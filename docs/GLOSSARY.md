@@ -7,33 +7,37 @@ Ordered alphabetically within sections.
 
 ## Creature anatomy
 
-Long-form descriptions and the sensor/brain/muscle contract live in
+Long-form descriptions and the sensor/model contract live in
 `docs/CREATURE_MODEL.md`. The entries below are quick references.
 
-- **Bone** — Rigid connection between two joints. Does not actuate. Renders as
-  a line/rectangle. See: `docs/CREATURE_MODEL.md`.
-- **Brain input** — One slot in the neural network's input vector, populated
-  one-to-one from a sensor value. See: `docs/CREATURE_MODEL.md`.
-- **Brain output** — One slot in the neural network's output vector, consumed
-  one-to-one as a muscle target. See: `docs/CREATURE_MODEL.md`.
-- **Creature** — A single agent: skeleton (joints + bones) + muscles + sensors
-  + brain. See: `docs/CREATURE_MODEL.md`.
-- **Creature element selection** — A selected joint, bone, or muscle,
+- **Beam** — A rigid, fixed-length connection between two nodes. Never
+  stretches or compresses. Its own `RigidBody2D` at runtime. See:
+  `docs/CREATURE_MODEL.md`.
+- **Core** — A sensor package mounted on a node: rays, pitch, elevation,
+  speed. **Not the neural model** — it only produces sensor readings. See:
+  `docs/CREATURE_MODEL.md`.
+- **Creature** — A single agent: nodes + beams (+ optional cores) + the
+  sensors/motor relations they derive + a brain. See:
+  `docs/CREATURE_MODEL.md`.
+- **Creature element selection** — A selected node, beam, or core,
   represented as a `CreatureElementKind` plus its zero-based index in the
   corresponding `CreatureDef` list.
 - **CreatureDef** — Pure-data description of a creature; the "genome" of the
   body, distinct from the brain's genome. See: `docs/CREATURE_MODEL.md`.
-- **Joint** — A point on the creature where bones/muscles attach. Has a
-  position and a small radius. Rendered as a circle. Corresponds to a
-  `RigidBody2D` in Godot. See: `docs/CREATURE_MODEL.md`.
-- **Muscle** — An actuator between two joints. Receives a target activation in
-  `[-1, 1]` from the brain each tick and applies a corresponding force/torque.
-  See: `docs/CREATURE_MODEL.md`.
-- **Sensor** — A source of scalar input to the brain. Examples: joint angle,
-  angular velocity, ground-contact boolean, raycast distance. See:
+- **Model input** — One slot in the neural network's input vector, populated
+  one-to-one from a sensor value (a core's or a motor relation's). See:
   `docs/CREATURE_MODEL.md`.
-- **Skeleton** — The set of joints + bones. What the user starts drawing in
-  0.3.0.
+- **Model output** — One slot in the neural network's output vector,
+  consumed one-to-one as a motor relation's target angular velocity. See:
+  `docs/CREATURE_MODEL.md`.
+- **Motor relation** — A controllable rotation between two beams sharing a
+  node, derived from the creature's topology (not stored data). Exposes
+  `relativeAngle`/`relativeAngularVelocity` sensors and accepts a
+  `targetAngularVelocity` output, driven by torque capped at a static
+  `MaxTorque`. See: `docs/CREATURE_MODEL.md`.
+- **Node** — A physical attachment point where beams meet and can rotate
+  relative to each other. Has a position and a small radius. Rendered as a
+  circle. See: `docs/CREATURE_MODEL.md`.
 
 ## ML
 
@@ -43,7 +47,7 @@ Long-form descriptions and the sensor/brain/muscle contract live in
   with respect to network weights by applying the chain rule from output back
   to input.
 - **Brain** — The neural network attached to a creature. A pure function
-  `sensors → muscle targets`.
+  `sensors → motor relation targets`.
 - **Crossover** — GA operator that combines two parent genomes into a child.
   We use uniform crossover on the flat weight vector.
 - **Epoch** (supervised) — One pass through the entire training dataset.
@@ -86,7 +90,7 @@ Long-form descriptions and the sensor/brain/muscle contract live in
 - **Run** — One evaluation episode for a population, typically 10 seconds
   (600 ticks).
 - **Seed** — Integer input to the RNG. Written to logs; shown in UI.
-- **Tick** — One fixed-step update. Sensors → brain → muscles → physics step
+- **Tick** — One fixed-step update. Sensors → brain → motor relations → physics step
   → fitness accumulation.
 
 ## App / UX

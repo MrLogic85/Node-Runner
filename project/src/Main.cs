@@ -94,7 +94,7 @@ public partial class Main : Node2D
         var scene = GD.Load<PackedScene>("res://scenes/Creature.tscn");
         var creature = scene.Instantiate<Creature.Creature>();
         creature.Name = "HardcodedWorm";
-        creature.Definition = HardcodedWormFactory.Create();
+        creature.Definition = HardcodedCreatureFactory.Create();
         creature.Theme = _theme;
         creature.Position = new Vector2(250, 260);
         AddChild(creature);
@@ -141,7 +141,7 @@ public partial class Main : Node2D
             Text = SeedText(),
             VerticalAlignment = VerticalAlignment.Center,
         };
-        _seedLabel.AddThemeColorOverride("font_color", _theme.Bone);
+        _seedLabel.AddThemeColorOverride("font_color", _theme.Beam);
 
         row.AddChild(button);
         row.AddChild(_seedLabel);
@@ -255,7 +255,7 @@ public partial class Main : Node2D
         _inspectorRole = new Label { AutowrapMode = TextServer.AutowrapMode.WordSmart };
         _inspectorRole.AddThemeColorOverride("font_color", _theme.GroundEdge);
         _inspectorValues = new Label { AutowrapMode = TextServer.AutowrapMode.WordSmart };
-        _inspectorValues.AddThemeColorOverride("font_color", _theme.Bone);
+        _inspectorValues.AddThemeColorOverride("font_color", _theme.Beam);
         content.AddChild(_inspectorTitle);
         content.AddChild(_inspectorRole);
         content.AddChild(_inspectorValues);

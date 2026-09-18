@@ -2,15 +2,20 @@ using Godot;
 
 namespace NodeRunner.Creature;
 
-public partial class SegmentVisual : Node2D
+/// <summary>
+/// Draws a beam as a static rod along its own local X axis. Beams are rigid
+/// bodies, so unlike the old muscle/bone springs this never needs to redraw
+/// per-frame — it moves with its parent automatically.
+/// </summary>
+public partial class BeamVisual : Node2D
 {
-    private RigidBody2D? _jointA;
-    private RigidBody2D? _jointB;
     private bool _isSelected;
 
-    public Color Color { get; set; }
+    public float HalfLength { get; set; }
 
     public float Width { get; set; }
+
+    public Color Color { get; set; }
 
     public Color SelectionColor { get; set; }
 
@@ -31,26 +36,11 @@ public partial class SegmentVisual : Node2D
         }
     }
 
-    public void Connect(RigidBody2D jointA, RigidBody2D jointB)
-    {
-        _jointA = jointA;
-        _jointB = jointB;
-    }
-
-    public override void _Process(double delta)
-    {
-        QueueRedraw();
-    }
-
     public override void _Draw()
     {
-        if (_jointA is null || _jointB is null)
-        {
-            return;
-        }
+        var start = new Vector2(-HalfLength, 0);
+        var end = new Vector2(HalfLength, 0);
 
-        var start = ToLocal(_jointA.GlobalPosition);
-        var end = ToLocal(_jointB.GlobalPosition);
         if (IsSelected)
         {
             DrawLine(start, end, SelectionColor, Width + SelectionWidth, antialiased: true);

@@ -4,49 +4,65 @@ namespace NodeRunner.Domain;
 
 public sealed record CreatureDef
 {
-    private readonly ReadOnlyCollection<JointDef> _joints;
-    private readonly ReadOnlyCollection<BoneDef> _bones;
-    private readonly ReadOnlyCollection<MuscleDef> _muscles;
+    private readonly ReadOnlyCollection<NodeDef> _nodes;
+    private readonly ReadOnlyCollection<BeamDef> _beams;
+    private readonly ReadOnlyCollection<CoreDef> _cores;
 
-    public CreatureDef(IReadOnlyList<JointDef> joints, IReadOnlyList<BoneDef> bones, IReadOnlyList<MuscleDef> muscles)
+    public CreatureDef(IReadOnlyList<NodeDef> nodes, IReadOnlyList<BeamDef> beams, IReadOnlyList<CoreDef> cores)
     {
-        ArgumentNullException.ThrowIfNull(joints);
-        ArgumentNullException.ThrowIfNull(bones);
-        ArgumentNullException.ThrowIfNull(muscles);
+        ArgumentNullException.ThrowIfNull(nodes);
+        ArgumentNullException.ThrowIfNull(beams);
+        ArgumentNullException.ThrowIfNull(cores);
 
-        if (joints.Count < 2)
+        if (nodes.Count == 0)
         {
-            throw new ArgumentException("A creature needs at least two joints.", nameof(joints));
+            throw new ArgumentException("A creature needs at least one node.", nameof(nodes));
         }
 
-        foreach (var bone in bones)
+        foreach (var beam in beams)
         {
-            ValidateJointIndex(bone.JointA, joints.Count);
-            ValidateJointIndex(bone.JointB, joints.Count);
+            ValidateNodeIndex(beam.NodeA, nodes.Count);
+            ValidateNodeIndex(beam.NodeB, nodes.Count);
         }
 
-        foreach (var muscle in muscles)
+        foreach (var core in cores)
         {
-            ValidateJointIndex(muscle.JointA, joints.Count);
-            ValidateJointIndex(muscle.JointB, joints.Count);
+            ValidateNodeIndex(core.NodeIndex, nodes.Count);
         }
 
-        _joints = Array.AsReadOnly(joints.ToArray());
-        _bones = Array.AsReadOnly(bones.ToArray());
-        _muscles = Array.AsReadOnly(muscles.ToArray());
+        var beamCountPerNode = new int[nodes.Count];
+        foreach (var beam in beams)
+        {
+            beamCountPerNode[beam.NodeA]++;
+            beamCountPerNode[beam.NodeB]++;
+        }
+
+        for (var i = 0; i < beamCountPerNode.Length; i++)
+        {
+            if (beamCountPerNode[i] == 0)
+            {
+                throw new ArgumentException(
+                    $"Node {i} has no beams attached. A node with no beams is just a loose point and cannot be simulated.",
+                    nameof(beams));
+            }
+        }
+
+        _nodes = Array.AsReadOnly(nodes.ToArray());
+        _beams = Array.AsReadOnly(beams.ToArray());
+        _cores = Array.AsReadOnly(cores.ToArray());
     }
 
-    public IReadOnlyList<JointDef> Joints => _joints;
+    public IReadOnlyList<NodeDef> Nodes => _nodes;
 
-    public IReadOnlyList<BoneDef> Bones => _bones;
+    public IReadOnlyList<BeamDef> Beams => _beams;
 
-    public IReadOnlyList<MuscleDef> Muscles => _muscles;
+    public IReadOnlyList<CoreDef> Cores => _cores;
 
-    private static void ValidateJointIndex(int index, int jointCount)
+    private static void ValidateNodeIndex(int index, int nodeCount)
     {
-        if (index >= jointCount)
+        if (index >= nodeCount)
         {
-            throw new ArgumentOutOfRangeException(nameof(index), "Joint index must point to an existing joint.");
+            throw new ArgumentOutOfRangeException(nameof(index), "Node index must point to an existing node.");
         }
     }
 }
