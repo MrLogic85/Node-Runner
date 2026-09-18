@@ -86,7 +86,7 @@ the PR):
 - [ ] Local `AGENTS.md` reflects any new rule that emerged
 - [ ] Nothing under `libs/` uses `using Godot;` — arch tests enforce this
 - [ ] No secrets, credentials, or personal data
-- [ ] Commit messages: imperative, reference issue (`(#0003)`)
+- [ ] PR title follows `type(#NNNN): Description`
 - [ ] Manual testing decision recorded and executed according to
       `docs/MANUAL_TESTING.md`
 - [ ] Squash auto-merge enabled, or CI verified green before manual merge
@@ -97,7 +97,7 @@ The branch-protection target for this solo project is deliberately limited
 to:
 
 - A pull request is required
-- Build, test, and format checks must pass
+- PR title, build, test, and format checks must pass
 - The branch must be up to date
 
 Until the repository configuration matches this target, treat any missing
@@ -150,12 +150,16 @@ CI jobs to pass and then run `gh pr merge --squash` without `--auto`.
 - Missing follow-up issues (file them; do not block the current PR)
 - Not adding a test for compiler-generated record members
 
-## Commit hygiene
+## PR title and commit hygiene
 
-- Squash-merge PRs. Individual commits inside the PR can be messy; the
-  merge commit tells the story.
-- Merge-commit message: imperative, references the issue.
-  Example: `Add feedforward NeuralNetwork with Xavier init (#0003)`
+- PR title format is `type(#NNNN): Description`.
+  Example: `feat(#0003): Add feedforward neural network`.
+- Allowed types: `feat`, `fix`, `docs`, `chore`, `refactor`, `test`, `build`,
+  `ci`, `perf`, `style`, `revert`.
+- The scope is the file-based issue id, including `#` and four digits.
+- The description starts with an uppercase letter.
+- Squash-merge PRs and use the PR title as the squash commit subject. Individual
+  commits inside the PR can be messy; the squash commit tells the story.
 - Include a `Co-authored-by:` trailer for every human or agent that
   contributed materially.
 
@@ -165,7 +169,8 @@ Configure on GitHub → Settings → Rules → Rulesets (or the legacy Branch
 protection rules UI) for the `main` branch. Required settings:
 
 - Require a pull request before merging
-- Require status checks to pass: `Build`, `Test & coverage`, `Format check`
+- Require status checks to pass: `PR title`, `Build`, `Test & coverage`,
+  `Format check`
 - Require branches to be up to date before merging
 - Require linear history
 - Do not allow force pushes

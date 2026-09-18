@@ -109,12 +109,10 @@ See `docs/TEST_STRATEGY.md` for the full tooling table and per-layer detail.
 ## 10. Version-control hygiene
 
 - One logical change per commit.
-- Commit messages: imperative present ("Add tournament selection"), reference
-  the issue file (`(#0007)`).
 - Do **not** commit generated files: `.godot/`, `.mono/`, `bin/`, `obj/`,
   `*.import` for imported assets is fine but check on a case-by-case basis.
-- Full commit/push workflow (code-review gate, DoD, PR process) lives in
-  root `AGENTS.md` § "Prime directives" and `docs/REVIEW.md`.
+- PR title, squash-commit format, DoD, and merge process live in
+  `docs/REVIEW.md`.
 
 ## 11. Dependencies are a debt
 
