@@ -77,8 +77,9 @@ Ordered alphabetically within sections.
 
 ## App / UX
 
-- **Cartoon style** — Chosen visual direction: friendly colors, expressive
-  eyes, rounded shapes.
+- **Neon theme** — Current reference visual direction: dark arena, glowing
+  nodes, bright signal paths, and readable console-like controls. See
+  `docs/UI_DIRECTION.md`; implementation should remain themeable.
 - **Focus** — Tapping a creature makes it the "focused" one; its brain is
   shown in the network visualizer.
 - **Terrarium** — The user's collection screen of saved creatures (v1.5+).

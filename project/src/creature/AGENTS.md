@@ -45,8 +45,8 @@ sensors, and the brain wiring.**
       _muscles.ApplyAll(_actionBuffer);
   }
   ```
-- Head joint = first joint in the `CreatureDef` by convention (used for camera
-  and eyes).
+- Head joint = first joint in the `CreatureDef` by convention. Visual head
+  markers follow `docs/UI_DIRECTION.md` and must stay themeable.
 - No `[Export]` for things that come from a `CreatureDef` — those are set
   programmatically at build time.
 

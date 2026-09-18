@@ -20,7 +20,8 @@ should be written from scratch where reasonable, not pulled from ML libraries.
 
 Read `docs/ROADMAP.md` for what version we are building toward,
 `docs/ARCHITECTURE.md` for how the code is organized, and `docs/REVIEW.md`
-for how changes land in `main`.
+for how changes land in `main`. Read `docs/UI_DIRECTION.md` before adding
+visible controls or changing screen layout.
 
 ## Prime directives for agents
 

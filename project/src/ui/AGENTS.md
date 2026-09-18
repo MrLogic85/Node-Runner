@@ -12,8 +12,8 @@
    layout, input handling. No fitness math, no ML, no persistence.
 4. **Every screen has a matching `.tscn` in `project/scenes/ui/`.** The `.cs`
    file lives here in `src/ui/screens/`.
-5. **Cartoon style** per `docs/ROADMAP.md`: rounded shapes, big friendly
-   eyes, soft colors. Keep visual language consistent.
+5. **Visual direction comes from `docs/UI_DIRECTION.md`.** Keep UI code
+   themeable; do not bake a specific skin into screen logic.
 
 ## Folder layout inside `src/ui/`
 
