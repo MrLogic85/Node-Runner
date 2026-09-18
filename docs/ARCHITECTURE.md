@@ -229,15 +229,17 @@ muscle targets stay in `[-1, 1]`. Hot paths use the overload that accepts
 caller-owned output and scratch buffers; those buffers must be distinct arrays.
 The network itself does not keep per-call scratch state.
 
-## Open questions (revisit before v2)
+## Open questions
 
 - Do we need our own RNG (Xoshiro/PCG) for cross-platform determinism, or is
-  `System.Random` fine? → decide when we ship v1 on Android and check parity
-  with desktop runs.
+  `System.Random` fine? → decide before 0.4.0 training relies on comparing
+  repeated runs across Android and desktop.
 - How do we visualize very large networks without cluttering the screen?
-  Group neurons? Collapse layers?
+  Group neurons? Collapse layers? → revisit before 0.5.0 network
+  visualization.
 - Should sensors be user-configurable at draw time, or auto-derived from
-  topology? Auto-derived for v1, revisit at v2.
+  topology? 0.3.0 should auto-derive the initial sensor set for user-built
+  creatures; user-configurable sensors are a later teaching/tooling question.
 - ViewModel base: raw C# events, `INotifyPropertyChanged`, or a small custom
   observable? Currently favoring `INotifyPropertyChanged` per
   `libs/NodeRunner.App/AGENTS.md`.
