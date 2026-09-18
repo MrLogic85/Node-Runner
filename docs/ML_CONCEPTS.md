@@ -22,7 +22,9 @@ For each concept:
 
 - **What:** The nonlinearity between layers. Without it, a deep network
   collapses to a single linear map.
-- **Where:** v0.1 (tanh only) → v2 (toggle ReLU / sigmoid / tanh)
+- **Where:** v0.1 hidden-layer support in `libs/NodeRunner.ML/Activation.cs`
+  (`Tanh`, `ReLU`, `Sigmoid`); v0.1 gameplay uses `Tanh`, and v2 exposes a UI
+  toggle.
 - **How we show it:** v2 slider. Same trained brain, different activation —
   watch behavior change.
 
@@ -62,9 +64,12 @@ For each concept:
 
 - **What:** What the network gets to *see*. Bad inputs cap performance;
   redundant inputs waste capacity.
-- **Where:** v1.5 (sensors auto-derived from creature topology)
-- **How we show it:** A panel lists what the network sees each tick.
-  Toggling a sensor off retrains from scratch — impact is visible.
+- **Where:** v0.1 starts with `project/src/creature/Sensors.cs` reading joint
+  angle and angular velocity in stable order; v1.5 expands this into
+  topology-derived sensors.
+- **How we show it:** v0.1 proves observation → action by making the worm
+  twitch. Later, a panel lists what the network sees each tick; toggling a
+  sensor off retrains from scratch — impact is visible.
 
 ## Network capacity (width/depth)
 
