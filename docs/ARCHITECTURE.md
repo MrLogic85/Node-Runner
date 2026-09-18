@@ -120,6 +120,8 @@ public sealed class NeuralNetwork
     public Activation Activation { get; }
 
     public double[] Forward(double[] input);
+    public void Forward(double[] input, double[] output);
+    public void Forward(double[] input, double[] output, double[] scratchA, double[] scratchB);
     public NeuralNetwork Clone();
     public double[] FlattenGenome();
     public static NeuralNetwork FromGenome(int[] layers, double[] genome, Activation act);
@@ -184,6 +186,13 @@ Creatures and their trained brains save as JSON via `FileCreatureRepository`:
 ```
 
 Round-trip: `CreatureDef` + `NeuralNetwork` → JSON → same objects. Tested.
+
+Neural-network genomes are flattened per layer transition: weights in
+row-major output-neuron order, then biases for that layer. v0.1 networks use
+the configured activation for hidden layers and `Tanh` for the output layer so
+muscle targets stay in `[-1, 1]`. Hot paths use the overload that accepts
+caller-owned output and scratch buffers; those buffers must be distinct arrays.
+The network itself does not keep per-call scratch state.
 
 ## Open questions (revisit before v2)
 
