@@ -20,11 +20,11 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          headerPattern: '^(\w+)(?:\((#[0-9]{4})\))?: (.+)$'
+          headerPattern: '^(\w+)(?:\((#[1-9][0-9]*)\))?: (.+)$'
           headerPatternCorrespondence: type, scope, subject
           requireScope: true
           scopes: |
-            #[0-9]{4}
+            #[1-9][0-9]*
           types: |
             feat
             fix
@@ -39,8 +39,8 @@ jobs:
             revert
           subjectPattern: ^[A-Z].+$
           subjectPatternError: |
-            PR title must be `type(#NNNN): Description`, e.g.
-            `ci(#0014): Add semantic PR title check`.
+            PR title must be `type(#123): Description`, e.g.
+            `ci(#15): Preserve CI test results`.
 
   build:
     name: Build

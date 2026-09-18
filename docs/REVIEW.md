@@ -10,8 +10,8 @@ How a change lands in `main`. Applies to humans and AI agents equally.
    GitHub then waits persistently and merges when the checks are green.
 4. The PR author owns failures and follow-up changes until the PR is merged.
    AI reviewers post advisory comments once enabled (see § "AI reviewer").
-5. Verify the merge and the resulting `main` checks. The issue file was
-   already moved to `issues/closed/` as part of the PR.
+5. Verify the merge and the resulting `main` checks. The linked GitHub Issue
+   is closed by the PR's closing keyword.
 
 Never push straight to `main`. Branch protection will reject direct pushes
 once it is configured; until then, treat it as a hard convention.
@@ -67,15 +67,16 @@ once it is configured; until then, treat it as a hard convention.
 - Follows the same PR template.
 - Ends every session with a summary of what it did and what it deferred —
   the human reviewer reads this before the diff.
-- May move and complete the issue resolved by its PR. Other files under
-  `issues/closed/` are historical records and must not be edited.
+- Updates the linked GitHub Issue when scope, status, or follow-up changes.
+  Archived file issues under `issues/archive/` are historical records and
+  must not be edited.
 
 ## Definition of Done
 
 A PR is mergeable when every box is true (or a skipped box is justified in
 the PR):
 
-- [ ] Linked issue file is moved to `issues/closed/` as part of the PR
+- [ ] Linked GitHub Issue exists and the PR uses a closing keyword
 - [ ] `dotnet build NodeRunner.slnx` clean, 0 warnings
 - [ ] `dotnet test NodeRunner.slnx` all green (unit + arch)
 - [ ] Any new logic in `libs/NodeRunner.{ML,Domain}/` has unit tests
@@ -86,7 +87,7 @@ the PR):
 - [ ] Local `AGENTS.md` reflects any new rule that emerged
 - [ ] Nothing under `libs/` uses `using Godot;` — arch tests enforce this
 - [ ] No secrets, credentials, or personal data
-- [ ] PR title follows `type(#NNNN): Description`
+- [ ] PR title follows `type(#123): Description`
 - [ ] Manual testing decision recorded and executed according to
       `docs/MANUAL_TESTING.md`
 - [ ] Squash auto-merge enabled, or CI verified green before manual merge
@@ -152,11 +153,11 @@ CI jobs to pass and then run `gh pr merge --squash` without `--auto`.
 
 ## PR title and commit hygiene
 
-- PR title format is `type(#NNNN): Description`.
-  Example: `feat(#0003): Add feedforward neural network`.
+- PR title format is `type(#123): Description`.
+  Example: `feat(#11): Add feedforward neural network`.
 - Allowed types: `feat`, `fix`, `docs`, `chore`, `refactor`, `test`, `build`,
   `ci`, `perf`, `style`, `revert`.
-- The scope is the file-based issue id, including `#` and four digits.
+- The scope is the GitHub Issue number, including `#`.
 - The description starts with an uppercase letter.
 - Squash-merge PRs and use the PR title as the squash commit subject. Individual
   commits inside the PR can be messy; the squash commit tells the story.

@@ -43,8 +43,7 @@ dotnet test  NodeRunner.slnx     # runs xUnit + architecture tests
 # Open project/project.godot in Godot and hit F5
 ```
 
-Android export requires additional setup — see issue `#0002` in
-`issues/open/`.
+Android export requires additional setup — see GitHub Issue #10.
 
 ## Repository layout
 
@@ -55,11 +54,11 @@ solution layout.
 
 ## Contributing
 
-This is primarily a solo learning project. Issues live in `issues/`
-(file-based, not GitHub Issues). Read `AGENTS.md` at the repo root for the
-working process. Suggestions and pull requests are welcome — expect
-opinionated review, especially around clarity of the ML code, since the app
-is meant to *teach*.
+This is primarily a solo learning project. Issues live in GitHub Issues;
+`issues/` is only a read-only archive of the old file tracker. Read
+`AGENTS.md` at the repo root for the working process. Suggestions and pull
+requests are welcome — expect opinionated review, especially around clarity
+of the ML code, since the app is meant to *teach*.
 
 ## License
 
