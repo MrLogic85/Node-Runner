@@ -152,10 +152,12 @@ Note: `Vector2D` in `NodeRunner.Domain` is our own `readonly record struct`,
 At 60 Hz (`_physics_process`), for each creature in the population:
 
 1. **Sense.** `Sensors` reads joint angles, angular velocities, ground
-   contacts → `double[]`.
-2. **Think.** `Brain.Forward(input)` returns `double[]` muscle targets in
-   `[-1, 1]`.
-3. **Act.** `Muscle.ApplyTarget(target)` sets joint motor torque.
+   contacts → `double[]`. v0.1 starts with joint angles and angular velocities;
+   ground-contact sensors are added when topology-derived sensors land.
+2. **Think.** `Brain.Forward(input, output, scratchA, scratchB)` writes muscle
+   targets in `[-1, 1]` without per-tick allocations.
+3. **Act.** `Muscle.ApplyTarget(target)` maps each target to a spring
+   contraction/extension around the base rest length.
 4. **Score.** `Evaluator` accumulates fitness for this creature.
 
 After N ticks (say 600 = 10 s at 60 Hz), the `Evolver` collects fitness scores

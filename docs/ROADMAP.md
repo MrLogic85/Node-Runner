@@ -14,7 +14,8 @@ Time estimates assume evening/weekend hobby pace and are rough.
 
 - Godot 4 + C# project builds and exports to Android
 - One hardcoded creature (e.g. a 5-joint "worm") lives in a 2D physics scene
-- `NeuralNetwork.cs` under `src/ml/` — pure C#, feedforward, tanh activation
+- `NeuralNetwork.cs` under `libs/NodeRunner.ML/` — pure C#, feedforward, tanh
+  gameplay activation
 - Random weights → creature twitches randomly
 - Single UI button: **Randomize**
 

@@ -7,6 +7,8 @@ namespace NodeRunner;
 public partial class Main : Node2D
 {
     private readonly VisualTheme _theme = VisualTheme.Neon;
+    private Creature.Creature? _creature;
+    private Label? _seedLabel;
 
     public override void _Ready()
     {
@@ -14,6 +16,7 @@ public partial class Main : Node2D
         AddGround();
         AddCamera();
         AddCreature();
+        AddHud();
     }
 
     private void AddBackdrop()
@@ -85,5 +88,90 @@ public partial class Main : Node2D
         creature.Theme = _theme;
         creature.Position = new Vector2(250, 260);
         AddChild(creature);
+        if (!creature.IsBuilt)
+        {
+            creature.BuildFrom(creature.Definition);
+        }
+
+        _creature = creature;
+    }
+
+    private void AddHud()
+    {
+        var layer = new CanvasLayer
+        {
+            Name = "Hud",
+        };
+
+        var panel = new PanelContainer
+        {
+            Position = new Vector2(16, 16),
+        };
+        panel.AddThemeStyleboxOverride("panel", CreateHudPanelStyle());
+
+        var row = new HBoxContainer
+        {
+            CustomMinimumSize = new Vector2(300, 36),
+        };
+
+        var button = new Button
+        {
+            Name = "RandomizeButton",
+            Text = "Randomize",
+            CustomMinimumSize = new Vector2(120, 32),
+        };
+        button.AddThemeColorOverride("font_color", _theme.GroundEdge);
+        button.Pressed += RandomizeCreatureBrain;
+
+        _seedLabel = new Label
+        {
+            Name = "SeedLabel",
+            Text = SeedText(),
+            VerticalAlignment = VerticalAlignment.Center,
+        };
+        _seedLabel.AddThemeColorOverride("font_color", _theme.Bone);
+
+        row.AddChild(button);
+        row.AddChild(_seedLabel);
+        panel.AddChild(row);
+        layer.AddChild(panel);
+        AddChild(layer);
+    }
+
+    private void RandomizeCreatureBrain()
+    {
+        if (_creature is null)
+        {
+            return;
+        }
+
+        var seed = Random.Shared.Next(int.MinValue, int.MaxValue);
+        _creature.RandomizeBrain(seed);
+        if (_seedLabel is not null)
+        {
+            _seedLabel.Text = SeedText();
+        }
+    }
+
+    private string SeedText()
+    {
+        return _creature is null ? "Seed: -" : $"Seed: {_creature.BrainSeed}";
+    }
+
+    private StyleBoxFlat CreateHudPanelStyle()
+    {
+        return new StyleBoxFlat
+        {
+            BgColor = _theme.ArenaBackground with { A = 0.82f },
+            BorderColor = _theme.GroundEdge,
+            BorderWidthLeft = 1,
+            BorderWidthTop = 1,
+            BorderWidthRight = 1,
+            BorderWidthBottom = 1,
+            ContentMarginLeft = 10,
+            ContentMarginTop = 8,
+            ContentMarginRight = 10,
+            ContentMarginBottom = 8,
+        };
     }
 }

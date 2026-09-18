@@ -1,20 +1,55 @@
 using Godot;
 using NodeRunner.Domain;
+using NodeRunner.ML;
 using NodeRunner.Theme;
 
 namespace NodeRunner.Creature;
 
 public partial class Creature : Node2D
 {
+    private const int _hiddenNeuronCount = 8;
+
     private readonly List<Muscle> _muscles = [];
+    private RigidBody2D[] _joints = [];
+    private Sensors? _sensors;
+    private double[] _sensorValues = [];
+    private double[] _muscleTargets = [];
+    private double[] _scratchA = [];
+    private double[] _scratchB = [];
+    private bool _isBuilt;
 
     public CreatureDef? Definition { get; set; }
 
     public VisualTheme Theme { get; set; } = VisualTheme.Neon;
 
+    public NeuralNetwork? Brain { get; private set; }
+
+    public int BrainSeed { get; private set; }
+
+    public bool IsBuilt => _isBuilt;
+
     public override void _Ready()
     {
-        BuildFrom(Definition ?? HardcodedWormFactory.Create());
+        if (!_isBuilt)
+        {
+            BuildFrom(Definition ?? HardcodedWormFactory.Create());
+        }
+    }
+
+    public override void _PhysicsProcess(double delta)
+    {
+        if (_sensors is null || Brain is null || _muscles.Count == 0)
+        {
+            return;
+        }
+
+        _sensors.Read(_sensorValues);
+        Brain.Forward(_sensorValues, _muscleTargets, _scratchA, _scratchB);
+
+        for (var i = 0; i < _muscles.Count; i++)
+        {
+            _muscles[i].ApplyTarget(_muscleTargets[i]);
+        }
     }
 
     public void BuildFrom(CreatureDef definition)
@@ -27,10 +62,30 @@ public partial class Creature : Node2D
         }
 
         _muscles.Clear();
+        _isBuilt = true;
 
-        var joints = CreateJoints(definition.Joints);
-        CreateBoneSprings(definition.Bones, definition.Joints, joints);
-        CreateMuscles(definition.Muscles, joints);
+        _joints = CreateJoints(definition.Joints);
+        CreateBoneSprings(definition.Bones, definition.Joints, _joints);
+        CreateMuscles(definition.Muscles, _joints);
+        ConfigureBrainBuffers();
+        if (_muscles.Count > 0)
+        {
+            RandomizeBrain(CreateSeed());
+        }
+    }
+
+    public void RandomizeBrain(int seed)
+    {
+        if (_sensors is null || _muscles.Count == 0)
+        {
+            Brain = null;
+            BrainSeed = seed;
+            return;
+        }
+
+        BrainSeed = seed;
+        Brain = new NeuralNetwork(new[] { _sensors.Count, _hiddenNeuronCount, _muscles.Count }, Activation.Tanh, new Random(seed));
+        GD.Print($"Node Runner brain seed: {seed}");
     }
 
     private RigidBody2D[] CreateJoints(IReadOnlyList<JointDef> jointDefs)
@@ -142,6 +197,33 @@ public partial class Creature : Node2D
         AddChild(line);
 
         return spring;
+    }
+
+    private void ConfigureBrainBuffers()
+    {
+        if (_muscles.Count == 0)
+        {
+            Brain = null;
+            _sensors = null;
+            _sensorValues = [];
+            _muscleTargets = [];
+            _scratchA = [];
+            _scratchB = [];
+            return;
+        }
+
+        _sensors = new Sensors(_joints);
+        _sensorValues = new double[_sensors.Count];
+        _muscleTargets = new double[_muscles.Count];
+
+        var scratchSize = Math.Max(_sensors.Count, Math.Max(_hiddenNeuronCount, _muscles.Count));
+        _scratchA = new double[scratchSize];
+        _scratchB = new double[scratchSize];
+    }
+
+    private static int CreateSeed()
+    {
+        return Random.Shared.Next(int.MinValue, int.MaxValue);
     }
 
     private static Vector2 ToGodot(Vector2D value)
