@@ -13,7 +13,7 @@ Time estimates assume evening/weekend hobby pace and are rough.
 **Goal:** Prove the stack works end-to-end.
 
 - Godot 4 + C# project builds and exports to Android
-- One hardcoded creature (e.g. a 5-joint "worm") lives in a 2D physics scene
+- One hardcoded creature (e.g. a 5-node "worm") lives in a 2D physics scene
 - `NeuralNetwork.cs` under `libs/NodeRunner.ML/` — pure C#, feedforward, tanh
   gameplay activation
 - Random weights → creature twitches randomly
@@ -34,19 +34,20 @@ editable or trainable.
 
 - Formalize the creature vocabulary in docs and code (see
   `docs/CREATURE_MODEL.md`):
-  - Joint = physical mass/node
-  - Bone = passive structural connection
-  - Muscle = active actuator controlled by a brain output
-  - Sensor = observed value exposed as a brain input
-  - Brain input/output mapping = the contract between body and network
+  - Node = physical attachment point where beams meet
+  - Beam = rigid, fixed-length structural connection between two nodes
+  - Core = sensor package mounted on a node (rays, pitch, elevation, speed)
+  - Motor relation = a controllable rotation between two beams at a node,
+    derived from topology, driven by torque toward a brain-set target
+  - Model input/output mapping = the contract between body and network
 - Add a basic touch-first inspector:
-  - Tap a joint, bone, or muscle to select it
+  - Tap a node, beam, or core to select it
   - Highlight the selected element in the neon scene
   - Show its role and important values in a simple panel
 - Visualize the control loop at a beginner-friendly level:
-  - Which sensor values feed the brain
-  - Which brain outputs drive which muscles
-  - Which muscles are currently active
+  - Which sensor values feed the model
+  - Which model outputs drive which motor relations
+  - Which motor relations are currently active
 - Keep the hardcoded worm as the default demo creature, but make sure it is
   described by the same `CreatureDef` concepts the future editor will use.
 
@@ -55,20 +56,20 @@ outputs as actuators, and the idea that a neural network controls a body through
 a defined interface.
 
 **Ship criterion:** A first-time viewer can tap the creature and explain what a
-joint, bone, muscle, sensor, input, and output are in the current demo.
+node, beam, core, motor relation, input, and output are in the current demo.
 
 **Done checklist:**
 
 - [ ] Creature vocabulary is documented in durable docs.
 - [ ] The hardcoded worm is explainable through that vocabulary.
-- [ ] User can select joints, bones, and muscles with touch.
+- [ ] User can select nodes, beams, and cores with touch.
 - [ ] Selected creature part is visually highlighted.
 - [ ] Inspector panel shows beginner-facing role text and key values.
-- [ ] Sensor values, brain outputs, and muscle activations are visible enough
-  to explain the control loop.
+- [ ] Sensor values, model outputs, and motor-relation activity are visible
+  enough to explain the control loop.
 - [ ] Randomize keeps inspector/mapping UI consistent with the new brain seed.
-- [ ] A first-time viewer can explain joint, bone, muscle, sensor, input, and
-  output from the app.
+- [ ] A first-time viewer can explain node, beam, core, motor relation,
+  sensor, input, and output from the app.
 - [ ] The release gates in `docs/REVIEW.md` and Android checks in
   `docs/MANUAL_TESTING.md` are satisfied for 0.2.0.
 
@@ -80,20 +81,20 @@ joint, bone, muscle, sensor, input, and output are in the current demo.
 introduced in 0.2.0.
 
 - Construction mode:
-  - Place and move joints
-  - Connect two joints with a bone
-  - Connect two joints with a muscle
+  - Place and move nodes
+  - Connect two nodes with a beam
+  - Attach a core to a node
   - Delete the selected element
   - Return to simulation mode and instantiate the creature
 - Validate the creature before simulation:
-  - At least two joints
-  - At least one connection
-  - No missing joint references
-  - No zero-length bones or muscles
-  - Muscles connect two different joints and map to brain outputs
-- Generate brain input/output counts from the creature topology:
-  - Inputs = selected sensor set
-  - Outputs = muscles
+  - At least one node
+  - Every node has at least one beam
+  - No missing node references
+  - No zero-length beams
+- Generate model input/output counts from the creature topology (via
+  `MotorTopology`):
+  - Inputs = cores' sensor values + motor relations' sensor values
+  - Outputs = motor relations
   - Hidden layer = simple documented heuristic
 - Keep the editor intentionally limited; this milestone proves the data model,
   not a full authoring tool.
@@ -102,21 +103,21 @@ introduced in 0.2.0.
 network-size-to-problem fit, observation → action mapping.
 
 **Ship criterion:** The user can build a simple creature on Android, run it, and
-see which muscles became neural-network outputs.
+see which motor relations became neural-network outputs.
 
 **Done checklist:**
 
 - [ ] Construction workflow is documented before implementation starts.
-- [ ] User can place at least two joints with Android touch.
-- [ ] User can move joints before simulation starts.
-- [ ] User can connect joints with passive bones.
-- [ ] User can connect joints with active muscles.
+- [ ] User can place at least two nodes with Android touch.
+- [ ] User can move nodes before simulation starts.
+- [ ] User can connect nodes with beams.
+- [ ] User can attach a core to a node.
 - [ ] User can delete the selected editable element.
 - [ ] Invalid creatures are blocked with understandable validation messages.
 - [ ] A valid edited creature can be converted into a `CreatureDef`.
 - [ ] Simulation can instantiate and run the edited creature.
-- [ ] Brain input count comes from the selected sensor set.
-- [ ] Brain output count equals muscle count.
+- [ ] Model input count comes from `MotorTopology`'s derived sensors.
+- [ ] Model output count equals motor-relation count.
 - [ ] The original hardcoded worm still works.
 - [ ] The release gates in `docs/REVIEW.md` and Android checks in
   `docs/MANUAL_TESTING.md` are satisfied for 0.3.0.
@@ -190,9 +191,9 @@ hyperparameter sensitivity, interpretability.
 **Goal:** Introduce gradient-based training.
 
 - **Imitation mode:** the player demonstrates the first X steps by moving
-  joints while bone lengths and constraints stay fixed. Recorded target motion
-  or derived actuator commands become supervised data. Backprop trains the
-  network to imitate. Release and observe.
+  nodes while beam lengths and constraints stay fixed. Recorded target motion
+  or derived motor-relation commands become supervised data. Backprop trains
+  the network to imitate. Release and observe.
 - **Classification mini-mode:** draw creatures, label them ("hopper", "crawler",
   "swimmer"). Train a classifier. Visualize the decision boundary.
 - Live loss curve

@@ -32,7 +32,7 @@ build; the *shape* below should stay stable.
 ┌─────────────────────────────────────────────────────────────────┐
 │                    Domain data (pure C#)                         │
 │                    libs/NodeRunner.Domain/                       │
-│           CreatureDef · JointDef · configs · Vector2D            │
+│           CreatureDef · NodeDef · BeamDef · CoreDef · Vector2D            │
 └─────────────────────────────────────────────────────────────────┘
                                            │
                                            ▼
@@ -164,28 +164,39 @@ public sealed class GeneticAlgorithm
 }
 
 // libs/NodeRunner.Domain/
-public sealed record JointDef(Vector2D Position, double Radius);
-public sealed record BoneDef(int JointA, int JointB);
-public sealed record MuscleDef(int JointA, int JointB, double RestLength, double MaxForce);
-public sealed record CreatureDef(JointDef[] Joints, BoneDef[] Bones, MuscleDef[] Muscles);
+public sealed record NodeDef(Vector2D Position, double Radius);
+public sealed record BeamDef(int NodeA, int NodeB);
+public sealed record CoreDef(int NodeIndex);
+public sealed record CreatureDef(NodeDef[] Nodes, BeamDef[] Beams, CoreDef[] Cores);
+public sealed record NodeConnectionDef(int NodeIndex, int ReferenceBeamIndex, int OtherBeamIndex, bool IsMotorized);
+
+public static class MotorTopology
+{
+    public static IReadOnlyList<NodeConnectionDef> BuildNodeConnections(CreatureDef creature);
+}
 ```
 
 Note: `Vector2D` in `NodeRunner.Domain` is our own `readonly record struct`,
 **not** `Godot.Vector2`. The creature layer converts at its boundary.
 
+See `docs/CREATURE_MODEL.md` for the full Node/Beam/Core/motor-relation model
+these types encode — including how motor relations are derived from a
+`CreatureDef`'s topology, and why a Core is a sensor package rather than the
+neural model.
+
 ## The tick
 
 At 60 Hz (`_physics_process`), for each creature in the population:
 
-1. **Sense.** `Sensors` reads an oscillator clock plus joint angles and angular
-   velocities → `double[]`. 0.1.0 uses the clock as a simple central pattern
-   input so a resting random brain still produces changing muscle targets;
-   ground-contact sensors are added when topology-derived sensors land.
-2. **Think.** `Brain.Forward(input, output, scratchA, scratchB)` writes muscle
-   targets in `[-1, 1]` without per-tick allocations.
-3. **Act.** `Muscle.ApplyTarget(target)` maps each target to a spring
-   contraction/extension around the base rest length and a perpendicular bend
-   force so the hardcoded worm visibly twitches.
+1. **Sense.** Each core reads 6 values (rays, pitch, elevation, speed); each
+   motor relation reads 2 (relative angle, relative angular velocity) →
+   `double[]`, in the fixed order documented in `docs/CREATURE_MODEL.md`.
+2. **Think.** `Brain.Forward(input, output, scratchA, scratchB)` writes a
+   target angular velocity in `[-1, 1]` per motor relation, without
+   per-tick allocations.
+3. **Act.** `MotorRelation.Drive(target)` scales the target by a static
+   `MaxAngularVelocity` and drives torque (capped at a static `MaxTorque`)
+   to chase it.
 4. **Score.** `Evaluator` accumulates fitness for this creature.
 
 After N ticks (say 600 = 10 s at 60 Hz), the `Evolver` collects fitness scores
@@ -195,10 +206,10 @@ New brains are assigned; positions reset; loop continues.
 The `Evolver` raises `GenerationCompleted` events which `PopulationViewModel`
 subscribes to, which the UI in turn observes.
 
-For 0.1.0 the hardcoded creature keeps its joint bodies awake (`CanSleep =
-false`) and uses deliberately punchy muscle pulses. This is a demo constraint:
-the goal is obvious visible twitching, not stable walking or plausible muscle
-physiology yet.
+For 0.2.0 the hardcoded creature keeps its beam bodies awake (`CanSleep =
+false`). Random brains produce visible, if uncoordinated, motor-relation
+movement without any twitch-hack overlay — the old 0.1.0 CPG/twitch blend was
+tied to the retired Muscle model and does not carry over.
 
 ## Threading
 
@@ -214,7 +225,7 @@ Creatures and their trained brains save as JSON via `FileCreatureRepository`:
 
 ```json
 {
-  "def":   { "joints": [...], "bones": [...], "muscles": [...] },
+  "def":   { "nodes": [...], "beams": [...], "cores": [...] },
   "brain": { "layers": [8, 12, 4], "genome": [...], "activation": "Tanh" },
   "meta":  { "seed": 4711, "generation": 137, "fitness": 42.7 }
 }
@@ -225,9 +236,9 @@ Round-trip: `CreatureDef` + `NeuralNetwork` → JSON → same objects. Tested.
 Neural-network genomes are flattened per layer transition: weights in
 row-major output-neuron order, then biases for that layer. 0.1.0 networks use
 the configured activation for hidden layers and `Tanh` for the output layer so
-muscle targets stay in `[-1, 1]`. Hot paths use the overload that accepts
-caller-owned output and scratch buffers; those buffers must be distinct arrays.
-The network itself does not keep per-call scratch state.
+motor-relation targets stay in `[-1, 1]`. Hot paths use the overload that
+accepts caller-owned output and scratch buffers; those buffers must be
+distinct arrays. The network itself does not keep per-call scratch state.
 
 ## Open questions
 

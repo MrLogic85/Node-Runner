@@ -65,10 +65,12 @@ For each concept:
 
 - **What:** What the network gets to *see*. Bad inputs cap performance;
   redundant inputs waste capacity.
-- **Where:** 0.1.0 starts with `project/src/creature/Sensors.cs` reading a
+- **Where:** 0.1.0 started with `project/src/creature/Sensors.cs` reading a
   sin/cos oscillator clock, then joint angle and angular velocity in stable
-  order; 0.2.0 explains the sensor list; 0.3.0 expands this into
-  topology-derived sensors for user-built creatures.
+  order. 0.2.0 replaced this with the Node/Beam/Core model (see
+  `docs/CREATURE_MODEL.md`): each core contributes rays/pitch/elevation/speed,
+  and each motor relation contributes a relative angle and angular velocity.
+  0.3.0 expands this into topology-derived sensors for user-built creatures.
 - **How we show it:** 0.1.0 proves observation → action by making the worm
   twitch. 0.2.0 lists what the network sees each tick. A later, uncommitted
   teaching mode may let the user toggle a sensor off, retrain from scratch, and
@@ -95,9 +97,9 @@ For each concept:
   rule, then step against the gradient. The workhorse of modern ML.
 - **Where:** Later · `libs/NodeRunner.ML/`
 - **How we show it:** "Imitation mode". User demonstrates the first X steps by
-  moving joints while bone lengths and constraints stay fixed. The network is
-  trained to reproduce the target motion or derived actuator commands. Loss
-  curve visualized. First the copy is bad, then it's good.
+  moving nodes while beam lengths and constraints stay fixed. The network is
+  trained to reproduce the target motion or derived motor-relation commands.
+  Loss curve visualized. First the copy is bad, then it's good.
 
 ## Loss functions
 

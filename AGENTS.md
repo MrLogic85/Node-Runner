@@ -7,8 +7,9 @@ is the entry point to the documents that own the project's rules.
 ## What this project is
 
 Node Runner is a **learning-by-playing Android app** where the user draws a 2D
-creature (joints, bones, muscles), a neural network is generated from it, and
-the user watches it learn to move via neuroevolution and (later) backprop. The
+creature (nodes, beams, cores — see `docs/CREATURE_MODEL.md`), a neural
+network is generated from it, and the user watches it learn to move via
+neuroevolution and (later) backprop. The
 primary goal is **pedagogical**: to make ML concepts visible, tangible, and
 interactive. The secondary goal is **the author's own ML education** — code
 should be written from scratch where reasonable, not pulled from ML libraries.
