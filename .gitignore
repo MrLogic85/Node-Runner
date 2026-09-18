@@ -36,6 +36,7 @@ coverage.*.xml
 
 # Local env
 .env
+/LOCAL_CONFIG.md
 
 # Editor tooling
 .npp-md-preview.html
