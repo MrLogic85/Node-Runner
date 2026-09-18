@@ -6,9 +6,9 @@ owned by docs/REVIEW.md; do not copy it into this template.
 ## What & why
 
 <!-- 1–3 sentences. What does this PR do, and why? Link the issue. -->
-<!-- PR title format: type(#NNNN): Description -->
+<!-- PR title format: type(#123): Description -->
 
-Closes `issues/closed/<NNNN>-<slug>.md`
+Closes #123
 
 ## Scope
 

@@ -1,34 +1,33 @@
-# Issues
+# Issues archive
 
-A dead-simple file-based issue tracker. No GitHub required. Grep-friendly.
+GitHub Issues are the source of truth for active work:
+<https://github.com/MrLogic85/Node-Runner/issues>.
 
-## Layout
+This directory is a read-only archive of the file-based tracker that existed
+before GitHub Issues were adopted. Do not create, edit, close, or delete issue
+files here. Update the corresponding GitHub Issue instead.
+
+See [`MIGRATION.md`](MIGRATION.md) for the mapping from legacy file issues to
+GitHub Issues and the decision for closed historical issues.
+
+## Archived layout
 
 ```
-issues/
-├── README.md            (this file)
-├── open/                active issues
-│   ├── 0001-....md
-│   ├── 0002-....md
-│   └── ...
-└── closed/              done / wontfix (never deleted, always moved here)
+issues/archive/
+├── open/                file issues that were open at migration time
+└── closed/              file issues that were already closed before migration
 ```
 
-## File naming
+## Historical file format
+
+Archived files keep their original Markdown front matter:
 
 `NNNN-short-kebab-title.md`
 
 - `NNNN` = zero-padded 4-digit id, monotonically increasing. Never reused.
 - Title is a slug: lower-case, hyphens, no punctuation.
 
-Example: `0007-creature-falls-through-floor.md`
-
-To find the next id: look at the highest-numbered file across **both** `open/`
-and `closed/` and add one.
-
-## File format
-
-Each issue is a Markdown file with YAML front-matter:
+Example front matter:
 
 ```markdown
 ---
@@ -61,57 +60,15 @@ Why does this matter? Link to `docs/ROADMAP.md` section, other issues, etc.
 Investigation notes, design sketches, open questions. Append as you learn.
 ```
 
-## Workflow
-
-1. **Create.** Add a new file in `issues/open/`. Fill front-matter and
-   Summary. Acceptance criteria may start rough — sharpen before you start
-   coding.
-2. **Start.** Change `status: in-progress`. Update `updated:` date.
-3. **Block.** If stuck on someone/something else, `status: blocked` and write
-   *what* you're blocked on in Notes.
-4. **Close.** Move the file to `issues/closed/`. Change `status: closed` (or
-   `wontfix`). Add a `## Resolution` section at the bottom describing what was
-   done and referencing the commit(s) or PR.
-
-The issue move happens as part of the PR that resolves it — same commit,
-so history stays coherent. See `docs/REVIEW.md`.
-
-Never delete an issue file. Historical record matters.
-
-## Priorities
-
-- **p0** — Broken build / demo. Fix now.
-- **p1** — Blocks the next roadmap version.
-- **p2** — Should be done for the next version but has workarounds.
-- **p3** — Nice to have / polish / backlog.
-
-## Types
-
-- **bug** — Something is wrong.
-- **feature** — New user-visible capability.
-- **chore** — Infrastructure, dependencies, repository setup, or tooling.
-- **refactor** — Internal restructuring without behavior change.
-- **docs** — Documentation-only change.
-- **test** — Test-only change.
-- **question** — Open design decision needing discussion.
-- **spike** — Time-boxed investigation to reduce uncertainty. Output is
-  usually another issue.
-
-## Labels
-
-GitHub label taxonomy lives in `docs/ISSUE_LABELS.md`. While the file-based
-tracker still exists, keep front-matter close to that schema so migration is
-mechanical.
-
-## Searching
+## Searching the archive
 
 ```bash
-# All open p1 issues
-grep -l "priority: p1" issues/open/*.md
+# File issues that were open at migration time with p1 priority
+grep -l "priority: p1" issues/archive/open/*.md
 
-# All ML-related issues, open or closed
-grep -l "labels:.*\bml\b" issues/**/*.md
+# All archived ML-related issues
+grep -l "labels:.*\bml\b" issues/archive/**/*.md
 
-# Issues targeting v1.0
-grep -l "version: v1.0" issues/**/*.md
+# Archived issues targeting v1.0
+grep -l "version: v1.0" issues/archive/**/*.md
 ```

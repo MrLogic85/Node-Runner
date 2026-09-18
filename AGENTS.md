@@ -48,14 +48,18 @@ Conceptually:
 - `project/` is the Godot host: scenes, simulation, composition, and UI.
 - `tests/` mirrors the pure-C# layers and enforces architecture boundaries.
 - `docs/` owns durable design, process, roadmap, and teaching material.
-- `issues/` is the file-based tracker.
+- `issues/` is a read-only archive of the old file-based tracker.
 
 Folders inside `libs/` and `project/src/` have local `AGENTS.md` files.
 Read the nearest one before editing that layer.
 
 ## Working process
 
-- Work from an issue and follow the lifecycle in `issues/README.md`.
+- Work from a GitHub Issue and follow the lifecycle in `docs/REVIEW.md`.
+- For non-trivial or ambiguous issues, use the issue-review flow in
+  `docs/ISSUE_REVIEW.md` before implementation.
+- Treat archived file issues under `issues/archive/` as immutable historical
+  records. Do not edit them; update the corresponding GitHub Issue instead.
 - Read the owning documents and nearest local `AGENTS.md` before editing.
 - Keep each change focused on the issue; ask if scope or design is unclear.
 - Follow `docs/REVIEW.md` when finishing the change. The code-review gate in
@@ -74,5 +78,3 @@ there; do not maintain a second copy.
 - Introduce a new ML paradigm (RL, transformers, etc.) — these are roadmap
   decisions
 - Rewrite existing modules "for clarity" — propose in an issue first
-- Edit already-closed issues. Moving and completing the issue resolved by the
-  current change is the only exception.

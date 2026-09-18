@@ -45,6 +45,5 @@ For GitHub Issues, put the review summary in an issue comment. If a review
 changes the issue materially, edit the issue body and add a short comment
 summarizing what changed.
 
-For the pre-migration file tracker, append review notes to the issue file only
-when the issue itself is still file-based. Do not create duplicate long-term
-state in both places.
+Archived file issues under `issues/archive/` are read-only historical records.
+Do not append review notes there; comment on the corresponding GitHub Issue.
