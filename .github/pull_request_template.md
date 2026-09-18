@@ -24,8 +24,11 @@ dotnet build NodeRunner.slnx
 dotnet test  NodeRunner.slnx
 ```
 
-- [ ] Manual desktop check (screenshot below if UI touched)
-- [ ] Android smoke test (if the change reaches the phone)
+Manual testing decision (`docs/MANUAL_TESTING.md`):
+
+- Required? <!-- yes/no + why -->
+- If required, result/evidence:
+- If skipped, reason:
 
 ## Screenshots / recordings
 

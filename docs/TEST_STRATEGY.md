@@ -25,7 +25,7 @@ inspired by `kappuccino`'s `docs/TEST_STRATEGY.md`.
 | App | `libs/NodeRunner.App/` | net8.0 | xUnit + Shouldly + NSubstitute | View-models, repositories, service contracts |
 | Architecture | (all libs) | net10.0 tests | xUnit + NetArchTest | No Godot leaks, correct layer graph |
 | Godot Nodes | `project/src/{creature,sim,managers,ui}/` | Godot runtime | **GdUnit4** (deferred, v1.0+) | Node lifecycle, physics scenarios |
-| End-to-end | full app on device | Android | Manual, checklist in issue | Feel, latency, battery |
+| End-to-end | full app on device | Android | Manual, per-issue decision | Feel, latency, battery |
 
 Tests target `net10.0` (only runtime installed locally). Libs target `net8.0`
 (Godot's runtime). This works because `net10.0` can load `net8.0` assemblies.
@@ -108,7 +108,8 @@ Separate runner (Godot editor invokes it), separate lifecycle. Don't force it
 into `NodeRunner.slnx`.
 
 We're deferring this to at least v1.0 — pre-v1, physics and UI are verified
-manually per issue.
+manually when the issue/change needs it. `docs/MANUAL_TESTING.md` owns that
+decision process and how agents can run or defer manual checks.
 
 ## Test file layout
 

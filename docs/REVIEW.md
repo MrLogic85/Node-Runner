@@ -87,8 +87,8 @@ the PR):
 - [ ] Nothing under `libs/` uses `using Godot;` — arch tests enforce this
 - [ ] No secrets, credentials, or personal data
 - [ ] Commit messages: imperative, reference issue (`(#0003)`)
-- [ ] Manually verified on desktop; on device if the change reaches physics
-      or UI
+- [ ] Manual testing decision recorded and executed according to
+      `docs/MANUAL_TESTING.md`
 - [ ] Squash auto-merge enabled, or CI verified green before manual merge
 
 ## Merge gates

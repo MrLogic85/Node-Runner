@@ -100,8 +100,8 @@ about *that* invariant.
   the compiler can't. Add a fact whenever a new convention emerges.
 - **Property tests** where cheap (a network's output shape equals the output
   layer size for any random input).
-- **Manual tests** for creature physics and UI — write a checklist in the
-  issue.
+- **Manual tests** are decided per issue/change. See
+  `docs/MANUAL_TESTING.md`.
 - We don't chase 100% coverage. We chase "the tricky parts are pinned down".
 
 See `docs/TEST_STRATEGY.md` for the full tooling table and per-layer detail.
