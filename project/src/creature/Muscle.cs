@@ -5,7 +5,8 @@ namespace NodeRunner.Creature;
 
 public sealed class Muscle
 {
-    private const float _maxLengthOffset = 0.45f;
+    private const float _maxLengthOffset = 0.65f;
+    private const float _bendForceScale = 5.0f;
 
     private readonly DampedSpringJoint2D _joint;
     private readonly RigidBody2D _jointA;
@@ -45,7 +46,7 @@ public sealed class Muscle
         }
 
         var normal = new Vector2(-axis.Y, axis.X).Normalized();
-        var force = normal * (clamped * _maxBendForce * _bendDirection);
+        var force = normal * (clamped * _maxBendForce * _bendForceScale * _bendDirection);
         _jointA.ApplyCentralForce(force);
         _jointB.ApplyCentralForce(-force);
     }

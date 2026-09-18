@@ -195,6 +195,11 @@ New brains are assigned; positions reset; loop continues.
 The `Evolver` raises `GenerationCompleted` events which `PopulationViewModel`
 subscribes to, which the UI in turn observes.
 
+For 0.1.0 the hardcoded creature keeps its joint bodies awake (`CanSleep =
+false`) and uses deliberately punchy muscle pulses. This is a demo constraint:
+the goal is obvious visible twitching, not stable walking or plausible muscle
+physiology yet.
+
 ## Threading
 
 - Single-threaded for v1. Godot's physics runs on one thread; we run 20
