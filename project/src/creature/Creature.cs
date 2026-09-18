@@ -10,7 +10,14 @@ public partial class Creature : Node2D
     private const int _hiddenNeuronCount = 8;
     private const float _beamThickness = 12f;
     private const float _rayLength = 220f;
-    private const float _maxMotorTorque = 4000f;
+
+    // Tuned empirically: a beam resting flat on the ground has both ends of
+    // its bottom edge in contact, so tipping it up (the only way to rotate
+    // while grounded) must overcome gravity + friction across the whole
+    // beam, not just spin freely in open air. 4000 (the original guess)
+    // could never lift a resting beam; 60000 reliably does across multiple
+    // random creatures/seeds — see MotorRelation for the matching gain fix.
+    private const float _maxMotorTorque = 60000f;
     private const float _maxAngularVelocityRadPerSec = 6f;
     private const double _relativeAngularVelocityScale = 8.0;
     private const float _lineHitTolerancePixels = 16;
