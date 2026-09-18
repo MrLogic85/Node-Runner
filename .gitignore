@@ -6,6 +6,7 @@
 .import/
 export.cfg
 export_credentials.cfg
+# Keep *.uid files tracked; Godot uses resource UIDs to keep references stable.
 
 # .NET / C#
 .mono/
@@ -38,3 +39,6 @@ coverage.*.xml
 
 # Editor tooling
 .npp-md-preview.html
+
+# Godot editor backups
+*.csproj.old
