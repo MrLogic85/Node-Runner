@@ -32,7 +32,8 @@ visible.
 **Goal:** Make the current hardcoded creature understandable before it becomes
 editable or trainable.
 
-- Formalize the creature vocabulary in docs and code:
+- Formalize the creature vocabulary in docs and code (see
+  `docs/CREATURE_MODEL.md`):
   - Joint = physical mass/node
   - Bone = passive structural connection
   - Muscle = active actuator controlled by a brain output
