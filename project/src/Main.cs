@@ -10,7 +10,11 @@ public partial class Main : Node2D
 {
     private readonly VisualTheme _theme = VisualTheme.Neon;
     private Creature.Creature? _creature;
+    private CreatureInspectorViewModel? _inspector;
     private Label? _seedLabel;
+    private Label? _inspectorTitle;
+    private Label? _inspectorRole;
+    private Label? _inspectorValues;
 
     public SelectionViewModel Selection { get; } = new();
 
@@ -22,6 +26,7 @@ public partial class Main : Node2D
         AddCamera();
         AddCreature();
         AddHud();
+        AddInspector();
     }
 
     private void AddBackdrop()
@@ -99,6 +104,8 @@ public partial class Main : Node2D
         }
 
         _creature = creature;
+        _inspector = new CreatureInspectorViewModel(creature.Definition, Selection);
+        _inspector.PropertyChanged += OnInspectorPropertyChanged;
     }
 
     private void AddHud()
@@ -181,6 +188,12 @@ public partial class Main : Node2D
     public override void _ExitTree()
     {
         Selection.PropertyChanged -= OnSelectionPropertyChanged;
+        if (_inspector is not null)
+        {
+            _inspector.PropertyChanged -= OnInspectorPropertyChanged;
+        }
+
+        _inspector?.Dispose();
     }
 
     private static bool TryGetPressedPointerPosition(InputEvent inputEvent, out Vector2 screenPosition)
@@ -205,6 +218,64 @@ public partial class Main : Node2D
         {
             _creature?.SetSelectedElement(Selection.SelectedElement);
         }
+    }
+
+    private void OnInspectorPropertyChanged(object? sender, PropertyChangedEventArgs eventArgs)
+    {
+        UpdateInspector();
+    }
+
+    private void AddInspector()
+    {
+        var layer = new CanvasLayer
+        {
+            Name = "Inspector",
+        };
+
+        var panel = new PanelContainer
+        {
+            AnchorsPreset = (int)Control.LayoutPreset.BottomWide,
+            AnchorTop = 0.64f,
+            AnchorRight = 1,
+            AnchorBottom = 1,
+            GrowHorizontal = Control.GrowDirection.Both,
+            GrowVertical = Control.GrowDirection.Begin,
+        };
+        panel.AddThemeStyleboxOverride("panel", CreateHudPanelStyle());
+
+        var margin = new MarginContainer();
+        margin.AddThemeConstantOverride("margin_left", 20);
+        margin.AddThemeConstantOverride("margin_top", 14);
+        margin.AddThemeConstantOverride("margin_right", 20);
+        margin.AddThemeConstantOverride("margin_bottom", 14);
+
+        var content = new VBoxContainer();
+        _inspectorTitle = new Label { AutowrapMode = TextServer.AutowrapMode.WordSmart };
+        _inspectorTitle.AddThemeColorOverride("font_color", _theme.SelectionGlow);
+        _inspectorRole = new Label { AutowrapMode = TextServer.AutowrapMode.WordSmart };
+        _inspectorRole.AddThemeColorOverride("font_color", _theme.GroundEdge);
+        _inspectorValues = new Label { AutowrapMode = TextServer.AutowrapMode.WordSmart };
+        _inspectorValues.AddThemeColorOverride("font_color", _theme.Bone);
+        content.AddChild(_inspectorTitle);
+        content.AddChild(_inspectorRole);
+        content.AddChild(_inspectorValues);
+        margin.AddChild(content);
+        panel.AddChild(margin);
+        layer.AddChild(panel);
+        AddChild(layer);
+        UpdateInspector();
+    }
+
+    private void UpdateInspector()
+    {
+        if (_inspector is null || _inspectorTitle is null || _inspectorRole is null || _inspectorValues is null)
+        {
+            return;
+        }
+
+        _inspectorTitle.Text = _inspector.Title;
+        _inspectorRole.Text = _inspector.Role;
+        _inspectorValues.Text = _inspector.Values;
     }
 
     private string SeedText()
