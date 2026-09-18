@@ -13,17 +13,17 @@ descending — something you can watch, poke, and understand.
 
 ## Status
 
-**Pre-alpha.** Currently working toward 0.1.0 — a fixed hardcoded creature
-that twitches on your phone. See `docs/ROADMAP.md`.
+**Pre-alpha.** 0.1.0 is a fixed hardcoded creature that twitches on your phone.
+Current planning starts with 0.2.0: making that creature understandable before
+it becomes editable or trainable. See `docs/ROADMAP.md`.
 
 ## What's inside
 
 - **Neuroevolution from scratch** — genetic algorithms training a feedforward
   neural network. No PyTorch, no ONNX, no ML libraries. All the math is in
   `libs/NodeRunner.ML/`, readable in an evening.
-- **Backpropagation** (from v3.0) — the other big paradigm, so you get to see
-  both.
-- **Live network visualization** (from v2.0) — nodes glow when they fire,
+- **Backpropagation** (later) — the other big paradigm, so you get to see both.
+- **Live network visualization** (from 0.5.0) — nodes glow when they fire,
   edges thicken with weight. You see the thought behind each step.
 
 ## Tech
@@ -44,7 +44,7 @@ dotnet test  NodeRunner.slnx     # runs xUnit + architecture tests
 # Open project/project.godot in Godot and hit F5
 ```
 
-Android export requires additional setup — see GitHub Issue #10.
+Android export requires additional setup — see `docs/ARCHITECTURE.md`.
 
 ## Repository layout
 

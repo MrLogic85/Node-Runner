@@ -27,48 +27,143 @@ visible.
 
 ---
 
-## v1.0 — "Den första vandringen" (The first walk) — MVP
+## 0.2.0 — "Förstå figuren" (Understand the creature)
 
-**Goal:** See evolution actually work.
+**Goal:** Make the current hardcoded creature understandable before it becomes
+editable or trainable.
 
-- 20 copies of the hardcoded creature run in parallel
-- Genetic algorithm from scratch:
-  - Fitness = distance travelled in 10 seconds
-  - Tournament selection
-  - Uniform crossover of weight vectors
-  - Gaussian mutation with tunable rate
-- Live fitness graph (best + mean per generation)
-- Time-scale button: 1× / 5× / 20×
-- Neon visuals: readable dark arena, glowing creature nodes, and a clear
-  theme-specific head marker
+- Formalize the creature vocabulary in docs and code:
+  - Joint = physical mass/node
+  - Bone = passive structural connection
+  - Muscle = active actuator controlled by a brain output
+  - Sensor = observed value exposed as a brain input
+  - Brain input/output mapping = the contract between body and network
+- Add a basic touch-first inspector:
+  - Tap a joint, bone, or muscle to select it
+  - Highlight the selected element in the neon scene
+  - Show its role and important values in a simple panel
+- Visualize the control loop at a beginner-friendly level:
+  - Which sensor values feed the brain
+  - Which brain outputs drive which muscles
+  - Which muscles are currently active
+- Keep the hardcoded worm as the default demo creature, but make sure it is
+  described by the same `CreatureDef` concepts the future editor will use.
 
-**ML concepts introduced:** Genetic algorithms, fitness functions, mutation
-rate, selection pressure, emergent behavior.
+**ML concepts introduced:** Observation → action mapping, sensors as features,
+outputs as actuators, and the idea that a neural network controls a body through
+a defined interface.
 
-**Ship criterion:** A first-time viewer says "oh cool, it learned to walk"
-within 2 minutes of opening the app.
+**Ship criterion:** A first-time viewer can tap the creature and explain what a
+joint, bone, muscle, sensor, input, and output are in the current demo.
+
+**Done checklist:**
+
+- [ ] Creature vocabulary is documented in durable docs.
+- [ ] The hardcoded worm is explainable through that vocabulary.
+- [ ] User can select joints, bones, and muscles with touch.
+- [ ] Selected creature part is visually highlighted.
+- [ ] Inspector panel shows beginner-facing role text and key values.
+- [ ] Sensor values, brain outputs, and muscle activations are visible enough
+  to explain the control loop.
+- [ ] Randomize keeps inspector/mapping UI consistent with the new brain seed.
+- [ ] A first-time viewer can explain joint, bone, muscle, sensor, input, and
+  output from the app.
+- [ ] The release gates in `docs/REVIEW.md` and Android checks in
+  `docs/MANUAL_TESTING.md` are satisfied for 0.2.0.
 
 ---
 
-## v1.5 — "Rita din varelse" (Draw your creature)
+## 0.3.0 — "Bygg figuren" (Build the creature)
 
-**Goal:** Turn the demo into an app.
+**Goal:** Let the user construct a small valid creature from the same model
+introduced in 0.2.0.
 
-- Drawing mode: tap for joints, drag for bones, double-tap a bone to make it a
-  muscle
-- Constraints: at least two ground-contact points, max ~20 joints
-- Automatic NN sizing from creature topology:
-  - Inputs = joint angles + angular velocities + ground-contact booleans
-  - Outputs = target muscle activations
-  - Hidden layer: heuristic (e.g. 2 × input count)
-- "Terrarium" screen: list of saved creatures with their best fitness
+- Construction mode:
+  - Place and move joints
+  - Connect two joints with a bone
+  - Connect two joints with a muscle
+  - Delete the selected element
+  - Return to simulation mode and instantiate the creature
+- Validate the creature before simulation:
+  - At least two joints
+  - At least one connection
+  - No missing joint references
+  - No zero-length bones or muscles
+  - Muscles connect two different joints and map to brain outputs
+- Generate brain input/output counts from the creature topology:
+  - Inputs = selected sensor set
+  - Outputs = muscles
+  - Hidden layer = simple documented heuristic
+- Keep the editor intentionally limited; this milestone proves the data model,
+  not a full authoring tool.
 
 **ML concepts introduced:** Feature engineering (what does the network *see*?),
 network-size-to-problem fit, observation → action mapping.
 
+**Ship criterion:** The user can build a simple creature on Android, run it, and
+see which muscles became neural-network outputs.
+
+**Done checklist:**
+
+- [ ] Construction workflow is documented before implementation starts.
+- [ ] User can place at least two joints with Android touch.
+- [ ] User can move joints before simulation starts.
+- [ ] User can connect joints with passive bones.
+- [ ] User can connect joints with active muscles.
+- [ ] User can delete the selected editable element.
+- [ ] Invalid creatures are blocked with understandable validation messages.
+- [ ] A valid edited creature can be converted into a `CreatureDef`.
+- [ ] Simulation can instantiate and run the edited creature.
+- [ ] Brain input count comes from the selected sensor set.
+- [ ] Brain output count equals muscle count.
+- [ ] The original hardcoded worm still works.
+- [ ] The release gates in `docs/REVIEW.md` and Android checks in
+  `docs/MANUAL_TESTING.md` are satisfied for 0.3.0.
+
 ---
 
-## v2.0 — "Visualisera hjärnan" (Visualize the brain)
+## 0.4.0 — "Den första träningen" (First training)
+
+**Goal:** Train a creature through neuroevolution after the body model and basic
+UI are understandable.
+
+- Run a small population of creatures or repeated trials of one creature
+- Genetic algorithm from scratch:
+  - Fitness = distance travelled or another visible objective
+  - Tournament selection
+  - Uniform crossover of weight vectors
+  - Gaussian mutation with tunable rate
+- Show generation, best fitness, mean fitness, and current best seed/genome
+- Add run/pause/reset and time-scale controls where they fit the 0.2 UI shell
+- Keep backprop out of this milestone; evolution is the first training paradigm
+  because it fits physics-driven locomotion without target labels.
+
+**ML concepts introduced:** Genetic algorithms, fitness functions, mutation
+rate, selection pressure, emergent behavior.
+
+**Ship criterion:** A first-time viewer says "oh cool, it improved" within a
+short demo, and can see the fitness signal that caused the improvement.
+
+**Done checklist:**
+
+- [ ] A fixed-duration trial can run and reset cleanly.
+- [ ] Fitness scoring is implemented and visible.
+- [ ] Candidate brains/genomes can be evaluated under comparable conditions.
+- [ ] Genetic algorithm advances generations using selection, crossover, and
+  mutation.
+- [ ] Best fitness and mean fitness are tracked across generations.
+- [ ] Training UI shows generation, fitness, and current/best seed or genome.
+- [ ] Run/pause/reset controls work with Android touch.
+- [ ] Time-scale control exists if it fits the 0.2 UI shell cleanly.
+- [ ] Backprop remains explicitly out of scope for this milestone.
+- [ ] A first-time viewer can see that behavior improved and identify the
+  fitness signal.
+- [ ] The release gates in `docs/REVIEW.md` and Android checks in
+  `docs/MANUAL_TESTING.md` are satisfied for 0.4.0.
+
+---
+
+## 0.5.0 — "Visualisera hjärnan" (Visualize the brain)
 
 **Goal:** Make it genuinely educational.
 
@@ -89,13 +184,14 @@ hyperparameter sensitivity, interpretability.
 
 ---
 
-## v3.0 — "Andra pelaren: Backprop" (Second pillar: backprop)
+## Later — "Andra pelaren: Backprop" (Second pillar: backprop)
 
 **Goal:** Introduce gradient-based training.
 
-- **Imitation mode:** the player controls muscles manually via touch sliders
-  for 20 seconds. Recorded (sensor → action) pairs become supervised data.
-  Backprop trains the network to imitate. Release and observe.
+- **Imitation mode:** the player demonstrates the first X steps by moving
+  joints while bone lengths and constraints stay fixed. Recorded target motion
+  or derived actuator commands become supervised data. Backprop trains the
+  network to imitate. Release and observe.
 - **Classification mini-mode:** draw creatures, label them ("hopper", "crawler",
   "swimmer"). Train a classifier. Visualize the decision boundary.
 - Live loss curve
@@ -109,7 +205,7 @@ gradient-based) and the user can articulate the difference.
 
 ---
 
-## v4+ — Advanced toppings (order not fixed)
+## Later — Advanced toppings (order not fixed)
 
 Picked from as time and interest allow:
 

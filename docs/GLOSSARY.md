@@ -20,7 +20,8 @@ Ordered alphabetically within sections.
   `[-1, 1]` from the brain each tick and applies a corresponding force/torque.
 - **Sensor** — A source of scalar input to the brain. Examples: joint angle,
   angular velocity, ground-contact boolean, raycast distance.
-- **Skeleton** — The set of joints + bones. What you draw in v1.5.
+- **Skeleton** — The set of joints + bones. What the user starts drawing in
+  0.3.0.
 
 ## ML
 
@@ -44,20 +45,21 @@ Ordered alphabetically within sections.
 - **Mutation** — GA operator that perturbs genome values with Gaussian noise at
   a per-weight probability.
 - **NEAT** — *NeuroEvolution of Augmenting Topologies*. A GA variant that
-  evolves network structure as well as weights. Roadmap v4+.
+  evolves network structure as well as weights. Reserved for a later roadmap
+  milestone.
 - **Neuroevolution** — Using evolutionary algorithms (GA) to train neural
-  networks. What v1 does.
+  networks. First planned for 0.4.0.
 - **Novelty search** — Alternative to fitness-based selection that rewards
-  behavioral diversity. Roadmap v4+.
+  behavioral diversity. Reserved for a later roadmap milestone.
 - **Optimizer** — In backprop, the rule for turning a gradient into a weight
   update. SGD, momentum, Adam.
 - **Population** — The set of creatures alive in one generation (default 20).
 - **Reinforcement Learning (RL)** — Training via reward signals from
-  environment interaction. Not used in v1; considered for v4+.
+  environment interaction. Not used in the early roadmap; considered for later.
 - **Selection** — GA operator that picks parents for the next generation. We
   use tournament selection.
 - **Supervised learning** — Learning from labeled (input, target) pairs via
-  backprop. The v3 imitation mode.
+  backprop. Planned later as an imitation mode after neuroevolution.
 - **Tournament selection** — Pick *k* random individuals, keep the fittest.
   Simple, robust, tunable via *k*.
 
@@ -82,5 +84,5 @@ Ordered alphabetically within sections.
   `docs/UI_DIRECTION.md`; implementation should remain themeable.
 - **Focus** — Tapping a creature makes it the "focused" one; its brain is
   shown in the network visualizer.
-- **Terrarium** — The user's collection screen of saved creatures (v1.5+).
+- **Terrarium** — The user's future collection screen of saved creatures.
 - **Time scale** — Simulation speed multiplier (1× / 5× / 20×).
