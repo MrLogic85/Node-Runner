@@ -89,6 +89,7 @@ Node Runner/
 ├── project/                        # Godot project (targets net9.0)
 │   ├── project.godot
 │   ├── NodeRunner.csproj           # references the three libs
+│   ├── NodeRunner.sln              # classic .sln required by Godot .NET export
 │   ├── scenes/
 │   └── src/
 │       ├── creature/               # Godot Nodes for creatures
@@ -128,6 +129,10 @@ paths/passwords stay in user-local Godot settings or ignored credential files.
 For the non-Gradle debug export, Godot 4.7.2 currently emits min SDK 24 and
 target/compile SDK 36 from its Android template. Do not override min/target SDK
 in `export_presets.cfg` unless Gradle export is enabled in a later issue.
+
+The project uses Godot's Compatibility/OpenGL renderer for 0.1.0 because the
+Mobile/Vulkan renderer crashed in Godot's Android `VkThread` on the SM-S938B
+test device. Revisit Vulkan only behind a separate compatibility issue.
 
 ## Key data types (informal)
 
