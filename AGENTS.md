@@ -66,6 +66,14 @@ Read the nearest one before editing that layer.
 - Follow `docs/REVIEW.md` when finishing the change. The code-review gate in
   the prime directives applies before every commit and push.
 
+## Machine-local setup
+
+Host-specific state (GitHub CLI accounts, SSH host aliases, per-machine
+paths) lives in `LOCAL_CONFIG.md` at the repo root. That file is git-ignored;
+each clone maintains its own. Read it before running `gh`, `git push`, or any
+command that touches an external account — the primary `gh` login on a
+machine is not necessarily the account that has write access to this repo.
+
 ## Definition of Done
 
 Authoritative Definition of Done lives in `docs/REVIEW.md`. Follow the list
