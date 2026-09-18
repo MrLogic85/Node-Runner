@@ -13,7 +13,7 @@ descending — something you can watch, poke, and understand.
 
 ## Status
 
-**Pre-alpha.** Currently working toward v0.1 — a fixed hardcoded creature
+**Pre-alpha.** Currently working toward 0.1.0 — a fixed hardcoded creature
 that twitches on your phone. See `docs/ROADMAP.md`.
 
 ## What's inside
@@ -29,8 +29,9 @@ that twitches on your phone. See `docs/ROADMAP.md`.
 ## Tech
 
 - Engine: **Godot 4.7** (.NET / C#)
-- Language: **C#** — libraries target **net8.0** (Godot's runtime), tests
-  target **net10.0** (the SDK currently installed)
+- Language: **C#** — libraries target **net8.0**, the Godot host targets
+  **net9.0** for Godot 4.7 Android templates, and tests target **net10.0**
+  (the SDK currently installed)
 - Target: **Android** (dev on macOS/Linux/Windows)
 - License: **GPLv3**
 

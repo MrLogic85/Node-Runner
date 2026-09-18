@@ -44,8 +44,9 @@ build; the *shape* below should stay stable.
 ```
 
 The three libraries in `libs/` are pure .NET 8 class libraries with **no
-`Godot.*` references**. The Godot project (`project/`) references them and
-provides the runtime host: scenes, physics, input, rendering.
+`Godot.*` references**. The Godot project (`project/`) targets .NET 9 for
+Godot 4.7 Android export templates, references the libraries, and provides the
+runtime host: scenes, physics, input, rendering.
 
 Enforcement: `tests/NodeRunner.Arch.Tests/ArchitectureSpec.cs` fails the build
 if any lib imports `Godot`, or if the layer graph below is violated.
@@ -85,7 +86,7 @@ Node Runner/
 │   ├── NodeRunner.Domain/          # data records, enums, invariants
 │   ├── NodeRunner.ML/              # neural nets, GA, backprop
 │   └── NodeRunner.App/             # viewmodels, services, repositories
-├── project/                        # Godot project (targets net8.0)
+├── project/                        # Godot project (targets net9.0)
 │   ├── project.godot
 │   ├── NodeRunner.csproj           # references the three libs
 │   ├── scenes/
@@ -107,6 +108,26 @@ Node Runner/
 Godot-side tests (Node behaviour, physics, UI) will land later in
 `project/tests/` using GdUnit4 — a separate framework with its own lifecycle,
 kept out of the pure-C# solution.
+
+## Android export
+
+`project/export_presets.cfg` defines the `Android` debug export preset for the
+0.1.0 APK:
+
+```bash
+/Applications/Godot_mono.app/Contents/MacOS/Godot \
+  --headless --path project \
+  --export-debug Android ../build/node-runner-0.1.0-debug.apk
+```
+
+Local prerequisites are Godot 4.7.2 Mono export templates, JDK 21, Android SDK
+platform/build-tools, platform-tools, and a user-local debug keystore configured
+in Godot editor settings. The committed preset contains values only; keystore
+paths/passwords stay in user-local Godot settings or ignored credential files.
+
+For the non-Gradle debug export, Godot 4.7.2 currently emits min SDK 24 and
+target/compile SDK 36 from its Android template. Do not override min/target SDK
+in `export_presets.cfg` unless Gradle export is enabled in a later issue.
 
 ## Key data types (informal)
 
@@ -152,7 +173,7 @@ Note: `Vector2D` in `NodeRunner.Domain` is our own `readonly record struct`,
 At 60 Hz (`_physics_process`), for each creature in the population:
 
 1. **Sense.** `Sensors` reads joint angles, angular velocities, ground
-   contacts → `double[]`. v0.1 starts with joint angles and angular velocities;
+   contacts → `double[]`. 0.1.0 starts with joint angles and angular velocities;
    ground-contact sensors are added when topology-derived sensors land.
 2. **Think.** `Brain.Forward(input, output, scratchA, scratchB)` writes muscle
    targets in `[-1, 1]` without per-tick allocations.
@@ -190,7 +211,7 @@ Creatures and their trained brains save as JSON via `FileCreatureRepository`:
 Round-trip: `CreatureDef` + `NeuralNetwork` → JSON → same objects. Tested.
 
 Neural-network genomes are flattened per layer transition: weights in
-row-major output-neuron order, then biases for that layer. v0.1 networks use
+row-major output-neuron order, then biases for that layer. 0.1.0 networks use
 the configured activation for hidden layers and `Tanh` for the output layer so
 muscle targets stay in `[-1, 1]`. Hot paths use the overload that accepts
 caller-owned output and scratch buffers; those buffers must be distinct arrays.

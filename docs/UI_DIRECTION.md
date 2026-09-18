@@ -2,7 +2,7 @@
 
 Node Runner's default visual direction is a neon sci-fi learning lab: dark
 arena, glowing nodes, bright signal paths, and readable console-like controls.
-This document is a lightweight compass for v0.1. It should guide decisions
+This document is a lightweight compass for 0.1.0. It should guide decisions
 without pretending we already know the final app design.
 
 ## Product feel
@@ -26,19 +26,19 @@ without pretending we already know the final app design.
 - Motion can use subtle pulses or signal traces, but should never obscure the
   physics or ML concept being taught.
 
-## v0.1 screen concept
+## 0.1.0 screen concept
 
-v0.1 has one main screen:
+0.1.0 has one main screen:
 
 - The simulation is the center of attention.
 - The creature and ground are visible without setup.
 - A tiny HUD overlays or sits beside the simulation.
-- HUD controls are limited to what the v0.1 loop needs:
+- HUD controls are limited to what the 0.1.0 loop needs:
   - **Randomize** — create a new random brain once GitHub Issue #13 lands.
   - **Seed/log text** — show enough state to reproduce behavior.
 
-Avoid turning v0.1 into a generic developer dashboard. If a control does not
-teach an ML/simulation concept or help the user run the v0.1 loop, leave it
+Avoid turning 0.1.0 into a generic developer dashboard. If a control does not
+teach an ML/simulation concept or help the user run the 0.1.0 loop, leave it
 out.
 
 ## Theme boundaries
