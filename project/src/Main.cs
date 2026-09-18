@@ -1,15 +1,29 @@
 using Godot;
 using NodeRunner.Creature;
+using NodeRunner.Theme;
 
 namespace NodeRunner;
 
 public partial class Main : Node2D
 {
+    private readonly VisualTheme _theme = VisualTheme.Neon;
+
     public override void _Ready()
     {
+        AddBackdrop();
         AddGround();
         AddCamera();
         AddCreature();
+    }
+
+    private void AddBackdrop()
+    {
+        AddChild(new ArenaBackdrop
+        {
+            Name = "ArenaBackdrop",
+            Theme = _theme,
+            ZIndex = -100,
+        });
     }
 
     private void AddGround()
@@ -27,7 +41,7 @@ public partial class Main : Node2D
 
         ground.AddChild(new Polygon2D
         {
-            Color = new Color(0.35f, 0.62f, 0.38f),
+            Color = _theme.GroundFill,
             Polygon = new[]
             {
                 new Vector2(-450, -24),
@@ -35,6 +49,17 @@ public partial class Main : Node2D
                 new Vector2(450, 24),
                 new Vector2(-450, 24),
             },
+        });
+
+        ground.AddChild(new Line2D
+        {
+            Points = new[]
+            {
+                new Vector2(-450, -24),
+                new Vector2(450, -24),
+            },
+            DefaultColor = _theme.GroundEdge,
+            Width = _theme.GroundEdgeWidth,
         });
 
         AddChild(ground);
@@ -57,6 +82,7 @@ public partial class Main : Node2D
         var creature = scene.Instantiate<Creature.Creature>();
         creature.Name = "HardcodedWorm";
         creature.Definition = HardcodedWormFactory.Create();
+        creature.Theme = _theme;
         creature.Position = new Vector2(250, 260);
         AddChild(creature);
     }

@@ -1,5 +1,6 @@
 using Godot;
 using NodeRunner.Domain;
+using NodeRunner.Theme;
 
 namespace NodeRunner.Creature;
 
@@ -8,6 +9,8 @@ public partial class Creature : Node2D
     private readonly List<Muscle> _muscles = [];
 
     public CreatureDef? Definition { get; set; }
+
+    public VisualTheme Theme { get; set; } = VisualTheme.Neon;
 
     public override void _Ready()
     {
@@ -55,6 +58,7 @@ public partial class Creature : Node2D
 
             var visual = new JointVisual
             {
+                Theme = Theme,
                 Radius = ToGodotFloat(jointDef.Radius, nameof(jointDef.Radius)),
                 IsHead = i == 0,
             };
@@ -84,7 +88,7 @@ public partial class Creature : Node2D
                 stiffness: 85,
                 damping: 12);
 
-            spring.Modulate = new Color(0.67f, 0.45f, 0.28f);
+            spring.Modulate = Theme.Bone;
         }
     }
 
@@ -101,7 +105,7 @@ public partial class Creature : Node2D
                 stiffness: ToGodotFloat(muscleDef.MaxForce / 18, nameof(muscleDef.MaxForce)),
                 damping: 6);
 
-            spring.Modulate = new Color(0.96f, 0.36f, 0.47f);
+            spring.Modulate = Theme.Muscle;
             _muscles.Add(new Muscle(muscleDef, spring));
         }
     }
@@ -131,10 +135,8 @@ public partial class Creature : Node2D
         {
             Name = $"{name}Visual",
             ZIndex = -1,
-            Width = name.StartsWith("Bone", StringComparison.Ordinal) ? 8 : 4,
-            Color = name.StartsWith("Bone", StringComparison.Ordinal)
-                ? new Color(0.67f, 0.45f, 0.28f)
-                : new Color(0.96f, 0.36f, 0.47f),
+            Width = name.StartsWith("Bone", StringComparison.Ordinal) ? Theme.BoneWidth : Theme.MuscleWidth,
+            Color = name.StartsWith("Bone", StringComparison.Ordinal) ? Theme.Bone : Theme.Muscle,
         };
         line.Connect(jointA, jointB);
         AddChild(line);
