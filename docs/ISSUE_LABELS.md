@@ -35,11 +35,21 @@ type and area separate.
 
 ## Priority labels
 
-Use one:
+Use one. Priority measures **delivery risk**, including product behavior,
+correctness, CI/review reliability, release safety, and workflow stability.
+Roadmap features do not automatically outrank process or correctness work: if
+the way we build, test, review, or merge is unsafe, fixing that is higher
+priority than adding more feature code on top.
 
-- `priority: p0` — Broken build/demo, data loss, or unusable core flow; fix now
-- `priority: p1` — Blocks the next roadmap version
-- `priority: p2` — Should be done for the next version but has workarounds
+- `priority: p0` — Fix now. Broken build/demo, data loss, unusable core flow,
+  or broken required delivery gate that prevents safe work.
+- `priority: p1` — Blocks safe progress toward the next roadmap version. Use
+  for roadmap-critical features **and** process/correctness work that protects
+  CI, review, branch protection, release, architecture boundaries, or issue
+  quality.
+- `priority: p2` — Important for the next version or for maintainability, but
+  safe work can continue with a clear workaround or without accumulating
+  serious risk.
 - `priority: p3` — Nice-to-have, polish, or backlog
 
 ## Area labels
