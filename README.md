@@ -50,7 +50,8 @@ Android export requires additional setup — see GitHub Issue #10.
 The app separates pure C# domain, ML, and application logic from the Godot
 runtime host. Tests mirror those boundaries and enforce the dependency graph.
 See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the layer diagram and
-solution layout.
+solution layout. See [`docs/UI_DIRECTION.md`](docs/UI_DIRECTION.md) for the
+current lightweight UI compass.
 
 ## Contributing
 

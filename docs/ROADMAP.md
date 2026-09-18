@@ -38,7 +38,8 @@ visible.
   - Gaussian mutation with tunable rate
 - Live fitness graph (best + mean per generation)
 - Time-scale button: 1× / 5× / 20×
-- Cartoon visuals: friendly colors, eyes on the "head"
+- Neon visuals: readable dark arena, glowing creature nodes, and a clear
+  theme-specific head marker
 
 **ML concepts introduced:** Genetic algorithms, fitness functions, mutation
 rate, selection pressure, emergent behavior.
