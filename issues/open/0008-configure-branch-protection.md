@@ -1,6 +1,6 @@
 ---
 id: 0008
-title: Configure branch protection on main
+title: Configure branch protection and auto-merge
 status: open
 priority: p2
 type: chore
@@ -12,9 +12,9 @@ updated: 2026-09-18
 
 ## Summary
 
-Turn on branch protection rules on `main` so nothing lands without a PR,
-and green CI. Human approval is not required because this is a solo project.
-Cannot be done from the CLI — GitHub web UI action required.
+Turn on branch protection rules on `main` so nothing lands without a PR and
+green CI, and enable GitHub-managed auto-merge. Human approval is not required
+because this is a solo project.
 
 ## Context
 
@@ -32,12 +32,18 @@ protection". This issue is the mechanical checklist to reach that state:
       account currently exposes) for the `main` branch
 - [ ] Enable every setting listed in `docs/REVIEW.md` § "Branch
       protection"
+- [ ] Enable **Allow auto-merge** under GitHub → Settings → General →
+      Pull Requests
+- [ ] Keep **Allow squash merging** enabled
 - [ ] Verify that the three required status checks are selectable in the
       UI — they only appear after CI has run at least once, and their
       names must match the job names in `.github/workflows/ci.yml`
       (`Build`, `Test & coverage`, `Format check`)
 - [ ] Verify in the ruleset summary that the rule targets `main`, has no
       bypass actors, and requires the three checks above
+- [ ] Open a disposable documentation PR, run
+      `gh pr merge --auto --squash`, and confirm GitHub accepts the
+      auto-merge request
 
 If `docs/REVIEW.md` and the resulting GitHub configuration diverge, the
 doc is wrong: update it in the same PR that fixes the configuration.
