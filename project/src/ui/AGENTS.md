@@ -64,7 +64,7 @@ unchanged, it belongs in `lib/`. If it embeds project vocabulary
 
 ## Test expectations
 
-- UI is manually tested. Add screenshots to the closing issue when a
-  visually-tricky change lands.
+- `docs/MANUAL_TESTING.md` decides when UI changes need manual testing and
+  what evidence to capture.
 - Pure presentation helpers (number formatters, string builders) get unit
   tests.

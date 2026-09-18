@@ -68,5 +68,6 @@ The leading `*` means the node is added to the scene tree.
 
 - Pure logic in a manager (e.g. seed derivation) is extracted into a plain
   C# helper class and tested there.
-- The manager itself is thin enough that manual testing suffices; if it isn't,
-  it's doing too much — split it.
+- `docs/MANUAL_TESTING.md` decides when a manager change needs manual
+  testing. If a manager needs heavy test setup, it's probably doing too much —
+  split it.

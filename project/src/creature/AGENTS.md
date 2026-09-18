@@ -52,6 +52,7 @@ sensors, and the brain wiring.**
 
 ## Test expectations
 
-- Manual testing on desktop for the physics feel.
+- `docs/MANUAL_TESTING.md` decides when physics changes need manual testing;
+  physics feel usually does.
 - Unit tests for pure helpers only (e.g. sensor-ordering, muscle target
   clamping) if any are extracted from the Godot classes.
