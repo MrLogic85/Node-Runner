@@ -7,19 +7,28 @@ Ordered alphabetically within sections.
 
 ## Creature anatomy
 
+Long-form descriptions and the sensor/brain/muscle contract live in
+`docs/CREATURE_MODEL.md`. The entries below are quick references.
+
 - **Bone** — Rigid connection between two joints. Does not actuate. Renders as
-  a line/rectangle.
+  a line/rectangle. See: `docs/CREATURE_MODEL.md`.
+- **Brain input** — One slot in the neural network's input vector, populated
+  one-to-one from a sensor value. See: `docs/CREATURE_MODEL.md`.
+- **Brain output** — One slot in the neural network's output vector, consumed
+  one-to-one as a muscle target. See: `docs/CREATURE_MODEL.md`.
 - **Creature** — A single agent: skeleton (joints + bones) + muscles + sensors
-  + brain.
+  + brain. See: `docs/CREATURE_MODEL.md`.
 - **CreatureDef** — Pure-data description of a creature; the "genome" of the
-  body, distinct from the brain's genome.
+  body, distinct from the brain's genome. See: `docs/CREATURE_MODEL.md`.
 - **Joint** — A point on the creature where bones/muscles attach. Has a
   position and a small radius. Rendered as a circle. Corresponds to a
-  `RigidBody2D` in Godot.
+  `RigidBody2D` in Godot. See: `docs/CREATURE_MODEL.md`.
 - **Muscle** — An actuator between two joints. Receives a target activation in
   `[-1, 1]` from the brain each tick and applies a corresponding force/torque.
+  See: `docs/CREATURE_MODEL.md`.
 - **Sensor** — A source of scalar input to the brain. Examples: joint angle,
-  angular velocity, ground-contact boolean, raycast distance.
+  angular velocity, ground-contact boolean, raycast distance. See:
+  `docs/CREATURE_MODEL.md`.
 - **Skeleton** — The set of joints + bones. What the user starts drawing in
   0.3.0.
 
