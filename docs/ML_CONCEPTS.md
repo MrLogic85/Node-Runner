@@ -14,7 +14,7 @@ For each concept:
 
 - **What:** A function `f(x) = σ(W₃ σ(W₂ σ(W₁ x + b₁) + b₂) + b₃)`. Layers of
   linear maps with a nonlinearity in between.
-- **Where:** v0.1 · `src/ml/NeuralNetwork.cs`
+- **Where:** v0.1 · `libs/NodeRunner.ML/NeuralNetwork.cs`
 - **How we show it:** The creature moves at all. Later (v2) the network is
   drawn on-screen with nodes and edges.
 
