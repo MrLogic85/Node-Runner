@@ -14,7 +14,7 @@ For each concept:
 
 - **What:** A function `f(x) = σ(W₃ σ(W₂ σ(W₁ x + b₁) + b₂) + b₃)`. Layers of
   linear maps with a nonlinearity in between.
-- **Where:** v0.1 · `libs/NodeRunner.ML/NeuralNetwork.cs`
+- **Where:** 0.1.0 · `libs/NodeRunner.ML/NeuralNetwork.cs`
 - **How we show it:** The creature moves at all. Later (v2) the network is
   drawn on-screen with nodes and edges.
 
@@ -22,8 +22,8 @@ For each concept:
 
 - **What:** The nonlinearity between layers. Without it, a deep network
   collapses to a single linear map.
-- **Where:** v0.1 hidden-layer support in `libs/NodeRunner.ML/Activation.cs`
-  (`Tanh`, `ReLU`, `Sigmoid`); v0.1 gameplay uses `Tanh`, and v2 exposes a UI
+- **Where:** 0.1.0 hidden-layer support in `libs/NodeRunner.ML/Activation.cs`
+  (`Tanh`, `ReLU`, `Sigmoid`); 0.1.0 gameplay uses `Tanh`, and v2 exposes a UI
   toggle.
 - **How we show it:** v2 slider. Same trained brain, different activation —
   watch behavior change.
@@ -64,10 +64,10 @@ For each concept:
 
 - **What:** What the network gets to *see*. Bad inputs cap performance;
   redundant inputs waste capacity.
-- **Where:** v0.1 starts with `project/src/creature/Sensors.cs` reading joint
+- **Where:** 0.1.0 starts with `project/src/creature/Sensors.cs` reading joint
   angle and angular velocity in stable order; v1.5 expands this into
   topology-derived sensors.
-- **How we show it:** v0.1 proves observation → action by making the worm
+- **How we show it:** 0.1.0 proves observation → action by making the worm
   twitch. Later, a panel lists what the network sees each tick; toggling a
   sensor off retrains from scratch — impact is visible.
 

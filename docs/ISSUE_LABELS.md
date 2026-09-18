@@ -12,7 +12,7 @@ Every open GitHub Issue must have:
 - Exactly one `priority: ...` label
 - At least one `area: ...` label
 
-Use a milestone for roadmap version (`v0.1`, `v1.0`, etc.) instead of version
+Use a milestone for roadmap version (`0.1.0`, `1.0.0`, etc.) instead of version
 labels. Leave the milestone empty for backlog work.
 
 ## Type labels
@@ -83,7 +83,7 @@ Use sparingly:
 - `maintenance` — Cleanup that prevents drift but does not change behavior
 
 Avoid labels that duplicate GitHub state (`open`, `closed`) or milestones
-(`v0.1`, `v1.0`).
+(`0.1.0`, `1.0.0`).
 
 ## Migration from file issues
 

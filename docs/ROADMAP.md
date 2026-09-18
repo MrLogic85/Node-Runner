@@ -8,7 +8,7 @@ Time estimates assume evening/weekend hobby pace and are rough.
 
 ---
 
-## v0.1 — "Ryckningar" (Twitches)
+## 0.1.0 — "Ryckningar" (Twitches)
 
 **Goal:** Prove the stack works end-to-end.
 
