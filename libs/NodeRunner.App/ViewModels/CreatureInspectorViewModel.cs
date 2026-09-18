@@ -47,33 +47,34 @@ public sealed class CreatureInspectorViewModel : INotifyPropertyChanged, IDispos
         {
             SetContent(
                 "Creature inspector",
-                "Tap a joint, bone, or muscle to inspect it.",
-                "The creature is built from joints, bones, and muscles.");
+                "Tap a node, beam, or core to inspect it.",
+                "The creature is built from nodes, beams, and cores.");
             return;
         }
 
         switch (selection.Kind)
         {
-            case CreatureElementKind.Joint:
-                var joint = _creature.Joints[selection.Index];
+            case CreatureElementKind.Node:
+                var node = _creature.Nodes[selection.Index];
                 SetContent(
-                    $"Joint {selection.Index + 1}",
-                    "A moving physical node that other parts attach to.",
-                    $"Position: ({joint.Position.X:0.#}, {joint.Position.Y:0.#})\nRadius: {joint.Radius:0.#}");
+                    $"Node {selection.Index + 1}",
+                    "A physical attachment point. Beams meet here and can rotate relative to each other.",
+                    $"Position: ({node.Position.X:0.#}, {node.Position.Y:0.#})\nRadius: {node.Radius:0.#}");
                 break;
-            case CreatureElementKind.Bone:
-                var bone = _creature.Bones[selection.Index];
+            case CreatureElementKind.Beam:
+                var beam = _creature.Beams[selection.Index];
+                var length = Distance(_creature.Nodes[beam.NodeA].Position, _creature.Nodes[beam.NodeB].Position);
                 SetContent(
-                    $"Bone {selection.Index + 1}",
-                    "A passive structural connection that helps the creature keep its shape.",
-                    $"Connects: Joint {bone.JointA + 1} to Joint {bone.JointB + 1}\nBrain output: none");
+                    $"Beam {selection.Index + 1}",
+                    "A rigid, fixed-length connection. It never stretches or compresses.",
+                    $"Connects: Node {beam.NodeA + 1} to Node {beam.NodeB + 1}\nLength: {length:0.#}");
                 break;
-            case CreatureElementKind.Muscle:
-                var muscle = _creature.Muscles[selection.Index];
+            case CreatureElementKind.Core:
+                var core = _creature.Cores[selection.Index];
                 SetContent(
-                    $"Muscle {selection.Index + 1}",
-                    "An active actuator. The brain changes it to move the body.",
-                    $"Connects: Joint {muscle.JointA + 1} to Joint {muscle.JointB + 1}\nBrain output: {selection.Index + 1}\nRest length: {muscle.RestLength:0.#}\nMax force: {muscle.MaxForce:0.#}");
+                    $"Core {selection.Index + 1}",
+                    "A sensor package. Not the brain itself — it feeds sensor readings (rays, pitch, elevation, speed) to the model.",
+                    $"Mounted on: Node {core.NodeIndex + 1}");
                 break;
         }
     }
@@ -84,5 +85,12 @@ public sealed class CreatureInspectorViewModel : INotifyPropertyChanged, IDispos
         Role = role;
         Values = values;
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null));
+    }
+
+    private static double Distance(Vector2D a, Vector2D b)
+    {
+        var dx = a.X - b.X;
+        var dy = a.Y - b.Y;
+        return Math.Sqrt((dx * dx) + (dy * dy));
     }
 }

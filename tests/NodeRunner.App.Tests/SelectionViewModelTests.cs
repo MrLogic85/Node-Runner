@@ -12,9 +12,9 @@ public sealed class SelectionViewModelTests
         var changedProperties = new List<string?>();
         viewModel.PropertyChanged += (_, eventArgs) => changedProperties.Add(eventArgs.PropertyName);
 
-        viewModel.Select(new CreatureElementSelection(CreatureElementKind.Muscle, 2));
+        viewModel.Select(new CreatureElementSelection(CreatureElementKind.Beam, 2));
 
-        viewModel.SelectedElement.ShouldBe(new CreatureElementSelection(CreatureElementKind.Muscle, 2));
+        viewModel.SelectedElement.ShouldBe(new CreatureElementSelection(CreatureElementKind.Beam, 2));
         changedProperties.ShouldBe(new[] { nameof(SelectionViewModel.SelectedElement) });
     }
 
@@ -22,7 +22,7 @@ public sealed class SelectionViewModelTests
     public void Clear_WithSelection_ClearsSelectionAndRaisesPropertyChanged()
     {
         var viewModel = new SelectionViewModel();
-        viewModel.Select(new CreatureElementSelection(CreatureElementKind.Joint, 0));
+        viewModel.Select(new CreatureElementSelection(CreatureElementKind.Node, 0));
         var changedProperties = new List<string?>();
         viewModel.PropertyChanged += (_, eventArgs) => changedProperties.Add(eventArgs.PropertyName);
 
