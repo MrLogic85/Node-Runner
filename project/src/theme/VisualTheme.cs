@@ -16,6 +16,7 @@ public sealed class VisualTheme
         GroundEdge = new Color(0.00f, 0.95f, 0.82f),
         JointFill = new Color(0.02f, 0.16f, 0.22f),
         JointGlow = new Color(0.00f, 0.92f, 1.00f),
+        SelectionGlow = new Color(1.00f, 0.90f, 0.15f, 0.72f),
         HeadMarker = new Color(1.00f, 0.15f, 0.78f),
         Bone = new Color(0.00f, 0.82f, 1.00f),
         Muscle = new Color(1.00f, 0.18f, 0.72f),
@@ -36,6 +37,8 @@ public sealed class VisualTheme
     public Color JointFill { get; private init; }
 
     public Color JointGlow { get; private init; }
+
+    public Color SelectionGlow { get; private init; }
 
     public Color HeadMarker { get; private init; }
 

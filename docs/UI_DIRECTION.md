@@ -86,6 +86,13 @@ rewriting creature/simulation layers.
   motion, battery, and low-end Android performance.
 - Critical text should stay crisp; avoid heavy bloom on labels and numbers.
 
+## 0.2.0 selection feedback
+
+Selected anatomy uses a theme-provided, warm halo with no pulse animation.
+The halo is paired with the selected part's existing shape (circle or line),
+so selection does not rely on color alone. Keep selection state outside
+visual nodes; visuals only render the selected state they receive.
+
 ## Non-goals for now
 
 - Pixel-perfect mockups.

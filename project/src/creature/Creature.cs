@@ -17,6 +17,9 @@ public partial class Creature : Node2D
     private readonly List<Connection> _bones = [];
     private readonly List<Connection> _muscleConnections = [];
     private RigidBody2D[] _joints = [];
+    private JointVisual[] _jointVisuals = [];
+    private SegmentVisual[] _boneVisuals = [];
+    private SegmentVisual[] _muscleVisuals = [];
     private Sensors? _sensors;
     private double[] _sensorValues = [];
     private double[] _muscleTargets = [];
@@ -130,6 +133,42 @@ public partial class Creature : Node2D
         return TrySelectConnection(_bones, CreatureElementKind.Bone, globalPosition, lineTolerance, out selection);
     }
 
+    public void SetSelectedElement(CreatureElementSelection? selection)
+    {
+        foreach (var visual in _jointVisuals)
+        {
+            visual.IsSelected = false;
+        }
+
+        foreach (var visual in _boneVisuals)
+        {
+            visual.IsSelected = false;
+        }
+
+        foreach (var visual in _muscleVisuals)
+        {
+            visual.IsSelected = false;
+        }
+
+        if (selection is null)
+        {
+            return;
+        }
+
+        switch (selection.Kind)
+        {
+            case CreatureElementKind.Joint when selection.Index < _jointVisuals.Length:
+                _jointVisuals[selection.Index].IsSelected = true;
+                break;
+            case CreatureElementKind.Bone when selection.Index < _boneVisuals.Length:
+                _boneVisuals[selection.Index].IsSelected = true;
+                break;
+            case CreatureElementKind.Muscle when selection.Index < _muscleVisuals.Length:
+                _muscleVisuals[selection.Index].IsSelected = true;
+                break;
+        }
+    }
+
     private static float BendDirection(int muscleIndex)
     {
         return muscleIndex % 2 == 0 ? 1 : -1;
@@ -138,6 +177,7 @@ public partial class Creature : Node2D
     private RigidBody2D[] CreateJoints(IReadOnlyList<JointDef> jointDefs)
     {
         var joints = new RigidBody2D[jointDefs.Count];
+        _jointVisuals = new JointVisual[jointDefs.Count];
 
         for (var i = 0; i < jointDefs.Count; i++)
         {
@@ -166,6 +206,7 @@ public partial class Creature : Node2D
                 IsHead = i == 0,
             };
             body.AddChild(visual);
+            _jointVisuals[i] = visual;
 
             AddChild(body);
             joints[i] = body;
@@ -179,6 +220,7 @@ public partial class Creature : Node2D
         IReadOnlyList<JointDef> jointDefs,
         IReadOnlyList<RigidBody2D> joints)
     {
+        _boneVisuals = new SegmentVisual[boneDefs.Count];
         for (var i = 0; i < boneDefs.Count; i++)
         {
             var boneDef = boneDefs[i];
@@ -189,15 +231,18 @@ public partial class Creature : Node2D
                 joints[boneDef.JointB],
                 length,
                 stiffness: 85,
-                damping: 12);
+                damping: 12,
+                out var visual);
 
             spring.Modulate = Theme.Bone;
             _bones.Add(new Connection(joints[boneDef.JointA], joints[boneDef.JointB]));
+            _boneVisuals[i] = visual;
         }
     }
 
     private void CreateMuscles(IReadOnlyList<MuscleDef> muscleDefs, IReadOnlyList<RigidBody2D> joints)
     {
+        _muscleVisuals = new SegmentVisual[muscleDefs.Count];
         for (var i = 0; i < muscleDefs.Count; i++)
         {
             var muscleDef = muscleDefs[i];
@@ -207,7 +252,8 @@ public partial class Creature : Node2D
                 joints[muscleDef.JointB],
                 ToGodotFloat(muscleDef.RestLength, nameof(muscleDef.RestLength)),
                 stiffness: ToGodotFloat(muscleDef.MaxForce / 18, nameof(muscleDef.MaxForce)),
-                damping: 6);
+                damping: 6,
+                out var visual);
 
             spring.Modulate = Theme.Muscle;
             _muscles.Add(new Muscle(
@@ -218,6 +264,7 @@ public partial class Creature : Node2D
                 BendDirection(i),
                 ToGodotFloat(muscleDef.MaxForce, nameof(muscleDef.MaxForce))));
             _muscleConnections.Add(new Connection(joints[muscleDef.JointA], joints[muscleDef.JointB]));
+            _muscleVisuals[i] = visual;
         }
     }
 
@@ -268,7 +315,8 @@ public partial class Creature : Node2D
         RigidBody2D jointB,
         float restLength,
         float stiffness,
-        float damping)
+        float damping,
+        out SegmentVisual visual)
     {
         var spring = new DampedSpringJoint2D
         {
@@ -283,15 +331,17 @@ public partial class Creature : Node2D
         spring.NodeA = spring.GetPathTo(jointA);
         spring.NodeB = spring.GetPathTo(jointB);
 
-        var line = new SegmentVisual
+        visual = new SegmentVisual
         {
             Name = $"{name}Visual",
             ZIndex = -1,
             Width = name.StartsWith("Bone", StringComparison.Ordinal) ? Theme.BoneWidth : Theme.MuscleWidth,
             Color = name.StartsWith("Bone", StringComparison.Ordinal) ? Theme.Bone : Theme.Muscle,
+            SelectionColor = Theme.SelectionGlow,
+            SelectionWidth = Theme.BoneWidth,
         };
-        line.Connect(jointA, jointB);
-        AddChild(line);
+        visual.Connect(jointA, jointB);
+        AddChild(visual);
 
         return spring;
     }

@@ -6,10 +6,30 @@ public partial class SegmentVisual : Node2D
 {
     private RigidBody2D? _jointA;
     private RigidBody2D? _jointB;
+    private bool _isSelected;
 
     public Color Color { get; set; }
 
     public float Width { get; set; }
+
+    public Color SelectionColor { get; set; }
+
+    public float SelectionWidth { get; set; }
+
+    public bool IsSelected
+    {
+        get => _isSelected;
+        set
+        {
+            if (_isSelected == value)
+            {
+                return;
+            }
+
+            _isSelected = value;
+            QueueRedraw();
+        }
+    }
 
     public void Connect(RigidBody2D jointA, RigidBody2D jointB)
     {
@@ -29,6 +49,13 @@ public partial class SegmentVisual : Node2D
             return;
         }
 
-        DrawLine(ToLocal(_jointA.GlobalPosition), ToLocal(_jointB.GlobalPosition), Color, Width, antialiased: true);
+        var start = ToLocal(_jointA.GlobalPosition);
+        var end = ToLocal(_jointB.GlobalPosition);
+        if (IsSelected)
+        {
+            DrawLine(start, end, SelectionColor, Width + SelectionWidth, antialiased: true);
+        }
+
+        DrawLine(start, end, Color, Width, antialiased: true);
     }
 }

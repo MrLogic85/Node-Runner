@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using Godot;
 using NodeRunner.App.ViewModels;
 using NodeRunner.Creature;
@@ -15,6 +16,7 @@ public partial class Main : Node2D
 
     public override void _Ready()
     {
+        Selection.PropertyChanged += OnSelectionPropertyChanged;
         AddBackdrop();
         AddGround();
         AddCamera();
@@ -176,6 +178,11 @@ public partial class Main : Node2D
         GetViewport().SetInputAsHandled();
     }
 
+    public override void _ExitTree()
+    {
+        Selection.PropertyChanged -= OnSelectionPropertyChanged;
+    }
+
     private static bool TryGetPressedPointerPosition(InputEvent inputEvent, out Vector2 screenPosition)
     {
         switch (inputEvent)
@@ -189,6 +196,14 @@ public partial class Main : Node2D
             default:
                 screenPosition = Vector2.Zero;
                 return false;
+        }
+    }
+
+    private void OnSelectionPropertyChanged(object? sender, PropertyChangedEventArgs eventArgs)
+    {
+        if (eventArgs.PropertyName == nameof(SelectionViewModel.SelectedElement))
+        {
+            _creature?.SetSelectedElement(Selection.SelectedElement);
         }
     }
 
