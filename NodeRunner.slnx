@@ -1,0 +1,16 @@
+<Solution>
+  <Folder Name="/libs/">
+    <Project Path="libs/NodeRunner.App/NodeRunner.App.csproj" />
+    <Project Path="libs/NodeRunner.Domain/NodeRunner.Domain.csproj" />
+    <Project Path="libs/NodeRunner.ML/NodeRunner.ML.csproj" />
+  </Folder>
+  <Folder Name="/project/">
+    <Project Path="project/NodeRunner.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/NodeRunner.App.Tests/NodeRunner.App.Tests.csproj" />
+    <Project Path="tests/NodeRunner.Arch.Tests/NodeRunner.Arch.Tests.csproj" />
+    <Project Path="tests/NodeRunner.Domain.Tests/NodeRunner.Domain.Tests.csproj" />
+    <Project Path="tests/NodeRunner.ML.Tests/NodeRunner.ML.Tests.csproj" />
+  </Folder>
+</Solution>

@@ -1,0 +1,85 @@
+# Glossary
+
+Domain vocabulary used across code, docs and issues. If a term appears in the
+codebase, it should appear here. When you introduce a new term, add it.
+
+Ordered alphabetically within sections.
+
+## Creature anatomy
+
+- **Bone** — Rigid connection between two joints. Does not actuate. Renders as
+  a line/rectangle.
+- **Creature** — A single agent: skeleton (joints + bones) + muscles + sensors
+  + brain.
+- **CreatureDef** — Pure-data description of a creature; the "genome" of the
+  body, distinct from the brain's genome.
+- **Joint** — A point on the creature where bones/muscles attach. Has a
+  position and a small radius. Rendered as a circle. Corresponds to a
+  `RigidBody2D` in Godot.
+- **Muscle** — An actuator between two joints. Receives a target activation in
+  `[-1, 1]` from the brain each tick and applies a corresponding force/torque.
+- **Sensor** — A source of scalar input to the brain. Examples: joint angle,
+  angular velocity, ground-contact boolean, raycast distance.
+- **Skeleton** — The set of joints + bones. What you draw in v1.5.
+
+## ML
+
+- **Activation** — The nonlinear function applied element-wise after each
+  linear layer. Options: tanh, ReLU, sigmoid.
+- **Backpropagation (backprop)** — Algorithm that computes gradients of a loss
+  with respect to network weights by applying the chain rule from output back
+  to input.
+- **Brain** — The neural network attached to a creature. A pure function
+  `sensors → muscle targets`.
+- **Crossover** — GA operator that combines two parent genomes into a child.
+  We use uniform crossover on the flat weight vector.
+- **Epoch** (supervised) — One pass through the entire training dataset.
+- **Fitness** — Scalar score for a creature after one evaluation run. Higher is
+  better. Definition is per-experiment (usually distance travelled).
+- **Genome** — Flat `double[]` of all weights + biases in a brain, in a fixed
+  canonical order. This is what the GA mutates and recombines.
+- **Generation** — One full cycle of GA: evaluate → select → recombine →
+  mutate → replace.
+- **Loss** — Scalar the supervised trainer minimizes. Lower is better.
+- **Mutation** — GA operator that perturbs genome values with Gaussian noise at
+  a per-weight probability.
+- **NEAT** — *NeuroEvolution of Augmenting Topologies*. A GA variant that
+  evolves network structure as well as weights. Roadmap v4+.
+- **Neuroevolution** — Using evolutionary algorithms (GA) to train neural
+  networks. What v1 does.
+- **Novelty search** — Alternative to fitness-based selection that rewards
+  behavioral diversity. Roadmap v4+.
+- **Optimizer** — In backprop, the rule for turning a gradient into a weight
+  update. SGD, momentum, Adam.
+- **Population** — The set of creatures alive in one generation (default 20).
+- **Reinforcement Learning (RL)** — Training via reward signals from
+  environment interaction. Not used in v1; considered for v4+.
+- **Selection** — GA operator that picks parents for the next generation. We
+  use tournament selection.
+- **Supervised learning** — Learning from labeled (input, target) pairs via
+  backprop. The v3 imitation mode.
+- **Tournament selection** — Pick *k* random individuals, keep the fittest.
+  Simple, robust, tunable via *k*.
+
+## Simulation
+
+- **Evaluator** — Component that measures fitness for each creature during a
+  run.
+- **Evolver** — Component that orchestrates generations: calls the GA, resets
+  the scene, assigns new brains.
+- **Fixed timestep** — Physics/NN updates happen at a locked 60 Hz regardless
+  of frame rate. Required for determinism.
+- **Run** — One evaluation episode for a population, typically 10 seconds
+  (600 ticks).
+- **Seed** — Integer input to the RNG. Written to logs; shown in UI.
+- **Tick** — One fixed-step update. Sensors → brain → muscles → physics step
+  → fitness accumulation.
+
+## App / UX
+
+- **Cartoon style** — Chosen visual direction: friendly colors, expressive
+  eyes, rounded shapes.
+- **Focus** — Tapping a creature makes it the "focused" one; its brain is
+  shown in the network visualizer.
+- **Terrarium** — The user's collection screen of saved creatures (v1.5+).
+- **Time scale** — Simulation speed multiplier (1× / 5× / 20×).

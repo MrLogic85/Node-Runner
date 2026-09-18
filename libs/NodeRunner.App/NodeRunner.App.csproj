@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <RootNamespace>NodeRunner.App</RootNamespace>
+    <AssemblyName>NodeRunner.App</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\NodeRunner.Domain\NodeRunner.Domain.csproj" />
+    <ProjectReference Include="..\NodeRunner.ML\NodeRunner.ML.csproj" />
+  </ItemGroup>
+</Project>

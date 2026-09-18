@@ -1,0 +1,21 @@
+<Project Sdk="Godot.NET.Sdk/4.4.0">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <EnableDynamicLoading>true</EnableDynamicLoading>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <RootNamespace>NodeRunner</RootNamespace>
+    <!-- Godot generates code we can't control; don't fail the build on its warnings -->
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <!-- Godot.NET.Sdk manages its own SourceGenerators/GodotSharp versions; opt out of CPM -->
+    <ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\libs\NodeRunner.Domain\NodeRunner.Domain.csproj" />
+    <ProjectReference Include="..\libs\NodeRunner.ML\NodeRunner.ML.csproj" />
+    <ProjectReference Include="..\libs\NodeRunner.App\NodeRunner.App.csproj" />
+  </ItemGroup>
+</Project>
+
+
