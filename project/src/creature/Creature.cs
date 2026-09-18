@@ -8,12 +8,16 @@ namespace NodeRunner.Creature;
 public partial class Creature : Node2D
 {
     private const int _hiddenNeuronCount = 8;
+    private const double _twitchFrequencyHz = 3.2;
+    private const double _brainInfluence = 0.45;
+    private const double _twitchInfluence = 0.85;
 
     private readonly List<Muscle> _muscles = [];
     private RigidBody2D[] _joints = [];
     private Sensors? _sensors;
     private double[] _sensorValues = [];
     private double[] _muscleTargets = [];
+    private double[] _twitchPhases = [];
     private double[] _scratchA = [];
     private double[] _scratchB = [];
     private bool _isBuilt;
@@ -50,7 +54,9 @@ public partial class Creature : Node2D
 
         for (var i = 0; i < _muscles.Count; i++)
         {
-            _muscles[i].ApplyTarget(_muscleTargets[i]);
+            var pulse = Math.Sin((_brainTimeSeconds * Math.Tau * _twitchFrequencyHz) + _twitchPhases[i]);
+            var target = Math.Clamp((_muscleTargets[i] * _brainInfluence) + (pulse * _twitchInfluence), -1, 1);
+            _muscles[i].ApplyTarget(target);
         }
     }
 
@@ -87,7 +93,13 @@ public partial class Creature : Node2D
 
         BrainSeed = seed;
         _brainTimeSeconds = 0;
-        Brain = new NeuralNetwork(new[] { _sensors.Count, _hiddenNeuronCount, _muscles.Count }, Activation.Tanh, new Random(seed));
+        var random = new Random(seed);
+        Brain = new NeuralNetwork(new[] { _sensors.Count, _hiddenNeuronCount, _muscles.Count }, Activation.Tanh, random);
+        for (var i = 0; i < _twitchPhases.Length; i++)
+        {
+            _twitchPhases[i] = random.NextDouble() * Math.Tau;
+        }
+
         GD.Print($"Node Runner brain seed: {seed}");
     }
 
@@ -108,8 +120,9 @@ public partial class Creature : Node2D
                 Name = $"Joint{i}",
                 Position = ToGodot(jointDef.Position),
                 Mass = 1.2f,
-                LinearDamp = 1.6f,
-                AngularDamp = 1.6f,
+                LinearDamp = 0.55f,
+                AngularDamp = 0.55f,
+                CanSleep = false,
                 ContinuousCd = RigidBody2D.CcdMode.CastRay,
             };
 
@@ -221,6 +234,7 @@ public partial class Creature : Node2D
             _sensors = null;
             _sensorValues = [];
             _muscleTargets = [];
+            _twitchPhases = [];
             _scratchA = [];
             _scratchB = [];
             return;
@@ -229,6 +243,7 @@ public partial class Creature : Node2D
         _sensors = new Sensors(_joints);
         _sensorValues = new double[_sensors.Count];
         _muscleTargets = new double[_muscles.Count];
+        _twitchPhases = new double[_muscles.Count];
 
         var scratchSize = Math.Max(_sensors.Count, Math.Max(_hiddenNeuronCount, _muscles.Count));
         _scratchA = new double[scratchSize];
