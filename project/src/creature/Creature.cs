@@ -11,8 +11,11 @@ public partial class Creature : Node2D
     private const double _twitchFrequencyHz = 3.2;
     private const double _brainInfluence = 0.45;
     private const double _twitchInfluence = 0.85;
+    private const float _lineHitTolerancePixels = 16;
 
     private readonly List<Muscle> _muscles = [];
+    private readonly List<Connection> _bones = [];
+    private readonly List<Connection> _muscleConnections = [];
     private RigidBody2D[] _joints = [];
     private Sensors? _sensors;
     private double[] _sensorValues = [];
@@ -64,12 +67,15 @@ public partial class Creature : Node2D
     {
         ArgumentNullException.ThrowIfNull(definition);
 
+        Definition = definition;
         foreach (var child in GetChildren())
         {
             child.QueueFree();
         }
 
         _muscles.Clear();
+        _bones.Clear();
+        _muscleConnections.Clear();
         _isBuilt = true;
 
         _joints = CreateJoints(definition.Joints);
@@ -101,6 +107,27 @@ public partial class Creature : Node2D
         }
 
         GD.Print($"Node Runner brain seed: {seed}");
+    }
+
+    public bool TrySelectPart(Vector2 globalPosition, out CreatureElementSelection? selection)
+    {
+        for (var i = 0; i < _joints.Length; i++)
+        {
+            var radius = ToGodotFloat(Definition!.Joints[i].Radius, nameof(JointDef.Radius));
+            if (_joints[i].GlobalPosition.DistanceSquaredTo(globalPosition) <= radius * radius)
+            {
+                selection = new CreatureElementSelection(CreatureElementKind.Joint, i);
+                return true;
+            }
+        }
+
+        var lineTolerance = GetLineHitTolerance();
+        if (TrySelectConnection(_muscleConnections, CreatureElementKind.Muscle, globalPosition, lineTolerance, out selection))
+        {
+            return true;
+        }
+
+        return TrySelectConnection(_bones, CreatureElementKind.Bone, globalPosition, lineTolerance, out selection);
     }
 
     private static float BendDirection(int muscleIndex)
@@ -165,6 +192,7 @@ public partial class Creature : Node2D
                 damping: 12);
 
             spring.Modulate = Theme.Bone;
+            _bones.Add(new Connection(joints[boneDef.JointA], joints[boneDef.JointB]));
         }
     }
 
@@ -189,7 +217,49 @@ public partial class Creature : Node2D
                 joints[muscleDef.JointB],
                 BendDirection(i),
                 ToGodotFloat(muscleDef.MaxForce, nameof(muscleDef.MaxForce))));
+            _muscleConnections.Add(new Connection(joints[muscleDef.JointA], joints[muscleDef.JointB]));
         }
+    }
+
+    private float GetLineHitTolerance()
+    {
+        var canvasTransform = GetViewport().GetCanvasTransform();
+        var pixelsPerWorldUnit = Math.Max(canvasTransform.X.Length(), canvasTransform.Y.Length());
+        return pixelsPerWorldUnit > 0 ? _lineHitTolerancePixels / pixelsPerWorldUnit : _lineHitTolerancePixels;
+    }
+
+    private static bool TrySelectConnection(
+        IReadOnlyList<Connection> connections,
+        CreatureElementKind kind,
+        Vector2 point,
+        float tolerance,
+        out CreatureElementSelection? selection)
+    {
+        for (var i = 0; i < connections.Count; i++)
+        {
+            var connection = connections[i];
+            if (DistanceSquaredToSegment(point, connection.JointA.GlobalPosition, connection.JointB.GlobalPosition) <= tolerance * tolerance)
+            {
+                selection = new CreatureElementSelection(kind, i);
+                return true;
+            }
+        }
+
+        selection = null;
+        return false;
+    }
+
+    private static float DistanceSquaredToSegment(Vector2 point, Vector2 start, Vector2 end)
+    {
+        var segment = end - start;
+        var segmentLengthSquared = segment.LengthSquared();
+        if (segmentLengthSquared <= float.Epsilon)
+        {
+            return point.DistanceSquaredTo(start);
+        }
+
+        var projection = Mathf.Clamp((point - start).Dot(segment) / segmentLengthSquared, 0, 1);
+        return point.DistanceSquaredTo(start + (segment * projection));
     }
 
     private DampedSpringJoint2D CreateSpring(
@@ -277,4 +347,6 @@ public partial class Creature : Node2D
 
         return converted;
     }
+
+    private sealed record Connection(RigidBody2D JointA, RigidBody2D JointB);
 }
