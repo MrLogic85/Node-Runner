@@ -36,7 +36,7 @@ id: 0007
 title: Creature falls through floor at high time scale
 status: open            # open | in-progress | blocked | closed | wontfix
 priority: p2            # p0 (drop everything) | p1 | p2 | p3
-type: bug               # bug | feature | chore | question | spike
+type: bug               # bug | feature | chore | refactor | docs | test | question | spike
 labels: [physics, v1.0]
 version: v1.0           # target roadmap version, or "backlog"
 created: 2026-09-16
@@ -89,19 +89,19 @@ Never delete an issue file. Historical record matters.
 
 - **bug** — Something is wrong.
 - **feature** — New user-visible capability.
-- **chore** — Infrastructure, refactor, docs, tooling.
+- **chore** — Infrastructure, dependencies, repository setup, or tooling.
+- **refactor** — Internal restructuring without behavior change.
+- **docs** — Documentation-only change.
+- **test** — Test-only change.
 - **question** — Open design decision needing discussion.
 - **spike** — Time-boxed investigation to reduce uncertainty. Output is
   usually another issue.
 
 ## Labels
 
-Free-form, but keep them short and reused. Suggested starter set:
-
-- Areas: `ml`, `ga`, `backprop`, `creature`, `sim`, `ui`, `android`, `physics`,
-  `visualization`, `docs`, `build`
-- Versions: `v0.1`, `v1.0`, `v1.5`, `v2.0`, `v3.0`, `backlog`
-- Meta: `good-first`, `research`, `pedagogical`
+GitHub label taxonomy lives in `docs/ISSUE_LABELS.md`. While the file-based
+tracker still exists, keep front-matter close to that schema so migration is
+mechanical.
 
 ## Searching
 
