@@ -18,6 +18,9 @@ Long-form descriptions and the sensor/brain/muscle contract live in
   one-to-one as a muscle target. See: `docs/CREATURE_MODEL.md`.
 - **Creature** — A single agent: skeleton (joints + bones) + muscles + sensors
   + brain. See: `docs/CREATURE_MODEL.md`.
+- **Creature element selection** — A selected joint, bone, or muscle,
+  represented as a `CreatureElementKind` plus its zero-based index in the
+  corresponding `CreatureDef` list.
 - **CreatureDef** — Pure-data description of a creature; the "genome" of the
   body, distinct from the brain's genome. See: `docs/CREATURE_MODEL.md`.
 - **Joint** — A point on the creature where bones/muscles attach. Has a

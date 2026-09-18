@@ -1,4 +1,5 @@
 using Godot;
+using NodeRunner.App.ViewModels;
 using NodeRunner.Creature;
 using NodeRunner.Theme;
 
@@ -9,6 +10,8 @@ public partial class Main : Node2D
     private readonly VisualTheme _theme = VisualTheme.Neon;
     private Creature.Creature? _creature;
     private Label? _seedLabel;
+
+    public SelectionViewModel Selection { get; } = new();
 
     public override void _Ready()
     {
@@ -150,6 +153,42 @@ public partial class Main : Node2D
         if (_seedLabel is not null)
         {
             _seedLabel.Text = SeedText();
+        }
+    }
+
+    public override void _UnhandledInput(InputEvent inputEvent)
+    {
+        if (!TryGetPressedPointerPosition(inputEvent, out var screenPosition))
+        {
+            return;
+        }
+
+        var worldPosition = GetGlobalTransformWithCanvas().AffineInverse() * screenPosition;
+        if (_creature is not null && _creature.TrySelectPart(worldPosition, out var selection) && selection is not null)
+        {
+            Selection.Select(selection);
+        }
+        else
+        {
+            Selection.Clear();
+        }
+
+        GetViewport().SetInputAsHandled();
+    }
+
+    private static bool TryGetPressedPointerPosition(InputEvent inputEvent, out Vector2 screenPosition)
+    {
+        switch (inputEvent)
+        {
+            case InputEventScreenTouch { Pressed: true } touch:
+                screenPosition = touch.Position;
+                return true;
+            case InputEventMouseButton { Pressed: true, ButtonIndex: MouseButton.Left } mouseButton:
+                screenPosition = mouseButton.Position;
+                return true;
+            default:
+                screenPosition = Vector2.Zero;
+                return false;
         }
     }
 
