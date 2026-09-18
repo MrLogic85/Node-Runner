@@ -71,7 +71,10 @@ Investigation notes, design sketches, open questions. Append as you learn.
    *what* you're blocked on in Notes.
 4. **Close.** Move the file to `issues/closed/`. Change `status: closed` (or
    `wontfix`). Add a `## Resolution` section at the bottom describing what was
-   done and referencing the commit(s).
+   done and referencing the commit(s) or PR.
+
+The issue move happens as part of the PR that resolves it — same commit,
+so history stays coherent. See `docs/REVIEW.md`.
 
 Never delete an issue file. Historical record matters.
 

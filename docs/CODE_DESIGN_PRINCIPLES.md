@@ -21,6 +21,8 @@ Anything under `libs/NodeRunner.ML/` must satisfy:
 - No references to `Node`, `Vector2`, `Resource`, etc.
 - Public API takes and returns primitive types or plain C# records: `double`,
   `double[]`, `int`, small structs
+- Use `double`, not `float`, throughout the ML engine so training math is
+  consistent and reproducible
 - Fully unit-testable outside Godot with plain xUnit
 
 Enforcement: `NodeRunner.Arch.Tests` fails the build if any `Godot.*` type
@@ -111,8 +113,8 @@ See `docs/TEST_STRATEGY.md` for the full tooling table and per-layer detail.
   the issue file (`(#0007)`).
 - Do **not** commit generated files: `.godot/`, `.mono/`, `bin/`, `obj/`,
   `*.import` for imported assets is fine but check on a case-by-case basis.
-- **Never** `git commit` or `git push` from an agent without explicit human
-  instruction.
+- Full commit/push workflow (code-review gate, DoD, PR process) lives in
+  root `AGENTS.md` § "Prime directives" and `docs/REVIEW.md`.
 
 ## 11. Dependencies are a debt
 

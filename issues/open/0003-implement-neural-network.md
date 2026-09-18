@@ -37,14 +37,12 @@ See `docs/ARCHITECTURE.md` for the intended API sketch and
       `FromGenome(int[] layers, double[] genome, Activation act) : NeuralNetwork`
       round-trip losslessly
 - [ ] `Activation` enum: `Tanh`, `ReLU`, `Sigmoid`
-- [ ] Zero `using Godot;` (enforced by `NodeRunner.Arch.Tests`)
+- [ ] Architecture tests continue to pass
 - [ ] Unit tests in `tests/NodeRunner.ML.Tests/NeuralNetworkTests.cs` cover:
       output shape, determinism with same seed, genome round-trip, clone
       independence, activation functions on hand-worked values
 
 ## Notes
 
-- Storage: `double[][] weights` where `weights[layer]` is a flat row-major
-  matrix of size `outSize * inSize`. Simple and cache-friendly enough for
-  v0.1.
-- Use `double`, not `float`. See design principles.
+- `docs/ARCHITECTURE.md` owns the API and storage shape.
+- `docs/CODE_DESIGN_PRINCIPLES.md` owns numeric and implementation rules.

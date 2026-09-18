@@ -1,16 +1,18 @@
 ---
 id: 0007
 title: Set up GitHub repository and initial push
-status: in-progress
+status: closed
 priority: p2
 type: chore
 labels: [build, chore, docs]
 version: v0.1
 created: 2026-09-16
 updated: 2026-09-18
+closed: 2026-09-18
+resolution: completed
 ---
 
-## Summary
+## Original summary
 
 Initialize the project as a git repository, create a GitHub repository for it,
 and push the current scaffolding as the first commit(s). Decide and document
@@ -102,3 +104,33 @@ Out of scope for this issue:
 - Release automation / tagging — separate issue when we get near v0.1 ship
 - Issue tracker migration to GitHub Issues — we're staying file-based per
   `issues/README.md`
+
+## Resolution
+
+Repository live at https://github.com/MrLogic85/Node-Runner (public, GPLv3).
+
+**What went in:**
+
+- Local `git init -b main` in `~/Documents/Godot/Node Runner`
+- Per-repo `user.name` / `user.email` (personal account, keeps global job
+  identity untouched)
+- New SSH key `~/.ssh/id_ed25519_personal`, added to the personal GitHub
+  account
+- SSH multi-account setup via `~/.ssh/config`: `Host github.com-personal`
+  alias uses the personal key with `IdentitiesOnly yes`, so job repos and
+  personal repos never cross wires
+- Remote configured against the alias:
+  `git@github.com-personal:MrLogic85/Node-Runner.git`
+- Two commits:
+  - `chore: initial project scaffolding` — the full 52-file scaffold
+  - merge of GitHub's `Initial commit` (LICENSE auto-merged; stub README
+    replaced with ours)
+- Pushed to `origin/main`, tracking configured
+- CI workflow (`.github/workflows/ci.yml`) triggered on first push
+
+**Left as follow-ups (not this issue's concern):**
+
+- Branch protection on `main` — deferred; solo trunk-based for now, tighten
+  when there are collaborators
+- Verify GitHub Actions run succeeds on ubuntu-latest with the .NET 8+10 SDK
+  combo — will observe on next push

@@ -48,51 +48,10 @@ Android export requires additional setup — see issue `#0002` in
 
 ## Repository layout
 
-```
-Node Runner/
-├── AGENTS.md                     Guidance for AI agents & humans
-├── LICENSE                       GPLv3
-├── NodeRunner.slnx               The C# solution
-├── Directory.Build.props         Shared MSBuild props
-├── Directory.Packages.props      Central package versions
-├── .editorconfig                 Style rules
-├── docs/
-│   ├── ROADMAP.md                Versioned feature plan
-│   ├── ARCHITECTURE.md           Layered architecture, module boundaries
-│   ├── CODE_DESIGN_PRINCIPLES.md Coding standards, do's and don'ts
-│   ├── TEST_STRATEGY.md          How each layer is tested
-│   ├── ML_CONCEPTS.md            Which ML ideas each version teaches
-│   └── GLOSSARY.md               Domain vocabulary
-├── issues/
-│   ├── README.md                 File-based issue tracker conventions
-│   ├── open/                     Active issues
-│   └── closed/                   Historical, never deleted
-├── libs/                         Pure C# — no Godot
-│   ├── NodeRunner.Domain/        Records, enums, invariants
-│   ├── NodeRunner.ML/            Neural network + GA + backprop
-│   └── NodeRunner.App/           View-models, services, repositories
-├── project/                      Godot project root
-│   ├── project.godot
-│   ├── NodeRunner.csproj         References the three libs
-│   ├── scenes/
-│   └── src/
-│       ├── creature/             Godot Nodes for creatures
-│       ├── sim/                  Simulation orchestration
-│       ├── managers/             Autoloads / composition root
-│       └── ui/
-│           ├── lib/              Reusable Controls
-│           ├── screens/          Full-screen scenes
-│           └── widgets/          App-specific composite widgets
-└── tests/                        xUnit — pure C# only
-    ├── NodeRunner.Domain.Tests/
-    ├── NodeRunner.ML.Tests/
-    ├── NodeRunner.App.Tests/
-    └── NodeRunner.Arch.Tests/    NetArchTest layer rules
-```
-
-Every folder in `libs/` and `project/src/` has its own `AGENTS.md`
-describing its rules and boundaries. Start there if you're editing that
-layer.
+The app separates pure C# domain, ML, and application logic from the Godot
+runtime host. Tests mirror those boundaries and enforce the dependency graph.
+See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the layer diagram and
+solution layout.
 
 ## Contributing
 
