@@ -38,6 +38,6 @@ Complete this before enabling the required `Format check` in issue #0008.
 
 ## Resolution
 
-Commit `d7f6857` renamed the three private static assembly fields to match the
+Commit `246d1ac` renamed the three private static assembly fields to match the
 configured `_camelCase` convention. The CI-equivalent format command, solution
 build, and all five architecture tests pass locally.
