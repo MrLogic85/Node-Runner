@@ -17,6 +17,7 @@ public partial class Creature : Node2D
     private double[] _scratchA = [];
     private double[] _scratchB = [];
     private bool _isBuilt;
+    private double _brainTimeSeconds;
 
     public CreatureDef? Definition { get; set; }
 
@@ -43,7 +44,8 @@ public partial class Creature : Node2D
             return;
         }
 
-        _sensors.Read(_sensorValues);
+        _brainTimeSeconds += delta;
+        _sensors.Read(_sensorValues, _brainTimeSeconds);
         Brain.Forward(_sensorValues, _muscleTargets, _scratchA, _scratchB);
 
         for (var i = 0; i < _muscles.Count; i++)
@@ -84,8 +86,14 @@ public partial class Creature : Node2D
         }
 
         BrainSeed = seed;
+        _brainTimeSeconds = 0;
         Brain = new NeuralNetwork(new[] { _sensors.Count, _hiddenNeuronCount, _muscles.Count }, Activation.Tanh, new Random(seed));
         GD.Print($"Node Runner brain seed: {seed}");
+    }
+
+    private static float BendDirection(int muscleIndex)
+    {
+        return muscleIndex % 2 == 0 ? 1 : -1;
     }
 
     private RigidBody2D[] CreateJoints(IReadOnlyList<JointDef> jointDefs)
@@ -161,7 +169,13 @@ public partial class Creature : Node2D
                 damping: 6);
 
             spring.Modulate = Theme.Muscle;
-            _muscles.Add(new Muscle(muscleDef, spring));
+            _muscles.Add(new Muscle(
+                muscleDef,
+                spring,
+                joints[muscleDef.JointA],
+                joints[muscleDef.JointB],
+                BendDirection(i),
+                ToGodotFloat(muscleDef.MaxForce, nameof(muscleDef.MaxForce))));
         }
     }
 

@@ -64,9 +64,9 @@ For each concept:
 
 - **What:** What the network gets to *see*. Bad inputs cap performance;
   redundant inputs waste capacity.
-- **Where:** 0.1.0 starts with `project/src/creature/Sensors.cs` reading joint
-  angle and angular velocity in stable order; v1.5 expands this into
-  topology-derived sensors.
+- **Where:** 0.1.0 starts with `project/src/creature/Sensors.cs` reading a
+  sin/cos oscillator clock, then joint angle and angular velocity in stable
+  order; v1.5 expands this into topology-derived sensors.
 - **How we show it:** 0.1.0 proves observation → action by making the worm
   twitch. Later, a panel lists what the network sees each tick; toggling a
   sensor off retrains from scratch — impact is visible.
