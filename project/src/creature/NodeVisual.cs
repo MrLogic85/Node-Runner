@@ -3,7 +3,11 @@ using NodeRunner.Theme;
 
 namespace NodeRunner.Creature;
 
-public partial class JointVisual : Node2D
+/// <summary>
+/// Draws the shared attachment point between beams. Lives as a child of
+/// whichever beam "anchors" the node, so it moves with physics for free.
+/// </summary>
+public partial class NodeVisual : Node2D
 {
     private bool _isSelected;
 
@@ -11,7 +15,7 @@ public partial class JointVisual : Node2D
 
     public float Radius { get; set; }
 
-    public bool IsHead { get; set; }
+    public bool HasCore { get; set; }
 
     public bool IsSelected
     {
@@ -35,14 +39,14 @@ public partial class JointVisual : Node2D
             DrawCircle(Vector2.Zero, Radius * 1.65f, Theme.SelectionGlow);
         }
 
-        DrawCircle(Vector2.Zero, Radius * 1.18f, Theme.JointGlow);
-        DrawCircle(Vector2.Zero, Radius, Theme.JointFill);
+        DrawCircle(Vector2.Zero, Radius * 1.18f, Theme.NodeGlow);
+        DrawCircle(Vector2.Zero, Radius, Theme.NodeFill);
 
-        if (!IsHead)
+        if (!HasCore)
         {
             return;
         }
 
-        DrawCircle(Vector2.Zero, Radius * 0.42f, Theme.HeadMarker);
+        DrawCircle(Vector2.Zero, Radius * 0.42f, Theme.CoreMarker);
     }
 }

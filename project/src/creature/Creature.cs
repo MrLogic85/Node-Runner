@@ -8,26 +8,25 @@ namespace NodeRunner.Creature;
 public partial class Creature : Node2D
 {
     private const int _hiddenNeuronCount = 8;
-    private const double _twitchFrequencyHz = 3.2;
-    private const double _brainInfluence = 0.45;
-    private const double _twitchInfluence = 0.85;
+    private const float _beamThickness = 12f;
+    private const float _rayLength = 220f;
+    private const float _maxMotorTorque = 4000f;
+    private const float _maxAngularVelocityRadPerSec = 6f;
+    private const double _relativeAngularVelocityScale = 8.0;
     private const float _lineHitTolerancePixels = 16;
 
-    private readonly List<Muscle> _muscles = [];
-    private readonly List<Connection> _bones = [];
-    private readonly List<Connection> _muscleConnections = [];
-    private RigidBody2D[] _joints = [];
-    private JointVisual[] _jointVisuals = [];
-    private SegmentVisual[] _boneVisuals = [];
-    private SegmentVisual[] _muscleVisuals = [];
-    private Sensors? _sensors;
+    private RigidBody2D[] _beamBodies = [];
+    private float[] _beamHalfLengths = [];
+    private NodeVisual[] _nodeVisuals = [];
+    private BeamVisual[] _beamVisuals = [];
+    private CoreSensors[] _coreSensors = [];
+    private int[] _coreIndexByNode = [];
+    private MotorRelation[] _motorRelations = [];
     private double[] _sensorValues = [];
-    private double[] _muscleTargets = [];
-    private double[] _twitchPhases = [];
+    private double[] _motorTargets = [];
     private double[] _scratchA = [];
     private double[] _scratchB = [];
     private bool _isBuilt;
-    private double _brainTimeSeconds;
 
     public CreatureDef? Definition { get; set; }
 
@@ -43,26 +42,23 @@ public partial class Creature : Node2D
     {
         if (!_isBuilt)
         {
-            BuildFrom(Definition ?? HardcodedWormFactory.Create());
+            BuildFrom(Definition ?? HardcodedCreatureFactory.Create());
         }
     }
 
     public override void _PhysicsProcess(double delta)
     {
-        if (_sensors is null || Brain is null || _muscles.Count == 0)
+        if (Brain is null || _motorRelations.Length == 0)
         {
             return;
         }
 
-        _brainTimeSeconds += delta;
-        _sensors.Read(_sensorValues, _brainTimeSeconds);
-        Brain.Forward(_sensorValues, _muscleTargets, _scratchA, _scratchB);
+        ReadSensors(_sensorValues);
+        Brain.Forward(_sensorValues, _motorTargets, _scratchA, _scratchB);
 
-        for (var i = 0; i < _muscles.Count; i++)
+        for (var i = 0; i < _motorRelations.Length; i++)
         {
-            var pulse = Math.Sin((_brainTimeSeconds * Math.Tau * _twitchFrequencyHz) + _twitchPhases[i]);
-            var target = Math.Clamp((_muscleTargets[i] * _brainInfluence) + (pulse * _twitchInfluence), -1, 1);
-            _muscles[i].ApplyTarget(target);
+            _motorRelations[i].Drive(_motorTargets[i]);
         }
     }
 
@@ -76,16 +72,18 @@ public partial class Creature : Node2D
             child.QueueFree();
         }
 
-        _muscles.Clear();
-        _bones.Clear();
-        _muscleConnections.Clear();
         _isBuilt = true;
 
-        _joints = CreateJoints(definition.Joints);
-        CreateBoneSprings(definition.Bones, definition.Joints, _joints);
-        CreateMuscles(definition.Muscles, _joints);
+        var anchorBeamPerNode = new int[definition.Nodes.Count];
+        var anchorOffsetPerNode = new Vector2[definition.Nodes.Count];
+        CreateBeams(definition, anchorBeamPerNode, anchorOffsetPerNode);
+        DisableSelfCollisions();
+        CreateNodeVisuals(definition, anchorBeamPerNode, anchorOffsetPerNode);
+        CreateCores(definition, anchorBeamPerNode, anchorOffsetPerNode);
+        CreateNodeConnections(definition);
         ConfigureBrainBuffers();
-        if (_muscles.Count > 0)
+
+        if (_motorRelations.Length > 0)
         {
             RandomizeBrain(CreateSeed());
         }
@@ -93,7 +91,7 @@ public partial class Creature : Node2D
 
     public void RandomizeBrain(int seed)
     {
-        if (_sensors is null || _muscles.Count == 0)
+        if (_motorRelations.Length == 0)
         {
             Brain = null;
             BrainSeed = seed;
@@ -101,51 +99,52 @@ public partial class Creature : Node2D
         }
 
         BrainSeed = seed;
-        _brainTimeSeconds = 0;
         var random = new Random(seed);
-        Brain = new NeuralNetwork(new[] { _sensors.Count, _hiddenNeuronCount, _muscles.Count }, Activation.Tanh, random);
-        for (var i = 0; i < _twitchPhases.Length; i++)
-        {
-            _twitchPhases[i] = random.NextDouble() * Math.Tau;
-        }
+        Brain = new NeuralNetwork(new[] { _sensorValues.Length, _hiddenNeuronCount, _motorRelations.Length }, Activation.Tanh, random);
 
         GD.Print($"Node Runner brain seed: {seed}");
     }
 
     public bool TrySelectPart(Vector2 globalPosition, out CreatureElementSelection? selection)
     {
-        for (var i = 0; i < _joints.Length; i++)
+        for (var nodeIndex = 0; nodeIndex < _nodeVisuals.Length; nodeIndex++)
         {
-            var radius = ToGodotFloat(Definition!.Joints[i].Radius, nameof(JointDef.Radius));
-            if (_joints[i].GlobalPosition.DistanceSquaredTo(globalPosition) <= radius * radius)
+            var radius = ToGodotFloat(Definition!.Nodes[nodeIndex].Radius, nameof(NodeDef.Radius));
+            if (_nodeVisuals[nodeIndex].GlobalPosition.DistanceSquaredTo(globalPosition) <= radius * radius)
             {
-                selection = new CreatureElementSelection(CreatureElementKind.Joint, i);
+                selection = _coreIndexByNode[nodeIndex] >= 0
+                    ? new CreatureElementSelection(CreatureElementKind.Core, _coreIndexByNode[nodeIndex])
+                    : new CreatureElementSelection(CreatureElementKind.Node, nodeIndex);
                 return true;
             }
         }
 
-        var lineTolerance = GetLineHitTolerance();
-        if (TrySelectConnection(_muscleConnections, CreatureElementKind.Muscle, globalPosition, lineTolerance, out selection))
+        var tolerance = GetLineHitTolerance();
+        for (var beamIndex = 0; beamIndex < _beamBodies.Length; beamIndex++)
         {
-            return true;
+            var body = _beamBodies[beamIndex];
+            var halfLength = _beamHalfLengths[beamIndex];
+            var start = body.ToGlobal(new Vector2(-halfLength, 0));
+            var end = body.ToGlobal(new Vector2(halfLength, 0));
+            if (DistanceSquaredToSegment(globalPosition, start, end) <= tolerance * tolerance)
+            {
+                selection = new CreatureElementSelection(CreatureElementKind.Beam, beamIndex);
+                return true;
+            }
         }
 
-        return TrySelectConnection(_bones, CreatureElementKind.Bone, globalPosition, lineTolerance, out selection);
+        selection = null;
+        return false;
     }
 
     public void SetSelectedElement(CreatureElementSelection? selection)
     {
-        foreach (var visual in _jointVisuals)
+        foreach (var visual in _nodeVisuals)
         {
             visual.IsSelected = false;
         }
 
-        foreach (var visual in _boneVisuals)
-        {
-            visual.IsSelected = false;
-        }
-
-        foreach (var visual in _muscleVisuals)
+        foreach (var visual in _beamVisuals)
         {
             visual.IsSelected = false;
         }
@@ -157,35 +156,42 @@ public partial class Creature : Node2D
 
         switch (selection.Kind)
         {
-            case CreatureElementKind.Joint when selection.Index < _jointVisuals.Length:
-                _jointVisuals[selection.Index].IsSelected = true;
+            case CreatureElementKind.Node when selection.Index < _nodeVisuals.Length:
+                _nodeVisuals[selection.Index].IsSelected = true;
                 break;
-            case CreatureElementKind.Bone when selection.Index < _boneVisuals.Length:
-                _boneVisuals[selection.Index].IsSelected = true;
+            case CreatureElementKind.Beam when selection.Index < _beamVisuals.Length:
+                _beamVisuals[selection.Index].IsSelected = true;
                 break;
-            case CreatureElementKind.Muscle when selection.Index < _muscleVisuals.Length:
-                _muscleVisuals[selection.Index].IsSelected = true;
+            case CreatureElementKind.Core when selection.Index < Definition!.Cores.Count:
+                _nodeVisuals[Definition.Cores[selection.Index].NodeIndex].IsSelected = true;
                 break;
         }
     }
 
-    private static float BendDirection(int muscleIndex)
+    private void CreateBeams(CreatureDef definition, int[] anchorBeamPerNode, Vector2[] anchorOffsetPerNode)
     {
-        return muscleIndex % 2 == 0 ? 1 : -1;
-    }
+        var beamDefs = definition.Beams;
+        _beamBodies = new RigidBody2D[beamDefs.Count];
+        _beamHalfLengths = new float[beamDefs.Count];
+        _beamVisuals = new BeamVisual[beamDefs.Count];
 
-    private RigidBody2D[] CreateJoints(IReadOnlyList<JointDef> jointDefs)
-    {
-        var joints = new RigidBody2D[jointDefs.Count];
-        _jointVisuals = new JointVisual[jointDefs.Count];
+        Array.Fill(anchorBeamPerNode, -1);
 
-        for (var i = 0; i < jointDefs.Count; i++)
+        for (var i = 0; i < beamDefs.Count; i++)
         {
-            var jointDef = jointDefs[i];
+            var beamDef = beamDefs[i];
+            var nodeAPos = ToGodot(definition.Nodes[beamDef.NodeA].Position);
+            var nodeBPos = ToGodot(definition.Nodes[beamDef.NodeB].Position);
+            var midpoint = (nodeAPos + nodeBPos) / 2;
+            var direction = nodeBPos - nodeAPos;
+            var halfLength = direction.Length() / 2;
+            var rotation = direction.Angle();
+
             var body = new RigidBody2D
             {
-                Name = $"Joint{i}",
-                Position = ToGodot(jointDef.Position),
+                Name = $"Beam{i}",
+                Position = midpoint,
+                Rotation = rotation,
                 Mass = 1.2f,
                 LinearDamp = 0.55f,
                 AngularDamp = 0.55f,
@@ -193,78 +199,177 @@ public partial class Creature : Node2D
                 ContinuousCd = RigidBody2D.CcdMode.CastRay,
             };
 
-            var collision = new CollisionShape2D
+            body.AddChild(new CollisionShape2D
             {
-                Shape = new CircleShape2D { Radius = ToGodotFloat(jointDef.Radius, nameof(jointDef.Radius)) },
-            };
-            body.AddChild(collision);
+                Shape = new RectangleShape2D { Size = new Vector2(halfLength * 2, _beamThickness) },
+            });
 
-            var visual = new JointVisual
+            var visual = new BeamVisual
             {
-                Theme = Theme,
-                Radius = ToGodotFloat(jointDef.Radius, nameof(jointDef.Radius)),
-                IsHead = i == 0,
+                Name = $"Beam{i}Visual",
+                ZIndex = -1,
+                HalfLength = halfLength,
+                Width = Theme.BeamWidth,
+                Color = Theme.Beam,
+                SelectionColor = Theme.SelectionGlow,
+                SelectionWidth = Theme.BeamWidth,
             };
             body.AddChild(visual);
-            _jointVisuals[i] = visual;
+            _beamVisuals[i] = visual;
 
             AddChild(body);
-            joints[i] = body;
-        }
+            _beamBodies[i] = body;
+            _beamHalfLengths[i] = halfLength;
 
-        return joints;
-    }
-
-    private void CreateBoneSprings(
-        IReadOnlyList<BoneDef> boneDefs,
-        IReadOnlyList<JointDef> jointDefs,
-        IReadOnlyList<RigidBody2D> joints)
-    {
-        _boneVisuals = new SegmentVisual[boneDefs.Count];
-        for (var i = 0; i < boneDefs.Count; i++)
-        {
-            var boneDef = boneDefs[i];
-            var length = Distance(jointDefs[boneDef.JointA].Position, jointDefs[boneDef.JointB].Position);
-            var spring = CreateSpring(
-                $"Bone{i}",
-                joints[boneDef.JointA],
-                joints[boneDef.JointB],
-                length,
-                stiffness: 85,
-                damping: 12,
-                out var visual);
-
-            spring.Modulate = Theme.Bone;
-            _bones.Add(new Connection(joints[boneDef.JointA], joints[boneDef.JointB]));
-            _boneVisuals[i] = visual;
+            RegisterAnchor(beamDef.NodeA, i, new Vector2(-halfLength, 0), anchorBeamPerNode, anchorOffsetPerNode);
+            RegisterAnchor(beamDef.NodeB, i, new Vector2(halfLength, 0), anchorBeamPerNode, anchorOffsetPerNode);
         }
     }
 
-    private void CreateMuscles(IReadOnlyList<MuscleDef> muscleDefs, IReadOnlyList<RigidBody2D> joints)
+    private static void RegisterAnchor(int nodeIndex, int beamIndex, Vector2 localOffset, int[] anchorBeamPerNode, Vector2[] anchorOffsetPerNode)
     {
-        _muscleVisuals = new SegmentVisual[muscleDefs.Count];
-        for (var i = 0; i < muscleDefs.Count; i++)
+        // The lowest-indexed beam touching a node anchors its visual/core
+        // mounting; any incident beam works equally well since they all meet
+        // at the same physical point.
+        if (anchorBeamPerNode[nodeIndex] != -1 && anchorBeamPerNode[nodeIndex] < beamIndex)
         {
-            var muscleDef = muscleDefs[i];
-            var spring = CreateSpring(
-                $"Muscle{i}",
-                joints[muscleDef.JointA],
-                joints[muscleDef.JointB],
-                ToGodotFloat(muscleDef.RestLength, nameof(muscleDef.RestLength)),
-                stiffness: ToGodotFloat(muscleDef.MaxForce / 18, nameof(muscleDef.MaxForce)),
-                damping: 6,
-                out var visual);
+            return;
+        }
 
-            spring.Modulate = Theme.Muscle;
-            _muscles.Add(new Muscle(
-                muscleDef,
-                spring,
-                joints[muscleDef.JointA],
-                joints[muscleDef.JointB],
-                BendDirection(i),
-                ToGodotFloat(muscleDef.MaxForce, nameof(muscleDef.MaxForce))));
-            _muscleConnections.Add(new Connection(joints[muscleDef.JointA], joints[muscleDef.JointB]));
-            _muscleVisuals[i] = visual;
+        anchorBeamPerNode[nodeIndex] = beamIndex;
+        anchorOffsetPerNode[nodeIndex] = localOffset;
+    }
+
+    private void DisableSelfCollisions()
+    {
+        for (var i = 0; i < _beamBodies.Length; i++)
+        {
+            for (var j = i + 1; j < _beamBodies.Length; j++)
+            {
+                _beamBodies[i].AddCollisionExceptionWith(_beamBodies[j]);
+            }
+        }
+    }
+
+    private void CreateNodeVisuals(CreatureDef definition, int[] anchorBeamPerNode, Vector2[] anchorOffsetPerNode)
+    {
+        _nodeVisuals = new NodeVisual[definition.Nodes.Count];
+        _coreIndexByNode = new int[definition.Nodes.Count];
+        Array.Fill(_coreIndexByNode, -1);
+
+        for (var i = 0; i < definition.Nodes.Count; i++)
+        {
+            var visual = new NodeVisual
+            {
+                Name = $"Node{i}Visual",
+                Theme = Theme,
+                Position = anchorOffsetPerNode[i],
+                Radius = ToGodotFloat(definition.Nodes[i].Radius, nameof(NodeDef.Radius)),
+            };
+            _beamBodies[anchorBeamPerNode[i]].AddChild(visual);
+            _nodeVisuals[i] = visual;
+        }
+    }
+
+    private void CreateCores(CreatureDef definition, int[] anchorBeamPerNode, Vector2[] anchorOffsetPerNode)
+    {
+        _coreSensors = new CoreSensors[definition.Cores.Count];
+
+        for (var i = 0; i < definition.Cores.Count; i++)
+        {
+            var core = definition.Cores[i];
+            _coreIndexByNode[core.NodeIndex] = i;
+            _nodeVisuals[core.NodeIndex].HasCore = true;
+
+            var anchorBeam = _beamBodies[anchorBeamPerNode[core.NodeIndex]];
+            var origin = anchorOffsetPerNode[core.NodeIndex];
+
+            var rayDown = CreateRay(anchorBeam, origin, new Vector2(0, _rayLength));
+            var rayForward = CreateRay(anchorBeam, origin, new Vector2(_rayLength, 0));
+            var rayForwardDown = CreateRay(anchorBeam, origin, new Vector2(_rayLength, _rayLength).Normalized() * _rayLength);
+
+            _coreSensors[i] = new CoreSensors(anchorBeam, rayDown, rayForward, rayForwardDown);
+        }
+    }
+
+    private static RayCast2D CreateRay(RigidBody2D anchorBeam, Vector2 origin, Vector2 targetPosition)
+    {
+        var ray = new RayCast2D
+        {
+            Position = origin,
+            TargetPosition = targetPosition,
+            Enabled = true,
+        };
+        anchorBeam.AddChild(ray);
+        return ray;
+    }
+
+    private void CreateNodeConnections(CreatureDef definition)
+    {
+        var connections = MotorTopology.BuildNodeConnections(definition);
+        var motorRelations = new List<MotorRelation>();
+
+        foreach (var connection in connections)
+        {
+            var nodePosition = ToGodot(definition.Nodes[connection.NodeIndex].Position);
+            var referenceBody = _beamBodies[connection.ReferenceBeamIndex];
+            var otherBody = _beamBodies[connection.OtherBeamIndex];
+
+            var pin = new PinJoint2D
+            {
+                Name = $"Node{connection.NodeIndex}Pin{connection.ReferenceBeamIndex}-{connection.OtherBeamIndex}",
+                Position = nodePosition,
+                MotorEnabled = false, // driven manually via MotorRelation.Drive so torque stays capped.
+            };
+            AddChild(pin);
+            pin.NodeA = pin.GetPathTo(referenceBody);
+            pin.NodeB = pin.GetPathTo(otherBody);
+
+            if (connection.IsMotorized)
+            {
+                motorRelations.Add(new MotorRelation(referenceBody, otherBody, _maxMotorTorque, _maxAngularVelocityRadPerSec));
+            }
+        }
+
+        _motorRelations = motorRelations.ToArray();
+    }
+
+    private void ConfigureBrainBuffers()
+    {
+        if (_motorRelations.Length == 0)
+        {
+            Brain = null;
+            _sensorValues = [];
+            _motorTargets = [];
+            _scratchA = [];
+            _scratchB = [];
+            return;
+        }
+
+        var sensorCount = (_coreSensors.Length * CoreSensors.ValueCount) + (_motorRelations.Length * 2);
+        _sensorValues = new double[sensorCount];
+        _motorTargets = new double[_motorRelations.Length];
+
+        var scratchSize = Math.Max(sensorCount, Math.Max(_hiddenNeuronCount, _motorRelations.Length));
+        _scratchA = new double[scratchSize];
+        _scratchB = new double[scratchSize];
+    }
+
+    // Stable order: each core's 6 values (see CoreSensors), then each motor
+    // relation's (relativeAngle, relativeAngularVelocity), in creation order.
+    private void ReadSensors(double[] values)
+    {
+        var index = 0;
+        foreach (var core in _coreSensors)
+        {
+            core.Read(values, index);
+            index += CoreSensors.ValueCount;
+        }
+
+        foreach (var relation in _motorRelations)
+        {
+            values[index++] = relation.RelativeAngle / Math.PI;
+            values[index++] = Math.Clamp(relation.RelativeAngularVelocity / _relativeAngularVelocityScale, -1, 1);
         }
     }
 
@@ -273,27 +378,6 @@ public partial class Creature : Node2D
         var canvasTransform = GetViewport().GetCanvasTransform();
         var pixelsPerWorldUnit = Math.Max(canvasTransform.X.Length(), canvasTransform.Y.Length());
         return pixelsPerWorldUnit > 0 ? _lineHitTolerancePixels / pixelsPerWorldUnit : _lineHitTolerancePixels;
-    }
-
-    private static bool TrySelectConnection(
-        IReadOnlyList<Connection> connections,
-        CreatureElementKind kind,
-        Vector2 point,
-        float tolerance,
-        out CreatureElementSelection? selection)
-    {
-        for (var i = 0; i < connections.Count; i++)
-        {
-            var connection = connections[i];
-            if (DistanceSquaredToSegment(point, connection.JointA.GlobalPosition, connection.JointB.GlobalPosition) <= tolerance * tolerance)
-            {
-                selection = new CreatureElementSelection(kind, i);
-                return true;
-            }
-        }
-
-        selection = null;
-        return false;
     }
 
     private static float DistanceSquaredToSegment(Vector2 point, Vector2 start, Vector2 end)
@@ -309,67 +393,6 @@ public partial class Creature : Node2D
         return point.DistanceSquaredTo(start + (segment * projection));
     }
 
-    private DampedSpringJoint2D CreateSpring(
-        string name,
-        RigidBody2D jointA,
-        RigidBody2D jointB,
-        float restLength,
-        float stiffness,
-        float damping,
-        out SegmentVisual visual)
-    {
-        var spring = new DampedSpringJoint2D
-        {
-            Name = name,
-            Length = restLength,
-            RestLength = restLength,
-            Stiffness = stiffness,
-            Damping = damping,
-            DisableCollision = false,
-        };
-        AddChild(spring);
-        spring.NodeA = spring.GetPathTo(jointA);
-        spring.NodeB = spring.GetPathTo(jointB);
-
-        visual = new SegmentVisual
-        {
-            Name = $"{name}Visual",
-            ZIndex = -1,
-            Width = name.StartsWith("Bone", StringComparison.Ordinal) ? Theme.BoneWidth : Theme.MuscleWidth,
-            Color = name.StartsWith("Bone", StringComparison.Ordinal) ? Theme.Bone : Theme.Muscle,
-            SelectionColor = Theme.SelectionGlow,
-            SelectionWidth = Theme.BoneWidth,
-        };
-        visual.Connect(jointA, jointB);
-        AddChild(visual);
-
-        return spring;
-    }
-
-    private void ConfigureBrainBuffers()
-    {
-        if (_muscles.Count == 0)
-        {
-            Brain = null;
-            _sensors = null;
-            _sensorValues = [];
-            _muscleTargets = [];
-            _twitchPhases = [];
-            _scratchA = [];
-            _scratchB = [];
-            return;
-        }
-
-        _sensors = new Sensors(_joints);
-        _sensorValues = new double[_sensors.Count];
-        _muscleTargets = new double[_muscles.Count];
-        _twitchPhases = new double[_muscles.Count];
-
-        var scratchSize = Math.Max(_sensors.Count, Math.Max(_hiddenNeuronCount, _muscles.Count));
-        _scratchA = new double[scratchSize];
-        _scratchB = new double[scratchSize];
-    }
-
     private static int CreateSeed()
     {
         return Random.Shared.Next(int.MinValue, int.MaxValue);
@@ -378,13 +401,6 @@ public partial class Creature : Node2D
     private static Vector2 ToGodot(Vector2D value)
     {
         return new Vector2(ToGodotFloat(value.X, nameof(value.X)), ToGodotFloat(value.Y, nameof(value.Y)));
-    }
-
-    private static float Distance(Vector2D a, Vector2D b)
-    {
-        var dx = a.X - b.X;
-        var dy = a.Y - b.Y;
-        return ToGodotFloat(Math.Sqrt((dx * dx) + (dy * dy)), "distance");
     }
 
     private static float ToGodotFloat(double value, string parameterName)
@@ -397,6 +413,4 @@ public partial class Creature : Node2D
 
         return converted;
     }
-
-    private sealed record Connection(RigidBody2D JointA, RigidBody2D JointB);
 }
