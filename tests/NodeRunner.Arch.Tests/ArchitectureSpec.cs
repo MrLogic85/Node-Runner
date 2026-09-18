@@ -9,14 +9,14 @@ namespace NodeRunner.Arch.Tests;
 /// </summary>
 public sealed class ArchitectureSpec
 {
-    private static readonly Assembly Domain = typeof(NodeRunner.Domain.AssemblyMarker).Assembly;
-    private static readonly Assembly Ml = typeof(NodeRunner.ML.AssemblyMarker).Assembly;
-    private static readonly Assembly App = typeof(NodeRunner.App.AssemblyMarker).Assembly;
+    private static readonly Assembly _domain = typeof(NodeRunner.Domain.AssemblyMarker).Assembly;
+    private static readonly Assembly _ml = typeof(NodeRunner.ML.AssemblyMarker).Assembly;
+    private static readonly Assembly _app = typeof(NodeRunner.App.AssemblyMarker).Assembly;
 
     [Fact]
     public void Domain_HasNoDependenciesOnOtherProjectAssemblies()
     {
-        var referenced = Domain.GetReferencedAssemblies().Select(a => a.Name).ToArray();
+        var referenced = _domain.GetReferencedAssemblies().Select(a => a.Name).ToArray();
 
         referenced.ShouldNotContain("NodeRunner.ML");
         referenced.ShouldNotContain("NodeRunner.App");
@@ -25,25 +25,25 @@ public sealed class ArchitectureSpec
     [Fact]
     public void Domain_DoesNotReferenceGodot()
     {
-        AssertNoGodotReference(Domain);
+        AssertNoGodotReference(_domain);
     }
 
     [Fact]
     public void Ml_DoesNotReferenceGodot()
     {
-        AssertNoGodotReference(Ml);
+        AssertNoGodotReference(_ml);
     }
 
     [Fact]
     public void App_DoesNotReferenceGodot()
     {
-        AssertNoGodotReference(App);
+        AssertNoGodotReference(_app);
     }
 
     [Fact]
     public void Ml_DoesNotReferenceApp()
     {
-        Ml.GetReferencedAssemblies()
+        _ml.GetReferencedAssemblies()
             .Select(a => a.Name)
             .ShouldNotContain("NodeRunner.App");
     }

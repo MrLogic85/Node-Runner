@@ -1,13 +1,15 @@
 ---
 id: 0011
 title: Fix the format-check baseline
-status: open
+status: closed
 priority: p1
 type: chore
 labels: [build, test, ci]
 version: v0.1
 created: 2026-09-18
 updated: 2026-09-18
+closed: 2026-09-18
+resolution: completed
 ---
 
 ## Summary
@@ -24,12 +26,18 @@ the baseline is red would block every merge.
 
 ## Acceptance criteria
 
-- [ ] The naming violations are corrected without weakening
+- [x] The naming violations are corrected without weakening
       `.editorconfig`
-- [ ] `dotnet format NodeRunner.slnx --verify-no-changes --no-restore`
+- [x] `dotnet format NodeRunner.slnx --verify-no-changes --no-restore`
       exits successfully
-- [ ] Build and tests remain green
+- [x] Build and tests remain green
 
 ## Notes
 
 Complete this before enabling the required `Format check` in issue #0008.
+
+## Resolution
+
+Commit `246d1ac` renamed the three private static assembly fields to match the
+configured `_camelCase` convention. The CI-equivalent format command, solution
+build, and all five architecture tests pass locally.

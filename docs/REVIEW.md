@@ -6,8 +6,8 @@ How a change lands in `main`. Applies to humans and AI agents equally.
 
 1. Branch from `main` (or use a Copilot-agent PR).
 2. Push and open a PR against `main`. The PR template auto-populates.
-3. Enable squash auto-merge. GitHub waits persistently for the required
-   checks and merges when they are green.
+3. Enable squash auto-merge once branch protection marks CI as required.
+   GitHub then waits persistently and merges when the checks are green.
 4. The PR author owns failures and follow-up changes until the PR is merged.
    AI reviewers post advisory comments once enabled (see § "AI reviewer").
 5. Verify the merge and the resulting `main` checks. The issue file was
@@ -27,7 +27,8 @@ once it is configured; until then, treat it as a hard convention.
   not apply.
 - Responds to review comments; does not resolve conversations they didn't
   address.
-- Enables squash auto-merge after opening the PR.
+- Enables squash auto-merge after opening the PR when required checks are
+  configured. Until then, waits for green CI before merging manually.
 - Monitors CI to a terminal result. If a check fails, fixes the cause, reruns
   the relevant local validation and code-review focuses, then pushes the fix.
 - Verifies that GitHub merged the PR and that `main` is healthy. A pushed
@@ -88,15 +89,19 @@ the PR):
 - [ ] Commit messages: imperative, reference issue (`(#0003)`)
 - [ ] Manually verified on desktop; on device if the change reaches physics
       or UI
-- [ ] Squash auto-merge enabled on the PR
+- [ ] Squash auto-merge enabled, or CI verified green before manual merge
 
 ## Merge gates
 
-GitHub-enforced gates are deliberately limited for this solo project:
+The branch-protection target for this solo project is deliberately limited
+to:
 
 - A pull request is required
-- Failing build, test, or format check
+- Build, test, and format checks must pass
 - The branch must be up to date
+
+Until the repository configuration matches this target, treat any missing
+gate as a hard convention and merge manually only after verifying it.
 
 The local code-review gate and every applicable pre-push DoD item are
 completed before the branch is pushed. PR lifecycle items, including
@@ -105,7 +110,8 @@ rules, not required GitHub approvals.
 
 ## Auto-merge
 
-After creating a PR, its author enables GitHub-managed squash auto-merge:
+After creating a PR, its author enables GitHub-managed squash auto-merge when
+the required checks are configured:
 
 ```bash
 gh pr merge --auto --squash
@@ -121,6 +127,10 @@ surviving the CLI session. The PR author still owns the outcome:
 
 If GitHub cannot enable auto-merge, keep the PR open, report the blocker, and
 do not bypass the required checks with a direct merge.
+
+Auto-merge only waits for checks configured as **required** in branch
+protection. Until that setup is complete, the author must wait for all three
+CI jobs to pass and then run `gh pr merge --squash` without `--auto`.
 
 ## What review should flag
 
