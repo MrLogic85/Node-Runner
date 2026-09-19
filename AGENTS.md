@@ -46,18 +46,21 @@ visible controls or changing screen layout.
    explicitly asks for that, when a genuine blocker prevents a safe commit,
    or when the repository's review process requires a human decision; state
    the reason plainly.
-3. **Resolve ordinary ambiguity autonomously.** During autonomous roadmap
-   work, choose the smallest reversible implementation that fits the
-   roadmap and owning documents, record the assumption in the relevant
-   documentation, and continue. Do not stop for routine UX wording,
-   parameter defaults, test strategy, or implementation details. Ask the
-   human only when the work is genuinely blocked, contradicts an explicit
-   product decision, requires a new roadmap/architecture decision, risks
-   data loss or an irreversible migration, or has two materially different
-   product outcomes that cannot be safely staged. A missing GitHub Issue or
-   ordinary uncertainty is not by itself a blocker to beginning or
-   implementing roadmap work; before commit/push, the issue and
-   `docs/REVIEW.md` release gates still apply.
+3. **Resolve ordinary ambiguity autonomously.** When autopilot is active,
+solving the problem independently is the default and asking the human is
+the last resort. First inspect the repository and owning documents, trace
+the relevant behavior, try a safe implementation, and validate it.
+During autonomous roadmap work, choose the smallest reversible
+implementation that fits the roadmap and owning documents, record the
+assumption in the relevant documentation, and continue. Do not stop for
+routine UX wording, parameter defaults, test strategy, or implementation
+details. Ask the human only when the work is genuinely blocked,
+contradicts an explicit product decision, requires a new
+roadmap/architecture decision, risks data loss or an irreversible
+migration, or has two materially different product outcomes that cannot
+be safely staged. A missing GitHub Issue or ordinary uncertainty is not by
+itself a blocker to beginning or implementing roadmap work; before
+commit/push, the issue and `docs/REVIEW.md` release gates still apply.
 
 ## Architecture map
 
