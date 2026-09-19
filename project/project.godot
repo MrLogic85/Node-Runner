@@ -10,6 +10,18 @@ config/description="Learn ML by drawing 2D creatures that evolve to move."
 run/main_scene="res://scenes/Main.tscn"
 config/features=PackedStringArray("4.7", "C#", "Mobile")
 
+[display]
+
+; Design-resolution base with "canvas_items" stretch so HUD/inspector text,
+; buttons, and Node2D world positions scale consistently to fill the real
+; device resolution instead of rendering at raw device pixels (which made
+; the HUD unreadably small on phones with high-density landscape screens).
+window/size/viewport_width=1280
+window/size/viewport_height=720
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
+window/handheld/orientation="landscape"
+
 [dotnet]
 
 project/assembly_name="NodeRunner"

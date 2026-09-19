@@ -83,7 +83,9 @@ public partial class Main : Node2D
         AddChild(new Camera2D
         {
             Name = "Camera",
-            Position = new Vector2(360, 220),
+            // Y is tuned so the ground/creature sit above the inspector
+            // panel's reserved area (see AddInspector) instead of behind it.
+            Position = new Vector2(360, 316),
             Zoom = new Vector2(1.15f, 1.15f),
             Enabled = true,
         });
@@ -108,6 +110,12 @@ public partial class Main : Node2D
         _inspector.PropertyChanged += OnInspectorPropertyChanged;
     }
 
+    // Base font size (Godot's default is 16px) and minimum touch target
+    // height (Android's recommended ~48dp) for HUD/inspector controls. Sized
+    // for the 720-tall design viewport (see [display] in project.godot).
+    private const int _hudFontSize = 26;
+    private const float _touchTargetHeight = 56f;
+
     private void AddHud()
     {
         var layer = new CanvasLayer
@@ -123,16 +131,18 @@ public partial class Main : Node2D
 
         var row = new HBoxContainer
         {
-            CustomMinimumSize = new Vector2(300, 36),
+            CustomMinimumSize = new Vector2(420, _touchTargetHeight),
         };
+        row.AddThemeConstantOverride("separation", 20);
 
         var button = new Button
         {
             Name = "RandomizeButton",
             Text = "Randomize",
-            CustomMinimumSize = new Vector2(120, 32),
+            CustomMinimumSize = new Vector2(180, _touchTargetHeight),
         };
         button.AddThemeColorOverride("font_color", _theme.GroundEdge);
+        button.AddThemeFontSizeOverride("font_size", _hudFontSize);
         button.Pressed += RandomizeCreatureBrain;
 
         _seedLabel = new Label
@@ -142,6 +152,7 @@ public partial class Main : Node2D
             VerticalAlignment = VerticalAlignment.Center,
         };
         _seedLabel.AddThemeColorOverride("font_color", _theme.Beam);
+        _seedLabel.AddThemeFontSizeOverride("font_size", _hudFontSize);
 
         row.AddChild(button);
         row.AddChild(_seedLabel);
@@ -235,7 +246,10 @@ public partial class Main : Node2D
         var panel = new PanelContainer
         {
             AnchorsPreset = (int)Control.LayoutPreset.BottomWide,
-            AnchorTop = 0.64f,
+            // Reserve less of the screen than before (was 0.64, which,
+            // combined with the camera framing, covered the creature's
+            // resting position). Paired with the camera Y in AddCamera().
+            AnchorTop = 0.78f,
             AnchorRight = 1,
             AnchorBottom = 1,
             GrowHorizontal = Control.GrowDirection.Both,
@@ -250,12 +264,16 @@ public partial class Main : Node2D
         margin.AddThemeConstantOverride("margin_bottom", 14);
 
         var content = new VBoxContainer();
+        content.AddThemeConstantOverride("separation", 6);
         _inspectorTitle = new Label { AutowrapMode = TextServer.AutowrapMode.WordSmart };
         _inspectorTitle.AddThemeColorOverride("font_color", _theme.SelectionGlow);
+        _inspectorTitle.AddThemeFontSizeOverride("font_size", _hudFontSize);
         _inspectorRole = new Label { AutowrapMode = TextServer.AutowrapMode.WordSmart };
         _inspectorRole.AddThemeColorOverride("font_color", _theme.GroundEdge);
+        _inspectorRole.AddThemeFontSizeOverride("font_size", _hudFontSize);
         _inspectorValues = new Label { AutowrapMode = TextServer.AutowrapMode.WordSmart };
         _inspectorValues.AddThemeColorOverride("font_color", _theme.Beam);
+        _inspectorValues.AddThemeFontSizeOverride("font_size", _hudFontSize);
         content.AddChild(_inspectorTitle);
         content.AddChild(_inspectorRole);
         content.AddChild(_inspectorValues);
