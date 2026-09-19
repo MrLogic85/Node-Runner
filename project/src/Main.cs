@@ -254,6 +254,9 @@ public partial class Main : Node2D
         var evolver = new Evolver { Name = "Evolver" };
         evolver.GenerationCompleted += OnGenerationCompleted;
         evolver.NewBestFound += OnNewBestFound;
+        // Temporary composition-root bridge until the Watch ViewModel seam
+        // is extracted in the UI implementation plan.
+        evolver.TrainingProgressChanged += OnTrainingProgressChanged;
         AddChild(evolver);
         _evolver = evolver;
         StartEvolution();
@@ -329,6 +332,8 @@ public partial class Main : Node2D
         UpdateTrainingLabels();
     }
 
+    private void OnTrainingProgressChanged() => UpdateTrainingLabels();
+
     private void UpdateTrainingLabels()
     {
         if (_evolver is null)
@@ -338,8 +343,9 @@ public partial class Main : Node2D
 
         if (_generationLabel is not null)
         {
-            var sessionGeneration = Math.Max(0, _evolver.Generation - _sessionGenerationStart);
-            _generationLabel.Text = $"Gen: {_evolver.Generation} ({sessionGeneration}/{CurrentTrainingProfile().MaxGenerations})";
+            _generationLabel.Text = _evolver.IsTrialActive
+                ? $"Generation {_evolver.Generation} · try {_evolver.CurrentCandidate} of {_evolver.PopulationSize}"
+                : $"Generation {_evolver.Generation} · session complete";
         }
 
         if (_bestFitnessLabel is not null)

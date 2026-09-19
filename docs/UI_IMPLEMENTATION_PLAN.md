@@ -208,5 +208,11 @@ Every phase touching visible UI requires:
 - a focused commit after review findings are addressed.
 
 The next implementation slice is **Phase 1 plus the minimum Phase 2
-GenerationStrip seam**. It is deliberately smaller than a full navigation
-rewrite and can be reverted without changing the domain or persistence model.
+GenerationStrip data seam**. That seam is only a prerequisite: it is not the
+GenerationStrip design. The actual strip is not complete until it renders
+one cell per try with Waiting/Current/Done states, a current-trial timer or
+distance treatment, completed distance bars, a best marker, and a concise
+learner-facing caption. This distinction prevents a text label from being
+mistaken for the finished Watch redesign. The work remains deliberately
+smaller than a full navigation rewrite and can be reverted without changing
+the domain or persistence model.

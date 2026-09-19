@@ -38,11 +38,23 @@ public partial class Evolver : Node
 
     public int[] LayerSizes => _layerSizes.ToArray();
 
+    /// <summary>Number of candidates in the active generation.</summary>
+    public int PopulationSize => _genomes.Length;
+
+    /// <summary>One-based candidate number currently being evaluated, or zero when stopped.</summary>
+    public int CurrentCandidate => IsTrialActive ? _currentIndex + 1 : 0;
+
+    /// <summary>Whether a candidate trial is currently active.</summary>
+    public bool IsTrialActive => _creature is not null && _trialController.IsRunning;
+
     /// <summary>Raised after every genome in a generation has been evaluated and the next generation has been produced.</summary>
     public event Action? GenerationCompleted;
 
     /// <summary>Raised when a generation's best fitness exceeds every previous generation's best.</summary>
     public event Action? NewBestFound;
+
+    /// <summary>Raised when the active candidate or generation changes.</summary>
+    public event Action? TrainingProgressChanged;
 
     public override void _Ready()
     {
@@ -51,14 +63,16 @@ public partial class Evolver : Node
     }
 
     /// <summary>
-    /// Halts the current generation cycle without raising any events, and
-    /// forgets the creature it was evolving. Safe to call when nothing is
-    /// running. Callers must call <see cref="Start"/> again to resume.
+    /// Halts the current generation cycle, forgets the creature it was
+    /// evolving, and notifies progress subscribers of the inactive state.
+    /// Safe to call when nothing is running. Callers must call
+    /// <see cref="Start"/> again to resume.
     /// </summary>
     public void Stop()
     {
         _trialController.Stop();
         _creature = null;
+        TrainingProgressChanged?.Invoke();
     }
 
     /// <summary>
@@ -135,6 +149,7 @@ public partial class Evolver : Node
         var brain = NeuralNetwork.FromGenome(_layerSizes, _genomes[_currentIndex], Activation.Tanh);
         _creature!.SetBrain(brain, seed: (Generation * _genomes.Length) + _currentIndex);
         _trialController.StartTrial(_creature);
+        TrainingProgressChanged?.Invoke();
     }
 
     private void OnTrialCompleted(float fitness)
@@ -170,6 +185,7 @@ public partial class Evolver : Node
         _currentIndex = 0;
 
         GenerationCompleted?.Invoke();
+        TrainingProgressChanged?.Invoke();
         if (isNewBest)
         {
             NewBestFound?.Invoke();
