@@ -60,18 +60,18 @@ node, beam, core, motor relation, input, and output are in the current demo.
 
 **Done checklist:**
 
-- [ ] Creature vocabulary is documented in durable docs.
-- [ ] The hardcoded worm is explainable through that vocabulary.
-- [ ] User can select nodes, beams, and cores with touch.
-- [ ] Selected creature part is visually highlighted.
-- [ ] Inspector panel shows beginner-facing role text and key values.
-- [ ] Sensor values, model outputs, and motor-relation activity are visible
-  enough to explain the control loop. (Implemented via the mapping panel,
-  #42; on-device validation tracked by #43.)
-- [ ] Randomize keeps inspector/mapping UI consistent with the new brain seed.
-- [ ] A first-time viewer can explain node, beam, core, motor relation,
+- [x] Creature vocabulary is documented in durable docs.
+- [x] The hardcoded worm is explainable through that vocabulary.
+- [x] User can select nodes, beams, and cores with touch.
+- [x] Selected creature part is visually highlighted.
+- [x] Inspector panel shows beginner-facing role text and key values.
+- [x] Sensor values, model outputs, and motor-relation activity are visible
+  enough to explain the control loop. (Mapping panel, #42; validated
+  on-device by #43.)
+- [x] Randomize keeps inspector/mapping UI consistent with the new brain seed.
+- [x] A first-time viewer can explain node, beam, core, motor relation,
   sensor, input, and output from the app.
-- [ ] The release gates in `docs/REVIEW.md` and Android checks in
+- [x] The release gates in `docs/REVIEW.md` and Android checks in
   `docs/MANUAL_TESTING.md` are satisfied for 0.2.0.
 
 ---
