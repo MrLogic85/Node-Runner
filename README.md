@@ -23,7 +23,7 @@ it becomes editable or trainable. See `docs/ROADMAP.md`.
   neural network. No PyTorch, no ONNX, no ML libraries. All the math is in
   `libs/NodeRunner.ML/`, readable in an evening.
 - **Backpropagation** (later) — the other big paradigm, so you get to see both.
-- **Live network visualization** (from 0.5.0) — nodes glow when they fire,
+- **Live network visualization** (from 0.9.0) — nodes glow when they fire,
   edges thicken with weight. You see the thought behind each step.
 
 ## Tech

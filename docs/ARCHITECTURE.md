@@ -251,7 +251,7 @@ distinct arrays. The network itself does not keep per-call scratch state.
 ## Open questions
 
 - How do we visualize very large networks without cluttering the screen?
-  Group neurons? Collapse layers? → revisit before 0.5.0 network
+  Group neurons? Collapse layers? → revisit before 0.9.0 network
   visualization.
 - Should sensors be user-configurable at draw time, or auto-derived from
   topology? 0.3.0 should auto-derive the initial sensor set for user-built

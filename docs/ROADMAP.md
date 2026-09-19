@@ -186,16 +186,140 @@ short demo, and can see the fitness signal that caused the improvement.
 
 ---
 
-## 0.5.0 — "Visualisera hjärnan" (Visualize the brain)
+> **Draft status (2026-09-19):** 0.5.0 through 0.9.0 below reflect a
+> game-loop-first redesign (build → save as Creation → edit/resume
+> training → tune training → unlock parts → visualize), replacing a
+> previous straight-ML-concept sequence. Several implementation questions
+> are still open — see "Open questions" call-outs inline below (Rebuild's
+> effect on training history, exact persisted training-history shape,
+> single vs. per-Creation RNG seed) — tracked in GitHub Issue #89. Milestone
+> numbers/order may still shift; treat this as the current best draft, not
+> final.
 
-**Goal:** Make it genuinely educational.
+## 0.5.0 — "Creations" (Save, list, and manage builds)
+
+**Goal:** Establish the game loop's foundation: a build becomes a durable
+Creation the player can return to, instead of disappearing when the app
+closes. This is a prerequisite for every later milestone in this sequence
+(Edit, training config, progression, and eventually save/load are all
+built on top of "a Creation is a real, addressable thing").
+
+- Build mode gains a **Complete** action: validates the anatomy (same
+  structural-completeness rules as current construction-mode validation,
+  see `docs/CONSTRUCTION_MODE.md` § Validation) and saves it as a Creation.
+- A **Creations** screen: list saved Creations, delete, duplicate.
+  - Duplicate creates an independent copy (assumption, flagged for
+    confirmation: starts with fresh/untrained state, not a clone of any
+    trained brain — open question, see Issue #89, to confirm before
+    implementation).
+- Domain-level persistence for `CreatureDef` (the body only at this stage;
+  brain/training-history persistence is 0.6.0's concern once Edit exists).
+- No Edit mode yet — a completed Creation is a saved snapshot, not yet
+  resumable/trainable-in-place. That distinction is what 0.6.0 adds.
+
+**Ship criterion:** A player can build a creature, tap Complete, close and
+reopen the app, and find it again in Creations.
+
+---
+
+## 0.6.0 — "Edit and resume training"
+
+**Goal:** Make a Creation something you come back to and keep improving,
+not just a static save file.
+
+- **Edit** mode: opens a saved Creation for editing, but — unlike Build —
+  can only move existing parts, not add/remove them. This preserves the
+  brain's sensor/motor layer shape (topology-derived, see
+  `docs/CREATURE_MODEL.md`), so training can resume in place.
+- Edit remembers and resumes training history/progress for that Creation
+  (exact persisted shape — best genome, generation count, or both — is an
+  open design question to settle before implementation; tracked in
+  Issue #89, not yet decided). Related open question: whether the app
+  keeps one global RNG seed per run (as today, via `RngProvider`) or each
+  Creation carries its own independent training seed/state once resumable
+  training exists.
+- **Rebuild** action (Edit → full Build mode, add/remove parts allowed
+  again): open question whether this resets training history (topology
+  changes can invalidate the old genome's shape) or attempts to preserve
+  what it can. Resolve before implementation (Issue #89); don't guess in
+  code.
+- This is also the natural point to evaluate whether the current
+  construction-mode UI (`project/src/creature/` construction tools) needs
+  a genuine reimplementation to support Edit's move-only interaction, or
+  can be extended. Run a `design-lead` review pass (see
+  `docs/UI_DIRECTION.md` § Design review) before deciding reimplement vs.
+  iterate.
+
+**Ship criterion:** A player can leave a Creation mid-training, come back
+later, resume training without losing prior progress, and reposition a
+part without invalidating that progress.
+
+---
+
+## 0.7.0 — "Training configuration"
+
+**Goal:** Let the player tune how a Creation trains, per session, instead
+of fixed engine constants.
+
+- Trial duration and population size (currently fixed:
+  `TrialController.TrialDurationTicks` defaults to 600 ticks ≈10s
+  in `project/src/sim/TrialController.cs`; `Main.cs`'s
+  `_populationSize = 8` configures the `Evolver`, see
+  `docs/TRAINING_LOOP.md`) become player-facing, session-scoped settings
+  rather than fixed constants. Generations-per-session (running a bounded
+  number of generations before stopping/reviewing, rather than evolving
+  indefinitely) is a new concept to introduce here, not an existing
+  setting.
+- Support the workflow the player described: e.g. many short trials (a
+  couple of seconds × dozens of runs) before switching to longer sessions
+  — a session-level training-profile choice, not a single fixed setup.
+- Natural point to also address the GA-plateau behavior observed in
+  practice this session (Best fitness flattening ~generation 50): larger
+  population and/or a less "competing conventions"-prone recombination
+  strategy become things the player can try, not just code-level tuning.
+
+**ML concepts introduced:** Trial/session design as a hyperparameter in
+its own right — batch size vs. duration tradeoffs in an evolutionary
+context.
+
+---
+
+## 0.8.0 — "Progression: first unlock"
+
+**Goal:** Prove the unlock loop with one concrete, small slice before
+expanding it.
+
+- One measurable training milestone (e.g. "reach N meters") unlocks a new
+  part globally — available in the Build palette for all future builds,
+  not just the Creation that earned it (assumption, flagged for
+  confirmation).
+- Training UI shows live progress toward the next unlock (distance/metric
+  and the "reached at generation G" framing already used for Best
+  fitness — see `docs/TRAINING_LOOP.md`).
+- Deliberately narrow scope: prove the pattern works end-to-end (train →
+  hit threshold → part appears in Build) before adding the other unlock
+  conditions already discussed (jump height, an "agility score", etc.) —
+  those are expected to keep evolving as the game does, not to be fully
+  designed now.
+
+**Ship criterion:** A first-time player can watch a concrete, visible
+threshold approach during training and see a new part become available in
+Build immediately after crossing it.
+
+---
+
+## 0.9.0 — "Visualisera hjärnan" (Visualize the brain)
+
+**Goal:** Make training genuinely educational, now situated inside the
+Edit/inspect step of the established game loop rather than a standalone
+feature.
 
 - Live network visualization panel next to the focused creature:
   - Nodes colored by activation (red negative, blue positive, brightness =
     magnitude)
   - Edge thickness/opacity by weight
 - Tap a creature → focus it, show its network updating in real time
-- Slider panel:
+- Slider panel (builds on 0.7.0's training-configuration UI):
   - Mutation rate
   - Population size
   - Hidden-layer count & width
