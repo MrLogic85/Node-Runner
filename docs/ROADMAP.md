@@ -323,6 +323,16 @@ expanding it.
 threshold approach during training and see a new part become available in
 Build immediately after crossing it.
 
+**Implementation status (2026-09-19):**
+
+- [x] Best fitness reaching 50 distance units unlocks a second core slot.
+- [x] The unlock is persisted globally and is available across all future
+  Builds and Creations.
+- [x] Training HUD shows progress toward the threshold and the generation
+  where the unlock was earned.
+- [x] Construction HUD reports the current core-slot limit and explains how
+  to unlock the next slot.
+
 ---
 
 ## 0.9.0 — "Visualisera hjärnan" (Visualize the brain)

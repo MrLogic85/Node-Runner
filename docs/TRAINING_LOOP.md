@@ -104,6 +104,11 @@ but do not redefine it here.
 - Generation/fitness are logged (`GD.Print`) and shown in the training HUD
   (see below).
 
+The first progression milestone uses the running best fitness as its metric:
+reaching 50 distance units unlocks a second core slot globally. The unlock is
+recorded with the generation that crossed the threshold and remains available
+in Build after restarting the app.
+
 ## Training HUD (issue #51)
 
 - `Main.cs` adds a training panel below the top Randomize/Build/Seed row

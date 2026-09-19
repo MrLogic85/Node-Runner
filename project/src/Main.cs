@@ -15,6 +15,7 @@ namespace NodeRunner;
 
 public partial class Main : Node2D
 {
+    private const double _extraCoreUnlockFitness = 50;
     private readonly VisualTheme _theme = VisualTheme.Neon;
     private Creature.Creature? _creature;
     private Evolver? _evolver;
@@ -40,6 +41,7 @@ public partial class Main : Node2D
     private Button? _timeScaleButton;
     private Button? _trainingProfileButton;
     private Label? _trainingProfileSummaryLabel;
+    private Label? _progressionLabel;
     private PanelContainer? _trainingPanel;
     private int _bestGeneration;
     private int _timeScaleIndex;
@@ -84,6 +86,7 @@ public partial class Main : Node2D
         Engine.TimeScale = _timeScales[0];
         Selection.PropertyChanged += OnSelectionPropertyChanged;
         Construction.PropertyChanged += OnConstructionPropertyChanged;
+        Construction.AnatomyChanged += OnConstructionAnatomyChanged;
         AddBackdrop();
         AddGround();
         AddCamera();
@@ -92,6 +95,48 @@ public partial class Main : Node2D
         AddHud();
         AddInspector();
         AddEvolver();
+    }
+
+    private void OnConstructionAnatomyChanged(object? sender, EventArgs eventArgs)
+    {
+        UpdateToolButtonVisibility();
+    }
+
+    private string ProgressionText()
+    {
+        var progression = GetNode<SaveManager>("/root/SaveManager").Progression;
+        if (progression.ExtraCoreUnlocked)
+        {
+            return $"Unlock: extra core available (Gen {progression.ExtraCoreUnlockedAtGeneration})";
+        }
+
+        var best = _evolver is null || double.IsNegativeInfinity(_evolver.BestFitness)
+            ? 0
+            : _evolver.BestFitness;
+        return $"Next unlock: extra core at {_extraCoreUnlockFitness:0} fitness ({Math.Min(best, _extraCoreUnlockFitness):0.0}/{_extraCoreUnlockFitness:0})";
+    }
+
+    private void TryUnlockProgression()
+    {
+        if (_evolver is null || _evolver.BestFitness < _extraCoreUnlockFitness)
+        {
+            return;
+        }
+
+        var saveManager = GetNode<SaveManager>("/root/SaveManager");
+        if (saveManager.UnlockExtraCore(_evolver.Generation))
+        {
+            ApplyProgression();
+            GD.Print($"Unlocked extra core at generation {_evolver.Generation}.");
+        }
+    }
+
+    private void ApplyProgression()
+    {
+        var unlocked = GetNode<SaveManager>("/root/SaveManager").Progression.ExtraCoreUnlocked;
+        Construction.SetMaxCores(unlocked ? 2 : 1);
+        UpdateToolButtonVisibility();
+        UpdateTrainingLabels();
     }
 
     // Refreshes the sensor/motor mapping display (#42) from whatever the
@@ -276,6 +321,7 @@ public partial class Main : Node2D
     private void OnNewBestFound()
     {
         _bestGeneration = _evolver!.Generation;
+        TryUnlockProgression();
         // GenerationCompleted (which also calls UpdateTrainingLabels) fires
         // before NewBestFound, so the "Best" label would otherwise render
         // with the previous _bestGeneration on the very generation the new
@@ -306,6 +352,11 @@ public partial class Main : Node2D
         if (_meanFitnessLabel is not null)
         {
             _meanFitnessLabel.Text = $"Mean: {_evolver.MeanFitness:0.0}";
+        }
+
+        if (_progressionLabel is not null)
+        {
+            _progressionLabel.Text = ProgressionText();
         }
     }
 
@@ -595,6 +646,7 @@ public partial class Main : Node2D
         _generationLabel = CreateTrainingLabel("GenerationLabel", "Gen: 0");
         _bestFitnessLabel = CreateTrainingLabel("BestFitnessLabel", "Best: —");
         _meanFitnessLabel = CreateTrainingLabel("MeanFitnessLabel", "Mean: 0.0");
+        _progressionLabel = CreateTrainingLabel("ProgressionLabel", ProgressionText());
         statsRow.AddChild(_generationLabel);
         statsRow.AddChild(_bestFitnessLabel);
         statsRow.AddChild(_meanFitnessLabel);
@@ -647,6 +699,7 @@ public partial class Main : Node2D
         column.AddChild(statsRow);
         column.AddChild(controlsRow);
         column.AddChild(_trainingProfileSummaryLabel);
+        column.AddChild(_progressionLabel);
         panel.AddChild(column);
         layer.AddChild(panel);
 
@@ -798,6 +851,7 @@ public partial class Main : Node2D
         layer.AddChild(panel);
 
         _toolPanel = panel;
+        ApplyProgression();
         UpdateToolButtonHighlight();
         UpdateToolButtonVisibility();
     }
@@ -988,6 +1042,9 @@ public partial class Main : Node2D
             case nameof(ConstructionViewModel.StatusMessage):
                 UpdateInspector();
                 break;
+            case nameof(ConstructionViewModel.MaxCores):
+                UpdateToolButtonVisibility();
+                break;
         }
     }
 
@@ -1018,6 +1075,11 @@ public partial class Main : Node2D
         if (_coreToolButton is not null)
         {
             _coreToolButton.Visible = visible;
+            var unlockHint = Construction.MaxCores > 1 ? "unlocked" : "50 fitness";
+            _coreToolButton.Text = $"Core {Construction.Cores.Count}/{Construction.MaxCores} ({unlockHint})";
+            _coreToolButton.TooltipText = Construction.MaxCores > 1
+                ? "Attach or remove a core. Extra core slot unlocked."
+                : "Attach or remove a core. Train to unlock a second core slot.";
         }
         if (_deleteToolButton is not null)
         {
@@ -1075,6 +1137,7 @@ public partial class Main : Node2D
         Engine.TimeScale = _timeScales[0];
         Selection.PropertyChanged -= OnSelectionPropertyChanged;
         Construction.PropertyChanged -= OnConstructionPropertyChanged;
+        Construction.AnatomyChanged -= OnConstructionAnatomyChanged;
         if (_inspector is not null)
         {
             _inspector.PropertyChanged -= OnInspectorPropertyChanged;

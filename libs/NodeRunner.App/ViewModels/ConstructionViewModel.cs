@@ -29,6 +29,7 @@ public sealed class ConstructionViewModel : INotifyPropertyChanged
     private int? _pendingBeamStartNode;
     private string? _statusMessage;
     private bool _moveOnly;
+    private int _maxCores = 1;
 
     public ConstructionViewModel(CreatureBuilder? builder = null)
     {
@@ -121,6 +122,19 @@ public sealed class ConstructionViewModel : INotifyPropertyChanged
     public IReadOnlyList<BeamDef> Beams => _builder.Beams;
 
     public IReadOnlyList<CoreDef> Cores => _builder.Cores;
+
+    public int MaxCores => _maxCores;
+
+    public void SetMaxCores(int maxCores)
+    {
+        if (maxCores < 1)
+        {
+            throw new ArgumentOutOfRangeException(nameof(maxCores));
+        }
+
+        _maxCores = maxCores;
+        OnPropertyChanged(nameof(MaxCores));
+    }
 
     /// <summary>Places a new node and returns its index.</summary>
     public int PlaceNode(Vector2D position, double radius)
@@ -227,6 +241,12 @@ public sealed class ConstructionViewModel : INotifyPropertyChanged
         }
         else
         {
+            if (_builder.Cores.Count >= _maxCores)
+            {
+                StatusMessage = $"Core limit reached ({_maxCores}). Train to unlock another core slot.";
+                return;
+            }
+
             _builder.AddCore(nodeIndex);
             StatusMessage = $"Attached core to node {nodeIndex}.";
         }

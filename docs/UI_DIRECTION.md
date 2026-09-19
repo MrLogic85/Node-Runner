@@ -59,6 +59,10 @@ the active run; a separate summary line keeps the selected population,
 trial duration, mutation rate, and crossover explanation visible without
 turning the button into a dense configuration panel.
 
+The first 0.8.0 progression slice adds a compact line below the training
+controls showing the next unlock threshold and current progress, or the
+generation at which the extra core slot was earned.
+
 ## Theme boundaries
 
 Tron/neon is the reference theme, not a permanent constraint. Implementation

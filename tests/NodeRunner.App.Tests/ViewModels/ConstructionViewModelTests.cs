@@ -231,6 +231,23 @@ public sealed class ConstructionViewModelTests
     }
 
     [Fact]
+    public void ToggleCoreOnNode_RespectsUnlockedCoreLimit()
+    {
+        var viewModel = new ConstructionViewModel();
+        var a = viewModel.PlaceNode(new Vector2D(0, 0), 18);
+        var b = viewModel.PlaceNode(new Vector2D(20, 0), 18);
+        var c = viewModel.PlaceNode(new Vector2D(40, 0), 18);
+        viewModel.SetMaxCores(2);
+
+        viewModel.ToggleCoreOnNode(a);
+        viewModel.ToggleCoreOnNode(b);
+        viewModel.ToggleCoreOnNode(c);
+
+        viewModel.Cores.Count.ShouldBe(2);
+        viewModel.StatusMessage.ShouldBe("Core limit reached (2). Train to unlock another core slot.");
+    }
+
+    [Fact]
     public void DeleteNode_RemovesNodeAndCascadesToBeamsAndCores()
     {
         var viewModel = new ConstructionViewModel();

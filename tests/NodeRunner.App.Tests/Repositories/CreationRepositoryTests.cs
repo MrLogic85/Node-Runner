@@ -81,6 +81,39 @@ public sealed class CreationRepositoryTests
         repository.Delete(Guid.NewGuid()).ShouldBeFalse();
     }
 
+    [Fact]
+    public void InMemoryProgression_SaveAndLoad_RoundTripsUnlock()
+    {
+        var repository = new InMemoryProgressionRepository();
+        var progression = new ProgressionDef(true, 12);
+
+        repository.Save(progression);
+
+        repository.Load().ShouldBe(progression);
+    }
+
+    [Fact]
+    public void FileProgression_SaveAndLoad_RoundTripsUnlock()
+    {
+        var directory = Path.Combine(Path.GetTempPath(), $"node-runner-progression-{Guid.NewGuid():N}");
+        try
+        {
+            var repository = new FileProgressionRepository(new TestStorageLocation(directory));
+            var progression = new ProgressionDef(true, 12);
+
+            repository.Save(progression);
+
+            repository.Load().ShouldBe(progression);
+        }
+        finally
+        {
+            if (Directory.Exists(directory))
+            {
+                Directory.Delete(directory, recursive: true);
+            }
+        }
+    }
+
     private static CreationDef CreateCreation(string name)
     {
         return new CreationDef(
