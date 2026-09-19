@@ -13,6 +13,13 @@ public sealed class CoreSensors
 {
     public const int ValueCount = 6;
 
+    // Labels for the mapping display (issue #42), in the same order as
+    // Read() writes values.
+    public static readonly string[] ValueNames =
+    {
+        "Ray down", "Ray forward", "Ray forward-down", "Pitch", "Elevation", "Speed",
+    };
+
     // Placeholder normalization scales for the prototype; tune once a real
     // arena size and creature speed range exist.
     private const double _elevationScale = 200.0;

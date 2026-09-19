@@ -46,6 +46,18 @@ public partial class Main : Node2D
     private Label? _inspectorTitle;
     private Label? _inspectorRole;
     private Label? _inspectorValues;
+    private readonly MappingViewModel _mapping = new();
+    private readonly List<SensorReading> _sensorReadings = [];
+    private readonly List<MotorReading> _motorReadings = [];
+    private Button? _mappingToggleButton;
+
+    // Sensor/motor mapping (#42) defaults to visible when nothing is
+    // selected and steps aside for the inspector once something is (see
+    // OnSelectionPropertyChanged) — the "second tab" decision recorded on
+    // issue #42.
+    private bool _showMapping = true;
+    private double _mappingRefreshElapsed;
+    private const double _mappingRefreshIntervalSeconds = 0.15;
 
     // Cycled by the time-scale HUD button. Godot's Engine.TimeScale speeds
     // up or slows down every physics/process step uniformly, so it doesn't
@@ -72,6 +84,32 @@ public partial class Main : Node2D
         AddHud();
         AddInspector();
         AddEvolver();
+    }
+
+    // Refreshes the sensor/motor mapping display (#42) from whatever the
+    // creature's last physics tick computed. Only does the (small) list
+    // work when the mapping view is actually showing, since the inspector
+    // view doesn't need it refreshed every frame. Throttled to a fixed
+    // cadence (see review discussion on #42) instead of every rendered
+    // frame — the numbers are for a human to read, so 60 refreshes/second
+    // is wasted allocation without adding legibility.
+    public override void _Process(double delta)
+    {
+        if (!_showMapping || Construction.IsActive || _creature is null)
+        {
+            return;
+        }
+
+        _mappingRefreshElapsed += delta;
+        if (_mappingRefreshElapsed < _mappingRefreshIntervalSeconds)
+        {
+            return;
+        }
+
+        _mappingRefreshElapsed = 0;
+        _creature.ReadMapping(_sensorReadings, _motorReadings);
+        _mapping.Update(_sensorReadings, _motorReadings);
+        UpdateInspector();
     }
 
     private void AddBackdrop()
@@ -690,6 +728,13 @@ public partial class Main : Node2D
         if (eventArgs.PropertyName == nameof(SelectionViewModel.SelectedElement))
         {
             _creature?.SetSelectedElement(Selection.SelectedElement);
+            _showMapping = Selection.SelectedElement is null;
+            if (_mappingToggleButton is not null)
+            {
+                _mappingToggleButton.Text = MappingToggleButtonText();
+            }
+
+            UpdateInspector();
         }
     }
 
@@ -725,8 +770,34 @@ public partial class Main : Node2D
         margin.AddThemeConstantOverride("margin_right", 20);
         margin.AddThemeConstantOverride("margin_bottom", 14);
 
+        var outer = new VBoxContainer();
+        outer.AddThemeConstantOverride("separation", 6);
+
+        _mappingToggleButton = new Button
+        {
+            Name = "MappingToggleButton",
+            Text = MappingToggleButtonText(),
+            CustomMinimumSize = new Vector2(0, _touchTargetHeight),
+            SizeFlagsHorizontal = Control.SizeFlags.ShrinkBegin,
+        };
+        _mappingToggleButton.AddThemeColorOverride("font_color", _theme.GroundEdge);
+        _mappingToggleButton.AddThemeFontSizeOverride("font_size", _hudFontSize);
+        _mappingToggleButton.Pressed += ToggleMappingView;
+        outer.AddChild(_mappingToggleButton);
+
+        // The Mapping view (#42) can have far more lines than Inspector's
+        // 3 (one core alone is 6 sensor lines). A ScrollContainer with a
+        // fixed height keeps the panel's footprint constant instead of
+        // growing over the HUD/scene above it — see #42 review.
+        var scroll = new ScrollContainer
+        {
+            CustomMinimumSize = new Vector2(0, 130),
+            HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled,
+        };
+
         var content = new VBoxContainer();
         content.AddThemeConstantOverride("separation", 6);
+        content.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
         _inspectorTitle = new Label { AutowrapMode = TextServer.AutowrapMode.WordSmart };
         _inspectorTitle.AddThemeColorOverride("font_color", _theme.SelectionGlow);
         _inspectorTitle.AddThemeFontSizeOverride("font_size", _hudFontSize);
@@ -739,7 +810,9 @@ public partial class Main : Node2D
         content.AddChild(_inspectorTitle);
         content.AddChild(_inspectorRole);
         content.AddChild(_inspectorValues);
-        margin.AddChild(content);
+        scroll.AddChild(content);
+        outer.AddChild(scroll);
+        margin.AddChild(outer);
         panel.AddChild(margin);
         layer.AddChild(panel);
         AddChild(layer);
@@ -753,11 +826,24 @@ public partial class Main : Node2D
             return;
         }
 
+        if (_mappingToggleButton is not null)
+        {
+            _mappingToggleButton.Visible = !Construction.IsActive;
+        }
+
         if (Construction.IsActive)
         {
             _inspectorTitle.Text = "Building";
             _inspectorRole.Text = $"Tool: {Construction.ActiveTool}";
             _inspectorValues.Text = Construction.StatusMessage ?? ConstructionToolHint(Construction.ActiveTool);
+            return;
+        }
+
+        if (_showMapping)
+        {
+            SetLabelTextIfChanged(_inspectorTitle, "Sensor \u2192 motor mapping");
+            SetLabelTextIfChanged(_inspectorRole, _mapping.SensorsText);
+            SetLabelTextIfChanged(_inspectorValues, _mapping.OutputsText);
             return;
         }
 
@@ -770,6 +856,33 @@ public partial class Main : Node2D
         _inspectorRole.Text = _inspector.Role;
         _inspectorValues.Text = _inspector.Values;
     }
+
+    // Godot's Label.Text setter re-triggers layout/redraw even when the
+    // assigned string is identical, which matters here since the mapping
+    // view reassigns these labels on every refresh tick (see _Process).
+    private static void SetLabelTextIfChanged(Label label, string text)
+    {
+        if (label.Text != text)
+        {
+            label.Text = text;
+        }
+    }
+
+    // Manual override of the #42 mapping/#41 inspector auto-switch (see
+    // OnSelectionPropertyChanged) — lets the user check the mapping even
+    // while something is selected, or vice versa.
+    private void ToggleMappingView()
+    {
+        _showMapping = !_showMapping;
+        if (_mappingToggleButton is not null)
+        {
+            _mappingToggleButton.Text = MappingToggleButtonText();
+        }
+
+        UpdateInspector();
+    }
+
+    private string MappingToggleButtonText() => _showMapping ? "Inspector" : "Mapping";
 
     private static string ConstructionToolHint(ConstructionTool tool)
     {
