@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Godot;
 
 namespace NodeRunner.Creature;
@@ -12,16 +13,24 @@ namespace NodeRunner.Creature;
 public sealed class MotorRelation
 {
     // How aggressively the motor chases its target velocity before the
-    // result is clamped to MaxTorque. Not itself exposed as a creature
-    // parameter — it only shapes how quickly MaxTorque is reached.
-    private const float _velocityGain = 40f;
+    // result is clamped to MaxTorque. Derived from maxTorque/maxAngularVelocity
+    // (not itself a creature parameter) so that a full-speed target reached
+    // from rest actually commands MaxTorque — with a fixed gain, MaxTorque
+    // could be unreachable in practice (e.g. a beam resting flat on the
+    // ground needs more torque than a low gain could ever produce, no
+    // matter how high MaxTorque was set).
+    private readonly float _velocityGain;
 
     public MotorRelation(RigidBody2D referenceBeam, RigidBody2D otherBeam, float maxTorque, float maxAngularVelocity)
     {
+        // A zero (or non-finite) maxAngularVelocity would make the gain
+        // below Infinity/NaN, poisoning Drive()'s torque output.
+        Debug.Assert(maxAngularVelocity > 0, "maxAngularVelocity must be positive.");
         ReferenceBeam = referenceBeam;
         OtherBeam = otherBeam;
         MaxTorque = maxTorque;
         MaxAngularVelocity = maxAngularVelocity;
+        _velocityGain = maxTorque / maxAngularVelocity;
     }
 
     public RigidBody2D ReferenceBeam { get; }
