@@ -14,6 +14,9 @@ public partial class WatchScreen : Control
     private readonly List<Label> _signalBodies = new();
     private int _selectedSignalIndex = -1;
 
+    [Signal]
+    public delegate void BrainFocusRequestedEventHandler();
+
     [Export]
     public bool ShowTopBar { get; set; } = true;
 
@@ -282,6 +285,10 @@ public partial class WatchScreen : Control
         }
 
         _selectedSignalIndex = index;
+        if (index == 1)
+        {
+            EmitSignal(SignalName.BrainFocusRequested);
+        }
     }
 
     private void DrawArenaPlaceholder(Control control)

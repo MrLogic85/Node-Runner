@@ -221,6 +221,7 @@ public partial class SampleFlowScreen : Control
             ShowTopBar = false,
             Hosted = true,
         };
+        _watch.BrainFocusRequested += () => ShowSheet("BrainFocus · Decides", CreateBrainFocusBody());
         _sampleView = _watch;
         _content.AddChild(_watch);
     }
@@ -463,6 +464,102 @@ public partial class SampleFlowScreen : Control
         };
         actions.AddChild(confirm);
         stack.AddChild(actions);
+        return stack;
+    }
+
+    private Control CreateBrainFocusBody()
+    {
+        var stack = new VBoxContainer();
+        stack.AddThemeConstantOverride("separation", 10);
+        stack.AddChild(new Label { Text = "Tap a neuron to see which signal it is shaping." });
+        var explanation = new Label
+        {
+            Text = "Hidden neuron 2 combines contact and body angle before the motor targets.",
+            AutowrapMode = TextServer.AutowrapMode.WordSmart,
+        };
+        var network = new Control { CustomMinimumSize = new Vector2(420, 150) };
+        var selectedNeuron = 1;
+        network.Draw += () =>
+        {
+            var left = new[] { new Vector2(50, 35), new Vector2(50, 105) };
+            var middle = new[] { new Vector2(210, 20), new Vector2(210, 75), new Vector2(210, 130) };
+            var right = new[] { new Vector2(370, 50), new Vector2(370, 105) };
+            foreach (var input in left)
+            {
+                foreach (var neuron in middle)
+                {
+                    network.DrawLine(input, neuron, _tokens.Edge, 2);
+                }
+            }
+
+            foreach (var neuron in middle)
+            {
+                foreach (var output in right)
+                {
+                    network.DrawLine(neuron, output, _tokens.Accent, 3);
+                }
+            }
+
+            foreach (var node in left)
+            {
+                network.DrawCircle(node, 12, _tokens.AccentGlow);
+            }
+
+            for (var index = 0; index < middle.Length; index++)
+            {
+                network.DrawCircle(middle[index], 15, _tokens.Halo);
+                if (index == selectedNeuron)
+                {
+                    network.DrawArc(middle[index], 22, 0, Mathf.Tau, 32, _tokens.Accent, 3);
+                }
+            }
+
+            foreach (var node in right)
+            {
+                network.DrawCircle(node, 12, _tokens.Accent);
+            }
+        };
+        stack.AddChild(network);
+        var neurons = new HBoxContainer();
+        neurons.AddThemeConstantOverride("separation", 8);
+        var neuronButtons = new List<UiActionButton>();
+        for (var index = 0; index < 3; index++)
+        {
+            var neuronIndex = index;
+            var button = new UiActionButton
+            {
+                Tokens = _tokens,
+                LabelText = $"Hidden {index + 1}",
+                Kind = index == selectedNeuron
+                    ? UiActionButton.ActionKind.Primary
+                    : UiActionButton.ActionKind.Secondary,
+            };
+            button.Pressed += () =>
+            {
+                selectedNeuron = neuronIndex;
+                for (var buttonIndex = 0; buttonIndex < neuronButtons.Count; buttonIndex++)
+                {
+                    neuronButtons[buttonIndex].Kind = buttonIndex == selectedNeuron
+                        ? UiActionButton.ActionKind.Primary
+                        : UiActionButton.ActionKind.Secondary;
+                }
+                explanation.Text = $"Hidden neuron {neuronIndex + 1} is highlighted; its weighted links shape the next motor targets.";
+                network.QueueRedraw();
+            };
+            neuronButtons.Add(button);
+            neurons.AddChild(button);
+        }
+        stack.AddChild(neurons);
+        stack.AddChild(explanation);
+        stack.AddChild(new Label { Text = "Inputs: core contact · body angle    Outputs: left joint · right joint" });
+        var close = new UiActionButton
+        {
+            Tokens = _tokens,
+            LabelText = "Back to SignalFlow",
+            Kind = UiActionButton.ActionKind.Primary,
+        };
+        close.Pressed += CloseOverlays;
+        stack.AddChild(close);
         return stack;
     }
 
