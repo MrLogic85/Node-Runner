@@ -20,6 +20,8 @@ public partial class SampleFlowScreen : Control
     private UiToast? _toast;
     private UiSheet? _sheet;
     private int _selectedMode;
+    private Control? _sampleView;
+    private string? _lastDeletedCreation;
 
     public UiTokens Tokens
     {
@@ -77,6 +79,7 @@ public partial class SampleFlowScreen : Control
         _overflowMenu = null;
         _toast = null;
         _sheet = null;
+        _sampleView = null;
         BuildLayout();
         if (_selectedMode == 0)
         {
@@ -177,7 +180,8 @@ public partial class SampleFlowScreen : Control
         };
         _overflowMenu.SetActions(
             ("training-settings", "Sample settings", false),
-            ("start-over", "Sample start over", true));
+            ("start-over", "Sample start over", true),
+            ("creations", "Creations", false));
         _overflowMenu.ActionSelected += OnOverflowAction;
         _overlay.AddChild(_overflowMenu);
 
@@ -190,6 +194,7 @@ public partial class SampleFlowScreen : Control
         };
         _toast.SetAnchorsPreset(LayoutPreset.BottomLeft);
         _toast.CustomMinimumSize = new Vector2(420, _tokens.TouchTarget);
+        _toast.UndoPressed += RestoreDeletedCreation;
         _overlay.AddChild(_toast);
 
         _sheet = new UiSheet
@@ -216,6 +221,7 @@ public partial class SampleFlowScreen : Control
             ShowTopBar = false,
             Hosted = true,
         };
+        _sampleView = _watch;
         _content.AddChild(_watch);
     }
 
@@ -234,6 +240,7 @@ public partial class SampleFlowScreen : Control
             Hosted = true,
         };
         _build.TrainingRequested += () => SetMode(0);
+        _sampleView = _build;
         _content.AddChild(_build);
     }
 
@@ -254,6 +261,39 @@ public partial class SampleFlowScreen : Control
         {
             ShowBuild();
         }
+    }
+
+    private void ShowCreations()
+    {
+        if (_content is null)
+        {
+            return;
+        }
+
+        ClearContent();
+        var creations = new CreationsScreen { Tokens = _tokens };
+        creations.OpenRequested += _ => SetMode(0);
+        creations.EditRequested += ShowEdit;
+        creations.DuplicateRequested += name => ShowSheet("Duplicate " + name + "?", CreateDuplicateBody(name));
+        creations.DeleteRequested += name => ShowSheet("Delete " + name + "?", CreateDeleteBody(name));
+        creations.BackRequested += () => SetMode(0);
+        _sampleView = creations;
+        _content.AddChild(creations);
+    }
+
+    private void ShowEdit(string creationName)
+    {
+        if (_content is null)
+        {
+            return;
+        }
+
+        ClearContent();
+        var edit = new EditScreen { Tokens = _tokens, CreationName = creationName };
+        edit.DoneRequested += () => SetMode(0);
+        edit.RebuildRequested += () => ShowSheet("Rebuild body?", CreateRebuildBody(creationName));
+        _sampleView = edit;
+        _content.AddChild(edit);
     }
 
     private void ToggleOverflowMenu()
@@ -310,7 +350,11 @@ public partial class SampleFlowScreen : Control
             return;
         }
 
-        if (actionId == "start-over")
+        if (actionId == "creations")
+        {
+            ShowCreations();
+        }
+        else if (actionId == "start-over")
         {
             ShowSheet("Start over?", CreateConfirmationBody());
         }
@@ -358,6 +402,7 @@ public partial class SampleFlowScreen : Control
         confirm.Pressed += () =>
         {
             CloseOverlays();
+            _lastDeletedCreation = "current sample run";
             _toast?.ShowMessage("Sample only: run reset confirmed.", "Undo");
         };
         actions.AddChild(confirm);
@@ -387,10 +432,139 @@ public partial class SampleFlowScreen : Control
         return stack;
     }
 
+    private Control CreateRebuildBody(string creationName)
+    {
+        var stack = new VBoxContainer();
+        stack.AddThemeConstantOverride("separation", 12);
+        stack.AddChild(new Label
+        {
+            Text = $"Rebuild creates a new body and brain. {creationName} stays saved as the original version.",
+            AutowrapMode = TextServer.AutowrapMode.WordSmart,
+        });
+        var actions = new HBoxContainer();
+        var cancel = new UiActionButton
+        {
+            Tokens = _tokens,
+            LabelText = "Cancel",
+            Kind = UiActionButton.ActionKind.Secondary,
+        };
+        cancel.Pressed += CloseOverlays;
+        actions.AddChild(cancel);
+        var confirm = new UiActionButton
+        {
+            Tokens = _tokens,
+            LabelText = "Create new body",
+            Kind = UiActionButton.ActionKind.Danger,
+        };
+        confirm.Pressed += () =>
+        {
+            CloseOverlays();
+            SetMode(1);
+        };
+        actions.AddChild(confirm);
+        stack.AddChild(actions);
+        return stack;
+    }
+
+    private Control CreateDuplicateBody(string name)
+    {
+        var stack = new VBoxContainer();
+        stack.AddThemeConstantOverride("separation", 12);
+        stack.AddChild(new Label
+        {
+            Text = "Copy brain is selected. Start fresh creates a new random brain while keeping the body.",
+            AutowrapMode = TextServer.AutowrapMode.WordSmart,
+        });
+        var choice = new UiSegmentedSwitch
+        {
+            Tokens = _tokens,
+            Options = new[] { "Copy brain", "Start fresh" },
+            SelectedIndex = 0,
+        };
+        stack.AddChild(choice);
+        var done = new UiActionButton
+        {
+            Tokens = _tokens,
+            LabelText = "Copy brain",
+            Kind = UiActionButton.ActionKind.Primary,
+        };
+        choice.SelectionChanged += index => done.LabelText = index == 0 ? "Copy brain" : "Start fresh";
+        done.Pressed += () =>
+        {
+            CloseOverlays();
+            _toast?.ShowMessage($"Sample only: {name} duplicate created using {done.LabelText.ToLowerInvariant()}.");
+        };
+        stack.AddChild(done);
+        return stack;
+    }
+
+    private Control CreateDeleteBody(string name)
+    {
+        var stack = new VBoxContainer();
+        stack.AddThemeConstantOverride("separation", 12);
+        stack.AddChild(new Label
+        {
+            Text = $"Hold-to-confirm is represented here by an explicit confirmation. {name} and its training data would be removed.",
+            AutowrapMode = TextServer.AutowrapMode.WordSmart,
+        });
+        var actions = new HBoxContainer();
+        var cancel = new UiActionButton
+        {
+            Tokens = _tokens,
+            LabelText = "Cancel",
+            Kind = UiActionButton.ActionKind.Secondary,
+        };
+        cancel.Pressed += CloseOverlays;
+        actions.AddChild(cancel);
+        var confirm = new UiActionButton
+        {
+            Tokens = _tokens,
+            LabelText = "Hold to delete",
+            Kind = UiActionButton.ActionKind.Danger,
+        };
+        var holdTimer = new Godot.Timer { OneShot = true, WaitTime = 1.2f };
+        holdTimer.Timeout += () =>
+        {
+            CloseOverlays();
+            _lastDeletedCreation = name;
+            _toast?.ShowMessage($"Sample only: {name} deleted.", "Undo", 4);
+        };
+        confirm.ButtonDown += () =>
+        {
+            confirm.LabelText = "Keep holding…";
+            holdTimer.Start();
+        };
+        confirm.ButtonUp += () =>
+        {
+            if (holdTimer.TimeLeft > 0)
+            {
+                holdTimer.Stop();
+                confirm.LabelText = "Hold to delete";
+            }
+        };
+        stack.AddChild(holdTimer);
+        actions.AddChild(confirm);
+        stack.AddChild(actions);
+        return stack;
+    }
+
+    private void RestoreDeletedCreation()
+    {
+        if (_lastDeletedCreation is null || _toast is null)
+        {
+            return;
+        }
+
+        var restoredName = _lastDeletedCreation;
+        _lastDeletedCreation = null;
+        _toast.ShowMessage($"Sample only: {restoredName} restored.");
+    }
+
     private void ClearContent()
     {
         _watch = null;
         _build = null;
+        _sampleView = null;
         foreach (var child in _content!.GetChildren())
         {
             _content.RemoveChild(child);

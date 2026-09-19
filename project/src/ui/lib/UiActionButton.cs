@@ -50,7 +50,18 @@ public partial class UiActionButton : Button
         }
     }
 
-    [Export] public string LabelText { get; set; } = string.Empty;
+    private string _labelText = string.Empty;
+
+    [Export]
+    public string LabelText
+    {
+        get => _labelText;
+        set
+        {
+            _labelText = value;
+            RefreshStyle();
+        }
+    }
 
     private UiTokens _tokens = UiTokens.Neon;
 
