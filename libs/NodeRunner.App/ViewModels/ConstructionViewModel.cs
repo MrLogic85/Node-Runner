@@ -23,21 +23,34 @@ public enum ConstructionTool
 /// </summary>
 public sealed class ConstructionViewModel : INotifyPropertyChanged
 {
-    private readonly CreatureBuilder _builder;
+    private CreatureBuilder _builder;
     private bool _isActive;
     private ConstructionTool _activeTool = ConstructionTool.Place;
     private int? _pendingBeamStartNode;
     private string? _statusMessage;
+    private bool _moveOnly;
 
     public ConstructionViewModel(CreatureBuilder? builder = null)
     {
         _builder = builder ?? new CreatureBuilder();
     }
 
+    public void Load(CreatureDef creature, bool moveOnly = false)
+    {
+        ArgumentNullException.ThrowIfNull(creature);
+        _builder = new CreatureBuilder(creature);
+        _moveOnly = moveOnly;
+        PendingBeamStartNode = null;
+        StatusMessage = null;
+        AnatomyChanged?.Invoke(this, EventArgs.Empty);
+    }
+
     public event PropertyChangedEventHandler? PropertyChanged;
 
     /// <summary>Raised whenever the placed anatomy (nodes/beams/cores) changes, so the UI can redraw.</summary>
     public event EventHandler? AnatomyChanged;
+
+    public bool IsMoveOnly => _moveOnly;
 
     public bool IsActive
     {
@@ -112,6 +125,11 @@ public sealed class ConstructionViewModel : INotifyPropertyChanged
     /// <summary>Places a new node and returns its index.</summary>
     public int PlaceNode(Vector2D position, double radius)
     {
+        if (_moveOnly)
+        {
+            throw new InvalidOperationException("Edit mode can only move existing nodes.");
+        }
+
         var index = _builder.AddNode(position, radius);
         AnatomyChanged?.Invoke(this, EventArgs.Empty);
         return index;
@@ -157,6 +175,12 @@ public sealed class ConstructionViewModel : INotifyPropertyChanged
     /// </summary>
     public void SelectNodeForBeam(int nodeIndex)
     {
+        if (_moveOnly)
+        {
+            StatusMessage = "Edit mode only allows moving existing nodes.";
+            return;
+        }
+
         if (PendingBeamStartNode is null)
         {
             PendingBeamStartNode = nodeIndex;
@@ -189,6 +213,12 @@ public sealed class ConstructionViewModel : INotifyPropertyChanged
     /// <summary>Attaches a core to <paramref name="nodeIndex"/>, or removes it if one is already there.</summary>
     public void ToggleCoreOnNode(int nodeIndex)
     {
+        if (_moveOnly)
+        {
+            StatusMessage = "Edit mode only allows moving existing nodes.";
+            return;
+        }
+
         var existingCoreIndex = FindCoreIndexForNode(nodeIndex);
         if (existingCoreIndex >= 0)
         {
@@ -232,6 +262,12 @@ public sealed class ConstructionViewModel : INotifyPropertyChanged
     /// <summary>Removes a node, cascading to any beams/cores attached to it (see <see cref="CreatureBuilder.RemoveNode"/>).</summary>
     public void DeleteNode(int nodeIndex)
     {
+        if (_moveOnly)
+        {
+            StatusMessage = "Edit mode only allows moving existing nodes.";
+            return;
+        }
+
         _builder.RemoveNode(nodeIndex);
         StatusMessage = $"Removed node {nodeIndex} and anything attached to it.";
         AnatomyChanged?.Invoke(this, EventArgs.Empty);
@@ -240,6 +276,12 @@ public sealed class ConstructionViewModel : INotifyPropertyChanged
     /// <summary>Removes a beam, leaving both of its nodes in place.</summary>
     public void DeleteBeam(int beamIndex)
     {
+        if (_moveOnly)
+        {
+            StatusMessage = "Edit mode only allows moving existing nodes.";
+            return;
+        }
+
         _builder.RemoveBeam(beamIndex);
         StatusMessage = "Removed beam.";
         AnatomyChanged?.Invoke(this, EventArgs.Empty);
@@ -271,6 +313,12 @@ public sealed class ConstructionViewModel : INotifyPropertyChanged
     public void SetBlockedLeaveMessage(IReadOnlyList<string> errors)
     {
         StatusMessage = $"Not ready to simulate yet: {string.Join(" ", errors)}";
+    }
+
+    public void SetCompletedMessage(string message)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(message);
+        StatusMessage = message;
     }
 
     private int FindCoreIndexForNode(int nodeIndex)

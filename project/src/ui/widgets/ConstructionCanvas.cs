@@ -170,7 +170,10 @@ public partial class ConstructionCanvas : Node2D
                 }
                 else
                 {
-                    _draggingNodeIndex = _viewModel.PlaceNode(domainPosition, _defaultNodeRadius);
+                    if (!_viewModel.IsMoveOnly)
+                    {
+                        _draggingNodeIndex = _viewModel.PlaceNode(domainPosition, _defaultNodeRadius);
+                    }
                 }
 
                 break;

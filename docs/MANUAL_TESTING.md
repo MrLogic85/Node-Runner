@@ -69,6 +69,12 @@ The PR's **How to verify** section records what actually ran:
 
 ## Agent-run manual tests
 
+The coding agent is allowed to perform manual checks when the required
+runtime is available. "Manual" describes the user-visible workflow; it does
+not mean that a human must perform every step. The agent may export and launch
+Godot, install an APK with `adb`, interact with a connected Android device,
+capture screenshots, and inspect `adb logcat`.
+
 An AI agent can run a manual test only when the environment is available and
 the expected result is observable from tools. Prefer agent-run tests for:
 

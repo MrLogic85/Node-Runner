@@ -67,6 +67,26 @@ public sealed class ConstructionViewModelTests
     }
 
     [Fact]
+    public void LoadMoveOnly_AllowsMovingExistingNodesButRejectsTopologyChanges()
+    {
+        var creature = new CreatureDef(
+            [new NodeDef(new Vector2D(0, 0), 18), new NodeDef(new Vector2D(20, 0), 18)],
+            [new BeamDef(0, 1)],
+            []);
+        var viewModel = new ConstructionViewModel();
+
+        viewModel.Load(creature, moveOnly: true);
+        viewModel.MoveNode(0, new Vector2D(5, 5));
+
+        viewModel.Nodes[0].Position.ShouldBe(new Vector2D(5, 5));
+        viewModel.IsMoveOnly.ShouldBeTrue();
+        viewModel.Beams.Count.ShouldBe(1);
+        Action action = () => viewModel.PlaceNode(new Vector2D(30, 0), 18);
+
+        action.ShouldThrow<InvalidOperationException>();
+    }
+
+    [Fact]
     public void TryFindNodeNear_WithNoNodes_ReturnsFalse()
     {
         var viewModel = new ConstructionViewModel();

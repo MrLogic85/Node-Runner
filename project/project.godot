@@ -29,6 +29,7 @@ project/assembly_name="NodeRunner"
 [autoload]
 
 RngProvider="*res://src/managers/RngProvider.cs"
+SaveManager="*res://src/managers/SaveManager.cs"
 
 [input_devices]
 

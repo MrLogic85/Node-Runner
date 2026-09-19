@@ -38,6 +38,14 @@ visible controls or changing screen layout.
    justification. Preexisting findings do not block the current commit;
    new findings introduced by the diff do until they are addressed or
    dismissed. Code-review clean = commit/push authorised.
+
+   When the user asks for autonomous implementation, carry the work through
+   validation, review, and commit without waiting for a separate request to
+   commit. Do not leave a completed change uncommitted merely because the
+   user did not say "commit". Leave changes uncommitted only when the user
+   explicitly asks for that, when a genuine blocker prevents a safe commit,
+   or when the repository's review process requires a human decision; state
+   the reason plainly.
 3. **Ask when in doubt.** If a design decision is not covered by
    `docs/CODE_DESIGN_PRINCIPLES.md`, stop and ask the human.
 
@@ -66,6 +74,7 @@ Read the nearest one before editing that layer.
 - Keep each change focused on the issue; ask if scope or design is unclear.
 - Follow `docs/REVIEW.md` when finishing the change. The code-review gate in
   the prime directives applies before every commit and push.
+- The prime directive above defines when autonomous work should be committed.
 
 ## Machine-local setup
 

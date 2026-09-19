@@ -21,6 +21,18 @@ public sealed class CreatureBuilder
     private readonly List<BeamDef> _beams = [];
     private readonly List<CoreDef> _cores = [];
 
+    public CreatureBuilder()
+    {
+    }
+
+    public CreatureBuilder(CreatureDef creature)
+    {
+        ArgumentNullException.ThrowIfNull(creature);
+        _nodes.AddRange(creature.Nodes);
+        _beams.AddRange(creature.Beams);
+        _cores.AddRange(creature.Cores);
+    }
+
     public IReadOnlyList<NodeDef> Nodes => _nodes;
 
     public IReadOnlyList<BeamDef> Beams => _beams;

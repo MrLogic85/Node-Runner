@@ -34,6 +34,10 @@ public partial class Evolver : Node
 
     public double MeanFitness { get; private set; }
 
+    public double[]? BestGenome { get; private set; }
+
+    public int[] LayerSizes => _layerSizes.ToArray();
+
     /// <summary>Raised after every genome in a generation has been evaluated and the next generation has been produced.</summary>
     public event Action? GenerationCompleted;
 
@@ -61,7 +65,15 @@ public partial class Evolver : Node
     /// Begins evolving brains for the given creature. <paramref name="layerSizes"/>
     /// must match the creature's sensor/motor counts (its input/output layers).
     /// </summary>
-    public void Start(Creature.Creature creature, int populationSize, int[] layerSizes, GeneticAlgorithm ga, Random rng)
+    public void Start(
+        Creature.Creature creature,
+        int populationSize,
+        int[] layerSizes,
+        GeneticAlgorithm ga,
+        Random rng,
+        double[]? resumeGenome = null,
+        int resumeGeneration = 0,
+        int trialDurationTicks = 600)
     {
         ArgumentNullException.ThrowIfNull(creature);
         ArgumentNullException.ThrowIfNull(layerSizes);
@@ -72,15 +84,36 @@ public partial class Evolver : Node
             throw new ArgumentOutOfRangeException(nameof(populationSize), "Population size must be at least 1.");
         }
 
+        if (resumeGeneration < 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(resumeGeneration));
+        }
+
+        if (trialDurationTicks < 1)
+        {
+            throw new ArgumentOutOfRangeException(nameof(trialDurationTicks));
+        }
+
+        if (resumeGenome is not null && resumeGenome.Length != NeuralNetwork.GenomeLength(layerSizes))
+        {
+            throw new ArgumentException("Resume genome must match the network layer sizes.", nameof(resumeGenome));
+        }
+
         _creature = creature;
-        _layerSizes = layerSizes;
+        _trialController.TrialDurationTicks = trialDurationTicks;
+        _layerSizes = layerSizes.ToArray();
         _ga = ga;
         _rng = rng;
-        Generation = 0;
+        Generation = resumeGeneration;
         BestFitness = double.NegativeInfinity;
         MeanFitness = 0;
+        BestGenome = resumeGenome?.ToArray();
 
         _genomes = CreateRandomPopulation(populationSize);
+        if (resumeGenome is not null)
+        {
+            _genomes[0] = resumeGenome.ToArray();
+        }
         _fitness = new double[populationSize];
         _currentIndex = 0;
         EvaluateCurrent();
@@ -122,6 +155,11 @@ public partial class Evolver : Node
     {
         var generationBest = _fitness.Max();
         var isNewBest = generationBest > BestFitness;
+
+        if (isNewBest)
+        {
+            BestGenome = _genomes[Array.IndexOf(_fitness, generationBest)].ToArray();
+        }
 
         BestFitness = Math.Max(BestFitness, generationBest);
         MeanFitness = _fitness.Average();
