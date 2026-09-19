@@ -43,6 +43,7 @@ public partial class Main : Node2D
     private Label? _trainingProfileSummaryLabel;
     private Label? _progressionLabel;
     private PanelContainer? _trainingPanel;
+    private GenerationStrip? _generationStrip;
     private int _bestGeneration;
     private int _timeScaleIndex;
     private Label? _inspectorTitle;
@@ -364,6 +365,14 @@ public partial class Main : Node2D
         {
             _progressionLabel.Text = ProgressionText();
         }
+
+        _generationStrip?.SetProgress(
+            _evolver.Generation,
+            _evolver.CurrentCandidate,
+            _evolver.PopulationSize,
+            _evolver.CompletedCandidateCount,
+            _evolver.CompletedFitness,
+            _evolver.IsTrialActive);
     }
 
     private RngProvider RngProvider() => GetNode<RngProvider>("/root/RngProvider");
@@ -656,6 +665,11 @@ public partial class Main : Node2D
         statsRow.AddChild(_generationLabel);
         statsRow.AddChild(_bestFitnessLabel);
         statsRow.AddChild(_meanFitnessLabel);
+        _generationStrip = new GenerationStrip
+        {
+            Name = "GenerationStrip",
+            Palette = _theme,
+        };
 
         var controlsRow = new HBoxContainer();
         controlsRow.AddThemeConstantOverride("separation", 20);
@@ -703,6 +717,7 @@ public partial class Main : Node2D
 
         _trainingProfileSummaryLabel = CreateTrainingLabel("TrainingProfileSummaryLabel", TrainingProfileSummaryText());
         column.AddChild(statsRow);
+        column.AddChild(_generationStrip);
         column.AddChild(controlsRow);
         column.AddChild(_trainingProfileSummaryLabel);
         column.AddChild(_progressionLabel);

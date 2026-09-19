@@ -47,6 +47,12 @@ public partial class Evolver : Node
     /// <summary>Whether a candidate trial is currently active.</summary>
     public bool IsTrialActive => _creature is not null && _trialController.IsRunning;
 
+    /// <summary>Fitness values completed in the current generation.</summary>
+    public double[] CompletedFitness => _fitness.ToArray();
+
+    /// <summary>Number of candidates whose trials have completed in the current generation.</summary>
+    public int CompletedCandidateCount => Math.Min(_currentIndex, _fitness.Length);
+
     /// <summary>Raised after every genome in a generation has been evaluated and the next generation has been produced.</summary>
     public event Action? GenerationCompleted;
 
