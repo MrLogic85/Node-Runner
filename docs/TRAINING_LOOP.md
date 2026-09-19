@@ -142,10 +142,11 @@ but do not redefine it here.
     reasonable later cleanup, not required for this slice.
 - Full neural-network visualization remains out of scope (later milestone).
 
-## Not yet implemented (issue #52)
+## Deferred future work (unassigned)
 
 - Running more than one creature at once in parallel (`Population`,
   collision-layer isolation per `project/src/sim/AGENTS.md`). #50
   intentionally evaluates candidates one at a time on a single creature
-  instead — see above.
+  instead — see above. This is not #52's scope: #52 is a validation-only
+  issue (manual release check for 0.4.0), not an implementation issue.
 
