@@ -46,8 +46,18 @@ visible controls or changing screen layout.
    explicitly asks for that, when a genuine blocker prevents a safe commit,
    or when the repository's review process requires a human decision; state
    the reason plainly.
-3. **Ask when in doubt.** If a design decision is not covered by
-   `docs/CODE_DESIGN_PRINCIPLES.md`, stop and ask the human.
+3. **Resolve ordinary ambiguity autonomously.** During autonomous roadmap
+   work, choose the smallest reversible implementation that fits the
+   roadmap and owning documents, record the assumption in the relevant
+   documentation, and continue. Do not stop for routine UX wording,
+   parameter defaults, test strategy, or implementation details. Ask the
+   human only when the work is genuinely blocked, contradicts an explicit
+   product decision, requires a new roadmap/architecture decision, risks
+   data loss or an irreversible migration, or has two materially different
+   product outcomes that cannot be safely staged. A missing GitHub Issue or
+   ordinary uncertainty is not by itself a blocker to beginning or
+   implementing roadmap work; before commit/push, the issue and
+   `docs/REVIEW.md` release gates still apply.
 
 ## Architecture map
 
@@ -71,7 +81,8 @@ Read the nearest one before editing that layer.
 - Treat archived file issues under `issues/archive/` as immutable historical
   records. Do not edit them; update the corresponding GitHub Issue instead.
 - Read the owning documents and nearest local `AGENTS.md` before editing.
-- Keep each change focused on the issue; ask if scope or design is unclear.
+- Keep each change focused on the issue. If scope or design is unclear,
+  apply the autonomous ambiguity rule above rather than waiting by default.
 - Follow `docs/REVIEW.md` when finishing the change. The code-review gate in
   the prime directives applies before every commit and push.
 - The prime directive above defines when autonomous work should be committed.
@@ -95,5 +106,5 @@ there; do not maintain a second copy.
 - Rename or move files/folders in bulk
 - Change project settings in `project.godot` or `.csproj`
 - Introduce a new ML paradigm (RL, transformers, etc.) — these are roadmap
-  decisions
+  decisions unless the current roadmap milestone explicitly schedules it
 - Rewrite existing modules "for clarity" — propose in an issue first
