@@ -41,6 +41,18 @@ Avoid turning 0.1.0 into a generic developer dashboard. If a control does not
 teach an ML/simulation concept or help the user run the 0.1.0 loop, leave it
 out.
 
+## 0.4.0 screen concept
+
+The single main screen gained a second HUD panel below the 0.1.0 row
+(Randomize/Build/Seed): a training panel (generation, best fitness, mean
+fitness, and run/pause/reset/time-scale controls — see
+`docs/TRAINING_LOOP.md`'s "Training HUD (issue #51)" section). It occupies
+the same position as the construction tool row and the two are mutually
+exclusive: the training panel shows outside construction mode, the tool row
+shows inside it. Toggling into/out of construction mode always resumes
+training first (pausing has no meaning while editing, and the construction
+canvas isn't reachable while the tree is paused).
+
 ## Theme boundaries
 
 Tron/neon is the reference theme, not a permanent constraint. Implementation
