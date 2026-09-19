@@ -11,6 +11,7 @@ public enum ConstructionTool
     Place,
     Beam,
     Core,
+    Delete,
 }
 
 /// <summary>
@@ -203,6 +204,72 @@ public sealed class ConstructionViewModel : INotifyPropertyChanged
         AnatomyChanged?.Invoke(this, EventArgs.Empty);
     }
 
+    /// <summary>
+    /// Finds the closest beam within <paramref name="maxDistance"/> of
+    /// <paramref name="position"/> (measured to the beam's line segment), if
+    /// any. Used to hit-test beams for the Delete tool, since a beam has no
+    /// single point like a node does.
+    /// </summary>
+    public bool TryFindBeamNear(Vector2D position, double maxDistance, out int beamIndex)
+    {
+        beamIndex = -1;
+        var bestDistanceSquared = maxDistance * maxDistance;
+
+        for (var i = 0; i < _builder.Beams.Count; i++)
+        {
+            var beam = _builder.Beams[i];
+            var distanceSquared = DistanceSquaredToSegment(position, _builder.Nodes[beam.NodeA].Position, _builder.Nodes[beam.NodeB].Position);
+            if (distanceSquared <= bestDistanceSquared)
+            {
+                bestDistanceSquared = distanceSquared;
+                beamIndex = i;
+            }
+        }
+
+        return beamIndex >= 0;
+    }
+
+    /// <summary>Removes a node, cascading to any beams/cores attached to it (see <see cref="CreatureBuilder.RemoveNode"/>).</summary>
+    public void DeleteNode(int nodeIndex)
+    {
+        _builder.RemoveNode(nodeIndex);
+        StatusMessage = $"Removed node {nodeIndex} and anything attached to it.";
+        AnatomyChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    /// <summary>Removes a beam, leaving both of its nodes in place.</summary>
+    public void DeleteBeam(int beamIndex)
+    {
+        _builder.RemoveBeam(beamIndex);
+        StatusMessage = "Removed beam.";
+        AnatomyChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    /// <summary>
+    /// Checks whether the current anatomy is valid enough to leave
+    /// construction mode. An empty anatomy (nothing placed yet) is always
+    /// allowed, so a user who opens Build mode without editing anything can
+    /// freely return to Simulate. Otherwise this defers to
+    /// <see cref="CreatureBuilder.TryBuild"/>'s validation.
+    /// </summary>
+    public bool TryLeave(out IReadOnlyList<string> errors)
+    {
+        if (_builder.Nodes.Count == 0)
+        {
+            errors = [];
+            return true;
+        }
+
+        var canBuild = _builder.TryBuild(out _, out errors);
+        return canBuild;
+    }
+
+    /// <summary>Surfaces why leaving Build mode was blocked, via <see cref="StatusMessage"/>.</summary>
+    public void SetBlockedLeaveMessage(IReadOnlyList<string> errors)
+    {
+        StatusMessage = $"Not ready to simulate yet: {string.Join(" ", errors)}";
+    }
+
     private int FindCoreIndexForNode(int nodeIndex)
     {
         for (var i = 0; i < _builder.Cores.Count; i++)
@@ -214,6 +281,25 @@ public sealed class ConstructionViewModel : INotifyPropertyChanged
         }
 
         return -1;
+    }
+
+    private static double DistanceSquaredToSegment(Vector2D point, Vector2D segmentStart, Vector2D segmentEnd)
+    {
+        var segmentX = segmentEnd.X - segmentStart.X;
+        var segmentY = segmentEnd.Y - segmentStart.Y;
+        var segmentLengthSquared = (segmentX * segmentX) + (segmentY * segmentY);
+
+        var pointX = point.X - segmentStart.X;
+        var pointY = point.Y - segmentStart.Y;
+
+        var t = segmentLengthSquared > 0 ? Math.Clamp(((pointX * segmentX) + (pointY * segmentY)) / segmentLengthSquared, 0, 1) : 0;
+
+        var closestX = segmentStart.X + (t * segmentX);
+        var closestY = segmentStart.Y + (t * segmentY);
+
+        var dx = point.X - closestX;
+        var dy = point.Y - closestY;
+        return (dx * dx) + (dy * dy);
     }
 
     private void OnPropertyChanged([CallerMemberName] string? propertyName = null)

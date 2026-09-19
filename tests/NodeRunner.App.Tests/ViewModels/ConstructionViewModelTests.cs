@@ -209,4 +209,121 @@ public sealed class ConstructionViewModelTests
 
         viewModel.Cores.Count.ShouldBe(0);
     }
+
+    [Fact]
+    public void DeleteNode_RemovesNodeAndCascadesToBeamsAndCores()
+    {
+        var viewModel = new ConstructionViewModel();
+        var a = viewModel.PlaceNode(new Vector2D(0, 0), 18);
+        var b = viewModel.PlaceNode(new Vector2D(10, 0), 18);
+        viewModel.SelectNodeForBeam(a);
+        viewModel.SelectNodeForBeam(b);
+        viewModel.ToggleCoreOnNode(a);
+        var raised = false;
+        viewModel.AnatomyChanged += (_, _) => raised = true;
+
+        viewModel.DeleteNode(a);
+
+        viewModel.Nodes.Count.ShouldBe(1);
+        viewModel.Beams.Count.ShouldBe(0);
+        viewModel.Cores.Count.ShouldBe(0);
+        raised.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void DeleteBeam_RemovesBeamButKeepsNodes()
+    {
+        var viewModel = new ConstructionViewModel();
+        var a = viewModel.PlaceNode(new Vector2D(0, 0), 18);
+        var b = viewModel.PlaceNode(new Vector2D(10, 0), 18);
+        viewModel.SelectNodeForBeam(a);
+        viewModel.SelectNodeForBeam(b);
+        var raised = false;
+        viewModel.AnatomyChanged += (_, _) => raised = true;
+
+        viewModel.DeleteBeam(0);
+
+        viewModel.Beams.Count.ShouldBe(0);
+        viewModel.Nodes.Count.ShouldBe(2);
+        raised.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void TryFindBeamNear_WithinDistance_ReturnsBeam()
+    {
+        var viewModel = new ConstructionViewModel();
+        var a = viewModel.PlaceNode(new Vector2D(0, 0), 18);
+        var b = viewModel.PlaceNode(new Vector2D(10, 0), 18);
+        viewModel.SelectNodeForBeam(a);
+        viewModel.SelectNodeForBeam(b);
+
+        var found = viewModel.TryFindBeamNear(new Vector2D(5, 0), 2, out var beamIndex);
+
+        found.ShouldBeTrue();
+        beamIndex.ShouldBe(0);
+    }
+
+    [Fact]
+    public void TryFindBeamNear_BeyondDistance_ReturnsFalse()
+    {
+        var viewModel = new ConstructionViewModel();
+        var a = viewModel.PlaceNode(new Vector2D(0, 0), 18);
+        var b = viewModel.PlaceNode(new Vector2D(10, 0), 18);
+        viewModel.SelectNodeForBeam(a);
+        viewModel.SelectNodeForBeam(b);
+
+        var found = viewModel.TryFindBeamNear(new Vector2D(5, 50), 2, out var beamIndex);
+
+        found.ShouldBeFalse();
+        beamIndex.ShouldBe(-1);
+    }
+
+    [Fact]
+    public void TryLeave_WithNoNodesPlaced_ReturnsTrue()
+    {
+        var viewModel = new ConstructionViewModel();
+
+        var canLeave = viewModel.TryLeave(out var errors);
+
+        canLeave.ShouldBeTrue();
+        errors.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void TryLeave_WithUnconnectedNode_ReturnsFalseWithErrors()
+    {
+        var viewModel = new ConstructionViewModel();
+        viewModel.PlaceNode(new Vector2D(0, 0), 18);
+
+        var canLeave = viewModel.TryLeave(out var errors);
+
+        canLeave.ShouldBeFalse();
+        errors.ShouldNotBeEmpty();
+    }
+
+    [Fact]
+    public void TryLeave_WithValidCreature_ReturnsTrue()
+    {
+        var viewModel = new ConstructionViewModel();
+        var a = viewModel.PlaceNode(new Vector2D(0, 0), 18);
+        var b = viewModel.PlaceNode(new Vector2D(10, 0), 18);
+        viewModel.SelectNodeForBeam(a);
+        viewModel.SelectNodeForBeam(b);
+
+        var canLeave = viewModel.TryLeave(out var errors);
+
+        canLeave.ShouldBeTrue();
+        errors.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void SetBlockedLeaveMessage_SetsStatusMessage()
+    {
+        var viewModel = new ConstructionViewModel();
+
+        viewModel.SetBlockedLeaveMessage(["Add at least one node before running the creature."]);
+
+        viewModel.StatusMessage.ShouldNotBeNullOrEmpty();
+        viewModel.StatusMessage!.ShouldContain("Add at least one node");
+    }
 }
