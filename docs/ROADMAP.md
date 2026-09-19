@@ -111,8 +111,8 @@ see which motor relations became neural-network outputs.
   `docs/CONSTRUCTION_MODE.md`).
 - [x] User can place at least two nodes with Android touch.
 - [x] User can move nodes before simulation starts.
-- [ ] User can connect nodes with beams.
-- [ ] User can attach a core to a node.
+- [x] User can connect nodes with beams.
+- [x] User can attach a core to a node.
 - [ ] User can delete the selected editable element.
 - [ ] Invalid creatures are blocked with understandable validation messages.
 - [ ] A valid edited creature can be converted into a `CreatureDef`.

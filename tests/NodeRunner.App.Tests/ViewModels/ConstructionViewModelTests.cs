@@ -38,11 +38,11 @@ public sealed class ConstructionViewModelTests
     }
 
     [Fact]
-    public void PlaceNode_AddsNodeAndRaisesNodesChanged()
+    public void PlaceNode_AddsNodeAndRaisesAnatomyChanged()
     {
         var viewModel = new ConstructionViewModel();
         var raised = false;
-        viewModel.NodesChanged += (_, _) => raised = true;
+        viewModel.AnatomyChanged += (_, _) => raised = true;
 
         var index = viewModel.PlaceNode(new Vector2D(3, 4), 18);
 
@@ -53,12 +53,12 @@ public sealed class ConstructionViewModelTests
     }
 
     [Fact]
-    public void MoveNode_UpdatesPositionAndRaisesNodesChanged()
+    public void MoveNode_UpdatesPositionAndRaisesAnatomyChanged()
     {
         var viewModel = new ConstructionViewModel();
         var index = viewModel.PlaceNode(new Vector2D(0, 0), 18);
         var raised = false;
-        viewModel.NodesChanged += (_, _) => raised = true;
+        viewModel.AnatomyChanged += (_, _) => raised = true;
 
         viewModel.MoveNode(index, new Vector2D(10, 20));
 
@@ -101,5 +101,112 @@ public sealed class ConstructionViewModelTests
 
         found.ShouldBeFalse();
         nodeIndex.ShouldBe(-1);
+    }
+
+    [Fact]
+    public void ActiveTool_DefaultsToPlace()
+    {
+        var viewModel = new ConstructionViewModel();
+
+        viewModel.ActiveTool.ShouldBe(ConstructionTool.Place);
+    }
+
+    [Fact]
+    public void ActiveTool_WhenChanged_ClearsPendingBeamAndStatus()
+    {
+        var viewModel = new ConstructionViewModel();
+        var a = viewModel.PlaceNode(new Vector2D(0, 0), 18);
+        viewModel.SelectNodeForBeam(a);
+
+        viewModel.ActiveTool = ConstructionTool.Core;
+
+        viewModel.PendingBeamStartNode.ShouldBeNull();
+        viewModel.StatusMessage.ShouldBeNull();
+    }
+
+    [Fact]
+    public void SelectNodeForBeam_FirstCall_SetsPendingStartNode()
+    {
+        var viewModel = new ConstructionViewModel();
+        var a = viewModel.PlaceNode(new Vector2D(0, 0), 18);
+
+        viewModel.SelectNodeForBeam(a);
+
+        viewModel.PendingBeamStartNode.ShouldBe(a);
+    }
+
+    [Fact]
+    public void SelectNodeForBeam_SecondCallOnDifferentNode_CreatesBeam()
+    {
+        var viewModel = new ConstructionViewModel();
+        var a = viewModel.PlaceNode(new Vector2D(0, 0), 18);
+        var b = viewModel.PlaceNode(new Vector2D(10, 0), 18);
+        var raised = false;
+        viewModel.AnatomyChanged += (_, _) => raised = true;
+
+        viewModel.SelectNodeForBeam(a);
+        viewModel.SelectNodeForBeam(b);
+
+        viewModel.Beams.Count.ShouldBe(1);
+        viewModel.Beams[0].NodeA.ShouldBe(a);
+        viewModel.Beams[0].NodeB.ShouldBe(b);
+        viewModel.PendingBeamStartNode.ShouldBeNull();
+        raised.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void SelectNodeForBeam_SameNodeTwice_ClearsSelectionWithoutCreatingBeam()
+    {
+        var viewModel = new ConstructionViewModel();
+        var a = viewModel.PlaceNode(new Vector2D(0, 0), 18);
+
+        viewModel.SelectNodeForBeam(a);
+        viewModel.SelectNodeForBeam(a);
+
+        viewModel.Beams.Count.ShouldBe(0);
+        viewModel.PendingBeamStartNode.ShouldBeNull();
+    }
+
+    [Fact]
+    public void SelectNodeForBeam_DuplicateBeam_SurfacesErrorInsteadOfThrowing()
+    {
+        var viewModel = new ConstructionViewModel();
+        var a = viewModel.PlaceNode(new Vector2D(0, 0), 18);
+        var b = viewModel.PlaceNode(new Vector2D(10, 0), 18);
+        viewModel.SelectNodeForBeam(a);
+        viewModel.SelectNodeForBeam(b);
+
+        viewModel.SelectNodeForBeam(a);
+        viewModel.SelectNodeForBeam(b);
+
+        viewModel.Beams.Count.ShouldBe(1);
+        viewModel.StatusMessage.ShouldNotBeNullOrEmpty();
+    }
+
+    [Fact]
+    public void ToggleCoreOnNode_AddsCoreAndRaisesAnatomyChanged()
+    {
+        var viewModel = new ConstructionViewModel();
+        var a = viewModel.PlaceNode(new Vector2D(0, 0), 18);
+        var raised = false;
+        viewModel.AnatomyChanged += (_, _) => raised = true;
+
+        viewModel.ToggleCoreOnNode(a);
+
+        viewModel.Cores.Count.ShouldBe(1);
+        viewModel.Cores[0].NodeIndex.ShouldBe(a);
+        raised.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void ToggleCoreOnNode_CalledTwice_RemovesCore()
+    {
+        var viewModel = new ConstructionViewModel();
+        var a = viewModel.PlaceNode(new Vector2D(0, 0), 18);
+
+        viewModel.ToggleCoreOnNode(a);
+        viewModel.ToggleCoreOnNode(a);
+
+        viewModel.Cores.Count.ShouldBe(0);
     }
 }

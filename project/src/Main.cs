@@ -15,6 +15,10 @@ public partial class Main : Node2D
     private CreatureInspectorViewModel? _inspector;
     private ConstructionCanvas? _constructionCanvas;
     private Button? _buildModeButton;
+    private PanelContainer? _toolPanel;
+    private Button? _placeToolButton;
+    private Button? _beamToolButton;
+    private Button? _coreToolButton;
     private Label? _seedLabel;
     private Label? _inspectorTitle;
     private Label? _inspectorRole;
@@ -192,6 +196,54 @@ public partial class Main : Node2D
         panel.AddChild(row);
         layer.AddChild(panel);
         AddChild(layer);
+
+        AddConstructionToolRow(layer);
+    }
+
+    private void AddConstructionToolRow(CanvasLayer layer)
+    {
+        var panel = new PanelContainer
+        {
+            Position = new Vector2(16, 16 + _touchTargetHeight + 12),
+            Visible = false,
+        };
+        panel.AddThemeStyleboxOverride("panel", CreateHudPanelStyle());
+
+        var row = new HBoxContainer
+        {
+            CustomMinimumSize = new Vector2(600, _touchTargetHeight),
+        };
+        row.AddThemeConstantOverride("separation", 20);
+
+        _placeToolButton = CreateToolButton("PlaceToolButton", "Place");
+        _placeToolButton.Pressed += () => Construction.ActiveTool = ConstructionTool.Place;
+
+        _beamToolButton = CreateToolButton("BeamToolButton", "Beam");
+        _beamToolButton.Pressed += () => Construction.ActiveTool = ConstructionTool.Beam;
+
+        _coreToolButton = CreateToolButton("CoreToolButton", "Core");
+        _coreToolButton.Pressed += () => Construction.ActiveTool = ConstructionTool.Core;
+
+        row.AddChild(_placeToolButton);
+        row.AddChild(_beamToolButton);
+        row.AddChild(_coreToolButton);
+        panel.AddChild(row);
+        layer.AddChild(panel);
+
+        _toolPanel = panel;
+        UpdateToolButtonHighlight();
+    }
+
+    private Button CreateToolButton(string name, string text)
+    {
+        var button = new Button
+        {
+            Name = name,
+            Text = text,
+            CustomMinimumSize = new Vector2(180, _touchTargetHeight),
+        };
+        button.AddThemeFontSizeOverride("font_size", _hudFontSize);
+        return button;
     }
 
     private void RandomizeCreatureBrain()
@@ -210,8 +262,9 @@ public partial class Main : Node2D
     }
 
     // 0.3.0 construction mode: toggling swaps the running creature for an
-    // editable node canvas. Beam/core editing and instantiating the edited
-    // creature into simulation are later slices (issues #70-#72).
+    // editable node canvas. Delete/validation messaging (#71) and
+    // instantiating the edited creature into simulation (#72) are still
+    // later slices; place/move/beam/connect/core are implemented.
     private void ToggleConstructionMode()
     {
         Construction.IsActive = !Construction.IsActive;
@@ -219,25 +272,56 @@ public partial class Main : Node2D
 
     private void OnConstructionPropertyChanged(object? sender, PropertyChangedEventArgs eventArgs)
     {
-        if (eventArgs.PropertyName != nameof(ConstructionViewModel.IsActive))
+        switch (eventArgs.PropertyName)
+        {
+            case nameof(ConstructionViewModel.IsActive):
+                if (_creature is not null)
+                {
+                    _creature.Visible = !Construction.IsActive;
+                }
+
+                if (_constructionCanvas is not null)
+                {
+                    _constructionCanvas.Visible = Construction.IsActive;
+                }
+
+                if (_toolPanel is not null)
+                {
+                    _toolPanel.Visible = Construction.IsActive;
+                }
+
+                if (_buildModeButton is not null)
+                {
+                    _buildModeButton.Text = BuildModeButtonText();
+                }
+
+                UpdateInspector();
+                break;
+            case nameof(ConstructionViewModel.ActiveTool):
+                UpdateToolButtonHighlight();
+                UpdateInspector();
+                break;
+            case nameof(ConstructionViewModel.StatusMessage):
+                UpdateInspector();
+                break;
+        }
+    }
+
+    private void UpdateToolButtonHighlight()
+    {
+        if (_placeToolButton is null || _beamToolButton is null || _coreToolButton is null)
         {
             return;
         }
 
-        if (_creature is not null)
-        {
-            _creature.Visible = !Construction.IsActive;
-        }
+        HighlightToolButton(_placeToolButton, Construction.ActiveTool == ConstructionTool.Place);
+        HighlightToolButton(_beamToolButton, Construction.ActiveTool == ConstructionTool.Beam);
+        HighlightToolButton(_coreToolButton, Construction.ActiveTool == ConstructionTool.Core);
+    }
 
-        if (_constructionCanvas is not null)
-        {
-            _constructionCanvas.Visible = Construction.IsActive;
-        }
-
-        if (_buildModeButton is not null)
-        {
-            _buildModeButton.Text = BuildModeButtonText();
-        }
+    private void HighlightToolButton(Button button, bool isActive)
+    {
+        button.AddThemeColorOverride("font_color", isActive ? _theme.SelectionGlow : _theme.GroundEdge);
     }
 
     private string BuildModeButtonText()
@@ -345,7 +429,20 @@ public partial class Main : Node2D
 
     private void UpdateInspector()
     {
-        if (_inspector is null || _inspectorTitle is null || _inspectorRole is null || _inspectorValues is null)
+        if (_inspectorTitle is null || _inspectorRole is null || _inspectorValues is null)
+        {
+            return;
+        }
+
+        if (Construction.IsActive)
+        {
+            _inspectorTitle.Text = "Building";
+            _inspectorRole.Text = $"Tool: {Construction.ActiveTool}";
+            _inspectorValues.Text = Construction.StatusMessage ?? ConstructionToolHint(Construction.ActiveTool);
+            return;
+        }
+
+        if (_inspector is null)
         {
             return;
         }
@@ -353,6 +450,17 @@ public partial class Main : Node2D
         _inspectorTitle.Text = _inspector.Title;
         _inspectorRole.Text = _inspector.Role;
         _inspectorValues.Text = _inspector.Values;
+    }
+
+    private static string ConstructionToolHint(ConstructionTool tool)
+    {
+        return tool switch
+        {
+            ConstructionTool.Place => "Tap empty space to place a node. Drag a node to move it.",
+            ConstructionTool.Beam => "Tap a node, then another node, to connect them with a beam.",
+            ConstructionTool.Core => "Tap a node to attach a core, tap again to remove it.",
+            _ => string.Empty,
+        };
     }
 
     private string SeedText()

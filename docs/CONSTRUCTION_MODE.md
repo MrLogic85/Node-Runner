@@ -30,11 +30,16 @@ flow; individual issues implement slices of it but do not redefine it here.
   that position. Tapping within a node's hit radius and dragging moves that
   node instead of placing a new one. There is no separate "select" step for
   moving — press-and-drag is the whole interaction.
-- **Connect beams / attach cores** (issue #70): not yet implemented. Expected
-  shape: selecting two existing nodes in sequence creates a beam between
-  them; selecting a single node and a "make core" action attaches a core to
-  it. Exact touch affordance (long-press menu vs. mode sub-toggle) is decided
-  when #70 starts, not before.
+- **Connect beams / attach cores** (issue #70): implemented. A tool sub-row
+  (Place / Beam / Core) below the mode toggle selects the active
+  interaction. In the Beam tool, tapping a node selects it (shown with a
+  selection-glow ring); tapping a second, different node connects them with
+  a beam, tapping the same node again clears the selection, and tapping a
+  pair that is already connected surfaces a status message instead of
+  throwing. In the Core tool, tapping a node attaches a core if it doesn't
+  have one, or removes it if it does. `ConstructionViewModel.StatusMessage`
+  carries all of this feedback and is shown in the Build-mode inspector
+  panel alongside the active tool name.
 - **Delete + validation messaging** (issue #71): not yet implemented.
   Expected shape: an editable element (node/beam/core) can be selected in
   Build mode and deleted with a dedicated control; invalid creature states
@@ -50,3 +55,22 @@ flow; individual issues implement slices of it but do not redefine it here.
 `NodeRunner.App.Builders.CreatureBuilder.TryBuild` is the single source of
 truth for whether an in-progress creature can be simulated. UI surfaces its
 error messages verbatim; it does not duplicate the validation rules.
+
+## Touch input
+
+- `ConstructionCanvas` converts raw pointer positions to its own local space
+  with `GetGlobalTransformWithCanvas().AffineInverse() * screenPosition`, not
+  plain `ToLocal()`. Plain `ToLocal()`/`GetGlobalTransform()` ignore the
+  project's `canvas_items` stretch transform, so on a device whose native
+  resolution differs from the 1280x720 viewport, taps would land on the
+  wrong in-canvas position relative to what's rendered. Any future widget
+  that hit-tests pointer input against drawn content should use the same
+  pattern.
+- `project.godot` sets `input_devices/pointing/emulate_mouse_from_touch` to
+  `false`. Godot's default emulates a mouse event from every touch event;
+  since `PointerInput` already handles both `InputEventScreenTouch` and
+  mouse events, leaving emulation on double-fires every tap/drag handler on
+  real touch devices (observed as, e.g., a beam selection being made and
+  immediately cleared by the "second" tap). Desktop development still gets
+  real mouse input, so nothing is lost by disabling the emulation.
+

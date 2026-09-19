@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using Godot;
 using NodeRunner.App.ViewModels;
 using NodeRunner.Domain;
@@ -7,10 +8,11 @@ using NodeRunner.Ui.Lib;
 namespace NodeRunner.Ui.Widgets;
 
 /// <summary>
-/// Renders the nodes placed so far in construction mode and lets the user
-/// place new ones or drag existing ones with touch. Binds to
-/// <see cref="ConstructionViewModel"/> per `project/src/ui/AGENTS.md`; does
-/// not own any anatomy state itself. See docs/ROADMAP.md 0.3.0.
+/// Renders the anatomy placed so far in construction mode and lets the user
+/// edit it with touch, per the active <see cref="ConstructionTool"/>: place
+/// or drag nodes, connect two nodes with a beam, or attach/remove a core.
+/// Binds to <see cref="ConstructionViewModel"/> per `project/src/ui/AGENTS.md`;
+/// does not own any anatomy state itself. See docs/CONSTRUCTION_MODE.md.
 /// </summary>
 public partial class ConstructionCanvas : Node2D
 {
@@ -29,14 +31,16 @@ public partial class ConstructionCanvas : Node2D
         {
             if (_viewModel is not null)
             {
-                _viewModel.NodesChanged -= OnNodesChanged;
+                _viewModel.AnatomyChanged -= OnAnatomyChanged;
+                _viewModel.PropertyChanged -= OnViewModelPropertyChanged;
             }
 
             _viewModel = value;
 
             if (_viewModel is not null)
             {
-                _viewModel.NodesChanged += OnNodesChanged;
+                _viewModel.AnatomyChanged += OnAnatomyChanged;
+                _viewModel.PropertyChanged += OnViewModelPropertyChanged;
             }
 
             QueueRedraw();
@@ -47,7 +51,8 @@ public partial class ConstructionCanvas : Node2D
     {
         if (_viewModel is not null)
         {
-            _viewModel.NodesChanged -= OnNodesChanged;
+            _viewModel.AnatomyChanged -= OnAnatomyChanged;
+            _viewModel.PropertyChanged -= OnViewModelPropertyChanged;
         }
     }
 
@@ -60,7 +65,7 @@ public partial class ConstructionCanvas : Node2D
 
         if (PointerInput.TryGetPressPosition(inputEvent, out var pressPosition))
         {
-            HandlePress(ToLocal(pressPosition));
+            HandlePress(ToCanvasLocal(pressPosition));
             GetViewport().SetInputAsHandled();
             return;
         }
@@ -69,7 +74,7 @@ public partial class ConstructionCanvas : Node2D
         {
             if (_draggingNodeIndex >= 0)
             {
-                HandleDrag(ToLocal(dragPosition));
+                HandleDrag(ToCanvasLocal(dragPosition));
                 GetViewport().SetInputAsHandled();
             }
 
@@ -89,11 +94,32 @@ public partial class ConstructionCanvas : Node2D
             return;
         }
 
+        foreach (var beam in _viewModel.Beams)
+        {
+            var start = ToGodot(_viewModel.Nodes[beam.NodeA].Position);
+            var end = ToGodot(_viewModel.Nodes[beam.NodeB].Position);
+            DrawLine(start, end, Theme.Beam, Theme.BeamWidth, antialiased: true);
+        }
+
         foreach (var node in _viewModel.Nodes)
         {
             var position = ToGodot(node.Position);
             DrawCircle(position, (float)node.Radius * 1.18f, Theme.NodeGlow);
             DrawCircle(position, (float)node.Radius, Theme.NodeFill);
+        }
+
+        foreach (var core in _viewModel.Cores)
+        {
+            var position = ToGodot(_viewModel.Nodes[core.NodeIndex].Position);
+            var radius = (float)_viewModel.Nodes[core.NodeIndex].Radius;
+            DrawCircle(position, radius * 0.42f, Theme.CoreMarker);
+        }
+
+        if (_viewModel.PendingBeamStartNode is { } pendingIndex)
+        {
+            var position = ToGodot(_viewModel.Nodes[pendingIndex].Position);
+            var radius = (float)_viewModel.Nodes[pendingIndex].Radius;
+            DrawCircle(position, radius * 1.65f, Theme.SelectionGlow);
         }
     }
 
@@ -105,18 +131,47 @@ public partial class ConstructionCanvas : Node2D
         }
 
         var domainPosition = ToDomain(localPosition);
-        if (_viewModel.TryFindNodeNear(domainPosition, _nodeHitRadius, out var nodeIndex))
-        {
-            _draggingNodeIndex = nodeIndex;
-            return;
-        }
+        var foundNode = _viewModel.TryFindNodeNear(domainPosition, _nodeHitRadius, out var nodeIndex);
 
-        _draggingNodeIndex = _viewModel.PlaceNode(domainPosition, _defaultNodeRadius);
+        switch (_viewModel.ActiveTool)
+        {
+            case ConstructionTool.Beam:
+                if (foundNode)
+                {
+                    _viewModel.SelectNodeForBeam(nodeIndex);
+                }
+
+                break;
+            case ConstructionTool.Core:
+                if (foundNode)
+                {
+                    _viewModel.ToggleCoreOnNode(nodeIndex);
+                }
+
+                break;
+            case ConstructionTool.Place:
+            default:
+                if (foundNode)
+                {
+                    _draggingNodeIndex = nodeIndex;
+                }
+                else
+                {
+                    _draggingNodeIndex = _viewModel.PlaceNode(domainPosition, _defaultNodeRadius);
+                }
+
+                break;
+        }
     }
 
     private void HandleDrag(Vector2 localPosition)
     {
-        if (_viewModel is null || _draggingNodeIndex < 0 || _draggingNodeIndex >= _viewModel.Nodes.Count)
+        if (_viewModel is null || _viewModel.ActiveTool != ConstructionTool.Place)
+        {
+            return;
+        }
+
+        if (_draggingNodeIndex < 0 || _draggingNodeIndex >= _viewModel.Nodes.Count)
         {
             return;
         }
@@ -124,9 +179,27 @@ public partial class ConstructionCanvas : Node2D
         _viewModel.MoveNode(_draggingNodeIndex, ToDomain(localPosition));
     }
 
-    private void OnNodesChanged(object? sender, EventArgs eventArgs)
+    private void OnAnatomyChanged(object? sender, EventArgs eventArgs)
     {
         QueueRedraw();
+    }
+
+    private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs eventArgs)
+    {
+        if (eventArgs.PropertyName == nameof(ConstructionViewModel.PendingBeamStartNode))
+        {
+            QueueRedraw();
+        }
+    }
+
+    private Vector2 ToCanvasLocal(Vector2 screenPosition)
+    {
+        // Regular ToLocal()/GetGlobalTransform() do not include the
+        // viewport's stretch transform (see [display] in project.godot), so
+        // raw screen-pixel input positions need GetGlobalTransformWithCanvas
+        // to land on the right spot. Mirrors Main._UnhandledInput's
+        // creature-selection math.
+        return GetGlobalTransformWithCanvas().AffineInverse() * screenPosition;
     }
 
     private static Vector2D ToDomain(Vector2 position)
