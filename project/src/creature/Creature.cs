@@ -24,6 +24,8 @@ public partial class Creature : Node2D
 
     private RigidBody2D[] _beamBodies = [];
     private float[] _beamHalfLengths = [];
+    private Vector2[] _beamInitialPositions = [];
+    private float[] _beamInitialRotations = [];
     private NodeVisual[] _nodeVisuals = [];
     private BeamVisual[] _beamVisuals = [];
     private CoreSensors[] _coreSensors = [];
@@ -112,6 +114,71 @@ public partial class Creature : Node2D
         GD.Print($"Node Runner brain seed: {seed}");
     }
 
+    /// <summary>
+    /// Assigns a specific brain (e.g. a candidate genome from a trial or
+    /// generation) instead of randomizing a new one. The brain's layer sizes
+    /// must match this creature's sensor/motor counts.
+    /// </summary>
+    public void SetBrain(NeuralNetwork brain, int seed)
+    {
+        ArgumentNullException.ThrowIfNull(brain);
+
+        var expectedInputs = _sensorValues.Length;
+        var expectedOutputs = _motorRelations.Length;
+        if (brain.LayerSizes[0] != expectedInputs || brain.LayerSizes[^1] != expectedOutputs)
+        {
+            throw new ArgumentException(
+                $"Brain shape [{string.Join(',', brain.LayerSizes)}] does not match this creature's " +
+                $"sensor/motor counts [{expectedInputs}, ..., {expectedOutputs}].",
+                nameof(brain));
+        }
+
+        Brain = brain;
+        BrainSeed = seed;
+    }
+
+    /// <summary>
+    /// Returns every beam body to its original built position/rotation and
+    /// zeroes its velocity, so a new trial starts from the exact same
+    /// physical state as the last. This is plain physical reset, not
+    /// evolution/fitness logic.
+    /// </summary>
+    public void ResetPose()
+    {
+        for (var i = 0; i < _beamBodies.Length; i++)
+        {
+            var body = _beamBodies[i];
+            body.Position = _beamInitialPositions[i];
+            body.Rotation = _beamInitialRotations[i];
+            body.LinearVelocity = Vector2.Zero;
+            body.AngularVelocity = 0f;
+        }
+    }
+
+    /// <summary>
+    /// The average position of all beam bodies, used as a simple centroid
+    /// for fitness tracking (e.g. forward distance travelled). Returns
+    /// Vector2.Zero for a creature with no beams.
+    /// </summary>
+    public Vector2 CenterOfMass
+    {
+        get
+        {
+            if (_beamBodies.Length == 0)
+            {
+                return Vector2.Zero;
+            }
+
+            var sum = Vector2.Zero;
+            foreach (var body in _beamBodies)
+            {
+                sum += body.GlobalPosition;
+            }
+
+            return sum / _beamBodies.Length;
+        }
+    }
+
     public bool TrySelectPart(Vector2 globalPosition, out CreatureElementSelection? selection)
     {
         for (var nodeIndex = 0; nodeIndex < _nodeVisuals.Length; nodeIndex++)
@@ -180,6 +247,8 @@ public partial class Creature : Node2D
         var beamDefs = definition.Beams;
         _beamBodies = new RigidBody2D[beamDefs.Count];
         _beamHalfLengths = new float[beamDefs.Count];
+        _beamInitialPositions = new Vector2[beamDefs.Count];
+        _beamInitialRotations = new float[beamDefs.Count];
         _beamVisuals = new BeamVisual[beamDefs.Count];
 
         Array.Fill(anchorBeamPerNode, -1);
@@ -227,6 +296,8 @@ public partial class Creature : Node2D
             AddChild(body);
             _beamBodies[i] = body;
             _beamHalfLengths[i] = halfLength;
+            _beamInitialPositions[i] = midpoint;
+            _beamInitialRotations[i] = rotation;
 
             RegisterAnchor(beamDef.NodeA, i, new Vector2(-halfLength, 0), anchorBeamPerNode, anchorOffsetPerNode);
             RegisterAnchor(beamDef.NodeB, i, new Vector2(halfLength, 0), anchorBeamPerNode, anchorOffsetPerNode);
