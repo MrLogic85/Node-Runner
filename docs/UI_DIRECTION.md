@@ -53,6 +53,12 @@ shows inside it. Toggling into/out of construction mode always resumes
 training first (pausing has no meaning while editing, and the construction
 canvas isn't reachable while the tree is paused).
 
+The 0.7.0 training-profile control cycles a small set of session presets.
+Its button label stays compact and explicitly says that changing it restarts
+the active run; a separate summary line keeps the selected population,
+trial duration, mutation rate, and crossover explanation visible without
+turning the button into a dense configuration panel.
+
 ## Theme boundaries
 
 Tron/neon is the reference theme, not a permanent constraint. Implementation

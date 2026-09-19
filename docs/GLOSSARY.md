@@ -49,7 +49,7 @@ Long-form descriptions and the sensor/model contract live in
 - **Brain** — The neural network attached to a creature. A pure function
   `sensors → motor relation targets`.
 - **Crossover** — GA operator that combines two parent genomes into a child.
-  We use uniform crossover on the flat weight vector.
+  We use configurable uniform or blend crossover on the flat weight vector.
 - **Epoch** (supervised) — One pass through the entire training dataset.
 - **Fitness** — Scalar score for a creature after one evaluation run. Higher is
   better. Definition is per-experiment (usually distance travelled).

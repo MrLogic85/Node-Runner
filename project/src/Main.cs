@@ -15,14 +15,6 @@ namespace NodeRunner;
 
 public partial class Main : Node2D
 {
-    // Population size and GA hyperparameters for the 0.4.0 first-training
-    // slice (issue #50). Tuned for a short, teachable demo, not for a
-    // fast/strong result — revisit once a training HUD (#51) makes tuning
-    // observable.
-    private const int _tournamentSize = 3;
-    private const double _mutationRate = 0.1;
-    private const double _mutationStrength = 0.3;
-
     private readonly VisualTheme _theme = VisualTheme.Neon;
     private Creature.Creature? _creature;
     private Evolver? _evolver;
@@ -47,6 +39,7 @@ public partial class Main : Node2D
     private Button? _pauseButton;
     private Button? _timeScaleButton;
     private Button? _trainingProfileButton;
+    private Label? _trainingProfileSummaryLabel;
     private PanelContainer? _trainingPanel;
     private int _bestGeneration;
     private int _timeScaleIndex;
@@ -72,9 +65,9 @@ public partial class Main : Node2D
     private static readonly float[] _timeScales = [1f, 2f, 4f];
     private static readonly TrainingProfile[] _trainingProfiles =
     [
-        new("Quick", 4, 180, 30),
-        new("Standard", 8, 600, 50),
-        new("Deep", 16, 1200, 100),
+        new("Quick", 4, 180, 30, 0.2, 0.35, 2, CrossoverStrategy.Uniform),
+        new("Standard", 8, 600, 50, 0.1, 0.3, 3, CrossoverStrategy.Uniform),
+        new("Deep", 16, 1200, 100, 0.06, 0.2, 3, CrossoverStrategy.Blend),
     ];
     private int _trainingProfileIndex = 1;
     private int _sessionGenerationStart;
@@ -234,7 +227,7 @@ public partial class Main : Node2D
 
         var profile = CurrentTrainingProfile();
         _sessionGenerationStart = 0;
-        var ga = new GeneticAlgorithm(_tournamentSize, _mutationRate, _mutationStrength);
+        var ga = CreateGeneticAlgorithm(profile);
         _evolver.Start(_creature, profile.PopulationSize, _creature.Brain.LayerSizes, ga, RngProvider().Random, trialDurationTicks: profile.TrialDurationTicks);
         UpdateTrainingLabels();
     }
@@ -250,7 +243,7 @@ public partial class Main : Node2D
 
         var profile = CurrentTrainingProfile();
         _sessionGenerationStart = creation.Training?.Generation ?? 0;
-        var ga = new GeneticAlgorithm(_tournamentSize, _mutationRate, _mutationStrength);
+        var ga = CreateGeneticAlgorithm(profile);
         var resume = creation.Training;
         _evolver.Start(
             _creature,
@@ -317,6 +310,9 @@ public partial class Main : Node2D
     }
 
     private RngProvider RngProvider() => GetNode<RngProvider>("/root/RngProvider");
+
+    private static GeneticAlgorithm CreateGeneticAlgorithm(TrainingProfile profile) =>
+        new(profile.TournamentSize, profile.MutationRate, profile.MutationStrength, crossoverStrategy: profile.CrossoverStrategy);
 
     // Swaps the inspector so it reads the currently active CreatureDef.
     // Needed both at startup and whenever construction mode replaces the
@@ -636,7 +632,8 @@ public partial class Main : Node2D
         {
             Name = "TrainingProfileButton",
             Text = TrainingProfileButtonText(),
-            CustomMinimumSize = new Vector2(200, _touchTargetHeight),
+            CustomMinimumSize = new Vector2(260, _touchTargetHeight),
+            TooltipText = "Tap to cycle the session profile. The active run restarts with the new settings.",
         };
         _trainingProfileButton.AddThemeFontSizeOverride("font_size", _hudFontSize);
         _trainingProfileButton.Pressed += CycleTrainingProfile;
@@ -646,8 +643,10 @@ public partial class Main : Node2D
         controlsRow.AddChild(_timeScaleButton);
         controlsRow.AddChild(_trainingProfileButton);
 
+        _trainingProfileSummaryLabel = CreateTrainingLabel("TrainingProfileSummaryLabel", TrainingProfileSummaryText());
         column.AddChild(statsRow);
         column.AddChild(controlsRow);
+        column.AddChild(_trainingProfileSummaryLabel);
         panel.AddChild(column);
         layer.AddChild(panel);
 
@@ -717,7 +716,14 @@ public partial class Main : Node2D
     private string TrainingProfileButtonText()
     {
         var profile = CurrentTrainingProfile();
-        return $"{profile.Name} ({profile.PopulationSize}×{profile.TrialDurationTicks / 60}s)";
+        return $"Training: {profile.Name} (restart)";
+    }
+
+    private string TrainingProfileSummaryText()
+    {
+        var profile = CurrentTrainingProfile();
+        var crossover = profile.CrossoverStrategy == CrossoverStrategy.Blend ? "blended genes" : "uniform genes";
+        return $"{profile.PopulationSize} candidates | {profile.TrialDurationTicks / 60}s trials | {profile.MutationRate:P0} mutation | {crossover}";
     }
 
     private void CycleTrainingProfile()
@@ -728,8 +734,24 @@ public partial class Main : Node2D
             _trainingProfileButton.Text = TrainingProfileButtonText();
         }
 
+        if (_trainingProfileSummaryLabel is not null)
+        {
+            _trainingProfileSummaryLabel.Text = TrainingProfileSummaryText();
+        }
+
         if (!Construction.IsActive)
         {
+            PersistActiveTraining();
+            if (_activeCreationId is { } id)
+            {
+                var creation = GetNode<SaveManager>("/root/SaveManager").Get(id);
+                if (creation is not null)
+                {
+                    StartEvolution(creation);
+                    return;
+                }
+            }
+
             StartEvolution();
         }
     }

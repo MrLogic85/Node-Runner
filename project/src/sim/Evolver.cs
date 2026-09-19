@@ -175,6 +175,11 @@ public partial class Evolver : Node
             NewBestFound?.Invoke();
         }
 
+        if (_creature is null)
+        {
+            return;
+        }
+
         EvaluateCurrent();
     }
 }

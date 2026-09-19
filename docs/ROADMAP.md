@@ -296,8 +296,8 @@ context.
   on the connected test device; no crash was observed in `adb logcat`.
 - [x] Profiles bound each training session to a visible generation budget;
   completion stops the evolver while preserving the latest training state.
-- [ ] GA plateau experiments and player-facing mutation/recombination choices
-  remain for the next 0.7 slice.
+- [x] Profiles expose mutation settings and alternate Uniform/Blend crossover
+  strategies for player-facing GA plateau experiments.
 
 ---
 

@@ -1,8 +1,8 @@
 namespace NodeRunner.ML.Ga;
 
 /// <summary>
-/// Pure genetic-algorithm math: tournament selection, uniform crossover, and
-/// Gaussian mutation over flat genome vectors (see
+/// Pure genetic-algorithm math: tournament selection, configurable crossover,
+/// and Gaussian mutation over flat genome vectors (see
 /// <see cref="NeuralNetwork.FlattenGenome"/> / <see cref="NeuralNetwork.FromGenome"/>).
 /// Godot-agnostic and fully deterministic given a seeded <see cref="Random"/>.
 /// </summary>
@@ -12,12 +12,19 @@ public sealed class GeneticAlgorithm
     private readonly double _mutationRate;
     private readonly double _mutationStrength;
     private readonly int _elitismCount;
+    private readonly CrossoverStrategy _crossoverStrategy;
 
     /// <param name="tournamentSize">How many candidates compete per parent selection. Must be at least 1.</param>
     /// <param name="mutationRate">Per-gene probability of mutation, in [0, 1].</param>
     /// <param name="mutationStrength">Standard deviation of the Gaussian noise added to a mutated gene.</param>
     /// <param name="elitismCount">How many of the fittest genomes carry over to the next generation unchanged. Default 1.</param>
-    public GeneticAlgorithm(int tournamentSize, double mutationRate, double mutationStrength, int elitismCount = 1)
+    /// <param name="crossoverStrategy">How parent genes are recombined.</param>
+    public GeneticAlgorithm(
+        int tournamentSize,
+        double mutationRate,
+        double mutationStrength,
+        int elitismCount = 1,
+        CrossoverStrategy crossoverStrategy = CrossoverStrategy.Uniform)
     {
         if (tournamentSize < 1)
         {
@@ -43,13 +50,20 @@ public sealed class GeneticAlgorithm
         _mutationRate = mutationRate;
         _mutationStrength = mutationStrength;
         _elitismCount = elitismCount;
+        if (!Enum.IsDefined(crossoverStrategy))
+        {
+            throw new ArgumentOutOfRangeException(nameof(crossoverStrategy));
+        }
+
+        _crossoverStrategy = crossoverStrategy;
     }
 
     /// <summary>
     /// Produces the next generation of genomes from the current generation's
     /// fitness scores: the fittest <c>elitismCount</c> genomes carry over
     /// unchanged, and the rest are filled by tournament-selecting two
-    /// parents, uniform-crossing them, and mutating the result.
+    /// parents, applying the configured crossover strategy, and mutating the
+    /// result.
     /// </summary>
     public double[][] NextGeneration(double[][] genomes, double[] fitness, Random random)
     {
@@ -99,7 +113,7 @@ public sealed class GeneticAlgorithm
         {
             var parentA = TournamentSelect(genomes, fitness, random);
             var parentB = TournamentSelect(genomes, fitness, random);
-            var child = UniformCrossover(parentA, parentB, random);
+            var child = Crossover(parentA, parentB, random);
             Mutate(child, random);
             nextGeneration[slot] = child;
             slot++;
@@ -123,12 +137,17 @@ public sealed class GeneticAlgorithm
         return genomes[bestIndex];
     }
 
-    private static double[] UniformCrossover(double[] parentA, double[] parentB, Random random)
+    private double[] Crossover(double[] parentA, double[] parentB, Random random)
     {
         var child = new double[parentA.Length];
         for (var i = 0; i < child.Length; i++)
         {
-            child[i] = random.NextDouble() < 0.5 ? parentA[i] : parentB[i];
+            child[i] = _crossoverStrategy switch
+            {
+                CrossoverStrategy.Uniform => random.NextDouble() < 0.5 ? parentA[i] : parentB[i],
+                CrossoverStrategy.Blend => parentA[i] + ((parentB[i] - parentA[i]) * random.NextDouble()),
+                _ => throw new InvalidOperationException($"Unsupported crossover strategy: {_crossoverStrategy}."),
+            };
         }
 
         return child;
