@@ -35,9 +35,22 @@ public partial class Main : Node2D
     private Button? _coreToolButton;
     private Button? _deleteToolButton;
     private Label? _seedLabel;
+    private Label? _generationLabel;
+    private Label? _bestFitnessLabel;
+    private Label? _meanFitnessLabel;
+    private Button? _pauseButton;
+    private Button? _timeScaleButton;
+    private PanelContainer? _trainingPanel;
+    private int _bestGeneration;
+    private int _timeScaleIndex;
     private Label? _inspectorTitle;
     private Label? _inspectorRole;
     private Label? _inspectorValues;
+
+    // Cycled by the time-scale HUD button. Godot's Engine.TimeScale speeds
+    // up or slows down every physics/process step uniformly, so it doesn't
+    // affect determinism — only how quickly a fixed number of ticks play out.
+    private static readonly float[] _timeScales = [1f, 2f, 4f];
 
     public SelectionViewModel Selection { get; } = new();
 
@@ -45,6 +58,10 @@ public partial class Main : Node2D
 
     public override void _Ready()
     {
+        // Engine.TimeScale is a global engine setting, not scoped to this
+        // scene — reset it on entry so a previous run's time-scale choice
+        // (e.g. from CycleTimeScale) can't silently carry over.
+        Engine.TimeScale = _timeScales[0];
         Selection.PropertyChanged += OnSelectionPropertyChanged;
         Construction.PropertyChanged += OnConstructionPropertyChanged;
         AddBackdrop();
@@ -139,12 +156,13 @@ public partial class Main : Node2D
 
     // 0.4.0 first training slice (#50): evolves a small population of
     // brains for the current creature via GeneticAlgorithm, one generation
-    // after another, without a UI (that's #51's job — Generation/fitness
-    // are only printed for now).
+    // after another. The training HUD (#51) binds to GenerationCompleted /
+    // NewBestFound below.
     private void AddEvolver()
     {
         var evolver = new Evolver { Name = "Evolver" };
         evolver.GenerationCompleted += OnGenerationCompleted;
+        evolver.NewBestFound += OnNewBestFound;
         AddChild(evolver);
         _evolver = evolver;
         StartEvolution();
@@ -153,6 +171,7 @@ public partial class Main : Node2D
     private void StartEvolution()
     {
         _evolver?.Stop();
+        _bestGeneration = 0;
         if (_creature?.Brain is null || _evolver is null)
         {
             // No motors (e.g. a just-cleared construction-mode anatomy) —
@@ -162,11 +181,52 @@ public partial class Main : Node2D
 
         var ga = new GeneticAlgorithm(_tournamentSize, _mutationRate, _mutationStrength);
         _evolver.Start(_creature, _populationSize, _creature.Brain.LayerSizes, ga, RngProvider().Random);
+        UpdateTrainingLabels();
     }
 
     private void OnGenerationCompleted()
     {
         GD.Print($"Generation {_evolver!.Generation} — best: {_evolver.BestFitness:0.0}, mean: {_evolver.MeanFitness:0.0}");
+        UpdateTrainingLabels();
+    }
+
+    // Records which generation produced the current all-time best, for the
+    // "Best" HUD label. Evolver doesn't retain a replayable per-genome seed
+    // today (see issue #51's scope decision), so this is the closest
+    // reproducible pointer to "where the best came from."
+    private void OnNewBestFound()
+    {
+        _bestGeneration = _evolver!.Generation;
+        // GenerationCompleted (which also calls UpdateTrainingLabels) fires
+        // before NewBestFound, so the "Best" label would otherwise render
+        // with the previous _bestGeneration on the very generation the new
+        // best was found. Refresh again now that it's current.
+        UpdateTrainingLabels();
+    }
+
+    private void UpdateTrainingLabels()
+    {
+        if (_evolver is null)
+        {
+            return;
+        }
+
+        if (_generationLabel is not null)
+        {
+            _generationLabel.Text = $"Gen: {_evolver.Generation}";
+        }
+
+        if (_bestFitnessLabel is not null)
+        {
+            _bestFitnessLabel.Text = double.IsNegativeInfinity(_evolver.BestFitness)
+                ? "Best: —"
+                : $"Best: {_evolver.BestFitness:0.0} (gen {_bestGeneration})";
+        }
+
+        if (_meanFitnessLabel is not null)
+        {
+            _meanFitnessLabel.Text = $"Mean: {_evolver.MeanFitness:0.0}";
+        }
     }
 
     private RngProvider RngProvider() => GetNode<RngProvider>("/root/RngProvider");
@@ -213,6 +273,10 @@ public partial class Main : Node2D
         var layer = new CanvasLayer
         {
             Name = "Hud",
+            // Keep HUD buttons (Pause included) responsive when TogglePause
+            // sets the scene tree's Paused flag — otherwise the "Run"
+            // button pausing itself out of existence would be a soft lock.
+            ProcessMode = ProcessModeEnum.Always,
         };
 
         var panel = new PanelContainer
@@ -264,7 +328,124 @@ public partial class Main : Node2D
         AddChild(layer);
 
         AddConstructionToolRow(layer);
+        AddTrainingPanel(layer);
     }
+
+    // Training HUD (#51): generation/best/mean readout plus run/pause,
+    // reset, and time-scale controls for the Evolver started in AddEvolver.
+    // Occupies the same row position as the construction tool row (below)
+    // since the two are mutually exclusive — this panel is only visible
+    // outside construction mode, the tool row only inside it.
+    private void AddTrainingPanel(CanvasLayer layer)
+    {
+        var panel = new PanelContainer
+        {
+            Position = new Vector2(16, 16 + _touchTargetHeight + 12),
+        };
+        panel.AddThemeStyleboxOverride("panel", CreateHudPanelStyle());
+
+        var column = new VBoxContainer();
+        column.AddThemeConstantOverride("separation", 8);
+
+        var statsRow = new HBoxContainer();
+        statsRow.AddThemeConstantOverride("separation", 20);
+        _generationLabel = CreateTrainingLabel("GenerationLabel", "Gen: 0");
+        _bestFitnessLabel = CreateTrainingLabel("BestFitnessLabel", "Best: —");
+        _meanFitnessLabel = CreateTrainingLabel("MeanFitnessLabel", "Mean: 0.0");
+        statsRow.AddChild(_generationLabel);
+        statsRow.AddChild(_bestFitnessLabel);
+        statsRow.AddChild(_meanFitnessLabel);
+
+        var controlsRow = new HBoxContainer();
+        controlsRow.AddThemeConstantOverride("separation", 20);
+        _pauseButton = new Button
+        {
+            Name = "PauseButton",
+            Text = PauseButtonText(),
+            CustomMinimumSize = new Vector2(160, _touchTargetHeight),
+        };
+        _pauseButton.AddThemeFontSizeOverride("font_size", _hudFontSize);
+        _pauseButton.Pressed += TogglePause;
+
+        var resetButton = new Button
+        {
+            Name = "ResetButton",
+            Text = "Reset",
+            CustomMinimumSize = new Vector2(160, _touchTargetHeight),
+        };
+        resetButton.AddThemeFontSizeOverride("font_size", _hudFontSize);
+        resetButton.Pressed += ResetEvolution;
+
+        _timeScaleButton = new Button
+        {
+            Name = "TimeScaleButton",
+            Text = TimeScaleButtonText(),
+            CustomMinimumSize = new Vector2(160, _touchTargetHeight),
+        };
+        _timeScaleButton.AddThemeFontSizeOverride("font_size", _hudFontSize);
+        _timeScaleButton.Pressed += CycleTimeScale;
+
+        controlsRow.AddChild(_pauseButton);
+        controlsRow.AddChild(resetButton);
+        controlsRow.AddChild(_timeScaleButton);
+
+        column.AddChild(statsRow);
+        column.AddChild(controlsRow);
+        panel.AddChild(column);
+        layer.AddChild(panel);
+
+        _trainingPanel = panel;
+        UpdateTrainingLabels();
+    }
+
+    private Label CreateTrainingLabel(string name, string text)
+    {
+        var label = new Label
+        {
+            Name = name,
+            Text = text,
+            VerticalAlignment = VerticalAlignment.Center,
+        };
+        label.AddThemeColorOverride("font_color", _theme.Beam);
+        label.AddThemeFontSizeOverride("font_size", _hudFontSize);
+        return label;
+    }
+
+    // Pausing freezes the whole scene tree — physics stops advancing, so
+    // the in-progress trial's creature motion, fitness recording, and
+    // trial-boundary checks all freeze in place with it (Evolver/
+    // TrialController/Creature all use the default Pausable process mode).
+    // The Hud CanvasLayer is set to Always below so its buttons (including
+    // this one) keep responding while paused.
+    private void TogglePause()
+    {
+        var tree = GetTree();
+        tree.Paused = !tree.Paused;
+        if (_pauseButton is not null)
+        {
+            _pauseButton.Text = PauseButtonText();
+        }
+    }
+
+    private string PauseButtonText() => GetTree().Paused ? "Run" : "Pause";
+
+    // Same effect as "Randomize": reseed and restart evolution from a fresh
+    // random population. Exposed as its own training-HUD control per issue
+    // #51's acceptance criteria, even though it shares RandomizeCreatureBrain's
+    // implementation.
+    private void ResetEvolution() => RandomizeCreatureBrain();
+
+    private void CycleTimeScale()
+    {
+        _timeScaleIndex = (_timeScaleIndex + 1) % _timeScales.Length;
+        Engine.TimeScale = _timeScales[_timeScaleIndex];
+        if (_timeScaleButton is not null)
+        {
+            _timeScaleButton.Text = TimeScaleButtonText();
+        }
+    }
+
+    private string TimeScaleButtonText() => $"{_timeScales[_timeScaleIndex]:0.#}x";
 
     private void AddConstructionToolRow(CanvasLayer layer)
     {
@@ -344,6 +525,16 @@ public partial class Main : Node2D
     // anything (see docs/CONSTRUCTION_MODE.md).
     private void ToggleConstructionMode()
     {
+        // ConstructionCanvas uses the default Pausable process mode (unlike
+        // the Always-mode Hud), so entering or leaving construction mode
+        // while training is paused would leave editing half-broken: the
+        // Build button stays tappable but taps/drags on the canvas itself
+        // wouldn't register. Always resume first so Build reliably works.
+        if (GetTree().Paused)
+        {
+            TogglePause();
+        }
+
         if (Construction.IsActive)
         {
             if (!Construction.TryLeave(out var editedCreature, out var errors))
@@ -407,6 +598,11 @@ public partial class Main : Node2D
                 if (_toolPanel is not null)
                 {
                     _toolPanel.Visible = Construction.IsActive;
+                }
+
+                if (_trainingPanel is not null)
+                {
+                    _trainingPanel.Visible = !Construction.IsActive;
                 }
 
                 if (_buildModeButton is not null)
@@ -476,6 +672,9 @@ public partial class Main : Node2D
 
     public override void _ExitTree()
     {
+        // Restore the global time scale so it doesn't leak into whatever
+        // runs next (another scene, a future scene reload, tests).
+        Engine.TimeScale = _timeScales[0];
         Selection.PropertyChanged -= OnSelectionPropertyChanged;
         Construction.PropertyChanged -= OnConstructionPropertyChanged;
         if (_inspector is not null)

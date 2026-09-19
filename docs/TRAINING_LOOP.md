@@ -76,8 +76,9 @@ but do not redefine it here.
   calls `GeneticAlgorithm.NextGeneration` and starts evaluating the next
   generation automatically. It tracks `Generation`, `BestFitness` (running
   best across all generations), and `MeanFitness` (current generation's
-  average), and raises `GenerationCompleted`/`NewBestFound` for a future
-  HUD to subscribe to.
+  average), and raises `GenerationCompleted`/`NewBestFound`, which
+  `Main.cs`'s training HUD (see "Training HUD (issue #51)" below) subscribes
+  to.
   - Evaluating candidates one at a time on one creature — rather than
     running a parallel population — is a deliberate, explicitly
     roadmap-sanctioned simplification ("repeated trials of one creature").
@@ -97,14 +98,54 @@ but do not redefine it here.
   restarting-on-rebuild/"Randomize" (which reseeds `RngProvider`) relies on
   to avoid a stale in-flight trial for the old creature outliving the
   rebuild.
-- Generation/fitness are only logged (`GD.Print`) for now; a bound HUD is
-  issue #51's job.
+- Generation/fitness are logged (`GD.Print`) and shown in the training HUD
+  (see below).
 
-## Not yet implemented (issues #51-#52)
+## Training HUD (issue #51)
 
-- Training HUD (generation, fitness, current/best seed) and run/pause/reset
-  /time-scale controls.
+- `Main.cs` adds a training panel below the top Randomize/Build/Seed row
+  (mutually exclusive with the construction tool row — training and
+  construction modes never show at once): "Gen: N", "Best: X.X (gen G)",
+  "Mean: X.X", and Run/Pause, Reset, and time-scale buttons.
+  - **Generation/Best/Mean** update only when `Evolver.GenerationCompleted`
+    fires (once per completed generation), driven by
+    `Main.UpdateTrainingLabels()`. "Best" shows the running best fitness
+    and the generation it was found at (tracked via `NewBestFound`); there
+    is no per-genome reproducibility seed to show (see #50's tradeoffs),
+    so "current/best seed" from the original issue scope became "run seed
+    (existing Seed label) + best generation."
+  - **Run/Pause** toggles `GetTree().Paused`. This is the standard Godot
+    pause mechanism: every node using the default `Pausable` process mode
+    (creature, `Evolver`, `TrialController`) freezes immediately —
+    physics stops advancing, so trial motion, fitness recording, and
+    trial-boundary checks all stop mid-trial and resume exactly where they
+    left off. The `Hud` `CanvasLayer` is set to `ProcessMode.Always` so its
+    buttons (Pause included) keep responding while paused — otherwise
+    pausing would lock out the only way to un-pause.
+  - **Reset** reseeds `RngProvider` and restarts evolution from a fresh
+    random population — identical to "Randomize"'s existing behavior,
+    exposed as its own control per the issue's acceptance criteria.
+  - **Time-scale** cycles a fixed 1x/2x/4x set via `Engine.TimeScale`.
+    This scales every physics/process step uniformly and does not affect
+    determinism, only how quickly a fixed tick budget plays out. It's
+    reset to 1x in `Main._Ready()`/`_ExitTree()` since it's a global engine
+    setting, not scoped to this scene.
+  - Toggling construction mode always resumes first (`GetTree().Paused =
+    false`) — the construction canvas uses the default `Pausable` process
+    mode, so editing while paused would silently not work even though the
+    Build button (on the `Always`-mode Hud layer) stayed tappable.
+  - `Main.cs` now owns scene composition, construction UI, the inspector,
+    *and* this training presentation directly subscribing to `Evolver`.
+    That's a growing pile of responsibility in one file; extracting the
+    training panel into its own UI widget backed by an App-layer view
+    model (matching how `CreatureInspectorViewModel` already works) is a
+    reasonable later cleanup, not required for this slice.
+- Full neural-network visualization remains out of scope (later milestone).
+
+## Not yet implemented (issue #52)
+
 - Running more than one creature at once in parallel (`Population`,
   collision-layer isolation per `project/src/sim/AGENTS.md`). #50
   intentionally evaluates candidates one at a time on a single creature
-  instead — see below.
+  instead — see above.
+

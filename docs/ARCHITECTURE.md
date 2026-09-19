@@ -205,8 +205,11 @@ the loop continues. See `docs/TRAINING_LOOP.md` for the full design and why
 candidates are currently evaluated sequentially on one creature rather than
 in parallel.
 
-`Evolver` raises a `GenerationCompleted` event; `Main.cs` logs it today.
-Binding it to an actual HUD (and a future `PopulationViewModel`) is #51's job.
+`Evolver` raises `GenerationCompleted`/`NewBestFound` events; `Main.cs`
+subscribes to both, logs the former, and drives a training HUD panel
+(generation/best/mean, run/pause/reset/time-scale controls) from them. A
+dedicated `PopulationViewModel` in the App layer remains a possible later
+refactor if this HUD logic outgrows `Main.cs` — not required yet.
 
 For 0.2.0 the hardcoded creature keeps its beam bodies awake (`CanSleep =
 false`). Random brains produce visible, if uncoordinated, motor-relation

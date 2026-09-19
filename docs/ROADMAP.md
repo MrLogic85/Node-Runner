@@ -144,6 +144,8 @@ UI are understandable.
   - Uniform crossover of weight vectors
   - Gaussian mutation with tunable rate
 - Show generation, best fitness, mean fitness, and current best seed/genome
+  (in practice: run seed plus the generation the current best was found at
+  — there's no per-genome reproducibility seed; see `docs/TRAINING_LOOP.md`)
 - Add run/pause/reset and time-scale controls where they fit the 0.2 UI shell
 - Keep backprop out of this milestone; evolution is the first training paradigm
   because it fits physics-driven locomotion without target labels.
@@ -157,14 +159,16 @@ short demo, and can see the fitness signal that caused the improvement.
 **Done checklist:**
 
 - [x] A fixed-duration trial can run and reset cleanly.
-- [ ] Fitness scoring is implemented and visible.
+- [x] Fitness scoring is implemented and visible.
 - [x] Candidate brains/genomes can be evaluated under comparable conditions.
 - [x] Genetic algorithm advances generations using selection, crossover, and
   mutation.
 - [x] Best fitness and mean fitness are tracked across generations.
-- [ ] Training UI shows generation, fitness, and current/best seed or genome.
-- [ ] Run/pause/reset controls work with Android touch.
-- [ ] Time-scale control exists if it fits the 0.2 UI shell cleanly.
+- [x] Training UI shows generation, fitness, and current run seed/best
+  generation (redefined from "seed or genome" — no per-genome
+  reproducibility seed exists; see `docs/TRAINING_LOOP.md`).
+- [x] Run/pause/reset controls work with Android touch.
+- [x] Time-scale control exists if it fits the 0.2 UI shell cleanly.
 - [ ] Backprop remains explicitly out of scope for this milestone.
 - [ ] A first-time viewer can see that behavior improved and identify the
   fitness signal.
