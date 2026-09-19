@@ -18,6 +18,7 @@ public partial class SampleFlowScreen : Control
     private Button? _overlayDismiss;
     private UiOverflowMenu? _overflowMenu;
     private UiToast? _toast;
+    private UiSheet? _sheet;
     private int _selectedMode;
 
     public UiTokens Tokens
@@ -75,6 +76,7 @@ public partial class SampleFlowScreen : Control
         _overlayDismiss = null;
         _overflowMenu = null;
         _toast = null;
+        _sheet = null;
         BuildLayout();
         if (_selectedMode == 0)
         {
@@ -189,6 +191,15 @@ public partial class SampleFlowScreen : Control
         _toast.SetAnchorsPreset(LayoutPreset.BottomLeft);
         _toast.CustomMinimumSize = new Vector2(420, _tokens.TouchTarget);
         _overlay.AddChild(_toast);
+
+        _sheet = new UiSheet
+        {
+            Tokens = _tokens,
+            ZIndex = 12,
+            CustomMinimumSize = new Vector2(460, 0),
+        };
+        _overlay.AddChild(_sheet);
+        _sheet.Hide();
     }
 
     private void ShowWatch()
@@ -273,6 +284,7 @@ public partial class SampleFlowScreen : Control
         }
 
         _toast?.Hide();
+        _sheet?.Hide();
     }
 
     private void RefreshOverlayLayout()
@@ -281,20 +293,98 @@ public partial class SampleFlowScreen : Control
         {
             _overflowMenu.Position = new Vector2(Mathf.Max(24, Size.X - 240), 76);
         }
+
+        if (_sheet is not null && _sheet.Visible)
+        {
+            _sheet.Position = new Vector2(
+                Mathf.Max(24, (Size.X - _sheet.CustomMinimumSize.X) / 2),
+                Mathf.Max(72, (Size.Y - 240) / 2));
+        }
     }
 
     private void OnOverflowAction(string actionId)
     {
         CloseOverlays();
-        if (_toast is null)
+        if (_sheet is null)
         {
             return;
         }
 
-        var message = actionId == "start-over"
-            ? "Sample only: start over would clear this run after confirmation."
-            : "Sample only: settings would open as a sheet here.";
-        _toast.ShowMessage(message);
+        if (actionId == "start-over")
+        {
+            ShowSheet("Start over?", CreateConfirmationBody());
+        }
+        else
+        {
+            ShowSheet("Training settings", CreateTrainingSettingsBody());
+        }
+    }
+
+    private void ShowSheet(string title, Control body)
+    {
+        _sheet!.Title = title;
+        _sheet.SetBody(body);
+        _sheet.Show();
+        RefreshOverlayLayout();
+        _overlayDismiss?.Show();
+    }
+
+    private Control CreateConfirmationBody()
+    {
+        var stack = new VBoxContainer();
+        stack.AddThemeConstantOverride("separation", 14);
+        stack.AddChild(new Label
+        {
+            Text = "This sample action would clear the current run. The real flow keeps an Undo window.",
+            AutowrapMode = TextServer.AutowrapMode.WordSmart,
+        });
+
+        var actions = new HBoxContainer();
+        actions.AddThemeConstantOverride("separation", 8);
+        var cancel = new UiActionButton
+        {
+            Tokens = _tokens,
+            LabelText = "Cancel",
+            Kind = UiActionButton.ActionKind.Secondary,
+        };
+        cancel.Pressed += CloseOverlays;
+        actions.AddChild(cancel);
+        var confirm = new UiActionButton
+        {
+            Tokens = _tokens,
+            LabelText = "Confirm sample reset",
+            Kind = UiActionButton.ActionKind.Danger,
+        };
+        confirm.Pressed += () =>
+        {
+            CloseOverlays();
+            _toast?.ShowMessage("Sample only: run reset confirmed.", "Undo");
+        };
+        actions.AddChild(confirm);
+        stack.AddChild(actions);
+        return stack;
+    }
+
+    private Control CreateTrainingSettingsBody()
+    {
+        var stack = new VBoxContainer();
+        stack.AddThemeConstantOverride("separation", 12);
+        stack.AddChild(new Label { Text = "Choose how much time the sample gives each learner." });
+        stack.AddChild(new UiSegmentedSwitch
+        {
+            Tokens = _tokens,
+            Options = new[] { "Quick", "Standard", "Deep" },
+            SelectedIndex = 0,
+        });
+        var done = new UiActionButton
+        {
+            Tokens = _tokens,
+            LabelText = "Done",
+            Kind = UiActionButton.ActionKind.Primary,
+        };
+        done.Pressed += CloseOverlays;
+        stack.AddChild(done);
+        return stack;
     }
 
     private void ClearContent()
