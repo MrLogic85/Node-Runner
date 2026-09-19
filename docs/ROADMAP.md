@@ -107,9 +107,10 @@ see which motor relations became neural-network outputs.
 
 **Done checklist:**
 
-- [ ] Construction workflow is documented before implementation starts.
-- [ ] User can place at least two nodes with Android touch.
-- [ ] User can move nodes before simulation starts.
+- [x] Construction workflow is documented before implementation starts (see
+  `docs/CONSTRUCTION_MODE.md`).
+- [x] User can place at least two nodes with Android touch.
+- [x] User can move nodes before simulation starts.
 - [ ] User can connect nodes with beams.
 - [ ] User can attach a core to a node.
 - [ ] User can delete the selected editable element.
