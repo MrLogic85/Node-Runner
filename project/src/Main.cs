@@ -3,6 +3,8 @@ using Godot;
 using NodeRunner.App.ViewModels;
 using NodeRunner.Creature;
 using NodeRunner.Domain;
+using NodeRunner.Managers;
+using NodeRunner.ML.Ga;
 using NodeRunner.Sim;
 using NodeRunner.Theme;
 using NodeRunner.Ui.Lib;
@@ -12,9 +14,18 @@ namespace NodeRunner;
 
 public partial class Main : Node2D
 {
+    // Population size and GA hyperparameters for the 0.4.0 first-training
+    // slice (issue #50). Tuned for a short, teachable demo, not for a
+    // fast/strong result — revisit once a training HUD (#51) makes tuning
+    // observable.
+    private const int _populationSize = 8;
+    private const int _tournamentSize = 3;
+    private const double _mutationRate = 0.1;
+    private const double _mutationStrength = 0.3;
+
     private readonly VisualTheme _theme = VisualTheme.Neon;
     private Creature.Creature? _creature;
-    private TrialController? _trialController;
+    private Evolver? _evolver;
     private CreatureInspectorViewModel? _inspector;
     private ConstructionCanvas? _constructionCanvas;
     private Button? _buildModeButton;
@@ -43,7 +54,7 @@ public partial class Main : Node2D
         AddConstructionCanvas();
         AddHud();
         AddInspector();
-        AddTrialController();
+        AddEvolver();
     }
 
     private void AddBackdrop()
@@ -126,31 +137,39 @@ public partial class Main : Node2D
         SetActiveInspector(creature.Definition);
     }
 
-    // 0.4.0 first training slice (#49): runs repeated fixed-duration trials
-    // of the current creature so its forward-distance fitness is
-    // observable end-to-end before generations/evolution (#50) exist.
-    // Fitness is only printed for now; #51 adds the real HUD binding.
-    private void AddTrialController()
+    // 0.4.0 first training slice (#50): evolves a small population of
+    // brains for the current creature via GeneticAlgorithm, one generation
+    // after another, without a UI (that's #51's job — Generation/fitness
+    // are only printed for now).
+    private void AddEvolver()
     {
-        var trialController = new TrialController { Name = "TrialController" };
-        trialController.TrialCompleted += OnTrialCompleted;
-        AddChild(trialController);
-        _trialController = trialController;
-
-        if (_creature is not null)
-        {
-            trialController.StartTrial(_creature);
-        }
+        var evolver = new Evolver { Name = "Evolver" };
+        evolver.GenerationCompleted += OnGenerationCompleted;
+        AddChild(evolver);
+        _evolver = evolver;
+        StartEvolution();
     }
 
-    private void OnTrialCompleted(float fitness)
+    private void StartEvolution()
     {
-        GD.Print($"Trial complete. Fitness (forward distance): {fitness:0.0}");
-        if (_creature is not null)
+        _evolver?.Stop();
+        if (_creature?.Brain is null || _evolver is null)
         {
-            _trialController!.StartTrial(_creature);
+            // No motors (e.g. a just-cleared construction-mode anatomy) —
+            // nothing to evolve.
+            return;
         }
+
+        var ga = new GeneticAlgorithm(_tournamentSize, _mutationRate, _mutationStrength);
+        _evolver.Start(_creature, _populationSize, _creature.Brain.LayerSizes, ga, RngProvider().Random);
     }
+
+    private void OnGenerationCompleted()
+    {
+        GD.Print($"Generation {_evolver!.Generation} — best: {_evolver.BestFitness:0.0}, mean: {_evolver.MeanFitness:0.0}");
+    }
+
+    private RngProvider RngProvider() => GetNode<RngProvider>("/root/RngProvider");
 
     // Swaps the inspector so it reads the currently active CreatureDef.
     // Needed both at startup and whenever construction mode replaces the
@@ -304,16 +323,17 @@ public partial class Main : Node2D
             return;
         }
 
+        // Reseeds the run and restarts evolution from a fresh random
+        // population, rather than hand-editing one brain: with the Evolver
+        // driving trials continuously, a single RandomizeBrain() call would
+        // just be overwritten by the next generation anyway.
         var seed = Random.Shared.Next(int.MinValue, int.MaxValue);
-        _creature.RandomizeBrain(seed);
+        RngProvider().Reseed(seed);
+        StartEvolution();
         if (_seedLabel is not null)
         {
             _seedLabel.Text = SeedText();
         }
-
-        // A new brain drives differently; start a fresh trial so its
-        // fitness reflects only this brain's behavior.
-        _trialController?.StartTrial(_creature);
     }
 
     // 0.3.0 construction mode: toggling swaps the running creature for an
@@ -361,9 +381,11 @@ public partial class Main : Node2D
             _seedLabel.Text = SeedText();
         }
 
-        // The anatomy just changed shape entirely, so any trial in progress
-        // was measuring a creature that no longer exists in this form.
-        _trialController?.StartTrial(_creature);
+        // The anatomy just changed shape entirely (different sensor/motor
+        // counts), so any evolution in progress was measuring a creature
+        // that no longer exists in this form. Start a fresh population
+        // sized for the new anatomy.
+        StartEvolution();
     }
 
 
@@ -564,7 +586,7 @@ public partial class Main : Node2D
 
     private string SeedText()
     {
-        return _creature is null ? "Seed: -" : $"Seed: {_creature.BrainSeed}";
+        return $"Seed: {RngProvider().Seed}";
     }
 
     private StyleBoxFlat CreateHudPanelStyle()

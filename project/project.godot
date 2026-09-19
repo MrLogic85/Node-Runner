@@ -26,6 +26,10 @@ window/handheld/orientation="landscape"
 
 project/assembly_name="NodeRunner"
 
+[autoload]
+
+RngProvider="*res://src/managers/RngProvider.cs"
+
 [input_devices]
 
 ; Touch devices already deliver InputEventScreenTouch/Drag directly (see

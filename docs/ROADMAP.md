@@ -158,10 +158,10 @@ short demo, and can see the fitness signal that caused the improvement.
 
 - [x] A fixed-duration trial can run and reset cleanly.
 - [ ] Fitness scoring is implemented and visible.
-- [ ] Candidate brains/genomes can be evaluated under comparable conditions.
-- [ ] Genetic algorithm advances generations using selection, crossover, and
+- [x] Candidate brains/genomes can be evaluated under comparable conditions.
+- [x] Genetic algorithm advances generations using selection, crossover, and
   mutation.
-- [ ] Best fitness and mean fitness are tracked across generations.
+- [x] Best fitness and mean fitness are tracked across generations.
 - [ ] Training UI shows generation, fitness, and current/best seed or genome.
 - [ ] Run/pause/reset controls work with Android touch.
 - [ ] Time-scale control exists if it fits the 0.2 UI shell cleanly.

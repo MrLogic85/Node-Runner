@@ -56,6 +56,13 @@ public partial class TrialController : Node
         IsRunning = true;
     }
 
+    /// <summary>Stops the current trial without raising <see cref="TrialCompleted"/>.</summary>
+    public void Stop()
+    {
+        IsRunning = false;
+        _creature = null;
+    }
+
     public override void _PhysicsProcess(double delta)
     {
         if (!IsRunning || _creature is null)

@@ -32,9 +32,11 @@ For each concept:
 
 - **What:** Search weights by simulating a population, keeping the fit ones,
   recombining them, mutating a bit, repeating.
-- **Where:** 0.4.0 · `libs/NodeRunner.ML/`
-- **How we show it:** 20 creatures visibly running in parallel. Fitness chart
-  climbs. Users can see mutations produce weird outliers.
+- **Where:** 0.4.0 · `libs/NodeRunner.ML/Ga/GeneticAlgorithm.cs`
+- **How we show it:** 0.4.0 evaluates candidate genomes one at a time on a
+  single creature (fitness chart climbs, mutations produce weird outliers);
+  showing a population of creatures visibly running in parallel is a
+  possible later step, not required for the first working demo.
 
 ## Fitness function
 
