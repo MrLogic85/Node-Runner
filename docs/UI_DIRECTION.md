@@ -3,8 +3,9 @@
 Node Runner's default visual direction is a neon sci-fi learning lab: dark
 arena, glowing nodes, bright signal paths, and readable console-like controls.
 This document is a lightweight visual compass. The staged implementation order
-and acceptance gates live in `docs/UI_IMPLEMENTATION_PLAN.md`; use that
-document before starting a larger UI slice.
+and acceptance gates live in `docs/UI_IMPLEMENTATION_PLAN.md`; the component
+inventory and screen flow live in `docs/UI_COMPONENTS_AND_FLOW.md`. Use those
+documents before starting a larger UI slice.
 
 ## Product feel
 

@@ -56,56 +56,53 @@ The current behavior is useful but the presentation is still prototype-shaped:
 
 ## Implementation phases
 
-### Phase 1 — UI shell extraction (next)
+### Phase 1 — Component kit and visual tokens
 
-**Goal:** make visual work safe without changing behavior.
+**Goal:** establish the reusable design system before connecting it to the
+current game.
 
-- Extract the current HUD composition from `Main.cs` into a Watch/Main screen
-  composition and small widgets under `project/src/ui/`.
-- Introduce widgets for `TopBar`, `ModeSwitch`, `TrainingControls`,
-  `BuildToolRail`, and `InfoPanel`.
-- Keep existing ViewModels, persistence, simulation, and touch behavior
-  intact while moving presentation code.
-- Add an App-layer presentation seam where UI currently reads simulation or
-  manager state directly. UI must not acquire new dependencies on
-  `project/src/sim/` or managers.
-- Preserve the current 1280x720 project settings and neon theme during this
-  extraction.
+- Finish `project/src/ui/lib/` primitives and the canonical token adapter.
+- Prove dark, paper, and effects-lite/readable states with sample data.
+- Keep controls app-agnostic and independent of simulation, persistence, and
+  managers.
+- Add component-level screenshot fixtures or a small sample host before any
+  game wiring.
 
 **Exit criteria:**
 
-- Watch, Build, and current Creations behavior still work on Android.
-- `Main.cs` no longer owns every panel's layout details.
-- No architecture-test regression and no new UI-to-simulation dependency.
+- The component kit renders all documented states with 48px touch targets.
+- Theme/effects changes update controls without rebuilding the screen.
+- No architecture-test regression and no UI-to-simulation dependency.
 
-### Phase 2 — Watch shell and GenerationStrip (first visible redesign)
+### Phase 2 — Static screens and interaction flow
 
-**Goal:** show what training is doing without making the screen a dashboard.
+**Goal:** make the complete target flow usable with sample data before game
+state is connected.
 
-- Add a fixed Watch shell: top bar, arena, reserved right panel, and bottom
-  training strip.
-- Expose current candidate index and population size from `Evolver` through a
-  presentation-facing state/event; do not let UI inspect private sim fields.
-- Render one generation as candidate cells with the current trial highlighted
-  and a caption such as `Generation 5 · try 3 of 8`.
-- Add the arena ruler, distance trail, and best-distance marker.
-- Move detailed Best/Mean/profile/unlock information behind an expanded
-  strip or overflow surface; keep only the essential readout visible.
-- Replace visible Randomize/Reset with a single Start over surface only after
-  equivalent behavior and a safe confirmation/undo path exist.
+- Build `WatchShell`, `BuildScreen`, `EditScreen`, and `CreationsScreen` with
+  sample data.
+- Build the mode switch, overflow, sheets, toasts, SignalFlow, BrainFocus,
+  GenerationStrip, and safe-action transitions.
+- Validate the entire touch flow and screenshots without reading `Evolver` or
+  `SaveManager`.
 
 **Exit criteria:**
 
-- The player can see trial progress before a generation completes.
-- Pause, Run, speed, Build, and overflow remain usable while paused.
-- Saved Creation resume still shows the correct generation and trial state.
-- Android screenshots show no text crowding and no raw sensor log on the main
-  Watch surface.
+- Every target flow in `docs/UI_COMPONENTS_AND_FLOW.md` is reachable with
+  sample data.
+- Risky actions have hold-to-confirm/Undo states and every overlay returns to
+  its parent mode.
+- Android screenshots show the intended 640x360 logical composition without
+  relying on current game state.
 
-### Phase 3 — Build teaching surface
+### Phase 3 — Game migration and teaching surfaces
 
-**Goal:** make anatomy-to-brain structure understandable while building.
+**Goal:** connect the stable screens to the current game one screen at a time.
 
+- Extract presentation view models/adapters from the current `Main.cs` wiring.
+- Migrate Watch first, then Build/Edit, then Creations and persistence actions.
+- Preserve simulation, persistence, and current product decisions while
+  replacing the prototype HUD.
 - Replace the horizontal tool row with a left rail: Move, Beam, Core, Delete.
   Keep the underlying `ConstructionTool.Place` name temporarily if that
   avoids an unnecessary domain rename.
@@ -207,12 +204,8 @@ Every phase touching visible UI requires:
 - no new direct UI dependency on simulation or managers;
 - a focused commit after review findings are addressed.
 
-The next implementation slice is **Phase 1 plus the minimum Phase 2
-GenerationStrip data seam**. That seam is only a prerequisite: it is not the
-GenerationStrip design. The actual strip is not complete until it renders
-one cell per try with Waiting/Current/Done states, a current-trial timer or
-distance treatment, completed distance bars, a best marker, and a concise
-learner-facing caption. This distinction prevents a text label from being
-mistaken for the finished Watch redesign. The work remains deliberately
-smaller than a full navigation rewrite and can be reverted without changing
-the domain or persistence model.
+The next implementation slice is **Phase 1 component-kit completion**, then
+Phase 2 sample-data screens and interaction flow. The earlier GenerationStrip
+commit remains a useful data/visual prototype, but it is not the finished
+Watch redesign and must not be treated as a reason to migrate the current
+HUD before the target screens are proven.
