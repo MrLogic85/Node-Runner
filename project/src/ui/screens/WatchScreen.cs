@@ -10,6 +10,9 @@ namespace NodeRunner.Ui.Screens;
 public partial class WatchScreen : Control
 {
     private UiTokens _tokens = UiTokens.Neon;
+    private readonly List<UiPanel> _signalCards = new();
+    private readonly List<Label> _signalBodies = new();
+    private int _selectedSignalIndex = -1;
 
     [Export]
     public bool ShowTopBar { get; set; } = true;
@@ -43,6 +46,9 @@ public partial class WatchScreen : Control
 
     private void RebuildLayout()
     {
+        _signalCards.Clear();
+        _signalBodies.Clear();
+        _selectedSignalIndex = -1;
         foreach (var child in GetChildren())
         {
             RemoveChild(child);
@@ -147,7 +153,7 @@ public partial class WatchScreen : Control
     private Control CreateSignalPanel()
     {
         var panel = CreatePanel(raised: false);
-        panel.CustomMinimumSize = new Vector2(260, 0);
+        panel.CustomMinimumSize = new Vector2(336, 0);
         panel.SizeFlagsVertical = SizeFlags.ExpandFill;
 
         var margin = CreateMargin(16);
@@ -162,11 +168,11 @@ public partial class WatchScreen : Control
         margin.AddChild(stack);
 
         stack.AddChild(CreateLabel("SignalFlow", 20, _tokens.Ink));
-        stack.AddChild(CreateSignalCard("1 Sees", "Sensors"));
-        stack.AddChild(CreateSignalCard("2 Decides", "Brain choice"));
-        stack.AddChild(CreateSignalCard("3 Twists", "Joint targets"));
-        stack.AddChild(CreateSignalCard("4 Scores", "Distance"));
-        stack.AddChild(CreateLabel("Tap a stage to expand details in a later slice.", 13, _tokens.Muted));
+        stack.AddChild(CreateSignalCard(0, "1 Sees", "Sensors", "The cores sense nearby contact and body state."));
+        stack.AddChild(CreateSignalCard(1, "2 Decides", "Brain choice", "The neural network turns sensor values into joint targets."));
+        stack.AddChild(CreateSignalCard(2, "3 Twists", "Joint targets", "Motor relations apply the chosen targets to beams."));
+        stack.AddChild(CreateSignalCard(3, "4 Scores", "Distance", "Fitness is the distance reached before the trial ends."));
+        stack.AddChild(CreateLabel("Tap one stage to expand its explanation.", 13, _tokens.Muted));
 
         return panel;
     }
@@ -232,10 +238,11 @@ public partial class WatchScreen : Control
         return strip;
     }
 
-    private UiPanel CreateSignalCard(string title, string body)
+    private UiPanel CreateSignalCard(int index, string title, string body, string detail)
     {
         var card = CreatePanel(raised: true);
-        card.CustomMinimumSize = new Vector2(0, 56);
+        card.CustomMinimumSize = new Vector2(312, 56);
+        _signalCards.Add(card);
 
         var margin = CreateMargin(10);
         card.AddChild(margin);
@@ -244,10 +251,37 @@ public partial class WatchScreen : Control
         stack.AddThemeConstantOverride("separation", 4);
         margin.AddChild(stack);
 
-        stack.AddChild(CreateLabel(title, 15, _tokens.Accent));
-        stack.AddChild(CreateLabel(body, 13, _tokens.Muted));
+        var action = new UiActionButton
+        {
+            Tokens = _tokens,
+            Kind = UiActionButton.ActionKind.Secondary,
+            LabelText = title,
+            CustomMinimumSize = new Vector2(0, _tokens.TouchTarget),
+        };
+        action.Pressed += () =>
+        {
+            SelectSignal(index, detail);
+        };
+        stack.AddChild(action);
+        var bodyLabel = CreateLabel($"{body}: {detail}", 13, _tokens.Muted);
+        bodyLabel.Visible = false;
+        bodyLabel.AutowrapMode = TextServer.AutowrapMode.WordSmart;
+        _signalBodies.Add(bodyLabel);
+        stack.AddChild(bodyLabel);
 
         return card;
+    }
+
+    private void SelectSignal(int index, string detail)
+    {
+        for (var cardIndex = 0; cardIndex < _signalCards.Count; cardIndex++)
+        {
+            var selected = cardIndex == index;
+            _signalCards[cardIndex].State = selected ? UiPanel.PanelState.Focused : UiPanel.PanelState.Normal;
+            _signalBodies[cardIndex].Visible = selected;
+        }
+
+        _selectedSignalIndex = index;
     }
 
     private void DrawArenaPlaceholder(Control control)
