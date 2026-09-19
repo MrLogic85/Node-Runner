@@ -25,6 +25,12 @@ layers.
   interfaces
 - `Results/` — `Result` / `Result<T>` helpers if we go that route (decide when
   first I/O lands)
+- `Builders/` — mutable, stateful construction helpers that assemble
+  `NodeRunner.Domain` records over several steps (e.g. `CreatureBuilder` for
+  0.3.0's construction mode). These hold in-progress state and expose
+  `TryBuild(...)` to attempt converting it into an immutable Domain type;
+  they belong here rather than in Domain because Domain permits no
+  behavior beyond validation (see `libs/NodeRunner.Domain/AGENTS.md`).
 
 ## What does NOT live here
 
