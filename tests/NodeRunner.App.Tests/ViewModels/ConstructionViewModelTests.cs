@@ -283,9 +283,10 @@ public sealed class ConstructionViewModelTests
     {
         var viewModel = new ConstructionViewModel();
 
-        var canLeave = viewModel.TryLeave(out var errors);
+        var canLeave = viewModel.TryLeave(out var creature, out var errors);
 
         canLeave.ShouldBeTrue();
+        creature.ShouldBeNull();
         errors.ShouldBeEmpty();
     }
 
@@ -295,9 +296,10 @@ public sealed class ConstructionViewModelTests
         var viewModel = new ConstructionViewModel();
         viewModel.PlaceNode(new Vector2D(0, 0), 18);
 
-        var canLeave = viewModel.TryLeave(out var errors);
+        var canLeave = viewModel.TryLeave(out var creature, out var errors);
 
         canLeave.ShouldBeFalse();
+        creature.ShouldBeNull();
         errors.ShouldNotBeEmpty();
     }
 
@@ -310,9 +312,11 @@ public sealed class ConstructionViewModelTests
         viewModel.SelectNodeForBeam(a);
         viewModel.SelectNodeForBeam(b);
 
-        var canLeave = viewModel.TryLeave(out var errors);
+        var canLeave = viewModel.TryLeave(out var creature, out var errors);
 
         canLeave.ShouldBeTrue();
+        creature.ShouldNotBeNull();
+        creature.Nodes.Count.ShouldBe(2);
         errors.ShouldBeEmpty();
     }
 
