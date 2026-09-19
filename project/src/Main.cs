@@ -3,6 +3,8 @@ using Godot;
 using NodeRunner.App.ViewModels;
 using NodeRunner.Creature;
 using NodeRunner.Theme;
+using NodeRunner.Ui.Lib;
+using NodeRunner.Ui.Widgets;
 
 namespace NodeRunner;
 
@@ -11,6 +13,8 @@ public partial class Main : Node2D
     private readonly VisualTheme _theme = VisualTheme.Neon;
     private Creature.Creature? _creature;
     private CreatureInspectorViewModel? _inspector;
+    private ConstructionCanvas? _constructionCanvas;
+    private Button? _buildModeButton;
     private Label? _seedLabel;
     private Label? _inspectorTitle;
     private Label? _inspectorRole;
@@ -18,13 +22,17 @@ public partial class Main : Node2D
 
     public SelectionViewModel Selection { get; } = new();
 
+    public ConstructionViewModel Construction { get; } = new();
+
     public override void _Ready()
     {
         Selection.PropertyChanged += OnSelectionPropertyChanged;
+        Construction.PropertyChanged += OnConstructionPropertyChanged;
         AddBackdrop();
         AddGround();
         AddCamera();
         AddCreature();
+        AddConstructionCanvas();
         AddHud();
         AddInspector();
     }
@@ -110,6 +118,20 @@ public partial class Main : Node2D
         _inspector.PropertyChanged += OnInspectorPropertyChanged;
     }
 
+    private void AddConstructionCanvas()
+    {
+        var canvas = new ConstructionCanvas
+        {
+            Name = "ConstructionCanvas",
+            Theme = _theme,
+            ViewModel = Construction,
+            Position = new Vector2(250, 260),
+            Visible = false,
+        };
+        AddChild(canvas);
+        _constructionCanvas = canvas;
+    }
+
     // Base font size (Godot's default is 16px) and minimum touch target
     // height (Android's recommended ~48dp) for HUD/inspector controls. Sized
     // for the 720-tall design viewport (see [display] in project.godot).
@@ -131,7 +153,7 @@ public partial class Main : Node2D
 
         var row = new HBoxContainer
         {
-            CustomMinimumSize = new Vector2(420, _touchTargetHeight),
+            CustomMinimumSize = new Vector2(600, _touchTargetHeight),
         };
         row.AddThemeConstantOverride("separation", 20);
 
@@ -145,6 +167,16 @@ public partial class Main : Node2D
         button.AddThemeFontSizeOverride("font_size", _hudFontSize);
         button.Pressed += RandomizeCreatureBrain;
 
+        _buildModeButton = new Button
+        {
+            Name = "BuildModeButton",
+            Text = BuildModeButtonText(),
+            CustomMinimumSize = new Vector2(180, _touchTargetHeight),
+        };
+        _buildModeButton.AddThemeColorOverride("font_color", _theme.SelectionGlow);
+        _buildModeButton.AddThemeFontSizeOverride("font_size", _hudFontSize);
+        _buildModeButton.Pressed += ToggleConstructionMode;
+
         _seedLabel = new Label
         {
             Name = "SeedLabel",
@@ -155,6 +187,7 @@ public partial class Main : Node2D
         _seedLabel.AddThemeFontSizeOverride("font_size", _hudFontSize);
 
         row.AddChild(button);
+        row.AddChild(_buildModeButton);
         row.AddChild(_seedLabel);
         panel.AddChild(row);
         layer.AddChild(panel);
@@ -176,9 +209,50 @@ public partial class Main : Node2D
         }
     }
 
+    // 0.3.0 construction mode: toggling swaps the running creature for an
+    // editable node canvas. Beam/core editing and instantiating the edited
+    // creature into simulation are later slices (issues #70-#72).
+    private void ToggleConstructionMode()
+    {
+        Construction.IsActive = !Construction.IsActive;
+    }
+
+    private void OnConstructionPropertyChanged(object? sender, PropertyChangedEventArgs eventArgs)
+    {
+        if (eventArgs.PropertyName != nameof(ConstructionViewModel.IsActive))
+        {
+            return;
+        }
+
+        if (_creature is not null)
+        {
+            _creature.Visible = !Construction.IsActive;
+        }
+
+        if (_constructionCanvas is not null)
+        {
+            _constructionCanvas.Visible = Construction.IsActive;
+        }
+
+        if (_buildModeButton is not null)
+        {
+            _buildModeButton.Text = BuildModeButtonText();
+        }
+    }
+
+    private string BuildModeButtonText()
+    {
+        return Construction.IsActive ? "Simulate" : "Build";
+    }
+
     public override void _UnhandledInput(InputEvent inputEvent)
     {
-        if (!TryGetPressedPointerPosition(inputEvent, out var screenPosition))
+        if (Construction.IsActive)
+        {
+            return;
+        }
+
+        if (!PointerInput.TryGetPressPosition(inputEvent, out var screenPosition))
         {
             return;
         }
@@ -199,28 +273,13 @@ public partial class Main : Node2D
     public override void _ExitTree()
     {
         Selection.PropertyChanged -= OnSelectionPropertyChanged;
+        Construction.PropertyChanged -= OnConstructionPropertyChanged;
         if (_inspector is not null)
         {
             _inspector.PropertyChanged -= OnInspectorPropertyChanged;
         }
 
         _inspector?.Dispose();
-    }
-
-    private static bool TryGetPressedPointerPosition(InputEvent inputEvent, out Vector2 screenPosition)
-    {
-        switch (inputEvent)
-        {
-            case InputEventScreenTouch { Pressed: true } touch:
-                screenPosition = touch.Position;
-                return true;
-            case InputEventMouseButton { Pressed: true, ButtonIndex: MouseButton.Left } mouseButton:
-                screenPosition = mouseButton.Position;
-                return true;
-            default:
-                screenPosition = Vector2.Zero;
-                return false;
-        }
     }
 
     private void OnSelectionPropertyChanged(object? sender, PropertyChangedEventArgs eventArgs)
