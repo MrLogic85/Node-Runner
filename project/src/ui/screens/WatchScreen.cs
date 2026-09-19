@@ -11,6 +11,12 @@ public partial class WatchScreen : Control
 {
     private UiTokens _tokens = UiTokens.Neon;
 
+    [Export]
+    public bool ShowTopBar { get; set; } = true;
+
+    [Export]
+    public bool Hosted { get; set; }
+
     public UiTokens Tokens
     {
         get => _tokens;
@@ -28,7 +34,10 @@ public partial class WatchScreen : Control
     {
         Name = nameof(WatchScreen);
         SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
-        Size = GetViewportRect().Size;
+        if (!Hosted)
+        {
+            Size = GetViewportRect().Size;
+        }
         RebuildLayout();
     }
 
@@ -64,7 +73,10 @@ public partial class WatchScreen : Control
         screen.AddThemeConstantOverride("separation", 14);
         safeFrame.AddChild(screen);
 
-        screen.AddChild(CreateTopBar());
+        if (ShowTopBar)
+        {
+            screen.AddChild(CreateTopBar());
+        }
 
         var contentRow = new HBoxContainer
         {

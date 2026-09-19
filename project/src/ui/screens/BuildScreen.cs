@@ -11,6 +11,15 @@ public partial class BuildScreen : Control
 {
     private UiTokens _tokens = UiTokens.Neon;
 
+    [Export]
+    public bool ShowTopBar { get; set; } = true;
+
+    [Export]
+    public bool Hosted { get; set; }
+
+    [Signal]
+    public delegate void TrainingRequestedEventHandler();
+
     public UiTokens Tokens
     {
         get => _tokens;
@@ -28,7 +37,10 @@ public partial class BuildScreen : Control
     {
         Name = nameof(BuildScreen);
         SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
-        Size = GetViewportRect().Size;
+        if (!Hosted)
+        {
+            Size = GetViewportRect().Size;
+        }
         RebuildLayout();
     }
 
@@ -64,7 +76,10 @@ public partial class BuildScreen : Control
         screen.AddThemeConstantOverride("separation", 14);
         safeFrame.AddChild(screen);
 
-        screen.AddChild(CreateTopBar());
+        if (ShowTopBar)
+        {
+            screen.AddChild(CreateTopBar());
+        }
 
         var contentRow = new HBoxContainer
         {
@@ -181,7 +196,9 @@ public partial class BuildScreen : Control
         stack.AddChild(CreateInfoCard("Validation", "Ready: at least one core and one motor relation"));
         stack.AddChild(CreateInfoCard("Teaching note", "Sees sensor values, decides joint targets, twists beams, then scores distance."));
         stack.AddChild(CreateSpacer());
-        stack.AddChild(CreateButton("Start training", UiActionButton.ActionKind.Primary, "Sample route to Watch"));
+        var startTraining = CreateButton("Start training", UiActionButton.ActionKind.Primary, "Sample route to Watch");
+        startTraining.Pressed += () => EmitSignal(SignalName.TrainingRequested);
+        stack.AddChild(startTraining);
 
         return panel;
     }
