@@ -34,8 +34,15 @@ without rewriting.
 
 ## 3. Determinism by default
 
-- All randomness flows through a single seeded `System.Random` (or explicit
-  `Xoshiro`/PCG later) passed to whoever needs it
+- All randomness flows through a single seeded `System.Random`, obtained
+  from `RngProvider` (see `project/src/managers/AGENTS.md`), passed to
+  whoever needs it — never `new Random()` scattered ad hoc
+- `System.Random`'s algorithm was replaced in .NET Core 3.0 and has been
+  stable since (identical output for a given seed on any OS/CPU
+  architecture, as long as all builds target .NET Core 3.0+ / .NET 5+ —
+  this project targets net8.0/net10.0), so it's sufficient for reproducing
+  a run across desktop and Android; a custom Xoshiro/PCG generator isn't
+  needed unless that guarantee changes
 - The seed for a simulation run is displayed in the UI and written to the log
 - Fixed timestep for physics *and* NN updates — never `_process(delta)` for
   anything training-related. Use `_physics_process` with 60 Hz.

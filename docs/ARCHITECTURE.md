@@ -156,9 +156,7 @@ public sealed class NeuralNetwork
 // libs/NodeRunner.ML/Ga/
 public sealed class GeneticAlgorithm
 {
-    public double MutationRate { get; init; }
-    public double MutationSigma { get; init; }
-    public int TournamentSize { get; init; }
+    public GeneticAlgorithm(int tournamentSize, double mutationRate, double mutationStrength, int elitismCount = 1);
 
     public double[][] NextGeneration(double[][] genomes, double[] fitness, Random rng);
 }
@@ -186,7 +184,7 @@ neural model.
 
 ## The tick
 
-At 60 Hz (`_physics_process`), for each creature in the population:
+At 60 Hz (`_physics_process`), for the creature currently under evaluation:
 
 1. **Sense.** Each core reads 6 values (rays, pitch, elevation, speed); each
    motor relation reads 2 (relative angle, relative angular velocity) →
@@ -197,14 +195,18 @@ At 60 Hz (`_physics_process`), for each creature in the population:
 3. **Act.** `MotorRelation.Drive(target)` scales the target by a static
    `MaxAngularVelocity` and drives torque (capped at a static `MaxTorque`)
    to chase it.
-4. **Score.** `Evaluator` accumulates fitness for this creature.
+4. **Score.** `Evaluator` accumulates fitness for this trial.
 
-After N ticks (say 600 = 10 s at 60 Hz), the `Evolver` collects fitness scores
-and produces the next generation via `GeneticAlgorithm.NextGeneration(...)`.
-New brains are assigned; positions reset; loop continues.
+After N ticks (say 600 = 10 s at 60 Hz) the trial ends. `Evolver` records its
+fitness and, once every genome in the current generation has had a trial,
+produces the next generation via `GeneticAlgorithm.NextGeneration(...)`. New
+brains are assigned one at a time; the creature's pose resets between trials;
+the loop continues. See `docs/TRAINING_LOOP.md` for the full design and why
+candidates are currently evaluated sequentially on one creature rather than
+in parallel.
 
-The `Evolver` raises `GenerationCompleted` events which `PopulationViewModel`
-subscribes to, which the UI in turn observes.
+`Evolver` raises a `GenerationCompleted` event; `Main.cs` logs it today.
+Binding it to an actual HUD (and a future `PopulationViewModel`) is #51's job.
 
 For 0.2.0 the hardcoded creature keeps its beam bodies awake (`CanSleep =
 false`). Random brains produce visible, if uncoordinated, motor-relation
@@ -213,8 +215,11 @@ tied to the retired Muscle model and does not carry over.
 
 ## Threading
 
-- Single-threaded for v1. Godot's physics runs on one thread; we run 20
-  creatures in one scene using collision layers to isolate them.
+- Single-threaded for v1. Godot's physics runs on one thread. As of 0.4.0
+  candidates are evaluated one at a time on a single creature instance
+  (`Evolver` + `TrialController`); running N creatures in parallel in one
+  scene with collision layers isolating them is a possible later
+  optimization, not yet built (see `docs/TRAINING_LOOP.md`).
 - If we ever need more parallelism, brains can be forward-passed off the main
   thread since they're pure functions on `double[]` — but only after profiling
   shows we need it.
@@ -242,9 +247,6 @@ distinct arrays. The network itself does not keep per-call scratch state.
 
 ## Open questions
 
-- Do we need our own RNG (Xoshiro/PCG) for cross-platform determinism, or is
-  `System.Random` fine? → decide before 0.4.0 training relies on comparing
-  repeated runs across Android and desktop.
 - How do we visualize very large networks without cluttering the screen?
   Group neurons? Collapse layers? → revisit before 0.5.0 network
   visualization.

@@ -17,12 +17,21 @@
 
 ## What lives here
 
-- `Population.cs` — spawns N creatures with N brains, runs them in parallel
-  in one scene (collision layers isolate them)
-- `Evaluator.cs` — measures fitness per creature per tick, accumulates
-- `Evolver.cs` — orchestrates the generation cycle: eval → GA → reset
+- `Evaluator.cs` — measures fitness for one trial, accumulates
+- `TrialController.cs` — times one fixed-duration trial for one creature,
+  resets its pose between trials
+- `Evolver.cs` — orchestrates the generation cycle: evaluate every genome
+  in the generation (sequentially, one trial each, via `TrialController`) →
+  GA → next generation
+- `Population.cs` (not yet built) — would spawn N creatures with N brains
+  and run them in parallel in one scene (collision layers isolate them).
+  `Evolver` currently evaluates candidates sequentially on one creature
+  instead ("repeated trials of one creature" — an explicitly valid roadmap
+  reading, see `docs/TRAINING_LOOP.md`); build this only if evaluation
+  speed becomes a real problem.
 - `SimulationRunner.cs` (probably) — the top-level `Node` that ties the
-  above together; scene entry point
+  above together; scene entry point. Not yet built — `Main.cs` owns this
+  role directly for now.
 
 ## What does NOT live here
 

@@ -69,7 +69,10 @@ Long-form descriptions and the sensor/model contract live in
   behavioral diversity. Reserved for a later roadmap milestone.
 - **Optimizer** — In backprop, the rule for turning a gradient into a weight
   update. SGD, momentum, Adam.
-- **Population** — The set of creatures alive in one generation (default 20).
+- **Population** — The set of candidate genomes (brains) evaluated in one
+  generation. As of 0.4.0 these are evaluated sequentially via repeated
+  trials of one creature (default size 8); running each as its own
+  simultaneous creature is a possible later optimization.
 - **Reinforcement Learning (RL)** — Training via reward signals from
   environment interaction. Not used in the early roadmap; considered for later.
 - **Selection** — GA operator that picks parents for the next generation. We
