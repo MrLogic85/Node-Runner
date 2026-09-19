@@ -169,11 +169,19 @@ short demo, and can see the fitness signal that caused the improvement.
   reproducibility seed exists; see `docs/TRAINING_LOOP.md`).
 - [x] Run/pause/reset controls work with Android touch.
 - [x] Time-scale control exists if it fits the 0.2 UI shell cleanly.
-- [ ] Backprop remains explicitly out of scope for this milestone.
-- [ ] A first-time viewer can see that behavior improved and identify the
-  fitness signal.
-- [ ] The release gates in `docs/REVIEW.md` and Android checks in
-  `docs/MANUAL_TESTING.md` are satisfied for 0.4.0.
+- [x] Backprop remains explicitly out of scope for this milestone
+  (confirmed: no backprop code exists anywhere in `libs/` or `project/src/`;
+  neuroevolution — `GeneticAlgorithm`/`Evolver` — is the only training
+  paradigm implemented).
+- [x] A first-time viewer can see that behavior improved and identify the
+  fitness signal (verified on-device in #52: a fresh seeded run showed Best
+  fitness rise from 46.0 at generation 1 to 49.9 at generation 5, with Mean
+  fitness rising from ~9 to 22.5 over the same window — both values visible
+  on the HUD at every generation boundary).
+- [x] The release gates in `docs/REVIEW.md` and Android checks in
+  `docs/MANUAL_TESTING.md` are satisfied for 0.4.0 (see #52: on-device
+  verification of ≥5 generations, all HUD controls, and construction-mode
+  interaction, with no crashes/hangs/exceptions in `adb logcat`).
 
 ---
 
