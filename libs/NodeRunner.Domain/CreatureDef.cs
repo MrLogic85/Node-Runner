@@ -23,6 +23,13 @@ public sealed record CreatureDef
         {
             ValidateNodeIndex(beam.NodeA, nodes.Count);
             ValidateNodeIndex(beam.NodeB, nodes.Count);
+
+            if (nodes[beam.NodeA].Position == nodes[beam.NodeB].Position)
+            {
+                throw new ArgumentException(
+                    $"Beam between node {beam.NodeA} and node {beam.NodeB} has zero length: both nodes share the same position.",
+                    nameof(beams));
+            }
         }
 
         foreach (var core in cores)
