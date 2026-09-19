@@ -14,6 +14,10 @@ public partial class SampleFlowScreen : Control
     private WatchScreen? _watch;
     private BuildScreen? _build;
     private UiSegmentedSwitch? _modeSwitch;
+    private Control? _overlay;
+    private Button? _overlayDismiss;
+    private UiOverflowMenu? _overflowMenu;
+    private UiToast? _toast;
     private int _selectedMode;
 
     public UiTokens Tokens
@@ -47,6 +51,14 @@ public partial class SampleFlowScreen : Control
         RebuildLayout();
     }
 
+    public override void _Notification(int what)
+    {
+        if (what == NotificationResized)
+        {
+            RefreshOverlayLayout();
+        }
+    }
+
     private void RebuildLayout()
     {
         foreach (var child in GetChildren())
@@ -59,6 +71,10 @@ public partial class SampleFlowScreen : Control
         _watch = null;
         _build = null;
         _modeSwitch = null;
+        _overlay = null;
+        _overlayDismiss = null;
+        _overflowMenu = null;
+        _toast = null;
         BuildLayout();
         if (_selectedMode == 0)
         {
@@ -124,6 +140,7 @@ public partial class SampleFlowScreen : Control
             IconText = "⋯",
             AccessibleLabel = "Open sample menu",
         };
+        menu.Pressed += ToggleOverflowMenu;
         header.AddChild(menu);
 
         _content = new Control
@@ -132,6 +149,46 @@ public partial class SampleFlowScreen : Control
             SizeFlagsVertical = SizeFlags.ExpandFill,
         };
         shell.AddChild(_content);
+
+        _overlay = new Control
+        {
+            MouseFilter = Control.MouseFilterEnum.Ignore,
+            ZIndex = 9,
+        };
+        _overlay.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
+        AddChild(_overlay);
+
+        _overlayDismiss = new Button
+        {
+            Flat = true,
+            MouseFilter = Control.MouseFilterEnum.Stop,
+        };
+        _overlayDismiss.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
+        _overlayDismiss.Pressed += CloseOverlays;
+        _overlayDismiss.Visible = false;
+        _overlay.AddChild(_overlayDismiss);
+
+        _overflowMenu = new UiOverflowMenu
+        {
+            Tokens = _tokens,
+            ZIndex = 10,
+        };
+        _overflowMenu.SetActions(
+            ("training-settings", "Sample settings", false),
+            ("start-over", "Sample start over", true));
+        _overflowMenu.ActionSelected += OnOverflowAction;
+        _overlay.AddChild(_overflowMenu);
+
+        _toast = new UiToast
+        {
+            Tokens = _tokens,
+            ZIndex = 11,
+            Position = new Vector2(24, 0),
+            SizeFlagsHorizontal = SizeFlags.Expand,
+        };
+        _toast.SetAnchorsPreset(LayoutPreset.BottomLeft);
+        _toast.CustomMinimumSize = new Vector2(420, _tokens.TouchTarget);
+        _overlay.AddChild(_toast);
     }
 
     private void ShowWatch()
@@ -171,6 +228,7 @@ public partial class SampleFlowScreen : Control
 
     private void SetMode(int mode)
     {
+        CloseOverlays();
         _selectedMode = Mathf.Clamp(mode, 0, 1);
         if (_modeSwitch is not null)
         {
@@ -185,6 +243,58 @@ public partial class SampleFlowScreen : Control
         {
             ShowBuild();
         }
+    }
+
+    private void ToggleOverflowMenu()
+    {
+        if (_overflowMenu is null)
+        {
+            return;
+        }
+
+        RefreshOverlayLayout();
+        _overflowMenu.Visible = !_overflowMenu.Visible;
+        if (_overlayDismiss is not null)
+        {
+            _overlayDismiss.Visible = _overflowMenu.Visible;
+        }
+    }
+
+    private void CloseOverlays()
+    {
+        if (_overflowMenu is not null)
+        {
+            _overflowMenu.Hide();
+        }
+
+        if (_overlayDismiss is not null)
+        {
+            _overlayDismiss.Hide();
+        }
+
+        _toast?.Hide();
+    }
+
+    private void RefreshOverlayLayout()
+    {
+        if (_overflowMenu is not null)
+        {
+            _overflowMenu.Position = new Vector2(Mathf.Max(24, Size.X - 240), 76);
+        }
+    }
+
+    private void OnOverflowAction(string actionId)
+    {
+        CloseOverlays();
+        if (_toast is null)
+        {
+            return;
+        }
+
+        var message = actionId == "start-over"
+            ? "Sample only: start over would clear this run after confirmation."
+            : "Sample only: settings would open as a sheet here.";
+        _toast.ShowMessage(message);
     }
 
     private void ClearContent()
