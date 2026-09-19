@@ -249,19 +249,22 @@ public sealed class ConstructionViewModel : INotifyPropertyChanged
     /// Checks whether the current anatomy is valid enough to leave
     /// construction mode. An empty anatomy (nothing placed yet) is always
     /// allowed, so a user who opens Build mode without editing anything can
-    /// freely return to Simulate. Otherwise this defers to
-    /// <see cref="CreatureBuilder.TryBuild"/>'s validation.
+    /// freely return to Simulate; in that case <paramref name="creature"/>
+    /// is null and the caller should keep whatever creature is already
+    /// running. Otherwise this defers to <see cref="CreatureBuilder.TryBuild"/>'s
+    /// validation and, on success, returns the built <see cref="CreatureDef"/>
+    /// for the caller to instantiate (see #72).
     /// </summary>
-    public bool TryLeave(out IReadOnlyList<string> errors)
+    public bool TryLeave(out CreatureDef? creature, out IReadOnlyList<string> errors)
     {
         if (_builder.Nodes.Count == 0)
         {
+            creature = null;
             errors = [];
             return true;
         }
 
-        var canBuild = _builder.TryBuild(out _, out errors);
-        return canBuild;
+        return _builder.TryBuild(out creature, out errors);
     }
 
     /// <summary>Surfaces why leaving Build mode was blocked, via <see cref="StatusMessage"/>.</summary>

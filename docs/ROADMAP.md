@@ -119,11 +119,13 @@ see which motor relations became neural-network outputs.
 - [x] A non-empty, invalid creature is blocked with understandable validation
   messages when attempting to leave Build mode; an untouched empty canvas
   may always leave (see `docs/CONSTRUCTION_MODE.md`'s Validation section).
-- [ ] A valid edited creature can be converted into a `CreatureDef`.
-- [ ] Simulation can instantiate and run the edited creature.
-- [ ] Model input count comes from `MotorTopology`'s derived sensors.
-- [ ] Model output count equals motor-relation count.
-- [ ] The original hardcoded worm still works.
+- [x] A valid edited creature can be converted into a `CreatureDef`.
+- [x] Simulation can instantiate and run the edited creature.
+- [x] Model input count comes from the creature's core sensor values plus
+  `MotorTopology`'s derived motor-relation sensor values (see this
+  document's Model section above).
+- [x] Model output count equals motor-relation count.
+- [x] The original hardcoded worm still works.
 - [ ] The release gates in `docs/REVIEW.md` and Android checks in
   `docs/MANUAL_TESTING.md` are satisfied for 0.3.0.
 

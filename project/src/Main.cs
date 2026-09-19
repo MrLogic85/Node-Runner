@@ -2,6 +2,7 @@ using System.ComponentModel;
 using Godot;
 using NodeRunner.App.ViewModels;
 using NodeRunner.Creature;
+using NodeRunner.Domain;
 using NodeRunner.Theme;
 using NodeRunner.Ui.Lib;
 using NodeRunner.Ui.Widgets;
@@ -108,7 +109,7 @@ public partial class Main : Node2D
     {
         var scene = GD.Load<PackedScene>("res://scenes/Creature.tscn");
         var creature = scene.Instantiate<Creature.Creature>();
-        creature.Name = "HardcodedWorm";
+        creature.Name = "Creature";
         creature.Definition = HardcodedCreatureFactory.Create();
         creature.Theme = _theme;
         creature.Position = new Vector2(250, 260);
@@ -119,7 +120,23 @@ public partial class Main : Node2D
         }
 
         _creature = creature;
-        _inspector = new CreatureInspectorViewModel(creature.Definition, Selection);
+        SetActiveInspector(creature.Definition);
+    }
+
+    // Swaps the inspector so it reads the currently active CreatureDef.
+    // Needed both at startup and whenever construction mode replaces the
+    // running creature (see ToggleConstructionMode / #72): the inspector
+    // holds its CreatureDef by reference and won't pick up a new one on its
+    // own.
+    private void SetActiveInspector(CreatureDef definition)
+    {
+        if (_inspector is not null)
+        {
+            _inspector.PropertyChanged -= OnInspectorPropertyChanged;
+            _inspector.Dispose();
+        }
+
+        _inspector = new CreatureInspectorViewModel(definition, Selection);
         _inspector.PropertyChanged += OnInspectorPropertyChanged;
     }
 
@@ -267,19 +284,51 @@ public partial class Main : Node2D
     }
 
     // 0.3.0 construction mode: toggling swaps the running creature for an
-    // editable node canvas. Instantiating the edited creature into
-    // simulation (#72) is the only remaining later slice; place/move/beam/
-    // connect/core/delete and leave-validation are implemented.
+    // editable node canvas. Leaving Build mode with a non-empty, valid
+    // anatomy replaces the running creature with the edited one (#72); an
+    // empty anatomy leaves the current creature untouched, which is how the
+    // original hardcoded worm keeps working for a user who never edits
+    // anything (see docs/CONSTRUCTION_MODE.md).
     private void ToggleConstructionMode()
     {
-        if (Construction.IsActive && !Construction.TryLeave(out var errors))
+        if (Construction.IsActive)
         {
-            Construction.SetBlockedLeaveMessage(errors);
-            return;
+            if (!Construction.TryLeave(out var editedCreature, out var errors))
+            {
+                Construction.SetBlockedLeaveMessage(errors);
+                return;
+            }
+
+            if (editedCreature is not null)
+            {
+                ApplyEditedCreature(editedCreature);
+            }
         }
 
         Construction.IsActive = !Construction.IsActive;
     }
+
+    private void ApplyEditedCreature(CreatureDef editedCreature)
+    {
+        if (_creature is null)
+        {
+            return;
+        }
+
+        // Clear any selection from the old creature before rebuilding the
+        // inspector: CreatureInspectorViewModel reads Selection.SelectedElement
+        // as soon as it's constructed, and a stale index into the old
+        // definition could point past the end of (or at a different element
+        // in) the newly edited one.
+        Selection.Clear();
+        _creature.BuildFrom(editedCreature);
+        SetActiveInspector(editedCreature);
+        if (_seedLabel is not null)
+        {
+            _seedLabel.Text = SeedText();
+        }
+    }
+
 
     private void OnConstructionPropertyChanged(object? sender, PropertyChangedEventArgs eventArgs)
     {

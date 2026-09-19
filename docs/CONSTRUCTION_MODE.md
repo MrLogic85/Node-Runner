@@ -53,10 +53,22 @@ flow; individual issues implement slices of it but do not redefine it here.
   the Beam/Core tools, so adding a persistent cross-mode selection concept
   here would add lifecycle risk (stale indices if mode switches mid-edit)
   without a corresponding benefit.
-- **Wire into simulation** (issue #72): not yet implemented. Expected shape:
-  leaving Build mode with a valid creature calls `CreatureBuilder.TryBuild`
-  and, on success, replaces (or offers to replace) the running creature with
-  the edited one; the original hardcoded worm remains available.
+- **Wire into simulation** (issue #72): implemented. Leaving Build mode
+  (`Main.ToggleConstructionMode`) calls `ConstructionViewModel.TryLeave`,
+  which returns the built `CreatureDef` when the anatomy is non-empty and
+  valid. If a `CreatureDef` comes back, `Main` rebuilds the running
+  `Creature` node from it (`Creature.BuildFrom`), which generically derives
+  the model's input/output counts (cores' sensor values plus
+  `MotorTopology`'s derived motor-relation sensor values, and one output per
+  motor relation) for whatever anatomy it is given — no special-casing
+  between the hardcoded worm and an edited creature. If the anatomy is
+  empty (nothing edited), `TryLeave` returns a null `CreatureDef` and the
+  currently running creature is left untouched; this is how the original
+  hardcoded worm keeps working with no extra UI:
+  it is simply what's already running until (and unless) the user builds
+  and leaves with a non-empty anatomy. There is no "reset to example"
+  action in this slice — restarting the app is the way back to the
+  hardcoded worm once it has been replaced.
 
 ## Validation
 
@@ -67,13 +79,13 @@ error messages verbatim; it does not duplicate the validation rules.
 Leaving Build mode (toggling back to Simulate) is gated by
 `ConstructionViewModel.TryLeave`: an anatomy with zero nodes (nothing edited
 yet) is always allowed to leave, so opening Build mode is never a one-way
-door before you've made any change. Once at least one node exists, leaving
-requires `TryBuild` to succeed; a failed attempt keeps Build mode active and
-shows the validation errors via `StatusMessage`
-(`ConstructionViewModel.SetBlockedLeaveMessage`). Since #72 (wiring the
-edited creature into simulation) isn't implemented yet, a successful leave in
-this slice still just returns to the unchanged hardcoded creature — the gate
-exists so the workflow behaves the same way once #72 lands.
+door before you've made any change — `TryLeave` returns a null
+`CreatureDef` in that case, so `Main` knows to leave the running creature
+untouched. Once at least one node exists, leaving requires `TryBuild` to
+succeed; a failed attempt keeps Build mode active and shows the validation
+errors via `StatusMessage` (`ConstructionViewModel.SetBlockedLeaveMessage`).
+A successful, non-empty leave returns the built `CreatureDef`, which `Main`
+uses to replace the running creature (see #72 above).
 
 ## Touch input
 
