@@ -137,6 +137,7 @@ see which motor relations became neural-network outputs.
 UI are understandable.
 
 - Run a small population of creatures or repeated trials of one creature
+  (see `docs/TRAINING_LOOP.md`)
 - Genetic algorithm from scratch:
   - Fitness = distance travelled or another visible objective
   - Tournament selection
@@ -155,7 +156,7 @@ short demo, and can see the fitness signal that caused the improvement.
 
 **Done checklist:**
 
-- [ ] A fixed-duration trial can run and reset cleanly.
+- [x] A fixed-duration trial can run and reset cleanly.
 - [ ] Fitness scoring is implemented and visible.
 - [ ] Candidate brains/genomes can be evaluated under comparable conditions.
 - [ ] Genetic algorithm advances generations using selection, crossover, and

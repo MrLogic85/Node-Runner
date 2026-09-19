@@ -3,6 +3,7 @@ using Godot;
 using NodeRunner.App.ViewModels;
 using NodeRunner.Creature;
 using NodeRunner.Domain;
+using NodeRunner.Sim;
 using NodeRunner.Theme;
 using NodeRunner.Ui.Lib;
 using NodeRunner.Ui.Widgets;
@@ -13,6 +14,7 @@ public partial class Main : Node2D
 {
     private readonly VisualTheme _theme = VisualTheme.Neon;
     private Creature.Creature? _creature;
+    private TrialController? _trialController;
     private CreatureInspectorViewModel? _inspector;
     private ConstructionCanvas? _constructionCanvas;
     private Button? _buildModeButton;
@@ -41,6 +43,7 @@ public partial class Main : Node2D
         AddConstructionCanvas();
         AddHud();
         AddInspector();
+        AddTrialController();
     }
 
     private void AddBackdrop()
@@ -121,6 +124,32 @@ public partial class Main : Node2D
 
         _creature = creature;
         SetActiveInspector(creature.Definition);
+    }
+
+    // 0.4.0 first training slice (#49): runs repeated fixed-duration trials
+    // of the current creature so its forward-distance fitness is
+    // observable end-to-end before generations/evolution (#50) exist.
+    // Fitness is only printed for now; #51 adds the real HUD binding.
+    private void AddTrialController()
+    {
+        var trialController = new TrialController { Name = "TrialController" };
+        trialController.TrialCompleted += OnTrialCompleted;
+        AddChild(trialController);
+        _trialController = trialController;
+
+        if (_creature is not null)
+        {
+            trialController.StartTrial(_creature);
+        }
+    }
+
+    private void OnTrialCompleted(float fitness)
+    {
+        GD.Print($"Trial complete. Fitness (forward distance): {fitness:0.0}");
+        if (_creature is not null)
+        {
+            _trialController!.StartTrial(_creature);
+        }
     }
 
     // Swaps the inspector so it reads the currently active CreatureDef.
@@ -281,6 +310,10 @@ public partial class Main : Node2D
         {
             _seedLabel.Text = SeedText();
         }
+
+        // A new brain drives differently; start a fresh trial so its
+        // fitness reflects only this brain's behavior.
+        _trialController?.StartTrial(_creature);
     }
 
     // 0.3.0 construction mode: toggling swaps the running creature for an
@@ -327,6 +360,10 @@ public partial class Main : Node2D
         {
             _seedLabel.Text = SeedText();
         }
+
+        // The anatomy just changed shape entirely, so any trial in progress
+        // was measuring a creature that no longer exists in this form.
+        _trialController?.StartTrial(_creature);
     }
 
 
