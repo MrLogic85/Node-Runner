@@ -19,6 +19,7 @@ public partial class Main : Node2D
     private Button? _placeToolButton;
     private Button? _beamToolButton;
     private Button? _coreToolButton;
+    private Button? _deleteToolButton;
     private Label? _seedLabel;
     private Label? _inspectorTitle;
     private Label? _inspectorRole;
@@ -211,7 +212,7 @@ public partial class Main : Node2D
 
         var row = new HBoxContainer
         {
-            CustomMinimumSize = new Vector2(600, _touchTargetHeight),
+            CustomMinimumSize = new Vector2(800, _touchTargetHeight),
         };
         row.AddThemeConstantOverride("separation", 20);
 
@@ -224,9 +225,13 @@ public partial class Main : Node2D
         _coreToolButton = CreateToolButton("CoreToolButton", "Core");
         _coreToolButton.Pressed += () => Construction.ActiveTool = ConstructionTool.Core;
 
+        _deleteToolButton = CreateToolButton("DeleteToolButton", "Delete");
+        _deleteToolButton.Pressed += () => Construction.ActiveTool = ConstructionTool.Delete;
+
         row.AddChild(_placeToolButton);
         row.AddChild(_beamToolButton);
         row.AddChild(_coreToolButton);
+        row.AddChild(_deleteToolButton);
         panel.AddChild(row);
         layer.AddChild(panel);
 
@@ -262,11 +267,17 @@ public partial class Main : Node2D
     }
 
     // 0.3.0 construction mode: toggling swaps the running creature for an
-    // editable node canvas. Delete/validation messaging (#71) and
-    // instantiating the edited creature into simulation (#72) are still
-    // later slices; place/move/beam/connect/core are implemented.
+    // editable node canvas. Instantiating the edited creature into
+    // simulation (#72) is the only remaining later slice; place/move/beam/
+    // connect/core/delete and leave-validation are implemented.
     private void ToggleConstructionMode()
     {
+        if (Construction.IsActive && !Construction.TryLeave(out var errors))
+        {
+            Construction.SetBlockedLeaveMessage(errors);
+            return;
+        }
+
         Construction.IsActive = !Construction.IsActive;
     }
 
@@ -309,7 +320,7 @@ public partial class Main : Node2D
 
     private void UpdateToolButtonHighlight()
     {
-        if (_placeToolButton is null || _beamToolButton is null || _coreToolButton is null)
+        if (_placeToolButton is null || _beamToolButton is null || _coreToolButton is null || _deleteToolButton is null)
         {
             return;
         }
@@ -317,6 +328,7 @@ public partial class Main : Node2D
         HighlightToolButton(_placeToolButton, Construction.ActiveTool == ConstructionTool.Place);
         HighlightToolButton(_beamToolButton, Construction.ActiveTool == ConstructionTool.Beam);
         HighlightToolButton(_coreToolButton, Construction.ActiveTool == ConstructionTool.Core);
+        HighlightToolButton(_deleteToolButton, Construction.ActiveTool == ConstructionTool.Delete);
     }
 
     private void HighlightToolButton(Button button, bool isActive)
@@ -459,6 +471,7 @@ public partial class Main : Node2D
             ConstructionTool.Place => "Tap empty space to place a node. Drag a node to move it.",
             ConstructionTool.Beam => "Tap a node, then another node, to connect them with a beam.",
             ConstructionTool.Core => "Tap a node to attach a core, tap again to remove it.",
+            ConstructionTool.Delete => "Tap a node or beam to delete it.",
             _ => string.Empty,
         };
     }

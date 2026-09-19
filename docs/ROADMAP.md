@@ -113,8 +113,12 @@ see which motor relations became neural-network outputs.
 - [x] User can move nodes before simulation starts.
 - [x] User can connect nodes with beams.
 - [x] User can attach a core to a node.
-- [ ] User can delete the selected editable element.
-- [ ] Invalid creatures are blocked with understandable validation messages.
+- [x] User can delete a node or beam (Delete tool, tap to act); a core is
+  removed via the Core tool's tap-to-toggle (see `docs/CONSTRUCTION_MODE.md`
+  for why this doesn't use a separate select-then-delete step).
+- [x] A non-empty, invalid creature is blocked with understandable validation
+  messages when attempting to leave Build mode; an untouched empty canvas
+  may always leave (see `docs/CONSTRUCTION_MODE.md`'s Validation section).
 - [ ] A valid edited creature can be converted into a `CreatureDef`.
 - [ ] Simulation can instantiate and run the edited creature.
 - [ ] Model input count comes from `MotorTopology`'s derived sensors.

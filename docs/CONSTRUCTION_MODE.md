@@ -40,11 +40,19 @@ flow; individual issues implement slices of it but do not redefine it here.
   have one, or removes it if it does. `ConstructionViewModel.StatusMessage`
   carries all of this feedback and is shown in the Build-mode inspector
   panel alongside the active tool name.
-- **Delete + validation messaging** (issue #71): not yet implemented.
-  Expected shape: an editable element (node/beam/core) can be selected in
-  Build mode and deleted with a dedicated control; invalid creature states
-  surface the same beginner-facing messages `CreatureBuilder.TryBuild`
-  already returns.
+- **Delete + validation messaging** (issue #71): implemented. A fourth tool,
+  Delete, is added to the tool row. Tapping a node deletes it and cascades to
+  every beam/core attached to it (`CreatureBuilder.RemoveNode`'s documented
+  behavior); tapping a beam (hit-tested against its line segment, not just
+  its endpoints) deletes just that beam, leaving its nodes in place. Cores
+  are removed via the existing Core tool's tap-to-toggle, not the Delete
+  tool, since a core has no separate touch target from its node. This
+  intentionally does not reuse the shared `SelectionViewModel` (which drives
+  Simulate-mode part inspection): construction-mode edits are transient,
+  index-based, and already follow the same "tap immediately acts" pattern as
+  the Beam/Core tools, so adding a persistent cross-mode selection concept
+  here would add lifecycle risk (stale indices if mode switches mid-edit)
+  without a corresponding benefit.
 - **Wire into simulation** (issue #72): not yet implemented. Expected shape:
   leaving Build mode with a valid creature calls `CreatureBuilder.TryBuild`
   and, on success, replaces (or offers to replace) the running creature with
@@ -55,6 +63,17 @@ flow; individual issues implement slices of it but do not redefine it here.
 `NodeRunner.App.Builders.CreatureBuilder.TryBuild` is the single source of
 truth for whether an in-progress creature can be simulated. UI surfaces its
 error messages verbatim; it does not duplicate the validation rules.
+
+Leaving Build mode (toggling back to Simulate) is gated by
+`ConstructionViewModel.TryLeave`: an anatomy with zero nodes (nothing edited
+yet) is always allowed to leave, so opening Build mode is never a one-way
+door before you've made any change. Once at least one node exists, leaving
+requires `TryBuild` to succeed; a failed attempt keeps Build mode active and
+shows the validation errors via `StatusMessage`
+(`ConstructionViewModel.SetBlockedLeaveMessage`). Since #72 (wiring the
+edited creature into simulation) isn't implemented yet, a successful leave in
+this slice still just returns to the unchanged hardcoded creature — the gate
+exists so the workflow behaves the same way once #72 lands.
 
 ## Touch input
 

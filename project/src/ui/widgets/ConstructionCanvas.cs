@@ -10,14 +10,16 @@ namespace NodeRunner.Ui.Widgets;
 /// <summary>
 /// Renders the anatomy placed so far in construction mode and lets the user
 /// edit it with touch, per the active <see cref="ConstructionTool"/>: place
-/// or drag nodes, connect two nodes with a beam, or attach/remove a core.
-/// Binds to <see cref="ConstructionViewModel"/> per `project/src/ui/AGENTS.md`;
-/// does not own any anatomy state itself. See docs/CONSTRUCTION_MODE.md.
+/// or drag nodes, connect two nodes with a beam, attach/remove a core, or
+/// delete a node/beam. Binds to <see cref="ConstructionViewModel"/> per
+/// `project/src/ui/AGENTS.md`; does not own any anatomy state itself. See
+/// docs/CONSTRUCTION_MODE.md.
 /// </summary>
 public partial class ConstructionCanvas : Node2D
 {
     private const float _nodeHitRadius = 32f;
     private const float _defaultNodeRadius = 18f;
+    private const float _beamHitDistance = 20f;
 
     private ConstructionViewModel? _viewModel;
     private int _draggingNodeIndex = -1;
@@ -146,6 +148,17 @@ public partial class ConstructionCanvas : Node2D
                 if (foundNode)
                 {
                     _viewModel.ToggleCoreOnNode(nodeIndex);
+                }
+
+                break;
+            case ConstructionTool.Delete:
+                if (foundNode)
+                {
+                    _viewModel.DeleteNode(nodeIndex);
+                }
+                else if (_viewModel.TryFindBeamNear(domainPosition, _beamHitDistance, out var beamIndex))
+                {
+                    _viewModel.DeleteBeam(beamIndex);
                 }
 
                 break;
