@@ -43,6 +43,7 @@ public partial class SampleFlowScreen : Control
     {
         Name = nameof(SampleFlowScreen);
         SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
+        Size = GetViewportRect().Size;
         RebuildLayout();
     }
 
