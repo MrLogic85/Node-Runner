@@ -15,7 +15,7 @@ For each concept:
 - **What:** A function `f(x) = σ(W₃ σ(W₂ σ(W₁ x + b₁) + b₂) + b₃)`. Layers of
   linear maps with a nonlinearity in between.
 - **Where:** 0.1.0 · `libs/NodeRunner.ML/NeuralNetwork.cs`
-- **How we show it:** The creature moves at all. Later (0.5.0) the network is
+- **How we show it:** The creature moves at all. Later (0.9.0) the network is
   drawn on-screen with nodes and edges.
 
 ## Activation functions
@@ -82,14 +82,14 @@ For each concept:
 
 - **What:** Bigger networks can represent more, but need more data/generations
   to train, and can overfit.
-- **Where:** 0.5.0 or later sliders
+- **Where:** 0.9.0 or later sliders
 - **How we show it:** Tiny nets can't even walk. Huge nets learn slowly and
   behave erratically. Sweet spot is visible.
 
 ## Live activation visualization
 
 - **What:** Which neuron fires at which moment, and how strongly.
-- **Where:** 0.5.0 · `project/src/ui/`
+- **Where:** 0.9.0 · `project/src/ui/`
 - **How we show it:** Nodes glow. Edges pulse. You literally see the thought
   behind each step.
 
