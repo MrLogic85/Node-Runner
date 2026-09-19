@@ -82,7 +82,10 @@ the PR):
 - [ ] Any new logic in `libs/NodeRunner.{ML,Domain}/` has unit tests
 - [ ] `dotnet format NodeRunner.slnx --verify-no-changes` passes
 - [ ] Local code-review agents (`CODEREVIEW.md`) dispatched; new findings
-      addressed or explicitly dismissed
+      addressed or explicitly dismissed. For UI-touching changes (screens,
+      controls, layout, theme), also run the `design-lead` custom agent
+      (`.github/agents/design-lead.agent.md`) — see `docs/UI_DIRECTION.md`
+      § "Design review"
 - [ ] Docs updated where behavior/architecture changed
 - [ ] Local `AGENTS.md` reflects any new rule that emerged
 - [ ] Nothing under `libs/` uses `using Godot;` — arch tests enforce this

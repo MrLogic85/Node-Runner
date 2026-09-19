@@ -122,6 +122,14 @@ The toggle button lets the user override that default in either direction.
 Both views reuse the same three labels (title/role/values) rather than
 maintaining separate widgets, keeping the panel's footprint constant.
 
+## Design review
+
+Node Runner has a `design-lead` custom agent
+(`.github/agents/design-lead.agent.md`) that reviews UI-touching changes
+against this document and helps scope new screens/controls before
+implementation starts. `docs/REVIEW.md`'s Definition of Done owns when it
+is required.
+
 ## Non-goals for now
 
 - Pixel-perfect mockups.
