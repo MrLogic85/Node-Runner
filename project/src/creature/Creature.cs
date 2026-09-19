@@ -451,6 +451,42 @@ public partial class Creature : Node2D
         }
     }
 
+    // Populates the sensor-to-brain-to-motor mapping display (issue #42)
+    // from the same buffers ReadSensors/_PhysicsProcess already computed
+    // this tick. Read-only telemetry: never mutates simulation state.
+    public void ReadMapping(List<SensorReading> sensors, List<MotorReading> motors)
+    {
+        ArgumentNullException.ThrowIfNull(sensors);
+        ArgumentNullException.ThrowIfNull(motors);
+
+        sensors.Clear();
+        motors.Clear();
+        if (Brain is null || _motorRelations.Length == 0)
+        {
+            return;
+        }
+
+        var index = 0;
+        for (var c = 0; c < _coreSensors.Length; c++)
+        {
+            for (var n = 0; n < CoreSensors.ValueCount; n++)
+            {
+                sensors.Add(new SensorReading("Core", c + 1, CoreSensors.ValueNames[n], _sensorValues[index++]));
+            }
+        }
+
+        for (var m = 0; m < _motorRelations.Length; m++)
+        {
+            sensors.Add(new SensorReading("Motor relation", m + 1, "angle", _sensorValues[index++]));
+            sensors.Add(new SensorReading("Motor relation", m + 1, "angular velocity", _sensorValues[index++]));
+        }
+
+        for (var m = 0; m < _motorRelations.Length; m++)
+        {
+            motors.Add(new MotorReading(m + 1, _motorTargets[m], _motorRelations[m].LastAppliedTorque));
+        }
+    }
+
     private float GetLineHitTolerance()
     {
         var canvasTransform = GetViewport().GetCanvasTransform();

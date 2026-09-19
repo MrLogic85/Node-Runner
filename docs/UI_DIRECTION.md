@@ -105,6 +105,23 @@ The halo is paired with the selected part's existing shape (circle or line),
 so selection does not rely on color alone. Keep selection state outside
 visual nodes; visuals only render the selected state they receive.
 
+## 0.2.0 inspector / mapping panel (#41, #42)
+
+The bottom panel is a single fixed-position `PanelContainer` (not a
+draggable bottom sheet) with a small toggle button ("Inspector" /
+"Mapping") above its three content labels. It shows one of two views at a
+time:
+
+- **Inspector** (#41): role text + values for the selected node/beam/core.
+- **Mapping** (#42): live sensor readings and motor-relation targets/torque,
+  refreshed on a ~0.15s cadence while visible (not every rendered frame).
+
+The view auto-switches — Mapping when nothing is selected, Inspector when
+something is — matching the "second tab" decision recorded on issue #42.
+The toggle button lets the user override that default in either direction.
+Both views reuse the same three labels (title/role/values) rather than
+maintaining separate widgets, keeping the panel's footprint constant.
+
 ## Non-goals for now
 
 - Pixel-perfect mockups.

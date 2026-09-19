@@ -45,6 +45,13 @@ public sealed class MotorRelation
 
     public double RelativeAngularVelocity => OtherBeam.AngularVelocity - ReferenceBeam.AngularVelocity;
 
+    /// <summary>
+    /// The torque this relation applied to <see cref="OtherBeam"/> on the
+    /// last <see cref="Drive"/> call. Read-only telemetry for the mapping
+    /// display (issue #42) — has no effect on physics itself.
+    /// </summary>
+    public float LastAppliedTorque { get; private set; }
+
     /// <param name="target">Desired angular velocity in [-1, 1].</param>
     public void Drive(double target)
     {
@@ -53,5 +60,6 @@ public sealed class MotorRelation
         var torque = (float)Math.Clamp(error * _velocityGain, -MaxTorque, MaxTorque);
         OtherBeam.ApplyTorque(torque);
         ReferenceBeam.ApplyTorque(-torque);
+        LastAppliedTorque = torque;
     }
 }

@@ -66,7 +66,8 @@ node, beam, core, motor relation, input, and output are in the current demo.
 - [ ] Selected creature part is visually highlighted.
 - [ ] Inspector panel shows beginner-facing role text and key values.
 - [ ] Sensor values, model outputs, and motor-relation activity are visible
-  enough to explain the control loop.
+  enough to explain the control loop. (Implemented via the mapping panel,
+  #42; on-device validation tracked by #43.)
 - [ ] Randomize keeps inspector/mapping UI consistent with the new brain seed.
 - [ ] A first-time viewer can explain node, beam, core, motor relation,
   sensor, input, and output from the app.
