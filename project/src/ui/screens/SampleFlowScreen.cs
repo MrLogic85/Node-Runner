@@ -1,4 +1,5 @@
 using Godot;
+using NodeRunner.App.ViewModels;
 using NodeRunner.Ui.Lib;
 
 namespace NodeRunner.Ui.Screens;
@@ -22,6 +23,20 @@ public partial class SampleFlowScreen : Control
     private int _selectedMode;
     private Control? _sampleView;
     private string? _lastDeletedCreation;
+    private TrainingPresentationViewModel? _presentation;
+
+    public TrainingPresentationViewModel? Presentation
+    {
+        get => _presentation;
+        set
+        {
+            _presentation = value;
+            if (_watch is not null)
+            {
+                _watch.Presentation = value;
+            }
+        }
+    }
 
     public UiTokens Tokens
     {
@@ -220,6 +235,7 @@ public partial class SampleFlowScreen : Control
             Tokens = _tokens,
             ShowTopBar = false,
             Hosted = true,
+            Presentation = _presentation,
         };
         _watch.BrainFocusRequested += () => ShowSheet("BrainFocus · Decides", CreateBrainFocusBody());
         _sampleView = _watch;

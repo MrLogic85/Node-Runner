@@ -9,6 +9,7 @@ using NodeRunner.ML.Ga;
 using NodeRunner.Sim;
 using NodeRunner.Theme;
 using NodeRunner.Ui.Lib;
+using NodeRunner.Ui.Screens;
 using NodeRunner.Ui.Widgets;
 
 namespace NodeRunner;
@@ -74,6 +75,7 @@ public partial class Main : Node2D
     ];
     private int _trainingProfileIndex = 1;
     private int _sessionGenerationStart;
+    private readonly TrainingPresentationViewModel _trainingPresentation = new();
 
     public SelectionViewModel Selection { get; } = new();
 
@@ -81,6 +83,15 @@ public partial class Main : Node2D
 
     public override void _Ready()
     {
+        if (ProjectSettings.GetSetting("ui/sample_preview", false).AsBool())
+        {
+            _trainingPresentation.Update(5, 3, 8, 12.8, 8.4, "Quick");
+            var sample = GD.Load<PackedScene>("res://scenes/ui/SampleFlowScreen.tscn").Instantiate<SampleFlowScreen>();
+            sample.Presentation = _trainingPresentation;
+            AddChild(sample);
+            return;
+        }
+
         // Engine.TimeScale is a global engine setting, not scoped to this
         // scene — reset it on entry so a previous run's time-scale choice
         // (e.g. from CycleTimeScale) can't silently carry over.
@@ -333,7 +344,20 @@ public partial class Main : Node2D
         UpdateTrainingLabels();
     }
 
-    private void OnTrainingProgressChanged() => UpdateTrainingLabels();
+    private void OnTrainingProgressChanged()
+    {
+        UpdateTrainingLabels();
+        if (_evolver is not null)
+        {
+            _trainingPresentation.Update(
+                _evolver.Generation,
+                _evolver.CurrentCandidate,
+                _evolver.PopulationSize,
+                _evolver.BestFitness,
+                _evolver.MeanFitness,
+                _trainingProfiles[_trainingProfileIndex].Name);
+        }
+    }
 
     private void UpdateTrainingLabels()
     {

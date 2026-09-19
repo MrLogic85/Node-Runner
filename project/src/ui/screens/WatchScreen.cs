@@ -1,4 +1,5 @@
 using Godot;
+using NodeRunner.App.ViewModels;
 using NodeRunner.Ui.Lib;
 
 namespace NodeRunner.Ui.Screens;
@@ -13,6 +14,7 @@ public partial class WatchScreen : Control
     private readonly List<UiPanel> _signalCards = new();
     private readonly List<Label> _signalBodies = new();
     private int _selectedSignalIndex = -1;
+    private TrainingPresentationViewModel? _presentation;
 
     [Signal]
     public delegate void BrainFocusRequestedEventHandler();
@@ -22,6 +24,29 @@ public partial class WatchScreen : Control
 
     [Export]
     public bool Hosted { get; set; }
+
+    public TrainingPresentationViewModel? Presentation
+    {
+        get => _presentation;
+        set
+        {
+            if (_presentation is not null)
+            {
+                _presentation.PropertyChanged -= OnPresentationChanged;
+            }
+
+            _presentation = value;
+            if (_presentation is not null)
+            {
+                _presentation.PropertyChanged += OnPresentationChanged;
+            }
+
+            if (IsInsideTree())
+            {
+                RebuildLayout();
+            }
+        }
+    }
 
     public UiTokens Tokens
     {
@@ -39,12 +64,34 @@ public partial class WatchScreen : Control
     public override void _Ready()
     {
         Name = nameof(WatchScreen);
+        if (_presentation is not null)
+        {
+            _presentation.PropertyChanged -= OnPresentationChanged;
+            _presentation.PropertyChanged += OnPresentationChanged;
+        }
         SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
         if (!Hosted)
         {
             Size = GetViewportRect().Size;
         }
+
         RebuildLayout();
+    }
+
+    public override void _ExitTree()
+    {
+        if (_presentation is not null)
+        {
+            _presentation.PropertyChanged -= OnPresentationChanged;
+        }
+    }
+
+    private void OnPresentationChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs args)
+    {
+        if (IsInsideTree())
+        {
+            RebuildLayout();
+        }
     }
 
     private void RebuildLayout()
@@ -204,8 +251,16 @@ public partial class WatchScreen : Control
         summary.AddThemeConstantOverride("separation", 6);
         row.AddChild(summary);
 
-        summary.AddChild(CreateLabel("Generation 5 · try 3 of 8", 18, _tokens.Ink));
-        summary.AddChild(CreateLabel("Best 12.8 m · mean 8.4 m · Quick profile", 14, _tokens.Muted));
+        var generation = _presentation?.Generation ?? 5;
+        var candidate = _presentation?.Candidate ?? 3;
+        var population = _presentation?.Population ?? 8;
+        var best = _presentation is null || double.IsNegativeInfinity(_presentation.BestFitness)
+            ? "—"
+            : $"{_presentation.BestFitness:0.0} m";
+        var mean = _presentation?.MeanFitness ?? 8.4;
+        var profile = _presentation?.Profile ?? "Quick";
+        summary.AddChild(CreateLabel($"Generation {generation} · try {candidate} of {population}", 18, _tokens.Ink));
+        summary.AddChild(CreateLabel($"Best {best} · mean {mean:0.0} m · {profile} profile", 14, _tokens.Muted));
         summary.AddChild(CreateSampleStrip());
 
         row.AddChild(CreateButton("Pause", UiActionButton.ActionKind.Secondary, "Pause sample training"));
