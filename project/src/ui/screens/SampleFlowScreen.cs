@@ -292,10 +292,10 @@ public partial class SampleFlowScreen : Control
 
         ClearContent();
         var creations = new CreationsScreen { Tokens = _tokens };
-        creations.OpenRequested += _ => SetMode(0);
-        creations.EditRequested += ShowEdit;
-        creations.DuplicateRequested += name => ShowSheet("Duplicate " + name + "?", CreateDuplicateBody(name));
-        creations.DeleteRequested += name => ShowSheet("Delete " + name + "?", CreateDeleteBody(name));
+        creations.OpenRequested += (_, _) => SetMode(0);
+        creations.EditRequested += (_, name) => ShowEdit(name);
+        creations.DuplicateRequested += (_, name) => ShowSheet("Duplicate " + name + "?", CreateDuplicateBody(name));
+        creations.DeleteRequested += (_, name) => ShowSheet("Delete " + name + "?", CreateDeleteBody(name));
         creations.BackRequested += () => SetMode(0);
         _sampleView = creations;
         _content.AddChild(creations);
