@@ -72,6 +72,7 @@ public partial class Main : Node2D
     private readonly MappingViewModel _mapping = new();
     private readonly SignalFlowPresentationViewModel _signalFlow = new();
     private readonly BrainFocusPresentationViewModel _brainFocus = new();
+    private readonly UnlockProgressPresentationViewModel _unlockProgress = new();
     private readonly List<SensorReading> _sensorReadings = [];
     private readonly List<MotorReading> _motorReadings = [];
     private Button? _mappingToggleButton;
@@ -354,6 +355,7 @@ public partial class Main : Node2D
         {
             _watchScreen.Presentation = _trainingPresentation;
         }
+        RefreshUnlockProgress();
 
         AddChild(evolver);
         _evolver = evolver;
@@ -446,6 +448,7 @@ public partial class Main : Node2D
         {
             _progressionLabel.Text = ProgressionText();
         }
+        RefreshUnlockProgress();
 
         _generationStrip?.SetProgress(
             _trainingPresentation.Generation,
@@ -518,11 +521,18 @@ public partial class Main : Node2D
             InputPassthrough = true,
             Presentation = _trainingPresentation,
             SignalFlow = _signalFlow,
+            UnlockProgress = _unlockProgress,
             Visible = !Construction.IsActive,
         };
         _watchScreen.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
         _watchScreen.BrainFocusRequested += ShowBrainFocus;
         watchLayer.AddChild(_watchScreen);
+    }
+
+    private void RefreshUnlockProgress()
+    {
+        var progression = GetNode<SaveManager>("/root/SaveManager").Progression;
+        _unlockProgress.Update(progression, _trainingPresentation.BestFitness, _extraCoreUnlockFitness);
     }
 
     private void AddBrainFocusOverlay()
