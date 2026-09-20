@@ -1,0 +1,25 @@
+{
+ "v": 3,
+ "assetGroups": {},
+ "blobs": {},
+ "createdOnFiles": {
+  "at": "2026-09-19T14:51:29Z",
+  "v": 1
+ },
+ "docs": {
+  "readme": "reference design/README.md",
+  "sections": []
+ },
+ "groups": [],
+ "lastChange": {
+  "by": "Claude",
+  "at": "2026-09-20T18:34:12Z",
+  "via": "Claude Cowork",
+  "note": "Large networks: BrainScale screen and large-brain SignalFlow card"
+ },
+ "layout": "files",
+ "libraries": [],
+ "namespace": "NodeRunner",
+ "sections": {},
+ "title": "Node Runner"
+}

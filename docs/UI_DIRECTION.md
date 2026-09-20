@@ -1,11 +1,13 @@
 # UI direction
 
-Node Runner's default visual direction is a neon sci-fi learning lab: dark
-arena, glowing nodes, bright signal paths, and readable console-like controls.
-This document is a lightweight visual compass. The staged implementation order
-and acceptance gates live in `docs/UI_IMPLEMENTATION_PLAN.md`; the component
-inventory and screen flow live in `docs/UI_COMPONENTS_AND_FLOW.md`. Use those
-documents before starting a larger UI slice.
+Node Runner's default visual direction is the tracked design package in
+`reference design/`: a neon sci-fi learning lab with a dark arena, glowing
+nodes, bright signal paths, and readable console-like controls. This document
+is the lightweight visual compass; `reference design/` is the detailed source
+of truth for how the app should look and behave. The staged implementation
+order and acceptance gates live in `docs/UI_IMPLEMENTATION_PLAN.md`; the
+component inventory and screen flow live in `docs/UI_COMPONENTS_AND_FLOW.md`.
+Use those documents before starting a larger UI slice.
 
 ## Product feel
 
@@ -17,6 +19,27 @@ documents before starting a larger UI slice.
   screen.
 - **Experiment-first:** the user should be able to change one thing and see
   what happened.
+- **Understanding over creatures:** every screen must answer "why did it do
+  that?". Controls that neither teach nor drive the core loop do not belong.
+
+## Reference design source
+
+`reference design/` is now a committed product artifact, not disposable
+inspiration. Its README, component READMEs, previews, tokens, and design JSON
+are the authoritative detailed UI source until implemented or deliberately
+revised.
+
+Major target decisions from that package:
+
+- Android phone, landscape only, touch only.
+- Fixed 640 x 360 logical canvas scaled to device; do not reflow per screen.
+- Creations is the hub; Build is only for new unsaved anatomy; saved Creation
+  locks structure while allowing position changes and non-structural settings.
+- Training is reached through Creation -> Train setup -> Training.
+- Brain setup chooses hidden layers/neurons before Save and is locked after
+  Save.
+- Achievements unlock parts and maps player-wide.
+- Neon is default, but paper/effects-lite must be possible through tokens.
 
 ## Visual language
 
@@ -27,43 +50,24 @@ documents before starting a larger UI slice.
   hardcoded cartoon skin.
 - Motion can use subtle pulses or signal traces, but should never obscure the
   physics or ML concept being taught.
+- Keep screens quiet: one focus at a time, one picture per idea, and details
+  on tap rather than text-heavy dashboards.
 
-## 0.1.0 screen concept
+## Active screen concept
 
-0.1.0 has one main screen:
+The active target is the hub-and-spoke flow in `reference design/components/Navigation/README.md`:
 
-- The simulation is the center of attention.
-- The creature and ground are visible without setup.
-- A tiny HUD overlays or sits beside the simulation.
-- HUD controls are limited to what the 0.1.0 loop needs:
-  - **Randomize** — create a new random brain once GitHub Issue #13 lands.
-  - **Seed/log text** — show enough state to reproduce behavior.
+- **Creations** is the home hub.
+- **Build** is only for new unsaved anatomy.
+- **Creation** is the saved/editable state with locked structure.
+- **Train setup** configures shadows, run length, map, and Train/Simulate.
+- **Training** visualizes the run and teaching surfaces.
+- **Achievements** unlock parts and maps player-wide.
 
-Avoid turning 0.1.0 into a generic developer dashboard. If a control does not
-teach an ML/simulation concept or help the user run the 0.1.0 loop, leave it
-out.
-
-## 0.4.0 screen concept
-
-The single main screen gained a second HUD panel below the 0.1.0 row
-(Randomize/Build/Seed): a training panel (generation, best fitness, mean
-fitness, and run/pause/reset/time-scale controls — see
-`docs/TRAINING_LOOP.md`'s "Training HUD (issue #51)" section). It occupies
-the same position as the construction tool row and the two are mutually
-exclusive: the training panel shows outside construction mode, the tool row
-shows inside it. Toggling into/out of construction mode always resumes
-training first (pausing has no meaning while editing, and the construction
-canvas isn't reachable while the tree is paused).
-
-The 0.7.0 training-profile control cycles a small set of session presets.
-Its button label stays compact and explicitly says that changing it restarts
-the active run; a separate summary line keeps the selected population,
-trial duration, mutation rate, and crossover explanation visible without
-turning the button into a dense configuration panel.
-
-The first 0.8.0 progression slice adds a compact line below the training
-controls showing the next unlock threshold and current progress, or the
-generation at which the extra core slot was earned.
+Older single-screen HUD, global Build/Simulate mode-switch, inspector, and
+mapping-panel concepts are historical prototype behavior. Do not use those
+sections of the old roadmap as active UI direction when they conflict with
+`reference design/`.
 
 ## Theme boundaries
 
@@ -81,15 +85,14 @@ must stay theme-agnostic:
 
 ## Reserved future UI areas
 
-Do not build future UI before its issue, but avoid choices that make inspection
-panels, graph views, editor tools, or saved-creature views hard later. The
-current roadmap owns feature sequencing; this document only says the main
-screen should be able to evolve into simulation + inspection layouts without
-rewriting creature/simulation layers.
+Do not build future UI before its issue, but avoid choices that make the
+tracked reference flow harder later. The current rollout is staged in GitHub
+milestones 0.10.0 through 0.13.0 and in `docs/UI_IMPLEMENTATION_PLAN.md`.
 
 ## Rules for UI changes
 
-- Prefer one clear screen over navigation until there is a second real mode.
+- Follow the reference Navigation flow; do not reintroduce a global
+  Build/Simulate mode switch unless the design source is deliberately revised.
 - Keep sim state observable from the simulation/app layers; UI should not own
   training or physics truth.
 - Add controls only when they are tied to a concrete issue and verification
@@ -110,30 +113,6 @@ rewriting creature/simulation layers.
   motion, battery, and low-end Android performance.
 - Critical text should stay crisp; avoid heavy bloom on labels and numbers.
 
-## 0.2.0 selection feedback
-
-Selected anatomy uses a theme-provided, warm halo with no pulse animation.
-The halo is paired with the selected part's existing shape (circle or line),
-so selection does not rely on color alone. Keep selection state outside
-visual nodes; visuals only render the selected state they receive.
-
-## 0.2.0 inspector / mapping panel (#41, #42)
-
-The bottom panel is a single fixed-position `PanelContainer` (not a
-draggable bottom sheet) with a small toggle button ("Inspector" /
-"Mapping") above its three content labels. It shows one of two views at a
-time:
-
-- **Inspector** (#41): role text + values for the selected node/beam/core.
-- **Mapping** (#42): live sensor readings and motor-relation targets/torque,
-  refreshed on a ~0.15s cadence while visible (not every rendered frame).
-
-The view auto-switches — Mapping when nothing is selected, Inspector when
-something is — matching the "second tab" decision recorded on issue #42.
-The toggle button lets the user override that default in either direction.
-Both views reuse the same three labels (title/role/values) rather than
-maintaining separate widgets, keeping the panel's footprint constant.
-
 ## Design review
 
 Node Runner has a `design-lead` custom agent
@@ -145,8 +124,7 @@ is required.
 ## Non-goals for now
 
 - Pixel-perfect mockups.
-- A complete design system or theme token set.
-- Responsive layouts for every future mode.
-- Final navigation architecture.
 - Polished onboarding/tutorial flows.
-- Settings menus beyond what the current issue needs.
+- Sound and accessibility settings beyond the reference package's current
+  placeholders.
+- Tablet-specific layout beyond the fixed 640 x 360 phone composition.

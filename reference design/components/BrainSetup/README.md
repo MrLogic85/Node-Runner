@@ -1,0 +1,9 @@
+Where the player chooses the **shape of the brain** (the hidden part of the network). It is opened from the **Brain** chip in the Build top bar, which always shows the current shape ("1 × 4": layers × neurons). The senses and outputs are not chosen here: they come from the cores and motors the player placed, and the preview shows their counts.
+
+**Hidden layers: 1, 2 or 3.** Three large cells, each with the number and a one-word purpose: **1 simple**, **2 navigation**, **3 experiment** (dashed). One line under them says what the selection is for: "Recommended for simple tasks" (1), "Recommended for harder navigation" (2), "Not recommended: slow to learn. For experiments." (3, with a warn icon, in `halo`). One layer is the default. Three is never blocked.
+
+**Neurons per layer: 1 to 100.** One row per hidden layer: a label, a 32px minus and plus stepper for exact values, a track with a 24px thumb, and the number in `readout`. Tapping the number opens a number pad. The **default is (senses + motors) / 2, rounded up**, and a tick on every track marks it ("tick = default 4" for 3 senses and 4 motors). **Use recommended** in the top bar resets both settings.
+
+**Live preview.** The network on the right redraws as things change: senses and motors filled in `accent`, hidden layers outlined, the count printed under each column and, past six, "+18 more" instead of drawing every neuron. The number of **connections** is shown as a `readout`, because it is the honest cost of the choice: more connections mean slower learning and more battery.
+
+**Locked on Save.** Layers and neurons change the model, so like parts they can only be set in Build. After Save the chip on Build's counterpart, the Brain screen, shows the shape with a lock and this screen cannot be opened.

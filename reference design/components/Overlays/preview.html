@@ -1,0 +1,51 @@
+<!-- @dsCard group="Overlays" height=330 width=1000 subtitle="Reset, delete, copy toast, undo, unlocks" -->
+<style>html,body{margin:0;background:transparent}</style>
+<div data-theme="dark" style="background:var(--bg);color:var(--ink);min-height:100vh;font-family:var(--font-body)">
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Chakra+Petch:wght@500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"><style>
+*{box-sizing:border-box}body{margin:0;font-family:var(--font-body);font-size:13px;line-height:18px}
+.mono{font-family:var(--font-mono)}.muted{color:var(--muted)}.abs{position:absolute}
+.frame{position:relative;width:640px;height:360px;background:var(--bg);color:var(--ink);border:1px solid var(--edge);box-shadow:0 0 22px var(--accent-glow);border-radius:var(--radius-lg);overflow:hidden;font-family:var(--font-body)}
+.top{position:absolute;left:0;right:0;top:0;height:48px;display:flex;align-items:center;gap:8px;padding:0 4px;background:var(--panel);border-bottom:1px solid var(--edge)}
+.body{position:absolute;left:0;right:0;top:48px;bottom:0}
+.ib{width:48px;height:48px;flex:none;display:inline-flex;align-items:center;justify-content:center;color:var(--ink)}
+.ib.box{width:44px;height:44px;margin:0 2px;border:1px solid var(--line-strong);background:var(--panel-raised);border-radius:var(--radius-md)}
+.ib.dis{opacity:.45}
+.h{font:600 16px/20px var(--font-display)}.sub{font:400 11px/14px var(--font-body);color:var(--muted)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:48px;padding:0 14px;border-radius:var(--radius-md);border:1px solid var(--line-strong);background:var(--panel-raised);color:var(--ink);font:500 12px/16px var(--font-body);letter-spacing:.04em;text-transform:uppercase;white-space:nowrap}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent);box-shadow:var(--glow)}
+.btn.danger{border-color:var(--danger);color:var(--danger)}
+.btn.off{opacity:.5}.btn.focus{outline:3px solid var(--accent);outline-offset:2px}
+.seg{display:inline-flex;border:1px solid var(--line-strong);border-radius:var(--radius-md);overflow:hidden;height:40px;flex:none}
+.seg span{display:inline-flex;align-items:center;gap:6px;padding:0 12px;font:500 12px/16px var(--font-body);letter-spacing:.04em;text-transform:uppercase;color:var(--ink);background:var(--panel-raised)}
+.seg span+span{border-left:1px solid var(--line-strong)}
+.seg span.on{background:var(--accent-soft);color:var(--ink);box-shadow:inset 0 0 0 2px var(--accent)}
+.chip{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 10px;border-radius:var(--radius-pill);border:1px solid var(--line-strong);background:var(--panel-raised);font:500 11px/14px var(--font-body);white-space:nowrap}
+.bar{display:inline-block;height:6px;border-radius:3px;background:var(--line);position:relative;overflow:hidden}
+.bar>i{position:absolute;left:0;top:0;bottom:0;background:var(--accent);border-radius:3px}
+.pnl{background:var(--panel);border:1px solid var(--edge);border-radius:10px}
+.k{font:500 10px/13px var(--font-body);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.rd{font:500 13px/16px var(--font-mono)}.rdl{font:500 22px/24px var(--font-mono)}
+.st{background:var(--panel);border:1px solid var(--edge);box-shadow:0 0 8px var(--accent-glow);border-radius:10px;padding:5px 8px;position:relative}
+.st.sel{border-color:var(--halo);box-shadow:0 0 0 1px var(--halo)}
+.glow{filter:drop-shadow(0 0 3px var(--accent-glow)) drop-shadow(0 0 7px var(--accent-glow))}
+[data-effects="lite"] .glow{filter:none}
+.st h4{margin:0 0 3px;font:600 11px/14px var(--font-display);letter-spacing:.06em;text-transform:uppercase;display:flex;gap:6px;align-items:center}
+.st h4 em{font:400 10px/13px var(--font-body);letter-spacing:0;text-transform:none;color:var(--muted);font-style:normal;margin-left:auto}
+.num{width:16px;height:16px;border-radius:50%;border:1.5px solid var(--accent);display:inline-flex;align-items:center;justify-content:center;font:500 10px/1 var(--font-mono);color:var(--accent)}
+.r{display:flex;align-items:center;gap:6px;height:13px;font:500 10px/13px var(--font-body)}
+.r span:first-child{width:38px;color:var(--muted)}.r .bar{width:60px;height:5px}.r b{font:500 10px/13px var(--font-mono)}
+.r.sel{outline:1px solid var(--halo);outline-offset:1px;border-radius:2px}
+.arrow{height:8px;display:flex;justify-content:center;color:var(--accent)}
+.call{position:absolute;padding:5px 8px;border-radius:8px;background:var(--panel);border:1px solid var(--halo);font:500 11px/14px var(--font-body);color:var(--ink)}
+.call.bad{border-color:var(--danger)}
+.tool{width:56px;height:58px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font:500 10px/13px var(--font-body);letter-spacing:.04em;text-transform:uppercase;border:1px solid var(--line-strong);border-radius:var(--radius-md);background:var(--panel-raised);color:var(--ink)}
+.tool.on{background:var(--accent-soft);border:2px solid var(--accent);box-shadow:var(--glow)}
+.tool.lock{opacity:.5;border-style:dashed}
+</style><style>
+.seg>span{white-space:nowrap;padding-left:12px;padding-right:12px}.field{display:inline-flex;align-items:center;gap:8px;height:36px;padding:0 12px;border:1px solid var(--line-strong);border-radius:8px;background:var(--panel-raised);font:600 15px/20px var(--font-display);white-space:nowrap}
+.partrow{display:flex;align-items:center;gap:8px;height:44px;padding:0 8px;border:1px solid var(--line-strong);border-radius:8px;background:var(--panel-raised);margin-bottom:6px}
+.partrow.lock{opacity:.55;border-style:dashed}.partrow.zero{opacity:.55}
+.partrow.on{border:2px solid var(--accent);background:var(--accent-soft);box-shadow:var(--glow)}
+.badge{position:absolute;top:6px;right:4px;min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:var(--halo);color:var(--on-accent);font:600 10px/16px var(--font-mono);text-align:center}
+</style><div style="display:grid;grid-template-columns:repeat(3,300px);gap:16px 20px;padding:16px;align-items:start;justify-content:center"><div style="width:300px;background:var(--panel);border:1px solid var(--danger);border-radius:14px;padding:12px 14px"><div class="h" style="margin-bottom:4px">Reset training?</div><div style="margin-bottom:10px">Walker-1 forgets its 142 generations. The shape stays. You can undo for 10 seconds.</div><div style="display:flex;gap:8px;justify-content:flex-end"><span class="btn">Cancel</span><span class="btn danger" style="position:relative;overflow:hidden;min-width:150px"><span style="position:absolute;left:0;top:0;bottom:0;width:60%;background:var(--danger);opacity:.28"></span><span style="position:relative">Hold to reset</span></span></div></div><div style="width:300px;background:var(--panel);border:1px solid var(--danger);border-radius:14px;padding:12px 14px"><div class="h" style="margin-bottom:4px">Delete Walker-1?</div><div style="margin-bottom:10px">The creation and its trained brain are removed. You can undo for 10 seconds.</div><div style="display:flex;gap:8px;justify-content:flex-end"><span class="btn">Cancel</span><span class="btn danger">Delete</span></div></div><div><div style="width:300px;background:var(--ink);color:var(--bg);border-radius:10px;padding:8px 8px 8px 14px;display:flex;align-items:center;gap:10px"><span style="flex:1">Copied · Copy of Walker-1</span><span class="mono" style="font-size:11px"></span><span class="btn" style="min-height:40px;background:transparent;border-color:var(--bg);color:var(--bg)">Open</span></div><div class="sub" style="margin-top:6px">After Copy. The copy has the same brain and training.</div></div><div><div style="width:300px;background:var(--ink);color:var(--bg);border-radius:10px;padding:8px 8px 8px 14px;display:flex;align-items:center;gap:10px"><span style="flex:1">Walker-1 deleted</span><span class="mono" style="font-size:11px">8 s</span><span class="btn" style="min-height:40px;background:transparent;border-color:var(--bg);color:var(--bg)">Undo</span></div><div class="sub" style="margin-top:6px">After Delete or Reset training.</div></div><div style="width:300px;background:var(--panel);border:1px solid var(--accent);border-radius:14px;padding:10px 14px;box-shadow:var(--glow);display:flex;gap:12px;align-items:center"><span style="width:44px;height:44px;border-radius:50%;border:2px solid var(--accent);display:inline-flex;align-items:center;justify-content:center;color:var(--accent)"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M6 11h12v9H6zM8 11V8a4 4 0 0 1 7-2"/></svg></span><div><div class="k" style="color:var(--accent)">New part unlocked</div><div class="h">Spring</div><div class="sub">First steps · use it in new builds</div></div></div><div style="width:300px;background:var(--panel);border:1px solid var(--accent);border-radius:14px;padding:10px 14px;box-shadow:var(--glow);display:flex;gap:12px;align-items:center"><span style="width:44px;height:44px;border-radius:50%;border:2px solid var(--accent);display:inline-flex;align-items:center;justify-content:center;color:var(--accent)"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2zM9 4v14M15 6v14"/></svg></span><div><div class="k" style="color:var(--accent)">New map unlocked</div><div class="h">Hills</div><div class="sub">Marathon · pick it in Train setup</div></div></div></div>
+</div>

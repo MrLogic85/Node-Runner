@@ -1,3 +1,0 @@
-Three segmented choices with plain names and no helper text: length of each try (5 / 10 / 20 s), creatures per generation (4 / 8 / 16), generations per session (10 / 50 / no limit). The selected option has a check, a fill and a border.
-
-The right panel is the only explanation: it recomputes **how long one generation takes** ("≈ 80 s", 8 blocks for 8 tries) and one line for a whole session. Changing a control changes these numbers immediately, which teaches the trade-off without a paragraph. Changes apply from the next generation; the header says so. Reset to default is in the overflow menu.
