@@ -106,8 +106,16 @@ public sealed class GeneticAlgorithmTests
     }
 
     [Fact]
-    public void NextGeneration_WithBlendCrossover_StaysBetweenParentGenes()
+    public void NextGeneration_WithBlendCrossover_InterpolatesBetweenDistinctParentGenes()
     {
+        // Regression guard for #112: with Random(2) both tournament
+        // selections land on distinct parents for both children, so a
+        // correct Blend crossover must produce genes strictly between the
+        // two parent values. Uniform crossover (the accidental fallback
+        // this guards against) can only ever reproduce a parent's gene
+        // exactly, so it would fail this assertion -- unlike the previous
+        // "stays within range" assertion, which uniform crossover also
+        // always satisfies.
         var ga = new GeneticAlgorithm(1, mutationRate: 0.0, mutationStrength: 1.0, elitismCount: 0, crossoverStrategy: CrossoverStrategy.Blend);
         var genomes = new[]
         {
@@ -115,13 +123,18 @@ public sealed class GeneticAlgorithmTests
             new double[] { 10, 20 },
         };
 
-        var next = ga.NextGeneration(genomes, new[] { 1.0, 2.0 }, new Random(7));
+        var next = ga.NextGeneration(genomes, new[] { 1.0, 2.0 }, new Random(2));
 
         for (var genomeIndex = 0; genomeIndex < next.Length; genomeIndex++)
         {
             for (var geneIndex = 0; geneIndex < next[genomeIndex].Length; geneIndex++)
             {
-                next[genomeIndex][geneIndex].ShouldBeInRange(genomes[0][geneIndex], genomes[1][geneIndex]);
+                var gene = next[genomeIndex][geneIndex];
+                var parentAGene = genomes[0][geneIndex];
+                var parentBGene = genomes[1][geneIndex];
+                gene.ShouldBeInRange(parentAGene, parentBGene);
+                gene.ShouldNotBe(parentAGene);
+                gene.ShouldNotBe(parentBGene);
             }
         }
     }
