@@ -560,12 +560,15 @@ public partial class SampleFlowScreen : Control
 
             foreach (var node in left)
             {
-                network.DrawCircle(node, 12, _tokens.AccentGlow);
+                // Illustrative network diagram -- effects-lite drops the
+                // glow treatment for flat schematic dots instead of hiding
+                // them (#134).
+                network.DrawCircle(node, _tokens.EffectsEnabled ? 12 : 8, _tokens.EffectsEnabled ? _tokens.AccentGlow : _tokens.Line);
             }
 
             for (var index = 0; index < middle.Length; index++)
             {
-                network.DrawCircle(middle[index], 15, _tokens.Halo);
+                network.DrawCircle(middle[index], _tokens.EffectsEnabled ? 15 : 10, _tokens.EffectsEnabled ? _tokens.Halo : _tokens.LineStrong);
                 if (index == selectedNeuron)
                 {
                     network.DrawArc(middle[index], 22, 0, Mathf.Tau, 32, _tokens.Accent, 3);

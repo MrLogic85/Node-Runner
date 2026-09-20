@@ -250,8 +250,8 @@ public partial class BuildScreen : Control
         DrawNode(control, c, hasCore: true);
         DrawNode(control, d, hasCore: false);
 
-        control.DrawArc(b, 44, 0.35f, 1.55f, 24, _tokens.Halo, 3, antialiased: true);
-        control.DrawArc(d, 44, 3.75f, 4.95f, 24, _tokens.Halo, 3, antialiased: true);
+        control.DrawArc(b, 44, 0.35f, 1.55f, 24, _tokens.EffectsEnabled ? _tokens.Halo : _tokens.Accent, 3, antialiased: true);
+        control.DrawArc(d, 44, 3.75f, 4.95f, 24, _tokens.EffectsEnabled ? _tokens.Halo : _tokens.Accent, 3, antialiased: true);
     }
 
     private void DrawBeam(Control control, Vector2 start, Vector2 end, Color color)
@@ -261,12 +261,19 @@ public partial class BuildScreen : Control
 
     private void DrawNode(Control control, Vector2 position, bool hasCore)
     {
-        control.DrawCircle(position, 25, _tokens.AccentGlow);
+        if (_tokens.EffectsEnabled)
+        {
+            control.DrawCircle(position, 25, _tokens.AccentGlow);
+        }
+
         control.DrawCircle(position, 17, _tokens.AccentSoft);
         control.DrawCircle(position, 17, _tokens.LineStrong);
         if (hasCore)
         {
-            control.DrawCircle(position, 7, _tokens.Halo);
+            // The core marker must survive effects-lite mode (it's the only
+            // signal a node has a core, not decoration) -- it just loses its
+            // glow tint and renders as a plain schematic dot instead (#134).
+            control.DrawCircle(position, 7, _tokens.EffectsEnabled ? _tokens.Halo : _tokens.OnAccent);
         }
     }
 
