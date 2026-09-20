@@ -1,0 +1,3 @@
+One cell per try in the generation. It fills the ~80 s between number changes: something visibly changes every second, with a single line of text above it ("Generation 37 · try 5 of 8").
+
+**Done** cells have a solid outline and a bar as tall as the distance reached; the best is drawn in `ink` with a ▲. **Current** has a thick `accent` border, a left-to-right wash for the 10 s timer and a live bar. **Waiting** is dashed and empty. Cells have no numerals; position says the order. At the end the caption reads "Generation 37 · best 14.2 m" for a moment, then the strip resets. With 16 cells the cells narrow to 17px.
