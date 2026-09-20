@@ -73,6 +73,7 @@ public partial class Main : Node2D
     private readonly SignalFlowPresentationViewModel _signalFlow = new();
     private readonly BrainFocusPresentationViewModel _brainFocus = new();
     private readonly UnlockProgressPresentationViewModel _unlockProgress = new();
+    private readonly TrainingProfileSummaryPresentationViewModel _profileSummary = new();
     private readonly List<SensorReading> _sensorReadings = [];
     private readonly List<MotorReading> _motorReadings = [];
     private Button? _mappingToggleButton;
@@ -351,6 +352,7 @@ public partial class Main : Node2D
             evolver,
             () => _trainingProfiles[_trainingProfileIndex].Name));
         _trainingPresentation.PropertyChanged += OnTrainingPresentationChanged;
+        RefreshTrainingProfileSummary();
         if (_watchScreen is not null)
         {
             _watchScreen.Presentation = _trainingPresentation;
@@ -522,6 +524,7 @@ public partial class Main : Node2D
             Presentation = _trainingPresentation,
             SignalFlow = _signalFlow,
             UnlockProgress = _unlockProgress,
+            ProfileSummary = _profileSummary,
             Visible = !Construction.IsActive,
         };
         _watchScreen.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
@@ -534,6 +537,13 @@ public partial class Main : Node2D
     {
         var progression = GetNode<SaveManager>("/root/SaveManager").Progression;
         _unlockProgress.Update(progression, _trainingPresentation.BestFitness, _extraCoreUnlockFitness);
+    }
+
+    private void RefreshTrainingProfileSummary()
+    {
+        var profile = CurrentTrainingProfile();
+        var crossover = TrainingProfileCrossoverText(profile);
+        _profileSummary.Update(profile.PopulationSize, profile.TrialDurationTicks / 60, profile.MutationRate, crossover);
     }
 
     private void AddBrainFocusOverlay()
@@ -1252,8 +1262,13 @@ public partial class Main : Node2D
     private string TrainingProfileSummaryText()
     {
         var profile = CurrentTrainingProfile();
-        var crossover = profile.CrossoverStrategy == CrossoverStrategy.Blend ? "blended genes" : "uniform genes";
+        var crossover = TrainingProfileCrossoverText(profile);
         return $"{profile.PopulationSize} candidates | {profile.TrialDurationTicks / 60}s trials | {profile.MutationRate:P0} mutation | {crossover}";
+    }
+
+    private static string TrainingProfileCrossoverText(TrainingProfile profile)
+    {
+        return profile.CrossoverStrategy == CrossoverStrategy.Blend ? "blended genes" : "uniform genes";
     }
 
     private void CycleTrainingProfile()
@@ -1268,6 +1283,8 @@ public partial class Main : Node2D
         {
             _trainingProfileSummaryLabel.Text = TrainingProfileSummaryText();
         }
+
+        RefreshTrainingProfileSummary();
 
         if (!Construction.IsActive)
         {

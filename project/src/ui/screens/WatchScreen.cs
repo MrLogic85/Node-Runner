@@ -20,6 +20,7 @@ public partial class WatchScreen : Control
     private TrainingPresentationViewModel? _presentation;
     private SignalFlowPresentationViewModel? _signalFlow;
     private UnlockProgressPresentationViewModel? _unlockProgress;
+    private TrainingProfileSummaryPresentationViewModel? _profileSummary;
     private Label? _seesStatusLabel;
     private Label? _decidesStatusLabel;
     private Label? _twistsStatusLabel;
@@ -133,6 +134,29 @@ public partial class WatchScreen : Control
         }
     }
 
+    public TrainingProfileSummaryPresentationViewModel? ProfileSummary
+    {
+        get => _profileSummary;
+        set
+        {
+            if (_profileSummary is not null)
+            {
+                _profileSummary.PropertyChanged -= OnProfileSummaryChanged;
+            }
+
+            _profileSummary = value;
+            if (_profileSummary is not null)
+            {
+                _profileSummary.PropertyChanged += OnProfileSummaryChanged;
+            }
+
+            if (IsInsideTree())
+            {
+                RebuildLayout();
+            }
+        }
+    }
+
     public UiTokens Tokens
     {
         get => _tokens;
@@ -164,6 +188,11 @@ public partial class WatchScreen : Control
             _unlockProgress.PropertyChanged -= OnUnlockProgressChanged;
             _unlockProgress.PropertyChanged += OnUnlockProgressChanged;
         }
+        if (_profileSummary is not null)
+        {
+            _profileSummary.PropertyChanged -= OnProfileSummaryChanged;
+            _profileSummary.PropertyChanged += OnProfileSummaryChanged;
+        }
         SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
         if (!Hosted)
         {
@@ -188,6 +217,10 @@ public partial class WatchScreen : Control
         {
             _unlockProgress.PropertyChanged -= OnUnlockProgressChanged;
         }
+        if (_profileSummary is not null)
+        {
+            _profileSummary.PropertyChanged -= OnProfileSummaryChanged;
+        }
     }
 
     private void OnPresentationChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs args)
@@ -207,6 +240,14 @@ public partial class WatchScreen : Control
     }
 
     private void OnUnlockProgressChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs args)
+    {
+        if (IsInsideTree())
+        {
+            RebuildLayout();
+        }
+    }
+
+    private void OnProfileSummaryChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs args)
     {
         if (IsInsideTree())
         {
@@ -356,7 +397,7 @@ public partial class WatchScreen : Control
         panel.CustomMinimumSize = new Vector2(336, 0);
         panel.SizeFlagsVertical = SizeFlags.ExpandFill;
 
-        var margin = CreateMargin(16);
+        var margin = CreateMargin(12);
         panel.AddChild(margin);
 
         var stack = new VBoxContainer
@@ -364,7 +405,7 @@ public partial class WatchScreen : Control
             SizeFlagsHorizontal = SizeFlags.ExpandFill,
             SizeFlagsVertical = SizeFlags.ExpandFill,
         };
-        stack.AddThemeConstantOverride("separation", 7);
+        stack.AddThemeConstantOverride("separation", 5);
         margin.AddChild(stack);
 
         if (ReadOnlyControls)
@@ -464,6 +505,7 @@ public partial class WatchScreen : Control
         stack.AddChild(profileButton);
         stack.AddChild(CreateLabel(generationText, 15, _tokens.Ink));
         stack.AddChild(CreateLabel($"Best {best} · mean {mean:0.0} m", 13, _tokens.Muted));
+        stack.AddChild(CreateLabel(_profileSummary?.Detail ?? "8 candidates · 10s · 10% mutation · uniform genes", 11, _tokens.Muted));
         stack.AddChild(CreateSampleStrip());
         stack.AddChild(CreateUnlockProgress());
 
@@ -544,14 +586,14 @@ public partial class WatchScreen : Control
     private UiPanel CreateSignalCard(int index, string title, string detail)
     {
         var card = CreatePanel(raised: true);
-        card.CustomMinimumSize = new Vector2(312, 76);
+        card.CustomMinimumSize = new Vector2(312, 68);
         _signalCards.Add(card);
 
-        var margin = CreateMargin(10);
+        var margin = CreateMargin(6);
         card.AddChild(margin);
 
         var stack = new VBoxContainer();
-        stack.AddThemeConstantOverride("separation", 4);
+        stack.AddThemeConstantOverride("separation", 3);
         margin.AddChild(stack);
 
         if (ReadOnlyControls)
@@ -577,7 +619,7 @@ public partial class WatchScreen : Control
             {
                 var heading = CreateLabel(title, 13, _tokens.Muted);
                 heading.HorizontalAlignment = HorizontalAlignment.Center;
-                heading.CustomMinimumSize = new Vector2(0, 24);
+                heading.CustomMinimumSize = new Vector2(0, 20);
                 stack.AddChild(heading);
             }
         }
@@ -634,7 +676,7 @@ public partial class WatchScreen : Control
         var row = new HBoxContainer
         {
             SizeFlagsHorizontal = SizeFlags.ExpandFill,
-            CustomMinimumSize = new Vector2(0, 20),
+            CustomMinimumSize = new Vector2(0, 18),
         };
         row.AddThemeConstantOverride("separation", 8);
         for (var index = 0; index < 3; index++)
@@ -652,7 +694,7 @@ public partial class WatchScreen : Control
         var row = new HBoxContainer
         {
             SizeFlagsHorizontal = SizeFlags.ExpandFill,
-            CustomMinimumSize = new Vector2(0, 20),
+            CustomMinimumSize = new Vector2(0, 18),
         };
         row.AddThemeConstantOverride("separation", 8);
         for (var index = 0; index < 2; index++)
@@ -672,7 +714,7 @@ public partial class WatchScreen : Control
             MinValue = 0,
             MaxValue = 1,
             ShowPercentage = false,
-            CustomMinimumSize = new Vector2(0, 12),
+            CustomMinimumSize = new Vector2(0, 10),
             SizeFlagsHorizontal = SizeFlags.ExpandFill,
             SizeFlagsVertical = SizeFlags.ShrinkCenter,
         };
@@ -687,7 +729,7 @@ public partial class WatchScreen : Control
         {
             Text = "\u2193",
             HorizontalAlignment = HorizontalAlignment.Center,
-            CustomMinimumSize = new Vector2(0, 8),
+            CustomMinimumSize = new Vector2(0, 6),
         };
         connector.AddThemeColorOverride("font_color", _tokens.Accent);
         connector.AddThemeFontSizeOverride("font_size", 12);
