@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using Godot;
 using NodeRunner.App.Repositories;
+using NodeRunner.App.Services;
 using NodeRunner.App.ViewModels;
 using NodeRunner.Creature;
 using NodeRunner.Domain;
@@ -1242,21 +1243,21 @@ public partial class Main : Node2D
         // Creature record on disk -- the same resurrection-style hazard
         // #113's epoch invalidation fixed, just triggered by an I/O failure
         // instead of a race.
-        CreationDef? updated = null;
+        ConstructionEditResult? editResult = null;
         if (_activeCreationId is { } id)
         {
             var saveManager = GetNode<SaveManager>("/root/SaveManager");
             var succeeded = TryRunFileOperation(
-                () => updated = saveManager.ApplyCreatureEdit(id, editedCreature),
+                () => editResult = saveManager.PersistMoveOnlyEdit(id, editedCreature),
                 $"Applying creature edit for Creation {id}");
 
             // A null result (no exception, but nothing to update -- e.g. the
             // Creation was deleted concurrently) means nothing was actually
             // persisted either, so it must be treated the same as a thrown
             // failure: discard the edit rather than applying it live.
-            if (!succeeded || updated is null)
+            if (!succeeded || editResult is null || !editResult.ShouldApplyLive)
             {
-                Construction.SetCompletedMessage("Could not save the edited creature; your edit was discarded.");
+                Construction.SetCompletedMessage(editResult?.StatusMessage ?? "Could not save the edited creature; your edit was discarded.");
                 return;
             }
         }
@@ -1274,8 +1275,9 @@ public partial class Main : Node2D
             _seedLabel.Text = SeedText();
         }
 
-        if (updated is not null)
+        if (editResult?.UpdatedCreation is { } updated)
         {
+            Construction.SetCompletedMessage(editResult.StatusMessage);
             StartEvolution(updated);
             return;
         }
