@@ -186,11 +186,20 @@ short demo, and can see the fitness signal that caused the improvement.
 
 ---
 
-> **Draft status (2026-09-19):** 0.5.0 through 0.9.0 below reflect a
-> game-loop-first redesign (build → save as Creation → edit/resume
-> training → tune training → unlock parts → visualize), replacing a
-> previous straight-ML-concept sequence. Milestone numbers/order may still
-> shift; treat this as the current best draft, not final.
+> **Tracking status (2026-09-20):** 0.5.0 through 0.9.0 reflect the
+> game-loop-first sequence (build → save as Creation → edit/resume training
+> → tune training → unlock parts → visualize). GitHub milestones and tracking
+> issues now exist for each version. The checklists below describe the
+> implementation state; checked items are delivered locally, while unchecked
+> items remain open in the corresponding GitHub issue.
+
+| Milestone | GitHub tracking issue |
+|---|---|
+| 0.5.0 Creations | [#93](https://github.com/MrLogic85/Node-Runner/issues/93) |
+| 0.6.0 Edit and resume training | [#94](https://github.com/MrLogic85/Node-Runner/issues/94) |
+| 0.7.0 Training configuration | [#95](https://github.com/MrLogic85/Node-Runner/issues/95) |
+| 0.8.0 Progression: first unlock | [#96](https://github.com/MrLogic85/Node-Runner/issues/96) |
+| 0.9.0 Visualize the brain | [#97](https://github.com/MrLogic85/Node-Runner/issues/97) |
 
 ## 0.5.0 — "Creations" (Save, list, and manage builds)
 
