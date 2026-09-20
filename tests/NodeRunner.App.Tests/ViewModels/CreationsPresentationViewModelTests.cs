@@ -34,8 +34,10 @@ public sealed class CreationsPresentationViewModelTests
         viewModel.HasCards.ShouldBeTrue();
         var walker = viewModel.Cards.Single(card => card.Id == trained.Id);
         walker.Name.ShouldBe("Walker");
-        walker.SummaryText.ShouldBe("Generation 12");
-        walker.NoteText.ShouldBe("Training saved");
+        walker.SummaryText.ShouldBe("Generation 12 · trained brain");
+        walker.NoteText.ShouldBe("Duplicate copies training");
+        walker.ThumbnailText.ShouldBe("2 nodes · 1 beam · 1 core");
+        walker.SavedStateText.ShouldBe("Saved training · generation 12");
         walker.CanOpen.ShouldBeTrue();
         walker.CanEdit.ShouldBeTrue();
         walker.CanDuplicate.ShouldBeTrue();
@@ -44,6 +46,7 @@ public sealed class CreationsPresentationViewModelTests
         var draft = viewModel.Cards.Single(card => card.Id == untrained.Id);
         draft.SummaryText.ShouldBe("Untrained");
         draft.NoteText.ShouldBe("Start fresh");
+        draft.SavedStateText.ShouldBe("Saved draft");
     }
 
     [Fact]
@@ -90,7 +93,7 @@ public sealed class CreationsPresentationViewModelTests
         viewModel.HasError.ShouldBeFalse();
         viewModel.LoadError.ShouldBeNull();
         viewModel.Cards.Single().Name.ShouldBe("Crawler");
-        viewModel.Cards.Single().SummaryText.ShouldBe("Generation 9");
+        viewModel.Cards.Single().SummaryText.ShouldBe("Generation 9 · trained brain");
     }
 
     [Fact]
