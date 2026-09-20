@@ -130,10 +130,14 @@ For the non-Gradle debug export, Godot 4.7.2 currently emits min SDK 24 and
 target/compile SDK 36 from its Android template. Do not override min/target SDK
 in `export_presets.cfg` unless Gradle export is enabled in a later issue.
 
-The project uses Godot's Compatibility/OpenGL renderer for 0.1.0 because the
-Mobile/Vulkan renderer crashed in Godot's Android `VkThread` on the SM-S938B
-test device. Revisiting Vulkan is tracked in issue #104; do not switch
-renderers outside that issue.
+The project uses Godot's Compatibility/OpenGL renderer by default because the
+Mobile/Vulkan renderer previously crashed in Godot's Android `VkThread` on the
+SM-S938B test device. Issue #104 revisited Mobile/Vulkan on 2026-09-20 with
+Godot 4.7.2 on a Samsung SM-S911B (Android 15 / API 35): a debug APK exported,
+installed, and launched without `FATAL EXCEPTION`, `SIGSEGV`, `VkThread`, or
+ANR logcat signals in a short smoke test. Keep Compatibility/OpenGL as the
+default until Mobile/Vulkan has a longer stability/performance pass showing a
+clear benefit on target devices.
 
 ## Key data types (informal)
 
