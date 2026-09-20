@@ -14,6 +14,7 @@ public partial class UiIconButton : Button
         More,
         Add,
         Help,
+        Trophy,
     }
 
     private UiTokens _tokens = UiTokens.Neon;
@@ -137,6 +138,16 @@ public partial class UiIconButton : Button
                 DrawLine(center + new Vector2(4, 2), center + new Vector2(0, 6), color, stroke, antialiased: true);
                 DrawCircle(center + new Vector2(0, 11), 1.8f, color);
                 break;
+            case IconRole.Trophy:
+                DrawArc(center + new Vector2(0, -5), 8, 0, Mathf.Pi, 24, color, stroke, antialiased: true);
+                DrawLine(center + new Vector2(-8, -5), center + new Vector2(-5, 4), color, stroke, antialiased: true);
+                DrawLine(center + new Vector2(8, -5), center + new Vector2(5, 4), color, stroke, antialiased: true);
+                DrawLine(center + new Vector2(-4, 6), center + new Vector2(4, 6), color, stroke, antialiased: true);
+                DrawLine(center + new Vector2(0, 6), center + new Vector2(0, 12), color, stroke, antialiased: true);
+                DrawLine(center + new Vector2(-7, 12), center + new Vector2(7, 12), color, stroke, antialiased: true);
+                DrawArc(center + new Vector2(-10, -3), 5, -Mathf.Pi / 2, Mathf.Pi / 2, 16, color, stroke, antialiased: true);
+                DrawArc(center + new Vector2(10, -3), 5, Mathf.Pi / 2, Mathf.Pi * 1.5f, 16, color, stroke, antialiased: true);
+                break;
         }
     }
 
@@ -147,6 +158,7 @@ public partial class UiIconButton : Button
             UiIconGlyphs.Brain => IconRole.Brain,
             UiIconGlyphs.Train => IconRole.Train,
             UiIconGlyphs.More => IconRole.More,
+            UiIconGlyphs.Trophy => IconRole.Trophy,
             "+" => IconRole.Add,
             "?" => IconRole.Help,
             "..." => IconRole.More,

@@ -7,4 +7,5 @@ public static class UiIconGlyphs
     public const string Brain = "◎";
     public const string Train = "▶";
     public const string More = "⋯";
+    public const string Trophy = "trophy";
 }
