@@ -1,6 +1,7 @@
 using Godot;
 using NodeRunner.App.Repositories;
 using NodeRunner.App.Services;
+using NodeRunner.App.ViewModels;
 using NodeRunner.Domain;
 
 namespace NodeRunner.Managers;
@@ -13,6 +14,7 @@ public partial class SaveManager : Node
     private ICreationUpdateCoordinator? _updateCoordinator;
     private IConstructionDraftWorkflow? _constructionDraftWorkflow;
     private IConstructionEditWorkflow? _constructionEditWorkflow;
+    private CreationsPresentationViewModel? _creationsPresentation;
 
     public override void _Ready()
     {
@@ -21,6 +23,7 @@ public partial class SaveManager : Node
         _updateCoordinator = new CreationUpdateCoordinator(_repository);
         _constructionDraftWorkflow = new ConstructionDraftWorkflow();
         _constructionEditWorkflow = new ConstructionEditWorkflow(_updateCoordinator);
+        _creationsPresentation = new CreationsPresentationViewModel(_repository);
         var progressionDirectory = ProjectSettings.GlobalizePath("user://progression");
         _progressionRepository = new FileProgressionRepository(new GodotStorageLocation(progressionDirectory));
     }
@@ -62,6 +65,9 @@ public partial class SaveManager : Node
 
     public IConstructionDraftWorkflow ConstructionDraftWorkflow =>
         _constructionDraftWorkflow ?? throw new InvalidOperationException("SaveManager is not ready.");
+
+    public CreationsPresentationViewModel CreationsPresentation =>
+        _creationsPresentation ?? throw new InvalidOperationException("SaveManager is not ready.");
 
     private IConstructionEditWorkflow ConstructionEditWorkflow =>
         _constructionEditWorkflow ?? throw new InvalidOperationException("SaveManager is not ready.");
