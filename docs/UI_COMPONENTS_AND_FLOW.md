@@ -186,5 +186,6 @@ the finished component from this contract until it is placed inside
   `earned at generation G`; the menu is secondary.
 - `Move` is the canonical tool label. Node creation in Build is a canvas
   gesture; Edit exposes only Move.
-- SignalFlow and BrainFocus preserve the four-word causal chain and the
-  vocabulary rules in `components/Vocabulary/README.md`.
+- SignalFlow and BrainFocus preserve the four-word causal chain
+  (**Sees -> Decides -> Twists -> Scores**) and the domain vocabulary in
+  `docs/GLOSSARY.md`.
