@@ -132,7 +132,8 @@ in `export_presets.cfg` unless Gradle export is enabled in a later issue.
 
 The project uses Godot's Compatibility/OpenGL renderer for 0.1.0 because the
 Mobile/Vulkan renderer crashed in Godot's Android `VkThread` on the SM-S938B
-test device. Revisit Vulkan only behind a separate compatibility issue.
+test device. Revisiting Vulkan is tracked in issue #104; do not switch
+renderers outside that issue.
 
 ## Key data types (informal)
 
@@ -227,7 +228,7 @@ tied to the retired Muscle model and does not carry over.
   candidates are evaluated one at a time on a single creature instance
   (`Evolver` + `TrialController`); running N creatures in parallel in one
   scene with collision layers isolating them is a possible later
-  optimization, not yet built (see `docs/TRAINING_LOOP.md`).
+  optimization, not yet built (see `docs/TRAINING_LOOP.md` and issue #105).
 - If we ever need more parallelism, brains can be forward-passed off the main
   thread since they're pure functions on `double[]` — but only after profiling
   shows we need it.
@@ -255,12 +256,10 @@ distinct arrays. The network itself does not keep per-call scratch state.
 
 ## Open questions
 
-- How do we visualize very large networks without cluttering the screen?
-  Group neurons? Collapse layers? → revisit before 0.9.0 network
-  visualization.
-- Should sensors be user-configurable at draw time, or auto-derived from
-  topology? 0.3.0 should auto-derive the initial sensor set for user-built
-  creatures; user-configurable sensors are a later teaching/tooling question.
-- ViewModel base: raw C# events, `INotifyPropertyChanged`, or a small custom
-  observable? Currently favoring `INotifyPropertyChanged` per
-  `libs/NodeRunner.App/AGENTS.md`.
+Open design questions are tracked as GitHub Issues rather than listed here,
+so they get labels, milestones, and a closing decision instead of going
+stale in prose. Of the three questions previously recorded in this section:
+the large-network-visualization question is now tracked on issue #97
+(0.9.0); the sensor-configurability question is now tracked on issue #107;
+and the ViewModel-base question is resolved: `INotifyPropertyChanged` per
+`libs/NodeRunner.App/AGENTS.md`.

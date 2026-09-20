@@ -147,13 +147,14 @@ in Build after restarting the app.
     That's a growing pile of responsibility in one file; extracting the
     training panel into its own UI widget backed by an App-layer view
     model (matching how `CreatureInspectorViewModel` already works) is a
-    reasonable later cleanup, not required for this slice.
+    reasonable later cleanup, tracked in issue #106.
 - Full neural-network visualization remains out of scope (later milestone).
 
-## Deferred future work (unassigned)
+## Deferred future work
 
 - Running more than one creature at once in parallel (`Population`,
   collision-layer isolation per `project/src/sim/AGENTS.md`). #50
   intentionally evaluates candidates one at a time on a single creature
-  instead — see above. This is not #52's scope: #52 is a validation-only
-  issue (manual release check for 0.4.0), not an implementation issue.
+  instead — see above. Tracked in issue #105. This is not #52's scope: #52
+  is a validation-only issue (manual release check for 0.4.0), not an
+  implementation issue.
