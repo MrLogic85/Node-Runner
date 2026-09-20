@@ -19,6 +19,7 @@ public partial class WatchScreen : Control
     private int _selectedSignalIndex = -1;
     private TrainingPresentationViewModel? _presentation;
     private SignalFlowPresentationViewModel? _signalFlow;
+    private UnlockProgressPresentationViewModel? _unlockProgress;
     private Label? _seesStatusLabel;
     private Label? _decidesStatusLabel;
     private Label? _twistsStatusLabel;
@@ -106,6 +107,29 @@ public partial class WatchScreen : Control
         }
     }
 
+    public UnlockProgressPresentationViewModel? UnlockProgress
+    {
+        get => _unlockProgress;
+        set
+        {
+            if (_unlockProgress is not null)
+            {
+                _unlockProgress.PropertyChanged -= OnUnlockProgressChanged;
+            }
+
+            _unlockProgress = value;
+            if (_unlockProgress is not null)
+            {
+                _unlockProgress.PropertyChanged += OnUnlockProgressChanged;
+            }
+
+            if (IsInsideTree())
+            {
+                RebuildLayout();
+            }
+        }
+    }
+
     public UiTokens Tokens
     {
         get => _tokens;
@@ -132,6 +156,11 @@ public partial class WatchScreen : Control
             _signalFlow.PropertyChanged -= OnSignalFlowChanged;
             _signalFlow.PropertyChanged += OnSignalFlowChanged;
         }
+        if (_unlockProgress is not null)
+        {
+            _unlockProgress.PropertyChanged -= OnUnlockProgressChanged;
+            _unlockProgress.PropertyChanged += OnUnlockProgressChanged;
+        }
         SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
         if (!Hosted)
         {
@@ -152,6 +181,10 @@ public partial class WatchScreen : Control
         {
             _signalFlow.PropertyChanged -= OnSignalFlowChanged;
         }
+        if (_unlockProgress is not null)
+        {
+            _unlockProgress.PropertyChanged -= OnUnlockProgressChanged;
+        }
     }
 
     private void OnPresentationChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs args)
@@ -167,6 +200,14 @@ public partial class WatchScreen : Control
         if (IsInsideTree())
         {
             UpdateSignalFlowCards();
+        }
+    }
+
+    private void OnUnlockProgressChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs args)
+    {
+        if (IsInsideTree())
+        {
+            RebuildLayout();
         }
     }
 
@@ -320,7 +361,7 @@ public partial class WatchScreen : Control
             SizeFlagsHorizontal = SizeFlags.ExpandFill,
             SizeFlagsVertical = SizeFlags.ExpandFill,
         };
-        stack.AddThemeConstantOverride("separation", 10);
+        stack.AddThemeConstantOverride("separation", 7);
         margin.AddChild(stack);
 
         if (ReadOnlyControls)
@@ -398,7 +439,7 @@ public partial class WatchScreen : Control
         {
             SizeFlagsHorizontal = SizeFlags.ExpandFill,
         };
-        stack.AddThemeConstantOverride("separation", 6);
+        stack.AddThemeConstantOverride("separation", 4);
         margin.AddChild(stack);
 
         var generationText = _presentation?.GenerationText ?? "Generation 5 · try 3 of 8";
@@ -412,15 +453,35 @@ public partial class WatchScreen : Control
         stack.AddChild(CreateLabel($"Best {best} · mean {mean:0.0} m", 13, _tokens.Muted));
         stack.AddChild(CreateLabel($"{profile} profile", 13, _tokens.Accent));
         stack.AddChild(CreateSampleStrip());
+        stack.AddChild(CreateUnlockProgress());
 
         return panel;
+    }
+
+    private Control CreateUnlockProgress()
+    {
+        var stack = new VBoxContainer
+        {
+            SizeFlagsHorizontal = SizeFlags.ExpandFill,
+        };
+        stack.AddThemeConstantOverride("separation", 4);
+
+        var title = _unlockProgress?.Title ?? "Next unlock";
+        var detail = _unlockProgress?.Detail ?? "Reach 50.0 m to unlock one extra core slot";
+        var progress = _unlockProgress?.Progress ?? 0;
+        stack.AddChild(CreateLabel(title, 13, _tokens.Accent));
+        var bar = CreateSignalBar();
+        bar.Value = progress;
+        stack.AddChild(bar);
+        stack.AddChild(CreateLabel(detail, 12, _tokens.Muted));
+        return stack;
     }
 
     private Control CreateSampleStrip()
     {
         var strip = new HBoxContainer
         {
-            CustomMinimumSize = new Vector2(0, 24),
+            CustomMinimumSize = new Vector2(0, 20),
             SizeFlagsHorizontal = SizeFlags.ExpandFill,
         };
         strip.AddThemeConstantOverride("separation", 6);
@@ -450,7 +511,7 @@ public partial class WatchScreen : Control
             // a themed border stylebox as its non-color "current" cue.
             var cell = new Panel
             {
-                CustomMinimumSize = new Vector2(34, 20),
+                CustomMinimumSize = new Vector2(34, 18),
                 SizeFlagsHorizontal = SizeFlags.ExpandFill,
             };
             cell.AddThemeStyleboxOverride("panel", new StyleBoxFlat
@@ -471,7 +532,7 @@ public partial class WatchScreen : Control
     private UiPanel CreateSignalCard(int index, string title, string detail)
     {
         var card = CreatePanel(raised: true);
-        card.CustomMinimumSize = new Vector2(312, 86);
+        card.CustomMinimumSize = new Vector2(312, 76);
         _signalCards.Add(card);
 
         var margin = CreateMargin(10);
@@ -614,7 +675,7 @@ public partial class WatchScreen : Control
         {
             Text = "\u2193",
             HorizontalAlignment = HorizontalAlignment.Center,
-            CustomMinimumSize = new Vector2(0, 12),
+            CustomMinimumSize = new Vector2(0, 8),
         };
         connector.AddThemeColorOverride("font_color", _tokens.Accent);
         connector.AddThemeFontSizeOverride("font_size", 12);
