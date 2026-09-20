@@ -1,5 +1,6 @@
 using Godot;
 using NodeRunner.App.ViewModels;
+using NodeRunner.Domain;
 using NodeRunner.Ui.Lib;
 
 namespace NodeRunner.Ui.Screens;
@@ -258,10 +259,28 @@ public partial class SampleFlowScreen : Control
             Tokens = _tokens,
             ShowTopBar = false,
             Hosted = true,
+            Presentation = CreateSampleConstructionPresentation(),
         };
         _build.TrainingRequested += () => SetMode(0);
         _sampleView = _build;
         _content.AddChild(_build);
+    }
+
+    private static ConstructionPresentationViewModel CreateSampleConstructionPresentation()
+    {
+        var construction = new ConstructionViewModel();
+        construction.SetMaxCores(2);
+        var rear = construction.PlaceNode(new Vector2D(-90, 20), 18);
+        var mid = construction.PlaceNode(new Vector2D(0, -18), 18);
+        var front = construction.PlaceNode(new Vector2D(90, 18), 18);
+        construction.SelectNodeForBeam(rear);
+        construction.SelectNodeForBeam(mid);
+        construction.SelectNodeForBeam(mid);
+        construction.SelectNodeForBeam(front);
+        construction.ToggleCoreOnNode(rear);
+        construction.ToggleCoreOnNode(front);
+        construction.ActiveTool = ConstructionTool.Core;
+        return new ConstructionPresentationViewModel(construction);
     }
 
     private void SetMode(int mode)
