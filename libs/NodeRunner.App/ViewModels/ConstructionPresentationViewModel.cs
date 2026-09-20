@@ -51,6 +51,12 @@ public sealed class ConstructionPresentationViewModel
 
     public ConstructionTool ActiveTool => _construction.ActiveTool;
 
+    public int NodeCount => _construction.Nodes.Count;
+
+    public int CoreCount => _construction.Cores.Count;
+
+    public int MaxCores => _construction.MaxCores;
+
     public string MoveOnlyLockReason => "Move only · training kept";
 
     public string LockedTopologyToolsText => $"Beam, Core, Delete locked: {MoveOnlyLockReason}";
@@ -64,6 +70,8 @@ public sealed class ConstructionPresentationViewModel
     public string CoreToolText => _construction.IsMoveOnly ? "Core · locked" : BuildCoreToolText();
 
     public string DeleteToolText => _construction.IsMoveOnly ? "Delete · locked" : "Delete";
+
+    public string SelectToolText => "Select";
 
     public bool ShowCompleteAction => !_construction.IsMoveOnly;
 
@@ -89,6 +97,7 @@ public sealed class ConstructionPresentationViewModel
         {
             ConstructionTool.Place => "Tap empty space to place a node. Drag a node to move it.",
             ConstructionTool.Beam => "Tap a node, then another node, to connect them with a beam.",
+            ConstructionTool.Select => "Tap parts to select them. Drag selected parts to move them together.",
             ConstructionTool.Core => "Tap a node to attach a core, tap again to remove it.",
             ConstructionTool.Delete => "Tap a node or beam to delete it.",
             _ => string.Empty,

@@ -10,6 +10,7 @@ public enum ConstructionTool
 {
     Place,
     Beam,
+    Select,
     Core,
     Delete,
 }
@@ -30,6 +31,7 @@ public sealed class ConstructionViewModel : INotifyPropertyChanged
     private string? _statusMessage;
     private bool _moveOnly;
     private int _maxCores = 1;
+    private readonly HashSet<int> _selectedNodeIndices = [];
 
     public ConstructionViewModel(CreatureBuilder? builder = null)
     {
@@ -40,6 +42,7 @@ public sealed class ConstructionViewModel : INotifyPropertyChanged
     {
         ArgumentNullException.ThrowIfNull(creature);
         _builder = new CreatureBuilder(creature);
+        _selectedNodeIndices.Clear();
         _moveOnly = moveOnly;
         if (moveOnly)
         {
@@ -54,6 +57,7 @@ public sealed class ConstructionViewModel : INotifyPropertyChanged
     public void ResetDraft()
     {
         _builder = new CreatureBuilder();
+        _selectedNodeIndices.Clear();
         _moveOnly = false;
         ActiveTool = ConstructionTool.Place;
         PendingBeamStartNode = null;
@@ -138,6 +142,8 @@ public sealed class ConstructionViewModel : INotifyPropertyChanged
 
     public IReadOnlyList<CoreDef> Cores => _builder.Cores;
 
+    public IReadOnlyCollection<int> SelectedNodeIndices => _selectedNodeIndices;
+
     public int MaxCores => _maxCores;
 
     public void SetMaxCores(int maxCores)
@@ -168,6 +174,55 @@ public sealed class ConstructionViewModel : INotifyPropertyChanged
     public void MoveNode(int nodeIndex, Vector2D position)
     {
         _builder.MoveNode(nodeIndex, position);
+        AnatomyChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    public void ToggleSelectedNode(int nodeIndex)
+    {
+        if (nodeIndex < 0 || nodeIndex >= _builder.Nodes.Count)
+        {
+            throw new ArgumentOutOfRangeException(nameof(nodeIndex));
+        }
+
+        if (!_selectedNodeIndices.Add(nodeIndex))
+        {
+            _selectedNodeIndices.Remove(nodeIndex);
+        }
+
+        StatusMessage = _selectedNodeIndices.Count == 0
+            ? "Selection cleared."
+            : $"{_selectedNodeIndices.Count} selected. Drag one selected node to move them together.";
+        AnatomyChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    public void ClearSelection()
+    {
+        if (_selectedNodeIndices.Count == 0)
+        {
+            return;
+        }
+
+        _selectedNodeIndices.Clear();
+        StatusMessage = "Selection cleared.";
+        AnatomyChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    public void MoveSelectedNodes(int anchorNodeIndex, Vector2D anchorPosition)
+    {
+        if (!_selectedNodeIndices.Contains(anchorNodeIndex))
+        {
+            MoveNode(anchorNodeIndex, anchorPosition);
+            return;
+        }
+
+        var anchor = _builder.Nodes[anchorNodeIndex].Position;
+        var delta = new Vector2D(anchorPosition.X - anchor.X, anchorPosition.Y - anchor.Y);
+        foreach (var selectedIndex in _selectedNodeIndices.ToArray())
+        {
+            var current = _builder.Nodes[selectedIndex].Position;
+            _builder.MoveNode(selectedIndex, new Vector2D(current.X + delta.X, current.Y + delta.Y));
+        }
+
         AnatomyChanged?.Invoke(this, EventArgs.Empty);
     }
 
@@ -304,6 +359,7 @@ public sealed class ConstructionViewModel : INotifyPropertyChanged
         }
 
         _builder.RemoveNode(nodeIndex);
+        _selectedNodeIndices.Clear();
         StatusMessage = $"Removed node {nodeIndex} and anything attached to it.";
         AnatomyChanged?.Invoke(this, EventArgs.Empty);
     }
