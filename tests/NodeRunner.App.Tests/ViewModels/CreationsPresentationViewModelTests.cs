@@ -45,9 +45,9 @@ public sealed class CreationsPresentationViewModelTests
         walker.CanDelete.ShouldBeTrue();
 
         var draft = viewModel.Cards.Single(card => card.Id == untrained.Id);
-        draft.SummaryText.ShouldBe("Untrained");
-        draft.NoteText.ShouldBe("Start fresh");
-        draft.SavedStateText.ShouldBe("Saved draft");
+        draft.SummaryText.ShouldBe("Ready to train");
+        draft.NoteText.ShouldBe("Train or edit");
+        draft.SavedStateText.ShouldBe("Untrained Creation");
     }
 
     [Fact]

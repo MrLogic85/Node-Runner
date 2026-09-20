@@ -188,7 +188,7 @@ public sealed class CreationRepositoryTests
         try
         {
             var repository = new FileProgressionRepository(new TestStorageLocation(directory));
-            var progression = new ProgressionDef(true, 12);
+            var progression = new ProgressionDef(true, 12, defaultCreationsSeeded: true);
 
             repository.Save(progression);
 
