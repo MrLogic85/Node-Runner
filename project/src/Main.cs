@@ -24,6 +24,8 @@ public partial class Main : Node2D
     private Evolver? _evolver;
     private CreatureInspectorViewModel? _inspector;
     private ConstructionCanvas? _constructionCanvas;
+    private ArenaBackdrop? _arenaBackdrop;
+    private ColorRect? _buildModeBackdrop;
     private Button? _buildModeButton;
     private PanelContainer? _toolPanel;
     private Button? _placeToolButton;
@@ -38,6 +40,7 @@ public partial class Main : Node2D
     private Label? _buildInputSummaryLabel;
     private Label? _buildMotorSummaryLabel;
     private Label? _buildValidationLabel;
+    private BuildScreen? _buildScreen;
     private Button? _creationsButton;
     private PanelContainer? _creationsPanel;
     private VBoxContainer? _creationsList;
@@ -69,6 +72,8 @@ public partial class Main : Node2D
     private Label? _inspectorTitle;
     private Label? _inspectorRole;
     private Label? _inspectorValues;
+    private PanelContainer? _inspectorPanel;
+    private StaticBody2D? _ground;
     private readonly MappingViewModel _mapping = new();
     private readonly SignalFlowPresentationViewModel _signalFlow = new();
     private readonly BrainFocusPresentationViewModel _brainFocus = new();
@@ -146,11 +151,13 @@ public partial class Main : Node2D
         Construction.AnatomyChanged += OnConstructionAnatomyChanged;
         _brainFocus.PropertyChanged += OnBrainFocusChanged;
         AddBackdrop();
+        AddBuildModeBackdrop();
         AddGround();
         AddCamera();
         AddCreature();
         AddConstructionCanvas();
         AddSimulateScreen();
+        AddBuildScreen();
         AddBrainFocusOverlay();
         AddHud();
         AddInspector();
@@ -252,12 +259,33 @@ public partial class Main : Node2D
 
     private void AddBackdrop()
     {
-        AddChild(new ArenaBackdrop
+        _arenaBackdrop = new ArenaBackdrop
         {
             Name = "ArenaBackdrop",
             Theme = _theme,
             ZIndex = -100,
-        });
+        };
+        AddChild(_arenaBackdrop);
+    }
+
+    private void AddBuildModeBackdrop()
+    {
+        var layer = new CanvasLayer
+        {
+            Name = "BuildModeBackdropLayer",
+            Layer = -1,
+        };
+        AddChild(layer);
+
+        _buildModeBackdrop = new ColorRect
+        {
+            Name = "BuildModeBackdrop",
+            Color = UiTokens.Neon.Background,
+            MouseFilter = Control.MouseFilterEnum.Ignore,
+            Visible = Construction.IsActive,
+        };
+        _buildModeBackdrop.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
+        layer.AddChild(_buildModeBackdrop);
     }
 
     private void AddGround()
@@ -297,6 +325,7 @@ public partial class Main : Node2D
         });
 
         AddChild(ground);
+        _ground = ground;
     }
 
     private void AddCamera()
@@ -535,6 +564,33 @@ public partial class Main : Node2D
         _simulateScreen.TrainingProfileRequested += CycleTrainingProfile;
         _simulateScreen.TrainingProfileSelected += SelectTrainingProfile;
         simulateLayer.AddChild(_simulateScreen);
+    }
+
+    private void AddBuildScreen()
+    {
+        var buildLayer = new CanvasLayer
+        {
+            Name = "BuildOverlay",
+            Layer = 2,
+            ProcessMode = ProcessModeEnum.Always,
+        };
+        AddChild(buildLayer);
+
+        _buildScreen = new BuildScreen
+        {
+            Name = "LiveBuildScreen",
+            Tokens = UiTokens.Neon,
+            Hosted = true,
+            ShowCanvasPreview = false,
+            Presentation = ConstructionPresentation,
+            Visible = Construction.IsActive,
+        };
+        _buildScreen.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
+        _buildScreen.SimulateRequested += ToggleConstructionMode;
+        _buildScreen.ToolRequested += tool => Construction.ActiveTool = (ConstructionTool)(int)tool;
+        _buildScreen.TrainingRequested += CompleteCreationAndSimulate;
+        _buildScreen.RebuildRequested += RebuildCreation;
+        buildLayer.AddChild(_buildScreen);
     }
 
     private void RefreshUnlockProgress()
@@ -1529,20 +1585,46 @@ public partial class Main : Node2D
 
     private void CompleteCreation()
     {
-        if (!Construction.TryLeave(out var creature, out var errors) || creature is null)
+        _ = TryCompleteCreation(out _, out _);
+    }
+
+    private void CompleteCreationAndSimulate()
+    {
+        if (!TryCompleteCreation(out var creature, out var creation) || creature is null || creation is null || _creature is null)
         {
-            Construction.SetBlockedLeaveMessage(errors);
             return;
         }
 
+        Selection.Clear();
+        _creature.BuildFrom(creature);
+        SetActiveInspector(creature);
+        if (_seedLabel is not null)
+        {
+            _seedLabel.Text = SeedText();
+        }
+
+        Construction.IsActive = false;
+        StartEvolution(creation);
+    }
+
+    private bool TryCompleteCreation(out CreatureDef? creature, out CreationDef? creation)
+    {
+        creation = null;
+        if (!Construction.TryLeave(out creature, out var errors) || creature is null)
+        {
+            Construction.SetBlockedLeaveMessage(errors);
+            return false;
+        }
+
         var saveManager = GetNode<SaveManager>("/root/SaveManager");
-        var creation = saveManager.ConstructionDraftWorkflow.CompleteDraft(
+        var completedCreation = saveManager.ConstructionDraftWorkflow.CompleteDraft(
             creature,
             $"Creation {saveManager.List().Count + 1}");
         if (TryRunFileOperation(
-            () => saveManager.Save(creation),
-            $"Saving Creation '{creation.Name}'"))
+            () => saveManager.Save(completedCreation),
+            $"Saving Creation '{completedCreation.Name}'"))
         {
+            creation = completedCreation;
             _activeCreationId = creation.Id;
             if (saveManager.TryAttributeExtraCoreUnlock(creation.Id))
             {
@@ -1551,11 +1633,11 @@ public partial class Main : Node2D
             }
 
             Construction.SetCompletedMessage($"Saved {creation.Name}.");
+            return true;
         }
-        else
-        {
-            Construction.SetCompletedMessage("Save failed — see log.");
-        }
+
+        Construction.SetCompletedMessage("Save failed — see log.");
+        return false;
     }
 
     // Persisting reads the current Creation back off disk and writes the
@@ -1768,14 +1850,29 @@ public partial class Main : Node2D
                     _constructionCanvas.Visible = Construction.IsActive;
                 }
 
+                if (_arenaBackdrop is not null)
+                {
+                    _arenaBackdrop.Visible = !Construction.IsActive;
+                }
+
+                if (_buildModeBackdrop is not null)
+                {
+                    _buildModeBackdrop.Visible = Construction.IsActive;
+                }
+
+                if (_ground is not null)
+                {
+                    _ground.Visible = !Construction.IsActive;
+                }
+
                 if (_toolPanel is not null)
                 {
-                    _toolPanel.Visible = Construction.IsActive;
+                    _toolPanel.Visible = false;
                 }
 
                 if (_buildInfoPanel is not null)
                 {
-                    _buildInfoPanel.Visible = Construction.IsActive && !Construction.IsMoveOnly;
+                    _buildInfoPanel.Visible = false;
                 }
 
                 if (_trainingPanel is not null)
@@ -1786,6 +1883,11 @@ public partial class Main : Node2D
                 if (_simulateScreen is not null)
                 {
                     _simulateScreen.Visible = !Construction.IsActive;
+                }
+
+                if (_buildScreen is not null)
+                {
+                    _buildScreen.Visible = Construction.IsActive;
                 }
 
                 if (_buildModeButton is not null)
@@ -1873,7 +1975,7 @@ public partial class Main : Node2D
         }
         if (_buildInfoPanel is not null)
         {
-            _buildInfoPanel.Visible = Construction.IsActive && !Construction.IsMoveOnly;
+            _buildInfoPanel.Visible = false;
         }
     }
 
@@ -2046,6 +2148,7 @@ public partial class Main : Node2D
         panel.AddChild(margin);
         layer.AddChild(panel);
         AddChild(layer);
+        _inspectorPanel = panel;
         UpdateInspector();
     }
 
@@ -2059,6 +2162,10 @@ public partial class Main : Node2D
         if (_mappingToggleButton is not null)
         {
             _mappingToggleButton.Visible = !Construction.IsActive;
+        }
+        if (_inspectorPanel is not null)
+        {
+            _inspectorPanel.Visible = !Construction.IsActive;
         }
 
         if (Construction.IsActive)

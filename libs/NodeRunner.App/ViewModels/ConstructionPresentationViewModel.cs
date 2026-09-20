@@ -49,6 +49,8 @@ public sealed class ConstructionPresentationViewModel
         ? "Drag an existing node to reposition it. Training is kept."
         : ToolHint(_construction.ActiveTool));
 
+    public ConstructionTool ActiveTool => _construction.ActiveTool;
+
     public string MoveOnlyLockReason => "Move only · training kept";
 
     public string LockedTopologyToolsText => $"Beam, Core, Delete locked: {MoveOnlyLockReason}";
@@ -112,7 +114,9 @@ public sealed class ConstructionPresentationViewModel
                 $"Not ready: {disabledReason}",
                 CanStartTraining: false,
                 CanCompleteCreation: false,
-                DisabledReason: disabledReason);
+                DisabledReason: disabledReason,
+                InputCount: _construction.Cores.Count * _coreSensorValueCount,
+                OutputCount: 0);
         }
 
         var motorRelationCount = MotorTopology.BuildNodeConnections(creature)
@@ -127,7 +131,9 @@ public sealed class ConstructionPresentationViewModel
                 $"Not ready: {disabledReason}",
                 CanStartTraining: false,
                 CanCompleteCreation: true,
-                DisabledReason: disabledReason);
+                DisabledReason: disabledReason,
+                InputCount: inputCount,
+                OutputCount: 0);
         }
 
         return new ConstructionBuildPanelPresentation(
@@ -136,7 +142,9 @@ public sealed class ConstructionPresentationViewModel
             $"Ready: {inputCount} inputs -> {motorRelationCount} outputs",
             CanStartTraining: true,
             CanCompleteCreation: true,
-            DisabledReason: null);
+            DisabledReason: null,
+            InputCount: inputCount,
+            OutputCount: motorRelationCount);
     }
 
     private string BuildCoreToolText()
