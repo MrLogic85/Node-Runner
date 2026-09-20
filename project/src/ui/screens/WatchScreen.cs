@@ -5,8 +5,8 @@ using NodeRunner.Ui.Lib;
 namespace NodeRunner.Ui.Screens;
 
 /// <summary>
-/// Static Watch shell using sample presentation data only. This scene does not
-/// bind to simulation, managers, or persistence.
+/// Watch shell bound to presentation data only. This scene does not bind to
+/// simulation, managers, or persistence.
 /// </summary>
 public partial class WatchScreen : Control
 {
@@ -15,6 +15,7 @@ public partial class WatchScreen : Control
     private readonly List<Label> _signalBodies = new();
     private int _selectedSignalIndex = -1;
     private TrainingPresentationViewModel? _presentation;
+    private bool _inputPassthrough;
 
     [Signal]
     public delegate void BrainFocusRequestedEventHandler();
@@ -24,6 +25,33 @@ public partial class WatchScreen : Control
 
     [Export]
     public bool Hosted { get; set; }
+
+    [Export]
+    public bool ShowArenaPlaceholder { get; set; } = true;
+
+    [Export]
+    public bool ReadOnlyControls { get; set; }
+
+    [Export]
+    public bool InputPassthrough
+    {
+        get => _inputPassthrough;
+        set
+        {
+            _inputPassthrough = value;
+            if (IsInsideTree())
+            {
+                if (_inputPassthrough)
+                {
+                    ApplyInputPassthrough(this);
+                }
+                else
+                {
+                    RebuildLayout();
+                }
+            }
+        }
+    }
 
     public TrainingPresentationViewModel? Presentation
     {
@@ -76,6 +104,7 @@ public partial class WatchScreen : Control
         }
 
         RebuildLayout();
+        ApplyInputPassthrough(this);
     }
 
     public override void _ExitTree()
@@ -110,13 +139,16 @@ public partial class WatchScreen : Control
 
     private void BuildLayout()
     {
-        AddChild(new ColorRect
+        if (ShowArenaPlaceholder)
         {
-            Color = _tokens.Background,
-            MouseFilter = MouseFilterEnum.Ignore,
-            AnchorRight = 1,
-            AnchorBottom = 1,
-        });
+            AddChild(new ColorRect
+            {
+                Color = _tokens.Background,
+                MouseFilter = MouseFilterEnum.Ignore,
+                AnchorRight = 1,
+                AnchorBottom = 1,
+            });
+        }
 
         var safeFrame = CreateMargin(24);
         AddChild(safeFrame);
@@ -145,7 +177,12 @@ public partial class WatchScreen : Control
         contentRow.AddChild(CreateArenaPanel());
         contentRow.AddChild(CreateSignalPanel());
 
-        screen.AddChild(CreateTrainingPanel());
+        if (!ReadOnlyControls)
+        {
+            screen.AddChild(CreateTrainingPanel());
+        }
+
+        ApplyInputPassthrough(this);
     }
 
     private Control CreateTopBar()
@@ -168,6 +205,16 @@ public partial class WatchScreen : Control
 
     private Control CreateArenaPanel()
     {
+        if (!ShowArenaPlaceholder)
+        {
+            return new Control
+            {
+                SizeFlagsHorizontal = SizeFlags.ExpandFill,
+                SizeFlagsVertical = SizeFlags.ExpandFill,
+                MouseFilter = MouseFilterEnum.Ignore,
+            };
+        }
+
         var panel = CreatePanel(raised: true);
         panel.SizeFlagsHorizontal = SizeFlags.ExpandFill;
         panel.SizeFlagsVertical = SizeFlags.ExpandFill;
@@ -183,8 +230,13 @@ public partial class WatchScreen : Control
         layout.AddThemeConstantOverride("separation", 12);
         margin.AddChild(layout);
 
-        layout.AddChild(CreateLabel("Arena preview", 20, _tokens.Ink));
-        layout.AddChild(CreateLabel("Sample creature running on a flat test track", 14, _tokens.Muted));
+        layout.AddChild(CreateLabel("Arena", 20, _tokens.Ink));
+        layout.AddChild(CreateLabel(
+            _presentation is null
+                ? "Sample creature running on a flat test track"
+                : "Live Creation training on the test track",
+            14,
+            _tokens.Muted));
 
         var placeholder = new Control
         {
@@ -217,12 +269,20 @@ public partial class WatchScreen : Control
         stack.AddThemeConstantOverride("separation", 10);
         margin.AddChild(stack);
 
+        if (ReadOnlyControls)
+        {
+            stack.AddChild(CreateLiveTrainingSummary());
+        }
+
         stack.AddChild(CreateLabel("SignalFlow", 20, _tokens.Ink));
         stack.AddChild(CreateSignalCard(0, "1 Sees", "Sensors", "The cores sense nearby contact and body state."));
         stack.AddChild(CreateSignalCard(1, "2 Decides", "Brain choice", "The neural network turns sensor values into joint targets."));
         stack.AddChild(CreateSignalCard(2, "3 Twists", "Joint targets", "Motor relations apply the chosen targets to beams."));
         stack.AddChild(CreateSignalCard(3, "4 Scores", "Distance", "Fitness is the distance reached before the trial ends."));
-        stack.AddChild(CreateLabel("Tap one stage to expand its explanation.", 13, _tokens.Muted));
+        if (!ReadOnlyControls)
+        {
+            stack.AddChild(CreateLabel("Tap one stage to expand its explanation.", 13, _tokens.Muted));
+        }
 
         return panel;
     }
@@ -251,20 +311,49 @@ public partial class WatchScreen : Control
         summary.AddThemeConstantOverride("separation", 6);
         row.AddChild(summary);
 
-        var generation = _presentation?.Generation ?? 5;
-        var candidate = _presentation?.Candidate ?? 3;
-        var population = _presentation?.Population ?? 8;
+        var generationText = _presentation?.GenerationText ?? "Generation 5 · try 3 of 8";
         var best = _presentation is null || double.IsNegativeInfinity(_presentation.BestFitness)
             ? "—"
             : $"{_presentation.BestFitness:0.0} m";
         var mean = _presentation?.MeanFitness ?? 8.4;
         var profile = _presentation?.Profile ?? "Quick";
-        summary.AddChild(CreateLabel($"Generation {generation} · try {candidate} of {population}", 18, _tokens.Ink));
+        summary.AddChild(CreateLabel(generationText, 18, _tokens.Ink));
         summary.AddChild(CreateLabel($"Best {best} · mean {mean:0.0} m · {profile} profile", 14, _tokens.Muted));
         summary.AddChild(CreateSampleStrip());
 
-        row.AddChild(CreateButton("Pause", UiActionButton.ActionKind.Secondary, "Pause sample training"));
-        row.AddChild(CreateButton("Profile", UiActionButton.ActionKind.Secondary, "Open sample training settings"));
+        if (!ReadOnlyControls)
+        {
+            row.AddChild(CreateButton("Pause", UiActionButton.ActionKind.Secondary, "Pause sample training"));
+            row.AddChild(CreateButton("Profile", UiActionButton.ActionKind.Secondary, "Open sample training settings"));
+        }
+
+        return panel;
+    }
+
+    private Control CreateLiveTrainingSummary()
+    {
+        var panel = CreatePanel(raised: true);
+        var margin = CreateMargin(12);
+        panel.AddChild(margin);
+
+        var stack = new VBoxContainer
+        {
+            SizeFlagsHorizontal = SizeFlags.ExpandFill,
+        };
+        stack.AddThemeConstantOverride("separation", 6);
+        margin.AddChild(stack);
+
+        var generationText = _presentation?.GenerationText ?? "Generation 5 · try 3 of 8";
+        var best = _presentation is null || double.IsNegativeInfinity(_presentation.BestFitness)
+            ? "—"
+            : $"{_presentation.BestFitness:0.0} m";
+        var mean = _presentation?.MeanFitness ?? 8.4;
+        var profile = _presentation?.Profile ?? "Quick";
+        stack.AddChild(CreateLabel("Training", 18, _tokens.Ink));
+        stack.AddChild(CreateLabel(generationText, 15, _tokens.Ink));
+        stack.AddChild(CreateLabel($"Best {best} · mean {mean:0.0} m", 13, _tokens.Muted));
+        stack.AddChild(CreateLabel($"{profile} profile", 13, _tokens.Accent));
+        stack.AddChild(CreateSampleStrip());
 
         return panel;
     }
@@ -278,10 +367,18 @@ public partial class WatchScreen : Control
         };
         strip.AddThemeConstantOverride("separation", 6);
 
-        for (var index = 1; index <= 8; index++)
+        var population = _presentation?.Population ?? 8;
+        var currentCandidate = _presentation?.Candidate ?? 3;
+        var completedCount = _presentation?.CompletedCandidateCount ?? Math.Max(0, currentCandidate - 1);
+        if (population < 1)
         {
-            var isCurrent = index == 3;
-            var color = index < 3
+            population = 8;
+        }
+
+        for (var index = 1; index <= population; index++)
+        {
+            var isCurrent = _presentation?.IsTrialActive != false && index == currentCandidate;
+            var color = index <= completedCount
                 ? _tokens.AccentSoft
                 : isCurrent
                     // Marks the current generation; never rely on color
@@ -333,10 +430,21 @@ public partial class WatchScreen : Control
             LabelText = title,
             CustomMinimumSize = new Vector2(0, _tokens.TouchTarget),
         };
-        action.Pressed += () =>
+        if (ReadOnlyControls)
         {
-            SelectSignal(index, detail);
-        };
+            action.Locked = true;
+            action.LockReason = "later";
+            action.ShowLockReasonInText = false;
+            action.TooltipText = "Live SignalFlow interactions arrive in a later slice.";
+        }
+        else
+        {
+            action.Pressed += () =>
+            {
+                SelectSignal(index, detail);
+            };
+        }
+
         stack.AddChild(action);
         var bodyLabel = CreateLabel($"{body}: {detail}", 13, _tokens.Muted);
         bodyLabel.Visible = false;
@@ -469,5 +577,23 @@ public partial class WatchScreen : Control
             CornerRadiusBottomRight = (int)_tokens.Radius,
         });
         return label;
+    }
+
+    private void ApplyInputPassthrough(Node node)
+    {
+        if (!_inputPassthrough)
+        {
+            return;
+        }
+
+        if (node is Control control)
+        {
+            control.MouseFilter = MouseFilterEnum.Ignore;
+        }
+
+        foreach (var child in node.GetChildren())
+        {
+            ApplyInputPassthrough(child);
+        }
     }
 }

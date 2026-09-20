@@ -45,6 +45,7 @@ public partial class Main : Node2D
     private ConfirmationDialog? _deleteCreationConfirmationDialog;
     private Guid? _pendingDeleteCreationId;
     private string? _pendingDeleteCreationName;
+    private WatchScreen? _watchScreen;
     private Guid? _activeCreationId;
     private Label? _seedLabel;
     private Label? _generationLabel;
@@ -131,6 +132,7 @@ public partial class Main : Node2D
         AddCamera();
         AddCreature();
         AddConstructionCanvas();
+        AddWatchScreen();
         AddHud();
         AddInspector();
         AddEvolver();
@@ -323,6 +325,11 @@ public partial class Main : Node2D
             evolver,
             () => _trainingProfiles[_trainingProfileIndex].Name));
         _trainingPresentation.PropertyChanged += OnTrainingPresentationChanged;
+        if (_watchScreen is not null)
+        {
+            _watchScreen.Presentation = _trainingPresentation;
+        }
+
         AddChild(evolver);
         _evolver = evolver;
         StartEvolution();
@@ -461,6 +468,32 @@ public partial class Main : Node2D
         };
         AddChild(canvas);
         _constructionCanvas = canvas;
+    }
+
+    private void AddWatchScreen()
+    {
+        var watchLayer = new CanvasLayer
+        {
+            Name = "WatchOverlay",
+            Layer = 0,
+            ProcessMode = ProcessModeEnum.Always,
+        };
+        AddChild(watchLayer);
+
+        _watchScreen = new WatchScreen
+        {
+            Name = "LiveWatchScreen",
+            Tokens = UiTokens.Neon,
+            Hosted = true,
+            ShowTopBar = false,
+            ShowArenaPlaceholder = false,
+            ReadOnlyControls = true,
+            InputPassthrough = true,
+            Presentation = _trainingPresentation,
+            Visible = !Construction.IsActive,
+        };
+        _watchScreen.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
+        watchLayer.AddChild(_watchScreen);
     }
 
     // Base font size (Godot's default is 16px) and minimum touch target
@@ -1344,6 +1377,11 @@ public partial class Main : Node2D
                 if (_trainingPanel is not null)
                 {
                     _trainingPanel.Visible = !Construction.IsActive;
+                }
+
+                if (_watchScreen is not null)
+                {
+                    _watchScreen.Visible = !Construction.IsActive;
                 }
 
                 if (_buildModeButton is not null)
