@@ -173,6 +173,7 @@ public partial class BuildScreen : Control
 
     private Control CreateToolRail()
     {
+        var presentation = Presentation;
         var panel = CreatePanel(raised: false);
         panel.CustomMinimumSize = new Vector2(132, 0);
         panel.SizeFlagsVertical = SizeFlags.ExpandFill;
@@ -189,14 +190,67 @@ public partial class BuildScreen : Control
         margin.AddChild(rail);
 
         rail.AddChild(CreateLabel("Tools", 18, _tokens.Ink));
-        rail.AddChild(CreateButton("Move", UiActionButton.ActionKind.Primary, "Move sample nodes"));
-        rail.AddChild(CreateButton("Beam", UiActionButton.ActionKind.Secondary, "Connect two sample nodes"));
-        rail.AddChild(CreateButton("Core", UiActionButton.ActionKind.Secondary, "Attach sample core"));
-        rail.AddChild(CreateButton("Delete", UiActionButton.ActionKind.Danger, "Remove sample part"));
+        rail.AddChild(CreateToolButton(
+            presentation?.PlaceToolText ?? "Move",
+            UiActionButton.ActionKind.Primary,
+            presentation is null ? "Move sample nodes" : ConstructionPresentationViewModel.ToolHint(ConstructionTool.Place),
+            locked: false));
+        rail.AddChild(CreateToolButton(
+            presentation?.BeamToolText ?? "Beam",
+            UiActionButton.ActionKind.Secondary,
+            presentation is null
+                ? "Connect two sample nodes"
+                : presentation.LockTopologyTools
+                    ? presentation.MoveOnlyLockReason
+                    : ConstructionPresentationViewModel.ToolHint(ConstructionTool.Beam),
+            presentation?.LockTopologyTools ?? false));
+        rail.AddChild(CreateToolButton(
+            CompactCoreToolText(presentation?.CoreToolText) ?? "Core",
+            UiActionButton.ActionKind.Secondary,
+            presentation?.CoreToolTooltip ?? "Attach sample core",
+            presentation?.LockTopologyTools ?? false));
+        if (presentation is not null)
+        {
+            rail.AddChild(CreateLabel(presentation.CoreToolTooltip, 12, _tokens.Muted));
+        }
+
+        rail.AddChild(CreateToolButton(
+            presentation?.DeleteToolText ?? "Delete",
+            UiActionButton.ActionKind.Danger,
+            presentation is null
+                ? "Remove sample part"
+                : presentation.LockTopologyTools
+                    ? presentation.MoveOnlyLockReason
+                    : ConstructionPresentationViewModel.ToolHint(ConstructionTool.Delete),
+            presentation?.LockTopologyTools ?? false));
         rail.AddChild(CreateSpacer());
-        rail.AddChild(CreateLabel("Tap empty space to place a node.", 13, _tokens.Muted));
+        rail.AddChild(CreateLabel(presentation?.InspectorValues ?? "Tap empty space to place a node.", 13, _tokens.Muted));
 
         return panel;
+    }
+
+    private static string? CompactCoreToolText(string? text)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return text;
+        }
+
+        var hintStart = text.IndexOf(" (", StringComparison.Ordinal);
+        return hintStart < 0 ? text : text[..hintStart];
+    }
+
+    private UiActionButton CreateToolButton(string label, UiActionButton.ActionKind kind, string tooltip, bool locked)
+    {
+        var button = CreateButton(label, kind, tooltip);
+        button.Locked = locked;
+        if (locked)
+        {
+            button.LockReason = tooltip;
+            button.ShowLockReasonInText = false;
+        }
+
+        return button;
     }
 
     private Control CreateBuildCanvasPanel()
