@@ -1,4 +1,4 @@
-Node Runner teaches what a neural network is by letting the player build a small creature and watch it learn to walk. The thing being sold is the understanding, not the creature: every screen must answer "why did it do that?". A control that neither teaches something nor drives the core loop does not belong.
+Node Runner teaches what a neural network is by letting the player build a small creature and simulate it learning to walk. The thing being sold is the understanding, not the creature: every screen must answer "why did it do that?". A control that neither teaches something nor drives the core loop does not belong.
 
 The feeling is a **neon lab bench**, not a cute toy: a dark arena, glowing parts, high-contrast readouts. The audience is a curious beginner who has heard of machine learning but never touched it. Android phone, landscape only, touch only: no keyboard, no hover, no right-click.
 

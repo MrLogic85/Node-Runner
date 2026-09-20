@@ -164,7 +164,7 @@ public partial class BuildScreen : Control
         topBar.AddThemeConstantOverride("separation", 12);
 
         topBar.AddChild(CreateLabel("Build a creature", 22, _tokens.Ink, expand: true));
-        topBar.AddChild(CreateModeButton("Watch", false));
+        topBar.AddChild(CreateModeButton("Simulate", false));
         topBar.AddChild(CreateModeButton("Build", true));
         topBar.AddChild(CreateButton("Saved", UiActionButton.ActionKind.Secondary, "Sample autosave status"));
 

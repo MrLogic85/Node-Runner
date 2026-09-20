@@ -1,4 +1,4 @@
-The live brain, opened by tapping the Decides card in Watch. It shows the network and one sentence, nothing more.
+The live brain, opened by tapping the Decides card in Simulate. It shows the network and one sentence, nothing more.
 
 Columns are implied by position and the outputs and inputs carry the names of the cores and motors ("Left foot down", "Hip"), never indices. Firing neurons are filled `accent` with a glow; quiet ones are outlined. Edge thickness is weight and a **dashed edge pushes against**. Values are not printed on the neurons.
 

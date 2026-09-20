@@ -41,9 +41,9 @@ colour alone.
 The current behavior is useful but the presentation is still prototype-shaped:
 
 1. Most UI composition and wiring lives in `project/src/Main.cs`, which makes
-   the Watch, Build, Creations, and Edit surfaces difficult to evolve
+   the Simulate, Build, Creations, and Edit surfaces difficult to evolve
    independently.
-2. Watch is a text-heavy HUD with raw mapping lines rather than a causal
+2. Simulate is a text-heavy HUD with raw mapping lines rather than a causal
    arena, generation strip, and SignalFlow.
 3. Build uses a horizontal tool row and lacks live motor-relation/brain
    feedback.
@@ -66,7 +66,7 @@ checklist.
 |---|---|
 | 1. Component kit and visual tokens | [#119](https://github.com/MrLogic85/Node-Runner/issues/119) |
 | 2. Static screens and interaction flow | [#120](https://github.com/MrLogic85/Node-Runner/issues/120) |
-| 3. Game migration and teaching surfaces | [#121](https://github.com/MrLogic85/Node-Runner/issues/121) (Watch: #98; Main.cs HUD wiring: #106) |
+| 3. Game migration and teaching surfaces | [#121](https://github.com/MrLogic85/Node-Runner/issues/121) (Simulate: #98; Main.cs HUD wiring: #106) |
 | 4. Creations and safe actions | [#122](https://github.com/MrLogic85/Node-Runner/issues/122) (durable repository: #93) |
 | 5. SignalFlow and BrainFocus (0.9) | [#97](https://github.com/MrLogic85/Node-Runner/issues/97), [#101](https://github.com/MrLogic85/Node-Runner/issues/101) |
 
@@ -93,7 +93,7 @@ current game.
 **Goal:** make the complete target flow usable with sample data before game
 state is connected.
 
-- Build `WatchShell`, `BuildScreen`, `EditScreen`, and `CreationsScreen` with
+- Build `SimulateShell`, `BuildScreen`, `EditScreen`, and `CreationsScreen` with
   sample data.
 - Build the mode switch, overflow, sheets, toasts, SignalFlow, BrainFocus,
   GenerationStrip, and safe-action transitions.
@@ -114,7 +114,7 @@ state is connected.
 **Goal:** connect the stable screens to the current game one screen at a time.
 
 - Extract presentation view models/adapters from the current `Main.cs` wiring.
-- Migrate Watch first, then Build/Edit, then Creations and persistence actions.
+- Migrate Simulate first, then Build/Edit, then Creations and persistence actions.
 - Preserve simulation, persistence, and current product decisions while
   replacing the prototype HUD.
 - Replace the horizontal tool row with a left rail: Move, Beam, Core, Delete.
@@ -199,7 +199,7 @@ Do this without adding dependencies or changing project settings:
 - Teach each technical term once where it appears.
 - Keep one focus at a time: one expanded card, halo, or hint.
 - Use `Start over` rather than separate Randomize and Reset in the polished
-  Watch surface; state what training will be lost and provide Undo where
+  Simulate surface; state what training will be lost and provide Undo where
   practical.
 - Use visible locked states and reasons on touch; never rely on tooltips.
 - Prefer `Generation 5 · try 3 of 8` and `Reach 50 fitness to unlock` over
@@ -212,12 +212,12 @@ requirements in `docs/REVIEW.md`. In addition to those requirements, UI
 phases specifically require:
 
 - the relevant `design-lead` review against this plan and `UI_DIRECTION.md`;
-- screenshots for Watch at rest, mid-generation, Build, Edit, and any
+- screenshots for Simulate at rest, mid-generation, Build, Edit, and any
   unlock/confirmation state introduced by the phase;
 - no new direct UI dependency on simulation or managers.
 
 The next implementation slice is **Phase 1 component-kit completion**, then
 Phase 2 sample-data screens and interaction flow. The earlier GenerationStrip
 commit remains a useful data/visual prototype, but it is not the finished
-Watch redesign and must not be treated as a reason to migrate the current
+Simulate redesign and must not be treated as a reason to migrate the current
 HUD before the target screens are proven.
