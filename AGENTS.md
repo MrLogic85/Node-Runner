@@ -35,7 +35,8 @@ of the project before starting to work.
    Code-review clean = commit/push authorised.
 3. Always try to continue to work autonomously, only pause when you are stuck
    due to hardware issues or when you guninely need input from a human. Pick work
-   tasks from recent discussions with a human or from GitHub.
+   tasks from recent discussions with a human or from GitHub. If GitHub tasks are big,
+   break them down into milestones, new issues or subtasks.
 4. When new milestones, feature bugs are found or discussed. Add or update them
    on GitHub. Dont leave desicions undocumented. Review broad, risky, or ambiguous
    issues under docs/ISSUE_REVIEW.md before implementation.
