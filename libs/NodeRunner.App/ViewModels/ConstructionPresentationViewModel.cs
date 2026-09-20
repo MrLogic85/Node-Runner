@@ -92,12 +92,13 @@ public sealed class ConstructionPresentationViewModel
                 : BuildInputSummary(_construction.Cores.Count, motorRelationCount: 0);
             var motorRelationSummary = errors.Count > 0
                 ? "Fix anatomy to count motor relations."
-                : "Motor relations appear where two beams meet at a node and are not locked by a closed triangle.";
+                : "Two beams at one node create a motor relation; closed triangles do not twist.";
             return new ConstructionBuildPanelPresentation(
                 inputSummary,
                 motorRelationSummary,
                 $"Not ready: {disabledReason}",
                 CanStartTraining: false,
+                CanCompleteCreation: false,
                 DisabledReason: disabledReason);
         }
 
@@ -106,12 +107,13 @@ public sealed class ConstructionPresentationViewModel
         var inputCount = BuildInputCount(creature.Cores.Count, motorRelationCount);
         if (motorRelationCount == 0)
         {
-            const string disabledReason = "Connect two beams at a node. Closed triangles are rigid and cannot twist.";
+            const string disabledReason = "Add a two-beam node. Closed triangles cannot twist.";
             return new ConstructionBuildPanelPresentation(
                 BuildInputSummary(creature.Cores.Count, motorRelationCount),
                 "0 motor relations can twist",
                 $"Not ready: {disabledReason}",
                 CanStartTraining: false,
+                CanCompleteCreation: true,
                 DisabledReason: disabledReason);
         }
 
@@ -120,6 +122,7 @@ public sealed class ConstructionPresentationViewModel
             motorRelationCount == 1 ? "1 motor relation can twist" : $"{motorRelationCount} motor relations can twist",
             $"Ready: {inputCount} inputs -> {motorRelationCount} outputs",
             CanStartTraining: true,
+            CanCompleteCreation: true,
             DisabledReason: null);
     }
 
@@ -130,9 +133,9 @@ public sealed class ConstructionPresentationViewModel
         var motorSensorCount = motorRelationCount * _motorRelationSensorValueCount;
         var coreWord = coreCount == 1 ? "core" : "cores";
         var relationWord = motorRelationCount == 1 ? "motor relation" : "motor relations";
-        var coreSensorWord = coreSensorCount == 1 ? "core sensor value" : "core sensor values";
-        var motorSensorWord = motorSensorCount == 1 ? "motor-relation sensor value" : "motor-relation sensor values";
-        return $"{coreCount} {coreWord} -> {coreSensorCount} {coreSensorWord}; {motorRelationCount} {relationWord} -> {motorSensorCount} {motorSensorWord}; {inputCount} inputs total";
+        var coreSensorWord = coreSensorCount == 1 ? "sensor" : "sensors";
+        var motorSensorWord = motorSensorCount == 1 ? "sensor" : "sensors";
+        return $"{coreCount} {coreWord}: {coreSensorCount} {coreSensorWord}; {motorRelationCount} {relationWord}: {motorSensorCount} {motorSensorWord}; {inputCount} inputs total";
     }
 
     private static int BuildInputCount(int coreCount, int motorRelationCount)

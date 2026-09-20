@@ -103,6 +103,7 @@ public sealed class ConstructionPresentationViewModelTests
         var buildPanel = presentation.BuildPanel;
 
         buildPanel.CanStartTraining.ShouldBeFalse();
+        buildPanel.CanCompleteCreation.ShouldBeFalse();
         buildPanel.DisabledReason.ShouldBe("Add nodes and beams before training a new creature.");
         buildPanel.ValidationLine.ShouldBe("Not ready: Add nodes and beams before training a new creature.");
     }
@@ -117,6 +118,7 @@ public sealed class ConstructionPresentationViewModelTests
         var buildPanel = presentation.BuildPanel;
 
         buildPanel.CanStartTraining.ShouldBeFalse();
+        buildPanel.CanCompleteCreation.ShouldBeFalse();
         buildPanel.DisabledReason.ShouldBe("Node 0 has no beams attached. Connect it with a beam or remove it.");
         buildPanel.InputSummary.ShouldBe("0 cores placed; fix anatomy to count inputs.");
         buildPanel.MotorRelationSummary.ShouldBe("Fix anatomy to count motor relations.");
@@ -143,8 +145,9 @@ public sealed class ConstructionPresentationViewModelTests
         var buildPanel = presentation.BuildPanel;
 
         buildPanel.CanStartTraining.ShouldBeTrue();
+        buildPanel.CanCompleteCreation.ShouldBeTrue();
         buildPanel.DisabledReason.ShouldBeNull();
-        buildPanel.InputSummary.ShouldBe("1 core -> 6 core sensor values; 3 motor relations -> 6 motor-relation sensor values; 12 inputs total");
+        buildPanel.InputSummary.ShouldBe("1 core: 6 sensors; 3 motor relations: 6 sensors; 12 inputs total");
         buildPanel.MotorRelationSummary.ShouldBe("3 motor relations can twist");
         buildPanel.ValidationLine.ShouldBe("Ready: 12 inputs -> 3 outputs");
     }
@@ -163,10 +166,11 @@ public sealed class ConstructionPresentationViewModelTests
         var buildPanel = presentation.BuildPanel;
 
         buildPanel.CanStartTraining.ShouldBeFalse();
-        buildPanel.DisabledReason.ShouldBe("Connect two beams at a node. Closed triangles are rigid and cannot twist.");
-        buildPanel.InputSummary.ShouldBe("1 core -> 6 core sensor values; 0 motor relations -> 0 motor-relation sensor values; 6 inputs total");
+        buildPanel.CanCompleteCreation.ShouldBeTrue();
+        buildPanel.DisabledReason.ShouldBe("Add a two-beam node. Closed triangles cannot twist.");
+        buildPanel.InputSummary.ShouldBe("1 core: 6 sensors; 0 motor relations: 0 sensors; 6 inputs total");
         buildPanel.MotorRelationSummary.ShouldBe("0 motor relations can twist");
-        buildPanel.ValidationLine.ShouldBe("Not ready: Connect two beams at a node. Closed triangles are rigid and cannot twist.");
+        buildPanel.ValidationLine.ShouldBe("Not ready: Add a two-beam node. Closed triangles cannot twist.");
     }
 
     [Fact]

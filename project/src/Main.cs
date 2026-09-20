@@ -31,6 +31,10 @@ public partial class Main : Node2D
     private Button? _deleteToolButton;
     private Button? _completeButton;
     private Button? _rebuildButton;
+    private PanelContainer? _buildInfoPanel;
+    private Label? _buildInputSummaryLabel;
+    private Label? _buildMotorSummaryLabel;
+    private Label? _buildValidationLabel;
     private Button? _creationsButton;
     private PanelContainer? _creationsPanel;
     private VBoxContainer? _creationsList;
@@ -129,6 +133,7 @@ public partial class Main : Node2D
     private void OnConstructionAnatomyChanged(object? sender, EventArgs eventArgs)
     {
         UpdateToolButtonVisibility();
+        UpdateBuildPanelPresentation();
     }
 
     private string ProgressionText()
@@ -920,16 +925,18 @@ public partial class Main : Node2D
     {
         var panel = new PanelContainer
         {
-            Position = new Vector2(16, 16 + _touchTargetHeight + 12),
+            Position = new Vector2(16, 16 + _touchTargetHeight + 28),
             Visible = false,
         };
         panel.AddThemeStyleboxOverride("panel", CreateHudPanelStyle());
 
-        var row = new HBoxContainer
+        var rail = new VBoxContainer
         {
-            CustomMinimumSize = new Vector2(800, _touchTargetHeight),
+            CustomMinimumSize = new Vector2(220, 0),
         };
-        row.AddThemeConstantOverride("separation", 20);
+        rail.AddThemeConstantOverride("separation", 10);
+
+        rail.AddChild(CreateBuildPanelLabel("Tools", _theme.SelectionGlow, _hudFontSize));
 
         _placeToolButton = CreateToolButton("PlaceToolButton", "Place");
         _placeToolButton.Pressed += () => Construction.ActiveTool = ConstructionTool.Place;
@@ -948,19 +955,65 @@ public partial class Main : Node2D
         _rebuildButton = CreateToolButton("RebuildButton", "Rebuild");
         _rebuildButton.Pressed += RebuildCreation;
 
-        row.AddChild(_placeToolButton);
-        row.AddChild(_beamToolButton);
-        row.AddChild(_coreToolButton);
-        row.AddChild(_deleteToolButton);
-        row.AddChild(_completeButton);
-        row.AddChild(_rebuildButton);
-        panel.AddChild(row);
+        rail.AddChild(_placeToolButton);
+        rail.AddChild(_beamToolButton);
+        rail.AddChild(_coreToolButton);
+        rail.AddChild(_deleteToolButton);
+        rail.AddChild(_completeButton);
+        rail.AddChild(_rebuildButton);
+        panel.AddChild(rail);
         layer.AddChild(panel);
 
         _toolPanel = panel;
+        AddBuildInfoPanel(layer);
         ApplyProgression();
         UpdateToolButtonHighlight();
         UpdateToolButtonVisibility();
+        UpdateBuildPanelPresentation();
+    }
+
+    private void AddBuildInfoPanel(CanvasLayer layer)
+    {
+        var panel = new PanelContainer
+        {
+            Position = new Vector2(820, 16 + _touchTargetHeight + 28),
+            Visible = false,
+        };
+        panel.AddThemeStyleboxOverride("panel", CreateHudPanelStyle());
+
+        var column = new VBoxContainer
+        {
+            CustomMinimumSize = new Vector2(420, 0),
+        };
+        column.AddThemeConstantOverride("separation", 10);
+
+        column.AddChild(CreateBuildPanelLabel(ConstructionBuildPanelPresentation.Title, _theme.SelectionGlow, _hudFontSize));
+        column.AddChild(CreateBuildPanelLabel("Inputs", _theme.Beam, 22));
+        _buildInputSummaryLabel = CreateBuildPanelLabel(string.Empty, _theme.GroundEdge, 20);
+        column.AddChild(_buildInputSummaryLabel);
+        column.AddChild(CreateBuildPanelLabel("Motor relations", _theme.Beam, 22));
+        _buildMotorSummaryLabel = CreateBuildPanelLabel(string.Empty, _theme.GroundEdge, 20);
+        column.AddChild(_buildMotorSummaryLabel);
+        column.AddChild(CreateBuildPanelLabel("Validation", _theme.Beam, 22));
+        _buildValidationLabel = CreateBuildPanelLabel(string.Empty, _theme.GroundEdge, 20);
+        column.AddChild(_buildValidationLabel);
+
+        panel.AddChild(column);
+        layer.AddChild(panel);
+        _buildInfoPanel = panel;
+    }
+
+    private Label CreateBuildPanelLabel(string text, Color color, int fontSize)
+    {
+        var label = new Label
+        {
+            Text = text,
+            AutowrapMode = TextServer.AutowrapMode.WordSmart,
+            CustomMinimumSize = new Vector2(380, 0),
+        };
+        label.AddThemeColorOverride("font_color", color);
+        label.AddThemeFontSizeOverride("font_size", fontSize);
+        return label;
     }
 
     private Button CreateToolButton(string name, string text)
@@ -969,7 +1022,7 @@ public partial class Main : Node2D
         {
             Name = name,
             Text = text,
-            CustomMinimumSize = new Vector2(180, _touchTargetHeight),
+            CustomMinimumSize = new Vector2(200, _touchTargetHeight),
         };
         button.AddThemeFontSizeOverride("font_size", _hudFontSize);
         return button;
@@ -1199,6 +1252,11 @@ public partial class Main : Node2D
                     _toolPanel.Visible = Construction.IsActive;
                 }
 
+                if (_buildInfoPanel is not null)
+                {
+                    _buildInfoPanel.Visible = Construction.IsActive && !Construction.IsMoveOnly;
+                }
+
                 if (_trainingPanel is not null)
                 {
                     _trainingPanel.Visible = !Construction.IsActive;
@@ -1210,6 +1268,7 @@ public partial class Main : Node2D
                 }
 
                 UpdateToolButtonVisibility();
+                UpdateBuildPanelPresentation();
                 UpdateInspector();
                 break;
             case nameof(ConstructionViewModel.ActiveTool):
@@ -1217,10 +1276,12 @@ public partial class Main : Node2D
                 UpdateInspector();
                 break;
             case nameof(ConstructionViewModel.StatusMessage):
+                UpdateBuildPanelPresentation();
                 UpdateInspector();
                 break;
             case nameof(ConstructionViewModel.MaxCores):
                 UpdateToolButtonVisibility();
+                UpdateBuildPanelPresentation();
                 break;
         }
     }
@@ -1267,6 +1328,35 @@ public partial class Main : Node2D
         if (_rebuildButton is not null)
         {
             _rebuildButton.Visible = presentation.ShowRebuildAction;
+        }
+        if (_buildInfoPanel is not null)
+        {
+            _buildInfoPanel.Visible = Construction.IsActive && !Construction.IsMoveOnly;
+        }
+    }
+
+    private void UpdateBuildPanelPresentation()
+    {
+        var buildPanel = ConstructionPresentation.BuildPanel;
+        if (_buildInputSummaryLabel is not null)
+        {
+            SetLabelTextIfChanged(_buildInputSummaryLabel, buildPanel.InputSummary);
+        }
+        if (_buildMotorSummaryLabel is not null)
+        {
+            SetLabelTextIfChanged(_buildMotorSummaryLabel, buildPanel.MotorRelationSummary);
+        }
+        if (_buildValidationLabel is not null)
+        {
+            SetLabelTextIfChanged(_buildValidationLabel, buildPanel.ValidationLine);
+            _buildValidationLabel.AddThemeColorOverride("font_color", buildPanel.CanStartTraining ? _theme.GroundEdge : Colors.Orange);
+        }
+        if (_completeButton is not null)
+        {
+            _completeButton.Disabled = !buildPanel.CanCompleteCreation;
+            _completeButton.TooltipText = buildPanel.CanCompleteCreation
+                ? "Save this anatomy as a new Creation."
+                : buildPanel.DisabledReason ?? "Finish the anatomy before saving.";
         }
     }
 
