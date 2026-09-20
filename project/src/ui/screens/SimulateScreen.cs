@@ -10,6 +10,9 @@ namespace NodeRunner.Ui.Screens;
 /// </summary>
 public partial class SimulateScreen : Control
 {
+    private const int _topBarHeight = 64;
+    private const int _modeSwitchHeight = 52;
+    private const int _signalPanelWidth = 340;
     private UiTokens _tokens = UiTokens.Neon;
     private readonly List<UiPanel> _signalCards = new();
     private readonly List<Label> _signalBodies = new();
@@ -29,7 +32,10 @@ public partial class SimulateScreen : Control
     private Control? _settingsOverlay;
     private ColorRect? _settingsScrim;
     private UiSheet? _settingsSheet;
+    private Control? _buildModeSegment;
+    private UiActionButton? _livePauseButton;
     private bool _inputPassthrough;
+    private string _pauseActionText = "Pause";
 
     [Signal]
     public delegate void BrainFocusRequestedEventHandler();
@@ -39,6 +45,21 @@ public partial class SimulateScreen : Control
 
     [Signal]
     public delegate void TrainingProfileSelectedEventHandler(int index);
+
+    [Signal]
+    public delegate void CreationsRequestedEventHandler();
+
+    [Signal]
+    public delegate void BuildRequestedEventHandler();
+
+    [Signal]
+    public delegate void PauseRequestedEventHandler();
+
+    [Signal]
+    public delegate void SpeedRequestedEventHandler();
+
+    [Signal]
+    public delegate void ResetRequestedEventHandler();
 
     [Export]
     public bool ShowTopBar { get; set; } = true;
@@ -200,6 +221,19 @@ public partial class SimulateScreen : Control
         }
     }
 
+    public string PauseActionText
+    {
+        get => _pauseActionText;
+        set
+        {
+            _pauseActionText = string.IsNullOrWhiteSpace(value) ? "Pause" : value;
+            if (_livePauseButton is not null)
+            {
+                _livePauseButton.LabelText = _pauseActionText;
+            }
+        }
+    }
+
     public override void _Ready()
     {
         Name = nameof(SimulateScreen);
@@ -314,6 +348,8 @@ public partial class SimulateScreen : Control
         _decidesStatusLabel = null;
         _twistsStatusLabel = null;
         _scoresStatusLabel = null;
+        _buildModeSegment = null;
+        _livePauseButton = null;
         _selectedSignalIndex = -1;
         foreach (var child in GetChildren())
         {
@@ -341,7 +377,7 @@ public partial class SimulateScreen : Control
             });
         }
 
-        var safeFrame = CreateMargin(24);
+        var safeFrame = CreateMargin(16);
         AddChild(safeFrame);
 
         var screen = new VBoxContainer
@@ -349,7 +385,7 @@ public partial class SimulateScreen : Control
             SizeFlagsHorizontal = SizeFlags.ExpandFill,
             SizeFlagsVertical = SizeFlags.ExpandFill,
         };
-        screen.AddThemeConstantOverride("separation", 14);
+        screen.AddThemeConstantOverride("separation", 8);
         safeFrame.AddChild(screen);
 
         if (ShowTopBar)
@@ -362,13 +398,17 @@ public partial class SimulateScreen : Control
             SizeFlagsHorizontal = SizeFlags.ExpandFill,
             SizeFlagsVertical = SizeFlags.ExpandFill,
         };
-        contentRow.AddThemeConstantOverride("separation", 14);
+        contentRow.AddThemeConstantOverride("separation", 8);
         screen.AddChild(contentRow);
 
         contentRow.AddChild(CreateArenaPanel());
         contentRow.AddChild(CreateSignalPanel());
 
-        if (!ReadOnlyControls)
+        if (ReadOnlyControls)
+        {
+            screen.AddChild(CreateLiveControlRow());
+        }
+        else
         {
             screen.AddChild(CreateTrainingPanel());
         }
@@ -379,20 +419,153 @@ public partial class SimulateScreen : Control
 
     private Control CreateTopBar()
     {
+        var panel = CreatePanel(raised: true);
+        panel.CustomMinimumSize = new Vector2(0, _topBarHeight);
+        panel.SizeFlagsHorizontal = SizeFlags.ExpandFill;
+        panel.GuiInput += OnTopBarInput;
+        _inputPassthroughExceptions.Add(panel);
+
+        var margin = CreateMargin(0);
+        margin.AddThemeConstantOverride("margin_left", 12);
+        margin.AddThemeConstantOverride("margin_right", 0);
+        panel.AddChild(margin);
+
         var topBar = new HBoxContainer
         {
             SizeFlagsHorizontal = SizeFlags.ExpandFill,
-            CustomMinimumSize = new Vector2(0, _tokens.TouchTarget),
+            CustomMinimumSize = new Vector2(0, _topBarHeight),
         };
-        topBar.AddThemeConstantOverride("separation", 12);
+        topBar.AddThemeConstantOverride("separation", 8);
+        margin.AddChild(topBar);
 
-        topBar.AddChild(CreateLabel("NODE RUNNER", 22, _tokens.Ink, expand: true));
-        topBar.AddChild(CreatePill("Training", _tokens.AccentSoft, _tokens.Accent));
-        topBar.AddChild(CreateModeButton("Simulate", true));
-        topBar.AddChild(CreateModeButton("Build", false));
-        topBar.AddChild(CreateButton("Menu", UiActionButton.ActionKind.Secondary, "Overflow: Start over, settings, restore example"));
+        var title = new VBoxContainer
+        {
+            SizeFlagsHorizontal = SizeFlags.ExpandFill,
+        };
+        title.AddThemeConstantOverride("separation", 0);
+        topBar.AddChild(title);
+        title.AddChild(CreateLabel("Simulate", 22, _tokens.Ink, expand: true));
+        title.AddChild(CreateLabel(_presentation?.GenerationText ?? "Training", 14, _tokens.Muted));
 
-        return topBar;
+        var creations = CreateButton("Creations", UiActionButton.ActionKind.Secondary, "Open saved Creations");
+        creations.Pressed += () => EmitSignal(SignalName.CreationsRequested);
+        _inputPassthroughExceptions.Add(creations);
+        topBar.AddChild(creations);
+
+        topBar.AddChild(CreateModeSwitch());
+
+        var settings = new UiIconButton
+        {
+            Tokens = _tokens,
+            IconText = "⋯",
+            AccessibleLabel = "Training settings",
+        };
+        settings.Pressed += () =>
+        {
+            if (_profileSettings is null)
+            {
+                EmitSignal(SignalName.TrainingProfileRequested);
+                return;
+            }
+
+            ShowTrainingSettingsSheet();
+        };
+        _inputPassthroughExceptions.Add(settings);
+        topBar.AddChild(settings);
+
+        var progress = new ProgressBar
+        {
+            MinValue = 0,
+            MaxValue = 1,
+            Value = _unlockProgress?.Progress ?? 0,
+            ShowPercentage = false,
+            CustomMinimumSize = new Vector2(0, 3),
+            AnchorLeft = 0,
+            AnchorRight = 1,
+            AnchorTop = 1,
+            AnchorBottom = 1,
+            OffsetTop = -3,
+        };
+        progress.AddThemeStyleboxOverride("background", new StyleBoxFlat { BgColor = _tokens.Line });
+        progress.AddThemeStyleboxOverride("fill", new StyleBoxFlat { BgColor = _tokens.Accent });
+        panel.AddChild(progress);
+
+        return panel;
+    }
+
+    private Control CreateModeSwitch()
+    {
+        var frame = new HBoxContainer
+        {
+            CustomMinimumSize = new Vector2(0, _modeSwitchHeight),
+        };
+        frame.AddThemeConstantOverride("separation", 0);
+        frame.AddChild(CreateModeSegment("▶  Simulate", active: true, first: true, last: false));
+        frame.AddChild(CreateModeSegment("✎  Build", active: false, first: false, last: true));
+        return frame;
+    }
+
+    private Control CreateModeSegment(string label, bool active, bool first, bool last)
+    {
+        var segment = new PanelContainer
+        {
+            CustomMinimumSize = new Vector2(148, _modeSwitchHeight),
+        };
+        segment.AddThemeStyleboxOverride("panel", CreateSegmentStyle(active, first, last));
+        var text = CreateLabel(label.ToUpperInvariant(), 16, _tokens.Ink);
+        text.HorizontalAlignment = HorizontalAlignment.Center;
+        text.VerticalAlignment = VerticalAlignment.Center;
+        text.MouseFilter = MouseFilterEnum.Ignore;
+        segment.AddChild(text);
+        if (!active)
+        {
+            _buildModeSegment = segment;
+            void RequestBuild(InputEvent @event)
+            {
+                if (@event is InputEventMouseButton { Pressed: true } or InputEventScreenTouch { Pressed: true })
+                {
+                    EmitSignal(SignalName.BuildRequested);
+                    segment.AcceptEvent();
+                }
+            }
+
+            segment.MouseDefaultCursorShape = CursorShape.PointingHand;
+            segment.GuiInput += RequestBuild;
+            text.GuiInput += RequestBuild;
+            _inputPassthroughExceptions.Add(segment);
+        }
+
+        return segment;
+    }
+
+    private void OnTopBarInput(InputEvent @event)
+    {
+        if (_buildModeSegment is null || !TryGetPressedPosition(@event, out var position))
+        {
+            return;
+        }
+
+        if (_buildModeSegment.GetGlobalRect().HasPoint(position))
+        {
+            EmitSignal(SignalName.BuildRequested);
+            AcceptEvent();
+        }
+    }
+
+    private static bool TryGetPressedPosition(InputEvent @event, out Vector2 position)
+    {
+        switch (@event)
+        {
+            case InputEventMouseButton { Pressed: true } mouse:
+                position = mouse.GlobalPosition;
+                return true;
+            case InputEventScreenTouch { Pressed: true } touch:
+                position = touch.Position;
+                return true;
+            default:
+                position = default;
+                return false;
+        }
     }
 
     private Control CreateArenaPanel()
@@ -447,8 +620,9 @@ public partial class SimulateScreen : Control
     private Control CreateSignalPanel()
     {
         var panel = CreatePanel(raised: false);
-        panel.CustomMinimumSize = new Vector2(336, 0);
+        panel.CustomMinimumSize = new Vector2(_signalPanelWidth, 0);
         panel.SizeFlagsVertical = SizeFlags.ExpandFill;
+        _inputPassthroughExceptions.Add(panel);
 
         var margin = CreateMargin(12);
         panel.AddChild(margin);
@@ -461,11 +635,6 @@ public partial class SimulateScreen : Control
         stack.AddThemeConstantOverride("separation", 5);
         margin.AddChild(stack);
 
-        if (ReadOnlyControls)
-        {
-            stack.AddChild(CreateLiveTrainingSummary());
-        }
-
         stack.AddChild(CreateLabel("SignalFlow", 20, _tokens.Ink));
         stack.AddChild(CreateSignalCard(0, "1 Sees", "The cores sense nearby contact and body state."));
         stack.AddChild(CreateSignalConnector());
@@ -476,7 +645,7 @@ public partial class SimulateScreen : Control
         stack.AddChild(CreateSignalCard(3, "4 Scores", "Fitness is the distance reached before the trial ends."));
         if (!ReadOnlyControls)
         {
-            stack.AddChild(CreateLabel("Tap one stage to expand its explanation.", 13, _tokens.Muted));
+            stack.AddChild(CreateLabel("Tap one stage to expand its explanation.", 14, _tokens.Muted));
         }
 
         UpdateSignalFlowCards();
@@ -522,6 +691,52 @@ public partial class SimulateScreen : Control
             row.AddChild(CreateButton("Pause", UiActionButton.ActionKind.Secondary, "Pause sample training"));
             row.AddChild(CreateButton("Profile", UiActionButton.ActionKind.Secondary, "Open sample training settings"));
         }
+
+        return panel;
+    }
+
+    private Control CreateLiveControlRow()
+    {
+        var panel = CreatePanel(raised: true);
+        panel.CustomMinimumSize = new Vector2(0, 74);
+        _inputPassthroughExceptions.Add(panel);
+
+        var margin = CreateMargin(8);
+        panel.AddChild(margin);
+
+        var row = new HBoxContainer
+        {
+            SizeFlagsHorizontal = SizeFlags.ExpandFill,
+            SizeFlagsVertical = SizeFlags.ExpandFill,
+        };
+        row.AddThemeConstantOverride("separation", 8);
+        margin.AddChild(row);
+
+        var pause = CreateButton(PauseActionText, UiActionButton.ActionKind.Secondary, "Pause or resume simulation");
+        pause.Pressed += () => EmitSignal(SignalName.PauseRequested);
+        _livePauseButton = pause;
+        _inputPassthroughExceptions.Add(pause);
+        row.AddChild(pause);
+
+        var speed = CreateButton("Speed", UiActionButton.ActionKind.Secondary, "Cycle simulation speed");
+        speed.Pressed += () => EmitSignal(SignalName.SpeedRequested);
+        _inputPassthroughExceptions.Add(speed);
+        row.AddChild(speed);
+
+        var reset = CreateButton("Reset", UiActionButton.ActionKind.Secondary, "Restart the active training run");
+        reset.Pressed += () => EmitSignal(SignalName.ResetRequested);
+        _inputPassthroughExceptions.Add(reset);
+        row.AddChild(reset);
+
+        var summary = new VBoxContainer
+        {
+            SizeFlagsHorizontal = SizeFlags.ExpandFill,
+            SizeFlagsVertical = SizeFlags.ExpandFill,
+        };
+        summary.AddThemeConstantOverride("separation", 4);
+        row.AddChild(summary);
+        summary.AddChild(CreateLabel(_presentation?.GenerationText ?? "Generation 0 · try 1 of 8", 18, _tokens.Ink));
+        summary.AddChild(CreateSampleStrip());
 
         return panel;
     }
@@ -802,7 +1017,7 @@ public partial class SimulateScreen : Control
     private UiPanel CreateSignalCard(int index, string title, string detail)
     {
         var card = CreatePanel(raised: true);
-        card.CustomMinimumSize = new Vector2(312, 68);
+        card.CustomMinimumSize = new Vector2(_signalPanelWidth - 28, ReadOnlyControls ? 78 : 72);
         _signalCards.Add(card);
 
         var margin = CreateMargin(6);
@@ -833,7 +1048,7 @@ public partial class SimulateScreen : Control
             }
             else
             {
-                var heading = CreateLabel(title, 13, _tokens.Muted);
+                var heading = CreateLabel(title, 16, _tokens.Muted);
                 heading.HorizontalAlignment = HorizontalAlignment.Center;
                 heading.CustomMinimumSize = new Vector2(0, 20);
                 stack.AddChild(heading);
@@ -857,22 +1072,22 @@ public partial class SimulateScreen : Control
         switch (index)
         {
             case 0:
-                _seesStatusLabel = CreateLabel(string.Empty, 12, _tokens.Muted);
+                _seesStatusLabel = CreateLabel(string.Empty, 14, _tokens.Muted);
                 stack.AddChild(CreateThreeBarPreview(_sensorBars));
                 stack.AddChild(_seesStatusLabel);
                 break;
             case 1:
-                _decidesStatusLabel = CreateLabel(string.Empty, 13, _tokens.Accent);
+                _decidesStatusLabel = CreateLabel(string.Empty, 15, _tokens.Accent);
                 _decidesStatusLabel.HorizontalAlignment = HorizontalAlignment.Center;
                 stack.AddChild(_decidesStatusLabel);
                 break;
             case 2:
-                _twistsStatusLabel = CreateLabel(string.Empty, 12, _tokens.Muted);
+                _twistsStatusLabel = CreateLabel(string.Empty, 14, _tokens.Muted);
                 stack.AddChild(CreateTwoBarPreview(_motorBars));
                 stack.AddChild(_twistsStatusLabel);
                 break;
             case 3:
-                _scoresStatusLabel = CreateLabel(string.Empty, 13, _tokens.Accent);
+                _scoresStatusLabel = CreateLabel(string.Empty, 15, _tokens.Accent);
                 _scoresStatusLabel.HorizontalAlignment = HorizontalAlignment.Center;
                 stack.AddChild(_scoresStatusLabel);
                 break;
@@ -1054,6 +1269,26 @@ public partial class SimulateScreen : Control
             Kind = active ? UiActionButton.ActionKind.Primary : UiActionButton.ActionKind.Secondary,
             LabelText = label,
             CustomMinimumSize = new Vector2(96, _tokens.TouchTarget),
+        };
+    }
+
+    private StyleBoxFlat CreateSegmentStyle(bool active, bool first, bool last)
+    {
+        var radius = (int)_tokens.Radius;
+        return new StyleBoxFlat
+        {
+            BgColor = active ? _tokens.AccentSoft : _tokens.PanelRaised,
+            BorderColor = active ? _tokens.Accent : _tokens.LineStrong,
+            BorderWidthLeft = 1,
+            BorderWidthTop = 1,
+            BorderWidthRight = last ? 1 : 0,
+            BorderWidthBottom = 1,
+            CornerRadiusTopLeft = first ? radius : 0,
+            CornerRadiusBottomLeft = first ? radius : 0,
+            CornerRadiusTopRight = last ? radius : 0,
+            CornerRadiusBottomRight = last ? radius : 0,
+            ContentMarginLeft = 12,
+            ContentMarginRight = 12,
         };
     }
 

@@ -111,6 +111,7 @@ public partial class Main : Node2D
     private int _trainingProfileIndex = 1;
     private int _sessionGenerationStart;
     private TrainingPresentationViewModel _trainingPresentation = new();
+    private ulong _lastModeToggleTicks;
 
     public SelectionViewModel Selection { get; } = new();
 
@@ -264,6 +265,8 @@ public partial class Main : Node2D
         {
             Name = "ArenaBackdrop",
             Theme = _theme,
+            Position = new Vector2(-450, 0),
+            Size = new Vector2(1800, 720),
             ZIndex = -100,
         };
         AddChild(_arenaBackdrop);
@@ -549,7 +552,7 @@ public partial class Main : Node2D
             Name = "LiveSimulateScreen",
             Tokens = UiTokens.Neon,
             Hosted = true,
-            ShowTopBar = false,
+            ShowTopBar = true,
             ShowArenaPlaceholder = false,
             ReadOnlyControls = true,
             InputPassthrough = true,
@@ -558,10 +561,16 @@ public partial class Main : Node2D
             UnlockProgress = _unlockProgress,
             ProfileSummary = _profileSummary,
             ProfileSettings = _profileSettings,
+            PauseActionText = PauseButtonText(),
             Visible = !Construction.IsActive,
         };
         _simulateScreen.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
         _simulateScreen.BrainFocusRequested += ShowBrainFocus;
+        _simulateScreen.CreationsRequested += ToggleCreationsPanel;
+        _simulateScreen.BuildRequested += ToggleConstructionMode;
+        _simulateScreen.PauseRequested += TogglePause;
+        _simulateScreen.SpeedRequested += CycleTimeScale;
+        _simulateScreen.ResetRequested += ResetEvolution;
         _simulateScreen.TrainingProfileRequested += CycleTrainingProfile;
         _simulateScreen.TrainingProfileSelected += SelectTrainingProfile;
         simulateLayer.AddChild(_simulateScreen);
@@ -762,6 +771,7 @@ public partial class Main : Node2D
         var panel = new PanelContainer
         {
             Position = new Vector2(16, 16),
+            Visible = false,
         };
         _hudPanel = panel;
         panel.AddThemeStyleboxOverride("panel", CreateHudPanelStyle());
@@ -1172,6 +1182,7 @@ public partial class Main : Node2D
         var panel = new PanelContainer
         {
             Position = new Vector2(16, 16 + _touchTargetHeight + 12),
+            Visible = false,
         };
         panel.AddThemeStyleboxOverride("panel", CreateHudPanelStyle());
 
@@ -1279,6 +1290,10 @@ public partial class Main : Node2D
         if (_pauseButton is not null)
         {
             _pauseButton.Text = PauseButtonText();
+        }
+        if (_simulateScreen is not null)
+        {
+            _simulateScreen.PauseActionText = PauseButtonText();
         }
     }
 
@@ -1558,6 +1573,14 @@ public partial class Main : Node2D
     // anything (see docs/CONSTRUCTION_MODE.md).
     private void ToggleConstructionMode()
     {
+        var now = Time.GetTicksMsec();
+        if (_lastModeToggleTicks != 0 && now - _lastModeToggleTicks < 250)
+        {
+            return;
+        }
+
+        _lastModeToggleTicks = now;
+
         // ConstructionCanvas uses the default Pausable process mode (unlike
         // the Always-mode Hud), so entering or leaving construction mode
         // while training is paused would leave editing half-broken: the
@@ -1879,12 +1902,12 @@ public partial class Main : Node2D
 
                 if (_trainingPanel is not null)
                 {
-                    _trainingPanel.Visible = !Construction.IsActive;
+                    _trainingPanel.Visible = false;
                 }
 
                 if (_hudPanel is not null)
                 {
-                    _hudPanel.Visible = !Construction.IsActive;
+                    _hudPanel.Visible = false;
                 }
 
                 if (_simulateScreen is not null)
@@ -2172,7 +2195,7 @@ public partial class Main : Node2D
         }
         if (_inspectorPanel is not null)
         {
-            _inspectorPanel.Visible = !Construction.IsActive;
+            _inspectorPanel.Visible = false;
         }
 
         if (Construction.IsActive)
