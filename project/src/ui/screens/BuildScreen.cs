@@ -12,6 +12,10 @@ namespace NodeRunner.Ui.Screens;
 public partial class BuildScreen : Control
 {
     private const string _hostedInputPassthroughMeta = "HostedInputPassthrough";
+    private const int _topBarHeight = 64;
+    private const int _modeSwitchHeight = 52;
+    private const int _toolRailWidth = 84;
+    private const int _toolButtonHeight = 76;
     private UiTokens _tokens = UiTokens.Neon;
     private ConstructionPresentationViewModel? _presentation;
     private bool _isSubscribedToPresentation;
@@ -191,20 +195,20 @@ public partial class BuildScreen : Control
     private Control CreateTopBar()
     {
         var topBarPanel = CreatePanel(raised: true);
-        topBarPanel.CustomMinimumSize = new Vector2(0, 72);
+        topBarPanel.CustomMinimumSize = new Vector2(0, _topBarHeight);
         topBarPanel.SizeFlagsHorizontal = SizeFlags.ExpandFill;
 
         var margin = new MarginContainer();
-        margin.AddThemeConstantOverride("margin_left", 18);
-        margin.AddThemeConstantOverride("margin_top", 6);
-        margin.AddThemeConstantOverride("margin_right", 18);
-        margin.AddThemeConstantOverride("margin_bottom", 6);
+        margin.AddThemeConstantOverride("margin_left", 4);
+        margin.AddThemeConstantOverride("margin_top", 0);
+        margin.AddThemeConstantOverride("margin_right", 4);
+        margin.AddThemeConstantOverride("margin_bottom", 0);
         topBarPanel.AddChild(margin);
 
         var topBar = new HBoxContainer
         {
             SizeFlagsHorizontal = SizeFlags.ExpandFill,
-            CustomMinimumSize = new Vector2(0, _tokens.TouchTarget),
+            CustomMinimumSize = new Vector2(0, _topBarHeight),
         };
         topBar.AddThemeConstantOverride("separation", 8);
         margin.AddChild(topBar);
@@ -223,10 +227,9 @@ public partial class BuildScreen : Control
         titleStack.AddThemeConstantOverride("separation", 0);
         topBar.AddChild(titleStack);
         titleStack.AddChild(CreateLabel("Building", 22, _tokens.Ink, expand: true));
-        titleStack.AddChild(CreateLabel("✓ Saved", 13, _tokens.Muted));
+        titleStack.AddChild(CreateLabel("✓ Saved", 14, _tokens.Muted));
 
-        topBar.AddChild(CreateModeButton("Simulate", false));
-        topBar.AddChild(CreateModeButton("Build", true));
+        topBar.AddChild(CreateModeSwitch());
         topBar.AddChild(new UiIconButton
         {
             Tokens = _tokens,
@@ -241,10 +244,10 @@ public partial class BuildScreen : Control
     {
         var presentation = Presentation;
         var panel = CreatePanel(raised: true);
-        panel.CustomMinimumSize = new Vector2(88, 0);
+        panel.CustomMinimumSize = new Vector2(_toolRailWidth, 0);
         panel.SizeFlagsVertical = SizeFlags.ExpandFill;
 
-        var margin = CreateMargin(4);
+        var margin = CreateMargin(0);
         panel.AddChild(margin);
 
         var rail = new VBoxContainer
@@ -255,13 +258,13 @@ public partial class BuildScreen : Control
         rail.AddThemeConstantOverride("separation", 2);
         margin.AddChild(rail);
 
-        rail.AddChild(CreateToolButton(
+        rail.AddChild(CreateBuildToolButton(
             ConstructionTool.Place,
             presentation?.PlaceToolText ?? "Move",
             ToolButtonKind(ConstructionTool.Place),
             presentation is null ? "Move sample nodes" : ConstructionPresentationViewModel.ToolHint(ConstructionTool.Place),
             locked: false));
-        rail.AddChild(CreateToolButton(
+        rail.AddChild(CreateBuildToolButton(
             ConstructionTool.Beam,
             presentation?.BeamToolText ?? "Beam",
             ToolButtonKind(ConstructionTool.Beam),
@@ -271,13 +274,13 @@ public partial class BuildScreen : Control
                     ? presentation.MoveOnlyLockReason
                     : ConstructionPresentationViewModel.ToolHint(ConstructionTool.Beam),
             presentation?.LockTopologyTools ?? false));
-        rail.AddChild(CreateToolButton(
+        rail.AddChild(CreateBuildToolButton(
             ConstructionTool.Core,
             CompactCoreToolText(presentation?.CoreToolText) ?? "Core",
             ToolButtonKind(ConstructionTool.Core),
             presentation?.CoreToolTooltip ?? "Attach sample core",
             presentation?.LockTopologyTools ?? false));
-        rail.AddChild(CreateToolButton(
+        rail.AddChild(CreateBuildToolButton(
             ConstructionTool.Delete,
             presentation?.DeleteToolText ?? "Delete",
             ToolButtonKind(ConstructionTool.Delete),
@@ -306,20 +309,33 @@ public partial class BuildScreen : Control
     private UiActionButton.ActionKind ToolButtonKind(ConstructionTool tool) =>
         Presentation?.ActiveTool == tool ? UiActionButton.ActionKind.Primary : UiActionButton.ActionKind.Secondary;
 
-    private UiActionButton CreateToolButton(ConstructionTool tool, string label, UiActionButton.ActionKind kind, string tooltip, bool locked)
+    private Button CreateBuildToolButton(ConstructionTool tool, string label, UiActionButton.ActionKind kind, string tooltip, bool locked)
     {
-        var button = CreateButton(label, kind, tooltip);
-        button.Locked = locked;
+        var active = kind == UiActionButton.ActionKind.Primary;
+        var button = new Button
+        {
+            Text = label.ToUpperInvariant(),
+            TooltipText = tooltip,
+            Disabled = locked,
+            CustomMinimumSize = new Vector2(_toolRailWidth, _toolButtonHeight),
+            SizeFlagsHorizontal = SizeFlags.ExpandFill,
+        };
+        button.AddThemeFontSizeOverride("font_size", 15);
+        button.AddThemeColorOverride("font_color", locked ? _tokens.Muted : _tokens.Ink);
+        button.AddThemeColorOverride("font_hover_color", _tokens.Ink);
+        button.AddThemeColorOverride("font_pressed_color", _tokens.Ink);
+        button.AddThemeColorOverride("font_disabled_color", _tokens.Muted);
+        button.AddThemeStyleboxOverride("normal", CreateToolStyle(active, locked));
+        button.AddThemeStyleboxOverride("hover", CreateToolStyle(true, locked));
+        button.AddThemeStyleboxOverride("pressed", CreateToolStyle(true, locked));
+        button.AddThemeStyleboxOverride("focus", CreateToolStyle(true, locked, 3));
+        button.AddThemeStyleboxOverride("disabled", CreateToolStyle(false, locked, opacity: 0.5f));
         if (locked)
         {
-            button.LockReason = tooltip;
-            button.ShowLockReasonInText = false;
-        }
-        else
-        {
-            button.Pressed += () => EmitSignal(SignalName.ToolRequested, (int)tool);
+            return button;
         }
 
+        button.Pressed += () => EmitSignal(SignalName.ToolRequested, (int)tool);
         return button;
     }
 
@@ -359,17 +375,6 @@ public partial class BuildScreen : Control
         };
         layout.AddChild(placeholder);
 
-        var topEdgeMask = MarkHostedInputPassthrough(new ColorRect
-        {
-            Color = _tokens.Background,
-            MouseFilter = MouseFilterEnum.Ignore,
-            AnchorRight = 1,
-            CustomMinimumSize = new Vector2(0, 4),
-        });
-        topEdgeMask.SetAnchorsAndOffsetsPreset(LayoutPreset.TopWide);
-        topEdgeMask.OffsetBottom = 4;
-        layout.AddChild(topEdgeMask);
-
         return panel;
     }
 
@@ -377,10 +382,10 @@ public partial class BuildScreen : Control
     {
         var buildPanel = Presentation?.BuildPanel ?? ConstructionBuildPanelPresentation.Sample;
         var panel = CreatePanel(raised: true);
-        panel.CustomMinimumSize = new Vector2(270, 0);
+        panel.CustomMinimumSize = new Vector2(320, 0);
         panel.SizeFlagsVertical = SizeFlags.ExpandFill;
 
-        var margin = CreateMargin(14);
+        var margin = CreateMargin(18);
         panel.AddChild(margin);
 
         var stack = new VBoxContainer
@@ -391,9 +396,9 @@ public partial class BuildScreen : Control
         stack.AddThemeConstantOverride("separation", 10);
         margin.AddChild(stack);
 
-        stack.AddChild(CreateLabel(ConstructionBuildPanelPresentation.Title, 15, _tokens.Muted));
+        stack.AddChild(CreateLabel(ConstructionBuildPanelPresentation.Title, 20, _tokens.Muted));
         stack.AddChild(CreateBrainPreview(buildPanel));
-        stack.AddChild(CreateLabel(BuildBrainCountLine(buildPanel), 14, _tokens.Muted));
+        stack.AddChild(CreateLabel(BuildBrainCountLine(buildPanel), 17, _tokens.Muted));
         stack.AddChild(CreateValidationLine(buildPanel));
         stack.AddChild(CreateSpacer());
         if (Presentation?.ShowRebuildAction == true)
@@ -405,9 +410,9 @@ public partial class BuildScreen : Control
         else
         {
             var startTraining = CreateButton(
-                "Start training",
+                "Save + train",
                 UiActionButton.ActionKind.Primary,
-                buildPanel.DisabledReason ?? "Start training with this anatomy");
+                buildPanel.DisabledReason ?? "Save this body and start training in Simulate");
             startTraining.Locked = !buildPanel.CanStartTraining;
             if (buildPanel.DisabledReason is not null)
             {
@@ -447,11 +452,11 @@ public partial class BuildScreen : Control
             ? "Ready to train"
             : ShortValidationText(buildPanel.DisabledReason ?? buildPanel.ValidationLine);
         var row = new HBoxContainer();
-        row.AddThemeConstantOverride("separation", 6);
-        var icon = CreateLabel(buildPanel.CanStartTraining ? "✓" : "⚠", 16, buildPanel.CanStartTraining ? _tokens.Accent : _tokens.Danger);
-        icon.CustomMinimumSize = new Vector2(22, 0);
+        row.AddThemeConstantOverride("separation", 8);
+        var icon = CreateLabel(buildPanel.CanStartTraining ? "✓" : "⚠", 20, buildPanel.CanStartTraining ? _tokens.Accent : _tokens.Danger);
+        icon.CustomMinimumSize = new Vector2(28, 0);
         row.AddChild(icon);
-        row.AddChild(CreateLabel(text, 15, buildPanel.CanStartTraining ? _tokens.Accent : _tokens.Danger, expand: true));
+        row.AddChild(CreateLabel(text, 18, buildPanel.CanStartTraining ? _tokens.Accent : _tokens.Danger, expand: true));
         return row;
     }
 
@@ -531,7 +536,7 @@ public partial class BuildScreen : Control
                 "Build anatomy to preview brain",
                 HorizontalAlignment.Left,
                 -1,
-                14,
+                17,
                 _tokens.Muted);
             return;
         }
@@ -651,20 +656,38 @@ public partial class BuildScreen : Control
         };
     }
 
-    private UiActionButton CreateModeButton(string label, bool active)
+    private Control CreateModeSwitch()
     {
-        var button = new UiActionButton
+        var frame = new HBoxContainer
         {
-            Tokens = _tokens,
-            Kind = active ? UiActionButton.ActionKind.Primary : UiActionButton.ActionKind.Secondary,
-            LabelText = label,
-            CustomMinimumSize = new Vector2(128, _tokens.TouchTarget),
+            CustomMinimumSize = new Vector2(0, _modeSwitchHeight),
         };
+        frame.AddThemeConstantOverride("separation", 0);
+        frame.AddChild(CreateModeSegment("▶  Simulate", active: false, first: true, last: false));
+        frame.AddChild(CreateModeSegment("✎  Build", active: true, first: false, last: true));
+        return frame;
+    }
+
+    private Button CreateModeSegment(string label, bool active, bool first, bool last)
+    {
+        var button = new Button
+        {
+            Text = label.ToUpperInvariant(),
+            CustomMinimumSize = new Vector2(148, _modeSwitchHeight),
+            Disabled = active,
+        };
+        button.AddThemeFontSizeOverride("font_size", 16);
+        button.AddThemeColorOverride("font_color", _tokens.Ink);
+        button.AddThemeColorOverride("font_disabled_color", _tokens.Ink);
+        button.AddThemeColorOverride("font_hover_color", _tokens.Ink);
+        button.AddThemeStyleboxOverride("normal", CreateSegmentStyle(active, first, last));
+        button.AddThemeStyleboxOverride("hover", CreateSegmentStyle(true, first, last));
+        button.AddThemeStyleboxOverride("pressed", CreateSegmentStyle(true, first, last));
+        button.AddThemeStyleboxOverride("disabled", CreateSegmentStyle(active, first, last));
         if (!active)
         {
             button.Pressed += () => EmitSignal(SignalName.SimulateRequested);
         }
-
         return button;
     }
 
@@ -677,6 +700,50 @@ public partial class BuildScreen : Control
             LabelText = label,
             TooltipText = tooltip,
             CustomMinimumSize = new Vector2(0, _tokens.TouchTarget),
+        };
+    }
+
+    private StyleBoxFlat CreateSegmentStyle(bool active, bool first, bool last)
+    {
+        var radius = (int)_tokens.Radius;
+        return new StyleBoxFlat
+        {
+            BgColor = active ? _tokens.AccentSoft : _tokens.PanelRaised,
+            BorderColor = active ? _tokens.Accent : _tokens.LineStrong,
+            BorderWidthLeft = 1,
+            BorderWidthTop = 1,
+            BorderWidthRight = last ? 1 : 0,
+            BorderWidthBottom = 1,
+            CornerRadiusTopLeft = first ? radius : 0,
+            CornerRadiusBottomLeft = first ? radius : 0,
+            CornerRadiusTopRight = last ? radius : 0,
+            CornerRadiusBottomRight = last ? radius : 0,
+            ContentMarginLeft = 12,
+            ContentMarginRight = 12,
+        };
+    }
+
+    private StyleBoxFlat CreateToolStyle(bool active, bool locked, int borderWidth = 1, float opacity = 1)
+    {
+        var radius = (int)_tokens.Radius;
+        var border = active ? _tokens.Accent : _tokens.LineStrong;
+        var alpha = opacity * (locked ? 0.5f : 1f);
+        return new StyleBoxFlat
+        {
+            BgColor = active
+                ? new Color(_tokens.AccentSoft.R, _tokens.AccentSoft.G, _tokens.AccentSoft.B, _tokens.AccentSoft.A * alpha)
+                : new Color(_tokens.PanelRaised.R, _tokens.PanelRaised.G, _tokens.PanelRaised.B, _tokens.PanelRaised.A * alpha),
+            BorderColor = new Color(border.R, border.G, border.B, border.A * alpha),
+            BorderWidthLeft = active ? 2 : borderWidth,
+            BorderWidthTop = active ? 2 : borderWidth,
+            BorderWidthRight = active ? 2 : borderWidth,
+            BorderWidthBottom = active ? 2 : borderWidth,
+            CornerRadiusTopLeft = radius,
+            CornerRadiusTopRight = radius,
+            CornerRadiusBottomLeft = radius,
+            CornerRadiusBottomRight = radius,
+            ContentMarginLeft = 2,
+            ContentMarginRight = 2,
         };
     }
 

@@ -27,6 +27,7 @@ public partial class Main : Node2D
     private ArenaBackdrop? _arenaBackdrop;
     private ColorRect? _buildModeBackdrop;
     private Button? _buildModeButton;
+    private PanelContainer? _hudPanel;
     private PanelContainer? _toolPanel;
     private Button? _placeToolButton;
     private Button? _beamToolButton;
@@ -762,6 +763,7 @@ public partial class Main : Node2D
         {
             Position = new Vector2(16, 16),
         };
+        _hudPanel = panel;
         panel.AddThemeStyleboxOverride("panel", CreateHudPanelStyle());
 
         var row = new HBoxContainer
@@ -1878,6 +1880,11 @@ public partial class Main : Node2D
                 if (_trainingPanel is not null)
                 {
                     _trainingPanel.Visible = !Construction.IsActive;
+                }
+
+                if (_hudPanel is not null)
+                {
+                    _hudPanel.Visible = !Construction.IsActive;
                 }
 
                 if (_simulateScreen is not null)

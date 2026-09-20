@@ -22,9 +22,9 @@ public sealed class UiTokens
     public Color Halo { get; init; }
     public Color OnAccent { get; init; }
     public Color Danger { get; init; }
-    public float Radius { get; init; } = 4;
-    public float TouchTarget { get; init; } = 48;
-    public float LabelFontSize { get; init; } = 16;
+    public float Radius { get; init; } = 8;
+    public float TouchTarget { get; init; } = 56;
+    public float LabelFontSize { get; init; } = 18;
     public bool EffectsEnabled { get; init; } = true;
 
     public static UiTokens Neon { get; } = new()
@@ -33,8 +33,8 @@ public sealed class UiTokens
         Panel = new Color(0.03f, 0.04f, 0.11f),
         PanelRaised = new Color(0.05f, 0.06f, 0.15f),
         Line = new Color(0.05f, 0.22f, 0.32f, 0.55f),
-        LineStrong = new Color(0.00f, 0.82f, 1.00f),
-        Edge = new Color(0.00f, 0.82f, 1.00f, 0.65f),
+        LineStrong = new Color(0.33f, 0.45f, 0.65f, 0.85f),
+        Edge = new Color(0.00f, 0.82f, 1.00f, 0.35f),
         Ink = new Color(0.92f, 0.95f, 1.00f),
         Muted = new Color(0.56f, 0.63f, 0.72f),
         Accent = new Color(0.00f, 0.95f, 0.82f),

@@ -103,9 +103,10 @@ public partial class UiActionButton : Button
         CustomMinimumSize = new Vector2(0, Tokens.TouchTarget);
         Disabled = Locked;
         AddThemeFontSizeOverride("font_size", (int)Tokens.LabelFontSize);
-        AddThemeColorOverride("font_color", Tokens.Ink);
-        AddThemeColorOverride("font_hover_color", Tokens.Ink);
-        AddThemeColorOverride("font_pressed_color", Tokens.Ink);
+        var textColor = Kind == ActionKind.Primary ? Tokens.OnAccent : Kind == ActionKind.Danger ? Tokens.Danger : Tokens.Ink;
+        AddThemeColorOverride("font_color", textColor);
+        AddThemeColorOverride("font_hover_color", textColor);
+        AddThemeColorOverride("font_pressed_color", textColor);
         AddThemeColorOverride("font_disabled_color", Tokens.Muted);
         if (!string.IsNullOrWhiteSpace(LabelText))
         {
@@ -124,7 +125,8 @@ public partial class UiActionButton : Button
 
     private string DisplayText()
     {
-        return Locked && ShowLockReasonInText ? $"{LabelText} · {LockReason}" : LabelText;
+        var text = Locked && ShowLockReasonInText ? $"{LabelText} · {LockReason}" : LabelText;
+        return text.ToUpperInvariant();
     }
 
     private StyleBoxFlat CreateStyle(bool focused, float opacity = 1)
@@ -134,9 +136,13 @@ public partial class UiActionButton : Button
         return new StyleBoxFlat
         {
             BgColor = Kind == ActionKind.Primary
-                ? new Color(color.R, color.G, color.B, 0.82f * opacity * opacityMultiplier)
-                : new Color(color.R, color.G, color.B, focused ? 0.18f * opacity * opacityMultiplier : 0.08f * opacity * opacityMultiplier),
-            BorderColor = new Color(color.R, color.G, color.B, opacity * opacityMultiplier),
+                ? new Color(color.R, color.G, color.B, opacity * opacityMultiplier)
+                : focused
+                    ? new Color(color.R, color.G, color.B, 0.18f * opacity * opacityMultiplier)
+                    : new Color(Tokens.PanelRaised.R, Tokens.PanelRaised.G, Tokens.PanelRaised.B, Tokens.PanelRaised.A * opacity * opacityMultiplier),
+            BorderColor = Kind == ActionKind.Primary
+                ? new Color(color.R, color.G, color.B, opacity * opacityMultiplier)
+                : new Color((Kind == ActionKind.Danger ? Tokens.Danger : Tokens.LineStrong).R, (Kind == ActionKind.Danger ? Tokens.Danger : Tokens.LineStrong).G, (Kind == ActionKind.Danger ? Tokens.Danger : Tokens.LineStrong).B, opacity * opacityMultiplier),
             BorderWidthLeft = 1,
             BorderWidthTop = 1,
             BorderWidthRight = 1,
