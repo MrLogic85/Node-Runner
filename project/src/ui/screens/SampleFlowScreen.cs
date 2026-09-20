@@ -24,6 +24,9 @@ public partial class SampleFlowScreen : Control
     private Control? _sampleView;
     private string? _lastDeletedCreation;
     private TrainingPresentationViewModel? _presentation;
+    private Godot.Timer? _activeHoldTimer;
+    private UiActionButton? _activeHoldButton;
+    private string _activeHoldLabel = string.Empty;
 
     public TrainingPresentationViewModel? Presentation
     {
@@ -330,6 +333,7 @@ public partial class SampleFlowScreen : Control
 
     private void CloseOverlays()
     {
+        CancelActiveHold();
         if (_overflowMenu is not null)
         {
             _overflowMenu.Hide();
@@ -342,6 +346,23 @@ public partial class SampleFlowScreen : Control
 
         _toast?.Hide();
         _sheet?.Hide();
+    }
+
+    private void CancelActiveHold()
+    {
+        if (_activeHoldTimer is not null)
+        {
+            _activeHoldTimer.Stop();
+        }
+
+        if (_activeHoldButton is not null && !string.IsNullOrEmpty(_activeHoldLabel))
+        {
+            _activeHoldButton.LabelText = _activeHoldLabel;
+        }
+
+        _activeHoldTimer = null;
+        _activeHoldButton = null;
+        _activeHoldLabel = string.Empty;
     }
 
     private void RefreshOverlayLayout()
@@ -396,7 +417,7 @@ public partial class SampleFlowScreen : Control
         stack.AddThemeConstantOverride("separation", 14);
         stack.AddChild(new Label
         {
-            Text = "This sample action would clear the current run. The real flow keeps an Undo window.",
+            Text = "Hold the reset action to clear the current run. An Undo window keeps the action recoverable.",
             AutowrapMode = TextServer.AutowrapMode.WordSmart,
         });
 
@@ -413,15 +434,36 @@ public partial class SampleFlowScreen : Control
         var confirm = new UiActionButton
         {
             Tokens = _tokens,
-            LabelText = "Confirm sample reset",
+            LabelText = "Hold to reset",
             Kind = UiActionButton.ActionKind.Danger,
         };
-        confirm.Pressed += () =>
+        var holdTimer = new Godot.Timer { OneShot = true, WaitTime = 1.2f };
+        _activeHoldTimer = holdTimer;
+        _activeHoldButton = confirm;
+        _activeHoldLabel = "Hold to reset";
+        holdTimer.Timeout += () =>
         {
+            _activeHoldTimer = null;
+            _activeHoldButton = null;
+            _activeHoldLabel = string.Empty;
             CloseOverlays();
             _lastDeletedCreation = "current sample run";
-            _toast?.ShowMessage("Sample only: run reset confirmed.", "Undo");
+            _toast?.ShowMessage("Sample only: run reset confirmed.", "Undo", 10);
         };
+        confirm.ButtonDown += () =>
+        {
+            confirm.LabelText = "Keep holding…";
+            holdTimer.Start();
+        };
+        confirm.ButtonUp += () =>
+        {
+            if (holdTimer.TimeLeft > 0)
+            {
+                holdTimer.Stop();
+                confirm.LabelText = "Hold to reset";
+            }
+        };
+        stack.AddChild(holdTimer);
         actions.AddChild(confirm);
         stack.AddChild(actions);
         return stack;
@@ -617,7 +659,7 @@ public partial class SampleFlowScreen : Control
         stack.AddThemeConstantOverride("separation", 12);
         stack.AddChild(new Label
         {
-            Text = $"Hold-to-confirm is represented here by an explicit confirmation. {name} and its training data would be removed.",
+            Text = $"Hold to delete {name} and its training data. Undo remains available for 10 seconds.",
             AutowrapMode = TextServer.AutowrapMode.WordSmart,
         });
         var actions = new HBoxContainer();
@@ -636,11 +678,17 @@ public partial class SampleFlowScreen : Control
             Kind = UiActionButton.ActionKind.Danger,
         };
         var holdTimer = new Godot.Timer { OneShot = true, WaitTime = 1.2f };
+        _activeHoldTimer = holdTimer;
+        _activeHoldButton = confirm;
+        _activeHoldLabel = "Hold to delete";
         holdTimer.Timeout += () =>
         {
+            _activeHoldTimer = null;
+            _activeHoldButton = null;
+            _activeHoldLabel = string.Empty;
             CloseOverlays();
             _lastDeletedCreation = name;
-            _toast?.ShowMessage($"Sample only: {name} deleted.", "Undo", 4);
+            _toast?.ShowMessage($"Sample only: {name} deleted.", "Undo", 10);
         };
         confirm.ButtonDown += () =>
         {
