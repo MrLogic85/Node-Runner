@@ -53,6 +53,16 @@ Major target decisions from that package:
 - Keep screens quiet: one focus at a time, one picture per idea, and details
   on tap rather than text-heavy dashboards.
 
+## Visual fidelity standard
+
+`reference design/` is visually binding on tokens, layout, typography/text
+styles, spacing, radius, stroke widths, dividers, glow, component proportions,
+and hierarchy. "Not pixel-perfect" only means Godot does not have to reproduce
+HTML/CSS rendering artifacts exactly across fonts, rasterization, and device
+scaling. It does **not** mean loose inspiration: visible deviations from the
+reference must be deliberate, documented in the PR/issue, or fixed before the
+milestone is considered done.
+
 ## Active screen concept
 
 The active target is the hub-and-spoke flow in `reference design/components/Navigation/README.md`:

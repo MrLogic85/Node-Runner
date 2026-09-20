@@ -60,7 +60,7 @@ public partial class UiIconButton : Button
         Text = IconText;
         TooltipText = AccessibleLabel;
         CustomMinimumSize = new Vector2(_tokens.TouchTarget, _tokens.TouchTarget);
-        AddThemeFontSizeOverride("font_size", (int)_tokens.LabelFontSize + 2);
+        _tokens.ApplyTextStyle(this, _tokens.HeadingText);
         AddThemeColorOverride("font_color", _tokens.Ink);
         AddThemeColorOverride("font_hover_color", _tokens.Accent);
         AddThemeColorOverride("font_pressed_color", _tokens.OnAccent);
@@ -85,10 +85,10 @@ public partial class UiIconButton : Button
             BorderWidthTop = borderWidth,
             BorderWidthRight = borderWidth,
             BorderWidthBottom = borderWidth,
-            CornerRadiusTopLeft = (int)_tokens.Radius,
-            CornerRadiusTopRight = (int)_tokens.Radius,
-            CornerRadiusBottomLeft = (int)_tokens.Radius,
-            CornerRadiusBottomRight = (int)_tokens.Radius,
+            CornerRadiusTopLeft = (int)_tokens.RadiusMedium,
+            CornerRadiusTopRight = (int)_tokens.RadiusMedium,
+            CornerRadiusBottomLeft = (int)_tokens.RadiusMedium,
+            CornerRadiusBottomRight = (int)_tokens.RadiusMedium,
         };
     }
 }

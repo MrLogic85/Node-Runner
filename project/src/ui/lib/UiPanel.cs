@@ -65,19 +65,7 @@ public partial class UiPanel : PanelContainer
     private StyleBoxFlat CreateStyle()
     {
         var border = State == PanelState.Danger ? Tokens.Danger : Tokens.LineStrong;
-        var borderWidth = State == PanelState.Focused ? 3 : 1;
-        return new StyleBoxFlat
-        {
-            BgColor = Raised ? Tokens.PanelRaised : Tokens.Panel,
-            BorderColor = border,
-            BorderWidthLeft = borderWidth,
-            BorderWidthTop = borderWidth,
-            BorderWidthRight = borderWidth,
-            BorderWidthBottom = borderWidth,
-            CornerRadiusTopLeft = (int)Tokens.Radius,
-            CornerRadiusTopRight = (int)Tokens.Radius,
-            CornerRadiusBottomLeft = (int)Tokens.Radius,
-            CornerRadiusBottomRight = (int)Tokens.Radius,
-        };
+        var borderWidth = State == PanelState.Focused ? Tokens.StrokeBeam : Tokens.StrokeHair;
+        return Tokens.PanelStyle(Raised, border, borderWidth);
     }
 }

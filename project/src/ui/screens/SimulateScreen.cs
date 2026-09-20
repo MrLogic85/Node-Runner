@@ -1274,7 +1274,7 @@ public partial class SimulateScreen : Control
 
     private StyleBoxFlat CreateSegmentStyle(bool active, bool first, bool last)
     {
-        var radius = (int)_tokens.Radius;
+        var radius = (int)_tokens.RadiusMedium;
         return new StyleBoxFlat
         {
             BgColor = active ? _tokens.AccentSoft : _tokens.PanelRaised,
@@ -1343,10 +1343,10 @@ public partial class SimulateScreen : Control
             BorderWidthTop = 1,
             BorderWidthRight = 1,
             BorderWidthBottom = 1,
-            CornerRadiusTopLeft = (int)_tokens.Radius,
-            CornerRadiusTopRight = (int)_tokens.Radius,
-            CornerRadiusBottomLeft = (int)_tokens.Radius,
-            CornerRadiusBottomRight = (int)_tokens.Radius,
+            CornerRadiusTopLeft = (int)_tokens.RadiusLarge,
+            CornerRadiusTopRight = (int)_tokens.RadiusLarge,
+            CornerRadiusBottomLeft = (int)_tokens.RadiusLarge,
+            CornerRadiusBottomRight = (int)_tokens.RadiusLarge,
         });
         return label;
     }

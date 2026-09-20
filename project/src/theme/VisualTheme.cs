@@ -1,4 +1,5 @@
 using Godot;
+using NodeRunner.Ui.Lib;
 
 namespace NodeRunner.Theme;
 
@@ -8,21 +9,27 @@ public sealed class VisualTheme
     {
     }
 
-    public static VisualTheme Neon { get; } = new()
+    public static VisualTheme Neon { get; } = FromTokens(UiTokens.Neon);
+
+    public static VisualTheme Paper { get; } = FromTokens(UiTokens.Paper);
+
+    public static VisualTheme FromTokens(UiTokens tokens) => new()
     {
-        ArenaBackground = new Color(0.02f, 0.03f, 0.09f),
-        ArenaGrid = new Color(0.05f, 0.22f, 0.32f, 0.55f),
-        GroundFill = new Color(0.03f, 0.10f, 0.13f),
-        GroundEdge = new Color(0.00f, 0.95f, 0.82f),
-        NodeFill = new Color(0.02f, 0.16f, 0.22f),
-        NodeGlow = new Color(0.00f, 0.92f, 1.00f),
-        SelectionGlow = new Color(1.00f, 0.90f, 0.15f, 0.72f),
-        CoreMarker = new Color(1.00f, 0.15f, 0.78f),
-        Beam = new Color(0.00f, 0.82f, 1.00f),
-        MotorAccent = new Color(1.00f, 0.18f, 0.72f),
-        BeamWidth = 6,
-        GroundEdgeWidth = 4,
-        GridSpacing = 48,
+        ArenaBackground = tokens.Background,
+        ArenaGrid = tokens.Line,
+        GroundFill = tokens.Panel,
+        GroundEdge = tokens.Accent,
+        NodeFill = tokens.PanelRaised,
+        NodeGlow = tokens.AccentGlow,
+        SelectionGlow = tokens.Halo,
+        CoreMarker = tokens.Accent,
+        Beam = tokens.LineStrong,
+        MotorAccent = tokens.Accent,
+        Danger = tokens.Danger,
+        BeamWidth = tokens.StrokeBeam,
+        MotorSignalWidth = tokens.StrokeSignal,
+        GroundEdgeWidth = tokens.StrokeSignal,
+        GridSpacing = tokens.TouchTarget,
     };
 
     public Color ArenaBackground { get; private init; }
@@ -45,7 +52,11 @@ public sealed class VisualTheme
 
     public Color MotorAccent { get; private init; }
 
+    public Color Danger { get; private init; }
+
     public float BeamWidth { get; private init; }
+
+    public float MotorSignalWidth { get; private init; }
 
     public float GroundEdgeWidth { get; private init; }
 

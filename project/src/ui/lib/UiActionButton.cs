@@ -102,7 +102,7 @@ public partial class UiActionButton : Button
 
         CustomMinimumSize = new Vector2(0, Tokens.TouchTarget);
         Disabled = Locked;
-        AddThemeFontSizeOverride("font_size", (int)Tokens.LabelFontSize);
+        Tokens.ApplyTextStyle(this, Tokens.LabelText);
         var textColor = Kind == ActionKind.Primary ? Tokens.OnAccent : Kind == ActionKind.Danger ? Tokens.Danger : Tokens.Ink;
         AddThemeColorOverride("font_color", textColor);
         AddThemeColorOverride("font_hover_color", textColor);
@@ -133,24 +133,14 @@ public partial class UiActionButton : Button
     {
         var color = Kind == ActionKind.Danger ? Tokens.Danger : Tokens.Accent;
         var opacityMultiplier = Locked ? 0.5f : 1f;
-        return new StyleBoxFlat
-        {
-            BgColor = Kind == ActionKind.Primary
-                ? new Color(color.R, color.G, color.B, opacity * opacityMultiplier)
-                : focused
-                    ? new Color(color.R, color.G, color.B, 0.18f * opacity * opacityMultiplier)
-                    : new Color(Tokens.PanelRaised.R, Tokens.PanelRaised.G, Tokens.PanelRaised.B, Tokens.PanelRaised.A * opacity * opacityMultiplier),
-            BorderColor = Kind == ActionKind.Primary
-                ? new Color(color.R, color.G, color.B, opacity * opacityMultiplier)
-                : new Color((Kind == ActionKind.Danger ? Tokens.Danger : Tokens.LineStrong).R, (Kind == ActionKind.Danger ? Tokens.Danger : Tokens.LineStrong).G, (Kind == ActionKind.Danger ? Tokens.Danger : Tokens.LineStrong).B, opacity * opacityMultiplier),
-            BorderWidthLeft = 1,
-            BorderWidthTop = 1,
-            BorderWidthRight = 1,
-            BorderWidthBottom = 1,
-            CornerRadiusTopLeft = (int)Tokens.Radius,
-            CornerRadiusTopRight = (int)Tokens.Radius,
-            CornerRadiusBottomLeft = (int)Tokens.Radius,
-            CornerRadiusBottomRight = (int)Tokens.Radius,
-        };
+        var background = Kind == ActionKind.Primary
+            ? UiTokens.WithAlpha(color, opacity * opacityMultiplier)
+            : focused
+                ? UiTokens.MultiplyAlpha(Kind == ActionKind.Danger ? UiTokens.WithAlpha(Tokens.Danger, Tokens.AccentSoft.A) : Tokens.AccentSoft, opacity * opacityMultiplier)
+                : UiTokens.MultiplyAlpha(Tokens.PanelRaised, opacity * opacityMultiplier);
+        var border = Kind == ActionKind.Primary
+            ? UiTokens.WithAlpha(color, opacity * opacityMultiplier)
+            : UiTokens.WithAlpha(Kind == ActionKind.Danger ? Tokens.Danger : Tokens.LineStrong, opacity * opacityMultiplier);
+        return Tokens.ControlStyle(background, border, glow: Kind == ActionKind.Primary && opacityMultiplier > 0.99f);
     }
 }

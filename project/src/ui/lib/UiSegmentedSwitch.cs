@@ -60,7 +60,7 @@ public partial class UiSegmentedSwitch : HBoxContainer
             child.QueueFree();
         }
 
-        AddThemeConstantOverride("separation", 4);
+        AddThemeConstantOverride("separation", (int)_tokens.Space1);
         for (var index = 0; index < _options.Length; index++)
         {
             var button = new Button
@@ -104,7 +104,7 @@ public partial class UiSegmentedSwitch : HBoxContainer
 
     private void StyleButton(Button button, bool selected)
     {
-        button.AddThemeFontSizeOverride("font_size", (int)_tokens.LabelFontSize);
+        _tokens.ApplyTextStyle(button, _tokens.LabelText);
         button.AddThemeColorOverride("font_color", selected ? _tokens.OnAccent : _tokens.Ink);
         button.AddThemeColorOverride("font_hover_color", _tokens.OnAccent);
         button.AddThemeStyleboxOverride("normal", CreateStyle(selected));
@@ -119,14 +119,14 @@ public partial class UiSegmentedSwitch : HBoxContainer
         {
             BgColor = selected ? _tokens.Accent : _tokens.Panel,
             BorderColor = _tokens.Edge,
-            BorderWidthLeft = 1,
-            BorderWidthTop = 1,
-            BorderWidthRight = 1,
-            BorderWidthBottom = 1,
-            CornerRadiusTopLeft = (int)_tokens.Radius,
-            CornerRadiusTopRight = (int)_tokens.Radius,
-            CornerRadiusBottomLeft = (int)_tokens.Radius,
-            CornerRadiusBottomRight = (int)_tokens.Radius,
+            BorderWidthLeft = (int)_tokens.StrokeHair,
+            BorderWidthTop = (int)_tokens.StrokeHair,
+            BorderWidthRight = (int)_tokens.StrokeHair,
+            BorderWidthBottom = (int)_tokens.StrokeHair,
+            CornerRadiusTopLeft = (int)_tokens.RadiusMedium,
+            CornerRadiusTopRight = (int)_tokens.RadiusMedium,
+            CornerRadiusBottomLeft = (int)_tokens.RadiusMedium,
+            CornerRadiusBottomRight = (int)_tokens.RadiusMedium,
         };
     }
 }
