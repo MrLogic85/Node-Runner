@@ -94,6 +94,22 @@ public sealed class NeuralNetworkTests
     }
 
     [Fact]
+    public void CaptureActivations_ReturnsInputHiddenAndOutputLayers()
+    {
+        var network = NeuralNetwork.FromGenome(
+            new[] { 2, 2, 1 },
+            new[] { 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, -1.0, 0.0 },
+            Activation.Tanh);
+
+        var activations = network.CaptureActivations(new[] { 0.25, -0.75 });
+
+        activations.Length.ShouldBe(3);
+        activations[0].ShouldBe(new[] { 0.25, -0.75 });
+        activations[1].ShouldBe(new[] { Math.Tanh(0.25), Math.Tanh(-0.75) }, tolerance: 0.000000000001);
+        activations[2][0].ShouldBe(Math.Tanh(Math.Tanh(0.25) - Math.Tanh(-0.75)), tolerance: 0.000000000001);
+    }
+
+    [Fact]
     public void FlattenGenome_UsesStableWeightsThenBiasesLayout()
     {
         var layers = new[] { 2, 2, 1 };

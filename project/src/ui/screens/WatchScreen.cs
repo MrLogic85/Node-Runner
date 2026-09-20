@@ -15,6 +15,7 @@ public partial class WatchScreen : Control
     private readonly List<Label> _signalBodies = new();
     private readonly List<ProgressBar> _sensorBars = new();
     private readonly List<ProgressBar> _motorBars = new();
+    private readonly List<Control> _inputPassthroughExceptions = new();
     private int _selectedSignalIndex = -1;
     private TrainingPresentationViewModel? _presentation;
     private SignalFlowPresentationViewModel? _signalFlow;
@@ -175,6 +176,7 @@ public partial class WatchScreen : Control
         _signalBodies.Clear();
         _sensorBars.Clear();
         _motorBars.Clear();
+        _inputPassthroughExceptions.Clear();
         _seesStatusLabel = null;
         _decidesStatusLabel = null;
         _twistsStatusLabel = null;
@@ -481,10 +483,30 @@ public partial class WatchScreen : Control
 
         if (ReadOnlyControls)
         {
-            var heading = CreateLabel(title, 13, _tokens.Muted);
-            heading.HorizontalAlignment = HorizontalAlignment.Center;
-            heading.CustomMinimumSize = new Vector2(0, 24);
-            stack.AddChild(heading);
+            if (index == 1)
+            {
+                var action = new UiActionButton
+                {
+                    Tokens = _tokens,
+                    Kind = UiActionButton.ActionKind.Secondary,
+                    LabelText = title,
+                    TooltipText = "Open BrainFocus for the live network.",
+                    CustomMinimumSize = new Vector2(0, _tokens.TouchTarget),
+                };
+                action.Pressed += () =>
+                {
+                    SelectSignal(index, detail);
+                };
+                _inputPassthroughExceptions.Add(action);
+                stack.AddChild(action);
+            }
+            else
+            {
+                var heading = CreateLabel(title, 13, _tokens.Muted);
+                heading.HorizontalAlignment = HorizontalAlignment.Center;
+                heading.CustomMinimumSize = new Vector2(0, 24);
+                stack.AddChild(heading);
+            }
         }
         else
         {
@@ -778,6 +800,11 @@ public partial class WatchScreen : Control
         foreach (var child in node.GetChildren())
         {
             ApplyInputPassthrough(child);
+        }
+
+        foreach (var exception in _inputPassthroughExceptions)
+        {
+            exception.MouseFilter = MouseFilterEnum.Stop;
         }
     }
 }

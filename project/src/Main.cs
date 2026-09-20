@@ -71,9 +71,15 @@ public partial class Main : Node2D
     private Label? _inspectorValues;
     private readonly MappingViewModel _mapping = new();
     private readonly SignalFlowPresentationViewModel _signalFlow = new();
+    private readonly BrainFocusPresentationViewModel _brainFocus = new();
     private readonly List<SensorReading> _sensorReadings = [];
     private readonly List<MotorReading> _motorReadings = [];
     private Button? _mappingToggleButton;
+    private CanvasLayer? _brainFocusLayer;
+    private Button? _brainFocusDismiss;
+    private UiSheet? _brainFocusSheet;
+    private Label? _brainFocusSummaryLabel;
+    private Label? _brainFocusSelectedLabel;
 
     // Sensor/motor mapping (#42) defaults to visible when nothing is
     // selected and steps aside for the inspector once something is (see
@@ -135,12 +141,14 @@ public partial class Main : Node2D
         Selection.PropertyChanged += OnSelectionPropertyChanged;
         Construction.PropertyChanged += OnConstructionPropertyChanged;
         Construction.AnatomyChanged += OnConstructionAnatomyChanged;
+        _brainFocus.PropertyChanged += OnBrainFocusChanged;
         AddBackdrop();
         AddGround();
         AddCamera();
         AddCreature();
         AddConstructionCanvas();
         AddWatchScreen();
+        AddBrainFocusOverlay();
         AddHud();
         AddInspector();
         AddEvolver();
@@ -231,6 +239,7 @@ public partial class Main : Node2D
         _mappingRefreshElapsed = 0;
         _creature.ReadMapping(_sensorReadings, _motorReadings);
         _signalFlow.Update(_sensorReadings, _motorReadings, _trainingPresentation.BestFitness, _trainingPresentation.MeanFitness);
+        _brainFocus.Update(_creature.Brain, _sensorReadings, _motorReadings);
         if (_showMapping)
         {
             _mapping.Update(_sensorReadings, _motorReadings);
@@ -512,7 +521,136 @@ public partial class Main : Node2D
             Visible = !Construction.IsActive,
         };
         _watchScreen.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
+        _watchScreen.BrainFocusRequested += ShowBrainFocus;
         watchLayer.AddChild(_watchScreen);
+    }
+
+    private void AddBrainFocusOverlay()
+    {
+        _brainFocusLayer = new CanvasLayer
+        {
+            Name = "BrainFocusOverlay",
+            Layer = 5,
+            ProcessMode = ProcessModeEnum.Always,
+            Visible = false,
+        };
+        AddChild(_brainFocusLayer);
+
+        _brainFocusDismiss = new Button
+        {
+            Name = "BrainFocusDismiss",
+            Flat = true,
+            Text = string.Empty,
+            MouseFilter = Control.MouseFilterEnum.Stop,
+        };
+        _brainFocusDismiss.Pressed += HideBrainFocus;
+        _brainFocusLayer.AddChild(_brainFocusDismiss);
+
+        _brainFocusSheet = new UiSheet
+        {
+            Name = "BrainFocusSheet",
+            Tokens = UiTokens.Neon,
+            Title = "BrainFocus · Decides",
+            CustomMinimumSize = new Vector2(540, 0),
+        };
+        _brainFocusLayer.AddChild(_brainFocusSheet);
+    }
+
+    private void ShowBrainFocus()
+    {
+        if (_brainFocusLayer is null || _brainFocusSheet is null)
+        {
+            return;
+        }
+
+        RefreshBrainFocusOverlayLayout();
+        _brainFocusSheet.SetBody(CreateBrainFocusBody());
+        UpdateBrainFocusLabels();
+        _brainFocusLayer.Show();
+    }
+
+    private void HideBrainFocus()
+    {
+        _brainFocusLayer?.Hide();
+    }
+
+    private Control CreateBrainFocusBody()
+    {
+        var stack = new VBoxContainer();
+        stack.AddThemeConstantOverride("separation", 10);
+
+        _brainFocusSummaryLabel = new Label
+        {
+            AutowrapMode = TextServer.AutowrapMode.WordSmart,
+        };
+        stack.AddChild(_brainFocusSummaryLabel);
+
+        stack.AddChild(new BrainFocusNetworkView
+        {
+            Tokens = UiTokens.Neon,
+            ViewModel = _brainFocus,
+            CustomMinimumSize = new Vector2(500, 220),
+            MouseFilter = Control.MouseFilterEnum.Stop,
+        });
+
+        _brainFocusSelectedLabel = new Label
+        {
+            AutowrapMode = TextServer.AutowrapMode.WordSmart,
+        };
+        stack.AddChild(_brainFocusSelectedLabel);
+
+        var close = new UiActionButton
+        {
+            Tokens = UiTokens.Neon,
+            Kind = UiActionButton.ActionKind.Primary,
+            LabelText = "Back to SignalFlow",
+        };
+        close.Pressed += HideBrainFocus;
+        stack.AddChild(close);
+
+        return stack;
+    }
+
+    private void OnBrainFocusChanged(object? sender, PropertyChangedEventArgs args)
+    {
+        UpdateBrainFocusLabels();
+    }
+
+    private void UpdateBrainFocusLabels()
+    {
+        if (_brainFocusSummaryLabel is not null)
+        {
+            _brainFocusSummaryLabel.Text = _brainFocus.HasNetwork
+                ? $"{_brainFocus.Summary}. Circles/solid cyan are positive; diamonds/dashed red are negative; stronger signals draw brighter/thicker."
+                : _brainFocus.Summary;
+        }
+
+        if (_brainFocusSelectedLabel is not null)
+        {
+            _brainFocusSelectedLabel.Text = $"{_brainFocus.SelectedNeuronLabel}: {_brainFocus.SelectedNeuronSummary}";
+        }
+    }
+
+    private void RefreshBrainFocusOverlayLayout()
+    {
+        if (_brainFocusLayer is null)
+        {
+            return;
+        }
+
+        var viewportSize = GetViewportRect().Size;
+        if (_brainFocusDismiss is not null)
+        {
+            _brainFocusDismiss.Position = Vector2.Zero;
+            _brainFocusDismiss.Size = viewportSize;
+        }
+
+        if (_brainFocusSheet is not null)
+        {
+            _brainFocusSheet.Position = new Vector2(
+                Mathf.Max(24, (viewportSize.X - _brainFocusSheet.CustomMinimumSize.X) / 2),
+                72);
+        }
     }
 
     // Base font size (Godot's default is 16px) and minimum touch target
