@@ -84,6 +84,13 @@ public partial class Main : Node2D
 
     public override void _Ready()
     {
+        if (ProjectSettings.GetSetting("ui/component_gallery", false).AsBool())
+        {
+            var gallery = GD.Load<PackedScene>("res://scenes/ui/ComponentGalleryScreen.tscn").Instantiate<ComponentGalleryScreen>();
+            AddChild(gallery);
+            return;
+        }
+
         if (ProjectSettings.GetSetting("ui/sample_preview", false).AsBool())
         {
             _trainingPresentation.Update(5, 3, 8, 12.8, 8.4, "Quick");
