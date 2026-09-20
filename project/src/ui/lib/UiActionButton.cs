@@ -50,6 +50,19 @@ public partial class UiActionButton : Button
         }
     }
 
+    private bool _showLockReasonInText = true;
+
+    [Export]
+    public bool ShowLockReasonInText
+    {
+        get => _showLockReasonInText;
+        set
+        {
+            _showLockReasonInText = value;
+            RefreshStyle();
+        }
+    }
+
     private string _labelText = string.Empty;
 
     [Export]
@@ -96,7 +109,7 @@ public partial class UiActionButton : Button
         AddThemeColorOverride("font_disabled_color", Tokens.Muted);
         if (!string.IsNullOrWhiteSpace(LabelText))
         {
-            Text = Locked ? $"{LabelText} · {LockReason}" : LabelText;
+            Text = DisplayText();
         }
         AddThemeStyleboxOverride("normal", CreateStyle(false));
         AddThemeStyleboxOverride("focus", CreateStyle(true));
@@ -107,6 +120,11 @@ public partial class UiActionButton : Button
         {
             TooltipText = LockReason;
         }
+    }
+
+    private string DisplayText()
+    {
+        return Locked && ShowLockReasonInText ? $"{LabelText} · {LockReason}" : LabelText;
     }
 
     private StyleBoxFlat CreateStyle(bool focused, float opacity = 1)

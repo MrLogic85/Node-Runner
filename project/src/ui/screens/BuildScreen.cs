@@ -1,15 +1,19 @@
 using Godot;
+using NodeRunner.App.ViewModels;
 using NodeRunner.Ui.Lib;
 
 namespace NodeRunner.Ui.Screens;
 
 /// <summary>
-/// Static Build shell using sample presentation data only. This scene does not
-/// bind to simulation, managers, or persistence.
+/// Build shell using sample presentation data by default, or injected App
+/// presentation state when hosted by the live game. This scene does not bind
+/// to simulation, managers, or persistence.
 /// </summary>
 public partial class BuildScreen : Control
 {
     private UiTokens _tokens = UiTokens.Neon;
+    private ConstructionPresentationViewModel? _presentation;
+    private bool _isSubscribedToPresentation;
 
     [Export]
     public bool ShowTopBar { get; set; } = true;
@@ -33,6 +37,27 @@ public partial class BuildScreen : Control
         }
     }
 
+    public ConstructionPresentationViewModel? Presentation
+    {
+        get => _presentation;
+        set
+        {
+            UnsubscribeFromPresentation();
+            _presentation = value;
+
+            if (IsInsideTree())
+            {
+                SubscribeToPresentation();
+                RebuildLayout();
+            }
+        }
+    }
+
+    public override void _EnterTree()
+    {
+        SubscribeToPresentation();
+    }
+
     public override void _Ready()
     {
         Name = nameof(BuildScreen);
@@ -44,6 +69,11 @@ public partial class BuildScreen : Control
         RebuildLayout();
     }
 
+    public override void _ExitTree()
+    {
+        UnsubscribeFromPresentation();
+    }
+
     private void RebuildLayout()
     {
         foreach (var child in GetChildren())
@@ -53,6 +83,36 @@ public partial class BuildScreen : Control
         }
 
         BuildLayout();
+    }
+
+    private void OnPresentationChanged(object? sender, EventArgs eventArgs)
+    {
+        if (IsInsideTree())
+        {
+            RebuildLayout();
+        }
+    }
+
+    private void SubscribeToPresentation()
+    {
+        if (_presentation is null || _isSubscribedToPresentation)
+        {
+            return;
+        }
+
+        _presentation.PresentationChanged += OnPresentationChanged;
+        _isSubscribedToPresentation = true;
+    }
+
+    private void UnsubscribeFromPresentation()
+    {
+        if (_presentation is null || !_isSubscribedToPresentation)
+        {
+            return;
+        }
+
+        _presentation.PresentationChanged -= OnPresentationChanged;
+        _isSubscribedToPresentation = false;
     }
 
     private void BuildLayout()
@@ -175,6 +235,7 @@ public partial class BuildScreen : Control
 
     private Control CreateBrainPanel()
     {
+        var buildPanel = Presentation?.BuildPanel ?? ConstructionBuildPanelPresentation.Sample;
         var panel = CreatePanel(raised: false);
         panel.CustomMinimumSize = new Vector2(280, 0);
         panel.SizeFlagsVertical = SizeFlags.ExpandFill;
@@ -190,14 +251,26 @@ public partial class BuildScreen : Control
         stack.AddThemeConstantOverride("separation", 12);
         margin.AddChild(stack);
 
-        stack.AddChild(CreateLabel("Brain it will get", 20, _tokens.Ink));
-        stack.AddChild(CreateInfoCard("Inputs", "2 cores · 6 sensor values"));
-        stack.AddChild(CreateInfoCard("Motor relations", "3 joints can twist"));
-        stack.AddChild(CreateInfoCard("Validation", "Ready: at least one core and one motor relation"));
-        stack.AddChild(CreateInfoCard("Teaching note", "Sees sensor values, decides joint targets, twists beams, then scores distance."));
+        stack.AddChild(CreateLabel(ConstructionBuildPanelPresentation.Title, 20, _tokens.Ink));
+        stack.AddChild(CreateInfoCard("Inputs", buildPanel.InputSummary));
+        stack.AddChild(CreateInfoCard("Motor relations", buildPanel.MotorRelationSummary));
+        stack.AddChild(CreateInfoCard("Validation", buildPanel.ValidationLine));
+        stack.AddChild(CreateInfoCard("Teaching note", ConstructionBuildPanelPresentation.TeachingNote));
         stack.AddChild(CreateSpacer());
-        var startTraining = CreateButton("Start training", UiActionButton.ActionKind.Primary, "Sample route to Watch");
-        startTraining.Pressed += () => EmitSignal(SignalName.TrainingRequested);
+        var startTraining = CreateButton(
+            "Start training",
+            UiActionButton.ActionKind.Primary,
+            buildPanel.DisabledReason ?? "Start training with this anatomy");
+        startTraining.Locked = !buildPanel.CanStartTraining;
+        if (buildPanel.DisabledReason is not null)
+        {
+            startTraining.ShowLockReasonInText = false;
+            startTraining.LockReason = buildPanel.DisabledReason;
+        }
+        if (buildPanel.CanStartTraining)
+        {
+            startTraining.Pressed += () => EmitSignal(SignalName.TrainingRequested);
+        }
         stack.AddChild(startTraining);
 
         return panel;
