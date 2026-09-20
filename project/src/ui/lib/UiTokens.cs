@@ -8,6 +8,12 @@ namespace NodeRunner.Ui.Lib;
 /// </summary>
 public sealed class UiTokens
 {
+    private const string _barlowRegularPath = "res://assets/fonts/Barlow/Barlow-Regular.ttf";
+    private const string _barlowMediumPath = "res://assets/fonts/Barlow/Barlow-Medium.ttf";
+    private const string _chakraPetchSemiBoldPath = "res://assets/fonts/ChakraPetch/ChakraPetch-SemiBold.ttf";
+    private const string _jetBrainsMonoRegularPath = "res://assets/fonts/JetBrainsMono/JetBrainsMono-Regular.ttf";
+    private const string _jetBrainsMonoMediumPath = "res://assets/fonts/JetBrainsMono/JetBrainsMono-Medium.ttf";
+
     public enum FontFamily
     {
         Display,
@@ -165,6 +171,11 @@ public sealed class UiTokens
     {
         control.AddThemeFontSizeOverride("font_size", (int)style.FontSize);
         control.AddThemeConstantOverride("line_spacing", (int)Math.Max(0, style.LineHeight - style.FontSize));
+        if (TryLoadFont(style, out var font))
+        {
+            control.AddThemeFontOverride("font", font);
+        }
+
         control.SetMeta("ui_font_family", style.Family.ToString());
         control.SetMeta("ui_line_height", style.LineHeight);
         control.SetMeta("ui_font_weight", style.FontWeight);
@@ -189,6 +200,20 @@ public sealed class UiTokens
             button.Text = button.Text.ToUpperInvariant();
         }
     }
+
+    private static bool TryLoadFont(TextStyle style, out Font font)
+    {
+        font = GD.Load<Font>(FontPathFor(style));
+        return font is not null;
+    }
+
+    private static string FontPathFor(TextStyle style) =>
+        style.Family switch
+        {
+            FontFamily.Display => _chakraPetchSemiBoldPath,
+            FontFamily.Mono => style.FontWeight >= 500 ? _jetBrainsMonoMediumPath : _jetBrainsMonoRegularPath,
+            _ => style.FontWeight >= 500 ? _barlowMediumPath : _barlowRegularPath,
+        };
 
     public StyleBoxFlat PanelStyle(
         bool raised = false,

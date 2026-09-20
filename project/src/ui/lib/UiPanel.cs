@@ -64,7 +64,12 @@ public partial class UiPanel : PanelContainer
 
     private StyleBoxFlat CreateStyle()
     {
-        var border = State == PanelState.Danger ? Tokens.Danger : Tokens.LineStrong;
+        var border = State switch
+        {
+            PanelState.Danger => Tokens.Danger,
+            PanelState.Focused => Tokens.LineStrong,
+            _ => Tokens.Edge,
+        };
         var borderWidth = State == PanelState.Focused ? Tokens.StrokeBeam : Tokens.StrokeHair;
         return Tokens.PanelStyle(Raised, border, borderWidth);
     }
