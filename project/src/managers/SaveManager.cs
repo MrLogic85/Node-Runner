@@ -1,5 +1,6 @@
 using Godot;
 using NodeRunner.App.Repositories;
+using NodeRunner.App.Services;
 using NodeRunner.Domain;
 
 namespace NodeRunner.Managers;
@@ -9,11 +10,13 @@ public partial class SaveManager : Node
 {
     private ICreationRepository? _repository;
     private IProgressionRepository? _progressionRepository;
+    private ICreationUpdateCoordinator? _updateCoordinator;
 
     public override void _Ready()
     {
         var directory = ProjectSettings.GlobalizePath("user://creations");
         _repository = new FileCreationRepository(new GodotStorageLocation(directory));
+        _updateCoordinator = new CreationUpdateCoordinator(_repository);
         var progressionDirectory = ProjectSettings.GlobalizePath("user://progression");
         _progressionRepository = new FileProgressionRepository(new GodotStorageLocation(progressionDirectory));
     }
@@ -28,21 +31,30 @@ public partial class SaveManager : Node
         Repository.Save(creation);
     }
 
-    public bool Delete(Guid id)
-    {
-        return Repository.Delete(id);
-    }
+    // Delete/ResetTraining/ApplyCreatureEdit/UpdateIfPresent/
+    // CurrentTrainingEpoch/TryPersistTraining all delegate to
+    // UpdateCoordinator, which serializes mutations per Creation id and
+    // invalidates queued background training snapshots (see #113) that a
+    // reset, edit, or delete has superseded.
+    public bool Delete(Guid id) => UpdateCoordinator.Delete(id);
 
     public CreationDef? Get(Guid id)
     {
         return Repository.Get(id);
     }
 
-    public void ResetTraining(Guid id)
-    {
-        var source = Repository.Get(id) ?? throw new InvalidOperationException($"Creation '{id}' was not found.");
-        Repository.Save(new CreationDef(source.Id, source.Name, source.Creature));
-    }
+    public CreationDef? ApplyCreatureEdit(Guid id, CreatureDef editedCreature) =>
+        UpdateCoordinator.ApplyCreatureEdit(id, editedCreature);
+
+    public void ResetTraining(Guid id) => UpdateCoordinator.ResetTraining(id);
+
+    public long CurrentTrainingEpoch(Guid id) => UpdateCoordinator.CurrentTrainingEpoch(id);
+
+    public bool TryPersistTraining(Guid id, long expectedEpoch, TrainingStateDef training) =>
+        UpdateCoordinator.TryPersistTraining(id, expectedEpoch, training);
+
+    public CreationDef? UpdateIfPresent(Guid id, Func<CreationDef, CreationDef> update) =>
+        UpdateCoordinator.UpdateIfPresent(id, update);
 
     public ProgressionDef Progression => ProgressionRepository.Load();
 
@@ -71,6 +83,9 @@ public partial class SaveManager : Node
 
     private IProgressionRepository ProgressionRepository =>
         _progressionRepository ?? throw new InvalidOperationException("SaveManager is not ready.");
+
+    private ICreationUpdateCoordinator UpdateCoordinator =>
+        _updateCoordinator ?? throw new InvalidOperationException("SaveManager is not ready.");
 
     private sealed class GodotStorageLocation(string directoryPath) : IStorageLocation
     {

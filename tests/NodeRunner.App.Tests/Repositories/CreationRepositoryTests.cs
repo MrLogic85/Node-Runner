@@ -73,6 +73,41 @@ public sealed class CreationRepositoryTests
     }
 
     [Fact]
+    public void File_ConcurrentSaves_NeverLeaveACorruptOrMissingFile()
+    {
+        // Regression guard for #113: persistence now runs off the main
+        // thread, so overlapping writers must not corrupt the shared
+        // `.tmp` write-then-rename sequence for the same Creation id.
+        var directory = Path.Combine(Path.GetTempPath(), $"node-runner-{Guid.NewGuid():N}");
+        try
+        {
+            var repository = new FileCreationRepository(new TestStorageLocation(directory));
+            var creation = CreateCreation("Concurrent");
+
+            Parallel.For(0, 16, i =>
+            {
+                var withGeneration = new CreationDef(
+                    creation.Id,
+                    creation.Name,
+                    creation.Creature,
+                    new TrainingStateDef(creation.Training!.LayerSizes, creation.Training.BestGenome, i, "Tanh"));
+                repository.Save(withGeneration);
+            });
+
+            var result = repository.Get(creation.Id);
+            result.ShouldNotBeNull();
+            result.Training!.Generation.ShouldBeInRange(0, 15);
+        }
+        finally
+        {
+            if (Directory.Exists(directory))
+            {
+                Directory.Delete(directory, recursive: true);
+            }
+        }
+    }
+
+    [Fact]
     public void File_DeleteMissingCreation_ReturnsFalse()
     {
         var directory = Path.Combine(Path.GetTempPath(), $"node-runner-{Guid.NewGuid():N}");
