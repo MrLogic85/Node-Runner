@@ -29,6 +29,7 @@ public partial class Main : Node2D
     private Button? _beamToolButton;
     private Button? _coreToolButton;
     private Button? _deleteToolButton;
+    private Label? _editLockReasonLabel;
     private Button? _completeButton;
     private Button? _rebuildButton;
     private PanelContainer? _buildInfoPanel;
@@ -932,7 +933,7 @@ public partial class Main : Node2D
 
         var rail = new VBoxContainer
         {
-            CustomMinimumSize = new Vector2(220, 0),
+            CustomMinimumSize = new Vector2(330, 0),
         };
         rail.AddThemeConstantOverride("separation", 10);
 
@@ -950,6 +951,15 @@ public partial class Main : Node2D
         _deleteToolButton = CreateToolButton("DeleteToolButton", "Delete");
         _deleteToolButton.Pressed += () => Construction.ActiveTool = ConstructionTool.Delete;
 
+        _editLockReasonLabel = new Label
+        {
+            Visible = false,
+            AutowrapMode = TextServer.AutowrapMode.WordSmart,
+            CustomMinimumSize = new Vector2(300, 0),
+        };
+        _editLockReasonLabel.AddThemeColorOverride("font_color", _theme.GroundEdge);
+        _editLockReasonLabel.AddThemeFontSizeOverride("font_size", 20);
+
         _completeButton = CreateToolButton("CompleteButton", "Complete");
         _completeButton.Pressed += CompleteCreation;
         _rebuildButton = CreateToolButton("RebuildButton", "Rebuild");
@@ -959,6 +969,7 @@ public partial class Main : Node2D
         rail.AddChild(_beamToolButton);
         rail.AddChild(_coreToolButton);
         rail.AddChild(_deleteToolButton);
+        rail.AddChild(_editLockReasonLabel);
         rail.AddChild(_completeButton);
         rail.AddChild(_rebuildButton);
         panel.AddChild(rail);
@@ -1022,7 +1033,7 @@ public partial class Main : Node2D
         {
             Name = name,
             Text = text,
-            CustomMinimumSize = new Vector2(200, _touchTargetHeight),
+            CustomMinimumSize = new Vector2(300, _touchTargetHeight),
         };
         button.AddThemeFontSizeOverride("font_size", _hudFontSize);
         return button;
@@ -1302,24 +1313,38 @@ public partial class Main : Node2D
     private void UpdateToolButtonVisibility()
     {
         var presentation = ConstructionPresentation;
-        var visible = presentation.ShowConstructionTools;
         if (_placeToolButton is not null)
         {
-            _placeToolButton.Visible = visible;
+            _placeToolButton.Visible = true;
+            _placeToolButton.Disabled = false;
+            _placeToolButton.Text = presentation.PlaceToolText;
+            _placeToolButton.TooltipText = ConstructionPresentationViewModel.ToolHint(ConstructionTool.Place);
         }
         if (_beamToolButton is not null)
         {
-            _beamToolButton.Visible = visible;
+            _beamToolButton.Visible = true;
+            _beamToolButton.Disabled = presentation.LockTopologyTools;
+            _beamToolButton.Text = presentation.BeamToolText;
+            _beamToolButton.TooltipText = presentation.LockTopologyTools ? presentation.MoveOnlyLockReason : ConstructionPresentationViewModel.ToolHint(ConstructionTool.Beam);
         }
         if (_coreToolButton is not null)
         {
-            _coreToolButton.Visible = visible;
+            _coreToolButton.Visible = true;
+            _coreToolButton.Disabled = presentation.LockTopologyTools;
             _coreToolButton.Text = presentation.CoreToolText;
             _coreToolButton.TooltipText = presentation.CoreToolTooltip;
         }
         if (_deleteToolButton is not null)
         {
-            _deleteToolButton.Visible = visible;
+            _deleteToolButton.Visible = true;
+            _deleteToolButton.Disabled = presentation.LockTopologyTools;
+            _deleteToolButton.Text = presentation.DeleteToolText;
+            _deleteToolButton.TooltipText = presentation.LockTopologyTools ? presentation.MoveOnlyLockReason : ConstructionPresentationViewModel.ToolHint(ConstructionTool.Delete);
+        }
+        if (_editLockReasonLabel is not null)
+        {
+            _editLockReasonLabel.Visible = presentation.LockTopologyTools;
+            _editLockReasonLabel.Text = presentation.LockedTopologyToolsText;
         }
         if (_completeButton is not null)
         {

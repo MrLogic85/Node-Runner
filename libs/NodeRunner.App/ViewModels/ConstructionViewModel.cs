@@ -41,6 +41,11 @@ public sealed class ConstructionViewModel : INotifyPropertyChanged
         ArgumentNullException.ThrowIfNull(creature);
         _builder = new CreatureBuilder(creature);
         _moveOnly = moveOnly;
+        if (moveOnly)
+        {
+            ActiveTool = ConstructionTool.Place;
+        }
+
         PendingBeamStartNode = null;
         StatusMessage = null;
         AnatomyChanged?.Invoke(this, EventArgs.Empty);

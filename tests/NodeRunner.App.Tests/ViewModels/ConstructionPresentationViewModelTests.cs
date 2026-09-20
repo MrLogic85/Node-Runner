@@ -44,7 +44,7 @@ public sealed class ConstructionPresentationViewModelTests
     }
 
     [Fact]
-    public void EditMode_HidesTopologyToolsAndShowsRebuildAction()
+    public void EditMode_LocksTopologyToolsAndShowsRebuildAction()
     {
         var construction = new ConstructionViewModel();
         construction.Load(
@@ -55,7 +55,15 @@ public sealed class ConstructionPresentationViewModelTests
             moveOnly: true);
         var presentation = new ConstructionPresentationViewModel(construction);
 
-        presentation.ShowConstructionTools.ShouldBeFalse();
+        presentation.PlaceToolText.ShouldBe("Move");
+        presentation.LockTopologyTools.ShouldBeTrue();
+        presentation.LockedTopologyToolsText.ShouldBe("Beam, Core, Delete locked: Move only · training kept");
+        presentation.BeamToolText.ShouldBe("Beam · locked");
+        presentation.CoreToolText.ShouldBe("Core · locked");
+        presentation.CoreToolTooltip.ShouldBe("Move only · training kept");
+        presentation.DeleteToolText.ShouldBe("Delete · locked");
+        presentation.InspectorRole.ShouldBe("Tool: Move");
+        presentation.InspectorValues.ShouldBe("Drag an existing node to reposition it. Training is kept.");
         presentation.ShowCompleteAction.ShouldBeFalse();
         presentation.ShowRebuildAction.ShouldBeTrue();
     }
@@ -66,7 +74,10 @@ public sealed class ConstructionPresentationViewModelTests
         var construction = new ConstructionViewModel();
         var presentation = new ConstructionPresentationViewModel(construction);
 
-        presentation.ShowConstructionTools.ShouldBeTrue();
+        presentation.PlaceToolText.ShouldBe("Place");
+        presentation.LockTopologyTools.ShouldBeFalse();
+        presentation.BeamToolText.ShouldBe("Beam");
+        presentation.DeleteToolText.ShouldBe("Delete");
         presentation.ShowCompleteAction.ShouldBeTrue();
         presentation.ShowRebuildAction.ShouldBeFalse();
     }
