@@ -55,6 +55,8 @@ the PR.
 
 Authoritative sources:
 
+- `reference design/` for the detailed product UI target, including component
+  READMEs, previews, tokens, and design-system JSON
 - `docs/UI_DIRECTION.md` for product feel, visual language, theme boundaries,
   accessibility/readability rules, and non-goals
 - `docs/UI_IMPLEMENTATION_PLAN.md` and
@@ -64,19 +66,18 @@ Authoritative sources:
 
 Optional supplied evidence:
 
-- `claude_design_example_design/`, screenshots, recordings, or other design
-  references attached to the issue/PR when they are the active look-and-feel
-  input. These are review inputs, not durable repository authority; if the
-  reference is not in the clone, attach or link it in the PR.
+- Screenshots, recordings, or additional design references attached to the
+  issue/PR. These can clarify intent, but they do not override the tracked
+  `reference design/` package unless a human explicitly records that change.
 
 Judge the experience, not just the code. Check whether the screen/control:
 
 - Looks intentional and polished enough for the current milestone
 - Feels intuitive on Android touch: clear affordances, no dead controls,
   readable labels, and sensible primary/secondary actions
-- Follows the design example's layout, spacing, contrast, rhythm, corner
-  radius, dividers, glow, and visual hierarchy closely enough without becoming
-  pixel-perfect
+- Follows `reference design/` and the relevant component README's layout,
+  spacing, contrast, rhythm, corner radius, dividers, glow, and visual
+  hierarchy closely enough without becoming pixel-perfect
 - Preserves Node Runner's neon learning-lab identity and the issue's teaching
   goal
 - Uses state indicators that do not rely on color alone

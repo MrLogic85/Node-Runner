@@ -1,0 +1,5 @@
+The control kit. All targets are 48px in the 640 x 360 canvas (a 40px button sits in a 48px row); icon buttons are 48 square with a 44px visible box.
+
+One `primary` (`accent` fill, `on-accent` text, `glow` shadow) per surface. Everything else is `panel-raised` with a `line-strong` border. Destructive is `danger` outline plus a word, and irreversible ones use hold-to-confirm. The **segmented** Train / Simulate switch (on Train setup) is the only mode switch; the active side is filled and its label is bold upper case. **Tools** (Move, Beam, Select, and draggable part tools from the tray) show an icon and a label; the active tool has an `accent` border and wash, a locked one is dashed with a lock. Disabled controls sit at 50% and must say why in a nearby line.
+
+Focus is a solid 3px `accent` ring with a 2px offset, always visible. Nothing depends on hover: every affordance is on screen or reachable by long-press with a visible cue.

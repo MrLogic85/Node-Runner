@@ -9,6 +9,33 @@ Time estimates assume evening/weekend hobby pace and are rough.
 
 ---
 
+## Current UI rollout — reference design adoption
+
+The tracked package in `reference design/` is now the app's detailed UI target.
+It introduces a larger product-shape change than the original milestone
+sequence: Creations becomes the home hub, Build is only for new unsaved
+anatomy, saved Creation screens lock structure and preserve training, Training
+is reached through Train setup, and Achievements unlock parts and maps.
+
+Implementation is tracked in the current GitHub milestones:
+
+- **0.10.0** — adopt the new reference design, remove the old design example,
+  and establish tokens/shell/primitives (#186, #187, #188).
+- **0.11.0** — implement the core Creation flow: Creations hub, Build-only new
+  anatomy, Brain setup, saved Creation, and Part settings (#189-#193).
+- **0.12.0** — implement Training and explanation surfaces: Train setup,
+  Training arena, SignalFlow, Brain/BrainScale, and Stats (#194-#198).
+- **0.13.0** — implement unlocks and polish: Achievements, safe overlays,
+  paper/effects-lite, and vocabulary/model alignment (#199-#202).
+
+`docs/UI_IMPLEMENTATION_PLAN.md` owns the implementation order and acceptance
+gates. `docs/UI_COMPONENTS_AND_FLOW.md` owns the durable screen/component
+inventory. Older milestone text below remains historical context for how the
+current prototype arrived here; the reference-design rollout is the active UI
+plan.
+
+---
+
 ## 0.1.0 — "Ryckningar" (Twitches)
 
 **Goal:** Prove the stack works end-to-end.

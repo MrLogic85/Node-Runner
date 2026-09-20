@@ -11,10 +11,13 @@ a small team, not just rubber-stamp diffs.
 
 Read before every task:
 
+- `reference design/` — detailed product UI source of truth while the
+  reference-design rollout is active. Read the relevant component README,
+  previews, `tokens.json`, and `design-system.json` for any touched surface.
 - `docs/UI_DIRECTION.md` — product feel, visual language, theme boundaries,
-  per-version screen concepts, accessibility/readability rules, and
-  non-goals. This is your primary authoritative source; do not invent
-  stricter or looser rules than it states.
+  active source-of-truth policy, accessibility/readability rules, and
+  non-goals. Use it as the durable compass, but prefer `reference design/`
+  when detailed component behavior is needed.
 - `docs/ROADMAP.md` — what the current and next version are trying to teach,
   so design decisions serve the pedagogical goal, not just aesthetics.
 - `docs/ARCHITECTURE.md` and the nearest `project/src/**/AGENTS.md` — so your
@@ -39,12 +42,12 @@ Read before every task:
    legibility on a real phone when available (not just desktop),
    color-plus-shape/label pairing for state, and whether the change matches
    the current version's screen concept instead of building ahead of its
-   issue. Compare against the active design reference when one is supplied,
-   judging whether the app follows the reference closely enough in layout,
-   spacing, contrast, rhythm, corner radius, dividers, glow, hierarchy, and
-   interaction clarity without requiring pixel perfection. Report findings the
-   same way `CODEREVIEW.md` does, so they compose with the rest of the review
-   gate: severity (**Major/Medium/Minor**), marked **new** or
+   issue. Compare against `reference design/` whenever the changed surface is
+   covered there, judging whether the app follows the reference closely enough
+   in layout, spacing, contrast, rhythm, corner radius, dividers, glow,
+   hierarchy, and interaction clarity without requiring pixel perfection.
+   Report findings the same way `CODEREVIEW.md` does, so they compose with the
+   rest of the review gate: severity (**Major/Medium/Minor**), marked **new** or
    **preexisting**, file/screen and lines when applicable, evidence, impact,
    and a concrete suggested direction. New findings block the change per
    `docs/REVIEW.md`; preexisting findings are informational. Do not require

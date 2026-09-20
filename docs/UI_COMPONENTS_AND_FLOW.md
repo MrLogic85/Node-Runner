@@ -1,191 +1,177 @@
 # UI component kit and screen flow
 
-This is the design-first implementation contract for the supplied design
-specification. It deliberately comes before adapting the current game HUD.
-The existing simulation and persistence remain behind the future screen
-contracts until the kit and flow are stable.
+This document is the durable repository summary of `reference design/`. It is
+an index and implementation map, not a replacement for the design files. The
+component READMEs under `reference design/components/*/README.md` carry the
+detailed behavior for each screen/control; implementers must read the relevant
+README before changing that surface. When this document and the design package
+disagree, treat the design package as the more detailed source and update this
+summary.
 
-## Component inventory
+The app is organized around **Creations**. There is no persistent global
+Build/Simulate mode switch in the final target flow.
 
-### Global primitives
+## Target navigation flow
 
-These controls are app-agnostic and belong under `project/src/ui/lib/`:
+```text
+Creations
+  |-- + New -> Build -> Save -> Creation
+  |-- card/Edit -> Creation
+  |-- Copy/Delete -> toast/sheet -> Creations
+  |-- Achievements
 
-| Component | Purpose | States |
-| --- | --- | --- |
-| `UiPanel` | Token-backed surface with edge line and optional raised treatment | normal, focused, danger |
-| `UiActionButton` | Touch-safe verb action | primary, secondary, danger, disabled, locked |
-| `UiIconButton` | 48x48 icon action | normal, focused, disabled |
-| `UiSegmentedSwitch` | Simulate/Build mode choice | selected, unselected, disabled |
-| `UiToolButton` | Icon + label tool action | active, idle, locked |
-| `UiSheet` | Dimmed modal surface for risky/notable moments | open, closing |
-| `UiToast` | Temporary saved/undo/unlock feedback | visible, dismissing |
-| `UiReadout` | Monospace changing number | normal, emphasis |
-| `UiOverflowMenu` | Touch-safe menu for rare and destructive actions | open, dismissed |
+Creation
+  |-- Train/Resume -> Train setup -> Training
+  |-- Brain -> Brain / BrainScale
+  |-- Stats
+  |-- overflow -> Reset training / Delete creation
 
-All interactive controls expose a minimum 48 logical-pixel hit row, visible
-focus, and a text label or lock reason. No state is conveyed by colour alone.
+Training
+  |-- Back -> Creation (paused/saved)
+  |-- Brain -> Brain / BrainScale
+  |-- Stats
+```
 
-### Domain widgets
+Back always returns exactly one step. Training's Back returns to Creation and
+leaves training paused/saved. Overlays and sheets are not navigation
+destinations.
 
-These controls belong under `project/src/ui/widgets/`:
+## Layout model
+
+- Android phone, landscape only, touch only.
+- Fixed 640 x 360 logical canvas scaled to device; never reflow.
+- Screen edge inset: 8px (`space-2`) plus safe area/cutout handling.
+- Top bar: 48px high, same shape everywhere: Back, title, spacer, at most two
+  icons, overflow.
+- Left area: arena/build canvas.
+- Right panel: fixed 168-176px, exactly one panel state visible.
+- Build and Creation also have a 56px left tool rail.
+- Minimum touch target: `touch` (48px).
+
+## Global primitives
+
+Reusable, app-agnostic controls live in `project/src/ui/lib/`.
 
 | Component | Purpose |
 | --- | --- |
-| `SimulateShell` | Top bar, arena slot, right panel slot, bottom control slot and inline progression row |
-| `SignalFlow` | `1 Sees -> 2 Decides -> 3 Twists -> 4 Scores` cards, one expanded at a time |
-| `GenerationStrip` | One cell per trial with Waiting/Current/Done states and profile-driven timing |
-| `BrainFocus` | Tapped neural network explanation with named inputs/outputs |
-| `BuildCanvas` | Grid, anatomy, motor arcs, rigid hatching, validation marks and first-appearance hints |
-| `BuildPanel` | Brain preview, one validation line, Start training |
-| `ToolRail` | Move, Beam, Core, Delete with Build/Edit locked states |
-| `CreationCard` | Named, resumable saved creature |
-| `CreationsScreen` | Cards, empty state, Open/Edit, Duplicate and Delete actions |
-| `TrainingSettingsPanel` | Current Quick/Standard/Deep profile control and duration/session explanation |
-| `EditSafetyPanel` | Move-only explanation, ghosted old position, generations readout, Done, Rebuild body |
+| Panel/surface | Token-backed `panel`/`panel-raised` surface with `edge` outline |
+| Action button | Primary, secondary, danger, disabled, locked-with-reason actions |
+| Icon button | 48px icon target with visible focus and label/accessible name |
+| Segmented switch | Train/Simulate switch used on Train setup |
+| Tool button | Icon + label rail controls, active/idle/locked/dashed states |
+| Sheet | Modal surface for risky actions and focused setup |
+| Toast | Saved, copied, undo, and unlock feedback |
+| Readout | Monospace changing numbers |
+| Overflow menu | Rare actions and destructive actions |
+| Slider/stepper | Touch-safe numeric input with live value and exact entry path |
+| Chip | Status, lock, unlock, reward, brain-shape, and tag labels |
 
-Widgets receive presentation data; they do not read `Evolver`, `SaveManager`,
-or other managers directly.
+Controls must not rely on hover or color alone. Disabled controls need a
+nearby reason.
 
-## Target product contract: screen flow
-
-```text
-First launch
-    |
-    v
-Build (example anatomy) <----> Simulate (training)
-    |                              |
-    |                              +--> SignalFlow card expands
-    |                              +--> BrainFocus overlay
-    |                              +--> TrainingSettings sheet
-    |                              +--> Start over sheet -> Undo toast
-    |
-    +--> Edit (saved trained Creation)
-    |       |
-    |       +--> Done -> Simulate
-    |       +--> Rebuild body sheet -> Build new version -> Simulate
-    |
-    +--> CreationsScreen
-            |
-            +--> Open -> Simulate
-            +--> Edit -> Edit
-            +--> Duplicate sheet -> Copy brain / Start fresh
-            +--> Delete hold -> Undo toast
-```
-
-There is one persistent mode switch between Simulate and Build. Sheets and
-overlays do not become additional modes; they preserve their parent screen
-and return to it on completion or cancellation.
-
-Simulate and Build are modes of the same main shell, not separate navigation
-destinations. The diagram uses them as named destinations only to make
-interactions readable.
-
-## Layout model and implementation status
-
-The target Simulate shell is top bar, left arena, fixed 168px right information
-panel, and bottom controls. SignalFlow and BrainFocus own the right panel in
-the target shell; the current prototype's bottom inspector is transitional
-and must not be copied into the new shell.
-
-The inventory below describes target contracts, not completed features.
-Phase 1/2 shell and Simulate work precede Phase 3 Build feedback, Phase 4
-Creations safety, and Phase 5 SignalFlow/BrainFocus integration. In
-particular, the current implementation still hides Edit tools, uses immediate
-Creation actions, and has no finished paper/effects-lite switch.
-
-## Target product contract: interaction contracts
-
-### Simulate
-
-At rest: arena, one-word status, mode switch, overflow, bottom controls,
-GenerationStrip, inline unlock progression, and collapsed SignalFlow. Tapping
-a body part expands only the matching fixed-width 156px SignalFlow card
-(maximum 32px growth; expanded rows scroll when necessary). Tapping Decides
-opens BrainFocus. Overflow owns Start over (hold-to-confirm plus ten-second Undo), Training
-settings/profile, Restore example when available, and Reset to default. The current
-0.8 unlock progress remains visible inline and may also be repeated in the
-menu.
-
-### Build
-
-The left rail owns the four tools. `Move` moves existing nodes; Build-only node
-placement remains a canvas gesture rather than a fifth tool. Motor relations
-appear automatically where geometry creates them, while closed triangles are
-hatched and labelled `Rigid: no joints`. Invalid parts are dashed and
-danger-marked. The right panel owns brain preview, one first validation line,
-and Start training. Autosave presents a Saved cue; there is no Save button.
-
-### Edit
-
-Edit is a safe subset of Build. Move works. Beam, Core, and Delete remain
-visible but locked with `Move only · training kept`. Done returns to Simulate.
-Rebuild is danger-styled and always opens a sheet explaining that anatomy
-creates a new brain and preserves the old Creation as a version.
+## Screens and widgets
 
 ### Creations
 
-`CreationsScreen` owns the list and empty state. Each card exposes Open/Edit
-and a summary of generation and best distance.
-Duplicate opens with Copy brain selected and Start fresh as the explicit
-alternative. Delete uses hold-to-confirm and a ten-second Undo toast.
-These card and safety affordances are Phase 4 targets; the current prototype
-still uses immediate actions.
+Home hub. Horizontally scrolling cards, three across. Cards show live
+thumbnail, name, one-line stats, optional achievement progress, and Copy/Edit/
+Delete actions. + New opens Build. Trophy opens Achievements.
 
-## Migration boundary and build order
+### Build
 
-### Stage 1: component kit and tokens
+Only for a new unsaved Creation. Left rail: Move, Beam, Select. Parts tray:
+Node, Core, Motor, locked Spring. Brain chip opens Brain setup. Save locks
+anatomy and opens Creation. One right panel state at a time: tray, part
+settings, or multi-selection.
 
-Finish the app-agnostic component kit and token adapter, including dark and
-paper themes plus effects-lite/reduced-motion behavior.
+### Creation
 
-### Stage 2: screens and interactions with sample data
+Saved Creation with anatomy locked. Move/Select work; Beam is visible but
+locked/dashed; no Delete. Right panel alternates between training summary and
+actions, editable non-structural part settings, or multi-selection movement
+explanation. Name is editable. Train/Resume opens Train setup; Stats and Brain
+open their screens.
 
-Build static screen shells and the screen/overlay router. Build Simulate, Build,
-Edit, Creations, and overlay interaction contracts against sample data.
-Validate screenshots, states, and touch targets before connecting the game.
+### Part settings
 
-### Stage 3: game migration
+Right-panel editor for selected node, beam, core, motor, or spring. Name
+first; then main setting, connections, read-only facts. Structural settings
+lock after Save. Build includes Delete in the header; Creation omits it.
 
-Add presentation view models/adapters that translate current domain/sim state
-into the widget contracts. Replace the current `Main.cs` HUD and simulation
-wiring one screen at a time, preserving behavior at every migration step.
+### Brain setup
 
-The concrete phase gates and acceptance criteria are owned by
-`docs/UI_IMPLEMENTATION_PLAN.md`; this document defines the contracts that
-those phases build toward.
+Available only before Save. Hidden layers: 1, 2, or 3. Neurons per layer:
+1-100. Preview shows senses/outputs from the placed parts and connection
+count. Shape locks after Save.
 
-### Current implementation snapshot (2026-09-19)
+### Train setup
 
-The current app is still a programmatic `Main.cs` prototype with a text-heavy
-HUD, bottom inspector/mapping surface, immediate Creation actions, hidden
-Edit tools, and a prototype GenerationStrip. The target flow above is not
-implemented yet. The existing strip commit is a data/visual prototype only;
-it is not evidence that the Simulate shell or screen flow has been migrated.
+Opened only from Creation. Choices: Shadows (1-32), Run length (5-60s), and
+Map. Train/Simulate segmented switch and Start primary. Locked maps open
+Achievements.
 
-The existing `GenerationStrip` is a prototype data visualization and is not
-the finished component from this contract until it is placed inside
-`SimulateShell` and supports the complete states above.
+### Training
 
-## Explicit non-goals for the kit phase
+Arena-first run screen. Shows leader shadow, faded other shadows, ruler,
+best marker, camera follow, bottom GenerationStrip, Pause/Speed, top bar
+status, Brain/Stats icons, and achievement progress line. Same screen can
+run saved brain in Simulate mode without learning.
 
-- No changes to the simulation algorithm.
-- No persistence migration.
-- No project viewport or orientation changes.
-- No runtime web-font or addon dependency.
-- No direct binding from reusable controls to Godot managers.
-- No claim that the current HUD has been redesigned.
+### GenerationStrip
 
-## Current product decisions carried into the kit
+One cell per shadow with live distance bar. Leader has accent border and ▲.
+Caption says `Generation N · S of T s`; done state briefly shows best result.
 
-- Training uses the current Quick/Standard/Deep profile model. A settings
-  surface may expose the underlying duration, population, generation budget,
-  mutation, and crossover explanation, but must preserve profile-change
-  restart behavior and next-generation application.
-- The 0.8 extra-core unlock is shown inline on Simulate as threshold progress or
-  `earned at generation G`; the menu is secondary.
-- `Move` is the canonical tool label. Node creation in Build is a canvas
-  gesture; Edit exposes only Move.
-- SignalFlow and BrainFocus preserve the four-word causal chain
-  (**Sees -> Decides -> Twists -> Scores**) and the domain vocabulary in
-  `docs/GLOSSARY.md`.
+### SignalFlow
+
+Right-column causal chain: **1 Senses, 2 Brain, 3 Motors/Outputs, 4 Distance**.
+At rest each card is one picture. Tapping expands one card and collapses the
+others. Tapping Brain opens Brain.
+
+### Brain / BrainScale
+
+Explains the neural network. Small networks draw neurons/links. Large networks
+use square grids and bundled bands. Focused neurons show strongest positive
+and negative weights using thickness plus solid/dashed shape, not color alone.
+
+### Stats
+
+Per-map training summary: generations, best distance, time trained, and chart
+of best vs average distance. Detail appears on tap.
+
+### Achievements
+
+Player-wide unlocks for parts and maps. Cards show progress/check, goal, and
+reward chip. Creations trophy badge clears when opened. Unlock toasts link here.
+
+### Overlays and toasts
+
+Reset training uses hold-to-confirm and names what is lost. Delete asks once.
+Both offer 10s Undo. Copy shows toast with Open. Unlock toast is non-blocking.
+
+### Themes
+
+Neon/dark is default. Paper theme and effects-lite use the same token names,
+not layout forks. Effects-lite removes glow while preserving fills, borders,
+labels, hatches, and other non-color state cues.
+
+## Vocabulary contract
+
+- **Creation:** saved thing the player builds/trains.
+- **Beam:** rigid rod between nodes, unlimited in Build.
+- **Node:** hinge/pivot point where beams meet.
+- **Core:** sensor package on a node; the eyes, never the brain.
+- **Motor:** output actuator on a hinge that lets the brain twist a joint.
+- **Spring:** unlockable part that pulls back on its own.
+- **Shadow:** one ghost copy racing during training.
+
+The durable causal sentence is: cores sense, the brain decides, motors and
+other outputs move the body, and distance is the score.
+
+## Current implementation status
+
+The current app has partially migrated Build and Simulate surfaces, but it
+does not yet implement the final hub-and-spoke flow. The existing mode switch,
+legacy HUD wiring, old Creations popup, and text-heavy mapping surfaces are
+transitional. Follow `docs/UI_IMPLEMENTATION_PLAN.md` and the milestone issues
+for the implementation order.

@@ -1,223 +1,159 @@
 # UI implementation plan
 
-This document turns the reviewed design direction into an executable plan for
-Node Runner. An untracked local directory supplied reference material for
-this planning pass, but that material is not part of the repository and is
-not required to apply this plan: this tracked document is the durable
-implementation contract, and any decision that must persist is captured here
-rather than in that ephemeral input. `docs/UI_DIRECTION.md` remains the short
-visual compass; this document owns the staged implementation order,
-dependencies, and acceptance criteria.
+This document turns `reference design/` into the executable implementation
+plan for Node Runner. The reference design is now the product UI source of
+truth: it is not a loose inspiration folder. Keep the design package tracked
+until the app has implemented the described flow, tokens, screens, and
+interaction rules. The component READMEs in that package are intentionally
+detailed and authoritative for their surfaces; this plan sequences them, it
+does not replace them.
 
-The product principle is simple: the app sells understanding, not creatures.
-Every visible control or panel must either teach the causal chain
-**Sees -> Decides -> Twists -> Scores** or help the player build, train, save,
-resume, or experiment with a creature.
+`docs/UI_DIRECTION.md` owns the short visual compass. `docs/UI_COMPONENTS_AND_FLOW.md`
+owns the durable screen/component inventory. This document owns staged
+delivery, dependencies, and GitHub tracking.
 
-## Target composition
+## Product target
 
-The Android target is landscape-only with a fixed 16:9 composition. The
-current Godot project uses a 1280x720 viewport; treat the design spec's
-640x360 values as logical design units at 2x until a measured device need
-justifies changing project settings.
+Node Runner is a landscape-only Android touch app on a 640 x 360 logical
+canvas, scaled to device. The product is a neon learning lab that teaches
+the causal ML chain:
 
-The stable shell is:
+```text
+cores sense -> brain decides -> motors/outputs move -> distance scores
+```
 
-- a quiet top bar with creature identity, one-word run status, mode switch,
-  and overflow actions;
-- a left arena/build canvas where the creature remains the visual focus;
-- a reserved right information surface for SignalFlow, BrainFocus, or
-  Creation details;
-- a bottom training strip for generation/trial progress and essential
-  controls;
-- a 48 logical-pixel minimum touch target and no hover-only behavior.
+Every visible control must either teach that loop or help the player build,
+save, train, resume, inspect, or safely manage a Creation.
 
-Neon remains the default visual language: dark surfaces, one signal accent,
-lit lines, a faint grid, and a warm focus halo. State must never depend on
-colour alone.
+## Major design changes from the previous prototype direction
 
-## Current gap summary
+- **Creations is the home hub.** The old Build/Simulate mode-switch mental
+  model is replaced by hub-and-spoke navigation.
+- **Build is only for new unsaved anatomy.** Saving locks structure forever
+  so the neural-network shape remains valid.
+- **Creation is the saved/editable state.** A saved Creation can be moved,
+  renamed, and tuned through non-structural settings, but not structurally
+  changed; structural changes require a new Creation.
+- **Training is a separate flow.** Creation -> Train setup -> Training.
+  Simulating a saved brain uses the same Training screen with learning off.
+- **Brain setup happens before Save.** Hidden layers and neurons are chosen in
+  Build and locked afterward.
+- **SignalFlow and Brain are teaching surfaces, not raw logs.** Raw lists are
+  hidden behind taps; at rest the UI is quiet.
+- **Achievements unlock parts and maps player-wide.** Locked maps/parts point
+  to Achievements.
+- **Themes are token-driven.** Neon is default, paper and effects-lite prove
+  the theme boundary.
 
-The current behavior is useful but the presentation is still prototype-shaped:
+## Milestones and tracking
 
-1. Most UI composition and wiring lives in `project/src/Main.cs`, which makes
-   the Simulate, Build, Creations, and Edit surfaces difficult to evolve
-   independently.
-2. Simulate is a text-heavy HUD with raw mapping lines rather than a causal
-   arena, generation strip, and SignalFlow.
-3. Build uses a horizontal tool row and lacks live motor-relation/brain
-   feedback.
-4. Edit correctly protects training in code, but hides locked tools instead of
-   explaining the Move-only safety model.
-5. Creations, duplicate, and delete work, but destructive actions are
-   immediate and the list is not yet a card-based, resumable surface.
-6. Theme values and sizing are concentrated in code; the design tokens are
-   not yet represented by a shared UI adapter.
-7. Randomize and Reset are separate visible actions, while the target design
-   has one explicit Start over action in an overflow surface.
+| Milestone | Purpose | Primary issues |
+| --- | --- | --- |
+| 0.10.0 | Adopt the new reference design, remove old reference, establish tokens/shell/primitives | #186, #187, #188 |
+| 0.11.0 | Implement the core Creation flow: Creations hub, Build, Brain setup, saved Creation, Part settings | #189, #190, #191, #192, #193 |
+| 0.12.0 | Implement Training and explanation surfaces: Train setup, Training arena, SignalFlow, Brain/BrainScale, Stats | #194, #195, #196, #197, #198 |
+| 0.13.0 | Implement unlocks and polish: Achievements, safe overlays, paper/effects-lite, vocabulary/model alignment | #199, #200, #201, #202 |
 
-## Implementation phases
+Related existing issues have been linked into the new rollout where they fit:
+#91, #92, #105, #127, #137, and #175.
 
-Each phase below is tracked on GitHub for progress and acceptance-criteria
-status; the prose here is the durable specification, not a duplicated
-checklist.
+## Phase 0 — reference adoption (#186)
 
-| Phase | GitHub tracking issue |
-|---|---|
-| 1. Component kit and visual tokens | [#119](https://github.com/MrLogic85/Node-Runner/issues/119) |
-| 2. Static screens and interaction flow | [#120](https://github.com/MrLogic85/Node-Runner/issues/120) |
-| 3. Game migration and teaching surfaces | [#121](https://github.com/MrLogic85/Node-Runner/issues/121) (Simulate: #98; Main.cs HUD wiring: #106) |
-| 4. Creations and safe actions | [#122](https://github.com/MrLogic85/Node-Runner/issues/122) (durable repository: #93) |
-| 5. SignalFlow and BrainFocus (0.9) | [#97](https://github.com/MrLogic85/Node-Runner/issues/97), [#101](https://github.com/MrLogic85/Node-Runner/issues/101) |
+**Goal:** make the new design package durable and remove the old design
+example.
 
-### Phase 1 — Component kit and visual tokens
+- Track `reference design/` in the repository.
+- Remove `claude_design_example_design/`.
+- Update docs and review process to point at `reference design/` as the
+  active app target.
+- Preserve all supplied README, preview, token, CSS, and JSON files needed for
+  future implementation and design review.
 
-**Goal:** establish the reusable design system before connecting it to the
-current game.
+**Exit criteria:** a clean clone contains the full current design source, and
+no active documentation points to the deleted old design directory.
 
-- Finish `project/src/ui/lib/` primitives and the canonical token adapter.
-- Prove dark, paper, and effects-lite/readable states with sample data.
-- Keep controls app-agnostic and independent of simulation, persistence, and
-  managers.
-- Add component-level screenshot fixtures or a small sample host before any
-  game wiring.
+## Phase 1 — tokens, themes, and shell (#187, #188)
 
-**Exit criteria:**
+**Goal:** establish the reusable UI foundation before screen migration.
 
-- The component kit renders all documented states with 48px touch targets.
-- Theme/effects changes update controls without rebuilding the screen.
-- No architecture-test regression and no UI-to-simulation dependency.
+- Map the canonical token names from `reference design/tokens.json` into the
+  Godot/C# token adapter:
+  `bg`, `panel`, `panel-raised`, `line`, `line-strong`, `ink`, `muted`,
+  `accent`, `edge`, `accent-soft`, `accent-glow`, `on-accent`, `halo`,
+  `danger`, plus spacing, touch, radius, and stroke roles.
+- Implement the fixed 640 x 360 landscape composition scaled to Android.
+- Centralize top bar, side panel, left rail, bottom strip, and minimum touch
+  target dimensions.
+- Build reusable controls for panels, action/icon/tool buttons, segmented
+  switches, sheets, toasts, readouts, sliders, chips, lock states, danger
+  states, focus rings, and overflow menus.
+- Prove controls in component/gallery screenshots on Android phone or emulator.
 
-### Phase 2 — Static screens and interaction flow
+**Exit criteria:** UI changes can be built from tokenized controls without
+duplicating colors, sizes, or one-off panel styles.
 
-**Goal:** make the complete target flow usable with sample data before game
-state is connected.
+## Phase 2 — Creations, Build, and saved Creation (#189-#193)
 
-- Build `SimulateShell`, `BuildScreen`, `EditScreen`, and `CreationsScreen` with
-  sample data.
-- Build the mode switch, overflow, sheets, toasts, SignalFlow, BrainFocus,
-  GenerationStrip, and safe-action transitions.
-- Validate the entire touch flow and screenshots without reading `Evolver` or
-  `SaveManager`.
+**Goal:** implement the app's new hub-and-spoke core loop.
 
-**Exit criteria:**
+- Make Creations the home hub with cards, autosave/Saved cue, Achievements
+  entry, and + New.
+- Rework Build as the only place that adds/removes anatomy.
+- Add the Parts tray, Move/Beam/Select rail, part counts, validation, and
+  disabled Save reasons.
+- Add Brain setup before Save.
+- Add the saved Creation screen with locked structure, editable name, position
+  editing, non-structural part settings, training summary/actions,
+  Stats/Brain/Train navigation, and overflow actions.
+- Add Part settings and multi-selection panels that occupy the single right
+  panel slot.
 
-- Every target flow in `docs/UI_COMPONENTS_AND_FLOW.md` is reachable with
-  sample data.
-- Risky actions have hold-to-confirm/Undo states and every overlay returns to
-  its parent mode.
-- Android screenshots show the intended 640x360 logical composition without
-  relying on current game state.
+**Exit criteria:** a player can create a new valid Creation, save it, reopen
+it from the Creations hub, move it without breaking training compatibility,
+and understand why structural edits are locked.
 
-### Phase 3 — Game migration and teaching surfaces
+## Phase 3 — Train setup, Training, SignalFlow, Brain, Stats (#194-#198)
 
-**Goal:** connect the stable screens to the current game one screen at a time.
+**Goal:** make the learning loop visible and explainable.
 
-- Extract presentation view models/adapters from the current `Main.cs` wiring.
-- Migrate Simulate first, then Build/Edit, then Creations and persistence actions.
-- Preserve simulation, persistence, and current product decisions while
-  replacing the prototype HUD.
-- Replace the horizontal tool row with a left rail: Move, Beam, Core, Delete.
-  Keep the underlying `ConstructionTool.Place` name temporarily if that
-  avoids an unnecessary domain rename.
-- Add a right-side Build panel with:
-  - `Brain it will get`;
-  - input/core and motor-relation counts;
-  - one first validation line;
-  - a disabled Start training/Complete action with its reason.
-- Extend `ConstructionCanvas` using existing topology helpers to show motor
-  relations, rigid triangles, and invalid/disconnected states.
-- In Edit, keep all tools visible but visibly locked and show
-  `Move only · training kept`.
-- Keep Rebuild as a separated, named danger action explaining that it creates
-  a new body and brain while preserving the original Creation.
+- Add Train setup with Shadows, Run length, map picker, and Train/Simulate.
+- Implement the Training screen: leader shadow, faded other shadows, ruler,
+  best marker, camera follow, bottom GenerationStrip, progress caption, and
+  top bar achievement progress.
+- Implement SignalFlow cards: 1 Senses, 2 Brain, 3 Motors/Outputs, 4 Distance.
+- Implement Brain/BrainScale for small and large networks.
+- Add Stats per map.
 
-**Exit criteria:**
+**Exit criteria:** a player can start/resume training, watch simultaneous
+shadows run, inspect why the body moved, and see progress without raw log
+lists dominating the screen.
 
-- A first-time player can explain Node, Beam, Core, and Motor relation from
-  the Build screen.
-- Invalid anatomy is explained before the player attempts to leave Build.
-- Edit and Rebuild safety is visible without relying on hidden controls.
+## Phase 4 — Achievements, overlays, themes, vocabulary (#199-#202)
 
-### Phase 4 — Creations and safe actions
+**Goal:** complete the shipped design surface.
 
-**Goal:** make persistence feel like a creative workspace, not a file list.
+- Add Achievements and player-wide unlocks for parts and maps.
+- Standardize toasts, sheets, Undo, hold-to-confirm, and destructive action
+  copy.
+- Implement paper theme, effects-lite, and reduced-motion switches on top of
+  the shared tokens.
+- Align vocabulary and glyphs: Creation, Beam, Node, Core, Motor, Spring,
+  hinges, rigid triangles, and locked structural settings.
 
-- Replace the current popup list with a Creation card/screen surface:
-  thumbnail, name, generation/fitness summary, unlock credit, and clear
-  Open/Edit actions.
-- Duplicate opens a sheet with `Copy brain` preselected and `Start fresh` as
-  the explicit alternative.
-- Delete names what will be lost and offers a 10-second Undo toast.
-- Show a visible Saved state after autosave/generation persistence.
-- Add Restore example only when an example Creation is represented by durable
-  data; do not invent a second source of truth.
-
-**Exit criteria:**
-
-- No destructive Creation action is accidental.
-- A player can identify which Creation earned an unlock and resume it.
-- Duplicate semantics remain compatible with the 0.5 decision that training
-  data is copied.
-
-### Phase 5 — SignalFlow and BrainFocus (0.9)
-
-**Goal:** visualize the causal ML loop.
-
-- Replace the raw Mapping panel with four compact stages:
-  `Sees`, `Decides`, `Twists`, `Scores`.
-- Use bars/dials/cards for live values; raw lists remain available only after
-  tapping or expanding a stage.
-- Tapping Decides opens BrainFocus: activations colour neurons, weights affect
-  edge thickness/opacity, and the view remains readable without printing
-  numbers on every node.
-- Add the 0.9 settings/compare surfaces only after the basic visualization
-  teaches the single-population loop.
-
-## Theme and asset strategy
-
-Adopt the supplied token roles as the naming source for a UI adapter. The
-design JSON keys are canonical: `bg`, `panel`, `panel-raised`, `line`,
-`line-strong`, `ink`, `muted`, `accent`, `edge`, `accent-soft`,
-`accent-glow`, `on-accent`, `halo`, and `danger`, plus spacing, touch, radius,
-and stroke roles. C# may expose idiomatic PascalCase properties
-(`PanelRaised`, `AccentGlow`, and so on), but each property must map
-explicitly to one canonical key; do not create a second token vocabulary.
-
-Do this without adding dependencies or changing project settings:
-
-- expand `VisualTheme` behind the existing neon adapter first;
-- move shared panel/button styles out of `Main.cs`;
-- add an effects-lite switch before adding more glow or pulse animation;
-- defer bundled Chakra Petch, Barlow, and JetBrains Mono fonts until the
-  asset/import path is deliberately chosen;
-- defer the paper theme until the neon token path is used consistently.
-
-## Copy and interaction rules
-
-- Use plain words first: `Sees`, `Decides`, `Twists`, `Scores`.
-- Teach each technical term once where it appears.
-- Keep one focus at a time: one expanded card, halo, or hint.
-- Use `Start over` rather than separate Randomize and Reset in the polished
-  Simulate surface; state what training will be lost and provide Undo where
-  practical.
-- Use visible locked states and reasons on touch; never rely on tooltips.
-- Prefer `Generation 5 · try 3 of 8` and `Reach 50 fitness to unlock` over
-  unexplained developer-facing labels.
+**Exit criteria:** the app's UI vocabulary, unlock model, safe actions, and
+theme behavior match `reference design/`.
 
 ## Review and verification gates
 
-Every phase touching visible UI follows the merge and Definition of Done
-requirements in `docs/REVIEW.md`. In addition to those requirements, UI
-phases specifically require:
+Every visible UI issue in this plan requires:
 
-- the relevant `design-lead` review against this plan and `UI_DIRECTION.md`;
-- screenshots for Simulate at rest, mid-generation, Build, Edit, and any
-  unlock/confirmation state introduced by the phase;
-- no new direct UI dependency on simulation or managers.
+- `design-lead` Visual & UX review per `CODEREVIEW.md`;
+- live app access on Android phone first, configured emulator fallback, or
+  fresh screenshots/recordings;
+- screenshots for every new screen/state introduced by the issue;
+- manual-test decision recorded per `docs/MANUAL_TESTING.md`;
+- no direct dependency from reusable UI controls to simulation, ML, or
+  persistence managers.
 
-The next implementation slice is **Phase 1 component-kit completion**, then
-Phase 2 sample-data screens and interaction flow. The earlier GenerationStrip
-commit remains a useful data/visual prototype, but it is not the finished
-Simulate redesign and must not be treated as a reason to migrate the current
-HUD before the target screens are proven.
+If a UI review returns **insufficient evidence**, the issue is not done until
+the evidence or a human waiver is recorded.

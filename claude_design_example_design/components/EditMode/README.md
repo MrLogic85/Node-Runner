@@ -1,3 +1,0 @@
-Edit is the safe subset of Build for a trained creature. **Move** works; **Beam, Core and Delete are dimmed, dashed and locked**, and one line on the canvas says why in five words: "Move only · training kept".
-
-A moved node leaves a dashed ghost at its old place. The panel shows only how much is trained (generations) and one exit each: **Done** (`accent`, top right) and **Rebuild body…** (`danger`, bottom). Rebuild opens the Rebuild sheet (see Overlays), so the risky path is separate from the safe one.
