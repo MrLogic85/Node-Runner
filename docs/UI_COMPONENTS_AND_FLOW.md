@@ -16,7 +16,7 @@ These controls are app-agnostic and belong under `project/src/ui/lib/`:
 | `UiPanel` | Token-backed surface with edge line and optional raised treatment | normal, focused, danger |
 | `UiActionButton` | Touch-safe verb action | primary, secondary, danger, disabled, locked |
 | `UiIconButton` | 48x48 icon action | normal, focused, disabled |
-| `UiSegmentedSwitch` | Watch/Build mode choice | selected, unselected, disabled |
+| `UiSegmentedSwitch` | Simulate/Build mode choice | selected, unselected, disabled |
 | `UiToolButton` | Icon + label tool action | active, idle, locked |
 | `UiSheet` | Dimmed modal surface for risky/notable moments | open, closing |
 | `UiToast` | Temporary saved/undo/unlock feedback | visible, dismissing |
@@ -32,7 +32,7 @@ These controls belong under `project/src/ui/widgets/`:
 
 | Component | Purpose |
 | --- | --- |
-| `WatchShell` | Top bar, arena slot, right panel slot, bottom control slot and inline progression row |
+| `SimulateShell` | Top bar, arena slot, right panel slot, bottom control slot and inline progression row |
 | `SignalFlow` | `1 Sees -> 2 Decides -> 3 Twists -> 4 Scores` cards, one expanded at a time |
 | `GenerationStrip` | One cell per trial with Waiting/Current/Done states and profile-driven timing |
 | `BrainFocus` | Tapped neural network explanation with named inputs/outputs |
@@ -53,7 +53,7 @@ or other managers directly.
 First launch
     |
     v
-Build (example anatomy) <----> Watch (training)
+Build (example anatomy) <----> Simulate (training)
     |                              |
     |                              +--> SignalFlow card expands
     |                              +--> BrainFocus overlay
@@ -62,41 +62,41 @@ Build (example anatomy) <----> Watch (training)
     |
     +--> Edit (saved trained Creation)
     |       |
-    |       +--> Done -> Watch
-    |       +--> Rebuild body sheet -> Build new version -> Watch
+    |       +--> Done -> Simulate
+    |       +--> Rebuild body sheet -> Build new version -> Simulate
     |
     +--> CreationsScreen
             |
-            +--> Open -> Watch
+            +--> Open -> Simulate
             +--> Edit -> Edit
             +--> Duplicate sheet -> Copy brain / Start fresh
             +--> Delete hold -> Undo toast
 ```
 
-There is one persistent mode switch between Watch and Build. Sheets and
+There is one persistent mode switch between Simulate and Build. Sheets and
 overlays do not become additional modes; they preserve their parent screen
 and return to it on completion or cancellation.
 
-Watch and Build are modes of the same main shell, not separate navigation
+Simulate and Build are modes of the same main shell, not separate navigation
 destinations. The diagram uses them as named destinations only to make
 interactions readable.
 
 ## Layout model and implementation status
 
-The target Watch shell is top bar, left arena, fixed 168px right information
+The target Simulate shell is top bar, left arena, fixed 168px right information
 panel, and bottom controls. SignalFlow and BrainFocus own the right panel in
 the target shell; the current prototype's bottom inspector is transitional
 and must not be copied into the new shell.
 
 The inventory below describes target contracts, not completed features.
-Phase 1/2 shell and Watch work precede Phase 3 Build feedback, Phase 4
+Phase 1/2 shell and Simulate work precede Phase 3 Build feedback, Phase 4
 Creations safety, and Phase 5 SignalFlow/BrainFocus integration. In
 particular, the current implementation still hides Edit tools, uses immediate
 Creation actions, and has no finished paper/effects-lite switch.
 
 ## Target product contract: interaction contracts
 
-### Watch
+### Simulate
 
 At rest: arena, one-word status, mode switch, overflow, bottom controls,
 GenerationStrip, inline unlock progression, and collapsed SignalFlow. Tapping
@@ -119,7 +119,7 @@ and Start training. Autosave presents a Saved cue; there is no Save button.
 ### Edit
 
 Edit is a safe subset of Build. Move works. Beam, Core, and Delete remain
-visible but locked with `Move only · training kept`. Done returns to Watch.
+visible but locked with `Move only · training kept`. Done returns to Simulate.
 Rebuild is danger-styled and always opens a sheet explaining that anatomy
 creates a new brain and preserves the old Creation as a version.
 
@@ -141,7 +141,7 @@ paper themes plus effects-lite/reduced-motion behavior.
 
 ### Stage 2: screens and interactions with sample data
 
-Build static screen shells and the screen/overlay router. Build Watch, Build,
+Build static screen shells and the screen/overlay router. Build Simulate, Build,
 Edit, Creations, and overlay interaction contracts against sample data.
 Validate screenshots, states, and touch targets before connecting the game.
 
@@ -161,11 +161,11 @@ The current app is still a programmatic `Main.cs` prototype with a text-heavy
 HUD, bottom inspector/mapping surface, immediate Creation actions, hidden
 Edit tools, and a prototype GenerationStrip. The target flow above is not
 implemented yet. The existing strip commit is a data/visual prototype only;
-it is not evidence that the Watch shell or screen flow has been migrated.
+it is not evidence that the Simulate shell or screen flow has been migrated.
 
 The existing `GenerationStrip` is a prototype data visualization and is not
 the finished component from this contract until it is placed inside
-`WatchShell` and supports the complete states above.
+`SimulateShell` and supports the complete states above.
 
 ## Explicit non-goals for the kit phase
 
@@ -182,7 +182,7 @@ the finished component from this contract until it is placed inside
   surface may expose the underlying duration, population, generation budget,
   mutation, and crossover explanation, but must preserve profile-change
   restart behavior and next-generation application.
-- The 0.8 extra-core unlock is shown inline on Watch as threshold progress or
+- The 0.8 extra-core unlock is shown inline on Simulate as threshold progress or
   `earned at generation G`; the menu is secondary.
 - `Move` is the canonical tool label. Node creation in Build is a canvas
   gesture; Edit exposes only Move.

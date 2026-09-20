@@ -50,7 +50,7 @@ public partial class Main : Node2D
     private string? _pendingDuplicateCreationName;
     private Guid? _pendingDeleteCreationId;
     private string? _pendingDeleteCreationName;
-    private WatchScreen? _watchScreen;
+    private SimulateScreen? _simulateScreen;
     private Guid? _activeCreationId;
     private Label? _seedLabel;
     private Label? _generationLabel;
@@ -150,7 +150,7 @@ public partial class Main : Node2D
         AddCamera();
         AddCreature();
         AddConstructionCanvas();
-        AddWatchScreen();
+        AddSimulateScreen();
         AddBrainFocusOverlay();
         AddHud();
         AddInspector();
@@ -355,9 +355,9 @@ public partial class Main : Node2D
         _trainingPresentation.PropertyChanged += OnTrainingPresentationChanged;
         RefreshTrainingProfileSummary();
         RefreshTrainingProfileSettings();
-        if (_watchScreen is not null)
+        if (_simulateScreen is not null)
         {
-            _watchScreen.Presentation = _trainingPresentation;
+            _simulateScreen.Presentation = _trainingPresentation;
         }
         RefreshUnlockProgress();
 
@@ -504,19 +504,19 @@ public partial class Main : Node2D
         _constructionCanvas = canvas;
     }
 
-    private void AddWatchScreen()
+    private void AddSimulateScreen()
     {
-        var watchLayer = new CanvasLayer
+        var simulateLayer = new CanvasLayer
         {
-            Name = "WatchOverlay",
+            Name = "SimulateOverlay",
             Layer = 2,
             ProcessMode = ProcessModeEnum.Always,
         };
-        AddChild(watchLayer);
+        AddChild(simulateLayer);
 
-        _watchScreen = new WatchScreen
+        _simulateScreen = new SimulateScreen
         {
-            Name = "LiveWatchScreen",
+            Name = "LiveSimulateScreen",
             Tokens = UiTokens.Neon,
             Hosted = true,
             ShowTopBar = false,
@@ -530,11 +530,11 @@ public partial class Main : Node2D
             ProfileSettings = _profileSettings,
             Visible = !Construction.IsActive,
         };
-        _watchScreen.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
-        _watchScreen.BrainFocusRequested += ShowBrainFocus;
-        _watchScreen.TrainingProfileRequested += CycleTrainingProfile;
-        _watchScreen.TrainingProfileSelected += SelectTrainingProfile;
-        watchLayer.AddChild(_watchScreen);
+        _simulateScreen.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
+        _simulateScreen.BrainFocusRequested += ShowBrainFocus;
+        _simulateScreen.TrainingProfileRequested += CycleTrainingProfile;
+        _simulateScreen.TrainingProfileSelected += SelectTrainingProfile;
+        simulateLayer.AddChild(_simulateScreen);
     }
 
     private void RefreshUnlockProgress()
@@ -1783,9 +1783,9 @@ public partial class Main : Node2D
                     _trainingPanel.Visible = !Construction.IsActive;
                 }
 
-                if (_watchScreen is not null)
+                if (_simulateScreen is not null)
                 {
-                    _watchScreen.Visible = !Construction.IsActive;
+                    _simulateScreen.Visible = !Construction.IsActive;
                 }
 
                 if (_buildModeButton is not null)

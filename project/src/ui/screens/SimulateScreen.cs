@@ -5,10 +5,10 @@ using NodeRunner.Ui.Lib;
 namespace NodeRunner.Ui.Screens;
 
 /// <summary>
-/// Watch shell bound to presentation data only. This scene does not bind to
+/// Simulate shell bound to presentation data only. This scene does not bind to
 /// simulation, managers, or persistence.
 /// </summary>
-public partial class WatchScreen : Control
+public partial class SimulateScreen : Control
 {
     private UiTokens _tokens = UiTokens.Neon;
     private readonly List<UiPanel> _signalCards = new();
@@ -202,7 +202,7 @@ public partial class WatchScreen : Control
 
     public override void _Ready()
     {
-        Name = nameof(WatchScreen);
+        Name = nameof(SimulateScreen);
         if (_presentation is not null)
         {
             _presentation.PropertyChanged -= OnPresentationChanged;
@@ -388,7 +388,7 @@ public partial class WatchScreen : Control
 
         topBar.AddChild(CreateLabel("NODE RUNNER", 22, _tokens.Ink, expand: true));
         topBar.AddChild(CreatePill("Training", _tokens.AccentSoft, _tokens.Accent));
-        topBar.AddChild(CreateModeButton("Watch", true));
+        topBar.AddChild(CreateModeButton("Simulate", true));
         topBar.AddChild(CreateModeButton("Build", false));
         topBar.AddChild(CreateButton("Menu", UiActionButton.ActionKind.Secondary, "Overflow: Start over, settings, restore example"));
 

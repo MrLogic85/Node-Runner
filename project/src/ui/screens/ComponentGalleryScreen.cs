@@ -177,7 +177,7 @@ public partial class ComponentGalleryScreen : Control
         }));
         content.AddChild(Track(new UiSegmentedSwitch
         {
-            Options = new[] { "Watch", "Build", "Edit" },
+            Options = new[] { "Simulate", "Build", "Edit" },
             SelectedIndex = 1,
             SizeFlagsHorizontal = SizeFlags.ExpandFill,
         }));

@@ -6,14 +6,14 @@ using NodeRunner.Ui.Lib;
 namespace NodeRunner.Ui.Screens;
 
 /// <summary>
-/// Sample-data host for the persistent Watch/Build shell. It intentionally
+/// Sample-data host for the persistent Simulate/Build shell. It intentionally
 /// keeps both child screens disconnected from game state.
 /// </summary>
 public partial class SampleFlowScreen : Control
 {
     private UiTokens _tokens = UiTokens.Neon;
     private Control? _content;
-    private WatchScreen? _watch;
+    private SimulateScreen? _simulate;
     private BuildScreen? _build;
     private UiSegmentedSwitch? _modeSwitch;
     private Control? _overlay;
@@ -35,9 +35,9 @@ public partial class SampleFlowScreen : Control
         set
         {
             _presentation = value;
-            if (_watch is not null)
+            if (_simulate is not null)
             {
-                _watch.Presentation = value;
+                _simulate.Presentation = value;
             }
         }
     }
@@ -48,9 +48,9 @@ public partial class SampleFlowScreen : Control
         set
         {
             _tokens = value;
-            if (_watch is not null)
+            if (_simulate is not null)
             {
-                _watch.Tokens = value;
+                _simulate.Tokens = value;
             }
 
             if (_build is not null)
@@ -90,7 +90,7 @@ public partial class SampleFlowScreen : Control
         }
 
         _content = null;
-        _watch = null;
+        _simulate = null;
         _build = null;
         _modeSwitch = null;
         _overlay = null;
@@ -102,7 +102,7 @@ public partial class SampleFlowScreen : Control
         BuildLayout();
         if (_selectedMode == 0)
         {
-            ShowWatch();
+            ShowSimulate();
         }
         else
         {
@@ -151,7 +151,7 @@ public partial class SampleFlowScreen : Control
         _modeSwitch = new UiSegmentedSwitch
         {
             Tokens = _tokens,
-            Options = new[] { "Watch", "Build" },
+            Options = new[] { "Simulate", "Build" },
             SelectedIndex = _selectedMode,
             CustomMinimumSize = new Vector2(208, _tokens.TouchTarget),
         };
@@ -226,7 +226,7 @@ public partial class SampleFlowScreen : Control
         _sheet.Hide();
     }
 
-    private void ShowWatch()
+    private void ShowSimulate()
     {
         if (_content is null)
         {
@@ -234,16 +234,16 @@ public partial class SampleFlowScreen : Control
         }
 
         ClearContent();
-        _watch = new WatchScreen
+        _simulate = new SimulateScreen
         {
             Tokens = _tokens,
             ShowTopBar = false,
             Hosted = true,
             Presentation = _presentation,
         };
-        _watch.BrainFocusRequested += () => ShowSheet("BrainFocus · Decides", CreateBrainFocusBody());
-        _sampleView = _watch;
-        _content.AddChild(_watch);
+        _simulate.BrainFocusRequested += () => ShowSheet("BrainFocus · Decides", CreateBrainFocusBody());
+        _sampleView = _simulate;
+        _content.AddChild(_simulate);
     }
 
     private void ShowBuild()
@@ -294,7 +294,7 @@ public partial class SampleFlowScreen : Control
 
         if (_selectedMode == 0)
         {
-            ShowWatch();
+            ShowSimulate();
         }
         else
         {
@@ -745,7 +745,7 @@ public partial class SampleFlowScreen : Control
 
     private void ClearContent()
     {
-        _watch = null;
+        _simulate = null;
         _build = null;
         _sampleView = null;
         foreach (var child in _content!.GetChildren())
