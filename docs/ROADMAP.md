@@ -187,12 +187,12 @@ short demo, and can see the fitness signal that caused the improvement.
 
 ---
 
-> **Tracking status (2026-09-20):** 0.5.0 through 0.9.0 reflect the
-> game-loop-first sequence (build → save as Creation → edit/resume training
-> → tune training → unlock parts → visualize). GitHub milestones and tracking
-> issues now exist for each version. The checklists below describe the
-> implementation state; checked items are delivered locally, while unchecked
-> items remain open in the corresponding GitHub issue.
+> **Tracking status:** 0.5.0 through 0.9.0 reflect the game-loop-first
+> sequence (build → save as Creation → edit/resume training → tune training
+> → unlock parts → visualize). GitHub milestones and tracking issues own
+> progress and acceptance-criteria state for each version; this document only
+> holds the durable narrative (goal, ML concepts, ship criterion). Check the
+> linked issue for current status rather than a local checklist.
 
 | Milestone | GitHub tracking issue |
 |---|---|
@@ -258,15 +258,7 @@ not just a static save file.
 later, resume training without losing prior progress, and reposition a
 part without invalidating that progress.
 
-**Implementation status (2026-09-19):**
-
-- [x] Saved genome and generation resume when a Creation is opened.
-- [x] Best genome and generation are persisted at generation boundaries.
-- [x] Reset clears persisted training and starts a fresh run.
-- [x] Edit exposes move-only interaction; topology tools are unavailable.
-- [x] Rebuild creates a new Build draft without carrying training state.
-- [x] Android smoke verification completed for Edit and Rebuild on the
-  connected test device; no app crash was observed in `adb logcat`.
+**Implementation status:** tracked in [#94](https://github.com/MrLogic85/Node-Runner/issues/94).
 
 ---
 
@@ -296,18 +288,7 @@ of fixed engine constants.
 its own right — batch size vs. duration tradeoffs in an evolutionary
 context.
 
-**Implementation status (2026-09-19):**
-
-- [x] Session-scoped Quick, Standard, and Deep profiles expose population
-  size and trial duration in the training HUD.
-- [x] Changing profile restarts the active evolution with the selected
-  settings; profile choice is not persisted.
-- [x] Android smoke verification completed for profile cycling and app restart
-  on the connected test device; no crash was observed in `adb logcat`.
-- [x] Profiles bound each training session to a visible generation budget;
-  completion stops the evolver while preserving the latest training state.
-- [x] Profiles expose mutation settings and alternate Uniform/Blend crossover
-  strategies for player-facing GA plateau experiments.
+**Implementation status:** tracked in [#95](https://github.com/MrLogic85/Node-Runner/issues/95).
 
 ---
 
@@ -333,15 +314,7 @@ expanding it.
 threshold approach during training and see a new part become available in
 Build immediately after crossing it.
 
-**Implementation status (2026-09-19):**
-
-- [x] Best fitness reaching 50 distance units unlocks a second core slot.
-- [x] The unlock is persisted globally and is available across all future
-  Builds and Creations.
-- [x] Training HUD shows progress toward the threshold and the generation
-  where the unlock was earned.
-- [x] Construction HUD reports the current core-slot limit and explains how
-  to unlock the next slot.
+**Implementation status:** tracked in [#96](https://github.com/MrLogic85/Node-Runner/issues/96).
 
 ---
 

@@ -43,6 +43,7 @@ changing what the app teaches or how a concept is made visible.
 4. When new milestones, feature bugs are found or discussed. Add or update them
    on GitHub. Dont leave desicions undocumented. Review broad, risky, or ambiguous
    issues under docs/ISSUE_REVIEW.md before implementation.
+5. Keep *.md files up to date and as clean as possible.
 
 ## Architecture map
 
