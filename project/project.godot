@@ -12,14 +12,13 @@ config/features=PackedStringArray("4.7", "C#", "Mobile")
 
 [display]
 
-; Design-resolution base with "canvas_items" stretch so HUD/inspector text,
-; buttons, and Node2D world positions scale consistently to fill the real
-; device resolution instead of rendering at raw device pixels (which made
-; the HUD unreadably small on phones with high-density landscape screens).
-window/size/viewport_width=1280
-window/size/viewport_height=720
+; Reference design logical canvas. "canvas_items" stretch keeps layout in
+; 640 x 360 design units while rendering Control text and shapes at the
+; device framebuffer scale instead of scaling a low-resolution bitmap.
+window/size/viewport_width=640
+window/size/viewport_height=360
 window/stretch/mode="canvas_items"
-window/stretch/aspect="expand"
+window/stretch/aspect="keep"
 window/handheld/orientation="landscape"
 
 [dotnet]

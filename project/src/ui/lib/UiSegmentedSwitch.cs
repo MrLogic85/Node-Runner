@@ -105,8 +105,8 @@ public partial class UiSegmentedSwitch : HBoxContainer
     private void StyleButton(Button button, bool selected)
     {
         _tokens.ApplyTextStyle(button, _tokens.LabelText);
-        button.AddThemeColorOverride("font_color", selected ? _tokens.OnAccent : _tokens.Ink);
-        button.AddThemeColorOverride("font_hover_color", _tokens.OnAccent);
+        button.AddThemeColorOverride("font_color", _tokens.Ink);
+        button.AddThemeColorOverride("font_hover_color", selected ? _tokens.Ink : _tokens.Accent);
         button.AddThemeStyleboxOverride("normal", CreateStyle(selected));
         button.AddThemeStyleboxOverride("hover", CreateStyle(true));
         button.AddThemeStyleboxOverride("pressed", CreateStyle(true));
@@ -117,12 +117,12 @@ public partial class UiSegmentedSwitch : HBoxContainer
     {
         return new StyleBoxFlat
         {
-            BgColor = selected ? _tokens.Accent : _tokens.Panel,
-            BorderColor = _tokens.Edge,
-            BorderWidthLeft = (int)_tokens.StrokeHair,
-            BorderWidthTop = (int)_tokens.StrokeHair,
-            BorderWidthRight = (int)_tokens.StrokeHair,
-            BorderWidthBottom = (int)_tokens.StrokeHair,
+            BgColor = selected ? _tokens.AccentSoft : _tokens.PanelRaised,
+            BorderColor = selected ? _tokens.Accent : _tokens.LineStrong,
+            BorderWidthLeft = (int)(selected ? _tokens.StrokeSignal : _tokens.StrokeHair),
+            BorderWidthTop = (int)(selected ? _tokens.StrokeSignal : _tokens.StrokeHair),
+            BorderWidthRight = (int)(selected ? _tokens.StrokeSignal : _tokens.StrokeHair),
+            BorderWidthBottom = (int)(selected ? _tokens.StrokeSignal : _tokens.StrokeHair),
             CornerRadiusTopLeft = (int)_tokens.RadiusMedium,
             CornerRadiusTopRight = (int)_tokens.RadiusMedium,
             CornerRadiusBottomLeft = (int)_tokens.RadiusMedium,
