@@ -1,0 +1,3 @@
+.glow{filter:drop-shadow(0 0 3px var(--accent-glow)) drop-shadow(0 0 7px var(--accent-glow))}
+[data-effects="lite"]{--glow:none;--accent-glow:transparent}
+[data-effects="lite"] .glow{filter:none}
