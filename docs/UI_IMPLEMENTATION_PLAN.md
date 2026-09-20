@@ -1,9 +1,11 @@
 # UI implementation plan
 
 This document turns the reviewed design direction into an executable plan for
-Node Runner. The local `claude_design_example_design/` directory is the
-reference material supplied for this planning pass; this tracked document is
-the durable implementation contract. `docs/UI_DIRECTION.md` remains the short
+Node Runner. An untracked local directory supplied reference material for
+this planning pass, but that material is not part of the repository and is
+not required to apply this plan: this tracked document is the durable
+implementation contract, and any decision that must persist is captured here
+rather than in that ephemeral input. `docs/UI_DIRECTION.md` remains the short
 visual compass; this document owns the staged implementation order,
 dependencies, and acceptance criteria.
 
@@ -193,16 +195,14 @@ Do this without adding dependencies or changing project settings:
 
 ## Review and verification gates
 
-Every phase touching visible UI requires:
+Every phase touching visible UI follows the merge and Definition of Done
+requirements in `docs/REVIEW.md`. In addition to those requirements, UI
+phases specifically require:
 
 - the relevant `design-lead` review against this plan and `UI_DIRECTION.md`;
-- full build/test/format/diff validation for the smallest affected scope;
-- Android export/install/start verification when layout, touch, or device
-  behavior changes;
 - screenshots for Watch at rest, mid-generation, Build, Edit, and any
   unlock/confirmation state introduced by the phase;
-- no new direct UI dependency on simulation or managers;
-- a focused commit after review findings are addressed.
+- no new direct UI dependency on simulation or managers.
 
 The next implementation slice is **Phase 1 component-kit completion**, then
 Phase 2 sample-data screens and interaction flow. The earlier GenerationStrip
