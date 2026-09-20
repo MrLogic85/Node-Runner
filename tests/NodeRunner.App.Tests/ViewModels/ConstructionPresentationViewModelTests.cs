@@ -66,6 +66,9 @@ public sealed class ConstructionPresentationViewModelTests
         presentation.InspectorValues.ShouldBe("Drag an existing node to reposition it. Training is kept.");
         presentation.ShowCompleteAction.ShouldBeFalse();
         presentation.ShowRebuildAction.ShouldBeTrue();
+        presentation.RebuildActionText.ShouldBe("Rebuild body");
+        presentation.RebuildConfirmationTitle.ShouldBe("Rebuild body?");
+        presentation.RebuildConfirmationBody.ShouldBe("Rebuild creates a new body and a new brain. The original Creation and its training stay unchanged.");
     }
 
     [Fact]
