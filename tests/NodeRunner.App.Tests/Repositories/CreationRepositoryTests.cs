@@ -108,6 +108,60 @@ public sealed class CreationRepositoryTests
     }
 
     [Fact]
+    public void File_ListWithOneCorruptCreationFile_SkipsItButReturnsTheRest()
+    {
+        // Regression guard for #114: a single unreadable/corrupt file must
+        // not empty the whole Creations list.
+        var directory = Path.Combine(Path.GetTempPath(), $"node-runner-{Guid.NewGuid():N}");
+        try
+        {
+            var repository = new FileCreationRepository(new TestStorageLocation(directory));
+            var healthy = CreateCreation("Healthy");
+            repository.Save(healthy);
+
+            var corruptPath = Path.Combine(directory, $"{Guid.NewGuid():N}.json");
+            File.WriteAllText(corruptPath, "{ this is not valid json");
+
+            var listed = repository.List();
+
+            listed.Count.ShouldBe(1);
+            listed[0].Id.ShouldBe(healthy.Id);
+        }
+        finally
+        {
+            if (Directory.Exists(directory))
+            {
+                Directory.Delete(directory, recursive: true);
+            }
+        }
+    }
+
+    [Fact]
+    public void File_GetWithCorruptCreationFile_ReturnsNullInsteadOfThrowing()
+    {
+        // Regression guard for #114: Get() must handle a corrupt file for
+        // the currently active Creation the same way List() does, instead
+        // of throwing out of a caller like CycleTrainingProfile.
+        var directory = Path.Combine(Path.GetTempPath(), $"node-runner-{Guid.NewGuid():N}");
+        try
+        {
+            Directory.CreateDirectory(directory);
+            var id = Guid.NewGuid();
+            var repository = new FileCreationRepository(new TestStorageLocation(directory));
+            File.WriteAllText(Path.Combine(directory, $"{id:N}.json"), "{ this is not valid json");
+
+            repository.Get(id).ShouldBeNull();
+        }
+        finally
+        {
+            if (Directory.Exists(directory))
+            {
+                Directory.Delete(directory, recursive: true);
+            }
+        }
+    }
+
+    [Fact]
     public void File_DeleteMissingCreation_ReturnsFalse()
     {
         var directory = Path.Combine(Path.GetTempPath(), $"node-runner-{Guid.NewGuid():N}");
@@ -139,6 +193,127 @@ public sealed class CreationRepositoryTests
             repository.Save(progression);
 
             repository.Load().ShouldBe(progression);
+        }
+        finally
+        {
+            if (Directory.Exists(directory))
+            {
+                Directory.Delete(directory, recursive: true);
+            }
+        }
+    }
+
+    [Fact]
+    public void FileProgression_LoadWithTruncatedJson_ResetsToDefaultsAndQuarantinesFile()
+    {
+        // Regression guard for #114: a genuinely malformed file must not
+        // crash the reader that runs on nearly every generation completion.
+        var directory = Path.Combine(Path.GetTempPath(), $"node-runner-progression-{Guid.NewGuid():N}");
+        try
+        {
+            Directory.CreateDirectory(directory);
+            var path = Path.Combine(directory, "progression.json");
+            File.WriteAllText(path, "{ not valid json");
+            var repository = new FileProgressionRepository(new TestStorageLocation(directory));
+
+            var progression = repository.Load();
+
+            progression.ShouldBe(new ProgressionDef());
+            File.Exists(path).ShouldBeFalse();
+            Directory.EnumerateFiles(directory, "progression.json.corrupt-*").ShouldNotBeEmpty();
+        }
+        finally
+        {
+            if (Directory.Exists(directory))
+            {
+                Directory.Delete(directory, recursive: true);
+            }
+        }
+    }
+
+    [Fact]
+    public void FileProgression_ConcurrentLoadAndSaveAcrossInstances_NeverQuarantinesAValidFile()
+    {
+        // Regression guard for #114: the per-path lock must be shared
+        // across FileProgressionRepository instances (not just within a
+        // single instance), otherwise one instance's Load() could race a
+        // different instance's Save() and quarantine away a file that was
+        // actually just written successfully.
+        var directory = Path.Combine(Path.GetTempPath(), $"node-runner-progression-{Guid.NewGuid():N}");
+        try
+        {
+            var storageLocation = new TestStorageLocation(directory);
+            new FileProgressionRepository(storageLocation).Save(new ProgressionDef(true, 5));
+
+            Parallel.For(0, 16, i =>
+            {
+                // A fresh instance per iteration exercises the cross-instance
+                // path, not just cross-call reuse of the same object.
+                var repository = new FileProgressionRepository(storageLocation);
+                repository.Save(new ProgressionDef(true, 5 + i));
+                repository.Load();
+            });
+
+            Directory.EnumerateFiles(directory, "progression.json.corrupt-*").ShouldBeEmpty();
+            new FileProgressionRepository(storageLocation).Load().ExtraCoreUnlocked.ShouldBeTrue();
+        }
+        finally
+        {
+            if (Directory.Exists(directory))
+            {
+                Directory.Delete(directory, recursive: true);
+            }
+        }
+    }
+
+    [Fact]
+    public void FileProgression_LoadWithMissingFields_TreatsItAsCorruptRatherThanFresh()
+    {
+        // Regression guard for #114: ProgressionDef's constructor defaults
+        // make "{}" a *valid* fresh progression, so structurally incomplete
+        // JSON must be distinguished from a genuinely fresh install instead
+        // of silently resetting the unlock state.
+        var directory = Path.Combine(Path.GetTempPath(), $"node-runner-progression-{Guid.NewGuid():N}");
+        try
+        {
+            Directory.CreateDirectory(directory);
+            var path = Path.Combine(directory, "progression.json");
+            File.WriteAllText(path, "{}");
+            var repository = new FileProgressionRepository(new TestStorageLocation(directory));
+
+            var progression = repository.Load();
+
+            progression.ShouldBe(new ProgressionDef());
+            File.Exists(path).ShouldBeFalse();
+            Directory.EnumerateFiles(directory, "progression.json.corrupt-*").ShouldNotBeEmpty();
+        }
+        finally
+        {
+            if (Directory.Exists(directory))
+            {
+                Directory.Delete(directory, recursive: true);
+            }
+        }
+    }
+
+    [Fact]
+    public void FileProgression_LoadWithNonObjectJson_TreatsItAsCorruptRatherThanCrashing()
+    {
+        // Regression guard for #114: valid-but-non-object JSON (e.g. a bare
+        // array) must not throw when checking for required fields.
+        var directory = Path.Combine(Path.GetTempPath(), $"node-runner-progression-{Guid.NewGuid():N}");
+        try
+        {
+            Directory.CreateDirectory(directory);
+            var path = Path.Combine(directory, "progression.json");
+            File.WriteAllText(path, "[]");
+            var repository = new FileProgressionRepository(new TestStorageLocation(directory));
+
+            var progression = repository.Load();
+
+            progression.ShouldBe(new ProgressionDef());
+            File.Exists(path).ShouldBeFalse();
+            Directory.EnumerateFiles(directory, "progression.json.corrupt-*").ShouldNotBeEmpty();
         }
         finally
         {

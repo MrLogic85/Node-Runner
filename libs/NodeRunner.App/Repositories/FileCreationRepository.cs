@@ -31,16 +31,34 @@ public sealed class FileCreationRepository : ICreationRepository
             return [];
         }
 
-        return Directory.EnumerateFiles(_directoryPath, "*.json")
-            .Select(path => Read(path))
-            .OrderBy(creation => creation.Name)
-            .ToArray();
+        // A single unreadable/corrupt file must not empty the whole
+        // Creations list (#114): skip and log it instead of letting
+        // Read()'s exception propagate out of the LINQ pipeline.
+        var creations = new List<CreationDef>();
+        foreach (var path in Directory.EnumerateFiles(_directoryPath, "*.json"))
+        {
+            if (TryRead(path, out var creation))
+            {
+                creations.Add(creation);
+            }
+        }
+
+        return creations.OrderBy(creation => creation.Name).ToArray();
     }
 
     public CreationDef? Get(Guid id)
     {
         var path = PathFor(id);
-        return File.Exists(path) ? Read(path) : null;
+        if (!File.Exists(path))
+        {
+            return null;
+        }
+
+        // Matches List()'s recoverable-corruption handling (#114): treat an
+        // unreadable file the same as "no Creation with this id" instead of
+        // throwing, so a lookup for the currently open Creation can't crash
+        // a caller if its file becomes corrupt between saves.
+        return TryRead(path, out var creation) ? creation : null;
     }
 
     public void Save(CreationDef creation)
@@ -49,7 +67,10 @@ public sealed class FileCreationRepository : ICreationRepository
         Directory.CreateDirectory(_directoryPath);
 
         var path = PathFor(creation.Id);
-        var temporaryPath = $"{path}.tmp";
+        // A per-save unique name (rather than a shared "<path>.tmp") means
+        // no two Save() calls, even from different repository instances,
+        // can ever contend on the same temp path (#114).
+        var temporaryPath = $"{path}.{Guid.NewGuid():N}.tmp";
         var json = JsonSerializer.Serialize(creation, _jsonOptions);
 
         lock (_writeLock)
@@ -76,6 +97,21 @@ public sealed class FileCreationRepository : ICreationRepository
         var json = File.ReadAllText(path);
         return JsonSerializer.Deserialize<CreationDef>(json, _jsonOptions)
             ?? throw new InvalidDataException($"Creation file '{path}' is empty or invalid.");
+    }
+
+    private bool TryRead(string path, out CreationDef creation)
+    {
+        try
+        {
+            creation = Read(path);
+            return true;
+        }
+        catch (Exception ex) when (FilePersistenceExceptions.IsRecoverable(ex))
+        {
+            Console.Error.WriteLine($"[FileCreationRepository] Skipping unreadable creation file '{path}': {ex}");
+            creation = null!;
+            return false;
+        }
     }
 
     private string PathFor(Guid id) => Path.Combine(_directoryPath, $"{id:N}.json");

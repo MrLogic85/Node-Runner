@@ -121,7 +121,11 @@ public sealed class CreationUpdateCoordinatorTests
         var repository = new InMemoryCreationRepository();
         var coordinator = new CreationUpdateCoordinator(repository);
 
-        Should.Throw<InvalidOperationException>(() => coordinator.ResetTraining(Guid.NewGuid()));
+        // KeyNotFoundException (not InvalidOperationException), so callers
+        // treating "missing Creation" as a recoverable condition (#114)
+        // can't also swallow a genuine InvalidOperationException lifecycle
+        // bug elsewhere in the call chain.
+        Should.Throw<KeyNotFoundException>(() => coordinator.ResetTraining(Guid.NewGuid()));
     }
 
     private static CreationDef CreateCreation(string name, bool withTraining = false)
