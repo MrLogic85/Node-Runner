@@ -32,6 +32,7 @@ public partial class Main : Node2D
     private Label? _editLockReasonLabel;
     private Button? _completeButton;
     private Button? _rebuildButton;
+    private ConfirmationDialog? _rebuildConfirmationDialog;
     private PanelContainer? _buildInfoPanel;
     private Label? _buildInputSummaryLabel;
     private Label? _buildMotorSummaryLabel;
@@ -135,6 +136,21 @@ public partial class Main : Node2D
     {
         UpdateToolButtonVisibility();
         UpdateBuildPanelPresentation();
+    }
+
+    private void AddRebuildConfirmationDialog(CanvasLayer layer)
+    {
+        var presentation = ConstructionPresentation;
+        _rebuildConfirmationDialog = new ConfirmationDialog
+        {
+            Title = presentation.RebuildConfirmationTitle,
+            DialogText = presentation.RebuildConfirmationBody,
+            OkButtonText = presentation.RebuildActionText,
+            CancelButtonText = "Keep editing",
+            ProcessMode = ProcessModeEnum.Always,
+        };
+        _rebuildConfirmationDialog.Confirmed += ConfirmRebuildCreation;
+        layer.AddChild(_rebuildConfirmationDialog);
     }
 
     private string ProgressionText()
@@ -546,6 +562,7 @@ public partial class Main : Node2D
         AddChild(layer);
 
         AddConstructionToolRow(layer);
+        AddRebuildConfirmationDialog(layer);
         AddTrainingPanel(layer);
         AddCreationsPanel(layer);
     }
@@ -677,6 +694,26 @@ public partial class Main : Node2D
     }
 
     private void RebuildCreation()
+    {
+        if (!Construction.IsMoveOnly)
+        {
+            return;
+        }
+
+        if (_rebuildConfirmationDialog is null)
+        {
+            ConfirmRebuildCreation();
+            return;
+        }
+
+        var presentation = ConstructionPresentation;
+        _rebuildConfirmationDialog.Title = presentation.RebuildConfirmationTitle;
+        _rebuildConfirmationDialog.DialogText = presentation.RebuildConfirmationBody;
+        _rebuildConfirmationDialog.OkButtonText = presentation.RebuildActionText;
+        _rebuildConfirmationDialog.PopupCentered();
+    }
+
+    private void ConfirmRebuildCreation()
     {
         if (!Construction.IsMoveOnly)
         {
@@ -964,6 +1001,7 @@ public partial class Main : Node2D
         _completeButton.Pressed += CompleteCreation;
         _rebuildButton = CreateToolButton("RebuildButton", "Rebuild");
         _rebuildButton.Pressed += RebuildCreation;
+        _rebuildButton.AddThemeColorOverride("font_color", Colors.OrangeRed);
 
         rail.AddChild(_placeToolButton);
         rail.AddChild(_beamToolButton);
@@ -1353,6 +1391,8 @@ public partial class Main : Node2D
         if (_rebuildButton is not null)
         {
             _rebuildButton.Visible = presentation.ShowRebuildAction;
+            _rebuildButton.Text = presentation.RebuildActionText;
+            _rebuildButton.TooltipText = presentation.RebuildConfirmationBody;
         }
         if (_buildInfoPanel is not null)
         {

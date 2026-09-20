@@ -67,6 +67,12 @@ public sealed class ConstructionPresentationViewModel
 
     public bool ShowRebuildAction => _construction.IsMoveOnly;
 
+    public string RebuildActionText => "Rebuild body";
+
+    public string RebuildConfirmationTitle => "Rebuild body?";
+
+    public string RebuildConfirmationBody => "Rebuild creates a new body and a new brain. The original Creation and its training stay unchanged.";
+
     public string CoreToolTooltip => _construction.IsMoveOnly
         ? MoveOnlyLockReason
         : _construction.MaxCores > 1
