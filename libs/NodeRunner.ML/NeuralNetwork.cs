@@ -133,6 +133,39 @@ public sealed class NeuralNetwork
         }
     }
 
+    public double[][] CaptureActivations(double[] input)
+    {
+        ValidateInput(input);
+
+        var activations = new double[_layerSizes.Length][];
+        activations[0] = input.ToArray();
+        var previous = activations[0];
+
+        for (var layer = 0; layer < _weights.Length; layer++)
+        {
+            var inputCount = _layerSizes[layer];
+            var outputCount = _layerSizes[layer + 1];
+            var isOutputLayer = layer == _weights.Length - 1;
+            var current = new double[outputCount];
+
+            for (var neuron = 0; neuron < outputCount; neuron++)
+            {
+                var sum = _biases[layer][neuron];
+                for (var inputIndex = 0; inputIndex < inputCount; inputIndex++)
+                {
+                    sum += _weights[layer][WeightIndex(neuron, inputIndex, inputCount)] * previous[inputIndex];
+                }
+
+                current[neuron] = isOutputLayer ? Math.Tanh(sum) : ApplyActivation(sum, Activation);
+            }
+
+            activations[layer + 1] = current;
+            previous = current;
+        }
+
+        return activations;
+    }
+
     public NeuralNetwork Clone() => new(_layerSizes, Activation, _weights, _biases);
 
     public double[] FlattenGenome()
