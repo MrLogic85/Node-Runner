@@ -12,6 +12,7 @@ public partial class CreationCard : Control
     private string _note = string.Empty;
     private string _thumbnail = string.Empty;
     private string _savedState = string.Empty;
+    private string _unlockCredit = string.Empty;
     private bool _canOpen;
     private bool _canEdit;
     private bool _canDuplicate;
@@ -37,6 +38,7 @@ public partial class CreationCard : Control
         string note,
         string thumbnail,
         string savedState,
+        string unlockCredit,
         bool canOpen,
         bool canEdit,
         bool canDuplicate,
@@ -49,6 +51,7 @@ public partial class CreationCard : Control
         _note = note;
         _thumbnail = thumbnail;
         _savedState = savedState;
+        _unlockCredit = unlockCredit;
         _canOpen = canOpen;
         _canEdit = canEdit;
         _canDuplicate = canDuplicate;
@@ -97,6 +100,11 @@ public partial class CreationCard : Control
         stack.AddChild(CreateThumbnail(_thumbnail));
         stack.AddChild(CreateLabel(_summary, 14, _tokens.Muted));
         stack.AddChild(CreateLabel(_savedState, 13, _tokens.Accent));
+        if (!string.IsNullOrWhiteSpace(_unlockCredit))
+        {
+            stack.AddChild(CreateLabel(_unlockCredit, 13, _tokens.Accent));
+        }
+
         stack.AddChild(CreateLabel(_note, 14, _tokens.Accent));
         stack.AddChild(new Control { SizeFlagsVertical = SizeFlags.ExpandFill });
 

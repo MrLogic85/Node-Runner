@@ -2,7 +2,7 @@ namespace NodeRunner.Domain;
 
 public sealed record ProgressionDef
 {
-    public ProgressionDef(bool extraCoreUnlocked = false, int? extraCoreUnlockedAtGeneration = null)
+    public ProgressionDef(bool extraCoreUnlocked = false, int? extraCoreUnlockedAtGeneration = null, Guid? extraCoreUnlockedByCreationId = null)
     {
         if (extraCoreUnlocked && extraCoreUnlockedAtGeneration is null)
         {
@@ -16,9 +16,12 @@ public sealed record ProgressionDef
 
         ExtraCoreUnlocked = extraCoreUnlocked;
         ExtraCoreUnlockedAtGeneration = extraCoreUnlockedAtGeneration;
+        ExtraCoreUnlockedByCreationId = extraCoreUnlockedByCreationId;
     }
 
     public bool ExtraCoreUnlocked { get; }
 
     public int? ExtraCoreUnlockedAtGeneration { get; }
+
+    public Guid? ExtraCoreUnlockedByCreationId { get; }
 }

@@ -204,6 +204,36 @@ public sealed class CreationRepositoryTests
     }
 
     [Fact]
+    public void FileProgression_LoadWithoutUnlockAttribution_RetainsOlderProgressionFiles()
+    {
+        var directory = Path.Combine(Path.GetTempPath(), $"node-runner-progression-{Guid.NewGuid():N}");
+        try
+        {
+            Directory.CreateDirectory(directory);
+            File.WriteAllText(
+                Path.Combine(directory, "progression.json"),
+                """
+                {
+                  "ExtraCoreUnlocked": true,
+                  "ExtraCoreUnlockedAtGeneration": 12
+                }
+                """);
+            var repository = new FileProgressionRepository(new TestStorageLocation(directory));
+
+            var progression = repository.Load();
+
+            progression.ShouldBe(new ProgressionDef(true, 12));
+        }
+        finally
+        {
+            if (Directory.Exists(directory))
+            {
+                Directory.Delete(directory, recursive: true);
+            }
+        }
+    }
+
+    [Fact]
     public void FileProgression_LoadWithTruncatedJson_ResetsToDefaultsAndQuarantinesFile()
     {
         // Regression guard for #114: a genuinely malformed file must not
