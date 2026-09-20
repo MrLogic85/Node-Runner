@@ -280,16 +280,33 @@ public partial class WatchScreen : Control
 
         for (var index = 1; index <= 8; index++)
         {
-            var cell = new ColorRect
+            var isCurrent = index == 3;
+            var color = index < 3
+                ? _tokens.AccentSoft
+                : isCurrent
+                    // Marks the current generation; never rely on color
+                    // alone (see the LineStrong border below), so this
+                    // stays legible in Paper and doesn't depend on the
+                    // glow-flavored Halo tint from effects-lite (#134).
+                    ? _tokens.Accent
+                    : _tokens.Line;
+
+            // Panel (not ColorRect) so the current-generation cell can carry
+            // a themed border stylebox as its non-color "current" cue.
+            var cell = new Panel
             {
-                Color = index < 3
-                    ? _tokens.AccentSoft
-                    : index == 3
-                        ? _tokens.Halo
-                        : _tokens.Line,
                 CustomMinimumSize = new Vector2(34, 20),
                 SizeFlagsHorizontal = SizeFlags.ExpandFill,
             };
+            cell.AddThemeStyleboxOverride("panel", new StyleBoxFlat
+            {
+                BgColor = color,
+                BorderColor = isCurrent ? _tokens.LineStrong : color,
+                BorderWidthLeft = isCurrent ? 2 : 0,
+                BorderWidthTop = isCurrent ? 2 : 0,
+                BorderWidthRight = isCurrent ? 2 : 0,
+                BorderWidthBottom = isCurrent ? 2 : 0,
+            });
             strip.AddChild(cell);
         }
 
@@ -368,9 +385,11 @@ public partial class WatchScreen : Control
         var rear = center + new Vector2(-86, 16);
         control.DrawLine(rear, center, _tokens.Accent, 5, antialiased: true);
         control.DrawLine(center, front, _tokens.Accent, 5, antialiased: true);
-        control.DrawCircle(rear, 18, _tokens.AccentGlow);
-        control.DrawCircle(center, 24, _tokens.Halo);
-        control.DrawCircle(front, 18, _tokens.AccentGlow);
+        // Purely decorative illustration -- effects-lite drops the glow
+        // treatment for flat schematic dots instead of hiding them (#134).
+        control.DrawCircle(rear, _tokens.EffectsEnabled ? 18 : 8, _tokens.EffectsEnabled ? _tokens.AccentGlow : _tokens.Line);
+        control.DrawCircle(center, _tokens.EffectsEnabled ? 24 : 10, _tokens.EffectsEnabled ? _tokens.Halo : _tokens.LineStrong);
+        control.DrawCircle(front, _tokens.EffectsEnabled ? 18 : 8, _tokens.EffectsEnabled ? _tokens.AccentGlow : _tokens.Line);
     }
 
     private UiPanel CreatePanel(bool raised)

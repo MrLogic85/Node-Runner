@@ -101,9 +101,11 @@ public partial class EditScreen : Control
             var center = canvas.Size / 2;
             canvas.DrawLine(center + new Vector2(-100, 20), center + new Vector2(0, -30), _tokens.Accent, 6);
             canvas.DrawLine(center + new Vector2(0, -30), center + new Vector2(100, 16), _tokens.Accent, 6);
-            canvas.DrawCircle(center + new Vector2(0, -30), 25, _tokens.Halo);
-            canvas.DrawCircle(center + new Vector2(-100, 20), 18, _tokens.AccentGlow);
-            canvas.DrawCircle(center + new Vector2(100, 16), 18, _tokens.AccentGlow);
+            // Purely decorative illustration -- effects-lite drops the glow
+            // treatment for flat schematic dots instead of hiding them (#134).
+            canvas.DrawCircle(center + new Vector2(0, -30), _tokens.EffectsEnabled ? 25 : 10, _tokens.EffectsEnabled ? _tokens.Halo : _tokens.LineStrong);
+            canvas.DrawCircle(center + new Vector2(-100, 20), _tokens.EffectsEnabled ? 18 : 8, _tokens.EffectsEnabled ? _tokens.AccentGlow : _tokens.Line);
+            canvas.DrawCircle(center + new Vector2(100, 16), _tokens.EffectsEnabled ? 18 : 8, _tokens.EffectsEnabled ? _tokens.AccentGlow : _tokens.Line);
             canvas.DrawString(ThemeDB.FallbackFont, new Vector2(16, 28), "Ghosted original position stays visible while Move is active.", HorizontalAlignment.Left, -1, 13, _tokens.Muted);
         };
         panel.AddChild(canvas);
