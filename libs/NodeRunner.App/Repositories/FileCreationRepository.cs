@@ -12,6 +12,12 @@ public sealed class FileCreationRepository : ICreationRepository
         PropertyNameCaseInsensitive = true,
     };
 
+    // Saves can now be dispatched from a background thread (see #113), so a
+    // synchronous main-thread Save and a background one could otherwise race
+    // on the same shared `.tmp` path. Serializing writes keeps the
+    // write-temp-then-rename sequence atomic per repository instance.
+    private readonly object _writeLock = new();
+
     public FileCreationRepository(IStorageLocation storageLocation)
     {
         ArgumentNullException.ThrowIfNull(storageLocation);
@@ -44,8 +50,13 @@ public sealed class FileCreationRepository : ICreationRepository
 
         var path = PathFor(creation.Id);
         var temporaryPath = $"{path}.tmp";
-        File.WriteAllText(temporaryPath, JsonSerializer.Serialize(creation, _jsonOptions));
-        File.Move(temporaryPath, path, overwrite: true);
+        var json = JsonSerializer.Serialize(creation, _jsonOptions);
+
+        lock (_writeLock)
+        {
+            File.WriteAllText(temporaryPath, json);
+            File.Move(temporaryPath, path, overwrite: true);
+        }
     }
 
     public bool Delete(Guid id)

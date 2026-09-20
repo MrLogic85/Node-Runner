@@ -18,12 +18,8 @@ interactive.
 - **Target:** Android (primary), desktop for development
 - **Not targeted (yet):** iOS, web, consoles
 
-Read `docs/ROADMAP.md` for what version we are building toward,
-`docs/ARCHITECTURE.md` for how the code is organized, docs/CODE_DESIGN_PRINCIPLES.md
-for how to write good code, and `docs/REVIEW.md`
-for how changes land in `main`. Read `docs/UI_DIRECTION.md` before adding
-visible controls or changing screen layout. Read docs/ML_CONCEPTS.md when
-changing what the app teaches or how a concept is made visible.
+Make sure to read all the documents in docs/* and have a good understanding
+of the project before starting to work.
 
 ## Prime directives for agents
 

@@ -839,19 +839,37 @@ public partial class Main : Node2D
 
         if (!Construction.IsActive)
         {
+            // PersistActiveTraining now writes to disk in the background
+            // (#113), so a Get() right after it can't be relied on to
+            // observe that write yet. Merge the in-memory training snapshot
+            // into the read Creation directly instead of waiting on disk.
             PersistActiveTraining();
             if (_activeCreationId is { } id)
             {
                 var creation = GetNode<SaveManager>("/root/SaveManager").Get(id);
                 if (creation is not null)
                 {
-                    StartEvolution(creation);
+                    StartEvolution(WithActiveTrainingSnapshot(creation));
                     return;
                 }
             }
 
             StartEvolution();
         }
+    }
+
+    private CreationDef WithActiveTrainingSnapshot(CreationDef creation)
+    {
+        if (_evolver?.BestGenome is not { } genome || _creature?.Brain is null)
+        {
+            return creation;
+        }
+
+        return new CreationDef(
+            creation.Id,
+            creation.Name,
+            creation.Creature,
+            new TrainingStateDef(_evolver.LayerSizes, genome.ToArray(), _evolver.Generation, Activation.Tanh.ToString()));
     }
 
     private void AddConstructionToolRow(CanvasLayer layer)
@@ -985,6 +1003,13 @@ public partial class Main : Node2D
         Construction.SetCompletedMessage($"Saved {creation.Name}.");
     }
 
+    // Persisting reads the current Creation back off disk and writes the
+    // updated one, both synchronous File IO (see #113). At a generation
+    // boundary that would stall the physics thread, so the round trip runs
+    // on the thread pool instead. Everything captured below is a plain value
+    // snapshot (arrays, primitives, a Guid) — no Godot object ever crosses
+    // onto the background thread; only SaveManager/FileCreationRepository
+    // (plain C#/file APIs) are touched there.
     private void PersistActiveTraining()
     {
         if (_activeCreationId is not { } id || _evolver?.BestGenome is not { } genome || _creature?.Brain is null)
@@ -993,21 +1018,38 @@ public partial class Main : Node2D
         }
 
         var saveManager = GetNode<SaveManager>("/root/SaveManager");
-        var source = saveManager.Get(id);
-        if (source is null)
-        {
-            return;
-        }
+        var layerSizes = _evolver.LayerSizes;
+        var genomeSnapshot = genome.ToArray();
+        var generation = _evolver.Generation;
+        var epoch = saveManager.CurrentTrainingEpoch(id);
 
-        saveManager.Save(new CreationDef(
-            source.Id,
-            source.Name,
-            source.Creature,
-            new TrainingStateDef(
-                _evolver.LayerSizes,
-                genome,
-                _evolver.Generation,
-                Activation.Tanh.ToString())));
+        Task.Run(() => PersistTrainingSnapshot(saveManager, id, epoch, layerSizes, genomeSnapshot, generation));
+    }
+
+    private void PersistTrainingSnapshot(SaveManager saveManager, Guid id, long epoch, int[] layerSizes, double[] genome, int generation)
+    {
+        try
+        {
+            saveManager.TryPersistTraining(
+                id,
+                epoch,
+                new TrainingStateDef(layerSizes, genome, generation, Activation.Tanh.ToString()));
+        }
+        catch (Exception ex)
+        {
+            // Keep the full exception (not just its message) and the id/
+            // generation it failed for — this is a data-loss condition, not
+            // a benign one-liner, and dev builds should fail loud (see
+            // docs/CODE_DESIGN_PRINCIPLES.md § "Fail loud in dev").
+            CallDeferred(nameof(LogPersistTrainingError), id.ToString(), generation, ex.ToString());
+        }
+    }
+
+    // Deferred back to the main thread so the log call never touches the
+    // engine from the background save thread.
+    private void LogPersistTrainingError(string id, int generation, string exception)
+    {
+        GD.PrintErr($"Failed to persist training state for Creation {id} at generation {generation}: {exception}");
     }
 
     private void ApplyEditedCreature(CreatureDef editedCreature)
@@ -1033,11 +1075,9 @@ public partial class Main : Node2D
         if (_activeCreationId is { } id)
         {
             var saveManager = GetNode<SaveManager>("/root/SaveManager");
-            var source = saveManager.Get(id);
-            if (source is not null)
+            var updated = saveManager.ApplyCreatureEdit(id, editedCreature);
+            if (updated is not null)
             {
-                var updated = new CreationDef(source.Id, source.Name, editedCreature, source.Training);
-                saveManager.Save(updated);
                 StartEvolution(updated);
                 return;
             }
