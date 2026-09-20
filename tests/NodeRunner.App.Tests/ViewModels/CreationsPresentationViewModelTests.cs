@@ -1,4 +1,5 @@
 using NodeRunner.App.Repositories;
+using NodeRunner.App.Services;
 using NodeRunner.App.ViewModels;
 using NodeRunner.Domain;
 
@@ -34,11 +35,15 @@ public sealed class CreationsPresentationViewModelTests
         viewModel.HasCards.ShouldBeTrue();
         var walker = viewModel.Cards.Single(card => card.Id == trained.Id);
         walker.Name.ShouldBe("Walker");
+        walker.Creature.ShouldBe(trained.Creature);
         walker.SummaryText.ShouldBe("Generation 12 · trained brain");
         walker.NoteText.ShouldBe("Duplicate copies training");
         walker.ThumbnailText.ShouldBe("2 nodes · 1 beam · 1 core");
         walker.SavedStateText.ShouldBe("Saved training · generation 12");
         walker.UnlockCreditText.ShouldBe(string.Empty);
+        walker.AchievementProgress.ShouldBe(0.6f);
+        walker.AchievementProgressText.ShouldBe("Achievement progress");
+        walker.IsExample.ShouldBeFalse();
         walker.CanOpen.ShouldBeTrue();
         walker.CanEdit.ShouldBeTrue();
         walker.CanDuplicate.ShouldBeTrue();
@@ -66,8 +71,39 @@ public sealed class CreationsPresentationViewModelTests
 
         viewModel.Cards.Single(card => card.Id == credited.Id)
             .UnlockCreditText.ShouldBe("Earned extra core unlock · generation 12");
+        viewModel.Cards.Single(card => card.Id == credited.Id)
+            .AchievementProgress.ShouldBe(1f);
+        viewModel.HasAchievementCue.ShouldBeTrue();
         viewModel.Cards.Single(card => card.Id == other.Id)
             .UnlockCreditText.ShouldBe(string.Empty);
+    }
+
+    [Fact]
+    public void Refresh_WithStarterExample_MarksExampleLocked()
+    {
+        var repository = new InMemoryCreationRepository();
+        repository.Save(DefaultCreationTemplates.CreateStarterWorm());
+        var viewModel = new CreationsPresentationViewModel(repository);
+
+        viewModel.Refresh();
+
+        var example = viewModel.Cards.Single();
+        example.IsExample.ShouldBeTrue();
+        example.NoteText.ShouldBe("Example");
+        example.CanDelete.ShouldBeFalse();
+        viewModel.CanRestoreExample.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Refresh_WhenStarterExampleMissing_AllowsRestore()
+    {
+        var repository = new InMemoryCreationRepository();
+        repository.Save(CreateCreation("Player", generation: 1));
+        var viewModel = new CreationsPresentationViewModel(repository);
+
+        viewModel.Refresh();
+
+        viewModel.CanRestoreExample.ShouldBeTrue();
     }
 
     [Fact]

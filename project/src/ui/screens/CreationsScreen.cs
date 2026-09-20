@@ -1,12 +1,13 @@
 using System.ComponentModel;
 using Godot;
 using NodeRunner.App.ViewModels;
+using NodeRunner.Domain;
 using NodeRunner.Ui.Lib;
 using NodeRunner.Ui.Widgets;
 
 namespace NodeRunner.Ui.Screens;
 
-/// <summary>Creations workspace; receives presentation state from the host.</summary>
+/// <summary>Reference Creations home hub; receives presentation state from the host.</summary>
 public partial class CreationsScreen : Control
 {
     private UiTokens _tokens = UiTokens.Neon;
@@ -21,6 +22,15 @@ public partial class CreationsScreen : Control
 
     [Signal]
     public delegate void BackRequestedEventHandler();
+
+    [Signal]
+    public delegate void NewRequestedEventHandler();
+
+    [Signal]
+    public delegate void AchievementsRequestedEventHandler();
+
+    [Signal]
+    public delegate void RestoreExampleRequestedEventHandler();
 
     [Signal]
     public delegate void DuplicateRequestedEventHandler(string creationKey, string creationName);
@@ -65,8 +75,7 @@ public partial class CreationsScreen : Control
     public override void _Ready()
     {
         Name = nameof(CreationsScreen);
-        SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
-        Size = GetViewportRect().Size;
+        UiLayout.ApplyScreen(this);
         Rebuild();
     }
 
@@ -116,55 +125,50 @@ public partial class CreationsScreen : Control
         AddChild(new ColorRect
         {
             Color = _tokens.Background,
-            MouseFilter = Control.MouseFilterEnum.Ignore,
+            MouseFilter = MouseFilterEnum.Ignore,
             AnchorRight = 1,
             AnchorBottom = 1,
         });
 
         var margin = new MarginContainer();
         margin.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
-        margin.AddThemeConstantOverride("margin_left", 32);
-        margin.AddThemeConstantOverride("margin_top", 24);
-        margin.AddThemeConstantOverride("margin_right", 32);
-        margin.AddThemeConstantOverride("margin_bottom", 24);
+        margin.AddThemeConstantOverride("margin_left", (int)UiLayout.EdgeInset);
+        margin.AddThemeConstantOverride("margin_top", (int)UiLayout.EdgeInset);
+        margin.AddThemeConstantOverride("margin_right", (int)UiLayout.EdgeInset);
+        margin.AddThemeConstantOverride("margin_bottom", (int)UiLayout.EdgeInset);
         AddChild(margin);
 
         var layout = new VBoxContainer();
-        layout.AddThemeConstantOverride("separation", 16);
+        layout.AddThemeConstantOverride("separation", (int)_tokens.Space2);
         margin.AddChild(layout);
-
-        var header = new HBoxContainer();
-        header.AddChild(CreateLabel("Creations", 24, _tokens.Ink, true));
-        var back = CreateButton("Back", UiActionButton.ActionKind.Secondary);
-        back.Pressed += () => EmitSignal(SignalName.BackRequested);
-        header.AddChild(back);
-        layout.AddChild(header);
-        layout.AddChild(CreateLabel("Open, train, edit, or duplicate your saved creatures.", 14, _tokens.Muted));
+        layout.AddChild(CreateTopBar());
 
         var scroll = new ScrollContainer
         {
             SizeFlagsHorizontal = SizeFlags.ExpandFill,
             SizeFlagsVertical = SizeFlags.ExpandFill,
             VerticalScrollMode = ScrollContainer.ScrollMode.Disabled,
+            HorizontalScrollMode = ScrollContainer.ScrollMode.Auto,
         };
         var cards = new HBoxContainer
         {
             SizeFlagsHorizontal = SizeFlags.ExpandFill,
             SizeFlagsVertical = SizeFlags.ExpandFill,
         };
-        cards.AddThemeConstantOverride("separation", 14);
+        cards.AddThemeConstantOverride("separation", (int)_tokens.Space2);
         scroll.AddChild(cards);
+
         if (_presentation is null)
         {
             AddSampleCards(cards);
         }
         else if (_presentation.HasError)
         {
-            cards.AddChild(CreateLabel(_presentation.ErrorText ?? "Could not load Creations.", 16, _tokens.Danger));
+            cards.AddChild(CreateStatusLabel(_presentation.ErrorText ?? "Could not load Creations.", _tokens.Danger));
         }
         else if (!_presentation.HasCards)
         {
-            cards.AddChild(CreateLabel(_presentation.EmptyText, 16, _tokens.Muted));
+            cards.AddChild(CreateStatusLabel(_presentation.EmptyText, _tokens.Muted));
         }
         else
         {
@@ -175,6 +179,118 @@ public partial class CreationsScreen : Control
         }
 
         layout.AddChild(scroll);
+        AddChild(CreateOverflowMenu());
+    }
+
+    private Control CreateTopBar()
+    {
+        var topBar = new UiPanel
+        {
+            Tokens = _tokens,
+            Raised = false,
+            CustomMinimumSize = new Vector2(0, UiLayout.TopBarHeight),
+            SizeFlagsHorizontal = SizeFlags.ExpandFill,
+        };
+
+        var margin = new MarginContainer();
+        margin.AddThemeConstantOverride("margin_left", (int)_tokens.Space3);
+        margin.AddThemeConstantOverride("margin_top", (int)_tokens.Space1);
+        margin.AddThemeConstantOverride("margin_right", (int)_tokens.Space1);
+        margin.AddThemeConstantOverride("margin_bottom", (int)_tokens.Space1);
+        topBar.AddChild(margin);
+
+        var row = new HBoxContainer();
+        row.AddThemeConstantOverride("separation", (int)_tokens.Space2);
+        margin.AddChild(row);
+
+        var titleStack = new VBoxContainer
+        {
+            SizeFlagsHorizontal = SizeFlags.ExpandFill,
+            Alignment = BoxContainer.AlignmentMode.Center,
+        };
+        titleStack.AddThemeConstantOverride("separation", 0);
+        titleStack.AddChild(CreateStyledLabel("Creations", _tokens.HeadingText, _tokens.Ink));
+        titleStack.AddChild(CreateStyledLabel(_presentation?.SavedCueText ?? "Saved", _tokens.CaptionText, _tokens.Accent));
+        row.AddChild(titleStack);
+
+        row.AddChild(CreateAchievementButton());
+
+        var newButton = CreateButton("+ New", UiActionButton.ActionKind.Primary);
+        newButton.CustomMinimumSize = new Vector2(104, _tokens.TouchTarget);
+        newButton.Pressed += () => EmitSignal(SignalName.NewRequested);
+        row.AddChild(newButton);
+
+        var overflowButton = new UiIconButton
+        {
+            Tokens = _tokens,
+            IconText = UiIconGlyphs.More,
+            AccessibleLabel = "More",
+        };
+        overflowButton.Pressed += ToggleOverflowMenu;
+        row.AddChild(overflowButton);
+        return topBar;
+    }
+
+    private Control CreateAchievementButton()
+    {
+        var holder = new Control
+        {
+            CustomMinimumSize = new Vector2(_tokens.TouchTarget, _tokens.TouchTarget),
+        };
+        var trophy = new UiIconButton
+        {
+            Tokens = _tokens,
+            IconText = UiIconGlyphs.Trophy,
+            AccessibleLabel = "Achievements",
+        };
+        trophy.Pressed += () => EmitSignal(SignalName.AchievementsRequested);
+        holder.AddChild(trophy);
+
+        if (_presentation?.HasAchievementCue == true)
+        {
+            var badge = new PanelContainer
+            {
+                CustomMinimumSize = new Vector2(14, 14),
+                Position = new Vector2(31, 4),
+                MouseFilter = MouseFilterEnum.Ignore,
+            };
+            badge.AddThemeStyleboxOverride("panel", _tokens.ControlStyle(_tokens.Danger, _tokens.Danger, radius: (int)_tokens.RadiusPill));
+            holder.AddChild(badge);
+        }
+
+        return holder;
+    }
+
+    private UiOverflowMenu CreateOverflowMenu()
+    {
+        var menu = new UiOverflowMenu
+        {
+            Name = "CreationsOverflow",
+            Tokens = _tokens,
+            Position = new Vector2(UiLayout.CanvasWidth - 196, UiLayout.TopBarHeight + (UiLayout.EdgeInset * 2)),
+        };
+        menu.SetActions(("close", "Close Creations", false), ("restore-example", "Restore example", false));
+        menu.ActionSelected += id =>
+        {
+            if (id == "close")
+            {
+                EmitSignal(SignalName.BackRequested);
+            }
+            else if (id == "restore-example")
+            {
+                EmitSignal(SignalName.RestoreExampleRequested);
+            }
+        };
+        menu.Visible = false;
+        return menu;
+    }
+
+    private void ToggleOverflowMenu()
+    {
+        if (GetNodeOrNull<UiOverflowMenu>("CreationsOverflow") is { } menu)
+        {
+            menu.Visible = !menu.Visible;
+        }
     }
 
     private void AddSampleCards(HBoxContainer cards)
@@ -182,38 +298,50 @@ public partial class CreationsScreen : Control
         cards.AddChild(CreateCreationCard(
             "sample:first-walker",
             "First Walker",
+            null,
             "Generation 18 · best 42.6 m",
             "2 cores unlocked",
             "3 nodes · 2 beams · 1 core",
             "Saved training · generation 18",
             "Earned extra core unlock · generation 18",
+            1f,
+            "Achievement complete",
+            isExample: false,
             canOpen: true,
             canEdit: true,
             canDuplicate: true,
             canDelete: true));
         cards.AddChild(CreateCreationCard(
-            "sample:triangle-study",
-            "Triangle Study",
-            "Generation 7 · best 12.8 m",
-            "Training copied",
-            "4 nodes · 3 beams · 1 core",
-            "Saved training · generation 7",
+            "sample:starter-worm",
+            "Example: Worm",
+            null,
+            "Ready to train",
+            "Example",
+            "5 nodes · 4 beams · 1 core",
+            "Untrained Creation",
             string.Empty,
+            0f,
+            string.Empty,
+            isExample: true,
             canOpen: true,
             canEdit: true,
             canDuplicate: true,
-            canDelete: true));
+            canDelete: false));
     }
 
     private Control CreateCreationCard(CreationCardPresentation creation) =>
         CreateCreationCard(
             creation.Id.ToString("D"),
             creation.Name,
+            creation.Creature,
             creation.SummaryText,
             creation.NoteText,
             creation.ThumbnailText,
             creation.SavedStateText,
             creation.UnlockCreditText,
+            creation.AchievementProgress,
+            creation.AchievementProgressText,
+            creation.IsExample,
             canOpen: creation.CanOpen,
             canEdit: creation.CanEdit,
             canDuplicate: creation.CanDuplicate,
@@ -260,18 +388,38 @@ public partial class CreationsScreen : Control
     private Control CreateCreationCard(
         string creationKey,
         string title,
+        CreatureDef? creature,
         string summary,
         string note,
         string thumbnail,
         string savedState,
         string unlockCredit,
+        float achievementProgress,
+        string achievementProgressText,
+        bool isExample,
         bool canOpen,
         bool canEdit,
         bool canDuplicate,
         bool canDelete)
     {
         var card = new CreationCard();
-        card.Setup(_tokens, creationKey, title, summary, note, thumbnail, savedState, unlockCredit, canOpen, canEdit, canDuplicate, canDelete);
+        card.Setup(
+            _tokens,
+            creationKey,
+            title,
+            creature,
+            summary,
+            note,
+            thumbnail,
+            savedState,
+            unlockCredit,
+            achievementProgress,
+            achievementProgressText,
+            isExample,
+            canOpen,
+            canEdit,
+            canDuplicate,
+            canDelete);
         card.OpenRequested += HandleCardOpenRequested;
         card.EditRequested += HandleCardEditRequested;
         card.DuplicateRequested += HandleCardDuplicateRequested;
@@ -335,11 +483,19 @@ public partial class CreationsScreen : Control
         }
     }
 
-    private Label CreateLabel(string text, int size, Color color, bool expand = false)
+    private Label CreateStatusLabel(string text, Color color)
+    {
+        var label = CreateStyledLabel(text, _tokens.BodyText, color, expand: true);
+        label.VerticalAlignment = VerticalAlignment.Center;
+        label.HorizontalAlignment = HorizontalAlignment.Center;
+        return label;
+    }
+
+    private Label CreateStyledLabel(string text, UiTokens.TextStyle style, Color color, bool expand = false)
     {
         var label = new Label { Text = text };
         label.SizeFlagsHorizontal = expand ? SizeFlags.ExpandFill : SizeFlags.Fill;
-        label.AddThemeFontSizeOverride("font_size", size);
+        _tokens.ApplyTextStyle(label, style);
         label.AddThemeColorOverride("font_color", color);
         return label;
     }

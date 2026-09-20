@@ -54,6 +54,7 @@ public partial class Main : Node2D
     private string? _pendingDuplicateCreationName;
     private Guid? _pendingDeleteCreationId;
     private string? _pendingDeleteCreationName;
+    private bool _evolutionDeferredByHomeHub;
     private SimulateScreen? _simulateScreen;
     private Guid? _activeCreationId;
     private Label? _seedLabel;
@@ -396,6 +397,14 @@ public partial class Main : Node2D
 
         AddChild(evolver);
         _evolver = evolver;
+        if (_creationsScreen?.Visible == true)
+        {
+            _evolutionDeferredByHomeHub = true;
+            UpdateTrainingLabels();
+            ResetTrainingSaveStatus(null);
+            return;
+        }
+
         StartEvolution();
     }
 
@@ -847,10 +856,13 @@ public partial class Main : Node2D
         _creationsScreen = new CreationsScreen
         {
             Tokens = UiTokens.Neon,
-            Visible = false,
+            Visible = true,
         };
         _creationsScreen.Setup(saveManager.CreationsPresentation);
-        _creationsScreen.BackRequested += () => _creationsScreen.Visible = false;
+        _creationsScreen.BackRequested += CloseCreationsHome;
+        _creationsScreen.NewRequested += StartNewCreationFromHome;
+        _creationsScreen.AchievementsRequested += ShowAchievementsCueFromHome;
+        _creationsScreen.RestoreExampleRequested += RestoreExampleFromHome;
         _creationsScreen.OpenRequested += OpenCreationFromScreen;
         _creationsScreen.EditRequested += EditCreationFromScreen;
         _creationsScreen.DuplicateRequested += RequestDuplicateCreationFromScreen;
@@ -878,8 +890,8 @@ public partial class Main : Node2D
         {
             Name = "DeleteCreationToast",
             Tokens = UiTokens.Neon,
-            CustomMinimumSize = new Vector2(520, _touchTargetHeight),
-            Position = new Vector2(32, 620),
+            CustomMinimumSize = new Vector2(420, _touchTargetHeight),
+            Position = new Vector2(UiLayout.EdgeInset * 2, UiLayout.CanvasHeight - _touchTargetHeight - (UiLayout.EdgeInset * 2)),
             ProcessMode = ProcessModeEnum.Always,
         };
         _deleteCreationToast.UndoPressed += RestoreDeletedCreationFromToast;
@@ -911,6 +923,20 @@ public partial class Main : Node2D
         if (_creationsScreen.Visible)
         {
             RefreshCreationsPanel();
+        }
+    }
+
+    private void CloseCreationsHome()
+    {
+        if (_creationsScreen is not null)
+        {
+            _creationsScreen.Visible = false;
+        }
+
+        if (_evolutionDeferredByHomeHub)
+        {
+            _evolutionDeferredByHomeHub = false;
+            StartEvolution();
         }
     }
 
@@ -956,15 +982,16 @@ public partial class Main : Node2D
             return;
         }
 
-        _pendingDuplicateCreationId = id;
-        _pendingDuplicateCreationName = creationName;
-        if (_duplicateCreationSheet is null)
+        var saveManager = GetNode<SaveManager>("/root/SaveManager");
+        CreationDef? copy = null;
+        if (TryRunFileOperation(
+            () => copy = saveManager.Duplicate(id, CreationDuplicateMode.CopyTraining),
+            $"Duplicating Creation '{creationName}' with {CreationDuplicateMode.CopyTraining}"))
         {
-            ConfirmDuplicateCreationFromScreen(CreationDuplicateMode.CopyTraining);
-            return;
+            _deleteCreationToast?.ShowMessage($"Copied · {copy?.Name ?? creationName}");
         }
 
-        _duplicateCreationSheet.ShowFor(creationName);
+        RefreshCreationsPanel();
     }
 
     private void ConfirmDuplicateCreationFromScreen(CreationDuplicateMode mode)
@@ -1077,6 +1104,50 @@ public partial class Main : Node2D
         RefreshCreationsPanel();
     }
 
+    private void StartNewCreationFromHome()
+    {
+        if (GetTree().Paused)
+        {
+            TogglePause();
+        }
+
+        _activeCreationId = null;
+        _evolutionDeferredByHomeHub = false;
+        Selection.Clear();
+        Construction.ResetDraft();
+        Construction.IsActive = true;
+        UpdateToolButtonVisibility();
+        if (_creationsScreen is not null)
+        {
+            _creationsScreen.Visible = false;
+        }
+    }
+
+    private void ShowAchievementsCueFromHome()
+    {
+        _deleteCreationToast?.ShowMessage("Achievements open in milestone 0.13.0.");
+    }
+
+    private void RestoreExampleFromHome()
+    {
+        var saveManager = GetNode<SaveManager>("/root/SaveManager");
+        if (saveManager.Get(DefaultCreationTemplates.StarterWormId) is not null)
+        {
+            _deleteCreationToast?.ShowMessage("Example already restored.");
+            return;
+        }
+
+        if (!TryRunFileOperation(
+            () => saveManager.Save(DefaultCreationTemplates.CreateStarterWorm()),
+            "Restoring example Creation"))
+        {
+            return;
+        }
+
+        RefreshCreationsPanel();
+        _deleteCreationToast?.ShowMessage("Restored example.");
+    }
+
     private bool TryGetCreationFromScreen(string creationKey, string creationName, out CreationDef creation)
     {
         creation = null!;
@@ -1101,6 +1172,7 @@ public partial class Main : Node2D
 
     private void OpenCreation(CreationDef creation)
     {
+        _evolutionDeferredByHomeHub = false;
         if (Construction.IsActive)
         {
             Construction.IsActive = false;

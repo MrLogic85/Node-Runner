@@ -18,7 +18,7 @@ public sealed class CreationDuplicateWorkflowTests
         var copy = workflow.Duplicate(source.Id, CreationDuplicateMode.CopyTraining);
 
         copy.Id.ShouldBe(copyId);
-        copy.Name.ShouldBe("Walker Copy");
+        copy.Name.ShouldBe("Copy of Walker");
         copy.Creature.ShouldBe(source.Creature);
         copy.Training.ShouldBe(source.Training);
         repository.Get(copyId).ShouldBe(copy);
@@ -36,7 +36,7 @@ public sealed class CreationDuplicateWorkflowTests
         var copy = workflow.Duplicate(source.Id, CreationDuplicateMode.StartFresh);
 
         copy.Id.ShouldBe(copyId);
-        copy.Name.ShouldBe("Walker Copy");
+        copy.Name.ShouldBe("Copy of Walker");
         copy.Creature.ShouldBe(source.Creature);
         copy.Training.ShouldBeNull();
         repository.Get(copyId)!.Training.ShouldBeNull();

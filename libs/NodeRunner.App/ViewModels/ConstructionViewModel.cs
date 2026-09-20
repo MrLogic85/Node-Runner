@@ -51,6 +51,16 @@ public sealed class ConstructionViewModel : INotifyPropertyChanged
         AnatomyChanged?.Invoke(this, EventArgs.Empty);
     }
 
+    public void ResetDraft()
+    {
+        _builder = new CreatureBuilder();
+        _moveOnly = false;
+        ActiveTool = ConstructionTool.Place;
+        PendingBeamStartNode = null;
+        StatusMessage = null;
+        AnatomyChanged?.Invoke(this, EventArgs.Empty);
+    }
+
     public event PropertyChangedEventHandler? PropertyChanged;
 
     /// <summary>Raised whenever the placed anatomy (nodes/beams/cores) changes, so the UI can redraw.</summary>
