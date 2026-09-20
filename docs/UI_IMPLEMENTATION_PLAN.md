@@ -58,6 +58,18 @@ The current behavior is useful but the presentation is still prototype-shaped:
 
 ## Implementation phases
 
+Each phase below is tracked on GitHub for progress and acceptance-criteria
+status; the prose here is the durable specification, not a duplicated
+checklist.
+
+| Phase | GitHub tracking issue |
+|---|---|
+| 1. Component kit and visual tokens | [#119](https://github.com/MrLogic85/Node-Runner/issues/119) |
+| 2. Static screens and interaction flow | [#120](https://github.com/MrLogic85/Node-Runner/issues/120) |
+| 3. Game migration and teaching surfaces | [#121](https://github.com/MrLogic85/Node-Runner/issues/121) (Watch: #98; Main.cs HUD wiring: #106) |
+| 4. Creations and safe actions | [#122](https://github.com/MrLogic85/Node-Runner/issues/122) (durable repository: #93) |
+| 5. SignalFlow and BrainFocus (0.9) | [#97](https://github.com/MrLogic85/Node-Runner/issues/97), [#101](https://github.com/MrLogic85/Node-Runner/issues/101) |
+
 ### Phase 1 — Component kit and visual tokens
 
 **Goal:** establish the reusable design system before connecting it to the
