@@ -10,6 +10,7 @@ public sealed class ProgressionDefTests
         progression.ExtraCoreUnlocked.ShouldBeFalse();
         progression.ExtraCoreUnlockedAtGeneration.ShouldBeNull();
         progression.ExtraCoreUnlockedByCreationId.ShouldBeNull();
+        progression.DefaultCreationsSeeded.ShouldBeFalse();
     }
 
     [Fact]
@@ -29,5 +30,13 @@ public sealed class ProgressionDefTests
         progression.ExtraCoreUnlocked.ShouldBeTrue();
         progression.ExtraCoreUnlockedAtGeneration.ShouldBe(12);
         progression.ExtraCoreUnlockedByCreationId.ShouldBe(creationId);
+    }
+
+    [Fact]
+    public void ProgressionCanRecordDefaultCreationSeeding()
+    {
+        var progression = new ProgressionDef(defaultCreationsSeeded: true);
+
+        progression.DefaultCreationsSeeded.ShouldBeTrue();
     }
 }

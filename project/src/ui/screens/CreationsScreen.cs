@@ -139,7 +139,7 @@ public partial class CreationsScreen : Control
         back.Pressed += () => EmitSignal(SignalName.BackRequested);
         header.AddChild(back);
         layout.AddChild(header);
-        layout.AddChild(CreateLabel("Saved creatures you can resume, edit, or duplicate.", 14, _tokens.Muted));
+        layout.AddChild(CreateLabel("Open, train, edit, or duplicate your saved creatures.", 14, _tokens.Muted));
 
         var scroll = new ScrollContainer
         {

@@ -50,9 +50,11 @@ public sealed class FileProgressionRepository : IProgressionRepository
                 // defaults, so structurally incomplete JSON (e.g. "{}")
                 // would otherwise silently deserialize as a fresh/reset
                 // progression instead of being recognized as corrupt (#114).
-                // Every file we write always contains both fields as an
-                // object, so anything else didn't come from Save() and must
-                // be treated as invalid.
+                // Every file we write always contains the original unlock
+                // fields as an object, so anything else didn't come from
+                // Save() and must be treated as invalid. Newer fields stay
+                // optional so older valid progression files can migrate
+                // through the ProgressionDef constructor defaults.
                 using (var document = JsonDocument.Parse(json))
                 {
                     var root = document.RootElement;

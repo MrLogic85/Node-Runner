@@ -27,6 +27,7 @@ public partial class SaveManager : Node
         var progressionDirectory = ProjectSettings.GlobalizePath("user://progression");
         _progressionRepository = new FileProgressionRepository(new GodotStorageLocation(progressionDirectory));
         _creationDuplicateWorkflow = new CreationDuplicateWorkflow(_repository);
+        new DefaultCreationSeeder(_repository, _progressionRepository).SeedIfNeeded();
         _creationsPresentation = new CreationsPresentationViewModel(_repository, _progressionRepository);
     }
 
@@ -86,7 +87,11 @@ public partial class SaveManager : Node
             return creationId is { } id && TryAttributeExtraCoreUnlock(id);
         }
 
-        ProgressionRepository.Save(new ProgressionDef(true, generation, creationId));
+        ProgressionRepository.Save(new ProgressionDef(
+            true,
+            generation,
+            creationId,
+            current.DefaultCreationsSeeded));
         return true;
     }
 
@@ -98,7 +103,11 @@ public partial class SaveManager : Node
             return false;
         }
 
-        ProgressionRepository.Save(new ProgressionDef(true, current.ExtraCoreUnlockedAtGeneration, creationId));
+        ProgressionRepository.Save(new ProgressionDef(
+            true,
+            current.ExtraCoreUnlockedAtGeneration,
+            creationId,
+            current.DefaultCreationsSeeded));
         return true;
     }
 

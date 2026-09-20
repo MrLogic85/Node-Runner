@@ -73,13 +73,13 @@ public sealed class CreationsPresentationViewModel : INotifyPropertyChanged
     {
         var summary = creation.Training is { } training
             ? $"Generation {training.Generation} · trained brain"
-            : "Untrained";
+            : "Ready to train";
         var note = creation.Training is null
-            ? "Start fresh"
+            ? "Train or edit"
             : "Duplicate copies training";
         var thumbnail = $"{FormatCount(creation.Creature.Nodes.Count, "node")} · {FormatCount(creation.Creature.Beams.Count, "beam")} · {FormatCount(creation.Creature.Cores.Count, "core")}";
         var savedState = creation.Training is null
-            ? "Saved draft"
+            ? "Untrained Creation"
             : $"Saved training · generation {creation.Training.Generation}";
         var unlockCredit = progression?.ExtraCoreUnlockedByCreationId == creation.Id
             ? $"Earned extra core unlock · generation {progression.ExtraCoreUnlockedAtGeneration}"
