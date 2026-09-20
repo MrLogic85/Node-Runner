@@ -13,8 +13,15 @@ public partial class WatchScreen : Control
     private UiTokens _tokens = UiTokens.Neon;
     private readonly List<UiPanel> _signalCards = new();
     private readonly List<Label> _signalBodies = new();
+    private readonly List<ProgressBar> _sensorBars = new();
+    private readonly List<ProgressBar> _motorBars = new();
     private int _selectedSignalIndex = -1;
     private TrainingPresentationViewModel? _presentation;
+    private SignalFlowPresentationViewModel? _signalFlow;
+    private Label? _seesStatusLabel;
+    private Label? _decidesStatusLabel;
+    private Label? _twistsStatusLabel;
+    private Label? _scoresStatusLabel;
     private bool _inputPassthrough;
 
     [Signal]
@@ -62,11 +69,33 @@ public partial class WatchScreen : Control
             {
                 _presentation.PropertyChanged -= OnPresentationChanged;
             }
-
             _presentation = value;
             if (_presentation is not null)
             {
                 _presentation.PropertyChanged += OnPresentationChanged;
+            }
+
+            if (IsInsideTree())
+            {
+                RebuildLayout();
+            }
+        }
+    }
+
+    public SignalFlowPresentationViewModel? SignalFlow
+    {
+        get => _signalFlow;
+        set
+        {
+            if (_signalFlow is not null)
+            {
+                _signalFlow.PropertyChanged -= OnSignalFlowChanged;
+            }
+
+            _signalFlow = value;
+            if (_signalFlow is not null)
+            {
+                _signalFlow.PropertyChanged += OnSignalFlowChanged;
             }
 
             if (IsInsideTree())
@@ -97,6 +126,11 @@ public partial class WatchScreen : Control
             _presentation.PropertyChanged -= OnPresentationChanged;
             _presentation.PropertyChanged += OnPresentationChanged;
         }
+        if (_signalFlow is not null)
+        {
+            _signalFlow.PropertyChanged -= OnSignalFlowChanged;
+            _signalFlow.PropertyChanged += OnSignalFlowChanged;
+        }
         SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
         if (!Hosted)
         {
@@ -113,6 +147,10 @@ public partial class WatchScreen : Control
         {
             _presentation.PropertyChanged -= OnPresentationChanged;
         }
+        if (_signalFlow is not null)
+        {
+            _signalFlow.PropertyChanged -= OnSignalFlowChanged;
+        }
     }
 
     private void OnPresentationChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs args)
@@ -123,10 +161,24 @@ public partial class WatchScreen : Control
         }
     }
 
+    private void OnSignalFlowChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs args)
+    {
+        if (IsInsideTree())
+        {
+            UpdateSignalFlowCards();
+        }
+    }
+
     private void RebuildLayout()
     {
         _signalCards.Clear();
         _signalBodies.Clear();
+        _sensorBars.Clear();
+        _motorBars.Clear();
+        _seesStatusLabel = null;
+        _decidesStatusLabel = null;
+        _twistsStatusLabel = null;
+        _scoresStatusLabel = null;
         _selectedSignalIndex = -1;
         foreach (var child in GetChildren())
         {
@@ -275,15 +327,19 @@ public partial class WatchScreen : Control
         }
 
         stack.AddChild(CreateLabel("SignalFlow", 20, _tokens.Ink));
-        stack.AddChild(CreateSignalCard(0, "1 Sees", "Sensors", "The cores sense nearby contact and body state."));
-        stack.AddChild(CreateSignalCard(1, "2 Decides", "Brain choice", "The neural network turns sensor values into joint targets."));
-        stack.AddChild(CreateSignalCard(2, "3 Twists", "Joint targets", "Motor relations apply the chosen targets to beams."));
-        stack.AddChild(CreateSignalCard(3, "4 Scores", "Distance", "Fitness is the distance reached before the trial ends."));
+        stack.AddChild(CreateSignalCard(0, "1 Sees", "The cores sense nearby contact and body state."));
+        stack.AddChild(CreateSignalConnector());
+        stack.AddChild(CreateSignalCard(1, "2 Decides", "The neural network turns sensor values into joint targets."));
+        stack.AddChild(CreateSignalConnector());
+        stack.AddChild(CreateSignalCard(2, "3 Twists", "Motor relations apply the chosen targets to beams."));
+        stack.AddChild(CreateSignalConnector());
+        stack.AddChild(CreateSignalCard(3, "4 Scores", "Fitness is the distance reached before the trial ends."));
         if (!ReadOnlyControls)
         {
             stack.AddChild(CreateLabel("Tap one stage to expand its explanation.", 13, _tokens.Muted));
         }
 
+        UpdateSignalFlowCards();
         return panel;
     }
 
@@ -410,10 +466,10 @@ public partial class WatchScreen : Control
         return strip;
     }
 
-    private UiPanel CreateSignalCard(int index, string title, string body, string detail)
+    private UiPanel CreateSignalCard(int index, string title, string detail)
     {
         var card = CreatePanel(raised: true);
-        card.CustomMinimumSize = new Vector2(312, 56);
+        card.CustomMinimumSize = new Vector2(312, 86);
         _signalCards.Add(card);
 
         var margin = CreateMargin(10);
@@ -423,36 +479,164 @@ public partial class WatchScreen : Control
         stack.AddThemeConstantOverride("separation", 4);
         margin.AddChild(stack);
 
-        var action = new UiActionButton
-        {
-            Tokens = _tokens,
-            Kind = UiActionButton.ActionKind.Secondary,
-            LabelText = title,
-            CustomMinimumSize = new Vector2(0, _tokens.TouchTarget),
-        };
         if (ReadOnlyControls)
         {
-            action.Locked = true;
-            action.LockReason = "later";
-            action.ShowLockReasonInText = false;
-            action.TooltipText = "Live SignalFlow interactions arrive in a later slice.";
+            var heading = CreateLabel(title, 13, _tokens.Muted);
+            heading.HorizontalAlignment = HorizontalAlignment.Center;
+            heading.CustomMinimumSize = new Vector2(0, 24);
+            stack.AddChild(heading);
         }
         else
         {
+            var action = new UiActionButton
+            {
+                Tokens = _tokens,
+                Kind = UiActionButton.ActionKind.Secondary,
+                LabelText = title,
+                CustomMinimumSize = new Vector2(0, _tokens.TouchTarget),
+            };
             action.Pressed += () =>
             {
                 SelectSignal(index, detail);
             };
+            stack.AddChild(action);
+        }
+        switch (index)
+        {
+            case 0:
+                _seesStatusLabel = CreateLabel(string.Empty, 12, _tokens.Muted);
+                stack.AddChild(CreateThreeBarPreview(_sensorBars));
+                stack.AddChild(_seesStatusLabel);
+                break;
+            case 1:
+                _decidesStatusLabel = CreateLabel(string.Empty, 13, _tokens.Accent);
+                _decidesStatusLabel.HorizontalAlignment = HorizontalAlignment.Center;
+                stack.AddChild(_decidesStatusLabel);
+                break;
+            case 2:
+                _twistsStatusLabel = CreateLabel(string.Empty, 12, _tokens.Muted);
+                stack.AddChild(CreateTwoBarPreview(_motorBars));
+                stack.AddChild(_twistsStatusLabel);
+                break;
+            case 3:
+                _scoresStatusLabel = CreateLabel(string.Empty, 13, _tokens.Accent);
+                _scoresStatusLabel.HorizontalAlignment = HorizontalAlignment.Center;
+                stack.AddChild(_scoresStatusLabel);
+                break;
         }
 
-        stack.AddChild(action);
-        var bodyLabel = CreateLabel($"{body}: {detail}", 13, _tokens.Muted);
+        var bodyLabel = CreateLabel(detail, 13, _tokens.Muted);
         bodyLabel.Visible = false;
         bodyLabel.AutowrapMode = TextServer.AutowrapMode.WordSmart;
         _signalBodies.Add(bodyLabel);
         stack.AddChild(bodyLabel);
 
         return card;
+    }
+
+    private Control CreateThreeBarPreview(List<ProgressBar> bars)
+    {
+        var row = new HBoxContainer
+        {
+            SizeFlagsHorizontal = SizeFlags.ExpandFill,
+            CustomMinimumSize = new Vector2(0, 20),
+        };
+        row.AddThemeConstantOverride("separation", 8);
+        for (var index = 0; index < 3; index++)
+        {
+            var bar = CreateSignalBar();
+            bars.Add(bar);
+            row.AddChild(bar);
+        }
+
+        return row;
+    }
+
+    private Control CreateTwoBarPreview(List<ProgressBar> bars)
+    {
+        var row = new HBoxContainer
+        {
+            SizeFlagsHorizontal = SizeFlags.ExpandFill,
+            CustomMinimumSize = new Vector2(0, 20),
+        };
+        row.AddThemeConstantOverride("separation", 8);
+        for (var index = 0; index < 2; index++)
+        {
+            var bar = CreateSignalBar();
+            bars.Add(bar);
+            row.AddChild(bar);
+        }
+
+        return row;
+    }
+
+    private ProgressBar CreateSignalBar()
+    {
+        var bar = new ProgressBar
+        {
+            MinValue = 0,
+            MaxValue = 1,
+            ShowPercentage = false,
+            CustomMinimumSize = new Vector2(0, 12),
+            SizeFlagsHorizontal = SizeFlags.ExpandFill,
+            SizeFlagsVertical = SizeFlags.ShrinkCenter,
+        };
+        bar.AddThemeStyleboxOverride("background", new StyleBoxFlat { BgColor = _tokens.Line });
+        bar.AddThemeStyleboxOverride("fill", new StyleBoxFlat { BgColor = _tokens.Accent });
+        return bar;
+    }
+
+    private Control CreateSignalConnector()
+    {
+        var connector = new Label
+        {
+            Text = "\u2193",
+            HorizontalAlignment = HorizontalAlignment.Center,
+            CustomMinimumSize = new Vector2(0, 12),
+        };
+        connector.AddThemeColorOverride("font_color", _tokens.Accent);
+        connector.AddThemeFontSizeOverride("font_size", 12);
+        return connector;
+    }
+
+    private void UpdateSignalFlowCards()
+    {
+        if (_signalFlow is null)
+        {
+            SetLabelTextIfChanged(_seesStatusLabel, "Waiting for live sensors");
+            SetLabelTextIfChanged(_decidesStatusLabel, "Brain waits");
+            SetLabelTextIfChanged(_twistsStatusLabel, "Waiting for motors");
+            SetLabelTextIfChanged(_scoresStatusLabel, "Distance pending");
+            return;
+        }
+
+        UpdateBars(_sensorBars, _signalFlow.SensorRows);
+        UpdateBars(_motorBars, _signalFlow.MotorRows);
+        SetLabelTextIfChanged(_seesStatusLabel, _signalFlow.SensorCount == 0 ? _signalFlow.SeesSummary : string.Empty);
+        SetLabelTextIfChanged(
+            _decidesStatusLabel,
+            _signalFlow.SensorCount == 0 || _signalFlow.MotorCount == 0
+                ? "Brain waits"
+                : $"{_signalFlow.SensorCount} inputs \u2192 {_signalFlow.MotorCount} targets");
+        SetLabelTextIfChanged(_twistsStatusLabel, _signalFlow.MotorCount == 0 ? _signalFlow.TwistsSummary : string.Empty);
+        SetLabelTextIfChanged(_scoresStatusLabel, _signalFlow.ScoresSummary);
+    }
+
+    private static void UpdateBars(IReadOnlyList<ProgressBar> bars, IReadOnlyList<SignalFlowReadingPresentation> readings)
+    {
+        for (var index = 0; index < bars.Count; index++)
+        {
+            bars[index].Value = index < readings.Count ? readings[index].Fill : 0;
+        }
+    }
+
+    private static void SetLabelTextIfChanged(Label? label, string text)
+    {
+        if (label is not null && label.Text != text)
+        {
+            label.Text = text;
+            label.Visible = !string.IsNullOrWhiteSpace(text);
+        }
     }
 
     private void SelectSignal(int index, string detail)

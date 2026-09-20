@@ -70,6 +70,7 @@ public partial class Main : Node2D
     private Label? _inspectorRole;
     private Label? _inspectorValues;
     private readonly MappingViewModel _mapping = new();
+    private readonly SignalFlowPresentationViewModel _signalFlow = new();
     private readonly List<SensorReading> _sensorReadings = [];
     private readonly List<MotorReading> _motorReadings = [];
     private Button? _mappingToggleButton;
@@ -216,7 +217,7 @@ public partial class Main : Node2D
     // is wasted allocation without adding legibility.
     public override void _Process(double delta)
     {
-        if (!_showMapping || Construction.IsActive || _creature is null)
+        if (Construction.IsActive || _creature is null)
         {
             return;
         }
@@ -229,8 +230,12 @@ public partial class Main : Node2D
 
         _mappingRefreshElapsed = 0;
         _creature.ReadMapping(_sensorReadings, _motorReadings);
-        _mapping.Update(_sensorReadings, _motorReadings);
-        UpdateInspector();
+        _signalFlow.Update(_sensorReadings, _motorReadings, _trainingPresentation.BestFitness, _trainingPresentation.MeanFitness);
+        if (_showMapping)
+        {
+            _mapping.Update(_sensorReadings, _motorReadings);
+            UpdateInspector();
+        }
     }
 
     private void AddBackdrop()
@@ -488,7 +493,7 @@ public partial class Main : Node2D
         var watchLayer = new CanvasLayer
         {
             Name = "WatchOverlay",
-            Layer = 0,
+            Layer = 2,
             ProcessMode = ProcessModeEnum.Always,
         };
         AddChild(watchLayer);
@@ -503,6 +508,7 @@ public partial class Main : Node2D
             ReadOnlyControls = true,
             InputPassthrough = true,
             Presentation = _trainingPresentation,
+            SignalFlow = _signalFlow,
             Visible = !Construction.IsActive,
         };
         _watchScreen.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
