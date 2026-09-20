@@ -95,14 +95,26 @@ public sealed class CreationUpdateCoordinator : ICreationUpdateCoordinator
 
     public bool Delete(Guid id)
     {
+        return DeleteAndCapture(id) is not null;
+    }
+
+    public CreationDef? DeleteAndCapture(Guid id)
+    {
         // Serialized with UpdateIfPresent (same per-id lock) so a queued
         // training snapshot can never read the Creation, lose the race with
         // a delete, and write it back afterward.
         var creationLock = _creationLocks.GetOrAdd(id, static _ => new object());
         lock (creationLock)
         {
+            var deleted = _repository.Get(id);
+            if (deleted is null)
+            {
+                return null;
+            }
+
             BumpTrainingEpoch(id);
-            return _repository.Delete(id);
+            _repository.Delete(id);
+            return deleted;
         }
     }
 

@@ -47,4 +47,10 @@ public interface ICreationUpdateCoordinator
 
     /// <summary>Deletes a Creation, invalidating any pending training snapshot.</summary>
     bool Delete(Guid id);
+
+    /// <summary>
+    /// Atomically captures and deletes a Creation, invalidating any pending
+    /// training snapshot. Returns <c>null</c> if no such Creation exists.
+    /// </summary>
+    CreationDef? DeleteAndCapture(Guid id);
 }

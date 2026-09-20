@@ -47,6 +47,8 @@ public partial class SaveManager : Node
     // reset, edit, or delete has superseded.
     public bool Delete(Guid id) => UpdateCoordinator.Delete(id);
 
+    public CreationDef? DeleteAndCapture(Guid id) => UpdateCoordinator.DeleteAndCapture(id);
+
     public CreationDef? Get(Guid id)
     {
         return Repository.Get(id);

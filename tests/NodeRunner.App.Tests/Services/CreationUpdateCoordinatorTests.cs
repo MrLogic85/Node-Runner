@@ -74,6 +74,20 @@ public sealed class CreationUpdateCoordinatorTests
     }
 
     [Fact]
+    public void DeleteAndCapture_ReturnsDeletedCreationAndRemovesIt()
+    {
+        var repository = new InMemoryCreationRepository();
+        var coordinator = new CreationUpdateCoordinator(repository);
+        var creation = CreateCreation("Alpha", withTraining: true);
+        repository.Save(creation);
+
+        var deleted = coordinator.DeleteAndCapture(creation.Id);
+
+        deleted.ShouldBe(creation);
+        repository.Get(creation.Id).ShouldBeNull();
+    }
+
+    [Fact]
     public void TryPersistTraining_OlderGeneration_NeverRegressesNewerPersistedGeneration()
     {
         // Two snapshots queued out of order must not let the older one win.

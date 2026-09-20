@@ -43,6 +43,8 @@ public partial class Main : Node2D
     private VBoxContainer? _creationsList;
     private CreationsScreen? _creationsScreen;
     private ConfirmationDialog? _deleteCreationConfirmationDialog;
+    private UiToast? _deleteCreationToast;
+    private CreationDef? _lastDeletedCreation;
     private DuplicateCreationSheet? _duplicateCreationSheet;
     private Guid? _pendingDuplicateCreationId;
     private string? _pendingDuplicateCreationName;
@@ -613,8 +615,23 @@ public partial class Main : Node2D
         _deleteCreationConfirmationDialog.Confirmed += ConfirmDeleteCreationFromScreen;
         overlayLayer.AddChild(_deleteCreationConfirmationDialog);
         AddDuplicateCreationSheet(overlayLayer);
+        AddDeleteCreationToast(overlayLayer);
 
         RefreshCreationsPanel();
+    }
+
+    private void AddDeleteCreationToast(CanvasLayer overlayLayer)
+    {
+        _deleteCreationToast = new UiToast
+        {
+            Name = "DeleteCreationToast",
+            Tokens = UiTokens.Neon,
+            CustomMinimumSize = new Vector2(520, _touchTargetHeight),
+            Position = new Vector2(32, 620),
+            ProcessMode = ProcessModeEnum.Always,
+        };
+        _deleteCreationToast.UndoPressed += RestoreDeletedCreationFromToast;
+        overlayLayer.AddChild(_deleteCreationToast);
     }
 
     private void AddDuplicateCreationSheet(CanvasLayer overlayLayer)
@@ -746,7 +763,8 @@ public partial class Main : Node2D
             return;
         }
 
-        _deleteCreationConfirmationDialog.DialogText = $"Delete {creationName}? This permanently removes this saved Creation.";
+        _deleteCreationConfirmationDialog.DialogText =
+            $"Delete {creationName}? It will leave Creations now. You can Undo for 10 seconds.";
         _deleteCreationConfirmationDialog.PopupCentered();
     }
 
@@ -761,9 +779,43 @@ public partial class Main : Node2D
         _pendingDeleteCreationId = null;
         _pendingDeleteCreationName = null;
         var saveManager = GetNode<SaveManager>("/root/SaveManager");
-        TryRunFileOperation(
-            () => saveManager.Delete(id),
+        CreationDef? deleted = null;
+        var succeeded = TryRunFileOperation(
+            () =>
+            {
+                deleted = saveManager.DeleteAndCapture(id);
+                if (deleted is null)
+                {
+                    throw new FileNotFoundException($"Creation '{id}' was not found.");
+                }
+            },
             $"Deleting Creation '{name}'");
+        if (!succeeded)
+        {
+            return;
+        }
+
+        _lastDeletedCreation = deleted;
+        RefreshCreationsPanel();
+        _deleteCreationToast?.ShowMessage($"Deleted {name}.", "Undo", 10);
+    }
+
+    private void RestoreDeletedCreationFromToast()
+    {
+        if (_lastDeletedCreation is not { } creation)
+        {
+            return;
+        }
+
+        var saveManager = GetNode<SaveManager>("/root/SaveManager");
+        if (!TryRunFileOperation(
+            () => saveManager.Save(creation),
+            $"Restoring Creation '{creation.Name}'"))
+        {
+            return;
+        }
+
+        _lastDeletedCreation = null;
         RefreshCreationsPanel();
     }
 
