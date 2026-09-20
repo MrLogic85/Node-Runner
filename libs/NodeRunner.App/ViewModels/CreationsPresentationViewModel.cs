@@ -69,20 +69,31 @@ public sealed class CreationsPresentationViewModel : INotifyPropertyChanged
     private static CreationCardPresentation ToCard(CreationDef creation)
     {
         var summary = creation.Training is { } training
-            ? $"Generation {training.Generation}"
+            ? $"Generation {training.Generation} · trained brain"
             : "Untrained";
         var note = creation.Training is null
             ? "Start fresh"
-            : "Training saved";
+            : "Duplicate copies training";
+        var thumbnail = $"{FormatCount(creation.Creature.Nodes.Count, "node")} · {FormatCount(creation.Creature.Beams.Count, "beam")} · {FormatCount(creation.Creature.Cores.Count, "core")}";
+        var savedState = creation.Training is null
+            ? "Saved draft"
+            : $"Saved training · generation {creation.Training.Generation}";
 
         return new CreationCardPresentation(
             creation.Id,
             creation.Name,
             summary,
             note,
+            thumbnail,
+            savedState,
             CanOpen: true,
             CanEdit: true,
             CanDuplicate: true,
             CanDelete: true);
     }
+
+    private static string FormatCount(int count, string singular) =>
+        count == 1
+            ? $"1 {singular}"
+            : $"{count} {singular}s";
 }

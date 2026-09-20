@@ -5,6 +5,8 @@ public sealed record CreationCardPresentation(
     string Name,
     string SummaryText,
     string NoteText,
+    string ThumbnailText,
+    string SavedStateText,
     bool CanOpen,
     bool CanEdit,
     bool CanDuplicate,

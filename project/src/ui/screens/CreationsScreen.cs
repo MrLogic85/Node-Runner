@@ -2,6 +2,7 @@ using System.ComponentModel;
 using Godot;
 using NodeRunner.App.ViewModels;
 using NodeRunner.Ui.Lib;
+using NodeRunner.Ui.Widgets;
 
 namespace NodeRunner.Ui.Screens;
 
@@ -179,25 +180,23 @@ public partial class CreationsScreen : Control
     private void AddSampleCards(HBoxContainer cards)
     {
         cards.AddChild(CreateCreationCard(
+            "sample:first-walker",
             "First Walker",
             "Generation 18 · best 42.6 m",
             "2 cores unlocked",
-            () => EmitSignal(SignalName.OpenRequested, "sample:first-walker", "First Walker"),
-            () => EmitSignal(SignalName.EditRequested, "sample:first-walker", "First Walker"),
-            () => EmitSignal(SignalName.DuplicateRequested, "sample:first-walker", "First Walker"),
-            () => EmitSignal(SignalName.DeleteRequested, "sample:first-walker", "First Walker"),
+            "3 nodes · 2 beams · 1 core",
+            "Saved training · generation 18",
             canOpen: true,
             canEdit: true,
             canDuplicate: true,
             canDelete: true));
         cards.AddChild(CreateCreationCard(
+            "sample:triangle-study",
             "Triangle Study",
             "Generation 7 · best 12.8 m",
             "Training copied",
-            () => EmitSignal(SignalName.OpenRequested, "sample:triangle-study", "Triangle Study"),
-            () => EmitSignal(SignalName.EditRequested, "sample:triangle-study", "Triangle Study"),
-            () => EmitSignal(SignalName.DuplicateRequested, "sample:triangle-study", "Triangle Study"),
-            () => EmitSignal(SignalName.DeleteRequested, "sample:triangle-study", "Triangle Study"),
+            "4 nodes · 3 beams · 1 core",
+            "Saved training · generation 7",
             canOpen: true,
             canEdit: true,
             canDuplicate: true,
@@ -206,13 +205,12 @@ public partial class CreationsScreen : Control
 
     private Control CreateCreationCard(CreationCardPresentation creation) =>
         CreateCreationCard(
+            creation.Id.ToString("D"),
             creation.Name,
             creation.SummaryText,
             creation.NoteText,
-            () => EmitPresentationIntent(CreationCommandKind.Open, creation.Id, creation.Name),
-            () => EmitPresentationIntent(CreationCommandKind.Edit, creation.Id, creation.Name),
-            () => EmitPresentationIntent(CreationCommandKind.Duplicate, creation.Id, creation.Name),
-            () => EmitPresentationIntent(CreationCommandKind.Delete, creation.Id, creation.Name),
+            creation.ThumbnailText,
+            creation.SavedStateText,
             canOpen: creation.CanOpen,
             canEdit: creation.CanEdit,
             canDuplicate: creation.CanDuplicate,
@@ -256,52 +254,81 @@ public partial class CreationsScreen : Control
         }
     }
 
-    private Control CreateCreationCard(string title, string summary, string note, Action open, Action edit, Action duplicate, Action delete, bool canOpen, bool canEdit, bool canDuplicate, bool canDelete)
+    private Control CreateCreationCard(
+        string creationKey,
+        string title,
+        string summary,
+        string note,
+        string thumbnail,
+        string savedState,
+        bool canOpen,
+        bool canEdit,
+        bool canDuplicate,
+        bool canDelete)
     {
-        var card = new UiPanel
-        {
-            Tokens = _tokens,
-            Raised = true,
-            CustomMinimumSize = new Vector2(280, 0),
-            SizeFlagsHorizontal = SizeFlags.ExpandFill,
-        };
-        var margin = new MarginContainer();
-        margin.AddThemeConstantOverride("margin_left", 16);
-        margin.AddThemeConstantOverride("margin_top", 16);
-        margin.AddThemeConstantOverride("margin_right", 16);
-        margin.AddThemeConstantOverride("margin_bottom", 16);
-        card.AddChild(margin);
-        var stack = new VBoxContainer();
-        stack.AddThemeConstantOverride("separation", 10);
-        margin.AddChild(stack);
-        stack.AddChild(CreateLabel(title, 19, _tokens.Ink));
-        stack.AddChild(CreateLabel(summary, 14, _tokens.Muted));
-        stack.AddChild(CreateLabel(note, 14, _tokens.Accent));
-        var spacer = new Control { SizeFlagsVertical = SizeFlags.ExpandFill };
-        stack.AddChild(spacer);
-        var actions = new HBoxContainer();
-        actions.AddThemeConstantOverride("separation", 8);
-        var openButton = CreateButton("Open", UiActionButton.ActionKind.Primary);
-        openButton.Locked = !canOpen;
-        openButton.Pressed += open;
-        actions.AddChild(openButton);
-        var editButton = CreateButton("Edit", UiActionButton.ActionKind.Secondary);
-        editButton.Locked = !canEdit;
-        editButton.Pressed += edit;
-        actions.AddChild(editButton);
-        stack.AddChild(actions);
-        var safeActions = new HBoxContainer();
-        safeActions.AddThemeConstantOverride("separation", 8);
-        var duplicateButton = CreateButton("Duplicate", UiActionButton.ActionKind.Secondary);
-        duplicateButton.Locked = !canDuplicate;
-        duplicateButton.Pressed += duplicate;
-        safeActions.AddChild(duplicateButton);
-        var deleteButton = CreateButton("Delete", UiActionButton.ActionKind.Danger);
-        deleteButton.Locked = !canDelete;
-        deleteButton.Pressed += delete;
-        safeActions.AddChild(deleteButton);
-        stack.AddChild(safeActions);
+        var card = new CreationCard();
+        card.Setup(_tokens, creationKey, title, summary, note, thumbnail, savedState, canOpen, canEdit, canDuplicate, canDelete);
+        card.OpenRequested += HandleCardOpenRequested;
+        card.EditRequested += HandleCardEditRequested;
+        card.DuplicateRequested += HandleCardDuplicateRequested;
+        card.DeleteRequested += HandleCardDeleteRequested;
         return card;
+    }
+
+    private void HandleCardOpenRequested(string creationKey, string creationName)
+    {
+        if (_presentation is null)
+        {
+            EmitSignal(SignalName.OpenRequested, creationKey, creationName);
+            return;
+        }
+
+        if (Guid.TryParse(creationKey, out var id))
+        {
+            EmitPresentationIntent(CreationCommandKind.Open, id, creationName);
+        }
+    }
+
+    private void HandleCardEditRequested(string creationKey, string creationName)
+    {
+        if (_presentation is null)
+        {
+            EmitSignal(SignalName.EditRequested, creationKey, creationName);
+            return;
+        }
+
+        if (Guid.TryParse(creationKey, out var id))
+        {
+            EmitPresentationIntent(CreationCommandKind.Edit, id, creationName);
+        }
+    }
+
+    private void HandleCardDuplicateRequested(string creationKey, string creationName)
+    {
+        if (_presentation is null)
+        {
+            EmitSignal(SignalName.DuplicateRequested, creationKey, creationName);
+            return;
+        }
+
+        if (Guid.TryParse(creationKey, out var id))
+        {
+            EmitPresentationIntent(CreationCommandKind.Duplicate, id, creationName);
+        }
+    }
+
+    private void HandleCardDeleteRequested(string creationKey, string creationName)
+    {
+        if (_presentation is null)
+        {
+            EmitSignal(SignalName.DeleteRequested, creationKey, creationName);
+            return;
+        }
+
+        if (Guid.TryParse(creationKey, out var id))
+        {
+            EmitPresentationIntent(CreationCommandKind.Delete, id, creationName);
+        }
     }
 
     private Label CreateLabel(string text, int size, Color color, bool expand = false)
@@ -313,14 +340,12 @@ public partial class CreationsScreen : Control
         return label;
     }
 
-    private UiActionButton CreateButton(string text, UiActionButton.ActionKind kind)
-    {
-        return new UiActionButton
+    private UiActionButton CreateButton(string text, UiActionButton.ActionKind kind) =>
+        new()
         {
             Tokens = _tokens,
             LabelText = text,
             Kind = kind,
             CustomMinimumSize = new Vector2(96, _tokens.TouchTarget),
         };
-    }
 }
