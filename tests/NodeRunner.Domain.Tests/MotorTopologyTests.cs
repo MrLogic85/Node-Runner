@@ -3,6 +3,42 @@ namespace NodeRunner.Domain.Tests;
 public sealed class MotorTopologyTests
 {
     [Fact]
+    public void BuildRigidTriangles_ClosedTriangle_ReturnsOneSortedTriangle()
+    {
+        var creature = new CreatureDef(
+            new[]
+            {
+                new NodeDef(new Vector2D(0, 0), 1),
+                new NodeDef(new Vector2D(1, 0), 1),
+                new NodeDef(new Vector2D(0, 1), 1),
+            },
+            new[] { new BeamDef(1, 2), new BeamDef(2, 0), new BeamDef(0, 1) },
+            []);
+
+        var triangles = MotorTopology.BuildRigidTriangles(creature);
+
+        triangles.ShouldBe([new RigidTriangleDef(0, 1, 2)]);
+    }
+
+    [Fact]
+    public void BuildRigidTriangles_Chain_ReturnsNoTriangles()
+    {
+        var creature = new CreatureDef(
+            new[]
+            {
+                new NodeDef(new Vector2D(0, 0), 1),
+                new NodeDef(new Vector2D(1, 0), 1),
+                new NodeDef(new Vector2D(2, 0), 1),
+            },
+            new[] { new BeamDef(0, 1), new BeamDef(1, 2) },
+            []);
+
+        var triangles = MotorTopology.BuildRigidTriangles(creature);
+
+        triangles.ShouldBeEmpty();
+    }
+
+    [Fact]
     public void BuildNodeConnections_EndNodeWithOneBeam_HasNoConnections()
     {
         // Two nodes, one beam: both ends have degree 1, i.e. no free rotation.

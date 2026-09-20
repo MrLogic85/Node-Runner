@@ -17,6 +17,40 @@ namespace NodeRunner.Domain;
 public static class MotorTopology
 {
     /// <summary>
+    /// Finds every closed triangle of beams in the creature. Each returned
+    /// triangle is rigid by geometry (SSS) and therefore contributes no
+    /// independent motor relation inside that triangle.
+    /// </summary>
+    public static IReadOnlyList<RigidTriangleDef> BuildRigidTriangles(CreatureDef creature)
+    {
+        ArgumentNullException.ThrowIfNull(creature);
+
+        var triangles = new HashSet<RigidTriangleDef>();
+        var beams = creature.Beams;
+        for (var a = 0; a < beams.Count; a++)
+        {
+            for (var b = a + 1; b < beams.Count; b++)
+            {
+                if (!TryShareNode(beams[a], beams[b], out _, out var farA, out var farB))
+                {
+                    continue;
+                }
+
+                if (TryFindBeamBetween(creature, farA, farB, out var closingBeam) && closingBeam != a && closingBeam != b)
+                {
+                    triangles.Add(new RigidTriangleDef(beams[a].NodeA, beams[a].NodeB, farB));
+                }
+            }
+        }
+
+        return triangles
+            .OrderBy(triangle => triangle.NodeA)
+            .ThenBy(triangle => triangle.NodeB)
+            .ThenBy(triangle => triangle.NodeC)
+            .ToArray();
+    }
+
+    /// <summary>
     /// Builds every physical pin between beams that share a node, plus which
     /// of those pins are genuinely independent motor relations: a node with
     /// N beams grouped into K rigid clusters (clusters of size 1 unless a
@@ -171,6 +205,7 @@ public static class MotorTopology
             locked[i] = [];
         }
 
+        var triangleSet = BuildRigidTriangles(creature).ToHashSet();
         var beams = creature.Beams;
         for (var a = 0; a < beams.Count; a++)
         {
@@ -181,12 +216,7 @@ public static class MotorTopology
                     continue;
                 }
 
-                if (!TryFindBeamBetween(creature, farA, farB, out var closingBeam))
-                {
-                    continue;
-                }
-
-                if (closingBeam == a || closingBeam == b)
+                if (!triangleSet.Contains(new RigidTriangleDef(sharedNode, farA, farB)))
                 {
                     continue;
                 }
