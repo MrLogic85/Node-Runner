@@ -607,6 +607,7 @@ public partial class Main : Node2D
         _buildScreen.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
         _buildScreen.SimulateRequested += ToggleConstructionMode;
         _buildScreen.ToolRequested += tool => Construction.ActiveTool = (ConstructionTool)(int)tool;
+        _buildScreen.SaveRequested += SaveCreationFromBuild;
         _buildScreen.TrainingRequested += CompleteCreationAndSimulate;
         _buildScreen.RebuildRequested += RebuildCreation;
         buildLayer.AddChild(_buildScreen);
@@ -1683,6 +1684,16 @@ public partial class Main : Node2D
     private void CompleteCreation()
     {
         _ = TryCompleteCreation(out _, out _);
+    }
+
+    private void SaveCreationFromBuild()
+    {
+        if (!TryCompleteCreation(out _, out var creation) || creation is null)
+        {
+            return;
+        }
+
+        OpenCreation(creation);
     }
 
     private void CompleteCreationAndSimulate()

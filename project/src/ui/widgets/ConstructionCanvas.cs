@@ -105,9 +105,15 @@ public partial class ConstructionCanvas : Node2D
 
         DrawTopologyFeedback();
 
-        foreach (var node in _viewModel.Nodes)
+        for (var nodeIndex = 0; nodeIndex < _viewModel.Nodes.Count; nodeIndex++)
         {
+            var node = _viewModel.Nodes[nodeIndex];
             var position = ToGodot(node.Position);
+            if (_viewModel.SelectedNodeIndices.Contains(nodeIndex))
+            {
+                DrawCircle(position, (float)node.Radius * 1.7f, Theme.SelectionGlow);
+            }
+
             DrawCircle(position, (float)node.Radius * 1.18f, Theme.NodeGlow);
             DrawCircle(position, (float)node.Radius, Theme.NodeFill);
         }
@@ -348,6 +354,22 @@ public partial class ConstructionCanvas : Node2D
                 }
 
                 break;
+            case ConstructionTool.Select:
+                if (foundNode)
+                {
+                    if (!_viewModel.SelectedNodeIndices.Contains(nodeIndex))
+                    {
+                        _viewModel.ToggleSelectedNode(nodeIndex);
+                    }
+
+                    _draggingNodeIndex = nodeIndex;
+                }
+                else
+                {
+                    _viewModel.ClearSelection();
+                }
+
+                break;
             case ConstructionTool.Place:
             default:
                 if (foundNode)
@@ -368,7 +390,7 @@ public partial class ConstructionCanvas : Node2D
 
     private void HandleDrag(Vector2 localPosition)
     {
-        if (_viewModel is null || _viewModel.ActiveTool != ConstructionTool.Place)
+        if (_viewModel is null || (_viewModel.ActiveTool != ConstructionTool.Place && _viewModel.ActiveTool != ConstructionTool.Select))
         {
             return;
         }
@@ -378,7 +400,14 @@ public partial class ConstructionCanvas : Node2D
             return;
         }
 
-        _viewModel.MoveNode(_draggingNodeIndex, ToDomain(localPosition));
+        if (_viewModel.ActiveTool == ConstructionTool.Select)
+        {
+            _viewModel.MoveSelectedNodes(_draggingNodeIndex, ToDomain(localPosition));
+        }
+        else
+        {
+            _viewModel.MoveNode(_draggingNodeIndex, ToDomain(localPosition));
+        }
     }
 
     private void OnAnatomyChanged(object? sender, EventArgs eventArgs)

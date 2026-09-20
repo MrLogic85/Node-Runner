@@ -12,13 +12,12 @@ namespace NodeRunner.Ui.Screens;
 public partial class BuildScreen : Control
 {
     private const string _hostedInputPassthroughMeta = "HostedInputPassthrough";
-    private const int _topBarHeight = 64;
     private const int _modeSwitchHeight = 52;
-    private const int _toolRailWidth = 84;
-    private const int _toolButtonHeight = 76;
+    private const int _toolButtonHeight = 56;
     private UiTokens _tokens = UiTokens.Neon;
     private ConstructionPresentationViewModel? _presentation;
     private bool _isSubscribedToPresentation;
+    private bool _partsTrayCollapsed;
 
     [Export]
     public bool ShowTopBar { get; set; } = true;
@@ -31,6 +30,9 @@ public partial class BuildScreen : Control
 
     [Signal]
     public delegate void TrainingRequestedEventHandler();
+
+    [Signal]
+    public delegate void SaveRequestedEventHandler();
 
     [Signal]
     public delegate void RebuildRequestedEventHandler();
@@ -79,7 +81,7 @@ public partial class BuildScreen : Control
     {
         Name = nameof(BuildScreen);
         MouseFilter = MouseFilterEnum.Ignore;
-        SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
+        UiLayout.ApplyScreen(this);
         if (!Hosted)
         {
             Size = GetViewportRect().Size;
@@ -150,7 +152,7 @@ public partial class BuildScreen : Control
             });
         }
 
-        var safeFrame = MarkHostedInputPassthrough(CreateMargin(12));
+        var safeFrame = MarkHostedInputPassthrough(CreateMargin((int)UiLayout.EdgeInset));
         AddChild(safeFrame);
 
         var screenParent = safeFrame;
@@ -195,7 +197,7 @@ public partial class BuildScreen : Control
     private Control CreateTopBar()
     {
         var topBarPanel = CreatePanel(raised: true);
-        topBarPanel.CustomMinimumSize = new Vector2(0, _topBarHeight);
+        topBarPanel.CustomMinimumSize = new Vector2(0, UiLayout.TopBarHeight);
         topBarPanel.SizeFlagsHorizontal = SizeFlags.ExpandFill;
 
         var margin = new MarginContainer();
@@ -208,9 +210,9 @@ public partial class BuildScreen : Control
         var topBar = new HBoxContainer
         {
             SizeFlagsHorizontal = SizeFlags.ExpandFill,
-            CustomMinimumSize = new Vector2(0, _topBarHeight),
+            CustomMinimumSize = new Vector2(0, UiLayout.TopBarHeight),
         };
-        topBar.AddThemeConstantOverride("separation", 8);
+        topBar.AddThemeConstantOverride("separation", (int)_tokens.Space2);
         margin.AddChild(topBar);
 
         topBar.AddChild(new UiIconButton
@@ -226,10 +228,29 @@ public partial class BuildScreen : Control
         };
         titleStack.AddThemeConstantOverride("separation", 0);
         topBar.AddChild(titleStack);
-        titleStack.AddChild(CreateLabel("Building", 22, _tokens.Ink, expand: true));
-        titleStack.AddChild(CreateLabel("✓ Saved", 14, _tokens.Muted));
+        titleStack.AddChild(CreateLabel("Untitled Creation  ✎", 18, _tokens.Ink, expand: true));
+        titleStack.AddChild(CreateLabel("Unsaved anatomy draft", 11, _tokens.Muted));
 
-        topBar.AddChild(CreateModeSwitch());
+        topBar.AddChild(new UiChip
+        {
+            Tokens = _tokens,
+            Text = "Brain 1 × 4",
+            Kind = UiChip.ChipKind.Accent,
+        });
+        var buildPanel = Presentation?.BuildPanel ?? ConstructionBuildPanelPresentation.Sample;
+        var save = CreateButton("Save", buildPanel.CanCompleteCreation ? UiActionButton.ActionKind.Primary : UiActionButton.ActionKind.Secondary, buildPanel.DisabledReason ?? "Save this Creation");
+        save.CustomMinimumSize = new Vector2(88, _tokens.TouchTarget);
+        save.Locked = !buildPanel.CanCompleteCreation;
+        save.ShowLockReasonInText = false;
+        if (buildPanel.DisabledReason is not null)
+        {
+            save.LockReason = buildPanel.DisabledReason;
+        }
+        if (buildPanel.CanCompleteCreation)
+        {
+            save.Pressed += () => EmitSignal(SignalName.SaveRequested);
+        }
+        topBar.AddChild(save);
         topBar.AddChild(new UiIconButton
         {
             Tokens = _tokens,
@@ -244,7 +265,7 @@ public partial class BuildScreen : Control
     {
         var presentation = Presentation;
         var panel = CreatePanel(raised: true);
-        panel.CustomMinimumSize = new Vector2(_toolRailWidth, 0);
+        panel.CustomMinimumSize = new Vector2(UiLayout.LeftRailWidth, 0);
         panel.SizeFlagsVertical = SizeFlags.ExpandFill;
 
         var margin = CreateMargin(0);
@@ -260,7 +281,7 @@ public partial class BuildScreen : Control
 
         rail.AddChild(CreateBuildToolButton(
             ConstructionTool.Place,
-            presentation?.PlaceToolText ?? "Move",
+            "Move",
             ToolButtonKind(ConstructionTool.Place),
             presentation is null ? "Move sample nodes" : ConstructionPresentationViewModel.ToolHint(ConstructionTool.Place),
             locked: false));
@@ -275,21 +296,11 @@ public partial class BuildScreen : Control
                     : ConstructionPresentationViewModel.ToolHint(ConstructionTool.Beam),
             presentation?.LockTopologyTools ?? false));
         rail.AddChild(CreateBuildToolButton(
-            ConstructionTool.Core,
-            CompactCoreToolText(presentation?.CoreToolText) ?? "Core",
-            ToolButtonKind(ConstructionTool.Core),
-            presentation?.CoreToolTooltip ?? "Attach sample core",
-            presentation?.LockTopologyTools ?? false));
-        rail.AddChild(CreateBuildToolButton(
-            ConstructionTool.Delete,
-            presentation?.DeleteToolText ?? "Delete",
-            ToolButtonKind(ConstructionTool.Delete),
-            presentation is null
-                ? "Remove sample part"
-                : presentation.LockTopologyTools
-                    ? presentation.MoveOnlyLockReason
-                    : ConstructionPresentationViewModel.ToolHint(ConstructionTool.Delete),
-            presentation?.LockTopologyTools ?? false));
+            ConstructionTool.Select,
+            presentation?.SelectToolText ?? "Select",
+            ToolButtonKind(ConstructionTool.Select),
+            presentation is null ? "Select parts" : ConstructionPresentationViewModel.ToolHint(ConstructionTool.Select),
+            locked: false));
         rail.AddChild(CreateSpacer());
 
         return panel;
@@ -317,10 +328,10 @@ public partial class BuildScreen : Control
             Text = label.ToUpperInvariant(),
             TooltipText = tooltip,
             Disabled = locked,
-            CustomMinimumSize = new Vector2(_toolRailWidth, _toolButtonHeight),
+            CustomMinimumSize = new Vector2(UiLayout.LeftRailWidth, _toolButtonHeight),
             SizeFlagsHorizontal = SizeFlags.ExpandFill,
         };
-        button.AddThemeFontSizeOverride("font_size", 15);
+        button.AddThemeFontSizeOverride("font_size", 11);
         button.AddThemeColorOverride("font_color", locked ? _tokens.Muted : _tokens.Ink);
         button.AddThemeColorOverride("font_hover_color", _tokens.Ink);
         button.AddThemeColorOverride("font_pressed_color", _tokens.Ink);
@@ -382,10 +393,27 @@ public partial class BuildScreen : Control
     {
         var buildPanel = Presentation?.BuildPanel ?? ConstructionBuildPanelPresentation.Sample;
         var panel = CreatePanel(raised: true);
-        panel.CustomMinimumSize = new Vector2(320, 0);
+        panel.CustomMinimumSize = new Vector2(_partsTrayCollapsed ? 28 : UiLayout.RightPanelWidth, 0);
         panel.SizeFlagsVertical = SizeFlags.ExpandFill;
 
-        var margin = CreateMargin(18);
+        if (_partsTrayCollapsed)
+        {
+            var handle = new Button
+            {
+                Text = "‹",
+                CustomMinimumSize = new Vector2(28, 0),
+                SizeFlagsVertical = SizeFlags.ExpandFill,
+            };
+            _tokens.ApplyTextStyle(handle, _tokens.HeadingText);
+            handle.AddThemeColorOverride("font_color", _tokens.Accent);
+            handle.AddThemeStyleboxOverride("normal", _tokens.ControlStyle(_tokens.PanelRaised, _tokens.Edge));
+            handle.AddThemeStyleboxOverride("hover", _tokens.ControlStyle(_tokens.AccentSoft, _tokens.Accent));
+            handle.Pressed += TogglePartsTrayCollapsed;
+            panel.AddChild(handle);
+            return panel;
+        }
+
+        var margin = CreateMargin((int)_tokens.Space2);
         panel.AddChild(margin);
 
         var stack = new VBoxContainer
@@ -393,40 +421,80 @@ public partial class BuildScreen : Control
             SizeFlagsHorizontal = SizeFlags.ExpandFill,
             SizeFlagsVertical = SizeFlags.ExpandFill,
         };
-        stack.AddThemeConstantOverride("separation", 10);
+        stack.AddThemeConstantOverride("separation", (int)_tokens.Space1);
         margin.AddChild(stack);
 
-        stack.AddChild(CreateLabel(ConstructionBuildPanelPresentation.Title, 20, _tokens.Muted));
-        stack.AddChild(CreateBrainPreview(buildPanel));
-        stack.AddChild(CreateLabel(BuildBrainCountLine(buildPanel), 17, _tokens.Muted));
-        stack.AddChild(CreateValidationLine(buildPanel));
-        stack.AddChild(CreateSpacer());
-        if (Presentation?.ShowRebuildAction == true)
-        {
-            var rebuild = CreateButton(Presentation.RebuildActionText, UiActionButton.ActionKind.Danger, Presentation.RebuildConfirmationBody);
-            rebuild.Pressed += () => EmitSignal(SignalName.RebuildRequested);
-            stack.AddChild(rebuild);
-        }
-        else
-        {
-            var startTraining = CreateButton(
-                "Save + train",
-                UiActionButton.ActionKind.Primary,
-                buildPanel.DisabledReason ?? "Save this body and start training in Simulate");
-            startTraining.Locked = !buildPanel.CanStartTraining;
-            if (buildPanel.DisabledReason is not null)
-            {
-                startTraining.ShowLockReasonInText = false;
-                startTraining.LockReason = buildPanel.DisabledReason;
-            }
-            if (buildPanel.CanStartTraining)
-            {
-                startTraining.Pressed += () => EmitSignal(SignalName.TrainingRequested);
-            }
-            stack.AddChild(startTraining);
-        }
+        stack.AddChild(CreatePartsTrayHeader());
+        var presentation = Presentation;
+        stack.AddChild(CreatePartButton("Node", "1 left", locked: false, ConstructionTool.Place));
+        stack.AddChild(CreatePartButton("Core", $"{Mathf.Max(0, (presentation?.MaxCores ?? 1) - (presentation?.CoreCount ?? 0))} left", locked: presentation?.LockTopologyTools ?? false, ConstructionTool.Core));
+        stack.AddChild(CreatePartButton("Motor", "1 left", locked: false, ConstructionTool.Beam));
+        stack.AddChild(CreatePartButton("Spring", "locked", locked: true, null));
+        stack.AddChild(CreateCompactValidationLine(buildPanel));
 
         return panel;
+    }
+
+    private Control CreatePartsTrayHeader()
+    {
+        var row = new HBoxContainer();
+        row.AddThemeConstantOverride("separation", (int)_tokens.Space1);
+        row.AddChild(CreateLabel("Parts tray", 14, _tokens.Ink, expand: true));
+        var collapse = new Button
+        {
+            Text = "›",
+            CustomMinimumSize = new Vector2(28, 28),
+        };
+        _tokens.ApplyTextStyle(collapse, _tokens.LabelText);
+        collapse.AddThemeColorOverride("font_color", _tokens.Accent);
+        collapse.AddThemeStyleboxOverride("normal", _tokens.ControlStyle(_tokens.PanelRaised, _tokens.Edge, radius: (int)_tokens.RadiusSmall));
+        collapse.AddThemeStyleboxOverride("hover", _tokens.ControlStyle(_tokens.AccentSoft, _tokens.Accent, radius: (int)_tokens.RadiusSmall));
+        collapse.Pressed += TogglePartsTrayCollapsed;
+        row.AddChild(collapse);
+        return row;
+    }
+
+    private void TogglePartsTrayCollapsed()
+    {
+        _partsTrayCollapsed = !_partsTrayCollapsed;
+        RebuildLayout();
+    }
+
+    private Control CreateCompactValidationLine(ConstructionBuildPanelPresentation buildPanel)
+    {
+        var row = new HBoxContainer
+        {
+            CustomMinimumSize = new Vector2(0, 34),
+            SizeFlagsHorizontal = SizeFlags.ExpandFill,
+        };
+        row.AddThemeConstantOverride("separation", (int)_tokens.Space1);
+        row.AddChild(CreateLabel(buildPanel.CanStartTraining ? "✓" : "⚠", 14, buildPanel.CanStartTraining ? _tokens.Accent : _tokens.Danger));
+        var reason = buildPanel.CanStartTraining
+            ? "Ready to save"
+            : ShortValidationText(buildPanel.DisabledReason ?? buildPanel.ValidationLine);
+        row.AddChild(CreateLabel(reason, 12, buildPanel.CanStartTraining ? _tokens.Accent : _tokens.Danger, expand: true));
+        return row;
+    }
+
+    private Control CreatePartButton(string label, string countText, bool locked, ConstructionTool? tool)
+    {
+        var button = new UiActionButton
+        {
+            Tokens = _tokens,
+            LabelText = $"{label} · {countText}",
+            Kind = UiActionButton.ActionKind.Secondary,
+            Locked = locked,
+            ShowLockReasonInText = false,
+            LockReason = countText,
+            CustomMinimumSize = new Vector2(0, _tokens.TouchTarget),
+            SizeFlagsHorizontal = SizeFlags.ExpandFill,
+        };
+        if (!locked && tool is { } activeTool)
+        {
+            button.Pressed += () => EmitSignal(SignalName.ToolRequested, (int)activeTool);
+        }
+
+        return button;
     }
 
     private Control CreateBrainPreview(ConstructionBuildPanelPresentation buildPanel)
