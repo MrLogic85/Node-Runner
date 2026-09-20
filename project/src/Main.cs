@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using Godot;
+using NodeRunner.App.Repositories;
 using NodeRunner.App.ViewModels;
 using NodeRunner.Creature;
 using NodeRunner.Domain;
@@ -593,7 +594,9 @@ public partial class Main : Node2D
             };
             duplicate.Pressed += () =>
             {
-                saveManager.Duplicate(creation.Id);
+                TryRunFileOperation(
+                    () => saveManager.Duplicate(creation.Id),
+                    $"Duplicating Creation '{creation.Name}'");
                 RefreshCreationsPanel();
             };
             var delete = new Button
@@ -603,7 +606,9 @@ public partial class Main : Node2D
             };
             delete.Pressed += () =>
             {
-                saveManager.Delete(creation.Id);
+                TryRunFileOperation(
+                    () => saveManager.Delete(creation.Id),
+                    $"Deleting Creation '{creation.Name}'");
                 RefreshCreationsPanel();
             };
             row.AddChild(open);
@@ -791,7 +796,17 @@ public partial class Main : Node2D
     {
         if (_activeCreationId is { } id)
         {
-            GetNode<SaveManager>("/root/SaveManager").ResetTraining(id);
+            // If persisting the reset fails (#114), don't randomize the live
+            // brain either: the disk copy would still hold the old training,
+            // so a reset that "worked" on screen but not on disk would look
+            // like it silently reverted after the next app restart. The
+            // failure is already logged inside TryRunFileOperation.
+            if (!TryRunFileOperation(
+                () => GetNode<SaveManager>("/root/SaveManager").ResetTraining(id),
+                $"Resetting training for Creation {id}"))
+            {
+                return;
+            }
         }
 
         RandomizeCreatureBrain();
@@ -998,9 +1013,17 @@ public partial class Main : Node2D
             Guid.NewGuid(),
             $"Creation {GetNode<SaveManager>("/root/SaveManager").List().Count + 1}",
             creature);
-        GetNode<SaveManager>("/root/SaveManager").Save(creation);
-        _activeCreationId = creation.Id;
-        Construction.SetCompletedMessage($"Saved {creation.Name}.");
+        if (TryRunFileOperation(
+            () => GetNode<SaveManager>("/root/SaveManager").Save(creation),
+            $"Saving Creation '{creation.Name}'"))
+        {
+            _activeCreationId = creation.Id;
+            Construction.SetCompletedMessage($"Saved {creation.Name}.");
+        }
+        else
+        {
+            Construction.SetCompletedMessage("Save failed — see log.");
+        }
     }
 
     // Persisting reads the current Creation back off disk and writes the
@@ -1052,11 +1075,56 @@ public partial class Main : Node2D
         GD.PrintErr($"Failed to persist training state for Creation {id} at generation {generation}: {exception}");
     }
 
+    // Synchronous Creation file operations (save/duplicate/delete/reset/edit)
+    // can throw on unreadable or corrupt on-disk state (#114). One bad file
+    // must not crash the whole app from a button press; log and let the
+    // caller treat it as a no-op instead.
+    private static bool TryRunFileOperation(Action action, string description)
+    {
+        try
+        {
+            action();
+            return true;
+        }
+        catch (Exception ex) when (FilePersistenceExceptions.IsRecoverable(ex))
+        {
+            GD.PrintErr($"{description} failed: {ex}");
+            return false;
+        }
+    }
+
     private void ApplyEditedCreature(CreatureDef editedCreature)
     {
         if (_creature is null)
         {
             return;
+        }
+
+        // Persist before ever touching the live creature (#114): if saving
+        // this Creation fails, the on-disk and in-memory anatomy must stay
+        // identical. Applying the edit live anyway and continuing to train
+        // would mean a later periodic training save (#113) writes a genome
+        // sized for the new, never-persisted anatomy onto the still-old
+        // Creature record on disk -- the same resurrection-style hazard
+        // #113's epoch invalidation fixed, just triggered by an I/O failure
+        // instead of a race.
+        CreationDef? updated = null;
+        if (_activeCreationId is { } id)
+        {
+            var saveManager = GetNode<SaveManager>("/root/SaveManager");
+            var succeeded = TryRunFileOperation(
+                () => updated = saveManager.ApplyCreatureEdit(id, editedCreature),
+                $"Applying creature edit for Creation {id}");
+
+            // A null result (no exception, but nothing to update -- e.g. the
+            // Creation was deleted concurrently) means nothing was actually
+            // persisted either, so it must be treated the same as a thrown
+            // failure: discard the edit rather than applying it live.
+            if (!succeeded || updated is null)
+            {
+                Construction.SetCompletedMessage("Could not save the edited creature; your edit was discarded.");
+                return;
+            }
         }
 
         // Clear any selection from the old creature before rebuilding the
@@ -1072,15 +1140,10 @@ public partial class Main : Node2D
             _seedLabel.Text = SeedText();
         }
 
-        if (_activeCreationId is { } id)
+        if (updated is not null)
         {
-            var saveManager = GetNode<SaveManager>("/root/SaveManager");
-            var updated = saveManager.ApplyCreatureEdit(id, editedCreature);
-            if (updated is not null)
-            {
-                StartEvolution(updated);
-                return;
-            }
+            StartEvolution(updated);
+            return;
         }
 
         StartEvolution();

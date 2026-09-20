@@ -72,7 +72,7 @@ public partial class SaveManager : Node
 
     public CreationDef Duplicate(Guid id)
     {
-        var source = Repository.Get(id) ?? throw new InvalidOperationException($"Creation '{id}' was not found.");
+        var source = Repository.Get(id) ?? throw new KeyNotFoundException($"Creation '{id}' was not found.");
         var copy = new CreationDef(Guid.NewGuid(), $"{source.Name} Copy", source.Creature, source.Training);
         Repository.Save(copy);
         return copy;
