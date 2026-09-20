@@ -57,7 +57,6 @@ public partial class Main : Node2D
     private Label? _progressionLabel;
     private PanelContainer? _trainingPanel;
     private GenerationStrip? _generationStrip;
-    private int _bestGeneration;
     private int _timeScaleIndex;
     private Label? _inspectorTitle;
     private Label? _inspectorRole;
@@ -87,7 +86,7 @@ public partial class Main : Node2D
     ];
     private int _trainingProfileIndex = 1;
     private int _sessionGenerationStart;
-    private readonly TrainingPresentationViewModel _trainingPresentation = new();
+    private TrainingPresentationViewModel _trainingPresentation = new();
 
     public SelectionViewModel Selection { get; } = new();
 
@@ -318,9 +317,12 @@ public partial class Main : Node2D
         evolver.ProcessMode = ProcessModeEnum.Pausable;
         evolver.GenerationCompleted += OnGenerationCompleted;
         evolver.NewBestFound += OnNewBestFound;
-        // Temporary composition-root bridge until the Watch ViewModel seam
-        // is extracted in the UI implementation plan.
-        evolver.TrainingProgressChanged += OnTrainingProgressChanged;
+        _trainingPresentation.PropertyChanged -= OnTrainingPresentationChanged;
+        _trainingPresentation.Dispose();
+        _trainingPresentation = new TrainingPresentationViewModel(new EvolverTrainingProgressSource(
+            evolver,
+            () => _trainingProfiles[_trainingProfileIndex].Name));
+        _trainingPresentation.PropertyChanged += OnTrainingPresentationChanged;
         AddChild(evolver);
         _evolver = evolver;
         StartEvolution();
@@ -329,7 +331,7 @@ public partial class Main : Node2D
     private void StartEvolution()
     {
         _evolver?.Stop();
-        _bestGeneration = 0;
+        UpdateTrainingLabels();
         if (_creature?.Brain is null || _evolver is null)
         {
             // No motors (e.g. a just-cleared construction-mode anatomy) —
@@ -341,13 +343,12 @@ public partial class Main : Node2D
         _sessionGenerationStart = 0;
         var ga = CreateGeneticAlgorithm(profile);
         _evolver.Start(_creature, profile.PopulationSize, _creature.Brain.LayerSizes, ga, RngProvider().Random, trialDurationTicks: profile.TrialDurationTicks);
-        UpdateTrainingLabels();
     }
 
     private void StartEvolution(CreationDef creation)
     {
         _evolver?.Stop();
-        _bestGeneration = creation.Training?.Generation ?? 0;
+        UpdateTrainingLabels();
         if (_creature?.Brain is null || _evolver is null)
         {
             return;
@@ -366,7 +367,6 @@ public partial class Main : Node2D
             resume?.BestGenome,
             resume?.Generation ?? 0,
             profile.TrialDurationTicks);
-        UpdateTrainingLabels();
     }
 
     private void OnGenerationCompleted()
@@ -381,60 +381,31 @@ public partial class Main : Node2D
         }
     }
 
-    // Records which generation produced the current all-time best, for the
-    // "Best" HUD label. Evolver doesn't retain a replayable per-genome seed
-    // today (see issue #51's scope decision), so this is the closest
-    // reproducible pointer to "where the best came from."
     private void OnNewBestFound()
     {
-        _bestGeneration = _evolver!.Generation;
         TryUnlockProgression();
-        // GenerationCompleted (which also calls UpdateTrainingLabels) fires
-        // before NewBestFound, so the "Best" label would otherwise render
-        // with the previous _bestGeneration on the very generation the new
-        // best was found. Refresh again now that it's current.
-        UpdateTrainingLabels();
     }
 
-    private void OnTrainingProgressChanged()
+    private void OnTrainingPresentationChanged(object? sender, PropertyChangedEventArgs args)
     {
         UpdateTrainingLabels();
-        if (_evolver is not null)
-        {
-            _trainingPresentation.Update(
-                _evolver.Generation,
-                _evolver.CurrentCandidate,
-                _evolver.PopulationSize,
-                _evolver.BestFitness,
-                _evolver.MeanFitness,
-                _trainingProfiles[_trainingProfileIndex].Name);
-        }
     }
 
     private void UpdateTrainingLabels()
     {
-        if (_evolver is null)
-        {
-            return;
-        }
-
         if (_generationLabel is not null)
         {
-            _generationLabel.Text = _evolver.IsTrialActive
-                ? $"Generation {_evolver.Generation} · try {_evolver.CurrentCandidate} of {_evolver.PopulationSize}"
-                : $"Generation {_evolver.Generation} · session complete";
+            _generationLabel.Text = _trainingPresentation.GenerationText;
         }
 
         if (_bestFitnessLabel is not null)
         {
-            _bestFitnessLabel.Text = double.IsNegativeInfinity(_evolver.BestFitness)
-                ? "Best: —"
-                : $"Best: {_evolver.BestFitness:0.0} (gen {_bestGeneration})";
+            _bestFitnessLabel.Text = _trainingPresentation.BestFitnessText;
         }
 
         if (_meanFitnessLabel is not null)
         {
-            _meanFitnessLabel.Text = $"Mean: {_evolver.MeanFitness:0.0}";
+            _meanFitnessLabel.Text = _trainingPresentation.MeanFitnessText;
         }
 
         if (_progressionLabel is not null)
@@ -443,12 +414,12 @@ public partial class Main : Node2D
         }
 
         _generationStrip?.SetProgress(
-            _evolver.Generation,
-            _evolver.CurrentCandidate,
-            _evolver.PopulationSize,
-            _evolver.CompletedCandidateCount,
-            _evolver.CompletedFitness,
-            _evolver.IsTrialActive);
+            _trainingPresentation.Generation,
+            _trainingPresentation.Candidate,
+            _trainingPresentation.Population,
+            _trainingPresentation.CompletedCandidateCount,
+            _trainingPresentation.CompletedFitness.ToArray(),
+            _trainingPresentation.IsTrialActive);
     }
 
     private RngProvider RngProvider() => GetNode<RngProvider>("/root/RngProvider");
