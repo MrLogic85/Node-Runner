@@ -6,7 +6,9 @@ public sealed record ConstructionBuildPanelPresentation(
     string ValidationLine,
     bool CanStartTraining,
     bool CanCompleteCreation,
-    string? DisabledReason)
+    string? DisabledReason,
+    int InputCount = 0,
+    int OutputCount = 0)
 {
     public const string Title = "Brain it will get";
 
@@ -18,5 +20,7 @@ public sealed record ConstructionBuildPanelPresentation(
         "Ready: 18 inputs -> 3 outputs",
         CanStartTraining: true,
         CanCompleteCreation: true,
-        DisabledReason: null);
+        DisabledReason: null,
+        InputCount: 18,
+        OutputCount: 3);
 }
