@@ -60,6 +60,8 @@ public partial class Main : Node2D
     private Button? _timeScaleButton;
     private Button? _trainingProfileButton;
     private Label? _trainingProfileSummaryLabel;
+    private Label? _trainingSaveStatusLabel;
+    private long _trainingSaveStatusVersion;
     private Label? _progressionLabel;
     private PanelContainer? _trainingPanel;
     private GenerationStrip? _generationStrip;
@@ -344,6 +346,7 @@ public partial class Main : Node2D
     {
         _evolver?.Stop();
         UpdateTrainingLabels();
+        ResetTrainingSaveStatus(null);
         if (_creature?.Brain is null || _evolver is null)
         {
             // No motors (e.g. a just-cleared construction-mode anatomy) —
@@ -361,6 +364,7 @@ public partial class Main : Node2D
     {
         _evolver?.Stop();
         UpdateTrainingLabels();
+        ResetTrainingSaveStatus(creation.Training is { } training ? $"Saved generation {training.Generation}" : "Saved draft");
         if (_creature?.Brain is null || _evolver is null)
         {
             return;
@@ -990,10 +994,13 @@ public partial class Main : Node2D
         controlsRow.AddChild(_trainingProfileButton);
 
         _trainingProfileSummaryLabel = CreateTrainingLabel("TrainingProfileSummaryLabel", TrainingProfileSummaryText());
+        _trainingSaveStatusLabel = CreateTrainingLabel("TrainingSaveStatusLabel", string.Empty);
+        _trainingSaveStatusLabel.AddThemeColorOverride("font_color", _theme.SelectionGlow);
         column.AddChild(statsRow);
         column.AddChild(_generationStrip);
         column.AddChild(controlsRow);
         column.AddChild(_trainingProfileSummaryLabel);
+        column.AddChild(_trainingSaveStatusLabel);
         column.AddChild(_progressionLabel);
         panel.AddChild(column);
         layer.AddChild(panel);
@@ -1349,18 +1356,27 @@ public partial class Main : Node2D
         var genomeSnapshot = genome.ToArray();
         var generation = _evolver.Generation;
         var epoch = saveManager.CurrentTrainingEpoch(id);
+        var saveStatusVersion = BeginTrainingSaveStatus($"Saving generation {generation}...");
 
-        Task.Run(() => PersistTrainingSnapshot(saveManager, id, epoch, layerSizes, genomeSnapshot, generation));
+        Task.Run(() => PersistTrainingSnapshot(saveManager, id, epoch, saveStatusVersion, layerSizes, genomeSnapshot, generation));
     }
 
-    private void PersistTrainingSnapshot(SaveManager saveManager, Guid id, long epoch, int[] layerSizes, double[] genome, int generation)
+    private void PersistTrainingSnapshot(SaveManager saveManager, Guid id, long epoch, long saveStatusVersion, int[] layerSizes, double[] genome, int generation)
     {
         try
         {
-            saveManager.TryPersistTraining(
+            var persisted = saveManager.TryPersistTraining(
                 id,
                 epoch,
                 new TrainingStateDef(layerSizes, genome, generation, Activation.Tanh.ToString()));
+            if (persisted)
+            {
+                CallDeferred(nameof(ShowTrainingPersisted), id.ToString(), saveStatusVersion, generation);
+            }
+            else
+            {
+                CallDeferred(nameof(ShowTrainingSaveSkipped), id.ToString(), saveStatusVersion, generation);
+            }
         }
         catch (Exception ex)
         {
@@ -1369,6 +1385,7 @@ public partial class Main : Node2D
             // a benign one-liner, and dev builds should fail loud (see
             // docs/CODE_DESIGN_PRINCIPLES.md § "Fail loud in dev").
             CallDeferred(nameof(LogPersistTrainingError), id.ToString(), generation, ex.ToString());
+            CallDeferred(nameof(ShowTrainingSaveFailed), id.ToString(), saveStatusVersion);
         }
     }
 
@@ -1377,6 +1394,66 @@ public partial class Main : Node2D
     private void LogPersistTrainingError(string id, int generation, string exception)
     {
         GD.PrintErr($"Failed to persist training state for Creation {id} at generation {generation}: {exception}");
+    }
+
+    private void ShowTrainingPersisted(string id, long saveStatusVersion, int generation)
+    {
+        if (!IsCurrentTrainingSaveStatus(id, saveStatusVersion))
+        {
+            return;
+        }
+
+        SetTrainingSaveStatus($"Saved generation {generation}");
+    }
+
+    private void ShowTrainingSaveSkipped(string id, long saveStatusVersion, int generation)
+    {
+        if (!IsCurrentTrainingSaveStatus(id, saveStatusVersion))
+        {
+            return;
+        }
+
+        SetTrainingSaveStatus($"Saved generation {generation}");
+    }
+
+    private void ShowTrainingSaveFailed(string id, long saveStatusVersion)
+    {
+        if (!IsCurrentTrainingSaveStatus(id, saveStatusVersion))
+        {
+            return;
+        }
+
+        SetTrainingSaveStatus("Save failed — see log");
+    }
+
+    private long BeginTrainingSaveStatus(string text)
+    {
+        var version = Interlocked.Increment(ref _trainingSaveStatusVersion);
+        SetTrainingSaveStatus(text);
+        return version;
+    }
+
+    private void ResetTrainingSaveStatus(string? text)
+    {
+        Interlocked.Increment(ref _trainingSaveStatusVersion);
+        SetTrainingSaveStatus(text);
+    }
+
+    private bool IsCurrentTrainingSaveStatus(string id, long saveStatusVersion)
+    {
+        return saveStatusVersion == Interlocked.Read(ref _trainingSaveStatusVersion)
+            && _activeCreationId?.ToString() == id;
+    }
+
+    private void SetTrainingSaveStatus(string? text)
+    {
+        if (_trainingSaveStatusLabel is null)
+        {
+            return;
+        }
+
+        _trainingSaveStatusLabel.Text = text ?? string.Empty;
+        _trainingSaveStatusLabel.Visible = !string.IsNullOrWhiteSpace(text);
     }
 
     // Synchronous Creation file operations (save/duplicate/delete/reset/edit)
