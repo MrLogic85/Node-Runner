@@ -81,11 +81,13 @@ the PR):
 - [ ] `dotnet test NodeRunner.slnx` all green (unit + arch)
 - [ ] Any new logic in `libs/NodeRunner.{ML,Domain}/` has unit tests
 - [ ] `dotnet format NodeRunner.slnx --verify-no-changes` passes
-- [ ] Local code-review agents (`CODEREVIEW.md`) dispatched; new findings
+- [ ] Local review agents (`CODEREVIEW.md`) dispatched; new findings
       addressed or explicitly dismissed. For UI-touching changes (screens,
-      controls, layout, theme), also run the `design-lead` custom agent
-      (`.github/agents/design-lead.agent.md`) — see `docs/UI_DIRECTION.md`
-      § "Design review"
+      controls, layout, theme), include `CODEREVIEW.md`'s "Visual & UX
+      design" focus area, which uses the `design-lead` custom agent
+      (`.github/agents/design-lead.agent.md`). A Visual & UX result of
+      "insufficient evidence" is blocking until live app access,
+      screenshots/recordings, or an explicit human waiver is recorded.
 - [ ] Docs updated where behavior/architecture changed
 - [ ] Local `AGENTS.md` reflects any new rule that emerged
 - [ ] Nothing under `libs/` uses `using Godot;` — arch tests enforce this

@@ -8,7 +8,9 @@ sources instead of inventing stricter rules.
 ## How to run
 
 1. Select every focus area relevant to the diff.
-2. Dispatch each selected section as a separate parallel `code-review` agent.
+2. Dispatch each selected section as a separate parallel review agent.
+   Use `code-review` for code/process focus areas and `design-lead` for the
+   "Visual & UX design" focus area.
 3. Give every agent the repository path and exact diff or commit range.
 4. Include the selected section body verbatim.
 
@@ -29,6 +31,66 @@ Every agent must:
 
 New findings block commit and push until fixed or explicitly dismissed with a
 written reason. `AGENTS.md` owns that gate.
+
+---
+
+## Visual & UX design
+
+Review UI-touching changes for whether they are attractive, intuitive, and
+close enough to the current design reference for the issue.
+
+Use the `design-lead` custom agent, not the generic `code-review` agent.
+Give it access to the user-facing result, not only the diff. Prefer a
+connected Android phone for UI review. If no phone is available, the reviewer
+may start and use an Android emulator/AVD when the local environment has one
+configured. Otherwise provide fresh screenshots/recordings from the target
+device/form factor with the exact screens and interactions under review.
+Include the design reference path and the issue/PR goal in the prompt. If
+neither live app access nor visual evidence is available, the design review
+must report **insufficient evidence** instead of guessing from code.
+**Insufficient evidence is a blocking, non-passing review outcome** for this
+focus area: the gate is not satisfied until the author supplies live app
+access, fresh screenshots/recordings, or records an explicit human waiver in
+the PR.
+
+Authoritative sources:
+
+- `docs/UI_DIRECTION.md` for product feel, visual language, theme boundaries,
+  accessibility/readability rules, and non-goals
+- `docs/UI_IMPLEMENTATION_PLAN.md` and
+  `docs/UI_COMPONENTS_AND_FLOW.md` for staged UI rollout and screen flow
+- `docs/MANUAL_TESTING.md` for device/screenshot evidence expectations
+- The nearest `project/src/**/AGENTS.md` files for UI layering constraints
+
+Optional supplied evidence:
+
+- `claude_design_example_design/`, screenshots, recordings, or other design
+  references attached to the issue/PR when they are the active look-and-feel
+  input. These are review inputs, not durable repository authority; if the
+  reference is not in the clone, attach or link it in the PR.
+
+Judge the experience, not just the code. Check whether the screen/control:
+
+- Looks intentional and polished enough for the current milestone
+- Feels intuitive on Android touch: clear affordances, no dead controls,
+  readable labels, and sensible primary/secondary actions
+- Follows the design example's layout, spacing, contrast, rhythm, corner
+  radius, dividers, glow, and visual hierarchy closely enough without becoming
+  pixel-perfect
+- Preserves Node Runner's neon learning-lab identity and the issue's teaching
+  goal
+- Uses state indicators that do not rely on color alone
+- Avoids unplanned future UI or generic developer-dashboard chrome
+- Has screenshot/manual-test evidence when the change is visible, including
+  before/after or design-reference comparison when that is what the issue is
+  trying to improve
+
+Do not block on personal taste, exact pixel matching, or missing design-system
+tokens unless the result is visibly inconsistent, confusing, inaccessible, or
+contradicts the agreed design direction. Report findings in the same format as
+other review sections: **Major**, **Medium**, or **Minor**, **new** or
+**preexisting**, with screen/file, evidence, impact, and a concrete suggested
+direction.
 
 ---
 

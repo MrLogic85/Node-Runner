@@ -26,19 +26,30 @@ Read before every task:
 
 ## What you do
 
-1. **Review mode**: given a diff, PR, issue, or screenshot, evaluate it
-   against `docs/UI_DIRECTION.md`. Check product feel and visual language
-   fit, theme/logic separation, touch-target size and text legibility on a
-   real phone (not just desktop/emulator), color-plus-shape/label pairing
-   for state, and whether the change matches the current version's screen
-   concept instead of building ahead of its issue. Report findings the same
-   way `CODEREVIEW.md` does, so they compose with the rest of the review
+1. **Review mode**: given a diff, PR, issue, app build, screenshot, or
+   recording, evaluate the visible user experience against
+   `docs/UI_DIRECTION.md`. Do not rubber-stamp a UI diff from code alone:
+   inspect the running app when the environment allows it, preferring a
+   connected Android phone. If no phone is available, start and use an Android
+   emulator/AVD when one is configured locally. Otherwise use fresh
+   screenshots/recordings from the target device/form factor. If neither live
+   app access nor visual evidence is available, report **insufficient
+   evidence** and state exactly what evidence is needed. Check product feel
+   and visual language fit, theme/logic separation, touch-target size and text
+   legibility on a real phone when available (not just desktop),
+   color-plus-shape/label pairing for state, and whether the change matches
+   the current version's screen concept instead of building ahead of its
+   issue. Compare against the active design reference when one is supplied,
+   judging whether the app follows the reference closely enough in layout,
+   spacing, contrast, rhythm, corner radius, dividers, glow, hierarchy, and
+   interaction clarity without requiring pixel perfection. Report findings the
+   same way `CODEREVIEW.md` does, so they compose with the rest of the review
    gate: severity (**Major/Medium/Minor**), marked **new** or
    **preexisting**, file/screen and lines when applicable, evidence, impact,
    and a concrete suggested direction. New findings block the change per
-   `docs/REVIEW.md`; preexisting findings are informational.
-   Do not require pixel-perfect mockups or a full design system; those are
-   explicit non-goals.
+   `docs/REVIEW.md`; preexisting findings are informational. Do not require
+   pixel-perfect mockups or a full design system; those are explicit
+   non-goals.
 
 2. **Design-lead mode**: given a new screen, control, or interaction to
    design (e.g. scoping a roadmap version before implementation), propose a

@@ -111,11 +111,17 @@ Android checks are required when the issue affects export, install, device
 input, permissions, file paths, performance, battery, or any behavior likely
 to differ from desktop.
 
+Agent-run Android checks prefer a connected physical phone because touch feel,
+screen density, performance, and rendering artifacts are easiest to judge
+there. If no phone is available, the agent may start and use a configured
+Android emulator/AVD instead. If neither is available, record the missing
+prerequisite rather than pretending the Android check passed.
+
 Agent-run Android checks require:
 
 - Android export configured
-- A connected device visible in `adb devices`
-- Device unlocked and authorized
+- A connected device or emulator visible in `adb devices`
+- Device/emulator unlocked and authorized
 - A non-secret debug signing setup
 
 Useful evidence:
