@@ -41,6 +41,10 @@ public partial class Main : Node2D
     private Button? _creationsButton;
     private PanelContainer? _creationsPanel;
     private VBoxContainer? _creationsList;
+    private CreationsScreen? _creationsScreen;
+    private ConfirmationDialog? _deleteCreationConfirmationDialog;
+    private Guid? _pendingDeleteCreationId;
+    private string? _pendingDeleteCreationName;
     private Guid? _activeCreationId;
     private Label? _seedLabel;
     private Label? _generationLabel;
@@ -570,35 +574,50 @@ public partial class Main : Node2D
 
     private void AddCreationsPanel(CanvasLayer layer)
     {
-        _creationsPanel = new PanelContainer
+        var overlayLayer = new CanvasLayer
         {
-            Name = "CreationsPanel",
-            Position = new Vector2(16, 90),
+            Name = "CreationsOverlay",
+            Layer = 20,
+            ProcessMode = ProcessModeEnum.Always,
+        };
+        AddChild(overlayLayer);
+
+        var saveManager = GetNode<SaveManager>("/root/SaveManager");
+        _creationsScreen = new CreationsScreen
+        {
+            Tokens = UiTokens.Neon,
             Visible = false,
         };
-        _creationsPanel.AddThemeStyleboxOverride("panel", CreateHudPanelStyle());
-        var margin = new MarginContainer();
-        margin.AddThemeConstantOverride("margin_left", 16);
-        margin.AddThemeConstantOverride("margin_top", 12);
-        margin.AddThemeConstantOverride("margin_right", 16);
-        margin.AddThemeConstantOverride("margin_bottom", 12);
-        _creationsList = new VBoxContainer();
-        _creationsList.AddThemeConstantOverride("separation", 8);
-        margin.AddChild(_creationsList);
-        _creationsPanel.AddChild(margin);
-        layer.AddChild(_creationsPanel);
+        _creationsScreen.Setup(saveManager.CreationsPresentation);
+        _creationsScreen.BackRequested += () => _creationsScreen.Visible = false;
+        _creationsScreen.OpenRequested += OpenCreationFromScreen;
+        _creationsScreen.EditRequested += EditCreationFromScreen;
+        _creationsScreen.DuplicateRequested += DuplicateCreationFromScreen;
+        _creationsScreen.DeleteRequested += RequestDeleteCreationFromScreen;
+        overlayLayer.AddChild(_creationsScreen);
+
+        _deleteCreationConfirmationDialog = new ConfirmationDialog
+        {
+            Title = "Delete Creation?",
+            OkButtonText = "Delete",
+            CancelButtonText = "Keep",
+            ProcessMode = ProcessModeEnum.Always,
+        };
+        _deleteCreationConfirmationDialog.Confirmed += ConfirmDeleteCreationFromScreen;
+        overlayLayer.AddChild(_deleteCreationConfirmationDialog);
+
         RefreshCreationsPanel();
     }
 
     private void ToggleCreationsPanel()
     {
-        if (_creationsPanel is null)
+        if (_creationsScreen is null)
         {
             return;
         }
 
-        _creationsPanel.Visible = !_creationsPanel.Visible;
-        if (_creationsPanel.Visible)
+        _creationsScreen.Visible = !_creationsScreen.Visible;
+        if (_creationsScreen.Visible)
         {
             RefreshCreationsPanel();
         }
@@ -606,70 +625,110 @@ public partial class Main : Node2D
 
     private void RefreshCreationsPanel()
     {
-        if (_creationsList is null)
+        var saveManager = GetNode<SaveManager>("/root/SaveManager");
+        saveManager.CreationsPresentation.Refresh();
+        if (saveManager.CreationsPresentation.LoadError is { } error)
         {
-            return;
+            GD.PrintErr($"Loading Creations failed: {error}");
         }
+    }
 
-        foreach (var child in _creationsList.GetChildren())
+    private void OpenCreationFromScreen(string creationKey, string creationName)
+    {
+        if (TryGetCreationFromScreen(creationKey, creationName, out var creation))
         {
-            child.QueueFree();
+            OpenCreation(creation);
+            if (_creationsScreen is not null)
+            {
+                _creationsScreen.Visible = false;
+            }
+        }
+    }
+
+    private void EditCreationFromScreen(string creationKey, string creationName)
+    {
+        if (TryGetCreationFromScreen(creationKey, creationName, out var creation))
+        {
+            EditCreation(creation);
+            if (_creationsScreen is not null)
+            {
+                _creationsScreen.Visible = false;
+            }
+        }
+    }
+
+    private void DuplicateCreationFromScreen(string creationKey, string creationName)
+    {
+        if (!Guid.TryParse(creationKey, out var id))
+        {
+            GD.PrintErr($"Could not duplicate Creation '{creationName}': invalid id '{creationKey}'.");
+            return;
         }
 
         var saveManager = GetNode<SaveManager>("/root/SaveManager");
-        var creations = saveManager.List();
-        if (creations.Count == 0)
+        TryRunFileOperation(
+            () => saveManager.Duplicate(id),
+            $"Duplicating Creation '{creationName}'");
+        RefreshCreationsPanel();
+    }
+
+    private void RequestDeleteCreationFromScreen(string creationKey, string creationName)
+    {
+        if (!Guid.TryParse(creationKey, out var id))
         {
-            _creationsList.AddChild(new Label { Text = "No saved Creations yet." });
+            GD.PrintErr($"Could not delete Creation '{creationName}': invalid id '{creationKey}'.");
             return;
         }
 
-        foreach (var creation in creations)
+        _pendingDeleteCreationId = id;
+        _pendingDeleteCreationName = creationName;
+        if (_deleteCreationConfirmationDialog is null)
         {
-            var row = new HBoxContainer();
-            row.AddThemeConstantOverride("separation", 8);
-            var open = new Button
-            {
-                Text = $"{creation.Name} (Gen {creation.Training?.Generation ?? 0})",
-                CustomMinimumSize = new Vector2(300, _touchTargetHeight),
-            };
-            open.Pressed += () => OpenCreation(creation);
-            var edit = new Button
-            {
-                Text = "Edit",
-                CustomMinimumSize = new Vector2(110, _touchTargetHeight),
-            };
-            edit.Pressed += () => EditCreation(creation);
-            var duplicate = new Button
-            {
-                Text = "Duplicate",
-                CustomMinimumSize = new Vector2(150, _touchTargetHeight),
-            };
-            duplicate.Pressed += () =>
-            {
-                TryRunFileOperation(
-                    () => saveManager.Duplicate(creation.Id),
-                    $"Duplicating Creation '{creation.Name}'");
-                RefreshCreationsPanel();
-            };
-            var delete = new Button
-            {
-                Text = "Delete",
-                CustomMinimumSize = new Vector2(120, _touchTargetHeight),
-            };
-            delete.Pressed += () =>
-            {
-                TryRunFileOperation(
-                    () => saveManager.Delete(creation.Id),
-                    $"Deleting Creation '{creation.Name}'");
-                RefreshCreationsPanel();
-            };
-            row.AddChild(open);
-            row.AddChild(edit);
-            row.AddChild(duplicate);
-            row.AddChild(delete);
-            _creationsList.AddChild(row);
+            ConfirmDeleteCreationFromScreen();
+            return;
         }
+
+        _deleteCreationConfirmationDialog.DialogText = $"Delete {creationName}? This permanently removes this saved Creation.";
+        _deleteCreationConfirmationDialog.PopupCentered();
+    }
+
+    private void ConfirmDeleteCreationFromScreen()
+    {
+        if (_pendingDeleteCreationId is not { } id)
+        {
+            return;
+        }
+
+        var name = _pendingDeleteCreationName ?? id.ToString();
+        _pendingDeleteCreationId = null;
+        _pendingDeleteCreationName = null;
+        var saveManager = GetNode<SaveManager>("/root/SaveManager");
+        TryRunFileOperation(
+            () => saveManager.Delete(id),
+            $"Deleting Creation '{name}'");
+        RefreshCreationsPanel();
+    }
+
+    private bool TryGetCreationFromScreen(string creationKey, string creationName, out CreationDef creation)
+    {
+        creation = null!;
+        if (!Guid.TryParse(creationKey, out var id))
+        {
+            GD.PrintErr($"Could not open Creation '{creationName}': invalid id '{creationKey}'.");
+            return false;
+        }
+
+        var saveManager = GetNode<SaveManager>("/root/SaveManager");
+        var loaded = saveManager.Get(id);
+        if (loaded is null)
+        {
+            GD.PrintErr($"Creation '{creationName}' ({id}) was not found.");
+            RefreshCreationsPanel();
+            return false;
+        }
+
+        creation = loaded;
+        return true;
     }
 
     private void OpenCreation(CreationDef creation)
