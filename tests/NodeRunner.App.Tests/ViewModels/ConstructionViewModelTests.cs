@@ -87,6 +87,20 @@ public sealed class ConstructionViewModelTests
     }
 
     [Fact]
+    public void LoadMoveOnly_ResetsActiveToolToPlaceForMoving()
+    {
+        var creature = new CreatureDef(
+            [new NodeDef(new Vector2D(0, 0), 18), new NodeDef(new Vector2D(20, 0), 18)],
+            [new BeamDef(0, 1)],
+            []);
+        var viewModel = new ConstructionViewModel { ActiveTool = ConstructionTool.Beam };
+
+        viewModel.Load(creature, moveOnly: true);
+
+        viewModel.ActiveTool.ShouldBe(ConstructionTool.Place);
+    }
+
+    [Fact]
     public void TryFindNodeNear_WithNoNodes_ReturnsFalse()
     {
         var viewModel = new ConstructionViewModel();

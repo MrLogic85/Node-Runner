@@ -43,26 +43,33 @@ public sealed class ConstructionPresentationViewModel
 
     public string InspectorTitle => "Building";
 
-    public string InspectorRole => $"Tool: {_construction.ActiveTool}";
+    public string InspectorRole => _construction.IsMoveOnly ? "Tool: Move" : $"Tool: {_construction.ActiveTool}";
 
-    public string InspectorValues => _construction.StatusMessage ?? ToolHint(_construction.ActiveTool);
+    public string InspectorValues => _construction.StatusMessage ?? (_construction.IsMoveOnly
+        ? "Drag an existing node to reposition it. Training is kept."
+        : ToolHint(_construction.ActiveTool));
 
-    public bool ShowConstructionTools => !_construction.IsMoveOnly;
+    public string MoveOnlyLockReason => "Move only · training kept";
+
+    public string LockedTopologyToolsText => $"Beam, Core, Delete locked: {MoveOnlyLockReason}";
+
+    public string PlaceToolText => _construction.IsMoveOnly ? "Move" : "Place";
+
+    public bool LockTopologyTools => _construction.IsMoveOnly;
+
+    public string BeamToolText => _construction.IsMoveOnly ? "Beam · locked" : "Beam";
+
+    public string CoreToolText => _construction.IsMoveOnly ? "Core · locked" : BuildCoreToolText();
+
+    public string DeleteToolText => _construction.IsMoveOnly ? "Delete · locked" : "Delete";
 
     public bool ShowCompleteAction => !_construction.IsMoveOnly;
 
     public bool ShowRebuildAction => _construction.IsMoveOnly;
 
-    public string CoreToolText
-    {
-        get
-        {
-            var unlockHint = _construction.MaxCores > 1 ? "unlocked" : "50 fitness";
-            return $"Core {_construction.Cores.Count}/{_construction.MaxCores} ({unlockHint})";
-        }
-    }
-
-    public string CoreToolTooltip => _construction.MaxCores > 1
+    public string CoreToolTooltip => _construction.IsMoveOnly
+        ? MoveOnlyLockReason
+        : _construction.MaxCores > 1
         ? "Attach or remove a core. Extra core slot unlocked."
         : "Attach or remove a core. Train to unlock a second core slot.";
 
@@ -124,6 +131,12 @@ public sealed class ConstructionPresentationViewModel
             CanStartTraining: true,
             CanCompleteCreation: true,
             DisabledReason: null);
+    }
+
+    private string BuildCoreToolText()
+    {
+        var unlockHint = _construction.MaxCores > 1 ? "unlocked" : "50 fitness";
+        return $"Core {_construction.Cores.Count}/{_construction.MaxCores} ({unlockHint})";
     }
 
     private static string BuildInputSummary(int coreCount, int motorRelationCount)
