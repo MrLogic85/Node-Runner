@@ -4,6 +4,9 @@ GitHub Issues are the source of truth after the migration from file issues.
 Issue review happens by reviewing the GitHub Issue text or URL directly — not
 by creating a PR just to edit an issue.
 
+Apply the required label rules in `docs/ISSUE_LABELS.md` when creating,
+updating, or reviewing an issue.
+
 ## When to review an issue
 
 Trivial issues can be created and worked directly. Review an issue before
@@ -27,7 +30,8 @@ Ask it to check:
 
 - Scope: one clear problem/outcome, or a suggested split
 - Acceptance criteria: concrete, testable, and not implementation-biased
-- Ownership: correct labels, milestone, and linked docs
+- Ownership: labels follow `docs/ISSUE_LABELS.md`, with the correct milestone
+  and linked docs
 - Dependencies: blocked-by/follow-up relationships are explicit
 - Test plan: whether automated or manual testing is expected
 - Risk: architecture, data loss, determinism, performance, Android/device

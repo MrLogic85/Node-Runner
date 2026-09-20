@@ -2,7 +2,8 @@
 
 Node Runner is developed in small, always-shippable increments. Each version
 below is an **Android APK you can install and demo**. Do not start version N+1
-before version N runs end-to-end on a device.
+before version N runs end-to-end on a device. `docs/ML_CONCEPTS.md` defines
+which ML ideas each version teaches and how they are made visible.
 
 Time estimates assume evening/weekend hobby pace and are rough.
 

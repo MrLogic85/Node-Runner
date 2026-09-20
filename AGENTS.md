@@ -11,8 +11,7 @@ creature (nodes, beams, cores — see `docs/CREATURE_MODEL.md`), a neural
 network is generated from it, and the user watches it learn to move via
 neuroevolution and (later) backprop. The
 primary goal is **pedagogical**: to make ML concepts visible, tangible, and
-interactive. The secondary goal is **the author's own ML education** — code
-should be written from scratch where reasonable, not pulled from ML libraries.
+interactive.
 
 - **Engine:** Godot 4 (latest stable)
 - **Language:** C# (.NET) for everything
@@ -20,9 +19,11 @@ should be written from scratch where reasonable, not pulled from ML libraries.
 - **Not targeted (yet):** iOS, web, consoles
 
 Read `docs/ROADMAP.md` for what version we are building toward,
-`docs/ARCHITECTURE.md` for how the code is organized, and `docs/REVIEW.md`
+`docs/ARCHITECTURE.md` for how the code is organized, docs/CODE_DESIGN_PRINCIPLES.md
+for how to write good code, and `docs/REVIEW.md`
 for how changes land in `main`. Read `docs/UI_DIRECTION.md` before adding
-visible controls or changing screen layout.
+visible controls or changing screen layout. Read docs/ML_CONCEPTS.md when
+changing what the app teaches or how a concept is made visible.
 
 ## Prime directives for agents
 
@@ -30,37 +31,18 @@ visible controls or changing screen layout.
    dependencies, `docs/CODE_DESIGN_PRINCIPLES.md` owns implementation rules,
    `docs/TEST_STRATEGY.md` owns testing, and `docs/REVIEW.md` owns how changes
    land. The nearest local `AGENTS.md` adds only layer-specific instructions.
-2. **Run code review before committing or pushing.** Dispatch the
+2. **Run code review agents before committing or pushing.** Dispatch the
    reviews in `CODEREVIEW.md` against the staged diff (or the range about
-   to be pushed). Report the findings. Only commit/push once each *new*
-   finding has either been addressed in the diff or is explicitly judged
-   as not useful — by the human, or by the agent with a written
-   justification. Preexisting findings do not block the current commit;
-   new findings introduced by the diff do until they are addressed or
-   dismissed. Code-review clean = commit/push authorised.
-
-   When the user asks for autonomous implementation, carry the work through
-   validation, review, and commit without waiting for a separate request to
-   commit. Do not leave a completed change uncommitted merely because the
-   user did not say "commit". Leave changes uncommitted only when the user
-   explicitly asks for that, when a genuine blocker prevents a safe commit,
-   or when the repository's review process requires a human decision; state
-   the reason plainly.
-3. **Resolve ordinary ambiguity autonomously.** When autopilot is active,
-solving the problem independently is the default and asking the human is
-the last resort. First inspect the repository and owning documents, trace
-the relevant behavior, try a safe implementation, and validate it.
-During autonomous roadmap work, choose the smallest reversible
-implementation that fits the roadmap and owning documents, record the
-assumption in the relevant documentation, and continue. Do not stop for
-routine UX wording, parameter defaults, test strategy, or implementation
-details. Ask the human only when the work is genuinely blocked,
-contradicts an explicit product decision, requires a new
-roadmap/architecture decision, risks data loss or an irreversible
-migration, or has two materially different product outcomes that cannot
-be safely staged. A missing GitHub Issue or ordinary uncertainty is not by
-itself a blocker to beginning or implementing roadmap work; before
-commit/push, the issue and `docs/REVIEW.md` release gates still apply.
+   to be pushed). Only commit/push once each *new*
+   finding has either been addressed or judged
+   as not useful — by the human, or by the agent.
+   Code-review clean = commit/push authorised.
+3. Always try to continue to work autonomously, only pause when you are stuck
+   due to hardware issues or when you guninely need input from a human. Pick work
+   tasks from recent discussions with a human or from GitHub.
+4. When new milestones, feature bugs are found or discussed. Add or update them
+   on GitHub. Dont leave desicions undocumented. Review broad, risky, or ambiguous
+   issues under docs/ISSUE_REVIEW.md before implementation.
 
 ## Architecture map
 
@@ -76,20 +58,6 @@ Conceptually:
 Folders inside `libs/` and `project/src/` have local `AGENTS.md` files.
 Read the nearest one before editing that layer.
 
-## Working process
-
-- Work from a GitHub Issue and follow the lifecycle in `docs/REVIEW.md`.
-- For non-trivial or ambiguous issues, use the issue-review flow in
-  `docs/ISSUE_REVIEW.md` before implementation.
-- Treat archived file issues under `issues/archive/` as immutable historical
-  records. Do not edit them; update the corresponding GitHub Issue instead.
-- Read the owning documents and nearest local `AGENTS.md` before editing.
-- Keep each change focused on the issue. If scope or design is unclear,
-  apply the autonomous ambiguity rule above rather than waiting by default.
-- Follow `docs/REVIEW.md` when finishing the change. The code-review gate in
-  the prime directives applies before every commit and push.
-- The prime directive above defines when autonomous work should be committed.
-
 ## Machine-local setup
 
 Host-specific state (GitHub CLI accounts, SSH host aliases, per-machine
@@ -102,12 +70,3 @@ machine is not necessarily the account that has write access to this repo.
 
 Authoritative Definition of Done lives in `docs/REVIEW.md`. Follow the list
 there; do not maintain a second copy.
-
-## What agents should NOT do without asking
-
-- Add dependencies (NuGet packages, GDExtensions, addons)
-- Rename or move files/folders in bulk
-- Change project settings in `project.godot` or `.csproj`
-- Introduce a new ML paradigm (RL, transformers, etc.) — these are roadmap
-  decisions unless the current roadmap milestone explicitly schedules it
-- Rewrite existing modules "for clarity" — propose in an issue first
