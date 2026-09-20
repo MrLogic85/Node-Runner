@@ -93,4 +93,92 @@ public sealed class ConstructionPresentationViewModelTests
         presentation.CoreToolText.ShouldBe("Core 0/2 (unlocked)");
         presentation.CoreToolTooltip.ShouldBe("Attach or remove a core. Extra core slot unlocked.");
     }
+
+    [Fact]
+    public void BuildPanel_WhenAnatomyIsEmpty_DisablesTrainingWithBeginnerReason()
+    {
+        var construction = new ConstructionViewModel();
+        var presentation = new ConstructionPresentationViewModel(construction);
+
+        var buildPanel = presentation.BuildPanel;
+
+        buildPanel.CanStartTraining.ShouldBeFalse();
+        buildPanel.DisabledReason.ShouldBe("Add nodes and beams before training a new creature.");
+        buildPanel.ValidationLine.ShouldBe("Not ready: Add nodes and beams before training a new creature.");
+    }
+
+    [Fact]
+    public void BuildPanel_WhenAnatomyIsInvalid_UsesFirstBuilderValidationError()
+    {
+        var construction = new ConstructionViewModel();
+        construction.PlaceNode(new Vector2D(0, 0), 18);
+        var presentation = new ConstructionPresentationViewModel(construction);
+
+        var buildPanel = presentation.BuildPanel;
+
+        buildPanel.CanStartTraining.ShouldBeFalse();
+        buildPanel.DisabledReason.ShouldBe("Node 0 has no beams attached. Connect it with a beam or remove it.");
+        buildPanel.InputSummary.ShouldBe("0 cores placed; fix anatomy to count inputs.");
+        buildPanel.MotorRelationSummary.ShouldBe("Fix anatomy to count motor relations.");
+        buildPanel.ValidationLine.ShouldBe("Not ready: Node 0 has no beams attached. Connect it with a beam or remove it.");
+    }
+
+    [Fact]
+    public void BuildPanel_WhenAnatomyIsValid_SummarizesInputsAndMotorRelations()
+    {
+        var construction = new ConstructionViewModel();
+        construction.Load(
+            new CreatureDef(
+                [
+                    new NodeDef(new Vector2D(0, 0), 18),
+                    new NodeDef(new Vector2D(56, 0), 18),
+                    new NodeDef(new Vector2D(112, 0), 18),
+                    new NodeDef(new Vector2D(168, 0), 18),
+                    new NodeDef(new Vector2D(224, 0), 18),
+                ],
+                [new BeamDef(0, 1), new BeamDef(1, 2), new BeamDef(2, 3), new BeamDef(3, 4)],
+                [new CoreDef(0)]));
+        var presentation = new ConstructionPresentationViewModel(construction);
+
+        var buildPanel = presentation.BuildPanel;
+
+        buildPanel.CanStartTraining.ShouldBeTrue();
+        buildPanel.DisabledReason.ShouldBeNull();
+        buildPanel.InputSummary.ShouldBe("1 core -> 6 core sensor values; 3 motor relations -> 6 motor-relation sensor values; 12 inputs total");
+        buildPanel.MotorRelationSummary.ShouldBe("3 motor relations can twist");
+        buildPanel.ValidationLine.ShouldBe("Ready: 12 inputs -> 3 outputs");
+    }
+
+    [Fact]
+    public void BuildPanel_WhenValidAnatomyHasNoMotorRelations_DisablesTrainingWithFlexibleJointReason()
+    {
+        var construction = new ConstructionViewModel();
+        construction.Load(
+            new CreatureDef(
+                [new NodeDef(new Vector2D(0, 0), 18), new NodeDef(new Vector2D(56, 0), 18)],
+                [new BeamDef(0, 1)],
+                [new CoreDef(0)]));
+        var presentation = new ConstructionPresentationViewModel(construction);
+
+        var buildPanel = presentation.BuildPanel;
+
+        buildPanel.CanStartTraining.ShouldBeFalse();
+        buildPanel.DisabledReason.ShouldBe("Connect two beams at a node. Closed triangles are rigid and cannot twist.");
+        buildPanel.InputSummary.ShouldBe("1 core -> 6 core sensor values; 0 motor relations -> 0 motor-relation sensor values; 6 inputs total");
+        buildPanel.MotorRelationSummary.ShouldBe("0 motor relations can twist");
+        buildPanel.ValidationLine.ShouldBe("Not ready: Connect two beams at a node. Closed triangles are rigid and cannot twist.");
+    }
+
+    [Fact]
+    public void PresentationChanged_WhenAnatomyChanges_RaisesForLiveBuildScreenRefresh()
+    {
+        var construction = new ConstructionViewModel();
+        var presentation = new ConstructionPresentationViewModel(construction);
+        var raiseCount = 0;
+        presentation.PresentationChanged += (_, _) => raiseCount++;
+
+        construction.PlaceNode(new Vector2D(0, 0), 18);
+
+        raiseCount.ShouldBe(1);
+    }
 }

@@ -1,3 +1,5 @@
+using NodeRunner.Domain;
+
 namespace NodeRunner.App.ViewModels;
 
 /// <summary>
@@ -8,11 +10,33 @@ namespace NodeRunner.App.ViewModels;
 /// </summary>
 public sealed class ConstructionPresentationViewModel
 {
+    private const int _coreSensorValueCount = 6;
+    private const int _motorRelationSensorValueCount = 2;
+
     private readonly ConstructionViewModel _construction;
+    private EventHandler? _presentationChanged;
+    private bool _isSubscribedToConstruction;
 
     public ConstructionPresentationViewModel(ConstructionViewModel construction)
     {
         _construction = construction ?? throw new ArgumentNullException(nameof(construction));
+    }
+
+    public event EventHandler? PresentationChanged
+    {
+        add
+        {
+            _presentationChanged += value;
+            SubscribeToConstruction();
+        }
+        remove
+        {
+            _presentationChanged -= value;
+            if (_presentationChanged is null)
+            {
+                UnsubscribeFromConstruction();
+            }
+        }
     }
 
     public string BuildModeButtonText => _construction.IsActive ? "Simulate" : "Build";
@@ -42,6 +66,8 @@ public sealed class ConstructionPresentationViewModel
         ? "Attach or remove a core. Extra core slot unlocked."
         : "Attach or remove a core. Train to unlock a second core slot.";
 
+    public ConstructionBuildPanelPresentation BuildPanel => CreateBuildPanel();
+
     public static string ToolHint(ConstructionTool tool)
     {
         return tool switch
@@ -52,5 +78,100 @@ public sealed class ConstructionPresentationViewModel
             ConstructionTool.Delete => "Tap a node or beam to delete it.",
             _ => string.Empty,
         };
+    }
+
+    private ConstructionBuildPanelPresentation CreateBuildPanel()
+    {
+        if (!_construction.TryLeave(out var creature, out var errors) || creature is null)
+        {
+            var disabledReason = errors.Count > 0
+                ? errors[0]
+                : "Add nodes and beams before training a new creature.";
+            var inputSummary = errors.Count > 0
+                ? BuildInvalidDraftInputSummary(_construction.Cores.Count)
+                : BuildInputSummary(_construction.Cores.Count, motorRelationCount: 0);
+            var motorRelationSummary = errors.Count > 0
+                ? "Fix anatomy to count motor relations."
+                : "Motor relations appear where two beams meet at a node and are not locked by a closed triangle.";
+            return new ConstructionBuildPanelPresentation(
+                inputSummary,
+                motorRelationSummary,
+                $"Not ready: {disabledReason}",
+                CanStartTraining: false,
+                DisabledReason: disabledReason);
+        }
+
+        var motorRelationCount = MotorTopology.BuildNodeConnections(creature)
+            .Count(connection => connection.IsMotorized);
+        var inputCount = BuildInputCount(creature.Cores.Count, motorRelationCount);
+        if (motorRelationCount == 0)
+        {
+            const string disabledReason = "Connect two beams at a node. Closed triangles are rigid and cannot twist.";
+            return new ConstructionBuildPanelPresentation(
+                BuildInputSummary(creature.Cores.Count, motorRelationCount),
+                "0 motor relations can twist",
+                $"Not ready: {disabledReason}",
+                CanStartTraining: false,
+                DisabledReason: disabledReason);
+        }
+
+        return new ConstructionBuildPanelPresentation(
+            BuildInputSummary(creature.Cores.Count, motorRelationCount),
+            motorRelationCount == 1 ? "1 motor relation can twist" : $"{motorRelationCount} motor relations can twist",
+            $"Ready: {inputCount} inputs -> {motorRelationCount} outputs",
+            CanStartTraining: true,
+            DisabledReason: null);
+    }
+
+    private static string BuildInputSummary(int coreCount, int motorRelationCount)
+    {
+        var inputCount = BuildInputCount(coreCount, motorRelationCount);
+        var coreSensorCount = coreCount * _coreSensorValueCount;
+        var motorSensorCount = motorRelationCount * _motorRelationSensorValueCount;
+        var coreWord = coreCount == 1 ? "core" : "cores";
+        var relationWord = motorRelationCount == 1 ? "motor relation" : "motor relations";
+        var coreSensorWord = coreSensorCount == 1 ? "core sensor value" : "core sensor values";
+        var motorSensorWord = motorSensorCount == 1 ? "motor-relation sensor value" : "motor-relation sensor values";
+        return $"{coreCount} {coreWord} -> {coreSensorCount} {coreSensorWord}; {motorRelationCount} {relationWord} -> {motorSensorCount} {motorSensorWord}; {inputCount} inputs total";
+    }
+
+    private static int BuildInputCount(int coreCount, int motorRelationCount)
+    {
+        return (coreCount * _coreSensorValueCount) + (motorRelationCount * _motorRelationSensorValueCount);
+    }
+
+    private static string BuildInvalidDraftInputSummary(int coreCount)
+    {
+        var coreWord = coreCount == 1 ? "core" : "cores";
+        return $"{coreCount} {coreWord} placed; fix anatomy to count inputs.";
+    }
+
+    private void SubscribeToConstruction()
+    {
+        if (_isSubscribedToConstruction)
+        {
+            return;
+        }
+
+        _construction.AnatomyChanged += OnConstructionChanged;
+        _construction.PropertyChanged += OnConstructionChanged;
+        _isSubscribedToConstruction = true;
+    }
+
+    private void UnsubscribeFromConstruction()
+    {
+        if (!_isSubscribedToConstruction)
+        {
+            return;
+        }
+
+        _construction.AnatomyChanged -= OnConstructionChanged;
+        _construction.PropertyChanged -= OnConstructionChanged;
+        _isSubscribedToConstruction = false;
+    }
+
+    private void OnConstructionChanged(object? sender, EventArgs eventArgs)
+    {
+        _presentationChanged?.Invoke(this, EventArgs.Empty);
     }
 }
