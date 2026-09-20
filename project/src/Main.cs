@@ -97,6 +97,13 @@ public partial class Main : Node2D
         // scene — reset it on entry so a previous run's time-scale choice
         // (e.g. from CycleTimeScale) can't silently carry over.
         Engine.TimeScale = _timeScales[0];
+        // Always-mode so tapping a part to select it still works while
+        // paused (#85) -- the HUD buttons already need this for the same
+        // reason (see AddHud). Physics- and training-critical children
+        // (Creature, Evolver) explicitly pin themselves back to Pausable
+        // below so they don't inherit this and keep simulating/training
+        // while the scene tree is paused.
+        ProcessMode = ProcessModeEnum.Always;
         Selection.PropertyChanged += OnSelectionPropertyChanged;
         Construction.PropertyChanged += OnConstructionPropertyChanged;
         Construction.AnatomyChanged += OnConstructionAnatomyChanged;
@@ -245,6 +252,10 @@ public partial class Main : Node2D
         var scene = GD.Load<PackedScene>("res://scenes/Creature.tscn");
         var creature = scene.Instantiate<Creature.Creature>();
         creature.Name = "Creature";
+        // Explicitly Pausable (not the default Inherit) so it doesn't pick
+        // up Main's Always process mode (#85) and keep simulating physics
+        // while the scene tree is paused.
+        creature.ProcessMode = ProcessModeEnum.Pausable;
         creature.Definition = HardcodedCreatureFactory.Create();
         creature.Theme = _theme;
         creature.Position = new Vector2(250, 260);
@@ -265,6 +276,10 @@ public partial class Main : Node2D
     private void AddEvolver()
     {
         var evolver = new Evolver { Name = "Evolver" };
+        // Explicitly Pausable (not the default Inherit) so it doesn't pick
+        // up Main's Always process mode (#85) and keep training while the
+        // scene tree is paused.
+        evolver.ProcessMode = ProcessModeEnum.Pausable;
         evolver.GenerationCompleted += OnGenerationCompleted;
         evolver.NewBestFound += OnNewBestFound;
         // Temporary composition-root bridge until the Watch ViewModel seam
@@ -431,6 +446,11 @@ public partial class Main : Node2D
             ViewModel = Construction,
             Position = new Vector2(250, 260),
             Visible = false,
+            // Explicitly Pausable (not the default Inherit) so it doesn't
+            // pick up Main's Always process mode (#85) -- ToggleConstructionMode
+            // relies on it staying Pausable to justify always resuming
+            // pause before entering/leaving Construction (see there).
+            ProcessMode = ProcessModeEnum.Pausable,
         };
         AddChild(canvas);
         _constructionCanvas = canvas;
