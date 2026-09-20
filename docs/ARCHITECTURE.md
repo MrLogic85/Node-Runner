@@ -156,7 +156,12 @@ public sealed class NeuralNetwork
 // libs/NodeRunner.ML/Ga/
 public sealed class GeneticAlgorithm
 {
-    public GeneticAlgorithm(int tournamentSize, double mutationRate, double mutationStrength, int elitismCount = 1);
+    public GeneticAlgorithm(
+        int tournamentSize,
+        double mutationRate,
+        double mutationStrength,
+        int elitismCount = 1,
+        CrossoverStrategy crossoverStrategy = CrossoverStrategy.Uniform);
 
     public double[][] NextGeneration(double[][] genomes, double[] fitness, Random rng);
 }

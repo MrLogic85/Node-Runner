@@ -65,8 +65,9 @@ but do not redefine it here.
   Godot-agnostic math over flat genome vectors (`double[]`, see
   `NeuralNetwork.FlattenGenome`/`FromGenome`). `NextGeneration(genomes,
   fitness, random)` keeps the fittest `elitismCount` genomes unchanged,
-  then fills the rest via tournament selection, uniform crossover, and
-  per-gene Gaussian mutation (Box-Muller). Fully unit-tested
+  then fills the rest via tournament selection, the configured crossover
+  strategy (Uniform or Blend), and per-gene Gaussian mutation (Box-Muller).
+  Fully unit-tested
   (`tests/NodeRunner.ML.Tests/GeneticAlgorithmTests.cs`), including
   determinism-given-a-seed and elitism preserving the exact best genome.
 - `Evolver` (`project/src/sim/Evolver.cs`) orchestrates one generation cycle
@@ -85,11 +86,13 @@ but do not redefine it here.
     It avoids collision-layer/population-lifecycle work for this slice;
     running N creatures in parallel remains available as a later
     optimization if evaluation speed becomes a problem.
-- `Main.cs` creates one `Evolver`, sizes its population/GA hyperparameters
-  (population 8, tournament size 3, mutation rate 0.1, mutation strength
-  0.3 — tuned for a short teachable demo, not for strong results), and
-  starts it against the current creature's sensor/motor-derived layer
-  sizes (read from its initial auto-randomized `Brain.LayerSizes`).
+- `Main.cs` creates one `Evolver` and selects a session-scoped training
+  profile. Quick, Standard, and Deep vary population size, trial duration,
+  generation budget, tournament size, mutation rate/strength, and crossover
+  strategy. Uniform crossover preserves parent genes; Blend crossover samples
+  continuous values between the two parent genes, giving the player a direct
+  experiment for the competing-conventions plateau without changing the
+  underlying network.
   `StartEvolution()` (`Main.cs`) always calls `Evolver.Stop()` first (which
   halts the in-progress trial without raising any events), then calls
   `Evolver.Start(...)` again — unless the current creature has no brain
@@ -100,6 +103,11 @@ but do not redefine it here.
   rebuild.
 - Generation/fitness are logged (`GD.Print`) and shown in the training HUD
   (see below).
+
+The first progression milestone uses the running best fitness as its metric:
+reaching 50 distance units unlocks a second core slot globally. The unlock is
+recorded with the generation that crossed the threshold and remains available
+in Build after restarting the app.
 
 ## Training HUD (issue #51)
 
@@ -149,4 +157,3 @@ but do not redefine it here.
   intentionally evaluates candidates one at a time on a single creature
   instead — see above. This is not #52's scope: #52 is a validation-only
   issue (manual release check for 0.4.0), not an implementation issue.
-

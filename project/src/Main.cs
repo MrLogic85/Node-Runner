@@ -4,25 +4,19 @@ using NodeRunner.App.ViewModels;
 using NodeRunner.Creature;
 using NodeRunner.Domain;
 using NodeRunner.Managers;
+using NodeRunner.ML;
 using NodeRunner.ML.Ga;
 using NodeRunner.Sim;
 using NodeRunner.Theme;
 using NodeRunner.Ui.Lib;
+using NodeRunner.Ui.Screens;
 using NodeRunner.Ui.Widgets;
 
 namespace NodeRunner;
 
 public partial class Main : Node2D
 {
-    // Population size and GA hyperparameters for the 0.4.0 first-training
-    // slice (issue #50). Tuned for a short, teachable demo, not for a
-    // fast/strong result — revisit once a training HUD (#51) makes tuning
-    // observable.
-    private const int _populationSize = 8;
-    private const int _tournamentSize = 3;
-    private const double _mutationRate = 0.1;
-    private const double _mutationStrength = 0.3;
-
+    private const double _extraCoreUnlockFitness = 50;
     private readonly VisualTheme _theme = VisualTheme.Neon;
     private Creature.Creature? _creature;
     private Evolver? _evolver;
@@ -34,13 +28,23 @@ public partial class Main : Node2D
     private Button? _beamToolButton;
     private Button? _coreToolButton;
     private Button? _deleteToolButton;
+    private Button? _completeButton;
+    private Button? _rebuildButton;
+    private Button? _creationsButton;
+    private PanelContainer? _creationsPanel;
+    private VBoxContainer? _creationsList;
+    private Guid? _activeCreationId;
     private Label? _seedLabel;
     private Label? _generationLabel;
     private Label? _bestFitnessLabel;
     private Label? _meanFitnessLabel;
     private Button? _pauseButton;
     private Button? _timeScaleButton;
+    private Button? _trainingProfileButton;
+    private Label? _trainingProfileSummaryLabel;
+    private Label? _progressionLabel;
     private PanelContainer? _trainingPanel;
+    private GenerationStrip? _generationStrip;
     private int _bestGeneration;
     private int _timeScaleIndex;
     private Label? _inspectorTitle;
@@ -63,6 +67,15 @@ public partial class Main : Node2D
     // up or slows down every physics/process step uniformly, so it doesn't
     // affect determinism — only how quickly a fixed number of ticks play out.
     private static readonly float[] _timeScales = [1f, 2f, 4f];
+    private static readonly TrainingProfile[] _trainingProfiles =
+    [
+        new("Quick", 4, 180, 30, 0.2, 0.35, 2, CrossoverStrategy.Uniform),
+        new("Standard", 8, 600, 50, 0.1, 0.3, 3, CrossoverStrategy.Uniform),
+        new("Deep", 16, 1200, 100, 0.06, 0.2, 3, CrossoverStrategy.Blend),
+    ];
+    private int _trainingProfileIndex = 1;
+    private int _sessionGenerationStart;
+    private readonly TrainingPresentationViewModel _trainingPresentation = new();
 
     public SelectionViewModel Selection { get; } = new();
 
@@ -70,12 +83,22 @@ public partial class Main : Node2D
 
     public override void _Ready()
     {
+        if (ProjectSettings.GetSetting("ui/sample_preview", false).AsBool())
+        {
+            _trainingPresentation.Update(5, 3, 8, 12.8, 8.4, "Quick");
+            var sample = GD.Load<PackedScene>("res://scenes/ui/SampleFlowScreen.tscn").Instantiate<SampleFlowScreen>();
+            sample.Presentation = _trainingPresentation;
+            AddChild(sample);
+            return;
+        }
+
         // Engine.TimeScale is a global engine setting, not scoped to this
         // scene — reset it on entry so a previous run's time-scale choice
         // (e.g. from CycleTimeScale) can't silently carry over.
         Engine.TimeScale = _timeScales[0];
         Selection.PropertyChanged += OnSelectionPropertyChanged;
         Construction.PropertyChanged += OnConstructionPropertyChanged;
+        Construction.AnatomyChanged += OnConstructionAnatomyChanged;
         AddBackdrop();
         AddGround();
         AddCamera();
@@ -84,6 +107,48 @@ public partial class Main : Node2D
         AddHud();
         AddInspector();
         AddEvolver();
+    }
+
+    private void OnConstructionAnatomyChanged(object? sender, EventArgs eventArgs)
+    {
+        UpdateToolButtonVisibility();
+    }
+
+    private string ProgressionText()
+    {
+        var progression = GetNode<SaveManager>("/root/SaveManager").Progression;
+        if (progression.ExtraCoreUnlocked)
+        {
+            return $"Unlock: extra core available (Gen {progression.ExtraCoreUnlockedAtGeneration})";
+        }
+
+        var best = _evolver is null || double.IsNegativeInfinity(_evolver.BestFitness)
+            ? 0
+            : _evolver.BestFitness;
+        return $"Next unlock: extra core at {_extraCoreUnlockFitness:0} fitness ({Math.Min(best, _extraCoreUnlockFitness):0.0}/{_extraCoreUnlockFitness:0})";
+    }
+
+    private void TryUnlockProgression()
+    {
+        if (_evolver is null || _evolver.BestFitness < _extraCoreUnlockFitness)
+        {
+            return;
+        }
+
+        var saveManager = GetNode<SaveManager>("/root/SaveManager");
+        if (saveManager.UnlockExtraCore(_evolver.Generation))
+        {
+            ApplyProgression();
+            GD.Print($"Unlocked extra core at generation {_evolver.Generation}.");
+        }
+    }
+
+    private void ApplyProgression()
+    {
+        var unlocked = GetNode<SaveManager>("/root/SaveManager").Progression.ExtraCoreUnlocked;
+        Construction.SetMaxCores(unlocked ? 2 : 1);
+        UpdateToolButtonVisibility();
+        UpdateTrainingLabels();
     }
 
     // Refreshes the sensor/motor mapping display (#42) from whatever the
@@ -201,6 +266,9 @@ public partial class Main : Node2D
         var evolver = new Evolver { Name = "Evolver" };
         evolver.GenerationCompleted += OnGenerationCompleted;
         evolver.NewBestFound += OnNewBestFound;
+        // Temporary composition-root bridge until the Watch ViewModel seam
+        // is extracted in the UI implementation plan.
+        evolver.TrainingProgressChanged += OnTrainingProgressChanged;
         AddChild(evolver);
         _evolver = evolver;
         StartEvolution();
@@ -217,15 +285,48 @@ public partial class Main : Node2D
             return;
         }
 
-        var ga = new GeneticAlgorithm(_tournamentSize, _mutationRate, _mutationStrength);
-        _evolver.Start(_creature, _populationSize, _creature.Brain.LayerSizes, ga, RngProvider().Random);
+        var profile = CurrentTrainingProfile();
+        _sessionGenerationStart = 0;
+        var ga = CreateGeneticAlgorithm(profile);
+        _evolver.Start(_creature, profile.PopulationSize, _creature.Brain.LayerSizes, ga, RngProvider().Random, trialDurationTicks: profile.TrialDurationTicks);
+        UpdateTrainingLabels();
+    }
+
+    private void StartEvolution(CreationDef creation)
+    {
+        _evolver?.Stop();
+        _bestGeneration = creation.Training?.Generation ?? 0;
+        if (_creature?.Brain is null || _evolver is null)
+        {
+            return;
+        }
+
+        var profile = CurrentTrainingProfile();
+        _sessionGenerationStart = creation.Training?.Generation ?? 0;
+        var ga = CreateGeneticAlgorithm(profile);
+        var resume = creation.Training;
+        _evolver.Start(
+            _creature,
+            profile.PopulationSize,
+            _creature.Brain.LayerSizes,
+            ga,
+            RngProvider().Random,
+            resume?.BestGenome,
+            resume?.Generation ?? 0,
+            profile.TrialDurationTicks);
         UpdateTrainingLabels();
     }
 
     private void OnGenerationCompleted()
     {
         GD.Print($"Generation {_evolver!.Generation} — best: {_evolver.BestFitness:0.0}, mean: {_evolver.MeanFitness:0.0}");
+        PersistActiveTraining();
         UpdateTrainingLabels();
+        if (_evolver.Generation - _sessionGenerationStart >= CurrentTrainingProfile().MaxGenerations)
+        {
+            _evolver.Stop();
+            GD.Print($"Training session complete after {CurrentTrainingProfile().MaxGenerations} generations.");
+        }
     }
 
     // Records which generation produced the current all-time best, for the
@@ -235,11 +336,27 @@ public partial class Main : Node2D
     private void OnNewBestFound()
     {
         _bestGeneration = _evolver!.Generation;
+        TryUnlockProgression();
         // GenerationCompleted (which also calls UpdateTrainingLabels) fires
         // before NewBestFound, so the "Best" label would otherwise render
         // with the previous _bestGeneration on the very generation the new
         // best was found. Refresh again now that it's current.
         UpdateTrainingLabels();
+    }
+
+    private void OnTrainingProgressChanged()
+    {
+        UpdateTrainingLabels();
+        if (_evolver is not null)
+        {
+            _trainingPresentation.Update(
+                _evolver.Generation,
+                _evolver.CurrentCandidate,
+                _evolver.PopulationSize,
+                _evolver.BestFitness,
+                _evolver.MeanFitness,
+                _trainingProfiles[_trainingProfileIndex].Name);
+        }
     }
 
     private void UpdateTrainingLabels()
@@ -251,7 +368,9 @@ public partial class Main : Node2D
 
         if (_generationLabel is not null)
         {
-            _generationLabel.Text = $"Gen: {_evolver.Generation}";
+            _generationLabel.Text = _evolver.IsTrialActive
+                ? $"Generation {_evolver.Generation} · try {_evolver.CurrentCandidate} of {_evolver.PopulationSize}"
+                : $"Generation {_evolver.Generation} · session complete";
         }
 
         if (_bestFitnessLabel is not null)
@@ -265,9 +384,25 @@ public partial class Main : Node2D
         {
             _meanFitnessLabel.Text = $"Mean: {_evolver.MeanFitness:0.0}";
         }
+
+        if (_progressionLabel is not null)
+        {
+            _progressionLabel.Text = ProgressionText();
+        }
+
+        _generationStrip?.SetProgress(
+            _evolver.Generation,
+            _evolver.CurrentCandidate,
+            _evolver.PopulationSize,
+            _evolver.CompletedCandidateCount,
+            _evolver.CompletedFitness,
+            _evolver.IsTrialActive);
     }
 
     private RngProvider RngProvider() => GetNode<RngProvider>("/root/RngProvider");
+
+    private static GeneticAlgorithm CreateGeneticAlgorithm(TrainingProfile profile) =>
+        new(profile.TournamentSize, profile.MutationRate, profile.MutationStrength, crossoverStrategy: profile.CrossoverStrategy);
 
     // Swaps the inspector so it reads the currently active CreatureDef.
     // Needed both at startup and whenever construction mode replaces the
@@ -361,12 +496,172 @@ public partial class Main : Node2D
         row.AddChild(button);
         row.AddChild(_buildModeButton);
         row.AddChild(_seedLabel);
+        _creationsButton = new Button
+        {
+            Name = "CreationsButton",
+            Text = "Creations",
+            CustomMinimumSize = new Vector2(180, _touchTargetHeight),
+        };
+        _creationsButton.AddThemeFontSizeOverride("font_size", _hudFontSize);
+        _creationsButton.Pressed += ToggleCreationsPanel;
+        row.AddChild(_creationsButton);
         panel.AddChild(row);
         layer.AddChild(panel);
         AddChild(layer);
 
         AddConstructionToolRow(layer);
         AddTrainingPanel(layer);
+        AddCreationsPanel(layer);
+    }
+
+    private void AddCreationsPanel(CanvasLayer layer)
+    {
+        _creationsPanel = new PanelContainer
+        {
+            Name = "CreationsPanel",
+            Position = new Vector2(16, 90),
+            Visible = false,
+        };
+        _creationsPanel.AddThemeStyleboxOverride("panel", CreateHudPanelStyle());
+        var margin = new MarginContainer();
+        margin.AddThemeConstantOverride("margin_left", 16);
+        margin.AddThemeConstantOverride("margin_top", 12);
+        margin.AddThemeConstantOverride("margin_right", 16);
+        margin.AddThemeConstantOverride("margin_bottom", 12);
+        _creationsList = new VBoxContainer();
+        _creationsList.AddThemeConstantOverride("separation", 8);
+        margin.AddChild(_creationsList);
+        _creationsPanel.AddChild(margin);
+        layer.AddChild(_creationsPanel);
+        RefreshCreationsPanel();
+    }
+
+    private void ToggleCreationsPanel()
+    {
+        if (_creationsPanel is null)
+        {
+            return;
+        }
+
+        _creationsPanel.Visible = !_creationsPanel.Visible;
+        if (_creationsPanel.Visible)
+        {
+            RefreshCreationsPanel();
+        }
+    }
+
+    private void RefreshCreationsPanel()
+    {
+        if (_creationsList is null)
+        {
+            return;
+        }
+
+        foreach (var child in _creationsList.GetChildren())
+        {
+            child.QueueFree();
+        }
+
+        var saveManager = GetNode<SaveManager>("/root/SaveManager");
+        var creations = saveManager.List();
+        if (creations.Count == 0)
+        {
+            _creationsList.AddChild(new Label { Text = "No saved Creations yet." });
+            return;
+        }
+
+        foreach (var creation in creations)
+        {
+            var row = new HBoxContainer();
+            row.AddThemeConstantOverride("separation", 8);
+            var open = new Button
+            {
+                Text = $"{creation.Name} (Gen {creation.Training?.Generation ?? 0})",
+                CustomMinimumSize = new Vector2(300, _touchTargetHeight),
+            };
+            open.Pressed += () => OpenCreation(creation);
+            var edit = new Button
+            {
+                Text = "Edit",
+                CustomMinimumSize = new Vector2(110, _touchTargetHeight),
+            };
+            edit.Pressed += () => EditCreation(creation);
+            var duplicate = new Button
+            {
+                Text = "Duplicate",
+                CustomMinimumSize = new Vector2(150, _touchTargetHeight),
+            };
+            duplicate.Pressed += () =>
+            {
+                saveManager.Duplicate(creation.Id);
+                RefreshCreationsPanel();
+            };
+            var delete = new Button
+            {
+                Text = "Delete",
+                CustomMinimumSize = new Vector2(120, _touchTargetHeight),
+            };
+            delete.Pressed += () =>
+            {
+                saveManager.Delete(creation.Id);
+                RefreshCreationsPanel();
+            };
+            row.AddChild(open);
+            row.AddChild(edit);
+            row.AddChild(duplicate);
+            row.AddChild(delete);
+            _creationsList.AddChild(row);
+        }
+    }
+
+    private void OpenCreation(CreationDef creation)
+    {
+        if (Construction.IsActive)
+        {
+            Construction.IsActive = false;
+        }
+
+        ApplyLoadedCreature(creation);
+        if (_creationsPanel is not null)
+        {
+            _creationsPanel.Visible = false;
+        }
+    }
+
+    private void EditCreation(CreationDef creation)
+    {
+        OpenCreation(creation);
+        Construction.Load(creation.Creature, moveOnly: true);
+        Construction.IsActive = true;
+        UpdateToolButtonVisibility();
+    }
+
+    private void RebuildCreation()
+    {
+        if (!Construction.IsMoveOnly)
+        {
+            return;
+        }
+
+        _activeCreationId = null;
+        Construction.Load(_creature?.Definition ?? throw new InvalidOperationException("No creature is loaded."));
+        UpdateToolButtonVisibility();
+        Construction.SetCompletedMessage("Rebuild creates a new Creation; previous training will not be copied.");
+    }
+
+    private void ApplyLoadedCreature(CreationDef creation)
+    {
+        if (_creature is null)
+        {
+            return;
+        }
+
+        Selection.Clear();
+        _activeCreationId = creation.Id;
+        _creature.BuildFrom(creation.Creature);
+        Construction.Load(creation.Creature);
+        SetActiveInspector(creation.Creature);
+        StartEvolution(creation);
     }
 
     // Training HUD (#51): generation/best/mean readout plus run/pause,
@@ -390,9 +685,15 @@ public partial class Main : Node2D
         _generationLabel = CreateTrainingLabel("GenerationLabel", "Gen: 0");
         _bestFitnessLabel = CreateTrainingLabel("BestFitnessLabel", "Best: —");
         _meanFitnessLabel = CreateTrainingLabel("MeanFitnessLabel", "Mean: 0.0");
+        _progressionLabel = CreateTrainingLabel("ProgressionLabel", ProgressionText());
         statsRow.AddChild(_generationLabel);
         statsRow.AddChild(_bestFitnessLabel);
         statsRow.AddChild(_meanFitnessLabel);
+        _generationStrip = new GenerationStrip
+        {
+            Name = "GenerationStrip",
+            Palette = _theme,
+        };
 
         var controlsRow = new HBoxContainer();
         controlsRow.AddThemeConstantOverride("separation", 20);
@@ -423,12 +724,27 @@ public partial class Main : Node2D
         _timeScaleButton.AddThemeFontSizeOverride("font_size", _hudFontSize);
         _timeScaleButton.Pressed += CycleTimeScale;
 
+        _trainingProfileButton = new Button
+        {
+            Name = "TrainingProfileButton",
+            Text = TrainingProfileButtonText(),
+            CustomMinimumSize = new Vector2(260, _touchTargetHeight),
+            TooltipText = "Tap to cycle the session profile. The active run restarts with the new settings.",
+        };
+        _trainingProfileButton.AddThemeFontSizeOverride("font_size", _hudFontSize);
+        _trainingProfileButton.Pressed += CycleTrainingProfile;
+
         controlsRow.AddChild(_pauseButton);
         controlsRow.AddChild(resetButton);
         controlsRow.AddChild(_timeScaleButton);
+        controlsRow.AddChild(_trainingProfileButton);
 
+        _trainingProfileSummaryLabel = CreateTrainingLabel("TrainingProfileSummaryLabel", TrainingProfileSummaryText());
         column.AddChild(statsRow);
+        column.AddChild(_generationStrip);
         column.AddChild(controlsRow);
+        column.AddChild(_trainingProfileSummaryLabel);
+        column.AddChild(_progressionLabel);
         panel.AddChild(column);
         layer.AddChild(panel);
 
@@ -471,7 +787,15 @@ public partial class Main : Node2D
     // random population. Exposed as its own training-HUD control per issue
     // #51's acceptance criteria, even though it shares RandomizeCreatureBrain's
     // implementation.
-    private void ResetEvolution() => RandomizeCreatureBrain();
+    private void ResetEvolution()
+    {
+        if (_activeCreationId is { } id)
+        {
+            GetNode<SaveManager>("/root/SaveManager").ResetTraining(id);
+        }
+
+        RandomizeCreatureBrain();
+    }
 
     private void CycleTimeScale()
     {
@@ -484,6 +808,51 @@ public partial class Main : Node2D
     }
 
     private string TimeScaleButtonText() => $"{_timeScales[_timeScaleIndex]:0.#}x";
+
+    private TrainingProfile CurrentTrainingProfile() => _trainingProfiles[_trainingProfileIndex];
+
+    private string TrainingProfileButtonText()
+    {
+        var profile = CurrentTrainingProfile();
+        return $"Training: {profile.Name} (restart)";
+    }
+
+    private string TrainingProfileSummaryText()
+    {
+        var profile = CurrentTrainingProfile();
+        var crossover = profile.CrossoverStrategy == CrossoverStrategy.Blend ? "blended genes" : "uniform genes";
+        return $"{profile.PopulationSize} candidates | {profile.TrialDurationTicks / 60}s trials | {profile.MutationRate:P0} mutation | {crossover}";
+    }
+
+    private void CycleTrainingProfile()
+    {
+        _trainingProfileIndex = (_trainingProfileIndex + 1) % _trainingProfiles.Length;
+        if (_trainingProfileButton is not null)
+        {
+            _trainingProfileButton.Text = TrainingProfileButtonText();
+        }
+
+        if (_trainingProfileSummaryLabel is not null)
+        {
+            _trainingProfileSummaryLabel.Text = TrainingProfileSummaryText();
+        }
+
+        if (!Construction.IsActive)
+        {
+            PersistActiveTraining();
+            if (_activeCreationId is { } id)
+            {
+                var creation = GetNode<SaveManager>("/root/SaveManager").Get(id);
+                if (creation is not null)
+                {
+                    StartEvolution(creation);
+                    return;
+                }
+            }
+
+            StartEvolution();
+        }
+    }
 
     private void AddConstructionToolRow(CanvasLayer layer)
     {
@@ -512,15 +881,24 @@ public partial class Main : Node2D
         _deleteToolButton = CreateToolButton("DeleteToolButton", "Delete");
         _deleteToolButton.Pressed += () => Construction.ActiveTool = ConstructionTool.Delete;
 
+        _completeButton = CreateToolButton("CompleteButton", "Complete");
+        _completeButton.Pressed += CompleteCreation;
+        _rebuildButton = CreateToolButton("RebuildButton", "Rebuild");
+        _rebuildButton.Pressed += RebuildCreation;
+
         row.AddChild(_placeToolButton);
         row.AddChild(_beamToolButton);
         row.AddChild(_coreToolButton);
         row.AddChild(_deleteToolButton);
+        row.AddChild(_completeButton);
+        row.AddChild(_rebuildButton);
         panel.AddChild(row);
         layer.AddChild(panel);
 
         _toolPanel = panel;
+        ApplyProgression();
         UpdateToolButtonHighlight();
+        UpdateToolButtonVisibility();
     }
 
     private Button CreateToolButton(string name, string text)
@@ -590,6 +968,48 @@ public partial class Main : Node2D
         Construction.IsActive = !Construction.IsActive;
     }
 
+    private void CompleteCreation()
+    {
+        if (!Construction.TryLeave(out var creature, out var errors) || creature is null)
+        {
+            Construction.SetBlockedLeaveMessage(errors);
+            return;
+        }
+
+        var creation = new CreationDef(
+            Guid.NewGuid(),
+            $"Creation {GetNode<SaveManager>("/root/SaveManager").List().Count + 1}",
+            creature);
+        GetNode<SaveManager>("/root/SaveManager").Save(creation);
+        _activeCreationId = creation.Id;
+        Construction.SetCompletedMessage($"Saved {creation.Name}.");
+    }
+
+    private void PersistActiveTraining()
+    {
+        if (_activeCreationId is not { } id || _evolver?.BestGenome is not { } genome || _creature?.Brain is null)
+        {
+            return;
+        }
+
+        var saveManager = GetNode<SaveManager>("/root/SaveManager");
+        var source = saveManager.Get(id);
+        if (source is null)
+        {
+            return;
+        }
+
+        saveManager.Save(new CreationDef(
+            source.Id,
+            source.Name,
+            source.Creature,
+            new TrainingStateDef(
+                _evolver.LayerSizes,
+                genome,
+                _evolver.Generation,
+                Activation.Tanh.ToString())));
+    }
+
     private void ApplyEditedCreature(CreatureDef editedCreature)
     {
         if (_creature is null)
@@ -610,10 +1030,19 @@ public partial class Main : Node2D
             _seedLabel.Text = SeedText();
         }
 
-        // The anatomy just changed shape entirely (different sensor/motor
-        // counts), so any evolution in progress was measuring a creature
-        // that no longer exists in this form. Start a fresh population
-        // sized for the new anatomy.
+        if (_activeCreationId is { } id)
+        {
+            var saveManager = GetNode<SaveManager>("/root/SaveManager");
+            var source = saveManager.Get(id);
+            if (source is not null)
+            {
+                var updated = new CreationDef(source.Id, source.Name, editedCreature, source.Training);
+                saveManager.Save(updated);
+                StartEvolution(updated);
+                return;
+            }
+        }
+
         StartEvolution();
     }
 
@@ -648,6 +1077,7 @@ public partial class Main : Node2D
                     _buildModeButton.Text = BuildModeButtonText();
                 }
 
+                UpdateToolButtonVisibility();
                 UpdateInspector();
                 break;
             case nameof(ConstructionViewModel.ActiveTool):
@@ -656,6 +1086,9 @@ public partial class Main : Node2D
                 break;
             case nameof(ConstructionViewModel.StatusMessage):
                 UpdateInspector();
+                break;
+            case nameof(ConstructionViewModel.MaxCores):
+                UpdateToolButtonVisibility();
                 break;
         }
     }
@@ -671,6 +1104,40 @@ public partial class Main : Node2D
         HighlightToolButton(_beamToolButton, Construction.ActiveTool == ConstructionTool.Beam);
         HighlightToolButton(_coreToolButton, Construction.ActiveTool == ConstructionTool.Core);
         HighlightToolButton(_deleteToolButton, Construction.ActiveTool == ConstructionTool.Delete);
+    }
+
+    private void UpdateToolButtonVisibility()
+    {
+        var visible = !Construction.IsMoveOnly;
+        if (_placeToolButton is not null)
+        {
+            _placeToolButton.Visible = visible;
+        }
+        if (_beamToolButton is not null)
+        {
+            _beamToolButton.Visible = visible;
+        }
+        if (_coreToolButton is not null)
+        {
+            _coreToolButton.Visible = visible;
+            var unlockHint = Construction.MaxCores > 1 ? "unlocked" : "50 fitness";
+            _coreToolButton.Text = $"Core {Construction.Cores.Count}/{Construction.MaxCores} ({unlockHint})";
+            _coreToolButton.TooltipText = Construction.MaxCores > 1
+                ? "Attach or remove a core. Extra core slot unlocked."
+                : "Attach or remove a core. Train to unlock a second core slot.";
+        }
+        if (_deleteToolButton is not null)
+        {
+            _deleteToolButton.Visible = visible;
+        }
+        if (_completeButton is not null)
+        {
+            _completeButton.Visible = !Construction.IsMoveOnly;
+        }
+        if (_rebuildButton is not null)
+        {
+            _rebuildButton.Visible = Construction.IsMoveOnly;
+        }
     }
 
     private void HighlightToolButton(Button button, bool isActive)
@@ -715,6 +1182,7 @@ public partial class Main : Node2D
         Engine.TimeScale = _timeScales[0];
         Selection.PropertyChanged -= OnSelectionPropertyChanged;
         Construction.PropertyChanged -= OnConstructionPropertyChanged;
+        Construction.AnatomyChanged -= OnConstructionAnatomyChanged;
         if (_inspector is not null)
         {
             _inspector.PropertyChanged -= OnInspectorPropertyChanged;

@@ -161,7 +161,9 @@ without a fresh design conversation:
 - Beams breaking on impact; joints tearing apart under load.
 - Collision between a creature's own parts (currently always disabled).
 - Node/Beam/Core as unlockable resources via an achievement/quest
-  progression system, rather than unlimited from the start.
+  progression system, rather than unlimited from the start. The later
+  0.8.0 roadmap milestone explicitly schedules the first narrow unlock slice;
+  that milestone owns the decision about its initial implementation.
 - More than 3 rays, or additional sensor types, once ray-casting
   performance is a known quantity (especially on Android).
 - Exposing `MaxTorque`/`MaxAngularVelocity` as player- or

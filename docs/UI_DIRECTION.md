@@ -2,8 +2,10 @@
 
 Node Runner's default visual direction is a neon sci-fi learning lab: dark
 arena, glowing nodes, bright signal paths, and readable console-like controls.
-This document is a lightweight compass for 0.1.0. It should guide decisions
-without pretending we already know the final app design.
+This document is a lightweight visual compass. The staged implementation order
+and acceptance gates live in `docs/UI_IMPLEMENTATION_PLAN.md`; the component
+inventory and screen flow live in `docs/UI_COMPONENTS_AND_FLOW.md`. Use those
+documents before starting a larger UI slice.
 
 ## Product feel
 
@@ -52,6 +54,16 @@ exclusive: the training panel shows outside construction mode, the tool row
 shows inside it. Toggling into/out of construction mode always resumes
 training first (pausing has no meaning while editing, and the construction
 canvas isn't reachable while the tree is paused).
+
+The 0.7.0 training-profile control cycles a small set of session presets.
+Its button label stays compact and explicitly says that changing it restarts
+the active run; a separate summary line keeps the selected population,
+trial duration, mutation rate, and crossover explanation visible without
+turning the button into a dense configuration panel.
+
+The first 0.8.0 progression slice adds a compact line below the training
+controls showing the next unlock threshold and current progress, or the
+generation at which the extra core slot was earned.
 
 ## Theme boundaries
 

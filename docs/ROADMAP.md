@@ -2,7 +2,8 @@
 
 Node Runner is developed in small, always-shippable increments. Each version
 below is an **Android APK you can install and demo**. Do not start version N+1
-before version N runs end-to-end on a device.
+before version N runs end-to-end on a device. `docs/ML_CONCEPTS.md` defines
+which ML ideas each version teaches and how they are made visible.
 
 Time estimates assume evening/weekend hobby pace and are rough.
 
@@ -186,15 +187,20 @@ short demo, and can see the fitness signal that caused the improvement.
 
 ---
 
-> **Draft status (2026-09-19):** 0.5.0 through 0.9.0 below reflect a
-> game-loop-first redesign (build → save as Creation → edit/resume
-> training → tune training → unlock parts → visualize), replacing a
-> previous straight-ML-concept sequence. Several implementation questions
-> are still open — see "Open questions" call-outs inline below (Rebuild's
-> effect on training history, exact persisted training-history shape,
-> single vs. per-Creation RNG seed) — tracked in GitHub Issue #89. Milestone
-> numbers/order may still shift; treat this as the current best draft, not
-> final.
+> **Tracking status (2026-09-20):** 0.5.0 through 0.9.0 reflect the
+> game-loop-first sequence (build → save as Creation → edit/resume training
+> → tune training → unlock parts → visualize). GitHub milestones and tracking
+> issues now exist for each version. The checklists below describe the
+> implementation state; checked items are delivered locally, while unchecked
+> items remain open in the corresponding GitHub issue.
+
+| Milestone | GitHub tracking issue |
+|---|---|
+| 0.5.0 Creations | [#93](https://github.com/MrLogic85/Node-Runner/issues/93) |
+| 0.6.0 Edit and resume training | [#94](https://github.com/MrLogic85/Node-Runner/issues/94) |
+| 0.7.0 Training configuration | [#95](https://github.com/MrLogic85/Node-Runner/issues/95) |
+| 0.8.0 Progression: first unlock | [#96](https://github.com/MrLogic85/Node-Runner/issues/96) |
+| 0.9.0 Visualize the brain | [#97](https://github.com/MrLogic85/Node-Runner/issues/97) |
 
 ## 0.5.0 — "Creations" (Save, list, and manage builds)
 
@@ -208,12 +214,13 @@ built on top of "a Creation is a real, addressable thing").
   structural-completeness rules as current construction-mode validation,
   see `docs/CONSTRUCTION_MODE.md` § Validation) and saves it as a Creation.
 - A **Creations** screen: list saved Creations, delete, duplicate.
-  - Duplicate creates an independent copy (assumption, flagged for
-    confirmation: starts with fresh/untrained state, not a clone of any
-    trained brain — open question, see Issue #89, to confirm before
-    implementation).
-- Domain-level persistence for `CreatureDef` (the body only at this stage;
-  brain/training-history persistence is 0.6.0's concern once Edit exists).
+  - Duplicate creates an independent copy, including the current training
+    state. The copy can later be reset to a new seed with random weights.
+- Domain-level persistence for `CreatureDef` and the current training state
+  needed to make duplication faithful. Edit-based resume and generation
+  history management remain 0.6.0 concerns.
+- Resetting a Creation's training state removes its saved genome and
+  generation; the next run starts with a fresh random population and seed.
 - No Edit mode yet — a completed Creation is a saved snapshot, not yet
   resumable/trainable-in-place. That distinction is what 0.6.0 adds.
 
@@ -231,18 +238,15 @@ not just a static save file.
   can only move existing parts, not add/remove them. This preserves the
   brain's sensor/motor layer shape (topology-derived, see
   `docs/CREATURE_MODEL.md`), so training can resume in place.
-- Edit remembers and resumes training history/progress for that Creation
-  (exact persisted shape — best genome, generation count, or both — is an
-  open design question to settle before implementation; tracked in
-  Issue #89, not yet decided). Related open question: whether the app
-  keeps one global RNG seed per run (as today, via `RngProvider`) or each
-  Creation carries its own independent training seed/state once resumable
-  training exists.
+- Edit remembers and resumes training history/progress for that Creation:
+  the best genome and generation count are persisted. A seed is not needed
+  to resume because the trained model is saved; a new seed is generated only
+  when training is explicitly reset to random weights.
 - **Rebuild** action (Edit → full Build mode, add/remove parts allowed
-  again): open question whether this resets training history (topology
-  changes can invalidate the old genome's shape) or attempts to preserve
-  what it can. Resolve before implementation (Issue #89); don't guess in
-  code.
+  again): copies the Creation into a new Build draft. The original Creation
+  remains unchanged, and the new Creation starts without the previous
+  training model because topology changes can invalidate the old genome's
+  shape.
 - This is also the natural point to evaluate whether the current
   construction-mode UI (`project/src/creature/` construction tools) needs
   a genuine reimplementation to support Edit's move-only interaction, or
@@ -253,6 +257,16 @@ not just a static save file.
 **Ship criterion:** A player can leave a Creation mid-training, come back
 later, resume training without losing prior progress, and reposition a
 part without invalidating that progress.
+
+**Implementation status (2026-09-19):**
+
+- [x] Saved genome and generation resume when a Creation is opened.
+- [x] Best genome and generation are persisted at generation boundaries.
+- [x] Reset clears persisted training and starts a fresh run.
+- [x] Edit exposes move-only interaction; topology tools are unavailable.
+- [x] Rebuild creates a new Build draft without carrying training state.
+- [x] Android smoke verification completed for Edit and Rebuild on the
+  connected test device; no app crash was observed in `adb logcat`.
 
 ---
 
@@ -282,6 +296,19 @@ of fixed engine constants.
 its own right — batch size vs. duration tradeoffs in an evolutionary
 context.
 
+**Implementation status (2026-09-19):**
+
+- [x] Session-scoped Quick, Standard, and Deep profiles expose population
+  size and trial duration in the training HUD.
+- [x] Changing profile restarts the active evolution with the selected
+  settings; profile choice is not persisted.
+- [x] Android smoke verification completed for profile cycling and app restart
+  on the connected test device; no crash was observed in `adb logcat`.
+- [x] Profiles bound each training session to a visible generation budget;
+  completion stops the evolver while preserving the latest training state.
+- [x] Profiles expose mutation settings and alternate Uniform/Blend crossover
+  strategies for player-facing GA plateau experiments.
+
 ---
 
 ## 0.8.0 — "Progression: first unlock"
@@ -305,6 +332,16 @@ expanding it.
 **Ship criterion:** A first-time player can watch a concrete, visible
 threshold approach during training and see a new part become available in
 Build immediately after crossing it.
+
+**Implementation status (2026-09-19):**
+
+- [x] Best fitness reaching 50 distance units unlocks a second core slot.
+- [x] The unlock is persisted globally and is available across all future
+  Builds and Creations.
+- [x] Training HUD shows progress toward the threshold and the generation
+  where the unlock was earned.
+- [x] Construction HUD reports the current core-slot limit and explains how
+  to unlock the next slot.
 
 ---
 

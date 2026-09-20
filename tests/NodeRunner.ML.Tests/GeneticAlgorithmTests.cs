@@ -12,6 +12,7 @@ public sealed class GeneticAlgorithmTests
         Should.Throw<ArgumentOutOfRangeException>(() => new GeneticAlgorithm(2, 1.1, 0.1));
         Should.Throw<ArgumentOutOfRangeException>(() => new GeneticAlgorithm(2, 0.1, -0.1));
         Should.Throw<ArgumentOutOfRangeException>(() => new GeneticAlgorithm(2, 0.1, 0.1, elitismCount: -1));
+        Should.Throw<ArgumentOutOfRangeException>(() => new GeneticAlgorithm(2, 0.1, 0.1, crossoverStrategy: (CrossoverStrategy)99));
     }
 
     [Fact]
@@ -100,6 +101,27 @@ public sealed class GeneticAlgorithmTests
             foreach (var gene in genome)
             {
                 possibleGeneValues.ShouldContain(gene);
+            }
+        }
+    }
+
+    [Fact]
+    public void NextGeneration_WithBlendCrossover_StaysBetweenParentGenes()
+    {
+        var ga = new GeneticAlgorithm(1, mutationRate: 0.0, mutationStrength: 1.0, elitismCount: 0, crossoverStrategy: CrossoverStrategy.Blend);
+        var genomes = new[]
+        {
+            new double[] { 0, 10 },
+            new double[] { 10, 20 },
+        };
+
+        var next = ga.NextGeneration(genomes, new[] { 1.0, 2.0 }, new Random(7));
+
+        for (var genomeIndex = 0; genomeIndex < next.Length; genomeIndex++)
+        {
+            for (var geneIndex = 0; geneIndex < next[genomeIndex].Length; geneIndex++)
+            {
+                next[genomeIndex][geneIndex].ShouldBeInRange(genomes[0][geneIndex], genomes[1][geneIndex]);
             }
         }
     }
