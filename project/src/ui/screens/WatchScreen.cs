@@ -21,10 +21,14 @@ public partial class WatchScreen : Control
     private SignalFlowPresentationViewModel? _signalFlow;
     private UnlockProgressPresentationViewModel? _unlockProgress;
     private TrainingProfileSummaryPresentationViewModel? _profileSummary;
+    private TrainingProfileSettingsPresentationViewModel? _profileSettings;
     private Label? _seesStatusLabel;
     private Label? _decidesStatusLabel;
     private Label? _twistsStatusLabel;
     private Label? _scoresStatusLabel;
+    private Control? _settingsOverlay;
+    private ColorRect? _settingsScrim;
+    private UiSheet? _settingsSheet;
     private bool _inputPassthrough;
 
     [Signal]
@@ -32,6 +36,9 @@ public partial class WatchScreen : Control
 
     [Signal]
     public delegate void TrainingProfileRequestedEventHandler();
+
+    [Signal]
+    public delegate void TrainingProfileSelectedEventHandler(int index);
 
     [Export]
     public bool ShowTopBar { get; set; } = true;
@@ -157,6 +164,29 @@ public partial class WatchScreen : Control
         }
     }
 
+    public TrainingProfileSettingsPresentationViewModel? ProfileSettings
+    {
+        get => _profileSettings;
+        set
+        {
+            if (_profileSettings is not null)
+            {
+                _profileSettings.PropertyChanged -= OnProfileSettingsChanged;
+            }
+
+            _profileSettings = value;
+            if (_profileSettings is not null)
+            {
+                _profileSettings.PropertyChanged += OnProfileSettingsChanged;
+            }
+
+            if (_settingsOverlay?.Visible == true)
+            {
+                ShowTrainingSettingsSheet();
+            }
+        }
+    }
+
     public UiTokens Tokens
     {
         get => _tokens;
@@ -193,6 +223,11 @@ public partial class WatchScreen : Control
             _profileSummary.PropertyChanged -= OnProfileSummaryChanged;
             _profileSummary.PropertyChanged += OnProfileSummaryChanged;
         }
+        if (_profileSettings is not null)
+        {
+            _profileSettings.PropertyChanged -= OnProfileSettingsChanged;
+            _profileSettings.PropertyChanged += OnProfileSettingsChanged;
+        }
         SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
         if (!Hosted)
         {
@@ -220,6 +255,10 @@ public partial class WatchScreen : Control
         if (_profileSummary is not null)
         {
             _profileSummary.PropertyChanged -= OnProfileSummaryChanged;
+        }
+        if (_profileSettings is not null)
+        {
+            _profileSettings.PropertyChanged -= OnProfileSettingsChanged;
         }
     }
 
@@ -255,8 +294,17 @@ public partial class WatchScreen : Control
         }
     }
 
+    private void OnProfileSettingsChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs args)
+    {
+        if (_settingsOverlay?.Visible == true)
+        {
+            ShowTrainingSettingsSheet();
+        }
+    }
+
     private void RebuildLayout()
     {
+        var reopenSettings = _settingsOverlay?.Visible == true;
         _signalCards.Clear();
         _signalBodies.Clear();
         _sensorBars.Clear();
@@ -274,6 +322,10 @@ public partial class WatchScreen : Control
         }
 
         BuildLayout();
+        if (reopenSettings)
+        {
+            ShowTrainingSettingsSheet();
+        }
     }
 
     private void BuildLayout()
@@ -321,6 +373,7 @@ public partial class WatchScreen : Control
             screen.AddChild(CreateTrainingPanel());
         }
 
+        AddSettingsOverlay();
         ApplyInputPassthrough(this);
     }
 
@@ -496,11 +549,20 @@ public partial class WatchScreen : Control
         {
             Tokens = _tokens,
             Kind = UiActionButton.ActionKind.Secondary,
-            LabelText = $"Training: {profile} · restart",
-            TooltipText = "Cycle Quick / Standard / Deep. The active run restarts with the new settings.",
+            LabelText = $"Training: {profile} · settings",
+            TooltipText = "Open profile settings. Choosing a profile restarts the active run.",
             CustomMinimumSize = new Vector2(0, _tokens.TouchTarget),
         };
-        profileButton.Pressed += () => EmitSignal(SignalName.TrainingProfileRequested);
+        profileButton.Pressed += () =>
+        {
+            if (_profileSettings is null)
+            {
+                EmitSignal(SignalName.TrainingProfileRequested);
+                return;
+            }
+
+            ShowTrainingSettingsSheet();
+        };
         _inputPassthroughExceptions.Add(profileButton);
         stack.AddChild(profileButton);
         stack.AddChild(CreateLabel(generationText, 15, _tokens.Ink));
@@ -510,6 +572,160 @@ public partial class WatchScreen : Control
         stack.AddChild(CreateUnlockProgress());
 
         return panel;
+    }
+
+    private void AddSettingsOverlay()
+    {
+        _settingsOverlay = new Control
+        {
+            Visible = false,
+            ZIndex = 30,
+        };
+        _settingsOverlay.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
+        AddChild(_settingsOverlay);
+
+        _settingsScrim = new ColorRect
+        {
+            Color = new Color(0, 0, 0, 0.18f),
+            MouseFilter = MouseFilterEnum.Stop,
+            ZIndex = 30,
+        };
+        _settingsScrim.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
+        _settingsScrim.GuiInput += OnSettingsScrimInput;
+        _settingsOverlay.AddChild(_settingsScrim);
+        _inputPassthroughExceptions.Add(_settingsScrim);
+
+        _settingsSheet = new UiSheet
+        {
+            Tokens = _tokens,
+            Title = "Training settings",
+            CustomMinimumSize = new Vector2(460, 0),
+            ZIndex = 31,
+        };
+        _settingsOverlay.AddChild(_settingsSheet);
+        _settingsSheet.Hide();
+        _inputPassthroughExceptions.Add(_settingsSheet);
+    }
+
+    private void ShowTrainingSettingsSheet()
+    {
+        if (_settingsOverlay is null || _settingsSheet is null || _profileSettings is null)
+        {
+            return;
+        }
+
+        _settingsSheet.SetBody(CreateTrainingSettingsBody());
+        _settingsOverlay.Show();
+        _settingsSheet.Show();
+        RefreshSettingsSheetLayout();
+        MakeSettingsInteractive(_settingsSheet);
+    }
+
+    private void CloseTrainingSettingsSheet()
+    {
+        _settingsSheet?.Hide();
+        _settingsOverlay?.Hide();
+    }
+
+    private void OnSettingsScrimInput(InputEvent @event)
+    {
+        if (@event is InputEventMouseButton { Pressed: true } or InputEventScreenTouch { Pressed: true })
+        {
+            CloseTrainingSettingsSheet();
+            _settingsScrim?.AcceptEvent();
+        }
+    }
+
+    private static void MakeSettingsInteractive(Node node)
+    {
+        if (node is Control control)
+        {
+            control.MouseFilter = MouseFilterEnum.Stop;
+        }
+
+        foreach (var child in node.GetChildren())
+        {
+            MakeSettingsInteractive(child);
+        }
+    }
+
+    private void RefreshSettingsSheetLayout()
+    {
+        if (_settingsSheet is null)
+        {
+            return;
+        }
+
+        var sheetWidth = _settingsSheet.CustomMinimumSize.X;
+        _settingsSheet.Position = new Vector2(Mathf.Max(24, Size.X - sheetWidth - 48), 72);
+    }
+
+    private Control CreateTrainingSettingsBody()
+    {
+        var stack = new VBoxContainer();
+        stack.AddThemeConstantOverride("separation", 12);
+        stack.AddChild(CreateLabel("Choose a profile. Changing it restarts this training run without changing saved Creation data.", 13, _tokens.Muted));
+
+        var options = _profileSettings?.Options ?? Array.Empty<TrainingProfileOptionPresentation>();
+        var selectedIndex = _profileSettings?.SelectedIndex ?? -1;
+        for (var index = 0; index < options.Count; index++)
+        {
+            stack.AddChild(CreateTrainingProfileOption(index, options[index], index == selectedIndex));
+        }
+
+        var done = new UiActionButton
+        {
+            Tokens = _tokens,
+            Kind = UiActionButton.ActionKind.Secondary,
+            LabelText = "Done",
+            CustomMinimumSize = new Vector2(0, _tokens.TouchTarget),
+        };
+        done.Pressed += CloseTrainingSettingsSheet;
+        stack.AddChild(done);
+        return stack;
+    }
+
+    private Control CreateTrainingProfileOption(int index, TrainingProfileOptionPresentation option, bool selected)
+    {
+        var card = CreatePanel(raised: true);
+        var margin = CreateMargin(10);
+        card.AddChild(margin);
+
+        var row = new HBoxContainer
+        {
+            SizeFlagsHorizontal = SizeFlags.ExpandFill,
+        };
+        row.AddThemeConstantOverride("separation", 10);
+        margin.AddChild(row);
+
+        var text = new VBoxContainer
+        {
+            SizeFlagsHorizontal = SizeFlags.ExpandFill,
+        };
+        text.AddThemeConstantOverride("separation", 3);
+        text.AddChild(CreateLabel(option.Name, 15, selected ? _tokens.Accent : _tokens.Ink));
+        text.AddChild(CreateLabel(option.Detail, 11, _tokens.Muted));
+        row.AddChild(text);
+
+        var choose = new UiActionButton
+        {
+            Tokens = _tokens,
+            Kind = selected ? UiActionButton.ActionKind.Primary : UiActionButton.ActionKind.Secondary,
+            LabelText = selected ? "Active" : "Restart",
+            CustomMinimumSize = new Vector2(112, _tokens.TouchTarget),
+        };
+        choose.Pressed += () =>
+        {
+            if (!selected)
+            {
+                EmitSignal(SignalName.TrainingProfileSelected, index);
+            }
+
+            CloseTrainingSettingsSheet();
+        };
+        row.AddChild(choose);
+
+        return card;
     }
 
     private Control CreateUnlockProgress()
