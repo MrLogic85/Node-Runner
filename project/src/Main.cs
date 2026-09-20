@@ -82,6 +82,8 @@ public partial class Main : Node2D
 
     public ConstructionViewModel Construction { get; } = new();
 
+    private ConstructionPresentationViewModel ConstructionPresentation => new(Construction);
+
     public override void _Ready()
     {
         if (ProjectSettings.GetSetting("ui/component_gallery", false).AsBool())
@@ -1238,7 +1240,8 @@ public partial class Main : Node2D
 
     private void UpdateToolButtonVisibility()
     {
-        var visible = !Construction.IsMoveOnly;
+        var presentation = ConstructionPresentation;
+        var visible = presentation.ShowConstructionTools;
         if (_placeToolButton is not null)
         {
             _placeToolButton.Visible = visible;
@@ -1250,11 +1253,8 @@ public partial class Main : Node2D
         if (_coreToolButton is not null)
         {
             _coreToolButton.Visible = visible;
-            var unlockHint = Construction.MaxCores > 1 ? "unlocked" : "50 fitness";
-            _coreToolButton.Text = $"Core {Construction.Cores.Count}/{Construction.MaxCores} ({unlockHint})";
-            _coreToolButton.TooltipText = Construction.MaxCores > 1
-                ? "Attach or remove a core. Extra core slot unlocked."
-                : "Attach or remove a core. Train to unlock a second core slot.";
+            _coreToolButton.Text = presentation.CoreToolText;
+            _coreToolButton.TooltipText = presentation.CoreToolTooltip;
         }
         if (_deleteToolButton is not null)
         {
@@ -1262,11 +1262,11 @@ public partial class Main : Node2D
         }
         if (_completeButton is not null)
         {
-            _completeButton.Visible = !Construction.IsMoveOnly;
+            _completeButton.Visible = presentation.ShowCompleteAction;
         }
         if (_rebuildButton is not null)
         {
-            _rebuildButton.Visible = Construction.IsMoveOnly;
+            _rebuildButton.Visible = presentation.ShowRebuildAction;
         }
     }
 
@@ -1277,7 +1277,7 @@ public partial class Main : Node2D
 
     private string BuildModeButtonText()
     {
-        return Construction.IsActive ? "Simulate" : "Build";
+        return ConstructionPresentation.BuildModeButtonText;
     }
 
     public override void _UnhandledInput(InputEvent inputEvent)
@@ -1431,9 +1431,10 @@ public partial class Main : Node2D
 
         if (Construction.IsActive)
         {
-            _inspectorTitle.Text = "Building";
-            _inspectorRole.Text = $"Tool: {Construction.ActiveTool}";
-            _inspectorValues.Text = Construction.StatusMessage ?? ConstructionToolHint(Construction.ActiveTool);
+            var presentation = ConstructionPresentation;
+            _inspectorTitle.Text = presentation.InspectorTitle;
+            _inspectorRole.Text = presentation.InspectorRole;
+            _inspectorValues.Text = presentation.InspectorValues;
             return;
         }
 
@@ -1481,18 +1482,6 @@ public partial class Main : Node2D
     }
 
     private string MappingToggleButtonText() => _showMapping ? "Inspector" : "Mapping";
-
-    private static string ConstructionToolHint(ConstructionTool tool)
-    {
-        return tool switch
-        {
-            ConstructionTool.Place => "Tap empty space to place a node. Drag a node to move it.",
-            ConstructionTool.Beam => "Tap a node, then another node, to connect them with a beam.",
-            ConstructionTool.Core => "Tap a node to attach a core, tap again to remove it.",
-            ConstructionTool.Delete => "Tap a node or beam to delete it.",
-            _ => string.Empty,
-        };
-    }
 
     private string SeedText()
     {
