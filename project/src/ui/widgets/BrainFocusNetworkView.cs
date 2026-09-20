@@ -111,14 +111,14 @@ public partial class BrainFocusNetworkView : Control
         {
             BgColor = _tokens.Panel,
             BorderColor = _tokens.Line,
-            BorderWidthLeft = 1,
-            BorderWidthTop = 1,
-            BorderWidthRight = 1,
-            BorderWidthBottom = 1,
-            CornerRadiusTopLeft = (int)_tokens.Radius,
-            CornerRadiusTopRight = (int)_tokens.Radius,
-            CornerRadiusBottomLeft = (int)_tokens.Radius,
-            CornerRadiusBottomRight = (int)_tokens.Radius,
+            BorderWidthLeft = (int)_tokens.StrokeHair,
+            BorderWidthTop = (int)_tokens.StrokeHair,
+            BorderWidthRight = (int)_tokens.StrokeHair,
+            BorderWidthBottom = (int)_tokens.StrokeHair,
+            CornerRadiusTopLeft = (int)_tokens.RadiusLarge,
+            CornerRadiusTopRight = (int)_tokens.RadiusLarge,
+            CornerRadiusBottomLeft = (int)_tokens.RadiusLarge,
+            CornerRadiusBottomRight = (int)_tokens.RadiusLarge,
         };
         DrawStyleBox(style, new Rect2(Vector2.Zero, Size));
         DrawCircle(Size / 2, 14, _tokens.LineStrong);

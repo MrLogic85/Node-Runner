@@ -60,7 +60,7 @@ public partial class UiReadout : VBoxContainer
 
     public override void _Ready()
     {
-        AddThemeConstantOverride("separation", 2);
+        AddThemeConstantOverride("separation", (int)_tokens.Space1);
         _captionLabel = new Label { Text = Caption };
         _valueLabel = new Label { Text = ValueText };
         AddChild(_captionLabel);
@@ -82,9 +82,9 @@ public partial class UiReadout : VBoxContainer
 
         _captionLabel.Text = Caption;
         _valueLabel.Text = ValueText;
-        _captionLabel.AddThemeFontSizeOverride("font_size", (int)_tokens.LabelFontSize - 3);
+        _tokens.ApplyTextStyle(_captionLabel, _tokens.CaptionText);
         _captionLabel.AddThemeColorOverride("font_color", _tokens.Muted);
-        _valueLabel.AddThemeFontSizeOverride("font_size", (int)_tokens.LabelFontSize + (Emphasis ? 4 : 1));
+        _tokens.ApplyTextStyle(_valueLabel, Emphasis ? _tokens.ReadoutLargeText : _tokens.ReadoutText);
         _valueLabel.AddThemeColorOverride("font_color", Emphasis ? _tokens.Accent : _tokens.Ink);
     }
 }

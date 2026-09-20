@@ -87,29 +87,29 @@ public partial class CreationCard : Control
         AddChild(panel);
 
         var margin = new MarginContainer();
-        margin.AddThemeConstantOverride("margin_left", 16);
-        margin.AddThemeConstantOverride("margin_top", 16);
-        margin.AddThemeConstantOverride("margin_right", 16);
-        margin.AddThemeConstantOverride("margin_bottom", 16);
+        margin.AddThemeConstantOverride("margin_left", (int)_tokens.Space4);
+        margin.AddThemeConstantOverride("margin_top", (int)_tokens.Space4);
+        margin.AddThemeConstantOverride("margin_right", (int)_tokens.Space4);
+        margin.AddThemeConstantOverride("margin_bottom", (int)_tokens.Space4);
         panel.AddChild(margin);
 
         var stack = new VBoxContainer();
-        stack.AddThemeConstantOverride("separation", 10);
+        stack.AddThemeConstantOverride("separation", (int)_tokens.Space2);
         margin.AddChild(stack);
-        stack.AddChild(CreateLabel(_creationName, 19, _tokens.Ink));
+        stack.AddChild(CreateLabel(_creationName, (int)_tokens.HeadingFontSize, _tokens.Ink));
         stack.AddChild(CreateThumbnail(_thumbnail));
-        stack.AddChild(CreateLabel(_summary, 14, _tokens.Muted));
-        stack.AddChild(CreateLabel(_savedState, 13, _tokens.Accent));
+        stack.AddChild(CreateLabel(_summary, (int)_tokens.BodyFontSize, _tokens.Muted));
+        stack.AddChild(CreateLabel(_savedState, (int)_tokens.BodyFontSize, _tokens.Accent));
         if (!string.IsNullOrWhiteSpace(_unlockCredit))
         {
-            stack.AddChild(CreateLabel(_unlockCredit, 13, _tokens.Accent));
+            stack.AddChild(CreateLabel(_unlockCredit, (int)_tokens.BodyFontSize, _tokens.Accent));
         }
 
-        stack.AddChild(CreateLabel(_note, 14, _tokens.Accent));
+        stack.AddChild(CreateLabel(_note, (int)_tokens.BodyFontSize, _tokens.Accent));
         stack.AddChild(new Control { SizeFlagsVertical = SizeFlags.ExpandFill });
 
         var actions = new HBoxContainer();
-        actions.AddThemeConstantOverride("separation", 8);
+        actions.AddThemeConstantOverride("separation", (int)_tokens.Space2);
         var openButton = CreateButton("Open", UiActionButton.ActionKind.Primary);
         openButton.Locked = !_canOpen;
         openButton.Pressed += () => EmitSignal(SignalName.OpenRequested, _creationKey, _creationName);
@@ -121,7 +121,7 @@ public partial class CreationCard : Control
         stack.AddChild(actions);
 
         var safeActions = new HBoxContainer();
-        safeActions.AddThemeConstantOverride("separation", 8);
+        safeActions.AddThemeConstantOverride("separation", (int)_tokens.Space2);
         var duplicateButton = CreateButton("Duplicate", UiActionButton.ActionKind.Secondary);
         duplicateButton.Locked = !_canDuplicate;
         duplicateButton.Pressed += () => EmitSignal(SignalName.DuplicateRequested, _creationKey, _creationName);
@@ -144,25 +144,25 @@ public partial class CreationCard : Control
         {
             BgColor = _tokens.AccentSoft,
             BorderColor = _tokens.LineStrong,
-            BorderWidthLeft = 1,
-            BorderWidthTop = 1,
-            BorderWidthRight = 1,
-            BorderWidthBottom = 1,
-            CornerRadiusTopLeft = (int)_tokens.Radius,
-            CornerRadiusTopRight = (int)_tokens.Radius,
-            CornerRadiusBottomLeft = (int)_tokens.Radius,
-            CornerRadiusBottomRight = (int)_tokens.Radius,
+            BorderWidthLeft = (int)_tokens.StrokeHair,
+            BorderWidthTop = (int)_tokens.StrokeHair,
+            BorderWidthRight = (int)_tokens.StrokeHair,
+            BorderWidthBottom = (int)_tokens.StrokeHair,
+            CornerRadiusTopLeft = (int)_tokens.RadiusLarge,
+            CornerRadiusTopRight = (int)_tokens.RadiusLarge,
+            CornerRadiusBottomLeft = (int)_tokens.RadiusLarge,
+            CornerRadiusBottomRight = (int)_tokens.RadiusLarge,
         });
 
         var margin = new MarginContainer();
         margin.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
-        margin.AddThemeConstantOverride("margin_left", 10);
-        margin.AddThemeConstantOverride("margin_top", 10);
-        margin.AddThemeConstantOverride("margin_right", 10);
-        margin.AddThemeConstantOverride("margin_bottom", 10);
+        margin.AddThemeConstantOverride("margin_left", (int)_tokens.Space2);
+        margin.AddThemeConstantOverride("margin_top", (int)_tokens.Space2);
+        margin.AddThemeConstantOverride("margin_right", (int)_tokens.Space2);
+        margin.AddThemeConstantOverride("margin_bottom", (int)_tokens.Space2);
         panel.AddChild(margin);
 
-        var label = CreateLabel(text, 13, _tokens.Ink);
+        var label = CreateLabel(text, (int)_tokens.BodyFontSize, _tokens.Ink);
         label.VerticalAlignment = VerticalAlignment.Center;
         label.HorizontalAlignment = HorizontalAlignment.Center;
         margin.AddChild(label);

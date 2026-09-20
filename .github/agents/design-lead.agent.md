@@ -43,16 +43,17 @@ Read before every task:
    color-plus-shape/label pairing for state, and whether the change matches
    the current version's screen concept instead of building ahead of its
    issue. Compare against `reference design/` whenever the changed surface is
-   covered there, judging whether the app follows the reference closely enough
-   in layout, spacing, contrast, rhythm, corner radius, dividers, glow,
-   hierarchy, and interaction clarity without requiring pixel perfection.
-   Report findings the same way `CODEREVIEW.md` does, so they compose with the
+   covered there. Treat it as visually binding for layout, typography/text
+   styles, spacing, contrast, rhythm, corner radius, stroke widths, dividers,
+   glow, component proportions, hierarchy, and interaction clarity. Do not
+   require exact HTML/CSS pixel matching when Godot rendering, font metrics, or
+   device scaling make that unrealistic, but do report visible token/style
+   deviations unless the PR documents a concrete technical constraint or
+   human-approved design change. Report findings the same way `CODEREVIEW.md` does, so they compose with the
    rest of the review gate: severity (**Major/Medium/Minor**), marked **new** or
    **preexisting**, file/screen and lines when applicable, evidence, impact,
    and a concrete suggested direction. New findings block the change per
-   `docs/REVIEW.md`; preexisting findings are informational. Do not require
-   pixel-perfect mockups or a full design system; those are explicit
-   non-goals.
+   `docs/REVIEW.md`; preexisting findings are informational.
 
 2. **Design-lead mode**: given a new screen, control, or interaction to
    design (e.g. scoping a roadmap version before implementation), propose a

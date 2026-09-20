@@ -64,14 +64,14 @@ public partial class UiToast : PanelContainer
     private void BuildContent()
     {
         var margin = new MarginContainer();
-        margin.AddThemeConstantOverride("margin_left", 14);
-        margin.AddThemeConstantOverride("margin_top", 10);
-        margin.AddThemeConstantOverride("margin_right", 10);
-        margin.AddThemeConstantOverride("margin_bottom", 10);
+        margin.AddThemeConstantOverride("margin_left", (int)_tokens.Space3);
+        margin.AddThemeConstantOverride("margin_top", (int)_tokens.Space2);
+        margin.AddThemeConstantOverride("margin_right", (int)_tokens.Space2);
+        margin.AddThemeConstantOverride("margin_bottom", (int)_tokens.Space2);
         AddChild(margin);
 
         var row = new HBoxContainer();
-        row.AddThemeConstantOverride("separation", 12);
+        row.AddThemeConstantOverride("separation", (int)_tokens.Space3);
         margin.AddChild(row);
 
         _messageLabel = new Label
@@ -108,19 +108,7 @@ public partial class UiToast : PanelContainer
             return;
         }
 
-        AddThemeStyleboxOverride("panel", new StyleBoxFlat
-        {
-            BgColor = _tokens.PanelRaised,
-            BorderColor = _tokens.LineStrong,
-            BorderWidthLeft = 1,
-            BorderWidthTop = 1,
-            BorderWidthRight = 1,
-            BorderWidthBottom = 1,
-            CornerRadiusTopLeft = (int)_tokens.Radius,
-            CornerRadiusTopRight = (int)_tokens.Radius,
-            CornerRadiusBottomLeft = (int)_tokens.Radius,
-            CornerRadiusBottomRight = (int)_tokens.Radius,
-        });
+        AddThemeStyleboxOverride("panel", _tokens.PanelStyle(raised: true, borderColor: _tokens.LineStrong));
     }
 
     private void RefreshContentStyle()
@@ -130,9 +118,9 @@ public partial class UiToast : PanelContainer
             return;
         }
 
-        _messageLabel.AddThemeFontSizeOverride("font_size", (int)_tokens.LabelFontSize);
+        _tokens.ApplyTextStyle(_messageLabel, _tokens.BodyText);
         _messageLabel.AddThemeColorOverride("font_color", _tokens.Ink);
-        _undoButton.AddThemeFontSizeOverride("font_size", (int)_tokens.LabelFontSize);
+        _tokens.ApplyTextStyle(_undoButton, _tokens.LabelText);
         _undoButton.AddThemeColorOverride("font_color", _tokens.Accent);
         _undoButton.AddThemeColorOverride("font_hover_color", _tokens.Ink);
     }

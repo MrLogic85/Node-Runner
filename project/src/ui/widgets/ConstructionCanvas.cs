@@ -236,7 +236,7 @@ public partial class ConstructionCanvas : Node2D
         var arcEnd = delta < 0 ? start : start + delta;
 
         var radius = (float)node.Radius * 2.0f;
-        DrawArc(center, radius, arcStart, arcEnd, 28, Theme.MotorAccent, 4, antialiased: true);
+        DrawArc(center, radius, arcStart, arcEnd, 28, Theme.MotorAccent, Theme.MotorSignalWidth, antialiased: true);
     }
 
     private void DrawMotorCenterMarkers()
@@ -252,7 +252,7 @@ public partial class ConstructionCanvas : Node2D
             .Distinct())
         {
             var node = creature.Nodes[nodeIndex];
-            DrawArc(ToGodot(node.Position), (float)node.Radius * 0.72f, 0, Mathf.Tau, 32, Theme.MotorAccent, 3, antialiased: true);
+            DrawArc(ToGodot(node.Position), (float)node.Radius * 0.72f, 0, Mathf.Tau, 32, Theme.MotorAccent, Theme.MotorSignalWidth, antialiased: true);
         }
     }
 
@@ -281,9 +281,9 @@ public partial class ConstructionCanvas : Node2D
             var node = _viewModel.Nodes[nodeIndex];
             var position = ToGodot(node.Position);
             var radius = (float)node.Radius * 1.55f;
-            DrawArc(position, radius, 0, Mathf.Tau, 32, Colors.Orange, 4, antialiased: true);
-            DrawLine(position + new Vector2(-radius * 0.45f, -radius * 0.45f), position + new Vector2(radius * 0.45f, radius * 0.45f), Colors.Orange, 3, antialiased: true);
-            DrawLine(position + new Vector2(radius * 0.45f, -radius * 0.45f), position + new Vector2(-radius * 0.45f, radius * 0.45f), Colors.Orange, 3, antialiased: true);
+            DrawArc(position, radius, 0, Mathf.Tau, 32, Theme.Danger, Theme.MotorSignalWidth, antialiased: true);
+            DrawLine(position + new Vector2(-radius * 0.45f, -radius * 0.45f), position + new Vector2(radius * 0.45f, radius * 0.45f), Theme.Danger, Theme.MotorSignalWidth, antialiased: true);
+            DrawLine(position + new Vector2(radius * 0.45f, -radius * 0.45f), position + new Vector2(-radius * 0.45f, radius * 0.45f), Theme.Danger, Theme.MotorSignalWidth, antialiased: true);
         }
     }
 
@@ -305,9 +305,9 @@ public partial class ConstructionCanvas : Node2D
 
             var position = ToGodot(start.Position);
             var radius = (float)Math.Max(start.Radius, end.Radius) * 1.95f;
-            DrawArc(position, radius, 0, Mathf.Tau, 32, Colors.Red, 5, antialiased: true);
-            DrawLine(position + new Vector2(-radius * 0.55f, 0), position + new Vector2(radius * 0.55f, 0), Colors.Red, 4, antialiased: true);
-            DrawLine(position + new Vector2(0, -radius * 0.55f), position + new Vector2(0, radius * 0.55f), Colors.Red, 4, antialiased: true);
+            DrawArc(position, radius, 0, Mathf.Tau, 32, Theme.Danger, Theme.MotorSignalWidth, antialiased: true);
+            DrawLine(position + new Vector2(-radius * 0.55f, 0), position + new Vector2(radius * 0.55f, 0), Theme.Danger, Theme.MotorSignalWidth, antialiased: true);
+            DrawLine(position + new Vector2(0, -radius * 0.55f), position + new Vector2(0, radius * 0.55f), Theme.Danger, Theme.MotorSignalWidth, antialiased: true);
         }
     }
 

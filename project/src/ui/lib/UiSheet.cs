@@ -36,14 +36,14 @@ public partial class UiSheet : PanelContainer
         }
 
         var margin = new MarginContainer();
-        margin.AddThemeConstantOverride("margin_left", 20);
-        margin.AddThemeConstantOverride("margin_top", 20);
-        margin.AddThemeConstantOverride("margin_right", 20);
-        margin.AddThemeConstantOverride("margin_bottom", 20);
+        margin.AddThemeConstantOverride("margin_left", (int)_tokens.Space4);
+        margin.AddThemeConstantOverride("margin_top", (int)_tokens.Space4);
+        margin.AddThemeConstantOverride("margin_right", (int)_tokens.Space4);
+        margin.AddThemeConstantOverride("margin_bottom", (int)_tokens.Space4);
         AddChild(margin);
 
         var stack = new VBoxContainer();
-        stack.AddThemeConstantOverride("separation", 12);
+        stack.AddThemeConstantOverride("separation", (int)_tokens.Space3);
         margin.AddChild(stack);
         if (!string.IsNullOrWhiteSpace(Title))
         {
@@ -63,19 +63,7 @@ public partial class UiSheet : PanelContainer
             return;
         }
 
-        AddThemeStyleboxOverride("panel", new StyleBoxFlat
-        {
-            BgColor = _tokens.PanelRaised,
-            BorderColor = _tokens.LineStrong,
-            BorderWidthLeft = 1,
-            BorderWidthTop = 1,
-            BorderWidthRight = 1,
-            BorderWidthBottom = 1,
-            CornerRadiusTopLeft = (int)_tokens.Radius,
-            CornerRadiusTopRight = (int)_tokens.Radius,
-            CornerRadiusBottomLeft = (int)_tokens.Radius,
-            CornerRadiusBottomRight = (int)_tokens.Radius,
-        });
+        AddThemeStyleboxOverride("panel", _tokens.PanelStyle(raised: true, borderColor: _tokens.LineStrong));
         RefreshTitle();
     }
 
@@ -86,7 +74,7 @@ public partial class UiSheet : PanelContainer
             return;
         }
 
-        _titleLabel.AddThemeFontSizeOverride("font_size", (int)_tokens.LabelFontSize + 4);
+        _tokens.ApplyTextStyle(_titleLabel, _tokens.HeadingText);
         _titleLabel.AddThemeColorOverride("font_color", _tokens.Ink);
     }
 }

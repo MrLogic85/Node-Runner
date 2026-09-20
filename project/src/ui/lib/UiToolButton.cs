@@ -105,13 +105,13 @@ public partial class UiToolButton : Button
         Text = Locked ? $"{IconText}  {ToolLabel} · {LockReason}" : $"{IconText}  {ToolLabel}";
         TooltipText = Locked ? LockReason : ToolLabel;
         CustomMinimumSize = new Vector2(0, _tokens.TouchTarget);
-        AddThemeFontSizeOverride("font_size", (int)_tokens.LabelFontSize);
+        _tokens.ApplyTextStyle(this, _tokens.LabelText);
         AddThemeColorOverride("font_color", Locked ? _tokens.Muted : (_active ? _tokens.OnAccent : _tokens.Ink));
         AddThemeColorOverride("font_hover_color", _tokens.OnAccent);
         AddThemeStyleboxOverride("normal", CreateStyle(_active, false));
         AddThemeStyleboxOverride("hover", CreateStyle(true, true));
         AddThemeStyleboxOverride("pressed", CreateStyle(true, true));
-        AddThemeStyleboxOverride("focus", CreateStyle(true, true, 2));
+        AddThemeStyleboxOverride("focus", CreateStyle(true, true, (int)_tokens.StrokeSignal));
         AddThemeStyleboxOverride("disabled", CreateStyle(false, false, 1, 0.5f));
     }
 
@@ -119,18 +119,10 @@ public partial class UiToolButton : Button
     {
         var background = selected ? _tokens.Accent : _tokens.Panel;
         var border = selected ? _tokens.Accent : _tokens.Edge;
-        return new StyleBoxFlat
-        {
-            BgColor = new Color(background.R, background.G, background.B, background.A * opacity),
-            BorderColor = new Color(border.R, border.G, border.B, border.A * opacity),
-            BorderWidthLeft = borderWidth,
-            BorderWidthTop = borderWidth,
-            BorderWidthRight = borderWidth,
-            BorderWidthBottom = borderWidth,
-            CornerRadiusTopLeft = (int)_tokens.Radius,
-            CornerRadiusTopRight = (int)_tokens.Radius,
-            CornerRadiusBottomLeft = (int)_tokens.Radius,
-            CornerRadiusBottomRight = (int)_tokens.Radius,
-        };
+        return _tokens.ControlStyle(
+            UiTokens.MultiplyAlpha(background, opacity),
+            UiTokens.MultiplyAlpha(border, opacity),
+            borderWidth,
+            glow: selected && opacity > 0.99f);
     }
 }

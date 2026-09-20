@@ -75,9 +75,12 @@ Judge the experience, not just the code. Check whether the screen/control:
 - Looks intentional and polished enough for the current milestone
 - Feels intuitive on Android touch: clear affordances, no dead controls,
   readable labels, and sensible primary/secondary actions
-- Follows `reference design/` and the relevant component README's layout,
-  spacing, contrast, rhythm, corner radius, dividers, glow, and visual
-  hierarchy closely enough without becoming pixel-perfect
+- Follows `reference design/` and the relevant component README as a visually
+  binding target for layout, typography/text styles, spacing, contrast,
+  rhythm, corner radius, stroke widths, dividers, glow, component
+  proportions, and visual hierarchy. "Not pixel-perfect" only covers
+  unavoidable renderer/device/font differences; visible deviations must be
+  deliberate, documented, or fixed.
 - Preserves Node Runner's neon learning-lab identity and the issue's teaching
   goal
 - Uses state indicators that do not rely on color alone
@@ -86,12 +89,13 @@ Judge the experience, not just the code. Check whether the screen/control:
   before/after or design-reference comparison when that is what the issue is
   trying to improve
 
-Do not block on personal taste, exact pixel matching, or missing design-system
-tokens unless the result is visibly inconsistent, confusing, inaccessible, or
-contradicts the agreed design direction. Report findings in the same format as
-other review sections: **Major**, **Medium**, or **Minor**, **new** or
-**preexisting**, with screen/file, evidence, impact, and a concrete suggested
-direction.
+Do not block on personal taste or exact HTML/CSS pixel matching, but do block
+on loose interpretation of the reference: mismatched typography, token values,
+spacing, radius, line/stroke weight, glow, component proportion, or hierarchy
+is a design bug unless the PR records a concrete technical constraint or
+human-approved change. Report findings in the same format as other review
+sections: **Major**, **Medium**, or **Minor**, **new** or **preexisting**, with
+screen/file, evidence, impact, and a concrete suggested direction.
 
 ---
 

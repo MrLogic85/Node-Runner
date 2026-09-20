@@ -30,13 +30,13 @@ public partial class UiOverflowMenu : PanelContainer
     public override void _Ready()
     {
         var margin = new MarginContainer();
-        margin.AddThemeConstantOverride("margin_left", 8);
-        margin.AddThemeConstantOverride("margin_top", 8);
-        margin.AddThemeConstantOverride("margin_right", 8);
-        margin.AddThemeConstantOverride("margin_bottom", 8);
+        margin.AddThemeConstantOverride("margin_left", (int)_tokens.Space2);
+        margin.AddThemeConstantOverride("margin_top", (int)_tokens.Space2);
+        margin.AddThemeConstantOverride("margin_right", (int)_tokens.Space2);
+        margin.AddThemeConstantOverride("margin_bottom", (int)_tokens.Space2);
         AddChild(margin);
         _items = new VBoxContainer();
-        _items.AddThemeConstantOverride("separation", 4);
+        _items.AddThemeConstantOverride("separation", (int)_tokens.Space1);
         margin.AddChild(_items);
         RefreshStyle();
         if (_pendingActions is not null)
@@ -71,7 +71,7 @@ public partial class UiOverflowMenu : PanelContainer
                 CustomMinimumSize = new Vector2(180, _tokens.TouchTarget),
                 Alignment = HorizontalAlignment.Left,
             };
-            button.AddThemeFontSizeOverride("font_size", (int)_tokens.LabelFontSize);
+            _tokens.ApplyTextStyle(button, _tokens.LabelText);
             button.AddThemeColorOverride("font_color", action.Danger ? _tokens.Danger : _tokens.Ink);
             button.AddThemeColorOverride("font_hover_color", _tokens.Ink);
             button.AddThemeColorOverride("font_pressed_color", _tokens.OnAccent);
@@ -94,16 +94,16 @@ public partial class UiOverflowMenu : PanelContainer
         var color = danger ? _tokens.Danger : _tokens.Accent;
         return new StyleBoxFlat
         {
-            BgColor = focused ? (danger ? _tokens.Danger with { A = 0.18f } : _tokens.AccentSoft) : Colors.Transparent,
+            BgColor = focused ? (danger ? UiTokens.WithAlpha(_tokens.Danger, 0.18f) : _tokens.AccentSoft) : Colors.Transparent,
             BorderColor = danger ? _tokens.Danger : _tokens.Edge,
-            BorderWidthLeft = focused && danger ? 2 : 1,
-            BorderWidthTop = 1,
-            BorderWidthRight = 1,
-            BorderWidthBottom = 1,
-            CornerRadiusTopLeft = (int)_tokens.Radius,
-            CornerRadiusTopRight = (int)_tokens.Radius,
-            CornerRadiusBottomLeft = (int)_tokens.Radius,
-            CornerRadiusBottomRight = (int)_tokens.Radius,
+            BorderWidthLeft = (int)(focused && danger ? _tokens.StrokeSignal : _tokens.StrokeHair),
+            BorderWidthTop = (int)_tokens.StrokeHair,
+            BorderWidthRight = (int)_tokens.StrokeHair,
+            BorderWidthBottom = (int)_tokens.StrokeHair,
+            CornerRadiusTopLeft = (int)_tokens.RadiusMedium,
+            CornerRadiusTopRight = (int)_tokens.RadiusMedium,
+            CornerRadiusBottomLeft = (int)_tokens.RadiusMedium,
+            CornerRadiusBottomRight = (int)_tokens.RadiusMedium,
         };
     }
 
@@ -114,18 +114,6 @@ public partial class UiOverflowMenu : PanelContainer
             return;
         }
 
-        AddThemeStyleboxOverride("panel", new StyleBoxFlat
-        {
-            BgColor = _tokens.PanelRaised,
-            BorderColor = _tokens.LineStrong,
-            BorderWidthLeft = 1,
-            BorderWidthTop = 1,
-            BorderWidthRight = 1,
-            BorderWidthBottom = 1,
-            CornerRadiusTopLeft = (int)_tokens.Radius,
-            CornerRadiusTopRight = (int)_tokens.Radius,
-            CornerRadiusBottomLeft = (int)_tokens.Radius,
-            CornerRadiusBottomRight = (int)_tokens.Radius,
-        });
+        AddThemeStyleboxOverride("panel", _tokens.PanelStyle(raised: true, borderColor: _tokens.LineStrong));
     }
 }

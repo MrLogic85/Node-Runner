@@ -705,7 +705,7 @@ public partial class BuildScreen : Control
 
     private StyleBoxFlat CreateSegmentStyle(bool active, bool first, bool last)
     {
-        var radius = (int)_tokens.Radius;
+        var radius = (int)_tokens.RadiusMedium;
         return new StyleBoxFlat
         {
             BgColor = active ? _tokens.AccentSoft : _tokens.PanelRaised,
@@ -725,7 +725,7 @@ public partial class BuildScreen : Control
 
     private StyleBoxFlat CreateToolStyle(bool active, bool locked, int borderWidth = 1, float opacity = 1)
     {
-        var radius = (int)_tokens.Radius;
+        var radius = (int)_tokens.RadiusMedium;
         var border = active ? _tokens.Accent : _tokens.LineStrong;
         var alpha = opacity * (locked ? 0.5f : 1f);
         return new StyleBoxFlat
