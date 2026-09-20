@@ -14,6 +14,7 @@ public partial class SaveManager : Node
     private ICreationUpdateCoordinator? _updateCoordinator;
     private IConstructionDraftWorkflow? _constructionDraftWorkflow;
     private IConstructionEditWorkflow? _constructionEditWorkflow;
+    private ICreationDuplicateWorkflow? _creationDuplicateWorkflow;
     private CreationsPresentationViewModel? _creationsPresentation;
 
     public override void _Ready()
@@ -23,6 +24,7 @@ public partial class SaveManager : Node
         _updateCoordinator = new CreationUpdateCoordinator(_repository);
         _constructionDraftWorkflow = new ConstructionDraftWorkflow();
         _constructionEditWorkflow = new ConstructionEditWorkflow(_updateCoordinator);
+        _creationDuplicateWorkflow = new CreationDuplicateWorkflow(_repository);
         _creationsPresentation = new CreationsPresentationViewModel(_repository);
         var progressionDirectory = ProjectSettings.GlobalizePath("user://progression");
         _progressionRepository = new FileProgressionRepository(new GodotStorageLocation(progressionDirectory));
@@ -86,12 +88,9 @@ public partial class SaveManager : Node
         return true;
     }
 
-    public CreationDef Duplicate(Guid id)
+    public CreationDef Duplicate(Guid id, CreationDuplicateMode mode = CreationDuplicateMode.CopyTraining)
     {
-        var source = Repository.Get(id) ?? throw new KeyNotFoundException($"Creation '{id}' was not found.");
-        var copy = new CreationDef(Guid.NewGuid(), $"{source.Name} Copy", source.Creature, source.Training);
-        Repository.Save(copy);
-        return copy;
+        return CreationDuplicateWorkflow.Duplicate(id, mode);
     }
 
     private ICreationRepository Repository =>
@@ -102,6 +101,9 @@ public partial class SaveManager : Node
 
     private ICreationUpdateCoordinator UpdateCoordinator =>
         _updateCoordinator ?? throw new InvalidOperationException("SaveManager is not ready.");
+
+    private ICreationDuplicateWorkflow CreationDuplicateWorkflow =>
+        _creationDuplicateWorkflow ?? throw new InvalidOperationException("SaveManager is not ready.");
 
     private sealed class GodotStorageLocation(string directoryPath) : IStorageLocation
     {
