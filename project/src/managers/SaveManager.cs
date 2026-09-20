@@ -11,12 +11,14 @@ public partial class SaveManager : Node
     private ICreationRepository? _repository;
     private IProgressionRepository? _progressionRepository;
     private ICreationUpdateCoordinator? _updateCoordinator;
+    private IConstructionDraftWorkflow? _constructionDraftWorkflow;
 
     public override void _Ready()
     {
         var directory = ProjectSettings.GlobalizePath("user://creations");
         _repository = new FileCreationRepository(new GodotStorageLocation(directory));
         _updateCoordinator = new CreationUpdateCoordinator(_repository);
+        _constructionDraftWorkflow = new ConstructionDraftWorkflow();
         var progressionDirectory = ProjectSettings.GlobalizePath("user://progression");
         _progressionRepository = new FileProgressionRepository(new GodotStorageLocation(progressionDirectory));
     }
@@ -55,6 +57,9 @@ public partial class SaveManager : Node
 
     public CreationDef? UpdateIfPresent(Guid id, Func<CreationDef, CreationDef> update) =>
         UpdateCoordinator.UpdateIfPresent(id, update);
+
+    public IConstructionDraftWorkflow ConstructionDraftWorkflow =>
+        _constructionDraftWorkflow ?? throw new InvalidOperationException("SaveManager is not ready.");
 
     public ProgressionDef Progression => ProgressionRepository.Load();
 

@@ -720,10 +720,13 @@ public partial class Main : Node2D
             return;
         }
 
-        _activeCreationId = null;
-        Construction.Load(_creature?.Definition ?? throw new InvalidOperationException("No creature is loaded."));
+        var saveManager = GetNode<SaveManager>("/root/SaveManager");
+        var draft = saveManager.ConstructionDraftWorkflow.BeginRebuildDraft(
+            _creature?.Definition ?? throw new InvalidOperationException("No creature is loaded."));
+        _activeCreationId = draft.ActiveCreationId;
+        Construction.Load(draft.Creature);
         UpdateToolButtonVisibility();
-        Construction.SetCompletedMessage("Rebuild creates a new Creation; previous training will not be copied.");
+        Construction.SetCompletedMessage(draft.StatusMessage);
     }
 
     private void ApplyLoadedCreature(CreationDef creation)
@@ -1140,12 +1143,12 @@ public partial class Main : Node2D
             return;
         }
 
-        var creation = new CreationDef(
-            Guid.NewGuid(),
-            $"Creation {GetNode<SaveManager>("/root/SaveManager").List().Count + 1}",
-            creature);
+        var saveManager = GetNode<SaveManager>("/root/SaveManager");
+        var creation = saveManager.ConstructionDraftWorkflow.CompleteDraft(
+            creature,
+            $"Creation {saveManager.List().Count + 1}");
         if (TryRunFileOperation(
-            () => GetNode<SaveManager>("/root/SaveManager").Save(creation),
+            () => saveManager.Save(creation),
             $"Saving Creation '{creation.Name}'"))
         {
             _activeCreationId = creation.Id;
