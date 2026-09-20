@@ -29,6 +29,9 @@ public partial class WatchScreen : Control
     [Signal]
     public delegate void BrainFocusRequestedEventHandler();
 
+    [Signal]
+    public delegate void TrainingProfileRequestedEventHandler();
+
     [Export]
     public bool ShowTopBar { get; set; } = true;
 
@@ -448,10 +451,19 @@ public partial class WatchScreen : Control
             : $"{_presentation.BestFitness:0.0} m";
         var mean = _presentation?.MeanFitness ?? 8.4;
         var profile = _presentation?.Profile ?? "Quick";
-        stack.AddChild(CreateLabel("Training", 18, _tokens.Ink));
+        var profileButton = new UiActionButton
+        {
+            Tokens = _tokens,
+            Kind = UiActionButton.ActionKind.Secondary,
+            LabelText = $"Training: {profile} · restart",
+            TooltipText = "Cycle Quick / Standard / Deep. The active run restarts with the new settings.",
+            CustomMinimumSize = new Vector2(0, _tokens.TouchTarget),
+        };
+        profileButton.Pressed += () => EmitSignal(SignalName.TrainingProfileRequested);
+        _inputPassthroughExceptions.Add(profileButton);
+        stack.AddChild(profileButton);
         stack.AddChild(CreateLabel(generationText, 15, _tokens.Ink));
         stack.AddChild(CreateLabel($"Best {best} · mean {mean:0.0} m", 13, _tokens.Muted));
-        stack.AddChild(CreateLabel($"{profile} profile", 13, _tokens.Accent));
         stack.AddChild(CreateSampleStrip());
         stack.AddChild(CreateUnlockProgress());
 
@@ -484,7 +496,7 @@ public partial class WatchScreen : Control
             CustomMinimumSize = new Vector2(0, 20),
             SizeFlagsHorizontal = SizeFlags.ExpandFill,
         };
-        strip.AddThemeConstantOverride("separation", 6);
+        strip.AddThemeConstantOverride("separation", 4);
 
         var population = _presentation?.Population ?? 8;
         var currentCandidate = _presentation?.Candidate ?? 3;
@@ -511,8 +523,8 @@ public partial class WatchScreen : Control
             // a themed border stylebox as its non-color "current" cue.
             var cell = new Panel
             {
-                CustomMinimumSize = new Vector2(34, 18),
-                SizeFlagsHorizontal = SizeFlags.ExpandFill,
+                CustomMinimumSize = new Vector2(12, 18),
+                SizeFlagsHorizontal = SizeFlags.ShrinkCenter,
             };
             cell.AddThemeStyleboxOverride("panel", new StyleBoxFlat
             {

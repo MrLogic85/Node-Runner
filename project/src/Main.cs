@@ -526,6 +526,7 @@ public partial class Main : Node2D
         };
         _watchScreen.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
         _watchScreen.BrainFocusRequested += ShowBrainFocus;
+        _watchScreen.TrainingProfileRequested += CycleTrainingProfile;
         watchLayer.AddChild(_watchScreen);
     }
 
