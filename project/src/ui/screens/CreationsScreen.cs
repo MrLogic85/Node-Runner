@@ -186,6 +186,7 @@ public partial class CreationsScreen : Control
             "2 cores unlocked",
             "3 nodes · 2 beams · 1 core",
             "Saved training · generation 18",
+            "Earned extra core unlock · generation 18",
             canOpen: true,
             canEdit: true,
             canDuplicate: true,
@@ -197,6 +198,7 @@ public partial class CreationsScreen : Control
             "Training copied",
             "4 nodes · 3 beams · 1 core",
             "Saved training · generation 7",
+            string.Empty,
             canOpen: true,
             canEdit: true,
             canDuplicate: true,
@@ -211,6 +213,7 @@ public partial class CreationsScreen : Control
             creation.NoteText,
             creation.ThumbnailText,
             creation.SavedStateText,
+            creation.UnlockCreditText,
             canOpen: creation.CanOpen,
             canEdit: creation.CanEdit,
             canDuplicate: creation.CanDuplicate,
@@ -261,13 +264,14 @@ public partial class CreationsScreen : Control
         string note,
         string thumbnail,
         string savedState,
+        string unlockCredit,
         bool canOpen,
         bool canEdit,
         bool canDuplicate,
         bool canDelete)
     {
         var card = new CreationCard();
-        card.Setup(_tokens, creationKey, title, summary, note, thumbnail, savedState, canOpen, canEdit, canDuplicate, canDelete);
+        card.Setup(_tokens, creationKey, title, summary, note, thumbnail, savedState, unlockCredit, canOpen, canEdit, canDuplicate, canDelete);
         card.OpenRequested += HandleCardOpenRequested;
         card.EditRequested += HandleCardEditRequested;
         card.DuplicateRequested += HandleCardDuplicateRequested;

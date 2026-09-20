@@ -24,10 +24,10 @@ public partial class SaveManager : Node
         _updateCoordinator = new CreationUpdateCoordinator(_repository);
         _constructionDraftWorkflow = new ConstructionDraftWorkflow();
         _constructionEditWorkflow = new ConstructionEditWorkflow(_updateCoordinator);
-        _creationDuplicateWorkflow = new CreationDuplicateWorkflow(_repository);
-        _creationsPresentation = new CreationsPresentationViewModel(_repository);
         var progressionDirectory = ProjectSettings.GlobalizePath("user://progression");
         _progressionRepository = new FileProgressionRepository(new GodotStorageLocation(progressionDirectory));
+        _creationDuplicateWorkflow = new CreationDuplicateWorkflow(_repository);
+        _creationsPresentation = new CreationsPresentationViewModel(_repository, _progressionRepository);
     }
 
     public IReadOnlyList<CreationDef> List()
@@ -78,15 +78,27 @@ public partial class SaveManager : Node
 
     public ProgressionDef Progression => ProgressionRepository.Load();
 
-    public bool UnlockExtraCore(int generation)
+    public bool UnlockExtraCore(int generation, Guid? creationId = null)
     {
         var current = ProgressionRepository.Load();
         if (current.ExtraCoreUnlocked)
         {
+            return creationId is { } id && TryAttributeExtraCoreUnlock(id);
+        }
+
+        ProgressionRepository.Save(new ProgressionDef(true, generation, creationId));
+        return true;
+    }
+
+    public bool TryAttributeExtraCoreUnlock(Guid creationId)
+    {
+        var current = ProgressionRepository.Load();
+        if (!current.ExtraCoreUnlocked || current.ExtraCoreUnlockedByCreationId is not null)
+        {
             return false;
         }
 
-        ProgressionRepository.Save(new ProgressionDef(true, generation));
+        ProgressionRepository.Save(new ProgressionDef(true, current.ExtraCoreUnlockedAtGeneration, creationId));
         return true;
     }
 

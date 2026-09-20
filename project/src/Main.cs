@@ -188,9 +188,13 @@ public partial class Main : Node2D
         }
 
         var saveManager = GetNode<SaveManager>("/root/SaveManager");
-        if (saveManager.UnlockExtraCore(_evolver.Generation))
+        var attributionId = _activeCreationId is { } activeId && saveManager.Get(activeId) is not null
+            ? activeId
+            : (Guid?)null;
+        if (saveManager.UnlockExtraCore(_evolver.Generation, attributionId))
         {
             ApplyProgression();
+            RefreshCreationsPanel();
             GD.Print($"Unlocked extra core at generation {_evolver.Generation}.");
         }
     }
@@ -799,6 +803,12 @@ public partial class Main : Node2D
             return;
         }
 
+        if (_activeCreationId == id)
+        {
+            _activeCreationId = null;
+            ResetTrainingSaveStatus(null);
+        }
+
         _lastDeletedCreation = deleted;
         RefreshCreationsPanel();
         _deleteCreationToast?.ShowMessage($"Deleted {name}.", "Undo", 10);
@@ -1329,6 +1339,12 @@ public partial class Main : Node2D
             $"Saving Creation '{creation.Name}'"))
         {
             _activeCreationId = creation.Id;
+            if (saveManager.TryAttributeExtraCoreUnlock(creation.Id))
+            {
+                ApplyProgression();
+                RefreshCreationsPanel();
+            }
+
             Construction.SetCompletedMessage($"Saved {creation.Name}.");
         }
         else

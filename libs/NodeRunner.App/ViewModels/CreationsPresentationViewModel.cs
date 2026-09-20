@@ -7,12 +7,14 @@ namespace NodeRunner.App.ViewModels;
 public sealed class CreationsPresentationViewModel : INotifyPropertyChanged
 {
     private readonly ICreationRepository _repository;
+    private readonly IProgressionRepository? _progressionRepository;
     private readonly List<CreationCardPresentation> _cards = [];
 
-    public CreationsPresentationViewModel(ICreationRepository repository)
+    public CreationsPresentationViewModel(ICreationRepository repository, IProgressionRepository? progressionRepository = null)
     {
         ArgumentNullException.ThrowIfNull(repository);
         _repository = repository;
+        _progressionRepository = progressionRepository;
     }
 
     public IReadOnlyList<CreationCardPresentation> Cards => _cards;
@@ -33,10 +35,11 @@ public sealed class CreationsPresentationViewModel : INotifyPropertyChanged
     {
         try
         {
+            var progression = _progressionRepository?.Load();
             var cards = new List<CreationCardPresentation>();
             foreach (var creation in _repository.List())
             {
-                cards.Add(ToCard(creation));
+                cards.Add(ToCard(creation, progression));
             }
 
             _cards.Clear();
@@ -66,7 +69,7 @@ public sealed class CreationsPresentationViewModel : INotifyPropertyChanged
             ? new CreationCommandIntent(kind, id)
             : null;
 
-    private static CreationCardPresentation ToCard(CreationDef creation)
+    private static CreationCardPresentation ToCard(CreationDef creation, ProgressionDef? progression)
     {
         var summary = creation.Training is { } training
             ? $"Generation {training.Generation} · trained brain"
@@ -78,6 +81,9 @@ public sealed class CreationsPresentationViewModel : INotifyPropertyChanged
         var savedState = creation.Training is null
             ? "Saved draft"
             : $"Saved training · generation {creation.Training.Generation}";
+        var unlockCredit = progression?.ExtraCoreUnlockedByCreationId == creation.Id
+            ? $"Earned extra core unlock · generation {progression.ExtraCoreUnlockedAtGeneration}"
+            : string.Empty;
 
         return new CreationCardPresentation(
             creation.Id,
@@ -86,6 +92,7 @@ public sealed class CreationsPresentationViewModel : INotifyPropertyChanged
             note,
             thumbnail,
             savedState,
+            unlockCredit,
             CanOpen: true,
             CanEdit: true,
             CanDuplicate: true,

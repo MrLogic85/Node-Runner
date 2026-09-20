@@ -38,6 +38,7 @@ public sealed class CreationsPresentationViewModelTests
         walker.NoteText.ShouldBe("Duplicate copies training");
         walker.ThumbnailText.ShouldBe("2 nodes · 1 beam · 1 core");
         walker.SavedStateText.ShouldBe("Saved training · generation 12");
+        walker.UnlockCreditText.ShouldBe(string.Empty);
         walker.CanOpen.ShouldBeTrue();
         walker.CanEdit.ShouldBeTrue();
         walker.CanDuplicate.ShouldBeTrue();
@@ -47,6 +48,26 @@ public sealed class CreationsPresentationViewModelTests
         draft.SummaryText.ShouldBe("Untrained");
         draft.NoteText.ShouldBe("Start fresh");
         draft.SavedStateText.ShouldBe("Saved draft");
+    }
+
+    [Fact]
+    public void Refresh_WithUnlockAttribution_MarksWinningCreation()
+    {
+        var repository = new InMemoryCreationRepository();
+        var credited = CreateCreation("Unlocker", generation: 12);
+        var other = CreateCreation("Other", generation: 20);
+        repository.Save(credited);
+        repository.Save(other);
+        var progression = new InMemoryProgressionRepository();
+        progression.Save(new ProgressionDef(true, 12, credited.Id));
+        var viewModel = new CreationsPresentationViewModel(repository, progression);
+
+        viewModel.Refresh();
+
+        viewModel.Cards.Single(card => card.Id == credited.Id)
+            .UnlockCreditText.ShouldBe("Earned extra core unlock · generation 12");
+        viewModel.Cards.Single(card => card.Id == other.Id)
+            .UnlockCreditText.ShouldBe(string.Empty);
     }
 
     [Fact]

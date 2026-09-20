@@ -9,6 +9,7 @@ public sealed class ProgressionDefTests
 
         progression.ExtraCoreUnlocked.ShouldBeFalse();
         progression.ExtraCoreUnlockedAtGeneration.ShouldBeNull();
+        progression.ExtraCoreUnlockedByCreationId.ShouldBeNull();
     }
 
     [Fact]
@@ -16,5 +17,17 @@ public sealed class ProgressionDefTests
     {
         Should.Throw<ArgumentException>(() => new ProgressionDef(true));
         Should.Throw<ArgumentOutOfRangeException>(() => new ProgressionDef(false, 0));
+    }
+
+    [Fact]
+    public void UnlockedProgressionCanRecordCreationAttribution()
+    {
+        var creationId = Guid.NewGuid();
+
+        var progression = new ProgressionDef(true, 12, creationId);
+
+        progression.ExtraCoreUnlocked.ShouldBeTrue();
+        progression.ExtraCoreUnlockedAtGeneration.ShouldBe(12);
+        progression.ExtraCoreUnlockedByCreationId.ShouldBe(creationId);
     }
 }
