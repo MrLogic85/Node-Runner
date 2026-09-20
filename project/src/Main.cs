@@ -43,6 +43,9 @@ public partial class Main : Node2D
     private VBoxContainer? _creationsList;
     private CreationsScreen? _creationsScreen;
     private ConfirmationDialog? _deleteCreationConfirmationDialog;
+    private DuplicateCreationSheet? _duplicateCreationSheet;
+    private Guid? _pendingDuplicateCreationId;
+    private string? _pendingDuplicateCreationName;
     private Guid? _pendingDeleteCreationId;
     private string? _pendingDeleteCreationName;
     private WatchScreen? _watchScreen;
@@ -596,7 +599,7 @@ public partial class Main : Node2D
         _creationsScreen.BackRequested += () => _creationsScreen.Visible = false;
         _creationsScreen.OpenRequested += OpenCreationFromScreen;
         _creationsScreen.EditRequested += EditCreationFromScreen;
-        _creationsScreen.DuplicateRequested += DuplicateCreationFromScreen;
+        _creationsScreen.DuplicateRequested += RequestDuplicateCreationFromScreen;
         _creationsScreen.DeleteRequested += RequestDeleteCreationFromScreen;
         overlayLayer.AddChild(_creationsScreen);
 
@@ -609,8 +612,23 @@ public partial class Main : Node2D
         };
         _deleteCreationConfirmationDialog.Confirmed += ConfirmDeleteCreationFromScreen;
         overlayLayer.AddChild(_deleteCreationConfirmationDialog);
+        AddDuplicateCreationSheet(overlayLayer);
 
         RefreshCreationsPanel();
+    }
+
+    private void AddDuplicateCreationSheet(CanvasLayer overlayLayer)
+    {
+        _duplicateCreationSheet = new DuplicateCreationSheet
+        {
+            Name = "DuplicateCreationSheet",
+            Tokens = UiTokens.Neon,
+            ProcessMode = ProcessModeEnum.Always,
+        };
+        _duplicateCreationSheet.CopyBrainRequested += () => ConfirmDuplicateCreationFromScreen(CreationDuplicateMode.CopyTraining);
+        _duplicateCreationSheet.StartFreshRequested += () => ConfirmDuplicateCreationFromScreen(CreationDuplicateMode.StartFresh);
+        _duplicateCreationSheet.CancelRequested += CancelDuplicateCreationFromScreen;
+        overlayLayer.AddChild(_duplicateCreationSheet);
     }
 
     private void ToggleCreationsPanel()
@@ -661,7 +679,7 @@ public partial class Main : Node2D
         }
     }
 
-    private void DuplicateCreationFromScreen(string creationKey, string creationName)
+    private void RequestDuplicateCreationFromScreen(string creationKey, string creationName)
     {
         if (!Guid.TryParse(creationKey, out var id))
         {
@@ -669,11 +687,47 @@ public partial class Main : Node2D
             return;
         }
 
+        _pendingDuplicateCreationId = id;
+        _pendingDuplicateCreationName = creationName;
+        if (_duplicateCreationSheet is null)
+        {
+            ConfirmDuplicateCreationFromScreen(CreationDuplicateMode.CopyTraining);
+            return;
+        }
+
+        _duplicateCreationSheet.ShowFor(creationName);
+    }
+
+    private void ConfirmDuplicateCreationFromScreen(CreationDuplicateMode mode)
+    {
+        if (_pendingDuplicateCreationId is not { } id)
+        {
+            return;
+        }
+
+        var name = _pendingDuplicateCreationName ?? id.ToString();
+        _pendingDuplicateCreationId = null;
+        _pendingDuplicateCreationName = null;
+        if (_duplicateCreationSheet is not null)
+        {
+            _duplicateCreationSheet.Visible = false;
+        }
+
         var saveManager = GetNode<SaveManager>("/root/SaveManager");
         TryRunFileOperation(
-            () => saveManager.Duplicate(id),
-            $"Duplicating Creation '{creationName}'");
+            () => saveManager.Duplicate(id, mode),
+            $"Duplicating Creation '{name}' with {mode}");
         RefreshCreationsPanel();
+    }
+
+    private void CancelDuplicateCreationFromScreen()
+    {
+        _pendingDuplicateCreationId = null;
+        _pendingDuplicateCreationName = null;
+        if (_duplicateCreationSheet is not null)
+        {
+            _duplicateCreationSheet.Visible = false;
+        }
     }
 
     private void RequestDeleteCreationFromScreen(string creationKey, string creationName)
