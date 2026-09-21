@@ -95,13 +95,3 @@ Long-form descriptions and the sensor/model contract live in
 - **Seed** — Integer input to the RNG. Written to logs; shown in UI.
 - **Tick** — One fixed-step update. Sensors → brain → motor relations → physics step
   → fitness accumulation.
-
-## App / UX
-
-- **Neon theme** — Current reference visual direction: dark arena, glowing
-  nodes, bright signal paths, and readable console-like controls. See
-  `docs/UI_DIRECTION.md`; implementation should remain themeable.
-- **Focus** — Tapping a creature makes it the "focused" one; its brain is
-  shown in the network visualizer.
-- **Terrarium** — The user's future collection screen of saved creatures.
-- **Time scale** — Simulation speed multiplier (1× / 5× / 20×).

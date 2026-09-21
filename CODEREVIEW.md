@@ -56,11 +56,10 @@ the PR.
 Authoritative sources:
 
 - `reference design/` for the detailed product UI target, including component
-  READMEs, previews, tokens, and design-system JSON
-- `docs/UI_DIRECTION.md` for product feel, visual language, theme boundaries,
-  accessibility/readability rules, and non-goals
-- `docs/UI_IMPLEMENTATION_PLAN.md` and
-  `docs/UI_COMPONENTS_AND_FLOW.md` for staged UI rollout and screen flow
+  READMEs, previews, `tokens.json`, and `library.md`
+- `docs/UI_DIRECTION.md` for repository-specific fidelity and implementation
+  boundaries
+- `docs/UI_IMPLEMENTATION_PLAN.md` for staged UI rollout and dependencies
 - `docs/MANUAL_TESTING.md` for device/screenshot evidence expectations
 - The nearest `project/src/**/AGENTS.md` files for UI layering constraints
 

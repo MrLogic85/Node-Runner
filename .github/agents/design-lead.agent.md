@@ -13,11 +13,10 @@ Read before every task:
 
 - `reference design/` — detailed product UI source of truth while the
   reference-design rollout is active. Read the relevant component README,
-  previews, `tokens.json`, and `design-system.json` for any touched surface.
-- `docs/UI_DIRECTION.md` — product feel, visual language, theme boundaries,
-  active source-of-truth policy, accessibility/readability rules, and
-  non-goals. Use it as the durable compass, but prefer `reference design/`
-  when detailed component behavior is needed.
+  previews, `tokens.json`, and `library.md` for any touched surface.
+- `docs/UI_DIRECTION.md` — repository-specific fidelity, architecture, and
+  verification boundaries. Product and component behavior lives only in
+  `reference design/`.
 - `docs/ROADMAP.md` — what the current and next version are trying to teach,
   so design decisions serve the pedagogical goal, not just aesthetics.
 - `docs/ARCHITECTURE.md` and the nearest `project/src/**/AGENTS.md` — so your

@@ -1,8 +1,13 @@
-# Construction mode workflow
+# Construction mode workflow (historical prototype)
 
 Durable design notes for 0.3.0 "Bygg figuren" (see `docs/ROADMAP.md`). This is
-the authoritative description of the construction-mode interaction and state
-flow; individual issues implement slices of it but do not redefine it here.
+the authoritative description of that shipped prototype's interaction and
+state flow, not the current product target. It remains useful when maintaining
+the transitional implementation.
+
+The active target is owned by `reference design/components/Build/README.md`,
+`reference design/components/BuildLocked/README.md`, and
+`reference design/components/Navigation/README.md`.
 
 ## Mode
 
@@ -104,4 +109,3 @@ uses to replace the running creature (see #72 above).
   real touch devices (observed as, e.g., a beam selection being made and
   immediately cleared by the "second" tap). Desktop development still gets
   real mouse input, so nothing is lost by disabling the emulation.
-

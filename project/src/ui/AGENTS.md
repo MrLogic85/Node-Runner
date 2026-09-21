@@ -12,16 +12,17 @@
    layout, input handling. No fitness math, no ML, no persistence.
 4. **Every screen has a matching `.tscn` in `project/scenes/ui/`.** The `.cs`
    file lives here in `src/ui/screens/`.
-5. **Visual direction comes from `docs/UI_DIRECTION.md`.** Keep UI code
-   themeable; do not bake a specific skin into screen logic.
+5. **Visual contracts come from `reference design/`.** Start at its index and
+   read the relevant component README/preview, `tokens.json`, and `library.md`.
+   `docs/UI_DIRECTION.md` adds repository-specific implementation boundaries.
 
 ## Folder layout inside `src/ui/`
 
 ```
 src/ui/
-├── lib/          Reusable, app-agnostic Controls (LabeledSlider, LineChart)
-├── screens/      Full-screen scenes (MainScreen, TerrariumScreen)
-└── widgets/      App-specific composite widgets (NetworkVisualizer, CreatureIcon)
+├── lib/          Reusable, app-agnostic Controls (UiActionButton, UiPanel)
+├── screens/      Full-screen scenes (BuildScreen, CreationsScreen)
+└── widgets/      App-specific composites (ConstructionCanvas, GenerationStrip)
 ```
 
 Rule of thumb: if a Control could be lifted into another Godot project
@@ -58,9 +59,10 @@ unchanged, it belongs in `lib/`. If it embeds project vocabulary
   ViewModel-to-Control notifications.
 - `[Export]` fields have sensible defaults so the Control renders something
   useful in the editor without setup.
-- No hardcoded pixel sizes for mobile — use anchors, container-based layout.
-- Colors and fonts come from a shared Theme resource (add when it becomes
-  painful; not on day one).
+- Use containers and anchors for composition. Fixed reference dimensions must
+  come from named `UiTokens`/`UiLayout` values, never one-off screen literals.
+- Colors, fonts, typography, spacing, radius, and strokes come from the shared
+  token adapter. A screen must not recreate theme values locally.
 
 ## Test expectations
 
