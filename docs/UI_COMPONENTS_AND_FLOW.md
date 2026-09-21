@@ -61,6 +61,9 @@ literal margins/separations when composing screens.
 | `PanelPadding` | `space-3` | 12px | Default inner padding for right panels, sheets, menus, and cards. |
 | `PanelGap` | `space-4` | 16px | Gap between major panels/cards and between sections inside a sheet. |
 | `TouchTarget` | `touch` | 48px | Minimum tappable width/height for buttons and interactive rows. |
+| `ControlHorizontalPadding` | `space-3` | 12px | Left/right content inset for labelled buttons and segmented options. |
+| `ControlVerticalPadding` | `space-2` | 8px | Top/bottom content inset for labelled buttons and segmented options. |
+| `FocusRingGap` | `space-1` | 4px | Clear gap between a control edge and its outer focus ring. |
 
 `UiLayout` may expose fixed shell dimensions such as top-bar height and panel
 width, but reference spacing values such as screen inset and touch target come
@@ -72,6 +75,13 @@ compose components and view-model state; they should not hand-style every
 button, chip, slider, or settings row. When a screen needs repeated structure,
 extract a reusable `lib/` control if it is app-agnostic, or a `widgets/`
 control if it uses Node Runner vocabulary.
+
+Labelled controls are content-sized by default: their text plus the shared
+content insets determines their width, equivalent to Android `wrap_content`.
+Use horizontal `ExpandFill` only when the reference layout intentionally
+shares or fills available width. A visible focus state uses a separate outer
+accent ring and must not replace the normal border or change the control's
+content geometry.
 
 ## Global primitives
 

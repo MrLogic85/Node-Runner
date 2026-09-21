@@ -93,7 +93,7 @@ public partial class UiIconButton : Button
         AddThemeStyleboxOverride("normal", CreateStyle(false));
         AddThemeStyleboxOverride("hover", CreateStyle(true));
         AddThemeStyleboxOverride("pressed", CreateStyle(true));
-        AddThemeStyleboxOverride("focus", CreateStyle(true, 2));
+        AddThemeStyleboxOverride("focus", _tokens.FocusRingStyle());
         AddThemeStyleboxOverride("disabled", CreateStyle(false, 1, 0.5f));
         QueueRedraw();
     }
@@ -174,6 +174,8 @@ public partial class UiIconButton : Button
         return _tokens.ControlStyle(
             UiTokens.MultiplyAlpha(background, opacity),
             UiTokens.MultiplyAlpha(border, opacity),
-            borderWidth);
+            borderWidth,
+            horizontalPadding: UiSpacing.ControlHorizontalPadding(_tokens),
+            verticalPadding: UiSpacing.ControlVerticalPadding(_tokens));
     }
 }
