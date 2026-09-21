@@ -1,3 +1,4 @@
+using System.Text;
 using Godot;
 
 namespace NodeRunner.Ui.Lib;
@@ -5,15 +6,15 @@ namespace NodeRunner.Ui.Lib;
 /// <summary>Canonical UI glyphs. Their SVG sources are white and receive colour from their parent control.</summary>
 public enum UiIconId
 {
-    Back, Beam, Bolt, Brain, Build, Chart, Check, ChevronDown, ChevronRight, Copy, Core, Edit, Flag, Gear,
-    Height, Joint, Lock, Map, Menu, More, Move, Mute, Padlock, Pause, Phone, Play, Plus, Restart, Rotate,
+    Back, Beam, Bolt, Build, Chart, Check, ChevronDown, ChevronRight, Copy, Core, Edit, Flag, Gear,
+    Height, Joint, Lock, Map, Menu, Model, More, Move, Mute, Pause, Phone, Play, Plus, Restart, Rotate,
     Scale, Select, Shadow, Sound, Speed, Stop, Trash, Trophy, Unlock, Warn, Close,
 }
 
 /// <summary>Canonical 20-grid glyphs for build parts.</summary>
 public enum UiPartIconId
 {
-    Battery, Beam, Brake, Core, Damper, Engine, Fuel, LineOfSight, Node, Piston, Servo, Spring, Stepper,
+    Battery, Beam, Brake, Core, Fuel, Generator, LineOfSight, Node, Piston, Servo, Spring, Stepper,
     Velocity, Wheel, Wing,
 }
 
@@ -31,6 +32,10 @@ public static class UiIcons
 {
     public const string UiRoot = "res://assets/icons/ui/";
     public const string PartRoot = "res://assets/icons/parts/";
+    private const float _uiSourceSize = 24;
+    private const float _partSourceSize = 20;
+    private static readonly Dictionary<(string Path, int PixelSize), Texture2D> _textures = [];
+    private static float _cachedUiScale = float.NaN;
 
     public static IReadOnlyList<UiIconId> AllUiIds { get; } = Enum.GetValues<UiIconId>();
     public static IReadOnlyList<UiPartIconId> AllPartIds { get; } = Enum.GetValues<UiPartIconId>();
@@ -44,12 +49,16 @@ public static class UiIcons
         _ => throw new ArgumentOutOfRangeException(nameof(size), size, "Only canonical icon sizes are supported."),
     };
 
+    public static int RasterPixels(UiIconSize size, int windowWidth, int windowHeight) =>
+        Mathf.Max(1, Mathf.RoundToInt(Pixels(size) * Math.Min(
+            windowWidth / UiTokens.LogicalCanvasWidth,
+            windowHeight / UiTokens.LogicalCanvasHeight)));
+
     public static string PathFor(UiIconId icon) => UiRoot + (icon switch
     {
         UiIconId.Back => "back.svg",
         UiIconId.Beam => "beam.svg",
         UiIconId.Bolt => "bolt.svg",
-        UiIconId.Brain => "brain.svg",
         UiIconId.Build => "build.svg",
         UiIconId.Chart => "chart.svg",
         UiIconId.Check => "check.svg",
@@ -65,10 +74,10 @@ public static class UiIcons
         UiIconId.Lock => "lock.svg",
         UiIconId.Map => "map.svg",
         UiIconId.Menu => "menu.svg",
+        UiIconId.Model => "model.svg",
         UiIconId.More => "more.svg",
         UiIconId.Move => "move.svg",
         UiIconId.Mute => "mute.svg",
-        UiIconId.Padlock => "padlock.svg",
         UiIconId.Pause => "pause.svg",
         UiIconId.Phone => "phone.svg",
         UiIconId.Play => "play.svg",
@@ -95,9 +104,8 @@ public static class UiIcons
         UiPartIconId.Beam => "beam.svg",
         UiPartIconId.Brake => "brake.svg",
         UiPartIconId.Core => "core.svg",
-        UiPartIconId.Damper => "damper.svg",
-        UiPartIconId.Engine => "engine.svg",
         UiPartIconId.Fuel => "fuel.svg",
+        UiPartIconId.Generator => "generator.svg",
         UiPartIconId.LineOfSight => "los.svg",
         UiPartIconId.Node => "node.svg",
         UiPartIconId.Piston => "piston.svg",
@@ -110,13 +118,15 @@ public static class UiIcons
         _ => throw new ArgumentOutOfRangeException(nameof(icon), icon, "Unknown part icon."),
     });
 
-    public static Texture2D? Load(UiIconId icon) => Load(PathFor(icon));
-    public static Texture2D? Load(UiPartIconId icon) => Load(PathFor(icon));
+    public static Texture2D Load(UiIconId icon, UiIconSize size) =>
+        Load(PathFor(icon), Pixels(size), _uiSourceSize);
+
+    public static Texture2D Load(UiPartIconId icon, UiIconSize size) =>
+        Load(PathFor(icon), Pixels(size), _partSourceSize);
 
     public static void Apply(Button button, UiIconId icon, UiIconSize size, Color tint)
     {
-        var texture = Require(Load(icon), PathFor(icon));
-        button.Icon = texture;
+        button.Icon = Load(icon, size);
         button.ExpandIcon = false;
         button.AddThemeConstantOverride("icon_max_width", Pixels(size));
         button.AddThemeColorOverride("icon_normal_color", tint);
@@ -126,31 +136,71 @@ public static class UiIcons
     }
 
     public static TextureRect Create(UiIconId icon, UiIconSize size, Color tint) =>
-        Create(Require(Load(icon), PathFor(icon)), size, tint);
+        Create(Load(icon, size), size, tint);
 
     public static TextureRect Create(UiPartIconId icon, UiIconSize size, Color tint) =>
-        Create(Require(Load(icon), PathFor(icon)), size, tint);
+        Create(Load(icon, size), size, tint);
 
-    private static Texture2D? Load(string path)
+    private static Texture2D Load(string path, int logicalPixels, float sourceSize)
     {
-        var texture = ResourceLoader.Load<Texture2D>(path);
-        if (texture is not null)
+        var uiScale = UiScale();
+        if (!Mathf.IsEqualApprox(uiScale, _cachedUiScale))
         {
-            return texture;
+            _textures.Clear();
+            _cachedUiScale = uiScale;
         }
 
-        GD.PushError($"Canonical icon resource could not be loaded: {path}");
-        return null;
+        var physicalPixels = Mathf.Max(1, Mathf.RoundToInt(logicalPixels * uiScale));
+        var key = (path, physicalPixels);
+        if (_textures.TryGetValue(key, out var cached))
+        {
+            return cached;
+        }
+
+        var resourceName = path["res://assets/".Length..];
+        using var stream = typeof(UiIcons).Assembly.GetManifestResourceStream(resourceName);
+        if (stream is null)
+        {
+            return HandleLoadFailure(path, $"Embedded canonical SVG source could not be loaded: {resourceName}");
+        }
+
+        using var reader = new StreamReader(stream, Encoding.UTF8);
+        var source = reader.ReadToEnd();
+        var image = new Image();
+        var error = image.LoadSvgFromString(source, physicalPixels / sourceSize);
+        if (error != Error.Ok)
+        {
+            return HandleLoadFailure(path, $"Canonical SVG could not be rasterized at {physicalPixels}px: {path} ({error})");
+        }
+
+        var texture = ImageTexture.CreateFromImage(image);
+        _textures.Add(key, texture);
+        return texture;
     }
 
-    private static Texture2D Require(Texture2D? texture, string path)
+    private static Texture2D HandleLoadFailure(string path, string message)
     {
-        if (texture is not null)
+#if DEBUG
+        throw new InvalidOperationException(message);
+#else
+        GD.PushError(message);
+        var fallback = ResourceLoader.Load<Texture2D>(path);
+        if (fallback is not null)
         {
-            return texture;
+            return fallback;
         }
 
-        throw new InvalidOperationException($"Canonical icon resource could not be loaded: {path}");
+        GD.PushError($"Imported icon fallback could not be loaded: {path}");
+        throw new InvalidOperationException(message);
+#endif
+    }
+
+    private static float UiScale()
+    {
+        var windowSize = DisplayServer.WindowGetSize();
+        return Mathf.Min(
+            windowSize.X / UiTokens.LogicalCanvasWidth,
+            windowSize.Y / UiTokens.LogicalCanvasHeight);
     }
 
     private static TextureRect Create(Texture2D texture, UiIconSize size, Color tint)

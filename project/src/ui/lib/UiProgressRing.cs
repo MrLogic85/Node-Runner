@@ -57,11 +57,9 @@ public partial class UiProgressRing : Control
         DrawArc(center, radius, -Mathf.Pi / 2, -Mathf.Pi / 2 + (Mathf.Tau * Percent / 100f), 48, Done ? _tokens.Halo : _tokens.Accent, _tokens.StrokeSignal, antialiased: true);
         if (Done)
         {
-            if (UiIcons.Load(UiIconId.Check) is { } check)
-            {
-                var iconSize = UiIcons.Pixels(UiIconSize.Standard);
-                DrawTextureRect(check, new Rect2(center - new Vector2(iconSize * 0.5f, iconSize * 0.5f), new Vector2(iconSize, iconSize)), false, _tokens.Halo);
-            }
+            var check = UiIcons.Load(UiIconId.Check, UiIconSize.Standard);
+            var iconSize = UiIcons.Pixels(UiIconSize.Standard);
+            DrawTextureRect(check, new Rect2(center - new Vector2(iconSize * 0.5f, iconSize * 0.5f), new Vector2(iconSize, iconSize)), false, _tokens.Halo);
 
             return;
         }

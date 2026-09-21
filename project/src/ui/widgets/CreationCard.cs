@@ -383,10 +383,8 @@ public partial class CreationCard : Control
             var centerX = Size.X * 0.5f;
             var iconY = 17f;
             var color = Tokens.Muted;
-            if (UiIcons.Load(UiIconId.Lock) is { } lockIcon)
-            {
-                DrawTextureRect(lockIcon, new Rect2(centerX - 8, iconY - 8, 16, 16), false, color);
-            }
+            var lockIcon = UiIcons.Load(UiIconId.Lock, UiIconSize.Standard);
+            DrawTextureRect(lockIcon, new Rect2(centerX - 8, iconY - 8, 16, 16), false, color);
 
             DrawString(ThemeDB.FallbackFont, new Vector2(0, 40), "LOCK", HorizontalAlignment.Center, Size.X, 12, color);
         }

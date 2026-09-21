@@ -1,12 +1,12 @@
 namespace NodeRunner.Ui.Lib;
 
-/// <summary>Accent-outlined canonical icon action.</summary>
+/// <summary>Filled primary icon action using the active theme's accent colour.</summary>
 public partial class UiPrimaryIconButton : UiIconButton
 {
     public UiPrimaryIconButton()
     {
         BorderColor = UiColor.Accent;
-        ContentColor = UiColor.Accent;
-        Filled = false;
+        ContentColor = UiColor.OnAccent;
+        Filled = true;
     }
 }

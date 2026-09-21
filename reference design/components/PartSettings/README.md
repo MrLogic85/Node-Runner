@@ -10,6 +10,6 @@ The **settings panel** for the selected part. It takes the right-hand slot that 
 
 **Links.** **Spring / damper**: stiffness, damping, rest length, the two nodes. **Piston**: max strength, stroke, the two nodes. **Wing**: the two nodes, Flip, lift, weight.
 
-**Blocks.** **Battery**: shows what is **stored**, of what it can hold ("20 / 20 units"); it takes and gives power without a speed limit. **Engine**: which fuel tank feeds it, and nothing else to set: it makes as much as it can, feeds the powered parts first and charges the batteries with the rest. **Fuel tank**: the fuel it holds, in seconds of engine time, and which engine it feeds.
+**Blocks.** **Battery**: shows what is **stored**, of what it can hold ("20 / 20 units"); it takes and gives power without a speed limit. **Generator**: which fuel tank feeds it, and nothing else to set: it makes as much as it can, feeds the powered parts first and charges the batteries with the rest. **Fuel tank**: the fuel it holds, in seconds of generator time, and which generator it feeds.
 
 Powered parts show a **Power** row: "Draws up to 0.6", because a part uses less when it is idle. Structure that changes the model (length, stroke, what a link is between) is a dashed locked row on a locked creation.

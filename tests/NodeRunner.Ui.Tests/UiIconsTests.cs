@@ -9,6 +9,9 @@ public sealed class UiIconsTests
     {
         var projectRoot = Path.Combine(FindRepositoryRoot(), "project");
 
+        UiIcons.AllUiIds.Count.ShouldBe(39);
+        UiIcons.AllPartIds.Count.ShouldBe(15);
+
         foreach (var icon in UiIcons.AllUiIds)
         {
             File.Exists(ToAssetPath(projectRoot, UiIcons.PathFor(icon))).ShouldBeTrue($"Missing UI icon: {icon}");
@@ -27,8 +30,41 @@ public sealed class UiIconsTests
     }
 
     [Theory]
+    [InlineData(UiIconSize.Small, 1920, 1080, 36)]
+    [InlineData(UiIconSize.Standard, 1920, 1080, 48)]
+    [InlineData(UiIconSize.Large, 1920, 1080, 60)]
+    [InlineData(UiIconSize.ExtraLarge, 1920, 1080, 72)]
+    [InlineData(UiIconSize.ExtraLarge, 1280, 720, 48)]
+    public void RasterPixels_MatchesCanonicalSizeAtUiScale(
+        UiIconSize size,
+        int windowWidth,
+        int windowHeight,
+        int expected)
+    {
+        UiIcons.RasterPixels(size, windowWidth, windowHeight).ShouldBe(expected);
+    }
+
+    [Fact]
+    public void EveryCanonicalSvg_IsEmbeddedForRuntimeRasterization()
+    {
+        var resources = typeof(UiIcons).Assembly.GetManifestResourceNames();
+
+        foreach (var icon in UiIcons.AllUiIds)
+        {
+            resources.ShouldContain(UiIcons.PathFor(icon)["res://assets/".Length..]);
+        }
+
+        foreach (var icon in UiIcons.AllPartIds)
+        {
+            resources.ShouldContain(UiIcons.PathFor(icon)["res://assets/".Length..]);
+        }
+    }
+
+    [Theory]
     [InlineData("back", UiIconId.Back)]
-    [InlineData("brain", UiIconId.Brain)]
+    [InlineData("brain", UiIconId.Model)]
+    [InlineData("model", UiIconId.Model)]
+    [InlineData("padlock", UiIconId.Lock)]
     [InlineData("play", UiIconId.Play)]
     [InlineData("settings", UiIconId.Gear)]
     [InlineData("locked", UiIconId.Lock)]
