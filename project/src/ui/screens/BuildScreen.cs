@@ -197,7 +197,7 @@ public partial class BuildScreen : Control
             });
         }
 
-        var safeFrame = MarkHostedInputPassthrough(CreateMargin((int)UiLayout.EdgeInset));
+        var safeFrame = MarkHostedInputPassthrough(CreateMargin(UiSpacing.ScreenEdgeInset(_tokens)));
         AddChild(safeFrame);
 
         var screenParent = safeFrame;

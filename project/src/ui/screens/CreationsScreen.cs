@@ -132,10 +132,7 @@ public partial class CreationsScreen : Control
 
         var margin = new MarginContainer();
         margin.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
-        margin.AddThemeConstantOverride("margin_left", (int)UiLayout.EdgeInset);
-        margin.AddThemeConstantOverride("margin_top", (int)UiLayout.EdgeInset);
-        margin.AddThemeConstantOverride("margin_right", (int)UiLayout.EdgeInset);
-        margin.AddThemeConstantOverride("margin_bottom", (int)UiLayout.EdgeInset);
+        UiSpacing.ApplyUniformMargin(margin, UiSpacing.ScreenEdgeInset(_tokens));
         AddChild(margin);
 
         var layout = new VBoxContainer();
@@ -267,7 +264,7 @@ public partial class CreationsScreen : Control
         {
             Name = "CreationsOverflow",
             Tokens = _tokens,
-            Position = new Vector2(UiLayout.CanvasWidth - 196, UiLayout.TopBarHeight + (UiLayout.EdgeInset * 2)),
+            Position = new Vector2(UiLayout.CanvasWidth - 196, UiLayout.TopBarHeight + (UiSpacing.ScreenEdgeInset(_tokens) * 2)),
         };
         menu.SetActions(("close", "Close Creations", false), ("restore-example", "Restore example", false));
         menu.ActionSelected += id =>

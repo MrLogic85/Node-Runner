@@ -906,7 +906,7 @@ public partial class Main : Node2D
             Name = "DeleteCreationToast",
             Tokens = UiTokens.Neon,
             CustomMinimumSize = new Vector2(420, _touchTargetHeight),
-            Position = new Vector2(UiLayout.EdgeInset * 2, UiLayout.CanvasHeight - _touchTargetHeight - (UiLayout.EdgeInset * 2)),
+            Position = new Vector2(UiSpacing.ScreenEdgeInset(UiTokens.Neon) * 2, UiLayout.CanvasHeight - _touchTargetHeight - (UiSpacing.ScreenEdgeInset(UiTokens.Neon) * 2)),
             ProcessMode = ProcessModeEnum.Always,
         };
         _deleteCreationToast.UndoPressed += RestoreDeletedCreationFromToast;
