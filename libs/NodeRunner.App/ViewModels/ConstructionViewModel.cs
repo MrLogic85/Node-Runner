@@ -37,6 +37,7 @@ public sealed class ConstructionViewModel : INotifyPropertyChanged
     private string _creationName = "Untitled Creation";
     private int? _trainingGeneration;
     private double? _bestFitness;
+    private int? _selectedBeamIndex;
 
     public ConstructionViewModel(CreatureBuilder? builder = null)
     {
@@ -48,6 +49,7 @@ public sealed class ConstructionViewModel : INotifyPropertyChanged
         ArgumentNullException.ThrowIfNull(creature);
         _builder = new CreatureBuilder(creature);
         _selectedNodeIndices.Clear();
+        _selectedBeamIndex = null;
         _brainShape = brainShape ?? BrainShapeDef.Default;
         _hasCustomBrainShape = brainShape is not null;
         _creationName = string.IsNullOrWhiteSpace(creationName) ? "Untitled Creation" : creationName;
@@ -68,6 +70,7 @@ public sealed class ConstructionViewModel : INotifyPropertyChanged
     {
         _builder = new CreatureBuilder();
         _selectedNodeIndices.Clear();
+        _selectedBeamIndex = null;
         _brainShape = BrainShapeDef.Default;
         _hasCustomBrainShape = false;
         _creationName = "Untitled Creation";
@@ -95,11 +98,17 @@ public sealed class ConstructionViewModel : INotifyPropertyChanged
 
     public int SelectedNodeCount => _selectedNodeIndices.Count;
 
+    public int SelectedBeamCount => _selectedBeamIndex is null ? 0 : 1;
+
+    public int SelectedPartCount => SelectedNodeCount + SelectedBeamCount;
+
     public int SelectedCoreCount => _builder.Cores.Count(core => _selectedNodeIndices.Contains(core.NodeIndex));
 
     public int? SingleSelectedNodeIndex => _selectedNodeIndices.Count == 1
         ? _selectedNodeIndices.First()
         : null;
+
+    public int? SingleSelectedBeamIndex => SelectedPartCount == 1 ? _selectedBeamIndex : null;
 
     public bool SingleSelectionHasCore => SingleSelectedNodeIndex is { } index
         && _builder.Cores.Any(core => core.NodeIndex == index);
@@ -251,29 +260,39 @@ public sealed class ConstructionViewModel : INotifyPropertyChanged
             _selectedNodeIndices.Remove(nodeIndex);
         }
 
+        _selectedBeamIndex = null;
         StatusMessage = _selectedNodeIndices.Count == 0
             ? "Selection cleared."
             : $"{_selectedNodeIndices.Count} selected. Drag one selected node to move them together.";
-        OnPropertyChanged(nameof(SelectedNodeCount));
-        OnPropertyChanged(nameof(SelectedCoreCount));
-        OnPropertyChanged(nameof(SingleSelectedNodeIndex));
-        OnPropertyChanged(nameof(SingleSelectionHasCore));
+        NotifySelectionChanged();
+        AnatomyChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    public void SelectBeam(int beamIndex)
+    {
+        if (beamIndex < 0 || beamIndex >= _builder.Beams.Count)
+        {
+            throw new ArgumentOutOfRangeException(nameof(beamIndex));
+        }
+
+        _selectedNodeIndices.Clear();
+        _selectedBeamIndex = beamIndex;
+        StatusMessage = $"Beam {beamIndex + 1} selected.";
+        NotifySelectionChanged();
         AnatomyChanged?.Invoke(this, EventArgs.Empty);
     }
 
     public void ClearSelection()
     {
-        if (_selectedNodeIndices.Count == 0)
+        if (SelectedPartCount == 0)
         {
             return;
         }
 
         _selectedNodeIndices.Clear();
+        _selectedBeamIndex = null;
         StatusMessage = "Selection cleared.";
-        OnPropertyChanged(nameof(SelectedNodeCount));
-        OnPropertyChanged(nameof(SelectedCoreCount));
-        OnPropertyChanged(nameof(SingleSelectedNodeIndex));
-        OnPropertyChanged(nameof(SingleSelectionHasCore));
+        NotifySelectionChanged();
         AnatomyChanged?.Invoke(this, EventArgs.Empty);
     }
 
@@ -281,6 +300,7 @@ public sealed class ConstructionViewModel : INotifyPropertyChanged
     {
         ArgumentNullException.ThrowIfNull(nodeIndices);
         _selectedNodeIndices.Clear();
+        _selectedBeamIndex = null;
         foreach (var nodeIndex in nodeIndices)
         {
             if (nodeIndex >= 0 && nodeIndex < _builder.Nodes.Count)
@@ -292,10 +312,7 @@ public sealed class ConstructionViewModel : INotifyPropertyChanged
         StatusMessage = _selectedNodeIndices.Count == 0
             ? "Selection cleared."
             : $"{_selectedNodeIndices.Count} selected. Drag one selected node to move them together.";
-        OnPropertyChanged(nameof(SelectedNodeCount));
-        OnPropertyChanged(nameof(SelectedCoreCount));
-        OnPropertyChanged(nameof(SingleSelectedNodeIndex));
-        OnPropertyChanged(nameof(SingleSelectionHasCore));
+        NotifySelectionChanged();
         AnatomyChanged?.Invoke(this, EventArgs.Empty);
     }
 
@@ -452,7 +469,40 @@ public sealed class ConstructionViewModel : INotifyPropertyChanged
 
         _builder.RemoveNode(nodeIndex);
         _selectedNodeIndices.Clear();
+        _selectedBeamIndex = null;
         StatusMessage = $"Removed node {nodeIndex} and anything attached to it.";
+        NotifySelectionChanged();
+        AnatomyChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    public void DeleteSelectedParts()
+    {
+        if (_moveOnly)
+        {
+            StatusMessage = "Edit mode can only move selected parts.";
+            return;
+        }
+
+        if (SelectedPartCount == 0)
+        {
+            StatusMessage = "No selected parts to delete.";
+            return;
+        }
+
+        if (_selectedBeamIndex is { } beamIndex)
+        {
+            _builder.RemoveBeam(beamIndex);
+        }
+
+        foreach (var nodeIndex in _selectedNodeIndices.OrderByDescending(index => index))
+        {
+            _builder.RemoveNode(nodeIndex);
+        }
+
+        _selectedNodeIndices.Clear();
+        _selectedBeamIndex = null;
+        StatusMessage = "Deleted selected parts.";
+        NotifySelectionChanged();
         AnatomyChanged?.Invoke(this, EventArgs.Empty);
     }
 
@@ -466,7 +516,9 @@ public sealed class ConstructionViewModel : INotifyPropertyChanged
         }
 
         _builder.RemoveBeam(beamIndex);
+        _selectedBeamIndex = null;
         StatusMessage = "Removed beam.";
+        NotifySelectionChanged();
         AnatomyChanged?.Invoke(this, EventArgs.Empty);
     }
 
@@ -515,6 +567,17 @@ public sealed class ConstructionViewModel : INotifyPropertyChanged
         }
 
         return -1;
+    }
+
+    private void NotifySelectionChanged()
+    {
+        OnPropertyChanged(nameof(SelectedNodeCount));
+        OnPropertyChanged(nameof(SelectedBeamCount));
+        OnPropertyChanged(nameof(SelectedPartCount));
+        OnPropertyChanged(nameof(SelectedCoreCount));
+        OnPropertyChanged(nameof(SingleSelectedNodeIndex));
+        OnPropertyChanged(nameof(SingleSelectedBeamIndex));
+        OnPropertyChanged(nameof(SingleSelectionHasCore));
     }
 
     private static double DistanceSquaredToSegment(Vector2D point, Vector2D segmentStart, Vector2D segmentEnd)

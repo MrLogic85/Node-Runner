@@ -108,6 +108,86 @@ public sealed class ConstructionPresentationViewModelTests
     }
 
     [Fact]
+    public void SelectedBeam_ShowsLengthEndpointsAndFixedStructureFacts()
+    {
+        var construction = new ConstructionViewModel();
+        construction.Load(
+            new CreatureDef(
+                [new NodeDef(new Vector2D(0, 0), 18), new NodeDef(new Vector2D(3, 4), 18)],
+                [new BeamDef(0, 1)],
+                []));
+        construction.SelectBeam(0);
+        var presentation = new ConstructionPresentationViewModel(construction);
+
+        presentation.SinglePartTitle.ShouldBe("Beam 1");
+        presentation.SinglePartPrimaryLabel.ShouldBe("Length");
+        presentation.SinglePartPrimaryValue.ShouldBe("5.0 units");
+        presentation.SinglePartConnectionsLabel.ShouldBe("Between");
+        presentation.SinglePartConnectionsValue.ShouldBe("Node 1 ↔ Node 2");
+        presentation.SinglePartFacts.ShouldBe("Rigid connection");
+    }
+
+    [Fact]
+    public void SelectedCore_ShowsActualBuiltInSensorContract()
+    {
+        var construction = new ConstructionViewModel();
+        construction.Load(
+            new CreatureDef(
+                [new NodeDef(new Vector2D(0, 0), 18), new NodeDef(new Vector2D(20, 0), 18)],
+                [new BeamDef(0, 1)],
+                [new CoreDef(0)]));
+        construction.ToggleSelectedNode(0);
+        var presentation = new ConstructionPresentationViewModel(construction);
+
+        presentation.SinglePartTitle.ShouldBe("Core · Node 1");
+        presentation.SinglePartPrimaryLabel.ShouldBe("Built-in senses");
+        presentation.SinglePartPrimaryValue.ShouldBe("6 inputs");
+        presentation.SinglePartConnectionsValue.ShouldBe("Node 1");
+        presentation.SinglePartFacts.ShouldContain("Forward-down ray");
+    }
+
+    [Fact]
+    public void SelectedNode_ShowsPositionRadiusAndConnectedBeams()
+    {
+        var construction = new ConstructionViewModel();
+        construction.Load(
+            new CreatureDef(
+                [
+                    new NodeDef(new Vector2D(0, 0), 18),
+                    new NodeDef(new Vector2D(20, 5), 12),
+                    new NodeDef(new Vector2D(40, 0), 18),
+                ],
+                [new BeamDef(0, 1), new BeamDef(1, 2)],
+                []));
+        construction.ToggleSelectedNode(1);
+        var presentation = new ConstructionPresentationViewModel(construction);
+
+        presentation.SelectedPartCount.ShouldBe(1);
+        presentation.SinglePartTitle.ShouldBe("Node 2");
+        presentation.SinglePartPrimaryValue.ShouldBe("20, 5");
+        presentation.SinglePartConnectionsValue.ShouldBe("Beam 1 · Beam 2");
+        presentation.SinglePartFacts.ShouldBe("Radius 12.0 · 2 attached Beam(s)");
+    }
+
+    [Fact]
+    public void MultiSelection_WithCore_SummarizesSelectedNodesAndCore()
+    {
+        var construction = new ConstructionViewModel();
+        construction.Load(
+            new CreatureDef(
+                [new NodeDef(new Vector2D(0, 0), 18), new NodeDef(new Vector2D(20, 0), 18)],
+                [new BeamDef(0, 1)],
+                [new CoreDef(0)]));
+        construction.ToggleSelectedNode(0);
+        construction.ToggleSelectedNode(1);
+        var presentation = new ConstructionPresentationViewModel(construction);
+
+        presentation.SelectedPartCount.ShouldBe(2);
+        presentation.MultiSelectionTitle.ShouldBe("2 selected");
+        presentation.MultiSelectionCounts.ShouldBe("Nodes · 2    Core · 1");
+    }
+
+    [Fact]
     public void BrainShape_WhenNotCustomized_UsesRecommendedNeuronCount()
     {
         var construction = new ConstructionViewModel();

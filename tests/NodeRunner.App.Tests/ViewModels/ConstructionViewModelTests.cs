@@ -361,6 +361,141 @@ public sealed class ConstructionViewModelTests
     }
 
     [Fact]
+    public void SelectBeam_ReplacesNodeSelectionAndExposesBeamAsSelectedPart()
+    {
+        var viewModel = new ConstructionViewModel();
+        var a = viewModel.PlaceNode(new Vector2D(0, 0), 18);
+        var b = viewModel.PlaceNode(new Vector2D(10, 0), 18);
+        viewModel.SelectNodeForBeam(a);
+        viewModel.SelectNodeForBeam(b);
+        viewModel.ToggleSelectedNode(a);
+        var raisedFor = new List<string?>();
+        var anatomyChanged = false;
+        viewModel.PropertyChanged += (_, args) => raisedFor.Add(args.PropertyName);
+        viewModel.AnatomyChanged += (_, _) => anatomyChanged = true;
+
+        viewModel.SelectBeam(0);
+
+        viewModel.SelectedNodeCount.ShouldBe(0);
+        viewModel.SelectedBeamCount.ShouldBe(1);
+        viewModel.SelectedPartCount.ShouldBe(1);
+        viewModel.SingleSelectedBeamIndex.ShouldBe(0);
+        raisedFor.ShouldContain(nameof(ConstructionViewModel.SelectedBeamCount));
+        raisedFor.ShouldContain(nameof(ConstructionViewModel.SelectedPartCount));
+        raisedFor.ShouldContain(nameof(ConstructionViewModel.SingleSelectedBeamIndex));
+        anatomyChanged.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void ClearSelection_WithOnlyBeamSelected_ClearsBeam()
+    {
+        var viewModel = new ConstructionViewModel();
+        var a = viewModel.PlaceNode(new Vector2D(0, 0), 18);
+        var b = viewModel.PlaceNode(new Vector2D(10, 0), 18);
+        viewModel.SelectNodeForBeam(a);
+        viewModel.SelectNodeForBeam(b);
+        viewModel.SelectBeam(0);
+        var raisedFor = new List<string?>();
+        var anatomyChanged = false;
+        viewModel.PropertyChanged += (_, args) => raisedFor.Add(args.PropertyName);
+        viewModel.AnatomyChanged += (_, _) => anatomyChanged = true;
+
+        viewModel.ClearSelection();
+
+        viewModel.SelectedPartCount.ShouldBe(0);
+        viewModel.SingleSelectedBeamIndex.ShouldBeNull();
+        raisedFor.ShouldContain(nameof(ConstructionViewModel.SelectedBeamCount));
+        raisedFor.ShouldContain(nameof(ConstructionViewModel.SelectedPartCount));
+        raisedFor.ShouldContain(nameof(ConstructionViewModel.SingleSelectedBeamIndex));
+        anatomyChanged.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void DeleteSelectedParts_WithBeamSelected_RemovesBeamButKeepsNodes()
+    {
+        var viewModel = new ConstructionViewModel();
+        var a = viewModel.PlaceNode(new Vector2D(0, 0), 18);
+        var b = viewModel.PlaceNode(new Vector2D(10, 0), 18);
+        viewModel.SelectNodeForBeam(a);
+        viewModel.SelectNodeForBeam(b);
+        viewModel.SelectBeam(0);
+
+        viewModel.DeleteSelectedParts();
+
+        viewModel.Beams.ShouldBeEmpty();
+        viewModel.Nodes.Count.ShouldBe(2);
+        viewModel.SelectedPartCount.ShouldBe(0);
+    }
+
+    [Fact]
+    public void DeleteSelectedParts_InMoveOnlyMode_PreservesAnatomy()
+    {
+        var viewModel = new ConstructionViewModel();
+        viewModel.Load(
+            new CreatureDef(
+                [new NodeDef(new Vector2D(0, 0), 18), new NodeDef(new Vector2D(10, 0), 18)],
+                [new BeamDef(0, 1)],
+                []),
+            moveOnly: true);
+        viewModel.SelectBeam(0);
+
+        viewModel.DeleteSelectedParts();
+
+        viewModel.Beams.Count.ShouldBe(1);
+        viewModel.StatusMessage.ShouldBe("Edit mode can only move selected parts.");
+    }
+
+    [Fact]
+    public void DeleteSelectedParts_WithNodeSelected_CascadesAttachedPartsAndClearsSelection()
+    {
+        var viewModel = new ConstructionViewModel();
+        var a = viewModel.PlaceNode(new Vector2D(0, 0), 18);
+        var b = viewModel.PlaceNode(new Vector2D(10, 0), 18);
+        var c = viewModel.PlaceNode(new Vector2D(20, 0), 18);
+        viewModel.SelectNodeForBeam(a);
+        viewModel.SelectNodeForBeam(b);
+        viewModel.SelectNodeForBeam(b);
+        viewModel.SelectNodeForBeam(c);
+        viewModel.ToggleCoreOnNode(b);
+        viewModel.ToggleSelectedNode(b);
+        var anatomyChanged = false;
+        viewModel.AnatomyChanged += (_, _) => anatomyChanged = true;
+
+        viewModel.DeleteSelectedParts();
+
+        viewModel.Nodes.Count.ShouldBe(2);
+        viewModel.Beams.ShouldBeEmpty();
+        viewModel.Cores.ShouldBeEmpty();
+        viewModel.SelectedPartCount.ShouldBe(0);
+        anatomyChanged.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void DeleteSelectedParts_WithMultipleNodes_DeletesDescendingAndReindexesSurvivors()
+    {
+        var viewModel = new ConstructionViewModel();
+        var a = viewModel.PlaceNode(new Vector2D(0, 0), 18);
+        var b = viewModel.PlaceNode(new Vector2D(10, 0), 18);
+        var c = viewModel.PlaceNode(new Vector2D(20, 0), 18);
+        viewModel.SelectNodeForBeam(a);
+        viewModel.SelectNodeForBeam(b);
+        viewModel.SelectNodeForBeam(b);
+        viewModel.SelectNodeForBeam(c);
+        viewModel.ToggleCoreOnNode(b);
+        viewModel.ToggleSelectedNode(a);
+        viewModel.ToggleSelectedNode(c);
+
+        viewModel.DeleteSelectedParts();
+
+        viewModel.Nodes.Count.ShouldBe(1);
+        viewModel.Nodes[0].Position.ShouldBe(new Vector2D(10, 0));
+        viewModel.Beams.ShouldBeEmpty();
+        viewModel.Cores.Count.ShouldBe(1);
+        viewModel.Cores[0].NodeIndex.ShouldBe(0);
+        viewModel.SelectedPartCount.ShouldBe(0);
+    }
+
+    [Fact]
     public void TryLeave_WithNoNodesPlaced_ReturnsTrue()
     {
         var viewModel = new ConstructionViewModel();
