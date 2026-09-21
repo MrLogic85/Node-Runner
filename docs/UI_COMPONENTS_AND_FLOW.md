@@ -48,6 +48,31 @@ destinations.
 - Build and Creation also have a 56px left tool rail.
 - Minimum touch target: `touch` (48px).
 
+## Spacing and component rules
+
+Use the reference design spacing tokens as named rules, not ad-hoc pixel
+values. In Godot these names live in `UiSpacing` and should be preferred over
+literal margins/separations when composing screens.
+
+| Rule | Token | Value | Use |
+| --- | --- | ---: | --- |
+| `IconLabelGap` | `space-1` | 4px | Icon-to-label gaps, dense label/value pairs, compact rows inside a card. |
+| `ControlGap` | `space-2` | 8px | Gap between sibling controls in a row; screen edge inset; tight panel content. |
+| `PanelPadding` | `space-3` | 12px | Default inner padding for right panels, sheets, menus, and cards. |
+| `PanelGap` | `space-4` | 16px | Gap between major panels/cards and between sections inside a sheet. |
+| `TouchTarget` | `touch` | 48px | Minimum tappable width/height for buttons and interactive rows. |
+
+`UiLayout` may expose fixed shell dimensions such as top-bar height and panel
+width, but reference spacing values such as screen inset and touch target come
+from `UiSpacing` so screens have one vocabulary for margins and gaps.
+
+Component completion means the primitive owns its typography, radius, minimum
+touch target, disabled/locked state, and focus/selection border. Screens should
+compose components and view-model state; they should not hand-style every
+button, chip, slider, or settings row. When a screen needs repeated structure,
+extract a reusable `lib/` control if it is app-agnostic, or a `widgets/`
+control if it uses Node Runner vocabulary.
+
 ## Global primitives
 
 Reusable, app-agnostic controls live in `project/src/ui/lib/`.
