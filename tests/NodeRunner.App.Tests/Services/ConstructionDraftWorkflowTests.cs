@@ -33,8 +33,21 @@ public sealed class ConstructionDraftWorkflowTests
         rebuilt.Id.ShouldNotBe(original.Id);
         rebuilt.Name.ShouldBe("Creation 2");
         rebuilt.Creature.ShouldBe(original.Creature);
+        rebuilt.BrainShape.ShouldBe(BrainShapeDef.Default);
         rebuilt.Training.ShouldBeNull();
         original.Training!.Generation.ShouldBe(8);
+    }
+
+    [Fact]
+    public void CompleteDraft_WithBrainShape_StoresShape()
+    {
+        var shape = new BrainShapeDef(3, 16);
+        var creature = CreateCreation("Original", generation: 1).Creature;
+        var workflow = new ConstructionDraftWorkflow(() => Guid.NewGuid());
+
+        var draft = workflow.CompleteDraft(creature, "Creation 2", shape);
+
+        draft.BrainShape.ShouldBe(shape);
     }
 
     [Fact]

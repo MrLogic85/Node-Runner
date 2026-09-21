@@ -1,5 +1,6 @@
 using Godot;
 using NodeRunner.App.ViewModels;
+using NodeRunner.Domain;
 using NodeRunner.Ui.Lib;
 
 namespace NodeRunner.Ui.Screens;
@@ -18,6 +19,9 @@ public partial class BuildScreen : Control
     private ConstructionPresentationViewModel? _presentation;
     private bool _isSubscribedToPresentation;
     private bool _partsTrayCollapsed;
+    private bool _brainSetupOpen;
+    private bool _exactNeuronEntryOpen;
+    private int _pendingExactNeurons = BrainShapeDef.DefaultNeuronsPerLayer;
 
     [Export]
     public bool ShowTopBar { get; set; } = true;
@@ -42,6 +46,9 @@ public partial class BuildScreen : Control
 
     [Signal]
     public delegate void ToolRequestedEventHandler(ConstructionTool tool);
+
+    [Signal]
+    public delegate void BrainShapeChangedEventHandler(int hiddenLayers, int neuronsPerLayer);
 
     public UiTokens Tokens
     {
@@ -103,6 +110,11 @@ public partial class BuildScreen : Control
         }
 
         BuildLayout();
+        if (_brainSetupOpen)
+        {
+            AddChild(CreateBrainSetupOverlay());
+        }
+
         if (Hosted)
         {
             ApplyHostedInputPassthrough(this);
@@ -231,13 +243,8 @@ public partial class BuildScreen : Control
         titleStack.AddChild(CreateLabel("Untitled Creation  ✎", 18, _tokens.Ink, expand: true));
         titleStack.AddChild(CreateLabel("Unsaved anatomy draft", 11, _tokens.Muted));
 
-        topBar.AddChild(new UiChip
-        {
-            Tokens = _tokens,
-            Text = "Brain 1 × 4",
-            Kind = UiChip.ChipKind.Accent,
-        });
         var buildPanel = Presentation?.BuildPanel ?? ConstructionBuildPanelPresentation.Sample;
+        topBar.AddChild(CreateBrainChip(buildPanel));
         var save = CreateButton("Save", buildPanel.CanCompleteCreation ? UiActionButton.ActionKind.Primary : UiActionButton.ActionKind.Secondary, buildPanel.DisabledReason ?? "Save this Creation");
         save.CustomMinimumSize = new Vector2(88, _tokens.TouchTarget);
         save.Locked = !buildPanel.CanCompleteCreation;
@@ -259,6 +266,33 @@ public partial class BuildScreen : Control
         });
 
         return topBarPanel;
+    }
+
+    private Control CreateBrainChip(ConstructionBuildPanelPresentation buildPanel)
+    {
+        var shape = Presentation?.BrainShape ?? BrainShapeDef.Default;
+        var locked = Presentation?.IsBrainShapeLocked ?? false;
+        var chip = new Button
+        {
+            Text = locked ? $"Brain {shape.HiddenLayers} × {shape.NeuronsPerLayer} locked" : $"Brain {shape.HiddenLayers} × {shape.NeuronsPerLayer}",
+            CustomMinimumSize = new Vector2(112, 32),
+            TooltipText = locked ? "Brain shape is locked after Save" : $"{buildPanel.InputCount} senses · {buildPanel.OutputCount} motors",
+            Disabled = locked,
+        };
+        _tokens.ApplyTextStyle(chip, _tokens.LabelText);
+        chip.AddThemeColorOverride("font_color", _tokens.Accent);
+        chip.AddThemeColorOverride("font_hover_color", _tokens.Ink);
+        chip.AddThemeStyleboxOverride("normal", _tokens.ControlStyle(_tokens.PanelRaised, _tokens.Accent, radius: _tokens.RadiusPill));
+        chip.AddThemeStyleboxOverride("hover", _tokens.ControlStyle(_tokens.AccentSoft, _tokens.Accent, radius: _tokens.RadiusPill));
+        if (!locked)
+        {
+            chip.Pressed += () =>
+            {
+                _brainSetupOpen = true;
+                RebuildLayout();
+            };
+        }
+        return chip;
     }
 
     private Control CreateToolRail()
@@ -474,6 +508,338 @@ public partial class BuildScreen : Control
             : ShortValidationText(buildPanel.DisabledReason ?? buildPanel.ValidationLine);
         row.AddChild(CreateLabel(reason, 12, buildPanel.CanStartTraining ? _tokens.Accent : _tokens.Danger, expand: true));
         return row;
+    }
+
+    private Control CreateBrainSetupOverlay()
+    {
+        var overlay = new Control
+        {
+            Name = "BrainSetupOverlay",
+            MouseFilter = MouseFilterEnum.Stop,
+            AnchorRight = 1,
+            AnchorBottom = 1,
+        };
+        overlay.AddChild(new ColorRect
+        {
+            Color = new Color(0, 0, 0, 0.45f),
+            AnchorRight = 1,
+            AnchorBottom = 1,
+            MouseFilter = MouseFilterEnum.Stop,
+        });
+
+        var sheet = CreatePanel(raised: true);
+        sheet.Position = new Vector2(76, 52);
+        sheet.CustomMinimumSize = new Vector2(488, 260);
+        overlay.AddChild(sheet);
+
+        var margin = CreateMargin((int)_tokens.Space3);
+        sheet.AddChild(margin);
+
+        var layout = new VBoxContainer();
+        layout.AddThemeConstantOverride("separation", (int)_tokens.Space2);
+        margin.AddChild(layout);
+        layout.AddChild(CreateBrainSetupTopBar());
+
+        var body = new HBoxContainer();
+        body.AddThemeConstantOverride("separation", (int)_tokens.Space3);
+        layout.AddChild(body);
+
+        var controls = new VBoxContainer
+        {
+            CustomMinimumSize = new Vector2(270, 0),
+            SizeFlagsVertical = SizeFlags.ExpandFill,
+        };
+        controls.AddThemeConstantOverride("separation", (int)_tokens.Space2);
+        body.AddChild(controls);
+        controls.AddChild(CreateLayerChooser());
+        controls.AddChild(CreateNeuronControl());
+
+        body.AddChild(CreateBrainPreviewPanel());
+        if (_exactNeuronEntryOpen)
+        {
+            overlay.AddChild(CreateExactNeuronEntry());
+        }
+
+        return overlay;
+    }
+
+    private Control CreateBrainSetupTopBar()
+    {
+        var buildPanel = Presentation?.BuildPanel ?? ConstructionBuildPanelPresentation.Sample;
+        var row = new HBoxContainer();
+        row.AddThemeConstantOverride("separation", (int)_tokens.Space2);
+        row.AddChild(CreateLabel("Brain setup", 16, _tokens.Ink, expand: true));
+        var recommended = new Button
+        {
+            Text = "Use recommended",
+            CustomMinimumSize = new Vector2(124, 32),
+            SizeFlagsVertical = SizeFlags.ShrinkCenter,
+            TooltipText = "Reset layers and neurons",
+        };
+        _tokens.ApplyTextStyle(recommended, _tokens.CaptionText);
+        recommended.AddThemeColorOverride("font_color", _tokens.Ink);
+        recommended.AddThemeStyleboxOverride("normal", _tokens.ControlStyle(_tokens.PanelRaised, _tokens.Edge, radius: (int)_tokens.RadiusSmall));
+        recommended.AddThemeStyleboxOverride("hover", _tokens.ControlStyle(_tokens.AccentSoft, _tokens.Accent, radius: (int)_tokens.RadiusSmall));
+        recommended.Pressed += () => EmitBrainShape(BrainShapeDef.DefaultHiddenLayers, RecommendedNeurons(buildPanel));
+        row.AddChild(recommended);
+        var close = new Button
+        {
+            Text = "×",
+            CustomMinimumSize = new Vector2(36, 36),
+            SizeFlagsVertical = SizeFlags.ShrinkCenter,
+            TooltipText = "Close brain setup",
+        };
+        _tokens.ApplyTextStyle(close, _tokens.HeadingText);
+        close.AddThemeColorOverride("font_color", _tokens.Accent);
+        close.AddThemeStyleboxOverride("normal", _tokens.ControlStyle(_tokens.PanelRaised, _tokens.Edge, radius: (int)_tokens.RadiusSmall));
+        close.AddThemeStyleboxOverride("hover", _tokens.ControlStyle(_tokens.AccentSoft, _tokens.Accent, radius: (int)_tokens.RadiusSmall));
+        close.Pressed += () =>
+        {
+            _brainSetupOpen = false;
+            _exactNeuronEntryOpen = false;
+            RebuildLayout();
+        };
+        row.AddChild(close);
+        return row;
+    }
+
+    private Control CreateLayerChooser()
+    {
+        var shape = Presentation?.BrainShape ?? BrainShapeDef.Default;
+        var stack = new VBoxContainer();
+        stack.AddThemeConstantOverride("separation", (int)_tokens.Space1);
+        var row = new HBoxContainer();
+        row.AddThemeConstantOverride("separation", (int)_tokens.Space1);
+        stack.AddChild(row);
+        row.AddChild(CreateLayerButton(1, "simple", shape.HiddenLayers == 1));
+        row.AddChild(CreateLayerButton(2, "navigation", shape.HiddenLayers == 2));
+        row.AddChild(CreateLayerButton(3, "experiment", shape.HiddenLayers == 3));
+        var help = shape.HiddenLayers switch
+        {
+            1 => "Recommended for simple tasks",
+            2 => "Recommended for harder navigation",
+            _ => "! Not recommended: slow to learn. For experiments.",
+        };
+        stack.AddChild(CreateLabel(help, 12, shape.HiddenLayers == 3 ? _tokens.Halo : _tokens.Muted, expand: true));
+        return stack;
+    }
+
+    private Control CreateLayerButton(int layers, string caption, bool active)
+    {
+        var shape = Presentation?.BrainShape ?? BrainShapeDef.Default;
+        var button = new Button
+        {
+            Text = $"{layers}\n{caption}".ToUpperInvariant(),
+            CustomMinimumSize = new Vector2(82, 42),
+        };
+        _tokens.ApplyTextStyle(button, _tokens.CaptionText);
+        button.AddThemeColorOverride("font_color", active ? _tokens.OnAccent : _tokens.Ink);
+        button.AddThemeStyleboxOverride("normal", _tokens.ControlStyle(active ? _tokens.Accent : _tokens.PanelRaised, active ? _tokens.Accent : _tokens.Edge));
+        button.AddThemeStyleboxOverride("hover", _tokens.ControlStyle(_tokens.AccentSoft, _tokens.Accent));
+        button.Pressed += () => EmitBrainShape(layers, shape.NeuronsPerLayer);
+        return button;
+    }
+
+    private Control CreateNeuronControl()
+    {
+        var shape = Presentation?.BrainShape ?? BrainShapeDef.Default;
+        var buildPanel = Presentation?.BuildPanel ?? ConstructionBuildPanelPresentation.Sample;
+        var stack = new VBoxContainer();
+        stack.AddThemeConstantOverride("separation", (int)_tokens.Space1);
+        stack.AddChild(CreateLabel($"Neurons per layer · tick = default {RecommendedNeurons(buildPanel)}", 12, _tokens.Muted));
+        stack.AddChild(CreateLabel(shape.HiddenLayers == 1 ? "Layer 1 shares this value" : $"Layers 1-{shape.HiddenLayers} share this value", 10, _tokens.Muted));
+
+        var row = new HBoxContainer();
+        row.AddThemeConstantOverride("separation", (int)_tokens.Space1);
+        stack.AddChild(row);
+        row.AddChild(CreateStepper("-", -1));
+        var slider = new UiTokenSlider
+        {
+            Tokens = _tokens,
+            LabelText = "Hidden",
+            MinValue = BrainShapeDef.MinimumNeuronsPerLayer,
+            MaxValue = BrainShapeDef.MaximumNeuronsPerLayer,
+            Value = shape.NeuronsPerLayer,
+            SizeFlagsHorizontal = SizeFlags.ExpandFill,
+        };
+        slider.ValueChanged += value => EmitBrainShape(shape.HiddenLayers, (int)value);
+        slider.ExactValueRequested += _ =>
+        {
+            _pendingExactNeurons = shape.NeuronsPerLayer;
+            _exactNeuronEntryOpen = true;
+            RebuildLayout();
+        };
+        row.AddChild(slider);
+        row.AddChild(CreateStepper("+", 1));
+        return stack;
+    }
+
+    private Control CreateExactNeuronEntry()
+    {
+        var shape = Presentation?.BrainShape ?? BrainShapeDef.Default;
+        var panel = CreatePanel(raised: true);
+        panel.Position = new Vector2(190, 132);
+        panel.CustomMinimumSize = new Vector2(260, 128);
+
+        var margin = CreateMargin((int)_tokens.Space3);
+        panel.AddChild(margin);
+        var stack = new VBoxContainer();
+        stack.AddThemeConstantOverride("separation", (int)_tokens.Space2);
+        margin.AddChild(stack);
+        stack.AddChild(CreateLabel("Exact neurons per layer", 14, _tokens.Ink));
+        var spin = new SpinBox
+        {
+            MinValue = BrainShapeDef.MinimumNeuronsPerLayer,
+            MaxValue = BrainShapeDef.MaximumNeuronsPerLayer,
+            Value = shape.NeuronsPerLayer,
+            Step = 1,
+            CustomMinimumSize = new Vector2(0, _tokens.TouchTarget),
+        };
+        spin.ValueChanged += value => _pendingExactNeurons = (int)value;
+        stack.AddChild(spin);
+        var actions = new HBoxContainer();
+        actions.AddThemeConstantOverride("separation", (int)_tokens.Space2);
+        stack.AddChild(actions);
+        var apply = CreateButton("Apply", UiActionButton.ActionKind.Primary, "Apply exact value");
+        apply.Pressed += () =>
+        {
+            _exactNeuronEntryOpen = false;
+            EmitBrainShape(shape.HiddenLayers, _pendingExactNeurons);
+        };
+        actions.AddChild(apply);
+        var cancel = CreateButton("Cancel", UiActionButton.ActionKind.Secondary, "Close exact value entry");
+        cancel.Pressed += () =>
+        {
+            _exactNeuronEntryOpen = false;
+            RebuildLayout();
+        };
+        actions.AddChild(cancel);
+        return panel;
+    }
+
+    private Button CreateStepper(string label, int delta)
+    {
+        var shape = Presentation?.BrainShape ?? BrainShapeDef.Default;
+        var button = new Button
+        {
+            Text = label,
+            CustomMinimumSize = new Vector2(32, 32),
+        };
+        _tokens.ApplyTextStyle(button, _tokens.LabelText);
+        button.AddThemeColorOverride("font_color", _tokens.Accent);
+        button.AddThemeStyleboxOverride("normal", _tokens.ControlStyle(_tokens.PanelRaised, _tokens.Edge, radius: (int)_tokens.RadiusSmall));
+        button.Pressed += () => EmitBrainShape(
+            shape.HiddenLayers,
+            Mathf.Clamp(shape.NeuronsPerLayer + delta, BrainShapeDef.MinimumNeuronsPerLayer, BrainShapeDef.MaximumNeuronsPerLayer));
+        return button;
+    }
+
+    private Control CreateBrainPreviewPanel()
+    {
+        var panel = CreatePanel(raised: false);
+        panel.CustomMinimumSize = new Vector2(170, 176);
+        var margin = CreateMargin((int)_tokens.Space2);
+        panel.AddChild(margin);
+        var stack = new VBoxContainer();
+        stack.AddThemeConstantOverride("separation", (int)_tokens.Space2);
+        margin.AddChild(stack);
+        stack.AddChild(CreateLabel("Live preview", 14, _tokens.Ink));
+        stack.AddChild(CreateBrainSetupPreview());
+        var connections = ConnectionCount();
+        stack.AddChild(CreateLabel($"{connections:0} connections", 14, _tokens.Accent));
+        return panel;
+    }
+
+    private Control CreateBrainSetupPreview()
+    {
+        var preview = new Control
+        {
+            CustomMinimumSize = new Vector2(0, 96),
+            SizeFlagsHorizontal = SizeFlags.ExpandFill,
+        };
+        preview.Draw += () => DrawBrainSetupPreview(preview);
+        return preview;
+    }
+
+    private void DrawBrainSetupPreview(Control control)
+    {
+        var buildPanel = Presentation?.BuildPanel ?? ConstructionBuildPanelPresentation.Sample;
+        var shape = Presentation?.BrainShape ?? BrainShapeDef.Default;
+        if (buildPanel.InputCount <= 0 || buildPanel.OutputCount <= 0)
+        {
+            control.DrawString(
+                ThemeDB.FallbackFont,
+                new Vector2(12, control.Size.Y / 2),
+                "Add anatomy to preview brain",
+                HorizontalAlignment.Left,
+                control.Size.X - 24,
+                10,
+                _tokens.Muted);
+            return;
+        }
+
+        var layers = new[] { buildPanel.InputCount }.Concat(Enumerable.Repeat(shape.NeuronsPerLayer, shape.HiddenLayers)).Concat([buildPanel.OutputCount]).ToArray();
+        var spacingX = control.Size.X / (layers.Length + 1);
+        var font = ThemeDB.FallbackFont;
+        var nodeColumns = new List<List<Vector2>>();
+        for (var layer = 0; layer < layers.Length; layer++)
+        {
+            var count = layers[layer];
+            var shown = Math.Min(6, Math.Max(1, count));
+            var x = spacingX * (layer + 1);
+            var column = new List<Vector2>();
+            var header = layer == 0
+                ? "Senses"
+                : layer == layers.Length - 1
+                    ? "Motors"
+                    : $"H{layer}";
+            control.DrawString(font, new Vector2(x - 24, 10), header, HorizontalAlignment.Center, 48, 8, _tokens.Muted);
+            for (var i = 0; i < shown; i++)
+            {
+                var y = 14 + ((control.Size.Y - 34) / (shown + 1) * (i + 1));
+                var point = new Vector2(x, y);
+                column.Add(point);
+                var color = layer == 0 || layer == layers.Length - 1 ? _tokens.Accent : _tokens.LineStrong;
+                control.DrawArc(point, 4, 0, Mathf.Tau, 18, color, 1.5f, antialiased: true);
+            }
+
+            var label = count > 6 ? $"+{count - 6} more" : $"{count}";
+            control.DrawString(font, new Vector2(x - 22, control.Size.Y - 3), label, HorizontalAlignment.Center, 44, 10, _tokens.Muted);
+            nodeColumns.Add(column);
+        }
+
+        for (var layer = 0; layer < nodeColumns.Count - 1; layer++)
+        {
+            foreach (var from in nodeColumns[layer])
+            {
+                foreach (var to in nodeColumns[layer + 1])
+                {
+                    control.DrawLine(from, to, new Color(_tokens.Edge, 0.35f), 0.5f, antialiased: true);
+                }
+            }
+        }
+    }
+
+    private void EmitBrainShape(int hiddenLayers, int neuronsPerLayer)
+    {
+        EmitSignal(SignalName.BrainShapeChanged, hiddenLayers, neuronsPerLayer);
+    }
+
+    private int RecommendedNeurons(ConstructionBuildPanelPresentation buildPanel) =>
+        Mathf.Clamp((int)Math.Ceiling((buildPanel.InputCount + buildPanel.OutputCount) / 2.0), BrainShapeDef.MinimumNeuronsPerLayer, BrainShapeDef.MaximumNeuronsPerLayer);
+
+    private int ConnectionCount()
+    {
+        var buildPanel = Presentation?.BuildPanel ?? ConstructionBuildPanelPresentation.Sample;
+        var shape = Presentation?.BrainShape ?? BrainShapeDef.Default;
+        var layers = new[] { buildPanel.InputCount }.Concat(Enumerable.Repeat(shape.NeuronsPerLayer, shape.HiddenLayers)).Concat([buildPanel.OutputCount]).ToArray();
+        var total = 0;
+        for (var i = 0; i < layers.Length - 1; i++)
+        {
+            total += layers[i] * layers[i + 1];
+        }
+
+        return total;
     }
 
     private Control CreatePartButton(string label, string countText, bool locked, ConstructionTool? tool)

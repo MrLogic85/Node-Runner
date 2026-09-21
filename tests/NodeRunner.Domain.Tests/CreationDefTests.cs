@@ -18,6 +18,7 @@ public sealed class CreationDefTests
         roundTripped.Creature.Nodes.ToArray().ShouldBe(original.Creature.Nodes.ToArray());
         roundTripped.Creature.Beams.ToArray().ShouldBe(original.Creature.Beams.ToArray());
         roundTripped.Creature.Cores.ToArray().ShouldBe(original.Creature.Cores.ToArray());
+        roundTripped.BrainShape.ShouldBe(original.BrainShape);
         roundTripped.Training.ShouldNotBeNull();
         roundTripped.Training.LayerSizes.ShouldBe(original.Training!.LayerSizes);
         roundTripped.Training.BestGenome.ShouldBe(original.Training.BestGenome);
@@ -33,12 +34,26 @@ public sealed class CreationDefTests
         action.ShouldThrow<ArgumentException>();
     }
 
+    [Fact]
+    public void Constructor_WhenBrainShapeIsMissing_UsesTrainingLayerShapeForLegacySaves()
+    {
+        var creation = new CreationDef(
+            Guid.NewGuid(),
+            "Legacy worm",
+            CreateCreature(),
+            brainShape: null,
+            new TrainingStateDef([8, 8, 1], Enumerable.Repeat(0.1, 81).ToArray(), 12, "Tanh"));
+
+        creation.BrainShape.ShouldBe(new BrainShapeDef(1, 8));
+    }
+
     private static CreationDef CreateCreation()
     {
         return new CreationDef(
             Guid.NewGuid(),
             "Worm",
             CreateCreature(),
+            new BrainShapeDef(2, 5),
             new TrainingStateDef([2, 3, 1], [0.1, -0.2, 0.3], 7, "Tanh"));
     }
 

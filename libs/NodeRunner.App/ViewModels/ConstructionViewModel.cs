@@ -32,17 +32,21 @@ public sealed class ConstructionViewModel : INotifyPropertyChanged
     private bool _moveOnly;
     private int _maxCores = 1;
     private readonly HashSet<int> _selectedNodeIndices = [];
+    private BrainShapeDef _brainShape = BrainShapeDef.Default;
+    private bool _hasCustomBrainShape;
 
     public ConstructionViewModel(CreatureBuilder? builder = null)
     {
         _builder = builder ?? new CreatureBuilder();
     }
 
-    public void Load(CreatureDef creature, bool moveOnly = false)
+    public void Load(CreatureDef creature, bool moveOnly = false, BrainShapeDef? brainShape = null)
     {
         ArgumentNullException.ThrowIfNull(creature);
         _builder = new CreatureBuilder(creature);
         _selectedNodeIndices.Clear();
+        _brainShape = brainShape ?? BrainShapeDef.Default;
+        _hasCustomBrainShape = brainShape is not null;
         _moveOnly = moveOnly;
         if (moveOnly)
         {
@@ -58,6 +62,8 @@ public sealed class ConstructionViewModel : INotifyPropertyChanged
     {
         _builder = new CreatureBuilder();
         _selectedNodeIndices.Clear();
+        _brainShape = BrainShapeDef.Default;
+        _hasCustomBrainShape = false;
         _moveOnly = false;
         ActiveTool = ConstructionTool.Place;
         PendingBeamStartNode = null;
@@ -145,6 +151,24 @@ public sealed class ConstructionViewModel : INotifyPropertyChanged
     public IReadOnlyCollection<int> SelectedNodeIndices => _selectedNodeIndices;
 
     public int MaxCores => _maxCores;
+
+    public BrainShapeDef BrainShape => _brainShape;
+
+    public bool HasCustomBrainShape => _hasCustomBrainShape;
+
+    public void SetBrainShape(BrainShapeDef brainShape)
+    {
+        ArgumentNullException.ThrowIfNull(brainShape);
+        if (_brainShape == brainShape)
+        {
+            return;
+        }
+
+        _brainShape = brainShape;
+        _hasCustomBrainShape = true;
+        OnPropertyChanged(nameof(BrainShape));
+        OnPropertyChanged(nameof(HasCustomBrainShape));
+    }
 
     public void SetMaxCores(int maxCores)
     {

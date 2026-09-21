@@ -57,6 +57,12 @@ public sealed class ConstructionPresentationViewModel
 
     public int MaxCores => _construction.MaxCores;
 
+    public BrainShapeDef BrainShape => _construction.HasCustomBrainShape
+        ? _construction.BrainShape
+        : new BrainShapeDef(BrainShapeDef.DefaultHiddenLayers, RecommendedNeurons(BuildPanel));
+
+    public bool IsBrainShapeLocked => _construction.IsMoveOnly;
+
     public string MoveOnlyLockReason => "Move only · training kept";
 
     public string LockedTopologyToolsText => $"Beam, Core, Delete locked: {MoveOnlyLockReason}";
@@ -178,6 +184,12 @@ public sealed class ConstructionPresentationViewModel
     {
         return (coreCount * _coreSensorValueCount) + (motorRelationCount * _motorRelationSensorValueCount);
     }
+
+    private static int RecommendedNeurons(ConstructionBuildPanelPresentation buildPanel) =>
+        Math.Clamp(
+            (int)Math.Ceiling((buildPanel.InputCount + buildPanel.OutputCount) / 2.0),
+            BrainShapeDef.MinimumNeuronsPerLayer,
+            BrainShapeDef.MaximumNeuronsPerLayer);
 
     private static string BuildInvalidDraftInputSummary(int coreCount)
     {
