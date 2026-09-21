@@ -127,9 +127,9 @@ public partial class UiSegmentedSwitch : HBoxContainer
             CornerRadiusTopRight = (int)_tokens.RadiusMedium,
             CornerRadiusBottomLeft = (int)_tokens.RadiusMedium,
             CornerRadiusBottomRight = (int)_tokens.RadiusMedium,
-            ContentMarginLeft = UiSpacing.ControlHorizontalPadding(_tokens),
+            ContentMarginLeft = UiSpacing.SegmentedControlHorizontalPadding(_tokens),
             ContentMarginTop = UiSpacing.ControlVerticalPadding(_tokens),
-            ContentMarginRight = UiSpacing.ControlHorizontalPadding(_tokens),
+            ContentMarginRight = UiSpacing.SegmentedControlHorizontalPadding(_tokens),
             ContentMarginBottom = UiSpacing.ControlVerticalPadding(_tokens),
         };
     }

@@ -10,9 +10,12 @@ public sealed class UiTokens
 {
     private const string _barlowRegularPath = "res://assets/fonts/Barlow/Barlow-Regular.ttf";
     private const string _barlowMediumPath = "res://assets/fonts/Barlow/Barlow-Medium.ttf";
+    private const string _barlowSemiBoldPath = "res://assets/fonts/Barlow/Barlow-SemiBold.ttf";
     private const string _chakraPetchSemiBoldPath = "res://assets/fonts/ChakraPetch/ChakraPetch-SemiBold.ttf";
+    private const string _chakraPetchBoldPath = "res://assets/fonts/ChakraPetch/ChakraPetch-Bold.ttf";
     private const string _jetBrainsMonoRegularPath = "res://assets/fonts/JetBrainsMono/JetBrainsMono-Regular.ttf";
     private const string _jetBrainsMonoMediumPath = "res://assets/fonts/JetBrainsMono/JetBrainsMono-Medium.ttf";
+    private const string _jetBrainsMonoSemiBoldPath = "res://assets/fonts/JetBrainsMono/JetBrainsMono-SemiBold.ttf";
 
     public enum FontFamily
     {
@@ -31,6 +34,7 @@ public sealed class UiTokens
 
     public const float LogicalCanvasWidth = 640;
     public const float LogicalCanvasHeight = 360;
+    public const int FocusRingStroke = 3;
 
     public Color Background { get; init; }
     public Color Panel { get; init; }
@@ -46,15 +50,43 @@ public sealed class UiTokens
     public Color Halo { get; init; }
     public Color OnAccent { get; init; }
     public Color Danger { get; init; }
+    public Color Scrim { get; init; }
+    public Color Output { get; init; }
     public float GlowRadius { get; init; } = 16;
     public float Space1 { get; init; } = 4;
     public float Space2 { get; init; } = 8;
     public float Space3 { get; init; } = 12;
     public float Space4 { get; init; } = 16;
+    public float Space5 { get; init; } = 24;
+    public float ControlExtraSmall { get; init; } = 24;
+    public float ControlSmall { get; init; } = 32;
+    public float ControlHeight { get; init; } = 40;
     public float TouchTarget { get; init; } = 48;
+    public float IconSmall { get; init; } = 12;
+    public float Icon { get; init; } = 16;
+    public float IconLarge { get; init; } = 20;
+    public float IconExtraLarge { get; init; } = 24;
+    public float RailWidth { get; init; } = 56;
+    public float SidePanelWidth { get; init; } = 176;
+    public float MenuWidth { get; init; } = 200;
+    public float DialogWidth { get; init; } = 300;
+    public float BrainWidth { get; init; } = 460;
+    public float CardWidth { get; init; } = 326;
+    public float TileWidth { get; init; } = 156;
+    public float WellWidth { get; init; } = 250;
+    public float SheetWidth { get; init; } = 720;
+    public float SheetWideWidth { get; init; } = 880;
+    public float ScreenBodyHeight { get; init; } = 312;
+    public float StageHeight { get; init; } = 170;
+    public float ThumbnailHeight { get; init; } = 100;
+    public float ColumnExtraSmallWidth { get; init; } = 40;
+    public float ColumnSmallWidth { get; init; } = 52;
+    public float ColumnMediumWidth { get; init; } = 76;
+    public float ColumnLargeWidth { get; init; } = 96;
+    public float ColumnExtraLargeWidth { get; init; } = 128;
     public float RadiusSmall { get; init; } = 4;
     public float RadiusMedium { get; init; } = 8;
-    public float RadiusLarge { get; init; } = 14;
+    public float RadiusLarge { get; init; } = 12;
     public float RadiusPill { get; init; } = 999;
     public float StrokeHair { get; init; } = 1;
     public float StrokeSignal { get; init; } = 2;
@@ -68,15 +100,23 @@ public sealed class UiTokens
     public float ReadoutLargeFontSize { get; init; } = 22;
     public float ReadoutFontSize { get; init; } = 13;
     public float ReadoutSmallFontSize { get; init; } = 10;
-    public TextStyle TitleText { get; init; } = new(FontFamily.Display, 28, 32, 600);
+    public TextStyle TitleText { get; init; } = new(FontFamily.Display, 28, 32, 700);
     public TextStyle HeadingText { get; init; } = new(FontFamily.Display, 16, 20, 600);
+    public TextStyle SubheadingText { get; init; } = new(FontFamily.Display, 14, 18, 600);
     public TextStyle StageText { get; init; } = new(FontFamily.Display, 11, 14, 600, 0.06f, true);
     public TextStyle BodyText { get; init; } = new(FontFamily.Body, 13, 18, 400);
-    public TextStyle LabelText { get; init; } = new(FontFamily.Body, 12, 16, 500, 0.04f, true);
+    public TextStyle BodyStrongText { get; init; } = new(FontFamily.Body, 13, 18, 600);
+    public TextStyle SmallText { get; init; } = new(FontFamily.Body, 12, 16, 400);
+    public TextStyle SmallStrongText { get; init; } = new(FontFamily.Body, 12, 16, 600);
+    public TextStyle LabelText { get; init; } = new(FontFamily.Body, 12, 16, 600, 0.04f, true);
+    public TextStyle NoteText { get; init; } = new(FontFamily.Body, 11, 14, 400);
+    public TextStyle NoteStrongText { get; init; } = new(FontFamily.Body, 11, 14, 600);
     public TextStyle CaptionText { get; init; } = new(FontFamily.Body, 10, 13, 500);
-    public TextStyle ReadoutLargeText { get; init; } = new(FontFamily.Mono, 22, 24, 500);
+    public TextStyle OverlineText { get; init; } = new(FontFamily.Body, 10, 13, 600, 0.06f, true);
+    public TextStyle ReadoutLargeText { get; init; } = new(FontFamily.Mono, 22, 24, 600);
     public TextStyle ReadoutText { get; init; } = new(FontFamily.Mono, 13, 16, 500);
-    public TextStyle ReadoutSmallText { get; init; } = new(FontFamily.Mono, 10, 13, 400);
+    public TextStyle ReadoutMediumText { get; init; } = new(FontFamily.Mono, 12, 16, 500);
+    public TextStyle ReadoutSmallText { get; init; } = new(FontFamily.Mono, 10, 13, 500);
     public bool EffectsEnabled { get; init; } = true;
 
     public static UiTokens Neon { get; } = new()
@@ -95,6 +135,8 @@ public sealed class UiTokens
         Halo = Rgb(0xff, 0xb3, 0x47),
         OnAccent = Rgb(0x04, 0x12, 0x1a),
         Danger = Rgb(0xff, 0x6b, 0x87),
+        Scrim = Rgb(0x04, 0x08, 0x10, 0xbd),
+        Output = Rgb(0xff, 0xe1, 0x4d),
     };
 
     public static UiTokens Paper { get; } = new()
@@ -113,6 +155,8 @@ public sealed class UiTokens
         Halo = Rgb(0xb4, 0x5f, 0x00),
         OnAccent = Rgb(0xff, 0xff, 0xff),
         Danger = Rgb(0xb3, 0x26, 0x1e),
+        Scrim = Rgb(0x1b, 0x1a, 0x17, 0x73),
+        Output = Rgb(0x7a, 0x5c, 0x00),
         GlowRadius = 0,
         EffectsEnabled = false,
     };
@@ -133,12 +177,40 @@ public sealed class UiTokens
         Halo = Halo,
         OnAccent = OnAccent,
         Danger = Danger,
+        Scrim = Scrim,
+        Output = Output,
         GlowRadius = enabled ? GlowRadius : 0,
         Space1 = Space1,
         Space2 = Space2,
         Space3 = Space3,
         Space4 = Space4,
+        Space5 = Space5,
+        ControlExtraSmall = ControlExtraSmall,
+        ControlSmall = ControlSmall,
+        ControlHeight = ControlHeight,
         TouchTarget = TouchTarget,
+        IconSmall = IconSmall,
+        Icon = Icon,
+        IconLarge = IconLarge,
+        IconExtraLarge = IconExtraLarge,
+        RailWidth = RailWidth,
+        SidePanelWidth = SidePanelWidth,
+        MenuWidth = MenuWidth,
+        DialogWidth = DialogWidth,
+        BrainWidth = BrainWidth,
+        CardWidth = CardWidth,
+        TileWidth = TileWidth,
+        WellWidth = WellWidth,
+        SheetWidth = SheetWidth,
+        SheetWideWidth = SheetWideWidth,
+        ScreenBodyHeight = ScreenBodyHeight,
+        StageHeight = StageHeight,
+        ThumbnailHeight = ThumbnailHeight,
+        ColumnExtraSmallWidth = ColumnExtraSmallWidth,
+        ColumnSmallWidth = ColumnSmallWidth,
+        ColumnMediumWidth = ColumnMediumWidth,
+        ColumnLargeWidth = ColumnLargeWidth,
+        ColumnExtraLargeWidth = ColumnExtraLargeWidth,
         RadiusSmall = RadiusSmall,
         RadiusMedium = RadiusMedium,
         RadiusLarge = RadiusLarge,
@@ -157,12 +229,20 @@ public sealed class UiTokens
         ReadoutSmallFontSize = ReadoutSmallFontSize,
         TitleText = TitleText,
         HeadingText = HeadingText,
+        SubheadingText = SubheadingText,
         StageText = StageText,
         BodyText = BodyText,
+        BodyStrongText = BodyStrongText,
+        SmallText = SmallText,
+        SmallStrongText = SmallStrongText,
         LabelText = LabelText,
+        NoteText = NoteText,
+        NoteStrongText = NoteStrongText,
         CaptionText = CaptionText,
+        OverlineText = OverlineText,
         ReadoutLargeText = ReadoutLargeText,
         ReadoutText = ReadoutText,
+        ReadoutMediumText = ReadoutMediumText,
         ReadoutSmallText = ReadoutSmallText,
         EffectsEnabled = enabled,
     };
@@ -173,6 +253,15 @@ public sealed class UiTokens
         control.AddThemeConstantOverride("line_spacing", (int)Math.Max(0, style.LineHeight - style.FontSize));
         if (TryLoadFont(style, out var font))
         {
+            if (style.LetterSpacing > 0)
+            {
+                font = new FontVariation
+                {
+                    BaseFont = font,
+                    SpacingGlyph = Math.Max(1, (int)Math.Round(style.FontSize * style.LetterSpacing)),
+                };
+            }
+
             control.AddThemeFontOverride("font", font);
         }
 
@@ -207,12 +296,20 @@ public sealed class UiTokens
         return font is not null;
     }
 
-    private static string FontPathFor(TextStyle style) =>
+    public static string FontPathFor(TextStyle style) =>
         style.Family switch
         {
-            FontFamily.Display => _chakraPetchSemiBoldPath,
-            FontFamily.Mono => style.FontWeight >= 500 ? _jetBrainsMonoMediumPath : _jetBrainsMonoRegularPath,
-            _ => style.FontWeight >= 500 ? _barlowMediumPath : _barlowRegularPath,
+            FontFamily.Display => style.FontWeight >= 700 ? _chakraPetchBoldPath : _chakraPetchSemiBoldPath,
+            FontFamily.Mono => style.FontWeight >= 600
+                ? _jetBrainsMonoSemiBoldPath
+                : style.FontWeight >= 500
+                    ? _jetBrainsMonoMediumPath
+                    : _jetBrainsMonoRegularPath,
+            _ => style.FontWeight >= 600
+                ? _barlowSemiBoldPath
+                : style.FontWeight >= 500
+                    ? _barlowMediumPath
+                    : _barlowRegularPath,
         };
 
     public StyleBoxFlat PanelStyle(
@@ -276,7 +373,7 @@ public sealed class UiTokens
         var style = ControlStyle(
             Colors.Transparent,
             Accent,
-            StrokeSignal,
+            FocusRingStroke,
             (radius ?? RadiusMedium) + gap);
         style.DrawCenter = false;
         style.ExpandMarginLeft = gap;

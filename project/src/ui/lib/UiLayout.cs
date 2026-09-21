@@ -11,9 +11,7 @@ public static class UiLayout
     public const float CanvasHeight = UiTokens.LogicalCanvasHeight;
     public const float TopBarHeight = 48;
     public const float LeftRailWidth = 56;
-    public const float RightPanelWidth = 172;
-    public const float RightPanelMinWidth = 168;
-    public const float RightPanelMaxWidth = 176;
+    public const float RightPanelWidth = 176;
     public const float BottomStripHeight = 52;
 
     public static Vector2 CanvasSize { get; } = new(CanvasWidth, CanvasHeight);

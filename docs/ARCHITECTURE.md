@@ -99,14 +99,17 @@ Node Runner/
 │           ├── lib/                # reusable Controls
 │           ├── screens/            # full-screen scenes
 │           └── widgets/            # app-specific composite widgets
-└── tests/                          # xUnit — pure C# only
+└── tests/                          # xUnit — libs plus static UI contracts
     ├── NodeRunner.Domain.Tests/
     ├── NodeRunner.ML.Tests/
     ├── NodeRunner.App.Tests/
-    └── NodeRunner.Arch.Tests/      # NetArchTest layer rules
+    ├── NodeRunner.Arch.Tests/      # NetArchTest layer rules
+    └── NodeRunner.Ui.Tests/        # static Godot UI contracts; no scene tree
 ```
 
-Godot-side tests (Node behaviour, physics, UI) will land later in
+Static UI token/style contracts run in xUnit by referencing the Godot project
+without constructing Nodes. Godot-side behavioral tests (Node lifecycle,
+physics, input, rendered layout) will land later in
 `project/tests/` using GdUnit4 — a separate framework with its own lifecycle,
 kept out of the pure-C# solution.
 
