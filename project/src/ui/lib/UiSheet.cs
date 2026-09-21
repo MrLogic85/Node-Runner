@@ -63,7 +63,9 @@ public partial class UiSheet : PanelContainer
             return;
         }
 
-        AddThemeStyleboxOverride("panel", _tokens.PanelStyle(raised: true, borderColor: _tokens.LineStrong));
+        var style = _tokens.FrameStyle(UiSurfaceContracts.FrameVariant.Dialog);
+        style.BorderColor = _tokens.LineStrong;
+        AddThemeStyleboxOverride("panel", style);
         RefreshTitle();
     }
 

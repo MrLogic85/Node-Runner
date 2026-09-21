@@ -67,7 +67,7 @@ public partial class UiTopBar : UiPanel
 
     public override void _Ready()
     {
-        Raised = false;
+        Variant = UiSurfaceContracts.FrameVariant.Frame;
         CustomMinimumSize = new Vector2(0, UiLayout.TopBarHeight);
 
         var row = new HBoxContainer();
@@ -77,7 +77,7 @@ public partial class UiTopBar : UiPanel
         _backButton = new UiIconButton
         {
             Tokens = _tokens,
-            IconText = UiIconGlyphs.Back,
+            IconId = UiIconId.Back,
             AccessibleLabel = "Back",
         };
         _backButton.Pressed += () => EmitSignal(SignalName.BackPressed);
@@ -97,7 +97,7 @@ public partial class UiTopBar : UiPanel
         _overflowButton = new UiIconButton
         {
             Tokens = _tokens,
-            IconText = UiIconGlyphs.More,
+            IconId = UiIconId.More,
             AccessibleLabel = "More",
         };
         _overflowButton.Pressed += () => EmitSignal(SignalName.OverflowPressed);

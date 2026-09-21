@@ -76,7 +76,32 @@ public partial class UiActionButton : Button
         }
     }
 
+    private bool _showFocusRing;
+
+    [Export]
+    public bool ShowFocusRing
+    {
+        get => _showFocusRing;
+        set
+        {
+            _showFocusRing = value;
+            RefreshStyle();
+        }
+    }
+
     private UiTokens _tokens = UiTokens.Neon;
+    private UiIconId? _iconId;
+
+    /// <summary>Optional canonical SVG displayed before the action label.</summary>
+    public UiIconId? IconId
+    {
+        get => _iconId;
+        set
+        {
+            _iconId = value;
+            RefreshStyle();
+        }
+    }
 
     public UiTokens Tokens
     {
@@ -108,11 +133,20 @@ public partial class UiActionButton : Button
         AddThemeColorOverride("font_hover_color", textColor);
         AddThemeColorOverride("font_pressed_color", textColor);
         AddThemeColorOverride("font_disabled_color", Tokens.Muted);
+        if (IconId is { } icon)
+        {
+            UiIcons.Apply(this, icon, UiIconSize.Standard, textColor);
+        }
+        else
+        {
+            Icon = null;
+        }
+
         if (!string.IsNullOrWhiteSpace(LabelText))
         {
             Text = DisplayText();
         }
-        AddThemeStyleboxOverride("normal", CreateStyle(false));
+        AddThemeStyleboxOverride("normal", ShowFocusRing ? CreateFocusPreviewStyle() : CreateStyle(false));
         AddThemeStyleboxOverride("focus", Tokens.FocusRingStyle());
         AddThemeStyleboxOverride("hover", CreateStyle(true));
         AddThemeStyleboxOverride("pressed", CreateStyle(true));
@@ -147,5 +181,22 @@ public partial class UiActionButton : Button
             glow: Kind == ActionKind.Primary && opacityMultiplier > 0.99f,
             horizontalPadding: UiSpacing.ControlHorizontalPadding(Tokens),
             verticalPadding: UiSpacing.ControlVerticalPadding(Tokens));
+    }
+
+    private StyleBoxFlat CreateFocusPreviewStyle()
+    {
+        var gap = UiSpacing.FocusRingGap(Tokens);
+        var style = Tokens.ControlStyle(
+            Tokens.PanelRaised,
+            Tokens.Accent,
+            UiTokens.FocusRingStroke,
+            Tokens.RadiusMedium + gap,
+            horizontalPadding: UiSpacing.ControlHorizontalPadding(Tokens),
+            verticalPadding: UiSpacing.ControlVerticalPadding(Tokens));
+        style.ExpandMarginLeft = gap;
+        style.ExpandMarginTop = gap;
+        style.ExpandMarginRight = gap;
+        style.ExpandMarginBottom = gap;
+        return style;
     }
 }

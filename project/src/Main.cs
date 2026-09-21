@@ -49,6 +49,9 @@ public partial class Main : Node2D
     private CanvasLayer? _componentGalleryLayer;
     private Control? _componentGalleryHost;
     private ComponentGalleryScreen? _componentGalleryScreen;
+    private CanvasLayer? _colorsAndStylesLayer;
+    private Control? _colorsAndStylesHost;
+    private ColorsAndStylesScreen? _colorsAndStylesScreen;
     private ConfirmationDialog? _deleteCreationConfirmationDialog;
     private UiToast? _deleteCreationToast;
     private CreationDef? _lastDeletedCreation;
@@ -896,6 +899,7 @@ public partial class Main : Node2D
         _creationsScreen.NewRequested += StartNewCreationFromHome;
         _creationsScreen.AchievementsRequested += ShowAchievementsCueFromHome;
         _creationsScreen.RestoreExampleRequested += RestoreExampleFromHome;
+        _creationsScreen.ColorsAndStylesRequested += OpenColorsAndStylesFromHome;
         _creationsScreen.ComponentLibraryRequested += OpenComponentLibraryFromHome;
         _creationsScreen.OpenRequested += OpenCreationFromScreen;
         _creationsScreen.EditRequested += EditCreationFromScreen;
@@ -968,6 +972,52 @@ public partial class Main : Node2D
         _componentGalleryLayer = null;
         _componentGalleryHost = null;
         _componentGalleryScreen = null;
+    }
+
+    private void OpenColorsAndStylesFromHome()
+    {
+        if (_colorsAndStylesScreen is not null)
+        {
+            _colorsAndStylesHost?.Show();
+            _colorsAndStylesLayer?.Show();
+            return;
+        }
+
+        _colorsAndStylesLayer = new CanvasLayer
+        {
+            Name = "ColorsAndStylesOverlay",
+            Layer = 30,
+            ProcessMode = ProcessModeEnum.Always,
+        };
+        AddChild(_colorsAndStylesLayer);
+
+        _colorsAndStylesHost = new Control
+        {
+            Name = "ColorsAndStylesHost",
+            ProcessMode = ProcessModeEnum.Always,
+        };
+        _colorsAndStylesHost.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
+        _colorsAndStylesHost.MouseFilter = Control.MouseFilterEnum.Stop;
+        _colorsAndStylesLayer.AddChild(_colorsAndStylesHost);
+
+        _colorsAndStylesScreen = GD.Load<PackedScene>("res://scenes/ui/ColorsAndStylesScreen.tscn").Instantiate<ColorsAndStylesScreen>();
+        _colorsAndStylesScreen.ShowCloseAction = true;
+        _colorsAndStylesScreen.CloseRequested += CloseColorsAndStyles;
+        _colorsAndStylesScreen.ProcessMode = ProcessModeEnum.Always;
+        _colorsAndStylesHost.AddChild(_colorsAndStylesScreen);
+    }
+
+    private void CloseColorsAndStyles()
+    {
+        if (_colorsAndStylesScreen is null)
+        {
+            return;
+        }
+
+        _colorsAndStylesLayer?.QueueFree();
+        _colorsAndStylesLayer = null;
+        _colorsAndStylesHost = null;
+        _colorsAndStylesScreen = null;
     }
 
     private void AddDeleteCreationToast(CanvasLayer overlayLayer)

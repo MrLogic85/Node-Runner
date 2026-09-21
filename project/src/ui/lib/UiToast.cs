@@ -108,7 +108,9 @@ public partial class UiToast : PanelContainer
             return;
         }
 
-        AddThemeStyleboxOverride("panel", _tokens.PanelStyle(raised: true, borderColor: _tokens.LineStrong));
+        var style = _tokens.FrameStyle();
+        style.BorderColor = _tokens.LineStrong;
+        AddThemeStyleboxOverride("panel", style);
     }
 
     private void RefreshContentStyle()

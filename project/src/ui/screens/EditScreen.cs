@@ -94,7 +94,12 @@ public partial class EditScreen : Control
 
     private Control CreateCanvas()
     {
-        var panel = new UiPanel { Tokens = _tokens, Raised = true, SizeFlagsHorizontal = SizeFlags.ExpandFill };
+        var panel = new UiPanel
+        {
+            Tokens = _tokens,
+            Variant = UiSurfaceContracts.FrameVariant.Frame,
+            SizeFlagsHorizontal = SizeFlags.ExpandFill,
+        };
         var canvas = new Control { SizeFlagsHorizontal = SizeFlags.ExpandFill, SizeFlagsVertical = SizeFlags.ExpandFill };
         canvas.Draw += () =>
         {
@@ -132,7 +137,7 @@ public partial class EditScreen : Control
             {
                 Tokens = _tokens,
                 ToolLabel = tool,
-                IconText = "—",
+                IconId = UiIconId.Move,
                 Locked = true,
                 LockReason = "Move only · training kept",
             };

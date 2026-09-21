@@ -161,7 +161,7 @@ public partial class SampleFlowScreen : Control
         var menu = new UiIconButton
         {
             Tokens = _tokens,
-            IconText = "⋯",
+            IconId = UiIconId.More,
             AccessibleLabel = "Open sample menu",
         };
         menu.Pressed += ToggleOverflowMenu;

@@ -457,7 +457,7 @@ public partial class SimulateScreen : Control
         var settings = new UiIconButton
         {
             Tokens = _tokens,
-            IconText = "⋯",
+            IconId = UiIconId.More,
             AccessibleLabel = "Training settings",
         };
         settings.Pressed += () =>
@@ -500,8 +500,8 @@ public partial class SimulateScreen : Control
             CustomMinimumSize = new Vector2(0, _modeSwitchHeight),
         };
         frame.AddThemeConstantOverride("separation", 0);
-        frame.AddChild(CreateModeSegment("▶  Simulate", active: true, first: true, last: false));
-        frame.AddChild(CreateModeSegment("✎  Build", active: false, first: false, last: true));
+        frame.AddChild(CreateModeSegment("Simulate", active: true, first: true, last: false));
+        frame.AddChild(CreateModeSegment("Build", active: false, first: false, last: true));
         return frame;
     }
 
@@ -1212,7 +1212,9 @@ public partial class SimulateScreen : Control
         for (var cardIndex = 0; cardIndex < _signalCards.Count; cardIndex++)
         {
             var selected = cardIndex == index;
-            _signalCards[cardIndex].State = selected ? UiPanel.PanelState.Focused : UiPanel.PanelState.Normal;
+            _signalCards[cardIndex].Variant = selected
+                ? UiSurfaceContracts.FrameVariant.Pick
+                : UiSurfaceContracts.FrameVariant.Frame;
             _signalBodies[cardIndex].Visible = selected;
         }
 
@@ -1257,7 +1259,9 @@ public partial class SimulateScreen : Control
         return new UiPanel
         {
             Tokens = _tokens,
-            Raised = raised,
+            Variant = raised
+                ? UiSurfaceContracts.FrameVariant.Raised
+                : UiSurfaceContracts.FrameVariant.Frame,
         };
     }
 
