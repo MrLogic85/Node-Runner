@@ -36,6 +36,9 @@ public partial class CreationsScreen : Control
     public delegate void ComponentLibraryRequestedEventHandler();
 
     [Signal]
+    public delegate void ColorsAndStylesRequestedEventHandler();
+
+    [Signal]
     public delegate void DuplicateRequestedEventHandler(string creationKey, string creationName);
 
     [Signal]
@@ -208,7 +211,7 @@ public partial class CreationsScreen : Control
         var topBar = new UiPanel
         {
             Tokens = _tokens,
-            Raised = false,
+            Variant = UiSurfaceContracts.FrameVariant.Frame,
             CustomMinimumSize = new Vector2(0, UiLayout.TopBarHeight),
             SizeFlagsHorizontal = SizeFlags.ExpandFill,
         };
@@ -244,7 +247,7 @@ public partial class CreationsScreen : Control
         var overflowButton = new UiIconButton
         {
             Tokens = _tokens,
-            IconText = UiIconGlyphs.More,
+            IconId = UiIconId.More,
             AccessibleLabel = "More",
         };
         overflowButton.Pressed += ToggleOverflowMenu;
@@ -261,7 +264,7 @@ public partial class CreationsScreen : Control
         var trophy = new UiIconButton
         {
             Tokens = _tokens,
-            IconText = UiIconGlyphs.Trophy,
+            IconId = UiIconId.Trophy,
             AccessibleLabel = "Achievements",
         };
         trophy.Pressed += () => EmitSignal(SignalName.AchievementsRequested);
@@ -297,6 +300,7 @@ public partial class CreationsScreen : Control
         };
         if (ShowComponentLibraryLink)
         {
+            actions.Add(("colors-and-styles", "Colors and styles", false));
             actions.Add(("component-library", "Component library", false));
         }
 
@@ -314,6 +318,10 @@ public partial class CreationsScreen : Control
             else if (id == "component-library")
             {
                 EmitSignal(SignalName.ComponentLibraryRequested);
+            }
+            else if (id == "colors-and-styles")
+            {
+                EmitSignal(SignalName.ColorsAndStylesRequested);
             }
         };
         menu.Visible = false;

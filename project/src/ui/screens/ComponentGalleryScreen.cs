@@ -10,7 +10,8 @@ namespace NodeRunner.Ui.Screens;
 /// </summary>
 public partial class ComponentGalleryScreen : Control
 {
-    private const float _touchScrollDeadzone = 8f;
+    private const string _sharedCardPanelSection =
+        "Panel and card · shared composition · c_card / c_panel";
 
     [Signal]
     public delegate void CloseRequestedEventHandler();
@@ -20,7 +21,6 @@ public partial class ComponentGalleryScreen : Control
 
     private readonly List<Action<UiTokens>> _tokenAppliers = new();
     private readonly List<Action<UiTokens>> _labelAppliers = new();
-    private readonly List<Action<UiTokens>> _colorAppliers = new();
     private UiTokens _tokens = UiTokens.Neon;
     private ColorRect? _background;
     private ScrollContainer? _scroll;
@@ -28,12 +28,49 @@ public partial class ComponentGalleryScreen : Control
     private Vector2 _pendingTouchDrag;
     private bool _isTouchScrolling;
 
+    public readonly record struct GalleryComponentSpec(
+        UiComponentContracts.CanonicalComponent Component,
+        string EntryName,
+        string Section,
+        bool SharedComposition = false);
+
+    public static IReadOnlyList<GalleryComponentSpec> CanonicalInventory { get; } =
+    [
+        new(UiComponentContracts.CanonicalComponent.CBtn, "c_btn", "Actions · c_btn / c_ib / c_hold / c_step"),
+        new(UiComponentContracts.CanonicalComponent.CIb, "c_ib", "Actions · c_btn / c_ib / c_hold / c_step"),
+        new(UiComponentContracts.CanonicalComponent.CHold, "c_hold", "Actions · c_btn / c_ib / c_hold / c_step"),
+        new(UiComponentContracts.CanonicalComponent.CStep, "c_step", "Actions · c_btn / c_ib / c_hold / c_step"),
+        new(UiComponentContracts.CanonicalComponent.CSlider, "c_slider", "Numeric inputs · c_slider / c_range / c_chip"),
+        new(UiComponentContracts.CanonicalComponent.CRange, "c_range", "Numeric inputs · c_slider / c_range / c_chip"),
+        new(UiComponentContracts.CanonicalComponent.CToggle, "c_toggle", "Choices and tray rows · c_toggle / c_check / c_pick / c_row / c_tabs"),
+        new(UiComponentContracts.CanonicalComponent.CCheck, "c_check", "Choices and tray rows · c_toggle / c_check / c_pick / c_row / c_tabs"),
+        new(UiComponentContracts.CanonicalComponent.CSeg, "c_seg", "Tool buttons and mode switch · c_seg"),
+        new(UiComponentContracts.CanonicalComponent.CPick, "c_pick", "Choices and tray rows · c_toggle / c_check / c_pick / c_row / c_tabs"),
+        new(UiComponentContracts.CanonicalComponent.CMenu, "c_menu", "Overflow menu · c_menu"),
+        new(UiComponentContracts.CanonicalComponent.CChip, "c_chip", "Numeric inputs · c_slider / c_range / c_chip"),
+        new(UiComponentContracts.CanonicalComponent.CProg, "c_prog", "Progress · c_prog / c_ring"),
+        new(UiComponentContracts.CanonicalComponent.CTextfield, "c_textfield", "Text and values · c_textfield / c_name / c_value / c_readonly / c_power / c_meter / c_panel_head / c_info_row"),
+        new(UiComponentContracts.CanonicalComponent.CName, "c_name", "Text and values · c_textfield / c_name / c_value / c_readonly / c_power / c_meter / c_panel_head / c_info_row"),
+        new(UiComponentContracts.CanonicalComponent.CValue, "c_value", "Text and values · c_textfield / c_name / c_value / c_readonly / c_power / c_meter / c_panel_head / c_info_row"),
+        new(UiComponentContracts.CanonicalComponent.CReadonly, "c_readonly", "Text and values · c_textfield / c_name / c_value / c_readonly / c_power / c_meter / c_panel_head / c_info_row"),
+        new(UiComponentContracts.CanonicalComponent.CPower, "c_power", "Text and values · c_textfield / c_name / c_value / c_readonly / c_power / c_meter / c_panel_head / c_info_row"),
+        new(UiComponentContracts.CanonicalComponent.CMeter, "c_meter", "Text and values · c_textfield / c_name / c_value / c_readonly / c_power / c_meter / c_panel_head / c_info_row"),
+        new(UiComponentContracts.CanonicalComponent.CRow, "c_row", "Choices and tray rows · c_toggle / c_check / c_pick / c_row / c_tabs"),
+        new(UiComponentContracts.CanonicalComponent.CTabs, "c_tabs", "Choices and tray rows · c_toggle / c_check / c_pick / c_row / c_tabs"),
+        new(UiComponentContracts.CanonicalComponent.CPanelHead, "c_panel_head", "Text and values · c_textfield / c_name / c_value / c_readonly / c_power / c_meter / c_panel_head / c_info_row"),
+        new(UiComponentContracts.CanonicalComponent.CInfoRow, "c_info_row", "Text and values · c_textfield / c_name / c_value / c_readonly / c_power / c_meter / c_panel_head / c_info_row"),
+        new(UiComponentContracts.CanonicalComponent.CCard, "c_card", _sharedCardPanelSection, SharedComposition: true),
+        new(UiComponentContracts.CanonicalComponent.CPanel, "c_panel", _sharedCardPanelSection, SharedComposition: true),
+        new(UiComponentContracts.CanonicalComponent.CRing, "c_ring", "Progress · c_prog / c_ring"),
+    ];
+
     public override void _Ready()
     {
         Name = nameof(ComponentGalleryScreen);
         UiLayout.ApplyScreen(this);
         BuildLayout();
         ApplyTokens(_tokens);
+        Callable.From(ResetScrollPosition).CallDeferred();
     }
 
     public override void _Input(InputEvent inputEvent)
@@ -57,7 +94,7 @@ public partial class ComponentGalleryScreen : Control
         _pendingTouchDrag += drag.Relative;
         if (!_isTouchScrolling)
         {
-            if (_pendingTouchDrag.Length() < _touchScrollDeadzone)
+            if (_pendingTouchDrag.Length() < UiGalleryScroll.TouchDeadzone)
             {
                 return;
             }
@@ -71,9 +108,19 @@ public partial class ComponentGalleryScreen : Control
             _isTouchScrolling = true;
         }
 
-        _scroll.ScrollVertical -= Mathf.RoundToInt(_pendingTouchDrag.Y);
+        _scroll.ScrollVertical = UiGalleryScroll.ApplyVerticalDrag(
+            _scroll.ScrollVertical,
+            _pendingTouchDrag.Y);
         _pendingTouchDrag = Vector2.Zero;
         GetViewport().SetInputAsHandled();
+    }
+
+    private void ResetScrollPosition()
+    {
+        if (_scroll is not null)
+        {
+            _scroll.ScrollVertical = 0;
+        }
     }
 
     private void BuildLayout()
@@ -113,81 +160,14 @@ public partial class ComponentGalleryScreen : Control
         content.AddThemeConstantOverride("separation", (int)_tokens.Space2);
         _scroll.AddChild(content);
 
-        content.AddChild(CreateFoundationSection());
-        content.AddChild(CreateShellSection());
         content.AddChild(CreateActionsSection());
-        content.AddChild(CreateToolsSection());
-        content.AddChild(CreatePanelsAndReadoutsSection());
+        content.AddChild(CreateSegmentedSection());
+        content.AddChild(CreatePanelsSection());
         content.AddChild(CreateInputsSection());
+        content.AddChild(CreateChoiceAndRowsSection());
+        content.AddChild(CreateTextAndValueSection());
+        content.AddChild(CreateProgressAndStatusSection());
         content.AddChild(CreateOverlaysSection());
-    }
-
-    private Control CreateFoundationSection()
-    {
-        var content = new VBoxContainer();
-        content.AddThemeConstantOverride("separation", UiSpacing.SectionGap(_tokens));
-
-        var typography = new HBoxContainer();
-        typography.AddThemeConstantOverride("separation", UiSpacing.SectionGap(_tokens));
-        content.AddChild(typography);
-
-        var displayAndText = new VBoxContainer
-        {
-            SizeFlagsHorizontal = SizeFlags.ExpandFill,
-        };
-        displayAndText.AddThemeConstantOverride("separation", 0);
-        displayAndText.AddChild(CreateLabel("TITLE · NODE RUNNER", _tokens.TitleText, tokens => tokens.Ink));
-        displayAndText.AddChild(CreateLabel("Heading · Build", _tokens.HeadingText, tokens => tokens.Ink));
-        displayAndText.AddChild(CreateLabel("Subheading · Left foot", _tokens.SubheadingText, tokens => tokens.Ink));
-        displayAndText.AddChild(CreateLabel("STAGE · SENSES", _tokens.StageText, tokens => tokens.Accent));
-        displayAndText.AddChild(CreateLabel("Body explains the learning loop.", _tokens.BodyText, tokens => tokens.Ink));
-        displayAndText.AddChild(CreateLabel("Body strong names a value.", _tokens.BodyStrongText, tokens => tokens.Ink));
-        displayAndText.AddChild(CreateLabel("Small secondary line", _tokens.SmallText, tokens => tokens.Muted));
-        displayAndText.AddChild(CreateLabel("Small strong row text", _tokens.SmallStrongText, tokens => tokens.Ink));
-        typography.AddChild(displayAndText);
-
-        var labelsAndReadouts = new VBoxContainer
-        {
-            SizeFlagsHorizontal = SizeFlags.ExpandFill,
-        };
-        labelsAndReadouts.AddThemeConstantOverride("separation", 0);
-        labelsAndReadouts.AddChild(CreateLabel("BUTTON LABEL", _tokens.LabelText, tokens => tokens.Ink));
-        labelsAndReadouts.AddChild(CreateLabel("Helper note under a control", _tokens.NoteText, tokens => tokens.Muted));
-        labelsAndReadouts.AddChild(CreateLabel("CHIP NOTE", _tokens.NoteStrongText, tokens => tokens.Ink));
-        labelsAndReadouts.AddChild(CreateLabel("Dense caption", _tokens.CaptionText, tokens => tokens.Muted));
-        labelsAndReadouts.AddChild(CreateLabel("SECTION OVERLINE", _tokens.OverlineText, tokens => tokens.Muted));
-        labelsAndReadouts.AddChild(CreateLabel("142.8 m", _tokens.ReadoutLargeText, tokens => tokens.Ink));
-        labelsAndReadouts.AddChild(CreateLabel("generation 37", _tokens.ReadoutText, tokens => tokens.Accent));
-        labelsAndReadouts.AddChild(CreateLabel("62%", _tokens.ReadoutMediumText, tokens => tokens.Ink));
-        labelsAndReadouts.AddChild(CreateLabel("0  2  4  6", _tokens.ReadoutSmallText, tokens => tokens.Muted));
-        typography.AddChild(labelsAndReadouts);
-
-        var palette = new GridContainer
-        {
-            Columns = 4,
-            SizeFlagsHorizontal = SizeFlags.ExpandFill,
-        };
-        palette.AddThemeConstantOverride("h_separation", UiSpacing.ControlGap(_tokens));
-        palette.AddThemeConstantOverride("v_separation", UiSpacing.IconLabelGap(_tokens));
-        palette.AddChild(CreateColorSwatch("bg", tokens => tokens.Background));
-        palette.AddChild(CreateColorSwatch("panel", tokens => tokens.Panel));
-        palette.AddChild(CreateColorSwatch("raised", tokens => tokens.PanelRaised));
-        palette.AddChild(CreateColorSwatch("line", tokens => tokens.Line));
-        palette.AddChild(CreateColorSwatch("line strong", tokens => tokens.LineStrong));
-        palette.AddChild(CreateColorSwatch("ink", tokens => tokens.Ink));
-        palette.AddChild(CreateColorSwatch("muted", tokens => tokens.Muted));
-        palette.AddChild(CreateColorSwatch("accent", tokens => tokens.Accent));
-        palette.AddChild(CreateColorSwatch("edge", tokens => tokens.Edge));
-        palette.AddChild(CreateColorSwatch("accent soft", tokens => tokens.AccentSoft));
-        palette.AddChild(CreateColorSwatch("glow", tokens => tokens.AccentGlow));
-        palette.AddChild(CreateColorSwatch("on accent", tokens => tokens.OnAccent));
-        palette.AddChild(CreateColorSwatch("halo", tokens => tokens.Halo));
-        palette.AddChild(CreateColorSwatch("danger", tokens => tokens.Danger));
-        palette.AddChild(CreateColorSwatch("scrim", tokens => tokens.Scrim));
-        palette.AddChild(CreateColorSwatch("output", tokens => tokens.Output));
-        content.AddChild(palette);
-
-        return WrapSection("Foundations · type and color", content);
     }
 
     private Control CreateHeader()
@@ -209,7 +189,7 @@ public partial class ComponentGalleryScreen : Control
         {
             var close = Track(new UiIconButton
             {
-                IconText = UiIconGlyphs.Back,
+                IconId = UiIconId.Back,
                 AccessibleLabel = "Back to Creations",
                 SizeFlagsVertical = SizeFlags.ShrinkCenter,
             });
@@ -265,35 +245,6 @@ public partial class ComponentGalleryScreen : Control
         _isTouchScrolling = false;
     }
 
-    private Control CreateShellSection()
-    {
-        var content = new VBoxContainer();
-        content.AddThemeConstantOverride("separation", (int)_tokens.Space2);
-
-        var topBar = Track(new UiTopBar
-        {
-            TitleText = "Creation name",
-            ShowBack = true,
-            ShowOverflow = true,
-            SizeFlagsHorizontal = SizeFlags.ExpandFill,
-        });
-        topBar.SetActions(
-            new UiIconButton { IconText = UiIconGlyphs.Brain, AccessibleLabel = "Brain" },
-            new UiIconButton { IconText = UiIconGlyphs.Train, AccessibleLabel = "Train" });
-        content.AddChild(topBar);
-
-        var metrics = new HBoxContainer();
-        metrics.AddThemeConstantOverride("separation", (int)_tokens.Space2);
-        metrics.AddChild(Track(new UiChip { Text = "640 × 360", Kind = UiChip.ChipKind.Accent }));
-        metrics.AddChild(Track(new UiChip { Text = "Top 48", Kind = UiChip.ChipKind.Neutral }));
-        metrics.AddChild(Track(new UiChip { Text = "Rail 56", Kind = UiChip.ChipKind.Neutral }));
-        metrics.AddChild(Track(new UiChip { Text = "Panel 176", Kind = UiChip.ChipKind.Neutral }));
-        metrics.AddChild(Track(new UiChip { Text = "Touch 48", Kind = UiChip.ChipKind.Locked }));
-        content.AddChild(metrics);
-
-        return WrapSection("640 × 360 app shell", content);
-    }
-
     private Control CreateActionsSection()
     {
         var content = new VBoxContainer();
@@ -306,6 +257,12 @@ public partial class ComponentGalleryScreen : Control
         {
             Kind = UiActionButton.ActionKind.Primary,
             LabelText = "Primary action",
+        }));
+        actions.AddChild(Track(new UiActionButton
+        {
+            Kind = UiActionButton.ActionKind.Secondary,
+            LabelText = "Icon action",
+            IconId = UiIconId.Play,
         }));
         actions.AddChild(Track(new UiActionButton
         {
@@ -326,83 +283,69 @@ public partial class ComponentGalleryScreen : Control
         var focused = Track(new UiActionButton
         {
             LabelText = "Focused",
+            ShowFocusRing = true,
         });
-        focused.CallDeferred(Control.MethodName.GrabFocus);
         actions.AddChild(focused);
 
-        var iconRow = new HBoxContainer();
-        iconRow.AddThemeConstantOverride("separation", UiSpacing.ControlGap(_tokens));
-        iconRow.AddChild(Track(new UiIconButton { IconText = "?", AccessibleLabel = "Help" }));
-        iconRow.AddChild(Track(new UiIconButton { IconText = "+", AccessibleLabel = "Add" }));
-        iconRow.AddChild(Track(new UiIconButton { IconText = "...", AccessibleLabel = "More" }));
+        var iconRow = CreateFlow();
+        iconRow.AddChild(Track(new UiIconButton { IconId = UiIconId.Warn, AccessibleLabel = "Warning" }));
+        iconRow.AddChild(Track(new UiIconButton { IconId = UiIconId.Plus, AccessibleLabel = "Add", AccentRole = true }));
+        iconRow.AddChild(Track(new UiIconButton { IconId = UiIconId.Trash, AccessibleLabel = "Delete", DangerRole = true }));
+        iconRow.AddChild(Track(new UiIconButton { IconId = UiIconId.More, AccessibleLabel = "More", Disabled = true }));
         content.AddChild(iconRow);
 
-        return WrapSection("Actions and icon buttons", content);
+        var holdRow = CreateFlow();
+        holdRow.AddChild(Track(new UiHoldButton { LabelText = "Hold to unlock", ProgressPercent = 42, SizeFlagsHorizontal = SizeFlags.ExpandFill }));
+        holdRow.AddChild(Track(new UiHoldButton { LabelText = "Completed", ProgressPercent = 100, SizeFlagsHorizontal = SizeFlags.ExpandFill }));
+        holdRow.AddChild(Track(new UiHoldButton { LabelText = "Locked hold", Locked = true, SizeFlagsHorizontal = SizeFlags.ExpandFill }));
+        holdRow.AddChild(Track(new UiStepperButton { Symbol = UiComponentContracts.StepperSymbol.Minus }));
+        holdRow.AddChild(Track(new UiStepperButton { Symbol = UiComponentContracts.StepperSymbol.Plus }));
+        content.AddChild(holdRow);
+
+        return WrapSection("Actions · c_btn / c_ib / c_hold / c_step", content);
     }
 
-    private Control CreateToolsSection()
+    private Control CreateSegmentedSection()
     {
-        var content = new HBoxContainer();
-        content.AddThemeConstantOverride("separation", (int)_tokens.Space2);
-        content.AddChild(Track(new UiToolButton
-        {
-            IconText = "↕",
-            ToolLabel = "Move",
-            Active = true,
-            SizeFlagsHorizontal = SizeFlags.ExpandFill,
-        }));
-        content.AddChild(Track(new UiToolButton
-        {
-            IconText = "─",
-            ToolLabel = "Beam",
-            SizeFlagsHorizontal = SizeFlags.ExpandFill,
-        }));
-        content.AddChild(Track(new UiToolButton
-        {
-            IconText = "●",
-            ToolLabel = "Core",
-            Locked = true,
-            LockReason = "unlocked later",
-            SizeFlagsHorizontal = SizeFlags.ExpandFill,
-        }));
+        var content = CreateFlow();
         content.AddChild(Track(new UiSegmentedSwitch
         {
             Options = new[] { "Train", "Simulate" },
             SelectedIndex = 1,
+            Icons = [],
             SizeFlagsHorizontal = SizeFlags.ExpandFill,
         }));
 
-        return WrapSection("Tool buttons and segmented switch", content);
+        return WrapSection("Segmented · c_seg", content);
     }
 
-    private Control CreatePanelsAndReadoutsSection()
+    private Control CreatePanelsSection()
     {
-        var content = new HBoxContainer();
-        content.AddThemeConstantOverride("separation", (int)_tokens.Space2);
+        var content = new VBoxContainer();
+        content.AddThemeConstantOverride("separation", UiSpacing.StackGap(_tokens));
+        var panels = CreateFlow();
+        content.AddChild(panels);
 
-        content.AddChild(CreatePanelExample("Normal", UiPanel.PanelState.Normal, raised: false));
-        content.AddChild(CreatePanelExample("Focused", UiPanel.PanelState.Focused, raised: true));
-        content.AddChild(CreatePanelExample("Danger", UiPanel.PanelState.Danger, raised: true));
-
-        var readouts = new VBoxContainer
+        panels.AddChild(CreatePanelExample("Rest", UiSurfaceContracts.FrameVariant.Frame));
+        panels.AddChild(CreatePanelExample("Selected", UiSurfaceContracts.FrameVariant.Sel));
+        panels.AddChild(CreatePanelExample("Locked", UiSurfaceContracts.FrameVariant.Lock));
+        panels.AddChild(CreatePanelExample("Warning", UiSurfaceContracts.FrameVariant.Warn));
+        panels.AddChild(CreatePanelExample("Hint", UiSurfaceContracts.FrameVariant.Hint));
+        panels.AddChild(CreatePanelExample("Raised", UiSurfaceContracts.FrameVariant.Raised));
+        panels.AddChild(Track(new UiPanel
         {
-            SizeFlagsHorizontal = SizeFlags.ExpandFill,
-        };
-        readouts.AddThemeConstantOverride("separation", (int)_tokens.Space2);
-        readouts.AddChild(Track(new UiReadout
-        {
-            Caption = "Generation",
-            ValueText = "12",
-            Emphasis = true,
+            Variant = UiSurfaceContracts.FrameVariant.Frame,
+            Size = UiSurfaceContracts.FrameSize.Tight,
         }));
-        readouts.AddChild(Track(new UiReadout
+        ((UiPanel)panels.GetChild(panels.GetChildCount() - 1)).AddChild(CreateLabel("Tight", _tokens.BodyText, tokens => tokens.Ink, TextServer.AutowrapMode.Off));
+        panels.AddChild(Track(new UiPanel
         {
-            Caption = "Mean fitness",
-            ValueText = "8.4 m",
+            Variant = UiSurfaceContracts.FrameVariant.Frame,
+            Size = UiSurfaceContracts.FrameSize.Flush,
         }));
-        content.AddChild(readouts);
+        ((UiPanel)panels.GetChild(panels.GetChildCount() - 1)).AddChild(CreateLabel("Flush", _tokens.BodyText, tokens => tokens.Ink, TextServer.AutowrapMode.Off));
 
-        return WrapSection("Panels and readouts", content);
+        return WrapSection(_sharedCardPanelSection, content);
     }
 
     private Control CreateInputsSection()
@@ -415,6 +358,8 @@ public partial class ComponentGalleryScreen : Control
             MinValue = 1,
             MaxValue = 60,
             Value = 20,
+            DefaultMarker = 30,
+            ShowSteppers = true,
         }));
         content.AddChild(Track(new UiTokenSlider
         {
@@ -422,57 +367,152 @@ public partial class ComponentGalleryScreen : Control
             MinValue = 0,
             MaxValue = 8,
             Value = 3,
+            Compact = true,
+        }));
+        content.AddChild(Track(new UiTokenSlider
+        {
+            LabelText = "Locked slider",
+            MinValue = 0,
+            MaxValue = 100,
+            Value = 50,
+            Locked = true,
+        }));
+        content.AddChild(Track(new UiTokenSlider
+        {
+            LabelText = "Disabled slider",
+            MinValue = 0,
+            MaxValue = 100,
+            Value = 18,
+            Disabled = true,
+            Compact = true,
+        }));
+        content.AddChild(Track(new UiRangeSlider
+        {
+            LabelText = "Angle limits",
+            Low = -40,
+            High = 70,
+            Mark = 12,
+            SizeFlagsHorizontal = SizeFlags.ExpandFill,
         }));
 
-        var chips = new HBoxContainer();
-        chips.AddThemeConstantOverride("separation", (int)_tokens.Space2);
+        var chips = CreateFlow();
         chips.AddChild(Track(new UiChip { Text = "Brain 1 × 4", Kind = UiChip.ChipKind.Accent }));
         chips.AddChild(Track(new UiChip { Text = "Spring locked", Kind = UiChip.ChipKind.Locked }));
-        chips.AddChild(Track(new UiChip { Text = "Invalid", Kind = UiChip.ChipKind.Danger }));
+        chips.AddChild(Track(new UiChip { Text = "Warn", Kind = UiChip.ChipKind.Warning }));
+        chips.AddChild(Track(new UiChip { Text = "Danger", Kind = UiChip.ChipKind.Danger }));
+        chips.AddChild(Track(new UiChip { Text = "Bad", Kind = UiChip.ChipKind.Bad }));
+        chips.AddChild(Track(new UiChip { Text = "OK", Kind = UiChip.ChipKind.Ok }));
         content.AddChild(chips);
 
-        return WrapSection("Sliders and chips", content);
+        return WrapSection("Numeric inputs · c_slider / c_range / c_chip", content);
+    }
+
+    private Control CreateChoiceAndRowsSection()
+    {
+        var content = new VBoxContainer();
+        content.AddThemeConstantOverride("separation", UiSpacing.StackGap(_tokens));
+
+        var toggles = new HFlowContainer();
+        toggles.AddThemeConstantOverride("h_separation", UiSpacing.ControlGap(_tokens));
+        toggles.AddThemeConstantOverride("v_separation", UiSpacing.ControlGap(_tokens));
+        toggles.AddChild(Track(new UiToggleRow { LabelText = "Sounds", Subtext = "On", On = true, SizeFlagsHorizontal = SizeFlags.ExpandFill }));
+        toggles.AddChild(Track(new UiToggleRow { LabelText = "Dense toggle", Subtext = "Off", On = false, Dense = true, SizeFlagsHorizontal = SizeFlags.ExpandFill }));
+        toggles.AddChild(Track(new UiToggleRow { LabelText = "Locked sound", Subtext = "Disabled", Disabled = true, SizeFlagsHorizontal = SizeFlags.ExpandFill }));
+        toggles.AddChild(Track(new UiCheckRow { Checked = true, SizeFlagsHorizontal = SizeFlags.ExpandFill }));
+        toggles.AddChild(Track(new UiCheckRow { LabelText = "Needs battery", Subtext = "Disabled reason", Disabled = true, SizeFlagsHorizontal = SizeFlags.ExpandFill }));
+        content.AddChild(toggles);
+
+        var pickers = new HFlowContainer();
+        pickers.AddThemeConstantOverride("h_separation", UiSpacing.ControlGap(_tokens));
+        pickers.AddThemeConstantOverride("v_separation", UiSpacing.ControlGap(_tokens));
+        pickers.AddChild(Track(new UiPicker { LabelText = "Fixed part", ValueText = "Beam A", SizeFlagsHorizontal = SizeFlags.ExpandFill }));
+        pickers.AddChild(Track(new UiPicker { LabelText = "Target part", ValueText = "Beam A", Open = true, SizeFlagsHorizontal = SizeFlags.ExpandFill }));
+        pickers.AddChild(Track(new UiPicker { LabelText = "Wheel target", ValueText = "Wheel", Locked = true, SizeFlagsHorizontal = SizeFlags.ExpandFill }));
+        content.AddChild(pickers);
+
+        var rows = new HFlowContainer();
+        rows.AddThemeConstantOverride("h_separation", UiSpacing.ControlGap(_tokens));
+        rows.AddThemeConstantOverride("v_separation", UiSpacing.ControlGap(_tokens));
+        rows.AddChild(Track(new UiPartRow { PartIconId = UiPartIconId.Servo, PartName = "Servo", Count = "1", State = UiComponentContracts.SemanticState.Selected, SizeFlagsHorizontal = SizeFlags.ExpandFill }));
+        rows.AddChild(Track(new UiPartRow { PartIconId = UiPartIconId.Spring, PartName = "Spring", Count = "0", State = UiComponentContracts.SemanticState.Disabled, SizeFlagsHorizontal = SizeFlags.ExpandFill }));
+        rows.AddChild(Track(new UiPartRow { PartIconId = UiPartIconId.LineOfSight, PartName = "LOS sensor", Count = "2", State = UiComponentContracts.SemanticState.Locked, SizeFlagsHorizontal = SizeFlags.ExpandFill }));
+        rows.AddChild(Track(new UiIconTabs { ActiveIndex = 1 }));
+        content.AddChild(rows);
+
+        return WrapSection("Choices and tray rows · c_toggle / c_check / c_pick / c_row / c_tabs", content);
+    }
+
+    private Control CreateTextAndValueSection()
+    {
+        var content = new VBoxContainer();
+        content.AddThemeConstantOverride("separation", UiSpacing.StackGap(_tokens));
+
+        var fields = new HFlowContainer();
+        fields.AddThemeConstantOverride("h_separation", UiSpacing.ControlGap(_tokens));
+        fields.AddThemeConstantOverride("v_separation", UiSpacing.ControlGap(_tokens));
+        fields.AddChild(Track(new UiTextField { TextValue = "Runner", State = UiComponentContracts.ValidationState.Rest, SizeFlagsHorizontal = SizeFlags.ExpandFill }));
+        fields.AddChild(Track(new UiTextField { TextValue = "Runner", State = UiComponentContracts.ValidationState.Editing, SizeFlagsHorizontal = SizeFlags.ExpandFill }));
+        fields.AddChild(Track(new UiTextField { TextValue = "", State = UiComponentContracts.ValidationState.Invalid, SizeFlagsHorizontal = SizeFlags.ExpandFill }));
+        fields.AddChild(Track(new UiNameField { TextValue = "Core", State = UiComponentContracts.ValidationState.Rest, SizeFlagsHorizontal = SizeFlags.ExpandFill }));
+        fields.AddChild(Track(new UiNameField { TextValue = "Left foot", State = UiComponentContracts.ValidationState.Editing, SizeFlagsHorizontal = SizeFlags.ExpandFill }));
+        content.AddChild(fields);
+
+        var values = new HFlowContainer();
+        values.AddThemeConstantOverride("h_separation", UiSpacing.ControlGap(_tokens));
+        values.AddThemeConstantOverride("v_separation", UiSpacing.ControlGap(_tokens));
+        values.AddChild(Track(new UiValueRow { LabelText = "Step size", ValueText = "12°", SizeFlagsHorizontal = SizeFlags.ExpandFill }));
+        values.AddChild(Track(new UiReadonlyValue { LabelText = "Length", ValueText = "56", Reason = "trained", SizeFlagsHorizontal = SizeFlags.ExpandFill }));
+        values.AddChild(Track(new UiPowerRow { TextValue = "Draws up to 0.6", Output = false }));
+        values.AddChild(Track(new UiPowerRow { TextValue = "Makes 1.0 · stores rest", Output = true }));
+        values.AddChild(Track(new UiMeterRow { LabelText = "Battery", ValueText = "20 / 20 units", Percent = 78, SizeFlagsHorizontal = SizeFlags.ExpandFill }));
+        content.AddChild(values);
+
+        content.AddChild(Track(new UiPanelHeader { Title = "Part settings" }));
+        content.AddChild(Track(new UiInfoRow { Title = "Rotate handle", Help = "Drag the stem to rotate selected parts." }));
+        return WrapSection("Text and values · c_textfield / c_name / c_value / c_readonly / c_power / c_meter / c_panel_head / c_info_row", content);
+    }
+
+    private Control CreateProgressAndStatusSection()
+    {
+        var content = new HFlowContainer();
+        content.AddThemeConstantOverride("h_separation", UiSpacing.ControlGap(_tokens));
+        content.AddThemeConstantOverride("v_separation", UiSpacing.ControlGap(_tokens));
+        content.AddChild(Track(new UiProgressBar { Percent = 37, SizeFlagsHorizontal = SizeFlags.ExpandFill }));
+        content.AddChild(Track(new UiProgressBar { Percent = 84, Bad = true, SizeFlagsHorizontal = SizeFlags.ExpandFill }));
+        content.AddChild(Track(new UiProgressRing { Percent = 62 }));
+        content.AddChild(Track(new UiProgressRing { Percent = 100, Done = true }));
+        return WrapSection("Progress · c_prog / c_ring", content);
     }
 
     private Control CreateOverlaysSection()
     {
-        var content = new HBoxContainer();
-        content.AddThemeConstantOverride("separation", (int)_tokens.Space2);
+        var content = CreateFlow();
 
         var menu = Track(new UiOverflowMenu
         {
             Visible = true,
             SizeFlagsHorizontal = SizeFlags.ExpandFill,
         });
-        menu.SetActions(("open", "Open creation", false), ("duplicate", "Duplicate", false), ("delete", "Delete creation", true));
+        menu.SetActions(
+            new UiOverflowMenu.MenuAction("open", "Open creation", UiIconId.Play, UiComponentContracts.SemanticState.Neutral),
+            new UiOverflowMenu.MenuAction("duplicate", "Duplicate", UiIconId.Copy, UiComponentContracts.SemanticState.Neutral),
+            new UiOverflowMenu.MenuAction("locked", "Locked action", UiIconId.Lock, UiComponentContracts.SemanticState.Locked),
+            new UiOverflowMenu.MenuAction("delete", "Delete creation", UiIconId.Trash, UiComponentContracts.SemanticState.Danger));
         menu.CallDeferred(CanvasItem.MethodName.Show);
         content.AddChild(menu);
 
-        var sheet = Track(new UiSheet
-        {
-            Title = "Settings sheet",
-            SizeFlagsHorizontal = SizeFlags.ExpandFill,
-        });
-        sheet.SetBody(CreateLabel("Compact modal surface with token-backed border and title.", _tokens.BodyText, tokens => tokens.Muted));
-        content.AddChild(sheet);
-
-        var toast = Track(new UiToast
-        {
-            SizeFlagsHorizontal = SizeFlags.ExpandFill,
-        });
-        toast.ShowMessage("Saved creation", "Undo", 60);
-        content.AddChild(toast);
-
-        return WrapSection("Overflow, sheet, and toast", content);
+        return WrapSection("Overflow menu · c_menu", content);
     }
 
-    private Control CreatePanelExample(string title, UiPanel.PanelState state, bool raised)
+    private Control CreatePanelExample(string title, UiSurfaceContracts.FrameVariant variant)
     {
+        // These are compact one-word badges, not paragraph specimens: they must
+        // size to their natural content width so HFlowContainer can wrap rows
+        // instead of squeezing every panel into an equal, too-narrow share and
+        // forcing the label to wrap character-by-character.
         var panel = Track(new UiPanel
         {
-            State = state,
-            Raised = raised,
-            SizeFlagsHorizontal = SizeFlags.ExpandFill,
+            Variant = variant,
         });
         var margin = new MarginContainer();
         margin.AddThemeConstantOverride("margin_left", (int)_tokens.Space3);
@@ -483,17 +523,29 @@ public partial class ComponentGalleryScreen : Control
         margin.AddChild(CreateLabel(
             title,
             _tokens.BodyText,
-            state == UiPanel.PanelState.Danger
+            variant == UiSurfaceContracts.FrameVariant.Warn
                 ? tokens => tokens.Danger
-                : tokens => tokens.Ink));
+                : tokens => tokens.Ink,
+            TextServer.AutowrapMode.Off));
         return panel;
+    }
+
+    private HFlowContainer CreateFlow()
+    {
+        var flow = new HFlowContainer
+        {
+            SizeFlagsHorizontal = SizeFlags.ExpandFill,
+        };
+        flow.AddThemeConstantOverride("h_separation", UiSpacing.ControlGap(_tokens));
+        flow.AddThemeConstantOverride("v_separation", UiSpacing.ControlGap(_tokens));
+        return flow;
     }
 
     private Control WrapSection(string title, Control content)
     {
         var panel = Track(new UiPanel
         {
-            Raised = true,
+            Variant = UiSurfaceContracts.FrameVariant.Frame,
             SizeFlagsHorizontal = SizeFlags.ExpandFill,
         });
         var margin = new MarginContainer();
@@ -511,12 +563,16 @@ public partial class ComponentGalleryScreen : Control
         return panel;
     }
 
-    private Label CreateLabel(string text, UiTokens.TextStyle textStyle, Func<UiTokens, Color> colorForTokens)
+    private Label CreateLabel(
+        string text,
+        UiTokens.TextStyle textStyle,
+        Func<UiTokens, Color> colorForTokens,
+        TextServer.AutowrapMode autowrap = TextServer.AutowrapMode.WordSmart)
     {
         var label = new Label
         {
             Text = text,
-            AutowrapMode = TextServer.AutowrapMode.WordSmart,
+            AutowrapMode = autowrap,
         };
         _tokens.ApplyTextStyle(label, textStyle);
         label.AddThemeColorOverride("font_color", colorForTokens(_tokens));
@@ -526,29 +582,6 @@ public partial class ComponentGalleryScreen : Control
             label.AddThemeColorOverride("font_color", colorForTokens(tokens));
         });
         return label;
-    }
-
-    private Control CreateColorSwatch(string name, Func<UiTokens, Color> colorForTokens)
-    {
-        var row = new HBoxContainer
-        {
-            CustomMinimumSize = new Vector2(0, _tokens.ControlExtraSmall),
-            SizeFlagsHorizontal = SizeFlags.ExpandFill,
-        };
-        row.AddThemeConstantOverride("separation", UiSpacing.IconLabelGap(_tokens));
-
-        var swatch = new ColorRect
-        {
-            Color = colorForTokens(_tokens),
-            CustomMinimumSize = new Vector2(_tokens.ControlExtraSmall, _tokens.ControlExtraSmall),
-            MouseFilter = MouseFilterEnum.Ignore,
-        };
-        _colorAppliers.Add(tokens => swatch.Color = colorForTokens(tokens));
-        row.AddChild(swatch);
-        var label = CreateLabel(name, _tokens.CaptionText, tokens => tokens.Ink);
-        label.SizeFlagsHorizontal = SizeFlags.ExpandFill;
-        row.AddChild(label);
-        return row;
     }
 
     private T Track<T>(T control)
@@ -572,23 +605,8 @@ public partial class ComponentGalleryScreen : Control
             case UiOverflowMenu menu:
                 menu.Tokens = tokens;
                 break;
-            case UiTopBar topBar:
-                topBar.Tokens = tokens;
-                break;
-            case UiReadout readout:
-                readout.Tokens = tokens;
-                break;
             case UiSegmentedSwitch segmentedSwitch:
                 segmentedSwitch.Tokens = tokens;
-                break;
-            case UiSheet sheet:
-                sheet.Tokens = tokens;
-                break;
-            case UiToast toast:
-                toast.Tokens = tokens;
-                break;
-            case UiToolButton toolButton:
-                toolButton.Tokens = tokens;
                 break;
             case UiPanel panel:
                 panel.Tokens = tokens;
@@ -598,6 +616,57 @@ public partial class ComponentGalleryScreen : Control
                 break;
             case UiTokenSlider slider:
                 slider.Tokens = tokens;
+                break;
+            case UiHoldButton holdButton:
+                holdButton.Tokens = tokens;
+                break;
+            case UiStepperButton stepperButton:
+                stepperButton.Tokens = tokens;
+                break;
+            case UiRangeSlider rangeSlider:
+                rangeSlider.Tokens = tokens;
+                break;
+            case UiToggleRow toggleRow:
+                toggleRow.Tokens = tokens;
+                break;
+            case UiCheckRow checkRow:
+                checkRow.Tokens = tokens;
+                break;
+            case UiPicker picker:
+                picker.Tokens = tokens;
+                break;
+            case UiProgressBar progressBar:
+                progressBar.Tokens = tokens;
+                break;
+            case UiTextField textField:
+                textField.Tokens = tokens;
+                break;
+            case UiValueRow valueRow:
+                valueRow.Tokens = tokens;
+                break;
+            case UiReadonlyValue readonlyValue:
+                readonlyValue.Tokens = tokens;
+                break;
+            case UiPowerRow powerRow:
+                powerRow.Tokens = tokens;
+                break;
+            case UiMeterRow meterRow:
+                meterRow.Tokens = tokens;
+                break;
+            case UiPartRow partRow:
+                partRow.Tokens = tokens;
+                break;
+            case UiIconTabs iconTabs:
+                iconTabs.Tokens = tokens;
+                break;
+            case UiPanelHeader panelHeader:
+                panelHeader.Tokens = tokens;
+                break;
+            case UiInfoRow infoRow:
+                infoRow.Tokens = tokens;
+                break;
+            case UiProgressRing progressRing:
+                progressRing.Tokens = tokens;
                 break;
         }
     }
@@ -620,9 +689,5 @@ public partial class ComponentGalleryScreen : Control
             apply(tokens);
         }
 
-        foreach (var apply in _colorAppliers)
-        {
-            apply(tokens);
-        }
     }
 }

@@ -8,6 +8,7 @@ public partial class UiToolButton : Button
     private UiTokens _tokens = UiTokens.Neon;
     private string _toolLabel = "Tool";
     private string _iconText = "•";
+    private UiIconId _iconId = UiIconId.Move;
     private bool _active;
     private bool _locked;
     private string _lockReason = "Unavailable";
@@ -33,6 +34,17 @@ public partial class UiToolButton : Button
         set
         {
             _iconText = value;
+            Refresh();
+        }
+    }
+
+    [Export]
+    public UiIconId IconId
+    {
+        get => _iconId;
+        set
+        {
+            _iconId = value;
             Refresh();
         }
     }
@@ -102,12 +114,13 @@ public partial class UiToolButton : Button
         }
 
         Disabled = Locked;
-        Text = Locked ? $"{IconText}  {ToolLabel} · {LockReason}" : $"{IconText}  {ToolLabel}";
+        Text = Locked ? $"{ToolLabel} · {LockReason}" : ToolLabel;
         TooltipText = Locked ? LockReason : ToolLabel;
         CustomMinimumSize = new Vector2(0, _tokens.TouchTarget);
         _tokens.ApplyTextStyle(this, _tokens.LabelText);
         AddThemeColorOverride("font_color", Locked ? _tokens.Muted : (_active ? _tokens.OnAccent : _tokens.Ink));
         AddThemeColorOverride("font_hover_color", _tokens.OnAccent);
+        UiIcons.Apply(this, IconId, UiIconSize.Standard, Locked ? _tokens.Muted : (_active ? _tokens.OnAccent : _tokens.Ink));
         AddThemeStyleboxOverride("normal", CreateStyle(_active, false));
         AddThemeStyleboxOverride("hover", CreateStyle(true, true));
         AddThemeStyleboxOverride("pressed", CreateStyle(true, true));

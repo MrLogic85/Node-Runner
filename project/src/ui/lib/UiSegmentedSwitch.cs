@@ -11,6 +11,9 @@ public partial class UiSegmentedSwitch : HBoxContainer
     private UiTokens _tokens = UiTokens.Neon;
     private string[] _options = { "One", "Two" };
     private int _selectedIndex;
+    private string[] _icons = [];
+    private UiIconId[] _iconIds = [];
+    private bool _fullWidth = true;
 
     [Export]
     public string[] Options
@@ -32,6 +35,38 @@ public partial class UiSegmentedSwitch : HBoxContainer
         {
             _selectedIndex = Mathf.Clamp(value, 0, Mathf.Max(0, _options.Length - 1));
             RefreshSelection();
+        }
+    }
+
+    [Export]
+    public string[] Icons
+    {
+        get => _icons;
+        set
+        {
+            _icons = value ?? [];
+            Rebuild();
+        }
+    }
+
+    public UiIconId[] IconIds
+    {
+        get => _iconIds;
+        set
+        {
+            _iconIds = value ?? [];
+            Rebuild();
+        }
+    }
+
+    [Export]
+    public bool FullWidth
+    {
+        get => _fullWidth;
+        set
+        {
+            _fullWidth = value;
+            Rebuild();
         }
     }
 
@@ -69,7 +104,7 @@ public partial class UiSegmentedSwitch : HBoxContainer
                 ToggleMode = true,
                 ButtonPressed = index == _selectedIndex,
                 CustomMinimumSize = new Vector2(0, _tokens.TouchTarget),
-                SizeFlagsHorizontal = SizeFlags.ExpandFill,
+                SizeFlagsHorizontal = FullWidth ? SizeFlags.ExpandFill : SizeFlags.ShrinkBegin,
             };
             var capturedIndex = index;
             button.Pressed += () => Select(capturedIndex);
@@ -82,6 +117,7 @@ public partial class UiSegmentedSwitch : HBoxContainer
     {
         if (index == _selectedIndex)
         {
+            RefreshSelection();
             return;
         }
 
@@ -97,6 +133,7 @@ public partial class UiSegmentedSwitch : HBoxContainer
             if (GetChild(index) is Button button)
             {
                 button.ButtonPressed = index == _selectedIndex;
+                button.Text = _options[index];
                 StyleButton(button, index == _selectedIndex);
             }
         }
@@ -107,11 +144,26 @@ public partial class UiSegmentedSwitch : HBoxContainer
         _tokens.ApplyTextStyle(button, _tokens.LabelText);
         button.AddThemeColorOverride("font_color", _tokens.Ink);
         button.AddThemeColorOverride("font_hover_color", selected ? _tokens.Ink : _tokens.Accent);
+        var icon = selected ? UiIconId.Check : IconFor(button.GetIndex());
+        if (icon is { } iconId)
+        {
+            UiIcons.Apply(button, iconId, UiIconSize.Small, selected ? _tokens.Accent : _tokens.Ink);
+        }
+        else
+        {
+            button.Icon = null;
+        }
+
         button.AddThemeStyleboxOverride("normal", CreateStyle(selected));
         button.AddThemeStyleboxOverride("hover", CreateStyle(true));
         button.AddThemeStyleboxOverride("pressed", CreateStyle(true));
         button.AddThemeStyleboxOverride("focus", _tokens.FocusRingStyle());
     }
+
+    private UiIconId? IconFor(int index) =>
+        index < _iconIds.Length
+            ? _iconIds[index]
+            : index < Icons.Length && UiIconGlyphs.TryParse(Icons[index], out var icon) ? icon : null;
 
     private StyleBoxFlat CreateStyle(bool selected)
     {

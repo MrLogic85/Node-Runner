@@ -312,27 +312,181 @@ public sealed class UiTokens
                     : _barlowRegularPath,
         };
 
+    /// <summary>Creates the canonical Frame surface for panels and cards.</summary>
+    public StyleBoxFlat FrameStyle(
+        UiSurfaceContracts.FrameVariant variant = UiSurfaceContracts.FrameVariant.Frame,
+        UiSurfaceContracts.FrameSize size = UiSurfaceContracts.FrameSize.Default)
+    {
+        var style = new StyleBoxFlat
+        {
+            BgColor = Panel,
+            BorderColor = Edge,
+            BorderWidthLeft = (int)StrokeHair,
+            BorderWidthTop = (int)StrokeHair,
+            BorderWidthRight = (int)StrokeHair,
+            BorderWidthBottom = (int)StrokeHair,
+            CornerRadiusTopLeft = (int)RadiusLarge,
+            CornerRadiusTopRight = (int)RadiusLarge,
+            CornerRadiusBottomLeft = (int)RadiusLarge,
+            CornerRadiusBottomRight = (int)RadiusLarge,
+        };
+
+        switch (variant)
+        {
+            case UiSurfaceContracts.FrameVariant.Sel:
+                style.BorderColor = Accent;
+                SetBorderWidth(style, StrokeSignal);
+                AddGlow(style, AccentGlow);
+                break;
+            case UiSurfaceContracts.FrameVariant.Pick:
+                style.BorderColor = Halo;
+                SetBorderWidth(style, StrokeSignal);
+                break;
+            case UiSurfaceContracts.FrameVariant.Lock:
+                style.BorderColor = LineStrong;
+                SetBorderWidth(style, StrokeHair);
+                style.BgColor = MultiplyAlpha(style.BgColor, 0.55f);
+                break;
+            case UiSurfaceContracts.FrameVariant.Warn:
+                style.BorderColor = Danger;
+                break;
+            case UiSurfaceContracts.FrameVariant.Hint:
+                style.BorderColor = Halo;
+                break;
+            case UiSurfaceContracts.FrameVariant.Ok:
+                style.BorderColor = Accent;
+                break;
+            case UiSurfaceContracts.FrameVariant.Glow:
+                style.BorderColor = Accent;
+                AddGlow(style, AccentGlow);
+                break;
+            case UiSurfaceContracts.FrameVariant.Raised:
+                return RaisedStyle();
+            case UiSurfaceContracts.FrameVariant.Menu:
+            case UiSurfaceContracts.FrameVariant.Dialog:
+            case UiSurfaceContracts.FrameVariant.StageCard:
+                style.BorderColor = variant == UiSurfaceContracts.FrameVariant.StageCard
+                    ? Accent
+                    : Edge;
+                if (variant == UiSurfaceContracts.FrameVariant.StageCard)
+                {
+                    AddGlow(style, AccentGlow);
+                }
+                break;
+        }
+
+        var padding = size switch
+        {
+            UiSurfaceContracts.FrameSize.Snug => Space2,
+            UiSurfaceContracts.FrameSize.Tight => Space1,
+            UiSurfaceContracts.FrameSize.Roomy => Space4,
+            UiSurfaceContracts.FrameSize.Flush => 0,
+            _ => Space3,
+        };
+        SetContentMargin(style, padding);
+        return style;
+    }
+
+    /// <summary>Creates the canonical Raised surface for pressable or editable controls.</summary>
+    public StyleBoxFlat RaisedStyle(
+        UiSurfaceContracts.RaisedState state = UiSurfaceContracts.RaisedState.Rest)
+    {
+        var style = new StyleBoxFlat
+        {
+            BgColor = PanelRaised,
+            BorderColor = LineStrong,
+            BorderWidthLeft = (int)StrokeHair,
+            BorderWidthTop = (int)StrokeHair,
+            BorderWidthRight = (int)StrokeHair,
+            BorderWidthBottom = (int)StrokeHair,
+            CornerRadiusTopLeft = (int)RadiusMedium,
+            CornerRadiusTopRight = (int)RadiusMedium,
+            CornerRadiusBottomLeft = (int)RadiusMedium,
+            CornerRadiusBottomRight = (int)RadiusMedium,
+        };
+
+        switch (state)
+        {
+            case UiSurfaceContracts.RaisedState.On:
+            case UiSurfaceContracts.RaisedState.Primary:
+                style.BgColor = Accent;
+                style.BorderColor = Accent;
+                style.ShadowColor = EffectsEnabled ? AccentGlow : Colors.Transparent;
+                style.ShadowSize = EffectsEnabled ? (int)GlowRadius : 0;
+                break;
+            case UiSurfaceContracts.RaisedState.Lock:
+            case UiSurfaceContracts.RaisedState.Off:
+                style.BgColor = MultiplyAlpha(style.BgColor, 0.5f);
+                style.BorderColor = MultiplyAlpha(style.BorderColor, 0.5f);
+                break;
+            case UiSurfaceContracts.RaisedState.Danger:
+                style.BorderColor = Danger;
+                break;
+        }
+
+        return style;
+    }
+
+    /// <summary>
+    /// Compatibility adapter for controls that still call the old panel helper.
+    /// New surfaces must use <see cref="FrameStyle"/> or <see cref="RaisedStyle"/>.
+    /// </summary>
+    [Obsolete("Use FrameStyle or RaisedStyle; the bool overload conflates two surfaces.")]
     public StyleBoxFlat PanelStyle(
         bool raised = false,
         Color? borderColor = null,
         float? borderWidth = null,
         float? radius = null)
     {
-        var width = (int)(borderWidth ?? StrokeHair);
-        var cornerRadius = (int)(radius ?? RadiusLarge);
-        return new StyleBoxFlat
+        var style = raised ? RaisedStyle() : FrameStyle();
+        if (borderColor.HasValue)
         {
-            BgColor = raised ? PanelRaised : Panel,
-            BorderColor = borderColor ?? Edge,
-            BorderWidthLeft = width,
-            BorderWidthTop = width,
-            BorderWidthRight = width,
-            BorderWidthBottom = width,
-            CornerRadiusTopLeft = cornerRadius,
-            CornerRadiusTopRight = cornerRadius,
-            CornerRadiusBottomLeft = cornerRadius,
-            CornerRadiusBottomRight = cornerRadius,
-        };
+            style.BorderColor = borderColor.Value;
+        }
+
+        if (borderWidth.HasValue)
+        {
+            SetBorderWidth(style, borderWidth.Value);
+        }
+
+        if (radius.HasValue)
+        {
+            SetCornerRadius(style, radius.Value);
+        }
+
+        return style;
+    }
+
+    private void AddGlow(StyleBoxFlat style, Color color)
+    {
+        style.ShadowColor = EffectsEnabled ? color : Colors.Transparent;
+        style.ShadowSize = EffectsEnabled ? (int)GlowRadius : 0;
+    }
+
+    private static void SetContentMargin(StyleBoxFlat style, float value)
+    {
+        style.ContentMarginLeft = value;
+        style.ContentMarginTop = value;
+        style.ContentMarginRight = value;
+        style.ContentMarginBottom = value;
+    }
+
+    private static void SetBorderWidth(StyleBoxFlat style, float value)
+    {
+        var width = (int)value;
+        style.BorderWidthLeft = width;
+        style.BorderWidthTop = width;
+        style.BorderWidthRight = width;
+        style.BorderWidthBottom = width;
+    }
+
+    private static void SetCornerRadius(StyleBoxFlat style, float value)
+    {
+        var radius = (int)value;
+        style.CornerRadiusTopLeft = radius;
+        style.CornerRadiusTopRight = radius;
+        style.CornerRadiusBottomLeft = radius;
+        style.CornerRadiusBottomRight = radius;
     }
 
     public StyleBoxFlat ControlStyle(

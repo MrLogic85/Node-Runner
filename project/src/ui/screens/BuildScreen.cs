@@ -269,7 +269,7 @@ public partial class BuildScreen : Control
         var back = new UiIconButton
         {
             Tokens = _tokens,
-            IconText = "‹",
+            IconId = UiIconId.Back,
             AccessibleLabel = "Back",
         };
         back.Pressed += () => EmitSignal(SignalName.BackRequested);
@@ -283,13 +283,14 @@ public partial class BuildScreen : Control
         topBar.AddChild(titleStack);
         var title = new Button
         {
-            Text = $"{Presentation?.CreationName ?? "Untitled Creation"}  ✎",
+            Text = Presentation?.CreationName ?? "Untitled Creation",
             Flat = true,
             Alignment = HorizontalAlignment.Left,
             SizeFlagsHorizontal = SizeFlags.ExpandFill,
             CustomMinimumSize = new Vector2(0, 28),
         };
         _tokens.ApplyTextStyle(title, _tokens.HeadingText);
+        UiIcons.Apply(title, UiIconId.Edit, UiIconSize.Small, _tokens.Ink);
         title.AddThemeColorOverride("font_color", _tokens.Ink);
         title.Pressed += () =>
         {
@@ -320,7 +321,7 @@ public partial class BuildScreen : Control
         var overflow = new UiIconButton
         {
             Tokens = _tokens,
-            IconText = "⋯",
+            IconId = UiIconId.More,
             AccessibleLabel = Presentation?.ShowCompleteAction == false ? "Reset training or delete creation" : "More build actions",
         };
         overflow.Pressed += () =>
@@ -424,7 +425,7 @@ public partial class BuildScreen : Control
         var active = kind == UiActionButton.ActionKind.Primary;
         var button = new Button
         {
-            Text = locked ? $"🔒 {label.ToUpperInvariant()}" : label.ToUpperInvariant(),
+            Text = label.ToUpperInvariant(),
             TooltipText = tooltip,
             Disabled = locked,
             CustomMinimumSize = new Vector2(UiLayout.LeftRailWidth, _toolButtonHeight),
@@ -612,7 +613,7 @@ public partial class BuildScreen : Control
         header.AddChild(CreateLabel(presentation.SinglePartTitle, 14, _tokens.Ink, expand: true));
         if (allowDelete)
         {
-            var delete = CreateButton("⌫", UiActionButton.ActionKind.Danger, "Delete selected part");
+            var delete = CreateButton("Delete", UiActionButton.ActionKind.Danger, "Delete selected part", UiIconId.Trash);
             delete.CustomMinimumSize = new Vector2(38, 34);
             delete.Pressed += () => EmitSignal(SignalName.DeleteSelectionRequested);
             header.AddChild(delete);
@@ -621,7 +622,7 @@ public partial class BuildScreen : Control
         var close = new UiIconButton
         {
             Tokens = _tokens,
-            IconText = "×",
+            IconId = UiIconId.Close,
             AccessibleLabel = "Close settings",
         };
         close.Pressed += () => EmitSignal(SignalName.ClearSelectionRequested);
@@ -665,7 +666,7 @@ public partial class BuildScreen : Control
         var close = new UiIconButton
         {
             Tokens = _tokens,
-            IconText = "×",
+            IconId = UiIconId.Close,
             AccessibleLabel = "Close selection",
         };
         close.Pressed += () => EmitSignal(SignalName.ClearSelectionRequested);
@@ -833,7 +834,7 @@ public partial class BuildScreen : Control
             SizeFlagsHorizontal = SizeFlags.ExpandFill,
         };
         row.AddThemeConstantOverride("separation", (int)_tokens.Space1);
-        row.AddChild(CreateLabel(buildPanel.CanStartTraining ? "✓" : "⚠", 14, buildPanel.CanStartTraining ? _tokens.Accent : _tokens.Danger));
+        row.AddChild(UiFieldAndRows.Icon(buildPanel.CanStartTraining ? UiIconId.Check : UiIconId.Warn, UiIconSize.Small, buildPanel.CanStartTraining ? _tokens.Accent : _tokens.Danger));
         var reason = buildPanel.CanStartTraining
             ? "Ready to save"
             : ShortValidationText(buildPanel.DisabledReason ?? buildPanel.ValidationLine);
@@ -915,13 +916,14 @@ public partial class BuildScreen : Control
         row.AddChild(recommended);
         var close = new Button
         {
-            Text = "×",
+            Text = string.Empty,
             CustomMinimumSize = new Vector2(36, 36),
             SizeFlagsVertical = SizeFlags.ShrinkCenter,
             TooltipText = "Close brain setup",
         };
         _tokens.ApplyTextStyle(close, _tokens.HeadingText);
         close.AddThemeColorOverride("font_color", _tokens.Accent);
+        UiIcons.Apply(close, UiIconId.Close, UiIconSize.Standard, _tokens.Accent);
         close.AddThemeStyleboxOverride("normal", _tokens.ControlStyle(_tokens.PanelRaised, _tokens.Edge, radius: (int)_tokens.RadiusSmall));
         close.AddThemeStyleboxOverride("hover", _tokens.ControlStyle(_tokens.AccentSoft, _tokens.Accent, radius: (int)_tokens.RadiusSmall));
         close.Pressed += () =>
@@ -1218,7 +1220,7 @@ public partial class BuildScreen : Control
             : ShortValidationText(buildPanel.DisabledReason ?? buildPanel.ValidationLine);
         var row = new HBoxContainer();
         row.AddThemeConstantOverride("separation", 8);
-        var icon = CreateLabel(buildPanel.CanStartTraining ? "✓" : "⚠", 20, buildPanel.CanStartTraining ? _tokens.Accent : _tokens.Danger);
+        var icon = UiFieldAndRows.Icon(buildPanel.CanStartTraining ? UiIconId.Check : UiIconId.Warn, UiIconSize.Large, buildPanel.CanStartTraining ? _tokens.Accent : _tokens.Danger);
         icon.CustomMinimumSize = new Vector2(28, 0);
         row.AddChild(icon);
         row.AddChild(CreateLabel(text, 18, buildPanel.CanStartTraining ? _tokens.Accent : _tokens.Danger, expand: true));
@@ -1287,7 +1289,7 @@ public partial class BuildScreen : Control
         DrawInvalidNode(control, brokenB);
 
         DrawTag(control, "Rigid: no joints", top + new Vector2(-70, -42), _tokens.Halo);
-        DrawTag(control, "⚠ Not connected", brokenA + new Vector2(-48, -46), _tokens.Danger);
+        DrawTag(control, "Not connected", brokenA + new Vector2(-48, -46), _tokens.Danger);
     }
 
     private void DrawBrainPreview(Control control, ConstructionBuildPanelPresentation buildPanel)
@@ -1417,7 +1419,9 @@ public partial class BuildScreen : Control
         return new UiPanel
         {
             Tokens = _tokens,
-            Raised = raised,
+            Variant = raised
+                ? UiSurfaceContracts.FrameVariant.Raised
+                : UiSurfaceContracts.FrameVariant.Frame,
         };
     }
 
@@ -1428,8 +1432,8 @@ public partial class BuildScreen : Control
             CustomMinimumSize = new Vector2(0, _modeSwitchHeight),
         };
         frame.AddThemeConstantOverride("separation", 0);
-        frame.AddChild(CreateModeSegment("▶  Simulate", active: false, first: true, last: false));
-        frame.AddChild(CreateModeSegment("✎  Build", active: true, first: false, last: true));
+        frame.AddChild(CreateModeSegment("Simulate", active: false, first: true, last: false));
+        frame.AddChild(CreateModeSegment("Build", active: true, first: false, last: true));
         return frame;
     }
 
@@ -1456,13 +1460,14 @@ public partial class BuildScreen : Control
         return button;
     }
 
-    private UiActionButton CreateButton(string label, UiActionButton.ActionKind kind, string tooltip)
+    private UiActionButton CreateButton(string label, UiActionButton.ActionKind kind, string tooltip, UiIconId? iconId = null)
     {
         return new UiActionButton
         {
             Tokens = _tokens,
             Kind = kind,
             LabelText = label,
+            IconId = iconId,
             TooltipText = tooltip,
             CustomMinimumSize = new Vector2(0, _tokens.TouchTarget),
         };

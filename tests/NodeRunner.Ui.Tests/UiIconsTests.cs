@@ -1,0 +1,107 @@
+using NodeRunner.Ui.Lib;
+
+namespace NodeRunner.Ui.Tests;
+
+public sealed class UiIconsTests
+{
+    [Fact]
+    public void EveryTypedIcon_MapsToAnExistingCopiedSvg()
+    {
+        var projectRoot = Path.Combine(FindRepositoryRoot(), "project");
+
+        foreach (var icon in UiIcons.AllUiIds)
+        {
+            File.Exists(ToAssetPath(projectRoot, UiIcons.PathFor(icon))).ShouldBeTrue($"Missing UI icon: {icon}");
+        }
+
+        foreach (var icon in UiIcons.AllPartIds)
+        {
+            File.Exists(ToAssetPath(projectRoot, UiIcons.PathFor(icon))).ShouldBeTrue($"Missing part icon: {icon}");
+        }
+    }
+
+    [Fact]
+    public void IconSizes_UseOnlyTheFourCanonicalPixelMappings()
+    {
+        Enum.GetValues<UiIconSize>().Select(UiIcons.Pixels).ShouldBe([12, 16, 20, 24]);
+    }
+
+    [Theory]
+    [InlineData("back", UiIconId.Back)]
+    [InlineData("brain", UiIconId.Brain)]
+    [InlineData("play", UiIconId.Play)]
+    [InlineData("settings", UiIconId.Gear)]
+    [InlineData("locked", UiIconId.Lock)]
+    [InlineData("delete", UiIconId.Trash)]
+    public void LegacyAliases_ResolveThroughOneCanonicalAdapter(string alias, UiIconId expected)
+    {
+        UiIconGlyphs.TryParse(alias, out var icon).ShouldBeTrue();
+        icon.ShouldBe(expected);
+    }
+
+    [Fact]
+    public void CanonicalGalleryFixtures_DoNotContainPseudoIconStrings()
+    {
+        var gallery = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "project", "src", "ui", "screens", "ComponentGalleryScreen.cs"));
+
+        foreach (var pseudoIcon in new[] { "IconText =", "Glyph =", "Glyphs =", "\"?\"", "\"!\"", "\"...\"", "🔒", "◎", "▶", "✓" })
+        {
+            gallery.ShouldNotContain(pseudoIcon);
+        }
+    }
+
+    [Fact]
+    public void ActiveProductUiCallers_DoNotUseLegacyIconAliasesOrPseudoIconLiterals()
+    {
+        var uiRoot = Path.Combine(FindRepositoryRoot(), "project", "src", "ui");
+        var activeFiles = Directory.EnumerateFiles(Path.Combine(uiRoot, "screens"), "*.cs")
+            .Concat(Directory.EnumerateFiles(Path.Combine(uiRoot, "widgets"), "*.cs"));
+        var bannedSnippets = new[]
+        {
+            "IconText =",
+            "Glyph =",
+            "Glyphs =",
+            "🔒",
+            "⋯",
+            "▶",
+            "✎",
+            "✓",
+            "⚠",
+            "⌫",
+            "⧉",
+            "◎",
+            "⛓",
+            "◌",
+            "▣",
+            "⌃",
+            "⌄",
+        };
+
+        foreach (var path in activeFiles)
+        {
+            var text = File.ReadAllText(path);
+            foreach (var snippet in bannedSnippets)
+            {
+                text.Contains(snippet, StringComparison.Ordinal).ShouldBeFalse($"{Path.GetRelativePath(uiRoot, path)} must use typed UiIconId APIs for icon visuals.");
+            }
+        }
+    }
+
+    private static string ToAssetPath(string projectRoot, string resourcePath) =>
+        Path.Combine(projectRoot, resourcePath["res://".Length..]);
+
+    private static string FindRepositoryRoot()
+    {
+        for (var directory = new DirectoryInfo(AppContext.BaseDirectory);
+             directory is not null;
+             directory = directory.Parent)
+        {
+            if (File.Exists(Path.Combine(directory.FullName, "NodeRunner.slnx")))
+            {
+                return directory.FullName;
+            }
+        }
+
+        throw new DirectoryNotFoundException("Could not locate the Node Runner repository root.");
+    }
+}

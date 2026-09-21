@@ -105,7 +105,7 @@ public partial class CreationCard : Control
         var panel = new UiPanel
         {
             Tokens = _tokens,
-            Raised = true,
+            Variant = UiSurfaceContracts.FrameVariant.Frame,
         };
         panel.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
         AddChild(panel);
@@ -185,12 +185,12 @@ public partial class CreationCard : Control
         row.AddThemeConstantOverride("separation", 0);
         actions.AddChild(row);
 
-        var duplicateButton = CreateActionSegment("⧉\nCOPY", UiActionButton.ActionKind.Secondary);
+        var duplicateButton = CreateActionSegment("Copy", UiIconId.Copy, UiActionButton.ActionKind.Secondary);
         duplicateButton.Disabled = !_canDuplicate;
         duplicateButton.Pressed += () => EmitSignal(SignalName.DuplicateRequested, _creationKey, _creationName);
         row.AddChild(duplicateButton);
 
-        var editButton = CreateActionSegment("✎\nEDIT", UiActionButton.ActionKind.Secondary);
+        var editButton = CreateActionSegment("Edit", UiIconId.Edit, UiActionButton.ActionKind.Secondary);
         editButton.Disabled = !_canEdit;
         editButton.Pressed += () => EmitSignal(SignalName.EditRequested, _creationKey, _creationName);
         row.AddChild(editButton);
@@ -206,7 +206,7 @@ public partial class CreationCard : Control
         }
         else
         {
-            var deleteButton = CreateActionSegment("×\nDELETE", UiActionButton.ActionKind.Danger);
+            var deleteButton = CreateActionSegment("Delete", UiIconId.Trash, UiActionButton.ActionKind.Danger);
             deleteButton.Disabled = !_canDelete;
             deleteButton.Pressed += () => EmitSignal(SignalName.DeleteRequested, _creationKey, _creationName);
             row.AddChild(deleteButton);
@@ -281,17 +281,18 @@ public partial class CreationCard : Control
             CustomMinimumSize = new Vector2(56, _tokens.TouchTarget),
         };
 
-    private Button CreateActionSegment(string text, UiActionButton.ActionKind kind, bool disabled = false)
+    private Button CreateActionSegment(string text, UiIconId iconId, UiActionButton.ActionKind kind, bool disabled = false)
     {
         var color = kind == UiActionButton.ActionKind.Danger ? _tokens.Danger : _tokens.Ink;
         var button = new Button
         {
-            Text = text,
+            Text = text.ToUpperInvariant(),
             Disabled = disabled,
             CustomMinimumSize = new Vector2(0, _tokens.TouchTarget),
             SizeFlagsHorizontal = SizeFlags.ExpandFill,
         };
         _tokens.ApplyTextStyle(button, _tokens.CaptionText);
+        UiIcons.Apply(button, iconId, UiIconSize.Standard, color);
         button.AddThemeColorOverride("font_color", color);
         button.AddThemeColorOverride("font_disabled_color", _tokens.Muted);
         button.AddThemeColorOverride("font_hover_color", kind == UiActionButton.ActionKind.Danger ? _tokens.Danger : _tokens.Accent);
@@ -382,8 +383,11 @@ public partial class CreationCard : Control
             var centerX = Size.X * 0.5f;
             var iconY = 17f;
             var color = Tokens.Muted;
-            DrawArc(new Vector2(centerX, iconY - 1), 5, Mathf.Pi, Mathf.Tau, 18, color, 1.6f, antialiased: true);
-            DrawRect(new Rect2(centerX - 6, iconY - 1, 12, 9), color, filled: false, width: 1.6f);
+            if (UiIcons.Load(UiIconId.Lock) is { } lockIcon)
+            {
+                DrawTextureRect(lockIcon, new Rect2(centerX - 8, iconY - 8, 16, 16), false, color);
+            }
+
             DrawString(ThemeDB.FallbackFont, new Vector2(0, 40), "LOCK", HorizontalAlignment.Center, Size.X, 12, color);
         }
     }

@@ -2,25 +2,14 @@ using Godot;
 
 namespace NodeRunner.Ui.Lib;
 
-/// <summary>Touch-safe icon-labelled action with a stable square hit target.</summary>
+/// <summary>Touch-safe canonical SVG icon action with a stable square hit target.</summary>
 public partial class UiIconButton : Button
 {
-    public enum IconRole
-    {
-        Custom,
-        Back,
-        Brain,
-        Train,
-        More,
-        Add,
-        Help,
-        Trophy,
-    }
-
     private UiTokens _tokens = UiTokens.Neon;
-    private IconRole _role;
-
-    private string _iconText = "•";
+    private UiIconId _iconId = UiIconId.More;
+    private string _iconText = "more";
+    private bool _accentRole;
+    private bool _dangerRole;
 
     [Export]
     public string IconText
@@ -29,10 +18,32 @@ public partial class UiIconButton : Button
         set
         {
             _iconText = value;
-            _role = RoleFor(value);
+            if (UiIconGlyphs.TryParse(value, out var icon))
+            {
+                _iconId = icon;
+            }
+            else
+            {
+                GD.PushError($"UiIconButton.IconText '{value}' is not a canonical icon. Use IconId.");
+            }
             RefreshStyle();
         }
     }
+
+    [Export]
+    public UiIconId IconId
+    {
+        get => _iconId;
+        set
+        {
+            _iconId = value;
+            _iconText = value.ToString();
+            RefreshStyle();
+        }
+    }
+
+    [Export]
+    public UiIconSize IconSize { get; set; } = UiIconSize.Large;
 
     private string _accessibleLabel = string.Empty;
 
@@ -43,6 +54,28 @@ public partial class UiIconButton : Button
         set
         {
             _accessibleLabel = value;
+            RefreshStyle();
+        }
+    }
+
+    [Export]
+    public bool AccentRole
+    {
+        get => _accentRole;
+        set
+        {
+            _accentRole = value;
+            RefreshStyle();
+        }
+    }
+
+    [Export]
+    public bool DangerRole
+    {
+        get => _dangerRole;
+        set
+        {
+            _dangerRole = value;
             RefreshStyle();
         }
     }
@@ -64,17 +97,6 @@ public partial class UiIconButton : Button
         RefreshStyle();
     }
 
-    public override void _Draw()
-    {
-        base._Draw();
-        if (_role == IconRole.Custom)
-        {
-            return;
-        }
-
-        DrawIcon(_role);
-    }
-
     private void RefreshStyle()
     {
         if (!IsInsideTree())
@@ -82,95 +104,27 @@ public partial class UiIconButton : Button
             return;
         }
 
-        _role = RoleFor(IconText);
-        Text = _role == IconRole.Custom ? IconText : string.Empty;
+        Text = string.Empty;
         TooltipText = AccessibleLabel;
         CustomMinimumSize = new Vector2(_tokens.TouchTarget, _tokens.TouchTarget);
         _tokens.ApplyTextStyle(this, _tokens.HeadingText);
-        AddThemeColorOverride("font_color", _tokens.Ink);
-        AddThemeColorOverride("font_hover_color", _tokens.Accent);
+        var foreground = Disabled ? _tokens.Muted : DangerRole ? _tokens.Danger : AccentRole ? _tokens.Accent : _tokens.Ink;
+        AddThemeColorOverride("font_color", foreground);
+        AddThemeColorOverride("font_hover_color", DangerRole ? _tokens.Danger : _tokens.Accent);
         AddThemeColorOverride("font_pressed_color", _tokens.OnAccent);
+        UiIcons.Apply(this, IconId, IconSize, foreground);
         AddThemeStyleboxOverride("normal", CreateStyle(false));
         AddThemeStyleboxOverride("hover", CreateStyle(true));
         AddThemeStyleboxOverride("pressed", CreateStyle(true));
         AddThemeStyleboxOverride("focus", _tokens.FocusRingStyle());
         AddThemeStyleboxOverride("disabled", CreateStyle(false, 1, 0.5f));
-        QueueRedraw();
     }
-
-    private void DrawIcon(IconRole role)
-    {
-        var color = Disabled ? _tokens.Muted : _tokens.Ink;
-        var center = Size * 0.5f;
-        const float stroke = 2f;
-        switch (role)
-        {
-            case IconRole.Back:
-                DrawLine(center + new Vector2(5, -9), center + new Vector2(-5, 0), color, stroke, antialiased: true);
-                DrawLine(center + new Vector2(-5, 0), center + new Vector2(5, 9), color, stroke, antialiased: true);
-                break;
-            case IconRole.Brain:
-                DrawArc(center, 8, 0, Mathf.Tau, 32, color, stroke, antialiased: true);
-                DrawCircle(center + new Vector2(-4, -2), 2.2f, color);
-                DrawCircle(center + new Vector2(4, -2), 2.2f, color);
-                DrawLine(center + new Vector2(-3, 4), center + new Vector2(3, 4), color, stroke, antialiased: true);
-                break;
-            case IconRole.Train:
-                DrawColoredPolygon(
-                    [
-                        center + new Vector2(-5, -9),
-                        center + new Vector2(9, 0),
-                        center + new Vector2(-5, 9),
-                    ],
-                    color);
-                break;
-            case IconRole.More:
-                DrawCircle(center + new Vector2(-8, 0), 2.4f, color);
-                DrawCircle(center, 2.4f, color);
-                DrawCircle(center + new Vector2(8, 0), 2.4f, color);
-                break;
-            case IconRole.Add:
-                DrawLine(center + new Vector2(-8, 0), center + new Vector2(8, 0), color, stroke, antialiased: true);
-                DrawLine(center + new Vector2(0, -8), center + new Vector2(0, 8), color, stroke, antialiased: true);
-                break;
-            case IconRole.Help:
-                DrawArc(center + new Vector2(0, -3), 6, Mathf.Pi, Mathf.Tau * 0.95f, 24, color, stroke, antialiased: true);
-                DrawLine(center + new Vector2(4, 2), center + new Vector2(0, 6), color, stroke, antialiased: true);
-                DrawCircle(center + new Vector2(0, 11), 1.8f, color);
-                break;
-            case IconRole.Trophy:
-                DrawArc(center + new Vector2(0, -5), 8, 0, Mathf.Pi, 24, color, stroke, antialiased: true);
-                DrawLine(center + new Vector2(-8, -5), center + new Vector2(-5, 4), color, stroke, antialiased: true);
-                DrawLine(center + new Vector2(8, -5), center + new Vector2(5, 4), color, stroke, antialiased: true);
-                DrawLine(center + new Vector2(-4, 6), center + new Vector2(4, 6), color, stroke, antialiased: true);
-                DrawLine(center + new Vector2(0, 6), center + new Vector2(0, 12), color, stroke, antialiased: true);
-                DrawLine(center + new Vector2(-7, 12), center + new Vector2(7, 12), color, stroke, antialiased: true);
-                DrawArc(center + new Vector2(-10, -3), 5, -Mathf.Pi / 2, Mathf.Pi / 2, 16, color, stroke, antialiased: true);
-                DrawArc(center + new Vector2(10, -3), 5, Mathf.Pi / 2, Mathf.Pi * 1.5f, 16, color, stroke, antialiased: true);
-                break;
-        }
-    }
-
-    private static IconRole RoleFor(string iconText) =>
-        iconText switch
-        {
-            UiIconGlyphs.Back => IconRole.Back,
-            UiIconGlyphs.Brain => IconRole.Brain,
-            UiIconGlyphs.Train => IconRole.Train,
-            UiIconGlyphs.More => IconRole.More,
-            UiIconGlyphs.Trophy => IconRole.Trophy,
-            "+" => IconRole.Add,
-            "?" => IconRole.Help,
-            "..." => IconRole.More,
-            "<" => IconRole.Back,
-            ">" => IconRole.Train,
-            _ => IconRole.Custom,
-        };
 
     private StyleBoxFlat CreateStyle(bool focused, int borderWidth = 1, float opacity = 1)
     {
-        var background = focused ? _tokens.AccentSoft : _tokens.PanelRaised;
-        var border = focused ? _tokens.Accent : _tokens.LineStrong;
+        var roleColor = DangerRole ? _tokens.Danger : AccentRole ? _tokens.Accent : _tokens.LineStrong;
+        var background = focused ? (DangerRole ? UiTokens.WithAlpha(_tokens.Danger, 0.18f) : _tokens.AccentSoft) : _tokens.PanelRaised;
+        var border = focused ? (DangerRole ? _tokens.Danger : _tokens.Accent) : roleColor;
         return _tokens.ControlStyle(
             UiTokens.MultiplyAlpha(background, opacity),
             UiTokens.MultiplyAlpha(border, opacity),

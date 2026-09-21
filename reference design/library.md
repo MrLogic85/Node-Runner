@@ -96,7 +96,7 @@ Icon, title and one line of help.
 
 ## `c_card(inner, kind='panel', w=None, h=None, style='')`
 
-The one frame for panels, cards and tiles. kind: panel, sel, lock, warn, hint, raised; plus tight or flush.
+The one Frame surface for panels, cards, tiles, menus and dialogs. Signature c_card(inner, kind, w, h, style). kind: panel (default), sel, pick, lock, warn, hint, ok, glow, raised, menu, dialog; add a size with a space: snug, tight, roomy or flush.
 
 ## `c_ring(pct, done=False)`
 
@@ -104,4 +104,4 @@ Progress ring: a touch-size box, a 44 ring centred in it, the percent (or a chec
 
 ## `c_panel(kind, inner, w=None)`
 
-Alias of c_card(kind, inner, w).
+Legacy alias with the arguments swapped: c_panel(kind, inner, w) calls c_card(inner, kind, w). New code calls c_card.
