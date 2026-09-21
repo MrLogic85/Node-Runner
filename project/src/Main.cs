@@ -617,6 +617,13 @@ public partial class Main : Node2D
         _buildScreen.SaveRequested += SaveCreationFromBuild;
         _buildScreen.TrainingRequested += CompleteCreationAndSimulate;
         _buildScreen.RebuildRequested += RebuildCreation;
+        _buildScreen.BackRequested += BackFromBuildScreen;
+        _buildScreen.CreationNameChanged += RenameActiveCreation;
+        _buildScreen.ResetTrainingRequested += ResetActiveCreationTraining;
+        _buildScreen.DeleteCreationRequested += RequestDeleteActiveCreation;
+        _buildScreen.ResumeTrainingRequested += ResumeTrainingFromSavedCreation;
+        _buildScreen.StatsRequested += ShowStatsCueFromBuild;
+        _buildScreen.BrainRequested += ShowBrainCueFromBuild;
         buildLayer.AddChild(_buildScreen);
     }
 
@@ -962,7 +969,7 @@ public partial class Main : Node2D
     {
         if (TryGetCreationFromScreen(creationKey, creationName, out var creation))
         {
-            OpenCreation(creation);
+            EditCreation(creation);
             if (_creationsScreen is not null)
             {
                 _creationsScreen.Visible = false;
@@ -1085,7 +1092,16 @@ public partial class Main : Node2D
         if (_activeCreationId == id)
         {
             _activeCreationId = null;
+            _evolver?.Stop();
+            UpdateTrainingLabels();
             ResetTrainingSaveStatus(null);
+            Construction.IsActive = false;
+            if (_creationsScreen is not null)
+            {
+                _creationsScreen.Visible = true;
+            }
+
+            UpdateToolButtonVisibility();
         }
 
         _lastDeletedCreation = deleted;
@@ -1196,7 +1212,7 @@ public partial class Main : Node2D
     private void EditCreation(CreationDef creation)
     {
         OpenCreation(creation);
-        Construction.Load(creation.Creature, moveOnly: true, brainShape: creation.BrainShape);
+        Construction.Load(creation.Creature, moveOnly: true, brainShape: creation.BrainShape, creationName: creation.Name, training: creation.Training);
         Construction.IsActive = true;
         UpdateToolButtonVisibility();
     }
@@ -1239,6 +1255,11 @@ public partial class Main : Node2D
 
     private void ApplyLoadedCreature(CreationDef creation)
     {
+        ApplyLoadedCreature(creation, startEvolution: true);
+    }
+
+    private void ApplyLoadedCreature(CreationDef creation, bool startEvolution)
+    {
         if (_creature is null)
         {
             return;
@@ -1248,9 +1269,149 @@ public partial class Main : Node2D
         _activeCreationId = creation.Id;
         _creature.BrainShape = creation.BrainShape;
         _creature.BuildFrom(creation.Creature);
-        Construction.Load(creation.Creature, brainShape: creation.BrainShape);
+        Construction.Load(creation.Creature, brainShape: creation.BrainShape, creationName: creation.Name, training: creation.Training);
         SetActiveInspector(creation.Creature);
-        StartEvolution(creation);
+        if (startEvolution)
+        {
+            StartEvolution(creation);
+        }
+        else
+        {
+            _evolver?.Stop();
+            UpdateTrainingLabels();
+            ResetTrainingSaveStatus(null);
+        }
+    }
+
+    private void ResumeTrainingFromSavedCreation()
+    {
+        Construction.IsActive = false;
+        UpdateToolButtonVisibility();
+        _deleteCreationToast?.ShowMessage("Train setup opens in milestone 0.12.0.");
+    }
+
+    private void ShowStatsCueFromBuild()
+    {
+        _deleteCreationToast?.ShowMessage("Stats open in milestone 0.12.0.");
+    }
+
+    private void ShowBrainCueFromBuild()
+    {
+        _deleteCreationToast?.ShowMessage("Brain view opens in milestone 0.12.0.");
+    }
+
+    private void BackFromBuildScreen()
+    {
+        if (Construction.IsMoveOnly)
+        {
+            if (!LeaveConstructionAndPersistEdits())
+            {
+                return;
+            }
+
+            Construction.IsActive = false;
+            if (_creationsScreen is not null)
+            {
+                RefreshCreationsPanel();
+                _creationsScreen.Visible = true;
+            }
+
+            UpdateToolButtonVisibility();
+            return;
+        }
+
+        ToggleConstructionMode();
+    }
+
+    private bool LeaveConstructionAndPersistEdits()
+    {
+        if (!Construction.TryLeave(out var editedCreature, out var errors))
+        {
+            Construction.SetBlockedLeaveMessage(errors);
+            return false;
+        }
+
+        if (editedCreature is not null)
+        {
+            ApplyEditedCreature(editedCreature);
+        }
+
+        return true;
+    }
+
+    private void RenameActiveCreation(string name)
+    {
+        if (_activeCreationId is not { } id)
+        {
+            Construction.SetCreationName(name);
+            return;
+        }
+
+        var saveManager = GetNode<SaveManager>("/root/SaveManager");
+        CreationDef? renamed = null;
+        if (!TryRunFileOperation(
+            () => renamed = saveManager.UpdateIfPresent(
+                id,
+                source => new CreationDef(source.Id, name, source.Creature, source.BrainShape, source.Training)),
+            $"Renaming Creation '{id}'"))
+        {
+            return;
+        }
+
+        if (renamed is null)
+        {
+            return;
+        }
+
+        Construction.SetCreationName(renamed.Name);
+        RefreshCreationsPanel();
+        _deleteCreationToast?.ShowMessage($"Renamed to {renamed.Name}.");
+    }
+
+    private void ResetActiveCreationTraining()
+    {
+        if (_activeCreationId is not { } id)
+        {
+            return;
+        }
+
+        if (!TryRunFileOperation(
+            () => GetNode<SaveManager>("/root/SaveManager").ResetTraining(id),
+            $"Resetting training for Creation {id}"))
+        {
+            return;
+        }
+
+        ResetTrainingSaveStatus(null);
+        if (GetNode<SaveManager>("/root/SaveManager").Get(id) is { } creation)
+        {
+            ApplyLoadedCreature(creation, startEvolution: false);
+            Construction.Load(creation.Creature, moveOnly: true, brainShape: creation.BrainShape, creationName: creation.Name, training: creation.Training);
+            Construction.IsActive = true;
+        }
+
+        _deleteCreationToast?.ShowMessage("Training reset.");
+    }
+
+    private void RequestDeleteActiveCreation()
+    {
+        if (_activeCreationId is not { } id)
+        {
+            return;
+        }
+
+        var name = Construction.CreationName;
+        _pendingDeleteCreationId = id;
+        _pendingDeleteCreationName = name;
+        if (_deleteCreationConfirmationDialog is null)
+        {
+            ConfirmDeleteCreationFromScreen();
+            return;
+        }
+
+        _deleteCreationConfirmationDialog.DialogText =
+            $"Delete {name}? The creation and its trained brain are removed. You can Undo for 10 seconds.";
+        _deleteCreationConfirmationDialog.PopupCentered();
     }
 
     // Training HUD (#51): generation/best/mean readout plus run/pause,
@@ -1506,7 +1667,7 @@ public partial class Main : Node2D
             creation.Name,
             creation.Creature,
             creation.BrainShape,
-            new TrainingStateDef(_evolver.LayerSizes, genome.ToArray(), _evolver.Generation, Activation.Tanh.ToString()));
+            new TrainingStateDef(_evolver.LayerSizes, genome.ToArray(), _evolver.Generation, Activation.Tanh.ToString(), _evolver.BestFitness));
     }
 
     private void AddConstructionToolRow(CanvasLayer layer)
@@ -1675,15 +1836,9 @@ public partial class Main : Node2D
 
         if (Construction.IsActive)
         {
-            if (!Construction.TryLeave(out var editedCreature, out var errors))
+            if (!LeaveConstructionAndPersistEdits())
             {
-                Construction.SetBlockedLeaveMessage(errors);
                 return;
-            }
-
-            if (editedCreature is not null)
-            {
-                ApplyEditedCreature(editedCreature);
             }
         }
 
@@ -1794,17 +1949,18 @@ public partial class Main : Node2D
         var epoch = saveManager.CurrentTrainingEpoch(id);
         var saveStatusVersion = BeginTrainingSaveStatus($"Saving generation {generation}...");
 
-        Task.Run(() => PersistTrainingSnapshot(saveManager, id, epoch, saveStatusVersion, layerSizes, genomeSnapshot, generation));
+        var bestFitness = _evolver.BestFitness;
+        Task.Run(() => PersistTrainingSnapshot(saveManager, id, epoch, saveStatusVersion, layerSizes, genomeSnapshot, generation, bestFitness));
     }
 
-    private void PersistTrainingSnapshot(SaveManager saveManager, Guid id, long epoch, long saveStatusVersion, int[] layerSizes, double[] genome, int generation)
+    private void PersistTrainingSnapshot(SaveManager saveManager, Guid id, long epoch, long saveStatusVersion, int[] layerSizes, double[] genome, int generation, double bestFitness)
     {
         try
         {
             var persisted = saveManager.TryPersistTraining(
                 id,
                 epoch,
-                new TrainingStateDef(layerSizes, genome, generation, Activation.Tanh.ToString()));
+                new TrainingStateDef(layerSizes, genome, generation, Activation.Tanh.ToString(), bestFitness));
             if (persisted)
             {
                 CallDeferred(nameof(ShowTrainingPersisted), id.ToString(), saveStatusVersion, generation);

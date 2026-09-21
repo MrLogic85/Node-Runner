@@ -43,6 +43,12 @@ public sealed class ConstructionPresentationViewModel
 
     public string InspectorTitle => "Building";
 
+    public string CreationName => _construction.CreationName;
+
+    public string CreationSubtitle => _construction.IsMoveOnly
+        ? "Saved Creation · anatomy locked"
+        : "Unsaved anatomy draft";
+
     public string InspectorRole => _construction.IsMoveOnly ? "Tool: Move" : $"Tool: {_construction.ActiveTool}";
 
     public string InspectorValues => _construction.StatusMessage ?? (_construction.IsMoveOnly
@@ -64,6 +70,38 @@ public sealed class ConstructionPresentationViewModel
     public bool IsBrainShapeLocked => _construction.IsMoveOnly;
 
     public string MoveOnlyLockReason => "Move only · training kept";
+
+    public string PartsLockedChipText => "Parts locked · drag to move";
+
+    public string TrainingSummaryTitle => _construction.TrainingGeneration is { } generation
+        ? $"Trained {generation} generations"
+        : "Not trained yet";
+
+    public string TrainingSummaryBody => _construction.TrainingGeneration is { } generation
+        ? $"Generation {generation}. Best distance {BestDistanceText}. Anatomy is locked so this brain stays valid."
+        : "Start training when you are ready. Anatomy is locked after Save.";
+
+    public string BestDistanceText => _construction.BestFitness is { } bestFitness
+        ? $"{bestFitness:0.0} m"
+        : "—";
+
+    public int SelectedNodeCount => _construction.SelectedNodeCount;
+
+    public int SelectedCoreCount => _construction.SelectedCoreCount;
+
+    public string SinglePartTitle => _construction.SingleSelectedNodeIndex is { } index
+        ? _construction.SingleSelectionHasCore ? $"Core · Node {index + 1}" : $"Node {index + 1}"
+        : "Part";
+
+    public string SinglePartBody => "Position can be moved. Structural settings are locked after Save.";
+
+    public string MultiSelectionTitle => $"{_construction.SelectedNodeCount} selected";
+
+    public string MultiSelectionCounts => _construction.SelectedCoreCount > 0
+        ? $"Nodes · {_construction.SelectedNodeCount}    Core · {_construction.SelectedCoreCount}"
+        : $"Nodes · {_construction.SelectedNodeCount}";
+
+    public string MultiSelectionBody => "Drag any selected part to move them together. Parts are locked, so this selection can only be moved.";
 
     public string LockedTopologyToolsText => $"Beam, Core, Delete locked: {MoveOnlyLockReason}";
 

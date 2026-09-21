@@ -6,7 +6,7 @@ namespace NodeRunner.Domain;
 /// </summary>
 public sealed record TrainingStateDef
 {
-    public TrainingStateDef(int[] layerSizes, double[] bestGenome, int generation, string activation)
+    public TrainingStateDef(int[] layerSizes, double[] bestGenome, int generation, string activation, double? bestFitness = null)
     {
         ArgumentNullException.ThrowIfNull(layerSizes);
         ArgumentNullException.ThrowIfNull(bestGenome);
@@ -26,6 +26,7 @@ public sealed record TrainingStateDef
         BestGenome = bestGenome.ToArray();
         Generation = generation;
         Activation = activation;
+        BestFitness = bestFitness;
     }
 
     public int[] LayerSizes { get; }
@@ -35,4 +36,6 @@ public sealed record TrainingStateDef
     public int Generation { get; }
 
     public string Activation { get; }
+
+    public double? BestFitness { get; }
 }

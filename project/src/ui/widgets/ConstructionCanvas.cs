@@ -23,6 +23,10 @@ public partial class ConstructionCanvas : Node2D
 
     private ConstructionViewModel? _viewModel;
     private int _draggingNodeIndex = -1;
+    private readonly Dictionary<int, Vector2D> _ghostNodePositions = [];
+    private int _ghostVersion;
+    private Vector2? _selectionBoxStart;
+    private Vector2? _selectionBoxCurrent;
 
     public VisualTheme Theme { get; set; } = VisualTheme.Neon;
 
@@ -38,7 +42,7 @@ public partial class ConstructionCanvas : Node2D
             }
 
             _viewModel = value;
-
+            ClearMoveGhosts();
             if (_viewModel is not null)
             {
                 _viewModel.AnatomyChanged += OnAnatomyChanged;
@@ -74,7 +78,13 @@ public partial class ConstructionCanvas : Node2D
 
         if (PointerInput.TryGetDragPosition(inputEvent, out var dragPosition))
         {
-            if (_draggingNodeIndex >= 0)
+            if (_selectionBoxStart is not null)
+            {
+                _selectionBoxCurrent = ToCanvasLocal(dragPosition);
+                QueueRedraw();
+                GetViewport().SetInputAsHandled();
+            }
+            else if (_draggingNodeIndex >= 0)
             {
                 HandleDrag(ToCanvasLocal(dragPosition));
                 GetViewport().SetInputAsHandled();
@@ -85,7 +95,9 @@ public partial class ConstructionCanvas : Node2D
 
         if (PointerInput.TryGetReleasePosition(inputEvent, out _))
         {
+            CompleteSelectionBox();
             _draggingNodeIndex = -1;
+            ScheduleMoveGhostClear();
         }
     }
 
@@ -95,6 +107,9 @@ public partial class ConstructionCanvas : Node2D
         {
             return;
         }
+
+        DrawMoveGhosts();
+        DrawSelectionBox();
 
         foreach (var beam in _viewModel.Beams)
         {
@@ -135,6 +150,55 @@ public partial class ConstructionCanvas : Node2D
             var position = ToGodot(_viewModel.Nodes[pendingIndex].Position);
             var radius = (float)_viewModel.Nodes[pendingIndex].Radius;
             DrawCircle(position, radius * 1.65f, Theme.SelectionGlow);
+        }
+    }
+
+    private void DrawSelectionBox()
+    {
+        if (_selectionBoxStart is not { } start || _selectionBoxCurrent is not { } current)
+        {
+            return;
+        }
+
+        var rect = RectFromPoints(start, current);
+        var fill = Theme.SelectionGlow;
+        fill.A = 0.16f;
+        DrawRect(rect, fill, filled: true);
+        DrawDashedLine(rect.Position, rect.Position + new Vector2(rect.Size.X, 0), Theme.SelectionGlow, 2, 6, antialiased: true);
+        DrawDashedLine(rect.Position + new Vector2(rect.Size.X, 0), rect.End, Theme.SelectionGlow, 2, 6, antialiased: true);
+        DrawDashedLine(rect.End, rect.Position + new Vector2(0, rect.Size.Y), Theme.SelectionGlow, 2, 6, antialiased: true);
+        DrawDashedLine(rect.Position + new Vector2(0, rect.Size.Y), rect.Position, Theme.SelectionGlow, 2, 6, antialiased: true);
+    }
+
+    private void DrawMoveGhosts()
+    {
+        if (_viewModel is null || _ghostNodePositions.Count == 0)
+        {
+            return;
+        }
+
+        foreach (var beam in _viewModel.Beams)
+        {
+            if (!_ghostNodePositions.TryGetValue(beam.NodeA, out var startPosition)
+                && !_ghostNodePositions.TryGetValue(beam.NodeB, out var endPosition))
+            {
+                continue;
+            }
+
+            startPosition = _ghostNodePositions.GetValueOrDefault(beam.NodeA, _viewModel.Nodes[beam.NodeA].Position);
+            endPosition = _ghostNodePositions.GetValueOrDefault(beam.NodeB, _viewModel.Nodes[beam.NodeB].Position);
+            DrawDashedLine(ToGodot(startPosition), ToGodot(endPosition), Theme.SelectionGlow, 4, 8, antialiased: true);
+        }
+
+        foreach (var (nodeIndex, position) in _ghostNodePositions)
+        {
+            if (nodeIndex < 0 || nodeIndex >= _viewModel.Nodes.Count)
+            {
+                continue;
+            }
+
+            var radius = (float)_viewModel.Nodes[nodeIndex].Radius;
+            DrawArc(ToGodot(position), radius * 1.35f, 0, Mathf.Tau, 32, Theme.SelectionGlow, 2, antialiased: true);
         }
     }
 
@@ -362,11 +426,14 @@ public partial class ConstructionCanvas : Node2D
                         _viewModel.ToggleSelectedNode(nodeIndex);
                     }
 
+                    CaptureMoveGhosts(nodeIndex);
                     _draggingNodeIndex = nodeIndex;
                 }
                 else
                 {
                     _viewModel.ClearSelection();
+                    _selectionBoxStart = localPosition;
+                    _selectionBoxCurrent = localPosition;
                 }
 
                 break;
@@ -374,6 +441,13 @@ public partial class ConstructionCanvas : Node2D
             default:
                 if (foundNode)
                 {
+                    if (_viewModel.IsMoveOnly)
+                    {
+                        _viewModel.ClearSelection();
+                        _viewModel.ToggleSelectedNode(nodeIndex);
+                        CaptureMoveGhosts(nodeIndex);
+                    }
+
                     _draggingNodeIndex = nodeIndex;
                 }
                 else
@@ -386,6 +460,98 @@ public partial class ConstructionCanvas : Node2D
 
                 break;
         }
+    }
+
+    private void CaptureMoveGhosts(int anchorNodeIndex)
+    {
+        if (_viewModel is null || !_viewModel.IsMoveOnly)
+        {
+            return;
+        }
+
+        _ghostNodePositions.Clear();
+        _ghostVersion++;
+        var indices = _viewModel.SelectedNodeIndices.Count > 0
+            ? _viewModel.SelectedNodeIndices
+            : [anchorNodeIndex];
+        foreach (var index in indices)
+        {
+            if (index >= 0 && index < _viewModel.Nodes.Count)
+            {
+                _ghostNodePositions[index] = _viewModel.Nodes[index].Position;
+            }
+        }
+    }
+
+    private void CompleteSelectionBox()
+    {
+        if (_viewModel is null || _selectionBoxStart is not { } start || _selectionBoxCurrent is not { } current)
+        {
+            _selectionBoxStart = null;
+            _selectionBoxCurrent = null;
+            return;
+        }
+
+        var rect = RectFromPoints(start, current);
+        if (rect.Size.X < 8 && rect.Size.Y < 8)
+        {
+            _selectionBoxStart = null;
+            _selectionBoxCurrent = null;
+            QueueRedraw();
+            return;
+        }
+
+        var selected = new List<int>();
+        for (var i = 0; i < _viewModel.Nodes.Count; i++)
+        {
+            if (rect.HasPoint(ToGodot(_viewModel.Nodes[i].Position)))
+            {
+                selected.Add(i);
+            }
+        }
+
+        _viewModel.ReplaceSelection(selected);
+        _selectionBoxStart = null;
+        _selectionBoxCurrent = null;
+        QueueRedraw();
+    }
+
+    private static Rect2 RectFromPoints(Vector2 first, Vector2 second)
+    {
+        var min = new Vector2(Mathf.Min(first.X, second.X), Mathf.Min(first.Y, second.Y));
+        var max = new Vector2(Mathf.Max(first.X, second.X), Mathf.Max(first.Y, second.Y));
+        return new Rect2(min, max - min);
+    }
+
+    private void ScheduleMoveGhostClear()
+    {
+        if (_ghostNodePositions.Count == 0 || GetTree() is not { } tree)
+        {
+            return;
+        }
+
+        var version = _ghostVersion;
+        tree.CreateTimer(1.8).Timeout += () =>
+        {
+            if (_ghostVersion != version)
+            {
+                return;
+            }
+
+            ClearMoveGhosts();
+        };
+    }
+
+    private void ClearMoveGhosts()
+    {
+        if (_ghostNodePositions.Count == 0)
+        {
+            return;
+        }
+
+        _ghostVersion++;
+        _ghostNodePositions.Clear();
+        QueueRedraw();
     }
 
     private void HandleDrag(Vector2 localPosition)
@@ -417,9 +583,15 @@ public partial class ConstructionCanvas : Node2D
 
     private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs eventArgs)
     {
-        if (eventArgs.PropertyName == nameof(ConstructionViewModel.PendingBeamStartNode))
+        if (eventArgs.PropertyName == nameof(ConstructionViewModel.PendingBeamStartNode)
+            || eventArgs.PropertyName == nameof(ConstructionViewModel.SelectedNodeCount))
         {
             QueueRedraw();
+        }
+
+        if (eventArgs.PropertyName == nameof(ConstructionViewModel.IsMoveOnly) && _viewModel?.IsMoveOnly != true)
+        {
+            ClearMoveGhosts();
         }
     }
 

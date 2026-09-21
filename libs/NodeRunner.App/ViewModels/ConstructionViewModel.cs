@@ -34,19 +34,25 @@ public sealed class ConstructionViewModel : INotifyPropertyChanged
     private readonly HashSet<int> _selectedNodeIndices = [];
     private BrainShapeDef _brainShape = BrainShapeDef.Default;
     private bool _hasCustomBrainShape;
+    private string _creationName = "Untitled Creation";
+    private int? _trainingGeneration;
+    private double? _bestFitness;
 
     public ConstructionViewModel(CreatureBuilder? builder = null)
     {
         _builder = builder ?? new CreatureBuilder();
     }
 
-    public void Load(CreatureDef creature, bool moveOnly = false, BrainShapeDef? brainShape = null)
+    public void Load(CreatureDef creature, bool moveOnly = false, BrainShapeDef? brainShape = null, string? creationName = null, TrainingStateDef? training = null)
     {
         ArgumentNullException.ThrowIfNull(creature);
         _builder = new CreatureBuilder(creature);
         _selectedNodeIndices.Clear();
         _brainShape = brainShape ?? BrainShapeDef.Default;
         _hasCustomBrainShape = brainShape is not null;
+        _creationName = string.IsNullOrWhiteSpace(creationName) ? "Untitled Creation" : creationName;
+        _trainingGeneration = training?.Generation;
+        _bestFitness = training?.BestFitness;
         _moveOnly = moveOnly;
         if (moveOnly)
         {
@@ -64,6 +70,9 @@ public sealed class ConstructionViewModel : INotifyPropertyChanged
         _selectedNodeIndices.Clear();
         _brainShape = BrainShapeDef.Default;
         _hasCustomBrainShape = false;
+        _creationName = "Untitled Creation";
+        _trainingGeneration = null;
+        _bestFitness = null;
         _moveOnly = false;
         ActiveTool = ConstructionTool.Place;
         PendingBeamStartNode = null;
@@ -77,6 +86,35 @@ public sealed class ConstructionViewModel : INotifyPropertyChanged
     public event EventHandler? AnatomyChanged;
 
     public bool IsMoveOnly => _moveOnly;
+
+    public string CreationName => _creationName;
+
+    public int? TrainingGeneration => _trainingGeneration;
+
+    public double? BestFitness => _bestFitness;
+
+    public int SelectedNodeCount => _selectedNodeIndices.Count;
+
+    public int SelectedCoreCount => _builder.Cores.Count(core => _selectedNodeIndices.Contains(core.NodeIndex));
+
+    public int? SingleSelectedNodeIndex => _selectedNodeIndices.Count == 1
+        ? _selectedNodeIndices.First()
+        : null;
+
+    public bool SingleSelectionHasCore => SingleSelectedNodeIndex is { } index
+        && _builder.Cores.Any(core => core.NodeIndex == index);
+
+    public void SetCreationName(string creationName)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(creationName);
+        if (_creationName == creationName)
+        {
+            return;
+        }
+
+        _creationName = creationName;
+        OnPropertyChanged(nameof(CreationName));
+    }
 
     public bool IsActive
     {
@@ -216,6 +254,10 @@ public sealed class ConstructionViewModel : INotifyPropertyChanged
         StatusMessage = _selectedNodeIndices.Count == 0
             ? "Selection cleared."
             : $"{_selectedNodeIndices.Count} selected. Drag one selected node to move them together.";
+        OnPropertyChanged(nameof(SelectedNodeCount));
+        OnPropertyChanged(nameof(SelectedCoreCount));
+        OnPropertyChanged(nameof(SingleSelectedNodeIndex));
+        OnPropertyChanged(nameof(SingleSelectionHasCore));
         AnatomyChanged?.Invoke(this, EventArgs.Empty);
     }
 
@@ -228,6 +270,32 @@ public sealed class ConstructionViewModel : INotifyPropertyChanged
 
         _selectedNodeIndices.Clear();
         StatusMessage = "Selection cleared.";
+        OnPropertyChanged(nameof(SelectedNodeCount));
+        OnPropertyChanged(nameof(SelectedCoreCount));
+        OnPropertyChanged(nameof(SingleSelectedNodeIndex));
+        OnPropertyChanged(nameof(SingleSelectionHasCore));
+        AnatomyChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    public void ReplaceSelection(IEnumerable<int> nodeIndices)
+    {
+        ArgumentNullException.ThrowIfNull(nodeIndices);
+        _selectedNodeIndices.Clear();
+        foreach (var nodeIndex in nodeIndices)
+        {
+            if (nodeIndex >= 0 && nodeIndex < _builder.Nodes.Count)
+            {
+                _selectedNodeIndices.Add(nodeIndex);
+            }
+        }
+
+        StatusMessage = _selectedNodeIndices.Count == 0
+            ? "Selection cleared."
+            : $"{_selectedNodeIndices.Count} selected. Drag one selected node to move them together.";
+        OnPropertyChanged(nameof(SelectedNodeCount));
+        OnPropertyChanged(nameof(SelectedCoreCount));
+        OnPropertyChanged(nameof(SingleSelectedNodeIndex));
+        OnPropertyChanged(nameof(SingleSelectionHasCore));
         AnatomyChanged?.Invoke(this, EventArgs.Empty);
     }
 

@@ -66,9 +66,31 @@ public sealed class ConstructionPresentationViewModelTests
         presentation.InspectorValues.ShouldBe("Drag an existing node to reposition it. Training is kept.");
         presentation.ShowCompleteAction.ShouldBeFalse();
         presentation.ShowRebuildAction.ShouldBeTrue();
+        presentation.CreationSubtitle.ShouldBe("Saved Creation · anatomy locked");
+        presentation.PartsLockedChipText.ShouldBe("Parts locked · drag to move");
         presentation.RebuildActionText.ShouldBe("Rebuild body");
         presentation.RebuildConfirmationTitle.ShouldBe("Rebuild body?");
         presentation.RebuildConfirmationBody.ShouldBe("Rebuild creates a new body and a new brain. The original Creation and its training stay unchanged.");
+    }
+
+    [Fact]
+    public void EditMode_WithTraining_ShowsTrainingSummary()
+    {
+        var construction = new ConstructionViewModel();
+        construction.Load(
+            new CreatureDef(
+                [new NodeDef(new Vector2D(0, 0), 18), new NodeDef(new Vector2D(20, 0), 18)],
+                [new BeamDef(0, 1)],
+                []),
+            moveOnly: true,
+            creationName: "Worm",
+            training: new TrainingStateDef([2, 4, 1], Enumerable.Repeat(0.1, 17).ToArray(), 12, "Tanh", 42.25));
+        var presentation = new ConstructionPresentationViewModel(construction);
+
+        presentation.CreationName.ShouldBe("Worm");
+        presentation.TrainingSummaryTitle.ShouldBe("Trained 12 generations");
+        presentation.BestDistanceText.ShouldBe("42.3 m");
+        presentation.TrainingSummaryBody.ShouldBe("Generation 12. Best distance 42.3 m. Anatomy is locked so this brain stays valid.");
     }
 
     [Fact]

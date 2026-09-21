@@ -116,6 +116,22 @@ public sealed class ConstructionViewModelTests
     }
 
     [Fact]
+    public void LoadMoveOnly_WithSavedCreationMetadata_ExposesNameAndTrainingGeneration()
+    {
+        var creature = new CreatureDef(
+            [new NodeDef(new Vector2D(0, 0), 18), new NodeDef(new Vector2D(20, 0), 18)],
+            [new BeamDef(0, 1)],
+            []);
+        var training = new TrainingStateDef([2, 4, 1], Enumerable.Repeat(0.1, 17).ToArray(), 9, "Tanh");
+        var viewModel = new ConstructionViewModel();
+
+        viewModel.Load(creature, moveOnly: true, creationName: "Worm", training: training);
+
+        viewModel.CreationName.ShouldBe("Worm");
+        viewModel.TrainingGeneration.ShouldBe(9);
+    }
+
+    [Fact]
     public void TryFindNodeNear_WithNoNodes_ReturnsFalse()
     {
         var viewModel = new ConstructionViewModel();
