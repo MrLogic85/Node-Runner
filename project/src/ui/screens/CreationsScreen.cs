@@ -33,6 +33,9 @@ public partial class CreationsScreen : Control
     public delegate void RestoreExampleRequestedEventHandler();
 
     [Signal]
+    public delegate void ComponentLibraryRequestedEventHandler();
+
+    [Signal]
     public delegate void DuplicateRequestedEventHandler(string creationKey, string creationName);
 
     [Signal]
@@ -44,6 +47,27 @@ public partial class CreationsScreen : Control
         set
         {
             _tokens = value;
+            if (IsInsideTree())
+            {
+                Rebuild();
+            }
+        }
+    }
+
+    private bool _showComponentLibraryLink;
+
+    [Export]
+    public bool ShowComponentLibraryLink
+    {
+        get => _showComponentLibraryLink;
+        set
+        {
+            if (_showComponentLibraryLink == value)
+            {
+                return;
+            }
+
+            _showComponentLibraryLink = value;
             if (IsInsideTree())
             {
                 Rebuild();
@@ -266,7 +290,17 @@ public partial class CreationsScreen : Control
             Tokens = _tokens,
             Position = new Vector2(UiLayout.CanvasWidth - 196, UiLayout.TopBarHeight + (UiSpacing.ScreenEdgeInset(_tokens) * 2)),
         };
-        menu.SetActions(("close", "Close Creations", false), ("restore-example", "Restore example", false));
+        var actions = new List<(string Id, string Label, bool Danger)>
+        {
+            ("close", "Close Creations", false),
+            ("restore-example", "Restore example", false),
+        };
+        if (ShowComponentLibraryLink)
+        {
+            actions.Add(("component-library", "Component library", false));
+        }
+
+        menu.SetActions(actions.ToArray());
         menu.ActionSelected += id =>
         {
             if (id == "close")
@@ -276,6 +310,10 @@ public partial class CreationsScreen : Control
             else if (id == "restore-example")
             {
                 EmitSignal(SignalName.RestoreExampleRequested);
+            }
+            else if (id == "component-library")
+            {
+                EmitSignal(SignalName.ComponentLibraryRequested);
             }
         };
         menu.Visible = false;

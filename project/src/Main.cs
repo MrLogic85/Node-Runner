@@ -46,6 +46,9 @@ public partial class Main : Node2D
     private PanelContainer? _creationsPanel;
     private VBoxContainer? _creationsList;
     private CreationsScreen? _creationsScreen;
+    private CanvasLayer? _componentGalleryLayer;
+    private Control? _componentGalleryHost;
+    private ComponentGalleryScreen? _componentGalleryScreen;
     private ConfirmationDialog? _deleteCreationConfirmationDialog;
     private UiToast? _deleteCreationToast;
     private CreationDef? _lastDeletedCreation;
@@ -871,6 +874,7 @@ public partial class Main : Node2D
         _creationsScreen = new CreationsScreen
         {
             Tokens = UiTokens.Neon,
+            ShowComponentLibraryLink = ShouldShowComponentLibraryLink(),
             Visible = true,
         };
         _creationsScreen.Setup(saveManager.CreationsPresentation);
@@ -878,6 +882,7 @@ public partial class Main : Node2D
         _creationsScreen.NewRequested += StartNewCreationFromHome;
         _creationsScreen.AchievementsRequested += ShowAchievementsCueFromHome;
         _creationsScreen.RestoreExampleRequested += RestoreExampleFromHome;
+        _creationsScreen.ComponentLibraryRequested += OpenComponentLibraryFromHome;
         _creationsScreen.OpenRequested += OpenCreationFromScreen;
         _creationsScreen.EditRequested += EditCreationFromScreen;
         _creationsScreen.DuplicateRequested += RequestDuplicateCreationFromScreen;
@@ -897,6 +902,58 @@ public partial class Main : Node2D
         AddDeleteCreationToast(overlayLayer);
 
         RefreshCreationsPanel();
+    }
+
+    private static bool ShouldShowComponentLibraryLink()
+    {
+        return OS.IsDebugBuild()
+            && ProjectSettings.GetSetting("ui/show_component_library_link", true).AsBool();
+    }
+
+    private void OpenComponentLibraryFromHome()
+    {
+        if (_componentGalleryScreen is not null)
+        {
+            _componentGalleryHost?.Show();
+            _componentGalleryLayer?.Show();
+            return;
+        }
+
+        _componentGalleryLayer = new CanvasLayer
+        {
+            Name = "ComponentGalleryOverlay",
+            Layer = 30,
+            ProcessMode = ProcessModeEnum.Always,
+        };
+        AddChild(_componentGalleryLayer);
+
+        _componentGalleryHost = new Control
+        {
+            Name = "ComponentGalleryHost",
+            ProcessMode = ProcessModeEnum.Always,
+        };
+        _componentGalleryHost.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
+        _componentGalleryHost.MouseFilter = Control.MouseFilterEnum.Stop;
+        _componentGalleryLayer.AddChild(_componentGalleryHost);
+
+        _componentGalleryScreen = GD.Load<PackedScene>("res://scenes/ui/ComponentGalleryScreen.tscn").Instantiate<ComponentGalleryScreen>();
+        _componentGalleryScreen.ShowCloseAction = true;
+        _componentGalleryScreen.CloseRequested += CloseComponentLibrary;
+        _componentGalleryScreen.ProcessMode = ProcessModeEnum.Always;
+        _componentGalleryHost.AddChild(_componentGalleryScreen);
+    }
+
+    private void CloseComponentLibrary()
+    {
+        if (_componentGalleryScreen is null)
+        {
+            return;
+        }
+
+        _componentGalleryLayer?.QueueFree();
+        _componentGalleryLayer = null;
+        _componentGalleryHost = null;
+        _componentGalleryScreen = null;
     }
 
     private void AddDeleteCreationToast(CanvasLayer overlayLayer)
