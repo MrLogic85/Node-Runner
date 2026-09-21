@@ -10,6 +10,12 @@ namespace NodeRunner.Ui.Screens;
 /// </summary>
 public partial class ComponentGalleryScreen : Control
 {
+    [Signal]
+    public delegate void CloseRequestedEventHandler();
+
+    [Export]
+    public bool ShowCloseAction { get; set; }
+
     private readonly List<Action<UiTokens>> _tokenAppliers = new();
     private readonly List<Action<UiTokens>> _labelAppliers = new();
     private UiTokens _tokens = UiTokens.Neon;
@@ -81,6 +87,18 @@ public partial class ComponentGalleryScreen : Control
         title.AutowrapMode = TextServer.AutowrapMode.Off;
         title.SizeFlagsHorizontal = SizeFlags.ExpandFill;
         header.AddChild(title);
+
+        if (ShowCloseAction)
+        {
+            var close = Track(new UiIconButton
+            {
+                IconText = UiIconGlyphs.Back,
+                AccessibleLabel = "Back to Creations",
+                SizeFlagsVertical = SizeFlags.ShrinkCenter,
+            });
+            close.Pressed += () => EmitSignal(SignalName.CloseRequested);
+            header.AddChild(close);
+        }
 
         var note = CreateLabel("Live token swap:", _tokens.BodyText, tokens => tokens.Muted);
         note.AutowrapMode = TextServer.AutowrapMode.Off;
