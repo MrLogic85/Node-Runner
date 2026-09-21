@@ -74,7 +74,7 @@ public partial class UiTopBar : UiPanel
         row.AddThemeConstantOverride("separation", (int)_tokens.Space2);
         AddChild(row);
 
-        _backButton = new UiIconButton
+        _backButton = new UiSecondaryIconButton
         {
             Tokens = _tokens,
             IconId = UiIconId.Back,
@@ -94,7 +94,7 @@ public partial class UiTopBar : UiPanel
         _actionHost.AddThemeConstantOverride("separation", (int)_tokens.Space1);
         row.AddChild(_actionHost);
 
-        _overflowButton = new UiIconButton
+        _overflowButton = new UiSecondaryIconButton
         {
             Tokens = _tokens,
             IconId = UiIconId.More,

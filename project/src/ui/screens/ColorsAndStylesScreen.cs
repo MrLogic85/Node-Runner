@@ -172,7 +172,7 @@ public partial class ColorsAndStylesScreen : Control
 
         if (ShowCloseAction)
         {
-            var close = Track(new UiIconButton
+            var close = Track(new UiSecondaryIconButton
             {
                 IconId = UiIconId.Back,
                 AccessibleLabel = "Back",
@@ -449,8 +449,8 @@ public partial class ColorsAndStylesScreen : Control
     {
         switch (control)
         {
-            case UiIconButton iconButton:
-                iconButton.Tokens = tokens;
+            case UiButton button:
+                button.Tokens = tokens;
                 break;
             case UiSegmentedSwitch segmentedSwitch:
                 segmentedSwitch.Tokens = tokens;

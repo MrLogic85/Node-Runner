@@ -8,6 +8,22 @@ public static class UiComponentContracts
     public const float IconButtonVisibleSize = 40;
     public const float ProgressRingDiameter = 44;
     public const float HoldCompletionSeconds = 0.8f;
+    public const float ButtonProgressOpacity = 0.35f;
+
+    public static float HoldProgress(double elapsedSeconds, double durationSeconds)
+    {
+        if (!double.IsFinite(elapsedSeconds) || elapsedSeconds <= 0)
+        {
+            return 0;
+        }
+
+        if (!double.IsFinite(durationSeconds) || durationSeconds <= 0)
+        {
+            return 1;
+        }
+
+        return (float)Math.Clamp(elapsedSeconds / durationSeconds, 0, 1);
+    }
 
     public enum CanonicalComponent
     {
