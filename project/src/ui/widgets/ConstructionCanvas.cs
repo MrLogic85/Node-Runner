@@ -115,6 +115,10 @@ public partial class ConstructionCanvas : Node2D
         {
             var start = ToGodot(_viewModel.Nodes[beam.NodeA].Position);
             var end = ToGodot(_viewModel.Nodes[beam.NodeB].Position);
+            if (_viewModel.SingleSelectedBeamIndex is { } selectedBeamIndex && _viewModel.Beams[selectedBeamIndex] == beam)
+            {
+                DrawLine(start, end, Theme.SelectionGlow, Theme.BeamWidth * 2.2f, antialiased: true);
+            }
             DrawLine(start, end, Theme.Beam, Theme.BeamWidth, antialiased: true);
         }
 
@@ -431,9 +435,16 @@ public partial class ConstructionCanvas : Node2D
                 }
                 else
                 {
-                    _viewModel.ClearSelection();
-                    _selectionBoxStart = localPosition;
-                    _selectionBoxCurrent = localPosition;
+                    if (_viewModel.TryFindBeamNear(domainPosition, _beamHitDistance, out var beamIndex))
+                    {
+                        _viewModel.SelectBeam(beamIndex);
+                    }
+                    else
+                    {
+                        _viewModel.ClearSelection();
+                        _selectionBoxStart = localPosition;
+                        _selectionBoxCurrent = localPosition;
+                    }
                 }
 
                 break;
@@ -452,7 +463,18 @@ public partial class ConstructionCanvas : Node2D
                 }
                 else
                 {
-                    if (!_viewModel.IsMoveOnly)
+                    if (_viewModel.IsMoveOnly)
+                    {
+                        if (_viewModel.TryFindBeamNear(domainPosition, _beamHitDistance, out var beamIndex))
+                        {
+                            _viewModel.SelectBeam(beamIndex);
+                        }
+                        else
+                        {
+                            _viewModel.ClearSelection();
+                        }
+                    }
+                    else
                     {
                         _draggingNodeIndex = _viewModel.PlaceNode(domainPosition, _defaultNodeRadius);
                     }

@@ -624,6 +624,8 @@ public partial class Main : Node2D
         _buildScreen.CreationNameChanged += RenameActiveCreation;
         _buildScreen.ResetTrainingRequested += ResetActiveCreationTraining;
         _buildScreen.DeleteCreationRequested += RequestDeleteActiveCreation;
+        _buildScreen.ClearSelectionRequested += Construction.ClearSelection;
+        _buildScreen.DeleteSelectionRequested += DeleteSelectedConstructionParts;
         _buildScreen.ResumeTrainingRequested += ResumeTrainingFromSavedCreation;
         _buildScreen.StatsRequested += ShowStatsCueFromBuild;
         _buildScreen.BrainRequested += ShowBrainCueFromBuild;
@@ -1423,6 +1425,11 @@ public partial class Main : Node2D
         Construction.SetCreationName(renamed.Name);
         RefreshCreationsPanel();
         _deleteCreationToast?.ShowMessage($"Renamed to {renamed.Name}.");
+    }
+
+    private void DeleteSelectedConstructionParts()
+    {
+        Construction.DeleteSelectedParts();
     }
 
     private void ResetActiveCreationTraining()

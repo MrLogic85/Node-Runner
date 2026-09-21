@@ -59,6 +59,12 @@ public partial class BuildScreen : Control
     public delegate void DeleteCreationRequestedEventHandler();
 
     [Signal]
+    public delegate void ClearSelectionRequestedEventHandler();
+
+    [Signal]
+    public delegate void DeleteSelectionRequestedEventHandler();
+
+    [Signal]
     public delegate void ResumeTrainingRequestedEventHandler();
 
     [Signal]
@@ -535,7 +541,7 @@ public partial class BuildScreen : Control
             return panel;
         }
 
-        var margin = CreateMargin((int)_tokens.Space2);
+        var margin = CreateMargin(UiSpacing.ControlGap(_tokens));
         panel.AddChild(margin);
 
         var stack = new VBoxContainer
@@ -543,11 +549,17 @@ public partial class BuildScreen : Control
             SizeFlagsHorizontal = SizeFlags.ExpandFill,
             SizeFlagsVertical = SizeFlags.ExpandFill,
         };
-        stack.AddThemeConstantOverride("separation", (int)_tokens.Space1);
+        stack.AddThemeConstantOverride("separation", UiSpacing.StackGap(_tokens));
         margin.AddChild(stack);
 
         var presentation = Presentation;
-        if (presentation?.ShowCompleteAction == false)
+        if (presentation?.SelectedPartCount > 0)
+        {
+            stack.AddChild(presentation.SelectedPartCount == 1
+                ? CreatePartSettingsPanel(presentation, allowDelete: presentation.ShowCompleteAction)
+                : CreateSelectionPanel(presentation, allowDelete: presentation.ShowCompleteAction));
+        }
+        else if (presentation?.ShowCompleteAction == false)
         {
             stack.AddChild(CreateSavedCreationPanel(presentation));
         }
@@ -566,22 +578,12 @@ public partial class BuildScreen : Control
 
     private Control CreateSavedCreationPanel(ConstructionPresentationViewModel presentation)
     {
-        if (presentation.SelectedNodeCount == 1)
-        {
-            return CreateSavedSinglePartPanel(presentation);
-        }
-
-        if (presentation.SelectedNodeCount > 1)
-        {
-            return CreateSavedMultiSelectionPanel(presentation);
-        }
-
         var stack = new VBoxContainer
         {
             SizeFlagsHorizontal = SizeFlags.ExpandFill,
             SizeFlagsVertical = SizeFlags.ExpandFill,
         };
-        stack.AddThemeConstantOverride("separation", (int)_tokens.Space2);
+        stack.AddThemeConstantOverride("separation", UiSpacing.StackGap(_tokens));
         stack.AddChild(CreateLabel(presentation.TrainingSummaryTitle, 14, _tokens.Ink, expand: true));
         stack.AddChild(CreateLabel($"Best distance {presentation.BestDistanceText}", 12, _tokens.Accent, expand: true));
         stack.AddChild(CreateLabel(presentation.TrainingSummaryBody, 11, _tokens.Muted, expand: true));
@@ -598,46 +600,84 @@ public partial class BuildScreen : Control
         return stack;
     }
 
-    private Control CreateSavedSinglePartPanel(ConstructionPresentationViewModel presentation)
+    private Control CreatePartSettingsPanel(ConstructionPresentationViewModel presentation, bool allowDelete)
     {
         var stack = new VBoxContainer
         {
             SizeFlagsHorizontal = SizeFlags.ExpandFill,
             SizeFlagsVertical = SizeFlags.ExpandFill,
         };
-        stack.AddThemeConstantOverride("separation", (int)_tokens.Space2);
+        stack.AddThemeConstantOverride("separation", UiSpacing.DenseStackGap(_tokens));
         var header = new HBoxContainer();
         header.AddChild(CreateLabel(presentation.SinglePartTitle, 14, _tokens.Ink, expand: true));
-        header.AddChild(CreateLabel("×", 16, _tokens.Muted));
+        if (allowDelete)
+        {
+            var delete = CreateButton("⌫", UiActionButton.ActionKind.Danger, "Delete selected part");
+            delete.CustomMinimumSize = new Vector2(38, 34);
+            delete.Pressed += () => EmitSignal(SignalName.DeleteSelectionRequested);
+            header.AddChild(delete);
+        }
+
+        var close = new UiIconButton
+        {
+            Tokens = _tokens,
+            IconText = "×",
+            AccessibleLabel = "Close settings",
+        };
+        close.Pressed += () => EmitSignal(SignalName.ClearSelectionRequested);
+        header.AddChild(close);
         stack.AddChild(header);
-        stack.AddChild(CreateLabel("Name", 10, _tokens.Muted));
-        stack.AddChild(CreateLabel(presentation.SinglePartTitle, 12, _tokens.Ink, expand: true));
-        stack.AddChild(CreateLabel("Locked structure", 10, _tokens.Muted));
+        stack.AddChild(CreateLabel(presentation.SinglePartPrimaryLabel, 10, _tokens.Muted));
+        stack.AddChild(CreateLabel(presentation.SinglePartPrimaryValue, 12, _tokens.Ink, expand: true));
+        stack.AddChild(CreateLabel(presentation.SinglePartConnectionsLabel, 10, _tokens.Muted));
+        stack.AddChild(CreateLabel(presentation.SinglePartConnectionsValue, 11, _tokens.Ink, expand: true));
+        stack.AddChild(CreateLabel("Facts", 10, _tokens.Muted));
+        stack.AddChild(CreateLabel(presentation.SinglePartFacts, 10, _tokens.Muted, expand: true));
+        stack.AddChild(CreateLabel(allowDelete ? "Structure" : "Locked topology", 10, _tokens.Muted));
         stack.AddChild(CreateLabel(presentation.SinglePartBody, 11, _tokens.Muted, expand: true));
-        stack.AddChild(CreateLabel("No Delete in saved Creation", 11, _tokens.Muted, expand: true));
+        if (!allowDelete)
+        {
+            stack.AddChild(CreateLabel("No Delete in saved Creation", 11, _tokens.Muted, expand: true));
+        }
+
         stack.AddChild(CreateSpacer());
         return stack;
     }
 
-    private Control CreateSavedMultiSelectionPanel(ConstructionPresentationViewModel presentation)
+    private Control CreateSelectionPanel(ConstructionPresentationViewModel presentation, bool allowDelete)
     {
         var stack = new VBoxContainer
         {
             SizeFlagsHorizontal = SizeFlags.ExpandFill,
             SizeFlagsVertical = SizeFlags.ExpandFill,
         };
-        stack.AddThemeConstantOverride("separation", (int)_tokens.Space2);
+        stack.AddThemeConstantOverride("separation", UiSpacing.StackGap(_tokens));
         var header = new HBoxContainer();
         header.AddChild(CreateLabel(presentation.MultiSelectionTitle, 14, _tokens.Ink, expand: true));
-        header.AddChild(CreateLabel("×", 16, _tokens.Muted));
+        if (allowDelete)
+        {
+            var delete = CreateButton("Delete", UiActionButton.ActionKind.Danger, "Delete selected parts");
+            delete.CustomMinimumSize = new Vector2(82, 34);
+            delete.Pressed += () => EmitSignal(SignalName.DeleteSelectionRequested);
+            header.AddChild(delete);
+        }
+
+        var close = new UiIconButton
+        {
+            Tokens = _tokens,
+            IconText = "×",
+            AccessibleLabel = "Close selection",
+        };
+        close.Pressed += () => EmitSignal(SignalName.ClearSelectionRequested);
+        header.AddChild(close);
         stack.AddChild(header);
         stack.AddChild(CreateLabel(presentation.MultiSelectionCounts, 12, _tokens.Ink, expand: true));
-        stack.AddChild(CreateLabel(presentation.MultiSelectionBody, 11, _tokens.Muted, expand: true));
+        stack.AddChild(CreateLabel(allowDelete ? "Drag any selected part to move them together, or delete the selection." : presentation.MultiSelectionBody, 11, _tokens.Muted, expand: true));
         stack.AddChild(new UiChip
         {
             Tokens = _tokens,
-            Text = "Move only",
-            Kind = UiChip.ChipKind.Locked,
+            Text = allowDelete ? "Move · Delete" : "Move only",
+            Kind = allowDelete ? UiChip.ChipKind.Neutral : UiChip.ChipKind.Locked,
         });
         stack.AddChild(CreateSpacer());
         return stack;

@@ -87,18 +87,68 @@ public sealed class ConstructionPresentationViewModel
 
     public int SelectedNodeCount => _construction.SelectedNodeCount;
 
+    public int SelectedBeamCount => _construction.SelectedBeamCount;
+
+    public int SelectedPartCount => _construction.SelectedPartCount;
+
     public int SelectedCoreCount => _construction.SelectedCoreCount;
 
-    public string SinglePartTitle => _construction.SingleSelectedNodeIndex is { } index
+    public string SinglePartTitle => _construction.SingleSelectedBeamIndex is { } beamIndex
+        ? $"Beam {beamIndex + 1}"
+        : _construction.SingleSelectedNodeIndex is { } index
         ? _construction.SingleSelectionHasCore ? $"Core · Node {index + 1}" : $"Node {index + 1}"
         : "Part";
 
-    public string SinglePartBody => "Position can be moved. Structural settings are locked after Save.";
+    public string SinglePartBody => _construction.SingleSelectedBeamIndex is not null
+        ? _construction.IsMoveOnly
+            ? "Select and move an endpoint Node to reposition it. The Beam follows its Nodes."
+            : "Move either endpoint Node to change the Beam length."
+        : _construction.SingleSelectionHasCore
+            ? "The Core contributes six sensor inputs. Move its Node to reposition it."
+            : "Move the Node to change its position and connected Beam lengths.";
 
-    public string MultiSelectionTitle => $"{_construction.SelectedNodeCount} selected";
+    public string SinglePartPrimaryLabel => _construction.SingleSelectedBeamIndex is not null
+        ? "Length"
+        : _construction.SingleSelectionHasCore
+            ? "Built-in senses"
+            : "Position";
+
+    public string SinglePartPrimaryValue => _construction.SingleSelectedBeamIndex is { } beamIndex
+        ? $"{BeamLength(beamIndex):0.0} units"
+        : _construction.SingleSelectedNodeIndex is { } nodeIndex
+            ? _construction.SingleSelectionHasCore
+                ? "6 inputs"
+                : $"{_construction.Nodes[nodeIndex].Position.X:0}, {_construction.Nodes[nodeIndex].Position.Y:0}"
+            : "—";
+
+    public string SinglePartConnectionsLabel => _construction.SingleSelectedBeamIndex is not null
+        ? "Between"
+        : _construction.SingleSelectionHasCore
+            ? "Mounted on"
+            : "Connections";
+
+    public string SinglePartConnectionsValue => _construction.SingleSelectedBeamIndex is { } beamIndex
+        ? $"Node {_construction.Beams[beamIndex].NodeA + 1} ↔ Node {_construction.Beams[beamIndex].NodeB + 1}"
+        : _construction.SingleSelectedNodeIndex is { } nodeIndex
+            ? _construction.SingleSelectionHasCore
+                ? $"Node {nodeIndex + 1}"
+                : ConnectedBeamText(nodeIndex)
+            : "—";
+
+    public string SinglePartFacts => _construction.SingleSelectedBeamIndex is not null
+        ? "Rigid connection"
+        : _construction.SingleSelectionHasCore
+            ? "Down ray · Forward ray · Forward-down ray · Pitch · Elevation · Speed"
+            : _construction.SingleSelectedNodeIndex is { } nodeIndex
+                ? $"Radius {_construction.Nodes[nodeIndex].Radius:0.0} · {_construction.Beams.Count(beam => beam.NodeA == nodeIndex || beam.NodeB == nodeIndex)} attached Beam(s)"
+                : string.Empty;
+
+    public string MultiSelectionTitle => $"{_construction.SelectedPartCount} selected";
 
     public string MultiSelectionCounts => _construction.SelectedCoreCount > 0
         ? $"Nodes · {_construction.SelectedNodeCount}    Core · {_construction.SelectedCoreCount}"
+        : _construction.SelectedBeamCount > 0
+        ? $"Beam · {_construction.SelectedBeamCount}"
         : $"Nodes · {_construction.SelectedNodeCount}";
 
     public string MultiSelectionBody => "Drag any selected part to move them together. Parts are locked, so this selection can only be moved.";
@@ -204,6 +254,26 @@ public sealed class ConstructionPresentationViewModel
     {
         var unlockHint = _construction.MaxCores > 1 ? "unlocked" : "50 fitness";
         return $"Core {_construction.Cores.Count}/{_construction.MaxCores} ({unlockHint})";
+    }
+
+    private double BeamLength(int beamIndex)
+    {
+        var beam = _construction.Beams[beamIndex];
+        var start = _construction.Nodes[beam.NodeA].Position;
+        var end = _construction.Nodes[beam.NodeB].Position;
+        var deltaX = end.X - start.X;
+        var deltaY = end.Y - start.Y;
+        return Math.Sqrt((deltaX * deltaX) + (deltaY * deltaY));
+    }
+
+    private string ConnectedBeamText(int nodeIndex)
+    {
+        var connected = _construction.Beams
+            .Select((beam, index) => (beam, index))
+            .Where(item => item.beam.NodeA == nodeIndex || item.beam.NodeB == nodeIndex)
+            .Select(item => $"Beam {item.index + 1}")
+            .ToArray();
+        return connected.Length == 0 ? "No Beams" : string.Join(" · ", connected);
     }
 
     private static string BuildInputSummary(int coreCount, int motorRelationCount)
