@@ -111,7 +111,7 @@ public partial class UiToolButton : Button
         AddThemeStyleboxOverride("normal", CreateStyle(_active, false));
         AddThemeStyleboxOverride("hover", CreateStyle(true, true));
         AddThemeStyleboxOverride("pressed", CreateStyle(true, true));
-        AddThemeStyleboxOverride("focus", CreateStyle(true, true, (int)_tokens.StrokeSignal));
+        AddThemeStyleboxOverride("focus", _tokens.FocusRingStyle());
         AddThemeStyleboxOverride("disabled", CreateStyle(false, false, 1, 0.5f));
     }
 
@@ -123,6 +123,8 @@ public partial class UiToolButton : Button
             UiTokens.MultiplyAlpha(background, opacity),
             UiTokens.MultiplyAlpha(border, opacity),
             borderWidth,
-            glow: selected && opacity > 0.99f);
+            glow: selected && opacity > 0.99f,
+            horizontalPadding: UiSpacing.ControlHorizontalPadding(_tokens),
+            verticalPadding: UiSpacing.ControlVerticalPadding(_tokens));
     }
 }

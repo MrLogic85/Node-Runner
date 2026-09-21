@@ -113,7 +113,7 @@ public partial class UiActionButton : Button
             Text = DisplayText();
         }
         AddThemeStyleboxOverride("normal", CreateStyle(false));
-        AddThemeStyleboxOverride("focus", CreateStyle(true));
+        AddThemeStyleboxOverride("focus", Tokens.FocusRingStyle());
         AddThemeStyleboxOverride("hover", CreateStyle(true));
         AddThemeStyleboxOverride("pressed", CreateStyle(true));
         AddThemeStyleboxOverride("disabled", CreateStyle(false, 0.5f));
@@ -141,6 +141,11 @@ public partial class UiActionButton : Button
         var border = Kind == ActionKind.Primary
             ? UiTokens.WithAlpha(color, opacity * opacityMultiplier)
             : UiTokens.WithAlpha(Kind == ActionKind.Danger ? Tokens.Danger : Tokens.LineStrong, opacity * opacityMultiplier);
-        return Tokens.ControlStyle(background, border, glow: Kind == ActionKind.Primary && opacityMultiplier > 0.99f);
+        return Tokens.ControlStyle(
+            background,
+            border,
+            glow: Kind == ActionKind.Primary && opacityMultiplier > 0.99f,
+            horizontalPadding: UiSpacing.ControlHorizontalPadding(Tokens),
+            verticalPadding: UiSpacing.ControlVerticalPadding(Tokens));
     }
 }

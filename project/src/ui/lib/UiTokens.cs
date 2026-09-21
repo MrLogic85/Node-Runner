@@ -243,7 +243,9 @@ public sealed class UiTokens
         Color borderColor,
         float? borderWidth = null,
         float? radius = null,
-        bool glow = false)
+        bool glow = false,
+        float? horizontalPadding = null,
+        float? verticalPadding = null)
     {
         var width = (int)(borderWidth ?? StrokeHair);
         var cornerRadius = (int)(radius ?? RadiusMedium);
@@ -261,7 +263,27 @@ public sealed class UiTokens
             CornerRadiusBottomRight = cornerRadius,
             ShadowColor = glow && EffectsEnabled ? AccentGlow : Colors.Transparent,
             ShadowSize = glow && EffectsEnabled ? (int)GlowRadius : 0,
+            ContentMarginLeft = horizontalPadding ?? 0,
+            ContentMarginTop = verticalPadding ?? 0,
+            ContentMarginRight = horizontalPadding ?? 0,
+            ContentMarginBottom = verticalPadding ?? 0,
         };
+    }
+
+    public StyleBoxFlat FocusRingStyle(float? radius = null)
+    {
+        var gap = UiSpacing.FocusRingGap(this);
+        var style = ControlStyle(
+            Colors.Transparent,
+            Accent,
+            StrokeSignal,
+            (radius ?? RadiusMedium) + gap);
+        style.DrawCenter = false;
+        style.ExpandMarginLeft = gap;
+        style.ExpandMarginTop = gap;
+        style.ExpandMarginRight = gap;
+        style.ExpandMarginBottom = gap;
+        return style;
     }
 
     public static Color WithAlpha(Color color, float alpha) =>

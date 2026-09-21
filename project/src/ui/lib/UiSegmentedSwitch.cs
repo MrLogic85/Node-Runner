@@ -110,7 +110,7 @@ public partial class UiSegmentedSwitch : HBoxContainer
         button.AddThemeStyleboxOverride("normal", CreateStyle(selected));
         button.AddThemeStyleboxOverride("hover", CreateStyle(true));
         button.AddThemeStyleboxOverride("pressed", CreateStyle(true));
-        button.AddThemeStyleboxOverride("focus", CreateStyle(true));
+        button.AddThemeStyleboxOverride("focus", _tokens.FocusRingStyle());
     }
 
     private StyleBoxFlat CreateStyle(bool selected)
@@ -127,6 +127,10 @@ public partial class UiSegmentedSwitch : HBoxContainer
             CornerRadiusTopRight = (int)_tokens.RadiusMedium,
             CornerRadiusBottomLeft = (int)_tokens.RadiusMedium,
             CornerRadiusBottomRight = (int)_tokens.RadiusMedium,
+            ContentMarginLeft = UiSpacing.ControlHorizontalPadding(_tokens),
+            ContentMarginTop = UiSpacing.ControlVerticalPadding(_tokens),
+            ContentMarginRight = UiSpacing.ControlHorizontalPadding(_tokens),
+            ContentMarginBottom = UiSpacing.ControlVerticalPadding(_tokens),
         };
     }
 }

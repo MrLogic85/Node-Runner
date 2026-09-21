@@ -20,6 +20,12 @@ public static class UiSpacing
 
     public static int TouchTarget(UiTokens tokens) => (int)tokens.TouchTarget;
 
+    public static int ControlHorizontalPadding(UiTokens tokens) => (int)tokens.Space3;
+
+    public static int ControlVerticalPadding(UiTokens tokens) => (int)tokens.Space2;
+
+    public static int FocusRingGap(UiTokens tokens) => (int)tokens.Space1;
+
     public static int DenseStackGap(UiTokens tokens) => IconLabelGap(tokens);
 
     public static int StackGap(UiTokens tokens) => ControlGap(tokens);

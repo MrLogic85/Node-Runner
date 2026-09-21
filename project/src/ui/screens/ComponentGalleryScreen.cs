@@ -157,36 +157,41 @@ public partial class ComponentGalleryScreen : Control
 
     private Control CreateActionsSection()
     {
-        var content = new HBoxContainer();
-        content.AddThemeConstantOverride("separation", (int)_tokens.Space2);
-        content.AddChild(Track(new UiActionButton
+        var content = new VBoxContainer();
+        content.AddThemeConstantOverride("separation", UiSpacing.StackGap(_tokens));
+        var actions = new HBoxContainer();
+        actions.AddThemeConstantOverride("separation", UiSpacing.ControlGap(_tokens));
+        content.AddChild(actions);
+        actions.AddChild(Track(new UiActionButton
         {
             Kind = UiActionButton.ActionKind.Primary,
             LabelText = "Primary action",
-            SizeFlagsHorizontal = SizeFlags.ExpandFill,
         }));
-        content.AddChild(Track(new UiActionButton
+        actions.AddChild(Track(new UiActionButton
         {
             Kind = UiActionButton.ActionKind.Secondary,
             LabelText = "Secondary",
-            SizeFlagsHorizontal = SizeFlags.ExpandFill,
         }));
-        content.AddChild(Track(new UiActionButton
+        actions.AddChild(Track(new UiActionButton
         {
             Kind = UiActionButton.ActionKind.Danger,
             LabelText = "Danger",
-            SizeFlagsHorizontal = SizeFlags.ExpandFill,
         }));
-        content.AddChild(Track(new UiActionButton
+        actions.AddChild(Track(new UiActionButton
         {
             LabelText = "Locked",
             Locked = true,
             LockReason = "needs creature",
-            SizeFlagsHorizontal = SizeFlags.ExpandFill,
         }));
+        var focused = Track(new UiActionButton
+        {
+            LabelText = "Focused",
+        });
+        focused.CallDeferred(Control.MethodName.GrabFocus);
+        actions.AddChild(focused);
 
         var iconRow = new HBoxContainer();
-        iconRow.AddThemeConstantOverride("separation", (int)_tokens.Space2);
+        iconRow.AddThemeConstantOverride("separation", UiSpacing.ControlGap(_tokens));
         iconRow.AddChild(Track(new UiIconButton { IconText = "?", AccessibleLabel = "Help" }));
         iconRow.AddChild(Track(new UiIconButton { IconText = "+", AccessibleLabel = "Add" }));
         iconRow.AddChild(Track(new UiIconButton { IconText = "...", AccessibleLabel = "More" }));
