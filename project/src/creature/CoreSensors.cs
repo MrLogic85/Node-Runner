@@ -48,6 +48,13 @@ public sealed class CoreSensors
         values[startIndex + 5] = Math.Clamp(_anchorBeam.LinearVelocity.Length() / _speedScale, 0, 1);
     }
 
+    public void SetCollisionMask(uint collisionMask)
+    {
+        _rayDown.CollisionMask = collisionMask;
+        _rayForward.CollisionMask = collisionMask;
+        _rayForwardDown.CollisionMask = collisionMask;
+    }
+
     // 1 = nothing within range, 0 = touching. A simple normalized distance
     // reading; ray count/placement is a 0.2.0 starting point (see
     // docs/CREATURE_MODEL.md future ideas).

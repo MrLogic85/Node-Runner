@@ -207,13 +207,13 @@ At 60 Hz (`_physics_process`), for the creature currently under evaluation:
    to chase it.
 4. **Score.** `Evaluator` accumulates fitness for this trial.
 
-After N ticks (say 600 = 10 s at 60 Hz) the trial ends. `Evolver` records its
-fitness and, once every genome in the current generation has had a trial,
-produces the next generation via `GeneticAlgorithm.NextGeneration(...)`. New
-brains are assigned one at a time; the creature's pose resets between trials;
-the loop continues. See `docs/TRAINING_LOOP.md` for the full design and why
-candidates are currently evaluated sequentially on one creature rather than
-in parallel.
+After N ticks (say 600 = 10 s at 60 Hz) each slot's trial ends. `Evolver`
+records its fitness, assigns the slot the next pending genome, and, once every
+genome in the current generation has completed, produces the next generation
+via `GeneticAlgorithm.NextGeneration(...)`. The first slot reuses the visible
+creature; up to 15 hidden clones run alongside it. Each slot owns a
+`TrialController`, resets independently between trials, and uses an isolated
+collision layer. See `docs/TRAINING_LOOP.md` for the full design.
 
 `Evolver` raises `GenerationCompleted`/`NewBestFound` events; `Main.cs`
 subscribes to both, logs the former, and drives a training HUD panel
@@ -228,14 +228,13 @@ tied to the retired Muscle model and does not carry over.
 
 ## Threading
 
-- Single-threaded for v1. Godot's physics runs on one thread. As of 0.4.0
-  candidates are evaluated one at a time on a single creature instance
-  (`Evolver` + `TrialController`); running N creatures in parallel in one
-  scene with collision layers isolating them is a possible later
-  optimization, not yet built (see `docs/TRAINING_LOOP.md` and issue #105).
-- If we ever need more parallelism, brains can be forward-passed off the main
-  thread since they're pure functions on `double[]` — but only after profiling
-  shows we need it.
+- Single-threaded for v1. Godot's physics runs on one thread, but `Evolver`
+  evaluates up to 16 candidates concurrently in one scene using the
+  collision-isolated slots specified in `docs/TRAINING_LOOP.md`. This is
+  parallel evaluation, not multithreaded physics.
+- If profiling later shows the need for more throughput, brains can be
+  forward-passed off the main thread since they are pure functions on
+  `double[]`. Physics remains on Godot's thread.
 
 ## Save format (v1.5+)
 

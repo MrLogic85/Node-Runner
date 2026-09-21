@@ -70,9 +70,9 @@ Long-form descriptions and the sensor/model contract live in
 - **Optimizer** — In backprop, the rule for turning a gradient into a weight
   update. SGD, momentum, Adam.
 - **Population** — The set of candidate genomes (brains) evaluated in one
-  generation. As of 0.4.0 these are evaluated sequentially via repeated
-  trials of one creature (default size 8); running each as its own
-  simultaneous creature is a possible later optimization.
+  generation. `Evolver` evaluates up to 16 candidates concurrently in fixed,
+  collision-isolated slots. The first slot is visible; additional slots are
+  hidden until population visualization is implemented.
 - **Reinforcement Learning (RL)** — Training via reward signals from
   environment interaction. Not used in the early roadmap; considered for later.
 - **Selection** — GA operator that picks parents for the next generation. We

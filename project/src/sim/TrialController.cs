@@ -7,9 +7,9 @@ namespace NodeRunner.Sim;
 /// between runs and scoring each trial with an <see cref="Evaluator"/>.
 ///
 /// This node does not own the creature's lifecycle (creation/destruction) or
-/// brain assignment — callers (Main.cs today, Population/Evolver later) are
-/// responsible for that. TrialController only knows how to time a trial and
-/// measure how far the creature got.
+/// brain assignment — its <see cref="Evolver"/> caller is responsible for
+/// both. TrialController only knows how to time a trial and measure how far
+/// the creature got.
 /// </summary>
 public partial class TrialController : Node
 {

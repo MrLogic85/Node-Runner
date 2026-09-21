@@ -46,12 +46,12 @@ but do not redefine it here.
   (validated against the creature's sensor/motor counts) instead of always
   auto-randomizing one via `BuildFrom`. This is how the population/GA step
   (issue #50, below) plugs a candidate genome into a trial.
-- Historical wiring (as of issue #49, superseded by #50 below): `Main.cs`
+- Historical wiring (as of issue #49, superseded by #50 and #105 below):
+  `Main.cs`
   owned a single `TrialController` directly and restarted trials on
   `TrialCompleted` with a freshly randomized brain each time. As of #50,
-  `Evolver` owns the `TrialController` internally and assigns each
-  generation's candidate genomes in turn; `Main.cs` no longer talks to
-  `TrialController` directly.
+  `Evolver` owns trial controllers internally and assigns each generation's
+  candidate genomes; `Main.cs` no longer talks to `TrialController` directly.
 - `TrialController.ProcessPhysicsPriority` is set below `Creature`'s default
   so a trial-boundary reset always runs before that tick's `Creature`
   motor drive. Without this, a `TrialCompleted` handler that calls
@@ -71,21 +71,24 @@ but do not redefine it here.
   (`tests/NodeRunner.ML.Tests/GeneticAlgorithmTests.cs`), including
   determinism-given-a-seed and elitism preserving the exact best genome.
 - `Evolver` (`project/src/sim/Evolver.cs`) orchestrates one generation cycle
-  for a single creature: it evaluates every genome in the current
-  generation **sequentially**, one `TrialController` trial each (assigning
-  each candidate brain via `Creature.SetBrain` before the trial), then
-  calls `GeneticAlgorithm.NextGeneration` and starts evaluating the next
-  generation automatically. It tracks `Generation`, `BestFitness` (running
-  best across all generations), and `MeanFitness` (current generation's
-  average), and raises `GenerationCompleted`/`NewBestFound`, which
-  `Main.cs`'s training HUD (see "Training HUD (issue #51)" below) subscribes
-  to.
-  - Evaluating candidates one at a time on one creature — rather than
-    running a parallel population — is a deliberate, explicitly
-    roadmap-sanctioned simplification ("repeated trials of one creature").
-    It avoids collision-layer/population-lifecycle work for this slice;
-    running N creatures in parallel remains available as a later
-    optimization if evaluation speed becomes a problem.
+  in deterministic fixed slots. Slot 0 reuses the visible creature and each
+  additional slot is a hidden clone; every slot owns one `TrialController`.
+  A completed slot receives the next pending genome in index order until the
+  generation is complete, then `GeneticAlgorithm.NextGeneration` starts the
+  next generation automatically. `Evolver` tracks `Generation`,
+  `BestFitness` (running best across all generations), and `MeanFitness`
+  (current generation's average), and raises
+  `GenerationCompleted`/`NewBestFound`, which `Main.cs`'s training HUD (see
+  "Training HUD (issue #51)" below) subscribes to.
+  - Concurrency is capped at 16 and never exceeds population size. Layer 1 is
+    reserved for ground; zero-based slot `i` uses layer `2+i` and collides
+    only with ground and its own slot. Core sensor rays remain ground-only.
+  - Candidate assignment is deterministic for the same seed, parallel mode,
+    slot count, build, and platform. Sequential and parallel fitness parity
+    is not promised because physics ordering can differ.
+  - `Evolver.Start` retains a one-slot compatibility mode when no creature
+    factory is supplied. Production `Main.cs` supplies the factory and uses
+    parallel evaluation.
 - `Main.cs` creates one `Evolver` and selects a session-scoped training
   profile. Quick, Standard, and Deep vary population size, trial duration,
   generation budget, tournament size, mutation rate/strength, and crossover
@@ -124,7 +127,8 @@ in Build after restarting the app.
     (existing Seed label) + best generation."
   - **Run/Pause** toggles `GetTree().Paused`. This is the standard Godot
     pause mechanism: every node using the default `Pausable` process mode
-    (creature, `Evolver`, `TrialController`) freezes immediately —
+    (all slot creatures, `Evolver`, and every `TrialController`) freezes
+    immediately —
     physics stops advancing, so trial motion, fitness recording, and
     trial-boundary checks all stop mid-trial and resume exactly where they
     left off. The `Hud` `CanvasLayer` is set to `ProcessMode.Always` so its
@@ -152,9 +156,6 @@ in Build after restarting the app.
 
 ## Deferred future work
 
-- Running more than one creature at once in parallel (`Population`,
-  collision-layer isolation per `project/src/sim/AGENTS.md`). #50
-  intentionally evaluates candidates one at a time on a single creature
-  instead — see above. Tracked in issue #105. This is not #52's scope: #52
-  is a validation-only issue (manual release check for 0.4.0), not an
-  implementation issue.
+- Parallel slot clones remain hidden. Showing live ghost candidates and a
+  solid previous-generation reference is tracked separately in issue #137;
+  it must reuse this slot lifecycle rather than create another population.
