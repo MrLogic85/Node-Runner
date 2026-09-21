@@ -1,0 +1,11 @@
+Every gap, padding and margin in every screen is one of five steps, and every control is one of four heights. **Nothing else is allowed.** Horizontal and vertical spacing use the same steps, so a row of controls has the same gap between them as between the row and the next.
+
+**Space scale.** `space-1` 4, `space-2` 8, `space-3` 12, `space-4` 16, `space-5` 24. Use `space-1` inside a control (icon to label) and at the edge of a bar, `space-2` between controls and rows and at the screen edge, `space-3` for panel, card and menu padding, `space-4` between panels and cards, `space-5` between sections.
+
+**Control sizes.** `control-xs` 24 (chips), `control-sm` 32 (dense rows, steppers, pickers), `control` 40 (button, icon button, field, segmented control, toggle row) and `touch` 48. A control is drawn at its size but its **touch area is always 48**, so a 40 button in a 48 bar has `space-1` above and below it.
+
+**Top bar.** 48 high, `space-2` between its controls, `space-1` (plus the control's own touch margin) at the edges, so every icon button, button and field in it is `control` high and centred.
+
+**Rules.** No other pixel value is used for spacing or a control height. Sizes of drawings (a beam, a node, a slider thumb) are not spacing and keep their own values. The gen script lints this: it counts any spacing value that is not a token and must report zero.
+
+**Screen size.** The reference is 640 x 360 units. The height is always 360; the width is the device's (640 at 16:9, about 800 at 20:9). The top bar (48), the tool rail (56) and the side panel (176) keep their size, and the arena takes everything else, so a wider phone gets a wider play area and the same buttons. **UI size** scales all of it: at 200% a 16:9 screen is 320 x 180 units. When the arena would be narrower than 200 units, the side panel collapses to its 28px tab. **For Godot:** Project Settings, Display, Window, Stretch: mode `canvas_items`, aspect `expand`; keep the arena as a Control with the expand size flag and the rail and panel with a fixed `custom_minimum_size`; UI size sets `Window.content_scale_factor`; read `DisplayServer.get_display_safe_area()` for the cutout inset.

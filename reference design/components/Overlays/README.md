@@ -1,0 +1,7 @@
+Three overlays, no more. Each is shown over a dimmed screen (or at the bottom edge for toasts) and each is listed here with the one moment it appears.
+
+- **Unlock dialog.** Tapping the padlock on a saved creation. It names what is lost ("142 generations of training") and needs a **press-and-hold** on a `danger` button (a fill sweeps across, about 0.8 s). Unlocking resets the model. Cancel is the other button and is never `danger`.
+- **Delete dialog.** Delete on a card in Creations or in the overflow. It is the same dialog as Unlock and uses the same **press-and-hold** button ("Hold to delete"), so a delete can never happen by accident and there is **no Undo**. It says the creation is removed for good and suggests Copy first.
+- **Achievement toast.** While training, when an achievement is earned: a glowing `accent` card with the reward glyph, the name and the achievement that earned it. It appears once, never blocks controls, and opens Achievements when tapped.
+
+There is no Copy dialog or toast: Copy makes an identical creation at once and the new card appears in the list. Every destructive action is a hold to confirm; there is no undo toast. Never place two destructive actions side by side. Buttons are 48px and named with verbs.

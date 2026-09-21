@@ -1,0 +1,27 @@
+.glow{filter:drop-shadow(0 0 3px var(--accent-glow)) drop-shadow(0 0 7px var(--accent-glow))}
+[data-effects="lite"]{--glow:none;--accent-glow:transparent}
+[data-effects="lite"] .glow{filter:none}
+/* layout-classes */
+.slot-rail{position:absolute;left:0;top:0;bottom:0;width:var(--w-rail)}
+.slot-arena{position:absolute;left:var(--w-rail);right:var(--w-side);top:0;bottom:0}
+.slot-side{position:absolute;right:0;top:0;bottom:0;width:var(--w-side)}
+.slot-tray{position:absolute;left:0;right:var(--w-side);bottom:0}
+.slot-fill{position:absolute;left:0;right:0;top:0;bottom:0}
+.slot-foot{position:absolute;left:var(--space-4);right:var(--space-4);bottom:var(--space-1)}
+.slot-brain{position:absolute;left:50%;margin-left:calc(var(--w-brain) / -2);top:0;bottom:0;width:var(--w-brain)}
+.slot-corner{position:absolute;right:var(--space-2);top:var(--space-1)}
+.pg{position:absolute;top:var(--space-2)}
+.pg.col-a{left:var(--space-3);width:calc(50% - var(--space-4))}
+.pg.col-b{right:var(--space-3);width:calc(50% - var(--space-4))}
+.pg.wide{left:var(--space-3);right:var(--space-3)}
+.pg.side{left:var(--space-3);width:var(--w-side)}
+.pg.rest{left:calc(var(--space-3) * 2 + var(--w-side));right:var(--space-3)}
+.pg.inset{left:var(--space-4);right:var(--space-4);top:var(--space-3)}
+.at-corner{position:absolute;left:var(--space-1);bottom:var(--space-2)}
+.w-tile{width:var(--w-tile)}.w-well{width:var(--w-well)}.w-sheet{width:var(--w-sheet)}.w-sheet-wide{width:var(--w-sheet-wide)}.h-screen{height:var(--h-screen)}.h-stage{height:var(--h-stage)}.h-thumb{height:var(--h-thumb)}
+.inset-tl{position:absolute;left:var(--space-3);top:var(--space-3)}
+.slot-at-side{position:absolute;right:0;top:0}
+.at-badge{position:absolute;top:calc(var(--space-1) * -1);right:calc(var(--space-1) * -1)}
+.w-card{width:var(--w-card)}.w-menu{width:var(--w-menu)}.w-dialog{width:var(--w-dialog)}.w-side{width:var(--w-side)}
+.w-col-xs{width:var(--w-col-xs)}.w-col-sm{width:var(--w-col-sm)}.w-col-md{width:var(--w-col-md)}.w-col-lg{width:var(--w-col-lg)}.w-col-xl{width:var(--w-col-xl)}
+.scrollbar{top:var(--space-2);bottom:var(--space-2);right:var(--space-1);height:auto}

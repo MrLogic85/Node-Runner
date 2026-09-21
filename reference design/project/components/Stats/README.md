@@ -1,3 +1,0 @@
-Opened from Creation or Training. Three big readouts on the left (generations, best distance, time trained) and one chart on the right: **best** (solid `accent` with glow) and **average** (dashed `line-strong`) distance per generation, with a labelled end point. The two lines are told apart by style and by the written legend, not colour alone. Stats are per map; a map switcher appears in the header once a second map is unlocked.
-
-Nothing else is shown by default. Detail (per-generation values, per-shadow results) appears when a point on the chart is tapped.

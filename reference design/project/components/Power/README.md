@@ -1,9 +1,0 @@
-Powered parts need power, and the design says so where it matters: a chip while building, a screen to understand it, and a chip while training.
-
-**The rule.** Servos, steppers, velocity motors, LOS sensors and pistons draw power in proportion to their strength. An **Engine** makes a small, steady amount. A **Battery** stores a limited amount but can take in and give out a lot at once, so it covers short peaks and is charged by any surplus. A **Fuel tank** is used up by the engine (later engines need no fuel). If total **draw** is more than **output**, every powered part gets the same fraction of its force: draw 2 and output 1 means 50%. Brakes, springs and dampers are passive and draw nothing. When the battery and the fuel are both gone, the build stops and the run ends.
-
-**Power budget (Build).** Opened from the bolt chip in the top bar. The left column lists what makes power (engine bar, battery capacity) and what uses it (one bar per powered part, `ink` and signed "-"), the right card is one large number, the **strength every powered part gets**, with a bar and a plain sentence. Enough power is `accent` with a check; not enough is `halo` with a warn icon and says how long the battery covers the gap. Never colour alone: the icon and the sentence carry it.
-
-**Power chip (Training).** In the Training top bar, next to Brain and Stats: a bolt, the battery percentage and a small bar. **Limited** adds a warn icon and "50% strength" in `halo`; **Empty** is `danger` with "Out of power", and the run for that shadow ends and appears in the strip as finished. Tapping the chip opens a small popover: battery, fuel, draw and output and the resulting strength. The chip appears only when the creation has any powered part.
-
-**Not designed yet:** charging and refuelling between runs, and how several engines share one fuel tank.

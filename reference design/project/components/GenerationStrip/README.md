@@ -1,3 +1,0 @@
-One cell per **shadow** (4, 8 or 16), all running at the same time, with one line of text ("Generation 37 · 6 of 10 s") and a thin `accent` bar underneath for how far through the run is. It keeps the screen alive during a run: bars rise as each shadow travels.
-
-Every cell shows its live distance as a bar. The current **leader** has a thick `accent` border, an `accent` bar and a ▲, and is the one drawn in full in the arena; the others are `line-strong`. When the run ends the bars freeze, the caption reads "Generation 37 done · best 15.2 m" for a moment, then the next generation starts. With 16 shadows the cells narrow to 17px.

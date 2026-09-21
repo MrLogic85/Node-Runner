@@ -1,0 +1,7 @@
+The home screen and the hub for everything: the list of saved **creations**. Three cards across, scrolling sideways.
+
+**Tap a card to open it.** A trained creation opens in its locked state (see BuildLocked); one that has never been trained opens in Build. There is no Edit button: the padlock on the opened creation is how you unlock it.
+
+**A card** is a live thumbnail, the name and, for a trained creation, a **padlock** and three small stats with icons: **best distance** (flag), **top speed** and **peak elevation**, then the number of generations. An untrained creation says so instead. Along its bottom edge are two 48px actions: **Copy** (an identical creation with the trained model intact; the new card simply appears in the list, no dialog) and **Delete** (a hold to confirm, no undo, see Overlays). The shipped **Example** carries a tag and only Copy; **Restore example** is in the overflow menu.
+
+**Top bar.** The title with a "Saved" cue, the **Achievements** trophy with a badge at its top right corner for anything new, **+ New** (the only primary, which opens an empty Build) and the overflow menu: **Settings** (with a cog) and **Restore example**. Nothing has a Save button: everything autosaves.

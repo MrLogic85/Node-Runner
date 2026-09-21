@@ -1,9 +1,0 @@
-**Settings** holds the three things a player may want to change for their own phone. It opens from the **overflow menu on Creations** (Settings, then Restore example), so the top bars keep their two-icons-plus-overflow shape and nothing on Build or Training carries a gear. Back returns to Creations. Its own overflow holds **Reset to defaults**.
-
-**UI size.** A slider from **50% to 400%** with the value in `readout` (default 100%). The track is logarithmic, so the everyday range from 50 to 200% is not squeezed into the left corner; ticks mark 50, 100, 200 and 400. A 48px **minus** and **plus** button on either side step it by 5% for precision. It scales text, panels and buttons, not the arena, and never takes a touch target below 48px: under 100% text and spacing shrink but controls keep their 48px. The Preview panel shows the change live and is clipped, as the real screen would be, when it grows past its box. Above about 200% the side panels no longer fit beside the arena, so they open over it one at a time; that layout is not drawn yet.
-
-**Theme.** Three tiles, each a tiny picture of what it looks like: **Neon** (dark, lit lines; the default), **Paper** (light, no glow) and **Use phone**, which follows the phone's light or dark setting: Neon when the phone is dark, Paper when it is light. The tile for Use phone is split half and half so it is not read as a fourth theme, and a line under the preview says which one the phone is giving right now. The chosen tile has a check and a thicker `accent` border, so it reads without colour.
-
-**Sounds.** One switch, on or off: taps, unlocks and results. The row shows a speaker glyph, or a crossed-out speaker when off, and says "On" or "Off" in words. A separate music level is not designed.
-
-Every change applies at once and is saved; there is no Save button. The screen itself is drawn in the theme and size being chosen, so the change is seen where it happens.
