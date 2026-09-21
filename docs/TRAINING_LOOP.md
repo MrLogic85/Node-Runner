@@ -21,6 +21,27 @@ but do not redefine it here.
   `project/src/managers/AGENTS.md`). Sim/ML code receives a `Random` from
   it explicitly rather than constructing its own.
 
+## Product lifecycle boundary
+
+The training engine does not decide whether a Creation is editable. The App
+layer owns the durable lifecycle described by
+`reference design/components/Navigation/README.md`:
+
+1. An unlocked Build autosaves and opens Train setup through Start training.
+2. Train setup opens Training.
+3. The Creation remains unlocked while its first training session is in
+   progress.
+4. Finishing that session persists the trained state and locks anatomy plus
+   brain shape.
+5. Later Train or Simulate sessions start from the locked Build state.
+6. Unlock is a destructive App operation: after hold-to-confirm it removes
+   the trained model/history and returns the same Creation to unlocked Build.
+
+`Evolver` reports training progress and completion; it must not mutate the
+Creation lock by itself. The App/persistence orchestration translates a
+completed session into the durable lock transition and must make interrupted
+sessions explicit rather than treating navigation or Start as completion.
+
 ## Trial (issue #49)
 
 - `Evaluator` (`project/src/sim/Evaluator.cs`) is a plain, dependency-free
@@ -112,7 +133,11 @@ reaching 50 distance units unlocks a second core slot globally. The unlock is
 recorded with the generation that crossed the threshold and remains available
 in Build after restarting the app.
 
-## Training HUD (issue #51)
+## Legacy training HUD (issue #51)
+
+This section documents the current prototype wiring, not the target
+navigation or presentation. The target is owned by the TrainSetup and Training
+component READMEs under `reference design/components/`.
 
 - `Main.cs` adds a training panel below the top Randomize/Build/Seed row
   (mutually exclusive with the construction tool row — training and

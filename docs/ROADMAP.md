@@ -11,28 +11,29 @@ Time estimates assume evening/weekend hobby pace and are rough.
 
 ## Current UI rollout — reference design adoption
 
-The tracked package in `reference design/` is now the app's detailed UI target.
-It introduces a larger product-shape change than the original milestone
-sequence: Creations becomes the home hub, Build is only for new unsaved
-anatomy, saved Creation screens lock structure and preserve training, Training
-is reached through Train setup, and Achievements unlock parts and maps.
+The tracked package in `reference design/` owns the detailed UI and product
+flow. Do not duplicate that contract in this roadmap.
 
-Implementation is tracked in the current GitHub milestones:
+Current delivery is gated by:
 
-- **0.10.0** — adopt the new reference design, remove the old design example,
-  and establish tokens/shell/primitives (#186, #187, #188).
-- **0.11.0** — implement the core Creation flow: Creations hub, Build-only new
-  anatomy, Brain setup, saved Creation, and Part settings (#189-#193).
-- **0.12.0** — implement Training and explanation surfaces: Train setup,
-  Training arena, SignalFlow, Brain/BrainScale, and Stats (#194-#198).
-- **0.13.0** — implement unlocks and polish: Achievements, safe overlays,
-  paper/effects-lite, and vocabulary/model alignment (#199-#202).
+1. **Foundations (#226):** exact colors, typography, spacing, dimensions,
+   radii, strokes, and font resources from the structured export.
+2. **Component Library (#227):** every reusable component and meaningful state
+   built and verified in isolation.
+3. **Creation lifecycle (#229):** autosave, training-driven lock, and
+   destructive Unlock in one Build scene.
+4. **Scene delivery:** Build parts and the remaining Training, explanation,
+   progression, and settings surfaces (#194-#202, #211, #220).
 
-`docs/UI_IMPLEMENTATION_PLAN.md` owns the implementation order and acceptance
-gates. `docs/UI_COMPONENTS_AND_FLOW.md` owns the durable screen/component
-inventory. Older milestone text below remains historical context for how the
-current prototype arrived here; the reference-design rollout is the active UI
-plan.
+Earlier #186-#193 established the first reference-based shell and scene
+slices. They remain useful implementation history, but completion against the
+previous export does not bypass the current foundation and component gates.
+
+`docs/UI_IMPLEMENTATION_PLAN.md` owns implementation order and acceptance
+gates. Older milestone text below remains historical context for how the
+current prototype arrived here. Terms such as Complete, Save, Edit, Rebuild,
+and the global Build/Simulate switch describe those shipped increments, not
+the active product target.
 
 ---
 
