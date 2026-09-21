@@ -101,6 +101,21 @@ public sealed class ConstructionViewModelTests
     }
 
     [Fact]
+    public void Load_WithBrainShape_PreservesSavedBrainShape()
+    {
+        var creature = new CreatureDef(
+            [new NodeDef(new Vector2D(0, 0), 18), new NodeDef(new Vector2D(20, 0), 18)],
+            [new BeamDef(0, 1)],
+            []);
+        var shape = new BrainShapeDef(3, 12);
+        var viewModel = new ConstructionViewModel();
+
+        viewModel.Load(creature, moveOnly: true, brainShape: shape);
+
+        viewModel.BrainShape.ShouldBe(shape);
+    }
+
+    [Fact]
     public void TryFindNodeNear_WithNoNodes_ReturnsFalse()
     {
         var viewModel = new ConstructionViewModel();

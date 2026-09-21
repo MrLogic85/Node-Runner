@@ -20,6 +20,7 @@ public sealed class CreationDuplicateWorkflowTests
         copy.Id.ShouldBe(copyId);
         copy.Name.ShouldBe("Copy of Walker");
         copy.Creature.ShouldBe(source.Creature);
+        copy.BrainShape.ShouldBe(source.BrainShape);
         copy.Training.ShouldBe(source.Training);
         repository.Get(copyId).ShouldBe(copy);
     }
@@ -72,5 +73,6 @@ public sealed class CreationDuplicateWorkflowTests
                 [new NodeDef(new Vector2D(0, 0), 1), new NodeDef(new Vector2D(2, 0), 1)],
                 [new BeamDef(0, 1)],
                 [new CoreDef(0)]),
+            new BrainShapeDef(2, 6),
             new TrainingStateDef([2, 1], [0.1, -0.2, 0.3], generation, "Tanh"));
 }

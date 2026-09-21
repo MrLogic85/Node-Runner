@@ -6,5 +6,5 @@ public interface IConstructionDraftWorkflow
 {
     ConstructionDraftSession BeginRebuildDraft(CreatureDef sourceCreature);
 
-    CreationDef CompleteDraft(CreatureDef creature, string name);
+    CreationDef CompleteDraft(CreatureDef creature, string name, BrainShapeDef? brainShape = null);
 }

@@ -7,7 +7,6 @@ namespace NodeRunner.Creature;
 
 public partial class Creature : Node2D
 {
-    private const int _hiddenNeuronCount = 8;
     private const float _beamThickness = 12f;
     private const float _rayLength = 220f;
 
@@ -38,6 +37,8 @@ public partial class Creature : Node2D
     private bool _isBuilt;
 
     public CreatureDef? Definition { get; set; }
+
+    public BrainShapeDef BrainShape { get; set; } = BrainShapeDef.Default;
 
     public VisualTheme Theme { get; set; } = VisualTheme.Neon;
 
@@ -109,7 +110,7 @@ public partial class Creature : Node2D
 
         BrainSeed = seed;
         var random = new Random(seed);
-        Brain = new NeuralNetwork(new[] { _sensorValues.Length, _hiddenNeuronCount, _motorRelations.Length }, Activation.Tanh, random);
+        Brain = new NeuralNetwork(BrainShape.ToLayerSizes(_sensorValues.Length, _motorRelations.Length), Activation.Tanh, random);
 
         GD.Print($"Node Runner brain seed: {seed}");
     }
@@ -428,7 +429,8 @@ public partial class Creature : Node2D
         _sensorValues = new double[sensorCount];
         _motorTargets = new double[_motorRelations.Length];
 
-        var scratchSize = Math.Max(sensorCount, Math.Max(_hiddenNeuronCount, _motorRelations.Length));
+        var shape = BrainShape.ToLayerSizes(sensorCount, _motorRelations.Length);
+        var scratchSize = shape.Max();
         _scratchA = new double[scratchSize];
         _scratchB = new double[scratchSize];
     }

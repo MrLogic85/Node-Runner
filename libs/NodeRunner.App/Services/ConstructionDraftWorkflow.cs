@@ -21,10 +21,10 @@ public sealed class ConstructionDraftWorkflow : IConstructionDraftWorkflow
             "Rebuild creates a new Creation; previous training will not be copied.");
     }
 
-    public CreationDef CompleteDraft(CreatureDef creature, string name)
+    public CreationDef CompleteDraft(CreatureDef creature, string name, BrainShapeDef? brainShape = null)
     {
         ArgumentNullException.ThrowIfNull(creature);
         ArgumentException.ThrowIfNullOrWhiteSpace(name);
-        return new CreationDef(_newId(), name, creature);
+        return new CreationDef(_newId(), name, creature, brainShape ?? BrainShapeDef.Default);
     }
 }

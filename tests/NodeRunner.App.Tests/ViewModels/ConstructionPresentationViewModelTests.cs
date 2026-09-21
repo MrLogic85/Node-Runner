@@ -86,6 +86,33 @@ public sealed class ConstructionPresentationViewModelTests
     }
 
     [Fact]
+    public void BrainShape_WhenNotCustomized_UsesRecommendedNeuronCount()
+    {
+        var construction = new ConstructionViewModel();
+        var a = construction.PlaceNode(new Vector2D(0, 0), 18);
+        var b = construction.PlaceNode(new Vector2D(20, 0), 18);
+        var c = construction.PlaceNode(new Vector2D(40, 0), 18);
+        construction.SelectNodeForBeam(a);
+        construction.SelectNodeForBeam(b);
+        construction.SelectNodeForBeam(b);
+        construction.SelectNodeForBeam(c);
+        construction.ToggleCoreOnNode(a);
+        var presentation = new ConstructionPresentationViewModel(construction);
+
+        presentation.BrainShape.ShouldBe(new BrainShapeDef(1, 5));
+    }
+
+    [Fact]
+    public void BrainShape_WhenCustomized_UsesExplicitShape()
+    {
+        var construction = new ConstructionViewModel();
+        construction.SetBrainShape(new BrainShapeDef(2, 9));
+        var presentation = new ConstructionPresentationViewModel(construction);
+
+        presentation.BrainShape.ShouldBe(new BrainShapeDef(2, 9));
+    }
+
+    [Fact]
     public void CoreToolText_WhenExtraCoreLocked_ShowsFitnessUnlockHint()
     {
         var construction = new ConstructionViewModel();

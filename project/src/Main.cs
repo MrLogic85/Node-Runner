@@ -607,6 +607,13 @@ public partial class Main : Node2D
         _buildScreen.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
         _buildScreen.SimulateRequested += ToggleConstructionMode;
         _buildScreen.ToolRequested += tool => Construction.ActiveTool = (ConstructionTool)(int)tool;
+        _buildScreen.BrainShapeChanged += (layers, neurons) =>
+        {
+            if (!Construction.IsMoveOnly)
+            {
+                Construction.SetBrainShape(new BrainShapeDef(layers, neurons));
+            }
+        };
         _buildScreen.SaveRequested += SaveCreationFromBuild;
         _buildScreen.TrainingRequested += CompleteCreationAndSimulate;
         _buildScreen.RebuildRequested += RebuildCreation;
@@ -1189,7 +1196,7 @@ public partial class Main : Node2D
     private void EditCreation(CreationDef creation)
     {
         OpenCreation(creation);
-        Construction.Load(creation.Creature, moveOnly: true);
+        Construction.Load(creation.Creature, moveOnly: true, brainShape: creation.BrainShape);
         Construction.IsActive = true;
         UpdateToolButtonVisibility();
     }
@@ -1239,8 +1246,9 @@ public partial class Main : Node2D
 
         Selection.Clear();
         _activeCreationId = creation.Id;
+        _creature.BrainShape = creation.BrainShape;
         _creature.BuildFrom(creation.Creature);
-        Construction.Load(creation.Creature);
+        Construction.Load(creation.Creature, brainShape: creation.BrainShape);
         SetActiveInspector(creation.Creature);
         StartEvolution(creation);
     }
@@ -1497,6 +1505,7 @@ public partial class Main : Node2D
             creation.Id,
             creation.Name,
             creation.Creature,
+            creation.BrainShape,
             new TrainingStateDef(_evolver.LayerSizes, genome.ToArray(), _evolver.Generation, Activation.Tanh.ToString()));
     }
 
@@ -1702,8 +1711,9 @@ public partial class Main : Node2D
         {
             return;
         }
-
         Selection.Clear();
+        Selection.Clear();
+        _creature.BrainShape = creation.BrainShape;
         _creature.BuildFrom(creature);
         SetActiveInspector(creature);
         if (_seedLabel is not null)
@@ -1727,7 +1737,8 @@ public partial class Main : Node2D
         var saveManager = GetNode<SaveManager>("/root/SaveManager");
         var completedCreation = saveManager.ConstructionDraftWorkflow.CompleteDraft(
             creature,
-            $"Creation {saveManager.List().Count + 1}");
+            $"Creation {saveManager.List().Count + 1}",
+            Construction.HasCustomBrainShape ? Construction.BrainShape : RecommendedBrainShape(creature));
         if (TryRunFileOperation(
             () => saveManager.Save(completedCreation),
             $"Saving Creation '{completedCreation.Name}'"))
@@ -1746,6 +1757,20 @@ public partial class Main : Node2D
 
         Construction.SetCompletedMessage("Save failed — see log.");
         return false;
+    }
+
+    private static BrainShapeDef RecommendedBrainShape(CreatureDef creature)
+    {
+        var motorRelationCount = MotorTopology.BuildNodeConnections(creature)
+            .Count(connection => connection.IsMotorized);
+        var inputCount = (creature.Cores.Count * 6) + (motorRelationCount * 2);
+        var outputCount = motorRelationCount;
+        return new BrainShapeDef(
+            BrainShapeDef.DefaultHiddenLayers,
+            Math.Clamp(
+                (int)Math.Ceiling((inputCount + outputCount) / 2.0),
+                BrainShapeDef.MinimumNeuronsPerLayer,
+                BrainShapeDef.MaximumNeuronsPerLayer));
     }
 
     // Persisting reads the current Creation back off disk and writes the
