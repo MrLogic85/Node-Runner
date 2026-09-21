@@ -1,1 +1,0 @@
-Open index.html in a browser to see every screen. previews/ holds each card on its own; they need tokens.css next to them (../tokens.css). project/ is the source: README.md, tokens.json and each component's README.md are the written design.

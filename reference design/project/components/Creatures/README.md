@@ -1,5 +1,0 @@
-The home screen and the hub for everything: the list of saved **creations** (the product word; in conversation these were called creatures). Three cards across, scrolling sideways.
-
-Each card is a live thumbnail, a name, one line of stats and, if it has progress, a thin bar toward the next achievement. Along its bottom edge are three 48px actions with icon and label: **Copy** (makes an identical creation with the trained model intact and shows a toast "Copied · Copy of Walker-1"; no questions asked), **Edit** (opens the Creation screen; the whole card also does this) and **Delete** (asks once, then offers a 10 s Undo). The shipped example carries an "Example" tag and a lock instead of Delete; **Restore example** is in the overflow menu.
-
-Top bar: the title with a "Saved" cue, the **Achievements** trophy with a badge for anything new, and **+ New**, the only primary, which opens an empty Build. There is no Save button; state autosaves.

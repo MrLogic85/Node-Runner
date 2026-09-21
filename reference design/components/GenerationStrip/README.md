@@ -1,0 +1,5 @@
+One cell per **shadow** (the ghost copies that all run at the same time). Each cell shows **how far that shadow has travelled**, as a bar that grows during the run, so a glance says who is ahead. The leader has a bright `accent` border and fill (its bar is simply the tallest, so no extra marker is needed) and is drawn in full in the arena; the others are `line-strong` and faded in the arena.
+
+**It is tappable.** Tapping a cell makes the arena follow that shadow (drawn in full) and rings the cell in `halo`; the caption says "Following shadow 5 · 10.3 m". Tapping the leader goes back to following the leader. Following stays put if a shadow is passed by another.
+
+There is no time bar under the strip: all shadows run for the same time, so one line of text carries it ("Generation 37 · 6 of 10 s"). When the run ends the bars freeze, the caption reads "Generation 37 done · best 14.2 m" for a moment, then the next generation starts. With 16 or more shadows the cells narrow to a few pixels.

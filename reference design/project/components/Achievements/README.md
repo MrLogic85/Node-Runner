@@ -1,5 +1,0 @@
-Opened from the trophy on the Creations menu, from a toast, or from a locked map or part. It is the only place parts and maps are unlocked.
-
-Each card has a **progress ring** (a check when done), the name, a one-line goal and a **reward chip** with its kind (a part or a map glyph) and name. Chips show a lock until earned and a check afterwards. States: earned and new (`accent` border, glow, a "New" tag), in progress (ring with percent), and blocked by another achievement (dashed, dimmed; the goal names the prerequisite). Two chips in the top bar say what can be earned (Parts, Maps).
-
-Achievements are **player-wide**: an unlocked part or map is available to every creation. The Creations trophy shows a badge with the number of new ones; opening the screen clears it. When one is earned during training a toast appears over Training (see Overlays) and the thin `accent` line under the top bar fills toward the next.
