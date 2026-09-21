@@ -284,8 +284,8 @@ public partial class ComponentGalleryScreen : Control
         actions.AddChild(unlock);
 
         content.AddChild(CreateSectionDescription(
-            "Icon buttons",
-            "48px target, 40px box"));
+            "Buttons with an icon",
+            "the same button in another layout: icon only"));
         var iconActions = CreateFlow();
         iconActions.AddChild(Track(new UiSecondaryIconButton
         {
@@ -307,10 +307,11 @@ public partial class ComponentGalleryScreen : Control
             IconId = UiIconId.Speed,
             AccessibleLabel = "Fast forward",
         }));
-        iconActions.AddChild(Track(new UiPrimaryIconButton
+        iconActions.AddChild(Track(new UiSecondaryIconButton
         {
             IconId = UiIconId.Lock,
             AccessibleLabel = "Lock",
+            On = true,
             HoldDurationSeconds = UiComponentContracts.HoldCompletionSeconds,
         }));
         iconActions.AddChild(Track(new UiSecondaryIconButton
@@ -335,9 +336,56 @@ public partial class ComponentGalleryScreen : Control
             AccessibleLabel = "Close",
             Enabled = false,
         }));
+        iconActions.AddChild(Track(new UiPrimaryIconButton
+        {
+            IconId = UiIconId.Play,
+            AccessibleLabel = "Play",
+            ButtonSize = UiIconButtonSize.Large,
+            IconSize = UiIconSize.ExtraLarge,
+        }));
         content.AddChild(iconActions);
 
+        content.AddChild(CreateSectionDescription(
+            "Stacked buttons",
+            "the same button with the icon over a small label"));
+        var stackedActions = CreateFlow();
+        stackedActions.AddChild(CreateStackedButtonSpecimen(Track(new UiSecondaryButton
+        {
+            LabelText = "Move",
+            IconId = UiIconId.Move,
+            ContentLayout = UiButtonContentLayout.Stack,
+        }), "rest"));
+        stackedActions.AddChild(CreateStackedButtonSpecimen(Track(new UiSecondaryButton
+        {
+            LabelText = "Move",
+            IconId = UiIconId.Move,
+            ContentLayout = UiButtonContentLayout.Stack,
+            On = true,
+        }), "on (chosen)"));
+        stackedActions.AddChild(CreateStackedButtonSpecimen(Track(new UiSecondaryButton
+        {
+            LabelText = "Beam",
+            IconId = UiIconId.Beam,
+            ContentLayout = UiButtonContentLayout.Stack,
+            Enabled = false,
+        }), "off (disabled)"));
+        content.AddChild(stackedActions);
+
         return content;
+    }
+
+    private Control CreateStackedButtonSpecimen(UiButton button, string state)
+    {
+        var stack = new VBoxContainer
+        {
+            Alignment = BoxContainer.AlignmentMode.Center,
+        };
+        stack.AddThemeConstantOverride("separation", (int)_tokens.Space1);
+        stack.AddChild(button);
+        var label = CreateLabel(state, _tokens.NoteText, tokens => tokens.Muted, TextServer.AutowrapMode.Off);
+        label.HorizontalAlignment = HorizontalAlignment.Center;
+        stack.AddChild(label);
+        return stack;
     }
 
     private Control CreateSegmentedSection()

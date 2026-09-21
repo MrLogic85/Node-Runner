@@ -4,14 +4,13 @@ All icons are pure white (`#ffffff`) on purpose: import them as SVG and tint the
 
 Two sets. **UI icons** are stroked glyphs on a 24 grid (stroke 2, round caps and joins, `currentColor`), used at 12, 16, 20 and 24. **Part glyphs** are 20-grid pictures of parts, drawn with the dark theme colours. One SVG per icon in `icons/ui/` and `icons/parts/`.
 
-## UI icons (40)
+## UI icons (39)
 
 | Icon | Name |
 |---|---|
 | <img src="icons/ui/back.svg" width="24" style="background:#0d1424"> | `back` |
 | <img src="icons/ui/beam.svg" width="24" style="background:#0d1424"> | `beam` |
 | <img src="icons/ui/bolt.svg" width="24" style="background:#0d1424"> | `bolt` |
-| <img src="icons/ui/brain.svg" width="24" style="background:#0d1424"> | `brain` |
 | <img src="icons/ui/build.svg" width="24" style="background:#0d1424"> | `build` |
 | <img src="icons/ui/chart.svg" width="24" style="background:#0d1424"> | `chart` |
 | <img src="icons/ui/check.svg" width="24" style="background:#0d1424"> | `check` |
@@ -27,10 +26,10 @@ Two sets. **UI icons** are stroked glyphs on a 24 grid (stroke 2, round caps and
 | <img src="icons/ui/lock.svg" width="24" style="background:#0d1424"> | `lock` |
 | <img src="icons/ui/map.svg" width="24" style="background:#0d1424"> | `map` |
 | <img src="icons/ui/menu.svg" width="24" style="background:#0d1424"> | `menu` |
+| <img src="icons/ui/model.svg" width="24" style="background:#0d1424"> | `model` |
 | <img src="icons/ui/more.svg" width="24" style="background:#0d1424"> | `more` |
 | <img src="icons/ui/move.svg" width="24" style="background:#0d1424"> | `move` |
 | <img src="icons/ui/mute.svg" width="24" style="background:#0d1424"> | `mute` |
-| <img src="icons/ui/padlock.svg" width="24" style="background:#0d1424"> | `padlock` |
 | <img src="icons/ui/pause.svg" width="24" style="background:#0d1424"> | `pause` |
 | <img src="icons/ui/phone.svg" width="24" style="background:#0d1424"> | `phone` |
 | <img src="icons/ui/play.svg" width="24" style="background:#0d1424"> | `play` |
@@ -49,7 +48,7 @@ Two sets. **UI icons** are stroked glyphs on a 24 grid (stroke 2, round caps and
 | <img src="icons/ui/warn.svg" width="24" style="background:#0d1424"> | `warn` |
 | <img src="icons/ui/x.svg" width="24" style="background:#0d1424"> | `x` |
 
-## Part glyphs (16)
+## Part glyphs (15)
 
 | Glyph | Name |
 |---|---|
@@ -57,9 +56,8 @@ Two sets. **UI icons** are stroked glyphs on a 24 grid (stroke 2, round caps and
 | <img src="icons/parts/beam.svg" width="32"> | `beam` |
 | <img src="icons/parts/brake.svg" width="32"> | `brake` |
 | <img src="icons/parts/core.svg" width="32"> | `core` |
-| <img src="icons/parts/damper.svg" width="32"> | `damper` |
-| <img src="icons/parts/engine.svg" width="32"> | `engine` |
 | <img src="icons/parts/fuel.svg" width="32"> | `fuel` |
+| <img src="icons/parts/generator.svg" width="32"> | `generator` |
 | <img src="icons/parts/los.svg" width="32"> | `los` |
 | <img src="icons/parts/node.svg" width="32"> | `node` |
 | <img src="icons/parts/piston.svg" width="32"> | `piston` |

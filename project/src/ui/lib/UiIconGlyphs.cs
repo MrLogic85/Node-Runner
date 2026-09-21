@@ -5,6 +5,7 @@ public static class UiIconGlyphs
 {
     public const string Back = "back";
     public const string Brain = "brain";
+    public const string Model = "model";
     public const string Train = "play";
     public const string More = "more";
     public const string Trophy = "trophy";
@@ -15,7 +16,7 @@ public static class UiIconGlyphs
         {
             "back" or "‹" or "<" => UiIconId.Back,
             "beam" or "link" or "⛓" => UiIconId.Beam,
-            "brain" or "◎" => UiIconId.Brain,
+            "brain" or "model" or "◎" => UiIconId.Model,
             "build" or "✎" => UiIconId.Build,
             "check" or "✓" => UiIconId.Check,
             "close" or "x" or "×" => UiIconId.Close,
@@ -26,7 +27,7 @@ public static class UiIconGlyphs
             "lock" or "locked" or "🔒" => UiIconId.Lock,
             "more" or "..." or "⋯" => UiIconId.More,
             "move" => UiIconId.Move,
-            "padlock" => UiIconId.Padlock,
+            "padlock" => UiIconId.Lock,
             "play" or "▶" or ">" => UiIconId.Play,
             "plus" or "+" => UiIconId.Plus,
             "rotate" => UiIconId.Rotate,
@@ -41,7 +42,7 @@ public static class UiIconGlyphs
         return value is
             "back" or "‹" or "<" or
             "beam" or "link" or "⛓" or
-            "brain" or "◎" or
+            "brain" or "model" or "◎" or
             "build" or "✎" or
             "check" or "✓" or
             "close" or "x" or "×" or

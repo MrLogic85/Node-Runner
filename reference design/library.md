@@ -4,11 +4,11 @@ One implementation per control. Every screen calls these; a new screen adds a va
 
 ## `c_btn(text, kind='', icon=None, w=None, off=False)`
 
-Text button. kind: primary (one per screen), danger, or default; icon optional; off dims it.
+The one button (`btn`): kind primary (one per screen), danger or default, an optional icon, and off for disabled (dimmed, dashed border). Icon-only and stacked layouts are `btn icon` and `btn stack`.
 
-## `c_ib(icon, kind='', size=22)`
+## `c_ib(icon, kind='', size=20)`
 
-Icon button: 40 box in a 48 touch area. kind: accent, danger, dis.
+The icon layout of the one button (`btn icon`): a 40 x 40 box in a 48 x 48 touch area. kind: accent (state `on`), danger, dis (state `off`).
 
 ## `c_hold(text, pct=40, w=None)`
 

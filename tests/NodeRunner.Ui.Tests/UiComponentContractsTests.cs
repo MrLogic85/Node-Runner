@@ -83,6 +83,10 @@ public sealed class UiComponentContractsTests
             .ShouldBe(["Primary", "Secondary", "Danger"]);
         Enum.GetNames<UiIconSize>()
             .ShouldBe(["Small", "Standard", "Large", "ExtraLarge"]);
+        Enum.GetNames<UiIconButtonSize>()
+            .ShouldBe(["Small", "Default", "Large"]);
+        Enum.GetNames<UiButtonContentLayout>()
+            .ShouldBe(["Row", "Stack"]);
         Enum.GetNames<UiPanel.PanelState>()
             .ShouldBe(["Normal", "Focused", "Selected", "Locked", "Warning", "Danger", "Hint"]);
         Enum.GetNames<UiChip.ChipKind>()
@@ -99,6 +103,8 @@ public sealed class UiComponentContractsTests
         UiComponentContracts.ProgressRingDiameter.ShouldBe(44);
         UiComponentContracts.HoldCompletionSeconds.ShouldBe(0.8f);
         UiComponentContracts.ButtonProgressOpacity.ShouldBe(0.35f);
+        UiComponentContracts.ButtonGlowSize.ShouldBe(12);
+        UiComponentContracts.ButtonGlowOpacity.ShouldBe(0.4f);
     }
 
     [Theory]

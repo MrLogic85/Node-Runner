@@ -9,6 +9,8 @@ public static class UiComponentContracts
     public const float ProgressRingDiameter = 44;
     public const float HoldCompletionSeconds = 0.8f;
     public const float ButtonProgressOpacity = 0.35f;
+    public const float ButtonGlowSize = 12;
+    public const float ButtonGlowOpacity = 0.4f;
 
     public static float HoldProgress(double elapsedSeconds, double durationSeconds)
     {

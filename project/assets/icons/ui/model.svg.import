@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dwhaa41chefog"
-path="res://.godot/imported/brain.svg-851e4750101c340923d4696ed1993dab.ctex"
+uid="uid://cfglngawakf6e"
+path="res://.godot/imported/model.svg-44b7e9bb7dbd06b82122c1089e251abc.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/icons/ui/brain.svg"
-dest_files=["res://.godot/imported/brain.svg-851e4750101c340923d4696ed1993dab.ctex"]
+source_file="res://assets/icons/ui/model.svg"
+dest_files=["res://.godot/imported/model.svg-44b7e9bb7dbd06b82122c1089e251abc.ctex"]
 
 [params]
 
