@@ -158,7 +158,7 @@ public partial class SampleFlowScreen : Control
         _modeSwitch.SelectionChanged += index => SetMode(index);
         header.AddChild(_modeSwitch);
 
-        var menu = new UiIconButton
+        var menu = new UiSecondaryIconButton
         {
             Tokens = _tokens,
             IconId = UiIconId.More,

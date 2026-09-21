@@ -244,7 +244,7 @@ public partial class CreationsScreen : Control
         newButton.Pressed += () => EmitSignal(SignalName.NewRequested);
         row.AddChild(newButton);
 
-        var overflowButton = new UiIconButton
+        var overflowButton = new UiSecondaryIconButton
         {
             Tokens = _tokens,
             IconId = UiIconId.More,
@@ -261,7 +261,7 @@ public partial class CreationsScreen : Control
         {
             CustomMinimumSize = new Vector2(_tokens.TouchTarget, _tokens.TouchTarget),
         };
-        var trophy = new UiIconButton
+        var trophy = new UiSecondaryIconButton
         {
             Tokens = _tokens,
             IconId = UiIconId.Trophy,

@@ -56,30 +56,4 @@ public sealed class UiGalleryInventoryTests
         UiGalleryScroll.ApplyVerticalDrag(currentScroll, relativeY).ShouldBe(expected);
     }
 
-    [Fact]
-    public void ComponentGallery_FocusPreviewDoesNotStealRuntimeFocus()
-    {
-        var gallery = File.ReadAllText(Path.Combine(
-            FindRepositoryRoot(),
-            "project",
-            "src",
-            "ui",
-            "screens",
-            "ComponentGalleryScreen.cs"));
-
-        gallery.ShouldContain("ShowFocusRing = true");
-        gallery.ShouldNotContain("GrabFocus");
-    }
-
-    private static string FindRepositoryRoot()
-    {
-        var current = new DirectoryInfo(AppContext.BaseDirectory);
-        while (current is not null && !File.Exists(Path.Combine(current.FullName, "NodeRunner.slnx")))
-        {
-            current = current.Parent;
-        }
-
-        return current?.FullName
-            ?? throw new DirectoryNotFoundException("Could not locate repository root.");
-    }
 }

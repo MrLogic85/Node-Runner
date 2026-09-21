@@ -454,7 +454,7 @@ public partial class SimulateScreen : Control
 
         topBar.AddChild(CreateModeSwitch());
 
-        var settings = new UiIconButton
+        var settings = new UiSecondaryIconButton
         {
             Tokens = _tokens,
             IconId = UiIconId.More,

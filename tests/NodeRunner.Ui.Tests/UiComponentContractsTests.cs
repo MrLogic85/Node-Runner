@@ -98,6 +98,28 @@ public sealed class UiComponentContractsTests
         UiTokens.Neon.TouchTarget.ShouldBe(48);
         UiComponentContracts.ProgressRingDiameter.ShouldBe(44);
         UiComponentContracts.HoldCompletionSeconds.ShouldBe(0.8f);
+        UiComponentContracts.ButtonProgressOpacity.ShouldBe(0.35f);
+    }
+
+    [Theory]
+    [InlineData(0, 0.8, 0)]
+    [InlineData(0.4, 0.8, 0.5)]
+    [InlineData(0.8, 0.8, 1)]
+    [InlineData(1.2, 0.8, 1)]
+    [InlineData(-0.1, 0.8, 0)]
+    [InlineData(double.NaN, 0.8, 0)]
+    [InlineData(double.PositiveInfinity, 0.8, 0)]
+    [InlineData(0.4, 0, 1)]
+    [InlineData(0.4, -0.8, 1)]
+    [InlineData(0.4, double.NaN, 1)]
+    [InlineData(0.4, double.PositiveInfinity, 1)]
+    public void HoldProgress_TracksElapsedFraction(
+        double elapsedSeconds,
+        double durationSeconds,
+        float expected)
+    {
+        UiComponentContracts.HoldProgress(elapsedSeconds, durationSeconds)
+            .ShouldBe(expected);
     }
 
     [Theory]

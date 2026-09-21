@@ -266,7 +266,7 @@ public partial class BuildScreen : Control
         topBar.AddThemeConstantOverride("separation", (int)_tokens.Space2);
         margin.AddChild(topBar);
 
-        var back = new UiIconButton
+        var back = new UiSecondaryIconButton
         {
             Tokens = _tokens,
             IconId = UiIconId.Back,
@@ -318,7 +318,7 @@ public partial class BuildScreen : Control
             }
             topBar.AddChild(save);
         }
-        var overflow = new UiIconButton
+        var overflow = new UiSecondaryIconButton
         {
             Tokens = _tokens,
             IconId = UiIconId.More,
@@ -619,7 +619,7 @@ public partial class BuildScreen : Control
             header.AddChild(delete);
         }
 
-        var close = new UiIconButton
+        var close = new UiSecondaryIconButton
         {
             Tokens = _tokens,
             IconId = UiIconId.Close,
@@ -663,7 +663,7 @@ public partial class BuildScreen : Control
             header.AddChild(delete);
         }
 
-        var close = new UiIconButton
+        var close = new UiSecondaryIconButton
         {
             Tokens = _tokens,
             IconId = UiIconId.Close,

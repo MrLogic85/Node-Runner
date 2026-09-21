@@ -160,6 +160,9 @@ public partial class ComponentGalleryScreen : Control
         content.AddThemeConstantOverride("separation", (int)_tokens.Space2);
         _scroll.AddChild(content);
 
+        content.AddChild(CreateSectionDescription(
+            "Buttons",
+            "one primary per screen; destructive ones are outlined and named"));
         content.AddChild(CreateActionsSection());
         content.AddChild(CreateSegmentedSection());
         content.AddChild(CreatePanelsSection());
@@ -187,7 +190,7 @@ public partial class ComponentGalleryScreen : Control
 
         if (ShowCloseAction)
         {
-            var close = Track(new UiIconButton
+            var close = Track(new UiSecondaryIconButton
             {
                 IconId = UiIconId.Back,
                 AccessibleLabel = "Back to Creations",
@@ -253,56 +256,88 @@ public partial class ComponentGalleryScreen : Control
         actions.AddThemeConstantOverride("h_separation", UiSpacing.ControlGap(_tokens));
         actions.AddThemeConstantOverride("v_separation", UiSpacing.ControlGap(_tokens));
         content.AddChild(actions);
-        actions.AddChild(Track(new UiActionButton
+        actions.AddChild(Track(new UiPrimaryButton
         {
-            Kind = UiActionButton.ActionKind.Primary,
-            LabelText = "Primary action",
-        }));
-        actions.AddChild(Track(new UiActionButton
-        {
-            Kind = UiActionButton.ActionKind.Secondary,
-            LabelText = "Icon action",
+            LabelText = "Start training",
             IconId = UiIconId.Play,
         }));
-        actions.AddChild(Track(new UiActionButton
+        actions.AddChild(Track(new UiSecondaryButton
         {
-            Kind = UiActionButton.ActionKind.Secondary,
-            LabelText = "Secondary",
+            LabelText = "Cancel",
         }));
-        actions.AddChild(Track(new UiActionButton
+        actions.AddChild(Track(new UiTertiaryButton
         {
-            Kind = UiActionButton.ActionKind.Danger,
-            LabelText = "Danger",
+            LabelText = "Delete",
+            IconId = UiIconId.Trash,
         }));
-        actions.AddChild(Track(new UiActionButton
+        actions.AddChild(Track(new UiSecondaryButton
         {
-            LabelText = "Locked",
-            Locked = true,
-            LockReason = "needs creature",
+            LabelText = "Start training",
+            Enabled = false,
         }));
-        var focused = Track(new UiActionButton
+        var unlock = Track(new UiTertiaryButton
         {
-            LabelText = "Focused",
-            ShowFocusRing = true,
+            LabelText = "Hold to unlock",
+            HoldDurationSeconds = UiComponentContracts.HoldCompletionSeconds,
         });
-        actions.AddChild(focused);
+        unlock.Activated += () => unlock.LabelText = "Unlocked";
+        actions.AddChild(unlock);
 
-        var iconRow = CreateFlow();
-        iconRow.AddChild(Track(new UiIconButton { IconId = UiIconId.Warn, AccessibleLabel = "Warning" }));
-        iconRow.AddChild(Track(new UiIconButton { IconId = UiIconId.Plus, AccessibleLabel = "Add", AccentRole = true }));
-        iconRow.AddChild(Track(new UiIconButton { IconId = UiIconId.Trash, AccessibleLabel = "Delete", DangerRole = true }));
-        iconRow.AddChild(Track(new UiIconButton { IconId = UiIconId.More, AccessibleLabel = "More", Disabled = true }));
-        content.AddChild(iconRow);
+        content.AddChild(CreateSectionDescription(
+            "Icon buttons",
+            "48px target, 40px box"));
+        var iconActions = CreateFlow();
+        iconActions.AddChild(Track(new UiSecondaryIconButton
+        {
+            IconId = UiIconId.Back,
+            AccessibleLabel = "Back",
+        }));
+        iconActions.AddChild(Track(new UiSecondaryIconButton
+        {
+            IconId = UiIconId.More,
+            AccessibleLabel = "More",
+        }));
+        iconActions.AddChild(Track(new UiSecondaryIconButton
+        {
+            IconId = UiIconId.Pause,
+            AccessibleLabel = "Pause",
+        }));
+        iconActions.AddChild(Track(new UiSecondaryIconButton
+        {
+            IconId = UiIconId.Speed,
+            AccessibleLabel = "Fast forward",
+        }));
+        iconActions.AddChild(Track(new UiPrimaryIconButton
+        {
+            IconId = UiIconId.Lock,
+            AccessibleLabel = "Lock",
+            HoldDurationSeconds = UiComponentContracts.HoldCompletionSeconds,
+        }));
+        iconActions.AddChild(Track(new UiSecondaryIconButton
+        {
+            IconId = UiIconId.Unlock,
+            AccessibleLabel = "Unlock",
+        }));
+        iconActions.AddChild(Track(new UiSecondaryIconButton
+        {
+            IconId = UiIconId.Chart,
+            AccessibleLabel = "Chart",
+        }));
+        iconActions.AddChild(Track(new UiTertiaryIconButton
+        {
+            IconId = UiIconId.Trash,
+            AccessibleLabel = "Delete",
+            HoldDurationSeconds = UiComponentContracts.HoldCompletionSeconds,
+        }));
+        iconActions.AddChild(Track(new UiSecondaryIconButton
+        {
+            IconId = UiIconId.Close,
+            AccessibleLabel = "Close",
+            Enabled = false,
+        }));
+        content.AddChild(iconActions);
 
-        var holdRow = CreateFlow();
-        holdRow.AddChild(Track(new UiHoldButton { LabelText = "Hold to unlock", ProgressPercent = 42, SizeFlagsHorizontal = SizeFlags.ExpandFill }));
-        holdRow.AddChild(Track(new UiHoldButton { LabelText = "Completed", ProgressPercent = 100, SizeFlagsHorizontal = SizeFlags.ExpandFill }));
-        holdRow.AddChild(Track(new UiHoldButton { LabelText = "Locked hold", Locked = true, SizeFlagsHorizontal = SizeFlags.ExpandFill }));
-        holdRow.AddChild(Track(new UiStepperButton { Symbol = UiComponentContracts.StepperSymbol.Minus }));
-        holdRow.AddChild(Track(new UiStepperButton { Symbol = UiComponentContracts.StepperSymbol.Plus }));
-        content.AddChild(holdRow);
-
-        return WrapSection("Actions · c_btn / c_ib / c_hold / c_step", content);
+        return content;
     }
 
     private Control CreateSegmentedSection()
@@ -541,7 +576,24 @@ public partial class ComponentGalleryScreen : Control
         return flow;
     }
 
-    private Control WrapSection(string title, Control content)
+    private Control CreateSectionDescription(string title, string description)
+    {
+        var heading = new HBoxContainer();
+        heading.AddThemeConstantOverride("separation", (int)_tokens.Space2);
+        heading.AddChild(CreateLabel(
+            title,
+            _tokens.OverlineText,
+            tokens => tokens.Ink,
+            TextServer.AutowrapMode.Off));
+        heading.AddChild(CreateLabel(
+            description,
+            _tokens.NoteText,
+            tokens => tokens.Muted,
+            TextServer.AutowrapMode.Off));
+        return heading;
+    }
+
+    private Control WrapSection(string? title, Control content)
     {
         var panel = Track(new UiPanel
         {
@@ -558,7 +610,11 @@ public partial class ComponentGalleryScreen : Control
         var stack = new VBoxContainer();
         stack.AddThemeConstantOverride("separation", (int)_tokens.Space2);
         margin.AddChild(stack);
-        stack.AddChild(CreateLabel(title, _tokens.HeadingText, tokens => tokens.Accent));
+        if (title is not null)
+        {
+            stack.AddChild(CreateLabel(title, _tokens.HeadingText, tokens => tokens.Accent));
+        }
+
         stack.AddChild(content);
         return panel;
     }
@@ -596,10 +652,10 @@ public partial class ComponentGalleryScreen : Control
     {
         switch (control)
         {
-            case UiActionButton button:
+            case UiButton button:
                 button.Tokens = tokens;
                 break;
-            case UiIconButton button:
+            case UiActionButton button:
                 button.Tokens = tokens;
                 break;
             case UiOverflowMenu menu:
