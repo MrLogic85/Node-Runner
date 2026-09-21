@@ -351,8 +351,7 @@ public partial class Main : Node2D
 
     private void AddCreature()
     {
-        var scene = GD.Load<PackedScene>("res://scenes/Creature.tscn");
-        var creature = scene.Instantiate<Creature.Creature>();
+        var creature = CreateCreatureInstance();
         creature.Name = "Creature";
         // Explicitly Pausable (not the default Inherit) so it doesn't pick
         // up Main's Always process mode (#85) and keep simulating physics
@@ -371,10 +370,15 @@ public partial class Main : Node2D
         SetActiveInspector(creature.Definition);
     }
 
-    // 0.4.0 first training slice (#50): evolves a small population of
-    // brains for the current creature via GeneticAlgorithm, one generation
-    // after another. The training HUD (#51) binds to GenerationCompleted /
-    // NewBestFound below.
+    private static Creature.Creature CreateCreatureInstance()
+    {
+        var scene = GD.Load<PackedScene>("res://scenes/Creature.tscn");
+        return scene.Instantiate<Creature.Creature>();
+    }
+
+    // Evolves a small population of brains via fixed parallel physics slots
+    // and GeneticAlgorithm, one generation after another. The training HUD
+    // binds to GenerationCompleted / NewBestFound below.
     private void AddEvolver()
     {
         var evolver = new Evolver { Name = "Evolver" };
@@ -426,7 +430,14 @@ public partial class Main : Node2D
         var profile = CurrentTrainingProfile();
         _sessionGenerationStart = 0;
         var ga = CreateGeneticAlgorithm(profile);
-        _evolver.Start(_creature, profile.PopulationSize, _creature.Brain.LayerSizes, ga, RngProvider().Random, trialDurationTicks: profile.TrialDurationTicks);
+        _evolver.Start(
+            _creature,
+            profile.PopulationSize,
+            _creature.Brain.LayerSizes,
+            ga,
+            RngProvider().Random,
+            trialDurationTicks: profile.TrialDurationTicks,
+            creatureFactory: CreateCreatureInstance);
     }
 
     private void StartEvolution(CreationDef creation)
@@ -451,7 +462,8 @@ public partial class Main : Node2D
             RngProvider().Random,
             resume?.BestGenome,
             resume?.Generation ?? 0,
-            profile.TrialDurationTicks);
+            profile.TrialDurationTicks,
+            CreateCreatureInstance);
     }
 
     private void OnGenerationCompleted()

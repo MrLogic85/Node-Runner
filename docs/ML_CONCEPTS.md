@@ -33,10 +33,10 @@ For each concept:
 - **What:** Search weights by simulating a population, keeping the fit ones,
   recombining them, mutating a bit, repeating.
 - **Where:** 0.4.0 · `libs/NodeRunner.ML/Ga/GeneticAlgorithm.cs`
-- **How we show it:** 0.4.0 evaluates candidate genomes one at a time on a
-  single creature (fitness chart climbs, mutations produce weird outliers);
-  showing a population of creatures visibly running in parallel is a
-  possible later step, not required for the first working demo.
+- **How we show it:** Candidate genomes run concurrently in fixed,
+  collision-isolated slots while the fitness chart climbs and mutations
+  produce weird outliers. The first candidate is visible; showing the hidden
+  parallel candidates as ghosts is tracked separately.
 
 ## Fitness function
 

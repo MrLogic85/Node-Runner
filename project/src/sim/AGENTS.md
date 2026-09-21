@@ -21,14 +21,12 @@
 - `TrialController.cs` — times one fixed-duration trial for one creature,
   resets its pose between trials
 - `Evolver.cs` — orchestrates the generation cycle: evaluate every genome
-  in the generation (sequentially, one trial each, via `TrialController`) →
-  GA → next generation
-- `Population.cs` (not yet built) — would spawn N creatures with N brains
-  and run them in parallel in one scene (collision layers isolate them).
-  `Evolver` currently evaluates candidates sequentially on one creature
-  instead ("repeated trials of one creature" — an explicitly valid roadmap
-  reading, see `docs/TRAINING_LOOP.md`); build this only if evaluation
-  speed becomes a real problem.
+  in fixed parallel slots (one `TrialController` per slot) → GA → next
+  generation. Slot 0 reuses the visible creature; additional slots are
+  hidden clones whose collision layers isolate their physics.
+- `Population.cs` — not currently needed. `Evolver` owns the fixed-slot
+  population lifecycle directly; extract it only if that lifecycle grows
+  beyond training orchestration.
 - `SimulationRunner.cs` (probably) — the top-level `Node` that ties the
   above together; scene entry point. Not yet built — `Main.cs` owns this
   role directly for now.
@@ -43,9 +41,8 @@
 
 ## Style specifics
 
-- Collision layers: reserve layer 1 for the ground, layers 2..(N+1) per
-  population slot. Creatures in slot `i` collide with layer 1 and layer `1+i`,
-  nothing else. Documented in this AGENTS.md so nobody re-invents it.
+- Collision isolation must follow the canonical slot allocation in
+  `docs/TRAINING_LOOP.md`; do not introduce an independent layer scheme here.
 - Emit C# events for milestones (`GenerationCompleted`,
   `NewBestFound`). ViewModels subscribe.
 - Fitness accumulation happens in `_PhysicsProcess`, not on generation

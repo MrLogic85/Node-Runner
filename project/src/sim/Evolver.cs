@@ -5,28 +5,23 @@ using NodeRunner.ML.Ga;
 namespace NodeRunner.Sim;
 
 /// <summary>
-/// Runs the generation cycle for one creature: evaluates every genome in
-/// the current generation sequentially (one <see cref="TrialController"/>
-/// trial each), then hands the resulting fitness scores to
-/// <see cref="GeneticAlgorithm"/> to produce the next generation. See
+/// Runs the generation cycle in fixed parallel slots. Each slot owns one
+/// creature and one <see cref="TrialController"/>; completed slots receive
+/// the next pending genome until the generation is evaluated. The resulting
+/// fitness scores are passed to <see cref="GeneticAlgorithm"/>. See
 /// docs/TRAINING_LOOP.md.
-///
-/// This evaluates candidates one at a time on a single creature instance
-/// rather than running a parallel population — "repeated trials of one
-/// creature" is an explicitly valid reading of the 0.4.0 roadmap goal, and
-/// keeps this slice free of collision-layer/population-lifecycle concerns.
 /// </summary>
 public partial class Evolver : Node
 {
-    private readonly TrialController _trialController = new() { Name = "TrialController" };
-
     private GeneticAlgorithm? _ga;
     private Random? _rng;
-    private Creature.Creature? _creature;
+    private Creature.Creature? _primaryCreature;
+    private readonly List<Creature.Creature> _creatures = [];
+    private readonly List<TrialController> _trialControllers = [];
     private int[] _layerSizes = [];
     private double[][] _genomes = [];
     private double[] _fitness = [];
-    private int _currentIndex;
+    private ParallelEvaluationSchedule? _schedule;
 
     public int Generation { get; private set; }
 
@@ -41,17 +36,17 @@ public partial class Evolver : Node
     /// <summary>Number of candidates in the active generation.</summary>
     public int PopulationSize => _genomes.Length;
 
-    /// <summary>One-based candidate number currently being evaluated, or zero when stopped.</summary>
-    public int CurrentCandidate => IsTrialActive ? _currentIndex + 1 : 0;
+    /// <summary>Lowest one-based candidate number currently being evaluated, or zero when stopped.</summary>
+    public int CurrentCandidate => (_schedule?.LowestActiveCandidate ?? -1) + 1;
 
-    /// <summary>Whether a candidate trial is currently active.</summary>
-    public bool IsTrialActive => _creature is not null && _trialController.IsRunning;
+    /// <summary>Whether any candidate trial is currently active.</summary>
+    public bool IsTrialActive => _primaryCreature is not null && _trialControllers.Any(controller => controller.IsRunning);
 
     /// <summary>Fitness values completed in the current generation.</summary>
     public double[] CompletedFitness => _fitness.ToArray();
 
     /// <summary>Number of candidates whose trials have completed in the current generation.</summary>
-    public int CompletedCandidateCount => Math.Min(_currentIndex, _fitness.Length);
+    public int CompletedCandidateCount => _schedule?.CompletedCount ?? 0;
 
     /// <summary>Raised after every genome in a generation has been evaluated and the next generation has been produced.</summary>
     public event Action? GenerationCompleted;
@@ -59,31 +54,28 @@ public partial class Evolver : Node
     /// <summary>Raised when a generation's best fitness exceeds every previous generation's best.</summary>
     public event Action? NewBestFound;
 
-    /// <summary>Raised when the active candidate or generation changes.</summary>
+    /// <summary>Raised when active candidates, completed candidates, or the generation changes.</summary>
     public event Action? TrainingProgressChanged;
 
-    public override void _Ready()
-    {
-        AddChild(_trialController);
-        _trialController.TrialCompleted += OnTrialCompleted;
-    }
-
     /// <summary>
-    /// Halts the current generation cycle, forgets the creature it was
-    /// evolving, and notifies progress subscribers of the inactive state.
-    /// Safe to call when nothing is running. Callers must call
-    /// <see cref="Start"/> again to resume.
+    /// Halts the current generation cycle, removes parallel slot creatures,
+    /// forgets the primary creature, and notifies progress subscribers of
+    /// the inactive state. Safe to call when nothing is running. Callers
+    /// must call <see cref="Start"/> again to resume.
     /// </summary>
     public void Stop()
     {
-        _trialController.Stop();
-        _creature = null;
+        ReleaseSlots();
+        _primaryCreature = null;
         TrainingProgressChanged?.Invoke();
     }
 
     /// <summary>
     /// Begins evolving brains for the given creature. <paramref name="layerSizes"/>
     /// must match the creature's sensor/motor counts (its input/output layers).
+    /// Supplying <paramref name="creatureFactory"/> enables fixed parallel
+    /// slots up to <paramref name="maxParallelSlots"/>; without it, evaluation
+    /// remains sequential for compatibility.
     /// </summary>
     public void Start(
         Creature.Creature creature,
@@ -93,7 +85,9 @@ public partial class Evolver : Node
         Random rng,
         double[]? resumeGenome = null,
         int resumeGeneration = 0,
-        int trialDurationTicks = 600)
+        int trialDurationTicks = 600,
+        Func<Creature.Creature>? creatureFactory = null,
+        int maxParallelSlots = Creature.Creature.MaximumCollisionSlots)
     {
         ArgumentNullException.ThrowIfNull(creature);
         ArgumentNullException.ThrowIfNull(layerSizes);
@@ -114,13 +108,18 @@ public partial class Evolver : Node
             throw new ArgumentOutOfRangeException(nameof(trialDurationTicks));
         }
 
+        if (maxParallelSlots is < 1 or > Creature.Creature.MaximumCollisionSlots)
+        {
+            throw new ArgumentOutOfRangeException(nameof(maxParallelSlots));
+        }
+
         if (resumeGenome is not null && resumeGenome.Length != NeuralNetwork.GenomeLength(layerSizes))
         {
             throw new ArgumentException("Resume genome must match the network layer sizes.", nameof(resumeGenome));
         }
 
-        _creature = creature;
-        _trialController.TrialDurationTicks = trialDurationTicks;
+        ReleaseSlots();
+        _primaryCreature = creature;
         _layerSizes = layerSizes.ToArray();
         _ga = ga;
         _rng = rng;
@@ -135,8 +134,13 @@ public partial class Evolver : Node
             _genomes[0] = resumeGenome.ToArray();
         }
         _fitness = new double[populationSize];
-        _currentIndex = 0;
-        EvaluateCurrent();
+
+        var slotCount = creatureFactory is null
+            ? 1
+            : Math.Min(populationSize, maxParallelSlots);
+        _schedule = new ParallelEvaluationSchedule(populationSize, slotCount);
+        ConfigureSlots(creature, slotCount, trialDurationTicks, creatureFactory);
+        StartAvailableSlots();
     }
 
     private double[][] CreateRandomPopulation(int populationSize)
@@ -150,26 +154,92 @@ public partial class Evolver : Node
         return genomes;
     }
 
-    private void EvaluateCurrent()
+    private void ConfigureSlots(
+        Creature.Creature primaryCreature,
+        int slotCount,
+        int trialDurationTicks,
+        Func<Creature.Creature>? creatureFactory)
     {
-        var brain = NeuralNetwork.FromGenome(_layerSizes, _genomes[_currentIndex], Activation.Tanh);
-        _creature!.SetBrain(brain, seed: (Generation * _genomes.Length) + _currentIndex);
-        _trialController.StartTrial(_creature);
+        for (var slot = 0; slot < slotCount; slot++)
+        {
+            var creature = slot == 0
+                ? primaryCreature
+                : CreateParallelCreature(primaryCreature, creatureFactory!, slot);
+            creature.ConfigureCollisionSlot(slot + 1);
+            _creatures.Add(creature);
+
+            var controller = new TrialController
+            {
+                Name = $"TrialController{slot + 1}",
+                TrialDurationTicks = trialDurationTicks,
+            };
+            var capturedSlot = slot;
+            controller.TrialCompleted += fitness => OnTrialCompleted(capturedSlot, fitness);
+            AddChild(controller);
+            _trialControllers.Add(controller);
+        }
+    }
+
+    private Creature.Creature CreateParallelCreature(
+        Creature.Creature primaryCreature,
+        Func<Creature.Creature> creatureFactory,
+        int slot)
+    {
+        var creature = creatureFactory();
+        creature.Name = $"ParallelCreature{slot + 1}";
+        creature.Definition = primaryCreature.Definition;
+        creature.BrainShape = primaryCreature.BrainShape;
+        creature.Theme = primaryCreature.Theme;
+        creature.Position = primaryCreature.Position;
+        creature.ProcessMode = ProcessModeEnum.Pausable;
+        creature.Visible = false;
+        AddChild(creature);
+        return creature;
+    }
+
+    private void StartAvailableSlots()
+    {
+        for (var slot = 0; slot < _creatures.Count; slot++)
+        {
+            if (_schedule!.ActiveCandidate(slot) < 0 && _schedule.TryAssignNext(slot, out var genomeIndex))
+            {
+                StartCandidate(slot, genomeIndex);
+            }
+        }
+
         TrainingProgressChanged?.Invoke();
     }
 
-    private void OnTrialCompleted(float fitness)
+    private void StartCandidate(int slot, int genomeIndex)
     {
-        _fitness[_currentIndex] = fitness;
-        _currentIndex++;
+        var brain = NeuralNetwork.FromGenome(_layerSizes, _genomes[genomeIndex], Activation.Tanh);
+        _creatures[slot].SetBrain(brain, seed: (Generation * _genomes.Length) + genomeIndex);
+        _trialControllers[slot].StartTrial(_creatures[slot]);
+    }
 
-        if (_currentIndex < _genomes.Length)
+    private void OnTrialCompleted(int slot, float fitness)
+    {
+        var genomeIndex = _schedule!.ActiveCandidate(slot);
+        if (genomeIndex < 0)
         {
-            EvaluateCurrent();
             return;
         }
 
-        FinishGeneration();
+        _fitness[genomeIndex] = fitness;
+        _schedule.Complete(slot);
+
+        if (_schedule.IsComplete)
+        {
+            FinishGeneration();
+            return;
+        }
+
+        if (_schedule.TryAssignNext(slot, out var nextGenomeIndex))
+        {
+            StartCandidate(slot, nextGenomeIndex);
+        }
+
+        TrainingProgressChanged?.Invoke();
     }
 
     private void FinishGeneration()
@@ -188,7 +258,7 @@ public partial class Evolver : Node
 
         _genomes = _ga!.NextGeneration(_genomes, _fitness, _rng!);
         _fitness = new double[_genomes.Length];
-        _currentIndex = 0;
+        _schedule!.Reset();
 
         GenerationCompleted?.Invoke();
         TrainingProgressChanged?.Invoke();
@@ -197,11 +267,32 @@ public partial class Evolver : Node
             NewBestFound?.Invoke();
         }
 
-        if (_creature is null)
+        if (_primaryCreature is null)
         {
             return;
         }
 
-        EvaluateCurrent();
+        StartAvailableSlots();
+    }
+
+    private void ReleaseSlots()
+    {
+        foreach (var controller in _trialControllers)
+        {
+            controller.Stop();
+            RemoveChild(controller);
+            controller.QueueFree();
+        }
+
+        for (var slot = 1; slot < _creatures.Count; slot++)
+        {
+            var creature = _creatures[slot];
+            RemoveChild(creature);
+            creature.QueueFree();
+        }
+
+        _trialControllers.Clear();
+        _creatures.Clear();
+        _schedule = null;
     }
 }

@@ -7,6 +7,8 @@ namespace NodeRunner.Creature;
 
 public partial class Creature : Node2D
 {
+    public const int MaximumCollisionSlots = 16;
+
     private const float _beamThickness = 12f;
     private const float _rayLength = 220f;
 
@@ -153,6 +155,26 @@ public partial class Creature : Node2D
             body.Rotation = _beamInitialRotations[i];
             body.LinearVelocity = Vector2.Zero;
             body.AngularVelocity = 0f;
+        }
+    }
+
+    public void ConfigureCollisionSlot(int slot)
+    {
+        if (slot is < 1 or > MaximumCollisionSlots)
+        {
+            throw new ArgumentOutOfRangeException(nameof(slot));
+        }
+
+        var slotLayer = 1u << slot;
+        foreach (var body in _beamBodies)
+        {
+            body.CollisionLayer = slotLayer;
+            body.CollisionMask = 1u | slotLayer;
+        }
+
+        foreach (var coreSensors in _coreSensors)
+        {
+            coreSensors.SetCollisionMask(1);
         }
     }
 
