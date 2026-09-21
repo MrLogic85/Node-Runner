@@ -24,6 +24,7 @@ inspired by `kappuccino`'s `docs/TEST_STRATEGY.md`.
 | ML | `libs/NodeRunner.ML/` | net8.0 | xUnit + Shouldly | Forward pass, GA math, backprop, activation math |
 | App | `libs/NodeRunner.App/` | net8.0 | xUnit + Shouldly + NSubstitute | View-models, repositories, service contracts |
 | Architecture | (all libs) | net10.0 tests | xUnit + NetArchTest | No Godot leaks, correct layer graph |
+| Static UI contracts | `project/src/ui/lib/` | net10.0 tests referencing Godot | xUnit + Shouldly | Token values, typography, resource mapping |
 | Godot Nodes | `project/src/{creature,sim,managers,ui}/` | Godot runtime | **GdUnit4** (deferred, v1.0+) | Node lifecycle, physics scenarios |
 | End-to-end | full app on device | Android | Manual, per-issue decision | Feel, latency, battery |
 
@@ -99,6 +100,18 @@ Current facts (see `ArchitectureSpec.cs`):
 - `NodeRunner.App` references only `NodeRunner.Domain` and `NodeRunner.ML`
 
 Add a fact whenever a convention emerges that we've decided to enforce.
+
+### `NodeRunner.Ui.Tests`
+
+Cover static UI contracts that can run without the Godot scene tree:
+
+- exact theme colors and foundation dimensions
+- typography family, size, line height, weight, tracking, and casing
+- font-resource selection for every required weight
+- effects-lite preserving semantic tokens while removing glow
+
+Do not instantiate Nodes or claim to prove rendering. Scene lifecycle, input,
+layout, and visual fidelity remain Godot/device verification concerns.
 
 ### Godot-side tests (deferred)
 

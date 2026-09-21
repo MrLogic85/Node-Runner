@@ -1,7 +1,8 @@
 # AGENTS.md — `tests/`
 
-Pure C# tests. Run from CLI with `dotnet test NodeRunner.slnx`. Godot is not
-on the classpath.
+CLI xUnit tests. Run with `dotnet test NodeRunner.slnx`. Library test projects
+remain pure C#. `NodeRunner.Ui.Tests` references Godot types only for static UI
+contracts and must not construct nodes or claim runtime rendering coverage.
 
 For the Godot-side tests (Node behaviour, physics, UI), see the eventual
 `project/tests/` (GdUnit4) — separate framework, separate lifecycle.
@@ -27,6 +28,7 @@ declared in each `*.Tests.csproj`. Do not import them per file.
 | `NodeRunner.ML.Tests` | NN math, GA, backprop — the pure engine |
 | `NodeRunner.App.Tests` | View-models, repositories, service abstractions |
 | `NodeRunner.Arch.Tests` | Layer/dependency rules from `docs/ARCHITECTURE.md` |
+| `NodeRunner.Ui.Tests` | Static Godot UI contracts that do not require a scene tree |
 
 ## Rules
 
@@ -47,8 +49,10 @@ declared in each `*.Tests.csproj`. Do not import them per file.
 - **Business rules & math** → the lib's own test project. Bulk of test mass.
 - **Layer rules** → `NodeRunner.Arch.Tests/ArchitectureSpec.cs`. Add a new
   fact whenever a convention emerges that the compiler can't enforce.
+- **Static Godot UI contracts** → `NodeRunner.Ui.Tests`; tests may inspect
+  token/style data but must not instantiate Nodes or require a scene tree.
 - **Godot Node behaviour** → not here. Add GdUnit4 tests in `project/tests/`
-  when the first Godot class needs coverage (deferred until v1.0-ish).
+  when lifecycle/input/physics coverage is required (deferred until v1.0-ish).
 
 ## Coverage philosophy
 

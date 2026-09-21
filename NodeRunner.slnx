@@ -12,5 +12,6 @@
     <Project Path="tests/NodeRunner.Arch.Tests/NodeRunner.Arch.Tests.csproj" />
     <Project Path="tests/NodeRunner.Domain.Tests/NodeRunner.Domain.Tests.csproj" />
     <Project Path="tests/NodeRunner.ML.Tests/NodeRunner.ML.Tests.csproj" />
+    <Project Path="tests/NodeRunner.Ui.Tests/NodeRunner.Ui.Tests.csproj" />
   </Folder>
 </Solution>

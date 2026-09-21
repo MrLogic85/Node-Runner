@@ -10,6 +10,8 @@ namespace NodeRunner.Ui.Screens;
 /// </summary>
 public partial class ComponentGalleryScreen : Control
 {
+    private const float _touchScrollDeadzone = 8f;
+
     [Signal]
     public delegate void CloseRequestedEventHandler();
 
@@ -18,8 +20,13 @@ public partial class ComponentGalleryScreen : Control
 
     private readonly List<Action<UiTokens>> _tokenAppliers = new();
     private readonly List<Action<UiTokens>> _labelAppliers = new();
+    private readonly List<Action<UiTokens>> _colorAppliers = new();
     private UiTokens _tokens = UiTokens.Neon;
     private ColorRect? _background;
+    private ScrollContainer? _scroll;
+    private int _scrollTouchIndex = -1;
+    private Vector2 _pendingTouchDrag;
+    private bool _isTouchScrolling;
 
     public override void _Ready()
     {
@@ -27,6 +34,46 @@ public partial class ComponentGalleryScreen : Control
         UiLayout.ApplyScreen(this);
         BuildLayout();
         ApplyTokens(_tokens);
+    }
+
+    public override void _Input(InputEvent inputEvent)
+    {
+        if (_scroll is null || !IsVisibleInTree())
+        {
+            return;
+        }
+
+        if (inputEvent is InputEventScreenTouch touch)
+        {
+            HandleScrollTouch(touch);
+            return;
+        }
+
+        if (inputEvent is not InputEventScreenDrag drag || drag.Index != _scrollTouchIndex)
+        {
+            return;
+        }
+
+        _pendingTouchDrag += drag.Relative;
+        if (!_isTouchScrolling)
+        {
+            if (_pendingTouchDrag.Length() < _touchScrollDeadzone)
+            {
+                return;
+            }
+
+            if (Mathf.Abs(_pendingTouchDrag.Y) <= Mathf.Abs(_pendingTouchDrag.X))
+            {
+                _scrollTouchIndex = -1;
+                return;
+            }
+
+            _isTouchScrolling = true;
+        }
+
+        _scroll.ScrollVertical -= Mathf.RoundToInt(_pendingTouchDrag.Y);
+        _pendingTouchDrag = Vector2.Zero;
+        GetViewport().SetInputAsHandled();
     }
 
     private void BuildLayout()
@@ -51,26 +98,96 @@ public partial class ComponentGalleryScreen : Control
 
         shell.AddChild(CreateHeader());
 
-        var scroll = new ScrollContainer
+        _scroll = new ScrollContainer
         {
             SizeFlagsHorizontal = SizeFlags.ExpandFill,
             SizeFlagsVertical = SizeFlags.ExpandFill,
+            HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled,
         };
-        shell.AddChild(scroll);
+        shell.AddChild(_scroll);
 
         var content = new VBoxContainer
         {
             SizeFlagsHorizontal = SizeFlags.ExpandFill,
         };
         content.AddThemeConstantOverride("separation", (int)_tokens.Space2);
-        scroll.AddChild(content);
+        _scroll.AddChild(content);
 
+        content.AddChild(CreateFoundationSection());
         content.AddChild(CreateShellSection());
         content.AddChild(CreateActionsSection());
         content.AddChild(CreateToolsSection());
         content.AddChild(CreatePanelsAndReadoutsSection());
         content.AddChild(CreateInputsSection());
         content.AddChild(CreateOverlaysSection());
+    }
+
+    private Control CreateFoundationSection()
+    {
+        var content = new VBoxContainer();
+        content.AddThemeConstantOverride("separation", UiSpacing.SectionGap(_tokens));
+
+        var typography = new HBoxContainer();
+        typography.AddThemeConstantOverride("separation", UiSpacing.SectionGap(_tokens));
+        content.AddChild(typography);
+
+        var displayAndText = new VBoxContainer
+        {
+            SizeFlagsHorizontal = SizeFlags.ExpandFill,
+        };
+        displayAndText.AddThemeConstantOverride("separation", 0);
+        displayAndText.AddChild(CreateLabel("TITLE · NODE RUNNER", _tokens.TitleText, tokens => tokens.Ink));
+        displayAndText.AddChild(CreateLabel("Heading · Build", _tokens.HeadingText, tokens => tokens.Ink));
+        displayAndText.AddChild(CreateLabel("Subheading · Left foot", _tokens.SubheadingText, tokens => tokens.Ink));
+        displayAndText.AddChild(CreateLabel("STAGE · SENSES", _tokens.StageText, tokens => tokens.Accent));
+        displayAndText.AddChild(CreateLabel("Body explains the learning loop.", _tokens.BodyText, tokens => tokens.Ink));
+        displayAndText.AddChild(CreateLabel("Body strong names a value.", _tokens.BodyStrongText, tokens => tokens.Ink));
+        displayAndText.AddChild(CreateLabel("Small secondary line", _tokens.SmallText, tokens => tokens.Muted));
+        displayAndText.AddChild(CreateLabel("Small strong row text", _tokens.SmallStrongText, tokens => tokens.Ink));
+        typography.AddChild(displayAndText);
+
+        var labelsAndReadouts = new VBoxContainer
+        {
+            SizeFlagsHorizontal = SizeFlags.ExpandFill,
+        };
+        labelsAndReadouts.AddThemeConstantOverride("separation", 0);
+        labelsAndReadouts.AddChild(CreateLabel("BUTTON LABEL", _tokens.LabelText, tokens => tokens.Ink));
+        labelsAndReadouts.AddChild(CreateLabel("Helper note under a control", _tokens.NoteText, tokens => tokens.Muted));
+        labelsAndReadouts.AddChild(CreateLabel("CHIP NOTE", _tokens.NoteStrongText, tokens => tokens.Ink));
+        labelsAndReadouts.AddChild(CreateLabel("Dense caption", _tokens.CaptionText, tokens => tokens.Muted));
+        labelsAndReadouts.AddChild(CreateLabel("SECTION OVERLINE", _tokens.OverlineText, tokens => tokens.Muted));
+        labelsAndReadouts.AddChild(CreateLabel("142.8 m", _tokens.ReadoutLargeText, tokens => tokens.Ink));
+        labelsAndReadouts.AddChild(CreateLabel("generation 37", _tokens.ReadoutText, tokens => tokens.Accent));
+        labelsAndReadouts.AddChild(CreateLabel("62%", _tokens.ReadoutMediumText, tokens => tokens.Ink));
+        labelsAndReadouts.AddChild(CreateLabel("0  2  4  6", _tokens.ReadoutSmallText, tokens => tokens.Muted));
+        typography.AddChild(labelsAndReadouts);
+
+        var palette = new GridContainer
+        {
+            Columns = 4,
+            SizeFlagsHorizontal = SizeFlags.ExpandFill,
+        };
+        palette.AddThemeConstantOverride("h_separation", UiSpacing.ControlGap(_tokens));
+        palette.AddThemeConstantOverride("v_separation", UiSpacing.IconLabelGap(_tokens));
+        palette.AddChild(CreateColorSwatch("bg", tokens => tokens.Background));
+        palette.AddChild(CreateColorSwatch("panel", tokens => tokens.Panel));
+        palette.AddChild(CreateColorSwatch("raised", tokens => tokens.PanelRaised));
+        palette.AddChild(CreateColorSwatch("line", tokens => tokens.Line));
+        palette.AddChild(CreateColorSwatch("line strong", tokens => tokens.LineStrong));
+        palette.AddChild(CreateColorSwatch("ink", tokens => tokens.Ink));
+        palette.AddChild(CreateColorSwatch("muted", tokens => tokens.Muted));
+        palette.AddChild(CreateColorSwatch("accent", tokens => tokens.Accent));
+        palette.AddChild(CreateColorSwatch("edge", tokens => tokens.Edge));
+        palette.AddChild(CreateColorSwatch("accent soft", tokens => tokens.AccentSoft));
+        palette.AddChild(CreateColorSwatch("glow", tokens => tokens.AccentGlow));
+        palette.AddChild(CreateColorSwatch("on accent", tokens => tokens.OnAccent));
+        palette.AddChild(CreateColorSwatch("halo", tokens => tokens.Halo));
+        palette.AddChild(CreateColorSwatch("danger", tokens => tokens.Danger));
+        palette.AddChild(CreateColorSwatch("scrim", tokens => tokens.Scrim));
+        palette.AddChild(CreateColorSwatch("output", tokens => tokens.Output));
+        content.AddChild(palette);
+
+        return WrapSection("Foundations · type and color", content);
     }
 
     private Control CreateHeader()
@@ -100,16 +217,10 @@ public partial class ComponentGalleryScreen : Control
             header.AddChild(close);
         }
 
-        var note = CreateLabel("Live token swap:", _tokens.BodyText, tokens => tokens.Muted);
-        note.AutowrapMode = TextServer.AutowrapMode.Off;
-        note.VerticalAlignment = VerticalAlignment.Center;
-        header.AddChild(note);
-
         var switcher = Track(new UiSegmentedSwitch
         {
-            Options = new[] { "Neon", "Paper", "Lite" },
+            Options = new[] { "Neon", "Paper" },
             SelectedIndex = 0,
-            CustomMinimumSize = new Vector2(248, _tokens.TouchTarget),
             SizeFlagsVertical = SizeFlags.ShrinkCenter,
         });
         switcher.SelectionChanged += index =>
@@ -117,13 +228,41 @@ public partial class ComponentGalleryScreen : Control
             ApplyTokens(index switch
             {
                 1 => UiTokens.Paper,
-                2 => UiTokens.Neon.WithEffects(false),
                 _ => UiTokens.Neon,
             });
         };
         header.AddChild(switcher);
 
         return header;
+    }
+
+    private void HandleScrollTouch(InputEventScreenTouch touch)
+    {
+        if (touch.Pressed)
+        {
+            if (_scroll!.GetGlobalRect().HasPoint(touch.Position))
+            {
+                _scrollTouchIndex = touch.Index;
+                _pendingTouchDrag = Vector2.Zero;
+                _isTouchScrolling = false;
+            }
+
+            return;
+        }
+
+        if (touch.Index != _scrollTouchIndex)
+        {
+            return;
+        }
+
+        if (_isTouchScrolling)
+        {
+            GetViewport().SetInputAsHandled();
+        }
+
+        _scrollTouchIndex = -1;
+        _pendingTouchDrag = Vector2.Zero;
+        _isTouchScrolling = false;
     }
 
     private Control CreateShellSection()
@@ -148,7 +287,7 @@ public partial class ComponentGalleryScreen : Control
         metrics.AddChild(Track(new UiChip { Text = "640 × 360", Kind = UiChip.ChipKind.Accent }));
         metrics.AddChild(Track(new UiChip { Text = "Top 48", Kind = UiChip.ChipKind.Neutral }));
         metrics.AddChild(Track(new UiChip { Text = "Rail 56", Kind = UiChip.ChipKind.Neutral }));
-        metrics.AddChild(Track(new UiChip { Text = "Panel 172", Kind = UiChip.ChipKind.Neutral }));
+        metrics.AddChild(Track(new UiChip { Text = "Panel 176", Kind = UiChip.ChipKind.Neutral }));
         metrics.AddChild(Track(new UiChip { Text = "Touch 48", Kind = UiChip.ChipKind.Locked }));
         content.AddChild(metrics);
 
@@ -159,8 +298,9 @@ public partial class ComponentGalleryScreen : Control
     {
         var content = new VBoxContainer();
         content.AddThemeConstantOverride("separation", UiSpacing.StackGap(_tokens));
-        var actions = new HBoxContainer();
-        actions.AddThemeConstantOverride("separation", UiSpacing.ControlGap(_tokens));
+        var actions = new HFlowContainer();
+        actions.AddThemeConstantOverride("h_separation", UiSpacing.ControlGap(_tokens));
+        actions.AddThemeConstantOverride("v_separation", UiSpacing.ControlGap(_tokens));
         content.AddChild(actions);
         actions.AddChild(Track(new UiActionButton
         {
@@ -388,6 +528,29 @@ public partial class ComponentGalleryScreen : Control
         return label;
     }
 
+    private Control CreateColorSwatch(string name, Func<UiTokens, Color> colorForTokens)
+    {
+        var row = new HBoxContainer
+        {
+            CustomMinimumSize = new Vector2(0, _tokens.ControlExtraSmall),
+            SizeFlagsHorizontal = SizeFlags.ExpandFill,
+        };
+        row.AddThemeConstantOverride("separation", UiSpacing.IconLabelGap(_tokens));
+
+        var swatch = new ColorRect
+        {
+            Color = colorForTokens(_tokens),
+            CustomMinimumSize = new Vector2(_tokens.ControlExtraSmall, _tokens.ControlExtraSmall),
+            MouseFilter = MouseFilterEnum.Ignore,
+        };
+        _colorAppliers.Add(tokens => swatch.Color = colorForTokens(tokens));
+        row.AddChild(swatch);
+        var label = CreateLabel(name, _tokens.CaptionText, tokens => tokens.Ink);
+        label.SizeFlagsHorizontal = SizeFlags.ExpandFill;
+        row.AddChild(label);
+        return row;
+    }
+
     private T Track<T>(T control)
         where T : Control
     {
@@ -453,6 +616,11 @@ public partial class ComponentGalleryScreen : Control
         }
 
         foreach (var apply in _labelAppliers)
+        {
+            apply(tokens);
+        }
+
+        foreach (var apply in _colorAppliers)
         {
             apply(tokens);
         }
