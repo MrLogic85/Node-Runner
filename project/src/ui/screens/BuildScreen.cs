@@ -21,6 +21,8 @@ public partial class BuildScreen : Control
     private bool _partsTrayCollapsed;
     private bool _brainSetupOpen;
     private bool _exactNeuronEntryOpen;
+    private bool _nameEntryOpen;
+    private bool _creationOverflowOpen;
     private int _pendingExactNeurons = BrainShapeDef.DefaultNeuronsPerLayer;
 
     [Export]
@@ -43,6 +45,27 @@ public partial class BuildScreen : Control
 
     [Signal]
     public delegate void SimulateRequestedEventHandler();
+
+    [Signal]
+    public delegate void BackRequestedEventHandler();
+
+    [Signal]
+    public delegate void CreationNameChangedEventHandler(string name);
+
+    [Signal]
+    public delegate void ResetTrainingRequestedEventHandler();
+
+    [Signal]
+    public delegate void DeleteCreationRequestedEventHandler();
+
+    [Signal]
+    public delegate void ResumeTrainingRequestedEventHandler();
+
+    [Signal]
+    public delegate void StatsRequestedEventHandler();
+
+    [Signal]
+    public delegate void BrainRequestedEventHandler();
 
     [Signal]
     public delegate void ToolRequestedEventHandler(ConstructionTool tool);
@@ -113,6 +136,16 @@ public partial class BuildScreen : Control
         if (_brainSetupOpen)
         {
             AddChild(CreateBrainSetupOverlay());
+        }
+
+        if (_nameEntryOpen)
+        {
+            AddChild(CreateNameEntryOverlay());
+        }
+
+        if (_creationOverflowOpen)
+        {
+            AddChild(CreateCreationOverflowOverlay());
         }
 
         if (Hosted)
@@ -227,12 +260,14 @@ public partial class BuildScreen : Control
         topBar.AddThemeConstantOverride("separation", (int)_tokens.Space2);
         margin.AddChild(topBar);
 
-        topBar.AddChild(new UiIconButton
+        var back = new UiIconButton
         {
             Tokens = _tokens,
             IconText = "‹",
             AccessibleLabel = "Back",
-        });
+        };
+        back.Pressed += () => EmitSignal(SignalName.BackRequested);
+        topBar.AddChild(back);
 
         var titleStack = new VBoxContainer
         {
@@ -240,30 +275,54 @@ public partial class BuildScreen : Control
         };
         titleStack.AddThemeConstantOverride("separation", 0);
         topBar.AddChild(titleStack);
-        titleStack.AddChild(CreateLabel("Untitled Creation  ✎", 18, _tokens.Ink, expand: true));
-        titleStack.AddChild(CreateLabel("Unsaved anatomy draft", 11, _tokens.Muted));
+        var title = new Button
+        {
+            Text = $"{Presentation?.CreationName ?? "Untitled Creation"}  ✎",
+            Flat = true,
+            Alignment = HorizontalAlignment.Left,
+            SizeFlagsHorizontal = SizeFlags.ExpandFill,
+            CustomMinimumSize = new Vector2(0, 28),
+        };
+        _tokens.ApplyTextStyle(title, _tokens.HeadingText);
+        title.AddThemeColorOverride("font_color", _tokens.Ink);
+        title.Pressed += () =>
+        {
+            _nameEntryOpen = true;
+            RebuildLayout();
+        };
+        titleStack.AddChild(title);
+        titleStack.AddChild(CreateLabel(Presentation?.CreationSubtitle ?? "Unsaved anatomy draft", 11, _tokens.Muted));
 
         var buildPanel = Presentation?.BuildPanel ?? ConstructionBuildPanelPresentation.Sample;
         topBar.AddChild(CreateBrainChip(buildPanel));
-        var save = CreateButton("Save", buildPanel.CanCompleteCreation ? UiActionButton.ActionKind.Primary : UiActionButton.ActionKind.Secondary, buildPanel.DisabledReason ?? "Save this Creation");
-        save.CustomMinimumSize = new Vector2(88, _tokens.TouchTarget);
-        save.Locked = !buildPanel.CanCompleteCreation;
-        save.ShowLockReasonInText = false;
-        if (buildPanel.DisabledReason is not null)
+        if (Presentation?.ShowCompleteAction != false)
         {
-            save.LockReason = buildPanel.DisabledReason;
+            var save = CreateButton("Save", buildPanel.CanCompleteCreation ? UiActionButton.ActionKind.Primary : UiActionButton.ActionKind.Secondary, buildPanel.DisabledReason ?? "Save this Creation");
+            save.CustomMinimumSize = new Vector2(88, _tokens.TouchTarget);
+            save.Locked = !buildPanel.CanCompleteCreation;
+            save.ShowLockReasonInText = false;
+            if (buildPanel.DisabledReason is not null)
+            {
+                save.LockReason = buildPanel.DisabledReason;
+            }
+            if (buildPanel.CanCompleteCreation)
+            {
+                save.Pressed += () => EmitSignal(SignalName.SaveRequested);
+            }
+            topBar.AddChild(save);
         }
-        if (buildPanel.CanCompleteCreation)
-        {
-            save.Pressed += () => EmitSignal(SignalName.SaveRequested);
-        }
-        topBar.AddChild(save);
-        topBar.AddChild(new UiIconButton
+        var overflow = new UiIconButton
         {
             Tokens = _tokens,
             IconText = "⋯",
-            AccessibleLabel = "More build actions",
-        });
+            AccessibleLabel = Presentation?.ShowCompleteAction == false ? "Reset training or delete creation" : "More build actions",
+        };
+        overflow.Pressed += () =>
+        {
+            _creationOverflowOpen = true;
+            RebuildLayout();
+        };
+        topBar.AddChild(overflow);
 
         return topBarPanel;
     }
@@ -359,7 +418,7 @@ public partial class BuildScreen : Control
         var active = kind == UiActionButton.ActionKind.Primary;
         var button = new Button
         {
-            Text = label.ToUpperInvariant(),
+            Text = locked ? $"🔒 {label.ToUpperInvariant()}" : label.ToUpperInvariant(),
             TooltipText = tooltip,
             Disabled = locked,
             CustomMinimumSize = new Vector2(UiLayout.LeftRailWidth, _toolButtonHeight),
@@ -377,11 +436,27 @@ public partial class BuildScreen : Control
         button.AddThemeStyleboxOverride("disabled", CreateToolStyle(false, locked, opacity: 0.5f));
         if (locked)
         {
+            button.Draw += () => DrawLockedToolBorder(button);
+        }
+
+        if (locked)
+        {
             return button;
         }
 
         button.Pressed += () => EmitSignal(SignalName.ToolRequested, (int)tool);
         return button;
+    }
+
+    private void DrawLockedToolBorder(Button button)
+    {
+        var rect = new Rect2(Vector2.Zero, button.Size).Grow(-4);
+        var color = _tokens.Muted;
+        color.A = 0.72f;
+        button.DrawDashedLine(rect.Position, rect.Position + new Vector2(rect.Size.X, 0), color, 2, 6, antialiased: true);
+        button.DrawDashedLine(rect.Position + new Vector2(rect.Size.X, 0), rect.End, color, 2, 6, antialiased: true);
+        button.DrawDashedLine(rect.End, rect.Position + new Vector2(0, rect.Size.Y), color, 2, 6, antialiased: true);
+        button.DrawDashedLine(rect.Position + new Vector2(0, rect.Size.Y), rect.Position, color, 2, 6, antialiased: true);
     }
 
     private Control CreateBuildCanvasPanel()
@@ -419,6 +494,19 @@ public partial class BuildScreen : Control
             }
         };
         layout.AddChild(placeholder);
+
+        if (Presentation is { ShowCompleteAction: false } presentation)
+        {
+            var chip = new UiChip
+            {
+                Tokens = _tokens,
+                Text = presentation.PartsLockedChipText,
+                Kind = UiChip.ChipKind.Locked,
+                Position = new Vector2(18, 18),
+                MouseFilter = MouseFilterEnum.Ignore,
+            };
+            layout.AddChild(chip);
+        }
 
         return panel;
     }
@@ -458,15 +546,218 @@ public partial class BuildScreen : Control
         stack.AddThemeConstantOverride("separation", (int)_tokens.Space1);
         margin.AddChild(stack);
 
-        stack.AddChild(CreatePartsTrayHeader());
         var presentation = Presentation;
-        stack.AddChild(CreatePartButton("Node", "1 left", locked: false, ConstructionTool.Place));
-        stack.AddChild(CreatePartButton("Core", $"{Mathf.Max(0, (presentation?.MaxCores ?? 1) - (presentation?.CoreCount ?? 0))} left", locked: presentation?.LockTopologyTools ?? false, ConstructionTool.Core));
-        stack.AddChild(CreatePartButton("Motor", "1 left", locked: false, ConstructionTool.Beam));
-        stack.AddChild(CreatePartButton("Spring", "locked", locked: true, null));
-        stack.AddChild(CreateCompactValidationLine(buildPanel));
+        if (presentation?.ShowCompleteAction == false)
+        {
+            stack.AddChild(CreateSavedCreationPanel(presentation));
+        }
+        else
+        {
+            stack.AddChild(CreatePartsTrayHeader());
+            stack.AddChild(CreatePartButton("Node", "1 left", locked: false, ConstructionTool.Place));
+            stack.AddChild(CreatePartButton("Core", $"{Mathf.Max(0, (presentation?.MaxCores ?? 1) - (presentation?.CoreCount ?? 0))} left", locked: presentation?.LockTopologyTools ?? false, ConstructionTool.Core));
+            stack.AddChild(CreatePartButton("Motor", "1 left", locked: false, ConstructionTool.Beam));
+            stack.AddChild(CreatePartButton("Spring", "locked", locked: true, null));
+            stack.AddChild(CreateCompactValidationLine(buildPanel));
+        }
 
         return panel;
+    }
+
+    private Control CreateSavedCreationPanel(ConstructionPresentationViewModel presentation)
+    {
+        if (presentation.SelectedNodeCount == 1)
+        {
+            return CreateSavedSinglePartPanel(presentation);
+        }
+
+        if (presentation.SelectedNodeCount > 1)
+        {
+            return CreateSavedMultiSelectionPanel(presentation);
+        }
+
+        var stack = new VBoxContainer
+        {
+            SizeFlagsHorizontal = SizeFlags.ExpandFill,
+            SizeFlagsVertical = SizeFlags.ExpandFill,
+        };
+        stack.AddThemeConstantOverride("separation", (int)_tokens.Space2);
+        stack.AddChild(CreateLabel(presentation.TrainingSummaryTitle, 14, _tokens.Ink, expand: true));
+        stack.AddChild(CreateLabel($"Best distance {presentation.BestDistanceText}", 12, _tokens.Accent, expand: true));
+        stack.AddChild(CreateLabel(presentation.TrainingSummaryBody, 11, _tokens.Muted, expand: true));
+        var resume = CreateButton("Resume training", UiActionButton.ActionKind.Primary, "Open Train setup");
+        resume.Pressed += () => EmitSignal(SignalName.ResumeTrainingRequested);
+        stack.AddChild(resume);
+        var stats = CreateButton("Stats", UiActionButton.ActionKind.Secondary, "Open stats");
+        stats.Pressed += () => EmitSignal(SignalName.StatsRequested);
+        stack.AddChild(stats);
+        var brain = CreateButton("Brain", UiActionButton.ActionKind.Secondary, "Open brain view");
+        brain.Pressed += () => EmitSignal(SignalName.BrainRequested);
+        stack.AddChild(brain);
+        stack.AddChild(CreateSpacer());
+        return stack;
+    }
+
+    private Control CreateSavedSinglePartPanel(ConstructionPresentationViewModel presentation)
+    {
+        var stack = new VBoxContainer
+        {
+            SizeFlagsHorizontal = SizeFlags.ExpandFill,
+            SizeFlagsVertical = SizeFlags.ExpandFill,
+        };
+        stack.AddThemeConstantOverride("separation", (int)_tokens.Space2);
+        var header = new HBoxContainer();
+        header.AddChild(CreateLabel(presentation.SinglePartTitle, 14, _tokens.Ink, expand: true));
+        header.AddChild(CreateLabel("×", 16, _tokens.Muted));
+        stack.AddChild(header);
+        stack.AddChild(CreateLabel("Name", 10, _tokens.Muted));
+        stack.AddChild(CreateLabel(presentation.SinglePartTitle, 12, _tokens.Ink, expand: true));
+        stack.AddChild(CreateLabel("Locked structure", 10, _tokens.Muted));
+        stack.AddChild(CreateLabel(presentation.SinglePartBody, 11, _tokens.Muted, expand: true));
+        stack.AddChild(CreateLabel("No Delete in saved Creation", 11, _tokens.Muted, expand: true));
+        stack.AddChild(CreateSpacer());
+        return stack;
+    }
+
+    private Control CreateSavedMultiSelectionPanel(ConstructionPresentationViewModel presentation)
+    {
+        var stack = new VBoxContainer
+        {
+            SizeFlagsHorizontal = SizeFlags.ExpandFill,
+            SizeFlagsVertical = SizeFlags.ExpandFill,
+        };
+        stack.AddThemeConstantOverride("separation", (int)_tokens.Space2);
+        var header = new HBoxContainer();
+        header.AddChild(CreateLabel(presentation.MultiSelectionTitle, 14, _tokens.Ink, expand: true));
+        header.AddChild(CreateLabel("×", 16, _tokens.Muted));
+        stack.AddChild(header);
+        stack.AddChild(CreateLabel(presentation.MultiSelectionCounts, 12, _tokens.Ink, expand: true));
+        stack.AddChild(CreateLabel(presentation.MultiSelectionBody, 11, _tokens.Muted, expand: true));
+        stack.AddChild(new UiChip
+        {
+            Tokens = _tokens,
+            Text = "Move only",
+            Kind = UiChip.ChipKind.Locked,
+        });
+        stack.AddChild(CreateSpacer());
+        return stack;
+    }
+
+    private Control CreateNameEntryOverlay()
+    {
+        var overlay = CreateDismissOverlay(() =>
+        {
+            _nameEntryOpen = false;
+            RebuildLayout();
+        });
+        var panel = CreatePanel(raised: true);
+        panel.Position = new Vector2(96, 58);
+        panel.CustomMinimumSize = new Vector2(280, 104);
+        overlay.AddChild(panel);
+
+        var margin = CreateMargin((int)_tokens.Space3);
+        panel.AddChild(margin);
+        var stack = new VBoxContainer();
+        stack.AddThemeConstantOverride("separation", (int)_tokens.Space2);
+        margin.AddChild(stack);
+        stack.AddChild(CreateLabel("Creation name", 14, _tokens.Ink));
+        var entry = new LineEdit
+        {
+            Text = Presentation?.CreationName ?? "Untitled Creation",
+            CustomMinimumSize = new Vector2(0, 36),
+        };
+        entry.TextSubmitted += text =>
+        {
+            SubmitCreationName(text);
+        };
+        stack.AddChild(entry);
+        var apply = CreateButton("Apply", UiActionButton.ActionKind.Primary, "Rename Creation");
+        apply.Pressed += () => SubmitCreationName(entry.Text);
+        stack.AddChild(apply);
+        entry.CallDeferred(LineEdit.MethodName.GrabFocus);
+        return overlay;
+    }
+
+    private void SubmitCreationName(string text)
+    {
+        var name = text.Trim();
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            return;
+        }
+
+        _nameEntryOpen = false;
+        EmitSignal(SignalName.CreationNameChanged, name);
+    }
+
+    private Control CreateCreationOverflowOverlay()
+    {
+        var overlay = CreateDismissOverlay(() =>
+        {
+            _creationOverflowOpen = false;
+            RebuildLayout();
+        });
+        var panel = CreatePanel(raised: true);
+        panel.Position = new Vector2(458, 58);
+        panel.CustomMinimumSize = new Vector2(170, 130);
+        overlay.AddChild(panel);
+        var margin = CreateMargin((int)_tokens.Space2);
+        panel.AddChild(margin);
+        var stack = new VBoxContainer();
+        stack.AddThemeConstantOverride("separation", (int)_tokens.Space2);
+        margin.AddChild(stack);
+
+        if (Presentation?.ShowCompleteAction == false)
+        {
+            var reset = CreateButton("Reset training", UiActionButton.ActionKind.Secondary, "Reset saved training");
+            reset.Pressed += () =>
+            {
+                _creationOverflowOpen = false;
+                RebuildLayout();
+                EmitSignal(SignalName.ResetTrainingRequested);
+            };
+            stack.AddChild(reset);
+            var delete = CreateButton("Delete creation", UiActionButton.ActionKind.Danger, "Delete this Creation");
+            delete.Pressed += () =>
+            {
+                _creationOverflowOpen = false;
+                RebuildLayout();
+                EmitSignal(SignalName.DeleteCreationRequested);
+            };
+            stack.AddChild(delete);
+        }
+        else
+        {
+            stack.AddChild(CreateLabel("More actions arrive in later milestones.", 11, _tokens.Muted, expand: true));
+        }
+
+        return overlay;
+    }
+
+    private Control CreateDismissOverlay(Action dismissed)
+    {
+        var overlay = new Control
+        {
+            MouseFilter = MouseFilterEnum.Stop,
+            AnchorRight = 1,
+            AnchorBottom = 1,
+        };
+        var dim = new ColorRect
+        {
+            Color = new Color(0, 0, 0, 0.25f),
+            AnchorRight = 1,
+            AnchorBottom = 1,
+            MouseFilter = MouseFilterEnum.Stop,
+        };
+        dim.GuiInput += @event =>
+        {
+            if (@event is InputEventMouseButton { Pressed: true } or InputEventScreenTouch { Pressed: true })
+            {
+                dismissed();
+            }
+        };
+        overlay.AddChild(dim);
+        return overlay;
     }
 
     private Control CreatePartsTrayHeader()
@@ -1168,10 +1459,10 @@ public partial class BuildScreen : Control
                 ? new Color(_tokens.AccentSoft.R, _tokens.AccentSoft.G, _tokens.AccentSoft.B, _tokens.AccentSoft.A * alpha)
                 : new Color(_tokens.PanelRaised.R, _tokens.PanelRaised.G, _tokens.PanelRaised.B, _tokens.PanelRaised.A * alpha),
             BorderColor = new Color(border.R, border.G, border.B, border.A * alpha),
-            BorderWidthLeft = active ? 2 : borderWidth,
-            BorderWidthTop = active ? 2 : borderWidth,
-            BorderWidthRight = active ? 2 : borderWidth,
-            BorderWidthBottom = active ? 2 : borderWidth,
+            BorderWidthLeft = locked ? 2 : active ? 2 : borderWidth,
+            BorderWidthTop = locked ? 1 : active ? 2 : borderWidth,
+            BorderWidthRight = locked ? 2 : active ? 2 : borderWidth,
+            BorderWidthBottom = locked ? 1 : active ? 2 : borderWidth,
             CornerRadiusTopLeft = radius,
             CornerRadiusTopRight = radius,
             CornerRadiusBottomLeft = radius,
