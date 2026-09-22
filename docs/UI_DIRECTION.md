@@ -76,6 +76,21 @@ Only label/help layout and theme assets are customized; disabled textures
 dim the fully composed indicator once. The obsolete dense toggle size is removed
 in [issue #245](https://github.com/MrLogic85/Node-Runner/issues/245).
 
+Segmented controls use native toggle `Button`s in a `ButtonGroup`; Godot owns
+exclusive selection and input. The rendered reference keeps option icons
+unchanged when selected, unlike `library.md`'s older check/bold wording.
+Selection uses the accent-soft fill and 2px outline, not a replacement check.
+Content-width segments retain their own widths; full-width segments share the
+assigned width equally. Both keep 40px visible height within 48px minimum
+touch targets. See [issue #247](https://github.com/MrLogic85/Node-Runner/issues/247).
+The human approved wider numeric segments to preserve a 48px target per
+option rather than copying the narrower HTML specimen. The existing shared
+font adapter still rounds label tracking from 0.04em (0.48px at 12px) to 1px;
+this change does not claim exact CSS tracking or line-box equivalence.
+Until #244 replaces manual gallery scrolling, both galleries send native
+scroll notifications to their content so Godot controls cancel pending
+presses instead of retaining a stuck pressed appearance.
+
 ## Rules for UI changes
 
 - Finish and verify the token/typography/size foundation before the Component

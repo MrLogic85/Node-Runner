@@ -8,7 +8,7 @@ public enum UiIconId
 {
     Back, Beam, Bolt, Build, Chart, Check, ChevronDown, ChevronRight, Copy, Core, Edit, Flag, Gear,
     Height, Joint, Lock, Map, Menu, Model, More, Move, Mute, Pause, Phone, Play, Plus, Restart, Rotate,
-    Scale, Select, Shadow, Sound, Speed, Stop, Trash, Trophy, Unlock, Warn, Close,
+    Scale, Select, Shadow, Sound, Speed, Stop, Trash, Trophy, Unlock, Warn, Close, Eye,
 }
 
 /// <summary>Canonical 20-grid glyphs for build parts.</summary>
@@ -95,6 +95,7 @@ public static class UiIcons
         UiIconId.Unlock => "unlock.svg",
         UiIconId.Warn => "warn.svg",
         UiIconId.Close => "x.svg",
+        UiIconId.Eye => "eye.svg",
         _ => throw new ArgumentOutOfRangeException(nameof(icon), icon, "Unknown UI icon."),
     });
 

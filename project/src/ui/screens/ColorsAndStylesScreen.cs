@@ -101,6 +101,8 @@ public partial class ColorsAndStylesScreen : Control
             }
 
             _isTouchScrolling = true;
+            // Until #244 restores native scrolling, deliver its native press cancellation.
+            _scroll.PropagateNotification((int)NotificationScrollBegin);
         }
 
         _scroll.ScrollVertical = UiGalleryScroll.ApplyVerticalDrag(
@@ -545,6 +547,7 @@ public partial class ColorsAndStylesScreen : Control
 
         if (_isTouchScrolling)
         {
+            _scroll!.PropagateNotification((int)NotificationScrollEnd);
             GetViewport().SetInputAsHandled();
         }
         _scrollTouchIndex = -1;

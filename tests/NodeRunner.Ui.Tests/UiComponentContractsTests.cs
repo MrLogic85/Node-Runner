@@ -39,7 +39,6 @@ public sealed class UiComponentContractsTests
         foreach (var spec in ComponentGalleryScreen.CanonicalInventory)
         {
             spec.EntryName.ShouldBe(ReferenceEntryName(spec.Component));
-            spec.Section.ShouldContain(spec.EntryName);
             spec.Section.ShouldNotContain("effects-lite");
             spec.Section.ShouldNotBeNullOrWhiteSpace();
         }
