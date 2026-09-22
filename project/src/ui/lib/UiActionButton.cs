@@ -1,30 +1,46 @@
 using Godot;
+
 namespace NodeRunner.Ui.Lib;
 
-/// <summary>Touch-safe labelled action with explicit visual state.</summary>
-public partial class UiActionButton : Button
+/// <summary>Compatibility facade for existing scene actions over the canonical button.</summary>
+public partial class UiActionButton : UiButton
 {
     public enum ActionKind
     {
         Primary,
         Secondary,
         Danger,
+        Flat,
     }
 
     private ActionKind _kind = ActionKind.Secondary;
+    private bool _locked;
+    private string _lockReason = "Unavailable";
+    private bool _showLockReasonInText = true;
 
     [Export]
-    public ActionKind Kind
+    public new ActionKind Kind
     {
         get => _kind;
         set
         {
+            if (!Enum.IsDefined(value))
+            {
+                GD.PushError($"Invalid action button kind: {value}. Keeping {_kind}.");
+                return;
+            }
+
+            Style = value switch
+            {
+                ActionKind.Primary => UiButtonStyle.Primary,
+                ActionKind.Secondary => UiButtonStyle.Secondary,
+                ActionKind.Danger => UiButtonStyle.Tertiary,
+                ActionKind.Flat => UiButtonStyle.Flat,
+                _ => throw new ArgumentOutOfRangeException(nameof(value), value, null),
+            };
             _kind = value;
-            RefreshStyle();
         }
     }
-
-    private bool _locked;
 
     [Export]
     public bool Locked
@@ -33,11 +49,9 @@ public partial class UiActionButton : Button
         set
         {
             _locked = value;
-            RefreshStyle();
+            Enabled = !value;
         }
     }
-
-    private string _lockReason = "Unavailable";
 
     [Export]
     public string LockReason
@@ -50,8 +64,6 @@ public partial class UiActionButton : Button
         }
     }
 
-    private bool _showLockReasonInText = true;
-
     [Export]
     public bool ShowLockReasonInText
     {
@@ -63,111 +75,8 @@ public partial class UiActionButton : Button
         }
     }
 
-    private string _labelText = string.Empty;
+    protected override string DisplayText =>
+        (Locked && ShowLockReasonInText ? $"{LabelText} · {LockReason}" : LabelText).ToUpperInvariant();
 
-    [Export]
-    public string LabelText
-    {
-        get => _labelText;
-        set
-        {
-            _labelText = value;
-            RefreshStyle();
-        }
-    }
-
-    private UiTokens _tokens = UiTokens.Neon;
-    private UiIconId? _iconId;
-
-    /// <summary>Optional canonical SVG displayed before the action label.</summary>
-    public UiIconId? IconId
-    {
-        get => _iconId;
-        set
-        {
-            _iconId = value;
-            RefreshStyle();
-        }
-    }
-
-    public UiTokens Tokens
-    {
-        get => _tokens;
-        set
-        {
-            _tokens = value;
-            RefreshStyle();
-        }
-    }
-
-    public override void _Ready()
-    {
-        RefreshStyle();
-    }
-
-    private void RefreshStyle()
-    {
-        if (!IsInsideTree())
-        {
-            return;
-        }
-
-        CustomMinimumSize = new Vector2(0, Tokens.TouchTarget);
-        Disabled = Locked;
-        Tokens.ApplyTextStyle(this, Tokens.LabelText);
-        var textColor = Kind == ActionKind.Primary ? Tokens.OnAccent : Kind == ActionKind.Danger ? Tokens.Danger : Tokens.Ink;
-        AddThemeColorOverride("font_color", textColor);
-        AddThemeColorOverride("font_hover_color", textColor);
-        AddThemeColorOverride("font_pressed_color", textColor);
-        AddThemeColorOverride("font_disabled_color", Tokens.Muted);
-        if (IconId is { } icon)
-        {
-            UiIcons.Apply(this, icon, UiIconSize.Standard, textColor);
-        }
-        else
-        {
-            Icon = null;
-        }
-
-        if (!string.IsNullOrWhiteSpace(LabelText))
-        {
-            Text = DisplayText();
-        }
-        AddThemeStyleboxOverride("normal", CreateStyle(false));
-        AddThemeStyleboxOverride("focus", new StyleBoxEmpty());
-        AddThemeStyleboxOverride("hover", CreateStyle(true));
-        AddThemeStyleboxOverride("pressed", CreateStyle(true));
-        AddThemeStyleboxOverride("disabled", CreateStyle(false, 0.5f));
-        if (Locked && string.IsNullOrWhiteSpace(TooltipText))
-        {
-            TooltipText = LockReason;
-        }
-    }
-
-    private string DisplayText()
-    {
-        var text = Locked && ShowLockReasonInText ? $"{LabelText} · {LockReason}" : LabelText;
-        return text.ToUpperInvariant();
-    }
-
-    private StyleBoxFlat CreateStyle(bool focused, float opacity = 1)
-    {
-        var color = Kind == ActionKind.Danger ? Tokens.Danger : Tokens.Accent;
-        var opacityMultiplier = Locked ? 0.5f : 1f;
-        var background = Kind == ActionKind.Primary
-            ? UiTokens.WithAlpha(color, opacity * opacityMultiplier)
-            : focused
-                ? UiTokens.MultiplyAlpha(Kind == ActionKind.Danger ? UiTokens.WithAlpha(Tokens.Danger, Tokens.AccentSoft.A) : Tokens.AccentSoft, opacity * opacityMultiplier)
-                : UiTokens.MultiplyAlpha(Tokens.PanelRaised, opacity * opacityMultiplier);
-        var border = Kind == ActionKind.Primary
-            ? UiTokens.WithAlpha(color, opacity * opacityMultiplier)
-            : UiTokens.WithAlpha(Kind == ActionKind.Danger ? Tokens.Danger : Tokens.LineStrong, opacity * opacityMultiplier);
-        return Tokens.ControlStyle(
-            background,
-            border,
-            glow: Kind == ActionKind.Primary && opacityMultiplier > 0.99f,
-            horizontalPadding: UiSpacing.ControlHorizontalPadding(Tokens),
-            verticalPadding: UiSpacing.ControlVerticalPadding(Tokens));
-    }
-
+    protected override string AccessibleDescription => Locked ? LockReason : string.Empty;
 }

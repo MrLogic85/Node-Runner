@@ -70,6 +70,10 @@ public sealed class UiTokensTests
         }.ShouldBe(new[] { 24f, 32f, 40f, 48f });
         new[]
         {
+            tokens.BadgeMinimumSize, tokens.BadgeOffset, tokens.ButtonSelectedStroke,
+        }.ShouldBe(new[] { 16f, 4f, 2f });
+        new[]
+        {
             tokens.IconSmall, tokens.Icon, tokens.IconLarge, tokens.IconExtraLarge,
         }.ShouldBe(new[] { 12f, 16f, 20f, 24f });
         new[]

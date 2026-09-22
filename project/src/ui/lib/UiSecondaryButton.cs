@@ -5,8 +5,7 @@ public partial class UiSecondaryButton : UiButton
 {
     public UiSecondaryButton()
     {
-        BorderColor = UiColor.LineStrong;
-        ContentColor = UiColor.Ink;
+        Style = UiButtonStyle.Secondary;
         HorizontalPadding = UiSpace.Space4;
         VerticalPadding = UiSpace.None;
         Filled = false;

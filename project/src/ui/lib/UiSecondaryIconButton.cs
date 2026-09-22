@@ -5,8 +5,7 @@ public partial class UiSecondaryIconButton : UiIconButton
 {
     public UiSecondaryIconButton()
     {
-        BorderColor = UiColor.LineStrong;
-        ContentColor = UiColor.Ink;
+        Style = UiButtonStyle.Secondary;
         Filled = false;
     }
 }

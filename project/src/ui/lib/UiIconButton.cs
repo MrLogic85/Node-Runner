@@ -19,6 +19,7 @@ public abstract partial class UiIconButton : UiButton
 
     protected UiIconButton()
     {
+        ContentLayout = UiButtonContentLayout.Icon;
         IconAlignment = HorizontalAlignment.Center;
         Alignment = HorizontalAlignment.Center;
         IconId = UiIconId.More;
@@ -57,6 +58,7 @@ public abstract partial class UiIconButton : UiButton
         set
         {
             _buttonSize = value;
+            Compact = value == UiIconButtonSize.Small;
             RefreshStyle();
         }
     }
@@ -83,13 +85,7 @@ public abstract partial class UiIconButton : UiButton
             ? base.DisplayTextStyle
             : Tokens.ReadoutMediumText;
 
-    protected override Vector2 MinimumSize => ButtonSize switch
-    {
-        UiIconButtonSize.Small => new(Tokens.TouchTarget, Tokens.TouchTarget),
-        UiIconButtonSize.Default => new(Tokens.TouchTarget, Tokens.TouchTarget),
-        UiIconButtonSize.Large => new(Tokens.TouchTarget, Tokens.TouchTarget),
-        _ => throw new ArgumentOutOfRangeException(nameof(ButtonSize), ButtonSize, null),
-    };
+    protected override Vector2 MinimumSize => new(Tokens.TouchTarget, Tokens.TouchTarget);
 
     protected override float VisibleControlSize => ButtonSize switch
     {
@@ -100,6 +96,4 @@ public abstract partial class UiIconButton : UiButton
     };
 
     protected override float HorizontalVisibleInset => (MinimumSize.X - VisibleControlSize) * 0.5f;
-
-    protected override HorizontalAlignment DisplayIconAlignment => HorizontalAlignment.Center;
 }

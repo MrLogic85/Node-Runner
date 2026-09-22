@@ -48,6 +48,25 @@ must stay theme-agnostic:
 - Keep flavor copy outside core logic; names in code should describe behavior,
   not a specific visual skin.
 
+The reference's HTML/CSS structure is not a Godot class or node hierarchy.
+In particular, CSS-only translucent color variants need not become additional
+Godot color tokens: shared effect definitions may derive alpha from the
+style's semantic color token. Keep effect settings centralized and preserve
+the paper theme and Effects Lite suppression of glow.
+
+The current Godot host uses the `UiTokens` adapter. The reference's native
+`Theme` resource and `Window.content_scale_factor` guidance describes a target,
+not completed host wiring; theme/scale propagation is tracked in
+[issue #236](https://github.com/MrLogic85/Node-Runner/issues/236).
+
+For buttons, the Component Library's **Buttons** paragraph defines the four
+current kinds. Older reference summaries still call `secondary` "default"
+and `tertiary` "danger"; `on` and `off` are states, not kinds.
+Hold-to-activate is available across kinds and layouts, not only destructive
+buttons. The Android-reviewed glow uses 12% opacity and extent 12 rather than
+the stronger HTML preview glow, as approved in
+[issue #242](https://github.com/MrLogic85/Node-Runner/issues/242).
+
 ## Rules for UI changes
 
 - Finish and verify the token/typography/size foundation before the Component
