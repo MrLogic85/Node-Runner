@@ -26,6 +26,8 @@ public partial class UiButton : Button
     private bool _filled;
     private bool _on;
     private UiButtonContentLayout _contentLayout;
+    private SizeFlags _rowSizeFlagsHorizontal = SizeFlags.Fill;
+    private SizeFlags _rowSizeFlagsVertical = SizeFlags.Fill;
     private float _progress = -1f;
     private float _holdDurationSeconds;
     private double _holdElapsedSeconds;
@@ -151,6 +153,20 @@ public partial class UiButton : Button
         get => _contentLayout;
         set
         {
+            if (_contentLayout != value)
+            {
+                if (value == UiButtonContentLayout.Stack)
+                {
+                    _rowSizeFlagsHorizontal = SizeFlagsHorizontal;
+                    _rowSizeFlagsVertical = SizeFlagsVertical;
+                }
+                else
+                {
+                    SizeFlagsHorizontal = _rowSizeFlagsHorizontal;
+                    SizeFlagsVertical = _rowSizeFlagsVertical;
+                }
+            }
+
             _contentLayout = value;
             RefreshStyle();
         }
@@ -279,6 +295,12 @@ public partial class UiButton : Button
         Disabled = !Enabled;
         TooltipText = AccessibleDescription;
         CustomMinimumSize = MinimumSize;
+        if (ContentLayout == UiButtonContentLayout.Stack)
+        {
+            SizeFlagsHorizontal = SizeFlags.ShrinkCenter;
+            SizeFlagsVertical = SizeFlags.ShrinkCenter;
+        }
+
         ClipText = ContentLayout == UiButtonContentLayout.Stack;
         IconAlignment = DisplayIconAlignment;
         VerticalIconAlignment = ContentLayout == UiButtonContentLayout.Stack
