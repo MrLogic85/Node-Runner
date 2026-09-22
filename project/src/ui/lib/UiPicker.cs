@@ -114,7 +114,7 @@ public partial class UiPicker : PanelContainer
             TooltipText = LabelText,
         };
         closedRow.Pressed += () => SetOpen(!Open, emit: true);
-        closedRow.AddThemeStyleboxOverride("focus", _tokens.FocusRingStyle());
+        closedRow.AddThemeStyleboxOverride("focus", new StyleBoxEmpty());
         stack.AddChild(closedRow);
 
         var row = new HBoxContainer { MouseFilter = MouseFilterEnum.Ignore };
@@ -157,7 +157,7 @@ public partial class UiPicker : PanelContainer
                 UiIcons.Apply(optionButton, UiIconId.Check, UiIconSize.Small, _tokens.Accent);
             }
 
-            optionButton.AddThemeStyleboxOverride("focus", _tokens.FocusRingStyle());
+            optionButton.AddThemeStyleboxOverride("focus", new StyleBoxEmpty());
             stack.AddChild(optionButton);
         }
     }

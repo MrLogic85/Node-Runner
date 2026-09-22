@@ -985,25 +985,40 @@ public partial class BuildScreen : Control
         var row = new HBoxContainer();
         row.AddThemeConstantOverride("separation", (int)_tokens.Space1);
         stack.AddChild(row);
-        row.AddChild(CreateStepper("-", -1));
-        var slider = new UiTokenSlider
+        row.AddChild(CreateStepper("−", -1, "Decrease neurons"));
+        var minimumNeurons = BrainShapeDef.MinimumNeuronsPerLayer;
+        var maximumNeurons = BrainShapeDef.MaximumNeuronsPerLayer;
+        var slider = new UiSlider
         {
             Tokens = _tokens,
-            LabelText = "Hidden",
-            MinValue = BrainShapeDef.MinimumNeuronsPerLayer,
-            MaxValue = BrainShapeDef.MaximumNeuronsPerLayer,
-            Value = shape.NeuronsPerLayer,
+            LabelText = "Neurons",
+            ReadoutText = shape.NeuronsPerLayer.ToString(),
+            Thumbs =
+            [
+                (shape.NeuronsPerLayer - minimumNeurons) /
+                (double)(maximumNeurons - minimumNeurons),
+            ],
+            StepLabels = [minimumNeurons.ToString(), maximumNeurons.ToString()],
+            HasMarker = true,
+            MarkerPosition =
+                (RecommendedNeurons(buildPanel) - minimumNeurons) /
+                (double)(maximumNeurons - minimumNeurons),
+            MarkerText = $"default {RecommendedNeurons(buildPanel)}",
             SizeFlagsHorizontal = SizeFlags.ExpandFill,
         };
-        slider.ValueChanged += value => EmitBrainShape(shape.HiddenLayers, (int)value);
-        slider.ExactValueRequested += _ =>
+        slider.ThumbChangeCommitted += (_, position) =>
+        {
+            var neurons = (int)Math.Round(minimumNeurons + (position * (maximumNeurons - minimumNeurons)));
+            EmitBrainShape(shape.HiddenLayers, neurons);
+        };
+        slider.ReadoutActivated += () =>
         {
             _pendingExactNeurons = shape.NeuronsPerLayer;
             _exactNeuronEntryOpen = true;
             RebuildLayout();
         };
         row.AddChild(slider);
-        row.AddChild(CreateStepper("+", 1));
+        row.AddChild(CreateStepper("+", 1, "Increase neurons"));
         return stack;
     }
 
@@ -1050,18 +1065,18 @@ public partial class BuildScreen : Control
         return panel;
     }
 
-    private Button CreateStepper(string label, int delta)
+    private UiButton CreateStepper(string label, int delta, string accessibleLabel)
     {
         var shape = Presentation?.BrainShape ?? BrainShapeDef.Default;
-        var button = new Button
+        var button = new UiSecondaryIconButton
         {
-            Text = label,
-            CustomMinimumSize = new Vector2(32, 32),
+            Tokens = _tokens,
+            IconId = null,
+            SymbolText = label,
+            AccessibleLabel = accessibleLabel,
+            ButtonSize = UiIconButtonSize.Small,
         };
-        _tokens.ApplyTextStyle(button, _tokens.LabelText);
-        button.AddThemeColorOverride("font_color", _tokens.Accent);
-        button.AddThemeStyleboxOverride("normal", _tokens.ControlStyle(_tokens.PanelRaised, _tokens.Edge, radius: (int)_tokens.RadiusSmall));
-        button.Pressed += () => EmitBrainShape(
+        button.Activated += () => EmitBrainShape(
             shape.HiddenLayers,
             Mathf.Clamp(shape.NeuronsPerLayer + delta, BrainShapeDef.MinimumNeuronsPerLayer, BrainShapeDef.MaximumNeuronsPerLayer));
         return button;

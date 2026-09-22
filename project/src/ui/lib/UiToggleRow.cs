@@ -110,7 +110,7 @@ public partial class UiToggleRow : PanelContainer
         pill.AddThemeStyleboxOverride("normal", _tokens.ControlStyle(On ? _tokens.Accent : _tokens.Panel, On ? _tokens.Accent : _tokens.LineStrong, radius: _tokens.RadiusPill));
         row.AddChild(pill);
 
-        toggle.AddThemeStyleboxOverride("focus", _tokens.FocusRingStyle());
+        toggle.AddThemeStyleboxOverride("focus", new StyleBoxEmpty());
     }
 
     private void Toggle()

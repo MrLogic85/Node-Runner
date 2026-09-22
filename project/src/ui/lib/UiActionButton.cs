@@ -76,19 +76,6 @@ public partial class UiActionButton : Button
         }
     }
 
-    private bool _showFocusRing;
-
-    [Export]
-    public bool ShowFocusRing
-    {
-        get => _showFocusRing;
-        set
-        {
-            _showFocusRing = value;
-            RefreshStyle();
-        }
-    }
-
     private UiTokens _tokens = UiTokens.Neon;
     private UiIconId? _iconId;
 
@@ -146,8 +133,8 @@ public partial class UiActionButton : Button
         {
             Text = DisplayText();
         }
-        AddThemeStyleboxOverride("normal", ShowFocusRing ? CreateFocusPreviewStyle() : CreateStyle(false));
-        AddThemeStyleboxOverride("focus", Tokens.FocusRingStyle());
+        AddThemeStyleboxOverride("normal", CreateStyle(false));
+        AddThemeStyleboxOverride("focus", new StyleBoxEmpty());
         AddThemeStyleboxOverride("hover", CreateStyle(true));
         AddThemeStyleboxOverride("pressed", CreateStyle(true));
         AddThemeStyleboxOverride("disabled", CreateStyle(false, 0.5f));
@@ -183,20 +170,4 @@ public partial class UiActionButton : Button
             verticalPadding: UiSpacing.ControlVerticalPadding(Tokens));
     }
 
-    private StyleBoxFlat CreateFocusPreviewStyle()
-    {
-        var gap = UiSpacing.FocusRingGap(Tokens);
-        var style = Tokens.ControlStyle(
-            Tokens.PanelRaised,
-            Tokens.Accent,
-            UiTokens.FocusRingStroke,
-            Tokens.RadiusMedium + gap,
-            horizontalPadding: UiSpacing.ControlHorizontalPadding(Tokens),
-            verticalPadding: UiSpacing.ControlVerticalPadding(Tokens));
-        style.ExpandMarginLeft = gap;
-        style.ExpandMarginTop = gap;
-        style.ExpandMarginRight = gap;
-        style.ExpandMarginBottom = gap;
-        return style;
-    }
 }

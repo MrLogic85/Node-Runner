@@ -28,8 +28,6 @@ public static class UiSpacing
 
     public static int ControlVerticalPadding(UiTokens tokens) => (int)tokens.Space2;
 
-    public static int FocusRingGap(UiTokens tokens) => 2;
-
     public static int DenseStackGap(UiTokens tokens) => IconLabelGap(tokens);
 
     public static int StackGap(UiTokens tokens) => ControlGap(tokens);

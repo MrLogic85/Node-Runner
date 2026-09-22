@@ -36,18 +36,17 @@ public partial class ComponentGalleryScreen : Control
 
     public static IReadOnlyList<GalleryComponentSpec> CanonicalInventory { get; } =
     [
-        new(UiComponentContracts.CanonicalComponent.CBtn, "c_btn", "Actions · c_btn / c_ib / c_hold / c_step"),
-        new(UiComponentContracts.CanonicalComponent.CIb, "c_ib", "Actions · c_btn / c_ib / c_hold / c_step"),
-        new(UiComponentContracts.CanonicalComponent.CHold, "c_hold", "Actions · c_btn / c_ib / c_hold / c_step"),
-        new(UiComponentContracts.CanonicalComponent.CStep, "c_step", "Actions · c_btn / c_ib / c_hold / c_step"),
-        new(UiComponentContracts.CanonicalComponent.CSlider, "c_slider", "Numeric inputs · c_slider / c_range / c_chip"),
-        new(UiComponentContracts.CanonicalComponent.CRange, "c_range", "Numeric inputs · c_slider / c_range / c_chip"),
+        new(UiComponentContracts.CanonicalComponent.CBtn, "c_btn", "Actions · c_btn / c_ib / c_hold"),
+        new(UiComponentContracts.CanonicalComponent.CIb, "c_ib", "Actions · c_btn / c_ib / c_hold"),
+        new(UiComponentContracts.CanonicalComponent.CHold, "c_hold", "Actions · c_btn / c_ib / c_hold"),
+        new(UiComponentContracts.CanonicalComponent.CSlider, "c_slider", "Slider · c_slider / c_range"),
+        new(UiComponentContracts.CanonicalComponent.CRange, "c_range", "Slider · c_slider / c_range"),
         new(UiComponentContracts.CanonicalComponent.CToggle, "c_toggle", "Choices and tray rows · c_toggle / c_check / c_pick / c_row / c_tabs"),
         new(UiComponentContracts.CanonicalComponent.CCheck, "c_check", "Choices and tray rows · c_toggle / c_check / c_pick / c_row / c_tabs"),
         new(UiComponentContracts.CanonicalComponent.CSeg, "c_seg", "Tool buttons and mode switch · c_seg"),
         new(UiComponentContracts.CanonicalComponent.CPick, "c_pick", "Choices and tray rows · c_toggle / c_check / c_pick / c_row / c_tabs"),
         new(UiComponentContracts.CanonicalComponent.CMenu, "c_menu", "Overflow menu · c_menu"),
-        new(UiComponentContracts.CanonicalComponent.CChip, "c_chip", "Numeric inputs · c_slider / c_range / c_chip"),
+        new(UiComponentContracts.CanonicalComponent.CChip, "c_chip", "Chips · c_chip"),
         new(UiComponentContracts.CanonicalComponent.CProg, "c_prog", "Progress · c_prog / c_ring"),
         new(UiComponentContracts.CanonicalComponent.CTextfield, "c_textfield", "Text and values · c_textfield / c_name / c_value / c_readonly / c_power / c_meter / c_panel_head / c_info_row"),
         new(UiComponentContracts.CanonicalComponent.CName, "c_name", "Text and values · c_textfield / c_name / c_value / c_readonly / c_power / c_meter / c_panel_head / c_info_row"),
@@ -164,6 +163,7 @@ public partial class ComponentGalleryScreen : Control
             "Buttons",
             "one primary per screen; destructive ones are outlined and named"));
         content.AddChild(CreateActionsSection());
+        content.AddChild(CreateSliderSection());
         content.AddChild(CreateSegmentedSection());
         content.AddChild(CreatePanelsSection());
         content.AddChild(CreateInputsSection());
@@ -435,49 +435,6 @@ public partial class ComponentGalleryScreen : Control
     {
         var content = new VBoxContainer();
         content.AddThemeConstantOverride("separation", (int)_tokens.Space2);
-        content.AddChild(Track(new UiTokenSlider
-        {
-            LabelText = "Run length",
-            MinValue = 1,
-            MaxValue = 60,
-            Value = 20,
-            DefaultMarker = 30,
-            ShowSteppers = true,
-        }));
-        content.AddChild(Track(new UiTokenSlider
-        {
-            LabelText = "Shadows",
-            MinValue = 0,
-            MaxValue = 8,
-            Value = 3,
-            Compact = true,
-        }));
-        content.AddChild(Track(new UiTokenSlider
-        {
-            LabelText = "Locked slider",
-            MinValue = 0,
-            MaxValue = 100,
-            Value = 50,
-            Locked = true,
-        }));
-        content.AddChild(Track(new UiTokenSlider
-        {
-            LabelText = "Disabled slider",
-            MinValue = 0,
-            MaxValue = 100,
-            Value = 18,
-            Disabled = true,
-            Compact = true,
-        }));
-        content.AddChild(Track(new UiRangeSlider
-        {
-            LabelText = "Angle limits",
-            Low = -40,
-            High = 70,
-            Mark = 12,
-            SizeFlagsHorizontal = SizeFlags.ExpandFill,
-        }));
-
         var chips = CreateFlow();
         chips.AddChild(Track(new UiChip { Text = "Brain 1 × 4", Kind = UiChip.ChipKind.Accent }));
         chips.AddChild(Track(new UiChip { Text = "Spring locked", Kind = UiChip.ChipKind.Locked }));
@@ -487,7 +444,164 @@ public partial class ComponentGalleryScreen : Control
         chips.AddChild(Track(new UiChip { Text = "OK", Kind = UiChip.ChipKind.Ok }));
         content.AddChild(chips);
 
-        return WrapSection("Numeric inputs · c_slider / c_range / c_chip", content);
+        return WrapSection("Chips · c_chip", content);
+    }
+
+    private Control CreateSliderSection()
+    {
+        var section = new VBoxContainer
+        {
+            SizeFlagsHorizontal = SizeFlags.ExpandFill,
+        };
+        section.AddThemeConstantOverride("separation", (int)_tokens.Space2);
+        section.AddChild(CreateSliderColumns(
+            CreateSliderSectionDescription(
+                "Slider",
+                "the only slider, configured: one thumb or two, two or more even steps, a named marker"),
+            CreateSliderSectionDescription(
+                "Slider, disabled",
+                "the same four with enabled=False: dimmed; the filled part stays solid but grey")));
+        section.AddChild(CreateSliderPair(
+            "Plain",
+            new UiSlider
+            {
+                LabelText = "Shadows",
+                ReadoutText = "8",
+                Thumbs = [0.22],
+            },
+            "Plain",
+            new UiSlider
+            {
+                LabelText = "Shadows",
+                ReadoutText = "8",
+                Thumbs = [0.22],
+                Enabled = false,
+            }));
+        section.AddChild(CreateSliderPair(
+            "Two steps (the ends) and a marker with a name",
+            new UiSlider
+            {
+                LabelText = "Neurons",
+                ReadoutText = "24",
+                Thumbs = [0.24],
+                StepLabels = ["1", "100"],
+                HasMarker = true,
+                MarkerPosition = 0.03,
+                MarkerText = "default 4",
+            },
+            "Two steps and marker",
+            new UiSlider
+            {
+                LabelText = "Neurons",
+                ReadoutText = "24",
+                Thumbs = [0.24],
+                StepLabels = ["1", "100"],
+                HasMarker = true,
+                MarkerPosition = 0.03,
+                MarkerText = "default 4",
+                Enabled = false,
+            }));
+        section.AddChild(CreateSliderPair(
+            "Four steps, always evenly placed; a marker on a step",
+            new UiSlider
+            {
+                LabelText = "UI size",
+                ReadoutText = "150%",
+                Thumbs = [0.5],
+                StepLabels = ["50%", "100%", "200%", "400%"],
+                HasMarker = true,
+                MarkerPosition = 1d / 3d,
+                MarkerText = "default 100%",
+            },
+            "Four steps and marker",
+            new UiSlider
+            {
+                LabelText = "UI size",
+                ReadoutText = "150%",
+                Thumbs = [0.5],
+                StepLabels = ["50%", "100%", "200%", "400%"],
+                HasMarker = true,
+                MarkerPosition = 1d / 3d,
+                MarkerText = "default 100%",
+                Enabled = false,
+            }));
+        section.AddChild(CreateSliderPair(
+            "Two thumbs: a range, and a marker",
+            new UiSlider
+            {
+                LabelText = "Angle limits",
+                ReadoutText = "-20° to 110°",
+                Thumbs = [0.18, 0.72],
+                HasMarker = true,
+                MarkerPosition = 0.44,
+                MarkerText = "now 35°",
+            },
+            "Two thumbs and a marker",
+            new UiSlider
+            {
+                LabelText = "Angle limits",
+                ReadoutText = "-20° to 110°",
+                Thumbs = [0.18, 0.72],
+                HasMarker = true,
+                MarkerPosition = 0.44,
+                MarkerText = "now 35°",
+                Enabled = false,
+            }));
+        return section;
+    }
+
+    private Control CreateSliderSectionDescription(string title, string description)
+    {
+        var heading = new HBoxContainer
+        {
+            SizeFlagsHorizontal = SizeFlags.ExpandFill,
+        };
+        heading.AddThemeConstantOverride("separation", (int)_tokens.Space2);
+        var titleLabel = CreateLabel(
+            title,
+            _tokens.OverlineText,
+            tokens => tokens.Ink,
+            TextServer.AutowrapMode.Off);
+        titleLabel.VerticalAlignment = VerticalAlignment.Top;
+        heading.AddChild(titleLabel);
+        var detail = CreateLabel(description, _tokens.NoteText, tokens => tokens.Muted);
+        detail.CustomMinimumSize = Vector2.Zero;
+        detail.SizeFlagsHorizontal = SizeFlags.ExpandFill;
+        detail.VerticalAlignment = VerticalAlignment.Top;
+        heading.AddChild(detail);
+        return heading;
+    }
+
+    private Control CreateSliderPair(
+        string enabledCaption,
+        UiSlider enabledSlider,
+        string disabledCaption,
+        UiSlider disabledSlider)
+    {
+        var pair = new VBoxContainer();
+        pair.AddThemeConstantOverride("separation", (int)_tokens.Space1);
+        pair.AddChild(CreateSliderColumns(
+            CreateLabel(enabledCaption, _tokens.NoteText, tokens => tokens.Muted),
+            CreateLabel(disabledCaption, _tokens.NoteText, tokens => tokens.Muted)));
+        enabledSlider.SizeFlagsHorizontal = SizeFlags.ExpandFill;
+        disabledSlider.SizeFlagsHorizontal = SizeFlags.ExpandFill;
+        pair.AddChild(CreateSliderColumns(Track(enabledSlider), Track(disabledSlider)));
+        return pair;
+    }
+
+    private GridContainer CreateSliderColumns(Control enabled, Control disabled)
+    {
+        var columns = new GridContainer
+        {
+            SizeFlagsHorizontal = SizeFlags.ExpandFill,
+            Columns = 2,
+        };
+        columns.AddThemeConstantOverride("h_separation", (int)_tokens.Space5);
+        enabled.SizeFlagsHorizontal = SizeFlags.ExpandFill;
+        disabled.SizeFlagsHorizontal = SizeFlags.ExpandFill;
+        columns.AddChild(enabled);
+        columns.AddChild(disabled);
+        return columns;
     }
 
     private Control CreateChoiceAndRowsSection()
@@ -718,17 +832,11 @@ public partial class ComponentGalleryScreen : Control
             case UiChip chip:
                 chip.Tokens = tokens;
                 break;
-            case UiTokenSlider slider:
+            case UiSlider slider:
                 slider.Tokens = tokens;
                 break;
             case UiHoldButton holdButton:
                 holdButton.Tokens = tokens;
-                break;
-            case UiStepperButton stepperButton:
-                stepperButton.Tokens = tokens;
-                break;
-            case UiRangeSlider rangeSlider:
-                rangeSlider.Tokens = tokens;
                 break;
             case UiToggleRow toggleRow:
                 toggleRow.Tokens = tokens;

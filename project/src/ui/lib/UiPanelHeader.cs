@@ -130,7 +130,7 @@ public partial class UiPanelHeader : HBoxContainer
             button.AddThemeStyleboxOverride("normal", _tokens.ControlStyle(_tokens.PanelRaised, _tokens.LineStrong));
             button.AddThemeStyleboxOverride("hover", _tokens.ControlStyle(_tokens.AccentSoft, _tokens.Accent));
             button.AddThemeStyleboxOverride("pressed", _tokens.ControlStyle(_tokens.Accent, _tokens.Accent, _tokens.StrokeSignal));
-            button.AddThemeStyleboxOverride("focus", _tokens.FocusRingStyle());
+            button.AddThemeStyleboxOverride("focus", new StyleBoxEmpty());
             button.AddThemeStyleboxOverride("disabled", _tokens.ControlStyle(UiTokens.MultiplyAlpha(_tokens.PanelRaised, 0.5f), _tokens.Line));
             var id = action.Id;
             button.Pressed += () => EmitSignal(SignalName.ActionSelected, id);

@@ -157,7 +157,7 @@ public partial class UiSegmentedSwitch : HBoxContainer
         button.AddThemeStyleboxOverride("normal", CreateStyle(selected));
         button.AddThemeStyleboxOverride("hover", CreateStyle(true));
         button.AddThemeStyleboxOverride("pressed", CreateStyle(true));
-        button.AddThemeStyleboxOverride("focus", _tokens.FocusRingStyle());
+        button.AddThemeStyleboxOverride("focus", new StyleBoxEmpty());
     }
 
     private UiIconId? IconFor(int index) =>

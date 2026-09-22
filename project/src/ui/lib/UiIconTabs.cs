@@ -125,7 +125,7 @@ public partial class UiIconTabs : HBoxContainer
             button.AddThemeStyleboxOverride("normal", CreateStyle(selected));
             button.AddThemeStyleboxOverride("hover", CreateStyle(selected, hovered: true));
             button.AddThemeStyleboxOverride("pressed", CreateStyle(true));
-            button.AddThemeStyleboxOverride("focus", _tokens.FocusRingStyle());
+            button.AddThemeStyleboxOverride("focus", new StyleBoxEmpty());
             button.AddThemeStyleboxOverride("disabled", CreateStyle(false, disabled: true));
             button.Pressed += () => SelectTab(tabIndex, item.Id);
             AddChild(button);

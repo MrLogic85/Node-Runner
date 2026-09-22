@@ -34,8 +34,6 @@ public sealed class UiTokens
 
     public const float LogicalCanvasWidth = 640;
     public const float LogicalCanvasHeight = 360;
-    public const int FocusRingStroke = 3;
-
     public Color Background { get; init; }
     public Color Panel { get; init; }
     public Color PanelRaised { get; init; }
@@ -91,6 +89,13 @@ public sealed class UiTokens
     public float StrokeHair { get; init; } = 1;
     public float StrokeSignal { get; init; } = 2;
     public float StrokeBeam { get; init; } = 3;
+    public float SliderThumbDiameter { get; init; } = 18;
+    public float SliderTrackWidth { get; init; } = 4;
+    public float SliderMarkerHeight { get; init; } = 16;
+    public float SliderStepTickHeight { get; init; } = 10;
+    public float SliderDisabledDashLength { get; init; } = 4;
+    public float SliderSteppedHeight { get; init; } = 60;
+    public float SliderCompactSteppedHeight { get; init; } = 54;
     public float TitleFontSize { get; init; } = 28;
     public float HeadingFontSize { get; init; } = 16;
     public float StageFontSize { get; init; } = 11;
@@ -218,6 +223,13 @@ public sealed class UiTokens
         StrokeHair = StrokeHair,
         StrokeSignal = StrokeSignal,
         StrokeBeam = StrokeBeam,
+        SliderThumbDiameter = SliderThumbDiameter,
+        SliderTrackWidth = SliderTrackWidth,
+        SliderMarkerHeight = SliderMarkerHeight,
+        SliderStepTickHeight = SliderStepTickHeight,
+        SliderDisabledDashLength = SliderDisabledDashLength,
+        SliderSteppedHeight = SliderSteppedHeight,
+        SliderCompactSteppedHeight = SliderCompactSteppedHeight,
         TitleFontSize = TitleFontSize,
         HeadingFontSize = HeadingFontSize,
         StageFontSize = StageFontSize,
@@ -411,8 +423,7 @@ public sealed class UiTokens
             case UiSurfaceContracts.RaisedState.Primary:
                 style.BgColor = Accent;
                 style.BorderColor = Accent;
-                style.ShadowColor = EffectsEnabled ? AccentGlow : Colors.Transparent;
-                style.ShadowSize = EffectsEnabled ? (int)GlowRadius : 0;
+                UiGlow.ApplyToControl(style, AccentGlow, EffectsEnabled);
                 break;
             case UiSurfaceContracts.RaisedState.Lock:
             case UiSurfaceContracts.RaisedState.Off:
@@ -500,7 +511,7 @@ public sealed class UiTokens
     {
         var width = (int)(borderWidth ?? StrokeHair);
         var cornerRadius = (int)(radius ?? RadiusMedium);
-        return new StyleBoxFlat
+        var style = new StyleBoxFlat
         {
             BgColor = background,
             BorderColor = borderColor,
@@ -512,28 +523,16 @@ public sealed class UiTokens
             CornerRadiusTopRight = cornerRadius,
             CornerRadiusBottomLeft = cornerRadius,
             CornerRadiusBottomRight = cornerRadius,
-            ShadowColor = glow && EffectsEnabled ? AccentGlow : Colors.Transparent,
-            ShadowSize = glow && EffectsEnabled ? (int)GlowRadius : 0,
             ContentMarginLeft = horizontalPadding ?? 0,
             ContentMarginTop = verticalPadding ?? 0,
             ContentMarginRight = horizontalPadding ?? 0,
             ContentMarginBottom = verticalPadding ?? 0,
         };
-    }
+        if (glow)
+        {
+            UiGlow.ApplyToControl(style, AccentGlow, EffectsEnabled);
+        }
 
-    public StyleBoxFlat FocusRingStyle(float? radius = null)
-    {
-        var gap = UiSpacing.FocusRingGap(this);
-        var style = ControlStyle(
-            Colors.Transparent,
-            Accent,
-            FocusRingStroke,
-            (radius ?? RadiusMedium) + gap);
-        style.DrawCenter = false;
-        style.ExpandMarginLeft = gap;
-        style.ExpandMarginTop = gap;
-        style.ExpandMarginRight = gap;
-        style.ExpandMarginBottom = gap;
         return style;
     }
 

@@ -9,9 +9,6 @@ public static class UiComponentContracts
     public const float ProgressRingDiameter = 44;
     public const float HoldCompletionSeconds = 0.8f;
     public const float ButtonProgressOpacity = 0.35f;
-    public const float ButtonGlowSize = 12;
-    public const float ButtonGlowOpacity = 0.4f;
-
     public static float HoldProgress(double elapsedSeconds, double durationSeconds)
     {
         if (!double.IsFinite(elapsedSeconds) || elapsedSeconds <= 0)
@@ -32,7 +29,6 @@ public static class UiComponentContracts
         CBtn,
         CIb,
         CHold,
-        CStep,
         CSlider,
         CRange,
         CToggle,
@@ -66,12 +62,6 @@ public static class UiComponentContracts
         Disabled,
     }
 
-    public enum StepperSymbol
-    {
-        Minus,
-        Plus,
-    }
-
     public enum ValidationState
     {
         Rest,
@@ -101,9 +91,8 @@ public static class UiComponentContracts
             CanonicalComponent.CBtn => nameof(UiActionButton),
             CanonicalComponent.CIb => nameof(UiIconButton),
             CanonicalComponent.CHold => nameof(UiHoldButton),
-            CanonicalComponent.CStep => nameof(UiStepperButton),
-            CanonicalComponent.CSlider => nameof(UiTokenSlider),
-            CanonicalComponent.CRange => nameof(UiRangeSlider),
+            CanonicalComponent.CSlider => nameof(UiSlider),
+            CanonicalComponent.CRange => nameof(UiSlider),
             CanonicalComponent.CToggle => nameof(UiToggleRow),
             CanonicalComponent.CCheck => nameof(UiCheckRow),
             CanonicalComponent.CSeg => nameof(UiSegmentedSwitch),
@@ -183,28 +172,43 @@ public static class UiComponentContracts
         return Math.Clamp(value, minimum, maximum);
     }
 
-    public static (double Low, double High) ClampRange(double low, double high, double minimum, double maximum, double? mark = null)
+    public static double ClampSliderPosition(double position)
     {
-        if (minimum > maximum)
+        if (!double.IsFinite(position))
         {
-            (minimum, maximum) = (maximum, minimum);
+            return position > 0 ? 1 : 0;
         }
 
-        var clampedLow = ClampValue(low, minimum, maximum);
-        var clampedHigh = ClampValue(high, minimum, maximum);
-        if (clampedLow > clampedHigh)
+        return Math.Clamp(position, 0, 1);
+    }
+
+    public static double[] NormalizeSliderThumbs(IEnumerable<double>? thumbs)
+    {
+        var normalized = thumbs?
+            .Take(2)
+            .Select(ClampSliderPosition)
+            .Order()
+            .ToArray() ?? [];
+        return normalized.Length == 0 ? [0] : normalized;
+    }
+
+    public static int SelectSliderThumb(IEnumerable<double>? thumbs, double position)
+    {
+        var normalized = NormalizeSliderThumbs(thumbs);
+        if (normalized.Length == 1)
         {
-            (clampedLow, clampedHigh) = (clampedHigh, clampedLow);
+            return 0;
         }
 
-        if (mark is { } finiteMark && double.IsFinite(finiteMark))
+        var target = ClampSliderPosition(position);
+        if (normalized[0] == normalized[1])
         {
-            var clampedMark = ClampValue(finiteMark, minimum, maximum);
-            clampedLow = Math.Min(clampedLow, clampedMark);
-            clampedHigh = Math.Max(clampedHigh, clampedMark);
+            return target < normalized[0] ? 0 : 1;
         }
 
-        return (clampedLow, clampedHigh);
+        var lowDistance = Math.Abs(target - normalized[0]);
+        var highDistance = Math.Abs(target - normalized[1]);
+        return lowDistance <= highDistance ? 0 : 1;
     }
 
     public static string FormatPercent(double value) =>
