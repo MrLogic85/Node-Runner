@@ -13,6 +13,17 @@ public partial class ComponentGalleryScreen : Control
     private const string _sharedCardPanelSection =
         "Panel and card · shared composition · c_card / c_panel";
 
+    private const string _rowInteractiveTitle =
+        "Row — interactive selected, hold, disabled, compact, and badge";
+
+    private const string _iconStandardTitle = "Icon — representative kinds and states";
+
+    private const string _iconHoldTitle = "Hold — works the same as on a text button";
+
+    private const string _iconBadgeTitle = "Badge — a halo counter, same colour whatever the kind";
+
+    private const string _stackTitle = "Stack — play, tool, destructive, flat, and badge";
+
     [Signal]
     public delegate void CloseRequestedEventHandler();
 
@@ -33,6 +44,70 @@ public partial class ComponentGalleryScreen : Control
         string EntryName,
         string Section,
         bool SharedComposition = false);
+
+    /// <summary>
+    /// The single declarative source for every rendered button specimen in
+    /// <see cref="CreateActionsSection"/>. <see cref="RowGroup"/> ties each
+    /// specimen to the visual row it is rendered in, so the inventory and the
+    /// live gallery can never drift apart.
+    /// </summary>
+    public readonly record struct ButtonGallerySpec(
+        UiButtonKind Kind,
+        UiButtonContentLayout Layout,
+        string RowGroup,
+        string Label,
+        UiIconId? Icon = null,
+        bool Selected = false,
+        bool Enabled = true,
+        bool Compact = false,
+        bool Hold = false,
+        string? BadgeText = null,
+        bool ToggleOnActivate = false)
+    {
+        public bool Badge => BadgeText is not null;
+    }
+
+    public static IReadOnlyList<ButtonGallerySpec> ButtonSpecimenInventory { get; } =
+    [
+        new(UiButtonKind.Primary, UiButtonContentLayout.Row, _rowInteractiveTitle, "Start training", UiIconId.Play),
+        new(UiButtonKind.Primary, UiButtonContentLayout.Row, _rowInteractiveTitle, "Start training", UiIconId.Play, Selected: true, ToggleOnActivate: true),
+        new(UiButtonKind.Secondary, UiButtonContentLayout.Row, _rowInteractiveTitle, "Cancel"),
+        new(UiButtonKind.Tertiary, UiButtonContentLayout.Row, _rowInteractiveTitle, "Hold to delete", Hold: true),
+        new(UiButtonKind.Tertiary, UiButtonContentLayout.Row, _rowInteractiveTitle, "Delete", UiIconId.Trash, Enabled: false),
+        new(UiButtonKind.Flat, UiButtonContentLayout.Row, _rowInteractiveTitle, "Skip"),
+        new(UiButtonKind.Flat, UiButtonContentLayout.Row, _rowInteractiveTitle, "Skip", Selected: true, ToggleOnActivate: true),
+        new(UiButtonKind.Secondary, UiButtonContentLayout.Row, _rowInteractiveTitle, "Cancel", Compact: true),
+        new(UiButtonKind.Primary, UiButtonContentLayout.Row, _rowInteractiveTitle, "Start", UiIconId.Play, Compact: true),
+        new(UiButtonKind.Tertiary, UiButtonContentLayout.Row, _rowInteractiveTitle, "Delete", UiIconId.Trash, Compact: true),
+        new(UiButtonKind.Flat, UiButtonContentLayout.Row, _rowInteractiveTitle, "Skip", Compact: true),
+        new(UiButtonKind.Secondary, UiButtonContentLayout.Row, _rowInteractiveTitle, "Creations", UiIconId.Model, BadgeText: "3"),
+        new(UiButtonKind.Primary, UiButtonContentLayout.Row, _rowInteractiveTitle, "Hold to start training", Selected: true, Hold: true),
+        new(UiButtonKind.Secondary, UiButtonContentLayout.Icon, _iconStandardTitle, string.Empty, UiIconId.Back),
+        new(UiButtonKind.Secondary, UiButtonContentLayout.Icon, _iconStandardTitle, string.Empty, UiIconId.Back, Selected: true),
+        new(UiButtonKind.Primary, UiButtonContentLayout.Icon, _iconStandardTitle, string.Empty, UiIconId.Gear),
+        new(UiButtonKind.Tertiary, UiButtonContentLayout.Icon, _iconStandardTitle, string.Empty, UiIconId.Trash, Enabled: false),
+        new(UiButtonKind.Flat, UiButtonContentLayout.Icon, _iconStandardTitle, string.Empty, UiIconId.More),
+        new(UiButtonKind.Secondary, UiButtonContentLayout.Icon, _iconStandardTitle, string.Empty, UiIconId.Back, Compact: true),
+        new(UiButtonKind.Primary, UiButtonContentLayout.Icon, _iconStandardTitle, string.Empty, UiIconId.Gear, Compact: true),
+        new(UiButtonKind.Tertiary, UiButtonContentLayout.Icon, _iconStandardTitle, string.Empty, UiIconId.Trash, Compact: true),
+        new(UiButtonKind.Flat, UiButtonContentLayout.Icon, _iconStandardTitle, string.Empty, UiIconId.More, Compact: true),
+        new(UiButtonKind.Secondary, UiButtonContentLayout.Icon, _iconStandardTitle, string.Empty, UiIconId.Model, Compact: true, BadgeText: "3"),
+        new(UiButtonKind.Primary, UiButtonContentLayout.Icon, _iconHoldTitle, string.Empty, UiIconId.Play, Hold: true),
+        new(UiButtonKind.Tertiary, UiButtonContentLayout.Icon, _iconHoldTitle, string.Empty, UiIconId.Trash, Hold: true),
+        new(UiButtonKind.Secondary, UiButtonContentLayout.Icon, _iconBadgeTitle, string.Empty, UiIconId.Model, BadgeText: "3"),
+        new(UiButtonKind.Primary, UiButtonContentLayout.Icon, _iconBadgeTitle, string.Empty, UiIconId.Lock, BadgeText: "1"),
+        new(UiButtonKind.Tertiary, UiButtonContentLayout.Icon, _iconBadgeTitle, string.Empty, UiIconId.Trash, BadgeText: "2"),
+        new(UiButtonKind.Primary, UiButtonContentLayout.Stack, _stackTitle, string.Empty, UiIconId.Play),
+        new(UiButtonKind.Primary, UiButtonContentLayout.Stack, _stackTitle, string.Empty, UiIconId.Play, Selected: true),
+        new(UiButtonKind.Primary, UiButtonContentLayout.Stack, _stackTitle, string.Empty, UiIconId.Play, Hold: true),
+        new(UiButtonKind.Secondary, UiButtonContentLayout.Stack, _stackTitle, "Move", UiIconId.Move),
+        new(UiButtonKind.Secondary, UiButtonContentLayout.Stack, _stackTitle, "Move", UiIconId.Move, Selected: true),
+        new(UiButtonKind.Secondary, UiButtonContentLayout.Stack, _stackTitle, "Beam", UiIconId.Beam, Enabled: false),
+        new(UiButtonKind.Tertiary, UiButtonContentLayout.Stack, _stackTitle, "Delete", UiIconId.Trash, Hold: true),
+        new(UiButtonKind.Flat, UiButtonContentLayout.Stack, _stackTitle, "More", UiIconId.More),
+        new(UiButtonKind.Flat, UiButtonContentLayout.Stack, _stackTitle, "More", UiIconId.More, Selected: true),
+        new(UiButtonKind.Primary, UiButtonContentLayout.Stack, _stackTitle, string.Empty, UiIconId.Play, BadgeText: "1"),
+    ];
 
     public static IReadOnlyList<GalleryComponentSpec> CanonicalInventory { get; } =
     [
@@ -161,7 +236,7 @@ public partial class ComponentGalleryScreen : Control
 
         content.AddChild(CreateSectionDescription(
             "Buttons",
-            "one primary per screen; destructive ones are outlined and named"));
+            "four semantic kinds, three layouts, compact geometry, hold progress, and badges"));
         content.AddChild(CreateActionsSection());
         content.AddChild(CreateSliderSection());
         content.AddChild(CreateSegmentedSection());
@@ -202,7 +277,7 @@ public partial class ComponentGalleryScreen : Control
 
         var switcher = Track(new UiSegmentedSwitch
         {
-            Options = new[] { "Neon", "Paper" },
+            Options = new[] { "Neon", "Paper", "Effects lite" },
             SelectedIndex = 0,
             SizeFlagsVertical = SizeFlags.ShrinkCenter,
         });
@@ -211,6 +286,7 @@ public partial class ComponentGalleryScreen : Control
             ApplyTokens(index switch
             {
                 1 => UiTokens.Paper,
+                2 => UiTokens.Neon.WithEffects(false),
                 _ => UiTokens.Neon,
             });
         };
@@ -252,126 +328,107 @@ public partial class ComponentGalleryScreen : Control
     {
         var content = new VBoxContainer();
         content.AddThemeConstantOverride("separation", UiSpacing.StackGap(_tokens));
-        var actions = new HFlowContainer();
-        actions.AddThemeConstantOverride("h_separation", UiSpacing.ControlGap(_tokens));
-        actions.AddThemeConstantOverride("v_separation", UiSpacing.ControlGap(_tokens));
-        content.AddChild(actions);
-        actions.AddChild(Track(new UiPrimaryButton
-        {
-            LabelText = "Start training",
-            IconId = UiIconId.Play,
-        }));
-        actions.AddChild(Track(new UiSecondaryButton
-        {
-            LabelText = "Cancel",
-        }));
-        actions.AddChild(Track(new UiTertiaryButton
-        {
-            LabelText = "Delete",
-            IconId = UiIconId.Trash,
-        }));
-        actions.AddChild(Track(new UiSecondaryButton
-        {
-            LabelText = "Start training",
-            Enabled = false,
-        }));
-        var unlock = Track(new UiTertiaryButton
-        {
-            LabelText = "Hold to unlock",
-            HoldDurationSeconds = UiComponentContracts.HoldCompletionSeconds,
-        });
-        unlock.Activated += () => unlock.LabelText = "Unlocked";
-        actions.AddChild(unlock);
+        AddButtonRow(content, _rowInteractiveTitle, SpecimensFor(_rowInteractiveTitle));
 
         content.AddChild(CreateSectionDescription(
             "Buttons with an icon",
-            "the same button in another layout: icon only"));
-        var iconActions = CreateFlow();
-        iconActions.AddChild(Track(new UiSecondaryIconButton
-        {
-            IconId = UiIconId.Back,
-            AccessibleLabel = "Back",
-        }));
-        iconActions.AddChild(Track(new UiSecondaryIconButton
-        {
-            IconId = UiIconId.More,
-            AccessibleLabel = "More",
-        }));
-        iconActions.AddChild(Track(new UiSecondaryIconButton
-        {
-            IconId = UiIconId.Pause,
-            AccessibleLabel = "Pause",
-        }));
-        iconActions.AddChild(Track(new UiSecondaryIconButton
-        {
-            IconId = UiIconId.Speed,
-            AccessibleLabel = "Fast forward",
-        }));
-        iconActions.AddChild(Track(new UiSecondaryIconButton
-        {
-            IconId = UiIconId.Lock,
-            AccessibleLabel = "Lock",
-            On = true,
-            HoldDurationSeconds = UiComponentContracts.HoldCompletionSeconds,
-        }));
-        iconActions.AddChild(Track(new UiSecondaryIconButton
-        {
-            IconId = UiIconId.Unlock,
-            AccessibleLabel = "Unlock",
-        }));
-        iconActions.AddChild(Track(new UiSecondaryIconButton
-        {
-            IconId = UiIconId.Chart,
-            AccessibleLabel = "Chart",
-        }));
-        iconActions.AddChild(Track(new UiTertiaryIconButton
-        {
-            IconId = UiIconId.Trash,
-            AccessibleLabel = "Delete",
-            HoldDurationSeconds = UiComponentContracts.HoldCompletionSeconds,
-        }));
-        iconActions.AddChild(Track(new UiSecondaryIconButton
-        {
-            IconId = UiIconId.Close,
-            AccessibleLabel = "Close",
-            Enabled = false,
-        }));
-        iconActions.AddChild(Track(new UiPrimaryIconButton
-        {
-            IconId = UiIconId.Play,
-            AccessibleLabel = "Play",
-            ButtonSize = UiIconButtonSize.Large,
-            IconSize = UiIconSize.ExtraLarge,
-        }));
-        content.AddChild(iconActions);
+            "standard and compact frames, plus hold, disabled, and badge states"));
+        AddButtonRow(content, _iconStandardTitle, SpecimensFor(_iconStandardTitle));
+        AddButtonRow(content, _iconHoldTitle, SpecimensFor(_iconHoldTitle));
+        AddButtonRow(content, _iconBadgeTitle, SpecimensFor(_iconBadgeTitle));
 
         content.AddChild(CreateSectionDescription(
             "Stacked buttons",
-            "the same button with the icon over a small label"));
-        var stackedActions = CreateFlow();
-        stackedActions.AddChild(CreateStackedButtonSpecimen(Track(new UiSecondaryButton
-        {
-            LabelText = "Move",
-            IconId = UiIconId.Move,
-            ContentLayout = UiButtonContentLayout.Stack,
-        }), "rest"));
-        stackedActions.AddChild(CreateStackedButtonSpecimen(Track(new UiSecondaryButton
-        {
-            LabelText = "Move",
-            IconId = UiIconId.Move,
-            ContentLayout = UiButtonContentLayout.Stack,
-            On = true,
-        }), "on (chosen)"));
-        stackedActions.AddChild(CreateStackedButtonSpecimen(Track(new UiSecondaryButton
-        {
-            LabelText = "Beam",
-            IconId = UiIconId.Beam,
-            ContentLayout = UiButtonContentLayout.Stack,
-            Enabled = false,
-        }), "off (disabled)"));
-        content.AddChild(stackedActions);
+            "touch-sized with the icon over a label, or no label for play"));
+        AddStackedButtonRow(content, _stackTitle, SpecimensFor(_stackTitle));
 
         return content;
+    }
+
+    /// <summary>
+    /// Renders the live buttons for a single gallery row directly from
+    /// <see cref="ButtonSpecimenInventory"/>, so the inventory is the only
+    /// declarative source of what actually appears in the gallery.
+    /// </summary>
+    private List<UiButton> SpecimensFor(string rowGroup) =>
+        ButtonSpecimenInventory
+            .Where(spec => spec.RowGroup == rowGroup)
+            .Select(CreateButtonFromSpec)
+            .ToList();
+
+    private UiButton CreateButtonFromSpec(ButtonGallerySpec spec) =>
+        CreateButton(
+            spec.Kind,
+            spec.Label,
+            spec.Icon,
+            spec.Layout,
+            selected: spec.Selected,
+            enabled: spec.Enabled,
+            compact: spec.Compact,
+            hold: spec.Hold,
+            badge: spec.BadgeText,
+            toggleOnActivate: spec.ToggleOnActivate);
+
+    private void AddButtonRow(VBoxContainer content, string title, IReadOnlyList<UiButton> buttons)
+    {
+        content.AddChild(CreateLabel(title, _tokens.NoteText, tokens => tokens.Muted));
+        var flow = CreateFlow();
+        foreach (var button in buttons)
+        {
+            flow.AddChild(button);
+        }
+
+        content.AddChild(flow);
+    }
+
+    private void AddStackedButtonRow(VBoxContainer content, string title, IReadOnlyList<UiButton> buttons)
+    {
+        content.AddChild(CreateSectionDescription(title, string.Empty));
+        var flow = CreateFlow();
+        foreach (var button in buttons)
+        {
+            var state = button.Enabled
+                ? button.HoldDurationSeconds > 0
+                    ? "hold"
+                    : button.On ? "selected" : "normal"
+                : "disabled";
+            flow.AddChild(CreateStackedButtonSpecimen(button, state));
+        }
+
+        content.AddChild(flow);
+    }
+
+    private UiButton CreateButton(
+        UiButtonKind kind,
+        string label,
+        UiIconId? icon = null,
+        UiButtonContentLayout layout = UiButtonContentLayout.Row,
+        bool selected = false,
+        bool enabled = true,
+        bool compact = false,
+        bool hold = false,
+        string? badge = null,
+        bool toggleOnActivate = false)
+    {
+        var button = Track(new UiButton
+        {
+            Kind = kind,
+            LabelText = label,
+            IconId = icon,
+            ContentLayout = layout,
+            On = selected,
+            Enabled = enabled,
+            Compact = compact,
+            HoldDurationSeconds = hold ? UiComponentContracts.HoldCompletionSeconds : 0,
+            Progress = hold ? 0.45f : -1,
+            BadgeText = badge ?? string.Empty,
+        });
+        if (toggleOnActivate)
+        {
+            button.Activated += () => button.On = !button.On;
+        }
+
+        return button;
     }
 
     private Control CreateStackedButtonSpecimen(UiButton button, string state)
@@ -818,9 +875,6 @@ public partial class ComponentGalleryScreen : Control
             case UiButton button:
                 button.Tokens = tokens;
                 break;
-            case UiActionButton button:
-                button.Tokens = tokens;
-                break;
             case UiOverflowMenu menu:
                 menu.Tokens = tokens;
                 break;
@@ -835,9 +889,6 @@ public partial class ComponentGalleryScreen : Control
                 break;
             case UiSlider slider:
                 slider.Tokens = tokens;
-                break;
-            case UiHoldButton holdButton:
-                holdButton.Tokens = tokens;
                 break;
             case UiToggleRow toggleRow:
                 toggleRow.Tokens = tokens;

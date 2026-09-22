@@ -5,8 +5,7 @@ public partial class UiPrimaryButton : UiButton
 {
     public UiPrimaryButton()
     {
-        BorderColor = UiColor.Accent;
-        ContentColor = UiColor.OnAccent;
+        Style = UiButtonStyle.Primary;
         HorizontalPadding = UiSpace.Space4;
         VerticalPadding = UiSpace.None;
         Filled = true;

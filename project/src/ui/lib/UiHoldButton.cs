@@ -2,144 +2,65 @@ using Godot;
 
 namespace NodeRunner.Ui.Lib;
 
-/// <summary>Hold-to-confirm action with visible progress, cancellation, and completion state.</summary>
-public partial class UiHoldButton : Button
+/// <summary>Compatibility facade for the destructive hold variant of the canonical button.</summary>
+public partial class UiHoldButton : UiTertiaryButton
 {
     [Signal]
     public delegate void HoldCompletedEventHandler();
 
-    private UiTokens _tokens = UiTokens.Neon;
     private UiComponentContracts.HoldState _state;
-    private float _holdSeconds;
-    private float _progressPercent;
+
+    public UiHoldButton()
+    {
+        HoldDurationSeconds = UiComponentContracts.HoldCompletionSeconds;
+    }
 
     [Export]
-    public string LabelText { get; set; } = "Hold to confirm";
-
-    [Export(PropertyHint.Range, "0,100,1")]
     public float ProgressPercent
     {
-        get => _progressPercent;
-        set
-        {
-            _progressPercent = (float)UiComponentContracts.ClampPercent(value);
-            QueueRedraw();
-        }
+        get => Progress < 0 ? 0 : Progress * 100;
+        set => Progress = (float)UiComponentContracts.ClampPercent(value) / 100;
     }
 
     [Export]
     public bool Locked
     {
-        get => _state == UiComponentContracts.HoldState.Disabled;
+        get => !Enabled;
         set
         {
-            _state = value ? UiComponentContracts.HoldState.Disabled : UiComponentContracts.HoldState.Rest;
-            Refresh();
-        }
-    }
-
-    public UiTokens Tokens
-    {
-        get => _tokens;
-        set
-        {
-            _tokens = value;
-            Refresh();
+            Enabled = !value;
+            _state = value
+                ? UiComponentContracts.HoldState.Disabled
+                : UiComponentContracts.HoldState.Rest;
+            Progress = 0;
+            RefreshStyle();
         }
     }
 
     public UiComponentContracts.HoldState State => _state;
 
-    public override void _Ready()
+    protected override bool CanBeginHold =>
+        UiComponentContracts.CanBeginHold(_state);
+
+    protected override void OnHoldStarted()
     {
-        ButtonDown += BeginHold;
-        ButtonUp += ReleaseHold;
-        Refresh();
+        _state = UiComponentContracts.HoldState.Holding;
     }
 
-    public override void _Process(double delta)
+    protected override void OnHoldCancelled()
     {
-        if (_state != UiComponentContracts.HoldState.Holding)
-        {
-            return;
-        }
+        _state = UiComponentContracts.HoldState.Cancelled;
+    }
 
-        _holdSeconds += (float)delta;
-        ProgressPercent = _holdSeconds / UiComponentContracts.HoldCompletionSeconds * 100f;
-        if (ProgressPercent < 100)
-        {
-            return;
-        }
-
+    protected override void OnHoldCompleted()
+    {
         _state = UiComponentContracts.HoldState.Completed;
-        ProgressPercent = 100;
-        Refresh();
+        RefreshStyle();
         EmitSignal(SignalName.HoldCompleted);
     }
 
-    public override void _Draw()
-    {
-        base._Draw();
-        if (ProgressPercent <= 0)
-        {
-            return;
-        }
-
-        var fillWidth = Size.X * ProgressPercent / 100f;
-        DrawRect(new Rect2(Vector2.Zero, new Vector2(fillWidth, Size.Y)), UiTokens.WithAlpha(_tokens.Accent, 0.28f), filled: true);
-    }
-
-    private void BeginHold()
-    {
-        if (Locked || _state == UiComponentContracts.HoldState.Completed)
-        {
-            return;
-        }
-
-        _state = UiComponentContracts.HoldState.Holding;
-        _holdSeconds = 0;
-        ProgressPercent = 0;
-        Refresh();
-    }
-
-    private void ReleaseHold()
-    {
-        if (_state == UiComponentContracts.HoldState.Holding)
-        {
-            _state = UiComponentContracts.HoldState.Cancelled;
-            _holdSeconds = 0;
-            ProgressPercent = 0;
-            Refresh();
-        }
-    }
-
-    private void Refresh()
-    {
-        if (!IsInsideTree())
-        {
-            return;
-        }
-
-        Disabled = Locked;
-        Text = _state == UiComponentContracts.HoldState.Completed ? "COMPLETED" : LabelText.ToUpperInvariant();
-        CustomMinimumSize = new Vector2(0, _tokens.TouchTarget);
-        _tokens.ApplyTextStyle(this, _tokens.LabelText);
-        AddThemeColorOverride("font_color", Locked ? _tokens.Muted : _tokens.Danger);
-        AddThemeColorOverride("font_hover_color", _tokens.Danger);
-        AddThemeStyleboxOverride("normal", CreateStyle(false));
-        AddThemeStyleboxOverride("hover", CreateStyle(true));
-        AddThemeStyleboxOverride("pressed", CreateStyle(true));
-        AddThemeStyleboxOverride("focus", new StyleBoxEmpty());
-        AddThemeStyleboxOverride("disabled", CreateStyle(false, 0.5f));
-        QueueRedraw();
-    }
-
-    private StyleBoxFlat CreateStyle(bool active, float opacity = 1) =>
-        _tokens.ControlStyle(
-            active ? UiTokens.WithAlpha(_tokens.Danger, 0.18f * opacity) : UiTokens.MultiplyAlpha(_tokens.PanelRaised, opacity),
-            UiTokens.MultiplyAlpha(_tokens.Danger, opacity),
-            active ? _tokens.StrokeSignal : _tokens.StrokeHair,
-            glow: false,
-            horizontalPadding: UiSpacing.ControlHorizontalPadding(_tokens),
-            verticalPadding: UiSpacing.ControlVerticalPadding(_tokens));
+    protected override string DisplayText =>
+        State == UiComponentContracts.HoldState.Completed
+            ? "COMPLETED"
+            : base.DisplayText;
 }

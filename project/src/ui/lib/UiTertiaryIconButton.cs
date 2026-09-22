@@ -5,8 +5,7 @@ public partial class UiTertiaryIconButton : UiIconButton
 {
     public UiTertiaryIconButton()
     {
-        BorderColor = UiColor.Danger;
-        ContentColor = UiColor.Danger;
+        Style = UiButtonStyle.Tertiary;
         Filled = false;
     }
 }

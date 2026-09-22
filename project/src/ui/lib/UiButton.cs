@@ -2,12 +2,6 @@ using Godot;
 
 namespace NodeRunner.Ui.Lib;
 
-public enum UiButtonContentLayout
-{
-    Row,
-    Stack,
-}
-
 /// <summary>Shared themed foundation for labelled buttons.</summary>
 public partial class UiButton : Button
 {
@@ -16,7 +10,10 @@ public partial class UiButton : Button
 
     private const float _disabledOpacity = 0.5f;
     private UiTokens _tokens = UiTokens.Neon;
+    private UiButtonStyle _style = UiButtonStyle.Secondary;
     private string _labelText = string.Empty;
+    private string _callerTooltip = string.Empty;
+    private string _lastAppliedTooltip = string.Empty;
     private UiIconId? _iconId;
     private bool _enabled = true;
     private UiColor _borderColor = UiColor.LineStrong;
@@ -25,6 +22,8 @@ public partial class UiButton : Button
     private UiSpace _verticalPadding = UiSpace.None;
     private bool _filled;
     private bool _on;
+    private bool _compact;
+    private string _badgeText = string.Empty;
     private UiButtonContentLayout _contentLayout;
     private SizeFlags _rowSizeFlagsHorizontal = SizeFlags.Fill;
     private SizeFlags _rowSizeFlagsVertical = SizeFlags.Fill;
@@ -32,11 +31,16 @@ public partial class UiButton : Button
     private float _holdDurationSeconds;
     private double _holdElapsedSeconds;
     private bool _isHolding;
+    private int _holdTouchIndex = -1;
+    private bool _handlersConnected;
+    private Control? _progressClip;
     private Panel? _progressBackground;
+    private Control? _progressFillClip;
     private Panel? _progressFill;
     private VBoxContainer? _stackContent;
     private TextureRect? _stackIcon;
     private Label? _stackLabel;
+    private Label? _badge;
 
     public UiButton()
     {
@@ -65,6 +69,28 @@ public partial class UiButton : Button
     }
 
     [Export]
+    public UiButtonKind Kind
+    {
+        get => _style.Kind;
+        set
+        {
+            _style = UiButtonStyle.For(value);
+            RefreshStyle();
+        }
+    }
+
+    /// <summary>Composes the semantic colours without coupling callers to rendering details.</summary>
+    public UiButtonStyle Style
+    {
+        get => _style;
+        set
+        {
+            _style = value;
+            RefreshStyle();
+        }
+    }
+
+    [Export]
     public bool Enabled
     {
         get => _enabled;
@@ -87,6 +113,7 @@ public partial class UiButton : Button
         set
         {
             _borderColor = value;
+            _style = _style with { BorderColor = value };
             RefreshStyle();
         }
     }
@@ -98,6 +125,7 @@ public partial class UiButton : Button
         set
         {
             _contentColor = value;
+            _style = _style with { ContentColor = value };
             RefreshStyle();
         }
     }
@@ -135,7 +163,7 @@ public partial class UiButton : Button
         }
     }
 
-    /// <summary>Selected state using the canonical accent-soft fill, accent border, and glow.</summary>
+    /// <summary>Selected state preserving the style background with its selected border and glow.</summary>
     [Export]
     public bool On
     {
@@ -155,7 +183,7 @@ public partial class UiButton : Button
         {
             if (_contentLayout != value)
             {
-                if (value == UiButtonContentLayout.Stack)
+                if (value is UiButtonContentLayout.Stack or UiButtonContentLayout.Icon)
                 {
                     _rowSizeFlagsHorizontal = SizeFlagsHorizontal;
                     _rowSizeFlagsVertical = SizeFlagsVertical;
@@ -179,7 +207,23 @@ public partial class UiButton : Button
         get => _progress;
         set
         {
-            _progress = value < 0 ? -1 : Mathf.Clamp(value, 0, 1);
+            var next = value < 0 ? -1 : Mathf.Clamp(value, 0, 1);
+            if (next.Equals(_progress))
+            {
+                return;
+            }
+
+            var stayedVisible = _progress >= 0 && next >= 0;
+            _progress = next;
+            if (stayedVisible && IsInsideTree())
+            {
+                // Only the revealed fraction changed. Rebuilding the button
+                // styleboxes here would invalidate its minimum size on every
+                // hold frame and make containers re-sort mid-gesture.
+                RefreshProgressLayout();
+                return;
+            }
+
             RefreshStyle();
         }
     }
@@ -194,8 +238,11 @@ public partial class UiButton : Button
             _holdDurationSeconds = Mathf.Max(value, 0);
             _holdElapsedSeconds = 0;
             _isHolding = false;
+            _holdTouchIndex = -1;
             Progress = _holdDurationSeconds > 0 ? 0 : -1;
             SetProcess(false);
+            SetProcessInput(false);
+            RefreshStyle();
         }
     }
 
@@ -209,28 +256,102 @@ public partial class UiButton : Button
         }
     }
 
-    public override void _Ready()
+    public override void _EnterTree()
     {
+        base._EnterTree();
+        if (_handlersConnected)
+        {
+            return;
+        }
+
         Resized += LayoutProgress;
         Pressed += HandlePressed;
         ButtonDown += BeginHold;
         ButtonUp += EndHold;
+        _handlersConnected = true;
+    }
+
+    public override void _Ready()
+    {
         SetProcess(false);
+        SetProcessInput(false);
         RefreshStyle();
+    }
+
+    public override void _GuiInput(InputEvent inputEvent)
+    {
+        if (!_isHolding && Enabled && HoldDurationSeconds > 0 && inputEvent.IsPressed())
+        {
+            _holdTouchIndex = inputEvent is InputEventScreenTouch touch ? touch.Index : -1;
+        }
+    }
+
+    public override void _Input(InputEvent inputEvent)
+    {
+        if (!_isHolding)
+        {
+            return;
+        }
+
+        // Observe before a parent scroll container can consume the release or drag.
+        switch (inputEvent)
+        {
+            case InputEventScreenTouch touch when touch.Index == _holdTouchIndex:
+                if (!touch.Pressed || touch.Canceled)
+                {
+                    EndHold();
+                }
+                break;
+            case InputEventScreenDrag drag when drag.Index == _holdTouchIndex:
+                CancelHoldOutside(drag.Position);
+                break;
+            case InputEventMouseMotion motion when _holdTouchIndex < 0:
+                CancelHoldOutside(motion.Position);
+                break;
+            case InputEventMouseButton { Pressed: false, ButtonIndex: MouseButton.Left }
+                when _holdTouchIndex < 0:
+                EndHold();
+                break;
+        }
+    }
+
+    public override void _Notification(int what)
+    {
+        if (what == NotificationScrollBegin || what == NotificationDragBegin
+            || what == NotificationFocusExit || what == NotificationApplicationFocusOut
+            || (what == NotificationVisibilityChanged && !IsVisibleInTree()))
+        {
+            EndHold();
+        }
+    }
+
+    private void CancelHoldOutside(Vector2 viewportPosition)
+    {
+        var localPosition = GetGlobalTransformWithCanvas().AffineInverse() * viewportPosition;
+        if (!new Rect2(Vector2.Zero, Size).HasPoint(localPosition))
+        {
+            EndHold();
+        }
     }
 
     public override void _ExitTree()
     {
         EndHold();
-        Resized -= LayoutProgress;
-        Pressed -= HandlePressed;
-        ButtonDown -= BeginHold;
-        ButtonUp -= EndHold;
+        if (_handlersConnected)
+        {
+            Resized -= LayoutProgress;
+            Pressed -= HandlePressed;
+            ButtonDown -= BeginHold;
+            ButtonUp -= EndHold;
+            _handlersConnected = false;
+        }
+
+        base._ExitTree();
     }
 
     public override void _Process(double delta)
     {
-        if (!_isHolding || !Enabled)
+        if (!_isHolding || !Enabled || !IsPressed() || !IsVisibleInTree())
         {
             EndHold();
             return;
@@ -247,7 +368,10 @@ public partial class UiButton : Button
 
         _isHolding = false;
         SetProcess(false);
-        EmitSignal(SignalName.Activated);
+        SetProcessInput(false);
+        _holdTouchIndex = -1;
+        OnHoldCompleted();
+        Activate();
     }
 
     protected virtual string DisplayText => LabelText.ToUpperInvariant();
@@ -259,24 +383,29 @@ public partial class UiButton : Button
     protected virtual Vector2 MinimumSize => ContentLayout switch
     {
         UiButtonContentLayout.Row => new(0, Tokens.TouchTarget),
+        UiButtonContentLayout.Icon => new(Tokens.TouchTarget, Tokens.TouchTarget),
         UiButtonContentLayout.Stack => new(Tokens.TouchTarget, Tokens.TouchTarget),
         _ => throw new ArgumentOutOfRangeException(nameof(ContentLayout), ContentLayout, null),
     };
 
     protected virtual float VisibleControlSize => ContentLayout switch
     {
-        UiButtonContentLayout.Row => Tokens.ControlHeight,
+        UiButtonContentLayout.Row => UiButtonMetrics.From(Tokens).VisibleControlSize(ContentLayout, Compact),
+        UiButtonContentLayout.Icon => UiButtonMetrics.From(Tokens).VisibleControlSize(ContentLayout, Compact),
         UiButtonContentLayout.Stack => Tokens.TouchTarget,
         _ => throw new ArgumentOutOfRangeException(nameof(ContentLayout), ContentLayout, null),
     };
 
-    protected virtual float HorizontalVisibleInset => 0;
+    protected virtual float HorizontalVisibleInset =>
+        ContentLayout == UiButtonContentLayout.Icon
+            ? (MinimumSize.X - VisibleControlSize) * 0.5f
+            : 0;
 
     protected virtual float VerticalVisibleInset =>
         (MinimumSize.Y - VisibleControlSize) * 0.5f;
 
     protected virtual HorizontalAlignment DisplayIconAlignment =>
-        ContentLayout == UiButtonContentLayout.Stack
+        ContentLayout is UiButtonContentLayout.Stack or UiButtonContentLayout.Icon
             ? HorizontalAlignment.Center
             : HorizontalAlignment.Left;
 
@@ -284,6 +413,30 @@ public partial class UiButton : Button
         ContentLayout == UiButtonContentLayout.Stack
             ? Tokens.OverlineText
             : Tokens.LabelText;
+
+    /// <summary>Uses the compact control size for row and icon layouts.</summary>
+    [Export]
+    public bool Compact
+    {
+        get => _compact;
+        set
+        {
+            _compact = value;
+            RefreshStyle();
+        }
+    }
+
+    /// <summary>Optional halo count displayed just outside the upper-right corner.</summary>
+    [Export]
+    public string BadgeText
+    {
+        get => _badgeText;
+        set
+        {
+            _badgeText = value;
+            RefreshStyle();
+        }
+    }
 
     protected void RefreshStyle()
     {
@@ -293,9 +446,17 @@ public partial class UiButton : Button
         }
 
         Disabled = !Enabled;
-        TooltipText = AccessibleDescription;
+        if (TooltipText != _lastAppliedTooltip)
+        {
+            _callerTooltip = TooltipText;
+        }
+
+        TooltipText = string.IsNullOrEmpty(AccessibleDescription)
+            ? _callerTooltip
+            : AccessibleDescription;
+        _lastAppliedTooltip = TooltipText;
         CustomMinimumSize = MinimumSize;
-        if (ContentLayout == UiButtonContentLayout.Stack)
+        if (ContentLayout is UiButtonContentLayout.Stack or UiButtonContentLayout.Icon)
         {
             SizeFlagsHorizontal = SizeFlags.ShrinkCenter;
             SizeFlagsVertical = SizeFlags.ShrinkCenter;
@@ -313,11 +474,12 @@ public partial class UiButton : Button
                 ? (int)Tokens.Space1
                 : UiSpacing.ControlGap(Tokens));
 
-        var content = Resolve(ContentColor);
+        var content = _style.Resolve(Tokens).Content;
         AddThemeColorOverride("font_color", content);
         AddThemeColorOverride("font_hover_color", content);
         AddThemeColorOverride("font_pressed_color", content);
         AddThemeColorOverride("font_disabled_color", UiTokens.MultiplyAlpha(content, _disabledOpacity));
+        EnsureProgressLayers();
         EnsureStackContent();
         _stackContent!.Visible = ContentLayout == UiButtonContentLayout.Stack;
         if (ContentLayout == UiButtonContentLayout.Stack)
@@ -346,23 +508,49 @@ public partial class UiButton : Button
         AddThemeStyleboxOverride("focus", new StyleBoxEmpty());
         AddThemeStyleboxOverride("disabled", CreateStyle(_disabledOpacity, transparentBorder: true));
         RefreshProgress();
+        RefreshSelectedGlow();
+        RefreshBadge();
         if (!Enabled)
         {
             QueueRedraw();
         }
     }
 
+    protected virtual bool CanBeginHold => true;
+
+    protected virtual void OnHoldStarted()
+    {
+    }
+
+    protected virtual void OnHoldCancelled()
+    {
+    }
+
+    protected virtual void OnHoldCompleted()
+    {
+    }
+
+    protected virtual void OnActivated()
+    {
+    }
+
+    private void Activate()
+    {
+        OnActivated();
+        EmitSignal(SignalName.Activated);
+    }
+
     private void HandlePressed()
     {
         if (Enabled && HoldDurationSeconds <= 0)
         {
-            EmitSignal(SignalName.Activated);
+            Activate();
         }
     }
 
     private void BeginHold()
     {
-        if (!Enabled || HoldDurationSeconds <= 0)
+        if (!Enabled || HoldDurationSeconds <= 0 || !CanBeginHold)
         {
             return;
         }
@@ -371,6 +559,8 @@ public partial class UiButton : Button
         _isHolding = true;
         Progress = 0;
         SetProcess(true);
+        SetProcessInput(true);
+        OnHoldStarted();
     }
 
     private void EndHold()
@@ -384,17 +574,26 @@ public partial class UiButton : Button
         _isHolding = false;
         Progress = 0;
         SetProcess(false);
+        SetProcessInput(false);
+        _holdTouchIndex = -1;
+        OnHoldCancelled();
     }
 
     public override void _Draw()
     {
         base._Draw();
+        if (Enabled && On && Tokens.EffectsEnabled)
+        {
+            DrawSelectedGlow();
+        }
+
         if (Enabled)
         {
             return;
         }
 
-        var color = UiTokens.MultiplyAlpha(Resolve(BorderColor), _disabledOpacity);
+        var style = _style.Resolve(Tokens);
+        var color = UiTokens.MultiplyAlpha(On ? style.Selected : style.Border, _disabledOpacity);
         var inset = new Vector2(HorizontalVisibleInset, VerticalVisibleInset);
         var halfStroke = Tokens.StrokeHair * 0.5f;
         var left = inset.X + halfStroke;
@@ -489,13 +688,9 @@ public partial class UiButton : Button
 
     private StyleBoxFlat CreateStyle(float opacity = 1, bool transparentBorder = false)
     {
-        var border = Resolve(BorderColor);
-        var background = On
-            ? CompositeOver(Tokens.AccentSoft, Tokens.Background)
-            : Filled
-            ? border
-            : Tokens.PanelRaised;
-        var styleBorder = On ? Tokens.Accent : border;
+        var visual = _style.Resolve(Tokens);
+        var background = visual.Background;
+        var styleBorder = _style.BorderFor(Tokens, On);
         if (Progress >= 0)
         {
             background = Colors.Transparent;
@@ -506,14 +701,20 @@ public partial class UiButton : Button
             transparentBorder
                 ? Colors.Transparent
                 : UiTokens.MultiplyAlpha(styleBorder, opacity),
-            borderWidth: On ? 2 : null,
-            glow: Progress < 0 && (On || Filled),
+            borderWidth: On ? Tokens.ButtonSelectedStroke : null,
+            glow: false,
             horizontalPadding: ContentLayout == UiButtonContentLayout.Stack
                 ? 0
-                : Resolve(HorizontalPadding),
+            : ResolveSpace(HorizontalPadding),
             verticalPadding: ContentLayout == UiButtonContentLayout.Stack
                 ? 0
-                : Resolve(VerticalPadding));
+                : ResolveSpace(VerticalPadding));
+        var glowColor = _style.GlowBaseFor(Tokens, On, Enabled);
+        if (glowColor is { } color)
+        {
+            UiGlow.ApplyButtonGlow(style, color, Tokens.EffectsEnabled);
+        }
+
         return InsetToVisibleControl(style);
     }
 
@@ -523,9 +724,7 @@ public partial class UiButton : Button
             UiTokens.MultiplyAlpha(background, opacity),
             Colors.Transparent,
             borderWidth: 0,
-            glow: On || Filled,
-            horizontalPadding: Resolve(HorizontalPadding),
-            verticalPadding: Resolve(VerticalPadding));
+            glow: false);
         return style;
     }
 
@@ -533,23 +732,32 @@ public partial class UiButton : Button
     {
         var style = Tokens.ControlStyle(
             UiTokens.MultiplyAlpha(
-                Resolve(BorderColor),
+                _style.Resolve(Tokens).Selected,
                 UiComponentContracts.ButtonProgressOpacity * opacity),
             Colors.Transparent,
             borderWidth: 0);
-        if (Progress < 1)
-        {
-            style.CornerRadiusTopRight = 0;
-            style.CornerRadiusBottomRight = 0;
-        }
 
+        // The fill always spans the whole visible frame and keeps the frame's
+        // corner radii; the revealed fraction is produced by clipping. Sizing
+        // the fill itself would make Godot shrink the corner radii to fit the
+        // narrow rect, so early hold frames would bleed outside the rounded
+        // contour of the button.
         return style;
+    }
+
+    private void RefreshProgressLayout()
+    {
+        EnsureProgressLayers();
+        LayoutProgress();
+        _progressFill!.Visible = Progress > 0;
     }
 
     private void RefreshProgress()
     {
         EnsureProgressLayers();
         var visible = Progress >= 0;
+        LayoutProgress();
+        _progressClip!.Visible = visible;
         _progressBackground!.Visible = visible;
         _progressFill!.Visible = visible && Progress > 0;
         if (!visible)
@@ -558,16 +766,11 @@ public partial class UiButton : Button
         }
 
         var opacity = Enabled ? 1f : _disabledOpacity;
-        var background = On
-            ? CompositeOver(Tokens.AccentSoft, Tokens.Background)
-            : Filled
-                ? Resolve(BorderColor)
-                : Tokens.PanelRaised;
+        var background = _style.Resolve(Tokens).Background;
         _progressBackground.AddThemeStyleboxOverride(
             "panel",
             CreateBackgroundStyle(background, opacity));
         _progressFill.AddThemeStyleboxOverride("panel", CreateProgressStyle(opacity));
-        LayoutProgress();
     }
 
     private void EnsureProgressLayers()
@@ -577,10 +780,30 @@ public partial class UiButton : Button
             return;
         }
 
+        _progressClip = new Control
+        {
+            // Only hold layers must stay within the visible button frame;
+            // badges and the intentional outer glow may extend beyond it.
+            ClipContents = true,
+            MouseFilter = MouseFilterEnum.Ignore,
+            ShowBehindParent = true,
+        };
         _progressBackground = CreateProgressLayer();
+        _progressFillClip = new Control
+        {
+            ClipContents = true,
+            MouseFilter = MouseFilterEnum.Ignore,
+        };
         _progressFill = CreateProgressLayer();
-        AddChild(_progressBackground);
-        AddChild(_progressFill);
+        _progressFillClip.AddChild(_progressFill);
+        _progressClip.AddChild(_progressBackground);
+        _progressClip.AddChild(_progressFillClip);
+        AddChild(_progressClip);
+    }
+
+    private void RefreshSelectedGlow()
+    {
+        QueueRedraw();
     }
 
     private void EnsureStackContent()
@@ -618,10 +841,49 @@ public partial class UiButton : Button
         AddChild(_stackContent);
     }
 
+    private void RefreshBadge()
+    {
+        if (_badge is null)
+        {
+            _badge = new Label
+            {
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center,
+                MouseFilter = MouseFilterEnum.Ignore,
+                ZIndex = 1,
+            };
+            AddChild(_badge);
+        }
+
+        var metrics = UiButtonMetrics.From(Tokens);
+        _badge.Visible = !string.IsNullOrWhiteSpace(BadgeText);
+        if (!_badge.Visible)
+        {
+            return;
+        }
+
+        _badge.Text = BadgeText;
+        _badge.CustomMinimumSize = new Vector2(metrics.BadgeMinimumSize, metrics.BadgeMinimumSize);
+        _badge.Size = _badge.CustomMinimumSize;
+        _badge.Position = metrics.BadgePosition(
+            Size,
+            ContentLayout,
+            Compact);
+        Tokens.ApplyTextStyle(_badge, Tokens.CaptionText);
+        _badge.AddThemeColorOverride("font_color", Tokens.Background);
+        _badge.AddThemeStyleboxOverride(
+            "normal",
+            Tokens.ControlStyle(Tokens.Halo, Colors.Transparent, borderWidth: 0, radius: Tokens.RadiusPill));
+    }
+
     private void RefreshStackContent(Color content)
     {
-        _stackContent!.AddThemeConstantOverride("separation", (int)Tokens.Space1);
+        var hasLabel = !string.IsNullOrWhiteSpace(LabelText);
+        _stackContent!.AddThemeConstantOverride(
+            "separation",
+            hasLabel ? (int)Tokens.Space1 : 0);
         _stackLabel!.Text = DisplayText;
+        _stackLabel.Visible = hasLabel;
         Tokens.ApplyTextStyle(_stackLabel, Tokens.OverlineText);
         var visibleContent = Enabled
             ? content
@@ -635,22 +897,79 @@ public partial class UiButton : Button
         new()
         {
             MouseFilter = MouseFilterEnum.Ignore,
-            ShowBehindParent = true,
         };
 
     private void LayoutProgress()
     {
-        if (_progressBackground is null || _progressFill is null)
+        if (_progressClip is null
+            || _progressBackground is null
+            || _progressFillClip is null
+            || _progressFill is null)
         {
             return;
         }
 
-        var verticalInset = VerticalVisibleInset;
-        var visibleWidth = Size.X - (HorizontalVisibleInset * 2);
-        _progressBackground.Position = new Vector2(HorizontalVisibleInset, verticalInset);
-        _progressBackground.Size = new Vector2(visibleWidth, VisibleControlSize);
-        _progressFill.Position = new Vector2(HorizontalVisibleInset, verticalInset);
-        _progressFill.Size = new Vector2(visibleWidth * Mathf.Max(Progress, 0), VisibleControlSize);
+        var frame = UiButtonMetrics.From(Tokens).VisibleFrame(
+            Size,
+            ContentLayout,
+            Compact);
+        var layout = UiButtonMetrics.ProgressLayout(frame, Progress);
+        _progressClip.Position = frame.Position;
+        _progressClip.Size = layout.Fill.Size;
+        _progressBackground.Position = layout.Fill.Position;
+        _progressBackground.Size = layout.Fill.Size;
+        _progressFillClip.Position = layout.Reveal.Position;
+        _progressFillClip.Size = layout.Reveal.Size;
+
+        // The fill keeps the full rounded frame geometry and is offset back by
+        // the reveal window's origin, so only the revealed fraction is visible.
+        _progressFill.Position = layout.Fill.Position - layout.Reveal.Position;
+        _progressFill.Size = layout.Fill.Size;
+        RefreshBadge();
+    }
+
+    private void DrawSelectedGlow()
+    {
+        var baseColor = UiGlow.FromButtonBase(_style.Resolve(Tokens).Selected, enabled: true);
+        var opacity = Enabled ? 1f : _disabledOpacity;
+        var inset = new Vector2(HorizontalVisibleInset, VerticalVisibleInset);
+        for (var depth = 0; depth < UiGlow.InsetExtent; depth++)
+        {
+            var strength = 1f - (depth / (float)UiGlow.InsetExtent);
+            var color = UiTokens.MultiplyAlpha(baseColor, opacity * strength * strength);
+            var rect = new Rect2(
+                inset.X + depth,
+                inset.Y + depth,
+                Size.X - (HorizontalVisibleInset * 2) - (depth * 2),
+                VisibleControlSize - (depth * 2));
+            if (rect.Size.X <= 0 || rect.Size.Y <= 0)
+            {
+                break;
+            }
+
+            DrawRoundedRectOutline(rect, Mathf.Max(0, Tokens.RadiusMedium - depth), color);
+        }
+    }
+
+    private void DrawRoundedRectOutline(Rect2 rect, float radius, Color color)
+    {
+        if (radius <= 0)
+        {
+            DrawRect(rect, color, filled: false, width: Tokens.StrokeHair, antialiased: true);
+            return;
+        }
+
+        var perimeter = ((rect.Size.X - (radius * 2)) * 2)
+            + ((rect.Size.Y - (radius * 2)) * 2)
+            + (Mathf.Tau * radius);
+        var sampleCount = Mathf.Max(12, Mathf.CeilToInt(perimeter / Tokens.Space1));
+        var points = new Vector2[sampleCount + 1];
+        for (var index = 0; index <= sampleCount; index++)
+        {
+            points[index] = PointOnRoundedRect(rect, radius, perimeter * index / sampleCount);
+        }
+
+        DrawPolyline(points, color, Tokens.StrokeHair, antialiased: true);
     }
 
     private StyleBoxFlat InsetToVisibleControl(StyleBoxFlat style)
@@ -662,18 +981,7 @@ public partial class UiButton : Button
         return style;
     }
 
-    private Color Resolve(UiColor color) => color switch
-    {
-        UiColor.LineStrong => Tokens.LineStrong,
-        UiColor.Ink => Tokens.Ink,
-        UiColor.Muted => Tokens.Muted,
-        UiColor.Accent => Tokens.Accent,
-        UiColor.OnAccent => Tokens.OnAccent,
-        UiColor.Danger => Tokens.Danger,
-        _ => throw new ArgumentOutOfRangeException(nameof(color), color, null),
-    };
-
-    private int Resolve(UiSpace space) => space switch
+    private int ResolveSpace(UiSpace space) => space switch
     {
         UiSpace.None => 0,
         UiSpace.Space1 => (int)Tokens.Space1,
@@ -683,15 +991,5 @@ public partial class UiButton : Button
         UiSpace.Space5 => (int)Tokens.Space5,
         _ => throw new ArgumentOutOfRangeException(nameof(space), space, null),
     };
-
-    private static Color CompositeOver(Color foreground, Color background)
-    {
-        var inverseAlpha = 1 - foreground.A;
-        return new Color(
-            (foreground.R * foreground.A) + (background.R * inverseAlpha),
-            (foreground.G * foreground.A) + (background.G * inverseAlpha),
-            (foreground.B * foreground.A) + (background.B * inverseAlpha),
-            1);
-    }
 
 }

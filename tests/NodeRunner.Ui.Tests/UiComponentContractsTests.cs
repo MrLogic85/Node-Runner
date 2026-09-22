@@ -91,13 +91,13 @@ public sealed class UiComponentContractsTests
     public void ReusableControlEnums_PinDocumentedDefaultsAndVariants()
     {
         Enum.GetNames<UiActionButton.ActionKind>()
-            .ShouldBe(["Primary", "Secondary", "Danger"]);
+            .ShouldBe(["Primary", "Secondary", "Danger", "Flat"]);
         Enum.GetNames<UiIconSize>()
             .ShouldBe(["Small", "Standard", "Large", "ExtraLarge"]);
         Enum.GetNames<UiIconButtonSize>()
             .ShouldBe(["Small", "Default", "Large"]);
         Enum.GetNames<UiButtonContentLayout>()
-            .ShouldBe(["Row", "Stack"]);
+            .ShouldBe(["Row", "Icon", "Stack"]);
         Enum.GetNames<UiPanel.PanelState>()
             .ShouldBe(["Normal", "Focused", "Selected", "Locked", "Warning", "Danger", "Hint"]);
         Enum.GetNames<UiChip.ChipKind>()
@@ -111,9 +111,12 @@ public sealed class UiComponentContractsTests
         UiTokens.Neon.TouchTarget.ShouldBe(48);
         UiComponentContracts.ProgressRingDiameter.ShouldBe(44);
         UiComponentContracts.HoldCompletionSeconds.ShouldBe(0.8f);
-        UiComponentContracts.ButtonProgressOpacity.ShouldBe(0.35f);
+        UiComponentContracts.ButtonProgressOpacity.ShouldBe(0.5f);
         UiGlow.ControlExtent.ShouldBe(12);
         UiGlow.ControlOpacity.ShouldBe(0.4f);
+        UiGlow.ButtonExtent.ShouldBe(12);
+        UiGlow.ButtonOpacity.ShouldBe(0.12f);
+        UiGlow.InsetExtent.ShouldBe(12);
         var sliderStyle = UiSliderStyle.From(UiTokens.Neon);
         sliderStyle.ThumbRadius.ShouldBe(9);
         sliderStyle.TrackWidth.ShouldBe(4);
@@ -260,6 +263,46 @@ public sealed class UiComponentContractsTests
             .ShouldContain("Ok");
         Enum.GetNames<UiComponentContracts.SemanticState>()
             .ShouldContain("Bad");
+    }
+
+    [Fact]
+    public void HoldLifecycle_AllowsCancellationRetryButKeepsCompletionOneShotUntilReset()
+    {
+        UiComponentContracts.CanBeginHold(UiComponentContracts.HoldState.Rest).ShouldBeTrue();
+        UiComponentContracts.CanBeginHold(UiComponentContracts.HoldState.Cancelled).ShouldBeTrue();
+        UiComponentContracts.CanBeginHold(UiComponentContracts.HoldState.Holding).ShouldBeFalse();
+        UiComponentContracts.CanBeginHold(UiComponentContracts.HoldState.Completed).ShouldBeFalse();
+        UiComponentContracts.CanBeginHold(UiComponentContracts.HoldState.Disabled).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void ButtonProgressRevealWidth_StaysInsideFrameAndTracksProgress()
+    {
+        const float frame = 200;
+        UiComponentContracts.ButtonProgressRevealWidth(frame, -1).ShouldBe(0);
+        UiComponentContracts.ButtonProgressRevealWidth(frame, 0).ShouldBe(0);
+        UiComponentContracts.ButtonProgressRevealWidth(frame, 0.25f).ShouldBe(50);
+        UiComponentContracts.ButtonProgressRevealWidth(frame, 1).ShouldBe(frame);
+        UiComponentContracts.ButtonProgressRevealWidth(frame, 4).ShouldBe(frame);
+        UiComponentContracts.ButtonProgressRevealWidth(0, 0.5f).ShouldBe(0);
+        UiComponentContracts.ButtonProgressRevealWidth(float.NaN, 0.5f).ShouldBe(0);
+        UiComponentContracts.ButtonProgressRevealWidth(frame, float.NaN).ShouldBe(0);
+    }
+
+    [Fact]
+    public void ButtonProgressRevealWidth_IsMonotonicAndNeverExceedsTheVisibleFrame()
+    {
+        const float frame = 137.5f;
+        var previous = 0f;
+        for (var step = 0; step <= 20; step++)
+        {
+            var width = UiComponentContracts.ButtonProgressRevealWidth(frame, step / 20f);
+            width.ShouldBeGreaterThanOrEqualTo(previous);
+            width.ShouldBeLessThanOrEqualTo(frame);
+            previous = width;
+        }
+
+        previous.ShouldBe(frame);
     }
 
     [Fact]

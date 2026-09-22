@@ -2,19 +2,22 @@ using Godot;
 
 namespace NodeRunner.Ui.Lib;
 
-/// <summary>Touch-safe labelled tool action with an explicit active or locked state.</summary>
-public partial class UiToolButton : Button
+/// <summary>Compatibility facade for a selectable or locked canonical secondary button.</summary>
+public partial class UiToolButton : UiButton
 {
-    private UiTokens _tokens = UiTokens.Neon;
+    [Signal]
+    public delegate void ToolActivatedEventHandler();
+
     private string _toolLabel = "Tool";
     private string _iconText = "•";
-    private UiIconId _iconId = UiIconId.Move;
-    private bool _active;
     private bool _locked;
     private string _lockReason = "Unavailable";
 
-    [Signal]
-    public delegate void ToolActivatedEventHandler();
+    public UiToolButton()
+    {
+        Style = UiButtonStyle.Secondary;
+        IconId = UiIconId.Move;
+    }
 
     [Export]
     public string ToolLabel
@@ -23,7 +26,7 @@ public partial class UiToolButton : Button
         set
         {
             _toolLabel = value;
-            Refresh();
+            LabelText = value;
         }
     }
 
@@ -34,30 +37,22 @@ public partial class UiToolButton : Button
         set
         {
             _iconText = value;
-            Refresh();
+            RefreshStyle();
         }
     }
 
     [Export]
-    public UiIconId IconId
+    public new UiIconId IconId
     {
-        get => _iconId;
-        set
-        {
-            _iconId = value;
-            Refresh();
-        }
+        get => base.IconId ?? UiIconId.Move;
+        set => base.IconId = value;
     }
 
     [Export]
     public bool Active
     {
-        get => _active;
-        set
-        {
-            _active = value;
-            Refresh();
-        }
+        get => On;
+        set => On = value;
     }
 
     [Export]
@@ -67,7 +62,7 @@ public partial class UiToolButton : Button
         set
         {
             _locked = value;
-            Refresh();
+            Enabled = !value;
         }
     }
 
@@ -78,66 +73,14 @@ public partial class UiToolButton : Button
         set
         {
             _lockReason = value;
-            Refresh();
+            RefreshStyle();
         }
     }
 
-    public UiTokens Tokens
-    {
-        get => _tokens;
-        set
-        {
-            _tokens = value;
-            Refresh();
-        }
-    }
+    protected override string DisplayText =>
+        (Locked ? $"{ToolLabel} · {LockReason}" : ToolLabel).ToUpperInvariant();
 
-    public override void _Ready()
-    {
-        Pressed += OnPressed;
-        Refresh();
-    }
+    protected override string AccessibleDescription => Locked ? LockReason : ToolLabel;
 
-    private void OnPressed()
-    {
-        if (!Locked)
-        {
-            EmitSignal(SignalName.ToolActivated);
-        }
-    }
-
-    private void Refresh()
-    {
-        if (!IsInsideTree())
-        {
-            return;
-        }
-
-        Disabled = Locked;
-        Text = Locked ? $"{ToolLabel} · {LockReason}" : ToolLabel;
-        TooltipText = Locked ? LockReason : ToolLabel;
-        CustomMinimumSize = new Vector2(0, _tokens.TouchTarget);
-        _tokens.ApplyTextStyle(this, _tokens.LabelText);
-        AddThemeColorOverride("font_color", Locked ? _tokens.Muted : (_active ? _tokens.OnAccent : _tokens.Ink));
-        AddThemeColorOverride("font_hover_color", _tokens.OnAccent);
-        UiIcons.Apply(this, IconId, UiIconSize.Standard, Locked ? _tokens.Muted : (_active ? _tokens.OnAccent : _tokens.Ink));
-        AddThemeStyleboxOverride("normal", CreateStyle(_active, false));
-        AddThemeStyleboxOverride("hover", CreateStyle(true, true));
-        AddThemeStyleboxOverride("pressed", CreateStyle(true, true));
-        AddThemeStyleboxOverride("focus", new StyleBoxEmpty());
-        AddThemeStyleboxOverride("disabled", CreateStyle(false, false, 1, 0.5f));
-    }
-
-    private StyleBoxFlat CreateStyle(bool selected, bool focused, int borderWidth = 1, float opacity = 1)
-    {
-        var background = selected ? _tokens.Accent : _tokens.Panel;
-        var border = selected ? _tokens.Accent : _tokens.Edge;
-        return _tokens.ControlStyle(
-            UiTokens.MultiplyAlpha(background, opacity),
-            UiTokens.MultiplyAlpha(border, opacity),
-            borderWidth,
-            glow: selected && opacity > 0.99f,
-            horizontalPadding: UiSpacing.ControlHorizontalPadding(_tokens),
-            verticalPadding: UiSpacing.ControlVerticalPadding(_tokens));
-    }
+    protected override void OnActivated() => EmitSignal(SignalName.ToolActivated);
 }

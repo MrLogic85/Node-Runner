@@ -8,7 +8,28 @@ public static class UiComponentContracts
     public const float IconButtonVisibleSize = 40;
     public const float ProgressRingDiameter = 44;
     public const float HoldCompletionSeconds = 0.8f;
-    public const float ButtonProgressOpacity = 0.35f;
+    public const float ButtonProgressOpacity = 0.5f;
+
+    /// <summary>
+    /// Width of the revealed hold fill inside the visible button frame. The
+    /// fill layer itself always spans the whole frame so it keeps the frame's
+    /// rounded contour; only this reveal window changes while holding.
+    /// </summary>
+    public static float ButtonProgressRevealWidth(float frameWidth, float progress)
+    {
+        if (!float.IsFinite(frameWidth) || frameWidth <= 0)
+        {
+            return 0;
+        }
+
+        if (!float.IsFinite(progress) || progress <= 0)
+        {
+            return 0;
+        }
+
+        return progress >= 1 ? frameWidth : frameWidth * progress;
+    }
+
     public static float HoldProgress(double elapsedSeconds, double durationSeconds)
     {
         if (!double.IsFinite(elapsedSeconds) || elapsedSeconds <= 0)
@@ -61,6 +82,10 @@ public static class UiComponentContracts
         Completed,
         Disabled,
     }
+
+    /// <summary>Completed destructive holds remain one-shot until their owner explicitly resets them.</summary>
+    public static bool CanBeginHold(HoldState state) =>
+        state is HoldState.Rest or HoldState.Cancelled;
 
     public enum ValidationState
     {

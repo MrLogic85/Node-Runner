@@ -60,6 +60,9 @@ public sealed class UiTokens
     public float ControlSmall { get; init; } = 32;
     public float ControlHeight { get; init; } = 40;
     public float TouchTarget { get; init; } = 48;
+    public float BadgeMinimumSize { get; init; } = 16;
+    public float BadgeOffset { get; init; } = 4;
+    public float ButtonSelectedStroke { get; init; } = 2;
     public float IconSmall { get; init; } = 12;
     public float Icon { get; init; } = 16;
     public float IconLarge { get; init; } = 20;
@@ -194,6 +197,9 @@ public sealed class UiTokens
         ControlSmall = ControlSmall,
         ControlHeight = ControlHeight,
         TouchTarget = TouchTarget,
+        BadgeMinimumSize = BadgeMinimumSize,
+        BadgeOffset = BadgeOffset,
+        ButtonSelectedStroke = ButtonSelectedStroke,
         IconSmall = IconSmall,
         Icon = Icon,
         IconLarge = IconLarge,

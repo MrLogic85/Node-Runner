@@ -2,29 +2,29 @@
 
 One implementation per control. Every screen calls these; a new screen adds a variant here, never a private copy. The signatures are the props to give the matching Godot scene.
 
-## `c_btn(text, kind='', icon=None, w=None, off=False)`
+## `c_btn(text, kind='secondary', icon=None, w=None, off=False, on=False, compact=False, badge=None)`
 
 The one button (`btn`): kind primary (one per screen), danger or default, an optional icon, and off for disabled (dimmed, dashed border). Icon-only and stacked layouts are `btn icon` and `btn stack`.
 
-## `c_ib(icon, kind='', size=20)`
+## `c_ib(icon, kind='secondary', size=20, on=False, off=False, compact=False, badge=None)`
 
 The icon layout of the one button (`btn icon`): a 40 x 40 box in a 48 x 48 touch area. kind: accent (state `on`), danger, dis (state `off`).
 
-## `c_hold(text, pct=40, w=None)`
+## `c_hold(text, pct=40, w=None, kind='tertiary', icon=None)`
 
 Hold-to-confirm button with a fill that grows while held. Used for every destructive or resetting action; there is no undo.
 
 ## `c_slider(label, value, thumbs, steps=(), marker=None, enabled=True, compact=False, _steppers=False)`
 
-The one slider. thumbs is 0.0-1.0, one number or (lo, hi) for a range. steps is optional; when supplied it contains at least two labels, evenly spaced. marker (0.0-1.0, name) is a named line across the track, its name shown in the label row, centred over the marker. enabled=False dims it, dashed. Steppers are a layout: stepped_slider puts a minus and a plus (btn icon sm) either side.
+The one slider. thumbs is 0.0-1.0, one number or (lo, hi) for a range. steps is a list of at least two labels, evenly spaced. marker (0.0-1.0, name) is a named line across the track, its name shown in the label row, centred over the marker. enabled=False dims it, dashed. Steppers are a layout: stepped_slider puts a minus and a plus (btn icon sm) either side.
 
 ## `c_range(label, lo, hi, text, marker=None, steps=(), enabled=True)`
 
-Convenience wrapper only; it calls `c_slider(label, text, (lo, hi), steps, marker, enabled)`. It is the same slider implementation configured with two normalized thumbs, not a separate component.
+The slider with two thumbs (c_slider with (lo, hi) in 0.0-1.0), with an optional marker.
 
-## `c_toggle(label, on=True, sub=None, dis=False, dense=False)`
+## `c_toggle(label, on=True, sub=None, dis=False)`
 
-On/off switch row; dense is a control-sm row for settings panels.
+On/off switch row, one size: a control (40px) row, so the switch is always easy to hit.
 
 ## `c_check(label, on=False, sub=None, dis=False)`
 
@@ -34,9 +34,9 @@ Checkbox row with an optional sub line.
 
 Segmented control: the chosen option is filled and has a check or bold label.
 
-## `c_pick(label, val, role=None, op=False, opts=None, lock=False)`
+## `c_pick(label, val, accessory=None, op=False, opts=None, lock=False)`
 
-Picker: a closed row, or the open list with the current choice checked and swap hints.
+Picker: a closed row with an optional accessory (icon or swatch, caller-supplied), or the open list with the same accessories, a check on the current choice and an optional note per row.
 
 ## `c_menu(items, w=210)`
 

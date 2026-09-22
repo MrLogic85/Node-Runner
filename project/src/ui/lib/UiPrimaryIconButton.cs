@@ -5,8 +5,7 @@ public partial class UiPrimaryIconButton : UiIconButton
 {
     public UiPrimaryIconButton()
     {
-        BorderColor = UiColor.Accent;
-        ContentColor = UiColor.OnAccent;
+        Style = UiButtonStyle.Primary;
         Filled = true;
     }
 }
