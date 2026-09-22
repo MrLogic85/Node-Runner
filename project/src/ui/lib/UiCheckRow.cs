@@ -77,7 +77,7 @@ public partial class UiCheckRow : PanelContainer
             TooltipText = LabelText,
         };
         toggle.Pressed += Toggle;
-        toggle.AddThemeStyleboxOverride("focus", _tokens.FocusRingStyle());
+        toggle.AddThemeStyleboxOverride("focus", new StyleBoxEmpty());
         AddChild(toggle);
 
         var row = new HBoxContainer { MouseFilter = MouseFilterEnum.Ignore };

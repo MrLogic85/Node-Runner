@@ -72,8 +72,19 @@ public sealed class UiComponentContractsTests
                 UiComponentContracts.CanonicalComponent.CCard,
                 UiComponentContracts.CanonicalComponent.CPanel)
             .ShouldBeTrue();
-        UiComponentContracts.ControlTypeFor(UiComponentContracts.CanonicalComponent.CCard)
-            .ShouldBe(nameof(UiPanel));
+    }
+
+    [Fact]
+    public void SliderAndRange_ShareImplementation()
+    {
+        UiComponentContracts.ControlTypeFor(UiComponentContracts.CanonicalComponent.CSlider)
+            .ShouldBe(nameof(UiSlider));
+        UiComponentContracts.ControlTypeFor(UiComponentContracts.CanonicalComponent.CRange)
+            .ShouldBe(nameof(UiSlider));
+        UiComponentContracts.SharesImplementation(
+                UiComponentContracts.CanonicalComponent.CSlider,
+                UiComponentContracts.CanonicalComponent.CRange)
+            .ShouldBeTrue();
     }
 
     [Fact]
@@ -91,8 +102,6 @@ public sealed class UiComponentContractsTests
             .ShouldBe(["Normal", "Focused", "Selected", "Locked", "Warning", "Danger", "Hint"]);
         Enum.GetNames<UiChip.ChipKind>()
             .ShouldBe(["Neutral", "Accent", "Locked", "Danger", "Warning", "Bad", "Ok"]);
-        Enum.GetNames<UiComponentContracts.StepperSymbol>()
-            .ShouldBe(["Minus", "Plus"]);
     }
 
     [Fact]
@@ -103,8 +112,38 @@ public sealed class UiComponentContractsTests
         UiComponentContracts.ProgressRingDiameter.ShouldBe(44);
         UiComponentContracts.HoldCompletionSeconds.ShouldBe(0.8f);
         UiComponentContracts.ButtonProgressOpacity.ShouldBe(0.35f);
-        UiComponentContracts.ButtonGlowSize.ShouldBe(12);
-        UiComponentContracts.ButtonGlowOpacity.ShouldBe(0.4f);
+        UiGlow.ControlExtent.ShouldBe(12);
+        UiGlow.ControlOpacity.ShouldBe(0.4f);
+        var sliderStyle = UiSliderStyle.From(UiTokens.Neon);
+        sliderStyle.ThumbRadius.ShouldBe(9);
+        sliderStyle.TrackWidth.ShouldBe(4);
+        UiSliderStyle.DisabledOpacity.ShouldBe(0.5f);
+    }
+
+    [Fact]
+    public void SliderStyle_ResolvesScalableGeometryFromTokens()
+    {
+        var tokens = new UiTokens
+        {
+            SliderThumbDiameter = 36,
+            SliderTrackWidth = 8,
+            SliderMarkerHeight = 32,
+            SliderStepTickHeight = 20,
+            SliderDisabledDashLength = 8,
+            SliderSteppedHeight = 120,
+            SliderCompactSteppedHeight = 108,
+            StrokeHair = 2,
+        };
+
+        UiSliderStyle.From(tokens).ShouldBe(new UiSliderStyle(
+            ThumbRadius: 18,
+            TrackWidth: 8,
+            MarkerHalfHeight: 16,
+            StepTickHalfHeight: 10,
+            DisabledDashLength: 8,
+            DisabledThumbInset: 2,
+            SteppedHeight: 120,
+            CompactSteppedHeight: 108));
     }
 
     [Theory]
@@ -152,24 +191,40 @@ public sealed class UiComponentContractsTests
         UiComponentContracts.ClampValue(value, minimum, maximum).ShouldBe(expected);
     }
 
-    [Fact]
-    public void ClampRange_SortsAndKeepsThumbsOutsideMark()
+    [Theory]
+    [InlineData(double.NaN, 0)]
+    [InlineData(double.NegativeInfinity, 0)]
+    [InlineData(double.PositiveInfinity, 1)]
+    [InlineData(-0.2, 0)]
+    [InlineData(0.4, 0.4)]
+    [InlineData(1.2, 1)]
+    public void ClampSliderPosition_UsesNormalizedFiniteRange(double position, double expected)
     {
-        var range = UiComponentContracts.ClampRange(80, -40, -90, 90, mark: 10);
-
-        range.Low.ShouldBe(-40);
-        range.High.ShouldBe(80);
-        range.Low.ShouldBeLessThanOrEqualTo(10);
-        range.High.ShouldBeGreaterThanOrEqualTo(10);
+        UiComponentContracts.ClampSliderPosition(position).ShouldBe(expected);
     }
 
     [Fact]
-    public void ClampRange_ExpandsAroundMarkWhenBothThumbsWouldCrossIt()
+    public void NormalizeSliderThumbs_DefaultsClampsSortsAndLimitsToRangeMode()
     {
-        var range = UiComponentContracts.ClampRange(30, 50, -90, 90, mark: 10);
+        UiComponentContracts.NormalizeSliderThumbs(null).ShouldBe([0]);
+        UiComponentContracts.NormalizeSliderThumbs([]).ShouldBe([0]);
+        UiComponentContracts.NormalizeSliderThumbs([0.8, -1, 0.4]).ShouldBe([0, 0.8]);
+    }
 
-        range.Low.ShouldBe(10);
-        range.High.ShouldBe(50);
+    [Theory]
+    [InlineData(0, 0, 0, 1)]
+    [InlineData(1, 1, 0.9, 0)]
+    [InlineData(0.5, 0.5, 0.49, 0)]
+    [InlineData(0.5, 0.5, 0.5, 1)]
+    [InlineData(0.2, 0.8, 0.4, 0)]
+    [InlineData(0.2, 0.8, 0.6, 1)]
+    public void SelectSliderThumb_ReopensCollapsedRangesAndChoosesNearest(
+        double low,
+        double high,
+        double position,
+        int expected)
+    {
+        UiComponentContracts.SelectSliderThumb([low, high], position).ShouldBe(expected);
     }
 
     [Theory]
@@ -233,7 +288,6 @@ public sealed class UiComponentContractsTests
             UiComponentContracts.CanonicalComponent.CBtn => "c_btn",
             UiComponentContracts.CanonicalComponent.CIb => "c_ib",
             UiComponentContracts.CanonicalComponent.CHold => "c_hold",
-            UiComponentContracts.CanonicalComponent.CStep => "c_step",
             UiComponentContracts.CanonicalComponent.CSlider => "c_slider",
             UiComponentContracts.CanonicalComponent.CRange => "c_range",
             UiComponentContracts.CanonicalComponent.CToggle => "c_toggle",

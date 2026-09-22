@@ -93,6 +93,12 @@ public sealed class UiTokensTests
         }.ShouldBe(new[] { 4f, 8f, 12f, 999f });
         new[] { tokens.StrokeHair, tokens.StrokeBeam, tokens.StrokeSignal }
             .ShouldBe(new[] { 1f, 3f, 2f });
+        new[]
+        {
+            tokens.SliderThumbDiameter, tokens.SliderTrackWidth, tokens.SliderMarkerHeight,
+            tokens.SliderStepTickHeight, tokens.SliderDisabledDashLength,
+            tokens.SliderSteppedHeight, tokens.SliderCompactSteppedHeight,
+        }.ShouldBe(new[] { 18f, 4f, 16f, 10f, 4f, 60f, 54f });
         UiTokens.LogicalCanvasWidth.ShouldBe(640);
         UiTokens.LogicalCanvasHeight.ShouldBe(360);
     }
@@ -186,8 +192,6 @@ public sealed class UiTokensTests
 
         UiSpacing.ControlHorizontalPadding(tokens).ShouldBe(16);
         UiSpacing.SegmentedControlHorizontalPadding(tokens).ShouldBe(12);
-        UiSpacing.FocusRingGap(tokens).ShouldBe(2);
-        UiTokens.FocusRingStroke.ShouldBe(3);
     }
 
     private static void AssertColor(Color actual, byte red, byte green, byte blue, byte alpha = 0xff)

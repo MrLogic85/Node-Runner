@@ -13,12 +13,14 @@ public enum UiIconButtonSize
 public abstract partial class UiIconButton : UiButton
 {
     private string _accessibleLabel = string.Empty;
+    private string _symbolText = string.Empty;
     private UiIconButtonSize _buttonSize = UiIconButtonSize.Default;
     private UiIconSize _iconSize = UiIconSize.Large;
 
     protected UiIconButton()
     {
         IconAlignment = HorizontalAlignment.Center;
+        Alignment = HorizontalAlignment.Center;
         IconId = UiIconId.More;
         HorizontalPadding = UiSpace.None;
         VerticalPadding = UiSpace.None;
@@ -33,6 +35,17 @@ public abstract partial class UiIconButton : UiButton
         set
         {
             _accessibleLabel = value;
+            RefreshStyle();
+        }
+    }
+
+    [Export]
+    public string SymbolText
+    {
+        get => _symbolText;
+        set
+        {
+            _symbolText = value;
             RefreshStyle();
         }
     }
@@ -59,11 +72,16 @@ public abstract partial class UiIconButton : UiButton
         }
     }
 
-    protected override string DisplayText => string.Empty;
+    protected override string DisplayText => SymbolText;
 
     protected override string AccessibleDescription => AccessibleLabel;
 
     protected override UiIconSize DisplayIconSize => IconSize;
+
+    protected override UiTokens.TextStyle DisplayTextStyle =>
+        string.IsNullOrEmpty(SymbolText)
+            ? base.DisplayTextStyle
+            : Tokens.ReadoutMediumText;
 
     protected override Vector2 MinimumSize => ButtonSize switch
     {

@@ -14,17 +14,13 @@ The icon layout of the one button (`btn icon`): a 40 x 40 box in a 48 x 48 touch
 
 Hold-to-confirm button with a fill that grows while held. Used for every destructive or resetting action; there is no undo.
 
-## `c_step(sym)`
+## `c_slider(label, value, thumbs, steps=(), marker=None, enabled=True, compact=False, _steppers=False)`
 
-The minus/plus stepper next to a slider (control-sm).
+The one slider. thumbs is 0.0-1.0, one number or (lo, hi) for a range. steps is optional; when supplied it contains at least two labels, evenly spaced. marker (0.0-1.0, name) is a named line across the track, its name shown in the label row, centred over the marker. enabled=False dims it, dashed. Steppers are a layout: stepped_slider puts a minus and a plus (btn icon sm) either side.
 
-## `c_slider(label, val, pos, ticks=(), default=None, steppers=False, lock=False, dis=False, compact=False)`
+## `c_range(label, lo, hi, text, marker=None, steps=(), enabled=True)`
 
-The only slider. pos 0..100, optional ticks and a named default mark, steppers, lock and dis states.
-
-## `c_range(label, lo, hi, lo_t, hi_t, mark=None, mark_t='')`
-
-Two-thumb slider with a mark that stops the thumbs crossing (angle limits).
+Convenience wrapper only; it calls `c_slider(label, text, (lo, hi), steps, marker, enabled)`. It is the same slider implementation configured with two normalized thumbs, not a separate component.
 
 ## `c_toggle(label, on=True, sub=None, dis=False, dense=False)`
 

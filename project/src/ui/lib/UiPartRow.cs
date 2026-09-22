@@ -57,20 +57,16 @@ public partial class UiPartRow : PanelContainer
 
     public override void _Ready()
     {
-        FocusMode = FocusModeEnum.All;
-        FocusEntered += Rebuild;
-        FocusExited += Rebuild;
+        FocusMode = FocusModeEnum.None;
         Rebuild();
     }
 
     public override void _GuiInput(InputEvent @event)
     {
         var activated = @event is InputEventMouseButton { Pressed: true, ButtonIndex: MouseButton.Left } ||
-                        @event is InputEventScreenTouch { Pressed: true } ||
-                        @event is InputEventKey { Pressed: true, Keycode: Key.Enter or Key.Space };
+                        @event is InputEventScreenTouch { Pressed: true };
         if (IsAvailable && activated)
         {
-            GrabFocus();
             EmitSignal(SignalName.PartSelected);
             AcceptEvent();
         }
@@ -98,11 +94,10 @@ public partial class UiPartRow : PanelContainer
             UiComponentContracts.SemanticState.Disabled => _tokens.LineStrong,
             _ => _tokens.LineStrong,
         };
-        var focused = HasFocus();
         var style = _tokens.ControlStyle(
             State == UiComponentContracts.SemanticState.Selected ? _tokens.AccentSoft : _tokens.PanelRaised,
-            focused ? _tokens.Accent : border,
-            focused ? UiTokens.FocusRingStroke : State == UiComponentContracts.SemanticState.Selected ? _tokens.StrokeSignal : _tokens.StrokeHair);
+            border,
+            State == UiComponentContracts.SemanticState.Selected ? _tokens.StrokeSignal : _tokens.StrokeHair);
         if (State == UiComponentContracts.SemanticState.Locked)
         {
             style.BorderWidthLeft = 0;

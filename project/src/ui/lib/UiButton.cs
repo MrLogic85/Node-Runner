@@ -264,6 +264,11 @@ public partial class UiButton : Button
             ? HorizontalAlignment.Center
             : HorizontalAlignment.Left;
 
+    protected virtual UiTokens.TextStyle DisplayTextStyle =>
+        ContentLayout == UiButtonContentLayout.Stack
+            ? Tokens.OverlineText
+            : Tokens.LabelText;
+
     protected void RefreshStyle()
     {
         if (!IsInsideTree())
@@ -279,11 +284,7 @@ public partial class UiButton : Button
         VerticalIconAlignment = ContentLayout == UiButtonContentLayout.Stack
             ? VerticalAlignment.Top
             : VerticalAlignment.Center;
-        Tokens.ApplyTextStyle(
-            this,
-            ContentLayout == UiButtonContentLayout.Stack
-                ? Tokens.OverlineText
-                : Tokens.LabelText);
+        Tokens.ApplyTextStyle(this, DisplayTextStyle);
         AddThemeConstantOverride(
             "h_separation",
             ContentLayout == UiButtonContentLayout.Stack
@@ -320,7 +321,7 @@ public partial class UiButton : Button
         AddThemeStyleboxOverride("normal", CreateStyle());
         AddThemeStyleboxOverride("hover", CreateStyle());
         AddThemeStyleboxOverride("pressed", CreateStyle());
-        AddThemeStyleboxOverride("focus", Tokens.FocusRingStyle());
+        AddThemeStyleboxOverride("focus", new StyleBoxEmpty());
         AddThemeStyleboxOverride("disabled", CreateStyle(_disabledOpacity, transparentBorder: true));
         RefreshProgress();
         if (!Enabled)
@@ -491,11 +492,6 @@ public partial class UiButton : Button
             verticalPadding: ContentLayout == UiButtonContentLayout.Stack
                 ? 0
                 : Resolve(VerticalPadding));
-        if (style.ShadowSize > 0)
-        {
-            ApplyButtonGlow(style);
-        }
-
         return InsetToVisibleControl(style);
     }
 
@@ -508,11 +504,6 @@ public partial class UiButton : Button
             glow: On || Filled,
             horizontalPadding: Resolve(HorizontalPadding),
             verticalPadding: Resolve(VerticalPadding));
-        if (style.ShadowSize > 0)
-        {
-            ApplyButtonGlow(style);
-        }
-
         return style;
     }
 
@@ -681,11 +672,4 @@ public partial class UiButton : Button
             1);
     }
 
-    private static void ApplyButtonGlow(StyleBoxFlat style)
-    {
-        style.ShadowSize = (int)UiComponentContracts.ButtonGlowSize;
-        style.ShadowColor = UiTokens.MultiplyAlpha(
-            style.ShadowColor,
-            UiComponentContracts.ButtonGlowOpacity);
-    }
 }

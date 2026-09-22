@@ -106,7 +106,7 @@ public partial class UiOverflowMenu : PanelContainer
             button.AddThemeStyleboxOverride("normal", CreateActionStyle(action.State, false));
             button.AddThemeStyleboxOverride("hover", CreateActionStyle(action.State, true));
             button.AddThemeStyleboxOverride("pressed", CreateActionStyle(action.State, true));
-            button.AddThemeStyleboxOverride("focus", _tokens.FocusRingStyle());
+            button.AddThemeStyleboxOverride("focus", new StyleBoxEmpty());
             button.AddThemeStyleboxOverride("disabled", CreateActionStyle(action.State, false, 0.5f));
             if (action.Icon is { } icon)
             {

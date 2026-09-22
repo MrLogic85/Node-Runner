@@ -129,7 +129,7 @@ public partial class UiHoldButton : Button
         AddThemeStyleboxOverride("normal", CreateStyle(false));
         AddThemeStyleboxOverride("hover", CreateStyle(true));
         AddThemeStyleboxOverride("pressed", CreateStyle(true));
-        AddThemeStyleboxOverride("focus", _tokens.FocusRingStyle());
+        AddThemeStyleboxOverride("focus", new StyleBoxEmpty());
         AddThemeStyleboxOverride("disabled", CreateStyle(false, 0.5f));
         QueueRedraw();
     }
