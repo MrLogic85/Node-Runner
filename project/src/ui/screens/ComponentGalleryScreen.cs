@@ -379,6 +379,7 @@ public partial class ComponentGalleryScreen : Control
         var stack = new VBoxContainer
         {
             Alignment = BoxContainer.AlignmentMode.Center,
+            CustomMinimumSize = new Vector2(_tokens.ColumnMediumWidth, 0),
         };
         stack.AddThemeConstantOverride("separation", (int)_tokens.Space1);
         stack.AddChild(button);
