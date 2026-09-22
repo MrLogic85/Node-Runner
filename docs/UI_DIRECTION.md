@@ -67,6 +67,15 @@ buttons. The Android-reviewed glow uses 12% opacity and extent 12 rather than
 the stronger HTML preview glow, as approved in
 [issue #242](https://github.com/MrLogic85/Node-Runner/issues/242).
 
+Toggle and checkbox rows follow the Component Library's rendered specimens:
+transparent rows, solid indicator outlines, and 50% opacity for the whole
+disabled row. The dashed disabled treatment for buttons/sliders does not
+apply to these indicators. Native Godot `CheckButton` and `CheckBox` own input,
+state, accessibility roles and indicator rendering through themed textures.
+Only label/help layout and theme assets are customized; disabled textures
+dim the fully composed indicator once. The obsolete dense toggle size is removed
+in [issue #245](https://github.com/MrLogic85/Node-Runner/issues/245).
+
 ## Rules for UI changes
 
 - Finish and verify the token/typography/size foundation before the Component

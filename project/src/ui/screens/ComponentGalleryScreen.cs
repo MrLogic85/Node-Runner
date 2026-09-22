@@ -238,6 +238,7 @@ public partial class ComponentGalleryScreen : Control
             "Buttons",
             "four semantic kinds, three layouts, compact geometry, hold progress, and badges"));
         content.AddChild(CreateActionsSection());
+        content.AddChild(CreateChoicesSection());
         content.AddChild(CreateSliderSection());
         content.AddChild(CreateSegmentedSection());
         content.AddChild(CreatePanelsSection());
@@ -667,16 +668,6 @@ public partial class ComponentGalleryScreen : Control
         var content = new VBoxContainer();
         content.AddThemeConstantOverride("separation", UiSpacing.StackGap(_tokens));
 
-        var toggles = new HFlowContainer();
-        toggles.AddThemeConstantOverride("h_separation", UiSpacing.ControlGap(_tokens));
-        toggles.AddThemeConstantOverride("v_separation", UiSpacing.ControlGap(_tokens));
-        toggles.AddChild(Track(new UiToggleRow { LabelText = "Sounds", Subtext = "On", On = true, SizeFlagsHorizontal = SizeFlags.ExpandFill }));
-        toggles.AddChild(Track(new UiToggleRow { LabelText = "Dense toggle", Subtext = "Off", On = false, Dense = true, SizeFlagsHorizontal = SizeFlags.ExpandFill }));
-        toggles.AddChild(Track(new UiToggleRow { LabelText = "Locked sound", Subtext = "Disabled", Disabled = true, SizeFlagsHorizontal = SizeFlags.ExpandFill }));
-        toggles.AddChild(Track(new UiCheckRow { Checked = true, SizeFlagsHorizontal = SizeFlags.ExpandFill }));
-        toggles.AddChild(Track(new UiCheckRow { LabelText = "Needs battery", Subtext = "Disabled reason", Disabled = true, SizeFlagsHorizontal = SizeFlags.ExpandFill }));
-        content.AddChild(toggles);
-
         var pickers = new HFlowContainer();
         pickers.AddThemeConstantOverride("h_separation", UiSpacing.ControlGap(_tokens));
         pickers.AddThemeConstantOverride("v_separation", UiSpacing.ControlGap(_tokens));
@@ -694,7 +685,42 @@ public partial class ComponentGalleryScreen : Control
         rows.AddChild(Track(new UiIconTabs { ActiveIndex = 1 }));
         content.AddChild(rows);
 
-        return WrapSection("Choices and tray rows · c_toggle / c_check / c_pick / c_row / c_tabs", content);
+        return WrapSection("Choices and tray rows · c_pick / c_row / c_tabs", content);
+    }
+
+    private Control CreateChoicesSection()
+    {
+        var content = new VBoxContainer();
+        content.AddThemeConstantOverride("separation", (int)_tokens.Space2);
+        content.AddChild(CreateSectionDescription("Toggle and checkbox", "tap a row to change its state; dimmed rows are disabled"));
+        var columns = new GridContainer { Columns = 2 };
+        columns.AddThemeConstantOverride("h_separation", (int)_tokens.Space5);
+        columns.AddThemeConstantOverride("v_separation", (int)_tokens.Space2);
+        foreach (var disabled in new[] { false, true })
+        {
+            foreach (var on in new[] { true, false })
+            {
+                columns.AddChild(Track(new UiToggleRow
+                {
+                    LabelText = "Sounds",
+                    Subtext = disabled ? "Unavailable during this preview" : on ? "Taps, unlocks and results" : "",
+                    On = on,
+                    Disabled = disabled,
+                    SizeFlagsHorizontal = SizeFlags.ExpandFill,
+                }));
+                columns.AddChild(Track(new UiCheckRow
+                {
+                    LabelText = "Run until power is out",
+                    Subtext = disabled ? "No powered parts" : on ? "Ends when the battery does" : "",
+                    Checked = on,
+                    Disabled = disabled,
+                    SizeFlagsHorizontal = SizeFlags.ExpandFill,
+                }));
+            }
+        }
+
+        content.AddChild(columns);
+        return content;
     }
 
     private Control CreateTextAndValueSection()
