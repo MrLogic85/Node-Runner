@@ -127,7 +127,17 @@ public static class UiIcons
 
     public static void Apply(Button button, UiIconId icon, UiIconSize size, Color tint)
     {
-        button.Icon = Load(icon, size);
+        Apply(button, Load(icon, size), size, tint);
+    }
+
+    public static void Apply(Button button, UiPartIconId icon, UiIconSize size, Color tint)
+    {
+        Apply(button, Load(icon, size), size, tint);
+    }
+
+    private static void Apply(Button button, Texture2D icon, UiIconSize size, Color tint)
+    {
+        button.Icon = icon;
         button.ExpandIcon = false;
         button.AddThemeConstantOverride("icon_max_width", Pixels(size));
         button.AddThemeColorOverride("icon_normal_color", tint);

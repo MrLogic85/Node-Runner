@@ -130,7 +130,7 @@ public partial class ComponentGalleryScreen : Control
         new(UiComponentContracts.CanonicalComponent.CPower, "c_power", "Text and values · c_textfield / c_name / c_value / c_readonly / c_power / c_meter / c_panel_head / c_info_row"),
         new(UiComponentContracts.CanonicalComponent.CMeter, "c_meter", "Text and values · c_textfield / c_name / c_value / c_readonly / c_power / c_meter / c_panel_head / c_info_row"),
         new(UiComponentContracts.CanonicalComponent.CRow, "c_row", "Choices and tray rows · c_toggle / c_check / c_pick / c_row / c_tabs"),
-        new(UiComponentContracts.CanonicalComponent.CTabs, "c_tabs", "Choices and tray rows · c_toggle / c_check / c_pick / c_row / c_tabs"),
+        new(UiComponentContracts.CanonicalComponent.CTabs, "c_tabs", "Parts tray tabs"),
         new(UiComponentContracts.CanonicalComponent.CPanelHead, "c_panel_head", "Text and values · c_textfield / c_name / c_value / c_readonly / c_power / c_meter / c_panel_head / c_info_row"),
         new(UiComponentContracts.CanonicalComponent.CInfoRow, "c_info_row", "Text and values · c_textfield / c_name / c_value / c_readonly / c_power / c_meter / c_panel_head / c_info_row"),
         new(UiComponentContracts.CanonicalComponent.CCard, "c_card", _sharedCardPanelSection, SharedComposition: true),
@@ -242,6 +242,7 @@ public partial class ComponentGalleryScreen : Control
         content.AddChild(CreateActionsSection());
         content.AddChild(CreateChoicesSection());
         content.AddChild(CreateSegmentedSection());
+        content.AddChild(CreateTrayTabsSection());
         content.AddChild(CreateSliderSection());
         content.AddChild(CreatePanelsSection());
         content.AddChild(CreateInputsSection());
@@ -681,6 +682,25 @@ public partial class ComponentGalleryScreen : Control
         return columns;
     }
 
+    private Control CreateTrayTabsSection()
+    {
+        var content = new VBoxContainer();
+        content.AddThemeConstantOverride("separation", (int)_tokens.Space2);
+        content.AddChild(CreateSectionDescription("Parts tray tabs", "four tabs, one open at a time"));
+        var tabs = Track(new UiIconTabs
+        {
+            ActiveIndex = 1,
+            SizeFlagsHorizontal = SizeFlags.ShrinkBegin,
+        });
+        tabs.SetTabs(
+            new UiIconTabs.TabItem("between", UiPartIconId.Spring, "Between two nodes"),
+            new UiIconTabs.TabItem("joint", UiPartIconId.Servo, "On a joint"),
+            new UiIconTabs.TabItem("sensors", UiPartIconId.LineOfSight, "Sensors"),
+            new UiIconTabs.TabItem("blocks", UiPartIconId.Battery, "Blocks"));
+        content.AddChild(tabs);
+        return content;
+    }
+
     private Control CreateChoiceAndRowsSection()
     {
         var content = new VBoxContainer();
@@ -700,10 +720,9 @@ public partial class ComponentGalleryScreen : Control
         rows.AddChild(Track(new UiPartRow { PartIconId = UiPartIconId.Servo, PartName = "Servo", Count = "1", State = UiComponentContracts.SemanticState.Selected, SizeFlagsHorizontal = SizeFlags.ExpandFill }));
         rows.AddChild(Track(new UiPartRow { PartIconId = UiPartIconId.Spring, PartName = "Spring", Count = "0", State = UiComponentContracts.SemanticState.Disabled, SizeFlagsHorizontal = SizeFlags.ExpandFill }));
         rows.AddChild(Track(new UiPartRow { PartIconId = UiPartIconId.LineOfSight, PartName = "LOS sensor", Count = "2", State = UiComponentContracts.SemanticState.Locked, SizeFlagsHorizontal = SizeFlags.ExpandFill }));
-        rows.AddChild(Track(new UiIconTabs { ActiveIndex = 1 }));
         content.AddChild(rows);
 
-        return WrapSection("Choices and tray rows · c_pick / c_row / c_tabs", content);
+        return WrapSection("Choices and tray rows · c_pick / c_row", content);
     }
 
     private Control CreateChoicesSection()

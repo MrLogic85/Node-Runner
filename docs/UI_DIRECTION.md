@@ -91,6 +91,14 @@ Until #244 replaces manual gallery scrolling, both galleries send native
 scroll notifications to their content so Godot controls cancel pending
 presses instead of retaining a stuck pressed appearance.
 
+Parts tray tabs use persistent native toggle buttons in a `ButtonGroup`,
+with the reference's part glyphs and accent-soft selected treatment, not a
+solid accent fill. Each native target is at least 48px wide and high; the
+visible frame is 32px high with 4px between tabs. Four tabs therefore need
+204px rather than the HTML specimen's 176px strip. The gallery shows one
+unframed interactive specimen. See
+[issue #249](https://github.com/MrLogic85/Node-Runner/issues/249).
+
 ## Rules for UI changes
 
 - Finish and verify the token/typography/size foundation before the Component
