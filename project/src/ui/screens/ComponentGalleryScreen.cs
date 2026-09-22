@@ -118,7 +118,7 @@ public partial class ComponentGalleryScreen : Control
         new(UiComponentContracts.CanonicalComponent.CRange, "c_range", "Slider · c_slider / c_range"),
         new(UiComponentContracts.CanonicalComponent.CToggle, "c_toggle", "Choices and tray rows · c_toggle / c_check / c_pick / c_row / c_tabs"),
         new(UiComponentContracts.CanonicalComponent.CCheck, "c_check", "Choices and tray rows · c_toggle / c_check / c_pick / c_row / c_tabs"),
-        new(UiComponentContracts.CanonicalComponent.CSeg, "c_seg", "Tool buttons and mode switch · c_seg"),
+        new(UiComponentContracts.CanonicalComponent.CSeg, "c_seg", "Segmented"),
         new(UiComponentContracts.CanonicalComponent.CPick, "c_pick", "Choices and tray rows · c_toggle / c_check / c_pick / c_row / c_tabs"),
         new(UiComponentContracts.CanonicalComponent.CMenu, "c_menu", "Overflow menu · c_menu"),
         new(UiComponentContracts.CanonicalComponent.CChip, "c_chip", "Chips · c_chip"),
@@ -180,6 +180,8 @@ public partial class ComponentGalleryScreen : Control
             }
 
             _isTouchScrolling = true;
+            // Until #244 restores native scrolling, deliver its native press cancellation.
+            _scroll.PropagateNotification((int)NotificationScrollBegin);
         }
 
         _scroll.ScrollVertical = UiGalleryScroll.ApplyVerticalDrag(
@@ -239,8 +241,8 @@ public partial class ComponentGalleryScreen : Control
             "four semantic kinds, three layouts, compact geometry, hold progress, and badges"));
         content.AddChild(CreateActionsSection());
         content.AddChild(CreateChoicesSection());
-        content.AddChild(CreateSliderSection());
         content.AddChild(CreateSegmentedSection());
+        content.AddChild(CreateSliderSection());
         content.AddChild(CreatePanelsSection());
         content.AddChild(CreateInputsSection());
         content.AddChild(CreateChoiceAndRowsSection());
@@ -317,6 +319,7 @@ public partial class ComponentGalleryScreen : Control
 
         if (_isTouchScrolling)
         {
+            _scroll!.PropagateNotification((int)NotificationScrollEnd);
             GetViewport().SetInputAsHandled();
         }
 
@@ -449,16 +452,31 @@ public partial class ComponentGalleryScreen : Control
 
     private Control CreateSegmentedSection()
     {
-        var content = CreateFlow();
-        content.AddChild(Track(new UiSegmentedSwitch
+        var content = new VBoxContainer();
+        content.AddThemeConstantOverride("separation", (int)_tokens.Space2);
+        content.AddChild(CreateSectionDescription(
+            "Segmented", "tap to choose one option; text and icons stay in place"));
+        var examples = CreateFlow();
+        examples.AddChild(Track(new UiSegmentedSwitch
         {
             Options = new[] { "Train", "Simulate" },
-            SelectedIndex = 1,
-            Icons = [],
-            SizeFlagsHorizontal = SizeFlags.ExpandFill,
+            IconIds = new[] { UiIconId.Play, UiIconId.Eye },
+            FullWidth = false,
         }));
+        examples.AddChild(Track(new UiSegmentedSwitch
+        {
+            Options = new[] { "1", "2", "3" },
+            SelectedIndex = 1,
+            FullWidth = false,
+        }));
+        examples.AddChild(Track(new UiSegmentedSwitch
+        {
+            Options = new[] { "Distance", "Speed", "Elevation" },
+            FullWidth = false,
+        }));
+        content.AddChild(examples);
 
-        return WrapSection("Segmented · c_seg", content);
+        return content;
     }
 
     private Control CreatePanelsSection()
