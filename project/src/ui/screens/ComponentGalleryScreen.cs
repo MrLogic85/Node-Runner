@@ -842,12 +842,12 @@ public partial class ComponentGalleryScreen : Control
             new UiPicker
             {
                 LabelText = "Fixed part",
-                SelectedIndex = 0,
+                SelectedId = "left-thigh",
                 Options =
                 [
-                    new("Left thigh", UiIconId.Beam),
-                    new("Left shin", UiIconId.Beam, "swaps"),
-                    new("Tail"),
+                    new("left-thigh", "Left thigh", UiIconId.Beam),
+                    new("left-shin", "Left shin", UiIconId.Beam, Note: "swaps"),
+                    new("tail", "Tail"),
                 ],
             }));
         examples.AddChild(CreatePickerExample(
@@ -856,16 +856,16 @@ public partial class ComponentGalleryScreen : Control
             {
                 LabelText = "Target part",
                 State = UiPicker.PickerState.Locked,
-                SelectedIndex = 0,
-                Options = [new("Wheel 1", UiIconId.Beam)],
+                SelectedId = "wheel-1",
+                Options = [new("wheel-1", "Wheel 1", UiIconId.Beam)],
             }));
         examples.AddChild(CreatePickerExample(
             "Disabled",
             new UiPicker
             {
                 LabelText = "Target part",
-                SelectedIndex = 0,
-                Options = [new("Wheel 1", UiIconId.Beam)],
+                SelectedId = "wheel-1",
+                Options = [new("wheel-1", "Wheel 1", UiIconId.Beam)],
                 Disabled = true,
                 BelowText = "Can't reassign while training",
             }));

@@ -25,8 +25,8 @@ public partial class UiOverflowMenu : PanelContainer
     public readonly record struct MenuAction(
         string Id,
         string Label,
-        UiIconId? Icon,
-        UiComponentContracts.SemanticState State,
+        UiIconId? Icon = null,
+        UiComponentContracts.SemanticState State = UiComponentContracts.SemanticState.Neutral,
         string? Note = null,
         Color? IconTint = null);
 
