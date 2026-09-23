@@ -20,9 +20,8 @@ public partial class UiTextField : VBoxContainer
 
     private UiTokens _tokens = UiTokens.Neon;
     private Label? _label;
-    private PanelContainer? _fieldFrame;
     private LineEdit? _editor;
-    private Button? _actionButton;
+    private TextureRect? _stateIcon;
     private Label? _errorLabel;
     private string _textValue = "Creation name";
     private string _labelText = string.Empty;
@@ -31,6 +30,9 @@ public partial class UiTextField : VBoxContainer
     private TextInputSize _size = TextInputSize.Standard;
     private TextInputState _state;
     private bool _placeCaretAtEndOnFocus;
+    private bool _holdErrorUntilTextChanges;
+
+    public Func<string, bool> ValidateValue { get; set; } = static _ => true;
 
     [Export]
     public string TextValue
@@ -139,37 +141,21 @@ public partial class UiTextField : VBoxContainer
         _label = UiFieldAndRows.Label(string.Empty, _tokens, _tokens.OverlineText, _tokens.Muted);
         AddChild(_label);
 
-        _fieldFrame = new PanelContainer
-        {
-            SizeFlagsHorizontal = SizeFlags.ExpandFill,
-            SizeFlagsVertical = SizeFlags.ShrinkCenter,
-        };
-        AddChild(_fieldFrame);
-
-        var row = new HBoxContainer();
-        row.AddThemeConstantOverride("separation", (int)_tokens.Space2);
-        _fieldFrame.AddChild(row);
-
         _editor = new LineEdit
         {
             Text = _textValue,
             PlaceholderText = _placeholderText,
             SizeFlagsHorizontal = SizeFlags.ExpandFill,
+            SizeFlagsVertical = SizeFlags.ShrinkCenter,
             CaretBlink = true,
+            MouseFilter = MouseFilterEnum.Pass,
         };
         _editor.FocusEntered += OnFocusEntered;
         _editor.FocusExited += OnFocusExited;
         _editor.TextChanged += OnTextChanged;
         _editor.TextSubmitted += _ => FinishEditing();
-        row.AddChild(_editor);
-
-        _actionButton = new Button
-        {
-            Flat = true,
-            FocusMode = FocusModeEnum.None,
-        };
-        _actionButton.Pressed += OnActionPressed;
-        row.AddChild(_actionButton);
+        _editor.Resized += LayoutStateIcon;
+        AddChild(_editor);
 
         _errorLabel = UiFieldAndRows.Label(string.Empty, _tokens, _tokens.NoteText, _tokens.Danger);
         AddChild(_errorLabel);
@@ -192,6 +178,15 @@ public partial class UiTextField : VBoxContainer
     public void FinishEditing()
     {
         _textValue = _editor?.Text ?? _textValue;
+        if (!ValidateValue(_textValue))
+        {
+            _holdErrorUntilTextChanges = true;
+            State = TextInputState.Error;
+            ReopenEditorAfterInvalidSubmit();
+            return;
+        }
+
+        _holdErrorUntilTextChanges = false;
         if (State == TextInputState.Editing)
         {
             State = TextInputState.Rest;
@@ -206,6 +201,7 @@ public partial class UiTextField : VBoxContainer
 
     public void ShowError(string message)
     {
+        _holdErrorUntilTextChanges = true;
         ErrorText = message;
         State = TextInputState.Error;
     }
@@ -228,35 +224,9 @@ public partial class UiTextField : VBoxContainer
         }
 
         var visibleHeight = InputSize == TextInputSize.Compact ? _tokens.ControlSmall : _tokens.ControlHeight;
-        if (_fieldFrame is not null)
-        {
-            var border = State switch
-            {
-                TextInputState.Error => _tokens.Danger,
-                TextInputState.Editing => _tokens.Accent,
-                _ => _tokens.LineStrong,
-            };
-            _fieldFrame.CustomMinimumSize = new Vector2(0, visibleHeight);
-            _fieldFrame.AddThemeStyleboxOverride("panel", _tokens.ControlStyle(
-                _tokens.PanelRaised,
-                border,
-                State == TextInputState.Rest ? _tokens.StrokeHair : _tokens.StrokeSignal,
-                horizontalPadding: _tokens.Space2,
-                verticalPadding: 0));
-            if (State == TextInputState.Editing)
-            {
-                var style = _fieldFrame.GetThemeStylebox("panel") as StyleBoxFlat;
-                if (style is not null)
-                {
-                    style.ShadowColor = _tokens.EffectsEnabled ? _tokens.AccentSoft : Colors.Transparent;
-                    style.ShadowSize = _tokens.EffectsEnabled ? 3 : 0;
-                }
-            }
-        }
-
         if (_editor is not null)
         {
-            if (_editor.Text != _textValue)
+            if (!_editor.HasFocus() && _editor.Text != _textValue)
             {
                 _editor.Text = _textValue;
             }
@@ -267,27 +237,32 @@ public partial class UiTextField : VBoxContainer
             _editor.AddThemeColorOverride("font_color", State == TextInputState.Error ? _tokens.Danger : _tokens.Ink);
             _editor.AddThemeColorOverride("font_placeholder_color", _tokens.Muted);
             _editor.AddThemeColorOverride("caret_color", _tokens.Accent);
-            _editor.AddThemeStyleboxOverride("normal", new StyleBoxEmpty());
-            _editor.AddThemeStyleboxOverride("focus", new StyleBoxEmpty());
-            _editor.AddThemeStyleboxOverride("read_only", new StyleBoxEmpty());
+            var border = State switch
+            {
+                TextInputState.Error => _tokens.Danger,
+                TextInputState.Editing => _tokens.Accent,
+                _ => _tokens.LineStrong,
+            };
+            var style = _tokens.ControlStyle(
+                _tokens.PanelRaised,
+                border,
+                State == TextInputState.Rest ? _tokens.StrokeHair : _tokens.StrokeSignal,
+                horizontalPadding: _tokens.Space2,
+                verticalPadding: 0);
+            style.ContentMarginRight = _tokens.Space2 + _tokens.Icon + _tokens.Space2;
+            if (State == TextInputState.Editing)
+            {
+                style.ShadowColor = _tokens.EffectsEnabled ? _tokens.AccentSoft : Colors.Transparent;
+                style.ShadowSize = _tokens.EffectsEnabled ? 3 : 0;
+            }
+
+            _editor.AddThemeStyleboxOverride("normal", style);
+            _editor.AddThemeStyleboxOverride("focus", style);
+            _editor.AddThemeStyleboxOverride("read_only", style);
         }
 
-        if (_actionButton is not null)
-        {
-            _actionButton.CustomMinimumSize = new Vector2(_tokens.ControlSmall, visibleHeight);
-            var actionIcon = State switch
-            {
-                TextInputState.Error => UiIconId.Warn,
-                TextInputState.Editing => UiIconId.Check,
-                _ => UiIconId.Edit,
-            };
-            var actionColor = State == TextInputState.Error ? _tokens.Danger : _tokens.Accent;
-            UiIcons.Apply(_actionButton, actionIcon, UiIconSize.Standard, actionColor);
-            _actionButton.AddThemeStyleboxOverride("normal", new StyleBoxEmpty());
-            _actionButton.AddThemeStyleboxOverride("hover", new StyleBoxEmpty());
-            _actionButton.AddThemeStyleboxOverride("pressed", new StyleBoxEmpty());
-            _actionButton.AddThemeStyleboxOverride("focus", new StyleBoxEmpty());
-        }
+        RefreshStateIcon();
+        LayoutStateIcon();
 
         if (_errorLabel is not null)
         {
@@ -296,6 +271,39 @@ public partial class UiTextField : VBoxContainer
             _tokens.ApplyTextStyle(_errorLabel, _tokens.NoteText);
             _errorLabel.AddThemeColorOverride("font_color", _tokens.Danger);
         }
+    }
+
+    private void RefreshStateIcon()
+    {
+        if (_editor is null || !IsInstanceValid(_editor))
+        {
+            return;
+        }
+
+        _stateIcon?.QueueFree();
+        var actionIcon = State switch
+        {
+            TextInputState.Error => UiIconId.Warn,
+            _ => UiIconId.Edit,
+        };
+        var actionColor = State == TextInputState.Error ? _tokens.Danger : _tokens.Accent;
+        _stateIcon = UiIcons.Create(actionIcon, UiIconSize.Standard, actionColor);
+        _stateIcon.MouseFilter = MouseFilterEnum.Ignore;
+        _editor.AddChild(_stateIcon);
+    }
+
+    private void LayoutStateIcon()
+    {
+        if (_editor is null || _stateIcon is null)
+        {
+            return;
+        }
+
+        var iconSize = _stateIcon.CustomMinimumSize;
+        _stateIcon.Position = new Vector2(
+            _editor.Size.X - _tokens.Space2 - iconSize.X,
+            (_editor.Size.Y - iconSize.Y) * 0.5f);
+        _stateIcon.Size = iconSize;
     }
 
     private void OnFocusEntered()
@@ -320,18 +328,13 @@ public partial class UiTextField : VBoxContainer
     private void OnTextChanged(string value)
     {
         _textValue = value;
-        EmitSignal(SignalName.TextEdited, value);
-    }
-
-    private void OnActionPressed()
-    {
-        if (State == TextInputState.Editing)
+        if (_holdErrorUntilTextChanges)
         {
-            FinishEditing();
-            return;
+            _holdErrorUntilTextChanges = false;
+            State = TextInputState.Editing;
         }
 
-        BeginEditing();
+        EmitSignal(SignalName.TextEdited, value);
     }
 
     private void PlaceCaretAtEnd()
@@ -349,8 +352,38 @@ public partial class UiTextField : VBoxContainer
             return;
         }
 
+        if (State == TextInputState.Error && _holdErrorUntilTextChanges)
+        {
+            return;
+        }
+
         State = TextInputState.Editing;
         EmitSignal(SignalName.EditingStarted);
+    }
+
+    private void ReopenEditorAfterInvalidSubmit()
+    {
+        if (_editor is null || !IsInstanceValid(_editor))
+        {
+            return;
+        }
+
+        Callable.From(RestoreEditorAfterInvalidSubmit).CallDeferred();
+    }
+
+    private void RestoreEditorAfterInvalidSubmit()
+    {
+        if (_editor is null || !IsInstanceValid(_editor))
+        {
+            return;
+        }
+
+        if (_editor.HasFocus())
+        {
+            _editor.ReleaseFocus();
+        }
+
+        _editor.GrabFocus();
     }
 
 }

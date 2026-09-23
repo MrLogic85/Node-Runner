@@ -747,6 +747,7 @@ public partial class ComponentGalleryScreen : Control
             LabelText = "Creation name",
             TextValue = "",
             ErrorText = "A creation needs a name",
+            ValidateValue = static value => !string.IsNullOrWhiteSpace(value),
             State = UiTextField.TextInputState.Error,
             SizeFlagsHorizontal = SizeFlags.ExpandFill,
         }));
