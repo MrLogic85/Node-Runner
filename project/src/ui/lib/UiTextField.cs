@@ -2,15 +2,37 @@ using Godot;
 
 namespace NodeRunner.Ui.Lib;
 
-/// <summary>The canonical text entry with rest, edit, and invalid states.</summary>
-public partial class UiTextField : PanelContainer
+/// <summary>Single-line text input with standard and compact sizes.</summary>
+public partial class UiTextField : VBoxContainer
 {
+    public enum TextInputSize
+    {
+        Standard,
+        Compact,
+    }
+
+    public enum TextInputState
+    {
+        Rest,
+        Editing,
+        Error,
+    }
+
     private UiTokens _tokens = UiTokens.Neon;
+    private Label? _label;
     private LineEdit? _editor;
-    private Button? _actionButton;
-    private Label? _messageLabel;
+    private TextureRect? _stateIcon;
+    private Label? _errorLabel;
     private string _textValue = "Creation name";
-    private UiComponentContracts.ValidationState _state;
+    private string _labelText = string.Empty;
+    private string _errorText = string.Empty;
+    private string _placeholderText = string.Empty;
+    private TextInputSize _size = TextInputSize.Standard;
+    private TextInputState _state;
+    private bool _placeCaretAtEndOnFocus;
+    private bool _holdErrorUntilTextChanges;
+
+    public Func<string, bool> ValidateValue { get; set; } = static _ => true;
 
     [Export]
     public string TextValue
@@ -19,7 +41,7 @@ public partial class UiTextField : PanelContainer
         set
         {
             _textValue = value;
-            if (_editor is not null)
+            if (_editor is not null && _editor.Text != value)
             {
                 _editor.Text = value;
             }
@@ -27,10 +49,54 @@ public partial class UiTextField : PanelContainer
     }
 
     [Export]
-    public string ValidationMessage { get; set; } = "A creation needs a name";
+    public string LabelText
+    {
+        get => _labelText;
+        set
+        {
+            _labelText = value;
+            Refresh();
+        }
+    }
 
     [Export]
-    public UiComponentContracts.ValidationState State
+    public string ErrorText
+    {
+        get => _errorText;
+        set
+        {
+            _errorText = value;
+            Refresh();
+        }
+    }
+
+    [Export]
+    public string PlaceholderText
+    {
+        get => _placeholderText;
+        set
+        {
+            _placeholderText = value;
+            if (_editor is not null)
+            {
+                _editor.PlaceholderText = value;
+            }
+        }
+    }
+
+    [Export]
+    public TextInputSize InputSize
+    {
+        get => _size;
+        set
+        {
+            _size = value;
+            Refresh();
+        }
+    }
+
+    [Export]
+    public TextInputState State
     {
         get => _state;
         set
@@ -42,24 +108,21 @@ public partial class UiTextField : PanelContainer
 
             _state = value;
             Refresh();
-            EmitSignal(SignalName.ValidationStateChanged, (long)value);
+            EmitSignal(SignalName.StateChanged, (long)value);
         }
     }
 
-    [Export]
-    public bool PanelSize { get; set; }
+    [Signal]
+    public delegate void EditingStartedEventHandler();
 
     [Signal]
-    public delegate void EditStartedEventHandler();
-
-    [Signal]
-    public delegate void EditConfirmedEventHandler(string value);
+    public delegate void EditingFinishedEventHandler(string value);
 
     [Signal]
     public delegate void TextEditedEventHandler(string value);
 
     [Signal]
-    public delegate void ValidationStateChangedEventHandler(long state);
+    public delegate void StateChangedEventHandler(long state);
 
     public UiTokens Tokens
     {
@@ -73,68 +136,74 @@ public partial class UiTextField : PanelContainer
 
     public override void _Ready()
     {
-        var stack = new VBoxContainer();
-        stack.AddThemeConstantOverride("separation", (int)_tokens.Space1);
-        AddChild(stack);
+        AddThemeConstantOverride("separation", (int)_tokens.Space1);
 
-        var row = new HBoxContainer();
-        row.AddThemeConstantOverride("separation", (int)_tokens.Space2);
-        stack.AddChild(row);
+        _label = UiFieldAndRows.Label(string.Empty, _tokens, _tokens.OverlineText, _tokens.Muted);
+        AddChild(_label);
 
         _editor = new LineEdit
         {
             Text = _textValue,
-            PlaceholderText = "Creation name",
+            PlaceholderText = _placeholderText,
             SizeFlagsHorizontal = SizeFlags.ExpandFill,
+            SizeFlagsVertical = SizeFlags.ShrinkCenter,
+            CaretBlink = true,
+            MouseFilter = MouseFilterEnum.Pass,
         };
+        _editor.FocusEntered += OnFocusEntered;
+        _editor.FocusExited += OnFocusExited;
         _editor.TextChanged += OnTextChanged;
-        _editor.TextSubmitted += _ => ConfirmEditing();
-        row.AddChild(_editor);
+        _editor.TextSubmitted += _ => FinishEditing();
+        _editor.Resized += LayoutStateIcon;
+        AddChild(_editor);
 
-        _actionButton = new Button
-        {
-            Flat = true,
-            CustomMinimumSize = new Vector2(_tokens.ControlSmall, _tokens.ControlSmall),
-        };
-        _actionButton.Pressed += OnActionPressed;
-        row.AddChild(_actionButton);
-
-        _messageLabel = UiFieldAndRows.Label(ValidationMessage, _tokens, _tokens.NoteText, _tokens.Danger);
-        stack.AddChild(_messageLabel);
+        _errorLabel = UiFieldAndRows.Label(string.Empty, _tokens, _tokens.NoteText, _tokens.Danger);
+        AddChild(_errorLabel);
         Refresh();
     }
 
-    /// <summary>Starts an edit while preserving the value currently shown by the field.</summary>
     public void BeginEditing()
     {
-        if (State == UiComponentContracts.ValidationState.Editing)
+        if (_editor?.HasFocus() == true)
         {
+            StartEditing();
             return;
         }
 
-        State = UiComponentContracts.ValidationState.Editing;
+        _placeCaretAtEndOnFocus = true;
         _editor?.GrabFocus();
-        EmitSignal(SignalName.EditStarted);
+        PlaceCaretAtEnd();
     }
 
-    /// <summary>Ends the edit and lets the owner validate or persist the submitted value.</summary>
-    public void ConfirmEditing()
+    public void FinishEditing()
     {
-        if (State != UiComponentContracts.ValidationState.Editing)
+        _textValue = _editor?.Text ?? _textValue;
+        if (!ValidateValue(_textValue))
         {
+            _holdErrorUntilTextChanges = true;
+            State = TextInputState.Error;
+            ReopenEditorAfterInvalidSubmit();
             return;
         }
 
-        _textValue = _editor?.Text ?? _textValue;
-        State = UiComponentContracts.ValidationState.Rest;
-        EmitSignal(SignalName.EditConfirmed, _textValue);
+        _holdErrorUntilTextChanges = false;
+        if (State == TextInputState.Editing)
+        {
+            State = TextInputState.Rest;
+        }
+
+        EmitSignal(SignalName.EditingFinished, _textValue);
+        if (_editor?.HasFocus() == true)
+        {
+            _editor.ReleaseFocus();
+        }
     }
 
-    /// <summary>Shows a validation error supplied by the field's owner.</summary>
-    public void ShowValidationError(string message)
+    public void ShowError(string message)
     {
-        ValidationMessage = message;
-        State = UiComponentContracts.ValidationState.Invalid;
+        _holdErrorUntilTextChanges = true;
+        ErrorText = message;
+        State = TextInputState.Error;
     }
 
     private void Refresh()
@@ -144,68 +213,177 @@ public partial class UiTextField : PanelContainer
             return;
         }
 
-        CustomMinimumSize = new Vector2(0, PanelSize ? _tokens.ControlSmall : _tokens.ControlHeight);
-        var border = State switch
-        {
-            UiComponentContracts.ValidationState.Invalid => _tokens.Danger,
-            UiComponentContracts.ValidationState.Editing => _tokens.Accent,
-            _ => _tokens.LineStrong,
-        };
-        AddThemeStyleboxOverride("panel", _tokens.ControlStyle(
-            _tokens.PanelRaised,
-            border,
-            State == UiComponentContracts.ValidationState.Rest ? _tokens.StrokeHair : _tokens.StrokeSignal,
-            glow: State == UiComponentContracts.ValidationState.Editing,
-            horizontalPadding: _tokens.Space2,
-            verticalPadding: _tokens.Space1));
+        AddThemeConstantOverride("separation", (int)_tokens.Space1);
 
+        if (_label is not null)
+        {
+            _label.Text = LabelText;
+            _label.Visible = !string.IsNullOrWhiteSpace(LabelText);
+            _tokens.ApplyTextStyle(_label, _tokens.OverlineText);
+            _label.AddThemeColorOverride("font_color", _tokens.Muted);
+        }
+
+        var visibleHeight = InputSize == TextInputSize.Compact ? _tokens.ControlSmall : _tokens.ControlHeight;
         if (_editor is not null)
         {
-            _editor.Text = _textValue;
-            _editor.Editable = State == UiComponentContracts.ValidationState.Editing;
-            _editor.PlaceholderText = State == UiComponentContracts.ValidationState.Invalid ? ValidationMessage : "Creation name";
-            _tokens.ApplyTextStyle(_editor, PanelSize ? _tokens.BodyStrongText : _tokens.HeadingText);
-            _editor.AddThemeColorOverride("font_color", State == UiComponentContracts.ValidationState.Invalid ? _tokens.Danger : _tokens.Ink);
-        }
-
-        if (_actionButton is not null)
-        {
-            _actionButton.Text = string.Empty;
-            var actionIcon = State switch
+            if (!_editor.HasFocus() && _editor.Text != _textValue)
             {
-                UiComponentContracts.ValidationState.Invalid => UiIconId.Warn,
-                UiComponentContracts.ValidationState.Editing => UiIconId.Check,
-                _ => UiIconId.Edit,
+                _editor.Text = _textValue;
+            }
+
+            _editor.PlaceholderText = PlaceholderText;
+            _editor.CustomMinimumSize = new Vector2(0, visibleHeight);
+            _tokens.ApplyTextStyle(_editor, InputSize == TextInputSize.Compact ? _tokens.BodyStrongText : _tokens.HeadingText);
+            _editor.AddThemeColorOverride("font_color", State == TextInputState.Error ? _tokens.Danger : _tokens.Ink);
+            _editor.AddThemeColorOverride("font_placeholder_color", _tokens.Muted);
+            _editor.AddThemeColorOverride("caret_color", _tokens.Accent);
+            var border = State switch
+            {
+                TextInputState.Error => _tokens.Danger,
+                TextInputState.Editing => _tokens.Accent,
+                _ => _tokens.LineStrong,
             };
-            var actionColor = State == UiComponentContracts.ValidationState.Invalid ? _tokens.Danger : _tokens.Accent;
-            _tokens.ApplyTextStyle(_actionButton, _tokens.LabelText);
-            _actionButton.AddThemeColorOverride("font_color", actionColor);
-            UiIcons.Apply(_actionButton, actionIcon, UiIconSize.Standard, actionColor);
+            var style = _tokens.ControlStyle(
+                _tokens.PanelRaised,
+                border,
+                State == TextInputState.Rest ? _tokens.StrokeHair : _tokens.StrokeSignal,
+                horizontalPadding: _tokens.Space2,
+                verticalPadding: 0);
+            style.ContentMarginRight = _tokens.Space2 + _tokens.Icon + _tokens.Space2;
+            if (State == TextInputState.Editing)
+            {
+                style.ShadowColor = _tokens.EffectsEnabled ? _tokens.AccentSoft : Colors.Transparent;
+                style.ShadowSize = _tokens.EffectsEnabled ? 3 : 0;
+            }
+
+            _editor.AddThemeStyleboxOverride("normal", style);
+            _editor.AddThemeStyleboxOverride("focus", style);
+            _editor.AddThemeStyleboxOverride("read_only", style);
         }
 
-        if (_messageLabel is not null)
+        RefreshStateIcon();
+        LayoutStateIcon();
+
+        if (_errorLabel is not null)
         {
-            _messageLabel.Visible = State == UiComponentContracts.ValidationState.Invalid;
-            _messageLabel.Text = ValidationMessage;
-            _tokens.ApplyTextStyle(_messageLabel, _tokens.NoteText);
-            _messageLabel.AddThemeColorOverride("font_color", _tokens.Danger);
+            _errorLabel.Text = ErrorText;
+            _errorLabel.Visible = State == TextInputState.Error && !string.IsNullOrWhiteSpace(ErrorText);
+            _tokens.ApplyTextStyle(_errorLabel, _tokens.NoteText);
+            _errorLabel.AddThemeColorOverride("font_color", _tokens.Danger);
         }
     }
 
-    private void OnActionPressed()
+    private void RefreshStateIcon()
     {
-        if (State == UiComponentContracts.ValidationState.Editing)
+        if (_editor is null || !IsInstanceValid(_editor))
         {
-            ConfirmEditing();
             return;
         }
 
-        BeginEditing();
+        _stateIcon?.QueueFree();
+        var actionIcon = State switch
+        {
+            TextInputState.Error => UiIconId.Warn,
+            _ => UiIconId.Edit,
+        };
+        var actionColor = State == TextInputState.Error ? _tokens.Danger : _tokens.Accent;
+        _stateIcon = UiIcons.Create(actionIcon, UiIconSize.Standard, actionColor);
+        _stateIcon.MouseFilter = MouseFilterEnum.Ignore;
+        _editor.AddChild(_stateIcon);
+    }
+
+    private void LayoutStateIcon()
+    {
+        if (_editor is null || _stateIcon is null)
+        {
+            return;
+        }
+
+        var iconSize = _stateIcon.CustomMinimumSize;
+        _stateIcon.Position = new Vector2(
+            _editor.Size.X - _tokens.Space2 - iconSize.X,
+            (_editor.Size.Y - iconSize.Y) * 0.5f);
+        _stateIcon.Size = iconSize;
+    }
+
+    private void OnFocusEntered()
+    {
+        if (_placeCaretAtEndOnFocus)
+        {
+            PlaceCaretAtEnd();
+            _placeCaretAtEndOnFocus = false;
+        }
+
+        StartEditing();
+    }
+
+    private void OnFocusExited()
+    {
+        if (State == TextInputState.Editing)
+        {
+            FinishEditing();
+        }
     }
 
     private void OnTextChanged(string value)
     {
         _textValue = value;
+        if (_holdErrorUntilTextChanges)
+        {
+            _holdErrorUntilTextChanges = false;
+            State = TextInputState.Editing;
+        }
+
         EmitSignal(SignalName.TextEdited, value);
     }
+
+    private void PlaceCaretAtEnd()
+    {
+        if (_editor is not null)
+        {
+            _editor.CaretColumn = _editor.Text.Length;
+        }
+    }
+
+    private void StartEditing()
+    {
+        if (State == TextInputState.Editing)
+        {
+            return;
+        }
+
+        if (State == TextInputState.Error && _holdErrorUntilTextChanges)
+        {
+            return;
+        }
+
+        State = TextInputState.Editing;
+        EmitSignal(SignalName.EditingStarted);
+    }
+
+    private void ReopenEditorAfterInvalidSubmit()
+    {
+        if (_editor is null || !IsInstanceValid(_editor))
+        {
+            return;
+        }
+
+        Callable.From(RestoreEditorAfterInvalidSubmit).CallDeferred();
+    }
+
+    private void RestoreEditorAfterInvalidSubmit()
+    {
+        if (_editor is null || !IsInstanceValid(_editor))
+        {
+            return;
+        }
+
+        if (_editor.HasFocus())
+        {
+            _editor.ReleaseFocus();
+        }
+
+        _editor.GrabFocus();
+    }
+
 }

@@ -5,7 +5,8 @@ public partial class UiNameField : UiTextField
 {
     public UiNameField()
     {
-        PanelSize = true;
+        InputSize = TextInputSize.Compact;
+        LabelText = "Name";
         TextValue = "Left foot";
     }
 }

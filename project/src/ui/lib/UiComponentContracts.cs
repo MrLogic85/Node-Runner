@@ -88,13 +88,6 @@ public static class UiComponentContracts
     public static bool CanBeginHold(HoldState state) =>
         state is HoldState.Rest or HoldState.Cancelled;
 
-    public enum ValidationState
-    {
-        Rest,
-        Editing,
-        Invalid,
-    }
-
     public enum SemanticState
     {
         Neutral,

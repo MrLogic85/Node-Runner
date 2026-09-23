@@ -120,8 +120,8 @@ public partial class ComponentGalleryScreen : Control
         new(UiComponentContracts.CanonicalComponent.OverflowMenu, "Overflow menu"),
         new(UiComponentContracts.CanonicalComponent.Chip, "Chips"),
         new(UiComponentContracts.CanonicalComponent.ProgressBar, "Progress"),
-        new(UiComponentContracts.CanonicalComponent.TextField, "Text and values"),
-        new(UiComponentContracts.CanonicalComponent.NameField, "Text and values"),
+        new(UiComponentContracts.CanonicalComponent.TextField, "Text input"),
+        new(UiComponentContracts.CanonicalComponent.NameField, "Text input"),
         new(UiComponentContracts.CanonicalComponent.ValueRow, "Text and values"),
         new(UiComponentContracts.CanonicalComponent.ReadonlyValue, "Text and values"),
         new(UiComponentContracts.CanonicalComponent.PowerRow, "Text and values"),
@@ -212,6 +212,7 @@ public partial class ComponentGalleryScreen : Control
         content.AddChild(CreateSliderSection());
         content.AddChild(CreateMenuSection());
         content.AddChild(CreatePickerSection());
+        content.AddChild(CreateTextInputSection());
         content.AddChild(CreatePanelsSection());
         content.AddChild(CreateInputsSection());
         content.AddChild(CreateChoiceAndRowsSection());
@@ -708,16 +709,6 @@ public partial class ComponentGalleryScreen : Control
         var content = new VBoxContainer();
         content.AddThemeConstantOverride("separation", UiSpacing.StackGap(_tokens));
 
-        var fields = new HFlowContainer();
-        fields.AddThemeConstantOverride("h_separation", UiSpacing.ControlGap(_tokens));
-        fields.AddThemeConstantOverride("v_separation", UiSpacing.ControlGap(_tokens));
-        fields.AddChild(Track(new UiTextField { TextValue = "Runner", State = UiComponentContracts.ValidationState.Rest, SizeFlagsHorizontal = SizeFlags.ExpandFill }));
-        fields.AddChild(Track(new UiTextField { TextValue = "Runner", State = UiComponentContracts.ValidationState.Editing, SizeFlagsHorizontal = SizeFlags.ExpandFill }));
-        fields.AddChild(Track(new UiTextField { TextValue = "", State = UiComponentContracts.ValidationState.Invalid, SizeFlagsHorizontal = SizeFlags.ExpandFill }));
-        fields.AddChild(Track(new UiNameField { TextValue = "Core", State = UiComponentContracts.ValidationState.Rest, SizeFlagsHorizontal = SizeFlags.ExpandFill }));
-        fields.AddChild(Track(new UiNameField { TextValue = "Left foot", State = UiComponentContracts.ValidationState.Editing, SizeFlagsHorizontal = SizeFlags.ExpandFill }));
-        content.AddChild(fields);
-
         var values = new HFlowContainer();
         values.AddThemeConstantOverride("h_separation", UiSpacing.ControlGap(_tokens));
         values.AddThemeConstantOverride("v_separation", UiSpacing.ControlGap(_tokens));
@@ -731,6 +722,45 @@ public partial class ComponentGalleryScreen : Control
         content.AddChild(Track(new UiPanelHeader { Title = "Part settings" }));
         content.AddChild(Track(new UiInfoRow { Title = "Rotate handle", Help = "Drag the stem to rotate selected parts." }));
         return WrapSection("Text and values", content);
+    }
+
+    private Control CreateTextInputSection()
+    {
+        var content = new VBoxContainer();
+        content.AddThemeConstantOverride("separation", (int)_tokens.Space2);
+        content.AddChild(CreateSectionDescription(
+            "Text input",
+            "standard and compact, rest, editing, and error"));
+
+        var fields = new HFlowContainer();
+        fields.AddThemeConstantOverride("h_separation", UiSpacing.ControlGap(_tokens));
+        fields.AddThemeConstantOverride("v_separation", UiSpacing.ControlGap(_tokens));
+        fields.AddChild(Track(new UiTextField
+        {
+            LabelText = "Creation name",
+            TextValue = "Runner",
+            State = UiTextField.TextInputState.Rest,
+            SizeFlagsHorizontal = SizeFlags.ExpandFill,
+        }));
+        fields.AddChild(Track(new UiTextField
+        {
+            LabelText = "Creation name",
+            TextValue = "",
+            ErrorText = "A creation needs a name",
+            ValidateValue = static value => !string.IsNullOrWhiteSpace(value),
+            State = UiTextField.TextInputState.Error,
+            SizeFlagsHorizontal = SizeFlags.ExpandFill,
+        }));
+        fields.AddChild(Track(new UiTextField
+        {
+            LabelText = "Part name",
+            TextValue = "Left foot",
+            InputSize = UiTextField.TextInputSize.Compact,
+            State = UiTextField.TextInputState.Editing,
+            SizeFlagsHorizontal = SizeFlags.ExpandFill,
+        }));
+        content.AddChild(fields);
+        return content;
     }
 
     private Control CreateProgressAndStatusSection()
