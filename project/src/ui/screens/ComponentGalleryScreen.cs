@@ -255,6 +255,7 @@ public partial class ComponentGalleryScreen : Control
         content.AddChild(CreateTrayTabsSection());
         content.AddChild(CreateSliderSection());
         content.AddChild(CreateMenuSection());
+        content.AddChild(CreatePickerSection());
         content.AddChild(CreatePanelsSection());
         content.AddChild(CreateInputsSection());
         content.AddChild(CreateChoiceAndRowsSection());
@@ -716,14 +717,6 @@ public partial class ComponentGalleryScreen : Control
         var content = new VBoxContainer();
         content.AddThemeConstantOverride("separation", UiSpacing.StackGap(_tokens));
 
-        var pickers = new HFlowContainer();
-        pickers.AddThemeConstantOverride("h_separation", UiSpacing.ControlGap(_tokens));
-        pickers.AddThemeConstantOverride("v_separation", UiSpacing.ControlGap(_tokens));
-        pickers.AddChild(Track(new UiPicker { LabelText = "Fixed part", ValueText = "Beam A", SizeFlagsHorizontal = SizeFlags.ExpandFill }));
-        pickers.AddChild(Track(new UiPicker { LabelText = "Target part", ValueText = "Beam A", Open = true, SizeFlagsHorizontal = SizeFlags.ExpandFill }));
-        pickers.AddChild(Track(new UiPicker { LabelText = "Wheel target", ValueText = "Wheel", Locked = true, SizeFlagsHorizontal = SizeFlags.ExpandFill }));
-        content.AddChild(pickers);
-
         var rows = new HFlowContainer();
         rows.AddThemeConstantOverride("h_separation", UiSpacing.ControlGap(_tokens));
         rows.AddThemeConstantOverride("v_separation", UiSpacing.ControlGap(_tokens));
@@ -732,7 +725,7 @@ public partial class ComponentGalleryScreen : Control
         rows.AddChild(Track(new UiPartRow { PartIconId = UiPartIconId.LineOfSight, PartName = "LOS sensor", Count = "2", State = UiComponentContracts.SemanticState.Locked, SizeFlagsHorizontal = SizeFlags.ExpandFill }));
         content.AddChild(rows);
 
-        return WrapSection("Choices and tray rows · c_pick / c_row", content);
+        return WrapSection("Tray rows · c_row", content);
     }
 
     private Control CreateChoicesSection()
@@ -833,6 +826,64 @@ public partial class ComponentGalleryScreen : Control
         content.AddChild(menu);
 
         return content;
+    }
+
+    private Control CreatePickerSection()
+    {
+        var content = new VBoxContainer();
+        content.AddThemeConstantOverride("separation", (int)_tokens.Space2);
+        content.AddChild(CreateSectionDescription(
+            "Picker",
+            "collapsed, expanded, locked, and disabled"));
+
+        var examples = CreateFlow();
+        examples.AddChild(CreatePickerExample(
+            "Interactive",
+            new UiPicker
+            {
+                LabelText = "Fixed part",
+                SelectedIndex = 0,
+                Options =
+                [
+                    new("Left thigh", UiIconId.Beam),
+                    new("Left shin", UiIconId.Beam, "swaps"),
+                    new("Tail"),
+                ],
+            }));
+        examples.AddChild(CreatePickerExample(
+            "Locked",
+            new UiPicker
+            {
+                LabelText = "Target part",
+                State = UiPicker.PickerState.Locked,
+                SelectedIndex = 0,
+                Options = [new("Wheel 1", UiIconId.Beam)],
+            }));
+        examples.AddChild(CreatePickerExample(
+            "Disabled",
+            new UiPicker
+            {
+                LabelText = "Target part",
+                SelectedIndex = 0,
+                Options = [new("Wheel 1", UiIconId.Beam)],
+                Disabled = true,
+                BelowText = "Can't reassign while training",
+            }));
+        content.AddChild(examples);
+
+        return content;
+    }
+
+    private Control CreatePickerExample(string caption, UiPicker picker)
+    {
+        var stack = new VBoxContainer
+        {
+            SizeFlagsHorizontal = SizeFlags.ShrinkBegin,
+        };
+        stack.AddThemeConstantOverride("separation", (int)_tokens.Space1);
+        stack.AddChild(CreateLabel(caption, _tokens.NoteText, tokens => tokens.Muted, TextServer.AutowrapMode.Off));
+        stack.AddChild(Track(picker));
+        return stack;
     }
 
     private Control CreatePanelExample(string title, UiSurfaceContracts.FrameVariant variant)

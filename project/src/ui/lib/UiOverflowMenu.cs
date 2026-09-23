@@ -11,18 +11,32 @@ public partial class UiOverflowMenu : PanelContainer
         WrapContent,
     }
 
+    public enum MenuRowSize
+    {
+        Standard,
+        Compact,
+    }
+
     [Signal]
     public delegate void ActionSelectedEventHandler(string actionId);
 
     private UiTokens _tokens = UiTokens.Neon;
     private VBoxContainer? _items;
-    public readonly record struct MenuAction(string Id, string Label, UiIconId? Icon, UiComponentContracts.SemanticState State);
+    public readonly record struct MenuAction(
+        string Id,
+        string Label,
+        UiIconId? Icon,
+        UiComponentContracts.SemanticState State,
+        string? Note = null,
+        Color? IconTint = null);
 
     private MenuAction[]? _pendingActions;
     private MenuAction[] _currentActions = [];
     private float _width;
     private MenuWidthMode _widthMode = MenuWidthMode.Fixed;
+    private MenuRowSize _rowSize = MenuRowSize.Standard;
     private bool _closeOnSelect = true;
+    private bool _showSelectedCheck;
 
     [Export]
     public float Width
@@ -51,6 +65,28 @@ public partial class UiOverflowMenu : PanelContainer
     {
         get => _closeOnSelect;
         set => _closeOnSelect = value;
+    }
+
+    [Export]
+    public MenuRowSize RowSize
+    {
+        get => _rowSize;
+        set
+        {
+            _rowSize = value;
+            RefreshRows();
+        }
+    }
+
+    [Export]
+    public bool ShowSelectedCheck
+    {
+        get => _showSelectedCheck;
+        set
+        {
+            _showSelectedCheck = value;
+            RefreshRows();
+        }
     }
 
     public static float ResolveFixedWidth(float width, UiTokens tokens) =>
@@ -129,15 +165,17 @@ public partial class UiOverflowMenu : PanelContainer
             }
 
             var action = actions[index];
+            var textStyle = TextStyleForRows;
+            var iconSize = IconSizeForRows;
             var button = new Button
             {
-                Text = action.Label,
+                Text = UseCustomRowContent(action) ? string.Empty : action.Label,
                 Alignment = HorizontalAlignment.Left,
                 Disabled = action.State is UiComponentContracts.SemanticState.Disabled or UiComponentContracts.SemanticState.Locked,
                 TooltipText = action.Label,
                 SizeFlagsHorizontal = SizeFlags.ExpandFill,
             };
-            _tokens.ApplyTextStyle(button, _tokens.BodyStrongText);
+            _tokens.ApplyTextStyle(button, textStyle);
             button.AddThemeConstantOverride("h_separation", (int)_tokens.Space2);
             button.AddThemeColorOverride("font_color", TextColor(action.State));
             button.AddThemeColorOverride("font_hover_color", _tokens.Ink);
@@ -152,22 +190,88 @@ public partial class UiOverflowMenu : PanelContainer
             button.AddThemeStyleboxOverride("disabled", CreateActionStyle(action.State, false, first, last, 0.5f));
             if (action.Icon is { } icon)
             {
-                UiIcons.Apply(button, icon, UiIconSize.Large, IconColor(action.State));
+                if (UseCustomRowContent(action))
+                {
+                    AddRowContent(button, action, textStyle, iconSize);
+                }
+                else
+                {
+                    UiIcons.Apply(button, icon, iconSize, IconColor(action));
+                }
+            }
+            else if (UseCustomRowContent(action))
+            {
+                AddRowContent(button, action, textStyle, iconSize);
             }
             var id = action.Id;
             button.Pressed += () =>
             {
+                EmitSignal(SignalName.ActionSelected, id);
                 if (CloseOnSelect)
                 {
                     Hide();
                 }
-
-                EmitSignal(SignalName.ActionSelected, id);
             };
             _items.AddChild(button);
         }
 
         RefreshWidth();
+    }
+
+    private bool UseCustomRowContent(MenuAction action) =>
+        RowSize == MenuRowSize.Compact || ShowSelectedCheck || action.Note is not null;
+
+    private void AddRowContent(
+        Button button,
+        MenuAction action,
+        UiTokens.TextStyle textStyle,
+        UiIconSize iconSize)
+    {
+        var margin = new MarginContainer
+        {
+            MouseFilter = MouseFilterEnum.Ignore,
+            SizeFlagsHorizontal = SizeFlags.ExpandFill,
+        };
+        margin.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
+        margin.AddThemeConstantOverride("margin_left", (int)HorizontalPaddingForRows);
+        margin.AddThemeConstantOverride("margin_right", (int)HorizontalPaddingForRows);
+        button.AddChild(margin);
+
+        var row = new HBoxContainer
+        {
+            MouseFilter = MouseFilterEnum.Ignore,
+            Alignment = BoxContainer.AlignmentMode.Center,
+            SizeFlagsHorizontal = SizeFlags.ExpandFill,
+        };
+        row.AddThemeConstantOverride("separation", (int)_tokens.Space2);
+        margin.AddChild(row);
+
+        if (action.Icon is { } icon)
+        {
+            row.AddChild(UiFieldAndRows.Icon(icon, iconSize, IconColor(action)));
+        }
+
+        var label = UiFieldAndRows.Label(action.Label, _tokens, textStyle, TextColor(action.State));
+        label.SizeFlagsHorizontal = SizeFlags.ExpandFill;
+        row.AddChild(label);
+
+        if (action.Note is { } note)
+        {
+            var noteLabel = UiFieldAndRows.Label(
+                note,
+                _tokens,
+                _tokens.NoteText,
+                _tokens.Muted,
+                HorizontalAlignment.Right);
+            noteLabel.CustomMinimumSize = new Vector2(_tokens.ControlSmall * 1.5f, 0);
+            noteLabel.SizeFlagsHorizontal = SizeFlags.ShrinkEnd;
+            row.AddChild(noteLabel);
+        }
+
+        if (ShowSelectedCheck && action.State == UiComponentContracts.SemanticState.Selected)
+        {
+            row.AddChild(UiFieldAndRows.Icon(UiIconId.Check, UiIconSize.Small, _tokens.Accent));
+        }
     }
 
     private Color TextColor(UiComponentContracts.SemanticState state) =>
@@ -178,6 +282,9 @@ public partial class UiOverflowMenu : PanelContainer
             UiComponentContracts.SemanticState.Locked or UiComponentContracts.SemanticState.Disabled => _tokens.Muted,
             _ => _tokens.Ink,
         };
+
+    private Color IconColor(MenuAction action) =>
+        action.IconTint ?? IconColor(action.State);
 
     private Color IconColor(UiComponentContracts.SemanticState state) =>
         state switch
@@ -253,7 +360,7 @@ public partial class UiOverflowMenu : PanelContainer
             {
                 if (child is Button control)
                 {
-                    control.CustomMinimumSize = new Vector2(RowWidth, _tokens.TouchTarget);
+                    control.CustomMinimumSize = new Vector2(RowWidth, RowHeight);
                 }
             }
         }
@@ -266,4 +373,20 @@ public partial class UiOverflowMenu : PanelContainer
     private float RowWidth => ResolveRowWidth(WidthMode, _width, _tokens);
 
     private float ContainerWidth => ResolveContainerWidth(WidthMode, _width, _tokens);
+
+    private float RowHeight => RowSize == MenuRowSize.Compact ? _tokens.ControlSmall : _tokens.TouchTarget;
+
+    private float HorizontalPaddingForRows => RowSize == MenuRowSize.Compact ? _tokens.Space2 : _tokens.Space3;
+
+    private UiTokens.TextStyle TextStyleForRows => RowSize == MenuRowSize.Compact ? _tokens.SmallStrongText : _tokens.BodyStrongText;
+
+    private UiIconSize IconSizeForRows => RowSize == MenuRowSize.Compact ? UiIconSize.Standard : UiIconSize.Large;
+
+    private void RefreshRows()
+    {
+        if (_items is not null)
+        {
+            SetActions(_currentActions);
+        }
+    }
 }
