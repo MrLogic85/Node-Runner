@@ -54,7 +54,11 @@ public partial class UiInfoRow : HBoxContainer
         }
     }
 
-    public override void _Ready() => Rebuild();
+    public override void _Ready()
+    {
+        MouseFilter = MouseFilterEnum.Pass;
+        Rebuild();
+    }
 
     private void Rebuild()
     {

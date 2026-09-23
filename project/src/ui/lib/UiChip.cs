@@ -76,7 +76,11 @@ public partial class UiChip : PanelContainer
         }
     }
 
-    public override void _Ready() => Refresh();
+    public override void _Ready()
+    {
+        MouseFilter = MouseFilterEnum.Pass;
+        Refresh();
+    }
 
     private void Refresh()
     {

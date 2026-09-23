@@ -83,6 +83,7 @@ public partial class UiSegmentedSwitch : HBoxContainer
 
     public override void _Ready()
     {
+        MouseFilter = MouseFilterEnum.Pass;
         _group ??= new ButtonGroup { AllowUnpress = false };
         RefreshOptions();
     }
@@ -119,6 +120,7 @@ public partial class UiSegmentedSwitch : HBoxContainer
                 ToggleMode = true,
                 ButtonGroup = _group,
                 SizeFlagsVertical = SizeFlags.ShrinkCenter,
+                MouseFilter = MouseFilterEnum.Pass,
             };
             button.Pressed += () => Select(index);
             AddChild(button);

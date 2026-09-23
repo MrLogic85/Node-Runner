@@ -35,9 +35,7 @@ public partial class ComponentGalleryScreen : Control
     private UiTokens _tokens = UiTokens.Neon;
     private ColorRect? _background;
     private ScrollContainer? _scroll;
-    private int _scrollTouchIndex = -1;
-    private Vector2 _pendingTouchDrag;
-    private bool _isTouchScrolling;
+    private Control? _scrollContent;
 
     public readonly record struct GalleryComponentSpec(
         UiComponentContracts.CanonicalComponent Component,
@@ -147,50 +145,6 @@ public partial class ComponentGalleryScreen : Control
         Callable.From(ResetScrollPosition).CallDeferred();
     }
 
-    public override void _Input(InputEvent inputEvent)
-    {
-        if (_scroll is null || !IsVisibleInTree())
-        {
-            return;
-        }
-
-        if (inputEvent is InputEventScreenTouch touch)
-        {
-            HandleScrollTouch(touch);
-            return;
-        }
-
-        if (inputEvent is not InputEventScreenDrag drag || drag.Index != _scrollTouchIndex)
-        {
-            return;
-        }
-
-        _pendingTouchDrag += drag.Relative;
-        if (!_isTouchScrolling)
-        {
-            if (_pendingTouchDrag.Length() < UiGalleryScroll.TouchDeadzone)
-            {
-                return;
-            }
-
-            if (Mathf.Abs(_pendingTouchDrag.Y) <= Mathf.Abs(_pendingTouchDrag.X))
-            {
-                _scrollTouchIndex = -1;
-                return;
-            }
-
-            _isTouchScrolling = true;
-            // Until #244 restores native scrolling, deliver its native press cancellation.
-            _scroll.PropagateNotification((int)NotificationScrollBegin);
-        }
-
-        _scroll.ScrollVertical = UiGalleryScroll.ApplyVerticalDrag(
-            _scroll.ScrollVertical,
-            _pendingTouchDrag.Y);
-        _pendingTouchDrag = Vector2.Zero;
-        GetViewport().SetInputAsHandled();
-    }
-
     private void ResetScrollPosition()
     {
         if (_scroll is not null)
@@ -245,6 +199,7 @@ public partial class ComponentGalleryScreen : Control
         };
         content.AddThemeConstantOverride("separation", (int)_tokens.Space2);
         contentFrame.AddChild(content);
+        _scrollContent = contentFrame;
 
         content.AddChild(CreateSectionDescription(
             "Buttons",
@@ -262,6 +217,7 @@ public partial class ComponentGalleryScreen : Control
         content.AddChild(CreateChoiceAndRowsSection());
         content.AddChild(CreateTextAndValueSection());
         content.AddChild(CreateProgressAndStatusSection());
+        UiNativeScroll.AllowGesturesToBubble(contentFrame);
     }
 
     private Control CreateHeader()
@@ -309,36 +265,6 @@ public partial class ComponentGalleryScreen : Control
         header.AddChild(switcher);
 
         return header;
-    }
-
-    private void HandleScrollTouch(InputEventScreenTouch touch)
-    {
-        if (touch.Pressed)
-        {
-            if (_scroll!.GetGlobalRect().HasPoint(touch.Position))
-            {
-                _scrollTouchIndex = touch.Index;
-                _pendingTouchDrag = Vector2.Zero;
-                _isTouchScrolling = false;
-            }
-
-            return;
-        }
-
-        if (touch.Index != _scrollTouchIndex)
-        {
-            return;
-        }
-
-        if (_isTouchScrolling)
-        {
-            _scroll!.PropagateNotification((int)NotificationScrollEnd);
-            GetViewport().SetInputAsHandled();
-        }
-
-        _scrollTouchIndex = -1;
-        _pendingTouchDrag = Vector2.Zero;
-        _isTouchScrolling = false;
     }
 
     private Control CreateActionsSection()
@@ -990,6 +916,7 @@ public partial class ComponentGalleryScreen : Control
         {
             Text = text,
             AutowrapMode = autowrap,
+            MouseFilter = MouseFilterEnum.Ignore,
         };
         _tokens.ApplyTextStyle(label, textStyle);
         label.AddThemeColorOverride("font_color", colorForTokens(_tokens));
@@ -1097,5 +1024,9 @@ public partial class ComponentGalleryScreen : Control
             apply(tokens);
         }
 
+        if (_scrollContent is not null)
+        {
+            UiNativeScroll.AllowGesturesToBubble(_scrollContent);
+        }
     }
 }

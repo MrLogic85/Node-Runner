@@ -790,7 +790,7 @@ public partial class BuildScreen : Control
         };
         dim.GuiInput += @event =>
         {
-            if (@event is InputEventMouseButton { Pressed: true } or InputEventScreenTouch { Pressed: true })
+            if (@event is InputEventMouseButton { Pressed: true })
             {
                 dismissed();
             }

@@ -120,6 +120,7 @@ public partial class UiOverflowMenu : PanelContainer
 
     public override void _Ready()
     {
+        MouseFilter = MouseFilterEnum.Pass;
         SizeFlagsVertical = SizeFlags.ShrinkBegin;
         _items = new VBoxContainer();
         _items.AddThemeConstantOverride("separation", 0);
@@ -173,6 +174,7 @@ public partial class UiOverflowMenu : PanelContainer
                 Alignment = HorizontalAlignment.Left,
                 Disabled = action.State is UiComponentContracts.SemanticState.Disabled or UiComponentContracts.SemanticState.Locked,
                 TooltipText = action.Label,
+                MouseFilter = MouseFilterEnum.Pass,
                 SizeFlagsHorizontal = SizeFlags.ExpandFill,
             };
             _tokens.ApplyTextStyle(button, textStyle);

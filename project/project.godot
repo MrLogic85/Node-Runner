@@ -32,11 +32,7 @@ SaveManager="*res://src/managers/SaveManager.cs"
 
 [input_devices]
 
-; Touch devices already deliver InputEventScreenTouch/Drag directly (see
-; PointerInput.cs); emulating mouse events from the same touch would fire
-; press/drag handlers twice per gesture. Desktop development still gets real
-; mouse events, so nothing is lost by disabling the emulation.
-pointing/emulate_mouse_from_touch=false
+pointing/emulate_mouse_from_touch=true
 
 [physics]
 

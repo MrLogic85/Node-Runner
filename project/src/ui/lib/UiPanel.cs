@@ -124,6 +124,7 @@ public partial class UiPanel : PanelContainer
     public override void _Ready()
     {
         FocusMode = FocusModeEnum.None;
+        MouseFilter = MouseFilterEnum.Pass;
         RefreshStyle();
     }
 

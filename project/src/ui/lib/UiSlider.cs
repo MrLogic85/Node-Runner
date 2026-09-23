@@ -29,6 +29,8 @@ public partial class UiSlider : Control
     private StyleBoxFlat? _thumbStyle;
     private readonly List<Label> _stepLabelNodes = [];
     private int _draggedThumb = -1;
+    private int _pressedThumb = -1;
+    private Vector2 _pressPosition;
 
     [Export]
     public string LabelText
@@ -132,7 +134,7 @@ public partial class UiSlider : Control
     public override void _Ready()
     {
         FocusMode = FocusModeEnum.None;
-        MouseFilter = MouseFilterEnum.Stop;
+        MouseFilter = MouseFilterEnum.Pass;
         Resized += LayoutContent;
         EnsureLabels();
         RebuildStepLabels();
@@ -143,25 +145,39 @@ public partial class UiSlider : Control
     {
         Resized -= LayoutContent;
         _draggedThumb = -1;
+        _pressedThumb = -1;
     }
 
     public override void _GuiInput(InputEvent inputEvent)
     {
         if (!Enabled)
         {
+            _draggedThumb = -1;
+            _pressedThumb = -1;
             return;
         }
 
         if (PointerInput.TryGetPressPosition(inputEvent, out var pressPosition))
         {
-            _draggedThumb = NearestThumb(pressPosition.X);
-            SetDraggedThumb(pressPosition.X);
-            AcceptEvent();
+            _pressedThumb = NearestThumb(pressPosition.X);
+            _pressPosition = pressPosition;
             return;
         }
 
-        if (_draggedThumb >= 0 && PointerInput.TryGetDragPosition(inputEvent, out var dragPosition))
+        if (_pressedThumb >= 0 && PointerInput.TryGetDragPosition(inputEvent, out var dragPosition))
         {
+            var delta = dragPosition - _pressPosition;
+            if (_draggedThumb < 0)
+            {
+                if (Mathf.Abs(delta.Y) > Mathf.Abs(delta.X))
+                {
+                    _pressedThumb = -1;
+                    return;
+                }
+
+                _draggedThumb = _pressedThumb;
+            }
+
             SetDraggedThumb(dragPosition.X);
             AcceptEvent();
             return;
@@ -173,8 +189,15 @@ public partial class UiSlider : Control
             {
                 EmitSignal(SignalName.ThumbChangeCommitted, _draggedThumb, _thumbs[_draggedThumb]);
             }
+            else if (_pressedThumb >= 0)
+            {
+                _draggedThumb = _pressedThumb;
+                SetDraggedThumb(_pressPosition.X);
+                EmitSignal(SignalName.ThumbChangeCommitted, _draggedThumb, _thumbs[_draggedThumb]);
+            }
 
             _draggedThumb = -1;
+            _pressedThumb = -1;
         }
     }
 

@@ -40,7 +40,11 @@ public partial class UiMeterRow : VBoxContainer
         }
     }
 
-    public override void _Ready() => Rebuild();
+    public override void _Ready()
+    {
+        MouseFilter = MouseFilterEnum.Pass;
+        Rebuild();
+    }
 
     private void Rebuild()
     {

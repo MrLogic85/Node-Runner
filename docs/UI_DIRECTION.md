@@ -87,9 +87,9 @@ The human approved wider numeric segments to preserve a 48px target per
 option rather than copying the narrower HTML specimen. The existing shared
 font adapter still rounds label tracking from 0.04em (0.48px at 12px) to 1px;
 this change does not claim exact CSS tracking or line-box equivalence.
-Until #244 replaces manual gallery scrolling, both galleries send native
-scroll notifications to their content so Godot controls cancel pending
-presses instead of retaining a stuck pressed appearance.
+Component Gallery and Colors & Styles use Godot `ScrollContainer` native
+scrolling; controls inside them rely on Godot's native input dispatch for
+tap, drag, fling, focus, and caret behavior.
 
 Parts tray tabs use persistent native toggle buttons in a `ButtonGroup`,
 with the reference's part glyphs and accent-soft selected treatment, not a

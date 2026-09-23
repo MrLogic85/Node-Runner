@@ -3,9 +3,7 @@ using Godot;
 namespace NodeRunner.Ui.Lib;
 
 /// <summary>
-/// Normalizes touch and mouse pointer events into press/drag/release
-/// positions, so screens and widgets do not each re-implement the
-/// touch-vs-mouse branching. App-agnostic: only Godot input/primitive types.
+/// Normalizes native pointer events into press/drag/release positions.
 /// </summary>
 public static class PointerInput
 {
@@ -13,9 +11,6 @@ public static class PointerInput
     {
         switch (inputEvent)
         {
-            case InputEventScreenTouch { Pressed: true } touch:
-                position = touch.Position;
-                return true;
             case InputEventMouseButton { Pressed: true, ButtonIndex: MouseButton.Left } mouseButton:
                 position = mouseButton.Position;
                 return true;
@@ -29,9 +24,6 @@ public static class PointerInput
     {
         switch (inputEvent)
         {
-            case InputEventScreenTouch { Pressed: false } touch:
-                position = touch.Position;
-                return true;
             case InputEventMouseButton { Pressed: false, ButtonIndex: MouseButton.Left } mouseButton:
                 position = mouseButton.Position;
                 return true;
@@ -45,9 +37,6 @@ public static class PointerInput
     {
         switch (inputEvent)
         {
-            case InputEventScreenDrag drag:
-                position = drag.Position;
-                return true;
             case InputEventMouseMotion { ButtonMask: MouseButtonMask.Left } mouseMotion:
                 position = mouseMotion.Position;
                 return true;
