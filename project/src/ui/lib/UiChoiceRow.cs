@@ -84,6 +84,7 @@ public abstract partial class UiChoiceRow : Container
         {
             MouseFilter = MouseFilterEnum.Pass;
             _button = IsSwitch ? new CheckButton() : new CheckBox();
+            _button.MouseFilter = MouseFilterEnum.Pass;
             _button.Disabled = Disabled;
             _button.SetPressedNoSignal(_selected);
             _button.Toggled += OnNativeToggled;

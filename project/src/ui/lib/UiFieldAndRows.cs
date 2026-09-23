@@ -14,6 +14,7 @@ internal static class UiFieldAndRows
             HorizontalAlignment = alignment,
             AutowrapMode = TextServer.AutowrapMode.Off,
             TextOverrunBehavior = TextServer.OverrunBehavior.TrimEllipsis,
+            MouseFilter = Control.MouseFilterEnum.Ignore,
         };
         tokens.ApplyTextStyle(label, style);
         label.AddThemeColorOverride("font_color", color);

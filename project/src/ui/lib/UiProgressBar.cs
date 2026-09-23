@@ -52,6 +52,7 @@ public partial class UiProgressBar : Control
 
     public override void _Ready()
     {
+        MouseFilter = MouseFilterEnum.Ignore;
         ApplyGeometry();
     }
 

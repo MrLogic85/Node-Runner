@@ -26,7 +26,11 @@ public partial class UiValueRow : HBoxContainer
         }
     }
 
-    public override void _Ready() => Rebuild();
+    public override void _Ready()
+    {
+        MouseFilter = MouseFilterEnum.Pass;
+        Rebuild();
+    }
 
     private void Rebuild()
     {
@@ -51,6 +55,7 @@ public partial class UiValueRow : HBoxContainer
             Text = ValueText,
             Flat = true,
             CustomMinimumSize = new Vector2(_tokens.ColumnSmallWidth, _tokens.ControlSmall),
+            MouseFilter = MouseFilterEnum.Pass,
         };
         _tokens.ApplyTextStyle(editButton, _tokens.ReadoutMediumText);
         editButton.AddThemeColorOverride("font_color", _tokens.Ink);

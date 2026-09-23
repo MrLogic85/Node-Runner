@@ -55,9 +55,7 @@ public partial class ColorsAndStylesScreen : Control
     private UiTokens _tokens = UiTokens.Neon;
     private ColorRect? _background;
     private ScrollContainer? _scroll;
-    private int _scrollTouchIndex = -1;
-    private Vector2 _pendingTouchDrag;
-    private bool _isTouchScrolling;
+    private Control? _scrollContent;
 
     public override void _Ready()
     {
@@ -66,50 +64,6 @@ public partial class ColorsAndStylesScreen : Control
         BuildLayout();
         ApplyTokens(_tokens);
         Callable.From(ResetScrollPosition).CallDeferred();
-    }
-
-    public override void _Input(InputEvent inputEvent)
-    {
-        if (_scroll is null || !IsVisibleInTree())
-        {
-            return;
-        }
-
-        if (inputEvent is InputEventScreenTouch touch)
-        {
-            HandleScrollTouch(touch);
-            return;
-        }
-
-        if (inputEvent is not InputEventScreenDrag drag || drag.Index != _scrollTouchIndex)
-        {
-            return;
-        }
-
-        _pendingTouchDrag += drag.Relative;
-        if (!_isTouchScrolling)
-        {
-            if (_pendingTouchDrag.Length() < UiGalleryScroll.TouchDeadzone)
-            {
-                return;
-            }
-
-            if (Mathf.Abs(_pendingTouchDrag.Y) <= Mathf.Abs(_pendingTouchDrag.X))
-            {
-                _scrollTouchIndex = -1;
-                return;
-            }
-
-            _isTouchScrolling = true;
-            // Until #244 restores native scrolling, deliver its native press cancellation.
-            _scroll.PropagateNotification((int)NotificationScrollBegin);
-        }
-
-        _scroll.ScrollVertical = UiGalleryScroll.ApplyVerticalDrag(
-            _scroll.ScrollVertical,
-            _pendingTouchDrag.Y);
-        _pendingTouchDrag = Vector2.Zero;
-        GetViewport().SetInputAsHandled();
     }
 
     private void ResetScrollPosition()
@@ -151,12 +105,14 @@ public partial class ColorsAndStylesScreen : Control
         var content = new VBoxContainer { SizeFlagsHorizontal = SizeFlags.ExpandFill };
         content.AddThemeConstantOverride("separation", (int)_tokens.Space5);
         _scroll.AddChild(content);
+        _scrollContent = content;
         content.AddChild(CreateColorsSection(UiTokens.Neon, "NEON LAB (DARK)"));
         content.AddChild(CreateColorsSection(UiTokens.Paper, "PAPER (LIGHT)"));
         content.AddChild(CreateSurfacesSection());
         content.AddChild(CreateIconsSection());
         content.AddChild(CreateTextStylesSection());
         content.AddChild(CreateRadiiSection());
+        UiNativeScroll.AllowGesturesToBubble(content);
     }
 
     private Control CreateHeader()
@@ -290,6 +246,7 @@ public partial class ColorsAndStylesScreen : Control
             {
                 CustomMinimumSize = new Vector2(_tokens.ColumnLargeWidth, _tokens.ControlHeight),
                 TooltipText = RadiusInventory[index],
+                MouseFilter = MouseFilterEnum.Pass,
             };
             specimen.AddThemeStyleboxOverride(
                 "panel",
@@ -428,7 +385,7 @@ public partial class ColorsAndStylesScreen : Control
         Func<UiTokens, Color> colorForTokens,
         TextServer.AutowrapMode autowrap = TextServer.AutowrapMode.WordSmart)
     {
-        var label = new Label { Text = text, AutowrapMode = autowrap };
+        var label = new Label { Text = text, AutowrapMode = autowrap, MouseFilter = MouseFilterEnum.Ignore };
         _tokens.ApplyTextStyle(label, textStyle);
         label.AddThemeColorOverride("font_color", colorForTokens(_tokens));
         _labelAppliers.Add(tokens =>
@@ -480,6 +437,11 @@ public partial class ColorsAndStylesScreen : Control
         {
             apply(tokens);
         }
+
+        if (_scrollContent is not null)
+        {
+            UiNativeScroll.AllowGesturesToBubble(_scrollContent);
+        }
     }
 
     private static UiTokens.TextStyle TextStyleFor(UiTokens tokens, string name) =>
@@ -527,31 +489,4 @@ public partial class ColorsAndStylesScreen : Control
             _ => throw new ArgumentOutOfRangeException(nameof(name), name, null),
         };
 
-    private void HandleScrollTouch(InputEventScreenTouch touch)
-    {
-        if (touch.Pressed)
-        {
-            if (_scroll!.GetGlobalRect().HasPoint(touch.Position))
-            {
-                _scrollTouchIndex = touch.Index;
-                _pendingTouchDrag = Vector2.Zero;
-                _isTouchScrolling = false;
-            }
-            return;
-        }
-
-        if (touch.Index != _scrollTouchIndex)
-        {
-            return;
-        }
-
-        if (_isTouchScrolling)
-        {
-            _scroll!.PropagateNotification((int)NotificationScrollEnd);
-            GetViewport().SetInputAsHandled();
-        }
-        _scrollTouchIndex = -1;
-        _pendingTouchDrag = Vector2.Zero;
-        _isTouchScrolling = false;
-    }
 }

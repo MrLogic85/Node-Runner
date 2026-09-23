@@ -102,10 +102,7 @@ uses to replace the running creature (see #72 above).
   wrong in-canvas position relative to what's rendered. Any future widget
   that hit-tests pointer input against drawn content should use the same
   pattern.
-- `project.godot` sets `input_devices/pointing/emulate_mouse_from_touch` to
-  `false`. Godot's default emulates a mouse event from every touch event;
-  since `PointerInput` already handles both `InputEventScreenTouch` and
-  mouse events, leaving emulation on double-fires every tap/drag handler on
-  real touch devices (observed as, e.g., a beam selection being made and
-  immediately cleared by the "second" tap). Desktop development still gets
-  real mouse input, so nothing is lost by disabling the emulation.
+- `project.godot` keeps `input_devices/pointing/emulate_mouse_from_touch`
+  enabled so Godot controls receive their native mouse-style input on Android
+  touch devices. App pointer helpers consume those native pointer events
+  instead of branching on raw touch events.

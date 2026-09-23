@@ -522,7 +522,7 @@ public partial class SimulateScreen : Control
             _buildModeSegment = segment;
             void RequestBuild(InputEvent @event)
             {
-                if (@event is InputEventMouseButton { Pressed: true } or InputEventScreenTouch { Pressed: true })
+                if (@event is InputEventMouseButton { Pressed: true })
                 {
                     EmitSignal(SignalName.BuildRequested);
                     segment.AcceptEvent();
@@ -558,9 +558,6 @@ public partial class SimulateScreen : Control
         {
             case InputEventMouseButton { Pressed: true } mouse:
                 position = mouse.GlobalPosition;
-                return true;
-            case InputEventScreenTouch { Pressed: true } touch:
-                position = touch.Position;
                 return true;
             default:
                 position = default;
@@ -844,7 +841,7 @@ public partial class SimulateScreen : Control
 
     private void OnSettingsScrimInput(InputEvent @event)
     {
-        if (@event is InputEventMouseButton { Pressed: true } or InputEventScreenTouch { Pressed: true })
+        if (@event is InputEventMouseButton { Pressed: true })
         {
             CloseTrainingSettingsSheet();
             _settingsScrim?.AcceptEvent();

@@ -123,12 +123,6 @@ public partial class UiSelectionHandle : Control
 
     private static bool TryHandlePress(InputEvent inputEvent, out Vector2 position)
     {
-        if (inputEvent is InputEventScreenTouch { Pressed: true } touch)
-        {
-            position = touch.Position;
-            return true;
-        }
-
         if (inputEvent is InputEventMouseButton { Pressed: true, ButtonIndex: MouseButton.Left } mouse)
         {
             position = mouse.Position;

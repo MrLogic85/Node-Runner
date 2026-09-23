@@ -73,6 +73,7 @@ public partial class UiIconTabs : HBoxContainer
 
     public override void _Ready()
     {
+        MouseFilter = MouseFilterEnum.Pass;
         _group ??= new ButtonGroup { AllowUnpress = false };
         if (!_tabsConfigured)
         {
@@ -130,6 +131,7 @@ public partial class UiIconTabs : HBoxContainer
                 ButtonGroup = _group,
                 CustomMinimumSize = new Vector2(_tokens.TouchTarget, _tokens.TouchTarget),
                 SizeFlagsVertical = SizeFlags.ShrinkCenter,
+                MouseFilter = MouseFilterEnum.Pass,
             };
             var slotIndex = _slots.Count;
             button.Pressed += () => SelectTab(slotIndex);

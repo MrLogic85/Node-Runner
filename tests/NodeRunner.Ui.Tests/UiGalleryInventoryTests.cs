@@ -96,16 +96,4 @@ public sealed class UiGalleryInventoryTests
         rowGroups.ShouldAllBe(group => !string.IsNullOrWhiteSpace(group));
     }
 
-    [Theory]
-    [InlineData(120, 8.4f, 112)]
-    [InlineData(120, -8.4f, 128)]
-    [InlineData(0, 0.4f, 0)]
-    public void GalleryScroll_AppliesTouchDragInNaturalDirection(
-        int currentScroll,
-        float relativeY,
-        int expected)
-    {
-        UiGalleryScroll.ApplyVerticalDrag(currentScroll, relativeY).ShouldBe(expected);
-    }
-
 }

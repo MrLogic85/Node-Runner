@@ -72,6 +72,7 @@ public partial class UiPanelHeader : HBoxContainer
 
     public override void _Ready()
     {
+        MouseFilter = MouseFilterEnum.Pass;
         _actionItems = _pendingActions ?? CreateActionsFromGlyphs();
         _pendingActions = null;
         Rebuild();
@@ -121,6 +122,7 @@ public partial class UiPanelHeader : HBoxContainer
                 TooltipText = string.IsNullOrWhiteSpace(action.AccessibleLabel) ? action.Id : action.AccessibleLabel,
                 CustomMinimumSize = new Vector2(_tokens.ControlSmall, _tokens.ControlSmall),
                 Disabled = action.State is UiComponentContracts.SemanticState.Disabled or UiComponentContracts.SemanticState.Locked,
+                MouseFilter = MouseFilterEnum.Pass,
             };
             _tokens.ApplyTextStyle(button, _tokens.LabelText);
             var actionColor = ActionColor(action.State);

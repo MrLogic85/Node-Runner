@@ -31,7 +31,6 @@ public partial class UiButton : Button
     private float _holdDurationSeconds;
     private double _holdElapsedSeconds;
     private bool _isHolding;
-    private int _holdTouchIndex = -1;
     private bool _handlersConnected;
     private Control? _progressClip;
     private Panel? _progressBackground;
@@ -238,7 +237,6 @@ public partial class UiButton : Button
             _holdDurationSeconds = Mathf.Max(value, 0);
             _holdElapsedSeconds = 0;
             _isHolding = false;
-            _holdTouchIndex = -1;
             Progress = _holdDurationSeconds > 0 ? 0 : -1;
             SetProcess(false);
             SetProcessInput(false);
@@ -273,17 +271,10 @@ public partial class UiButton : Button
 
     public override void _Ready()
     {
+        MouseFilter = MouseFilterEnum.Pass;
         SetProcess(false);
         SetProcessInput(false);
         RefreshStyle();
-    }
-
-    public override void _GuiInput(InputEvent inputEvent)
-    {
-        if (!_isHolding && Enabled && HoldDurationSeconds > 0 && inputEvent.IsPressed())
-        {
-            _holdTouchIndex = inputEvent is InputEventScreenTouch touch ? touch.Index : -1;
-        }
     }
 
     public override void _Input(InputEvent inputEvent)
@@ -296,20 +287,10 @@ public partial class UiButton : Button
         // Observe before a parent scroll container can consume the release or drag.
         switch (inputEvent)
         {
-            case InputEventScreenTouch touch when touch.Index == _holdTouchIndex:
-                if (!touch.Pressed || touch.Canceled)
-                {
-                    EndHold();
-                }
-                break;
-            case InputEventScreenDrag drag when drag.Index == _holdTouchIndex:
-                CancelHoldOutside(drag.Position);
-                break;
-            case InputEventMouseMotion motion when _holdTouchIndex < 0:
+            case InputEventMouseMotion motion:
                 CancelHoldOutside(motion.Position);
                 break;
-            case InputEventMouseButton { Pressed: false, ButtonIndex: MouseButton.Left }
-                when _holdTouchIndex < 0:
+            case InputEventMouseButton { Pressed: false, ButtonIndex: MouseButton.Left }:
                 EndHold();
                 break;
         }
@@ -369,7 +350,6 @@ public partial class UiButton : Button
         _isHolding = false;
         SetProcess(false);
         SetProcessInput(false);
-        _holdTouchIndex = -1;
         OnHoldCompleted();
         Activate();
     }
@@ -575,7 +555,6 @@ public partial class UiButton : Button
         Progress = 0;
         SetProcess(false);
         SetProcessInput(false);
-        _holdTouchIndex = -1;
         OnHoldCancelled();
     }
 

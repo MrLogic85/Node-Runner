@@ -55,11 +55,7 @@ public partial class BrainFocusNetworkView : Control
             return;
         }
 
-        if (@event is InputEventScreenTouch { Pressed: true } touch)
-        {
-            SelectNearestNeuron(touch.Position);
-        }
-        else if (@event is InputEventMouseButton { Pressed: true, ButtonIndex: MouseButton.Left } mouse)
+        if (@event is InputEventMouseButton { Pressed: true, ButtonIndex: MouseButton.Left } mouse)
         {
             SelectNearestNeuron(mouse.Position);
         }

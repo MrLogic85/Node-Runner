@@ -58,13 +58,13 @@ public partial class UiPartRow : PanelContainer
     public override void _Ready()
     {
         FocusMode = FocusModeEnum.None;
+        MouseFilter = MouseFilterEnum.Pass;
         Rebuild();
     }
 
     public override void _GuiInput(InputEvent @event)
     {
-        var activated = @event is InputEventMouseButton { Pressed: true, ButtonIndex: MouseButton.Left } ||
-                        @event is InputEventScreenTouch { Pressed: true };
+        var activated = @event is InputEventMouseButton { Pressed: true, ButtonIndex: MouseButton.Left };
         if (IsAvailable && activated)
         {
             EmitSignal(SignalName.PartSelected);
