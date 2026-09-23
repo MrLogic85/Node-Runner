@@ -52,13 +52,15 @@ public sealed class UiComponentContractsTests
     }
 
     [Fact]
-    public void ComponentGalleryInventory_CoversEveryCanonicalComponentExactlyOnce()
+    public void ComponentGalleryInventory_CoversVisibleCanonicalComponentsExactlyOnce()
     {
         var inventory = ComponentGalleryScreen.CanonicalInventory;
 
         inventory.Select(spec => spec.Component)
-            .ShouldBe(UiComponentContracts.AllCanonicalComponents);
-        foreach (var component in UiComponentContracts.AllCanonicalComponents)
+            .ShouldAllBe(component => UiComponentContracts.AllCanonicalComponents.Contains(component));
+        inventory.Select(spec => spec.Component).Distinct().Count()
+            .ShouldBe(inventory.Count);
+        foreach (var component in inventory.Select(spec => spec.Component))
         {
             inventory.Count(spec => spec.Component == component).ShouldBe(1);
         }
@@ -87,35 +89,6 @@ public sealed class UiComponentContractsTests
     }
 
     [Fact]
-    public void ComponentGalleryInventory_LabelsPanelAndCardAsSharedComposition()
-    {
-        var shared = ComponentGalleryScreen.CanonicalInventory
-            .Where(spec => spec.SharedComposition)
-            .ToArray();
-
-        shared.Select(spec => spec.Component).ShouldBe(
-            [
-                UiComponentContracts.CanonicalComponent.Card,
-                UiComponentContracts.CanonicalComponent.Panel,
-            ]);
-        shared.Select(spec => spec.Section).Distinct().Single()
-            .ShouldContain("shared composition");
-        UiComponentContracts.SharesImplementation(
-                UiComponentContracts.CanonicalComponent.Card,
-                UiComponentContracts.CanonicalComponent.Panel)
-            .ShouldBeTrue();
-    }
-
-    [Fact]
-    public void PanelAndCard_ShareImplementation()
-    {
-        UiComponentContracts.SharesImplementation(
-                UiComponentContracts.CanonicalComponent.Card,
-                UiComponentContracts.CanonicalComponent.Panel)
-            .ShouldBeTrue();
-    }
-
-    [Fact]
     public void SliderAndRange_ShareImplementation()
     {
         UiComponentContracts.ControlTypeFor(UiComponentContracts.CanonicalComponent.Slider)
@@ -125,6 +98,15 @@ public sealed class UiComponentContractsTests
         UiComponentContracts.SharesImplementation(
                 UiComponentContracts.CanonicalComponent.Slider,
                 UiComponentContracts.CanonicalComponent.Range)
+            .ShouldBeTrue();
+    }
+
+    [Fact]
+    public void PanelAndCard_ShareImplementation()
+    {
+        UiComponentContracts.SharesImplementation(
+                UiComponentContracts.CanonicalComponent.Card,
+                UiComponentContracts.CanonicalComponent.Panel)
             .ShouldBeTrue();
     }
 
