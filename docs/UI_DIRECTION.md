@@ -99,6 +99,21 @@ visible frame is 32px high with 4px between tabs. Four tabs therefore need
 unframed interactive specimen. See
 [issue #249](https://github.com/MrLogic85/Node-Runner/issues/249).
 
+Glow is a visual effect outside a control's layout rectangle. Components must
+not add layout padding just to make glow visible, because that breaks placement
+and popup anchoring. Parents that intentionally clip children, especially
+scroll viewports, must either provide container-level bleed/inset for glowing
+content or accept/document clipped glow. Product popups should live in an
+unclipped overlay layer rather than inside clipped scroll content. See
+[issue #252](https://github.com/MrLogic85/Node-Runner/issues/252).
+
+Overflow menus default to the existing fixed token width, and can opt into
+content-wrapping width through `UiOverflowMenu.WidthMode`. The legacy `Width`
+property remains the fixed row width override for compatibility; `0` keeps the
+token default. Wrap-content menus remove the fixed row width but keep native
+button rows, 48px touch height, row padding, icon gap, and semantic coloring.
+See [issue #251](https://github.com/MrLogic85/Node-Runner/issues/251).
+
 ## Rules for UI changes
 
 - Finish and verify the token/typography/size foundation before the Component

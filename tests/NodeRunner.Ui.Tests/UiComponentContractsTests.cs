@@ -101,6 +101,8 @@ public sealed class UiComponentContractsTests
             .ShouldBe(["Normal", "Focused", "Selected", "Locked", "Warning", "Danger", "Hint"]);
         Enum.GetNames<UiChip.ChipKind>()
             .ShouldBe(["Neutral", "Accent", "Locked", "Danger", "Warning", "Bad", "Ok"]);
+        Enum.GetNames<UiOverflowMenu.MenuWidthMode>()
+            .ShouldBe(["Fixed", "WrapContent"]);
     }
 
     [Fact]
@@ -120,6 +122,25 @@ public sealed class UiComponentContractsTests
         sliderStyle.ThumbRadius.ShouldBe(9);
         sliderStyle.TrackWidth.ShouldBe(4);
         UiSliderStyle.DisabledOpacity.ShouldBe(0.5f);
+    }
+
+    [Fact]
+    public void OverflowMenuWidthResolution_PreservesFixedDefaultAndWrapContracts()
+    {
+        var tokens = UiTokens.Neon;
+
+        UiOverflowMenu.ResolveContainerWidth(UiOverflowMenu.MenuWidthMode.Fixed, 0, tokens)
+            .ShouldBe(tokens.MenuWidth);
+        UiOverflowMenu.ResolveRowWidth(UiOverflowMenu.MenuWidthMode.Fixed, 0, tokens)
+            .ShouldBe(tokens.MenuWidth - (tokens.StrokeHair * 2));
+        UiOverflowMenu.ResolveContainerWidth(UiOverflowMenu.MenuWidthMode.Fixed, 220, tokens)
+            .ShouldBe(220);
+        UiOverflowMenu.ResolveRowWidth(UiOverflowMenu.MenuWidthMode.Fixed, 220, tokens)
+            .ShouldBe(218);
+        UiOverflowMenu.ResolveContainerWidth(UiOverflowMenu.MenuWidthMode.WrapContent, 220, tokens)
+            .ShouldBe(0);
+        UiOverflowMenu.ResolveRowWidth(UiOverflowMenu.MenuWidthMode.WrapContent, 220, tokens)
+            .ShouldBe(0);
     }
 
     [Fact]
