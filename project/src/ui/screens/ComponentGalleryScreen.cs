@@ -111,6 +111,8 @@ public partial class ComponentGalleryScreen : Control
         new(UiComponentContracts.CanonicalComponent.Range, "Slider and range"),
         new(UiComponentContracts.CanonicalComponent.ProgressBar, "Slider and range"),
         new(UiComponentContracts.CanonicalComponent.ProgressRing, "Progress"),
+        new(UiComponentContracts.CanonicalComponent.Card, "Cards"),
+        new(UiComponentContracts.CanonicalComponent.Panel, "Cards"),
         new(UiComponentContracts.CanonicalComponent.Toggle, "Choices and tray rows"),
         new(UiComponentContracts.CanonicalComponent.Checkbox, "Choices and tray rows"),
         new(UiComponentContracts.CanonicalComponent.Segmented, "Segmented"),
@@ -198,6 +200,7 @@ public partial class ComponentGalleryScreen : Control
         content.AddChild(CreateSelectionHandlesSection());
         content.AddChild(CreateSliderSection());
         content.AddChild(CreateProgressSection());
+        content.AddChild(CreateCardSection());
         content.AddChild(CreateMenuSection());
         content.AddChild(CreatePickerSection());
         content.AddChild(CreateTextInputSection());
@@ -552,6 +555,65 @@ public partial class ComponentGalleryScreen : Control
         return content;
     }
 
+    private Control CreateCardSection()
+    {
+        var content = new VBoxContainer();
+        content.AddThemeConstantOverride("separation", (int)_tokens.Space2);
+        content.AddChild(CreateSectionDescription(
+            "Cards",
+            "one frame surface with variants; menu, dialog, pick, and stage card are owned elsewhere"));
+
+        var variants = new GridContainer
+        {
+            Columns = 3,
+            SizeFlagsHorizontal = SizeFlags.ExpandFill,
+        };
+        variants.AddThemeConstantOverride("h_separation", UiSpacing.ControlGap(_tokens));
+        variants.AddThemeConstantOverride("v_separation", UiSpacing.ControlGap(_tokens));
+        variants.AddChild(CreateCardSpecimen("Frame", "Default card", UiCard.CardVariant.Frame));
+        variants.AddChild(CreateCardSpecimen("Selected", "Accent border and glow", UiCard.CardVariant.Selected));
+        variants.AddChild(CreateCardSpecimen("Locked", "Dimmed dashed frame", UiCard.CardVariant.Locked));
+        variants.AddChild(CreateCardSpecimen("Warning", "Danger border with words", UiCard.CardVariant.Warning));
+        variants.AddChild(CreateCardSpecimen("Hint", "Halo border for guidance", UiCard.CardVariant.Hint));
+        variants.AddChild(CreateCardSpecimen("Frame + glow", "Frame with glow enabled", UiCard.CardVariant.Frame, glow: true));
+        variants.AddChild(CreateCardSpecimen("Raised", "Raised surface variant", UiCard.CardVariant.Raised));
+        content.AddChild(variants);
+
+        var sizes = new HFlowContainer();
+        sizes.AddThemeConstantOverride("h_separation", UiSpacing.ControlGap(_tokens));
+        sizes.AddThemeConstantOverride("v_separation", UiSpacing.ControlGap(_tokens));
+        sizes.AddChild(CreateCardSpecimen("Default", "space-3 padding", UiCard.CardVariant.Frame, UiCard.CardSize.Default));
+        sizes.AddChild(CreateCardSpecimen("Snug", "smaller padding", UiCard.CardVariant.Frame, UiCard.CardSize.Snug));
+        sizes.AddChild(CreateCardSpecimen("Tight", "compact padding", UiCard.CardVariant.Frame, UiCard.CardSize.Tight));
+        sizes.AddChild(CreateCardSpecimen("Roomy", "larger padding", UiCard.CardVariant.Frame, UiCard.CardSize.Roomy));
+        sizes.AddChild(CreateCardSpecimen("Flush", "no padding", UiCard.CardVariant.Frame, UiCard.CardSize.Flush));
+        content.AddChild(sizes);
+        return content;
+    }
+
+    private Control CreateCardSpecimen(
+        string title,
+        string description,
+        UiCard.CardVariant variant,
+        UiCard.CardSize size = UiCard.CardSize.Default,
+        bool glow = false)
+    {
+        var card = Track(new UiCard
+        {
+            Kind = variant,
+            SizeVariant = size,
+            Glow = glow,
+            CustomMinimumSize = new Vector2(148, 0),
+            SizeFlagsHorizontal = SizeFlags.ExpandFill,
+        });
+        var stack = new VBoxContainer();
+        stack.AddThemeConstantOverride("separation", (int)_tokens.Space1);
+        stack.AddChild(CreateLabel(title, _tokens.SubheadingText, tokens => tokens.Ink, TextServer.AutowrapMode.Off));
+        stack.AddChild(CreateLabel(description, _tokens.NoteText, tokens => tokens.Muted));
+        card.AddChild(stack);
+        return card;
+    }
+
     private Control CreateSliderSectionDescription(string title, string description)
     {
         var heading = new HBoxContainer
@@ -893,6 +955,9 @@ public partial class ComponentGalleryScreen : Control
                 break;
             case UiProgressRing progressRing:
                 progressRing.Tokens = tokens;
+                break;
+            case UiCard card:
+                card.Tokens = tokens;
                 break;
         }
     }

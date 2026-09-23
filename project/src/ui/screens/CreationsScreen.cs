@@ -208,10 +208,10 @@ public partial class CreationsScreen : Control
 
     private Control CreateTopBar()
     {
-        var topBar = new UiPanel
+        var topBar = new UiCard
         {
             Tokens = _tokens,
-            Variant = UiSurfaceContracts.FrameVariant.Frame,
+            Kind = UiCard.CardVariant.Frame,
             CustomMinimumSize = new Vector2(0, UiLayout.TopBarHeight),
             SizeFlagsHorizontal = SizeFlags.ExpandFill,
         };

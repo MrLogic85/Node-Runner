@@ -3,7 +3,7 @@ using Godot;
 namespace NodeRunner.Ui.Lib;
 
 /// <summary>Reference top bar: Back, title, spacer, up to two actions and overflow.</summary>
-public partial class UiTopBar : UiPanel
+public partial class UiTopBar : UiCard
 {
     [Signal]
     public delegate void BackPressedEventHandler();
@@ -54,7 +54,7 @@ public partial class UiTopBar : UiPanel
         }
     }
 
-    public new UiTokens Tokens
+    public override UiTokens Tokens
     {
         get => _tokens;
         set
@@ -67,8 +67,9 @@ public partial class UiTopBar : UiPanel
 
     public override void _Ready()
     {
-        Variant = UiSurfaceContracts.FrameVariant.Frame;
+        Kind = CardVariant.Frame;
         CustomMinimumSize = new Vector2(0, UiLayout.TopBarHeight);
+        base._Ready();
 
         var row = new HBoxContainer();
         row.AddThemeConstantOverride("separation", (int)_tokens.Space2);

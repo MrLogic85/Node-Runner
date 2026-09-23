@@ -113,13 +113,18 @@ public sealed class UiComponentContractsTests
     }
 
     [Fact]
-    public void PanelAndCard_ShareImplementation()
+    public void CardAndPanel_ShareImplementation()
     {
+        UiComponentContracts.ControlTypeFor(UiComponentContracts.CanonicalComponent.Card)
+            .ShouldBe(nameof(UiCard));
+        UiComponentContracts.ControlTypeFor(UiComponentContracts.CanonicalComponent.Panel)
+            .ShouldBe(nameof(UiCard));
         UiComponentContracts.SharesImplementation(
                 UiComponentContracts.CanonicalComponent.Card,
                 UiComponentContracts.CanonicalComponent.Panel)
             .ShouldBeTrue();
     }
+
 
     [Fact]
     public void ReusableControlEnums_PinDocumentedDefaultsAndVariants()
@@ -132,8 +137,10 @@ public sealed class UiComponentContractsTests
             .ShouldBe(["Small", "Default", "Large"]);
         Enum.GetNames<UiButtonContentLayout>()
             .ShouldBe(["Row", "Icon", "Stack"]);
-        Enum.GetNames<UiPanel.PanelState>()
-            .ShouldBe(["Normal", "Focused", "Selected", "Locked", "Warning", "Danger", "Hint"]);
+        Enum.GetNames<UiCard.CardVariant>()
+            .ShouldBe(["Frame", "Selected", "Locked", "Warning", "Hint", "Raised"]);
+        Enum.GetNames<UiCard.CardSize>()
+            .ShouldBe(["Default", "Snug", "Tight", "Roomy", "Flush"]);
         Enum.GetNames<UiChip.ChipKind>()
             .ShouldBe(["Neutral", "Accent", "Locked", "Danger", "Warning", "Bad", "Ok"]);
         Enum.GetNames<UiOverflowMenu.MenuWidthMode>()
@@ -148,8 +155,8 @@ public sealed class UiComponentContractsTests
         UiComponentContracts.ProgressRingDiameter.ShouldBe(44);
         UiComponentContracts.HoldCompletionSeconds.ShouldBe(0.8f);
         UiComponentContracts.ButtonProgressOpacity.ShouldBe(0.5f);
-        UiGlow.ControlExtent.ShouldBe(12);
-        UiGlow.ControlOpacity.ShouldBe(0.4f);
+        UiGlow.ControlExtent.ShouldBe(10);
+        UiGlow.ControlOpacity.ShouldBe(0.6f);
         UiGlow.ButtonExtent.ShouldBe(12);
         UiGlow.ButtonOpacity.ShouldBe(0.12f);
         UiGlow.InsetExtent.ShouldBe(12);

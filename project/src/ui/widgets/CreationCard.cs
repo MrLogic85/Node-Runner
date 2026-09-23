@@ -102,10 +102,10 @@ public partial class CreationCard : Control
         SizeFlagsHorizontal = SizeFlags.ShrinkBegin;
         SizeFlagsVertical = SizeFlags.ShrinkBegin;
 
-        var panel = new UiPanel
+        var panel = new UiCard
         {
             Tokens = _tokens,
-            Variant = UiSurfaceContracts.FrameVariant.Frame,
+            Kind = UiCard.CardVariant.Frame,
         };
         panel.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
         AddChild(panel);

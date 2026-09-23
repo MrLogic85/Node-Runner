@@ -16,10 +16,7 @@ public sealed class UiSurfaceContractsTests
             UiSurfaceContracts.FrameVariant.Warn,
             UiSurfaceContracts.FrameVariant.Hint,
             UiSurfaceContracts.FrameVariant.Ok,
-            UiSurfaceContracts.FrameVariant.Glow,
             UiSurfaceContracts.FrameVariant.Raised,
-            UiSurfaceContracts.FrameVariant.Menu,
-            UiSurfaceContracts.FrameVariant.Dialog,
             UiSurfaceContracts.FrameVariant.StageCard,
         ]);
     }
@@ -54,7 +51,6 @@ public sealed class UiSurfaceContractsTests
     [Theory]
     [InlineData(UiSurfaceContracts.FrameVariant.Lock, true, true, false)]
     [InlineData(UiSurfaceContracts.FrameVariant.Sel, false, false, true)]
-    [InlineData(UiSurfaceContracts.FrameVariant.Glow, false, false, true)]
     [InlineData(UiSurfaceContracts.FrameVariant.StageCard, false, false, true)]
     [InlineData(UiSurfaceContracts.FrameVariant.Warn, false, false, false)]
     public void FrameVariantHelpers_DescribeOnlySharedVisualSemantics(
