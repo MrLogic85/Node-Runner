@@ -4,8 +4,6 @@ namespace NodeRunner.Ui.Lib;
 /// <summary>Canonical token-backed card/frame surface for the design-system component kit.</summary>
 public partial class UiCard : PanelContainer
 {
-    private const float _lockedOpacity = 0.5f;
-
     public enum CardVariant
     {
         Frame,
@@ -92,6 +90,8 @@ public partial class UiCard : PanelContainer
 
     protected virtual StyleBoxFlat CreateStyle()
     {
+        Modulate = Colors.White;
+
         var style = Tokens.FrameStyle(ToFrameVariant(Kind), ToFrameSize(SizeVariant), glow: Glow);
         if (Kind == CardVariant.Raised)
         {
@@ -106,11 +106,6 @@ public partial class UiCard : PanelContainer
             style.BorderWidthTop = 0;
             style.BorderWidthRight = 0;
             style.BorderWidthBottom = 0;
-            Modulate = new Color(1, 1, 1, _lockedOpacity);
-        }
-        else
-        {
-            Modulate = Colors.White;
         }
 
         return style;
