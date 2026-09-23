@@ -60,7 +60,7 @@ Overflow menu list of (icon, label, state) items.
 
 ## `c_chip(text, icn=None, kind='neutral', lg=False)`
 
-Small fact chip with an optional icon; kind neutral/warn/danger/ok for colour.
+Small fact chip with an optional icon; state warn/bad/ok for colour.
 
 ## `c_call(x, y, text, col=None, icn=None, kind='warn')`
 
@@ -112,9 +112,9 @@ A part's settings panel: c_panel_head then c_rows.
 
 Icon, title and one line of help.
 
-## `c_card(inner, kind='panel', w=None, h=None, style='')`
+## `c_card(inner, kind='panel', w=None, h=None, style='', glow=False, disabled=False)`
 
-The one Frame surface for panels, cards, tiles, menus and dialogs. Signature c_card(inner, kind, w, h, style). kind: panel (default), sel, lock, warn, hint, glow, raised (pick, menu and dialog are owned by the stage card, menu and dialog components, not picked freely); add a size with a space: snug, tight, roomy or flush.
+The one Frame surface for panels, cards, tiles, menus and dialogs. Signature c_card(inner, kind, w, h, style, glow, disabled). kind: panel (default), sel, lock, warn, hint, raised (pick, menu and dialog are owned by the stage card, menu and dialog components, not picked freely); add a size with a space: snug, tight, roomy or flush. lock tints the frame in accent, dashed: no other choice, ever. glow is a separate on/off, never a kind of its own: any frame can glow, in that frame's own border colour. disabled is a third, independent on/off: dashed line-strong border, dimmed, no glow, on any kind -- for something temporarily unavailable.
 
 ## `c_ring(pct, done=False)`
 
