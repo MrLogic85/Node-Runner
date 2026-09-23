@@ -229,12 +229,22 @@ public partial class ComponentGalleryScreen : Control
         };
         shell.AddChild(_scroll);
 
+        var contentFrame = new MarginContainer
+        {
+            SizeFlagsHorizontal = SizeFlags.ExpandFill,
+        };
+        contentFrame.AddThemeConstantOverride("margin_left", UiGlow.ButtonExtent);
+        contentFrame.AddThemeConstantOverride("margin_top", UiGlow.ButtonExtent);
+        contentFrame.AddThemeConstantOverride("margin_right", UiGlow.ButtonExtent);
+        contentFrame.AddThemeConstantOverride("margin_bottom", UiGlow.ButtonExtent);
+        _scroll.AddChild(contentFrame);
+
         var content = new VBoxContainer
         {
             SizeFlagsHorizontal = SizeFlags.ExpandFill,
         };
         content.AddThemeConstantOverride("separation", (int)_tokens.Space2);
-        _scroll.AddChild(content);
+        contentFrame.AddChild(content);
 
         content.AddChild(CreateSectionDescription(
             "Buttons",
@@ -244,12 +254,12 @@ public partial class ComponentGalleryScreen : Control
         content.AddChild(CreateSegmentedSection());
         content.AddChild(CreateTrayTabsSection());
         content.AddChild(CreateSliderSection());
+        content.AddChild(CreateMenuSection());
         content.AddChild(CreatePanelsSection());
         content.AddChild(CreateInputsSection());
         content.AddChild(CreateChoiceAndRowsSection());
         content.AddChild(CreateTextAndValueSection());
         content.AddChild(CreateProgressAndStatusSection());
-        content.AddChild(CreateOverlaysSection());
     }
 
     private Control CreateHeader()
@@ -802,24 +812,27 @@ public partial class ComponentGalleryScreen : Control
         return WrapSection("Progress · c_prog / c_ring", content);
     }
 
-    private Control CreateOverlaysSection()
+    private Control CreateMenuSection()
     {
-        var content = CreateFlow();
+        var content = new VBoxContainer();
+        content.AddThemeConstantOverride("separation", (int)_tokens.Space2);
+        content.AddChild(CreateSectionDescription("Menu", "the overflow (three dots) list"));
 
         var menu = Track(new UiOverflowMenu
         {
+            CloseOnSelect = false,
+            SizeFlagsHorizontal = SizeFlags.ShrinkBegin,
+            WidthMode = UiOverflowMenu.MenuWidthMode.WrapContent,
             Visible = true,
-            SizeFlagsHorizontal = SizeFlags.ExpandFill,
         });
         menu.SetActions(
-            new UiOverflowMenu.MenuAction("open", "Open creation", UiIconId.Play, UiComponentContracts.SemanticState.Neutral),
-            new UiOverflowMenu.MenuAction("duplicate", "Duplicate", UiIconId.Copy, UiComponentContracts.SemanticState.Neutral),
-            new UiOverflowMenu.MenuAction("locked", "Locked action", UiIconId.Lock, UiComponentContracts.SemanticState.Locked),
+            new UiOverflowMenu.MenuAction("brain-setup", "Brain setup", UiIconId.Model, UiComponentContracts.SemanticState.Neutral),
+            new UiOverflowMenu.MenuAction("settings", "Settings", UiIconId.Gear, UiComponentContracts.SemanticState.Selected),
             new UiOverflowMenu.MenuAction("delete", "Delete creation", UiIconId.Trash, UiComponentContracts.SemanticState.Danger));
         menu.CallDeferred(CanvasItem.MethodName.Show);
         content.AddChild(menu);
 
-        return WrapSection("Overflow menu · c_menu", content);
+        return content;
     }
 
     private Control CreatePanelExample(string title, UiSurfaceContracts.FrameVariant variant)
