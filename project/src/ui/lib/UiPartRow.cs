@@ -2,45 +2,68 @@ using Godot;
 
 namespace NodeRunner.Ui.Lib;
 
-/// <summary>Parts-tray row with glyph, name, count, selected, locked, and zero states.</summary>
+/// <summary>Canonical row for build parts: icon, name, count, and four reference states.</summary>
 public partial class UiPartRow : PanelContainer
 {
     [Signal]
     public delegate void PartSelectedEventHandler();
 
-    private UiTokens _tokens = UiTokens.Neon;
-    private bool _isZero;
-    private UiComponentContracts.SemanticState _state;
-
-    public string Glyph { get; set; } = string.Empty;
-
-    [Export]
-    public UiPartIconId PartIconId { get; set; } = UiPartIconId.Servo;
-
-    [Export]
-    public string PartName { get; set; } = "Servo";
-
-    [Export]
-    public string Count { get; set; } = "1";
-
-    [Export]
-    public UiComponentContracts.SemanticState State
+    public enum PartRowState
     {
-        get => _state;
+        Rest,
+        Selected,
+        Locked,
+        NoneLeft,
+    }
+
+    private const float _unavailableOpacity = 0.55f;
+
+    private UiTokens _tokens = UiTokens.Neon;
+    private UiPartIconId _partIconId = UiPartIconId.Servo;
+    private string _partName = "Servo";
+    private string _countText = "3 left";
+    private PartRowState _state;
+
+    [Export]
+    public UiPartIconId PartIconId
+    {
+        get => _partIconId;
         set
         {
-            _state = value;
+            _partIconId = value;
             Rebuild();
         }
     }
 
     [Export]
-    public bool IsZero
+    public string PartName
     {
-        get => _isZero;
+        get => _partName;
         set
         {
-            _isZero = value;
+            _partName = value;
+            Rebuild();
+        }
+    }
+
+    [Export]
+    public string CountText
+    {
+        get => _countText;
+        set
+        {
+            _countText = value;
+            Rebuild();
+        }
+    }
+
+    [Export]
+    public PartRowState State
+    {
+        get => _state;
+        set
+        {
+            _state = value;
             Rebuild();
         }
     }
@@ -86,19 +109,15 @@ public partial class UiPartRow : PanelContainer
         }
 
         CustomMinimumSize = new Vector2(0, _tokens.TouchTarget);
-        var zero = IsZero || State == UiComponentContracts.SemanticState.Disabled || Count == "0";
-        var border = State switch
-        {
-            UiComponentContracts.SemanticState.Selected => _tokens.Accent,
-            UiComponentContracts.SemanticState.Locked => _tokens.LineStrong,
-            UiComponentContracts.SemanticState.Disabled => _tokens.LineStrong,
-            _ => _tokens.LineStrong,
-        };
         var style = _tokens.ControlStyle(
-            State == UiComponentContracts.SemanticState.Selected ? _tokens.AccentSoft : _tokens.PanelRaised,
-            border,
-            State == UiComponentContracts.SemanticState.Selected ? _tokens.StrokeSignal : _tokens.StrokeHair);
-        if (State == UiComponentContracts.SemanticState.Locked)
+            State == PartRowState.Selected ? _tokens.AccentSoft : _tokens.PanelRaised,
+            State == PartRowState.Selected ? _tokens.Accent : _tokens.LineStrong,
+            State == PartRowState.Selected ? _tokens.StrokeSignal : _tokens.StrokeHair,
+            _tokens.RadiusMedium,
+            glow: State == PartRowState.Selected,
+            horizontalPadding: _tokens.Space2);
+
+        if (State == PartRowState.Locked)
         {
             style.BorderWidthLeft = 0;
             style.BorderWidthTop = 0;
@@ -107,65 +126,63 @@ public partial class UiPartRow : PanelContainer
         }
 
         AddThemeStyleboxOverride("panel", style);
-        QueueRedraw();
-        SelfModulate = State == UiComponentContracts.SemanticState.Locked || zero
-            ? new Color(1, 1, 1, 0.5f)
+        SelfModulate = State is PartRowState.Locked or PartRowState.NoneLeft
+            ? new Color(1, 1, 1, _unavailableOpacity)
             : Colors.White;
-        var row = new HBoxContainer();
+        QueueRedraw();
+
+        var row = new HBoxContainer
+        {
+            SizeFlagsHorizontal = SizeFlags.ExpandFill,
+            SizeFlagsVertical = SizeFlags.Fill,
+        };
         row.AddThemeConstantOverride("separation", (int)_tokens.Space2);
         AddChild(row);
-        var glyphTint = State == UiComponentContracts.SemanticState.Selected ? _tokens.Accent : _tokens.Ink;
-        row.AddChild(State == UiComponentContracts.SemanticState.Locked
-            ? UiIcons.Create(UiIconId.Lock, UiIconSize.Large, _tokens.Muted)
-            : UiIcons.Create(PartIconId, UiIconSize.Large, glyphTint));
-        var name = UiFieldAndRows.Label(PartName, _tokens, _tokens.BodyStrongText, zero || State == UiComponentContracts.SemanticState.Locked ? _tokens.Muted : _tokens.Ink);
-        name.SizeFlagsHorizontal = SizeFlags.ExpandFill;
-        row.AddChild(name);
-        row.AddChild(UiFieldAndRows.Label(zero ? "0" : Count, _tokens, _tokens.ReadoutSmallText, zero ? _tokens.Muted : _tokens.Ink, HorizontalAlignment.Right));
-    }
 
-    private bool IsAvailable => State != UiComponentContracts.SemanticState.Locked && !IsZero && State != UiComponentContracts.SemanticState.Disabled && Count != "0";
+        var iconTint = State == PartRowState.Selected ? _tokens.Accent : _tokens.Ink;
+        row.AddChild(UiIcons.Create(PartIconId, UiIconSize.Large, iconTint));
+
+        var label = UiFieldAndRows.Label(PartName, _tokens, _tokens.SmallStrongText, _tokens.Ink);
+        label.SizeFlagsHorizontal = SizeFlags.ExpandFill;
+        row.AddChild(label);
+
+        if (State == PartRowState.Locked)
+        {
+            if (!string.IsNullOrWhiteSpace(CountText))
+            {
+                row.AddChild(CreateTrailingLabel(CountText));
+            }
+
+            row.AddChild(UiFieldAndRows.Icon(UiIconId.Lock, UiIconSize.Standard, _tokens.Ink));
+        }
+        else
+        {
+            row.AddChild(CreateTrailingLabel(CountText));
+        }
+    }
 
     public override void _Draw()
     {
         base._Draw();
-        if (State != UiComponentContracts.SemanticState.Locked)
+        if (State != PartRowState.Locked)
         {
             return;
         }
 
-        DrawDashedBorder(_tokens.LineStrong);
+        var stroke = _tokens.StrokeHair;
+        var rect = new Rect2(
+            new Vector2(stroke * 0.5f, stroke * 0.5f),
+            new Vector2(Math.Max(0, Size.X - stroke), Math.Max(0, Size.Y - stroke)));
+        UiDashedBorder.DrawRoundedRect(this, rect, Math.Max(0, _tokens.RadiusMedium - (stroke * 0.5f)), _tokens.LineStrong, stroke);
     }
 
-    private void DrawDashedBorder(Color color)
-    {
-        const float dash = 4;
-        const float gap = 3;
-        var inset = _tokens.RadiusMedium * 0.5f;
-        DrawDashedLine(new Vector2(inset, 0), new Vector2(Size.X - inset, 0), color, dash, gap);
-        DrawDashedLine(new Vector2(inset, Size.Y), new Vector2(Size.X - inset, Size.Y), color, dash, gap);
-        DrawDashedLine(new Vector2(0, inset), new Vector2(0, Size.Y - inset), color, dash, gap);
-        DrawDashedLine(new Vector2(Size.X, inset), new Vector2(Size.X, Size.Y - inset), color, dash, gap);
-    }
+    private bool IsAvailable => State is PartRowState.Rest or PartRowState.Selected;
 
-    private void DrawDashedLine(Vector2 from, Vector2 to, Color color, float dashLength, float gapLength)
+    private Label CreateTrailingLabel(string text)
     {
-        var direction = to - from;
-        var length = direction.Length();
-        if (length <= 0)
-        {
-            return;
-        }
-
-        direction /= length;
-        for (var distance = 0f; distance < length; distance += dashLength + gapLength)
-        {
-            DrawLine(
-                from + (direction * distance),
-                from + (direction * Math.Min(distance + dashLength, length)),
-                color,
-                _tokens.StrokeHair,
-                antialiased: true);
-        }
+        var label = UiFieldAndRows.Label(text, _tokens, _tokens.ReadoutMediumText, _tokens.Ink, HorizontalAlignment.Right);
+        label.CustomMinimumSize = new Vector2(_tokens.ColumnSmallWidth, 0);
+        label.SizeFlagsHorizontal = SizeFlags.ShrinkEnd;
+        return label;
     }
 }
