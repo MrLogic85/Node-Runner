@@ -14,19 +14,14 @@ public partial class UiSlider : Control
     [Signal]
     public delegate void RangeChangedEventHandler(double low, double high);
 
-    [Signal]
-    public delegate void ReadoutActivatedEventHandler();
-
     private UiTokens _tokens = UiTokens.Neon;
     private string _labelText = "Value";
     private string _readoutText = "50";
     private double[] _thumbs = [0.5];
     private string[] _stepLabels = [];
-    private bool _hasMarker;
-    private double _markerPosition;
+    private double _markerPosition = -1;
     private string _markerText = string.Empty;
     private bool _enabled = true;
-    private bool _compact;
     private UiSliderStyle _style = UiSliderStyle.From(UiTokens.Neon);
     private Label? _label;
     private Label? _readout;
@@ -86,24 +81,13 @@ public partial class UiSlider : Control
         }
     }
 
-    [Export]
-    public bool HasMarker
-    {
-        get => _hasMarker;
-        set
-        {
-            _hasMarker = value;
-            Refresh();
-        }
-    }
-
-    [Export(PropertyHint.Range, "0,1,0.001")]
+    [Export(PropertyHint.Range, "-1,1,0.001")]
     public double MarkerPosition
     {
         get => _markerPosition;
         set
         {
-            _markerPosition = UiComponentContracts.ClampSliderPosition(value);
+            _markerPosition = value < 0 ? -1 : UiComponentContracts.ClampSliderPosition(value);
             Refresh();
         }
     }
@@ -131,17 +115,6 @@ public partial class UiSlider : Control
                 _draggedThumb = -1;
             }
 
-            Refresh();
-        }
-    }
-
-    [Export]
-    public bool Compact
-    {
-        get => _compact;
-        set
-        {
-            _compact = value;
             Refresh();
         }
     }
@@ -250,7 +223,7 @@ public partial class UiSlider : Control
 
     }
 
-    private float TrackY => _tokens.OverlineText.LineHeight + (Compact ? _tokens.Space2 : _tokens.Space3);
+    private float TrackY => _tokens.OverlineText.LineHeight + _tokens.Space3;
 
     private void EnsureLabels()
     {
@@ -262,8 +235,6 @@ public partial class UiSlider : Control
         _label = CreateLabel();
         _readout = CreateLabel();
         _markerLabel = CreateLabel();
-        _readout.MouseFilter = MouseFilterEnum.Stop;
-        _readout.GuiInput += HandleReadoutInput;
         AddChild(_label);
         AddChild(_readout);
         AddChild(_markerLabel);
@@ -275,21 +246,6 @@ public partial class UiSlider : Control
             MouseFilter = MouseFilterEnum.Ignore,
             AutowrapMode = TextServer.AutowrapMode.Off,
         };
-
-    private void HandleReadoutInput(InputEvent inputEvent)
-    {
-        if (!Enabled)
-        {
-            return;
-        }
-
-        if (inputEvent is InputEventScreenTouch { Pressed: true } ||
-            inputEvent is InputEventMouseButton { Pressed: true, ButtonIndex: MouseButton.Left })
-        {
-            EmitSignal(SignalName.ReadoutActivated);
-            AcceptEvent();
-        }
-    }
 
     private void RebuildStepLabels()
     {
@@ -325,11 +281,7 @@ public partial class UiSlider : Control
         var hasSteps = StepLabels.Length >= 2;
         CustomMinimumSize = new Vector2(
             0,
-            hasSteps
-                ? Compact
-                    ? _style.CompactSteppedHeight
-                    : _style.SteppedHeight
-                : _tokens.TouchTarget);
+            hasSteps ? _style.SteppedHeight : _tokens.TouchTarget);
 
         _label!.Text = LabelText;
         _readout!.Text = ReadoutText;
@@ -525,4 +477,6 @@ public partial class UiSlider : Control
 
     private static float PositionFor(double position, float left, float right) =>
         Mathf.Lerp(left, right, (float)UiComponentContracts.ClampSliderPosition(position));
+
+    private bool HasMarker => MarkerPosition >= 0;
 }

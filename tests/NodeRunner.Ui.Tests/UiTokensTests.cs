@@ -101,8 +101,8 @@ public sealed class UiTokensTests
         {
             tokens.SliderThumbDiameter, tokens.SliderTrackWidth, tokens.SliderMarkerHeight,
             tokens.SliderStepTickHeight, tokens.SliderDisabledDashLength,
-            tokens.SliderSteppedHeight, tokens.SliderCompactSteppedHeight,
-        }.ShouldBe(new[] { 18f, 4f, 16f, 10f, 4f, 60f, 54f });
+            tokens.SliderSteppedHeight,
+        }.ShouldBe(new[] { 18f, 4f, 16f, 10f, 4f, 60f });
         UiTokens.LogicalCanvasWidth.ShouldBe(640);
         UiTokens.LogicalCanvasHeight.ShouldBe(360);
     }
