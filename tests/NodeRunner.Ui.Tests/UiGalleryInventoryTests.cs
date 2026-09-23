@@ -38,10 +38,10 @@ public sealed class UiGalleryInventoryTests
             .Select(spec => spec.Component)
             .ShouldBe(UiComponentContracts.AllCanonicalComponents);
         ComponentGalleryScreen.CanonicalInventory
-            .Select(spec => spec.EntryName)
+            .Select(spec => spec.Section)
             .Distinct()
             .Count()
-            .ShouldBe(UiComponentContracts.AllCanonicalComponents.Count);
+            .ShouldBeLessThan(UiComponentContracts.AllCanonicalComponents.Count);
     }
 
     [Fact]

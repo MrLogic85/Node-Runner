@@ -18,6 +18,40 @@ public sealed class UiComponentContractsTests
     }
 
     [Fact]
+    public void CanonicalComponents_UseComponentLibraryNamesNotReferenceFunctionNames()
+    {
+        Enum.GetNames<UiComponentContracts.CanonicalComponent>().ShouldBe(
+            [
+                "Button",
+                "IconButton",
+                "HoldButton",
+                "Slider",
+                "Range",
+                "Toggle",
+                "Checkbox",
+                "Segmented",
+                "Picker",
+                "OverflowMenu",
+                "Chip",
+                "ProgressBar",
+                "TextField",
+                "NameField",
+                "ValueRow",
+                "ReadonlyValue",
+                "PowerRow",
+                "MeterRow",
+                "PartRow",
+                "IconTabs",
+                "SelectionHandle",
+                "PanelHeader",
+                "InfoRow",
+                "Card",
+                "Panel",
+                "ProgressRing",
+            ]);
+    }
+
+    [Fact]
     public void ComponentGalleryInventory_CoversEveryCanonicalComponentExactlyOnce()
     {
         var inventory = ComponentGalleryScreen.CanonicalInventory;
@@ -28,20 +62,28 @@ public sealed class UiComponentContractsTests
         {
             inventory.Count(spec => spec.Component == component).ShouldBe(1);
         }
-
-        inventory.Select(spec => spec.EntryName).Distinct().Count()
-            .ShouldBe(UiComponentContracts.AllCanonicalComponents.Count);
     }
 
     [Fact]
-    public void ComponentGalleryInventory_UsesReferenceEntryNamesAndVisibleSectionLabels()
+    public void ComponentGalleryInventory_UsesVisibleSectionLabelsWithoutReferenceFunctionNames()
     {
         foreach (var spec in ComponentGalleryScreen.CanonicalInventory)
         {
-            spec.EntryName.ShouldBe(ReferenceEntryName(spec.Component));
             spec.Section.ShouldNotContain("effects-lite");
+            spec.Section.ShouldNotContain("c_");
             spec.Section.ShouldNotBeNullOrWhiteSpace();
         }
+    }
+
+    [Fact]
+    public void ComponentLibraryComponents_MapToReferenceDesignEntryNames()
+    {
+        var referenceNames = UiComponentContracts.AllCanonicalComponents
+            .Select(ReferenceEntryName)
+            .ToArray();
+
+        referenceNames.Distinct().Count().ShouldBe(UiComponentContracts.AllCanonicalComponents.Count);
+        referenceNames.ShouldAllBe(name => name.StartsWith("c_", StringComparison.Ordinal));
     }
 
     [Fact]
@@ -53,14 +95,14 @@ public sealed class UiComponentContractsTests
 
         shared.Select(spec => spec.Component).ShouldBe(
             [
-                UiComponentContracts.CanonicalComponent.CCard,
-                UiComponentContracts.CanonicalComponent.CPanel,
+                UiComponentContracts.CanonicalComponent.Card,
+                UiComponentContracts.CanonicalComponent.Panel,
             ]);
         shared.Select(spec => spec.Section).Distinct().Single()
             .ShouldContain("shared composition");
         UiComponentContracts.SharesImplementation(
-                UiComponentContracts.CanonicalComponent.CCard,
-                UiComponentContracts.CanonicalComponent.CPanel)
+                UiComponentContracts.CanonicalComponent.Card,
+                UiComponentContracts.CanonicalComponent.Panel)
             .ShouldBeTrue();
     }
 
@@ -68,21 +110,21 @@ public sealed class UiComponentContractsTests
     public void PanelAndCard_ShareImplementation()
     {
         UiComponentContracts.SharesImplementation(
-                UiComponentContracts.CanonicalComponent.CCard,
-                UiComponentContracts.CanonicalComponent.CPanel)
+                UiComponentContracts.CanonicalComponent.Card,
+                UiComponentContracts.CanonicalComponent.Panel)
             .ShouldBeTrue();
     }
 
     [Fact]
     public void SliderAndRange_ShareImplementation()
     {
-        UiComponentContracts.ControlTypeFor(UiComponentContracts.CanonicalComponent.CSlider)
+        UiComponentContracts.ControlTypeFor(UiComponentContracts.CanonicalComponent.Slider)
             .ShouldBe(nameof(UiSlider));
-        UiComponentContracts.ControlTypeFor(UiComponentContracts.CanonicalComponent.CRange)
+        UiComponentContracts.ControlTypeFor(UiComponentContracts.CanonicalComponent.Range)
             .ShouldBe(nameof(UiSlider));
         UiComponentContracts.SharesImplementation(
-                UiComponentContracts.CanonicalComponent.CSlider,
-                UiComponentContracts.CanonicalComponent.CRange)
+                UiComponentContracts.CanonicalComponent.Slider,
+                UiComponentContracts.CanonicalComponent.Range)
             .ShouldBeTrue();
     }
 
@@ -346,31 +388,32 @@ public sealed class UiComponentContractsTests
     private static string ReferenceEntryName(UiComponentContracts.CanonicalComponent component) =>
         component switch
         {
-            UiComponentContracts.CanonicalComponent.CBtn => "c_btn",
-            UiComponentContracts.CanonicalComponent.CIb => "c_ib",
-            UiComponentContracts.CanonicalComponent.CHold => "c_hold",
-            UiComponentContracts.CanonicalComponent.CSlider => "c_slider",
-            UiComponentContracts.CanonicalComponent.CRange => "c_range",
-            UiComponentContracts.CanonicalComponent.CToggle => "c_toggle",
-            UiComponentContracts.CanonicalComponent.CCheck => "c_check",
-            UiComponentContracts.CanonicalComponent.CSeg => "c_seg",
-            UiComponentContracts.CanonicalComponent.CPick => "c_pick",
-            UiComponentContracts.CanonicalComponent.CMenu => "c_menu",
-            UiComponentContracts.CanonicalComponent.CChip => "c_chip",
-            UiComponentContracts.CanonicalComponent.CProg => "c_prog",
-            UiComponentContracts.CanonicalComponent.CTextfield => "c_textfield",
-            UiComponentContracts.CanonicalComponent.CName => "c_name",
-            UiComponentContracts.CanonicalComponent.CValue => "c_value",
-            UiComponentContracts.CanonicalComponent.CReadonly => "c_readonly",
-            UiComponentContracts.CanonicalComponent.CPower => "c_power",
-            UiComponentContracts.CanonicalComponent.CMeter => "c_meter",
-            UiComponentContracts.CanonicalComponent.CRow => "c_row",
-            UiComponentContracts.CanonicalComponent.CTabs => "c_tabs",
-            UiComponentContracts.CanonicalComponent.CPanelHead => "c_panel_head",
-            UiComponentContracts.CanonicalComponent.CInfoRow => "c_info_row",
-            UiComponentContracts.CanonicalComponent.CCard => "c_card",
-            UiComponentContracts.CanonicalComponent.CPanel => "c_panel",
-            UiComponentContracts.CanonicalComponent.CRing => "c_ring",
+            UiComponentContracts.CanonicalComponent.Button => "c_btn",
+            UiComponentContracts.CanonicalComponent.IconButton => "c_ib",
+            UiComponentContracts.CanonicalComponent.HoldButton => "c_hold",
+            UiComponentContracts.CanonicalComponent.Slider => "c_slider",
+            UiComponentContracts.CanonicalComponent.Range => "c_range",
+            UiComponentContracts.CanonicalComponent.Toggle => "c_toggle",
+            UiComponentContracts.CanonicalComponent.Checkbox => "c_check",
+            UiComponentContracts.CanonicalComponent.Segmented => "c_seg",
+            UiComponentContracts.CanonicalComponent.Picker => "c_pick",
+            UiComponentContracts.CanonicalComponent.OverflowMenu => "c_menu",
+            UiComponentContracts.CanonicalComponent.Chip => "c_chip",
+            UiComponentContracts.CanonicalComponent.ProgressBar => "c_prog",
+            UiComponentContracts.CanonicalComponent.TextField => "c_textfield",
+            UiComponentContracts.CanonicalComponent.NameField => "c_name",
+            UiComponentContracts.CanonicalComponent.ValueRow => "c_value",
+            UiComponentContracts.CanonicalComponent.ReadonlyValue => "c_readonly",
+            UiComponentContracts.CanonicalComponent.PowerRow => "c_power",
+            UiComponentContracts.CanonicalComponent.MeterRow => "c_meter",
+            UiComponentContracts.CanonicalComponent.PartRow => "c_row",
+            UiComponentContracts.CanonicalComponent.IconTabs => "c_tabs",
+            UiComponentContracts.CanonicalComponent.SelectionHandle => "c_handle",
+            UiComponentContracts.CanonicalComponent.PanelHeader => "c_panel_head",
+            UiComponentContracts.CanonicalComponent.InfoRow => "c_info_row",
+            UiComponentContracts.CanonicalComponent.Card => "c_card",
+            UiComponentContracts.CanonicalComponent.Panel => "c_panel",
+            UiComponentContracts.CanonicalComponent.ProgressRing => "c_ring",
             _ => throw new ArgumentOutOfRangeException(nameof(component), component, null),
         };
 }
