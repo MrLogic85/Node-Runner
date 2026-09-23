@@ -109,6 +109,8 @@ public partial class ComponentGalleryScreen : Control
         new(UiComponentContracts.CanonicalComponent.HoldButton, "Actions"),
         new(UiComponentContracts.CanonicalComponent.Slider, "Slider and range"),
         new(UiComponentContracts.CanonicalComponent.Range, "Slider and range"),
+        new(UiComponentContracts.CanonicalComponent.ProgressBar, "Slider and range"),
+        new(UiComponentContracts.CanonicalComponent.ProgressRing, "Progress"),
         new(UiComponentContracts.CanonicalComponent.Toggle, "Choices and tray rows"),
         new(UiComponentContracts.CanonicalComponent.Checkbox, "Choices and tray rows"),
         new(UiComponentContracts.CanonicalComponent.Segmented, "Segmented"),
@@ -195,6 +197,7 @@ public partial class ComponentGalleryScreen : Control
         content.AddChild(CreateTrayTabsSection());
         content.AddChild(CreateSelectionHandlesSection());
         content.AddChild(CreateSliderSection());
+        content.AddChild(CreateProgressSection());
         content.AddChild(CreateMenuSection());
         content.AddChild(CreatePickerSection());
         content.AddChild(CreateTextInputSection());
@@ -493,7 +496,60 @@ public partial class ComponentGalleryScreen : Control
                 MarkerText = "now 35°",
                 Enabled = false,
             }));
+        section.AddChild(CreateSliderPair(
+            "Linear progress with label/value: the same slider track with no thumb",
+            new UiSlider
+            {
+                LabelText = "Loading",
+                ReadoutText = "62%",
+                Thumbs = [],
+                FillPosition = 0.62,
+            },
+            "Linear progress, disabled",
+            new UiSlider
+            {
+                LabelText = "Power",
+                ReadoutText = "18%",
+                Thumbs = [],
+                FillPosition = 0.18,
+                Enabled = false,
+            }));
+        section.AddChild(CreateSliderPair(
+            "Bare progress bar: no slider value row",
+            new UiSlider
+            {
+                Thumbs = [],
+                FillPosition = 0.78,
+                ShowValueRow = false,
+            },
+            "Bare progress, disabled",
+            new UiSlider
+            {
+                Thumbs = [],
+                FillPosition = 0.35,
+                ShowValueRow = false,
+                Enabled = false,
+            }));
         return section;
+    }
+
+    private Control CreateProgressSection()
+    {
+        var content = new VBoxContainer();
+        content.AddThemeConstantOverride("separation", (int)_tokens.Space2);
+        content.AddChild(CreateSectionDescription(
+            "Progress",
+            "rings are their own component; linear progress is shown with sliders above"));
+
+        var rings = new HBoxContainer
+        {
+            SizeFlagsHorizontal = SizeFlags.ShrinkBegin,
+        };
+        rings.AddThemeConstantOverride("separation", (int)_tokens.Space3);
+        rings.AddChild(Track(new UiProgressRing { Percent = 72 }));
+        rings.AddChild(Track(new UiProgressRing { Percent = 100, Done = true }));
+        content.AddChild(rings);
+        return content;
     }
 
     private Control CreateSliderSectionDescription(string title, string description)
@@ -834,6 +890,9 @@ public partial class ComponentGalleryScreen : Control
                 break;
             case UiSelectionHandle selectionHandle:
                 selectionHandle.Tokens = tokens;
+                break;
+            case UiProgressRing progressRing:
+                progressRing.Tokens = tokens;
                 break;
         }
     }
