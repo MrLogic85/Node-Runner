@@ -51,6 +51,7 @@ public sealed class UiGalleryInventoryTests
                     UiComponentContracts.CanonicalComponent.Checkbox,
                     UiComponentContracts.CanonicalComponent.Segmented,
                     UiComponentContracts.CanonicalComponent.Picker,
+                    UiComponentContracts.CanonicalComponent.PartRow,
                     UiComponentContracts.CanonicalComponent.OverflowMenu,
                     UiComponentContracts.CanonicalComponent.TextField,
                     UiComponentContracts.CanonicalComponent.NameField,

@@ -117,6 +117,7 @@ public partial class ComponentGalleryScreen : Control
         new(UiComponentContracts.CanonicalComponent.Checkbox, "Choices and tray rows"),
         new(UiComponentContracts.CanonicalComponent.Segmented, "Segmented"),
         new(UiComponentContracts.CanonicalComponent.Picker, "Choices and tray rows"),
+        new(UiComponentContracts.CanonicalComponent.PartRow, "Part rows"),
         new(UiComponentContracts.CanonicalComponent.OverflowMenu, "Overflow menu"),
         new(UiComponentContracts.CanonicalComponent.TextField, "Text input"),
         new(UiComponentContracts.CanonicalComponent.NameField, "Text input"),
@@ -203,6 +204,7 @@ public partial class ComponentGalleryScreen : Control
         content.AddChild(CreateCardSection());
         content.AddChild(CreateMenuSection());
         content.AddChild(CreatePickerSection());
+        content.AddChild(CreatePartRowSection());
         content.AddChild(CreateTextInputSection());
         UiNativeScroll.AllowGesturesToBubble(contentFrame);
     }
@@ -787,6 +789,56 @@ public partial class ComponentGalleryScreen : Control
         return content;
     }
 
+    private Control CreatePartRowSection()
+    {
+        var content = new VBoxContainer();
+        content.AddThemeConstantOverride("separation", (int)_tokens.Space2);
+        content.AddChild(CreateSectionDescription(
+            "Part Row",
+            "a build part in the tray: glyph, name, count, and four states"));
+
+        var rows = new VBoxContainer
+        {
+            CustomMinimumSize = new Vector2(_tokens.SidePanelWidth, 0),
+            SizeFlagsHorizontal = SizeFlags.ShrinkBegin,
+        };
+        rows.AddThemeConstantOverride("separation", (int)_tokens.Space1);
+        rows.AddChild(Track(new UiPartRow
+        {
+            PartIconId = UiPartIconId.Servo,
+            PartName = "Servo",
+            CountText = "3 left",
+            State = UiPartRow.PartRowState.Rest,
+            SizeFlagsHorizontal = SizeFlags.ExpandFill,
+        }));
+        rows.AddChild(Track(new UiPartRow
+        {
+            PartIconId = UiPartIconId.Servo,
+            PartName = "Servo",
+            CountText = "3 left",
+            State = UiPartRow.PartRowState.Selected,
+            SizeFlagsHorizontal = SizeFlags.ExpandFill,
+        }));
+        rows.AddChild(Track(new UiPartRow
+        {
+            PartIconId = UiPartIconId.Stepper,
+            PartName = "Stepper",
+            CountText = "Locked",
+            State = UiPartRow.PartRowState.Locked,
+            SizeFlagsHorizontal = SizeFlags.ExpandFill,
+        }));
+        rows.AddChild(Track(new UiPartRow
+        {
+            PartIconId = UiPartIconId.Wheel,
+            PartName = "Wheel",
+            CountText = "0 left",
+            State = UiPartRow.PartRowState.NoneLeft,
+            SizeFlagsHorizontal = SizeFlags.ExpandFill,
+        }));
+        content.AddChild(rows);
+        return content;
+    }
+
     private Control CreateMenuSection()
     {
         var content = new VBoxContainer();
@@ -965,6 +1017,9 @@ public partial class ComponentGalleryScreen : Control
                 break;
             case UiCard card:
                 card.Tokens = tokens;
+                break;
+            case UiPartRow partRow:
+                partRow.Tokens = tokens;
                 break;
         }
     }

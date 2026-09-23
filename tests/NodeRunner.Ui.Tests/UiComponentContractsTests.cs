@@ -141,6 +141,8 @@ public sealed class UiComponentContractsTests
             .ShouldBe(["Frame", "Selected", "Locked", "Warning", "Hint", "Raised"]);
         Enum.GetNames<UiCard.CardSize>()
             .ShouldBe(["Default", "Snug", "Tight", "Roomy", "Flush"]);
+        Enum.GetNames<UiPartRow.PartRowState>()
+            .ShouldBe(["Rest", "Selected", "Locked", "NoneLeft"]);
         Enum.GetNames<UiChip.ChipKind>()
             .ShouldBe(["Neutral", "Accent", "Locked", "Danger", "Warning", "Bad", "Ok"]);
         Enum.GetNames<UiOverflowMenu.MenuWidthMode>()
