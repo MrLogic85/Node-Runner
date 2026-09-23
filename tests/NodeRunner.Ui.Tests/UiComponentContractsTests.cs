@@ -313,8 +313,10 @@ public sealed class UiComponentContractsTests
     {
         Enum.GetNames<UiComponentContracts.HoldState>()
             .ShouldBe(["Rest", "Holding", "Cancelled", "Completed", "Disabled"]);
-        Enum.GetNames<UiComponentContracts.ValidationState>()
-            .ShouldBe(["Rest", "Editing", "Invalid"]);
+        Enum.GetNames<UiTextField.TextInputState>()
+            .ShouldBe(["Rest", "Editing", "Error"]);
+        Enum.GetNames<UiTextField.TextInputSize>()
+            .ShouldBe(["Standard", "Compact"]);
         Enum.GetNames<UiComponentContracts.SemanticState>()
             .ShouldContain("Locked");
         Enum.GetNames<UiComponentContracts.SemanticState>()
