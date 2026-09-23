@@ -1,4 +1,4 @@
-The **settings panel** for the selected part. It takes the right-hand slot that holds the Parts tray in Build and sits under the brain widget in BuildLocked. Tap a part or beam to open it; tap empty canvas or the x to close it. Every part has an editable **Name**, then its main settings, then its connections, then read-only facts. In Build the header carries **Delete** (trash); on a locked creation it is absent.
+The **settings panel** for the selected part. It takes the right-hand slot that holds the Parts tray in Build and sits under the brain widget in BuildLocked. Tap a part or beam to open it; tap empty canvas or the x to close it. Every part has an editable **Name**, then its main settings, then its connections. In Build the header carries **Delete** (trash); on a locked creation it is absent.
 
 **Weight.** Only **beams** (and wings, which are beams) have a weight you set. A Core, a node, motors, sensors and blocks have no setting for it. Blocks and wheels show what they **weigh** as a read-only fact; a **fuel tank** gets lighter as the fuel is used.
 
@@ -8,8 +8,8 @@ The **settings panel** for the selected part. It takes the right-hand slot that 
 
 **LOS sensor.** Rays as five cells, spread, range and rotation. Its rays are drawn while it is selected. **Core.** Toggles for its built-in senses; each on is one more input to the brain.
 
-**Links.** **Spring / damper**: stiffness, damping, rest length, the two nodes. **Piston**: max strength, stroke, the two nodes. **Wing**: the two nodes, Flip, lift, weight.
+**Links.** **Spring / damper**: stiffness, damping. **Piston**: max strength. **Wing**: Flip, lift, weight. All three are drawn directly between two nodes, the same way a beam is drawn: their length (or which nodes they span) is structure, not a setting, so the panel does not list it — it's already visible on the canvas.
 
 **Blocks.** **Battery**: shows what is **stored**, of what it can hold ("20 / 20 units"); it takes and gives power without a speed limit. **Generator**: which fuel tank feeds it, and nothing else to set: it makes as much as it can, feeds the powered parts first and charges the batteries with the rest. **Fuel tank**: the fuel it holds, in seconds of generator time, and which generator it feeds.
 
-Powered parts show a **Power** row: "Draws up to 0.6", because a part uses less when it is idle. Structure that changes the model (length, stroke, what a link is between) is a dashed locked row on a locked creation.
+Powered parts show a **Power** row: "Draws up to 0.6", because a part uses less when it is idle. A beam's length works the same way as a link's: it is drawn, not set, so the panel says how to change it ("Drag its ends to change the length") instead of repeating the number.

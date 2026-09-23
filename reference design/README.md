@@ -35,7 +35,7 @@ A phone in landscape has about 360px of height, so each screen shows only what t
 
 ## Selecting a part
 
-The rail is **Move** (also tap to select one part; it never adds joints), **Beam** (joins two joints), **Joint** (adds one) and **Select** (several at once, with move, rotate and scale handles around the selection). Tapping a part or beam opens its **settings** (see PartSettings). They take the place of the Parts tray when unlocked and sit under the brain widget when locked. A motor has a **Fixed part** and a **Target part**, both lit on the canvas and both chosen from the beams that touch the joint. Settings that change the model (beam length) are locked once the creation is locked.
+The rail is **Move** (also tap to select one part; it never adds joints), **Beam** (joins two joints), **Joint** (adds one) and **Select** (several at once, with move, rotate and scale handles around the selection). Tapping a part or beam opens its **settings** (see PartSettings). They take the place of the Parts tray when unlocked and sit under the brain widget when locked. A motor has a **Fixed part** and a **Target part**, both lit on the canvas and both chosen from the beams that touch the joint. A beam's own length, and a link's own length or which nodes it spans, are not settings: they're structure, drawn on the canvas, not listed in the panel.
 
 ## The words
 
@@ -96,7 +96,7 @@ A stroked glyph set on a 24px grid, 2px stroke, round caps, `currentColor`: menu
 
 Empty state for a first launch, onboarding, accessibility settings beyond UI size, music, map details, and a tablet layout.
 
-**Rule: frames.** A panel, card, tile or dialog is `c_card` (class `pnl`): radius-lg, padding space-3, 1px `edge`. It has these variants, all of the same frame: `sel` (accent border and glow), `pick` (halo ring, the chosen stage), `lock` (dashed, dimmed), `warn` (danger border), `hint` (halo border), `ok`, `glow` and `raised`; menu and dialog are the frames `menu` and `dialog`. The sizes `snug`, `tight`, `roomy` and `flush` (a thumbnail that bleeds to the edge) only change the padding. A frame does not set its own radius, padding or border colour. A tool rail is a screen layout, not a frame: `.rail` stacks `btn stack` cells touch by touch, space-1 apart.
+**Rule: frames.** A panel, card, tile or dialog is `c_card` (class `pnl`): radius-lg, padding space-3, 1px `edge`. It has these variants, all of the same frame: `sel` (accent border and glow), `lock` (dashed, dimmed), `warn` (danger border), `hint` (halo border), `glow` and `raised`; menu, dialog and the chosen stage card are the frames `menu`, `dialog` and `pick`, not picked freely. The sizes `snug`, `tight`, `roomy` and `flush` (a thumbnail that bleeds to the edge) only change the padding. A frame does not set its own radius, padding or border colour. A tool rail is a screen layout, not a frame: `.rail` stacks `btn stack` cells touch by touch, space-1 apart.
 
 **Rule: colour.** Every colour is a token from tokens.json, defined once per theme and referenced as `var(--name)`. A component never holds a hex or rgba value, so a theme swap or a change to a token reaches everything. Transparency comes from a token that has it (`accent-soft`, `accent-glow`, `scrim`) or from `opacity`, not from a new literal. The build fails on any literal colour.
 
@@ -106,7 +106,7 @@ Empty state for a first launch, onboarding, accessibility settings beyond UI siz
 
 **Rule: text is a class.** A view or component puts `class="t-<style>"` on its text (`t-title`, `t-body`, `t-label`, `t-readout`...) and nothing else: no inline `font`, `font-size`, `font-weight`, `font-family`, `line-height`, `letter-spacing` or `text-transform`. The class carries the font, the tracking and the case of its style, so one place decides them. In Godot each style is a `LabelSettings` or a theme type variation.
 
-**Rule: size is content.** A view never sets `width`, `height`, `left`, `top`, `right` or `bottom` in pixels. A component is as big as its content, its font size and its padding tokens (`wrap_content` in Android, `custom_minimum_size` left at zero in Godot). Where a size has to be fixed it is named once in Spacing and used by class: screen slots (`slot-rail`, `slot-arena`, `slot-side`, `slot-tray`, `slot-fill`, `slot-foot`), page columns (`pg`), value columns and card widths (`w-col-*`, `w-card`, `w-tile`, `w-well`), menu and dialog widths (`w-menu`, `w-dialog`), and the figures that have to be exact (`w-brain`, `h-screen`, `h-stage`, `h-thumb`). The arena has no width of its own: it takes what the rail and side panel leave, so a wider screen gives it more. A callout's position in a figure is data and stays. The build fails on any other fixed size in a view.
+**Rule: size is content.** A view never sets `width`, `height`, `left`, `top`, `right` or `bottom` in pixels. A component is as big as its content, its font size and its padding tokens (`wrap_content` in Android, `custom_minimum_size` left at zero in Godot). Spacing (space steps, control and icon sizes) is the one reusable scale and is never itself a fixed layout size. Where a size genuinely has to be fixed because Node Runner's own screen is, it's named once in **Layout** and used by class: the screen slots (`slot-rail`, `slot-arena`, `slot-side`, `slot-tray`, `slot-fill`, `slot-foot`), page columns (`pg`), the stage strip's own tile and label columns (`w-tile`, `w-col-*`), and the figures that have to be drawn at an exact size (`w-brain`, `w-well`, `h-well`, `h-screen`, `h-stage`, `h-thumb`). The arena has no width of its own: it takes what the rail and side panel leave, so a wider screen gives it more. A callout's position in a figure is data and stays. A component that owns its own fixed size privately (a menu, a dialog) sets it once inside that one component, marked `data-c`, and is exempt here rather than pulling from a shared token — nothing else may set a pixel size outside these two cases, and the build fails on any that does.
 
 ---
 
@@ -115,7 +115,9 @@ Empty state for a first launch, onboarding, accessibility settings beyond UI siz
 ## Foundations
 
 - [ColorsAndStyles](#colorsandstyles): Colour tokens in both themes, the seventeen text styles and the icons
-- [ComponentLibrary](#componentlibrary): Every control and frame the game uses: buttons, sliders, fields, panels, rows, progress
+- [ComponentLibrary](#componentlibrary): Every control the game uses: buttons, sliders, toggles, chips, callouts and progress
+- [ComponentLibraryCont](#componentlibrarycont): More from the component library: frames, an overflow menu, a picker, a part in the tray and a part's settings panel
+- [Cover](#cover): The cover of the design system, also used by the Splash screen
 - [Navigation](#navigation): How the screens connect
 - [Overlays](#overlays): The two confirmations and the achievement toast, and where each appears
 - [Parts](#parts): Every part, and how each kind is placed
@@ -148,10 +150,6 @@ Empty state for a first launch, onboarding, accessibility settings beyond UI siz
 
 - [Themes](#themes): Same screen, paper theme and low-effects neon
 
-## Other
-
-- [Cover](#cover): 
-
 ---
 
 # ColorsAndStyles
@@ -162,9 +160,9 @@ Empty state for a first launch, onboarding, accessibility settings beyond UI siz
 
 The **foundations** every component is built from: colours, text styles, radius and icons. A component or a screen never defines any of these itself; it names a token or a class. The components are on the ComponentLibrary page, and spacing and control sizes are on Spacing.
 
-**Colours.** Sixteen tokens, each defined once per theme (Neon lab, dark, and Paper, light) and used by name (`var(--accent)`, `accent` in Godot). The page shows every token in both themes. A screen can be themed by changing the theme only.
+**Colours.** 14 base tokens, each defined once per theme (Neon lab, dark, and Paper, light) and used by name (`var(--accent)`, `accent` in Godot). The page shows every token in both themes. A screen can be themed by changing the theme only.
 
-**Surfaces.** There are two, and nothing else draws a border, a radius, a background or a shadow. **Frame** (`.pnl`, `c_card`; in Godot one `StyleBoxFlat` `frame`) holds things: `radius-lg`, `edge` 1px, `panel`, padding `space-3`. Its looks are variants of the same frame: `sel` (accent 2px and glow), `pick` (a halo ring, for the chosen stage), `lock` (dashed, dimmed), `warn` (danger border), `hint`, `ok`, `glow`, `raised`, and the sizes `snug`, `tight`, `roomy` and `flush`. Menu, dialog and stage card are frames (`menu`, `dialog`, `glow snug`), not their own. **Raised** (one `StyleBoxFlat` `raised`) is anything you press or type in: `radius-md`, `line-strong` 1px, `panel-raised`. Button (in every kind and layout), field, list row, segmented control and chip share it; their states (`on`, `lock`, `off`, `primary`, `danger`) change the border or fill and nothing else.
+**Colour variants.** 5 more tokens, each a transparent or glow version of one base colour (`accent-soft`, `accent-glow`, `halo-glow`, `danger-glow`, `ink-glow`), shown in their own group so they are never mistaken for a colour of their own. A variant is never used as a solid colour: `accent-soft` washes a selected tool or the current stage; the `*-glow` tokens build the glow around a selected button, in that kind's own colour (`halo-glow` for primary, `accent-glow` for secondary, `danger-glow` for tertiary, `ink-glow` for flat), and `accent-glow` also lights a menu, a dialog and firing neurons. Both `glow`, the shadow token, and every `*-glow` colour go to `none` or transparent in the paper theme and under `data-effects="lite"`.
 
 **Icon set.** Every UI icon (39) and part glyph (15) is shown by name on this page, and exported as pure white SVG (see `icons/`). Each part has exactly one glyph, named after the part: the `spring` glyph is the Spring / damper part (there is no separate damper glyph). The `model` icon is a tiny network: two inputs, three hidden neurons and two outputs, drawn as dots joined by lines. Each input reaches two hidden neurons and each output is fed by two. It is used for Brain setup and the network view. Icons are drawn with the same 2 px round stroke; a dot (the `more` icon) is a 4 px dot, not a zero-length stroke.
 
@@ -188,7 +186,7 @@ Preview: [components/ColorsAndStyles/preview.html](components/ColorsAndStyles/pr
 
 # ComponentLibrary
 
-*Foundations · Every control and frame the game uses: buttons, sliders, fields, panels, rows, progress*
+*Foundations · Every control the game uses: buttons, sliders, toggles, chips, callouts and progress*
 
 ![ComponentLibrary](screenshots/ComponentLibrary.png)
 
@@ -196,37 +194,74 @@ The Component Library. Colours, text styles and icons are on ColorsAndStyles; th
 
 Touch targets are 48px, even when the visible control is smaller: a button, icon button, field or segmented control is `control` (40) high, and a 24px slider track sits in a 48px row. All spacing and heights use the tokens in Spacing; nothing else. One `primary` (`accent` fill, `on-accent` text, `glow`) per surface; everything else is `panel-raised` with a `line-strong` border. Destructive is a `danger` outline plus a word, and irreversible ones are **hold to confirm** (a fill sweeps across, about 0.8 s). A disabled control is dimmed to 50% and, where it has an edge or a track, that is dashed (the same for every button, whatever its kind or layout, and for a slider's track and thumbs); it says why in a nearby line.
 
+Frames, menus, pickers, list rows and panels moved to [ComponentLibraryCont](components/ComponentLibraryCont/README.md).
+
 - **Buttons.** One component, `btn`, with four choices that combine freely. **Kind**: `primary` (accent fill, one per screen), `secondary` (the plain raised button, no class needed beyond `btn`), `tertiary` (outlined in danger red) and `flat` (no box, for a top bar or a nav icon). Only primary glows at rest; the other three pick up a glow only when selected. **Layout**: a row (icon and/or label), `icon` (a `control` 40 x 40 box centred in a 48 x 48 touch area, 4 px of margin on all four sides) or `stack` (a `touch` 48 x 48 box, the icon over a small label — or with no label at all, which is all the play button is). **Size**: standard, or `compact` (a smaller control-sm box or min-height) for a row or icon button; stack is always touch, there is no room under a label for a smaller box. **State**: `on` (selected: a 2 px border and an inward-and-outward glow, both in that kind's own colour — halo for primary, accent for secondary, danger for tertiary, ink for flat) and `off` (disabled: dimmed with a dashed border, the same for every kind and layout, so a disabled Start training and a disabled Beam tool look alike). Hold-to-activate (`c_hold`) works the same way for all four kinds and all three layouts: the fill is that kind's selected colour at 50% opacity. A **badge** (a small `halo` count in the corner) is available on any kind or layout too — always halo, never the button's own colour. The play button is a primary `stack` button with no label, the tool rail cells are `stack` buttons with one; neither is a component of its own. Copy, not the component, decides whether a tertiary action needs a verb label. The padlock (`on` when locked), pause and speed are icon buttons on the game screens.
+- **Round button.** `c_round_button`: a small circular frame, like `.pnl`'s variants (`sel`, `lock`, `warn`...) just round — a coloured ring with an icon centred inside, the ring itself the colour that carries the meaning. Selection handles (move, rotate, scale) on the canvas are this; `sv_handle` draws the identical shape straight into the canvas's own SVG, since the canvas is one drawing at absolute coordinates, not flowed HTML.
 - **Slider.** One component with a few settings. A track, a filled part in `accent`, an 18px thumb, the value in `readout-md` at the right of the label. **Thumbs**: one, or two for a range (the fill runs between them). **Steps**: two or more labels the screen supplies, always evenly spaced (a slider with two steps names only its ends); the end labels are aligned to the ends of the track. **Marker**: one 2px `halo` line across the track with a name ("default 4", "now 35°"). The slider only draws it; what the marker means, and whether the thumbs respect it, is decided by the screen. **Marker name placement**: the name lives in the label row, between the label at the left and the value at the right, centred over the marker; where that would touch the label or the value it slides towards the free space. It never sits among the steps, so they cannot collide. **Position** is given as 0.0 to 1.0 for thumbs and marker alike. **Disabled** is dimmed to 50%: the filled part stays solid, the rest of the track is dashed, and the thumbs are hollow and dashed, like a disabled button, and a nearby line says why. **Steppers are not part of the slider**: where a value is also set exactly, the screen lays out two `btn icon sm` buttons (minus and plus) either side of the track (`stepped_slider` in the kit); that is layout, not a component.
 - **Toggle** for an on or off setting that applies now (Sounds); **checkbox** for an option that goes with an action (Run until power is out). Both carry the state in shape as well as colour and can show a line of help.
 - **Segmented.** A small set of modes; the chosen one is filled.
-- **Picker.** A row with an optional small accessory (an icon, or a caller-drawn swatch: the picker does not know which), the current choice, and a chevron. Opened, it lists the choices under it in the same frame as Menu (`c_card` kind `menu`), each row with the same kind of accessory; a choice can carry a check (selected) or a short note instead of a check ("swaps", on Parts, for a choice that needs explaining rather than being refused). **Locked** shows a lock instead of a chevron and is not editable.
-- **Tray tabs, selection handles.** Tray tabs are icon tabs, one open at a time. Handles (move, rotate, scale) appear around a Select selection. The tool rail on Build is not a component: it is a screen layout that stacks `stack` buttons in a column, with the play button (a primary `stack` button with no label) at the bottom on a saved creation.
-- **Text field.** The only text entry: the creation's name in a top bar (a `control` high field with a pencil) and a name in a settings panel (full width). **Editing** is an `accent` 2px border with a soft ring, a caret and a check; the phone keyboard opens and its Done ends the edit, there is no Save. **Empty or invalid** is a `danger` border, a warn icon and one line of words ("A creation needs a name"). Two sizes of the same field: in a **bar** it is `control` high with `heading` text, in a **panel** it is `control-sm` high with `body-strong`.
-- **Menu.** The overflow list: 48px rows with an icon, a word, and `danger` for destructive ones.
-- **Panel and card.** (The Frame surface, see ColorsAndStyles: menu, dialog, stage card and a picker's open list are the same frame.) One frame at rest (`edge` 1px, `radius-lg`, `panel`, `space-3` padding) with variants: `sel` (accent 2px and `glow`), `pick`, `lock` (dashed, dimmed), `warn` (`danger` border, always with words), `hint`, `ok`, `glow` and `raised`, and the padding sizes `snug`, `tight`, `roomy` and `flush`. Cards on Creations, Achievements and Train setup, the settings panel and dialogs are all this frame.
-- **List row.** A part in the tray: a glyph, a name and how many are left, `control` high with a `radius-md` border. States: at rest, selected (`accent`), locked (dashed with a lock) and none left (dimmed).
-- **Value rows.** A `caption` label with its value in `readout-md`. A read-only value (length, between which nodes) is dashed with a lock or move icon so it says why it cannot be edited. The power row is a value row with a bolt.
-- **Callout.** A small `halo` card that names something on the canvas (`danger` when it explains a refusal).
-- **Progress.** There are two, and every screen uses these: the **bar** (`c_prog`: a `line` track and an `accent` fill; `c_meter` is the same bar under a `caption` label with its value) and the **ring** (`c_ring`: the percentage inside, a check when done). Nothing else draws progress: not chips, not value rows, not a screen.
-- **Panel header.** The title row of every side panel (Parts, a part's settings, a selection): an optional glyph, the title in `subheading` (it truncates with an ellipsis, never wraps) and icon actions on the right, each `control-sm` wide. Deleting a part is a full-width `danger` button at the end of its settings, the same as the selection panel, not an icon in the header.
+- **Tool rail, tray tabs.** The rail is Move, Beam, Joint, Select and, on a saved creation, a **play** at the bottom.
+- **Text field.** The only text entry, `c_textfield`: the creation's name in a top bar (a `control` high field with a pencil, beside the autosave **Saved** cue) and a name in a settings panel (full width, under a "Name" label — that pairing is `c_name`, not a separate field). **Editing** is an `accent` 2px border with a soft ring, a caret and a check; the phone keyboard opens and its Done ends the edit, there is no Save. **Empty or invalid** is a `danger` border, a warn icon and one line of words ("A creation needs a name"). Two sizes of the same field: in a **bar** it is `control` high with `heading` text, in a **panel** it is `control-sm` high with `body-strong`.
+- **Value row.** `c_value`: a `caption` label with its value in `readout-md`. `c_power` is the same row, a named preset with the label fixed to "Power" and a bolt icon — `accent` when the part feeds power back, `ink` when it only draws. A part's own structure (a beam's length, a link's length or which nodes it spans) is drawn on the canvas, not a value row: nothing repeats it in a panel.
+- **Note.** `c_note`: one line of `note` text below the rows of a panel, in `muted`.
+- **Callout.** A small card, built by `c_call`, that points at a spot in a figure — its position is data, set by the caller. Kind shares chip's names: `warn` (halo, the default), `danger` (explains a refusal) and `ok` (accent, marks a target).
+- **Progress.** There are two, and every screen uses these: the **bar** and the **ring**. The bar is the slider with no thumb: `c_prog` and `c_meter` are `c_slider(..., thumbs=None)`, the same `line` track and `accent` fill, just nothing to drag — `c_meter` adds the `caption` label and its value above it, exactly like a labelled slider does. The **ring** (`c_ring`: the percentage inside, a check when done) is its own component, not built from anything else. Nothing else draws progress: not chips, not a value row, not a screen.
 - **Info row.** A ringed `halo` icon with a title and a `note`, used to explain a handle or a mode.
-- **Stage card.** A numbered card of the signal-flow column: a ringed number, the stage name in `stage`, an optional right-aligned `note`.
-- **Chips and status.** Small facts. Warning is `halo`, error is `danger`, and both add an icon and words.
+- **Stage card.** A numbered card of the signal-flow column: `c_num` leading its header, the stage name in `stage`, an optional right-aligned `note`.
+- **Chips and status.** One component, `chip`, small facts. **Kind**: neutral (default), `warn` (halo), `danger` and `ok` (accent) — border and text/icon are always the same colour, never set inline. **Size**: standard (`control-xs`, 24), or `lg` (`control`, 40) for a chip that sits beside a control-height button or field, e.g. in a top bar.
 
 Nothing depends on hover: every affordance works the same on a touch screen.
 
 **For Godot.** Each control here is one scene, built once and reused: `Button` (one scene: kind default, primary, danger or flat; layout row, icon or stack; state on or off; StyleBoxFlat `raised`, with the primary and on looks as variants, and `off` as a dashed border at 50% alpha), `Slider` (HSlider with a custom grabber, configured by properties: `thumbs` as 0.0 to 1.0 (one, or two for a range, the same scene with a second grabber), `steps` as an Array of at least two labels laid out evenly, `marker` as a position 0.0 to 1.0 and a name, `enabled`; the marker name is a Label in the label row, centred over the marker and clamped between the label and the value by their measured widths; the minus and plus buttons of a stepped slider are an HBoxContainer around it), `Toggle` and `Checkbox` (CheckButton, CheckBox), `Segmented` (a row of toggle Buttons in a ButtonGroup), `Picker` (a Button that opens a PopupMenu), `Menu` (PopupPanel), `Chip` (PanelContainer with a Label), `Dialog` (a modal PanelContainer). The design tokens become one Theme resource: `space-1` to `space-5` are `separation` and `margin` constants (BoxContainer separation, MarginContainer margins), `control-xs` to `touch` are `custom_minimum_size`, radii are StyleBoxFlat corner radii, colours are theme colours per theme. Containers do the layout (HBox, VBox, Margin, Grid); no screen positions a control by hand except over the arena canvas.
 
-**One implementation each.** Every entry above is one component in the kit and every screen calls it: `c_textfield`, `c_toggle`, `c_seg`, `c_slider(label, value, thumbs, steps, marker, enabled)` (`c_range` is the same slider with two thumbs; `stepped_slider` is only the layout with minus and plus buttons), `c_pick(label, value, accessory, open, opts, lock)`, `c_value`, `c_readonly`, `c_meter`, `c_power`, `c_row`, `c_tabs`, `c_panel_head`, `c_info_row`, `c_card` (`c_panel` is the same with its arguments swapped), `c_chip`, `c_prog`, `c_menu`, `c_btn`, `c_ib` (the icon layout of `btn`) and `c_hold` (a `danger` button with a sweeping fill). Older names (`tog`, `nm`, `ro`, `pw`, `kv`, `bar1`, `seg5`, `field`) are only aliases of these. A new screen adds a variant here, never a private copy.
+**One implementation each.** Every entry above is one component in the kit and every screen calls it: `c_textfield`, `c_toggle`, `c_seg`, `c_slider(label, value, thumbs, steps, marker, enabled)` (`c_range` is the same slider with two thumbs; `stepped_slider` is only the layout with minus and plus buttons), `c_pick(label, value, accessory, open, opts, lock, dis)`, `c_value`, `c_note`, `c_meter`, `c_row`, `c_tabs`, `c_panel_head`, `c_rows`, `c_inspector`, `c_info_row`, `c_card`, `c_chip`, `c_prog`, `c_menu` and `c_btn` (`c_power` and `c_name` are named presets of `c_value` and `c_textfield`, not separate implementations. Older names (`tog`, `nm`, `pw`, `kv`, `nt`, `bar1`, `seg5`, `field`) are only aliases of these. A new screen adds a variant here, never a private copy.
 
-**Rule: frames.** A panel, card, tile or dialog is `c_card` (class `pnl`): radius-lg, padding space-3, 1px `edge`. It has these variants, all of the same frame: `sel` (accent border and glow), `pick` (halo ring, the chosen stage), `lock` (dashed, dimmed), `warn` (danger border), `hint` (halo border), `ok`, `glow` and `raised`; menu and dialog are the frames `menu` and `dialog`. The sizes `snug`, `tight`, `roomy` and `flush` (a thumbnail that bleeds to the edge) only change the padding. A frame does not set its own radius, padding or border colour. A tool rail is a screen layout, not a frame: `.rail` stacks `btn stack` cells touch by touch, space-1 apart.
+**Rule: frames.** A panel, card, tile or dialog is `c_card` (class `pnl`): radius-lg, padding space-3, 1px `edge`. It has these variants, all of the same frame: `sel` (accent border and glow), `lock` (dashed, dimmed), `warn` (danger border), `hint` (halo border), `glow` and `raised`; menu, dialog and the chosen stage card are the frames `menu`, `dialog` and `pick`, not picked freely. The sizes `snug`, `tight`, `roomy` and `flush` (a thumbnail that bleeds to the edge) only change the padding. A frame does not set its own radius, padding or border colour. A tool rail is a screen layout, not a frame: `.rail` stacks `btn stack` cells touch by touch, space-1 apart.
 
 **Rule: one implementation.** Every control, frame and figure comes from the component library (`c_*` functions in the kit; in Godot, one scene each) and is marked `data-c` in the preview HTML, or is one of its classes (`btn`, `chip`, `bar`, `field`, `partrow`, `call`, `pnl`, `well`, `switch`, `scrollbar`, `rail`). A screen never draws its own copy: no hand-built frame (border, radius and background on a bare element), no inline border, radius, background or shadow on a component class, no second progress ring. A new look is a variant of the component, added once. The build lists every violation and fails on any.
 
-**Rule: size is content.** A view never sets `width`, `height`, `left`, `top`, `right` or `bottom` in pixels. A component is as big as its content, its font size and its padding tokens (`wrap_content` in Android, `custom_minimum_size` left at zero in Godot). Where a size has to be fixed it is named once in Spacing and used by class: screen slots (`slot-rail`, `slot-arena`, `slot-side`, `slot-tray`, `slot-fill`, `slot-foot`), page columns (`pg`), value columns and card widths (`w-col-*`, `w-card`, `w-tile`, `w-well`), menu and dialog widths (`w-menu`, `w-dialog`), and the figures that have to be exact (`w-brain`, `h-screen`, `h-stage`, `h-thumb`). The arena has no width of its own: it takes what the rail and side panel leave, so a wider screen gives it more. A callout's position in a figure is data and stays. The build fails on any other fixed size in a view.
+**Rule: size is content.** A view never sets `width`, `height`, `left`, `top`, `right` or `bottom` in pixels. A component is as big as its content, its font size and its padding tokens (`wrap_content` in Android, `custom_minimum_size` left at zero in Godot). Spacing (space steps, control and icon sizes) is the one reusable scale and is never itself a fixed layout size. Where a size genuinely has to be fixed because Node Runner's own screen is, it's named once in **Layout** and used by class: the screen slots (`slot-rail`, `slot-arena`, `slot-side`, `slot-tray`, `slot-fill`, `slot-foot`), page columns (`pg`), the stage strip's own tile and label columns (`w-tile`, `w-col-*`), and the figures that have to be drawn at an exact size (`w-brain`, `w-well`, `h-well`, `h-screen`, `h-stage`, `h-thumb`). The arena has no width of its own: it takes what the rail and side panel leave, so a wider screen gives it more. A callout's position in a figure is data and stays. A component that owns its own fixed size privately (a menu, a dialog) sets it once inside that one component, marked `data-c`, and is exempt here rather than pulling from a shared token — nothing else may set a pixel size outside these two cases, and the build fails on any that does.
 
 Preview: [components/ComponentLibrary/preview.html](components/ComponentLibrary/preview.html)
+
+
+---
+
+# ComponentLibraryCont
+
+*Foundations · More from the component library: frames, an overflow menu, a picker, a part in the tray and a part's settings panel*
+
+![ComponentLibraryCont](screenshots/ComponentLibraryCont.png)
+
+More from the [Component Library](components/ComponentLibrary/README.md): frames, an overflow menu, a picker, a part in the tray and a part's settings panel.
+
+- **Picker.** A row with an optional small accessory (an icon, or a caller-drawn swatch: the picker does not know which), the current choice, and a chevron. Opened, it lists the choices under it in the same menu-owned frame as Menu (`menu`), each row with the same kind of accessory; a choice can carry a check (selected) or a short note instead of a check ("swaps", on Parts, for a choice that needs explaining rather than being refused). **Locked** shows a lock instead of a chevron and tints the row in accent: there is no other choice to make, ever. **Disabled** is the ordinary disabled state every other control has: the whole row dims to 50% with a dashed border, the chevron stays (it still works, it just can't be opened right now) — a line nearby says why. The two never combine.
+- **Menu.** The overflow list: 48px rows with an icon, a word, and `danger` for destructive ones.
+- **Card.** One frame at rest (`edge` 1px, `radius-lg`, `panel`, `space-3` padding) with variants: `sel` (accent 2px and `glow`), `lock` (dashed, dimmed), `warn` (`danger` border, always with words), `hint`, `glow` and `raised`, and the padding sizes `snug`, `tight`, `roomy` and `flush`. Menu, dialog and the chosen stage card are the frames `menu`, `dialog` and `pick`, not picked freely. Cards on Creations, Achievements and Train setup, the settings panel and dialogs are all this frame.
+- **List row.** A part in the tray: a glyph, a name and how many are left, `control` high with a `radius-md` border. States: at rest, selected (`accent`), locked (dashed with a lock) and none left (dimmed).
+- **Panel.** `c_inspector` is a part's settings panel: `c_panel_head` at the top (an optional glyph, the title in `subheading` — it truncates with an ellipsis, never wraps — and icon actions on the right, each `control-sm` wide, the same header any side panel uses), then `c_rows`. Every row inside is built with `pad=False`: it carries no margin of its own, whatever kind of row it is, and `c_rows` alone sets the gap between them (`space-1`), the same regardless of which two row kinds happen to be next to each other. Deleting a part is `c_rows`'s own full-width `danger` button at the end, with a bigger gap above it (`space-2`): an action, not another row.
+
+
+Preview: [components/ComponentLibraryCont/preview.html](components/ComponentLibraryCont/preview.html)
+
+
+---
+
+# Cover
+
+*Foundations · The cover of the design system, also used by the Splash screen*
+
+![Cover](screenshots/Cover.png)
+
+The cover of the design system: the name "Node Runner" and the line "Draw a creature. Watch it learn to move." over a 48 px dot grid, which stands for the node lattice, with four blocks in the theme colours (accent, halo, line-strong and a small danger square).
+
+It is the game's brand art. The store cover and the Splash screen both use it. It uses only tokens (`bg`, `muted`, `accent`, `halo`, `line-strong`, `danger`, `ink`, the display and body families and `radius-lg` / `radius-sm`), so it follows a theme swap.
+
+The same art is the **Splash** screen (see Splash): one scene `CoverArt` in Godot, used by the store cover and by the splash, so the two can never drift apart.
+
+
+Preview: [components/Cover/preview.html](components/Cover/preview.html)
 
 
 ---
@@ -525,7 +560,7 @@ Preview: [components/Creations/preview.html](components/Creations/preview.html)
 
 ![PartSettings](screenshots/PartSettings.png)
 
-The **settings panel** for the selected part. It takes the right-hand slot that holds the Parts tray in Build and sits under the brain widget in BuildLocked. Tap a part or beam to open it; tap empty canvas or the x to close it. Every part has an editable **Name**, then its main settings, then its connections, then read-only facts. In Build the header carries **Delete** (trash); on a locked creation it is absent.
+The **settings panel** for the selected part. It takes the right-hand slot that holds the Parts tray in Build and sits under the brain widget in BuildLocked. Tap a part or beam to open it; tap empty canvas or the x to close it. Every part has an editable **Name**, then its main settings, then its connections. In Build the header carries **Delete** (trash); on a locked creation it is absent.
 
 **Weight.** Only **beams** (and wings, which are beams) have a weight you set. A Core, a node, motors, sensors and blocks have no setting for it. Blocks and wheels show what they **weigh** as a read-only fact; a **fuel tank** gets lighter as the fuel is used.
 
@@ -535,11 +570,11 @@ The **settings panel** for the selected part. It takes the right-hand slot that 
 
 **LOS sensor.** Rays as five cells, spread, range and rotation. Its rays are drawn while it is selected. **Core.** Toggles for its built-in senses; each on is one more input to the brain.
 
-**Links.** **Spring / damper**: stiffness, damping, rest length, the two nodes. **Piston**: max strength, stroke, the two nodes. **Wing**: the two nodes, Flip, lift, weight.
+**Links.** **Spring / damper**: stiffness, damping. **Piston**: max strength. **Wing**: Flip, lift, weight. All three are drawn directly between two nodes, the same way a beam is drawn: their length (or which nodes they span) is structure, not a setting, so the panel does not list it — it's already visible on the canvas.
 
 **Blocks.** **Battery**: shows what is **stored**, of what it can hold ("20 / 20 units"); it takes and gives power without a speed limit. **Generator**: which fuel tank feeds it, and nothing else to set: it makes as much as it can, feeds the powered parts first and charges the batteries with the rest. **Fuel tank**: the fuel it holds, in seconds of generator time, and which generator it feeds.
 
-Powered parts show a **Power** row: "Draws up to 0.6", because a part uses less when it is idle. Structure that changes the model (length, stroke, what a link is between) is a dashed locked row on a locked creation.
+Powered parts show a **Power** row: "Draws up to 0.6", because a part uses less when it is idle. A beam's length works the same way as a link's: it is drawn, not set, so the panel says how to change it ("Drag its ends to change the length") instead of repeating the number.
 
 Preview: [components/PartSettings/preview.html](components/PartSettings/preview.html)
 
@@ -688,7 +723,7 @@ A **wing** is a beam that gives lift on one side. It is placed like a Spring or 
 - **Gliding.** Lift whenever the speed along the beam is not zero. The sign does not matter, so moving end to start lifts the same way as start to end.
 - **Flapping.** Lift when the velocity along the normal is negative, that is when the wing moves down against its lift side. Moving up gives none.
 
-**Settings** (see PartSettings): Name, the two nodes it is between (locked once the creation is locked), **Flip** (swaps start and end and so turns the normal over), Lift strength and Weight. A wing needs no power.
+**Settings** (see PartSettings): Name, **Flip** (swaps start and end and so turns the normal over), Lift strength and Weight. A wing needs no power. Which two nodes it's between is structure, not a setting — it's drawn on the canvas, the same as its own length would be, and the panel does not repeat it.
 
 **Placement.** While dragging, the start node is ringed in `halo` and a dashed ring follows to the node it would end on. Two nodes hold one wing between them.
 
@@ -713,21 +748,3 @@ Every preview in this system pins its own theme on a wrapper element (`data-them
 
 
 Preview: [components/Themes/preview.html](components/Themes/preview.html)
-
-
----
-
-# Cover
-
-*Other · *
-
-![Cover](screenshots/Cover.png)
-
-The cover of the design system: the name "Node Runner" and the line "Draw a creature. Watch it learn to move." over a 48 px dot grid, which stands for the node lattice, with four blocks in the theme colours (accent, halo, line-strong and a small danger square).
-
-It is the game's brand art. The store cover and the Splash screen both use it. It uses only tokens (`bg`, `muted`, `accent`, `halo`, `line-strong`, `danger`, `ink`, the display and body families and `radius-lg` / `radius-sm`), so it follows a theme swap.
-
-The same art is the **Splash** screen (see Splash): one scene `CoverArt` in Godot, used by the store cover and by the splash, so the two can never drift apart.
-
-
-Preview: [components/Cover/preview.html](components/Cover/preview.html)
