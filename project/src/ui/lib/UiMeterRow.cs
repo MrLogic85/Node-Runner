@@ -25,7 +25,7 @@ public partial class UiMeterRow : VBoxContainer
             _percent = (float)UiComponentContracts.ClampPercent(value);
             if (_bar is not null)
             {
-                _bar.FillPosition = _percent / 100d;
+                _bar.Value = UiSliderValue.Progress(_percent / 100d);
             }
         }
     }
@@ -70,9 +70,9 @@ public partial class UiMeterRow : VBoxContainer
         _bar = new UiSlider
         {
             Tokens = _tokens,
-            Thumbs = [],
-            FillPosition = Percent / 100d,
-            ShowValueRow = false,
+            LabelText = string.Empty,
+            ReadoutText = string.Empty,
+            Value = UiSliderValue.Progress(Percent / 100d),
         };
         AddChild(_bar);
     }

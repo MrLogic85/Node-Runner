@@ -2,6 +2,103 @@ using Godot;
 
 namespace NodeRunner.Ui.Lib;
 
+public enum UiSliderValueKind
+{
+    Thumb,
+    Range,
+    Progress,
+}
+
+public readonly record struct UiSliderValue
+{
+    private UiSliderValue(UiSliderValueKind kind, double low, double high)
+    {
+        Kind = kind;
+        Low = UiComponentContracts.ClampSliderPosition(low);
+        High = kind == UiSliderValueKind.Range
+            ? UiComponentContracts.ClampSliderPosition(high)
+            : Low;
+        if (Kind == UiSliderValueKind.Range && High < Low)
+        {
+            (Low, High) = (High, Low);
+        }
+    }
+
+    public UiSliderValueKind Kind { get; }
+
+    public double Low { get; }
+
+    public double High { get; }
+
+    public int ThumbCount => Kind switch
+    {
+        UiSliderValueKind.Progress => 0,
+        UiSliderValueKind.Range => 2,
+        _ => 1,
+    };
+
+    public double FillStart => Kind == UiSliderValueKind.Range ? Low : 0;
+
+    public double FillEnd => Kind == UiSliderValueKind.Range ? High : Low;
+
+    public static UiSliderValue Progress(double value) =>
+        new(UiSliderValueKind.Progress, value, value);
+
+    public static UiSliderValue Thumb(double value) =>
+        new(UiSliderValueKind.Thumb, value, value);
+
+    public static UiSliderValue Thumbs(double low, double high) =>
+        new(UiSliderValueKind.Range, low, high);
+
+    public static UiSliderValue From(UiSliderValueKind kind, double low, double high) =>
+        kind switch
+        {
+            UiSliderValueKind.Progress => Progress(low),
+            UiSliderValueKind.Range => Thumbs(low, high),
+            _ => Thumb(low),
+        };
+
+    public double ThumbAt(int index) =>
+        index switch
+        {
+            0 when ThumbCount > 0 => Low,
+            1 when ThumbCount > 1 => High,
+            _ => throw new ArgumentOutOfRangeException(nameof(index), index, null),
+        };
+
+    public int SelectThumb(double position)
+    {
+        if (ThumbCount == 0)
+        {
+            return -1;
+        }
+
+        if (ThumbCount == 1)
+        {
+            return 0;
+        }
+
+        var target = UiComponentContracts.ClampSliderPosition(position);
+        if (Low == High)
+        {
+            return target < Low ? 0 : 1;
+        }
+
+        var lowDistance = Math.Abs(target - Low);
+        var highDistance = Math.Abs(target - High);
+        return lowDistance <= highDistance ? 0 : 1;
+    }
+
+    public UiSliderValue WithThumb(int index, double position) =>
+        Kind switch
+        {
+            UiSliderValueKind.Thumb when index == 0 => Thumb(position),
+            UiSliderValueKind.Range when index == 0 => Thumbs(Math.Min(position, High), High),
+            UiSliderValueKind.Range when index == 1 => Thumbs(Low, Math.Max(position, Low)),
+            _ => throw new ArgumentOutOfRangeException(nameof(index), index, null),
+        };
+}
+
 /// <summary>Canonical normalized slider with one or two thumbs, steps, marker, and disabled state.</summary>
 public partial class UiSlider : Control
 {
@@ -17,18 +114,21 @@ public partial class UiSlider : Control
     private UiTokens _tokens = UiTokens.Neon;
     private string _labelText = "Value";
     private string _readoutText = "50";
-    private double[] _thumbs = [0.5];
-    private double _fillPosition = 0.5;
+    private UiSliderValueKind _valueKind = UiSliderValueKind.Thumb;
+    private double _lowPosition = 0.5;
+    private double _highPosition = 0.5;
     private string[] _stepLabels = [];
     private double _markerPosition = -1;
     private string _markerText = string.Empty;
-    private bool _showValueRow = true;
+    private bool _showValueLabels = true;
+    private bool _showStepLabels = true;
     private bool _enabled = true;
     private UiSliderStyle _style = UiSliderStyle.From(UiTokens.Neon);
     private Label? _label;
     private Label? _readout;
     private Label? _markerLabel;
     private StyleBoxFlat? _thumbStyle;
+    private StyleBoxFlat? _trackSegmentStyle;
     private readonly List<Label> _stepLabelNodes = [];
     private int _draggedThumb = -1;
     private int _pressedThumb = -1;
@@ -56,25 +156,42 @@ public partial class UiSlider : Control
         }
     }
 
-    [Export]
-    public double[] Thumbs
+    public UiSliderValue Value
     {
-        get => _thumbs;
+        get => UiSliderValue.From(ValueKind, LowPosition, HighPosition);
+        set => SetValue(value);
+    }
+
+    [Export]
+    public UiSliderValueKind ValueKind
+    {
+        get => _valueKind;
         set
         {
-            _thumbs = UiComponentContracts.NormalizeSliderThumbs(value);
+            _valueKind = value;
             Refresh();
         }
     }
 
     [Export(PropertyHint.Range, "0,1,0.001")]
-    public double FillPosition
+    public double LowPosition
     {
-        get => _fillPosition;
+        get => _lowPosition;
         set
         {
-            _fillPosition = UiComponentContracts.ClampSliderPosition(value);
-            QueueRedraw();
+            _lowPosition = UiComponentContracts.ClampSliderPosition(value);
+            Refresh();
+        }
+    }
+
+    [Export(PropertyHint.Range, "0,1,0.001")]
+    public double HighPosition
+    {
+        get => _highPosition;
+        set
+        {
+            _highPosition = UiComponentContracts.ClampSliderPosition(value);
+            Refresh();
         }
     }
 
@@ -119,12 +236,23 @@ public partial class UiSlider : Control
     }
 
     [Export]
-    public bool ShowValueRow
+    public bool ShowValueLabels
     {
-        get => _showValueRow;
+        get => _showValueLabels;
         set
         {
-            _showValueRow = value;
+            _showValueLabels = value;
+            Refresh();
+        }
+    }
+
+    [Export]
+    public bool ShowStepLabels
+    {
+        get => _showStepLabels;
+        set
+        {
+            _showStepLabels = value;
             Refresh();
         }
     }
@@ -174,7 +302,7 @@ public partial class UiSlider : Control
 
     public override void _GuiInput(InputEvent inputEvent)
     {
-        if (!Enabled || _thumbs.Length == 0)
+        if (!Enabled || Value.ThumbCount == 0)
         {
             _draggedThumb = -1;
             _pressedThumb = -1;
@@ -211,13 +339,13 @@ public partial class UiSlider : Control
         {
             if (_draggedThumb >= 0)
             {
-                EmitSignal(SignalName.ThumbChangeCommitted, _draggedThumb, _thumbs[_draggedThumb]);
+                EmitSignal(SignalName.ThumbChangeCommitted, _draggedThumb, Value.ThumbAt(_draggedThumb));
             }
             else if (_pressedThumb >= 0)
             {
                 _draggedThumb = _pressedThumb;
                 SetDraggedThumb(_pressPosition.X);
-                EmitSignal(SignalName.ThumbChangeCommitted, _draggedThumb, _thumbs[_draggedThumb]);
+                EmitSignal(SignalName.ThumbChangeCommitted, _draggedThumb, Value.ThumbAt(_draggedThumb));
             }
 
             _draggedThumb = -1;
@@ -233,29 +361,21 @@ public partial class UiSlider : Control
         var opacity = Enabled ? 1f : UiSliderStyle.DisabledOpacity;
         var line = UiTokens.MultiplyAlpha(Enabled ? _tokens.Line : _tokens.LineStrong, opacity);
         var accent = UiTokens.MultiplyAlpha(_tokens.Accent, opacity);
-        var lowX = _thumbs.Length > 0
-            ? PositionFor(_thumbs[0], trackLeft, trackRight)
-            : trackLeft;
-        var highX = _thumbs.Length switch
-        {
-            0 => PositionFor(FillPosition, trackLeft, trackRight),
-            2 => PositionFor(_thumbs[1], trackLeft, trackRight),
-            _ => lowX,
-        };
-        var fillStart = _thumbs.Length == 2 ? lowX : trackLeft;
+        var fillStart = PositionFor(Value.FillStart, trackLeft, trackRight);
+        var fillEnd = PositionFor(Value.FillEnd, trackLeft, trackRight);
 
         if (Enabled)
         {
-            DrawLine(new Vector2(trackLeft, trackY), new Vector2(trackRight, trackY), line, _style.TrackWidth, antialiased: true);
+            DrawRoundedTrackSegment(trackLeft, trackRight, trackY, line);
         }
         else
         {
             DrawDisabledTrackSegment(trackLeft, fillStart, trackY, line);
-            DrawDisabledTrackSegment(highX, trackRight, trackY, line);
+            DrawDisabledTrackSegment(fillEnd, trackRight, trackY, line);
         }
 
         DrawSteps(trackLeft, trackRight, trackY, opacity);
-        DrawLine(new Vector2(fillStart, trackY), new Vector2(highX, trackY), accent, _style.TrackWidth, antialiased: true);
+        DrawRoundedTrackSegment(fillStart, fillEnd, trackY, accent);
 
         if (HasMarker)
         {
@@ -268,14 +388,14 @@ public partial class UiSlider : Control
                 antialiased: true);
         }
 
-        foreach (var thumb in _thumbs)
+        for (var index = 0; index < Value.ThumbCount; index++)
         {
-            DrawThumb(new Vector2(PositionFor(thumb, trackLeft, trackRight), trackY), accent);
+            DrawThumb(new Vector2(PositionFor(Value.ThumbAt(index), trackLeft, trackRight), trackY), accent);
         }
 
     }
 
-    private float TrackY => ShowValueRow
+    private float TrackY => UsesLabelArea
         ? _tokens.OverlineText.LineHeight + _tokens.Space3
         : Size.Y * 0.5f;
 
@@ -323,6 +443,14 @@ public partial class UiSlider : Control
         }
     }
 
+    private void SetValue(UiSliderValue value)
+    {
+        _valueKind = value.Kind;
+        _lowPosition = value.Low;
+        _highPosition = value.High;
+        Refresh();
+    }
+
     private void Refresh()
     {
         if (!IsInsideTree())
@@ -332,19 +460,18 @@ public partial class UiSlider : Control
 
         EnsureLabels();
         _style = UiSliderStyle.From(_tokens);
-        var hasSteps = StepLabels.Length >= 2;
         CustomMinimumSize = new Vector2(
             0,
-            ShowValueRow
-                ? hasSteps ? _style.SteppedHeight : _tokens.TouchTarget
+            UsesLabelArea
+                ? HasStepLabelRow ? _style.SteppedHeight : _tokens.TouchTarget
                 : _style.TrackWidth);
 
         _label!.Text = LabelText;
         _readout!.Text = ReadoutText;
         _markerLabel!.Text = MarkerText;
-        _label.Visible = ShowValueRow;
-        _readout.Visible = ShowValueRow;
-        _markerLabel.Visible = ShowValueRow && HasMarker && !string.IsNullOrWhiteSpace(MarkerText);
+        _label.Visible = HasValueLabelRow && !string.IsNullOrWhiteSpace(LabelText);
+        _readout.Visible = HasValueLabelRow && !string.IsNullOrWhiteSpace(ReadoutText);
+        _markerLabel.Visible = HasMarkerText && (HasValueLabelRow || HasMarkerBelowRow);
 
         ApplyLabelStyle(_label, _tokens.OverlineText, _tokens.Muted);
         ApplyLabelStyle(_readout, _tokens.ReadoutMediumText, _tokens.Ink);
@@ -355,8 +482,10 @@ public partial class UiSlider : Control
             borderWidth: 0,
             radius: _style.ThumbRadius);
         UiGlow.ApplyToControl(_thumbStyle, _tokens.AccentGlow, _tokens.EffectsEnabled);
+        _trackSegmentStyle ??= new StyleBoxFlat();
         foreach (var stepLabel in _stepLabelNodes)
         {
+            stepLabel.Visible = HasStepLabelRow;
             ApplyLabelStyle(stepLabel, _tokens.ReadoutSmallText, _tokens.Muted);
         }
 
@@ -391,15 +520,17 @@ public partial class UiSlider : Control
                 _style.ThumbRadius,
                 Size.X - _style.ThumbRadius,
                 (float)MarkerPosition);
-            var minimumX = _label.Size.X + _tokens.Space1;
-            var maximumX = _readout.Position.X - _tokens.Space1 - _markerLabel.Size.X;
+            var minimumX = HasMarkerBelowRow ? 0 : _label.Size.X + _tokens.Space1;
+            var maximumX = HasMarkerBelowRow
+                ? Mathf.Max(0, Size.X - _markerLabel.Size.X)
+                : _readout.Position.X - _tokens.Space1 - _markerLabel.Size.X;
             var markerX = maximumX >= minimumX
                 ? Mathf.Clamp(desiredCenter - (_markerLabel.Size.X * 0.5f), minimumX, maximumX)
                 : minimumX;
-            _markerLabel.Position = new Vector2(markerX, 0);
+            _markerLabel.Position = new Vector2(markerX, HasMarkerBelowRow ? TrackY + _tokens.Space2 : 0);
         }
 
-        if (_stepLabelNodes.Count < 2)
+        if (!HasStepLabelRow)
         {
             return;
         }
@@ -436,7 +567,7 @@ public partial class UiSlider : Control
                 new Vector2(x, trackY - _style.StepTickHalfHeight),
                 new Vector2(x, trackY + _style.StepTickHalfHeight),
                 color,
-                _tokens.StrokeHair);
+                _tokens.StrokeSignal);
         }
     }
 
@@ -454,6 +585,24 @@ public partial class UiSlider : Control
             _style.TrackWidth,
             _style.DisabledDashLength,
             antialiased: true);
+    }
+
+    private void DrawRoundedTrackSegment(float startX, float endX, float trackY, Color color)
+    {
+        if (endX <= startX)
+        {
+            return;
+        }
+
+        var radius = Mathf.CeilToInt(_style.TrackWidth * 0.5f);
+        _trackSegmentStyle!.BgColor = color;
+        _trackSegmentStyle.CornerRadiusTopLeft = radius;
+        _trackSegmentStyle.CornerRadiusTopRight = radius;
+        _trackSegmentStyle.CornerRadiusBottomLeft = radius;
+        _trackSegmentStyle.CornerRadiusBottomRight = radius;
+        DrawStyleBox(
+            _trackSegmentStyle,
+            new Rect2(startX, trackY - (_style.TrackWidth * 0.5f), endX - startX, _style.TrackWidth));
     }
 
     private void DrawThumb(Vector2 center, Color color)
@@ -487,7 +636,7 @@ public partial class UiSlider : Control
 
     private int NearestThumb(float x)
     {
-        if (_thumbs.Length == 1)
+        if (Value.ThumbCount == 1)
         {
             return 0;
         }
@@ -497,7 +646,7 @@ public partial class UiSlider : Control
         var position = trackRight <= trackLeft
             ? 0
             : UiComponentContracts.ClampSliderPosition((x - trackLeft) / (trackRight - trackLeft));
-        return UiComponentContracts.SelectSliderThumb(_thumbs, position);
+        return Value.SelectThumb(position);
     }
 
     private void SetDraggedThumb(float x)
@@ -512,24 +661,19 @@ public partial class UiSlider : Control
         var position = trackRight <= trackLeft
             ? 0
             : UiComponentContracts.ClampSliderPosition((x - trackLeft) / (trackRight - trackLeft));
-        if (_thumbs.Length == 2)
-        {
-            position = _draggedThumb == 0
-                ? Math.Min(position, _thumbs[1])
-                : Math.Max(position, _thumbs[0]);
-        }
+        var next = Value.WithThumb(_draggedThumb, position);
 
-        if (Mathf.IsEqualApprox((float)_thumbs[_draggedThumb], (float)position))
+        if (Mathf.IsEqualApprox((float)Value.ThumbAt(_draggedThumb), (float)next.ThumbAt(_draggedThumb)))
         {
             return;
         }
 
-        _thumbs[_draggedThumb] = position;
+        Value = next;
         QueueRedraw();
-        EmitSignal(SignalName.ThumbChanged, _draggedThumb, position);
-        if (_thumbs.Length == 2)
+        EmitSignal(SignalName.ThumbChanged, _draggedThumb, Value.ThumbAt(_draggedThumb));
+        if (Value.ThumbCount == 2)
         {
-            EmitSignal(SignalName.RangeChanged, _thumbs[0], _thumbs[1]);
+            EmitSignal(SignalName.RangeChanged, Value.Low, Value.High);
         }
     }
 
@@ -537,4 +681,18 @@ public partial class UiSlider : Control
         Mathf.Lerp(left, right, (float)UiComponentContracts.ClampSliderPosition(position));
 
     private bool HasMarker => MarkerPosition >= 0;
+
+    private bool HasMarkerText => HasMarker && !string.IsNullOrWhiteSpace(MarkerText);
+
+    private bool HasValueLabelRow =>
+        ShowValueLabels
+        && (!string.IsNullOrWhiteSpace(LabelText)
+            || !string.IsNullOrWhiteSpace(ReadoutText)
+            || HasMarkerText && HasStepLabelRow);
+
+    private bool HasStepLabelRow => ShowStepLabels && StepLabels.Length >= 2;
+
+    private bool HasMarkerBelowRow => ShowValueLabels && HasMarkerText && !HasStepLabelRow;
+
+    private bool UsesLabelArea => HasValueLabelRow || HasStepLabelRow || HasMarkerBelowRow;
 }

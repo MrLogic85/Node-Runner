@@ -422,14 +422,14 @@ public partial class ComponentGalleryScreen : Control
             {
                 LabelText = "Shadows",
                 ReadoutText = "8",
-                Thumbs = [0.22],
+                Value = UiSliderValue.Thumb(0.22),
             },
             "Plain",
             new UiSlider
             {
                 LabelText = "Shadows",
                 ReadoutText = "8",
-                Thumbs = [0.22],
+                Value = UiSliderValue.Thumb(0.22),
                 Enabled = false,
             }));
         section.AddChild(CreateSliderPair(
@@ -438,7 +438,7 @@ public partial class ComponentGalleryScreen : Control
             {
                 LabelText = "Neurons",
                 ReadoutText = "24",
-                Thumbs = [0.24],
+                Value = UiSliderValue.Thumb(0.24),
                 StepLabels = ["1", "100"],
                 MarkerPosition = 0.03,
                 MarkerText = "default 4",
@@ -448,7 +448,7 @@ public partial class ComponentGalleryScreen : Control
             {
                 LabelText = "Neurons",
                 ReadoutText = "24",
-                Thumbs = [0.24],
+                Value = UiSliderValue.Thumb(0.24),
                 StepLabels = ["1", "100"],
                 MarkerPosition = 0.03,
                 MarkerText = "default 4",
@@ -460,7 +460,7 @@ public partial class ComponentGalleryScreen : Control
             {
                 LabelText = "UI size",
                 ReadoutText = "150%",
-                Thumbs = [0.5],
+                Value = UiSliderValue.Thumb(0.5),
                 StepLabels = ["50%", "100%", "200%", "400%"],
                 MarkerPosition = 1d / 3d,
                 MarkerText = "default 100%",
@@ -470,7 +470,7 @@ public partial class ComponentGalleryScreen : Control
             {
                 LabelText = "UI size",
                 ReadoutText = "150%",
-                Thumbs = [0.5],
+                Value = UiSliderValue.Thumb(0.5),
                 StepLabels = ["50%", "100%", "200%", "400%"],
                 MarkerPosition = 1d / 3d,
                 MarkerText = "default 100%",
@@ -482,7 +482,7 @@ public partial class ComponentGalleryScreen : Control
             {
                 LabelText = "Angle limits",
                 ReadoutText = "-20° to 110°",
-                Thumbs = [0.18, 0.72],
+                Value = UiSliderValue.Thumbs(0.18, 0.72),
                 MarkerPosition = 0.44,
                 MarkerText = "now 35°",
             },
@@ -491,7 +491,7 @@ public partial class ComponentGalleryScreen : Control
             {
                 LabelText = "Angle limits",
                 ReadoutText = "-20° to 110°",
-                Thumbs = [0.18, 0.72],
+                Value = UiSliderValue.Thumbs(0.18, 0.72),
                 MarkerPosition = 0.44,
                 MarkerText = "now 35°",
                 Enabled = false,
@@ -502,32 +502,30 @@ public partial class ComponentGalleryScreen : Control
             {
                 LabelText = "Loading",
                 ReadoutText = "62%",
-                Thumbs = [],
-                FillPosition = 0.62,
+                Value = UiSliderValue.Progress(0.62),
             },
             "Linear progress, disabled",
             new UiSlider
             {
                 LabelText = "Power",
                 ReadoutText = "18%",
-                Thumbs = [],
-                FillPosition = 0.18,
+                Value = UiSliderValue.Progress(0.18),
                 Enabled = false,
             }));
         section.AddChild(CreateSliderPair(
             "Bare progress bar: no slider value row",
             new UiSlider
             {
-                Thumbs = [],
-                FillPosition = 0.78,
-                ShowValueRow = false,
+                LabelText = string.Empty,
+                ReadoutText = string.Empty,
+                Value = UiSliderValue.Progress(0.78),
             },
             "Bare progress, disabled",
             new UiSlider
             {
-                Thumbs = [],
-                FillPosition = 0.35,
-                ShowValueRow = false,
+                LabelText = string.Empty,
+                ReadoutText = string.Empty,
+                Value = UiSliderValue.Progress(0.35),
                 Enabled = false,
             }));
         return section;
@@ -546,8 +544,8 @@ public partial class ComponentGalleryScreen : Control
             SizeFlagsHorizontal = SizeFlags.ShrinkBegin,
         };
         rings.AddThemeConstantOverride("separation", (int)_tokens.Space3);
-        rings.AddChild(Track(new UiProgressRing { Percent = 72 }));
-        rings.AddChild(Track(new UiProgressRing { Percent = 100, Done = true }));
+        rings.AddChild(Track(new UiProgressRing { Progress = 0.72f }));
+        rings.AddChild(Track(new UiProgressRing { Progress = 1 }));
         content.AddChild(rings);
         return content;
     }
