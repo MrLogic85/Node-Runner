@@ -6,7 +6,13 @@ namespace NodeRunner.Ui.Lib;
 public partial class UiNumber : Control
 {
     private UiTokens _tokens = UiTokens.Neon;
-    private Label? _label;
+    private readonly Label _label = new()
+    {
+        HorizontalAlignment = HorizontalAlignment.Center,
+        VerticalAlignment = VerticalAlignment.Center,
+        MouseFilter = MouseFilterEnum.Ignore,
+    };
+
     private string _text = "1";
 
     [Export]
@@ -36,12 +42,6 @@ public partial class UiNumber : Control
     public override void _Ready()
     {
         MouseFilter = MouseFilterEnum.Ignore;
-        _label = new Label
-        {
-            HorizontalAlignment = HorizontalAlignment.Center,
-            VerticalAlignment = VerticalAlignment.Center,
-            MouseFilter = MouseFilterEnum.Ignore,
-        };
         AddChild(_label);
         Resized += LayoutLabel;
         ApplyGeometry();
@@ -71,11 +71,6 @@ public partial class UiNumber : Control
 
     private void RefreshLabel()
     {
-        if (_label is null)
-        {
-            return;
-        }
-
         _label.Text = Text;
         _tokens.ApplyTextStyle(_label, _tokens.ReadoutSmallText);
         _label.AddThemeColorOverride("font_color", _tokens.Accent);
@@ -84,11 +79,6 @@ public partial class UiNumber : Control
 
     private void LayoutLabel()
     {
-        if (_label is null)
-        {
-            return;
-        }
-
         _label.Position = Vector2.Zero;
         _label.Size = Size;
     }
