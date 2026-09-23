@@ -14,7 +14,7 @@ public partial class SimulateScreen : Control
     private const int _modeSwitchHeight = 52;
     private const int _signalPanelWidth = 340;
     private UiTokens _tokens = UiTokens.Neon;
-    private readonly List<UiPanel> _signalCards = new();
+    private readonly List<UiCard> _signalCards = new();
     private readonly List<Label> _signalBodies = new();
     private readonly List<ProgressBar> _sensorBars = new();
     private readonly List<ProgressBar> _motorBars = new();
@@ -1011,7 +1011,7 @@ public partial class SimulateScreen : Control
         return strip;
     }
 
-    private UiPanel CreateSignalCard(int index, string title, string detail)
+    private UiCard CreateSignalCard(int index, string title, string detail)
     {
         var card = CreatePanel(raised: true);
         card.CustomMinimumSize = new Vector2(_signalPanelWidth - 28, ReadOnlyControls ? 78 : 72);
@@ -1209,9 +1209,9 @@ public partial class SimulateScreen : Control
         for (var cardIndex = 0; cardIndex < _signalCards.Count; cardIndex++)
         {
             var selected = cardIndex == index;
-            _signalCards[cardIndex].Variant = selected
-                ? UiSurfaceContracts.FrameVariant.Pick
-                : UiSurfaceContracts.FrameVariant.Frame;
+            _signalCards[cardIndex].Kind = selected
+                ? UiCard.CardVariant.Selected
+                : UiCard.CardVariant.Frame;
             _signalBodies[cardIndex].Visible = selected;
         }
 
@@ -1251,14 +1251,14 @@ public partial class SimulateScreen : Control
         control.DrawCircle(front, _tokens.EffectsEnabled ? 18 : 8, _tokens.EffectsEnabled ? _tokens.AccentGlow : _tokens.Line);
     }
 
-    private UiPanel CreatePanel(bool raised)
+    private UiCard CreatePanel(bool raised)
     {
-        return new UiPanel
+        return new UiCard
         {
             Tokens = _tokens,
-            Variant = raised
-                ? UiSurfaceContracts.FrameVariant.Raised
-                : UiSurfaceContracts.FrameVariant.Frame,
+            Kind = raised
+                ? UiCard.CardVariant.Raised
+                : UiCard.CardVariant.Frame,
         };
     }
 

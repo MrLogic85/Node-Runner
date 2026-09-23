@@ -45,6 +45,8 @@ public sealed class UiGalleryInventoryTests
                     UiComponentContracts.CanonicalComponent.Range,
                     UiComponentContracts.CanonicalComponent.ProgressBar,
                     UiComponentContracts.CanonicalComponent.ProgressRing,
+                    UiComponentContracts.CanonicalComponent.Card,
+                    UiComponentContracts.CanonicalComponent.Panel,
                     UiComponentContracts.CanonicalComponent.Toggle,
                     UiComponentContracts.CanonicalComponent.Checkbox,
                     UiComponentContracts.CanonicalComponent.Segmented,

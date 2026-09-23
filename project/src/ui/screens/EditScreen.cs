@@ -94,10 +94,10 @@ public partial class EditScreen : Control
 
     private Control CreateCanvas()
     {
-        var panel = new UiPanel
+        var panel = new UiCard
         {
             Tokens = _tokens,
-            Variant = UiSurfaceContracts.FrameVariant.Frame,
+            Kind = UiCard.CardVariant.Frame,
             SizeFlagsHorizontal = SizeFlags.ExpandFill,
         };
         var canvas = new Control { SizeFlagsHorizontal = SizeFlags.ExpandFill, SizeFlagsVertical = SizeFlags.ExpandFill };
@@ -119,7 +119,7 @@ public partial class EditScreen : Control
 
     private Control CreateSafetyPanel()
     {
-        var panel = new UiPanel { Tokens = _tokens, CustomMinimumSize = new Vector2(300, 0) };
+        var panel = new UiCard { Tokens = _tokens, CustomMinimumSize = new Vector2(300, 0) };
         var margin = new MarginContainer();
         margin.AddThemeConstantOverride("margin_left", 16);
         margin.AddThemeConstantOverride("margin_top", 16);

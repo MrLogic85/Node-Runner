@@ -172,15 +172,13 @@ public partial class ColorsAndStylesScreen : Control
     private Control CreateSurfacesSection()
     {
         var content = CreateFlow();
-        content.AddChild(CreateSurfaceSpecimen("frame", UiSurfaceContracts.FrameVariant.Frame));
-        content.AddChild(CreateSurfaceSpecimen("sel", UiSurfaceContracts.FrameVariant.Sel));
-        content.AddChild(CreateSurfaceSpecimen("pick", UiSurfaceContracts.FrameVariant.Pick));
-        content.AddChild(CreateSurfaceSpecimen("lock", UiSurfaceContracts.FrameVariant.Lock));
-        content.AddChild(CreateSurfaceSpecimen("warn", UiSurfaceContracts.FrameVariant.Warn));
-        content.AddChild(CreateSurfaceSpecimen("hint", UiSurfaceContracts.FrameVariant.Hint));
-        content.AddChild(CreateSurfaceSpecimen("ok", UiSurfaceContracts.FrameVariant.Ok));
-        content.AddChild(CreateSurfaceSpecimen("glow", UiSurfaceContracts.FrameVariant.Glow));
-        content.AddChild(CreateSurfaceSpecimen("raised", UiSurfaceContracts.FrameVariant.Raised));
+        content.AddChild(CreateSurfaceSpecimen("frame", UiCard.CardVariant.Frame));
+        content.AddChild(CreateSurfaceSpecimen("sel", UiCard.CardVariant.Selected));
+        content.AddChild(CreateSurfaceSpecimen("lock", UiCard.CardVariant.Locked));
+        content.AddChild(CreateSurfaceSpecimen("warn", UiCard.CardVariant.Warning));
+        content.AddChild(CreateSurfaceSpecimen("hint", UiCard.CardVariant.Hint));
+        content.AddChild(CreateSurfaceSpecimen("glow", UiCard.CardVariant.Frame, glow: true));
+        content.AddChild(CreateSurfaceSpecimen("raised", UiCard.CardVariant.Raised));
         return WrapSection("SURFACES", content);
     }
 
@@ -300,11 +298,12 @@ public partial class ColorsAndStylesScreen : Control
         return WrapSection("TEXT STYLES", content);
     }
 
-    private Control CreateSurfaceSpecimen(string label, UiSurfaceContracts.FrameVariant variant)
+    private Control CreateSurfaceSpecimen(string label, UiCard.CardVariant variant, bool glow = false)
     {
-        var panel = Track(new UiPanel
+        var panel = Track(new UiCard
         {
-            Variant = variant,
+            Kind = variant,
+            Glow = glow,
             CustomMinimumSize = new Vector2(_tokens.ColumnLargeWidth, 0),
         });
         var margin = new MarginContainer();
@@ -348,9 +347,9 @@ public partial class ColorsAndStylesScreen : Control
 
     private Control WrapSection(string title, Control content, UiTokens? surfaceTokens = null)
     {
-        var panel = new UiPanel
+        var panel = new UiCard
         {
-            Variant = UiSurfaceContracts.FrameVariant.Frame,
+            Kind = UiCard.CardVariant.Frame,
             SizeFlagsHorizontal = SizeFlags.ExpandFill,
         };
         if (surfaceTokens is null)
@@ -415,7 +414,7 @@ public partial class ColorsAndStylesScreen : Control
             case UiSegmentedSwitch segmentedSwitch:
                 segmentedSwitch.Tokens = tokens;
                 break;
-            case UiPanel panel:
+            case UiCard panel:
                 panel.Tokens = tokens;
                 break;
         }

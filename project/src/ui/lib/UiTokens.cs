@@ -133,7 +133,7 @@ public sealed class UiTokens
         PanelRaised = Rgb(0x13, 0x1c, 0x31),
         Line = Rgb(0x23, 0x30, 0x4d),
         LineStrong = Rgb(0x55, 0x73, 0xa6),
-        Edge = Rgb(0x19, 0xf0, 0xff, 0x59),
+        Edge = Rgb(0x1a, 0x7f, 0x79),
         Ink = Rgb(0xe6, 0xf1, 0xff),
         Muted = Rgb(0x8f, 0xa3, 0xc4),
         Accent = Rgb(0x19, 0xf0, 0xff),
@@ -331,7 +331,8 @@ public sealed class UiTokens
     /// <summary>Creates the canonical Frame surface for panels and cards.</summary>
     public StyleBoxFlat FrameStyle(
         UiSurfaceContracts.FrameVariant variant = UiSurfaceContracts.FrameVariant.Frame,
-        UiSurfaceContracts.FrameSize size = UiSurfaceContracts.FrameSize.Default)
+        UiSurfaceContracts.FrameSize size = UiSurfaceContracts.FrameSize.Default,
+        bool glow = false)
     {
         var style = new StyleBoxFlat
         {
@@ -372,23 +373,17 @@ public sealed class UiTokens
             case UiSurfaceContracts.FrameVariant.Ok:
                 style.BorderColor = Accent;
                 break;
-            case UiSurfaceContracts.FrameVariant.Glow:
+            case UiSurfaceContracts.FrameVariant.Raised:
+                return RaisedStyle();
+            case UiSurfaceContracts.FrameVariant.StageCard:
                 style.BorderColor = Accent;
                 AddGlow(style, AccentGlow);
                 break;
-            case UiSurfaceContracts.FrameVariant.Raised:
-                return RaisedStyle();
-            case UiSurfaceContracts.FrameVariant.Menu:
-            case UiSurfaceContracts.FrameVariant.Dialog:
-            case UiSurfaceContracts.FrameVariant.StageCard:
-                style.BorderColor = variant == UiSurfaceContracts.FrameVariant.StageCard
-                    ? Accent
-                    : Edge;
-                if (variant == UiSurfaceContracts.FrameVariant.StageCard)
-                {
-                    AddGlow(style, AccentGlow);
-                }
-                break;
+        }
+
+        if (glow)
+        {
+            AddGlow(style, AccentGlow);
         }
 
         var padding = size switch
@@ -398,7 +393,7 @@ public sealed class UiTokens
             UiSurfaceContracts.FrameSize.Roomy => Space4,
             UiSurfaceContracts.FrameSize.Flush => 0,
             _ => Space3,
-        };
+        } + StrokeHair;
         SetContentMargin(style, padding);
         return style;
     }
@@ -474,8 +469,7 @@ public sealed class UiTokens
 
     private void AddGlow(StyleBoxFlat style, Color color)
     {
-        style.ShadowColor = EffectsEnabled ? color : Colors.Transparent;
-        style.ShadowSize = EffectsEnabled ? (int)GlowRadius : 0;
+        UiGlow.ApplyToControl(style, color, EffectsEnabled);
     }
 
     private static void SetContentMargin(StyleBoxFlat style, float value)

@@ -3,27 +3,45 @@ using Godot;
 namespace NodeRunner.Ui.Lib;
 
 /// <summary>Token-backed modal surface used for focused settings and confirmations.</summary>
-public partial class UiSheet : PanelContainer
+public partial class UiSheet : UiCard
 {
-    private UiTokens _tokens = UiTokens.Neon;
     private Label? _titleLabel;
+    private string _title = string.Empty;
 
     [Export]
-    public string Title { get; set; } = string.Empty;
-
-    public UiTokens Tokens
+    public string Title
     {
-        get => _tokens;
+        get => _title;
         set
         {
-            _tokens = value;
-            RefreshStyle();
+            _title = value;
+            RefreshTitle();
+        }
+    }
+
+    public override UiTokens Tokens
+    {
+        get => base.Tokens;
+        set
+        {
+            base.Tokens = value;
+            RefreshTitle();
         }
     }
 
     public override void _Ready()
     {
-        RefreshStyle();
+        Kind = CardVariant.Frame;
+        SizeVariant = CardSize.Flush;
+        Glow = true;
+        base._Ready();
+    }
+
+    protected override StyleBoxFlat CreateStyle()
+    {
+        var style = base.CreateStyle();
+        style.BorderColor = Tokens.LineStrong;
+        return style;
     }
 
     public void SetBody(Control body)
@@ -36,14 +54,14 @@ public partial class UiSheet : PanelContainer
         }
 
         var margin = new MarginContainer();
-        margin.AddThemeConstantOverride("margin_left", (int)_tokens.Space4);
-        margin.AddThemeConstantOverride("margin_top", (int)_tokens.Space4);
-        margin.AddThemeConstantOverride("margin_right", (int)_tokens.Space4);
-        margin.AddThemeConstantOverride("margin_bottom", (int)_tokens.Space4);
+        margin.AddThemeConstantOverride("margin_left", (int)Tokens.Space4);
+        margin.AddThemeConstantOverride("margin_top", (int)Tokens.Space4);
+        margin.AddThemeConstantOverride("margin_right", (int)Tokens.Space4);
+        margin.AddThemeConstantOverride("margin_bottom", (int)Tokens.Space4);
         AddChild(margin);
 
         var stack = new VBoxContainer();
-        stack.AddThemeConstantOverride("separation", (int)_tokens.Space3);
+        stack.AddThemeConstantOverride("separation", (int)Tokens.Space3);
         margin.AddChild(stack);
         if (!string.IsNullOrWhiteSpace(Title))
         {
@@ -56,19 +74,6 @@ public partial class UiSheet : PanelContainer
         RefreshTitle();
     }
 
-    private void RefreshStyle()
-    {
-        if (!IsInsideTree())
-        {
-            return;
-        }
-
-        var style = _tokens.FrameStyle(UiSurfaceContracts.FrameVariant.Dialog);
-        style.BorderColor = _tokens.LineStrong;
-        AddThemeStyleboxOverride("panel", style);
-        RefreshTitle();
-    }
-
     private void RefreshTitle()
     {
         if (_titleLabel is null)
@@ -76,7 +81,8 @@ public partial class UiSheet : PanelContainer
             return;
         }
 
-        _tokens.ApplyTextStyle(_titleLabel, _tokens.HeadingText);
-        _titleLabel.AddThemeColorOverride("font_color", _tokens.Ink);
+        _titleLabel.Text = Title;
+        Tokens.ApplyTextStyle(_titleLabel, Tokens.HeadingText);
+        _titleLabel.AddThemeColorOverride("font_color", Tokens.Ink);
     }
 }

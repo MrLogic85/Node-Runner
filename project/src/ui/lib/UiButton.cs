@@ -580,89 +580,7 @@ public partial class UiButton : Button
         var right = Size.X - HorizontalVisibleInset - halfStroke;
         var bottom = VerticalVisibleInset + VisibleControlSize - halfStroke;
         var radius = Tokens.RadiusMedium;
-        DrawDashedRoundedRect(new Rect2(left, top, right - left, bottom - top), radius, color);
-    }
-
-    private void DrawDashedRoundedRect(Rect2 rect, float radius, Color color)
-    {
-        const float targetPatternLength = 7;
-        const float dashRatio = 4f / 7f;
-        var straightWidth = rect.Size.X - (radius * 2);
-        var straightHeight = rect.Size.Y - (radius * 2);
-        var perimeter = (straightWidth * 2) + (straightHeight * 2) + (Mathf.Tau * radius);
-        var patternCount = Mathf.Max(1, Mathf.RoundToInt(perimeter / targetPatternLength));
-        var patternLength = perimeter / patternCount;
-        var dashLength = patternLength * dashRatio;
-
-        for (var start = 0f; start < perimeter; start += patternLength)
-        {
-            var sampleCount = Mathf.Max(2, Mathf.CeilToInt(dashLength) + 1);
-            var points = new Vector2[sampleCount];
-            for (var index = 0; index < sampleCount; index++)
-            {
-                var distance = start + (dashLength * index / (sampleCount - 1));
-                points[index] = PointOnRoundedRect(rect, radius, distance);
-            }
-
-            DrawPolyline(points, color, Tokens.StrokeHair, antialiased: true);
-        }
-    }
-
-    private static Vector2 PointOnRoundedRect(Rect2 rect, float radius, float distance)
-    {
-        var straightWidth = rect.Size.X - (radius * 2);
-        var straightHeight = rect.Size.Y - (radius * 2);
-        var arcLength = Mathf.Pi * radius * 0.5f;
-
-        if (distance <= straightWidth)
-        {
-            return new Vector2(rect.Position.X + radius + distance, rect.Position.Y);
-        }
-
-        distance -= straightWidth;
-        if (distance <= arcLength)
-        {
-            return ArcPoint(rect.Position + new Vector2(rect.Size.X - radius, radius), radius, -Mathf.Pi * 0.5f, distance);
-        }
-
-        distance -= arcLength;
-        if (distance <= straightHeight)
-        {
-            return new Vector2(rect.End.X, rect.Position.Y + radius + distance);
-        }
-
-        distance -= straightHeight;
-        if (distance <= arcLength)
-        {
-            return ArcPoint(rect.End - new Vector2(radius, radius), radius, 0, distance);
-        }
-
-        distance -= arcLength;
-        if (distance <= straightWidth)
-        {
-            return new Vector2(rect.End.X - radius - distance, rect.End.Y);
-        }
-
-        distance -= straightWidth;
-        if (distance <= arcLength)
-        {
-            return ArcPoint(new Vector2(rect.Position.X + radius, rect.End.Y - radius), radius, Mathf.Pi * 0.5f, distance);
-        }
-
-        distance -= arcLength;
-        if (distance <= straightHeight)
-        {
-            return new Vector2(rect.Position.X, rect.End.Y - radius - distance);
-        }
-
-        distance -= straightHeight;
-        return ArcPoint(rect.Position + new Vector2(radius, radius), radius, Mathf.Pi, distance);
-    }
-
-    private static Vector2 ArcPoint(Vector2 center, float radius, float startAngle, float distance)
-    {
-        var angle = startAngle + (distance / radius);
-        return center + (Vector2.FromAngle(angle) * radius);
+        UiDashedBorder.DrawRoundedRect(this, new Rect2(left, top, right - left, bottom - top), radius, color, Tokens.StrokeHair);
     }
 
     private StyleBoxFlat CreateStyle(float opacity = 1, bool transparentBorder = false)
@@ -680,7 +598,7 @@ public partial class UiButton : Button
             transparentBorder
                 ? Colors.Transparent
                 : UiTokens.MultiplyAlpha(styleBorder, opacity),
-            borderWidth: On ? Tokens.ButtonSelectedStroke : null,
+            borderWidth: transparentBorder ? 0 : On ? Tokens.ButtonSelectedStroke : null,
             glow: false,
             horizontalPadding: ContentLayout == UiButtonContentLayout.Stack
                 ? 0
@@ -945,7 +863,7 @@ public partial class UiButton : Button
         var points = new Vector2[sampleCount + 1];
         for (var index = 0; index <= sampleCount; index++)
         {
-            points[index] = PointOnRoundedRect(rect, radius, perimeter * index / sampleCount);
+            points[index] = UiDashedBorder.PointOnRoundedRect(rect, radius, perimeter * index / sampleCount);
         }
 
         DrawPolyline(points, color, Tokens.StrokeHair, antialiased: true);

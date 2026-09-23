@@ -3,7 +3,7 @@ using Godot;
 namespace NodeRunner.Ui.Lib;
 
 /// <summary>Compact menu for infrequent actions that should not occupy the main shell.</summary>
-public partial class UiOverflowMenu : PanelContainer
+public partial class UiOverflowMenu : UiCard
 {
     public enum MenuWidthMode
     {
@@ -100,13 +100,13 @@ public partial class UiOverflowMenu : PanelContainer
     public static float ResolveContainerWidth(MenuWidthMode mode, float width, UiTokens tokens) =>
         mode == MenuWidthMode.WrapContent ? 0 : ResolveFixedWidth(width, tokens);
 
-    public UiTokens Tokens
+    public override UiTokens Tokens
     {
         get => _tokens;
         set
         {
             _tokens = value;
-            RefreshStyle();
+            base.Tokens = value;
             if (_items is not null)
             {
                 SetActions(_currentActions);
@@ -120,12 +120,15 @@ public partial class UiOverflowMenu : PanelContainer
 
     public override void _Ready()
     {
+        Kind = CardVariant.Frame;
+        SizeVariant = CardSize.Flush;
+        Glow = true;
+        base._Ready();
         MouseFilter = MouseFilterEnum.Pass;
         SizeFlagsVertical = SizeFlags.ShrinkBegin;
         _items = new VBoxContainer();
         _items.AddThemeConstantOverride("separation", 0);
         AddChild(_items);
-        RefreshStyle();
         RefreshWidth();
         if (_pendingActions is not null)
         {
@@ -335,24 +338,6 @@ public partial class UiOverflowMenu : PanelContainer
             CustomMinimumSize = new Vector2(0, _tokens.StrokeHair),
             SizeFlagsHorizontal = SizeFlags.ExpandFill,
         };
-
-    private void RefreshStyle()
-    {
-        if (!IsInsideTree())
-        {
-            return;
-        }
-
-        var style = _tokens.FrameStyle(
-            UiSurfaceContracts.FrameVariant.Menu,
-            UiSurfaceContracts.FrameSize.Flush);
-        style.ContentMarginLeft = _tokens.StrokeHair;
-        style.ContentMarginRight = _tokens.StrokeHair;
-        style.ContentMarginTop = _tokens.StrokeHair;
-        style.ContentMarginBottom = _tokens.StrokeHair;
-        UiGlow.ApplyButtonGlow(style, _tokens.Accent, _tokens.EffectsEnabled);
-        AddThemeStyleboxOverride("panel", style);
-    }
 
     private void RefreshWidth()
     {
