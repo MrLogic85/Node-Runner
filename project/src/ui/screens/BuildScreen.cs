@@ -985,11 +985,9 @@ public partial class BuildScreen : Control
             Tokens = _tokens,
             LabelText = "Neurons",
             ReadoutText = shape.NeuronsPerLayer.ToString(),
-            Thumbs =
-            [
+            Value = UiSliderValue.Thumb(
                 (shape.NeuronsPerLayer - minimumNeurons) /
-                (double)(maximumNeurons - minimumNeurons),
-            ],
+                (double)(maximumNeurons - minimumNeurons)),
             StepLabels = [minimumNeurons.ToString(), maximumNeurons.ToString()],
             MarkerPosition =
                 (RecommendedNeurons(buildPanel) - minimumNeurons) /

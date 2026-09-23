@@ -202,38 +202,23 @@ public static class UiComponentContracts
         return Math.Clamp(position, 0, 1);
     }
 
-    public static double[] NormalizeSliderThumbs(IEnumerable<double>? thumbs)
+    public static double ClampProgress(double progress) => ClampSliderPosition(progress);
+
+    public static int ProgressPercent(double progress) =>
+        Math.Clamp((int)Math.Round(ClampProgress(progress) * 100, MidpointRounding.AwayFromZero), 0, 100);
+
+    public static bool IsProgressComplete(double progress) =>
+        ProgressPercent(progress) >= 100;
+
+    public static string FormatProgressPercent(double progress)
     {
-        var normalized = thumbs?
-            .Take(2)
-            .Select(ClampSliderPosition)
-            .Order()
-            .ToArray() ?? [];
-        return normalized;
-    }
-
-    public static int SelectSliderThumb(IEnumerable<double>? thumbs, double position)
-    {
-        var normalized = NormalizeSliderThumbs(thumbs);
-        if (normalized.Length == 0)
+        var roundedPercent = ProgressPercent(progress);
+        if (roundedPercent >= 100)
         {
-            return -1;
+            return "99%";
         }
 
-        if (normalized.Length == 1)
-        {
-            return 0;
-        }
-
-        var target = ClampSliderPosition(position);
-        if (normalized[0] == normalized[1])
-        {
-            return target < normalized[0] ? 0 : 1;
-        }
-
-        var lowDistance = Math.Abs(target - normalized[0]);
-        var highDistance = Math.Abs(target - normalized[1]);
-        return lowDistance <= highDistance ? 0 : 1;
+        return roundedPercent.ToString("0", CultureInfo.InvariantCulture) + "%";
     }
 
     public static string FormatPercent(double value) =>

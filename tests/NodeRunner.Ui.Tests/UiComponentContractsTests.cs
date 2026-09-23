@@ -108,8 +108,57 @@ public sealed class UiComponentContractsTests
             .ShouldBe(nameof(UiSlider));
         UiComponentContracts.ControlTypeFor(UiComponentContracts.CanonicalComponent.MeterRow)
             .ShouldBe(nameof(UiMeterRow));
-        UiComponentContracts.NormalizeSliderThumbs([]).ShouldBeEmpty();
-        UiComponentContracts.SelectSliderThumb([], 0.5).ShouldBe(-1);
+        var progress = UiSliderValue.Progress(0.62);
+
+        progress.Kind.ShouldBe(UiSliderValueKind.Progress);
+        progress.ThumbCount.ShouldBe(0);
+        progress.FillStart.ShouldBe(0);
+        progress.FillEnd.ShouldBe(0.62);
+    }
+
+    [Fact]
+    public void SliderValue_FactoriesPreventConflictingProgressAndThumbState()
+    {
+        var thumb = UiSliderValue.Thumb(0.4);
+        thumb.Kind.ShouldBe(UiSliderValueKind.Thumb);
+        thumb.ThumbCount.ShouldBe(1);
+        thumb.FillEnd.ShouldBe(0.4);
+        thumb.ThumbAt(0).ShouldBe(0.4);
+
+        var range = UiSliderValue.Thumbs(0.8, 0.2);
+        range.Kind.ShouldBe(UiSliderValueKind.Range);
+        range.ThumbCount.ShouldBe(2);
+        range.Low.ShouldBe(0.2);
+        range.High.ShouldBe(0.8);
+        range.FillStart.ShouldBe(0.2);
+        range.FillEnd.ShouldBe(0.8);
+    }
+
+    [Theory]
+    [InlineData(0, 0, 0, 1)]
+    [InlineData(1, 1, 0.9, 0)]
+    [InlineData(0.5, 0.5, 0.49, 0)]
+    [InlineData(0.5, 0.5, 0.5, 1)]
+    [InlineData(0.2, 0.8, 0.4, 0)]
+    [InlineData(0.2, 0.8, 0.6, 1)]
+    public void SliderValue_SelectThumb_ReopensCollapsedRangesAndChoosesNearest(
+        double low,
+        double high,
+        double position,
+        int expected)
+    {
+        UiSliderValue.Thumbs(low, high).SelectThumb(position).ShouldBe(expected);
+    }
+
+    [Fact]
+    public void SliderValue_FromComposesPrimitiveSceneValuesWithoutAmbiguousInputs()
+    {
+        UiSliderValue.From(UiSliderValueKind.Progress, 0.62, 0.8)
+            .ShouldBe(UiSliderValue.Progress(0.62));
+        UiSliderValue.From(UiSliderValueKind.Thumb, 0.62, 0.8)
+            .ShouldBe(UiSliderValue.Thumb(0.62));
+        UiSliderValue.From(UiSliderValueKind.Range, 0.62, 0.8)
+            .ShouldBe(UiSliderValue.Thumbs(0.62, 0.8));
     }
 
     [Fact]
@@ -242,6 +291,29 @@ public sealed class UiComponentContractsTests
     }
 
     [Theory]
+    [InlineData(-1, 0)]
+    [InlineData(0.72, 0.72)]
+    [InlineData(2, 1)]
+    [InlineData(double.NaN, 0)]
+    [InlineData(double.PositiveInfinity, 1)]
+    public void ClampProgress_ConstrainsToNormalizedRange(double value, double expected)
+    {
+        UiComponentContracts.ClampProgress(value).ShouldBe(expected);
+    }
+
+    [Theory]
+    [InlineData(0, 0)]
+    [InlineData(0.724, 72)]
+    [InlineData(0.725, 73)]
+    [InlineData(0.994, 99)]
+    [InlineData(0.995, 100)]
+    [InlineData(2, 100)]
+    public void ProgressPercent_RoundsNormalizedProgressToWholePercent(double progress, int expected)
+    {
+        UiComponentContracts.ProgressPercent(progress).ShouldBe(expected);
+    }
+
+    [Theory]
     [InlineData(double.NaN, 10, 20, 10)]
     [InlineData(double.NegativeInfinity, 10, 20, 10)]
     [InlineData(double.PositiveInfinity, 10, 20, 20)]
@@ -268,30 +340,6 @@ public sealed class UiComponentContractsTests
         UiComponentContracts.ClampSliderPosition(position).ShouldBe(expected);
     }
 
-    [Fact]
-    public void NormalizeSliderThumbs_DefaultsClampsSortsAndLimitsToRangeMode()
-    {
-        UiComponentContracts.NormalizeSliderThumbs(null).ShouldBeEmpty();
-        UiComponentContracts.NormalizeSliderThumbs([]).ShouldBeEmpty();
-        UiComponentContracts.NormalizeSliderThumbs([0.8, -1, 0.4]).ShouldBe([0, 0.8]);
-    }
-
-    [Theory]
-    [InlineData(0, 0, 0, 1)]
-    [InlineData(1, 1, 0.9, 0)]
-    [InlineData(0.5, 0.5, 0.49, 0)]
-    [InlineData(0.5, 0.5, 0.5, 1)]
-    [InlineData(0.2, 0.8, 0.4, 0)]
-    [InlineData(0.2, 0.8, 0.6, 1)]
-    public void SelectSliderThumb_ReopensCollapsedRangesAndChoosesNearest(
-        double low,
-        double high,
-        double position,
-        int expected)
-    {
-        UiComponentContracts.SelectSliderThumb([low, high], position).ShouldBe(expected);
-    }
-
     [Theory]
     [InlineData(-2, "0%")]
     [InlineData(37.4, "37%")]
@@ -299,6 +347,26 @@ public sealed class UiComponentContractsTests
     public void FormatPercent_ClampsAndFormatsWithoutDecimals(double value, string expected)
     {
         UiComponentContracts.FormatPercent(value).ShouldBe(expected);
+    }
+
+    [Theory]
+    [InlineData(0, "0%")]
+    [InlineData(0.724, "72%")]
+    [InlineData(0.999, "99%")]
+    [InlineData(1, "99%")]
+    [InlineData(2, "99%")]
+    public void FormatProgressPercent_FormatsOnlyIncompleteProgress(double progress, string expected)
+    {
+        UiComponentContracts.FormatProgressPercent(progress).ShouldBe(expected);
+    }
+
+    [Theory]
+    [InlineData(0.994, false)]
+    [InlineData(0.995, true)]
+    [InlineData(1, true)]
+    public void IsProgressComplete_UsesRoundedPercent(double progress, bool expected)
+    {
+        UiComponentContracts.IsProgressComplete(progress).ShouldBe(expected);
     }
 
     [Theory]
