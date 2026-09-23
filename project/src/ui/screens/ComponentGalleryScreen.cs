@@ -11,7 +11,7 @@ namespace NodeRunner.Ui.Screens;
 public partial class ComponentGalleryScreen : Control
 {
     private const string _sharedCardPanelSection =
-        "Panel and card · shared composition · c_card / c_panel";
+        "Panel and card · shared composition";
 
     private const string _rowInteractiveTitle =
         "Row — interactive selected, hold, disabled, compact, and badge";
@@ -41,7 +41,6 @@ public partial class ComponentGalleryScreen : Control
 
     public readonly record struct GalleryComponentSpec(
         UiComponentContracts.CanonicalComponent Component,
-        string EntryName,
         string Section,
         bool SharedComposition = false);
 
@@ -111,31 +110,32 @@ public partial class ComponentGalleryScreen : Control
 
     public static IReadOnlyList<GalleryComponentSpec> CanonicalInventory { get; } =
     [
-        new(UiComponentContracts.CanonicalComponent.CBtn, "c_btn", "Actions · c_btn / c_ib / c_hold"),
-        new(UiComponentContracts.CanonicalComponent.CIb, "c_ib", "Actions · c_btn / c_ib / c_hold"),
-        new(UiComponentContracts.CanonicalComponent.CHold, "c_hold", "Actions · c_btn / c_ib / c_hold"),
-        new(UiComponentContracts.CanonicalComponent.CSlider, "c_slider", "Slider · c_slider / c_range"),
-        new(UiComponentContracts.CanonicalComponent.CRange, "c_range", "Slider · c_slider / c_range"),
-        new(UiComponentContracts.CanonicalComponent.CToggle, "c_toggle", "Choices and tray rows · c_toggle / c_check / c_pick / c_row / c_tabs"),
-        new(UiComponentContracts.CanonicalComponent.CCheck, "c_check", "Choices and tray rows · c_toggle / c_check / c_pick / c_row / c_tabs"),
-        new(UiComponentContracts.CanonicalComponent.CSeg, "c_seg", "Segmented"),
-        new(UiComponentContracts.CanonicalComponent.CPick, "c_pick", "Choices and tray rows · c_toggle / c_check / c_pick / c_row / c_tabs"),
-        new(UiComponentContracts.CanonicalComponent.CMenu, "c_menu", "Overflow menu · c_menu"),
-        new(UiComponentContracts.CanonicalComponent.CChip, "c_chip", "Chips · c_chip"),
-        new(UiComponentContracts.CanonicalComponent.CProg, "c_prog", "Progress · c_prog / c_ring"),
-        new(UiComponentContracts.CanonicalComponent.CTextfield, "c_textfield", "Text and values · c_textfield / c_name / c_value / c_readonly / c_power / c_meter / c_panel_head / c_info_row"),
-        new(UiComponentContracts.CanonicalComponent.CName, "c_name", "Text and values · c_textfield / c_name / c_value / c_readonly / c_power / c_meter / c_panel_head / c_info_row"),
-        new(UiComponentContracts.CanonicalComponent.CValue, "c_value", "Text and values · c_textfield / c_name / c_value / c_readonly / c_power / c_meter / c_panel_head / c_info_row"),
-        new(UiComponentContracts.CanonicalComponent.CReadonly, "c_readonly", "Text and values · c_textfield / c_name / c_value / c_readonly / c_power / c_meter / c_panel_head / c_info_row"),
-        new(UiComponentContracts.CanonicalComponent.CPower, "c_power", "Text and values · c_textfield / c_name / c_value / c_readonly / c_power / c_meter / c_panel_head / c_info_row"),
-        new(UiComponentContracts.CanonicalComponent.CMeter, "c_meter", "Text and values · c_textfield / c_name / c_value / c_readonly / c_power / c_meter / c_panel_head / c_info_row"),
-        new(UiComponentContracts.CanonicalComponent.CRow, "c_row", "Choices and tray rows · c_toggle / c_check / c_pick / c_row / c_tabs"),
-        new(UiComponentContracts.CanonicalComponent.CTabs, "c_tabs", "Parts tray tabs"),
-        new(UiComponentContracts.CanonicalComponent.CPanelHead, "c_panel_head", "Text and values · c_textfield / c_name / c_value / c_readonly / c_power / c_meter / c_panel_head / c_info_row"),
-        new(UiComponentContracts.CanonicalComponent.CInfoRow, "c_info_row", "Text and values · c_textfield / c_name / c_value / c_readonly / c_power / c_meter / c_panel_head / c_info_row"),
-        new(UiComponentContracts.CanonicalComponent.CCard, "c_card", _sharedCardPanelSection, SharedComposition: true),
-        new(UiComponentContracts.CanonicalComponent.CPanel, "c_panel", _sharedCardPanelSection, SharedComposition: true),
-        new(UiComponentContracts.CanonicalComponent.CRing, "c_ring", "Progress · c_prog / c_ring"),
+        new(UiComponentContracts.CanonicalComponent.Button, "Actions"),
+        new(UiComponentContracts.CanonicalComponent.IconButton, "Actions"),
+        new(UiComponentContracts.CanonicalComponent.HoldButton, "Actions"),
+        new(UiComponentContracts.CanonicalComponent.Slider, "Slider and range"),
+        new(UiComponentContracts.CanonicalComponent.Range, "Slider and range"),
+        new(UiComponentContracts.CanonicalComponent.Toggle, "Choices and tray rows"),
+        new(UiComponentContracts.CanonicalComponent.Checkbox, "Choices and tray rows"),
+        new(UiComponentContracts.CanonicalComponent.Segmented, "Segmented"),
+        new(UiComponentContracts.CanonicalComponent.Picker, "Choices and tray rows"),
+        new(UiComponentContracts.CanonicalComponent.OverflowMenu, "Overflow menu"),
+        new(UiComponentContracts.CanonicalComponent.Chip, "Chips"),
+        new(UiComponentContracts.CanonicalComponent.ProgressBar, "Progress"),
+        new(UiComponentContracts.CanonicalComponent.TextField, "Text and values"),
+        new(UiComponentContracts.CanonicalComponent.NameField, "Text and values"),
+        new(UiComponentContracts.CanonicalComponent.ValueRow, "Text and values"),
+        new(UiComponentContracts.CanonicalComponent.ReadonlyValue, "Text and values"),
+        new(UiComponentContracts.CanonicalComponent.PowerRow, "Text and values"),
+        new(UiComponentContracts.CanonicalComponent.MeterRow, "Text and values"),
+        new(UiComponentContracts.CanonicalComponent.PartRow, "Choices and tray rows"),
+        new(UiComponentContracts.CanonicalComponent.IconTabs, "Parts tray tabs"),
+        new(UiComponentContracts.CanonicalComponent.SelectionHandle, "Selection handles"),
+        new(UiComponentContracts.CanonicalComponent.PanelHeader, "Text and values"),
+        new(UiComponentContracts.CanonicalComponent.InfoRow, "Text and values"),
+        new(UiComponentContracts.CanonicalComponent.Card, _sharedCardPanelSection, SharedComposition: true),
+        new(UiComponentContracts.CanonicalComponent.Panel, _sharedCardPanelSection, SharedComposition: true),
+        new(UiComponentContracts.CanonicalComponent.ProgressRing, "Progress"),
     ];
 
     public override void _Ready()
@@ -253,6 +253,7 @@ public partial class ComponentGalleryScreen : Control
         content.AddChild(CreateChoicesSection());
         content.AddChild(CreateSegmentedSection());
         content.AddChild(CreateTrayTabsSection());
+        content.AddChild(CreateSelectionHandlesSection());
         content.AddChild(CreateSliderSection());
         content.AddChild(CreateMenuSection());
         content.AddChild(CreatePickerSection());
@@ -533,7 +534,7 @@ public partial class ComponentGalleryScreen : Control
         chips.AddChild(Track(new UiChip { Text = "OK", Kind = UiChip.ChipKind.Ok }));
         content.AddChild(chips);
 
-        return WrapSection("Chips · c_chip", content);
+        return WrapSection("Chips", content);
     }
 
     private Control CreateSliderSection()
@@ -706,6 +707,25 @@ public partial class ComponentGalleryScreen : Control
         return content;
     }
 
+    private Control CreateSelectionHandlesSection()
+    {
+        var content = new VBoxContainer();
+        content.AddThemeConstantOverride("separation", (int)_tokens.Space2);
+        content.AddChild(CreateSectionDescription(
+            "Selection handles",
+            "move, rotate, scale, on the canvas around a selection"));
+        var handles = new HBoxContainer
+        {
+            SizeFlagsHorizontal = SizeFlags.ShrinkBegin,
+        };
+        handles.AddThemeConstantOverride("separation", (int)_tokens.Space1);
+        handles.AddChild(Track(new UiSelectionHandle { Type = UiSelectionHandle.HandleType.Drag }));
+        handles.AddChild(Track(new UiSelectionHandle { Type = UiSelectionHandle.HandleType.Rotate }));
+        handles.AddChild(Track(new UiSelectionHandle { Type = UiSelectionHandle.HandleType.Scale }));
+        content.AddChild(handles);
+        return content;
+    }
+
     private Control CreateChoiceAndRowsSection()
     {
         var content = new VBoxContainer();
@@ -719,7 +739,7 @@ public partial class ComponentGalleryScreen : Control
         rows.AddChild(Track(new UiPartRow { PartIconId = UiPartIconId.LineOfSight, PartName = "LOS sensor", Count = "2", State = UiComponentContracts.SemanticState.Locked, SizeFlagsHorizontal = SizeFlags.ExpandFill }));
         content.AddChild(rows);
 
-        return WrapSection("Tray rows · c_row", content);
+        return WrapSection("Tray rows", content);
     }
 
     private Control CreateChoicesSection()
@@ -784,7 +804,7 @@ public partial class ComponentGalleryScreen : Control
 
         content.AddChild(Track(new UiPanelHeader { Title = "Part settings" }));
         content.AddChild(Track(new UiInfoRow { Title = "Rotate handle", Help = "Drag the stem to rotate selected parts." }));
-        return WrapSection("Text and values · c_textfield / c_name / c_value / c_readonly / c_power / c_meter / c_panel_head / c_info_row", content);
+        return WrapSection("Text and values", content);
     }
 
     private Control CreateProgressAndStatusSection()
@@ -796,7 +816,7 @@ public partial class ComponentGalleryScreen : Control
         content.AddChild(Track(new UiProgressBar { Percent = 84, Bad = true, SizeFlagsHorizontal = SizeFlags.ExpandFill }));
         content.AddChild(Track(new UiProgressRing { Percent = 62 }));
         content.AddChild(Track(new UiProgressRing { Percent = 100, Done = true }));
-        return WrapSection("Progress · c_prog / c_ring", content);
+        return WrapSection("Progress", content);
     }
 
     private Control CreateMenuSection()
@@ -1043,6 +1063,9 @@ public partial class ComponentGalleryScreen : Control
                 break;
             case UiIconTabs iconTabs:
                 iconTabs.Tokens = tokens;
+                break;
+            case UiSelectionHandle selectionHandle:
+                selectionHandle.Tokens = tokens;
                 break;
             case UiPanelHeader panelHeader:
                 panelHeader.Tokens = tokens;
