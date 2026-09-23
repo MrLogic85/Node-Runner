@@ -48,6 +48,7 @@ public sealed class UiComponentContractsTests
                 "Card",
                 "Panel",
                 "ProgressRing",
+                "Number",
             ]);
     }
 
@@ -174,6 +175,13 @@ public sealed class UiComponentContractsTests
             .ShouldBeTrue();
     }
 
+    [Fact]
+    public void Number_UsesDedicatedImplementation()
+    {
+        UiComponentContracts.ControlTypeFor(UiComponentContracts.CanonicalComponent.Number)
+            .ShouldBe(nameof(UiNumber));
+    }
+
 
     [Fact]
     public void ReusableControlEnums_PinDocumentedDefaultsAndVariants()
@@ -203,6 +211,8 @@ public sealed class UiComponentContractsTests
     {
         UiComponentContracts.IconButtonVisibleSize.ShouldBe(40);
         UiTokens.Neon.TouchTarget.ShouldBe(48);
+        UiTokens.Neon.NumberDiameter.ShouldBe(16);
+        UiTokens.Neon.NumberStrokeWidth.ShouldBe(1.5f);
         UiComponentContracts.ProgressRingDiameter.ShouldBe(44);
         UiComponentContracts.HoldCompletionSeconds.ShouldBe(0.8f);
         UiComponentContracts.ButtonProgressOpacity.ShouldBe(0.5f);
@@ -486,6 +496,7 @@ public sealed class UiComponentContractsTests
             UiComponentContracts.CanonicalComponent.Card => "c_card",
             UiComponentContracts.CanonicalComponent.Panel => "c_panel",
             UiComponentContracts.CanonicalComponent.ProgressRing => "c_ring",
+            UiComponentContracts.CanonicalComponent.Number => "c_num",
             _ => throw new ArgumentOutOfRangeException(nameof(component), component, null),
         };
 }

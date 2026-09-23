@@ -57,12 +57,24 @@ public sealed class UiGalleryInventoryTests
                     UiComponentContracts.CanonicalComponent.NameField,
                     UiComponentContracts.CanonicalComponent.IconTabs,
                     UiComponentContracts.CanonicalComponent.SelectionHandle,
+                    UiComponentContracts.CanonicalComponent.Number,
                 ]);
         ComponentGalleryScreen.CanonicalInventory
             .Select(spec => spec.Section)
             .Distinct()
             .Count()
             .ShouldBeLessThan(UiComponentContracts.AllCanonicalComponents.Count);
+    }
+
+    [Fact]
+    public void ComponentGallerySectionOrder_PlacesNumberDirectlyAfterSelectionHandles()
+    {
+        ComponentGalleryScreen.RenderedSectionOrder.ShouldContain(ComponentGalleryScreen.GallerySection.Number);
+        var sectionOrder = ComponentGalleryScreen.RenderedSectionOrder.ToList();
+        var selectionIndex = sectionOrder.IndexOf(ComponentGalleryScreen.GallerySection.SelectionHandles);
+        var numberIndex = sectionOrder.IndexOf(ComponentGalleryScreen.GallerySection.Number);
+
+        numberIndex.ShouldBe(selectionIndex + 1);
     }
 
     [Fact]
