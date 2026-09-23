@@ -73,6 +73,7 @@ public static class UiComponentContracts
         Card,
         Panel,
         ProgressRing,
+        Number,
     }
 
     public enum HoldState
@@ -133,6 +134,7 @@ public static class UiComponentContracts
             CanonicalComponent.Card => nameof(UiCard),
             CanonicalComponent.Panel => nameof(UiCard),
             CanonicalComponent.ProgressRing => nameof(UiProgressRing),
+            CanonicalComponent.Number => nameof(UiNumber),
             _ => throw new ArgumentOutOfRangeException(nameof(component), component, null),
         };
 

@@ -38,6 +38,23 @@ public partial class ComponentGalleryScreen : Control
         UiComponentContracts.CanonicalComponent Component,
         string Section);
 
+    public enum GallerySection
+    {
+        Actions,
+        Choices,
+        Segmented,
+        PartsTrayTabs,
+        SelectionHandles,
+        Number,
+        Slider,
+        Progress,
+        Cards,
+        OverflowMenu,
+        Picker,
+        PartRows,
+        TextInput,
+    }
+
     /// <summary>
     /// The single declarative source for every rendered button specimen in
     /// <see cref="CreateActionsSection"/>. <see cref="RowGroup"/> ties each
@@ -123,6 +140,24 @@ public partial class ComponentGalleryScreen : Control
         new(UiComponentContracts.CanonicalComponent.NameField, "Text input"),
         new(UiComponentContracts.CanonicalComponent.IconTabs, "Parts tray tabs"),
         new(UiComponentContracts.CanonicalComponent.SelectionHandle, "Selection handles"),
+        new(UiComponentContracts.CanonicalComponent.Number, "Number"),
+    ];
+
+    public static IReadOnlyList<GallerySection> RenderedSectionOrder { get; } =
+    [
+        GallerySection.Actions,
+        GallerySection.Choices,
+        GallerySection.Segmented,
+        GallerySection.PartsTrayTabs,
+        GallerySection.SelectionHandles,
+        GallerySection.Number,
+        GallerySection.Slider,
+        GallerySection.Progress,
+        GallerySection.Cards,
+        GallerySection.OverflowMenu,
+        GallerySection.Picker,
+        GallerySection.PartRows,
+        GallerySection.TextInput,
     ];
 
     public override void _Ready()
@@ -191,22 +226,63 @@ public partial class ComponentGalleryScreen : Control
         contentFrame.AddChild(content);
         _scrollContent = contentFrame;
 
-        content.AddChild(CreateSectionDescription(
-            "Buttons",
-            "four semantic kinds, three layouts, compact geometry, hold progress, and badges"));
-        content.AddChild(CreateActionsSection());
-        content.AddChild(CreateChoicesSection());
-        content.AddChild(CreateSegmentedSection());
-        content.AddChild(CreateTrayTabsSection());
-        content.AddChild(CreateSelectionHandlesSection());
-        content.AddChild(CreateSliderSection());
-        content.AddChild(CreateProgressSection());
-        content.AddChild(CreateCardSection());
-        content.AddChild(CreateMenuSection());
-        content.AddChild(CreatePickerSection());
-        content.AddChild(CreatePartRowSection());
-        content.AddChild(CreateTextInputSection());
+        foreach (var section in RenderedSectionOrder)
+        {
+            AddRenderedSection(content, section);
+        }
+
         UiNativeScroll.AllowGesturesToBubble(contentFrame);
+    }
+
+    private void AddRenderedSection(VBoxContainer content, GallerySection section)
+    {
+        switch (section)
+        {
+            case GallerySection.Actions:
+                content.AddChild(CreateSectionDescription(
+                    "Buttons",
+                    "four semantic kinds, three layouts, compact geometry, hold progress, and badges"));
+                content.AddChild(CreateActionsSection());
+                break;
+            case GallerySection.Choices:
+                content.AddChild(CreateChoicesSection());
+                break;
+            case GallerySection.Segmented:
+                content.AddChild(CreateSegmentedSection());
+                break;
+            case GallerySection.PartsTrayTabs:
+                content.AddChild(CreateTrayTabsSection());
+                break;
+            case GallerySection.SelectionHandles:
+                content.AddChild(CreateSelectionHandlesSection());
+                break;
+            case GallerySection.Number:
+                content.AddChild(CreateNumberSection());
+                break;
+            case GallerySection.Slider:
+                content.AddChild(CreateSliderSection());
+                break;
+            case GallerySection.Progress:
+                content.AddChild(CreateProgressSection());
+                break;
+            case GallerySection.Cards:
+                content.AddChild(CreateCardSection());
+                break;
+            case GallerySection.OverflowMenu:
+                content.AddChild(CreateMenuSection());
+                break;
+            case GallerySection.Picker:
+                content.AddChild(CreatePickerSection());
+                break;
+            case GallerySection.PartRows:
+                content.AddChild(CreatePartRowSection());
+                break;
+            case GallerySection.TextInput:
+                content.AddChild(CreateTextInputSection());
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(section), section, null);
+        }
     }
 
     private Control CreateHeader()
@@ -552,6 +628,28 @@ public partial class ComponentGalleryScreen : Control
         rings.AddChild(Track(new UiProgressRing { Progress = 0.72f }));
         rings.AddChild(Track(new UiProgressRing { Progress = 1 }));
         content.AddChild(rings);
+        return content;
+    }
+
+    private Control CreateNumberSection()
+    {
+        var content = new VBoxContainer();
+        content.AddThemeConstantOverride("separation", (int)_tokens.Space2);
+        content.AddChild(CreateSectionDescription(
+            "Number",
+            "the ringed step number alone: c_num, used before stage headers and chain chips"));
+
+        var numbers = new HBoxContainer
+        {
+            SizeFlagsHorizontal = SizeFlags.ShrinkBegin,
+        };
+        numbers.AddThemeConstantOverride("separation", (int)_tokens.Space2);
+        foreach (var text in new[] { "1", "2", "3", "4" })
+        {
+            numbers.AddChild(Track(new UiNumber { Text = text }));
+        }
+
+        content.AddChild(numbers);
         return content;
     }
 
@@ -1012,6 +1110,9 @@ public partial class ComponentGalleryScreen : Control
                 break;
             case UiProgressRing progressRing:
                 progressRing.Tokens = tokens;
+                break;
+            case UiNumber number:
+                number.Tokens = tokens;
                 break;
             case UiCard card:
                 card.Tokens = tokens;
