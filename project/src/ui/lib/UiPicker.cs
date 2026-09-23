@@ -12,14 +12,8 @@ public partial class UiPicker : PanelContainer
         Locked,
     }
 
-    public readonly record struct PickerOption(
-        string Label,
-        UiIconId? Icon = null,
-        string? Note = null,
-        Color? IconTint = null);
-
     [Signal]
-    public delegate void SelectionChangedEventHandler(string value);
+    public delegate void SelectionChangedEventHandler(string selectedId);
 
     [Signal]
     public delegate void StateChangedEventHandler(PickerState state);
@@ -29,12 +23,12 @@ public partial class UiPicker : PanelContainer
     private PickerState _state = PickerState.Collapsed;
     private bool _disabled;
     private string _belowText = string.Empty;
-    private int _selectedIndex;
-    private PickerOption[] _options =
+    private string _selectedId = "left-thigh";
+    private UiOverflowMenu.MenuAction[] _options =
     [
-        new("Left thigh", UiIconId.Beam),
-        new("Left shin", UiIconId.Beam, "swaps"),
-        new("Tail"),
+        new("left-thigh", "Left thigh", UiIconId.Beam),
+        new("left-shin", "Left shin", UiIconId.Beam, Note: "swaps"),
+        new("tail", "Tail"),
     ];
     private UiOverflowMenu? _openMenu;
     private Control? _menuAnchor;
@@ -87,23 +81,22 @@ public partial class UiPicker : PanelContainer
     }
 
     [Export]
-    public int SelectedIndex
+    public string SelectedId
     {
-        get => _selectedIndex;
+        get => EffectiveSelectedId;
         set
         {
-            _selectedIndex = ResolveSelectedIndex(value);
+            _selectedId = value ?? string.Empty;
             Rebuild();
         }
     }
 
-    public PickerOption[] Options
+    public UiOverflowMenu.MenuAction[] Options
     {
         get => _options;
         set
         {
             _options = value ?? [];
-            _selectedIndex = ResolveSelectedIndex(_selectedIndex);
             Rebuild();
         }
     }
@@ -264,16 +257,14 @@ public partial class UiPicker : PanelContainer
             SizeFlagsHorizontal = SizeFlags.ShrinkBegin,
             Visible = true,
         };
-        menu.SetActions(Options.Select((option, index) =>
+        menu.SetActions(Options.Select(option =>
         {
-            var selected = index == SelectedIndex;
-            return new UiOverflowMenu.MenuAction(
-                index.ToString(System.Globalization.CultureInfo.InvariantCulture),
-                option.Label,
-                option.Icon,
-                selected ? UiComponentContracts.SemanticState.Selected : UiComponentContracts.SemanticState.Neutral,
-                option.Note,
-                ResolveIconTint(option, selected));
+            var selected = string.Equals(option.Id, EffectiveSelectedId, StringComparison.Ordinal);
+            return option with
+            {
+                State = selected ? UiComponentContracts.SemanticState.Selected : option.State,
+                IconTint = ResolveIconTint(option, selected),
+            };
         }).ToArray());
         menu.ActionSelected += Select;
         return menu;
@@ -316,32 +307,42 @@ public partial class UiPicker : PanelContainer
 
     private void Select(string optionId)
     {
-        if (!int.TryParse(optionId, System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out var index)
-            || index < 0
-            || index >= Options.Length)
+        if (!Options.Any(option => string.Equals(option.Id, optionId, StringComparison.Ordinal)))
         {
             GD.PushError($"Invalid picker option id: {optionId}.");
             return;
         }
 
-        _selectedIndex = index;
+        _selectedId = optionId;
         _state = PickerState.Collapsed;
         Rebuild();
         EmitSignal(SignalName.StateChanged, (int)_state);
-        EmitSignal(SignalName.SelectionChanged, ValueText);
+        EmitSignal(SignalName.SelectionChanged, EffectiveSelectedId);
     }
 
-    private int ResolveSelectedIndex(int index) =>
-        Options.Length == 0 ? -1 : Mathf.Clamp(index, 0, Options.Length - 1);
+    private UiOverflowMenu.MenuAction? SelectedOption
+    {
+        get
+        {
+            foreach (var option in Options)
+            {
+                if (string.Equals(option.Id, _selectedId, StringComparison.Ordinal))
+                {
+                    return option;
+                }
+            }
 
-    private PickerOption? SelectedOption =>
-        SelectedIndex >= 0 && SelectedIndex < Options.Length ? Options[SelectedIndex] : null;
+            return Options.Length > 0 ? Options[0] : null;
+        }
+    }
+
+    private string EffectiveSelectedId => SelectedOption?.Id ?? string.Empty;
 
     private bool IsExpanded => State == PickerState.Expanded;
 
     private bool IsLocked => State == PickerState.Locked;
 
-    private Color ResolveIconTint(PickerOption option, bool selected) =>
+    private Color ResolveIconTint(UiOverflowMenu.MenuAction option, bool selected) =>
         option.IconTint ?? (selected ? _tokens.Halo : _tokens.Accent);
 
     private Color ValueColor => IsLocked ? _tokens.Muted : _tokens.Ink;
