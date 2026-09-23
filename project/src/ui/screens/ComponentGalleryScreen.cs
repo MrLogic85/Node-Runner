@@ -572,10 +572,11 @@ public partial class ComponentGalleryScreen : Control
         variants.AddThemeConstantOverride("v_separation", UiSpacing.ControlGap(_tokens));
         variants.AddChild(CreateCardSpecimen("Frame", "Default card", UiCard.CardVariant.Frame));
         variants.AddChild(CreateCardSpecimen("Selected", "Accent border and glow", UiCard.CardVariant.Selected));
-        variants.AddChild(CreateCardSpecimen("Locked", "Dimmed dashed frame", UiCard.CardVariant.Locked));
+        variants.AddChild(CreateCardSpecimen("Locked", "Dashed locked frame", UiCard.CardVariant.Locked));
         variants.AddChild(CreateCardSpecimen("Warning", "Danger border with words", UiCard.CardVariant.Warning));
         variants.AddChild(CreateCardSpecimen("Hint", "Halo border for guidance", UiCard.CardVariant.Hint));
         variants.AddChild(CreateCardSpecimen("Frame + glow", "Frame with glow enabled", UiCard.CardVariant.Frame, glow: true));
+        variants.AddChild(CreateCardSpecimen("Frame + glow disabled", "Disabled display treatment", UiCard.CardVariant.Frame, glow: true, disabled: true));
         variants.AddChild(CreateCardSpecimen("Raised", "Raised surface variant", UiCard.CardVariant.Raised));
         content.AddChild(variants);
 
@@ -596,7 +597,8 @@ public partial class ComponentGalleryScreen : Control
         string description,
         UiCard.CardVariant variant,
         UiCard.CardSize size = UiCard.CardSize.Default,
-        bool glow = false)
+        bool glow = false,
+        bool disabled = false)
     {
         var card = Track(new UiCard
         {
@@ -606,6 +608,11 @@ public partial class ComponentGalleryScreen : Control
             CustomMinimumSize = new Vector2(148, 0),
             SizeFlagsHorizontal = SizeFlags.ExpandFill,
         });
+        if (disabled)
+        {
+            card.Modulate = UiTokens.MultiplyAlpha(Colors.White, 0.5f);
+        }
+
         var stack = new VBoxContainer();
         stack.AddThemeConstantOverride("separation", (int)_tokens.Space1);
         stack.AddChild(CreateLabel(title, _tokens.SubheadingText, tokens => tokens.Ink, TextServer.AutowrapMode.Off));
