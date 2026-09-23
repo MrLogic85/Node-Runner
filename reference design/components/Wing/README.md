@@ -7,6 +7,6 @@ A **wing** is a beam that gives lift on one side. It is placed like a Spring or 
 - **Gliding.** Lift whenever the speed along the beam is not zero. The sign does not matter, so moving end to start lifts the same way as start to end.
 - **Flapping.** Lift when the velocity along the normal is negative, that is when the wing moves down against its lift side. Moving up gives none.
 
-**Settings** (see PartSettings): Name, the two nodes it is between (locked once the creation is locked), **Flip** (swaps start and end and so turns the normal over), Lift strength and Weight. A wing needs no power.
+**Settings** (see PartSettings): Name, **Flip** (swaps start and end and so turns the normal over), Lift strength and Weight. A wing needs no power. Which two nodes it's between is structure, not a setting — it's drawn on the canvas, the same as its own length would be, and the panel does not repeat it.
 
 **Placement.** While dragging, the start node is ringed in `halo` and a dashed ring follows to the node it would end on. Two nodes hold one wing between them.
