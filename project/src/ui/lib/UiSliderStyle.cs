@@ -7,8 +7,7 @@ public readonly record struct UiSliderStyle(
     float StepTickHalfHeight,
     float DisabledDashLength,
     float DisabledThumbInset,
-    float SteppedHeight,
-    float CompactSteppedHeight)
+    float SteppedHeight)
 {
     public const float DisabledOpacity = 0.5f;
     public const int DisabledThumbSegments = 8;
@@ -22,6 +21,5 @@ public readonly record struct UiSliderStyle(
             tokens.SliderStepTickHeight * 0.5f,
             tokens.SliderDisabledDashLength,
             tokens.StrokeHair,
-            tokens.SliderSteppedHeight,
-            tokens.SliderCompactSteppedHeight);
+            tokens.SliderSteppedHeight);
 }

@@ -20,10 +20,8 @@ public partial class BuildScreen : Control
     private bool _isSubscribedToPresentation;
     private bool _partsTrayCollapsed;
     private bool _brainSetupOpen;
-    private bool _exactNeuronEntryOpen;
     private bool _nameEntryOpen;
     private bool _creationOverflowOpen;
-    private int _pendingExactNeurons = BrainShapeDef.DefaultNeuronsPerLayer;
 
     [Export]
     public bool ShowTopBar { get; set; } = true;
@@ -887,11 +885,6 @@ public partial class BuildScreen : Control
         controls.AddChild(CreateNeuronControl());
 
         body.AddChild(CreateBrainPreviewPanel());
-        if (_exactNeuronEntryOpen)
-        {
-            overlay.AddChild(CreateExactNeuronEntry());
-        }
-
         return overlay;
     }
 
@@ -929,7 +922,6 @@ public partial class BuildScreen : Control
         close.Pressed += () =>
         {
             _brainSetupOpen = false;
-            _exactNeuronEntryOpen = false;
             RebuildLayout();
         };
         row.AddChild(close);
@@ -999,7 +991,6 @@ public partial class BuildScreen : Control
                 (double)(maximumNeurons - minimumNeurons),
             ],
             StepLabels = [minimumNeurons.ToString(), maximumNeurons.ToString()],
-            HasMarker = true,
             MarkerPosition =
                 (RecommendedNeurons(buildPanel) - minimumNeurons) /
                 (double)(maximumNeurons - minimumNeurons),
@@ -1011,58 +1002,9 @@ public partial class BuildScreen : Control
             var neurons = (int)Math.Round(minimumNeurons + (position * (maximumNeurons - minimumNeurons)));
             EmitBrainShape(shape.HiddenLayers, neurons);
         };
-        slider.ReadoutActivated += () =>
-        {
-            _pendingExactNeurons = shape.NeuronsPerLayer;
-            _exactNeuronEntryOpen = true;
-            RebuildLayout();
-        };
         row.AddChild(slider);
         row.AddChild(CreateStepper("+", 1, "Increase neurons"));
         return stack;
-    }
-
-    private Control CreateExactNeuronEntry()
-    {
-        var shape = Presentation?.BrainShape ?? BrainShapeDef.Default;
-        var panel = CreatePanel(raised: true);
-        panel.Position = new Vector2(190, 132);
-        panel.CustomMinimumSize = new Vector2(260, 128);
-
-        var margin = CreateMargin((int)_tokens.Space3);
-        panel.AddChild(margin);
-        var stack = new VBoxContainer();
-        stack.AddThemeConstantOverride("separation", (int)_tokens.Space2);
-        margin.AddChild(stack);
-        stack.AddChild(CreateLabel("Exact neurons per layer", 14, _tokens.Ink));
-        var spin = new SpinBox
-        {
-            MinValue = BrainShapeDef.MinimumNeuronsPerLayer,
-            MaxValue = BrainShapeDef.MaximumNeuronsPerLayer,
-            Value = shape.NeuronsPerLayer,
-            Step = 1,
-            CustomMinimumSize = new Vector2(0, _tokens.TouchTarget),
-        };
-        spin.ValueChanged += value => _pendingExactNeurons = (int)value;
-        stack.AddChild(spin);
-        var actions = new HBoxContainer();
-        actions.AddThemeConstantOverride("separation", (int)_tokens.Space2);
-        stack.AddChild(actions);
-        var apply = CreateButton("Apply", UiActionButton.ActionKind.Primary, "Apply exact value");
-        apply.Pressed += () =>
-        {
-            _exactNeuronEntryOpen = false;
-            EmitBrainShape(shape.HiddenLayers, _pendingExactNeurons);
-        };
-        actions.AddChild(apply);
-        var cancel = CreateButton("Cancel", UiActionButton.ActionKind.Secondary, "Close exact value entry");
-        cancel.Pressed += () =>
-        {
-            _exactNeuronEntryOpen = false;
-            RebuildLayout();
-        };
-        actions.AddChild(cancel);
-        return panel;
     }
 
     private UiButton CreateStepper(string label, int delta, string accessibleLabel)

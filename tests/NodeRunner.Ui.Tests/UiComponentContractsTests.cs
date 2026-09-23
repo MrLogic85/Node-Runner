@@ -154,7 +154,6 @@ public sealed class UiComponentContractsTests
             SliderStepTickHeight = 20,
             SliderDisabledDashLength = 8,
             SliderSteppedHeight = 120,
-            SliderCompactSteppedHeight = 108,
             StrokeHair = 2,
         };
 
@@ -165,8 +164,7 @@ public sealed class UiComponentContractsTests
             StepTickHalfHeight: 10,
             DisabledDashLength: 8,
             DisabledThumbInset: 2,
-            SteppedHeight: 120,
-            CompactSteppedHeight: 108));
+            SteppedHeight: 120));
     }
 
     [Theory]

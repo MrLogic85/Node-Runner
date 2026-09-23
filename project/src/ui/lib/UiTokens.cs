@@ -98,7 +98,6 @@ public sealed class UiTokens
     public float SliderStepTickHeight { get; init; } = 10;
     public float SliderDisabledDashLength { get; init; } = 4;
     public float SliderSteppedHeight { get; init; } = 60;
-    public float SliderCompactSteppedHeight { get; init; } = 54;
     public float TitleFontSize { get; init; } = 28;
     public float HeadingFontSize { get; init; } = 16;
     public float StageFontSize { get; init; } = 11;
@@ -235,7 +234,6 @@ public sealed class UiTokens
         SliderStepTickHeight = SliderStepTickHeight,
         SliderDisabledDashLength = SliderDisabledDashLength,
         SliderSteppedHeight = SliderSteppedHeight,
-        SliderCompactSteppedHeight = SliderCompactSteppedHeight,
         TitleFontSize = TitleFontSize,
         HeadingFontSize = HeadingFontSize,
         StageFontSize = StageFontSize,
