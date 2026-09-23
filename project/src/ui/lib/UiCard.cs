@@ -119,7 +119,7 @@ public partial class UiCard : PanelContainer
             return;
         }
 
-        DrawDashedBorder(Tokens.LineStrong);
+        DrawDashedBorder(Tokens.Accent);
     }
 
     private void DrawDashedBorder(Color color)
