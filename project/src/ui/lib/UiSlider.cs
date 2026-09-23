@@ -18,9 +18,11 @@ public partial class UiSlider : Control
     private string _labelText = "Value";
     private string _readoutText = "50";
     private double[] _thumbs = [0.5];
+    private double _fillPosition = 0.5;
     private string[] _stepLabels = [];
     private double _markerPosition = -1;
     private string _markerText = string.Empty;
+    private bool _showValueRow = true;
     private bool _enabled = true;
     private UiSliderStyle _style = UiSliderStyle.From(UiTokens.Neon);
     private Label? _label;
@@ -65,6 +67,17 @@ public partial class UiSlider : Control
         }
     }
 
+    [Export(PropertyHint.Range, "0,1,0.001")]
+    public double FillPosition
+    {
+        get => _fillPosition;
+        set
+        {
+            _fillPosition = UiComponentContracts.ClampSliderPosition(value);
+            QueueRedraw();
+        }
+    }
+
     [Export]
     public string[] StepLabels
     {
@@ -101,6 +114,17 @@ public partial class UiSlider : Control
         set
         {
             _markerText = value;
+            Refresh();
+        }
+    }
+
+    [Export]
+    public bool ShowValueRow
+    {
+        get => _showValueRow;
+        set
+        {
+            _showValueRow = value;
             Refresh();
         }
     }
@@ -150,7 +174,7 @@ public partial class UiSlider : Control
 
     public override void _GuiInput(InputEvent inputEvent)
     {
-        if (!Enabled)
+        if (!Enabled || _thumbs.Length == 0)
         {
             _draggedThumb = -1;
             _pressedThumb = -1;
@@ -208,11 +232,16 @@ public partial class UiSlider : Control
         var trackY = TrackY;
         var opacity = Enabled ? 1f : UiSliderStyle.DisabledOpacity;
         var line = UiTokens.MultiplyAlpha(Enabled ? _tokens.Line : _tokens.LineStrong, opacity);
-        var accent = UiTokens.MultiplyAlpha(Enabled ? _tokens.Accent : _tokens.LineStrong, opacity);
-        var lowX = PositionFor(_thumbs[0], trackLeft, trackRight);
-        var highX = _thumbs.Length == 2
-            ? PositionFor(_thumbs[1], trackLeft, trackRight)
-            : lowX;
+        var accent = UiTokens.MultiplyAlpha(_tokens.Accent, opacity);
+        var lowX = _thumbs.Length > 0
+            ? PositionFor(_thumbs[0], trackLeft, trackRight)
+            : trackLeft;
+        var highX = _thumbs.Length switch
+        {
+            0 => PositionFor(FillPosition, trackLeft, trackRight),
+            2 => PositionFor(_thumbs[1], trackLeft, trackRight),
+            _ => lowX,
+        };
         var fillStart = _thumbs.Length == 2 ? lowX : trackLeft;
 
         if (Enabled)
@@ -246,7 +275,9 @@ public partial class UiSlider : Control
 
     }
 
-    private float TrackY => _tokens.OverlineText.LineHeight + _tokens.Space3;
+    private float TrackY => ShowValueRow
+        ? _tokens.OverlineText.LineHeight + _tokens.Space3
+        : Size.Y * 0.5f;
 
     private void EnsureLabels()
     {
@@ -304,12 +335,16 @@ public partial class UiSlider : Control
         var hasSteps = StepLabels.Length >= 2;
         CustomMinimumSize = new Vector2(
             0,
-            hasSteps ? _style.SteppedHeight : _tokens.TouchTarget);
+            ShowValueRow
+                ? hasSteps ? _style.SteppedHeight : _tokens.TouchTarget
+                : _style.TrackWidth);
 
         _label!.Text = LabelText;
         _readout!.Text = ReadoutText;
         _markerLabel!.Text = MarkerText;
-        _markerLabel.Visible = HasMarker && !string.IsNullOrWhiteSpace(MarkerText);
+        _label.Visible = ShowValueRow;
+        _readout.Visible = ShowValueRow;
+        _markerLabel.Visible = ShowValueRow && HasMarker && !string.IsNullOrWhiteSpace(MarkerText);
 
         ApplyLabelStyle(_label, _tokens.OverlineText, _tokens.Muted);
         ApplyLabelStyle(_readout, _tokens.ReadoutMediumText, _tokens.Ink);

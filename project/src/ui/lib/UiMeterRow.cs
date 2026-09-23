@@ -6,7 +6,7 @@ namespace NodeRunner.Ui.Lib;
 public partial class UiMeterRow : VBoxContainer
 {
     private UiTokens _tokens = UiTokens.Neon;
-    private UiProgressBar? _bar;
+    private UiSlider? _bar;
 
     [Export]
     public string LabelText { get; set; } = "Battery";
@@ -25,7 +25,7 @@ public partial class UiMeterRow : VBoxContainer
             _percent = (float)UiComponentContracts.ClampPercent(value);
             if (_bar is not null)
             {
-                _bar.Percent = _percent;
+                _bar.FillPosition = _percent / 100d;
             }
         }
     }
@@ -67,7 +67,13 @@ public partial class UiMeterRow : VBoxContainer
         label.SizeFlagsHorizontal = SizeFlags.ExpandFill;
         row.AddChild(label);
         row.AddChild(UiFieldAndRows.Label(ValueText, _tokens, _tokens.ReadoutMediumText, _tokens.Ink, HorizontalAlignment.Right));
-        _bar = new UiProgressBar { Tokens = _tokens, Percent = Percent, ShowPercent = false };
+        _bar = new UiSlider
+        {
+            Tokens = _tokens,
+            Thumbs = [],
+            FillPosition = Percent / 100d,
+            ShowValueRow = false,
+        };
         AddChild(_bar);
     }
 }

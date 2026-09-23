@@ -102,6 +102,17 @@ public sealed class UiComponentContractsTests
     }
 
     [Fact]
+    public void ProgressBar_IsRepresentedBySliderWithoutThumbs()
+    {
+        UiComponentContracts.ControlTypeFor(UiComponentContracts.CanonicalComponent.ProgressBar)
+            .ShouldBe(nameof(UiSlider));
+        UiComponentContracts.ControlTypeFor(UiComponentContracts.CanonicalComponent.MeterRow)
+            .ShouldBe(nameof(UiMeterRow));
+        UiComponentContracts.NormalizeSliderThumbs([]).ShouldBeEmpty();
+        UiComponentContracts.SelectSliderThumb([], 0.5).ShouldBe(-1);
+    }
+
+    [Fact]
     public void PanelAndCard_ShareImplementation()
     {
         UiComponentContracts.SharesImplementation(
@@ -251,8 +262,8 @@ public sealed class UiComponentContractsTests
     [Fact]
     public void NormalizeSliderThumbs_DefaultsClampsSortsAndLimitsToRangeMode()
     {
-        UiComponentContracts.NormalizeSliderThumbs(null).ShouldBe([0]);
-        UiComponentContracts.NormalizeSliderThumbs([]).ShouldBe([0]);
+        UiComponentContracts.NormalizeSliderThumbs(null).ShouldBeEmpty();
+        UiComponentContracts.NormalizeSliderThumbs([]).ShouldBeEmpty();
         UiComponentContracts.NormalizeSliderThumbs([0.8, -1, 0.4]).ShouldBe([0, 0.8]);
     }
 

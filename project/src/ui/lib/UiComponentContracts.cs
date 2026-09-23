@@ -118,7 +118,7 @@ public static class UiComponentContracts
             CanonicalComponent.Picker => nameof(UiPicker),
             CanonicalComponent.OverflowMenu => nameof(UiOverflowMenu),
             CanonicalComponent.Chip => nameof(UiChip),
-            CanonicalComponent.ProgressBar => nameof(UiProgressBar),
+            CanonicalComponent.ProgressBar => nameof(UiSlider),
             CanonicalComponent.TextField => nameof(UiTextField),
             CanonicalComponent.NameField => nameof(UiNameField),
             CanonicalComponent.ValueRow => nameof(UiValueRow),
@@ -209,12 +209,17 @@ public static class UiComponentContracts
             .Select(ClampSliderPosition)
             .Order()
             .ToArray() ?? [];
-        return normalized.Length == 0 ? [0] : normalized;
+        return normalized;
     }
 
     public static int SelectSliderThumb(IEnumerable<double>? thumbs, double position)
     {
         var normalized = NormalizeSliderThumbs(thumbs);
+        if (normalized.Length == 0)
+        {
+            return -1;
+        }
+
         if (normalized.Length == 1)
         {
             return 0;
