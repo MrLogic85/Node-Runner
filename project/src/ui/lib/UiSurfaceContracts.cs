@@ -12,10 +12,7 @@ public static class UiSurfaceContracts
         Warn,
         Hint,
         Ok,
-        Glow,
         Raised,
-        Menu,
-        Dialog,
         StageCard,
     }
 
@@ -56,5 +53,5 @@ public static class UiSurfaceContracts
     public static bool IsDimmed(FrameVariant variant) => variant == FrameVariant.Lock;
 
     public static bool HasGlow(FrameVariant variant) =>
-        variant is FrameVariant.Sel or FrameVariant.Glow or FrameVariant.StageCard;
+        variant is FrameVariant.Sel or FrameVariant.StageCard;
 }

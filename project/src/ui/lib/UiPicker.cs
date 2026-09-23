@@ -276,7 +276,7 @@ public partial class UiPicker : PanelContainer
         var style = _tokens.ControlStyle(
             _tokens.PanelRaised,
             border,
-            _tokens.StrokeHair,
+            IsLocked ? 0 : _tokens.StrokeHair,
             _tokens.RadiusMedium,
             horizontalPadding: 0,
             verticalPadding: 0);
@@ -364,108 +364,13 @@ public partial class UiPicker : PanelContainer
 
         public override void _Draw()
         {
-            const float dash = 4;
-            const float gap = 3;
             var halfStroke = Tokens.StrokeHair * 0.5f;
             var rect = new Rect2(
                 halfStroke,
                 halfStroke,
                 Mathf.Max(0, Size.X - Tokens.StrokeHair),
                 Mathf.Max(0, Size.Y - Tokens.StrokeHair));
-            DrawDashedRoundedRect(rect, Tokens.RadiusMedium, Color, dash, gap);
-        }
-
-        private void DrawDashedRoundedRect(Rect2 rect, float radius, Color color, float dashLength, float gapLength)
-        {
-            var perimeter = (2 * (rect.Size.X + rect.Size.Y - (4 * radius))) + (Mathf.Tau * radius);
-            if (perimeter <= 0)
-            {
-                return;
-            }
-
-            var pattern = dashLength + gapLength;
-            var dashCount = Mathf.Max(1, Mathf.RoundToInt(perimeter / pattern));
-            var fittedPattern = perimeter / dashCount;
-            var fittedDashLength = fittedPattern * (dashLength / pattern);
-            for (var index = 0; index < dashCount; index++)
-            {
-                var start = index * fittedPattern;
-                var end = Mathf.Min(start + fittedDashLength, perimeter);
-                DrawRoundedRectSegment(rect, radius, start, end, color);
-            }
-        }
-
-        private void DrawRoundedRectSegment(Rect2 rect, float radius, float start, float end, Color color)
-        {
-            const int pointCount = 5;
-            var points = new Vector2[pointCount];
-            for (var index = 0; index < pointCount; index++)
-            {
-                var distance = Mathf.Lerp(start, end, index / (float)(pointCount - 1));
-                points[index] = PointOnRoundedRect(rect, radius, distance);
-            }
-
-            DrawPolyline(points, color, Tokens.StrokeHair, antialiased: true);
-        }
-
-        private static Vector2 PointOnRoundedRect(Rect2 rect, float radius, float distance)
-        {
-            var straightWidth = Mathf.Max(0, rect.Size.X - (2 * radius));
-            var straightHeight = Mathf.Max(0, rect.Size.Y - (2 * radius));
-            var topEnd = straightWidth;
-            var topRightArcEnd = topEnd + (Mathf.Pi * radius / 2);
-            var rightEnd = topRightArcEnd + straightHeight;
-            var bottomRightArcEnd = rightEnd + (Mathf.Pi * radius / 2);
-            var bottomEnd = bottomRightArcEnd + straightWidth;
-            var bottomLeftArcEnd = bottomEnd + (Mathf.Pi * radius / 2);
-            var leftEnd = bottomLeftArcEnd + straightHeight;
-            var leftTopArcEnd = leftEnd + (Mathf.Pi * radius / 2);
-            distance = Mathf.PosMod(distance, leftTopArcEnd);
-
-            if (distance <= topEnd)
-            {
-                return new Vector2(rect.Position.X + radius + distance, rect.Position.Y);
-            }
-
-            if (distance <= topRightArcEnd)
-            {
-                var angle = -Mathf.Pi / 2 + ((distance - topEnd) / (Mathf.Pi * radius / 2) * Mathf.Pi / 2);
-                var center = new Vector2(rect.End.X - radius, rect.Position.Y + radius);
-                return center + new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * radius;
-            }
-
-            if (distance <= rightEnd)
-            {
-                return new Vector2(rect.End.X, rect.Position.Y + radius + distance - topRightArcEnd);
-            }
-
-            if (distance <= bottomRightArcEnd)
-            {
-                var angle = (distance - rightEnd) / (Mathf.Pi * radius / 2) * Mathf.Pi / 2;
-                var center = new Vector2(rect.End.X - radius, rect.End.Y - radius);
-                return center + new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * radius;
-            }
-
-            if (distance <= bottomEnd)
-            {
-                return new Vector2(rect.End.X - radius - (distance - bottomRightArcEnd), rect.End.Y);
-            }
-
-            if (distance <= bottomLeftArcEnd)
-            {
-                var angle = Mathf.Pi / 2 + ((distance - bottomEnd) / (Mathf.Pi * radius / 2) * Mathf.Pi / 2);
-                var center = new Vector2(rect.Position.X + radius, rect.End.Y - radius);
-                return center + new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * radius;
-            }
-
-            if (distance <= leftEnd)
-            {
-                return new Vector2(rect.Position.X, rect.End.Y - radius - (distance - bottomLeftArcEnd));
-            }
-
-            var finalAngle = Mathf.Pi + ((distance - leftEnd) / (Mathf.Pi * radius / 2) * Mathf.Pi / 2);
-            var finalCenter = new Vector2(rect.Position.X + radius, rect.Position.Y + radius);
-            return finalCenter + new Vector2(Mathf.Cos(finalAngle), Mathf.Sin(finalAngle)) * radius;
+            UiDashedBorder.DrawRoundedRect(this, rect, Tokens.RadiusMedium, Color, Tokens.StrokeHair);
         }
     }
 }

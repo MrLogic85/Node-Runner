@@ -1369,14 +1369,14 @@ public partial class BuildScreen : Control
         control.DrawString(ThemeDB.FallbackFont, position + new Vector2(12, 21), text, HorizontalAlignment.Left, -1, 16, _tokens.Ink);
     }
 
-    private UiPanel CreatePanel(bool raised)
+    private UiCard CreatePanel(bool raised)
     {
-        return new UiPanel
+        return new UiCard
         {
             Tokens = _tokens,
-            Variant = raised
-                ? UiSurfaceContracts.FrameVariant.Raised
-                : UiSurfaceContracts.FrameVariant.Frame,
+            Kind = raised
+                ? UiCard.CardVariant.Raised
+                : UiCard.CardVariant.Frame,
         };
     }
 

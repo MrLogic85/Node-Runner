@@ -130,8 +130,8 @@ public static class UiComponentContracts
             CanonicalComponent.SelectionHandle => nameof(UiSelectionHandle),
             CanonicalComponent.PanelHeader => nameof(UiPanelHeader),
             CanonicalComponent.InfoRow => nameof(UiInfoRow),
-            CanonicalComponent.Card => nameof(UiPanel),
-            CanonicalComponent.Panel => nameof(UiPanel),
+            CanonicalComponent.Card => nameof(UiCard),
+            CanonicalComponent.Panel => nameof(UiCard),
             CanonicalComponent.ProgressRing => nameof(UiProgressRing),
             _ => throw new ArgumentOutOfRangeException(nameof(component), component, null),
         };

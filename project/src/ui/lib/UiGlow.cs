@@ -6,8 +6,8 @@ public static class UiGlow
 {
     // Existing controls pass a pre-composed glow token into ApplyToControl.
     // Keep their established footprint and opacity independent of button glows.
-    public const int ControlExtent = 12;
-    public const float ControlOpacity = 0.4f;
+    public const int ControlExtent = 10;
+    public const float ControlOpacity = 0.6f;
     public const int ButtonExtent = 12;
     public const float ButtonOpacity = 0.12f;
     public const int InsetExtent = 12;
