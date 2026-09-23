@@ -172,7 +172,7 @@ public partial class CreationsScreen : Control
             SizeFlagsHorizontal = SizeFlags.ExpandFill,
             SizeFlagsVertical = SizeFlags.ExpandFill,
             VerticalScrollMode = ScrollContainer.ScrollMode.Disabled,
-            HorizontalScrollMode = ScrollContainer.ScrollMode.Auto,
+            HorizontalScrollMode = ScrollContainer.ScrollMode.ShowNever,
         };
         var cards = new HBoxContainer
         {

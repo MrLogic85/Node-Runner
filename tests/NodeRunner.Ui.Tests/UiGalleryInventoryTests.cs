@@ -32,11 +32,27 @@ public sealed class UiGalleryInventoryTests
     }
 
     [Fact]
-    public void ComponentGalleryInventory_RemainsExactlyTheCanonicalComponentSet()
+    public void ComponentGalleryInventory_ContainsOnlyCurrentLibrarySpecimens()
     {
         ComponentGalleryScreen.CanonicalInventory
             .Select(spec => spec.Component)
-            .ShouldBe(UiComponentContracts.AllCanonicalComponents);
+            .ShouldBe(
+                [
+                    UiComponentContracts.CanonicalComponent.Button,
+                    UiComponentContracts.CanonicalComponent.IconButton,
+                    UiComponentContracts.CanonicalComponent.HoldButton,
+                    UiComponentContracts.CanonicalComponent.Slider,
+                    UiComponentContracts.CanonicalComponent.Range,
+                    UiComponentContracts.CanonicalComponent.Toggle,
+                    UiComponentContracts.CanonicalComponent.Checkbox,
+                    UiComponentContracts.CanonicalComponent.Segmented,
+                    UiComponentContracts.CanonicalComponent.Picker,
+                    UiComponentContracts.CanonicalComponent.OverflowMenu,
+                    UiComponentContracts.CanonicalComponent.TextField,
+                    UiComponentContracts.CanonicalComponent.NameField,
+                    UiComponentContracts.CanonicalComponent.IconTabs,
+                    UiComponentContracts.CanonicalComponent.SelectionHandle,
+                ]);
         ComponentGalleryScreen.CanonicalInventory
             .Select(spec => spec.Section)
             .Distinct()
