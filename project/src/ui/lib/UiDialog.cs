@@ -14,12 +14,7 @@ public sealed partial class UiDialog : Window
     public string? ErrorMessage { get; private set; }
 
     private UiDialogSpec? _spec;
-    private UiCard? _card;
-    private ScrollContainer? _scroll;
-    private Label? _body;
-    private Label? _error;
-    private UiButton? _cancel;
-    private UiButton? _confirm;
+    private UiDialogContent _content = null!;
     private Viewport? _host;
     private bool _quitOnBack;
     private int _operation;
@@ -38,6 +33,10 @@ public sealed partial class UiDialog : Window
 
     public override void _Ready()
     {
+        _content = GD.Load<PackedScene>("res://scenes/ui/UiDialogContent.tscn").Instantiate<UiDialogContent>();
+        AddChild(_content);
+        _content.AbortButton.Activated += OnCloseRequested;
+        _content.ActionButton.Activated += OnConfirm;
         _host = GetParent().GetViewport();
         _host.SizeChanged += FitHost;
         CloseRequested += OnCloseRequested;
@@ -67,14 +66,14 @@ public sealed partial class UiDialog : Window
         ErrorMessage = null;
         IsBusy = false;
         _operation++;
-        BuildContent(spec);
+        _content.Bind(spec, Tokens);
         Title = spec.Title;
         _quitOnBack = GetTree().QuitOnGoBack;
         GetTree().QuitOnGoBack = false;
         IsOpen = true;
         FitHost();
         Popup();
-        _cancel!.GrabFocus();
+        _content.AbortButton.GrabFocus();
         QueueLayout();
     }
 
@@ -104,9 +103,8 @@ public sealed partial class UiDialog : Window
         var spec = _spec;
         IsBusy = true;
         ErrorMessage = null;
-        _error!.Hide();
-        _cancel!.Enabled = false;
-        _confirm!.Enabled = false;
+        _content.ShowError(null);
+        _content.SetBusy(true);
         QueueLayout();
 
         UiDialogResult result;
@@ -134,12 +132,10 @@ public sealed partial class UiDialog : Window
             return;
         }
         ErrorMessage = result.ErrorMessage;
-        _error.Text = ErrorMessage;
-        _error.Show();
-        _cancel.Enabled = true;
-        _confirm.Enabled = true;
-        _confirm.Progress = spec.HoldToAction ? 0 : -1;
-        _cancel.GrabFocus();
+        _content.ShowError(ErrorMessage);
+        _content.SetBusy(false);
+        _content.ActionButton.HoldToActivate = spec.HoldToAction;
+        _content.AbortButton.GrabFocus();
         QueueLayout();
     }
 
@@ -151,74 +147,6 @@ public sealed partial class UiDialog : Window
         GetTree().QuitOnGoBack = _quitOnBack;
         Hide();
         EmitSignal(SignalName.Finished, confirmed);
-    }
-
-    private void BuildContent(UiDialogSpec spec)
-    {
-        _confirm = null;
-        foreach (var child in GetChildren())
-        {
-            RemoveChild(child);
-            child.QueueFree();
-        }
-        var scrim = new ColorRect { Color = Tokens.Scrim, MouseFilter = Control.MouseFilterEnum.Stop };
-        scrim.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
-        AddChild(scrim);
-        _card = UiPopupStyle.Card(spec.Type, Tokens);
-        _card.MinimumSizeChanged += QueueLayout;
-        AddChild(_card);
-        _card.MouseFilter = Control.MouseFilterEnum.Stop;
-        var column = new VBoxContainer();
-        column.AddThemeConstantOverride("separation", (int)Tokens.Space3);
-        _card.AddChild(column);
-        column.AddChild(UiPopupStyle.Heading(spec.Type, spec.Title, Tokens));
-        _scroll = new ScrollContainer
-        {
-            HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled,
-            SizeFlagsVertical = Control.SizeFlags.ExpandFill,
-        };
-        column.AddChild(_scroll);
-        _body = UiPopupStyle.Text(spec.Content, Tokens.BodyText, Tokens);
-        _body.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
-        _scroll.AddChild(_body);
-        _error = UiPopupStyle.Text("", Tokens.NoteText, Tokens, Tokens.Danger);
-        _error.Name = "Error";
-        _error.Visible = false;
-        column.AddChild(_error);
-        var actions = new HBoxContainer();
-        actions.AddThemeConstantOverride("separation", (int)Tokens.Space2);
-        column.AddChild(actions);
-        _cancel = new UiButton
-        {
-            Name = "Cancel",
-            Tokens = Tokens,
-            LabelText = spec.AbortText,
-            SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
-        };
-        _cancel.Activated += OnCloseRequested;
-        _cancel.MinimumSizeChanged += QueueLayout;
-        actions.AddChild(_cancel);
-        if (!spec.HasAction)
-        {
-            return;
-        }
-        _confirm = new UiButton
-        {
-            Name = "Confirm",
-            Tokens = Tokens,
-            LabelText = spec.ActionText!,
-            SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
-            Kind = spec.Type switch
-            {
-                UiPopupType.Warn => UiButtonKind.Flat,
-                UiPopupType.Danger => UiButtonKind.Tertiary,
-                _ => UiButtonKind.Primary,
-            },
-            HoldDurationSeconds = spec.HoldToAction ? UiComponentContracts.HoldCompletionSeconds : 0,
-        };
-        _confirm.Activated += OnConfirm;
-        _confirm.MinimumSizeChanged += QueueLayout;
-        actions.AddChild(_confirm);
     }
 
     private void OnConfirm() => _ = ConfirmAsync();
@@ -258,6 +186,8 @@ public sealed partial class UiDialog : Window
         CloseRequested -= OnCloseRequested;
         WindowInput -= OnWindowInput;
         SizeChanged -= QueueLayout;
+        _content.AbortButton.Activated -= OnCloseRequested;
+        _content.ActionButton.Activated -= OnConfirm;
     }
 
     private void FitHost()
@@ -275,26 +205,10 @@ public sealed partial class UiDialog : Window
 
     private void LayoutCard()
     {
-        if (!IsOpen || _card is null || _scroll is null || _body is null)
+        if (!IsOpen)
         {
             return;
         }
-        var available = (Vector2)Size - Vector2.One * Tokens.Space4 * 2;
-        var actionWidth = Mathf.Max(_cancel!.GetMinimumSize().X, _confirm?.GetMinimumSize().X ?? 0);
-        _cancel.CustomMinimumSize = new Vector2(actionWidth, Tokens.ControlHeight);
-        if (_confirm is not null)
-        {
-            _confirm.CustomMinimumSize = _cancel.CustomMinimumSize;
-        }
-        var width = Mathf.Min(Tokens.DialogWidth, available.X);
-        _card.CustomMinimumSize = new Vector2(width, 0);
-        _card.Size = new Vector2(width, 0);
-        using var measured = new TextParagraph();
-        measured.AddString(_body.Text, _body.GetThemeFont("font"), (int)Tokens.BodyText.FontSize);
-        measured.Width = Mathf.Max(1, width - Tokens.Space3 * 2 - Tokens.Space4);
-        var fixedHeight = _card.GetCombinedMinimumSize().Y - _scroll.GetCombinedMinimumSize().Y;
-        _scroll.CustomMinimumSize = new Vector2(0, Mathf.Min(measured.GetSize().Y, Mathf.Max(Tokens.ControlHeight, available.Y - fixedHeight)));
-        _card.Size = new Vector2(width, 0);
-        _card.Position = ((Vector2)Size - _card.Size) / 2;
+        _content.LayoutCard();
     }
 }

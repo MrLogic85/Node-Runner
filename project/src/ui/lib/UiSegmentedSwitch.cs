@@ -3,28 +3,46 @@ using Godot;
 namespace NodeRunner.Ui.Lib;
 
 /// <summary>Touch-safe mutually exclusive choice control for compact mode/profile switches.</summary>
-public partial class UiSegmentedSwitch : HBoxContainer
+[Tool]
+[GlobalClass]
+public partial class UiSegmentedSwitch : HBoxContainer, ISerializationListener
 {
     [Signal]
     public delegate void SelectionChangedEventHandler(int index);
 
     private UiTokens _tokens = UiTokens.Neon;
-    private string[] _options = { "One", "Two" };
+    private Godot.Collections.Array<UiSegment> _segments =
+        [new() { Text = "1" }, new() { Text = "2" }];
+    private readonly HashSet<UiSegment> _observedSegments = [];
+    private readonly List<Button> _buttons = [];
     private int _selectedIndex;
-    private string[] _icons = [];
-    private UiIconId[] _iconIds = [];
-    private bool _fullWidth = true;
+    private bool _matchWidth = true;
     private ButtonGroup? _group;
+    // Object/method callables survive assembly reloads without retaining managed delegates.
+    private Callable ChildAddedCallback => new(this, MethodName.WarnAboutExtraChild);
+    private Callable GroupPressedCallback => new(this, MethodName.HandleGroupPressed);
+    private Callable SegmentChangedCallback => new(this, MethodName.RefreshAppearance);
 
     [Export]
-    public string[] Options
+    public Godot.Collections.Array<UiSegment> Segments
     {
-        get => _options;
+        get => _segments;
         set
         {
-            _options = value ?? System.Array.Empty<string>();
-            _selectedIndex = Mathf.Clamp(_selectedIndex, 0, Mathf.Max(0, _options.Length - 1));
+            _segments = value?.Duplicate() ?? [];
+            bool populated = false;
+            for (int index = 0; index < _segments.Count; index++)
+            {
+                if (_segments[index] is not null)
+                    continue;
+                _segments[index] = new UiSegment { Text = (index + 1).ToString() };
+                populated = true;
+            }
+            ObserveSegments();
+            _selectedIndex = Mathf.Clamp(_selectedIndex, 0, Mathf.Max(0, _segments.Count - 1));
             RefreshOptions();
+            if (populated && Engine.IsEditorHint())
+                CallDeferred(GodotObject.MethodName.NotifyPropertyListChanged);
         }
     }
 
@@ -34,39 +52,18 @@ public partial class UiSegmentedSwitch : HBoxContainer
         get => _selectedIndex;
         set
         {
-            _selectedIndex = Mathf.Clamp(value, 0, Mathf.Max(0, _options.Length - 1));
+            _selectedIndex = Mathf.Clamp(value, 0, Mathf.Max(0, _segments.Count - 1));
             RefreshSelection();
         }
     }
 
     [Export]
-    public string[] Icons
+    public bool MatchWidth
     {
-        get => _icons;
+        get => _matchWidth;
         set
         {
-            _icons = value ?? [];
-            RefreshAppearance();
-        }
-    }
-
-    public UiIconId[] IconIds
-    {
-        get => _iconIds;
-        set
-        {
-            _iconIds = value ?? [];
-            RefreshAppearance();
-        }
-    }
-
-    [Export]
-    public bool FullWidth
-    {
-        get => _fullWidth;
-        set
-        {
-            _fullWidth = value;
+            _matchWidth = value;
             RefreshLayout();
         }
     }
@@ -81,11 +78,106 @@ public partial class UiSegmentedSwitch : HBoxContainer
         }
     }
 
+    public override void _EnterTree()
+    {
+        if (!IsConnected(SignalName.ChildEnteredTree, ChildAddedCallback))
+            Connect(SignalName.ChildEnteredTree, ChildAddedCallback);
+        RequestReady();
+    }
+
+    private void WarnAboutExtraChild(Node child)
+    {
+        if (IsNodeReady() && GetChildren().Contains(child))
+            GD.PushWarning($"{Name}: '{child.Name}' is not a segment. Use Segments to add options; this child is left unchanged.");
+    }
+
+    public override void _ExitTree()
+    {
+        if (IsConnected(SignalName.ChildEnteredTree, ChildAddedCallback))
+            Disconnect(SignalName.ChildEnteredTree, ChildAddedCallback);
+        DisconnectContent();
+    }
+
+    private void DisconnectContent()
+    {
+        if (_group is not null && _group.IsConnected(ButtonGroup.SignalName.Pressed, GroupPressedCallback))
+            _group.Disconnect(ButtonGroup.SignalName.Pressed, GroupPressedCallback);
+        DisconnectSegments();
+    }
+
+    private void DisconnectSegments()
+    {
+        foreach (UiSegment? segment in _observedSegments)
+        {
+            if (segment is not null && segment.IsConnected(Resource.SignalName.Changed, SegmentChangedCallback))
+                segment.Disconnect(Resource.SignalName.Changed, SegmentChangedCallback);
+        }
+        _observedSegments.Clear();
+    }
+
+    public void OnBeforeSerialize()
+    {
+        if (IsConnected(SignalName.ChildEnteredTree, ChildAddedCallback))
+            Disconnect(SignalName.ChildEnteredTree, ChildAddedCallback);
+        DisconnectContent();
+    }
+
+    public void OnAfterDeserialize() => CallDeferred(MethodName.RestoreContent);
+
+    private void RestoreContent()
+    {
+        if (!IsInsideTree())
+            return;
+        if (!IsConnected(SignalName.ChildEnteredTree, ChildAddedCallback))
+            Connect(SignalName.ChildEnteredTree, ChildAddedCallback);
+        InitializeContent();
+    }
+
+    private void ObserveSegments()
+    {
+        DisconnectSegments();
+        if (!IsInsideTree())
+            return;
+        foreach (UiSegment? segment in _segments)
+        {
+            if (segment is not null && _observedSegments.Add(segment))
+            {
+                if (!segment.IsConnected(Resource.SignalName.Changed, SegmentChangedCallback))
+                    segment.Connect(Resource.SignalName.Changed, SegmentChangedCallback);
+            }
+        }
+    }
+
     public override void _Ready()
     {
         MouseFilter = MouseFilterEnum.Pass;
-        _group ??= new ButtonGroup { AllowUnpress = false };
+        InitializeContent();
+    }
+
+    private void InitializeContent()
+    {
+        DisconnectContent();
+        // Native children survive a C# assembly reload; recover them rather than adding duplicates.
+        _buttons.Clear();
+        _group = new ButtonGroup { AllowUnpress = false };
+        _group.Connect(ButtonGroup.SignalName.Pressed, GroupPressedCallback);
+        var authoredChildren = GetChildren();
+        foreach (Node child in GetChildren(includeInternal: true))
+        {
+            if (child is Button button && !authoredChildren.Contains(child))
+            {
+                _buttons.Add(button);
+                button.ButtonGroup = _group;
+            }
+        }
+        ObserveSegments();
         RefreshOptions();
+    }
+
+    private void HandleGroupPressed(BaseButton button)
+    {
+        if (button is Button segmentButton && _buttons.IndexOf(segmentButton) is var index && index >= 0)
+            Select(index);
     }
 
     private void RefreshOptions()
@@ -95,26 +187,26 @@ public partial class UiSegmentedSwitch : HBoxContainer
             return;
         }
 
-        var focusedIndex = -1;
-        for (var index = 0; index < GetChildCount(); index++)
+        int focusedIndex = -1;
+        for (int index = 0; index < _buttons.Count; index++)
         {
-            if (GetChild<Button>(index).HasFocus())
+            if (_buttons[index].HasFocus())
             {
                 focusedIndex = index;
             }
         }
 
-        while (GetChildCount() > _options.Length)
+        while (_buttons.Count > _segments.Count)
         {
-            var button = GetChild<Button>(GetChildCount() - 1);
+            Button button = _buttons[^1];
+            _buttons.RemoveAt(_buttons.Count - 1);
             button.ButtonGroup = null;
             RemoveChild(button);
             button.QueueFree();
         }
 
-        while (GetChildCount() < _options.Length)
+        while (_buttons.Count < _segments.Count)
         {
-            var index = GetChildCount();
             var button = new Button
             {
                 ToggleMode = true,
@@ -122,21 +214,21 @@ public partial class UiSegmentedSwitch : HBoxContainer
                 SizeFlagsVertical = SizeFlags.ShrinkCenter,
                 MouseFilter = MouseFilterEnum.Pass,
             };
-            button.Pressed += () => Select(index);
-            AddChild(button);
+            _buttons.Add(button);
+            AddChild(button, false, InternalMode.Front);
         }
 
         RefreshAppearance();
         RefreshSelection();
-        if (focusedIndex >= 0 && GetChildCount() > 0 && IsInsideTree())
+        if (focusedIndex >= 0 && _buttons.Count > 0 && IsInsideTree())
         {
-            GetChild<Button>(Math.Min(focusedIndex, GetChildCount() - 1)).GrabFocus();
+            _buttons[Math.Min(focusedIndex, _buttons.Count - 1)].GrabFocus();
         }
     }
 
     private void Select(int index)
     {
-        if (index == _selectedIndex)
+        if (Engine.IsEditorHint() || index == _selectedIndex)
         {
             return;
         }
@@ -147,30 +239,32 @@ public partial class UiSegmentedSwitch : HBoxContainer
 
     private void RefreshSelection()
     {
-        if (_selectedIndex < GetChildCount())
+        if (_selectedIndex < _buttons.Count)
         {
             // SetPressedNoSignal bypasses ButtonGroup exclusivity. ButtonPressed
             // updates the group without emitting the Button.Pressed we forward.
-            GetChild<Button>(_selectedIndex).ButtonPressed = true;
+            _buttons[_selectedIndex].ButtonPressed = true;
         }
     }
 
     private void RefreshAppearance()
     {
-        for (var index = 0; index < GetChildCount(); index++)
+        for (int index = 0; index < _buttons.Count; index++)
         {
-            var button = GetChild<Button>(index);
-            button.Text = _options[index];
-            button.AccessibilityName = _options[index];
+            Button button = _buttons[index];
+            UiSegment? segment = _segments[index];
+            button.Disabled = segment is null;
+            button.Text = segment?.Text ?? string.Empty;
+            button.AccessibilityName = button.Text;
             _tokens.ApplyTextStyle(button, _tokens.LabelText);
-            foreach (var state in new[] { "font_color", "font_hover_color", "font_pressed_color", "font_hover_pressed_color", "font_focus_color" })
+            foreach (string state in new[] { "font_color", "font_hover_color", "font_pressed_color", "font_hover_pressed_color", "font_focus_color" })
             {
                 button.AddThemeColorOverride(state, _tokens.Ink);
             }
 
-            if (IconFor(index) is { } iconId)
+            if (segment is { IconId: not UiIconId.None })
             {
-                UiIcons.Apply(button, iconId, UiIconSize.Standard, _tokens.Ink);
+                UiIcons.Apply(button, segment.IconId, UiIconSize.Standard, _tokens.Ink);
                 button.AddThemeColorOverride("icon_hover_pressed_color", _tokens.Ink);
                 button.AddThemeColorOverride("icon_focus_color", _tokens.Ink);
             }
@@ -180,13 +274,13 @@ public partial class UiSegmentedSwitch : HBoxContainer
             }
 
             button.AddThemeConstantOverride("h_separation", (int)_tokens.Space2);
-            var normal = CreateStyle(index, false);
-            var selected = CreateStyle(index, true);
+            StyleBoxFlat normal = CreateStyle(index, false);
+            StyleBoxFlat selected = CreateStyle(index, true);
             button.AddThemeStyleboxOverride("normal", normal);
             button.AddThemeStyleboxOverride("hover", normal);
             button.AddThemeStyleboxOverride("pressed", selected);
             button.AddThemeStyleboxOverride("hover_pressed", selected);
-            var focus = CreateStyle(index, true);
+            StyleBoxFlat focus = CreateStyle(index, true);
             focus.DrawCenter = false;
             focus.BorderColor = _tokens.Halo;
             button.AddThemeStyleboxOverride("focus", focus);
@@ -198,33 +292,24 @@ public partial class UiSegmentedSwitch : HBoxContainer
     private void RefreshLayout()
     {
         AddThemeConstantOverride("separation", 0);
-        var width = _tokens.TouchTarget;
-        foreach (var child in GetChildren())
+        float width = _tokens.TouchTarget;
+        foreach (Button button in _buttons)
         {
-            var button = (Button)child;
             width = Mathf.Max(width, button.GetMinimumSize().X);
         }
 
-        foreach (var child in GetChildren())
+        foreach (Button button in _buttons)
         {
-            var button = (Button)child;
-            button.CustomMinimumSize = new Vector2(FullWidth ? width : _tokens.TouchTarget, _tokens.TouchTarget);
-            button.SizeFlagsHorizontal = FullWidth ? SizeFlags.ExpandFill : SizeFlags.ShrinkBegin;
+            button.CustomMinimumSize = new Vector2(MatchWidth ? width : _tokens.TouchTarget, _tokens.ControlHeight);
+            button.SizeFlagsHorizontal = MatchWidth ? SizeFlags.ExpandFill : SizeFlags.ShrinkBegin;
         }
     }
 
-    private UiIconId? IconFor(int index) =>
-        index < _iconIds.Length
-            ? _iconIds[index]
-            : index < Icons.Length && UiIconGlyphs.TryParse(Icons[index], out var icon) ? icon : null;
-
     private StyleBoxFlat CreateStyle(int index, bool selected)
     {
-        var first = index == 0;
-        var last = index == _options.Length - 1;
-        var stroke = (int)(selected ? _tokens.StrokeSignal : _tokens.StrokeHair);
-        var inset = (_tokens.TouchTarget - _tokens.ControlHeight) * 0.5f;
-        var verticalPadding = (_tokens.TouchTarget - _tokens.LabelText.LineHeight) * 0.5f;
+        bool first = index == 0;
+        bool last = index == _segments.Count - 1;
+        int stroke = (int)(selected ? _tokens.StrokeSignal : _tokens.StrokeHair);
         return new StyleBoxFlat
         {
             BgColor = selected ? _tokens.PanelRaised.Blend(_tokens.AccentSoft) : _tokens.PanelRaised,
@@ -237,12 +322,8 @@ public partial class UiSegmentedSwitch : HBoxContainer
             CornerRadiusTopRight = last ? (int)_tokens.RadiusMedium : 0,
             CornerRadiusBottomLeft = first ? (int)_tokens.RadiusMedium : 0,
             CornerRadiusBottomRight = last ? (int)_tokens.RadiusMedium : 0,
-            ExpandMarginTop = -inset,
-            ExpandMarginBottom = -inset,
             ContentMarginLeft = UiSpacing.SegmentedControlHorizontalPadding(_tokens),
-            ContentMarginTop = verticalPadding,
             ContentMarginRight = UiSpacing.SegmentedControlHorizontalPadding(_tokens),
-            ContentMarginBottom = verticalPadding,
         };
     }
 }

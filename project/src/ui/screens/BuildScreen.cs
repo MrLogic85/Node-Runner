@@ -305,7 +305,7 @@ public partial class BuildScreen : Control
         {
             var save = CreateButton("Save", buildPanel.CanCompleteCreation ? UiButtonKind.Primary : UiButtonKind.Secondary, buildPanel.DisabledReason ?? "Save this Creation");
             save.CustomMinimumSize = new Vector2(88, _tokens.TouchTarget);
-            save.Enabled = buildPanel.CanCompleteCreation;
+            save.Disabled = !buildPanel.CanCompleteCreation;
             if (buildPanel.CanCompleteCreation)
             {
                 save.Pressed += () => EmitSignal(SignalName.SaveRequested);
@@ -616,7 +616,7 @@ public partial class BuildScreen : Control
 
         var close = new UiButton
         {
-            Compact = true,
+            ContentLayout = UiButtonContentLayout.RowCompact,
             Kind = UiButtonKind.Flat,
             Tokens = _tokens,
             IconId = UiIconId.Close,
@@ -662,7 +662,7 @@ public partial class BuildScreen : Control
 
         var close = new UiButton
         {
-            Compact = true,
+            ContentLayout = UiButtonContentLayout.RowCompact,
             Kind = UiButtonKind.Flat,
             Tokens = _tokens,
             IconId = UiIconId.Close,
@@ -1012,10 +1012,9 @@ public partial class BuildScreen : Control
         var button = new UiButton
         {
             Tokens = _tokens,
-            IconId = null,
-            SymbolText = label,
+            LabelText = label,
             TooltipText = accessibleLabel,
-            Compact = true,
+            ContentLayout = UiButtonContentLayout.RowCompact,
         };
         button.Activated += () => EmitBrainShape(
             shape.HiddenLayers,
@@ -1138,7 +1137,7 @@ public partial class BuildScreen : Control
             Tokens = _tokens,
             LabelText = $"{label} · {countText}",
             Kind = UiButtonKind.Secondary,
-            Enabled = !locked,
+            Disabled = locked,
             TooltipText = locked ? countText : string.Empty,
             CustomMinimumSize = new Vector2(0, _tokens.TouchTarget),
             SizeFlagsHorizontal = SizeFlags.ExpandFill,
@@ -1422,7 +1421,7 @@ public partial class BuildScreen : Control
             Tokens = _tokens,
             Kind = kind,
             LabelText = label,
-            IconId = iconId,
+            IconId = iconId ?? UiIconId.None,
             TooltipText = tooltip,
             CustomMinimumSize = new Vector2(0, _tokens.TouchTarget),
         };

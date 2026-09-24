@@ -7,19 +7,24 @@ internal static class UiPopupStyle
     public static UiCard Card(UiPopupType type, UiTokens tokens) => new()
     {
         Tokens = tokens,
-        Kind = type switch
-        {
-            UiPopupType.Warn => UiCard.CardVariant.Hint,
-            UiPopupType.Danger => UiCard.CardVariant.Warning,
-            _ => UiCard.CardVariant.Frame,
-        },
+        Kind = CardKind(type),
     };
+
+    public static UiCard.CardVariant CardKind(UiPopupType type) => type switch
+    {
+        UiPopupType.Warn => UiCard.CardVariant.Hint,
+        UiPopupType.Danger => UiCard.CardVariant.Warning,
+        _ => UiCard.CardVariant.Frame,
+    };
+
+    public static Color SemanticColor(UiPopupType type, UiTokens tokens) =>
+        type switch { UiPopupType.Warn => tokens.Halo, UiPopupType.Danger => tokens.Danger, _ => tokens.Accent };
 
     public static Control Heading(UiPopupType type, string title, UiTokens tokens)
     {
         var row = new HBoxContainer { MouseFilter = Control.MouseFilterEnum.Ignore };
         row.AddThemeConstantOverride("separation", (int)tokens.Space2);
-        var color = type switch { UiPopupType.Warn => tokens.Halo, UiPopupType.Danger => tokens.Danger, _ => tokens.Accent };
+        var color = SemanticColor(type, tokens);
         row.AddChild(UiIcons.Create(type == UiPopupType.Default ? UiIconId.Model : UiIconId.Warn, UiIconSize.Large, color));
         var titles = new VBoxContainer
         {

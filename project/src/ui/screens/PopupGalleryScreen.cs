@@ -10,7 +10,8 @@ public partial class PopupGalleryScreen : Control
     public delegate void CloseRequestedEventHandler();
 
     private UiTokens _tokens = UiTokens.Neon;
-    private Control _page = null!;
+    private ColorRect _background = null!;
+    private UiSegmentedSwitch _themes = null!;
     private Label _status = null!;
     private UiDialog _dialog = null!;
     private UiNotification _notifications = null!;
@@ -24,7 +25,12 @@ public partial class PopupGalleryScreen : Control
         MouseFilter = MouseFilterEnum.Stop;
         _quitOnBack = GetTree().QuitOnGoBack;
         GetTree().QuitOnGoBack = false;
-        BuildPage();
+        _background = GetNode<ColorRect>("%Background");
+        _status = GetNode<UiLabel>("%Status");
+        _themes = GetNode<UiSegmentedSwitch>("%UiSegmentedSwitch");
+        _tokens = TokensFor(_themes.SelectedIndex);
+        ApplyTheme();
+        UiNativeScroll.AllowGesturesToBubble(GetNode<Control>("MarginContainer"));
         _notifications = new UiNotification { Tokens = _tokens };
         AddChild(_notifications);
         _dialog = new UiDialog { Tokens = _tokens };
@@ -39,110 +45,70 @@ public partial class PopupGalleryScreen : Control
         GetTree().QuitOnGoBack = _quitOnBack;
     }
 
-    private void BuildPage()
+    private void ShowDefaultDialog() => ShowTypeDialog(UiPopupType.Default);
+    private void ShowWarningDialog() => ShowTypeDialog(UiPopupType.Warn);
+    private void ShowDangerDialog() => ShowTypeDialog(UiPopupType.Danger);
+
+    private void ShowTypeDialog(UiPopupType type) => ShowDialog(new(
+        type, $"{type} dialog", "Review this example. Nothing in your creation will change.", "Continue", Succeed));
+
+    private void ShowDeleteDialog() => ShowDialog(new(
+        UiPopupType.Danger, "Delete creation?", "\"Walker\" and its 142 generations of training would be removed permanently. Make a copy first if you want to keep it.",
+        "Hold to delete", Succeed, true));
+
+    private void ShowUnlockDialog() => ShowDialog(new(
+        UiPopupType.Warn, "Unlock creation?", "This example would reset 142 generations of training while keeping the body.",
+        "Hold to unlock", Succeed, true));
+
+    private void ShowLongDialog() => ShowDialog(new(
+        UiPopupType.Default, "Review the details",
+        string.Join("\n\n", Enumerable.Repeat("The content scrolls while the title and actions remain visible. Cancel, Escape or Android Back safely dismisses the dialog.", 6)),
+        "Continue", Succeed));
+
+    private void ShowErrorDialog()
     {
-        _page = new Control();
-        _page.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
-        AddChild(_page);
-        var background = new ColorRect { Color = _tokens.Background, MouseFilter = MouseFilterEnum.Ignore };
-        background.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
-        _page.AddChild(background);
-        var margin = new MarginContainer();
-        margin.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
-        UiLayout.ApplyMargins(margin, _tokens);
-        _page.AddChild(margin);
-        var column = new VBoxContainer();
-        column.AddThemeConstantOverride("separation", (int)_tokens.Space2);
-        margin.AddChild(column);
-        var header = new HBoxContainer();
-        header.AddThemeConstantOverride("separation", (int)_tokens.Space2);
-        column.AddChild(header);
-        var title = Text("Popup Gallery", _tokens.HeadingText);
-        title.AutowrapMode = TextServer.AutowrapMode.Off;
-        header.AddChild(title);
-        header.AddChild(new Control { SizeFlagsHorizontal = SizeFlags.ExpandFill });
-        var themes = new UiSegmentedSwitch
-        {
-            Tokens = _tokens,
-            Options = ["Neon", "Paper", "Effects lite"],
-            SelectedIndex = _tokens == UiTokens.Paper ? 1 : _tokens.EffectsEnabled ? 0 : 2,
-        };
-        themes.SelectionChanged += ChangeTheme;
-        header.AddChild(themes);
-        header.AddChild(Action("Back", Back));
-        column.AddChild(Text("DESIGN PROPOSAL / no real data changes", _tokens.OverlineText, _tokens.Halo));
-        var scroll = new ScrollContainer
-        {
-            SizeFlagsVertical = SizeFlags.ExpandFill,
-            HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled,
-        };
-        column.AddChild(scroll);
-        var body = new VBoxContainer { SizeFlagsHorizontal = SizeFlags.ExpandFill };
-        body.AddThemeConstantOverride("separation", (int)_tokens.Space2);
-        scroll.AddChild(body);
-        body.AddChild(Text("Dialogs / type and hold are independent", _tokens.SubheadingText));
-        var dialogs = Flow();
-        body.AddChild(dialogs);
-        foreach (var type in Enum.GetValues<UiPopupType>())
-        {
-            var current = type;
-            dialogs.AddChild(Action(type.ToString(), () => ShowDialog(new(
-                current, $"{current} dialog", "Review this example. Nothing in your creation will change.", "Continue", Succeed))));
-        }
-        dialogs.AddChild(Action("Hold to delete", () => ShowDialog(new(
-            UiPopupType.Danger, "Delete creation?", "\"Walker\" and its 142 generations of training would be removed permanently. Make a copy first if you want to keep it.", "Hold to delete", Succeed, true))));
-        dialogs.AddChild(Action("Warning + hold", () => ShowDialog(new(
-            UiPopupType.Warn, "Unlock creation?", "This example would reset 142 generations of training while keeping the body.", "Hold to unlock", Succeed, true))));
-        dialogs.AddChild(Action("Long content", () => ShowDialog(new(
-            UiPopupType.Default, "Review the details",
-            string.Join("\n\n", Enumerable.Repeat("The content scrolls while the title and actions remain visible. Cancel, Escape or Android Back safely dismisses the dialog.", 6)), "Continue", Succeed))));
-        dialogs.AddChild(Action("Action error", () =>
-        {
-            var attempts = 0;
-            ShowDialog(new(UiPopupType.Danger, "Try an action",
-                "Both buttons are disabled while the callback runs. The first attempt fails; retry succeeds.",
-                "Hold to try", async () =>
-                {
-                    await Task.Delay(1500);
-                    return ++attempts == 1
-                        ? UiDialogResult.Failure("The example action failed. Nothing changed; retry or cancel.")
-                        : UiDialogResult.Success;
-                }, true));
-        }));
-        dialogs.AddChild(Action("Async action", () => ShowDialog(new(
-            UiPopupType.Default, "Wait for the action", "The callback takes two seconds. Closing and repeated activation are blocked until it finishes.",
-            "Run action", async () => { await Task.Delay(2000); return UiDialogResult.Success; }))));
-        dialogs.AddChild(Action("Close only", () => ShowDialog(new(
-            UiPopupType.Default, "Information", "No action button. Close fills the entire action row.",
-            AbortText: "Close"))));
-        dialogs.AddChild(Action("Default action", () => ShowDialog(new(
-            UiPopupType.Default, "Continue?", "No callback is supplied. OK confirms and closes the dialog.",
-            ActionText: "OK", AbortText: "Not now"))));
-        body.AddChild(Text("Notifications / 5 seconds, click or swipe", _tokens.SubheadingText));
-        var notifications = Flow();
-        body.AddChild(notifications);
-        foreach (var type in Enum.GetValues<UiPopupType>())
-        {
-            var current = type;
-            notifications.AddChild(Action(type.ToString(), () => Enqueue(new(
-                current, $"{current} notification", "No click action. Swipe sideways to dismiss."))));
-        }
-        notifications.AddChild(Action("Click: true", () => Enqueue(new(
-            UiPopupType.Default, "New part unlocked: Spring", "Reached 10 m. Tap to simulate opening Achievements.",
-            () => { SetStatus("Achievements action ran; returned true."); return true; }))));
-        notifications.AddChild(Action("Click: false", () => Enqueue(new(
-            UiPopupType.Warn, "Keep this notification", "Tap runs the action but does not dismiss it.",
-            () => { SetStatus("Action ran; returned false. Expiry is unchanged."); return false; }))));
-        notifications.AddChild(Action("Queue three", () =>
-        {
-            foreach (var type in Enum.GetValues<UiPopupType>())
+        var attempts = 0;
+        ShowDialog(new(UiPopupType.Danger, "Try an action",
+            "Both buttons are disabled while the callback runs. The first attempt fails; retry succeeds.",
+            "Hold to try", async () =>
             {
-                Enqueue(new(type, $"Queued: {type}", "One at a time. Swipe to advance."));
-            }
-        }));
-        _status = Text("Ready. Dialogs block input; notifications do not.", _tokens.NoteText, _tokens.Muted);
-        body.AddChild(_status);
-        UiNativeScroll.AllowGesturesToBubble(body);
+                await Task.Delay(1500);
+                return ++attempts == 1
+                    ? UiDialogResult.Failure("The example action failed. Nothing changed; retry or cancel.")
+                    : UiDialogResult.Success;
+            }, true));
+    }
+
+    private void ShowAsyncDialog() => ShowDialog(new(
+        UiPopupType.Default, "Wait for the action", "The callback takes two seconds. Closing and repeated activation are blocked until it finishes.",
+        "Run action", async () => { await Task.Delay(2000); return UiDialogResult.Success; }));
+
+    private void ShowCloseDialog() => ShowDialog(new(
+        UiPopupType.Default, "Information", "No action button. Close fills the entire action row.", AbortText: "Close"));
+
+    private void ShowOptionalActionDialog() => ShowDialog(new(
+        UiPopupType.Default, "Continue?", "No callback is supplied. OK confirms and closes the dialog.",
+        ActionText: "OK", AbortText: "Not now"));
+
+    private void ShowDefaultNotification() => ShowTypeNotification(UiPopupType.Default);
+    private void ShowWarningNotification() => ShowTypeNotification(UiPopupType.Warn);
+    private void ShowDangerNotification() => ShowTypeNotification(UiPopupType.Danger);
+
+    private void ShowTypeNotification(UiPopupType type) => Enqueue(new(
+        type, $"{type} notification", "No click action. Swipe sideways to dismiss."));
+
+    private void ShowDismissingNotification() => Enqueue(new(
+        UiPopupType.Default, "New part unlocked: Spring", "Reached 10 m. Tap to simulate opening Achievements.",
+        () => { SetStatus("Achievements action ran; returned true."); return true; }));
+
+    private void ShowPersistentNotification() => Enqueue(new(
+        UiPopupType.Warn, "Keep this notification", "Tap runs the action but does not dismiss it.",
+        () => { SetStatus("Action ran; returned false. Expiry is unchanged."); return false; }));
+
+    private void QueueNotifications()
+    {
+        foreach (var type in Enum.GetValues<UiPopupType>())
+            Enqueue(new(type, $"Queued: {type}", "One at a time. Swipe to advance."));
     }
 
     private static Task<UiDialogResult> Succeed() => Task.FromResult(UiDialogResult.Success);
@@ -206,31 +172,40 @@ public partial class PopupGalleryScreen : Control
             return;
         }
         _notifications.Clear();
-        _tokens = index switch { 1 => UiTokens.Paper, 2 => UiTokens.Neon.WithEffects(false), _ => UiTokens.Neon };
+        _tokens = TokensFor(index);
         _dialog.Tokens = _tokens;
         _notifications.Tokens = _tokens;
-        _page.Hide();
-        _page.QueueFree();
-        BuildPage();
-        MoveChild(_page, 0);
+        ApplyTheme();
     }
 
-    private Label Text(string text, UiTokens.TextStyle style, Color? color = null) =>
-        UiPopupStyle.Text(text, style, _tokens, color);
+    private static UiTokens TokensFor(int index) =>
+        index switch { 1 => UiTokens.Paper, 2 => UiTokens.Neon.WithEffects(false), _ => UiTokens.Neon };
 
-    private UiButton Action(string text, Action action)
+    private void ApplyTheme()
     {
-        var button = new UiButton { Tokens = _tokens, LabelText = text, Compact = true };
-        button.Activated += () => action();
-        return button;
+        _background.Color = _tokens.Background;
+        ApplyTokens(GetNode<Control>("MarginContainer"));
+        _status.AddThemeColorOverride("font_color", _tokens.Muted);
+        GetNode<UiLabel>("%Disclaimer").AddThemeColorOverride("font_color", _tokens.Halo);
     }
 
-    private HFlowContainer Flow()
+    private void ApplyTokens(Control control)
     {
-        var flow = new HFlowContainer();
-        flow.AddThemeConstantOverride("h_separation", (int)_tokens.Space2);
-        flow.AddThemeConstantOverride("v_separation", (int)_tokens.Space2);
-        return flow;
+        switch (control)
+        {
+            case UiLabel label:
+                label.Tokens = _tokens;
+                label.AddThemeColorOverride("font_color", _tokens.Ink);
+                return;
+            case UiButton button:
+                button.Tokens = _tokens;
+                return;
+            case UiSegmentedSwitch segmented:
+                segmented.Tokens = _tokens;
+                return;
+        }
+        foreach (var child in control.GetChildren().OfType<Control>())
+            ApplyTokens(child);
     }
 
     private void FitViewport()

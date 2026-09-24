@@ -151,7 +151,7 @@ public partial class SampleFlowScreen : Control
         _modeSwitch = new UiSegmentedSwitch
         {
             Tokens = _tokens,
-            Options = new[] { "Simulate", "Build" },
+            Segments = [new() { Text = "Simulate" }, new() { Text = "Build" }],
             SelectedIndex = _selectedMode,
             CustomMinimumSize = new Vector2(208, _tokens.TouchTarget),
         };
@@ -497,7 +497,7 @@ public partial class SampleFlowScreen : Control
         stack.AddChild(new UiSegmentedSwitch
         {
             Tokens = _tokens,
-            Options = new[] { "Quick", "Standard", "Deep" },
+            Segments = [new() { Text = "Quick" }, new() { Text = "Standard" }, new() { Text = "Deep" }],
             SelectedIndex = 0,
         });
         var done = new UiButton
@@ -656,7 +656,7 @@ public partial class SampleFlowScreen : Control
         var choice = new UiSegmentedSwitch
         {
             Tokens = _tokens,
-            Options = new[] { "Copy brain", "Start fresh" },
+            Segments = [new() { Text = "Copy brain" }, new() { Text = "Start fresh" }],
             SelectedIndex = 0,
         };
         stack.AddChild(choice);

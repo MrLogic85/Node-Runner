@@ -5,6 +5,15 @@ namespace NodeRunner.Ui.Tests;
 public sealed class UiIconsTests
 {
     [Fact]
+    public void NoIcon_IsNotAResourceAndDoesNotRenumberExistingIcons()
+    {
+        ((int)UiIconId.None).ShouldBe(-1);
+        ((int)UiIconId.Back).ShouldBe(0);
+        UiIcons.AllUiIds.ShouldNotContain(UiIconId.None);
+        Should.Throw<ArgumentOutOfRangeException>(() => UiIcons.PathFor(UiIconId.None));
+    }
+
+    [Fact]
     public void EveryTypedIcon_MapsToAnExistingCopiedSvg()
     {
         var projectRoot = Path.Combine(FindRepositoryRoot(), "project");

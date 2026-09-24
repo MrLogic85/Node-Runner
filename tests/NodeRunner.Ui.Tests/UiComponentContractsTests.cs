@@ -6,6 +6,27 @@ namespace NodeRunner.Ui.Tests;
 public sealed class UiComponentContractsTests
 {
     [Fact]
+    public void SegmentedChoices_KeepTextAndIconInOneResource()
+    {
+        typeof(UiSegmentedSwitch).GetProperty(nameof(UiSegmentedSwitch.Segments))!
+            .PropertyType.ShouldBe(typeof(Godot.Collections.Array<UiSegment>));
+        typeof(UiSegmentedSwitch).GetProperty("Options").ShouldBeNull();
+        typeof(UiSegmentedSwitch).GetProperty("Icons").ShouldBeNull();
+        typeof(UiSegmentedSwitch).GetProperty("IconIds").ShouldBeNull();
+        typeof(UiSegment).BaseType.ShouldBe(typeof(Godot.Resource));
+        typeof(UiSegment).GetProperty(nameof(UiSegment.IconId))!
+            .PropertyType.ShouldBe(typeof(UiIconId));
+    }
+
+    [Fact]
+    public void ButtonAvailability_UsesNativeDisabledWithoutAnInverseProperty()
+    {
+        typeof(UiButton).GetProperty("Enabled").ShouldBeNull();
+        typeof(UiButton).GetProperty(nameof(UiButton.Disabled))!
+            .DeclaringType.ShouldBe(typeof(Godot.BaseButton));
+    }
+
+    [Fact]
     public void AllCanonicalComponents_AreMappedToReusableControls()
     {
         var components = UiComponentContracts.AllCanonicalComponents;
@@ -199,7 +220,7 @@ public sealed class UiComponentContractsTests
         Enum.GetNames<UiIconSize>()
             .ShouldBe(["Small", "Standard", "Large", "ExtraLarge"]);
         Enum.GetNames<UiButtonContentLayout>()
-            .ShouldBe(["Row", "Stacked"]);
+            .ShouldBe(["Row", "Stacked", "RowCompact"]);
         Enum.GetNames<UiCard.CardVariant>()
             .ShouldBe(["Frame", "Selected", "Locked", "Warning", "Hint", "Raised"]);
         Enum.GetNames<UiCard.CardSize>()

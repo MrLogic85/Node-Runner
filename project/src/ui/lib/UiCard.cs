@@ -2,6 +2,7 @@ using Godot;
 namespace NodeRunner.Ui.Lib;
 
 /// <summary>Canonical token-backed card/frame surface for the design-system component kit.</summary>
+[Tool]
 public partial class UiCard : PanelContainer
 {
     public enum CardVariant

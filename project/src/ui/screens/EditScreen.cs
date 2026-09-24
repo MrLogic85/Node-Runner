@@ -138,7 +138,7 @@ public partial class EditScreen : Control
                 Tokens = _tokens,
                 LabelText = $"{tool} · Move only · training kept",
                 IconId = UiIconId.Move,
-                Enabled = false,
+                Disabled = true,
                 TooltipText = "Move only · training kept",
             };
             stack.AddChild(locked);
