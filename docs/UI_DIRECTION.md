@@ -125,6 +125,85 @@ Bounds are off by default; `ShowDebugBounds` also supports runtime changes,
 and `ui/component_gallery_debug_bounds` can enable them at startup for a
 debugging export.
 
+The same menu opens **Popup Gallery**, the interactive specimens for reusable
+`UiDialog` and `UiNotification` in `ui/lib`, tracked in
+[issue #281](https://github.com/MrLogic85/Node-Runner/issues/281).
+The gallery consumes the actual components; only its callbacks are demonstrations
+that do not mutate product data. Designer review and rollout to existing product
+overlays (#200) remain separate.
+`ui/popup_gallery=true` starts it directly for a development export.
+When hosted beneath `Main`'s `Node2D`, the gallery explicitly follows the
+viewport size; when hosted beneath a `Control`, it fills its parent via anchors.
+Dialogs support Default/Warn/Danger and independent `HoldToAction` on the
+confirmation button. Default actions use Primary buttons, Warning actions use
+Flat (human decision pending designer review), and Danger actions use Tertiary.
+Cancel and action have exactly equal width and height, expanding evenly across
+the action row with a single token-sized gap, including busy and retry states.
+`ActionText` is optional: null, empty or whitespace omits the action button and
+the abort button fills the entire row. `AbortText` defaults to `"Cancel"` and
+must be nonblank. `Action` is non-nullable with a default implementation returning
+`UiDialogResult.Success`; supplying an action label alone therefore gives a
+working confirmation button. A custom callback may be passed in the constructor
+or set with an object initializer. Omitting the action label means that no
+callback can be triggered, even if one was supplied. Abort always reports
+`Finished(false)`; successful confirmation reports `Finished(true)`.
+`UiDialogSpec.Action` is a `Func<Task<UiDialogResult>>`: success closes, failure
+shows its user-facing error and permits retry. Both buttons are disabled while
+the callback runs; repeated activation, Cancel, Escape, Android Back and window
+close requests cannot dismiss it during that time. Expected failures return
+`UiDialogResult.Failure(message)`; unexpected callback exceptions are logged
+and show a generic failure, never success. Late completions after owner teardown
+do not access freed UI. Outside presses do not dismiss.
+The gallery's Action error callback waits, fails once and then succeeds on retry;
+there is no simulation flag in the component contract.
+Notifications use the same three semantic types and an optional click callback:
+true dismisses, false/no action does not. A horizontal drag follows the finger;
+releasing at least 48 logical pixels sideways slides the card fully offscreen
+in that direction (220ms). A shorter swipe eases back to rest (180ms). Both use
+cubic ease-out. Vertical gestures do not move or dismiss the card, and dragging
+never invokes the click action, even when the pointer returns to its origin.
+They queue one at a time; the next card appears only after the outgoing swipe
+finishes. Cards expire after five seconds of idle display. Expiry pauses during
+gestures/animations, while hidden or unfocused, and when the host sets `Paused`
+for a modal dialog. Modal pause/focus loss cancels unfinished drags to rest and
+pauses a committed exit until resumed. Resize cancels unfinished drags and
+retargets an outgoing animation. Clear/dismiss/teardown cancel pending animation.
+The gallery wires modal pause to `UiDialog.Open`/`Finished`.
+Unexpected notification callback exceptions are logged and surfaced as a Danger
+notification before the remaining queue. Modal input/focus is isolated from the
+gallery. Theme changes clear its notification queue; tokens apply to the next
+opened dialog/notification.
+Placement, timings, swipe threshold and appearance are proposals for the
+designer, not new product-wide rules. All actions are demonstrations only.
+`UiDialog` uses an embedded, borderless `Window` with
+`Transient`/`Exclusive` for modal input isolation and native focus navigation.
+Its transparent viewport covers the gallery for the scrim and unclipped card
+effects. Content uses our `UiCard` and `UiButton`, including hold behavior;
+it does not hide or replace `AcceptDialog`'s built-in buttons. Godot renders it,
+not Android's system dialog. Escape/Android Back and action outcomes are wired
+by the component. `EditorToaster` is editor-only, not a runtime Notification
+component. Both components work outside the gallery. Add them to the scene tree
+before opening; `UiDialog` requires the host viewport's `GuiEmbedSubwindows`.
+It restores `QuitOnGoBack` when closed or removed. The gallery itself can run
+with F6. Moving the authored layout into editor-visible scenes remains separate
+in [issue #282](https://github.com/MrLogic85/Node-Runner/issues/282).
+
+```csharp
+var dialog = new UiDialog { Tokens = tokens };
+AddChild(dialog);
+dialog.Open(new UiDialogSpec(
+    UiPopupType.Warn, "Continue?", "Review the changes.", "Continue",
+    async () => await ApplyChangesAsync(), // Returns UiDialogResult.
+    holdToAction: false));
+dialog.Finished += confirmed => { /* Host reacts to completion or cancellation. */ };
+
+var notifications = new UiNotification { Tokens = tokens };
+AddChild(notifications);
+notifications.Enqueue(new UiNotificationSpec(
+    UiPopupType.Default, "Saved", "Your changes are saved.",
+    OnClick: () => false));
+```
+
 Parts tray tabs use persistent native toggle buttons in a `ButtonGroup`,
 with the reference's part glyphs and accent-soft selected treatment, not a
 solid accent fill. Each native target is at least 48px wide and high; the

@@ -366,6 +366,7 @@ public sealed partial class UiButton : Button
 
         var content = _style.Resolve(Tokens).Content;
         AddThemeColorOverride("font_color", content);
+        AddThemeColorOverride("font_focus_color", content);
         AddThemeColorOverride("font_hover_color", content);
         AddThemeColorOverride("font_pressed_color", content);
         AddThemeColorOverride("font_disabled_color", UiTokens.MultiplyAlpha(content, _disabledOpacity));

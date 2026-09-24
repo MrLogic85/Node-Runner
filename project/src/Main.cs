@@ -128,6 +128,18 @@ public partial class Main : Node2D
 
     public override void _Ready()
     {
+        if (ProjectSettings.GetSetting("ui/popup_gallery", false).AsBool())
+        {
+            var gallery = GD.Load<PackedScene>("res://scenes/ui/PopupGalleryScreen.tscn").Instantiate<PopupGalleryScreen>();
+            gallery.CloseRequested += () =>
+            {
+                gallery.QueueFree();
+                AddChild(GD.Load<PackedScene>("res://scenes/ui/ComponentGalleryScreen.tscn").Instantiate<ComponentGalleryScreen>());
+            };
+            AddChild(gallery);
+            return;
+        }
+
         if (ProjectSettings.GetSetting("ui/component_gallery", false).AsBool())
         {
             var gallery = GD.Load<PackedScene>("res://scenes/ui/ComponentGalleryScreen.tscn").Instantiate<ComponentGalleryScreen>();
