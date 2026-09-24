@@ -120,10 +120,9 @@ public partial class UiPanelHeader : HBoxContainer
             {
                 Tokens = _tokens,
                 Style = UiButtonStyle.Flat,
-                ContentLayout = UiButtonContentLayout.Row,
-                Compact = true,
+                ContentLayout = UiButtonContentLayout.RowCompact,
                 IconId = action.IconId,
-                Enabled = action.State is not UiComponentContracts.SemanticState.Disabled and not UiComponentContracts.SemanticState.Locked,
+                Disabled = action.State is UiComponentContracts.SemanticState.Disabled or UiComponentContracts.SemanticState.Locked,
                 TooltipText = string.IsNullOrWhiteSpace(action.AccessibleLabel) ? action.Id : action.AccessibleLabel,
                 MouseFilter = MouseFilterEnum.Pass,
             };

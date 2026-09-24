@@ -6,6 +6,7 @@ namespace NodeRunner.Ui.Lib;
 /// <summary>Canonical UI glyphs. Their SVG sources are white and receive colour from their parent control.</summary>
 public enum UiIconId
 {
+    None = -1,
     Back, Beam, Bolt, Build, Chart, Check, ChevronDown, ChevronRight, Copy, Core, Edit, Flag, Gear,
     Height, Joint, Lock, Map, Menu, Model, More, Move, Mute, Pause, Phone, Play, Plus, Restart, Rotate,
     Scale, Select, Shadow, Sound, Speed, Stop, Trash, Trophy, Unlock, Warn, Close, Eye,
@@ -37,7 +38,8 @@ public static class UiIcons
     private static readonly Dictionary<(string Path, int PixelSize), Texture2D> _textures = [];
     private static float _cachedUiScale = float.NaN;
 
-    public static IReadOnlyList<UiIconId> AllUiIds { get; } = Enum.GetValues<UiIconId>();
+    public static IReadOnlyList<UiIconId> AllUiIds { get; } = Enum.GetValues<UiIconId>()
+        .Where(icon => icon != UiIconId.None).ToArray();
     public static IReadOnlyList<UiPartIconId> AllPartIds { get; } = Enum.GetValues<UiPartIconId>();
 
     public static int Pixels(UiIconSize size) => size switch

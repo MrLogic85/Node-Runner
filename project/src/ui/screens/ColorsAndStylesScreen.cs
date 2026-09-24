@@ -144,7 +144,7 @@ public partial class ColorsAndStylesScreen : Control
 
         var switcher = Track(new UiSegmentedSwitch
         {
-            Options = ["Neon", "Paper"],
+            Segments = [new() { Text = "Neon" }, new() { Text = "Paper" }],
             SelectedIndex = 0,
             SizeFlagsVertical = SizeFlags.ShrinkCenter,
         });

@@ -117,9 +117,9 @@ public sealed class UiButtonStyleTests
         });
 
         metrics.TouchTarget.ShouldBe(96);
-        metrics.MinimumSize(UiButtonContentLayout.Row, true).ShouldBe(new Vector2(64, 64));
-        metrics.MinimumSize(UiButtonContentLayout.Row, false).ShouldBe(new Vector2(80, 80));
-        metrics.MinimumSize(UiButtonContentLayout.Stacked, true).ShouldBe(new Vector2(96, 96));
+        metrics.MinimumSize(UiButtonContentLayout.RowCompact).ShouldBe(new Vector2(64, 64));
+        metrics.MinimumSize(UiButtonContentLayout.Row).ShouldBe(new Vector2(80, 80));
+        metrics.MinimumSize(UiButtonContentLayout.Stacked).ShouldBe(new Vector2(96, 96));
         metrics.BadgeMinimumSize.ShouldBe(32);
         metrics.BadgeOffset.ShouldBe(8);
         metrics.SelectedStroke.ShouldBe(4);
@@ -130,24 +130,23 @@ public sealed class UiButtonStyleTests
     {
         var metrics = UiButtonMetrics.From(UiTokens.Neon);
 
-        metrics.BadgePosition(metrics.MinimumSize(UiButtonContentLayout.Row, true))
+        metrics.BadgePosition(metrics.MinimumSize(UiButtonContentLayout.RowCompact))
             .ShouldBe(new Vector2(20, -4));
-        metrics.BadgePosition(metrics.MinimumSize(UiButtonContentLayout.Row, false))
+        metrics.BadgePosition(metrics.MinimumSize(UiButtonContentLayout.Row))
             .ShouldBe(new Vector2(28, -4));
-        metrics.BadgePosition(metrics.MinimumSize(UiButtonContentLayout.Stacked, false))
+        metrics.BadgePosition(metrics.MinimumSize(UiButtonContentLayout.Stacked))
             .ShouldBe(new Vector2(36, -4));
         metrics.BadgePosition(new Vector2(120, 40))
             .ShouldBe(new Vector2(108, -4));
     }
 
     [Theory]
-    [InlineData(UiButtonContentLayout.Row, false, 40)]
-    [InlineData(UiButtonContentLayout.Row, true, 32)]
-    [InlineData(UiButtonContentLayout.Stacked, false, 48)]
-    [InlineData(UiButtonContentLayout.Stacked, true, 48)]
-    public void Metrics_KeepCompactAsARowSizeModifier(UiButtonContentLayout layout, bool compact, float expected)
+    [InlineData(UiButtonContentLayout.Row, 40)]
+    [InlineData(UiButtonContentLayout.RowCompact, 32)]
+    [InlineData(UiButtonContentLayout.Stacked, 48)]
+    public void Metrics_LayoutDeterminesSize(UiButtonContentLayout layout, float expected)
     {
-        UiButtonMetrics.From(UiTokens.Neon).MinimumSize(layout, compact)
+        UiButtonMetrics.From(UiTokens.Neon).MinimumSize(layout)
             .ShouldBe(new Vector2(expected, expected));
     }
 
@@ -155,6 +154,7 @@ public sealed class UiButtonStyleTests
     public void Metrics_OnlyLayoutDeterminesIconSize()
     {
         UiButtonMetrics.IconSize(UiButtonContentLayout.Row).ShouldBe(UiIconSize.Standard);
+        UiButtonMetrics.IconSize(UiButtonContentLayout.RowCompact).ShouldBe(UiIconSize.Standard);
         UiButtonMetrics.IconSize(UiButtonContentLayout.Stacked).ShouldBe(UiIconSize.Large);
     }
 
@@ -209,18 +209,16 @@ public sealed class UiButtonStyleTests
         foreach (var layout in new[]
                  {
                      UiButtonContentLayout.Row,
+                     UiButtonContentLayout.RowCompact,
                      UiButtonContentLayout.Stacked,
                  })
         {
-            foreach (var compact in new[] { false, true })
-            {
-                var frame = new Rect2(Vector2.Zero, metrics.MinimumSize(layout, compact));
+            var frame = new Rect2(Vector2.Zero, metrics.MinimumSize(layout));
 
-                UiButtonMetrics.ProgressLayout(frame, 0.5f)
-                    .Fill
-                    .Size
-                    .ShouldBe(frame.Size);
-            }
+            UiButtonMetrics.ProgressLayout(frame, 0.5f)
+                .Fill
+                .Size
+                .ShouldBe(frame.Size);
         }
     }
 }

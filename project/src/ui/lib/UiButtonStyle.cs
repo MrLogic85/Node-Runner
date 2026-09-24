@@ -14,8 +14,10 @@ public enum UiButtonKind
 /// <summary>Visual layouts supported by the canonical reusable button.</summary>
 public enum UiButtonContentLayout
 {
-    Row,
-    Stacked,
+    // Keep existing scene values stable when adding the compact row option.
+    Row = 0,
+    RowCompact = 2,
+    Stacked = 1,
 }
 
 /// <summary>
@@ -125,22 +127,23 @@ public readonly record struct UiButtonMetrics(
         tokens.BadgeOffset,
         tokens.ButtonSelectedStroke);
 
-    public float ControlSize(UiButtonContentLayout layout, bool compact) => layout switch
+    public float ControlSize(UiButtonContentLayout layout) => layout switch
     {
-        UiButtonContentLayout.Row => compact ? CompactControlSize : StandardControlSize,
+        UiButtonContentLayout.Row => StandardControlSize,
+        UiButtonContentLayout.RowCompact => CompactControlSize,
         UiButtonContentLayout.Stacked => TouchTarget,
         _ => throw new ArgumentOutOfRangeException(nameof(layout), layout, null),
     };
 
-    public Vector2 MinimumSize(UiButtonContentLayout layout, bool compact)
+    public Vector2 MinimumSize(UiButtonContentLayout layout)
     {
-        var size = ControlSize(layout, compact);
+        var size = ControlSize(layout);
         return new Vector2(size, size);
     }
 
     public static UiIconSize IconSize(UiButtonContentLayout layout) => layout switch
     {
-        UiButtonContentLayout.Row => UiIconSize.Standard,
+        UiButtonContentLayout.Row or UiButtonContentLayout.RowCompact => UiIconSize.Standard,
         UiButtonContentLayout.Stacked => UiIconSize.Large,
         _ => throw new ArgumentOutOfRangeException(nameof(layout), layout, null),
     };

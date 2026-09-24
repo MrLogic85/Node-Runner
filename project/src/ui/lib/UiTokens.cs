@@ -270,20 +270,8 @@ public sealed class UiTokens
     public void ApplyTextStyle(Control control, TextStyle style)
     {
         control.AddThemeFontSizeOverride("font_size", (int)style.FontSize);
-        if (TryLoadFont(style, out var font))
+        if (CreateTextFont(style) is { } font)
         {
-            var adjustment = style.LineHeight - font.GetHeight((int)style.FontSize);
-            var spacingTop = (int)Math.Floor(adjustment / 2);
-            font = new FontVariation
-            {
-                BaseFont = font,
-                SpacingTop = spacingTop,
-                SpacingBottom = (int)Math.Round(adjustment) - spacingTop,
-                SpacingGlyph = style.LetterSpacing > 0
-                    ? Math.Max(1, (int)Math.Round(style.FontSize * style.LetterSpacing))
-                    : 0,
-            };
-
             control.AddThemeFontOverride("font", font);
         }
 
@@ -312,10 +300,25 @@ public sealed class UiTokens
         }
     }
 
-    private static bool TryLoadFont(TextStyle style, out Font font)
+    public static FontVariation? CreateTextFont(TextStyle style)
     {
-        font = GD.Load<Font>(FontPathFor(style));
-        return font is not null;
+        var font = GD.Load<Font>(FontPathFor(style));
+        if (font is null)
+        {
+            GD.PushError($"Could not load typography font: {FontPathFor(style)}");
+            return null;
+        }
+        var adjustment = style.LineHeight - font.GetHeight((int)style.FontSize);
+        var spacingTop = (int)Math.Floor(adjustment / 2);
+        return new FontVariation
+        {
+            BaseFont = font,
+            SpacingTop = spacingTop,
+            SpacingBottom = (int)Math.Round(adjustment) - spacingTop,
+            SpacingGlyph = style.LetterSpacing > 0
+                ? Math.Max(1, (int)Math.Round(style.FontSize * style.LetterSpacing))
+                : 0,
+        };
     }
 
     public static string FontPathFor(TextStyle style) =>

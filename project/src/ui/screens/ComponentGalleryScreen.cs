@@ -93,7 +93,6 @@ public partial class ComponentGalleryScreen : Control
         UiIconId? Icon = null,
         bool Selected = false,
         bool Enabled = true,
-        bool Compact = false,
         bool Hold = false,
         string? BadgeText = null,
         bool ToggleOnActivate = false)
@@ -110,10 +109,10 @@ public partial class ComponentGalleryScreen : Control
         new(UiButtonKind.Tertiary, UiButtonContentLayout.Row, _rowInteractiveTitle, "Delete", UiIconId.Trash, Enabled: false),
         new(UiButtonKind.Flat, UiButtonContentLayout.Row, _rowInteractiveTitle, "Skip"),
         new(UiButtonKind.Flat, UiButtonContentLayout.Row, _rowInteractiveTitle, "Skip", Selected: true, ToggleOnActivate: true),
-        new(UiButtonKind.Secondary, UiButtonContentLayout.Row, _rowInteractiveTitle, "Cancel", Compact: true),
-        new(UiButtonKind.Primary, UiButtonContentLayout.Row, _rowInteractiveTitle, "Start", UiIconId.Play, Compact: true),
-        new(UiButtonKind.Tertiary, UiButtonContentLayout.Row, _rowInteractiveTitle, "Delete", UiIconId.Trash, Compact: true),
-        new(UiButtonKind.Flat, UiButtonContentLayout.Row, _rowInteractiveTitle, "Skip", Compact: true),
+        new(UiButtonKind.Secondary, UiButtonContentLayout.RowCompact, _rowInteractiveTitle, "Cancel"),
+        new(UiButtonKind.Primary, UiButtonContentLayout.RowCompact, _rowInteractiveTitle, "Start", UiIconId.Play),
+        new(UiButtonKind.Tertiary, UiButtonContentLayout.RowCompact, _rowInteractiveTitle, "Delete", UiIconId.Trash),
+        new(UiButtonKind.Flat, UiButtonContentLayout.RowCompact, _rowInteractiveTitle, "Skip"),
         new(UiButtonKind.Secondary, UiButtonContentLayout.Row, _rowInteractiveTitle, "Creations", UiIconId.Model, BadgeText: "3"),
         new(UiButtonKind.Primary, UiButtonContentLayout.Row, _rowInteractiveTitle, "Hold to start training", Selected: true, Hold: true),
         new(UiButtonKind.Secondary, UiButtonContentLayout.Row, _iconStandardTitle, string.Empty, UiIconId.Back),
@@ -121,11 +120,11 @@ public partial class ComponentGalleryScreen : Control
         new(UiButtonKind.Primary, UiButtonContentLayout.Row, _iconStandardTitle, string.Empty, UiIconId.Gear),
         new(UiButtonKind.Tertiary, UiButtonContentLayout.Row, _iconStandardTitle, string.Empty, UiIconId.Trash, Enabled: false),
         new(UiButtonKind.Flat, UiButtonContentLayout.Row, _iconStandardTitle, string.Empty, UiIconId.More),
-        new(UiButtonKind.Secondary, UiButtonContentLayout.Row, _iconStandardTitle, string.Empty, UiIconId.Back, Compact: true),
-        new(UiButtonKind.Primary, UiButtonContentLayout.Row, _iconStandardTitle, string.Empty, UiIconId.Gear, Compact: true),
-        new(UiButtonKind.Tertiary, UiButtonContentLayout.Row, _iconStandardTitle, string.Empty, UiIconId.Trash, Compact: true),
-        new(UiButtonKind.Flat, UiButtonContentLayout.Row, _iconStandardTitle, string.Empty, UiIconId.More, Compact: true),
-        new(UiButtonKind.Secondary, UiButtonContentLayout.Row, _iconStandardTitle, string.Empty, UiIconId.Model, Compact: true, BadgeText: "3"),
+        new(UiButtonKind.Secondary, UiButtonContentLayout.RowCompact, _iconStandardTitle, string.Empty, UiIconId.Back),
+        new(UiButtonKind.Primary, UiButtonContentLayout.RowCompact, _iconStandardTitle, string.Empty, UiIconId.Gear),
+        new(UiButtonKind.Tertiary, UiButtonContentLayout.RowCompact, _iconStandardTitle, string.Empty, UiIconId.Trash),
+        new(UiButtonKind.Flat, UiButtonContentLayout.RowCompact, _iconStandardTitle, string.Empty, UiIconId.More),
+        new(UiButtonKind.Secondary, UiButtonContentLayout.RowCompact, _iconStandardTitle, string.Empty, UiIconId.Model, BadgeText: "3"),
         new(UiButtonKind.Primary, UiButtonContentLayout.Row, _iconHoldTitle, string.Empty, UiIconId.Play, Hold: true),
         new(UiButtonKind.Tertiary, UiButtonContentLayout.Row, _iconHoldTitle, string.Empty, UiIconId.Trash, Hold: true),
         new(UiButtonKind.Secondary, UiButtonContentLayout.Row, _iconBadgeTitle, string.Empty, UiIconId.Model, BadgeText: "3"),
@@ -356,7 +355,7 @@ public partial class ComponentGalleryScreen : Control
 
         var switcher = Track(new UiSegmentedSwitch
         {
-            Options = new[] { "Neon", "Paper", "Effects lite" },
+            Segments = [new() { Text = "Neon" }, new() { Text = "Paper" }, new() { Text = "Effects lite" }],
             SelectedIndex = 0,
             SizeFlagsVertical = SizeFlags.ShrinkCenter,
         });
@@ -538,7 +537,6 @@ public partial class ComponentGalleryScreen : Control
             spec.Layout,
             selected: spec.Selected,
             enabled: spec.Enabled,
-            compact: spec.Compact,
             hold: spec.Hold,
             badge: spec.BadgeText,
             toggleOnActivate: spec.ToggleOnActivate);
@@ -561,10 +559,10 @@ public partial class ComponentGalleryScreen : Control
         var flow = CreateFlow();
         foreach (var button in buttons)
         {
-            var state = button.Enabled
-                ? button.HoldDurationSeconds > 0
+            var state = !button.Disabled
+                ? button.HoldToActivate
                     ? "hold"
-                    : button.On ? "selected" : "normal"
+                    : button.Selected ? "selected" : "normal"
                 : "disabled";
             flow.AddChild(CreateStackedButtonSpecimen(button, state));
         }
@@ -579,7 +577,6 @@ public partial class ComponentGalleryScreen : Control
         UiButtonContentLayout layout = UiButtonContentLayout.Row,
         bool selected = false,
         bool enabled = true,
-        bool compact = false,
         bool hold = false,
         string? badge = null,
         bool toggleOnActivate = false)
@@ -588,19 +585,18 @@ public partial class ComponentGalleryScreen : Control
         {
             Kind = kind,
             LabelText = label,
-            IconId = icon,
+            IconId = icon ?? UiIconId.None,
             ContentLayout = layout,
-            On = selected,
-            Enabled = enabled,
-            Compact = compact,
+            Selected = selected,
+            Disabled = !enabled,
             HoldDurationSeconds = hold ? UiComponentContracts.HoldCompletionSeconds : 0,
-            Progress = hold ? 0.45f : -1,
+            HoldToActivate = hold,
             BadgeText = badge ?? string.Empty,
             TooltipText = string.IsNullOrEmpty(label) ? icon?.ToString() ?? string.Empty : string.Empty,
         });
         if (toggleOnActivate)
         {
-            button.Activated += () => button.On = !button.On;
+            button.Activated += () => button.Selected = !button.Selected;
         }
 
         return button;
@@ -630,20 +626,19 @@ public partial class ComponentGalleryScreen : Control
         var examples = CreateFlow();
         examples.AddChild(Track(new UiSegmentedSwitch
         {
-            Options = new[] { "Train", "Simulate" },
-            IconIds = new[] { UiIconId.Play, UiIconId.Eye },
-            FullWidth = false,
+            Segments = [new() { Text = "Train", IconId = UiIconId.Play }, new() { Text = "Simulate", IconId = UiIconId.Eye }],
+            MatchWidth = false,
         }));
         examples.AddChild(Track(new UiSegmentedSwitch
         {
-            Options = new[] { "1", "2", "3" },
+            Segments = [new() { Text = "1" }, new() { Text = "2" }, new() { Text = "3" }],
             SelectedIndex = 1,
-            FullWidth = false,
+            MatchWidth = false,
         }));
         examples.AddChild(Track(new UiSegmentedSwitch
         {
-            Options = new[] { "Distance", "Speed", "Elevation" },
-            FullWidth = false,
+            Segments = [new() { Text = "Distance" }, new() { Text = "Speed" }, new() { Text = "Elevation" }],
+            MatchWidth = false,
         }));
         content.AddChild(examples);
 

@@ -63,13 +63,44 @@ not completed host wiring. Theme/scale propagation is tracked in
 For buttons, the Component Library's **Buttons** paragraph defines the four
 current kinds. Older reference summaries still call `secondary` "default"
 and `tertiary` "danger"; `on` and `off` are states, not kinds.
+`UiButton.Selected` exposes that selected state in C# and the Inspector.
+Native `Disabled` is the sole availability setting; UiButton has no inverse
+`Enabled` property. Disabling cancels a hold and dims the custom stack/progress
+content as well as the native button visuals.
+All button text, including the neuron stepper's plus/minus signs, uses
+`LabelText` with the layout's normal typography and padding.
+Inherited `Text` and `Icon` remain visible but read-only in the Inspector.
+Their generated values are not saved; author `LabelText` and `IconId` instead.
+Native `Flat` is hidden in the Inspector; use `Kind = Flat` for the canonical style.
+`Kind` defaults to `Secondary`, including the Inspector's Reset action.
+`UiSegmentedSwitch` is also available through Add Node with an editor preview.
+Edit `Segments`, `SelectedIndex`, and `MatchWidth` in the Inspector. Each
+`Segments` entry is a `UiSegment` resource: expand it and edit
+`Text` and the `IconId` dropdown (`None` means no icon). Resource edits update
+the preview directly. New or cleared resource slots are automatically populated
+with independent resources (numbered text, `IconId = None`); remove an array
+entry to delete a segment. Generated buttons are internal children recovered
+after C# assembly reloads. Adding an extra child to a ready switch emits a warning
+in Output, not a persistent configuration warning; that child is never restyled
+or removed by segment updates. The former parallel `Options`, `Icons`, and `IconIds`
+arrays are removed; locally authored switches must move those values into
+segment resources.
 Hold-to-activate is available across kinds and layouts, not only destructive
-buttons. Under the human-approved simplification in
+buttons. `HoldToActivate` enables it; `HoldDurationSeconds` only sets the
+duration. A new button uses an ordinary click even though the configured hold
+duration defaults to 0.8 seconds. Under the human-approved simplification in
 [issue #275](https://github.com/MrLogic85/Node-Runner/issues/275), buttons have
 no invisible touch margin: visible and clickable bounds are the same.
-`UiButton` is the only button class. `Row` uses 40px height/minimum width,
-or 32px with `Compact`; `Stacked` uses exactly 48x48px and ignores `Compact`.
+`UiButton` is the only button class. In the editor-authoring follow-up, the
+human requested one `Content Layout` choice: `Row` (40px height/minimum width),
+`RowCompact` (32px), or `Stacked` (48x48px). The separate `Compact` boolean is
+removed; both row options share rendering and differ only in size.
 These sizes come from `ControlHeight`, `ControlSmall`, and `TouchTarget`.
+Add UiButton directly via Add Node. Its exported `Icon Id` selects a canonical
+icon or `None`; no nullable/icon-only wrapper is needed. Existing serialized
+Row/Stacked enum values remain stable. C# callers use `UiIconId.None` instead
+of null. Any locally authored, unsaved old `Compact` setting must be replaced
+by selecting `RowCompact`; reopen scenes after rebuilding to refresh Inspector.
 Row icons are 16px with or without text, including compact; stacked icons are
 20px with or without text. Textless row buttons need no separate icon layout.
 Inspector close uses the shared flat compact row button. Toolbar icon actions
@@ -185,8 +216,72 @@ by the component. `EditorToaster` is editor-only, not a runtime Notification
 component. Both components work outside the gallery. Add them to the scene tree
 before opening; `UiDialog` requires the host viewport's `GuiEmbedSubwindows`.
 It restores `QuitOnGoBack` when closed or removed. The gallery itself can run
-with F6. Moving the authored layout into editor-visible scenes remains separate
-in [issue #282](https://github.com/MrLogic85/Node-Runner/issues/282).
+with F6. Editor authoring is being introduced in
+[issue #282](https://github.com/MrLogic85/Node-Runner/issues/282). Dialog content
+and Popup Gallery are scene-authored; notification content authoring remains.
+
+Open `project/scenes/ui/PopupGalleryScreen.tscn` to edit the actual gallery.
+The header keeps a horizontally scrolling, right-aligned theme selector.
+Below it, a vertical ScrollContainer holds dialog and notification specimens
+in wrapping HFlowContainers plus a status label. Labels, order, spacing, and
+layout live in the scene; its signal connections bind each button to the demo
+callbacks in `PopupGalleryScreen.cs`. Keep the unique `Background`,
+`UiSegmentedSwitch`, `Disclaimer`, and `Status` names and the root
+`MarginContainer` binding. Theme changes update existing controls instead of
+rebuilding the page, preserving authored layout and scroll position.
+Gallery launcher buttons use ordinary clicks; hold requirements belong to the
+dialogs they open. F6 exercises the same scene that the Component Gallery opens.
+
+#### Editing a dialog in Godot
+
+For new scene-authored text, add **UiLabel** from Godot's Add Node dialog.
+Its **Text Style** dropdown selects one of the 17 canonical `UiTokens` text
+styles. `[Tool]` updates typography in the editor; native Label still owns
+text, wrapping, alignment, sizing and rendering. The derived Theme,
+auto-font-sizing, uppercase and LabelSettings Inspector fields are hidden;
+their values are controlled by the preset rather than serialized per node.
+Uppercase is display-only and never changes the authored Text. Color and
+layout remain normal Label properties; this is not global theme propagation.
+Code may supply `Tokens`, while style values remain defined only in `UiTokens`.
+The label derives a private typography-only Theme; colors still inherit normally.
+Godot's dynamic font/font-size/line-spacing overrides remain visible by human
+decision; no Inspector plugin is needed. Manual overrides can take effect until
+the preset is reapplied (Text Style or Tokens changes, or scene load/reentry),
+at which point UiLabel clears those overrides. Use Text Style for durable
+typography choices, not those transient overrides.
+This is an authoring API, not a restriction on what arbitrary C# can change.
+Existing Labels are not automatically migrated.
+
+Open `project/scenes/ui/UiDialogContent.tscn` in the 2D editor. This is the
+actual scene instantiated by `UiDialog`, not a separate mock. Build the C#
+project once after script changes so Godot can run its editor previews.
+
+- `Card/Column/Heading/Titles/Title` and `Card/Column/BodyScroll/Content`:
+  edit the Label's Text for the standalone specimen.
+- `Card/Column/Actions/Cancel` and `Confirm`: edit **Label Text** (the UiButton
+  export), not the inherited Button Text. Toggle Confirm's Visible for a
+  one-button specimen; the abort button fills the row.
+- `Card`: edit Custom Minimum Size X for the desired card width. Containers
+  own child placement; `Column` and `Actions` expose separation under Theme
+  Overrides / Constants. The view keeps the card centered, constrains long
+  content to the viewport and keeps the action buttons equal.
+- Root `Type` and `Theme Preview`: preview semantic type and Neon/Paper/
+  Effects Lite. Typography and semantic colors still come from shared tokens.
+  Previewing an error is possible by showing the named `Error` Label.
+
+F6 on this content scene shows the standalone visual specimen; it has no
+action callbacks or modal host. Use F6 on `PopupGalleryScreen.tscn` to exercise
+the real modal, including hold, busy, retry and dismissal. Runtime
+`UiDialogSpec` supplies title/content/button labels, type and hold state;
+those values intentionally replace specimen text, while the authored node
+hierarchy, spacing and card width remain the shared runtime layout.
+
+Keep the named `%` nodes (unique names) when rearranging containers; these
+are the view's binding points. Button/card editor previews run via `[Tool]`;
+button internals are generated without scene ownership and must not be
+copied into the authored scene. Editor previews never emit action callbacks.
+No external installation is required. While pairing, avoid editing
+the same scene file simultaneously and save before handing it over.
 
 ```csharp
 var dialog = new UiDialog { Tokens = tokens };
