@@ -415,6 +415,17 @@ public partial class ComponentGalleryScreen : Control
             }
 
             CloseToolbarMenu();
+            if (actionId == "popup-gallery")
+            {
+                var gallery = GD.Load<PackedScene>("res://scenes/ui/PopupGalleryScreen.tscn").Instantiate<PopupGalleryScreen>();
+                gallery.CloseRequested += () =>
+                {
+                    gallery.QueueFree();
+                    Show();
+                };
+                GetParent().AddChild(gallery);
+                Hide();
+            }
         };
         _toolbarMenu.Resized += PositionToolbarMenu;
         AddChild(_toolbarMenu);
@@ -435,7 +446,8 @@ public partial class ComponentGalleryScreen : Control
             "Debug bounds",
             State: ShowDebugBounds
                 ? UiComponentContracts.SemanticState.Selected
-                : UiComponentContracts.SemanticState.Neutral));
+                : UiComponentContracts.SemanticState.Neutral),
+            new UiOverflowMenu.MenuAction("popup-gallery", "Popup Gallery", UiIconId.Model));
     }
 
     private void ToggleToolbarMenu()
