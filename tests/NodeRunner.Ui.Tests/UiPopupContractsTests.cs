@@ -27,6 +27,7 @@ public sealed class UiPopupContractsTests
     {
         var spec = new UiNotificationSpec(UiPopupType.Default, "Title", "Message");
 
+        spec.Icon.ShouldBeNull();
         (spec.OnClick?.Invoke() ?? false).ShouldBeFalse();
         (spec with { OnClick = () => true }).OnClick!().ShouldBeTrue();
     }

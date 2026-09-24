@@ -46,4 +46,5 @@ public sealed record UiDialogResult
 }
 
 public sealed record UiNotificationSpec(
-    UiPopupType Type, string Title, string Message, Func<bool>? OnClick = null);
+    UiPopupType Type, string Title, string Message, Func<bool>? OnClick = null,
+    UiNotificationIcon? Icon = null);
