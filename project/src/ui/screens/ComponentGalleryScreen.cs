@@ -27,6 +27,28 @@ public partial class ComponentGalleryScreen : Control
     [Export]
     public bool ShowCloseAction { get; set; }
 
+    [Export]
+    public bool ShowDebugBounds
+    {
+        get => _showDebugBounds;
+        set
+        {
+            _showDebugBounds = value;
+            if (_boundsOverlay is not null)
+            {
+                _boundsOverlay.Visible = value;
+                _boundsOverlay.SetProcess(value);
+            }
+
+            RefreshToolbarMenu();
+        }
+    }
+
+    private bool _showDebugBounds;
+    private UiBoundsDebugOverlay? _boundsOverlay;
+    private UiButton? _toolbarMore;
+    private UiOverflowMenu? _toolbarMenu;
+    private Button? _toolbarDismiss;
     private readonly List<Action<UiTokens>> _tokenAppliers = new();
     private readonly List<Action<UiTokens>> _labelAppliers = new();
     private UiTokens _tokens = UiTokens.Neon;
@@ -41,6 +63,7 @@ public partial class ComponentGalleryScreen : Control
     public enum GallerySection
     {
         Actions,
+        TextInput,
         Choices,
         Segmented,
         PartsTrayTabs,
@@ -52,7 +75,8 @@ public partial class ComponentGalleryScreen : Control
         OverflowMenu,
         Picker,
         PartRows,
-        TextInput,
+        Panel,
+        StageCard,
     }
 
     /// <summary>
@@ -124,20 +148,22 @@ public partial class ComponentGalleryScreen : Control
         new(UiComponentContracts.CanonicalComponent.Button, "Actions"),
         new(UiComponentContracts.CanonicalComponent.IconButton, "Actions"),
         new(UiComponentContracts.CanonicalComponent.HoldButton, "Actions"),
+        new(UiComponentContracts.CanonicalComponent.TextField, "Text input"),
+        new(UiComponentContracts.CanonicalComponent.NameField, "Text input"),
+        new(UiComponentContracts.CanonicalComponent.Note, "Panel"),
         new(UiComponentContracts.CanonicalComponent.Slider, "Slider and range"),
         new(UiComponentContracts.CanonicalComponent.Range, "Slider and range"),
         new(UiComponentContracts.CanonicalComponent.ProgressBar, "Slider and range"),
         new(UiComponentContracts.CanonicalComponent.ProgressRing, "Progress"),
         new(UiComponentContracts.CanonicalComponent.Card, "Cards"),
-        new(UiComponentContracts.CanonicalComponent.Panel, "Cards"),
         new(UiComponentContracts.CanonicalComponent.Toggle, "Choices and tray rows"),
         new(UiComponentContracts.CanonicalComponent.Checkbox, "Choices and tray rows"),
         new(UiComponentContracts.CanonicalComponent.Segmented, "Segmented"),
         new(UiComponentContracts.CanonicalComponent.Picker, "Choices and tray rows"),
         new(UiComponentContracts.CanonicalComponent.PartRow, "Part rows"),
+        new(UiComponentContracts.CanonicalComponent.Panel, "Panel"),
+        new(UiComponentContracts.CanonicalComponent.StageCard, "Stage card"),
         new(UiComponentContracts.CanonicalComponent.OverflowMenu, "Overflow menu"),
-        new(UiComponentContracts.CanonicalComponent.TextField, "Text input"),
-        new(UiComponentContracts.CanonicalComponent.NameField, "Text input"),
         new(UiComponentContracts.CanonicalComponent.IconTabs, "Parts tray tabs"),
         new(UiComponentContracts.CanonicalComponent.SelectionHandle, "Selection handles"),
         new(UiComponentContracts.CanonicalComponent.Number, "Number"),
@@ -146,6 +172,7 @@ public partial class ComponentGalleryScreen : Control
     public static IReadOnlyList<GallerySection> RenderedSectionOrder { get; } =
     [
         GallerySection.Actions,
+        GallerySection.TextInput,
         GallerySection.Choices,
         GallerySection.Segmented,
         GallerySection.PartsTrayTabs,
@@ -157,7 +184,8 @@ public partial class ComponentGalleryScreen : Control
         GallerySection.OverflowMenu,
         GallerySection.Picker,
         GallerySection.PartRows,
-        GallerySection.TextInput,
+        GallerySection.Panel,
+        GallerySection.StageCard,
     ];
 
     public override void _Ready()
@@ -212,10 +240,10 @@ public partial class ComponentGalleryScreen : Control
         {
             SizeFlagsHorizontal = SizeFlags.ExpandFill,
         };
-        contentFrame.AddThemeConstantOverride("margin_left", UiGlow.ButtonExtent);
-        contentFrame.AddThemeConstantOverride("margin_top", UiGlow.ButtonExtent);
-        contentFrame.AddThemeConstantOverride("margin_right", UiGlow.ButtonExtent);
-        contentFrame.AddThemeConstantOverride("margin_bottom", UiGlow.ButtonExtent);
+        contentFrame.AddThemeConstantOverride("margin_left", UiGlow.Extent);
+        contentFrame.AddThemeConstantOverride("margin_top", UiGlow.Extent);
+        contentFrame.AddThemeConstantOverride("margin_right", UiGlow.Extent);
+        contentFrame.AddThemeConstantOverride("margin_bottom", UiGlow.Extent);
         _scroll.AddChild(contentFrame);
 
         var content = new VBoxContainer
@@ -232,6 +260,13 @@ public partial class ComponentGalleryScreen : Control
         }
 
         UiNativeScroll.AllowGesturesToBubble(contentFrame);
+        _boundsOverlay = new UiBoundsDebugOverlay
+        {
+            RootPath = frame.GetPath(),
+        };
+        AddChild(_boundsOverlay);
+        ShowDebugBounds = ShowDebugBounds || ProjectSettings.GetSetting("ui/component_gallery_debug_bounds", false).AsBool();
+        CreateToolbarMenu();
     }
 
     private void AddRenderedSection(VBoxContainer content, GallerySection section)
@@ -243,6 +278,9 @@ public partial class ComponentGalleryScreen : Control
                     "Buttons",
                     "four semantic kinds, three layouts, compact geometry, hold progress, and badges"));
                 content.AddChild(CreateActionsSection());
+                break;
+            case GallerySection.TextInput:
+                content.AddChild(CreateTextInputSection());
                 break;
             case GallerySection.Choices:
                 content.AddChild(CreateChoicesSection());
@@ -277,8 +315,11 @@ public partial class ComponentGalleryScreen : Control
             case GallerySection.PartRows:
                 content.AddChild(CreatePartRowSection());
                 break;
-            case GallerySection.TextInput:
-                content.AddChild(CreateTextInputSection());
+            case GallerySection.Panel:
+                content.AddChild(CreatePanelSection());
+                break;
+            case GallerySection.StageCard:
+                content.AddChild(CreateStageCardSection());
                 break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(section), section, null);
@@ -329,7 +370,119 @@ public partial class ComponentGalleryScreen : Control
         };
         header.AddChild(switcher);
 
+        _toolbarMore = Track(new UiButton
+        {
+            Style = UiButtonStyle.Flat,
+            ContentLayout = UiButtonContentLayout.Icon,
+            IconId = UiIconId.More,
+            TooltipText = "Gallery options",
+            SizeFlagsVertical = SizeFlags.ShrinkCenter,
+        });
+        _toolbarMore.Activated += ToggleToolbarMenu;
+        _toolbarMore.ItemRectChanged += () => Callable.From(PositionToolbarMenu).CallDeferred();
+        header.AddChild(_toolbarMore);
+
         return header;
+    }
+
+    private void CreateToolbarMenu()
+    {
+        _toolbarDismiss = new Button
+        {
+            Flat = true,
+            FocusMode = FocusModeEnum.None,
+            MouseFilter = MouseFilterEnum.Stop,
+            Visible = false,
+        };
+        foreach (var state in new[] { "normal", "hover", "pressed", "focus" })
+        {
+            _toolbarDismiss.AddThemeStyleboxOverride(state, new StyleBoxEmpty());
+        }
+
+        AddChild(_toolbarDismiss);
+        _toolbarDismiss.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
+        _toolbarDismiss.Pressed += CloseToolbarMenu;
+        _toolbarMenu = Track(new UiOverflowMenu
+        {
+            ShowSelectedCheck = true,
+        });
+        _toolbarMenu.ActionSelected += actionId =>
+        {
+            if (actionId == "debug-bounds")
+            {
+                ShowDebugBounds = !ShowDebugBounds;
+            }
+
+            CloseToolbarMenu();
+        };
+        _toolbarMenu.Resized += PositionToolbarMenu;
+        AddChild(_toolbarMenu);
+        RefreshToolbarMenu();
+        VisibilityChanged += () =>
+        {
+            if (!IsVisibleInTree())
+            {
+                CloseToolbarMenu();
+            }
+        };
+    }
+
+    private void RefreshToolbarMenu()
+    {
+        _toolbarMenu?.SetActions(new UiOverflowMenu.MenuAction(
+            "debug-bounds",
+            "Debug bounds",
+            State: ShowDebugBounds
+                ? UiComponentContracts.SemanticState.Selected
+                : UiComponentContracts.SemanticState.Neutral));
+    }
+
+    private void ToggleToolbarMenu()
+    {
+        if (_toolbarMenu is null || _toolbarDismiss is null)
+        {
+            return;
+        }
+
+        if (_toolbarMenu.Visible)
+        {
+            CloseToolbarMenu();
+            return;
+        }
+
+        _toolbarDismiss.Show();
+        _toolbarMenu.Show();
+        PositionToolbarMenu();
+        Callable.From(PositionToolbarMenu).CallDeferred();
+    }
+
+    private void PositionToolbarMenu()
+    {
+        if (_toolbarMenu is null || _toolbarMore is null || !_toolbarMenu.Visible)
+        {
+            return;
+        }
+
+        var transform = GetGlobalTransform().AffineInverse() * _toolbarMore.GetGlobalTransform();
+        var bottomRight = transform * _toolbarMore.Size;
+        _toolbarMenu.Position = new Vector2(
+            Mathf.Max(0, bottomRight.X - _toolbarMenu.Size.X),
+            bottomRight.Y + _tokens.Space1);
+    }
+
+    private void CloseToolbarMenu()
+    {
+        _toolbarMenu?.Hide();
+        _toolbarDismiss?.Hide();
+    }
+
+    public override void _UnhandledKeyInput(InputEvent inputEvent)
+    {
+        if (_toolbarMenu?.Visible == true && inputEvent.IsActionPressed("ui_cancel"))
+        {
+            CloseToolbarMenu();
+            GetViewport().SetInputAsHandled();
+        }
     }
 
     private Control CreateActionsSection()
@@ -637,7 +790,7 @@ public partial class ComponentGalleryScreen : Control
         content.AddThemeConstantOverride("separation", (int)_tokens.Space2);
         content.AddChild(CreateSectionDescription(
             "Number",
-            "the ringed step number alone: c_num, used before stage headers and chain chips"));
+            "the ringed step number alone, used before stage headers and chain chips"));
 
         var numbers = new HBoxContainer
         {
@@ -935,6 +1088,109 @@ public partial class ComponentGalleryScreen : Control
         return content;
     }
 
+    private Control CreatePanelSection()
+    {
+        var content = new VBoxContainer();
+        content.AddThemeConstantOverride("separation", (int)_tokens.Space2);
+        content.AddChild(CreateSectionDescription(
+            "Panel",
+            "a part settings panel: header, padless rows sharing one gap, then Delete"));
+
+        var panel = Track(new UiInspectorPanel
+        {
+            Title = "Servo",
+            GlyphIconId = UiIconId.Speed,
+            DeleteText = "Delete",
+            CustomMinimumSize = new Vector2(_tokens.SidePanelWidth, 0),
+            SizeFlagsHorizontal = SizeFlags.ShrinkBegin,
+        });
+        panel.SetRows(
+            new UiNameField
+            {
+                TextValue = "Front knee",
+            },
+            new UiSlider
+            {
+                LabelText = "Max strength",
+                ReadoutText = "40 N·m",
+                Value = UiSliderValue.Thumb(0.62),
+            },
+            new UiValueRow
+            {
+                LabelText = "Weighs",
+                ValueText = "1.2 kg",
+            },
+            new UiPicker
+            {
+                LabelText = "Fixed part",
+                SelectedId = "front-thigh",
+                Options =
+                [
+                    new("front-thigh", "Front thigh", UiIconId.Beam),
+                    new("front-shin", "Front shin", UiIconId.Beam),
+                ],
+            },
+            new UiValueRow
+            {
+                LabelText = "Power",
+                ValueText = "Draws up to 0.6",
+                IconId = UiIconId.Bolt,
+            },
+            new UiNoteRow
+            {
+                Text = "Sits on an empty joint. Put a motor on top to drive it.",
+            });
+        content.AddChild(panel);
+        return content;
+    }
+
+    private Control CreateStageCardSection()
+    {
+        var content = new VBoxContainer();
+        content.AddThemeConstantOverride("separation", (int)_tokens.Space2);
+        content.AddChild(CreateSectionDescription(
+            "Stage card",
+            "one signal-flow stage: number, stage name, optional note, then stage content"));
+
+        var cards = CreateFlow();
+        cards.AddChild(CreateStageCardSpecimen("1", "Senses", "Left foot", "9 readings · top first"));
+        cards.AddChild(CreateStageCardSpecimen("2", "Thinks", "Brain", "24 neurons · 8 outputs", selected: true));
+        cards.AddChild(CreateStageCardSpecimen("3", "Moves", "Servo", string.Empty, collapsed: true));
+        content.AddChild(cards);
+        return content;
+    }
+
+    private UiStageCard CreateStageCardSpecimen(
+        string number,
+        string title,
+        string note,
+        string body,
+        bool selected = false,
+        bool collapsed = false)
+    {
+        var card = Track(new UiStageCard
+        {
+            NumberText = number,
+            Title = title,
+            Note = note,
+            Selected = selected,
+            Collapsed = collapsed,
+            CustomMinimumSize = new Vector2(_tokens.TileWidth, 0),
+            SizeFlagsHorizontal = SizeFlags.ShrinkBegin,
+        });
+        if (!string.IsNullOrWhiteSpace(body))
+        {
+            card.SetBody(new Label
+            {
+                Text = body,
+                AutowrapMode = TextServer.AutowrapMode.WordSmart,
+                MouseFilter = MouseFilterEnum.Ignore,
+            });
+        }
+
+        return card;
+    }
+
     private Control CreateMenuSection()
     {
         var content = new VBoxContainer();
@@ -1076,51 +1332,7 @@ public partial class ComponentGalleryScreen : Control
 
     private static void SetTokens(Control control, UiTokens tokens)
     {
-        switch (control)
-        {
-            case UiButton button:
-                button.Tokens = tokens;
-                break;
-            case UiOverflowMenu menu:
-                menu.Tokens = tokens;
-                break;
-            case UiSegmentedSwitch segmentedSwitch:
-                segmentedSwitch.Tokens = tokens;
-                break;
-            case UiSlider slider:
-                slider.Tokens = tokens;
-                break;
-            case UiToggleRow toggleRow:
-                toggleRow.Tokens = tokens;
-                break;
-            case UiCheckRow checkRow:
-                checkRow.Tokens = tokens;
-                break;
-            case UiPicker picker:
-                picker.Tokens = tokens;
-                break;
-            case UiTextField textField:
-                textField.Tokens = tokens;
-                break;
-            case UiIconTabs iconTabs:
-                iconTabs.Tokens = tokens;
-                break;
-            case UiSelectionHandle selectionHandle:
-                selectionHandle.Tokens = tokens;
-                break;
-            case UiProgressRing progressRing:
-                progressRing.Tokens = tokens;
-                break;
-            case UiNumber number:
-                number.Tokens = tokens;
-                break;
-            case UiCard card:
-                card.Tokens = tokens;
-                break;
-            case UiPartRow partRow:
-                partRow.Tokens = tokens;
-                break;
-        }
+        UiTokenApplier.Apply(control, tokens);
     }
 
     private void ApplyTokens(UiTokens tokens)

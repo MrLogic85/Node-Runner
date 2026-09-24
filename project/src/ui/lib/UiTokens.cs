@@ -357,7 +357,7 @@ public sealed class UiTokens
             case UiSurfaceContracts.FrameVariant.Sel:
                 style.BorderColor = Accent;
                 SetBorderWidth(style, StrokeSignal);
-                AddGlow(style, AccentGlow);
+                AddGlow(style, Accent);
                 break;
             case UiSurfaceContracts.FrameVariant.Pick:
                 style.BorderColor = Halo;
@@ -381,13 +381,13 @@ public sealed class UiTokens
                 return RaisedStyle();
             case UiSurfaceContracts.FrameVariant.StageCard:
                 style.BorderColor = Accent;
-                AddGlow(style, AccentGlow);
+                AddGlow(style, Accent);
                 break;
         }
 
         if (glow)
         {
-            AddGlow(style, AccentGlow);
+            AddGlow(style, style.BorderColor);
         }
 
         var padding = size switch
@@ -426,7 +426,7 @@ public sealed class UiTokens
             case UiSurfaceContracts.RaisedState.Primary:
                 style.BgColor = Accent;
                 style.BorderColor = Accent;
-                UiGlow.ApplyToControl(style, AccentGlow, EffectsEnabled);
+                UiGlow.ApplyToControl(style, Accent, EffectsEnabled);
                 break;
             case UiSurfaceContracts.RaisedState.Lock:
             case UiSurfaceContracts.RaisedState.Off:
@@ -532,7 +532,7 @@ public sealed class UiTokens
         };
         if (glow)
         {
-            UiGlow.ApplyToControl(style, AccentGlow, EffectsEnabled);
+            UiGlow.ApplyToControl(style, Accent, EffectsEnabled);
         }
 
         return style;

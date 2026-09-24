@@ -124,6 +124,7 @@ public partial class UiSlider : Control
     private bool _showStepLabels = true;
     private bool _enabled = true;
     private UiSliderStyle _style = UiSliderStyle.From(UiTokens.Neon);
+    private HBoxContainer? _header;
     private Label? _label;
     private Label? _readout;
     private Label? _markerLabel;
@@ -283,11 +284,15 @@ public partial class UiSlider : Control
         }
     }
 
+    public override void _EnterTree()
+    {
+        Resized += LayoutContent;
+    }
+
     public override void _Ready()
     {
         FocusMode = FocusModeEnum.None;
         MouseFilter = MouseFilterEnum.Pass;
-        Resized += LayoutContent;
         EnsureLabels();
         RebuildStepLabels();
         Refresh();
@@ -395,9 +400,7 @@ public partial class UiSlider : Control
 
     }
 
-    private float TrackY => UsesLabelArea
-        ? _tokens.OverlineText.LineHeight + _tokens.Space3
-        : Size.Y * 0.5f;
+    private float TrackY => CalculateTrackY(_style, _tokens, HasValueLabelRow);
 
     private void EnsureLabels()
     {
@@ -409,8 +412,22 @@ public partial class UiSlider : Control
         _label = CreateLabel();
         _readout = CreateLabel();
         _markerLabel = CreateLabel();
-        AddChild(_label);
-        AddChild(_readout);
+        _header = new HBoxContainer
+        {
+            MouseFilter = MouseFilterEnum.Ignore,
+        };
+        AddChild(_header);
+        _header.SetAnchorsAndOffsetsPreset(LayoutPreset.TopWide);
+        _label.SizeFlagsVertical = SizeFlags.ShrinkBegin;
+        _readout.SizeFlagsVertical = SizeFlags.ShrinkBegin;
+        _header.AddChild(_label);
+        _header.AddChild(new Control
+        {
+            SizeFlagsHorizontal = SizeFlags.ExpandFill,
+            MouseFilter = MouseFilterEnum.Ignore,
+        });
+        _header.AddChild(_readout);
+        _header.SortChildren += LayoutContent;
         AddChild(_markerLabel);
     }
 
@@ -462,15 +479,15 @@ public partial class UiSlider : Control
         _style = UiSliderStyle.From(_tokens);
         CustomMinimumSize = new Vector2(
             0,
-            UsesLabelArea
-                ? HasStepLabelRow ? _style.SteppedHeight : _tokens.TouchTarget
-                : _style.TrackWidth);
+            CalculateMinimumHeight(_style, _tokens, HasValueLabelRow, HasStepLabelRow, HasMarkerBelowRow));
 
         _label!.Text = LabelText;
         _readout!.Text = ReadoutText;
         _markerLabel!.Text = MarkerText;
         _label.Visible = HasValueLabelRow && !string.IsNullOrWhiteSpace(LabelText);
         _readout.Visible = HasValueLabelRow && !string.IsNullOrWhiteSpace(ReadoutText);
+        _header!.Visible = HasValueLabelRow;
+        _header.AddThemeConstantOverride("separation", (int)_tokens.Space1);
         _markerLabel.Visible = HasMarkerText && (HasValueLabelRow || HasMarkerBelowRow);
 
         ApplyLabelStyle(_label, _tokens.OverlineText, _tokens.Muted);
@@ -481,7 +498,7 @@ public partial class UiSlider : Control
             Colors.Transparent,
             borderWidth: 0,
             radius: _style.ThumbRadius);
-        UiGlow.ApplyToControl(_thumbStyle, _tokens.AccentGlow, _tokens.EffectsEnabled);
+        UiGlow.ApplyToControl(_thumbStyle, _tokens.Accent, _tokens.EffectsEnabled);
         _trackSegmentStyle ??= new StyleBoxFlat();
         foreach (var stepLabel in _stepLabelNodes)
         {
@@ -508,11 +525,7 @@ public partial class UiSlider : Control
             return;
         }
 
-        _label.ResetSize();
-        _readout.ResetSize();
         _markerLabel.ResetSize();
-        _label.Position = Vector2.Zero;
-        _readout.Position = new Vector2(Mathf.Max(0, Size.X - _readout.Size.X), 0);
 
         if (_markerLabel.Visible)
         {
@@ -520,8 +533,8 @@ public partial class UiSlider : Control
                 _style.ThumbRadius,
                 Size.X - _style.ThumbRadius,
                 (float)MarkerPosition);
-            var minimumX = HasMarkerBelowRow ? 0 : _label.Size.X + _tokens.Space1;
-            var maximumX = HasMarkerBelowRow
+            var minimumX = HasMarkerBelowRow || !_label.Visible ? 0 : _label.Size.X + _tokens.Space1;
+            var maximumX = HasMarkerBelowRow || !_readout.Visible
                 ? Mathf.Max(0, Size.X - _markerLabel.Size.X)
                 : _readout.Position.X - _tokens.Space1 - _markerLabel.Size.X;
             var markerX = maximumX >= minimumX
@@ -694,5 +707,28 @@ public partial class UiSlider : Control
 
     private bool HasMarkerBelowRow => ShowValueLabels && HasMarkerText && !HasStepLabelRow;
 
-    private bool UsesLabelArea => HasValueLabelRow || HasStepLabelRow || HasMarkerBelowRow;
+    private static float CalculateTrackY(UiSliderStyle style, UiTokens tokens, bool hasValueLabelRow) =>
+        hasValueLabelRow
+            ? tokens.OverlineText.LineHeight + tokens.Space3
+            : TrackHalfHeight(style);
+
+    private static float TrackHalfHeight(UiSliderStyle style) =>
+        Math.Max(style.ThumbRadius, Math.Max(style.MarkerHalfHeight, style.TrackWidth * 0.5f));
+
+    public static float CalculateMinimumHeight(
+        UiSliderStyle style,
+        UiTokens tokens,
+        bool hasValueLabelRow,
+        bool hasStepLabelRow,
+        bool hasMarkerBelowRow)
+    {
+        var trackY = CalculateTrackY(style, tokens, hasValueLabelRow);
+        var height = trackY + TrackHalfHeight(style);
+        if (hasStepLabelRow || hasMarkerBelowRow)
+        {
+            height = Math.Max(height, trackY + tokens.Space2 + tokens.ReadoutSmallText.LineHeight);
+        }
+
+        return height;
+    }
 }

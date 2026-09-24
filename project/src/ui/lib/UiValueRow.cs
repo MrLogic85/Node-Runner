@@ -2,19 +2,45 @@ using Godot;
 
 namespace NodeRunner.Ui.Lib;
 
-/// <summary>Editable label/value row.</summary>
+/// <summary>Static label/value row with an optional icon before the value.</summary>
 public partial class UiValueRow : HBoxContainer
 {
     private UiTokens _tokens = UiTokens.Neon;
+    private string _labelText = "Strength";
+    private string _valueText = "0.6";
+    private UiIconId? _iconId;
 
     [Export]
-    public string LabelText { get; set; } = "Strength";
+    public string LabelText
+    {
+        get => _labelText;
+        set
+        {
+            _labelText = value;
+            Rebuild();
+        }
+    }
 
     [Export]
-    public string ValueText { get; set; } = "0.6";
+    public string ValueText
+    {
+        get => _valueText;
+        set
+        {
+            _valueText = value;
+            Rebuild();
+        }
+    }
 
-    [Signal]
-    public delegate void EditRequestedEventHandler();
+    public UiIconId? IconId
+    {
+        get => _iconId;
+        set
+        {
+            _iconId = value;
+            Rebuild();
+        }
+    }
 
     public UiTokens Tokens
     {
@@ -28,7 +54,7 @@ public partial class UiValueRow : HBoxContainer
 
     public override void _Ready()
     {
-        MouseFilter = MouseFilterEnum.Pass;
+        MouseFilter = MouseFilterEnum.Ignore;
         Rebuild();
     }
 
@@ -45,22 +71,27 @@ public partial class UiValueRow : HBoxContainer
             child.QueueFree();
         }
 
-        CustomMinimumSize = new Vector2(0, _tokens.ControlSmall);
         AddThemeConstantOverride("separation", (int)_tokens.Space2);
         var label = UiFieldAndRows.Label(LabelText, _tokens, _tokens.CaptionText, _tokens.Muted);
         label.SizeFlagsHorizontal = SizeFlags.ExpandFill;
         AddChild(label);
-        var editButton = new Button
+        var readout = new HBoxContainer
         {
-            Text = ValueText,
-            Flat = true,
-            CustomMinimumSize = new Vector2(_tokens.ColumnSmallWidth, _tokens.ControlSmall),
-            MouseFilter = MouseFilterEnum.Pass,
+            SizeFlagsVertical = SizeFlags.ShrinkCenter,
+            MouseFilter = MouseFilterEnum.Ignore,
         };
-        _tokens.ApplyTextStyle(editButton, _tokens.ReadoutMediumText);
-        editButton.AddThemeColorOverride("font_color", _tokens.Ink);
-        editButton.Pressed += () => EmitSignal(SignalName.EditRequested);
-        AddChild(editButton);
-        AddChild(UiFieldAndRows.Icon(UiIconId.Edit, UiIconSize.Small, _tokens.Accent));
+        readout.AddThemeConstantOverride("separation", (int)_tokens.Space1);
+        AddChild(readout);
+        if (IconId is { } icon)
+        {
+            var glyph = UiFieldAndRows.Icon(icon, UiIconSize.Small, _tokens.Ink);
+            glyph.SizeFlagsVertical = SizeFlags.ShrinkCenter;
+            readout.AddChild(glyph);
+        }
+
+        var value = UiFieldAndRows.Label(ValueText, _tokens, _tokens.ReadoutMediumText, _tokens.Ink, HorizontalAlignment.Right);
+        value.TextOverrunBehavior = TextServer.OverrunBehavior.NoTrimming;
+        value.SizeFlagsHorizontal = SizeFlags.ShrinkEnd;
+        readout.AddChild(value);
     }
 }

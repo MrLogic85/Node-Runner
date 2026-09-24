@@ -169,7 +169,10 @@ public partial class UiPicker : PanelContainer
 
         if (!string.IsNullOrWhiteSpace(BelowText))
         {
-            stack.AddChild(UiFieldAndRows.Label(BelowText, _tokens, _tokens.NoteText, _tokens.Muted));
+            var below = UiFieldAndRows.Label(BelowText, _tokens, _tokens.NoteText, _tokens.Muted);
+            below.CustomMinimumSize = new Vector2(0, _tokens.NoteText.LineHeight);
+            below.ClipText = true;
+            stack.AddChild(below);
         }
 
         SetProcess(IsExpanded);

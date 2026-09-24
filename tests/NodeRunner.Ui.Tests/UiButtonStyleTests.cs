@@ -68,20 +68,20 @@ public sealed class UiButtonStyleTests
         primary.GlowBaseFor(tokens, selected: true).ShouldBe(tokens.Halo);
         primary.GlowBaseFor(tokens, selected: true).ShouldNotBe(
             primary.GlowBaseFor(tokens, selected: false));
-        UiGlow.FromButtonBase(
+        UiGlow.FromBase(
                 primary.GlowBaseFor(tokens, selected: true)!.Value,
                 enabled: true)
-            .ShouldBe(UiTokens.MultiplyAlpha(tokens.Halo, UiGlow.ButtonOpacity));
+            .ShouldBe(UiTokens.MultiplyAlpha(tokens.Halo, UiGlow.Opacity));
     }
 
     [Fact]
     public void Glow_IsDerivedFromSelectedBaseColorAndSuppressedForEffectsLite()
     {
         var selected = UiButtonStyle.Primary.Resolve(UiTokens.Neon).Selected;
-        UiGlow.FromButtonBase(selected, enabled: true).ShouldBe(
-            UiTokens.MultiplyAlpha(selected, UiGlow.ButtonOpacity));
-        UiGlow.FromButtonBase(selected, enabled: false).ShouldBe(Colors.Transparent);
-        UiGlow.FromButtonBase(
+        UiGlow.FromBase(selected, enabled: true).ShouldBe(
+            UiTokens.MultiplyAlpha(selected, UiGlow.Opacity));
+        UiGlow.FromBase(selected, enabled: false).ShouldBe(Colors.Transparent);
+        UiGlow.FromBase(
             UiButtonStyle.Primary.Resolve(UiTokens.Paper).Selected,
             UiTokens.Paper.EffectsEnabled).ShouldBe(Colors.Transparent);
     }
@@ -117,6 +117,8 @@ public sealed class UiButtonStyleTests
         });
 
         metrics.TouchTarget.ShouldBe(96);
+        metrics.MinimumSize(UiButtonContentLayout.Icon, true).ShouldBe(new Vector2(64, 64));
+        metrics.MinimumSize(UiButtonContentLayout.Row, true).ShouldBe(new Vector2(0, 64));
         metrics.VisibleControlSize(UiButtonContentLayout.Row, compact: false).ShouldBe(80);
         metrics.VisibleControlSize(UiButtonContentLayout.Row, compact: true).ShouldBe(64);
         metrics.VisibleControlSize(UiButtonContentLayout.Icon, compact: false).ShouldBe(80);
@@ -133,10 +135,10 @@ public sealed class UiButtonStyleTests
         var metrics = UiButtonMetrics.From(UiTokens.Neon);
 
         metrics.BadgePosition(
-                new Vector2(metrics.TouchTarget, metrics.TouchTarget),
+                metrics.MinimumSize(UiButtonContentLayout.Icon, true),
                 UiButtonContentLayout.Icon,
                 compact: true)
-            .ShouldBe(new Vector2(28, 4));
+            .ShouldBe(new Vector2(20, -4));
         metrics.BadgePosition(
                 new Vector2(metrics.TouchTarget, metrics.TouchTarget),
                 UiButtonContentLayout.Icon,
@@ -160,10 +162,10 @@ public sealed class UiButtonStyleTests
                 compact: false)
             .ShouldBe(new Rect2(4, 4, 40, 40));
         metrics.VisibleFrame(
-                new Vector2(metrics.TouchTarget, metrics.TouchTarget),
+                metrics.MinimumSize(UiButtonContentLayout.Icon, true),
                 UiButtonContentLayout.Icon,
                 compact: true)
-            .ShouldBe(new Rect2(8, 8, 32, 32));
+            .ShouldBe(new Rect2(0, 0, 32, 32));
         metrics.VisibleFrame(
                 new Vector2(120, metrics.TouchTarget),
                 UiButtonContentLayout.Row,

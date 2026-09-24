@@ -3,7 +3,7 @@ using Godot;
 namespace NodeRunner.Ui.Lib;
 
 /// <summary>Canonical row for build parts: icon, name, count, and four reference states.</summary>
-public partial class UiPartRow : PanelContainer
+public partial class UiPartRow : Control
 {
     [Signal]
     public delegate void PartSelectedEventHandler();
@@ -23,6 +23,7 @@ public partial class UiPartRow : PanelContainer
     private string _partName = "Servo";
     private string _countText = "3 left";
     private PartRowState _state;
+    private StyleBoxFlat? _style;
 
     [Export]
     public UiPartIconId PartIconId
@@ -108,28 +109,34 @@ public partial class UiPartRow : PanelContainer
             child.QueueFree();
         }
 
-        CustomMinimumSize = new Vector2(0, _tokens.TouchTarget);
-        var style = _tokens.ControlStyle(
+        CustomMinimumSize = new Vector2(0, UiComponentContracts.PartRowTouchHeight);
+        _style = _tokens.ControlStyle(
             State == PartRowState.Selected ? _tokens.AccentSoft : _tokens.PanelRaised,
             State == PartRowState.Selected ? _tokens.Accent : _tokens.LineStrong,
             State == PartRowState.Selected ? _tokens.StrokeSignal : _tokens.StrokeHair,
             _tokens.RadiusMedium,
-            glow: State == PartRowState.Selected,
-            horizontalPadding: _tokens.Space2);
+            glow: State == PartRowState.Selected);
 
         if (State == PartRowState.Locked)
         {
-            style.BorderWidthLeft = 0;
-            style.BorderWidthTop = 0;
-            style.BorderWidthRight = 0;
-            style.BorderWidthBottom = 0;
+            _style.BorderWidthLeft = 0;
+            _style.BorderWidthTop = 0;
+            _style.BorderWidthRight = 0;
+            _style.BorderWidthBottom = 0;
         }
 
-        AddThemeStyleboxOverride("panel", style);
         SelfModulate = State is PartRowState.Locked or PartRowState.NoneLeft
             ? new Color(1, 1, 1, _unavailableOpacity)
             : Colors.White;
         QueueRedraw();
+
+        var margin = new MarginContainer();
+        margin.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
+        margin.AddThemeConstantOverride("margin_left", (int)_tokens.Space2);
+        margin.AddThemeConstantOverride("margin_top", (int)VerticalVisibleInset);
+        margin.AddThemeConstantOverride("margin_right", (int)_tokens.Space2);
+        margin.AddThemeConstantOverride("margin_bottom", (int)VerticalVisibleInset);
+        AddChild(margin);
 
         var row = new HBoxContainer
         {
@@ -137,7 +144,7 @@ public partial class UiPartRow : PanelContainer
             SizeFlagsVertical = SizeFlags.Fill,
         };
         row.AddThemeConstantOverride("separation", (int)_tokens.Space2);
-        AddChild(row);
+        margin.AddChild(row);
 
         var iconTint = State == PartRowState.Selected ? _tokens.Accent : _tokens.Ink;
         row.AddChild(UiIcons.Create(PartIconId, UiIconSize.Large, iconTint));
@@ -164,6 +171,11 @@ public partial class UiPartRow : PanelContainer
     public override void _Draw()
     {
         base._Draw();
+        if (_style is not null)
+        {
+            DrawStyleBox(_style, VisibleRect);
+        }
+
         if (State != PartRowState.Locked)
         {
             return;
@@ -171,12 +183,18 @@ public partial class UiPartRow : PanelContainer
 
         var stroke = _tokens.StrokeHair;
         var rect = new Rect2(
-            new Vector2(stroke * 0.5f, stroke * 0.5f),
-            new Vector2(Math.Max(0, Size.X - stroke), Math.Max(0, Size.Y - stroke)));
+            VisibleRect.Position + new Vector2(stroke * 0.5f, stroke * 0.5f),
+            new Vector2(Math.Max(0, VisibleRect.Size.X - stroke), Math.Max(0, VisibleRect.Size.Y - stroke)));
         UiDashedBorder.DrawRoundedRect(this, rect, Math.Max(0, _tokens.RadiusMedium - (stroke * 0.5f)), _tokens.LineStrong, stroke);
     }
 
     private bool IsAvailable => State is PartRowState.Rest or PartRowState.Selected;
+
+    private float VerticalVisibleInset =>
+        Math.Max(0, (UiComponentContracts.PartRowTouchHeight - UiComponentContracts.PartRowVisibleHeight) * 0.5f);
+
+    private Rect2 VisibleRect =>
+        new(Vector2.Down * VerticalVisibleInset, new Vector2(Size.X, Math.Min(Size.Y, UiComponentContracts.PartRowVisibleHeight)));
 
     private Label CreateTrailingLabel(string text)
     {

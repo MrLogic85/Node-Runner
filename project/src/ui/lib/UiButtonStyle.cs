@@ -134,6 +134,19 @@ public readonly record struct UiButtonMetrics(
         _ => throw new ArgumentOutOfRangeException(nameof(layout), layout, null),
     };
 
+    public Vector2 MinimumSize(UiButtonContentLayout layout, bool compact)
+    {
+        var target = compact && layout != UiButtonContentLayout.Stack
+            ? CompactControlSize
+            : TouchTarget;
+        return layout switch
+        {
+            UiButtonContentLayout.Row => new Vector2(0, target),
+            UiButtonContentLayout.Icon or UiButtonContentLayout.Stack => new Vector2(target, target),
+            _ => throw new ArgumentOutOfRangeException(nameof(layout), layout, null),
+        };
+    }
+
     public Rect2 VisibleFrame(
         Vector2 controlSize,
         UiButtonContentLayout layout,

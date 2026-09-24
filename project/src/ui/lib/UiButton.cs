@@ -360,13 +360,7 @@ public partial class UiButton : Button
 
     protected virtual UiIconSize DisplayIconSize => UiIconSize.Standard;
 
-    protected virtual Vector2 MinimumSize => ContentLayout switch
-    {
-        UiButtonContentLayout.Row => new(0, Tokens.TouchTarget),
-        UiButtonContentLayout.Icon => new(Tokens.TouchTarget, Tokens.TouchTarget),
-        UiButtonContentLayout.Stack => new(Tokens.TouchTarget, Tokens.TouchTarget),
-        _ => throw new ArgumentOutOfRangeException(nameof(ContentLayout), ContentLayout, null),
-    };
+    protected virtual Vector2 MinimumSize => UiButtonMetrics.From(Tokens).MinimumSize(ContentLayout, Compact);
 
     protected virtual float VisibleControlSize => ContentLayout switch
     {
@@ -600,16 +594,16 @@ public partial class UiButton : Button
                 : UiTokens.MultiplyAlpha(styleBorder, opacity),
             borderWidth: transparentBorder ? 0 : On ? Tokens.ButtonSelectedStroke : null,
             glow: false,
-            horizontalPadding: ContentLayout == UiButtonContentLayout.Stack
-                ? 0
-            : ResolveSpace(HorizontalPadding),
-            verticalPadding: ContentLayout == UiButtonContentLayout.Stack
-                ? 0
-                : ResolveSpace(VerticalPadding));
+            horizontalPadding: ContentLayout == UiButtonContentLayout.Row
+                ? ResolveSpace(HorizontalPadding)
+                : 0,
+            verticalPadding: ContentLayout == UiButtonContentLayout.Row
+                ? ResolveSpace(VerticalPadding)
+                : 0);
         var glowColor = _style.GlowBaseFor(Tokens, On, Enabled);
         if (glowColor is { } color)
         {
-            UiGlow.ApplyButtonGlow(style, color, Tokens.EffectsEnabled);
+            UiGlow.ApplyToControl(style, color, Tokens.EffectsEnabled);
         }
 
         return InsetToVisibleControl(style);
@@ -827,12 +821,12 @@ public partial class UiButton : Button
 
     private void DrawSelectedGlow()
     {
-        var baseColor = UiGlow.FromButtonBase(_style.Resolve(Tokens).Selected, enabled: true);
+        var baseColor = UiGlow.FromBase(_style.Resolve(Tokens).Selected, enabled: true);
         var opacity = Enabled ? 1f : _disabledOpacity;
         var inset = new Vector2(HorizontalVisibleInset, VerticalVisibleInset);
-        for (var depth = 0; depth < UiGlow.InsetExtent; depth++)
+        for (var depth = 0; depth < UiGlow.Extent; depth++)
         {
-            var strength = 1f - (depth / (float)UiGlow.InsetExtent);
+            var strength = 1f - (depth / (float)UiGlow.Extent);
             var color = UiTokens.MultiplyAlpha(baseColor, opacity * strength * strength);
             var rect = new Rect2(
                 inset.X + depth,

@@ -85,9 +85,7 @@ public abstract partial class UiIconButton : UiButton
             ? base.DisplayTextStyle
             : Tokens.ReadoutMediumText;
 
-    protected override Vector2 MinimumSize => new(Tokens.TouchTarget, Tokens.TouchTarget);
-
-    protected override float VisibleControlSize => ButtonSize switch
+    protected override float VisibleControlSize => Compact ? Tokens.ControlSmall : ButtonSize switch
     {
         UiIconButtonSize.Small => Tokens.ControlSmall,
         UiIconButtonSize.Default => Tokens.ControlHeight,

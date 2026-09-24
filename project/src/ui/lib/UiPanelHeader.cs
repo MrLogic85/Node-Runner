@@ -105,10 +105,10 @@ public partial class UiPanelHeader : HBoxContainer
         }
 
         CustomMinimumSize = new Vector2(0, _tokens.ControlSmall);
-        AddThemeConstantOverride("separation", (int)_tokens.Space2);
+        AddThemeConstantOverride("separation", (int)_tokens.Space1);
         if (!string.IsNullOrWhiteSpace(Glyph))
         {
-            AddChild(UiFieldAndRows.Icon(GlyphIconId, UiIconSize.Standard, _tokens.Accent));
+            AddChild(UiFieldAndRows.Icon(GlyphIconId, UiIconSize.Standard, _tokens.Ink));
         }
 
         var title = UiFieldAndRows.Label(Title, _tokens, _tokens.SubheadingText, _tokens.Ink);
@@ -116,26 +116,19 @@ public partial class UiPanelHeader : HBoxContainer
         AddChild(title);
         foreach (var action in _actionItems.Take(2))
         {
-            var button = new Button
+            var button = new UiButton
             {
-                Text = string.Empty,
+                Tokens = _tokens,
+                Style = UiButtonStyle.Flat,
+                ContentLayout = UiButtonContentLayout.Icon,
+                Compact = true,
+                IconId = action.IconId,
+                Enabled = action.State is not UiComponentContracts.SemanticState.Disabled and not UiComponentContracts.SemanticState.Locked,
                 TooltipText = string.IsNullOrWhiteSpace(action.AccessibleLabel) ? action.Id : action.AccessibleLabel,
-                CustomMinimumSize = new Vector2(_tokens.ControlSmall, _tokens.ControlSmall),
-                Disabled = action.State is UiComponentContracts.SemanticState.Disabled or UiComponentContracts.SemanticState.Locked,
                 MouseFilter = MouseFilterEnum.Pass,
             };
-            _tokens.ApplyTextStyle(button, _tokens.LabelText);
-            var actionColor = ActionColor(action.State);
-            button.AddThemeColorOverride("font_color", actionColor);
-            button.AddThemeColorOverride("font_disabled_color", _tokens.Muted);
-            UiIcons.Apply(button, action.IconId, UiIconSize.Standard, button.Disabled ? _tokens.Muted : actionColor);
-            button.AddThemeStyleboxOverride("normal", _tokens.ControlStyle(_tokens.PanelRaised, _tokens.LineStrong));
-            button.AddThemeStyleboxOverride("hover", _tokens.ControlStyle(_tokens.AccentSoft, _tokens.Accent));
-            button.AddThemeStyleboxOverride("pressed", _tokens.ControlStyle(_tokens.Accent, _tokens.Accent, _tokens.StrokeSignal));
-            button.AddThemeStyleboxOverride("focus", new StyleBoxEmpty());
-            button.AddThemeStyleboxOverride("disabled", _tokens.ControlStyle(UiTokens.MultiplyAlpha(_tokens.PanelRaised, 0.5f), _tokens.Line));
             var id = action.Id;
-            button.Pressed += () => EmitSignal(SignalName.ActionSelected, id);
+            button.Activated += () => EmitSignal(SignalName.ActionSelected, id);
             AddChild(button);
         }
     }
@@ -146,10 +139,4 @@ public partial class UiPanelHeader : HBoxContainer
             UiIconGlyphs.ParseOr(icon, UiIconId.More),
             icon)).ToArray();
 
-    private Color ActionColor(UiComponentContracts.SemanticState state) =>
-        state is UiComponentContracts.SemanticState.Danger or UiComponentContracts.SemanticState.Bad
-            ? _tokens.Danger
-            : state == UiComponentContracts.SemanticState.Warning
-                ? _tokens.Halo
-                : _tokens.Muted;
 }
