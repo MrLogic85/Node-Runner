@@ -25,6 +25,10 @@ window/handheld/orientation="landscape"
 
 project/assembly_name="NodeRunner"
 
+[gui]
+
+theme/custom="res://assets/themes/UiDefaults.tres"
+
 [autoload]
 
 RngProvider="*res://src/managers/RngProvider.cs"
