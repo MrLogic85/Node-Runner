@@ -33,6 +33,7 @@ public sealed partial class UiNotification : Control
     private readonly Queue<UiNotificationSpec> _queue = [];
     private UiNotificationSpec? _current;
     private UiCard? _card;
+    private float _preferredWidth;
     private double _remaining;
     private bool _pointerDown;
     private bool _activating;
@@ -147,15 +148,11 @@ public sealed partial class UiNotification : Control
         }
         _current = spec;
         _remaining = LifetimeSeconds;
-        _card = UiPopupStyle.Card(spec.Type, Tokens);
-        _card.Name = "Notification";
-        _card.TooltipText = "Swipe sideways to dismiss";
-        var column = new VBoxContainer { MouseFilter = MouseFilterEnum.Ignore };
-        column.AddThemeConstantOverride("separation", (int)Tokens.Space1);
-        _card.AddChild(column);
-        column.AddChild(UiPopupStyle.Heading(spec.Type, spec.Title, Tokens));
-        column.AddChild(UiPopupStyle.Text(spec.Message, Tokens.SmallText, Tokens));
+        var content = GD.Load<PackedScene>("res://scenes/ui/UiNotificationContent.tscn").Instantiate<UiNotificationContent>();
+        _card = content;
+        _preferredWidth = content.CustomMinimumSize.X;
         AddChild(_card);
+        content.Bind(spec, Tokens);
         _card.FocusMode = FocusModeEnum.All;
         _card.MouseFilter = MouseFilterEnum.Stop;
         _card.GuiInput += OnCardInput;
@@ -356,7 +353,7 @@ public sealed partial class UiNotification : Control
         }
         var previousRestPosition = _restPosition;
         var previousSize = _card.Size;
-        var width = Mathf.Min(Tokens.CardWidth, Size.X - Tokens.Space4 * 2);
+        var width = Mathf.Min(_preferredWidth, Size.X - Tokens.Space4 * 2);
         _card.CustomMinimumSize = new Vector2(width, 0);
         _card.Size = new Vector2(width, 0);
         _restPosition = new Vector2((Size.X - width) / 2, Size.Y - _card.Size.Y - Tokens.Space4);

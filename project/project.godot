@@ -1,5 +1,10 @@
 ; Engine configuration file.
-; See https://docs.godotengine.org/en/stable/tutorials/editor/project_settings.html
+; It's best edited using the editor UI and not directly,
+; since the parameters that go here are not all obvious.
+;
+; Format:
+;   [section] ; section goes between []
+;   param=value ; assign values to parameters
 
 config_version=5
 
@@ -10,15 +15,16 @@ config/description="Learn ML by drawing 2D creatures that evolve to move."
 run/main_scene="res://scenes/Main.tscn"
 config/features=PackedStringArray("4.7", "C#", "Mobile")
 
+[autoload]
+
+RngProvider="*res://src/managers/RngProvider.cs"
+SaveManager="*res://src/managers/SaveManager.cs"
+
 [display]
 
-; Reference design logical canvas. "canvas_items" stretch keeps layout in
-; 640 x 360 design units while rendering Control text and shapes at the
-; device framebuffer scale instead of scaling a low-resolution bitmap.
 window/size/viewport_width=640
 window/size/viewport_height=360
 window/stretch/mode="canvas_items"
-window/stretch/aspect="keep"
 window/handheld/orientation="landscape"
 
 [dotnet]
@@ -28,19 +34,6 @@ project/assembly_name="NodeRunner"
 [gui]
 
 theme/custom="res://assets/themes/UiDefaults.tres"
-
-[autoload]
-
-RngProvider="*res://src/managers/RngProvider.cs"
-SaveManager="*res://src/managers/SaveManager.cs"
-
-[input_devices]
-
-pointing/emulate_mouse_from_touch=true
-
-[physics]
-
-common/physics_ticks_per_second=60
 
 [rendering]
 
