@@ -270,17 +270,19 @@ public sealed class UiTokens
     public void ApplyTextStyle(Control control, TextStyle style)
     {
         control.AddThemeFontSizeOverride("font_size", (int)style.FontSize);
-        control.AddThemeConstantOverride("line_spacing", (int)Math.Max(0, style.LineHeight - style.FontSize));
         if (TryLoadFont(style, out var font))
         {
-            if (style.LetterSpacing > 0)
+            var adjustment = style.LineHeight - font.GetHeight((int)style.FontSize);
+            var spacingTop = (int)Math.Floor(adjustment / 2);
+            font = new FontVariation
             {
-                font = new FontVariation
-                {
-                    BaseFont = font,
-                    SpacingGlyph = Math.Max(1, (int)Math.Round(style.FontSize * style.LetterSpacing)),
-                };
-            }
+                BaseFont = font,
+                SpacingTop = spacingTop,
+                SpacingBottom = (int)Math.Round(adjustment) - spacingTop,
+                SpacingGlyph = style.LetterSpacing > 0
+                    ? Math.Max(1, (int)Math.Round(style.FontSize * style.LetterSpacing))
+                    : 0,
+            };
 
             control.AddThemeFontOverride("font", font);
         }

@@ -54,9 +54,10 @@ Godot color tokens: shared effect definitions may derive alpha from the
 style's semantic color token. Keep effect settings centralized and preserve
 the paper theme and Effects Lite suppression of glow.
 
-The current Godot host uses the `UiTokens` adapter. The reference's native
-`Theme` resource and `Window.content_scale_factor` guidance describes a target,
-not completed host wiring; theme/scale propagation is tracked in
+The current Godot host uses the `UiTokens` adapter. A small project-wide native
+`Theme` supplies the Label line-spacing default described below; the reference's
+full native theme and `Window.content_scale_factor` guidance remains a target,
+not completed host wiring. Theme/scale propagation is tracked in
 [issue #236](https://github.com/MrLogic85/Node-Runner/issues/236).
 
 For buttons, the Component Library's **Buttons** paragraph defines the four
@@ -137,6 +138,67 @@ property remains the fixed row width override for compatibility; `0` keeps the
 token default. Wrap-content menus remove the fixed row width but keep native
 button rows, 48px touch height, row padding, icon gap, and semantic coloring.
 See [issue #251](https://github.com/MrLogic85/Node-Runner/issues/251).
+
+## CSS line-height mapping to Godot
+
+**Investigated and visually approved on Android 2026-09-24 in
+[issue #278](https://github.com/MrLogic85/Node-Runner/issues/278).**
+The previous shared typography adapter derived `Label.line_spacing` from
+`LineHeight - FontSize`, clamped to zero. This is not a CSS line-height mapping:
+the natural font height can differ from its font size, and Label adds spacing
+only between lines.
+
+The shared adapter now uses a `FontVariation` per resolved text style/font size,
+without modifying the shared base font:
+
+```text
+adjustment = target LineHeight - baseFont.GetHeight(fontSize)
+SpacingTop = floor(adjustment / 2)
+SpacingBottom = round(adjustment) - SpacingTop
+Label.line_spacing = 0
+```
+
+The zero line-spacing default lives once in
+`project/assets/themes/UiDefaults.tres`, loaded through `gui/theme/custom` in
+`project.godot`. Godot's built-in Label default is **3px**, not zero. New Labels
+inherit the project default without per-component overrides; `ApplyTextStyle`
+adjusts font metrics rather than Label spacing. Do not subtract those 3px from font heights, since that
+would shorten single-line boxes and affect controls that do not add Label's gap.
+
+Top/bottom spacing changes every line's metrics, including a single line and
+the outer edges of a multiline block. Preserve the adapter's existing glyph
+spacing when creating the variation. Resolve spacing for the actual font size;
+these properties are pixel additions, not relative multipliers.
+
+Godot 4.7.2 Mono and Chrome 153 were measured with the same repository font
+files. The following are three-line block heights in pixels; the comparison
+column uses corrected `line_spacing = target - natural font height`, not the
+previous adapter's formula.
+
+| Style | Natural line height | Target line height | CSS block | Corrected Label spacing | FontVariation block |
+|---|---:|---:|---:|---:|---:|
+| Note (Barlow 11) | 14 | 14 | 42 | 42 | 42 |
+| Body (Barlow 13) | 16 | 18 | 54 | 52 | 54 |
+| Readout medium (JetBrains Mono 12) | 17 | 16 | 48 | 49 | 48 |
+| Small (Barlow 12) | 15 | 16 | 48 | 47 | 48 |
+
+FontVariation also produced the target heights for one and two explicit lines
+and for the inspector note text wrapped at widths of 100, 160, and 240 pixels.
+Negative spacing worked: Readout needed -1px total. Note needs no added spacing,
+rather than the previous adapter's extra 3px between lines. Browser `normal`
+line-height was not always equal to Godot's natural font height, so it should
+not be used as the subtraction baseline for the Godot adapter.
+
+This establishes line-box heights, not complete rendering equivalence.
+Godot's integer spacing cannot reproduce CSS half-pixel leading exactly for
+odd adjustments. The human approved the installed Component Gallery on Android;
+runtime checks covered all 17 styles in Neon/Paper and preserved 32px compact
+and 48px ordinary icon targets. This does not establish equivalence for arbitrary
+fallback glyphs, scaling, or every native text control.
+
+References: [CSS leading and half-leading](https://www.w3.org/TR/CSS2/visudet.html#leading),
+[Godot FontVariation](https://docs.godotengine.org/en/stable/classes/class_fontvariation.html),
+and [Label line_spacing](https://docs.godotengine.org/en/stable/classes/class_label.html#class-label-theme-constant-line-spacing).
 
 ## Rules for UI changes
 

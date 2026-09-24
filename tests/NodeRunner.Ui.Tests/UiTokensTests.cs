@@ -176,6 +176,17 @@ public sealed class UiTokensTests
     }
 
     [Fact]
+    public void Typography_ProjectThemeOwnsTheZeroLabelLineSpacingDefault()
+    {
+        var projectRoot = Path.Combine(FindRepositoryRoot(), "project");
+        var settings = File.ReadAllText(Path.Combine(projectRoot, "project.godot"));
+        var theme = File.ReadAllText(Path.Combine(projectRoot, "assets", "themes", "UiDefaults.tres"));
+
+        settings.ShouldContain("theme/custom=\"res://assets/themes/UiDefaults.tres\"");
+        theme.ShouldContain("Label/constants/line_spacing = 0");
+    }
+
+    [Fact]
     public void EffectsLite_PreservesTokensAndRemovesGlow()
     {
         var tokens = UiTokens.Neon.WithEffects(false);
