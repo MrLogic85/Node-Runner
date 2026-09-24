@@ -15,8 +15,7 @@ public enum UiButtonKind
 public enum UiButtonContentLayout
 {
     Row,
-    Icon,
-    Stack,
+    Stacked,
 }
 
 /// <summary>
@@ -126,40 +125,25 @@ public readonly record struct UiButtonMetrics(
         tokens.BadgeOffset,
         tokens.ButtonSelectedStroke);
 
-    public float VisibleControlSize(UiButtonContentLayout layout, bool compact) => layout switch
+    public float ControlSize(UiButtonContentLayout layout, bool compact) => layout switch
     {
         UiButtonContentLayout.Row => compact ? CompactControlSize : StandardControlSize,
-        UiButtonContentLayout.Icon => compact ? CompactControlSize : StandardControlSize,
-        UiButtonContentLayout.Stack => TouchTarget,
+        UiButtonContentLayout.Stacked => TouchTarget,
         _ => throw new ArgumentOutOfRangeException(nameof(layout), layout, null),
     };
 
     public Vector2 MinimumSize(UiButtonContentLayout layout, bool compact)
     {
-        var target = compact && layout != UiButtonContentLayout.Stack
-            ? CompactControlSize
-            : TouchTarget;
-        return layout switch
-        {
-            UiButtonContentLayout.Row => new Vector2(0, target),
-            UiButtonContentLayout.Icon or UiButtonContentLayout.Stack => new Vector2(target, target),
-            _ => throw new ArgumentOutOfRangeException(nameof(layout), layout, null),
-        };
+        var size = ControlSize(layout, compact);
+        return new Vector2(size, size);
     }
 
-    public Rect2 VisibleFrame(
-        Vector2 controlSize,
-        UiButtonContentLayout layout,
-        bool compact)
+    public static UiIconSize IconSize(UiButtonContentLayout layout) => layout switch
     {
-        var visibleSize = VisibleControlSize(layout, compact);
-        var width = layout == UiButtonContentLayout.Row ? controlSize.X : visibleSize;
-        return new Rect2(
-            (controlSize.X - width) * 0.5f,
-            (controlSize.Y - visibleSize) * 0.5f,
-            width,
-            visibleSize);
-    }
+        UiButtonContentLayout.Row => UiIconSize.Standard,
+        UiButtonContentLayout.Stacked => UiIconSize.Large,
+        _ => throw new ArgumentOutOfRangeException(nameof(layout), layout, null),
+    };
 
     /// <summary>
     /// Local geometry of the hold-progress layers inside the visible frame.
@@ -180,16 +164,8 @@ public readonly record struct UiButtonMetrics(
                     height)));
     }
 
-    public Vector2 BadgePosition(
-        Vector2 controlSize,
-        UiButtonContentLayout layout,
-        bool compact)
-    {
-        var frame = VisibleFrame(controlSize, layout, compact);
-        return new Vector2(
-            frame.End.X - BadgeMinimumSize + BadgeOffset,
-            frame.Position.Y - BadgeOffset);
-    }
+    public Vector2 BadgePosition(Vector2 controlSize) =>
+        new(controlSize.X - BadgeMinimumSize + BadgeOffset, -BadgeOffset);
 }
 
 /// <summary>Local rects of the hold-progress fill and its reveal window.</summary>

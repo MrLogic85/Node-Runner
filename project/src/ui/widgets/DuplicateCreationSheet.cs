@@ -93,13 +93,13 @@ public partial class DuplicateCreationSheet : Control
 
         var actions = new VBoxContainer();
         actions.AddThemeConstantOverride("separation", 12);
-        var copy = CreateButton("Copy brain", UiActionButton.ActionKind.Primary);
+        var copy = CreateButton("Copy brain", UiButtonKind.Primary);
         copy.Pressed += () => EmitSignal(SignalName.CopyBrainRequested);
         actions.AddChild(copy);
-        var fresh = CreateButton("Start fresh", UiActionButton.ActionKind.Secondary);
+        var fresh = CreateButton("Start fresh", UiButtonKind.Secondary);
         fresh.Pressed += () => EmitSignal(SignalName.StartFreshRequested);
         actions.AddChild(fresh);
-        var cancel = CreateButton("Cancel", UiActionButton.ActionKind.Secondary);
+        var cancel = CreateButton("Cancel", UiButtonKind.Secondary);
         cancel.Pressed += () => EmitSignal(SignalName.CancelRequested);
         actions.AddChild(cancel);
         stack.AddChild(actions);
@@ -120,7 +120,7 @@ public partial class DuplicateCreationSheet : Control
         return label;
     }
 
-    private UiActionButton CreateButton(string text, UiActionButton.ActionKind kind) =>
+    private UiButton CreateButton(string text, UiButtonKind kind) =>
         new()
         {
             Tokens = _tokens,

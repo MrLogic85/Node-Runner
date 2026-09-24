@@ -20,7 +20,7 @@
 
 ```
 src/ui/
-├── lib/          Reusable, app-agnostic Controls (UiActionButton, UiPanel)
+├── lib/          Reusable, app-agnostic Controls (UiButton, UiCard)
 ├── screens/      Full-screen scenes (BuildScreen, CreationsScreen)
 └── widgets/      App-specific composites (ConstructionCanvas, GenerationStrip)
 ```

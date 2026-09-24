@@ -78,7 +78,7 @@ public partial class EditScreen : Control
 
         var header = new HBoxContainer();
         header.AddChild(CreateLabel("Edit " + _creationName, 22, _tokens.Ink, true));
-        var done = CreateButton("Done", UiActionButton.ActionKind.Primary);
+        var done = CreateButton("Done", UiButtonKind.Primary);
         done.Pressed += () => EmitSignal(SignalName.DoneRequested);
         header.AddChild(done);
         layout.AddChild(header);
@@ -133,21 +133,21 @@ public partial class EditScreen : Control
         stack.AddChild(CreateLabel("Only Move is active. Beam, Core, and Delete stay visible so you know what is protected.", 14, _tokens.Muted));
         foreach (var tool in new[] { "Beam · Move only · training kept", "Core · Move only · training kept", "Delete · Move only · training kept" })
         {
-            var locked = new UiToolButton
+            var locked = new UiButton
             {
                 Tokens = _tokens,
-                ToolLabel = tool,
+                LabelText = $"{tool} · Move only · training kept",
                 IconId = UiIconId.Move,
-                Locked = true,
-                LockReason = "Move only · training kept",
+                Enabled = false,
+                TooltipText = "Move only · training kept",
             };
             stack.AddChild(locked);
         }
-        var rebuild = new UiActionButton
+        var rebuild = new UiButton
         {
             Tokens = _tokens,
             LabelText = "Rebuild body",
-            Kind = UiActionButton.ActionKind.Danger,
+            Kind = UiButtonKind.Tertiary,
         };
         rebuild.Pressed += () => EmitSignal(SignalName.RebuildRequested);
         stack.AddChild(rebuild);
@@ -163,9 +163,9 @@ public partial class EditScreen : Control
         return label;
     }
 
-    private UiActionButton CreateButton(string text, UiActionButton.ActionKind kind)
+    private UiButton CreateButton(string text, UiButtonKind kind)
     {
-        return new UiActionButton
+        return new UiButton
         {
             Tokens = _tokens,
             LabelText = text,

@@ -239,16 +239,17 @@ public partial class CreationsScreen : Control
 
         row.AddChild(CreateAchievementButton());
 
-        var newButton = CreateButton("+ New", UiActionButton.ActionKind.Primary);
+        var newButton = CreateButton("+ New", UiButtonKind.Primary);
         newButton.CustomMinimumSize = new Vector2(104, _tokens.TouchTarget);
         newButton.Pressed += () => EmitSignal(SignalName.NewRequested);
         row.AddChild(newButton);
 
-        var overflowButton = new UiSecondaryIconButton
+        var overflowButton = new UiButton
         {
+            ContentLayout = UiButtonContentLayout.Stacked,
             Tokens = _tokens,
             IconId = UiIconId.More,
-            AccessibleLabel = "More",
+            TooltipText = "More",
         };
         overflowButton.Pressed += ToggleOverflowMenu;
         row.AddChild(overflowButton);
@@ -261,11 +262,12 @@ public partial class CreationsScreen : Control
         {
             CustomMinimumSize = new Vector2(_tokens.TouchTarget, _tokens.TouchTarget),
         };
-        var trophy = new UiSecondaryIconButton
+        var trophy = new UiButton
         {
+            ContentLayout = UiButtonContentLayout.Stacked,
             Tokens = _tokens,
             IconId = UiIconId.Trophy,
-            AccessibleLabel = "Achievements",
+            TooltipText = "Achievements",
         };
         trophy.Pressed += () => EmitSignal(SignalName.AchievementsRequested);
         holder.AddChild(trophy);
@@ -543,7 +545,7 @@ public partial class CreationsScreen : Control
         return label;
     }
 
-    private UiActionButton CreateButton(string text, UiActionButton.ActionKind kind) =>
+    private UiButton CreateButton(string text, UiButtonKind kind) =>
         new()
         {
             Tokens = _tokens,

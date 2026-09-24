@@ -264,11 +264,12 @@ public partial class BuildScreen : Control
         topBar.AddThemeConstantOverride("separation", (int)_tokens.Space2);
         margin.AddChild(topBar);
 
-        var back = new UiSecondaryIconButton
+        var back = new UiButton
         {
+            ContentLayout = UiButtonContentLayout.Stacked,
             Tokens = _tokens,
             IconId = UiIconId.Back,
-            AccessibleLabel = "Back",
+            TooltipText = "Back",
         };
         back.Pressed += () => EmitSignal(SignalName.BackRequested);
         topBar.AddChild(back);
@@ -302,25 +303,21 @@ public partial class BuildScreen : Control
         topBar.AddChild(CreateBrainChip(buildPanel));
         if (Presentation?.ShowCompleteAction != false)
         {
-            var save = CreateButton("Save", buildPanel.CanCompleteCreation ? UiActionButton.ActionKind.Primary : UiActionButton.ActionKind.Secondary, buildPanel.DisabledReason ?? "Save this Creation");
+            var save = CreateButton("Save", buildPanel.CanCompleteCreation ? UiButtonKind.Primary : UiButtonKind.Secondary, buildPanel.DisabledReason ?? "Save this Creation");
             save.CustomMinimumSize = new Vector2(88, _tokens.TouchTarget);
-            save.Locked = !buildPanel.CanCompleteCreation;
-            save.ShowLockReasonInText = false;
-            if (buildPanel.DisabledReason is not null)
-            {
-                save.LockReason = buildPanel.DisabledReason;
-            }
+            save.Enabled = buildPanel.CanCompleteCreation;
             if (buildPanel.CanCompleteCreation)
             {
                 save.Pressed += () => EmitSignal(SignalName.SaveRequested);
             }
             topBar.AddChild(save);
         }
-        var overflow = new UiSecondaryIconButton
+        var overflow = new UiButton
         {
+            ContentLayout = UiButtonContentLayout.Stacked,
             Tokens = _tokens,
             IconId = UiIconId.More,
-            AccessibleLabel = Presentation?.ShowCompleteAction == false ? "Reset training or delete creation" : "More build actions",
+            TooltipText = Presentation?.ShowCompleteAction == false ? "Reset training or delete creation" : "More build actions",
         };
         overflow.Pressed += () =>
         {
@@ -415,12 +412,12 @@ public partial class BuildScreen : Control
         return hintStart < 0 ? text : text[..hintStart];
     }
 
-    private UiActionButton.ActionKind ToolButtonKind(ConstructionTool tool) =>
-        Presentation?.ActiveTool == tool ? UiActionButton.ActionKind.Primary : UiActionButton.ActionKind.Secondary;
+    private UiButtonKind ToolButtonKind(ConstructionTool tool) =>
+        Presentation?.ActiveTool == tool ? UiButtonKind.Primary : UiButtonKind.Secondary;
 
-    private Button CreateBuildToolButton(ConstructionTool tool, string label, UiActionButton.ActionKind kind, string tooltip, bool locked)
+    private Button CreateBuildToolButton(ConstructionTool tool, string label, UiButtonKind kind, string tooltip, bool locked)
     {
-        var active = kind == UiActionButton.ActionKind.Primary;
+        var active = kind == UiButtonKind.Primary;
         var button = new Button
         {
             Text = label.ToUpperInvariant(),
@@ -586,13 +583,13 @@ public partial class BuildScreen : Control
         stack.AddChild(CreateLabel(presentation.TrainingSummaryTitle, 14, _tokens.Ink, expand: true));
         stack.AddChild(CreateLabel($"Best distance {presentation.BestDistanceText}", 12, _tokens.Accent, expand: true));
         stack.AddChild(CreateLabel(presentation.TrainingSummaryBody, 11, _tokens.Muted, expand: true));
-        var resume = CreateButton("Resume training", UiActionButton.ActionKind.Primary, "Open Train setup");
+        var resume = CreateButton("Resume training", UiButtonKind.Primary, "Open Train setup");
         resume.Pressed += () => EmitSignal(SignalName.ResumeTrainingRequested);
         stack.AddChild(resume);
-        var stats = CreateButton("Stats", UiActionButton.ActionKind.Secondary, "Open stats");
+        var stats = CreateButton("Stats", UiButtonKind.Secondary, "Open stats");
         stats.Pressed += () => EmitSignal(SignalName.StatsRequested);
         stack.AddChild(stats);
-        var brain = CreateButton("Brain", UiActionButton.ActionKind.Secondary, "Open brain view");
+        var brain = CreateButton("Brain", UiButtonKind.Secondary, "Open brain view");
         brain.Pressed += () => EmitSignal(SignalName.BrainRequested);
         stack.AddChild(brain);
         stack.AddChild(CreateSpacer());
@@ -611,17 +608,19 @@ public partial class BuildScreen : Control
         header.AddChild(CreateLabel(presentation.SinglePartTitle, 14, _tokens.Ink, expand: true));
         if (allowDelete)
         {
-            var delete = CreateButton("Delete", UiActionButton.ActionKind.Danger, "Delete selected part", UiIconId.Trash);
+            var delete = CreateButton("Delete", UiButtonKind.Tertiary, "Delete selected part", UiIconId.Trash);
             delete.CustomMinimumSize = new Vector2(38, 34);
             delete.Pressed += () => EmitSignal(SignalName.DeleteSelectionRequested);
             header.AddChild(delete);
         }
 
-        var close = new UiSecondaryIconButton
+        var close = new UiButton
         {
+            Compact = true,
+            Kind = UiButtonKind.Flat,
             Tokens = _tokens,
             IconId = UiIconId.Close,
-            AccessibleLabel = "Close settings",
+            TooltipText = "Close settings",
         };
         close.Pressed += () => EmitSignal(SignalName.ClearSelectionRequested);
         header.AddChild(close);
@@ -655,17 +654,19 @@ public partial class BuildScreen : Control
         header.AddChild(CreateLabel(presentation.MultiSelectionTitle, 14, _tokens.Ink, expand: true));
         if (allowDelete)
         {
-            var delete = CreateButton("Delete", UiActionButton.ActionKind.Danger, "Delete selected parts");
+            var delete = CreateButton("Delete", UiButtonKind.Tertiary, "Delete selected parts");
             delete.CustomMinimumSize = new Vector2(82, 34);
             delete.Pressed += () => EmitSignal(SignalName.DeleteSelectionRequested);
             header.AddChild(delete);
         }
 
-        var close = new UiSecondaryIconButton
+        var close = new UiButton
         {
+            Compact = true,
+            Kind = UiButtonKind.Flat,
             Tokens = _tokens,
             IconId = UiIconId.Close,
-            AccessibleLabel = "Close selection",
+            TooltipText = "Close selection",
         };
         close.Pressed += () => EmitSignal(SignalName.ClearSelectionRequested);
         header.AddChild(close);
@@ -710,7 +711,7 @@ public partial class BuildScreen : Control
             SubmitCreationName(text);
         };
         stack.AddChild(entry);
-        var apply = CreateButton("Apply", UiActionButton.ActionKind.Primary, "Rename Creation");
+        var apply = CreateButton("Apply", UiButtonKind.Primary, "Rename Creation");
         apply.Pressed += () => SubmitCreationName(entry.Text);
         stack.AddChild(apply);
         entry.CallDeferred(LineEdit.MethodName.GrabFocus);
@@ -748,7 +749,7 @@ public partial class BuildScreen : Control
 
         if (Presentation?.ShowCompleteAction == false)
         {
-            var reset = CreateButton("Reset training", UiActionButton.ActionKind.Secondary, "Reset saved training");
+            var reset = CreateButton("Reset training", UiButtonKind.Secondary, "Reset saved training");
             reset.Pressed += () =>
             {
                 _creationOverflowOpen = false;
@@ -756,7 +757,7 @@ public partial class BuildScreen : Control
                 EmitSignal(SignalName.ResetTrainingRequested);
             };
             stack.AddChild(reset);
-            var delete = CreateButton("Delete creation", UiActionButton.ActionKind.Danger, "Delete this Creation");
+            var delete = CreateButton("Delete creation", UiButtonKind.Tertiary, "Delete this Creation");
             delete.Pressed += () =>
             {
                 _creationOverflowOpen = false;
@@ -1008,13 +1009,13 @@ public partial class BuildScreen : Control
     private UiButton CreateStepper(string label, int delta, string accessibleLabel)
     {
         var shape = Presentation?.BrainShape ?? BrainShapeDef.Default;
-        var button = new UiSecondaryIconButton
+        var button = new UiButton
         {
             Tokens = _tokens,
             IconId = null,
             SymbolText = label,
-            AccessibleLabel = accessibleLabel,
-            ButtonSize = UiIconButtonSize.Small,
+            TooltipText = accessibleLabel,
+            Compact = true,
         };
         button.Activated += () => EmitBrainShape(
             shape.HiddenLayers,
@@ -1132,14 +1133,13 @@ public partial class BuildScreen : Control
 
     private Control CreatePartButton(string label, string countText, bool locked, ConstructionTool? tool)
     {
-        var button = new UiActionButton
+        var button = new UiButton
         {
             Tokens = _tokens,
             LabelText = $"{label} · {countText}",
-            Kind = UiActionButton.ActionKind.Secondary,
-            Locked = locked,
-            ShowLockReasonInText = false,
-            LockReason = countText,
+            Kind = UiButtonKind.Secondary,
+            Enabled = !locked,
+            TooltipText = locked ? countText : string.Empty,
             CustomMinimumSize = new Vector2(0, _tokens.TouchTarget),
             SizeFlagsHorizontal = SizeFlags.ExpandFill,
         };
@@ -1415,9 +1415,9 @@ public partial class BuildScreen : Control
         return button;
     }
 
-    private UiActionButton CreateButton(string label, UiActionButton.ActionKind kind, string tooltip, UiIconId? iconId = null)
+    private UiButton CreateButton(string label, UiButtonKind kind, string tooltip, UiIconId? iconId = null)
     {
-        return new UiActionButton
+        return new UiButton
         {
             Tokens = _tokens,
             Kind = kind,

@@ -2,8 +2,8 @@ using Godot;
 
 namespace NodeRunner.Ui.Lib;
 
-/// <summary>Shared themed foundation for labelled buttons.</summary>
-public partial class UiButton : Button
+/// <summary>Canonical button: row or stacked content, optional compact sizing and hold activation.</summary>
+public sealed partial class UiButton : Button
 {
     [Signal]
     public delegate void ActivatedEventHandler();
@@ -12,21 +12,15 @@ public partial class UiButton : Button
     private UiTokens _tokens = UiTokens.Neon;
     private UiButtonStyle _style = UiButtonStyle.Secondary;
     private string _labelText = string.Empty;
-    private string _callerTooltip = string.Empty;
-    private string _lastAppliedTooltip = string.Empty;
+    private string _symbolText = string.Empty;
     private UiIconId? _iconId;
     private bool _enabled = true;
-    private UiColor _borderColor = UiColor.LineStrong;
-    private UiColor _contentColor = UiColor.Ink;
-    private UiSpace _horizontalPadding = UiSpace.Space4;
-    private UiSpace _verticalPadding = UiSpace.None;
-    private bool _filled;
     private bool _on;
     private bool _compact;
     private string _badgeText = string.Empty;
     private UiButtonContentLayout _contentLayout;
     private SizeFlags _rowSizeFlagsHorizontal = SizeFlags.Fill;
-    private SizeFlags _rowSizeFlagsVertical = SizeFlags.Fill;
+    private bool _squareContent;
     private float _progress = -1f;
     private float _holdDurationSeconds;
     private double _holdElapsedSeconds;
@@ -73,6 +67,12 @@ public partial class UiButton : Button
         get => _style.Kind;
         set
         {
+            if (!Enum.IsDefined(value))
+            {
+                GD.PushError($"Invalid button kind: {value}. Keeping {_style.Kind}.");
+                return;
+            }
+
             _style = UiButtonStyle.For(value);
             RefreshStyle();
         }
@@ -106,58 +106,12 @@ public partial class UiButton : Button
     }
 
     [Export]
-    public UiColor BorderColor
+    public string SymbolText
     {
-        get => _borderColor;
+        get => _symbolText;
         set
         {
-            _borderColor = value;
-            _style = _style with { BorderColor = value };
-            RefreshStyle();
-        }
-    }
-
-    [Export]
-    public UiColor ContentColor
-    {
-        get => _contentColor;
-        set
-        {
-            _contentColor = value;
-            _style = _style with { ContentColor = value };
-            RefreshStyle();
-        }
-    }
-
-    [Export]
-    public UiSpace HorizontalPadding
-    {
-        get => _horizontalPadding;
-        set
-        {
-            _horizontalPadding = value;
-            RefreshStyle();
-        }
-    }
-
-    [Export]
-    public UiSpace VerticalPadding
-    {
-        get => _verticalPadding;
-        set
-        {
-            _verticalPadding = value;
-            RefreshStyle();
-        }
-    }
-
-    [Export]
-    public bool Filled
-    {
-        get => _filled;
-        set
-        {
-            _filled = value;
+            _symbolText = value;
             RefreshStyle();
         }
     }
@@ -180,18 +134,10 @@ public partial class UiButton : Button
         get => _contentLayout;
         set
         {
-            if (_contentLayout != value)
+            if (!Enum.IsDefined(value))
             {
-                if (value is UiButtonContentLayout.Stack or UiButtonContentLayout.Icon)
-                {
-                    _rowSizeFlagsHorizontal = SizeFlagsHorizontal;
-                    _rowSizeFlagsVertical = SizeFlagsVertical;
-                }
-                else
-                {
-                    SizeFlagsHorizontal = _rowSizeFlagsHorizontal;
-                    SizeFlagsVertical = _rowSizeFlagsVertical;
-                }
+                GD.PushError($"Invalid button layout: {value}. Keeping {_contentLayout}.");
+                return;
             }
 
             _contentLayout = value;
@@ -350,45 +296,19 @@ public partial class UiButton : Button
         _isHolding = false;
         SetProcess(false);
         SetProcessInput(false);
-        OnHoldCompleted();
         Activate();
     }
 
-    protected virtual string DisplayText => LabelText.ToUpperInvariant();
+    private string DisplayText => string.IsNullOrEmpty(SymbolText) ? LabelText.ToUpperInvariant() : SymbolText;
 
-    protected virtual string AccessibleDescription => string.Empty;
+    private bool HasRowLabel => !string.IsNullOrWhiteSpace(LabelText) && string.IsNullOrEmpty(SymbolText);
 
-    protected virtual UiIconSize DisplayIconSize => UiIconSize.Standard;
-
-    protected virtual Vector2 MinimumSize => UiButtonMetrics.From(Tokens).MinimumSize(ContentLayout, Compact);
-
-    protected virtual float VisibleControlSize => ContentLayout switch
-    {
-        UiButtonContentLayout.Row => UiButtonMetrics.From(Tokens).VisibleControlSize(ContentLayout, Compact),
-        UiButtonContentLayout.Icon => UiButtonMetrics.From(Tokens).VisibleControlSize(ContentLayout, Compact),
-        UiButtonContentLayout.Stack => Tokens.TouchTarget,
-        _ => throw new ArgumentOutOfRangeException(nameof(ContentLayout), ContentLayout, null),
-    };
-
-    protected virtual float HorizontalVisibleInset =>
-        ContentLayout == UiButtonContentLayout.Icon
-            ? (MinimumSize.X - VisibleControlSize) * 0.5f
-            : 0;
-
-    protected virtual float VerticalVisibleInset =>
-        (MinimumSize.Y - VisibleControlSize) * 0.5f;
-
-    protected virtual HorizontalAlignment DisplayIconAlignment =>
-        ContentLayout is UiButtonContentLayout.Stack or UiButtonContentLayout.Icon
-            ? HorizontalAlignment.Center
-            : HorizontalAlignment.Left;
-
-    protected virtual UiTokens.TextStyle DisplayTextStyle =>
-        ContentLayout == UiButtonContentLayout.Stack
+    private UiTokens.TextStyle DisplayTextStyle =>
+        ContentLayout == UiButtonContentLayout.Stacked
             ? Tokens.OverlineText
-            : Tokens.LabelText;
+            : string.IsNullOrEmpty(SymbolText) ? Tokens.LabelText : Tokens.ReadoutMediumText;
 
-    /// <summary>Uses the compact control size for row and icon layouts.</summary>
+    /// <summary>Uses the compact control size for the row layout; stacked stays touch-sized.</summary>
     [Export]
     public bool Compact
     {
@@ -412,7 +332,7 @@ public partial class UiButton : Button
         }
     }
 
-    protected void RefreshStyle()
+    private void RefreshStyle()
     {
         if (!IsInsideTree())
         {
@@ -420,31 +340,27 @@ public partial class UiButton : Button
         }
 
         Disabled = !Enabled;
-        if (TooltipText != _lastAppliedTooltip)
+        CustomMinimumSize = UiButtonMetrics.From(Tokens).MinimumSize(ContentLayout, Compact);
+        SizeFlagsVertical = SizeFlags.ShrinkCenter;
+        var squareContent = ContentLayout == UiButtonContentLayout.Stacked || !HasRowLabel;
+        if (squareContent && !_squareContent)
         {
-            _callerTooltip = TooltipText;
-        }
-
-        TooltipText = string.IsNullOrEmpty(AccessibleDescription)
-            ? _callerTooltip
-            : AccessibleDescription;
-        _lastAppliedTooltip = TooltipText;
-        CustomMinimumSize = MinimumSize;
-        if (ContentLayout is UiButtonContentLayout.Stack or UiButtonContentLayout.Icon)
-        {
+            _rowSizeFlagsHorizontal = SizeFlagsHorizontal;
             SizeFlagsHorizontal = SizeFlags.ShrinkCenter;
-            SizeFlagsVertical = SizeFlags.ShrinkCenter;
         }
+        else if (!squareContent && _squareContent)
+        {
+            SizeFlagsHorizontal = _rowSizeFlagsHorizontal;
+        }
+        _squareContent = squareContent;
 
-        ClipText = ContentLayout == UiButtonContentLayout.Stack;
-        IconAlignment = DisplayIconAlignment;
-        VerticalIconAlignment = ContentLayout == UiButtonContentLayout.Stack
-            ? VerticalAlignment.Top
-            : VerticalAlignment.Center;
+        ClipText = ContentLayout == UiButtonContentLayout.Stacked;
+        IconAlignment = HasRowLabel ? HorizontalAlignment.Left : HorizontalAlignment.Center;
+        VerticalIconAlignment = VerticalAlignment.Center;
         Tokens.ApplyTextStyle(this, DisplayTextStyle);
         AddThemeConstantOverride(
             "h_separation",
-            ContentLayout == UiButtonContentLayout.Stack
+            ContentLayout == UiButtonContentLayout.Stacked
                 ? (int)Tokens.Space1
                 : UiSpacing.ControlGap(Tokens));
 
@@ -455,8 +371,8 @@ public partial class UiButton : Button
         AddThemeColorOverride("font_disabled_color", UiTokens.MultiplyAlpha(content, _disabledOpacity));
         EnsureProgressLayers();
         EnsureStackContent();
-        _stackContent!.Visible = ContentLayout == UiButtonContentLayout.Stack;
-        if (ContentLayout == UiButtonContentLayout.Stack)
+        _stackContent!.Visible = ContentLayout == UiButtonContentLayout.Stacked;
+        if (ContentLayout == UiButtonContentLayout.Stacked)
         {
             Text = string.Empty;
             Icon = null;
@@ -467,7 +383,7 @@ public partial class UiButton : Button
             Text = DisplayText;
             if (IconId is { } icon)
             {
-                UiIcons.Apply(this, icon, DisplayIconSize, content);
+                UiIcons.Apply(this, icon, UiButtonMetrics.IconSize(ContentLayout), content);
                 AddThemeColorOverride("icon_disabled_color", UiTokens.MultiplyAlpha(content, _disabledOpacity));
             }
             else
@@ -482,35 +398,12 @@ public partial class UiButton : Button
         AddThemeStyleboxOverride("focus", new StyleBoxEmpty());
         AddThemeStyleboxOverride("disabled", CreateStyle(_disabledOpacity, transparentBorder: true));
         RefreshProgress();
-        RefreshSelectedGlow();
+        QueueRedraw();
         RefreshBadge();
-        if (!Enabled)
-        {
-            QueueRedraw();
-        }
-    }
-
-    protected virtual bool CanBeginHold => true;
-
-    protected virtual void OnHoldStarted()
-    {
-    }
-
-    protected virtual void OnHoldCancelled()
-    {
-    }
-
-    protected virtual void OnHoldCompleted()
-    {
-    }
-
-    protected virtual void OnActivated()
-    {
     }
 
     private void Activate()
     {
-        OnActivated();
         EmitSignal(SignalName.Activated);
     }
 
@@ -524,7 +417,7 @@ public partial class UiButton : Button
 
     private void BeginHold()
     {
-        if (!Enabled || HoldDurationSeconds <= 0 || !CanBeginHold)
+        if (!Enabled || HoldDurationSeconds <= 0)
         {
             return;
         }
@@ -534,7 +427,6 @@ public partial class UiButton : Button
         Progress = 0;
         SetProcess(true);
         SetProcessInput(true);
-        OnHoldStarted();
     }
 
     private void EndHold()
@@ -549,7 +441,6 @@ public partial class UiButton : Button
         Progress = 0;
         SetProcess(false);
         SetProcessInput(false);
-        OnHoldCancelled();
     }
 
     public override void _Draw()
@@ -567,14 +458,9 @@ public partial class UiButton : Button
 
         var style = _style.Resolve(Tokens);
         var color = UiTokens.MultiplyAlpha(On ? style.Selected : style.Border, _disabledOpacity);
-        var inset = new Vector2(HorizontalVisibleInset, VerticalVisibleInset);
         var halfStroke = Tokens.StrokeHair * 0.5f;
-        var left = inset.X + halfStroke;
-        var top = inset.Y + halfStroke;
-        var right = Size.X - HorizontalVisibleInset - halfStroke;
-        var bottom = VerticalVisibleInset + VisibleControlSize - halfStroke;
         var radius = Tokens.RadiusMedium;
-        UiDashedBorder.DrawRoundedRect(this, new Rect2(left, top, right - left, bottom - top), radius, color, Tokens.StrokeHair);
+        UiDashedBorder.DrawRoundedRect(this, new Rect2(Vector2.One * halfStroke, Size - Vector2.One * Tokens.StrokeHair), radius, color, Tokens.StrokeHair);
     }
 
     private StyleBoxFlat CreateStyle(float opacity = 1, bool transparentBorder = false)
@@ -594,19 +480,17 @@ public partial class UiButton : Button
                 : UiTokens.MultiplyAlpha(styleBorder, opacity),
             borderWidth: transparentBorder ? 0 : On ? Tokens.ButtonSelectedStroke : null,
             glow: false,
-            horizontalPadding: ContentLayout == UiButtonContentLayout.Row
-                ? ResolveSpace(HorizontalPadding)
+            horizontalPadding: ContentLayout == UiButtonContentLayout.Row && HasRowLabel
+                ? (int)Tokens.Space4
                 : 0,
-            verticalPadding: ContentLayout == UiButtonContentLayout.Row
-                ? ResolveSpace(VerticalPadding)
-                : 0);
+            verticalPadding: 0);
         var glowColor = _style.GlowBaseFor(Tokens, On, Enabled);
         if (glowColor is { } color)
         {
             UiGlow.ApplyToControl(style, color, Tokens.EffectsEnabled);
         }
 
-        return InsetToVisibleControl(style);
+        return style;
     }
 
     private StyleBoxFlat CreateBackgroundStyle(Color background, float opacity)
@@ -692,11 +576,6 @@ public partial class UiButton : Button
         AddChild(_progressClip);
     }
 
-    private void RefreshSelectedGlow()
-    {
-        QueueRedraw();
-    }
-
     private void EnsureStackContent()
     {
         if (_stackContent is not null)
@@ -722,9 +601,10 @@ public partial class UiButton : Button
         };
         _stackLabel = new Label
         {
+            TextOverrunBehavior = TextServer.OverrunBehavior.TrimEllipsis,
             HorizontalAlignment = HorizontalAlignment.Center,
             MouseFilter = MouseFilterEnum.Ignore,
-            SizeFlagsHorizontal = SizeFlags.ShrinkCenter,
+            SizeFlagsHorizontal = SizeFlags.Fill,
         };
         _stackContent.AddThemeConstantOverride("separation", (int)Tokens.Space1);
         _stackContent.AddChild(_stackIcon);
@@ -756,10 +636,7 @@ public partial class UiButton : Button
         _badge.Text = BadgeText;
         _badge.CustomMinimumSize = new Vector2(metrics.BadgeMinimumSize, metrics.BadgeMinimumSize);
         _badge.Size = _badge.CustomMinimumSize;
-        _badge.Position = metrics.BadgePosition(
-            Size,
-            ContentLayout,
-            Compact);
+        _badge.Position = metrics.BadgePosition(Size);
         Tokens.ApplyTextStyle(_badge, Tokens.CaptionText);
         _badge.AddThemeColorOverride("font_color", Tokens.Background);
         _badge.AddThemeStyleboxOverride(
@@ -800,10 +677,7 @@ public partial class UiButton : Button
             return;
         }
 
-        var frame = UiButtonMetrics.From(Tokens).VisibleFrame(
-            Size,
-            ContentLayout,
-            Compact);
+        var frame = new Rect2(Vector2.Zero, Size);
         var layout = UiButtonMetrics.ProgressLayout(frame, Progress);
         _progressClip.Position = frame.Position;
         _progressClip.Size = layout.Fill.Size;
@@ -823,16 +697,15 @@ public partial class UiButton : Button
     {
         var baseColor = UiGlow.FromBase(_style.Resolve(Tokens).Selected, enabled: true);
         var opacity = Enabled ? 1f : _disabledOpacity;
-        var inset = new Vector2(HorizontalVisibleInset, VerticalVisibleInset);
         for (var depth = 0; depth < UiGlow.Extent; depth++)
         {
             var strength = 1f - (depth / (float)UiGlow.Extent);
             var color = UiTokens.MultiplyAlpha(baseColor, opacity * strength * strength);
             var rect = new Rect2(
-                inset.X + depth,
-                inset.Y + depth,
-                Size.X - (HorizontalVisibleInset * 2) - (depth * 2),
-                VisibleControlSize - (depth * 2));
+                depth,
+                depth,
+                Size.X - (depth * 2),
+                Size.Y - (depth * 2));
             if (rect.Size.X <= 0 || rect.Size.Y <= 0)
             {
                 break;
@@ -862,25 +735,5 @@ public partial class UiButton : Button
 
         DrawPolyline(points, color, Tokens.StrokeHair, antialiased: true);
     }
-
-    private StyleBoxFlat InsetToVisibleControl(StyleBoxFlat style)
-    {
-        style.ExpandMarginLeft = -HorizontalVisibleInset;
-        style.ExpandMarginTop = -VerticalVisibleInset;
-        style.ExpandMarginRight = -HorizontalVisibleInset;
-        style.ExpandMarginBottom = -VerticalVisibleInset;
-        return style;
-    }
-
-    private int ResolveSpace(UiSpace space) => space switch
-    {
-        UiSpace.None => 0,
-        UiSpace.Space1 => (int)Tokens.Space1,
-        UiSpace.Space2 => (int)Tokens.Space2,
-        UiSpace.Space3 => (int)Tokens.Space3,
-        UiSpace.Space4 => (int)Tokens.Space4,
-        UiSpace.Space5 => (int)Tokens.Space5,
-        _ => throw new ArgumentOutOfRangeException(nameof(space), space, null),
-    };
 
 }

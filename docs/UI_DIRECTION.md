@@ -64,10 +64,19 @@ For buttons, the Component Library's **Buttons** paragraph defines the four
 current kinds. Older reference summaries still call `secondary` "default"
 and `tertiary` "danger"; `on` and `off` are states, not kinds.
 Hold-to-activate is available across kinds and layouts, not only destructive
-buttons. Standard icon buttons have a 40px visible frame inside a 48px target.
-Compact row/icon buttons use 32px height (32px width for icons) with no extra
-touch inset; stacked buttons retain their 48px target. Inspector close uses
-the shared flat compact icon button, not a custom header button.
+buttons. Under the human-approved simplification in
+[issue #275](https://github.com/MrLogic85/Node-Runner/issues/275), buttons have
+no invisible touch margin: visible and clickable bounds are the same.
+`UiButton` is the only button class. `Row` uses 40px height/minimum width,
+or 32px with `Compact`; `Stacked` uses exactly 48x48px and ignores `Compact`.
+These sizes come from `ControlHeight`, `ControlSmall`, and `TouchTarget`.
+Row icons are 16px with or without text, including compact; stacked icons are
+20px with or without text. Textless row buttons need no separate icon layout.
+Inspector close uses the shared flat compact row button. Toolbar icon actions
+may use Stacked pending their own component review; the human accepted the
+temporary visual change and will discuss the removed touch margins with the
+designer. This deliberately supersedes the reference's 40px-in-48px button
+target, not the touch geometry of other controls.
 The Android-reviewed shared glow uses base colours with 12% opacity
 and 10px extent rather than separate button/control glow variants.
 
@@ -192,8 +201,9 @@ not be used as the subtraction baseline for the Godot adapter.
 This establishes line-box heights, not complete rendering equivalence.
 Godot's integer spacing cannot reproduce CSS half-pixel leading exactly for
 odd adjustments. The human approved the installed Component Gallery on Android;
-runtime checks covered all 17 styles in Neon/Paper and preserved 32px compact
-and 48px ordinary icon targets. This does not establish equivalence for arbitrary
+runtime checks covered all 17 styles in Neon/Paper and preserved the then-current
+32px compact and 48px ordinary icon targets (button geometry changed separately
+in #275 above). This does not establish equivalence for arbitrary
 fallback glyphs, scaling, or every native text control.
 
 References: [CSS leading and half-leading](https://www.w3.org/TR/CSS2/visudet.html#leading),

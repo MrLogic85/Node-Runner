@@ -131,10 +131,11 @@ public partial class ColorsAndStylesScreen : Control
 
         if (ShowCloseAction)
         {
-            var close = Track(new UiSecondaryIconButton
+            var close = Track(new UiButton
             {
+                ContentLayout = UiButtonContentLayout.Stacked,
                 IconId = UiIconId.Back,
-                AccessibleLabel = "Back",
+                TooltipText = "Back",
                 SizeFlagsVertical = SizeFlags.ShrinkCenter,
             });
             close.Pressed += () => EmitSignal(SignalName.CloseRequested);
