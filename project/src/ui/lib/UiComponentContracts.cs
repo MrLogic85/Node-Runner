@@ -6,6 +6,8 @@ namespace NodeRunner.Ui.Lib;
 public static class UiComponentContracts
 {
     public const float IconButtonVisibleSize = 40;
+    public const float PartRowVisibleHeight = 40;
+    public const float PartRowTouchHeight = 48;
     public const float ProgressRingDiameter = 44;
     public const float HoldCompletionSeconds = 0.8f;
     public const float ButtonProgressOpacity = 0.5f;
@@ -61,6 +63,7 @@ public static class UiComponentContracts
         ProgressBar,
         TextField,
         NameField,
+        Note,
         ValueRow,
         ReadonlyValue,
         PowerRow,
@@ -74,6 +77,7 @@ public static class UiComponentContracts
         Panel,
         ProgressRing,
         Number,
+        StageCard,
     }
 
     public enum HoldState
@@ -122,9 +126,10 @@ public static class UiComponentContracts
             CanonicalComponent.ProgressBar => nameof(UiSlider),
             CanonicalComponent.TextField => nameof(UiTextField),
             CanonicalComponent.NameField => nameof(UiNameField),
+            CanonicalComponent.Note => nameof(UiNoteRow),
             CanonicalComponent.ValueRow => nameof(UiValueRow),
             CanonicalComponent.ReadonlyValue => nameof(UiReadonlyValue),
-            CanonicalComponent.PowerRow => nameof(UiPowerRow),
+            CanonicalComponent.PowerRow => nameof(UiValueRow),
             CanonicalComponent.MeterRow => nameof(UiMeterRow),
             CanonicalComponent.PartRow => nameof(UiPartRow),
             CanonicalComponent.IconTabs => nameof(UiIconTabs),
@@ -132,9 +137,10 @@ public static class UiComponentContracts
             CanonicalComponent.PanelHeader => nameof(UiPanelHeader),
             CanonicalComponent.InfoRow => nameof(UiInfoRow),
             CanonicalComponent.Card => nameof(UiCard),
-            CanonicalComponent.Panel => nameof(UiCard),
+            CanonicalComponent.Panel => nameof(UiInspectorPanel),
             CanonicalComponent.ProgressRing => nameof(UiProgressRing),
             CanonicalComponent.Number => nameof(UiNumber),
+            CanonicalComponent.StageCard => nameof(UiStageCard),
             _ => throw new ArgumentOutOfRangeException(nameof(component), component, null),
         };
 

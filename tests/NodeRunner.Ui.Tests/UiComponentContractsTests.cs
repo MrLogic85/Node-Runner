@@ -36,6 +36,7 @@ public sealed class UiComponentContractsTests
                 "ProgressBar",
                 "TextField",
                 "NameField",
+                "Note",
                 "ValueRow",
                 "ReadonlyValue",
                 "PowerRow",
@@ -49,6 +50,7 @@ public sealed class UiComponentContractsTests
                 "Panel",
                 "ProgressRing",
                 "Number",
+                "StageCard",
             ]);
     }
 
@@ -100,6 +102,16 @@ public sealed class UiComponentContractsTests
                 UiComponentContracts.CanonicalComponent.Slider,
                 UiComponentContracts.CanonicalComponent.Range)
             .ShouldBeTrue();
+    }
+
+    [Fact]
+    public void PowerAndValueRows_ShareImplementation()
+    {
+        UiComponentContracts.ControlTypeFor(UiComponentContracts.CanonicalComponent.PowerRow)
+            .ShouldBe(nameof(UiValueRow));
+        UiComponentContracts.SharesImplementation(
+            UiComponentContracts.CanonicalComponent.PowerRow,
+            UiComponentContracts.CanonicalComponent.ValueRow).ShouldBeTrue();
     }
 
     [Fact]
@@ -163,16 +175,12 @@ public sealed class UiComponentContractsTests
     }
 
     [Fact]
-    public void CardAndPanel_ShareImplementation()
+    public void PanelAndStageCard_UseDedicatedImplementations()
     {
-        UiComponentContracts.ControlTypeFor(UiComponentContracts.CanonicalComponent.Card)
-            .ShouldBe(nameof(UiCard));
         UiComponentContracts.ControlTypeFor(UiComponentContracts.CanonicalComponent.Panel)
-            .ShouldBe(nameof(UiCard));
-        UiComponentContracts.SharesImplementation(
-                UiComponentContracts.CanonicalComponent.Card,
-                UiComponentContracts.CanonicalComponent.Panel)
-            .ShouldBeTrue();
+            .ShouldBe(nameof(UiInspectorPanel));
+        UiComponentContracts.ControlTypeFor(UiComponentContracts.CanonicalComponent.StageCard)
+            .ShouldBe(nameof(UiStageCard));
     }
 
     [Fact]
@@ -210,17 +218,16 @@ public sealed class UiComponentContractsTests
     public void Defaults_MatchReferenceTouchAndCompletionContracts()
     {
         UiComponentContracts.IconButtonVisibleSize.ShouldBe(40);
+        UiComponentContracts.PartRowVisibleHeight.ShouldBe(UiTokens.Neon.ControlHeight);
+        UiComponentContracts.PartRowTouchHeight.ShouldBe(UiTokens.Neon.TouchTarget);
         UiTokens.Neon.TouchTarget.ShouldBe(48);
         UiTokens.Neon.NumberDiameter.ShouldBe(16);
         UiTokens.Neon.NumberStrokeWidth.ShouldBe(1.5f);
         UiComponentContracts.ProgressRingDiameter.ShouldBe(44);
         UiComponentContracts.HoldCompletionSeconds.ShouldBe(0.8f);
         UiComponentContracts.ButtonProgressOpacity.ShouldBe(0.5f);
-        UiGlow.ControlExtent.ShouldBe(10);
-        UiGlow.ControlOpacity.ShouldBe(0.6f);
-        UiGlow.ButtonExtent.ShouldBe(12);
-        UiGlow.ButtonOpacity.ShouldBe(0.12f);
-        UiGlow.InsetExtent.ShouldBe(12);
+        UiGlow.Extent.ShouldBe(10);
+        UiGlow.Opacity.ShouldBe(0.12f);
         var sliderStyle = UiSliderStyle.From(UiTokens.Neon);
         sliderStyle.ThumbRadius.ShouldBe(9);
         sliderStyle.TrackWidth.ShouldBe(4);
@@ -268,6 +275,26 @@ public sealed class UiComponentContractsTests
             DisabledDashLength: 8,
             DisabledThumbInset: 2,
             SteppedHeight: 120));
+    }
+
+    [Fact]
+    public void SliderMinimumHeight_ComposesOnlyVisibleLabelRows()
+    {
+        var tokens = UiTokens.Neon;
+        var style = UiSliderStyle.From(tokens);
+        var trackOnly = UiSlider.CalculateMinimumHeight(style, tokens, hasValueLabelRow: false, hasStepLabelRow: false, hasMarkerBelowRow: false);
+        var withValueLabels = UiSlider.CalculateMinimumHeight(style, tokens, hasValueLabelRow: true, hasStepLabelRow: false, hasMarkerBelowRow: false);
+        var withStepLabels = UiSlider.CalculateMinimumHeight(style, tokens, hasValueLabelRow: true, hasStepLabelRow: true, hasMarkerBelowRow: false);
+        var withMarkerBelow = UiSlider.CalculateMinimumHeight(style, tokens, hasValueLabelRow: true, hasStepLabelRow: false, hasMarkerBelowRow: true);
+
+        trackOnly.ShouldBe(style.ThumbRadius * 2);
+        withValueLabels.ShouldBe(tokens.OverlineText.LineHeight + tokens.Space3 + style.ThumbRadius);
+        withStepLabels.ShouldBe(tokens.OverlineText.LineHeight + tokens.Space3 + tokens.Space2 + tokens.ReadoutSmallText.LineHeight);
+        withMarkerBelow.ShouldBe(withStepLabels);
+        UiSlider.CalculateMinimumHeight(style, tokens, false, true, false)
+            .ShouldBe(style.ThumbRadius + tokens.Space2 + tokens.ReadoutSmallText.LineHeight);
+        UiSlider.CalculateMinimumHeight(style, tokens, false, false, true)
+            .ShouldBe(style.ThumbRadius + tokens.Space2 + tokens.ReadoutSmallText.LineHeight);
     }
 
     [Theory]
@@ -484,6 +511,7 @@ public sealed class UiComponentContractsTests
             UiComponentContracts.CanonicalComponent.ProgressBar => "c_prog",
             UiComponentContracts.CanonicalComponent.TextField => "c_textfield",
             UiComponentContracts.CanonicalComponent.NameField => "c_name",
+            UiComponentContracts.CanonicalComponent.Note => "c_note",
             UiComponentContracts.CanonicalComponent.ValueRow => "c_value",
             UiComponentContracts.CanonicalComponent.ReadonlyValue => "c_readonly",
             UiComponentContracts.CanonicalComponent.PowerRow => "c_power",
@@ -494,9 +522,10 @@ public sealed class UiComponentContractsTests
             UiComponentContracts.CanonicalComponent.PanelHeader => "c_panel_head",
             UiComponentContracts.CanonicalComponent.InfoRow => "c_info_row",
             UiComponentContracts.CanonicalComponent.Card => "c_card",
-            UiComponentContracts.CanonicalComponent.Panel => "c_panel",
+            UiComponentContracts.CanonicalComponent.Panel => "c_inspector",
             UiComponentContracts.CanonicalComponent.ProgressRing => "c_ring",
             UiComponentContracts.CanonicalComponent.Number => "c_num",
+            UiComponentContracts.CanonicalComponent.StageCard => "c_stage",
             _ => throw new ArgumentOutOfRangeException(nameof(component), component, null),
         };
 }

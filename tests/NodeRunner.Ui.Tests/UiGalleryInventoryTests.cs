@@ -41,20 +41,22 @@ public sealed class UiGalleryInventoryTests
                     UiComponentContracts.CanonicalComponent.Button,
                     UiComponentContracts.CanonicalComponent.IconButton,
                     UiComponentContracts.CanonicalComponent.HoldButton,
+                    UiComponentContracts.CanonicalComponent.TextField,
+                    UiComponentContracts.CanonicalComponent.NameField,
+                    UiComponentContracts.CanonicalComponent.Note,
                     UiComponentContracts.CanonicalComponent.Slider,
                     UiComponentContracts.CanonicalComponent.Range,
                     UiComponentContracts.CanonicalComponent.ProgressBar,
                     UiComponentContracts.CanonicalComponent.ProgressRing,
                     UiComponentContracts.CanonicalComponent.Card,
-                    UiComponentContracts.CanonicalComponent.Panel,
                     UiComponentContracts.CanonicalComponent.Toggle,
                     UiComponentContracts.CanonicalComponent.Checkbox,
                     UiComponentContracts.CanonicalComponent.Segmented,
                     UiComponentContracts.CanonicalComponent.Picker,
                     UiComponentContracts.CanonicalComponent.PartRow,
+                    UiComponentContracts.CanonicalComponent.Panel,
+                    UiComponentContracts.CanonicalComponent.StageCard,
                     UiComponentContracts.CanonicalComponent.OverflowMenu,
-                    UiComponentContracts.CanonicalComponent.TextField,
-                    UiComponentContracts.CanonicalComponent.NameField,
                     UiComponentContracts.CanonicalComponent.IconTabs,
                     UiComponentContracts.CanonicalComponent.SelectionHandle,
                     UiComponentContracts.CanonicalComponent.Number,
@@ -75,6 +77,33 @@ public sealed class UiGalleryInventoryTests
         var numberIndex = sectionOrder.IndexOf(ComponentGalleryScreen.GallerySection.Number);
 
         numberIndex.ShouldBe(selectionIndex + 1);
+    }
+
+    [Fact]
+    public void ComponentGallerySectionOrder_PlacesTextInputDirectlyAfterButtons()
+    {
+        var sectionOrder = ComponentGalleryScreen.RenderedSectionOrder.ToList();
+        var actionsIndex = sectionOrder.IndexOf(ComponentGalleryScreen.GallerySection.Actions);
+        var textInputIndex = sectionOrder.IndexOf(ComponentGalleryScreen.GallerySection.TextInput);
+
+        actionsIndex.ShouldBeGreaterThanOrEqualTo(0);
+        textInputIndex.ShouldBeGreaterThanOrEqualTo(0);
+        textInputIndex.ShouldBe(actionsIndex + 1);
+    }
+
+    [Fact]
+    public void ComponentGallerySectionOrder_PlacesPanelAndStageCardAfterPartRows()
+    {
+        var sectionOrder = ComponentGalleryScreen.RenderedSectionOrder.ToList();
+        var partRowsIndex = sectionOrder.IndexOf(ComponentGalleryScreen.GallerySection.PartRows);
+        var panelIndex = sectionOrder.IndexOf(ComponentGalleryScreen.GallerySection.Panel);
+        var stageCardIndex = sectionOrder.IndexOf(ComponentGalleryScreen.GallerySection.StageCard);
+
+        partRowsIndex.ShouldBeGreaterThanOrEqualTo(0);
+        panelIndex.ShouldBeGreaterThanOrEqualTo(0);
+        stageCardIndex.ShouldBeGreaterThanOrEqualTo(0);
+        panelIndex.ShouldBe(partRowsIndex + 1);
+        stageCardIndex.ShouldBe(panelIndex + 1);
     }
 
     [Fact]

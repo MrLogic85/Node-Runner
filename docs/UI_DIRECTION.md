@@ -63,9 +63,12 @@ For buttons, the Component Library's **Buttons** paragraph defines the four
 current kinds. Older reference summaries still call `secondary` "default"
 and `tertiary` "danger"; `on` and `off` are states, not kinds.
 Hold-to-activate is available across kinds and layouts, not only destructive
-buttons. The Android-reviewed glow uses 12% opacity and extent 12 rather than
-the stronger HTML preview glow, as approved in
-[issue #242](https://github.com/MrLogic85/Node-Runner/issues/242).
+buttons. Standard icon buttons have a 40px visible frame inside a 48px target.
+Compact row/icon buttons use 32px height (32px width for icons) with no extra
+touch inset; stacked buttons retain their 48px target. Inspector close uses
+the shared flat compact icon button, not a custom header button.
+The Android-reviewed shared glow uses base colours with 12% opacity
+and 10px extent rather than separate button/control glow variants.
 
 Toggle and checkbox rows follow the Component Library's rendered specimens:
 transparent rows, solid indicator outlines, and 50% opacity for the whole
@@ -90,6 +93,27 @@ this change does not claim exact CSS tracking or line-box equivalence.
 Component Gallery and Colors & Styles use Godot `ScrollContainer` native
 scrolling; controls inside them rely on Godot's native input dispatch for
 tap, drag, fling, focus, and caret behavior.
+
+Slider title/readout rows use native `HBoxContainer` layout; only track-relative
+markers and step labels are positioned manually. Inspector theme updates keep
+unchanged row controls in the tree, preserving focus and input state. Sliders
+also reconnect their resize handling when removed and re-added to the tree.
+Slider minimum height ends at the thumb/marker extent or the last visible
+text row, using the same track position as rendering rather than adding
+another track diameter below its centre.
+
+Inspector facts and Power share `UiValueRow`: a label on the left and a readout
+on the right, optionally prefixed by a small icon. Power is a value-row
+configuration, not a separate control.
+Value rows have no vertical padding or fixed minimum height; text/icon content
+determines their height and the parent container owns spacing between rows.
+Note rows follow the same spacing rule and use native container layout to grow
+with wrapped text, without a fixed line count or clipping.
+
+Component Gallery's toolbar overflow menu toggles **Debug bounds** live.
+Bounds are off by default; `ShowDebugBounds` also supports runtime changes,
+and `ui/component_gallery_debug_bounds` can enable them at startup for a
+debugging export.
 
 Parts tray tabs use persistent native toggle buttons in a `ButtonGroup`,
 with the reference's part glyphs and accent-soft selected treatment, not a
