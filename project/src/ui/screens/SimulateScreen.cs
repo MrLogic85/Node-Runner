@@ -33,7 +33,7 @@ public partial class SimulateScreen : Control
     private ColorRect? _settingsScrim;
     private UiSheet? _settingsSheet;
     private Control? _buildModeSegment;
-    private UiActionButton? _livePauseButton;
+    private UiButton? _livePauseButton;
     private bool _inputPassthrough;
     private string _pauseActionText = "Pause";
 
@@ -447,18 +447,19 @@ public partial class SimulateScreen : Control
         title.AddChild(CreateLabel("Simulate", 22, _tokens.Ink, expand: true));
         title.AddChild(CreateLabel(_presentation?.GenerationText ?? "Training", 14, _tokens.Muted));
 
-        var creations = CreateButton("Creations", UiActionButton.ActionKind.Secondary, "Open saved Creations");
+        var creations = CreateButton("Creations", UiButtonKind.Secondary, "Open saved Creations");
         creations.Pressed += () => EmitSignal(SignalName.CreationsRequested);
         _inputPassthroughExceptions.Add(creations);
         topBar.AddChild(creations);
 
         topBar.AddChild(CreateModeSwitch());
 
-        var settings = new UiSecondaryIconButton
+        var settings = new UiButton
         {
+            ContentLayout = UiButtonContentLayout.Stacked,
             Tokens = _tokens,
             IconId = UiIconId.More,
-            AccessibleLabel = "Training settings",
+            TooltipText = "Training settings",
         };
         settings.Pressed += () =>
         {
@@ -685,8 +686,8 @@ public partial class SimulateScreen : Control
 
         if (!ReadOnlyControls)
         {
-            row.AddChild(CreateButton("Pause", UiActionButton.ActionKind.Secondary, "Pause sample training"));
-            row.AddChild(CreateButton("Profile", UiActionButton.ActionKind.Secondary, "Open sample training settings"));
+            row.AddChild(CreateButton("Pause", UiButtonKind.Secondary, "Pause sample training"));
+            row.AddChild(CreateButton("Profile", UiButtonKind.Secondary, "Open sample training settings"));
         }
 
         return panel;
@@ -709,18 +710,18 @@ public partial class SimulateScreen : Control
         row.AddThemeConstantOverride("separation", 8);
         margin.AddChild(row);
 
-        var pause = CreateButton(PauseActionText, UiActionButton.ActionKind.Secondary, "Pause or resume simulation");
+        var pause = CreateButton(PauseActionText, UiButtonKind.Secondary, "Pause or resume simulation");
         pause.Pressed += () => EmitSignal(SignalName.PauseRequested);
         _livePauseButton = pause;
         _inputPassthroughExceptions.Add(pause);
         row.AddChild(pause);
 
-        var speed = CreateButton("Speed", UiActionButton.ActionKind.Secondary, "Cycle simulation speed");
+        var speed = CreateButton("Speed", UiButtonKind.Secondary, "Cycle simulation speed");
         speed.Pressed += () => EmitSignal(SignalName.SpeedRequested);
         _inputPassthroughExceptions.Add(speed);
         row.AddChild(speed);
 
-        var reset = CreateButton("Reset", UiActionButton.ActionKind.Secondary, "Restart the active training run");
+        var reset = CreateButton("Reset", UiButtonKind.Secondary, "Restart the active training run");
         reset.Pressed += () => EmitSignal(SignalName.ResetRequested);
         _inputPassthroughExceptions.Add(reset);
         row.AddChild(reset);
@@ -757,10 +758,10 @@ public partial class SimulateScreen : Control
             : $"{_presentation.BestFitness:0.0} m";
         var mean = _presentation?.MeanFitness ?? 8.4;
         var profile = _presentation?.Profile ?? "Quick";
-        var profileButton = new UiActionButton
+        var profileButton = new UiButton
         {
             Tokens = _tokens,
-            Kind = UiActionButton.ActionKind.Secondary,
+            Kind = UiButtonKind.Secondary,
             LabelText = $"Training: {profile} · settings",
             TooltipText = "Open profile settings. Choosing a profile restarts the active run.",
             CustomMinimumSize = new Vector2(0, _tokens.TouchTarget),
@@ -885,10 +886,10 @@ public partial class SimulateScreen : Control
             stack.AddChild(CreateTrainingProfileOption(index, options[index], index == selectedIndex));
         }
 
-        var done = new UiActionButton
+        var done = new UiButton
         {
             Tokens = _tokens,
-            Kind = UiActionButton.ActionKind.Secondary,
+            Kind = UiButtonKind.Secondary,
             LabelText = "Done",
             CustomMinimumSize = new Vector2(0, _tokens.TouchTarget),
         };
@@ -919,10 +920,10 @@ public partial class SimulateScreen : Control
         text.AddChild(CreateLabel(option.Detail, 11, _tokens.Muted));
         row.AddChild(text);
 
-        var choose = new UiActionButton
+        var choose = new UiButton
         {
             Tokens = _tokens,
-            Kind = selected ? UiActionButton.ActionKind.Primary : UiActionButton.ActionKind.Secondary,
+            Kind = selected ? UiButtonKind.Primary : UiButtonKind.Secondary,
             LabelText = selected ? "Active" : "Restart",
             CustomMinimumSize = new Vector2(112, _tokens.TouchTarget),
         };
@@ -1028,10 +1029,10 @@ public partial class SimulateScreen : Control
         {
             if (index == 1)
             {
-                var action = new UiActionButton
+                var action = new UiButton
                 {
                     Tokens = _tokens,
-                    Kind = UiActionButton.ActionKind.Secondary,
+                    Kind = UiButtonKind.Secondary,
                     LabelText = title,
                     TooltipText = "Open BrainFocus for the live network.",
                     CustomMinimumSize = new Vector2(0, _tokens.TouchTarget),
@@ -1053,10 +1054,10 @@ public partial class SimulateScreen : Control
         }
         else
         {
-            var action = new UiActionButton
+            var action = new UiButton
             {
                 Tokens = _tokens,
-                Kind = UiActionButton.ActionKind.Secondary,
+                Kind = UiButtonKind.Secondary,
                 LabelText = title,
                 CustomMinimumSize = new Vector2(0, _tokens.TouchTarget),
             };
@@ -1262,12 +1263,12 @@ public partial class SimulateScreen : Control
         };
     }
 
-    private UiActionButton CreateModeButton(string label, bool active)
+    private UiButton CreateModeButton(string label, bool active)
     {
-        return new UiActionButton
+        return new UiButton
         {
             Tokens = _tokens,
-            Kind = active ? UiActionButton.ActionKind.Primary : UiActionButton.ActionKind.Secondary,
+            Kind = active ? UiButtonKind.Primary : UiButtonKind.Secondary,
             LabelText = label,
             CustomMinimumSize = new Vector2(96, _tokens.TouchTarget),
         };
@@ -1293,9 +1294,9 @@ public partial class SimulateScreen : Control
         };
     }
 
-    private UiActionButton CreateButton(string label, UiActionButton.ActionKind kind, string tooltip)
+    private UiButton CreateButton(string label, UiButtonKind kind, string tooltip)
     {
-        return new UiActionButton
+        return new UiButton
         {
             Tokens = _tokens,
             Kind = kind,

@@ -26,7 +26,7 @@ public partial class SampleFlowScreen : Control
     private string? _lastDeletedCreation;
     private TrainingPresentationViewModel? _presentation;
     private Godot.Timer? _activeHoldTimer;
-    private UiActionButton? _activeHoldButton;
+    private UiButton? _activeHoldButton;
     private string _activeHoldLabel = string.Empty;
 
     public TrainingPresentationViewModel? Presentation
@@ -158,11 +158,12 @@ public partial class SampleFlowScreen : Control
         _modeSwitch.SelectionChanged += index => SetMode(index);
         header.AddChild(_modeSwitch);
 
-        var menu = new UiSecondaryIconButton
+        var menu = new UiButton
         {
+            ContentLayout = UiButtonContentLayout.Stacked,
             Tokens = _tokens,
             IconId = UiIconId.More,
-            AccessibleLabel = "Open sample menu",
+            TooltipText = "Open sample menu",
         };
         menu.Pressed += ToggleOverflowMenu;
         header.AddChild(menu);
@@ -442,19 +443,19 @@ public partial class SampleFlowScreen : Control
 
         var actions = new HBoxContainer();
         actions.AddThemeConstantOverride("separation", 8);
-        var cancel = new UiActionButton
+        var cancel = new UiButton
         {
             Tokens = _tokens,
             LabelText = "Cancel",
-            Kind = UiActionButton.ActionKind.Secondary,
+            Kind = UiButtonKind.Secondary,
         };
         cancel.Pressed += CloseOverlays;
         actions.AddChild(cancel);
-        var confirm = new UiActionButton
+        var confirm = new UiButton
         {
             Tokens = _tokens,
             LabelText = "Hold to reset",
-            Kind = UiActionButton.ActionKind.Danger,
+            Kind = UiButtonKind.Tertiary,
         };
         var holdTimer = new Godot.Timer { OneShot = true, WaitTime = 1.2f };
         _activeHoldTimer = holdTimer;
@@ -499,11 +500,11 @@ public partial class SampleFlowScreen : Control
             Options = new[] { "Quick", "Standard", "Deep" },
             SelectedIndex = 0,
         });
-        var done = new UiActionButton
+        var done = new UiButton
         {
             Tokens = _tokens,
             LabelText = "Done",
-            Kind = UiActionButton.ActionKind.Primary,
+            Kind = UiButtonKind.Primary,
         };
         done.Pressed += CloseOverlays;
         stack.AddChild(done);
@@ -520,19 +521,19 @@ public partial class SampleFlowScreen : Control
             AutowrapMode = TextServer.AutowrapMode.WordSmart,
         });
         var actions = new HBoxContainer();
-        var cancel = new UiActionButton
+        var cancel = new UiButton
         {
             Tokens = _tokens,
             LabelText = "Cancel",
-            Kind = UiActionButton.ActionKind.Secondary,
+            Kind = UiButtonKind.Secondary,
         };
         cancel.Pressed += CloseOverlays;
         actions.AddChild(cancel);
-        var confirm = new UiActionButton
+        var confirm = new UiButton
         {
             Tokens = _tokens,
             LabelText = "Create new body",
-            Kind = UiActionButton.ActionKind.Danger,
+            Kind = UiButtonKind.Tertiary,
         };
         confirm.Pressed += () =>
         {
@@ -602,17 +603,17 @@ public partial class SampleFlowScreen : Control
         stack.AddChild(network);
         var neurons = new HBoxContainer();
         neurons.AddThemeConstantOverride("separation", 8);
-        var neuronButtons = new List<UiActionButton>();
+        var neuronButtons = new List<UiButton>();
         for (var index = 0; index < 3; index++)
         {
             var neuronIndex = index;
-            var button = new UiActionButton
+            var button = new UiButton
             {
                 Tokens = _tokens,
                 LabelText = $"Hidden {index + 1}",
                 Kind = index == selectedNeuron
-                    ? UiActionButton.ActionKind.Primary
-                    : UiActionButton.ActionKind.Secondary,
+                    ? UiButtonKind.Primary
+                    : UiButtonKind.Secondary,
             };
             button.Pressed += () =>
             {
@@ -620,8 +621,8 @@ public partial class SampleFlowScreen : Control
                 for (var buttonIndex = 0; buttonIndex < neuronButtons.Count; buttonIndex++)
                 {
                     neuronButtons[buttonIndex].Kind = buttonIndex == selectedNeuron
-                        ? UiActionButton.ActionKind.Primary
-                        : UiActionButton.ActionKind.Secondary;
+                        ? UiButtonKind.Primary
+                        : UiButtonKind.Secondary;
                 }
                 explanation.Text = $"Hidden neuron {neuronIndex + 1} is highlighted; its weighted links shape the next motor targets.";
                 network.QueueRedraw();
@@ -632,11 +633,11 @@ public partial class SampleFlowScreen : Control
         stack.AddChild(neurons);
         stack.AddChild(explanation);
         stack.AddChild(new Label { Text = "Inputs: core contact · body angle    Outputs: left joint · right joint" });
-        var close = new UiActionButton
+        var close = new UiButton
         {
             Tokens = _tokens,
             LabelText = "Back to SignalFlow",
-            Kind = UiActionButton.ActionKind.Primary,
+            Kind = UiButtonKind.Primary,
         };
         close.Pressed += CloseOverlays;
         stack.AddChild(close);
@@ -659,11 +660,11 @@ public partial class SampleFlowScreen : Control
             SelectedIndex = 0,
         };
         stack.AddChild(choice);
-        var done = new UiActionButton
+        var done = new UiButton
         {
             Tokens = _tokens,
             LabelText = "Copy brain",
-            Kind = UiActionButton.ActionKind.Primary,
+            Kind = UiButtonKind.Primary,
         };
         choice.SelectionChanged += index => done.LabelText = index == 0 ? "Copy brain" : "Start fresh";
         done.Pressed += () =>
@@ -685,19 +686,19 @@ public partial class SampleFlowScreen : Control
             AutowrapMode = TextServer.AutowrapMode.WordSmart,
         });
         var actions = new HBoxContainer();
-        var cancel = new UiActionButton
+        var cancel = new UiButton
         {
             Tokens = _tokens,
             LabelText = "Cancel",
-            Kind = UiActionButton.ActionKind.Secondary,
+            Kind = UiButtonKind.Secondary,
         };
         cancel.Pressed += CloseOverlays;
         actions.AddChild(cancel);
-        var confirm = new UiActionButton
+        var confirm = new UiButton
         {
             Tokens = _tokens,
             LabelText = "Hold to delete",
-            Kind = UiActionButton.ActionKind.Danger,
+            Kind = UiButtonKind.Tertiary,
         };
         var holdTimer = new Godot.Timer { OneShot = true, WaitTime = 1.2f };
         _activeHoldTimer = holdTimer;

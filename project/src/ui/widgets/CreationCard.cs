@@ -185,12 +185,12 @@ public partial class CreationCard : Control
         row.AddThemeConstantOverride("separation", 0);
         actions.AddChild(row);
 
-        var duplicateButton = CreateActionSegment("Copy", UiIconId.Copy, UiActionButton.ActionKind.Secondary);
+        var duplicateButton = CreateActionSegment("Copy", UiIconId.Copy, UiButtonKind.Secondary);
         duplicateButton.Disabled = !_canDuplicate;
         duplicateButton.Pressed += () => EmitSignal(SignalName.DuplicateRequested, _creationKey, _creationName);
         row.AddChild(duplicateButton);
 
-        var editButton = CreateActionSegment("Edit", UiIconId.Edit, UiActionButton.ActionKind.Secondary);
+        var editButton = CreateActionSegment("Edit", UiIconId.Edit, UiButtonKind.Secondary);
         editButton.Disabled = !_canEdit;
         editButton.Pressed += () => EmitSignal(SignalName.EditRequested, _creationKey, _creationName);
         row.AddChild(editButton);
@@ -206,7 +206,7 @@ public partial class CreationCard : Control
         }
         else
         {
-            var deleteButton = CreateActionSegment("Delete", UiIconId.Trash, UiActionButton.ActionKind.Danger);
+            var deleteButton = CreateActionSegment("Delete", UiIconId.Trash, UiButtonKind.Tertiary);
             deleteButton.Disabled = !_canDelete;
             deleteButton.Pressed += () => EmitSignal(SignalName.DeleteRequested, _creationKey, _creationName);
             row.AddChild(deleteButton);
@@ -272,7 +272,7 @@ public partial class CreationCard : Control
             ? _creationName["Example: ".Length..]
             : _creationName;
 
-    private UiActionButton CreateButton(string text, UiActionButton.ActionKind kind) =>
+    private UiButton CreateButton(string text, UiButtonKind kind) =>
         new()
         {
             Tokens = _tokens,
@@ -281,9 +281,9 @@ public partial class CreationCard : Control
             CustomMinimumSize = new Vector2(56, _tokens.TouchTarget),
         };
 
-    private Button CreateActionSegment(string text, UiIconId iconId, UiActionButton.ActionKind kind, bool disabled = false)
+    private Button CreateActionSegment(string text, UiIconId iconId, UiButtonKind kind, bool disabled = false)
     {
-        var color = kind == UiActionButton.ActionKind.Danger ? _tokens.Danger : _tokens.Ink;
+        var color = kind == UiButtonKind.Tertiary ? _tokens.Danger : _tokens.Ink;
         var button = new Button
         {
             Text = text.ToUpperInvariant(),
@@ -295,11 +295,11 @@ public partial class CreationCard : Control
         UiIcons.Apply(button, iconId, UiIconSize.Standard, color);
         button.AddThemeColorOverride("font_color", color);
         button.AddThemeColorOverride("font_disabled_color", _tokens.Muted);
-        button.AddThemeColorOverride("font_hover_color", kind == UiActionButton.ActionKind.Danger ? _tokens.Danger : _tokens.Accent);
+        button.AddThemeColorOverride("font_hover_color", kind == UiButtonKind.Tertiary ? _tokens.Danger : _tokens.Accent);
         button.AddThemeColorOverride("font_pressed_color", _tokens.OnAccent);
         button.AddThemeStyleboxOverride("normal", CreateSegmentStyle(Colors.Transparent, Colors.Transparent));
-        button.AddThemeStyleboxOverride("hover", CreateSegmentStyle(kind == UiActionButton.ActionKind.Danger ? UiTokens.WithAlpha(_tokens.Danger, 0.16f) : _tokens.AccentSoft, _tokens.Edge));
-        button.AddThemeStyleboxOverride("pressed", CreateSegmentStyle(kind == UiActionButton.ActionKind.Danger ? _tokens.Danger : _tokens.Accent, kind == UiActionButton.ActionKind.Danger ? _tokens.Danger : _tokens.Accent));
+        button.AddThemeStyleboxOverride("hover", CreateSegmentStyle(kind == UiButtonKind.Tertiary ? UiTokens.WithAlpha(_tokens.Danger, 0.16f) : _tokens.AccentSoft, _tokens.Edge));
+        button.AddThemeStyleboxOverride("pressed", CreateSegmentStyle(kind == UiButtonKind.Tertiary ? _tokens.Danger : _tokens.Accent, kind == UiButtonKind.Tertiary ? _tokens.Danger : _tokens.Accent));
         button.AddThemeStyleboxOverride("focus", CreateSegmentStyle(_tokens.AccentSoft, _tokens.Accent));
         button.AddThemeStyleboxOverride("disabled", CreateSegmentStyle(Colors.Transparent, Colors.Transparent));
         return button;

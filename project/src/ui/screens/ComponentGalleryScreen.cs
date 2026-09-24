@@ -116,31 +116,31 @@ public partial class ComponentGalleryScreen : Control
         new(UiButtonKind.Flat, UiButtonContentLayout.Row, _rowInteractiveTitle, "Skip", Compact: true),
         new(UiButtonKind.Secondary, UiButtonContentLayout.Row, _rowInteractiveTitle, "Creations", UiIconId.Model, BadgeText: "3"),
         new(UiButtonKind.Primary, UiButtonContentLayout.Row, _rowInteractiveTitle, "Hold to start training", Selected: true, Hold: true),
-        new(UiButtonKind.Secondary, UiButtonContentLayout.Icon, _iconStandardTitle, string.Empty, UiIconId.Back),
-        new(UiButtonKind.Secondary, UiButtonContentLayout.Icon, _iconStandardTitle, string.Empty, UiIconId.Back, Selected: true),
-        new(UiButtonKind.Primary, UiButtonContentLayout.Icon, _iconStandardTitle, string.Empty, UiIconId.Gear),
-        new(UiButtonKind.Tertiary, UiButtonContentLayout.Icon, _iconStandardTitle, string.Empty, UiIconId.Trash, Enabled: false),
-        new(UiButtonKind.Flat, UiButtonContentLayout.Icon, _iconStandardTitle, string.Empty, UiIconId.More),
-        new(UiButtonKind.Secondary, UiButtonContentLayout.Icon, _iconStandardTitle, string.Empty, UiIconId.Back, Compact: true),
-        new(UiButtonKind.Primary, UiButtonContentLayout.Icon, _iconStandardTitle, string.Empty, UiIconId.Gear, Compact: true),
-        new(UiButtonKind.Tertiary, UiButtonContentLayout.Icon, _iconStandardTitle, string.Empty, UiIconId.Trash, Compact: true),
-        new(UiButtonKind.Flat, UiButtonContentLayout.Icon, _iconStandardTitle, string.Empty, UiIconId.More, Compact: true),
-        new(UiButtonKind.Secondary, UiButtonContentLayout.Icon, _iconStandardTitle, string.Empty, UiIconId.Model, Compact: true, BadgeText: "3"),
-        new(UiButtonKind.Primary, UiButtonContentLayout.Icon, _iconHoldTitle, string.Empty, UiIconId.Play, Hold: true),
-        new(UiButtonKind.Tertiary, UiButtonContentLayout.Icon, _iconHoldTitle, string.Empty, UiIconId.Trash, Hold: true),
-        new(UiButtonKind.Secondary, UiButtonContentLayout.Icon, _iconBadgeTitle, string.Empty, UiIconId.Model, BadgeText: "3"),
-        new(UiButtonKind.Primary, UiButtonContentLayout.Icon, _iconBadgeTitle, string.Empty, UiIconId.Lock, BadgeText: "1"),
-        new(UiButtonKind.Tertiary, UiButtonContentLayout.Icon, _iconBadgeTitle, string.Empty, UiIconId.Trash, BadgeText: "2"),
-        new(UiButtonKind.Primary, UiButtonContentLayout.Stack, _stackTitle, string.Empty, UiIconId.Play),
-        new(UiButtonKind.Primary, UiButtonContentLayout.Stack, _stackTitle, string.Empty, UiIconId.Play, Selected: true),
-        new(UiButtonKind.Primary, UiButtonContentLayout.Stack, _stackTitle, string.Empty, UiIconId.Play, Hold: true),
-        new(UiButtonKind.Secondary, UiButtonContentLayout.Stack, _stackTitle, "Move", UiIconId.Move),
-        new(UiButtonKind.Secondary, UiButtonContentLayout.Stack, _stackTitle, "Move", UiIconId.Move, Selected: true),
-        new(UiButtonKind.Secondary, UiButtonContentLayout.Stack, _stackTitle, "Beam", UiIconId.Beam, Enabled: false),
-        new(UiButtonKind.Tertiary, UiButtonContentLayout.Stack, _stackTitle, "Delete", UiIconId.Trash, Hold: true),
-        new(UiButtonKind.Flat, UiButtonContentLayout.Stack, _stackTitle, "More", UiIconId.More),
-        new(UiButtonKind.Flat, UiButtonContentLayout.Stack, _stackTitle, "More", UiIconId.More, Selected: true),
-        new(UiButtonKind.Primary, UiButtonContentLayout.Stack, _stackTitle, string.Empty, UiIconId.Play, BadgeText: "1"),
+        new(UiButtonKind.Secondary, UiButtonContentLayout.Row, _iconStandardTitle, string.Empty, UiIconId.Back),
+        new(UiButtonKind.Secondary, UiButtonContentLayout.Row, _iconStandardTitle, string.Empty, UiIconId.Back, Selected: true),
+        new(UiButtonKind.Primary, UiButtonContentLayout.Row, _iconStandardTitle, string.Empty, UiIconId.Gear),
+        new(UiButtonKind.Tertiary, UiButtonContentLayout.Row, _iconStandardTitle, string.Empty, UiIconId.Trash, Enabled: false),
+        new(UiButtonKind.Flat, UiButtonContentLayout.Row, _iconStandardTitle, string.Empty, UiIconId.More),
+        new(UiButtonKind.Secondary, UiButtonContentLayout.Row, _iconStandardTitle, string.Empty, UiIconId.Back, Compact: true),
+        new(UiButtonKind.Primary, UiButtonContentLayout.Row, _iconStandardTitle, string.Empty, UiIconId.Gear, Compact: true),
+        new(UiButtonKind.Tertiary, UiButtonContentLayout.Row, _iconStandardTitle, string.Empty, UiIconId.Trash, Compact: true),
+        new(UiButtonKind.Flat, UiButtonContentLayout.Row, _iconStandardTitle, string.Empty, UiIconId.More, Compact: true),
+        new(UiButtonKind.Secondary, UiButtonContentLayout.Row, _iconStandardTitle, string.Empty, UiIconId.Model, Compact: true, BadgeText: "3"),
+        new(UiButtonKind.Primary, UiButtonContentLayout.Row, _iconHoldTitle, string.Empty, UiIconId.Play, Hold: true),
+        new(UiButtonKind.Tertiary, UiButtonContentLayout.Row, _iconHoldTitle, string.Empty, UiIconId.Trash, Hold: true),
+        new(UiButtonKind.Secondary, UiButtonContentLayout.Row, _iconBadgeTitle, string.Empty, UiIconId.Model, BadgeText: "3"),
+        new(UiButtonKind.Primary, UiButtonContentLayout.Row, _iconBadgeTitle, string.Empty, UiIconId.Lock, BadgeText: "1"),
+        new(UiButtonKind.Tertiary, UiButtonContentLayout.Row, _iconBadgeTitle, string.Empty, UiIconId.Trash, BadgeText: "2"),
+        new(UiButtonKind.Primary, UiButtonContentLayout.Stacked, _stackTitle, string.Empty, UiIconId.Play),
+        new(UiButtonKind.Primary, UiButtonContentLayout.Stacked, _stackTitle, string.Empty, UiIconId.Play, Selected: true),
+        new(UiButtonKind.Primary, UiButtonContentLayout.Stacked, _stackTitle, string.Empty, UiIconId.Play, Hold: true),
+        new(UiButtonKind.Secondary, UiButtonContentLayout.Stacked, _stackTitle, "Move", UiIconId.Move),
+        new(UiButtonKind.Secondary, UiButtonContentLayout.Stacked, _stackTitle, "Move", UiIconId.Move, Selected: true),
+        new(UiButtonKind.Secondary, UiButtonContentLayout.Stacked, _stackTitle, "Beam", UiIconId.Beam, Enabled: false),
+        new(UiButtonKind.Tertiary, UiButtonContentLayout.Stacked, _stackTitle, "Delete", UiIconId.Trash, Hold: true),
+        new(UiButtonKind.Flat, UiButtonContentLayout.Stacked, _stackTitle, "More", UiIconId.More),
+        new(UiButtonKind.Flat, UiButtonContentLayout.Stacked, _stackTitle, "More", UiIconId.More, Selected: true),
+        new(UiButtonKind.Primary, UiButtonContentLayout.Stacked, _stackTitle, string.Empty, UiIconId.Play, BadgeText: "1"),
     ];
 
     public static IReadOnlyList<GalleryComponentSpec> CanonicalInventory { get; } =
@@ -276,7 +276,7 @@ public partial class ComponentGalleryScreen : Control
             case GallerySection.Actions:
                 content.AddChild(CreateSectionDescription(
                     "Buttons",
-                    "four semantic kinds, three layouts, compact geometry, hold progress, and badges"));
+                    "four semantic kinds, row or stacked layout, compact geometry, hold progress, and badges"));
                 content.AddChild(CreateActionsSection());
                 break;
             case GallerySection.TextInput:
@@ -343,10 +343,11 @@ public partial class ComponentGalleryScreen : Control
 
         if (ShowCloseAction)
         {
-            var close = Track(new UiSecondaryIconButton
+            var close = Track(new UiButton
             {
+                ContentLayout = UiButtonContentLayout.Stacked,
                 IconId = UiIconId.Back,
-                AccessibleLabel = "Back to Creations",
+                TooltipText = "Back to Creations",
                 SizeFlagsVertical = SizeFlags.ShrinkCenter,
             });
             close.Pressed += () => EmitSignal(SignalName.CloseRequested);
@@ -373,7 +374,7 @@ public partial class ComponentGalleryScreen : Control
         _toolbarMore = Track(new UiButton
         {
             Style = UiButtonStyle.Flat,
-            ContentLayout = UiButtonContentLayout.Icon,
+            ContentLayout = UiButtonContentLayout.Stacked,
             IconId = UiIconId.More,
             TooltipText = "Gallery options",
             SizeFlagsVertical = SizeFlags.ShrinkCenter,
@@ -583,6 +584,7 @@ public partial class ComponentGalleryScreen : Control
             HoldDurationSeconds = hold ? UiComponentContracts.HoldCompletionSeconds : 0,
             Progress = hold ? 0.45f : -1,
             BadgeText = badge ?? string.Empty,
+            TooltipText = string.IsNullOrEmpty(label) ? icon?.ToString() ?? string.Empty : string.Empty,
         });
         if (toggleOnActivate)
         {

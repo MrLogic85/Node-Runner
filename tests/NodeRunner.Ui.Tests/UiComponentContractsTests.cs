@@ -194,14 +194,12 @@ public sealed class UiComponentContractsTests
     [Fact]
     public void ReusableControlEnums_PinDocumentedDefaultsAndVariants()
     {
-        Enum.GetNames<UiActionButton.ActionKind>()
-            .ShouldBe(["Primary", "Secondary", "Danger", "Flat"]);
+        Enum.GetNames<UiButtonKind>()
+            .ShouldBe(["Primary", "Secondary", "Tertiary", "Flat"]);
         Enum.GetNames<UiIconSize>()
             .ShouldBe(["Small", "Standard", "Large", "ExtraLarge"]);
-        Enum.GetNames<UiIconButtonSize>()
-            .ShouldBe(["Small", "Default", "Large"]);
         Enum.GetNames<UiButtonContentLayout>()
-            .ShouldBe(["Row", "Icon", "Stack"]);
+            .ShouldBe(["Row", "Stacked"]);
         Enum.GetNames<UiCard.CardVariant>()
             .ShouldBe(["Frame", "Selected", "Locked", "Warning", "Hint", "Raised"]);
         Enum.GetNames<UiCard.CardSize>()
@@ -217,7 +215,6 @@ public sealed class UiComponentContractsTests
     [Fact]
     public void Defaults_MatchReferenceTouchAndCompletionContracts()
     {
-        UiComponentContracts.IconButtonVisibleSize.ShouldBe(40);
         UiComponentContracts.PartRowVisibleHeight.ShouldBe(UiTokens.Neon.ControlHeight);
         UiComponentContracts.PartRowTouchHeight.ShouldBe(UiTokens.Neon.TouchTarget);
         UiTokens.Neon.TouchTarget.ShouldBe(48);
@@ -418,8 +415,6 @@ public sealed class UiComponentContractsTests
     [Fact]
     public void SemanticEnums_IncludeDocumentedStates()
     {
-        Enum.GetNames<UiComponentContracts.HoldState>()
-            .ShouldBe(["Rest", "Holding", "Cancelled", "Completed", "Disabled"]);
         Enum.GetNames<UiTextField.TextInputState>()
             .ShouldBe(["Rest", "Editing", "Error"]);
         Enum.GetNames<UiTextField.TextInputSize>()
@@ -435,13 +430,21 @@ public sealed class UiComponentContractsTests
     }
 
     [Fact]
-    public void HoldLifecycle_AllowsCancellationRetryButKeepsCompletionOneShotUntilReset()
+    public void AllButtonSpecimens_ShareTheOnlyButtonImplementation()
     {
-        UiComponentContracts.CanBeginHold(UiComponentContracts.HoldState.Rest).ShouldBeTrue();
-        UiComponentContracts.CanBeginHold(UiComponentContracts.HoldState.Cancelled).ShouldBeTrue();
-        UiComponentContracts.CanBeginHold(UiComponentContracts.HoldState.Holding).ShouldBeFalse();
-        UiComponentContracts.CanBeginHold(UiComponentContracts.HoldState.Completed).ShouldBeFalse();
-        UiComponentContracts.CanBeginHold(UiComponentContracts.HoldState.Disabled).ShouldBeFalse();
+        foreach (var component in new[]
+        {
+            UiComponentContracts.CanonicalComponent.Button,
+            UiComponentContracts.CanonicalComponent.IconButton,
+            UiComponentContracts.CanonicalComponent.HoldButton,
+        })
+        {
+            UiComponentContracts.ControlTypeFor(component).ShouldBe(nameof(UiButton));
+        }
+
+        typeof(UiButton).IsSealed.ShouldBeTrue();
+        typeof(UiButton).Assembly.GetTypes()
+            .ShouldNotContain(type => type.IsSubclassOf(typeof(UiButton)));
     }
 
     [Fact]

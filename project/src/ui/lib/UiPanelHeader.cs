@@ -120,7 +120,7 @@ public partial class UiPanelHeader : HBoxContainer
             {
                 Tokens = _tokens,
                 Style = UiButtonStyle.Flat,
-                ContentLayout = UiButtonContentLayout.Icon,
+                ContentLayout = UiButtonContentLayout.Row,
                 Compact = true,
                 IconId = action.IconId,
                 Enabled = action.State is not UiComponentContracts.SemanticState.Disabled and not UiComponentContracts.SemanticState.Locked,

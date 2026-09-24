@@ -112,19 +112,19 @@ public sealed class UiGalleryInventoryTests
         var specimens = ComponentGalleryScreen.ButtonSpecimenInventory;
 
         specimens.Count.ShouldBe(38);
-        specimens.Count(spec => spec.Layout == UiButtonContentLayout.Row && !spec.Compact && !spec.Badge)
+        specimens.Count(spec => spec.Layout == UiButtonContentLayout.Row && spec.Label.Length > 0 && !spec.Compact && !spec.Badge)
             .ShouldBe(8);
-        specimens.Count(spec => spec.Layout == UiButtonContentLayout.Row && spec.Compact)
+        specimens.Count(spec => spec.Layout == UiButtonContentLayout.Row && spec.Label.Length > 0 && spec.Compact)
             .ShouldBe(4);
-        specimens.Count(spec => spec.Layout == UiButtonContentLayout.Row && spec.Badge)
+        specimens.Count(spec => spec.Layout == UiButtonContentLayout.Row && spec.Label.Length > 0 && spec.Badge)
             .ShouldBe(1);
-        specimens.Count(spec => spec.Layout == UiButtonContentLayout.Icon && !spec.Compact && !spec.Badge)
+        specimens.Count(spec => spec.Layout == UiButtonContentLayout.Row && spec.Label.Length == 0 && !spec.Compact && !spec.Badge)
             .ShouldBe(7);
-        specimens.Count(spec => spec.Layout == UiButtonContentLayout.Icon && spec.Compact)
+        specimens.Count(spec => spec.Layout == UiButtonContentLayout.Row && spec.Label.Length == 0 && spec.Compact)
             .ShouldBe(5);
-        specimens.Count(spec => spec.Layout == UiButtonContentLayout.Icon && spec.Badge)
+        specimens.Count(spec => spec.Layout == UiButtonContentLayout.Row && spec.Label.Length == 0 && spec.Badge)
             .ShouldBe(4);
-        specimens.Count(spec => spec.Layout == UiButtonContentLayout.Stack)
+        specimens.Count(spec => spec.Layout == UiButtonContentLayout.Stacked)
             .ShouldBe(10);
         specimens.Count(spec => spec.Badge).ShouldBe(6);
         specimens.Select(spec => spec.Kind).Distinct().ShouldBe(Enum.GetValues<UiButtonKind>());

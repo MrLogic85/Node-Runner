@@ -12,11 +12,11 @@ public partial class UiTopBar : UiCard
     public delegate void OverflowPressedEventHandler();
 
     private UiTokens _tokens = UiTokens.Neon;
-    private UiIconButton? _backButton;
+    private UiButton? _backButton;
     private Label? _titleLabel;
     private HBoxContainer? _actionHost;
-    private UiIconButton? _overflowButton;
-    private UiIconButton[] _pendingActions = [];
+    private UiButton? _overflowButton;
+    private UiButton[] _pendingActions = [];
     private string _titleText = "Screen";
     private bool _showBack = true;
     private bool _showOverflow;
@@ -75,11 +75,12 @@ public partial class UiTopBar : UiCard
         row.AddThemeConstantOverride("separation", (int)_tokens.Space2);
         AddChild(row);
 
-        _backButton = new UiSecondaryIconButton
+        _backButton = new UiButton
         {
+            ContentLayout = UiButtonContentLayout.Stacked,
             Tokens = _tokens,
             IconId = UiIconId.Back,
-            AccessibleLabel = "Back",
+            TooltipText = "Back",
         };
         _backButton.Pressed += () => EmitSignal(SignalName.BackPressed);
         row.AddChild(_backButton);
@@ -95,11 +96,12 @@ public partial class UiTopBar : UiCard
         _actionHost.AddThemeConstantOverride("separation", (int)_tokens.Space1);
         row.AddChild(_actionHost);
 
-        _overflowButton = new UiSecondaryIconButton
+        _overflowButton = new UiButton
         {
+            ContentLayout = UiButtonContentLayout.Stacked,
             Tokens = _tokens,
             IconId = UiIconId.More,
-            AccessibleLabel = "More",
+            TooltipText = "More",
         };
         _overflowButton.Pressed += () => EmitSignal(SignalName.OverflowPressed);
         row.AddChild(_overflowButton);
@@ -108,7 +110,7 @@ public partial class UiTopBar : UiCard
         Refresh();
     }
 
-    public void SetActions(params UiIconButton[] actions)
+    public void SetActions(params UiButton[] actions)
     {
         _pendingActions = actions.Take(2).ToArray();
         if (_actionHost is null)
@@ -119,7 +121,7 @@ public partial class UiTopBar : UiCard
         ApplyActions(_pendingActions);
     }
 
-    private void ApplyActions(IReadOnlyList<UiIconButton> actions)
+    private void ApplyActions(IReadOnlyList<UiButton> actions)
     {
         if (_actionHost is null)
         {
@@ -163,7 +165,7 @@ public partial class UiTopBar : UiCard
         if (_actionHost is not null)
         {
             _actionHost.AddThemeConstantOverride("separation", (int)_tokens.Space1);
-            foreach (var child in _actionHost.GetChildren().OfType<UiIconButton>())
+            foreach (var child in _actionHost.GetChildren().OfType<UiButton>())
             {
                 child.Tokens = _tokens;
             }

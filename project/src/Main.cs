@@ -741,10 +741,10 @@ public partial class Main : Node2D
         };
         stack.AddChild(_brainFocusSelectedLabel);
 
-        var close = new UiActionButton
+        var close = new UiButton
         {
             Tokens = UiTokens.Neon,
-            Kind = UiActionButton.ActionKind.Primary,
+            Kind = UiButtonKind.Primary,
             LabelText = "Back to SignalFlow",
         };
         close.Pressed += HideBrainFocus;

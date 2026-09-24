@@ -5,7 +5,6 @@ namespace NodeRunner.Ui.Lib;
 /// <summary>Pure, testable contracts for the UI component-library inventory.</summary>
 public static class UiComponentContracts
 {
-    public const float IconButtonVisibleSize = 40;
     public const float PartRowVisibleHeight = 40;
     public const float PartRowTouchHeight = 48;
     public const float ProgressRingDiameter = 44;
@@ -80,19 +79,6 @@ public static class UiComponentContracts
         StageCard,
     }
 
-    public enum HoldState
-    {
-        Rest,
-        Holding,
-        Cancelled,
-        Completed,
-        Disabled,
-    }
-
-    /// <summary>Completed destructive holds remain one-shot until their owner explicitly resets them.</summary>
-    public static bool CanBeginHold(HoldState state) =>
-        state is HoldState.Rest or HoldState.Cancelled;
-
     public enum SemanticState
     {
         Neutral,
@@ -112,9 +98,9 @@ public static class UiComponentContracts
     public static string ControlTypeFor(CanonicalComponent component) =>
         component switch
         {
-            CanonicalComponent.Button => nameof(UiActionButton),
-            CanonicalComponent.IconButton => nameof(UiIconButton),
-            CanonicalComponent.HoldButton => nameof(UiHoldButton),
+            CanonicalComponent.Button => nameof(UiButton),
+            CanonicalComponent.IconButton => nameof(UiButton),
+            CanonicalComponent.HoldButton => nameof(UiButton),
             CanonicalComponent.Slider => nameof(UiSlider),
             CanonicalComponent.Range => nameof(UiSlider),
             CanonicalComponent.Toggle => nameof(UiToggleRow),
