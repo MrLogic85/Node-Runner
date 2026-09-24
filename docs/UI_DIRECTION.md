@@ -218,7 +218,7 @@ before opening; `UiDialog` requires the host viewport's `GuiEmbedSubwindows`.
 It restores `QuitOnGoBack` when closed or removed. The gallery itself can run
 with F6. Editor authoring is being introduced in
 [issue #282](https://github.com/MrLogic85/Node-Runner/issues/282). Dialog content
-and Popup Gallery are scene-authored; notification content authoring remains.
+and notification content, as well as Popup Gallery, are scene-authored.
 
 Open `project/scenes/ui/PopupGalleryScreen.tscn` to edit the actual gallery.
 The header keeps a horizontally scrolling, right-aligned theme selector.
@@ -282,6 +282,29 @@ button internals are generated without scene ownership and must not be
 copied into the authored scene. Editor previews never emit action callbacks.
 No external installation is required. While pairing, avoid editing
 the same scene file simultaneously and save before handing it over.
+
+#### Editing a notification in Godot
+
+Open `project/scenes/ui/UiNotificationContent.tscn`. Its root is the shared
+UiCard with a notification binding script, not a separate preview. Edit
+`Column/Heading/Titles/Title` and `Column/Message` for standalone specimen
+text. Their UiLabel **Text Style**, wrapping, container arrangement and
+separations remain scene-owned. Keep the unique `Title`, `Message`,
+`SemanticType`, and `SemanticIcon` names when rearranging nodes.
+
+Root **Type** controls the card variant, semantic overline and icon/color;
+**Theme Preview** selects Neon, Paper or Effects Lite. Card **Size Variant**
+and **Glow** remain normal shared-card options. Root Custom Minimum Size X
+is the preferred width (initially the 326px card-width token); the runtime
+host narrows it to the available viewport and restores that preferred width
+when space becomes available again.
+
+F6 shows the standalone card without callbacks, expiry or swipe. Use Popup
+Gallery to exercise those interactions. Runtime `UiNotificationSpec` replaces
+the specimen title/message/type, and the host supplies tokens, focus/input
+and bottom-center placement. The authored hierarchy, typography choices,
+spacing and preferred width are reused unchanged. Queue, expiry, click
+callbacks, pause and swipe animation remain in `UiNotification`.
 
 ```csharp
 var dialog = new UiDialog { Tokens = tokens };
