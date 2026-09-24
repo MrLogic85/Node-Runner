@@ -99,7 +99,8 @@ public partial class PopupGalleryScreen : Control
 
     private void ShowDismissingNotification() => Enqueue(new(
         UiPopupType.Default, "New part unlocked: Spring", "Reached 10 m. Tap to simulate opening Achievements.",
-        () => { SetStatus("Achievements action ran; returned true."); return true; }));
+        () => { SetStatus("Achievements action ran; returned true."); return true; },
+        Icon: new(UiPartIconId.Spring)));
 
     private void ShowPersistentNotification() => Enqueue(new(
         UiPopupType.Warn, "Keep this notification", "Tap runs the action but does not dismiss it.",

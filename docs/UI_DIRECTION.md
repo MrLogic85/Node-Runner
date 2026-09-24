@@ -306,6 +306,14 @@ and bottom-center placement. The authored hierarchy, typography choices,
 spacing and preferred width are reused unchanged. Queue, expiry, click
 callbacks, pause and swipe animation remain in `UiNotification`.
 
+`UiNotificationSpec.Icon` optionally selects a canonical glyph through
+`new UiNotificationIcon(UiIconId.Trophy)` or
+`new UiNotificationIcon(UiPartIconId.Spring)`. Omit it (or use null) to retain
+the type's default: Model for Default, Warn for Warn/Danger. The selected
+glyph keeps the semantic tint and Large icon size; it does not change the
+type label or card variant. Arbitrary textures and `UiIconId.None` are not
+accepted. The override is runtime data, not a new Inspector field.
+
 ```csharp
 var dialog = new UiDialog { Tokens = tokens };
 AddChild(dialog);
@@ -320,6 +328,10 @@ AddChild(notifications);
 notifications.Enqueue(new UiNotificationSpec(
     UiPopupType.Default, "Saved", "Your changes are saved.",
     OnClick: () => false));
+
+notifications.Enqueue(new UiNotificationSpec(
+    UiPopupType.Default, "New part unlocked: Spring", "Reached 10 m.",
+    Icon: new(UiPartIconId.Spring)));
 ```
 
 Parts tray tabs use persistent native toggle buttons in a `ButtonGroup`,

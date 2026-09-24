@@ -14,6 +14,7 @@ public sealed partial class UiNotificationContent : UiCard
     private UiLabel _message = null!;
     private UiLabel _semanticType = null!;
     private TextureRect _icon = null!;
+    private UiNotificationIcon? _iconOverride;
 
     [Export]
     public UiPopupType Type
@@ -77,6 +78,7 @@ public sealed partial class UiNotificationContent : UiCard
     public void Bind(UiNotificationSpec spec, UiTokens tokens)
     {
         _type = spec.Type;
+        _iconOverride = spec.Icon;
         _title!.Text = spec.Title;
         _message.Text = spec.Message;
         Tokens = tokens;
@@ -90,7 +92,9 @@ public sealed partial class UiNotificationContent : UiCard
         }
         Kind = UiPopupStyle.CardKind(Type);
         var color = UiPopupStyle.SemanticColor(Type, Tokens);
-        _icon.Texture = UiIcons.Load(Type == UiPopupType.Default ? UiIconId.Model : UiIconId.Warn, UiIconSize.Large);
+        _icon.Texture = _iconOverride is { } icon
+            ? icon.Load(UiIconSize.Large)
+            : UiIcons.Load(Type == UiPopupType.Default ? UiIconId.Model : UiIconId.Warn, UiIconSize.Large);
         _icon.SelfModulate = color;
         _semanticType.Text = Type.ToString();
         _semanticType.Tokens = Tokens;
