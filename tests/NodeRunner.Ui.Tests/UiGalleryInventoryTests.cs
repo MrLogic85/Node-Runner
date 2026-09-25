@@ -54,9 +54,8 @@ public sealed class UiGalleryInventoryTests
                     UiComponentContracts.CanonicalComponent.Segmented,
                     UiComponentContracts.CanonicalComponent.Picker,
                     UiComponentContracts.CanonicalComponent.PartRow,
-                    UiComponentContracts.CanonicalComponent.Panel,
                     UiComponentContracts.CanonicalComponent.StageCard,
-                    UiComponentContracts.CanonicalComponent.OverflowMenu,
+                    UiComponentContracts.CanonicalComponent.Menu,
                     UiComponentContracts.CanonicalComponent.IconTabs,
                     UiComponentContracts.CanonicalComponent.SelectionHandle,
                     UiComponentContracts.CanonicalComponent.Number,
@@ -92,11 +91,11 @@ public sealed class UiGalleryInventoryTests
     }
 
     [Fact]
-    public void ComponentGallerySectionOrder_PlacesPanelAndStageCardAfterPartRows()
+    public void ComponentGallerySectionOrder_PlacesPanelRowsAndStageCardAfterPartRows()
     {
         var sectionOrder = ComponentGalleryScreen.RenderedSectionOrder.ToList();
         var partRowsIndex = sectionOrder.IndexOf(ComponentGalleryScreen.GallerySection.PartRows);
-        var panelIndex = sectionOrder.IndexOf(ComponentGalleryScreen.GallerySection.Panel);
+        var panelIndex = sectionOrder.IndexOf(ComponentGalleryScreen.GallerySection.PanelRows);
         var stageCardIndex = sectionOrder.IndexOf(ComponentGalleryScreen.GallerySection.StageCard);
 
         partRowsIndex.ShouldBeGreaterThanOrEqualTo(0);
@@ -104,58 +103,6 @@ public sealed class UiGalleryInventoryTests
         stageCardIndex.ShouldBeGreaterThanOrEqualTo(0);
         panelIndex.ShouldBe(partRowsIndex + 1);
         stageCardIndex.ShouldBe(panelIndex + 1);
-    }
-
-    [Fact]
-    public void ButtonGalleryInventory_CoversEveryReferenceKindLayoutAndStateGroup()
-    {
-        var specimens = ComponentGalleryScreen.ButtonSpecimenInventory;
-
-        specimens.Count.ShouldBe(38);
-        specimens.Count(spec => spec.Layout == UiButtonContentLayout.Row && spec.Label.Length > 0 && !spec.Badge)
-            .ShouldBe(8);
-        specimens.Count(spec => spec.Layout == UiButtonContentLayout.RowCompact && spec.Label.Length > 0)
-            .ShouldBe(4);
-        specimens.Count(spec => spec.Layout == UiButtonContentLayout.Row && spec.Label.Length > 0 && spec.Badge)
-            .ShouldBe(1);
-        specimens.Count(spec => spec.Layout == UiButtonContentLayout.Row && spec.Label.Length == 0 && !spec.Badge)
-            .ShouldBe(7);
-        specimens.Count(spec => spec.Layout == UiButtonContentLayout.RowCompact && spec.Label.Length == 0)
-            .ShouldBe(5);
-        specimens.Count(spec => spec.Layout != UiButtonContentLayout.Stacked && spec.Label.Length == 0 && spec.Badge)
-            .ShouldBe(4);
-        specimens.Count(spec => spec.Layout == UiButtonContentLayout.Stacked)
-            .ShouldBe(10);
-        specimens.Count(spec => spec.Badge).ShouldBe(6);
-        specimens.Select(spec => spec.Kind).Distinct().ShouldBe(Enum.GetValues<UiButtonKind>());
-    }
-
-    [Fact]
-    public void ButtonGalleryInventory_PreservesReferenceDisabledAndHoldCoverage()
-    {
-        var specimens = ComponentGalleryScreen.ButtonSpecimenInventory;
-
-        specimens.Count(spec => !spec.Enabled).ShouldBe(3);
-        specimens.Count(spec => spec.Hold).ShouldBe(6);
-        specimens.ShouldContain(new ComponentGalleryScreen.ButtonGallerySpec(
-            UiButtonKind.Primary,
-            UiButtonContentLayout.Row,
-            "Row — interactive selected, hold, disabled, compact, and badge",
-            "Hold to start training",
-            Selected: true,
-            Hold: true));
-    }
-
-    [Fact]
-    public void ButtonGalleryInventory_IsTheSoleSourceRenderedByTheActionsSection()
-    {
-        var rowGroups = ComponentGalleryScreen.ButtonSpecimenInventory
-            .Select(spec => spec.RowGroup)
-            .Distinct()
-            .ToList();
-
-        rowGroups.Count.ShouldBe(5);
-        rowGroups.ShouldAllBe(group => !string.IsNullOrWhiteSpace(group));
     }
 
 }

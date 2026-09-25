@@ -9,7 +9,7 @@ public sealed class UiIconsTests
     {
         ((int)UiIconId.None).ShouldBe(-1);
         ((int)UiIconId.Back).ShouldBe(0);
-        UiIcons.AllUiIds.ShouldNotContain(UiIconId.None);
+        UiIcons.AllIds.ShouldNotContain(UiIconId.None);
         Should.Throw<ArgumentOutOfRangeException>(() => UiIcons.PathFor(UiIconId.None));
     }
 
@@ -18,17 +18,11 @@ public sealed class UiIconsTests
     {
         var projectRoot = Path.Combine(FindRepositoryRoot(), "project");
 
-        UiIcons.AllUiIds.Count.ShouldBe(40);
-        UiIcons.AllPartIds.Count.ShouldBe(15);
+        UiIcons.AllIds.Count.ShouldBe(55);
 
-        foreach (var icon in UiIcons.AllUiIds)
+        foreach (var icon in UiIcons.AllIds)
         {
-            File.Exists(ToAssetPath(projectRoot, UiIcons.PathFor(icon))).ShouldBeTrue($"Missing UI icon: {icon}");
-        }
-
-        foreach (var icon in UiIcons.AllPartIds)
-        {
-            File.Exists(ToAssetPath(projectRoot, UiIcons.PathFor(icon))).ShouldBeTrue($"Missing part icon: {icon}");
+            File.Exists(ToAssetPath(projectRoot, UiIcons.PathFor(icon))).ShouldBeTrue($"Missing icon: {icon}");
         }
     }
 
@@ -58,12 +52,7 @@ public sealed class UiIconsTests
     {
         var resources = typeof(UiIcons).Assembly.GetManifestResourceNames();
 
-        foreach (var icon in UiIcons.AllUiIds)
-        {
-            resources.ShouldContain(UiIcons.PathFor(icon)["res://assets/".Length..]);
-        }
-
-        foreach (var icon in UiIcons.AllPartIds)
+        foreach (var icon in UiIcons.AllIds)
         {
             resources.ShouldContain(UiIcons.PathFor(icon)["res://assets/".Length..]);
         }

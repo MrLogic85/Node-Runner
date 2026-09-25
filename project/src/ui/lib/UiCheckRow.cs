@@ -1,6 +1,8 @@
 namespace NodeRunner.Ui.Lib;
 
 /// <summary>An action option with a left-aligned checkbox.</summary>
+[Godot.Tool]
+[Godot.GlobalClass]
 public partial class UiCheckRow : UiChoiceRow
 {
     public UiCheckRow()

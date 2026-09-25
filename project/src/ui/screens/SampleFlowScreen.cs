@@ -18,7 +18,7 @@ public partial class SampleFlowScreen : Control
     private UiSegmentedSwitch? _modeSwitch;
     private Control? _overlay;
     private Button? _overlayDismiss;
-    private UiOverflowMenu? _overflowMenu;
+    private UiMenu? _overflowMenu;
     private UiToast? _toast;
     private UiSheet? _sheet;
     private int _selectedMode;
@@ -193,16 +193,37 @@ public partial class SampleFlowScreen : Control
         _overlayDismiss.Visible = false;
         _overlay.AddChild(_overlayDismiss);
 
-        _overflowMenu = new UiOverflowMenu
+        _overflowMenu = new UiMenu
         {
             Tokens = _tokens,
             ZIndex = 10,
         };
-        _overflowMenu.SetActions(
-            ("training-settings", "Sample settings", false),
-            ("start-over", "Sample start over", true),
-            ("creations", "Creations", false));
-        _overflowMenu.ActionSelected += OnOverflowAction;
+        UiMenuItems.Populate(
+            _overflowMenu,
+            [
+                new UiMenuItemSpec("Sample settings"),
+                new UiMenuItemSpec(
+                    "Sample start over",
+                    UiIconId.Trash,
+                    UiMenuActionItem.MenuItemKind.Danger),
+                new UiMenuItemSpec("Creations"),
+            ],
+            _tokens);
+        _overflowMenu.IndexClicked += index =>
+        {
+            string? action = index switch
+            {
+                0 => "training-settings",
+                1 => "start-over",
+                2 => "creations",
+                _ => null,
+            };
+            if (action is null)
+                return;
+
+            _overflowMenu.Hide();
+            OnOverflowAction(action);
+        };
         _overlay.AddChild(_overflowMenu);
 
         _toast = new UiToast

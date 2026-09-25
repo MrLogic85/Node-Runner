@@ -3,7 +3,9 @@ using Godot;
 namespace NodeRunner.Ui.Lib;
 
 /// <summary>One canvas selection handle, configured as drag, rotate, or scale.</summary>
-public partial class UiSelectionHandle : Control
+[Tool]
+[GlobalClass]
+public partial class UiSelectionHandle : Control, ISerializationListener
 {
     public enum HandleType
     {
@@ -48,13 +50,35 @@ public partial class UiSelectionHandle : Control
     {
         CustomMinimumSize = new Vector2(44, 44);
         MouseFilter = MouseFilterEnum.Pass;
+        RecoverIcon();
         RefreshIcon();
-        Resized += LayoutIcon;
     }
 
-    public override void _ExitTree()
+    public override void _EnterTree() => RequestReady();
+
+    public void OnBeforeSerialize()
     {
-        Resized -= LayoutIcon;
+    }
+
+    public void OnAfterDeserialize() => CallDeferred(MethodName.RestoreContent);
+
+    private void RestoreContent()
+    {
+        if (!IsInsideTree())
+        {
+            return;
+        }
+
+        RecoverIcon();
+        RefreshIcon();
+    }
+
+    public override void _Notification(int what)
+    {
+        if (what == NotificationResized)
+        {
+            LayoutIcon();
+        }
     }
 
     public override void _GuiInput(InputEvent inputEvent)
@@ -79,7 +103,7 @@ public partial class UiSelectionHandle : Control
             40,
             _tokens.Halo,
             _handleStroke,
-            antialiased: true);
+            antialiased: false);
     }
 
     private void RefreshIcon()
@@ -96,8 +120,15 @@ public partial class UiSelectionHandle : Control
         }
 
         _icon = UiIcons.Create(IconFor(Type), UiIconSize.Standard, _tokens.Halo);
-        AddChild(_icon);
+        AddChild(_icon, false, InternalMode.Front);
         LayoutIcon();
+    }
+
+    private void RecoverIcon()
+    {
+        _icon = GetChildren(includeInternal: true)
+            .OfType<TextureRect>()
+            .FirstOrDefault();
     }
 
     private void LayoutIcon()

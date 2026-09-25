@@ -3,59 +3,46 @@ using Godot;
 namespace NodeRunner.Ui.Lib;
 
 /// <summary>Icon tab strip with single active selection.</summary>
+[Tool]
+[GlobalClass]
 public partial class UiIconTabs : HBoxContainer
 {
     [Signal]
-    public delegate void TabSelectedEventHandler(string tabId, int index);
+    public delegate void TabSelectedEventHandler(int index);
 
     private UiTokens _tokens = UiTokens.Neon;
     private ButtonGroup? _group;
-    private bool _tabsConfigured;
-    private TabItem[] _tabs = [];
-
-    private readonly List<TabSlot> _slots = [];
-
-    public readonly record struct TabItem(string Id, UiIconId IconId, string AccessibleLabel, bool Enabled = true)
-    {
-        public TabItem(string id, UiPartIconId partIconId, string accessibleLabel, bool enabled = true)
-            : this(id, default(UiIconId), accessibleLabel, enabled)
-        {
-            PartIconId = partIconId;
-        }
-
-        public UiPartIconId? PartIconId { get; init; }
-    }
+    private Godot.Collections.Array<UiIconId> _icons = [];
+    private readonly List<Button> _buttons = [];
 
     [Export]
-    public string[] Glyphs
+    public Godot.Collections.Array<UiIconId> Icons
     {
-        get => _glyphs;
+        get => _icons;
         set
         {
-            _glyphs = value ?? [];
-            _tabsConfigured = true;
-            _tabs = CreateTabsFromGlyphs();
-            _activeIndex = UiComponentContracts.NormalizeTabIndex(_activeIndex, _tabs.Length);
-            RefreshTabs();
+            var icons = value?.Duplicate() ?? [];
+            ValidateIcons(icons);
+            _icons = icons;
+            _activeIndex = UiComponentContracts.NormalizeTabIndex(_activeIndex, _icons.Count);
+            RebuildButtons();
         }
     }
 
-    private string[] _glyphs = ["beam", "core", "joint", "select"];
-
     [Export]
-    public int ActiveIndex
+    public int SelectedIndex
     {
         get => _activeIndex;
         set
         {
-            var normalized = UiComponentContracts.NormalizeTabIndex(value, _tabs.Length);
+            var normalized = UiComponentContracts.NormalizeTabIndex(value, _icons.Count);
             if (normalized == _activeIndex)
             {
                 return;
             }
 
             _activeIndex = normalized;
-            RefreshSelection();
+            ApplySelection();
         }
     }
 
@@ -67,7 +54,7 @@ public partial class UiIconTabs : HBoxContainer
         set
         {
             _tokens = value;
-            RefreshAppearance();
+            ApplyTheme();
         }
     }
 
@@ -75,53 +62,37 @@ public partial class UiIconTabs : HBoxContainer
     {
         MouseFilter = MouseFilterEnum.Pass;
         _group ??= new ButtonGroup { AllowUnpress = false };
-        if (!_tabsConfigured)
-        {
-            _tabs = CreateTabsFromGlyphs();
-            _tabsConfigured = true;
-        }
-        _activeIndex = UiComponentContracts.NormalizeTabIndex(_activeIndex, _tabs.Length);
-        RefreshTabs();
+        _activeIndex = UiComponentContracts.NormalizeTabIndex(_activeIndex, _icons.Count);
+        RebuildButtons();
     }
 
-    public void SetTabs(params TabItem[] tabs)
-    {
-        ArgumentNullException.ThrowIfNull(tabs);
-        _tabsConfigured = true;
-        _tabs = tabs.ToArray();
-        _activeIndex = UiComponentContracts.NormalizeTabIndex(_activeIndex, _tabs.Length);
-        RefreshTabs();
-    }
-
-    private void RefreshTabs()
+    private void RebuildButtons()
     {
         if (_group is null)
         {
             return;
         }
 
-        AddThemeConstantOverride("separation", (int)_tokens.Space1);
-
         var focusedIndex = -1;
-        for (var index = 0; index < _slots.Count; index++)
+        for (var index = 0; index < _buttons.Count; index++)
         {
-            if (_slots[index].Button.HasFocus())
+            if (_buttons[index].HasFocus())
             {
                 focusedIndex = index;
                 break;
             }
         }
 
-        while (_slots.Count > _tabs.Length)
+        while (_buttons.Count > _icons.Count)
         {
-            var slot = _slots[^1];
-            slot.Button.ButtonGroup = null;
-            RemoveChild(slot.Button);
-            slot.Button.QueueFree();
-            _slots.RemoveAt(_slots.Count - 1);
+            var button = _buttons[^1];
+            button.ButtonGroup = null;
+            RemoveChild(button);
+            button.QueueFree();
+            _buttons.RemoveAt(_buttons.Count - 1);
         }
 
-        while (_slots.Count < _tabs.Length)
+        while (_buttons.Count < _icons.Count)
         {
             var button = new Button
             {
@@ -129,88 +100,78 @@ public partial class UiIconTabs : HBoxContainer
                 IconAlignment = HorizontalAlignment.Center,
                 ToggleMode = true,
                 ButtonGroup = _group,
-                CustomMinimumSize = new Vector2(_tokens.TouchTarget, _tokens.TouchTarget),
+                CustomMinimumSize = new Vector2(_tokens.TouchTarget, _tokens.ControlSmall),
                 SizeFlagsVertical = SizeFlags.ShrinkCenter,
                 MouseFilter = MouseFilterEnum.Pass,
             };
-            var slotIndex = _slots.Count;
-            button.Pressed += () => SelectTab(slotIndex);
-            _slots.Add(new TabSlot(button));
+            var buttonIndex = _buttons.Count;
+            button.Pressed += () => SelectTab(buttonIndex);
+            _buttons.Add(button);
             AddChild(button);
         }
 
-        _activeIndex = UiComponentContracts.NormalizeTabIndex(_activeIndex, _tabs.Length);
-        RefreshAppearance();
-        RefreshSelection();
-        if (focusedIndex >= 0 && _slots.Count > 0 && IsInsideTree())
+        ApplyTheme();
+        ApplySelection();
+        if (focusedIndex >= 0 && _buttons.Count > 0 && IsInsideTree())
         {
-            _slots[Math.Min(focusedIndex, _slots.Count - 1)].Button.GrabFocus();
+            _buttons[Math.Min(focusedIndex, _buttons.Count - 1)].GrabFocus();
         }
     }
 
     private void SelectTab(int index)
     {
-        var normalized = UiComponentContracts.NormalizeTabIndex(index, _tabs.Length);
+        var normalized = UiComponentContracts.NormalizeTabIndex(index, _icons.Count);
         if (normalized == _activeIndex)
         {
             return;
         }
 
         _activeIndex = normalized;
-        RefreshSelection();
-        EmitSignal(SignalName.TabSelected, _tabs[normalized].Id, normalized);
+        ApplySelection();
+        EmitSignal(SignalName.TabSelected, normalized);
     }
 
-    private void RefreshSelection()
+    private void ApplySelection()
     {
-        _activeIndex = UiComponentContracts.NormalizeTabIndex(_activeIndex, _tabs.Length);
-        if (_activeIndex < _slots.Count)
+        _activeIndex = UiComponentContracts.NormalizeTabIndex(_activeIndex, _icons.Count);
+        if (_activeIndex < _buttons.Count)
         {
-            _slots[_activeIndex].Button.ButtonPressed = true;
+            _buttons[_activeIndex].ButtonPressed = true;
         }
-
-        RefreshDisabledStyle();
     }
 
-    private void RefreshAppearance()
+    private void ApplyTheme()
     {
         AddThemeConstantOverride("separation", (int)_tokens.Space1);
-        for (var index = 0; index < _slots.Count; index++)
+        for (var index = 0; index < _buttons.Count; index++)
         {
-            var item = _tabs[index];
-            var slot = _slots[index];
-            var button = slot.Button;
-            var label = string.IsNullOrWhiteSpace(item.AccessibleLabel) ? item.Id : item.AccessibleLabel;
+            var button = _buttons[index];
             button.Text = string.Empty;
-            button.TooltipText = label;
-            button.AccessibilityName = label;
-            button.Disabled = !item.Enabled;
-            button.CustomMinimumSize = new Vector2(_tokens.TouchTarget, _tokens.TouchTarget);
+            button.CustomMinimumSize = new Vector2(_tokens.TouchTarget, _tokens.ControlSmall);
             button.SizeFlagsHorizontal = SizeFlags.ShrinkBegin;
             button.SizeFlagsVertical = SizeFlags.ShrinkCenter;
-            ApplyIcon(button, item);
-            ApplyStyle(slot);
+            ApplyIcon(button, _icons[index]);
+            ApplyStyle(button);
         }
-
-        RefreshDisabledStyle();
     }
 
-    private TabItem[] CreateTabsFromGlyphs() =>
-        Glyphs.Select((glyph, index) => new TabItem(
-            index.ToString(),
-            UiIconGlyphs.ParseOr(glyph, UiIconId.Select),
-            glyph)).ToArray();
-
-    private void ApplyIcon(Button button, TabItem item)
+    private static void ValidateIcons(Godot.Collections.Array<UiIconId> icons)
     {
-        if (item.PartIconId is { } partIcon)
+        for (var index = 0; index < icons.Count; index++)
         {
-            UiIcons.Apply(button, partIcon, UiIconSize.Large, _tokens.Muted);
+            var icon = icons[index];
+            if (!Enum.IsDefined(icon) || icon == UiIconId.None)
+            {
+                throw new ArgumentException(
+                    $"Icon tab at index {index} must use a visible UiIconId.",
+                    nameof(icons));
+            }
         }
-        else
-        {
-            UiIcons.Apply(button, item.IconId, UiIconSize.Large, _tokens.Muted);
-        }
+    }
+
+    private void ApplyIcon(Button button, UiIconId icon)
+    {
+        UiIcons.Apply(button, icon, UiIconSize.Large, _tokens.Muted);
 
         button.AddThemeConstantOverride("h_separation", 0);
         button.AddThemeColorOverride("icon_pressed_color", _tokens.Accent);
@@ -218,43 +179,26 @@ public partial class UiIconTabs : HBoxContainer
         button.AddThemeColorOverride("icon_focus_color", _tokens.Muted);
     }
 
-    private void ApplyStyle(TabSlot slot)
+    private void ApplyStyle(Button button)
     {
-        slot.Disabled = CreateStyle(selected: false, disabled: true);
-        slot.DisabledSelected = CreateStyle(selected: true, disabled: true);
         var inactive = CreateStyle(selected: false);
         var active = CreateStyle(selected: true);
-        slot.Button.AddThemeStyleboxOverride("normal", inactive);
-        slot.Button.AddThemeStyleboxOverride("hover", inactive);
-        slot.Button.AddThemeStyleboxOverride("pressed", active);
-        slot.Button.AddThemeStyleboxOverride("hover_pressed", active);
-        slot.Button.AddThemeStyleboxOverride("focus", CreateFocusStyle());
-        slot.Button.AddThemeStyleboxOverride("disabled", slot.Disabled);
+        button.AddThemeStyleboxOverride("normal", inactive);
+        button.AddThemeStyleboxOverride("hover", inactive);
+        button.AddThemeStyleboxOverride("pressed", active);
+        button.AddThemeStyleboxOverride("hover_pressed", active);
+        button.AddThemeStyleboxOverride("focus", CreateFocusStyle());
     }
 
-    private void RefreshDisabledStyle()
+    private StyleBoxFlat CreateStyle(bool selected)
     {
-        for (var index = 0; index < _slots.Count; index++)
-        {
-            var slot = _slots[index];
-            slot.Button.AddThemeStyleboxOverride("disabled", index == _activeIndex ? slot.DisabledSelected : slot.Disabled);
-            slot.Button.AddThemeColorOverride("icon_disabled_color",
-                DisabledColor(index == _activeIndex ? _tokens.Accent : _tokens.Muted));
-        }
-    }
-
-    private StyleBoxFlat CreateStyle(bool selected, bool disabled = false)
-    {
-        var background = selected ? _tokens.AccentSoft : Colors.Transparent;
-        var border = selected ? _tokens.Accent : _tokens.Line;
+        var background = selected ? _tokens.PanelRaised.Blend(_tokens.AccentSoft) : _tokens.PanelRaised;
+        var border = selected ? _tokens.Accent : _tokens.LineStrong;
         var style = _tokens.ControlStyle(
-            disabled ? DisabledColor(background) : background,
-            disabled ? DisabledColor(border) : border,
+            background,
+            border,
             selected ? _tokens.StrokeSignal : _tokens.StrokeHair,
             _tokens.RadiusMedium);
-        var inset = (_tokens.TouchTarget - _tokens.ControlSmall) * 0.5f;
-        style.ExpandMarginTop = -inset;
-        style.ExpandMarginBottom = -inset;
         style.SetContentMarginAll(0);
         return style;
     }
@@ -265,14 +209,5 @@ public partial class UiIconTabs : HBoxContainer
         style.DrawCenter = false;
         style.BorderColor = _tokens.Halo;
         return style;
-    }
-
-    private static Color DisabledColor(Color color) => UiTokens.MultiplyAlpha(color, 0.5f);
-
-    private sealed class TabSlot(Button button)
-    {
-        public Button Button { get; } = button;
-        public StyleBoxFlat Disabled { get; set; } = new();
-        public StyleBoxFlat DisabledSelected { get; set; } = new();
     }
 }

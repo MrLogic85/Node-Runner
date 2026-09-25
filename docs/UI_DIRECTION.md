@@ -34,6 +34,44 @@ reference must be deliberate, documented in the PR/issue, or fixed before the
 milestone is considered done. When the package is contradictory or incomplete,
 record the ambiguity instead of editing it or choosing silently.
 
+## Immediate-mode drawing and antialiasing
+
+The project renders at a low logical canvas (`window/size/viewport_width=640`,
+`viewport_height=360`) and relies on `window/stretch/mode="canvas_items"` to
+scale everything up to the device's physical resolution (e.g. 3x on a
+1920x1080 display). Any `_Draw()` override that calls an immediate-mode
+`CanvasItem` primitive (`DrawArc`, `DrawLine`, `DrawPolyline`,
+`DrawDashedLine`, `DrawRect`, `DrawCircle`, ...) with `antialiased: true`
+records its AA "feather" as extra geometry sized in local/object-space at
+draw time. That feather is not recomputed against the canvas stretch
+transform — it just scales up along with the rest of the shape. At 3x
+stretch, a feather meant to be ~1 physical pixel becomes ~3 physical pixels,
+producing a visibly soft/blurry halo around rings, dashed borders, and other
+hand-drawn strokes (first noticed on `UiNumber`'s ring and `UiCard`'s
+disabled dashed border).
+
+`StyleBoxFlat`-based rendering (used for `UiCard`'s normal/rounded borders)
+does not have this problem — it uses a separate, scale-aware rendering path.
+Setting `textures/canvas_textures/default_texture_filter` to `Nearest` (done
+in `project.godot`) fixes texture-sampling blur (fonts, sprites) but does
+**not** fix this, since the AA feather is extra vector geometry, not a
+texture-filtering artifact; it was empirically confirmed to still be blurry
+under `Nearest` filtering. `anti_aliasing/quality/msaa_2d` is also enabled in
+`project.godot`, but has no effect at all under the project's
+Compatibility/GLES3 renderer (Godot logs `2D MSAA is not yet supported for
+GLES3`); see the Compatibility/OpenGL renderer note in
+`docs/ARCHITECTURE.md`.
+
+**Rule: all immediate-mode `_Draw()` calls in this project must pass
+`antialiased: false`.** This has been applied across every existing call
+site (`UiNumber`, `UiDashedBorder`, `UiProgressRing`, `UiSlider`,
+`UiSelectionHandle`, `UiButton`, `UiReadonlyValue`, `UiBoundsDebugOverlay`,
+`BuildScreen`, `SimulateScreen`, `BrainFocusNetworkView`,
+`ConstructionCanvas`, `CreationCard`, `BeamVisual`). Any new `_Draw()` code
+must follow the same rule; a stray edge without antialiasing reads as a
+sharp 1px line at any stretch factor, while `antialiased: true` reads as a
+blurry, stretch-factor-wide halo.
+
 ## Theme boundaries
 
 Tron/neon is the reference theme, not a permanent constraint. Implementation
@@ -220,7 +258,24 @@ with F6. Editor authoring is being introduced in
 [issue #282](https://github.com/MrLogic85/Node-Runner/issues/282). Dialog content
 and notification content, as well as Popup Gallery, are scene-authored.
 
-Open `project/scenes/ui/PopupGalleryScreen.tscn` to edit the actual gallery.
+Component Gallery is migrating one component at a time. Open
+`project/scenes/ui/ComponentGalleryScreen.tscn` and expand
+`Frame/Shell/Scroll/ContentFrame/Content` to edit the authored component
+sections. Buttons, Toggle/Checkbox, Segmented, and Parts tray tabs are the
+actual runtime controls, not editor-only copies. The scene may group and rename
+those sections freely; tests should cover component behavior, not lock the
+gallery's visual arrangement.
+Edit normal exported properties, UiLabel Text Style presets and native
+container separations; theme switching does not recreate or reset those
+choices. `gallery_muted` marks captions that use muted tokens.
+Keep the unique `Background`, `Frame`, `HeaderHost`, `Scroll`, `ContentFrame`,
+and `RuntimeSections` binding names. The toolbar and authored component
+sections are scene-owned; the remaining component sections are still built at
+runtime in `RuntimeSections`, so they appear with F6 but are deliberately not
+yet authored in the editor. Do not copy generated component internals into the
+scene.
+
+Open `project/scenes/ui/PopupGalleryScreen.tscn` to edit the actual popup gallery.
 The header keeps a horizontally scrolling, right-aligned theme selector.
 Below it, a vertical ScrollContainer holds dialog and notification specimens
 in wrapping HFlowContainers plus a status label. Labels, order, spacing, and
@@ -308,7 +363,7 @@ callbacks, pause and swipe animation remain in `UiNotification`.
 
 `UiNotificationSpec.Icon` optionally selects a canonical glyph through
 `new UiNotificationIcon(UiIconId.Trophy)` or
-`new UiNotificationIcon(UiPartIconId.Spring)`. Omit it (or use null) to retain
+`new UiNotificationIcon(UiIconId.PartSpring)`. Omit it (or use null) to retain
 the type's default: Model for Default, Warn for Warn/Danger. The selected
 glyph keeps the semantic tint and Large icon size; it does not change the
 type label or card variant. Arbitrary textures and `UiIconId.None` are not
@@ -331,7 +386,7 @@ notifications.Enqueue(new UiNotificationSpec(
 
 notifications.Enqueue(new UiNotificationSpec(
     UiPopupType.Default, "New part unlocked: Spring", "Reached 10 m.",
-    Icon: new(UiPartIconId.Spring)));
+    Icon: new(UiIconId.PartSpring)));
 ```
 
 Parts tray tabs use persistent native toggle buttons in a `ButtonGroup`,
@@ -350,11 +405,33 @@ content or accept/document clipped glow. Product popups should live in an
 unclipped overlay layer rather than inside clipped scroll content. See
 [issue #252](https://github.com/MrLogic85/Node-Runner/issues/252).
 
-Overflow menus default to the existing fixed token width, and can opt into
-content-wrapping width through `UiOverflowMenu.WidthMode`. The legacy `Width`
-property remains the fixed row width override for compatibility; `0` keeps the
-token default. Wrap-content menus remove the fixed row width but keep native
-button rows, 48px touch height, row padding, icon gap, and semantic coloring.
+`UiMenu` is a generic overlay container with a token-backed border/background.
+It vertically lays out arbitrary direct child controls. A child gets first
+chance to consume input. An unconsumed click bubbles to the menu, which emits
+the clicked visible-child index, then consumes the event before it reaches
+content behind the overlay. Selection belongs to individual menu items rather
+than the menu, so sectioned and nested menu layouts can manage each selectable
+item independently. Item highlights remain square; the menu clips all children
+to its rounded surface. `Follow` keeps the top-level menu attached to a
+normalized point on an anchor control while scrolling or relayout moves that
+control.
+Menus default to the fixed menu-width token and can opt into content-wrapping
+width through `WidthMode`. The menu's `Compact` toggle overrides all direct
+`UiMenuItem` children to the matching 32px or 48px row variant, so one menu
+cannot accidentally mix densities. The abstract `UiMenuItem` base owns tokens,
+availability, size, padding, and the square selected highlight.
+`UiMenuActionItem` is the recommended optional action child. `Kind` distinguishes
+only Default and Danger actions; availability uses the base item's independent
+`Disabled` property. It listens for and emits its own `Activated` signal but
+defaults to `MouseFilter.Pass`, so the menu's index handler also receives the
+click. Set an item to `Stop` only when that item explicitly owns and consumes
+the action. `UiMenuToggleItem` composes the standard `UiToggleRow` inside a
+Standard or Compact menu row and owns the menu-specific horizontal padding; it consumes its
+own input so toggling it does not also invoke the menu's index action. Other
+controls remain valid children. `UiMenuItemDivider` is a non-interactive
+separator with the same `Edge` colour and `StrokeHair` width as the menu
+border. It uses the base item's Standard or Compact padding and does not emit
+the menu's index-click signal.
 See [issue #251](https://github.com/MrLogic85/Node-Runner/issues/251).
 
 ## CSS line-height mapping to Godot

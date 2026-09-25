@@ -102,7 +102,7 @@ public partial class UiReadonlyValue : PanelContainer
         var direction = (end - start).Normalized();
         for (var offset = 0f; offset < length; offset += dashLength + gapLength)
         {
-            DrawLine(start + (direction * offset), start + (direction * Mathf.Min(offset + dashLength, length)), _tokens.LineStrong, _tokens.StrokeHair, antialiased: true);
+            DrawLine(start + (direction * offset), start + (direction * Mathf.Min(offset + dashLength, length)), _tokens.LineStrong, _tokens.StrokeHair, antialiased: false);
         }
     }
 

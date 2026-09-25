@@ -3,7 +3,9 @@ using Godot;
 namespace NodeRunner.Ui.Lib;
 
 /// <summary>Ringed 16px step number used to lead numbered stage and chain items.</summary>
-public partial class UiNumber : Control
+[Tool]
+[GlobalClass]
+public partial class UiNumber : Control, ISerializationListener
 {
     private UiTokens _tokens = UiTokens.Neon;
     private Label? _label;
@@ -36,21 +38,50 @@ public partial class UiNumber : Control
     public override void _Ready()
     {
         MouseFilter = MouseFilterEnum.Ignore;
-        _label = new Label
+        InitializeContent();
+    }
+
+    private void InitializeContent()
+    {
+        _label = GetChildren(includeInternal: true)
+            .OfType<Label>()
+            .FirstOrDefault();
+        if (_label is null)
         {
-            HorizontalAlignment = HorizontalAlignment.Center,
-            VerticalAlignment = VerticalAlignment.Center,
-            MouseFilter = MouseFilterEnum.Ignore,
-        };
-        AddChild(_label);
-        Resized += LayoutLabel;
+            _label = new Label
+            {
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center,
+                MouseFilter = MouseFilterEnum.Ignore,
+            };
+            AddChild(_label, false, InternalMode.Front);
+        }
         ApplyGeometry();
         RefreshLabel();
     }
 
-    public override void _ExitTree()
+    public override void _EnterTree() => RequestReady();
+
+    public void OnBeforeSerialize()
     {
-        Resized -= LayoutLabel;
+    }
+
+    public void OnAfterDeserialize() => CallDeferred(MethodName.RestoreContent);
+
+    private void RestoreContent()
+    {
+        if (IsInsideTree())
+        {
+            InitializeContent();
+        }
+    }
+
+    public override void _Notification(int what)
+    {
+        if (what == NotificationResized)
+        {
+            LayoutLabel();
+        }
     }
 
     public override void _Draw()
@@ -58,7 +89,7 @@ public partial class UiNumber : Control
         var stroke = _tokens.NumberStrokeWidth;
         var center = Size * 0.5f;
         var radius = (_tokens.NumberDiameter - stroke) * 0.5f;
-        DrawArc(center, radius, 0, Mathf.Tau, 32, _tokens.Accent, stroke, antialiased: true);
+        DrawArc(center, radius, 0, Mathf.Tau, 32, _tokens.Accent, stroke, antialiased: false);
     }
 
     private void ApplyGeometry()

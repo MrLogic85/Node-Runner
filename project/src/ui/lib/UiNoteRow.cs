@@ -3,6 +3,8 @@ using Godot;
 namespace NodeRunner.Ui.Lib;
 
 /// <summary>Content-sized, wrapping note text with spacing owned by its parent.</summary>
+[Tool]
+[GlobalClass]
 public partial class UiNoteRow : VBoxContainer
 {
     private UiTokens _tokens = UiTokens.Neon;
@@ -13,7 +15,7 @@ public partial class UiNoteRow : VBoxContainer
         SizeFlagsHorizontal = SizeFlags.ExpandFill,
     };
 
-    private string _text = "Sits on an empty joint.";
+    private string _text = "";
 
     [Export]
     public string Text

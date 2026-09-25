@@ -287,43 +287,44 @@ public partial class CreationsScreen : Control
         return holder;
     }
 
-    private UiOverflowMenu CreateOverflowMenu()
+    private UiMenu CreateOverflowMenu()
     {
-        var menu = new UiOverflowMenu
+        var menu = new UiMenu
         {
             Name = "CreationsOverflow",
             Tokens = _tokens,
             Position = new Vector2(UiLayout.CanvasWidth - 196, UiLayout.TopBarHeight + (UiSpacing.ScreenEdgeInset(_tokens) * 2)),
         };
-        var actions = new List<(string Id, string Label, bool Danger)>
+        var actions = new List<(string Id, UiMenuItemSpec Item)>
         {
-            ("close", "Close Creations", false),
-            ("restore-example", "Restore example", false),
+            ("close", new("Close Creations")),
+            ("restore-example", new("Restore example")),
         };
         if (ShowComponentLibraryLink)
         {
-            actions.Add(("colors-and-styles", "Colors and styles", false));
-            actions.Add(("component-library", "Component library", false));
+            actions.Add(("colors-and-styles", new("Colors and styles")));
+            actions.Add(("component-library", new("Component library")));
         }
 
-        menu.SetActions(actions.ToArray());
-        menu.ActionSelected += id =>
+        UiMenuItems.Populate(menu, actions.Select(action => action.Item), _tokens);
+        menu.IndexClicked += index =>
         {
-            if (id == "close")
+            var id = index >= 0 && index < actions.Count ? actions[index].Id : null;
+            menu.Hide();
+            switch (id)
             {
-                EmitSignal(SignalName.BackRequested);
-            }
-            else if (id == "restore-example")
-            {
-                EmitSignal(SignalName.RestoreExampleRequested);
-            }
-            else if (id == "component-library")
-            {
-                EmitSignal(SignalName.ComponentLibraryRequested);
-            }
-            else if (id == "colors-and-styles")
-            {
-                EmitSignal(SignalName.ColorsAndStylesRequested);
+                case "close":
+                    EmitSignal(SignalName.BackRequested);
+                    break;
+                case "restore-example":
+                    EmitSignal(SignalName.RestoreExampleRequested);
+                    break;
+                case "component-library":
+                    EmitSignal(SignalName.ComponentLibraryRequested);
+                    break;
+                case "colors-and-styles":
+                    EmitSignal(SignalName.ColorsAndStylesRequested);
+                    break;
             }
         };
         menu.Visible = false;
@@ -332,7 +333,7 @@ public partial class CreationsScreen : Control
 
     private void ToggleOverflowMenu()
     {
-        if (GetNodeOrNull<UiOverflowMenu>("CreationsOverflow") is { } menu)
+        if (GetNodeOrNull<UiMenu>("CreationsOverflow") is { } menu)
         {
             menu.Visible = !menu.Visible;
         }

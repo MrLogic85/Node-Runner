@@ -2,7 +2,16 @@ using Godot;
 
 namespace NodeRunner.Ui.Lib;
 
+public readonly record struct UiPickerOption(
+    string Label,
+    UiIconId? Icon = null,
+    UiMenuActionItem.MenuItemKind Kind = UiMenuActionItem.MenuItemKind.Default,
+    string? Note = null,
+    Color? IconTint = null);
+
 /// <summary>Picker row that opens a menu-backed list of valid choices.</summary>
+[Tool]
+[GlobalClass]
 public partial class UiPicker : PanelContainer
 {
     public enum PickerState
@@ -13,7 +22,7 @@ public partial class UiPicker : PanelContainer
     }
 
     [Signal]
-    public delegate void SelectionChangedEventHandler(string selectedId);
+    public delegate void SelectionChangedEventHandler(int selectedIndex);
 
     [Signal]
     public delegate void StateChangedEventHandler(PickerState state);
@@ -23,15 +32,14 @@ public partial class UiPicker : PanelContainer
     private PickerState _state = PickerState.Collapsed;
     private bool _disabled;
     private string _belowText = string.Empty;
-    private string _selectedId = "left-thigh";
-    private UiOverflowMenu.MenuAction[] _options =
+    private int _selectedIndex;
+    private UiPickerOption[] _options =
     [
-        new("left-thigh", "Left thigh", UiIconId.Beam),
-        new("left-shin", "Left shin", UiIconId.Beam, Note: "swaps"),
-        new("tail", "Tail"),
+        new("Left thigh", UiIconId.Beam),
+        new("Left shin", UiIconId.Beam, Note: "swaps"),
+        new("Tail"),
     ];
-    private UiOverflowMenu? _openMenu;
-    private Control? _menuAnchor;
+    private UiMenu? _openMenu;
 
     [Export]
     public string LabelText
@@ -81,22 +89,23 @@ public partial class UiPicker : PanelContainer
     }
 
     [Export]
-    public string SelectedId
+    public int SelectedIndex
     {
-        get => EffectiveSelectedId;
+        get => EffectiveSelectedIndex;
         set
         {
-            _selectedId = value ?? string.Empty;
+            _selectedIndex = NormalizeSelectedIndex(value);
             Rebuild();
         }
     }
 
-    public UiOverflowMenu.MenuAction[] Options
+    public UiPickerOption[] Options
     {
         get => _options;
         set
         {
             _options = value ?? [];
+            _selectedIndex = NormalizeSelectedIndex(_selectedIndex);
             Rebuild();
         }
     }
@@ -113,16 +122,7 @@ public partial class UiPicker : PanelContainer
 
     public override void _Ready()
     {
-        SetProcess(false);
         Rebuild();
-    }
-
-    public override void _Process(double delta)
-    {
-        if (IsExpanded && _openMenu is not null && _menuAnchor is not null)
-        {
-            PositionMenu(_openMenu, _menuAnchor);
-        }
     }
 
     private void Rebuild()
@@ -138,7 +138,6 @@ public partial class UiPicker : PanelContainer
             child.QueueFree();
         }
         _openMenu = null;
-        _menuAnchor = null;
 
         AddThemeStyleboxOverride("panel", new StyleBoxEmpty());
         MouseFilter = MouseFilterEnum.Pass;
@@ -158,12 +157,9 @@ public partial class UiPicker : PanelContainer
         if (IsExpanded)
         {
             var menu = CreateOptionsMenu();
-            menu.TopLevel = true;
-            menu.ZIndex = 100;
             AddChild(menu);
             _openMenu = menu;
-            _menuAnchor = closedRow;
-            Callable.From(() => PositionMenu(menu, closedRow)).CallDeferred();
+            menu.Follow(closedRow, new Vector2(0, 1), new Vector2(0, _tokens.Space1));
             menu.CallDeferred(CanvasItem.MethodName.Show);
         }
 
@@ -175,7 +171,6 @@ public partial class UiPicker : PanelContainer
             stack.AddChild(below);
         }
 
-        SetProcess(IsExpanded);
     }
 
     private Button CreateClosedRow()
@@ -237,39 +232,40 @@ public partial class UiPicker : PanelContainer
         return rowButton;
     }
 
-    private void PositionMenu(UiOverflowMenu menu, Control anchor)
+    private UiMenu CreateOptionsMenu()
     {
-        if (!IsInstanceValid(menu) || !IsInstanceValid(anchor))
+        var menu = new UiMenu
         {
-            return;
-        }
-
-        menu.GlobalPosition = anchor.GlobalPosition + new Vector2(0, anchor.Size.Y + _tokens.Space1);
-    }
-
-    private UiOverflowMenu CreateOptionsMenu()
-    {
-        var menu = new UiOverflowMenu
-        {
-            CloseOnSelect = true,
-            RowSize = UiOverflowMenu.MenuRowSize.Compact,
-            ShowSelectedCheck = true,
             Tokens = _tokens,
             Width = _tokens.SidePanelWidth,
-            WidthMode = UiOverflowMenu.MenuWidthMode.Fixed,
+            WidthMode = UiMenu.MenuWidthMode.Fixed,
+            Compact = true,
             SizeFlagsHorizontal = SizeFlags.ShrinkBegin,
             Visible = true,
         };
-        menu.SetActions(Options.Select(option =>
+        var items = Options.Select((option, index) =>
         {
-            var selected = string.Equals(option.Id, EffectiveSelectedId, StringComparison.Ordinal);
-            return option with
+            return new UiMenuItemSpec(
+                option.Label,
+                option.Icon,
+                option.Kind,
+                option.Note,
+                ResolveIconTint(option, index == EffectiveSelectedIndex),
+                Selected: index == EffectiveSelectedIndex);
+        }).ToArray();
+        UiMenuItems.Populate(
+            menu,
+            items,
+            _tokens,
+            showSelectedIndicator: true);
+        menu.IndexClicked += index =>
+        {
+            if (index >= 0 && index < Options.Length)
             {
-                State = selected ? UiComponentContracts.SemanticState.Selected : option.State,
-                IconTint = ResolveIconTint(option, selected),
-            };
-        }).ToArray());
-        menu.ActionSelected += Select;
+                Select(index);
+                menu.Hide();
+            }
+        };
         return menu;
     }
 
@@ -308,44 +304,34 @@ public partial class UiPicker : PanelContainer
         }
     }
 
-    private void Select(string optionId)
+    private void Select(int index)
     {
-        if (!Options.Any(option => string.Equals(option.Id, optionId, StringComparison.Ordinal)))
+        if (index < 0 || index >= Options.Length)
         {
-            GD.PushError($"Invalid picker option id: {optionId}.");
+            GD.PushError($"Invalid picker option index: {index}.");
             return;
         }
 
-        _selectedId = optionId;
+        _selectedIndex = index;
         _state = PickerState.Collapsed;
         Rebuild();
         EmitSignal(SignalName.StateChanged, (int)_state);
-        EmitSignal(SignalName.SelectionChanged, EffectiveSelectedId);
+        EmitSignal(SignalName.SelectionChanged, _selectedIndex);
     }
 
-    private UiOverflowMenu.MenuAction? SelectedOption
-    {
-        get
-        {
-            foreach (var option in Options)
-            {
-                if (string.Equals(option.Id, _selectedId, StringComparison.Ordinal))
-                {
-                    return option;
-                }
-            }
+    private UiPickerOption? SelectedOption =>
+        EffectiveSelectedIndex >= 0 ? Options[EffectiveSelectedIndex] : null;
 
-            return Options.Length > 0 ? Options[0] : null;
-        }
-    }
+    private int EffectiveSelectedIndex => NormalizeSelectedIndex(_selectedIndex);
 
-    private string EffectiveSelectedId => SelectedOption?.Id ?? string.Empty;
+    private int NormalizeSelectedIndex(int index) =>
+        Options.Length == 0 ? -1 : Mathf.Clamp(index, 0, Options.Length - 1);
 
     private bool IsExpanded => State == PickerState.Expanded;
 
     private bool IsLocked => State == PickerState.Locked;
 
-    private Color ResolveIconTint(UiOverflowMenu.MenuAction option, bool selected) =>
+    private Color ResolveIconTint(UiPickerOption option, bool selected) =>
         option.IconTint ?? (selected ? _tokens.Halo : _tokens.Accent);
 
     private Color ValueColor => IsLocked ? _tokens.Muted : _tokens.Ink;
