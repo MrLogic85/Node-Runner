@@ -119,6 +119,21 @@ public sealed class UiTokens
     public TextStyle ReadoutSmallText { get; init; } = new(FontFamily.Mono, 10, 13, 500);
     public bool EffectsEnabled { get; init; } = true;
 
+    public static UiTokens FromType(UiTokenType type)
+    {
+        switch (type)
+        {
+            case UiTokenType.Neon:
+                return Neon;
+            case UiTokenType.Paper:
+                return Paper;
+            case UiTokenType.Light:
+                return Neon.WithEffects(false);
+            default:
+                throw new ArgumentOutOfRangeException(nameof(type), type, null);
+        }
+    }
+
     public static UiTokens Neon { get; } = new()
     {
         Background = Rgb(0x07, 0x0b, 0x14),
@@ -533,4 +548,11 @@ public sealed class UiTokens
 
     private static Color Rgb(int red, int green, int blue, int alpha = 0xff) =>
         new(red / 255f, green / 255f, blue / 255f, alpha / 255f);
+}
+
+public enum UiTokenType
+{
+    Neon,
+    Paper,
+    Light,
 }

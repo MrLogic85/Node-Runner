@@ -41,76 +41,9 @@ public partial class ComponentGalleryScreen : Control
     private readonly List<Action<UiTokens>> _tokenAppliers = new();
     private readonly List<Action<UiTokens>> _labelAppliers = new();
     private UiTokens _tokens = UiTokens.Neon;
-    private ColorRect? _background;
     private ScrollContainer? _scroll;
     private Control? _scrollContent;
-
-    public readonly record struct GalleryComponentSpec(
-        UiComponentContracts.CanonicalComponent Component,
-        string Section);
-
-    public enum GallerySection
-    {
-        Actions,
-        TextInput,
-        Choices,
-        Segmented,
-        PartsTrayTabs,
-        SelectionHandles,
-        Number,
-        Slider,
-        Progress,
-        Cards,
-        Menu,
-        Picker,
-        PartRows,
-        PanelRows,
-        StageCard,
-    }
-
-    public static IReadOnlyList<GalleryComponentSpec> CanonicalInventory { get; } =
-    [
-        new(UiComponentContracts.CanonicalComponent.Button, "Actions"),
-        new(UiComponentContracts.CanonicalComponent.IconButton, "Actions"),
-        new(UiComponentContracts.CanonicalComponent.HoldButton, "Actions"),
-        new(UiComponentContracts.CanonicalComponent.TextField, "Text input"),
-        new(UiComponentContracts.CanonicalComponent.NameField, "Text input"),
-        new(UiComponentContracts.CanonicalComponent.Note, "Panel rows"),
-        new(UiComponentContracts.CanonicalComponent.Slider, "Slider and range"),
-        new(UiComponentContracts.CanonicalComponent.Range, "Slider and range"),
-        new(UiComponentContracts.CanonicalComponent.ProgressBar, "Slider and range"),
-        new(UiComponentContracts.CanonicalComponent.ProgressRing, "Progress"),
-        new(UiComponentContracts.CanonicalComponent.Card, "Cards"),
-        new(UiComponentContracts.CanonicalComponent.Toggle, "Choices and tray rows"),
-        new(UiComponentContracts.CanonicalComponent.Checkbox, "Choices and tray rows"),
-        new(UiComponentContracts.CanonicalComponent.Segmented, "Segmented"),
-        new(UiComponentContracts.CanonicalComponent.Picker, "Choices and tray rows"),
-        new(UiComponentContracts.CanonicalComponent.PartRow, "Part rows"),
-        new(UiComponentContracts.CanonicalComponent.StageCard, "Stage card"),
-        new(UiComponentContracts.CanonicalComponent.Menu, "Menu"),
-        new(UiComponentContracts.CanonicalComponent.IconTabs, "Parts tray tabs"),
-        new(UiComponentContracts.CanonicalComponent.SelectionHandle, "Selection handles"),
-        new(UiComponentContracts.CanonicalComponent.Number, "Number"),
-    ];
-
-    public static IReadOnlyList<GallerySection> RenderedSectionOrder { get; } =
-    [
-        GallerySection.Actions,
-        GallerySection.TextInput,
-        GallerySection.Choices,
-        GallerySection.Segmented,
-        GallerySection.PartsTrayTabs,
-        GallerySection.SelectionHandles,
-        GallerySection.Number,
-        GallerySection.Slider,
-        GallerySection.Progress,
-        GallerySection.Cards,
-        GallerySection.Menu,
-        GallerySection.Picker,
-        GallerySection.PartRows,
-        GallerySection.PanelRows,
-        GallerySection.StageCard,
-    ];
+    private UiFrame? _frame;
 
     public override void _Ready()
     {
@@ -131,56 +64,21 @@ public partial class ComponentGalleryScreen : Control
 
     private void BuildLayout()
     {
-        _background = GetNode<ColorRect>("%Background");
-        var frame = GetNode<MarginContainer>("%Frame");
+        _frame = Track(GetNode<UiFrame>("%UiFrame"));
         BindHeader();
         _scroll = GetNode<ScrollContainer>("%Scroll");
         _scrollContent = GetNode<MarginContainer>("%ContentFrame");
         var runtimeSections = GetNode<VBoxContainer>("%RuntimeSections");
         BindAuthoredControls(runtimeSections.GetParent<Control>());
 
-        foreach (var section in RenderedSectionOrder)
-        {
-            if (section is not (
-                GallerySection.Actions
-                or GallerySection.Choices
-                or GallerySection.Segmented
-                or GallerySection.PartsTrayTabs
-                or GallerySection.SelectionHandles
-                or GallerySection.Number
-                or GallerySection.Slider
-                or GallerySection.Progress
-                or GallerySection.Cards
-                or GallerySection.Menu
-                or GallerySection.Picker
-                or GallerySection.PartRows
-                or GallerySection.PanelRows
-                or GallerySection.StageCard))
-            {
-                AddRenderedSection(runtimeSections, section);
-            }
-        }
-
         UiNativeScroll.AllowGesturesToBubble(_scrollContent);
         _boundsOverlay = new UiBoundsDebugOverlay
         {
-            RootPath = frame.GetPath(),
+            RootPath = _frame.GetPath(),
         };
         AddChild(_boundsOverlay);
         ShowDebugBounds = ShowDebugBounds || ProjectSettings.GetSetting("ui/component_gallery_debug_bounds", false).AsBool();
         CreateToolbarMenu();
-    }
-
-    private void AddRenderedSection(VBoxContainer content, GallerySection section)
-    {
-        switch (section)
-        {
-            case GallerySection.TextInput:
-                content.AddChild(CreateTextInputSection());
-                break;
-            default:
-                throw new ArgumentOutOfRangeException(nameof(section), section, null);
-        }
     }
 
     private void BindHeader()
@@ -283,7 +181,7 @@ public partial class ComponentGalleryScreen : Control
             return;
         }
 
-        var gallery = GD.Load<PackedScene>("res://scenes/ui/PopupGalleryScreen.tscn").Instantiate<PopupGalleryScreen>();
+        var gallery = GD.Load<PackedScene>("res://scenes/screens/PopupGalleryScreen.tscn").Instantiate<PopupGalleryScreen>();
         gallery.CloseRequested += () =>
         {
             gallery.QueueFree();
@@ -464,84 +362,6 @@ public partial class ComponentGalleryScreen : Control
         }
     }
 
-    private Control CreateTextInputSection()
-    {
-        var content = new VBoxContainer();
-        content.AddThemeConstantOverride("separation", (int)_tokens.Space2);
-        content.AddChild(CreateSectionDescription(
-            "Text input",
-            "standard and compact, rest, editing, and error"));
-
-        var fields = new HFlowContainer();
-        fields.AddThemeConstantOverride("h_separation", UiSpacing.ControlGap(_tokens));
-        fields.AddThemeConstantOverride("v_separation", UiSpacing.ControlGap(_tokens));
-        fields.AddChild(Track(new UiTextField
-        {
-            LabelText = "Creation name",
-            TextValue = "Runner",
-            State = UiTextField.TextInputState.Rest,
-            SizeFlagsHorizontal = SizeFlags.ExpandFill,
-        }));
-        fields.AddChild(Track(new UiTextField
-        {
-            LabelText = "Creation name",
-            TextValue = "",
-            ErrorText = "A creation needs a name",
-            ValidateValue = static value => !string.IsNullOrWhiteSpace(value),
-            State = UiTextField.TextInputState.Error,
-            SizeFlagsHorizontal = SizeFlags.ExpandFill,
-        }));
-        fields.AddChild(Track(new UiTextField
-        {
-            LabelText = "Part name",
-            TextValue = "Left foot",
-            InputSize = UiTextField.TextInputSize.Compact,
-            State = UiTextField.TextInputState.Editing,
-            SizeFlagsHorizontal = SizeFlags.ExpandFill,
-        }));
-        content.AddChild(fields);
-        return content;
-    }
-
-    private Control CreateSectionDescription(string title, string description)
-    {
-        var heading = new HBoxContainer();
-        heading.AddThemeConstantOverride("separation", (int)_tokens.Space2);
-        heading.AddChild(CreateLabel(
-            title,
-            _tokens.OverlineText,
-            tokens => tokens.Ink,
-            TextServer.AutowrapMode.Off));
-        heading.AddChild(CreateLabel(
-            description,
-            _tokens.NoteText,
-            tokens => tokens.Muted,
-            TextServer.AutowrapMode.Off));
-        return heading;
-    }
-
-    private Label CreateLabel(
-        string text,
-        UiTokens.TextStyle textStyle,
-        Func<UiTokens, Color> colorForTokens,
-        TextServer.AutowrapMode autowrap = TextServer.AutowrapMode.WordSmart)
-    {
-        var label = new Label
-        {
-            Text = text,
-            AutowrapMode = autowrap,
-            MouseFilter = MouseFilterEnum.Ignore,
-        };
-        _tokens.ApplyTextStyle(label, textStyle);
-        label.AddThemeColorOverride("font_color", colorForTokens(_tokens));
-        _labelAppliers.Add(tokens =>
-        {
-            tokens.ApplyTextStyle(label, textStyle);
-            label.AddThemeColorOverride("font_color", colorForTokens(tokens));
-        });
-        return label;
-    }
-
     private T Track<T>(T control)
         where T : Control
     {
@@ -558,10 +378,6 @@ public partial class ComponentGalleryScreen : Control
     private void ApplyTokens(UiTokens tokens)
     {
         _tokens = tokens;
-        if (_background is not null)
-        {
-            _background.Color = tokens.Background;
-        }
 
         foreach (var apply in _tokenAppliers)
         {

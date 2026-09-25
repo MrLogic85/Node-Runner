@@ -130,11 +130,11 @@ public partial class Main : Node2D
     {
         if (ProjectSettings.GetSetting("ui/popup_gallery", false).AsBool())
         {
-            var gallery = GD.Load<PackedScene>("res://scenes/ui/PopupGalleryScreen.tscn").Instantiate<PopupGalleryScreen>();
+            var gallery = GD.Load<PackedScene>("res://scenes/screens/PopupGalleryScreen.tscn").Instantiate<PopupGalleryScreen>();
             gallery.CloseRequested += () =>
             {
                 gallery.QueueFree();
-                AddChild(GD.Load<PackedScene>("res://scenes/ui/ComponentGalleryScreen.tscn").Instantiate<ComponentGalleryScreen>());
+                AddChild(GD.Load<PackedScene>("res://scenes/screens/ComponentGalleryScreen.tscn").Instantiate<ComponentGalleryScreen>());
             };
             AddChild(gallery);
             return;
@@ -142,7 +142,7 @@ public partial class Main : Node2D
 
         if (ProjectSettings.GetSetting("ui/component_gallery", false).AsBool())
         {
-            var gallery = GD.Load<PackedScene>("res://scenes/ui/ComponentGalleryScreen.tscn").Instantiate<ComponentGalleryScreen>();
+            var gallery = GD.Load<PackedScene>("res://scenes/screens/ComponentGalleryScreen.tscn").Instantiate<ComponentGalleryScreen>();
             AddChild(gallery);
             return;
         }
@@ -150,7 +150,7 @@ public partial class Main : Node2D
         if (ProjectSettings.GetSetting("ui/sample_preview", false).AsBool())
         {
             _trainingPresentation.Update(5, 3, 8, 12.8, 8.4, "Quick");
-            var sample = GD.Load<PackedScene>("res://scenes/ui/SampleFlowScreen.tscn").Instantiate<SampleFlowScreen>();
+            var sample = GD.Load<PackedScene>("res://scenes/screens/SampleFlowScreen.tscn").Instantiate<SampleFlowScreen>();
             sample.Presentation = _trainingPresentation;
             AddChild(sample);
             return;
@@ -966,7 +966,7 @@ public partial class Main : Node2D
         _componentGalleryHost.MouseFilter = Control.MouseFilterEnum.Stop;
         _componentGalleryLayer.AddChild(_componentGalleryHost);
 
-        _componentGalleryScreen = GD.Load<PackedScene>("res://scenes/ui/ComponentGalleryScreen.tscn").Instantiate<ComponentGalleryScreen>();
+        _componentGalleryScreen = GD.Load<PackedScene>("res://scenes/screens/ComponentGalleryScreen.tscn").Instantiate<ComponentGalleryScreen>();
         _componentGalleryScreen.ShowCloseAction = true;
         _componentGalleryScreen.CloseRequested += CloseComponentLibrary;
         _componentGalleryScreen.ProcessMode = ProcessModeEnum.Always;
@@ -1012,7 +1012,7 @@ public partial class Main : Node2D
         _colorsAndStylesHost.MouseFilter = Control.MouseFilterEnum.Stop;
         _colorsAndStylesLayer.AddChild(_colorsAndStylesHost);
 
-        _colorsAndStylesScreen = GD.Load<PackedScene>("res://scenes/ui/ColorsAndStylesScreen.tscn").Instantiate<ColorsAndStylesScreen>();
+        _colorsAndStylesScreen = GD.Load<PackedScene>("res://scenes/screens/ColorsAndStylesScreen.tscn").Instantiate<ColorsAndStylesScreen>();
         _colorsAndStylesScreen.ShowCloseAction = true;
         _colorsAndStylesScreen.CloseRequested += CloseColorsAndStyles;
         _colorsAndStylesScreen.ProcessMode = ProcessModeEnum.Always;

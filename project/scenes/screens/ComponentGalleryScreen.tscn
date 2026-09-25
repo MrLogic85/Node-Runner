@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" uid="uid://bddcl7ao6j5t0" path="res://src/ui/screens/ComponentGalleryScreen.cs" id="1_component_gallery"]
 [ext_resource type="Script" uid="uid://dk67qmt3brp4e" path="res://src/ui/lib/UiLabel.cs" id="2_cpfof"]
+[ext_resource type="PackedScene" uid="uid://dokr6l5stu6ll" path="res://scenes/ui/UiFrame.tscn" id="2_txsyx"]
 [ext_resource type="FontFile" uid="uid://dyvmdtxnxsrxm" path="res://assets/fonts/Barlow/Barlow-SemiBold.ttf" id="3_6lf3v"]
 [ext_resource type="Script" uid="uid://r2ped3g3uiaa" path="res://src/ui/lib/UiButton.cs" id="3_h0qut"]
 [ext_resource type="Script" uid="uid://pdb6hwlullhe" path="res://src/ui/lib/UiSegmentedSwitch.cs" id="4_theme_switch"]
@@ -25,12 +26,30 @@
 [ext_resource type="Script" uid="uid://cpu86ur7b6yuc" path="res://src/ui/lib/UiNameField.cs" id="22_name_field"]
 [ext_resource type="PackedScene" uid="uid://bxxwv8m0f8sml" path="res://scenes/ui/UiStageCard.tscn" id="23_stage_card"]
 
-[sub_resource type="FontVariation" id="FontVariation_cmo5k"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_txsyx"]
+content_margin_left = 1.0
+content_margin_top = 1.0
+content_margin_right = 1.0
+content_margin_bottom = 1.0
+bg_color = Color(0.050980393, 0.078431375, 0.14117648, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.101960786, 0.49803922, 0.4745098, 1)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+shadow_color = Color(0.101960786, 0.49803922, 0.4745098, 0.12)
+shadow_size = 10
+
+[sub_resource type="FontVariation" id="FontVariation_txsyx"]
 base_font = ExtResource("3_6lf3v")
 spacing_glyph = 1
 spacing_bottom = 1
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_nnyce"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_vw1xq"]
 content_margin_left = 0.0
 content_margin_top = 0.0
 content_margin_right = 0.0
@@ -46,7 +65,7 @@ corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_xlpsv"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_rocc3"]
 content_margin_left = 0.0
 content_margin_top = 0.0
 content_margin_right = 0.0
@@ -62,7 +81,7 @@ corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_oe13h"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_scgfs"]
 content_margin_left = 0.0
 content_margin_top = 0.0
 content_margin_right = 0.0
@@ -78,7 +97,7 @@ corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_17fmf"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_e3pnv"]
 content_margin_left = 0.0
 content_margin_top = 0.0
 content_margin_right = 0.0
@@ -90,7 +109,7 @@ corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
-[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_jvesb"]
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_4w6dm"]
 
 [sub_resource type="Resource" id="Resource_theme_neon"]
 script = ExtResource("5_theme_segment")
@@ -104,12 +123,12 @@ Text = "Paper"
 script = ExtResource("5_theme_segment")
 Text = "Effects lite"
 
-[sub_resource type="FontVariation" id="FontVariation_b3hu4"]
+[sub_resource type="FontVariation" id="FontVariation_wx3mb"]
 base_font = ExtResource("3_6lf3v")
 spacing_glyph = 1
 spacing_bottom = 1
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ltv8k"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_lya3v"]
 content_margin_left = 0.0
 content_margin_top = 0.0
 content_margin_right = 0.0
@@ -125,7 +144,7 @@ corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_7i18i"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_t2rc2"]
 content_margin_left = 0.0
 content_margin_top = 0.0
 content_margin_right = 0.0
@@ -141,7 +160,7 @@ corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_oqkj4"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hyw6t"]
 content_margin_left = 0.0
 content_margin_top = 0.0
 content_margin_right = 0.0
@@ -157,7 +176,7 @@ corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_cxest"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_qp680"]
 content_margin_left = 0.0
 content_margin_top = 0.0
 content_margin_right = 0.0
@@ -169,14 +188,14 @@ corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
-[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_st064"]
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_cd0ec"]
 
-[sub_resource type="FontVariation" id="FontVariation_wbp6o"]
+[sub_resource type="FontVariation" id="FontVariation_bip51"]
 base_font = ExtResource("3_6lf3v")
 spacing_glyph = 1
 spacing_bottom = 1
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_358nd"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_1owt2"]
 content_margin_left = 16.0
 content_margin_top = 0.0
 content_margin_right = 16.0
@@ -194,7 +213,7 @@ corner_radius_bottom_left = 8
 shadow_color = Color(0.09803922, 0.9411765, 1, 0.12)
 shadow_size = 10
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_kc1ah"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hw6mt"]
 content_margin_left = 16.0
 content_margin_top = 0.0
 content_margin_right = 16.0
@@ -212,7 +231,7 @@ corner_radius_bottom_left = 8
 shadow_color = Color(0.09803922, 0.9411765, 1, 0.12)
 shadow_size = 10
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_th0dp"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hmw0j"]
 content_margin_left = 16.0
 content_margin_top = 0.0
 content_margin_right = 16.0
@@ -230,7 +249,7 @@ corner_radius_bottom_left = 8
 shadow_color = Color(0.09803922, 0.9411765, 1, 0.12)
 shadow_size = 10
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_v2all"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_4v36o"]
 content_margin_left = 16.0
 content_margin_top = 0.0
 content_margin_right = 16.0
@@ -242,14 +261,14 @@ corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
-[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_5xn72"]
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_xana4"]
 
-[sub_resource type="FontVariation" id="FontVariation_wfjxq"]
+[sub_resource type="FontVariation" id="FontVariation_uiuq5"]
 base_font = ExtResource("3_6lf3v")
 spacing_glyph = 1
 spacing_bottom = 1
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_kluuk"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bmuvo"]
 content_margin_left = 16.0
 content_margin_top = 0.0
 content_margin_right = 16.0
@@ -265,7 +284,7 @@ corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_6lxa6"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_854av"]
 content_margin_left = 16.0
 content_margin_top = 0.0
 content_margin_right = 16.0
@@ -281,7 +300,7 @@ corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_grk22"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_66fcy"]
 content_margin_left = 16.0
 content_margin_top = 0.0
 content_margin_right = 16.0
@@ -297,7 +316,7 @@ corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_b1soj"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ia8p2"]
 content_margin_left = 16.0
 content_margin_top = 0.0
 content_margin_right = 16.0
@@ -309,14 +328,14 @@ corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
-[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_o3dwy"]
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_060jj"]
 
-[sub_resource type="FontVariation" id="FontVariation_sro2v"]
+[sub_resource type="FontVariation" id="FontVariation_1gb2r"]
 base_font = ExtResource("3_6lf3v")
 spacing_glyph = 1
 spacing_bottom = 1
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_63x8d"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_2h7xb"]
 content_margin_left = 16.0
 content_margin_top = 0.0
 content_margin_right = 16.0
@@ -332,7 +351,7 @@ corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_vhkax"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_lc58b"]
 content_margin_left = 16.0
 content_margin_top = 0.0
 content_margin_right = 16.0
@@ -348,7 +367,7 @@ corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_sor5l"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_jqph7"]
 content_margin_left = 16.0
 content_margin_top = 0.0
 content_margin_right = 16.0
@@ -364,7 +383,7 @@ corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ce235"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ggpl1"]
 content_margin_left = 16.0
 content_margin_top = 0.0
 content_margin_right = 16.0
@@ -376,14 +395,14 @@ corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
-[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_0lggh"]
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_g5nab"]
 
-[sub_resource type="FontVariation" id="FontVariation_mldw0"]
+[sub_resource type="FontVariation" id="FontVariation_6mb8s"]
 base_font = ExtResource("3_6lf3v")
 spacing_glyph = 1
 spacing_bottom = 1
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_mj5l3"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_i6pts"]
 content_margin_left = 16.0
 content_margin_top = 0.0
 content_margin_right = 16.0
@@ -399,7 +418,7 @@ corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_tvdog"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_p7mor"]
 content_margin_left = 16.0
 content_margin_top = 0.0
 content_margin_right = 16.0
@@ -415,7 +434,7 @@ corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_s738k"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_x35b4"]
 content_margin_left = 16.0
 content_margin_top = 0.0
 content_margin_right = 16.0
@@ -431,7 +450,7 @@ corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ulpoj"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_q747j"]
 content_margin_left = 16.0
 content_margin_top = 0.0
 content_margin_right = 16.0
@@ -443,14 +462,14 @@ corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
-[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_8hxs1"]
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_hcdl0"]
 
-[sub_resource type="FontVariation" id="FontVariation_qic7j"]
+[sub_resource type="FontVariation" id="FontVariation_xeh5b"]
 base_font = ExtResource("3_6lf3v")
 spacing_glyph = 1
 spacing_bottom = 1
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bm0a2"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_5a22u"]
 content_margin_left = 16.0
 content_margin_top = 0.0
 content_margin_right = 16.0
@@ -466,7 +485,7 @@ corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_s5038"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_mc2hl"]
 content_margin_left = 16.0
 content_margin_top = 0.0
 content_margin_right = 16.0
@@ -482,7 +501,7 @@ corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_vtbgu"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ijmr8"]
 content_margin_left = 16.0
 content_margin_top = 0.0
 content_margin_right = 16.0
@@ -498,7 +517,7 @@ corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_h7m76"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_qompx"]
 content_margin_left = 16.0
 content_margin_top = 0.0
 content_margin_right = 16.0
@@ -510,14 +529,14 @@ corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
-[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_vpusq"]
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_pgs0a"]
 
-[sub_resource type="FontVariation" id="FontVariation_me2wj"]
+[sub_resource type="FontVariation" id="FontVariation_7worn"]
 base_font = ExtResource("3_6lf3v")
 spacing_glyph = 1
 spacing_bottom = 1
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_4xrra"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_7h54v"]
 content_margin_left = 16.0
 content_margin_top = 0.0
 content_margin_right = 16.0
@@ -533,7 +552,7 @@ corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_4bkuo"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_n1574"]
 content_margin_left = 16.0
 content_margin_top = 0.0
 content_margin_right = 16.0
@@ -549,7 +568,7 @@ corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_wrhtg"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_im7lw"]
 content_margin_left = 16.0
 content_margin_top = 0.0
 content_margin_right = 16.0
@@ -565,7 +584,7 @@ corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_0fyvk"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_mvxgj"]
 content_margin_left = 16.0
 content_margin_top = 0.0
 content_margin_right = 16.0
@@ -577,14 +596,14 @@ corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
-[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_lmjfy"]
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_58nhv"]
 
-[sub_resource type="FontVariation" id="FontVariation_jv8as"]
+[sub_resource type="FontVariation" id="FontVariation_ql5fu"]
 base_font = ExtResource("3_6lf3v")
 spacing_glyph = 1
 spacing_bottom = 1
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ux3un"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_8f8jc"]
 content_margin_left = 0.0
 content_margin_top = 0.0
 content_margin_right = 0.0
@@ -600,7 +619,7 @@ corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_oplsj"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_05na4"]
 content_margin_left = 0.0
 content_margin_top = 0.0
 content_margin_right = 0.0
@@ -616,7 +635,7 @@ corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_7ddg8"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_mj6tn"]
 content_margin_left = 0.0
 content_margin_top = 0.0
 content_margin_right = 0.0
@@ -632,7 +651,7 @@ corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_g5mai"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_5owd6"]
 content_margin_left = 0.0
 content_margin_top = 0.0
 content_margin_right = 0.0
@@ -644,14 +663,14 @@ corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
-[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_xooig"]
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_s3pyx"]
 
-[sub_resource type="FontVariation" id="FontVariation_qms5i"]
+[sub_resource type="FontVariation" id="FontVariation_nps34"]
 base_font = ExtResource("3_6lf3v")
 spacing_glyph = 1
 spacing_bottom = 1
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_1hw3w"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_18uh4"]
 content_margin_left = 16.0
 content_margin_top = 0.0
 content_margin_right = 16.0
@@ -667,7 +686,7 @@ corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_j37gv"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_cr1b0"]
 content_margin_left = 16.0
 content_margin_top = 0.0
 content_margin_right = 16.0
@@ -683,7 +702,7 @@ corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_cfetj"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_obxwq"]
 content_margin_left = 16.0
 content_margin_top = 0.0
 content_margin_right = 16.0
@@ -699,7 +718,7 @@ corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_yypx2"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_k8cmn"]
 content_margin_left = 16.0
 content_margin_top = 0.0
 content_margin_right = 16.0
@@ -711,14 +730,14 @@ corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
-[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_0v0hg"]
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_utq7y"]
 
-[sub_resource type="FontVariation" id="FontVariation_81gks"]
+[sub_resource type="FontVariation" id="FontVariation_mhlst"]
 base_font = ExtResource("3_6lf3v")
 spacing_glyph = 1
 spacing_bottom = 1
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ujekt"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_8v6kq"]
 content_margin_left = 16.0
 content_margin_top = 0.0
 content_margin_right = 16.0
@@ -736,7 +755,7 @@ corner_radius_bottom_left = 8
 shadow_color = Color(0.09803922, 0.9411765, 1, 0.12)
 shadow_size = 10
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_qm84f"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_v2w4q"]
 content_margin_left = 16.0
 content_margin_top = 0.0
 content_margin_right = 16.0
@@ -754,7 +773,7 @@ corner_radius_bottom_left = 8
 shadow_color = Color(0.09803922, 0.9411765, 1, 0.12)
 shadow_size = 10
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_skeas"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_4qrbw"]
 content_margin_left = 16.0
 content_margin_top = 0.0
 content_margin_right = 16.0
@@ -772,7 +791,7 @@ corner_radius_bottom_left = 8
 shadow_color = Color(0.09803922, 0.9411765, 1, 0.12)
 shadow_size = 10
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_f1tjj"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ij4d1"]
 content_margin_left = 16.0
 content_margin_top = 0.0
 content_margin_right = 16.0
@@ -784,14 +803,14 @@ corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
-[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_u003p"]
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_nqfnc"]
 
-[sub_resource type="FontVariation" id="FontVariation_gxggg"]
+[sub_resource type="FontVariation" id="FontVariation_8t8dp"]
 base_font = ExtResource("3_6lf3v")
 spacing_glyph = 1
 spacing_bottom = 1
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_tgvi7"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_s4b2h"]
 content_margin_left = 16.0
 content_margin_top = 0.0
 content_margin_right = 16.0
@@ -807,7 +826,7 @@ corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_a3mxm"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_84adk"]
 content_margin_left = 16.0
 content_margin_top = 0.0
 content_margin_right = 16.0
@@ -823,7 +842,7 @@ corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ra2ol"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_13pq2"]
 content_margin_left = 16.0
 content_margin_top = 0.0
 content_margin_right = 16.0
@@ -839,7 +858,7 @@ corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_f5drw"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_108fo"]
 content_margin_left = 16.0
 content_margin_top = 0.0
 content_margin_right = 16.0
@@ -851,14 +870,14 @@ corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
-[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_t2mxh"]
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_xqv4q"]
 
-[sub_resource type="FontVariation" id="FontVariation_dmj5g"]
+[sub_resource type="FontVariation" id="FontVariation_h6o83"]
 base_font = ExtResource("3_6lf3v")
 spacing_glyph = 1
 spacing_bottom = 1
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_av7ui"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_u6feq"]
 content_margin_left = 16.0
 content_margin_top = 0.0
 content_margin_right = 16.0
@@ -874,7 +893,7 @@ corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_4kdiq"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_miut4"]
 content_margin_left = 16.0
 content_margin_top = 0.0
 content_margin_right = 16.0
@@ -890,7 +909,7 @@ corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_3iie4"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_8eowx"]
 content_margin_left = 16.0
 content_margin_top = 0.0
 content_margin_right = 16.0
@@ -906,7 +925,7 @@ corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_83f3d"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_4ij1d"]
 content_margin_left = 16.0
 content_margin_top = 0.0
 content_margin_right = 16.0
@@ -918,14 +937,14 @@ corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
-[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_4fkuf"]
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_rw74y"]
 
-[sub_resource type="FontVariation" id="FontVariation_nompd"]
+[sub_resource type="FontVariation" id="FontVariation_ieo6d"]
 base_font = ExtResource("3_6lf3v")
 spacing_glyph = 1
 spacing_bottom = 1
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_y7251"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_73lmj"]
 content_margin_left = 16.0
 content_margin_top = 0.0
 content_margin_right = 16.0
@@ -943,7 +962,7 @@ corner_radius_bottom_left = 8
 shadow_color = Color(0.09803922, 0.9411765, 1, 0.12)
 shadow_size = 10
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_lwct0"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_b5ppb"]
 content_margin_left = 16.0
 content_margin_top = 0.0
 content_margin_right = 16.0
@@ -961,7 +980,7 @@ corner_radius_bottom_left = 8
 shadow_color = Color(0.09803922, 0.9411765, 1, 0.12)
 shadow_size = 10
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_68wwo"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_urwal"]
 content_margin_left = 16.0
 content_margin_top = 0.0
 content_margin_right = 16.0
@@ -979,7 +998,7 @@ corner_radius_bottom_left = 8
 shadow_color = Color(0.09803922, 0.9411765, 1, 0.12)
 shadow_size = 10
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_5uju5"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_jrvor"]
 content_margin_left = 16.0
 content_margin_top = 0.0
 content_margin_right = 16.0
@@ -991,14 +1010,14 @@ corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
-[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_jpuaj"]
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_gn54m"]
 
-[sub_resource type="FontVariation" id="FontVariation_ffust"]
+[sub_resource type="FontVariation" id="FontVariation_pue0o"]
 base_font = ExtResource("3_6lf3v")
 spacing_glyph = 1
 spacing_bottom = 1
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_dk76r"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_37ouk"]
 content_margin_left = 0.0
 content_margin_top = 0.0
 content_margin_right = 0.0
@@ -1014,7 +1033,7 @@ corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_qhmdo"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_wd6qg"]
 content_margin_left = 0.0
 content_margin_top = 0.0
 content_margin_right = 0.0
@@ -1030,7 +1049,7 @@ corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_to0qb"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_jem1f"]
 content_margin_left = 0.0
 content_margin_top = 0.0
 content_margin_right = 0.0
@@ -1046,7 +1065,7 @@ corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ddbea"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_rj68v"]
 content_margin_left = 0.0
 content_margin_top = 0.0
 content_margin_right = 0.0
@@ -1058,14 +1077,14 @@ corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
-[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_1fasc"]
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_wyfjm"]
 
-[sub_resource type="FontVariation" id="FontVariation_iqsa0"]
+[sub_resource type="FontVariation" id="FontVariation_7kkl6"]
 base_font = ExtResource("3_6lf3v")
 spacing_glyph = 1
 spacing_bottom = 1
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_kxhgb"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_6us5s"]
 content_margin_left = 0.0
 content_margin_top = 0.0
 content_margin_right = 0.0
@@ -1083,7 +1102,7 @@ corner_radius_bottom_left = 8
 shadow_color = Color(0.09803922, 0.9411765, 1, 0.12)
 shadow_size = 10
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_tttpc"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_he78d"]
 content_margin_left = 0.0
 content_margin_top = 0.0
 content_margin_right = 0.0
@@ -1101,7 +1120,7 @@ corner_radius_bottom_left = 8
 shadow_color = Color(0.09803922, 0.9411765, 1, 0.12)
 shadow_size = 10
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_dptpw"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_si3gu"]
 content_margin_left = 0.0
 content_margin_top = 0.0
 content_margin_right = 0.0
@@ -1119,7 +1138,7 @@ corner_radius_bottom_left = 8
 shadow_color = Color(0.09803922, 0.9411765, 1, 0.12)
 shadow_size = 10
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_uiaw7"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_wncmy"]
 content_margin_left = 0.0
 content_margin_top = 0.0
 content_margin_right = 0.0
@@ -1131,14 +1150,14 @@ corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
-[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_fqv6l"]
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_47wb2"]
 
-[sub_resource type="FontVariation" id="FontVariation_gc5yd"]
+[sub_resource type="FontVariation" id="FontVariation_q4kl6"]
 base_font = ExtResource("3_6lf3v")
 spacing_glyph = 1
 spacing_bottom = 1
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_85r0j"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_1pu7t"]
 content_margin_left = 16.0
 content_margin_top = 0.0
 content_margin_right = 16.0
@@ -1154,7 +1173,7 @@ corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_q25ph"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ii1qx"]
 content_margin_left = 16.0
 content_margin_top = 0.0
 content_margin_right = 16.0
@@ -1170,7 +1189,7 @@ corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_frtug"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_jr6b7"]
 content_margin_left = 16.0
 content_margin_top = 0.0
 content_margin_right = 16.0
@@ -1186,7 +1205,7 @@ corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_rcgku"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_3rhci"]
 content_margin_left = 16.0
 content_margin_top = 0.0
 content_margin_right = 16.0
@@ -1198,14 +1217,14 @@ corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
-[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_x1fka"]
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_hs7c4"]
 
-[sub_resource type="FontVariation" id="FontVariation_2bso8"]
+[sub_resource type="FontVariation" id="FontVariation_kq7bs"]
 base_font = ExtResource("3_6lf3v")
 spacing_glyph = 1
 spacing_bottom = 1
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_c3uqx"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_5ey6c"]
 content_margin_left = 0.0
 content_margin_top = 0.0
 content_margin_right = 0.0
@@ -1223,7 +1242,7 @@ corner_radius_bottom_left = 8
 shadow_color = Color(0.9019608, 0.94509804, 1, 0.12)
 shadow_size = 10
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_xxpa1"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_xc6sr"]
 content_margin_left = 0.0
 content_margin_top = 0.0
 content_margin_right = 0.0
@@ -1241,7 +1260,7 @@ corner_radius_bottom_left = 8
 shadow_color = Color(0.9019608, 0.94509804, 1, 0.12)
 shadow_size = 10
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_g16yd"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_pmaxt"]
 content_margin_left = 0.0
 content_margin_top = 0.0
 content_margin_right = 0.0
@@ -1259,7 +1278,7 @@ corner_radius_bottom_left = 8
 shadow_color = Color(0.9019608, 0.94509804, 1, 0.12)
 shadow_size = 10
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_din0j"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_juiam"]
 content_margin_left = 0.0
 content_margin_top = 0.0
 content_margin_right = 0.0
@@ -1271,7 +1290,7 @@ corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
-[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_l8mey"]
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_w25f5"]
 
 [sub_resource type="Resource" id="Resource_segmented_train"]
 script = ExtResource("5_theme_segment")
@@ -1295,7 +1314,7 @@ IconId = 18
 script = ExtResource("5_theme_segment")
 Text = "Short"
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_20ksx"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_u3c4y"]
 content_margin_left = 13.0
 content_margin_top = 13.0
 content_margin_right = 13.0
@@ -1311,7 +1330,7 @@ corner_radius_top_right = 12
 corner_radius_bottom_right = 12
 corner_radius_bottom_left = 12
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_v6a8w"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_dd3wa"]
 content_margin_left = 13.0
 content_margin_top = 13.0
 content_margin_right = 13.0
@@ -1329,7 +1348,7 @@ corner_radius_bottom_left = 12
 shadow_color = Color(0.09803922, 0.9411765, 1, 0.12)
 shadow_size = 10
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ein0f"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_po0vj"]
 content_margin_left = 13.0
 content_margin_top = 13.0
 content_margin_right = 13.0
@@ -1341,7 +1360,7 @@ corner_radius_top_right = 12
 corner_radius_bottom_right = 12
 corner_radius_bottom_left = 12
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_jg6ph"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ocqr4"]
 content_margin_left = 13.0
 content_margin_top = 13.0
 content_margin_right = 13.0
@@ -1357,7 +1376,7 @@ corner_radius_top_right = 12
 corner_radius_bottom_right = 12
 corner_radius_bottom_left = 12
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_cyoit"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_pxyvs"]
 content_margin_left = 13.0
 content_margin_top = 13.0
 content_margin_right = 13.0
@@ -1373,7 +1392,7 @@ corner_radius_top_right = 12
 corner_radius_bottom_right = 12
 corner_radius_bottom_left = 12
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_sxvnb"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_u1lks"]
 content_margin_left = 13.0
 content_margin_top = 13.0
 content_margin_right = 13.0
@@ -1391,7 +1410,7 @@ corner_radius_bottom_left = 12
 shadow_color = Color(0.101960786, 0.49803922, 0.4745098, 0.12)
 shadow_size = 10
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_tyhro"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_idypk"]
 content_margin_left = 13.0
 content_margin_top = 13.0
 content_margin_right = 13.0
@@ -1403,7 +1422,7 @@ corner_radius_top_right = 12
 corner_radius_bottom_right = 12
 corner_radius_bottom_left = 12
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_8tl26"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_mw0qh"]
 content_margin_left = 13.0
 content_margin_top = 13.0
 content_margin_right = 13.0
@@ -1419,7 +1438,7 @@ corner_radius_top_right = 12
 corner_radius_bottom_right = 12
 corner_radius_bottom_left = 12
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_6cwqy"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_spww0"]
 content_margin_left = 17.0
 content_margin_top = 17.0
 content_margin_right = 17.0
@@ -1435,7 +1454,7 @@ corner_radius_top_right = 12
 corner_radius_bottom_right = 12
 corner_radius_bottom_left = 12
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_qsej1"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_pqqtt"]
 content_margin_left = 13.0
 content_margin_top = 13.0
 content_margin_right = 13.0
@@ -1451,7 +1470,7 @@ corner_radius_top_right = 12
 corner_radius_bottom_right = 12
 corner_radius_bottom_left = 12
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_kyxic"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_q8smt"]
 content_margin_left = 9.0
 content_margin_top = 9.0
 content_margin_right = 9.0
@@ -1467,7 +1486,7 @@ corner_radius_top_right = 12
 corner_radius_bottom_right = 12
 corner_radius_bottom_left = 12
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_y40k3"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_grw3c"]
 content_margin_left = 5.0
 content_margin_top = 5.0
 content_margin_right = 5.0
@@ -1483,7 +1502,7 @@ corner_radius_top_right = 12
 corner_radius_bottom_right = 12
 corner_radius_bottom_left = 12
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_mprqe"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_62m5c"]
 content_margin_left = 1.0
 content_margin_top = 1.0
 content_margin_right = 1.0
@@ -1499,13 +1518,13 @@ corner_radius_top_right = 12
 corner_radius_bottom_right = 12
 corner_radius_bottom_left = 12
 
-[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_70cks"]
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_h0hlv"]
 
-[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_66il2"]
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_5rqwo"]
 
-[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_mn47c"]
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_g31rv"]
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_djlmq"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_cmnrj"]
 content_margin_left = 13.0
 content_margin_top = 13.0
 content_margin_right = 13.0
@@ -1521,9 +1540,9 @@ corner_radius_top_right = 12
 corner_radius_bottom_right = 12
 corner_radius_bottom_left = 12
 
-[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_gceaq"]
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_qcf60"]
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_8frep"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_gy5hh"]
 content_margin_left = 9.0
 content_margin_top = 9.0
 content_margin_right = 9.0
@@ -1541,7 +1560,7 @@ corner_radius_bottom_left = 12
 shadow_color = Color(0.101960786, 0.49803922, 0.4745098, 0.12)
 shadow_size = 10
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_xigj4"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_132er"]
 content_margin_left = 9.0
 content_margin_top = 9.0
 content_margin_right = 9.0
@@ -1559,7 +1578,7 @@ corner_radius_bottom_left = 12
 shadow_color = Color(0.09803922, 0.9411765, 1, 0.12)
 shadow_size = 10
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_0kx2t"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ejsal"]
 content_margin_left = 9.0
 content_margin_top = 9.0
 content_margin_right = 9.0
@@ -1586,45 +1605,27 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_component_gallery")
 
-[node name="Background" type="ColorRect" parent="." unique_id=1706080278]
+[node name="UiFrame" parent="." unique_id=708820507 instance=ExtResource("2_txsyx")]
 unique_name_in_owner = true
 layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
-color = Color(0.02745098, 0.043137256, 0.078431375, 1)
 
-[node name="Frame" type="MarginContainer" parent="." unique_id=1686211281]
-unique_name_in_owner = true
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-theme_override_constants/margin_left = 8
-theme_override_constants/margin_top = 8
-theme_override_constants/margin_right = 8
-theme_override_constants/margin_bottom = 8
+[node name="Card" parent="UiFrame/MarginContainer" parent_id_path=PackedInt32Array(708820507, 1718213397) index="0" unique_id=1864407290]
+theme_override_styles/panel = SubResource("StyleBoxFlat_txsyx")
 
-[node name="Shell" type="VBoxContainer" parent="Frame" unique_id=1050022208]
+[node name="Shell" type="VBoxContainer" parent="UiFrame/MarginContainer/Card" index="0" unique_id=1050022208]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="HeaderHost" type="VBoxContainer" parent="Frame/Shell" unique_id=999505118]
+[node name="HeaderHost" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell" unique_id=999505118]
 unique_name_in_owner = true
 layout_mode = 2
 
-[node name="Toolbar" type="HBoxContainer" parent="Frame/Shell/HeaderHost" unique_id=1306440071]
+[node name="Toolbar" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/HeaderHost" unique_id=1306440071]
 custom_minimum_size = Vector2(0, 48)
 layout_mode = 2
-size_flags_horizontal = 3
 theme_override_constants/separation = 8
 
-[node name="ToolbarTitle" type="Label" parent="Frame/Shell/HeaderHost/Toolbar" unique_id=1335195632]
+[node name="ToolbarTitle" type="Label" parent="UiFrame/MarginContainer/Card/Shell/HeaderHost/Toolbar" unique_id=1335195632]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
@@ -1632,7 +1633,7 @@ text = "Component Gallery"
 script = ExtResource("2_cpfof")
 TextStyle = 1
 
-[node name="CloseAction" type="Button" parent="Frame/Shell/HeaderHost/Toolbar" unique_id=1127170492]
+[node name="CloseAction" type="Button" parent="UiFrame/MarginContainer/Card/Shell/HeaderHost/Toolbar" unique_id=1127170492]
 unique_name_in_owner = true
 visible = false
 custom_minimum_size = Vector2(48, 48)
@@ -1652,13 +1653,13 @@ theme_override_colors/icon_hover_color = Color(0.9019608, 0.94509804, 1, 1)
 theme_override_colors/icon_disabled_color = Color(0.9019608, 0.94509804, 1, 0.5)
 theme_override_constants/h_separation = 4
 theme_override_constants/icon_max_width = 16
-theme_override_fonts/font = SubResource("FontVariation_cmo5k")
+theme_override_fonts/font = SubResource("FontVariation_txsyx")
 theme_override_font_sizes/font_size = 10
-theme_override_styles/normal = SubResource("StyleBoxFlat_nnyce")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_xlpsv")
-theme_override_styles/hover = SubResource("StyleBoxFlat_oe13h")
-theme_override_styles/disabled = SubResource("StyleBoxFlat_17fmf")
-theme_override_styles/focus = SubResource("StyleBoxEmpty_jvesb")
+theme_override_styles/normal = SubResource("StyleBoxFlat_vw1xq")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_rocc3")
+theme_override_styles/hover = SubResource("StyleBoxFlat_scgfs")
+theme_override_styles/disabled = SubResource("StyleBoxFlat_e3pnv")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_4w6dm")
 clip_text = true
 icon_alignment = 1
 script = ExtResource("3_h0qut")
@@ -1670,7 +1671,7 @@ metadata/ui_font_weight = 600
 metadata/ui_letter_spacing = 0.06
 metadata/ui_uppercase = true
 
-[node name="ThemeSwitcher" type="HBoxContainer" parent="Frame/Shell/HeaderHost/Toolbar" unique_id=449543467]
+[node name="ThemeSwitcher" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/HeaderHost/Toolbar" unique_id=449543467]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 4
@@ -1678,7 +1679,7 @@ theme_override_constants/separation = 0
 script = ExtResource("4_theme_switch")
 Segments = Array[ExtResource("5_theme_segment")]([SubResource("Resource_theme_neon"), SubResource("Resource_theme_paper"), SubResource("Resource_theme_effects_lite")])
 
-[node name="ToolbarMore" type="Button" parent="Frame/Shell/HeaderHost/Toolbar" unique_id=1036642172]
+[node name="ToolbarMore" type="Button" parent="UiFrame/MarginContainer/Card/Shell/HeaderHost/Toolbar" unique_id=1036642172]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(48, 48)
 layout_mode = 2
@@ -1697,13 +1698,13 @@ theme_override_colors/icon_hover_color = Color(0.9019608, 0.94509804, 1, 1)
 theme_override_colors/icon_disabled_color = Color(0.9019608, 0.94509804, 1, 0.5)
 theme_override_constants/h_separation = 4
 theme_override_constants/icon_max_width = 16
-theme_override_fonts/font = SubResource("FontVariation_b3hu4")
+theme_override_fonts/font = SubResource("FontVariation_wx3mb")
 theme_override_font_sizes/font_size = 10
-theme_override_styles/normal = SubResource("StyleBoxFlat_ltv8k")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_7i18i")
-theme_override_styles/hover = SubResource("StyleBoxFlat_oqkj4")
-theme_override_styles/disabled = SubResource("StyleBoxFlat_cxest")
-theme_override_styles/focus = SubResource("StyleBoxEmpty_st064")
+theme_override_styles/normal = SubResource("StyleBoxFlat_lya3v")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_t2rc2")
+theme_override_styles/hover = SubResource("StyleBoxFlat_hyw6t")
+theme_override_styles/disabled = SubResource("StyleBoxFlat_qp680")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_cd0ec")
 clip_text = true
 icon_alignment = 1
 script = ExtResource("3_h0qut")
@@ -1716,7 +1717,7 @@ metadata/ui_font_weight = 600
 metadata/ui_letter_spacing = 0.06
 metadata/ui_uppercase = true
 
-[node name="Scroll" type="ScrollContainer" parent="Frame/Shell" unique_id=289018015]
+[node name="Scroll" type="ScrollContainer" parent="UiFrame/MarginContainer/Card/Shell" unique_id=289018015]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
@@ -1724,7 +1725,7 @@ size_flags_vertical = 3
 horizontal_scroll_mode = 0
 vertical_scroll_mode = 3
 
-[node name="ContentFrame" type="MarginContainer" parent="Frame/Shell/Scroll" unique_id=1967133643]
+[node name="ContentFrame" type="MarginContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll" unique_id=1967133643]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
@@ -1733,19 +1734,19 @@ theme_override_constants/margin_top = 10
 theme_override_constants/margin_right = 10
 theme_override_constants/margin_bottom = 10
 
-[node name="Content" type="VBoxContainer" parent="Frame/Shell/Scroll/ContentFrame" unique_id=1782610495]
+[node name="Content" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame" unique_id=1782610495]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 8
 
-[node name="ButtonTypes" type="VBoxContainer" parent="Frame/Shell/Scroll/ContentFrame/Content" unique_id=1381902128]
+[node name="ButtonTypes" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content" unique_id=1381902128]
 layout_mode = 2
 
-[node name="Heading" type="HBoxContainer" parent="Frame/Shell/Scroll/ContentFrame/Content/ButtonTypes" unique_id=416404027]
+[node name="Heading" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/ButtonTypes" unique_id=416404027]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="Caption1" type="Label" parent="Frame/Shell/Scroll/ContentFrame/Content/ButtonTypes/Heading" unique_id=1041774259]
+[node name="Caption1" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/ButtonTypes/Heading" unique_id=1041774259]
 layout_mode = 2
 size_flags_vertical = 8
 theme_override_colors/font_color = Color(0.9019608, 0.94509804, 1, 1)
@@ -1753,7 +1754,7 @@ text = "Buttons"
 script = ExtResource("2_cpfof")
 TextStyle = 12
 
-[node name="Caption2" type="Label" parent="Frame/Shell/Scroll/ContentFrame/Content/ButtonTypes/Heading" unique_id=417485603 groups=["gallery_muted"]]
+[node name="Caption2" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/ButtonTypes/Heading" unique_id=417485603 groups=["gallery_muted"]]
 custom_minimum_size = Vector2(120, 0)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -1764,10 +1765,10 @@ autowrap_mode = 3
 script = ExtResource("2_cpfof")
 TextStyle = 9
 
-[node name="Examples" type="HFlowContainer" parent="Frame/Shell/Scroll/ContentFrame/Content/ButtonTypes" unique_id=1411785829]
+[node name="Examples" type="HFlowContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/ButtonTypes" unique_id=1411785829]
 layout_mode = 2
 
-[node name="UiButton" type="Button" parent="Frame/Shell/Scroll/ContentFrame/Content/ButtonTypes/Examples" unique_id=11760709]
+[node name="UiButton" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/ButtonTypes/Examples" unique_id=11760709]
 custom_minimum_size = Vector2(40, 40)
 layout_mode = 2
 size_flags_vertical = 4
@@ -1778,13 +1779,13 @@ theme_override_colors/font_pressed_color = Color(0.015686275, 0.07058824, 0.1019
 theme_override_colors/font_hover_color = Color(0.015686275, 0.07058824, 0.101960786, 1)
 theme_override_colors/font_disabled_color = Color(0.015686275, 0.07058824, 0.101960786, 0.5)
 theme_override_constants/h_separation = 8
-theme_override_fonts/font = SubResource("FontVariation_wbp6o")
+theme_override_fonts/font = SubResource("FontVariation_bip51")
 theme_override_font_sizes/font_size = 12
-theme_override_styles/normal = SubResource("StyleBoxFlat_358nd")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_kc1ah")
-theme_override_styles/hover = SubResource("StyleBoxFlat_th0dp")
-theme_override_styles/disabled = SubResource("StyleBoxFlat_v2all")
-theme_override_styles/focus = SubResource("StyleBoxEmpty_5xn72")
+theme_override_styles/normal = SubResource("StyleBoxFlat_1owt2")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_hw6mt")
+theme_override_styles/hover = SubResource("StyleBoxFlat_hmw0j")
+theme_override_styles/disabled = SubResource("StyleBoxFlat_4v36o")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_xana4")
 script = ExtResource("3_h0qut")
 LabelText = "Primary"
 Kind = 0
@@ -1795,7 +1796,7 @@ metadata/ui_font_weight = 600
 metadata/ui_letter_spacing = 0.04
 metadata/ui_uppercase = true
 
-[node name="UiButton2" type="Button" parent="Frame/Shell/Scroll/ContentFrame/Content/ButtonTypes/Examples" unique_id=2047803806]
+[node name="UiButton2" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/ButtonTypes/Examples" unique_id=2047803806]
 custom_minimum_size = Vector2(40, 40)
 layout_mode = 2
 size_flags_vertical = 4
@@ -1806,13 +1807,13 @@ theme_override_colors/font_pressed_color = Color(0.9019608, 0.94509804, 1, 1)
 theme_override_colors/font_hover_color = Color(0.9019608, 0.94509804, 1, 1)
 theme_override_colors/font_disabled_color = Color(0.9019608, 0.94509804, 1, 0.5)
 theme_override_constants/h_separation = 8
-theme_override_fonts/font = SubResource("FontVariation_wfjxq")
+theme_override_fonts/font = SubResource("FontVariation_uiuq5")
 theme_override_font_sizes/font_size = 12
-theme_override_styles/normal = SubResource("StyleBoxFlat_kluuk")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_6lxa6")
-theme_override_styles/hover = SubResource("StyleBoxFlat_grk22")
-theme_override_styles/disabled = SubResource("StyleBoxFlat_b1soj")
-theme_override_styles/focus = SubResource("StyleBoxEmpty_o3dwy")
+theme_override_styles/normal = SubResource("StyleBoxFlat_bmuvo")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_854av")
+theme_override_styles/hover = SubResource("StyleBoxFlat_66fcy")
+theme_override_styles/disabled = SubResource("StyleBoxFlat_ia8p2")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_060jj")
 script = ExtResource("3_h0qut")
 LabelText = "Secondary"
 metadata/_custom_type_script = "uid://r2ped3g3uiaa"
@@ -1822,7 +1823,7 @@ metadata/ui_font_weight = 600
 metadata/ui_letter_spacing = 0.04
 metadata/ui_uppercase = true
 
-[node name="UiButton3" type="Button" parent="Frame/Shell/Scroll/ContentFrame/Content/ButtonTypes/Examples" unique_id=1491583485]
+[node name="UiButton3" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/ButtonTypes/Examples" unique_id=1491583485]
 custom_minimum_size = Vector2(40, 40)
 layout_mode = 2
 size_flags_vertical = 4
@@ -1833,13 +1834,13 @@ theme_override_colors/font_pressed_color = Color(1, 0.41960785, 0.5294118, 1)
 theme_override_colors/font_hover_color = Color(1, 0.41960785, 0.5294118, 1)
 theme_override_colors/font_disabled_color = Color(1, 0.41960785, 0.5294118, 0.5)
 theme_override_constants/h_separation = 8
-theme_override_fonts/font = SubResource("FontVariation_sro2v")
+theme_override_fonts/font = SubResource("FontVariation_1gb2r")
 theme_override_font_sizes/font_size = 12
-theme_override_styles/normal = SubResource("StyleBoxFlat_63x8d")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_vhkax")
-theme_override_styles/hover = SubResource("StyleBoxFlat_sor5l")
-theme_override_styles/disabled = SubResource("StyleBoxFlat_ce235")
-theme_override_styles/focus = SubResource("StyleBoxEmpty_0lggh")
+theme_override_styles/normal = SubResource("StyleBoxFlat_2h7xb")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_lc58b")
+theme_override_styles/hover = SubResource("StyleBoxFlat_jqph7")
+theme_override_styles/disabled = SubResource("StyleBoxFlat_ggpl1")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_g5nab")
 script = ExtResource("3_h0qut")
 LabelText = "Tertiary"
 Kind = 2
@@ -1850,7 +1851,7 @@ metadata/ui_font_weight = 600
 metadata/ui_letter_spacing = 0.04
 metadata/ui_uppercase = true
 
-[node name="UiButton4" type="Button" parent="Frame/Shell/Scroll/ContentFrame/Content/ButtonTypes/Examples" unique_id=347817702]
+[node name="UiButton4" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/ButtonTypes/Examples" unique_id=347817702]
 custom_minimum_size = Vector2(40, 40)
 layout_mode = 2
 size_flags_vertical = 4
@@ -1861,13 +1862,13 @@ theme_override_colors/font_pressed_color = Color(0.9019608, 0.94509804, 1, 1)
 theme_override_colors/font_hover_color = Color(0.9019608, 0.94509804, 1, 1)
 theme_override_colors/font_disabled_color = Color(0.9019608, 0.94509804, 1, 0.5)
 theme_override_constants/h_separation = 8
-theme_override_fonts/font = SubResource("FontVariation_mldw0")
+theme_override_fonts/font = SubResource("FontVariation_6mb8s")
 theme_override_font_sizes/font_size = 12
-theme_override_styles/normal = SubResource("StyleBoxFlat_mj5l3")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_tvdog")
-theme_override_styles/hover = SubResource("StyleBoxFlat_s738k")
-theme_override_styles/disabled = SubResource("StyleBoxFlat_ulpoj")
-theme_override_styles/focus = SubResource("StyleBoxEmpty_8hxs1")
+theme_override_styles/normal = SubResource("StyleBoxFlat_i6pts")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_p7mor")
+theme_override_styles/hover = SubResource("StyleBoxFlat_x35b4")
+theme_override_styles/disabled = SubResource("StyleBoxFlat_q747j")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_hcdl0")
 script = ExtResource("3_h0qut")
 LabelText = "flat"
 Kind = 3
@@ -1878,14 +1879,14 @@ metadata/ui_font_weight = 600
 metadata/ui_letter_spacing = 0.04
 metadata/ui_uppercase = true
 
-[node name="ButtonSizes" type="VBoxContainer" parent="Frame/Shell/Scroll/ContentFrame/Content" unique_id=1835888969]
+[node name="ButtonSizes" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content" unique_id=1835888969]
 layout_mode = 2
 
-[node name="Heading" type="HBoxContainer" parent="Frame/Shell/Scroll/ContentFrame/Content/ButtonSizes" unique_id=720925817]
+[node name="Heading" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/ButtonSizes" unique_id=720925817]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="Caption1" type="Label" parent="Frame/Shell/Scroll/ContentFrame/Content/ButtonSizes/Heading" unique_id=1434634156]
+[node name="Caption1" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/ButtonSizes/Heading" unique_id=1434634156]
 layout_mode = 2
 size_flags_vertical = 8
 theme_override_colors/font_color = Color(0.9019608, 0.94509804, 1, 1)
@@ -1893,7 +1894,7 @@ text = "Button - formats"
 script = ExtResource("2_cpfof")
 TextStyle = 12
 
-[node name="Caption2" type="Label" parent="Frame/Shell/Scroll/ContentFrame/Content/ButtonSizes/Heading" unique_id=1195707509 groups=["gallery_muted"]]
+[node name="Caption2" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/ButtonSizes/Heading" unique_id=1195707509 groups=["gallery_muted"]]
 custom_minimum_size = Vector2(120, 0)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -1904,10 +1905,10 @@ autowrap_mode = 3
 script = ExtResource("2_cpfof")
 TextStyle = 9
 
-[node name="Examples" type="HFlowContainer" parent="Frame/Shell/Scroll/ContentFrame/Content/ButtonSizes" unique_id=798242366]
+[node name="Examples" type="HFlowContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/ButtonSizes" unique_id=798242366]
 layout_mode = 2
 
-[node name="UiButton" type="Button" parent="Frame/Shell/Scroll/ContentFrame/Content/ButtonSizes/Examples" unique_id=1814750554]
+[node name="UiButton" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/ButtonSizes/Examples" unique_id=1814750554]
 custom_minimum_size = Vector2(40, 40)
 layout_mode = 2
 size_flags_vertical = 4
@@ -1918,13 +1919,13 @@ theme_override_colors/font_pressed_color = Color(0.9019608, 0.94509804, 1, 1)
 theme_override_colors/font_hover_color = Color(0.9019608, 0.94509804, 1, 1)
 theme_override_colors/font_disabled_color = Color(0.9019608, 0.94509804, 1, 0.5)
 theme_override_constants/h_separation = 8
-theme_override_fonts/font = SubResource("FontVariation_qic7j")
+theme_override_fonts/font = SubResource("FontVariation_xeh5b")
 theme_override_font_sizes/font_size = 12
-theme_override_styles/normal = SubResource("StyleBoxFlat_bm0a2")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_s5038")
-theme_override_styles/hover = SubResource("StyleBoxFlat_vtbgu")
-theme_override_styles/disabled = SubResource("StyleBoxFlat_h7m76")
-theme_override_styles/focus = SubResource("StyleBoxEmpty_vpusq")
+theme_override_styles/normal = SubResource("StyleBoxFlat_5a22u")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_mc2hl")
+theme_override_styles/hover = SubResource("StyleBoxFlat_ijmr8")
+theme_override_styles/disabled = SubResource("StyleBoxFlat_qompx")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_pgs0a")
 script = ExtResource("3_h0qut")
 LabelText = "Row"
 metadata/_custom_type_script = "uid://r2ped3g3uiaa"
@@ -1934,7 +1935,7 @@ metadata/ui_font_weight = 600
 metadata/ui_letter_spacing = 0.04
 metadata/ui_uppercase = true
 
-[node name="UiButton2" type="Button" parent="Frame/Shell/Scroll/ContentFrame/Content/ButtonSizes/Examples" unique_id=1007736206]
+[node name="UiButton2" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/ButtonSizes/Examples" unique_id=1007736206]
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
 size_flags_vertical = 4
@@ -1945,13 +1946,13 @@ theme_override_colors/font_pressed_color = Color(0.9019608, 0.94509804, 1, 1)
 theme_override_colors/font_hover_color = Color(0.9019608, 0.94509804, 1, 1)
 theme_override_colors/font_disabled_color = Color(0.9019608, 0.94509804, 1, 0.5)
 theme_override_constants/h_separation = 8
-theme_override_fonts/font = SubResource("FontVariation_me2wj")
+theme_override_fonts/font = SubResource("FontVariation_7worn")
 theme_override_font_sizes/font_size = 12
-theme_override_styles/normal = SubResource("StyleBoxFlat_4xrra")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_4bkuo")
-theme_override_styles/hover = SubResource("StyleBoxFlat_wrhtg")
-theme_override_styles/disabled = SubResource("StyleBoxFlat_0fyvk")
-theme_override_styles/focus = SubResource("StyleBoxEmpty_lmjfy")
+theme_override_styles/normal = SubResource("StyleBoxFlat_7h54v")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_n1574")
+theme_override_styles/hover = SubResource("StyleBoxFlat_im7lw")
+theme_override_styles/disabled = SubResource("StyleBoxFlat_mvxgj")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_58nhv")
 script = ExtResource("3_h0qut")
 LabelText = "Compact"
 ContentLayout = 2
@@ -1962,7 +1963,7 @@ metadata/ui_font_weight = 600
 metadata/ui_letter_spacing = 0.04
 metadata/ui_uppercase = true
 
-[node name="UiButton3" type="Button" parent="Frame/Shell/Scroll/ContentFrame/Content/ButtonSizes/Examples" unique_id=836495016]
+[node name="UiButton3" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/ButtonSizes/Examples" unique_id=836495016]
 custom_minimum_size = Vector2(48, 48)
 layout_mode = 2
 size_flags_horizontal = 4
@@ -1974,13 +1975,13 @@ theme_override_colors/font_pressed_color = Color(0.9019608, 0.94509804, 1, 1)
 theme_override_colors/font_hover_color = Color(0.9019608, 0.94509804, 1, 1)
 theme_override_colors/font_disabled_color = Color(0.9019608, 0.94509804, 1, 0.5)
 theme_override_constants/h_separation = 4
-theme_override_fonts/font = SubResource("FontVariation_jv8as")
+theme_override_fonts/font = SubResource("FontVariation_ql5fu")
 theme_override_font_sizes/font_size = 10
-theme_override_styles/normal = SubResource("StyleBoxFlat_ux3un")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_oplsj")
-theme_override_styles/hover = SubResource("StyleBoxFlat_7ddg8")
-theme_override_styles/disabled = SubResource("StyleBoxFlat_g5mai")
-theme_override_styles/focus = SubResource("StyleBoxEmpty_xooig")
+theme_override_styles/normal = SubResource("StyleBoxFlat_8f8jc")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_05na4")
+theme_override_styles/hover = SubResource("StyleBoxFlat_mj6tn")
+theme_override_styles/disabled = SubResource("StyleBoxFlat_5owd6")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_s3pyx")
 clip_text = true
 script = ExtResource("3_h0qut")
 LabelText = "Stack"
@@ -1992,14 +1993,14 @@ metadata/ui_font_weight = 600
 metadata/ui_letter_spacing = 0.06
 metadata/ui_uppercase = true
 
-[node name="ButtonStates" type="VBoxContainer" parent="Frame/Shell/Scroll/ContentFrame/Content" unique_id=1907363045]
+[node name="ButtonStates" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content" unique_id=1907363045]
 layout_mode = 2
 
-[node name="Heading" type="HBoxContainer" parent="Frame/Shell/Scroll/ContentFrame/Content/ButtonStates" unique_id=853910195]
+[node name="Heading" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/ButtonStates" unique_id=853910195]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="Caption1" type="Label" parent="Frame/Shell/Scroll/ContentFrame/Content/ButtonStates/Heading" unique_id=802846522]
+[node name="Caption1" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/ButtonStates/Heading" unique_id=802846522]
 layout_mode = 2
 size_flags_vertical = 8
 theme_override_colors/font_color = Color(0.9019608, 0.94509804, 1, 1)
@@ -2007,7 +2008,7 @@ text = "Button - states"
 script = ExtResource("2_cpfof")
 TextStyle = 12
 
-[node name="Caption2" type="Label" parent="Frame/Shell/Scroll/ContentFrame/Content/ButtonStates/Heading" unique_id=1095605302 groups=["gallery_muted"]]
+[node name="Caption2" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/ButtonStates/Heading" unique_id=1095605302 groups=["gallery_muted"]]
 custom_minimum_size = Vector2(120, 0)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -2018,10 +2019,10 @@ autowrap_mode = 3
 script = ExtResource("2_cpfof")
 TextStyle = 9
 
-[node name="Examples" type="HFlowContainer" parent="Frame/Shell/Scroll/ContentFrame/Content/ButtonStates" unique_id=1307080974]
+[node name="Examples" type="HFlowContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/ButtonStates" unique_id=1307080974]
 layout_mode = 2
 
-[node name="UiButton" type="Button" parent="Frame/Shell/Scroll/ContentFrame/Content/ButtonStates/Examples" unique_id=389844862]
+[node name="UiButton" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/ButtonStates/Examples" unique_id=389844862]
 custom_minimum_size = Vector2(40, 40)
 layout_mode = 2
 size_flags_vertical = 4
@@ -2032,13 +2033,13 @@ theme_override_colors/font_pressed_color = Color(0.9019608, 0.94509804, 1, 1)
 theme_override_colors/font_hover_color = Color(0.9019608, 0.94509804, 1, 1)
 theme_override_colors/font_disabled_color = Color(0.9019608, 0.94509804, 1, 0.5)
 theme_override_constants/h_separation = 8
-theme_override_fonts/font = SubResource("FontVariation_qms5i")
+theme_override_fonts/font = SubResource("FontVariation_nps34")
 theme_override_font_sizes/font_size = 12
-theme_override_styles/normal = SubResource("StyleBoxFlat_1hw3w")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_j37gv")
-theme_override_styles/hover = SubResource("StyleBoxFlat_cfetj")
-theme_override_styles/disabled = SubResource("StyleBoxFlat_yypx2")
-theme_override_styles/focus = SubResource("StyleBoxEmpty_0v0hg")
+theme_override_styles/normal = SubResource("StyleBoxFlat_18uh4")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_cr1b0")
+theme_override_styles/hover = SubResource("StyleBoxFlat_obxwq")
+theme_override_styles/disabled = SubResource("StyleBoxFlat_k8cmn")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_utq7y")
 script = ExtResource("3_h0qut")
 LabelText = "Neutral"
 metadata/_custom_type_script = "uid://r2ped3g3uiaa"
@@ -2048,7 +2049,7 @@ metadata/ui_font_weight = 600
 metadata/ui_letter_spacing = 0.04
 metadata/ui_uppercase = true
 
-[node name="UiButton2" type="Button" parent="Frame/Shell/Scroll/ContentFrame/Content/ButtonStates/Examples" unique_id=290919563]
+[node name="UiButton2" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/ButtonStates/Examples" unique_id=290919563]
 custom_minimum_size = Vector2(40, 40)
 layout_mode = 2
 size_flags_vertical = 4
@@ -2059,13 +2060,13 @@ theme_override_colors/font_pressed_color = Color(0.9019608, 0.94509804, 1, 1)
 theme_override_colors/font_hover_color = Color(0.9019608, 0.94509804, 1, 1)
 theme_override_colors/font_disabled_color = Color(0.9019608, 0.94509804, 1, 0.5)
 theme_override_constants/h_separation = 8
-theme_override_fonts/font = SubResource("FontVariation_81gks")
+theme_override_fonts/font = SubResource("FontVariation_mhlst")
 theme_override_font_sizes/font_size = 12
-theme_override_styles/normal = SubResource("StyleBoxFlat_ujekt")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_qm84f")
-theme_override_styles/hover = SubResource("StyleBoxFlat_skeas")
-theme_override_styles/disabled = SubResource("StyleBoxFlat_f1tjj")
-theme_override_styles/focus = SubResource("StyleBoxEmpty_u003p")
+theme_override_styles/normal = SubResource("StyleBoxFlat_8v6kq")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_v2w4q")
+theme_override_styles/hover = SubResource("StyleBoxFlat_4qrbw")
+theme_override_styles/disabled = SubResource("StyleBoxFlat_ij4d1")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_nqfnc")
 script = ExtResource("3_h0qut")
 LabelText = "Selected"
 Selected = true
@@ -2076,7 +2077,7 @@ metadata/ui_font_weight = 600
 metadata/ui_letter_spacing = 0.04
 metadata/ui_uppercase = true
 
-[node name="UiButton3" type="Button" parent="Frame/Shell/Scroll/ContentFrame/Content/ButtonStates/Examples" unique_id=36405401]
+[node name="UiButton3" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/ButtonStates/Examples" unique_id=36405401]
 custom_minimum_size = Vector2(40, 40)
 layout_mode = 2
 size_flags_horizontal = 4
@@ -2088,13 +2089,13 @@ theme_override_colors/font_pressed_color = Color(0.9019608, 0.94509804, 1, 1)
 theme_override_colors/font_hover_color = Color(0.9019608, 0.94509804, 1, 1)
 theme_override_colors/font_disabled_color = Color(0.9019608, 0.94509804, 1, 0.5)
 theme_override_constants/h_separation = 8
-theme_override_fonts/font = SubResource("FontVariation_gxggg")
+theme_override_fonts/font = SubResource("FontVariation_8t8dp")
 theme_override_font_sizes/font_size = 12
-theme_override_styles/normal = SubResource("StyleBoxFlat_tgvi7")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_a3mxm")
-theme_override_styles/hover = SubResource("StyleBoxFlat_ra2ol")
-theme_override_styles/disabled = SubResource("StyleBoxFlat_f5drw")
-theme_override_styles/focus = SubResource("StyleBoxEmpty_t2mxh")
+theme_override_styles/normal = SubResource("StyleBoxFlat_s4b2h")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_84adk")
+theme_override_styles/hover = SubResource("StyleBoxFlat_13pq2")
+theme_override_styles/disabled = SubResource("StyleBoxFlat_108fo")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_xqv4q")
 script = ExtResource("3_h0qut")
 LabelText = "Hold to activate"
 HoldToActivate = true
@@ -2105,7 +2106,7 @@ metadata/ui_font_weight = 600
 metadata/ui_letter_spacing = 0.04
 metadata/ui_uppercase = true
 
-[node name="UiButton4" type="Button" parent="Frame/Shell/Scroll/ContentFrame/Content/ButtonStates/Examples" unique_id=1186856321]
+[node name="UiButton4" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/ButtonStates/Examples" unique_id=1186856321]
 custom_minimum_size = Vector2(40, 40)
 layout_mode = 2
 size_flags_horizontal = 4
@@ -2117,13 +2118,13 @@ theme_override_colors/font_pressed_color = Color(0.9019608, 0.94509804, 1, 1)
 theme_override_colors/font_hover_color = Color(0.9019608, 0.94509804, 1, 1)
 theme_override_colors/font_disabled_color = Color(0.9019608, 0.94509804, 1, 0.5)
 theme_override_constants/h_separation = 8
-theme_override_fonts/font = SubResource("FontVariation_dmj5g")
+theme_override_fonts/font = SubResource("FontVariation_h6o83")
 theme_override_font_sizes/font_size = 12
-theme_override_styles/normal = SubResource("StyleBoxFlat_av7ui")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_4kdiq")
-theme_override_styles/hover = SubResource("StyleBoxFlat_3iie4")
-theme_override_styles/disabled = SubResource("StyleBoxFlat_83f3d")
-theme_override_styles/focus = SubResource("StyleBoxEmpty_4fkuf")
+theme_override_styles/normal = SubResource("StyleBoxFlat_u6feq")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_miut4")
+theme_override_styles/hover = SubResource("StyleBoxFlat_8eowx")
+theme_override_styles/disabled = SubResource("StyleBoxFlat_4ij1d")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_rw74y")
 disabled = true
 script = ExtResource("3_h0qut")
 LabelText = "Disabled"
@@ -2135,14 +2136,14 @@ metadata/ui_font_weight = 600
 metadata/ui_letter_spacing = 0.04
 metadata/ui_uppercase = true
 
-[node name="ButtonDecorations" type="VBoxContainer" parent="Frame/Shell/Scroll/ContentFrame/Content" unique_id=459420129]
+[node name="ButtonDecorations" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content" unique_id=459420129]
 layout_mode = 2
 
-[node name="Heading" type="HBoxContainer" parent="Frame/Shell/Scroll/ContentFrame/Content/ButtonDecorations" unique_id=1807550073]
+[node name="Heading" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/ButtonDecorations" unique_id=1807550073]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="Caption1" type="Label" parent="Frame/Shell/Scroll/ContentFrame/Content/ButtonDecorations/Heading" unique_id=201334036]
+[node name="Caption1" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/ButtonDecorations/Heading" unique_id=201334036]
 layout_mode = 2
 size_flags_vertical = 8
 theme_override_colors/font_color = Color(0.9019608, 0.94509804, 1, 1)
@@ -2150,7 +2151,7 @@ text = "Button - decorations"
 script = ExtResource("2_cpfof")
 TextStyle = 12
 
-[node name="Caption2" type="Label" parent="Frame/Shell/Scroll/ContentFrame/Content/ButtonDecorations/Heading" unique_id=1525741603 groups=["gallery_muted"]]
+[node name="Caption2" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/ButtonDecorations/Heading" unique_id=1525741603 groups=["gallery_muted"]]
 custom_minimum_size = Vector2(120, 0)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -2161,14 +2162,14 @@ autowrap_mode = 3
 script = ExtResource("2_cpfof")
 TextStyle = 9
 
-[node name="Examples" type="HFlowContainer" parent="Frame/Shell/Scroll/ContentFrame/Content/ButtonDecorations" unique_id=1506031366]
+[node name="Examples" type="HFlowContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/ButtonDecorations" unique_id=1506031366]
 layout_mode = 2
 
-[node name="Selected" type="VBoxContainer" parent="Frame/Shell/Scroll/ContentFrame/Content/ButtonDecorations/Examples" unique_id=2120058161]
+[node name="Selected" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/ButtonDecorations/Examples" unique_id=2120058161]
 custom_minimum_size = Vector2(100, 0)
 layout_mode = 2
 
-[node name="UiButton" type="Button" parent="Frame/Shell/Scroll/ContentFrame/Content/ButtonDecorations/Examples/Selected" unique_id=1609034396]
+[node name="UiButton" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/ButtonDecorations/Examples/Selected" unique_id=1609034396]
 custom_minimum_size = Vector2(40, 40)
 layout_mode = 2
 size_flags_horizontal = 4
@@ -2185,13 +2186,13 @@ theme_override_colors/icon_hover_color = Color(0.9019608, 0.94509804, 1, 1)
 theme_override_colors/icon_disabled_color = Color(0.9019608, 0.94509804, 1, 0.5)
 theme_override_constants/h_separation = 8
 theme_override_constants/icon_max_width = 16
-theme_override_fonts/font = SubResource("FontVariation_nompd")
+theme_override_fonts/font = SubResource("FontVariation_ieo6d")
 theme_override_font_sizes/font_size = 12
-theme_override_styles/normal = SubResource("StyleBoxFlat_y7251")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_lwct0")
-theme_override_styles/hover = SubResource("StyleBoxFlat_68wwo")
-theme_override_styles/disabled = SubResource("StyleBoxFlat_5uju5")
-theme_override_styles/focus = SubResource("StyleBoxEmpty_jpuaj")
+theme_override_styles/normal = SubResource("StyleBoxFlat_73lmj")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_b5ppb")
+theme_override_styles/hover = SubResource("StyleBoxFlat_urwal")
+theme_override_styles/disabled = SubResource("StyleBoxFlat_jrvor")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_gn54m")
 script = ExtResource("3_h0qut")
 LabelText = "text"
 IconId = 18
@@ -2204,7 +2205,7 @@ metadata/ui_font_weight = 600
 metadata/ui_letter_spacing = 0.04
 metadata/ui_uppercase = true
 
-[node name="UiLabel" type="Label" parent="Frame/Shell/Scroll/ContentFrame/Content/ButtonDecorations/Examples/Selected" unique_id=389896239]
+[node name="UiLabel" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/ButtonDecorations/Examples/Selected" unique_id=389896239]
 layout_mode = 2
 text = "Secondary, Row, Selected, Badge"
 horizontal_alignment = 1
@@ -2213,11 +2214,11 @@ script = ExtResource("2_cpfof")
 TextStyle = 9
 metadata/_custom_type_script = "uid://dk67qmt3brp4e"
 
-[node name="Achievements" type="VBoxContainer" parent="Frame/Shell/Scroll/ContentFrame/Content/ButtonDecorations/Examples" unique_id=705873260]
+[node name="Achievements" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/ButtonDecorations/Examples" unique_id=705873260]
 custom_minimum_size = Vector2(100, 0)
 layout_mode = 2
 
-[node name="UiButton" type="Button" parent="Frame/Shell/Scroll/ContentFrame/Content/ButtonDecorations/Examples/Achievements" unique_id=252561379]
+[node name="UiButton" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/ButtonDecorations/Examples/Achievements" unique_id=252561379]
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
 size_flags_horizontal = 4
@@ -2234,13 +2235,13 @@ theme_override_colors/icon_hover_color = Color(0.9019608, 0.94509804, 1, 1)
 theme_override_colors/icon_disabled_color = Color(0.9019608, 0.94509804, 1, 0.5)
 theme_override_constants/h_separation = 8
 theme_override_constants/icon_max_width = 16
-theme_override_fonts/font = SubResource("FontVariation_ffust")
+theme_override_fonts/font = SubResource("FontVariation_pue0o")
 theme_override_font_sizes/font_size = 12
-theme_override_styles/normal = SubResource("StyleBoxFlat_dk76r")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_qhmdo")
-theme_override_styles/hover = SubResource("StyleBoxFlat_to0qb")
-theme_override_styles/disabled = SubResource("StyleBoxFlat_ddbea")
-theme_override_styles/focus = SubResource("StyleBoxEmpty_1fasc")
+theme_override_styles/normal = SubResource("StyleBoxFlat_37ouk")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_wd6qg")
+theme_override_styles/hover = SubResource("StyleBoxFlat_jem1f")
+theme_override_styles/disabled = SubResource("StyleBoxFlat_rj68v")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_wyfjm")
 icon_alignment = 1
 script = ExtResource("3_h0qut")
 IconId = 35
@@ -2253,7 +2254,7 @@ metadata/ui_font_weight = 600
 metadata/ui_letter_spacing = 0.04
 metadata/ui_uppercase = true
 
-[node name="UiLabel" type="Label" parent="Frame/Shell/Scroll/ContentFrame/Content/ButtonDecorations/Examples/Achievements" unique_id=1649669005]
+[node name="UiLabel" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/ButtonDecorations/Examples/Achievements" unique_id=1649669005]
 layout_mode = 2
 text = "Secondary, RowCompact, icon and badge"
 horizontal_alignment = 1
@@ -2262,11 +2263,11 @@ script = ExtResource("2_cpfof")
 TextStyle = 9
 metadata/_custom_type_script = "uid://dk67qmt3brp4e"
 
-[node name="Play" type="VBoxContainer" parent="Frame/Shell/Scroll/ContentFrame/Content/ButtonDecorations/Examples" unique_id=1063927110]
+[node name="Play" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/ButtonDecorations/Examples" unique_id=1063927110]
 custom_minimum_size = Vector2(100, 0)
 layout_mode = 2
 
-[node name="UiButton" type="Button" parent="Frame/Shell/Scroll/ContentFrame/Content/ButtonDecorations/Examples/Play" unique_id=1697995662]
+[node name="UiButton" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/ButtonDecorations/Examples/Play" unique_id=1697995662]
 custom_minimum_size = Vector2(48, 48)
 layout_mode = 2
 size_flags_horizontal = 4
@@ -2283,13 +2284,13 @@ theme_override_colors/icon_hover_color = Color(0.015686275, 0.07058824, 0.101960
 theme_override_colors/icon_disabled_color = Color(0.015686275, 0.07058824, 0.101960786, 0.5)
 theme_override_constants/h_separation = 4
 theme_override_constants/icon_max_width = 16
-theme_override_fonts/font = SubResource("FontVariation_iqsa0")
+theme_override_fonts/font = SubResource("FontVariation_7kkl6")
 theme_override_font_sizes/font_size = 10
-theme_override_styles/normal = SubResource("StyleBoxFlat_kxhgb")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_tttpc")
-theme_override_styles/hover = SubResource("StyleBoxFlat_dptpw")
-theme_override_styles/disabled = SubResource("StyleBoxFlat_uiaw7")
-theme_override_styles/focus = SubResource("StyleBoxEmpty_fqv6l")
+theme_override_styles/normal = SubResource("StyleBoxFlat_6us5s")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_he78d")
+theme_override_styles/hover = SubResource("StyleBoxFlat_si3gu")
+theme_override_styles/disabled = SubResource("StyleBoxFlat_wncmy")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_47wb2")
 clip_text = true
 icon_alignment = 1
 script = ExtResource("3_h0qut")
@@ -2304,7 +2305,7 @@ metadata/ui_font_weight = 600
 metadata/ui_letter_spacing = 0.06
 metadata/ui_uppercase = true
 
-[node name="UiLabel" type="Label" parent="Frame/Shell/Scroll/ContentFrame/Content/ButtonDecorations/Examples/Play" unique_id=16984270]
+[node name="UiLabel" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/ButtonDecorations/Examples/Play" unique_id=16984270]
 layout_mode = 2
 text = "Primary, Stacked, only icon"
 horizontal_alignment = 1
@@ -2313,11 +2314,11 @@ script = ExtResource("2_cpfof")
 TextStyle = 9
 metadata/_custom_type_script = "uid://dk67qmt3brp4e"
 
-[node name="DeleteButton" type="VBoxContainer" parent="Frame/Shell/Scroll/ContentFrame/Content/ButtonDecorations/Examples" unique_id=518011082]
+[node name="DeleteButton" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/ButtonDecorations/Examples" unique_id=518011082]
 custom_minimum_size = Vector2(100, 0)
 layout_mode = 2
 
-[node name="UiButton" type="Button" parent="Frame/Shell/Scroll/ContentFrame/Content/ButtonDecorations/Examples/DeleteButton" unique_id=367803743]
+[node name="UiButton" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/ButtonDecorations/Examples/DeleteButton" unique_id=367803743]
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
 size_flags_horizontal = 4
@@ -2334,13 +2335,13 @@ theme_override_colors/icon_hover_color = Color(1, 0.41960785, 0.5294118, 1)
 theme_override_colors/icon_disabled_color = Color(1, 0.41960785, 0.5294118, 0.5)
 theme_override_constants/h_separation = 8
 theme_override_constants/icon_max_width = 16
-theme_override_fonts/font = SubResource("FontVariation_gc5yd")
+theme_override_fonts/font = SubResource("FontVariation_q4kl6")
 theme_override_font_sizes/font_size = 12
-theme_override_styles/normal = SubResource("StyleBoxFlat_85r0j")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_q25ph")
-theme_override_styles/hover = SubResource("StyleBoxFlat_frtug")
-theme_override_styles/disabled = SubResource("StyleBoxFlat_rcgku")
-theme_override_styles/focus = SubResource("StyleBoxEmpty_x1fka")
+theme_override_styles/normal = SubResource("StyleBoxFlat_1pu7t")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_ii1qx")
+theme_override_styles/hover = SubResource("StyleBoxFlat_jr6b7")
+theme_override_styles/disabled = SubResource("StyleBoxFlat_3rhci")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_hs7c4")
 disabled = true
 script = ExtResource("3_h0qut")
 LabelText = "Delete"
@@ -2353,7 +2354,7 @@ metadata/ui_font_weight = 600
 metadata/ui_letter_spacing = 0.04
 metadata/ui_uppercase = true
 
-[node name="UiLabel" type="Label" parent="Frame/Shell/Scroll/ContentFrame/Content/ButtonDecorations/Examples/DeleteButton" unique_id=2062579954]
+[node name="UiLabel" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/ButtonDecorations/Examples/DeleteButton" unique_id=2062579954]
 custom_maximum_size = Vector2(100, -1)
 layout_mode = 2
 text = "Tertiary, Compact, Disabled"
@@ -2363,11 +2364,11 @@ script = ExtResource("2_cpfof")
 TextStyle = 9
 metadata/_custom_type_script = "uid://dk67qmt3brp4e"
 
-[node name="MoreButton" type="VBoxContainer" parent="Frame/Shell/Scroll/ContentFrame/Content/ButtonDecorations/Examples" unique_id=700552037]
+[node name="MoreButton" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/ButtonDecorations/Examples" unique_id=700552037]
 custom_minimum_size = Vector2(100, 0)
 layout_mode = 2
 
-[node name="UiButton" type="Button" parent="Frame/Shell/Scroll/ContentFrame/Content/ButtonDecorations/Examples/MoreButton" unique_id=1250842813]
+[node name="UiButton" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/ButtonDecorations/Examples/MoreButton" unique_id=1250842813]
 custom_minimum_size = Vector2(48, 48)
 layout_mode = 2
 size_flags_horizontal = 4
@@ -2384,13 +2385,13 @@ theme_override_colors/icon_hover_color = Color(0.9019608, 0.94509804, 1, 1)
 theme_override_colors/icon_disabled_color = Color(0.9019608, 0.94509804, 1, 0.5)
 theme_override_constants/h_separation = 4
 theme_override_constants/icon_max_width = 16
-theme_override_fonts/font = SubResource("FontVariation_2bso8")
+theme_override_fonts/font = SubResource("FontVariation_kq7bs")
 theme_override_font_sizes/font_size = 10
-theme_override_styles/normal = SubResource("StyleBoxFlat_c3uqx")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_xxpa1")
-theme_override_styles/hover = SubResource("StyleBoxFlat_g16yd")
-theme_override_styles/disabled = SubResource("StyleBoxFlat_din0j")
-theme_override_styles/focus = SubResource("StyleBoxEmpty_l8mey")
+theme_override_styles/normal = SubResource("StyleBoxFlat_5ey6c")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_xc6sr")
+theme_override_styles/hover = SubResource("StyleBoxFlat_pmaxt")
+theme_override_styles/disabled = SubResource("StyleBoxFlat_juiam")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_w25f5")
 clip_text = true
 script = ExtResource("3_h0qut")
 LabelText = "More"
@@ -2404,7 +2405,7 @@ metadata/ui_font_weight = 600
 metadata/ui_letter_spacing = 0.06
 metadata/ui_uppercase = true
 
-[node name="UiLabel" type="Label" parent="Frame/Shell/Scroll/ContentFrame/Content/ButtonDecorations/Examples/MoreButton" unique_id=380337480]
+[node name="UiLabel" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/ButtonDecorations/Examples/MoreButton" unique_id=380337480]
 layout_mode = 2
 text = "Flat, Stacked, Selected"
 horizontal_alignment = 1
@@ -2413,14 +2414,14 @@ script = ExtResource("2_cpfof")
 TextStyle = 9
 metadata/_custom_type_script = "uid://dk67qmt3brp4e"
 
-[node name="Choices" type="VBoxContainer" parent="Frame/Shell/Scroll/ContentFrame/Content" unique_id=1707976448]
+[node name="Choices" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content" unique_id=1707976448]
 layout_mode = 2
 
-[node name="Heading" type="HBoxContainer" parent="Frame/Shell/Scroll/ContentFrame/Content/Choices" unique_id=1495787851]
+[node name="Heading" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Choices" unique_id=1495787851]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="Caption1" type="Label" parent="Frame/Shell/Scroll/ContentFrame/Content/Choices/Heading" unique_id=1896626803]
+[node name="Caption1" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Choices/Heading" unique_id=1896626803]
 layout_mode = 2
 size_flags_vertical = 8
 theme_override_colors/font_color = Color(0.9019608, 0.94509804, 1, 1)
@@ -2428,7 +2429,7 @@ text = "Toggle and checkbox"
 script = ExtResource("2_cpfof")
 TextStyle = 12
 
-[node name="Caption2" type="Label" parent="Frame/Shell/Scroll/ContentFrame/Content/Choices/Heading" unique_id=181758663 groups=["gallery_muted"]]
+[node name="Caption2" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Choices/Heading" unique_id=181758663 groups=["gallery_muted"]]
 custom_minimum_size = Vector2(120, 0)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -2439,39 +2440,39 @@ autowrap_mode = 3
 script = ExtResource("2_cpfof")
 TextStyle = 9
 
-[node name="Examples" type="GridContainer" parent="Frame/Shell/Scroll/ContentFrame/Content/Choices" unique_id=1830873360]
+[node name="Examples" type="GridContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Choices" unique_id=1830873360]
 layout_mode = 2
 size_flags_horizontal = 0
 theme_override_constants/h_separation = 40
 theme_override_constants/v_separation = 4
 columns = 2
 
-[node name="ToggleOn" type="Container" parent="Frame/Shell/Scroll/ContentFrame/Content/Choices/Examples" unique_id=1319666388]
+[node name="ToggleOn" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Choices/Examples" unique_id=1319666388]
 layout_mode = 2
 script = ExtResource("6_toggle_row")
 On = true
 LabelText = "Sounds"
 Subtext = "Taps, unlocks and results"
 
-[node name="CheckOn" type="Container" parent="Frame/Shell/Scroll/ContentFrame/Content/Choices/Examples" unique_id=1737186750]
+[node name="CheckOn" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Choices/Examples" unique_id=1737186750]
 layout_mode = 2
 script = ExtResource("7_check_row")
 Checked = true
 LabelText = "Run until power is out"
 Subtext = "Ends when the battery does"
 
-[node name="ToggleOff" type="Container" parent="Frame/Shell/Scroll/ContentFrame/Content/Choices/Examples" unique_id=240537559]
+[node name="ToggleOff" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Choices/Examples" unique_id=240537559]
 layout_mode = 2
 script = ExtResource("6_toggle_row")
 On = true
 LabelText = "Sounds"
 
-[node name="CheckOff" type="Container" parent="Frame/Shell/Scroll/ContentFrame/Content/Choices/Examples" unique_id=2055042273]
+[node name="CheckOff" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Choices/Examples" unique_id=2055042273]
 layout_mode = 2
 script = ExtResource("7_check_row")
 LabelText = "Run until power is out"
 
-[node name="ToggleDisabledOn" type="Container" parent="Frame/Shell/Scroll/ContentFrame/Content/Choices/Examples" unique_id=390065540]
+[node name="ToggleDisabledOn" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Choices/Examples" unique_id=390065540]
 layout_mode = 2
 script = ExtResource("6_toggle_row")
 On = true
@@ -2479,7 +2480,7 @@ Disabled = true
 LabelText = "Sounds"
 Subtext = "Unavailable during this preview"
 
-[node name="CheckDisabledOn" type="Container" parent="Frame/Shell/Scroll/ContentFrame/Content/Choices/Examples" unique_id=1193495586]
+[node name="CheckDisabledOn" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Choices/Examples" unique_id=1193495586]
 layout_mode = 2
 script = ExtResource("7_check_row")
 Checked = true
@@ -2487,7 +2488,7 @@ Disabled = true
 LabelText = "Run until power is out"
 Subtext = "No powered parts"
 
-[node name="ToggleDisabledOff" type="Container" parent="Frame/Shell/Scroll/ContentFrame/Content/Choices/Examples" unique_id=1741558427]
+[node name="ToggleDisabledOff" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Choices/Examples" unique_id=1741558427]
 layout_mode = 2
 script = ExtResource("6_toggle_row")
 On = true
@@ -2495,21 +2496,21 @@ Disabled = true
 LabelText = "Sounds"
 Subtext = "Unavailable during this preview"
 
-[node name="CheckDisabledOff" type="Container" parent="Frame/Shell/Scroll/ContentFrame/Content/Choices/Examples" unique_id=442918422]
+[node name="CheckDisabledOff" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Choices/Examples" unique_id=442918422]
 layout_mode = 2
 script = ExtResource("7_check_row")
 Disabled = true
 LabelText = "Run until power is out"
 Subtext = "No powered parts"
 
-[node name="Segmented" type="VBoxContainer" parent="Frame/Shell/Scroll/ContentFrame/Content" unique_id=2061997591]
+[node name="Segmented" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content" unique_id=2061997591]
 layout_mode = 2
 
-[node name="Heading" type="HBoxContainer" parent="Frame/Shell/Scroll/ContentFrame/Content/Segmented" unique_id=721347238]
+[node name="Heading" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Segmented" unique_id=721347238]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="Caption1" type="Label" parent="Frame/Shell/Scroll/ContentFrame/Content/Segmented/Heading" unique_id=1653213415]
+[node name="Caption1" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Segmented/Heading" unique_id=1653213415]
 layout_mode = 2
 size_flags_vertical = 8
 theme_override_colors/font_color = Color(0.9019608, 0.94509804, 1, 1)
@@ -2517,7 +2518,7 @@ text = "Segmented"
 script = ExtResource("2_cpfof")
 TextStyle = 12
 
-[node name="Caption2" type="Label" parent="Frame/Shell/Scroll/ContentFrame/Content/Segmented/Heading" unique_id=489805598 groups=["gallery_muted"]]
+[node name="Caption2" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Segmented/Heading" unique_id=489805598 groups=["gallery_muted"]]
 custom_minimum_size = Vector2(120, 0)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -2528,31 +2529,31 @@ autowrap_mode = 3
 script = ExtResource("2_cpfof")
 TextStyle = 9
 
-[node name="Examples" type="HFlowContainer" parent="Frame/Shell/Scroll/ContentFrame/Content/Segmented" unique_id=1896977098]
+[node name="Examples" type="HFlowContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Segmented" unique_id=1896977098]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="ModeSwitch" type="HBoxContainer" parent="Frame/Shell/Scroll/ContentFrame/Content/Segmented/Examples" unique_id=2001253886]
+[node name="ModeSwitch" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Segmented/Examples" unique_id=2001253886]
 layout_mode = 2
 theme_override_constants/separation = 0
 script = ExtResource("4_theme_switch")
 Segments = Array[ExtResource("5_theme_segment")]([SubResource("Resource_segmented_train"), SubResource("Resource_segmented_simulate")])
 
-[node name="MetricSwitch" type="HBoxContainer" parent="Frame/Shell/Scroll/ContentFrame/Content/Segmented/Examples" unique_id=1183647331]
+[node name="MetricSwitch" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Segmented/Examples" unique_id=1183647331]
 layout_mode = 2
 theme_override_constants/separation = 0
 script = ExtResource("4_theme_switch")
 Segments = Array[ExtResource("5_theme_segment")]([SubResource("Resource_segmented_distance"), SubResource("Resource_segmented_speed"), SubResource("Resource_segmented_elevation")])
 MatchWidth = false
 
-[node name="PartsTrayTabs" type="VBoxContainer" parent="Frame/Shell/Scroll/ContentFrame/Content" unique_id=552515420]
+[node name="PartsTrayTabs" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content" unique_id=552515420]
 layout_mode = 2
 
-[node name="Heading" type="HBoxContainer" parent="Frame/Shell/Scroll/ContentFrame/Content/PartsTrayTabs" unique_id=189132522]
+[node name="Heading" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/PartsTrayTabs" unique_id=189132522]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="Caption1" type="Label" parent="Frame/Shell/Scroll/ContentFrame/Content/PartsTrayTabs/Heading" unique_id=1247325608]
+[node name="Caption1" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/PartsTrayTabs/Heading" unique_id=1247325608]
 layout_mode = 2
 size_flags_vertical = 8
 theme_override_colors/font_color = Color(0.9019608, 0.94509804, 1, 1)
@@ -2560,7 +2561,7 @@ text = "Parts tray tabs"
 script = ExtResource("2_cpfof")
 TextStyle = 12
 
-[node name="Caption2" type="Label" parent="Frame/Shell/Scroll/ContentFrame/Content/PartsTrayTabs/Heading" unique_id=1922014487 groups=["gallery_muted"]]
+[node name="Caption2" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/PartsTrayTabs/Heading" unique_id=1922014487 groups=["gallery_muted"]]
 custom_minimum_size = Vector2(120, 0)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -2571,7 +2572,7 @@ autowrap_mode = 3
 script = ExtResource("2_cpfof")
 TextStyle = 9
 
-[node name="Tabs" type="HBoxContainer" parent="Frame/Shell/Scroll/ContentFrame/Content/PartsTrayTabs" unique_id=1247141693]
+[node name="Tabs" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/PartsTrayTabs" unique_id=1247141693]
 layout_mode = 2
 size_flags_horizontal = 0
 theme_override_constants/separation = 4
@@ -2579,14 +2580,14 @@ script = ExtResource("8_icon_tabs")
 Icons = Array[int]([50, 49, 46, 40])
 SelectedIndex = 1
 
-[node name="SelectionHandles" type="VBoxContainer" parent="Frame/Shell/Scroll/ContentFrame/Content" unique_id=1630847732]
+[node name="SelectionHandles" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content" unique_id=1630847732]
 layout_mode = 2
 
-[node name="Heading" type="HBoxContainer" parent="Frame/Shell/Scroll/ContentFrame/Content/SelectionHandles" unique_id=1284719165]
+[node name="Heading" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/SelectionHandles" unique_id=1284719165]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="Caption1" type="Label" parent="Frame/Shell/Scroll/ContentFrame/Content/SelectionHandles/Heading" unique_id=1093752841]
+[node name="Caption1" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/SelectionHandles/Heading" unique_id=1093752841]
 layout_mode = 2
 size_flags_vertical = 8
 theme_override_colors/font_color = Color(0.9019608, 0.94509804, 1, 1)
@@ -2594,7 +2595,7 @@ text = "Selection handles"
 script = ExtResource("2_cpfof")
 TextStyle = 12
 
-[node name="Caption2" type="Label" parent="Frame/Shell/Scroll/ContentFrame/Content/SelectionHandles/Heading" unique_id=1749286035 groups=["gallery_muted"]]
+[node name="Caption2" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/SelectionHandles/Heading" unique_id=1749286035 groups=["gallery_muted"]]
 custom_minimum_size = Vector2(120, 0)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -2605,39 +2606,39 @@ autowrap_mode = 3
 script = ExtResource("2_cpfof")
 TextStyle = 9
 
-[node name="Handles" type="HBoxContainer" parent="Frame/Shell/Scroll/ContentFrame/Content/SelectionHandles" unique_id=1037569124]
+[node name="Handles" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/SelectionHandles" unique_id=1037569124]
 layout_mode = 2
 size_flags_horizontal = 0
 theme_override_constants/separation = 0
 
-[node name="Move" type="Control" parent="Frame/Shell/Scroll/ContentFrame/Content/SelectionHandles/Handles" unique_id=1183642057]
+[node name="Move" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/SelectionHandles/Handles" unique_id=1183642057]
 custom_minimum_size = Vector2(44, 44)
 layout_mode = 2
 mouse_filter = 1
 script = ExtResource("10_number")
 
-[node name="Rotate" type="Control" parent="Frame/Shell/Scroll/ContentFrame/Content/SelectionHandles/Handles" unique_id=1462975830]
+[node name="Rotate" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/SelectionHandles/Handles" unique_id=1462975830]
 custom_minimum_size = Vector2(44, 44)
 layout_mode = 2
 mouse_filter = 1
 script = ExtResource("10_number")
 Type = 1
 
-[node name="Scale" type="Control" parent="Frame/Shell/Scroll/ContentFrame/Content/SelectionHandles/Handles" unique_id=1975364281]
+[node name="Scale" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/SelectionHandles/Handles" unique_id=1975364281]
 custom_minimum_size = Vector2(44, 44)
 layout_mode = 2
 mouse_filter = 1
 script = ExtResource("10_number")
 Type = 2
 
-[node name="Number" type="VBoxContainer" parent="Frame/Shell/Scroll/ContentFrame/Content" unique_id=1846257903]
+[node name="Number" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content" unique_id=1846257903]
 layout_mode = 2
 
-[node name="Heading" type="HBoxContainer" parent="Frame/Shell/Scroll/ContentFrame/Content/Number" unique_id=1320957468]
+[node name="Heading" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Number" unique_id=1320957468]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="Caption1" type="Label" parent="Frame/Shell/Scroll/ContentFrame/Content/Number/Heading" unique_id=1726804195]
+[node name="Caption1" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Number/Heading" unique_id=1726804195]
 layout_mode = 2
 size_flags_vertical = 8
 theme_override_colors/font_color = Color(0.9019608, 0.94509804, 1, 1)
@@ -2645,7 +2646,7 @@ text = "Number"
 script = ExtResource("2_cpfof")
 TextStyle = 12
 
-[node name="Caption2" type="Label" parent="Frame/Shell/Scroll/ContentFrame/Content/Number/Heading" unique_id=1437528069 groups=["gallery_muted"]]
+[node name="Caption2" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Number/Heading" unique_id=1437528069 groups=["gallery_muted"]]
 custom_minimum_size = Vector2(120, 0)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -2656,48 +2657,48 @@ autowrap_mode = 3
 script = ExtResource("2_cpfof")
 TextStyle = 9
 
-[node name="Numbers" type="HBoxContainer" parent="Frame/Shell/Scroll/ContentFrame/Content/Number" unique_id=1857396240]
+[node name="Numbers" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Number" unique_id=1857396240]
 layout_mode = 2
 size_flags_horizontal = 0
 theme_override_constants/separation = 8
 
-[node name="One" type="Control" parent="Frame/Shell/Scroll/ContentFrame/Content/Number/Numbers" unique_id=1526480973]
+[node name="One" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Number/Numbers" unique_id=1526480973]
 custom_minimum_size = Vector2(16, 16)
 layout_mode = 2
 mouse_filter = 2
 script = ExtResource("9_selection_handle")
 
-[node name="Two" type="Control" parent="Frame/Shell/Scroll/ContentFrame/Content/Number/Numbers" unique_id=1963802457]
+[node name="Two" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Number/Numbers" unique_id=1963802457]
 custom_minimum_size = Vector2(16, 16)
 layout_mode = 2
 mouse_filter = 2
 script = ExtResource("9_selection_handle")
 Text = "2"
 
-[node name="Three" type="Control" parent="Frame/Shell/Scroll/ContentFrame/Content/Number/Numbers" unique_id=1175268394]
+[node name="Three" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Number/Numbers" unique_id=1175268394]
 custom_minimum_size = Vector2(16, 16)
 layout_mode = 2
 mouse_filter = 2
 script = ExtResource("9_selection_handle")
 Text = "3"
 
-[node name="Slider" type="VBoxContainer" parent="Frame/Shell/Scroll/ContentFrame/Content" unique_id=1266658681]
+[node name="Slider" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content" unique_id=1266658681]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 8
 
-[node name="Heading" type="GridContainer" parent="Frame/Shell/Scroll/ContentFrame/Content/Slider" unique_id=1013966420]
+[node name="Heading" type="GridContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Slider" unique_id=1013966420]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/h_separation = 40
 columns = 2
 
-[node name="Enabled" type="HBoxContainer" parent="Frame/Shell/Scroll/ContentFrame/Content/Slider/Heading" unique_id=62559175]
+[node name="Enabled" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Slider/Heading" unique_id=62559175]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 8
 
-[node name="Title" type="Label" parent="Frame/Shell/Scroll/ContentFrame/Content/Slider/Heading/Enabled" unique_id=1780225241]
+[node name="Title" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Slider/Heading/Enabled" unique_id=1780225241]
 layout_mode = 2
 size_flags_vertical = 0
 theme_override_colors/font_color = Color(0.9019608, 0.94509804, 1, 1)
@@ -2705,7 +2706,7 @@ text = "Slider"
 script = ExtResource("2_cpfof")
 TextStyle = 12
 
-[node name="Description" type="Label" parent="Frame/Shell/Scroll/ContentFrame/Content/Slider/Heading/Enabled" unique_id=1712523844 groups=["gallery_muted"]]
+[node name="Description" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Slider/Heading/Enabled" unique_id=1712523844 groups=["gallery_muted"]]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 0
@@ -2715,12 +2716,12 @@ autowrap_mode = 3
 script = ExtResource("2_cpfof")
 TextStyle = 9
 
-[node name="Disabled" type="HBoxContainer" parent="Frame/Shell/Scroll/ContentFrame/Content/Slider/Heading" unique_id=1631769087]
+[node name="Disabled" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Slider/Heading" unique_id=1631769087]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 8
 
-[node name="Title" type="Label" parent="Frame/Shell/Scroll/ContentFrame/Content/Slider/Heading/Disabled" unique_id=1339298701]
+[node name="Title" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Slider/Heading/Disabled" unique_id=1339298701]
 layout_mode = 2
 size_flags_vertical = 0
 theme_override_colors/font_color = Color(0.9019608, 0.94509804, 1, 1)
@@ -2728,7 +2729,7 @@ text = "Slider, disabled"
 script = ExtResource("2_cpfof")
 TextStyle = 12
 
-[node name="Description" type="Label" parent="Frame/Shell/Scroll/ContentFrame/Content/Slider/Heading/Disabled" unique_id=1190846814 groups=["gallery_muted"]]
+[node name="Description" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Slider/Heading/Disabled" unique_id=1190846814 groups=["gallery_muted"]]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 0
@@ -2738,37 +2739,37 @@ autowrap_mode = 3
 script = ExtResource("2_cpfof")
 TextStyle = 9
 
-[node name="Plain" type="VBoxContainer" parent="Frame/Shell/Scroll/ContentFrame/Content/Slider" unique_id=1305891898]
+[node name="Plain" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Slider" unique_id=1305891898]
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="Captions" type="GridContainer" parent="Frame/Shell/Scroll/ContentFrame/Content/Slider/Plain" unique_id=1240002768]
+[node name="Captions" type="GridContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Slider/Plain" unique_id=1240002768]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/h_separation = 40
 columns = 2
 
-[node name="Enabled" type="Label" parent="Frame/Shell/Scroll/ContentFrame/Content/Slider/Plain/Captions" unique_id=506524842 groups=["gallery_muted"]]
+[node name="Enabled" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Slider/Plain/Captions" unique_id=506524842 groups=["gallery_muted"]]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Plain"
 script = ExtResource("2_cpfof")
 TextStyle = 9
 
-[node name="Disabled" type="Label" parent="Frame/Shell/Scroll/ContentFrame/Content/Slider/Plain/Captions" unique_id=1343555939 groups=["gallery_muted"]]
+[node name="Disabled" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Slider/Plain/Captions" unique_id=1343555939 groups=["gallery_muted"]]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Plain"
 script = ExtResource("2_cpfof")
 TextStyle = 9
 
-[node name="Controls" type="GridContainer" parent="Frame/Shell/Scroll/ContentFrame/Content/Slider/Plain" unique_id=539019555]
+[node name="Controls" type="GridContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Slider/Plain" unique_id=539019555]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/h_separation = 40
 columns = 2
 
-[node name="Enabled" type="Control" parent="Frame/Shell/Scroll/ContentFrame/Content/Slider/Plain/Controls" unique_id=612207092]
+[node name="Enabled" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Slider/Plain/Controls" unique_id=612207092]
 custom_minimum_size = Vector2(0, 34)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -2777,7 +2778,7 @@ script = ExtResource("11_slider")
 LabelText = "Shadows"
 ReadoutText = "8"
 
-[node name="Disabled" type="Control" parent="Frame/Shell/Scroll/ContentFrame/Content/Slider/Plain/Controls" unique_id=448813824]
+[node name="Disabled" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Slider/Plain/Controls" unique_id=448813824]
 custom_minimum_size = Vector2(0, 34)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -2787,37 +2788,39 @@ LabelText = "Shadows"
 ReadoutText = "8"
 Disabled = true
 
-[node name="TwoSteps" type="VBoxContainer" parent="Frame/Shell/Scroll/ContentFrame/Content/Slider" unique_id=1879528425]
+[node name="TwoSteps" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Slider" unique_id=1879528425]
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="Captions" type="GridContainer" parent="Frame/Shell/Scroll/ContentFrame/Content/Slider/TwoSteps" unique_id=2130847632]
+[node name="Captions" type="GridContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Slider/TwoSteps" unique_id=2130847632]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/h_separation = 40
 columns = 2
 
-[node name="Enabled" type="Label" parent="Frame/Shell/Scroll/ContentFrame/Content/Slider/TwoSteps/Captions" unique_id=1362116896 groups=["gallery_muted"]]
+[node name="Enabled" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Slider/TwoSteps/Captions" unique_id=1362116896 groups=["gallery_muted"]]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Two steps (the ends) and a marker with a name"
+autowrap_mode = 3
 script = ExtResource("2_cpfof")
 TextStyle = 9
 
-[node name="Disabled" type="Label" parent="Frame/Shell/Scroll/ContentFrame/Content/Slider/TwoSteps/Captions" unique_id=629202666 groups=["gallery_muted"]]
+[node name="Disabled" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Slider/TwoSteps/Captions" unique_id=629202666 groups=["gallery_muted"]]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Two steps and marker"
+autowrap_mode = 3
 script = ExtResource("2_cpfof")
 TextStyle = 9
 
-[node name="Controls" type="GridContainer" parent="Frame/Shell/Scroll/ContentFrame/Content/Slider/TwoSteps" unique_id=1284362186]
+[node name="Controls" type="GridContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Slider/TwoSteps" unique_id=1284362186]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/h_separation = 40
 columns = 2
 
-[node name="Enabled" type="Control" parent="Frame/Shell/Scroll/ContentFrame/Content/Slider/TwoSteps/Controls" unique_id=531635782]
+[node name="Enabled" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Slider/TwoSteps/Controls" unique_id=531635782]
 custom_minimum_size = Vector2(0, 46)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -2830,7 +2833,7 @@ StepLabels = PackedStringArray("1", "100")
 MarkerPosition = 0.03000000000000002
 MarkerText = "default 4"
 
-[node name="Disabled" type="Control" parent="Frame/Shell/Scroll/ContentFrame/Content/Slider/TwoSteps/Controls" unique_id=1907878503]
+[node name="Disabled" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Slider/TwoSteps/Controls" unique_id=1907878503]
 custom_minimum_size = Vector2(0, 46)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -2844,37 +2847,39 @@ MarkerPosition = 0.03
 MarkerText = "default 4"
 Disabled = true
 
-[node name="FourSteps" type="VBoxContainer" parent="Frame/Shell/Scroll/ContentFrame/Content/Slider" unique_id=405657451]
+[node name="FourSteps" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Slider" unique_id=405657451]
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="Captions" type="GridContainer" parent="Frame/Shell/Scroll/ContentFrame/Content/Slider/FourSteps" unique_id=495447978]
+[node name="Captions" type="GridContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Slider/FourSteps" unique_id=495447978]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/h_separation = 40
 columns = 2
 
-[node name="Enabled" type="Label" parent="Frame/Shell/Scroll/ContentFrame/Content/Slider/FourSteps/Captions" unique_id=1289285790 groups=["gallery_muted"]]
+[node name="Enabled" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Slider/FourSteps/Captions" unique_id=1289285790 groups=["gallery_muted"]]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Four steps, always evenly placed; a marker on a step"
+autowrap_mode = 3
 script = ExtResource("2_cpfof")
 TextStyle = 9
 
-[node name="Disabled" type="Label" parent="Frame/Shell/Scroll/ContentFrame/Content/Slider/FourSteps/Captions" unique_id=119465047 groups=["gallery_muted"]]
+[node name="Disabled" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Slider/FourSteps/Captions" unique_id=119465047 groups=["gallery_muted"]]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Four steps and marker"
+autowrap_mode = 3
 script = ExtResource("2_cpfof")
 TextStyle = 9
 
-[node name="Controls" type="GridContainer" parent="Frame/Shell/Scroll/ContentFrame/Content/Slider/FourSteps" unique_id=570344504]
+[node name="Controls" type="GridContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Slider/FourSteps" unique_id=570344504]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/h_separation = 40
 columns = 2
 
-[node name="Enabled" type="Control" parent="Frame/Shell/Scroll/ContentFrame/Content/Slider/FourSteps/Controls" unique_id=1200819043]
+[node name="Enabled" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Slider/FourSteps/Controls" unique_id=1200819043]
 custom_minimum_size = Vector2(0, 46)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -2886,7 +2891,7 @@ StepLabels = PackedStringArray("50%", "100%", "200%", "400%")
 MarkerPosition = 0.333333333333
 MarkerText = "default 100%"
 
-[node name="Disabled" type="Control" parent="Frame/Shell/Scroll/ContentFrame/Content/Slider/FourSteps/Controls" unique_id=902644839]
+[node name="Disabled" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Slider/FourSteps/Controls" unique_id=902644839]
 custom_minimum_size = Vector2(0, 46)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -2899,37 +2904,39 @@ MarkerPosition = 0.333333333333
 MarkerText = "default 100%"
 Disabled = true
 
-[node name="Range" type="VBoxContainer" parent="Frame/Shell/Scroll/ContentFrame/Content/Slider" unique_id=143164666]
+[node name="Range" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Slider" unique_id=143164666]
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="Captions" type="GridContainer" parent="Frame/Shell/Scroll/ContentFrame/Content/Slider/Range" unique_id=487901167]
+[node name="Captions" type="GridContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Slider/Range" unique_id=487901167]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/h_separation = 40
 columns = 2
 
-[node name="Enabled" type="Label" parent="Frame/Shell/Scroll/ContentFrame/Content/Slider/Range/Captions" unique_id=275370898 groups=["gallery_muted"]]
+[node name="Enabled" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Slider/Range/Captions" unique_id=275370898 groups=["gallery_muted"]]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Two thumbs: a range, and a marker"
+autowrap_mode = 3
 script = ExtResource("2_cpfof")
 TextStyle = 9
 
-[node name="Disabled" type="Label" parent="Frame/Shell/Scroll/ContentFrame/Content/Slider/Range/Captions" unique_id=60087693 groups=["gallery_muted"]]
+[node name="Disabled" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Slider/Range/Captions" unique_id=60087693 groups=["gallery_muted"]]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Two thumbs and a marker"
+autowrap_mode = 3
 script = ExtResource("2_cpfof")
 TextStyle = 9
 
-[node name="Controls" type="GridContainer" parent="Frame/Shell/Scroll/ContentFrame/Content/Slider/Range" unique_id=1129465892]
+[node name="Controls" type="GridContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Slider/Range" unique_id=1129465892]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/h_separation = 40
 columns = 2
 
-[node name="Enabled" type="Control" parent="Frame/Shell/Scroll/ContentFrame/Content/Slider/Range/Controls" unique_id=1284867027]
+[node name="Enabled" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Slider/Range/Controls" unique_id=1284867027]
 custom_minimum_size = Vector2(0, 46)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -2943,7 +2950,7 @@ HighPosition = 0.72
 MarkerPosition = 0.44
 MarkerText = "now 35°"
 
-[node name="Disabled" type="Control" parent="Frame/Shell/Scroll/ContentFrame/Content/Slider/Range/Controls" unique_id=1359480158]
+[node name="Disabled" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Slider/Range/Controls" unique_id=1359480158]
 custom_minimum_size = Vector2(0, 46)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -2958,37 +2965,39 @@ MarkerPosition = 0.44
 MarkerText = "now 35°"
 Disabled = true
 
-[node name="Progress" type="VBoxContainer" parent="Frame/Shell/Scroll/ContentFrame/Content/Slider" unique_id=178032061]
+[node name="Progress" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Slider" unique_id=178032061]
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="Captions" type="GridContainer" parent="Frame/Shell/Scroll/ContentFrame/Content/Slider/Progress" unique_id=832545396]
+[node name="Captions" type="GridContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Slider/Progress" unique_id=832545396]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/h_separation = 40
 columns = 2
 
-[node name="Enabled" type="Label" parent="Frame/Shell/Scroll/ContentFrame/Content/Slider/Progress/Captions" unique_id=267914880 groups=["gallery_muted"]]
+[node name="Enabled" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Slider/Progress/Captions" unique_id=267914880 groups=["gallery_muted"]]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Linear progress with label/value: the same slider track with no thumb"
+autowrap_mode = 3
 script = ExtResource("2_cpfof")
 TextStyle = 9
 
-[node name="Disabled" type="Label" parent="Frame/Shell/Scroll/ContentFrame/Content/Slider/Progress/Captions" unique_id=176978803 groups=["gallery_muted"]]
+[node name="Disabled" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Slider/Progress/Captions" unique_id=176978803 groups=["gallery_muted"]]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Linear progress, disabled"
+autowrap_mode = 3
 script = ExtResource("2_cpfof")
 TextStyle = 9
 
-[node name="Controls" type="GridContainer" parent="Frame/Shell/Scroll/ContentFrame/Content/Slider/Progress" unique_id=620522222]
+[node name="Controls" type="GridContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Slider/Progress" unique_id=620522222]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/h_separation = 40
 columns = 2
 
-[node name="Enabled" type="Control" parent="Frame/Shell/Scroll/ContentFrame/Content/Slider/Progress/Controls" unique_id=840258816]
+[node name="Enabled" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Slider/Progress/Controls" unique_id=840258816]
 custom_minimum_size = Vector2(0, 34)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -2999,7 +3008,7 @@ ReadoutText = "62%"
 ValueKind = 2
 HighPosition = 0.62
 
-[node name="Disabled" type="Control" parent="Frame/Shell/Scroll/ContentFrame/Content/Slider/Progress/Controls" unique_id=1398953290]
+[node name="Disabled" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Slider/Progress/Controls" unique_id=1398953290]
 custom_minimum_size = Vector2(0, 34)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -3011,37 +3020,37 @@ ValueKind = 2
 HighPosition = 0.18
 Disabled = true
 
-[node name="BareProgress" type="VBoxContainer" parent="Frame/Shell/Scroll/ContentFrame/Content/Slider" unique_id=563938221]
+[node name="BareProgress" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Slider" unique_id=563938221]
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="Captions" type="GridContainer" parent="Frame/Shell/Scroll/ContentFrame/Content/Slider/BareProgress" unique_id=1213661014]
+[node name="Captions" type="GridContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Slider/BareProgress" unique_id=1213661014]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/h_separation = 40
 columns = 2
 
-[node name="Enabled" type="Label" parent="Frame/Shell/Scroll/ContentFrame/Content/Slider/BareProgress/Captions" unique_id=835399378 groups=["gallery_muted"]]
+[node name="Enabled" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Slider/BareProgress/Captions" unique_id=835399378 groups=["gallery_muted"]]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Bare progress bar: no slider value row"
 script = ExtResource("2_cpfof")
 TextStyle = 9
 
-[node name="Disabled" type="Label" parent="Frame/Shell/Scroll/ContentFrame/Content/Slider/BareProgress/Captions" unique_id=380991979 groups=["gallery_muted"]]
+[node name="Disabled" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Slider/BareProgress/Captions" unique_id=380991979 groups=["gallery_muted"]]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Bare progress, disabled"
 script = ExtResource("2_cpfof")
 TextStyle = 9
 
-[node name="Controls" type="GridContainer" parent="Frame/Shell/Scroll/ContentFrame/Content/Slider/BareProgress" unique_id=363143323]
+[node name="Controls" type="GridContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Slider/BareProgress" unique_id=363143323]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/h_separation = 40
 columns = 2
 
-[node name="Enabled" type="Control" parent="Frame/Shell/Scroll/ContentFrame/Content/Slider/BareProgress/Controls" unique_id=601139858]
+[node name="Enabled" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Slider/BareProgress/Controls" unique_id=601139858]
 custom_minimum_size = Vector2(0, 18)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -3052,7 +3061,7 @@ ReadoutText = ""
 ValueKind = 2
 HighPosition = 0.78
 
-[node name="Disabled" type="Control" parent="Frame/Shell/Scroll/ContentFrame/Content/Slider/BareProgress/Controls" unique_id=1359565844]
+[node name="Disabled" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Slider/BareProgress/Controls" unique_id=1359565844]
 custom_minimum_size = Vector2(0, 18)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -3064,463 +3073,469 @@ ValueKind = 2
 HighPosition = 0.35
 Disabled = true
 
-[node name="Progress" type="VBoxContainer" parent="Frame/Shell/Scroll/ContentFrame/Content" unique_id=591411798]
+[node name="Progress" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content" unique_id=591411798]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="Heading" type="HBoxContainer" parent="Frame/Shell/Scroll/ContentFrame/Content/Progress" unique_id=890956046]
+[node name="Heading" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Progress" unique_id=890956046]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="Title" type="Label" parent="Frame/Shell/Scroll/ContentFrame/Content/Progress/Heading" unique_id=491581845]
+[node name="Title" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Progress/Heading" unique_id=491581845]
 layout_mode = 2
 size_flags_vertical = 8
 text = "Progress"
 script = ExtResource("2_cpfof")
 TextStyle = 12
 
-[node name="Description" type="Label" parent="Frame/Shell/Scroll/ContentFrame/Content/Progress/Heading" unique_id=517261648 groups=["gallery_muted"]]
+[node name="Description" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Progress/Heading" unique_id=517261648 groups=["gallery_muted"]]
 layout_mode = 2
+size_flags_horizontal = 3
 size_flags_vertical = 8
 text = "rings are their own component; linear progress is shown with sliders above"
+autowrap_mode = 3
 script = ExtResource("2_cpfof")
 TextStyle = 9
 
-[node name="Rings" type="HBoxContainer" parent="Frame/Shell/Scroll/ContentFrame/Content/Progress" unique_id=1953894168]
+[node name="Rings" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Progress" unique_id=1953894168]
 layout_mode = 2
 size_flags_horizontal = 0
 
-[node name="InProgress" type="Control" parent="Frame/Shell/Scroll/ContentFrame/Content/Progress/Rings" unique_id=996727548]
+[node name="InProgress" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Progress/Rings" unique_id=996727548]
 custom_minimum_size = Vector2(48, 48)
 layout_mode = 2
 mouse_filter = 2
 script = ExtResource("12_progress_ring")
 
-[node name="Complete" type="Control" parent="Frame/Shell/Scroll/ContentFrame/Content/Progress/Rings" unique_id=163210651]
+[node name="Complete" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Progress/Rings" unique_id=163210651]
 custom_minimum_size = Vector2(48, 48)
 layout_mode = 2
 mouse_filter = 2
 script = ExtResource("12_progress_ring")
 Progress = 1.0
 
-[node name="Cards" type="VBoxContainer" parent="Frame/Shell/Scroll/ContentFrame/Content" unique_id=134824687]
+[node name="Cards" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content" unique_id=134824687]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="Heading" type="HBoxContainer" parent="Frame/Shell/Scroll/ContentFrame/Content/Cards" unique_id=1477033918]
+[node name="Heading" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Cards" unique_id=1477033918]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="Title" type="Label" parent="Frame/Shell/Scroll/ContentFrame/Content/Cards/Heading" unique_id=1179140058]
+[node name="Title" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Cards/Heading" unique_id=1179140058]
 layout_mode = 2
 size_flags_vertical = 8
 text = "Cards"
 script = ExtResource("2_cpfof")
 TextStyle = 12
 
-[node name="Description" type="Label" parent="Frame/Shell/Scroll/ContentFrame/Content/Cards/Heading" unique_id=639195568 groups=["gallery_muted"]]
+[node name="Description" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Cards/Heading" unique_id=639195568 groups=["gallery_muted"]]
 layout_mode = 2
+size_flags_horizontal = 3
 size_flags_vertical = 8
 text = "one frame surface with variants; menu, dialog, pick, and stage card are owned elsewhere"
+autowrap_mode = 3
 script = ExtResource("2_cpfof")
 TextStyle = 9
 
-[node name="Variants" type="GridContainer" parent="Frame/Shell/Scroll/ContentFrame/Content/Cards" unique_id=1025049154]
+[node name="Variants" type="GridContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Cards" unique_id=1025049154]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/h_separation = 12
 theme_override_constants/v_separation = 12
 columns = 3
 
-[node name="Frame" type="PanelContainer" parent="Frame/Shell/Scroll/ContentFrame/Content/Cards/Variants" unique_id=688166943]
+[node name="Frame" type="PanelContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Cards/Variants" unique_id=688166943]
 custom_minimum_size = Vector2(148, 0)
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 1
-theme_override_styles/panel = SubResource("StyleBoxFlat_20ksx")
+theme_override_styles/panel = SubResource("StyleBoxFlat_u3c4y")
 script = ExtResource("13_card")
 
-[node name="Content" type="VBoxContainer" parent="Frame/Shell/Scroll/ContentFrame/Content/Cards/Variants/Frame" unique_id=2007108677]
+[node name="Content" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Cards/Variants/Frame" unique_id=2007108677]
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="Title" type="Label" parent="Frame/Shell/Scroll/ContentFrame/Content/Cards/Variants/Frame/Content" unique_id=683827206]
+[node name="Title" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Cards/Variants/Frame/Content" unique_id=683827206]
 layout_mode = 2
 text = "Frame"
 script = ExtResource("2_cpfof")
 TextStyle = 2
 
-[node name="Description" type="Label" parent="Frame/Shell/Scroll/ContentFrame/Content/Cards/Variants/Frame/Content" unique_id=1625177524 groups=["gallery_muted"]]
+[node name="Description" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Cards/Variants/Frame/Content" unique_id=1625177524 groups=["gallery_muted"]]
 layout_mode = 2
 text = "Default card"
 autowrap_mode = 3
 script = ExtResource("2_cpfof")
 TextStyle = 9
 
-[node name="Selected" type="PanelContainer" parent="Frame/Shell/Scroll/ContentFrame/Content/Cards/Variants" unique_id=2053544394]
+[node name="Selected" type="PanelContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Cards/Variants" unique_id=2053544394]
 custom_minimum_size = Vector2(148, 0)
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 1
-theme_override_styles/panel = SubResource("StyleBoxFlat_v6a8w")
+theme_override_styles/panel = SubResource("StyleBoxFlat_dd3wa")
 script = ExtResource("13_card")
 Kind = 1
 
-[node name="Content" type="VBoxContainer" parent="Frame/Shell/Scroll/ContentFrame/Content/Cards/Variants/Selected" unique_id=87623479]
+[node name="Content" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Cards/Variants/Selected" unique_id=87623479]
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="Title" type="Label" parent="Frame/Shell/Scroll/ContentFrame/Content/Cards/Variants/Selected/Content" unique_id=946386552]
+[node name="Title" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Cards/Variants/Selected/Content" unique_id=946386552]
 layout_mode = 2
 text = "Selected"
 script = ExtResource("2_cpfof")
 TextStyle = 2
 
-[node name="Description" type="Label" parent="Frame/Shell/Scroll/ContentFrame/Content/Cards/Variants/Selected/Content" unique_id=1186099961 groups=["gallery_muted"]]
+[node name="Description" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Cards/Variants/Selected/Content" unique_id=1186099961 groups=["gallery_muted"]]
 layout_mode = 2
 text = "Accent border and glow"
 autowrap_mode = 3
 script = ExtResource("2_cpfof")
 TextStyle = 9
 
-[node name="Locked" type="PanelContainer" parent="Frame/Shell/Scroll/ContentFrame/Content/Cards/Variants" unique_id=671754411]
+[node name="Locked" type="PanelContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Cards/Variants" unique_id=671754411]
 custom_minimum_size = Vector2(148, 0)
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 1
-theme_override_styles/panel = SubResource("StyleBoxFlat_ein0f")
+theme_override_styles/panel = SubResource("StyleBoxFlat_po0vj")
 script = ExtResource("13_card")
 Kind = 2
 
-[node name="Content" type="VBoxContainer" parent="Frame/Shell/Scroll/ContentFrame/Content/Cards/Variants/Locked" unique_id=1437414375]
+[node name="Content" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Cards/Variants/Locked" unique_id=1437414375]
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="Title" type="Label" parent="Frame/Shell/Scroll/ContentFrame/Content/Cards/Variants/Locked/Content" unique_id=1857971698]
+[node name="Title" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Cards/Variants/Locked/Content" unique_id=1857971698]
 layout_mode = 2
 text = "Locked"
 script = ExtResource("2_cpfof")
 TextStyle = 2
 
-[node name="Description" type="Label" parent="Frame/Shell/Scroll/ContentFrame/Content/Cards/Variants/Locked/Content" unique_id=1146409571 groups=["gallery_muted"]]
+[node name="Description" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Cards/Variants/Locked/Content" unique_id=1146409571 groups=["gallery_muted"]]
 layout_mode = 2
 text = "Dashed locked frame"
 autowrap_mode = 3
 script = ExtResource("2_cpfof")
 TextStyle = 9
 
-[node name="Warning" type="PanelContainer" parent="Frame/Shell/Scroll/ContentFrame/Content/Cards/Variants" unique_id=181371090]
+[node name="Warning" type="PanelContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Cards/Variants" unique_id=181371090]
 custom_minimum_size = Vector2(148, 0)
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 1
-theme_override_styles/panel = SubResource("StyleBoxFlat_jg6ph")
+theme_override_styles/panel = SubResource("StyleBoxFlat_ocqr4")
 script = ExtResource("13_card")
 Kind = 3
 
-[node name="Content" type="VBoxContainer" parent="Frame/Shell/Scroll/ContentFrame/Content/Cards/Variants/Warning" unique_id=1185286993]
+[node name="Content" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Cards/Variants/Warning" unique_id=1185286993]
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="Title" type="Label" parent="Frame/Shell/Scroll/ContentFrame/Content/Cards/Variants/Warning/Content" unique_id=1306772493]
+[node name="Title" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Cards/Variants/Warning/Content" unique_id=1306772493]
 layout_mode = 2
 text = "Warning"
 script = ExtResource("2_cpfof")
 TextStyle = 2
 
-[node name="Description" type="Label" parent="Frame/Shell/Scroll/ContentFrame/Content/Cards/Variants/Warning/Content" unique_id=898111114 groups=["gallery_muted"]]
+[node name="Description" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Cards/Variants/Warning/Content" unique_id=898111114 groups=["gallery_muted"]]
 layout_mode = 2
 text = "Danger border with words"
 autowrap_mode = 3
 script = ExtResource("2_cpfof")
 TextStyle = 9
 
-[node name="Hint" type="PanelContainer" parent="Frame/Shell/Scroll/ContentFrame/Content/Cards/Variants" unique_id=1350965931]
+[node name="Hint" type="PanelContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Cards/Variants" unique_id=1350965931]
 custom_minimum_size = Vector2(148, 0)
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 1
-theme_override_styles/panel = SubResource("StyleBoxFlat_cyoit")
+theme_override_styles/panel = SubResource("StyleBoxFlat_pxyvs")
 script = ExtResource("13_card")
 Kind = 4
 
-[node name="Content" type="VBoxContainer" parent="Frame/Shell/Scroll/ContentFrame/Content/Cards/Variants/Hint" unique_id=679693852]
+[node name="Content" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Cards/Variants/Hint" unique_id=679693852]
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="Title" type="Label" parent="Frame/Shell/Scroll/ContentFrame/Content/Cards/Variants/Hint/Content" unique_id=1597864382]
+[node name="Title" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Cards/Variants/Hint/Content" unique_id=1597864382]
 layout_mode = 2
 text = "Hint"
 script = ExtResource("2_cpfof")
 TextStyle = 2
 
-[node name="Description" type="Label" parent="Frame/Shell/Scroll/ContentFrame/Content/Cards/Variants/Hint/Content" unique_id=503496894 groups=["gallery_muted"]]
+[node name="Description" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Cards/Variants/Hint/Content" unique_id=503496894 groups=["gallery_muted"]]
 layout_mode = 2
 text = "Halo border for guidance"
 autowrap_mode = 3
 script = ExtResource("2_cpfof")
 TextStyle = 9
 
-[node name="Glow" type="PanelContainer" parent="Frame/Shell/Scroll/ContentFrame/Content/Cards/Variants" unique_id=964138095]
+[node name="Glow" type="PanelContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Cards/Variants" unique_id=964138095]
 custom_minimum_size = Vector2(148, 0)
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 1
-theme_override_styles/panel = SubResource("StyleBoxFlat_sxvnb")
+theme_override_styles/panel = SubResource("StyleBoxFlat_u1lks")
 script = ExtResource("13_card")
 Glow = true
 
-[node name="Content" type="VBoxContainer" parent="Frame/Shell/Scroll/ContentFrame/Content/Cards/Variants/Glow" unique_id=1637880739]
+[node name="Content" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Cards/Variants/Glow" unique_id=1637880739]
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="Title" type="Label" parent="Frame/Shell/Scroll/ContentFrame/Content/Cards/Variants/Glow/Content" unique_id=815237050]
+[node name="Title" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Cards/Variants/Glow/Content" unique_id=815237050]
 layout_mode = 2
 text = "Frame + glow"
 script = ExtResource("2_cpfof")
 TextStyle = 2
 
-[node name="Description" type="Label" parent="Frame/Shell/Scroll/ContentFrame/Content/Cards/Variants/Glow/Content" unique_id=99984382 groups=["gallery_muted"]]
+[node name="Description" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Cards/Variants/Glow/Content" unique_id=99984382 groups=["gallery_muted"]]
 layout_mode = 2
 text = "Frame with glow enabled"
 autowrap_mode = 3
 script = ExtResource("2_cpfof")
 TextStyle = 9
 
-[node name="DisabledGlow" type="PanelContainer" parent="Frame/Shell/Scroll/ContentFrame/Content/Cards/Variants" unique_id=1616480815]
+[node name="DisabledGlow" type="PanelContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Cards/Variants" unique_id=1616480815]
 modulate = Color(1, 1, 1, 0.5)
 custom_minimum_size = Vector2(148, 0)
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 1
-theme_override_styles/panel = SubResource("StyleBoxFlat_tyhro")
+theme_override_styles/panel = SubResource("StyleBoxFlat_idypk")
 script = ExtResource("13_card")
 Glow = true
 Disabled = true
 
-[node name="Content" type="VBoxContainer" parent="Frame/Shell/Scroll/ContentFrame/Content/Cards/Variants/DisabledGlow" unique_id=579424639]
+[node name="Content" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Cards/Variants/DisabledGlow" unique_id=579424639]
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="Title" type="Label" parent="Frame/Shell/Scroll/ContentFrame/Content/Cards/Variants/DisabledGlow/Content" unique_id=1984023909]
+[node name="Title" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Cards/Variants/DisabledGlow/Content" unique_id=1984023909]
 layout_mode = 2
 text = "Frame + glow disabled"
 script = ExtResource("2_cpfof")
 TextStyle = 2
 
-[node name="Description" type="Label" parent="Frame/Shell/Scroll/ContentFrame/Content/Cards/Variants/DisabledGlow/Content" unique_id=747679938 groups=["gallery_muted"]]
+[node name="Description" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Cards/Variants/DisabledGlow/Content" unique_id=747679938 groups=["gallery_muted"]]
 layout_mode = 2
 text = "Disabled display treatment"
 autowrap_mode = 3
 script = ExtResource("2_cpfof")
 TextStyle = 9
 
-[node name="Raised" type="PanelContainer" parent="Frame/Shell/Scroll/ContentFrame/Content/Cards/Variants" unique_id=1348188660]
+[node name="Raised" type="PanelContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Cards/Variants" unique_id=1348188660]
 custom_minimum_size = Vector2(148, 0)
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 1
-theme_override_styles/panel = SubResource("StyleBoxFlat_8tl26")
+theme_override_styles/panel = SubResource("StyleBoxFlat_mw0qh")
 script = ExtResource("13_card")
 Kind = 5
 
-[node name="Content" type="VBoxContainer" parent="Frame/Shell/Scroll/ContentFrame/Content/Cards/Variants/Raised" unique_id=408322302]
+[node name="Content" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Cards/Variants/Raised" unique_id=408322302]
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="Title" type="Label" parent="Frame/Shell/Scroll/ContentFrame/Content/Cards/Variants/Raised/Content" unique_id=1951333365]
+[node name="Title" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Cards/Variants/Raised/Content" unique_id=1951333365]
 layout_mode = 2
 text = "Raised"
 script = ExtResource("2_cpfof")
 TextStyle = 2
 
-[node name="Description" type="Label" parent="Frame/Shell/Scroll/ContentFrame/Content/Cards/Variants/Raised/Content" unique_id=2083273159 groups=["gallery_muted"]]
+[node name="Description" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Cards/Variants/Raised/Content" unique_id=2083273159 groups=["gallery_muted"]]
 layout_mode = 2
 text = "Raised surface variant"
 autowrap_mode = 3
 script = ExtResource("2_cpfof")
 TextStyle = 9
 
-[node name="Sizes" type="GridContainer" parent="Frame/Shell/Scroll/ContentFrame/Content/Cards" unique_id=877708168]
+[node name="Sizes" type="GridContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Cards" unique_id=877708168]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/h_separation = 12
 theme_override_constants/v_separation = 12
 columns = 3
 
-[node name="Roomy" type="PanelContainer" parent="Frame/Shell/Scroll/ContentFrame/Content/Cards/Sizes" unique_id=1548914825]
+[node name="Roomy" type="PanelContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Cards/Sizes" unique_id=1548914825]
 custom_minimum_size = Vector2(148, 0)
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 1
-theme_override_styles/panel = SubResource("StyleBoxFlat_6cwqy")
+theme_override_styles/panel = SubResource("StyleBoxFlat_spww0")
 script = ExtResource("13_card")
 SizeVariant = 3
 
-[node name="Content" type="VBoxContainer" parent="Frame/Shell/Scroll/ContentFrame/Content/Cards/Sizes/Roomy" unique_id=2096403772]
+[node name="Content" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Cards/Sizes/Roomy" unique_id=2096403772]
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="Title" type="Label" parent="Frame/Shell/Scroll/ContentFrame/Content/Cards/Sizes/Roomy/Content" unique_id=27793753]
+[node name="Title" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Cards/Sizes/Roomy/Content" unique_id=27793753]
 layout_mode = 2
 text = "Roomy"
 script = ExtResource("2_cpfof")
 TextStyle = 2
 
-[node name="Description" type="Label" parent="Frame/Shell/Scroll/ContentFrame/Content/Cards/Sizes/Roomy/Content" unique_id=1506053541 groups=["gallery_muted"]]
+[node name="Description" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Cards/Sizes/Roomy/Content" unique_id=1506053541 groups=["gallery_muted"]]
 layout_mode = 2
 text = "larger padding"
 autowrap_mode = 3
 script = ExtResource("2_cpfof")
 TextStyle = 9
 
-[node name="Default" type="PanelContainer" parent="Frame/Shell/Scroll/ContentFrame/Content/Cards/Sizes" unique_id=1879514964]
+[node name="Default" type="PanelContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Cards/Sizes" unique_id=1879514964]
 custom_minimum_size = Vector2(148, 0)
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 1
-theme_override_styles/panel = SubResource("StyleBoxFlat_qsej1")
+theme_override_styles/panel = SubResource("StyleBoxFlat_pqqtt")
 script = ExtResource("13_card")
 
-[node name="Content" type="VBoxContainer" parent="Frame/Shell/Scroll/ContentFrame/Content/Cards/Sizes/Default" unique_id=1169541268]
+[node name="Content" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Cards/Sizes/Default" unique_id=1169541268]
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="Title" type="Label" parent="Frame/Shell/Scroll/ContentFrame/Content/Cards/Sizes/Default/Content" unique_id=17527281]
+[node name="Title" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Cards/Sizes/Default/Content" unique_id=17527281]
 layout_mode = 2
 text = "Default"
 script = ExtResource("2_cpfof")
 TextStyle = 2
 
-[node name="Description" type="Label" parent="Frame/Shell/Scroll/ContentFrame/Content/Cards/Sizes/Default/Content" unique_id=419483033 groups=["gallery_muted"]]
+[node name="Description" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Cards/Sizes/Default/Content" unique_id=419483033 groups=["gallery_muted"]]
 layout_mode = 2
 text = "space-3 padding"
 autowrap_mode = 3
 script = ExtResource("2_cpfof")
 TextStyle = 9
 
-[node name="Snug" type="PanelContainer" parent="Frame/Shell/Scroll/ContentFrame/Content/Cards/Sizes" unique_id=2001943216]
+[node name="Snug" type="PanelContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Cards/Sizes" unique_id=2001943216]
 custom_minimum_size = Vector2(148, 0)
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 1
-theme_override_styles/panel = SubResource("StyleBoxFlat_kyxic")
+theme_override_styles/panel = SubResource("StyleBoxFlat_q8smt")
 script = ExtResource("13_card")
 SizeVariant = 1
 
-[node name="Content" type="VBoxContainer" parent="Frame/Shell/Scroll/ContentFrame/Content/Cards/Sizes/Snug" unique_id=1895416076]
+[node name="Content" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Cards/Sizes/Snug" unique_id=1895416076]
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="Title" type="Label" parent="Frame/Shell/Scroll/ContentFrame/Content/Cards/Sizes/Snug/Content" unique_id=815584327]
+[node name="Title" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Cards/Sizes/Snug/Content" unique_id=815584327]
 layout_mode = 2
 text = "Snug"
 script = ExtResource("2_cpfof")
 TextStyle = 2
 
-[node name="Description" type="Label" parent="Frame/Shell/Scroll/ContentFrame/Content/Cards/Sizes/Snug/Content" unique_id=646856415 groups=["gallery_muted"]]
+[node name="Description" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Cards/Sizes/Snug/Content" unique_id=646856415 groups=["gallery_muted"]]
 layout_mode = 2
 text = "smaller padding"
 autowrap_mode = 3
 script = ExtResource("2_cpfof")
 TextStyle = 9
 
-[node name="Tight" type="PanelContainer" parent="Frame/Shell/Scroll/ContentFrame/Content/Cards/Sizes" unique_id=90341417]
+[node name="Tight" type="PanelContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Cards/Sizes" unique_id=90341417]
 custom_minimum_size = Vector2(148, 0)
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 1
-theme_override_styles/panel = SubResource("StyleBoxFlat_y40k3")
+theme_override_styles/panel = SubResource("StyleBoxFlat_grw3c")
 script = ExtResource("13_card")
 SizeVariant = 2
 
-[node name="Content" type="VBoxContainer" parent="Frame/Shell/Scroll/ContentFrame/Content/Cards/Sizes/Tight" unique_id=1995478117]
+[node name="Content" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Cards/Sizes/Tight" unique_id=1995478117]
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="Title" type="Label" parent="Frame/Shell/Scroll/ContentFrame/Content/Cards/Sizes/Tight/Content" unique_id=567997445]
+[node name="Title" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Cards/Sizes/Tight/Content" unique_id=567997445]
 layout_mode = 2
 text = "Tight"
 script = ExtResource("2_cpfof")
 TextStyle = 2
 
-[node name="Description" type="Label" parent="Frame/Shell/Scroll/ContentFrame/Content/Cards/Sizes/Tight/Content" unique_id=1084328805 groups=["gallery_muted"]]
+[node name="Description" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Cards/Sizes/Tight/Content" unique_id=1084328805 groups=["gallery_muted"]]
 layout_mode = 2
 text = "compact padding"
 autowrap_mode = 3
 script = ExtResource("2_cpfof")
 TextStyle = 9
 
-[node name="Flush" type="PanelContainer" parent="Frame/Shell/Scroll/ContentFrame/Content/Cards/Sizes" unique_id=739571843]
+[node name="Flush" type="PanelContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Cards/Sizes" unique_id=739571843]
 custom_minimum_size = Vector2(148, 0)
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 1
-theme_override_styles/panel = SubResource("StyleBoxFlat_mprqe")
+theme_override_styles/panel = SubResource("StyleBoxFlat_62m5c")
 script = ExtResource("13_card")
 SizeVariant = 4
 
-[node name="Content" type="VBoxContainer" parent="Frame/Shell/Scroll/ContentFrame/Content/Cards/Sizes/Flush" unique_id=1422982098]
+[node name="Content" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Cards/Sizes/Flush" unique_id=1422982098]
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="Title" type="Label" parent="Frame/Shell/Scroll/ContentFrame/Content/Cards/Sizes/Flush/Content" unique_id=503733167]
+[node name="Title" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Cards/Sizes/Flush/Content" unique_id=503733167]
 layout_mode = 2
 text = "Flush"
 script = ExtResource("2_cpfof")
 TextStyle = 2
 
-[node name="Description" type="Label" parent="Frame/Shell/Scroll/ContentFrame/Content/Cards/Sizes/Flush/Content" unique_id=1620428389 groups=["gallery_muted"]]
+[node name="Description" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Cards/Sizes/Flush/Content" unique_id=1620428389 groups=["gallery_muted"]]
 layout_mode = 2
 text = "no padding"
 autowrap_mode = 3
 script = ExtResource("2_cpfof")
 TextStyle = 9
 
-[node name="Menu" type="VBoxContainer" parent="Frame/Shell/Scroll/ContentFrame/Content" unique_id=1147911407]
+[node name="Menu" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content" unique_id=1147911407]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="Heading" type="HBoxContainer" parent="Frame/Shell/Scroll/ContentFrame/Content/Menu" unique_id=459804516]
+[node name="Heading" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Menu" unique_id=459804516]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="Title" type="Label" parent="Frame/Shell/Scroll/ContentFrame/Content/Menu/Heading" unique_id=867378182]
+[node name="Title" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Menu/Heading" unique_id=867378182]
 layout_mode = 2
 size_flags_vertical = 8
 text = "Menu"
 script = ExtResource("2_cpfof")
 TextStyle = 12
 
-[node name="Description" type="Label" parent="Frame/Shell/Scroll/ContentFrame/Content/Menu/Heading" unique_id=1774284126 groups=["gallery_muted"]]
+[node name="Description" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Menu/Heading" unique_id=1774284126 groups=["gallery_muted"]]
 layout_mode = 2
+size_flags_horizontal = 3
 size_flags_vertical = 8
 text = "a generic overlay container; recommended menu items are shown below"
+autowrap_mode = 3
 script = ExtResource("2_cpfof")
 TextStyle = 9
 
-[node name="Examples" type="HBoxContainer" parent="Frame/Shell/Scroll/ContentFrame/Content/Menu" unique_id=241245732]
+[node name="Examples" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Menu" unique_id=241245732]
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="Standard" type="VBoxContainer" parent="Frame/Shell/Scroll/ContentFrame/Content/Menu/Examples" unique_id=66787727]
+[node name="Standard" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Menu/Examples" unique_id=66787727]
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="Caption" type="Label" parent="Frame/Shell/Scroll/ContentFrame/Content/Menu/Examples/Standard" unique_id=2088502260 groups=["gallery_muted"]]
+[node name="Caption" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Menu/Examples/Standard" unique_id=2088502260 groups=["gallery_muted"]]
 layout_mode = 2
 text = "Standard items"
 script = ExtResource("2_cpfof")
 TextStyle = 9
 
-[node name="Menu" type="Container" parent="Frame/Shell/Scroll/ContentFrame/Content/Menu/Examples/Standard" unique_id=1798105516]
+[node name="Menu" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Menu/Examples/Standard" unique_id=1798105516]
 clip_children = 2
 layout_mode = 2
 size_flags_horizontal = 0
 mouse_filter = 0
 script = ExtResource("14_menu")
 
-[node name="BrainSetup" type="Container" parent="Frame/Shell/Scroll/ContentFrame/Content/Menu/Examples/Standard/Menu" unique_id=1076717446]
+[node name="BrainSetup" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Menu/Examples/Standard/Menu" unique_id=1076717446]
 layout_mode = 2
 script = ExtResource("15_menu_item")
 LabelText = "Brain setup"
@@ -3528,41 +3543,41 @@ IconId = 18
 ShowSelectedIndicator = true
 Selected = true
 
-[node name="Settings" type="Container" parent="Frame/Shell/Scroll/ContentFrame/Content/Menu/Examples/Standard/Menu" unique_id=960603757]
+[node name="Settings" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Menu/Examples/Standard/Menu" unique_id=960603757]
 layout_mode = 2
 script = ExtResource("15_menu_item")
 LabelText = "Settings"
 IconId = 12
 
-[node name="Divider" type="Container" parent="Frame/Shell/Scroll/ContentFrame/Content/Menu/Examples/Standard/Menu" unique_id=1863937465]
+[node name="Divider" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Menu/Examples/Standard/Menu" unique_id=1863937465]
 layout_mode = 2
 mouse_filter = 2
 script = ExtResource("17_menu_divider")
 
-[node name="Delete" type="Container" parent="Frame/Shell/Scroll/ContentFrame/Content/Menu/Examples/Standard/Menu" unique_id=1975911002]
+[node name="Delete" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Menu/Examples/Standard/Menu" unique_id=1975911002]
 layout_mode = 2
 script = ExtResource("15_menu_item")
 LabelText = "Delete creation"
 IconId = 34
 Kind = 1
 
-[node name="UiMenuToggleItem" type="Container" parent="Frame/Shell/Scroll/ContentFrame/Content/Menu/Examples/Standard/Menu" unique_id=57799732]
+[node name="UiMenuToggleItem" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Menu/Examples/Standard/Menu" unique_id=57799732]
 layout_mode = 2
 mouse_filter = 0
 script = ExtResource("16_menu_toggle_item")
 On = true
 
-[node name="Compact" type="VBoxContainer" parent="Frame/Shell/Scroll/ContentFrame/Content/Menu/Examples" unique_id=1577018896]
+[node name="Compact" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Menu/Examples" unique_id=1577018896]
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="Caption" type="Label" parent="Frame/Shell/Scroll/ContentFrame/Content/Menu/Examples/Compact" unique_id=1883929491 groups=["gallery_muted"]]
+[node name="Caption" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Menu/Examples/Compact" unique_id=1883929491 groups=["gallery_muted"]]
 layout_mode = 2
 text = "Compact items"
 script = ExtResource("2_cpfof")
 TextStyle = 9
 
-[node name="Menu" type="Container" parent="Frame/Shell/Scroll/ContentFrame/Content/Menu/Examples/Compact" unique_id=454245445]
+[node name="Menu" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Menu/Examples/Compact" unique_id=454245445]
 clip_children = 2
 layout_mode = 2
 size_flags_horizontal = 0
@@ -3570,14 +3585,14 @@ mouse_filter = 0
 script = ExtResource("14_menu")
 Compact = true
 
-[node name="BrainSetup" type="Container" parent="Frame/Shell/Scroll/ContentFrame/Content/Menu/Examples/Compact/Menu" unique_id=1626660657]
+[node name="BrainSetup" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Menu/Examples/Compact/Menu" unique_id=1626660657]
 layout_mode = 2
 script = ExtResource("15_menu_item")
 LabelText = "Brain setup"
 IconId = 18
 SizeVariant = 1
 
-[node name="Settings" type="Container" parent="Frame/Shell/Scroll/ContentFrame/Content/Menu/Examples/Compact/Menu" unique_id=1518402301]
+[node name="Settings" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Menu/Examples/Compact/Menu" unique_id=1518402301]
 layout_mode = 2
 script = ExtResource("15_menu_item")
 LabelText = "Settings"
@@ -3586,13 +3601,13 @@ ShowSelectedIndicator = true
 SizeVariant = 1
 Selected = true
 
-[node name="Divider" type="Container" parent="Frame/Shell/Scroll/ContentFrame/Content/Menu/Examples/Compact/Menu" unique_id=1263308930]
+[node name="Divider" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Menu/Examples/Compact/Menu" unique_id=1263308930]
 layout_mode = 2
 mouse_filter = 2
 script = ExtResource("17_menu_divider")
 SizeVariant = 1
 
-[node name="Delete" type="Container" parent="Frame/Shell/Scroll/ContentFrame/Content/Menu/Examples/Compact/Menu" unique_id=1550235732]
+[node name="Delete" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Menu/Examples/Compact/Menu" unique_id=1550235732]
 layout_mode = 2
 script = ExtResource("15_menu_item")
 LabelText = "Delete creation"
@@ -3600,50 +3615,52 @@ IconId = 34
 Kind = 1
 SizeVariant = 1
 
-[node name="UiMenuToggleItem" type="Container" parent="Frame/Shell/Scroll/ContentFrame/Content/Menu/Examples/Compact/Menu" unique_id=1850673069]
+[node name="UiMenuToggleItem" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Menu/Examples/Compact/Menu" unique_id=1850673069]
 layout_mode = 2
 mouse_filter = 0
 script = ExtResource("16_menu_toggle_item")
 On = true
 SizeVariant = 1
 
-[node name="MenuItems" type="VBoxContainer" parent="Frame/Shell/Scroll/ContentFrame/Content" unique_id=649713769]
+[node name="MenuItems" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content" unique_id=649713769]
 layout_mode = 2
 
-[node name="Heading" type="HBoxContainer" parent="Frame/Shell/Scroll/ContentFrame/Content/MenuItems" unique_id=1564803185]
+[node name="Heading" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/MenuItems" unique_id=1564803185]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="Title" type="Label" parent="Frame/Shell/Scroll/ContentFrame/Content/MenuItems/Heading" unique_id=1252950468]
+[node name="Title" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/MenuItems/Heading" unique_id=1252950468]
 layout_mode = 2
 size_flags_vertical = 8
 text = "Menu items"
 script = ExtResource("2_cpfof")
 TextStyle = 12
 
-[node name="Description" type="Label" parent="Frame/Shell/Scroll/ContentFrame/Content/MenuItems/Heading" unique_id=372896398 groups=["gallery_muted"]]
+[node name="Description" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/MenuItems/Heading" unique_id=372896398 groups=["gallery_muted"]]
 layout_mode = 2
+size_flags_horizontal = 3
 size_flags_vertical = 8
 text = "layouts specifically designed to be used in a menu"
+autowrap_mode = 3
 script = ExtResource("2_cpfof")
 TextStyle = 9
 
-[node name="HBoxContainer" type="HBoxContainer" parent="Frame/Shell/Scroll/ContentFrame/Content/MenuItems" unique_id=148842345]
+[node name="HBoxContainer" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/MenuItems" unique_id=148842345]
 layout_mode = 2
 
-[node name="Items" type="VBoxContainer" parent="Frame/Shell/Scroll/ContentFrame/Content/MenuItems/HBoxContainer" unique_id=1166930162]
+[node name="Items" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/MenuItems/HBoxContainer" unique_id=1166930162]
 custom_minimum_size = Vector2(200, 0)
 layout_mode = 2
 size_flags_horizontal = 0
 
-[node name="Title" type="Label" parent="Frame/Shell/Scroll/ContentFrame/Content/MenuItems/HBoxContainer/Items" unique_id=856443674]
+[node name="Title" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/MenuItems/HBoxContainer/Items" unique_id=856443674]
 layout_mode = 2
 size_flags_vertical = 8
 text = "default"
 script = ExtResource("2_cpfof")
 TextStyle = 12
 
-[node name="UiMenuItemSelected" type="Container" parent="Frame/Shell/Scroll/ContentFrame/Content/MenuItems/HBoxContainer/Items" unique_id=246002791]
+[node name="UiMenuItemSelected" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/MenuItems/HBoxContainer/Items" unique_id=246002791]
 layout_mode = 2
 script = ExtResource("15_menu_item")
 LabelText = "Selcted"
@@ -3652,7 +3669,7 @@ IconId = 18
 ShowSelectedIndicator = true
 Selected = true
 
-[node name="UiMenuItemCompactDanger" type="Container" parent="Frame/Shell/Scroll/ContentFrame/Content/MenuItems/HBoxContainer/Items" unique_id=1384839174]
+[node name="UiMenuItemCompactDanger" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/MenuItems/HBoxContainer/Items" unique_id=1384839174]
 layout_mode = 2
 script = ExtResource("15_menu_item")
 LabelText = "Danger"
@@ -3662,12 +3679,12 @@ Kind = 1
 ShowSelectedIndicator = true
 SizeVariant = 1
 
-[node name="UiMenuItemDivider" type="Container" parent="Frame/Shell/Scroll/ContentFrame/Content/MenuItems/HBoxContainer/Items" unique_id=1656988177]
+[node name="UiMenuItemDivider" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/MenuItems/HBoxContainer/Items" unique_id=1656988177]
 layout_mode = 2
 mouse_filter = 2
 script = ExtResource("17_menu_divider")
 
-[node name="UiMenuToggleItem" type="Container" parent="Frame/Shell/Scroll/ContentFrame/Content/MenuItems/HBoxContainer/Items" unique_id=1716778313]
+[node name="UiMenuToggleItem" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/MenuItems/HBoxContainer/Items" unique_id=1716778313]
 layout_mode = 2
 mouse_filter = 0
 script = ExtResource("16_menu_toggle_item")
@@ -3675,18 +3692,18 @@ LabelText = "Toggle"
 Subtext = "Details"
 On = true
 
-[node name="CompactItems" type="VBoxContainer" parent="Frame/Shell/Scroll/ContentFrame/Content/MenuItems/HBoxContainer" unique_id=1130573016]
+[node name="CompactItems" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/MenuItems/HBoxContainer" unique_id=1130573016]
 custom_minimum_size = Vector2(200, 0)
 layout_mode = 2
 
-[node name="Title" type="Label" parent="Frame/Shell/Scroll/ContentFrame/Content/MenuItems/HBoxContainer/CompactItems" unique_id=1420062970]
+[node name="Title" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/MenuItems/HBoxContainer/CompactItems" unique_id=1420062970]
 layout_mode = 2
 size_flags_vertical = 8
 text = "Compact"
 script = ExtResource("2_cpfof")
 TextStyle = 12
 
-[node name="UiMenuItemSelected" type="Container" parent="Frame/Shell/Scroll/ContentFrame/Content/MenuItems/HBoxContainer/CompactItems" unique_id=1898114187]
+[node name="UiMenuItemSelected" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/MenuItems/HBoxContainer/CompactItems" unique_id=1898114187]
 layout_mode = 2
 script = ExtResource("15_menu_item")
 LabelText = "Selcted"
@@ -3696,7 +3713,7 @@ ShowSelectedIndicator = true
 SizeVariant = 1
 Selected = true
 
-[node name="UiMenuItemCompactDanger" type="Container" parent="Frame/Shell/Scroll/ContentFrame/Content/MenuItems/HBoxContainer/CompactItems" unique_id=850027856]
+[node name="UiMenuItemCompactDanger" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/MenuItems/HBoxContainer/CompactItems" unique_id=850027856]
 layout_mode = 2
 script = ExtResource("15_menu_item")
 LabelText = "Danger"
@@ -3706,13 +3723,13 @@ Kind = 1
 ShowSelectedIndicator = true
 SizeVariant = 1
 
-[node name="UiMenuItemDivider" type="Container" parent="Frame/Shell/Scroll/ContentFrame/Content/MenuItems/HBoxContainer/CompactItems" unique_id=2092968357]
+[node name="UiMenuItemDivider" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/MenuItems/HBoxContainer/CompactItems" unique_id=2092968357]
 layout_mode = 2
 mouse_filter = 2
 script = ExtResource("17_menu_divider")
 SizeVariant = 1
 
-[node name="UiMenuToggleItem" type="Container" parent="Frame/Shell/Scroll/ContentFrame/Content/MenuItems/HBoxContainer/CompactItems" unique_id=1448441432]
+[node name="UiMenuToggleItem" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/MenuItems/HBoxContainer/CompactItems" unique_id=1448441432]
 layout_mode = 2
 mouse_filter = 0
 script = ExtResource("16_menu_toggle_item")
@@ -3721,123 +3738,127 @@ Subtext = "Details"
 On = true
 SizeVariant = 1
 
-[node name="Picker" type="VBoxContainer" parent="Frame/Shell/Scroll/ContentFrame/Content" unique_id=1479671885]
+[node name="Picker" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content" unique_id=1479671885]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="Heading" type="HBoxContainer" parent="Frame/Shell/Scroll/ContentFrame/Content/Picker" unique_id=474604823]
+[node name="Heading" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Picker" unique_id=474604823]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="Title" type="Label" parent="Frame/Shell/Scroll/ContentFrame/Content/Picker/Heading" unique_id=1093509366]
+[node name="Title" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Picker/Heading" unique_id=1093509366]
 layout_mode = 2
 size_flags_vertical = 8
 text = "Picker"
 script = ExtResource("2_cpfof")
 TextStyle = 12
 
-[node name="Description" type="Label" parent="Frame/Shell/Scroll/ContentFrame/Content/Picker/Heading" unique_id=548029152 groups=["gallery_muted"]]
+[node name="Description" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Picker/Heading" unique_id=548029152 groups=["gallery_muted"]]
 layout_mode = 2
+size_flags_horizontal = 3
 size_flags_vertical = 8
 text = "collapsed, expanded, locked, and disabled"
+autowrap_mode = 3
 script = ExtResource("2_cpfof")
 TextStyle = 9
 
-[node name="Examples" type="HFlowContainer" parent="Frame/Shell/Scroll/ContentFrame/Content/Picker" unique_id=62632349]
+[node name="Examples" type="HFlowContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Picker" unique_id=62632349]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/h_separation = 12
 theme_override_constants/v_separation = 12
 
-[node name="Interactive" type="VBoxContainer" parent="Frame/Shell/Scroll/ContentFrame/Content/Picker/Examples" unique_id=298393796]
+[node name="Interactive" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Picker/Examples" unique_id=298393796]
 layout_mode = 2
 size_flags_horizontal = 0
 theme_override_constants/separation = 4
 
-[node name="Caption" type="Label" parent="Frame/Shell/Scroll/ContentFrame/Content/Picker/Examples/Interactive" unique_id=551640138 groups=["gallery_muted"]]
+[node name="Caption" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Picker/Examples/Interactive" unique_id=551640138 groups=["gallery_muted"]]
 layout_mode = 2
 text = "Interactive"
 script = ExtResource("2_cpfof")
 TextStyle = 9
 
-[node name="InteractivePicker" type="PanelContainer" parent="Frame/Shell/Scroll/ContentFrame/Content/Picker/Examples/Interactive" unique_id=1923261699]
+[node name="InteractivePicker" type="PanelContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Picker/Examples/Interactive" unique_id=1923261699]
 layout_mode = 2
 size_flags_horizontal = 0
 mouse_filter = 1
-theme_override_styles/panel = SubResource("StyleBoxEmpty_70cks")
+theme_override_styles/panel = SubResource("StyleBoxEmpty_h0hlv")
 script = ExtResource("18_picker")
 LabelText = "Interactive"
 
-[node name="Locked" type="VBoxContainer" parent="Frame/Shell/Scroll/ContentFrame/Content/Picker/Examples" unique_id=1109829917]
+[node name="Locked" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Picker/Examples" unique_id=1109829917]
 layout_mode = 2
 size_flags_horizontal = 0
 theme_override_constants/separation = 4
 
-[node name="Caption" type="Label" parent="Frame/Shell/Scroll/ContentFrame/Content/Picker/Examples/Locked" unique_id=1043361572 groups=["gallery_muted"]]
+[node name="Caption" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Picker/Examples/Locked" unique_id=1043361572 groups=["gallery_muted"]]
 layout_mode = 2
 text = "Locked"
 script = ExtResource("2_cpfof")
 TextStyle = 9
 
-[node name="LockedPicker" type="PanelContainer" parent="Frame/Shell/Scroll/ContentFrame/Content/Picker/Examples/Locked" unique_id=888456967]
+[node name="LockedPicker" type="PanelContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Picker/Examples/Locked" unique_id=888456967]
 layout_mode = 2
 size_flags_horizontal = 0
 mouse_filter = 1
-theme_override_styles/panel = SubResource("StyleBoxEmpty_66il2")
+theme_override_styles/panel = SubResource("StyleBoxEmpty_5rqwo")
 script = ExtResource("18_picker")
 LabelText = "Locked"
 State = 2
 BelowText = "Locked reason"
 
-[node name="Disabled" type="VBoxContainer" parent="Frame/Shell/Scroll/ContentFrame/Content/Picker/Examples" unique_id=1717442340]
+[node name="Disabled" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Picker/Examples" unique_id=1717442340]
 layout_mode = 2
 size_flags_horizontal = 0
 theme_override_constants/separation = 4
 
-[node name="Caption" type="Label" parent="Frame/Shell/Scroll/ContentFrame/Content/Picker/Examples/Disabled" unique_id=1805290641 groups=["gallery_muted"]]
+[node name="Caption" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Picker/Examples/Disabled" unique_id=1805290641 groups=["gallery_muted"]]
 layout_mode = 2
 text = "Disabled"
 script = ExtResource("2_cpfof")
 TextStyle = 9
 
-[node name="DisabledPicker" type="PanelContainer" parent="Frame/Shell/Scroll/ContentFrame/Content/Picker/Examples/Disabled" unique_id=1742418974]
+[node name="DisabledPicker" type="PanelContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Picker/Examples/Disabled" unique_id=1742418974]
 modulate = Color(1, 1, 1, 0.5)
 layout_mode = 2
 size_flags_horizontal = 0
 mouse_filter = 1
-theme_override_styles/panel = SubResource("StyleBoxEmpty_mn47c")
+theme_override_styles/panel = SubResource("StyleBoxEmpty_g31rv")
 script = ExtResource("18_picker")
 LabelText = "Disabled"
 Disabled = true
 
-[node name="PartRows" type="VBoxContainer" parent="Frame/Shell/Scroll/ContentFrame/Content" unique_id=1472066312]
+[node name="PartRows" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content" unique_id=1472066312]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="Heading" type="HBoxContainer" parent="Frame/Shell/Scroll/ContentFrame/Content/PartRows" unique_id=1445299585]
+[node name="Heading" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/PartRows" unique_id=1445299585]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="Title" type="Label" parent="Frame/Shell/Scroll/ContentFrame/Content/PartRows/Heading" unique_id=180101189]
+[node name="Title" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/PartRows/Heading" unique_id=180101189]
 layout_mode = 2
 size_flags_vertical = 8
 text = "Part Row"
 script = ExtResource("2_cpfof")
 TextStyle = 12
 
-[node name="Description" type="Label" parent="Frame/Shell/Scroll/ContentFrame/Content/PartRows/Heading" unique_id=370698987 groups=["gallery_muted"]]
+[node name="Description" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/PartRows/Heading" unique_id=370698987 groups=["gallery_muted"]]
 layout_mode = 2
+size_flags_horizontal = 3
 size_flags_vertical = 8
 text = "a build part in the tray: glyph, name, count, and four states"
+autowrap_mode = 3
 script = ExtResource("2_cpfof")
 TextStyle = 9
 
-[node name="Rows" type="VBoxContainer" parent="Frame/Shell/Scroll/ContentFrame/Content/PartRows" unique_id=854829792]
+[node name="Rows" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/PartRows" unique_id=854829792]
 custom_minimum_size = Vector2(176, 0)
 layout_mode = 2
 size_flags_horizontal = 0
 
-[node name="Rest" type="Control" parent="Frame/Shell/Scroll/ContentFrame/Content/PartRows/Rows" unique_id=2081701680]
+[node name="Rest" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/PartRows/Rows" unique_id=2081701680]
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 1
@@ -3846,7 +3867,7 @@ IconId = 49
 Label = "Servo"
 ValueText = "3 left"
 
-[node name="Selected" type="Control" parent="Frame/Shell/Scroll/ContentFrame/Content/PartRows/Rows" unique_id=82803774]
+[node name="Selected" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/PartRows/Rows" unique_id=82803774]
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 1
@@ -3856,7 +3877,7 @@ Label = "Servo"
 ValueText = "3 left"
 State = 1
 
-[node name="Locked" type="Control" parent="Frame/Shell/Scroll/ContentFrame/Content/PartRows/Rows" unique_id=656227028]
+[node name="Locked" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/PartRows/Rows" unique_id=656227028]
 self_modulate = Color(1, 1, 1, 0.55)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -3867,7 +3888,7 @@ Label = "Stepper"
 ValueText = "Locked"
 State = 2
 
-[node name="NoneLeft" type="Control" parent="Frame/Shell/Scroll/ContentFrame/Content/PartRows/Rows" unique_id=639492777]
+[node name="NoneLeft" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/PartRows/Rows" unique_id=639492777]
 self_modulate = Color(1, 1, 1, 0.55)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -3878,41 +3899,43 @@ Label = "Wheel"
 ValueText = "0 left"
 State = 3
 
-[node name="PanelRows" type="VBoxContainer" parent="Frame/Shell/Scroll/ContentFrame/Content" unique_id=-1126537795]
+[node name="PanelRows" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content" unique_id=-1126537795]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="Heading" type="HBoxContainer" parent="Frame/Shell/Scroll/ContentFrame/Content/PanelRows" unique_id=-1126537794]
+[node name="Heading" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/PanelRows" unique_id=-1126537794]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="Title" type="Label" parent="Frame/Shell/Scroll/ContentFrame/Content/PanelRows/Heading" unique_id=-1126537793]
+[node name="Title" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/PanelRows/Heading" unique_id=-1126537793]
 layout_mode = 2
-size_flags_vertical = 8
+size_flags_vertical = 0
 text = "Panel rows"
 script = ExtResource("2_cpfof")
 TextStyle = 12
 
-[node name="Description" type="Label" parent="Frame/Shell/Scroll/ContentFrame/Content/PanelRows/Heading" unique_id=-1126537792 groups=["gallery_muted"]]
+[node name="Description" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/PanelRows/Heading" unique_id=-1126537792 groups=["gallery_muted"]]
 layout_mode = 2
+size_flags_horizontal = 3
 size_flags_vertical = 8
 text = "a shared row stack: name field, slider, values, picker, and note, each row padless with one shared gap between them"
+autowrap_mode = 3
 script = ExtResource("2_cpfof")
 TextStyle = 9
 
-[node name="Panel" type="PanelContainer" parent="Frame/Shell/Scroll/ContentFrame/Content/PanelRows" unique_id=-1126537791]
+[node name="Panel" type="PanelContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/PanelRows" unique_id=-1126537791]
 custom_minimum_size = Vector2(176, 0)
 layout_mode = 2
 size_flags_horizontal = 0
 mouse_filter = 1
-theme_override_styles/panel = SubResource("StyleBoxFlat_djlmq")
+theme_override_styles/panel = SubResource("StyleBoxFlat_cmnrj")
 script = ExtResource("13_card")
 
-[node name="Rows" type="VBoxContainer" parent="Frame/Shell/Scroll/ContentFrame/Content/PanelRows/Panel" unique_id=-1126537790]
+[node name="Rows" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/PanelRows/Panel" unique_id=-1126537790]
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="Name" type="VBoxContainer" parent="Frame/Shell/Scroll/ContentFrame/Content/PanelRows/Panel/Rows" unique_id=-1126537789]
+[node name="Name" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/PanelRows/Panel/Rows" unique_id=-1126537789]
 layout_mode = 2
 theme_override_constants/separation = 4
 script = ExtResource("22_name_field")
@@ -3920,7 +3943,7 @@ TextValue = "Front knee"
 LabelText = "Name"
 InputSize = 1
 
-[node name="MaxStrength" type="Control" parent="Frame/Shell/Scroll/ContentFrame/Content/PanelRows/Panel/Rows" unique_id=-1126537788]
+[node name="MaxStrength" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/PanelRows/Panel/Rows" unique_id=-1126537788]
 custom_minimum_size = Vector2(0, 34)
 layout_mode = 2
 mouse_filter = 1
@@ -3929,7 +3952,7 @@ LabelText = "Max strength"
 ReadoutText = "40 N·m"
 HighPosition = 0.62
 
-[node name="Weighs" type="HBoxContainer" parent="Frame/Shell/Scroll/ContentFrame/Content/PanelRows/Panel/Rows" unique_id=-1126537787]
+[node name="Weighs" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/PanelRows/Panel/Rows" unique_id=-1126537787]
 layout_mode = 2
 mouse_filter = 2
 theme_override_constants/separation = 8
@@ -3937,13 +3960,13 @@ script = ExtResource("20_value_row")
 LabelText = "Weighs"
 ValueText = "1.2 kg"
 
-[node name="FixedPartPicker" type="PanelContainer" parent="Frame/Shell/Scroll/ContentFrame/Content/PanelRows/Panel/Rows" unique_id=-1126537786]
+[node name="FixedPartPicker" type="PanelContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/PanelRows/Panel/Rows" unique_id=-1126537786]
 layout_mode = 2
 mouse_filter = 1
-theme_override_styles/panel = SubResource("StyleBoxEmpty_gceaq")
+theme_override_styles/panel = SubResource("StyleBoxEmpty_qcf60")
 script = ExtResource("18_picker")
 
-[node name="Power" type="HBoxContainer" parent="Frame/Shell/Scroll/ContentFrame/Content/PanelRows/Panel/Rows" unique_id=-1126537785]
+[node name="Power" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/PanelRows/Panel/Rows" unique_id=-1126537785]
 layout_mode = 2
 mouse_filter = 2
 theme_override_constants/separation = 8
@@ -3952,64 +3975,69 @@ LabelText = "Power"
 ValueText = "Draws up to 0.6"
 IconId = 2
 
-[node name="Note" type="VBoxContainer" parent="Frame/Shell/Scroll/ContentFrame/Content/PanelRows/Panel/Rows" unique_id=-1126537784]
+[node name="Note" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/PanelRows/Panel/Rows" unique_id=-1126537784]
 layout_mode = 2
 mouse_filter = 2
 script = ExtResource("21_note_row")
 Text = "Sits on an empty joint. Put a motor on top to drive it."
 
-[node name="StageCard" type="VBoxContainer" parent="Frame/Shell/Scroll/ContentFrame/Content" unique_id=-2010556231]
+[node name="StageCard" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content" unique_id=-2010556231]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="Heading" type="HBoxContainer" parent="Frame/Shell/Scroll/ContentFrame/Content/StageCard" unique_id=-2010556230]
+[node name="Heading" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/StageCard" unique_id=-2010556230]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="Title" type="Label" parent="Frame/Shell/Scroll/ContentFrame/Content/StageCard/Heading" unique_id=-2010556229]
+[node name="Title" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/StageCard/Heading" unique_id=-2010556229]
 layout_mode = 2
 size_flags_vertical = 8
 text = "Stage card"
 script = ExtResource("2_cpfof")
 TextStyle = 12
 
-[node name="Description" type="Label" parent="Frame/Shell/Scroll/ContentFrame/Content/StageCard/Heading" unique_id=-2010556228 groups=["gallery_muted"]]
+[node name="Description" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/StageCard/Heading" unique_id=-2010556228 groups=["gallery_muted"]]
 layout_mode = 2
+size_flags_horizontal = 3
 size_flags_vertical = 8
 text = "one signal-flow stage: number, stage name, optional note, then stage content"
+autowrap_mode = 3
 script = ExtResource("2_cpfof")
 TextStyle = 9
 
-[node name="Examples" type="HFlowContainer" parent="Frame/Shell/Scroll/ContentFrame/Content/StageCard" unique_id=-2010556227]
+[node name="Examples" type="HFlowContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/StageCard" unique_id=-2010556227]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/h_separation = 12
 theme_override_constants/v_separation = 12
 
-[node name="Senses" parent="Frame/Shell/Scroll/ContentFrame/Content/StageCard/Examples" unique_id=-2010556226 instance=ExtResource("23_stage_card")]
+[node name="Senses" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/StageCard/Examples" unique_id=-2010556226 instance=ExtResource("23_stage_card")]
 layout_mode = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_8frep")
+theme_override_styles/panel = SubResource("StyleBoxFlat_gy5hh")
 Title = "Senses"
 Note = "Left foot"
+Collapsed = true
 
-[node name="Thinks" parent="Frame/Shell/Scroll/ContentFrame/Content/StageCard/Examples" unique_id=-2010556225 instance=ExtResource("23_stage_card")]
+[node name="Thinks" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/StageCard/Examples" unique_id=-2010556225 instance=ExtResource("23_stage_card")]
 layout_mode = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_xigj4")
+theme_override_styles/panel = SubResource("StyleBoxFlat_132er")
 NumberText = "2"
 Title = "Thinks"
 Note = "Brain"
 Selected = true
 Kind = 1
 
-[node name="Moves" parent="Frame/Shell/Scroll/ContentFrame/Content/StageCard/Examples" unique_id=-2010556224 instance=ExtResource("23_stage_card")]
+[node name="Moves" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/StageCard/Examples" unique_id=-2010556224 instance=ExtResource("23_stage_card")]
 layout_mode = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_0kx2t")
+theme_override_styles/panel = SubResource("StyleBoxFlat_ejsal")
 NumberText = "3"
 Title = "Moves"
 Note = "Servo"
 Collapsed = true
 
-[node name="RuntimeSections" type="VBoxContainer" parent="Frame/Shell/Scroll/ContentFrame/Content" unique_id=1093177179]
+[node name="RuntimeSections" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content" unique_id=1093177179]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_constants/separation = 8
+
+[editable path="UiFrame"]
