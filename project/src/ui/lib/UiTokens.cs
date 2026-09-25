@@ -128,7 +128,7 @@ public sealed class UiTokens
             case UiTokenType.Paper:
                 return Paper;
             case UiTokenType.Light:
-                return  Neon.WithEffects(false);
+                return Neon.WithEffects(false);
             default:
                 throw new ArgumentOutOfRangeException(nameof(type), type, null);
         }

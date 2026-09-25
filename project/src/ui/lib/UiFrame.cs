@@ -45,7 +45,8 @@ public partial class UiFrame : PanelContainer
 
     private void ApplyTokens()
     {
-        if (!_ready) return;
+        if (!_ready)
+            return;
 
         _card?.Tokens = Tokens;
         _background?.Color = Tokens.Background;
