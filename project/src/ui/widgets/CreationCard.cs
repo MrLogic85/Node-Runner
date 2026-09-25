@@ -331,7 +331,7 @@ public partial class CreationCard : Control
         public override void _Draw()
         {
             DrawRect(new Rect2(Vector2.Zero, Size), Tokens.Background);
-            DrawLine(new Vector2(0, Size.Y - 1), new Vector2(Size.X, Size.Y - 1), Tokens.Edge, Tokens.StrokeHair, antialiased: true);
+            DrawLine(new Vector2(0, Size.Y - 1), new Vector2(Size.X, Size.Y - 1), Tokens.Edge, Tokens.StrokeHair, antialiased: false);
             if (Creature is null || Creature.Nodes.Count == 0)
             {
                 DrawString(ThemeDB.FallbackFont, new Vector2(16, Size.Y * 0.52f), Summary, HorizontalAlignment.Left, Size.X - 32, 12, Tokens.Muted);
@@ -356,14 +356,14 @@ public partial class CreationCard : Control
 
             foreach (var beam in Creature.Beams)
             {
-                DrawLine(Map(points[beam.NodeA]), Map(points[beam.NodeB]), Tokens.Ink, 3, antialiased: true);
+                DrawLine(Map(points[beam.NodeA]), Map(points[beam.NodeB]), Tokens.Ink, 3, antialiased: false);
             }
 
             for (var i = 0; i < points.Length; i++)
             {
                 var mapped = Map(points[i]);
                 DrawCircle(mapped, 5.5f, Tokens.PanelRaised);
-                DrawArc(mapped, 5.5f, 0, Mathf.Tau, 24, Tokens.Accent, 2, antialiased: true);
+                DrawArc(mapped, 5.5f, 0, Mathf.Tau, 24, Tokens.Accent, 2, antialiased: false);
             }
 
             foreach (var core in Creature.Cores)

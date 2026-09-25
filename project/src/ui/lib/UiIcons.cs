@@ -9,14 +9,9 @@ public enum UiIconId
     None = -1,
     Back, Beam, Bolt, Build, Chart, Check, ChevronDown, ChevronRight, Copy, Core, Edit, Flag, Gear,
     Height, Joint, Lock, Map, Menu, Model, More, Move, Mute, Pause, Phone, Play, Plus, Restart, Rotate,
-    Scale, Select, Shadow, Sound, Speed, Stop, Trash, Trophy, Unlock, Warn, Close, Eye,
-}
-
-/// <summary>Canonical 20-grid glyphs for build parts.</summary>
-public enum UiPartIconId
-{
-    Battery, Beam, Brake, Core, Fuel, Generator, LineOfSight, Node, Piston, Servo, Spring, Stepper,
-    Velocity, Wheel, Wing,
+    Scale, Select, Shadow, Sound, Speed, Stop, Trash, Trophy, Unlock, Warn, Close, Eye, PartBattery,
+    PartBeam, PartBrake, PartCore, PartFuel, PartGenerator, PartLineOfSight, PartNode, PartPiston,
+    PartServo, PartSpring, PartStepper, PartVelocity, PartWheel, PartWing
 }
 
 /// <summary>The only permitted display sizes for canonical icons.</summary>
@@ -38,9 +33,8 @@ public static class UiIcons
     private static readonly Dictionary<(string Path, int PixelSize), Texture2D> _textures = [];
     private static float _cachedUiScale = float.NaN;
 
-    public static IReadOnlyList<UiIconId> AllUiIds { get; } = Enum.GetValues<UiIconId>()
+    public static IReadOnlyList<UiIconId> AllIds { get; } = Enum.GetValues<UiIconId>()
         .Where(icon => icon != UiIconId.None).ToArray();
-    public static IReadOnlyList<UiPartIconId> AllPartIds { get; } = Enum.GetValues<UiPartIconId>();
 
     public static int Pixels(UiIconSize size) => size switch
     {
@@ -56,83 +50,19 @@ public static class UiIcons
             windowWidth / UiTokens.LogicalCanvasWidth,
             windowHeight / UiTokens.LogicalCanvasHeight)));
 
-    public static string PathFor(UiIconId icon) => UiRoot + (icon switch
+    public static string PathFor(UiIconId icon)
     {
-        UiIconId.Back => "back.svg",
-        UiIconId.Beam => "beam.svg",
-        UiIconId.Bolt => "bolt.svg",
-        UiIconId.Build => "build.svg",
-        UiIconId.Chart => "chart.svg",
-        UiIconId.Check => "check.svg",
-        UiIconId.ChevronDown => "chev-d.svg",
-        UiIconId.ChevronRight => "chev-r.svg",
-        UiIconId.Copy => "copy.svg",
-        UiIconId.Core => "core.svg",
-        UiIconId.Edit => "edit.svg",
-        UiIconId.Flag => "flag.svg",
-        UiIconId.Gear => "gear.svg",
-        UiIconId.Height => "height.svg",
-        UiIconId.Joint => "joint.svg",
-        UiIconId.Lock => "lock.svg",
-        UiIconId.Map => "map.svg",
-        UiIconId.Menu => "menu.svg",
-        UiIconId.Model => "model.svg",
-        UiIconId.More => "more.svg",
-        UiIconId.Move => "move.svg",
-        UiIconId.Mute => "mute.svg",
-        UiIconId.Pause => "pause.svg",
-        UiIconId.Phone => "phone.svg",
-        UiIconId.Play => "play.svg",
-        UiIconId.Plus => "plus.svg",
-        UiIconId.Restart => "restart.svg",
-        UiIconId.Rotate => "rotate.svg",
-        UiIconId.Scale => "scale.svg",
-        UiIconId.Select => "select.svg",
-        UiIconId.Shadow => "shadow.svg",
-        UiIconId.Sound => "sound.svg",
-        UiIconId.Speed => "speed.svg",
-        UiIconId.Stop => "stop.svg",
-        UiIconId.Trash => "trash.svg",
-        UiIconId.Trophy => "trophy.svg",
-        UiIconId.Unlock => "unlock.svg",
-        UiIconId.Warn => "warn.svg",
-        UiIconId.Close => "x.svg",
-        UiIconId.Eye => "eye.svg",
-        _ => throw new ArgumentOutOfRangeException(nameof(icon), icon, "Unknown UI icon."),
-    });
-
-    public static string PathFor(UiPartIconId icon) => PartRoot + (icon switch
-    {
-        UiPartIconId.Battery => "battery.svg",
-        UiPartIconId.Beam => "beam.svg",
-        UiPartIconId.Brake => "brake.svg",
-        UiPartIconId.Core => "core.svg",
-        UiPartIconId.Fuel => "fuel.svg",
-        UiPartIconId.Generator => "generator.svg",
-        UiPartIconId.LineOfSight => "los.svg",
-        UiPartIconId.Node => "node.svg",
-        UiPartIconId.Piston => "piston.svg",
-        UiPartIconId.Servo => "servo.svg",
-        UiPartIconId.Spring => "spring.svg",
-        UiPartIconId.Stepper => "stepper.svg",
-        UiPartIconId.Velocity => "velocity.svg",
-        UiPartIconId.Wheel => "wheel.svg",
-        UiPartIconId.Wing => "wing.svg",
-        _ => throw new ArgumentOutOfRangeException(nameof(icon), icon, "Unknown part icon."),
-    });
-
-    public static Texture2D Load(UiIconId icon, UiIconSize size) =>
-        Load(PathFor(icon), Pixels(size), _uiSourceSize);
-
-    public static Texture2D Load(UiPartIconId icon, UiIconSize size) =>
-        Load(PathFor(icon), Pixels(size), _partSourceSize);
-
-    public static void Apply(Button button, UiIconId icon, UiIconSize size, Color tint)
-    {
-        Apply(button, Load(icon, size), size, tint);
+        var source = SourceFor(icon);
+        return source.Root + source.FileName;
     }
 
-    public static void Apply(Button button, UiPartIconId icon, UiIconSize size, Color tint)
+    public static Texture2D Load(UiIconId icon, UiIconSize size)
+    {
+        var source = SourceFor(icon);
+        return Load(source.Root + source.FileName, Pixels(size), source.SourceSize);
+    }
+
+    public static void Apply(Button button, UiIconId icon, UiIconSize size, Color tint)
     {
         Apply(button, Load(icon, size), size, tint);
     }
@@ -151,8 +81,70 @@ public static class UiIcons
     public static TextureRect Create(UiIconId icon, UiIconSize size, Color tint) =>
         Create(Load(icon, size), size, tint);
 
-    public static TextureRect Create(UiPartIconId icon, UiIconSize size, Color tint) =>
-        Create(Load(icon, size), size, tint);
+    private static IconSource SourceFor(UiIconId icon) => icon switch
+    {
+        UiIconId.Back => Ui("back.svg"),
+        UiIconId.Beam => Ui("beam.svg"),
+        UiIconId.Bolt => Ui("bolt.svg"),
+        UiIconId.Build => Ui("build.svg"),
+        UiIconId.Chart => Ui("chart.svg"),
+        UiIconId.Check => Ui("check.svg"),
+        UiIconId.ChevronDown => Ui("chev-d.svg"),
+        UiIconId.ChevronRight => Ui("chev-r.svg"),
+        UiIconId.Copy => Ui("copy.svg"),
+        UiIconId.Core => Ui("core.svg"),
+        UiIconId.Edit => Ui("edit.svg"),
+        UiIconId.Flag => Ui("flag.svg"),
+        UiIconId.Gear => Ui("gear.svg"),
+        UiIconId.Height => Ui("height.svg"),
+        UiIconId.Joint => Ui("joint.svg"),
+        UiIconId.Lock => Ui("lock.svg"),
+        UiIconId.Map => Ui("map.svg"),
+        UiIconId.Menu => Ui("menu.svg"),
+        UiIconId.Model => Ui("model.svg"),
+        UiIconId.More => Ui("more.svg"),
+        UiIconId.Move => Ui("move.svg"),
+        UiIconId.Mute => Ui("mute.svg"),
+        UiIconId.Pause => Ui("pause.svg"),
+        UiIconId.Phone => Ui("phone.svg"),
+        UiIconId.Play => Ui("play.svg"),
+        UiIconId.Plus => Ui("plus.svg"),
+        UiIconId.Restart => Ui("restart.svg"),
+        UiIconId.Rotate => Ui("rotate.svg"),
+        UiIconId.Scale => Ui("scale.svg"),
+        UiIconId.Select => Ui("select.svg"),
+        UiIconId.Shadow => Ui("shadow.svg"),
+        UiIconId.Sound => Ui("sound.svg"),
+        UiIconId.Speed => Ui("speed.svg"),
+        UiIconId.Stop => Ui("stop.svg"),
+        UiIconId.Trash => Ui("trash.svg"),
+        UiIconId.Trophy => Ui("trophy.svg"),
+        UiIconId.Unlock => Ui("unlock.svg"),
+        UiIconId.Warn => Ui("warn.svg"),
+        UiIconId.Close => Ui("x.svg"),
+        UiIconId.Eye => Ui("eye.svg"),
+        UiIconId.PartBattery => Part("battery.svg"),
+        UiIconId.PartBeam => Part("beam.svg"),
+        UiIconId.PartBrake => Part("brake.svg"),
+        UiIconId.PartCore => Part("core.svg"),
+        UiIconId.PartFuel => Part("fuel.svg"),
+        UiIconId.PartGenerator => Part("generator.svg"),
+        UiIconId.PartLineOfSight => Part("los.svg"),
+        UiIconId.PartNode => Part("node.svg"),
+        UiIconId.PartPiston => Part("piston.svg"),
+        UiIconId.PartServo => Part("servo.svg"),
+        UiIconId.PartSpring => Part("spring.svg"),
+        UiIconId.PartStepper => Part("stepper.svg"),
+        UiIconId.PartVelocity => Part("velocity.svg"),
+        UiIconId.PartWheel => Part("wheel.svg"),
+        UiIconId.PartWing => Part("wing.svg"),
+        _ => throw new ArgumentOutOfRangeException(nameof(icon), icon, "Unknown UI icon."),
+    };
+
+    private static IconSource Ui(string fileName) => new(UiRoot, fileName, _uiSourceSize);
+    private static IconSource Part(string fileName) => new(PartRoot, fileName, _partSourceSize);
+
+    private readonly record struct IconSource(string Root, string FileName, float SourceSize);
 
     private static Texture2D Load(string path, int logicalPixels, float sourceSize)
     {

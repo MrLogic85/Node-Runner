@@ -3,6 +3,7 @@ namespace NodeRunner.Ui.Lib;
 
 /// <summary>Canonical token-backed card/frame surface for the design-system component kit.</summary>
 [Tool]
+[GlobalClass]
 public partial class UiCard : PanelContainer
 {
     public enum CardVariant
@@ -27,6 +28,7 @@ public partial class UiCard : PanelContainer
     private CardVariant _kind = CardVariant.Frame;
     private CardSize _size = CardSize.Default;
     private bool _glow;
+    private bool _disabled;
 
     [Export]
     public CardVariant Kind
@@ -61,6 +63,17 @@ public partial class UiCard : PanelContainer
         }
     }
 
+    [Export]
+    public bool Disabled
+    {
+        get => _disabled;
+        set
+        {
+            _disabled = value;
+            RefreshStyle();
+        }
+    }
+
     private UiTokens _tokens = UiTokens.Neon;
 
     public virtual UiTokens Tokens
@@ -91,16 +104,21 @@ public partial class UiCard : PanelContainer
 
     protected virtual StyleBoxFlat CreateStyle()
     {
-        Modulate = Colors.White;
+        Modulate = Disabled
+            ? UiTokens.MultiplyAlpha(Colors.White, 0.5f)
+            : Colors.White;
 
-        var style = Tokens.FrameStyle(ToFrameVariant(Kind), ToFrameSize(SizeVariant), glow: Glow);
+        var style = Tokens.FrameStyle(
+            ToFrameVariant(Kind),
+            ToFrameSize(SizeVariant),
+            glow: Glow && !Disabled);
         if (Kind == CardVariant.Raised)
         {
             SetContentMargin(style, PaddingFor(SizeVariant));
             SetCornerRadius(style, Tokens.RadiusLarge);
         }
 
-        if (Kind == CardVariant.Locked)
+        if (Kind == CardVariant.Locked || Disabled)
         {
             style.BgColor = Tokens.Panel;
             style.BorderWidthLeft = 0;
@@ -115,13 +133,23 @@ public partial class UiCard : PanelContainer
     public override void _Draw()
     {
         base._Draw();
-        if (Kind != CardVariant.Locked)
+        if (!Disabled && Kind != CardVariant.Locked)
         {
             return;
         }
 
-        DrawDashedBorder(Tokens.Accent);
+        DrawDashedBorder(DashedBorderColor());
     }
+
+    private Color DashedBorderColor() =>
+        Kind switch
+        {
+            CardVariant.Selected or CardVariant.Locked => Tokens.Accent,
+            CardVariant.Warning => Tokens.Danger,
+            CardVariant.Hint => Tokens.Halo,
+            CardVariant.Raised => Tokens.LineStrong,
+            _ => Tokens.Edge,
+        };
 
     private void DrawDashedBorder(Color color)
     {

@@ -5,7 +5,7 @@ namespace NodeRunner.Ui.Lib;
 /// <summary>Canonical button with row, compact row or stacked content and optional hold activation.</summary>
 [Tool]
 [GlobalClass]
-public sealed partial class UiButton : Button
+public sealed partial class UiButton : Button, ISerializationListener
 {
     [Signal]
     public delegate void ActivatedEventHandler();
@@ -25,7 +25,6 @@ public sealed partial class UiButton : Button
     private bool _holdToActivate;
     private double _holdElapsedSeconds;
     private bool _isHolding;
-    private bool _handlersConnected;
     private Control? _progressClip;
     private Panel? _progressBackground;
     private Control? _progressFillClip;
@@ -34,6 +33,11 @@ public sealed partial class UiButton : Button
     private TextureRect? _stackIcon;
     private Label? _stackLabel;
     private Label? _badge;
+    // Object/method callables survive assembly reloads without retaining managed delegates.
+    private Callable ResizedCallback => new(this, MethodName.LayoutProgress);
+    private Callable PressedCallback => new(this, MethodName.HandlePressed);
+    private Callable ButtonDownCallback => new(this, MethodName.BeginHold);
+    private Callable ButtonUpCallback => new(this, MethodName.EndHold);
 
     public UiButton() => Alignment = HorizontalAlignment.Center;
 
@@ -201,14 +205,8 @@ public sealed partial class UiButton : Button
     public override void _EnterTree()
     {
         base._EnterTree();
-        if (_handlersConnected)
-            return;
-
-        Resized += LayoutProgress;
-        Pressed += HandlePressed;
-        ButtonDown += BeginHold;
-        ButtonUp += EndHold;
-        _handlersConnected = true;
+        ConnectHandlers();
+        RequestReady();
     }
 
     public override void _Ready()
@@ -256,16 +254,49 @@ public sealed partial class UiButton : Button
     public override void _ExitTree()
     {
         EndHold();
-        if (_handlersConnected)
-        {
-            Resized -= LayoutProgress;
-            Pressed -= HandlePressed;
-            ButtonDown -= BeginHold;
-            ButtonUp -= EndHold;
-            _handlersConnected = false;
-        }
-
+        DisconnectHandlers();
         base._ExitTree();
+    }
+
+    public void OnBeforeSerialize() => DisconnectHandlers();
+
+    public void OnAfterDeserialize() => CallDeferred(MethodName.RestoreAfterDeserialize);
+
+    private void RestoreAfterDeserialize()
+    {
+        if (!IsInsideTree())
+            return;
+
+        ConnectHandlers();
+        RefreshStyle();
+    }
+
+    private void ConnectHandlers()
+    {
+        ConnectIfMissing(Control.SignalName.Resized, ResizedCallback);
+        ConnectIfMissing(BaseButton.SignalName.Pressed, PressedCallback);
+        ConnectIfMissing(BaseButton.SignalName.ButtonDown, ButtonDownCallback);
+        ConnectIfMissing(BaseButton.SignalName.ButtonUp, ButtonUpCallback);
+    }
+
+    private void DisconnectHandlers()
+    {
+        DisconnectIfConnected(Control.SignalName.Resized, ResizedCallback);
+        DisconnectIfConnected(BaseButton.SignalName.Pressed, PressedCallback);
+        DisconnectIfConnected(BaseButton.SignalName.ButtonDown, ButtonDownCallback);
+        DisconnectIfConnected(BaseButton.SignalName.ButtonUp, ButtonUpCallback);
+    }
+
+    private void ConnectIfMissing(StringName signal, Callable callback)
+    {
+        if (!IsConnected(signal, callback))
+            Connect(signal, callback);
+    }
+
+    private void DisconnectIfConnected(StringName signal, Callable callback)
+    {
+        if (IsConnected(signal, callback))
+            Disconnect(signal, callback);
     }
 
     public override void _Process(double delta)
@@ -699,7 +730,7 @@ public sealed partial class UiButton : Button
     {
         if (radius <= 0)
         {
-            DrawRect(rect, color, filled: false, width: Tokens.StrokeHair, antialiased: true);
+            DrawRect(rect, color, filled: false, width: Tokens.StrokeHair, antialiased: false);
             return;
         }
 
@@ -711,7 +742,7 @@ public sealed partial class UiButton : Button
         for (int index = 0; index <= sampleCount; index++)
             points[index] = UiDashedBorder.PointOnRoundedRect(rect, radius, perimeter * index / sampleCount);
 
-        DrawPolyline(points, color, Tokens.StrokeHair, antialiased: true);
+        DrawPolyline(points, color, Tokens.StrokeHair, antialiased: false);
     }
 
 }

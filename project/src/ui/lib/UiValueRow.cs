@@ -3,12 +3,14 @@ using Godot;
 namespace NodeRunner.Ui.Lib;
 
 /// <summary>Static label/value row with an optional icon before the value.</summary>
+[Tool]
+[GlobalClass]
 public partial class UiValueRow : HBoxContainer
 {
     private UiTokens _tokens = UiTokens.Neon;
-    private string _labelText = "Strength";
-    private string _valueText = "0.6";
-    private UiIconId? _iconId;
+    private string _labelText = "";
+    private string _valueText = "";
+    private UiIconId _iconId = UiIconId.None;
 
     [Export]
     public string LabelText
@@ -32,7 +34,8 @@ public partial class UiValueRow : HBoxContainer
         }
     }
 
-    public UiIconId? IconId
+    [Export]
+    public UiIconId IconId
     {
         get => _iconId;
         set
@@ -82,9 +85,9 @@ public partial class UiValueRow : HBoxContainer
         };
         readout.AddThemeConstantOverride("separation", (int)_tokens.Space1);
         AddChild(readout);
-        if (IconId is { } icon)
+        if (IconId != UiIconId.None)
         {
-            var glyph = UiFieldAndRows.Icon(icon, UiIconSize.Small, _tokens.Ink);
+            var glyph = UiFieldAndRows.Icon(IconId, UiIconSize.Small, _tokens.Ink);
             glyph.SizeFlagsVertical = SizeFlags.ShrinkCenter;
             readout.AddChild(glyph);
         }

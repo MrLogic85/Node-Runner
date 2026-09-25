@@ -1,6 +1,8 @@
 namespace NodeRunner.Ui.Lib;
 
 /// <summary>An immediate on/off setting with a right-aligned switch.</summary>
+[Godot.Tool]
+[Godot.GlobalClass]
 public partial class UiToggleRow : UiChoiceRow
 {
     public UiToggleRow()

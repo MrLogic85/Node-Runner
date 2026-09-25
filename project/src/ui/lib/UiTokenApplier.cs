@@ -15,8 +15,11 @@ internal static class UiTokenApplier
             case UiButton button:
                 button.Tokens = tokens;
                 break;
-            case UiOverflowMenu menu:
+            case UiMenu menu:
                 menu.Tokens = tokens;
+                break;
+            case UiMenuItem menuItem:
+                menuItem.Tokens = tokens;
                 break;
             case UiSegmentedSwitch segmentedSwitch:
                 segmentedSwitch.Tokens = tokens;
@@ -53,9 +56,6 @@ internal static class UiTokenApplier
                 break;
             case UiNumber number:
                 number.Tokens = tokens;
-                break;
-            case UiInspectorPanel inspectorPanel:
-                inspectorPanel.Tokens = tokens;
                 break;
             case UiStageCard stageCard:
                 stageCard.Tokens = tokens;

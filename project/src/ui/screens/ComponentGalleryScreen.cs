@@ -10,17 +10,6 @@ namespace NodeRunner.Ui.Screens;
 /// </summary>
 public partial class ComponentGalleryScreen : Control
 {
-    private const string _rowInteractiveTitle =
-        "Row — interactive selected, hold, disabled, compact, and badge";
-
-    private const string _iconStandardTitle = "Icon — representative kinds and states";
-
-    private const string _iconHoldTitle = "Hold — works the same as on a text button";
-
-    private const string _iconBadgeTitle = "Badge — a halo counter, same colour whatever the kind";
-
-    private const string _stackTitle = "Stack — play, tool, destructive, flat, and badge";
-
     [Signal]
     public delegate void CloseRequestedEventHandler();
 
@@ -47,7 +36,7 @@ public partial class ComponentGalleryScreen : Control
     private bool _showDebugBounds;
     private UiBoundsDebugOverlay? _boundsOverlay;
     private UiButton? _toolbarMore;
-    private UiOverflowMenu? _toolbarMenu;
+    private UiMenu? _toolbarMenu;
     private Button? _toolbarDismiss;
     private readonly List<Action<UiTokens>> _tokenAppliers = new();
     private readonly List<Action<UiTokens>> _labelAppliers = new();
@@ -72,75 +61,12 @@ public partial class ComponentGalleryScreen : Control
         Slider,
         Progress,
         Cards,
-        OverflowMenu,
+        Menu,
         Picker,
         PartRows,
-        Panel,
+        PanelRows,
         StageCard,
     }
-
-    /// <summary>
-    /// The single declarative source for every rendered button specimen in
-    /// <see cref="CreateActionsSection"/>. <see cref="RowGroup"/> ties each
-    /// specimen to the visual row it is rendered in, so the inventory and the
-    /// live gallery can never drift apart.
-    /// </summary>
-    public readonly record struct ButtonGallerySpec(
-        UiButtonKind Kind,
-        UiButtonContentLayout Layout,
-        string RowGroup,
-        string Label,
-        UiIconId? Icon = null,
-        bool Selected = false,
-        bool Enabled = true,
-        bool Hold = false,
-        string? BadgeText = null,
-        bool ToggleOnActivate = false)
-    {
-        public bool Badge => BadgeText is not null;
-    }
-
-    public static IReadOnlyList<ButtonGallerySpec> ButtonSpecimenInventory { get; } =
-    [
-        new(UiButtonKind.Primary, UiButtonContentLayout.Row, _rowInteractiveTitle, "Start training", UiIconId.Play),
-        new(UiButtonKind.Primary, UiButtonContentLayout.Row, _rowInteractiveTitle, "Start training", UiIconId.Play, Selected: true, ToggleOnActivate: true),
-        new(UiButtonKind.Secondary, UiButtonContentLayout.Row, _rowInteractiveTitle, "Cancel"),
-        new(UiButtonKind.Tertiary, UiButtonContentLayout.Row, _rowInteractiveTitle, "Hold to delete", Hold: true),
-        new(UiButtonKind.Tertiary, UiButtonContentLayout.Row, _rowInteractiveTitle, "Delete", UiIconId.Trash, Enabled: false),
-        new(UiButtonKind.Flat, UiButtonContentLayout.Row, _rowInteractiveTitle, "Skip"),
-        new(UiButtonKind.Flat, UiButtonContentLayout.Row, _rowInteractiveTitle, "Skip", Selected: true, ToggleOnActivate: true),
-        new(UiButtonKind.Secondary, UiButtonContentLayout.RowCompact, _rowInteractiveTitle, "Cancel"),
-        new(UiButtonKind.Primary, UiButtonContentLayout.RowCompact, _rowInteractiveTitle, "Start", UiIconId.Play),
-        new(UiButtonKind.Tertiary, UiButtonContentLayout.RowCompact, _rowInteractiveTitle, "Delete", UiIconId.Trash),
-        new(UiButtonKind.Flat, UiButtonContentLayout.RowCompact, _rowInteractiveTitle, "Skip"),
-        new(UiButtonKind.Secondary, UiButtonContentLayout.Row, _rowInteractiveTitle, "Creations", UiIconId.Model, BadgeText: "3"),
-        new(UiButtonKind.Primary, UiButtonContentLayout.Row, _rowInteractiveTitle, "Hold to start training", Selected: true, Hold: true),
-        new(UiButtonKind.Secondary, UiButtonContentLayout.Row, _iconStandardTitle, string.Empty, UiIconId.Back),
-        new(UiButtonKind.Secondary, UiButtonContentLayout.Row, _iconStandardTitle, string.Empty, UiIconId.Back, Selected: true),
-        new(UiButtonKind.Primary, UiButtonContentLayout.Row, _iconStandardTitle, string.Empty, UiIconId.Gear),
-        new(UiButtonKind.Tertiary, UiButtonContentLayout.Row, _iconStandardTitle, string.Empty, UiIconId.Trash, Enabled: false),
-        new(UiButtonKind.Flat, UiButtonContentLayout.Row, _iconStandardTitle, string.Empty, UiIconId.More),
-        new(UiButtonKind.Secondary, UiButtonContentLayout.RowCompact, _iconStandardTitle, string.Empty, UiIconId.Back),
-        new(UiButtonKind.Primary, UiButtonContentLayout.RowCompact, _iconStandardTitle, string.Empty, UiIconId.Gear),
-        new(UiButtonKind.Tertiary, UiButtonContentLayout.RowCompact, _iconStandardTitle, string.Empty, UiIconId.Trash),
-        new(UiButtonKind.Flat, UiButtonContentLayout.RowCompact, _iconStandardTitle, string.Empty, UiIconId.More),
-        new(UiButtonKind.Secondary, UiButtonContentLayout.RowCompact, _iconStandardTitle, string.Empty, UiIconId.Model, BadgeText: "3"),
-        new(UiButtonKind.Primary, UiButtonContentLayout.Row, _iconHoldTitle, string.Empty, UiIconId.Play, Hold: true),
-        new(UiButtonKind.Tertiary, UiButtonContentLayout.Row, _iconHoldTitle, string.Empty, UiIconId.Trash, Hold: true),
-        new(UiButtonKind.Secondary, UiButtonContentLayout.Row, _iconBadgeTitle, string.Empty, UiIconId.Model, BadgeText: "3"),
-        new(UiButtonKind.Primary, UiButtonContentLayout.Row, _iconBadgeTitle, string.Empty, UiIconId.Lock, BadgeText: "1"),
-        new(UiButtonKind.Tertiary, UiButtonContentLayout.Row, _iconBadgeTitle, string.Empty, UiIconId.Trash, BadgeText: "2"),
-        new(UiButtonKind.Primary, UiButtonContentLayout.Stacked, _stackTitle, string.Empty, UiIconId.Play),
-        new(UiButtonKind.Primary, UiButtonContentLayout.Stacked, _stackTitle, string.Empty, UiIconId.Play, Selected: true),
-        new(UiButtonKind.Primary, UiButtonContentLayout.Stacked, _stackTitle, string.Empty, UiIconId.Play, Hold: true),
-        new(UiButtonKind.Secondary, UiButtonContentLayout.Stacked, _stackTitle, "Move", UiIconId.Move),
-        new(UiButtonKind.Secondary, UiButtonContentLayout.Stacked, _stackTitle, "Move", UiIconId.Move, Selected: true),
-        new(UiButtonKind.Secondary, UiButtonContentLayout.Stacked, _stackTitle, "Beam", UiIconId.Beam, Enabled: false),
-        new(UiButtonKind.Tertiary, UiButtonContentLayout.Stacked, _stackTitle, "Delete", UiIconId.Trash, Hold: true),
-        new(UiButtonKind.Flat, UiButtonContentLayout.Stacked, _stackTitle, "More", UiIconId.More),
-        new(UiButtonKind.Flat, UiButtonContentLayout.Stacked, _stackTitle, "More", UiIconId.More, Selected: true),
-        new(UiButtonKind.Primary, UiButtonContentLayout.Stacked, _stackTitle, string.Empty, UiIconId.Play, BadgeText: "1"),
-    ];
 
     public static IReadOnlyList<GalleryComponentSpec> CanonicalInventory { get; } =
     [
@@ -149,7 +75,7 @@ public partial class ComponentGalleryScreen : Control
         new(UiComponentContracts.CanonicalComponent.HoldButton, "Actions"),
         new(UiComponentContracts.CanonicalComponent.TextField, "Text input"),
         new(UiComponentContracts.CanonicalComponent.NameField, "Text input"),
-        new(UiComponentContracts.CanonicalComponent.Note, "Panel"),
+        new(UiComponentContracts.CanonicalComponent.Note, "Panel rows"),
         new(UiComponentContracts.CanonicalComponent.Slider, "Slider and range"),
         new(UiComponentContracts.CanonicalComponent.Range, "Slider and range"),
         new(UiComponentContracts.CanonicalComponent.ProgressBar, "Slider and range"),
@@ -160,9 +86,8 @@ public partial class ComponentGalleryScreen : Control
         new(UiComponentContracts.CanonicalComponent.Segmented, "Segmented"),
         new(UiComponentContracts.CanonicalComponent.Picker, "Choices and tray rows"),
         new(UiComponentContracts.CanonicalComponent.PartRow, "Part rows"),
-        new(UiComponentContracts.CanonicalComponent.Panel, "Panel"),
         new(UiComponentContracts.CanonicalComponent.StageCard, "Stage card"),
-        new(UiComponentContracts.CanonicalComponent.OverflowMenu, "Overflow menu"),
+        new(UiComponentContracts.CanonicalComponent.Menu, "Menu"),
         new(UiComponentContracts.CanonicalComponent.IconTabs, "Parts tray tabs"),
         new(UiComponentContracts.CanonicalComponent.SelectionHandle, "Selection handles"),
         new(UiComponentContracts.CanonicalComponent.Number, "Number"),
@@ -180,10 +105,10 @@ public partial class ComponentGalleryScreen : Control
         GallerySection.Slider,
         GallerySection.Progress,
         GallerySection.Cards,
-        GallerySection.OverflowMenu,
+        GallerySection.Menu,
         GallerySection.Picker,
         GallerySection.PartRows,
-        GallerySection.Panel,
+        GallerySection.PanelRows,
         GallerySection.StageCard,
     ];
 
@@ -206,59 +131,37 @@ public partial class ComponentGalleryScreen : Control
 
     private void BuildLayout()
     {
-        _background = new ColorRect
-        {
-            MouseFilter = MouseFilterEnum.Ignore,
-        };
-        _background.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
-        AddChild(_background);
-
-        var frame = new MarginContainer();
-        frame.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
-        UiLayout.ApplyMargins(frame, _tokens);
-        AddChild(frame);
-
-        var shell = new VBoxContainer();
-        shell.SizeFlagsHorizontal = SizeFlags.ExpandFill;
-        shell.SizeFlagsVertical = SizeFlags.ExpandFill;
-        shell.AddThemeConstantOverride("separation", (int)_tokens.Space2);
-        frame.AddChild(shell);
-
-        shell.AddChild(CreateHeader());
-
-        _scroll = new ScrollContainer
-        {
-            SizeFlagsHorizontal = SizeFlags.ExpandFill,
-            SizeFlagsVertical = SizeFlags.ExpandFill,
-            HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled,
-            VerticalScrollMode = ScrollContainer.ScrollMode.ShowNever,
-        };
-        shell.AddChild(_scroll);
-
-        var contentFrame = new MarginContainer
-        {
-            SizeFlagsHorizontal = SizeFlags.ExpandFill,
-        };
-        contentFrame.AddThemeConstantOverride("margin_left", UiGlow.Extent);
-        contentFrame.AddThemeConstantOverride("margin_top", UiGlow.Extent);
-        contentFrame.AddThemeConstantOverride("margin_right", UiGlow.Extent);
-        contentFrame.AddThemeConstantOverride("margin_bottom", UiGlow.Extent);
-        _scroll.AddChild(contentFrame);
-
-        var content = new VBoxContainer
-        {
-            SizeFlagsHorizontal = SizeFlags.ExpandFill,
-        };
-        content.AddThemeConstantOverride("separation", (int)_tokens.Space2);
-        contentFrame.AddChild(content);
-        _scrollContent = contentFrame;
+        _background = GetNode<ColorRect>("%Background");
+        var frame = GetNode<MarginContainer>("%Frame");
+        BindHeader();
+        _scroll = GetNode<ScrollContainer>("%Scroll");
+        _scrollContent = GetNode<MarginContainer>("%ContentFrame");
+        var runtimeSections = GetNode<VBoxContainer>("%RuntimeSections");
+        BindAuthoredControls(runtimeSections.GetParent<Control>());
 
         foreach (var section in RenderedSectionOrder)
         {
-            AddRenderedSection(content, section);
+            if (section is not (
+                GallerySection.Actions
+                or GallerySection.Choices
+                or GallerySection.Segmented
+                or GallerySection.PartsTrayTabs
+                or GallerySection.SelectionHandles
+                or GallerySection.Number
+                or GallerySection.Slider
+                or GallerySection.Progress
+                or GallerySection.Cards
+                or GallerySection.Menu
+                or GallerySection.Picker
+                or GallerySection.PartRows
+                or GallerySection.PanelRows
+                or GallerySection.StageCard))
+            {
+                AddRenderedSection(runtimeSections, section);
+            }
         }
 
-        UiNativeScroll.AllowGesturesToBubble(contentFrame);
+        UiNativeScroll.AllowGesturesToBubble(_scrollContent);
         _boundsOverlay = new UiBoundsDebugOverlay
         {
             RootPath = frame.GetPath(),
@@ -272,117 +175,43 @@ public partial class ComponentGalleryScreen : Control
     {
         switch (section)
         {
-            case GallerySection.Actions:
-                content.AddChild(CreateSectionDescription(
-                    "Buttons",
-                    "four semantic kinds, row or stacked layout, compact geometry, hold progress, and badges"));
-                content.AddChild(CreateActionsSection());
-                break;
             case GallerySection.TextInput:
                 content.AddChild(CreateTextInputSection());
-                break;
-            case GallerySection.Choices:
-                content.AddChild(CreateChoicesSection());
-                break;
-            case GallerySection.Segmented:
-                content.AddChild(CreateSegmentedSection());
-                break;
-            case GallerySection.PartsTrayTabs:
-                content.AddChild(CreateTrayTabsSection());
-                break;
-            case GallerySection.SelectionHandles:
-                content.AddChild(CreateSelectionHandlesSection());
-                break;
-            case GallerySection.Number:
-                content.AddChild(CreateNumberSection());
-                break;
-            case GallerySection.Slider:
-                content.AddChild(CreateSliderSection());
-                break;
-            case GallerySection.Progress:
-                content.AddChild(CreateProgressSection());
-                break;
-            case GallerySection.Cards:
-                content.AddChild(CreateCardSection());
-                break;
-            case GallerySection.OverflowMenu:
-                content.AddChild(CreateMenuSection());
-                break;
-            case GallerySection.Picker:
-                content.AddChild(CreatePickerSection());
-                break;
-            case GallerySection.PartRows:
-                content.AddChild(CreatePartRowSection());
-                break;
-            case GallerySection.Panel:
-                content.AddChild(CreatePanelSection());
-                break;
-            case GallerySection.StageCard:
-                content.AddChild(CreateStageCardSection());
                 break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(section), section, null);
         }
     }
 
-    private Control CreateHeader()
+    private void BindHeader()
     {
-        var header = new HBoxContainer
+        var title = GetNode<UiLabel>("%ToolbarTitle");
+        _labelAppliers.Add(tokens =>
         {
-            CustomMinimumSize = new Vector2(0, UiLayout.TopBarHeight),
-            SizeFlagsHorizontal = SizeFlags.ExpandFill,
-            SizeFlagsVertical = SizeFlags.ShrinkBegin,
-        };
-        header.AddThemeConstantOverride("separation", (int)_tokens.Space2);
-
-        var title = CreateLabel("Component Gallery", _tokens.HeadingText, tokens => tokens.Ink);
-        title.AutowrapMode = TextServer.AutowrapMode.Off;
-        title.SizeFlagsHorizontal = SizeFlags.ExpandFill;
-        header.AddChild(title);
-
-        if (ShowCloseAction)
-        {
-            var close = Track(new UiButton
-            {
-                ContentLayout = UiButtonContentLayout.Stacked,
-                IconId = UiIconId.Back,
-                TooltipText = "Back to Creations",
-                SizeFlagsVertical = SizeFlags.ShrinkCenter,
-            });
-            close.Pressed += () => EmitSignal(SignalName.CloseRequested);
-            header.AddChild(close);
-        }
-
-        var switcher = Track(new UiSegmentedSwitch
-        {
-            Segments = [new() { Text = "Neon" }, new() { Text = "Paper" }, new() { Text = "Effects lite" }],
-            SelectedIndex = 0,
-            SizeFlagsVertical = SizeFlags.ShrinkCenter,
+            title.Tokens = tokens;
+            title.AddThemeColorOverride("font_color", tokens.Ink);
         });
-        switcher.SelectionChanged += index =>
-        {
-            ApplyTokens(index switch
-            {
-                1 => UiTokens.Paper,
-                2 => UiTokens.Neon.WithEffects(false),
-                _ => UiTokens.Neon,
-            });
-        };
-        header.AddChild(switcher);
 
-        _toolbarMore = Track(new UiButton
-        {
-            Style = UiButtonStyle.Flat,
-            ContentLayout = UiButtonContentLayout.Stacked,
-            IconId = UiIconId.More,
-            TooltipText = "Gallery options",
-            SizeFlagsVertical = SizeFlags.ShrinkCenter,
-        });
+        var close = Track(GetNode<UiButton>("%CloseAction"));
+        close.Visible = ShowCloseAction;
+        close.Activated += () => EmitSignal(SignalName.CloseRequested);
+
+        var switcher = Track(GetNode<UiSegmentedSwitch>("%ThemeSwitcher"));
+        switcher.SelectionChanged += OnThemeSelectionChanged;
+
+        _toolbarMore = Track(GetNode<UiButton>("%ToolbarMore"));
         _toolbarMore.Activated += ToggleToolbarMenu;
         _toolbarMore.ItemRectChanged += () => Callable.From(PositionToolbarMenu).CallDeferred();
-        header.AddChild(_toolbarMore);
+    }
 
-        return header;
+    private void OnThemeSelectionChanged(int index)
+    {
+        ApplyTokens(index switch
+        {
+            1 => UiTokens.Paper,
+            2 => UiTokens.Neon.WithEffects(false),
+            _ => UiTokens.Neon,
+        });
     }
 
     private void CreateToolbarMenu()
@@ -402,28 +231,12 @@ public partial class ComponentGalleryScreen : Control
         AddChild(_toolbarDismiss);
         _toolbarDismiss.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
         _toolbarDismiss.Pressed += CloseToolbarMenu;
-        _toolbarMenu = Track(new UiOverflowMenu
+        _toolbarMenu = Track(new UiMenu());
+        _toolbarMenu.IndexClicked += index =>
         {
-            ShowSelectedCheck = true,
-        });
-        _toolbarMenu.ActionSelected += actionId =>
-        {
-            if (actionId == "debug-bounds")
+            if (index is 0 or 1)
             {
-                ShowDebugBounds = !ShowDebugBounds;
-            }
-
-            CloseToolbarMenu();
-            if (actionId == "popup-gallery")
-            {
-                var gallery = GD.Load<PackedScene>("res://scenes/ui/PopupGalleryScreen.tscn").Instantiate<PopupGalleryScreen>();
-                gallery.CloseRequested += () =>
-                {
-                    gallery.QueueFree();
-                    Show();
-                };
-                GetParent().AddChild(gallery);
-                Hide();
+                HandleToolbarMenuAction(index);
             }
         };
         _toolbarMenu.Resized += PositionToolbarMenu;
@@ -440,13 +253,44 @@ public partial class ComponentGalleryScreen : Control
 
     private void RefreshToolbarMenu()
     {
-        _toolbarMenu?.SetActions(new UiOverflowMenu.MenuAction(
-            "debug-bounds",
-            "Debug bounds",
-            State: ShowDebugBounds
-                ? UiComponentContracts.SemanticState.Selected
-                : UiComponentContracts.SemanticState.Neutral),
-            new UiOverflowMenu.MenuAction("popup-gallery", "Popup Gallery", UiIconId.Model));
+        if (_toolbarMenu is null)
+        {
+            return;
+        }
+
+        UiMenuItems.Populate(
+            _toolbarMenu,
+            [
+                new UiMenuItemSpec(
+                    "Debug bounds",
+                    Selected: ShowDebugBounds),
+                new UiMenuItemSpec("Popup Gallery", UiIconId.Model),
+            ],
+            _tokens,
+            showSelectedIndicator: true);
+    }
+
+    private void HandleToolbarMenuAction(int index)
+    {
+        if (index == 0)
+        {
+            ShowDebugBounds = !ShowDebugBounds;
+        }
+
+        CloseToolbarMenu();
+        if (index != 1)
+        {
+            return;
+        }
+
+        var gallery = GD.Load<PackedScene>("res://scenes/ui/PopupGalleryScreen.tscn").Instantiate<PopupGalleryScreen>();
+        gallery.CloseRequested += () =>
+        {
+            gallery.QueueFree();
+            Show();
+        };
+        GetParent().AddChild(gallery);
+        Hide();
     }
 
     private void ToggleToolbarMenu()
@@ -497,515 +341,127 @@ public partial class ComponentGalleryScreen : Control
         }
     }
 
-    private Control CreateActionsSection()
+    private void BindAuthoredControls(Control control)
     {
-        var content = new VBoxContainer();
-        content.AddThemeConstantOverride("separation", UiSpacing.StackGap(_tokens));
-        AddButtonRow(content, _rowInteractiveTitle, SpecimensFor(_rowInteractiveTitle));
-
-        content.AddChild(CreateSectionDescription(
-            "Buttons with an icon",
-            "standard and compact frames, plus hold, disabled, and badge states"));
-        AddButtonRow(content, _iconStandardTitle, SpecimensFor(_iconStandardTitle));
-        AddButtonRow(content, _iconHoldTitle, SpecimensFor(_iconHoldTitle));
-        AddButtonRow(content, _iconBadgeTitle, SpecimensFor(_iconBadgeTitle));
-
-        content.AddChild(CreateSectionDescription(
-            "Stacked buttons",
-            "touch-sized with the icon over a label, or no label for play"));
-        AddStackedButtonRow(content, _stackTitle, SpecimensFor(_stackTitle));
-
-        return content;
-    }
-
-    /// <summary>
-    /// Renders the live buttons for a single gallery row directly from
-    /// <see cref="ButtonSpecimenInventory"/>, so the inventory is the only
-    /// declarative source of what actually appears in the gallery.
-    /// </summary>
-    private List<UiButton> SpecimensFor(string rowGroup) =>
-        ButtonSpecimenInventory
-            .Where(spec => spec.RowGroup == rowGroup)
-            .Select(CreateButtonFromSpec)
-            .ToList();
-
-    private UiButton CreateButtonFromSpec(ButtonGallerySpec spec) =>
-        CreateButton(
-            spec.Kind,
-            spec.Label,
-            spec.Icon,
-            spec.Layout,
-            selected: spec.Selected,
-            enabled: spec.Enabled,
-            hold: spec.Hold,
-            badge: spec.BadgeText,
-            toggleOnActivate: spec.ToggleOnActivate);
-
-    private void AddButtonRow(VBoxContainer content, string title, IReadOnlyList<UiButton> buttons)
-    {
-        content.AddChild(CreateLabel(title, _tokens.NoteText, tokens => tokens.Muted));
-        var flow = CreateFlow();
-        foreach (var button in buttons)
+        if (control is UiButton button)
         {
-            flow.AddChild(button);
-        }
-
-        content.AddChild(flow);
-    }
-
-    private void AddStackedButtonRow(VBoxContainer content, string title, IReadOnlyList<UiButton> buttons)
-    {
-        content.AddChild(CreateSectionDescription(title, string.Empty));
-        var flow = CreateFlow();
-        foreach (var button in buttons)
-        {
-            var state = !button.Disabled
-                ? button.HoldToActivate
-                    ? "hold"
-                    : button.Selected ? "selected" : "normal"
-                : "disabled";
-            flow.AddChild(CreateStackedButtonSpecimen(button, state));
-        }
-
-        content.AddChild(flow);
-    }
-
-    private UiButton CreateButton(
-        UiButtonKind kind,
-        string label,
-        UiIconId? icon = null,
-        UiButtonContentLayout layout = UiButtonContentLayout.Row,
-        bool selected = false,
-        bool enabled = true,
-        bool hold = false,
-        string? badge = null,
-        bool toggleOnActivate = false)
-    {
-        var button = Track(new UiButton
-        {
-            Kind = kind,
-            LabelText = label,
-            IconId = icon ?? UiIconId.None,
-            ContentLayout = layout,
-            Selected = selected,
-            Disabled = !enabled,
-            HoldDurationSeconds = hold ? UiComponentContracts.HoldCompletionSeconds : 0,
-            HoldToActivate = hold,
-            BadgeText = badge ?? string.Empty,
-            TooltipText = string.IsNullOrEmpty(label) ? icon?.ToString() ?? string.Empty : string.Empty,
-        });
-        if (toggleOnActivate)
-        {
-            button.Activated += () => button.Selected = !button.Selected;
-        }
-
-        return button;
-    }
-
-    private Control CreateStackedButtonSpecimen(UiButton button, string state)
-    {
-        var stack = new VBoxContainer
-        {
-            Alignment = BoxContainer.AlignmentMode.Center,
-            CustomMinimumSize = new Vector2(_tokens.ColumnMediumWidth, 0),
-        };
-        stack.AddThemeConstantOverride("separation", (int)_tokens.Space1);
-        stack.AddChild(button);
-        var label = CreateLabel(state, _tokens.NoteText, tokens => tokens.Muted, TextServer.AutowrapMode.Off);
-        label.HorizontalAlignment = HorizontalAlignment.Center;
-        stack.AddChild(label);
-        return stack;
-    }
-
-    private Control CreateSegmentedSection()
-    {
-        var content = new VBoxContainer();
-        content.AddThemeConstantOverride("separation", (int)_tokens.Space2);
-        content.AddChild(CreateSectionDescription(
-            "Segmented", "tap to choose one option; text and icons stay in place"));
-        var examples = CreateFlow();
-        examples.AddChild(Track(new UiSegmentedSwitch
-        {
-            Segments = [new() { Text = "Train", IconId = UiIconId.Play }, new() { Text = "Simulate", IconId = UiIconId.Eye }],
-            MatchWidth = false,
-        }));
-        examples.AddChild(Track(new UiSegmentedSwitch
-        {
-            Segments = [new() { Text = "1" }, new() { Text = "2" }, new() { Text = "3" }],
-            SelectedIndex = 1,
-            MatchWidth = false,
-        }));
-        examples.AddChild(Track(new UiSegmentedSwitch
-        {
-            Segments = [new() { Text = "Distance" }, new() { Text = "Speed" }, new() { Text = "Elevation" }],
-            MatchWidth = false,
-        }));
-        content.AddChild(examples);
-
-        return content;
-    }
-
-    private Control CreateSliderSection()
-    {
-        var section = new VBoxContainer
-        {
-            SizeFlagsHorizontal = SizeFlags.ExpandFill,
-        };
-        section.AddThemeConstantOverride("separation", (int)_tokens.Space2);
-        section.AddChild(CreateSliderColumns(
-            CreateSliderSectionDescription(
-                "Slider",
-                "the only slider, configured: one thumb or two, two or more even steps, a named marker"),
-            CreateSliderSectionDescription(
-                "Slider, disabled",
-                "the same four with enabled=False: dimmed; the filled part stays solid but grey")));
-        section.AddChild(CreateSliderPair(
-            "Plain",
-            new UiSlider
+            Track(button);
+            if (button.IsInGroup("gallery_toggle_button"))
             {
-                LabelText = "Shadows",
-                ReadoutText = "8",
-                Value = UiSliderValue.Thumb(0.22),
-            },
-            "Plain",
-            new UiSlider
-            {
-                LabelText = "Shadows",
-                ReadoutText = "8",
-                Value = UiSliderValue.Thumb(0.22),
-                Enabled = false,
-            }));
-        section.AddChild(CreateSliderPair(
-            "Two steps (the ends) and a marker with a name",
-            new UiSlider
-            {
-                LabelText = "Neurons",
-                ReadoutText = "24",
-                Value = UiSliderValue.Thumb(0.24),
-                StepLabels = ["1", "100"],
-                MarkerPosition = 0.03,
-                MarkerText = "default 4",
-            },
-            "Two steps and marker",
-            new UiSlider
-            {
-                LabelText = "Neurons",
-                ReadoutText = "24",
-                Value = UiSliderValue.Thumb(0.24),
-                StepLabels = ["1", "100"],
-                MarkerPosition = 0.03,
-                MarkerText = "default 4",
-                Enabled = false,
-            }));
-        section.AddChild(CreateSliderPair(
-            "Four steps, always evenly placed; a marker on a step",
-            new UiSlider
-            {
-                LabelText = "UI size",
-                ReadoutText = "150%",
-                Value = UiSliderValue.Thumb(0.5),
-                StepLabels = ["50%", "100%", "200%", "400%"],
-                MarkerPosition = 1d / 3d,
-                MarkerText = "default 100%",
-            },
-            "Four steps and marker",
-            new UiSlider
-            {
-                LabelText = "UI size",
-                ReadoutText = "150%",
-                Value = UiSliderValue.Thumb(0.5),
-                StepLabels = ["50%", "100%", "200%", "400%"],
-                MarkerPosition = 1d / 3d,
-                MarkerText = "default 100%",
-                Enabled = false,
-            }));
-        section.AddChild(CreateSliderPair(
-            "Two thumbs: a range, and a marker",
-            new UiSlider
-            {
-                LabelText = "Angle limits",
-                ReadoutText = "-20° to 110°",
-                Value = UiSliderValue.Thumbs(0.18, 0.72),
-                MarkerPosition = 0.44,
-                MarkerText = "now 35°",
-            },
-            "Two thumbs and a marker",
-            new UiSlider
-            {
-                LabelText = "Angle limits",
-                ReadoutText = "-20° to 110°",
-                Value = UiSliderValue.Thumbs(0.18, 0.72),
-                MarkerPosition = 0.44,
-                MarkerText = "now 35°",
-                Enabled = false,
-            }));
-        section.AddChild(CreateSliderPair(
-            "Linear progress with label/value: the same slider track with no thumb",
-            new UiSlider
-            {
-                LabelText = "Loading",
-                ReadoutText = "62%",
-                Value = UiSliderValue.Progress(0.62),
-            },
-            "Linear progress, disabled",
-            new UiSlider
-            {
-                LabelText = "Power",
-                ReadoutText = "18%",
-                Value = UiSliderValue.Progress(0.18),
-                Enabled = false,
-            }));
-        section.AddChild(CreateSliderPair(
-            "Bare progress bar: no slider value row",
-            new UiSlider
-            {
-                LabelText = string.Empty,
-                ReadoutText = string.Empty,
-                Value = UiSliderValue.Progress(0.78),
-            },
-            "Bare progress, disabled",
-            new UiSlider
-            {
-                LabelText = string.Empty,
-                ReadoutText = string.Empty,
-                Value = UiSliderValue.Progress(0.35),
-                Enabled = false,
-            }));
-        return section;
-    }
-
-    private Control CreateProgressSection()
-    {
-        var content = new VBoxContainer();
-        content.AddThemeConstantOverride("separation", (int)_tokens.Space2);
-        content.AddChild(CreateSectionDescription(
-            "Progress",
-            "rings are their own component; linear progress is shown with sliders above"));
-
-        var rings = new HBoxContainer
-        {
-            SizeFlagsHorizontal = SizeFlags.ShrinkBegin,
-        };
-        rings.AddThemeConstantOverride("separation", (int)_tokens.Space3);
-        rings.AddChild(Track(new UiProgressRing { Progress = 0.72f }));
-        rings.AddChild(Track(new UiProgressRing { Progress = 1 }));
-        content.AddChild(rings);
-        return content;
-    }
-
-    private Control CreateNumberSection()
-    {
-        var content = new VBoxContainer();
-        content.AddThemeConstantOverride("separation", (int)_tokens.Space2);
-        content.AddChild(CreateSectionDescription(
-            "Number",
-            "the ringed step number alone, used before stage headers and chain chips"));
-
-        var numbers = new HBoxContainer
-        {
-            SizeFlagsHorizontal = SizeFlags.ShrinkBegin,
-        };
-        numbers.AddThemeConstantOverride("separation", (int)_tokens.Space2);
-        foreach (var text in new[] { "1", "2", "3", "4" })
-        {
-            numbers.AddChild(Track(new UiNumber { Text = text }));
-        }
-
-        content.AddChild(numbers);
-        return content;
-    }
-
-    private Control CreateCardSection()
-    {
-        var content = new VBoxContainer();
-        content.AddThemeConstantOverride("separation", (int)_tokens.Space2);
-        content.AddChild(CreateSectionDescription(
-            "Cards",
-            "one frame surface with variants; menu, dialog, pick, and stage card are owned elsewhere"));
-
-        var variants = new GridContainer
-        {
-            Columns = 3,
-            SizeFlagsHorizontal = SizeFlags.ExpandFill,
-        };
-        variants.AddThemeConstantOverride("h_separation", UiSpacing.ControlGap(_tokens));
-        variants.AddThemeConstantOverride("v_separation", UiSpacing.ControlGap(_tokens));
-        variants.AddChild(CreateCardSpecimen("Frame", "Default card", UiCard.CardVariant.Frame));
-        variants.AddChild(CreateCardSpecimen("Selected", "Accent border and glow", UiCard.CardVariant.Selected));
-        variants.AddChild(CreateCardSpecimen("Locked", "Dashed locked frame", UiCard.CardVariant.Locked));
-        variants.AddChild(CreateCardSpecimen("Warning", "Danger border with words", UiCard.CardVariant.Warning));
-        variants.AddChild(CreateCardSpecimen("Hint", "Halo border for guidance", UiCard.CardVariant.Hint));
-        variants.AddChild(CreateCardSpecimen("Frame + glow", "Frame with glow enabled", UiCard.CardVariant.Frame, glow: true));
-        variants.AddChild(CreateCardSpecimen("Frame + glow disabled", "Disabled display treatment", UiCard.CardVariant.Frame, glow: true, disabled: true));
-        variants.AddChild(CreateCardSpecimen("Raised", "Raised surface variant", UiCard.CardVariant.Raised));
-        content.AddChild(variants);
-
-        var sizes = new HFlowContainer();
-        sizes.AddThemeConstantOverride("h_separation", UiSpacing.ControlGap(_tokens));
-        sizes.AddThemeConstantOverride("v_separation", UiSpacing.ControlGap(_tokens));
-        sizes.AddChild(CreateCardSpecimen("Default", "space-3 padding", UiCard.CardVariant.Frame, UiCard.CardSize.Default));
-        sizes.AddChild(CreateCardSpecimen("Snug", "smaller padding", UiCard.CardVariant.Frame, UiCard.CardSize.Snug));
-        sizes.AddChild(CreateCardSpecimen("Tight", "compact padding", UiCard.CardVariant.Frame, UiCard.CardSize.Tight));
-        sizes.AddChild(CreateCardSpecimen("Roomy", "larger padding", UiCard.CardVariant.Frame, UiCard.CardSize.Roomy));
-        sizes.AddChild(CreateCardSpecimen("Flush", "no padding", UiCard.CardVariant.Frame, UiCard.CardSize.Flush));
-        content.AddChild(sizes);
-        return content;
-    }
-
-    private Control CreateCardSpecimen(
-        string title,
-        string description,
-        UiCard.CardVariant variant,
-        UiCard.CardSize size = UiCard.CardSize.Default,
-        bool glow = false,
-        bool disabled = false)
-    {
-        var card = Track(new UiCard
-        {
-            Kind = variant,
-            SizeVariant = size,
-            Glow = glow,
-            CustomMinimumSize = new Vector2(148, 0),
-            SizeFlagsHorizontal = SizeFlags.ExpandFill,
-        });
-        if (disabled)
-        {
-            card.Modulate = UiTokens.MultiplyAlpha(Colors.White, 0.5f);
-        }
-
-        var stack = new VBoxContainer();
-        stack.AddThemeConstantOverride("separation", (int)_tokens.Space1);
-        stack.AddChild(CreateLabel(title, _tokens.SubheadingText, tokens => tokens.Ink, TextServer.AutowrapMode.Off));
-        stack.AddChild(CreateLabel(description, _tokens.NoteText, tokens => tokens.Muted));
-        card.AddChild(stack);
-        return card;
-    }
-
-    private Control CreateSliderSectionDescription(string title, string description)
-    {
-        var heading = new HBoxContainer
-        {
-            SizeFlagsHorizontal = SizeFlags.ExpandFill,
-        };
-        heading.AddThemeConstantOverride("separation", (int)_tokens.Space2);
-        var titleLabel = CreateLabel(
-            title,
-            _tokens.OverlineText,
-            tokens => tokens.Ink,
-            TextServer.AutowrapMode.Off);
-        titleLabel.VerticalAlignment = VerticalAlignment.Top;
-        heading.AddChild(titleLabel);
-        var detail = CreateLabel(description, _tokens.NoteText, tokens => tokens.Muted);
-        detail.CustomMinimumSize = Vector2.Zero;
-        detail.SizeFlagsHorizontal = SizeFlags.ExpandFill;
-        detail.VerticalAlignment = VerticalAlignment.Top;
-        heading.AddChild(detail);
-        return heading;
-    }
-
-    private Control CreateSliderPair(
-        string enabledCaption,
-        UiSlider enabledSlider,
-        string disabledCaption,
-        UiSlider disabledSlider)
-    {
-        var pair = new VBoxContainer();
-        pair.AddThemeConstantOverride("separation", (int)_tokens.Space1);
-        pair.AddChild(CreateSliderColumns(
-            CreateLabel(enabledCaption, _tokens.NoteText, tokens => tokens.Muted),
-            CreateLabel(disabledCaption, _tokens.NoteText, tokens => tokens.Muted)));
-        enabledSlider.SizeFlagsHorizontal = SizeFlags.ExpandFill;
-        disabledSlider.SizeFlagsHorizontal = SizeFlags.ExpandFill;
-        pair.AddChild(CreateSliderColumns(Track(enabledSlider), Track(disabledSlider)));
-        return pair;
-    }
-
-    private GridContainer CreateSliderColumns(Control enabled, Control disabled)
-    {
-        var columns = new GridContainer
-        {
-            SizeFlagsHorizontal = SizeFlags.ExpandFill,
-            Columns = 2,
-        };
-        columns.AddThemeConstantOverride("h_separation", (int)_tokens.Space5);
-        enabled.SizeFlagsHorizontal = SizeFlags.ExpandFill;
-        disabled.SizeFlagsHorizontal = SizeFlags.ExpandFill;
-        columns.AddChild(enabled);
-        columns.AddChild(disabled);
-        return columns;
-    }
-
-    private Control CreateTrayTabsSection()
-    {
-        var content = new VBoxContainer();
-        content.AddThemeConstantOverride("separation", (int)_tokens.Space2);
-        content.AddChild(CreateSectionDescription("Parts tray tabs", "four tabs, one open at a time"));
-        var tabs = Track(new UiIconTabs
-        {
-            ActiveIndex = 1,
-            SizeFlagsHorizontal = SizeFlags.ShrinkBegin,
-        });
-        tabs.SetTabs(
-            new UiIconTabs.TabItem("between", UiPartIconId.Spring, "Between two nodes"),
-            new UiIconTabs.TabItem("joint", UiPartIconId.Servo, "On a joint"),
-            new UiIconTabs.TabItem("sensors", UiPartIconId.LineOfSight, "Sensors"),
-            new UiIconTabs.TabItem("blocks", UiPartIconId.Battery, "Blocks"));
-        content.AddChild(tabs);
-        return content;
-    }
-
-    private Control CreateSelectionHandlesSection()
-    {
-        var content = new VBoxContainer();
-        content.AddThemeConstantOverride("separation", (int)_tokens.Space2);
-        content.AddChild(CreateSectionDescription(
-            "Selection handles",
-            "move, rotate, scale, on the canvas around a selection"));
-        var handles = new HBoxContainer
-        {
-            SizeFlagsHorizontal = SizeFlags.ShrinkBegin,
-        };
-        handles.AddThemeConstantOverride("separation", (int)_tokens.Space1);
-        handles.AddChild(Track(new UiSelectionHandle { Type = UiSelectionHandle.HandleType.Drag }));
-        handles.AddChild(Track(new UiSelectionHandle { Type = UiSelectionHandle.HandleType.Rotate }));
-        handles.AddChild(Track(new UiSelectionHandle { Type = UiSelectionHandle.HandleType.Scale }));
-        content.AddChild(handles);
-        return content;
-    }
-
-    private Control CreateChoicesSection()
-    {
-        var content = new VBoxContainer();
-        content.AddThemeConstantOverride("separation", (int)_tokens.Space2);
-        content.AddChild(CreateSectionDescription("Toggle and checkbox", "tap a row to change its state; dimmed rows are disabled"));
-        var columns = new GridContainer { Columns = 2 };
-        columns.AddThemeConstantOverride("h_separation", (int)_tokens.Space5);
-        columns.AddThemeConstantOverride("v_separation", (int)_tokens.Space2);
-        foreach (var disabled in new[] { false, true })
-        {
-            foreach (var on in new[] { true, false })
-            {
-                columns.AddChild(Track(new UiToggleRow
-                {
-                    LabelText = "Sounds",
-                    Subtext = disabled ? "Unavailable during this preview" : on ? "Taps, unlocks and results" : "",
-                    On = on,
-                    Disabled = disabled,
-                    SizeFlagsHorizontal = SizeFlags.ExpandFill,
-                }));
-                columns.AddChild(Track(new UiCheckRow
-                {
-                    LabelText = "Run until power is out",
-                    Subtext = disabled ? "No powered parts" : on ? "Ends when the battery does" : "",
-                    Checked = on,
-                    Disabled = disabled,
-                    SizeFlagsHorizontal = SizeFlags.ExpandFill,
-                }));
+                button.Activated += () => button.Selected = !button.Selected;
             }
+            return;
         }
 
-        content.AddChild(columns);
-        return content;
+        if (control is UiLabel label)
+        {
+            _labelAppliers.Add(tokens =>
+            {
+                label.Tokens = tokens;
+                label.AddThemeColorOverride("font_color",
+                    label.IsInGroup("gallery_muted") ? tokens.Muted : tokens.Ink);
+            });
+            return;
+        }
+
+        if (control is UiStageCard stageCard)
+        {
+            BindAuthoredStageCard(stageCard);
+            Track(stageCard);
+            return;
+        }
+
+        if (control is UiCard card)
+        {
+            Track(card);
+            foreach (var child in card.GetChildren().OfType<Control>())
+            {
+                BindAuthoredControls(child);
+            }
+            return;
+        }
+
+        if (control is UiMenu menu)
+        {
+            Track(menu);
+            foreach (var child in menu.GetChildren().OfType<Control>())
+            {
+                BindAuthoredControls(child);
+            }
+            return;
+        }
+
+        if (control is UiPicker picker)
+        {
+            BindAuthoredPicker(picker);
+            Track(picker);
+            return;
+        }
+
+        if (control is UiToggleRow
+            or UiCheckRow
+            or UiSegmentedSwitch
+            or UiIconTabs
+            or UiSelectionHandle
+            or UiNumber
+            or UiSlider
+            or UiProgressRing
+            or UiPartRow
+            or UiMenuItem
+            or UiNameField
+            or UiValueRow
+            or UiNoteRow)
+        {
+            Track(control);
+            return;
+        }
+
+        foreach (var child in control.GetChildren().OfType<Control>())
+        {
+            BindAuthoredControls(child);
+        }
+    }
+
+    private static void BindAuthoredPicker(UiPicker picker)
+    {
+        picker.Options = picker.Name.ToString() switch
+        {
+            "InteractivePicker" =>
+            [
+                new("Left thigh", UiIconId.Beam),
+                new("Left shin", UiIconId.Beam, Note: "swaps"),
+                new("Tail"),
+            ],
+            "LockedPicker" or "DisabledPicker" =>
+            [
+                new("Wheel 1", UiIconId.Beam),
+            ],
+            "FixedPartPicker" =>
+            [
+                new("Front thigh", UiIconId.Beam),
+                new("Front shin", UiIconId.Beam),
+            ],
+            _ => picker.Options,
+        };
+    }
+
+    private static void BindAuthoredStageCard(UiStageCard stageCard)
+    {
+        var body = stageCard.Name.ToString() switch
+        {
+            "Senses" => "9 readings · top first",
+            "Thinks" => "24 neurons · 8 outputs",
+            _ => string.Empty,
+        };
+        if (!string.IsNullOrWhiteSpace(body))
+        {
+            stageCard.SetBody(new Label
+            {
+                Text = body,
+                AutowrapMode = TextServer.AutowrapMode.WordSmart,
+                MouseFilter = MouseFilterEnum.Ignore,
+            });
+        }
     }
 
     private Control CreateTextInputSection()
@@ -1045,251 +501,6 @@ public partial class ComponentGalleryScreen : Control
         }));
         content.AddChild(fields);
         return content;
-    }
-
-    private Control CreatePartRowSection()
-    {
-        var content = new VBoxContainer();
-        content.AddThemeConstantOverride("separation", (int)_tokens.Space2);
-        content.AddChild(CreateSectionDescription(
-            "Part Row",
-            "a build part in the tray: glyph, name, count, and four states"));
-
-        var rows = new VBoxContainer
-        {
-            CustomMinimumSize = new Vector2(_tokens.SidePanelWidth, 0),
-            SizeFlagsHorizontal = SizeFlags.ShrinkBegin,
-        };
-        rows.AddThemeConstantOverride("separation", (int)_tokens.Space1);
-        rows.AddChild(Track(new UiPartRow
-        {
-            PartIconId = UiPartIconId.Servo,
-            PartName = "Servo",
-            CountText = "3 left",
-            State = UiPartRow.PartRowState.Rest,
-            SizeFlagsHorizontal = SizeFlags.ExpandFill,
-        }));
-        rows.AddChild(Track(new UiPartRow
-        {
-            PartIconId = UiPartIconId.Servo,
-            PartName = "Servo",
-            CountText = "3 left",
-            State = UiPartRow.PartRowState.Selected,
-            SizeFlagsHorizontal = SizeFlags.ExpandFill,
-        }));
-        rows.AddChild(Track(new UiPartRow
-        {
-            PartIconId = UiPartIconId.Stepper,
-            PartName = "Stepper",
-            CountText = "Locked",
-            State = UiPartRow.PartRowState.Locked,
-            SizeFlagsHorizontal = SizeFlags.ExpandFill,
-        }));
-        rows.AddChild(Track(new UiPartRow
-        {
-            PartIconId = UiPartIconId.Wheel,
-            PartName = "Wheel",
-            CountText = "0 left",
-            State = UiPartRow.PartRowState.NoneLeft,
-            SizeFlagsHorizontal = SizeFlags.ExpandFill,
-        }));
-        content.AddChild(rows);
-        return content;
-    }
-
-    private Control CreatePanelSection()
-    {
-        var content = new VBoxContainer();
-        content.AddThemeConstantOverride("separation", (int)_tokens.Space2);
-        content.AddChild(CreateSectionDescription(
-            "Panel",
-            "a part settings panel: header, padless rows sharing one gap, then Delete"));
-
-        var panel = Track(new UiInspectorPanel
-        {
-            Title = "Servo",
-            GlyphIconId = UiIconId.Speed,
-            DeleteText = "Delete",
-            CustomMinimumSize = new Vector2(_tokens.SidePanelWidth, 0),
-            SizeFlagsHorizontal = SizeFlags.ShrinkBegin,
-        });
-        panel.SetRows(
-            new UiNameField
-            {
-                TextValue = "Front knee",
-            },
-            new UiSlider
-            {
-                LabelText = "Max strength",
-                ReadoutText = "40 N·m",
-                Value = UiSliderValue.Thumb(0.62),
-            },
-            new UiValueRow
-            {
-                LabelText = "Weighs",
-                ValueText = "1.2 kg",
-            },
-            new UiPicker
-            {
-                LabelText = "Fixed part",
-                SelectedId = "front-thigh",
-                Options =
-                [
-                    new("front-thigh", "Front thigh", UiIconId.Beam),
-                    new("front-shin", "Front shin", UiIconId.Beam),
-                ],
-            },
-            new UiValueRow
-            {
-                LabelText = "Power",
-                ValueText = "Draws up to 0.6",
-                IconId = UiIconId.Bolt,
-            },
-            new UiNoteRow
-            {
-                Text = "Sits on an empty joint. Put a motor on top to drive it.",
-            });
-        content.AddChild(panel);
-        return content;
-    }
-
-    private Control CreateStageCardSection()
-    {
-        var content = new VBoxContainer();
-        content.AddThemeConstantOverride("separation", (int)_tokens.Space2);
-        content.AddChild(CreateSectionDescription(
-            "Stage card",
-            "one signal-flow stage: number, stage name, optional note, then stage content"));
-
-        var cards = CreateFlow();
-        cards.AddChild(CreateStageCardSpecimen("1", "Senses", "Left foot", "9 readings · top first"));
-        cards.AddChild(CreateStageCardSpecimen("2", "Thinks", "Brain", "24 neurons · 8 outputs", selected: true));
-        cards.AddChild(CreateStageCardSpecimen("3", "Moves", "Servo", string.Empty, collapsed: true));
-        content.AddChild(cards);
-        return content;
-    }
-
-    private UiStageCard CreateStageCardSpecimen(
-        string number,
-        string title,
-        string note,
-        string body,
-        bool selected = false,
-        bool collapsed = false)
-    {
-        var card = Track(new UiStageCard
-        {
-            NumberText = number,
-            Title = title,
-            Note = note,
-            Selected = selected,
-            Collapsed = collapsed,
-            CustomMinimumSize = new Vector2(_tokens.TileWidth, 0),
-            SizeFlagsHorizontal = SizeFlags.ShrinkBegin,
-        });
-        if (!string.IsNullOrWhiteSpace(body))
-        {
-            card.SetBody(new Label
-            {
-                Text = body,
-                AutowrapMode = TextServer.AutowrapMode.WordSmart,
-                MouseFilter = MouseFilterEnum.Ignore,
-            });
-        }
-
-        return card;
-    }
-
-    private Control CreateMenuSection()
-    {
-        var content = new VBoxContainer();
-        content.AddThemeConstantOverride("separation", (int)_tokens.Space2);
-        content.AddChild(CreateSectionDescription("Menu", "the overflow (three dots) list"));
-
-        var menu = Track(new UiOverflowMenu
-        {
-            CloseOnSelect = false,
-            SizeFlagsHorizontal = SizeFlags.ShrinkBegin,
-            WidthMode = UiOverflowMenu.MenuWidthMode.WrapContent,
-            Visible = true,
-        });
-        menu.SetActions(
-            new UiOverflowMenu.MenuAction("brain-setup", "Brain setup", UiIconId.Model, UiComponentContracts.SemanticState.Neutral),
-            new UiOverflowMenu.MenuAction("settings", "Settings", UiIconId.Gear, UiComponentContracts.SemanticState.Selected),
-            new UiOverflowMenu.MenuAction("delete", "Delete creation", UiIconId.Trash, UiComponentContracts.SemanticState.Danger));
-        menu.CallDeferred(CanvasItem.MethodName.Show);
-        content.AddChild(menu);
-
-        return content;
-    }
-
-    private Control CreatePickerSection()
-    {
-        var content = new VBoxContainer();
-        content.AddThemeConstantOverride("separation", (int)_tokens.Space2);
-        content.AddChild(CreateSectionDescription(
-            "Picker",
-            "collapsed, expanded, locked, and disabled"));
-
-        var examples = CreateFlow();
-        examples.AddChild(CreatePickerExample(
-            "Interactive",
-            new UiPicker
-            {
-                LabelText = "Fixed part",
-                SelectedId = "left-thigh",
-                Options =
-                [
-                    new("left-thigh", "Left thigh", UiIconId.Beam),
-                    new("left-shin", "Left shin", UiIconId.Beam, Note: "swaps"),
-                    new("tail", "Tail"),
-                ],
-            }));
-        examples.AddChild(CreatePickerExample(
-            "Locked",
-            new UiPicker
-            {
-                LabelText = "Target part",
-                State = UiPicker.PickerState.Locked,
-                SelectedId = "wheel-1",
-                Options = [new("wheel-1", "Wheel 1", UiIconId.Beam)],
-            }));
-        examples.AddChild(CreatePickerExample(
-            "Disabled",
-            new UiPicker
-            {
-                LabelText = "Target part",
-                SelectedId = "wheel-1",
-                Options = [new("wheel-1", "Wheel 1", UiIconId.Beam)],
-                Disabled = true,
-                BelowText = "Can't reassign while training",
-            }));
-        content.AddChild(examples);
-
-        return content;
-    }
-
-    private Control CreatePickerExample(string caption, UiPicker picker)
-    {
-        var stack = new VBoxContainer
-        {
-            SizeFlagsHorizontal = SizeFlags.ShrinkBegin,
-        };
-        stack.AddThemeConstantOverride("separation", (int)_tokens.Space1);
-        stack.AddChild(CreateLabel(caption, _tokens.NoteText, tokens => tokens.Muted, TextServer.AutowrapMode.Off));
-        stack.AddChild(Track(picker));
-        return stack;
-    }
-
-    private HFlowContainer CreateFlow()
-    {
-        var flow = new HFlowContainer
-        {
-            SizeFlagsHorizontal = SizeFlags.ExpandFill,
-        };
-        flow.AddThemeConstantOverride("h_separation", UiSpacing.ControlGap(_tokens));
-        flow.AddThemeConstantOverride("v_separation", UiSpacing.ControlGap(_tokens));
-        return flow;
     }
 
     private Control CreateSectionDescription(string title, string description)

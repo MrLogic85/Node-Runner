@@ -32,7 +32,7 @@ internal static class UiDashedBorder
                 points[index] = PointOnRoundedRect(rect, radius, distance);
             }
 
-            canvas.DrawPolyline(points, color, width, antialiased: true);
+            canvas.DrawPolyline(points, color, width, antialiased: false);
         }
     }
 

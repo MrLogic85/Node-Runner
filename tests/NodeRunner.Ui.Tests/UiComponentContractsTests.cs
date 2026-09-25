@@ -24,6 +24,29 @@ public sealed class UiComponentContractsTests
         typeof(UiButton).GetProperty("Enabled").ShouldBeNull();
         typeof(UiButton).GetProperty(nameof(UiButton.Disabled))!
             .DeclaringType.ShouldBe(typeof(Godot.BaseButton));
+        typeof(UiSlider).GetProperty("Enabled").ShouldBeNull();
+        typeof(UiSlider).GetProperty(nameof(UiSlider.Disabled)).ShouldNotBeNull();
+        typeof(UiCard).GetProperty(nameof(UiCard.Disabled)).ShouldNotBeNull();
+    }
+
+    [Fact]
+    public void MenuToggleItem_ComposesTheStandardToggleContract()
+    {
+        typeof(UiMenuToggleItem).BaseType.ShouldBe(typeof(UiMenuItem));
+        typeof(UiMenuActionItem).BaseType.ShouldBe(typeof(UiMenuItem));
+        typeof(UiMenuItemDivider).BaseType.ShouldBe(typeof(UiMenuItem));
+        typeof(UiMenuItem).IsAbstract.ShouldBeTrue();
+        typeof(UiMenuItem).GetProperty(nameof(UiMenuItem.Selected)).ShouldNotBeNull();
+        typeof(UiMenuItem).GetProperty(nameof(UiMenuItem.Disabled)).ShouldNotBeNull();
+        typeof(UiMenuItem).GetProperty(nameof(UiMenuItem.SizeVariant)).ShouldNotBeNull();
+        typeof(UiMenuToggleItem).GetProperty(nameof(UiMenuToggleItem.LabelText)).ShouldNotBeNull();
+        typeof(UiMenuToggleItem).GetProperty(nameof(UiMenuToggleItem.Subtext)).ShouldNotBeNull();
+        typeof(UiMenuToggleItem).GetProperty(nameof(UiMenuToggleItem.On)).ShouldNotBeNull();
+        typeof(UiMenuToggleItem).GetProperty(nameof(UiMenuToggleItem.Disabled)).ShouldNotBeNull();
+        typeof(UiMenuToggleItem).GetProperty(nameof(UiMenuToggleItem.SizeVariant))!
+            .PropertyType.ShouldBe(typeof(UiMenuItem.MenuItemSize));
+        typeof(UiMenu).GetProperty(nameof(UiMenu.Compact))!
+            .PropertyType.ShouldBe(typeof(bool));
     }
 
     [Fact]
@@ -52,7 +75,7 @@ public sealed class UiComponentContractsTests
                 "Checkbox",
                 "Segmented",
                 "Picker",
-                "OverflowMenu",
+                "Menu",
                 "Chip",
                 "ProgressBar",
                 "TextField",
@@ -68,7 +91,6 @@ public sealed class UiComponentContractsTests
                 "PanelHeader",
                 "InfoRow",
                 "Card",
-                "Panel",
                 "ProgressRing",
                 "Number",
                 "StageCard",
@@ -146,6 +168,8 @@ public sealed class UiComponentContractsTests
 
         progress.Kind.ShouldBe(UiSliderValueKind.Progress);
         progress.ThumbCount.ShouldBe(0);
+        progress.Low.ShouldBe(0);
+        progress.High.ShouldBe(0.62);
         progress.FillStart.ShouldBe(0);
         progress.FillEnd.ShouldBe(0.62);
     }
@@ -156,6 +180,8 @@ public sealed class UiComponentContractsTests
         var thumb = UiSliderValue.Thumb(0.4);
         thumb.Kind.ShouldBe(UiSliderValueKind.Thumb);
         thumb.ThumbCount.ShouldBe(1);
+        thumb.Low.ShouldBe(0);
+        thumb.High.ShouldBe(0.4);
         thumb.FillEnd.ShouldBe(0.4);
         thumb.ThumbAt(0).ShouldBe(0.4);
 
@@ -188,18 +214,16 @@ public sealed class UiComponentContractsTests
     public void SliderValue_FromComposesPrimitiveSceneValuesWithoutAmbiguousInputs()
     {
         UiSliderValue.From(UiSliderValueKind.Progress, 0.62, 0.8)
-            .ShouldBe(UiSliderValue.Progress(0.62));
+            .ShouldBe(UiSliderValue.Progress(0.8));
         UiSliderValue.From(UiSliderValueKind.Thumb, 0.62, 0.8)
-            .ShouldBe(UiSliderValue.Thumb(0.62));
+            .ShouldBe(UiSliderValue.Thumb(0.8));
         UiSliderValue.From(UiSliderValueKind.Range, 0.62, 0.8)
             .ShouldBe(UiSliderValue.Thumbs(0.62, 0.8));
     }
 
     [Fact]
-    public void PanelAndStageCard_UseDedicatedImplementations()
+    public void StageCard_UsesDedicatedImplementation()
     {
-        UiComponentContracts.ControlTypeFor(UiComponentContracts.CanonicalComponent.Panel)
-            .ShouldBe(nameof(UiInspectorPanel));
         UiComponentContracts.ControlTypeFor(UiComponentContracts.CanonicalComponent.StageCard)
             .ShouldBe(nameof(UiStageCard));
     }
@@ -229,19 +253,20 @@ public sealed class UiComponentContractsTests
             .ShouldBe(["Rest", "Selected", "Locked", "NoneLeft"]);
         Enum.GetNames<UiChip.ChipKind>()
             .ShouldBe(["Neutral", "Accent", "Locked", "Danger", "Warning", "Bad", "Ok"]);
-        Enum.GetNames<UiOverflowMenu.MenuWidthMode>()
+        Enum.GetNames<UiMenu.MenuWidthMode>()
             .ShouldBe(["Fixed", "WrapContent"]);
+        Enum.GetNames<UiMenuActionItem.MenuItemKind>()
+            .ShouldBe(["Default", "Danger"]);
+        Enum.GetNames<UiMenuItem.MenuItemSize>()
+            .ShouldBe(["Standard", "Compact"]);
     }
 
     [Fact]
     public void Defaults_MatchReferenceTouchAndCompletionContracts()
     {
-        UiComponentContracts.PartRowVisibleHeight.ShouldBe(UiTokens.Neon.ControlHeight);
-        UiComponentContracts.PartRowTouchHeight.ShouldBe(UiTokens.Neon.TouchTarget);
         UiTokens.Neon.TouchTarget.ShouldBe(48);
         UiTokens.Neon.NumberDiameter.ShouldBe(16);
         UiTokens.Neon.NumberStrokeWidth.ShouldBe(1.5f);
-        UiComponentContracts.ProgressRingDiameter.ShouldBe(44);
         UiComponentContracts.HoldCompletionSeconds.ShouldBe(0.8f);
         UiComponentContracts.ButtonProgressOpacity.ShouldBe(0.5f);
         UiGlow.Extent.ShouldBe(10);
@@ -253,21 +278,15 @@ public sealed class UiComponentContractsTests
     }
 
     [Fact]
-    public void OverflowMenuWidthResolution_PreservesFixedDefaultAndWrapContracts()
+    public void MenuWidthResolution_PreservesFixedDefaultAndWrapContracts()
     {
         var tokens = UiTokens.Neon;
 
-        UiOverflowMenu.ResolveContainerWidth(UiOverflowMenu.MenuWidthMode.Fixed, 0, tokens)
+        UiMenu.ResolveWidth(UiMenu.MenuWidthMode.Fixed, 0, tokens)
             .ShouldBe(tokens.MenuWidth);
-        UiOverflowMenu.ResolveRowWidth(UiOverflowMenu.MenuWidthMode.Fixed, 0, tokens)
-            .ShouldBe(tokens.MenuWidth - (tokens.StrokeHair * 2));
-        UiOverflowMenu.ResolveContainerWidth(UiOverflowMenu.MenuWidthMode.Fixed, 220, tokens)
+        UiMenu.ResolveWidth(UiMenu.MenuWidthMode.Fixed, 220, tokens)
             .ShouldBe(220);
-        UiOverflowMenu.ResolveRowWidth(UiOverflowMenu.MenuWidthMode.Fixed, 220, tokens)
-            .ShouldBe(218);
-        UiOverflowMenu.ResolveContainerWidth(UiOverflowMenu.MenuWidthMode.WrapContent, 220, tokens)
-            .ShouldBe(0);
-        UiOverflowMenu.ResolveRowWidth(UiOverflowMenu.MenuWidthMode.WrapContent, 220, tokens)
+        UiMenu.ResolveWidth(UiMenu.MenuWidthMode.WrapContent, 220, tokens)
             .ShouldBe(0);
     }
 
@@ -530,7 +549,7 @@ public sealed class UiComponentContractsTests
             UiComponentContracts.CanonicalComponent.Checkbox => "c_check",
             UiComponentContracts.CanonicalComponent.Segmented => "c_seg",
             UiComponentContracts.CanonicalComponent.Picker => "c_pick",
-            UiComponentContracts.CanonicalComponent.OverflowMenu => "c_menu",
+            UiComponentContracts.CanonicalComponent.Menu => "c_menu",
             UiComponentContracts.CanonicalComponent.Chip => "c_chip",
             UiComponentContracts.CanonicalComponent.ProgressBar => "c_prog",
             UiComponentContracts.CanonicalComponent.TextField => "c_textfield",
@@ -546,7 +565,6 @@ public sealed class UiComponentContractsTests
             UiComponentContracts.CanonicalComponent.PanelHeader => "c_panel_head",
             UiComponentContracts.CanonicalComponent.InfoRow => "c_info_row",
             UiComponentContracts.CanonicalComponent.Card => "c_card",
-            UiComponentContracts.CanonicalComponent.Panel => "c_inspector",
             UiComponentContracts.CanonicalComponent.ProgressRing => "c_ring",
             UiComponentContracts.CanonicalComponent.Number => "c_num",
             UiComponentContracts.CanonicalComponent.StageCard => "c_stage",

@@ -2,18 +2,24 @@ using Godot;
 
 namespace NodeRunner.Ui.Lib;
 
-/// <summary>Numbered stage card for a signal-flow column.</summary>
+/// <summary>Numbered stage card for a signal-flow column, built from a shared authored scene.</summary>
+[Tool]
+[GlobalClass]
 public partial class UiStageCard : UiCard
 {
     [Signal]
     public delegate void StageSelectedEventHandler();
 
-    private Control[] _body = [];
     private string _numberText = "1";
     private string _title = "Senses";
     private string _note = string.Empty;
     private bool _selected;
     private bool _collapsed;
+    private UiNumber _number = null!;
+    private Label _titleLabel = null!;
+    private Label _noteLabel = null!;
+    private VBoxContainer _body = null!;
+    private bool _ready;
 
     [Export]
     public string NumberText
@@ -22,7 +28,7 @@ public partial class UiStageCard : UiCard
         set
         {
             _numberText = value;
-            Rebuild();
+            ApplyNumber();
         }
     }
 
@@ -33,7 +39,7 @@ public partial class UiStageCard : UiCard
         set
         {
             _title = value;
-            Rebuild();
+            ApplyTitle();
         }
     }
 
@@ -44,7 +50,7 @@ public partial class UiStageCard : UiCard
         set
         {
             _note = value;
-            Rebuild();
+            ApplyNote();
         }
     }
 
@@ -66,7 +72,7 @@ public partial class UiStageCard : UiCard
         set
         {
             _collapsed = value;
-            Rebuild();
+            ApplyCollapsed();
         }
     }
 
@@ -76,7 +82,7 @@ public partial class UiStageCard : UiCard
         set
         {
             base.Tokens = value;
-            Rebuild();
+            ApplyTokens();
         }
     }
 
@@ -85,9 +91,18 @@ public partial class UiStageCard : UiCard
         MouseFilter = MouseFilterEnum.Pass;
         SizeVariant = CardSize.Snug;
         Glow = true;
-        RefreshCardStyle();
+        _number = GetNode<UiNumber>("%Number");
+        _titleLabel = GetNode<Label>("%Title");
+        _noteLabel = GetNode<Label>("%Note");
+        _body = GetNode<VBoxContainer>("%Body");
+        _ready = true;
         base._Ready();
-        Rebuild();
+        RefreshCardStyle();
+        ApplyNumber();
+        ApplyTitle();
+        ApplyNote();
+        ApplyCollapsed();
+        ApplyTokens();
     }
 
     public override void _GuiInput(InputEvent @event)
@@ -102,8 +117,23 @@ public partial class UiStageCard : UiCard
     public void SetBody(params Control[] body)
     {
         ArgumentNullException.ThrowIfNull(body);
-        _body = body;
-        Rebuild();
+        if (!_ready)
+        {
+            return;
+        }
+
+        foreach (var child in _body.GetChildren().OfType<Control>().ToArray())
+        {
+            _body.RemoveChild(child);
+            child.QueueFree();
+        }
+
+        foreach (var child in body)
+        {
+            child.SizeFlagsHorizontal = SizeFlags.ExpandFill;
+            UiTokenApplier.Apply(child, Tokens);
+            _body.AddChild(child);
+        }
     }
 
     private void RefreshCardStyle()
@@ -111,64 +141,62 @@ public partial class UiStageCard : UiCard
         Kind = Selected ? CardVariant.Selected : CardVariant.Frame;
     }
 
-    private void Rebuild()
+    private void ApplyNumber()
     {
-        if (!IsInsideTree())
+        if (!_ready)
         {
             return;
         }
 
-        foreach (var child in _body)
+        _number.Text = NumberText;
+    }
+
+    private void ApplyTitle()
+    {
+        if (!_ready)
         {
-            child.GetParent()?.RemoveChild(child);
+            return;
         }
 
-        foreach (var child in GetChildren())
+        _titleLabel.Text = Title;
+    }
+
+    private void ApplyNote()
+    {
+        if (!_ready)
         {
-            RemoveChild(child);
-            child.QueueFree();
+            return;
         }
 
-        RefreshCardStyle();
-        var stack = new VBoxContainer
-        {
-            SizeFlagsHorizontal = SizeFlags.ExpandFill,
-        };
-        stack.AddThemeConstantOverride("separation", (int)Tokens.Space1);
-        AddChild(stack);
+        _noteLabel.Text = Note;
+        _noteLabel.Visible = !string.IsNullOrWhiteSpace(Note);
+    }
 
-        var header = new HBoxContainer
+    private void ApplyCollapsed()
+    {
+        if (!_ready)
         {
-            SizeFlagsHorizontal = SizeFlags.ExpandFill,
-        };
-        header.AddThemeConstantOverride("separation", (int)Tokens.Space2);
-        var number = new UiNumber { Text = NumberText, Tokens = Tokens };
-        header.AddChild(number);
-        var titleLabel = UiFieldAndRows.Label(Title, Tokens, Tokens.StageText, Tokens.Ink, HorizontalAlignment.Left);
-        titleLabel.CustomMinimumSize = Vector2.Zero;
-        titleLabel.SizeFlagsHorizontal = SizeFlags.ExpandFill;
-        header.AddChild(titleLabel);
-        if (!string.IsNullOrWhiteSpace(Note))
-        {
-            var noteLabel = UiFieldAndRows.Label(Note, Tokens, Tokens.CaptionText, Tokens.Muted, HorizontalAlignment.Right);
-            noteLabel.CustomMinimumSize = new Vector2(Tokens.ColumnSmallWidth, 0);
-            noteLabel.SizeFlagsHorizontal = SizeFlags.ShrinkEnd;
-            header.AddChild(noteLabel);
+            return;
         }
 
-        stack.AddChild(header);
-        var bodyContainer = new VBoxContainer
+        _body.Visible = !Collapsed;
+    }
+
+    private void ApplyTokens()
+    {
+        if (!_ready)
         {
-            SizeFlagsHorizontal = SizeFlags.ExpandFill,
-            Visible = !Collapsed,
-        };
-        bodyContainer.AddThemeConstantOverride("separation", (int)Tokens.Space1);
-        stack.AddChild(bodyContainer);
-        foreach (var child in _body)
+            return;
+        }
+
+        _number.Tokens = Tokens;
+        Tokens.ApplyTextStyle(_titleLabel, Tokens.StageText);
+        _titleLabel.AddThemeColorOverride("font_color", Tokens.Ink);
+        Tokens.ApplyTextStyle(_noteLabel, Tokens.CaptionText);
+        _noteLabel.AddThemeColorOverride("font_color", Tokens.Muted);
+        foreach (var child in _body.GetChildren().OfType<Control>())
         {
-            child.SizeFlagsHorizontal = SizeFlags.ExpandFill;
             UiTokenApplier.Apply(child, Tokens);
-            bodyContainer.AddChild(child);
         }
     }
 }

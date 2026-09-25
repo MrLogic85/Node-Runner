@@ -3,30 +3,32 @@ using Godot;
 namespace NodeRunner.Ui.Lib;
 
 /// <summary>Label/help composition around a native CheckButton or CheckBox.</summary>
-public abstract partial class UiChoiceRow : Container
+public abstract partial class UiChoiceRow : Container, ISerializationListener
 {
     [Signal]
     public delegate void ToggledEventHandler(bool on);
+
+    private sealed record Content(Button Button, VBoxContainer Labels, Label Label, Label Help);
 
     private UiTokens _tokens = UiTokens.Neon;
     private string _labelText = string.Empty;
     private string _subtext = string.Empty;
     private bool _selected;
     private bool _disabled;
-    private Button? _button;
-    private VBoxContainer? _labels;
-    private Label? _label;
-    private Label? _help;
+    private Content? _content;
+    // Object/method callables survive assembly reloads without retaining managed delegates.
+    private Callable ToggledCallback => new(this, MethodName.OnNativeToggled);
+    private Callable MinimumSizeChangedCallback => new(this, MethodName.UpdateLayout);
 
     protected abstract bool IsSwitch { get; }
 
     protected bool Selected
     {
-        get => _button?.ButtonPressed ?? _selected;
+        get => _content?.Button.ButtonPressed ?? _selected;
         set
         {
             _selected = value;
-            _button?.SetPressedNoSignal(value);
+            _content?.Button.SetPressedNoSignal(value);
         }
     }
 
@@ -37,11 +39,7 @@ public abstract partial class UiChoiceRow : Container
         set
         {
             _disabled = value;
-            if (_button is not null)
-            {
-                _button.Disabled = value;
-            }
-            RefreshLabels();
+            ApplyState();
         }
     }
 
@@ -52,7 +50,7 @@ public abstract partial class UiChoiceRow : Container
         set
         {
             _labelText = value;
-            RefreshLabels();
+            ApplyContent();
         }
     }
 
@@ -63,7 +61,7 @@ public abstract partial class UiChoiceRow : Container
         set
         {
             _subtext = value;
-            RefreshLabels();
+            ApplyContent();
         }
     }
 
@@ -74,45 +72,139 @@ public abstract partial class UiChoiceRow : Container
         {
             _tokens = value;
             ApplyTheme();
-            RefreshLabels();
+            ApplyState();
+        }
+    }
+
+    public override void _EnterTree() => RequestReady();
+
+    public override void _ExitTree() => DisconnectContent();
+
+    public void OnBeforeSerialize() => DisconnectContent();
+
+    public void OnAfterDeserialize() => CallDeferred(MethodName.RestoreContent);
+
+    private void RestoreContent()
+    {
+        if (IsInsideTree())
+        {
+            InitializeContent();
         }
     }
 
     public override void _Ready()
     {
-        if (_button is null)
+        MouseFilter = MouseFilterEnum.Pass;
+        InitializeContent();
+    }
+
+    private void InitializeContent()
+    {
+        DisconnectContent();
+        _content = RecoverContent() ?? CreateContent();
+        ConnectContent();
+        ApplyContent();
+        ApplyTheme();
+        ApplyState();
+    }
+
+    private Content? RecoverContent()
+    {
+        foreach (Node child in GetChildren(includeInternal: true))
         {
-            MouseFilter = MouseFilterEnum.Pass;
-            _button = IsSwitch ? new CheckButton() : new CheckBox();
-            _button.MouseFilter = MouseFilterEnum.Pass;
-            _button.Disabled = Disabled;
-            _button.SetPressedNoSignal(_selected);
-            _button.Toggled += OnNativeToggled;
-            AddChild(_button);
-            _labels = new VBoxContainer { MouseFilter = MouseFilterEnum.Ignore };
-            _labels.AddThemeConstantOverride("separation", 0);
-            _label = new Label { MouseFilter = MouseFilterEnum.Ignore };
-            _help = new Label { MouseFilter = MouseFilterEnum.Ignore };
-            _labels.AddChild(_label);
-            _labels.AddChild(_help);
-            _button.AddChild(_labels);
-            _labels.MinimumSizeChanged += RefreshMinimumSize;
+            if (child is not Button button
+                || IsSwitch && button is not CheckButton
+                || !IsSwitch && button is not CheckBox)
+            {
+                continue;
+            }
+
+            foreach (Node buttonChild in button.GetChildren(includeInternal: true))
+            {
+                if (buttonChild is not VBoxContainer labels)
+                {
+                    continue;
+                }
+
+                var labelChildren = labels.GetChildren(includeInternal: true)
+                    .OfType<Label>()
+                    .ToArray();
+                if (labelChildren.Length >= 2)
+                {
+                    return new Content(button, labels, labelChildren[0], labelChildren[1]);
+                }
+            }
         }
 
-        ApplyTheme();
-        RefreshLabels();
+        return null;
+    }
+
+    private Content CreateContent()
+    {
+        Button button = IsSwitch ? new CheckButton() : new CheckBox();
+        button.MouseFilter = MouseFilterEnum.Pass;
+        AddChild(button, false, InternalMode.Front);
+
+        var labels = new VBoxContainer { MouseFilter = MouseFilterEnum.Ignore };
+        labels.AddThemeConstantOverride("separation", 0);
+        button.AddChild(labels, false, InternalMode.Front);
+
+        var label = new Label { MouseFilter = MouseFilterEnum.Ignore };
+        var help = new Label { MouseFilter = MouseFilterEnum.Ignore };
+        labels.AddChild(label, false, InternalMode.Front);
+        labels.AddChild(help, false, InternalMode.Front);
+        return new Content(button, labels, label, help);
+    }
+
+    private void ConnectContent()
+    {
+        if (_content is not { } content)
+        {
+            return;
+        }
+
+        if (!content.Button.IsConnected(BaseButton.SignalName.Toggled, ToggledCallback))
+        {
+            content.Button.Connect(BaseButton.SignalName.Toggled, ToggledCallback);
+        }
+        if (!content.Labels.IsConnected(Control.SignalName.MinimumSizeChanged, MinimumSizeChangedCallback))
+        {
+            content.Labels.Connect(Control.SignalName.MinimumSizeChanged, MinimumSizeChangedCallback);
+        }
+    }
+
+    private void DisconnectContent()
+    {
+        if (_content is not { } content)
+        {
+            return;
+        }
+
+        if (content.Button.IsConnected(BaseButton.SignalName.Toggled, ToggledCallback))
+        {
+            content.Button.Disconnect(BaseButton.SignalName.Toggled, ToggledCallback);
+        }
+        if (content.Labels.IsConnected(Control.SignalName.MinimumSizeChanged, MinimumSizeChangedCallback))
+        {
+            content.Labels.Disconnect(Control.SignalName.MinimumSizeChanged, MinimumSizeChangedCallback);
+        }
+    }
+
+    public override Vector2 _GetMinimumSize()
+    {
+        return MeasureMinimumSize();
     }
 
     public override void _Notification(int what)
     {
-        if (what == NotificationSortChildren && _button is not null && _labels is not null)
+        if (what == NotificationSortChildren && _content is { } content)
         {
-            FitChildInRect(_button, new Rect2(Vector2.Zero, Size));
+            FitChildInRect(content.Button, new Rect2(Vector2.Zero, Size));
             var indicator = IndicatorSize();
             var inset = indicator.X + Tokens.Space2;
-            var height = _labels.GetCombinedMinimumSize().Y;
-            _labels.Position = new Vector2(IsSwitch ? 0 : inset, (Size.Y - height) * 0.5f);
-            _labels.Size = new Vector2(Mathf.Max(0, Size.X - inset), height);
+            var height = content.Labels.GetCombinedMinimumSize().Y;
+            content.Labels.Position = new Vector2(IsSwitch ? 0 : inset, (Size.Y - height) * 0.5f);
+            content.Labels.Size = new Vector2(Mathf.Max(0, Size.X - inset), height);
         }
     }
 
@@ -122,54 +214,70 @@ public abstract partial class UiChoiceRow : Container
         EmitSignal(SignalName.Toggled, on);
     }
 
-    private void RefreshMinimumSize()
+    private void UpdateLayout()
     {
-        var content = _labels?.GetCombinedMinimumSize() ?? Vector2.Zero;
-        CustomMinimumSize = new Vector2(
-            content.X + IndicatorSize().X + Tokens.Space2,
-            Mathf.Max(Tokens.TouchTarget, content.Y));
+        UpdateMinimumSize();
         QueueSort();
     }
 
-    private void RefreshLabels()
+    private Vector2 MeasureMinimumSize()
     {
-        if (_button is null || _labels is null)
+        var content = _content?.Labels.GetCombinedMinimumSize() ?? Vector2.Zero;
+        var indicator = IndicatorSize();
+        return new Vector2(
+            content.X + indicator.X + Tokens.Space2,
+            Mathf.Max(content.Y, indicator.Y));
+    }
+
+    private void ApplyContent()
+    {
+        if (_content is not { } content)
         {
             return;
         }
 
-        _label!.Text = LabelText;
-        _help!.Text = Subtext;
-        _help.Visible = !string.IsNullOrWhiteSpace(Subtext);
-        Tokens.ApplyTextStyle(_label, Tokens.SmallStrongText);
-        Tokens.ApplyTextStyle(_help, Tokens.NoteText);
-        _label.AddThemeColorOverride("font_color", Tokens.Ink);
-        _help.AddThemeColorOverride("font_color", Tokens.Muted);
-        _labels.Modulate = new Color(1, 1, 1, Disabled ? UiChoiceStyle.DisabledOpacity : 1);
-        _button.TooltipText = string.IsNullOrWhiteSpace(Subtext) ? LabelText : $"{LabelText}\n{Subtext}";
-        _button.AccessibilityName = LabelText;
-        _button.AccessibilityDescription = Subtext;
-        RefreshMinimumSize();
+        content.Label.Text = LabelText;
+        content.Help.Text = Subtext;
+        content.Help.Visible = !string.IsNullOrWhiteSpace(Subtext);
+        content.Button.TooltipText = string.IsNullOrWhiteSpace(Subtext) ? LabelText : $"{LabelText}\n{Subtext}";
+        UpdateLayout();
     }
 
     private void ApplyTheme()
     {
-        if (_button is null)
+        if (_content is not { } content)
         {
             return;
         }
 
-        _button.Theme = UiChoiceTheme.Create(Tokens, IsSwitch);
+        content.Button.Theme = UiChoiceTheme.Create(Tokens, IsSwitch);
+        Tokens.ApplyTextStyle(content.Label, Tokens.SmallStrongText);
+        Tokens.ApplyTextStyle(content.Help, Tokens.NoteText);
+        content.Label.AddThemeColorOverride("font_color", Tokens.Ink);
+        content.Help.AddThemeColorOverride("font_color", Tokens.Muted);
+        UpdateLayout();
+    }
+
+    private void ApplyState()
+    {
+        if (_content is not { } content)
+        {
+            return;
+        }
+
+        content.Button.Disabled = Disabled;
+        content.Button.SetPressedNoSignal(_selected);
+        content.Labels.Modulate = new Color(1, 1, 1, Disabled ? UiChoiceStyle.DisabledOpacity : 1);
     }
 
     private Vector2 IndicatorSize()
     {
-        if (_button is null)
+        if (_content is not { } content)
         {
             return UiChoiceStyle.IndicatorSize(Tokens, IsSwitch);
         }
 
-        return _button.GetThemeIcon("checked").GetSize()
-            .Max(_button.GetThemeIcon("unchecked").GetSize());
+        return content.Button.GetThemeIcon("checked").GetSize()
+            .Max(content.Button.GetThemeIcon("unchecked").GetSize());
     }
 }

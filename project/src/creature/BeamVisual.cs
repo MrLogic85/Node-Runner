@@ -43,9 +43,9 @@ public partial class BeamVisual : Node2D
 
         if (IsSelected)
         {
-            DrawLine(start, end, SelectionColor, Width + SelectionWidth, antialiased: true);
+            DrawLine(start, end, SelectionColor, Width + SelectionWidth, antialiased: false);
         }
 
-        DrawLine(start, end, Color, Width, antialiased: true);
+        DrawLine(start, end, Color, Width, antialiased: false);
     }
 }

@@ -5,9 +5,6 @@ namespace NodeRunner.Ui.Lib;
 /// <summary>Pure, testable contracts for the UI component-library inventory.</summary>
 public static class UiComponentContracts
 {
-    public const float PartRowVisibleHeight = 40;
-    public const float PartRowTouchHeight = 48;
-    public const float ProgressRingDiameter = 44;
     public const float HoldCompletionSeconds = 0.8f;
     public const float ButtonProgressOpacity = 0.5f;
 
@@ -57,7 +54,7 @@ public static class UiComponentContracts
         Checkbox,
         Segmented,
         Picker,
-        OverflowMenu,
+        Menu,
         Chip,
         ProgressBar,
         TextField,
@@ -73,7 +70,6 @@ public static class UiComponentContracts
         PanelHeader,
         InfoRow,
         Card,
-        Panel,
         ProgressRing,
         Number,
         StageCard,
@@ -107,7 +103,7 @@ public static class UiComponentContracts
             CanonicalComponent.Checkbox => nameof(UiCheckRow),
             CanonicalComponent.Segmented => nameof(UiSegmentedSwitch),
             CanonicalComponent.Picker => nameof(UiPicker),
-            CanonicalComponent.OverflowMenu => nameof(UiOverflowMenu),
+            CanonicalComponent.Menu => nameof(UiMenu),
             CanonicalComponent.Chip => nameof(UiChip),
             CanonicalComponent.ProgressBar => nameof(UiSlider),
             CanonicalComponent.TextField => nameof(UiTextField),
@@ -123,7 +119,6 @@ public static class UiComponentContracts
             CanonicalComponent.PanelHeader => nameof(UiPanelHeader),
             CanonicalComponent.InfoRow => nameof(UiInfoRow),
             CanonicalComponent.Card => nameof(UiCard),
-            CanonicalComponent.Panel => nameof(UiInspectorPanel),
             CanonicalComponent.ProgressRing => nameof(UiProgressRing),
             CanonicalComponent.Number => nameof(UiNumber),
             CanonicalComponent.StageCard => nameof(UiStageCard),

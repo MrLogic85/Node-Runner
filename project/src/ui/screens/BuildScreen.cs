@@ -455,10 +455,10 @@ public partial class BuildScreen : Control
         var rect = new Rect2(Vector2.Zero, button.Size).Grow(-4);
         var color = _tokens.Muted;
         color.A = 0.72f;
-        button.DrawDashedLine(rect.Position, rect.Position + new Vector2(rect.Size.X, 0), color, 2, 6, antialiased: true);
-        button.DrawDashedLine(rect.Position + new Vector2(rect.Size.X, 0), rect.End, color, 2, 6, antialiased: true);
-        button.DrawDashedLine(rect.End, rect.Position + new Vector2(0, rect.Size.Y), color, 2, 6, antialiased: true);
-        button.DrawDashedLine(rect.Position + new Vector2(0, rect.Size.Y), rect.Position, color, 2, 6, antialiased: true);
+        button.DrawDashedLine(rect.Position, rect.Position + new Vector2(rect.Size.X, 0), color, 2, 6, antialiased: false);
+        button.DrawDashedLine(rect.Position + new Vector2(rect.Size.X, 0), rect.End, color, 2, 6, antialiased: false);
+        button.DrawDashedLine(rect.End, rect.Position + new Vector2(0, rect.Size.Y), color, 2, 6, antialiased: false);
+        button.DrawDashedLine(rect.Position + new Vector2(0, rect.Size.Y), rect.Position, color, 2, 6, antialiased: false);
     }
 
     private Control CreateBuildCanvasPanel()
@@ -1088,7 +1088,7 @@ public partial class BuildScreen : Control
                 var point = new Vector2(x, y);
                 column.Add(point);
                 var color = layer == 0 || layer == layers.Length - 1 ? _tokens.Accent : _tokens.LineStrong;
-                control.DrawArc(point, 4, 0, Mathf.Tau, 18, color, 1.5f, antialiased: true);
+                control.DrawArc(point, 4, 0, Mathf.Tau, 18, color, 1.5f, antialiased: false);
             }
 
             var label = count > 6 ? $"+{count - 6} more" : $"{count}";
@@ -1102,7 +1102,7 @@ public partial class BuildScreen : Control
             {
                 foreach (var to in nodeColumns[layer + 1])
                 {
-                    control.DrawLine(from, to, new Color(_tokens.Edge, 0.35f), 0.5f, antialiased: true);
+                    control.DrawLine(from, to, new Color(_tokens.Edge, 0.35f), 0.5f, antialiased: false);
                 }
             }
         }
@@ -1225,7 +1225,7 @@ public partial class BuildScreen : Control
         DrawBeam(control, leftKnee, leftFoot, _tokens.Edge);
         DrawBeam(control, rightHip, rightKnee, _tokens.Edge);
         DrawBeam(control, rightKnee, rightFoot, _tokens.Edge);
-        control.DrawDashedLine(brokenA, brokenB, _tokens.Danger, 4, 7, antialiased: true);
+        control.DrawDashedLine(brokenA, brokenB, _tokens.Danger, 4, 7, antialiased: false);
 
         DrawMotorArc(control, leftHip, clockwise: false);
         DrawMotorArc(control, rightHip, clockwise: true);
@@ -1275,7 +1275,7 @@ public partial class BuildScreen : Control
         {
             foreach (var to in hidden)
             {
-                control.DrawLine(from, to, _tokens.Accent with { A = 0.45f }, 1.2f, antialiased: true);
+                control.DrawLine(from, to, _tokens.Accent with { A = 0.45f }, 1.2f, antialiased: false);
             }
         }
 
@@ -1283,14 +1283,14 @@ public partial class BuildScreen : Control
         {
             foreach (var to in outputs)
             {
-                control.DrawLine(from, to, _tokens.Accent with { A = 0.55f }, 1.2f, antialiased: true);
+                control.DrawLine(from, to, _tokens.Accent with { A = 0.55f }, 1.2f, antialiased: false);
             }
         }
 
         foreach (var point in inputs.Concat(hidden).Concat(outputs))
         {
             control.DrawCircle(point, 5, _tokens.PanelRaised);
-            control.DrawArc(point, 5, 0, Mathf.Tau, 18, _tokens.LineStrong, 1.5f, antialiased: true);
+            control.DrawArc(point, 5, 0, Mathf.Tau, 18, _tokens.LineStrong, 1.5f, antialiased: false);
         }
     }
 
@@ -1315,7 +1315,7 @@ public partial class BuildScreen : Control
 
     private void DrawBeam(Control control, Vector2 start, Vector2 end, Color color)
     {
-        control.DrawLine(start, end, color, 5, antialiased: true);
+        control.DrawLine(start, end, color, 5, antialiased: false);
     }
 
     private void DrawNode(Control control, Vector2 position, bool hasCore, bool selected = false)
@@ -1332,7 +1332,7 @@ public partial class BuildScreen : Control
         }
 
         control.DrawCircle(position, 12, _tokens.Panel);
-        control.DrawArc(position, 12, 0, Mathf.Tau, 24, _tokens.LineStrong, 3, antialiased: true);
+        control.DrawArc(position, 12, 0, Mathf.Tau, 24, _tokens.LineStrong, 3, antialiased: false);
         if (hasCore)
         {
             var half = new Vector2(12, 12);
@@ -1343,21 +1343,21 @@ public partial class BuildScreen : Control
                 position + new Vector2(0, half.Y),
                 position + new Vector2(-half.X, 0),
             };
-            control.DrawPolyline(points.Append(points[0]).ToArray(), _tokens.Accent, 3, antialiased: true);
+            control.DrawPolyline(points.Append(points[0]).ToArray(), _tokens.Accent, 3, antialiased: false);
         }
     }
 
     private void DrawInvalidNode(Control control, Vector2 position)
     {
         control.DrawCircle(position, 12, _tokens.Panel);
-        control.DrawArc(position, 12, 0, Mathf.Tau, 24, _tokens.Danger, 3, antialiased: true);
+        control.DrawArc(position, 12, 0, Mathf.Tau, 24, _tokens.Danger, 3, antialiased: false);
     }
 
     private void DrawMotorArc(Control control, Vector2 center, bool clockwise)
     {
         var start = clockwise ? -0.35f : 0.8f;
         var end = clockwise ? 1.0f : 2.1f;
-        control.DrawArc(center, 28, start, end, 20, _tokens.Accent, 3, antialiased: true);
+        control.DrawArc(center, 28, start, end, 20, _tokens.Accent, 3, antialiased: false);
     }
 
     private void DrawTag(Control control, string text, Vector2 position, Color borderColor)

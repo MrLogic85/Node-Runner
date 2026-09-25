@@ -168,7 +168,7 @@ public partial class BrainFocusNetworkView : Control
 
         if (selected)
         {
-            DrawArc(position, radius + 8, 0, Mathf.Tau, 40, _tokens.Halo, 3, antialiased: true);
+            DrawArc(position, radius + 8, 0, Mathf.Tau, 40, _tokens.Halo, 3, antialiased: false);
         }
     }
 
@@ -176,7 +176,7 @@ public partial class BrainFocusNetworkView : Control
     {
         if (!dashed)
         {
-            DrawLine(from, to, color, width, antialiased: true);
+            DrawLine(from, to, color, width, antialiased: false);
             return;
         }
 
@@ -194,7 +194,7 @@ public partial class BrainFocusNetworkView : Control
         {
             var start = from + direction * offset;
             var end = from + direction * Math.Min(offset + dashLength, length);
-            DrawLine(start, end, color, width, antialiased: true);
+            DrawLine(start, end, color, width, antialiased: false);
         }
     }
 

@@ -53,7 +53,7 @@ public partial class UiBoundsDebugOverlay : Control
             control.GetGlobalRect().Size);
         var color = _palette[depth % _palette.Length];
         DrawRect(rect, color with { A = 0.08f }, filled: true);
-        DrawRect(rect, color, filled: false, width: 1f, antialiased: true);
+        DrawRect(rect, color, filled: false, width: 1f, antialiased: false);
 
         foreach (var child in control.GetChildren().OfType<Control>())
         {

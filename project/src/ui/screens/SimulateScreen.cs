@@ -1243,8 +1243,8 @@ public partial class SimulateScreen : Control
         var center = new Vector2(size.X * 0.44f, groundY - 72);
         var front = center + new Vector2(86, 20);
         var rear = center + new Vector2(-86, 16);
-        control.DrawLine(rear, center, _tokens.Accent, 5, antialiased: true);
-        control.DrawLine(center, front, _tokens.Accent, 5, antialiased: true);
+        control.DrawLine(rear, center, _tokens.Accent, 5, antialiased: false);
+        control.DrawLine(center, front, _tokens.Accent, 5, antialiased: false);
         // Purely decorative illustration -- effects-lite drops the glow
         // treatment for flat schematic dots instead of hiding them (#134).
         control.DrawCircle(rear, _tokens.EffectsEnabled ? 18 : 8, _tokens.EffectsEnabled ? _tokens.AccentGlow : _tokens.Line);
