@@ -15,6 +15,9 @@ internal static class UiTokenApplier
             case UiButton button:
                 button.Tokens = tokens;
                 break;
+            case UiFrame frame:
+                frame.Tokens = tokens;
+                break;
             case UiMenu menu:
                 menu.Tokens = tokens;
                 break;

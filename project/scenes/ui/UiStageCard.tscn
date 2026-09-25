@@ -5,7 +5,7 @@
 [ext_resource type="FontFile" uid="uid://5s1wl322xi7n" path="res://assets/fonts/ChakraPetch/ChakraPetch-SemiBold.ttf" id="3_llodf"]
 [ext_resource type="FontFile" uid="uid://dejsnj7jlxm4" path="res://assets/fonts/Barlow/Barlow-Medium.ttf" id="4_qsdwa"]
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_llodf"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_pphkl"]
 content_margin_left = 9.0
 content_margin_top = 9.0
 content_margin_right = 9.0
@@ -23,19 +23,19 @@ corner_radius_bottom_left = 12
 shadow_color = Color(0.101960786, 0.49803922, 0.4745098, 0.12)
 shadow_size = 10
 
-[sub_resource type="FontVariation" id="FontVariation_qsdwa"]
+[sub_resource type="FontVariation" id="FontVariation_q602f"]
 base_font = ExtResource("3_llodf")
 spacing_glyph = 1
 spacing_top = -1
 
-[sub_resource type="FontVariation" id="FontVariation_pphkl"]
+[sub_resource type="FontVariation" id="FontVariation_r44si"]
 base_font = ExtResource("4_qsdwa")
 spacing_bottom = 1
 
 [node name="UiStageCard" type="PanelContainer" unique_id=1836660590]
 size_flags_horizontal = 0
 mouse_filter = 1
-theme_override_styles/panel = SubResource("StyleBoxFlat_llodf")
+theme_override_styles/panel = SubResource("StyleBoxFlat_pphkl")
 script = ExtResource("1_stage_card")
 Title = "Stage"
 Note = "Note about stage"
@@ -69,9 +69,9 @@ layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 8
 theme_override_colors/font_color = Color(0.9019608, 0.94509804, 1, 1)
-theme_override_fonts/font = SubResource("FontVariation_qsdwa")
+theme_override_fonts/font = SubResource("FontVariation_q602f")
 theme_override_font_sizes/font_size = 11
-text = "STAGE"
+text = "Stage"
 metadata/ui_font_family = "Display"
 metadata/ui_line_height = 14.0
 metadata/ui_font_weight = 600
@@ -80,11 +80,10 @@ metadata/ui_uppercase = true
 
 [node name="Note" type="Label" parent="Stack/Header/HFlowContainer" unique_id=140360441]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(52, 0)
 layout_mode = 2
 size_flags_horizontal = 0
 theme_override_colors/font_color = Color(0.56078434, 0.6392157, 0.76862746, 1)
-theme_override_fonts/font = SubResource("FontVariation_pphkl")
+theme_override_fonts/font = SubResource("FontVariation_r44si")
 theme_override_font_sizes/font_size = 10
 text = "Note about stage"
 horizontal_alignment = 2

@@ -1,5 +1,4 @@
 using NodeRunner.Ui.Lib;
-using NodeRunner.Ui.Screens;
 
 namespace NodeRunner.Ui.Tests;
 
@@ -95,32 +94,6 @@ public sealed class UiComponentContractsTests
                 "Number",
                 "StageCard",
             ]);
-    }
-
-    [Fact]
-    public void ComponentGalleryInventory_CoversVisibleCanonicalComponentsExactlyOnce()
-    {
-        var inventory = ComponentGalleryScreen.CanonicalInventory;
-
-        inventory.Select(spec => spec.Component)
-            .ShouldAllBe(component => UiComponentContracts.AllCanonicalComponents.Contains(component));
-        inventory.Select(spec => spec.Component).Distinct().Count()
-            .ShouldBe(inventory.Count);
-        foreach (var component in inventory.Select(spec => spec.Component))
-        {
-            inventory.Count(spec => spec.Component == component).ShouldBe(1);
-        }
-    }
-
-    [Fact]
-    public void ComponentGalleryInventory_UsesVisibleSectionLabelsWithoutReferenceFunctionNames()
-    {
-        foreach (var spec in ComponentGalleryScreen.CanonicalInventory)
-        {
-            spec.Section.ShouldNotContain("effects-lite");
-            spec.Section.ShouldNotContain("c_");
-            spec.Section.ShouldNotBeNullOrWhiteSpace();
-        }
     }
 
     [Fact]

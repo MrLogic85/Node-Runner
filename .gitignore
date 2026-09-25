@@ -44,3 +44,4 @@ coverage.*.xml
 
 # Godot editor backups
 *.csproj.old
+build/
