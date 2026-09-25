@@ -3,7 +3,9 @@ using Godot;
 namespace NodeRunner.Ui.Lib;
 
 /// <summary>Single-line text input with standard and compact sizes.</summary>
-public partial class UiTextField : VBoxContainer
+[Tool]
+[GlobalClass]
+public partial class UiTextField : VBoxContainer, ISerializationListener
 {
     public enum TextInputSize
     {
@@ -134,33 +136,125 @@ public partial class UiTextField : VBoxContainer
         }
     }
 
+    public override void _EnterTree() => RequestReady();
+
     public override void _Ready()
     {
+        InitializeContent();
+    }
+
+    private void InitializeContent()
+    {
         AddThemeConstantOverride("separation", (int)_tokens.Space1);
-
-        _label = UiFieldAndRows.Label(string.Empty, _tokens, _tokens.OverlineText, _tokens.Muted);
-        AddChild(_label);
-
-        _editor = new LineEdit
-        {
-            Text = _textValue,
-            PlaceholderText = _placeholderText,
-            SizeFlagsHorizontal = SizeFlags.ExpandFill,
-            SizeFlagsVertical = SizeFlags.ShrinkCenter,
-            CaretBlink = true,
-            MouseFilter = MouseFilterEnum.Pass,
-        };
-        _editor.FocusEntered += OnFocusEntered;
-        _editor.FocusExited += OnFocusExited;
-        _editor.TextChanged += OnTextChanged;
-        _editor.TextSubmitted += _ => FinishEditing();
-        _editor.Resized += LayoutStateIcon;
-        AddChild(_editor);
-
-        _errorLabel = UiFieldAndRows.Label(string.Empty, _tokens, _tokens.NoteText, _tokens.Danger);
-        AddChild(_errorLabel);
+        RecoverContent();
+        EnsureContent();
         Refresh();
     }
+
+    private void RecoverContent()
+    {
+        _label = GetChildren(includeInternal: true)
+            .OfType<Label>()
+            .FirstOrDefault(label => label.Name == "Label");
+        _editor = GetChildren(includeInternal: true)
+            .OfType<LineEdit>()
+            .FirstOrDefault();
+        _errorLabel = GetChildren(includeInternal: true)
+            .OfType<Label>()
+            .FirstOrDefault(label => label.Name == "ErrorLabel");
+        _stateIcon = _editor?.GetChildren(includeInternal: true)
+            .OfType<TextureRect>()
+            .FirstOrDefault();
+    }
+
+    private void EnsureContent()
+    {
+        if (_label is null)
+        {
+            _label = UiFieldAndRows.Label(string.Empty, _tokens, _tokens.OverlineText, _tokens.Muted);
+            _label.Name = "Label";
+            AddChild(_label, false, InternalMode.Front);
+        }
+
+        if (_editor is null)
+        {
+            _editor = new LineEdit
+            {
+                Name = "Editor",
+                Text = _textValue,
+                PlaceholderText = _placeholderText,
+                SizeFlagsHorizontal = SizeFlags.ExpandFill,
+                SizeFlagsVertical = SizeFlags.ShrinkCenter,
+                CaretBlink = true,
+                MouseFilter = MouseFilterEnum.Pass,
+            };
+            AddChild(_editor, false, InternalMode.Front);
+        }
+
+        ConnectEditorEvents();
+
+        if (_errorLabel is null)
+        {
+            _errorLabel = UiFieldAndRows.Label(string.Empty, _tokens, _tokens.NoteText, _tokens.Danger);
+            _errorLabel.Name = "ErrorLabel";
+            AddChild(_errorLabel, false, InternalMode.Front);
+        }
+    }
+
+    private void ConnectEditorEvents()
+    {
+        ConnectIfMissing(_editor!, Control.SignalName.FocusEntered, new Callable(this, MethodName.OnFocusEntered));
+        ConnectIfMissing(_editor!, Control.SignalName.FocusExited, new Callable(this, MethodName.OnFocusExited));
+        ConnectIfMissing(_editor!, Control.SignalName.Resized, new Callable(this, MethodName.LayoutStateIcon));
+        ConnectIfMissing(_editor!, LineEdit.SignalName.TextChanged, new Callable(this, MethodName.OnTextChanged));
+        ConnectIfMissing(_editor!, LineEdit.SignalName.TextSubmitted, new Callable(this, MethodName.OnTextSubmitted));
+    }
+
+    private void DisconnectEditorEvents()
+    {
+        if (_editor is null)
+        {
+            return;
+        }
+
+        DisconnectIfConnected(_editor, Control.SignalName.FocusEntered, new Callable(this, MethodName.OnFocusEntered));
+        DisconnectIfConnected(_editor, Control.SignalName.FocusExited, new Callable(this, MethodName.OnFocusExited));
+        DisconnectIfConnected(_editor, Control.SignalName.Resized, new Callable(this, MethodName.LayoutStateIcon));
+        DisconnectIfConnected(_editor, LineEdit.SignalName.TextChanged, new Callable(this, MethodName.OnTextChanged));
+        DisconnectIfConnected(_editor, LineEdit.SignalName.TextSubmitted, new Callable(this, MethodName.OnTextSubmitted));
+    }
+
+    private static void ConnectIfMissing(GodotObject target, StringName signal, Callable callback)
+    {
+        if (!target.IsConnected(signal, callback))
+        {
+            target.Connect(signal, callback);
+        }
+    }
+
+    private static void DisconnectIfConnected(GodotObject target, StringName signal, Callable callback)
+    {
+        if (target.IsConnected(signal, callback))
+        {
+            target.Disconnect(signal, callback);
+        }
+    }
+
+    public override void _ExitTree() => DisconnectEditorEvents();
+
+    public void OnBeforeSerialize() => DisconnectEditorEvents();
+
+    public void OnAfterDeserialize() => CallDeferred(MethodName.RestoreContent);
+
+    private void RestoreContent()
+    {
+        if (IsInsideTree())
+        {
+            InitializeContent();
+        }
+    }
+
+    private void OnTextSubmitted(string _) => FinishEditing();
 
     public void BeginEditing()
     {
@@ -224,6 +318,12 @@ public partial class UiTextField : VBoxContainer
         }
 
         var visibleHeight = InputSize == TextInputSize.Compact ? _tokens.ControlSmall : _tokens.ControlHeight;
+        var border = State switch
+        {
+            TextInputState.Error => _tokens.Danger,
+            TextInputState.Editing => _tokens.Accent,
+            _ => _tokens.LineStrong,
+        };
         if (_editor is not null)
         {
             if (!_editor.HasFocus() && _editor.Text != _textValue)
@@ -237,12 +337,6 @@ public partial class UiTextField : VBoxContainer
             _editor.AddThemeColorOverride("font_color", State == TextInputState.Error ? _tokens.Danger : _tokens.Ink);
             _editor.AddThemeColorOverride("font_placeholder_color", _tokens.Muted);
             _editor.AddThemeColorOverride("caret_color", _tokens.Accent);
-            var border = State switch
-            {
-                TextInputState.Error => _tokens.Danger,
-                TextInputState.Editing => _tokens.Accent,
-                _ => _tokens.LineStrong,
-            };
             var style = _tokens.ControlStyle(
                 _tokens.PanelRaised,
                 border,
@@ -261,7 +355,7 @@ public partial class UiTextField : VBoxContainer
             _editor.AddThemeStyleboxOverride("read_only", style);
         }
 
-        RefreshStateIcon();
+        RefreshStateIcon(border);
         LayoutStateIcon();
 
         if (_errorLabel is not null)
@@ -273,7 +367,7 @@ public partial class UiTextField : VBoxContainer
         }
     }
 
-    private void RefreshStateIcon()
+    private void RefreshStateIcon(Color iconColor)
     {
         if (_editor is null || !IsInstanceValid(_editor))
         {
@@ -286,10 +380,9 @@ public partial class UiTextField : VBoxContainer
             TextInputState.Error => UiIconId.Warn,
             _ => UiIconId.Edit,
         };
-        var actionColor = State == TextInputState.Error ? _tokens.Danger : _tokens.Accent;
-        _stateIcon = UiIcons.Create(actionIcon, UiIconSize.Standard, actionColor);
+        _stateIcon = UiIcons.Create(actionIcon, UiIconSize.Standard, iconColor);
         _stateIcon.MouseFilter = MouseFilterEnum.Ignore;
-        _editor.AddChild(_stateIcon);
+        _editor.AddChild(_stateIcon, false, InternalMode.Front);
     }
 
     private void LayoutStateIcon()
