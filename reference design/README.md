@@ -20,7 +20,7 @@ The app is hub and spoke around the **Creations** menu (see Navigation). **Build
 
 All spacing is `space-1` to `space-5` and all control heights are `control-xs`, `control-sm`, `control` or `touch` (see Spacing). No other pixel value is used for layout.
 
-Design on a 640 x 360 (16:9) reference and lay it out so it also fits wider screens: the height is fixed at 360 units and the width is whatever the device has (640 at 16:9, about 800 at 20:9). The top bar, tool rail and side panel keep their sizes; **the arena or canvas takes all the width that is left**, so extra width becomes play area, never wider panels or bigger controls. **UI size** (Settings) multiplies the whole scale, so the screen holds fewer units: 200% leaves 320 x 180 on a 16:9 device. Nothing shrinks below its size; when the arena would get narrower than 200 units the side panel collapses to its 28px tab (see Build). Inset for the display cutout and gesture bar. Every top bar is 48px with the same shape: Back, title, spacer, at most two icons and an overflow. Below it an arena or canvas on the left and one fixed side panel (168 to 176px) on the right; Build and BuildLocked have a 56px tool rail on the left. Touch targets are at least `touch` (48px). Keep 8px (`space-2`) from screen edges.
+Design on a 640 x 360 (16:9) reference and lay it out so it also fits wider screens: the height is fixed at 360 units and the width is whatever the device has (640 at 16:9, about 800 at 20:9). The top bar, tool rail and side panel keep their sizes; **the arena or canvas takes all the width that is left**, so extra width becomes play area, never wider panels or bigger controls. **UI size** (Settings) multiplies the whole scale, so the screen holds fewer units: 200% leaves 320 x 180 on a 16:9 device. Nothing shrinks below its size; the side panel has its own handle to collapse it to a 28px tab by hand when the arena needs the room back (see Build) -- never automatically from a narrow screen. Inset for the display cutout and gesture bar. Every top bar is 48px with the same shape: Back, one flexible field for the title and any trailing actions, then the overflow, always last. Below it an arena or canvas on the left and one fixed side panel (168 to 176px) on the right; Build and BuildLocked have a 56px tool rail on the left. Touch targets are at least `touch` (48px). Keep 8px (`space-2`) from screen edges.
 
 ## Keep it quiet
 
@@ -48,7 +48,7 @@ The causal chain is the sentence to serve: cores and sensors sense the world, th
 - **No dead air.** Trials run one at a time (about 10 s each, 8 per generation). The GenerationStrip makes a generation a shape and its one line says "try 5 of 8".
 - **Numbers are a diagram, not a log.** Sensors and motors live in SignalFlow (bars and dials, named on tap), neurons in BrainFocus. Never a scrolling text list of raw values.
 - **One reset.** Training is only lost by unlocking a creation, with a warning that names it and a hold to confirm. Delete is the same dialog and the same hold, and there is no Undo.
-- **Nothing is disposable.** Creations autosave with a visible "Saved" cue, are named (editable), listed and resumable; Copy makes an identical creation with its brain.
+- **Nothing is disposable.** Creations autosave silently, are named (editable), listed and resumable; Copy makes an identical creation with its brain.
 - **The camera follows.** The creature stays about 43% from the left, the ruler scrolls, and a dashed best marker sits ahead.
 - **Build gives live feedback.** Part counts ("1 left"), rigidity and one validation line update as you build; Start training is dimmed with the reason instead of failing later.
 - **Trained means locked.** After the first finished session only moving is allowed; Beam is dashed and locked, the tray is gone, and a padlock in the top bar says why and offers the way out.
@@ -117,9 +117,10 @@ Empty state for a first launch, onboarding, accessibility settings beyond UI siz
 - [ColorsAndStyles](#colorsandstyles): Colour tokens in both themes, the seventeen text styles and the icons
 - [ComponentLibrary](#componentlibrary): Every control the game uses: buttons, sliders, toggles, chips, callouts and progress
 - [ComponentLibraryCont](#componentlibrarycont): More from the component library: frames, an overflow menu, a picker, a part in the tray, a part's settings panel and the stage card
+- [ComponentToolbars](#componenttoolbars): Toolbar, ButtonBar and SideBar: together, then each on its own
 - [Cover](#cover): The cover of the design system, also used by the Splash screen
 - [Navigation](#navigation): How the screens connect
-- [Overlays](#overlays): The two confirmations and the achievement toast, and where each appears
+- [Overlays](#overlays): The dialog and the notification, in their three severities, and where each real one appears
 - [Parts](#parts): Every part, and how each kind is placed
 - [Spacing](#spacing): Space scale, control sizes and how a bar is built from them
 
@@ -136,6 +137,7 @@ Empty state for a first launch, onboarding, accessibility settings beyond UI siz
 - [BrainSetup](#brainsetup): Brain setup: hidden layers, neurons per layer, with the shared slider
 - [Build](#build): Build: place parts, move and rotate blocks, autosaved, Start training
 - [BuildLocked](#buildlocked): BuildLocked: a trained creation, locked. Brain widget, what drives what, padlock and play
+- [Checkpoints](#checkpoints): Checkpoints: full saves of a creation, sorted by generation
 - [Creations](#creations): Creations: the home menu. Tap a card to open, Copy, Delete
 - [PartSettings](#partsettings): The settings of every part, the fixed-part picker and angle limits
 - [Power](#power): Power budget, and the power chip in Build and while training
@@ -164,7 +166,7 @@ The **foundations** every component is built from: colours, text styles, radius 
 
 **Colour variants.** 7 more tokens, each a transparent or glow version of one base colour (`accent-soft`, `accent-glow`, `halo-glow`, `danger-glow`, `ink-glow`, `edge-glow`, `line-strong-glow`), shown in their own group so they are never mistaken for a colour of their own. A variant is never used as a solid colour: `accent-soft` washes a selected tool or the current stage; the `*-glow` tokens build the glow around a selected button, in that kind's own colour (`halo-glow` for primary, `accent-glow` for secondary, `danger-glow` for tertiary, `ink-glow` for flat), or around any frame that turns its own glow on (`edge-glow` for the plain panel, `accent-glow` for `sel` and `lock`, `danger-glow` for `warn`, `halo-glow` for `hint`, `line-strong-glow` for `raised`; a frame that is `disabled` never glows), and `accent-glow` also lights a menu, a dialog and firing neurons. Both `glow`, the shadow token, and every `*-glow` colour go to `none` or transparent in the paper theme and under `data-effects="lite"`.
 
-**Icon set.** Every UI icon (39) and part glyph (15) is shown by name on this page, and exported as pure white SVG (see `icons/`). Each part has exactly one glyph, named after the part: the `spring` glyph is the Spring / damper part (there is no separate damper glyph). The `model` icon is a tiny network: two inputs, three hidden neurons and two outputs, drawn as dots joined by lines. Each input reaches two hidden neurons and each output is fed by two. It is used for Brain setup and the network view. Icons are drawn with the same 2 px round stroke; a dot (the `more` icon) is a 4 px dot, not a zero-length stroke.
+**Icon set.** Every UI icon (40) and part glyph (15) is shown by name on this page, and exported as pure white SVG (see `icons/`). Each part has exactly one glyph, named after the part: the `spring` glyph is the Spring / damper part (there is no separate damper glyph). The `model` icon is a tiny network: two inputs, three hidden neurons and two outputs, drawn as dots joined by lines. Each input reaches two hidden neurons and each output is fed by two. It is used for Brain setup and the network view. Icons are drawn with the same 2 px round stroke; a dot (the `more` icon) is a 4 px dot, not a zero-length stroke.
 
 **Icons.** A stroked glyph on a 24 grid, `currentColor`, in four sizes: `icon-sm` 12 (inside a chip or dense row), `icon` 16 (beside text), `icon-lg` 20 (in an icon button or menu row) and `icon-xl` 24. No other size is used. Part glyphs are drawn on a 20 grid and used at `icon-lg`.
 
@@ -202,7 +204,7 @@ Frames, menus, pickers, list rows, panels and the stage card moved to [Component
 - **Toggle** for an on or off setting that applies now (Sounds); **checkbox** for an option that goes with an action (Run until power is out). Both carry the state in shape as well as colour and can show a line of help.
 - **Segmented.** A small set of modes; the chosen one is filled.
 - **Tool rail, tray tabs.** The rail is Move, Beam, Joint, Select and, on a saved creation, a **play** at the bottom.
-- **Text field.** The only text entry, `c_textfield`: the creation's name in a top bar (a `control` high field with a pencil, beside the autosave **Saved** cue) and a name in a settings panel (full width, under a "Name" label — that pairing is `c_name`, not a separate field). **Editing** is an `accent` 2px border with a soft ring, a caret and a check; the phone keyboard opens and its Done ends the edit, there is no Save. **Empty or invalid** is a `danger` border, a warn icon and one line of words ("A creation needs a name"). Two sizes of the same field: in a **bar** it is `control` high with `heading` text, in a **panel** it is `control-sm` high with `body-strong`.
+- **Text field.** The only text entry, `c_textfield`: the creation's name in a top bar (a `control` high field with a pencil) and a name in a settings panel (full width, under a "Name" label — that pairing is `c_name`, not a separate field). **Editing** is an `accent` 2px border with a soft ring, a caret and a check; the phone keyboard opens and its Done ends the edit, there is no Save. **Empty or invalid** is a `danger` border, a warn icon and one line of words ("A creation needs a name"). Two sizes of the same field: in a **bar** it is `control` high with `heading` text, in a **panel** it is `control-sm` high with `body-strong`.
 - **Value row.** `c_value`: a `caption` label with its value in `readout-md`. `c_power` is the same row, a named preset with the label fixed to "Power" and a bolt icon — `accent` when the part feeds power back, `ink` when it only draws. A part's own structure (a beam's length, a link's length or which nodes it spans) is drawn on the canvas, not a value row: nothing repeats it in a panel.
 - **Note.** `c_note`: one line of `note` text below the rows of a panel, in `muted`.
 - **Callout.** A small card, built by `c_call`, that points at a spot in a figure — its position is data, set by the caller. Kind shares chip's names: `warn` (halo, the default), `danger` (explains a refusal) and `ok` (accent, marks a target).
@@ -249,6 +251,25 @@ Preview: [components/ComponentLibraryCont/preview.html](components/ComponentLibr
 
 ---
 
+# ComponentToolbars
+
+*Foundations · Toolbar, ButtonBar and SideBar: together, then each on its own*
+
+The three structural pieces every Build and BuildLocked screen is built from -- shown here on their own, apart from any one screen's content, because they are shared chrome, not a feature of Build or BuildLocked specifically.
+
+**Toolbar**, 48px (`touch`), spans the full width at the top. Always the same shape: **Back**, one flexible field that holds everything else -- a title, and up to a couple of trailing actions, left- and/or right-justified within it but never taller than the bar itself -- then the **overflow**, always last. Every screen in the app uses it; only what sits inside the field changes.
+
+**ButtonBar**, 56px (`w-rail`), the vertical tool rail down the left edge of Build and BuildLocked -- Move, Beam and Select. A tool can be **locked** away (Beam, once a creation is trained: the beam layout can never change again) and, on a locked creation, a floating **play** control sits over its bottom edge.
+
+**SideBar**, 176px (`w-side`), one fixed panel on the right. It never shows more than one thing at a time, and what it shows depends on selection: the **Parts tray** when nothing is selected, the **selection panel** when one or more parts are, or a part's own **settings** (see PartSettings) when exactly one is and it is tapped rather than dragged. Expanded, the panel opens with one fixed row of its own -- an optional icon, an optional title, and a bare chevron always last, no button chrome -- so free content below it is never pushed down by a second header. Tapping the chevron **collapses** the panel to a 28px tab: just the chevron, now pointing the other way, plus the panel's own label turned on its side in place of the row. The row (and the tab it collapses to) is the SideBar's own, on every one of its three jobs; there's no close button here yet -- a job that needs one builds it inline as ordinary content instead (see PartSettings' own settings, in BuildLocked).
+
+The arena or canvas between ButtonBar and SideBar has no width of its own: it takes whatever the screen leaves once the fixed pieces have theirs, so a wider phone only ever makes it wider, never the chrome around it (see Spacing).
+
+Preview: [components/ComponentToolbars/preview.html](components/ComponentToolbars/preview.html)
+
+
+---
+
 # Cover
 
 *Foundations · The cover of the design system, also used by the Splash screen*
@@ -280,11 +301,12 @@ The whole app is a hub-and-spoke around **Creations**, the home menu. **Build an
 - **Creations → tap a trained card → BuildLocked** (locked). Its **padlock** opens the Unlock dialog; unlocking returns to Build and deletes the training, after a warning and a hold to confirm. **Copy** a creation first to keep the trained one.
 - **BuildLocked → play (bottom of the rail) → Train setup → Training.** Train setup is where Train or Simulate, shadows, run length and map are chosen.
 - **BuildLocked → overflow → Stats** and **Power budget.** Tapping the **brain widget** opens the **Brain** view.
+- **BuildLocked → overflow → Checkpoints.** Full saves of the creation, auto-made every 100 generations and on each achievement, or made by hand with **Save**. **Restore** overwrites the current creation and its training after a warning and a hold to confirm; checkpoints can also be renamed and deleted (also a hold).
 - **Creations → Achievements** (the trophy). Achievements unlock new parts for Build and new maps for Train setup.
 - **Creations → overflow → Settings.** UI size, theme (Neon, Paper or Use phone) and sounds; nothing to reset there. **Restore example** is in the same menu.
 - **Back** returns exactly one step. Training's Back returns to the creation and leaves training saved. There is no navigation bar and no mode switch.
 
-Every top bar has the same shape: Back, then the title (the creation's name, editable in Build and BuildLocked), spacer, and at most two icons plus overflow.
+Every top bar has the same shape: Back, one flexible field for the title and any trailing actions, then the overflow, always last.
 
 Preview: [components/Navigation/preview.html](components/Navigation/preview.html)
 
@@ -293,17 +315,24 @@ Preview: [components/Navigation/preview.html](components/Navigation/preview.html
 
 # Overlays
 
-*Foundations · The two confirmations and the achievement toast, and where each appears*
+*Foundations · The dialog and the notification, in their three severities, and where each real one appears*
 
 ![Overlays](screenshots/Overlays.png)
 
-Three overlays, no more. Each is shown over a dimmed screen (or at the bottom edge for toasts) and each is listed here with the one moment it appears.
+Two shapes -- a **dialog** (over a dimmed screen) and a **notification** (at the bottom edge, tap to act, never blocking controls) -- each in three severities, `default`, `warn` and `danger`, the same idea as chips and frames elsewhere. Severity colours the border, the glow and the uppercase label (DEFAULT / WARN / DANGER); the icon next to it is picked by whoever raises it, not fixed by the severity.
 
-- **Unlock dialog.** Tapping the padlock on a saved creation. It names what is lost ("142 generations of training") and needs a **press-and-hold** on a `danger` button (a fill sweeps across, about 0.8 s). Unlocking resets the model. Cancel is the other button and is never `danger`.
-- **Delete dialog.** Delete on a card in Creations or in the overflow. It is the same dialog as Unlock and uses the same **press-and-hold** button ("Hold to delete"), so a delete can never happen by accident and there is **no Undo**. It says the creation is removed for good and suggests Copy first.
-- **Achievement toast.** While training, when an achievement is earned: a glowing `accent` card with the reward glyph, the name and the achievement that earned it. It appears once, never blocks controls, and opens Achievements when tapped.
+**The dialog** is icon + label + title, then body text, then two equal-width buttons. Cancel is always the plain outline button. Continue's own style follows the severity as a default -- `primary` (filled) for `default`, `flat` (no border) for `warn`, `tertiary` (danger outline) for `danger` -- but whether a dialog needs a **press-and-hold** instead of a plain tap is a separate choice the calling screen makes: it is not tied to severity. The dialog can also carry one optional **error line**, always danger-coloured regardless of its own severity, for a problem with its own content; it is off unless a call site needs it.
 
-There is no Copy dialog or toast: Copy makes an identical creation at once and the new card appears in the list. Every destructive action is a hold to confirm; there is no undo toast. Never place two destructive actions side by side. Buttons are 48px and named with verbs.
+Four real dialogs today, all `danger`, all press-and-hold (so a destructive tap can never happen by accident, and there is no Undo):
+
+- **Unlock dialog.** Tapping the padlock on a saved creation. Names what is lost ("142 generations of training"); unlocking resets the model.
+- **Delete dialog.** Delete on a card in Creations or in the overflow. Says the creation is removed for good and suggests Copy first.
+- **Restore checkpoint dialog.** Restore in a checkpoint card's own action row, on Checkpoints. Names the checkpoint, warns that it overwrites the player's current progress (structure and training both), and suggests making a new checkpoint of the current state first.
+- **Delete checkpoint dialog.** Delete in a checkpoint card's own action row, on Checkpoints. Names the checkpoint, says it is removed for good. Deleting one checkpoint never touches active or any other checkpoint.
+
+There is no Copy dialog: Copy makes an identical creation at once and the new card appears in the list. There is no Save-checkpoint dialog either: it saves at once, already named by generation. Never place two destructive actions side by side.
+
+**The notification** is the same icon + label + title, then one line of body text, no buttons. Only `default` is used today, for the **achievement toast**: while training, when an achievement is earned, it names the reward and opens Achievements when tapped. `warn` and `danger` exist in the same shape for a future notice that needs them (a training run that stopped early, say), not shown live anywhere yet.
 
 Preview: [components/Overlays/preview.html](components/Overlays/preview.html)
 
@@ -353,7 +382,7 @@ Every gap, padding and margin in every screen is one of five steps, and every co
 
 **Rules.** No other pixel value is used for spacing or a control height. Sizes of drawings (a beam, a node, a slider thumb) are not spacing and keep their own values. The gen script lints this: it counts any spacing value that is not a token and must report zero.
 
-**Screen size.** The reference is 640 x 360 units. The height is always 360; the width is the device's (640 at 16:9, about 800 at 20:9). The top bar (48), the tool rail (56) and the side panel (176) keep their size, and the arena takes everything else, so a wider phone gets a wider play area and the same buttons. **UI size** scales all of it: at 200% a 16:9 screen is 320 x 180 units. When the arena would be narrower than 200 units, the side panel collapses to its 28px tab. **For Godot:** Project Settings, Display, Window, Stretch: mode `canvas_items`, aspect `expand`; keep the arena as a Control with the expand size flag and the rail and panel with a fixed `custom_minimum_size`; UI size sets `Window.content_scale_factor`; read `DisplayServer.get_display_safe_area()` for the cutout inset.
+**Screen size.** The reference is 640 x 360 units. The height is always 360; the width is the device's (640 at 16:9, about 800 at 20:9). The top bar (48), the tool rail (56) and the side panel (176) keep their size, and the arena takes everything else, so a wider phone gets a wider play area and the same buttons. **UI size** scales all of it: at 200% a 16:9 screen is 320 x 180 units. The side panel collapses to its 28px tab from its own handle, tapped by hand -- never automatically from a narrow arena. **For Godot:** Project Settings, Display, Window, Stretch: mode `canvas_items`, aspect `expand`; keep the arena as a Control with the expand size flag and the rail and panel with a fixed `custom_minimum_size`; UI size sets `Window.content_scale_factor`; read `DisplayServer.get_display_safe_area()` for the cutout inset.
 
 Preview: [components/Spacing/preview.html](components/Spacing/preview.html)
 
@@ -366,11 +395,13 @@ Preview: [components/Spacing/preview.html](components/Spacing/preview.html)
 
 ![GenerationStrip](screenshots/GenerationStrip.png)
 
-One cell per **shadow** (the ghost copies that all run at the same time). Each cell shows **how far that shadow has travelled**, as a bar that grows during the run, so a glance says who is ahead. The leader has a bright `accent` border and fill (its bar is simply the tallest, so no extra marker is needed) and is drawn in full in the arena; the others are `line-strong` and faded in the arena.
+One cell per **shadow** (the ghost copies that all run at the same time). Each cell shows **how far that shadow has travelled**, as a bar that grows during the run, so a glance says who is ahead: the leader's bar is `accent`, always, whichever cell is being followed; the rest are `line-strong`. The leader is drawn in full in the arena; the others are faded.
 
-**It is tappable.** Tapping a cell makes the arena follow that shadow (drawn in full) and rings the cell in `halo`; the caption says "Following shadow 5 · 10.3 m". Tapping the leader goes back to following the leader. Following stays put if a shadow is passed by another.
+**It is tappable, and there is only ever one ring.** The `accent` border is "selected" everywhere else in the system, so it sits on exactly one cell: whichever shadow the arena is following. By default that is the leader, so its bar and its ring are both `accent` and nothing else needs marking. Tap a different cell to follow it instead (the caption says "Following shadow 5 · 10.3 m"): the ring moves to it in `halo`, and the leader's border goes back to plain `line-strong` -- its bar stays the brightest, so it is still easy to find, but its border no longer claims to be selected. Tap the leader to bring the ring back to it.
 
-There is no time bar under the strip: all shadows run for the same time, so one line of text carries it ("Generation 37 · 6 of 10 s"). When the run ends the bars freeze, the caption reads "Generation 37 done · best 14.2 m" for a moment, then the next generation starts. With 16 or more shadows the cells narrow to a few pixels.
+There is no time bar under the strip: all shadows run for the same time, so one line of text carries it ("Generation 37 · 6 of 10 s").
+
+**Past 8 shadows, the row stops shrinking.** Shadows can go up to 32 (see TrainSetup), and a cell that thin would be unreadable and untappable. Instead of cramming every shadow in, the row always holds the same 8 cells' worth of room: the best 7 -- the only ones worth following anyway -- sorted worst to best, left to right, so the leader is always among the brightest, then a sort-icon button last (tap to re-sort). It never shrinks further and never gains a ninth cell, however many shadows are racing.
 
 Preview: [components/GenerationStrip/preview.html](components/GenerationStrip/preview.html)
 
@@ -480,7 +511,7 @@ Preview: [components/BrainSetup/preview.html](components/BrainSetup/preview.html
 
 ![Build](screenshots/Build.png)
 
-Build and BuildLocked are **one scene in two states**. In Godot there is a single `Build` scene with a `locked: bool`; there is no second scene. BuildLocked is only the name of the page here that shows the locked state. The flag changes: the rail (Beam and Joint are dashed and locked, and a large play button appears at the bottom), the top bar (Start training becomes a padlock and the overflow menu), the right panel (the Parts tray becomes how trained the creation is and its actions), and the settings (structure rows become read-only). The canvas, the rail, the brain widget and the part settings are the same nodes. Build is the **unlocked** state: parts can be added and removed and beams resized. Everything **autosaves**; there is no Save button. The name at the top is editable, with a small "Saved" cue.
+Build and BuildLocked are **one scene in two states**. In Godot there is a single `Build` scene with a `locked: bool`; there is no second scene. BuildLocked is only the name of the page here that shows the locked state. The flag changes: the rail (Beam and Joint are dashed and locked, and a large play button appears at the bottom), the top bar (Start training becomes a padlock and the overflow menu), the right panel (the Parts tray becomes how trained the creation is and its actions), and the settings (structure rows become read-only). The canvas, the rail, the brain widget and the part settings are the same nodes. Build is the **unlocked** state: parts can be added and removed and beams resized. Everything **autosaves** silently; there is no Save button. The name at the top is editable.
 
 **Top bar.** Back, the name, **Start training** (the one primary; dimmed with the reason in the tray if a piece is not connected) and the overflow menu: **Brain setup**, **Power budget** and **Delete creation**. Start training goes to Train setup. The creation **locks itself once a training session has finished**; from then on it opens in its locked state (see BuildLocked) and can be unlocked again at the cost of its training.
 
@@ -514,7 +545,7 @@ Preview: [components/Build/preview.html](components/Build/preview.html)
 
 A creation **after its first finished training session**. It is the Build scene in its **locked** state (`Build` with `locked = true`, not a second scene), so the parts and the brain shape that the trained model depends on cannot change.
 
-**Top bar.** Back, the name (editable) with the "Saved" cue, a **padlock** icon button in `accent` and the overflow menu (**Stats**, **Power budget**, **Copy creation**, **Delete creation**). Tapping the padlock opens the **Unlock dialog** (see Overlays): unlocking deletes the training, so the dialog names it ("142 generations"), suggests copying first, and needs a press-and-hold.
+**Top bar.** Back, the name (editable), a **padlock** icon button in `accent` and the overflow menu (**Stats**, **Power budget**, **Checkpoints**, **Copy creation**, **Delete creation**). Tapping the padlock opens the **Unlock dialog** (see Overlays): unlocking deletes the training, so the dialog names it ("142 generations"), suggests copying first, and needs a press-and-hold.
 
 **Rail.** **Move**, **Beam** and **Joint** (both dashed and locked) and **Select**, and a large **play** button at the bottom, which opens Train setup. In Select the handles are Move and Rotate; Scale is off, because beams keep their length.
 
@@ -536,6 +567,27 @@ Preview: [components/BuildLocked/preview.html](components/BuildLocked/preview.ht
 
 ---
 
+# Checkpoints
+
+*Screens · Checkpoints: full saves of a creation, sorted by generation*
+
+Reached from **Checkpoints** in the overflow menu on a locked creation (see BuildLocked). A checkpoint is a full save of the creation -- its structure and its trained brain -- with a name and a timestamp added on top; **active**, the save the player is currently working in, is not itself a checkpoint and never appears here.
+
+**Auto checkpoints** are made every 100 generations of training, and when an achievement is earned, named "Nth generation" after the generation reached. **Manual checkpoints** are made from **Save** in the top bar, which saves one at once (also named by generation, so there is always a name) -- rename it after if you want something else.
+
+**The list is a row of cards, exactly like Creations** -- same size, same live thumbnail of the creation, side by side, scrolling sideways once there are more than fit. The one difference is the sort: checkpoints are **sorted by generation, highest first**, not save order. Generation is stored as part of the save, not derived from the name, so this stays correct however a checkpoint was named.
+
+**Each card** carries the creation's thumbnail, its name and a "Gen N · timestamp" line, then a footer row of three labelled icon buttons -- **Restore**, **Rename** and **Delete** -- visible at once rather than behind an overflow menu, the same idea as Copy/Delete on a creation card.
+
+- **Restore.** Overwrites active with a copy of the checkpoint, as if the app had been reloaded into it -- structure and training both revert, so any progress or edits made since are lost. The dialog names the checkpoint and suggests making a new checkpoint of the current state first (see Overlays). Needs a press-and-hold; there is no undo.
+- **Rename.** The name becomes an editable field in place, the same field and states as any other name in the app (see Component Library). The timestamp does not change.
+- **Delete.** Removes that one checkpoint for good. The dialog names it and needs a press-and-hold; there is no undo. Deleting a checkpoint never touches active or any other checkpoint.
+
+Preview: [components/Checkpoints/preview.html](components/Checkpoints/preview.html)
+
+
+---
+
 # Creations
 
 *Screens · Creations: the home menu. Tap a card to open, Copy, Delete*
@@ -548,7 +600,7 @@ The home screen and the hub for everything: the list of saved **creations**. Thr
 
 **A card** is a live thumbnail, the name and, for a trained creation, a **padlock** and three small stats with icons: **best distance** (flag), **top speed** and **peak elevation**, then the number of generations. An untrained creation says so instead. Along its bottom edge are two 48px actions: **Copy** (an identical creation with the trained model intact; the new card simply appears in the list, no dialog) and **Delete** (a hold to confirm, no undo, see Overlays). The shipped **Example** carries a tag and only Copy; **Restore example** is in the overflow menu.
 
-**Top bar.** The title with a "Saved" cue, the **Achievements** trophy with a badge at its top right corner for anything new, **+ New** (the only primary, which opens an empty Build) and the overflow menu: **Settings** (with a cog) and **Restore example**. Nothing has a Save button: everything autosaves.
+**Top bar.** The title, the **Achievements** trophy with a badge at its top right corner for anything new, **+ New** (the only primary, which opens an empty Build) and the overflow menu: **Settings** (with a cog) and **Restore example**. Nothing has a Save button: everything autosaves.
 
 Preview: [components/Creations/preview.html](components/Creations/preview.html)
 

@@ -1,7 +1,14 @@
-Three overlays, no more. Each is shown over a dimmed screen (or at the bottom edge for toasts) and each is listed here with the one moment it appears.
+Two shapes -- a **dialog** (over a dimmed screen) and a **notification** (at the bottom edge, tap to act, never blocking controls) -- each in three severities, `default`, `warn` and `danger`, the same idea as chips and frames elsewhere. Severity colours the border, the glow and the uppercase label (DEFAULT / WARN / DANGER); the icon next to it is picked by whoever raises it, not fixed by the severity.
 
-- **Unlock dialog.** Tapping the padlock on a saved creation. It names what is lost ("142 generations of training") and needs a **press-and-hold** on a `danger` button (a fill sweeps across, about 0.8 s). Unlocking resets the model. Cancel is the other button and is never `danger`.
-- **Delete dialog.** Delete on a card in Creations or in the overflow. It is the same dialog as Unlock and uses the same **press-and-hold** button ("Hold to delete"), so a delete can never happen by accident and there is **no Undo**. It says the creation is removed for good and suggests Copy first.
-- **Achievement toast.** While training, when an achievement is earned: a glowing `accent` card with the reward glyph, the name and the achievement that earned it. It appears once, never blocks controls, and opens Achievements when tapped.
+**The dialog** is icon + label + title, then body text, then two equal-width buttons. Cancel is always the plain outline button. Continue's own style follows the severity as a default -- `primary` (filled) for `default`, `flat` (no border) for `warn`, `tertiary` (danger outline) for `danger` -- but whether a dialog needs a **press-and-hold** instead of a plain tap is a separate choice the calling screen makes: it is not tied to severity. The dialog can also carry one optional **error line**, always danger-coloured regardless of its own severity, for a problem with its own content; it is off unless a call site needs it.
 
-There is no Copy dialog or toast: Copy makes an identical creation at once and the new card appears in the list. Every destructive action is a hold to confirm; there is no undo toast. Never place two destructive actions side by side. Buttons are 48px and named with verbs.
+Four real dialogs today, all `danger`, all press-and-hold (so a destructive tap can never happen by accident, and there is no Undo):
+
+- **Unlock dialog.** Tapping the padlock on a saved creation. Names what is lost ("142 generations of training"); unlocking resets the model.
+- **Delete dialog.** Delete on a card in Creations or in the overflow. Says the creation is removed for good and suggests Copy first.
+- **Restore checkpoint dialog.** Restore in a checkpoint card's own action row, on Checkpoints. Names the checkpoint, warns that it overwrites the player's current progress (structure and training both), and suggests making a new checkpoint of the current state first.
+- **Delete checkpoint dialog.** Delete in a checkpoint card's own action row, on Checkpoints. Names the checkpoint, says it is removed for good. Deleting one checkpoint never touches active or any other checkpoint.
+
+There is no Copy dialog: Copy makes an identical creation at once and the new card appears in the list. There is no Save-checkpoint dialog either: it saves at once, already named by generation. Never place two destructive actions side by side.
+
+**The notification** is the same icon + label + title, then one line of body text, no buttons. Only `default` is used today, for the **achievement toast**: while training, when an achievement is earned, it names the reward and opens Achievements when tapped. `warn` and `danger` exist in the same shape for a future notice that needs them (a training run that stopped early, say), not shown live anywhere yet.

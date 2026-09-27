@@ -2,14 +2,6 @@
 
 One implementation per control. Every screen calls these; a new screen adds a variant here, never a private copy. The signatures are the props to give the matching Godot scene.
 
-## `c_btn(text, kind='secondary', icon=None, w=None, off=False, on=False, compact=False, badge=None)`
-
-The one button (`btn`): kind primary (one per screen), danger or default, an optional icon, and off for disabled (dimmed, dashed border). Icon-only and stacked layouts are `btn icon` and `btn stack`.
-
-## `c_ib(icon, kind='secondary', size=20, on=False, off=False, compact=False, badge=None)`
-
-The icon layout of the one button (`btn icon`): a 40 x 40 box in a 48 x 48 touch area. kind: accent (state `on`), danger, dis (state `off`).
-
 ## `c_round_button(icn, col=None, fill=None, r=13)`
 
 A circular icon badge: the circle is a frame, the same idea as .pnl's variants (sel, lock, warn...), just
