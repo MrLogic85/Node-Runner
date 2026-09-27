@@ -25,6 +25,8 @@
 [ext_resource type="Script" uid="uid://cpu86ur7b6yuc" path="res://src/ui/lib/UiNameField.cs" id="22_name_field"]
 [ext_resource type="PackedScene" uid="uid://bxxwv8m0f8sml" path="res://scenes/ui/UiStageCard.tscn" id="23_stage_card"]
 [ext_resource type="Script" uid="uid://ceoq80oxw56og" path="res://src/ui/lib/UiTextField.cs" id="24_text_field"]
+[ext_resource type="Script" uid="uid://b32bnhbgasedd" path="res://src/ui/lib/UiChip.cs" id="25_chip"]
+[ext_resource type="Script" uid="uid://b1nqvpdy0fk4h" path="res://src/ui/lib/UiCallout.cs" id="26_callout"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_txsyx"]
 content_margin_left = 1.0
@@ -2369,6 +2371,157 @@ layout_mode = 2
 mouse_filter = 2
 script = ExtResource("9_selection_handle")
 Text = "3"
+
+[node name="Chips" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content" unique_id=2122134995]
+layout_mode = 2
+
+[node name="Heading" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Chips" unique_id=1946978571]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Title" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Chips/Heading" unique_id=885409180]
+layout_mode = 2
+size_flags_vertical = 8
+text = "Chips and status"
+script = ExtResource("2_cpfof")
+TextStyle = 12
+
+[node name="Description" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Chips/Heading" unique_id=1996761043]
+custom_minimum_size = Vector2(120, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 8
+text = "one component, chip, with a kind for colour and lg for a chip beside control-height buttons and fields"
+autowrap_mode = 3
+script = ExtResource("2_cpfof")
+TextStyle = 9
+TextColor = 8
+
+[node name="Standard" type="HFlowContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Chips" unique_id=657661561]
+layout_mode = 2
+theme_override_constants/h_separation = 8
+theme_override_constants/v_separation = 8
+
+[node name="Neutral" type="PanelContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Chips/Standard" unique_id=679741733]
+layout_mode = 2
+size_flags_vertical = 4
+script = ExtResource("25_chip")
+Text = "Saved"
+IconId = 5
+
+[node name="Warning" type="PanelContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Chips/Standard" unique_id=1724061414]
+layout_mode = 2
+size_flags_vertical = 4
+script = ExtResource("25_chip")
+Text = "Uses 2.0 · makes 1.0 · 50%"
+Kind = 1
+IconId = 2
+
+[node name="Danger" type="PanelContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Chips/Standard" unique_id=921602520]
+layout_mode = 2
+size_flags_vertical = 4
+script = ExtResource("25_chip")
+Text = "Out of power"
+Kind = 2
+IconId = 2
+
+[node name="Ok" type="PanelContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Chips/Standard" unique_id=731373590]
+layout_mode = 2
+size_flags_vertical = 4
+script = ExtResource("25_chip")
+Text = "Earned"
+Kind = 3
+IconId = 5
+
+[node name="LargeCaption" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Chips" unique_id=182633523]
+layout_mode = 2
+text = "lg, in a top bar next to a control-height button or field"
+autowrap_mode = 3
+script = ExtResource("2_cpfof")
+TextStyle = 9
+TextColor = 8
+
+[node name="Large" type="HFlowContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Chips" unique_id=1722539990]
+layout_mode = 2
+theme_override_constants/h_separation = 8
+theme_override_constants/v_separation = 8
+
+[node name="Neutral" type="PanelContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Chips/Large" unique_id=895560462]
+layout_mode = 2
+size_flags_vertical = 4
+script = ExtResource("25_chip")
+Text = "Brain"
+IconId = 18
+Large = true
+
+[node name="Warning" type="PanelContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Chips/Large" unique_id=1348361851]
+layout_mode = 2
+size_flags_vertical = 4
+script = ExtResource("25_chip")
+Text = "62%"
+Kind = 1
+IconId = 2
+Large = true
+
+[node name="Danger" type="PanelContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Chips/Large" unique_id=1626006946]
+layout_mode = 2
+size_flags_vertical = 4
+script = ExtResource("25_chip")
+Text = "0%"
+Kind = 2
+IconId = 2
+Large = true
+
+[node name="Callout" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content" unique_id=1698557057]
+layout_mode = 2
+
+[node name="Heading" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Callout" unique_id=258897026]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Title" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Callout/Heading" unique_id=949750495]
+layout_mode = 2
+size_flags_vertical = 8
+text = "Callout"
+script = ExtResource("2_cpfof")
+TextStyle = 12
+
+[node name="Description" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Callout/Heading" unique_id=775219913]
+custom_minimum_size = Vector2(120, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 8
+text = "a name on the canvas, built by c_call: kind shares chip's names (warn, danger, ok)"
+autowrap_mode = 3
+script = ExtResource("2_cpfof")
+TextStyle = 9
+TextColor = 8
+
+[node name="Kinds" type="HFlowContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Callout" unique_id=700175146]
+layout_mode = 2
+theme_override_constants/h_separation = 24
+theme_override_constants/v_separation = 8
+
+[node name="Warning" type="PanelContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Callout/Kinds" unique_id=217362092]
+layout_mode = 2
+size_flags_vertical = 4
+script = ExtResource("26_callout")
+Text = "Spring ends here"
+
+[node name="Danger" type="PanelContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Callout/Kinds" unique_id=1103143834]
+layout_mode = 2
+size_flags_vertical = 4
+script = ExtResource("26_callout")
+Text = "One per joint"
+Kind = 1
+IconId = 37
+
+[node name="Ok" type="PanelContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Callout/Kinds" unique_id=527797105]
+layout_mode = 2
+size_flags_vertical = 4
+script = ExtResource("26_callout")
+Text = "Target · Front shin"
+Kind = 2
 
 [node name="Slider" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content" unique_id=1266658681]
 layout_mode = 2

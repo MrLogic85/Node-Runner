@@ -499,7 +499,8 @@ public partial class BuildScreen : Control
             var chip = new UiChip
             {
                 Text = presentation.PartsLockedChipText,
-                Kind = UiChip.ChipKind.Locked,
+                Kind = UiChip.ChipKind.Neutral,
+                IconId = UiIconId.Lock,
                 Position = new Vector2(18, 18),
                 MouseFilter = MouseFilterEnum.Ignore,
             };
@@ -673,7 +674,7 @@ public partial class BuildScreen : Control
         stack.AddChild(new UiChip
         {
             Text = allowDelete ? "Move · Delete" : "Move only",
-            Kind = allowDelete ? UiChip.ChipKind.Neutral : UiChip.ChipKind.Locked,
+            Kind = UiChip.ChipKind.Neutral,
         });
         stack.AddChild(CreateSpacer());
         return stack;
