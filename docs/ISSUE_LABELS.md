@@ -81,7 +81,6 @@ Use sparingly:
 - `status: needs-decision` — Design/product choice required before work starts
 - `status: ready` — Reviewed and actionable
 - `good-first` — Small, well-bounded issue with low architectural risk
-- `pedagogical` — Teaching value is central to the issue
 - `maintenance` — Cleanup that prevents drift but does not change behavior
 
 Avoid labels that duplicate GitHub state (`open`, `closed`) or milestones
@@ -117,7 +116,8 @@ When migrating a file issue to GitHub:
   - `github`, `process`, `review`, or `chore` → `area: repo`
   - `test` → `type: test` when the issue is test-only, otherwise keep the
     original type and add `area: ci` for CI-test infrastructure
-  - `pedagogical`, `maintenance`, and `good-first` keep their optional labels
+  - `maintenance` and `good-first` keep their optional labels; legacy
+    `pedagogical` is dropped
 - If no legacy label maps to an area, add `area: repo` and document the choice
   in the migrated issue body.
 - Drop legacy version labels such as `v0.1` after assigning the milestone.
