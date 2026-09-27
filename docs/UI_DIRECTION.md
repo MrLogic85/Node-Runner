@@ -189,12 +189,15 @@ change between skins, and plain constants for the values that do not.
     edited without regenerating.
   - `UiThemes` loads the files (`For(UiTokenType)`).
 - **Constants** own dimensions: `UiSize` for the component scale (`Space`,
-  `Control`, `Icon`, `Radius`, `Stroke`, `Widget`), `UiLayout` for shell and
-  surface dimensions, and `UiSpacing` for the semantic gap roles. These need no
-  control and no theme, so they are usable from pure tests and from `[Tool]`
-  scripts.
+  `Control`, `Icon`, `Radius`, `Stroke`, `Widget`), `UiLayout` for
+  shell and surface dimensions, and `UiSpacing` for the semantic gap roles.
+  These need no control and no theme, so they are usable from pure tests and
+  from `[Tool]` scripts. Component-library code takes every dimension from
+  them and names any other number; `UiSourceGuardTests` enforces this.
 - Plain colour maths lives in `UiColorExtensions` (`WithAlpha`, `ScaleAlpha`),
-  not in the lookup.
+  not in the lookup. C# never writes a colour literal: colours come from the
+  Theme and may be derived with an alpha, and only `Colors.White` and
+  `Colors.Transparent` serve as neutral modulation.
 
 Custom-drawn and cached controls refresh their drawing or layout locally on
 theme change. No per-control palette propagation or subtree adapter is used.

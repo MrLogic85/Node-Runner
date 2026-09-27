@@ -5,14 +5,18 @@ namespace NodeRunner.Ui.Lib;
 /// <summary>Developer overlay that draws global bounds for visible UI controls.</summary>
 public partial class UiBoundsDebugOverlay : Control
 {
-    private static readonly Color[] _palette =
+    /// <summary>Theme hues cycled per tree depth so nested bounds stay distinguishable.</summary>
+    private static readonly UiTokens.Color[] _depthColors =
     [
-        new(0.12f, 0.95f, 1f, 0.72f),
-        new(1f, 0.45f, 0.65f, 0.72f),
-        new(1f, 0.83f, 0.22f, 0.72f),
-        new(0.5f, 1f, 0.42f, 0.72f),
-        new(0.72f, 0.55f, 1f, 0.72f),
+        UiTokens.Color.Accent,
+        UiTokens.Color.Danger,
+        UiTokens.Color.Halo,
+        UiTokens.Color.Output,
+        UiTokens.Color.Ink,
     ];
+
+    private const float _outlineAlpha = 0.72f;
+    private const float _fillAlpha = 0.08f;
 
     [Export]
     public NodePath RootPath { get; set; } = new(".");
@@ -51,8 +55,8 @@ public partial class UiBoundsDebugOverlay : Control
         var rect = new Rect2(
             GetGlobalTransformWithCanvas().AffineInverse() * control.GetGlobalRect().Position,
             control.GetGlobalRect().Size);
-        var color = _palette[depth % _palette.Length];
-        DrawRect(rect, color with { A = 0.08f }, filled: true);
+        var color = UiThemeLookup.Color(this, _depthColors[depth % _depthColors.Length]).WithAlpha(_outlineAlpha);
+        DrawRect(rect, color.WithAlpha(_fillAlpha), filled: true);
         DrawRect(rect, color, filled: false, width: 1f, antialiased: false);
 
         foreach (var child in control.GetChildren().OfType<Control>())

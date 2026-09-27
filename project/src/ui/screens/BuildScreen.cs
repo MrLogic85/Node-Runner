@@ -781,7 +781,7 @@ public partial class BuildScreen : Control
         };
         var dim = new ColorRect
         {
-            Color = new Color(0, 0, 0, 0.25f),
+            Color = UiThemeLookup.Color(this, UiTokens.Color.Scrim).WithAlpha(0.25f),
             AnchorRight = 1,
             AnchorBottom = 1,
             MouseFilter = MouseFilterEnum.Stop,
@@ -853,7 +853,7 @@ public partial class BuildScreen : Control
         };
         overlay.AddChild(new ColorRect
         {
-            Color = new Color(0, 0, 0, 0.45f),
+            Color = UiThemeLookup.Color(this, UiTokens.Color.Scrim).WithAlpha(0.45f),
             AnchorRight = 1,
             AnchorBottom = 1,
             MouseFilter = MouseFilterEnum.Stop,

@@ -5,6 +5,9 @@ namespace NodeRunner.Ui.Lib;
 /// <summary>Short-lived feedback surface with an optional undo action.</summary>
 public partial class UiToast : PanelContainer
 {
+    public const float DefaultDurationSeconds = 4;
+    private const float _minimumDurationSeconds = 0.1f;
+
     [Signal]
     public delegate void UndoPressedEventHandler();
 
@@ -41,7 +44,7 @@ public partial class UiToast : PanelContainer
         }
     }
 
-    public void ShowMessage(string message, string? undoLabel = null, float durationSeconds = 4)
+    public void ShowMessage(string message, string? undoLabel = null, float durationSeconds = DefaultDurationSeconds)
     {
         if (!IsInsideTree() || _messageLabel is null || _undoButton is null || _dismissTimer is null)
         {
@@ -55,7 +58,7 @@ public partial class UiToast : PanelContainer
         _undoButton.Visible = !string.IsNullOrWhiteSpace(undoLabel);
         _undoButton.Text = undoLabel ?? "Undo";
         UiThemeLookup.ApplyTypography(_undoButton, UiTokens.Typography.Label);
-        _dismissTimer.WaitTime = Mathf.Max(0.1f, durationSeconds);
+        _dismissTimer.WaitTime = Mathf.Max(_minimumDurationSeconds, durationSeconds);
         _dismissTimer.Start();
         Show();
     }

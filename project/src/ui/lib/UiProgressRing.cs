@@ -7,7 +7,9 @@ namespace NodeRunner.Ui.Lib;
 [GlobalClass]
 public partial class UiProgressRing : Control, ISerializationListener
 {
-    private float _progress = 0.72f;
+    private const float _previewProgress = 0.72f;
+    private const int _ringPoints = 48;
+    private float _progress = _previewProgress;
     private Label? _percentLabel;
 
     [Export(PropertyHint.Range, "0,1,0.001")]
@@ -90,7 +92,7 @@ public partial class UiProgressRing : Control, ISerializationListener
             _ringRadius,
             0,
             Mathf.Tau,
-            48,
+            _ringPoints,
             UiThemeLookup.Color(this, UiTokens.Color.Line),
             UiSize.Stroke.Beam,
             antialiased: false);
@@ -147,7 +149,7 @@ public partial class UiProgressRing : Control, ISerializationListener
             return;
         }
 
-        var progress = percent / 100f;
+        var progress = percent / (float)UiComponentContracts.FullPercent;
         var startAngle = -Mathf.Pi / 2;
         var endAngle = startAngle + (Mathf.Tau * progress);
         DrawArc(
@@ -155,11 +157,11 @@ public partial class UiProgressRing : Control, ISerializationListener
             _ringRadius,
             startAngle,
             endAngle,
-            48,
+            _ringPoints,
             UiThemeLookup.Color(this, UiTokens.Color.Accent),
             UiSize.Stroke.Beam,
             antialiased: false);
-        if (percent >= 100)
+        if (percent >= UiComponentContracts.FullPercent)
         {
             return;
         }

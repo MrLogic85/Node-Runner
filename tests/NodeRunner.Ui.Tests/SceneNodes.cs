@@ -39,7 +39,7 @@ internal static partial class SceneNodes
         }
     }
 
-    private static string FindRepositoryRoot()
+    internal static string FindRepositoryRoot()
     {
         for (var directory = new DirectoryInfo(AppContext.BaseDirectory);
              directory is not null;

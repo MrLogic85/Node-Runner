@@ -261,7 +261,7 @@ public abstract partial class UiChoiceRow : Container, ISerializationListener
 
         content.Button.Disabled = Disabled;
         content.Button.SetPressedNoSignal(_selected);
-        content.Labels.Modulate = new Color(1, 1, 1, Disabled ? UiChoiceStyle.DisabledOpacity : 1);
+        content.Labels.Modulate = Colors.White with { A = Disabled ? UiChoiceStyle.DisabledOpacity : 1 };
     }
 
     private Vector2 IndicatorSize()

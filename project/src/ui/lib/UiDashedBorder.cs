@@ -5,6 +5,7 @@ namespace NodeRunner.Ui.Lib;
 internal static class UiDashedBorder
 {
     private const float _targetPatternLength = 7;
+    private const int _cornerCount = 4;
     private const float _dashRatio = 4f / 7f;
 
     public static void DrawRoundedRect(CanvasItem canvas, Rect2 rect, float radius, Color color, float width)
@@ -41,7 +42,7 @@ internal static class UiDashedBorder
         var straightWidth = Mathf.Max(0, rect.Size.X - (radius * 2));
         var straightHeight = Mathf.Max(0, rect.Size.Y - (radius * 2));
         var arcLength = Mathf.Pi * radius * 0.5f;
-        var perimeter = (straightWidth * 2) + (straightHeight * 2) + (arcLength * 4);
+        var perimeter = (straightWidth * 2) + (straightHeight * 2) + (arcLength * _cornerCount);
         distance = Mathf.PosMod(distance, perimeter);
 
         if (distance <= straightWidth)

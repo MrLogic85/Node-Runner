@@ -127,7 +127,7 @@ public partial class UiPartRow : Control
         }
 
         SelfModulate = State is PartRowState.Locked or PartRowState.NoneLeft
-            ? new Color(1, 1, 1, _unavailableOpacity)
+            ? Colors.White with { A = _unavailableOpacity }
             : Colors.White;
         UpdateMinimumSize();
         QueueRedraw();
