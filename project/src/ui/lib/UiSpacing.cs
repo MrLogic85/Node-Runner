@@ -3,34 +3,24 @@ using Godot;
 namespace NodeRunner.Ui.Lib;
 
 /// <summary>
-/// Reference-design spacing rules for the fixed 640 x 360 phone canvas.
-/// Use these names instead of one-off pixel values when composing UI.
+/// Semantic spacing roles for the fixed 640 x 360 phone canvas. Use these names
+/// instead of one-off pixel values or a raw <see cref="UiSize.Space"/> step, so the
+/// intent of a gap stays visible at the call site.
 /// </summary>
 public static class UiSpacing
 {
-    public static int IconLabelGap(UiTokens tokens) => (int)tokens.Space1;
-
-    public static int ControlGap(UiTokens tokens) => (int)tokens.Space2;
-
-    public static int PanelPadding(UiTokens tokens) => (int)tokens.Space3;
-
-    public static int PanelGap(UiTokens tokens) => (int)tokens.Space4;
-
-    public static int SectionGap(UiTokens tokens) => (int)tokens.Space5;
-
-    public static int ScreenEdgeInset(UiTokens tokens) => (int)tokens.Space2;
-
-    public static int TouchTarget(UiTokens tokens) => (int)tokens.TouchTarget;
-
-    public static int ControlHorizontalPadding(UiTokens tokens) => (int)tokens.Space4;
-
-    public static int SegmentedControlHorizontalPadding(UiTokens tokens) => (int)tokens.Space3;
-
-    public static int ControlVerticalPadding(UiTokens tokens) => (int)tokens.Space2;
-
-    public static int DenseStackGap(UiTokens tokens) => IconLabelGap(tokens);
-
-    public static int StackGap(UiTokens tokens) => ControlGap(tokens);
+    public const int IconLabelGap = UiSize.Space.S1;
+    public const int ControlGap = UiSize.Space.S2;
+    public const int PanelPadding = UiSize.Space.S3;
+    public const int PanelGap = UiSize.Space.S4;
+    public const int SectionGap = UiSize.Space.S5;
+    public const int ScreenEdgeInset = UiSize.Space.S2;
+    public const int TouchTarget = UiSize.Control.Touch;
+    public const int ControlHorizontalPadding = UiSize.Space.S4;
+    public const int SegmentedControlHorizontalPadding = UiSize.Space.S3;
+    public const int ControlVerticalPadding = UiSize.Space.S2;
+    public const int DenseStackGap = IconLabelGap;
+    public const int StackGap = ControlGap;
 
     public static void ApplyUniformMargin(MarginContainer margin, int value)
     {

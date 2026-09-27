@@ -4,7 +4,6 @@
 [ext_resource type="Script" uid="uid://dk67qmt3brp4e" path="res://src/ui/lib/UiLabel.cs" id="2_1xfhr"]
 [ext_resource type="Script" uid="uid://pdb6hwlullhe" path="res://src/ui/lib/UiSegmentedSwitch.cs" id="3_ejpeg"]
 [ext_resource type="Script" uid="uid://dd0bugxsg7bvl" path="res://src/ui/lib/UiSegment.cs" id="4_43x7j"]
-[ext_resource type="FontFile" uid="uid://dyvmdtxnxsrxm" path="res://assets/fonts/Barlow/Barlow-SemiBold.ttf" id="5_657w2"]
 [ext_resource type="Script" uid="uid://r2ped3g3uiaa" path="res://src/ui/lib/UiButton.cs" id="6_a4d2d"]
 
 [sub_resource type="Resource" id="Resource_m8oqa"]
@@ -18,11 +17,6 @@ Text = "Paper"
 [sub_resource type="Resource" id="Resource_hwiuu"]
 script = ExtResource("4_43x7j")
 Text = "Effects Lite"
-
-[sub_resource type="FontVariation" id="FontVariation_1xfhr"]
-base_font = ExtResource("5_657w2")
-spacing_glyph = 1
-spacing_bottom = 1
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ejpeg"]
 content_margin_left = 16.0
@@ -86,11 +80,6 @@ corner_radius_bottom_left = 8
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_m8oqa"]
 
-[sub_resource type="FontVariation" id="FontVariation_i47nv"]
-base_font = ExtResource("5_657w2")
-spacing_glyph = 1
-spacing_bottom = 1
-
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hwiuu"]
 content_margin_left = 16.0
 content_margin_top = 0.0
@@ -152,11 +141,6 @@ corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_n4ty4"]
-
-[sub_resource type="FontVariation" id="FontVariation_fjd4q"]
-base_font = ExtResource("5_657w2")
-spacing_glyph = 1
-spacing_bottom = 1
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_p0m0t"]
 content_margin_left = 16.0
@@ -220,11 +204,6 @@ corner_radius_bottom_left = 8
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_6ncfs"]
 
-[sub_resource type="FontVariation" id="FontVariation_vrx41"]
-base_font = ExtResource("5_657w2")
-spacing_glyph = 1
-spacing_bottom = 1
-
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_8pdr3"]
 content_margin_left = 16.0
 content_margin_top = 0.0
@@ -286,11 +265,6 @@ corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_0dttf"]
-
-[sub_resource type="FontVariation" id="FontVariation_njeup"]
-base_font = ExtResource("5_657w2")
-spacing_glyph = 1
-spacing_bottom = 1
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_6ba8n"]
 content_margin_left = 16.0
@@ -354,11 +328,6 @@ corner_radius_bottom_left = 8
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_vnen1"]
 
-[sub_resource type="FontVariation" id="FontVariation_i58aw"]
-base_font = ExtResource("5_657w2")
-spacing_glyph = 1
-spacing_bottom = 1
-
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_56hsg"]
 content_margin_left = 16.0
 content_margin_top = 0.0
@@ -420,11 +389,6 @@ corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_bpego"]
-
-[sub_resource type="FontVariation" id="FontVariation_6y4tp"]
-base_font = ExtResource("5_657w2")
-spacing_glyph = 1
-spacing_bottom = 1
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_6d40r"]
 content_margin_left = 16.0
@@ -488,11 +452,6 @@ corner_radius_bottom_left = 8
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_1wp4h"]
 
-[sub_resource type="FontVariation" id="FontVariation_ya6y4"]
-base_font = ExtResource("5_657w2")
-spacing_glyph = 1
-spacing_bottom = 1
-
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ehfir"]
 content_margin_left = 16.0
 content_margin_top = 0.0
@@ -554,11 +513,6 @@ corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_hqup1"]
-
-[sub_resource type="FontVariation" id="FontVariation_f85x6"]
-base_font = ExtResource("5_657w2")
-spacing_glyph = 1
-spacing_bottom = 1
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_k5hcy"]
 content_margin_left = 16.0
@@ -622,11 +576,6 @@ corner_radius_bottom_left = 8
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_a37l8"]
 
-[sub_resource type="FontVariation" id="FontVariation_voipd"]
-base_font = ExtResource("5_657w2")
-spacing_glyph = 1
-spacing_bottom = 1
-
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_yiyxq"]
 content_margin_left = 16.0
 content_margin_top = 0.0
@@ -688,11 +637,6 @@ corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_rgxys"]
-
-[sub_resource type="FontVariation" id="FontVariation_rwhbn"]
-base_font = ExtResource("5_657w2")
-spacing_glyph = 1
-spacing_bottom = 1
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_74g1p"]
 content_margin_left = 16.0
@@ -756,11 +700,6 @@ corner_radius_bottom_left = 8
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_rw12p"]
 
-[sub_resource type="FontVariation" id="FontVariation_nxukv"]
-base_font = ExtResource("5_657w2")
-spacing_glyph = 1
-spacing_bottom = 1
-
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_o2xf1"]
 content_margin_left = 16.0
 content_margin_top = 0.0
@@ -822,11 +761,6 @@ corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_j204u"]
-
-[sub_resource type="FontVariation" id="FontVariation_vjgjw"]
-base_font = ExtResource("5_657w2")
-spacing_glyph = 1
-spacing_bottom = 1
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_8r5k3"]
 content_margin_left = 16.0
@@ -890,11 +824,6 @@ corner_radius_bottom_left = 8
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_o1xt6"]
 
-[sub_resource type="FontVariation" id="FontVariation_4dx2m"]
-base_font = ExtResource("5_657w2")
-spacing_glyph = 1
-spacing_bottom = 1
-
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_wjody"]
 content_margin_left = 16.0
 content_margin_top = 0.0
@@ -956,11 +885,6 @@ corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_llqvo"]
-
-[sub_resource type="FontVariation" id="FontVariation_ii4o3"]
-base_font = ExtResource("5_657w2")
-spacing_glyph = 1
-spacing_bottom = 1
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_w8s2d"]
 content_margin_left = 16.0
@@ -1024,11 +948,6 @@ corner_radius_bottom_left = 8
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_uk8mx"]
 
-[sub_resource type="FontVariation" id="FontVariation_dhxe3"]
-base_font = ExtResource("5_657w2")
-spacing_glyph = 1
-spacing_bottom = 1
-
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_pelm2"]
 content_margin_left = 16.0
 content_margin_top = 0.0
@@ -1090,11 +1009,6 @@ corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_m4uqn"]
-
-[sub_resource type="FontVariation" id="FontVariation_bhhib"]
-base_font = ExtResource("5_657w2")
-spacing_glyph = 1
-spacing_bottom = 1
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_icb28"]
 content_margin_left = 16.0
@@ -1224,34 +1138,16 @@ custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
 size_flags_vertical = 4
 mouse_filter = 1
-theme_override_colors/font_color = Color(0.9019608, 0.94509804, 1, 1)
-theme_override_colors/font_focus_color = Color(0.9019608, 0.94509804, 1, 1)
-theme_override_colors/font_pressed_color = Color(0.9019608, 0.94509804, 1, 1)
-theme_override_colors/font_hover_color = Color(0.9019608, 0.94509804, 1, 1)
-theme_override_colors/font_disabled_color = Color(0.9019608, 0.94509804, 1, 0.5)
-theme_override_colors/icon_normal_color = Color(0.9019608, 0.94509804, 1, 1)
-theme_override_colors/icon_pressed_color = Color(0.9019608, 0.94509804, 1, 1)
-theme_override_colors/icon_hover_color = Color(0.9019608, 0.94509804, 1, 1)
-theme_override_colors/icon_disabled_color = Color(0.9019608, 0.94509804, 1, 0.5)
-theme_override_constants/h_separation = 8
-theme_override_constants/icon_max_width = 16
-theme_override_fonts/font = SubResource("FontVariation_1xfhr")
-theme_override_font_sizes/font_size = 12
 theme_override_styles/normal = SubResource("StyleBoxFlat_ejpeg")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_43x7j")
 theme_override_styles/hover = SubResource("StyleBoxFlat_657w2")
 theme_override_styles/disabled = SubResource("StyleBoxFlat_a4d2d")
 theme_override_styles/focus = SubResource("StyleBoxEmpty_m8oqa")
 script = ExtResource("6_a4d2d")
-LabelText = "Back"
+text = "Back"
 Kind = 1
 ContentLayout = 2
 metadata/_custom_type_script = "uid://r2ped3g3uiaa"
-metadata/ui_font_family = "Body"
-metadata/ui_line_height = 16.0
-metadata/ui_font_weight = 600
-metadata/ui_letter_spacing = 0.04
-metadata/ui_uppercase = true
 
 [node name="Disclaimer" type="Label" parent="MarginContainer/VBoxContainer" unique_id=716898321]
 unique_name_in_owner = true
@@ -1290,280 +1186,150 @@ custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
 size_flags_vertical = 4
 mouse_filter = 1
-theme_override_colors/font_color = Color(0.9019608, 0.94509804, 1, 1)
-theme_override_colors/font_focus_color = Color(0.9019608, 0.94509804, 1, 1)
-theme_override_colors/font_pressed_color = Color(0.9019608, 0.94509804, 1, 1)
-theme_override_colors/font_hover_color = Color(0.9019608, 0.94509804, 1, 1)
-theme_override_colors/font_disabled_color = Color(0.9019608, 0.94509804, 1, 0.5)
-theme_override_constants/h_separation = 8
-theme_override_fonts/font = SubResource("FontVariation_i47nv")
-theme_override_font_sizes/font_size = 12
 theme_override_styles/normal = SubResource("StyleBoxFlat_hwiuu")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_in7ub")
 theme_override_styles/hover = SubResource("StyleBoxFlat_vs6cb")
 theme_override_styles/disabled = SubResource("StyleBoxFlat_0itv7")
 theme_override_styles/focus = SubResource("StyleBoxEmpty_n4ty4")
 script = ExtResource("6_a4d2d")
-LabelText = "Default"
+text = "Default"
 Kind = 1
 ContentLayout = 2
-metadata/ui_font_family = "Body"
-metadata/ui_line_height = 16.0
-metadata/ui_font_weight = 600
-metadata/ui_letter_spacing = 0.04
-metadata/ui_uppercase = true
 
 [node name="Warning" type="Button" parent="MarginContainer/VBoxContainer/BodyScroll/Body/Dialogs" unique_id=1075103988]
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
 size_flags_vertical = 4
 mouse_filter = 1
-theme_override_colors/font_color = Color(0.9019608, 0.94509804, 1, 1)
-theme_override_colors/font_focus_color = Color(0.9019608, 0.94509804, 1, 1)
-theme_override_colors/font_pressed_color = Color(0.9019608, 0.94509804, 1, 1)
-theme_override_colors/font_hover_color = Color(0.9019608, 0.94509804, 1, 1)
-theme_override_colors/font_disabled_color = Color(0.9019608, 0.94509804, 1, 0.5)
-theme_override_constants/h_separation = 8
-theme_override_fonts/font = SubResource("FontVariation_fjd4q")
-theme_override_font_sizes/font_size = 12
 theme_override_styles/normal = SubResource("StyleBoxFlat_p0m0t")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_5gno8")
 theme_override_styles/hover = SubResource("StyleBoxFlat_sntbt")
 theme_override_styles/disabled = SubResource("StyleBoxFlat_1oqew")
 theme_override_styles/focus = SubResource("StyleBoxEmpty_6ncfs")
 script = ExtResource("6_a4d2d")
-LabelText = "Warn"
+text = "Warn"
 Kind = 1
 ContentLayout = 2
-metadata/ui_font_family = "Body"
-metadata/ui_line_height = 16.0
-metadata/ui_font_weight = 600
-metadata/ui_letter_spacing = 0.04
-metadata/ui_uppercase = true
 
 [node name="Danger" type="Button" parent="MarginContainer/VBoxContainer/BodyScroll/Body/Dialogs" unique_id=386964720]
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
 size_flags_vertical = 4
 mouse_filter = 1
-theme_override_colors/font_color = Color(0.9019608, 0.94509804, 1, 1)
-theme_override_colors/font_focus_color = Color(0.9019608, 0.94509804, 1, 1)
-theme_override_colors/font_pressed_color = Color(0.9019608, 0.94509804, 1, 1)
-theme_override_colors/font_hover_color = Color(0.9019608, 0.94509804, 1, 1)
-theme_override_colors/font_disabled_color = Color(0.9019608, 0.94509804, 1, 0.5)
-theme_override_constants/h_separation = 8
-theme_override_fonts/font = SubResource("FontVariation_vrx41")
-theme_override_font_sizes/font_size = 12
 theme_override_styles/normal = SubResource("StyleBoxFlat_8pdr3")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_7mxs7")
 theme_override_styles/hover = SubResource("StyleBoxFlat_i4uds")
 theme_override_styles/disabled = SubResource("StyleBoxFlat_yvlbw")
 theme_override_styles/focus = SubResource("StyleBoxEmpty_0dttf")
 script = ExtResource("6_a4d2d")
-LabelText = "Danger"
+text = "Danger"
 Kind = 1
 ContentLayout = 2
-metadata/ui_font_family = "Body"
-metadata/ui_line_height = 16.0
-metadata/ui_font_weight = 600
-metadata/ui_letter_spacing = 0.04
-metadata/ui_uppercase = true
 
 [node name="HoldDelete" type="Button" parent="MarginContainer/VBoxContainer/BodyScroll/Body/Dialogs" unique_id=568883074]
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
 size_flags_vertical = 4
 mouse_filter = 1
-theme_override_colors/font_color = Color(0.9019608, 0.94509804, 1, 1)
-theme_override_colors/font_focus_color = Color(0.9019608, 0.94509804, 1, 1)
-theme_override_colors/font_pressed_color = Color(0.9019608, 0.94509804, 1, 1)
-theme_override_colors/font_hover_color = Color(0.9019608, 0.94509804, 1, 1)
-theme_override_colors/font_disabled_color = Color(0.9019608, 0.94509804, 1, 0.5)
-theme_override_constants/h_separation = 8
-theme_override_fonts/font = SubResource("FontVariation_njeup")
-theme_override_font_sizes/font_size = 12
 theme_override_styles/normal = SubResource("StyleBoxFlat_6ba8n")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_5k58o")
 theme_override_styles/hover = SubResource("StyleBoxFlat_w2v4a")
 theme_override_styles/disabled = SubResource("StyleBoxFlat_7yx3a")
 theme_override_styles/focus = SubResource("StyleBoxEmpty_vnen1")
 script = ExtResource("6_a4d2d")
-LabelText = "Hold to delete"
+text = "Hold to delete"
 Kind = 1
 ContentLayout = 2
-metadata/ui_font_family = "Body"
-metadata/ui_line_height = 16.0
-metadata/ui_font_weight = 600
-metadata/ui_letter_spacing = 0.04
-metadata/ui_uppercase = true
 
 [node name="WarningHold" type="Button" parent="MarginContainer/VBoxContainer/BodyScroll/Body/Dialogs" unique_id=230549707]
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
 size_flags_vertical = 4
 mouse_filter = 1
-theme_override_colors/font_color = Color(0.9019608, 0.94509804, 1, 1)
-theme_override_colors/font_focus_color = Color(0.9019608, 0.94509804, 1, 1)
-theme_override_colors/font_pressed_color = Color(0.9019608, 0.94509804, 1, 1)
-theme_override_colors/font_hover_color = Color(0.9019608, 0.94509804, 1, 1)
-theme_override_colors/font_disabled_color = Color(0.9019608, 0.94509804, 1, 0.5)
-theme_override_constants/h_separation = 8
-theme_override_fonts/font = SubResource("FontVariation_i58aw")
-theme_override_font_sizes/font_size = 12
 theme_override_styles/normal = SubResource("StyleBoxFlat_56hsg")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_uwoag")
 theme_override_styles/hover = SubResource("StyleBoxFlat_871sj")
 theme_override_styles/disabled = SubResource("StyleBoxFlat_r35t0")
 theme_override_styles/focus = SubResource("StyleBoxEmpty_bpego")
 script = ExtResource("6_a4d2d")
-LabelText = "Warning + hold"
+text = "Warning + hold"
 Kind = 1
 ContentLayout = 2
-metadata/ui_font_family = "Body"
-metadata/ui_line_height = 16.0
-metadata/ui_font_weight = 600
-metadata/ui_letter_spacing = 0.04
-metadata/ui_uppercase = true
 
 [node name="LongContent" type="Button" parent="MarginContainer/VBoxContainer/BodyScroll/Body/Dialogs" unique_id=1315582245]
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
 size_flags_vertical = 4
 mouse_filter = 1
-theme_override_colors/font_color = Color(0.9019608, 0.94509804, 1, 1)
-theme_override_colors/font_focus_color = Color(0.9019608, 0.94509804, 1, 1)
-theme_override_colors/font_pressed_color = Color(0.9019608, 0.94509804, 1, 1)
-theme_override_colors/font_hover_color = Color(0.9019608, 0.94509804, 1, 1)
-theme_override_colors/font_disabled_color = Color(0.9019608, 0.94509804, 1, 0.5)
-theme_override_constants/h_separation = 8
-theme_override_fonts/font = SubResource("FontVariation_6y4tp")
-theme_override_font_sizes/font_size = 12
 theme_override_styles/normal = SubResource("StyleBoxFlat_6d40r")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_iosql")
 theme_override_styles/hover = SubResource("StyleBoxFlat_bxd01")
 theme_override_styles/disabled = SubResource("StyleBoxFlat_hfa80")
 theme_override_styles/focus = SubResource("StyleBoxEmpty_1wp4h")
 script = ExtResource("6_a4d2d")
-LabelText = "Long content"
+text = "Long content"
 Kind = 1
 ContentLayout = 2
-metadata/ui_font_family = "Body"
-metadata/ui_line_height = 16.0
-metadata/ui_font_weight = 600
-metadata/ui_letter_spacing = 0.04
-metadata/ui_uppercase = true
 
 [node name="ActionError" type="Button" parent="MarginContainer/VBoxContainer/BodyScroll/Body/Dialogs" unique_id=566424272]
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
 size_flags_vertical = 4
 mouse_filter = 1
-theme_override_colors/font_color = Color(0.9019608, 0.94509804, 1, 1)
-theme_override_colors/font_focus_color = Color(0.9019608, 0.94509804, 1, 1)
-theme_override_colors/font_pressed_color = Color(0.9019608, 0.94509804, 1, 1)
-theme_override_colors/font_hover_color = Color(0.9019608, 0.94509804, 1, 1)
-theme_override_colors/font_disabled_color = Color(0.9019608, 0.94509804, 1, 0.5)
-theme_override_constants/h_separation = 8
-theme_override_fonts/font = SubResource("FontVariation_ya6y4")
-theme_override_font_sizes/font_size = 12
 theme_override_styles/normal = SubResource("StyleBoxFlat_ehfir")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_g1utm")
 theme_override_styles/hover = SubResource("StyleBoxFlat_8xj1v")
 theme_override_styles/disabled = SubResource("StyleBoxFlat_wlq43")
 theme_override_styles/focus = SubResource("StyleBoxEmpty_hqup1")
 script = ExtResource("6_a4d2d")
-LabelText = "Action error"
+text = "Action error"
 Kind = 1
 ContentLayout = 2
-metadata/ui_font_family = "Body"
-metadata/ui_line_height = 16.0
-metadata/ui_font_weight = 600
-metadata/ui_letter_spacing = 0.04
-metadata/ui_uppercase = true
 
 [node name="AsyncAction" type="Button" parent="MarginContainer/VBoxContainer/BodyScroll/Body/Dialogs" unique_id=2109880785]
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
 size_flags_vertical = 4
 mouse_filter = 1
-theme_override_colors/font_color = Color(0.9019608, 0.94509804, 1, 1)
-theme_override_colors/font_focus_color = Color(0.9019608, 0.94509804, 1, 1)
-theme_override_colors/font_pressed_color = Color(0.9019608, 0.94509804, 1, 1)
-theme_override_colors/font_hover_color = Color(0.9019608, 0.94509804, 1, 1)
-theme_override_colors/font_disabled_color = Color(0.9019608, 0.94509804, 1, 0.5)
-theme_override_constants/h_separation = 8
-theme_override_fonts/font = SubResource("FontVariation_f85x6")
-theme_override_font_sizes/font_size = 12
 theme_override_styles/normal = SubResource("StyleBoxFlat_k5hcy")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_88xxm")
 theme_override_styles/hover = SubResource("StyleBoxFlat_dyfqj")
 theme_override_styles/disabled = SubResource("StyleBoxFlat_ng7wl")
 theme_override_styles/focus = SubResource("StyleBoxEmpty_a37l8")
 script = ExtResource("6_a4d2d")
-LabelText = "Async action"
+text = "Async action"
 Kind = 1
 ContentLayout = 2
-metadata/ui_font_family = "Body"
-metadata/ui_line_height = 16.0
-metadata/ui_font_weight = 600
-metadata/ui_letter_spacing = 0.04
-metadata/ui_uppercase = true
 
 [node name="CloseOnly" type="Button" parent="MarginContainer/VBoxContainer/BodyScroll/Body/Dialogs" unique_id=1607820461]
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
 size_flags_vertical = 4
 mouse_filter = 1
-theme_override_colors/font_color = Color(0.9019608, 0.94509804, 1, 1)
-theme_override_colors/font_focus_color = Color(0.9019608, 0.94509804, 1, 1)
-theme_override_colors/font_pressed_color = Color(0.9019608, 0.94509804, 1, 1)
-theme_override_colors/font_hover_color = Color(0.9019608, 0.94509804, 1, 1)
-theme_override_colors/font_disabled_color = Color(0.9019608, 0.94509804, 1, 0.5)
-theme_override_constants/h_separation = 8
-theme_override_fonts/font = SubResource("FontVariation_voipd")
-theme_override_font_sizes/font_size = 12
 theme_override_styles/normal = SubResource("StyleBoxFlat_yiyxq")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_5eelq")
 theme_override_styles/hover = SubResource("StyleBoxFlat_tifla")
 theme_override_styles/disabled = SubResource("StyleBoxFlat_gi71t")
 theme_override_styles/focus = SubResource("StyleBoxEmpty_rgxys")
 script = ExtResource("6_a4d2d")
-LabelText = "Close only"
+text = "Close only"
 Kind = 1
 ContentLayout = 2
-metadata/ui_font_family = "Body"
-metadata/ui_line_height = 16.0
-metadata/ui_font_weight = 600
-metadata/ui_letter_spacing = 0.04
-metadata/ui_uppercase = true
 
 [node name="DefaultAction" type="Button" parent="MarginContainer/VBoxContainer/BodyScroll/Body/Dialogs" unique_id=868960899]
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
 size_flags_vertical = 4
 mouse_filter = 1
-theme_override_colors/font_color = Color(0.9019608, 0.94509804, 1, 1)
-theme_override_colors/font_focus_color = Color(0.9019608, 0.94509804, 1, 1)
-theme_override_colors/font_pressed_color = Color(0.9019608, 0.94509804, 1, 1)
-theme_override_colors/font_hover_color = Color(0.9019608, 0.94509804, 1, 1)
-theme_override_colors/font_disabled_color = Color(0.9019608, 0.94509804, 1, 0.5)
-theme_override_constants/h_separation = 8
-theme_override_fonts/font = SubResource("FontVariation_rwhbn")
-theme_override_font_sizes/font_size = 12
 theme_override_styles/normal = SubResource("StyleBoxFlat_74g1p")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_rs4d2")
 theme_override_styles/hover = SubResource("StyleBoxFlat_5lqxi")
 theme_override_styles/disabled = SubResource("StyleBoxFlat_texoe")
 theme_override_styles/focus = SubResource("StyleBoxEmpty_rw12p")
 script = ExtResource("6_a4d2d")
-LabelText = "Default action"
+text = "Default action"
 Kind = 1
 ContentLayout = 2
-metadata/ui_font_family = "Body"
-metadata/ui_line_height = 16.0
-metadata/ui_font_weight = 600
-metadata/ui_letter_spacing = 0.04
-metadata/ui_uppercase = true
 
 [node name="NotificationsHeading" type="Label" parent="MarginContainer/VBoxContainer/BodyScroll/Body" unique_id=586555229]
 custom_minimum_size = Vector2(120, 0)
@@ -1583,168 +1349,90 @@ custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
 size_flags_vertical = 4
 mouse_filter = 1
-theme_override_colors/font_color = Color(0.9019608, 0.94509804, 1, 1)
-theme_override_colors/font_focus_color = Color(0.9019608, 0.94509804, 1, 1)
-theme_override_colors/font_pressed_color = Color(0.9019608, 0.94509804, 1, 1)
-theme_override_colors/font_hover_color = Color(0.9019608, 0.94509804, 1, 1)
-theme_override_colors/font_disabled_color = Color(0.9019608, 0.94509804, 1, 0.5)
-theme_override_constants/h_separation = 8
-theme_override_fonts/font = SubResource("FontVariation_nxukv")
-theme_override_font_sizes/font_size = 12
 theme_override_styles/normal = SubResource("StyleBoxFlat_o2xf1")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_f4nfw")
 theme_override_styles/hover = SubResource("StyleBoxFlat_7vna8")
 theme_override_styles/disabled = SubResource("StyleBoxFlat_2xsdp")
 theme_override_styles/focus = SubResource("StyleBoxEmpty_j204u")
 script = ExtResource("6_a4d2d")
-LabelText = "Default"
+text = "Default"
 Kind = 1
 ContentLayout = 2
-metadata/ui_font_family = "Body"
-metadata/ui_line_height = 16.0
-metadata/ui_font_weight = 600
-metadata/ui_letter_spacing = 0.04
-metadata/ui_uppercase = true
 
 [node name="Warning" type="Button" parent="MarginContainer/VBoxContainer/BodyScroll/Body/Notifications" unique_id=1514251876]
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
 size_flags_vertical = 4
 mouse_filter = 1
-theme_override_colors/font_color = Color(0.9019608, 0.94509804, 1, 1)
-theme_override_colors/font_focus_color = Color(0.9019608, 0.94509804, 1, 1)
-theme_override_colors/font_pressed_color = Color(0.9019608, 0.94509804, 1, 1)
-theme_override_colors/font_hover_color = Color(0.9019608, 0.94509804, 1, 1)
-theme_override_colors/font_disabled_color = Color(0.9019608, 0.94509804, 1, 0.5)
-theme_override_constants/h_separation = 8
-theme_override_fonts/font = SubResource("FontVariation_vjgjw")
-theme_override_font_sizes/font_size = 12
 theme_override_styles/normal = SubResource("StyleBoxFlat_8r5k3")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_hwypx")
 theme_override_styles/hover = SubResource("StyleBoxFlat_sxap0")
 theme_override_styles/disabled = SubResource("StyleBoxFlat_m88c6")
 theme_override_styles/focus = SubResource("StyleBoxEmpty_o1xt6")
 script = ExtResource("6_a4d2d")
-LabelText = "Warn"
+text = "Warn"
 Kind = 1
 ContentLayout = 2
-metadata/ui_font_family = "Body"
-metadata/ui_line_height = 16.0
-metadata/ui_font_weight = 600
-metadata/ui_letter_spacing = 0.04
-metadata/ui_uppercase = true
 
 [node name="Danger" type="Button" parent="MarginContainer/VBoxContainer/BodyScroll/Body/Notifications" unique_id=121714574]
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
 size_flags_vertical = 4
 mouse_filter = 1
-theme_override_colors/font_color = Color(0.9019608, 0.94509804, 1, 1)
-theme_override_colors/font_focus_color = Color(0.9019608, 0.94509804, 1, 1)
-theme_override_colors/font_pressed_color = Color(0.9019608, 0.94509804, 1, 1)
-theme_override_colors/font_hover_color = Color(0.9019608, 0.94509804, 1, 1)
-theme_override_colors/font_disabled_color = Color(0.9019608, 0.94509804, 1, 0.5)
-theme_override_constants/h_separation = 8
-theme_override_fonts/font = SubResource("FontVariation_4dx2m")
-theme_override_font_sizes/font_size = 12
 theme_override_styles/normal = SubResource("StyleBoxFlat_wjody")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_2owxm")
 theme_override_styles/hover = SubResource("StyleBoxFlat_lfigd")
 theme_override_styles/disabled = SubResource("StyleBoxFlat_faxxf")
 theme_override_styles/focus = SubResource("StyleBoxEmpty_llqvo")
 script = ExtResource("6_a4d2d")
-LabelText = "Danger"
+text = "Danger"
 Kind = 1
 ContentLayout = 2
-metadata/ui_font_family = "Body"
-metadata/ui_line_height = 16.0
-metadata/ui_font_weight = 600
-metadata/ui_letter_spacing = 0.04
-metadata/ui_uppercase = true
 
 [node name="ClickTrue" type="Button" parent="MarginContainer/VBoxContainer/BodyScroll/Body/Notifications" unique_id=841119754]
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
 size_flags_vertical = 4
 mouse_filter = 1
-theme_override_colors/font_color = Color(0.9019608, 0.94509804, 1, 1)
-theme_override_colors/font_focus_color = Color(0.9019608, 0.94509804, 1, 1)
-theme_override_colors/font_pressed_color = Color(0.9019608, 0.94509804, 1, 1)
-theme_override_colors/font_hover_color = Color(0.9019608, 0.94509804, 1, 1)
-theme_override_colors/font_disabled_color = Color(0.9019608, 0.94509804, 1, 0.5)
-theme_override_constants/h_separation = 8
-theme_override_fonts/font = SubResource("FontVariation_ii4o3")
-theme_override_font_sizes/font_size = 12
 theme_override_styles/normal = SubResource("StyleBoxFlat_w8s2d")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_efyxp")
 theme_override_styles/hover = SubResource("StyleBoxFlat_0152k")
 theme_override_styles/disabled = SubResource("StyleBoxFlat_rlrkg")
 theme_override_styles/focus = SubResource("StyleBoxEmpty_uk8mx")
 script = ExtResource("6_a4d2d")
-LabelText = "Click: true"
+text = "Click: true"
 Kind = 1
 ContentLayout = 2
-metadata/ui_font_family = "Body"
-metadata/ui_line_height = 16.0
-metadata/ui_font_weight = 600
-metadata/ui_letter_spacing = 0.04
-metadata/ui_uppercase = true
 
 [node name="ClickFalse" type="Button" parent="MarginContainer/VBoxContainer/BodyScroll/Body/Notifications" unique_id=119918838]
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
 size_flags_vertical = 4
 mouse_filter = 1
-theme_override_colors/font_color = Color(0.9019608, 0.94509804, 1, 1)
-theme_override_colors/font_focus_color = Color(0.9019608, 0.94509804, 1, 1)
-theme_override_colors/font_pressed_color = Color(0.9019608, 0.94509804, 1, 1)
-theme_override_colors/font_hover_color = Color(0.9019608, 0.94509804, 1, 1)
-theme_override_colors/font_disabled_color = Color(0.9019608, 0.94509804, 1, 0.5)
-theme_override_constants/h_separation = 8
-theme_override_fonts/font = SubResource("FontVariation_dhxe3")
-theme_override_font_sizes/font_size = 12
 theme_override_styles/normal = SubResource("StyleBoxFlat_pelm2")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_jc0s0")
 theme_override_styles/hover = SubResource("StyleBoxFlat_kn2rq")
 theme_override_styles/disabled = SubResource("StyleBoxFlat_kegpf")
 theme_override_styles/focus = SubResource("StyleBoxEmpty_m4uqn")
 script = ExtResource("6_a4d2d")
-LabelText = "Click: false"
+text = "Click: false"
 Kind = 1
 ContentLayout = 2
-metadata/ui_font_family = "Body"
-metadata/ui_line_height = 16.0
-metadata/ui_font_weight = 600
-metadata/ui_letter_spacing = 0.04
-metadata/ui_uppercase = true
 
 [node name="QueueThree" type="Button" parent="MarginContainer/VBoxContainer/BodyScroll/Body/Notifications" unique_id=483413131]
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
 size_flags_vertical = 4
 mouse_filter = 1
-theme_override_colors/font_color = Color(0.9019608, 0.94509804, 1, 1)
-theme_override_colors/font_focus_color = Color(0.9019608, 0.94509804, 1, 1)
-theme_override_colors/font_pressed_color = Color(0.9019608, 0.94509804, 1, 1)
-theme_override_colors/font_hover_color = Color(0.9019608, 0.94509804, 1, 1)
-theme_override_colors/font_disabled_color = Color(0.9019608, 0.94509804, 1, 0.5)
-theme_override_constants/h_separation = 8
-theme_override_fonts/font = SubResource("FontVariation_bhhib")
-theme_override_font_sizes/font_size = 12
 theme_override_styles/normal = SubResource("StyleBoxFlat_icb28")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_svamm")
 theme_override_styles/hover = SubResource("StyleBoxFlat_uovef")
 theme_override_styles/disabled = SubResource("StyleBoxFlat_xdf78")
 theme_override_styles/focus = SubResource("StyleBoxEmpty_7n5la")
 script = ExtResource("6_a4d2d")
-LabelText = "Queue three"
+text = "Queue three"
 Kind = 1
 ContentLayout = 2
-metadata/ui_font_family = "Body"
-metadata/ui_line_height = 16.0
-metadata/ui_font_weight = 600
-metadata/ui_letter_spacing = 0.04
-metadata/ui_uppercase = true
 
 [node name="Status" type="Label" parent="MarginContainer/VBoxContainer/BodyScroll/Body" unique_id=1496768585]
 unique_name_in_owner = true

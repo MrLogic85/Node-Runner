@@ -16,7 +16,6 @@ public partial class UiMenu : Container
         WrapContent,
     }
 
-    private UiTokens _tokens = UiTokens.Neon;
     private float _width;
     private MenuWidthMode _widthMode;
     private bool _compact;
@@ -62,22 +61,10 @@ public partial class UiMenu : Container
         }
     }
 
-    public UiTokens Tokens
-    {
-        get => _tokens;
-        set
-        {
-            ArgumentNullException.ThrowIfNull(value);
-            _tokens = value;
-            QueueLayout();
-            QueueRedraw();
-        }
-    }
-
-    public static float ResolveWidth(MenuWidthMode mode, float width, UiTokens tokens) =>
+    public static float ResolveWidth(MenuWidthMode mode, float width, float defaultWidth) =>
         mode == MenuWidthMode.WrapContent
             ? 0
-            : width > 0 ? width : tokens.MenuWidth;
+            : width > 0 ? width : defaultWidth;
 
     public override void _Ready()
     {
@@ -118,12 +105,15 @@ public partial class UiMenu : Container
     public override Vector2 _GetMinimumSize()
     {
         var children = VisibleChildren();
-        var stroke = Tokens.StrokeHair;
+        var stroke = UiSize.Stroke.Hair;
         var contentWidth = children.Length == 0
             ? 0
             : children.Max(child => child.GetCombinedMinimumSize().X);
         var contentHeight = children.Sum(child => child.GetCombinedMinimumSize().Y);
-        var fixedWidth = ResolveWidth(WidthMode, Width, Tokens);
+        var fixedWidth = ResolveWidth(
+            WidthMode,
+            Width,
+            UiLayout.MenuWidth);
         return new Vector2(
             Mathf.Max(fixedWidth, contentWidth + (stroke * 2)),
             contentHeight + (stroke * 2));
@@ -143,8 +133,8 @@ public partial class UiMenu : Container
             return;
         }
 
-        var stroke = Tokens.StrokeHair;
-        var y = stroke;
+        var stroke = UiSize.Stroke.Hair;
+        var y = (float)stroke;
         foreach (var child in VisibleChildren())
         {
             var height = child.GetCombinedMinimumSize().Y;
@@ -159,7 +149,8 @@ public partial class UiMenu : Container
 
     public override void _Draw()
     {
-        var style = Tokens.FrameStyle(
+        var style = UiThemeLookup.CreateFrameStyleBox(
+            this,
             UiSurfaceContracts.FrameVariant.Frame,
             UiSurfaceContracts.FrameSize.Flush,
             glow: true);

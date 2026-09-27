@@ -10,7 +10,6 @@ public partial class UiIconTabs : HBoxContainer
     [Signal]
     public delegate void TabSelectedEventHandler(int index);
 
-    private UiTokens _tokens = UiTokens.Neon;
     private ButtonGroup? _group;
     private Godot.Collections.Array<UiIconId> _icons = [];
     private readonly List<Button> _buttons = [];
@@ -48,22 +47,20 @@ public partial class UiIconTabs : HBoxContainer
 
     private int _activeIndex;
 
-    public UiTokens Tokens
-    {
-        get => _tokens;
-        set
-        {
-            _tokens = value;
-            ApplyTheme();
-        }
-    }
-
     public override void _Ready()
     {
         MouseFilter = MouseFilterEnum.Pass;
         _group ??= new ButtonGroup { AllowUnpress = false };
         _activeIndex = UiComponentContracts.NormalizeTabIndex(_activeIndex, _icons.Count);
         RebuildButtons();
+    }
+
+    public override void _Notification(int what)
+    {
+        if (what == NotificationThemeChanged && IsNodeReady())
+        {
+            UiThemeRefresh.Guarded(this, ApplyTheme);
+        }
     }
 
     private void RebuildButtons()
@@ -100,7 +97,7 @@ public partial class UiIconTabs : HBoxContainer
                 IconAlignment = HorizontalAlignment.Center,
                 ToggleMode = true,
                 ButtonGroup = _group,
-                CustomMinimumSize = new Vector2(_tokens.TouchTarget, _tokens.ControlSmall),
+                CustomMinimumSize = new Vector2(UiSize.Control.Touch, UiSize.Control.Small),
                 SizeFlagsVertical = SizeFlags.ShrinkCenter,
                 MouseFilter = MouseFilterEnum.Pass,
             };
@@ -142,12 +139,12 @@ public partial class UiIconTabs : HBoxContainer
 
     private void ApplyTheme()
     {
-        AddThemeConstantOverride("separation", (int)_tokens.Space1);
+        AddThemeConstantOverride("separation", (int)UiSize.Space.S1);
         for (var index = 0; index < _buttons.Count; index++)
         {
             var button = _buttons[index];
             button.Text = string.Empty;
-            button.CustomMinimumSize = new Vector2(_tokens.TouchTarget, _tokens.ControlSmall);
+            button.CustomMinimumSize = new Vector2(UiSize.Control.Touch, UiSize.Control.Small);
             button.SizeFlagsHorizontal = SizeFlags.ShrinkBegin;
             button.SizeFlagsVertical = SizeFlags.ShrinkCenter;
             ApplyIcon(button, _icons[index]);
@@ -171,12 +168,12 @@ public partial class UiIconTabs : HBoxContainer
 
     private void ApplyIcon(Button button, UiIconId icon)
     {
-        UiIcons.Apply(button, icon, UiIconSize.Large, _tokens.Muted);
+        UiIcons.Apply(button, icon, UiIconSize.Large, UiThemeLookup.Color(this, UiTokens.Color.Muted));
 
         button.AddThemeConstantOverride("h_separation", 0);
-        button.AddThemeColorOverride("icon_pressed_color", _tokens.Accent);
-        button.AddThemeColorOverride("icon_hover_pressed_color", _tokens.Accent);
-        button.AddThemeColorOverride("icon_focus_color", _tokens.Muted);
+        button.AddThemeColorOverride("icon_pressed_color", UiThemeLookup.Color(this, UiTokens.Color.Accent));
+        button.AddThemeColorOverride("icon_hover_pressed_color", UiThemeLookup.Color(this, UiTokens.Color.Accent));
+        button.AddThemeColorOverride("icon_focus_color", UiThemeLookup.Color(this, UiTokens.Color.Muted));
     }
 
     private void ApplyStyle(Button button)
@@ -192,13 +189,14 @@ public partial class UiIconTabs : HBoxContainer
 
     private StyleBoxFlat CreateStyle(bool selected)
     {
-        var background = selected ? _tokens.PanelRaised.Blend(_tokens.AccentSoft) : _tokens.PanelRaised;
-        var border = selected ? _tokens.Accent : _tokens.LineStrong;
-        var style = _tokens.ControlStyle(
-            background,
+        var background = selected
+            ? UiThemeLookup.Color(this, UiTokens.Color.PanelRaised).Blend(UiThemeLookup.Color(this, UiTokens.Color.Accent).WithAlpha(UiThemeLookup.Alpha(this, UiTokens.Alpha.Soft)))
+            : UiThemeLookup.Color(this, UiTokens.Color.PanelRaised);
+        var border = selected ? UiThemeLookup.Color(this, UiTokens.Color.Accent) : UiThemeLookup.Color(this, UiTokens.Color.LineStrong);
+        var style = UiThemeLookup.CreateStyleBox(background,
             border,
-            selected ? _tokens.StrokeSignal : _tokens.StrokeHair,
-            _tokens.RadiusMedium);
+            selected ? UiSize.Stroke.Signal : UiSize.Stroke.Hair,
+            UiSize.Radius.Medium);
         style.SetContentMarginAll(0);
         return style;
     }
@@ -207,7 +205,7 @@ public partial class UiIconTabs : HBoxContainer
     {
         var style = CreateStyle(selected: true);
         style.DrawCenter = false;
-        style.BorderColor = _tokens.Halo;
+        style.BorderColor = UiThemeLookup.Color(this, UiTokens.Color.Halo);
         return style;
     }
 }

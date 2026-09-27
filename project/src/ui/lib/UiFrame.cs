@@ -6,32 +6,10 @@ namespace NodeRunner.Ui.Lib;
 [GlobalClass]
 public partial class UiFrame : PanelContainer
 {
-    private UiTokenType _debugTokenType = UiTokenType.Neon;
     private bool _ready;
 
     private ColorRect? _background;
     private UiCard? _card;
-
-    [Export]
-    public UiTokenType DebugTokenType
-    {
-        get => _debugTokenType;
-        set
-        {
-            _debugTokenType = value;
-            Tokens = UiTokens.FromType(value);
-        }
-    }
-
-    public UiTokens Tokens
-    {
-        get;
-        set
-        {
-            field = value;
-            ApplyTokens();
-        }
-    } = UiTokens.Neon;
 
     public override void _Ready()
     {
@@ -43,12 +21,17 @@ public partial class UiFrame : PanelContainer
         ApplyTokens();
     }
 
+    public override void _Notification(int what)
+    {
+        if (what == NotificationThemeChanged)
+            ApplyTokens();
+    }
+
     private void ApplyTokens()
     {
         if (!_ready)
             return;
 
-        _card?.Tokens = Tokens;
-        _background?.Color = Tokens.Background;
+        _background?.Color = UiThemeLookup.Color(this, UiTokens.Color.Background);
     }
 }

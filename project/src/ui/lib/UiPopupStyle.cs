@@ -11,7 +11,15 @@ internal static class UiPopupStyle
         _ => UiCard.CardVariant.Frame,
     };
 
-    public static Color SemanticColor(UiPopupType type, UiTokens tokens) =>
-        type switch { UiPopupType.Warn => tokens.Halo, UiPopupType.Danger => tokens.Danger, _ => tokens.Accent };
+    public static UiTokens.Color SemanticToken(UiPopupType type) =>
+        type switch
+        {
+            UiPopupType.Warn => UiTokens.Color.Halo,
+            UiPopupType.Danger => UiTokens.Color.Danger,
+            _ => UiTokens.Color.Accent,
+        };
+
+    public static Color SemanticColor(UiPopupType type, Control owner) =>
+        UiThemeLookup.Color(owner, SemanticToken(type));
 
 }

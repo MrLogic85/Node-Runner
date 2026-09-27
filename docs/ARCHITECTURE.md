@@ -95,6 +95,8 @@ Node Runner/
 │       ├── creature/               # Godot Nodes for creatures
 │       ├── sim/                    # simulation orchestration
 │       ├── managers/               # autoloads / composition root
+│       ├── theme/                  # arena (world) visuals, not UI styling
+│       ├── tools/                  # editor/CLI tools; their scenes are not exported
 │       └── ui/
 │           ├── lib/                # reusable Controls
 │           ├── screens/            # full-screen scenes

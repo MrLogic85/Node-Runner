@@ -10,7 +10,6 @@ namespace NodeRunner.Ui.Screens;
 /// <summary>Reference Creations home hub; receives presentation state from the host.</summary>
 public partial class CreationsScreen : Control
 {
-    private UiTokens _tokens = UiTokens.Neon;
     private CreationsPresentationViewModel? _presentation;
     private bool _subscribedToPresentation;
 
@@ -43,19 +42,6 @@ public partial class CreationsScreen : Control
 
     [Signal]
     public delegate void DeleteRequestedEventHandler(string creationKey, string creationName);
-
-    public UiTokens Tokens
-    {
-        get => _tokens;
-        set
-        {
-            _tokens = value;
-            if (IsInsideTree())
-            {
-                Rebuild();
-            }
-        }
-    }
 
     private bool _showComponentLibraryLink;
 
@@ -106,6 +92,14 @@ public partial class CreationsScreen : Control
         Rebuild();
     }
 
+    public override void _Notification(int what)
+    {
+        if (what == NotificationThemeChanged && IsNodeReady())
+        {
+            UiThemeRefresh.Guarded(this, Rebuild);
+        }
+    }
+
     public override void _ExitTree()
     {
         UnsubscribeFromPresentation();
@@ -151,7 +145,7 @@ public partial class CreationsScreen : Control
 
         AddChild(new ColorRect
         {
-            Color = _tokens.Background,
+            Color = UiThemeLookup.Color(this, UiTokens.Color.Background),
             MouseFilter = MouseFilterEnum.Ignore,
             AnchorRight = 1,
             AnchorBottom = 1,
@@ -159,11 +153,11 @@ public partial class CreationsScreen : Control
 
         var margin = new MarginContainer();
         margin.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
-        UiSpacing.ApplyUniformMargin(margin, UiSpacing.ScreenEdgeInset(_tokens));
+        UiSpacing.ApplyUniformMargin(margin, UiSpacing.ScreenEdgeInset);
         AddChild(margin);
 
         var layout = new VBoxContainer();
-        layout.AddThemeConstantOverride("separation", (int)_tokens.Space2);
+        layout.AddThemeConstantOverride("separation", (int)UiSize.Space.S2);
         margin.AddChild(layout);
         layout.AddChild(CreateTopBar());
 
@@ -179,7 +173,7 @@ public partial class CreationsScreen : Control
             SizeFlagsHorizontal = SizeFlags.ExpandFill,
             SizeFlagsVertical = SizeFlags.ExpandFill,
         };
-        cards.AddThemeConstantOverride("separation", (int)_tokens.Space2);
+        cards.AddThemeConstantOverride("separation", (int)UiSize.Space.S2);
         scroll.AddChild(cards);
 
         if (_presentation is null)
@@ -188,11 +182,11 @@ public partial class CreationsScreen : Control
         }
         else if (_presentation.HasError)
         {
-            cards.AddChild(CreateStatusLabel(_presentation.ErrorText ?? "Could not load Creations.", _tokens.Danger));
+            cards.AddChild(CreateStatusLabel(_presentation.ErrorText ?? "Could not load Creations.", UiTokens.Color.Danger));
         }
         else if (!_presentation.HasCards)
         {
-            cards.AddChild(CreateStatusLabel(_presentation.EmptyText, _tokens.Muted));
+            cards.AddChild(CreateStatusLabel(_presentation.EmptyText, UiTokens.Color.Muted));
         }
         else
         {
@@ -210,21 +204,20 @@ public partial class CreationsScreen : Control
     {
         var topBar = new UiCard
         {
-            Tokens = _tokens,
             Kind = UiCard.CardVariant.Frame,
             CustomMinimumSize = new Vector2(0, UiLayout.TopBarHeight),
             SizeFlagsHorizontal = SizeFlags.ExpandFill,
         };
 
         var margin = new MarginContainer();
-        margin.AddThemeConstantOverride("margin_left", (int)_tokens.Space3);
-        margin.AddThemeConstantOverride("margin_top", (int)_tokens.Space1);
-        margin.AddThemeConstantOverride("margin_right", (int)_tokens.Space1);
-        margin.AddThemeConstantOverride("margin_bottom", (int)_tokens.Space1);
+        margin.AddThemeConstantOverride("margin_left", (int)UiSize.Space.S3);
+        margin.AddThemeConstantOverride("margin_top", (int)UiSize.Space.S1);
+        margin.AddThemeConstantOverride("margin_right", (int)UiSize.Space.S1);
+        margin.AddThemeConstantOverride("margin_bottom", (int)UiSize.Space.S1);
         topBar.AddChild(margin);
 
         var row = new HBoxContainer();
-        row.AddThemeConstantOverride("separation", (int)_tokens.Space2);
+        row.AddThemeConstantOverride("separation", (int)UiSize.Space.S2);
         margin.AddChild(row);
 
         var titleStack = new VBoxContainer
@@ -233,21 +226,20 @@ public partial class CreationsScreen : Control
             Alignment = BoxContainer.AlignmentMode.Center,
         };
         titleStack.AddThemeConstantOverride("separation", 0);
-        titleStack.AddChild(CreateStyledLabel("Creations", _tokens.HeadingText, _tokens.Ink));
-        titleStack.AddChild(CreateStyledLabel(_presentation?.SavedCueText ?? "Saved", _tokens.CaptionText, _tokens.Accent));
+        titleStack.AddChild(CreateStyledLabel("Creations", UiTokens.Typography.Heading, UiTokens.Color.Ink));
+        titleStack.AddChild(CreateStyledLabel(_presentation?.SavedCueText ?? "Saved", UiTokens.Typography.Caption, UiTokens.Color.Accent));
         row.AddChild(titleStack);
 
         row.AddChild(CreateAchievementButton());
 
         var newButton = CreateButton("+ New", UiButtonKind.Primary);
-        newButton.CustomMinimumSize = new Vector2(104, _tokens.TouchTarget);
+        newButton.CustomMinimumSize = new Vector2(104, UiSize.Control.Touch);
         newButton.Pressed += () => EmitSignal(SignalName.NewRequested);
         row.AddChild(newButton);
 
         var overflowButton = new UiButton
         {
             ContentLayout = UiButtonContentLayout.Stacked,
-            Tokens = _tokens,
             IconId = UiIconId.More,
             TooltipText = "More",
         };
@@ -260,12 +252,11 @@ public partial class CreationsScreen : Control
     {
         var holder = new Control
         {
-            CustomMinimumSize = new Vector2(_tokens.TouchTarget, _tokens.TouchTarget),
+            CustomMinimumSize = new Vector2(UiSize.Control.Touch, UiSize.Control.Touch),
         };
         var trophy = new UiButton
         {
             ContentLayout = UiButtonContentLayout.Stacked,
-            Tokens = _tokens,
             IconId = UiIconId.Trophy,
             TooltipText = "Achievements",
         };
@@ -280,7 +271,7 @@ public partial class CreationsScreen : Control
                 Position = new Vector2(31, 4),
                 MouseFilter = MouseFilterEnum.Ignore,
             };
-            badge.AddThemeStyleboxOverride("panel", _tokens.ControlStyle(_tokens.Danger, _tokens.Danger, radius: (int)_tokens.RadiusPill));
+            badge.AddThemeStyleboxOverride("panel", UiThemeLookup.CreateStyleBox(UiThemeLookup.Color(this, UiTokens.Color.Danger), UiThemeLookup.Color(this, UiTokens.Color.Danger), radius: (int)UiSize.Radius.Pill));
             holder.AddChild(badge);
         }
 
@@ -292,8 +283,7 @@ public partial class CreationsScreen : Control
         var menu = new UiMenu
         {
             Name = "CreationsOverflow",
-            Tokens = _tokens,
-            Position = new Vector2(UiLayout.CanvasWidth - 196, UiLayout.TopBarHeight + (UiSpacing.ScreenEdgeInset(_tokens) * 2)),
+            Position = new Vector2(UiLayout.CanvasWidth - 196, UiLayout.TopBarHeight + (UiSpacing.ScreenEdgeInset * 2)),
         };
         var actions = new List<(string Id, UiMenuItemSpec Item)>
         {
@@ -306,7 +296,7 @@ public partial class CreationsScreen : Control
             actions.Add(("component-library", new("Component library")));
         }
 
-        UiMenuItems.Populate(menu, actions.Select(action => action.Item), _tokens);
+        UiMenuItems.Populate(menu, actions.Select(action => action.Item));
         menu.IndexClicked += index =>
         {
             var id = index >= 0 && index < actions.Count ? actions[index].Id : null;
@@ -450,7 +440,6 @@ public partial class CreationsScreen : Control
     {
         var card = new CreationCard();
         card.Setup(
-            _tokens,
             creationKey,
             title,
             creature,
@@ -529,29 +518,27 @@ public partial class CreationsScreen : Control
         }
     }
 
-    private Label CreateStatusLabel(string text, Color color)
+    private Label CreateStatusLabel(string text, UiTokens.Color color)
     {
-        var label = CreateStyledLabel(text, _tokens.BodyText, color, expand: true);
+        var label = CreateStyledLabel(text, UiTokens.Typography.Body, color, expand: true);
         label.VerticalAlignment = VerticalAlignment.Center;
         label.HorizontalAlignment = HorizontalAlignment.Center;
         return label;
     }
 
-    private Label CreateStyledLabel(string text, UiTokens.TextStyle style, Color color, bool expand = false)
+    private Label CreateStyledLabel(string text, UiTokens.Typography style, UiTokens.Color color, bool expand = false)
     {
         var label = new Label { Text = text };
         label.SizeFlagsHorizontal = expand ? SizeFlags.ExpandFill : SizeFlags.Fill;
-        _tokens.ApplyTextStyle(label, style);
-        label.AddThemeColorOverride("font_color", color);
+        UiThemeLookup.ApplyTextStyle(label, style, color);
         return label;
     }
 
     private UiButton CreateButton(string text, UiButtonKind kind) =>
         new()
         {
-            Tokens = _tokens,
-            LabelText = text,
+            Text = text,
             Kind = kind,
-            CustomMinimumSize = new Vector2(96, _tokens.TouchTarget),
+            CustomMinimumSize = new Vector2(96, UiSize.Control.Touch),
         };
 }

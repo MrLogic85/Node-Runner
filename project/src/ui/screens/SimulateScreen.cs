@@ -13,7 +13,6 @@ public partial class SimulateScreen : Control
     private const int _topBarHeight = 64;
     private const int _modeSwitchHeight = 52;
     private const int _signalPanelWidth = 340;
-    private UiTokens _tokens = UiTokens.Neon;
     private readonly List<UiCard> _signalCards = new();
     private readonly List<Label> _signalBodies = new();
     private readonly List<ProgressBar> _sensorBars = new();
@@ -208,19 +207,6 @@ public partial class SimulateScreen : Control
         }
     }
 
-    public UiTokens Tokens
-    {
-        get => _tokens;
-        set
-        {
-            _tokens = value;
-            if (IsInsideTree())
-            {
-                RebuildLayout();
-            }
-        }
-    }
-
     public string PauseActionText
     {
         get => _pauseActionText;
@@ -229,7 +215,7 @@ public partial class SimulateScreen : Control
             _pauseActionText = string.IsNullOrWhiteSpace(value) ? "Pause" : value;
             if (_livePauseButton is not null)
             {
-                _livePauseButton.LabelText = _pauseActionText;
+                _livePauseButton.Text = _pauseActionText;
             }
         }
     }
@@ -242,6 +228,7 @@ public partial class SimulateScreen : Control
             _presentation.PropertyChanged -= OnPresentationChanged;
             _presentation.PropertyChanged += OnPresentationChanged;
         }
+
         if (_signalFlow is not null)
         {
             _signalFlow.PropertyChanged -= OnSignalFlowChanged;
@@ -293,6 +280,14 @@ public partial class SimulateScreen : Control
         if (_profileSettings is not null)
         {
             _profileSettings.PropertyChanged -= OnProfileSettingsChanged;
+        }
+    }
+
+    public override void _Notification(int what)
+    {
+        if (what == NotificationThemeChanged && IsNodeReady())
+        {
+            UiThemeRefresh.Guarded(this, RebuildLayout);
         }
     }
 
@@ -370,7 +365,7 @@ public partial class SimulateScreen : Control
         {
             AddChild(new ColorRect
             {
-                Color = _tokens.Background,
+                Color = UiThemeLookup.Color(this, UiTokens.Color.Background),
                 MouseFilter = MouseFilterEnum.Ignore,
                 AnchorRight = 1,
                 AnchorBottom = 1,
@@ -444,8 +439,8 @@ public partial class SimulateScreen : Control
         };
         title.AddThemeConstantOverride("separation", 0);
         topBar.AddChild(title);
-        title.AddChild(CreateLabel("Simulate", 22, _tokens.Ink, expand: true));
-        title.AddChild(CreateLabel(_presentation?.GenerationText ?? "Training", 14, _tokens.Muted));
+        title.AddChild(CreateLabel("Simulate", 22, UiThemeLookup.Color(this, UiTokens.Color.Ink), expand: true));
+        title.AddChild(CreateLabel(_presentation?.GenerationText ?? "Training", 14, UiThemeLookup.Color(this, UiTokens.Color.Muted)));
 
         var creations = CreateButton("Creations", UiButtonKind.Secondary, "Open saved Creations");
         creations.Pressed += () => EmitSignal(SignalName.CreationsRequested);
@@ -457,7 +452,6 @@ public partial class SimulateScreen : Control
         var settings = new UiButton
         {
             ContentLayout = UiButtonContentLayout.Stacked,
-            Tokens = _tokens,
             IconId = UiIconId.More,
             TooltipText = "Training settings",
         };
@@ -487,8 +481,8 @@ public partial class SimulateScreen : Control
             AnchorBottom = 1,
             OffsetTop = -3,
         };
-        progress.AddThemeStyleboxOverride("background", new StyleBoxFlat { BgColor = _tokens.Line });
-        progress.AddThemeStyleboxOverride("fill", new StyleBoxFlat { BgColor = _tokens.Accent });
+        progress.AddThemeStyleboxOverride("background", new StyleBoxFlat { BgColor = UiThemeLookup.Color(this, UiTokens.Color.Line) });
+        progress.AddThemeStyleboxOverride("fill", new StyleBoxFlat { BgColor = UiThemeLookup.Color(this, UiTokens.Color.Accent) });
         panel.AddChild(progress);
 
         return panel;
@@ -513,7 +507,7 @@ public partial class SimulateScreen : Control
             CustomMinimumSize = new Vector2(148, _modeSwitchHeight),
         };
         segment.AddThemeStyleboxOverride("panel", CreateSegmentStyle(active, first, last));
-        var text = CreateLabel(label.ToUpperInvariant(), 16, _tokens.Ink);
+        var text = CreateLabel(label.ToUpperInvariant(), 16, UiThemeLookup.Color(this, UiTokens.Color.Ink));
         text.HorizontalAlignment = HorizontalAlignment.Center;
         text.VerticalAlignment = VerticalAlignment.Center;
         text.MouseFilter = MouseFilterEnum.Ignore;
@@ -593,13 +587,13 @@ public partial class SimulateScreen : Control
         layout.AddThemeConstantOverride("separation", 12);
         margin.AddChild(layout);
 
-        layout.AddChild(CreateLabel("Arena", 20, _tokens.Ink));
+        layout.AddChild(CreateLabel("Arena", 20, UiThemeLookup.Color(this, UiTokens.Color.Ink)));
         layout.AddChild(CreateLabel(
             _presentation is null
                 ? "Sample creature running on a flat test track"
                 : "Live Creation training on the test track",
             14,
-            _tokens.Muted));
+            UiThemeLookup.Color(this, UiTokens.Color.Muted)));
 
         var placeholder = new Control
         {
@@ -610,7 +604,7 @@ public partial class SimulateScreen : Control
         placeholder.Draw += () => DrawArenaPlaceholder(placeholder);
         layout.AddChild(placeholder);
 
-        layout.AddChild(CreateLabel("Progress: reach 50 fitness to unlock one extra core slot", 14, _tokens.Accent));
+        layout.AddChild(CreateLabel("Progress: reach 50 fitness to unlock one extra core slot", 14, UiThemeLookup.Color(this, UiTokens.Color.Accent)));
 
         return panel;
     }
@@ -633,7 +627,7 @@ public partial class SimulateScreen : Control
         stack.AddThemeConstantOverride("separation", 5);
         margin.AddChild(stack);
 
-        stack.AddChild(CreateLabel("SignalFlow", 20, _tokens.Ink));
+        stack.AddChild(CreateLabel("SignalFlow", 20, UiThemeLookup.Color(this, UiTokens.Color.Ink)));
         stack.AddChild(CreateSignalCard(0, "1 Sees", "The cores sense nearby contact and body state."));
         stack.AddChild(CreateSignalConnector());
         stack.AddChild(CreateSignalCard(1, "2 Decides", "The neural network turns sensor values into joint targets."));
@@ -643,7 +637,7 @@ public partial class SimulateScreen : Control
         stack.AddChild(CreateSignalCard(3, "4 Scores", "Fitness is the distance reached before the trial ends."));
         if (!ReadOnlyControls)
         {
-            stack.AddChild(CreateLabel("Tap one stage to expand its explanation.", 14, _tokens.Muted));
+            stack.AddChild(CreateLabel("Tap one stage to expand its explanation.", 14, UiThemeLookup.Color(this, UiTokens.Color.Muted)));
         }
 
         UpdateSignalFlowCards();
@@ -680,8 +674,8 @@ public partial class SimulateScreen : Control
             : $"{_presentation.BestFitness:0.0} m";
         var mean = _presentation?.MeanFitness ?? 8.4;
         var profile = _presentation?.Profile ?? "Quick";
-        summary.AddChild(CreateLabel(generationText, 18, _tokens.Ink));
-        summary.AddChild(CreateLabel($"Best {best} · mean {mean:0.0} m · {profile} profile", 14, _tokens.Muted));
+        summary.AddChild(CreateLabel(generationText, 18, UiThemeLookup.Color(this, UiTokens.Color.Ink)));
+        summary.AddChild(CreateLabel($"Best {best} · mean {mean:0.0} m · {profile} profile", 14, UiThemeLookup.Color(this, UiTokens.Color.Muted)));
         summary.AddChild(CreateSampleStrip());
 
         if (!ReadOnlyControls)
@@ -733,7 +727,7 @@ public partial class SimulateScreen : Control
         };
         summary.AddThemeConstantOverride("separation", 4);
         row.AddChild(summary);
-        summary.AddChild(CreateLabel(_presentation?.GenerationText ?? "Generation 0 · try 1 of 8", 18, _tokens.Ink));
+        summary.AddChild(CreateLabel(_presentation?.GenerationText ?? "Generation 0 · try 1 of 8", 18, UiThemeLookup.Color(this, UiTokens.Color.Ink)));
         summary.AddChild(CreateSampleStrip());
 
         return panel;
@@ -760,11 +754,10 @@ public partial class SimulateScreen : Control
         var profile = _presentation?.Profile ?? "Quick";
         var profileButton = new UiButton
         {
-            Tokens = _tokens,
             Kind = UiButtonKind.Secondary,
-            LabelText = $"Training: {profile} · settings",
+            Text = $"Training: {profile} · settings",
             TooltipText = "Open profile settings. Choosing a profile restarts the active run.",
-            CustomMinimumSize = new Vector2(0, _tokens.TouchTarget),
+            CustomMinimumSize = new Vector2(0, UiSize.Control.Touch),
         };
         profileButton.Pressed += () =>
         {
@@ -778,9 +771,9 @@ public partial class SimulateScreen : Control
         };
         _inputPassthroughExceptions.Add(profileButton);
         stack.AddChild(profileButton);
-        stack.AddChild(CreateLabel(generationText, 15, _tokens.Ink));
-        stack.AddChild(CreateLabel($"Best {best} · mean {mean:0.0} m", 13, _tokens.Muted));
-        stack.AddChild(CreateLabel(_profileSummary?.Detail ?? "8 candidates · 10s · 10% mutation · uniform genes", 11, _tokens.Muted));
+        stack.AddChild(CreateLabel(generationText, 15, UiThemeLookup.Color(this, UiTokens.Color.Ink)));
+        stack.AddChild(CreateLabel($"Best {best} · mean {mean:0.0} m", 13, UiThemeLookup.Color(this, UiTokens.Color.Muted)));
+        stack.AddChild(CreateLabel(_profileSummary?.Detail ?? "8 candidates · 10s · 10% mutation · uniform genes", 11, UiThemeLookup.Color(this, UiTokens.Color.Muted)));
         stack.AddChild(CreateSampleStrip());
         stack.AddChild(CreateUnlockProgress());
 
@@ -810,7 +803,6 @@ public partial class SimulateScreen : Control
 
         _settingsSheet = new UiSheet
         {
-            Tokens = _tokens,
             Title = "Training settings",
             CustomMinimumSize = new Vector2(460, 0),
             ZIndex = 31,
@@ -877,7 +869,7 @@ public partial class SimulateScreen : Control
     {
         var stack = new VBoxContainer();
         stack.AddThemeConstantOverride("separation", 12);
-        stack.AddChild(CreateLabel("Choose a profile. Changing it restarts this training run without changing saved Creation data.", 13, _tokens.Muted));
+        stack.AddChild(CreateLabel("Choose a profile. Changing it restarts this training run without changing saved Creation data.", 13, UiThemeLookup.Color(this, UiTokens.Color.Muted)));
 
         var options = _profileSettings?.Options ?? Array.Empty<TrainingProfileOptionPresentation>();
         var selectedIndex = _profileSettings?.SelectedIndex ?? -1;
@@ -888,10 +880,9 @@ public partial class SimulateScreen : Control
 
         var done = new UiButton
         {
-            Tokens = _tokens,
             Kind = UiButtonKind.Secondary,
-            LabelText = "Done",
-            CustomMinimumSize = new Vector2(0, _tokens.TouchTarget),
+            Text = "Done",
+            CustomMinimumSize = new Vector2(0, UiSize.Control.Touch),
         };
         done.Pressed += CloseTrainingSettingsSheet;
         stack.AddChild(done);
@@ -916,16 +907,15 @@ public partial class SimulateScreen : Control
             SizeFlagsHorizontal = SizeFlags.ExpandFill,
         };
         text.AddThemeConstantOverride("separation", 3);
-        text.AddChild(CreateLabel(option.Name, 15, selected ? _tokens.Accent : _tokens.Ink));
-        text.AddChild(CreateLabel(option.Detail, 11, _tokens.Muted));
+        text.AddChild(CreateLabel(option.Name, 15, selected ? UiThemeLookup.Color(this, UiTokens.Color.Accent) : UiThemeLookup.Color(this, UiTokens.Color.Ink)));
+        text.AddChild(CreateLabel(option.Detail, 11, UiThemeLookup.Color(this, UiTokens.Color.Muted)));
         row.AddChild(text);
 
         var choose = new UiButton
         {
-            Tokens = _tokens,
             Kind = selected ? UiButtonKind.Primary : UiButtonKind.Secondary,
-            LabelText = selected ? "Active" : "Restart",
-            CustomMinimumSize = new Vector2(112, _tokens.TouchTarget),
+            Text = selected ? "Active" : "Restart",
+            CustomMinimumSize = new Vector2(112, UiSize.Control.Touch),
         };
         choose.Pressed += () =>
         {
@@ -952,11 +942,11 @@ public partial class SimulateScreen : Control
         var title = _unlockProgress?.Title ?? "Next unlock";
         var detail = _unlockProgress?.Detail ?? "Reach 50.0 m to unlock one extra core slot";
         var progress = _unlockProgress?.Progress ?? 0;
-        stack.AddChild(CreateLabel(title, 13, _tokens.Accent));
+        stack.AddChild(CreateLabel(title, 13, UiThemeLookup.Color(this, UiTokens.Color.Accent)));
         var bar = CreateSignalBar();
         bar.Value = progress;
         stack.AddChild(bar);
-        stack.AddChild(CreateLabel(detail, 12, _tokens.Muted));
+        stack.AddChild(CreateLabel(detail, 12, UiThemeLookup.Color(this, UiTokens.Color.Muted)));
         return stack;
     }
 
@@ -981,14 +971,14 @@ public partial class SimulateScreen : Control
         {
             var isCurrent = _presentation?.IsTrialActive != false && index == currentCandidate;
             var color = index <= completedCount
-                ? _tokens.AccentSoft
+                ? UiThemeLookup.Color(this, UiTokens.Color.Accent).WithAlpha(UiThemeLookup.Alpha(this, UiTokens.Alpha.Soft))
                 : isCurrent
                     // Marks the current generation; never rely on color
                     // alone (see the LineStrong border below), so this
                     // stays legible in Paper and doesn't depend on the
                     // glow-flavored Halo tint from effects-lite (#134).
-                    ? _tokens.Accent
-                    : _tokens.Line;
+                    ? UiThemeLookup.Color(this, UiTokens.Color.Accent)
+                    : UiThemeLookup.Color(this, UiTokens.Color.Line);
 
             // Panel (not ColorRect) so the current-generation cell can carry
             // a themed border stylebox as its non-color "current" cue.
@@ -1000,7 +990,7 @@ public partial class SimulateScreen : Control
             cell.AddThemeStyleboxOverride("panel", new StyleBoxFlat
             {
                 BgColor = color,
-                BorderColor = isCurrent ? _tokens.LineStrong : color,
+                BorderColor = isCurrent ? UiThemeLookup.Color(this, UiTokens.Color.LineStrong) : color,
                 BorderWidthLeft = isCurrent ? 2 : 0,
                 BorderWidthTop = isCurrent ? 2 : 0,
                 BorderWidthRight = isCurrent ? 2 : 0,
@@ -1031,11 +1021,10 @@ public partial class SimulateScreen : Control
             {
                 var action = new UiButton
                 {
-                    Tokens = _tokens,
                     Kind = UiButtonKind.Secondary,
-                    LabelText = title,
+                    Text = title,
                     TooltipText = "Open BrainFocus for the live network.",
-                    CustomMinimumSize = new Vector2(0, _tokens.TouchTarget),
+                    CustomMinimumSize = new Vector2(0, UiSize.Control.Touch),
                 };
                 action.Pressed += () =>
                 {
@@ -1046,7 +1035,7 @@ public partial class SimulateScreen : Control
             }
             else
             {
-                var heading = CreateLabel(title, 16, _tokens.Muted);
+                var heading = CreateLabel(title, 16, UiThemeLookup.Color(this, UiTokens.Color.Muted));
                 heading.HorizontalAlignment = HorizontalAlignment.Center;
                 heading.CustomMinimumSize = new Vector2(0, 20);
                 stack.AddChild(heading);
@@ -1056,10 +1045,9 @@ public partial class SimulateScreen : Control
         {
             var action = new UiButton
             {
-                Tokens = _tokens,
                 Kind = UiButtonKind.Secondary,
-                LabelText = title,
-                CustomMinimumSize = new Vector2(0, _tokens.TouchTarget),
+                Text = title,
+                CustomMinimumSize = new Vector2(0, UiSize.Control.Touch),
             };
             action.Pressed += () =>
             {
@@ -1070,28 +1058,28 @@ public partial class SimulateScreen : Control
         switch (index)
         {
             case 0:
-                _seesStatusLabel = CreateLabel(string.Empty, 14, _tokens.Muted);
+                _seesStatusLabel = CreateLabel(string.Empty, 14, UiThemeLookup.Color(this, UiTokens.Color.Muted));
                 stack.AddChild(CreateThreeBarPreview(_sensorBars));
                 stack.AddChild(_seesStatusLabel);
                 break;
             case 1:
-                _decidesStatusLabel = CreateLabel(string.Empty, 15, _tokens.Accent);
+                _decidesStatusLabel = CreateLabel(string.Empty, 15, UiThemeLookup.Color(this, UiTokens.Color.Accent));
                 _decidesStatusLabel.HorizontalAlignment = HorizontalAlignment.Center;
                 stack.AddChild(_decidesStatusLabel);
                 break;
             case 2:
-                _twistsStatusLabel = CreateLabel(string.Empty, 14, _tokens.Muted);
+                _twistsStatusLabel = CreateLabel(string.Empty, 14, UiThemeLookup.Color(this, UiTokens.Color.Muted));
                 stack.AddChild(CreateTwoBarPreview(_motorBars));
                 stack.AddChild(_twistsStatusLabel);
                 break;
             case 3:
-                _scoresStatusLabel = CreateLabel(string.Empty, 15, _tokens.Accent);
+                _scoresStatusLabel = CreateLabel(string.Empty, 15, UiThemeLookup.Color(this, UiTokens.Color.Accent));
                 _scoresStatusLabel.HorizontalAlignment = HorizontalAlignment.Center;
                 stack.AddChild(_scoresStatusLabel);
                 break;
         }
 
-        var bodyLabel = CreateLabel(detail, 13, _tokens.Muted);
+        var bodyLabel = CreateLabel(detail, 13, UiThemeLookup.Color(this, UiTokens.Color.Muted));
         bodyLabel.Visible = false;
         bodyLabel.AutowrapMode = TextServer.AutowrapMode.WordSmart;
         _signalBodies.Add(bodyLabel);
@@ -1147,8 +1135,8 @@ public partial class SimulateScreen : Control
             SizeFlagsHorizontal = SizeFlags.ExpandFill,
             SizeFlagsVertical = SizeFlags.ShrinkCenter,
         };
-        bar.AddThemeStyleboxOverride("background", new StyleBoxFlat { BgColor = _tokens.Line });
-        bar.AddThemeStyleboxOverride("fill", new StyleBoxFlat { BgColor = _tokens.Accent });
+        bar.AddThemeStyleboxOverride("background", new StyleBoxFlat { BgColor = UiThemeLookup.Color(this, UiTokens.Color.Line) });
+        bar.AddThemeStyleboxOverride("fill", new StyleBoxFlat { BgColor = UiThemeLookup.Color(this, UiTokens.Color.Accent) });
         return bar;
     }
 
@@ -1160,7 +1148,7 @@ public partial class SimulateScreen : Control
             HorizontalAlignment = HorizontalAlignment.Center,
             CustomMinimumSize = new Vector2(0, 6),
         };
-        connector.AddThemeColorOverride("font_color", _tokens.Accent);
+        connector.AddThemeColorOverride("font_color", UiThemeLookup.Color(this, UiTokens.Color.Accent));
         connector.AddThemeFontSizeOverride("font_size", 12);
         return connector;
     }
@@ -1226,7 +1214,7 @@ public partial class SimulateScreen : Control
     private void DrawArenaPlaceholder(Control control)
     {
         var size = control.Size;
-        var grid = _tokens.Line;
+        var grid = UiThemeLookup.Color(this, UiTokens.Color.Line);
         for (var x = 0f; x < size.X; x += 40f)
         {
             control.DrawLine(new Vector2(x, 0), new Vector2(x, size.Y), grid, 1);
@@ -1238,25 +1226,30 @@ public partial class SimulateScreen : Control
         }
 
         var groundY = size.Y - 44;
-        control.DrawLine(new Vector2(0, groundY), new Vector2(size.X, groundY), _tokens.LineStrong, 2);
+        control.DrawLine(new Vector2(0, groundY), new Vector2(size.X, groundY), UiThemeLookup.Color(this, UiTokens.Color.LineStrong), 2);
 
         var center = new Vector2(size.X * 0.44f, groundY - 72);
         var front = center + new Vector2(86, 20);
         var rear = center + new Vector2(-86, 16);
-        control.DrawLine(rear, center, _tokens.Accent, 5, antialiased: false);
-        control.DrawLine(center, front, _tokens.Accent, 5, antialiased: false);
+        control.DrawLine(rear, center, UiThemeLookup.Color(this, UiTokens.Color.Accent), 5, antialiased: false);
+        control.DrawLine(center, front, UiThemeLookup.Color(this, UiTokens.Color.Accent), 5, antialiased: false);
         // Purely decorative illustration -- effects-lite drops the glow
         // treatment for flat schematic dots instead of hiding them (#134).
-        control.DrawCircle(rear, _tokens.EffectsEnabled ? 18 : 8, _tokens.EffectsEnabled ? _tokens.AccentGlow : _tokens.Line);
-        control.DrawCircle(center, _tokens.EffectsEnabled ? 24 : 10, _tokens.EffectsEnabled ? _tokens.Halo : _tokens.LineStrong);
-        control.DrawCircle(front, _tokens.EffectsEnabled ? 18 : 8, _tokens.EffectsEnabled ? _tokens.AccentGlow : _tokens.Line);
+        control.DrawCircle(
+            rear,
+            UiThemeLookup.EffectsEnabled(this) ? 18 : 8,
+            UiThemeLookup.EffectsEnabled(this) ? UiGlow.FromBase(UiThemeLookup.Color(this, UiTokens.Color.Accent), true) : UiThemeLookup.Color(this, UiTokens.Color.Line));
+        control.DrawCircle(center, UiThemeLookup.EffectsEnabled(this) ? 24 : 10, UiThemeLookup.EffectsEnabled(this) ? UiThemeLookup.Color(this, UiTokens.Color.Halo) : UiThemeLookup.Color(this, UiTokens.Color.LineStrong));
+        control.DrawCircle(
+            front,
+            UiThemeLookup.EffectsEnabled(this) ? 18 : 8,
+            UiThemeLookup.EffectsEnabled(this) ? UiGlow.FromBase(UiThemeLookup.Color(this, UiTokens.Color.Accent), true) : UiThemeLookup.Color(this, UiTokens.Color.Line));
     }
 
     private UiCard CreatePanel(bool raised)
     {
         return new UiCard
         {
-            Tokens = _tokens,
             Kind = raised
                 ? UiCard.CardVariant.Raised
                 : UiCard.CardVariant.Frame,
@@ -1267,20 +1260,21 @@ public partial class SimulateScreen : Control
     {
         return new UiButton
         {
-            Tokens = _tokens,
             Kind = active ? UiButtonKind.Primary : UiButtonKind.Secondary,
-            LabelText = label,
-            CustomMinimumSize = new Vector2(96, _tokens.TouchTarget),
+            Text = label,
+            CustomMinimumSize = new Vector2(96, UiSize.Control.Touch),
         };
     }
 
     private StyleBoxFlat CreateSegmentStyle(bool active, bool first, bool last)
     {
-        var radius = (int)_tokens.RadiusMedium;
+        var radius = (int)UiSize.Radius.Medium;
         return new StyleBoxFlat
         {
-            BgColor = active ? _tokens.AccentSoft : _tokens.PanelRaised,
-            BorderColor = active ? _tokens.Accent : _tokens.LineStrong,
+            BgColor = active
+                ? UiThemeLookup.Color(this, UiTokens.Color.Accent).WithAlpha(UiThemeLookup.Alpha(this, UiTokens.Alpha.Soft))
+                : UiThemeLookup.Color(this, UiTokens.Color.PanelRaised),
+            BorderColor = active ? UiThemeLookup.Color(this, UiTokens.Color.Accent) : UiThemeLookup.Color(this, UiTokens.Color.LineStrong),
             BorderWidthLeft = 1,
             BorderWidthTop = 1,
             BorderWidthRight = last ? 1 : 0,
@@ -1298,11 +1292,10 @@ public partial class SimulateScreen : Control
     {
         return new UiButton
         {
-            Tokens = _tokens,
             Kind = kind,
-            LabelText = label,
+            Text = label,
             TooltipText = tooltip,
-            CustomMinimumSize = new Vector2(128, _tokens.TouchTarget),
+            CustomMinimumSize = new Vector2(128, UiSize.Control.Touch),
         };
     }
 
@@ -1333,7 +1326,7 @@ public partial class SimulateScreen : Control
     private Label CreatePill(string text, Color background, Color foreground)
     {
         var label = CreateLabel($"  {text}  ", 14, foreground);
-        label.CustomMinimumSize = new Vector2(110, _tokens.TouchTarget);
+        label.CustomMinimumSize = new Vector2(110, UiSize.Control.Touch);
         label.SizeFlagsHorizontal = SizeFlags.ShrinkBegin;
         label.VerticalAlignment = VerticalAlignment.Center;
         label.HorizontalAlignment = HorizontalAlignment.Center;
@@ -1345,10 +1338,10 @@ public partial class SimulateScreen : Control
             BorderWidthTop = 1,
             BorderWidthRight = 1,
             BorderWidthBottom = 1,
-            CornerRadiusTopLeft = (int)_tokens.RadiusLarge,
-            CornerRadiusTopRight = (int)_tokens.RadiusLarge,
-            CornerRadiusBottomLeft = (int)_tokens.RadiusLarge,
-            CornerRadiusBottomRight = (int)_tokens.RadiusLarge,
+            CornerRadiusTopLeft = (int)UiSize.Radius.Large,
+            CornerRadiusTopRight = (int)UiSize.Radius.Large,
+            CornerRadiusBottomLeft = (int)UiSize.Radius.Large,
+            CornerRadiusBottomRight = (int)UiSize.Radius.Large,
         });
         return label;
     }

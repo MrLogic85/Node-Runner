@@ -10,7 +10,6 @@ public abstract partial class UiChoiceRow : Container, ISerializationListener
 
     private sealed record Content(Button Button, VBoxContainer Labels, Label Label, Label Help);
 
-    private UiTokens _tokens = UiTokens.Neon;
     private string _labelText = string.Empty;
     private string _subtext = string.Empty;
     private bool _selected;
@@ -62,17 +61,6 @@ public abstract partial class UiChoiceRow : Container, ISerializationListener
         {
             _subtext = value;
             ApplyContent();
-        }
-    }
-
-    public UiTokens Tokens
-    {
-        get => _tokens;
-        set
-        {
-            _tokens = value;
-            ApplyTheme();
-            ApplyState();
         }
     }
 
@@ -197,11 +185,19 @@ public abstract partial class UiChoiceRow : Container, ISerializationListener
 
     public override void _Notification(int what)
     {
-        if (what == NotificationSortChildren && _content is { } content)
+        if (what == NotificationThemeChanged && IsNodeReady())
+        {
+            UiThemeRefresh.Guarded(this, () =>
+            {
+                ApplyTheme();
+                ApplyState();
+            });
+        }
+        else if (what == NotificationSortChildren && _content is { } content)
         {
             FitChildInRect(content.Button, new Rect2(Vector2.Zero, Size));
             var indicator = IndicatorSize();
-            var inset = indicator.X + Tokens.Space2;
+            var inset = indicator.X + UiSize.Space.S2;
             var height = content.Labels.GetCombinedMinimumSize().Y;
             content.Labels.Position = new Vector2(IsSwitch ? 0 : inset, (Size.Y - height) * 0.5f);
             content.Labels.Size = new Vector2(Mathf.Max(0, Size.X - inset), height);
@@ -225,7 +221,7 @@ public abstract partial class UiChoiceRow : Container, ISerializationListener
         var content = _content?.Labels.GetCombinedMinimumSize() ?? Vector2.Zero;
         var indicator = IndicatorSize();
         return new Vector2(
-            content.X + indicator.X + Tokens.Space2,
+            content.X + indicator.X + UiSize.Space.S2,
             Mathf.Max(content.Y, indicator.Y));
     }
 
@@ -250,11 +246,9 @@ public abstract partial class UiChoiceRow : Container, ISerializationListener
             return;
         }
 
-        content.Button.Theme = UiChoiceTheme.Create(Tokens, IsSwitch);
-        Tokens.ApplyTextStyle(content.Label, Tokens.SmallStrongText);
-        Tokens.ApplyTextStyle(content.Help, Tokens.NoteText);
-        content.Label.AddThemeColorOverride("font_color", Tokens.Ink);
-        content.Help.AddThemeColorOverride("font_color", Tokens.Muted);
+        content.Button.Theme = UiChoiceTheme.Create(this, IsSwitch);
+        UiThemeLookup.ApplyTextStyle(content.Label, UiTokens.Typography.SmallStrong, UiTokens.Color.Ink);
+        UiThemeLookup.ApplyTextStyle(content.Help, UiTokens.Typography.Note, UiTokens.Color.Muted);
         UpdateLayout();
     }
 
@@ -274,7 +268,7 @@ public abstract partial class UiChoiceRow : Container, ISerializationListener
     {
         if (_content is not { } content)
         {
-            return UiChoiceStyle.IndicatorSize(Tokens, IsSwitch);
+            return UiChoiceStyle.IndicatorSize(IsSwitch);
         }
 
         return content.Button.GetThemeIcon("checked").GetSize()

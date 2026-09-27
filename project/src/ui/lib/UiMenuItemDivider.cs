@@ -9,8 +9,8 @@ public partial class UiMenuItemDivider : UiMenuItem
 {
     private float VerticalPadding =>
         SizeVariant == MenuItemSize.Compact
-            ? Tokens.Space1
-            : Tokens.Space2;
+            ? UiSize.Space.S1
+            : UiSize.Space.S2;
 
     public override void _Ready()
     {
@@ -19,7 +19,7 @@ public partial class UiMenuItemDivider : UiMenuItem
     }
 
     public override Vector2 _GetMinimumSize() =>
-        new(0, (VerticalPadding * 2) + Tokens.StrokeHair);
+        new(0, (VerticalPadding * 2) + UiSize.Stroke.Hair);
 
     public override void _Draw()
     {
@@ -27,8 +27,8 @@ public partial class UiMenuItemDivider : UiMenuItem
         DrawLine(
             new Vector2(HorizontalPadding, y),
             new Vector2(Mathf.Max(HorizontalPadding, Size.X - HorizontalPadding), y),
-            Tokens.Edge,
-            Tokens.StrokeHair);
+            UiThemeLookup.Color(this, UiTokens.Color.Edge),
+            UiSize.Stroke.Hair);
     }
 
     protected override void RefreshItem()

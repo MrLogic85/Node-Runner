@@ -7,7 +7,6 @@ namespace NodeRunner.Ui.Lib;
 [GlobalClass]
 public partial class UiNoteRow : VBoxContainer
 {
-    private UiTokens _tokens = UiTokens.Neon;
     private readonly Label _label = new()
     {
         AutowrapMode = TextServer.AutowrapMode.WordSmart,
@@ -28,16 +27,6 @@ public partial class UiNoteRow : VBoxContainer
         }
     }
 
-    public UiTokens Tokens
-    {
-        get => _tokens;
-        set
-        {
-            _tokens = value;
-            Refresh();
-        }
-    }
-
     public override void _Ready()
     {
         MouseFilter = MouseFilterEnum.Ignore;
@@ -53,7 +42,6 @@ public partial class UiNoteRow : VBoxContainer
         }
 
         _label.Text = Text;
-        _tokens.ApplyTextStyle(_label, _tokens.NoteText);
-        _label.AddThemeColorOverride("font_color", _tokens.Muted);
+        UiThemeLookup.ApplyTextStyle(_label, UiTokens.Typography.Note, UiTokens.Color.Muted);
     }
 }

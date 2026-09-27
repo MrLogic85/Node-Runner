@@ -5,7 +5,6 @@ namespace NodeRunner.Ui.Lib;
 /// <summary>Label/value row paired with the canonical progress bar.</summary>
 public partial class UiMeterRow : VBoxContainer
 {
-    private UiTokens _tokens = UiTokens.Neon;
     private UiSlider? _bar;
 
     [Export]
@@ -30,16 +29,6 @@ public partial class UiMeterRow : VBoxContainer
         }
     }
 
-    public UiTokens Tokens
-    {
-        get => _tokens;
-        set
-        {
-            _tokens = value;
-            Rebuild();
-        }
-    }
-
     public override void _Ready()
     {
         MouseFilter = MouseFilterEnum.Pass;
@@ -59,17 +48,21 @@ public partial class UiMeterRow : VBoxContainer
             child.QueueFree();
         }
 
-        AddThemeConstantOverride("separation", (int)_tokens.Space1);
+        AddThemeConstantOverride("separation", UiSize.Space.S1);
         var row = new HBoxContainer();
-        row.AddThemeConstantOverride("separation", (int)_tokens.Space2);
+        row.AddThemeConstantOverride("separation", UiSize.Space.S2);
         AddChild(row);
-        var label = UiFieldAndRows.Label(LabelText, _tokens, _tokens.CaptionText, _tokens.Muted);
+        var label = UiFieldAndRows.Label(LabelText,
+            UiTokens.Typography.Caption,
+            UiTokens.Color.Muted);
         label.SizeFlagsHorizontal = SizeFlags.ExpandFill;
         row.AddChild(label);
-        row.AddChild(UiFieldAndRows.Label(ValueText, _tokens, _tokens.ReadoutMediumText, _tokens.Ink, HorizontalAlignment.Right));
+        row.AddChild(UiFieldAndRows.Label(ValueText,
+            UiTokens.Typography.ReadoutMedium,
+            UiTokens.Color.Ink,
+            HorizontalAlignment.Right));
         _bar = new UiSlider
         {
-            Tokens = _tokens,
             LabelText = string.Empty,
             ReadoutText = string.Empty,
             Value = UiSliderValue.Progress(Percent / 100d),

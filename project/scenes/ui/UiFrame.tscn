@@ -8,17 +8,17 @@ content_margin_left = 1.0
 content_margin_top = 1.0
 content_margin_right = 1.0
 content_margin_bottom = 1.0
-bg_color = Color(0.050980393, 0.078431375, 0.14117648, 1)
+bg_color = Color(0.0509804, 0.0784314, 0.141176, 1)
 border_width_left = 1
 border_width_top = 1
 border_width_right = 1
 border_width_bottom = 1
-border_color = Color(0.101960786, 0.49803922, 0.4745098, 1)
+border_color = Color(0.101961, 0.498039, 0.47451, 1)
 corner_radius_top_left = 12
 corner_radius_top_right = 12
 corner_radius_bottom_right = 12
 corner_radius_bottom_left = 12
-shadow_color = Color(0.101960786, 0.49803922, 0.4745098, 0.12)
+shadow_color = Color(0.101961, 0.498039, 0.47451, 0.12)
 shadow_size = 10
 
 [node name="UiFrame" type="PanelContainer" unique_id=708820507]
@@ -35,7 +35,7 @@ metadata/_custom_type_script = "uid://c3go506w58oj6"
 unique_name_in_owner = true
 layout_mode = 2
 mouse_filter = 2
-color = Color(0.56078434, 0.6392157, 0.76862746, 1)
+color = Color(0.027451, 0.0431373, 0.0784314, 1)
 
 [node name="MarginContainer" type="MarginContainer" parent="." unique_id=1718213397]
 layout_mode = 2

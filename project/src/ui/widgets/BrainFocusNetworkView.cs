@@ -8,7 +8,6 @@ public partial class BrainFocusNetworkView : Control
 {
     private readonly Dictionary<(int Layer, int Neuron), Vector2> _positions = new();
     private BrainFocusPresentationViewModel? _viewModel;
-    private UiTokens _tokens = UiTokens.Neon;
 
     public BrainFocusPresentationViewModel? ViewModel
     {
@@ -30,21 +29,19 @@ public partial class BrainFocusNetworkView : Control
         }
     }
 
-    public UiTokens Tokens
-    {
-        get => _tokens;
-        set
-        {
-            _tokens = value;
-            QueueRedraw();
-        }
-    }
-
     public override void _ExitTree()
     {
         if (_viewModel is not null)
         {
             _viewModel.PropertyChanged -= OnViewModelChanged;
+        }
+    }
+
+    public override void _Notification(int what)
+    {
+        if (what == NotificationThemeChanged)
+        {
+            QueueRedraw();
         }
     }
 
@@ -84,7 +81,7 @@ public partial class BrainFocusNetworkView : Control
                 continue;
             }
 
-            var color = edge.Weight >= 0 ? _tokens.LineStrong : _tokens.Danger;
+            var color = edge.Weight >= 0 ? UiThemeLookup.Color(this, UiTokens.Color.LineStrong) : UiThemeLookup.Color(this, UiTokens.Color.Danger);
             color.A = (float)Math.Clamp(0.06 + (edge.Strength * 0.58), 0.06, 0.64);
             DrawEdge(from, to, color, (float)(0.5 + edge.Strength * 3.5), edge.Weight < 0);
         }
@@ -105,19 +102,19 @@ public partial class BrainFocusNetworkView : Control
     {
         var style = new StyleBoxFlat
         {
-            BgColor = _tokens.Panel,
-            BorderColor = _tokens.Line,
-            BorderWidthLeft = (int)_tokens.StrokeHair,
-            BorderWidthTop = (int)_tokens.StrokeHair,
-            BorderWidthRight = (int)_tokens.StrokeHair,
-            BorderWidthBottom = (int)_tokens.StrokeHair,
-            CornerRadiusTopLeft = (int)_tokens.RadiusLarge,
-            CornerRadiusTopRight = (int)_tokens.RadiusLarge,
-            CornerRadiusBottomLeft = (int)_tokens.RadiusLarge,
-            CornerRadiusBottomRight = (int)_tokens.RadiusLarge,
+            BgColor = UiThemeLookup.Color(this, UiTokens.Color.Panel),
+            BorderColor = UiThemeLookup.Color(this, UiTokens.Color.Line),
+            BorderWidthLeft = (int)UiSize.Stroke.Hair,
+            BorderWidthTop = (int)UiSize.Stroke.Hair,
+            BorderWidthRight = (int)UiSize.Stroke.Hair,
+            BorderWidthBottom = (int)UiSize.Stroke.Hair,
+            CornerRadiusTopLeft = (int)UiSize.Radius.Large,
+            CornerRadiusTopRight = (int)UiSize.Radius.Large,
+            CornerRadiusBottomLeft = (int)UiSize.Radius.Large,
+            CornerRadiusBottomRight = (int)UiSize.Radius.Large,
         };
         DrawStyleBox(style, new Rect2(Vector2.Zero, Size));
-        DrawCircle(Size / 2, 14, _tokens.LineStrong);
+        DrawCircle(Size / 2, 14, UiThemeLookup.Color(this, UiTokens.Color.LineStrong));
     }
 
     private void CacheNeuronPositions()
@@ -146,10 +143,10 @@ public partial class BrainFocusNetworkView : Control
 
     private void DrawNeuron(Vector2 position, BrainFocusNeuronPresentation neuron, bool selected)
     {
-        var baseColor = neuron.Activation >= 0 ? _tokens.LineStrong : _tokens.Danger;
+        var baseColor = neuron.Activation >= 0 ? UiThemeLookup.Color(this, UiTokens.Color.LineStrong) : UiThemeLookup.Color(this, UiTokens.Color.Danger);
         baseColor.A = (float)Math.Clamp(0.30 + (neuron.ActivationFill * 0.70), 0.30, 1);
         var radius = 8 + (float)(neuron.ActivationFill * 8);
-        DrawCircle(position, radius + 3, _tokens.PanelRaised);
+        DrawCircle(position, radius + 3, UiThemeLookup.Color(this, UiTokens.Color.PanelRaised));
         if (neuron.Activation >= 0)
         {
             DrawCircle(position, radius, baseColor);
@@ -168,7 +165,7 @@ public partial class BrainFocusNetworkView : Control
 
         if (selected)
         {
-            DrawArc(position, radius + 8, 0, Mathf.Tau, 40, _tokens.Halo, 3, antialiased: false);
+            DrawArc(position, radius + 8, 0, Mathf.Tau, 40, UiThemeLookup.Color(this, UiTokens.Color.Halo), 3, antialiased: false);
         }
     }
 

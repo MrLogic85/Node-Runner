@@ -4,23 +4,38 @@ namespace NodeRunner.Ui.Lib;
 
 /// <summary>
 /// Shared reference-design layout metrics for the fixed 640 x 360 landscape shell.
+/// Owns every shell and surface dimension; component-scale values live in <see cref="UiSize"/>.
 /// </summary>
 public static class UiLayout
 {
-    public const float CanvasWidth = UiTokens.LogicalCanvasWidth;
-    public const float CanvasHeight = UiTokens.LogicalCanvasHeight;
-    public const float TopBarHeight = 48;
-    public const float LeftRailWidth = 56;
-    public const float RightPanelWidth = 176;
-    public const float BottomStripHeight = 52;
+    public const int CanvasWidth = 640;
+    public const int CanvasHeight = 360;
+
+    /// <summary>The top bar is exactly one touch target tall.</summary>
+    public const int TopBarHeight = UiSize.Control.Touch;
+
+    /// <summary>Remaining height below the top bar (<c>h-screen</c>).</summary>
+    public const int ScreenBodyHeight = CanvasHeight - TopBarHeight;
+
+    public const int RailWidth = 56;
+    public const int SidePanelWidth = 176;
+    public const int MenuWidth = 200;
+    public const int DialogWidth = 300;
+    public const int BrainWidth = 460;
+    public const int CardWidth = 326;
+    public const int TileWidth = 156;
+    public const int WellWidth = 250;
+    public const int SheetWidth = 720;
+    public const int SheetWideWidth = 880;
+    public const int StageHeight = 170;
+    public const int ThumbnailHeight = 100;
+    public const int ColumnExtraSmallWidth = 40;
+    public const int ColumnSmallWidth = 52;
+    public const int ColumnMediumWidth = 76;
+    public const int ColumnLargeWidth = 96;
+    public const int ColumnExtraLargeWidth = 128;
 
     public static Vector2 CanvasSize { get; } = new(CanvasWidth, CanvasHeight);
-
-    public static Rect2 ContentRect(UiTokens tokens)
-    {
-        var edgeInset = UiSpacing.ScreenEdgeInset(tokens);
-        return new Rect2(edgeInset, TopBarHeight + edgeInset, CanvasWidth - (edgeInset * 2), CanvasHeight - TopBarHeight - (edgeInset * 2));
-    }
 
     public static void ApplyScreen(Control root)
     {
@@ -29,8 +44,8 @@ public static class UiLayout
         root.CustomMinimumSize = CanvasSize;
     }
 
-    public static void ApplyMargins(MarginContainer margin, UiTokens tokens)
+    public static void ApplyMargins(MarginContainer margin)
     {
-        UiSpacing.ApplyUniformMargin(margin, UiSpacing.ScreenEdgeInset(tokens));
+        UiSpacing.ApplyUniformMargin(margin, UiSpacing.ScreenEdgeInset);
     }
 }

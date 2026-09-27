@@ -114,7 +114,6 @@ public partial class UiSlider : Control, ISerializationListener
     [Signal]
     public delegate void RangeChangedEventHandler(double low, double high);
 
-    private UiTokens _tokens = UiTokens.Neon;
     private string _labelText = "Value";
     private string _readoutText = "50";
     private UiSliderValueKind _valueKind = UiSliderValueKind.Thumb;
@@ -124,7 +123,7 @@ public partial class UiSlider : Control, ISerializationListener
     private double _markerPosition = -1;
     private string _markerText = string.Empty;
     private bool _disabled;
-    private UiSliderStyle _style = UiSliderStyle.From(UiTokens.Neon);
+    private UiSliderStyle _style;
     private HBoxContainer? _header;
     private Label? _label;
     private Label? _readout;
@@ -271,16 +270,6 @@ public partial class UiSlider : Control, ISerializationListener
         }
     }
 
-    public UiTokens Tokens
-    {
-        get => _tokens;
-        set
-        {
-            _tokens = value;
-            Refresh();
-        }
-    }
-
     public override void _EnterTree()
     {
         RequestReady();
@@ -290,6 +279,7 @@ public partial class UiSlider : Control, ISerializationListener
     {
         FocusMode = FocusModeEnum.None;
         MouseFilter = MouseFilterEnum.Pass;
+        _style = UiSliderStyle.Default;
         InitializeContent();
     }
 
@@ -325,7 +315,15 @@ public partial class UiSlider : Control, ISerializationListener
 
     public override void _Notification(int what)
     {
-        if (what == NotificationResized)
+        if (what == NotificationThemeChanged && IsNodeReady())
+        {
+            UiThemeRefresh.Guarded(this, () =>
+            {
+                _style = UiSliderStyle.Default;
+                Refresh();
+            });
+        }
+        else if (what == NotificationResized)
         {
             LayoutContent();
         }
@@ -390,8 +388,8 @@ public partial class UiSlider : Control, ISerializationListener
         var trackRight = Mathf.Max(trackLeft, Size.X - _style.ThumbRadius);
         var trackY = TrackY;
         var opacity = Disabled ? UiSliderStyle.DisabledOpacity : 1f;
-        var line = UiTokens.MultiplyAlpha(Disabled ? _tokens.LineStrong : _tokens.Line, opacity);
-        var accent = UiTokens.MultiplyAlpha(_tokens.Accent, opacity);
+        var line = Disabled ? UiThemeLookup.Color(this, UiTokens.Color.LineStrong) : UiThemeLookup.Color(this, UiTokens.Color.Line).ScaleAlpha(opacity);
+        var accent = UiThemeLookup.Color(this, UiTokens.Color.Accent).ScaleAlpha(opacity);
         var fillStart = PositionFor(Value.FillStart, trackLeft, trackRight);
         var fillEnd = PositionFor(Value.FillEnd, trackLeft, trackRight);
 
@@ -414,8 +412,8 @@ public partial class UiSlider : Control, ISerializationListener
             DrawLine(
                 new Vector2(markerX, trackY - _style.MarkerHalfHeight),
                 new Vector2(markerX, trackY + _style.MarkerHalfHeight),
-                UiTokens.MultiplyAlpha(_tokens.Halo, opacity),
-                _tokens.StrokeSignal,
+                UiThemeLookup.Color(this, UiTokens.Color.Halo).ScaleAlpha(opacity),
+                UiSize.Stroke.Signal,
                 antialiased: false);
         }
 
@@ -426,7 +424,11 @@ public partial class UiSlider : Control, ISerializationListener
 
     }
 
-    private float TrackY => CalculateTrackY(_style, _tokens, HasValueLabelRow);
+    private float TrackY => CalculateTrackY(
+        _style,
+        UiThemeLookup.FontSize(this, UiTokens.Typography.Overline) + 3,
+        UiSize.Space.S3,
+        HasValueLabelRow);
 
     private void EnsureLabels()
     {
@@ -599,10 +601,18 @@ public partial class UiSlider : Control, ISerializationListener
         }
 
         EnsureLabels();
-        _style = UiSliderStyle.From(_tokens);
+        _style = UiSliderStyle.Default;
         CustomMinimumSize = new Vector2(
             0,
-            CalculateMinimumHeight(_style, _tokens, HasValueLabelRow, HasStepLabelRow, HasMarkerBelowRow));
+            CalculateMinimumHeight(
+                _style,
+                UiThemeLookup.FontSize(this, UiTokens.Typography.Overline) + 3,
+                UiSize.Space.S3,
+                UiSize.Space.S2,
+                UiThemeLookup.FontSize(this, UiTokens.Typography.ReadoutSmall) + 3,
+                HasValueLabelRow,
+                HasStepLabelRow,
+                HasMarkerBelowRow));
 
         _label!.Text = LabelText;
         _readout!.Text = ReadoutText;
@@ -610,35 +620,32 @@ public partial class UiSlider : Control, ISerializationListener
         _label.Visible = HasValueLabelRow && !string.IsNullOrWhiteSpace(LabelText);
         _readout.Visible = HasValueLabelRow && !string.IsNullOrWhiteSpace(ReadoutText);
         _header!.Visible = HasValueLabelRow;
-        _header.AddThemeConstantOverride("separation", (int)_tokens.Space1);
+        _header.AddThemeConstantOverride("separation", (int)UiSize.Space.S1);
         _markerLabel.Visible = HasMarkerText && (HasValueLabelRow || HasMarkerBelowRow);
 
-        ApplyLabelStyle(_label, _tokens.OverlineText, _tokens.Muted);
-        ApplyLabelStyle(_readout, _tokens.ReadoutMediumText, _tokens.Ink);
-        ApplyLabelStyle(_markerLabel, _tokens.ReadoutSmallText, _tokens.Halo);
-        _thumbStyle = _tokens.ControlStyle(
-            _tokens.Accent,
+        ApplyLabelStyle(_label, UiTokens.Typography.Overline, UiTokens.Color.Muted);
+        ApplyLabelStyle(_readout, UiTokens.Typography.ReadoutMedium, UiTokens.Color.Ink);
+        ApplyLabelStyle(_markerLabel, UiTokens.Typography.ReadoutSmall, UiTokens.Color.Halo);
+        _thumbStyle = UiThemeLookup.CreateStyleBox(UiThemeLookup.Color(this, UiTokens.Color.Accent),
             Colors.Transparent,
             borderWidth: 0,
             radius: _style.ThumbRadius);
-        UiGlow.ApplyToControl(_thumbStyle, _tokens.Accent, _tokens.EffectsEnabled);
+        UiGlow.ApplyToControl(_thumbStyle, UiThemeLookup.Color(this, UiTokens.Color.Accent), UiThemeLookup.EffectsEnabled(this));
         _trackSegmentStyle ??= new StyleBoxFlat();
         foreach (var stepLabel in _stepLabelNodes)
         {
             stepLabel.Visible = HasStepLabelRow;
-            ApplyLabelStyle(stepLabel, _tokens.ReadoutSmallText, _tokens.Muted);
+            ApplyLabelStyle(stepLabel, UiTokens.Typography.ReadoutSmall, UiTokens.Color.Muted);
         }
 
         LayoutContent();
         QueueRedraw();
     }
 
-    private void ApplyLabelStyle(Label label, UiTokens.TextStyle style, Color color)
+    private void ApplyLabelStyle(Label label, UiTokens.Typography style, UiTokens.Color color)
     {
-        _tokens.ApplyTextStyle(label, style);
-        label.AddThemeColorOverride(
-            "font_color",
-            UiTokens.MultiplyAlpha(color, Disabled ? UiSliderStyle.DisabledOpacity : 1f));
+        UiThemeLookup.ApplyTextStyle(label, style, color);
+        label.SelfModulate = Colors.White with { A = Disabled ? UiSliderStyle.DisabledOpacity : 1f };
     }
 
     private void LayoutContent()
@@ -656,14 +663,14 @@ public partial class UiSlider : Control, ISerializationListener
                 _style.ThumbRadius,
                 Size.X - _style.ThumbRadius,
                 (float)MarkerPosition);
-            var minimumX = HasMarkerBelowRow || !_label.Visible ? 0 : _label.Size.X + _tokens.Space1;
+            var minimumX = HasMarkerBelowRow || !_label.Visible ? 0 : _label.Size.X + UiSize.Space.S1;
             var maximumX = HasMarkerBelowRow || !_readout.Visible
                 ? Mathf.Max(0, Size.X - _markerLabel.Size.X)
-                : _readout.Position.X - _tokens.Space1 - _markerLabel.Size.X;
+                : _readout.Position.X - UiSize.Space.S1 - _markerLabel.Size.X;
             var markerX = maximumX >= minimumX
                 ? Mathf.Clamp(desiredCenter - (_markerLabel.Size.X * 0.5f), minimumX, maximumX)
                 : minimumX;
-            _markerLabel.Position = new Vector2(markerX, HasMarkerBelowRow ? TrackY + _tokens.Space2 : 0);
+            _markerLabel.Position = new Vector2(markerX, HasMarkerBelowRow ? TrackY + UiSize.Space.S2 : 0);
         }
 
         if (!HasStepLabelRow)
@@ -671,7 +678,7 @@ public partial class UiSlider : Control, ISerializationListener
             return;
         }
 
-        var labelY = TrackY + _tokens.Space2;
+        var labelY = TrackY + UiSize.Space.S2;
         for (var index = 0; index < _stepLabelNodes.Count; index++)
         {
             var label = _stepLabelNodes[index];
@@ -695,7 +702,7 @@ public partial class UiSlider : Control, ISerializationListener
             return;
         }
 
-        var color = UiTokens.MultiplyAlpha(_tokens.LineStrong, opacity);
+        var color = UiThemeLookup.Color(this, UiTokens.Color.LineStrong).ScaleAlpha(opacity);
         for (var index = 0; index < StepLabels.Length; index++)
         {
             var x = Mathf.Lerp(trackLeft, trackRight, index / (float)(StepLabels.Length - 1));
@@ -703,7 +710,7 @@ public partial class UiSlider : Control, ISerializationListener
                 new Vector2(x, trackY - _style.StepTickHalfHeight),
                 new Vector2(x, trackY + _style.StepTickHalfHeight),
                 color,
-                _tokens.StrokeSignal);
+                UiSize.Stroke.Signal);
         }
     }
 
@@ -755,7 +762,7 @@ public partial class UiSlider : Control, ISerializationListener
         DrawCircle(
             center,
             _style.ThumbRadius - _style.DisabledThumbInset,
-            UiTokens.MultiplyAlpha(_tokens.PanelRaised, UiSliderStyle.DisabledOpacity));
+            UiThemeLookup.Color(this, UiTokens.Color.PanelRaised).ScaleAlpha(UiSliderStyle.DisabledOpacity));
         for (var index = 0; index < UiSliderStyle.DisabledThumbSegments; index += 2)
         {
             DrawArc(
@@ -765,7 +772,7 @@ public partial class UiSlider : Control, ISerializationListener
                 Mathf.Tau * (index + 1) / UiSliderStyle.DisabledThumbSegments,
                 UiSliderStyle.DisabledThumbArcPoints,
                 color,
-                _tokens.StrokeHair,
+                UiSize.Stroke.Hair,
                 antialiased: false);
         }
     }
@@ -829,9 +836,9 @@ public partial class UiSlider : Control, ISerializationListener
 
     private bool HasMarkerBelowRow => HasMarkerText && !HasStepLabelRow;
 
-    private static float CalculateTrackY(UiSliderStyle style, UiTokens tokens, bool hasValueLabelRow) =>
+    private static float CalculateTrackY(UiSliderStyle style, float labelLineHeight, float space3, bool hasValueLabelRow) =>
         hasValueLabelRow
-            ? tokens.OverlineText.LineHeight + tokens.Space3
+            ? labelLineHeight + space3
             : TrackHalfHeight(style);
 
     private static float TrackHalfHeight(UiSliderStyle style) =>
@@ -839,16 +846,19 @@ public partial class UiSlider : Control, ISerializationListener
 
     public static float CalculateMinimumHeight(
         UiSliderStyle style,
-        UiTokens tokens,
+        float labelLineHeight,
+        float space3,
+        float space2,
+        float stepLineHeight,
         bool hasValueLabelRow,
         bool hasStepLabelRow,
         bool hasMarkerBelowRow)
     {
-        var trackY = CalculateTrackY(style, tokens, hasValueLabelRow);
+        var trackY = CalculateTrackY(style, labelLineHeight, space3, hasValueLabelRow);
         var height = trackY + TrackHalfHeight(style);
         if (hasStepLabelRow || hasMarkerBelowRow)
         {
-            height = Math.Max(height, trackY + tokens.Space2 + tokens.ReadoutSmallText.LineHeight);
+            height = Math.Max(height, trackY + space2 + stepLineHeight);
         }
 
         return height;

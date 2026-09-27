@@ -6,7 +6,6 @@ namespace NodeRunner.Ui.Screens;
 /// <summary>Sample Edit state showing the safe Move-only training contract.</summary>
 public partial class EditScreen : Control
 {
-    private UiTokens _tokens = UiTokens.Neon;
     private string _creationName = "First Walker";
 
     [Export]
@@ -29,25 +28,20 @@ public partial class EditScreen : Control
     [Signal]
     public delegate void RebuildRequestedEventHandler();
 
-    public UiTokens Tokens
-    {
-        get => _tokens;
-        set
-        {
-            _tokens = value;
-            if (IsInsideTree())
-            {
-                Rebuild();
-            }
-        }
-    }
-
     public override void _Ready()
     {
         Name = nameof(EditScreen);
         SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
         Size = GetViewportRect().Size;
         Rebuild();
+    }
+
+    public override void _Notification(int what)
+    {
+        if (what == NotificationThemeChanged && IsNodeReady())
+        {
+            UiThemeRefresh.Guarded(this, Rebuild);
+        }
     }
 
     private void Rebuild()
@@ -60,7 +54,7 @@ public partial class EditScreen : Control
 
         AddChild(new ColorRect
         {
-            Color = _tokens.Background,
+            Color = UiThemeLookup.Color(this, UiTokens.Color.Background),
             MouseFilter = Control.MouseFilterEnum.Ignore,
             AnchorRight = 1,
             AnchorBottom = 1,
@@ -77,12 +71,12 @@ public partial class EditScreen : Control
         margin.AddChild(layout);
 
         var header = new HBoxContainer();
-        header.AddChild(CreateLabel("Edit " + _creationName, 22, _tokens.Ink, true));
+        header.AddChild(CreateLabel("Edit " + _creationName, 22, UiThemeLookup.Color(this, UiTokens.Color.Ink), true));
         var done = CreateButton("Done", UiButtonKind.Primary);
         done.Pressed += () => EmitSignal(SignalName.DoneRequested);
         header.AddChild(done);
         layout.AddChild(header);
-        layout.AddChild(CreateLabel("Move-only edit · training kept · generation 18", 14, _tokens.Accent));
+        layout.AddChild(CreateLabel("Move-only edit · training kept · generation 18", 14, UiThemeLookup.Color(this, UiTokens.Color.Accent)));
 
         var content = new HBoxContainer();
         content.AddThemeConstantOverride("separation", 14);
@@ -96,7 +90,6 @@ public partial class EditScreen : Control
     {
         var panel = new UiCard
         {
-            Tokens = _tokens,
             Kind = UiCard.CardVariant.Frame,
             SizeFlagsHorizontal = SizeFlags.ExpandFill,
         };
@@ -104,14 +97,20 @@ public partial class EditScreen : Control
         canvas.Draw += () =>
         {
             var center = canvas.Size / 2;
-            canvas.DrawLine(center + new Vector2(-100, 20), center + new Vector2(0, -30), _tokens.Accent, 6);
-            canvas.DrawLine(center + new Vector2(0, -30), center + new Vector2(100, 16), _tokens.Accent, 6);
+            canvas.DrawLine(center + new Vector2(-100, 20), center + new Vector2(0, -30), UiThemeLookup.Color(this, UiTokens.Color.Accent), 6);
+            canvas.DrawLine(center + new Vector2(0, -30), center + new Vector2(100, 16), UiThemeLookup.Color(this, UiTokens.Color.Accent), 6);
             // Purely decorative illustration -- effects-lite drops the glow
             // treatment for flat schematic dots instead of hiding them (#134).
-            canvas.DrawCircle(center + new Vector2(0, -30), _tokens.EffectsEnabled ? 25 : 10, _tokens.EffectsEnabled ? _tokens.Halo : _tokens.LineStrong);
-            canvas.DrawCircle(center + new Vector2(-100, 20), _tokens.EffectsEnabled ? 18 : 8, _tokens.EffectsEnabled ? _tokens.AccentGlow : _tokens.Line);
-            canvas.DrawCircle(center + new Vector2(100, 16), _tokens.EffectsEnabled ? 18 : 8, _tokens.EffectsEnabled ? _tokens.AccentGlow : _tokens.Line);
-            canvas.DrawString(ThemeDB.FallbackFont, new Vector2(16, 28), "Ghosted original position stays visible while Move is active.", HorizontalAlignment.Left, -1, 13, _tokens.Muted);
+            canvas.DrawCircle(center + new Vector2(0, -30), UiThemeLookup.EffectsEnabled(this) ? 25 : 10, UiThemeLookup.EffectsEnabled(this) ? UiThemeLookup.Color(this, UiTokens.Color.Halo) : UiThemeLookup.Color(this, UiTokens.Color.LineStrong));
+            canvas.DrawCircle(
+                center + new Vector2(-100, 20),
+                UiThemeLookup.EffectsEnabled(this) ? 18 : 8,
+                UiThemeLookup.EffectsEnabled(this) ? UiGlow.FromBase(UiThemeLookup.Color(this, UiTokens.Color.Accent), true) : UiThemeLookup.Color(this, UiTokens.Color.Line));
+            canvas.DrawCircle(
+                center + new Vector2(100, 16),
+                UiThemeLookup.EffectsEnabled(this) ? 18 : 8,
+                UiThemeLookup.EffectsEnabled(this) ? UiGlow.FromBase(UiThemeLookup.Color(this, UiTokens.Color.Accent), true) : UiThemeLookup.Color(this, UiTokens.Color.Line));
+            canvas.DrawString(ThemeDB.FallbackFont, new Vector2(16, 28), "Ghosted original position stays visible while Move is active.", HorizontalAlignment.Left, -1, 13, UiThemeLookup.Color(this, UiTokens.Color.Muted));
         };
         panel.AddChild(canvas);
         return panel;
@@ -119,7 +118,7 @@ public partial class EditScreen : Control
 
     private Control CreateSafetyPanel()
     {
-        var panel = new UiCard { Tokens = _tokens, CustomMinimumSize = new Vector2(300, 0) };
+        var panel = new UiCard { CustomMinimumSize = new Vector2(300, 0) };
         var margin = new MarginContainer();
         margin.AddThemeConstantOverride("margin_left", 16);
         margin.AddThemeConstantOverride("margin_top", 16);
@@ -129,14 +128,13 @@ public partial class EditScreen : Control
         var stack = new VBoxContainer();
         stack.AddThemeConstantOverride("separation", 8);
         margin.AddChild(stack);
-        stack.AddChild(CreateLabel("Edit safely", 19, _tokens.Ink));
-        stack.AddChild(CreateLabel("Only Move is active. Beam, Core, and Delete stay visible so you know what is protected.", 14, _tokens.Muted));
+        stack.AddChild(CreateLabel("Edit safely", 19, UiThemeLookup.Color(this, UiTokens.Color.Ink)));
+        stack.AddChild(CreateLabel("Only Move is active. Beam, Core, and Delete stay visible so you know what is protected.", 14, UiThemeLookup.Color(this, UiTokens.Color.Muted)));
         foreach (var tool in new[] { "Beam · Move only · training kept", "Core · Move only · training kept", "Delete · Move only · training kept" })
         {
             var locked = new UiButton
             {
-                Tokens = _tokens,
-                LabelText = $"{tool} · Move only · training kept",
+                Text = $"{tool} · Move only · training kept",
                 IconId = UiIconId.Move,
                 Disabled = true,
                 TooltipText = "Move only · training kept",
@@ -145,8 +143,7 @@ public partial class EditScreen : Control
         }
         var rebuild = new UiButton
         {
-            Tokens = _tokens,
-            LabelText = "Rebuild body",
+            Text = "Rebuild body",
             Kind = UiButtonKind.Tertiary,
         };
         rebuild.Pressed += () => EmitSignal(SignalName.RebuildRequested);
@@ -167,10 +164,9 @@ public partial class EditScreen : Control
     {
         return new UiButton
         {
-            Tokens = _tokens,
-            LabelText = text,
+            Text = text,
             Kind = kind,
-            CustomMinimumSize = new Vector2(110, _tokens.TouchTarget),
+            CustomMinimumSize = new Vector2(110, UiSize.Control.Touch),
         };
     }
 }

@@ -29,6 +29,7 @@ public partial class UiCard : PanelContainer
     private CardSize _size = CardSize.Default;
     private bool _glow;
     private bool _disabled;
+    private bool _refreshingStyle;
 
     [Export]
     public CardVariant Kind
@@ -74,18 +75,6 @@ public partial class UiCard : PanelContainer
         }
     }
 
-    private UiTokens _tokens = UiTokens.Neon;
-
-    public virtual UiTokens Tokens
-    {
-        get => _tokens;
-        set
-        {
-            _tokens = value;
-            RefreshStyle();
-        }
-    }
-
     public override void _Ready()
     {
         FocusMode = FocusModeEnum.None;
@@ -93,34 +82,53 @@ public partial class UiCard : PanelContainer
         RefreshStyle();
     }
 
+    public override void _Notification(int what)
+    {
+        if (what == NotificationThemeChanged)
+        {
+            RefreshStyle();
+        }
+    }
+
     private void RefreshStyle()
     {
-        if (IsInsideTree())
+        if (!IsInsideTree() || _refreshingStyle)
+        {
+            return;
+        }
+
+        _refreshingStyle = true;
+        try
         {
             AddThemeStyleboxOverride("panel", CreateStyle());
             QueueRedraw();
+        }
+        finally
+        {
+            _refreshingStyle = false;
         }
     }
 
     protected virtual StyleBoxFlat CreateStyle()
     {
         Modulate = Disabled
-            ? UiTokens.MultiplyAlpha(Colors.White, 0.5f)
+            ? Colors.White.ScaleAlpha(0.5f)
             : Colors.White;
 
-        var style = Tokens.FrameStyle(
+        var style = UiThemeLookup.CreateFrameStyleBox(
+            this,
             ToFrameVariant(Kind),
             ToFrameSize(SizeVariant),
             glow: Glow && !Disabled);
         if (Kind == CardVariant.Raised)
         {
             SetContentMargin(style, PaddingFor(SizeVariant));
-            SetCornerRadius(style, Tokens.RadiusLarge);
+            SetCornerRadius(style, UiSize.Radius.Large);
         }
 
         if (Kind == CardVariant.Locked || Disabled)
         {
-            style.BgColor = Tokens.Panel;
+            style.BgColor = UiThemeLookup.Color(this, UiTokens.Color.Panel);
             style.BorderWidthLeft = 0;
             style.BorderWidthTop = 0;
             style.BorderWidthRight = 0;
@@ -144,20 +152,20 @@ public partial class UiCard : PanelContainer
     private Color DashedBorderColor() =>
         Kind switch
         {
-            CardVariant.Selected or CardVariant.Locked => Tokens.Accent,
-            CardVariant.Warning => Tokens.Danger,
-            CardVariant.Hint => Tokens.Halo,
-            CardVariant.Raised => Tokens.LineStrong,
-            _ => Tokens.Edge,
+            CardVariant.Selected or CardVariant.Locked => UiThemeLookup.Color(this, UiTokens.Color.Accent),
+            CardVariant.Warning => UiThemeLookup.Color(this, UiTokens.Color.Danger),
+            CardVariant.Hint => UiThemeLookup.Color(this, UiTokens.Color.Halo),
+            CardVariant.Raised => UiThemeLookup.Color(this, UiTokens.Color.LineStrong),
+            _ => UiThemeLookup.Color(this, UiTokens.Color.Edge),
         };
 
     private void DrawDashedBorder(Color color)
     {
-        var stroke = Tokens.StrokeHair;
+        var stroke = UiSize.Stroke.Hair;
         var rect = new Rect2(
             new Vector2(stroke * 0.5f, stroke * 0.5f),
             new Vector2(Math.Max(0, base.Size.X - stroke), Math.Max(0, base.Size.Y - stroke)));
-        UiDashedBorder.DrawRoundedRect(this, rect, Math.Max(0, Tokens.RadiusLarge - (stroke * 0.5f)), color, stroke);
+        UiDashedBorder.DrawRoundedRect(this, rect, Math.Max(0, UiSize.Radius.Large - (stroke * 0.5f)), color, stroke);
     }
 
     private static UiSurfaceContracts.FrameVariant ToFrameVariant(CardVariant variant) =>
@@ -184,12 +192,12 @@ public partial class UiCard : PanelContainer
     private float PaddingFor(CardSize size) =>
         size switch
         {
-            CardSize.Snug => Tokens.Space2,
-            CardSize.Tight => Tokens.Space1,
-            CardSize.Roomy => Tokens.Space4,
+            CardSize.Snug => UiSize.Space.S2,
+            CardSize.Tight => UiSize.Space.S1,
+            CardSize.Roomy => UiSize.Space.S4,
             CardSize.Flush => 0,
-            _ => Tokens.Space3,
-        } + Tokens.StrokeHair;
+            _ => UiSize.Space.S3,
+        } + UiSize.Stroke.Hair;
 
     private static void SetContentMargin(StyleBoxFlat style, float value)
     {

@@ -13,13 +13,13 @@ public readonly record struct UiSliderStyle(
     public const int DisabledThumbSegments = 8;
     public const int DisabledThumbArcPoints = 4;
 
-    public static UiSliderStyle From(UiTokens tokens) =>
+    public static UiSliderStyle Default { get; } =
         new(
-            tokens.SliderThumbDiameter * 0.5f,
-            tokens.SliderTrackWidth,
-            tokens.SliderMarkerHeight * 0.5f,
-            tokens.SliderStepTickHeight * 0.5f,
-            tokens.SliderDisabledDashLength,
-            tokens.StrokeHair,
-            tokens.SliderSteppedHeight);
+            UiSize.Widget.SliderThumbDiameter * 0.5f,
+            UiSize.Widget.SliderTrackWidth,
+            UiSize.Widget.SliderMarkerHeight * 0.5f,
+            UiSize.Widget.SliderStepTickHeight * 0.5f,
+            UiSize.Widget.SliderDisabledDashLength,
+            UiSize.Stroke.Hair,
+            UiSize.Widget.SliderSteppedHeight);
 }

@@ -5,7 +5,11 @@ namespace NodeRunner.Ui.Lib;
 /// <summary>Shared helpers for compact component-library compositions.</summary>
 internal static class UiFieldAndRows
 {
-    public static Label Label(string text, UiTokens tokens, UiTokens.TextStyle style, Color color, HorizontalAlignment alignment = HorizontalAlignment.Left)
+    public static Label Label(
+        string text,
+        UiTokens.Typography style,
+        UiTokens.Color color,
+        HorizontalAlignment alignment = HorizontalAlignment.Left)
     {
         var label = new Label
         {
@@ -16,20 +20,21 @@ internal static class UiFieldAndRows
             TextOverrunBehavior = TextServer.OverrunBehavior.TrimEllipsis,
             MouseFilter = Control.MouseFilterEnum.Ignore,
         };
-        tokens.ApplyTextStyle(label, style);
-        label.AddThemeColorOverride("font_color", color);
+        UiThemeLookup.ApplyTextStyle(label, style, color);
         return label;
     }
 
     public static TextureRect Icon(UiIconId icon, UiIconSize size, Color tint) =>
         UiIcons.Create(icon, size, tint);
 
-    public static StyleBoxFlat DashedLike(UiTokens tokens, Color border, bool raised = true) =>
-        tokens.ControlStyle(
-            raised ? tokens.PanelRaised : tokens.Panel,
+    public static StyleBoxFlat DashedLike(Control owner, Color border, bool raised = true) =>
+        UiThemeLookup.CreateStyleBox(raised
+                ? UiThemeLookup.Color(owner, UiTokens.Color.PanelRaised)
+                : UiThemeLookup.Color(owner, UiTokens.Color.Panel),
             border,
             0,
-            tokens.RadiusMedium,
-            horizontalPadding: tokens.Space2,
-            verticalPadding: tokens.Space1);
+            UiSize.Radius.Medium,
+            horizontalPadding: UiSize.Space.S2,
+            verticalPadding: UiSize.Space.S1);
+
 }

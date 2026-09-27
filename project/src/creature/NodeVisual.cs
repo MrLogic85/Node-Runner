@@ -1,5 +1,6 @@
 using Godot;
 using NodeRunner.Theme;
+using NodeRunner.Ui.Lib;
 
 namespace NodeRunner.Creature;
 
@@ -39,7 +40,10 @@ public partial class NodeVisual : Node2D
             DrawCircle(Vector2.Zero, Radius * 1.65f, Theme.SelectionGlow);
         }
 
-        DrawCircle(Vector2.Zero, Radius * 1.18f, Theme.NodeGlow);
+        DrawCircle(
+            Vector2.Zero,
+            Radius * 1.18f,
+            UiGlow.FromBase(Theme.GroundEdge, Theme.EffectsEnabled));
         DrawCircle(Vector2.Zero, Radius, Theme.NodeFill);
 
         if (!HasCore)

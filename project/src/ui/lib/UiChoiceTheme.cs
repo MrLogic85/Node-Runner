@@ -8,11 +8,11 @@ namespace NodeRunner.Ui.Lib;
 /// <summary>Reference indicator textures supplied through Godot's native choice theme slots.</summary>
 internal static class UiChoiceTheme
 {
-    public static Godot.Theme Create(UiTokens tokens, bool isSwitch)
+    public static Godot.Theme Create(Control control, bool isSwitch)
     {
         try
         {
-            return CreateTheme(tokens, isSwitch);
+            return CreateTheme(control, isSwitch);
         }
         catch (Exception error) when (error is InvalidOperationException or XmlException or IOException)
         {
@@ -25,7 +25,7 @@ internal static class UiChoiceTheme
         }
     }
 
-    private static Godot.Theme CreateTheme(UiTokens tokens, bool isSwitch)
+    private static Godot.Theme CreateTheme(Control control, bool isSwitch)
     {
         var theme = new Godot.Theme();
         var type = isSwitch ? "CheckButton" : "CheckBox";
@@ -33,15 +33,15 @@ internal static class UiChoiceTheme
         {
             theme.SetStylebox(state, type, new StyleBoxEmpty());
         }
-        theme.SetConstant("h_separation", type, (int)tokens.Space2);
+        theme.SetConstant("h_separation", type, UiSize.Space.S2);
         theme.SetConstant("check_v_offset", type, 0);
         theme.SetColor(isSwitch ? "button_checked_color" : "checkbox_checked_color", type, Godot.Colors.White);
         theme.SetColor(isSwitch ? "button_unchecked_color" : "checkbox_unchecked_color", type, Godot.Colors.White);
 
         foreach (var on in new[] { false, true })
         {
-            using var image = RenderIndicator(tokens, isSwitch, on);
-            var size = UiChoiceStyle.IndicatorSize(tokens, isSwitch);
+            using var image = RenderIndicator(control, isSwitch, on);
+            var size = UiChoiceStyle.IndicatorSize(isSwitch);
             var name = on ? "checked" : "unchecked";
             var enabled = Texture(image, size);
             theme.SetIcon(name, type, enabled);
@@ -91,13 +91,13 @@ internal static class UiChoiceTheme
         }
     }
 
-    private static Image RenderIndicator(UiTokens tokens, bool isSwitch, bool on)
+    private static Image RenderIndicator(Control control, bool isSwitch, bool on)
     {
         XNamespace ns = "http://www.w3.org/2000/svg";
-        var size = UiChoiceStyle.IndicatorSize(tokens, isSwitch);
-        var colors = UiChoiceStyle.Resolve(tokens, isSwitch, on);
-        var stroke = tokens.StrokeSignal;
-        var radius = isSwitch ? tokens.RadiusLarge : tokens.RadiusSmall;
+        var size = UiChoiceStyle.IndicatorSize(isSwitch);
+        var colors = UiChoiceStyle.Resolve(control, isSwitch, on);
+        var stroke = UiSize.Stroke.Signal;
+        var radius = isSwitch ? UiSize.Radius.Large : UiSize.Radius.Small;
         var root = new XElement(ns + "svg",
             new XAttribute("width", size.X), new XAttribute("height", size.Y),
             new XAttribute("viewBox", $"0 0 {N(size.X)} {N(size.Y)}"),
@@ -111,10 +111,10 @@ internal static class UiChoiceTheme
                 new XAttribute("stroke-width", stroke)));
         if (isSwitch)
         {
-            var center = UiChoiceStyle.ThumbCenter(tokens, new Rect2(Vector2.Zero, size), on);
+            var center = UiChoiceStyle.ThumbCenter(new Rect2(Vector2.Zero, size), on);
             root.Add(new XElement(ns + "circle",
                 new XAttribute("cx", center.X), new XAttribute("cy", center.Y),
-                new XAttribute("r", tokens.Icon / 2),
+                new XAttribute("r", UiSize.Icon.Default / 2),
                 new XAttribute("fill", "#" + colors.Mark.ToHtml(false))));
         }
         else if (on)
@@ -130,12 +130,12 @@ internal static class UiChoiceTheme
                 check.Nodes());
             glyph.SetAttributeValue("stroke", "#" + colors.Mark.ToHtml(false));
             glyph.SetAttributeValue("transform",
-                $"translate({N((size.X - tokens.Icon) / 2)} {N((size.Y - tokens.Icon) / 2)}) scale({N(tokens.Icon / 24)})");
+                $"translate({N((size.X - UiSize.Icon.Default) / 2)} {N((size.Y - UiSize.Icon.Default) / 2)}) scale({N(UiSize.Icon.Default / 24)})");
             root.Add(glyph);
         }
 
         var window = DisplayServer.WindowGetSize();
-        var scale = Mathf.Max(1, Mathf.Min(window.X / UiTokens.LogicalCanvasWidth, window.Y / UiTokens.LogicalCanvasHeight));
+        var scale = Mathf.Max(1, Mathf.Min(window.X / UiLayout.CanvasWidth, window.Y / UiLayout.CanvasHeight));
         var image = new Image();
         var error = image.LoadSvgFromString(root.ToString(), scale);
         if (error != Error.Ok)

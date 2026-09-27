@@ -76,6 +76,7 @@ public partial class UiMenuToggleItem : UiMenuItem, ISerializationListener
 
     public override void _Notification(int what)
     {
+        base._Notification(what);
         if (what != NotificationSortChildren || _toggle is null)
         {
             return;
@@ -134,7 +135,6 @@ public partial class UiMenuToggleItem : UiMenuItem, ISerializationListener
         _toggle.Subtext = Subtext;
         _toggle.On = _on;
         _toggle.Disabled = Disabled;
-        _toggle.Tokens = Tokens;
         UpdateMinimumSize();
         QueueSort();
     }

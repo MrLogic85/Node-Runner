@@ -27,7 +27,6 @@ public partial class UiPicker : PanelContainer
     [Signal]
     public delegate void StateChangedEventHandler(PickerState state);
 
-    private UiTokens _tokens = UiTokens.Neon;
     private string _labelText = "Fixed part";
     private PickerState _state = PickerState.Collapsed;
     private bool _disabled;
@@ -110,19 +109,17 @@ public partial class UiPicker : PanelContainer
         }
     }
 
-    public UiTokens Tokens
-    {
-        get => _tokens;
-        set
-        {
-            _tokens = value;
-            Rebuild();
-        }
-    }
-
     public override void _Ready()
     {
         Rebuild();
+    }
+
+    public override void _Notification(int what)
+    {
+        if (what == NotificationThemeChanged && IsNodeReady())
+        {
+            UiThemeRefresh.Guarded(this, Rebuild);
+        }
     }
 
     private void Rebuild()
@@ -141,16 +138,16 @@ public partial class UiPicker : PanelContainer
 
         AddThemeStyleboxOverride("panel", new StyleBoxEmpty());
         MouseFilter = MouseFilterEnum.Pass;
-        Modulate = Disabled ? UiTokens.MultiplyAlpha(Colors.White, 0.5f) : Colors.White;
+        Modulate = Disabled ? Colors.White.ScaleAlpha(0.5f) : Colors.White;
 
         var stack = new VBoxContainer
         {
             SizeFlagsHorizontal = SizeFlags.ShrinkBegin,
         };
-        stack.AddThemeConstantOverride("separation", (int)_tokens.Space1);
+        stack.AddThemeConstantOverride("separation", (int)UiSize.Space.S1);
         AddChild(stack);
 
-        stack.AddChild(UiFieldAndRows.Label(LabelText, _tokens, _tokens.OverlineText, _tokens.Muted));
+        stack.AddChild(UiFieldAndRows.Label(LabelText, UiTokens.Typography.Overline, UiTokens.Color.Muted));
         var closedRow = CreateClosedRow();
         stack.AddChild(closedRow);
 
@@ -159,14 +156,14 @@ public partial class UiPicker : PanelContainer
             var menu = CreateOptionsMenu();
             AddChild(menu);
             _openMenu = menu;
-            menu.Follow(closedRow, new Vector2(0, 1), new Vector2(0, _tokens.Space1));
+            menu.Follow(closedRow, new Vector2(0, 1), new Vector2(0, UiSize.Space.S1));
             menu.CallDeferred(CanvasItem.MethodName.Show);
         }
 
         if (!string.IsNullOrWhiteSpace(BelowText))
         {
-            var below = UiFieldAndRows.Label(BelowText, _tokens, _tokens.NoteText, _tokens.Muted);
-            below.CustomMinimumSize = new Vector2(0, _tokens.NoteText.LineHeight);
+            var below = UiFieldAndRows.Label(BelowText, UiTokens.Typography.Note, UiTokens.Color.Muted);
+            below.CustomMinimumSize = new Vector2(0, UiThemeLookup.FontSize(this, UiTokens.Typography.Note) + 3);
             below.ClipText = true;
             stack.AddChild(below);
         }
@@ -178,7 +175,7 @@ public partial class UiPicker : PanelContainer
         var rowButton = new Button
         {
             Disabled = IsLocked || Disabled || Options.Length == 0,
-            CustomMinimumSize = new Vector2(_tokens.SidePanelWidth, _tokens.ControlSmall),
+            CustomMinimumSize = new Vector2(UiLayout.SidePanelWidth, UiSize.Control.Small),
             SizeFlagsHorizontal = SizeFlags.ShrinkBegin,
             TooltipText = LabelText,
         };
@@ -192,8 +189,7 @@ public partial class UiPicker : PanelContainer
         {
             var border = new DashedBorderOverlay
             {
-                Tokens = _tokens,
-                Color = _tokens.Accent,
+                Color = UiThemeLookup.Color(this, UiTokens.Color.Accent),
             };
             border.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
             rowButton.AddChild(border);
@@ -204,8 +200,8 @@ public partial class UiPicker : PanelContainer
             MouseFilter = MouseFilterEnum.Ignore,
         };
         margin.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
-        margin.AddThemeConstantOverride("margin_left", (int)_tokens.Space2);
-        margin.AddThemeConstantOverride("margin_right", (int)_tokens.Space2);
+        margin.AddThemeConstantOverride("margin_left", (int)UiSize.Space.S2);
+        margin.AddThemeConstantOverride("margin_right", (int)UiSize.Space.S2);
         rowButton.AddChild(margin);
 
         var row = new HBoxContainer
@@ -213,7 +209,7 @@ public partial class UiPicker : PanelContainer
             MouseFilter = MouseFilterEnum.Ignore,
             Alignment = BoxContainer.AlignmentMode.Center,
         };
-        row.AddThemeConstantOverride("separation", (int)_tokens.Space2);
+        row.AddThemeConstantOverride("separation", (int)UiSize.Space.S2);
         margin.AddChild(row);
 
         var selected = SelectedOption;
@@ -222,7 +218,7 @@ public partial class UiPicker : PanelContainer
             row.AddChild(UiFieldAndRows.Icon(accessory, UiIconSize.Standard, ResolveIconTint(selected.Value, selected: true)));
         }
 
-        var value = UiFieldAndRows.Label(ValueText, _tokens, _tokens.SmallStrongText, ValueColor);
+        var value = UiFieldAndRows.Label(ValueText, UiTokens.Typography.SmallStrong, ValueColor);
         value.SizeFlagsHorizontal = SizeFlags.ExpandFill;
         row.AddChild(value);
         if (TrailingIcon is { } trailingIcon)
@@ -236,8 +232,7 @@ public partial class UiPicker : PanelContainer
     {
         var menu = new UiMenu
         {
-            Tokens = _tokens,
-            Width = _tokens.SidePanelWidth,
+            Width = UiLayout.SidePanelWidth,
             WidthMode = UiMenu.MenuWidthMode.Fixed,
             Compact = true,
             SizeFlagsHorizontal = SizeFlags.ShrinkBegin,
@@ -256,7 +251,6 @@ public partial class UiPicker : PanelContainer
         UiMenuItems.Populate(
             menu,
             items,
-            _tokens,
             showSelectedIndicator: true);
         menu.IndexClicked += index =>
         {
@@ -271,18 +265,17 @@ public partial class UiPicker : PanelContainer
 
     private StyleBoxFlat ClosedRowStyle(bool focused = false, bool disabled = false)
     {
-        var border = IsLocked ? Colors.Transparent : _tokens.LineStrong;
-        var style = _tokens.ControlStyle(
-            _tokens.PanelRaised,
+        var border = IsLocked ? Colors.Transparent : UiThemeLookup.Color(this, UiTokens.Color.LineStrong);
+        var style = UiThemeLookup.CreateStyleBox(UiThemeLookup.Color(this, UiTokens.Color.PanelRaised),
             border,
-            IsLocked ? 0 : _tokens.StrokeHair,
-            _tokens.RadiusMedium,
+            IsLocked ? 0 : UiSize.Stroke.Hair,
+            UiSize.Radius.Medium,
             horizontalPadding: 0,
             verticalPadding: 0);
 
         if (focused && !IsLocked && !Disabled)
         {
-            style.BorderColor = _tokens.Accent;
+            style.BorderColor = UiThemeLookup.Color(this, UiTokens.Color.Accent);
         }
 
         return style;
@@ -332,18 +325,16 @@ public partial class UiPicker : PanelContainer
     private bool IsLocked => State == PickerState.Locked;
 
     private Color ResolveIconTint(UiPickerOption option, bool selected) =>
-        option.IconTint ?? (selected ? _tokens.Halo : _tokens.Accent);
+        option.IconTint ?? (selected ? UiThemeLookup.Color(this, UiTokens.Color.Halo) : UiThemeLookup.Color(this, UiTokens.Color.Accent));
 
-    private Color ValueColor => IsLocked ? _tokens.Muted : _tokens.Ink;
+    private UiTokens.Color ValueColor => IsLocked ? UiTokens.Color.Muted : UiTokens.Color.Ink;
 
-    private Color TrailingColor => IsLocked ? _tokens.Muted : _tokens.Accent;
+    private Color TrailingColor => IsLocked ? UiThemeLookup.Color(this, UiTokens.Color.Muted) : UiThemeLookup.Color(this, UiTokens.Color.Accent);
 
     private UiIconId? TrailingIcon => IsLocked ? UiIconId.Lock : Disabled ? null : IsExpanded ? UiIconId.ChevronDown : UiIconId.ChevronRight;
 
     private sealed partial class DashedBorderOverlay : Control
     {
-        public UiTokens Tokens { get; init; } = UiTokens.Neon;
-
         public Color Color { get; init; } = Colors.White;
 
         public override void _Ready()
@@ -353,13 +344,13 @@ public partial class UiPicker : PanelContainer
 
         public override void _Draw()
         {
-            var halfStroke = Tokens.StrokeHair * 0.5f;
+            var halfStroke = UiSize.Stroke.Hair * 0.5f;
             var rect = new Rect2(
                 halfStroke,
                 halfStroke,
-                Mathf.Max(0, Size.X - Tokens.StrokeHair),
-                Mathf.Max(0, Size.Y - Tokens.StrokeHair));
-            UiDashedBorder.DrawRoundedRect(this, rect, Tokens.RadiusMedium, Color, Tokens.StrokeHair);
+                Mathf.Max(0, Size.X - UiSize.Stroke.Hair),
+                Mathf.Max(0, Size.Y - UiSize.Stroke.Hair));
+            UiDashedBorder.DrawRoundedRect(this, rect, UiSize.Radius.Medium, Color, UiSize.Stroke.Hair);
         }
     }
 }

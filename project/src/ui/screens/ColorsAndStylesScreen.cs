@@ -33,7 +33,7 @@ public partial class ColorsAndStylesScreen : Control
 
     public static IReadOnlyList<string> ColorTokenInventory { get; } =
         ["bg", "panel", "panel-raised", "line", "line-strong", "ink", "muted", "accent",
-         "edge", "accent-soft", "accent-glow", "on-accent", "halo", "danger", "scrim", "output"];
+         "edge", "on-accent", "halo", "danger", "scrim", "output"];
 
     public static IReadOnlyList<string> TextStyleInventory { get; } =
         _textStyles.Select(style => style.Name).ToArray();
@@ -50,20 +50,44 @@ public partial class ColorsAndStylesScreen : Control
     [Export]
     public bool ShowCloseAction { get; set; }
 
-    private readonly List<Action<UiTokens>> _tokenAppliers = new();
-    private readonly List<Action<UiTokens>> _labelAppliers = new();
-    private UiTokens _tokens = UiTokens.Neon;
-    private ColorRect? _background;
     private ScrollContainer? _scroll;
     private Control? _scrollContent;
+    private ColorRect _background = null!;
+    private readonly List<TextureRect> _iconSpecimens = [];
+    private readonly List<(PanelContainer Panel, float Radius)> _radiusSpecimens = [];
 
     public override void _Ready()
     {
         Name = nameof(ColorsAndStylesScreen);
         UiLayout.ApplyScreen(this);
         BuildLayout();
-        ApplyTokens(_tokens);
+        ApplyThemeColors();
         Callable.From(ResetScrollPosition).CallDeferred();
+    }
+
+    public override void _Notification(int what)
+    {
+        if (what == NotificationThemeChanged && IsNodeReady())
+        {
+            ApplyThemeColors();
+        }
+    }
+
+    /// <summary>Text restyles through its variation; only drawn fills are re-resolved here.</summary>
+    private void ApplyThemeColors()
+    {
+        _background.Color = UiThemeLookup.Color(this, UiTokens.Color.Background);
+        foreach (var glyph in _iconSpecimens)
+        {
+            glyph.SelfModulate = UiThemeLookup.Color(this, UiTokens.Color.Accent);
+        }
+
+        foreach (var (panel, radius) in _radiusSpecimens)
+        {
+            panel.AddThemeStyleboxOverride(
+                "panel",
+                UiThemeLookup.CreateStyleBox(UiThemeLookup.Color(this, UiTokens.Color.PanelRaised), UiThemeLookup.Color(this, UiTokens.Color.LineStrong), radius: radius));
+        }
     }
 
     private void ResetScrollPosition()
@@ -82,7 +106,7 @@ public partial class ColorsAndStylesScreen : Control
 
         var frame = new MarginContainer();
         frame.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
-        UiLayout.ApplyMargins(frame, _tokens);
+        UiLayout.ApplyMargins(frame);
         AddChild(frame);
 
         var shell = new VBoxContainer
@@ -90,7 +114,7 @@ public partial class ColorsAndStylesScreen : Control
             SizeFlagsHorizontal = SizeFlags.ExpandFill,
             SizeFlagsVertical = SizeFlags.ExpandFill,
         };
-        shell.AddThemeConstantOverride("separation", (int)_tokens.Space2);
+        shell.AddThemeConstantOverride("separation", (int)UiSize.Space.S2);
         frame.AddChild(shell);
         shell.AddChild(CreateHeader());
 
@@ -104,11 +128,11 @@ public partial class ColorsAndStylesScreen : Control
         shell.AddChild(_scroll);
 
         var content = new VBoxContainer { SizeFlagsHorizontal = SizeFlags.ExpandFill };
-        content.AddThemeConstantOverride("separation", (int)_tokens.Space5);
+        content.AddThemeConstantOverride("separation", (int)UiSize.Space.S5);
         _scroll.AddChild(content);
         _scrollContent = content;
-        content.AddChild(CreateColorsSection(UiTokens.Neon, "NEON LAB (DARK)"));
-        content.AddChild(CreateColorsSection(UiTokens.Paper, "PAPER (LIGHT)"));
+        content.AddChild(CreateColorsSection(UiThemes.Neon, "NEON LAB (DARK)"));
+        content.AddChild(CreateColorsSection(UiThemes.Paper, "PAPER (LIGHT)"));
         content.AddChild(CreateSurfacesSection());
         content.AddChild(CreateIconsSection());
         content.AddChild(CreateTextStylesSection());
@@ -123,51 +147,52 @@ public partial class ColorsAndStylesScreen : Control
             CustomMinimumSize = new Vector2(0, UiLayout.TopBarHeight),
             SizeFlagsHorizontal = SizeFlags.ExpandFill,
         };
-        header.AddThemeConstantOverride("separation", (int)_tokens.Space2);
-        var title = CreateLabel("Colors & Styles", _tokens.HeadingText, tokens => tokens.Ink);
+        header.AddThemeConstantOverride("separation", (int)UiSize.Space.S2);
+        var title = CreateLabel("Colors & Styles", UiTokens.Typography.Heading, UiTokens.Color.Ink);
         title.AutowrapMode = TextServer.AutowrapMode.Off;
         title.SizeFlagsHorizontal = SizeFlags.ExpandFill;
         header.AddChild(title);
 
         if (ShowCloseAction)
         {
-            var close = Track(new UiButton
+            var close = new UiButton
             {
                 ContentLayout = UiButtonContentLayout.Stacked,
                 IconId = UiIconId.Back,
                 TooltipText = "Back",
                 SizeFlagsVertical = SizeFlags.ShrinkCenter,
-            });
+            };
             close.Pressed += () => EmitSignal(SignalName.CloseRequested);
             header.AddChild(close);
         }
 
-        var switcher = Track(new UiSegmentedSwitch
+        var switcher = new UiSegmentedSwitch
         {
             Segments = [new() { Text = "Neon" }, new() { Text = "Paper" }],
             SelectedIndex = 0,
             SizeFlagsVertical = SizeFlags.ShrinkCenter,
-        });
-        switcher.SelectionChanged += index => ApplyTokens(index == 1 ? UiTokens.Paper : UiTokens.Neon);
+        };
+        switcher.SelectionChanged += index => ApplyTheme(index == 1 ? UiThemes.Paper : UiThemes.Neon);
         header.AddChild(switcher);
         return header;
     }
 
-    private Control CreateColorsSection(UiTokens paletteTokens, string title)
+    private Control CreateColorsSection(Godot.Theme theme, string title)
     {
+        var themeScope = new Control { Theme = theme };
         var content = new GridContainer
         {
             Columns = 2,
             SizeFlagsHorizontal = SizeFlags.ExpandFill,
         };
-        content.AddThemeConstantOverride("h_separation", UiSpacing.ControlGap(_tokens));
-        content.AddThemeConstantOverride("v_separation", UiSpacing.IconLabelGap(_tokens));
+        content.AddThemeConstantOverride("h_separation", UiSpacing.ControlGap);
+        content.AddThemeConstantOverride("v_separation", UiSpacing.IconLabelGap);
         foreach (var token in ColorTokenInventory)
         {
-            content.AddChild(CreatePaletteRow(token, ColorFor(paletteTokens, token), paletteTokens));
+            content.AddChild(CreatePaletteRow(token, themeScope));
         }
 
-        return WrapSection(title, content, paletteTokens);
+        return WrapSection(title, content, theme);
     }
 
     private Control CreateSurfacesSection()
@@ -186,21 +211,21 @@ public partial class ColorsAndStylesScreen : Control
     private Control CreateIconsSection()
     {
         var icons = new HBoxContainer();
-        icons.AddThemeConstantOverride("separation", (int)_tokens.Space2);
+        icons.AddThemeConstantOverride("separation", (int)UiSize.Space.S2);
         for (var index = 0; index < IconSizeInventory.Count; index++)
         {
             var size = index switch
             {
-                0 => _tokens.IconSmall,
-                1 => _tokens.Icon,
-                2 => _tokens.IconLarge,
-                _ => _tokens.IconExtraLarge,
+                0 => UiSize.Icon.Small,
+                1 => UiSize.Icon.Default,
+                2 => UiSize.Icon.Large,
+                _ => UiSize.Icon.ExtraLarge,
             };
             var item = new VBoxContainer
             {
-                CustomMinimumSize = new Vector2(_tokens.ColumnMediumWidth, 0),
+                CustomMinimumSize = new Vector2(UiLayout.ColumnMediumWidth, 0),
             };
-            item.AddThemeConstantOverride("separation", (int)_tokens.Space1);
+            item.AddThemeConstantOverride("separation", (int)UiSize.Space.S1);
             var iconSize = index switch
             {
                 0 => UiIconSize.Small,
@@ -208,20 +233,21 @@ public partial class ColorsAndStylesScreen : Control
                 2 => UiIconSize.Large,
                 _ => UiIconSize.ExtraLarge,
             };
-            var glyph = UiIcons.Create(UiIconId.Gear, iconSize, _tokens.Accent);
+            var glyph = UiIcons.Create(UiIconId.Gear, iconSize, Colors.White);
+            _iconSpecimens.Add(glyph);
             glyph.SizeFlagsHorizontal = SizeFlags.ShrinkCenter;
             item.AddChild(glyph);
             var name = CreateLabel(
                 IconSizeInventory[index],
-                _tokens.ReadoutMediumText,
-                tokens => tokens.Ink,
+                UiTokens.Typography.ReadoutMedium,
+                UiTokens.Color.Ink,
                 TextServer.AutowrapMode.Off);
             name.HorizontalAlignment = HorizontalAlignment.Center;
             item.AddChild(name);
             var sizeLabel = CreateLabel(
                 $"{size:0}px",
-                _tokens.NoteText,
-                tokens => tokens.Muted,
+                UiTokens.Typography.Note,
+                UiTokens.Color.Muted,
                 TextServer.AutowrapMode.Off);
             sizeLabel.HorizontalAlignment = HorizontalAlignment.Center;
             item.AddChild(sizeLabel);
@@ -237,27 +263,22 @@ public partial class ColorsAndStylesScreen : Control
         {
             var radius = index switch
             {
-                0 => _tokens.RadiusSmall,
-                1 => _tokens.RadiusMedium,
-                2 => _tokens.RadiusLarge,
-                _ => _tokens.RadiusPill,
+                0 => UiSize.Radius.Small,
+                1 => UiSize.Radius.Medium,
+                2 => UiSize.Radius.Large,
+                _ => UiSize.Radius.Pill,
             };
             var specimen = new PanelContainer
             {
-                CustomMinimumSize = new Vector2(_tokens.ColumnLargeWidth, _tokens.ControlHeight),
+                CustomMinimumSize = new Vector2(UiLayout.ColumnLargeWidth, UiSize.Control.Default),
                 TooltipText = RadiusInventory[index],
                 MouseFilter = MouseFilterEnum.Pass,
             };
-            specimen.AddThemeStyleboxOverride(
-                "panel",
-                _tokens.ControlStyle(_tokens.PanelRaised, _tokens.LineStrong, radius: radius));
-            _tokenAppliers.Add(tokens => specimen.AddThemeStyleboxOverride(
-                "panel",
-                tokens.ControlStyle(tokens.PanelRaised, tokens.LineStrong, radius: radius)));
+            _radiusSpecimens.Add((specimen, radius));
             var label = CreateLabel(
                 $"{RadiusInventory[index]} · {radius:0}",
-                _tokens.CaptionText,
-                tokens => tokens.Ink,
+                UiTokens.Typography.Caption,
+                UiTokens.Color.Ink,
                 TextServer.AutowrapMode.Off);
             label.HorizontalAlignment = HorizontalAlignment.Center;
             specimen.AddChild(label);
@@ -274,24 +295,24 @@ public partial class ColorsAndStylesScreen : Control
         {
             var row = new HBoxContainer
             {
-                CustomMinimumSize = new Vector2(0, _tokens.ControlSmall),
+                CustomMinimumSize = new Vector2(0, UiSize.Control.Small),
             };
-            row.AddThemeConstantOverride("separation", (int)_tokens.Space3);
+            row.AddThemeConstantOverride("separation", (int)UiSize.Space.S3);
             var nameLabel = CreateLabel(
                 name,
-                _tokens.ReadoutMediumText,
-                tokens => tokens.Ink,
+                UiTokens.Typography.ReadoutMedium,
+                UiTokens.Color.Ink,
                 TextServer.AutowrapMode.Off);
-            nameLabel.CustomMinimumSize = new Vector2(_tokens.ColumnLargeWidth, 0);
+            nameLabel.CustomMinimumSize = new Vector2(UiLayout.ColumnLargeWidth, 0);
             row.AddChild(nameLabel);
             var descriptionLabel = CreateLabel(
                 description,
-                _tokens.NoteText,
-                tokens => tokens.Muted,
+                UiTokens.Typography.Note,
+                UiTokens.Color.Muted,
                 TextServer.AutowrapMode.Off);
-            descriptionLabel.CustomMinimumSize = new Vector2(_tokens.SidePanelWidth, 0);
+            descriptionLabel.CustomMinimumSize = new Vector2(UiLayout.SidePanelWidth, 0);
             row.AddChild(descriptionLabel);
-            var preview = CreateLabel(sample, TextStyleFor(_tokens, name), tokens => tokens.Ink);
+            var preview = CreateLabel(sample, TextStyleFor(name), UiTokens.Color.Ink);
             preview.SizeFlagsHorizontal = SizeFlags.ExpandFill;
             row.AddChild(preview);
             content.AddChild(row);
@@ -301,37 +322,38 @@ public partial class ColorsAndStylesScreen : Control
 
     private Control CreateSurfaceSpecimen(string label, UiCard.CardVariant variant, bool glow = false)
     {
-        var panel = Track(new UiCard
+        var panel = new UiCard
         {
             Kind = variant,
             Glow = glow,
-            CustomMinimumSize = new Vector2(_tokens.ColumnLargeWidth, 0),
-        });
+            CustomMinimumSize = new Vector2(UiLayout.ColumnLargeWidth, 0),
+        };
         var margin = new MarginContainer();
-        margin.AddThemeConstantOverride("margin_left", (int)_tokens.Space3);
-        margin.AddThemeConstantOverride("margin_right", (int)_tokens.Space3);
-        margin.AddThemeConstantOverride("margin_top", (int)_tokens.Space2);
-        margin.AddThemeConstantOverride("margin_bottom", (int)_tokens.Space2);
+        margin.AddThemeConstantOverride("margin_left", (int)UiSize.Space.S3);
+        margin.AddThemeConstantOverride("margin_right", (int)UiSize.Space.S3);
+        margin.AddThemeConstantOverride("margin_top", (int)UiSize.Space.S2);
+        margin.AddThemeConstantOverride("margin_bottom", (int)UiSize.Space.S2);
         panel.AddChild(margin);
-        margin.AddChild(CreateLabel(label, _tokens.BodyText, tokens => tokens.Ink, TextServer.AutowrapMode.Off));
+        margin.AddChild(CreateLabel(label, UiTokens.Typography.Body, UiTokens.Color.Ink, TextServer.AutowrapMode.Off));
         return panel;
     }
 
-    private Control CreatePaletteRow(string name, Color color, UiTokens paletteTokens)
+    private Control CreatePaletteRow(string name, Control themeScope)
     {
+        var color = ColorFor(themeScope, name);
         var row = new HBoxContainer { SizeFlagsHorizontal = SizeFlags.ExpandFill };
-        row.AddThemeConstantOverride("separation", UiSpacing.IconLabelGap(_tokens));
+        row.AddThemeConstantOverride("separation", UiSpacing.IconLabelGap);
         var swatch = new ColorRect
         {
             Color = color,
-            CustomMinimumSize = new Vector2(_tokens.ControlExtraSmall, _tokens.ControlExtraSmall),
+            CustomMinimumSize = new Vector2(UiSize.Control.ExtraSmall, UiSize.Control.ExtraSmall),
             MouseFilter = MouseFilterEnum.Ignore,
         };
         row.AddChild(swatch);
         var label = CreateLabel(
             name,
-            _tokens.CaptionText,
-            _ => paletteTokens.Ink,
+            UiTokens.Typography.Caption,
+            UiTokens.Color.Ink,
             TextServer.AutowrapMode.Off);
         label.SizeFlagsHorizontal = SizeFlags.ExpandFill;
         row.AddChild(label);
@@ -341,40 +363,36 @@ public partial class ColorsAndStylesScreen : Control
     private HFlowContainer CreateFlow()
     {
         var flow = new HFlowContainer { SizeFlagsHorizontal = SizeFlags.ExpandFill };
-        flow.AddThemeConstantOverride("h_separation", UiSpacing.ControlGap(_tokens));
-        flow.AddThemeConstantOverride("v_separation", UiSpacing.ControlGap(_tokens));
+        flow.AddThemeConstantOverride("h_separation", UiSpacing.ControlGap);
+        flow.AddThemeConstantOverride("v_separation", UiSpacing.ControlGap);
         return flow;
     }
 
-    private Control WrapSection(string title, Control content, UiTokens? surfaceTokens = null)
+    private Control WrapSection(string title, Control content, Godot.Theme? surfaceTheme = null)
     {
         var panel = new UiCard
         {
             Kind = UiCard.CardVariant.Frame,
             SizeFlagsHorizontal = SizeFlags.ExpandFill,
         };
-        if (surfaceTokens is null)
+        if (surfaceTheme is not null)
         {
-            Track(panel);
-        }
-        else
-        {
-            panel.Tokens = surfaceTokens;
+            panel.Theme = surfaceTheme;
         }
 
         var margin = new MarginContainer();
         foreach (var side in new[] { "left", "top", "right", "bottom" })
         {
-            margin.AddThemeConstantOverride($"margin_{side}", (int)_tokens.Space3);
+            margin.AddThemeConstantOverride($"margin_{side}", (int)UiSize.Space.S3);
         }
         panel.AddChild(margin);
         var stack = new VBoxContainer();
-        stack.AddThemeConstantOverride("separation", (int)_tokens.Space2);
+        stack.AddThemeConstantOverride("separation", (int)UiSize.Space.S2);
         margin.AddChild(stack);
         stack.AddChild(CreateLabel(
             title,
-            _tokens.HeadingText,
-            tokens => surfaceTokens?.Accent ?? tokens.Accent,
+            UiTokens.Typography.Heading,
+            UiTokens.Color.Accent,
             TextServer.AutowrapMode.Off));
         stack.AddChild(content);
         return panel;
@@ -382,62 +400,19 @@ public partial class ColorsAndStylesScreen : Control
 
     private Label CreateLabel(
         string text,
-        UiTokens.TextStyle textStyle,
-        Func<UiTokens, Color> colorForTokens,
+        UiTokens.Typography textStyle,
+        UiTokens.Color colorToken,
         TextServer.AutowrapMode autowrap = TextServer.AutowrapMode.WordSmart)
     {
         var label = new Label { Text = text, AutowrapMode = autowrap, MouseFilter = MouseFilterEnum.Ignore };
-        _tokens.ApplyTextStyle(label, textStyle);
-        label.AddThemeColorOverride("font_color", colorForTokens(_tokens));
-        _labelAppliers.Add(tokens =>
-        {
-            tokens.ApplyTextStyle(label, textStyle);
-            label.AddThemeColorOverride("font_color", colorForTokens(tokens));
-        });
+        UiThemeLookup.ApplyTextStyle(label, textStyle, colorToken);
         return label;
     }
 
-    private T Track<T>(T control)
-        where T : Control
+
+    private void ApplyTheme(Godot.Theme theme)
     {
-        SetTokens(control, _tokens);
-        _tokenAppliers.Add(tokens => SetTokens(control, tokens));
-        return control;
-    }
-
-    private static void SetTokens(Control control, UiTokens tokens)
-    {
-        switch (control)
-        {
-            case UiButton button:
-                button.Tokens = tokens;
-                break;
-            case UiSegmentedSwitch segmentedSwitch:
-                segmentedSwitch.Tokens = tokens;
-                break;
-            case UiCard panel:
-                panel.Tokens = tokens;
-                break;
-        }
-    }
-
-    private void ApplyTokens(UiTokens tokens)
-    {
-        _tokens = tokens;
-        if (_background is not null)
-        {
-            _background.Color = tokens.Background;
-        }
-
-        foreach (var apply in _tokenAppliers)
-        {
-            apply(tokens);
-        }
-
-        foreach (var apply in _labelAppliers)
-        {
-            apply(tokens);
-        }
+        Theme = theme;
 
         if (_scrollContent is not null)
         {
@@ -445,48 +420,46 @@ public partial class ColorsAndStylesScreen : Control
         }
     }
 
-    private static UiTokens.TextStyle TextStyleFor(UiTokens tokens, string name) =>
+    private static UiTokens.Typography TextStyleFor(string name) =>
         name switch
         {
-            "title" => tokens.TitleText,
-            "heading" => tokens.HeadingText,
-            "subheading" => tokens.SubheadingText,
-            "stage" => tokens.StageText,
-            "body" => tokens.BodyText,
-            "body-strong" => tokens.BodyStrongText,
-            "small" => tokens.SmallText,
-            "small-strong" => tokens.SmallStrongText,
-            "label" => tokens.LabelText,
-            "note" => tokens.NoteText,
-            "note-strong" => tokens.NoteStrongText,
-            "caption" => tokens.CaptionText,
-            "overline" => tokens.OverlineText,
-            "readout-lg" => tokens.ReadoutLargeText,
-            "readout" => tokens.ReadoutText,
-            "readout-md" => tokens.ReadoutMediumText,
-            "readout-sm" => tokens.ReadoutSmallText,
+            "title" => UiTokens.Typography.Title,
+            "heading" => UiTokens.Typography.Heading,
+            "subheading" => UiTokens.Typography.Subheading,
+            "stage" => UiTokens.Typography.Stage,
+            "body" => UiTokens.Typography.Body,
+            "body-strong" => UiTokens.Typography.BodyStrong,
+            "small" => UiTokens.Typography.Small,
+            "small-strong" => UiTokens.Typography.SmallStrong,
+            "label" => UiTokens.Typography.Label,
+            "note" => UiTokens.Typography.Note,
+            "note-strong" => UiTokens.Typography.NoteStrong,
+            "caption" => UiTokens.Typography.Caption,
+            "overline" => UiTokens.Typography.Overline,
+            "readout-lg" => UiTokens.Typography.ReadoutLarge,
+            "readout" => UiTokens.Typography.Readout,
+            "readout-md" => UiTokens.Typography.ReadoutMedium,
+            "readout-sm" => UiTokens.Typography.ReadoutSmall,
             _ => throw new ArgumentOutOfRangeException(nameof(name), name, null),
         };
 
-    private static Color ColorFor(UiTokens tokens, string name) =>
+    private static Color ColorFor(Control owner, string name) =>
         name switch
         {
-            "bg" => tokens.Background,
-            "panel" => tokens.Panel,
-            "panel-raised" => tokens.PanelRaised,
-            "line" => tokens.Line,
-            "line-strong" => tokens.LineStrong,
-            "ink" => tokens.Ink,
-            "muted" => tokens.Muted,
-            "accent" => tokens.Accent,
-            "edge" => tokens.Edge,
-            "accent-soft" => tokens.AccentSoft,
-            "accent-glow" => tokens.AccentGlow,
-            "on-accent" => tokens.OnAccent,
-            "halo" => tokens.Halo,
-            "danger" => tokens.Danger,
-            "scrim" => tokens.Scrim,
-            "output" => tokens.Output,
+            "bg" => UiThemeLookup.Color(owner, UiTokens.Color.Background),
+            "panel" => UiThemeLookup.Color(owner, UiTokens.Color.Panel),
+            "panel-raised" => UiThemeLookup.Color(owner, UiTokens.Color.PanelRaised),
+            "line" => UiThemeLookup.Color(owner, UiTokens.Color.Line),
+            "line-strong" => UiThemeLookup.Color(owner, UiTokens.Color.LineStrong),
+            "ink" => UiThemeLookup.Color(owner, UiTokens.Color.Ink),
+            "muted" => UiThemeLookup.Color(owner, UiTokens.Color.Muted),
+            "accent" => UiThemeLookup.Color(owner, UiTokens.Color.Accent),
+            "edge" => UiThemeLookup.Color(owner, UiTokens.Color.Edge),
+            "on-accent" => UiThemeLookup.Color(owner, UiTokens.Color.OnAccent),
+            "halo" => UiThemeLookup.Color(owner, UiTokens.Color.Halo),
+            "danger" => UiThemeLookup.Color(owner, UiTokens.Color.Danger),
+            "scrim" => UiThemeLookup.Color(owner, UiTokens.Color.Scrim),
+            "output" => UiThemeLookup.Color(owner, UiTokens.Color.Output),
             _ => throw new ArgumentOutOfRangeException(nameof(name), name, null),
         };
 

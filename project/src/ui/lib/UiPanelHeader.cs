@@ -8,7 +8,6 @@ public partial class UiPanelHeader : HBoxContainer
     [Signal]
     public delegate void ActionSelectedEventHandler(string actionId);
 
-    private UiTokens _tokens = UiTokens.Neon;
     private PanelAction[]? _pendingActions;
     private PanelAction[] _actionItems = [];
     private string[] _actions = ["close"];
@@ -60,22 +59,20 @@ public partial class UiPanelHeader : HBoxContainer
         }
     }
 
-    public UiTokens Tokens
-    {
-        get => _tokens;
-        set
-        {
-            _tokens = value;
-            Rebuild();
-        }
-    }
-
     public override void _Ready()
     {
         MouseFilter = MouseFilterEnum.Pass;
         _actionItems = _pendingActions ?? CreateActionsFromGlyphs();
         _pendingActions = null;
         Rebuild();
+    }
+
+    public override void _Notification(int what)
+    {
+        if (what == NotificationThemeChanged && IsNodeReady())
+        {
+            UiThemeRefresh.Guarded(this, Rebuild);
+        }
     }
 
     public void SetActions(params PanelAction[] actions)
@@ -104,21 +101,20 @@ public partial class UiPanelHeader : HBoxContainer
             child.QueueFree();
         }
 
-        CustomMinimumSize = new Vector2(0, _tokens.ControlSmall);
-        AddThemeConstantOverride("separation", (int)_tokens.Space1);
+        CustomMinimumSize = new Vector2(0, UiSize.Control.Small);
+        AddThemeConstantOverride("separation", (int)UiSize.Space.S1);
         if (!string.IsNullOrWhiteSpace(Glyph))
         {
-            AddChild(UiFieldAndRows.Icon(GlyphIconId, UiIconSize.Standard, _tokens.Ink));
+            AddChild(UiFieldAndRows.Icon(GlyphIconId, UiIconSize.Standard, UiThemeLookup.Color(this, UiTokens.Color.Ink)));
         }
 
-        var title = UiFieldAndRows.Label(Title, _tokens, _tokens.SubheadingText, _tokens.Ink);
+        var title = UiFieldAndRows.Label(Title, UiTokens.Typography.Subheading, UiTokens.Color.Ink);
         title.SizeFlagsHorizontal = SizeFlags.ExpandFill;
         AddChild(title);
         foreach (var action in _actionItems.Take(2))
         {
             var button = new UiButton
             {
-                Tokens = _tokens,
                 Style = UiButtonStyle.Flat,
                 ContentLayout = UiButtonContentLayout.RowCompact,
                 IconId = action.IconId,

@@ -237,74 +237,67 @@ public sealed class UiComponentContractsTests
     [Fact]
     public void Defaults_MatchReferenceTouchAndCompletionContracts()
     {
-        UiTokens.Neon.TouchTarget.ShouldBe(48);
-        UiTokens.Neon.NumberDiameter.ShouldBe(16);
-        UiTokens.Neon.NumberStrokeWidth.ShouldBe(1.5f);
+        UiSize.Control.Touch.ShouldBe(48);
+        UiSize.Widget.NumberDiameter.ShouldBe(16);
+        UiSize.Stroke.Number.ShouldBe(1.5f);
         UiComponentContracts.HoldCompletionSeconds.ShouldBe(0.8f);
         UiComponentContracts.ButtonProgressOpacity.ShouldBe(0.5f);
         UiGlow.Extent.ShouldBe(10);
         UiGlow.Opacity.ShouldBe(0.12f);
-        var sliderStyle = UiSliderStyle.From(UiTokens.Neon);
-        sliderStyle.ThumbRadius.ShouldBe(9);
-        sliderStyle.TrackWidth.ShouldBe(4);
+        UiSliderStyle.Default.ShouldBe(new UiSliderStyle(
+            UiSize.Widget.SliderThumbDiameter * 0.5f,
+            UiSize.Widget.SliderTrackWidth,
+            UiSize.Widget.SliderMarkerHeight * 0.5f,
+            UiSize.Widget.SliderStepTickHeight * 0.5f,
+            UiSize.Widget.SliderDisabledDashLength,
+            UiSize.Stroke.Hair,
+            UiSize.Widget.SliderSteppedHeight));
         UiSliderStyle.DisabledOpacity.ShouldBe(0.5f);
     }
 
     [Fact]
     public void MenuWidthResolution_PreservesFixedDefaultAndWrapContracts()
     {
-        var tokens = UiTokens.Neon;
-
-        UiMenu.ResolveWidth(UiMenu.MenuWidthMode.Fixed, 0, tokens)
-            .ShouldBe(tokens.MenuWidth);
-        UiMenu.ResolveWidth(UiMenu.MenuWidthMode.Fixed, 220, tokens)
+        UiMenu.ResolveWidth(UiMenu.MenuWidthMode.Fixed, 0, UiLayout.MenuWidth)
+            .ShouldBe(UiLayout.MenuWidth);
+        UiMenu.ResolveWidth(UiMenu.MenuWidthMode.Fixed, 220, UiLayout.MenuWidth)
             .ShouldBe(220);
-        UiMenu.ResolveWidth(UiMenu.MenuWidthMode.WrapContent, 220, tokens)
+        UiMenu.ResolveWidth(UiMenu.MenuWidthMode.WrapContent, 220, UiLayout.MenuWidth)
             .ShouldBe(0);
     }
 
     [Fact]
-    public void SliderStyle_ResolvesScalableGeometryFromTokens()
+    public void SliderGeometry_MatchesTheComponentContract()
     {
-        var tokens = new UiTokens
-        {
-            SliderThumbDiameter = 36,
-            SliderTrackWidth = 8,
-            SliderMarkerHeight = 32,
-            SliderStepTickHeight = 20,
-            SliderDisabledDashLength = 8,
-            SliderSteppedHeight = 120,
-            StrokeHair = 2,
-        };
-
-        UiSliderStyle.From(tokens).ShouldBe(new UiSliderStyle(
-            ThumbRadius: 18,
-            TrackWidth: 8,
-            MarkerHalfHeight: 16,
-            StepTickHalfHeight: 10,
-            DisabledDashLength: 8,
-            DisabledThumbInset: 2,
-            SteppedHeight: 120));
+        UiSize.Widget.SliderThumbDiameter.ShouldBe(18);
+        UiSize.Widget.SliderTrackWidth.ShouldBe(4);
+        UiSize.Widget.SliderMarkerHeight.ShouldBe(16);
+        UiSize.Widget.SliderStepTickHeight.ShouldBe(10);
+        UiSize.Widget.SliderDisabledDashLength.ShouldBe(4);
+        UiSize.Widget.SliderSteppedHeight.ShouldBe(60);
     }
 
     [Fact]
     public void SliderMinimumHeight_ComposesOnlyVisibleLabelRows()
     {
-        var tokens = UiTokens.Neon;
-        var style = UiSliderStyle.From(tokens);
-        var trackOnly = UiSlider.CalculateMinimumHeight(style, tokens, hasValueLabelRow: false, hasStepLabelRow: false, hasMarkerBelowRow: false);
-        var withValueLabels = UiSlider.CalculateMinimumHeight(style, tokens, hasValueLabelRow: true, hasStepLabelRow: false, hasMarkerBelowRow: false);
-        var withStepLabels = UiSlider.CalculateMinimumHeight(style, tokens, hasValueLabelRow: true, hasStepLabelRow: true, hasMarkerBelowRow: false);
-        var withMarkerBelow = UiSlider.CalculateMinimumHeight(style, tokens, hasValueLabelRow: true, hasStepLabelRow: false, hasMarkerBelowRow: true);
+        var style = new UiSliderStyle(9, 4, 9, 5, 8, 1, 80);
+        const float lineHeight = 13;
+        var space3 = UiSize.Space.S3;
+        var space2 = UiSize.Space.S2;
+        const float stepLineHeight = 13;
+        var trackOnly = UiSlider.CalculateMinimumHeight(style, lineHeight, space3, space2, stepLineHeight, false, false, false);
+        var withValueLabels = UiSlider.CalculateMinimumHeight(style, lineHeight, space3, space2, stepLineHeight, true, false, false);
+        var withStepLabels = UiSlider.CalculateMinimumHeight(style, lineHeight, space3, space2, stepLineHeight, true, true, false);
+        var withMarkerBelow = UiSlider.CalculateMinimumHeight(style, lineHeight, space3, space2, stepLineHeight, true, false, true);
 
         trackOnly.ShouldBe(style.ThumbRadius * 2);
-        withValueLabels.ShouldBe(tokens.OverlineText.LineHeight + tokens.Space3 + style.ThumbRadius);
-        withStepLabels.ShouldBe(tokens.OverlineText.LineHeight + tokens.Space3 + tokens.Space2 + tokens.ReadoutSmallText.LineHeight);
+        withValueLabels.ShouldBe(lineHeight + UiSize.Space.S3 + style.ThumbRadius);
+        withStepLabels.ShouldBe(lineHeight + UiSize.Space.S3 + UiSize.Space.S2 + stepLineHeight);
         withMarkerBelow.ShouldBe(withStepLabels);
-        UiSlider.CalculateMinimumHeight(style, tokens, false, true, false)
-            .ShouldBe(style.ThumbRadius + tokens.Space2 + tokens.ReadoutSmallText.LineHeight);
-        UiSlider.CalculateMinimumHeight(style, tokens, false, false, true)
-            .ShouldBe(style.ThumbRadius + tokens.Space2 + tokens.ReadoutSmallText.LineHeight);
+        UiSlider.CalculateMinimumHeight(style, lineHeight, space3, space2, stepLineHeight, false, true, false)
+            .ShouldBe(style.ThumbRadius + UiSize.Space.S2 + stepLineHeight);
+        UiSlider.CalculateMinimumHeight(style, lineHeight, space3, space2, stepLineHeight, false, false, true)
+            .ShouldBe(style.ThumbRadius + UiSize.Space.S2 + stepLineHeight);
     }
 
     [Theory]

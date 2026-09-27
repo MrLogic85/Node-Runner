@@ -5,7 +5,6 @@ namespace NodeRunner.Ui.Widgets;
 
 public partial class DuplicateCreationSheet : Control
 {
-    private UiTokens _tokens = UiTokens.Neon;
     private UiSheet? _sheet;
     private string _creationName = string.Empty;
 
@@ -17,19 +16,6 @@ public partial class DuplicateCreationSheet : Control
 
     [Signal]
     public delegate void CancelRequestedEventHandler();
-
-    public UiTokens Tokens
-    {
-        get => _tokens;
-        set
-        {
-            _tokens = value;
-            if (IsInsideTree())
-            {
-                Rebuild();
-            }
-        }
-    }
 
     public override void _Ready()
     {
@@ -71,7 +57,6 @@ public partial class DuplicateCreationSheet : Control
 
         _sheet = new UiSheet
         {
-            Tokens = _tokens,
             Title = "Duplicate Creation",
             SizeFlagsHorizontal = SizeFlags.ExpandFill,
         };
@@ -86,9 +71,9 @@ public partial class DuplicateCreationSheet : Control
         stack.AddChild(CreateLabel(
             $"Duplicate {_creationName}? Copy brain keeps trained progress. Start fresh keeps the body and creates an untrained copy.",
             16,
-            _tokens.Ink));
+            UiThemeLookup.Color(this, UiTokens.Color.Ink)));
 
-        var defaultLabel = CreateLabel("Copy brain is selected by default.", 14, _tokens.Accent);
+        var defaultLabel = CreateLabel("Copy brain is selected by default.", 14, UiThemeLookup.Color(this, UiTokens.Color.Accent));
         stack.AddChild(defaultLabel);
 
         var actions = new VBoxContainer();
@@ -123,10 +108,9 @@ public partial class DuplicateCreationSheet : Control
     private UiButton CreateButton(string text, UiButtonKind kind) =>
         new()
         {
-            Tokens = _tokens,
-            LabelText = text,
+            Text = text,
             Kind = kind,
             SizeFlagsHorizontal = SizeFlags.ExpandFill,
-            CustomMinimumSize = new Vector2(0, _tokens.TouchTarget),
+            CustomMinimumSize = new Vector2(0, UiSize.Control.Touch),
         };
 }

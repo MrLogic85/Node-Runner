@@ -76,16 +76,6 @@ public partial class UiStageCard : UiCard
         }
     }
 
-    public override UiTokens Tokens
-    {
-        get => base.Tokens;
-        set
-        {
-            base.Tokens = value;
-            ApplyTokens();
-        }
-    }
-
     public override void _Ready()
     {
         MouseFilter = MouseFilterEnum.Pass;
@@ -102,7 +92,7 @@ public partial class UiStageCard : UiCard
         ApplyTitle();
         ApplyNote();
         ApplyCollapsed();
-        ApplyTokens();
+        ApplyThemeStyles();
     }
 
     public override void _GuiInput(InputEvent @event)
@@ -131,7 +121,6 @@ public partial class UiStageCard : UiCard
         foreach (var child in body)
         {
             child.SizeFlagsHorizontal = SizeFlags.ExpandFill;
-            UiTokenApplier.Apply(child, Tokens);
             _body.AddChild(child);
         }
     }
@@ -182,21 +171,23 @@ public partial class UiStageCard : UiCard
         _body.Visible = !Collapsed;
     }
 
-    private void ApplyTokens()
+    public override void _Notification(int what)
+    {
+        base._Notification(what);
+        if (what == NotificationThemeChanged && IsNodeReady())
+        {
+            UiThemeRefresh.Guarded(this, ApplyThemeStyles);
+        }
+    }
+
+    private void ApplyThemeStyles()
     {
         if (!_ready)
         {
             return;
         }
 
-        _number.Tokens = Tokens;
-        Tokens.ApplyTextStyle(_titleLabel, Tokens.StageText);
-        _titleLabel.AddThemeColorOverride("font_color", Tokens.Ink);
-        Tokens.ApplyTextStyle(_noteLabel, Tokens.CaptionText);
-        _noteLabel.AddThemeColorOverride("font_color", Tokens.Muted);
-        foreach (var child in _body.GetChildren().OfType<Control>())
-        {
-            UiTokenApplier.Apply(child, Tokens);
-        }
+        UiThemeLookup.ApplyTextStyle(_titleLabel, UiTokens.Typography.Stage, UiTokens.Color.Ink);
+        UiThemeLookup.ApplyTextStyle(_noteLabel, UiTokens.Typography.Caption, UiTokens.Color.Muted);
     }
 }

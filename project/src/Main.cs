@@ -303,7 +303,7 @@ public partial class Main : Node2D
         _buildModeBackdrop = new ColorRect
         {
             Name = "BuildModeBackdrop",
-            Color = UiTokens.Neon.Background,
+            Color = UiThemes.Color(UiThemes.Neon, UiTokens.Color.Background),
             MouseFilter = Control.MouseFilterEnum.Ignore,
             Visible = Construction.IsActive,
         };
@@ -589,7 +589,6 @@ public partial class Main : Node2D
         _simulateScreen = new SimulateScreen
         {
             Name = "LiveSimulateScreen",
-            Tokens = UiTokens.Neon,
             Hosted = true,
             ShowTopBar = true,
             ShowArenaPlaceholder = false,
@@ -628,7 +627,6 @@ public partial class Main : Node2D
         _buildScreen = new BuildScreen
         {
             Name = "LiveBuildScreen",
-            Tokens = UiTokens.Neon,
             Hosted = true,
             ShowCanvasPreview = false,
             Presentation = ConstructionPresentation,
@@ -703,7 +701,6 @@ public partial class Main : Node2D
         _brainFocusSheet = new UiSheet
         {
             Name = "BrainFocusSheet",
-            Tokens = UiTokens.Neon,
             Title = "BrainFocus · Decides",
             CustomMinimumSize = new Vector2(540, 0),
         };
@@ -741,7 +738,6 @@ public partial class Main : Node2D
 
         stack.AddChild(new BrainFocusNetworkView
         {
-            Tokens = UiTokens.Neon,
             ViewModel = _brainFocus,
             CustomMinimumSize = new Vector2(500, 220),
             MouseFilter = Control.MouseFilterEnum.Stop,
@@ -755,9 +751,8 @@ public partial class Main : Node2D
 
         var close = new UiButton
         {
-            Tokens = UiTokens.Neon,
             Kind = UiButtonKind.Primary,
-            LabelText = "Back to SignalFlow",
+            Text = "Back to SignalFlow",
         };
         close.Pressed += HideBrainFocus;
         stack.AddChild(close);
@@ -902,7 +897,6 @@ public partial class Main : Node2D
         var saveManager = GetNode<SaveManager>("/root/SaveManager");
         _creationsScreen = new CreationsScreen
         {
-            Tokens = UiTokens.Neon,
             ShowComponentLibraryLink = ShouldShowComponentLibraryLink(),
             Visible = true,
         };
@@ -1037,11 +1031,13 @@ public partial class Main : Node2D
         _deleteCreationToast = new UiToast
         {
             Name = "DeleteCreationToast",
-            Tokens = UiTokens.Neon,
             CustomMinimumSize = new Vector2(420, _touchTargetHeight),
-            Position = new Vector2(UiSpacing.ScreenEdgeInset(UiTokens.Neon) * 2, UiLayout.CanvasHeight - _touchTargetHeight - (UiSpacing.ScreenEdgeInset(UiTokens.Neon) * 2)),
             ProcessMode = ProcessModeEnum.Always,
         };
+        var screenEdgeInset = UiSpacing.ScreenEdgeInset;
+        _deleteCreationToast.Position = new Vector2(
+            screenEdgeInset * 2,
+            UiLayout.CanvasHeight - _touchTargetHeight - (screenEdgeInset * 2));
         _deleteCreationToast.UndoPressed += RestoreDeletedCreationFromToast;
         overlayLayer.AddChild(_deleteCreationToast);
     }
@@ -1051,7 +1047,6 @@ public partial class Main : Node2D
         _duplicateCreationSheet = new DuplicateCreationSheet
         {
             Name = "DuplicateCreationSheet",
-            Tokens = UiTokens.Neon,
             ProcessMode = ProcessModeEnum.Always,
         };
         _duplicateCreationSheet.CopyBrainRequested += () => ConfirmDuplicateCreationFromScreen(CreationDuplicateMode.CopyTraining);

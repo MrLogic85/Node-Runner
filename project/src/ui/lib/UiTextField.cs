@@ -20,7 +20,6 @@ public partial class UiTextField : VBoxContainer, ISerializationListener
         Error,
     }
 
-    private UiTokens _tokens = UiTokens.Neon;
     private Label? _label;
     private LineEdit? _editor;
     private TextureRect? _stateIcon;
@@ -126,16 +125,6 @@ public partial class UiTextField : VBoxContainer, ISerializationListener
     [Signal]
     public delegate void StateChangedEventHandler(long state);
 
-    public UiTokens Tokens
-    {
-        get => _tokens;
-        set
-        {
-            _tokens = value;
-            Refresh();
-        }
-    }
-
     public override void _EnterTree() => RequestReady();
 
     public override void _Ready()
@@ -143,9 +132,17 @@ public partial class UiTextField : VBoxContainer, ISerializationListener
         InitializeContent();
     }
 
+    public override void _Notification(int what)
+    {
+        if (what == NotificationThemeChanged && IsNodeReady())
+        {
+            UiThemeRefresh.Guarded(this, Refresh);
+        }
+    }
+
     private void InitializeContent()
     {
-        AddThemeConstantOverride("separation", (int)_tokens.Space1);
+        AddThemeConstantOverride("separation", (int)UiSize.Space.S1);
         RecoverContent();
         EnsureContent();
         Refresh();
@@ -171,7 +168,7 @@ public partial class UiTextField : VBoxContainer, ISerializationListener
     {
         if (_label is null)
         {
-            _label = UiFieldAndRows.Label(string.Empty, _tokens, _tokens.OverlineText, _tokens.Muted);
+            _label = UiFieldAndRows.Label(string.Empty, UiTokens.Typography.Overline, UiTokens.Color.Muted);
             _label.Name = "Label";
             AddChild(_label, false, InternalMode.Front);
         }
@@ -195,7 +192,7 @@ public partial class UiTextField : VBoxContainer, ISerializationListener
 
         if (_errorLabel is null)
         {
-            _errorLabel = UiFieldAndRows.Label(string.Empty, _tokens, _tokens.NoteText, _tokens.Danger);
+            _errorLabel = UiFieldAndRows.Label(string.Empty, UiTokens.Typography.Note, UiTokens.Color.Danger);
             _errorLabel.Name = "ErrorLabel";
             AddChild(_errorLabel, false, InternalMode.Front);
         }
@@ -307,22 +304,21 @@ public partial class UiTextField : VBoxContainer, ISerializationListener
             return;
         }
 
-        AddThemeConstantOverride("separation", (int)_tokens.Space1);
+        AddThemeConstantOverride("separation", (int)UiSize.Space.S1);
 
         if (_label is not null)
         {
             _label.Text = LabelText;
             _label.Visible = !string.IsNullOrWhiteSpace(LabelText);
-            _tokens.ApplyTextStyle(_label, _tokens.OverlineText);
-            _label.AddThemeColorOverride("font_color", _tokens.Muted);
+            UiThemeLookup.ApplyTextStyle(_label, UiTokens.Typography.Overline, UiTokens.Color.Muted);
         }
 
-        var visibleHeight = InputSize == TextInputSize.Compact ? _tokens.ControlSmall : _tokens.ControlHeight;
+        var visibleHeight = InputSize == TextInputSize.Compact ? UiSize.Control.Small : UiSize.Control.Default;
         var border = State switch
         {
-            TextInputState.Error => _tokens.Danger,
-            TextInputState.Editing => _tokens.Accent,
-            _ => _tokens.LineStrong,
+            TextInputState.Error => UiThemeLookup.Color(this, UiTokens.Color.Danger),
+            TextInputState.Editing => UiThemeLookup.Color(this, UiTokens.Color.Accent),
+            _ => UiThemeLookup.Color(this, UiTokens.Color.LineStrong),
         };
         if (_editor is not null)
         {
@@ -333,21 +329,19 @@ public partial class UiTextField : VBoxContainer, ISerializationListener
 
             _editor.PlaceholderText = PlaceholderText;
             _editor.CustomMinimumSize = new Vector2(0, visibleHeight);
-            _tokens.ApplyTextStyle(_editor, InputSize == TextInputSize.Compact ? _tokens.BodyStrongText : _tokens.HeadingText);
-            _editor.AddThemeColorOverride("font_color", State == TextInputState.Error ? _tokens.Danger : _tokens.Ink);
-            _editor.AddThemeColorOverride("font_placeholder_color", _tokens.Muted);
-            _editor.AddThemeColorOverride("caret_color", _tokens.Accent);
-            var style = _tokens.ControlStyle(
-                _tokens.PanelRaised,
+            UiThemeLookup.ApplyTypography(_editor, InputSize == TextInputSize.Compact ? UiTokens.Typography.BodyStrong : UiTokens.Typography.Heading);
+            _editor.AddThemeColorOverride("font_color", State == TextInputState.Error ? UiThemeLookup.Color(this, UiTokens.Color.Danger) : UiThemeLookup.Color(this, UiTokens.Color.Ink));
+            _editor.AddThemeColorOverride("font_placeholder_color", UiThemeLookup.Color(this, UiTokens.Color.Muted));
+            _editor.AddThemeColorOverride("caret_color", UiThemeLookup.Color(this, UiTokens.Color.Accent));
+            var style = UiThemeLookup.CreateStyleBox(UiThemeLookup.Color(this, UiTokens.Color.PanelRaised),
                 border,
-                State == TextInputState.Rest ? _tokens.StrokeHair : _tokens.StrokeSignal,
-                horizontalPadding: _tokens.Space2,
+                State == TextInputState.Rest ? UiSize.Stroke.Hair : UiSize.Stroke.Signal,
+                horizontalPadding: UiSize.Space.S2,
                 verticalPadding: 0);
-            style.ContentMarginRight = _tokens.Space2 + _tokens.Icon + _tokens.Space2;
+            style.ContentMarginRight = UiSize.Space.S2 + UiSize.Icon.Default + UiSize.Space.S2;
             if (State == TextInputState.Editing)
             {
-                style.ShadowColor = _tokens.EffectsEnabled ? _tokens.AccentSoft : Colors.Transparent;
-                style.ShadowSize = _tokens.EffectsEnabled ? 3 : 0;
+                UiGlow.ApplyToControl(style, UiThemeLookup.Color(this, UiTokens.Color.Accent), UiThemeLookup.EffectsEnabled(this));
             }
 
             _editor.AddThemeStyleboxOverride("normal", style);
@@ -362,8 +356,7 @@ public partial class UiTextField : VBoxContainer, ISerializationListener
         {
             _errorLabel.Text = ErrorText;
             _errorLabel.Visible = State == TextInputState.Error && !string.IsNullOrWhiteSpace(ErrorText);
-            _tokens.ApplyTextStyle(_errorLabel, _tokens.NoteText);
-            _errorLabel.AddThemeColorOverride("font_color", _tokens.Danger);
+            UiThemeLookup.ApplyTextStyle(_errorLabel, UiTokens.Typography.Note, UiTokens.Color.Danger);
         }
     }
 
@@ -394,7 +387,7 @@ public partial class UiTextField : VBoxContainer, ISerializationListener
 
         var iconSize = _stateIcon.CustomMinimumSize;
         _stateIcon.Position = new Vector2(
-            _editor.Size.X - _tokens.Space2 - iconSize.X,
+            _editor.Size.X - UiSize.Space.S2 - iconSize.X,
             (_editor.Size.Y - iconSize.Y) * 0.5f);
         _stateIcon.Size = iconSize;
     }

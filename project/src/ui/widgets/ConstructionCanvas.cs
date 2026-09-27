@@ -133,7 +133,10 @@ public partial class ConstructionCanvas : Node2D
                 DrawCircle(position, (float)node.Radius * 1.7f, Theme.SelectionGlow);
             }
 
-            DrawCircle(position, (float)node.Radius * 1.18f, Theme.NodeGlow);
+            DrawCircle(
+                position,
+                (float)node.Radius * 1.18f,
+                UiGlow.FromBase(Theme.GroundEdge, Theme.EffectsEnabled));
             DrawCircle(position, (float)node.Radius, Theme.NodeFill);
         }
 

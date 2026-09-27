@@ -52,11 +52,6 @@ spacing_bottom = 1
 [sub_resource type="FontVariation" id="FontVariation_7jya1"]
 base_font = ExtResource("5_tyei0")
 
-[sub_resource type="FontVariation" id="FontVariation_h27vg"]
-base_font = ExtResource("3_m2e8a")
-spacing_glyph = 1
-spacing_bottom = 1
-
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_rbiea"]
 content_margin_left = 16.0
 content_margin_top = 0.0
@@ -118,11 +113,6 @@ corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_ywxo2"]
-
-[sub_resource type="FontVariation" id="FontVariation_8r3cc"]
-base_font = ExtResource("3_m2e8a")
-spacing_glyph = 1
-spacing_bottom = 1
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_pyfpl"]
 content_margin_left = 16.0
@@ -326,28 +316,14 @@ layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 4
 mouse_filter = 1
-theme_override_colors/font_color = Color(0.9019608, 0.94509804, 1, 1)
-theme_override_colors/font_focus_color = Color(0.9019608, 0.94509804, 1, 1)
-theme_override_colors/font_pressed_color = Color(0.9019608, 0.94509804, 1, 1)
-theme_override_colors/font_hover_color = Color(0.9019608, 0.94509804, 1, 1)
-theme_override_colors/font_disabled_color = Color(0.9019608, 0.94509804, 1, 0.5)
-theme_override_constants/h_separation = 8
-theme_override_fonts/font = SubResource("FontVariation_h27vg")
-theme_override_font_sizes/font_size = 12
 theme_override_styles/normal = SubResource("StyleBoxFlat_rbiea")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_sfm67")
 theme_override_styles/hover = SubResource("StyleBoxFlat_0vgeo")
 theme_override_styles/disabled = SubResource("StyleBoxFlat_02aee")
 theme_override_styles/focus = SubResource("StyleBoxEmpty_ywxo2")
-text = "CANCEL"
 script = ExtResource("3")
-LabelText = "Cancel"
+text = "Cancel"
 Kind = 1
-metadata/ui_font_family = "Body"
-metadata/ui_line_height = 16.0
-metadata/ui_font_weight = 600
-metadata/ui_letter_spacing = 0.04
-metadata/ui_uppercase = true
 
 [node name="Confirm" type="Button" parent="Card/Column/Actions" unique_id=1701276200]
 unique_name_in_owner = true
@@ -356,24 +332,10 @@ layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 4
 mouse_filter = 1
-theme_override_colors/font_color = Color(0.015686275, 0.07058824, 0.101960786, 1)
-theme_override_colors/font_focus_color = Color(0.015686275, 0.07058824, 0.101960786, 1)
-theme_override_colors/font_pressed_color = Color(0.015686275, 0.07058824, 0.101960786, 1)
-theme_override_colors/font_hover_color = Color(0.015686275, 0.07058824, 0.101960786, 1)
-theme_override_colors/font_disabled_color = Color(0.015686275, 0.07058824, 0.101960786, 0.5)
-theme_override_constants/h_separation = 8
-theme_override_fonts/font = SubResource("FontVariation_8r3cc")
-theme_override_font_sizes/font_size = 12
 theme_override_styles/normal = SubResource("StyleBoxFlat_pyfpl")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_lg5ga")
 theme_override_styles/hover = SubResource("StyleBoxFlat_026t0")
 theme_override_styles/disabled = SubResource("StyleBoxFlat_8uy01")
 theme_override_styles/focus = SubResource("StyleBoxEmpty_x6fhx")
-text = "CONTINUE"
 script = ExtResource("3")
-LabelText = "Continue"
-metadata/ui_font_family = "Body"
-metadata/ui_line_height = 16.0
-metadata/ui_font_weight = 600
-metadata/ui_letter_spacing = 0.04
-metadata/ui_uppercase = true
+text = "Continue"

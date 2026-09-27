@@ -5,8 +5,6 @@ namespace NodeRunner.Ui.Lib;
 /// <summary>Ringed icon, title, and one help line.</summary>
 public partial class UiInfoRow : HBoxContainer
 {
-    private UiTokens _tokens = UiTokens.Neon;
-
     private string _iconText = "?";
     private UiIconId _iconId = UiIconId.Warn;
 
@@ -44,20 +42,18 @@ public partial class UiInfoRow : HBoxContainer
     [Export]
     public string Help { get; set; } = "Drag the stem to rotate selected parts.";
 
-    public UiTokens Tokens
-    {
-        get => _tokens;
-        set
-        {
-            _tokens = value;
-            Rebuild();
-        }
-    }
-
     public override void _Ready()
     {
         MouseFilter = MouseFilterEnum.Pass;
         Rebuild();
+    }
+
+    public override void _Notification(int what)
+    {
+        if (what == NotificationThemeChanged && IsNodeReady())
+        {
+            UiThemeRefresh.Guarded(this, Rebuild);
+        }
     }
 
     private void Rebuild()
@@ -73,20 +69,32 @@ public partial class UiInfoRow : HBoxContainer
             child.QueueFree();
         }
 
-        AddThemeConstantOverride("separation", (int)_tokens.Space2);
+        var space2 = UiSize.Space.S2;
+        var halo = UiThemeLookup.Color(this, UiTokens.Color.Halo);
+        AddThemeConstantOverride("separation", space2);
         var iconFrame = new PanelContainer
         {
-            CustomMinimumSize = new Vector2(_tokens.ControlExtraSmall, _tokens.ControlExtraSmall),
+            CustomMinimumSize = new Vector2(
+                UiSize.Control.ExtraSmall,
+                UiSize.Control.ExtraSmall),
             MouseFilter = MouseFilterEnum.Ignore,
         };
-        iconFrame.AddThemeStyleboxOverride("panel", _tokens.ControlStyle(Colors.Transparent, _tokens.Halo, radius: _tokens.RadiusPill));
-        iconFrame.AddChild(UiFieldAndRows.Icon(IconId, UiIconSize.Small, _tokens.Halo));
+        iconFrame.AddThemeStyleboxOverride(
+            "panel",
+            UiThemeLookup.CreateStyleBox(Colors.Transparent,
+                halo,
+                radius: UiSize.Radius.Pill));
+        iconFrame.AddChild(UiFieldAndRows.Icon(IconId, UiIconSize.Small, halo));
         AddChild(iconFrame);
         var labels = new VBoxContainer { SizeFlagsHorizontal = SizeFlags.ExpandFill };
         labels.AddThemeConstantOverride("separation", 0);
         AddChild(labels);
-        labels.AddChild(UiFieldAndRows.Label(Title, _tokens, _tokens.BodyStrongText, _tokens.Ink));
-        labels.AddChild(UiFieldAndRows.Label(Help, _tokens, _tokens.NoteText, _tokens.Muted));
+        labels.AddChild(UiFieldAndRows.Label(Title,
+            UiTokens.Typography.BodyStrong,
+            UiTokens.Color.Ink));
+        labels.AddChild(UiFieldAndRows.Label(Help,
+            UiTokens.Typography.Note,
+            UiTokens.Color.Muted));
     }
 
 }

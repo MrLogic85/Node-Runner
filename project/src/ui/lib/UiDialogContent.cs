@@ -10,7 +10,6 @@ public sealed partial class UiDialogContent : Control
 
     private UiPopupType _type;
     private PreviewTheme _theme;
-    private UiTokens _tokens = UiTokens.Neon;
     private UiCard? _card;
     private ScrollContainer _scroll = null!;
     private Label _body = null!;
@@ -33,12 +32,12 @@ public sealed partial class UiDialogContent : Control
         set
         {
             _theme = value;
-            _tokens = value switch
+            Theme = UiThemes.For(value switch
             {
-                PreviewTheme.Paper => UiTokens.Paper,
-                PreviewTheme.EffectsLite => UiTokens.Neon.WithEffects(false),
-                _ => UiTokens.Neon,
-            };
+                PreviewTheme.Paper => UiTokenType.Paper,
+                PreviewTheme.EffectsLite => UiTokenType.Light,
+                _ => UiTokenType.Neon,
+            });
             ApplyAppearance();
         }
     }
@@ -65,16 +64,23 @@ public sealed partial class UiDialogContent : Control
         ApplyAppearance();
     }
 
-    public void Bind(UiDialogSpec spec, UiTokens tokens)
+    public override void _Notification(int what)
+    {
+        if (what == NotificationThemeChanged && IsNodeReady())
+        {
+            ApplyAppearance();
+        }
+    }
+
+    public void Bind(UiDialogSpec spec)
     {
         _type = spec.Type;
-        _tokens = tokens;
         GetNode<Label>("%Title").Text = spec.Title;
         _body.Text = spec.Content;
-        _cancel.LabelText = spec.AbortText;
+        _cancel.Text = spec.AbortText;
         _cancel.HoldDurationSeconds = 0;
         _cancel.HoldToActivate = false;
-        _confirm.LabelText = spec.ActionText ?? "";
+        _confirm.Text = spec.ActionText ?? "";
         _confirm.Visible = spec.HasAction;
         _confirm.HoldDurationSeconds = spec.HoldToAction ? UiComponentContracts.HoldCompletionSeconds : 0;
         _confirm.HoldToActivate = spec.HoldToAction;
@@ -104,21 +110,18 @@ public sealed partial class UiDialogContent : Control
         {
             return;
         }
-        _card.Tokens = _tokens;
         _card.Kind = UiPopupStyle.CardKind(Type);
-        GetNode<ColorRect>("%Scrim").Color = _tokens.Scrim;
-        var color = UiPopupStyle.SemanticColor(Type, _tokens);
+        GetNode<ColorRect>("%Scrim").Color = UiThemeLookup.Color(this, UiTokens.Color.Scrim);
+        var color = UiPopupStyle.SemanticColor(Type, this);
         var icon = GetNode<TextureRect>("%SemanticIcon");
         icon.Texture = UiIcons.Load(Type == UiPopupType.Default ? UiIconId.Model : UiIconId.Warn, UiIconSize.Large);
         icon.SelfModulate = color;
         var typeLabel = GetNode<Label>("%SemanticType");
         typeLabel.Text = Type.ToString();
-        StyleText(typeLabel, _tokens.OverlineText, color);
-        StyleText(GetNode<Label>("%Title"), _tokens.SubheadingText, _tokens.Ink);
-        StyleText(_body, _tokens.BodyText, _tokens.Ink);
-        StyleText(_error, _tokens.NoteText, _tokens.Danger);
-        _cancel.Tokens = _tokens;
-        _confirm.Tokens = _tokens;
+        StyleText(typeLabel, UiTokens.Typography.Overline, UiPopupStyle.SemanticToken(Type));
+        StyleText(GetNode<Label>("%Title"), UiTokens.Typography.Subheading, UiTokens.Color.Ink);
+        StyleText(_body, UiTokens.Typography.Body, UiTokens.Color.Ink);
+        StyleText(_error, UiTokens.Typography.Note, UiTokens.Color.Danger);
         _confirm.Kind = Type switch
         {
             UiPopupType.Warn => UiButtonKind.Flat,
@@ -128,11 +131,8 @@ public sealed partial class UiDialogContent : Control
         QueueLayout();
     }
 
-    private void StyleText(Label label, UiTokens.TextStyle style, Color color)
-    {
-        _tokens.ApplyTextStyle(label, style);
-        label.AddThemeColorOverride("font_color", color);
-    }
+    private static void StyleText(Label label, UiTokens.Typography style, UiTokens.Color color) =>
+        UiThemeLookup.ApplyTextStyle(label, style, color);
 
     private void QueueLayout()
     {
@@ -157,17 +157,17 @@ public sealed partial class UiDialogContent : Control
         {
             return;
         }
-        var available = Size - Vector2.One * _tokens.Space4 * 2;
+        var available = Size - Vector2.One * UiSize.Space.S4 * 2;
         var actionWidth = Mathf.Max(_cancel.GetMinimumSize().X, _confirm.Visible ? _confirm.GetMinimumSize().X : 0);
-        _cancel.CustomMinimumSize = new Vector2(actionWidth, _tokens.ControlHeight);
+        _cancel.CustomMinimumSize = new Vector2(actionWidth, UiSize.Control.Default);
         _confirm.CustomMinimumSize = _cancel.CustomMinimumSize;
         var width = Mathf.Min(_card.CustomMinimumSize.X, available.X);
         _card.Size = new Vector2(width, 0);
         using var measured = new TextParagraph();
         measured.AddString(_body.Text, _body.GetThemeFont("font"), _body.GetThemeFontSize("font_size"));
-        measured.Width = Mathf.Max(1, _scroll.Size.X - _tokens.Space4);
+        measured.Width = Mathf.Max(1, _scroll.Size.X - UiSize.Space.S4);
         var fixedHeight = _card.GetCombinedMinimumSize().Y - _scroll.GetCombinedMinimumSize().Y;
-        _scroll.CustomMinimumSize = new Vector2(0, Mathf.Min(measured.GetSize().Y, Mathf.Max(_tokens.ControlHeight, available.Y - fixedHeight)));
+        _scroll.CustomMinimumSize = new Vector2(0, Mathf.Min(measured.GetSize().Y, Mathf.Max(UiSize.Control.Default, available.Y - fixedHeight)));
         _card.Size = new Vector2(width, 0);
         _card.Position = (Size - _card.Size) / 2;
     }

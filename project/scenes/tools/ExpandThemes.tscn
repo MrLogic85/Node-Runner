@@ -1,0 +1,6 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://src/tools/ExpandThemes.cs" id="1_expand"]
+
+[node name="ExpandThemes" type="Node"]
+script = ExtResource("1_expand")

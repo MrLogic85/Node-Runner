@@ -15,7 +15,6 @@ public partial class BuildScreen : Control
     private const string _hostedInputPassthroughMeta = "HostedInputPassthrough";
     private const int _modeSwitchHeight = 52;
     private const int _toolButtonHeight = 56;
-    private UiTokens _tokens = UiTokens.Neon;
     private ConstructionPresentationViewModel? _presentation;
     private bool _isSubscribedToPresentation;
     private bool _partsTrayCollapsed;
@@ -77,19 +76,6 @@ public partial class BuildScreen : Control
     [Signal]
     public delegate void BrainShapeChangedEventHandler(int hiddenLayers, int neuronsPerLayer);
 
-    public UiTokens Tokens
-    {
-        get => _tokens;
-        set
-        {
-            _tokens = value;
-            if (IsInsideTree())
-            {
-                RebuildLayout();
-            }
-        }
-    }
-
     public ConstructionPresentationViewModel? Presentation
     {
         get => _presentation;
@@ -120,7 +106,16 @@ public partial class BuildScreen : Control
         {
             Size = GetViewportRect().Size;
         }
+
         RebuildLayout();
+    }
+
+    public override void _Notification(int what)
+    {
+        if (what == NotificationThemeChanged && IsNodeReady())
+        {
+            UiThemeRefresh.Guarded(this, RebuildLayout);
+        }
     }
 
     public override void _ExitTree()
@@ -194,14 +189,14 @@ public partial class BuildScreen : Control
         {
             AddChild(new ColorRect
             {
-                Color = _tokens.Background,
+                Color = UiThemeLookup.Color(this, UiTokens.Color.Background),
                 MouseFilter = MouseFilterEnum.Ignore,
                 AnchorRight = 1,
                 AnchorBottom = 1,
             });
         }
 
-        var safeFrame = MarkHostedInputPassthrough(CreateMargin(UiSpacing.ScreenEdgeInset(_tokens)));
+        var safeFrame = MarkHostedInputPassthrough(CreateMargin(UiSpacing.ScreenEdgeInset));
         AddChild(safeFrame);
 
         var screenParent = safeFrame;
@@ -261,13 +256,12 @@ public partial class BuildScreen : Control
             SizeFlagsHorizontal = SizeFlags.ExpandFill,
             CustomMinimumSize = new Vector2(0, UiLayout.TopBarHeight),
         };
-        topBar.AddThemeConstantOverride("separation", (int)_tokens.Space2);
+        topBar.AddThemeConstantOverride("separation", (int)UiSize.Space.S2);
         margin.AddChild(topBar);
 
         var back = new UiButton
         {
             ContentLayout = UiButtonContentLayout.Stacked,
-            Tokens = _tokens,
             IconId = UiIconId.Back,
             TooltipText = "Back",
         };
@@ -288,23 +282,23 @@ public partial class BuildScreen : Control
             SizeFlagsHorizontal = SizeFlags.ExpandFill,
             CustomMinimumSize = new Vector2(0, 28),
         };
-        _tokens.ApplyTextStyle(title, _tokens.HeadingText);
-        UiIcons.Apply(title, UiIconId.Edit, UiIconSize.Small, _tokens.Ink);
-        title.AddThemeColorOverride("font_color", _tokens.Ink);
+        UiThemeLookup.ApplyTypography(title, UiTokens.Typography.Heading);
+        UiIcons.Apply(title, UiIconId.Edit, UiIconSize.Small, UiThemeLookup.Color(this, UiTokens.Color.Ink));
+        title.AddThemeColorOverride("font_color", UiThemeLookup.Color(this, UiTokens.Color.Ink));
         title.Pressed += () =>
         {
             _nameEntryOpen = true;
             RebuildLayout();
         };
         titleStack.AddChild(title);
-        titleStack.AddChild(CreateLabel(Presentation?.CreationSubtitle ?? "Unsaved anatomy draft", 11, _tokens.Muted));
+        titleStack.AddChild(CreateLabel(Presentation?.CreationSubtitle ?? "Unsaved anatomy draft", 11, UiThemeLookup.Color(this, UiTokens.Color.Muted)));
 
         var buildPanel = Presentation?.BuildPanel ?? ConstructionBuildPanelPresentation.Sample;
         topBar.AddChild(CreateBrainChip(buildPanel));
         if (Presentation?.ShowCompleteAction != false)
         {
             var save = CreateButton("Save", buildPanel.CanCompleteCreation ? UiButtonKind.Primary : UiButtonKind.Secondary, buildPanel.DisabledReason ?? "Save this Creation");
-            save.CustomMinimumSize = new Vector2(88, _tokens.TouchTarget);
+            save.CustomMinimumSize = new Vector2(88, UiSize.Control.Touch);
             save.Disabled = !buildPanel.CanCompleteCreation;
             if (buildPanel.CanCompleteCreation)
             {
@@ -315,7 +309,6 @@ public partial class BuildScreen : Control
         var overflow = new UiButton
         {
             ContentLayout = UiButtonContentLayout.Stacked,
-            Tokens = _tokens,
             IconId = UiIconId.More,
             TooltipText = Presentation?.ShowCompleteAction == false ? "Reset training or delete creation" : "More build actions",
         };
@@ -340,11 +333,15 @@ public partial class BuildScreen : Control
             TooltipText = locked ? "Brain shape is locked after Save" : $"{buildPanel.InputCount} senses · {buildPanel.OutputCount} motors",
             Disabled = locked,
         };
-        _tokens.ApplyTextStyle(chip, _tokens.LabelText);
-        chip.AddThemeColorOverride("font_color", _tokens.Accent);
-        chip.AddThemeColorOverride("font_hover_color", _tokens.Ink);
-        chip.AddThemeStyleboxOverride("normal", _tokens.ControlStyle(_tokens.PanelRaised, _tokens.Accent, radius: _tokens.RadiusPill));
-        chip.AddThemeStyleboxOverride("hover", _tokens.ControlStyle(_tokens.AccentSoft, _tokens.Accent, radius: _tokens.RadiusPill));
+        UiThemeLookup.ApplyTypography(chip, UiTokens.Typography.Label);
+        chip.AddThemeColorOverride("font_color", UiThemeLookup.Color(this, UiTokens.Color.Accent));
+        chip.AddThemeColorOverride("font_hover_color", UiThemeLookup.Color(this, UiTokens.Color.Ink));
+        chip.AddThemeStyleboxOverride("normal", UiThemeLookup.CreateStyleBox(UiThemeLookup.Color(this, UiTokens.Color.PanelRaised), UiThemeLookup.Color(this, UiTokens.Color.Accent), radius: UiSize.Radius.Pill));
+        chip.AddThemeStyleboxOverride(
+            "hover",
+            UiThemeLookup.CreateStyleBox(UiThemeLookup.Color(this, UiTokens.Color.Accent).WithAlpha(UiThemeLookup.Alpha(this, UiTokens.Alpha.Soft)),
+                UiThemeLookup.Color(this, UiTokens.Color.Accent),
+                radius: UiSize.Radius.Pill));
         if (!locked)
         {
             chip.Pressed += () =>
@@ -360,7 +357,7 @@ public partial class BuildScreen : Control
     {
         var presentation = Presentation;
         var panel = CreatePanel(raised: true);
-        panel.CustomMinimumSize = new Vector2(UiLayout.LeftRailWidth, 0);
+        panel.CustomMinimumSize = new Vector2(UiLayout.RailWidth, 0);
         panel.SizeFlagsVertical = SizeFlags.ExpandFill;
 
         var margin = CreateMargin(0);
@@ -423,14 +420,14 @@ public partial class BuildScreen : Control
             Text = label.ToUpperInvariant(),
             TooltipText = tooltip,
             Disabled = locked,
-            CustomMinimumSize = new Vector2(UiLayout.LeftRailWidth, _toolButtonHeight),
+            CustomMinimumSize = new Vector2(UiLayout.RailWidth, _toolButtonHeight),
             SizeFlagsHorizontal = SizeFlags.ExpandFill,
         };
         button.AddThemeFontSizeOverride("font_size", 11);
-        button.AddThemeColorOverride("font_color", locked ? _tokens.Muted : _tokens.Ink);
-        button.AddThemeColorOverride("font_hover_color", _tokens.Ink);
-        button.AddThemeColorOverride("font_pressed_color", _tokens.Ink);
-        button.AddThemeColorOverride("font_disabled_color", _tokens.Muted);
+        button.AddThemeColorOverride("font_color", locked ? UiThemeLookup.Color(this, UiTokens.Color.Muted) : UiThemeLookup.Color(this, UiTokens.Color.Ink));
+        button.AddThemeColorOverride("font_hover_color", UiThemeLookup.Color(this, UiTokens.Color.Ink));
+        button.AddThemeColorOverride("font_pressed_color", UiThemeLookup.Color(this, UiTokens.Color.Ink));
+        button.AddThemeColorOverride("font_disabled_color", UiThemeLookup.Color(this, UiTokens.Color.Muted));
         button.AddThemeStyleboxOverride("normal", CreateToolStyle(active, locked));
         button.AddThemeStyleboxOverride("hover", CreateToolStyle(true, locked));
         button.AddThemeStyleboxOverride("pressed", CreateToolStyle(true, locked));
@@ -453,7 +450,7 @@ public partial class BuildScreen : Control
     private void DrawLockedToolBorder(Button button)
     {
         var rect = new Rect2(Vector2.Zero, button.Size).Grow(-4);
-        var color = _tokens.Muted;
+        var color = UiThemeLookup.Color(this, UiTokens.Color.Muted);
         color.A = 0.72f;
         button.DrawDashedLine(rect.Position, rect.Position + new Vector2(rect.Size.X, 0), color, 2, 6, antialiased: false);
         button.DrawDashedLine(rect.Position + new Vector2(rect.Size.X, 0), rect.End, color, 2, 6, antialiased: false);
@@ -501,7 +498,6 @@ public partial class BuildScreen : Control
         {
             var chip = new UiChip
             {
-                Tokens = _tokens,
                 Text = presentation.PartsLockedChipText,
                 Kind = UiChip.ChipKind.Locked,
                 Position = new Vector2(18, 18),
@@ -517,7 +513,7 @@ public partial class BuildScreen : Control
     {
         var buildPanel = Presentation?.BuildPanel ?? ConstructionBuildPanelPresentation.Sample;
         var panel = CreatePanel(raised: true);
-        panel.CustomMinimumSize = new Vector2(_partsTrayCollapsed ? 28 : UiLayout.RightPanelWidth, 0);
+        panel.CustomMinimumSize = new Vector2(_partsTrayCollapsed ? 28 : UiLayout.SidePanelWidth, 0);
         panel.SizeFlagsVertical = SizeFlags.ExpandFill;
 
         if (_partsTrayCollapsed)
@@ -528,16 +524,19 @@ public partial class BuildScreen : Control
                 CustomMinimumSize = new Vector2(28, 0),
                 SizeFlagsVertical = SizeFlags.ExpandFill,
             };
-            _tokens.ApplyTextStyle(handle, _tokens.HeadingText);
-            handle.AddThemeColorOverride("font_color", _tokens.Accent);
-            handle.AddThemeStyleboxOverride("normal", _tokens.ControlStyle(_tokens.PanelRaised, _tokens.Edge));
-            handle.AddThemeStyleboxOverride("hover", _tokens.ControlStyle(_tokens.AccentSoft, _tokens.Accent));
+            UiThemeLookup.ApplyTypography(handle, UiTokens.Typography.Heading);
+            handle.AddThemeColorOverride("font_color", UiThemeLookup.Color(this, UiTokens.Color.Accent));
+            handle.AddThemeStyleboxOverride("normal", UiThemeLookup.CreateStyleBox(UiThemeLookup.Color(this, UiTokens.Color.PanelRaised), UiThemeLookup.Color(this, UiTokens.Color.Edge)));
+            handle.AddThemeStyleboxOverride(
+                "hover",
+                UiThemeLookup.CreateStyleBox(UiThemeLookup.Color(this, UiTokens.Color.Accent).WithAlpha(UiThemeLookup.Alpha(this, UiTokens.Alpha.Soft)),
+                    UiThemeLookup.Color(this, UiTokens.Color.Accent)));
             handle.Pressed += TogglePartsTrayCollapsed;
             panel.AddChild(handle);
             return panel;
         }
 
-        var margin = CreateMargin(UiSpacing.ControlGap(_tokens));
+        var margin = CreateMargin(UiSpacing.ControlGap);
         panel.AddChild(margin);
 
         var stack = new VBoxContainer
@@ -545,7 +544,7 @@ public partial class BuildScreen : Control
             SizeFlagsHorizontal = SizeFlags.ExpandFill,
             SizeFlagsVertical = SizeFlags.ExpandFill,
         };
-        stack.AddThemeConstantOverride("separation", UiSpacing.StackGap(_tokens));
+        stack.AddThemeConstantOverride("separation", UiSpacing.StackGap);
         margin.AddChild(stack);
 
         var presentation = Presentation;
@@ -579,10 +578,10 @@ public partial class BuildScreen : Control
             SizeFlagsHorizontal = SizeFlags.ExpandFill,
             SizeFlagsVertical = SizeFlags.ExpandFill,
         };
-        stack.AddThemeConstantOverride("separation", UiSpacing.StackGap(_tokens));
-        stack.AddChild(CreateLabel(presentation.TrainingSummaryTitle, 14, _tokens.Ink, expand: true));
-        stack.AddChild(CreateLabel($"Best distance {presentation.BestDistanceText}", 12, _tokens.Accent, expand: true));
-        stack.AddChild(CreateLabel(presentation.TrainingSummaryBody, 11, _tokens.Muted, expand: true));
+        stack.AddThemeConstantOverride("separation", UiSpacing.StackGap);
+        stack.AddChild(CreateLabel(presentation.TrainingSummaryTitle, 14, UiThemeLookup.Color(this, UiTokens.Color.Ink), expand: true));
+        stack.AddChild(CreateLabel($"Best distance {presentation.BestDistanceText}", 12, UiThemeLookup.Color(this, UiTokens.Color.Accent), expand: true));
+        stack.AddChild(CreateLabel(presentation.TrainingSummaryBody, 11, UiThemeLookup.Color(this, UiTokens.Color.Muted), expand: true));
         var resume = CreateButton("Resume training", UiButtonKind.Primary, "Open Train setup");
         resume.Pressed += () => EmitSignal(SignalName.ResumeTrainingRequested);
         stack.AddChild(resume);
@@ -603,9 +602,9 @@ public partial class BuildScreen : Control
             SizeFlagsHorizontal = SizeFlags.ExpandFill,
             SizeFlagsVertical = SizeFlags.ExpandFill,
         };
-        stack.AddThemeConstantOverride("separation", UiSpacing.DenseStackGap(_tokens));
+        stack.AddThemeConstantOverride("separation", UiSpacing.DenseStackGap);
         var header = new HBoxContainer();
-        header.AddChild(CreateLabel(presentation.SinglePartTitle, 14, _tokens.Ink, expand: true));
+        header.AddChild(CreateLabel(presentation.SinglePartTitle, 14, UiThemeLookup.Color(this, UiTokens.Color.Ink), expand: true));
         if (allowDelete)
         {
             var delete = CreateButton("Delete", UiButtonKind.Tertiary, "Delete selected part", UiIconId.Trash);
@@ -618,24 +617,23 @@ public partial class BuildScreen : Control
         {
             ContentLayout = UiButtonContentLayout.RowCompact,
             Kind = UiButtonKind.Flat,
-            Tokens = _tokens,
             IconId = UiIconId.Close,
             TooltipText = "Close settings",
         };
         close.Pressed += () => EmitSignal(SignalName.ClearSelectionRequested);
         header.AddChild(close);
         stack.AddChild(header);
-        stack.AddChild(CreateLabel(presentation.SinglePartPrimaryLabel, 10, _tokens.Muted));
-        stack.AddChild(CreateLabel(presentation.SinglePartPrimaryValue, 12, _tokens.Ink, expand: true));
-        stack.AddChild(CreateLabel(presentation.SinglePartConnectionsLabel, 10, _tokens.Muted));
-        stack.AddChild(CreateLabel(presentation.SinglePartConnectionsValue, 11, _tokens.Ink, expand: true));
-        stack.AddChild(CreateLabel("Facts", 10, _tokens.Muted));
-        stack.AddChild(CreateLabel(presentation.SinglePartFacts, 10, _tokens.Muted, expand: true));
-        stack.AddChild(CreateLabel(allowDelete ? "Structure" : "Locked topology", 10, _tokens.Muted));
-        stack.AddChild(CreateLabel(presentation.SinglePartBody, 11, _tokens.Muted, expand: true));
+        stack.AddChild(CreateLabel(presentation.SinglePartPrimaryLabel, 10, UiThemeLookup.Color(this, UiTokens.Color.Muted)));
+        stack.AddChild(CreateLabel(presentation.SinglePartPrimaryValue, 12, UiThemeLookup.Color(this, UiTokens.Color.Ink), expand: true));
+        stack.AddChild(CreateLabel(presentation.SinglePartConnectionsLabel, 10, UiThemeLookup.Color(this, UiTokens.Color.Muted)));
+        stack.AddChild(CreateLabel(presentation.SinglePartConnectionsValue, 11, UiThemeLookup.Color(this, UiTokens.Color.Ink), expand: true));
+        stack.AddChild(CreateLabel("Facts", 10, UiThemeLookup.Color(this, UiTokens.Color.Muted)));
+        stack.AddChild(CreateLabel(presentation.SinglePartFacts, 10, UiThemeLookup.Color(this, UiTokens.Color.Muted), expand: true));
+        stack.AddChild(CreateLabel(allowDelete ? "Structure" : "Locked topology", 10, UiThemeLookup.Color(this, UiTokens.Color.Muted)));
+        stack.AddChild(CreateLabel(presentation.SinglePartBody, 11, UiThemeLookup.Color(this, UiTokens.Color.Muted), expand: true));
         if (!allowDelete)
         {
-            stack.AddChild(CreateLabel("No Delete in saved Creation", 11, _tokens.Muted, expand: true));
+            stack.AddChild(CreateLabel("No Delete in saved Creation", 11, UiThemeLookup.Color(this, UiTokens.Color.Muted), expand: true));
         }
 
         stack.AddChild(CreateSpacer());
@@ -649,9 +647,9 @@ public partial class BuildScreen : Control
             SizeFlagsHorizontal = SizeFlags.ExpandFill,
             SizeFlagsVertical = SizeFlags.ExpandFill,
         };
-        stack.AddThemeConstantOverride("separation", UiSpacing.StackGap(_tokens));
+        stack.AddThemeConstantOverride("separation", UiSpacing.StackGap);
         var header = new HBoxContainer();
-        header.AddChild(CreateLabel(presentation.MultiSelectionTitle, 14, _tokens.Ink, expand: true));
+        header.AddChild(CreateLabel(presentation.MultiSelectionTitle, 14, UiThemeLookup.Color(this, UiTokens.Color.Ink), expand: true));
         if (allowDelete)
         {
             var delete = CreateButton("Delete", UiButtonKind.Tertiary, "Delete selected parts");
@@ -664,18 +662,16 @@ public partial class BuildScreen : Control
         {
             ContentLayout = UiButtonContentLayout.RowCompact,
             Kind = UiButtonKind.Flat,
-            Tokens = _tokens,
             IconId = UiIconId.Close,
             TooltipText = "Close selection",
         };
         close.Pressed += () => EmitSignal(SignalName.ClearSelectionRequested);
         header.AddChild(close);
         stack.AddChild(header);
-        stack.AddChild(CreateLabel(presentation.MultiSelectionCounts, 12, _tokens.Ink, expand: true));
-        stack.AddChild(CreateLabel(allowDelete ? "Drag any selected part to move them together, or delete the selection." : presentation.MultiSelectionBody, 11, _tokens.Muted, expand: true));
+        stack.AddChild(CreateLabel(presentation.MultiSelectionCounts, 12, UiThemeLookup.Color(this, UiTokens.Color.Ink), expand: true));
+        stack.AddChild(CreateLabel(allowDelete ? "Drag any selected part to move them together, or delete the selection." : presentation.MultiSelectionBody, 11, UiThemeLookup.Color(this, UiTokens.Color.Muted), expand: true));
         stack.AddChild(new UiChip
         {
-            Tokens = _tokens,
             Text = allowDelete ? "Move · Delete" : "Move only",
             Kind = allowDelete ? UiChip.ChipKind.Neutral : UiChip.ChipKind.Locked,
         });
@@ -695,12 +691,12 @@ public partial class BuildScreen : Control
         panel.CustomMinimumSize = new Vector2(280, 104);
         overlay.AddChild(panel);
 
-        var margin = CreateMargin((int)_tokens.Space3);
+        var margin = CreateMargin((int)UiSize.Space.S3);
         panel.AddChild(margin);
         var stack = new VBoxContainer();
-        stack.AddThemeConstantOverride("separation", (int)_tokens.Space2);
+        stack.AddThemeConstantOverride("separation", (int)UiSize.Space.S2);
         margin.AddChild(stack);
-        stack.AddChild(CreateLabel("Creation name", 14, _tokens.Ink));
+        stack.AddChild(CreateLabel("Creation name", 14, UiThemeLookup.Color(this, UiTokens.Color.Ink)));
         var entry = new LineEdit
         {
             Text = Presentation?.CreationName ?? "Untitled Creation",
@@ -741,10 +737,10 @@ public partial class BuildScreen : Control
         panel.Position = new Vector2(458, 58);
         panel.CustomMinimumSize = new Vector2(170, 130);
         overlay.AddChild(panel);
-        var margin = CreateMargin((int)_tokens.Space2);
+        var margin = CreateMargin((int)UiSize.Space.S2);
         panel.AddChild(margin);
         var stack = new VBoxContainer();
-        stack.AddThemeConstantOverride("separation", (int)_tokens.Space2);
+        stack.AddThemeConstantOverride("separation", (int)UiSize.Space.S2);
         margin.AddChild(stack);
 
         if (Presentation?.ShowCompleteAction == false)
@@ -768,7 +764,7 @@ public partial class BuildScreen : Control
         }
         else
         {
-            stack.AddChild(CreateLabel("More actions arrive in later milestones.", 11, _tokens.Muted, expand: true));
+            stack.AddChild(CreateLabel("More actions arrive in later milestones.", 11, UiThemeLookup.Color(this, UiTokens.Color.Muted), expand: true));
         }
 
         return overlay;
@@ -803,17 +799,21 @@ public partial class BuildScreen : Control
     private Control CreatePartsTrayHeader()
     {
         var row = new HBoxContainer();
-        row.AddThemeConstantOverride("separation", (int)_tokens.Space1);
-        row.AddChild(CreateLabel("Parts tray", 14, _tokens.Ink, expand: true));
+        row.AddThemeConstantOverride("separation", (int)UiSize.Space.S1);
+        row.AddChild(CreateLabel("Parts tray", 14, UiThemeLookup.Color(this, UiTokens.Color.Ink), expand: true));
         var collapse = new Button
         {
             Text = "›",
             CustomMinimumSize = new Vector2(28, 28),
         };
-        _tokens.ApplyTextStyle(collapse, _tokens.LabelText);
-        collapse.AddThemeColorOverride("font_color", _tokens.Accent);
-        collapse.AddThemeStyleboxOverride("normal", _tokens.ControlStyle(_tokens.PanelRaised, _tokens.Edge, radius: (int)_tokens.RadiusSmall));
-        collapse.AddThemeStyleboxOverride("hover", _tokens.ControlStyle(_tokens.AccentSoft, _tokens.Accent, radius: (int)_tokens.RadiusSmall));
+        UiThemeLookup.ApplyTypography(collapse, UiTokens.Typography.Label);
+        collapse.AddThemeColorOverride("font_color", UiThemeLookup.Color(this, UiTokens.Color.Accent));
+        collapse.AddThemeStyleboxOverride("normal", UiThemeLookup.CreateStyleBox(UiThemeLookup.Color(this, UiTokens.Color.PanelRaised), UiThemeLookup.Color(this, UiTokens.Color.Edge), radius: (int)UiSize.Radius.Small));
+        collapse.AddThemeStyleboxOverride(
+            "hover",
+            UiThemeLookup.CreateStyleBox(UiThemeLookup.Color(this, UiTokens.Color.Accent).WithAlpha(UiThemeLookup.Alpha(this, UiTokens.Alpha.Soft)),
+                UiThemeLookup.Color(this, UiTokens.Color.Accent),
+                radius: (int)UiSize.Radius.Small));
         collapse.Pressed += TogglePartsTrayCollapsed;
         row.AddChild(collapse);
         return row;
@@ -832,12 +832,12 @@ public partial class BuildScreen : Control
             CustomMinimumSize = new Vector2(0, 34),
             SizeFlagsHorizontal = SizeFlags.ExpandFill,
         };
-        row.AddThemeConstantOverride("separation", (int)_tokens.Space1);
-        row.AddChild(UiFieldAndRows.Icon(buildPanel.CanStartTraining ? UiIconId.Check : UiIconId.Warn, UiIconSize.Small, buildPanel.CanStartTraining ? _tokens.Accent : _tokens.Danger));
+        row.AddThemeConstantOverride("separation", (int)UiSize.Space.S1);
+        row.AddChild(UiFieldAndRows.Icon(buildPanel.CanStartTraining ? UiIconId.Check : UiIconId.Warn, UiIconSize.Small, buildPanel.CanStartTraining ? UiThemeLookup.Color(this, UiTokens.Color.Accent) : UiThemeLookup.Color(this, UiTokens.Color.Danger)));
         var reason = buildPanel.CanStartTraining
             ? "Ready to save"
             : ShortValidationText(buildPanel.DisabledReason ?? buildPanel.ValidationLine);
-        row.AddChild(CreateLabel(reason, 12, buildPanel.CanStartTraining ? _tokens.Accent : _tokens.Danger, expand: true));
+        row.AddChild(CreateLabel(reason, 12, buildPanel.CanStartTraining ? UiThemeLookup.Color(this, UiTokens.Color.Accent) : UiThemeLookup.Color(this, UiTokens.Color.Danger), expand: true));
         return row;
     }
 
@@ -863,16 +863,16 @@ public partial class BuildScreen : Control
         sheet.CustomMinimumSize = new Vector2(488, 260);
         overlay.AddChild(sheet);
 
-        var margin = CreateMargin((int)_tokens.Space3);
+        var margin = CreateMargin((int)UiSize.Space.S3);
         sheet.AddChild(margin);
 
         var layout = new VBoxContainer();
-        layout.AddThemeConstantOverride("separation", (int)_tokens.Space2);
+        layout.AddThemeConstantOverride("separation", (int)UiSize.Space.S2);
         margin.AddChild(layout);
         layout.AddChild(CreateBrainSetupTopBar());
 
         var body = new HBoxContainer();
-        body.AddThemeConstantOverride("separation", (int)_tokens.Space3);
+        body.AddThemeConstantOverride("separation", (int)UiSize.Space.S3);
         layout.AddChild(body);
 
         var controls = new VBoxContainer
@@ -880,7 +880,7 @@ public partial class BuildScreen : Control
             CustomMinimumSize = new Vector2(270, 0),
             SizeFlagsVertical = SizeFlags.ExpandFill,
         };
-        controls.AddThemeConstantOverride("separation", (int)_tokens.Space2);
+        controls.AddThemeConstantOverride("separation", (int)UiSize.Space.S2);
         body.AddChild(controls);
         controls.AddChild(CreateLayerChooser());
         controls.AddChild(CreateNeuronControl());
@@ -893,8 +893,8 @@ public partial class BuildScreen : Control
     {
         var buildPanel = Presentation?.BuildPanel ?? ConstructionBuildPanelPresentation.Sample;
         var row = new HBoxContainer();
-        row.AddThemeConstantOverride("separation", (int)_tokens.Space2);
-        row.AddChild(CreateLabel("Brain setup", 16, _tokens.Ink, expand: true));
+        row.AddThemeConstantOverride("separation", (int)UiSize.Space.S2);
+        row.AddChild(CreateLabel("Brain setup", 16, UiThemeLookup.Color(this, UiTokens.Color.Ink), expand: true));
         var recommended = new Button
         {
             Text = "Use recommended",
@@ -902,10 +902,14 @@ public partial class BuildScreen : Control
             SizeFlagsVertical = SizeFlags.ShrinkCenter,
             TooltipText = "Reset layers and neurons",
         };
-        _tokens.ApplyTextStyle(recommended, _tokens.CaptionText);
-        recommended.AddThemeColorOverride("font_color", _tokens.Ink);
-        recommended.AddThemeStyleboxOverride("normal", _tokens.ControlStyle(_tokens.PanelRaised, _tokens.Edge, radius: (int)_tokens.RadiusSmall));
-        recommended.AddThemeStyleboxOverride("hover", _tokens.ControlStyle(_tokens.AccentSoft, _tokens.Accent, radius: (int)_tokens.RadiusSmall));
+        UiThemeLookup.ApplyTypography(recommended, UiTokens.Typography.Caption);
+        recommended.AddThemeColorOverride("font_color", UiThemeLookup.Color(this, UiTokens.Color.Ink));
+        recommended.AddThemeStyleboxOverride("normal", UiThemeLookup.CreateStyleBox(UiThemeLookup.Color(this, UiTokens.Color.PanelRaised), UiThemeLookup.Color(this, UiTokens.Color.Edge), radius: (int)UiSize.Radius.Small));
+        recommended.AddThemeStyleboxOverride(
+            "hover",
+            UiThemeLookup.CreateStyleBox(UiThemeLookup.Color(this, UiTokens.Color.Accent).WithAlpha(UiThemeLookup.Alpha(this, UiTokens.Alpha.Soft)),
+                UiThemeLookup.Color(this, UiTokens.Color.Accent),
+                radius: (int)UiSize.Radius.Small));
         recommended.Pressed += () => EmitBrainShape(BrainShapeDef.DefaultHiddenLayers, RecommendedNeurons(buildPanel));
         row.AddChild(recommended);
         var close = new Button
@@ -915,11 +919,15 @@ public partial class BuildScreen : Control
             SizeFlagsVertical = SizeFlags.ShrinkCenter,
             TooltipText = "Close brain setup",
         };
-        _tokens.ApplyTextStyle(close, _tokens.HeadingText);
-        close.AddThemeColorOverride("font_color", _tokens.Accent);
-        UiIcons.Apply(close, UiIconId.Close, UiIconSize.Standard, _tokens.Accent);
-        close.AddThemeStyleboxOverride("normal", _tokens.ControlStyle(_tokens.PanelRaised, _tokens.Edge, radius: (int)_tokens.RadiusSmall));
-        close.AddThemeStyleboxOverride("hover", _tokens.ControlStyle(_tokens.AccentSoft, _tokens.Accent, radius: (int)_tokens.RadiusSmall));
+        UiThemeLookup.ApplyTypography(close, UiTokens.Typography.Heading);
+        close.AddThemeColorOverride("font_color", UiThemeLookup.Color(this, UiTokens.Color.Accent));
+        UiIcons.Apply(close, UiIconId.Close, UiIconSize.Standard, UiThemeLookup.Color(this, UiTokens.Color.Accent));
+        close.AddThemeStyleboxOverride("normal", UiThemeLookup.CreateStyleBox(UiThemeLookup.Color(this, UiTokens.Color.PanelRaised), UiThemeLookup.Color(this, UiTokens.Color.Edge), radius: (int)UiSize.Radius.Small));
+        close.AddThemeStyleboxOverride(
+            "hover",
+            UiThemeLookup.CreateStyleBox(UiThemeLookup.Color(this, UiTokens.Color.Accent).WithAlpha(UiThemeLookup.Alpha(this, UiTokens.Alpha.Soft)),
+                UiThemeLookup.Color(this, UiTokens.Color.Accent),
+                radius: (int)UiSize.Radius.Small));
         close.Pressed += () =>
         {
             _brainSetupOpen = false;
@@ -933,9 +941,9 @@ public partial class BuildScreen : Control
     {
         var shape = Presentation?.BrainShape ?? BrainShapeDef.Default;
         var stack = new VBoxContainer();
-        stack.AddThemeConstantOverride("separation", (int)_tokens.Space1);
+        stack.AddThemeConstantOverride("separation", (int)UiSize.Space.S1);
         var row = new HBoxContainer();
-        row.AddThemeConstantOverride("separation", (int)_tokens.Space1);
+        row.AddThemeConstantOverride("separation", (int)UiSize.Space.S1);
         stack.AddChild(row);
         row.AddChild(CreateLayerButton(1, "simple", shape.HiddenLayers == 1));
         row.AddChild(CreateLayerButton(2, "navigation", shape.HiddenLayers == 2));
@@ -946,7 +954,7 @@ public partial class BuildScreen : Control
             2 => "Recommended for harder navigation",
             _ => "! Not recommended: slow to learn. For experiments.",
         };
-        stack.AddChild(CreateLabel(help, 12, shape.HiddenLayers == 3 ? _tokens.Halo : _tokens.Muted, expand: true));
+        stack.AddChild(CreateLabel(help, 12, shape.HiddenLayers == 3 ? UiThemeLookup.Color(this, UiTokens.Color.Halo) : UiThemeLookup.Color(this, UiTokens.Color.Muted), expand: true));
         return stack;
     }
 
@@ -958,10 +966,13 @@ public partial class BuildScreen : Control
             Text = $"{layers}\n{caption}".ToUpperInvariant(),
             CustomMinimumSize = new Vector2(82, 42),
         };
-        _tokens.ApplyTextStyle(button, _tokens.CaptionText);
-        button.AddThemeColorOverride("font_color", active ? _tokens.OnAccent : _tokens.Ink);
-        button.AddThemeStyleboxOverride("normal", _tokens.ControlStyle(active ? _tokens.Accent : _tokens.PanelRaised, active ? _tokens.Accent : _tokens.Edge));
-        button.AddThemeStyleboxOverride("hover", _tokens.ControlStyle(_tokens.AccentSoft, _tokens.Accent));
+        UiThemeLookup.ApplyTypography(button, UiTokens.Typography.Caption);
+        button.AddThemeColorOverride("font_color", active ? UiThemeLookup.Color(this, UiTokens.Color.OnAccent) : UiThemeLookup.Color(this, UiTokens.Color.Ink));
+        button.AddThemeStyleboxOverride("normal", UiThemeLookup.CreateStyleBox(active ? UiThemeLookup.Color(this, UiTokens.Color.Accent) : UiThemeLookup.Color(this, UiTokens.Color.PanelRaised), active ? UiThemeLookup.Color(this, UiTokens.Color.Accent) : UiThemeLookup.Color(this, UiTokens.Color.Edge)));
+        button.AddThemeStyleboxOverride(
+            "hover",
+            UiThemeLookup.CreateStyleBox(UiThemeLookup.Color(this, UiTokens.Color.Accent).WithAlpha(UiThemeLookup.Alpha(this, UiTokens.Alpha.Soft)),
+                UiThemeLookup.Color(this, UiTokens.Color.Accent)));
         button.Pressed += () => EmitBrainShape(layers, shape.NeuronsPerLayer);
         return button;
     }
@@ -971,19 +982,18 @@ public partial class BuildScreen : Control
         var shape = Presentation?.BrainShape ?? BrainShapeDef.Default;
         var buildPanel = Presentation?.BuildPanel ?? ConstructionBuildPanelPresentation.Sample;
         var stack = new VBoxContainer();
-        stack.AddThemeConstantOverride("separation", (int)_tokens.Space1);
-        stack.AddChild(CreateLabel($"Neurons per layer · tick = default {RecommendedNeurons(buildPanel)}", 12, _tokens.Muted));
-        stack.AddChild(CreateLabel(shape.HiddenLayers == 1 ? "Layer 1 shares this value" : $"Layers 1-{shape.HiddenLayers} share this value", 10, _tokens.Muted));
+        stack.AddThemeConstantOverride("separation", (int)UiSize.Space.S1);
+        stack.AddChild(CreateLabel($"Neurons per layer · tick = default {RecommendedNeurons(buildPanel)}", 12, UiThemeLookup.Color(this, UiTokens.Color.Muted)));
+        stack.AddChild(CreateLabel(shape.HiddenLayers == 1 ? "Layer 1 shares this value" : $"Layers 1-{shape.HiddenLayers} share this value", 10, UiThemeLookup.Color(this, UiTokens.Color.Muted)));
 
         var row = new HBoxContainer();
-        row.AddThemeConstantOverride("separation", (int)_tokens.Space1);
+        row.AddThemeConstantOverride("separation", (int)UiSize.Space.S1);
         stack.AddChild(row);
         row.AddChild(CreateStepper("−", -1, "Decrease neurons"));
         var minimumNeurons = BrainShapeDef.MinimumNeuronsPerLayer;
         var maximumNeurons = BrainShapeDef.MaximumNeuronsPerLayer;
         var slider = new UiSlider
         {
-            Tokens = _tokens,
             LabelText = "Neurons",
             ReadoutText = shape.NeuronsPerLayer.ToString(),
             Value = UiSliderValue.Thumb(
@@ -1011,8 +1021,7 @@ public partial class BuildScreen : Control
         var shape = Presentation?.BrainShape ?? BrainShapeDef.Default;
         var button = new UiButton
         {
-            Tokens = _tokens,
-            LabelText = label,
+            Text = label,
             TooltipText = accessibleLabel,
             ContentLayout = UiButtonContentLayout.RowCompact,
         };
@@ -1026,15 +1035,15 @@ public partial class BuildScreen : Control
     {
         var panel = CreatePanel(raised: false);
         panel.CustomMinimumSize = new Vector2(170, 176);
-        var margin = CreateMargin((int)_tokens.Space2);
+        var margin = CreateMargin((int)UiSize.Space.S2);
         panel.AddChild(margin);
         var stack = new VBoxContainer();
-        stack.AddThemeConstantOverride("separation", (int)_tokens.Space2);
+        stack.AddThemeConstantOverride("separation", (int)UiSize.Space.S2);
         margin.AddChild(stack);
-        stack.AddChild(CreateLabel("Live preview", 14, _tokens.Ink));
+        stack.AddChild(CreateLabel("Live preview", 14, UiThemeLookup.Color(this, UiTokens.Color.Ink)));
         stack.AddChild(CreateBrainSetupPreview());
         var connections = ConnectionCount();
-        stack.AddChild(CreateLabel($"{connections:0} connections", 14, _tokens.Accent));
+        stack.AddChild(CreateLabel($"{connections:0} connections", 14, UiThemeLookup.Color(this, UiTokens.Color.Accent)));
         return panel;
     }
 
@@ -1062,7 +1071,7 @@ public partial class BuildScreen : Control
                 HorizontalAlignment.Left,
                 control.Size.X - 24,
                 10,
-                _tokens.Muted);
+                UiThemeLookup.Color(this, UiTokens.Color.Muted));
             return;
         }
 
@@ -1081,18 +1090,18 @@ public partial class BuildScreen : Control
                 : layer == layers.Length - 1
                     ? "Motors"
                     : $"H{layer}";
-            control.DrawString(font, new Vector2(x - 24, 10), header, HorizontalAlignment.Center, 48, 8, _tokens.Muted);
+            control.DrawString(font, new Vector2(x - 24, 10), header, HorizontalAlignment.Center, 48, 8, UiThemeLookup.Color(this, UiTokens.Color.Muted));
             for (var i = 0; i < shown; i++)
             {
                 var y = 14 + ((control.Size.Y - 34) / (shown + 1) * (i + 1));
                 var point = new Vector2(x, y);
                 column.Add(point);
-                var color = layer == 0 || layer == layers.Length - 1 ? _tokens.Accent : _tokens.LineStrong;
+                var color = layer == 0 || layer == layers.Length - 1 ? UiThemeLookup.Color(this, UiTokens.Color.Accent) : UiThemeLookup.Color(this, UiTokens.Color.LineStrong);
                 control.DrawArc(point, 4, 0, Mathf.Tau, 18, color, 1.5f, antialiased: false);
             }
 
             var label = count > 6 ? $"+{count - 6} more" : $"{count}";
-            control.DrawString(font, new Vector2(x - 22, control.Size.Y - 3), label, HorizontalAlignment.Center, 44, 10, _tokens.Muted);
+            control.DrawString(font, new Vector2(x - 22, control.Size.Y - 3), label, HorizontalAlignment.Center, 44, 10, UiThemeLookup.Color(this, UiTokens.Color.Muted));
             nodeColumns.Add(column);
         }
 
@@ -1102,7 +1111,7 @@ public partial class BuildScreen : Control
             {
                 foreach (var to in nodeColumns[layer + 1])
                 {
-                    control.DrawLine(from, to, new Color(_tokens.Edge, 0.35f), 0.5f, antialiased: false);
+                    control.DrawLine(from, to, new Color(UiThemeLookup.Color(this, UiTokens.Color.Edge), 0.35f), 0.5f, antialiased: false);
                 }
             }
         }
@@ -1134,12 +1143,11 @@ public partial class BuildScreen : Control
     {
         var button = new UiButton
         {
-            Tokens = _tokens,
-            LabelText = $"{label} · {countText}",
+            Text = $"{label} · {countText}",
             Kind = UiButtonKind.Secondary,
             Disabled = locked,
             TooltipText = locked ? countText : string.Empty,
-            CustomMinimumSize = new Vector2(0, _tokens.TouchTarget),
+            CustomMinimumSize = new Vector2(0, UiSize.Control.Touch),
             SizeFlagsHorizontal = SizeFlags.ExpandFill,
         };
         if (!locked && tool is { } activeTool)
@@ -1174,10 +1182,10 @@ public partial class BuildScreen : Control
             : ShortValidationText(buildPanel.DisabledReason ?? buildPanel.ValidationLine);
         var row = new HBoxContainer();
         row.AddThemeConstantOverride("separation", 8);
-        var icon = UiFieldAndRows.Icon(buildPanel.CanStartTraining ? UiIconId.Check : UiIconId.Warn, UiIconSize.Large, buildPanel.CanStartTraining ? _tokens.Accent : _tokens.Danger);
+        var icon = UiFieldAndRows.Icon(buildPanel.CanStartTraining ? UiIconId.Check : UiIconId.Warn, UiIconSize.Large, buildPanel.CanStartTraining ? UiThemeLookup.Color(this, UiTokens.Color.Accent) : UiThemeLookup.Color(this, UiTokens.Color.Danger));
         icon.CustomMinimumSize = new Vector2(28, 0);
         row.AddChild(icon);
-        row.AddChild(CreateLabel(text, 18, buildPanel.CanStartTraining ? _tokens.Accent : _tokens.Danger, expand: true));
+        row.AddChild(CreateLabel(text, 18, buildPanel.CanStartTraining ? UiThemeLookup.Color(this, UiTokens.Color.Accent) : UiThemeLookup.Color(this, UiTokens.Color.Danger), expand: true));
         return row;
     }
 
@@ -1193,12 +1201,12 @@ public partial class BuildScreen : Control
         var size = control.Size;
         for (var x = 48f; x < size.X; x += 48f)
         {
-            control.DrawLine(new Vector2(x, 0), new Vector2(x, size.Y), _tokens.Line, 1);
+            control.DrawLine(new Vector2(x, 0), new Vector2(x, size.Y), UiThemeLookup.Color(this, UiTokens.Color.Line), 1);
         }
 
         for (var y = 48f; y < size.Y; y += 48f)
         {
-            control.DrawLine(new Vector2(0, y), new Vector2(size.X, y), _tokens.Line, 1);
+            control.DrawLine(new Vector2(0, y), new Vector2(size.X, y), UiThemeLookup.Color(this, UiTokens.Color.Line), 1);
         }
 
         DrawCornerMarks(control, size);
@@ -1218,14 +1226,14 @@ public partial class BuildScreen : Control
         var brokenB = new Vector2(size.X * 0.84f, size.Y * 0.86f);
 
         DrawTriangleFill(control, leftHip, top, rightHip);
-        DrawBeam(control, leftHip, top, _tokens.Edge);
-        DrawBeam(control, top, rightHip, _tokens.Edge);
-        DrawBeam(control, leftHip, rightHip, _tokens.Edge);
-        DrawBeam(control, leftHip, leftKnee, _tokens.Edge);
-        DrawBeam(control, leftKnee, leftFoot, _tokens.Edge);
-        DrawBeam(control, rightHip, rightKnee, _tokens.Edge);
-        DrawBeam(control, rightKnee, rightFoot, _tokens.Edge);
-        control.DrawDashedLine(brokenA, brokenB, _tokens.Danger, 4, 7, antialiased: false);
+        DrawBeam(control, leftHip, top, UiThemeLookup.Color(this, UiTokens.Color.Edge));
+        DrawBeam(control, top, rightHip, UiThemeLookup.Color(this, UiTokens.Color.Edge));
+        DrawBeam(control, leftHip, rightHip, UiThemeLookup.Color(this, UiTokens.Color.Edge));
+        DrawBeam(control, leftHip, leftKnee, UiThemeLookup.Color(this, UiTokens.Color.Edge));
+        DrawBeam(control, leftKnee, leftFoot, UiThemeLookup.Color(this, UiTokens.Color.Edge));
+        DrawBeam(control, rightHip, rightKnee, UiThemeLookup.Color(this, UiTokens.Color.Edge));
+        DrawBeam(control, rightKnee, rightFoot, UiThemeLookup.Color(this, UiTokens.Color.Edge));
+        control.DrawDashedLine(brokenA, brokenB, UiThemeLookup.Color(this, UiTokens.Color.Danger), 4, 7, antialiased: false);
 
         DrawMotorArc(control, leftHip, clockwise: false);
         DrawMotorArc(control, rightHip, clockwise: true);
@@ -1242,8 +1250,8 @@ public partial class BuildScreen : Control
         DrawInvalidNode(control, brokenA);
         DrawInvalidNode(control, brokenB);
 
-        DrawTag(control, "Rigid: no joints", top + new Vector2(-70, -42), _tokens.Halo);
-        DrawTag(control, "Not connected", brokenA + new Vector2(-48, -46), _tokens.Danger);
+        DrawTag(control, "Rigid: no joints", top + new Vector2(-70, -42), UiThemeLookup.Color(this, UiTokens.Color.Halo));
+        DrawTag(control, "Not connected", brokenA + new Vector2(-48, -46), UiThemeLookup.Color(this, UiTokens.Color.Danger));
     }
 
     private void DrawBrainPreview(Control control, ConstructionBuildPanelPresentation buildPanel)
@@ -1258,7 +1266,7 @@ public partial class BuildScreen : Control
                 HorizontalAlignment.Left,
                 -1,
                 17,
-                _tokens.Muted);
+                UiThemeLookup.Color(this, UiTokens.Color.Muted));
             return;
         }
 
@@ -1275,7 +1283,7 @@ public partial class BuildScreen : Control
         {
             foreach (var to in hidden)
             {
-                control.DrawLine(from, to, _tokens.Accent with { A = 0.45f }, 1.2f, antialiased: false);
+                control.DrawLine(from, to, UiThemeLookup.Color(this, UiTokens.Color.Accent) with { A = 0.45f }, 1.2f, antialiased: false);
             }
         }
 
@@ -1283,14 +1291,14 @@ public partial class BuildScreen : Control
         {
             foreach (var to in outputs)
             {
-                control.DrawLine(from, to, _tokens.Accent with { A = 0.55f }, 1.2f, antialiased: false);
+                control.DrawLine(from, to, UiThemeLookup.Color(this, UiTokens.Color.Accent) with { A = 0.55f }, 1.2f, antialiased: false);
             }
         }
 
         foreach (var point in inputs.Concat(hidden).Concat(outputs))
         {
-            control.DrawCircle(point, 5, _tokens.PanelRaised);
-            control.DrawArc(point, 5, 0, Mathf.Tau, 18, _tokens.LineStrong, 1.5f, antialiased: false);
+            control.DrawCircle(point, 5, UiThemeLookup.Color(this, UiTokens.Color.PanelRaised));
+            control.DrawArc(point, 5, 0, Mathf.Tau, 18, UiThemeLookup.Color(this, UiTokens.Color.LineStrong), 1.5f, antialiased: false);
         }
     }
 
@@ -1302,15 +1310,15 @@ public partial class BuildScreen : Control
 
     private void DrawCornerMarks(Control control, Vector2 size)
     {
-        control.DrawLine(new Vector2(14, 14), new Vector2(42, 14), _tokens.Accent, 3);
-        control.DrawLine(new Vector2(14, 14), new Vector2(14, 42), _tokens.Accent, 3);
-        control.DrawLine(new Vector2(size.X - 42, 14), new Vector2(size.X - 14, 14), _tokens.Accent, 3);
-        control.DrawLine(new Vector2(size.X - 14, 14), new Vector2(size.X - 14, 42), _tokens.Accent, 3);
+        control.DrawLine(new Vector2(14, 14), new Vector2(42, 14), UiThemeLookup.Color(this, UiTokens.Color.Accent), 3);
+        control.DrawLine(new Vector2(14, 14), new Vector2(14, 42), UiThemeLookup.Color(this, UiTokens.Color.Accent), 3);
+        control.DrawLine(new Vector2(size.X - 42, 14), new Vector2(size.X - 14, 14), UiThemeLookup.Color(this, UiTokens.Color.Accent), 3);
+        control.DrawLine(new Vector2(size.X - 14, 14), new Vector2(size.X - 14, 42), UiThemeLookup.Color(this, UiTokens.Color.Accent), 3);
     }
 
     private void DrawTriangleFill(Control control, Vector2 a, Vector2 b, Vector2 c)
     {
-        control.DrawColoredPolygon([a, b, c], _tokens.Muted with { A = 0.10f });
+        control.DrawColoredPolygon([a, b, c], UiThemeLookup.Color(this, UiTokens.Color.Muted) with { A = 0.10f });
     }
 
     private void DrawBeam(Control control, Vector2 start, Vector2 end, Color color)
@@ -1322,17 +1330,17 @@ public partial class BuildScreen : Control
     {
         if (selected)
         {
-            control.DrawCircle(position, 28, _tokens.Halo);
-            control.DrawCircle(position, 23, _tokens.Background);
+            control.DrawCircle(position, 28, UiThemeLookup.Color(this, UiTokens.Color.Halo));
+            control.DrawCircle(position, 23, UiThemeLookup.Color(this, UiTokens.Color.Background));
         }
 
-        if (_tokens.EffectsEnabled)
+        if (UiThemeLookup.EffectsEnabled(this))
         {
-            control.DrawCircle(position, 22, _tokens.AccentGlow);
+            control.DrawCircle(position, 22, UiGlow.FromBase(UiThemeLookup.Color(this, UiTokens.Color.Accent), UiThemeLookup.EffectsEnabled(this)));
         }
 
-        control.DrawCircle(position, 12, _tokens.Panel);
-        control.DrawArc(position, 12, 0, Mathf.Tau, 24, _tokens.LineStrong, 3, antialiased: false);
+        control.DrawCircle(position, 12, UiThemeLookup.Color(this, UiTokens.Color.Panel));
+        control.DrawArc(position, 12, 0, Mathf.Tau, 24, UiThemeLookup.Color(this, UiTokens.Color.LineStrong), 3, antialiased: false);
         if (hasCore)
         {
             var half = new Vector2(12, 12);
@@ -1343,36 +1351,35 @@ public partial class BuildScreen : Control
                 position + new Vector2(0, half.Y),
                 position + new Vector2(-half.X, 0),
             };
-            control.DrawPolyline(points.Append(points[0]).ToArray(), _tokens.Accent, 3, antialiased: false);
+            control.DrawPolyline(points.Append(points[0]).ToArray(), UiThemeLookup.Color(this, UiTokens.Color.Accent), 3, antialiased: false);
         }
     }
 
     private void DrawInvalidNode(Control control, Vector2 position)
     {
-        control.DrawCircle(position, 12, _tokens.Panel);
-        control.DrawArc(position, 12, 0, Mathf.Tau, 24, _tokens.Danger, 3, antialiased: false);
+        control.DrawCircle(position, 12, UiThemeLookup.Color(this, UiTokens.Color.Panel));
+        control.DrawArc(position, 12, 0, Mathf.Tau, 24, UiThemeLookup.Color(this, UiTokens.Color.Danger), 3, antialiased: false);
     }
 
     private void DrawMotorArc(Control control, Vector2 center, bool clockwise)
     {
         var start = clockwise ? -0.35f : 0.8f;
         var end = clockwise ? 1.0f : 2.1f;
-        control.DrawArc(center, 28, start, end, 20, _tokens.Accent, 3, antialiased: false);
+        control.DrawArc(center, 28, start, end, 20, UiThemeLookup.Color(this, UiTokens.Color.Accent), 3, antialiased: false);
     }
 
     private void DrawTag(Control control, string text, Vector2 position, Color borderColor)
     {
         var width = Mathf.Max(126, text.Length * 10);
-        control.DrawRect(new Rect2(position, new Vector2(width, 30)), _tokens.PanelRaised);
+        control.DrawRect(new Rect2(position, new Vector2(width, 30)), UiThemeLookup.Color(this, UiTokens.Color.PanelRaised));
         control.DrawRect(new Rect2(position, new Vector2(width, 30)), borderColor, filled: false, width: 2);
-        control.DrawString(ThemeDB.FallbackFont, position + new Vector2(12, 21), text, HorizontalAlignment.Left, -1, 16, _tokens.Ink);
+        control.DrawString(ThemeDB.FallbackFont, position + new Vector2(12, 21), text, HorizontalAlignment.Left, -1, 16, UiThemeLookup.Color(this, UiTokens.Color.Ink));
     }
 
     private UiCard CreatePanel(bool raised)
     {
         return new UiCard
         {
-            Tokens = _tokens,
             Kind = raised
                 ? UiCard.CardVariant.Raised
                 : UiCard.CardVariant.Frame,
@@ -1400,9 +1407,9 @@ public partial class BuildScreen : Control
             Disabled = active,
         };
         button.AddThemeFontSizeOverride("font_size", 16);
-        button.AddThemeColorOverride("font_color", _tokens.Ink);
-        button.AddThemeColorOverride("font_disabled_color", _tokens.Ink);
-        button.AddThemeColorOverride("font_hover_color", _tokens.Ink);
+        button.AddThemeColorOverride("font_color", UiThemeLookup.Color(this, UiTokens.Color.Ink));
+        button.AddThemeColorOverride("font_disabled_color", UiThemeLookup.Color(this, UiTokens.Color.Ink));
+        button.AddThemeColorOverride("font_hover_color", UiThemeLookup.Color(this, UiTokens.Color.Ink));
         button.AddThemeStyleboxOverride("normal", CreateSegmentStyle(active, first, last));
         button.AddThemeStyleboxOverride("hover", CreateSegmentStyle(true, first, last));
         button.AddThemeStyleboxOverride("pressed", CreateSegmentStyle(true, first, last));
@@ -1418,22 +1425,23 @@ public partial class BuildScreen : Control
     {
         return new UiButton
         {
-            Tokens = _tokens,
             Kind = kind,
-            LabelText = label,
+            Text = label,
             IconId = iconId ?? UiIconId.None,
             TooltipText = tooltip,
-            CustomMinimumSize = new Vector2(0, _tokens.TouchTarget),
+            CustomMinimumSize = new Vector2(0, UiSize.Control.Touch),
         };
     }
 
     private StyleBoxFlat CreateSegmentStyle(bool active, bool first, bool last)
     {
-        var radius = (int)_tokens.RadiusMedium;
+        var radius = (int)UiSize.Radius.Medium;
         return new StyleBoxFlat
         {
-            BgColor = active ? _tokens.AccentSoft : _tokens.PanelRaised,
-            BorderColor = active ? _tokens.Accent : _tokens.LineStrong,
+            BgColor = active
+                ? UiThemeLookup.Color(this, UiTokens.Color.Accent).WithAlpha(UiThemeLookup.Alpha(this, UiTokens.Alpha.Soft))
+                : UiThemeLookup.Color(this, UiTokens.Color.PanelRaised),
+            BorderColor = active ? UiThemeLookup.Color(this, UiTokens.Color.Accent) : UiThemeLookup.Color(this, UiTokens.Color.LineStrong),
             BorderWidthLeft = 1,
             BorderWidthTop = 1,
             BorderWidthRight = last ? 1 : 0,
@@ -1449,14 +1457,14 @@ public partial class BuildScreen : Control
 
     private StyleBoxFlat CreateToolStyle(bool active, bool locked, int borderWidth = 1, float opacity = 1)
     {
-        var radius = (int)_tokens.RadiusMedium;
-        var border = active ? _tokens.Accent : _tokens.LineStrong;
+        var radius = (int)UiSize.Radius.Medium;
+        var border = active ? UiThemeLookup.Color(this, UiTokens.Color.Accent) : UiThemeLookup.Color(this, UiTokens.Color.LineStrong);
         var alpha = opacity * (locked ? 0.5f : 1f);
         return new StyleBoxFlat
         {
             BgColor = active
-                ? new Color(_tokens.AccentSoft.R, _tokens.AccentSoft.G, _tokens.AccentSoft.B, _tokens.AccentSoft.A * alpha)
-                : new Color(_tokens.PanelRaised.R, _tokens.PanelRaised.G, _tokens.PanelRaised.B, _tokens.PanelRaised.A * alpha),
+                ? UiThemeLookup.Color(this, UiTokens.Color.Accent).WithAlpha(UiThemeLookup.Alpha(this, UiTokens.Alpha.Soft)).ScaleAlpha(alpha)
+                : new Color(UiThemeLookup.Color(this, UiTokens.Color.PanelRaised).R, UiThemeLookup.Color(this, UiTokens.Color.PanelRaised).G, UiThemeLookup.Color(this, UiTokens.Color.PanelRaised).B, UiThemeLookup.Color(this, UiTokens.Color.PanelRaised).A * alpha),
             BorderColor = new Color(border.R, border.G, border.B, border.A * alpha),
             BorderWidthLeft = locked ? 2 : active ? 2 : borderWidth,
             BorderWidthTop = locked ? 1 : active ? 2 : borderWidth,
@@ -1516,6 +1524,13 @@ public partial class BuildScreen : Control
             control.MouseFilter = control == this || control.HasMeta(_hostedInputPassthroughMeta)
                 ? MouseFilterEnum.Ignore
                 : MouseFilterEnum.Stop;
+
+            // Library components own their internal mouse filters; forcing Stop on a
+            // UiButton's caption would swallow the press before it reaches the button.
+            if (control != this && control.GetType().Namespace == typeof(UiButton).Namespace)
+            {
+                return;
+            }
         }
 
         foreach (var child in node.GetChildren())

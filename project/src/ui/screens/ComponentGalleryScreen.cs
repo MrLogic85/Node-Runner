@@ -38,9 +38,6 @@ public partial class ComponentGalleryScreen : Control
     private UiButton? _toolbarMore;
     private UiMenu? _toolbarMenu;
     private Button? _toolbarDismiss;
-    private readonly List<Action<UiTokens>> _tokenAppliers = new();
-    private readonly List<Action<UiTokens>> _labelAppliers = new();
-    private UiTokens _tokens = UiTokens.Neon;
     private ScrollContainer? _scroll;
     private Control? _scrollContent;
     private UiFrame? _frame;
@@ -50,7 +47,6 @@ public partial class ComponentGalleryScreen : Control
         Name = nameof(ComponentGalleryScreen);
         UiLayout.ApplyScreen(this);
         BuildLayout();
-        ApplyTokens(_tokens);
         Callable.From(ResetScrollPosition).CallDeferred();
     }
 
@@ -64,7 +60,7 @@ public partial class ComponentGalleryScreen : Control
 
     private void BuildLayout()
     {
-        _frame = Track(GetNode<UiFrame>("%UiFrame"));
+        _frame = GetNode<UiFrame>("%UiFrame");
         BindHeader();
         _scroll = GetNode<ScrollContainer>("%Scroll");
         _scrollContent = GetNode<MarginContainer>("%ContentFrame");
@@ -83,33 +79,26 @@ public partial class ComponentGalleryScreen : Control
 
     private void BindHeader()
     {
-        var title = GetNode<UiLabel>("%ToolbarTitle");
-        _labelAppliers.Add(tokens =>
-        {
-            title.Tokens = tokens;
-            title.AddThemeColorOverride("font_color", tokens.Ink);
-        });
-
-        var close = Track(GetNode<UiButton>("%CloseAction"));
+        var close = GetNode<UiButton>("%CloseAction");
         close.Visible = ShowCloseAction;
         close.Activated += () => EmitSignal(SignalName.CloseRequested);
 
-        var switcher = Track(GetNode<UiSegmentedSwitch>("%ThemeSwitcher"));
+        var switcher = GetNode<UiSegmentedSwitch>("%ThemeSwitcher");
         switcher.SelectionChanged += OnThemeSelectionChanged;
 
-        _toolbarMore = Track(GetNode<UiButton>("%ToolbarMore"));
+        _toolbarMore = GetNode<UiButton>("%ToolbarMore");
         _toolbarMore.Activated += ToggleToolbarMenu;
         _toolbarMore.ItemRectChanged += () => Callable.From(PositionToolbarMenu).CallDeferred();
     }
 
     private void OnThemeSelectionChanged(int index)
     {
-        ApplyTokens(index switch
+        ApplyTheme(UiThemes.For(index switch
         {
-            1 => UiTokens.Paper,
-            2 => UiTokens.Neon.WithEffects(false),
-            _ => UiTokens.Neon,
-        });
+            1 => UiTokenType.Paper,
+            2 => UiTokenType.Light,
+            _ => UiTokenType.Neon,
+        }));
     }
 
     private void CreateToolbarMenu()
@@ -129,7 +118,7 @@ public partial class ComponentGalleryScreen : Control
         AddChild(_toolbarDismiss);
         _toolbarDismiss.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
         _toolbarDismiss.Pressed += CloseToolbarMenu;
-        _toolbarMenu = Track(new UiMenu());
+        _toolbarMenu = new UiMenu();
         _toolbarMenu.IndexClicked += index =>
         {
             if (index is 0 or 1)
@@ -164,7 +153,6 @@ public partial class ComponentGalleryScreen : Control
                     Selected: ShowDebugBounds),
                 new UiMenuItemSpec("Popup Gallery", UiIconId.Model),
             ],
-            _tokens,
             showSelectedIndicator: true);
     }
 
@@ -221,7 +209,7 @@ public partial class ComponentGalleryScreen : Control
         var bottomRight = transform * _toolbarMore.Size;
         _toolbarMenu.Position = new Vector2(
             Mathf.Max(0, bottomRight.X - _toolbarMenu.Size.X),
-            bottomRight.Y + _tokens.Space1);
+            bottomRight.Y + UiSize.Space.S1);
     }
 
     private void CloseToolbarMenu()
@@ -243,7 +231,6 @@ public partial class ComponentGalleryScreen : Control
     {
         if (control is UiButton button)
         {
-            Track(button);
             if (button.IsInGroup("gallery_toggle_button"))
             {
                 button.Activated += () => button.Selected = !button.Selected;
@@ -251,27 +238,14 @@ public partial class ComponentGalleryScreen : Control
             return;
         }
 
-        if (control is UiLabel label)
-        {
-            _labelAppliers.Add(tokens =>
-            {
-                label.Tokens = tokens;
-                label.AddThemeColorOverride("font_color",
-                    label.IsInGroup("gallery_muted") ? tokens.Muted : tokens.Ink);
-            });
-            return;
-        }
-
         if (control is UiStageCard stageCard)
         {
             BindAuthoredStageCard(stageCard);
-            Track(stageCard);
             return;
         }
 
         if (control is UiCard card)
         {
-            Track(card);
             foreach (var child in card.GetChildren().OfType<Control>())
             {
                 BindAuthoredControls(child);
@@ -281,7 +255,6 @@ public partial class ComponentGalleryScreen : Control
 
         if (control is UiMenu menu)
         {
-            Track(menu);
             foreach (var child in menu.GetChildren().OfType<Control>())
             {
                 BindAuthoredControls(child);
@@ -292,7 +265,6 @@ public partial class ComponentGalleryScreen : Control
         if (control is UiPicker picker)
         {
             BindAuthoredPicker(picker);
-            Track(picker);
             return;
         }
 
@@ -310,7 +282,6 @@ public partial class ComponentGalleryScreen : Control
             or UiValueRow
             or UiNoteRow)
         {
-            Track(control);
             return;
         }
 
@@ -362,32 +333,9 @@ public partial class ComponentGalleryScreen : Control
         }
     }
 
-    private T Track<T>(T control)
-        where T : Control
+    private void ApplyTheme(Godot.Theme theme)
     {
-        SetTokens(control, _tokens);
-        _tokenAppliers.Add(tokens => SetTokens(control, tokens));
-        return control;
-    }
-
-    private static void SetTokens(Control control, UiTokens tokens)
-    {
-        UiTokenApplier.Apply(control, tokens);
-    }
-
-    private void ApplyTokens(UiTokens tokens)
-    {
-        _tokens = tokens;
-
-        foreach (var apply in _tokenAppliers)
-        {
-            apply(tokens);
-        }
-
-        foreach (var apply in _labelAppliers)
-        {
-            apply(tokens);
-        }
+        Theme = theme;
 
         if (_scrollContent is not null)
         {

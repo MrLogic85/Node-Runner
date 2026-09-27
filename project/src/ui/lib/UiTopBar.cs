@@ -11,7 +11,6 @@ public partial class UiTopBar : UiCard
     [Signal]
     public delegate void OverflowPressedEventHandler();
 
-    private UiTokens _tokens = UiTokens.Neon;
     private UiButton? _backButton;
     private Label? _titleLabel;
     private HBoxContainer? _actionHost;
@@ -54,17 +53,6 @@ public partial class UiTopBar : UiCard
         }
     }
 
-    public override UiTokens Tokens
-    {
-        get => _tokens;
-        set
-        {
-            _tokens = value;
-            base.Tokens = value;
-            Refresh();
-        }
-    }
-
     public override void _Ready()
     {
         Kind = CardVariant.Frame;
@@ -72,13 +60,12 @@ public partial class UiTopBar : UiCard
         base._Ready();
 
         var row = new HBoxContainer();
-        row.AddThemeConstantOverride("separation", (int)_tokens.Space2);
+        row.AddThemeConstantOverride("separation", (int)UiSize.Space.S2);
         AddChild(row);
 
         _backButton = new UiButton
         {
             ContentLayout = UiButtonContentLayout.Stacked,
-            Tokens = _tokens,
             IconId = UiIconId.Back,
             TooltipText = "Back",
         };
@@ -93,13 +80,12 @@ public partial class UiTopBar : UiCard
         row.AddChild(_titleLabel);
 
         _actionHost = new HBoxContainer();
-        _actionHost.AddThemeConstantOverride("separation", (int)_tokens.Space1);
+        _actionHost.AddThemeConstantOverride("separation", (int)UiSize.Space.S1);
         row.AddChild(_actionHost);
 
         _overflowButton = new UiButton
         {
             ContentLayout = UiButtonContentLayout.Stacked,
-            Tokens = _tokens,
             IconId = UiIconId.More,
             TooltipText = "More",
         };
@@ -136,7 +122,6 @@ public partial class UiTopBar : UiCard
 
         foreach (var action in actions)
         {
-            action.Tokens = _tokens;
             _actionHost.AddChild(action);
         }
     }
@@ -151,29 +136,22 @@ public partial class UiTopBar : UiCard
         CustomMinimumSize = new Vector2(0, UiLayout.TopBarHeight);
         if (_backButton is not null)
         {
-            _backButton.Tokens = _tokens;
             _backButton.Visible = ShowBack;
         }
 
         if (_titleLabel is not null)
         {
             _titleLabel.Text = TitleText;
-            _tokens.ApplyTextStyle(_titleLabel, _tokens.HeadingText);
-            _titleLabel.AddThemeColorOverride("font_color", _tokens.Ink);
+            UiThemeLookup.ApplyTextStyle(_titleLabel, UiTokens.Typography.Heading, UiTokens.Color.Ink);
         }
 
         if (_actionHost is not null)
         {
-            _actionHost.AddThemeConstantOverride("separation", (int)_tokens.Space1);
-            foreach (var child in _actionHost.GetChildren().OfType<UiButton>())
-            {
-                child.Tokens = _tokens;
-            }
+            _actionHost.AddThemeConstantOverride("separation", (int)UiSize.Space.S1);
         }
 
         if (_overflowButton is not null)
         {
-            _overflowButton.Tokens = _tokens;
             _overflowButton.Visible = ShowOverflow;
         }
     }
