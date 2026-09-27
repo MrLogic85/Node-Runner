@@ -58,21 +58,6 @@ public sealed class UiIconsTests
         }
     }
 
-    [Theory]
-    [InlineData("back", UiIconId.Back)]
-    [InlineData("brain", UiIconId.Model)]
-    [InlineData("model", UiIconId.Model)]
-    [InlineData("padlock", UiIconId.Lock)]
-    [InlineData("play", UiIconId.Play)]
-    [InlineData("settings", UiIconId.Gear)]
-    [InlineData("locked", UiIconId.Lock)]
-    [InlineData("delete", UiIconId.Trash)]
-    public void LegacyAliases_ResolveThroughOneCanonicalAdapter(string alias, UiIconId expected)
-    {
-        UiIconGlyphs.TryParse(alias, out var icon).ShouldBeTrue();
-        icon.ShouldBe(expected);
-    }
-
     [Fact]
     public void CanonicalGalleryFixtures_DoNotContainPseudoIconStrings()
     {

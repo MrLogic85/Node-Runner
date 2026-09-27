@@ -2,27 +2,26 @@ using Godot;
 
 namespace NodeRunner.Ui.Lib;
 
-/// <summary>Ringed icon, title, and one help line.</summary>
+/// <summary>
+/// Info row (<c>c_info_row</c>): a ringed halo icon with a title and one line of help, used to
+/// explain a handle or a mode.
+/// </summary>
+[Tool]
+[GlobalClass]
 public partial class UiInfoRow : HBoxContainer
 {
-    private string _iconText = "?";
-    private UiIconId _iconId = UiIconId.Warn;
+    private const string _ringName = "_UiRing";
+    private const string _textName = "_UiText";
 
-    [Export]
-    public string IconText
-    {
-        get => _iconText;
-        set
-        {
-            _iconText = value;
-            if (UiIconGlyphs.TryParse(value, out var icon))
-            {
-                _iconId = icon;
-            }
+    private UiIconId _iconId = UiIconId.None;
+    private string _title = string.Empty;
+    private string _help = string.Empty;
+    private PanelContainer? _ring;
+    private TextureRect? _icon;
+    private UiLabel? _titleLabel;
+    private UiLabel? _helpLabel;
 
-            Rebuild();
-        }
-    }
+    public UiInfoRow() => MouseFilter = MouseFilterEnum.Pass;
 
     [Export]
     public UiIconId IconId
@@ -30,71 +29,141 @@ public partial class UiInfoRow : HBoxContainer
         get => _iconId;
         set
         {
+            if (!Enum.IsDefined(value))
+            {
+                GD.PushError($"Invalid info row icon: {value}. Keeping {_iconId}.");
+                return;
+            }
+
             _iconId = value;
-            _iconText = value.ToString();
-            Rebuild();
+            Refresh();
         }
     }
 
     [Export]
-    public string Title { get; set; } = "Rotate handle";
-
-    [Export]
-    public string Help { get; set; } = "Drag the stem to rotate selected parts.";
-
-    public override void _Ready()
+    public string Title
     {
-        MouseFilter = MouseFilterEnum.Pass;
-        Rebuild();
+        get => _title;
+        set
+        {
+            _title = value;
+            Refresh();
+        }
     }
+
+    [Export(PropertyHint.MultilineText)]
+    public string Help
+    {
+        get => _help;
+        set
+        {
+            _help = value;
+            Refresh();
+        }
+    }
+
+    public override void _EnterTree() => RequestReady();
+
+    public override void _Ready() => Refresh();
 
     public override void _Notification(int what)
     {
         if (what == NotificationThemeChanged && IsNodeReady())
         {
-            UiThemeRefresh.Guarded(this, Rebuild);
+            UiThemeRefresh.Guarded(this, Refresh);
         }
     }
 
-    private void Rebuild()
+    private void Refresh()
     {
         if (!IsInsideTree())
         {
             return;
         }
 
-        foreach (var child in GetChildren())
-        {
-            RemoveChild(child);
-            child.QueueFree();
-        }
+        // Re-found after a C# assembly reload, which clears managed fields but keeps the children.
+        EnsureContent();
+        AddThemeConstantOverride("separation", UiSize.Space.S2);
 
-        var space2 = UiSize.Space.S2;
         var halo = UiThemeLookup.Color(this, UiTokens.Color.Halo);
-        AddThemeConstantOverride("separation", space2);
-        var iconFrame = new PanelContainer
-        {
-            CustomMinimumSize = new Vector2(
-                UiSize.Control.ExtraSmall,
-                UiSize.Control.ExtraSmall),
-            MouseFilter = MouseFilterEnum.Ignore,
-        };
-        iconFrame.AddThemeStyleboxOverride(
-            "panel",
-            UiThemeLookup.CreateStyleBox(Colors.Transparent,
-                halo,
-                radius: UiSize.Radius.Pill));
-        iconFrame.AddChild(UiFieldAndRows.Icon(IconId, UiIconSize.Small, halo));
-        AddChild(iconFrame);
-        var labels = new VBoxContainer { SizeFlagsHorizontal = SizeFlags.ExpandFill };
-        labels.AddThemeConstantOverride("separation", 0);
-        AddChild(labels);
-        labels.AddChild(UiFieldAndRows.Label(Title,
-            UiTokens.Typography.BodyStrong,
-            UiTokens.Color.Ink));
-        labels.AddChild(UiFieldAndRows.Label(Help,
-            UiTokens.Typography.Note,
-            UiTokens.Color.Muted));
+        _ring!.AddThemeStyleboxOverride("panel", UiThemeLookup.CreateStyleBox(
+            Colors.Transparent,
+            halo,
+            borderWidth: UiSize.Stroke.InfoRing,
+            radius: UiSize.Radius.Pill));
+        bool hasIcon = IconId != UiIconId.None;
+        _icon!.Visible = hasIcon;
+        _icon.Texture = hasIcon ? UiIcons.Load(IconId, UiIconSize.Standard) : null;
+        _icon.SelfModulate = halo;
+
+        _titleLabel!.Text = Title;
+        _helpLabel!.Text = Help;
+        _helpLabel.Visible = Help.Length > 0;
     }
 
+    private void EnsureContent()
+    {
+        if (_ring is not null)
+        {
+            return;
+        }
+
+        if (GetNodeOrNull<PanelContainer>(_ringName) is { } ring
+            && GetNodeOrNull<VBoxContainer>(_textName) is { } text)
+        {
+            _ring = ring;
+            _icon = ring.GetNode<TextureRect>("Icon");
+            _titleLabel = text.GetNode<UiLabel>("Title");
+            _helpLabel = text.GetNode<UiLabel>("Help");
+            return;
+        }
+
+        _ring = new PanelContainer
+        {
+            Name = _ringName,
+            CustomMinimumSize = Vector2.One * UiSize.Control.Small,
+            MouseFilter = MouseFilterEnum.Ignore,
+            SizeFlagsVertical = SizeFlags.ShrinkCenter,
+        };
+        _icon = new TextureRect
+        {
+            Name = "Icon",
+            ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
+            StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
+            CustomMinimumSize = Vector2.One * UiIcons.Pixels(UiIconSize.Standard),
+            MouseFilter = MouseFilterEnum.Ignore,
+            SizeFlagsHorizontal = SizeFlags.ShrinkCenter,
+            SizeFlagsVertical = SizeFlags.ShrinkCenter,
+        };
+        _ring.AddChild(_icon);
+
+        var textColumn = new VBoxContainer
+        {
+            Name = _textName,
+            MouseFilter = MouseFilterEnum.Ignore,
+            SizeFlagsHorizontal = SizeFlags.ExpandFill,
+            SizeFlagsVertical = SizeFlags.ShrinkCenter,
+        };
+        textColumn.AddThemeConstantOverride("separation", 0);
+        _titleLabel = new UiLabel
+        {
+            Name = "Title",
+            TextStyle = UiTokens.Typography.SmallStrong,
+            TextColor = UiTokens.Color.Ink,
+            MouseFilter = MouseFilterEnum.Ignore,
+        };
+        _helpLabel = new UiLabel
+        {
+            Name = "Help",
+            TextStyle = UiTokens.Typography.Note,
+            TextColor = UiTokens.Color.Muted,
+            AutowrapMode = TextServer.AutowrapMode.WordSmart,
+            MouseFilter = MouseFilterEnum.Ignore,
+        };
+        textColumn.AddChild(_titleLabel);
+        textColumn.AddChild(_helpLabel);
+
+        AddChild(_ring);
+        AddChild(textColumn);
+    }
 }

@@ -27,6 +27,7 @@
 [ext_resource type="Script" uid="uid://ceoq80oxw56og" path="res://src/ui/lib/UiTextField.cs" id="24_text_field"]
 [ext_resource type="Script" uid="uid://b32bnhbgasedd" path="res://src/ui/lib/UiChip.cs" id="25_chip"]
 [ext_resource type="Script" uid="uid://b1nqvpdy0fk4h" path="res://src/ui/lib/UiCallout.cs" id="26_callout"]
+[ext_resource type="Script" uid="uid://c6loxvqr7tfvr" path="res://src/ui/lib/UiInfoRow.cs" id="27_info_row"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_txsyx"]
 content_margin_left = 1.0
@@ -2522,6 +2523,58 @@ size_flags_vertical = 4
 script = ExtResource("26_callout")
 Text = "Target · Front shin"
 Kind = 2
+
+[node name="InfoRows" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content" unique_id=1172648689]
+layout_mode = 2
+
+[node name="Heading" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/InfoRows" unique_id=911351065]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Title" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/InfoRows/Heading" unique_id=833242222]
+layout_mode = 2
+size_flags_vertical = 8
+text = "Info row"
+script = ExtResource("2_cpfof")
+TextStyle = 12
+
+[node name="Description" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/InfoRows/Heading" unique_id=564261222]
+custom_minimum_size = Vector2(120, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 8
+text = "a ringed halo icon with a title and a note, used to explain a handle or a mode"
+autowrap_mode = 3
+script = ExtResource("2_cpfof")
+TextStyle = 9
+TextColor = 8
+
+[node name="Rows" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/InfoRows" unique_id=380158727]
+custom_minimum_size = Vector2(220, 0)
+layout_mode = 2
+size_flags_horizontal = 0
+theme_override_constants/separation = 8
+
+[node name="Move" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/InfoRows/Rows" unique_id=331588576]
+layout_mode = 2
+script = ExtResource("27_info_row")
+IconId = 20
+Title = "Move"
+Help = "Drag inside the box"
+
+[node name="Rotate" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/InfoRows/Rows" unique_id=259083449]
+layout_mode = 2
+script = ExtResource("27_info_row")
+IconId = 27
+Title = "Rotate"
+Help = "Turn it around its middle"
+
+[node name="Scale" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/InfoRows/Rows" unique_id=496646488]
+layout_mode = 2
+script = ExtResource("27_info_row")
+IconId = 28
+Title = "Scale"
+Help = "Drag the corner: closer together or further apart"
 
 [node name="Slider" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content" unique_id=1266658681]
 layout_mode = 2
