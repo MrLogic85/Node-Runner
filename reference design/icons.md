@@ -4,7 +4,7 @@ All icons are pure white (`#ffffff`) on purpose: import them as SVG and tint the
 
 Two sets. **UI icons** are stroked glyphs on a 24 grid (stroke 2, round caps and joins, `currentColor`), used at 12, 16, 20 and 24. **Part glyphs** are 20-grid pictures of parts, drawn with the dark theme colours. One SVG per icon in `icons/ui/` and `icons/parts/`.
 
-## UI icons (39)
+## UI icons (40)
 
 | Icon | Name |
 |---|---|
@@ -39,6 +39,7 @@ Two sets. **UI icons** are stroked glyphs on a 24 grid (stroke 2, round caps and
 | <img src="icons/ui/scale.svg" width="24" style="background:#0d1424"> | `scale` |
 | <img src="icons/ui/select.svg" width="24" style="background:#0d1424"> | `select` |
 | <img src="icons/ui/shadow.svg" width="24" style="background:#0d1424"> | `shadow` |
+| <img src="icons/ui/sort.svg" width="24" style="background:#0d1424"> | `sort` |
 | <img src="icons/ui/sound.svg" width="24" style="background:#0d1424"> | `sound` |
 | <img src="icons/ui/speed.svg" width="24" style="background:#0d1424"> | `speed` |
 | <img src="icons/ui/stop.svg" width="24" style="background:#0d1424"> | `stop` |

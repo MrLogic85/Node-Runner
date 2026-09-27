@@ -1,0 +1,11 @@
+Reached from **Checkpoints** in the overflow menu on a locked creation (see BuildLocked). A checkpoint is a full save of the creation -- its structure and its trained brain -- with a name and a timestamp added on top; **active**, the save the player is currently working in, is not itself a checkpoint and never appears here.
+
+**Auto checkpoints** are made every 100 generations of training, and when an achievement is earned, named "Nth generation" after the generation reached. **Manual checkpoints** are made from **Save** in the top bar, which saves one at once (also named by generation, so there is always a name) -- rename it after if you want something else.
+
+**The list is a row of cards, exactly like Creations** -- same size, same live thumbnail of the creation, side by side, scrolling sideways once there are more than fit. The one difference is the sort: checkpoints are **sorted by generation, highest first**, not save order. Generation is stored as part of the save, not derived from the name, so this stays correct however a checkpoint was named.
+
+**Each card** carries the creation's thumbnail, its name and a "Gen N · timestamp" line, then a footer row of three labelled icon buttons -- **Restore**, **Rename** and **Delete** -- visible at once rather than behind an overflow menu, the same idea as Copy/Delete on a creation card.
+
+- **Restore.** Overwrites active with a copy of the checkpoint, as if the app had been reloaded into it -- structure and training both revert, so any progress or edits made since are lost. The dialog names the checkpoint and suggests making a new checkpoint of the current state first (see Overlays). Needs a press-and-hold; there is no undo.
+- **Rename.** The name becomes an editable field in place, the same field and states as any other name in the app (see Component Library). The timestamp does not change.
+- **Delete.** Removes that one checkpoint for good. The dialog names it and needs a press-and-hold; there is no undo. Deleting a checkpoint never touches active or any other checkpoint.

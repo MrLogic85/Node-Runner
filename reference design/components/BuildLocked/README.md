@@ -1,6 +1,6 @@
 A creation **after its first finished training session**. It is the Build scene in its **locked** state (`Build` with `locked = true`, not a second scene), so the parts and the brain shape that the trained model depends on cannot change.
 
-**Top bar.** Back, the name (editable) with the "Saved" cue, a **padlock** icon button in `accent` and the overflow menu (**Stats**, **Power budget**, **Copy creation**, **Delete creation**). Tapping the padlock opens the **Unlock dialog** (see Overlays): unlocking deletes the training, so the dialog names it ("142 generations"), suggests copying first, and needs a press-and-hold.
+**Top bar.** Back, the name (editable), a **padlock** icon button in `accent` and the overflow menu (**Stats**, **Power budget**, **Checkpoints**, **Copy creation**, **Delete creation**). Tapping the padlock opens the **Unlock dialog** (see Overlays): unlocking deletes the training, so the dialog names it ("142 generations"), suggests copying first, and needs a press-and-hold.
 
 **Rail.** **Move**, **Beam** and **Joint** (both dashed and locked) and **Select**, and a large **play** button at the bottom, which opens Train setup. In Select the handles are Move and Rotate; Scale is off, because beams keep their length.
 
