@@ -2,37 +2,16 @@ using Godot;
 
 namespace NodeRunner.Ui.Lib;
 
-/// <summary>Native Label with a canonical typography preset selected in the Inspector.</summary>
+/// <summary>Native Label with a canonical typography and text color selected in the Inspector.</summary>
 [Tool]
 [GlobalClass]
 public sealed partial class UiLabel : Label
 {
-    public enum TextPreset
-    {
-        Title,
-        Heading,
-        Subheading,
-        Stage,
-        Body,
-        BodyStrong,
-        Small,
-        SmallStrong,
-        Label,
-        Note,
-        NoteStrong,
-        Caption,
-        Overline,
-        ReadoutLarge,
-        Readout,
-        ReadoutMedium,
-        ReadoutSmall,
-    }
-
-    private TextPreset _textStyle = TextPreset.Body;
-    private UiTokens _tokens = UiTokens.Neon;
+    private UiTokens.Typography _textStyle = UiTokens.Typography.Body;
+    private UiTokens.Color _textColor = UiTokens.Color.Ink;
 
     [Export]
-    public TextPreset TextStyle
+    public UiTokens.Typography TextStyle
     {
         get => _textStyle;
         set
@@ -43,80 +22,62 @@ public sealed partial class UiLabel : Label
                 return;
             }
             _textStyle = value;
-            ApplyTypography();
+            ApplyStyle();
         }
     }
 
-    public UiTokens Tokens
+    [Export]
+    public UiTokens.Color TextColor
     {
-        get => _tokens;
+        get => _textColor;
         set
         {
-            ArgumentNullException.ThrowIfNull(value);
-            _tokens = value;
-            ApplyTypography();
+            if (!UiTokens.IsTextColor(value))
+            {
+                GD.PushError($"Invalid label text color: {value}. Keeping {_textColor}.");
+                return;
+            }
+
+            _textColor = value;
+            ApplyStyle();
         }
     }
 
     public override void _EnterTree() => RequestReady();
 
-    public override void _Ready() => ApplyTypography();
+    public override void _Ready() => ApplyStyle();
 
-    private void ApplyTypography()
+    // Both values are theme-independent names; the inherited Theme resolves the font and color.
+    private void ApplyStyle()
     {
-        if (!IsNodeReady() || !IsInsideTree())
+        var variation = UiTokens.Variation(TextStyle, TextColor);
+        if (ThemeTypeVariation != variation)
         {
-            return;
+            ThemeTypeVariation = variation;
         }
 
-        var style = ResolveStyle(TextStyle, Tokens);
-        // A private derived theme preserves native color inheritance without serialized font overrides.
-        var typography = new Godot.Theme();
-        if (UiTokens.CreateTextFont(style) is { } font)
-        {
-            typography.SetFont("font", "Label", font);
-        }
-        typography.SetFontSize("font_size", "Label", (int)style.FontSize);
-        typography.SetConstant("line_spacing", "Label", 0);
-        LabelSettings = null;
-        RemoveThemeFontOverride("font");
-        RemoveThemeFontSizeOverride("font_size");
-        RemoveThemeConstantOverride("line_spacing");
-        Theme = typography;
-        Uppercase = style.Uppercase;
+        Uppercase = UiTokens.IsUppercase(TextStyle);
     }
 
+    private static readonly HashSet<StringName> _derivedProperties =
+    [
+        Control.PropertyName.Theme,
+        Control.PropertyName.ThemeTypeVariation,
+        Label.PropertyName.LabelSettings,
+        Label.PropertyName.Uppercase,
+    ];
+
+    // Hides properties that TextStyle/TextColor own from the Inspector and from saved scenes.
+    // Godot does not validate the dynamic theme_override_* properties, so baked colors and
+    // fonts are caught by the scene guard in NodeRunner.Ui.Tests instead.
     public override void _ValidateProperty(Godot.Collections.Dictionary property)
     {
-        var name = property["name"].AsString();
-        if (name is "theme" or "label_settings" or "uppercase" or "resize_font_to_fit"
-            or "minimum_font_size" or "maximum_font_size")
+        var name = property["name"].AsStringName();
+
+        if (_derivedProperties.Contains(name))
         {
-            // Typography is derived from TextStyle; do not expose or serialize competing values.
             var usage = (PropertyUsageFlags)property["usage"].AsInt64();
             property["usage"] = (long)(usage & ~(PropertyUsageFlags.Editor | PropertyUsageFlags.Storage));
         }
     }
-
-    public static UiTokens.TextStyle ResolveStyle(TextPreset preset, UiTokens tokens) => preset switch
-    {
-        TextPreset.Title => tokens.TitleText,
-        TextPreset.Heading => tokens.HeadingText,
-        TextPreset.Subheading => tokens.SubheadingText,
-        TextPreset.Stage => tokens.StageText,
-        TextPreset.Body => tokens.BodyText,
-        TextPreset.BodyStrong => tokens.BodyStrongText,
-        TextPreset.Small => tokens.SmallText,
-        TextPreset.SmallStrong => tokens.SmallStrongText,
-        TextPreset.Label => tokens.LabelText,
-        TextPreset.Note => tokens.NoteText,
-        TextPreset.NoteStrong => tokens.NoteStrongText,
-        TextPreset.Caption => tokens.CaptionText,
-        TextPreset.Overline => tokens.OverlineText,
-        TextPreset.ReadoutLarge => tokens.ReadoutLargeText,
-        TextPreset.Readout => tokens.ReadoutText,
-        TextPreset.ReadoutMedium => tokens.ReadoutMediumText,
-        TextPreset.ReadoutSmall => tokens.ReadoutSmallText,
-        _ => throw new ArgumentOutOfRangeException(nameof(preset), preset, "Unknown text style."),
-    };
 }

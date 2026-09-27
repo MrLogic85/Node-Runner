@@ -16,7 +16,6 @@ public partial class UiChip : PanelContainer
         Ok,
     }
 
-    private UiTokens _tokens = UiTokens.Neon;
     private ChipKind _kind;
     private string _text = string.Empty;
     private string _iconText = string.Empty;
@@ -66,20 +65,18 @@ public partial class UiChip : PanelContainer
         }
     }
 
-    public UiTokens Tokens
-    {
-        get => _tokens;
-        set
-        {
-            _tokens = value;
-            Refresh();
-        }
-    }
-
     public override void _Ready()
     {
         MouseFilter = MouseFilterEnum.Pass;
         Refresh();
+    }
+
+    public override void _Notification(int what)
+    {
+        if (what == NotificationThemeChanged && IsNodeReady())
+        {
+            UiThemeRefresh.Guarded(this, Refresh);
+        }
     }
 
     private void Refresh()
@@ -95,49 +92,36 @@ public partial class UiChip : PanelContainer
             child.QueueFree();
         }
 
-        CustomMinimumSize = new Vector2(0, _tokens.ControlExtraSmall);
-        var color = Kind switch
+        CustomMinimumSize = new Vector2(0, UiSize.Control.ExtraSmall);
+        var (lineToken, textToken) = Kind switch
         {
-            ChipKind.Accent => _tokens.Accent,
-            ChipKind.Locked => _tokens.Muted,
-            ChipKind.Danger => _tokens.Danger,
-            ChipKind.Warning => _tokens.Halo,
-            ChipKind.Bad => _tokens.Danger,
-            ChipKind.Ok => _tokens.Accent,
-            _ => _tokens.Edge,
+            ChipKind.Accent or ChipKind.Ok => (UiTokens.Color.Accent, UiTokens.Color.Accent),
+            ChipKind.Locked => (UiTokens.Color.Muted, UiTokens.Color.Muted),
+            ChipKind.Danger or ChipKind.Bad => (UiTokens.Color.Danger, UiTokens.Color.Danger),
+            ChipKind.Warning => (UiTokens.Color.Halo, UiTokens.Color.Halo),
+            _ => (UiTokens.Color.Edge, UiTokens.Color.Ink),
         };
-        var textColor = Kind switch
-        {
-            ChipKind.Accent => _tokens.Accent,
-            ChipKind.Locked => _tokens.Muted,
-            ChipKind.Danger => _tokens.Danger,
-            ChipKind.Warning => _tokens.Halo,
-            ChipKind.Bad => _tokens.Danger,
-            ChipKind.Ok => _tokens.Accent,
-            _ => _tokens.Ink,
-        };
+        Color color = UiThemeLookup.Color(this, lineToken);
+        Color textColor = UiThemeLookup.Color(this, textToken);
 
         var row = new HBoxContainer
         {
             Alignment = BoxContainer.AlignmentMode.Center,
             MouseFilter = MouseFilterEnum.Ignore,
         };
-        row.AddThemeConstantOverride("separation", (int)_tokens.Space1);
+        row.AddThemeConstantOverride("separation", UiSize.Space.S1);
         AddChild(row);
         if (IconId is { } icon)
         {
             row.AddChild(UiFieldAndRows.Icon(icon, UiIconSize.Small, textColor));
         }
 
-        var label = UiFieldAndRows.Label(Text, _tokens, _tokens.CaptionText, textColor, HorizontalAlignment.Center);
-        row.AddChild(label);
-        AddThemeColorOverride("font_color", textColor);
-        AddThemeStyleboxOverride("panel", _tokens.ControlStyle(
-            _tokens.PanelRaised,
+        row.AddChild(UiFieldAndRows.Label(Text, UiTokens.Typography.Caption, textToken, HorizontalAlignment.Center));
+        AddThemeStyleboxOverride("panel", UiThemeLookup.CreateStyleBox(UiThemeLookup.Color(this, UiTokens.Color.PanelRaised),
             color,
-            radius: _tokens.RadiusPill,
-            horizontalPadding: _tokens.Space2,
-            verticalPadding: _tokens.Space1));
+            radius: UiSize.Radius.Pill,
+            horizontalPadding: UiSize.Space.S2,
+            verticalPadding: UiSize.Space.S1));
     }
 
 }

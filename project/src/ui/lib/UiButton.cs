@@ -2,7 +2,11 @@ using Godot;
 
 namespace NodeRunner.Ui.Lib;
 
-/// <summary>Canonical button with row, compact row or stacked content and optional hold activation.</summary>
+/// <summary>
+/// Canonical button with row, compact row or stacked content and optional hold activation.
+/// Native <c>Text</c> is the authored caption (and translation key); an internal UiLabel renders
+/// it, so letter case follows the caption's typography exactly as for UiLabel.
+/// </summary>
 [Tool]
 [GlobalClass]
 public sealed partial class UiButton : Button, ISerializationListener
@@ -13,7 +17,6 @@ public sealed partial class UiButton : Button, ISerializationListener
     private const float _disabledOpacity = 0.5f;
     private UiButtonStyle _style = UiButtonStyle.Secondary;
     private UiButtonKind _kind = UiButtonKind.Secondary;
-    private string _labelText = string.Empty;
     private UiIconId _iconId = UiIconId.None;
     private bool _selected;
     private string _badgeText = string.Empty;
@@ -21,6 +24,7 @@ public sealed partial class UiButton : Button, ISerializationListener
     private SizeFlags _rowSizeFlagsHorizontal = SizeFlags.Fill;
     private bool _squareContent;
     private float _progress = -1f;
+    private bool _refreshingStyle;
     private float _holdDurationSeconds = 0.8f;
     private bool _holdToActivate;
     private double _holdElapsedSeconds;
@@ -29,28 +33,16 @@ public sealed partial class UiButton : Button, ISerializationListener
     private Panel? _progressBackground;
     private Control? _progressFillClip;
     private Panel? _progressFill;
-    private VBoxContainer? _stackContent;
-    private TextureRect? _stackIcon;
-    private Label? _stackLabel;
+    private BoxContainer? _content;
+    private TextureRect? _contentIcon;
+    private UiLabel? _contentLabel;
     private Label? _badge;
     // Object/method callables survive assembly reloads without retaining managed delegates.
     private Callable ResizedCallback => new(this, MethodName.LayoutProgress);
     private Callable PressedCallback => new(this, MethodName.HandlePressed);
     private Callable ButtonDownCallback => new(this, MethodName.BeginHold);
     private Callable ButtonUpCallback => new(this, MethodName.EndHold);
-
-    public UiButton() => Alignment = HorizontalAlignment.Center;
-
-    [Export]
-    public string LabelText
-    {
-        get => _labelText;
-        set
-        {
-            _labelText = value;
-            RefreshStyle();
-        }
-    }
+    private Callable ContentMinimumSizeCallback => new(this, MethodName.FitContent);
 
     [Export]
     public UiIconId IconId
@@ -177,28 +169,29 @@ public sealed partial class UiButton : Button, ISerializationListener
         }
     }
 
-    public UiTokens Tokens
-    {
-        get;
-        set
-        {
-            field = value;
-            RefreshStyle();
-        }
-    } = UiTokens.Neon;
+    // The internal content draws the icon and caption, so the native properties that would lay
+    // them out are derived, hidden from the Inspector, and not saved.
+    private static readonly HashSet<StringName> _derivedProperties =
+    [
+        Control.PropertyName.Theme,
+        Control.PropertyName.ThemeTypeVariation,
+        Button.PropertyName.Icon,
+        Button.PropertyName.Flat,
+        Button.PropertyName.Alignment,
+        Button.PropertyName.TextOverrunBehavior,
+        Button.PropertyName.AutowrapMode,
+        Button.PropertyName.ClipText,
+        Button.PropertyName.IconAlignment,
+        Button.PropertyName.VerticalIconAlignment,
+        Button.PropertyName.ExpandIcon,
+    ];
 
     public override void _ValidateProperty(Godot.Collections.Dictionary property)
     {
-        if (property["name"].AsString() is "text" or "icon")
-        {
-            // Derived from LabelText/IconId: visible for inspection, but not authored or saved.
-            var usage = (PropertyUsageFlags)property["usage"].AsInt64();
-            property["usage"] = (long)((usage | PropertyUsageFlags.ReadOnly) & ~PropertyUsageFlags.Storage);
-        }
-        else if (property["name"].AsString() == "flat")
+        if (_derivedProperties.Contains(property["name"].AsStringName()))
         {
             var usage = (PropertyUsageFlags)property["usage"].AsInt64();
-            property["usage"] = (long)(usage & ~PropertyUsageFlags.Editor);
+            property["usage"] = (long)(usage & ~(PropertyUsageFlags.Editor | PropertyUsageFlags.Storage));
         }
     }
 
@@ -236,7 +229,11 @@ public sealed partial class UiButton : Button, ISerializationListener
 
     public override void _Notification(int what)
     {
-        if (what == NotificationScrollBegin || what == NotificationDragBegin
+        if (what == NotificationThemeChanged && IsNodeReady())
+        {
+            RefreshStyle();
+        }
+        else if (what == NotificationScrollBegin || what == NotificationDragBegin
             || what == NotificationFocusExit || what == NotificationApplicationFocusOut
             || (what == NotificationVisibilityChanged && !IsVisibleInTree()))
         {
@@ -320,14 +317,12 @@ public sealed partial class UiButton : Button, ISerializationListener
         Activate();
     }
 
-    private string DisplayText => LabelText.ToUpperInvariant();
+    private bool HasLabel => !string.IsNullOrWhiteSpace(Text);
 
-    private bool HasRowLabel => !string.IsNullOrWhiteSpace(LabelText);
-
-    private UiTokens.TextStyle DisplayTextStyle =>
+    private UiTokens.Typography CaptionStyle =>
         ContentLayout == UiButtonContentLayout.Stacked
-            ? Tokens.OverlineText
-            : Tokens.LabelText;
+            ? UiTokens.Typography.Overline
+            : UiTokens.Typography.Label;
 
     /// <summary>Optional halo count displayed just outside the upper-right corner.</summary>
     [Export]
@@ -343,12 +338,24 @@ public sealed partial class UiButton : Button, ISerializationListener
 
     private void RefreshStyle()
     {
-        if (!IsInsideTree())
+        if (!IsInsideTree() || _refreshingStyle)
             return;
 
-        CustomMinimumSize = UiButtonMetrics.From(Tokens).MinimumSize(ContentLayout);
+        _refreshingStyle = true;
+        try
+        {
+            RefreshStyleCore();
+        }
+        finally
+        {
+            _refreshingStyle = false;
+        }
+    }
+
+    private void RefreshStyleCore()
+    {
         SizeFlagsVertical = SizeFlags.ShrinkCenter;
-        bool squareContent = ContentLayout == UiButtonContentLayout.Stacked || !HasRowLabel;
+        bool squareContent = ContentLayout == UiButtonContentLayout.Stacked || !HasLabel;
         if (squareContent && !_squareContent)
         {
             _rowSizeFlagsHorizontal = SizeFlagsHorizontal;
@@ -361,44 +368,18 @@ public sealed partial class UiButton : Button, ISerializationListener
 
         _squareContent = squareContent;
 
-        ClipText = ContentLayout == UiButtonContentLayout.Stacked;
-        IconAlignment = HasRowLabel ? HorizontalAlignment.Left : HorizontalAlignment.Center;
-        VerticalIconAlignment = VerticalAlignment.Center;
-        Tokens.ApplyTextStyle(this, DisplayTextStyle);
-        AddThemeConstantOverride(
-            "h_separation",
-            ContentLayout == UiButtonContentLayout.Stacked
-                ? (int)Tokens.Space1
-                : UiSpacing.ControlGap(Tokens));
+        // Native text stays the storage but is never measured or seen: the variation makes it
+        // transparent and the internal content renders the caption.
+        ClipText = true;
+        Icon = null;
+        if (ThemeTypeVariation != UiThemeExpander.ButtonVariationName)
+        {
+            ThemeTypeVariation = UiThemeExpander.ButtonVariationName;
+        }
 
-        Color content = _style.Resolve(Tokens).Content;
-        AddThemeColorOverride("font_color", content);
-        AddThemeColorOverride("font_focus_color", content);
-        AddThemeColorOverride("font_hover_color", content);
-        AddThemeColorOverride("font_pressed_color", content);
-        AddThemeColorOverride("font_disabled_color", UiTokens.MultiplyAlpha(content, _disabledOpacity));
         EnsureProgressLayers();
-        EnsureStackContent();
-        _stackContent!.Visible = ContentLayout == UiButtonContentLayout.Stacked;
-        if (ContentLayout == UiButtonContentLayout.Stacked)
-        {
-            Text = string.Empty;
-            Icon = null;
-            RefreshStackContent(content);
-        }
-        else
-        {
-            Text = DisplayText;
-            if (IconId != UiIconId.None)
-            {
-                UiIcons.Apply(this, IconId, UiButtonMetrics.IconSize(ContentLayout), content);
-                AddThemeColorOverride("icon_disabled_color", UiTokens.MultiplyAlpha(content, _disabledOpacity));
-            }
-            else
-            {
-                Icon = null;
-            }
-        }
+        EnsureContent();
+        RefreshContent(_style.Resolve(this).Content);
 
         AddThemeStyleboxOverride("normal", CreateStyle());
         AddThemeStyleboxOverride("hover", CreateStyle());
@@ -449,68 +430,62 @@ public sealed partial class UiButton : Button, ISerializationListener
     public override void _Draw()
     {
         base._Draw();
+        // Native Text has no change signal, but setting it always queues a redraw.
+        SyncCaption();
         // Native Disabled queues a redraw; update our child visuals without a second state property.
         var modulation = new Color(1, 1, 1, Disabled ? _disabledOpacity : 1);
-        if (_stackContent is not null)
-            _stackContent.Modulate = modulation;
+        if (_content is not null)
+            _content.Modulate = modulation;
         if (_progressClip is not null)
             _progressClip.Modulate = modulation;
-        if (!Disabled && Selected && Tokens.EffectsEnabled)
+        if (!Disabled && Selected && UiThemeLookup.EffectsEnabled(this))
             DrawSelectedGlow();
 
         if (!Disabled)
             return;
         EndHold();
 
-        UiResolvedButtonStyle style = _style.Resolve(Tokens);
-        Color color = UiTokens.MultiplyAlpha(Selected ? style.Selected : style.Border, _disabledOpacity);
-        float halfStroke = Tokens.StrokeHair * 0.5f;
-        float radius = Tokens.RadiusMedium;
-        UiDashedBorder.DrawRoundedRect(this, new Rect2(Vector2.One * halfStroke, Size - Vector2.One * Tokens.StrokeHair), radius, color, Tokens.StrokeHair);
+        UiResolvedButtonStyle style = _style.Resolve(this);
+        Color color = Selected ? style.Selected : style.Border.ScaleAlpha(_disabledOpacity);
+        float stroke = UiSize.Stroke.Hair;
+        float halfStroke = stroke * 0.5f;
+        float radius = UiSize.Radius.Medium;
+        UiDashedBorder.DrawRoundedRect(this, new Rect2(Vector2.One * halfStroke, Size - Vector2.One * stroke), radius, color, stroke);
     }
 
     private StyleBoxFlat CreateStyle(float opacity = 1, bool transparentBorder = false)
     {
-        UiResolvedButtonStyle visual = _style.Resolve(Tokens);
+        UiResolvedButtonStyle visual = _style.Resolve(this);
         Color background = visual.Background;
-        Color styleBorder = _style.BorderFor(Tokens, Selected);
+        Color styleBorder = _style.BorderFor(this, Selected);
         if (Progress >= 0)
             background = Colors.Transparent;
 
-        StyleBoxFlat style = Tokens.ControlStyle(
-            UiTokens.MultiplyAlpha(background, opacity),
+        StyleBoxFlat style = UiThemeLookup.CreateStyleBox(background.ScaleAlpha(opacity),
             transparentBorder
                 ? Colors.Transparent
-                : UiTokens.MultiplyAlpha(styleBorder, opacity),
-            borderWidth: transparentBorder ? 0 : Selected ? Tokens.ButtonSelectedStroke : null,
-            glow: false,
-            horizontalPadding: ContentLayout != UiButtonContentLayout.Stacked && HasRowLabel
-                ? (int)Tokens.Space4
-                : 0,
+                : styleBorder.ScaleAlpha(opacity),
+            borderWidth: transparentBorder ? 0 : Selected ? UiSize.Stroke.ButtonSelected : null,
+            horizontalPadding: ContentPadding,
             verticalPadding: 0);
-        Color? glowColor = _style.GlowBaseFor(Tokens, Selected, opacity == 1);
+        Color? glowColor = _style.GlowBaseFor(this, Selected, opacity == 1);
         if (glowColor is { } color)
-            UiGlow.ApplyToControl(style, color, Tokens.EffectsEnabled);
+            UiGlow.ApplyToControl(style, color, UiThemeLookup.EffectsEnabled(this));
 
         return style;
     }
 
     private StyleBoxFlat CreateBackgroundStyle(Color background, float opacity)
     {
-        StyleBoxFlat style = Tokens.ControlStyle(
-            UiTokens.MultiplyAlpha(background, opacity),
+        StyleBoxFlat style = UiThemeLookup.CreateStyleBox(background.ScaleAlpha(opacity),
             Colors.Transparent,
-            borderWidth: 0,
-            glow: false);
+            borderWidth: 0);
         return style;
     }
 
     private StyleBoxFlat CreateProgressStyle(float opacity)
     {
-        StyleBoxFlat style = Tokens.ControlStyle(
-            UiTokens.MultiplyAlpha(
-                _style.Resolve(Tokens).Selected,
-                UiComponentContracts.ButtonProgressOpacity * opacity),
+        StyleBoxFlat style = UiThemeLookup.CreateStyleBox(_style.Resolve(this).Selected.ScaleAlpha(UiComponentContracts.ButtonProgressOpacity * opacity),
             Colors.Transparent,
             borderWidth: 0);
 
@@ -540,7 +515,7 @@ public sealed partial class UiButton : Button, ISerializationListener
         if (!visible)
             return;
 
-        Color background = _style.Resolve(Tokens).Background;
+        Color background = _style.Resolve(this).Background;
         _progressBackground.AddThemeStyleboxOverride(
             "panel",
             CreateBackgroundStyle(background, 1));
@@ -584,47 +559,101 @@ public sealed partial class UiButton : Button, ISerializationListener
         AddChild(_progressClip);
     }
 
-    private void EnsureStackContent()
+    private float ContentPadding =>
+        ContentLayout != UiButtonContentLayout.Stacked && HasLabel ? UiSize.Space.S4 : 0;
+
+    private void EnsureContent()
     {
-        if (_stackContent is null && GetNodeOrNull<VBoxContainer>("_UiStack") is { } existing)
+        if (_content is null && GetNodeOrNull<BoxContainer>("_UiContent") is { } existing)
         {
-            _stackContent = existing;
-            _stackIcon = existing.GetNode<TextureRect>("Icon");
-            _stackLabel = existing.GetNode<Label>("Label");
+            _content = existing;
+            _contentIcon = existing.GetNode<TextureRect>("Icon");
+            _contentLabel = existing.GetNode<UiLabel>("Label");
         }
-        if (_stackContent is not null)
+        if (_content is null)
+        {
+            _content = new BoxContainer
+            {
+                Name = "_UiContent",
+                Alignment = BoxContainer.AlignmentMode.Center,
+                MouseFilter = MouseFilterEnum.Ignore,
+            };
+            _contentIcon = new TextureRect
+            {
+                Name = "Icon",
+                ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
+                StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
+                MouseFilter = MouseFilterEnum.Ignore,
+                SizeFlagsHorizontal = SizeFlags.ShrinkCenter,
+                SizeFlagsVertical = SizeFlags.ShrinkCenter,
+            };
+            _contentLabel = new UiLabel
+            {
+                Name = "Label",
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center,
+                MouseFilter = MouseFilterEnum.Ignore,
+                SizeFlagsVertical = SizeFlags.ShrinkCenter,
+            };
+            _content.AddChild(_contentIcon);
+            _content.AddChild(_contentLabel);
+            AddChild(_content);
+        }
+        if (!_content.IsConnected(Control.SignalName.MinimumSizeChanged, ContentMinimumSizeCallback))
+            _content.Connect(Control.SignalName.MinimumSizeChanged, ContentMinimumSizeCallback);
+    }
+
+    private void RefreshContent(Color content)
+    {
+        bool stacked = ContentLayout == UiButtonContentLayout.Stacked;
+        bool hasIcon = IconId != UiIconId.None;
+        var iconSize = UiButtonMetrics.IconSize(ContentLayout);
+        _content!.Vertical = stacked;
+        _content.AddThemeConstantOverride(
+            "separation",
+            HasLabel && hasIcon ? (stacked ? UiSize.Space.S1 : UiSpacing.ControlGap) : 0);
+        _content.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
+        _content.OffsetLeft = ContentPadding;
+        _content.OffsetRight = -ContentPadding;
+
+        _contentLabel!.Text = Text;
+        _contentLabel.Visible = HasLabel;
+        _contentLabel.TextStyle = CaptionStyle;
+        _contentLabel.TextColor = _style.ContentColor;
+        _contentLabel.TextOverrunBehavior = stacked
+            ? TextServer.OverrunBehavior.TrimEllipsis
+            : TextServer.OverrunBehavior.NoTrimming;
+        // Stacked captions span the column; row captions center in the space beside the icon.
+        _contentLabel.SizeFlagsHorizontal = stacked ? SizeFlags.Fill : SizeFlags.ExpandFill;
+
+        _contentIcon!.Visible = hasIcon;
+        _contentIcon.Texture = hasIcon ? UiIcons.Load(IconId, iconSize) : null;
+        _contentIcon.CustomMinimumSize = Vector2.One * UiIcons.Pixels(iconSize);
+        _contentIcon.SelfModulate = content;
+        FitContent();
+    }
+
+    private void SyncCaption()
+    {
+        if (_contentLabel is null || _contentLabel.Text == Text)
             return;
 
-        _stackContent = new VBoxContainer
-        {
-            Name = "_UiStack",
-            Alignment = BoxContainer.AlignmentMode.Center,
-            MouseFilter = MouseFilterEnum.Ignore,
-        };
-        _stackContent.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
-        _stackIcon = new TextureRect
-        {
-            Name = "Icon",
-            CustomMinimumSize = new Vector2(
-                UiIcons.Pixels(UiIconSize.Large),
-                UiIcons.Pixels(UiIconSize.Large)),
-            ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
-            StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
-            MouseFilter = MouseFilterEnum.Ignore,
-            SizeFlagsHorizontal = SizeFlags.ShrinkCenter,
-        };
-        _stackLabel = new Label
-        {
-            Name = "Label",
-            TextOverrunBehavior = TextServer.OverrunBehavior.TrimEllipsis,
-            HorizontalAlignment = HorizontalAlignment.Center,
-            MouseFilter = MouseFilterEnum.Ignore,
-            SizeFlagsHorizontal = SizeFlags.Fill,
-        };
-        _stackContent.AddThemeConstantOverride("separation", (int)Tokens.Space1);
-        _stackContent.AddChild(_stackIcon);
-        _stackContent.AddChild(_stackLabel);
-        AddChild(_stackContent);
+        if (_contentLabel.Visible == HasLabel)
+            _contentLabel.Text = Text;
+        else
+            CallDeferred(MethodName.RefreshStyle);
+    }
+
+    // Button measures neither its children nor clipped text, so the content sets the minimum.
+    private void FitContent()
+    {
+        if (_content is null)
+            return;
+
+        var minimum = UiButtonMetrics.Default.MinimumSize(ContentLayout)
+            .Max(_content.GetCombinedMinimumSize() + new Vector2(ContentPadding * 2, 0));
+        if (CustomMinimumSize != minimum)
+            CustomMinimumSize = minimum;
     }
 
     private void RefreshBadge()
@@ -643,7 +672,7 @@ public sealed partial class UiButton : Button, ISerializationListener
             AddChild(_badge);
         }
 
-        var metrics = UiButtonMetrics.From(Tokens);
+        var metrics = UiButtonMetrics.Default;
         _badge.Visible = !string.IsNullOrWhiteSpace(BadgeText);
         if (!_badge.Visible)
             return;
@@ -652,27 +681,14 @@ public sealed partial class UiButton : Button, ISerializationListener
         _badge.CustomMinimumSize = new Vector2(metrics.BadgeMinimumSize, metrics.BadgeMinimumSize);
         _badge.Size = _badge.CustomMinimumSize;
         _badge.Position = metrics.BadgePosition(Size);
-        Tokens.ApplyTextStyle(_badge, Tokens.CaptionText);
-        _badge.AddThemeColorOverride("font_color", Tokens.Background);
+        UiThemeLookup.ApplyTypography(_badge, UiTokens.Typography.Caption);
+        _badge.AddThemeColorOverride("font_color", UiThemeLookup.Color(this, UiTokens.Color.Background));
         _badge.AddThemeStyleboxOverride(
             "normal",
-            Tokens.ControlStyle(Tokens.Halo, Colors.Transparent, borderWidth: 0, radius: Tokens.RadiusPill));
-    }
-
-    private void RefreshStackContent(Color content)
-    {
-        bool hasLabel = !string.IsNullOrWhiteSpace(LabelText);
-        bool hasIcon = IconId != UiIconId.None;
-        _stackContent!.AddThemeConstantOverride(
-            "separation",
-            hasLabel && hasIcon ? (int)Tokens.Space1 : 0);
-        _stackLabel!.Text = DisplayText;
-        _stackLabel.Visible = hasLabel;
-        Tokens.ApplyTextStyle(_stackLabel, Tokens.OverlineText);
-        _stackLabel.AddThemeColorOverride("font_color", content);
-        _stackIcon!.Texture = hasIcon ? UiIcons.Load(IconId, UiIconSize.Large) : null;
-        _stackIcon.Visible = hasIcon;
-        _stackIcon.SelfModulate = content;
+            UiThemeLookup.CreateStyleBox(UiThemeLookup.Color(this, UiTokens.Color.Halo),
+                Colors.Transparent,
+                borderWidth: 0,
+                radius: UiSize.Radius.Pill));
     }
 
     private static Panel CreateProgressLayer() =>
@@ -709,11 +725,11 @@ public sealed partial class UiButton : Button, ISerializationListener
 
     private void DrawSelectedGlow()
     {
-        Color baseColor = UiGlow.FromBase(_style.Resolve(Tokens).Selected, enabled: true);
+        Color baseColor = UiGlow.FromBase(_style.Resolve(this).Selected, enabled: true);
         for (int depth = 0; depth < UiGlow.Extent; depth++)
         {
             float strength = 1f - (depth / (float)UiGlow.Extent);
-            Color color = UiTokens.MultiplyAlpha(baseColor, strength * strength);
+            Color color = baseColor.ScaleAlpha(strength * strength);
             var rect = new Rect2(
                 depth,
                 depth,
@@ -722,7 +738,10 @@ public sealed partial class UiButton : Button, ISerializationListener
             if (rect.Size.X <= 0 || rect.Size.Y <= 0)
                 break;
 
-            DrawRoundedRectOutline(rect, Mathf.Max(0, Tokens.RadiusMedium - depth), color);
+            DrawRoundedRectOutline(
+                rect,
+                Mathf.Max(0, UiSize.Radius.Medium - depth),
+                color);
         }
     }
 
@@ -730,19 +749,26 @@ public sealed partial class UiButton : Button, ISerializationListener
     {
         if (radius <= 0)
         {
-            DrawRect(rect, color, filled: false, width: Tokens.StrokeHair, antialiased: false);
+            DrawRect(
+                rect,
+                color,
+                filled: false,
+                width: UiSize.Stroke.Hair,
+                antialiased: false);
             return;
         }
 
         float perimeter = ((rect.Size.X - (radius * 2)) * 2)
             + ((rect.Size.Y - (radius * 2)) * 2)
             + (Mathf.Tau * radius);
-        int sampleCount = Mathf.Max(12, Mathf.CeilToInt(perimeter / Tokens.Space1));
+        int sampleCount = Mathf.Max(
+            12,
+            Mathf.CeilToInt(perimeter / UiSize.Space.S1));
         var points = new Vector2[sampleCount + 1];
         for (int index = 0; index <= sampleCount; index++)
             points[index] = UiDashedBorder.PointOnRoundedRect(rect, radius, perimeter * index / sampleCount);
 
-        DrawPolyline(points, color, Tokens.StrokeHair, antialiased: false);
+        DrawPolyline(points, color, UiSize.Stroke.Hair, antialiased: false);
     }
 
 }

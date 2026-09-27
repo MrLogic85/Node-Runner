@@ -7,7 +7,6 @@ namespace NodeRunner.Ui.Lib;
 [GlobalClass]
 public partial class UiNumber : Control, ISerializationListener
 {
-    private UiTokens _tokens = UiTokens.Neon;
     private Label? _label;
     private string _text = "1";
 
@@ -18,18 +17,6 @@ public partial class UiNumber : Control, ISerializationListener
         set
         {
             _text = value;
-            RefreshLabel();
-            QueueRedraw();
-        }
-    }
-
-    public UiTokens Tokens
-    {
-        get => _tokens;
-        set
-        {
-            _tokens = value;
-            ApplyGeometry();
             RefreshLabel();
             QueueRedraw();
         }
@@ -78,7 +65,16 @@ public partial class UiNumber : Control, ISerializationListener
 
     public override void _Notification(int what)
     {
-        if (what == NotificationResized)
+        if (what == NotificationThemeChanged && IsNodeReady())
+        {
+            UiThemeRefresh.Guarded(this, () =>
+            {
+                ApplyGeometry();
+                RefreshLabel();
+                QueueRedraw();
+            });
+        }
+        else if (what == NotificationResized)
         {
             LayoutLabel();
         }
@@ -86,17 +82,23 @@ public partial class UiNumber : Control, ISerializationListener
 
     public override void _Draw()
     {
-        var stroke = _tokens.NumberStrokeWidth;
+        const float stroke = UiSize.Stroke.Number;
         var center = Size * 0.5f;
-        var radius = (_tokens.NumberDiameter - stroke) * 0.5f;
-        DrawArc(center, radius, 0, Mathf.Tau, 32, _tokens.Accent, stroke, antialiased: false);
+        const float radius = (UiSize.Widget.NumberDiameter - stroke) * 0.5f;
+        DrawArc(
+            center,
+            radius,
+            0,
+            Mathf.Tau,
+            32,
+            UiThemeLookup.Color(this, UiTokens.Color.Accent),
+            stroke,
+            antialiased: false);
     }
 
     private void ApplyGeometry()
     {
-        CustomMinimumSize = new Vector2(
-            _tokens.NumberDiameter,
-            _tokens.NumberDiameter);
+        CustomMinimumSize = new Vector2(UiSize.Widget.NumberDiameter, UiSize.Widget.NumberDiameter);
         LayoutLabel();
     }
 
@@ -108,8 +110,7 @@ public partial class UiNumber : Control, ISerializationListener
         }
 
         _label.Text = Text;
-        _tokens.ApplyTextStyle(_label, _tokens.ReadoutSmallText);
-        _label.AddThemeColorOverride("font_color", _tokens.Accent);
+        UiThemeLookup.ApplyTextStyle(_label, UiTokens.Typography.ReadoutSmall, UiTokens.Color.Accent);
         LayoutLabel();
     }
 

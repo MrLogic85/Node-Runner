@@ -7,7 +7,6 @@ namespace NodeRunner.Ui.Lib;
 [GlobalClass]
 public partial class UiProgressRing : Control, ISerializationListener
 {
-    private UiTokens _tokens = UiTokens.Neon;
     private float _progress = 0.72f;
     private Label? _percentLabel;
 
@@ -18,18 +17,6 @@ public partial class UiProgressRing : Control, ISerializationListener
         set
         {
             _progress = (float)UiComponentContracts.ClampProgress(value);
-            RefreshLabel();
-            QueueRedraw();
-        }
-    }
-
-    public UiTokens Tokens
-    {
-        get => _tokens;
-        set
-        {
-            _tokens = value;
-            ApplyGeometry();
             RefreshLabel();
             QueueRedraw();
         }
@@ -80,7 +67,16 @@ public partial class UiProgressRing : Control, ISerializationListener
 
     public override void _Notification(int what)
     {
-        if (what == NotificationResized)
+        if (what == NotificationThemeChanged && IsNodeReady())
+        {
+            UiThemeRefresh.Guarded(this, () =>
+            {
+                ApplyGeometry();
+                RefreshLabel();
+                QueueRedraw();
+            });
+        }
+        else if (what == NotificationResized)
         {
             LayoutLabel();
         }
@@ -91,25 +87,31 @@ public partial class UiProgressRing : Control, ISerializationListener
         var center = Size * 0.5f;
         DrawArc(
             center,
-            RingRadius,
+            _ringRadius,
             0,
             Mathf.Tau,
             48,
-            _tokens.Line,
-            _tokens.StrokeBeam,
+            UiThemeLookup.Color(this, UiTokens.Color.Line),
+            UiSize.Stroke.Beam,
             antialiased: false);
         DrawProgressArc(center);
         if (IsDone)
         {
             var check = UiIcons.Load(UiIconId.Check, UiIconSize.Standard);
             var iconSize = UiIcons.Pixels(UiIconSize.Standard);
-            DrawTextureRect(check, new Rect2(center - new Vector2(iconSize * 0.5f, iconSize * 0.5f), new Vector2(iconSize, iconSize)), false, _tokens.Accent);
+            DrawTextureRect(
+                check,
+                new Rect2(
+                    center - new Vector2(iconSize * 0.5f, iconSize * 0.5f),
+                    new Vector2(iconSize, iconSize)),
+                false,
+                UiThemeLookup.Color(this, UiTokens.Color.Accent));
         }
     }
 
     private void ApplyGeometry()
     {
-        CustomMinimumSize = new Vector2(_tokens.TouchTarget, _tokens.TouchTarget);
+        CustomMinimumSize = new Vector2(UiSize.Control.Touch, UiSize.Control.Touch);
         LayoutLabel();
     }
 
@@ -122,8 +124,7 @@ public partial class UiProgressRing : Control, ISerializationListener
 
         _percentLabel.Text = UiComponentContracts.FormatProgressPercent(Progress);
         _percentLabel.Visible = !IsDone;
-        _tokens.ApplyTextStyle(_percentLabel, _tokens.ReadoutMediumText);
-        _percentLabel.AddThemeColorOverride("font_color", _tokens.Ink);
+        UiThemeLookup.ApplyTextStyle(_percentLabel, UiTokens.Typography.ReadoutMedium, UiTokens.Color.Ink);
         LayoutLabel();
     }
 
@@ -151,27 +152,28 @@ public partial class UiProgressRing : Control, ISerializationListener
         var endAngle = startAngle + (Mathf.Tau * progress);
         DrawArc(
             center,
-            RingRadius,
+            _ringRadius,
             startAngle,
             endAngle,
             48,
-            _tokens.Accent,
-            _tokens.StrokeBeam,
+            UiThemeLookup.Color(this, UiTokens.Color.Accent),
+            UiSize.Stroke.Beam,
             antialiased: false);
         if (percent >= 100)
         {
             return;
         }
 
-        var capRadius = _tokens.StrokeBeam * 0.5f;
-        DrawCircle(PointOnRing(center, startAngle), capRadius, _tokens.Accent);
-        DrawCircle(PointOnRing(center, endAngle), capRadius, _tokens.Accent);
+        const float capRadius = UiSize.Stroke.Beam * 0.5f;
+        var accent = UiThemeLookup.Color(this, UiTokens.Color.Accent);
+        DrawCircle(PointOnRing(center, startAngle), capRadius, accent);
+        DrawCircle(PointOnRing(center, endAngle), capRadius, accent);
     }
 
     private Vector2 PointOnRing(Vector2 center, float angle) =>
-        center + new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * RingRadius;
+        center + new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * _ringRadius;
 
-    private float RingRadius => _tokens.ControlSmall * 0.5f;
+    private const float _ringRadius = UiSize.Control.Small * 0.5f;
 
     private bool IsDone => UiComponentContracts.IsProgressComplete(Progress);
 }

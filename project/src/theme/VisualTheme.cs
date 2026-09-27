@@ -9,27 +9,27 @@ public sealed class VisualTheme
     {
     }
 
-    public static VisualTheme Neon { get; } = FromTokens(UiTokens.Neon);
+    public static VisualTheme Neon { get; } = FromTheme(UiThemes.Neon);
 
-    public static VisualTheme Paper { get; } = FromTokens(UiTokens.Paper);
+    public static VisualTheme Paper { get; } = FromTheme(UiThemes.Paper);
 
-    public static VisualTheme FromTokens(UiTokens tokens) => new()
+    public static VisualTheme FromTheme(Godot.Theme theme) => new()
     {
-        ArenaBackground = tokens.Background,
-        ArenaGrid = tokens.Line,
-        GroundFill = tokens.Panel,
-        GroundEdge = tokens.Accent,
-        NodeFill = tokens.PanelRaised,
-        NodeGlow = tokens.AccentGlow,
-        SelectionGlow = tokens.Halo,
-        CoreMarker = tokens.Accent,
-        Beam = tokens.LineStrong,
-        MotorAccent = tokens.Accent,
-        Danger = tokens.Danger,
-        BeamWidth = tokens.StrokeBeam,
-        MotorSignalWidth = tokens.StrokeSignal,
-        GroundEdgeWidth = tokens.StrokeSignal,
-        GridSpacing = tokens.TouchTarget,
+        ArenaBackground = UiThemes.Color(theme, UiTokens.Color.Background),
+        ArenaGrid = UiThemes.Color(theme, UiTokens.Color.Line),
+        GroundFill = UiThemes.Color(theme, UiTokens.Color.Panel),
+        GroundEdge = UiThemes.Color(theme, UiTokens.Color.Accent),
+        NodeFill = UiThemes.Color(theme, UiTokens.Color.PanelRaised),
+        EffectsEnabled = UiThemes.Flag(theme, UiTokens.Flag.EffectsEnabled),
+        SelectionGlow = UiThemes.Color(theme, UiTokens.Color.Halo),
+        CoreMarker = UiThemes.Color(theme, UiTokens.Color.Accent),
+        Beam = UiThemes.Color(theme, UiTokens.Color.LineStrong),
+        MotorAccent = UiThemes.Color(theme, UiTokens.Color.Accent),
+        Danger = UiThemes.Color(theme, UiTokens.Color.Danger),
+        BeamWidth = UiSize.Stroke.Beam,
+        MotorSignalWidth = UiSize.Stroke.Signal,
+        GroundEdgeWidth = UiSize.Stroke.Signal,
+        GridSpacing = UiSize.Control.Touch,
     };
 
     public Color ArenaBackground { get; private init; }
@@ -42,7 +42,7 @@ public sealed class VisualTheme
 
     public Color NodeFill { get; private init; }
 
-    public Color NodeGlow { get; private init; }
+    public bool EffectsEnabled { get; private init; }
 
     public Color SelectionGlow { get; private init; }
 

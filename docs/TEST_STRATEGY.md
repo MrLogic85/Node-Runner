@@ -103,15 +103,23 @@ Add a fact whenever a convention emerges that we've decided to enforce.
 
 ### `NodeRunner.Ui.Tests`
 
-Cover static UI contracts that can run without the Godot scene tree:
+UI tests guard where styling comes from, so a value is authored once and a
+root Theme swap restyles everything. They run without the Godot scene tree:
 
-- exact theme colors and foundation dimensions
-- typography family, size, line height, weight, tracking, and casing
-- font-resource selection for every required weight
-- effects-lite preserving semantic tokens while removing glow
+- theme files: every palette authors every token colour, and the derived items
+  (text-colour variations, base control colours) match their palette
+- typography is authored once, in the project theme, with a font and size for
+  every variation
+- effects-lite is Neon's palette with effects off
+- saved scenes do not pin colours, fonts or font sizes on canonical text
+  components (UiLabel, UiButton)
 
-Do not instantiate Nodes or claim to prove rendering. Scene lifecycle, input,
-layout, and visual fidelity remain Godot/device verification concerns.
+Do not write tests that lock a scene's layout, arrangement or pixel sizes;
+those are free to change in the editor. Do not instantiate Nodes or claim to
+prove rendering. Scene lifecycle, input, layout, and visual fidelity remain
+Godot/device verification concerns. Broader guards (every scene node, and C#
+that copies theme colours into overrides) are tracked in
+[#303](https://github.com/MrLogic85/Node-Runner/issues/303).
 
 ### Godot-side tests (deferred)
 
@@ -175,6 +183,8 @@ public void Forward_WithZeroInput_ReturnsZeroesForTanh()
 - .NET BCL behaviour
 - Godot engine behaviour (that's Godot's job)
 - UI layout down to the pixel
+- Code shape (sealed/abstract, member kinds, base types) — test the values a
+  contract maps to, or guard against the hardcoding it is meant to prevent
 
 ## Running the suite
 

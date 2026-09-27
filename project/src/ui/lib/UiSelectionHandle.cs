@@ -17,10 +17,7 @@ public partial class UiSelectionHandle : Control, ISerializationListener
     [Signal]
     public delegate void PressedEventHandler(HandleType type);
 
-    private const float _handleRadius = 13;
-    private const float _handleStroke = 2;
     private HandleType _type = HandleType.Drag;
-    private UiTokens _tokens = UiTokens.Neon;
     private TextureRect? _icon;
 
     [Export]
@@ -35,20 +32,9 @@ public partial class UiSelectionHandle : Control, ISerializationListener
         }
     }
 
-    public UiTokens Tokens
-    {
-        get => _tokens;
-        set
-        {
-            _tokens = value;
-            RefreshIcon();
-            QueueRedraw();
-        }
-    }
-
     public override void _Ready()
     {
-        CustomMinimumSize = new Vector2(44, 44);
+        ApplyThemeStyle();
         MouseFilter = MouseFilterEnum.Pass;
         RecoverIcon();
         RefreshIcon();
@@ -75,7 +61,13 @@ public partial class UiSelectionHandle : Control, ISerializationListener
 
     public override void _Notification(int what)
     {
-        if (what == NotificationResized)
+        if (what == NotificationThemeChanged && IsNodeReady())
+        {
+            ApplyThemeStyle();
+            RefreshIcon();
+            QueueRedraw();
+        }
+        else if (what == NotificationResized)
         {
             LayoutIcon();
         }
@@ -83,7 +75,7 @@ public partial class UiSelectionHandle : Control, ISerializationListener
 
     public override void _GuiInput(InputEvent inputEvent)
     {
-        if (!TryHandlePress(inputEvent, out var position) || position.DistanceTo(HandleCenter()) > _handleRadius)
+        if (!TryHandlePress(inputEvent, out var position) || position.DistanceTo(HandleCenter()) > UiSize.Widget.SelectionHandleRadius)
         {
             return;
         }
@@ -94,16 +86,23 @@ public partial class UiSelectionHandle : Control, ISerializationListener
 
     public override void _Draw()
     {
-        DrawCircle(HandleCenter(), _handleRadius, _tokens.Panel);
+        var center = HandleCenter();
+        const int radius = UiSize.Widget.SelectionHandleRadius;
+        DrawCircle(center, radius, UiThemeLookup.Color(this, UiTokens.Color.Panel));
         DrawArc(
-            HandleCenter(),
-            _handleRadius,
+            center,
+            radius,
             0,
             Mathf.Tau,
             40,
-            _tokens.Halo,
-            _handleStroke,
+            UiThemeLookup.Color(this, UiTokens.Color.Halo),
+            UiSize.Stroke.SelectionHandle,
             antialiased: false);
+    }
+
+    private void ApplyThemeStyle()
+    {
+        CustomMinimumSize = new Vector2(UiSize.Widget.SelectionHandleSize, UiSize.Widget.SelectionHandleSize);
     }
 
     private void RefreshIcon()
@@ -119,7 +118,8 @@ public partial class UiSelectionHandle : Control, ISerializationListener
             _icon.QueueFree();
         }
 
-        _icon = UiIcons.Create(IconFor(Type), UiIconSize.Standard, _tokens.Halo);
+        var tint = UiThemeLookup.Color(this, UiTokens.Color.Halo);
+        _icon = UiIcons.Create(IconFor(Type), UiIconSize.Standard, tint);
         AddChild(_icon, false, InternalMode.Front);
         LayoutIcon();
     }

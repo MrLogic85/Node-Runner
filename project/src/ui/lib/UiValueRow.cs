@@ -7,7 +7,6 @@ namespace NodeRunner.Ui.Lib;
 [GlobalClass]
 public partial class UiValueRow : HBoxContainer
 {
-    private UiTokens _tokens = UiTokens.Neon;
     private string _labelText = "";
     private string _valueText = "";
     private UiIconId _iconId = UiIconId.None;
@@ -45,20 +44,18 @@ public partial class UiValueRow : HBoxContainer
         }
     }
 
-    public UiTokens Tokens
-    {
-        get => _tokens;
-        set
-        {
-            _tokens = value;
-            Rebuild();
-        }
-    }
-
     public override void _Ready()
     {
         MouseFilter = MouseFilterEnum.Ignore;
         Rebuild();
+    }
+
+    public override void _Notification(int what)
+    {
+        if (what == NotificationThemeChanged && IsNodeReady())
+        {
+            UiThemeRefresh.Guarded(this, Rebuild);
+        }
     }
 
     private void Rebuild()
@@ -74,8 +71,9 @@ public partial class UiValueRow : HBoxContainer
             child.QueueFree();
         }
 
-        AddThemeConstantOverride("separation", (int)_tokens.Space2);
-        var label = UiFieldAndRows.Label(LabelText, _tokens, _tokens.CaptionText, _tokens.Muted);
+        var spacing = UiSize.Space.S2;
+        AddThemeConstantOverride("separation", spacing);
+        var label = UiFieldAndRows.Label(LabelText, UiTokens.Typography.Caption, UiTokens.Color.Muted);
         label.SizeFlagsHorizontal = SizeFlags.ExpandFill;
         AddChild(label);
         var readout = new HBoxContainer
@@ -83,16 +81,19 @@ public partial class UiValueRow : HBoxContainer
             SizeFlagsVertical = SizeFlags.ShrinkCenter,
             MouseFilter = MouseFilterEnum.Ignore,
         };
-        readout.AddThemeConstantOverride("separation", (int)_tokens.Space1);
+        readout.AddThemeConstantOverride("separation", UiSize.Space.S1);
         AddChild(readout);
         if (IconId != UiIconId.None)
         {
-            var glyph = UiFieldAndRows.Icon(IconId, UiIconSize.Small, _tokens.Ink);
+            var glyph = UiFieldAndRows.Icon(IconId, UiIconSize.Small, UiThemeLookup.Color(this, UiTokens.Color.Ink));
             glyph.SizeFlagsVertical = SizeFlags.ShrinkCenter;
             readout.AddChild(glyph);
         }
 
-        var value = UiFieldAndRows.Label(ValueText, _tokens, _tokens.ReadoutMediumText, _tokens.Ink, HorizontalAlignment.Right);
+        var value = UiFieldAndRows.Label(ValueText,
+            UiTokens.Typography.ReadoutMedium,
+            UiTokens.Color.Ink,
+            HorizontalAlignment.Right);
         value.TextOverrunBehavior = TextServer.OverrunBehavior.NoTrimming;
         value.SizeFlagsHorizontal = SizeFlags.ShrinkEnd;
         readout.AddChild(value);

@@ -11,7 +11,6 @@ namespace NodeRunner.Ui.Screens;
 /// </summary>
 public partial class SampleFlowScreen : Control
 {
-    private UiTokens _tokens = UiTokens.Neon;
     private Control? _content;
     private SimulateScreen? _simulate;
     private BuildScreen? _build;
@@ -38,29 +37,6 @@ public partial class SampleFlowScreen : Control
             if (_simulate is not null)
             {
                 _simulate.Presentation = value;
-            }
-        }
-    }
-
-    public UiTokens Tokens
-    {
-        get => _tokens;
-        set
-        {
-            _tokens = value;
-            if (_simulate is not null)
-            {
-                _simulate.Tokens = value;
-            }
-
-            if (_build is not null)
-            {
-                _build.Tokens = value;
-            }
-
-            if (IsInsideTree())
-            {
-                RebuildLayout();
             }
         }
     }
@@ -114,7 +90,7 @@ public partial class SampleFlowScreen : Control
     {
         AddChild(new ColorRect
         {
-            Color = _tokens.Background,
+            Color = UiThemeLookup.Color(this, UiTokens.Color.Background),
             MouseFilter = Control.MouseFilterEnum.Ignore,
             AnchorRight = 1,
             AnchorBottom = 1,
@@ -134,7 +110,7 @@ public partial class SampleFlowScreen : Control
 
         var header = new HBoxContainer
         {
-            CustomMinimumSize = new Vector2(0, _tokens.TouchTarget),
+            CustomMinimumSize = new Vector2(0, UiSize.Control.Touch),
         };
         header.AddThemeConstantOverride("separation", 12);
         shell.AddChild(header);
@@ -145,15 +121,14 @@ public partial class SampleFlowScreen : Control
             SizeFlagsHorizontal = SizeFlags.ExpandFill,
         };
         title.AddThemeFontSizeOverride("font_size", 22);
-        title.AddThemeColorOverride("font_color", _tokens.Ink);
+        title.AddThemeColorOverride("font_color", UiThemeLookup.Color(this, UiTokens.Color.Ink));
         header.AddChild(title);
 
         _modeSwitch = new UiSegmentedSwitch
         {
-            Tokens = _tokens,
             Segments = [new() { Text = "Simulate" }, new() { Text = "Build" }],
             SelectedIndex = _selectedMode,
-            CustomMinimumSize = new Vector2(208, _tokens.TouchTarget),
+            CustomMinimumSize = new Vector2(208, UiSize.Control.Touch),
         };
         _modeSwitch.SelectionChanged += index => SetMode(index);
         header.AddChild(_modeSwitch);
@@ -161,7 +136,6 @@ public partial class SampleFlowScreen : Control
         var menu = new UiButton
         {
             ContentLayout = UiButtonContentLayout.Stacked,
-            Tokens = _tokens,
             IconId = UiIconId.More,
             TooltipText = "Open sample menu",
         };
@@ -195,7 +169,6 @@ public partial class SampleFlowScreen : Control
 
         _overflowMenu = new UiMenu
         {
-            Tokens = _tokens,
             ZIndex = 10,
         };
         UiMenuItems.Populate(
@@ -207,8 +180,7 @@ public partial class SampleFlowScreen : Control
                     UiIconId.Trash,
                     UiMenuActionItem.MenuItemKind.Danger),
                 new UiMenuItemSpec("Creations"),
-            ],
-            _tokens);
+            ]);
         _overflowMenu.IndexClicked += index =>
         {
             string? action = index switch
@@ -228,19 +200,17 @@ public partial class SampleFlowScreen : Control
 
         _toast = new UiToast
         {
-            Tokens = _tokens,
             ZIndex = 11,
             Position = new Vector2(24, 0),
             SizeFlagsHorizontal = SizeFlags.Expand,
         };
         _toast.SetAnchorsPreset(LayoutPreset.BottomLeft);
-        _toast.CustomMinimumSize = new Vector2(420, _tokens.TouchTarget);
+        _toast.CustomMinimumSize = new Vector2(420, UiSize.Control.Touch);
         _toast.UndoPressed += RestoreDeletedCreation;
         _overlay.AddChild(_toast);
 
         _sheet = new UiSheet
         {
-            Tokens = _tokens,
             ZIndex = 12,
             CustomMinimumSize = new Vector2(460, 0),
         };
@@ -258,7 +228,6 @@ public partial class SampleFlowScreen : Control
         ClearContent();
         _simulate = new SimulateScreen
         {
-            Tokens = _tokens,
             ShowTopBar = false,
             Hosted = true,
             Presentation = _presentation,
@@ -278,7 +247,6 @@ public partial class SampleFlowScreen : Control
         ClearContent();
         _build = new BuildScreen
         {
-            Tokens = _tokens,
             ShowTopBar = false,
             Hosted = true,
             Presentation = CreateSampleConstructionPresentation(),
@@ -332,7 +300,7 @@ public partial class SampleFlowScreen : Control
         }
 
         ClearContent();
-        var creations = new CreationsScreen { Tokens = _tokens };
+        var creations = new CreationsScreen();
         creations.OpenRequested += (_, _) => SetMode(0);
         creations.EditRequested += (_, name) => ShowEdit(name);
         creations.DuplicateRequested += (_, name) => ShowSheet("Duplicate " + name + "?", CreateDuplicateBody(name));
@@ -350,7 +318,7 @@ public partial class SampleFlowScreen : Control
         }
 
         ClearContent();
-        var edit = new EditScreen { Tokens = _tokens, CreationName = creationName };
+        var edit = new EditScreen { CreationName = creationName };
         edit.DoneRequested += () => SetMode(0);
         edit.RebuildRequested += () => ShowSheet("Rebuild body?", CreateRebuildBody(creationName));
         _sampleView = edit;
@@ -398,7 +366,7 @@ public partial class SampleFlowScreen : Control
 
         if (_activeHoldButton is not null && !string.IsNullOrEmpty(_activeHoldLabel))
         {
-            _activeHoldButton.LabelText = _activeHoldLabel;
+            _activeHoldButton.Text = _activeHoldLabel;
         }
 
         _activeHoldTimer = null;
@@ -466,16 +434,14 @@ public partial class SampleFlowScreen : Control
         actions.AddThemeConstantOverride("separation", 8);
         var cancel = new UiButton
         {
-            Tokens = _tokens,
-            LabelText = "Cancel",
+            Text = "Cancel",
             Kind = UiButtonKind.Secondary,
         };
         cancel.Pressed += CloseOverlays;
         actions.AddChild(cancel);
         var confirm = new UiButton
         {
-            Tokens = _tokens,
-            LabelText = "Hold to reset",
+            Text = "Hold to reset",
             Kind = UiButtonKind.Tertiary,
         };
         var holdTimer = new Godot.Timer { OneShot = true, WaitTime = 1.2f };
@@ -493,7 +459,7 @@ public partial class SampleFlowScreen : Control
         };
         confirm.ButtonDown += () =>
         {
-            confirm.LabelText = "Keep holding…";
+            confirm.Text = "Keep holding…";
             holdTimer.Start();
         };
         confirm.ButtonUp += () =>
@@ -501,7 +467,7 @@ public partial class SampleFlowScreen : Control
             if (holdTimer.TimeLeft > 0)
             {
                 holdTimer.Stop();
-                confirm.LabelText = "Hold to reset";
+                confirm.Text = "Hold to reset";
             }
         };
         stack.AddChild(holdTimer);
@@ -517,14 +483,12 @@ public partial class SampleFlowScreen : Control
         stack.AddChild(new Label { Text = "Choose how much time the sample gives each learner." });
         stack.AddChild(new UiSegmentedSwitch
         {
-            Tokens = _tokens,
             Segments = [new() { Text = "Quick" }, new() { Text = "Standard" }, new() { Text = "Deep" }],
             SelectedIndex = 0,
         });
         var done = new UiButton
         {
-            Tokens = _tokens,
-            LabelText = "Done",
+            Text = "Done",
             Kind = UiButtonKind.Primary,
         };
         done.Pressed += CloseOverlays;
@@ -544,16 +508,14 @@ public partial class SampleFlowScreen : Control
         var actions = new HBoxContainer();
         var cancel = new UiButton
         {
-            Tokens = _tokens,
-            LabelText = "Cancel",
+            Text = "Cancel",
             Kind = UiButtonKind.Secondary,
         };
         cancel.Pressed += CloseOverlays;
         actions.AddChild(cancel);
         var confirm = new UiButton
         {
-            Tokens = _tokens,
-            LabelText = "Create new body",
+            Text = "Create new body",
             Kind = UiButtonKind.Tertiary,
         };
         confirm.Pressed += () =>
@@ -587,7 +549,7 @@ public partial class SampleFlowScreen : Control
             {
                 foreach (var neuron in middle)
                 {
-                    network.DrawLine(input, neuron, _tokens.Edge, 2);
+                    network.DrawLine(input, neuron, UiThemeLookup.Color(this, UiTokens.Color.Edge), 2);
                 }
             }
 
@@ -595,7 +557,7 @@ public partial class SampleFlowScreen : Control
             {
                 foreach (var output in right)
                 {
-                    network.DrawLine(neuron, output, _tokens.Accent, 3);
+                    network.DrawLine(neuron, output, UiThemeLookup.Color(this, UiTokens.Color.Accent), 3);
                 }
             }
 
@@ -604,21 +566,24 @@ public partial class SampleFlowScreen : Control
                 // Illustrative network diagram -- effects-lite drops the
                 // glow treatment for flat schematic dots instead of hiding
                 // them (#134).
-                network.DrawCircle(node, _tokens.EffectsEnabled ? 12 : 8, _tokens.EffectsEnabled ? _tokens.AccentGlow : _tokens.Line);
+                network.DrawCircle(
+                    node,
+                    UiThemeLookup.EffectsEnabled(this) ? 12 : 8,
+                    UiThemeLookup.EffectsEnabled(this) ? UiGlow.FromBase(UiThemeLookup.Color(this, UiTokens.Color.Accent), true) : UiThemeLookup.Color(this, UiTokens.Color.Line));
             }
 
             for (var index = 0; index < middle.Length; index++)
             {
-                network.DrawCircle(middle[index], _tokens.EffectsEnabled ? 15 : 10, _tokens.EffectsEnabled ? _tokens.Halo : _tokens.LineStrong);
+                network.DrawCircle(middle[index], UiThemeLookup.EffectsEnabled(this) ? 15 : 10, UiThemeLookup.EffectsEnabled(this) ? UiThemeLookup.Color(this, UiTokens.Color.Halo) : UiThemeLookup.Color(this, UiTokens.Color.LineStrong));
                 if (index == selectedNeuron)
                 {
-                    network.DrawArc(middle[index], 22, 0, Mathf.Tau, 32, _tokens.Accent, 3);
+                    network.DrawArc(middle[index], 22, 0, Mathf.Tau, 32, UiThemeLookup.Color(this, UiTokens.Color.Accent), 3);
                 }
             }
 
             foreach (var node in right)
             {
-                network.DrawCircle(node, 12, _tokens.Accent);
+                network.DrawCircle(node, 12, UiThemeLookup.Color(this, UiTokens.Color.Accent));
             }
         };
         stack.AddChild(network);
@@ -630,8 +595,7 @@ public partial class SampleFlowScreen : Control
             var neuronIndex = index;
             var button = new UiButton
             {
-                Tokens = _tokens,
-                LabelText = $"Hidden {index + 1}",
+                Text = $"Hidden {index + 1}",
                 Kind = index == selectedNeuron
                     ? UiButtonKind.Primary
                     : UiButtonKind.Secondary,
@@ -656,8 +620,7 @@ public partial class SampleFlowScreen : Control
         stack.AddChild(new Label { Text = "Inputs: core contact · body angle    Outputs: left joint · right joint" });
         var close = new UiButton
         {
-            Tokens = _tokens,
-            LabelText = "Back to SignalFlow",
+            Text = "Back to SignalFlow",
             Kind = UiButtonKind.Primary,
         };
         close.Pressed += CloseOverlays;
@@ -676,22 +639,20 @@ public partial class SampleFlowScreen : Control
         });
         var choice = new UiSegmentedSwitch
         {
-            Tokens = _tokens,
             Segments = [new() { Text = "Copy brain" }, new() { Text = "Start fresh" }],
             SelectedIndex = 0,
         };
         stack.AddChild(choice);
         var done = new UiButton
         {
-            Tokens = _tokens,
-            LabelText = "Copy brain",
+            Text = "Copy brain",
             Kind = UiButtonKind.Primary,
         };
-        choice.SelectionChanged += index => done.LabelText = index == 0 ? "Copy brain" : "Start fresh";
+        choice.SelectionChanged += index => done.Text = index == 0 ? "Copy brain" : "Start fresh";
         done.Pressed += () =>
         {
             CloseOverlays();
-            _toast?.ShowMessage($"Sample only: {name} duplicate created using {done.LabelText.ToLowerInvariant()}.");
+            _toast?.ShowMessage($"Sample only: {name} duplicate created using {done.Text.ToLowerInvariant()}.");
         };
         stack.AddChild(done);
         return stack;
@@ -709,16 +670,14 @@ public partial class SampleFlowScreen : Control
         var actions = new HBoxContainer();
         var cancel = new UiButton
         {
-            Tokens = _tokens,
-            LabelText = "Cancel",
+            Text = "Cancel",
             Kind = UiButtonKind.Secondary,
         };
         cancel.Pressed += CloseOverlays;
         actions.AddChild(cancel);
         var confirm = new UiButton
         {
-            Tokens = _tokens,
-            LabelText = "Hold to delete",
+            Text = "Hold to delete",
             Kind = UiButtonKind.Tertiary,
         };
         var holdTimer = new Godot.Timer { OneShot = true, WaitTime = 1.2f };
@@ -736,7 +695,7 @@ public partial class SampleFlowScreen : Control
         };
         confirm.ButtonDown += () =>
         {
-            confirm.LabelText = "Keep holding…";
+            confirm.Text = "Keep holding…";
             holdTimer.Start();
         };
         confirm.ButtonUp += () =>
@@ -744,7 +703,7 @@ public partial class SampleFlowScreen : Control
             if (holdTimer.TimeLeft > 0)
             {
                 holdTimer.Stop();
-                confirm.LabelText = "Hold to delete";
+                confirm.Text = "Hold to delete";
             }
         };
         stack.AddChild(holdTimer);

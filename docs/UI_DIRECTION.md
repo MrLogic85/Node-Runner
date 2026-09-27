@@ -34,6 +34,44 @@ reference must be deliberate, documented in the PR/issue, or fixed before the
 milestone is considered done. When the package is contradictory or incomplete,
 record the ambiguity instead of editing it or choosing silently.
 
+### Reference token mapping deviations
+
+Gate A requires every canonical token to have either an exact named Godot
+mapping or a documented non-runtime reason. The reasons live here, so a later
+token import does not recreate the dead mappings.
+
+- **`*-glow` color tokens** (`line-strong-glow`, `ink-glow`, `edge-glow`,
+  `accent-glow`, `halo-glow`, `danger-glow`) are **not** imported. They exist in
+  the package only because CSS cannot derive an alpha variant from an existing
+  custom property. `UiGlow` derives them from the base colour instead, and their
+  transparent paper values are expressed by `effects_enabled`.
+- **`accent-soft`** is **not** a colour of its own either: it is `accent` at
+  the palette's soft-fill opacity. Each theme file authors that opacity once as
+  `NodeRunner/constants/alpha_soft` (0–255, because theme constants are
+  integers: Neon 31, Paper 26), and a control that wants a soft fill asks for
+  `UiThemeLookup.Color(this, UiTokens.Color.Accent).WithAlpha(UiThemeLookup.Alpha(this, UiTokens.Alpha.Soft))`.
+  Any base colour can use the same alpha. Tests reject alpha-only colour
+  entries in the theme files.
+- **`shadow.glow`** (`0 0 16px #19f0ff40`) is **not** imported as a
+  `glow_radius` constant. A CSS `box-shadow` blur radius has no 1:1 equivalent
+  in `StyleBoxFlat.ShadowSize`, and matching the reference's perceived glow on
+  device required recalibration, not the literal number. `UiGlow` owns the
+  Android-reviewed values (extent 10, opacity 12%) for every glowing surface.
+  The paper theme and Effects Lite suppress glow through `effects_enabled`,
+  not through a zero radius. An earlier import did map the literal `16`; the
+  constant was never read by any control and has been removed.
+- **Dimension tokens** (`spacing`, `radius`, `stroke`, and `layout`) are
+  constants in `UiSize` and `UiLayout` rather than Godot theme entries. Every
+  palette shares the same dimensions — Neon, Paper, and Effects Lite differ only
+  in colour, soft-fill alpha, and glow — so routing them through the Theme added
+  a lookup and a per-palette copy without ever allowing a different value. Plain
+  constants also keep `stroke` fractions exact, because Godot rounds theme
+  constants to integers. Godot performs no scaling of theme constants, so
+  nothing is lost: UI scaling (issue
+  [#299](https://github.com/MrLogic85/Node-Runner/issues/299)) works on the
+  rendered viewport, not on token values. If a future theme ever needs its own
+  dimensions (a compact or dense mode), that token moves back into the Theme.
+
 ## Immediate-mode drawing and antialiasing
 
 The project renders at a low logical canvas (`window/size/viewport_width=640`,
@@ -87,16 +125,71 @@ must stay theme-agnostic:
   not a specific visual skin.
 
 The reference's HTML/CSS structure is not a Godot class or node hierarchy.
-In particular, CSS-only translucent color variants need not become additional
-Godot color tokens: shared effect definitions may derive alpha from the
-style's semantic color token. Keep effect settings centralized and preserve
-the paper theme and Effects Lite suppression of glow.
+CSS-only translucent color variants and the CSS glow shadow do not become
+Godot tokens; see "Reference token mapping deviations" above. Preserve the
+paper theme's transparent glow behavior.
 
-The current Godot host uses the `UiTokens` adapter. A small project-wide native
-`Theme` supplies the Label line-spacing default described below; the reference's
-full native theme and `Window.content_scale_factor` guidance remains a target,
-not completed host wiring. Theme/scale propagation is tracked in
-[issue #236](https://github.com/MrLogic85/Node-Runner/issues/236).
+The Godot host uses native `Theme` inheritance for the values that actually
+change between skins, and plain constants for the values that do not.
+
+- **Theme** owns colours, palette opacities (`UiTokens.Alpha`), the
+  `effects_enabled` flag, and type variations: one per typography, plus
+  generated combinations such as typography × text colour (`UiNoteMuted`) and
+  control-specific variations (`UiMenuItemButtonCompactDanger`). Controls pick a
+  variation by name instead of copying resolved values into overrides, so a
+  root Theme swap restyles them natively. `UiTokens` is the
+  static set of typed identifiers for exactly those, and `UiThemeLookup`
+  resolves them through a control's inherited Theme: `Color`, `Alpha`, `Flag`,
+  `Font`, `FontSize`, `ApplyTypography`, `ApplyTextStyle` (a Label's
+  typography × text-colour variation), plus the `CreateStyleBox` /
+  `CreateFrameStyleBox` / `CreateRaisedStyleBox` builders. A missing theme item
+  is reported as an error in debug builds instead of resolving silently.
+- **Theme files are the source of truth.** Each value is authored once, in the
+  Godot theme editor or the `.tres` text:
+  - `project/assets/themes/Neon.tres` is the project theme (`gui/theme/custom`),
+    so the editor and every screen inherit it without a runtime assignment. It
+    authors the Neon palette (`NodeRunner` colours, `effects_enabled`) **and**
+    everything that is the same in every palette: typography variations
+    (`UiBody`, `UiNote`, …, each a `FontVariation` plus `font_size`), the
+    default font, `line_spacing`, container separations, menu-item spacing.
+    The default container separation (8) is the theme's value for plain
+    containers; it equals `UiSize.Space.S2`, which code-built layout uses, so
+    change both together.
+  - `Paper.tres` authors only the Paper palette. Godot resolves a variation
+    chain from the first theme that declares it and then looks each item up
+    through the whole theme chain, so a Paper screen gets Paper colours and the
+    project theme's fonts. A colour missing from Paper would silently fall back
+    to Neon; the tests require every palette colour in every file.
+  - Colour-derived items (text-colour variations such as `UiNoteMuted`,
+    `UiMenuItemButton*` colours, the `UiButton` variation, base
+    `Label`/`Button`/`LineEdit` colours) are regenerated by `UiThemeExpander`.
+    `UiThemeExpander.DerivedColors` lists them; the expander clears every
+    colour of those types and rewrites them, leaving other items untouched.
+    `NeonLite.tres` is Neon's palette with effects off. After editing a palette
+    colour, build the Debug assembly (`dotnet build project/NodeRunner.csproj`)
+    and run
+    `Godot --headless --path project res://scenes/tools/ExpandThemes.tscn`.
+    Saving from the command line drops the font `uid`s from `Neon.tres`'s
+    `ext_resource` lines; restore them (or open and re-save the theme in the
+    editor) before committing. `UiThemeExpanderTests` fail if a file was
+    edited without regenerating.
+  - `UiThemes` loads the files (`For(UiTokenType)`).
+- **Constants** own dimensions: `UiSize` for the component scale (`Space`,
+  `Control`, `Icon`, `Radius`, `Stroke`, `Widget`), `UiLayout` for shell and
+  surface dimensions, and `UiSpacing` for the semantic gap roles. These need no
+  control and no theme, so they are usable from pure tests and from `[Tool]`
+  scripts.
+- Plain colour maths lives in `UiColorExtensions` (`WithAlpha`, `ScaleAlpha`),
+  not in the lookup.
+
+Custom-drawn and cached controls refresh their drawing or layout locally on
+theme change. No per-control palette propagation or subtree adapter is used.
+Issue [#236](https://github.com/MrLogic85/Node-Runner/issues/236) tracks the
+native theme migration. User-selectable UI-only scaling is separate work tracked in
+[issue #299](https://github.com/MrLogic85/Node-Runner/issues/299). Do not assume
+`Window.content_scale_factor` is UI-only; the scaling issue owns verifying a
+mechanism that leaves the simulation at its existing scale and applies the UI
+factor only once.
 
 For buttons, the Component Library's **Buttons** paragraph defines the four
 current kinds. Older reference summaries still call `secondary` "default"
@@ -105,11 +198,17 @@ and `tertiary` "danger"; `on` and `off` are states, not kinds.
 Native `Disabled` is the sole availability setting; UiButton has no inverse
 `Enabled` property. Disabling cancels a hold and dims the custom stack/progress
 content as well as the native button visuals.
-All button text, including the neuron stepper's plus/minus signs, uses
-`LabelText` with the layout's normal typography and padding.
-Inherited `Text` and `Icon` remain visible but read-only in the Inspector.
-Their generated values are not saved; author `LabelText` and `IconId` instead.
-Native `Flat` is hidden in the Inspector; use `Kind = Flat` for the canonical style.
+All button text, including the neuron stepper's plus/minus signs, is authored
+in the native `Text` property, with the layout's normal typography and padding.
+As for UiLabel, `Text` is stored exactly as written (it is also the
+translation key); an internal UiLabel renders it with the `Label` (row) or
+`Overline` (stacked) typography, so letter case follows
+`UiTokens.IsUppercase` and never changes the stored text. Godot's Button has
+no `uppercase`, so the native text is kept but made transparent by the
+generated `UiButton` theme variation and excluded from the measured size.
+Author `IconId` for the icon. Native `Icon`, `Flat`, text and icon alignment,
+overrun, autowrap and clip settings are derived and hidden in the Inspector;
+use `Kind = Flat` for the canonical flat style.
 `Kind` defaults to `Secondary`, including the Inspector's Reset action.
 `UiSegmentedSwitch` is also available through Add Node with an editor preview.
 Edit `Segments`, `SelectedIndex`, and `MatchWidth` in the Inspector. Each
@@ -133,7 +232,8 @@ no invisible touch margin: visible and clickable bounds are the same.
 human requested one `Content Layout` choice: `Row` (40px height/minimum width),
 `RowCompact` (32px), or `Stacked` (48x48px). The separate `Compact` boolean is
 removed; both row options share rendering and differ only in size.
-These sizes come from `ControlHeight`, `ControlSmall`, and `TouchTarget`.
+These sizes come from `UiSize.Control.Default`, `UiSize.Control.Small`, and
+`UiSize.Control.Touch`.
 Add UiButton directly via Add Node. Its exported `Icon Id` selects a canonical
 icon or `None`; no nullable/icon-only wrapper is needed. Existing serialized
 Row/Stacked enum values remain stable. C# callers use `UiIconId.None` instead
@@ -240,8 +340,8 @@ retargets an outgoing animation. Clear/dismiss/teardown cancel pending animation
 The gallery wires modal pause to `UiDialog.Open`/`Finished`.
 Unexpected notification callback exceptions are logged and surfaced as a Danger
 notification before the remaining queue. Modal input/focus is isolated from the
-gallery. Theme changes clear its notification queue; tokens apply to the next
-opened dialog/notification.
+gallery. Dialogs and notifications read the Theme inherited from their host;
+theme changes do not require rebinding token packages.
 Placement, timings, swipe threshold and appearance are proposals for the
 designer, not new product-wide rules. All actions are demonstrations only.
 `UiDialog` uses an embedded, borderless `Window` with
@@ -267,7 +367,7 @@ those sections freely; tests should cover component behavior, not lock the
 gallery's visual arrangement.
 Edit normal exported properties, UiLabel Text Style presets and native
 container separations; theme switching does not recreate or reset those
-choices. `gallery_muted` marks captions that use muted tokens.
+choices.
 Keep the unique `Background`, `Frame`, `HeaderHost`, `Scroll`, `ContentFrame`,
 and `RuntimeSections` binding names. The toolbar and authored component
 sections are scene-owned; the remaining component sections are still built at
@@ -283,7 +383,8 @@ layout live in the scene; its signal connections bind each button to the demo
 callbacks in `PopupGalleryScreen.cs`. Keep the unique `Background`,
 `UiSegmentedSwitch`, `Disclaimer`, and `Status` names and the root
 `MarginContainer` binding. Theme changes update existing controls instead of
-rebuilding the page, preserving authored layout and scroll position.
+rebuilding the page, preserving authored layout and scroll position. Switching
+theme clears queued notifications and is ignored while a dialog is open.
 Gallery launcher buttons use ordinary clicks; hold requirements belong to the
 dialogs they open. F6 exercises the same scene that the Component Gallery opens.
 
@@ -291,19 +392,25 @@ dialogs they open. F6 exercises the same scene that the Component Gallery opens.
 
 For new scene-authored text, add **UiLabel** from Godot's Add Node dialog.
 Its **Text Style** dropdown selects one of the 17 canonical `UiTokens` text
-styles. `[Tool]` updates typography in the editor; native Label still owns
-text, wrapping, alignment, sizing and rendering. The derived Theme,
-auto-font-sizing, uppercase and LabelSettings Inspector fields are hidden;
-their values are controlled by the preset rather than serialized per node.
-Uppercase is display-only and never changes the authored Text. Color and
-layout remain normal Label properties; this is not global theme propagation.
-Code may supply `Tokens`, while style values remain defined only in `UiTokens`.
-The label derives a private typography-only Theme; colors still inherit normally.
-Godot's dynamic font/font-size/line-spacing overrides remain visible by human
-decision; no Inspector plugin is needed. Manual overrides can take effect until
-the preset is reapplied (Text Style or Tokens changes, or scene load/reentry),
-at which point UiLabel clears those overrides. Use Text Style for durable
-typography choices, not those transient overrides.
+styles. `[Tool]` updates the native `ThemeTypeVariation` in the editor; native
+Label still owns text, wrapping, alignment, sizing and rendering. The Theme,
+Theme Type Variation, uppercase and LabelSettings Inspector
+fields are hidden; typography variations come from the inherited native Theme.
+Godot cannot hide the dynamic Theme Overrides fields. They stay usable for
+experimenting in the Inspector but must not be saved: a scene guard test fails
+if a UiLabel saves a color, font or font-size override.
+Uppercase is display-only and never changes the authored Text; which styles are
+uppercase is fixed per typography (`UiTokens.IsUppercase`). Its **Text Color**
+dropdown lists every `UiTokens.Color`, but only text colours
+(`UiTokens.IsTextColor`) are accepted; any other choice is rejected with an
+error and the previous colour is kept. Together with Text Style it picks one
+generated variation (e.g. `UiNoteMuted`), so no colour override is needed.
+Layout remains a normal Label property. UiLabel does not accept or store a
+`UiTokens` package and does not assign a private Theme; its typography variation
+and palette colors come from the inherited screen Theme. The canonical style
+definitions are the typography variations authored in the project theme `Neon.tres`.
+Changing Text Style
+selects a new variation but does not clear an unsaved Inspector override.
 This is an authoring API, not a restriction on what arbitrary C# can change.
 Existing Labels are not automatically migrated.
 
@@ -313,8 +420,7 @@ project once after script changes so Godot can run its editor previews.
 
 - `Card/Column/Heading/Titles/Title` and `Card/Column/BodyScroll/Content`:
   edit the Label's Text for the standalone specimen.
-- `Card/Column/Actions/Cancel` and `Confirm`: edit **Label Text** (the UiButton
-  export), not the inherited Button Text. Toggle Confirm's Visible for a
+- `Card/Column/Actions/Cancel` and `Confirm`: edit the button's **Text**. Toggle Confirm's Visible for a
   one-button specimen; the abort button fills the row.
 - `Card`: edit Custom Minimum Size X for the desired card width. Containers
   own child placement; `Column` and `Actions` expose separation under Theme
@@ -356,8 +462,8 @@ when space becomes available again.
 
 F6 shows the standalone card without callbacks, expiry or swipe. Use Popup
 Gallery to exercise those interactions. Runtime `UiNotificationSpec` replaces
-the specimen title/message/type, and the host supplies tokens, focus/input
-and bottom-center placement. The authored hierarchy, typography choices,
+the specimen title/message/type, and the host supplies the inherited Theme,
+focus/input and bottom-center placement. The authored hierarchy, typography choices,
 spacing and preferred width are reused unchanged. Queue, expiry, click
 callbacks, pause and swipe animation remain in `UiNotification`.
 
@@ -370,7 +476,7 @@ type label or card variant. Arbitrary textures and `UiIconId.None` are not
 accepted. The override is runtime data, not a new Inspector field.
 
 ```csharp
-var dialog = new UiDialog { Tokens = tokens };
+var dialog = new UiDialog();
 AddChild(dialog);
 dialog.Open(new UiDialogSpec(
     UiPopupType.Warn, "Continue?", "Review the changes.", "Continue",
@@ -378,7 +484,7 @@ dialog.Open(new UiDialogSpec(
     holdToAction: false));
 dialog.Finished += confirmed => { /* Host reacts to completion or cancellation. */ };
 
-var notifications = new UiNotification { Tokens = tokens };
+var notifications = new UiNotification();
 AddChild(notifications);
 notifications.Enqueue(new UiNotificationSpec(
     UiPopupType.Default, "Saved", "Your changes are saved.",
@@ -418,7 +524,7 @@ control.
 Menus default to the fixed menu-width token and can opt into content-wrapping
 width through `WidthMode`. The menu's `Compact` toggle overrides all direct
 `UiMenuItem` children to the matching 32px or 48px row variant, so one menu
-cannot accidentally mix densities. The abstract `UiMenuItem` base owns tokens,
+cannot accidentally mix densities. The abstract `UiMenuItem` base owns
 availability, size, padding, and the square selected highlight.
 `UiMenuActionItem` is the recommended optional action child. `Kind` distinguishes
 only Default and Danger actions; availability uses the base item's independent
@@ -429,7 +535,7 @@ the action. `UiMenuToggleItem` composes the standard `UiToggleRow` inside a
 Standard or Compact menu row and owns the menu-specific horizontal padding; it consumes its
 own input so toggling it does not also invoke the menu's index action. Other
 controls remain valid children. `UiMenuItemDivider` is a non-interactive
-separator with the same `Edge` colour and `StrokeHair` width as the menu
+separator with the same `Edge` colour and `UiSize.Stroke.Hair` width as the menu
 border. It uses the base item's Standard or Compact padding and does not emit
 the menu's index-click signal.
 See [issue #251](https://github.com/MrLogic85/Node-Runner/issues/251).
@@ -453,16 +559,22 @@ SpacingBottom = round(adjustment) - SpacingTop
 Label.line_spacing = 0
 ```
 
-The zero line-spacing default lives once in
-`project/assets/themes/UiDefaults.tres`, loaded through `gui/theme/custom` in
+Each typography variation's `FontVariation` in `Neon.tres` stores the result of
+this formula as `spacing_top`/`spacing_bottom` (letter spacing as
+`spacing_glyph`, rounded to at least 1px). Changing a style's size or line
+height means recomputing those spacings for its font and size. Target line
+heights are the `lineHeight` of each style in `reference design/tokens.json`.
+
+The zero line-spacing default lives once in the project theme
+`project/assets/themes/Neon.tres`, loaded through `gui/theme/custom` in
 `project.godot`. Godot's built-in Label default is **3px**, not zero. New Labels
-inherit the project default without per-component overrides; `ApplyTextStyle`
-adjusts font metrics rather than Label spacing. Do not subtract those 3px from font heights, since that
+inherit the project default without per-component overrides; the typography
+variations adjust font metrics rather than Label spacing. Do not subtract those 3px from font heights, since that
 would shorten single-line boxes and affect controls that do not add Label's gap.
 
 Top/bottom spacing changes every line's metrics, including a single line and
-the outer edges of a multiline block. Preserve the adapter's existing glyph
-spacing when creating the variation. Resolve spacing for the actual font size;
+the outer edges of a multiline block. Letter spacing is the same variation's
+`spacing_glyph` in `Neon.tres`. Resolve spacing for the actual font size;
 these properties are pixel additions, not relative multipliers.
 
 Godot 4.7.2 Mono and Chrome 153 were measured with the same repository font

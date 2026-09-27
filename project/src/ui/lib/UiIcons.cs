@@ -47,8 +47,8 @@ public static class UiIcons
 
     public static int RasterPixels(UiIconSize size, int windowWidth, int windowHeight) =>
         Mathf.Max(1, Mathf.RoundToInt(Pixels(size) * Math.Min(
-            windowWidth / UiTokens.LogicalCanvasWidth,
-            windowHeight / UiTokens.LogicalCanvasHeight)));
+            windowWidth / UiLayout.CanvasWidth,
+            windowHeight / UiLayout.CanvasHeight)));
 
     public static string PathFor(UiIconId icon)
     {
@@ -65,6 +65,19 @@ public static class UiIcons
     public static void Apply(Button button, UiIconId icon, UiIconSize size, Color tint)
     {
         Apply(button, Load(icon, size), size, tint);
+    }
+
+    /// <summary>Applies an icon whose colors come from the button's inherited Theme.</summary>
+    public static void Apply(Button button, UiIconId icon, UiIconSize size)
+    {
+        ArgumentNullException.ThrowIfNull(button);
+        button.Icon = Load(icon, size);
+        button.ExpandIcon = false;
+        button.AddThemeConstantOverride("icon_max_width", Pixels(size));
+        foreach (var state in new[] { "icon_normal_color", "icon_hover_color", "icon_pressed_color", "icon_disabled_color" })
+        {
+            button.RemoveThemeColorOverride(state);
+        }
     }
 
     private static void Apply(Button button, Texture2D icon, UiIconSize size, Color tint)
@@ -204,8 +217,8 @@ public static class UiIcons
     {
         var windowSize = DisplayServer.WindowGetSize();
         return Mathf.Min(
-            windowSize.X / UiTokens.LogicalCanvasWidth,
-            windowSize.Y / UiTokens.LogicalCanvasHeight);
+            windowSize.X / UiLayout.CanvasWidth,
+            windowSize.Y / UiLayout.CanvasHeight);
     }
 
     private static TextureRect Create(Texture2D texture, UiIconSize size, Color tint)

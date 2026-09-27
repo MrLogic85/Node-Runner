@@ -10,7 +10,6 @@ public partial class UiSegmentedSwitch : HBoxContainer, ISerializationListener
     [Signal]
     public delegate void SelectionChangedEventHandler(int index);
 
-    private UiTokens _tokens = UiTokens.Neon;
     private Godot.Collections.Array<UiSegment> _segments =
         [new() { Text = "1" }, new() { Text = "2" }];
     private readonly HashSet<UiSegment> _observedSegments = [];
@@ -68,21 +67,19 @@ public partial class UiSegmentedSwitch : HBoxContainer, ISerializationListener
         }
     }
 
-    public UiTokens Tokens
-    {
-        get => _tokens;
-        set
-        {
-            _tokens = value;
-            ApplyContentAndTheme();
-        }
-    }
-
     public override void _EnterTree()
     {
         if (!IsConnected(SignalName.ChildEnteredTree, ChildAddedCallback))
             Connect(SignalName.ChildEnteredTree, ChildAddedCallback);
         RequestReady();
+    }
+
+    public override void _Notification(int what)
+    {
+        if (what == NotificationThemeChanged && IsNodeReady())
+        {
+            UiThemeRefresh.Guarded(this, ApplyContentAndTheme);
+        }
     }
 
     private void WarnAboutExtraChild(Node child)
@@ -258,25 +255,25 @@ public partial class UiSegmentedSwitch : HBoxContainer, ISerializationListener
             bool hasIcon = segment is { IconId: not UiIconId.None };
             button.Disabled = segment is null;
             button.Text = text;
-            _tokens.ApplyTextStyle(button, _tokens.LabelText);
+            UiThemeLookup.ApplyTypography(button, UiTokens.Typography.Label);
             foreach (string state in new[] { "font_color", "font_hover_color", "font_pressed_color", "font_hover_pressed_color", "font_focus_color" })
             {
-                button.AddThemeColorOverride(state, _tokens.Ink);
+                button.AddThemeColorOverride(state, UiThemeLookup.Color(this, UiTokens.Color.Ink));
             }
 
             if (hasIcon)
             {
-                UiIcons.Apply(button, segment!.IconId, UiIconSize.Standard, _tokens.Ink);
+                UiIcons.Apply(button, segment!.IconId, UiIconSize.Standard, UiThemeLookup.Color(this, UiTokens.Color.Ink));
                 button.IconAlignment = hasText ? HorizontalAlignment.Left : HorizontalAlignment.Center;
-                button.AddThemeColorOverride("icon_hover_pressed_color", _tokens.Ink);
-                button.AddThemeColorOverride("icon_focus_color", _tokens.Ink);
+                button.AddThemeColorOverride("icon_hover_pressed_color", UiThemeLookup.Color(this, UiTokens.Color.Ink));
+                button.AddThemeColorOverride("icon_focus_color", UiThemeLookup.Color(this, UiTokens.Color.Ink));
             }
             else
             {
                 button.Icon = null;
             }
 
-            button.AddThemeConstantOverride("h_separation", hasText && hasIcon ? (int)_tokens.Space2 : 0);
+            button.AddThemeConstantOverride("h_separation", hasText && hasIcon ? (int)UiSize.Space.S2 : 0);
             StyleBoxFlat normal = CreateStyle(index, false);
             StyleBoxFlat selected = CreateStyle(index, true);
             button.AddThemeStyleboxOverride("normal", normal);
@@ -285,7 +282,7 @@ public partial class UiSegmentedSwitch : HBoxContainer, ISerializationListener
             button.AddThemeStyleboxOverride("hover_pressed", selected);
             StyleBoxFlat focus = CreateStyle(index, true);
             focus.DrawCenter = false;
-            focus.BorderColor = _tokens.Halo;
+            focus.BorderColor = UiThemeLookup.Color(this, UiTokens.Color.Halo);
             button.AddThemeStyleboxOverride("focus", focus);
         }
 
@@ -295,7 +292,7 @@ public partial class UiSegmentedSwitch : HBoxContainer, ISerializationListener
     private void ApplyLayout()
     {
         AddThemeConstantOverride("separation", 0);
-        float width = _tokens.TouchTarget;
+        float width = UiSize.Control.Touch;
         foreach (Button button in _buttons)
         {
             width = Mathf.Max(width, button.GetMinimumSize().X);
@@ -303,7 +300,7 @@ public partial class UiSegmentedSwitch : HBoxContainer, ISerializationListener
 
         foreach (Button button in _buttons)
         {
-            button.CustomMinimumSize = new Vector2(MatchWidth ? width : _tokens.TouchTarget, _tokens.ControlHeight);
+            button.CustomMinimumSize = new Vector2(MatchWidth ? width : UiSize.Control.Touch, UiSize.Control.Default);
             button.SizeFlagsHorizontal = MatchWidth ? SizeFlags.ExpandFill : SizeFlags.ShrinkBegin;
         }
     }
@@ -312,21 +309,23 @@ public partial class UiSegmentedSwitch : HBoxContainer, ISerializationListener
     {
         bool first = index == 0;
         bool last = index == _segments.Count - 1;
-        int stroke = (int)(selected ? _tokens.StrokeSignal : _tokens.StrokeHair);
+        int stroke = (int)(selected ? UiSize.Stroke.Signal : UiSize.Stroke.Hair);
         return new StyleBoxFlat
         {
-            BgColor = selected ? _tokens.PanelRaised.Blend(_tokens.AccentSoft) : _tokens.PanelRaised,
-            BorderColor = selected ? _tokens.Accent : _tokens.LineStrong,
+            BgColor = selected
+                ? UiThemeLookup.Color(this, UiTokens.Color.PanelRaised).Blend(UiThemeLookup.Color(this, UiTokens.Color.Accent).WithAlpha(UiThemeLookup.Alpha(this, UiTokens.Alpha.Soft)))
+                : UiThemeLookup.Color(this, UiTokens.Color.PanelRaised),
+            BorderColor = selected ? UiThemeLookup.Color(this, UiTokens.Color.Accent) : UiThemeLookup.Color(this, UiTokens.Color.LineStrong),
             BorderWidthLeft = first || selected ? stroke : 0,
             BorderWidthTop = stroke,
             BorderWidthRight = stroke,
             BorderWidthBottom = stroke,
-            CornerRadiusTopLeft = first ? (int)_tokens.RadiusMedium : 0,
-            CornerRadiusTopRight = last ? (int)_tokens.RadiusMedium : 0,
-            CornerRadiusBottomLeft = first ? (int)_tokens.RadiusMedium : 0,
-            CornerRadiusBottomRight = last ? (int)_tokens.RadiusMedium : 0,
-            ContentMarginLeft = UiSpacing.SegmentedControlHorizontalPadding(_tokens),
-            ContentMarginRight = UiSpacing.SegmentedControlHorizontalPadding(_tokens),
+            CornerRadiusTopLeft = first ? (int)UiSize.Radius.Medium : 0,
+            CornerRadiusTopRight = last ? (int)UiSize.Radius.Medium : 0,
+            CornerRadiusBottomLeft = first ? (int)UiSize.Radius.Medium : 0,
+            CornerRadiusBottomRight = last ? (int)UiSize.Radius.Medium : 0,
+            ContentMarginLeft = UiSpacing.SegmentedControlHorizontalPadding,
+            ContentMarginRight = UiSpacing.SegmentedControlHorizontalPadding,
         };
     }
 }

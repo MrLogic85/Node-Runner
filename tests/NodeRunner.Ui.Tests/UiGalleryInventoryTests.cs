@@ -8,7 +8,7 @@ public sealed class UiGalleryInventoryTests
     [Fact]
     public void ColorsAndStylesInventory_ContainsCanonicalFoundationCounts()
     {
-        ColorsAndStylesScreen.ColorTokenInventory.Count.ShouldBe(16);
+        ColorsAndStylesScreen.ColorTokenInventory.Count.ShouldBe(14);
         ColorsAndStylesScreen.ColorTokenInventory.Distinct().Count()
             .ShouldBe(ColorsAndStylesScreen.ColorTokenInventory.Count);
         ColorsAndStylesScreen.TextStyleInventory.Count.ShouldBe(17);
@@ -23,10 +23,12 @@ public sealed class UiGalleryInventoryTests
     [Fact]
     public void ColorsAndStylesInventory_UsesBothLiveThemes()
     {
-        UiTokens.Neon.Background.ShouldNotBe(UiTokens.Paper.Background);
-        UiTokens.Neon.Accent.ShouldNotBe(UiTokens.Paper.Accent);
+        ThemeFile.For(UiTokenType.Neon).Color(UiTokens.Color.Background).ShouldNotBe(ThemeFile.For(UiTokenType.Paper).Color(UiTokens.Color.Background));
+        ThemeFile.For(UiTokenType.Neon).Color(UiTokens.Color.Accent).ShouldNotBe(ThemeFile.For(UiTokenType.Paper).Color(UiTokens.Color.Accent));
         ColorsAndStylesScreen.ColorTokenInventory
-            .ShouldContain("accent-glow");
+            .ShouldNotContain("accent-glow");
+        ColorsAndStylesScreen.ColorTokenInventory
+            .ShouldNotContain("accent-soft");
         ColorsAndStylesScreen.ColorTokenInventory
             .ShouldContain("scrim");
     }

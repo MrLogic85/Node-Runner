@@ -44,21 +44,12 @@ public sealed partial class UiNotificationContent : UiCard
                 return;
             }
             _theme = value;
-            Tokens = value switch
+            Theme = UiThemes.For(value switch
             {
-                PreviewTheme.Paper => UiTokens.Paper,
-                PreviewTheme.EffectsLite => UiTokens.Neon.WithEffects(false),
-                _ => UiTokens.Neon,
-            };
-        }
-    }
-
-    public override UiTokens Tokens
-    {
-        get => base.Tokens;
-        set
-        {
-            base.Tokens = value;
+                PreviewTheme.Paper => UiTokenType.Paper,
+                PreviewTheme.EffectsLite => UiTokenType.Light,
+                _ => UiTokenType.Neon,
+            });
             ApplyAppearance();
         }
     }
@@ -75,13 +66,22 @@ public sealed partial class UiNotificationContent : UiCard
         ApplyAppearance();
     }
 
-    public void Bind(UiNotificationSpec spec, UiTokens tokens)
+    public override void _Notification(int what)
+    {
+        base._Notification(what);
+        if (what == NotificationThemeChanged && IsNodeReady())
+        {
+            UiThemeRefresh.Guarded(this, ApplyAppearance);
+        }
+    }
+
+    public void Bind(UiNotificationSpec spec)
     {
         _type = spec.Type;
         _iconOverride = spec.Icon;
         _title!.Text = spec.Title;
         _message.Text = spec.Message;
-        Tokens = tokens;
+        ApplyAppearance();
     }
 
     private void ApplyAppearance()
@@ -91,17 +91,14 @@ public sealed partial class UiNotificationContent : UiCard
             return;
         }
         Kind = UiPopupStyle.CardKind(Type);
-        var color = UiPopupStyle.SemanticColor(Type, Tokens);
+        var color = UiPopupStyle.SemanticColor(Type, this);
         _icon.Texture = _iconOverride is { } icon
             ? icon.Load(UiIconSize.Large)
             : UiIcons.Load(Type == UiPopupType.Default ? UiIconId.Model : UiIconId.Warn, UiIconSize.Large);
         _icon.SelfModulate = color;
         _semanticType.Text = Type.ToString();
-        _semanticType.Tokens = Tokens;
-        _semanticType.AddThemeColorOverride("font_color", color);
-        _title.Tokens = Tokens;
-        _title.AddThemeColorOverride("font_color", Tokens.Ink);
-        _message.Tokens = Tokens;
-        _message.AddThemeColorOverride("font_color", Tokens.Ink);
+        _semanticType.TextColor = UiPopupStyle.SemanticToken(Type);
+        _title.TextColor = UiTokens.Color.Ink;
+        _message.TextColor = UiTokens.Color.Ink;
     }
 }

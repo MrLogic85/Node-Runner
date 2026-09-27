@@ -8,24 +8,13 @@ public partial class UiToast : PanelContainer
     [Signal]
     public delegate void UndoPressedEventHandler();
 
-    private UiTokens _tokens = UiTokens.Neon;
     private Label? _messageLabel;
     private Button? _undoButton;
     private Godot.Timer? _dismissTimer;
     private string? _pendingMessage;
     private string? _pendingUndoLabel;
     private float _pendingDuration;
-
-    public UiTokens Tokens
-    {
-        get => _tokens;
-        set
-        {
-            _tokens = value;
-            RefreshStyle();
-            RefreshContentStyle();
-        }
-    }
+    private bool _refreshingStyle;
 
     public override void _Ready()
     {
@@ -43,6 +32,15 @@ public partial class UiToast : PanelContainer
         }
     }
 
+    public override void _Notification(int what)
+    {
+        if (what == NotificationThemeChanged)
+        {
+            RefreshStyle();
+            RefreshContentStyle();
+        }
+    }
+
     public void ShowMessage(string message, string? undoLabel = null, float durationSeconds = 4)
     {
         if (!IsInsideTree() || _messageLabel is null || _undoButton is null || _dismissTimer is null)
@@ -56,6 +54,7 @@ public partial class UiToast : PanelContainer
         _messageLabel.Text = message;
         _undoButton.Visible = !string.IsNullOrWhiteSpace(undoLabel);
         _undoButton.Text = undoLabel ?? "Undo";
+        UiThemeLookup.ApplyTypography(_undoButton, UiTokens.Typography.Label);
         _dismissTimer.WaitTime = Mathf.Max(0.1f, durationSeconds);
         _dismissTimer.Start();
         Show();
@@ -64,14 +63,14 @@ public partial class UiToast : PanelContainer
     private void BuildContent()
     {
         var margin = new MarginContainer();
-        margin.AddThemeConstantOverride("margin_left", (int)_tokens.Space3);
-        margin.AddThemeConstantOverride("margin_top", (int)_tokens.Space2);
-        margin.AddThemeConstantOverride("margin_right", (int)_tokens.Space2);
-        margin.AddThemeConstantOverride("margin_bottom", (int)_tokens.Space2);
+        margin.AddThemeConstantOverride("margin_left", (int)UiSize.Space.S3);
+        margin.AddThemeConstantOverride("margin_top", (int)UiSize.Space.S2);
+        margin.AddThemeConstantOverride("margin_right", (int)UiSize.Space.S2);
+        margin.AddThemeConstantOverride("margin_bottom", (int)UiSize.Space.S2);
         AddChild(margin);
 
         var row = new HBoxContainer();
-        row.AddThemeConstantOverride("separation", (int)_tokens.Space3);
+        row.AddThemeConstantOverride("separation", (int)UiSize.Space.S3);
         margin.AddChild(row);
 
         _messageLabel = new Label
@@ -83,7 +82,7 @@ public partial class UiToast : PanelContainer
 
         _undoButton = new Button
         {
-            CustomMinimumSize = new Vector2(0, _tokens.TouchTarget),
+            CustomMinimumSize = new Vector2(0, UiSize.Control.Touch),
         };
         _undoButton.Pressed += () =>
         {
@@ -103,14 +102,22 @@ public partial class UiToast : PanelContainer
 
     private void RefreshStyle()
     {
-        if (!IsInsideTree())
+        if (!IsInsideTree() || _refreshingStyle)
         {
             return;
         }
 
-        var style = _tokens.FrameStyle();
-        style.BorderColor = _tokens.LineStrong;
-        AddThemeStyleboxOverride("panel", style);
+        _refreshingStyle = true;
+        try
+        {
+            var style = UiThemeLookup.CreateFrameStyleBox(this);
+            style.BorderColor = UiThemeLookup.Color(this, UiTokens.Color.LineStrong);
+            AddThemeStyleboxOverride("panel", style);
+        }
+        finally
+        {
+            _refreshingStyle = false;
+        }
     }
 
     private void RefreshContentStyle()
@@ -120,10 +127,9 @@ public partial class UiToast : PanelContainer
             return;
         }
 
-        _tokens.ApplyTextStyle(_messageLabel, _tokens.BodyText);
-        _messageLabel.AddThemeColorOverride("font_color", _tokens.Ink);
-        _tokens.ApplyTextStyle(_undoButton, _tokens.LabelText);
-        _undoButton.AddThemeColorOverride("font_color", _tokens.Accent);
-        _undoButton.AddThemeColorOverride("font_hover_color", _tokens.Ink);
+        UiThemeLookup.ApplyTextStyle(_messageLabel, UiTokens.Typography.Body, UiTokens.Color.Ink);
+        UiThemeLookup.ApplyTypography(_undoButton, UiTokens.Typography.Label);
+        _undoButton.AddThemeColorOverride("font_color", UiThemeLookup.Color(this, UiTokens.Color.Accent));
+        _undoButton.AddThemeColorOverride("font_hover_color", UiThemeLookup.Color(this, UiTokens.Color.Ink));
     }
 }

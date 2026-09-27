@@ -33,7 +33,7 @@ project/assembly_name="NodeRunner"
 
 [gui]
 
-theme/custom="res://assets/themes/UiDefaults.tres"
+theme/custom="res://assets/themes/Neon.tres"
 
 [rendering]
 

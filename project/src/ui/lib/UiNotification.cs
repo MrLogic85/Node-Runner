@@ -11,7 +11,6 @@ public sealed partial class UiNotification : Control
     private const double _returnSeconds = 0.18;
     private const double _dismissSeconds = 0.22;
 
-    public UiTokens Tokens { get; set; } = UiTokens.Neon;
     public bool HasNotification => _card is not null;
     public int PendingCount => _queue.Count;
 
@@ -152,7 +151,7 @@ public sealed partial class UiNotification : Control
         _card = content;
         _preferredWidth = content.CustomMinimumSize.X;
         AddChild(_card);
-        content.Bind(spec, Tokens);
+        content.Bind(spec);
         _card.FocusMode = FocusModeEnum.All;
         _card.MouseFilter = MouseFilterEnum.Stop;
         _card.GuiInput += OnCardInput;
@@ -246,8 +245,8 @@ public sealed partial class UiNotification : Control
     }
 
     private float DismissOffset() => _swipeOffset < 0
-        ? -_restPosition.X - _card!.Size.X - Tokens.Space4
-        : Size.X - _restPosition.X + Tokens.Space4;
+        ? -_restPosition.X - _card!.Size.X - UiSize.Space.S4
+        : Size.X - _restPosition.X + UiSize.Space.S4;
 
     private void AnimateOffset(float target, double seconds)
     {
@@ -353,10 +352,10 @@ public sealed partial class UiNotification : Control
         }
         var previousRestPosition = _restPosition;
         var previousSize = _card.Size;
-        var width = Mathf.Min(_preferredWidth, Size.X - Tokens.Space4 * 2);
+        var width = Mathf.Min(_preferredWidth, Size.X - UiSize.Space.S4 * 2);
         _card.CustomMinimumSize = new Vector2(width, 0);
         _card.Size = new Vector2(width, 0);
-        _restPosition = new Vector2((Size.X - width) / 2, Size.Y - _card.Size.Y - Tokens.Space4);
+        _restPosition = new Vector2((Size.X - width) / 2, Size.Y - _card.Size.Y - UiSize.Space.S4);
         SetSwipeOffset(_swipeOffset);
         if (previousRestPosition != _restPosition || previousSize != _card.Size)
         {

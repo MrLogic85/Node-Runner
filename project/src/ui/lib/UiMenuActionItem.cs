@@ -15,12 +15,10 @@ public static class UiMenuItems
     public static void Populate(
         UiMenu menu,
         IEnumerable<UiMenuItemSpec> specs,
-        UiTokens tokens,
         bool showSelectedIndicator = false)
     {
         ArgumentNullException.ThrowIfNull(menu);
         ArgumentNullException.ThrowIfNull(specs);
-        ArgumentNullException.ThrowIfNull(tokens);
 
         foreach (var child in menu.GetChildren())
         {
@@ -39,7 +37,6 @@ public static class UiMenuItems
                 Selected = spec.Selected,
                 ShowSelectedIndicator = showSelectedIndicator,
                 IconTint = spec.IconTint,
-                Tokens = tokens,
                 SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
             });
         }
@@ -67,8 +64,8 @@ public partial class UiMenuActionItem : UiMenuItem, ISerializationListener
     private bool _showSelectedIndicator;
     private Button? _button;
     private Label? _noteLabel;
-    private TextureRect? _selectedIndicator;
     private Callable PressedCallback => new(this, MethodName.Activate);
+    private Callable RedrawCallback => new(this, CanvasItem.MethodName.QueueRedraw);
 
     [Export]
     public string LabelText
@@ -146,6 +143,7 @@ public partial class UiMenuActionItem : UiMenuItem, ISerializationListener
 
     public override void _Notification(int what)
     {
+        base._Notification(what);
         if (what == NotificationSortChildren && _button is not null)
         {
             FitChildInRect(_button, new Rect2(Vector2.Zero, Size));
@@ -163,30 +161,20 @@ public partial class UiMenuActionItem : UiMenuItem, ISerializationListener
         _button.Text = LabelText;
         _button.Disabled = Disabled;
         _button.Alignment = HorizontalAlignment.Left;
-        ApplyTypography();
-        _button.AddThemeConstantOverride("h_separation", (int)Tokens.Space2);
-
-        if (IconId != UiIconId.None)
-        {
-            UiIcons.Apply(
-                _button,
-                IconId,
-                SizeVariant == MenuItemSize.Compact ? UiIconSize.Standard : UiIconSize.Large,
-                IconTint ?? IconColor());
-            _button.AddThemeColorOverride("icon_disabled_color", Tokens.Muted);
-        }
-        else
-        {
-            _button.Icon = null;
-        }
-
+        _button.ThemeTypeVariation = UiThemeExpander.MenuItemButtonVariation(
+            compact: SizeVariant == MenuItemSize.Compact,
+            danger: Kind == MenuItemKind.Danger);
+        ApplyIcon();
         RefreshNote();
-        RefreshSelectedIndicator();
-        foreach (var state in new[] { "normal", "pressed", "focus", "disabled" })
+
+        // Transparent and margin-only: hover and selection are drawn by this item so their
+        // colors follow the inherited Theme without re-applying overrides.
+        var style = CreateStyle();
+        foreach (var state in new[] { "normal", "hover", "pressed", "focus", "disabled" })
         {
-            _button.AddThemeStyleboxOverride(state, CreateStyle(Colors.Transparent));
+            _button.AddThemeStyleboxOverride(state, style);
         }
-        _button.AddThemeStyleboxOverride("hover", CreateStyle(Tokens.AccentSoft));
+        QueueRedraw();
         RefreshLayout();
     }
 
@@ -213,44 +201,83 @@ public partial class UiMenuActionItem : UiMenuItem, ISerializationListener
         {
             _button.Connect(BaseButton.SignalName.Pressed, PressedCallback);
         }
+        foreach (var signal in new[] { Control.SignalName.MouseEntered, Control.SignalName.MouseExited })
+        {
+            if (!_button.IsConnected(signal, RedrawCallback))
+            {
+                _button.Connect(signal, RedrawCallback);
+            }
+        }
         RefreshItem();
     }
 
     private void DisconnectButton()
-    {
-        if (_button is not null
-            && _button.IsConnected(BaseButton.SignalName.Pressed, PressedCallback))
-        {
-            _button.Disconnect(BaseButton.SignalName.Pressed, PressedCallback);
-        }
-    }
-
-    private void Activate() => EmitSignal(SignalName.Activated);
-
-    private void ApplyTypography()
     {
         if (_button is null)
         {
             return;
         }
 
-        var style = SizeVariant == MenuItemSize.Compact
-            ? Tokens.SmallStrongText
-            : Tokens.BodyStrongText;
-        var color = TextColor();
-        var typography = new Godot.Theme();
-        if (UiTokens.CreateTextFont(style) is { } font)
+        if (_button.IsConnected(BaseButton.SignalName.Pressed, PressedCallback))
         {
-            typography.SetFont("font", "Button", font);
+            _button.Disconnect(BaseButton.SignalName.Pressed, PressedCallback);
         }
-        typography.SetFontSize("font_size", "Button", (int)style.FontSize);
-        typography.SetColor("font_color", "Button", color);
-        typography.SetColor("font_focus_color", "Button", color);
-        typography.SetColor("font_hover_color", "Button", Tokens.Ink);
-        typography.SetColor("font_pressed_color", "Button", color);
-        typography.SetColor("font_hover_pressed_color", "Button", color);
-        typography.SetColor("font_disabled_color", "Button", Tokens.Muted);
-        _button.Theme = typography;
+        foreach (var signal in new[] { Control.SignalName.MouseEntered, Control.SignalName.MouseExited })
+        {
+            if (_button.IsConnected(signal, RedrawCallback))
+            {
+                _button.Disconnect(signal, RedrawCallback);
+            }
+        }
+    }
+
+    private void Activate() => EmitSignal(SignalName.Activated);
+
+    private void ApplyIcon()
+    {
+        if (_button is null)
+        {
+            return;
+        }
+
+        if (IconId == UiIconId.None)
+        {
+            _button.Icon = null;
+            return;
+        }
+
+        var size = SizeVariant == MenuItemSize.Compact ? UiIconSize.Standard : UiIconSize.Large;
+        if (IconTint is { } tint)
+        {
+            UiIcons.Apply(_button, IconId, size, tint);
+        }
+        else
+        {
+            UiIcons.Apply(_button, IconId, size);
+        }
+    }
+
+    public override void _Draw()
+    {
+        if (!Selected && !Disabled && _button?.IsHovered() == true)
+        {
+            DrawRect(new Rect2(Vector2.Zero, Size), UiThemeLookup.Color(this, UiTokens.Color.Accent).WithAlpha(UiThemeLookup.Alpha(this, UiTokens.Alpha.Soft)));
+        }
+
+        base._Draw();
+        if (!ShowSelectedIndicator || !Selected)
+        {
+            return;
+        }
+
+        var pixels = UiIcons.Pixels(UiIconSize.Small);
+        var rect = new Rect2(
+            Size.X - HorizontalPadding - pixels,
+            (Size.Y - pixels) * 0.5f,
+            pixels,
+            pixels);
+        var color = UiThemeLookup.Color(this, Disabled ? UiTokens.Color.Muted : UiTokens.Color.Accent);
+        DrawTextureRect(UiIcons.Load(UiIconId.Check, UiIconSize.Small), rect, false, color);
     }
 
     private void RefreshNote()
@@ -282,9 +309,8 @@ public partial class UiMenuActionItem : UiMenuItem, ISerializationListener
         }
 
         _noteLabel.Text = NoteText;
-        _noteLabel.CustomMinimumSize = new Vector2(Tokens.ControlSmall * 1.5f, 0);
-        Tokens.ApplyTextStyle(_noteLabel, Tokens.NoteText);
-        _noteLabel.AddThemeColorOverride("font_color", Tokens.Muted);
+        _noteLabel.CustomMinimumSize = new Vector2(UiSize.Control.Small * 1.5f, 0);
+        _noteLabel.ThemeTypeVariation = UiTokens.Variation(UiTokens.Typography.Note, UiTokens.Color.Muted);
         _noteLabel.Size = _noteLabel.GetCombinedMinimumSize();
         _noteLabel.SetAnchorsPreset(LayoutPreset.CenterRight);
 
@@ -296,62 +322,19 @@ public partial class UiMenuActionItem : UiMenuItem, ISerializationListener
         _noteLabel.Visible = true;
     }
 
-    private void RefreshSelectedIndicator()
-    {
-        if (_button is null)
-        {
-            return;
-        }
-
-        var visible = ShowSelectedIndicator && Selected;
-        if (!visible)
-        {
-            if (_selectedIndicator is not null)
-            {
-                _selectedIndicator.Visible = false;
-            }
-            return;
-        }
-
-        _selectedIndicator ??= _button.GetNodeOrNull<TextureRect>("SelectedIndicator");
-        if (_selectedIndicator is null)
-        {
-            _selectedIndicator = UiIcons.Create(UiIconId.Check, UiIconSize.Small, Tokens.Accent);
-            _selectedIndicator.Name = "SelectedIndicator";
-            _button.AddChild(_selectedIndicator, false, InternalMode.Front);
-        }
-
-        var pixels = UiIcons.Pixels(UiIconSize.Small);
-        _selectedIndicator.Texture = UiIcons.Load(UiIconId.Check, UiIconSize.Small);
-        _selectedIndicator.SelfModulate = Disabled ? Tokens.Muted : Tokens.Accent;
-        _selectedIndicator.SetAnchorsPreset(LayoutPreset.CenterRight);
-        _selectedIndicator.OffsetLeft = -HorizontalPadding - pixels;
-        _selectedIndicator.OffsetRight = -HorizontalPadding;
-        _selectedIndicator.OffsetTop = pixels * -0.5f;
-        _selectedIndicator.OffsetBottom = pixels * 0.5f;
-        _selectedIndicator.Visible = true;
-    }
-
-    private Color TextColor() =>
-        Kind == MenuItemKind.Danger ? Tokens.Danger : Tokens.Ink;
-
-    private Color IconColor() =>
-        Kind == MenuItemKind.Danger ? Tokens.Danger : Tokens.Accent;
-
     private float NoteWidth =>
         string.IsNullOrWhiteSpace(NoteText) || _noteLabel is null
             ? 0
-            : _noteLabel.Size.X + Tokens.Space2;
+            : _noteLabel.Size.X + UiSize.Space.S2;
 
     private float SelectedIndicatorWidth =>
         ShowSelectedIndicator && Selected
-            ? Tokens.Space2 + UiIcons.Pixels(UiIconSize.Small)
+            ? UiSize.Space.S2 + UiIcons.Pixels(UiIconSize.Small)
             : 0;
 
-    private StyleBoxFlat CreateStyle(Color background) =>
+    private StyleBoxEmpty CreateStyle() =>
         new()
         {
-            BgColor = background,
             ContentMarginLeft = HorizontalPadding,
             ContentMarginRight = HorizontalPadding + NoteWidth + SelectedIndicatorWidth,
         };

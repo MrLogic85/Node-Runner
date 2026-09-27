@@ -70,21 +70,19 @@ public partial class UiPartRow : Control
         }
     }
 
-    public UiTokens Tokens
-    {
-        get;
-        set
-        {
-            field = value;
-            Rebuild();
-        }
-    } = UiTokens.Neon;
-
     public override void _Ready()
     {
         FocusMode = FocusModeEnum.None;
         MouseFilter = MouseFilterEnum.Pass;
         Rebuild();
+    }
+
+    public override void _Notification(int what)
+    {
+        if (what == NotificationThemeChanged && IsNodeReady())
+        {
+            UiThemeRefresh.Guarded(this, Rebuild);
+        }
     }
 
     public override void _GuiInput(InputEvent @event)
@@ -98,7 +96,7 @@ public partial class UiPartRow : Control
     }
 
     public override Vector2 _GetMinimumSize() =>
-        new(0, Tokens.ControlHeight);
+        new(0, UiSize.Control.Default);
 
     private void Rebuild()
     {
@@ -113,11 +111,12 @@ public partial class UiPartRow : Control
             child.QueueFree();
         }
 
-        _style = Tokens.ControlStyle(
-            State == PartRowState.Selected ? Tokens.AccentSoft : Tokens.PanelRaised,
-            State == PartRowState.Selected ? Tokens.Accent : Tokens.LineStrong,
-            State == PartRowState.Selected ? Tokens.StrokeSignal : Tokens.StrokeHair,
-            Tokens.RadiusMedium);
+        _style = UiThemeLookup.CreateStyleBox(State == PartRowState.Selected
+                ? UiThemeLookup.Color(this, UiTokens.Color.Accent).WithAlpha(UiThemeLookup.Alpha(this, UiTokens.Alpha.Soft))
+                : UiThemeLookup.Color(this, UiTokens.Color.PanelRaised),
+            State == PartRowState.Selected ? UiThemeLookup.Color(this, UiTokens.Color.Accent) : UiThemeLookup.Color(this, UiTokens.Color.LineStrong),
+            State == PartRowState.Selected ? UiSize.Stroke.Signal : UiSize.Stroke.Hair,
+            UiSize.Radius.Medium);
 
         if (State == PartRowState.Locked)
         {
@@ -135,8 +134,8 @@ public partial class UiPartRow : Control
 
         var margin = new MarginContainer();
         margin.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
-        margin.AddThemeConstantOverride("margin_left", (int)Tokens.Space2);
-        margin.AddThemeConstantOverride("margin_right", (int)Tokens.Space2);
+        margin.AddThemeConstantOverride("margin_left", (int)UiSize.Space.S2);
+        margin.AddThemeConstantOverride("margin_right", (int)UiSize.Space.S2);
         AddChild(margin);
 
         var row = new HBoxContainer
@@ -144,13 +143,13 @@ public partial class UiPartRow : Control
             SizeFlagsHorizontal = SizeFlags.ExpandFill,
             SizeFlagsVertical = SizeFlags.Fill,
         };
-        row.AddThemeConstantOverride("separation", (int)Tokens.Space2);
+        row.AddThemeConstantOverride("separation", (int)UiSize.Space.S2);
         margin.AddChild(row);
 
-        var iconTint = State == PartRowState.Selected ? Tokens.Accent : Tokens.Ink;
+        var iconTint = State == PartRowState.Selected ? UiThemeLookup.Color(this, UiTokens.Color.Accent) : UiThemeLookup.Color(this, UiTokens.Color.Ink);
         row.AddChild(UiIcons.Create(IconId, UiIconSize.Large, iconTint));
 
-        var label = UiFieldAndRows.Label(Label, Tokens, Tokens.SmallStrongText, Tokens.Ink);
+        var label = UiFieldAndRows.Label(Label, UiTokens.Typography.SmallStrong, UiTokens.Color.Ink);
         label.SizeFlagsHorizontal = SizeFlags.ExpandFill;
         row.AddChild(label);
 
@@ -161,7 +160,7 @@ public partial class UiPartRow : Control
                 row.AddChild(CreateTrailingLabel(ValueText));
             }
 
-            row.AddChild(UiFieldAndRows.Icon(UiIconId.Lock, UiIconSize.Standard, Tokens.Ink));
+            row.AddChild(UiFieldAndRows.Icon(UiIconId.Lock, UiIconSize.Standard, UiThemeLookup.Color(this, UiTokens.Color.Ink)));
         }
         else
         {
@@ -182,19 +181,19 @@ public partial class UiPartRow : Control
             return;
         }
 
-        var stroke = Tokens.StrokeHair;
+        var stroke = UiSize.Stroke.Hair;
         var rect = new Rect2(
             new Vector2(stroke * 0.5f, stroke * 0.5f),
             new Vector2(Math.Max(0, Size.X - stroke), Math.Max(0, Size.Y - stroke)));
-        UiDashedBorder.DrawRoundedRect(this, rect, Math.Max(0, Tokens.RadiusMedium - (stroke * 0.5f)), Tokens.LineStrong, stroke);
+        UiDashedBorder.DrawRoundedRect(this, rect, Math.Max(0, UiSize.Radius.Medium - (stroke * 0.5f)), UiThemeLookup.Color(this, UiTokens.Color.LineStrong), stroke);
     }
 
     private bool IsAvailable => State is PartRowState.Rest or PartRowState.Selected;
 
     private Label CreateTrailingLabel(string text)
     {
-        var label = UiFieldAndRows.Label(text, Tokens, Tokens.ReadoutMediumText, Tokens.Ink, HorizontalAlignment.Right);
-        label.CustomMinimumSize = new Vector2(Tokens.ColumnSmallWidth, 0);
+        var label = UiFieldAndRows.Label(text, UiTokens.Typography.ReadoutMedium, UiTokens.Color.Ink, HorizontalAlignment.Right);
+        label.CustomMinimumSize = new Vector2(UiLayout.ColumnSmallWidth, 0);
         label.SizeFlagsHorizontal = SizeFlags.ShrinkEnd;
         return label;
     }

@@ -9,13 +9,21 @@ public partial class PopupGalleryScreen : Control
     [Signal]
     public delegate void CloseRequestedEventHandler();
 
-    private UiTokens _tokens = UiTokens.Neon;
+    private Godot.Theme _selectedTheme = UiThemes.Neon;
     private ColorRect _background = null!;
     private UiSegmentedSwitch _themes = null!;
-    private Label _status = null!;
+    private UiLabel _status = null!;
     private UiDialog _dialog = null!;
     private UiNotification _notifications = null!;
     private bool _quitOnBack;
+
+    // Authored children run _Ready before this node does, so the theme must be in place before
+    // they enter the tree or they measure themselves against the engine default theme.
+    public override void _EnterTree()
+    {
+        _selectedTheme = ThemeFor(GetNode<UiSegmentedSwitch>("%UiSegmentedSwitch").SelectedIndex);
+        Theme = _selectedTheme;
+    }
 
     public override void _Ready()
     {
@@ -28,14 +36,15 @@ public partial class PopupGalleryScreen : Control
         _background = GetNode<ColorRect>("%Background");
         _status = GetNode<UiLabel>("%Status");
         _themes = GetNode<UiSegmentedSwitch>("%UiSegmentedSwitch");
-        _tokens = TokensFor(_themes.SelectedIndex);
         ApplyTheme();
         UiNativeScroll.AllowGesturesToBubble(GetNode<Control>("MarginContainer"));
-        _notifications = new UiNotification { Tokens = _tokens };
+        _notifications = new UiNotification();
         AddChild(_notifications);
-        _dialog = new UiDialog { Tokens = _tokens };
+        _dialog = new UiDialog();
         AddChild(_dialog);
         _dialog.Finished += OnDialogFinished;
+        _status.TextColor = UiTokens.Color.Muted;
+        GetNode<UiLabel>("%Disclaimer").TextColor = UiTokens.Color.Halo;
     }
 
     public override void _ExitTree()
@@ -173,40 +182,22 @@ public partial class PopupGalleryScreen : Control
             return;
         }
         _notifications.Clear();
-        _tokens = TokensFor(index);
-        _dialog.Tokens = _tokens;
-        _notifications.Tokens = _tokens;
+        _selectedTheme = ThemeFor(index);
         ApplyTheme();
     }
 
-    private static UiTokens TokensFor(int index) =>
-        index switch { 1 => UiTokens.Paper, 2 => UiTokens.Neon.WithEffects(false), _ => UiTokens.Neon };
+    private static Godot.Theme ThemeFor(int index) =>
+        index switch
+        {
+            1 => UiThemes.Paper,
+            2 => UiThemes.For(UiTokenType.Light),
+            _ => UiThemes.Neon,
+        };
 
     private void ApplyTheme()
     {
-        _background.Color = _tokens.Background;
-        ApplyTokens(GetNode<Control>("MarginContainer"));
-        _status.AddThemeColorOverride("font_color", _tokens.Muted);
-        GetNode<UiLabel>("%Disclaimer").AddThemeColorOverride("font_color", _tokens.Halo);
-    }
-
-    private void ApplyTokens(Control control)
-    {
-        switch (control)
-        {
-            case UiLabel label:
-                label.Tokens = _tokens;
-                label.AddThemeColorOverride("font_color", _tokens.Ink);
-                return;
-            case UiButton button:
-                button.Tokens = _tokens;
-                return;
-            case UiSegmentedSwitch segmented:
-                segmented.Tokens = _tokens;
-                return;
-        }
-        foreach (var child in control.GetChildren().OfType<Control>())
-            ApplyTokens(child);
+        Theme = _selectedTheme;
+        _background.Color = UiThemeLookup.Color(this, UiTokens.Color.Background);
     }
 
     private void FitViewport()

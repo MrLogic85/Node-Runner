@@ -5,7 +5,6 @@ namespace NodeRunner.Ui.Lib;
 /// <summary>Dashed locked value row with an icon and reason.</summary>
 public partial class UiReadonlyValue : PanelContainer
 {
-    private UiTokens _tokens = UiTokens.Neon;
 
     [Export]
     public string LabelText { get; set; } = "Length";
@@ -47,17 +46,15 @@ public partial class UiReadonlyValue : PanelContainer
     [Export]
     public string Reason { get; set; } = "locked by training";
 
-    public UiTokens Tokens
+    public override void _Ready() => Rebuild();
+
+    public override void _Notification(int what)
     {
-        get => _tokens;
-        set
+        if (what == NotificationThemeChanged && IsNodeReady())
         {
-            _tokens = value;
-            Rebuild();
+            UiThemeRefresh.Guarded(this, Rebuild);
         }
     }
-
-    public override void _Ready() => Rebuild();
 
     private void Rebuild()
     {
@@ -72,15 +69,15 @@ public partial class UiReadonlyValue : PanelContainer
             child.QueueFree();
         }
 
-        AddThemeStyleboxOverride("panel", UiFieldAndRows.DashedLike(_tokens, _tokens.LineStrong));
+        AddThemeStyleboxOverride("panel", UiFieldAndRows.DashedLike(this, UiThemeLookup.Color(this, UiTokens.Color.LineStrong)));
         var row = new HBoxContainer();
-        row.AddThemeConstantOverride("separation", (int)_tokens.Space2);
+        row.AddThemeConstantOverride("separation", (int)UiSize.Space.S2);
         AddChild(row);
-        row.AddChild(UiFieldAndRows.Icon(IconId, UiIconSize.Standard, _tokens.Muted));
-        var label = UiFieldAndRows.Label($"{LabelText} · {Reason}", _tokens, _tokens.CaptionText, _tokens.Muted);
+        row.AddChild(UiFieldAndRows.Icon(IconId, UiIconSize.Standard, UiThemeLookup.Color(this, UiTokens.Color.Muted)));
+        var label = UiFieldAndRows.Label($"{LabelText} · {Reason}", UiTokens.Typography.Caption, UiTokens.Color.Muted);
         label.SizeFlagsHorizontal = SizeFlags.ExpandFill;
         row.AddChild(label);
-        row.AddChild(UiFieldAndRows.Label(ValueText, _tokens, _tokens.ReadoutMediumText, _tokens.Ink, HorizontalAlignment.Right));
+        row.AddChild(UiFieldAndRows.Label(ValueText, UiTokens.Typography.ReadoutMedium, UiTokens.Color.Ink, HorizontalAlignment.Right));
         MouseFilter = MouseFilterEnum.Ignore;
         QueueRedraw();
     }
@@ -89,7 +86,7 @@ public partial class UiReadonlyValue : PanelContainer
     {
         const float dashLength = 4;
         const float gapLength = 4;
-        var inset = _tokens.StrokeHair * 0.5f;
+        var inset = UiSize.Stroke.Hair * 0.5f;
         DrawDashedLine(new Vector2(inset, inset), new Vector2(Size.X - inset, inset), dashLength, gapLength);
         DrawDashedLine(new Vector2(inset, Size.Y - inset), new Vector2(Size.X - inset, Size.Y - inset), dashLength, gapLength);
         DrawDashedLine(new Vector2(inset, inset), new Vector2(inset, Size.Y - inset), dashLength, gapLength);
@@ -102,7 +99,7 @@ public partial class UiReadonlyValue : PanelContainer
         var direction = (end - start).Normalized();
         for (var offset = 0f; offset < length; offset += dashLength + gapLength)
         {
-            DrawLine(start + (direction * offset), start + (direction * Mathf.Min(offset + dashLength, length)), _tokens.LineStrong, _tokens.StrokeHair, antialiased: false);
+            DrawLine(start + (direction * offset), start + (direction * Mathf.Min(offset + dashLength, length)), UiThemeLookup.Color(this, UiTokens.Color.LineStrong), UiSize.Stroke.Hair, antialiased: false);
         }
     }
 

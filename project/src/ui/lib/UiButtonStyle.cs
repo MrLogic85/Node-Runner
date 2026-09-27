@@ -27,40 +27,40 @@ public enum UiButtonContentLayout
 /// </summary>
 public readonly record struct UiButtonStyle(
     UiButtonKind Kind,
-    UiColor BackgroundColor,
-    UiColor BorderColor,
-    UiColor ContentColor,
-    UiColor SelectedColor,
-    UiColor? RestGlowColor = null)
+    UiTokens.Color BackgroundColor,
+    UiTokens.Color BorderColor,
+    UiTokens.Color ContentColor,
+    UiTokens.Color SelectedColor,
+    UiTokens.Color? RestGlowColor = null)
 {
     public static UiButtonStyle Primary { get; } = new(
         UiButtonKind.Primary,
-        UiColor.Accent,
-        UiColor.Accent,
-        UiColor.OnAccent,
-        UiColor.Halo,
-        UiColor.Accent);
+        UiTokens.Color.Accent,
+        UiTokens.Color.Accent,
+        UiTokens.Color.OnAccent,
+        UiTokens.Color.Halo,
+        UiTokens.Color.Accent);
 
     public static UiButtonStyle Secondary { get; } = new(
         UiButtonKind.Secondary,
-        UiColor.PanelRaised,
-        UiColor.LineStrong,
-        UiColor.Ink,
-        UiColor.Accent);
+        UiTokens.Color.PanelRaised,
+        UiTokens.Color.LineStrong,
+        UiTokens.Color.Ink,
+        UiTokens.Color.Accent);
 
     public static UiButtonStyle Tertiary { get; } = new(
         UiButtonKind.Tertiary,
-        UiColor.PanelRaised,
-        UiColor.Danger,
-        UiColor.Danger,
-        UiColor.Danger);
+        UiTokens.Color.PanelRaised,
+        UiTokens.Color.Danger,
+        UiTokens.Color.Danger,
+        UiTokens.Color.Danger);
 
     public static UiButtonStyle Flat { get; } = new(
         UiButtonKind.Flat,
-        UiColor.Transparent,
-        UiColor.Transparent,
-        UiColor.Ink,
-        UiColor.Ink);
+        UiTokens.Color.Transparent,
+        UiTokens.Color.Transparent,
+        UiTokens.Color.Ink,
+        UiTokens.Color.Ink);
 
     public static UiButtonStyle For(UiButtonKind kind) => kind switch
     {
@@ -71,35 +71,38 @@ public readonly record struct UiButtonStyle(
         _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null),
     };
 
-    public UiResolvedButtonStyle Resolve(UiTokens tokens) => new(
-        ResolveColor(BackgroundColor, tokens),
-        ResolveColor(BorderColor, tokens),
-        ResolveColor(ContentColor, tokens),
-        ResolveColor(SelectedColor, tokens),
-        RestGlowColor is { } restGlow ? ResolveColor(restGlow, tokens) : null);
+    public UiResolvedButtonStyle Resolve(Control control) =>
+        Resolve(color => ResolveColor(control, color));
 
-    public Color BorderFor(UiTokens tokens, bool selected) =>
-        selected ? Resolve(tokens).Selected : Resolve(tokens).Border;
+    public UiResolvedButtonStyle Resolve(Func<UiTokens.Color, Color> resolveColor) => new(
+        resolveColor(BackgroundColor),
+        resolveColor(BorderColor),
+        resolveColor(ContentColor),
+        resolveColor(SelectedColor),
+        RestGlowColor is { } restGlow ? resolveColor(restGlow) : null);
 
-    public Color? GlowBaseFor(UiTokens tokens, bool selected) =>
-        selected ? Resolve(tokens).Selected : Resolve(tokens).RestGlow;
+    public Color BorderFor(Control control, bool selected) =>
+        BorderFor(color => ResolveColor(control, color), selected);
 
-    public Color? GlowBaseFor(UiTokens tokens, bool selected, bool enabled) =>
-        enabled ? GlowBaseFor(tokens, selected) : null;
+    public Color BorderFor(Func<UiTokens.Color, Color> resolveColor, bool selected) =>
+        selected ? Resolve(resolveColor).Selected : Resolve(resolveColor).Border;
 
-    public static Color ResolveColor(UiColor color, UiTokens tokens) => color switch
-    {
-        UiColor.Transparent => Colors.Transparent,
-        UiColor.PanelRaised => tokens.PanelRaised,
-        UiColor.LineStrong => tokens.LineStrong,
-        UiColor.Ink => tokens.Ink,
-        UiColor.Muted => tokens.Muted,
-        UiColor.Accent => tokens.Accent,
-        UiColor.OnAccent => tokens.OnAccent,
-        UiColor.Halo => tokens.Halo,
-        UiColor.Danger => tokens.Danger,
-        _ => throw new ArgumentOutOfRangeException(nameof(color), color, null),
-    };
+    public Color? GlowBaseFor(Control control, bool selected) =>
+        GlowBaseFor(color => ResolveColor(control, color), selected);
+
+    public Color? GlowBaseFor(Func<UiTokens.Color, Color> resolveColor, bool selected) =>
+        selected ? Resolve(resolveColor).Selected : Resolve(resolveColor).RestGlow;
+
+    public Color? GlowBaseFor(Control control, bool selected, bool enabled) =>
+        GlowBaseFor(color => ResolveColor(control, color), selected, enabled);
+
+    public Color? GlowBaseFor(Func<UiTokens.Color, Color> resolveColor, bool selected, bool enabled) =>
+        enabled ? GlowBaseFor(resolveColor, selected) : null;
+
+    public static Color ResolveColor(Control control, UiTokens.Color color) =>
+        color == UiTokens.Color.Transparent
+            ? Colors.Transparent
+            : UiThemeLookup.Color(control, color);
 }
 
 /// <summary>Resolved theme colours for one canonical button style.</summary>
@@ -119,13 +122,13 @@ public readonly record struct UiButtonMetrics(
     float BadgeOffset,
     float SelectedStroke)
 {
-    public static UiButtonMetrics From(UiTokens tokens) => new(
-        tokens.TouchTarget,
-        tokens.ControlHeight,
-        tokens.ControlSmall,
-        tokens.BadgeMinimumSize,
-        tokens.BadgeOffset,
-        tokens.ButtonSelectedStroke);
+    public static UiButtonMetrics Default { get; } = new(
+        UiSize.Control.Touch,
+        UiSize.Control.Default,
+        UiSize.Control.Small,
+        UiSize.Widget.BadgeMinimumSize,
+        UiSize.Widget.BadgeOffset,
+        UiSize.Stroke.ButtonSelected);
 
     public float ControlSize(UiButtonContentLayout layout) => layout switch
     {

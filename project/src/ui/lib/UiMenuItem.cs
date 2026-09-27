@@ -63,28 +63,15 @@ public abstract partial class UiMenuItem : Container
         }
     }
 
-    public UiTokens Tokens
-    {
-        get;
-        set
-        {
-            ArgumentNullException.ThrowIfNull(value);
-            field = value;
-            RefreshItem();
-            RefreshLayout();
-            QueueRedraw();
-        }
-    } = UiTokens.Neon;
-
     protected float RowHeight =>
         SizeVariant == MenuItemSize.Compact
-            ? Tokens.ControlSmall
-            : Tokens.TouchTarget;
+            ? UiSize.Control.Small
+            : UiSize.Control.Touch;
 
     protected float HorizontalPadding =>
         SizeVariant == MenuItemSize.Compact
-            ? Tokens.Space2
-            : Tokens.Space3;
+            ? UiSize.Space.S2
+            : UiSize.Space.S3;
 
     protected void RefreshLayout()
     {
@@ -96,7 +83,9 @@ public abstract partial class UiMenuItem : Container
     {
         if (Selected)
         {
-            DrawRect(new Rect2(Vector2.Zero, Size), Tokens.AccentSoft);
+            DrawRect(
+                new Rect2(Vector2.Zero, Size),
+                UiThemeLookup.Color(this, UiTokens.Color.Accent).WithAlpha(UiThemeLookup.Alpha(this, UiTokens.Alpha.Soft)));
         }
     }
 

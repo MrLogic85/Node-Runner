@@ -5,7 +5,6 @@ namespace NodeRunner.Ui.Lib;
 /// <summary>Compact numeric readout for changing learner-facing values.</summary>
 public partial class UiReadout : VBoxContainer
 {
-    private UiTokens _tokens = UiTokens.Neon;
     private Label? _valueLabel;
     private Label? _captionLabel;
 
@@ -48,24 +47,21 @@ public partial class UiReadout : VBoxContainer
         }
     }
 
-    public UiTokens Tokens
-    {
-        get => _tokens;
-        set
-        {
-            _tokens = value;
-            Refresh();
-        }
-    }
-
     public override void _Ready()
     {
-        AddThemeConstantOverride("separation", (int)_tokens.Space1);
         _captionLabel = new Label { Text = Caption };
         _valueLabel = new Label { Text = ValueText };
         AddChild(_captionLabel);
         AddChild(_valueLabel);
         Refresh();
+    }
+
+    public override void _Notification(int what)
+    {
+        if (what == NotificationThemeChanged && IsNodeReady())
+        {
+            UiThemeRefresh.Guarded(this, Refresh);
+        }
     }
 
     public void SetValue(string value)
@@ -82,9 +78,12 @@ public partial class UiReadout : VBoxContainer
 
         _captionLabel.Text = Caption;
         _valueLabel.Text = ValueText;
-        _tokens.ApplyTextStyle(_captionLabel, _tokens.CaptionText);
-        _captionLabel.AddThemeColorOverride("font_color", _tokens.Muted);
-        _tokens.ApplyTextStyle(_valueLabel, Emphasis ? _tokens.ReadoutLargeText : _tokens.ReadoutText);
-        _valueLabel.AddThemeColorOverride("font_color", Emphasis ? _tokens.Accent : _tokens.Ink);
+        AddThemeConstantOverride("separation", UiSize.Space.S1);
+
+        UiThemeLookup.ApplyTextStyle(_captionLabel, UiTokens.Typography.Caption, UiTokens.Color.Muted);
+        UiThemeLookup.ApplyTextStyle(
+            _valueLabel,
+            Emphasis ? UiTokens.Typography.ReadoutLarge : UiTokens.Typography.Readout,
+            Emphasis ? UiTokens.Color.Accent : UiTokens.Color.Ink);
     }
 }

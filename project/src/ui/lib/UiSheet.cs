@@ -19,16 +19,6 @@ public partial class UiSheet : UiCard
         }
     }
 
-    public override UiTokens Tokens
-    {
-        get => base.Tokens;
-        set
-        {
-            base.Tokens = value;
-            RefreshTitle();
-        }
-    }
-
     public override void _Ready()
     {
         Kind = CardVariant.Frame;
@@ -40,7 +30,7 @@ public partial class UiSheet : UiCard
     protected override StyleBoxFlat CreateStyle()
     {
         var style = base.CreateStyle();
-        style.BorderColor = Tokens.LineStrong;
+        style.BorderColor = UiThemeLookup.Color(this, UiTokens.Color.LineStrong);
         return style;
     }
 
@@ -54,14 +44,14 @@ public partial class UiSheet : UiCard
         }
 
         var margin = new MarginContainer();
-        margin.AddThemeConstantOverride("margin_left", (int)Tokens.Space4);
-        margin.AddThemeConstantOverride("margin_top", (int)Tokens.Space4);
-        margin.AddThemeConstantOverride("margin_right", (int)Tokens.Space4);
-        margin.AddThemeConstantOverride("margin_bottom", (int)Tokens.Space4);
+        margin.AddThemeConstantOverride("margin_left", (int)UiSize.Space.S4);
+        margin.AddThemeConstantOverride("margin_top", (int)UiSize.Space.S4);
+        margin.AddThemeConstantOverride("margin_right", (int)UiSize.Space.S4);
+        margin.AddThemeConstantOverride("margin_bottom", (int)UiSize.Space.S4);
         AddChild(margin);
 
         var stack = new VBoxContainer();
-        stack.AddThemeConstantOverride("separation", (int)Tokens.Space3);
+        stack.AddThemeConstantOverride("separation", (int)UiSize.Space.S3);
         margin.AddChild(stack);
         if (!string.IsNullOrWhiteSpace(Title))
         {
@@ -82,7 +72,6 @@ public partial class UiSheet : UiCard
         }
 
         _titleLabel.Text = Title;
-        Tokens.ApplyTextStyle(_titleLabel, Tokens.HeadingText);
-        _titleLabel.AddThemeColorOverride("font_color", Tokens.Ink);
+        UiThemeLookup.ApplyTextStyle(_titleLabel, UiTokens.Typography.Heading, UiTokens.Color.Ink);
     }
 }

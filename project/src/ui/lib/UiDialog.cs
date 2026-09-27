@@ -8,7 +8,6 @@ public sealed partial class UiDialog : Window
     [Signal]
     public delegate void FinishedEventHandler(bool confirmed);
 
-    public UiTokens Tokens { get; set; } = UiTokens.Neon;
     public bool IsOpen { get; private set; }
     public bool IsBusy { get; private set; }
     public string? ErrorMessage { get; private set; }
@@ -44,7 +43,7 @@ public sealed partial class UiDialog : Window
         SizeChanged += QueueLayout;
     }
 
-    /// <summary>Add to the scene tree before opening. Tokens are applied when opening.</summary>
+    /// <summary>Add to the scene tree before opening.</summary>
     public void Open(UiDialogSpec spec)
     {
         ArgumentNullException.ThrowIfNull(spec);
@@ -66,7 +65,7 @@ public sealed partial class UiDialog : Window
         ErrorMessage = null;
         IsBusy = false;
         _operation++;
-        _content.Bind(spec, Tokens);
+        _content.Bind(spec);
         Title = spec.Title;
         _quitOnBack = GetTree().QuitOnGoBack;
         GetTree().QuitOnGoBack = false;

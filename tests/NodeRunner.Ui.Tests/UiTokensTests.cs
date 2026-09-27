@@ -8,205 +8,151 @@ public sealed class UiTokensTests
     [Fact]
     public void Neon_MapsEveryCanonicalColor()
     {
-        var tokens = UiTokens.Neon;
+        var tokens = ThemeFile.For(UiTokenType.Neon);
 
-        AssertColor(tokens.Background, 0x07, 0x0b, 0x14);
-        AssertColor(tokens.Panel, 0x0d, 0x14, 0x24);
-        AssertColor(tokens.PanelRaised, 0x13, 0x1c, 0x31);
-        AssertColor(tokens.Line, 0x23, 0x30, 0x4d);
-        AssertColor(tokens.LineStrong, 0x55, 0x73, 0xa6);
-        AssertColor(tokens.Ink, 0xe6, 0xf1, 0xff);
-        AssertColor(tokens.Muted, 0x8f, 0xa3, 0xc4);
-        AssertColor(tokens.Accent, 0x19, 0xf0, 0xff);
-        AssertColor(tokens.Edge, 0x1a, 0x7f, 0x79);
-        AssertColor(tokens.AccentSoft, 0x19, 0xf0, 0xff, 0x1f);
-        AssertColor(tokens.AccentGlow, 0x19, 0xf0, 0xff, 0x40);
-        AssertColor(tokens.OnAccent, 0x04, 0x12, 0x1a);
-        AssertColor(tokens.Halo, 0xff, 0xb3, 0x47);
-        AssertColor(tokens.Danger, 0xff, 0x6b, 0x87);
-        AssertColor(tokens.Scrim, 0x04, 0x08, 0x10, 0xbd);
-        AssertColor(tokens.Output, 0xff, 0xe1, 0x4d);
-        tokens.GlowRadius.ShouldBe(16);
-        tokens.EffectsEnabled.ShouldBeTrue();
+        AssertColor(tokens.Color(UiTokens.Color.Background), 0x07, 0x0b, 0x14);
+        AssertColor(tokens.Color(UiTokens.Color.Panel), 0x0d, 0x14, 0x24);
+        AssertColor(tokens.Color(UiTokens.Color.PanelRaised), 0x13, 0x1c, 0x31);
+        AssertColor(tokens.Color(UiTokens.Color.Line), 0x23, 0x30, 0x4d);
+        AssertColor(tokens.Color(UiTokens.Color.LineStrong), 0x55, 0x73, 0xa6);
+        AssertColor(tokens.Color(UiTokens.Color.Ink), 0xe6, 0xf1, 0xff);
+        AssertColor(tokens.Color(UiTokens.Color.Muted), 0x8f, 0xa3, 0xc4);
+        AssertColor(tokens.Color(UiTokens.Color.Accent), 0x19, 0xf0, 0xff);
+        AssertColor(tokens.Color(UiTokens.Color.Edge), 0x1a, 0x7f, 0x79);
+        tokens.Constant(UiThemes.TokenType, UiTokens.Name(UiTokens.Alpha.Soft)).ShouldBe(0x1f);
+        AssertColor(tokens.Color(UiTokens.Color.OnAccent), 0x04, 0x12, 0x1a);
+        AssertColor(tokens.Color(UiTokens.Color.Halo), 0xff, 0xb3, 0x47);
+        AssertColor(tokens.Color(UiTokens.Color.Danger), 0xff, 0x6b, 0x87);
+        AssertColor(tokens.Color(UiTokens.Color.Scrim), 0x04, 0x08, 0x10, 0xbd);
+        AssertColor(tokens.Color(UiTokens.Color.Output), 0xff, 0xe1, 0x4d);
+        tokens.Flag(UiTokens.Flag.EffectsEnabled).ShouldBeTrue();
     }
 
     [Fact]
     public void Paper_MapsEveryCanonicalColor()
     {
-        var tokens = UiTokens.Paper;
+        var tokens = ThemeFile.For(UiTokenType.Paper);
 
-        AssertColor(tokens.Background, 0xf4, 0xf1, 0xea);
-        AssertColor(tokens.Panel, 0xff, 0xff, 0xff);
-        AssertColor(tokens.PanelRaised, 0xe9, 0xe5, 0xdb);
-        AssertColor(tokens.Line, 0xcf, 0xc8, 0xb8);
-        AssertColor(tokens.LineStrong, 0x7a, 0x74, 0x66);
-        AssertColor(tokens.Ink, 0x1b, 0x1a, 0x17);
-        AssertColor(tokens.Muted, 0x5a, 0x56, 0x48);
-        AssertColor(tokens.Accent, 0x00, 0x6d, 0x77);
-        AssertColor(tokens.Edge, 0xcf, 0xc8, 0xb8);
-        AssertColor(tokens.AccentSoft, 0x00, 0x6d, 0x77, 0x1a);
-        AssertColor(tokens.AccentGlow, 0x00, 0x6d, 0x77, 0x00);
-        AssertColor(tokens.OnAccent, 0xff, 0xff, 0xff);
-        AssertColor(tokens.Halo, 0xb4, 0x5f, 0x00);
-        AssertColor(tokens.Danger, 0xb3, 0x26, 0x1e);
-        AssertColor(tokens.Scrim, 0x1b, 0x1a, 0x17, 0x73);
-        AssertColor(tokens.Output, 0x7a, 0x5c, 0x00);
-        tokens.GlowRadius.ShouldBe(0);
-        tokens.EffectsEnabled.ShouldBeFalse();
+        AssertColor(tokens.Color(UiTokens.Color.Background), 0xf4, 0xf1, 0xea);
+        AssertColor(tokens.Color(UiTokens.Color.Panel), 0xff, 0xff, 0xff);
+        AssertColor(tokens.Color(UiTokens.Color.PanelRaised), 0xe9, 0xe5, 0xdb);
+        AssertColor(tokens.Color(UiTokens.Color.Line), 0xcf, 0xc8, 0xb8);
+        AssertColor(tokens.Color(UiTokens.Color.LineStrong), 0x7a, 0x74, 0x66);
+        AssertColor(tokens.Color(UiTokens.Color.Ink), 0x1b, 0x1a, 0x17);
+        AssertColor(tokens.Color(UiTokens.Color.Muted), 0x5a, 0x56, 0x48);
+        AssertColor(tokens.Color(UiTokens.Color.Accent), 0x00, 0x6d, 0x77);
+        AssertColor(tokens.Color(UiTokens.Color.Edge), 0xcf, 0xc8, 0xb8);
+        tokens.Constant(UiThemes.TokenType, UiTokens.Name(UiTokens.Alpha.Soft)).ShouldBe(0x1a);
+        AssertColor(tokens.Color(UiTokens.Color.OnAccent), 0xff, 0xff, 0xff);
+        AssertColor(tokens.Color(UiTokens.Color.Halo), 0xb4, 0x5f, 0x00);
+        AssertColor(tokens.Color(UiTokens.Color.Danger), 0xb3, 0x26, 0x1e);
+        AssertColor(tokens.Color(UiTokens.Color.Scrim), 0x1b, 0x1a, 0x17, 0x73);
+        AssertColor(tokens.Color(UiTokens.Color.Output), 0x7a, 0x5c, 0x00);
+        tokens.Flag(UiTokens.Flag.EffectsEnabled).ShouldBeFalse();
     }
 
     [Fact]
     public void Dimensions_MapEveryCanonicalValue()
     {
-        var tokens = UiTokens.Neon;
-
         new[]
         {
-            tokens.Space1, tokens.Space2, tokens.Space3, tokens.Space4, tokens.Space5,
-        }.ShouldBe(new[] { 4f, 8f, 12f, 16f, 24f });
+            UiSize.Space.S1, UiSize.Space.S2, UiSize.Space.S3, UiSize.Space.S4, UiSize.Space.S5,
+        }.ShouldBe(new[] { 4, 8, 12, 16, 24 });
         new[]
         {
-            tokens.ControlExtraSmall, tokens.ControlSmall, tokens.ControlHeight, tokens.TouchTarget,
-        }.ShouldBe(new[] { 24f, 32f, 40f, 48f });
+            UiSize.Control.ExtraSmall, UiSize.Control.Small, UiSize.Control.Default, UiSize.Control.Touch,
+        }.ShouldBe(new[] { 24, 32, 40, 48 });
         new[]
         {
-            tokens.BadgeMinimumSize, tokens.BadgeOffset, tokens.ButtonSelectedStroke,
-        }.ShouldBe(new[] { 16f, 4f, 2f });
+            UiSize.Widget.BadgeMinimumSize, UiSize.Widget.BadgeOffset, UiSize.Stroke.ButtonSelected,
+        }.ShouldBe(new[] { 16, 4, 2 });
         new[]
         {
-            tokens.IconSmall, tokens.Icon, tokens.IconLarge, tokens.IconExtraLarge,
-        }.ShouldBe(new[] { 12f, 16f, 20f, 24f });
+            UiSize.Icon.Small, UiSize.Icon.Default, UiSize.Icon.Large, UiSize.Icon.ExtraLarge,
+        }.ShouldBe(new[] { 12, 16, 20, 24 });
         new[]
         {
-            tokens.RailWidth, tokens.SidePanelWidth, tokens.MenuWidth, tokens.DialogWidth,
-            tokens.BrainWidth, tokens.CardWidth, tokens.TileWidth, tokens.WellWidth,
-            tokens.SheetWidth, tokens.SheetWideWidth,
-        }.ShouldBe(new[] { 56f, 176f, 200f, 300f, 460f, 326f, 156f, 250f, 720f, 880f });
+            UiLayout.RailWidth, UiLayout.SidePanelWidth, UiLayout.MenuWidth, UiLayout.DialogWidth,
+            UiLayout.BrainWidth, UiLayout.CardWidth, UiLayout.TileWidth, UiLayout.WellWidth,
+            UiLayout.SheetWidth, UiLayout.SheetWideWidth,
+        }.ShouldBe(new[] { 56, 176, 200, 300, 460, 326, 156, 250, 720, 880 });
         new[]
         {
-            tokens.ScreenBodyHeight, tokens.StageHeight, tokens.ThumbnailHeight,
-        }.ShouldBe(new[] { 312f, 170f, 100f });
+            UiLayout.ScreenBodyHeight, UiLayout.StageHeight, UiLayout.ThumbnailHeight,
+        }.ShouldBe(new[] { 312, 170, 100 });
         new[]
         {
-            tokens.ColumnExtraSmallWidth, tokens.ColumnSmallWidth, tokens.ColumnMediumWidth,
-            tokens.ColumnLargeWidth, tokens.ColumnExtraLargeWidth,
-        }.ShouldBe(new[] { 40f, 52f, 76f, 96f, 128f });
+            UiLayout.ColumnExtraSmallWidth, UiLayout.ColumnSmallWidth, UiLayout.ColumnMediumWidth,
+            UiLayout.ColumnLargeWidth, UiLayout.ColumnExtraLargeWidth,
+        }.ShouldBe(new[] { 40, 52, 76, 96, 128 });
         new[]
         {
-            tokens.RadiusSmall, tokens.RadiusMedium, tokens.RadiusLarge, tokens.RadiusPill,
-        }.ShouldBe(new[] { 4f, 8f, 12f, 999f });
-        new[] { tokens.StrokeHair, tokens.StrokeBeam, tokens.StrokeSignal }
-            .ShouldBe(new[] { 1f, 3f, 2f });
+            UiSize.Radius.Small, UiSize.Radius.Medium, UiSize.Radius.Large, UiSize.Radius.Pill,
+        }.ShouldBe(new[] { 4, 8, 12, 999 });
+        new[] { UiSize.Stroke.Hair, UiSize.Stroke.Beam, UiSize.Stroke.Signal }
+            .ShouldBe(new[] { 1, 3, 2 });
         new[]
         {
-            tokens.SliderThumbDiameter, tokens.SliderTrackWidth, tokens.SliderMarkerHeight,
-            tokens.SliderStepTickHeight, tokens.SliderDisabledDashLength,
-            tokens.SliderSteppedHeight,
-        }.ShouldBe(new[] { 18f, 4f, 16f, 10f, 4f, 60f });
-        UiTokens.LogicalCanvasWidth.ShouldBe(640);
-        UiTokens.LogicalCanvasHeight.ShouldBe(360);
+            UiSize.Widget.SliderThumbDiameter, UiSize.Widget.SliderTrackWidth, UiSize.Widget.SliderMarkerHeight,
+            UiSize.Widget.SliderStepTickHeight, UiSize.Widget.SliderDisabledDashLength,
+            UiSize.Widget.SliderSteppedHeight,
+        }.ShouldBe(new[] { 18, 4, 16, 10, 4, 60 });
+        UiLayout.CanvasWidth.ShouldBe(640);
+        UiLayout.CanvasHeight.ShouldBe(360);
     }
 
     [Fact]
     public void Typography_MapsEveryCanonicalStyle()
     {
-        var tokens = UiTokens.Neon;
+        const string chakraBold = "res://assets/fonts/ChakraPetch/ChakraPetch-Bold.ttf";
+        const string chakraSemiBold = "res://assets/fonts/ChakraPetch/ChakraPetch-SemiBold.ttf";
+        const string barlowRegular = "res://assets/fonts/Barlow/Barlow-Regular.ttf";
+        const string barlowMedium = "res://assets/fonts/Barlow/Barlow-Medium.ttf";
+        const string barlowSemiBold = "res://assets/fonts/Barlow/Barlow-SemiBold.ttf";
+        const string monoMedium = "res://assets/fonts/JetBrainsMono/JetBrainsMono-Medium.ttf";
+        const string monoSemiBold = "res://assets/fonts/JetBrainsMono/JetBrainsMono-SemiBold.ttf";
 
-        AssertStyle(tokens.TitleText, UiTokens.FontFamily.Display, 28, 32, 700);
-        AssertStyle(tokens.HeadingText, UiTokens.FontFamily.Display, 16, 20, 600);
-        AssertStyle(tokens.SubheadingText, UiTokens.FontFamily.Display, 14, 18, 600);
-        AssertStyle(tokens.StageText, UiTokens.FontFamily.Display, 11, 14, 600, 0.06f, true);
-        AssertStyle(tokens.BodyText, UiTokens.FontFamily.Body, 13, 18, 400);
-        AssertStyle(tokens.BodyStrongText, UiTokens.FontFamily.Body, 13, 18, 600);
-        AssertStyle(tokens.SmallText, UiTokens.FontFamily.Body, 12, 16, 400);
-        AssertStyle(tokens.SmallStrongText, UiTokens.FontFamily.Body, 12, 16, 600);
-        AssertStyle(tokens.LabelText, UiTokens.FontFamily.Body, 12, 16, 600, 0.04f, true);
-        AssertStyle(tokens.NoteText, UiTokens.FontFamily.Body, 11, 14, 400);
-        AssertStyle(tokens.NoteStrongText, UiTokens.FontFamily.Body, 11, 14, 600);
-        AssertStyle(tokens.CaptionText, UiTokens.FontFamily.Body, 10, 13, 500);
-        AssertStyle(tokens.OverlineText, UiTokens.FontFamily.Body, 10, 13, 600, 0.06f, true);
-        AssertStyle(tokens.ReadoutLargeText, UiTokens.FontFamily.Mono, 22, 24, 600);
-        AssertStyle(tokens.ReadoutText, UiTokens.FontFamily.Mono, 13, 16, 500);
-        AssertStyle(tokens.ReadoutMediumText, UiTokens.FontFamily.Mono, 12, 16, 500);
-        AssertStyle(tokens.ReadoutSmallText, UiTokens.FontFamily.Mono, 10, 13, 500);
+        // Letter spacing 0.04em-0.06em rounds up to 1px at these sizes.
+        AssertStyle(UiTokens.Typography.Title, chakraBold, 28);
+        AssertStyle(UiTokens.Typography.Heading, chakraSemiBold, 16);
+        AssertStyle(UiTokens.Typography.Subheading, chakraSemiBold, 14);
+        AssertStyle(UiTokens.Typography.Stage, chakraSemiBold, 11, letterSpacing: 1);
+        AssertStyle(UiTokens.Typography.Body, barlowRegular, 13);
+        AssertStyle(UiTokens.Typography.BodyStrong, barlowSemiBold, 13);
+        AssertStyle(UiTokens.Typography.Small, barlowRegular, 12);
+        AssertStyle(UiTokens.Typography.SmallStrong, barlowSemiBold, 12);
+        AssertStyle(UiTokens.Typography.Label, barlowSemiBold, 12, letterSpacing: 1);
+        AssertStyle(UiTokens.Typography.Note, barlowRegular, 11);
+        AssertStyle(UiTokens.Typography.NoteStrong, barlowSemiBold, 11);
+        AssertStyle(UiTokens.Typography.Caption, barlowMedium, 10);
+        AssertStyle(UiTokens.Typography.Overline, barlowSemiBold, 10, letterSpacing: 1);
+        AssertStyle(UiTokens.Typography.ReadoutLarge, monoSemiBold, 22);
+        AssertStyle(UiTokens.Typography.Readout, monoMedium, 13);
+        AssertStyle(UiTokens.Typography.ReadoutMedium, monoMedium, 12);
+        AssertStyle(UiTokens.Typography.ReadoutSmall, monoMedium, 10);
     }
 
     [Fact]
-    public void Typography_UsesAFontAssetForEveryRequiredWeight()
+    public void Typography_FontAssetsExistAndAreImported()
     {
-        var tokens = UiTokens.Neon;
-        var styles = new[]
-        {
-            tokens.TitleText, tokens.HeadingText, tokens.SubheadingText, tokens.StageText,
-            tokens.BodyText, tokens.BodyStrongText, tokens.SmallText, tokens.SmallStrongText,
-            tokens.LabelText, tokens.NoteText, tokens.NoteStrongText, tokens.CaptionText,
-            tokens.OverlineText, tokens.ReadoutLargeText, tokens.ReadoutText,
-            tokens.ReadoutMediumText, tokens.ReadoutSmallText,
-        };
+        var theme = ThemeFile.For(UiTokenType.Neon);
+        var fontPaths = Enum.GetValues<UiTokens.Typography>()
+            .Select(typography => theme.FontPath(UiTokens.Variation(typography)))
+            .Distinct();
 
-        var fontPaths = styles.Select(UiTokens.FontPathFor).ToArray();
-        fontPaths.ShouldBe(new[]
+        foreach (var fontPath in fontPaths)
         {
-            "res://assets/fonts/ChakraPetch/ChakraPetch-Bold.ttf",
-            "res://assets/fonts/ChakraPetch/ChakraPetch-SemiBold.ttf",
-            "res://assets/fonts/ChakraPetch/ChakraPetch-SemiBold.ttf",
-            "res://assets/fonts/ChakraPetch/ChakraPetch-SemiBold.ttf",
-            "res://assets/fonts/Barlow/Barlow-Regular.ttf",
-            "res://assets/fonts/Barlow/Barlow-SemiBold.ttf",
-            "res://assets/fonts/Barlow/Barlow-Regular.ttf",
-            "res://assets/fonts/Barlow/Barlow-SemiBold.ttf",
-            "res://assets/fonts/Barlow/Barlow-SemiBold.ttf",
-            "res://assets/fonts/Barlow/Barlow-Regular.ttf",
-            "res://assets/fonts/Barlow/Barlow-SemiBold.ttf",
-            "res://assets/fonts/Barlow/Barlow-Medium.ttf",
-            "res://assets/fonts/Barlow/Barlow-SemiBold.ttf",
-            "res://assets/fonts/JetBrainsMono/JetBrainsMono-SemiBold.ttf",
-            "res://assets/fonts/JetBrainsMono/JetBrainsMono-Medium.ttf",
-            "res://assets/fonts/JetBrainsMono/JetBrainsMono-Medium.ttf",
-            "res://assets/fonts/JetBrainsMono/JetBrainsMono-Medium.ttf",
-        });
-
-        var projectRoot = Path.Combine(FindRepositoryRoot(), "project");
-        foreach (var fontPath in fontPaths.Distinct())
-        {
-            var assetPath = Path.Combine(projectRoot, fontPath["res://".Length..]);
+            var assetPath = Path.Combine(ThemeFile.ProjectRoot, fontPath["res://".Length..]);
             File.Exists(assetPath).ShouldBeTrue($"Missing font asset: {fontPath}");
             File.Exists($"{assetPath}.import").ShouldBeTrue($"Missing Godot import metadata: {fontPath}.import");
         }
     }
 
     [Fact]
-    public void Typography_ProjectThemeOwnsTheZeroLabelLineSpacingDefault()
-    {
-        var projectRoot = Path.Combine(FindRepositoryRoot(), "project");
-        var settings = File.ReadAllText(Path.Combine(projectRoot, "project.godot"));
-        var theme = File.ReadAllText(Path.Combine(projectRoot, "assets", "themes", "UiDefaults.tres"));
-
-        settings.ShouldContain("theme/custom=\"res://assets/themes/UiDefaults.tres\"");
-        theme.ShouldContain("Label/constants/line_spacing = 0");
-    }
-
-    [Fact]
-    public void EffectsLite_PreservesTokensAndRemovesGlow()
-    {
-        var tokens = UiTokens.Neon.WithEffects(false);
-
-        tokens.Background.ShouldBe(UiTokens.Neon.Background);
-        tokens.Output.ShouldBe(UiTokens.Neon.Output);
-        tokens.TitleText.ShouldBe(UiTokens.Neon.TitleText);
-        tokens.SidePanelWidth.ShouldBe(UiTokens.Neon.SidePanelWidth);
-        tokens.AccentGlow.ShouldBe(Colors.Transparent);
-        tokens.GlowRadius.ShouldBe(0);
-        tokens.EffectsEnabled.ShouldBeFalse();
-    }
-
-    [Fact]
     public void ControlMetrics_KeepDistinctPaddingAndFocusContracts()
     {
-        var tokens = UiTokens.Neon;
-
-        UiSpacing.ControlHorizontalPadding(tokens).ShouldBe(16);
-        UiSpacing.SegmentedControlHorizontalPadding(tokens).ShouldBe(12);
+        UiSize.Space.S4.ShouldBe(16);
+        UiSize.Space.S3.ShouldBe(12);
     }
 
     private static void AssertColor(Color actual, byte red, byte green, byte blue, byte alpha = 0xff)
@@ -217,35 +163,12 @@ public sealed class UiTokensTests
         actual.A8.ShouldBe(alpha);
     }
 
-    private static void AssertStyle(
-        UiTokens.TextStyle actual,
-        UiTokens.FontFamily family,
-        float size,
-        float lineHeight,
-        int weight,
-        float letterSpacing = 0,
-        bool uppercase = false)
+    private static void AssertStyle(UiTokens.Typography typography, string fontPath, int size, int letterSpacing = 0)
     {
-        actual.Family.ShouldBe(family);
-        actual.FontSize.ShouldBe(size);
-        actual.LineHeight.ShouldBe(lineHeight);
-        actual.FontWeight.ShouldBe(weight);
-        actual.LetterSpacing.ShouldBe(letterSpacing);
-        actual.Uppercase.ShouldBe(uppercase);
-    }
-
-    private static string FindRepositoryRoot()
-    {
-        for (var directory = new DirectoryInfo(AppContext.BaseDirectory);
-             directory is not null;
-             directory = directory.Parent)
-        {
-            if (File.Exists(Path.Combine(directory.FullName, "NodeRunner.slnx")))
-            {
-                return directory.FullName;
-            }
-        }
-
-        throw new DirectoryNotFoundException("Could not locate the Node Runner repository root.");
+        var theme = ThemeFile.For(UiTokenType.Neon);
+        var variation = UiTokens.Variation(typography);
+        theme.FontPath(variation).ShouldBe(fontPath, variation);
+        theme.FontSize(variation).ShouldBe(size, variation);
+        theme.SpacingGlyph(variation).ShouldBe(letterSpacing, variation);
     }
 }

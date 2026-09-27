@@ -6,7 +6,6 @@ namespace NodeRunner.Ui.Widgets;
 
 public partial class CreationCard : Control
 {
-    private UiTokens _tokens = UiTokens.Neon;
     private string _creationKey = string.Empty;
     private string _creationName = string.Empty;
     private CreatureDef? _creature;
@@ -36,7 +35,6 @@ public partial class CreationCard : Control
     public delegate void DeleteRequestedEventHandler(string creationKey, string creationName);
 
     public void Setup(
-        UiTokens tokens,
         string creationKey,
         string creationName,
         CreatureDef? creature,
@@ -53,7 +51,6 @@ public partial class CreationCard : Control
         bool canDuplicate,
         bool canDelete)
     {
-        _tokens = tokens;
         _creationKey = creationKey;
         _creationName = creationName;
         _creature = creature;
@@ -81,6 +78,14 @@ public partial class CreationCard : Control
         Rebuild();
     }
 
+    public override void _Notification(int what)
+    {
+        if (what == NotificationThemeChanged && IsNodeReady())
+        {
+            UiThemeRefresh.Guarded(this, Rebuild);
+        }
+    }
+
     public override void _GuiInput(InputEvent @event)
     {
         if (PointerInput.TryGetPressPosition(@event, out _) && _canEdit)
@@ -104,7 +109,6 @@ public partial class CreationCard : Control
 
         var panel = new UiCard
         {
-            Tokens = _tokens,
             Kind = UiCard.CardVariant.Frame,
         };
         panel.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
@@ -125,16 +129,16 @@ public partial class CreationCard : Control
         {
             SizeFlagsHorizontal = SizeFlags.ExpandFill,
         };
-        margin.AddThemeConstantOverride("margin_left", (int)_tokens.Space2);
-        margin.AddThemeConstantOverride("margin_top", (int)_tokens.Space2);
-        margin.AddThemeConstantOverride("margin_right", (int)_tokens.Space2);
-        margin.AddThemeConstantOverride("margin_bottom", (int)_tokens.Space1);
+        margin.AddThemeConstantOverride("margin_left", (int)UiSize.Space.S2);
+        margin.AddThemeConstantOverride("margin_top", (int)UiSize.Space.S2);
+        margin.AddThemeConstantOverride("margin_right", (int)UiSize.Space.S2);
+        margin.AddThemeConstantOverride("margin_bottom", (int)UiSize.Space.S1);
 
         var content = new VBoxContainer();
-        content.AddThemeConstantOverride("separation", (int)_tokens.Space1);
+        content.AddThemeConstantOverride("separation", (int)UiSize.Space.S1);
         margin.AddChild(content);
         content.AddChild(CreateTitleRow());
-        content.AddChild(CreateLabel(_summary, _tokens.CaptionText, _tokens.Muted));
+        content.AddChild(CreateLabel(_summary, UiTokens.Typography.Caption, UiTokens.Color.Muted));
         if (_achievementProgress > 0)
         {
             content.AddChild(CreateProgressBar());
@@ -142,7 +146,7 @@ public partial class CreationCard : Control
 
         if (!string.IsNullOrWhiteSpace(_unlockCredit))
         {
-            content.AddChild(CreateLabel(_unlockCredit, _tokens.CaptionText, _tokens.Accent));
+            content.AddChild(CreateLabel(_unlockCredit, UiTokens.Typography.Caption, UiTokens.Color.Accent));
         }
 
         return margin;
@@ -151,13 +155,12 @@ public partial class CreationCard : Control
     private Control CreateTitleRow()
     {
         var row = new HBoxContainer();
-        row.AddThemeConstantOverride("separation", (int)_tokens.Space1);
-        row.AddChild(CreateLabel(DisplayName(), _tokens.LabelText, _tokens.Ink, expand: true));
+        row.AddThemeConstantOverride("separation", (int)UiSize.Space.S1);
+        row.AddChild(CreateLabel(DisplayName(), UiTokens.Typography.Label, UiTokens.Color.Ink, expand: true));
         if (_isExample || !string.IsNullOrWhiteSpace(_note))
         {
             row.AddChild(new UiChip
             {
-                Tokens = _tokens,
                 Text = _isExample ? "Example" : _note,
                 Kind = _isExample ? UiChip.ChipKind.Locked : UiChip.ChipKind.Accent,
                 CustomMinimumSize = new Vector2(0, 24),
@@ -171,14 +174,14 @@ public partial class CreationCard : Control
     {
         var actions = new PanelContainer
         {
-            CustomMinimumSize = new Vector2(0, _tokens.TouchTarget),
+            CustomMinimumSize = new Vector2(0, UiSize.Control.Touch),
             SizeFlagsHorizontal = SizeFlags.ExpandFill,
         };
         actions.AddThemeStyleboxOverride("panel", new StyleBoxFlat
         {
             BgColor = Colors.Transparent,
-            BorderColor = _tokens.Edge,
-            BorderWidthTop = (int)_tokens.StrokeHair,
+            BorderColor = UiThemeLookup.Color(this, UiTokens.Color.Edge),
+            BorderWidthTop = (int)UiSize.Stroke.Hair,
         });
 
         var row = new HBoxContainer();
@@ -199,8 +202,7 @@ public partial class CreationCard : Control
         {
             row.AddChild(new LockedActionSegment
             {
-                Tokens = _tokens,
-                CustomMinimumSize = new Vector2(0, _tokens.TouchTarget),
+                CustomMinimumSize = new Vector2(0, UiSize.Control.Touch),
                 SizeFlagsHorizontal = SizeFlags.ExpandFill,
             });
         }
@@ -219,7 +221,6 @@ public partial class CreationCard : Control
     {
         var thumbnail = new CreatureThumbnail
         {
-            Tokens = _tokens,
             Creature = _creature,
             Summary = text,
             CustomMinimumSize = new Vector2(0, 82),
@@ -234,7 +235,7 @@ public partial class CreationCard : Control
         stack.AddThemeConstantOverride("separation", 2);
         if (!string.IsNullOrWhiteSpace(_achievementProgressText))
         {
-            stack.AddChild(CreateLabel(_achievementProgressText, _tokens.CaptionText, _tokens.Muted));
+            stack.AddChild(CreateLabel(_achievementProgressText, UiTokens.Typography.Caption, UiTokens.Color.Muted));
         }
 
         var track = new Panel
@@ -242,10 +243,10 @@ public partial class CreationCard : Control
             CustomMinimumSize = new Vector2(0, 6),
             SizeFlagsHorizontal = SizeFlags.ExpandFill,
         };
-        track.AddThemeStyleboxOverride("panel", _tokens.ControlStyle(_tokens.Panel, _tokens.Edge, radius: (int)_tokens.RadiusPill));
+        track.AddThemeStyleboxOverride("panel", UiThemeLookup.CreateStyleBox(UiThemeLookup.Color(this, UiTokens.Color.Panel), UiThemeLookup.Color(this, UiTokens.Color.Edge), radius: UiSize.Radius.Pill));
         track.AddChild(new ColorRect
         {
-            Color = _tokens.Accent,
+            Color = UiThemeLookup.Color(this, UiTokens.Color.Accent),
             AnchorRight = _achievementProgress,
             AnchorBottom = 1,
             MouseFilter = MouseFilterEnum.Ignore,
@@ -254,7 +255,7 @@ public partial class CreationCard : Control
         return stack;
     }
 
-    private Label CreateLabel(string text, UiTokens.TextStyle style, Color color, bool expand = false)
+    private Label CreateLabel(string text, UiTokens.Typography style, UiTokens.Color color, bool expand = false)
     {
         var label = new Label
         {
@@ -262,8 +263,7 @@ public partial class CreationCard : Control
             SizeFlagsHorizontal = expand ? SizeFlags.ExpandFill : SizeFlags.Fill,
             ClipText = true,
         };
-        _tokens.ApplyTextStyle(label, style);
-        label.AddThemeColorOverride("font_color", color);
+        UiThemeLookup.ApplyTextStyle(label, style, color);
         return label;
     }
 
@@ -275,32 +275,41 @@ public partial class CreationCard : Control
     private UiButton CreateButton(string text, UiButtonKind kind) =>
         new()
         {
-            Tokens = _tokens,
-            LabelText = text,
+            Text = text,
             Kind = kind,
-            CustomMinimumSize = new Vector2(56, _tokens.TouchTarget),
+            CustomMinimumSize = new Vector2(56, UiSize.Control.Touch),
         };
 
     private Button CreateActionSegment(string text, UiIconId iconId, UiButtonKind kind, bool disabled = false)
     {
-        var color = kind == UiButtonKind.Tertiary ? _tokens.Danger : _tokens.Ink;
+        var color = kind == UiButtonKind.Tertiary ? UiThemeLookup.Color(this, UiTokens.Color.Danger) : UiThemeLookup.Color(this, UiTokens.Color.Ink);
         var button = new Button
         {
             Text = text.ToUpperInvariant(),
             Disabled = disabled,
-            CustomMinimumSize = new Vector2(0, _tokens.TouchTarget),
+            CustomMinimumSize = new Vector2(0, UiSize.Control.Touch),
             SizeFlagsHorizontal = SizeFlags.ExpandFill,
         };
-        _tokens.ApplyTextStyle(button, _tokens.CaptionText);
+        UiThemeLookup.ApplyTypography(button, UiTokens.Typography.Caption);
         UiIcons.Apply(button, iconId, UiIconSize.Standard, color);
         button.AddThemeColorOverride("font_color", color);
-        button.AddThemeColorOverride("font_disabled_color", _tokens.Muted);
-        button.AddThemeColorOverride("font_hover_color", kind == UiButtonKind.Tertiary ? _tokens.Danger : _tokens.Accent);
-        button.AddThemeColorOverride("font_pressed_color", _tokens.OnAccent);
+        button.AddThemeColorOverride("font_disabled_color", UiThemeLookup.Color(this, UiTokens.Color.Muted));
+        button.AddThemeColorOverride("font_hover_color", kind == UiButtonKind.Tertiary ? UiThemeLookup.Color(this, UiTokens.Color.Danger) : UiThemeLookup.Color(this, UiTokens.Color.Accent));
+        button.AddThemeColorOverride("font_pressed_color", UiThemeLookup.Color(this, UiTokens.Color.OnAccent));
         button.AddThemeStyleboxOverride("normal", CreateSegmentStyle(Colors.Transparent, Colors.Transparent));
-        button.AddThemeStyleboxOverride("hover", CreateSegmentStyle(kind == UiButtonKind.Tertiary ? UiTokens.WithAlpha(_tokens.Danger, 0.16f) : _tokens.AccentSoft, _tokens.Edge));
-        button.AddThemeStyleboxOverride("pressed", CreateSegmentStyle(kind == UiButtonKind.Tertiary ? _tokens.Danger : _tokens.Accent, kind == UiButtonKind.Tertiary ? _tokens.Danger : _tokens.Accent));
-        button.AddThemeStyleboxOverride("focus", CreateSegmentStyle(_tokens.AccentSoft, _tokens.Accent));
+        button.AddThemeStyleboxOverride(
+            "hover",
+            CreateSegmentStyle(
+                kind == UiButtonKind.Tertiary
+                    ? UiThemeLookup.Color(this, UiTokens.Color.Danger).WithAlpha(0.16f)
+                    : UiThemeLookup.Color(this, UiTokens.Color.Accent).WithAlpha(UiThemeLookup.Alpha(this, UiTokens.Alpha.Soft)),
+                UiThemeLookup.Color(this, UiTokens.Color.Edge)));
+        button.AddThemeStyleboxOverride("pressed", CreateSegmentStyle(kind == UiButtonKind.Tertiary ? UiThemeLookup.Color(this, UiTokens.Color.Danger) : UiThemeLookup.Color(this, UiTokens.Color.Accent), kind == UiButtonKind.Tertiary ? UiThemeLookup.Color(this, UiTokens.Color.Danger) : UiThemeLookup.Color(this, UiTokens.Color.Accent)));
+        button.AddThemeStyleboxOverride(
+            "focus",
+            CreateSegmentStyle(
+                UiThemeLookup.Color(this, UiTokens.Color.Accent).WithAlpha(UiThemeLookup.Alpha(this, UiTokens.Alpha.Soft)),
+                UiThemeLookup.Color(this, UiTokens.Color.Accent)));
         button.AddThemeStyleboxOverride("disabled", CreateSegmentStyle(Colors.Transparent, Colors.Transparent));
         return button;
     }
@@ -310,31 +319,29 @@ public partial class CreationCard : Control
         {
             BgColor = background,
             BorderColor = border,
-            BorderWidthLeft = border.A > 0 ? (int)_tokens.StrokeHair : 0,
-            BorderWidthTop = border.A > 0 ? (int)_tokens.StrokeHair : 0,
-            BorderWidthRight = border.A > 0 ? (int)_tokens.StrokeHair : 0,
-            BorderWidthBottom = border.A > 0 ? (int)_tokens.StrokeHair : 0,
-            CornerRadiusTopLeft = (int)_tokens.RadiusSmall,
-            CornerRadiusTopRight = (int)_tokens.RadiusSmall,
-            CornerRadiusBottomLeft = (int)_tokens.RadiusSmall,
-            CornerRadiusBottomRight = (int)_tokens.RadiusSmall,
+            BorderWidthLeft = border.A > 0 ? (int)UiSize.Stroke.Hair : 0,
+            BorderWidthTop = border.A > 0 ? (int)UiSize.Stroke.Hair : 0,
+            BorderWidthRight = border.A > 0 ? (int)UiSize.Stroke.Hair : 0,
+            BorderWidthBottom = border.A > 0 ? (int)UiSize.Stroke.Hair : 0,
+            CornerRadiusTopLeft = (int)UiSize.Radius.Small,
+            CornerRadiusTopRight = (int)UiSize.Radius.Small,
+            CornerRadiusBottomLeft = (int)UiSize.Radius.Small,
+            CornerRadiusBottomRight = (int)UiSize.Radius.Small,
         };
 
     private sealed partial class CreatureThumbnail : Control
     {
-        public UiTokens Tokens { get; init; } = UiTokens.Neon;
-
         public CreatureDef? Creature { get; init; }
 
         public string Summary { get; init; } = string.Empty;
 
         public override void _Draw()
         {
-            DrawRect(new Rect2(Vector2.Zero, Size), Tokens.Background);
-            DrawLine(new Vector2(0, Size.Y - 1), new Vector2(Size.X, Size.Y - 1), Tokens.Edge, Tokens.StrokeHair, antialiased: false);
+            DrawRect(new Rect2(Vector2.Zero, Size), UiThemeLookup.Color(this, UiTokens.Color.Background));
+            DrawLine(new Vector2(0, Size.Y - 1), new Vector2(Size.X, Size.Y - 1), UiThemeLookup.Color(this, UiTokens.Color.Edge), UiSize.Stroke.Hair, antialiased: false);
             if (Creature is null || Creature.Nodes.Count == 0)
             {
-                DrawString(ThemeDB.FallbackFont, new Vector2(16, Size.Y * 0.52f), Summary, HorizontalAlignment.Left, Size.X - 32, 12, Tokens.Muted);
+                DrawString(ThemeDB.FallbackFont, new Vector2(16, Size.Y * 0.52f), Summary, HorizontalAlignment.Left, Size.X - 32, 12, UiThemeLookup.Color(this, UiTokens.Color.Muted));
                 return;
             }
 
@@ -356,33 +363,31 @@ public partial class CreationCard : Control
 
             foreach (var beam in Creature.Beams)
             {
-                DrawLine(Map(points[beam.NodeA]), Map(points[beam.NodeB]), Tokens.Ink, 3, antialiased: false);
+                DrawLine(Map(points[beam.NodeA]), Map(points[beam.NodeB]), UiThemeLookup.Color(this, UiTokens.Color.Ink), 3, antialiased: false);
             }
 
             for (var i = 0; i < points.Length; i++)
             {
                 var mapped = Map(points[i]);
-                DrawCircle(mapped, 5.5f, Tokens.PanelRaised);
-                DrawArc(mapped, 5.5f, 0, Mathf.Tau, 24, Tokens.Accent, 2, antialiased: false);
+                DrawCircle(mapped, 5.5f, UiThemeLookup.Color(this, UiTokens.Color.PanelRaised));
+                DrawArc(mapped, 5.5f, 0, Mathf.Tau, 24, UiThemeLookup.Color(this, UiTokens.Color.Accent), 2, antialiased: false);
             }
 
             foreach (var core in Creature.Cores)
             {
                 var mapped = Map(points[core.NodeIndex]);
-                DrawCircle(mapped, 2.8f, Tokens.Accent);
+                DrawCircle(mapped, 2.8f, UiThemeLookup.Color(this, UiTokens.Color.Accent));
             }
         }
     }
 
     private sealed partial class LockedActionSegment : Control
     {
-        public UiTokens Tokens { get; init; } = UiTokens.Neon;
-
         public override void _Draw()
         {
             var centerX = Size.X * 0.5f;
             var iconY = 17f;
-            var color = Tokens.Muted;
+            var color = UiThemeLookup.Color(this, UiTokens.Color.Muted);
             var lockIcon = UiIcons.Load(UiIconId.Lock, UiIconSize.Standard);
             DrawTextureRect(lockIcon, new Rect2(centerX - 8, iconY - 8, 16, 16), false, color);
 
