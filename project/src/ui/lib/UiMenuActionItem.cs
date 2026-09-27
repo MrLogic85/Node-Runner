@@ -48,6 +48,8 @@ public static class UiMenuItems
 [GlobalClass]
 public partial class UiMenuActionItem : UiMenuItem, ISerializationListener
 {
+    private const float _noteMinimumWidth = UiSize.Control.Small * 1.5f;
+
     public enum MenuItemKind
     {
         Default,
@@ -309,7 +311,7 @@ public partial class UiMenuActionItem : UiMenuItem, ISerializationListener
         }
 
         _noteLabel.Text = NoteText;
-        _noteLabel.CustomMinimumSize = new Vector2(UiSize.Control.Small * 1.5f, 0);
+        _noteLabel.CustomMinimumSize = new Vector2(_noteMinimumWidth, 0);
         _noteLabel.ThemeTypeVariation = UiTokens.Variation(UiTokens.Typography.Note, UiTokens.Color.Muted);
         _noteLabel.Size = _noteLabel.GetCombinedMinimumSize();
         _noteLabel.SetAnchorsPreset(LayoutPreset.CenterRight);

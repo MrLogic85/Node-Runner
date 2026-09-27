@@ -72,5 +72,11 @@ public static class UiSize
         public const int SliderStepTickHeight = 10;
         public const int SliderDisabledDashLength = 4;
         public const int SliderSteppedHeight = 60;
+
+        /// <summary>
+        /// Line height minus font size of the small note, overline and readout-small styles
+        /// (reference 11/14 and 10/13); larger styles have more leading.
+        /// </summary>
+        public const int SmallTextLeading = 3;
     }
 }

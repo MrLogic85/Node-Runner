@@ -792,7 +792,7 @@ public partial class SimulateScreen : Control
 
         _settingsScrim = new ColorRect
         {
-            Color = new Color(0, 0, 0, 0.18f),
+            Color = UiThemeLookup.Color(this, UiTokens.Color.Scrim).WithAlpha(0.18f),
             MouseFilter = MouseFilterEnum.Stop,
             ZIndex = 30,
         };

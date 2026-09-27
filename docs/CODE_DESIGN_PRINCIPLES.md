@@ -169,6 +169,7 @@ Locked in — do not swap without an issue.
 | Mocking | **NSubstitute 5** | Cleaner API than Moq, no legal drama |
 | Architecture rules | **NetArchTest.Rules** | Reflection over assembly markers, keeps layer rules executable |
 | Coverage | **Coverlet** | Default; already wired to `dotnet test` |
+| Source guards | **Microsoft.CodeAnalysis.CSharp** (Roslyn) | Parses and binds C# in tests so hardcoding rules check real syntax and types, not text |
 | Solution format | **`.slnx`** (XML) | .NET 10 default; readable diffs, no GUIDs |
 | Package versioning | **Central Package Management** (`Directory.Packages.props`) | One source of truth for lib versions. Godot csproj opts out (SDK conflicts). |
 | Namespaces | **File-scoped** | Enforced by `.editorconfig` |

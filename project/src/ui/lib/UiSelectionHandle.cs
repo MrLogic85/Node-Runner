@@ -7,6 +7,8 @@ namespace NodeRunner.Ui.Lib;
 [GlobalClass]
 public partial class UiSelectionHandle : Control, ISerializationListener
 {
+    private const int _ringPoints = 40;
+
     public enum HandleType
     {
         Drag,
@@ -94,7 +96,7 @@ public partial class UiSelectionHandle : Control, ISerializationListener
             radius,
             0,
             Mathf.Tau,
-            40,
+            _ringPoints,
             UiThemeLookup.Color(this, UiTokens.Color.Halo),
             UiSize.Stroke.SelectionHandle,
             antialiased: false);
@@ -164,5 +166,5 @@ public partial class UiSelectionHandle : Control, ISerializationListener
         return false;
     }
 
-    private static Vector2 HandleCenter() => new(22, 22);
+    private static Vector2 HandleCenter() => Vector2.One * (UiSize.Widget.SelectionHandleSize * 0.5f);
 }

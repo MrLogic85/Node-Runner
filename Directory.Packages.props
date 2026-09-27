@@ -14,5 +14,8 @@
 
     <!-- Architecture testing -->
     <PackageVersion Include="NetArchTest.Rules" Version="1.3.2" />
+
+    <!-- Source guards -->
+    <PackageVersion Include="Microsoft.CodeAnalysis.CSharp" Version="5.9.0" />
   </ItemGroup>
 </Project>

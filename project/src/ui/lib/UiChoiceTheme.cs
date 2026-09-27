@@ -130,7 +130,7 @@ internal static class UiChoiceTheme
                 check.Nodes());
             glyph.SetAttributeValue("stroke", "#" + colors.Mark.ToHtml(false));
             glyph.SetAttributeValue("transform",
-                $"translate({N((size.X - UiSize.Icon.Default) / 2)} {N((size.Y - UiSize.Icon.Default) / 2)}) scale({N(UiSize.Icon.Default / 24)})");
+                $"translate({N((size.X - UiSize.Icon.Default) / 2)} {N((size.Y - UiSize.Icon.Default) / 2)}) scale({N(UiSize.Icon.Default / UiIcons.UiSourceSize)})");
             root.Add(glyph);
         }
 

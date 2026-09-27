@@ -15,6 +15,7 @@ public sealed partial class UiButton : Button, ISerializationListener
     public delegate void ActivatedEventHandler();
 
     private const float _disabledOpacity = 0.5f;
+    private const int _minimumOutlineSamples = 12;
     private UiButtonStyle _style = UiButtonStyle.Secondary;
     private UiButtonKind _kind = UiButtonKind.Secondary;
     private UiIconId _iconId = UiIconId.None;
@@ -25,7 +26,7 @@ public sealed partial class UiButton : Button, ISerializationListener
     private bool _squareContent;
     private float _progress = -1f;
     private bool _refreshingStyle;
-    private float _holdDurationSeconds = 0.8f;
+    private float _holdDurationSeconds = UiComponentContracts.HoldCompletionSeconds;
     private bool _holdToActivate;
     private double _holdElapsedSeconds;
     private bool _isHolding;
@@ -433,7 +434,7 @@ public sealed partial class UiButton : Button, ISerializationListener
         // Native Text has no change signal, but setting it always queues a redraw.
         SyncCaption();
         // Native Disabled queues a redraw; update our child visuals without a second state property.
-        var modulation = new Color(1, 1, 1, Disabled ? _disabledOpacity : 1);
+        var modulation = Colors.White with { A = Disabled ? _disabledOpacity : 1 };
         if (_content is not null)
             _content.Modulate = modulation;
         if (_progressClip is not null)
@@ -762,7 +763,7 @@ public sealed partial class UiButton : Button, ISerializationListener
             + ((rect.Size.Y - (radius * 2)) * 2)
             + (Mathf.Tau * radius);
         int sampleCount = Mathf.Max(
-            12,
+            _minimumOutlineSamples,
             Mathf.CeilToInt(perimeter / UiSize.Space.S1));
         var points = new Vector2[sampleCount + 1];
         for (int index = 0; index <= sampleCount; index++)

@@ -426,7 +426,7 @@ public partial class UiSlider : Control, ISerializationListener
 
     private float TrackY => CalculateTrackY(
         _style,
-        UiThemeLookup.FontSize(this, UiTokens.Typography.Overline) + 3,
+        UiThemeLookup.FontSize(this, UiTokens.Typography.Overline) + UiSize.Widget.SmallTextLeading,
         UiSize.Space.S3,
         HasValueLabelRow);
 
@@ -606,10 +606,10 @@ public partial class UiSlider : Control, ISerializationListener
             0,
             CalculateMinimumHeight(
                 _style,
-                UiThemeLookup.FontSize(this, UiTokens.Typography.Overline) + 3,
+                UiThemeLookup.FontSize(this, UiTokens.Typography.Overline) + UiSize.Widget.SmallTextLeading,
                 UiSize.Space.S3,
                 UiSize.Space.S2,
-                UiThemeLookup.FontSize(this, UiTokens.Typography.ReadoutSmall) + 3,
+                UiThemeLookup.FontSize(this, UiTokens.Typography.ReadoutSmall) + UiSize.Widget.SmallTextLeading,
                 HasValueLabelRow,
                 HasStepLabelRow,
                 HasMarkerBelowRow));

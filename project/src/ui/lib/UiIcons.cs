@@ -28,7 +28,8 @@ public static class UiIcons
 {
     public const string UiRoot = "res://assets/icons/ui/";
     public const string PartRoot = "res://assets/icons/parts/";
-    private const float _uiSourceSize = 24;
+    /// <summary>Side of the viewBox every UI icon SVG is authored on.</summary>
+    public const float UiSourceSize = 24;
     private const float _partSourceSize = 20;
     private static readonly Dictionary<(string Path, int PixelSize), Texture2D> _textures = [];
     private static float _cachedUiScale = float.NaN;
@@ -38,10 +39,10 @@ public static class UiIcons
 
     public static int Pixels(UiIconSize size) => size switch
     {
-        UiIconSize.Small => 12,
-        UiIconSize.Standard => 16,
-        UiIconSize.Large => 20,
-        UiIconSize.ExtraLarge => 24,
+        UiIconSize.Small => UiSize.Icon.Small,
+        UiIconSize.Standard => UiSize.Icon.Default,
+        UiIconSize.Large => UiSize.Icon.Large,
+        UiIconSize.ExtraLarge => UiSize.Icon.ExtraLarge,
         _ => throw new ArgumentOutOfRangeException(nameof(size), size, "Only canonical icon sizes are supported."),
     };
 
@@ -154,7 +155,7 @@ public static class UiIcons
         _ => throw new ArgumentOutOfRangeException(nameof(icon), icon, "Unknown UI icon."),
     };
 
-    private static IconSource Ui(string fileName) => new(UiRoot, fileName, _uiSourceSize);
+    private static IconSource Ui(string fileName) => new(UiRoot, fileName, UiSourceSize);
     private static IconSource Part(string fileName) => new(PartRoot, fileName, _partSourceSize);
 
     private readonly record struct IconSource(string Root, string FileName, float SourceSize);

@@ -113,13 +113,20 @@ root Theme swap restyles everything. They run without the Godot scene tree:
 - effects-lite is Neon's palette with effects off
 - saved scenes do not pin colours, fonts or font sizes on canonical text
   components (UiLabel, UiButton)
+- C# source (`UiSourceGuardTests`, a Roslyn scan with types bound) has no colour
+  literals anywhere in `project/src`, and `project/src/ui/lib` names every
+  number: dimensions come from `UiSize`/`UiLayout`/`UiSpacing`, other values
+  are named constants. Identity, halving and doubling stay inline; the test
+  owns the exact list.
+  Screens and widgets join the size rule as they are migrated
+  ([#310](https://github.com/MrLogic85/Node-Runner/issues/310)).
 
 Do not write tests that lock a scene's layout, arrangement or pixel sizes;
 those are free to change in the editor. Do not instantiate Nodes or claim to
 prove rendering. Scene lifecycle, input, layout, and visual fidelity remain
 Godot/device verification concerns. Broader guards (every scene node, and C#
 that copies theme colours into overrides) are tracked in
-[#303](https://github.com/MrLogic85/Node-Runner/issues/303).
+[#309](https://github.com/MrLogic85/Node-Runner/issues/309).
 
 ### Godot-side tests (deferred)
 

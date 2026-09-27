@@ -7,6 +7,9 @@ namespace NodeRunner.Ui.Lib;
 [GlobalClass]
 public partial class UiMenu : Container
 {
+    /// <summary>Keeps an open menu above the screen content it follows.</summary>
+    private const int _overlayZIndex = 100;
+
     [Signal]
     public delegate void IndexClickedEventHandler(int index);
 
@@ -169,7 +172,7 @@ public partial class UiMenu : Container
         _followOffset = offset;
         TopLevel = true;
         ZAsRelative = false;
-        ZIndex = Math.Max(ZIndex, 100);
+        ZIndex = Math.Max(ZIndex, _overlayZIndex);
         SetProcess(true);
         UpdateFollowPosition();
     }

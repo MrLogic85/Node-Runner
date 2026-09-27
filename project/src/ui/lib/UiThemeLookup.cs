@@ -8,6 +8,9 @@ namespace NodeRunner.Ui.Lib;
 /// </summary>
 public static class UiThemeLookup
 {
+    /// <summary>Theme constants store alphas as bytes because Godot rounds them to integers.</summary>
+    private const float _alphaByteMax = 255f;
+    private const float _lockedFillOpacity = 0.55f;
     private static readonly bool _reportMissing = OS.IsDebugBuild();
 
     public static Color Color(Control control, UiTokens.Color token)
@@ -44,7 +47,7 @@ public static class UiThemeLookup
             ReportMissing("constant", name, UiThemes.TokenType);
         }
 
-        return control.GetThemeConstant(name, UiThemes.TokenType) / 255f;
+        return control.GetThemeConstant(name, UiThemes.TokenType) / _alphaByteMax;
     }
 
     public static int FontSize(Control control, UiTokens.Typography token)
@@ -161,7 +164,7 @@ public static class UiThemeLookup
                 break;
             case UiSurfaceContracts.FrameVariant.Lock:
                 style.BorderColor = Color(control, UiTokens.Color.LineStrong);
-                style.BgColor = style.BgColor.ScaleAlpha(0.55f);
+                style.BgColor = style.BgColor.ScaleAlpha(_lockedFillOpacity);
                 break;
             case UiSurfaceContracts.FrameVariant.Warn:
                 style.BorderColor = Color(control, UiTokens.Color.Danger);
