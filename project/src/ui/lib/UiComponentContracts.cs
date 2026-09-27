@@ -62,31 +62,16 @@ public static class UiComponentContracts
         NameField,
         Note,
         ValueRow,
-        ReadonlyValue,
         PowerRow,
         MeterRow,
         PartRow,
         IconTabs,
         SelectionHandle,
-        PanelHeader,
         InfoRow,
         Card,
         ProgressRing,
         Number,
         StageCard,
-    }
-
-    public enum SemanticState
-    {
-        Neutral,
-        Selected,
-        Locked,
-        Warning,
-        Danger,
-        Hint,
-        Ok,
-        Bad,
-        Disabled,
     }
 
     public static IReadOnlyList<CanonicalComponent> AllCanonicalComponents { get; } =
@@ -112,13 +97,11 @@ public static class UiComponentContracts
             CanonicalComponent.NameField => nameof(UiNameField),
             CanonicalComponent.Note => nameof(UiNoteRow),
             CanonicalComponent.ValueRow => nameof(UiValueRow),
-            CanonicalComponent.ReadonlyValue => nameof(UiReadonlyValue),
             CanonicalComponent.PowerRow => nameof(UiValueRow),
-            CanonicalComponent.MeterRow => nameof(UiMeterRow),
+            CanonicalComponent.MeterRow => nameof(UiSlider),
             CanonicalComponent.PartRow => nameof(UiPartRow),
             CanonicalComponent.IconTabs => nameof(UiIconTabs),
             CanonicalComponent.SelectionHandle => nameof(UiSelectionHandle),
-            CanonicalComponent.PanelHeader => nameof(UiPanelHeader),
             CanonicalComponent.InfoRow => nameof(UiInfoRow),
             CanonicalComponent.Card => nameof(UiCard),
             CanonicalComponent.ProgressRing => nameof(UiProgressRing),
@@ -139,21 +122,6 @@ public static class UiComponentContracts
         }
 
         return Math.Clamp(index, 0, tabCount - 1);
-    }
-
-    public static double ClampPercent(double value)
-    {
-        if (double.IsNaN(value) || double.IsNegativeInfinity(value))
-        {
-            return 0;
-        }
-
-        if (double.IsPositiveInfinity(value))
-        {
-            return 100;
-        }
-
-        return Math.Clamp(value, 0, 100);
     }
 
     public static double ClampValue(double value, double minimum, double maximum)
@@ -211,9 +179,6 @@ public static class UiComponentContracts
 
         return roundedPercent.ToString("0", CultureInfo.InvariantCulture) + "%";
     }
-
-    public static string FormatPercent(double value) =>
-        ClampPercent(value).ToString("0", CultureInfo.InvariantCulture) + "%";
 
     public static string FormatNumber(double value, string suffix = "") =>
         FiniteOrZero(value).ToString("0.#", CultureInfo.InvariantCulture) + suffix;

@@ -72,6 +72,20 @@ token import does not recreate the dead mappings.
   rendered viewport, not on token values. If a future theme ever needs its own
   dimensions (a compact or dense mode), that token moves back into the Theme.
 
+### Reference component mapping
+
+Some `c_*` entries are not components of their own in Godot
+([issue #306](https://github.com/MrLogic85/Node-Runner/issues/306)):
+
+- **`c_prog` and `c_meter`** are `UiSlider` with `ValueKind` Progress (no
+  thumb). `c_meter` is the same slider with a label and value, as the reference
+  says.
+- **`c_power`** and read-only facts (for example "Weighs") are `UiValueRow`. The
+  reference has no separate read-only value component.
+- **`c_panel_head`** is dropped by human decision: it is not part of the future
+  design exports, so there is no panel header component. The side panel's
+  header (`c_inspector`) is decided when the Build inspector is migrated.
+
 ## Immediate-mode drawing and antialiasing
 
 The project renders at a low logical canvas (`window/size/viewport_width=640`,
@@ -103,7 +117,7 @@ GLES3`); see the Compatibility/OpenGL renderer note in
 **Rule: all immediate-mode `_Draw()` calls in this project must pass
 `antialiased: false`.** This has been applied across every existing call
 site (`UiNumber`, `UiDashedBorder`, `UiProgressRing`, `UiSlider`,
-`UiSelectionHandle`, `UiButton`, `UiReadonlyValue`, `UiBoundsDebugOverlay`,
+`UiSelectionHandle`, `UiButton`, `UiBoundsDebugOverlay`,
 `BuildScreen`, `SimulateScreen`, `BrainFocusNetworkView`,
 `ConstructionCanvas`, `CreationCard`, `BeamVisual`). Any new `_Draw()` code
 must follow the same rule; a stray edge without antialiasing reads as a

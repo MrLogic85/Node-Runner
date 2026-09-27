@@ -82,13 +82,11 @@ public sealed class UiComponentContractsTests
                 "NameField",
                 "Note",
                 "ValueRow",
-                "ReadonlyValue",
                 "PowerRow",
                 "MeterRow",
                 "PartRow",
                 "IconTabs",
                 "SelectionHandle",
-                "PanelHeader",
                 "InfoRow",
                 "Card",
                 "ProgressRing",
@@ -137,7 +135,7 @@ public sealed class UiComponentContractsTests
         UiComponentContracts.ControlTypeFor(UiComponentContracts.CanonicalComponent.ProgressBar)
             .ShouldBe(nameof(UiSlider));
         UiComponentContracts.ControlTypeFor(UiComponentContracts.CanonicalComponent.MeterRow)
-            .ShouldBe(nameof(UiMeterRow));
+            .ShouldBe(nameof(UiSlider));
         var progress = UiSliderValue.Progress(0.62);
 
         progress.Kind.ShouldBe(UiSliderValueKind.Progress);
@@ -326,15 +324,6 @@ public sealed class UiComponentContractsTests
 
     [Theory]
     [InlineData(-1, 0)]
-    [InlineData(42, 42)]
-    [InlineData(101, 100)]
-    public void ClampPercent_ConstrainsToCanonicalPercentRange(double value, double expected)
-    {
-        UiComponentContracts.ClampPercent(value).ShouldBe(expected);
-    }
-
-    [Theory]
-    [InlineData(-1, 0)]
     [InlineData(0.72, 0.72)]
     [InlineData(2, 1)]
     [InlineData(double.NaN, 0)]
@@ -384,15 +373,6 @@ public sealed class UiComponentContractsTests
     }
 
     [Theory]
-    [InlineData(-2, "0%")]
-    [InlineData(37.4, "37%")]
-    [InlineData(101, "100%")]
-    public void FormatPercent_ClampsAndFormatsWithoutDecimals(double value, string expected)
-    {
-        UiComponentContracts.FormatPercent(value).ShouldBe(expected);
-    }
-
-    [Theory]
     [InlineData(0, "0%")]
     [InlineData(0.724, "72%")]
     [InlineData(0.999, "99%")]
@@ -428,14 +408,6 @@ public sealed class UiComponentContractsTests
             .ShouldBe(["Rest", "Editing", "Error"]);
         Enum.GetNames<UiTextField.TextInputSize>()
             .ShouldBe(["Standard", "Compact"]);
-        Enum.GetNames<UiComponentContracts.SemanticState>()
-            .ShouldContain("Locked");
-        Enum.GetNames<UiComponentContracts.SemanticState>()
-            .ShouldContain("Warning");
-        Enum.GetNames<UiComponentContracts.SemanticState>()
-            .ShouldContain("Ok");
-        Enum.GetNames<UiComponentContracts.SemanticState>()
-            .ShouldContain("Bad");
     }
 
     [Fact]
@@ -526,13 +498,11 @@ public sealed class UiComponentContractsTests
             UiComponentContracts.CanonicalComponent.NameField => "c_name",
             UiComponentContracts.CanonicalComponent.Note => "c_note",
             UiComponentContracts.CanonicalComponent.ValueRow => "c_value",
-            UiComponentContracts.CanonicalComponent.ReadonlyValue => "c_readonly",
             UiComponentContracts.CanonicalComponent.PowerRow => "c_power",
             UiComponentContracts.CanonicalComponent.MeterRow => "c_meter",
             UiComponentContracts.CanonicalComponent.PartRow => "c_row",
             UiComponentContracts.CanonicalComponent.IconTabs => "c_tabs",
             UiComponentContracts.CanonicalComponent.SelectionHandle => "c_handle",
-            UiComponentContracts.CanonicalComponent.PanelHeader => "c_panel_head",
             UiComponentContracts.CanonicalComponent.InfoRow => "c_info_row",
             UiComponentContracts.CanonicalComponent.Card => "c_card",
             UiComponentContracts.CanonicalComponent.ProgressRing => "c_ring",

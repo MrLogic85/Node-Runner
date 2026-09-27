@@ -27,14 +27,4 @@ internal static class UiFieldAndRows
     public static TextureRect Icon(UiIconId icon, UiIconSize size, Color tint) =>
         UiIcons.Create(icon, size, tint);
 
-    public static StyleBoxFlat DashedLike(Control owner, Color border, bool raised = true) =>
-        UiThemeLookup.CreateStyleBox(raised
-                ? UiThemeLookup.Color(owner, UiTokens.Color.PanelRaised)
-                : UiThemeLookup.Color(owner, UiTokens.Color.Panel),
-            border,
-            0,
-            UiSize.Radius.Medium,
-            horizontalPadding: UiSize.Space.S2,
-            verticalPadding: UiSize.Space.S1);
-
 }
