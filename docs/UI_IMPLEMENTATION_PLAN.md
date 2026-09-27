@@ -19,6 +19,10 @@ structured reference.
 | C — Creation lifecycle | Autosave, single Build unlocked/locked state, first-training lock, destructive Unlock | #229 |
 | D — Product scenes | Build parts, Train setup/Training, teaching surfaces, progression, settings | #194-#202, #211, #220 |
 
+A rewritten product screen follows "Who owns what" in `docs/UI_DIRECTION.md`
+and joins the UI guards in the same PR
+([#310](https://github.com/MrLogic85/Node-Runner/issues/310)).
+
 Related existing issues still fit where their underlying behavior remains
 valid: #91, #92, #105, #127, #137, and #175.
 

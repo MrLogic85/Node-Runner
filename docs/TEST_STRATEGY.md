@@ -10,7 +10,8 @@ inspired by `kappuccino`'s `docs/TEST_STRATEGY.md`.
 2. **Deterministic.** Every random source is a seeded `Random`. Never
    `DateTime.Now`.
 3. **Layer boundaries are code.** Architecture rules live in
-   `NodeRunner.Arch.Tests`, not in a wiki.
+   `NodeRunner.Arch.Tests`, and UI ownership rules in `NodeRunner.Ui.Tests`,
+   not in a wiki.
 4. **Test the risky bits, not the trivia.** Compiler-checked things
    (record equality, enum switches) get one canary test at most.
 5. **Fakes are production code.** In-memory implementations of repositories
@@ -24,7 +25,7 @@ inspired by `kappuccino`'s `docs/TEST_STRATEGY.md`.
 | ML | `libs/NodeRunner.ML/` | net8.0 | xUnit + Shouldly | Forward pass, GA math, backprop, activation math |
 | App | `libs/NodeRunner.App/` | net8.0 | xUnit + Shouldly + NSubstitute | View-models, repositories, service contracts |
 | Architecture | (all libs) | net10.0 tests | xUnit + NetArchTest | No Godot leaks, correct layer graph |
-| Static UI contracts | `project/src/ui/lib/` | net10.0 tests referencing Godot | xUnit + Shouldly | Token values, typography, resource mapping |
+| Static UI contracts | `project/src/`, `project/scenes/`, theme files | net10.0 tests referencing Godot | xUnit + Shouldly + Roslyn | Theme files, component contracts, scene and source guards |
 | Godot Nodes | `project/src/{creature,sim,managers,ui}/` | Godot runtime | **GdUnit4** (deferred, v1.0+) | Node lifecycle, physics scenarios |
 | End-to-end | full app on device | Android | Manual, per-issue decision | Feel, latency, battery |
 
@@ -103,8 +104,12 @@ Add a fact whenever a convention emerges that we've decided to enforce.
 
 ### `NodeRunner.Ui.Tests`
 
-UI tests guard where styling comes from, so a value is authored once and a
-root Theme swap restyles everything. They run without the Godot scene tree:
+`docs/UI_DIRECTION.md` ("Who owns what") splits the UI between the reference
+design, the UI library, scenes and C#. These tests guard those boundaries and
+run without the Godot scene tree. They cover three concerns.
+
+**1. Values come from their owner.** A value is authored once, so a root Theme
+swap restyles everything:
 
 - theme files: every palette authors every token colour, and the derived items
   (text-colour variations, base control colours) match their palette
@@ -115,18 +120,40 @@ root Theme swap restyles everything. They run without the Godot scene tree:
   components (UiLabel, UiButton)
 - C# source (`UiSourceGuardTests`, a Roslyn scan with types bound) has no colour
   literals anywhere in `project/src`, and `project/src/ui/lib` names every
-  number: dimensions come from `UiSize`/`UiLayout`/`UiSpacing`, other values
-  are named constants. Identity, halving and doubling stay inline; the test
-  owns the exact list.
-  Screens and widgets join the size rule as they are migrated
-  ([#310](https://github.com/MrLogic85/Node-Runner/issues/310)).
+  number. Dimensions should come from `UiSize`/`UiLayout`/`UiSpacing`; the
+  test checks that a number is named, not where the name points. Identity,
+  halving and doubling stay inline; the test owns the exact list.
 
-Do not write tests that lock a scene's layout, arrangement or pixel sizes;
-those are free to change in the editor. Do not instantiate Nodes or claim to
-prove rendering. Scene lifecycle, input, layout, and visual fidelity remain
-Godot/device verification concerns. Broader guards (every scene node, and C#
-that copies theme colours into overrides) are tracked in
+**2. Screens reuse the library.** Every canonical component maps to one
+reusable control, and paired specimens (slider and range, power and value
+rows, every button) share that control instead of copying it
+(`UiComponentContractsTests`). The mapping to the `c_*` entries in
+`reference design/` is maintained by hand and checked in design review; a
+test that reads the reference is tracked in
+[#315](https://github.com/MrLogic85/Node-Runner/issues/315). That screens use
+the library, in their scene and in their code, is guarded per screen by #310.
+
+**3. Behaviour is tested apart from layout.** Rules and state live in
+`NodeRunner.App` view-models (`NodeRunner.App.Tests`), and component
+behaviour lives in pure contract functions in the library
+(`UiComponentContracts`, slider values, hold progress), tested here. Neither
+depends on how a scene arranges its nodes, so a layout can change in the
+editor without breaking a test. Whether a scene's controls reach the right
+view-model action is verified on device until Godot-side tests exist.
+
+Product screens join these guards as they are rewritten
+([#310](https://github.com/MrLogic85/Node-Runner/issues/310)). That issue adds
+a stricter size rule for screens, a rule against screen code building or
+restyling controls, a check that the screen's scene uses library components,
+and a check that every node a screen script binds exists in its scene with a
+matching type. Theme values copied into overrides, in
+scenes or in library C#, are tracked in
 [#309](https://github.com/MrLogic85/Node-Runner/issues/309).
+
+Do not write tests that lock a scene's arrangement: which components it uses,
+their order and its layout sizes are free to change in the editor. Do not
+instantiate Nodes or claim to prove rendering. Scene lifecycle, input, layout
+and visual fidelity remain Godot/device verification concerns.
 
 ### Godot-side tests (deferred)
 
@@ -189,7 +216,8 @@ public void Forward_WithZeroInput_ReturnsZeroesForTanh()
 - Trivial getters/setters
 - .NET BCL behaviour
 - Godot engine behaviour (that's Godot's job)
-- UI layout down to the pixel
+- A scene's arrangement: component choice, order and layout sizes belong to
+  the scene
 - Code shape (sealed/abstract, member kinds, base types) — test the values a
   contract maps to, or guard against the hardcoding it is meant to prevent
 

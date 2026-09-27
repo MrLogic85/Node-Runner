@@ -13,6 +13,8 @@
 4. **Every screen has a matching `.tscn` in `project/scenes/screens/`.** The
    `.cs` file lives here in `src/ui/screens/`. Reusable component scenes
    (e.g. `UiStageCard`, `UiFrame`) live in `project/scenes/ui/` instead.
+   The scene owns the layout and the script owns behaviour; see "Who owns
+   what" in `docs/UI_DIRECTION.md`.
 5. **Visual contracts come from `reference design/`.** Start at its index and
    read the relevant component README/preview, `tokens.json`, and `library.md`.
    `docs/UI_DIRECTION.md` adds repository-specific implementation boundaries.
