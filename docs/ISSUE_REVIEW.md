@@ -19,6 +19,11 @@ implementation when it is:
 - Likely to need manual testing
 - Marked with `status: needs-review` or `status: needs-decision`
 
+Issues marked `status: idea` are not actionable and are not reviewed or
+implemented yet. Shape them first through discussion; once the issue states
+one clear outcome and acceptance criteria, replace `status: idea` with
+`status: needs-review`.
+
 After review, replace `status: needs-review` with `status: ready` when the
 issue is actionable. Keep `status: needs-decision` until the open decision is
 settled.

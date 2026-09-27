@@ -64,6 +64,7 @@ Use one or more:
 - `area: physics` — Godot physics behavior and tuning
 - `area: ui` — Screens, controls, presentation logic
 - `area: visualization` — Network/training/creature visualization
+- `area: audio` — Sound effects, music, audio settings
 - `area: android` — Export, install, permissions, device behavior
 - `area: ci` — GitHub Actions, branch protection, required checks
 - `area: docs` — Documentation structure/content
@@ -75,6 +76,7 @@ Use sparingly:
 
 - `status: blocked` — Waiting on an external decision/tool/person
 - `status: in-progress` — Work has started but is not complete
+- `status: idea` — Unshaped idea; needs discussion and refinement
 - `status: needs-review` — Issue needs review before implementation
 - `status: needs-decision` — Design/product choice required before work starts
 - `status: ready` — Reviewed and actionable
