@@ -1845,7 +1845,7 @@ public partial class Main : Node2D
         _completeButton.Pressed += CompleteCreation;
         _rebuildButton = CreateToolButton("RebuildButton", "Rebuild");
         _rebuildButton.Pressed += RebuildCreation;
-        _rebuildButton.AddThemeColorOverride("font_color", Colors.OrangeRed);
+        _rebuildButton.AddThemeColorOverride("font_color", _theme.Danger);
 
         rail.AddChild(_placeToolButton);
         rail.AddChild(_beamToolButton);
@@ -2420,7 +2420,7 @@ public partial class Main : Node2D
         if (_buildValidationLabel is not null)
         {
             SetLabelTextIfChanged(_buildValidationLabel, buildPanel.ValidationLine);
-            _buildValidationLabel.AddThemeColorOverride("font_color", buildPanel.CanStartTraining ? _theme.GroundEdge : Colors.Orange);
+            _buildValidationLabel.AddThemeColorOverride("font_color", buildPanel.CanStartTraining ? _theme.GroundEdge : _theme.Danger);
         }
         if (_completeButton is not null)
         {

@@ -45,7 +45,7 @@ public partial class DuplicateCreationSheet : Control
 
         AddChild(new ColorRect
         {
-            Color = new Color(0, 0, 0, 0.52f),
+            Color = UiThemeLookup.Color(this, UiTokens.Color.Scrim).WithAlpha(0.52f),
             MouseFilter = MouseFilterEnum.Stop,
             AnchorRight = 1,
             AnchorBottom = 1,

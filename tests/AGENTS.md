@@ -16,6 +16,7 @@ For the Godot-side tests (Node behaviour, physics, UI), see the eventual
 | Mocking | **NSubstitute 5** — `Substitute.For<IFoo>()` |
 | Architecture rules | **NetArchTest.Rules** + reflection over `AssemblyMarker` |
 | Coverage | **Coverlet** — collected on every `dotnet test` run |
+| Source guards | **Microsoft.CodeAnalysis.CSharp** (Roslyn) — `UiSourceGuardTests` |
 
 Global usings for `Xunit`, `Shouldly` (and `NSubstitute` where relevant) are
 declared in each `*.Tests.csproj`. Do not import them per file.

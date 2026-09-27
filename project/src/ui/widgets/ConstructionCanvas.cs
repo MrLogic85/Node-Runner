@@ -298,7 +298,7 @@ public partial class ConstructionCanvas : Node2D
         DrawLine(c.Lerp(center, 0.35f), a.Lerp(center, 0.35f), Theme.SelectionGlow, 2, antialiased: false);
 
         var labelPosition = center + new Vector2(12, -12);
-        DrawRect(new Rect2(labelPosition + new Vector2(-6, -22), new Vector2(168, 30)), new Color(0.01f, 0.02f, 0.05f, 0.86f));
+        DrawRect(new Rect2(labelPosition + new Vector2(-6, -22), new Vector2(168, 30)), Theme.ArenaBackground.WithAlpha(0.86f));
         DrawString(ThemeDB.FallbackFont, labelPosition, "Rigid: no joints", HorizontalAlignment.Left, -1, 18, Theme.GroundEdge);
     }
 

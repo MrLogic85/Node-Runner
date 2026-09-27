@@ -7,6 +7,7 @@ namespace NodeRunner.Ui.Lib;
 [GlobalClass]
 public partial class UiNumber : Control, ISerializationListener
 {
+    private const int _ringPoints = 32;
     private Label? _label;
     private string _text = "1";
 
@@ -90,7 +91,7 @@ public partial class UiNumber : Control, ISerializationListener
             radius,
             0,
             Mathf.Tau,
-            32,
+            _ringPoints,
             UiThemeLookup.Color(this, UiTokens.Color.Accent),
             stroke,
             antialiased: false);

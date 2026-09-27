@@ -6,6 +6,7 @@ namespace NodeRunner.Ui.Lib;
 public static class UiComponentContracts
 {
     public const float HoldCompletionSeconds = 0.8f;
+    public const int FullPercent = 100;
     public const float ButtonProgressOpacity = 0.5f;
 
     /// <summary>
@@ -164,15 +165,15 @@ public static class UiComponentContracts
     public static double ClampProgress(double progress) => ClampSliderPosition(progress);
 
     public static int ProgressPercent(double progress) =>
-        Math.Clamp((int)Math.Round(ClampProgress(progress) * 100, MidpointRounding.AwayFromZero), 0, 100);
+        Math.Clamp((int)Math.Round(ClampProgress(progress) * FullPercent, MidpointRounding.AwayFromZero), 0, FullPercent);
 
     public static bool IsProgressComplete(double progress) =>
-        ProgressPercent(progress) >= 100;
+        ProgressPercent(progress) >= FullPercent;
 
     public static string FormatProgressPercent(double progress)
     {
         var roundedPercent = ProgressPercent(progress);
-        if (roundedPercent >= 100)
+        if (roundedPercent >= FullPercent)
         {
             return "99%";
         }
