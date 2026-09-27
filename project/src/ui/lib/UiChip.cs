@@ -2,35 +2,27 @@ using Godot;
 
 namespace NodeRunner.Ui.Lib;
 
-/// <summary>Small token-backed status, lock, unlock, or brain-shape label.</summary>
+/// <summary>
+/// Small fact chip (<c>c_chip</c>) with an optional icon. Kind colours the border, text and icon
+/// alike; <see cref="Large"/> sits beside control-height buttons and fields.
+/// </summary>
+[Tool]
+[GlobalClass]
 public partial class UiChip : PanelContainer
 {
     public enum ChipKind
     {
         Neutral,
-        Accent,
-        Locked,
-        Danger,
         Warning,
-        Bad,
+        Danger,
         Ok,
     }
 
     private ChipKind _kind;
     private string _text = string.Empty;
-    private string _iconText = string.Empty;
-    private UiIconId? _iconId;
-
-    [Export]
-    public ChipKind Kind
-    {
-        get => _kind;
-        set
-        {
-            _kind = value;
-            Refresh();
-        }
-    }
+    private UiIconId _iconId = UiIconId.None;
+    private bool _large;
+    private UiIconCaption? _content;
 
     [Export]
     public string Text
@@ -43,33 +35,68 @@ public partial class UiChip : PanelContainer
         }
     }
 
-    public UiIconId? IconId
+    [Export]
+    public ChipKind Kind
     {
-        get => _iconId;
+        get => _kind;
         set
         {
-            _iconId = value;
+            if (!Enum.IsDefined(value))
+            {
+                GD.PushError($"Invalid chip kind: {value}. Keeping {_kind}.");
+                return;
+            }
+
+            _kind = value;
             Refresh();
         }
     }
 
     [Export]
-    public string IconText
+    public UiIconId IconId
     {
-        get => _iconText;
+        get => _iconId;
         set
         {
-            _iconText = value;
-            _iconId = UiIconGlyphs.TryParse(value, out var icon) ? icon : null;
+            if (!Enum.IsDefined(value))
+            {
+                GD.PushError($"Invalid chip icon: {value}. Keeping {_iconId}.");
+                return;
+            }
+
+            _iconId = value;
             Refresh();
         }
     }
 
-    public override void _Ready()
+    /// <summary>Control height (40) instead of control-xs (24).</summary>
+    [Export]
+    public bool Large
     {
-        MouseFilter = MouseFilterEnum.Pass;
-        Refresh();
+        get => _large;
+        set
+        {
+            _large = value;
+            Refresh();
+        }
     }
+
+    /// <summary>Text, icon and border colour for a kind; neutral text is ink on a line-strong border.</summary>
+    public static (UiTokens.Color Border, UiTokens.Color Content) ColorsFor(ChipKind kind) => kind switch
+    {
+        ChipKind.Warning => (UiTokens.Color.Halo, UiTokens.Color.Halo),
+        ChipKind.Danger => (UiTokens.Color.Danger, UiTokens.Color.Danger),
+        ChipKind.Ok => (UiTokens.Color.Accent, UiTokens.Color.Accent),
+        _ => (UiTokens.Color.LineStrong, UiTokens.Color.Ink),
+    };
+
+    public static int HeightFor(bool large) => large ? UiSize.Control.Default : UiSize.Control.ExtraSmall;
+
+    public override void _EnterTree() => RequestReady();
+
+    public UiChip() => MouseFilter = MouseFilterEnum.Pass;
+
+    public override void _Ready() => Refresh();
 
     public override void _Notification(int what)
     {
@@ -86,42 +113,17 @@ public partial class UiChip : PanelContainer
             return;
         }
 
-        foreach (var child in GetChildren())
-        {
-            RemoveChild(child);
-            child.QueueFree();
-        }
+        // Re-found after a C# assembly reload, which clears managed fields but keeps the child.
+        _content ??= UiIconCaption.Ensure(this);
 
-        CustomMinimumSize = new Vector2(0, UiSize.Control.ExtraSmall);
-        var (lineToken, textToken) = Kind switch
-        {
-            ChipKind.Accent or ChipKind.Ok => (UiTokens.Color.Accent, UiTokens.Color.Accent),
-            ChipKind.Locked => (UiTokens.Color.Muted, UiTokens.Color.Muted),
-            ChipKind.Danger or ChipKind.Bad => (UiTokens.Color.Danger, UiTokens.Color.Danger),
-            ChipKind.Warning => (UiTokens.Color.Halo, UiTokens.Color.Halo),
-            _ => (UiTokens.Color.Edge, UiTokens.Color.Ink),
-        };
-        Color color = UiThemeLookup.Color(this, lineToken);
-        Color textColor = UiThemeLookup.Color(this, textToken);
-
-        var row = new HBoxContainer
-        {
-            Alignment = BoxContainer.AlignmentMode.Center,
-            MouseFilter = MouseFilterEnum.Ignore,
-        };
-        row.AddThemeConstantOverride("separation", UiSize.Space.S1);
-        AddChild(row);
-        if (IconId is { } icon)
-        {
-            row.AddChild(UiFieldAndRows.Icon(icon, UiIconSize.Small, textColor));
-        }
-
-        row.AddChild(UiFieldAndRows.Label(Text, UiTokens.Typography.Caption, textToken, HorizontalAlignment.Center));
-        AddThemeStyleboxOverride("panel", UiThemeLookup.CreateStyleBox(UiThemeLookup.Color(this, UiTokens.Color.PanelRaised),
-            color,
+        var (border, content) = ColorsFor(Kind);
+        _content.Row.CustomMinimumSize = new Vector2(0, HeightFor(Large));
+        _content.Apply(Text, IconId, content, UiThemeLookup.Color(this, content));
+        AddThemeStyleboxOverride("panel", UiThemeLookup.CreateStyleBox(
+            UiThemeLookup.Color(this, UiTokens.Color.PanelRaised),
+            UiThemeLookup.Color(this, border),
             radius: UiSize.Radius.Pill,
-            horizontalPadding: UiSize.Space.S2,
-            verticalPadding: UiSize.Space.S1));
+            horizontalPadding: UiSize.Space.S2 + UiSize.Stroke.Hair,
+            verticalPadding: 0));
     }
-
 }

@@ -359,10 +359,11 @@ with F6. Editor authoring is being introduced in
 and notification content, as well as Popup Gallery, are scene-authored.
 
 Component Gallery is migrating one component at a time. Open
-`project/scenes/ui/ComponentGalleryScreen.tscn` and expand
-`Frame/Shell/Scroll/ContentFrame/Content` to edit the authored component
-sections. Buttons, Toggle/Checkbox, Segmented, and Parts tray tabs are the
-actual runtime controls, not editor-only copies. The scene may group and rename
+`project/scenes/screens/ComponentGalleryScreen.tscn` and expand
+`UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content` to edit the
+authored component sections. They are the actual runtime controls, not
+editor-only copies; components still missing a section are tracked in
+[issue #306](https://github.com/MrLogic85/Node-Runner/issues/306). The scene may group and rename
 those sections freely; tests should cover component behavior, not lock the
 gallery's visual arrangement.
 Edit normal exported properties, UiLabel Text Style presets and native

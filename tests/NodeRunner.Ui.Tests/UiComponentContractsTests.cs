@@ -76,6 +76,7 @@ public sealed class UiComponentContractsTests
                 "Picker",
                 "Menu",
                 "Chip",
+                "Callout",
                 "ProgressBar",
                 "TextField",
                 "NameField",
@@ -225,7 +226,9 @@ public sealed class UiComponentContractsTests
         Enum.GetNames<UiPartRow.PartRowState>()
             .ShouldBe(["Rest", "Selected", "Locked", "NoneLeft"]);
         Enum.GetNames<UiChip.ChipKind>()
-            .ShouldBe(["Neutral", "Accent", "Locked", "Danger", "Warning", "Bad", "Ok"]);
+            .ShouldBe(["Neutral", "Warning", "Danger", "Ok"]);
+        Enum.GetNames<UiCallout.CalloutKind>()
+            .ShouldBe(["Warning", "Danger", "Ok"]);
         Enum.GetNames<UiMenu.MenuWidthMode>()
             .ShouldBe(["Fixed", "WrapContent"]);
         Enum.GetNames<UiMenuActionItem.MenuItemKind>()
@@ -517,6 +520,7 @@ public sealed class UiComponentContractsTests
             UiComponentContracts.CanonicalComponent.Picker => "c_pick",
             UiComponentContracts.CanonicalComponent.Menu => "c_menu",
             UiComponentContracts.CanonicalComponent.Chip => "c_chip",
+            UiComponentContracts.CanonicalComponent.Callout => "c_call",
             UiComponentContracts.CanonicalComponent.ProgressBar => "c_prog",
             UiComponentContracts.CanonicalComponent.TextField => "c_textfield",
             UiComponentContracts.CanonicalComponent.NameField => "c_name",

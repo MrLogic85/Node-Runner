@@ -162,8 +162,7 @@ public partial class CreationCard : Control
             row.AddChild(new UiChip
             {
                 Text = _isExample ? "Example" : _note,
-                Kind = _isExample ? UiChip.ChipKind.Locked : UiChip.ChipKind.Accent,
-                CustomMinimumSize = new Vector2(0, 24),
+                Kind = _isExample ? UiChip.ChipKind.Neutral : UiChip.ChipKind.Ok,
             });
         }
 
