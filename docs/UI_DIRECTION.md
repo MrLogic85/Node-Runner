@@ -10,6 +10,29 @@ This document contains only repository-specific direction that the design
 package does not own. `docs/UI_IMPLEMENTATION_PLAN.md` owns delivery order and
 GitHub dependencies.
 
+## Who owns what
+
+Each UI decision has one owner. A layer below never overrides the one above.
+
+| Owner | Owns | Must not |
+| --- | --- | --- |
+| `reference design/` | The design: tokens, components, screens, flows | — (never edited here; record ambiguities instead) |
+| UI library: `project/src/ui/lib`, component scenes in `project/scenes/ui`, the theme files, `UiSize`/`UiLayout`/`UiSpacing` | The Godot interpretation of the design: every colour, typography, component, state and component dimension (control heights, radius, stroke, icon and font sizes) | Know about screens or app vocabulary |
+| Screen scenes: `project/scenes/screens` | Layout: which components, their order, containers, separations, margins, a slot's minimum size, and text | Restyle a component (colour, font, font-size or stylebox overrides) or change its dimensions |
+| C#: view-models in `NodeRunner.App`, screen scripts in `project/src/ui/screens` | Functionality: state, rules, actions, formatting | Build a screen's static layout in code or restyle components |
+
+Layout sizes a scene sets use values from the spacing scale (`UiSize.Space`)
+or `UiLayout`; scenes cannot reference the C# constants, so this is checked in
+review. Screen scripts are thin: they bind scene nodes by unique name,
+subscribe to their view-model and forward input. Content that varies at
+runtime (one card per creation) is instantiated from library components or
+scenes. Widgets in `project/src/ui/widgets` are components that draw
+app-specific content: they may use the app's vocabulary and view-models, and
+follow the library's styling and size rules. Most product screens predate this
+split and still build themselves in code; they move to it as they are
+rewritten ([#310](https://github.com/MrLogic85/Node-Runner/issues/310)).
+`docs/TEST_STRATEGY.md` lists the guard for each boundary.
+
 ## Product feel
 
 - **Neon simulator:** the app feels like a digital petri dish for synthetic
