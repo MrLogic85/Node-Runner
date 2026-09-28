@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://dokr6l5stu6ll"]
 
 [ext_resource type="Script" uid="uid://c3go506w58oj6" path="res://src/ui/lib/UiFrame.cs" id="1_hqjv7"]
-[ext_resource type="Script" uid="uid://byhbh5da7rpk8" path="res://src/ui/lib/UiCard.cs" id="2_gkfpo"]
+[ext_resource type="Script" uid="uid://dyiolxaja60hw" path="res://src/ui/lib/UiFrameCard.cs" id="2_gkfpo"]
 
 [node name="UiFrame" type="PanelContainer" unique_id=708820507]
 anchors_preset = 15
@@ -34,4 +34,4 @@ script = ExtResource("2_gkfpo")
 SizeVariant = 4
 Glow = true
 ClipContent = true
-metadata/_custom_type_script = "uid://byhbh5da7rpk8"
+metadata/_custom_type_script = "uid://dyiolxaja60hw"
