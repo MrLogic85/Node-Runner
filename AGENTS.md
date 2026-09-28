@@ -17,6 +17,8 @@ interactive.
 - **Language:** C# (.NET) for everything
 - **Target:** Android (primary), desktop for development
 - **Not targeted (yet):** iOS, web, consoles
+- **Stage:** see `docs/ROADMAP.md` → "Project stage"; it decides whether
+  changes to saved data need a migration.
 
 Make sure to read all the documents in docs/* and have a good understanding
 of the project before starting to work.
