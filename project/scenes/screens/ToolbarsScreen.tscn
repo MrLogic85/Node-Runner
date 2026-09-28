@@ -176,6 +176,7 @@ mouse_filter = 1
 script = ExtResource("12_button")
 IconId = 24
 Kind = 0
+ContentLayout = 1
 metadata/_custom_type_script = "uid://r2ped3g3uiaa"
 
 [node name="Arena" type="Control" parent="UiFrame/MarginContainer/Card/Shell/HShell" unique_id=1682750689]
