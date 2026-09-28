@@ -5,7 +5,7 @@ namespace NodeRunner.Ui.Lib;
 /// <summary>
 /// Reference side panel (<c>ComponentToolbars</c> "SideBar"): the fixed panel on the right,
 /// <see cref="UiLayout.SidePanelWidth"/> wide, with a divider down its left edge. Its own header
-/// row holds an optional icon, an optional title and a chevron button; the screen authors the
+/// row holds an optional icon, an optional title and a bare chevron; the screen authors the
 /// content below it in <c>%SidePanelContent</c> and decides what the panel shows. Tapping the
 /// chevron collapses it to a <see cref="UiLayout.SidePanelTabWidth"/> tab with a left chevron
 /// and the title on its side; tapping the tab expands it again.
@@ -81,10 +81,11 @@ public partial class UiSidePanel : MarginContainer
     public override void _Ready()
     {
         GetNode<Control>("%SidePanelIcon").Draw += DrawHeaderIcon;
+        GetNode<Control>("%SidePanelChevron").Draw += DrawCollapseChevron;
         GetNode<Control>("%SidePanelTabChevron").Draw += DrawExpandChevron;
         if (!Engine.IsEditorHint())
         {
-            GetNode<UiButton>("%SidePanelChevron").Activated += OnChevronActivated;
+            GetNode<Control>("%SidePanelChevron").GuiInput += OnChevronInput;
             GetNode<Control>("%SidePanelTab").GuiInput += OnTabInput;
         }
 
@@ -194,6 +195,7 @@ public partial class UiSidePanel : MarginContainer
     private void RedrawIcons()
     {
         GetNode<Control>("%SidePanelIcon").QueueRedraw();
+        GetNode<Control>("%SidePanelChevron").QueueRedraw();
         GetNode<Control>("%SidePanelTabChevron").QueueRedraw();
     }
 
@@ -207,6 +209,10 @@ public partial class UiSidePanel : MarginContainer
         }
     }
 
+    // The reference's handle is a bare muted chevron, not a button; its control is the touch area.
+    private void DrawCollapseChevron() =>
+        DrawIcon(GetNode<Control>("%SidePanelChevron"), UiIconId.ChevronRight, UiIconSize.Standard, UiTokens.Color.Muted);
+
     // The reference's left chevron is named back.
     private void DrawExpandChevron() =>
         DrawIcon(GetNode<Control>("%SidePanelTabChevron"), UiIconId.Back, UiIconSize.Standard, UiTokens.Color.Muted);
@@ -218,7 +224,7 @@ public partial class UiSidePanel : MarginContainer
         target.DrawTextureRect(UiIcons.Load(icon, size), new Rect2(origin, pixels), tile: false, UiThemeLookup.Color(this, color));
     }
 
-    private void OnChevronActivated() => Collapsed = true;
+    private void OnChevronInput(InputEvent inputEvent) => OnToggleInput(inputEvent, GetNode<Control>("%SidePanelChevron"));
 
     private void OnTabInput(InputEvent inputEvent) => OnToggleInput(inputEvent, GetNode<Control>("%SidePanelTab"));
 
