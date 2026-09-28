@@ -2,54 +2,15 @@ using Godot;
 
 namespace NodeRunner.Ui.Lib;
 
-public readonly record struct UiMenuItemSpec(
-    string Label,
-    UiIconId? Icon = null,
-    UiMenuActionItem.MenuItemKind Kind = UiMenuActionItem.MenuItemKind.Default,
-    string? Note = null,
-    Color? IconTint = null,
-    bool Selected = false);
-
-public static class UiMenuItems
-{
-    public static void Populate(
-        UiMenu menu,
-        IEnumerable<UiMenuItemSpec> specs,
-        bool showSelectedIndicator = false)
-    {
-        ArgumentNullException.ThrowIfNull(menu);
-        ArgumentNullException.ThrowIfNull(specs);
-
-        foreach (var child in menu.GetChildren())
-        {
-            menu.RemoveChild(child);
-            child.QueueFree();
-        }
-
-        foreach (var spec in specs)
-        {
-            menu.AddChild(new UiMenuActionItem
-            {
-                LabelText = spec.Label,
-                NoteText = spec.Note ?? string.Empty,
-                IconId = spec.Icon ?? UiIconId.None,
-                Kind = spec.Kind,
-                Selected = spec.Selected,
-                ShowSelectedIndicator = showSelectedIndicator,
-                IconTint = spec.IconTint,
-                SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
-            });
-        }
-    }
-}
-
-/// <summary>Standard optional action row for UiMenu.</summary>
+/// <summary>
+/// Standard optional action row for UiMenu: an icon, the label with an optional note under it,
+/// and a check for the selected choice. Containers lay the row out; a transparent Button behind
+/// them only handles press, hover and focus.
+/// </summary>
 [Tool]
 [GlobalClass]
 public partial class UiMenuActionItem : UiMenuItem, ISerializationListener
 {
-    private const float _noteMinimumWidth = UiSize.Control.Small * 1.5f;
-
     public enum MenuItemKind
     {
         Default,
@@ -59,15 +20,29 @@ public partial class UiMenuActionItem : UiMenuItem, ISerializationListener
     [Signal]
     public delegate void ActivatedEventHandler();
 
-    private string _labelText = "Menu item";
+    private string _labelText = "";
     private string _noteText = string.Empty;
-    private UiIconId _iconId;
+    private UiIconId _iconId = UiIconId.None;
     private MenuItemKind _kind;
     private bool _showSelectedIndicator;
+    private Color? _iconTint;
     private Button? _button;
-    private Label? _noteLabel;
+    private MarginContainer? _content;
+    private TextureRect? _icon;
+    private Label? _label;
+    private Label? _note;
+    private TextureRect? _check;
     private Callable PressedCallback => new(this, MethodName.Activate);
     private Callable RedrawCallback => new(this, CanvasItem.MethodName.QueueRedraw);
+
+    // A held press leaves the Pressed draw mode when the pointer slides off the row.
+    private static readonly StringName[] _redrawSignals =
+    [
+        BaseButton.SignalName.ButtonDown,
+        BaseButton.SignalName.ButtonUp,
+        Control.SignalName.MouseEntered,
+        Control.SignalName.MouseExited,
+    ];
 
     [Export]
     public string LabelText
@@ -124,98 +99,192 @@ public partial class UiMenuActionItem : UiMenuItem, ISerializationListener
         }
     }
 
-    public Color? IconTint { get; set; }
+    public Color? IconTint
+    {
+        get => _iconTint;
+        set
+        {
+            _iconTint = value;
+            RefreshItem();
+        }
+    }
 
     public override void _EnterTree() => RequestReady();
 
     public override void _Ready()
     {
         MouseFilter = MouseFilterEnum.Pass;
-        InitializeButton();
+        Build();
     }
 
     public override void _ExitTree() => DisconnectButton();
 
     public void OnBeforeSerialize() => DisconnectButton();
 
-    public void OnAfterDeserialize() => CallDeferred(MethodName.RestoreButton);
+    public void OnAfterDeserialize() => CallDeferred(MethodName.RestoreContent);
 
-    public override Vector2 _GetMinimumSize() =>
-        _button?.GetCombinedMinimumSize() ?? new Vector2(0, RowHeight);
+    public override Vector2 _GetMinimumSize()
+    {
+        var content = _content?.GetCombinedMinimumSize() ?? Vector2.Zero;
+        return new Vector2(content.X, Mathf.Max(RowHeight, content.Y));
+    }
 
     public override void _Notification(int what)
     {
         base._Notification(what);
-        if (what == NotificationSortChildren && _button is not null)
+        if (what == NotificationSortChildren && _button is not null && _content is not null)
         {
-            FitChildInRect(_button, new Rect2(Vector2.Zero, Size));
+            var rect = new Rect2(Vector2.Zero, Size);
+            FitChildInRect(_button, rect);
+            FitChildInRect(_content, rect);
+        }
+        else if (what == NotificationThemeChanged)
+        {
+            RefreshIconColors();
         }
     }
 
     protected override void RefreshItem()
     {
-        if (_button is null)
+        if (_button is null || _content is null || _icon is null || _label is null || _note is null || _check is null)
         {
             return;
         }
 
-        _button.CustomMinimumSize = new Vector2(0, RowHeight);
-        _button.Text = LabelText;
         _button.Disabled = Disabled;
-        _button.Alignment = HorizontalAlignment.Left;
-        _button.ThemeTypeVariation = UiThemeExpander.MenuItemButtonVariation(
-            compact: SizeVariant == MenuItemSize.Compact,
-            danger: Kind == MenuItemKind.Danger);
-        ApplyIcon();
-        RefreshNote();
-
-        // Transparent and margin-only: hover and selection are drawn by this item so their
-        // colors follow the inherited Theme without re-applying overrides.
-        var style = CreateStyle();
-        foreach (var state in new[] { "normal", "hover", "pressed", "focus", "disabled" })
+        foreach (var side in new[] { "margin_left", "margin_right" })
         {
-            _button.AddThemeStyleboxOverride(state, style);
+            _content.AddThemeConstantOverride(side, (int)HorizontalPadding);
         }
+
+        var iconPixels = UiIcons.Pixels(IconSize);
+        _icon.Visible = IconId != UiIconId.None;
+        _icon.Texture = _icon.Visible ? UiIcons.Load(IconId, IconSize) : null;
+        _icon.CustomMinimumSize = new Vector2(iconPixels, iconPixels);
+
+        _label.Text = LabelText;
+        _label.ThemeTypeVariation = UiTokens.Variation(
+            SizeVariant == MenuItemSize.Compact ? UiTokens.Typography.SmallStrong : UiTokens.Typography.BodyStrong,
+            Disabled ? UiTokens.Color.Muted : Kind == MenuItemKind.Danger ? UiTokens.Color.Danger : UiTokens.Color.Ink);
+
+        _note.Text = NoteText;
+        _note.Visible = !string.IsNullOrWhiteSpace(NoteText);
+        _note.ThemeTypeVariation = UiTokens.Variation(UiTokens.Typography.Note, UiTokens.Color.Muted);
+
+        var checkPixels = UiIcons.Pixels(UiIconSize.Small);
+        _check.Visible = ShowSelectedIndicator && Selected;
+        _check.CustomMinimumSize = new Vector2(checkPixels, checkPixels);
+
+        RefreshIconColors();
         QueueRedraw();
         RefreshLayout();
     }
 
-    private void RestoreButton()
+    public override void _Draw()
+    {
+        // Pressed is the feedback on touch; hover is for a desktop pointer.
+        if (!Selected && !Disabled && _button?.GetDrawMode() is BaseButton.DrawMode.Pressed or BaseButton.DrawMode.Hover or BaseButton.DrawMode.HoverPressed)
+        {
+            DrawRect(new Rect2(Vector2.Zero, Size), UiThemeLookup.Color(this, UiTokens.Color.Accent).WithAlpha(UiThemeLookup.Alpha(this, UiTokens.Alpha.Soft)));
+        }
+
+        base._Draw();
+    }
+
+    private UiIconSize IconSize =>
+        SizeVariant == MenuItemSize.Compact ? UiIconSize.Standard : UiIconSize.Large;
+
+    private void RefreshIconColors()
+    {
+        if (_icon is null || _check is null)
+        {
+            return;
+        }
+
+        var iconToken = Disabled ? UiTokens.Color.Muted : Kind == MenuItemKind.Danger ? UiTokens.Color.Danger : UiTokens.Color.Accent;
+        _icon.SelfModulate = IconTint ?? UiThemeLookup.Color(this, iconToken);
+        _check.SelfModulate = UiThemeLookup.Color(this, Disabled ? UiTokens.Color.Muted : UiTokens.Color.Accent);
+    }
+
+    private void RestoreContent()
     {
         if (IsInsideTree())
         {
-            InitializeButton();
+            Build();
         }
     }
 
-    private void InitializeButton()
+    private void Build()
     {
         DisconnectButton();
-        _button = GetChildren(includeInternal: true).OfType<Button>().FirstOrDefault();
-        if (_button is null)
+        var own = GetChildren();
+        foreach (var child in GetChildren(includeInternal: true).Where(child => !own.Contains(child)))
         {
-            _button = new Button { Name = "Button" };
-            AddChild(_button, false, InternalMode.Front);
+            RemoveChild(child);
+            child.QueueFree();
         }
 
-        _button.MouseFilter = MouseFilterEnum.Pass;
-        if (!_button.IsConnected(BaseButton.SignalName.Pressed, PressedCallback))
+        _button = new Button
         {
-            _button.Connect(BaseButton.SignalName.Pressed, PressedCallback);
+            Name = "Button",
+            MouseFilter = MouseFilterEnum.Pass,
+        };
+        var empty = new StyleBoxEmpty();
+        foreach (var state in new[] { "normal", "hover", "pressed", "focus", "disabled" })
+        {
+            _button.AddThemeStyleboxOverride(state, empty);
         }
-        foreach (var signal in new[] { Control.SignalName.MouseEntered, Control.SignalName.MouseExited })
+        AddChild(_button, false, InternalMode.Front);
+
+        _icon = new TextureRect
         {
-            if (!_button.IsConnected(signal, RedrawCallback))
-            {
-                _button.Connect(signal, RedrawCallback);
-            }
+            Name = "Icon",
+            ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
+            StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
+            SizeFlagsVertical = SizeFlags.ShrinkCenter,
+            MouseFilter = MouseFilterEnum.Ignore,
+        };
+        _label = new Label { Name = "Label" };
+        _note = new Label { Name = "Note" };
+        var text = new VBoxContainer
+        {
+            Name = "Text",
+            SizeFlagsHorizontal = SizeFlags.ExpandFill,
+            SizeFlagsVertical = SizeFlags.ShrinkCenter,
+            MouseFilter = MouseFilterEnum.Ignore,
+        };
+        text.AddThemeConstantOverride("separation", 0);
+        text.AddChild(_label);
+        text.AddChild(_note);
+        _check = new TextureRect
+        {
+            Name = "Check",
+            Texture = UiIcons.Load(UiIconId.Check, UiIconSize.Small),
+            ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
+            StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
+            SizeFlagsVertical = SizeFlags.ShrinkCenter,
+            MouseFilter = MouseFilterEnum.Ignore,
+        };
+        var row = new HBoxContainer { Name = "Row", MouseFilter = MouseFilterEnum.Ignore };
+        row.AddThemeConstantOverride("separation", (int)UiSize.Space.S2);
+        row.AddChild(_icon);
+        row.AddChild(text);
+        row.AddChild(_check);
+        _content = new MarginContainer { Name = "Content", MouseFilter = MouseFilterEnum.Ignore };
+        _content.AddChild(row);
+        AddChild(_content, false, InternalMode.Front);
+
+        _button.Connect(BaseButton.SignalName.Pressed, PressedCallback);
+        foreach (var signal in _redrawSignals)
+        {
+            _button.Connect(signal, RedrawCallback);
         }
         RefreshItem();
     }
 
     private void DisconnectButton()
     {
-        if (_button is null)
+        if (_button is null || !IsInstanceValid(_button))
         {
             return;
         }
@@ -224,7 +293,7 @@ public partial class UiMenuActionItem : UiMenuItem, ISerializationListener
         {
             _button.Disconnect(BaseButton.SignalName.Pressed, PressedCallback);
         }
-        foreach (var signal in new[] { Control.SignalName.MouseEntered, Control.SignalName.MouseExited })
+        foreach (var signal in _redrawSignals)
         {
             if (_button.IsConnected(signal, RedrawCallback))
             {
@@ -234,110 +303,4 @@ public partial class UiMenuActionItem : UiMenuItem, ISerializationListener
     }
 
     private void Activate() => EmitSignal(SignalName.Activated);
-
-    private void ApplyIcon()
-    {
-        if (_button is null)
-        {
-            return;
-        }
-
-        if (IconId == UiIconId.None)
-        {
-            _button.Icon = null;
-            return;
-        }
-
-        var size = SizeVariant == MenuItemSize.Compact ? UiIconSize.Standard : UiIconSize.Large;
-        if (IconTint is { } tint)
-        {
-            UiIcons.Apply(_button, IconId, size, tint);
-        }
-        else
-        {
-            UiIcons.Apply(_button, IconId, size);
-        }
-    }
-
-    public override void _Draw()
-    {
-        if (!Selected && !Disabled && _button?.IsHovered() == true)
-        {
-            DrawRect(new Rect2(Vector2.Zero, Size), UiThemeLookup.Color(this, UiTokens.Color.Accent).WithAlpha(UiThemeLookup.Alpha(this, UiTokens.Alpha.Soft)));
-        }
-
-        base._Draw();
-        if (!ShowSelectedIndicator || !Selected)
-        {
-            return;
-        }
-
-        var pixels = UiIcons.Pixels(UiIconSize.Small);
-        var rect = new Rect2(
-            Size.X - HorizontalPadding - pixels,
-            (Size.Y - pixels) * 0.5f,
-            pixels,
-            pixels);
-        var color = UiThemeLookup.Color(this, Disabled ? UiTokens.Color.Muted : UiTokens.Color.Accent);
-        DrawTextureRect(UiIcons.Load(UiIconId.Check, UiIconSize.Small), rect, false, color);
-    }
-
-    private void RefreshNote()
-    {
-        if (_button is null)
-        {
-            return;
-        }
-
-        if (string.IsNullOrWhiteSpace(NoteText))
-        {
-            if (_noteLabel is not null)
-            {
-                _noteLabel.Visible = false;
-            }
-            return;
-        }
-
-        _noteLabel ??= _button.GetNodeOrNull<Label>("Note");
-        if (_noteLabel is null)
-        {
-            _noteLabel = new Label
-            {
-                Name = "Note",
-                HorizontalAlignment = HorizontalAlignment.Right,
-                MouseFilter = MouseFilterEnum.Ignore,
-            };
-            _button.AddChild(_noteLabel, false, InternalMode.Front);
-        }
-
-        _noteLabel.Text = NoteText;
-        _noteLabel.CustomMinimumSize = new Vector2(_noteMinimumWidth, 0);
-        _noteLabel.ThemeTypeVariation = UiTokens.Variation(UiTokens.Typography.Note, UiTokens.Color.Muted);
-        _noteLabel.Size = _noteLabel.GetCombinedMinimumSize();
-        _noteLabel.SetAnchorsPreset(LayoutPreset.CenterRight);
-
-        var indicatorInset = SelectedIndicatorWidth;
-        _noteLabel.OffsetLeft = -HorizontalPadding - indicatorInset - _noteLabel.Size.X;
-        _noteLabel.OffsetRight = -HorizontalPadding - indicatorInset;
-        _noteLabel.OffsetTop = _noteLabel.Size.Y * -0.5f;
-        _noteLabel.OffsetBottom = _noteLabel.Size.Y * 0.5f;
-        _noteLabel.Visible = true;
-    }
-
-    private float NoteWidth =>
-        string.IsNullOrWhiteSpace(NoteText) || _noteLabel is null
-            ? 0
-            : _noteLabel.Size.X + UiSize.Space.S2;
-
-    private float SelectedIndicatorWidth =>
-        ShowSelectedIndicator && Selected
-            ? UiSize.Space.S2 + UiIcons.Pixels(UiIconSize.Small)
-            : 0;
-
-    private StyleBoxEmpty CreateStyle() =>
-        new()
-        {
-            ContentMarginLeft = HorizontalPadding,
-            ContentMarginRight = HorizontalPadding + NoteWidth + SelectedIndicatorWidth,
-        };
 }

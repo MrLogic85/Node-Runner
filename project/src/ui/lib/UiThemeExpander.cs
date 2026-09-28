@@ -20,11 +20,6 @@ public static class UiThemeExpander
     public readonly record struct ColorVariation(string Name, string BaseVariation, UiTokens.Color Color);
     /// <summary>A derived color item: <paramref name="Token"/> from the palette, scaled in alpha.</summary>
     public readonly record struct DerivedColor(string Type, string Name, UiTokens.Color Token, float AlphaScale = 1f);
-    public readonly record struct ButtonVariation(
-        string Name,
-        string BaseVariation,
-        UiTokens.Color Text,
-        UiTokens.Color Icon);
 
     /// <summary>Colors each theme file must author; Transparent is the same everywhere.</summary>
     public static IReadOnlyList<UiTokens.Color> AuthoredColors { get; } =
@@ -44,14 +39,6 @@ public static class UiThemeExpander
                 color)))
             .ToArray();
 
-    public static IReadOnlyList<ButtonVariation> MenuItemButtonVariations { get; } =
-    [
-        new(MenuItemButtonVariation(compact: false, danger: false), UiTokens.Variation(UiTokens.Typography.BodyStrong), UiTokens.Color.Ink, UiTokens.Color.Accent),
-        new(MenuItemButtonVariation(compact: false, danger: true), UiTokens.Variation(UiTokens.Typography.BodyStrong), UiTokens.Color.Danger, UiTokens.Color.Danger),
-        new(MenuItemButtonVariation(compact: true, danger: false), UiTokens.Variation(UiTokens.Typography.SmallStrong), UiTokens.Color.Ink, UiTokens.Color.Accent),
-        new(MenuItemButtonVariation(compact: true, danger: true), UiTokens.Variation(UiTokens.Typography.SmallStrong), UiTokens.Color.Danger, UiTokens.Color.Danger),
-    ];
-
     /// <summary>
     /// UiButton's variation. Its native text is storage only (an internal UiLabel renders the
     /// caption), so every font color is transparent. Palette themes declare the base Button
@@ -62,9 +49,6 @@ public static class UiThemeExpander
 
     private static readonly string[] _buttonFontColors =
         ["font_color", "font_focus_color", "font_hover_color", "font_pressed_color", "font_hover_pressed_color", "font_disabled_color", "font_outline_color"];
-
-    public static string MenuItemButtonVariation(bool compact, bool danger) =>
-        "UiMenuItemButton" + (compact ? "Compact" : string.Empty) + (danger ? "Danger" : string.Empty);
 
     /// <summary>Rewrites the color-derived items in <paramref name="theme"/> from its authored palette.</summary>
     public static void Expand(GodotTheme theme)
@@ -141,7 +125,6 @@ public static class UiThemeExpander
     /// <summary>Each variation this expander declares, with the type it chains onto.</summary>
     public static IReadOnlyDictionary<string, string> DerivedBaseTypes { get; } =
         TextColorVariations.Select(variation => KeyValuePair.Create(variation.Name, variation.BaseVariation))
-            .Concat(MenuItemButtonVariations.Select(variation => KeyValuePair.Create(variation.Name, variation.BaseVariation)))
             .Append(KeyValuePair.Create(ButtonVariationName, "Button"))
             .ToDictionary();
 
@@ -156,20 +139,6 @@ public static class UiThemeExpander
         foreach (var variation in TextColorVariations)
         {
             yield return new(variation.Name, "font_color", variation.Color);
-        }
-        foreach (var variation in MenuItemButtonVariations)
-        {
-            foreach (var state in new[] { "font_color", "font_focus_color", "font_pressed_color", "font_hover_pressed_color" })
-            {
-                yield return new(variation.Name, state, variation.Text);
-            }
-            yield return new(variation.Name, "font_hover_color", UiTokens.Color.Ink);
-            yield return new(variation.Name, "font_disabled_color", UiTokens.Color.Muted);
-            foreach (var state in new[] { "icon_normal_color", "icon_focus_color", "icon_hover_color", "icon_pressed_color", "icon_hover_pressed_color" })
-            {
-                yield return new(variation.Name, state, variation.Icon);
-            }
-            yield return new(variation.Name, "icon_disabled_color", UiTokens.Color.Muted);
         }
         yield return new("Label", "font_color", UiTokens.Color.Ink);
         yield return new("Button", "font_color", UiTokens.Color.Ink);

@@ -222,18 +222,6 @@ public sealed class UiThemeExpanderTests
     }
 
     [Fact]
-    public void MenuItemButtonVariations_CoverEverySizeAndKind()
-    {
-        UiThemeExpander.MenuItemButtonVariations.ShouldBe(new UiThemeExpander.ButtonVariation[]
-        {
-            new("UiMenuItemButton", "UiBodyStrong", UiTokens.Color.Ink, UiTokens.Color.Accent),
-            new("UiMenuItemButtonDanger", "UiBodyStrong", UiTokens.Color.Danger, UiTokens.Color.Danger),
-            new("UiMenuItemButtonCompact", "UiSmallStrong", UiTokens.Color.Ink, UiTokens.Color.Accent),
-            new("UiMenuItemButtonCompactDanger", "UiSmallStrong", UiTokens.Color.Danger, UiTokens.Color.Danger),
-        });
-    }
-
-    [Fact]
     public void Uppercase_IsATypographyPropertyNotAPaletteValue()
     {
         Enum.GetValues<UiTokens.Typography>()

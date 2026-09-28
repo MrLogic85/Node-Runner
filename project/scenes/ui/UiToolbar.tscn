@@ -1,0 +1,202 @@
+[gd_scene format=3 uid="uid://gydkh1xys4yo"]
+
+[ext_resource type="Script" uid="uid://r2ped3g3uiaa" path="res://src/ui/lib/UiButton.cs" id="1_j2b7i"]
+[ext_resource type="Script" uid="uid://fw1i2vfgkd7q" path="res://src/ui/lib/UiDivider.cs" id="1_ni27y"]
+[ext_resource type="Script" uid="uid://bg3xut403ix88" path="res://src/ui/lib/UiToolbar.cs" id="3_tbar"]
+[ext_resource type="Script" uid="uid://brbdaifjy8lyi" path="res://src/ui/lib/UiMenu.cs" id="4_menu"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hgo8x"]
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+bg_color = Color(1, 1, 1, 0)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(1, 1, 1, 0)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_lubmr"]
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+bg_color = Color(1, 1, 1, 0)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(1, 1, 1, 0)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_kpmap"]
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+bg_color = Color(1, 1, 1, 0)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(1, 1, 1, 0)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_7mt7h"]
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+bg_color = Color(1, 1, 1, 0)
+border_color = Color(1, 1, 1, 0)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_ui4rl"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_nf06j"]
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+bg_color = Color(1, 1, 1, 0)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(1, 1, 1, 0)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_qr8ht"]
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+bg_color = Color(1, 1, 1, 0)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(1, 1, 1, 0)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_8q7hh"]
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+bg_color = Color(1, 1, 1, 0)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(1, 1, 1, 0)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_nrod6"]
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+bg_color = Color(1, 1, 1, 0)
+border_color = Color(1, 1, 1, 0)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_mmc68"]
+
+[node name="UiToolbar" type="MarginContainer" unique_id=587462716]
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 48.0
+grow_horizontal = 2
+size_flags_horizontal = 3
+mouse_filter = 0
+script = ExtResource("3_tbar")
+metadata/_custom_type_script = "uid://bg3xut403ix88"
+
+[node name="HBoxContainer" type="HBoxContainer" parent="." unique_id=1560195324]
+layout_mode = 2
+
+[node name="Back" type="Button" parent="HBoxContainer" unique_id=545193165]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(48, 48)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+mouse_filter = 1
+theme_override_styles/normal = SubResource("StyleBoxFlat_hgo8x")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_lubmr")
+theme_override_styles/hover = SubResource("StyleBoxFlat_kpmap")
+theme_override_styles/disabled = SubResource("StyleBoxFlat_7mt7h")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_ui4rl")
+script = ExtResource("1_j2b7i")
+IconId = 0
+Kind = 3
+ContentLayout = 1
+metadata/_custom_type_script = "uid://r2ped3g3uiaa"
+
+[node name="ToolbarContent" type="HBoxContainer" parent="HBoxContainer" unique_id=1466231439]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Overflow" type="Button" parent="HBoxContainer" unique_id=1416740256]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(48, 48)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+mouse_filter = 1
+theme_override_styles/normal = SubResource("StyleBoxFlat_nf06j")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_qr8ht")
+theme_override_styles/hover = SubResource("StyleBoxFlat_8q7hh")
+theme_override_styles/disabled = SubResource("StyleBoxFlat_nrod6")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_mmc68")
+script = ExtResource("1_j2b7i")
+IconId = 19
+Kind = 3
+ContentLayout = 1
+metadata/_custom_type_script = "uid://r2ped3g3uiaa"
+
+[node name="UiDivider" type="Control" parent="." unique_id=929050449]
+layout_mode = 2
+size_flags_vertical = 8
+mouse_filter = 2
+script = ExtResource("1_ni27y")
+metadata/_custom_type_script = "uid://fw1i2vfgkd7q"
+
+[node name="ToolbarMenu" type="Container" parent="." unique_id=1208477361]
+unique_name_in_owner = true
+visible = false
+top_level = true
+clip_children = 2
+layout_mode = 2
+size_flags_horizontal = 0
+mouse_filter = 0
+script = ExtResource("4_menu")
+metadata/_custom_type_script = "uid://brbdaifjy8lyi"
