@@ -29,6 +29,7 @@
 [ext_resource type="Script" uid="uid://b1nqvpdy0fk4h" path="res://src/ui/lib/UiCallout.cs" id="26_callout"]
 [ext_resource type="Script" uid="uid://c6loxvqr7tfvr" path="res://src/ui/lib/UiInfoRow.cs" id="27_info_row"]
 [ext_resource type="PackedScene" uid="uid://gydkh1xys4yo" path="res://scenes/ui/UiToolbar.tscn" id="28_toolbar"]
+[ext_resource type="Script" uid="uid://bjt8et7kcs50x" path="res://src/ui/lib/UiCardActions.cs" id="29_card_actions"]
 
 [sub_resource type="Resource" id="Resource_theme_neon"]
 script = ExtResource("5_theme_segment")
@@ -1819,6 +1820,125 @@ text = "no padding"
 autowrap_mode = 3
 script = ExtResource("2_cpfof")
 TextStyle = 9
+
+[node name="CardActions" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content" unique_id=1734800101]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Heading" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/CardActions" unique_id=1734800102]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Title" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/CardActions/Heading" unique_id=1734800103]
+layout_mode = 2
+size_flags_vertical = 8
+text = "Card actions"
+script = ExtResource("2_cpfof")
+TextStyle = 12
+
+[node name="Description" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/CardActions/Heading" unique_id=1734800104]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 8
+text = "UiButtons along the bottom of a flush card; each whole cell is the touch target, Tertiary is destructive"
+autowrap_mode = 3
+script = ExtResource("2_cpfof")
+TextStyle = 9
+TextColor = 8
+
+[node name="Examples" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/CardActions" unique_id=1734800105]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Saved" type="PanelContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/CardActions/Examples" unique_id=1734800110]
+custom_minimum_size = Vector2(192, 0)
+layout_mode = 2
+mouse_filter = 1
+script = ExtResource("13_card")
+SizeVariant = 4
+ClipContent = true
+
+[node name="Stack" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/CardActions/Examples/Saved" unique_id=1734800111]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="Body" type="MarginContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/CardActions/Examples/Saved/Stack" unique_id=1734800112]
+layout_mode = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 8
+
+[node name="Title" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/CardActions/Examples/Saved/Stack/Body" unique_id=1734800113]
+layout_mode = 2
+text = "Saved"
+script = ExtResource("2_cpfof")
+TextStyle = 1
+
+[node name="Actions" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/CardActions/Examples/Saved/Stack" unique_id=1734800114]
+layout_mode = 2
+script = ExtResource("29_card_actions")
+
+[node name="Copy" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/CardActions/Examples/Saved/Stack/Actions" unique_id=1734800115]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+mouse_filter = 1
+text = "Copy"
+script = ExtResource("3_h0qut")
+IconId = 8
+ContentLayout = 1
+
+[node name="Delete" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/CardActions/Examples/Saved/Stack/Actions" unique_id=1734800116]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+mouse_filter = 1
+text = "Delete"
+script = ExtResource("3_h0qut")
+IconId = 34
+Kind = 2
+ContentLayout = 1
+HoldToActivate = true
+
+[node name="Example" type="PanelContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/CardActions/Examples" unique_id=1734800130]
+custom_minimum_size = Vector2(192, 0)
+layout_mode = 2
+mouse_filter = 1
+script = ExtResource("13_card")
+SizeVariant = 4
+ClipContent = true
+
+[node name="Stack" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/CardActions/Examples/Example" unique_id=1734800131]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="Body" type="MarginContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/CardActions/Examples/Example/Stack" unique_id=1734800132]
+layout_mode = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 8
+
+[node name="Title" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/CardActions/Examples/Example/Stack/Body" unique_id=1734800133]
+layout_mode = 2
+text = "Example"
+script = ExtResource("2_cpfof")
+TextStyle = 1
+
+[node name="Actions" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/CardActions/Examples/Example/Stack" unique_id=1734800134]
+layout_mode = 2
+script = ExtResource("29_card_actions")
+
+[node name="Copy" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/CardActions/Examples/Example/Stack/Actions" unique_id=1734800135]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+mouse_filter = 1
+text = "Copy"
+script = ExtResource("3_h0qut")
+IconId = 8
+ContentLayout = 1
 
 [node name="Menu" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content" unique_id=1147911407]
 layout_mode = 2

@@ -1,0 +1,169 @@
+[gd_scene format=3 uid="uid://1x2j47badjkd"]
+
+[ext_resource type="Script" uid="uid://dyk2s8cyrjtyk" path="res://src/ui/widgets/CreationCard.cs" id="1_card"]
+[ext_resource type="Script" uid="uid://byhbh5da7rpk8" path="res://src/ui/lib/UiCard.cs" id="2_uicard"]
+[ext_resource type="Script" uid="uid://8edfdt3hsnj0" path="res://src/ui/widgets/CreatureThumbnail.cs" id="3_thumb"]
+[ext_resource type="Script" uid="uid://dk67qmt3brp4e" path="res://src/ui/lib/UiLabel.cs" id="4_label"]
+[ext_resource type="Script" uid="uid://fw1i2vfgkd7q" path="res://src/ui/lib/UiDivider.cs" id="5_divider"]
+[ext_resource type="Script" uid="uid://b32bnhbgasedd" path="res://src/ui/lib/UiChip.cs" id="6_chip"]
+[ext_resource type="Script" uid="uid://bau3bwe6tkv48" path="res://src/ui/lib/UiSlider.cs" id="7_slider"]
+[ext_resource type="Script" uid="uid://r2ped3g3uiaa" path="res://src/ui/lib/UiButton.cs" id="8_button"]
+[ext_resource type="Script" uid="uid://bjt8et7kcs50x" path="res://src/ui/lib/UiCardActions.cs" id="9_card_actions"]
+
+[node name="CreationCard" type="MarginContainer" unique_id=1817691574]
+custom_minimum_size = Vector2(192, 232)
+size_flags_horizontal = 0
+script = ExtResource("1_card")
+
+[node name="Frame" type="PanelContainer" parent="." unique_id=854428088]
+layout_mode = 2
+mouse_filter = 1
+script = ExtResource("2_uicard")
+SizeVariant = 4
+ClipContent = true
+
+[node name="Stack" type="VBoxContainer" parent="Frame" unique_id=267670883]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="ThumbnailSlot" type="Control" parent="Frame/Stack" unique_id=1387865494]
+custom_minimum_size = Vector2(0, 96)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Thumbnail" type="Control" parent="Frame/Stack/ThumbnailSlot" unique_id=1884047914]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("3_thumb")
+
+[node name="ThumbnailFallback" type="Label" parent="Frame/Stack/ThumbnailSlot" unique_id=1755324262]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+horizontal_alignment = 1
+vertical_alignment = 1
+script = ExtResource("4_label")
+TextStyle = 9
+TextColor = 8
+
+[node name="ThumbnailRule" type="Control" parent="Frame/Stack" unique_id=2013724137]
+layout_mode = 2
+mouse_filter = 2
+script = ExtResource("5_divider")
+Color = 4
+
+[node name="Body" type="MarginContainer" parent="Frame/Stack" unique_id=232057196]
+layout_mode = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 8
+
+[node name="BodyStack" type="VBoxContainer" parent="Frame/Stack/Body" unique_id=1348300623]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="TitleRow" type="HBoxContainer" parent="Frame/Stack/Body/BodyStack" unique_id=287071501]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Name" type="Label" parent="Frame/Stack/Body/BodyStack/TitleRow" unique_id=1987351606]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Walker"
+text_overrun_behavior = 3
+script = ExtResource("4_label")
+TextStyle = 1
+
+[node name="ExampleChip" type="PanelContainer" parent="Frame/Stack/Body/BodyStack/TitleRow" unique_id=868243380]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 1
+script = ExtResource("6_chip")
+Text = "Example"
+
+[node name="Summary" type="Label" parent="Frame/Stack/Body/BodyStack" unique_id=128398721]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Ready to train"
+autowrap_mode = 3
+script = ExtResource("4_label")
+TextStyle = 9
+TextColor = 8
+
+[node name="AchievementProgress" type="Control" parent="Frame/Stack/Body/BodyStack" unique_id=74681728]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+mouse_filter = 1
+script = ExtResource("7_slider")
+LabelText = "Achievement progress"
+ReadoutText = ""
+ValueKind = 2
+
+[node name="UnlockCredit" type="Label" parent="Frame/Stack/Body/BodyStack" unique_id=852071140]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+autowrap_mode = 3
+script = ExtResource("4_label")
+TextStyle = 9
+TextColor = 9
+
+[node name="Spacer" type="Control" parent="Frame/Stack" unique_id=1517837891]
+layout_mode = 2
+size_flags_vertical = 3
+mouse_filter = 2
+
+[node name="Actions" type="Container" parent="Frame/Stack" unique_id=77250990]
+unique_name_in_owner = true
+layout_mode = 2
+script = ExtResource("9_card_actions")
+
+[node name="Copy" type="Button" parent="Frame/Stack/Actions" unique_id=1472582409]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+mouse_filter = 1
+text = "Copy"
+script = ExtResource("8_button")
+IconId = 8
+ContentLayout = 1
+
+[node name="Edit" type="Button" parent="Frame/Stack/Actions" unique_id=162554681]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+mouse_filter = 1
+text = "Edit"
+script = ExtResource("8_button")
+IconId = 10
+ContentLayout = 1
+
+[node name="Delete" type="Button" parent="Frame/Stack/Actions" unique_id=1080360446]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+mouse_filter = 1
+text = "Delete"
+script = ExtResource("8_button")
+IconId = 34
+Kind = 2
+ContentLayout = 1

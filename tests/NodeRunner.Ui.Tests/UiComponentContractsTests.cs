@@ -92,6 +92,7 @@ public sealed class UiComponentContractsTests
                 "ProgressRing",
                 "Number",
                 "StageCard",
+                "CardActions",
             ]);
     }
 
@@ -508,6 +509,7 @@ public sealed class UiComponentContractsTests
             UiComponentContracts.CanonicalComponent.ProgressRing => "c_ring",
             UiComponentContracts.CanonicalComponent.Number => "c_num",
             UiComponentContracts.CanonicalComponent.StageCard => "c_stage",
+            UiComponentContracts.CanonicalComponent.CardActions => "c_card_actions",
             _ => throw new ArgumentOutOfRangeException(nameof(component), component, null),
         };
 }

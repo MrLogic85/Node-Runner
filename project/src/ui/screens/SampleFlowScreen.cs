@@ -300,7 +300,7 @@ public partial class SampleFlowScreen : Control
         }
 
         ClearContent();
-        var creations = new CreationsScreen();
+        var creations = GD.Load<PackedScene>("res://scenes/screens/CreationsScreen.tscn").Instantiate<CreationsScreen>();
         creations.OpenRequested += (_, _) => SetMode(0);
         creations.EditRequested += (_, name) => ShowEdit(name);
         creations.DuplicateRequested += (_, name) => ShowSheet("Duplicate " + name + "?", CreateDuplicateBody(name));

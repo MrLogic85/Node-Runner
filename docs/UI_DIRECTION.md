@@ -44,9 +44,11 @@ subscribe to their view-model and forward input. Content that varies at
 runtime (one card per creation) is instantiated from library components or
 scenes. Widgets in `project/src/ui/widgets` are components that draw
 app-specific content: they may use the app's vocabulary and view-models, and
-follow the library's styling and size rules. Most product screens predate this
-split and still build themselves in code; they move to it as they are
-rewritten ([#310](https://github.com/MrLogic85/Node-Runner/issues/310)).
+follow the library's styling and size rules; their scenes live in
+`project/scenes/widgets`. Most product screens predate this split and still
+build themselves in code; they move to it as they are rewritten
+([#310](https://github.com/MrLogic85/Node-Runner/issues/310)), starting with
+Creations ([#314](https://github.com/MrLogic85/Node-Runner/issues/314)).
 `docs/TEST_STRATEGY.md` lists the guard for each boundary.
 
 ## Product feel
@@ -121,6 +123,15 @@ Some `c_*` entries are not components of their own in Godot
   says.
 - **`c_power`** and read-only facts (for example "Weighs") are `UiValueRow`. The
   reference has no separate read-only value component.
+- **`c_card_actions`** is `UiCardActions`, a container of plain `UiButton`s
+  rather than a control of its own, so each cell keeps the button's
+  behaviour (hold to activate, disabled, badge). The container implements
+  `IUiButtonDesigner`: a `UiButton` whose *direct* parent is a designer takes
+  its colours, content layout and corners from it (`UiButtonDesign`),
+  and the container sizes the cells itself. The outer cells round their bottom
+  corners to the card's, since a card inside a page cannot clip. Other button groups that need a
+  look of their own use the same API. The pressed look of a cell waits for
+  [#286](https://github.com/MrLogic85/Node-Runner/issues/286).
 - **`c_panel_head`** is dropped by human decision: it is not part of the future
   design exports, so there is no panel header component. A side panel's
   header, including the inspector's (`c_inspector`), is `UiSidePanel`'s own
@@ -160,7 +171,7 @@ GLES3`); see the Compatibility/OpenGL renderer note in
 site (`UiNumber`, `UiDashedBorder`, `UiProgressRing`, `UiSlider`,
 `UiSelectionHandle`, `UiButton`, `UiBoundsDebugOverlay`,
 `BuildScreen`, `SimulateScreen`, `BrainFocusNetworkView`,
-`ConstructionCanvas`, `CreationCard`, `BeamVisual`). Any new `_Draw()` code
+`ConstructionCanvas`, `CreatureThumbnail`, `BeamVisual`). Any new `_Draw()` code
 must follow the same rule; a stray edge without antialiasing reads as a
 sharp 1px line at any stretch factor, while `antialiased: true` reads as a
 blurry, stretch-factor-wide halo.
@@ -668,7 +679,12 @@ renders through an extra buffer; `UiFrame`'s card turns it on. Godot cannot nest
 `clip_children` (the inner node draws nothing), so `UiCard` and `UiMenu` clip
 only when no ancestor already does (`UiClip`, re-checked below a card whose
 clipping changes); a menu opened as an overlay is top-level and clips again. Inside a clipping card, a static menu's row wash is
-therefore not rounded at the menu's own corners.
+therefore not rounded at the menu's own corners. For the same reason a card
+inside a page does not clip, so content drawn flush against its edge rounds
+the corners it shares with the card itself (`UiCorners`): the creature
+thumbnail at the top of a Creations card and the outer cells of
+`UiCardActions` do. `ClipContent` on such a card still draws its border over
+that content.
 
 `UiMenu` is a generic overlay container with a token-backed border/background.
 It vertically lays out arbitrary direct child controls. A child gets first

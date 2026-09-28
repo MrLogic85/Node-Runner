@@ -17,6 +17,8 @@ public sealed partial class UiButton : Button, ISerializationListener
     private const float _disabledOpacity = 0.5f;
     private const int _minimumOutlineSamples = 12;
     private UiButtonStyle _style = UiButtonStyle.Secondary;
+    private IUiButtonDesigner? _designer;
+    private UiButtonDesign? _drawnDesign;
     private UiButtonKind _kind = UiButtonKind.Secondary;
     private UiIconId _iconId = UiIconId.None;
     private bool _selected;
@@ -237,7 +239,17 @@ public sealed partial class UiButton : Button, ISerializationListener
             return;
         }
 
-        if (what == NotificationThemeChanged && IsNodeReady())
+        if (what == NotificationParented)
+        {
+            // Only the direct parent may restyle the button; it is re-read on every reparent.
+            _designer = GetParent() as IUiButtonDesigner;
+            RefreshStyle();
+        }
+        else if (what == NotificationUnparented)
+        {
+            _designer = null;
+        }
+        else if (what == NotificationThemeChanged && IsNodeReady())
         {
             RefreshStyle();
         }
@@ -327,8 +339,15 @@ public sealed partial class UiButton : Button, ISerializationListener
 
     private bool HasLabel => !string.IsNullOrWhiteSpace(Text);
 
+    private UiButtonDesign Design =>
+        _designer?.DesignFor(this) ?? new UiButtonDesign(_style, _contentLayout, UiCorners.Uniform(UiSize.Radius.Medium));
+
+    private UiButtonStyle DrawnStyle => Design.Style;
+
+    private UiButtonContentLayout DrawnLayout => Design.ContentLayout;
+
     private UiTokens.Typography CaptionStyle =>
-        ContentLayout == UiButtonContentLayout.Stacked
+        DrawnLayout == UiButtonContentLayout.Stacked
             ? UiTokens.Typography.Overline
             : UiTokens.Typography.Label;
 
@@ -342,6 +361,13 @@ public sealed partial class UiButton : Button, ISerializationListener
             _badgeText = value;
             RefreshStyle();
         }
+    }
+
+    /// <summary>Restyles the button if its designer now gives it a different design.</summary>
+    internal void RefreshDesign()
+    {
+        if (_drawnDesign != Design)
+            RefreshStyle();
     }
 
     private void RefreshStyle()
@@ -362,8 +388,9 @@ public sealed partial class UiButton : Button, ISerializationListener
 
     private void RefreshStyleCore()
     {
+        _drawnDesign = Design;
         SizeFlagsVertical = SizeFlags.ShrinkCenter;
-        bool squareContent = ContentLayout == UiButtonContentLayout.Stacked || !HasLabel;
+        bool squareContent = DrawnLayout == UiButtonContentLayout.Stacked || !HasLabel;
         if (squareContent && !_squareContent)
         {
             _rowSizeFlagsHorizontal = SizeFlagsHorizontal;
@@ -387,7 +414,7 @@ public sealed partial class UiButton : Button, ISerializationListener
 
         EnsureProgressLayers();
         EnsureContent();
-        RefreshContent(_style.Resolve(this).Content);
+        RefreshContent(DrawnStyle.Resolve(this).Content);
 
         AddThemeStyleboxOverride("normal", CreateStyle());
         AddThemeStyleboxOverride("hover", CreateStyle());
@@ -453,19 +480,20 @@ public sealed partial class UiButton : Button, ISerializationListener
             return;
         EndHold();
 
-        UiResolvedButtonStyle style = _style.Resolve(this);
+        UiResolvedButtonStyle style = DrawnStyle.Resolve(this);
         Color color = Selected ? style.Selected : style.Border.ScaleAlpha(_disabledOpacity);
         float stroke = UiSize.Stroke.Hair;
         float halfStroke = stroke * 0.5f;
-        float radius = UiSize.Radius.Medium;
+        float radius = Design.Corners.Smallest;
         UiDashedBorder.DrawRoundedRect(this, new Rect2(Vector2.One * halfStroke, Size - Vector2.One * stroke), radius, color, stroke);
     }
 
     private StyleBoxFlat CreateStyle(float opacity = 1, bool transparentBorder = false)
     {
-        UiResolvedButtonStyle visual = _style.Resolve(this);
+        UiButtonDesign design = Design;
+        UiResolvedButtonStyle visual = design.Style.Resolve(this);
         Color background = visual.Background;
-        Color styleBorder = _style.BorderFor(this, Selected);
+        Color styleBorder = design.Style.BorderFor(this, Selected);
         if (Progress >= 0)
             background = Colors.Transparent;
 
@@ -476,7 +504,8 @@ public sealed partial class UiButton : Button, ISerializationListener
             borderWidth: transparentBorder ? 0 : Selected ? UiSize.Stroke.ButtonSelected : null,
             horizontalPadding: ContentPadding,
             verticalPadding: 0);
-        Color? glowColor = _style.GlowBaseFor(this, Selected, opacity == 1);
+        design.Corners.ApplyTo(style);
+        Color? glowColor = design.Style.GlowBaseFor(this, Selected, opacity == 1);
         if (glowColor is { } color)
             UiGlow.ApplyToControl(style, color, UiThemeLookup.EffectsEnabled(this));
 
@@ -488,14 +517,16 @@ public sealed partial class UiButton : Button, ISerializationListener
         StyleBoxFlat style = UiThemeLookup.CreateStyleBox(background.ScaleAlpha(opacity),
             Colors.Transparent,
             borderWidth: 0);
+        Design.Corners.ApplyTo(style);
         return style;
     }
 
     private StyleBoxFlat CreateProgressStyle(float opacity)
     {
-        StyleBoxFlat style = UiThemeLookup.CreateStyleBox(_style.Resolve(this).Selected.ScaleAlpha(UiComponentContracts.ButtonProgressOpacity * opacity),
+        StyleBoxFlat style = UiThemeLookup.CreateStyleBox(DrawnStyle.Resolve(this).Selected.ScaleAlpha(UiComponentContracts.ButtonProgressOpacity * opacity),
             Colors.Transparent,
             borderWidth: 0);
+        Design.Corners.ApplyTo(style);
 
         // The fill always spans the whole visible frame and keeps the frame's
         // corner radii; the revealed fraction is produced by clipping. Sizing
@@ -523,7 +554,7 @@ public sealed partial class UiButton : Button, ISerializationListener
         if (!visible)
             return;
 
-        Color background = _style.Resolve(this).Background;
+        Color background = DrawnStyle.Resolve(this).Background;
         _progressBackground.AddThemeStyleboxOverride(
             "panel",
             CreateBackgroundStyle(background, 1));
@@ -568,7 +599,7 @@ public sealed partial class UiButton : Button, ISerializationListener
     }
 
     private float ContentPadding =>
-        ContentLayout != UiButtonContentLayout.Stacked && HasLabel ? UiSize.Space.S4 : 0;
+        DrawnLayout != UiButtonContentLayout.Stacked && HasLabel ? UiSize.Space.S4 : 0;
 
     private void EnsureContent()
     {
@@ -613,9 +644,9 @@ public sealed partial class UiButton : Button, ISerializationListener
 
     private void RefreshContent(Color content)
     {
-        bool stacked = ContentLayout == UiButtonContentLayout.Stacked;
+        bool stacked = DrawnLayout == UiButtonContentLayout.Stacked;
         bool hasIcon = IconId != UiIconId.None;
-        var iconSize = UiButtonMetrics.IconSize(ContentLayout);
+        var iconSize = UiButtonMetrics.IconSize(DrawnLayout);
         _content!.Vertical = stacked;
         _content.AddThemeConstantOverride(
             "separation",
@@ -627,7 +658,7 @@ public sealed partial class UiButton : Button, ISerializationListener
         _contentLabel!.Text = Text;
         _contentLabel.Visible = HasLabel;
         _contentLabel.TextStyle = CaptionStyle;
-        _contentLabel.TextColor = _style.ContentColor;
+        _contentLabel.TextColor = DrawnStyle.ContentColor;
         _contentLabel.TextOverrunBehavior = stacked
             ? TextServer.OverrunBehavior.TrimEllipsis
             : TextServer.OverrunBehavior.NoTrimming;
@@ -658,7 +689,7 @@ public sealed partial class UiButton : Button, ISerializationListener
         if (_content is null)
             return;
 
-        var minimum = UiButtonMetrics.Default.MinimumSize(ContentLayout)
+        var minimum = UiButtonMetrics.Default.MinimumSize(DrawnLayout)
             .Max(_content.GetCombinedMinimumSize() + new Vector2(ContentPadding * 2, 0));
         if (CustomMinimumSize != minimum)
             CustomMinimumSize = minimum;
@@ -733,7 +764,8 @@ public sealed partial class UiButton : Button, ISerializationListener
 
     private void DrawSelectedGlow()
     {
-        Color baseColor = UiGlow.FromBase(_style.Resolve(this).Selected, enabled: true);
+        UiButtonDesign design = Design;
+        Color baseColor = UiGlow.FromBase(design.Style.Resolve(this).Selected, enabled: true);
         for (int depth = 0; depth < UiGlow.Extent; depth++)
         {
             float strength = 1f - (depth / (float)UiGlow.Extent);
@@ -748,7 +780,7 @@ public sealed partial class UiButton : Button, ISerializationListener
 
             DrawRoundedRectOutline(
                 rect,
-                Mathf.Max(0, UiSize.Radius.Medium - depth),
+                Mathf.Max(0, design.Corners.Smallest - depth),
                 color);
         }
     }

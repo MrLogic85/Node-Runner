@@ -5,9 +5,9 @@ namespace NodeRunner.App.ViewModels;
 public sealed record CreationCardPresentation(
     Guid Id,
     string Name,
+    string DisplayName,
     CreatureDef Creature,
     string SummaryText,
-    string NoteText,
     string ThumbnailText,
     string SavedStateText,
     string UnlockCreditText,

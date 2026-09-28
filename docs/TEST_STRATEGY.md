@@ -132,8 +132,15 @@ rows, every button) share that control instead of copying it
 (`UiComponentContractsTests`). The mapping to the `c_*` entries in
 `reference design/` is maintained by hand and checked in design review; a
 test that reads the reference is tracked in
-[#315](https://github.com/MrLogic85/Node-Runner/issues/315). That screens use
-the library, in their scene and in their code, is guarded per screen by #310.
+[#315](https://github.com/MrLogic85/Node-Runner/issues/315). Screens rewritten
+under [#310](https://github.com/MrLogic85/Node-Runner/issues/310) are listed in
+`RewrittenUi` and held to stricter guards: their scenes are built from library
+components, widget scenes and plain layout containers, and every `%Name` their
+script binds exists in the scene with a matching type
+(`RewrittenSceneTests`); their screen scripts declare no numbers, their
+widget scripts name every number as the library does, and neither builds nor
+restyles controls (`UiSourceGuardTests`). A screen joins the lists when it is
+rewritten.
 
 **3. Behaviour is tested apart from layout.** Rules and state live in
 `NodeRunner.App` view-models (`NodeRunner.App.Tests`), and component
@@ -148,14 +155,6 @@ view-model action is verified on device until Godot-side tests exist.
 that instance `[editable]`. Such a scene still loads on desktop, so the bug
 only shows on device. `SceneEditableChildrenTests` requires the marker
 ([#333](https://github.com/MrLogic85/Node-Runner/issues/333)).
-
-Product screens join these guards as they are rewritten
-([#310](https://github.com/MrLogic85/Node-Runner/issues/310)). That issue adds
-a stricter size rule for screen C# (scene values are the scene's own, #331),
-a rule against screen code building or
-restyling controls, a check that the screen's scene uses library components,
-and a check that every node a screen script binds exists in its scene with a
-matching type.
 
 Do not write tests that lock a scene's arrangement: which components it uses,
 their order and its layout sizes are free to change in the editor. Do not

@@ -73,6 +73,7 @@ public static class UiComponentContracts
         ProgressRing,
         Number,
         StageCard,
+        CardActions,
     }
 
     public static IReadOnlyList<CanonicalComponent> AllCanonicalComponents { get; } =
@@ -108,6 +109,7 @@ public static class UiComponentContracts
             CanonicalComponent.ProgressRing => nameof(UiProgressRing),
             CanonicalComponent.Number => nameof(UiNumber),
             CanonicalComponent.StageCard => nameof(UiStageCard),
+            CanonicalComponent.CardActions => nameof(UiCardActions),
             _ => throw new ArgumentOutOfRangeException(nameof(component), component, null),
         };
 

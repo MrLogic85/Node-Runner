@@ -19,7 +19,33 @@ internal static partial class SceneNodes
         "theme_override_font_sizes/",
     ];
 
+    /// <summary>A node block with the resources its header and body point to.</summary>
+    public sealed record SceneNode(Node Node, string? Script, string? Instance)
+    {
+        public string Name => Attribute("name") ?? string.Empty;
+
+        /// <summary>The native type; absent on an instanced scene or a node it already owns.</summary>
+        public string? Type => Attribute("type");
+
+        public bool IsRoot => Attribute("parent") is null;
+
+        public bool IsUnique => Node.Body.Contains("\nunique_name_in_owner = true", StringComparison.Ordinal);
+
+        private string? Attribute(string name)
+        {
+            var match = HeaderAttribute().Matches(Node.Header).FirstOrDefault(match => match.Groups["name"].Value == name);
+            return match?.Groups["value"].Value;
+        }
+    }
+
     public static IEnumerable<Node> All() => Read().Select(entry => entry.Node);
+
+    /// <summary>The nodes of one scene, by its path under <c>project/scenes</c>.</summary>
+    public static IReadOnlyList<SceneNode> InScene(string scenePath)
+    {
+        var path = Path.Combine(FindRepositoryRoot(), "project", "scenes", scenePath);
+        return Parse(Path.GetFileName(path), File.ReadAllText(path)).ToList();
+    }
 
     public static IEnumerable<Node> WithScript(string scriptFileName) =>
         Read().Where(entry => entry.Script?.EndsWith("/" + scriptFileName, StringComparison.Ordinal) == true)
@@ -30,19 +56,24 @@ internal static partial class SceneNodes
         Directory.EnumerateFiles(Path.Combine(FindRepositoryRoot(), "project", "scenes"), "*.tscn", SearchOption.AllDirectories)
             .Select(path => (Path.GetFileName(path), File.ReadAllText(path)));
 
-    private static IEnumerable<(Node Node, string? Script)> Read()
+    private static IEnumerable<(Node Node, string? Script)> Read() =>
+        Files().SelectMany(file => Parse(file.Scene, file.Text)).Select(node => (node.Node, node.Script));
+
+    private static IEnumerable<SceneNode> Parse(string scene, string text)
     {
-        foreach (var (scene, text) in Files())
+        var resourcePaths = ExtResource().Matches(text)
+            .ToDictionary(match => match.Groups["id"].Value, match => match.Groups["path"].Value);
+        foreach (var block in NodeBlock().Split(text).Where(block => block.StartsWith("[node ", StringComparison.Ordinal)))
         {
-            var scriptPaths = ExtResource().Matches(text)
-                .ToDictionary(match => match.Groups["id"].Value, match => match.Groups["path"].Value);
-            foreach (var block in NodeBlock().Split(text).Where(block => block.StartsWith("[node ", StringComparison.Ordinal)))
-            {
-                var script = ScriptRef().Match(block);
-                var scriptPath = script.Success ? scriptPaths.GetValueOrDefault(script.Groups["id"].Value) : null;
-                yield return (new Node(scene, block[..block.IndexOf('\n')], block), scriptPath);
-            }
+            var header = block[..block.IndexOf('\n')];
+            yield return new SceneNode(
+                new Node(scene, header, block),
+                Resource(ScriptRef().Match(block)),
+                Resource(InstanceRef().Match(header)));
         }
+
+        string? Resource(Match reference) =>
+            reference.Success ? resourcePaths.GetValueOrDefault(reference.Groups["id"].Value) : null;
     }
 
     internal static string FindRepositoryRoot()
@@ -68,4 +99,10 @@ internal static partial class SceneNodes
 
     [GeneratedRegex("""script = ExtResource\("(?<id>[^"]+)"\)""")]
     private static partial Regex ScriptRef();
+
+    [GeneratedRegex("""instance=ExtResource\("(?<id>[^"]+)"\)""")]
+    private static partial Regex InstanceRef();
+
+    [GeneratedRegex(@"(?<name>\w+)=""(?<value>[^""]*)""")]
+    private static partial Regex HeaderAttribute();
 }

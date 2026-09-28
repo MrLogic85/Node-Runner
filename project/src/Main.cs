@@ -901,11 +901,8 @@ public partial class Main : Node2D
         AddChild(overlayLayer);
 
         var saveManager = GetNode<SaveManager>("/root/SaveManager");
-        _creationsScreen = new CreationsScreen
-        {
-            ShowComponentLibraryLink = ShouldShowComponentLibraryLink(),
-            Visible = true,
-        };
+        _creationsScreen = GD.Load<PackedScene>("res://scenes/screens/CreationsScreen.tscn").Instantiate<CreationsScreen>();
+        _creationsScreen.ShowComponentLibraryLink = ShouldShowComponentLibraryLink();
         _creationsScreen.Setup(saveManager.CreationsPresentation);
         _creationsScreen.BackRequested += CloseCreationsHome;
         _creationsScreen.NewRequested += StartNewCreationFromHome;

@@ -22,35 +22,15 @@ public sealed class UiSourceGuardTests
     private static readonly double[] _inlineNumbers = [0, 1, 2, 0.5];
 
     /// <summary>
-    /// Folders whose dimensions must come from UiSize, UiLayout or UiSpacing. Game screens and
-    /// widgets join as they are migrated to the component library (#310).
-    /// </summary>
-    private static readonly string[] _sizeGuardedFolders = ["ui/lib"];
-
-    /// <summary>
     /// The one library file that pins a colour override: UiIcons' tint helper, which game screens
     /// and widgets still call until they move to the component library (#310).
     /// </summary>
     private const string _tintHelper = "ui/lib/UiIcons.cs";
 
-    private static readonly Lazy<IReadOnlyList<MetadataReference>> _references = new(LoadReferences);
-
-    /// <summary>The SDK's implicit usings (<c>ImplicitUsings</c> in Directory.Build.props).</summary>
-    private static readonly SyntaxTree _implicitUsings = CSharpSyntaxTree.ParseText(
-        """
-        global using System;
-        global using System.Collections.Generic;
-        global using System.IO;
-        global using System.Linq;
-        global using System.Net.Http;
-        global using System.Threading;
-        global using System.Threading.Tasks;
-        """);
-
     [Fact]
     public void Source_takes_colours_from_the_theme()
     {
-        var violations = ColorLiterals(ProjectSources()).ToList();
+        var violations = ColorLiterals(CSharpSources.Project).ToList();
 
         violations.ShouldBeEmpty(
             "Take colours from the Theme (UiThemeLookup.Color, VisualTheme) and derive with WithAlpha/ScaleAlpha; " +
@@ -60,7 +40,7 @@ public sealed class UiSourceGuardTests
     [Fact]
     public void Colour_guard_binds_every_type_the_project_names()
     {
-        var unresolved = Compile(ProjectSources()).GetDiagnostics()
+        var unresolved = CSharpSources.ProjectCompilation.GetDiagnostics()
             .Where(diagnostic => diagnostic.Id == "CS0246")
             .Select(diagnostic => diagnostic.ToString())
             .ToList();
@@ -71,8 +51,8 @@ public sealed class UiSourceGuardTests
     [Fact]
     public void Component_library_names_every_number()
     {
-        var violations = ProjectSources()
-            .Where(source => _sizeGuardedFolders.Any(folder => source.Path.StartsWith(folder + "/", StringComparison.Ordinal)))
+        var violations = CSharpSources.Project
+            .Where(source => FollowsLibraryRules(source.Path))
             .SelectMany(source => source.Find(IsInlineNumber))
             .ToList();
 
@@ -81,10 +61,75 @@ public sealed class UiSourceGuardTests
     }
 
     [Fact]
+    public void Rewritten_screens_declare_no_numbers()
+    {
+        var violations = CSharpSources.Project
+            .Where(source => RewrittenUi.Screens.Contains(source.Path))
+            .SelectMany(source => source.Find(IsScreenNumber))
+            .ToList();
+
+        violations.ShouldBeEmpty(
+            "A rewritten screen takes numbers from UiSize, UiLayout, UiSpacing or its view-model; " +
+            "a layout value belongs in the scene (#310).");
+    }
+
+    [Fact]
+    public void Rewritten_screens_neither_build_nor_restyle_controls()
+    {
+        var compilation = CSharpSources.ProjectCompilation;
+        var violations = CSharpSources.Project
+            .Where(source => RewrittenUi.Screens.Contains(source.Path) || RewrittenUi.Widgets.Contains(source.Path))
+            .SelectMany(source =>
+            {
+                var model = compilation.GetSemanticModel(source.Tree);
+                return source.Find(node => BuildsOrRestyles(node, model));
+            })
+            .ToList();
+
+        violations.ShouldBeEmpty(
+            "Author static layout in the scene; code instantiates only library components and widgets " +
+            "for runtime content, and never sets theme overrides, styleboxes or sizes (#310).");
+    }
+
+    [Theory]
+    [InlineData("const float RowHeight = 48;")]
+    [InlineData("static readonly float Width = 12;")]
+    [InlineData("float M() => 3;")]
+    public void Screen_number_is_flagged(string member) =>
+        CSharpSources.Snippet(member).Find(IsScreenNumber).ShouldHaveSingleItem();
+
+    [Theory]
+    [InlineData("float M(float x) => (x * 0.5f) - 1 + 2;")]
+    [InlineData("enum Kind { A = 4 }")]
+    public void Screen_identity_number_passes(string member) =>
+        CSharpSources.Snippet(member).Find(IsScreenNumber).ShouldBeEmpty();
+
+    [Theory]
+    [InlineData("Label M() => new Label();")]
+    [InlineData("Control M() => new HBoxContainer();")]
+    [InlineData("void M() { AddChild(new Button()); }")]
+    [InlineData("void M() { AddThemeConstantOverride(\"separation\", 4); }")]
+    [InlineData("void M(Label label) { label.AddThemeFontSizeOverride(\"font_size\", 1); }")]
+    [InlineData("StyleBox M() => new StyleBoxFlat();")]
+    [InlineData("void M() { CustomMinimumSize = Vector2.One; }")]
+    [InlineData("void M(Control control) { control.Size = Vector2.One; }")]
+    [InlineData("UiButton M() => new UiButton { Position = Vector2.One };")]
+    public void Building_or_restyling_is_flagged(string member) =>
+        BuildsOrRestyles(member).ShouldHaveSingleItem();
+
+    [Theory]
+    [InlineData("UiButton M() => new UiButton { Text = \"New\" };")]
+    [InlineData("UiCard M() => new();")]
+    [InlineData("Vector2 M() => new(1, 2);")]
+    [InlineData("void M(Control control) { control.Visible = false; }")]
+    public void Library_instances_and_state_pass(string member) =>
+        BuildsOrRestyles(member).ShouldBeEmpty();
+
+    [Fact]
     public void Component_library_selects_colours_by_theme_variation()
     {
-        var violations = ProjectSources()
-            .Where(source => source.Path.StartsWith("ui/lib/", StringComparison.Ordinal) && source.Path != _tintHelper)
+        var violations = CSharpSources.Project
+            .Where(source => FollowsLibraryRules(source.Path) && source.Path != _tintHelper)
             .SelectMany(source => source.Find(IsPinnedColour))
             .ToList();
 
@@ -97,13 +142,13 @@ public sealed class UiSourceGuardTests
     [InlineData("void M(Label label) { label.AddThemeColorOverride(\"font_color\", Colors.White); }")]
     [InlineData("void M(Button button, Color tint) => UiIcons.Apply(button, UiIconId.Edit, UiIconSize.Small, tint);")]
     public void Pinned_colour_is_flagged(string member) =>
-        Snippet(member).Find(IsPinnedColour).ShouldHaveSingleItem();
+        CSharpSources.Snippet(member).Find(IsPinnedColour).ShouldHaveSingleItem();
 
     [Theory]
     [InlineData("void M(Label label) { label.RemoveThemeColorOverride(\"font_color\"); }")]
     [InlineData("void M(Button button) => UiIcons.Apply(button, UiIconId.Edit, UiIconSize.Small);")]
     public void Theme_variation_passes(string member) =>
-        Snippet(member).Find(IsPinnedColour).ShouldBeEmpty();
+        CSharpSources.Snippet(member).Find(IsPinnedColour).ShouldBeEmpty();
 
     [Theory]
     [InlineData("Color M() => new Color(0.1f, 0.2f, 0.3f);")]
@@ -120,7 +165,7 @@ public sealed class UiSourceGuardTests
     [InlineData("static readonly Color[] Palette = [new(1, 0, 0)];")]
     [InlineData("Dictionary<int, Color> Map = new() { [1] = new(1, 0, 0) };")]
     public void Colour_literal_is_flagged(string member) =>
-        ColorLiterals([Snippet(member)]).ShouldHaveSingleItem();
+        ColorLiterals([CSharpSources.Snippet(member)]).ShouldHaveSingleItem();
 
     [Theory]
     [InlineData("Color M() => Colors.White with { A = 0.5f };")]
@@ -129,7 +174,7 @@ public sealed class UiSourceGuardTests
     [InlineData("Color M(Color themed) => themed.Lerp(Colors.White, 0.25f);")]
     [InlineData("Vector2 M() => new(3, 4);")]
     public void Theme_derived_colour_passes(string member) =>
-        ColorLiterals([Snippet(member)]).ShouldBeEmpty();
+        ColorLiterals([CSharpSources.Snippet(member)]).ShouldBeEmpty();
 
     [Theory]
     [InlineData("float M() => 12;")]
@@ -138,7 +183,7 @@ public sealed class UiSourceGuardTests
     [InlineData("float Width { get; set; } = 3;")]
     [InlineData("static float Width = 3;")]
     public void Inline_number_is_flagged(string member) =>
-        Snippet(member).Find(IsInlineNumber).ShouldHaveSingleItem();
+        CSharpSources.Snippet(member).Find(IsInlineNumber).ShouldHaveSingleItem();
 
     [Theory]
     [InlineData("const float Width = 12;")]
@@ -148,11 +193,11 @@ public sealed class UiSourceGuardTests
     [InlineData("enum Kind { A = 4 }")]
     [InlineData("[System.ComponentModel.DefaultValue(4)] float Width { get; set; }")]
     public void Named_number_passes(string member) =>
-        Snippet(member).Find(IsInlineNumber).ShouldBeEmpty();
+        CSharpSources.Snippet(member).Find(IsInlineNumber).ShouldBeEmpty();
 
-    private static IEnumerable<string> ColorLiterals(IReadOnlyList<Source> sources)
+    private static IEnumerable<string> ColorLiterals(IReadOnlyList<CSharpSources.Source> sources)
     {
-        var compilation = Compile(sources);
+        var compilation = CSharpSources.Compile(sources);
         return sources.SelectMany(source =>
         {
             var model = compilation.GetSemanticModel(source.Tree);
@@ -160,32 +205,20 @@ public sealed class UiSourceGuardTests
         });
     }
 
-    private static CSharpCompilation Compile(IReadOnlyList<Source> sources) => CSharpCompilation.Create(
-        "UiSourceGuard",
-        sources.Select(source => source.Tree).Append(_implicitUsings),
-        _references.Value,
-        new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
-
     private static bool IsColorLiteral(SyntaxNode node, SemanticModel model) => node switch
     {
         BaseObjectCreationExpressionSyntax creation =>
             IsGodotType(model.GetTypeInfo(creation).Type, "Color") && StartsWithLiteral(creation.ArgumentList),
         InvocationExpressionSyntax invocation =>
-            Symbol(model, invocation) is IMethodSymbol { IsStatic: true } method
+            CSharpSources.Symbol(model, invocation) is IMethodSymbol { IsStatic: true } method
             && IsGodotType(method.ContainingType, "Color")
             && _colorFactories.Contains(method.Name),
         MemberAccessExpressionSyntax access =>
-            Symbol(model, access) is { IsStatic: true } member and (IPropertySymbol or IFieldSymbol)
+            CSharpSources.Symbol(model, access) is { IsStatic: true } member and (IPropertySymbol or IFieldSymbol)
             && IsGodotType(member.ContainingType, "Colors")
             && !_neutralColors.Contains(member.Name),
         _ => false,
     };
-
-    private static ISymbol? Symbol(SemanticModel model, SyntaxNode node)
-    {
-        var info = model.GetSymbolInfo(node);
-        return info.Symbol ?? info.CandidateSymbols.FirstOrDefault();
-    }
 
     private static bool IsGodotType(ITypeSymbol? type, string name) =>
         type is { ContainingNamespace.Name: "Godot" } && type.Name == name;
@@ -208,6 +241,52 @@ public sealed class UiSourceGuardTests
             _ => false,
         };
 
+    private static IEnumerable<string> BuildsOrRestyles(string member)
+    {
+        var snippet = CSharpSources.Snippet(member);
+        var compilation = CSharpSources.Compile([.. CSharpSources.Project, snippet]);
+        var model = compilation.GetSemanticModel(snippet.Tree);
+        return snippet.Find(node => BuildsOrRestyles(node, model));
+    }
+
+    private static bool BuildsOrRestyles(SyntaxNode node, SemanticModel model) => node switch
+    {
+        BaseObjectCreationExpressionSyntax creation => model.GetTypeInfo(creation).Type is { } type
+            && (IsGodotSubclass(type, "StyleBox")
+                || ((IsGodotSubclass(type, "Control") || IsGodotSubclass(type, "Window")) && !IsLibraryType(type))),
+        InvocationExpressionSyntax invocation =>
+            CSharpSources.Symbol(model, invocation) is IMethodSymbol { Name: var name } method
+            && name.StartsWith("AddTheme", StringComparison.Ordinal)
+            && name.EndsWith("Override", StringComparison.Ordinal)
+            && method.ContainingType.ContainingNamespace.Name == "Godot",
+        AssignmentExpressionSyntax assignment =>
+            CSharpSources.Symbol(model, assignment.Left) is IPropertySymbol { Name: "CustomMinimumSize" or "Size" or "Position" } property
+            && property.ContainingType.ContainingNamespace.Name == "Godot",
+        _ => false,
+    };
+
+    private static bool IsGodotSubclass(ITypeSymbol type, string godotBase)
+    {
+        for (var current = type; current is not null; current = current.BaseType)
+        {
+            if (IsGodotType(current, godotBase))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static bool IsLibraryType(ITypeSymbol type) =>
+        type.ContainingNamespace.ToDisplayString() is "NodeRunner.Ui.Lib" or "NodeRunner.Ui.Widgets";
+
+    private static bool IsScreenNumber(SyntaxNode node) =>
+        node is LiteralExpressionSyntax literal
+        && literal.IsKind(SyntaxKind.NumericLiteralExpression)
+        && !_inlineNumbers.Contains(Convert.ToDouble(literal.Token.Value, System.Globalization.CultureInfo.InvariantCulture))
+        && !literal.Ancestors().Any(ancestor => ancestor is EnumMemberDeclarationSyntax or AttributeSyntax);
+
     private static bool IsInlineNumber(SyntaxNode node) =>
         node is LiteralExpressionSyntax literal
         && literal.IsKind(SyntaxKind.NumericLiteralExpression)
@@ -224,42 +303,6 @@ public sealed class UiSourceGuardTests
         _ => false,
     };
 
-    private static IReadOnlyList<Source> ProjectSources()
-    {
-        var root = Path.Combine(SceneNodes.FindRepositoryRoot(), "project", "src");
-        return Directory.EnumerateFiles(root, "*.cs", SearchOption.AllDirectories)
-            .Order(StringComparer.Ordinal)
-            .Select(path => new Source(
-                Path.GetRelativePath(root, path).Replace('\\', '/'),
-                CSharpSyntaxTree.ParseText(File.ReadAllText(path))))
-            .ToList();
-    }
-
-    private static Source Snippet(string member) => new(
-        "snippet.cs",
-        CSharpSyntaxTree.ParseText(
-            $"using Godot; partial class Snippet {{ {member} }}"));
-
-    /// <summary>
-    /// The BCL, GodotSharp and the pure libs; the Godot project itself is the compiled source.
-    /// Generated Godot partials are absent, which only fails unrelated binds.
-    /// </summary>
-    private static IReadOnlyList<MetadataReference> LoadReferences()
-    {
-        var platform = ((string)AppContext.GetData("TRUSTED_PLATFORM_ASSEMBLIES")!).Split(Path.PathSeparator);
-        return platform
-            .Concat(Directory.EnumerateFiles(AppContext.BaseDirectory, "*.dll")
-                .Where(path => Path.GetFileName(path) is "GodotSharp.dll" or "NodeRunner.App.dll" or "NodeRunner.Domain.dll" or "NodeRunner.ML.dll"))
-            .Distinct()
-            .Select(path => (MetadataReference)MetadataReference.CreateFromFile(path))
-            .ToList();
-    }
-
-    private sealed record Source(string Path, SyntaxTree Tree)
-    {
-        public IEnumerable<string> Find(Func<SyntaxNode, bool> isViolation) =>
-            Tree.GetRoot().DescendantNodes()
-                .Where(isViolation)
-                .Select(node => $"{Path}:{node.GetLocation().GetLineSpan().StartLinePosition.Line + 1}: {node}");
-    }
+    private static bool FollowsLibraryRules(string path) =>
+        path.StartsWith("ui/lib/", StringComparison.Ordinal) || RewrittenUi.Widgets.Contains(path);
 }
