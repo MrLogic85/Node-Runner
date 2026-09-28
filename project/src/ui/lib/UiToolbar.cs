@@ -59,7 +59,16 @@ public partial class UiToolbar : MarginContainer
     // The height is the scene's own (#331); the bar never grows past it.
     public override Vector2 _GetMaximumSize() => new(_unbounded, CustomMinimumSize.Y);
 
-    public override void _Notification(int what) => _unsaved.Handle(this, what);
+    public override void _Notification(int what)
+    {
+        if (!_unsaved.Handle(this, what) && what == NotificationThemeChanged)
+        {
+            QueueRedraw();
+        }
+    }
+
+    public override void _Draw() =>
+        DrawRect(new Rect2(Vector2.Zero, Size), UiThemeLookup.Color(this, UiTokens.Color.Panel));
 
     public override void _Ready()
     {

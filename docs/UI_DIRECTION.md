@@ -635,18 +635,20 @@ where the screen authors its title and actions in the editor. `ShowBack` and
 `ShowOverflow` hide the fixed buttons. The toolbar also owns the overflow
 `Menu`: it anchors it under Overflow, opens it and makes it dismissible; the
 screen authors the items and decides what each does. `BackPressed` is its only
-signal.
+signal. It fills with `panel`, like the button bar and side panel, over the
+`bg` of `UiFrame`'s card (`UiFrameCard`, the reference's `.frame`), so the
+shell stands out from the screen's content (#347).
 
 `UiButtonBar` is the vertical button bar down the left edge
 ([issue #320](https://github.com/MrLogic85/Node-Runner/issues/320)): 56px
 wide, one touch target plus `space-2` (the reference token is `w-rail`), with
-a divider down its right edge and no background of its own. Its width, padding
+a divider down its right edge and a `panel` background (#347). Its width, padding
 and separation live in `UiButtonBar.tscn` (#335); the code-built Build screen
 uses the same width as `UiLayout.ButtonBarWidth`. Unlike `UiToolbar` it has no fixed buttons: `%ButtonBarContent` is a plain
 VBox, and everything in it (which tools, which is selected or locked, a play
 button at the bottom) belongs to the screen. By human decision on #320 it
-deliberately differs from the reference's `.rail`: no `panel` background, the
-divider in `edge` rather than `line`, and locked tools keep the 20px icon of
+deliberately differs from the reference's `.rail`: the divider is in `edge`
+rather than `line`, and locked tools keep the 20px icon of
 every stacked button rather than a 16px lock.
 
 `UiSidePanel` is the reference's SideBar, the fixed panel on the right
