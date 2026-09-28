@@ -976,7 +976,7 @@ public partial class SimulateScreen : Control
                     // Marks the current generation; never rely on color
                     // alone (see the LineStrong border below), so this
                     // stays legible in Paper and doesn't depend on the
-                    // glow-flavored Halo tint from effects-lite (#134).
+                    // glow-flavored Halo tint (#134).
                     ? UiThemeLookup.Color(this, UiTokens.Color.Accent)
                     : UiThemeLookup.Color(this, UiTokens.Color.Line);
 
@@ -1233,7 +1233,7 @@ public partial class SimulateScreen : Control
         var rear = center + new Vector2(-86, 16);
         control.DrawLine(rear, center, UiThemeLookup.Color(this, UiTokens.Color.Accent), 5, antialiased: false);
         control.DrawLine(center, front, UiThemeLookup.Color(this, UiTokens.Color.Accent), 5, antialiased: false);
-        // Purely decorative illustration -- effects-lite drops the glow
+        // Purely decorative illustration -- themes without effects drop the glow
         // treatment for flat schematic dots instead of hiding them (#134).
         control.DrawCircle(
             rear,

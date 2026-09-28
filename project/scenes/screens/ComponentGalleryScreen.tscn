@@ -39,10 +39,6 @@ Text = "Neon"
 script = ExtResource("5_theme_segment")
 Text = "Paper"
 
-[sub_resource type="Resource" id="Resource_theme_effects_lite"]
-script = ExtResource("5_theme_segment")
-Text = "Effects lite"
-
 [sub_resource type="Resource" id="Resource_segmented_train"]
 script = ExtResource("5_theme_segment")
 Text = "Matched"
@@ -104,7 +100,7 @@ unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 4
 script = ExtResource("4_theme_switch")
-Segments = Array[ExtResource("5_theme_segment")]([SubResource("Resource_theme_neon"), SubResource("Resource_theme_paper"), SubResource("Resource_theme_effects_lite")])
+Segments = Array[ExtResource("5_theme_segment")]([SubResource("Resource_theme_neon"), SubResource("Resource_theme_paper")])
 
 [node name="ToolbarMenuDebugBounds" type="Container" parent="UiFrame/MarginContainer/Card/Shell/HeaderHost/Toolbar/ToolbarMenu" parent_id_path=PackedInt32Array(1306440071, 1208477361) index="0" unique_id=997750600]
 unique_name_in_owner = true

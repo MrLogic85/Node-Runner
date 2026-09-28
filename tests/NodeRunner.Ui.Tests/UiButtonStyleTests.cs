@@ -78,7 +78,7 @@ public sealed class UiButtonStyleTests
     }
 
     [Fact]
-    public void Glow_IsDerivedFromSelectedBaseColorAndSuppressedForEffectsLite()
+    public void Glow_IsDerivedFromSelectedBaseColorAndSuppressedForPaper()
     {
         var selected = UiButtonStyle.Primary.Resolve(color => ResolveColor(ThemeFile.For(UiTokenType.Neon), color)).Selected;
         UiGlow.FromBase(selected, enabled: true).ShouldBe(

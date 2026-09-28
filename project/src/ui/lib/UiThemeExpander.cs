@@ -66,20 +66,6 @@ public static class UiThemeExpander
         Write(theme, ReadPalette(theme));
     }
 
-    /// <summary>
-    /// Makes <paramref name="target"/> a palette-only copy of <paramref name="source"/> with one flag
-    /// changed. Everything palette-independent still comes from the project theme.
-    /// </summary>
-    public static void ExpandVariant(GodotTheme source, GodotTheme target, UiTokens.Flag flag, bool enabled)
-    {
-        ArgumentNullException.ThrowIfNull(source);
-        ArgumentNullException.ThrowIfNull(target);
-        var palette = ReadPalette(source);
-        palette.Constants[UiTokens.Name(flag)] = enabled ? 1 : 0;
-        target.Clear();
-        Write(target, palette);
-    }
-
     private sealed record Palette(Dictionary<UiTokens.Color, Color> Colors, Dictionary<string, int> Constants);
 
     private static Palette ReadPalette(GodotTheme theme)

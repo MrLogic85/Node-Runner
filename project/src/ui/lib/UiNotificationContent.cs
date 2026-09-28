@@ -6,7 +6,7 @@ namespace NodeRunner.Ui.Lib;
 [Tool]
 public sealed partial class UiNotificationContent : UiPopupCard
 {
-    public enum PreviewTheme { Neon, Paper, EffectsLite }
+    public enum PreviewTheme { Neon, Paper }
 
     private UiPopupType _type;
     private PreviewTheme _theme;
@@ -47,7 +47,6 @@ public sealed partial class UiNotificationContent : UiPopupCard
             Theme = UiThemes.For(value switch
             {
                 PreviewTheme.Paper => UiTokenType.Paper,
-                PreviewTheme.EffectsLite => UiTokenType.Light,
                 _ => UiTokenType.Neon,
             });
             ApplyAppearance();
