@@ -342,9 +342,11 @@ scene authors its own copy of the `UiFrame`, toolbar and menu under the same
 unique names and marks its own page as selected; keep the copies identical,
 including the `[editable path=…]` lines for `UiFrame` and the toolbar. Without
 them the scene still loads on desktop, but export drops every node added inside
-those instances; `SceneEditableChildrenTests` guards this. Component Gallery, Colors & Styles
-and Popup Gallery hold their content in a `ContentFrame` inset `S3` (12px) from
-the card; the Toolbars page is laid out as Build is, without one.
+those instances; `SceneEditableChildrenTests` guards this. Component Gallery,
+Colors & Styles and Popup Gallery hold their content in a `ContentFrame` inset
+`S3` (12px) from the card, inside a `Scroll` with a hidden scrollbar, so the
+inset and every line of content scroll together under the toolbar; the Toolbars
+page is laid out as Build is, without one.
 A page starts with the gallery's theme and debug bounds and hands them back when
 it closes. A page opened from Component Gallery's menu opens on top of it, so
 Back returns there. Pages opened on their own hand over to Component Gallery,
@@ -450,9 +452,9 @@ yet authored in the editor. Do not copy generated component internals into the
 scene.
 
 Open `project/scenes/screens/PopupGalleryScreen.tscn` to edit the actual popup
-gallery. Under the gallery toolbar, `ContentFrame` holds the disclaimer and a
-vertical ScrollContainer with dialog and notification specimens in wrapping
-HFlowContainers plus a status label. Labels, order, spacing, and layout live in
+gallery. Under the gallery toolbar, `Scroll/ContentFrame` holds the disclaimer
+and the dialog and notification specimens in wrapping HFlowContainers plus a
+status label, all scrolling together. Labels, order, spacing, and layout live in
 the scene; its signal connections bind each button to the demo callbacks in
 `PopupGalleryScreen.cs`. Keep the unique `ContentFrame`, `Disclaimer`, and
 `Status` names. Theme changes update existing controls instead of rebuilding
@@ -460,7 +462,7 @@ the page, preserving authored layout and scroll position. Switching theme
 clears queued notifications; an open dialog is modal, so the toolbar cannot
 switch theme under it.
 
-Colors & Styles authors only its frame, toolbar, menu and an empty
+Colors & Styles authors only its frame, toolbar, menu, `Scroll` and an empty
 `ContentFrame` in `project/scenes/screens/ColorsAndStylesScreen.tscn`; the
 inventory inside is built in code.
 Gallery launcher buttons use ordinary clicks; hold requirements belong to the

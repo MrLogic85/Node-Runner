@@ -267,11 +267,18 @@ NoteText = "Dialog and Notification components"
 ShowSelectedIndicator = true
 metadata/_custom_type_script = "uid://dah3q1p7ikjlm"
 
-[node name="ContentFrame" type="MarginContainer" parent="UiFrame/MarginContainer/Card/Shell"]
+[node name="Scroll" type="ScrollContainer" parent="UiFrame/MarginContainer/Card/Shell" unique_id=1838207455]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
+horizontal_scroll_mode = 0
+vertical_scroll_mode = 3
+
+[node name="ContentFrame" type="MarginContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
 theme_override_constants/margin_left = 12
 theme_override_constants/margin_top = 12
 theme_override_constants/margin_right = 12

@@ -93,18 +93,10 @@ public partial class ColorsAndStylesScreen : GalleryScreen
 
     private void BuildLayout()
     {
-        _scroll = new ScrollContainer
-        {
-            SizeFlagsHorizontal = SizeFlags.ExpandFill,
-            SizeFlagsVertical = SizeFlags.ExpandFill,
-            HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled,
-            VerticalScrollMode = ScrollContainer.ScrollMode.ShowNever,
-        };
-        GetNode<MarginContainer>("%ContentFrame").AddChild(_scroll);
-
+        _scroll = GetNode<ScrollContainer>("%Scroll");
         var content = new VBoxContainer { SizeFlagsHorizontal = SizeFlags.ExpandFill };
         content.AddThemeConstantOverride("separation", (int)UiSize.Space.S5);
-        _scroll.AddChild(content);
+        GetNode<MarginContainer>("%ContentFrame").AddChild(content);
         _scrollContent = content;
         content.AddChild(CreateColorsSection(UiThemes.Neon, "NEON LAB (DARK)"));
         content.AddChild(CreateColorsSection(UiThemes.Paper, "PAPER (LIGHT)"));

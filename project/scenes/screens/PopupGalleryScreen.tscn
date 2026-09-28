@@ -1260,21 +1260,28 @@ ShowSelectedIndicator = true
 Selected = true
 metadata/_custom_type_script = "uid://dah3q1p7ikjlm"
 
-[node name="ContentFrame" type="MarginContainer" parent="UiFrame/MarginContainer/Card/Shell"]
+[node name="Scroll" type="ScrollContainer" parent="UiFrame/MarginContainer/Card/Shell" unique_id=1403958121]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
+horizontal_scroll_mode = 0
+vertical_scroll_mode = 3
+
+[node name="ContentFrame" type="MarginContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
 theme_override_constants/margin_left = 12
 theme_override_constants/margin_top = 12
 theme_override_constants/margin_right = 12
 theme_override_constants/margin_bottom = 12
 
-[node name="VBoxContainer" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/ContentFrame" unique_id=595028518]
+[node name="VBoxContainer" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame" unique_id=595028518]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="Disclaimer" type="Label" parent="UiFrame/MarginContainer/Card/Shell/ContentFrame/VBoxContainer" unique_id=716898321]
+[node name="Disclaimer" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/VBoxContainer" unique_id=716898321]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(120, 0)
 layout_mode = 2
@@ -1283,17 +1290,12 @@ autowrap_mode = 3
 script = ExtResource("2_1xfhr")
 TextStyle = 12
 
-[node name="BodyScroll" type="ScrollContainer" parent="UiFrame/MarginContainer/Card/Shell/ContentFrame/VBoxContainer" unique_id=695615497]
-layout_mode = 2
-size_flags_vertical = 3
-horizontal_scroll_mode = 0
-
-[node name="Body" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/ContentFrame/VBoxContainer/BodyScroll" unique_id=1280187482]
+[node name="Body" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/VBoxContainer" unique_id=1280187482]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 8
 
-[node name="DialogsHeading" type="Label" parent="UiFrame/MarginContainer/Card/Shell/ContentFrame/VBoxContainer/BodyScroll/Body" unique_id=823755943]
+[node name="DialogsHeading" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/VBoxContainer/Body" unique_id=823755943]
 custom_minimum_size = Vector2(120, 0)
 layout_mode = 2
 text = "Dialogs / type and hold are independent"
@@ -1301,12 +1303,12 @@ autowrap_mode = 3
 script = ExtResource("2_1xfhr")
 TextStyle = 2
 
-[node name="Dialogs" type="HFlowContainer" parent="UiFrame/MarginContainer/Card/Shell/ContentFrame/VBoxContainer/BodyScroll/Body" unique_id=763757008]
+[node name="Dialogs" type="HFlowContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/VBoxContainer/Body" unique_id=763757008]
 layout_mode = 2
 theme_override_constants/h_separation = 8
 theme_override_constants/v_separation = 8
 
-[node name="Default" type="Button" parent="UiFrame/MarginContainer/Card/Shell/ContentFrame/VBoxContainer/BodyScroll/Body/Dialogs" unique_id=2118787107]
+[node name="Default" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/VBoxContainer/Body/Dialogs" unique_id=2118787107]
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
 size_flags_vertical = 4
@@ -1321,7 +1323,7 @@ text = "Default"
 Kind = 1
 ContentLayout = 2
 
-[node name="Warning" type="Button" parent="UiFrame/MarginContainer/Card/Shell/ContentFrame/VBoxContainer/BodyScroll/Body/Dialogs" unique_id=1075103988]
+[node name="Warning" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/VBoxContainer/Body/Dialogs" unique_id=1075103988]
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
 size_flags_vertical = 4
@@ -1336,7 +1338,7 @@ text = "Warn"
 Kind = 1
 ContentLayout = 2
 
-[node name="Danger" type="Button" parent="UiFrame/MarginContainer/Card/Shell/ContentFrame/VBoxContainer/BodyScroll/Body/Dialogs" unique_id=386964720]
+[node name="Danger" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/VBoxContainer/Body/Dialogs" unique_id=386964720]
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
 size_flags_vertical = 4
@@ -1351,7 +1353,7 @@ text = "Danger"
 Kind = 1
 ContentLayout = 2
 
-[node name="HoldDelete" type="Button" parent="UiFrame/MarginContainer/Card/Shell/ContentFrame/VBoxContainer/BodyScroll/Body/Dialogs" unique_id=568883074]
+[node name="HoldDelete" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/VBoxContainer/Body/Dialogs" unique_id=568883074]
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
 size_flags_vertical = 4
@@ -1366,7 +1368,7 @@ text = "Hold to delete"
 Kind = 1
 ContentLayout = 2
 
-[node name="WarningHold" type="Button" parent="UiFrame/MarginContainer/Card/Shell/ContentFrame/VBoxContainer/BodyScroll/Body/Dialogs" unique_id=230549707]
+[node name="WarningHold" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/VBoxContainer/Body/Dialogs" unique_id=230549707]
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
 size_flags_vertical = 4
@@ -1381,7 +1383,7 @@ text = "Warning + hold"
 Kind = 1
 ContentLayout = 2
 
-[node name="LongContent" type="Button" parent="UiFrame/MarginContainer/Card/Shell/ContentFrame/VBoxContainer/BodyScroll/Body/Dialogs" unique_id=1315582245]
+[node name="LongContent" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/VBoxContainer/Body/Dialogs" unique_id=1315582245]
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
 size_flags_vertical = 4
@@ -1396,7 +1398,7 @@ text = "Long content"
 Kind = 1
 ContentLayout = 2
 
-[node name="ActionError" type="Button" parent="UiFrame/MarginContainer/Card/Shell/ContentFrame/VBoxContainer/BodyScroll/Body/Dialogs" unique_id=566424272]
+[node name="ActionError" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/VBoxContainer/Body/Dialogs" unique_id=566424272]
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
 size_flags_vertical = 4
@@ -1411,7 +1413,7 @@ text = "Action error"
 Kind = 1
 ContentLayout = 2
 
-[node name="AsyncAction" type="Button" parent="UiFrame/MarginContainer/Card/Shell/ContentFrame/VBoxContainer/BodyScroll/Body/Dialogs" unique_id=2109880785]
+[node name="AsyncAction" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/VBoxContainer/Body/Dialogs" unique_id=2109880785]
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
 size_flags_vertical = 4
@@ -1426,7 +1428,7 @@ text = "Async action"
 Kind = 1
 ContentLayout = 2
 
-[node name="CloseOnly" type="Button" parent="UiFrame/MarginContainer/Card/Shell/ContentFrame/VBoxContainer/BodyScroll/Body/Dialogs" unique_id=1607820461]
+[node name="CloseOnly" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/VBoxContainer/Body/Dialogs" unique_id=1607820461]
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
 size_flags_vertical = 4
@@ -1441,7 +1443,7 @@ text = "Close only"
 Kind = 1
 ContentLayout = 2
 
-[node name="DefaultAction" type="Button" parent="UiFrame/MarginContainer/Card/Shell/ContentFrame/VBoxContainer/BodyScroll/Body/Dialogs" unique_id=868960899]
+[node name="DefaultAction" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/VBoxContainer/Body/Dialogs" unique_id=868960899]
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
 size_flags_vertical = 4
@@ -1456,7 +1458,7 @@ text = "Default action"
 Kind = 1
 ContentLayout = 2
 
-[node name="NotificationsHeading" type="Label" parent="UiFrame/MarginContainer/Card/Shell/ContentFrame/VBoxContainer/BodyScroll/Body" unique_id=586555229]
+[node name="NotificationsHeading" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/VBoxContainer/Body" unique_id=586555229]
 custom_minimum_size = Vector2(120, 0)
 layout_mode = 2
 text = "Notifications / 5 seconds, click or swipe"
@@ -1464,12 +1466,12 @@ autowrap_mode = 3
 script = ExtResource("2_1xfhr")
 TextStyle = 2
 
-[node name="Notifications" type="HFlowContainer" parent="UiFrame/MarginContainer/Card/Shell/ContentFrame/VBoxContainer/BodyScroll/Body" unique_id=431789737]
+[node name="Notifications" type="HFlowContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/VBoxContainer/Body" unique_id=431789737]
 layout_mode = 2
 theme_override_constants/h_separation = 8
 theme_override_constants/v_separation = 8
 
-[node name="Default" type="Button" parent="UiFrame/MarginContainer/Card/Shell/ContentFrame/VBoxContainer/BodyScroll/Body/Notifications" unique_id=309585163]
+[node name="Default" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/VBoxContainer/Body/Notifications" unique_id=309585163]
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
 size_flags_vertical = 4
@@ -1484,7 +1486,7 @@ text = "Default"
 Kind = 1
 ContentLayout = 2
 
-[node name="Warning" type="Button" parent="UiFrame/MarginContainer/Card/Shell/ContentFrame/VBoxContainer/BodyScroll/Body/Notifications" unique_id=1514251876]
+[node name="Warning" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/VBoxContainer/Body/Notifications" unique_id=1514251876]
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
 size_flags_vertical = 4
@@ -1499,7 +1501,7 @@ text = "Warn"
 Kind = 1
 ContentLayout = 2
 
-[node name="Danger" type="Button" parent="UiFrame/MarginContainer/Card/Shell/ContentFrame/VBoxContainer/BodyScroll/Body/Notifications" unique_id=121714574]
+[node name="Danger" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/VBoxContainer/Body/Notifications" unique_id=121714574]
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
 size_flags_vertical = 4
@@ -1514,7 +1516,7 @@ text = "Danger"
 Kind = 1
 ContentLayout = 2
 
-[node name="ClickTrue" type="Button" parent="UiFrame/MarginContainer/Card/Shell/ContentFrame/VBoxContainer/BodyScroll/Body/Notifications" unique_id=841119754]
+[node name="ClickTrue" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/VBoxContainer/Body/Notifications" unique_id=841119754]
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
 size_flags_vertical = 4
@@ -1529,7 +1531,7 @@ text = "Click: true"
 Kind = 1
 ContentLayout = 2
 
-[node name="ClickFalse" type="Button" parent="UiFrame/MarginContainer/Card/Shell/ContentFrame/VBoxContainer/BodyScroll/Body/Notifications" unique_id=119918838]
+[node name="ClickFalse" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/VBoxContainer/Body/Notifications" unique_id=119918838]
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
 size_flags_vertical = 4
@@ -1544,7 +1546,7 @@ text = "Click: false"
 Kind = 1
 ContentLayout = 2
 
-[node name="QueueThree" type="Button" parent="UiFrame/MarginContainer/Card/Shell/ContentFrame/VBoxContainer/BodyScroll/Body/Notifications" unique_id=483413131]
+[node name="QueueThree" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/VBoxContainer/Body/Notifications" unique_id=483413131]
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
 size_flags_vertical = 4
@@ -1559,7 +1561,7 @@ text = "Queue three"
 Kind = 1
 ContentLayout = 2
 
-[node name="Status" type="Label" parent="UiFrame/MarginContainer/Card/Shell/ContentFrame/VBoxContainer/BodyScroll/Body" unique_id=1496768585]
+[node name="Status" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/VBoxContainer/Body" unique_id=1496768585]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(120, 0)
 layout_mode = 2
@@ -1568,22 +1570,22 @@ autowrap_mode = 3
 script = ExtResource("2_1xfhr")
 TextStyle = 9
 
-[connection signal="Activated" from="UiFrame/MarginContainer/Card/Shell/ContentFrame/VBoxContainer/BodyScroll/Body/Dialogs/Default" to="." method="ShowDefaultDialog"]
-[connection signal="Activated" from="UiFrame/MarginContainer/Card/Shell/ContentFrame/VBoxContainer/BodyScroll/Body/Dialogs/Warning" to="." method="ShowWarningDialog"]
-[connection signal="Activated" from="UiFrame/MarginContainer/Card/Shell/ContentFrame/VBoxContainer/BodyScroll/Body/Dialogs/Danger" to="." method="ShowDangerDialog"]
-[connection signal="Activated" from="UiFrame/MarginContainer/Card/Shell/ContentFrame/VBoxContainer/BodyScroll/Body/Dialogs/HoldDelete" to="." method="ShowDeleteDialog"]
-[connection signal="Activated" from="UiFrame/MarginContainer/Card/Shell/ContentFrame/VBoxContainer/BodyScroll/Body/Dialogs/WarningHold" to="." method="ShowUnlockDialog"]
-[connection signal="Activated" from="UiFrame/MarginContainer/Card/Shell/ContentFrame/VBoxContainer/BodyScroll/Body/Dialogs/LongContent" to="." method="ShowLongDialog"]
-[connection signal="Activated" from="UiFrame/MarginContainer/Card/Shell/ContentFrame/VBoxContainer/BodyScroll/Body/Dialogs/ActionError" to="." method="ShowErrorDialog"]
-[connection signal="Activated" from="UiFrame/MarginContainer/Card/Shell/ContentFrame/VBoxContainer/BodyScroll/Body/Dialogs/AsyncAction" to="." method="ShowAsyncDialog"]
-[connection signal="Activated" from="UiFrame/MarginContainer/Card/Shell/ContentFrame/VBoxContainer/BodyScroll/Body/Dialogs/CloseOnly" to="." method="ShowCloseDialog"]
-[connection signal="Activated" from="UiFrame/MarginContainer/Card/Shell/ContentFrame/VBoxContainer/BodyScroll/Body/Dialogs/DefaultAction" to="." method="ShowOptionalActionDialog"]
-[connection signal="Activated" from="UiFrame/MarginContainer/Card/Shell/ContentFrame/VBoxContainer/BodyScroll/Body/Notifications/Default" to="." method="ShowDefaultNotification"]
-[connection signal="Activated" from="UiFrame/MarginContainer/Card/Shell/ContentFrame/VBoxContainer/BodyScroll/Body/Notifications/Warning" to="." method="ShowWarningNotification"]
-[connection signal="Activated" from="UiFrame/MarginContainer/Card/Shell/ContentFrame/VBoxContainer/BodyScroll/Body/Notifications/Danger" to="." method="ShowDangerNotification"]
-[connection signal="Activated" from="UiFrame/MarginContainer/Card/Shell/ContentFrame/VBoxContainer/BodyScroll/Body/Notifications/ClickTrue" to="." method="ShowDismissingNotification"]
-[connection signal="Activated" from="UiFrame/MarginContainer/Card/Shell/ContentFrame/VBoxContainer/BodyScroll/Body/Notifications/ClickFalse" to="." method="ShowPersistentNotification"]
-[connection signal="Activated" from="UiFrame/MarginContainer/Card/Shell/ContentFrame/VBoxContainer/BodyScroll/Body/Notifications/QueueThree" to="." method="QueueNotifications"]
+[connection signal="Activated" from="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/VBoxContainer/Body/Dialogs/Default" to="." method="ShowDefaultDialog"]
+[connection signal="Activated" from="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/VBoxContainer/Body/Dialogs/Warning" to="." method="ShowWarningDialog"]
+[connection signal="Activated" from="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/VBoxContainer/Body/Dialogs/Danger" to="." method="ShowDangerDialog"]
+[connection signal="Activated" from="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/VBoxContainer/Body/Dialogs/HoldDelete" to="." method="ShowDeleteDialog"]
+[connection signal="Activated" from="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/VBoxContainer/Body/Dialogs/WarningHold" to="." method="ShowUnlockDialog"]
+[connection signal="Activated" from="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/VBoxContainer/Body/Dialogs/LongContent" to="." method="ShowLongDialog"]
+[connection signal="Activated" from="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/VBoxContainer/Body/Dialogs/ActionError" to="." method="ShowErrorDialog"]
+[connection signal="Activated" from="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/VBoxContainer/Body/Dialogs/AsyncAction" to="." method="ShowAsyncDialog"]
+[connection signal="Activated" from="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/VBoxContainer/Body/Dialogs/CloseOnly" to="." method="ShowCloseDialog"]
+[connection signal="Activated" from="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/VBoxContainer/Body/Dialogs/DefaultAction" to="." method="ShowOptionalActionDialog"]
+[connection signal="Activated" from="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/VBoxContainer/Body/Notifications/Default" to="." method="ShowDefaultNotification"]
+[connection signal="Activated" from="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/VBoxContainer/Body/Notifications/Warning" to="." method="ShowWarningNotification"]
+[connection signal="Activated" from="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/VBoxContainer/Body/Notifications/Danger" to="." method="ShowDangerNotification"]
+[connection signal="Activated" from="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/VBoxContainer/Body/Notifications/ClickTrue" to="." method="ShowDismissingNotification"]
+[connection signal="Activated" from="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/VBoxContainer/Body/Notifications/ClickFalse" to="." method="ShowPersistentNotification"]
+[connection signal="Activated" from="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/VBoxContainer/Body/Notifications/QueueThree" to="." method="QueueNotifications"]
 
 [editable path="UiFrame"]
 [editable path="UiFrame/MarginContainer/Card/Shell/Toolbar"]
