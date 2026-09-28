@@ -187,7 +187,7 @@ public sealed class UiThemeExpanderTests
         UiLayout.CanvasHeight.ShouldBe(360);
         UiLayout.TopBarHeight.ShouldBe(48);
         UiLayout.ScreenBodyHeight.ShouldBe(312);
-        UiLayout.RailWidth.ShouldBe(56);
+        UiLayout.ButtonBarWidth.ShouldBe(56);
         UiLayout.SidePanelWidth.ShouldBe(176);
         UiLayout.BrainWidth.ShouldBe(460);
         UiLayout.WellWidth.ShouldBe(250);

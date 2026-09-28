@@ -84,7 +84,7 @@ public sealed class UiTokensTests
         }.ShouldBe(new[] { 12, 16, 20, 24 });
         new[]
         {
-            UiLayout.RailWidth, UiLayout.SidePanelWidth, UiLayout.MenuWidth, UiLayout.DialogWidth,
+            UiLayout.ButtonBarWidth, UiLayout.SidePanelWidth, UiLayout.MenuWidth, UiLayout.DialogWidth,
             UiLayout.BrainWidth, UiLayout.CardWidth, UiLayout.TileWidth, UiLayout.WellWidth,
             UiLayout.SheetWidth, UiLayout.SheetWideWidth,
         }.ShouldBe(new[] { 56, 176, 200, 300, 460, 326, 156, 250, 720, 880 });

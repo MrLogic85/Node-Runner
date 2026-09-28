@@ -1,0 +1,33 @@
+[gd_scene format=3 uid="uid://xh7n0i08nbrq"]
+
+[ext_resource type="Script" uid="uid://byxiwsdxnwcs" path="res://src/ui/lib/UiButtonBar.cs" id="1_bbar"]
+[ext_resource type="Script" uid="uid://fw1i2vfgkd7q" path="res://src/ui/lib/UiDivider.cs" id="2_divider"]
+
+[node name="UiButtonBar" type="MarginContainer" unique_id=272279020]
+custom_minimum_size = Vector2(56, 0)
+anchors_preset = 9
+anchor_bottom = 1.0
+offset_right = 56.0
+grow_vertical = 2
+size_flags_vertical = 3
+script = ExtResource("1_bbar")
+metadata/_custom_type_script = "uid://byxiwsdxnwcs"
+
+[node name="ButtonBarPadding" type="MarginContainer" parent="." unique_id=703254020]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/margin_top = 4
+theme_override_constants/margin_bottom = 4
+
+[node name="ButtonBarContent" type="VBoxContainer" parent="ButtonBarPadding" unique_id=1236278218]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="UiDivider" type="Control" parent="." unique_id=1934481609]
+layout_mode = 2
+size_flags_horizontal = 8
+mouse_filter = 2
+script = ExtResource("2_divider")
+Orientation = 1
+metadata/_custom_type_script = "uid://fw1i2vfgkd7q"
