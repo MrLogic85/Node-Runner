@@ -144,7 +144,8 @@ CI jobs to pass and then run `gh pr merge --squash` without `--auto`.
   what they know to check)
 - Missing tests for load-bearing math or state changes
 - Hidden breaking changes (public API shape shift, save-file format
-  change) without a heads-up in the PR description
+  change) without a heads-up in the PR description, or without the
+  migration the current stage requires (`docs/ROADMAP.md` → "Project stage")
 - Changes to `AGENTS.md`, `ARCHITECTURE.md`, or `TEST_STRATEGY.md` without
   a paragraph in the PR explaining why
 
