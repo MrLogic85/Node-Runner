@@ -77,28 +77,9 @@ public partial class UiSidePanel : MarginContainer
 
     public override Vector2 _GetMaximumSize() => new(_width, _unbounded);
 
-    // The scene bakes the same values, so a screen that edits the panel's children saves none of them.
+    // Paddings, separations and slot sizes are the scene's own (#331, #335).
     public override void _Ready()
     {
-        var padding = GetNode<MarginContainer>("%SidePanelPadding");
-        padding.OffsetRight = UiLayout.SidePanelWidth;
-        padding.AddThemeConstantOverride("margin_left", UiSize.Space.S3);
-        padding.AddThemeConstantOverride("margin_right", UiSize.Space.S3);
-        padding.AddThemeConstantOverride("margin_top", UiSize.Space.S2);
-        padding.AddThemeConstantOverride("margin_bottom", UiSize.Space.S2);
-        GetNode<VBoxContainer>("%SidePanelExpanded").AddThemeConstantOverride("separation", UiSize.Space.S1);
-        // The chevron button centres its icon; pulling the header past the padding puts the
-        // icon flush with the content's right edge while the button keeps its tap size.
-        GetNode<MarginContainer>("%SidePanelHeaderInset").AddThemeConstantOverride(
-            "margin_right", -(UiSize.Control.Small - UiIcons.Pixels(UiIconSize.Standard)) / 2);
-        var header = GetNode<HBoxContainer>("%SidePanelHeader");
-        header.AddThemeConstantOverride("separation", UiSize.Space.S1);
-        header.CustomMinimumSize = new Vector2(0, UiSize.Control.Small);
-        GetNode<VBoxContainer>("%SidePanelTab").AddThemeConstantOverride("separation", UiSize.Space.S3);
-        GetNode<Control>("%SidePanelTab").CustomMinimumSize = new Vector2(UiLayout.SidePanelTabWidth, 0);
-        GetNode<Control>("%SidePanelIcon").CustomMinimumSize = Vector2.One * UiIcons.Pixels(UiIconSize.Large);
-        GetNode<Control>("%SidePanelTabChevron").CustomMinimumSize = Vector2.One * UiIcons.Pixels(UiIconSize.Standard);
-
         GetNode<Control>("%SidePanelIcon").Draw += DrawHeaderIcon;
         GetNode<Control>("%SidePanelTabChevron").Draw += DrawExpandChevron;
         if (!Engine.IsEditorHint())

@@ -608,9 +608,10 @@ signal.
 
 `UiButtonBar` is the vertical button bar down the left edge
 ([issue #320](https://github.com/MrLogic85/Node-Runner/issues/320)): 56px
-(`UiLayout.ButtonBarWidth`, one touch target plus `space-2`; the reference
-token is `w-rail`) with a divider down its right edge and no background of its
-own. Unlike `UiToolbar` it has no fixed buttons: `%ButtonBarContent` is a plain
+wide, one touch target plus `space-2` (the reference token is `w-rail`), with
+a divider down its right edge and no background of its own. Its width, padding
+and separation live in `UiButtonBar.tscn` (#335); the code-built Build screen
+uses the same width as `UiLayout.ButtonBarWidth`. Unlike `UiToolbar` it has no fixed buttons: `%ButtonBarContent` is a plain
 VBox, and everything in it (which tools, which is selected or locked, a play
 button at the bottom) belongs to the screen. By human decision on #320 it
 deliberately differs from the reference's `.rail`: no `panel` background, the
@@ -623,7 +624,9 @@ decision it is a panel, not a bar, because it holds any content. It is 176px
 (`UiLayout.SidePanelWidth`, the reference token `w-side`) with a `panel`
 background and a divider down its left edge. Its header row is its own: an
 optional `IconId`, an optional `Title` and a chevron, which is a compact
-flat `UiButton`. The header reaches past the padding on the right so the
+flat `UiButton`. Code owns only the panel's own width, which it animates
+when collapsing; its paddings, separations and slot sizes live in
+`UiSidePanel.tscn` (#335). The header reaches past the padding on the right so the
 chevron's icon lines up with the content's right edge, and it is `ink`
 rather than the reference's `muted`, while the collapsed tab's chevron stays
 `muted` to keep out of the way (human decisions on #321). The screen authors
