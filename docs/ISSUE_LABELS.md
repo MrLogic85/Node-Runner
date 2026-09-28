@@ -82,7 +82,9 @@ At most one, to estimate size. Set it once the issue is shaped; leave it off
 - `sp: 5` — Large refactor, but manageable. Requires complex thinking
 - `sp: 8` — This is too big to manage, split into smaller parts
 
-An `sp: 8` issue is split into sub-issues before implementation starts.
+An `sp: 8` issue is split into sub-issues before implementation starts. It
+then becomes a parent: remove its `sp:` label and estimate only the
+sub-issues. Parent issues carry no story point label.
 
 ## Optional labels
 
