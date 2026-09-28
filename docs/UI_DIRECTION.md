@@ -442,7 +442,10 @@ not Android's system dialog. Escape/Android Back and action outcomes are wired
 by the component. `EditorToaster` is editor-only, not a runtime Notification
 component. Both components work outside the gallery. Add them to the scene tree
 before opening; `UiDialog` requires the host viewport's `GuiEmbedSubwindows`.
-It restores `QuitOnGoBack` when closed or removed. The gallery itself can run
+It restores `QuitOnGoBack` when closed or removed. Godot sends Android Back
+only to the main window's own nodes, never into a child `Window`, so the dialog
+listens to the main window's `GoBackRequested` and cancels like Abort, deferred
+so that the same Back press does not also quit the app. The gallery itself can run
 with F6. Editor authoring is being introduced in
 [issue #282](https://github.com/MrLogic85/Node-Runner/issues/282). Dialog content
 and notification content, as well as Popup Gallery, are scene-authored.
