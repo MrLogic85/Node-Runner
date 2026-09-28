@@ -11,6 +11,9 @@
 [ext_resource type="Script" uid="uid://dah3q1p7ikjlm" path="res://src/ui/lib/UiMenuActionItem.cs" id="9_menu_item"]
 [ext_resource type="PackedScene" uid="uid://xh7n0i08nbrq" path="res://scenes/ui/UiButtonBar.tscn" id="10_button_bar"]
 [ext_resource type="Script" uid="uid://r2ped3g3uiaa" path="res://src/ui/lib/UiButton.cs" id="12_button"]
+[ext_resource type="PackedScene" uid="uid://c7sdp4nel2qx" path="res://scenes/ui/UiSidePanel.tscn" id="13_side_panel"]
+[ext_resource type="Script" uid="uid://cxlb7vq8iocpi" path="res://src/ui/lib/UiIconTabs.cs" id="14_icon_tabs"]
+[ext_resource type="Script" uid="uid://bss6jgv5hcc3q" path="res://src/ui/lib/UiPartRow.cs" id="15_part_row"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_qlghs"]
 content_margin_left = 1.0
@@ -688,6 +691,58 @@ IconId = 24
 Kind = 0
 metadata/_custom_type_script = "uid://r2ped3g3uiaa"
 
+[node name="Arena" type="Control" parent="UiFrame/MarginContainer/Card/Shell/HShell"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+
+[node name="SidePanel" parent="UiFrame/MarginContainer/Card/Shell/HShell" instance=ExtResource("13_side_panel")]
+layout_mode = 2
+Title = "Parts"
+
+[node name="SidePanelContent" parent="UiFrame/MarginContainer/Card/Shell/HShell/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded"]
+theme_override_constants/separation = 8
+
+[node name="PartTabs" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/HShell/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent"]
+layout_mode = 2
+theme_override_constants/separation = 4
+script = ExtResource("14_icon_tabs")
+Icons = Array[int]([50, 49, 46])
+SelectedIndex = 1
+
+[node name="PartRows" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/HShell/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="Servo" type="Control" parent="UiFrame/MarginContainer/Card/Shell/HShell/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/PartRows"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 1
+script = ExtResource("15_part_row")
+IconId = 49
+Label = "Servo"
+ValueText = "3 left"
+
+[node name="Spring" type="Control" parent="UiFrame/MarginContainer/Card/Shell/HShell/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/PartRows"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 1
+script = ExtResource("15_part_row")
+IconId = 50
+Label = "Spring"
+ValueText = "2 left"
+
+[node name="Wheel" type="Control" parent="UiFrame/MarginContainer/Card/Shell/HShell/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/PartRows"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 1
+script = ExtResource("15_part_row")
+IconId = 53
+Label = "Wheel"
+ValueText = "0 left"
+State = 3
+
 [editable path="UiFrame"]
 [editable path="UiFrame/MarginContainer/Card/Shell/Toolbar"]
 [editable path="UiFrame/MarginContainer/Card/Shell/HShell/ButtonBar"]
+[editable path="UiFrame/MarginContainer/Card/Shell/HShell/SidePanel"]

@@ -106,8 +106,10 @@ Some `c_*` entries are not components of their own in Godot
 - **`c_power`** and read-only facts (for example "Weighs") are `UiValueRow`. The
   reference has no separate read-only value component.
 - **`c_panel_head`** is dropped by human decision: it is not part of the future
-  design exports, so there is no panel header component. The side panel's
-  header (`c_inspector`) is decided when the Build inspector is migrated.
+  design exports, so there is no panel header component. A side panel's
+  header, including the inspector's (`c_inspector`), is `UiSidePanel`'s own
+  header row; its icon actions are decided when the Build inspector is
+  migrated.
 
 ## Immediate-mode drawing and antialiasing
 
@@ -342,7 +344,8 @@ closes. The Toolbars page mirrors the reference's ComponentToolbars page. Its
 own toolbar is the `UiToolbar` specimen; by human decision on
 [issue #319](https://github.com/MrLogic85/Node-Runner/issues/319) it shows no
 separate Editing/Locked specimens. Under it the page shows one `UiButtonBar`
-down its left edge, laid out as Build uses it (#320); #321 adds the side bar.
+down its left edge (#320) and one `UiSidePanel` down its right edge showing the
+Parts tray (#321), both laid out as Build uses them.
 
 Component Gallery's toolbar overflow menu toggles **Debug bounds** live.
 Bounds are off by default; `ShowDebugBounds` also supports runtime changes,
@@ -589,6 +592,32 @@ button at the bottom) belongs to the screen. By human decision on #320 it
 deliberately differs from the reference's `.rail`: no `panel` background, the
 divider in `edge` rather than `line`, and locked tools keep the 20px icon of
 every stacked button rather than a 16px lock.
+
+`UiSidePanel` is the reference's SideBar, the fixed panel on the right
+([issue #321](https://github.com/MrLogic85/Node-Runner/issues/321)); by human
+decision it is a panel, not a bar, because it holds any content. It is 176px
+(`UiLayout.SidePanelWidth`, the reference token `w-side`) with a `panel`
+background and a divider down its left edge. Its header row is its own: an
+optional `IconId`, an optional `Title` and a chevron, which is a compact
+flat `UiButton`. The header reaches past the padding on the right so the
+chevron's icon lines up with the content's right edge, and it is `ink`
+rather than the reference's `muted`, while the collapsed tab's chevron stays
+`muted` to keep out of the way (human decisions on #321). The screen authors
+the content below it in `%SidePanelContent` and decides what the panel shows.
+Tapping the chevron sets `Collapsed`: the panel shrinks to a 28px tab
+(`UiLayout.SidePanelTabWidth`; the reference hardcodes 28px, it is not a
+token) holding a left chevron (the icon set names it `back`) and the title
+turned on its side, and
+tapping the tab expands it again. Both take 200ms (human decision on #321): the
+content keeps its width and slides out past the panel's edge, fading out
+over the first half, and the tab, pinned to the panel's right edge, fades in
+over the second half so the two never overlap; expanding is the reverse. `CollapsedChanged` reports each change as it
+starts; the panel never collapses on its own.
+The tab's title is a `UiVerticalLabel`, which draws its text a quarter turn
+clockwise because a Container resets a child's rotation. By human decision on
+#321 only the chevron button collapses the panel (the title does nothing), and
+the tab's title keeps the Label typography's letter spacing rather than the
+reference's wider `0.08em`, which has no token.
 
 `UiCard.ClipContent` clips the card's content to its rounded shape and draws
 the border over it, the way the reference's `overflow: hidden` frames do, so
