@@ -4,13 +4,6 @@ namespace NodeRunner.Ui.Lib;
 
 internal static class UiPopupStyle
 {
-    public static UiCard.CardVariant CardKind(UiPopupType type) => type switch
-    {
-        UiPopupType.Warn => UiCard.CardVariant.Hint,
-        UiPopupType.Danger => UiCard.CardVariant.Warning,
-        _ => UiCard.CardVariant.Frame,
-    };
-
     public static UiTokens.Color SemanticToken(UiPopupType type) =>
         type switch
         {

@@ -4,7 +4,7 @@ namespace NodeRunner.Ui.Lib;
 
 /// <summary>The authored notification card, shared by the editor and the queue host.</summary>
 [Tool]
-public sealed partial class UiNotificationContent : UiCard
+public sealed partial class UiNotificationContent : UiPopupCard
 {
     public enum PreviewTheme { Neon, Paper, EffectsLite }
 
@@ -68,7 +68,6 @@ public sealed partial class UiNotificationContent : UiCard
 
     private readonly UiUnsavedState _unsaved = new(
         [
-            (".", UiCard.PropertyName.Kind),
             ("%SemanticIcon", TextureRect.PropertyName.Texture),
             ("%SemanticIcon", CanvasItem.PropertyName.SelfModulate),
             ("%SemanticType", Label.PropertyName.Text),
@@ -108,7 +107,7 @@ public sealed partial class UiNotificationContent : UiCard
         {
             return;
         }
-        Kind = UiPopupStyle.CardKind(Type);
+        PopupType = Type;
         var color = UiPopupStyle.SemanticColor(Type, this);
         _icon.Texture = _iconOverride is { } icon
             ? icon.Load(UiIconSize.Large)
