@@ -149,7 +149,8 @@ only shows on device. `SceneEditableChildrenTests` requires the marker
 
 Product screens join these guards as they are rewritten
 ([#310](https://github.com/MrLogic85/Node-Runner/issues/310)). That issue adds
-a stricter size rule for screens, a rule against screen code building or
+a stricter size rule for screen C# (scene values are the scene's own, #331),
+a rule against screen code building or
 restyling controls, a check that the screen's scene uses library components,
 and a check that every node a screen script binds exists in its scene with a
 matching type. Theme values copied into overrides, in
