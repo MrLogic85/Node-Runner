@@ -62,8 +62,10 @@ unchanged, it belongs in `lib/`. If it embeds project vocabulary
   ViewModel-to-Control notifications.
 - `[Export]` fields have sensible defaults so the Control renders something
   useful in the editor without setup.
-- Use containers and anchors for composition. Fixed reference dimensions must
-  come from named `UiSize`/`UiLayout` values, never one-off screen literals.
+- Use containers and anchors for composition. Dimensions set in C# come from
+  named `UiSize`/`UiLayout`/`UiSpacing` values, never one-off literals. A
+  scene owns the paddings and sizes it authors; do not re-apply them from code
+  (#331).
 - Colors, fonts, and typography come from the inherited Godot `Theme`, using
   its native lookup APIs and type variations. `UiTokens` holds the typed identifiers
   a control or the editor selects a value by (`Color`, `Alpha`, `Flag`, `Typography`,

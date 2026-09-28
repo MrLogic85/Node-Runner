@@ -21,9 +21,15 @@ Each UI decision has one owner. A layer below never overrides the one above.
 | Screen scenes: `project/scenes/screens` | Layout: which components, their order, containers, separations, margins, a slot's minimum size, and text | Restyle a component (colour, font, font-size or stylebox overrides) or change its dimensions |
 | C#: view-models in `NodeRunner.App`, screen scripts in `project/src/ui/screens` | Functionality: state, rules, actions, formatting | Build a screen's static layout in code or restyle components |
 
-Layout sizes a scene sets use values from the spacing scale (`UiSize.Space`)
-or `UiLayout`; scenes cannot reference the C# constants, so this is checked in
-review. Screen scripts are thin: they bind scene nodes by unique name,
+Whoever builds a piece of layout owns its values. A scene, screen or component,
+owns the paddings, separations and slot sizes it authors: it may match a
+`UiSize`/`UiLayout` value but does not have to, and code does not re-apply
+static values a scene already stores. Layout built in C# takes its dimensions
+from `UiSize`/`UiLayout`/`UiSpacing`. UI scaling (#299) does not depend on
+this: Godot's own scaling scales a number written in a scene exactly as it
+scales one set from a token, so the factor is applied once at the UI root and
+the tokens themselves are never scaled
+([#331](https://github.com/MrLogic85/Node-Runner/issues/331)). Screen scripts are thin: they bind scene nodes by unique name,
 subscribe to their view-model and forward input. Content that varies at
 runtime (one card per creation) is instantiated from library components or
 scenes. Widgets in `project/src/ui/widgets` are components that draw
