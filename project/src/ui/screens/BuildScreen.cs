@@ -514,7 +514,7 @@ public partial class BuildScreen : Control
     {
         var buildPanel = Presentation?.BuildPanel ?? ConstructionBuildPanelPresentation.Sample;
         var panel = CreatePanel(raised: true);
-        panel.CustomMinimumSize = new Vector2(_partsTrayCollapsed ? 28 : UiLayout.SidePanelWidth, 0);
+        panel.CustomMinimumSize = new Vector2(_partsTrayCollapsed ? UiLayout.SidePanelTabWidth : UiLayout.SidePanelWidth, 0);
         panel.SizeFlagsVertical = SizeFlags.ExpandFill;
 
         if (_partsTrayCollapsed)
@@ -522,7 +522,7 @@ public partial class BuildScreen : Control
             var handle = new Button
             {
                 Text = "‹",
-                CustomMinimumSize = new Vector2(28, 0),
+                CustomMinimumSize = new Vector2(UiLayout.SidePanelTabWidth, 0),
                 SizeFlagsVertical = SizeFlags.ExpandFill,
             };
             UiThemeLookup.ApplyTypography(handle, UiTokens.Typography.Heading);

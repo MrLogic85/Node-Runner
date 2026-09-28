@@ -1,0 +1,247 @@
+using Godot;
+
+namespace NodeRunner.Ui.Lib;
+
+/// <summary>
+/// Reference side panel (<c>ComponentToolbars</c> "SideBar"): the fixed panel on the right,
+/// <see cref="UiLayout.SidePanelWidth"/> wide, with a divider down its left edge. Its own header
+/// row holds an optional icon, an optional title and a chevron button; the screen authors the
+/// content below it in <c>%SidePanelContent</c> and decides what the panel shows. Tapping the
+/// chevron collapses it to a <see cref="UiLayout.SidePanelTabWidth"/> tab with a left chevron
+/// and the title on its side; tapping the tab expands it again.
+/// </summary>
+[Tool]
+[GlobalClass]
+public partial class UiSidePanel : MarginContainer
+{
+    [Signal]
+    public delegate void CollapsedChangedEventHandler(bool collapsed);
+
+    private const float _unbounded = -1;
+    private const double _collapseSeconds = 0.2;
+
+    private string _title = "";
+    private UiIconId _iconId = UiIconId.None;
+    private bool _collapsed;
+    private Control? _pressedTarget;
+    private float _width = UiLayout.SidePanelWidth;
+    private Tween? _collapseTween;
+
+    [Export]
+    public string Title
+    {
+        get => _title;
+        set
+        {
+            _title = value;
+            Refresh();
+        }
+    }
+
+    [Export]
+    public UiIconId IconId
+    {
+        get => _iconId;
+        set
+        {
+            _iconId = value;
+            Refresh();
+        }
+    }
+
+    /// <summary>Only the user collapses the panel; a narrow screen never does it for them.</summary>
+    [Export]
+    public bool Collapsed
+    {
+        get => _collapsed;
+        set
+        {
+            if (_collapsed == value)
+            {
+                return;
+            }
+
+            _collapsed = value;
+            if (!IsNodeReady() || !IsInsideTree() || Engine.IsEditorHint())
+            {
+                Refresh();
+                return;
+            }
+
+            AnimateCollapse();
+            EmitSignal(SignalName.CollapsedChanged, value);
+        }
+    }
+
+    private float TargetWidth => Collapsed ? UiLayout.SidePanelTabWidth : UiLayout.SidePanelWidth;
+
+    public override Vector2 _GetMaximumSize() => new(_width, _unbounded);
+
+    // The scene bakes the same values, so a screen that edits the panel's children saves none of them.
+    public override void _Ready()
+    {
+        var padding = GetNode<MarginContainer>("%SidePanelPadding");
+        padding.OffsetRight = UiLayout.SidePanelWidth;
+        padding.AddThemeConstantOverride("margin_left", UiSize.Space.S3);
+        padding.AddThemeConstantOverride("margin_right", UiSize.Space.S3);
+        padding.AddThemeConstantOverride("margin_top", UiSize.Space.S2);
+        padding.AddThemeConstantOverride("margin_bottom", UiSize.Space.S2);
+        GetNode<VBoxContainer>("%SidePanelExpanded").AddThemeConstantOverride("separation", UiSize.Space.S1);
+        // The chevron button centres its icon; pulling the header past the padding puts the
+        // icon flush with the content's right edge while the button keeps its tap size.
+        GetNode<MarginContainer>("%SidePanelHeaderInset").AddThemeConstantOverride(
+            "margin_right", -(UiSize.Control.Small - UiIcons.Pixels(UiIconSize.Standard)) / 2);
+        var header = GetNode<HBoxContainer>("%SidePanelHeader");
+        header.AddThemeConstantOverride("separation", UiSize.Space.S1);
+        header.CustomMinimumSize = new Vector2(0, UiSize.Control.Small);
+        GetNode<VBoxContainer>("%SidePanelTab").AddThemeConstantOverride("separation", UiSize.Space.S3);
+        GetNode<Control>("%SidePanelTab").CustomMinimumSize = new Vector2(UiLayout.SidePanelTabWidth, 0);
+        GetNode<Control>("%SidePanelIcon").CustomMinimumSize = Vector2.One * UiIcons.Pixels(UiIconSize.Large);
+        GetNode<Control>("%SidePanelTabChevron").CustomMinimumSize = Vector2.One * UiIcons.Pixels(UiIconSize.Standard);
+
+        GetNode<Control>("%SidePanelIcon").Draw += DrawHeaderIcon;
+        GetNode<Control>("%SidePanelTabChevron").Draw += DrawExpandChevron;
+        if (!Engine.IsEditorHint())
+        {
+            GetNode<UiButton>("%SidePanelChevron").Activated += OnChevronActivated;
+            GetNode<Control>("%SidePanelTab").GuiInput += OnTabInput;
+        }
+
+        Refresh();
+    }
+
+    public override void _Notification(int what)
+    {
+        if (what == NotificationThemeChanged && IsNodeReady())
+        {
+            RedrawIcons();
+            QueueRedraw();
+        }
+    }
+
+    public override void _Draw() =>
+        DrawRect(new Rect2(Vector2.Zero, Size), UiThemeLookup.Color(this, UiTokens.Color.Panel));
+
+    private void Refresh()
+    {
+        if (!IsNodeReady())
+        {
+            return;
+        }
+
+        if (_collapseTween is null)
+        {
+            SettleCollapse();
+        }
+
+        GetNode<Control>("%SidePanelIcon").Visible = IconId != UiIconId.None;
+        GetNode<Label>("%SidePanelTitle").Text = Title;
+        var tabLabel = GetNode<UiVerticalLabel>("%SidePanelTabLabel");
+        tabLabel.Text = Title;
+        tabLabel.Visible = Title.Length > 0;
+        RedrawIcons();
+    }
+
+    private void SetWidth(float width)
+    {
+        _width = width;
+        CustomMinimumSize = new Vector2(width, 0);
+        UpdateMaximumSize();
+    }
+
+    private void SettleCollapse()
+    {
+        _collapseTween?.Kill();
+        _collapseTween = null;
+        SetWidth(TargetWidth);
+        var drawer = GetNode<Control>("%SidePanelDrawer");
+        var tab = GetNode<Control>("%SidePanelTab");
+        drawer.Visible = !Collapsed;
+        tab.Visible = Collapsed;
+        drawer.Modulate = Colors.White;
+        tab.Modulate = Colors.White;
+    }
+
+    // The drawer keeps its full width and is clipped as the panel narrows, so its content
+    // slides out past the panel's edge instead of reflowing, while the tab fades in.
+    private void AnimateCollapse()
+    {
+        _collapseTween?.Kill();
+        var drawer = GetNode<Control>("%SidePanelDrawer");
+        var tab = GetNode<Control>("%SidePanelTab");
+        foreach (var part in new[] { drawer, tab })
+        {
+            if (!part.Visible)
+            {
+                part.Modulate = Colors.Transparent;
+                part.Visible = true;
+            }
+        }
+
+        _collapseTween = CreateTween()
+            .SetParallel()
+            .SetTrans(Tween.TransitionType.Cubic)
+            .SetEase(Tween.EaseType.InOut);
+        _collapseTween.TweenMethod(Callable.From<float>(SetWidth), _width, TargetWidth, _collapseSeconds);
+        // The outgoing part fades out in the first half and the incoming part fades in
+        // the second, so the tab's title never lies over the content.
+        var (outgoing, incoming) = Collapsed ? (drawer, tab) : (tab, drawer);
+        var half = _collapseSeconds / 2;
+        _collapseTween.TweenProperty(outgoing, "modulate", Colors.Transparent, half);
+        _collapseTween.TweenProperty(incoming, "modulate", Colors.White, half).SetDelay(half);
+        _collapseTween.Chain().TweenCallback(Callable.From(SettleCollapse));
+    }
+
+    private void RedrawIcons()
+    {
+        GetNode<Control>("%SidePanelIcon").QueueRedraw();
+        GetNode<Control>("%SidePanelTabChevron").QueueRedraw();
+    }
+
+    // Icons are drawn rather than set as a TextureRect's texture: the rasterised texture is
+    // built at runtime, and a screen that edits the panel's children would save it.
+    private void DrawHeaderIcon()
+    {
+        if (IconId != UiIconId.None)
+        {
+            DrawIcon(GetNode<Control>("%SidePanelIcon"), IconId, UiIconSize.Large, UiTokens.Color.Ink);
+        }
+    }
+
+    // The reference's left chevron is named back.
+    private void DrawExpandChevron() =>
+        DrawIcon(GetNode<Control>("%SidePanelTabChevron"), UiIconId.Back, UiIconSize.Standard, UiTokens.Color.Muted);
+
+    private void DrawIcon(Control target, UiIconId icon, UiIconSize size, UiTokens.Color color)
+    {
+        var pixels = Vector2.One * UiIcons.Pixels(size);
+        var origin = (target.Size - pixels) / 2;
+        target.DrawTextureRect(UiIcons.Load(icon, size), new Rect2(origin, pixels), tile: false, UiThemeLookup.Color(this, color));
+    }
+
+    private void OnChevronActivated() => Collapsed = true;
+
+    private void OnTabInput(InputEvent inputEvent) => OnToggleInput(inputEvent, GetNode<Control>("%SidePanelTab"));
+
+    // Toggles on a release over the control the press started on, so sliding off cancels.
+    private void OnToggleInput(InputEvent inputEvent, Control control)
+    {
+        if (PointerInput.TryGetPressPosition(inputEvent, out _))
+        {
+            _pressedTarget = control;
+            control.AcceptEvent();
+            return;
+        }
+
+        if (PointerInput.TryGetReleasePosition(inputEvent, out var position))
+        {
+            bool toggles = _pressedTarget == control && new Rect2(Vector2.Zero, control.Size).HasPoint(position);
+            _pressedTarget = null;
+            control.AcceptEvent();
+            if (toggles)
+            {
+                Collapsed = !Collapsed;
+            }
+        }
+    }
+}

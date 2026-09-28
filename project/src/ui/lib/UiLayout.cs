@@ -20,7 +20,14 @@ public static class UiLayout
     /// <summary>The button bar fits one touch target plus its inset (the reference token <c>w-rail</c>).</summary>
     public const int ButtonBarWidth = UiSize.Control.Touch + UiSize.Space.S2;
 
+    /// <summary>The side panel's width (the reference token <c>w-side</c>).</summary>
     public const int SidePanelWidth = 176;
+
+    /// <summary>
+    /// The collapsed side panel's tab. Not a reference token: the reference hardcodes 28px.
+    /// </summary>
+    public const int SidePanelTabWidth = 28;
+
     public const int MenuWidth = 200;
     public const int DialogWidth = 300;
     public const int BrainWidth = 460;

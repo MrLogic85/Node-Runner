@@ -1,0 +1,186 @@
+[gd_scene format=3 uid="uid://c7sdp4nel2qx"]
+
+[ext_resource type="Script" uid="uid://bndwo1ominqta" path="res://src/ui/lib/UiSidePanel.cs" id="1_side"]
+[ext_resource type="Script" uid="uid://fw1i2vfgkd7q" path="res://src/ui/lib/UiDivider.cs" id="2_divider"]
+[ext_resource type="Script" uid="uid://r2ped3g3uiaa" path="res://src/ui/lib/UiButton.cs" id="3_brq4r"]
+[ext_resource type="Script" uid="uid://dk67qmt3brp4e" path="res://src/ui/lib/UiLabel.cs" id="3_label"]
+[ext_resource type="Script" uid="uid://bt0qun8lahd5f" path="res://src/ui/lib/UiVerticalLabel.cs" id="4_vlabel"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ste4s"]
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+bg_color = Color(1, 1, 1, 0)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(1, 1, 1, 0)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hd5bl"]
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+bg_color = Color(1, 1, 1, 0)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(1, 1, 1, 0)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_teke8"]
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+bg_color = Color(1, 1, 1, 0)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(1, 1, 1, 0)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_mh31e"]
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+bg_color = Color(1, 1, 1, 0)
+border_color = Color(1, 1, 1, 0)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_qfyv8"]
+
+[node name="UiSidePanel" type="MarginContainer" unique_id=584626067]
+custom_minimum_size = Vector2(176, 0)
+anchors_preset = 11
+anchor_left = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -176.0
+grow_horizontal = 0
+grow_vertical = 2
+size_flags_vertical = 3
+mouse_filter = 0
+script = ExtResource("1_side")
+
+[node name="SidePanelDrawer" type="Control" parent="." unique_id=1602747327]
+unique_name_in_owner = true
+clip_contents = true
+layout_mode = 2
+mouse_filter = 2
+
+[node name="SidePanelPadding" type="MarginContainer" parent="SidePanelDrawer" unique_id=241500759]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 9
+anchor_bottom = 1.0
+offset_right = 176.0
+grow_vertical = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 8
+
+[node name="SidePanelExpanded" type="VBoxContainer" parent="SidePanelDrawer/SidePanelPadding" unique_id=1161470009]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="SidePanelHeaderInset" type="MarginContainer" parent="SidePanelDrawer/SidePanelPadding/SidePanelExpanded"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/margin_right = -8
+
+[node name="SidePanelHeader" type="HBoxContainer" parent="SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelHeaderInset" unique_id=256454402]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 32)
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="SidePanelIcon" type="Control" parent="SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelHeaderInset/SidePanelHeader" unique_id=1617606930]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(20, 20)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+
+[node name="SidePanelTitle" type="Label" parent="SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelHeaderInset/SidePanelHeader" unique_id=85325678]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text_overrun_behavior = 3
+script = ExtResource("3_label")
+TextStyle = 2
+
+[node name="SidePanelChevron" type="Button" parent="SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelHeaderInset/SidePanelHeader" unique_id=599248499]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+mouse_filter = 1
+theme_override_styles/normal = SubResource("StyleBoxFlat_ste4s")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_hd5bl")
+theme_override_styles/hover = SubResource("StyleBoxFlat_teke8")
+theme_override_styles/disabled = SubResource("StyleBoxFlat_mh31e")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_qfyv8")
+script = ExtResource("3_brq4r")
+IconId = 7
+Kind = 3
+ContentLayout = 2
+metadata/_custom_type_script = "uid://r2ped3g3uiaa"
+
+[node name="SidePanelContent" type="VBoxContainer" parent="SidePanelDrawer/SidePanelPadding/SidePanelExpanded" unique_id=398215167]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="SidePanelTab" type="VBoxContainer" parent="." unique_id=537295663]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(28, 0)
+layout_mode = 2
+size_flags_horizontal = 8
+mouse_filter = 0
+theme_override_constants/separation = 12
+alignment = 1
+
+[node name="SidePanelTabChevron" type="Control" parent="SidePanelTab" unique_id=217993199]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(16, 16)
+layout_mode = 2
+size_flags_horizontal = 4
+mouse_filter = 2
+
+[node name="SidePanelTabLabel" type="Control" parent="SidePanelTab" unique_id=1167489898]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 4
+mouse_filter = 2
+script = ExtResource("4_vlabel")
+
+[node name="UiDivider" type="Control" parent="." unique_id=75011903]
+layout_mode = 2
+size_flags_horizontal = 0
+mouse_filter = 2
+script = ExtResource("2_divider")
+Orientation = 1
