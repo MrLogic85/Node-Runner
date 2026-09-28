@@ -50,6 +50,29 @@ public static class UiThemeLookup
         return control.GetThemeConstant(name, UiThemes.TokenType) / _alphaByteMax;
     }
 
+    public static float Size(UiTokens.Size.Stroke stroke)
+    {
+        switch (stroke)
+        {
+            case UiTokens.Size.Stroke.Hair:
+                return UiSize.Stroke.Hair;
+            case UiTokens.Size.Stroke.Signal:
+                return UiSize.Stroke.Signal;
+            case UiTokens.Size.Stroke.Beam:
+                return UiSize.Stroke.Beam;
+            case UiTokens.Size.Stroke.ButtonSelected:
+                return UiSize.Stroke.ButtonSelected;
+            case UiTokens.Size.Stroke.SelectionHandle:
+                return UiSize.Stroke.SelectionHandle;
+            case UiTokens.Size.Stroke.InfoRing:
+                return UiSize.Stroke.InfoRing;
+            case UiTokens.Size.Stroke.Number:
+                return UiSize.Stroke.Number;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(stroke), stroke, null);
+        }
+    }
+
     public static int FontSize(Control control, UiTokens.Typography token)
     {
         ArgumentNullException.ThrowIfNull(control);

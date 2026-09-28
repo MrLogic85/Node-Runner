@@ -6,6 +6,18 @@ namespace NodeRunner.Ui.Tests;
 public sealed class UiTokensTests
 {
     [Fact]
+    public void StrokeSizeTokens_ResolveToTheSameNamedUiSizeConstant()
+    {
+        foreach (var token in Enum.GetValues<UiTokens.Size.Stroke>())
+        {
+            var constant = typeof(UiSize.Stroke).GetField(token.ToString());
+
+            constant.ShouldNotBeNull($"UiSize.Stroke has no constant for {token}");
+            UiThemeLookup.Size(token).ShouldBe(Convert.ToSingle(constant.GetValue(null)), $"{token}");
+        }
+    }
+
+    [Fact]
     public void Neon_MapsEveryCanonicalColor()
     {
         var tokens = ThemeFile.For(UiTokenType.Neon);

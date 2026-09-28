@@ -37,7 +37,7 @@ public static class UiTokens
     /// </summary>
     public enum Alpha
     {
-        /// <summary>Soft fill for selected and hovered backgrounds.</summary>
+        /// <summary>Soft fill for selected, pressed and hovered backgrounds.</summary>
         Soft,
     }
 
@@ -60,6 +60,20 @@ public static class UiTokens
         Readout,
         ReadoutMedium,
         ReadoutSmall,
+    }
+
+    public static class Size
+    {
+        public enum Stroke
+        {
+            Hair,
+            Signal,
+            Beam,
+            ButtonSelected,
+            SelectionHandle,
+            InfoRing,
+            Number
+        }
     }
 
     public static string Name(Color token) => token switch

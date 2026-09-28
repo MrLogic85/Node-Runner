@@ -2,7 +2,7 @@ using Godot;
 
 namespace NodeRunner.Ui.Lib;
 
-/// <summary>Non-interactive menu divider using the menu surface border style.</summary>
+/// <summary>Non-interactive menu divider: a hairline in <c>line</c>, as in the reference menus.</summary>
 [Tool]
 [GlobalClass]
 public partial class UiMenuItemDivider : UiMenuItem
@@ -27,7 +27,7 @@ public partial class UiMenuItemDivider : UiMenuItem
         DrawLine(
             new Vector2(HorizontalPadding, y),
             new Vector2(Mathf.Max(HorizontalPadding, Size.X - HorizontalPadding), y),
-            UiThemeLookup.Color(this, UiTokens.Color.Edge),
+            UiThemeLookup.Color(this, UiTokens.Color.Line),
             UiSize.Stroke.Hair);
     }
 

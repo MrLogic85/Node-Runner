@@ -10,7 +10,7 @@ public partial class UiMenuToggleItem : UiMenuItem, ISerializationListener
     [Signal]
     public delegate void ToggledEventHandler(bool on);
 
-    private string _labelText = "Sounds";
+    private string _labelText = "";
     private string _subtext = string.Empty;
     private bool _on = true;
     private UiToggleRow? _toggle;

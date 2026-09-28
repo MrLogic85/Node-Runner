@@ -8,46 +8,51 @@ namespace NodeRunner.Ui.Screens;
 /// reusable controls disconnected from game state and lets developers switch
 /// tokens live to prove token updates do not require rebuilding the screen.
 /// </summary>
-public partial class ComponentGalleryScreen : Control
+public partial class ComponentGalleryScreen : GalleryScreen
 {
-    [Signal]
-    public delegate void CloseRequestedEventHandler();
-
-    [Export]
-    public bool ShowCloseAction { get; set; }
-
-    [Export]
-    public bool ShowDebugBounds
-    {
-        get => _showDebugBounds;
-        set
-        {
-            _showDebugBounds = value;
-            if (_boundsOverlay is not null)
-            {
-                _boundsOverlay.Visible = value;
-                _boundsOverlay.SetProcess(value);
-            }
-
-            RefreshToolbarMenu();
-        }
-    }
-
-    private bool _showDebugBounds;
-    private UiBoundsDebugOverlay? _boundsOverlay;
-    private UiButton? _toolbarMore;
-    private UiMenu? _toolbarMenu;
-    private Button? _toolbarDismiss;
     private ScrollContainer? _scroll;
     private Control? _scrollContent;
-    private UiFrame? _frame;
+
+    protected override GalleryPage Page => GalleryPage.Components;
 
     public override void _Ready()
     {
-        Name = nameof(ComponentGalleryScreen);
-        UiLayout.ApplyScreen(this);
-        BuildLayout();
+        base._Ready();
+        _scroll = GetNode<ScrollContainer>("%Scroll");
+        _scrollContent = GetNode<MarginContainer>("%ContentFrame");
+        var runtimeSections = GetNode<VBoxContainer>("%RuntimeSections");
+        BindAuthoredControls(runtimeSections.GetParent<Control>());
+        UiNativeScroll.AllowGesturesToBubble(_scrollContent);
         Callable.From(ResetScrollPosition).CallDeferred();
+    }
+
+    protected override void OpenPage(GalleryPage page)
+    {
+        switch (page)
+        {
+            case GalleryPage.Toolbars:
+                OpenGalleryPage(GD.Load<PackedScene>("res://scenes/screens/ToolbarsScreen.tscn").Instantiate<ToolbarsScreen>());
+                break;
+            case GalleryPage.ColorsAndStyles:
+                var screen = GD.Load<PackedScene>("res://scenes/screens/ColorsAndStylesScreen.tscn").Instantiate<ColorsAndStylesScreen>();
+                screen.ShowCloseAction = true;
+                screen.CloseRequested += () => ReturnFrom(screen);
+                OpenOnTop(screen);
+                break;
+            case GalleryPage.PopupGallery:
+                var gallery = GD.Load<PackedScene>("res://scenes/screens/PopupGalleryScreen.tscn").Instantiate<PopupGalleryScreen>();
+                gallery.CloseRequested += () => ReturnFrom(gallery);
+                OpenOnTop(gallery);
+                break;
+        }
+    }
+
+    protected override void OnThemeApplied()
+    {
+        if (_scrollContent is not null)
+        {
+            UiNativeScroll.AllowGesturesToBubble(_scrollContent);
+        }
     }
 
     private void ResetScrollPosition()
@@ -58,173 +63,41 @@ public partial class ComponentGalleryScreen : Control
         }
     }
 
-    private void BuildLayout()
+    // A page carrying the gallery toolbar starts with this page's theme and
+    // debug bounds, hands them back when it closes, and can switch straight
+    // to another page.
+    private void OpenGalleryPage(GalleryScreen page)
     {
-        _frame = GetNode<UiFrame>("%UiFrame");
-        BindHeader();
-        _scroll = GetNode<ScrollContainer>("%Scroll");
-        _scrollContent = GetNode<MarginContainer>("%ContentFrame");
-        var runtimeSections = GetNode<VBoxContainer>("%RuntimeSections");
-        BindAuthoredControls(runtimeSections.GetParent<Control>());
-
-        UiNativeScroll.AllowGesturesToBubble(_scrollContent);
-        _boundsOverlay = new UiBoundsDebugOverlay
+        page.ShowCloseAction = true;
+        page.ThemeIndex = ThemeIndex;
+        page.ShowDebugBounds = ShowDebugBounds;
+        page.CloseRequested += () => ReturnFrom(page);
+        page.PageRequested += next =>
         {
-            RootPath = _frame.GetPath(),
+            ReturnFrom(page);
+            OpenPage(next);
         };
-        AddChild(_boundsOverlay);
-        ShowDebugBounds = ShowDebugBounds || ProjectSettings.GetSetting("ui/component_gallery_debug_bounds", false).AsBool();
-        CreateToolbarMenu();
+        OpenOnTop(page);
     }
 
-    private void BindHeader()
+    // Shows another gallery page in place of this one until it asks to close.
+    private void OpenOnTop(Control screen)
     {
-        var close = GetNode<UiButton>("%CloseAction");
-        close.Visible = ShowCloseAction;
-        close.Activated += () => EmitSignal(SignalName.CloseRequested);
-
-        var switcher = GetNode<UiSegmentedSwitch>("%ThemeSwitcher");
-        switcher.SelectionChanged += OnThemeSelectionChanged;
-
-        _toolbarMore = GetNode<UiButton>("%ToolbarMore");
-        _toolbarMore.Activated += ToggleToolbarMenu;
-        _toolbarMore.ItemRectChanged += () => Callable.From(PositionToolbarMenu).CallDeferred();
-    }
-
-    private void OnThemeSelectionChanged(int index)
-    {
-        ApplyTheme(UiThemes.For(index switch
-        {
-            1 => UiTokenType.Paper,
-            2 => UiTokenType.Light,
-            _ => UiTokenType.Neon,
-        }));
-    }
-
-    private void CreateToolbarMenu()
-    {
-        _toolbarDismiss = new Button
-        {
-            Flat = true,
-            FocusMode = FocusModeEnum.None,
-            MouseFilter = MouseFilterEnum.Stop,
-            Visible = false,
-        };
-        foreach (var state in new[] { "normal", "hover", "pressed", "focus" })
-        {
-            _toolbarDismiss.AddThemeStyleboxOverride(state, new StyleBoxEmpty());
-        }
-
-        AddChild(_toolbarDismiss);
-        _toolbarDismiss.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
-        _toolbarDismiss.Pressed += CloseToolbarMenu;
-        _toolbarMenu = new UiMenu();
-        _toolbarMenu.IndexClicked += index =>
-        {
-            if (index is 0 or 1)
-            {
-                HandleToolbarMenuAction(index);
-            }
-        };
-        _toolbarMenu.Resized += PositionToolbarMenu;
-        AddChild(_toolbarMenu);
-        RefreshToolbarMenu();
-        VisibilityChanged += () =>
-        {
-            if (!IsVisibleInTree())
-            {
-                CloseToolbarMenu();
-            }
-        };
-    }
-
-    private void RefreshToolbarMenu()
-    {
-        if (_toolbarMenu is null)
-        {
-            return;
-        }
-
-        UiMenuItems.Populate(
-            _toolbarMenu,
-            [
-                new UiMenuItemSpec(
-                    "Debug bounds",
-                    Selected: ShowDebugBounds),
-                new UiMenuItemSpec("Popup Gallery", UiIconId.Model),
-            ],
-            showSelectedIndicator: true);
-    }
-
-    private void HandleToolbarMenuAction(int index)
-    {
-        if (index == 0)
-        {
-            ShowDebugBounds = !ShowDebugBounds;
-        }
-
-        CloseToolbarMenu();
-        if (index != 1)
-        {
-            return;
-        }
-
-        var gallery = GD.Load<PackedScene>("res://scenes/screens/PopupGalleryScreen.tscn").Instantiate<PopupGalleryScreen>();
-        gallery.CloseRequested += () =>
-        {
-            gallery.QueueFree();
-            Show();
-        };
-        GetParent().AddChild(gallery);
+        Toolbar?.CloseMenu();
+        GetParent().AddChild(screen);
         Hide();
     }
 
-    private void ToggleToolbarMenu()
+    private void ReturnFrom(Control screen)
     {
-        if (_toolbarMenu is null || _toolbarDismiss is null)
+        if (screen is GalleryScreen page)
         {
-            return;
+            ThemeIndex = page.ThemeIndex;
+            ShowDebugBounds = page.ShowDebugBounds;
         }
 
-        if (_toolbarMenu.Visible)
-        {
-            CloseToolbarMenu();
-            return;
-        }
-
-        _toolbarDismiss.Show();
-        _toolbarMenu.Show();
-        PositionToolbarMenu();
-        Callable.From(PositionToolbarMenu).CallDeferred();
-    }
-
-    private void PositionToolbarMenu()
-    {
-        if (_toolbarMenu is null || _toolbarMore is null || !_toolbarMenu.Visible)
-        {
-            return;
-        }
-
-        var transform = GetGlobalTransform().AffineInverse() * _toolbarMore.GetGlobalTransform();
-        var bottomRight = transform * _toolbarMore.Size;
-        _toolbarMenu.Position = new Vector2(
-            Mathf.Max(0, bottomRight.X - _toolbarMenu.Size.X),
-            bottomRight.Y + UiSize.Space.S1);
-    }
-
-    private void CloseToolbarMenu()
-    {
-        _toolbarMenu?.Hide();
-        _toolbarDismiss?.Hide();
-    }
-
-    public override void _UnhandledKeyInput(InputEvent inputEvent)
-    {
-        if (_toolbarMenu?.Visible == true && inputEvent.IsActionPressed("ui_cancel"))
-        {
-            CloseToolbarMenu();
-            GetViewport().SetInputAsHandled();
-        }
+        screen.QueueFree();
+        Show();
     }
 
     private void BindAuthoredControls(Control control)
@@ -333,13 +206,4 @@ public partial class ComponentGalleryScreen : Control
         }
     }
 
-    private void ApplyTheme(Godot.Theme theme)
-    {
-        Theme = theme;
-
-        if (_scrollContent is not null)
-        {
-            UiNativeScroll.AllowGesturesToBubble(_scrollContent);
-        }
-    }
 }

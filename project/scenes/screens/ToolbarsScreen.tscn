@@ -1,0 +1,111 @@
+[gd_scene format=3 uid="uid://de53n5dwx7dp7"]
+
+[ext_resource type="Script" uid="uid://du7gm5fst4u3v" path="res://src/ui/screens/ToolbarsScreen.cs" id="1_toolbars"]
+[ext_resource type="PackedScene" uid="uid://dokr6l5stu6ll" path="res://scenes/ui/UiFrame.tscn" id="2_frame"]
+[ext_resource type="PackedScene" uid="uid://gydkh1xys4yo" path="res://scenes/ui/UiToolbar.tscn" id="3_toolbar"]
+[ext_resource type="Script" uid="uid://dk67qmt3brp4e" path="res://src/ui/lib/UiLabel.cs" id="4_label"]
+[ext_resource type="Script" uid="uid://pdb6hwlullhe" path="res://src/ui/lib/UiSegmentedSwitch.cs" id="5_theme_switch"]
+[ext_resource type="Script" uid="uid://dd0bugxsg7bvl" path="res://src/ui/lib/UiSegment.cs" id="6_theme_segment"]
+[ext_resource type="Script" uid="uid://cuku7dsosusj4" path="res://src/ui/lib/UiMenuToggleItem.cs" id="7_menu_toggle_item"]
+[ext_resource type="Script" uid="uid://ddvhocc4qru2x" path="res://src/ui/lib/UiMenuItemDivider.cs" id="8_menu_divider"]
+[ext_resource type="Script" uid="uid://dah3q1p7ikjlm" path="res://src/ui/lib/UiMenuActionItem.cs" id="9_menu_item"]
+
+[sub_resource type="Resource" id="Resource_theme_neon"]
+script = ExtResource("6_theme_segment")
+Text = "Neon"
+
+[sub_resource type="Resource" id="Resource_theme_paper"]
+script = ExtResource("6_theme_segment")
+Text = "Paper"
+
+[sub_resource type="Resource" id="Resource_theme_effects_lite"]
+script = ExtResource("6_theme_segment")
+Text = "Effects lite"
+
+[node name="ToolbarsScreen" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_toolbars")
+
+[node name="UiFrame" parent="." instance=ExtResource("2_frame")]
+unique_name_in_owner = true
+layout_mode = 1
+
+[node name="Shell" type="VBoxContainer" parent="UiFrame/MarginContainer/Card" index="0"]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="Toolbar" parent="UiFrame/MarginContainer/Card/Shell" instance=ExtResource("3_toolbar")]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="ToolbarTitle" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/HBoxContainer/ToolbarContent" index="0"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Toolbars"
+script = ExtResource("4_label")
+TextStyle = 1
+
+[node name="ThemeSwitcher" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/HBoxContainer/ToolbarContent" index="1"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_constants/separation = 0
+script = ExtResource("5_theme_switch")
+Segments = Array[ExtResource("6_theme_segment")]([SubResource("Resource_theme_neon"), SubResource("Resource_theme_paper"), SubResource("Resource_theme_effects_lite")])
+
+[node name="ToolbarMenuDebugBounds" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/ToolbarMenu" index="0"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 0
+script = ExtResource("7_menu_toggle_item")
+LabelText = "Debug Bounds"
+metadata/_custom_type_script = "uid://cuku7dsosusj4"
+
+[node name="UiMenuItemDivider" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/ToolbarMenu" index="1"]
+layout_mode = 2
+mouse_filter = 2
+script = ExtResource("8_menu_divider")
+metadata/_custom_type_script = "uid://ddvhocc4qru2x"
+
+[node name="ToolbarMenuComponents" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/ToolbarMenu" index="2"]
+unique_name_in_owner = true
+layout_mode = 2
+script = ExtResource("9_menu_item")
+LabelText = "Components"
+ShowSelectedIndicator = true
+metadata/_custom_type_script = "uid://dah3q1p7ikjlm"
+
+[node name="ToolbarMenuToolbars" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/ToolbarMenu" index="3"]
+unique_name_in_owner = true
+layout_mode = 2
+script = ExtResource("9_menu_item")
+LabelText = "Toolbars"
+ShowSelectedIndicator = true
+Selected = true
+metadata/_custom_type_script = "uid://dah3q1p7ikjlm"
+
+[node name="ToolbarMenuColorsAndStyles" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/ToolbarMenu" index="4"]
+unique_name_in_owner = true
+layout_mode = 2
+script = ExtResource("9_menu_item")
+LabelText = "Colors & Styles"
+ShowSelectedIndicator = true
+metadata/_custom_type_script = "uid://dah3q1p7ikjlm"
+
+[node name="ToolbarMenuPopupGallery" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/ToolbarMenu" index="5"]
+unique_name_in_owner = true
+layout_mode = 2
+script = ExtResource("9_menu_item")
+LabelText = "Popup Gallery"
+NoteText = "Dialog and Notification components"
+ShowSelectedIndicator = true
+metadata/_custom_type_script = "uid://dah3q1p7ikjlm"
+
+[editable path="UiFrame"]
+[editable path="UiFrame/MarginContainer/Card/Shell/Toolbar"]
