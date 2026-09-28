@@ -3,6 +3,7 @@
 [ext_resource type="Script" uid="uid://bomhjvql0pdwj" path="res://src/ui/lib/UiDialogContent.cs" id="1"]
 [ext_resource type="Script" uid="uid://tj04ceasjqhg" path="res://src/ui/lib/UiPopupCard.cs" id="2"]
 [ext_resource type="Script" uid="uid://r2ped3g3uiaa" path="res://src/ui/lib/UiButton.cs" id="3"]
+[ext_resource type="Script" uid="uid://bjt8et7kcs50x" path="res://src/ui/lib/UiCardActions.cs" id="4"]
 
 [node name="UiDialogContent" type="Control" unique_id=820140142]
 layout_mode = 3
@@ -28,17 +29,31 @@ custom_minimum_size = Vector2(300, 0)
 layout_mode = 0
 mouse_filter = 1
 script = ExtResource("2")
+SizeVariant = 4
+ClipContent = true
 
-[node name="Column" type="VBoxContainer" parent="Card" unique_id=834477201]
+[node name="Stack" type="VBoxContainer" parent="Card" unique_id=1459320317]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="Body" type="MarginContainer" parent="Card/Stack" unique_id=1283925640]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 12
+
+[node name="Column" type="VBoxContainer" parent="Card/Stack/Body" unique_id=834477201]
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="Heading" type="HBoxContainer" parent="Card/Column" unique_id=1807454297]
+[node name="Heading" type="HBoxContainer" parent="Card/Stack/Body/Column" unique_id=1807454297]
 layout_mode = 2
 mouse_filter = 2
 theme_override_constants/separation = 8
 
-[node name="SemanticIcon" type="TextureRect" parent="Card/Column/Heading" unique_id=835453344]
+[node name="SemanticIcon" type="TextureRect" parent="Card/Stack/Body/Column/Heading" unique_id=835453344]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(20, 20)
 layout_mode = 2
@@ -47,12 +62,12 @@ mouse_filter = 2
 expand_mode = 1
 stretch_mode = 5
 
-[node name="Titles" type="VBoxContainer" parent="Card/Column/Heading" unique_id=1579893642]
+[node name="Titles" type="VBoxContainer" parent="Card/Stack/Body/Column/Heading" unique_id=1579893642]
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 2
 
-[node name="SemanticType" type="Label" parent="Card/Column/Heading/Titles" unique_id=810079057]
+[node name="SemanticType" type="Label" parent="Card/Stack/Body/Column/Heading/Titles" unique_id=810079057]
 unique_name_in_owner = true
 layout_mode = 2
 metadata/ui_font_family = "Body"
@@ -60,7 +75,7 @@ metadata/ui_line_height = 13.0
 metadata/ui_font_weight = 600
 metadata/ui_letter_spacing = 0.06
 
-[node name="Title" type="Label" parent="Card/Column/Heading/Titles" unique_id=1883073661]
+[node name="Title" type="Label" parent="Card/Stack/Body/Column/Heading/Titles" unique_id=1883073661]
 unique_name_in_owner = true
 layout_mode = 2
 text = "Your dialog"
@@ -69,13 +84,13 @@ metadata/ui_line_height = 18.0
 metadata/ui_font_weight = 600
 metadata/ui_letter_spacing = 0.0
 
-[node name="BodyScroll" type="ScrollContainer" parent="Card/Column" unique_id=620710633]
+[node name="BodyScroll" type="ScrollContainer" parent="Card/Stack/Body/Column" unique_id=620710633]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 3
 horizontal_scroll_mode = 0
 
-[node name="Content" type="Label" parent="Card/Column/BodyScroll" unique_id=1924902134]
+[node name="Content" type="Label" parent="Card/Stack/Body/Column/BodyScroll" unique_id=1924902134]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(120, 0)
 layout_mode = 2
@@ -87,7 +102,7 @@ metadata/ui_line_height = 18.0
 metadata/ui_font_weight = 400
 metadata/ui_letter_spacing = 0.0
 
-[node name="Error" type="Label" parent="Card/Column" unique_id=1536230379]
+[node name="Error" type="Label" parent="Card/Stack/Body/Column" unique_id=1536230379]
 unique_name_in_owner = true
 visible = false
 custom_minimum_size = Vector2(120, 0)
@@ -99,24 +114,26 @@ metadata/ui_line_height = 14.0
 metadata/ui_font_weight = 400
 metadata/ui_letter_spacing = 0.0
 
-[node name="Actions" type="HBoxContainer" parent="Card/Column" unique_id=623321331]
+[node name="Actions" type="Container" parent="Card/Stack" unique_id=623321331]
 layout_mode = 2
-theme_override_constants/separation = 8
+script = ExtResource("4")
 
-[node name="Cancel" type="Button" parent="Card/Column/Actions" unique_id=353276574]
+[node name="Cancel" type="Button" parent="Card/Stack/Actions" unique_id=353276574]
 unique_name_in_owner = true
 layout_mode = 2
-size_flags_horizontal = 3
+size_flags_horizontal = 4
 size_flags_vertical = 4
 mouse_filter = 1
 text = "Cancel"
 script = ExtResource("3")
+ContentLayout = 1
 
-[node name="Confirm" type="Button" parent="Card/Column/Actions" unique_id=1701276200]
+[node name="Confirm" type="Button" parent="Card/Stack/Actions" unique_id=1701276200]
 unique_name_in_owner = true
 layout_mode = 2
-size_flags_horizontal = 3
+size_flags_horizontal = 4
 size_flags_vertical = 4
 mouse_filter = 1
 text = "Continue"
 script = ExtResource("3")
+ContentLayout = 1

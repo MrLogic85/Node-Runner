@@ -17,6 +17,7 @@ public sealed class SceneDerivedStateTests
         ["UiCard.cs"] = ["clip_children"],
         ["UiStageCard.cs"] = ["clip_children"],
         ["UiFrameCard.cs"] = ["clip_children"],
+        ["UiPopupCard.cs"] = ["clip_children"],
         ["UiNotificationContent.cs"] = ["clip_children"],
         ["UiMenu.cs"] = ["clip_children"],
         ["UiPartRow.cs"] = ["self_modulate"],

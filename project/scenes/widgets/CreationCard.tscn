@@ -143,6 +143,7 @@ mouse_filter = 1
 text = "Copy"
 script = ExtResource("8_button")
 IconId = 8
+Kind = 3
 ContentLayout = 1
 
 [node name="Edit" type="Button" parent="Frame/Stack/Actions" unique_id=162554681]
@@ -154,6 +155,7 @@ mouse_filter = 1
 text = "Edit"
 script = ExtResource("8_button")
 IconId = 10
+Kind = 3
 ContentLayout = 1
 
 [node name="Delete" type="Button" parent="Frame/Stack/Actions" unique_id=1080360446]

@@ -128,7 +128,10 @@ Some `c_*` entries are not components of their own in Godot
   behaviour (hold to activate, disabled, badge). The container implements
   `IUiButtonDesigner`: a `UiButton` whose *direct* parent is a designer takes
   its colours, content layout and corners from it (`UiButtonDesign`),
-  and the container sizes the cells itself. The outer cells round their bottom
+  and the container sizes the cells itself. The button's kind only picks the
+  text colour: Primary is accent, Tertiary (destructive) is danger, Secondary
+  and Flat are ink. A cell may be text only (no icon), as in `UiDialog`. The
+  outer cells round their bottom
   corners to the card's, since a card inside a page cannot clip. Other button groups that need a
   look of their own use the same API. The pressed look of a cell waits for
   [#286](https://github.com/MrLogic85/Node-Runner/issues/286).
@@ -409,8 +412,10 @@ reference's dialog/toast frame: its border and glow take the severity colour,
 accent for Default, halo for Warn and danger for Danger (#355). It is not a
 `UiCard` variant, since the popup type picks it, not the screen. Default actions use Primary buttons, Warning actions use
 Flat (human decision pending designer review), and Danger actions use Tertiary.
-Cancel and action have exactly equal width and height, expanding evenly across
-the action row with a single token-sized gap, including busy and retry states.
+Cancel is Secondary. Both sit as text-only cells in a `UiCardActions` bar flush
+with the bottom of the dialog frame (#353): they share its width equally with
+a hairline between them, so Primary reads as accent text, Flat and Secondary as
+ink and Tertiary as danger, and a hold fill covers only its own cell.
 `ActionText` is optional: null, empty or whitespace omits the action button and
 the abort button fills the entire row. `AbortText` defaults to `"Cancel"` and
 must be nonblank. `Action` is non-nullable with a default implementation returning
@@ -532,14 +537,16 @@ Open `project/scenes/ui/UiDialogContent.tscn` in the 2D editor. This is the
 actual scene instantiated by `UiDialog`, not a separate mock. Build the C#
 project once after script changes so Godot can run its editor previews.
 
-- `Card/Column/Heading/Titles/Title` and `Card/Column/BodyScroll/Content`:
-  edit the Label's Text for the standalone specimen.
-- `Card/Column/Actions/Cancel` and `Confirm`: edit the button's **Text**. Toggle Confirm's Visible for a
+- `Card/Stack/Body/Column/Heading/Titles/Title` and
+  `Card/Stack/Body/Column/BodyScroll/Content`: edit the Label's Text for the
+  standalone specimen.
+- `Card/Stack/Actions/Cancel` and `Confirm`: edit the button's **Text**. Toggle Confirm's Visible for a
   one-button specimen; the abort button fills the row.
-- `Card`: edit Custom Minimum Size X for the desired card width. Containers
-  own child placement; `Column` and `Actions` expose separation under Theme
-  Overrides / Constants. The view keeps the card centered, constrains long
-  content to the viewport and keeps the action buttons equal.
+- `Card`: edit Custom Minimum Size X for the desired card width. The card is
+  `Flush`, so `Body`'s margins are the dialog's padding and the `Actions` bar
+  reaches the frame. Containers own child placement; `Column` exposes its
+  separation under Theme Overrides / Constants. The view keeps the card
+  centered and constrains long content to the viewport.
 - Root `Type` and `Theme Preview`: preview semantic type and Neon/Paper/
   Effects Lite. Typography and semantic colors still come from shared tokens.
   Previewing an error is possible by showing the named `Error` Label.
