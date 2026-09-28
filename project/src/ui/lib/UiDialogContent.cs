@@ -189,9 +189,6 @@ public sealed partial class UiDialogContent : Control
             return;
         }
         var available = Size - Vector2.One * UiSize.Space.S4 * 2;
-        var actionWidth = Mathf.Max(_cancel.GetMinimumSize().X, _confirm.Visible ? _confirm.GetMinimumSize().X : 0);
-        _cancel.CustomMinimumSize = new Vector2(actionWidth, UiSize.Control.Default);
-        _confirm.CustomMinimumSize = _cancel.CustomMinimumSize;
         var width = Mathf.Min(_card.CustomMinimumSize.X, available.X);
         _card.Size = new Vector2(width, 0);
         using var measured = new TextParagraph();

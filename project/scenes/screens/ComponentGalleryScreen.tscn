@@ -1887,6 +1887,7 @@ mouse_filter = 1
 text = "Copy"
 script = ExtResource("3_h0qut")
 IconId = 8
+Kind = 3
 ContentLayout = 1
 
 [node name="Delete" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/CardActions/Examples/Saved/Stack/Actions" unique_id=1734800116]
@@ -1938,6 +1939,7 @@ mouse_filter = 1
 text = "Copy"
 script = ExtResource("3_h0qut")
 IconId = 8
+Kind = 3
 ContentLayout = 1
 
 [node name="Menu" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content" unique_id=1147911407]
