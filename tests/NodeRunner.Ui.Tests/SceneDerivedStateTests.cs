@@ -7,6 +7,8 @@ namespace NodeRunner.Ui.Tests;
 /// </summary>
 public sealed class SceneDerivedStateTests
 {
+    private static readonly string[] _generatedTextureTypes = ["Image", "ImageTexture"];
+
     // Component script → properties its code derives on its own node.
     private static readonly Dictionary<string, string[]> _derived = new()
     {
@@ -32,6 +34,18 @@ public sealed class SceneDerivedStateTests
             .Where(node => SceneNodes.StyleOverrideGroups.Any(
                 group => node.Body.Contains("\n" + group, StringComparison.Ordinal)))
             .Select(node => node.ToString())
+            .ShouldBeEmpty();
+    }
+
+    // UiIcons rasterises icons into ImageTextures at runtime; an authored icon is an ext_resource
+    // to its SVG. A saved Image or ImageTexture is a generated icon baked into the scene (#288).
+    [Fact]
+    public void Scenes_DoNotStoreGeneratedTextures()
+    {
+        SceneNodes.Files()
+            .SelectMany(file => _generatedTextureTypes
+                .Where(type => file.Text.Contains($"[sub_resource type=\"{type}\"", StringComparison.Ordinal))
+                .Select(type => $"{file.Scene}: {type}"))
             .ShouldBeEmpty();
     }
 

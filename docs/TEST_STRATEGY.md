@@ -116,9 +116,9 @@ swap restyles everything:
 - typography is authored once, in the project theme, with a font and size for
   every variation
 - effects-lite is Neon's palette with effects off
-- saved scenes pin no stylebox, colour, font or font size on any node, and
-  do not store the properties a library component derives on its own node
-  (`SceneDerivedStateTests`)
+- saved scenes pin no stylebox, colour, font or font size on any node, store
+  no generated icon texture, and do not store the properties a library
+  component derives on its own node (`SceneDerivedStateTests`)
 - C# source (`UiSourceGuardTests`, a Roslyn scan with types bound) has no colour
   literals anywhere in `project/src`; `project/src/ui/lib` pins no colour
   override (it selects a generated Theme variation) and names every
