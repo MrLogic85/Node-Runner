@@ -131,11 +131,17 @@ public partial class Main : Node2D
         if (ProjectSettings.GetSetting("ui/popup_gallery", false).AsBool())
         {
             var gallery = GD.Load<PackedScene>("res://scenes/screens/PopupGalleryScreen.tscn").Instantiate<PopupGalleryScreen>();
-            gallery.CloseRequested += () =>
+            gallery.ShowCloseAction = true;
+            void ContinueInComponentGallery(GalleryPage next)
             {
                 gallery.QueueFree();
-                AddChild(GD.Load<PackedScene>("res://scenes/screens/ComponentGalleryScreen.tscn").Instantiate<ComponentGalleryScreen>());
-            };
+                var components = GD.Load<PackedScene>("res://scenes/screens/ComponentGalleryScreen.tscn").Instantiate<ComponentGalleryScreen>();
+                AddChild(components);
+                components.ContinueFrom(gallery, next);
+            }
+
+            gallery.CloseRequested += () => ContinueInComponentGallery(GalleryPage.Components);
+            gallery.PageRequested += ContinueInComponentGallery;
             AddChild(gallery);
             return;
         }
@@ -1009,8 +1015,18 @@ public partial class Main : Node2D
         _colorsAndStylesScreen = GD.Load<PackedScene>("res://scenes/screens/ColorsAndStylesScreen.tscn").Instantiate<ColorsAndStylesScreen>();
         _colorsAndStylesScreen.ShowCloseAction = true;
         _colorsAndStylesScreen.CloseRequested += CloseColorsAndStyles;
+        _colorsAndStylesScreen.PageRequested += OpenGalleryPageFromColorsAndStyles;
         _colorsAndStylesScreen.ProcessMode = ProcessModeEnum.Always;
         _colorsAndStylesHost.AddChild(_colorsAndStylesScreen);
+    }
+
+    // The other gallery pages open from the component gallery, so Back from them returns there.
+    private void OpenGalleryPageFromColorsAndStyles(GalleryPage page)
+    {
+        var colorsAndStyles = _colorsAndStylesScreen!;
+        CloseColorsAndStyles();
+        OpenComponentLibraryFromHome();
+        _componentGalleryScreen!.ContinueFrom(colorsAndStyles, page);
     }
 
     private void CloseColorsAndStyles()

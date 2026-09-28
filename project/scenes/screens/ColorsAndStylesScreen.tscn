@@ -1,6 +1,168 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene format=3]
 
 [ext_resource type="Script" path="res://src/ui/screens/ColorsAndStylesScreen.cs" id="1_colors_and_styles"]
+[ext_resource type="PackedScene" uid="uid://dokr6l5stu6ll" path="res://scenes/ui/UiFrame.tscn" id="shell_2_frame"]
+[ext_resource type="PackedScene" uid="uid://gydkh1xys4yo" path="res://scenes/ui/UiToolbar.tscn" id="shell_3_toolbar"]
+[ext_resource type="Script" uid="uid://dk67qmt3brp4e" path="res://src/ui/lib/UiLabel.cs" id="shell_4_label"]
+[ext_resource type="Script" uid="uid://pdb6hwlullhe" path="res://src/ui/lib/UiSegmentedSwitch.cs" id="shell_5_theme_switch"]
+[ext_resource type="Script" uid="uid://dd0bugxsg7bvl" path="res://src/ui/lib/UiSegment.cs" id="shell_6_theme_segment"]
+[ext_resource type="Script" uid="uid://cuku7dsosusj4" path="res://src/ui/lib/UiMenuToggleItem.cs" id="shell_7_menu_toggle_item"]
+[ext_resource type="Script" uid="uid://ddvhocc4qru2x" path="res://src/ui/lib/UiMenuItemDivider.cs" id="shell_8_menu_divider"]
+[ext_resource type="Script" uid="uid://dah3q1p7ikjlm" path="res://src/ui/lib/UiMenuActionItem.cs" id="shell_9_menu_item"]
+
+[sub_resource type="StyleBoxFlat" id="shell_StyleBoxFlat_qlghs"]
+content_margin_left = 1.0
+content_margin_top = 1.0
+content_margin_right = 1.0
+content_margin_bottom = 1.0
+bg_color = Color(0.0509804, 0.0784314, 0.141176, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.101961, 0.498039, 0.47451, 1)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+shadow_color = Color(0.101961, 0.498039, 0.47451, 0.12)
+shadow_size = 10
+
+[sub_resource type="StyleBoxFlat" id="shell_StyleBoxFlat_cakib"]
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+bg_color = Color(1, 1, 1, 0)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(1, 1, 1, 0)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="shell_StyleBoxFlat_vq605"]
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+bg_color = Color(1, 1, 1, 0)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(1, 1, 1, 0)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="shell_StyleBoxFlat_mtv2x"]
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+bg_color = Color(1, 1, 1, 0)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(1, 1, 1, 0)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="shell_StyleBoxFlat_hlqrl"]
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+bg_color = Color(1, 1, 1, 0)
+border_color = Color(1, 1, 1, 0)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxEmpty" id="shell_StyleBoxEmpty_1kg3u"]
+
+[sub_resource type="Resource" id="shell_Resource_theme_neon"]
+script = ExtResource("shell_6_theme_segment")
+Text = "Neon"
+
+[sub_resource type="Resource" id="shell_Resource_theme_paper"]
+script = ExtResource("shell_6_theme_segment")
+Text = "Paper"
+
+[sub_resource type="Resource" id="shell_Resource_theme_effects_lite"]
+script = ExtResource("shell_6_theme_segment")
+Text = "Effects lite"
+
+[sub_resource type="StyleBoxFlat" id="shell_StyleBoxFlat_s8oj4"]
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+bg_color = Color(1, 1, 1, 0)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(1, 1, 1, 0)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="shell_StyleBoxFlat_72rt0"]
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+bg_color = Color(1, 1, 1, 0)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(1, 1, 1, 0)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="shell_StyleBoxFlat_rjk6k"]
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+bg_color = Color(1, 1, 1, 0)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(1, 1, 1, 0)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="shell_StyleBoxFlat_tak8s"]
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+bg_color = Color(1, 1, 1, 0)
+border_color = Color(1, 1, 1, 0)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxEmpty" id="shell_StyleBoxEmpty_30gbr"]
 
 [node name="ColorsAndStylesScreen" type="Control"]
 layout_mode = 3
@@ -10,3 +172,110 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_colors_and_styles")
+
+[node name="UiFrame" parent="." unique_id=1226224121 instance=ExtResource("shell_2_frame")]
+unique_name_in_owner = true
+layout_mode = 1
+
+[node name="Card" parent="UiFrame/MarginContainer" parent_id_path=PackedInt32Array(1226224121, 1718213397) index="0" unique_id=1864407290]
+theme_override_styles/panel = SubResource("shell_StyleBoxFlat_qlghs")
+
+[node name="Shell" type="VBoxContainer" parent="UiFrame/MarginContainer/Card" index="0" unique_id=762661772]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="Toolbar" parent="UiFrame/MarginContainer/Card/Shell" unique_id=1157572243 instance=ExtResource("shell_3_toolbar")]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+
+[node name="Back" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/HBoxContainer" parent_id_path=PackedInt32Array(1157572243, 1560195324) index="0" unique_id=545193165]
+theme_override_styles/normal = SubResource("shell_StyleBoxFlat_cakib")
+theme_override_styles/pressed = SubResource("shell_StyleBoxFlat_vq605")
+theme_override_styles/hover = SubResource("shell_StyleBoxFlat_mtv2x")
+theme_override_styles/disabled = SubResource("shell_StyleBoxFlat_hlqrl")
+theme_override_styles/focus = SubResource("shell_StyleBoxEmpty_1kg3u")
+
+[node name="ToolbarTitle" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/HBoxContainer/ToolbarContent" parent_id_path=PackedInt32Array(1157572243, 1466231439) index="0" unique_id=1012869594]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Colors & Styles"
+script = ExtResource("shell_4_label")
+TextStyle = 1
+
+[node name="ThemeSwitcher" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/HBoxContainer/ToolbarContent" parent_id_path=PackedInt32Array(1157572243, 1466231439) index="1" unique_id=492577172]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_constants/separation = 0
+script = ExtResource("shell_5_theme_switch")
+Segments = Array[ExtResource("shell_6_theme_segment")]([SubResource("shell_Resource_theme_neon"), SubResource("shell_Resource_theme_paper"), SubResource("shell_Resource_theme_effects_lite")])
+
+[node name="Overflow" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/HBoxContainer" parent_id_path=PackedInt32Array(1157572243, 1560195324) index="2" unique_id=1416740256]
+theme_override_styles/normal = SubResource("shell_StyleBoxFlat_s8oj4")
+theme_override_styles/pressed = SubResource("shell_StyleBoxFlat_72rt0")
+theme_override_styles/hover = SubResource("shell_StyleBoxFlat_rjk6k")
+theme_override_styles/disabled = SubResource("shell_StyleBoxFlat_tak8s")
+theme_override_styles/focus = SubResource("shell_StyleBoxEmpty_30gbr")
+
+[node name="ToolbarMenuDebugBounds" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/ToolbarMenu" parent_id_path=PackedInt32Array(1157572243, 1208477361) index="0" unique_id=2076457439]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 0
+script = ExtResource("shell_7_menu_toggle_item")
+LabelText = "Debug Bounds"
+metadata/_custom_type_script = "uid://cuku7dsosusj4"
+
+[node name="UiMenuItemDivider" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/ToolbarMenu" parent_id_path=PackedInt32Array(1157572243, 1208477361) index="1" unique_id=1320661275]
+layout_mode = 2
+mouse_filter = 2
+script = ExtResource("shell_8_menu_divider")
+metadata/_custom_type_script = "uid://ddvhocc4qru2x"
+
+[node name="ToolbarMenuComponents" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/ToolbarMenu" parent_id_path=PackedInt32Array(1157572243, 1208477361) index="2" unique_id=1097029948]
+unique_name_in_owner = true
+layout_mode = 2
+script = ExtResource("shell_9_menu_item")
+LabelText = "Components"
+ShowSelectedIndicator = true
+metadata/_custom_type_script = "uid://dah3q1p7ikjlm"
+
+[node name="ToolbarMenuToolbars" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/ToolbarMenu" parent_id_path=PackedInt32Array(1157572243, 1208477361) index="3" unique_id=1067320663]
+unique_name_in_owner = true
+layout_mode = 2
+script = ExtResource("shell_9_menu_item")
+LabelText = "Toolbars"
+ShowSelectedIndicator = true
+metadata/_custom_type_script = "uid://dah3q1p7ikjlm"
+
+[node name="ToolbarMenuColorsAndStyles" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/ToolbarMenu" parent_id_path=PackedInt32Array(1157572243, 1208477361) index="4" unique_id=993951496]
+unique_name_in_owner = true
+layout_mode = 2
+script = ExtResource("shell_9_menu_item")
+LabelText = "Colors & Styles"
+ShowSelectedIndicator = true
+Selected = true
+metadata/_custom_type_script = "uid://dah3q1p7ikjlm"
+
+[node name="ToolbarMenuPopupGallery" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/ToolbarMenu" parent_id_path=PackedInt32Array(1157572243, 1208477361) index="5" unique_id=616565866]
+unique_name_in_owner = true
+layout_mode = 2
+script = ExtResource("shell_9_menu_item")
+LabelText = "Popup Gallery"
+NoteText = "Dialog and Notification components"
+ShowSelectedIndicator = true
+metadata/_custom_type_script = "uid://dah3q1p7ikjlm"
+
+[node name="ContentFrame" type="MarginContainer" parent="UiFrame/MarginContainer/Card/Shell"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 12
+
+[editable path="UiFrame"]
+[editable path="UiFrame/MarginContainer/Card/Shell/Toolbar"]

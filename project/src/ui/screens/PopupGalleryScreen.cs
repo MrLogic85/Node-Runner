@@ -4,40 +4,24 @@ using NodeRunner.Ui.Lib;
 namespace NodeRunner.Ui.Screens;
 
 /// <summary>Interactive specimens of the real popup components; callbacks mutate no product data.</summary>
-public partial class PopupGalleryScreen : Control
+public partial class PopupGalleryScreen : GalleryScreen
 {
-    [Signal]
-    public delegate void CloseRequestedEventHandler();
-
-    private Godot.Theme _selectedTheme = UiThemes.Neon;
-    private ColorRect _background = null!;
-    private UiSegmentedSwitch _themes = null!;
     private UiLabel _status = null!;
-    private UiDialog _dialog = null!;
-    private UiNotification _notifications = null!;
-    private bool _quitOnBack;
+    private UiDialog? _dialog;
+    private UiNotification? _notifications;
 
-    // Authored children run _Ready before this node does, so the theme must be in place before
-    // they enter the tree or they measure themselves against the engine default theme.
-    public override void _EnterTree()
-    {
-        _selectedTheme = ThemeFor(GetNode<UiSegmentedSwitch>("%UiSegmentedSwitch").SelectedIndex);
-        Theme = _selectedTheme;
-    }
+    protected override GalleryPage Page => GalleryPage.PopupGallery;
+
+    protected override bool HasOpenPopup => _dialog is { IsOpen: true };
 
     public override void _Ready()
     {
-        SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
+        base._Ready();
         FitViewport();
         GetViewport().SizeChanged += FitViewport;
         MouseFilter = MouseFilterEnum.Stop;
-        _quitOnBack = GetTree().QuitOnGoBack;
-        GetTree().QuitOnGoBack = false;
-        _background = GetNode<ColorRect>("%Background");
         _status = GetNode<UiLabel>("%Status");
-        _themes = GetNode<UiSegmentedSwitch>("%UiSegmentedSwitch");
-        ApplyTheme();
-        UiNativeScroll.AllowGesturesToBubble(GetNode<Control>("MarginContainer"));
+        UiNativeScroll.AllowGesturesToBubble(GetNode<Control>("%ContentFrame"));
         _notifications = new UiNotification();
         AddChild(_notifications);
         _dialog = new UiDialog();
@@ -49,9 +33,9 @@ public partial class PopupGalleryScreen : Control
 
     public override void _ExitTree()
     {
+        base._ExitTree();
         GetViewport().SizeChanged -= FitViewport;
-        _dialog.Finished -= OnDialogFinished;
-        GetTree().QuitOnGoBack = _quitOnBack;
+        _dialog?.Finished -= OnDialogFinished;
     }
 
     private void ShowDefaultDialog() => ShowTypeDialog(UiPopupType.Default);
@@ -125,80 +109,24 @@ public partial class PopupGalleryScreen : Control
 
     private void ShowDialog(UiDialogSpec spec)
     {
-        _dialog.Open(spec);
-        _notifications.Paused = true;
+        _dialog!.Open(spec);
+        _notifications!.Paused = true;
     }
 
     private void OnDialogFinished(bool confirmed)
     {
-        _notifications.Paused = false;
+        _notifications!.Paused = false;
         SetStatus(confirmed ? "Action succeeded (demo only)." : "Dialog cancelled.");
     }
 
     private void Enqueue(UiNotificationSpec spec)
     {
-        _notifications.Enqueue(spec);
+        _notifications!.Enqueue(spec);
         SetStatus($"Notification queued: {spec.Type}");
     }
 
-    public override void _Input(InputEvent input)
-    {
-        if (!_dialog.IsOpen && input is InputEventKey && input.IsActionPressed("ui_cancel"))
-        {
-            Back();
-            GetViewport().SetInputAsHandled();
-        }
-    }
-
-    public override void _Notification(int what)
-    {
-        if (what == NotificationWMGoBackRequest && _dialog is not null && !_dialog.IsOpen)
-        {
-            // Defer navigation so the same Back cannot close a modal and its owning screen.
-            Callable.From(Back).CallDeferred();
-        }
-    }
-
-    private void Back()
-    {
-        if (_dialog.IsOpen)
-        {
-            _dialog.TryCancel();
-        }
-        else if (GetTree().CurrentScene == this)
-        {
-            GetTree().Quit();
-        }
-        else
-        {
-            EmitSignal(SignalName.CloseRequested);
-        }
-    }
-
-    private void ChangeTheme(int index)
-    {
-        if (_dialog.IsOpen)
-        {
-            return;
-        }
-        _notifications.Clear();
-        _selectedTheme = ThemeFor(index);
-        ApplyTheme();
-    }
-
-    private static Godot.Theme ThemeFor(int index) =>
-        index switch
-        {
-            1 => UiThemes.Paper,
-            2 => UiThemes.For(UiTokenType.Light),
-            _ => UiThemes.Neon,
-        };
-
-    private void ApplyTheme()
-    {
-        Theme = _selectedTheme;
-        _background.Color = UiThemeLookup.Color(this, UiTokens.Color.Background);
-    }
+    // The theme switch is in the toolbar; queued notifications belong to the old theme.
+    protected override void OnThemeApplied() => _notifications?.Clear();
 
     private void FitViewport()
     {

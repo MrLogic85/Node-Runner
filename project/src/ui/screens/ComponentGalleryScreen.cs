@@ -26,24 +26,32 @@ public partial class ComponentGalleryScreen : GalleryScreen
         Callable.From(ResetScrollPosition).CallDeferred();
     }
 
+    /// <summary>
+    /// Takes over from a gallery page its host opened on its own: keeps that page's
+    /// theme and debug bounds and opens the page it asked for on top of this one.
+    /// </summary>
+    public void ContinueFrom(GalleryScreen page, GalleryPage next)
+    {
+        ThemeIndex = page.ThemeIndex;
+        ShowDebugBounds = page.ShowDebugBounds;
+        if (next != Page)
+        {
+            OpenPage(next);
+        }
+    }
+
     protected override void OpenPage(GalleryPage page)
     {
-        switch (page)
+        var scene = page switch
         {
-            case GalleryPage.Toolbars:
-                OpenGalleryPage(GD.Load<PackedScene>("res://scenes/screens/ToolbarsScreen.tscn").Instantiate<ToolbarsScreen>());
-                break;
-            case GalleryPage.ColorsAndStyles:
-                var screen = GD.Load<PackedScene>("res://scenes/screens/ColorsAndStylesScreen.tscn").Instantiate<ColorsAndStylesScreen>();
-                screen.ShowCloseAction = true;
-                screen.CloseRequested += () => ReturnFrom(screen);
-                OpenOnTop(screen);
-                break;
-            case GalleryPage.PopupGallery:
-                var gallery = GD.Load<PackedScene>("res://scenes/screens/PopupGalleryScreen.tscn").Instantiate<PopupGalleryScreen>();
-                gallery.CloseRequested += () => ReturnFrom(gallery);
-                OpenOnTop(gallery);
-                break;
+            GalleryPage.Toolbars => "res://scenes/screens/ToolbarsScreen.tscn",
+            GalleryPage.ColorsAndStyles => "res://scenes/screens/ColorsAndStylesScreen.tscn",
+            GalleryPage.PopupGallery => "res://scenes/screens/PopupGalleryScreen.tscn",
+            _ => null,
+        };
+        if (scene is not null)
+        {
+            OpenGalleryPage(GD.Load<PackedScene>(scene).Instantiate<GalleryScreen>());
         }
     }
 
@@ -81,22 +89,18 @@ public partial class ComponentGalleryScreen : GalleryScreen
     }
 
     // Shows another gallery page in place of this one until it asks to close.
-    private void OpenOnTop(Control screen)
+    private void OpenOnTop(GalleryScreen screen)
     {
         Toolbar?.CloseMenu();
         GetParent().AddChild(screen);
         Hide();
     }
 
-    private void ReturnFrom(Control screen)
+    private void ReturnFrom(GalleryScreen page)
     {
-        if (screen is GalleryScreen page)
-        {
-            ThemeIndex = page.ThemeIndex;
-            ShowDebugBounds = page.ShowDebugBounds;
-        }
-
-        screen.QueueFree();
+        ThemeIndex = page.ThemeIndex;
+        ShowDebugBounds = page.ShowDebugBounds;
+        page.QueueFree();
         Show();
     }
 

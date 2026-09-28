@@ -15,8 +15,10 @@ public enum GalleryPage
 /// <summary>
 /// Shared behaviour of the gallery pages that carry the gallery toolbar: Back,
 /// the theme switch, debug bounds and page navigation from the overflow menu.
-/// Each page scene authors its own copy of the toolbar and menu under the same
-/// unique names and marks its own page item as selected.
+/// Each page scene authors its own copy of the frame, toolbar and menu under the
+/// same unique names and marks its own page item as selected.
+/// A page with a Back action also takes Android Back and Escape; an open menu or
+/// popup handles them first. Without one, Android Back keeps its default.
 /// </summary>
 public abstract partial class GalleryScreen : Control
 {
@@ -65,14 +67,68 @@ public abstract partial class GalleryScreen : Control
 
     protected UiToolbar? Toolbar { get; private set; }
 
+    /// <summary>True while a popup the page opened handles Back itself.</summary>
+    protected virtual bool HasOpenPopup => false;
+
     private bool _showDebugBounds;
     private int _themeIndex;
     private UiBoundsDebugOverlay? _boundsOverlay;
     private UiMenuToggleItem? _debugBoundsItem;
     private UiSegmentedSwitch? _themeSwitcher;
+    private bool _ownsBack;
+
+    // A page that replaces another enters before the old one leaves, so the pages share
+    // one hold on QuitOnGoBack rather than each saving and restoring it.
+    private static int _backOwners;
+    private static bool _quitOnBackBeforePages;
 
     // The theme goes on before the children are ready so they measure against it (#301).
-    public override void _EnterTree() => ApplyTheme();
+    public override void _EnterTree()
+    {
+        ApplyTheme();
+        if (ShowCloseAction && !Engine.IsEditorHint())
+        {
+            _ownsBack = true;
+            if (_backOwners++ == 0)
+            {
+                _quitOnBackBeforePages = GetTree().QuitOnGoBack;
+            }
+
+            GetTree().QuitOnGoBack = false;
+        }
+    }
+
+    public override void _ExitTree()
+    {
+        if (_ownsBack)
+        {
+            _ownsBack = false;
+            if (--_backOwners == 0)
+            {
+                GetTree().QuitOnGoBack = _quitOnBackBeforePages;
+            }
+        }
+    }
+
+    // The screen hears Android Back before the menu and popups inside it, so it can
+    // leave Back to them; acting deferred keeps one Back from also reaching the next page.
+    public override void _Notification(int what)
+    {
+        if (what == NotificationWMGoBackRequest && CanTakeBack())
+        {
+            Callable.From(RequestClose).CallDeferred();
+        }
+    }
+
+    // The menu takes Escape first as it is deeper in the tree.
+    public override void _UnhandledKeyInput(InputEvent inputEvent)
+    {
+        if (inputEvent.IsActionPressed("ui_cancel") && CanTakeBack())
+        {
+            GetViewport().SetInputAsHandled();
+            RequestClose();
+        }
+    }
 
     public override void _Ready()
     {
@@ -87,6 +143,11 @@ public abstract partial class GalleryScreen : Control
         ShowDebugBounds = ShowDebugBounds || ProjectSettings.GetSetting("ui/component_gallery_debug_bounds", false).AsBool();
     }
 
+    private bool CanTakeBack() =>
+        _ownsBack && IsVisibleInTree() && Toolbar is { Menu.Visible: false } && !HasOpenPopup;
+
+    private void RequestClose() => EmitSignal(SignalName.CloseRequested);
+
     /// <summary>Opens another page. By default the page asks its host to do it.</summary>
     protected virtual void OpenPage(GalleryPage page) =>
         EmitSignal(SignalName.PageRequested, Variant.From(page));
@@ -100,7 +161,7 @@ public abstract partial class GalleryScreen : Control
         var toolbar = GetNode<UiToolbar>("%Toolbar");
         Toolbar = toolbar;
         toolbar.ShowBack = ShowCloseAction;
-        toolbar.BackPressed += () => EmitSignal(SignalName.CloseRequested);
+        toolbar.BackPressed += RequestClose;
 
         _themeSwitcher = GetNode<UiSegmentedSwitch>("%ThemeSwitcher");
         _themeSwitcher.SelectedIndex = _themeIndex;
