@@ -92,6 +92,8 @@ Use sparingly:
 - `status: in-progress` — Work has started but is not complete
 - `status: idea` — Unshaped idea; needs discussion and refinement
 - `status: needs-review` — Issue needs review before implementation
+- `status: needs-design` — Waiting for a new or revised design in
+  `reference design/`
 - `status: needs-decision` — Design/product choice required before work starts
 - `status: ready` — Reviewed and actionable
 - `good-first` — Small, well-bounded issue with low architectural risk

@@ -24,6 +24,11 @@ implemented yet. Shape them first through discussion; once the issue states
 one clear outcome and acceptance criteria, replace `status: idea` with
 `status: needs-review`.
 
+Issues marked `status: needs-design` wait for the design to land in
+`reference design/`; then replace the label with `status: needs-review`. Go
+straight to `status: ready` only if the issue already passed review and the
+new design does not change its scope or acceptance criteria.
+
 After review, replace `status: needs-review` with `status: ready` when the
 issue is actionable. Keep `status: needs-decision` until the open decision is
 settled.
