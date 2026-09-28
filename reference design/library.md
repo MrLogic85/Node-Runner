@@ -2,6 +2,33 @@
 
 One implementation per control. Every screen calls these; a new screen adds a variant here, never a private copy. The signatures are the props to give the matching Godot scene.
 
+## `c_btn(text, kind='secondary', icon=None, w=None, off=False, on=False, compact=False, badge=None)`
+
+kind: primary, secondary, tertiary or flat. off/on are the disabled/selected states; compact is the small size.
+kind can also carry a layout word (icon, stack) for buttons with no text, e.g. c_btn('', 'icon secondary', 'gear');
+the play button is c_btn('', 'primary stack', 'play') — a stack button (like a tool rail cell) with no label.
+badge: a small halo counter in the corner, for any kind or layout, row, icon or stack alike.
+
+## `c_ib(icon, kind='secondary', size=20, on=False, off=False, compact=False, badge=None)`
+
+An icon-only button: the same btn system as c_btn, just the icon layout. kind: primary, secondary, tertiary or flat.
+badge: a small halo counter in the corner.
+
+## `c_num(n)`
+
+A ringed step number, 16px, accent on both ring and digit (the .num class). The mark in the top-left corner
+of a stage card's header, or leading a chain chip -- every numbered step uses this, not a hand-written span.
+Lives here, not in ui17's control kit, because the old signal-flow pipeline (gen10, gen13) needs it too and
+can't import ui17 without a circular import; ui17 pulls this in the same way it pulls in ic() and ICONS.
+
+## `c_stage(n, title, body='', em='', height=None, sel=False, collapsed=False, style='')`
+
+One numbered card of the signal-flow column: c_num leading the header (the stage name, an optional
+right-aligned note), then whatever that stage needs to show. collapsed=True is the 28px strip used when
+only one stage is expanded at a time -- same header, no body. sel=True is the frame `pick`: the chosen
+stage card, the same frame Menu and Dialog use for "this is the open one" (see Rule: frames) -- never a
+literal 'sel' class of its own. Every stage card is the Frame, glowing, in its own border colour.
+
 ## `c_round_button(icn, col=None, fill=None, r=13)`
 
 A circular icon badge: the circle is a frame, the same idea as .pnl's variants (sel, lock, warn...), just
@@ -12,27 +39,40 @@ step if this one's geometry changes.
 
 ## `c_hold(text, pct=40, w=None, kind='tertiary', icon=None)`
 
-Hold-to-confirm button with a fill that grows while held. Used for every destructive or resetting action; there is no undo.
+Hold-to-activate: an isolated fill span in that kind's selected colour, 50% opacity, sweeps under the content — same
+technique c_btn's box-shadow uses for the selected glow, just on a plain background instead. Works for row (text and/or
+icon), icon-only and stack layouts, put `icon`/`stack` in kind exactly as c_btn does, e.g. c_hold('', 45, kind='primary icon', icon='play').
 
 ## `c_prog(pct, w='100%', h=6)`
 
-Progress bar.
+A bare progress bar: c_slider's own track and fill (thumbs=None), no label/value row around it. w
+constrains it, since without a label row's box there is nothing else to size it by. h is accepted only so
+old call sites do not break -- the track is always 4px now, matching the slider it shares code with.
 
 ## `c_meter(label, txt, pct, pad=True)`
 
-Label with a value and a bar.
+Label with a value and a bar: c_slider with thumbs=None -- the slider's own track and fill, just with no
+thumb to drag. pad=False for a row inside c_rows: the list owns the gap between rows, this one carries none
+of its own.
 
 ## `c_slider(label, value, thumbs, steps=(), marker=None, enabled=True, compact=False, _steppers=False, pad=True, pct=None)`
 
-The one slider. thumbs is 0.0-1.0, one number or (lo, hi) for a range. steps is a list of at least two labels, evenly spaced. marker (0.0-1.0, name) is a named line across the track, its name shown in the label row, centred over the marker. enabled=False dims it, dashed. Steppers are a layout: stepped_slider puts a minus and a plus (btn icon sm) either side.
+The one slider, configured by data -- and, with thumbs=None, the one progress bar too (c_prog and c_meter
+above are thin wrappers over exactly this): the same track and the same fill, just no thumb to drag, and
+pct (0-100) stands in for thumbs' 0.0-1.0 position. thumbs: 0.0-1.0, one number or a (lo, hi) pair (a
+range), or None for a plain fill with no handle (pct then required). steps: the caller's labels, at least
+two, always evenly placed (thumbed sliders only). marker: (0.0-1.0, name), e.g. (0.03, 'default 4').
+enabled=False dims it, dashed like a disabled button. Steppers are a layout, see stepped_slider. pad=False
+for a row inside c_rows: the list owns the gap between rows, this one carries none of its own. label and
+value may both be None for a bare bar with no readout row at all.
 
 ## `c_range(label, lo, hi, text, marker=None, steps=(), enabled=True, pad=True)`
 
-The slider with two thumbs (c_slider with (lo, hi) in 0.0-1.0), with an optional marker.
+The slider with two thumbs: the same component, configured with (lo, hi) in 0.0-1.0.
 
 ## `c_toggle(label, on=True, sub=None, dis=False)`
 
-On/off switch row, one size: a control (40px) row, so the switch is always easy to hit.
+One toggle, one size: a control (40px) row, so the switch always sits in a touch target big enough to hit.
 
 ## `c_check(label, on=False, sub=None, dis=False)`
 
@@ -44,7 +84,13 @@ Segmented control: the chosen option is filled and has a check or bold label.
 
 ## `c_pick(label, val, accessory=None, op=False, opts=None, lock=False, dis=False, pad=True)`
 
-Picker: a closed row with an optional accessory (icon or swatch, caller-supplied), or the open list with the same accessories, a check on the current choice and an optional note per row. lock: no other choice, ever (accent tint). dis: the ordinary disabled state, temporary (dimmed, dashed, says why nearby).
+The one picker: a closed row (label, an optional small accessory, the value, a chevron) that opens a list of choices under it.
+accessory is any small HTML the caller builds (an icon, a swatch); the picker does not know what it means. lock shows a lock instead of a
+chevron and tints the row in accent: there is no other choice to make, ever (a Drive only has one wheel to attach to). dis is the ordinary
+disabled state every other control has: dims the whole row to 50% and dashes its border, chevron unchanged; the picker still works, it just
+can't be opened right now, and a line nearby should say why. The two never combine. opts (open=True) is [(name, accessory, selected, note)]:
+selected shows a check, note is a short word ("swaps") for a choice that needs explaining instead of being refused. pad=False for a row
+inside c_rows: the list owns the gap between rows, this one carries none of its own.
 
 ## `c_menu(items, w=210)`
 
@@ -52,7 +98,9 @@ Overflow menu list of (icon, label, state) items.
 
 ## `c_chip(text, icn=None, kind='neutral', lg=False)`
 
-Small fact chip with an optional icon; state warn/bad/ok for colour.
+Small fact chip. kind: neutral (default, no class needed beyond chip), warn (halo), danger, ok (accent) —
+border and text/icon always share the one colour, set by the class, never inline. lg is the one size step up
+(control, 40, instead of control-xs, 24) for a chip sitting beside control-height buttons and fields, e.g. in a top bar.
 
 ## `c_call(x, y, text, col=None, icn=None, kind='warn')`
 
@@ -62,23 +110,26 @@ kind shares chip's names: warn (halo, the default), danger (explains a refusal),
 
 ## `c_textfield(text, state='rest', size='bar', w=None)`
 
-The only text entry: rest (pencil), edit (caret and check), bad (danger and a line of words); size bar or panel.
+The only text entry. size 'bar' (control high, heading text) sits in a top bar; 'panel' (control-sm high, body-strong) fills a settings panel. States rest, edit, bad are classes of .field.
 
 ## `c_name(v, state='rest', pad=True)`
 
-Name field in a panel.
+Name field in a panel. pad=False for a row inside c_rows: the list owns the gap between rows, this one carries none of its own.
 
 ## `c_value(label, val, icn=None, color=None, pad=True)`
 
-Label with its value on one line.
+A label and its value on one line. With icn (and the colour to tint it and the value), the value carries a small icon — this is what c_power is: c_value with a fixed label and a bolt.
+pad=False for a row inside c_rows: the list owns the gap between rows, this one carries none of its own.
 
 ## `c_power(txt, out=False, pad=True)`
 
-A c_value row with the label fixed to "Power" and a bolt icon: draws up to X, or makes/stores.
+A c_value row with the label fixed to "Power" and a bolt icon: accent when the part feeds power back, ink when it only draws.
 
 ## `c_note(txt, pad=True)`
 
-One line of muted hint text below the rows of a panel.
+A single line of muted hint text in a panel. margin-top only, no margin-bottom:on its own it collapses with whatever row comes
+before, so the gap above it is always the same. pad=False for a row inside c_rows: the list owns the gap between rows, this one
+carries none of its own.
 
 ## `c_row(glyph, name, cnt='', state='', w=None)`
 
@@ -90,23 +141,33 @@ Icon tabs; one open at a time.
 
 ## `c_panel_head(title, glyph=None, actions=('x',))`
 
-Title row of a side panel: optional glyph, title and icon actions.
+Title row of a side panel: an optional glyph, the title, and icon actions. Actions are icon names; 'trash' is danger.
 
 ## `c_rows(rows, delete=None)`
 
-The body of a settings panel: its rows (each built with pad=False) in one column sharing one gap, and an optional Delete button.
+The body of a part's settings panel: its rows in one column with the panel's own gap between them (var(--space-1)) — the panel
+owns that spacing, not the rows, so build each row with pad=False and let this join them. delete, if given, is the label of a
+full-width danger button at the end (its own bigger gap above, space-2, since an action is not another row).
 
 ## `c_inspector(title, glyph, rows, delete=None)`
 
-A part's settings panel: c_panel_head then c_rows.
+A part's settings panel: c_panel_head (glyph, title, close) then c_rows (its rows sharing one gap, and an optional Delete).
 
 ## `c_info_row(icn, title, sub)`
 
 Icon, title and one line of help.
 
+## `c_card_actions(items)`
+
+Card action bar: the row of actions along the bottom of a flush card (a creation, a checkpoint), always visible,
+never a hidden menu. Each action is its own cell -- the whole cell, its share of the width and touch high, is what
+you tap -- drawn like a stacked button: an icon-lg icon over an overline label, space-1 between, a hairline
+between cells; a destructive one in the danger colour. It is not the stacked button (that one's touch area is a
+fixed 48 x 48), it only matches its look. items: (icon, label) or (icon, label, True) for danger.
+
 ## `c_card(inner, kind='panel', w=None, h=None, style='', glow=False, disabled=False)`
 
-The one Frame surface for panels, cards, tiles, menus and dialogs. Signature c_card(inner, kind, w, h, style, glow, disabled). kind: panel (default), sel, lock, warn, hint, raised (pick, menu and dialog are owned by the stage card, menu and dialog components, not picked freely); add a size with a space: snug, tight, roomy or flush. lock tints the frame in accent, dashed: no other choice, ever. glow is a separate on/off, never a kind of its own: any frame can glow, in that frame's own border colour. disabled is a third, independent on/off: dashed line-strong border, dimmed, no glow, on any kind -- for something temporarily unavailable.
+The one frame (Frame surface) for panels, cards, tiles, menus and dialogs. kind: panel, sel, lock, warn, hint, raised, pick, menu, dialog (pick, menu and dialog are owned by the stage card, menu and dialog components — not picked freely); add a size with a space: snug, tight, roomy or flush (no padding, clips a thumbnail). lock tints the frame in accent, dashed: there is no other choice, ever (the same idea as c_pick's lock) -- it is not dimmed, and it never means "can't use this right now". glow is a separate on/off, not a kind: any frame can glow, in that frame's own border colour (edge-glow for the plain panel, accent-glow for sel and lock, danger-glow for warn, halo-glow for hint, line-strong-glow for raised) -- never a fixed colour, and never picked on its own. disabled is a third, independent on/off: dashed line-strong border, dimmed, no glow, on any frame regardless of kind -- for something temporarily unavailable (the same idea as c_pick's dis and c_slider's enabled=False). A frame that was locked and also temporarily unavailable is both: kind='lock', disabled=True.
 
 ## `c_ring(pct, done=False)`
 

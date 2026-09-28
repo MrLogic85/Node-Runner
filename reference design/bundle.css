@@ -30,7 +30,11 @@
 .ib.box,.btn,.field,.partrow,.tool,.seg{border-radius:var(--radius-md)}
 .pnl.pick{border-color:var(--halo);box-shadow:0 0 0 1px var(--halo)}
 .pnl.menu{overflow:hidden;padding:0;box-shadow:0 0 12px var(--accent-glow)}
-.pnl.dialog{padding:var(--space-4);box-shadow:0 0 16px var(--accent-glow)}
+.pnl.dialog{padding:var(--space-4)}
+.pnl.toast{padding:var(--space-3) var(--space-4);display:flex;align-items:flex-start;gap:var(--space-2)}
+.pnl.dialog,.pnl.toast{border-color:var(--accent);box-shadow:0 0 16px var(--accent-glow)}
+.pnl.dialog.hint,.pnl.toast.hint{border-color:var(--halo);box-shadow:0 0 16px var(--halo-glow)}
+.pnl.dialog.warn,.pnl.toast.warn{border-color:var(--danger);box-shadow:0 0 16px var(--danger-glow)}
 /* chip kinds */
 .chip.warn{border-color:var(--halo);color:var(--halo)}
 .chip.danger{border-color:var(--danger);color:var(--danger)}

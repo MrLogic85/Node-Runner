@@ -2,20 +2,21 @@
 
 All icons are pure white (`#ffffff`) on purpose: import them as SVG and tint them in Godot with `modulate` / `self_modulate`, or with the Button icon colour properties. Never bake a colour into the file.
 
-Two sets. **UI icons** are stroked glyphs on a 24 grid (stroke 2, round caps and joins, `currentColor`), used at 12, 16, 20 and 24. **Part glyphs** are 20-grid pictures of parts, drawn with the dark theme colours. One SVG per icon in `icons/ui/` and `icons/parts/`.
+Two sets. **UI icons** are stroked glyphs on a 24 grid (stroke 2, round caps and joins, `currentColor`), used at 12, 16, 20 and 24. Each file's viewBox is fitted around its drawing, so every icon fills its box the same way (the longer side is 18 of 24) and the line stays 2 on 24. **Part glyphs** are 20-grid pictures of parts, drawn with the dark theme colours. One SVG per icon in `icons/ui/` and `icons/parts/`.
 
-## UI icons (40)
+## UI icons (41)
 
 | Icon | Name |
 |---|---|
-| <img src="icons/ui/back.svg" width="24" style="background:#0d1424"> | `back` |
 | <img src="icons/ui/beam.svg" width="24" style="background:#0d1424"> | `beam` |
 | <img src="icons/ui/bolt.svg" width="24" style="background:#0d1424"> | `bolt` |
 | <img src="icons/ui/build.svg" width="24" style="background:#0d1424"> | `build` |
 | <img src="icons/ui/chart.svg" width="24" style="background:#0d1424"> | `chart` |
 | <img src="icons/ui/check.svg" width="24" style="background:#0d1424"> | `check` |
 | <img src="icons/ui/chev-d.svg" width="24" style="background:#0d1424"> | `chev-d` |
+| <img src="icons/ui/chev-l.svg" width="24" style="background:#0d1424"> | `chev-l` |
 | <img src="icons/ui/chev-r.svg" width="24" style="background:#0d1424"> | `chev-r` |
+| <img src="icons/ui/chev-u.svg" width="24" style="background:#0d1424"> | `chev-u` |
 | <img src="icons/ui/copy.svg" width="24" style="background:#0d1424"> | `copy` |
 | <img src="icons/ui/core.svg" width="24" style="background:#0d1424"> | `core` |
 | <img src="icons/ui/edit.svg" width="24" style="background:#0d1424"> | `edit` |
