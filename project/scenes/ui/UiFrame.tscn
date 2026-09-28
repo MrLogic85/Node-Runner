@@ -52,4 +52,5 @@ theme_override_styles/panel = SubResource("StyleBoxFlat_ord8r")
 script = ExtResource("2_gkfpo")
 SizeVariant = 4
 Glow = true
+ClipContent = true
 metadata/_custom_type_script = "uid://byhbh5da7rpk8"

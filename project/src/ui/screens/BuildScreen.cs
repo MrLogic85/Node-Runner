@@ -357,27 +357,27 @@ public partial class BuildScreen : Control
     {
         var presentation = Presentation;
         var panel = CreatePanel(raised: true);
-        panel.CustomMinimumSize = new Vector2(UiLayout.RailWidth, 0);
+        panel.CustomMinimumSize = new Vector2(UiLayout.ButtonBarWidth, 0);
         panel.SizeFlagsVertical = SizeFlags.ExpandFill;
 
         var margin = CreateMargin(0);
         panel.AddChild(margin);
 
-        var rail = new VBoxContainer
+        var buttonBar = new VBoxContainer
         {
             SizeFlagsHorizontal = SizeFlags.ExpandFill,
             SizeFlagsVertical = SizeFlags.ExpandFill,
         };
-        rail.AddThemeConstantOverride("separation", 2);
-        margin.AddChild(rail);
+        buttonBar.AddThemeConstantOverride("separation", 2);
+        margin.AddChild(buttonBar);
 
-        rail.AddChild(CreateBuildToolButton(
+        buttonBar.AddChild(CreateBuildToolButton(
             ConstructionTool.Place,
             "Move",
             ToolButtonKind(ConstructionTool.Place),
             presentation is null ? "Move sample nodes" : ConstructionPresentationViewModel.ToolHint(ConstructionTool.Place),
             locked: false));
-        rail.AddChild(CreateBuildToolButton(
+        buttonBar.AddChild(CreateBuildToolButton(
             ConstructionTool.Beam,
             presentation?.BeamToolText ?? "Beam",
             ToolButtonKind(ConstructionTool.Beam),
@@ -387,13 +387,13 @@ public partial class BuildScreen : Control
                     ? presentation.MoveOnlyLockReason
                     : ConstructionPresentationViewModel.ToolHint(ConstructionTool.Beam),
             presentation?.LockTopologyTools ?? false));
-        rail.AddChild(CreateBuildToolButton(
+        buttonBar.AddChild(CreateBuildToolButton(
             ConstructionTool.Select,
             presentation?.SelectToolText ?? "Select",
             ToolButtonKind(ConstructionTool.Select),
             presentation is null ? "Select parts" : ConstructionPresentationViewModel.ToolHint(ConstructionTool.Select),
             locked: false));
-        rail.AddChild(CreateSpacer());
+        buttonBar.AddChild(CreateSpacer());
 
         return panel;
     }
@@ -420,7 +420,7 @@ public partial class BuildScreen : Control
             Text = label.ToUpperInvariant(),
             TooltipText = tooltip,
             Disabled = locked,
-            CustomMinimumSize = new Vector2(UiLayout.RailWidth, _toolButtonHeight),
+            CustomMinimumSize = new Vector2(UiLayout.ButtonBarWidth, _toolButtonHeight),
             SizeFlagsHorizontal = SizeFlags.ExpandFill,
         };
         button.AddThemeFontSizeOverride("font_size", 11);

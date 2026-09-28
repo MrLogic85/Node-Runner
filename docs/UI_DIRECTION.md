@@ -341,8 +341,8 @@ starts with the gallery's theme and debug bounds and hands them back when it
 closes. The Toolbars page mirrors the reference's ComponentToolbars page. Its
 own toolbar is the `UiToolbar` specimen; by human decision on
 [issue #319](https://github.com/MrLogic85/Node-Runner/issues/319) it shows no
-separate Editing/Locked specimens, and the other toolbars (#320, #321) add
-theirs.
+separate Editing/Locked specimens. Under it the page shows one `UiButtonBar`
+down its left edge, laid out as Build uses it (#320); #321 adds the side bar.
 
 Component Gallery's toolbar overflow menu toggles **Debug bounds** live.
 Bounds are off by default; `ShowDebugBounds` also supports runtime changes,
@@ -578,6 +578,27 @@ where the screen authors its title and actions in the editor. `ShowBack` and
 `Menu`: it anchors it under Overflow, opens it and makes it dismissible; the
 screen authors the items and decides what each does. `BackPressed` is its only
 signal.
+
+`UiButtonBar` is the vertical button bar down the left edge
+([issue #320](https://github.com/MrLogic85/Node-Runner/issues/320)): 56px
+(`UiLayout.ButtonBarWidth`, one touch target plus `space-2`; the reference
+token is `w-rail`) with a divider down its right edge and no background of its
+own. Unlike `UiToolbar` it has no fixed buttons: `%ButtonBarContent` is a plain
+VBox, and everything in it (which tools, which is selected or locked, a play
+button at the bottom) belongs to the screen. By human decision on #320 it
+deliberately differs from the reference's `.rail`: no `panel` background, the
+divider in `edge` rather than `line`, and locked tools keep the 20px icon of
+every stacked button rather than a 16px lock.
+
+`UiCard.ClipContent` clips the card's content to its rounded shape and draws
+the border over it, the way the reference's `overflow: hidden` frames do, so
+content that reaches the edge (a square background, a button's glow)
+never covers the corners. It is off by default because each clipping card
+renders through an extra buffer; `UiFrame`'s card turns it on. Godot cannot nest
+`clip_children` (the inner node draws nothing), so `UiCard` and `UiMenu` clip
+only when no ancestor already does (`UiClip`, re-checked below a card whose
+clipping changes); a menu opened as an overlay is top-level and clips again. Inside a clipping card, a static menu's row wash is
+therefore not rounded at the menu's own corners.
 
 `UiMenu` is a generic overlay container with a token-backed border/background.
 It vertically lays out arbitrary direct child controls. A child gets first

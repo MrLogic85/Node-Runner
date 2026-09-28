@@ -4,7 +4,7 @@ namespace NodeRunner.Ui.Lib;
 /// <summary>Canonical token-backed card/frame surface for the design-system component kit.</summary>
 [Tool]
 [GlobalClass]
-public partial class UiCard : PanelContainer
+public partial class UiCard : PanelContainer, IUiClipping
 {
     public enum CardVariant
     {
@@ -30,6 +30,9 @@ public partial class UiCard : PanelContainer
     private bool _glow;
     private bool _disabled;
     private bool _refreshingStyle;
+    private bool _clipContent;
+    private Control? _borderOverlay;
+    private StyleBoxFlat? _borderOnlyStyle;
 
     [Export]
     public CardVariant Kind
@@ -75,6 +78,22 @@ public partial class UiCard : PanelContainer
         }
     }
 
+    /// <summary>
+    /// Clips the content to the card's rounded shape (content that reaches the edge, a
+    /// square background or a glow, stays inside the corners) and draws the border over it.
+    /// Inside another clipping node the content is left unclipped; see <see cref="UiClip"/>.
+    /// </summary>
+    [Export]
+    public bool ClipContent
+    {
+        get => _clipContent;
+        set
+        {
+            _clipContent = value;
+            RefreshClip();
+        }
+    }
+
     public override void _Ready()
     {
         FocusMode = FocusModeEnum.None;
@@ -88,6 +107,10 @@ public partial class UiCard : PanelContainer
         {
             RefreshStyle();
         }
+        else if (what == NotificationEnterTree)
+        {
+            RefreshClip();
+        }
     }
 
     private void RefreshStyle()
@@ -100,8 +123,11 @@ public partial class UiCard : PanelContainer
         _refreshingStyle = true;
         try
         {
-            AddThemeStyleboxOverride("panel", CreateStyle());
+            var style = CreateStyle();
+            AddThemeStyleboxOverride("panel", style);
+            _borderOnlyStyle = BorderOnly(style);
             QueueRedraw();
+            _borderOverlay?.QueueRedraw();
         }
         finally
         {
@@ -141,12 +167,63 @@ public partial class UiCard : PanelContainer
     public override void _Draw()
     {
         base._Draw();
-        if (!Disabled && Kind != CardVariant.Locked)
+        if (!HasDashedBorder)
         {
             return;
         }
 
-        DrawDashedBorder(DashedBorderColor());
+        DrawDashedBorder(this, Vector2.Zero);
+    }
+
+    private bool HasDashedBorder => Disabled || Kind == CardVariant.Locked;
+
+    // Also run on entering the tree: whether an ancestor already clips decides if this card may.
+    void IUiClipping.RefreshClip() => RefreshClip();
+
+    private void RefreshClip()
+    {
+        UiClip.Apply(this, _clipContent);
+        if (_clipContent && _borderOverlay is null)
+        {
+            // Internal and last, so the content is clipped to the card's shape but the
+            // border still draws on top of whatever reaches the edge.
+            _borderOverlay = new Control { MouseFilter = MouseFilterEnum.Ignore };
+            _borderOverlay.Draw += DrawBorderOverContent;
+            AddChild(_borderOverlay, @internal: InternalMode.Back);
+        }
+        else if (!_clipContent && _borderOverlay is not null)
+        {
+            _borderOverlay.QueueFree();
+            _borderOverlay = null;
+        }
+    }
+
+    // The overlay is laid out inside the content margins; draw back out to the card's rect.
+    private void DrawBorderOverContent()
+    {
+        if (_borderOverlay is null)
+        {
+            return;
+        }
+
+        var origin = -_borderOverlay.Position;
+        if (_borderOnlyStyle is not null)
+        {
+            _borderOverlay.DrawStyleBox(_borderOnlyStyle, new Rect2(origin, Size));
+        }
+
+        if (HasDashedBorder)
+        {
+            DrawDashedBorder(_borderOverlay, origin);
+        }
+    }
+
+    private static StyleBoxFlat BorderOnly(StyleBoxFlat style)
+    {
+        var border = (StyleBoxFlat)style.Duplicate();
+        border.DrawCenter = false;
+        border.ShadowSize = 0;
+        return border;
     }
 
     private Color DashedBorderColor() =>
@@ -159,13 +236,13 @@ public partial class UiCard : PanelContainer
             _ => UiThemeLookup.Color(this, UiTokens.Color.Edge),
         };
 
-    private void DrawDashedBorder(Color color)
+    private void DrawDashedBorder(CanvasItem canvas, Vector2 origin)
     {
         var stroke = UiSize.Stroke.Hair;
         var rect = new Rect2(
-            new Vector2(stroke * 0.5f, stroke * 0.5f),
+            origin + new Vector2(stroke * 0.5f, stroke * 0.5f),
             new Vector2(Math.Max(0, base.Size.X - stroke), Math.Max(0, base.Size.Y - stroke)));
-        UiDashedBorder.DrawRoundedRect(this, rect, Math.Max(0, UiSize.Radius.Large - (stroke * 0.5f)), color, stroke);
+        UiDashedBorder.DrawRoundedRect(canvas, rect, Math.Max(0, UiSize.Radius.Large - (stroke * 0.5f)), DashedBorderColor(), stroke);
     }
 
     private static UiSurfaceContracts.FrameVariant ToFrameVariant(CardVariant variant) =>

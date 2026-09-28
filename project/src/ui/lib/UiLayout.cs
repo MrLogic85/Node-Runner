@@ -17,7 +17,9 @@ public static class UiLayout
     /// <summary>Remaining height below the top bar (<c>h-screen</c>).</summary>
     public const int ScreenBodyHeight = CanvasHeight - TopBarHeight;
 
-    public const int RailWidth = 56;
+    /// <summary>The button bar fits one touch target plus its inset (the reference token <c>w-rail</c>).</summary>
+    public const int ButtonBarWidth = UiSize.Control.Touch + UiSize.Space.S2;
+
     public const int SidePanelWidth = 176;
     public const int MenuWidth = 200;
     public const int DialogWidth = 300;

@@ -1812,13 +1812,13 @@ public partial class Main : Node2D
         };
         panel.AddThemeStyleboxOverride("panel", CreateHudPanelStyle());
 
-        var rail = new VBoxContainer
+        var buttonBar = new VBoxContainer
         {
             CustomMinimumSize = new Vector2(330, 0),
         };
-        rail.AddThemeConstantOverride("separation", 10);
+        buttonBar.AddThemeConstantOverride("separation", 10);
 
-        rail.AddChild(CreateBuildPanelLabel("Tools", _theme.SelectionGlow, _hudFontSize));
+        buttonBar.AddChild(CreateBuildPanelLabel("Tools", _theme.SelectionGlow, _hudFontSize));
 
         _placeToolButton = CreateToolButton("PlaceToolButton", "Place");
         _placeToolButton.Pressed += () => Construction.ActiveTool = ConstructionTool.Place;
@@ -1847,14 +1847,14 @@ public partial class Main : Node2D
         _rebuildButton.Pressed += RebuildCreation;
         _rebuildButton.AddThemeColorOverride("font_color", _theme.Danger);
 
-        rail.AddChild(_placeToolButton);
-        rail.AddChild(_beamToolButton);
-        rail.AddChild(_coreToolButton);
-        rail.AddChild(_deleteToolButton);
-        rail.AddChild(_editLockReasonLabel);
-        rail.AddChild(_completeButton);
-        rail.AddChild(_rebuildButton);
-        panel.AddChild(rail);
+        buttonBar.AddChild(_placeToolButton);
+        buttonBar.AddChild(_beamToolButton);
+        buttonBar.AddChild(_coreToolButton);
+        buttonBar.AddChild(_deleteToolButton);
+        buttonBar.AddChild(_editLockReasonLabel);
+        buttonBar.AddChild(_completeButton);
+        buttonBar.AddChild(_rebuildButton);
+        panel.AddChild(buttonBar);
         layer.AddChild(panel);
 
         _toolPanel = panel;

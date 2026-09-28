@@ -5,7 +5,7 @@ namespace NodeRunner.Ui.Lib;
 /// <summary>Overlay menu surface that vertically lays out arbitrary child controls.</summary>
 [Tool]
 [GlobalClass]
-public partial class UiMenu : Container
+public partial class UiMenu : Container, IUiClipping
 {
     /// <summary>Keeps an open menu above the screen content it follows.</summary>
     private const int _overlayZIndex = 100;
@@ -88,7 +88,6 @@ public partial class UiMenu : Container
     {
         MouseFilter = MouseFilterEnum.Stop;
         SizeFlagsHorizontal = SizeFlags.ShrinkBegin;
-        ClipChildren = ClipChildrenMode.AndDraw;
         SetProcess(false);
         ApplyItemSizes();
         QueueLayout();
@@ -224,8 +223,16 @@ public partial class UiMenu : Container
             contentHeight + (stroke * 2));
     }
 
+    void IUiClipping.RefreshClip() => UiClip.Apply(this, clip: true);
+
     public override void _Notification(int what)
     {
+        if (what == NotificationEnterTree)
+        {
+            UiClip.Apply(this, clip: true);
+            return;
+        }
+
         if (what == NotificationVisibilityChanged)
         {
             SetOwnsBack(Dismissible && !Engine.IsEditorHint() && IsVisibleInTree());
@@ -296,6 +303,7 @@ public partial class UiMenu : Container
         _followPoint = normalizedPoint;
         _followOffset = offset;
         TopLevel = true;
+        UiClip.Apply(this, clip: true);
         ZAsRelative = false;
         ZIndex = Math.Max(ZIndex, _overlayZIndex);
         SetProcess(true);
