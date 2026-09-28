@@ -646,7 +646,7 @@ public sealed partial class UiButton : Button, ISerializationListener
     {
         bool stacked = DrawnLayout == UiButtonContentLayout.Stacked;
         bool hasIcon = IconId != UiIconId.None;
-        var iconSize = UiButtonMetrics.IconSize(DrawnLayout);
+        var iconSize = UiButtonMetrics.IconSize(DrawnLayout, HasLabel);
         _content!.Vertical = stacked;
         _content.AddThemeConstantOverride(
             "separation",

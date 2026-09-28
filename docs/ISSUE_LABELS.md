@@ -70,6 +70,20 @@ Use one or more:
 - `area: docs` — Documentation structure/content
 - `area: repo` — Repository process, labels, issues, PR conventions
 
+## Story point labels
+
+At most one, to estimate size. Set it once the issue is shaped; leave it off
+`status: idea` and `type: question` issues.
+
+- `sp: 1` — Simple fix, about a oneliner
+- `sp: 2` — Easy fix, touches maybe one or two files
+- `sp: 3` — Medium sized, touches several files, but implementation is
+  straightforward
+- `sp: 5` — Large refactor, but manageable. Requires complex thinking
+- `sp: 8` — This is too big to manage, split into smaller parts
+
+An `sp: 8` issue is split into sub-issues before implementation starts.
+
 ## Optional labels
 
 Use sparingly:

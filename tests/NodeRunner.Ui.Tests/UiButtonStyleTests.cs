@@ -148,11 +148,14 @@ public sealed class UiButtonStyleTests
     }
 
     [Fact]
-    public void Metrics_OnlyLayoutDeterminesIconSize()
+    public void Metrics_LayoutAndLabelDetermineIconSize()
     {
-        UiButtonMetrics.IconSize(UiButtonContentLayout.Row).ShouldBe(UiIconSize.Standard);
-        UiButtonMetrics.IconSize(UiButtonContentLayout.RowCompact).ShouldBe(UiIconSize.Standard);
-        UiButtonMetrics.IconSize(UiButtonContentLayout.Stacked).ShouldBe(UiIconSize.Large);
+        UiButtonMetrics.IconSize(UiButtonContentLayout.Row, hasLabel: true).ShouldBe(UiIconSize.Standard);
+        UiButtonMetrics.IconSize(UiButtonContentLayout.RowCompact, hasLabel: true).ShouldBe(UiIconSize.Standard);
+        UiButtonMetrics.IconSize(UiButtonContentLayout.Row, hasLabel: false).ShouldBe(UiIconSize.Large);
+        UiButtonMetrics.IconSize(UiButtonContentLayout.RowCompact, hasLabel: false).ShouldBe(UiIconSize.Large);
+        UiButtonMetrics.IconSize(UiButtonContentLayout.Stacked, hasLabel: true).ShouldBe(UiIconSize.Large);
+        UiButtonMetrics.IconSize(UiButtonContentLayout.Stacked, hasLabel: false).ShouldBe(UiIconSize.Large);
     }
 
     [Fact]
