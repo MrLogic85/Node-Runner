@@ -29,7 +29,17 @@ from `UiSize`/`UiLayout`/`UiSpacing`. UI scaling (#299) does not depend on
 this: Godot's own scaling scales a number written in a scene exactly as it
 scales one set from a token, so the factor is applied once at the UI root and
 the tokens themselves are never scaled
-([#331](https://github.com/MrLogic85/Node-Runner/issues/331)). Screen scripts are thin: they bind scene nodes by unique name,
+([#331](https://github.com/MrLogic85/Node-Runner/issues/331)). The reverse
+also holds: what a library component derives in code is not saved into any
+scene ([#309](https://github.com/MrLogic85/Node-Runner/issues/309)). That
+covers its styleboxes and constants, clipping, the styling, text and icons it
+applies to nodes of its own scene, and sizes it computes. Godot saves every
+theme override and never shows them to `_ValidateProperty`, so a `[Tool]`
+component lists those properties in a `UiUnsavedState`: it clears them while
+the editor saves and restores them after. A plain `Control` that computes its
+size returns it from `_GetMinimumSize`, leaving `custom_minimum_size` to the
+scene. Button and container subclasses cannot, because their native minimum
+size ignores the script, so UiButton owns its `custom_minimum_size`. Screen scripts are thin: they bind scene nodes by unique name,
 subscribe to their view-model and forward input. Content that varies at
 runtime (one card per creation) is instantiated from library components or
 scenes. Widgets in `project/src/ui/widgets` are components that draw

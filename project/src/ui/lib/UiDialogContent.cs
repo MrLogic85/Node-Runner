@@ -64,8 +64,36 @@ public sealed partial class UiDialogContent : Control
         ApplyAppearance();
     }
 
+    private readonly UiUnsavedState _unsaved = new(
+        [
+            ("%Scrim", ColorRect.PropertyName.Color),
+            ("%Card", UiCard.PropertyName.Kind),
+            ("%Card", Control.PropertyName.OffsetLeft),
+            ("%Card", Control.PropertyName.OffsetTop),
+            ("%Card", Control.PropertyName.OffsetRight),
+            ("%Card", Control.PropertyName.OffsetBottom),
+            ("%SemanticIcon", TextureRect.PropertyName.Texture),
+            ("%SemanticIcon", CanvasItem.PropertyName.SelfModulate),
+            ("%SemanticType", Label.PropertyName.Text),
+            ("%SemanticType", Control.PropertyName.ThemeTypeVariation),
+            ("%SemanticType", Label.PropertyName.Uppercase),
+            ("%Title", Control.PropertyName.ThemeTypeVariation),
+            ("%Title", Label.PropertyName.Uppercase),
+            ("%Content", Control.PropertyName.ThemeTypeVariation),
+            ("%Content", Label.PropertyName.Uppercase),
+            ("%Error", Control.PropertyName.ThemeTypeVariation),
+            ("%Error", Label.PropertyName.Uppercase),
+            ("%BodyScroll", Control.PropertyName.CustomMinimumSize),
+            ("%Confirm", UiButton.PropertyName.Kind),
+        ]);
+
     public override void _Notification(int what)
     {
+        if (_unsaved.Handle(this, what, ApplyAppearance))
+        {
+            return;
+        }
+
         if (what == NotificationThemeChanged && IsNodeReady())
         {
             ApplyAppearance();

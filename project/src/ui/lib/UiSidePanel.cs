@@ -91,8 +91,26 @@ public partial class UiSidePanel : MarginContainer
         Refresh();
     }
 
+    private readonly UiUnsavedState _unsaved = new(
+        [
+            (".", Control.PropertyName.CustomMinimumSize),
+            ("%SidePanelDrawer", CanvasItem.PropertyName.Visible),
+            ("%SidePanelDrawer", CanvasItem.PropertyName.Modulate),
+            ("%SidePanelTab", CanvasItem.PropertyName.Visible),
+            ("%SidePanelTab", CanvasItem.PropertyName.Modulate),
+            ("%SidePanelIcon", CanvasItem.PropertyName.Visible),
+            ("%SidePanelTitle", Label.PropertyName.Text),
+            ("%SidePanelTabLabel", UiVerticalLabel.PropertyName.Text),
+            ("%SidePanelTabLabel", CanvasItem.PropertyName.Visible),
+        ]);
+
     public override void _Notification(int what)
     {
+        if (_unsaved.Handle(this, what, Refresh))
+        {
+            return;
+        }
+
         if (what == NotificationThemeChanged && IsNodeReady())
         {
             RedrawIcons();

@@ -124,6 +124,7 @@ public partial class UiSlider : Control, ISerializationListener
     private string _markerText = string.Empty;
     private bool _disabled;
     private UiSliderStyle _style;
+    private float _minimumHeight;
     private HBoxContainer? _header;
     private Label? _label;
     private Label? _readout;
@@ -593,6 +594,8 @@ public partial class UiSlider : Control, ISerializationListener
         NotifyPropertyListChanged();
     }
 
+    public override Vector2 _GetMinimumSize() => new(0, _minimumHeight);
+
     private void Refresh()
     {
         if (!IsInsideTree())
@@ -602,17 +605,20 @@ public partial class UiSlider : Control, ISerializationListener
 
         EnsureLabels();
         _style = UiSliderStyle.Default;
-        CustomMinimumSize = new Vector2(
-            0,
-            CalculateMinimumHeight(
-                _style,
-                UiThemeLookup.FontSize(this, UiTokens.Typography.Overline) + UiSize.Widget.SmallTextLeading,
-                UiSize.Space.S3,
-                UiSize.Space.S2,
-                UiThemeLookup.FontSize(this, UiTokens.Typography.ReadoutSmall) + UiSize.Widget.SmallTextLeading,
-                HasValueLabelRow,
-                HasStepLabelRow,
-                HasMarkerBelowRow));
+        var minimumHeight = CalculateMinimumHeight(
+            _style,
+            UiThemeLookup.FontSize(this, UiTokens.Typography.Overline) + UiSize.Widget.SmallTextLeading,
+            UiSize.Space.S3,
+            UiSize.Space.S2,
+            UiThemeLookup.FontSize(this, UiTokens.Typography.ReadoutSmall) + UiSize.Widget.SmallTextLeading,
+            HasValueLabelRow,
+            HasStepLabelRow,
+            HasMarkerBelowRow);
+        if (_minimumHeight != minimumHeight)
+        {
+            _minimumHeight = minimumHeight;
+            UpdateMinimumSize();
+        }
 
         _label!.Text = LabelText;
         _readout!.Text = ReadoutText;

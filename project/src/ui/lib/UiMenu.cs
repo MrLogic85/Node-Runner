@@ -225,8 +225,15 @@ public partial class UiMenu : Container, IUiClipping
 
     void IUiClipping.RefreshClip() => UiClip.Apply(this, clip: true);
 
+    private readonly UiUnsavedState _unsaved = new(CanvasItem.PropertyName.ClipChildren);
+
     public override void _Notification(int what)
     {
+        if (_unsaved.Handle(this, what, () => UiClip.Apply(this, clip: true)))
+        {
+            return;
+        }
+
         if (what == NotificationEnterTree)
         {
             UiClip.Apply(this, clip: true);

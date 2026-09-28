@@ -74,8 +74,15 @@ public partial class UiSegmentedSwitch : HBoxContainer, ISerializationListener
         RequestReady();
     }
 
+    private readonly UiUnsavedState _unsaved = new("theme_override_constants/separation");
+
     public override void _Notification(int what)
     {
+        if (_unsaved.Handle(this, what, ApplyContentAndTheme))
+        {
+            return;
+        }
+
         if (what == NotificationThemeChanged && IsNodeReady())
         {
             UiThemeRefresh.Guarded(this, ApplyContentAndTheme);

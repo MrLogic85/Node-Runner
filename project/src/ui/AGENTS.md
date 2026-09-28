@@ -66,6 +66,12 @@ unchanged, it belongs in `lib/`. If it embeds project vocabulary
   named `UiSize`/`UiLayout`/`UiSpacing` values, never one-off literals. A
   scene owns the paddings and sizes it authors; do not re-apply them from code
   (#331).
+- A `[Tool]` component that writes a property on itself or on a node of its
+  own scene (a theme override, `clip_children`, text, an icon, a computed
+  size) lists it in a `UiUnsavedState` and calls `Handle` first in
+  `_Notification`, so the value never lands in a saved scene (#309). A plain
+  `Control` returns a computed size from `_GetMinimumSize` instead of setting
+  `CustomMinimumSize`. Add own-node properties to `SceneDerivedStateTests`.
 - Colors, fonts, and typography come from the inherited Godot `Theme`, using
   its native lookup APIs and type variations. `UiTokens` holds the typed identifiers
   a control or the editor selects a value by (`Color`, `Alpha`, `Flag`, `Typography`,

@@ -171,9 +171,18 @@ public partial class UiStageCard : UiCard
         _body.Visible = !Collapsed;
     }
 
+    private readonly UiUnsavedState _unsaved = new([("%Title", Control.PropertyName.ThemeTypeVariation), ("%Title", Label.PropertyName.Uppercase), ("%Note", Control.PropertyName.ThemeTypeVariation), ("%Note", Label.PropertyName.Uppercase)]);
+
     public override void _Notification(int what)
     {
+        // Before the base, so the card's own state is cleared after what these setters restyle.
+        var saving = _unsaved.Handle(this, what, ApplyThemeStyles);
         base._Notification(what);
+        if (saving)
+        {
+            return;
+        }
+
         if (what == NotificationThemeChanged && IsNodeReady())
         {
             UiThemeRefresh.Guarded(this, ApplyThemeStyles);

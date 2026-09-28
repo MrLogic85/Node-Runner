@@ -50,7 +50,16 @@ public partial class UiToolbar : MarginContainer
 
     public UiMenu Menu => GetNode<UiMenu>("%ToolbarMenu");
 
-    public override Vector2 _GetMaximumSize() => new(_unbounded, UiLayout.TopBarHeight);
+    private readonly UiUnsavedState _unsaved = new(
+        [
+            ("%Back", CanvasItem.PropertyName.Visible),
+            ("%Overflow", CanvasItem.PropertyName.Visible),
+        ]);
+
+    // The height is the scene's own (#331); the bar never grows past it.
+    public override Vector2 _GetMaximumSize() => new(_unbounded, CustomMinimumSize.Y);
+
+    public override void _Notification(int what) => _unsaved.Handle(this, what);
 
     public override void _Ready()
     {
@@ -58,7 +67,6 @@ public partial class UiToolbar : MarginContainer
         _overflow = GetNode<UiButton>("%Overflow");
         _back.Visible = ShowBack;
         _overflow.Visible = ShowOverflow;
-        CustomMinimumSize = new Vector2(0, UiLayout.TopBarHeight);
         Menu.Hide();
         if (Engine.IsEditorHint())
         {
