@@ -621,10 +621,11 @@ notifications.Enqueue(new UiNotificationSpec(
 
 Parts tray tabs use persistent native toggle buttons in a `ButtonGroup`,
 with the reference's part glyphs and accent-soft selected treatment, not a
-solid accent fill. Each native target is at least 48px wide and high; the
-visible frame is 32px high with 4px between tabs. Four tabs therefore need
-204px rather than the HTML specimen's 176px strip. The gallery shows one
-unframed interactive specimen. See
+solid accent fill. The tabs share the strip's width equally with 4px between
+them (the reference's `flex: 1`), 32px high, so the owner sets the width: four
+tabs fit the side panel's content width, about 35px each (#330, replacing the
+48px-wide tabs of #249). The gallery shows one unframed interactive specimen
+at the reference's 176px. See
 [issue #249](https://github.com/MrLogic85/Node-Runner/issues/249).
 
 Glow is a visual effect outside a control's layout rectangle. Components must

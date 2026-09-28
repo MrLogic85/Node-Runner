@@ -194,7 +194,7 @@ theme_override_constants/separation = 8
 [node name="PartTabs" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/HShell/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent" index="0" unique_id=1392357914]
 layout_mode = 2
 script = ExtResource("14_icon_tabs")
-Icons = Array[int]([50, 49, 46])
+Icons = Array[int]([50, 49, 46, 40])
 SelectedIndex = 1
 
 [node name="PartRows" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/HShell/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent" index="1" unique_id=82276107]

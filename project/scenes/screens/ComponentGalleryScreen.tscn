@@ -727,6 +727,7 @@ TextStyle = 9
 TextColor = 8
 
 [node name="Tabs" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/PartsTrayTabs" unique_id=1247141693]
+custom_minimum_size = Vector2(176, 0)
 layout_mode = 2
 size_flags_horizontal = 0
 script = ExtResource("8_icon_tabs")
