@@ -20,6 +20,9 @@ public sealed record UiDialogSpec(
 
     public bool HasAction => !string.IsNullOrWhiteSpace(ActionText);
 
+    /// <summary>The glyph beside the title; null keeps the severity's default.</summary>
+    public UiNotificationIcon? Icon { get; init; }
+
     public UiDialogSpec(
         UiPopupType type, string title, string content, string? actionText,
         Func<Task<UiDialogResult>> action, bool holdToAction = false, string abortText = "Cancel")

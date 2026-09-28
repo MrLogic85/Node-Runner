@@ -22,9 +22,6 @@ public partial class CreationsScreen : Control
     public delegate void EditRequestedEventHandler(string creationKey, string creationName);
 
     [Signal]
-    public delegate void BackRequestedEventHandler();
-
-    [Signal]
     public delegate void NewRequestedEventHandler();
 
     [Signal]
@@ -35,9 +32,6 @@ public partial class CreationsScreen : Control
 
     [Signal]
     public delegate void ComponentLibraryRequestedEventHandler();
-
-    [Signal]
-    public delegate void ColorsAndStylesRequestedEventHandler();
 
     [Signal]
     public delegate void DuplicateRequestedEventHandler(string creationKey, string creationName);
@@ -98,8 +92,6 @@ public partial class CreationsScreen : Control
         GetNode<UiButton>("%New").Activated += () => EmitSignal(SignalName.NewRequested);
         GetNode<UiButton>("%EmptyNew").Activated += () => EmitSignal(SignalName.NewRequested);
         BindMenuItem(toolbar, GetNode<UiMenuActionItem>("%MenuRestoreExample"), SignalName.RestoreExampleRequested);
-        BindMenuItem(toolbar, GetNode<UiMenuActionItem>("%MenuClose"), SignalName.BackRequested);
-        BindMenuItem(toolbar, GetNode<UiMenuActionItem>("%MenuColorsAndStyles"), SignalName.ColorsAndStylesRequested);
         BindMenuItem(toolbar, GetNode<UiMenuActionItem>("%MenuComponentLibrary"), SignalName.ComponentLibraryRequested);
         ApplyDebugLinks();
         Apply();
@@ -120,7 +112,6 @@ public partial class CreationsScreen : Control
     private void ApplyDebugLinks()
     {
         GetNode<UiMenuItemDivider>("%MenuDebugDivider").Visible = _showComponentLibraryLink;
-        GetNode<UiMenuActionItem>("%MenuColorsAndStyles").Visible = _showComponentLibraryLink;
         GetNode<UiMenuActionItem>("%MenuComponentLibrary").Visible = _showComponentLibraryLink;
     }
 

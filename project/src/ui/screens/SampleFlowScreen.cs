@@ -18,11 +18,10 @@ public partial class SampleFlowScreen : Control
     private Control? _overlay;
     private Button? _overlayDismiss;
     private UiMenu? _overflowMenu;
-    private UiToast? _toast;
+    private UiNotification? _toast;
     private UiSheet? _sheet;
     private int _selectedMode;
     private Control? _sampleView;
-    private string? _lastDeletedCreation;
     private TrainingPresentationViewModel? _presentation;
     private Godot.Timer? _activeHoldTimer;
     private UiButton? _activeHoldButton;
@@ -198,15 +197,7 @@ public partial class SampleFlowScreen : Control
         };
         _overlay.AddChild(_overflowMenu);
 
-        _toast = new UiToast
-        {
-            ZIndex = 11,
-            Position = new Vector2(24, 0),
-            SizeFlagsHorizontal = SizeFlags.Expand,
-        };
-        _toast.SetAnchorsPreset(LayoutPreset.BottomLeft);
-        _toast.CustomMinimumSize = new Vector2(420, UiSize.Control.Touch);
-        _toast.UndoPressed += RestoreDeletedCreation;
+        _toast = new UiNotification { ZIndex = 11 };
         _overlay.AddChild(_toast);
 
         _sheet = new UiSheet
@@ -305,7 +296,6 @@ public partial class SampleFlowScreen : Control
         creations.EditRequested += (_, name) => ShowEdit(name);
         creations.DuplicateRequested += (_, name) => ShowSheet("Duplicate " + name + "?", CreateDuplicateBody(name));
         creations.DeleteRequested += (_, name) => ShowSheet("Delete " + name + "?", CreateDeleteBody(name));
-        creations.BackRequested += () => SetMode(0);
         _sampleView = creations;
         _content.AddChild(creations);
     }
@@ -353,7 +343,7 @@ public partial class SampleFlowScreen : Control
             _overlayDismiss.Hide();
         }
 
-        _toast?.Hide();
+        _toast?.Clear();
         _sheet?.Hide();
     }
 
@@ -454,8 +444,7 @@ public partial class SampleFlowScreen : Control
             _activeHoldButton = null;
             _activeHoldLabel = string.Empty;
             CloseOverlays();
-            _lastDeletedCreation = "current sample run";
-            _toast?.ShowMessage("Sample only: run reset confirmed.", "Undo", 10);
+            Notify("Sample only: run reset confirmed.");
         };
         confirm.ButtonDown += () =>
         {
@@ -652,7 +641,7 @@ public partial class SampleFlowScreen : Control
         done.Pressed += () =>
         {
             CloseOverlays();
-            _toast?.ShowMessage($"Sample only: {name} duplicate created using {done.Text.ToLowerInvariant()}.");
+            Notify($"Sample only: {name} duplicate created using {done.Text.ToLowerInvariant()}.");
         };
         stack.AddChild(done);
         return stack;
@@ -690,8 +679,7 @@ public partial class SampleFlowScreen : Control
             _activeHoldButton = null;
             _activeHoldLabel = string.Empty;
             CloseOverlays();
-            _lastDeletedCreation = name;
-            _toast?.ShowMessage($"Sample only: {name} deleted.", "Undo", 10);
+            Notify($"Sample only: {name} deleted.");
         };
         confirm.ButtonDown += () =>
         {
@@ -712,17 +700,8 @@ public partial class SampleFlowScreen : Control
         return stack;
     }
 
-    private void RestoreDeletedCreation()
-    {
-        if (_lastDeletedCreation is null || _toast is null)
-        {
-            return;
-        }
-
-        var restoredName = _lastDeletedCreation;
-        _lastDeletedCreation = null;
-        _toast.ShowMessage($"Sample only: {restoredName} restored.");
-    }
+    private void Notify(string message) =>
+        _toast?.Enqueue(new UiNotificationSpec(UiPopupType.Default, "Sample flow", message));
 
     private void ClearContent()
     {

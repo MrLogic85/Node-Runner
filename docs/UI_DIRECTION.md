@@ -377,10 +377,9 @@ inset and every line of content scroll together under the toolbar; the Toolbars
 page is laid out as Build is, without one.
 A page starts with the gallery's theme and debug bounds and hands them back when
 it closes. A page opened from Component Gallery's menu opens on top of it, so
-Back returns there. Pages opened on their own hand over to Component Gallery,
-keeping theme and debug bounds, when their menu opens another page: Colors &
-Styles from Home, whose Back returns to Home, and `ui/popup_gallery`, whose
-Back also hands over to Component Gallery. A page with a Back action also takes Android Back and Escape, after an
+Back returns there. A page opened on its own (`ui/popup_gallery`) hands over
+to Component Gallery, keeping theme and debug bounds, both on Back and when
+its menu opens another page. A page with a Back action also takes Android Back and Escape, after an
 open menu or dialog has handled them; a page without one, such as a standalone
 Component Gallery, leaves Android Back to its default and quits. The Toolbars page mirrors the reference's ComponentToolbars page. Its
 own toolbar is the `UiToolbar` specimen; by human decision on
@@ -585,6 +584,8 @@ the type's default: Model for Default, Warn for Warn/Danger. The selected
 glyph keeps the semantic tint and Large icon size; it does not change the
 type label or card variant. Arbitrary textures and `UiIconId.None` are not
 accepted. The override is runtime data, not a new Inspector field.
+`UiDialogSpec.Icon` works the same way for dialogs: the reference lets whoever
+raises a dialog pick its icon, so the Delete dialog shows the trash glyph.
 
 ```csharp
 var dialog = new UiDialog();

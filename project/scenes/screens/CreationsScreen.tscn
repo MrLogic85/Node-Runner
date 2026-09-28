@@ -80,6 +80,7 @@ mouse_filter = 1
 text = "New"
 script = ExtResource("5_button")
 IconId = 25
+Kind = 0
 
 [node name="MenuRestoreExample" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/ToolbarMenu" parent_id_path=PackedInt32Array(1400314004, 1208477361) index="0" unique_id=1400314011]
 unique_name_in_owner = true
@@ -88,28 +89,14 @@ script = ExtResource("6_menu_item")
 LabelText = "Restore example"
 IconId = 26
 
-[node name="MenuClose" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/ToolbarMenu" parent_id_path=PackedInt32Array(1400314004, 1208477361) index="1" unique_id=1400314012]
-unique_name_in_owner = true
-layout_mode = 2
-script = ExtResource("6_menu_item")
-LabelText = "Close Creations"
-IconId = 38
-
-[node name="MenuDebugDivider" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/ToolbarMenu" parent_id_path=PackedInt32Array(1400314004, 1208477361) index="2" unique_id=1400314013]
+[node name="MenuDebugDivider" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/ToolbarMenu" parent_id_path=PackedInt32Array(1400314004, 1208477361) index="1" unique_id=1400314013]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
 mouse_filter = 2
 script = ExtResource("7_menu_divider")
 
-[node name="MenuColorsAndStyles" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/ToolbarMenu" parent_id_path=PackedInt32Array(1400314004, 1208477361) index="3" unique_id=1400314014]
-unique_name_in_owner = true
-visible = false
-layout_mode = 2
-script = ExtResource("6_menu_item")
-LabelText = "Colors and styles"
-
-[node name="MenuComponentLibrary" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/ToolbarMenu" parent_id_path=PackedInt32Array(1400314004, 1208477361) index="4" unique_id=1400314015]
+[node name="MenuComponentLibrary" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/ToolbarMenu" parent_id_path=PackedInt32Array(1400314004, 1208477361) index="2" unique_id=1400314015]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
@@ -176,6 +163,7 @@ mouse_filter = 1
 text = "New"
 script = ExtResource("5_button")
 IconId = 25
+Kind = 0
 
 [node name="ErrorState" type="Label" parent="UiFrame/MarginContainer/Card/Shell/CardScroll/CardInset/CardRow" unique_id=1400314024]
 unique_name_in_owner = true

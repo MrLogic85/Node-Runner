@@ -49,18 +49,11 @@ public partial class Main : Node2D
     private CanvasLayer? _componentGalleryLayer;
     private Control? _componentGalleryHost;
     private ComponentGalleryScreen? _componentGalleryScreen;
-    private CanvasLayer? _colorsAndStylesLayer;
-    private Control? _colorsAndStylesHost;
-    private ColorsAndStylesScreen? _colorsAndStylesScreen;
-    private ConfirmationDialog? _deleteCreationConfirmationDialog;
-    private UiToast? _deleteCreationToast;
-    private CreationDef? _lastDeletedCreation;
+    private UiDialog? _deleteCreationDialog;
+    private UiNotification? _notifications;
     private DuplicateCreationSheet? _duplicateCreationSheet;
     private Guid? _pendingDuplicateCreationId;
     private string? _pendingDuplicateCreationName;
-    private Guid? _pendingDeleteCreationId;
-    private string? _pendingDeleteCreationName;
-    private bool _evolutionDeferredByHomeHub;
     private SimulateScreen? _simulateScreen;
     private Guid? _activeCreationId;
     private Label? _seedLabel;
@@ -427,7 +420,6 @@ public partial class Main : Node2D
         _evolver = evolver;
         if (_creationsScreen?.Visible == true)
         {
-            _evolutionDeferredByHomeHub = true;
             UpdateTrainingLabels();
             ResetTrainingSaveStatus(null);
             return;
@@ -904,11 +896,9 @@ public partial class Main : Node2D
         _creationsScreen = GD.Load<PackedScene>("res://scenes/screens/CreationsScreen.tscn").Instantiate<CreationsScreen>();
         _creationsScreen.ShowComponentLibraryLink = ShouldShowComponentLibraryLink();
         _creationsScreen.Setup(saveManager.CreationsPresentation);
-        _creationsScreen.BackRequested += CloseCreationsHome;
         _creationsScreen.NewRequested += StartNewCreationFromHome;
         _creationsScreen.AchievementsRequested += ShowAchievementsCueFromHome;
         _creationsScreen.RestoreExampleRequested += RestoreExampleFromHome;
-        _creationsScreen.ColorsAndStylesRequested += OpenColorsAndStylesFromHome;
         _creationsScreen.ComponentLibraryRequested += OpenComponentLibraryFromHome;
         _creationsScreen.OpenRequested += OpenCreationFromScreen;
         _creationsScreen.EditRequested += EditCreationFromScreen;
@@ -916,17 +906,18 @@ public partial class Main : Node2D
         _creationsScreen.DeleteRequested += RequestDeleteCreationFromScreen;
         overlayLayer.AddChild(_creationsScreen);
 
-        _deleteCreationConfirmationDialog = new ConfirmationDialog
+        _deleteCreationDialog = new UiDialog { ProcessMode = ProcessModeEnum.Always };
+        overlayLayer.AddChild(_deleteCreationDialog);
+        _deleteCreationDialog.Finished += _ =>
         {
-            Title = "Delete Creation?",
-            OkButtonText = "Delete",
-            CancelButtonText = "Keep",
-            ProcessMode = ProcessModeEnum.Always,
+            if (_notifications is not null)
+            {
+                _notifications.Paused = false;
+            }
         };
-        _deleteCreationConfirmationDialog.Confirmed += ConfirmDeleteCreationFromScreen;
-        overlayLayer.AddChild(_deleteCreationConfirmationDialog);
         AddDuplicateCreationSheet(overlayLayer);
-        AddDeleteCreationToast(overlayLayer);
+        _notifications = new UiNotification { ProcessMode = ProcessModeEnum.Always };
+        overlayLayer.AddChild(_notifications);
 
         RefreshCreationsPanel();
     }
@@ -983,78 +974,6 @@ public partial class Main : Node2D
         _componentGalleryScreen = null;
     }
 
-    private void OpenColorsAndStylesFromHome()
-    {
-        if (_colorsAndStylesScreen is not null)
-        {
-            _colorsAndStylesHost?.Show();
-            _colorsAndStylesLayer?.Show();
-            return;
-        }
-
-        _colorsAndStylesLayer = new CanvasLayer
-        {
-            Name = "ColorsAndStylesOverlay",
-            Layer = 30,
-            ProcessMode = ProcessModeEnum.Always,
-        };
-        AddChild(_colorsAndStylesLayer);
-
-        _colorsAndStylesHost = new Control
-        {
-            Name = "ColorsAndStylesHost",
-            ProcessMode = ProcessModeEnum.Always,
-        };
-        _colorsAndStylesHost.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
-        _colorsAndStylesHost.MouseFilter = Control.MouseFilterEnum.Stop;
-        _colorsAndStylesLayer.AddChild(_colorsAndStylesHost);
-
-        _colorsAndStylesScreen = GD.Load<PackedScene>("res://scenes/screens/ColorsAndStylesScreen.tscn").Instantiate<ColorsAndStylesScreen>();
-        _colorsAndStylesScreen.ShowCloseAction = true;
-        _colorsAndStylesScreen.CloseRequested += CloseColorsAndStyles;
-        _colorsAndStylesScreen.PageRequested += OpenGalleryPageFromColorsAndStyles;
-        _colorsAndStylesScreen.ProcessMode = ProcessModeEnum.Always;
-        _colorsAndStylesHost.AddChild(_colorsAndStylesScreen);
-    }
-
-    // The other gallery pages open from the component gallery, so Back from them returns there.
-    private void OpenGalleryPageFromColorsAndStyles(GalleryPage page)
-    {
-        var colorsAndStyles = _colorsAndStylesScreen!;
-        CloseColorsAndStyles();
-        OpenComponentLibraryFromHome();
-        _componentGalleryScreen!.ContinueFrom(colorsAndStyles, page);
-    }
-
-    private void CloseColorsAndStyles()
-    {
-        if (_colorsAndStylesScreen is null)
-        {
-            return;
-        }
-
-        _colorsAndStylesLayer?.QueueFree();
-        _colorsAndStylesLayer = null;
-        _colorsAndStylesHost = null;
-        _colorsAndStylesScreen = null;
-    }
-
-    private void AddDeleteCreationToast(CanvasLayer overlayLayer)
-    {
-        _deleteCreationToast = new UiToast
-        {
-            Name = "DeleteCreationToast",
-            CustomMinimumSize = new Vector2(420, _touchTargetHeight),
-            ProcessMode = ProcessModeEnum.Always,
-        };
-        var screenEdgeInset = UiSpacing.ScreenEdgeInset;
-        _deleteCreationToast.Position = new Vector2(
-            screenEdgeInset * 2,
-            UiLayout.CanvasHeight - _touchTargetHeight - (screenEdgeInset * 2));
-        _deleteCreationToast.UndoPressed += RestoreDeletedCreationFromToast;
-        overlayLayer.AddChild(_deleteCreationToast);
-    }
-
     private void AddDuplicateCreationSheet(CanvasLayer overlayLayer)
     {
         _duplicateCreationSheet = new DuplicateCreationSheet
@@ -1079,20 +998,6 @@ public partial class Main : Node2D
         if (_creationsScreen.Visible)
         {
             RefreshCreationsPanel();
-        }
-    }
-
-    private void CloseCreationsHome()
-    {
-        if (_creationsScreen is not null)
-        {
-            _creationsScreen.Visible = false;
-        }
-
-        if (_evolutionDeferredByHomeHub)
-        {
-            _evolutionDeferredByHomeHub = false;
-            StartEvolution();
         }
     }
 
@@ -1139,13 +1044,9 @@ public partial class Main : Node2D
         }
 
         var saveManager = GetNode<SaveManager>("/root/SaveManager");
-        CreationDef? copy = null;
-        if (TryRunFileOperation(
-            () => copy = saveManager.Duplicate(id, CreationDuplicateMode.CopyTraining),
-            $"Duplicating Creation '{creationName}' with {CreationDuplicateMode.CopyTraining}"))
-        {
-            _deleteCreationToast?.ShowMessage($"Copied · {copy?.Name ?? creationName}");
-        }
+        TryRunFileOperation(
+            () => saveManager.Duplicate(id, CreationDuplicateMode.CopyTraining),
+            $"Duplicating Creation '{creationName}' with {CreationDuplicateMode.CopyTraining}");
 
         RefreshCreationsPanel();
     }
@@ -1190,36 +1091,42 @@ public partial class Main : Node2D
             return;
         }
 
-        _pendingDeleteCreationId = id;
-        _pendingDeleteCreationName = creationName;
-        if (_deleteCreationConfirmationDialog is null)
-        {
-            ConfirmDeleteCreationFromScreen();
-            return;
-        }
-
-        _deleteCreationConfirmationDialog.DialogText =
-            $"Delete {creationName}? It will leave Creations now. You can Undo for 10 seconds.";
-        _deleteCreationConfirmationDialog.PopupCentered();
+        OpenDeleteCreationDialog(id, creationName);
     }
 
-    private void ConfirmDeleteCreationFromScreen()
+    // The reference's Delete dialog: danger, press-and-hold, no Undo.
+    private void OpenDeleteCreationDialog(Guid id, string name)
     {
-        if (_pendingDeleteCreationId is not { } id)
+        if (_deleteCreationDialog is null || _deleteCreationDialog.IsOpen)
         {
             return;
         }
 
-        var name = _pendingDeleteCreationName ?? id.ToString();
-        _pendingDeleteCreationId = null;
-        _pendingDeleteCreationName = null;
+        _deleteCreationDialog.Open(new UiDialogSpec(
+            UiPopupType.Danger,
+            $"Delete {name}?",
+            "The creation and its trained brain are removed for good. Copy it first if you might want it back.",
+            "Hold to delete",
+            () => Task.FromResult(DeleteCreation(id, name)
+                ? UiDialogResult.Success
+                : UiDialogResult.Failure($"Could not delete {name}. Try again.")),
+            holdToAction: true)
+        {
+            Icon = new(UiIconId.Trash),
+        });
+        if (_notifications is not null)
+        {
+            _notifications.Paused = true;
+        }
+    }
+
+    private bool DeleteCreation(Guid id, string name)
+    {
         var saveManager = GetNode<SaveManager>("/root/SaveManager");
-        CreationDef? deleted = null;
         var succeeded = TryRunFileOperation(
             () =>
             {
-                deleted = saveManager.DeleteAndCapture(id);
-                if (deleted is null)
+                if (!saveManager.Delete(id))
                 {
                     throw new FileNotFoundException($"Creation '{id}' was not found.");
                 }
@@ -1227,7 +1134,7 @@ public partial class Main : Node2D
             $"Deleting Creation '{name}'");
         if (!succeeded)
         {
-            return;
+            return false;
         }
 
         if (_activeCreationId == id)
@@ -1245,28 +1152,8 @@ public partial class Main : Node2D
             UpdateToolButtonVisibility();
         }
 
-        _lastDeletedCreation = deleted;
         RefreshCreationsPanel();
-        _deleteCreationToast?.ShowMessage($"Deleted {name}.", "Undo", 10);
-    }
-
-    private void RestoreDeletedCreationFromToast()
-    {
-        if (_lastDeletedCreation is not { } creation)
-        {
-            return;
-        }
-
-        var saveManager = GetNode<SaveManager>("/root/SaveManager");
-        if (!TryRunFileOperation(
-            () => saveManager.Save(creation),
-            $"Restoring Creation '{creation.Name}'"))
-        {
-            return;
-        }
-
-        _lastDeletedCreation = null;
-        RefreshCreationsPanel();
+        return true;
     }
 
     private void StartNewCreationFromHome()
@@ -1277,7 +1164,6 @@ public partial class Main : Node2D
         }
 
         _activeCreationId = null;
-        _evolutionDeferredByHomeHub = false;
         Selection.Clear();
         Construction.ResetDraft();
         Construction.IsActive = true;
@@ -1290,15 +1176,22 @@ public partial class Main : Node2D
 
     private void ShowAchievementsCueFromHome()
     {
-        _deleteCreationToast?.ShowMessage("Achievements open in milestone 0.13.0.");
+        _notifications?.Enqueue(new UiNotificationSpec(
+            UiPopupType.Default,
+            "Achievements",
+            "Achievements open in milestone 0.13.0.",
+            Icon: new(UiIconId.Trophy)));
     }
+
+    private void Notify(string title, string message) =>
+        _notifications?.Enqueue(new UiNotificationSpec(UiPopupType.Default, title, message));
 
     private void RestoreExampleFromHome()
     {
         var saveManager = GetNode<SaveManager>("/root/SaveManager");
         if (saveManager.Get(DefaultCreationTemplates.StarterWormId) is not null)
         {
-            _deleteCreationToast?.ShowMessage("Example already restored.");
+            Notify("Restore example", "The example is already in Creations.");
             return;
         }
 
@@ -1310,7 +1203,6 @@ public partial class Main : Node2D
         }
 
         RefreshCreationsPanel();
-        _deleteCreationToast?.ShowMessage("Restored example.");
     }
 
     private bool TryGetCreationFromScreen(string creationKey, string creationName, out CreationDef creation)
@@ -1337,7 +1229,6 @@ public partial class Main : Node2D
 
     private void OpenCreation(CreationDef creation)
     {
-        _evolutionDeferredByHomeHub = false;
         if (Construction.IsActive)
         {
             Construction.IsActive = false;
@@ -1428,17 +1319,17 @@ public partial class Main : Node2D
     {
         Construction.IsActive = false;
         UpdateToolButtonVisibility();
-        _deleteCreationToast?.ShowMessage("Train setup opens in milestone 0.12.0.");
+        Notify("Train setup", "Train setup opens in milestone 0.12.0.");
     }
 
     private void ShowStatsCueFromBuild()
     {
-        _deleteCreationToast?.ShowMessage("Stats open in milestone 0.12.0.");
+        Notify("Stats", "Stats open in milestone 0.12.0.");
     }
 
     private void ShowBrainCueFromBuild()
     {
-        _deleteCreationToast?.ShowMessage("Brain view opens in milestone 0.12.0.");
+        Notify("Brain view", "Brain view opens in milestone 0.12.0.");
     }
 
     private void BackFromBuildScreen()
@@ -1506,7 +1397,6 @@ public partial class Main : Node2D
 
         Construction.SetCreationName(renamed.Name);
         RefreshCreationsPanel();
-        _deleteCreationToast?.ShowMessage($"Renamed to {renamed.Name}.");
     }
 
     private void DeleteSelectedConstructionParts()
@@ -1535,29 +1425,14 @@ public partial class Main : Node2D
             Construction.Load(creation.Creature, moveOnly: true, brainShape: creation.BrainShape, creationName: creation.Name, training: creation.Training);
             Construction.IsActive = true;
         }
-
-        _deleteCreationToast?.ShowMessage("Training reset.");
     }
 
     private void RequestDeleteActiveCreation()
     {
-        if (_activeCreationId is not { } id)
+        if (_activeCreationId is { } id)
         {
-            return;
+            OpenDeleteCreationDialog(id, Construction.CreationName);
         }
-
-        var name = Construction.CreationName;
-        _pendingDeleteCreationId = id;
-        _pendingDeleteCreationName = name;
-        if (_deleteCreationConfirmationDialog is null)
-        {
-            ConfirmDeleteCreationFromScreen();
-            return;
-        }
-
-        _deleteCreationConfirmationDialog.DialogText =
-            $"Delete {name}? The creation and its trained brain are removed. You can Undo for 10 seconds.";
-        _deleteCreationConfirmationDialog.PopupCentered();
     }
 
     // Training HUD (#51): generation/best/mean readout plus run/pause,
