@@ -50,6 +50,15 @@ public static class UiThemeExpander
     private static readonly string[] _buttonFontColors =
         ["font_color", "font_focus_color", "font_hover_color", "font_pressed_color", "font_hover_pressed_color", "font_disabled_color", "font_outline_color"];
 
+    private static readonly string[] _iconColors =
+        ["icon_normal_color", "icon_hover_color", "icon_pressed_color", "icon_hover_pressed_color", "icon_focus_color"];
+
+    /// <summary>UiButton's count badge: Caption type in the background color, on a halo pill.</summary>
+    public const string BadgeVariationName = "UiBadge";
+
+    /// <summary>UiIconTabs' buttons: muted icons, accent when selected.</summary>
+    public const string IconTabVariationName = "UiIconTab";
+
     /// <summary>Rewrites the color-derived items in <paramref name="theme"/> from its authored palette.</summary>
     public static void Expand(GodotTheme theme)
     {
@@ -126,6 +135,8 @@ public static class UiThemeExpander
     public static IReadOnlyDictionary<string, string> DerivedBaseTypes { get; } =
         TextColorVariations.Select(variation => KeyValuePair.Create(variation.Name, variation.BaseVariation))
             .Append(KeyValuePair.Create(ButtonVariationName, "Button"))
+            .Append(KeyValuePair.Create(BadgeVariationName, UiTokens.Variation(UiTokens.Typography.Caption)))
+            .Append(KeyValuePair.Create(IconTabVariationName, "Button"))
             .ToDictionary();
 
     /// <summary>
@@ -144,15 +155,30 @@ public static class UiThemeExpander
         yield return new("Button", "font_color", UiTokens.Color.Ink);
         yield return new("Button", "font_hover_color", UiTokens.Color.Ink);
         yield return new("Button", "font_pressed_color", UiTokens.Color.Ink);
+        yield return new("Button", "font_hover_pressed_color", UiTokens.Color.Ink);
+        yield return new("Button", "font_focus_color", UiTokens.Color.Ink);
         yield return new("Button", "font_disabled_color", UiTokens.Color.Ink, 0.5f);
+        foreach (var state in _iconColors)
+        {
+            yield return new("Button", state, UiTokens.Color.Ink);
+        }
+        yield return new("Button", "icon_disabled_color", UiTokens.Color.Ink, 0.5f);
         yield return new("LineEdit", "font_color", UiTokens.Color.Ink);
         yield return new("LineEdit", "font_placeholder_color", UiTokens.Color.Muted);
+        yield return new("LineEdit", "caret_color", UiTokens.Color.Accent);
         yield return new("CheckButton", "font_color", UiTokens.Color.Ink);
         yield return new("CheckBox", "font_color", UiTokens.Color.Ink);
         foreach (var state in _buttonFontColors)
         {
             yield return new(ButtonVariationName, state, UiTokens.Color.Transparent);
         }
+        yield return new(BadgeVariationName, "font_color", UiTokens.Color.Background);
+        foreach (var state in _iconColors)
+        {
+            var selected = state is "icon_pressed_color" or "icon_hover_pressed_color";
+            yield return new(IconTabVariationName, state, selected ? UiTokens.Color.Accent : UiTokens.Color.Muted);
+        }
+        yield return new(IconTabVariationName, "icon_disabled_color", UiTokens.Color.Muted);
     }
 
     private static void ClearColors(GodotTheme theme, string type)

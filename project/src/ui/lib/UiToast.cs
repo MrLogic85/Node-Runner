@@ -57,7 +57,7 @@ public partial class UiToast : PanelContainer
         _messageLabel.Text = message;
         _undoButton.Visible = !string.IsNullOrWhiteSpace(undoLabel);
         _undoButton.Text = undoLabel ?? "Undo";
-        UiThemeLookup.ApplyTypography(_undoButton, UiTokens.Typography.Label);
+        RefreshContentStyle();
         _dismissTimer.WaitTime = Mathf.Max(_minimumDurationSeconds, durationSeconds);
         _dismissTimer.Start();
         Show();
@@ -131,8 +131,6 @@ public partial class UiToast : PanelContainer
         }
 
         UiThemeLookup.ApplyTextStyle(_messageLabel, UiTokens.Typography.Body, UiTokens.Color.Ink);
-        UiThemeLookup.ApplyTypography(_undoButton, UiTokens.Typography.Label);
-        _undoButton.AddThemeColorOverride("font_color", UiThemeLookup.Color(this, UiTokens.Color.Accent));
-        _undoButton.AddThemeColorOverride("font_hover_color", UiThemeLookup.Color(this, UiTokens.Color.Ink));
+        UiThemeLookup.ApplyTextStyle(_undoButton, UiTokens.Typography.Label, UiTokens.Color.Accent);
     }
 }

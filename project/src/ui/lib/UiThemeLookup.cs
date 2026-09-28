@@ -101,15 +101,16 @@ public static class UiThemeLookup
     }
 
     /// <summary>
-    /// Styles a Label by name only: the generated typography × text-color variation carries
-    /// font and color, so a Theme swap restyles it without a refresh.
+    /// Styles text by name only: the generated typography × text-color variation carries
+    /// font and color, so a Theme swap restyles it without a refresh. A Button or LineEdit takes
+    /// its other state colors (hover, placeholder, caret) from its own base type in the Theme.
     /// </summary>
-    public static void ApplyTextStyle(Label label, UiTokens.Typography typography, UiTokens.Color color)
+    public static void ApplyTextStyle(Control control, UiTokens.Typography typography, UiTokens.Color color)
     {
-        ArgumentNullException.ThrowIfNull(label);
-        label.ThemeTypeVariation = UiTokens.Variation(typography, color);
-        label.RemoveThemeColorOverride("font_color");
-        ApplyLetterCase(label, typography);
+        ArgumentNullException.ThrowIfNull(control);
+        control.ThemeTypeVariation = UiTokens.Variation(typography, color);
+        control.RemoveThemeColorOverride("font_color");
+        ApplyLetterCase(control, typography);
     }
 
     private static void ApplyLetterCase(Control control, UiTokens.Typography token)

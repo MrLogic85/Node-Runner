@@ -175,12 +175,9 @@ public partial class UiIconTabs : HBoxContainer
 
     private void ApplyIcon(Button button, UiIconId icon)
     {
-        UiIcons.Apply(button, icon, UiIconSize.Large, UiThemeLookup.Color(this, UiTokens.Color.Muted));
-
+        button.ThemeTypeVariation = UiThemeExpander.IconTabVariationName;
+        UiIcons.Apply(button, icon, UiIconSize.Large);
         button.AddThemeConstantOverride("h_separation", 0);
-        button.AddThemeColorOverride("icon_pressed_color", UiThemeLookup.Color(this, UiTokens.Color.Accent));
-        button.AddThemeColorOverride("icon_hover_pressed_color", UiThemeLookup.Color(this, UiTokens.Color.Accent));
-        button.AddThemeColorOverride("icon_focus_color", UiThemeLookup.Color(this, UiTokens.Color.Muted));
     }
 
     private void ApplyStyle(Button button)

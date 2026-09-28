@@ -120,7 +120,8 @@ swap restyles everything:
   do not store the properties a library component derives on its own node
   (`SceneDerivedStateTests`)
 - C# source (`UiSourceGuardTests`, a Roslyn scan with types bound) has no colour
-  literals anywhere in `project/src`, and `project/src/ui/lib` names every
+  literals anywhere in `project/src`; `project/src/ui/lib` pins no colour
+  override (it selects a generated Theme variation) and names every
   number. Dimensions should come from `UiSize`/`UiLayout`/`UiSpacing`; the
   test checks that a number is named, not where the name points. Identity,
   halving and doubling stay inline; the test owns the exact list.
@@ -154,8 +155,7 @@ a stricter size rule for screen C# (scene values are the scene's own, #331),
 a rule against screen code building or
 restyling controls, a check that the screen's scene uses library components,
 and a check that every node a screen script binds exists in its scene with a
-matching type. Theme values copied into overrides in library C# are tracked in
-[#338](https://github.com/MrLogic85/Node-Runner/issues/338).
+matching type.
 
 Do not write tests that lock a scene's arrangement: which components it uses,
 their order and its layout sizes are free to change in the editor. Do not

@@ -263,17 +263,11 @@ public partial class UiSegmentedSwitch : HBoxContainer, ISerializationListener
             button.Disabled = segment is null;
             button.Text = text;
             UiThemeLookup.ApplyTypography(button, UiTokens.Typography.Label);
-            foreach (string state in new[] { "font_color", "font_hover_color", "font_pressed_color", "font_hover_pressed_color", "font_focus_color" })
-            {
-                button.AddThemeColorOverride(state, UiThemeLookup.Color(this, UiTokens.Color.Ink));
-            }
 
             if (hasIcon)
             {
-                UiIcons.Apply(button, segment!.IconId, UiIconSize.Standard, UiThemeLookup.Color(this, UiTokens.Color.Ink));
+                UiIcons.Apply(button, segment!.IconId, UiIconSize.Standard);
                 button.IconAlignment = hasText ? HorizontalAlignment.Left : HorizontalAlignment.Center;
-                button.AddThemeColorOverride("icon_hover_pressed_color", UiThemeLookup.Color(this, UiTokens.Color.Ink));
-                button.AddThemeColorOverride("icon_focus_color", UiThemeLookup.Color(this, UiTokens.Color.Ink));
             }
             else
             {
