@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://i7rskwbsdhbk"]
 
 [ext_resource type="Script" uid="uid://bomhjvql0pdwj" path="res://src/ui/lib/UiDialogContent.cs" id="1"]
-[ext_resource type="Script" uid="uid://byhbh5da7rpk8" path="res://src/ui/lib/UiCard.cs" id="2"]
+[ext_resource type="Script" uid="uid://tj04ceasjqhg" path="res://src/ui/lib/UiPopupCard.cs" id="2"]
 [ext_resource type="Script" uid="uid://r2ped3g3uiaa" path="res://src/ui/lib/UiButton.cs" id="3"]
 
 [node name="UiDialogContent" type="Control" unique_id=820140142]

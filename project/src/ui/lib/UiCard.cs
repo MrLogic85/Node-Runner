@@ -120,7 +120,7 @@ public partial class UiCard : PanelContainer, IUiClipping
         }
     }
 
-    private void RefreshStyle()
+    protected void RefreshStyle()
     {
         if (!IsInsideTree() || _refreshingStyle)
         {

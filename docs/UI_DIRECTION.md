@@ -404,7 +404,10 @@ overlays (#200) remain separate.
 When hosted beneath `Main`'s `Node2D`, the gallery explicitly follows the
 viewport size; when hosted beneath a `Control`, it fills its parent via anchors.
 Dialogs support Default/Warn/Danger and independent `HoldToAction` on the
-confirmation button. Default actions use Primary buttons, Warning actions use
+confirmation button. Dialogs and notifications share `UiPopupCard`, the
+reference's dialog/toast frame: its border and glow take the severity colour,
+accent for Default, halo for Warn and danger for Danger (#355). It is not a
+`UiCard` variant, since the popup type picks it, not the screen. Default actions use Primary buttons, Warning actions use
 Flat (human decision pending designer review), and Danger actions use Tertiary.
 Cancel and action have exactly equal width and height, expanding evenly across
 the action row with a single token-sized gap, including busy and retry states.
@@ -564,9 +567,10 @@ text. Their UiLabel **Text Style**, wrapping, container arrangement and
 separations remain scene-owned. Keep the unique `Title`, `Message`,
 `SemanticType`, and `SemanticIcon` names when rearranging nodes.
 
-Root **Type** controls the card variant, semantic overline and icon/color;
-**Theme Preview** selects Neon, Paper or Effects Lite. Card **Size Variant**
-and **Glow** remain normal shared-card options. Root Custom Minimum Size X
+Root **Type** sets the frame's severity border and glow (`UiPopupCard`), the
+semantic overline and the icon colour; **Theme Preview** selects Neon, Paper
+or Effects Lite. Card **Size Variant** remains a normal shared-card option;
+the popup frame always glows unless effects are off. Root Custom Minimum Size X
 is the preferred width (initially the 326px card-width token); the runtime
 host narrows it to the available viewport and restores that preferred width
 when space becomes available again.
@@ -583,7 +587,7 @@ callbacks, pause and swipe animation remain in `UiNotification`.
 `new UiNotificationIcon(UiIconId.PartSpring)`. Omit it (or use null) to retain
 the type's default: Model for Default, Warn for Warn/Danger. The selected
 glyph keeps the semantic tint and Large icon size; it does not change the
-type label or card variant. Arbitrary textures and `UiIconId.None` are not
+type label or frame colour. Arbitrary textures and `UiIconId.None` are not
 accepted. The override is runtime data, not a new Inspector field.
 `UiDialogSpec.Icon` works the same way for dialogs: the reference lets whoever
 raises a dialog pick its icon, so the Delete dialog shows the trash glyph.

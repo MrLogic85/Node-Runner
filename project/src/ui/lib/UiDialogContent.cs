@@ -11,7 +11,7 @@ public sealed partial class UiDialogContent : Control
     private UiPopupType _type;
     private UiNotificationIcon? _iconOverride;
     private PreviewTheme _theme;
-    private UiCard? _card;
+    private UiPopupCard? _card;
     private ScrollContainer _scroll = null!;
     private Label _body = null!;
     private Label _error = null!;
@@ -50,7 +50,7 @@ public sealed partial class UiDialogContent : Control
 
     public override void _Ready()
     {
-        _card = GetNode<UiCard>("%Card");
+        _card = GetNode<UiPopupCard>("%Card");
         _scroll = GetNode<ScrollContainer>("%BodyScroll");
         _body = GetNode<Label>("%Content");
         _error = GetNode<Label>("%Error");
@@ -68,7 +68,6 @@ public sealed partial class UiDialogContent : Control
     private readonly UiUnsavedState _unsaved = new(
         [
             ("%Scrim", ColorRect.PropertyName.Color),
-            ("%Card", UiCard.PropertyName.Kind),
             ("%Card", Control.PropertyName.OffsetLeft),
             ("%Card", Control.PropertyName.OffsetTop),
             ("%Card", Control.PropertyName.OffsetRight),
@@ -140,7 +139,7 @@ public sealed partial class UiDialogContent : Control
         {
             return;
         }
-        _card.Kind = UiPopupStyle.CardKind(Type);
+        _card.PopupType = Type;
         GetNode<ColorRect>("%Scrim").Color = UiThemeLookup.Color(this, UiTokens.Color.Scrim);
         var color = UiPopupStyle.SemanticColor(Type, this);
         var icon = GetNode<TextureRect>("%SemanticIcon");
