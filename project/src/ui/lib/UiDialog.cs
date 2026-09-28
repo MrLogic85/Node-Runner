@@ -15,6 +15,7 @@ public sealed partial class UiDialog : Window
     private UiDialogSpec? _spec;
     private UiDialogContent _content = null!;
     private Viewport? _host;
+    private Window? _root;
     private bool _quitOnBack;
     private int _operation;
 
@@ -28,6 +29,14 @@ public sealed partial class UiDialog : Window
         Transparent = true;
         TransparentBg = true;
         ForceNative = false;
+    }
+
+    // Android Back reaches only the main window's own nodes and skips every child Window,
+    // this one included, so the dialog listens to the main window instead (#328).
+    public override void _EnterTree()
+    {
+        _root = GetTree().Root;
+        _root.GoBackRequested += OnGoBackRequested;
     }
 
     public override void _Ready()
@@ -160,12 +169,22 @@ public sealed partial class UiDialog : Window
         }
     }
 
-    public override void _Notification(int what)
+    // Deferred, so the tree checks QuitOnGoBack for this Back press while the dialog still holds it.
+    // Only the dialog open at the press closes; one a screen opens deferred from this Back stays open.
+    private void OnGoBackRequested()
     {
-        if (what == NotificationWMGoBackRequest)
+        if (!IsOpen)
         {
-            TryCancel();
+            return;
         }
+        var operation = _operation;
+        Callable.From(() =>
+        {
+            if (operation == _operation)
+            {
+                TryCancel();
+            }
+        }).CallDeferred();
     }
 
     public override void _ExitTree()
@@ -175,6 +194,8 @@ public sealed partial class UiDialog : Window
         {
             GetTree().QuitOnGoBack = _quitOnBack;
         }
+        _root?.GoBackRequested -= OnGoBackRequested;
+        _root = null;
         IsOpen = false;
         IsBusy = false;
         _spec = null;
