@@ -2,7 +2,6 @@
 
 [ext_resource type="Script" uid="uid://bndwo1ominqta" path="res://src/ui/lib/UiSidePanel.cs" id="1_side"]
 [ext_resource type="Script" uid="uid://fw1i2vfgkd7q" path="res://src/ui/lib/UiDivider.cs" id="2_divider"]
-[ext_resource type="Script" uid="uid://r2ped3g3uiaa" path="res://src/ui/lib/UiButton.cs" id="3_brq4r"]
 [ext_resource type="Script" uid="uid://dk67qmt3brp4e" path="res://src/ui/lib/UiLabel.cs" id="3_label"]
 [ext_resource type="Script" uid="uid://bt0qun8lahd5f" path="res://src/ui/lib/UiVerticalLabel.cs" id="4_vlabel"]
 
@@ -67,17 +66,12 @@ text_overrun_behavior = 3
 script = ExtResource("3_label")
 TextStyle = 2
 
-[node name="SidePanelChevron" type="Button" parent="SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelHeaderInset/SidePanelHeader" unique_id=599248499]
+[node name="SidePanelChevron" type="Control" parent="SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelHeaderInset/SidePanelHeader" unique_id=599248499]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
 size_flags_horizontal = 4
 size_flags_vertical = 4
-mouse_filter = 1
-script = ExtResource("3_brq4r")
-IconId = 7
-Kind = 3
-ContentLayout = 2
-metadata/_custom_type_script = "uid://r2ped3g3uiaa"
 
 [node name="SidePanelContent" type="VBoxContainer" parent="SidePanelDrawer/SidePanelPadding/SidePanelExpanded" unique_id=398215167]
 unique_name_in_owner = true

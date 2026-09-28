@@ -312,8 +312,9 @@ icon or `None`; no nullable/icon-only wrapper is needed. Existing serialized
 Row/Stacked enum values remain stable. C# callers use `UiIconId.None` instead
 of null. Any locally authored, unsaved old `Compact` setting must be replaced
 by selecting `RowCompact`; reopen scenes after rebuilding to refresh Inspector.
-Row icons are 16px with or without text, including compact; stacked icons are
-20px with or without text. Textless row buttons need no separate icon layout.
+The layout picks the icon size, never the call site (#358): a row icon beside
+text is 16px, including compact; a row button with no text and every stacked
+button use 20px. Textless row buttons need no separate icon layout.
 Inspector close uses the shared flat compact row button. Toolbar icon actions
 may use Stacked pending their own component review; the human accepted the
 temporary visual change and will discuss the removed touch margins with the
@@ -649,13 +650,14 @@ every stacked button rather than a 16px lock.
 decision it is a panel, not a bar, because it holds any content. It is 176px
 (`UiLayout.SidePanelWidth`, the reference token `w-side`) with a `panel`
 background and a divider down its left edge. Its header row is its own: an
-optional `IconId`, an optional `Title` and a chevron, which is a compact
-flat `UiButton`. Code owns only the panel's own width, which it animates
-when collapsing; its paddings, separations and slot sizes live in
-`UiSidePanel.tscn` (#335). The header reaches past the padding on the right so the
-chevron's icon lines up with the content's right edge, and it is `ink`
-rather than the reference's `muted`, while the collapsed tab's chevron stays
-`muted` to keep out of the way (human decisions on #321). The screen authors
+optional `IconId`, an optional `Title` and a chevron. Like the reference's
+`side-handle`, the chevron is a bare 16px `muted` icon, not a button, centred
+in a 32px touch area; both chevrons match (human decision on #358, replacing
+the compact flat `UiButton` and `ink` colour from #321). Code owns only the
+panel's own width, which it animates when collapsing; its paddings,
+separations and slot sizes live in `UiSidePanel.tscn` (#335). The header
+reaches past the padding on the right so the chevron's icon lines up with the
+content's right edge. The screen authors
 the content below it in `%SidePanelContent` and decides what the panel shows.
 Tapping the chevron sets `Collapsed`: the panel shrinks to a 28px tab
 (`UiLayout.SidePanelTabWidth`; the reference hardcodes 28px, it is not a
@@ -668,7 +670,7 @@ over the second half so the two never overlap; expanding is the reverse. `Collap
 starts; the panel never collapses on its own.
 The tab's title is a `UiVerticalLabel`, which draws its text a quarter turn
 clockwise because a Container resets a child's rotation. By human decision on
-#321 only the chevron button collapses the panel (the title does nothing), and
+#321 only the chevron collapses the panel (the title does nothing), and
 the tab's title keeps the Label typography's letter spacing rather than the
 reference's wider `0.08em`, which has no token.
 

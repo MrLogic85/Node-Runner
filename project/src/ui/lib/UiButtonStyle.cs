@@ -144,9 +144,13 @@ public readonly record struct UiButtonMetrics(
         return new Vector2(size, size);
     }
 
-    public static UiIconSize IconSize(UiButtonContentLayout layout) => layout switch
+    /// <summary>
+    /// The layout picks the icon size, never the call site: <c>icon</c> beside text in a row,
+    /// <c>icon-lg</c> in a row with no text and in a stack (reference <c>c_btn</c>/<c>c_ib</c>).
+    /// </summary>
+    public static UiIconSize IconSize(UiButtonContentLayout layout, bool hasLabel) => layout switch
     {
-        UiButtonContentLayout.Row or UiButtonContentLayout.RowCompact => UiIconSize.Standard,
+        UiButtonContentLayout.Row or UiButtonContentLayout.RowCompact => hasLabel ? UiIconSize.Standard : UiIconSize.Large,
         UiButtonContentLayout.Stacked => UiIconSize.Large,
         _ => throw new ArgumentOutOfRangeException(nameof(layout), layout, null),
     };
