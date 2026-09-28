@@ -36,7 +36,6 @@ public partial class UiSelectionHandle : Control, ISerializationListener
 
     public override void _Ready()
     {
-        ApplyThemeStyle();
         MouseFilter = MouseFilterEnum.Pass;
         RecoverIcon();
         RefreshIcon();
@@ -65,7 +64,6 @@ public partial class UiSelectionHandle : Control, ISerializationListener
     {
         if (what == NotificationThemeChanged && IsNodeReady())
         {
-            ApplyThemeStyle();
             RefreshIcon();
             QueueRedraw();
         }
@@ -102,10 +100,7 @@ public partial class UiSelectionHandle : Control, ISerializationListener
             antialiased: false);
     }
 
-    private void ApplyThemeStyle()
-    {
-        CustomMinimumSize = new Vector2(UiSize.Widget.SelectionHandleSize, UiSize.Widget.SelectionHandleSize);
-    }
+    public override Vector2 _GetMinimumSize() => Vector2.One * UiSize.Widget.SelectionHandleSize;
 
     private void RefreshIcon()
     {

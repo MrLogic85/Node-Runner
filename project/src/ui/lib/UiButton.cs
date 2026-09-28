@@ -187,6 +187,8 @@ public sealed partial class UiButton : Button, ISerializationListener
         Button.PropertyName.ExpandIcon,
     ];
 
+    private readonly UiUnsavedState _unsaved = new([.. UiUnsavedState.ButtonStyles, Control.PropertyName.CustomMinimumSize]);
+
     public override void _ValidateProperty(Godot.Collections.Dictionary property)
     {
         if (_derivedProperties.Contains(property["name"].AsStringName()))
@@ -230,6 +232,11 @@ public sealed partial class UiButton : Button, ISerializationListener
 
     public override void _Notification(int what)
     {
+        if (_unsaved.Handle(this, what, RefreshStyle))
+        {
+            return;
+        }
+
         if (what == NotificationThemeChanged && IsNodeReady())
         {
             RefreshStyle();

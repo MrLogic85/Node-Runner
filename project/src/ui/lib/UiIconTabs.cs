@@ -55,8 +55,15 @@ public partial class UiIconTabs : HBoxContainer
         RebuildButtons();
     }
 
+    private readonly UiUnsavedState _unsaved = new("theme_override_constants/separation");
+
     public override void _Notification(int what)
     {
+        if (_unsaved.Handle(this, what, ApplyTheme))
+        {
+            return;
+        }
+
         if (what == NotificationThemeChanged && IsNodeReady())
         {
             UiThemeRefresh.Guarded(this, ApplyTheme);

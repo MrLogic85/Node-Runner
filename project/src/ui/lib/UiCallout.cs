@@ -81,8 +81,15 @@ public partial class UiCallout : PanelContainer
 
     public override void _Ready() => Refresh();
 
+    private readonly UiUnsavedState _unsaved = new("theme_override_styles/panel");
+
     public override void _Notification(int what)
     {
+        if (_unsaved.Handle(this, what, Refresh))
+        {
+            return;
+        }
+
         if (what == NotificationThemeChanged && IsNodeReady())
         {
             UiThemeRefresh.Guarded(this, Refresh);

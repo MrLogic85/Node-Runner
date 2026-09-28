@@ -10,31 +10,34 @@ internal static partial class SceneNodes
         public override string ToString() => $"{Scene}: {Header}";
     }
 
-    /// <summary>Saved theme overrides that pin a palette color or text style on one node.</summary>
-    public static IReadOnlyList<string> PaletteOverrideGroups { get; } =
+    /// <summary>Saved theme overrides that pin a stylebox, palette color or text style on one node.</summary>
+    public static IReadOnlyList<string> StyleOverrideGroups { get; } =
     [
+        "theme_override_styles/",
         "theme_override_colors/",
         "theme_override_fonts/",
         "theme_override_font_sizes/",
     ];
 
-    public static IEnumerable<Node> WithScript(string scriptFileName)
+    public static IEnumerable<Node> All() => Read().Select(entry => entry.Node);
+
+    public static IEnumerable<Node> WithScript(string scriptFileName) =>
+        Read().Where(entry => entry.Script?.EndsWith("/" + scriptFileName, StringComparison.Ordinal) == true)
+            .Select(entry => entry.Node);
+
+    private static IEnumerable<(Node Node, string? Script)> Read()
     {
         var scenes = Path.Combine(FindRepositoryRoot(), "project", "scenes");
         foreach (var path in Directory.EnumerateFiles(scenes, "*.tscn", SearchOption.AllDirectories))
         {
             var text = File.ReadAllText(path);
-            var scriptIds = ExtResource().Matches(text)
-                .Where(match => match.Groups["path"].Value.EndsWith("/" + scriptFileName, StringComparison.Ordinal))
-                .Select(match => match.Groups["id"].Value)
-                .ToHashSet();
+            var scriptPaths = ExtResource().Matches(text)
+                .ToDictionary(match => match.Groups["id"].Value, match => match.Groups["path"].Value);
             foreach (var block in NodeBlock().Split(text).Where(block => block.StartsWith("[node ", StringComparison.Ordinal)))
             {
                 var script = ScriptRef().Match(block);
-                if (script.Success && scriptIds.Contains(script.Groups["id"].Value))
-                {
-                    yield return new Node(Path.GetFileName(path), block[..block.IndexOf('\n')], block);
-                }
+                var scriptPath = script.Success ? scriptPaths.GetValueOrDefault(script.Groups["id"].Value) : null;
+                yield return (new Node(Path.GetFileName(path), block[..block.IndexOf('\n')], block), scriptPath);
             }
         }
     }

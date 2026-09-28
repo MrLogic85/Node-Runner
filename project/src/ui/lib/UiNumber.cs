@@ -97,9 +97,10 @@ public partial class UiNumber : Control, ISerializationListener
             antialiased: false);
     }
 
+    public override Vector2 _GetMinimumSize() => Vector2.One * UiSize.Widget.NumberDiameter;
+
     private void ApplyGeometry()
     {
-        CustomMinimumSize = new Vector2(UiSize.Widget.NumberDiameter, UiSize.Widget.NumberDiameter);
         LayoutLabel();
     }
 

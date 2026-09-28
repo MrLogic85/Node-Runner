@@ -66,9 +66,27 @@ public sealed partial class UiNotificationContent : UiCard
         ApplyAppearance();
     }
 
+    private readonly UiUnsavedState _unsaved = new(
+        [
+            (".", UiCard.PropertyName.Kind),
+            ("%SemanticIcon", TextureRect.PropertyName.Texture),
+            ("%SemanticIcon", CanvasItem.PropertyName.SelfModulate),
+            ("%SemanticType", Label.PropertyName.Text),
+            ("%SemanticType", UiLabel.PropertyName.TextColor),
+            ("%Title", UiLabel.PropertyName.TextColor),
+            ("%Message", UiLabel.PropertyName.TextColor),
+        ]);
+
     public override void _Notification(int what)
     {
+        // Before the base, so the card's own state is cleared after what these setters restyle.
+        var saving = _unsaved.Handle(this, what, ApplyAppearance);
         base._Notification(what);
+        if (saving)
+        {
+            return;
+        }
+
         if (what == NotificationThemeChanged && IsNodeReady())
         {
             UiThemeRefresh.Guarded(this, ApplyAppearance);

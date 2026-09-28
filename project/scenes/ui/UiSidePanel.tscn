@@ -6,70 +6,7 @@
 [ext_resource type="Script" uid="uid://dk67qmt3brp4e" path="res://src/ui/lib/UiLabel.cs" id="3_label"]
 [ext_resource type="Script" uid="uid://bt0qun8lahd5f" path="res://src/ui/lib/UiVerticalLabel.cs" id="4_vlabel"]
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ste4s"]
-content_margin_left = 0.0
-content_margin_top = 0.0
-content_margin_right = 0.0
-content_margin_bottom = 0.0
-bg_color = Color(1, 1, 1, 0)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(1, 1, 1, 0)
-corner_radius_top_left = 8
-corner_radius_top_right = 8
-corner_radius_bottom_right = 8
-corner_radius_bottom_left = 8
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hd5bl"]
-content_margin_left = 0.0
-content_margin_top = 0.0
-content_margin_right = 0.0
-content_margin_bottom = 0.0
-bg_color = Color(1, 1, 1, 0)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(1, 1, 1, 0)
-corner_radius_top_left = 8
-corner_radius_top_right = 8
-corner_radius_bottom_right = 8
-corner_radius_bottom_left = 8
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_teke8"]
-content_margin_left = 0.0
-content_margin_top = 0.0
-content_margin_right = 0.0
-content_margin_bottom = 0.0
-bg_color = Color(1, 1, 1, 0)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(1, 1, 1, 0)
-corner_radius_top_left = 8
-corner_radius_top_right = 8
-corner_radius_bottom_right = 8
-corner_radius_bottom_left = 8
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_mh31e"]
-content_margin_left = 0.0
-content_margin_top = 0.0
-content_margin_right = 0.0
-content_margin_bottom = 0.0
-bg_color = Color(1, 1, 1, 0)
-border_color = Color(1, 1, 1, 0)
-corner_radius_top_left = 8
-corner_radius_top_right = 8
-corner_radius_bottom_right = 8
-corner_radius_bottom_left = 8
-
-[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_qfyv8"]
-
 [node name="UiSidePanel" type="MarginContainer" unique_id=584626067]
-custom_minimum_size = Vector2(176, 0)
 anchors_preset = 11
 anchor_left = 1.0
 anchor_right = 1.0
@@ -104,7 +41,7 @@ unique_name_in_owner = true
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="SidePanelHeaderInset" type="MarginContainer" parent="SidePanelDrawer/SidePanelPadding/SidePanelExpanded"]
+[node name="SidePanelHeaderInset" type="MarginContainer" parent="SidePanelDrawer/SidePanelPadding/SidePanelExpanded" unique_id=1468473977]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_constants/margin_right = -8
@@ -117,7 +54,6 @@ theme_override_constants/separation = 4
 
 [node name="SidePanelIcon" type="Control" parent="SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelHeaderInset/SidePanelHeader" unique_id=1617606930]
 unique_name_in_owner = true
-visible = false
 custom_minimum_size = Vector2(20, 20)
 layout_mode = 2
 size_flags_vertical = 4
@@ -133,16 +69,10 @@ TextStyle = 2
 
 [node name="SidePanelChevron" type="Button" parent="SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelHeaderInset/SidePanelHeader" unique_id=599248499]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
 size_flags_horizontal = 4
 size_flags_vertical = 4
 mouse_filter = 1
-theme_override_styles/normal = SubResource("StyleBoxFlat_ste4s")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_hd5bl")
-theme_override_styles/hover = SubResource("StyleBoxFlat_teke8")
-theme_override_styles/disabled = SubResource("StyleBoxFlat_mh31e")
-theme_override_styles/focus = SubResource("StyleBoxEmpty_qfyv8")
 script = ExtResource("3_brq4r")
 IconId = 7
 Kind = 3
@@ -156,7 +86,6 @@ size_flags_vertical = 3
 
 [node name="SidePanelTab" type="VBoxContainer" parent="." unique_id=537295663]
 unique_name_in_owner = true
-visible = false
 custom_minimum_size = Vector2(28, 0)
 layout_mode = 2
 size_flags_horizontal = 8

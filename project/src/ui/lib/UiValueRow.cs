@@ -50,8 +50,15 @@ public partial class UiValueRow : HBoxContainer
         Rebuild();
     }
 
+    private readonly UiUnsavedState _unsaved = new("theme_override_constants/separation");
+
     public override void _Notification(int what)
     {
+        if (_unsaved.Handle(this, what, Rebuild))
+        {
+            return;
+        }
+
         if (what == NotificationThemeChanged && IsNodeReady())
         {
             UiThemeRefresh.Guarded(this, Rebuild);

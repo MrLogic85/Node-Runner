@@ -101,8 +101,15 @@ public partial class UiCard : PanelContainer, IUiClipping
         RefreshStyle();
     }
 
+    private readonly UiUnsavedState _unsaved = new("theme_override_styles/panel", CanvasItem.PropertyName.ClipChildren);
+
     public override void _Notification(int what)
     {
+        if (_unsaved.Handle(this, what, RefreshStyle))
+        {
+            return;
+        }
+
         if (what == NotificationThemeChanged)
         {
             RefreshStyle();

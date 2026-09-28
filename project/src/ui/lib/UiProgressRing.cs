@@ -111,9 +111,10 @@ public partial class UiProgressRing : Control, ISerializationListener
         }
     }
 
+    public override Vector2 _GetMinimumSize() => Vector2.One * UiSize.Control.Touch;
+
     private void ApplyGeometry()
     {
-        CustomMinimumSize = new Vector2(UiSize.Control.Touch, UiSize.Control.Touch);
         LayoutLabel();
     }
 

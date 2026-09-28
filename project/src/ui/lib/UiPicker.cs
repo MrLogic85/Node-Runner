@@ -114,8 +114,15 @@ public partial class UiPicker : PanelContainer
         Rebuild();
     }
 
+    private readonly UiUnsavedState _unsaved = new("theme_override_styles/panel");
+
     public override void _Notification(int what)
     {
+        if (_unsaved.Handle(this, what, Rebuild))
+        {
+            return;
+        }
+
         if (what == NotificationThemeChanged && IsNodeReady())
         {
             UiThemeRefresh.Guarded(this, Rebuild);

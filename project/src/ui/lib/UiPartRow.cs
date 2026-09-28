@@ -77,8 +77,15 @@ public partial class UiPartRow : Control
         Rebuild();
     }
 
+    private readonly UiUnsavedState _unsaved = new(CanvasItem.PropertyName.SelfModulate);
+
     public override void _Notification(int what)
     {
+        if (_unsaved.Handle(this, what, Rebuild))
+        {
+            return;
+        }
+
         if (what == NotificationThemeChanged && IsNodeReady())
         {
             UiThemeRefresh.Guarded(this, Rebuild);
