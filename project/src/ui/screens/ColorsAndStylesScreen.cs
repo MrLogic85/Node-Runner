@@ -4,11 +4,10 @@ using NodeRunner.Ui.Lib;
 namespace NodeRunner.Ui.Screens;
 
 /// <summary>
-/// Standalone visual inventory for the design foundations. This screen is
-/// intentionally independent from the component gallery and can be wired to a
-/// scene later without changing the token or component controls.
+/// Visual inventory of the design foundations. The page frame, toolbar and menu are
+/// authored in its scene like the other gallery pages; the inventory itself is built in code.
 /// </summary>
-public partial class ColorsAndStylesScreen : Control
+public partial class ColorsAndStylesScreen : GalleryScreen
 {
     private static readonly (string Name, string Description, string Sample)[] _textStyles =
     [
@@ -44,22 +43,16 @@ public partial class ColorsAndStylesScreen : Control
     public static IReadOnlyList<string> RadiusInventory { get; } =
         ["radius-sm", "radius-md", "radius-lg", "radius-pill"];
 
-    [Signal]
-    public delegate void CloseRequestedEventHandler();
-
-    [Export]
-    public bool ShowCloseAction { get; set; }
-
     private ScrollContainer? _scroll;
     private Control? _scrollContent;
-    private ColorRect _background = null!;
     private readonly List<TextureRect> _iconSpecimens = [];
     private readonly List<(PanelContainer Panel, float Radius)> _radiusSpecimens = [];
 
+    protected override GalleryPage Page => GalleryPage.ColorsAndStyles;
+
     public override void _Ready()
     {
-        Name = nameof(ColorsAndStylesScreen);
-        UiLayout.ApplyScreen(this);
+        base._Ready();
         BuildLayout();
         ApplyThemeColors();
         Callable.From(ResetScrollPosition).CallDeferred();
@@ -67,6 +60,7 @@ public partial class ColorsAndStylesScreen : Control
 
     public override void _Notification(int what)
     {
+        base._Notification(what);
         if (what == NotificationThemeChanged && IsNodeReady())
         {
             ApplyThemeColors();
@@ -76,7 +70,6 @@ public partial class ColorsAndStylesScreen : Control
     /// <summary>Text restyles through its variation; only drawn fills are re-resolved here.</summary>
     private void ApplyThemeColors()
     {
-        _background.Color = UiThemeLookup.Color(this, UiTokens.Color.Background);
         foreach (var glyph in _iconSpecimens)
         {
             glyph.SelfModulate = UiThemeLookup.Color(this, UiTokens.Color.Accent);
@@ -100,36 +93,10 @@ public partial class ColorsAndStylesScreen : Control
 
     private void BuildLayout()
     {
-        _background = new ColorRect { MouseFilter = MouseFilterEnum.Ignore };
-        _background.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
-        AddChild(_background);
-
-        var frame = new MarginContainer();
-        frame.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
-        UiLayout.ApplyMargins(frame);
-        AddChild(frame);
-
-        var shell = new VBoxContainer
-        {
-            SizeFlagsHorizontal = SizeFlags.ExpandFill,
-            SizeFlagsVertical = SizeFlags.ExpandFill,
-        };
-        shell.AddThemeConstantOverride("separation", (int)UiSize.Space.S2);
-        frame.AddChild(shell);
-        shell.AddChild(CreateHeader());
-
-        _scroll = new ScrollContainer
-        {
-            SizeFlagsHorizontal = SizeFlags.ExpandFill,
-            SizeFlagsVertical = SizeFlags.ExpandFill,
-            HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled,
-            VerticalScrollMode = ScrollContainer.ScrollMode.ShowNever,
-        };
-        shell.AddChild(_scroll);
-
+        _scroll = GetNode<ScrollContainer>("%Scroll");
         var content = new VBoxContainer { SizeFlagsHorizontal = SizeFlags.ExpandFill };
         content.AddThemeConstantOverride("separation", (int)UiSize.Space.S5);
-        _scroll.AddChild(content);
+        GetNode<MarginContainer>("%ContentFrame").AddChild(content);
         _scrollContent = content;
         content.AddChild(CreateColorsSection(UiThemes.Neon, "NEON LAB (DARK)"));
         content.AddChild(CreateColorsSection(UiThemes.Paper, "PAPER (LIGHT)"));
@@ -138,43 +105,6 @@ public partial class ColorsAndStylesScreen : Control
         content.AddChild(CreateTextStylesSection());
         content.AddChild(CreateRadiiSection());
         UiNativeScroll.AllowGesturesToBubble(content);
-    }
-
-    private Control CreateHeader()
-    {
-        var header = new HBoxContainer
-        {
-            CustomMinimumSize = new Vector2(0, UiLayout.TopBarHeight),
-            SizeFlagsHorizontal = SizeFlags.ExpandFill,
-        };
-        header.AddThemeConstantOverride("separation", (int)UiSize.Space.S2);
-        var title = CreateLabel("Colors & Styles", UiTokens.Typography.Heading, UiTokens.Color.Ink);
-        title.AutowrapMode = TextServer.AutowrapMode.Off;
-        title.SizeFlagsHorizontal = SizeFlags.ExpandFill;
-        header.AddChild(title);
-
-        if (ShowCloseAction)
-        {
-            var close = new UiButton
-            {
-                ContentLayout = UiButtonContentLayout.Stacked,
-                IconId = UiIconId.Back,
-                TooltipText = "Back",
-                SizeFlagsVertical = SizeFlags.ShrinkCenter,
-            };
-            close.Pressed += () => EmitSignal(SignalName.CloseRequested);
-            header.AddChild(close);
-        }
-
-        var switcher = new UiSegmentedSwitch
-        {
-            Segments = [new() { Text = "Neon" }, new() { Text = "Paper" }],
-            SelectedIndex = 0,
-            SizeFlagsVertical = SizeFlags.ShrinkCenter,
-        };
-        switcher.SelectionChanged += index => ApplyTheme(index == 1 ? UiThemes.Paper : UiThemes.Neon);
-        header.AddChild(switcher);
-        return header;
     }
 
     private Control CreateColorsSection(Godot.Theme theme, string title)
@@ -409,11 +339,8 @@ public partial class ColorsAndStylesScreen : Control
         return label;
     }
 
-
-    private void ApplyTheme(Godot.Theme theme)
+    protected override void OnThemeApplied()
     {
-        Theme = theme;
-
         if (_scrollContent is not null)
         {
             UiNativeScroll.AllowGesturesToBubble(_scrollContent);

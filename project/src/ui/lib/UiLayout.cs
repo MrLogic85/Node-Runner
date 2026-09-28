@@ -52,9 +52,4 @@ public static class UiLayout
         root.Size = root.GetViewportRect().Size;
         root.CustomMinimumSize = CanvasSize;
     }
-
-    public static void ApplyMargins(MarginContainer margin)
-    {
-        UiSpacing.ApplyUniformMargin(margin, UiSpacing.ScreenEdgeInset);
-    }
 }

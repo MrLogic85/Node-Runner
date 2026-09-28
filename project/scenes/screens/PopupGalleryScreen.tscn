@@ -5,80 +5,11 @@
 [ext_resource type="Script" uid="uid://pdb6hwlullhe" path="res://src/ui/lib/UiSegmentedSwitch.cs" id="3_ejpeg"]
 [ext_resource type="Script" uid="uid://dd0bugxsg7bvl" path="res://src/ui/lib/UiSegment.cs" id="4_43x7j"]
 [ext_resource type="Script" uid="uid://r2ped3g3uiaa" path="res://src/ui/lib/UiButton.cs" id="6_a4d2d"]
-
-[sub_resource type="Resource" id="Resource_m8oqa"]
-script = ExtResource("4_43x7j")
-Text = "Neon"
-
-[sub_resource type="Resource" id="Resource_i47nv"]
-script = ExtResource("4_43x7j")
-Text = "Paper"
-
-[sub_resource type="Resource" id="Resource_hwiuu"]
-script = ExtResource("4_43x7j")
-Text = "Effects Lite"
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ejpeg"]
-content_margin_left = 16.0
-content_margin_top = 0.0
-content_margin_right = 16.0
-content_margin_bottom = 0.0
-bg_color = Color(0.07450981, 0.10980392, 0.19215687, 1)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(0.33333334, 0.4509804, 0.6509804, 1)
-corner_radius_top_left = 8
-corner_radius_top_right = 8
-corner_radius_bottom_right = 8
-corner_radius_bottom_left = 8
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_43x7j"]
-content_margin_left = 16.0
-content_margin_top = 0.0
-content_margin_right = 16.0
-content_margin_bottom = 0.0
-bg_color = Color(0.07450981, 0.10980392, 0.19215687, 1)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(0.33333334, 0.4509804, 0.6509804, 1)
-corner_radius_top_left = 8
-corner_radius_top_right = 8
-corner_radius_bottom_right = 8
-corner_radius_bottom_left = 8
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_657w2"]
-content_margin_left = 16.0
-content_margin_top = 0.0
-content_margin_right = 16.0
-content_margin_bottom = 0.0
-bg_color = Color(0.07450981, 0.10980392, 0.19215687, 1)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(0.33333334, 0.4509804, 0.6509804, 1)
-corner_radius_top_left = 8
-corner_radius_top_right = 8
-corner_radius_bottom_right = 8
-corner_radius_bottom_left = 8
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_a4d2d"]
-content_margin_left = 16.0
-content_margin_top = 0.0
-content_margin_right = 16.0
-content_margin_bottom = 0.0
-bg_color = Color(0.07450981, 0.10980392, 0.19215687, 0.5)
-border_color = Color(1, 1, 1, 0)
-corner_radius_top_left = 8
-corner_radius_top_right = 8
-corner_radius_bottom_right = 8
-corner_radius_bottom_left = 8
-
-[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_m8oqa"]
+[ext_resource type="PackedScene" uid="uid://dokr6l5stu6ll" path="res://scenes/ui/UiFrame.tscn" id="shell_2_frame"]
+[ext_resource type="PackedScene" uid="uid://gydkh1xys4yo" path="res://scenes/ui/UiToolbar.tscn" id="shell_3_toolbar"]
+[ext_resource type="Script" uid="uid://cuku7dsosusj4" path="res://src/ui/lib/UiMenuToggleItem.cs" id="shell_7_menu_toggle_item"]
+[ext_resource type="Script" uid="uid://ddvhocc4qru2x" path="res://src/ui/lib/UiMenuItemDivider.cs" id="shell_8_menu_divider"]
+[ext_resource type="Script" uid="uid://dah3q1p7ikjlm" path="res://src/ui/lib/UiMenuActionItem.cs" id="shell_9_menu_item"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hwiuu"]
 content_margin_left = 16.0
@@ -1072,6 +1003,160 @@ corner_radius_bottom_left = 8
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_7n5la"]
 
+[sub_resource type="StyleBoxFlat" id="shell_StyleBoxFlat_qlghs"]
+content_margin_left = 1.0
+content_margin_top = 1.0
+content_margin_right = 1.0
+content_margin_bottom = 1.0
+bg_color = Color(0.0509804, 0.0784314, 0.141176, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.101961, 0.498039, 0.47451, 1)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+shadow_color = Color(0.101961, 0.498039, 0.47451, 0.12)
+shadow_size = 10
+
+[sub_resource type="StyleBoxFlat" id="shell_StyleBoxFlat_cakib"]
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+bg_color = Color(1, 1, 1, 0)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(1, 1, 1, 0)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="shell_StyleBoxFlat_vq605"]
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+bg_color = Color(1, 1, 1, 0)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(1, 1, 1, 0)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="shell_StyleBoxFlat_mtv2x"]
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+bg_color = Color(1, 1, 1, 0)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(1, 1, 1, 0)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="shell_StyleBoxFlat_hlqrl"]
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+bg_color = Color(1, 1, 1, 0)
+border_color = Color(1, 1, 1, 0)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxEmpty" id="shell_StyleBoxEmpty_1kg3u"]
+
+[sub_resource type="Resource" id="shell_Resource_theme_neon"]
+script = ExtResource("4_43x7j")
+Text = "Neon"
+
+[sub_resource type="Resource" id="shell_Resource_theme_paper"]
+script = ExtResource("4_43x7j")
+Text = "Paper"
+
+[sub_resource type="Resource" id="shell_Resource_theme_effects_lite"]
+script = ExtResource("4_43x7j")
+Text = "Effects lite"
+
+[sub_resource type="StyleBoxFlat" id="shell_StyleBoxFlat_s8oj4"]
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+bg_color = Color(1, 1, 1, 0)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(1, 1, 1, 0)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="shell_StyleBoxFlat_72rt0"]
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+bg_color = Color(1, 1, 1, 0)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(1, 1, 1, 0)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="shell_StyleBoxFlat_rjk6k"]
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+bg_color = Color(1, 1, 1, 0)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(1, 1, 1, 0)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="shell_StyleBoxFlat_tak8s"]
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+bg_color = Color(1, 1, 1, 0)
+border_color = Color(1, 1, 1, 0)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxEmpty" id="shell_StyleBoxEmpty_30gbr"]
+
 [node name="PopupGalleryScreen" type="Control" unique_id=1057464504]
 layout_mode = 3
 anchors_preset = 15
@@ -1081,75 +1166,122 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1")
 
-[node name="Background" type="ColorRect" parent="." unique_id=484321589]
+[node name="UiFrame" parent="." unique_id=1226224121 instance=ExtResource("shell_2_frame")]
 unique_name_in_owner = true
 layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
-color = Color(0.027451, 0.043137, 0.078431, 1)
 
-[node name="MarginContainer" type="MarginContainer" parent="." unique_id=1840020960]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
+[node name="Card" parent="UiFrame/MarginContainer" parent_id_path=PackedInt32Array(1226224121, 1718213397) index="0" unique_id=1864407290]
+theme_override_styles/panel = SubResource("shell_StyleBoxFlat_qlghs")
 
-[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer" unique_id=595028518]
+[node name="Shell" type="VBoxContainer" parent="UiFrame/MarginContainer/Card" index="0" unique_id=762661772]
 layout_mode = 2
-theme_override_constants/separation = 8
+theme_override_constants/separation = 0
 
-[node name="Header" type="HBoxContainer" parent="MarginContainer/VBoxContainer" unique_id=1060753765]
+[node name="Toolbar" parent="UiFrame/MarginContainer/Card/Shell" unique_id=1157572243 instance=ExtResource("shell_3_toolbar")]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 48)
 layout_mode = 2
 
-[node name="UiLabel" type="Label" parent="MarginContainer/VBoxContainer/Header" unique_id=378813548]
+[node name="Back" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/HBoxContainer" parent_id_path=PackedInt32Array(1157572243, 1560195324) index="0" unique_id=545193165]
+theme_override_styles/normal = SubResource("shell_StyleBoxFlat_cakib")
+theme_override_styles/pressed = SubResource("shell_StyleBoxFlat_vq605")
+theme_override_styles/hover = SubResource("shell_StyleBoxFlat_mtv2x")
+theme_override_styles/disabled = SubResource("shell_StyleBoxFlat_hlqrl")
+theme_override_styles/focus = SubResource("shell_StyleBoxEmpty_1kg3u")
+
+[node name="ToolbarTitle" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/HBoxContainer/ToolbarContent" parent_id_path=PackedInt32Array(1157572243, 1466231439) index="0" unique_id=1012869594]
+unique_name_in_owner = true
 layout_mode = 2
+size_flags_horizontal = 3
 text = "Popup Gallery"
 script = ExtResource("2_1xfhr")
 TextStyle = 1
-metadata/_custom_type_script = "uid://dk67qmt3brp4e"
 
-[node name="ScrollContainer" type="ScrollContainer" parent="MarginContainer/VBoxContainer/Header" unique_id=1892709338]
-layout_mode = 2
-size_flags_horizontal = 3
-horizontal_scroll_mode = 3
-vertical_scroll_mode = 0
-
-[node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer/VBoxContainer/Header/ScrollContainer" unique_id=1887015754]
-layout_mode = 2
-size_flags_horizontal = 3
-alignment = 2
-
-[node name="UiSegmentedSwitch" type="HBoxContainer" parent="MarginContainer/VBoxContainer/Header/ScrollContainer/HBoxContainer" unique_id=1400301136]
+[node name="ThemeSwitcher" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/HBoxContainer/ToolbarContent" parent_id_path=PackedInt32Array(1157572243, 1466231439) index="1" unique_id=492577172]
 unique_name_in_owner = true
 layout_mode = 2
+size_flags_vertical = 4
 theme_override_constants/separation = 0
 script = ExtResource("3_ejpeg")
-Segments = Array[ExtResource("4_43x7j")]([SubResource("Resource_m8oqa"), SubResource("Resource_i47nv"), SubResource("Resource_hwiuu")])
-metadata/_custom_type_script = "uid://pdb6hwlullhe"
+Segments = Array[ExtResource("4_43x7j")]([SubResource("shell_Resource_theme_neon"), SubResource("shell_Resource_theme_paper"), SubResource("shell_Resource_theme_effects_lite")])
 
-[node name="Back" type="Button" parent="MarginContainer/VBoxContainer/Header" unique_id=2144100859]
-custom_minimum_size = Vector2(32, 32)
+[node name="Overflow" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/HBoxContainer" parent_id_path=PackedInt32Array(1157572243, 1560195324) index="2" unique_id=1416740256]
+theme_override_styles/normal = SubResource("shell_StyleBoxFlat_s8oj4")
+theme_override_styles/pressed = SubResource("shell_StyleBoxFlat_72rt0")
+theme_override_styles/hover = SubResource("shell_StyleBoxFlat_rjk6k")
+theme_override_styles/disabled = SubResource("shell_StyleBoxFlat_tak8s")
+theme_override_styles/focus = SubResource("shell_StyleBoxEmpty_30gbr")
+
+[node name="ToolbarMenuDebugBounds" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/ToolbarMenu" parent_id_path=PackedInt32Array(1157572243, 1208477361) index="0" unique_id=2076457439]
+unique_name_in_owner = true
 layout_mode = 2
-size_flags_vertical = 4
-mouse_filter = 1
-theme_override_styles/normal = SubResource("StyleBoxFlat_ejpeg")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_43x7j")
-theme_override_styles/hover = SubResource("StyleBoxFlat_657w2")
-theme_override_styles/disabled = SubResource("StyleBoxFlat_a4d2d")
-theme_override_styles/focus = SubResource("StyleBoxEmpty_m8oqa")
-script = ExtResource("6_a4d2d")
-text = "Back"
-Kind = 1
-ContentLayout = 2
-metadata/_custom_type_script = "uid://r2ped3g3uiaa"
+mouse_filter = 0
+script = ExtResource("shell_7_menu_toggle_item")
+LabelText = "Debug Bounds"
+metadata/_custom_type_script = "uid://cuku7dsosusj4"
 
-[node name="Disclaimer" type="Label" parent="MarginContainer/VBoxContainer" unique_id=716898321]
+[node name="UiMenuItemDivider" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/ToolbarMenu" parent_id_path=PackedInt32Array(1157572243, 1208477361) index="1" unique_id=1320661275]
+layout_mode = 2
+mouse_filter = 2
+script = ExtResource("shell_8_menu_divider")
+metadata/_custom_type_script = "uid://ddvhocc4qru2x"
+
+[node name="ToolbarMenuComponents" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/ToolbarMenu" parent_id_path=PackedInt32Array(1157572243, 1208477361) index="2" unique_id=1097029948]
+unique_name_in_owner = true
+layout_mode = 2
+script = ExtResource("shell_9_menu_item")
+LabelText = "Components"
+ShowSelectedIndicator = true
+metadata/_custom_type_script = "uid://dah3q1p7ikjlm"
+
+[node name="ToolbarMenuToolbars" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/ToolbarMenu" parent_id_path=PackedInt32Array(1157572243, 1208477361) index="3" unique_id=1067320663]
+unique_name_in_owner = true
+layout_mode = 2
+script = ExtResource("shell_9_menu_item")
+LabelText = "Toolbars"
+ShowSelectedIndicator = true
+metadata/_custom_type_script = "uid://dah3q1p7ikjlm"
+
+[node name="ToolbarMenuColorsAndStyles" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/ToolbarMenu" parent_id_path=PackedInt32Array(1157572243, 1208477361) index="4" unique_id=993951496]
+unique_name_in_owner = true
+layout_mode = 2
+script = ExtResource("shell_9_menu_item")
+LabelText = "Colors & Styles"
+ShowSelectedIndicator = true
+metadata/_custom_type_script = "uid://dah3q1p7ikjlm"
+
+[node name="ToolbarMenuPopupGallery" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/ToolbarMenu" parent_id_path=PackedInt32Array(1157572243, 1208477361) index="5" unique_id=616565866]
+unique_name_in_owner = true
+layout_mode = 2
+script = ExtResource("shell_9_menu_item")
+LabelText = "Popup Gallery"
+NoteText = "Dialog and Notification components"
+ShowSelectedIndicator = true
+Selected = true
+metadata/_custom_type_script = "uid://dah3q1p7ikjlm"
+
+[node name="Scroll" type="ScrollContainer" parent="UiFrame/MarginContainer/Card/Shell" unique_id=1403958121]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+vertical_scroll_mode = 3
+
+[node name="ContentFrame" type="MarginContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 12
+
+[node name="VBoxContainer" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame" unique_id=595028518]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Disclaimer" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/VBoxContainer" unique_id=716898321]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(120, 0)
 layout_mode = 2
@@ -1158,17 +1290,12 @@ autowrap_mode = 3
 script = ExtResource("2_1xfhr")
 TextStyle = 12
 
-[node name="BodyScroll" type="ScrollContainer" parent="MarginContainer/VBoxContainer" unique_id=695615497]
-layout_mode = 2
-size_flags_vertical = 3
-horizontal_scroll_mode = 0
-
-[node name="Body" type="VBoxContainer" parent="MarginContainer/VBoxContainer/BodyScroll" unique_id=1280187482]
+[node name="Body" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/VBoxContainer" unique_id=1280187482]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 8
 
-[node name="DialogsHeading" type="Label" parent="MarginContainer/VBoxContainer/BodyScroll/Body" unique_id=823755943]
+[node name="DialogsHeading" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/VBoxContainer/Body" unique_id=823755943]
 custom_minimum_size = Vector2(120, 0)
 layout_mode = 2
 text = "Dialogs / type and hold are independent"
@@ -1176,12 +1303,12 @@ autowrap_mode = 3
 script = ExtResource("2_1xfhr")
 TextStyle = 2
 
-[node name="Dialogs" type="HFlowContainer" parent="MarginContainer/VBoxContainer/BodyScroll/Body" unique_id=763757008]
+[node name="Dialogs" type="HFlowContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/VBoxContainer/Body" unique_id=763757008]
 layout_mode = 2
 theme_override_constants/h_separation = 8
 theme_override_constants/v_separation = 8
 
-[node name="Default" type="Button" parent="MarginContainer/VBoxContainer/BodyScroll/Body/Dialogs" unique_id=2118787107]
+[node name="Default" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/VBoxContainer/Body/Dialogs" unique_id=2118787107]
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
 size_flags_vertical = 4
@@ -1196,7 +1323,7 @@ text = "Default"
 Kind = 1
 ContentLayout = 2
 
-[node name="Warning" type="Button" parent="MarginContainer/VBoxContainer/BodyScroll/Body/Dialogs" unique_id=1075103988]
+[node name="Warning" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/VBoxContainer/Body/Dialogs" unique_id=1075103988]
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
 size_flags_vertical = 4
@@ -1211,7 +1338,7 @@ text = "Warn"
 Kind = 1
 ContentLayout = 2
 
-[node name="Danger" type="Button" parent="MarginContainer/VBoxContainer/BodyScroll/Body/Dialogs" unique_id=386964720]
+[node name="Danger" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/VBoxContainer/Body/Dialogs" unique_id=386964720]
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
 size_flags_vertical = 4
@@ -1226,7 +1353,7 @@ text = "Danger"
 Kind = 1
 ContentLayout = 2
 
-[node name="HoldDelete" type="Button" parent="MarginContainer/VBoxContainer/BodyScroll/Body/Dialogs" unique_id=568883074]
+[node name="HoldDelete" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/VBoxContainer/Body/Dialogs" unique_id=568883074]
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
 size_flags_vertical = 4
@@ -1241,7 +1368,7 @@ text = "Hold to delete"
 Kind = 1
 ContentLayout = 2
 
-[node name="WarningHold" type="Button" parent="MarginContainer/VBoxContainer/BodyScroll/Body/Dialogs" unique_id=230549707]
+[node name="WarningHold" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/VBoxContainer/Body/Dialogs" unique_id=230549707]
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
 size_flags_vertical = 4
@@ -1256,7 +1383,7 @@ text = "Warning + hold"
 Kind = 1
 ContentLayout = 2
 
-[node name="LongContent" type="Button" parent="MarginContainer/VBoxContainer/BodyScroll/Body/Dialogs" unique_id=1315582245]
+[node name="LongContent" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/VBoxContainer/Body/Dialogs" unique_id=1315582245]
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
 size_flags_vertical = 4
@@ -1271,7 +1398,7 @@ text = "Long content"
 Kind = 1
 ContentLayout = 2
 
-[node name="ActionError" type="Button" parent="MarginContainer/VBoxContainer/BodyScroll/Body/Dialogs" unique_id=566424272]
+[node name="ActionError" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/VBoxContainer/Body/Dialogs" unique_id=566424272]
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
 size_flags_vertical = 4
@@ -1286,7 +1413,7 @@ text = "Action error"
 Kind = 1
 ContentLayout = 2
 
-[node name="AsyncAction" type="Button" parent="MarginContainer/VBoxContainer/BodyScroll/Body/Dialogs" unique_id=2109880785]
+[node name="AsyncAction" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/VBoxContainer/Body/Dialogs" unique_id=2109880785]
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
 size_flags_vertical = 4
@@ -1301,7 +1428,7 @@ text = "Async action"
 Kind = 1
 ContentLayout = 2
 
-[node name="CloseOnly" type="Button" parent="MarginContainer/VBoxContainer/BodyScroll/Body/Dialogs" unique_id=1607820461]
+[node name="CloseOnly" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/VBoxContainer/Body/Dialogs" unique_id=1607820461]
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
 size_flags_vertical = 4
@@ -1316,7 +1443,7 @@ text = "Close only"
 Kind = 1
 ContentLayout = 2
 
-[node name="DefaultAction" type="Button" parent="MarginContainer/VBoxContainer/BodyScroll/Body/Dialogs" unique_id=868960899]
+[node name="DefaultAction" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/VBoxContainer/Body/Dialogs" unique_id=868960899]
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
 size_flags_vertical = 4
@@ -1331,7 +1458,7 @@ text = "Default action"
 Kind = 1
 ContentLayout = 2
 
-[node name="NotificationsHeading" type="Label" parent="MarginContainer/VBoxContainer/BodyScroll/Body" unique_id=586555229]
+[node name="NotificationsHeading" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/VBoxContainer/Body" unique_id=586555229]
 custom_minimum_size = Vector2(120, 0)
 layout_mode = 2
 text = "Notifications / 5 seconds, click or swipe"
@@ -1339,12 +1466,12 @@ autowrap_mode = 3
 script = ExtResource("2_1xfhr")
 TextStyle = 2
 
-[node name="Notifications" type="HFlowContainer" parent="MarginContainer/VBoxContainer/BodyScroll/Body" unique_id=431789737]
+[node name="Notifications" type="HFlowContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/VBoxContainer/Body" unique_id=431789737]
 layout_mode = 2
 theme_override_constants/h_separation = 8
 theme_override_constants/v_separation = 8
 
-[node name="Default" type="Button" parent="MarginContainer/VBoxContainer/BodyScroll/Body/Notifications" unique_id=309585163]
+[node name="Default" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/VBoxContainer/Body/Notifications" unique_id=309585163]
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
 size_flags_vertical = 4
@@ -1359,7 +1486,7 @@ text = "Default"
 Kind = 1
 ContentLayout = 2
 
-[node name="Warning" type="Button" parent="MarginContainer/VBoxContainer/BodyScroll/Body/Notifications" unique_id=1514251876]
+[node name="Warning" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/VBoxContainer/Body/Notifications" unique_id=1514251876]
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
 size_flags_vertical = 4
@@ -1374,7 +1501,7 @@ text = "Warn"
 Kind = 1
 ContentLayout = 2
 
-[node name="Danger" type="Button" parent="MarginContainer/VBoxContainer/BodyScroll/Body/Notifications" unique_id=121714574]
+[node name="Danger" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/VBoxContainer/Body/Notifications" unique_id=121714574]
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
 size_flags_vertical = 4
@@ -1389,7 +1516,7 @@ text = "Danger"
 Kind = 1
 ContentLayout = 2
 
-[node name="ClickTrue" type="Button" parent="MarginContainer/VBoxContainer/BodyScroll/Body/Notifications" unique_id=841119754]
+[node name="ClickTrue" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/VBoxContainer/Body/Notifications" unique_id=841119754]
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
 size_flags_vertical = 4
@@ -1404,7 +1531,7 @@ text = "Click: true"
 Kind = 1
 ContentLayout = 2
 
-[node name="ClickFalse" type="Button" parent="MarginContainer/VBoxContainer/BodyScroll/Body/Notifications" unique_id=119918838]
+[node name="ClickFalse" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/VBoxContainer/Body/Notifications" unique_id=119918838]
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
 size_flags_vertical = 4
@@ -1419,7 +1546,7 @@ text = "Click: false"
 Kind = 1
 ContentLayout = 2
 
-[node name="QueueThree" type="Button" parent="MarginContainer/VBoxContainer/BodyScroll/Body/Notifications" unique_id=483413131]
+[node name="QueueThree" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/VBoxContainer/Body/Notifications" unique_id=483413131]
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
 size_flags_vertical = 4
@@ -1434,7 +1561,7 @@ text = "Queue three"
 Kind = 1
 ContentLayout = 2
 
-[node name="Status" type="Label" parent="MarginContainer/VBoxContainer/BodyScroll/Body" unique_id=1496768585]
+[node name="Status" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/VBoxContainer/Body" unique_id=1496768585]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(120, 0)
 layout_mode = 2
@@ -1443,21 +1570,22 @@ autowrap_mode = 3
 script = ExtResource("2_1xfhr")
 TextStyle = 9
 
-[connection signal="SelectionChanged" from="MarginContainer/VBoxContainer/Header/ScrollContainer/HBoxContainer/UiSegmentedSwitch" to="." method="ChangeTheme"]
-[connection signal="Activated" from="MarginContainer/VBoxContainer/Header/Back" to="." method="Back"]
-[connection signal="Activated" from="MarginContainer/VBoxContainer/BodyScroll/Body/Dialogs/Default" to="." method="ShowDefaultDialog"]
-[connection signal="Activated" from="MarginContainer/VBoxContainer/BodyScroll/Body/Dialogs/Warning" to="." method="ShowWarningDialog"]
-[connection signal="Activated" from="MarginContainer/VBoxContainer/BodyScroll/Body/Dialogs/Danger" to="." method="ShowDangerDialog"]
-[connection signal="Activated" from="MarginContainer/VBoxContainer/BodyScroll/Body/Dialogs/HoldDelete" to="." method="ShowDeleteDialog"]
-[connection signal="Activated" from="MarginContainer/VBoxContainer/BodyScroll/Body/Dialogs/WarningHold" to="." method="ShowUnlockDialog"]
-[connection signal="Activated" from="MarginContainer/VBoxContainer/BodyScroll/Body/Dialogs/LongContent" to="." method="ShowLongDialog"]
-[connection signal="Activated" from="MarginContainer/VBoxContainer/BodyScroll/Body/Dialogs/ActionError" to="." method="ShowErrorDialog"]
-[connection signal="Activated" from="MarginContainer/VBoxContainer/BodyScroll/Body/Dialogs/AsyncAction" to="." method="ShowAsyncDialog"]
-[connection signal="Activated" from="MarginContainer/VBoxContainer/BodyScroll/Body/Dialogs/CloseOnly" to="." method="ShowCloseDialog"]
-[connection signal="Activated" from="MarginContainer/VBoxContainer/BodyScroll/Body/Dialogs/DefaultAction" to="." method="ShowOptionalActionDialog"]
-[connection signal="Activated" from="MarginContainer/VBoxContainer/BodyScroll/Body/Notifications/Default" to="." method="ShowDefaultNotification"]
-[connection signal="Activated" from="MarginContainer/VBoxContainer/BodyScroll/Body/Notifications/Warning" to="." method="ShowWarningNotification"]
-[connection signal="Activated" from="MarginContainer/VBoxContainer/BodyScroll/Body/Notifications/Danger" to="." method="ShowDangerNotification"]
-[connection signal="Activated" from="MarginContainer/VBoxContainer/BodyScroll/Body/Notifications/ClickTrue" to="." method="ShowDismissingNotification"]
-[connection signal="Activated" from="MarginContainer/VBoxContainer/BodyScroll/Body/Notifications/ClickFalse" to="." method="ShowPersistentNotification"]
-[connection signal="Activated" from="MarginContainer/VBoxContainer/BodyScroll/Body/Notifications/QueueThree" to="." method="QueueNotifications"]
+[connection signal="Activated" from="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/VBoxContainer/Body/Dialogs/Default" to="." method="ShowDefaultDialog"]
+[connection signal="Activated" from="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/VBoxContainer/Body/Dialogs/Warning" to="." method="ShowWarningDialog"]
+[connection signal="Activated" from="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/VBoxContainer/Body/Dialogs/Danger" to="." method="ShowDangerDialog"]
+[connection signal="Activated" from="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/VBoxContainer/Body/Dialogs/HoldDelete" to="." method="ShowDeleteDialog"]
+[connection signal="Activated" from="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/VBoxContainer/Body/Dialogs/WarningHold" to="." method="ShowUnlockDialog"]
+[connection signal="Activated" from="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/VBoxContainer/Body/Dialogs/LongContent" to="." method="ShowLongDialog"]
+[connection signal="Activated" from="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/VBoxContainer/Body/Dialogs/ActionError" to="." method="ShowErrorDialog"]
+[connection signal="Activated" from="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/VBoxContainer/Body/Dialogs/AsyncAction" to="." method="ShowAsyncDialog"]
+[connection signal="Activated" from="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/VBoxContainer/Body/Dialogs/CloseOnly" to="." method="ShowCloseDialog"]
+[connection signal="Activated" from="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/VBoxContainer/Body/Dialogs/DefaultAction" to="." method="ShowOptionalActionDialog"]
+[connection signal="Activated" from="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/VBoxContainer/Body/Notifications/Default" to="." method="ShowDefaultNotification"]
+[connection signal="Activated" from="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/VBoxContainer/Body/Notifications/Warning" to="." method="ShowWarningNotification"]
+[connection signal="Activated" from="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/VBoxContainer/Body/Notifications/Danger" to="." method="ShowDangerNotification"]
+[connection signal="Activated" from="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/VBoxContainer/Body/Notifications/ClickTrue" to="." method="ShowDismissingNotification"]
+[connection signal="Activated" from="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/VBoxContainer/Body/Notifications/ClickFalse" to="." method="ShowPersistentNotification"]
+[connection signal="Activated" from="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/VBoxContainer/Body/Notifications/QueueThree" to="." method="QueueNotifications"]
+
+[editable path="UiFrame"]
+[editable path="UiFrame/MarginContainer/Card/Shell/Toolbar"]

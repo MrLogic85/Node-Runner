@@ -334,13 +334,27 @@ determines their height and the parent container owns spacing between rows.
 Note rows follow the same spacing rule and use native container layout to grow
 with wrapped text, without a fixed line count or clipping.
 
-The gallery pages with the gallery toolbar (Component Gallery and **Toolbars**)
-share `GalleryScreen`: Back, the theme switch, debug bounds and the overflow
-menu that moves between pages. Each page scene authors its own copy of the
-toolbar and menu under the same unique names and marks its own page as
-selected; keep the copies identical. A page that carries the gallery toolbar
-starts with the gallery's theme and debug bounds and hands them back when it
-closes. The Toolbars page mirrors the reference's ComponentToolbars page. Its
+All UI library pages (Component Gallery, **Toolbars**, **Colors & Styles** and
+**Popup Gallery**) share `GalleryScreen`: Back, the theme switch, debug bounds
+and the overflow menu that moves between pages
+([issue #333](https://github.com/MrLogic85/Node-Runner/issues/333)). Each page
+scene authors its own copy of the `UiFrame`, toolbar and menu under the same
+unique names and marks its own page as selected; keep the copies identical,
+including the `[editable path=…]` lines for `UiFrame` and the toolbar. Without
+them the scene still loads on desktop, but export drops every node added inside
+those instances; `SceneEditableChildrenTests` guards this. Component Gallery,
+Colors & Styles and Popup Gallery hold their content in a `ContentFrame` inset
+`S3` (12px) from the card, inside a `Scroll` with a hidden scrollbar, so the
+inset and every line of content scroll together under the toolbar; the Toolbars
+page is laid out as Build is, without one.
+A page starts with the gallery's theme and debug bounds and hands them back when
+it closes. A page opened from Component Gallery's menu opens on top of it, so
+Back returns there. Pages opened on their own hand over to Component Gallery,
+keeping theme and debug bounds, when their menu opens another page: Colors &
+Styles from Home, whose Back returns to Home, and `ui/popup_gallery`, whose
+Back also hands over to Component Gallery. A page with a Back action also takes Android Back and Escape, after an
+open menu or dialog has handled them; a page without one, such as a standalone
+Component Gallery, leaves Android Back to its default and quits. The Toolbars page mirrors the reference's ComponentToolbars page. Its
 own toolbar is the `UiToolbar` specimen; by human decision on
 [issue #319](https://github.com/MrLogic85/Node-Runner/issues/319) it shows no
 separate Editing/Locked specimens. Under it the page shows one `UiButtonBar`
@@ -437,16 +451,20 @@ runtime in `RuntimeSections`, so they appear with F6 but are deliberately not
 yet authored in the editor. Do not copy generated component internals into the
 scene.
 
-Open `project/scenes/ui/PopupGalleryScreen.tscn` to edit the actual popup gallery.
-The header keeps a horizontally scrolling, right-aligned theme selector.
-Below it, a vertical ScrollContainer holds dialog and notification specimens
-in wrapping HFlowContainers plus a status label. Labels, order, spacing, and
-layout live in the scene; its signal connections bind each button to the demo
-callbacks in `PopupGalleryScreen.cs`. Keep the unique `Background`,
-`UiSegmentedSwitch`, `Disclaimer`, and `Status` names and the root
-`MarginContainer` binding. Theme changes update existing controls instead of
-rebuilding the page, preserving authored layout and scroll position. Switching
-theme clears queued notifications and is ignored while a dialog is open.
+Open `project/scenes/screens/PopupGalleryScreen.tscn` to edit the actual popup
+gallery. Under the gallery toolbar, `Scroll/ContentFrame` holds the disclaimer
+and the dialog and notification specimens in wrapping HFlowContainers plus a
+status label, all scrolling together. Labels, order, spacing, and layout live in
+the scene; its signal connections bind each button to the demo callbacks in
+`PopupGalleryScreen.cs`. Keep the unique `ContentFrame`, `Disclaimer`, and
+`Status` names. Theme changes update existing controls instead of rebuilding
+the page, preserving authored layout and scroll position. Switching theme
+clears queued notifications; an open dialog is modal, so the toolbar cannot
+switch theme under it.
+
+Colors & Styles authors only its frame, toolbar, menu, `Scroll` and an empty
+`ContentFrame` in `project/scenes/screens/ColorsAndStylesScreen.tscn`; the
+inventory inside is built in code.
 Gallery launcher buttons use ordinary clicks; hold requirements belong to the
 dialogs they open. F6 exercises the same scene that the Component Gallery opens.
 

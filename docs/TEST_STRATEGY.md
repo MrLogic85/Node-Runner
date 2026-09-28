@@ -106,7 +106,7 @@ Add a fact whenever a convention emerges that we've decided to enforce.
 
 `docs/UI_DIRECTION.md` ("Who owns what") splits the UI between the reference
 design, the UI library, scenes and C#. These tests guard those boundaries and
-run without the Godot scene tree. They cover three concerns.
+run without the Godot scene tree. They cover four concerns.
 
 **1. Values come from their owner.** A value is authored once, so a root Theme
 swap restyles everything:
@@ -140,6 +140,12 @@ behaviour lives in pure contract functions in the library
 depends on how a scene arranges its nodes, so a layout can change in the
 editor without breaking a test. Whether a scene's controls reach the right
 view-model action is verified on device until Godot-side tests exist.
+
+**4. Saved scenes survive export.** Export re-packs every scene, and
+`PackedScene.Pack` drops nodes added inside an instance unless the scene marks
+that instance `[editable]`. Such a scene still loads on desktop, so the bug
+only shows on device. `SceneEditableChildrenTests` requires the marker
+([#333](https://github.com/MrLogic85/Node-Runner/issues/333)).
 
 Product screens join these guards as they are rewritten
 ([#310](https://github.com/MrLogic85/Node-Runner/issues/310)). That issue adds
