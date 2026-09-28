@@ -30,6 +30,9 @@ public sealed class CreationsPresentationViewModel : INotifyPropertyChanged
 
     public bool HasAchievementCue { get; private set; }
 
+    /// <summary>Marks the Achievements button while something is new; empty hides the badge.</summary>
+    public string AchievementBadgeText => HasAchievementCue ? "!" : string.Empty;
+
     public bool CanRestoreExample { get; private set; }
 
     public string? ErrorText { get; private set; }
@@ -83,9 +86,6 @@ public sealed class CreationsPresentationViewModel : INotifyPropertyChanged
         var summary = creation.Training is { } training
             ? $"Generation {training.Generation} · trained brain"
             : "Ready to train";
-        var note = creation.Training is null
-            ? "Train or edit"
-            : "Duplicate copies training";
         var thumbnail = $"{FormatCount(creation.Creature.Nodes.Count, "node")} · {FormatCount(creation.Creature.Beams.Count, "beam")} · {FormatCount(creation.Creature.Cores.Count, "core")}";
         var savedState = creation.Training is null
             ? "Untrained Creation"
@@ -106,9 +106,9 @@ public sealed class CreationsPresentationViewModel : INotifyPropertyChanged
         return new CreationCardPresentation(
             creation.Id,
             creation.Name,
+            DisplayName(creation.Name, isExample),
             creation.Creature,
             summary,
-            isExample ? "Example" : note,
             thumbnail,
             savedState,
             unlockCredit,
@@ -120,6 +120,14 @@ public sealed class CreationsPresentationViewModel : INotifyPropertyChanged
             CanDuplicate: true,
             CanDelete: !isExample);
     }
+
+    private const string _examplePrefix = "Example: ";
+
+    // The Example chip already says it; the card title drops the prefix.
+    private static string DisplayName(string name, bool isExample) =>
+        isExample && name.StartsWith(_examplePrefix, StringComparison.OrdinalIgnoreCase)
+            ? name[_examplePrefix.Length..]
+            : name;
 
     private static string FormatCount(int count, string singular) =>
         count == 1

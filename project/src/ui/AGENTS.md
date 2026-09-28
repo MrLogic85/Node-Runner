@@ -12,7 +12,8 @@
    layout, input handling. No fitness math, no ML, no persistence.
 4. **Every screen has a matching `.tscn` in `project/scenes/screens/`.** The
    `.cs` file lives here in `src/ui/screens/`. Reusable component scenes
-   (e.g. `UiStageCard`, `UiFrame`) live in `project/scenes/ui/` instead.
+   (e.g. `UiStageCard`, `UiFrame`) live in `project/scenes/ui/` instead, and
+   widget scenes (e.g. `CreationCard`) in `project/scenes/widgets/`.
    The scene owns the layout and the script owns behaviour; see "Who owns
    what" in `docs/UI_DIRECTION.md`.
 5. **Visual contracts come from `reference design/`.** Start at its index and

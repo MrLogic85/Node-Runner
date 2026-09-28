@@ -1,12 +1,192 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene format=3 uid="uid://clkelepg1ixnj"]
 
-[ext_resource path="res://src/ui/screens/CreationsScreen.cs" type="Script" id="1"]
+[ext_resource type="Script" uid="uid://cfhy5r8xch1hy" path="res://src/ui/screens/CreationsScreen.cs" id="1_screen"]
+[ext_resource type="PackedScene" uid="uid://dokr6l5stu6ll" path="res://scenes/ui/UiFrame.tscn" id="2_frame"]
+[ext_resource type="PackedScene" uid="uid://gydkh1xys4yo" path="res://scenes/ui/UiToolbar.tscn" id="3_toolbar"]
+[ext_resource type="Script" uid="uid://dk67qmt3brp4e" path="res://src/ui/lib/UiLabel.cs" id="4_label"]
+[ext_resource type="Script" uid="uid://r2ped3g3uiaa" path="res://src/ui/lib/UiButton.cs" id="5_button"]
+[ext_resource type="Script" uid="uid://dah3q1p7ikjlm" path="res://src/ui/lib/UiMenuActionItem.cs" id="6_menu_item"]
+[ext_resource type="Script" uid="uid://ddvhocc4qru2x" path="res://src/ui/lib/UiMenuItemDivider.cs" id="7_menu_divider"]
+[ext_resource type="Script" uid="uid://byhbh5da7rpk8" path="res://src/ui/lib/UiCard.cs" id="8_card"]
+[ext_resource type="PackedScene" uid="uid://1x2j47badjkd" path="res://scenes/widgets/CreationCard.tscn" id="9_creation_card"]
 
-[node name="CreationsScreen" type="Control"]
+[node name="CreationsScreen" type="Control" unique_id=1400314001]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-script = ExtResource("1")
+script = ExtResource("1_screen")
+CardScene = ExtResource("9_creation_card")
+
+[node name="UiFrame" parent="." unique_id=1400314002 instance=ExtResource("2_frame")]
+unique_name_in_owner = true
+layout_mode = 1
+
+[node name="Shell" type="VBoxContainer" parent="UiFrame/MarginContainer/Card" parent_id_path=PackedInt32Array(1400314002, 1864407290) index="0" unique_id=1400314003]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="Toolbar" parent="UiFrame/MarginContainer/Card/Shell" unique_id=1400314004 instance=ExtResource("3_toolbar")]
+unique_name_in_owner = true
+layout_mode = 2
+ShowBack = false
+
+[node name="TitleInset" type="MarginContainer" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/HBoxContainer/ToolbarContent" parent_id_path=PackedInt32Array(1400314004, 1466231439) index="0" unique_id=1400314025]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/margin_left = 16
+
+[node name="TitleStack" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/HBoxContainer/ToolbarContent/TitleInset" unique_id=1400314005]
+layout_mode = 2
+theme_override_constants/separation = 0
+alignment = 1
+
+[node name="Title" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/HBoxContainer/ToolbarContent/TitleInset/TitleStack" unique_id=1400314006]
+layout_mode = 2
+text = "Creations"
+script = ExtResource("4_label")
+TextStyle = 1
+
+[node name="SavedCue" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/HBoxContainer/ToolbarContent/TitleInset/TitleStack" unique_id=1400314007]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Saved"
+script = ExtResource("4_label")
+TextStyle = 9
+TextColor = 8
+
+[node name="TopActions" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/HBoxContainer/ToolbarContent" parent_id_path=PackedInt32Array(1400314004, 1466231439) index="1" unique_id=1400314008]
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_constants/separation = 12
+
+[node name="Achievements" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/HBoxContainer/ToolbarContent/TopActions" unique_id=1400314009]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+tooltip_text = "Achievements"
+mouse_filter = 1
+script = ExtResource("5_button")
+IconId = 35
+
+[node name="New" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/HBoxContainer/ToolbarContent/TopActions" unique_id=1400314010]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 1
+text = "New"
+script = ExtResource("5_button")
+IconId = 25
+
+[node name="MenuRestoreExample" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/ToolbarMenu" parent_id_path=PackedInt32Array(1400314004, 1208477361) index="0" unique_id=1400314011]
+unique_name_in_owner = true
+layout_mode = 2
+script = ExtResource("6_menu_item")
+LabelText = "Restore example"
+IconId = 26
+
+[node name="MenuClose" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/ToolbarMenu" parent_id_path=PackedInt32Array(1400314004, 1208477361) index="1" unique_id=1400314012]
+unique_name_in_owner = true
+layout_mode = 2
+script = ExtResource("6_menu_item")
+LabelText = "Close Creations"
+IconId = 38
+
+[node name="MenuDebugDivider" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/ToolbarMenu" parent_id_path=PackedInt32Array(1400314004, 1208477361) index="2" unique_id=1400314013]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+mouse_filter = 2
+script = ExtResource("7_menu_divider")
+
+[node name="MenuColorsAndStyles" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/ToolbarMenu" parent_id_path=PackedInt32Array(1400314004, 1208477361) index="3" unique_id=1400314014]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+script = ExtResource("6_menu_item")
+LabelText = "Colors and styles"
+
+[node name="MenuComponentLibrary" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/ToolbarMenu" parent_id_path=PackedInt32Array(1400314004, 1208477361) index="4" unique_id=1400314015]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+script = ExtResource("6_menu_item")
+LabelText = "Component library"
+
+[node name="CardScroll" type="ScrollContainer" parent="UiFrame/MarginContainer/Card/Shell" unique_id=1400314016]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 3
+vertical_scroll_mode = 0
+
+[node name="CardInset" type="MarginContainer" parent="UiFrame/MarginContainer/Card/Shell/CardScroll" unique_id=1400314017]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 12
+
+[node name="CardRow" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/CardScroll/CardInset" unique_id=1400314018]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="EmptyCard" type="PanelContainer" parent="UiFrame/MarginContainer/Card/Shell/CardScroll/CardInset/CardRow" unique_id=1400314019]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(192, 232)
+layout_mode = 2
+size_flags_horizontal = 0
+mouse_filter = 1
+script = ExtResource("8_card")
+
+[node name="EmptyInset" type="MarginContainer" parent="UiFrame/MarginContainer/Card/Shell/CardScroll/CardInset/CardRow/EmptyCard" unique_id=1400314020]
+layout_mode = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 16
+
+[node name="EmptyStack" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/CardScroll/CardInset/CardRow/EmptyCard/EmptyInset" unique_id=1400314021]
+layout_mode = 2
+theme_override_constants/separation = 16
+alignment = 1
+
+[node name="EmptyText" type="Label" parent="UiFrame/MarginContainer/Card/Shell/CardScroll/CardInset/CardRow/EmptyCard/EmptyInset/EmptyStack" unique_id=1400314022]
+unique_name_in_owner = true
+layout_mode = 2
+text = "No saved Creations yet."
+horizontal_alignment = 1
+autowrap_mode = 3
+script = ExtResource("4_label")
+TextColor = 8
+
+[node name="EmptyNew" type="Button" parent="UiFrame/MarginContainer/Card/Shell/CardScroll/CardInset/CardRow/EmptyCard/EmptyInset/EmptyStack" unique_id=1400314023]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+mouse_filter = 1
+text = "New"
+script = ExtResource("5_button")
+IconId = 25
+
+[node name="ErrorState" type="Label" parent="UiFrame/MarginContainer/Card/Shell/CardScroll/CardInset/CardRow" unique_id=1400314024]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Could not load Creations."
+vertical_alignment = 1
+autowrap_mode = 3
+script = ExtResource("4_label")
+TextColor = 12
+
+[editable path="UiFrame"]
+[editable path="UiFrame/MarginContainer/Card/Shell/Toolbar"]

@@ -17,6 +17,7 @@ public sealed class CreationsPresentationViewModelTests
         viewModel.Cards.ShouldBeEmpty();
         viewModel.HasCards.ShouldBeFalse();
         viewModel.EmptyText.ShouldBe("No saved Creations yet.");
+        viewModel.AchievementBadgeText.ShouldBeEmpty();
         viewModel.HasError.ShouldBeFalse();
     }
 
@@ -37,7 +38,7 @@ public sealed class CreationsPresentationViewModelTests
         walker.Name.ShouldBe("Walker");
         walker.Creature.ShouldBe(trained.Creature);
         walker.SummaryText.ShouldBe("Generation 12 · trained brain");
-        walker.NoteText.ShouldBe("Duplicate copies training");
+        walker.DisplayName.ShouldBe("Walker");
         walker.ThumbnailText.ShouldBe("2 nodes · 1 beam · 1 core");
         walker.SavedStateText.ShouldBe("Saved training · generation 12");
         walker.UnlockCreditText.ShouldBe(string.Empty);
@@ -51,7 +52,6 @@ public sealed class CreationsPresentationViewModelTests
 
         var draft = viewModel.Cards.Single(card => card.Id == untrained.Id);
         draft.SummaryText.ShouldBe("Ready to train");
-        draft.NoteText.ShouldBe("Train or edit");
         draft.SavedStateText.ShouldBe("Untrained Creation");
     }
 
@@ -74,6 +74,7 @@ public sealed class CreationsPresentationViewModelTests
         viewModel.Cards.Single(card => card.Id == credited.Id)
             .AchievementProgress.ShouldBe(1f);
         viewModel.HasAchievementCue.ShouldBeTrue();
+        viewModel.AchievementBadgeText.ShouldBe("!");
         viewModel.Cards.Single(card => card.Id == other.Id)
             .UnlockCreditText.ShouldBe(string.Empty);
     }
@@ -89,7 +90,7 @@ public sealed class CreationsPresentationViewModelTests
 
         var example = viewModel.Cards.Single();
         example.IsExample.ShouldBeTrue();
-        example.NoteText.ShouldBe("Example");
+        example.DisplayName.ShouldBe("Worm");
         example.CanDelete.ShouldBeFalse();
         viewModel.CanRestoreExample.ShouldBeFalse();
     }
