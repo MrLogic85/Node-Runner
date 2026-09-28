@@ -8,11 +8,13 @@ kind: primary, secondary, tertiary or flat. off/on are the disabled/selected sta
 kind can also carry a layout word (icon, stack) for buttons with no text, e.g. c_btn('', 'icon secondary', 'gear');
 the play button is c_btn('', 'primary stack', 'play') — a stack button (like a tool rail cell) with no label.
 badge: a small halo counter in the corner, for any kind or layout, row, icon or stack alike.
+The layout picks the icon size, never the caller: icon (16) beside text in a row, icon-lg (20) with no text and in a stack.
 
-## `c_ib(icon, kind='secondary', size=20, on=False, off=False, compact=False, badge=None)`
+## `c_ib(icon, kind='secondary', on=False, off=False, compact=False, badge=None)`
 
 An icon-only button: the same btn system as c_btn, just the icon layout. kind: primary, secondary, tertiary or flat.
-badge: a small halo counter in the corner.
+badge: a small halo counter in the corner. The icon is always icon-lg (20): a button with no text gets the larger
+size, the same as a stacked button, and no call site picks its own.
 
 ## `c_num(n)`
 
@@ -141,7 +143,7 @@ Icon tabs; one open at a time.
 
 ## `c_panel_head(title, glyph=None, actions=('x',))`
 
-Title row of a side panel: an optional glyph, the title, and icon actions. Actions are icon names; 'trash' is danger.
+Title row of a side panel: an optional glyph, the title, and icon actions (compact flat icon buttons, by icon name).
 
 ## `c_rows(rows, delete=None)`
 
@@ -157,13 +159,14 @@ A part's settings panel: c_panel_head (glyph, title, close) then c_rows (its row
 
 Icon, title and one line of help.
 
-## `c_card_actions(items)`
+## `c_card_actions(buttons)`
 
 Card action bar: the row of actions along the bottom of a flush card (a creation, a checkpoint), always visible,
-never a hidden menu. Each action is its own cell -- the whole cell, its share of the width and touch high, is what
-you tap -- drawn like a stacked button: an icon-lg icon over an overline label, space-1 between, a hairline
-between cells; a destructive one in the danger colour. It is not the stacked button (that one's touch area is a
-fixed 48 x 48), it only matches its look. items: (icon, label) or (icon, label, True) for danger.
+never a hidden menu. It is a layout style, not a button of its own: buttons are ordinary stacked buttons (c_btn, or
+c_hold for hold-to-activate) and keep all their behaviour -- the bar only restyles them. Each one stretches to its
+share of the width and touch high (that whole cell is what you tap), loses its frame and background, and gets a
+hairline between it and the next; the bar draws a hairline above. A destructive action is the tertiary kind, so it
+is in the danger colour. buttons: e.g. [c_btn('Copy', 'flat stack', 'copy'), c_btn('Delete', 'tertiary stack', 'trash')].
 
 ## `c_card(inner, kind='panel', w=None, h=None, style='', glow=False, disabled=False)`
 
