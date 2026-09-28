@@ -25,19 +25,22 @@ internal static partial class SceneNodes
         Read().Where(entry => entry.Script?.EndsWith("/" + scriptFileName, StringComparison.Ordinal) == true)
             .Select(entry => entry.Node);
 
+    /// <summary>Every authored scene file, by file name, with its full text.</summary>
+    public static IEnumerable<(string Scene, string Text)> Files() =>
+        Directory.EnumerateFiles(Path.Combine(FindRepositoryRoot(), "project", "scenes"), "*.tscn", SearchOption.AllDirectories)
+            .Select(path => (Path.GetFileName(path), File.ReadAllText(path)));
+
     private static IEnumerable<(Node Node, string? Script)> Read()
     {
-        var scenes = Path.Combine(FindRepositoryRoot(), "project", "scenes");
-        foreach (var path in Directory.EnumerateFiles(scenes, "*.tscn", SearchOption.AllDirectories))
+        foreach (var (scene, text) in Files())
         {
-            var text = File.ReadAllText(path);
             var scriptPaths = ExtResource().Matches(text)
                 .ToDictionary(match => match.Groups["id"].Value, match => match.Groups["path"].Value);
             foreach (var block in NodeBlock().Split(text).Where(block => block.StartsWith("[node ", StringComparison.Ordinal)))
             {
                 var script = ScriptRef().Match(block);
                 var scriptPath = script.Success ? scriptPaths.GetValueOrDefault(script.Groups["id"].Value) : null;
-                yield return (new Node(Path.GetFileName(path), block[..block.IndexOf('\n')], block), scriptPath);
+                yield return (new Node(scene, block[..block.IndexOf('\n')], block), scriptPath);
             }
         }
     }
