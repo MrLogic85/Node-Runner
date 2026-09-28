@@ -94,9 +94,14 @@ unchanged, it belongs in `lib/`. If it embeds project vocabulary
 - Screens inherit the Neon project theme; assign another `Theme` only to
   switch palette, in `_EnterTree` or before `AddChild`, never in `_Ready`. Authored scene children run `_Ready` before their parent, so a
   late theme lets them measure against the engine default theme. See #301.
-- Labels take their text style by name: `UiThemeLookup.ApplyTextStyle(label,
-  typography, color)` (or UiLabel), never `ApplyTypography` plus a copied
-  `font_color`. Letter case belongs to the typography (`UiTokens.IsUppercase`).
+- Text takes its style by name: `UiThemeLookup.ApplyTextStyle(control,
+  typography, color)` on a Label, Button or LineEdit (or UiLabel), never
+  `ApplyTypography` plus a copied `font_color`. A Button or LineEdit takes its
+  other state colours (hover, placeholder, caret) from its base type. Letter
+  case belongs to the typography (`UiTokens.IsUppercase`).
+- Button icons use `UiIcons.Apply` without a tint; the icon state colours come
+  from `Button` or a generated variation (`UiIconTab`). `UiSourceGuardTests`
+  fails on any colour override in `ui/lib` outside UiIcons' tint helper (#338).
 - A `NotificationThemeChanged` handler is only for caches that cannot be a
   variation (e.g. custom-draw geometry, styleboxes, icon tints). Godot sends it
   on every tree entry, before `_Ready`, so a handler that rebuilds must check

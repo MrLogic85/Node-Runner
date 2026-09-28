@@ -690,7 +690,7 @@ public sealed partial class UiButton : Button, ISerializationListener
         _badge.Size = _badge.CustomMinimumSize;
         _badge.Position = metrics.BadgePosition(Size);
         UiThemeLookup.ApplyTypography(_badge, UiTokens.Typography.Caption);
-        _badge.AddThemeColorOverride("font_color", UiThemeLookup.Color(this, UiTokens.Color.Background));
+        _badge.ThemeTypeVariation = UiThemeExpander.BadgeVariationName;
         _badge.AddThemeStyleboxOverride(
             "normal",
             UiThemeLookup.CreateStyleBox(UiThemeLookup.Color(this, UiTokens.Color.Halo),

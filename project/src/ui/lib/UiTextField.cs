@@ -336,10 +336,10 @@ public partial class UiTextField : VBoxContainer, ISerializationListener
 
             _editor.PlaceholderText = PlaceholderText;
             _editor.CustomMinimumSize = new Vector2(0, visibleHeight);
-            UiThemeLookup.ApplyTypography(_editor, InputSize == TextInputSize.Compact ? UiTokens.Typography.BodyStrong : UiTokens.Typography.Heading);
-            _editor.AddThemeColorOverride("font_color", State == TextInputState.Error ? UiThemeLookup.Color(this, UiTokens.Color.Danger) : UiThemeLookup.Color(this, UiTokens.Color.Ink));
-            _editor.AddThemeColorOverride("font_placeholder_color", UiThemeLookup.Color(this, UiTokens.Color.Muted));
-            _editor.AddThemeColorOverride("caret_color", UiThemeLookup.Color(this, UiTokens.Color.Accent));
+            UiThemeLookup.ApplyTextStyle(
+                _editor,
+                InputSize == TextInputSize.Compact ? UiTokens.Typography.BodyStrong : UiTokens.Typography.Heading,
+                State == TextInputState.Error ? UiTokens.Color.Danger : UiTokens.Color.Ink);
             var style = UiThemeLookup.CreateStyleBox(UiThemeLookup.Color(this, UiTokens.Color.PanelRaised),
                 border,
                 State == TextInputState.Rest ? UiSize.Stroke.Hair : UiSize.Stroke.Signal,

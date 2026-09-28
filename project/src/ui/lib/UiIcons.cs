@@ -31,6 +31,9 @@ public static class UiIcons
     /// <summary>Side of the viewBox every UI icon SVG is authored on.</summary>
     public const float UiSourceSize = 24;
     private const float _partSourceSize = 20;
+
+    private static readonly string[] _iconStates =
+        ["icon_normal_color", "icon_hover_color", "icon_pressed_color", "icon_hover_pressed_color", "icon_focus_color", "icon_disabled_color"];
     private static readonly Dictionary<(string Path, int PixelSize), Texture2D> _textures = [];
     private static float _cachedUiScale = float.NaN;
 
@@ -63,6 +66,11 @@ public static class UiIcons
         return Load(source.Root + source.FileName, Pixels(size), source.SourceSize);
     }
 
+    /// <summary>
+    /// Pins one tint on the icon's normal, hover, pressed and disabled colors. It does not follow
+    /// a Theme swap, so library components use the themed overload and a Theme variation
+    /// instead (#338).
+    /// </summary>
     public static void Apply(Button button, UiIconId icon, UiIconSize size, Color tint)
     {
         Apply(button, Load(icon, size), size, tint);
@@ -75,7 +83,7 @@ public static class UiIcons
         button.Icon = Load(icon, size);
         button.ExpandIcon = false;
         button.AddThemeConstantOverride("icon_max_width", Pixels(size));
-        foreach (var state in new[] { "icon_normal_color", "icon_hover_color", "icon_pressed_color", "icon_disabled_color" })
+        foreach (var state in _iconStates)
         {
             button.RemoveThemeColorOverride(state);
         }

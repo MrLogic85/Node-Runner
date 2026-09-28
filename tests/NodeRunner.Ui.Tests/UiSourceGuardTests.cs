@@ -27,6 +27,12 @@ public sealed class UiSourceGuardTests
     /// </summary>
     private static readonly string[] _sizeGuardedFolders = ["ui/lib"];
 
+    /// <summary>
+    /// The one library file that pins a colour override: UiIcons' tint helper, which game screens
+    /// and widgets still call until they move to the component library (#310).
+    /// </summary>
+    private const string _tintHelper = "ui/lib/UiIcons.cs";
+
     private static readonly Lazy<IReadOnlyList<MetadataReference>> _references = new(LoadReferences);
 
     /// <summary>The SDK's implicit usings (<c>ImplicitUsings</c> in Directory.Build.props).</summary>
@@ -73,6 +79,31 @@ public sealed class UiSourceGuardTests
         violations.ShouldBeEmpty(
             "Take dimensions from UiSize, UiLayout or UiSpacing; name any other value as a const or static readonly field.");
     }
+
+    [Fact]
+    public void Component_library_selects_colours_by_theme_variation()
+    {
+        var violations = ProjectSources()
+            .Where(source => source.Path.StartsWith("ui/lib/", StringComparison.Ordinal) && source.Path != _tintHelper)
+            .SelectMany(source => source.Find(IsPinnedColour))
+            .ToList();
+
+        violations.ShouldBeEmpty(
+            "Select a generated Theme variation (ThemeTypeVariation, UiThemeLookup.ApplyTextStyle, " +
+            "UiIcons.Apply without a tint) so a Theme swap restyles the node; add the variation to UiThemeExpander.");
+    }
+
+    [Theory]
+    [InlineData("void M(Label label) { label.AddThemeColorOverride(\"font_color\", Colors.White); }")]
+    [InlineData("void M(Button button, Color tint) => UiIcons.Apply(button, UiIconId.Edit, UiIconSize.Small, tint);")]
+    public void Pinned_colour_is_flagged(string member) =>
+        Snippet(member).Find(IsPinnedColour).ShouldHaveSingleItem();
+
+    [Theory]
+    [InlineData("void M(Label label) { label.RemoveThemeColorOverride(\"font_color\"); }")]
+    [InlineData("void M(Button button) => UiIcons.Apply(button, UiIconId.Edit, UiIconSize.Small);")]
+    public void Theme_variation_passes(string member) =>
+        Snippet(member).Find(IsPinnedColour).ShouldBeEmpty();
 
     [Theory]
     [InlineData("Color M() => new Color(0.1f, 0.2f, 0.3f);")]
@@ -164,6 +195,16 @@ public sealed class UiSourceGuardTests
         {
             LiteralExpressionSyntax => true,
             PrefixUnaryExpressionSyntax { Operand: LiteralExpressionSyntax } => true,
+            _ => false,
+        };
+
+    private static bool IsPinnedColour(SyntaxNode node) => node is InvocationExpressionSyntax invocation
+        && invocation.Expression switch
+        {
+            MemberAccessExpressionSyntax { Name.Identifier.Text: "AddThemeColorOverride" } => true,
+            IdentifierNameSyntax { Identifier.Text: "AddThemeColorOverride" } => true,
+            MemberAccessExpressionSyntax { Expression: IdentifierNameSyntax { Identifier.Text: "UiIcons" }, Name.Identifier.Text: "Apply" }
+                => invocation.ArgumentList.Arguments.Count == 4,
             _ => false,
         };
 
