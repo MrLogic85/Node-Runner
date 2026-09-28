@@ -9,6 +9,7 @@ public sealed partial class UiDialogContent : Control
     public enum PreviewTheme { Neon, Paper, EffectsLite }
 
     private UiPopupType _type;
+    private UiNotificationIcon? _iconOverride;
     private PreviewTheme _theme;
     private UiCard? _card;
     private ScrollContainer _scroll = null!;
@@ -103,6 +104,7 @@ public sealed partial class UiDialogContent : Control
     public void Bind(UiDialogSpec spec)
     {
         _type = spec.Type;
+        _iconOverride = spec.Icon;
         GetNode<Label>("%Title").Text = spec.Title;
         _body.Text = spec.Content;
         _cancel.Text = spec.AbortText;
@@ -142,7 +144,9 @@ public sealed partial class UiDialogContent : Control
         GetNode<ColorRect>("%Scrim").Color = UiThemeLookup.Color(this, UiTokens.Color.Scrim);
         var color = UiPopupStyle.SemanticColor(Type, this);
         var icon = GetNode<TextureRect>("%SemanticIcon");
-        icon.Texture = UiIcons.Load(Type == UiPopupType.Default ? UiIconId.Model : UiIconId.Warn, UiIconSize.Large);
+        icon.Texture = _iconOverride is { } glyph
+            ? glyph.Load(UiIconSize.Large)
+            : UiIcons.Load(Type == UiPopupType.Default ? UiIconId.Model : UiIconId.Warn, UiIconSize.Large);
         icon.SelfModulate = color;
         var typeLabel = GetNode<Label>("%SemanticType");
         typeLabel.Text = Type.ToString();
