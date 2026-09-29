@@ -17,9 +17,9 @@
 
 ## What lives here
 
-- `Evaluator.cs` — measures fitness for one trial, accumulates
 - `TrialController.cs` — times one fixed-duration trial for one creature,
-  resets its pose between trials
+  resets its pose between trials, and feeds `TrialMeasurement`
+  (`libs/NodeRunner.ML/Ga`) each tick
 - `Evolver.cs` — orchestrates the generation cycle: evaluate every genome
   in fixed parallel slots (one `TrialController` per slot) → GA → next
   generation. Slot 0 reuses the visible creature; additional slots are

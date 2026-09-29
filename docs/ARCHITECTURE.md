@@ -210,7 +210,8 @@ At 60 Hz (`_physics_process`), for the creature currently under evaluation:
 3. **Act.** `MotorRelation.Drive(target)` scales the target by a static
    `MaxAngularVelocity` and drives torque (capped at a static `MaxTorque`)
    to chase it.
-4. **Score.** `Evaluator` accumulates fitness for this trial.
+4. **Score.** `TrialMeasurement` records distance, top speed and elevation
+   for this trial; distance is the fitness.
 
 After N ticks (say 600 = 10 s at 60 Hz) each slot's trial ends. `Evolver`
 records its fitness, assigns the slot the next pending genome, and, once every

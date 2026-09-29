@@ -21,6 +21,7 @@ public partial class Evolver : Node
     private int[] _layerSizes = [];
     private double[][] _genomes = [];
     private double[] _fitness = [];
+    private TrialResult[] _results = [];
     private ParallelEvaluationSchedule? _schedule;
 
     public int Generation { get; private set; }
@@ -30,6 +31,9 @@ public partial class Evolver : Node
     public double MeanFitness { get; private set; }
 
     public double[]? BestGenome { get; private set; }
+
+    /// <summary>What the trial behind <see cref="BestGenome"/> measured; null until a generation of this run completes.</summary>
+    public TrialResult? BestRun { get; private set; }
 
     public int[] LayerSizes => _layerSizes.ToArray();
 
@@ -75,7 +79,8 @@ public partial class Evolver : Node
     /// must match the creature's sensor/motor counts (its input/output layers).
     /// Supplying <paramref name="creatureFactory"/> enables fixed parallel
     /// slots up to <paramref name="maxParallelSlots"/>; without it, evaluation
-    /// remains sequential for compatibility.
+    /// remains sequential for compatibility. <paramref name="groundTopY"/> is the
+    /// ground's top edge, which each trial measures elevation from.
     /// </summary>
     public void Start(
         Creature.Creature creature,
@@ -83,6 +88,7 @@ public partial class Evolver : Node
         int[] layerSizes,
         GeneticAlgorithm ga,
         Random rng,
+        float groundTopY,
         double[]? resumeGenome = null,
         int resumeGeneration = 0,
         int trialDurationTicks = 600,
@@ -127,6 +133,7 @@ public partial class Evolver : Node
         BestFitness = double.NegativeInfinity;
         MeanFitness = 0;
         BestGenome = resumeGenome?.ToArray();
+        BestRun = null;
 
         _genomes = CreateRandomPopulation(populationSize);
         if (resumeGenome is not null)
@@ -134,12 +141,13 @@ public partial class Evolver : Node
             _genomes[0] = resumeGenome.ToArray();
         }
         _fitness = new double[populationSize];
+        _results = new TrialResult[populationSize];
 
         var slotCount = creatureFactory is null
             ? 1
             : Math.Min(populationSize, maxParallelSlots);
         _schedule = new ParallelEvaluationSchedule(populationSize, slotCount);
-        ConfigureSlots(creature, slotCount, trialDurationTicks, creatureFactory);
+        ConfigureSlots(creature, slotCount, trialDurationTicks, groundTopY, creatureFactory);
         StartAvailableSlots();
     }
 
@@ -158,6 +166,7 @@ public partial class Evolver : Node
         Creature.Creature primaryCreature,
         int slotCount,
         int trialDurationTicks,
+        float groundTopY,
         Func<Creature.Creature>? creatureFactory)
     {
         for (var slot = 0; slot < slotCount; slot++)
@@ -172,9 +181,10 @@ public partial class Evolver : Node
             {
                 Name = $"TrialController{slot + 1}",
                 TrialDurationTicks = trialDurationTicks,
+                GroundTopY = groundTopY,
             };
             var capturedSlot = slot;
-            controller.TrialCompleted += fitness => OnTrialCompleted(capturedSlot, fitness);
+            controller.TrialCompleted += result => OnTrialCompleted(capturedSlot, result);
             AddChild(controller);
             _trialControllers.Add(controller);
         }
@@ -217,7 +227,7 @@ public partial class Evolver : Node
         _trialControllers[slot].StartTrial(_creatures[slot]);
     }
 
-    private void OnTrialCompleted(int slot, float fitness)
+    private void OnTrialCompleted(int slot, TrialResult result)
     {
         var genomeIndex = _schedule!.ActiveCandidate(slot);
         if (genomeIndex < 0)
@@ -225,7 +235,8 @@ public partial class Evolver : Node
             return;
         }
 
-        _fitness[genomeIndex] = fitness;
+        _fitness[genomeIndex] = result.Distance;
+        _results[genomeIndex] = result;
         _schedule.Complete(slot);
 
         if (_schedule.IsComplete)
@@ -249,7 +260,9 @@ public partial class Evolver : Node
 
         if (isNewBest)
         {
-            BestGenome = _genomes[Array.IndexOf(_fitness, generationBest)].ToArray();
+            var bestIndex = Array.IndexOf(_fitness, generationBest);
+            BestGenome = _genomes[bestIndex].ToArray();
+            BestRun = _results[bestIndex];
         }
 
         BestFitness = Math.Max(BestFitness, generationBest);
@@ -258,6 +271,7 @@ public partial class Evolver : Node
 
         _genomes = _ga!.NextGeneration(_genomes, _fitness, _rng!);
         _fitness = new double[_genomes.Length];
+        _results = new TrialResult[_genomes.Length];
         _schedule!.Reset();
 
         GenerationCompleted?.Invoke();
