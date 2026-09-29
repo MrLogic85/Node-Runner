@@ -29,13 +29,7 @@ public partial class BuildScreen : Control
     public bool ShowCanvasPreview { get; set; } = true;
 
     [Signal]
-    public delegate void TrainingRequestedEventHandler();
-
-    [Signal]
     public delegate void SaveRequestedEventHandler();
-
-    [Signal]
-    public delegate void RebuildRequestedEventHandler();
 
     [Signal]
     public delegate void SimulateRequestedEventHandler();

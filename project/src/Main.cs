@@ -628,8 +628,6 @@ public partial class Main : Node2D
             }
         };
         _buildScreen.SaveRequested += SaveCreationFromBuild;
-        _buildScreen.TrainingRequested += CompleteCreationAndSimulate;
-        _buildScreen.RebuildRequested += RebuildCreation;
         _buildScreen.BackRequested += BackFromBuildScreen;
         _buildScreen.CreationNameChanged += RenameActiveCreation;
         _buildScreen.ResetTrainingRequested += ResetActiveCreationTraining;
@@ -1785,12 +1783,12 @@ public partial class Main : Node2D
 
     private void CompleteCreation()
     {
-        _ = TryCompleteCreation(out _, out _);
+        _ = TryCompleteCreation(out _);
     }
 
     private void SaveCreationFromBuild()
     {
-        if (!TryCompleteCreation(out _, out var creation) || creation is null)
+        if (!TryCompleteCreation(out var creation) || creation is null)
         {
             return;
         }
@@ -1798,30 +1796,10 @@ public partial class Main : Node2D
         OpenCreation(creation);
     }
 
-    private void CompleteCreationAndSimulate()
-    {
-        if (!TryCompleteCreation(out var creature, out var creation) || creature is null || creation is null || _creature is null)
-        {
-            return;
-        }
-        Selection.Clear();
-        Selection.Clear();
-        _creature.BrainShape = creation.BrainShape;
-        _creature.BuildFrom(creature);
-        SetActiveInspector(creature);
-        if (_seedLabel is not null)
-        {
-            _seedLabel.Text = SeedText();
-        }
-
-        Construction.IsActive = false;
-        StartEvolution(creation);
-    }
-
-    private bool TryCompleteCreation(out CreatureDef? creature, out CreationDef? creation)
+    private bool TryCompleteCreation(out CreationDef? creation)
     {
         creation = null;
-        if (!Construction.TryLeave(out creature, out var errors) || creature is null)
+        if (!Construction.TryLeave(out var creature, out var errors) || creature is null)
         {
             Construction.SetBlockedLeaveMessage(errors);
             return false;
