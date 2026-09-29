@@ -46,8 +46,10 @@ unchanged, it belongs in `lib/`. If it embeds project vocabulary
 
 - One class per screen. Holds child Control references, subscribes to its
   ViewModel, wires input.
-- `_Ready()` builds the VM (or receives one via a `Setup(vm)` method called
-  by `SceneRouter`) and subscribes.
+- A routed screen implements `IRoutedScene`: `SceneRouter` calls
+  `Enter(route, navigator)` before it joins the tree, and `_Ready()` builds
+  the VM from the route and subscribes. See `docs/ARCHITECTURE.md` →
+  Navigation.
 - `_ExitTree()` unsubscribes. No leaked handlers.
 
 ### `widgets/`

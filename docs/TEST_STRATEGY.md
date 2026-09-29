@@ -106,7 +106,7 @@ Add a fact whenever a convention emerges that we've decided to enforce.
 
 `docs/UI_DIRECTION.md` ("Who owns what") splits the UI between the reference
 design, the UI library, scenes and C#. These tests guard those boundaries and
-run without the Godot scene tree. They cover four concerns.
+run without the Godot scene tree. They cover five concerns.
 
 **1. Values come from their owner.** A value is authored once, so a root Theme
 swap restyles everything:
@@ -163,6 +163,11 @@ is instantiated. `SceneParentPathTests` resolves every saved parent path, and
 the path of every override block, through the nodes the scene creates and,
 recursively, its instanced scenes
 ([#407](https://github.com/MrLogic85/Node-Runner/issues/407)).
+
+**5. Every route opens its scene.** `SceneRouterTests` requires every App
+route to map to an existing scene, and a route that carries arguments to open
+a scene whose root script implements `IRoutedScene`, so the arguments reach it
+([#468](https://github.com/MrLogic85/Node-Runner/issues/468)).
 
 Do not write tests that lock a scene's arrangement: which components it uses,
 their order and its layout sizes are free to change in the editor. Do not

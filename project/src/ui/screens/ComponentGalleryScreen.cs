@@ -26,35 +26,6 @@ public partial class ComponentGalleryScreen : GalleryScreen
         Callable.From(ResetScrollPosition).CallDeferred();
     }
 
-    /// <summary>
-    /// Takes over from a gallery page its host opened on its own: keeps that page's
-    /// theme and debug bounds and opens the page it asked for on top of this one.
-    /// </summary>
-    public void ContinueFrom(GalleryScreen page, GalleryPage next)
-    {
-        ThemeIndex = page.ThemeIndex;
-        ShowDebugBounds = page.ShowDebugBounds;
-        if (next != Page)
-        {
-            OpenPage(next);
-        }
-    }
-
-    protected override void OpenPage(GalleryPage page)
-    {
-        var scene = page switch
-        {
-            GalleryPage.Toolbars => "res://scenes/screens/ToolbarsScreen.tscn",
-            GalleryPage.ColorsAndStyles => "res://scenes/screens/ColorsAndStylesScreen.tscn",
-            GalleryPage.PopupGallery => "res://scenes/screens/PopupGalleryScreen.tscn",
-            _ => null,
-        };
-        if (scene is not null)
-        {
-            OpenGalleryPage(GD.Load<PackedScene>(scene).Instantiate<GalleryScreen>());
-        }
-    }
-
     protected override void OnThemeApplied()
     {
         if (_scrollContent is not null)
@@ -69,39 +40,6 @@ public partial class ComponentGalleryScreen : GalleryScreen
         {
             _scroll.ScrollVertical = 0;
         }
-    }
-
-    // A page carrying the gallery toolbar starts with this page's theme and
-    // debug bounds, hands them back when it closes, and can switch straight
-    // to another page.
-    private void OpenGalleryPage(GalleryScreen page)
-    {
-        page.ShowCloseAction = true;
-        page.ThemeIndex = ThemeIndex;
-        page.ShowDebugBounds = ShowDebugBounds;
-        page.CloseRequested += () => ReturnFrom(page);
-        page.PageRequested += next =>
-        {
-            ReturnFrom(page);
-            OpenPage(next);
-        };
-        OpenOnTop(page);
-    }
-
-    // Shows another gallery page in place of this one until it asks to close.
-    private void OpenOnTop(GalleryScreen screen)
-    {
-        Toolbar?.CloseMenu();
-        GetParent().AddChild(screen);
-        Hide();
-    }
-
-    private void ReturnFrom(GalleryScreen page)
-    {
-        ThemeIndex = page.ThemeIndex;
-        ShowDebugBounds = page.ShowDebugBounds;
-        page.QueueFree();
-        Show();
     }
 
     private void BindAuthoredControls(Control control)

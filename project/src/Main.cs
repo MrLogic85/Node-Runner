@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using Godot;
+using NodeRunner.App.Navigation;
 using NodeRunner.App.Repositories;
 using NodeRunner.App.Services;
 using NodeRunner.App.ViewModels;
@@ -47,9 +48,6 @@ public partial class Main : Node2D
     private VBoxContainer? _creationsList;
     private CreationsScreen? _creationsScreen;
     private ExamplesScreen? _examplesScreen;
-    private CanvasLayer? _componentGalleryLayer;
-    private Control? _componentGalleryHost;
-    private ComponentGalleryScreen? _componentGalleryScreen;
     private UiDialog? _deleteCreationDialog;
     private UiNotification? _notifications;
     private SimulateScreen? _simulateScreen;
@@ -120,31 +118,6 @@ public partial class Main : Node2D
 
     public override void _Ready()
     {
-        if (ProjectSettings.GetSetting("ui/popup_gallery", false).AsBool())
-        {
-            var gallery = GD.Load<PackedScene>("res://scenes/screens/PopupGalleryScreen.tscn").Instantiate<PopupGalleryScreen>();
-            gallery.ShowCloseAction = true;
-            void ContinueInComponentGallery(GalleryPage next)
-            {
-                gallery.QueueFree();
-                var components = GD.Load<PackedScene>("res://scenes/screens/ComponentGalleryScreen.tscn").Instantiate<ComponentGalleryScreen>();
-                AddChild(components);
-                components.ContinueFrom(gallery, next);
-            }
-
-            gallery.CloseRequested += () => ContinueInComponentGallery(GalleryPage.Components);
-            gallery.PageRequested += ContinueInComponentGallery;
-            AddChild(gallery);
-            return;
-        }
-
-        if (ProjectSettings.GetSetting("ui/component_gallery", false).AsBool())
-        {
-            var gallery = GD.Load<PackedScene>("res://scenes/screens/ComponentGalleryScreen.tscn").Instantiate<ComponentGalleryScreen>();
-            AddChild(gallery);
-            return;
-        }
-
         // Engine.TimeScale is a global engine setting, not scoped to this
         // scene — reset it on entry so a previous run's time-scale choice
         // (e.g. from CycleTimeScale) can't silently carry over.
@@ -920,51 +893,9 @@ public partial class Main : Node2D
             && ProjectSettings.GetSetting("ui/show_component_library_link", true).AsBool();
     }
 
-    private void OpenComponentLibraryFromHome()
-    {
-        if (_componentGalleryScreen is not null)
-        {
-            _componentGalleryHost?.Show();
-            _componentGalleryLayer?.Show();
-            return;
-        }
-
-        _componentGalleryLayer = new CanvasLayer
-        {
-            Name = "ComponentGalleryOverlay",
-            Layer = 30,
-            ProcessMode = ProcessModeEnum.Always,
-        };
-        AddChild(_componentGalleryLayer);
-
-        _componentGalleryHost = new Control
-        {
-            Name = "ComponentGalleryHost",
-            ProcessMode = ProcessModeEnum.Always,
-        };
-        _componentGalleryHost.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
-        _componentGalleryHost.MouseFilter = Control.MouseFilterEnum.Stop;
-        _componentGalleryLayer.AddChild(_componentGalleryHost);
-
-        _componentGalleryScreen = GD.Load<PackedScene>("res://scenes/screens/ComponentGalleryScreen.tscn").Instantiate<ComponentGalleryScreen>();
-        _componentGalleryScreen.ShowCloseAction = true;
-        _componentGalleryScreen.CloseRequested += CloseComponentLibrary;
-        _componentGalleryScreen.ProcessMode = ProcessModeEnum.Always;
-        _componentGalleryHost.AddChild(_componentGalleryScreen);
-    }
-
-    private void CloseComponentLibrary()
-    {
-        if (_componentGalleryScreen is null)
-        {
-            return;
-        }
-
-        _componentGalleryLayer?.QueueFree();
-        _componentGalleryLayer = null;
-        _componentGalleryHost = null;
-        _componentGalleryScreen = null;
-    }
+    // The library opens as its own scene in place of Main; Back rebuilds Main (#468).
+    private void OpenComponentLibraryFromHome() =>
+        GetNode<SceneRouter>("/root/SceneRouter").Navigate(new SceneNavigation(new ComponentGalleryRoute()));
 
     private void ToggleCreationsPanel()
     {
@@ -1913,7 +1844,8 @@ public partial class Main : Node2D
 
         var bestFitness = _evolver.BestFitness;
         var bestRun = BestRunOf(_evolver);
-        Task.Run(() => PersistTrainingSnapshot(saveManager, id, epoch, saveStatusVersion, layerSizes, genomeSnapshot, generation, bestFitness, bestRun));
+        var owner = GetInstanceId();
+        Task.Run(() => PersistTrainingSnapshot(owner, saveManager, id, epoch, saveStatusVersion, layerSizes, genomeSnapshot, generation, bestFitness, bestRun));
     }
 
     // Training runs on flat ground only until maps land (#443).
@@ -1922,7 +1854,9 @@ public partial class Main : Node2D
             ? new TrainingRunDef(run.Distance, run.TopSpeed, run.Elevation, MapIds.Flat)
             : null;
 
-    private void PersistTrainingSnapshot(SaveManager saveManager, Guid id, long epoch, long saveStatusVersion, int[] layerSizes, double[] genome, int generation, double bestFitness, TrainingRunDef? bestRun)
+    // Runs on a worker thread and may outlive this scene (the router frees it on navigation), so it
+    // never calls into Main directly: results go back by instance id and are dropped once Main is gone.
+    private static void PersistTrainingSnapshot(ulong owner, SaveManager saveManager, Guid id, long epoch, long saveStatusVersion, int[] layerSizes, double[] genome, int generation, double bestFitness, TrainingRunDef? bestRun)
     {
         try
         {
@@ -1930,13 +1864,14 @@ public partial class Main : Node2D
                 id,
                 epoch,
                 new TrainingStateDef(layerSizes, genome, generation, Activation.Tanh.ToString(), bestFitness, bestRun));
+            var creation = id.ToString();
             if (persisted)
             {
-                CallDeferred(nameof(ShowTrainingPersisted), id.ToString(), saveStatusVersion, generation);
+                OnMain(owner, main => main.ShowTrainingPersisted(creation, saveStatusVersion, generation));
             }
             else
             {
-                CallDeferred(nameof(ShowTrainingSaveSkipped), id.ToString(), saveStatusVersion, generation);
+                OnMain(owner, main => main.ShowTrainingSaveSkipped(creation, saveStatusVersion, generation));
             }
         }
         catch (Exception ex)
@@ -1945,14 +1880,25 @@ public partial class Main : Node2D
             // generation it failed for — this is a data-loss condition, not
             // a benign one-liner, and dev builds should fail loud (see
             // docs/CODE_DESIGN_PRINCIPLES.md § "Fail loud in dev").
-            CallDeferred(nameof(LogPersistTrainingError), id.ToString(), generation, ex.ToString());
-            CallDeferred(nameof(ShowTrainingSaveFailed), id.ToString(), saveStatusVersion);
+            var creation = id.ToString();
+            var error = ex.ToString();
+            Callable.From(() => LogPersistTrainingError(creation, generation, error)).CallDeferred();
+            OnMain(owner, main => main.ShowTrainingSaveFailed(creation, saveStatusVersion));
         }
     }
 
+    private static void OnMain(ulong owner, Action<Main> action) =>
+        Callable.From(() =>
+        {
+            if (InstanceFromId(owner) is Main main)
+            {
+                action(main);
+            }
+        }).CallDeferred();
+
     // Deferred back to the main thread so the log call never touches the
-    // engine from the background save thread.
-    private void LogPersistTrainingError(string id, int generation, string exception)
+    // engine from the background save thread; logged even after Main is gone.
+    private static void LogPersistTrainingError(string id, int generation, string exception)
     {
         GD.PrintErr($"Failed to persist training state for Creation {id} at generation {generation}: {exception}");
     }
@@ -2304,9 +2250,10 @@ public partial class Main : Node2D
 
     public override void _ExitTree()
     {
-        // Restore the global time scale so it doesn't leak into whatever
-        // runs next (another scene, a future scene reload, tests).
+        // Restore the global time scale and pause so they don't leak into
+        // whatever runs next (another scene, a future scene reload, tests).
         Engine.TimeScale = _timeScales[0];
+        GetTree().Paused = false;
         Selection.PropertyChanged -= OnSelectionPropertyChanged;
         Construction.PropertyChanged -= OnConstructionPropertyChanged;
         Construction.AnatomyChanged -= OnConstructionAnatomyChanged;

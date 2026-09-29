@@ -419,13 +419,14 @@ Colors & Styles and Popup Gallery hold their content in a `ContentFrame` inset
 `S3` (12px) from the card, inside a `Scroll` with a hidden scrollbar, so the
 inset and every line of content scroll together under the toolbar; the Toolbars
 page is laid out as Build is, without one.
-A page starts with the gallery's theme and debug bounds and hands them back when
-it closes. A page opened from Component Gallery's menu opens on top of it, so
-Back returns there. A page opened on its own (`ui/popup_gallery`) hands over
-to Component Gallery, keeping theme and debug bounds, both on Back and when
-its menu opens another page. A page with a Back action also takes Android Back and Escape, after an
-open menu or dialog has handled them; a page without one, such as a standalone
-Component Gallery, leaves Android Back to its default and quits. The Toolbars page mirrors the reference's ComponentToolbars page. Its
+Each page is its own scene, opened by `SceneRouter` from its route
+(`docs/ARCHITECTURE.md`, Navigation). The pages replace each other: the menu
+opens the next page in place of the current one, carrying the theme and debug
+bounds in the route, so Back from any page returns to Creations (human decision
+on [issue #468](https://github.com/MrLogic85/Node-Runner/issues/468)). A routed
+page shows Back and also takes Android Back and Escape, after an open menu or
+dialog has handled them. A page run on its own with F6 has no Back and leaves
+Android Back to its default. The Toolbars page mirrors the reference's ComponentToolbars page. Its
 own toolbar is the `UiToolbar` specimen; by human decision on
 [issue #319](https://github.com/MrLogic85/Node-Runner/issues/319) it shows no
 separate Editing/Locked specimens. Under it the page shows one `UiButtonBar`
@@ -443,9 +444,8 @@ The same menu opens **Popup Gallery**, the interactive specimens for reusable
 The gallery consumes the actual components; only its callbacks are demonstrations
 that do not mutate product data. Designer review and rollout to existing product
 overlays (#200) remain separate.
-`ui/popup_gallery=true` starts it directly for a development export.
-When hosted beneath `Main`'s `Node2D`, the gallery explicitly follows the
-viewport size; when hosted beneath a `Control`, it fills its parent via anchors.
+`ui/popup_gallery=true` (or `ui/component_gallery=true`) makes a development
+export open that page on start, with Back to Creations.
 Dialogs support Default/Warn/Danger and independent `HoldToAction` on the
 confirmation button. Dialogs and notifications share `UiPopupCard`, the
 reference's dialog/toast frame: its border and glow take the severity colour,

@@ -236,8 +236,9 @@ tied to the retired Muscle model and does not carry over.
 
 Screens are moving to one scene each, where navigating replaces the current
 scene (#326): a left scene is closed, not paused, and Back rebuilds it from
-its route. Until #468 routes them, `Main` still hosts the screens and nothing
-uses the history below yet.
+its route. #468 is routing them one by one: the component-library pages are
+routed, while `Main` still hosts Creations (the root route opens `Main`),
+Examples, Build and Simulate.
 
 - `SceneRoute` is one sealed record per scene. The record type is the scene;
   its properties are the plain arguments it is built from (a creation id, an
@@ -250,10 +251,14 @@ uses the history below yet.
   removed; opening the root's scene returns to it. `Back()` returns the
   previous route, or null on the root, where Android leaves the app.
   `ReturnToRoot()` clears everything above the root (e.g. after Delete).
+- `ISceneNavigator` is what a scene asks to navigate; `IRoutedScene` is how
+  a scene receives its route and navigator before it joins the tree. Both
+  live in App so UI scenes need not know the manager.
+- The `SceneRouter` autoload (`project/src/managers/`) implements
+  `ISceneNavigator` over the history and is the only code that changes scenes.
 
 Because a scene is rebuilt from its route, anything the player expects to
-find again is saved before the scene closes. The Godot `SceneRouter`
-autoload that swaps scenes over this history lands with #468.
+find again is saved before the scene closes.
 
 ## Threading
 

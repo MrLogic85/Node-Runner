@@ -28,8 +28,10 @@
   scale, etc.)
 - `SaveManager.cs` — orchestrates saving/loading creatures via
   `ICreatureRepository`
-- `SceneRouter.cs` — the only place `GetTree().ChangeSceneToFile(...)` is
-  called
+- `SceneRouter.cs` — the only place scenes are changed
+  (`GetTree().ChangeSceneToNode(...)`). It keeps the `SceneBackStack` and maps
+  each route to its scene in `ScenePaths`; a scene implementing `IRoutedScene`
+  gets its route and the router before it joins the tree
 - `Services.cs` — static locator that resolves autoloads by type
 
 ## What does NOT live here
