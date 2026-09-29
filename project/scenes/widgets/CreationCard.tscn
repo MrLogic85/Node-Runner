@@ -5,7 +5,6 @@
 [ext_resource type="Script" uid="uid://8edfdt3hsnj0" path="res://src/ui/widgets/CreatureThumbnail.cs" id="3_thumb"]
 [ext_resource type="Script" uid="uid://dk67qmt3brp4e" path="res://src/ui/lib/UiLabel.cs" id="4_label"]
 [ext_resource type="Script" uid="uid://fw1i2vfgkd7q" path="res://src/ui/lib/UiDivider.cs" id="5_divider"]
-[ext_resource type="Script" uid="uid://b32bnhbgasedd" path="res://src/ui/lib/UiChip.cs" id="6_chip"]
 [ext_resource type="Script" uid="uid://bau3bwe6tkv48" path="res://src/ui/lib/UiSlider.cs" id="7_slider"]
 [ext_resource type="Script" uid="uid://r2ped3g3uiaa" path="res://src/ui/lib/UiButton.cs" id="8_button"]
 [ext_resource type="Script" uid="uid://bjt8et7kcs50x" path="res://src/ui/lib/UiCardActions.cs" id="9_card_actions"]
@@ -86,15 +85,6 @@ text = "Walker"
 text_overrun_behavior = 3
 script = ExtResource("4_label")
 TextStyle = 1
-
-[node name="ExampleChip" type="PanelContainer" parent="Frame/Stack/Body/BodyStack/TitleRow" unique_id=868243380]
-unique_name_in_owner = true
-visible = false
-layout_mode = 2
-size_flags_vertical = 4
-mouse_filter = 1
-script = ExtResource("6_chip")
-Text = "Example"
 
 [node name="Summary" type="Label" parent="Frame/Stack/Body/BodyStack" unique_id=128398721]
 unique_name_in_owner = true

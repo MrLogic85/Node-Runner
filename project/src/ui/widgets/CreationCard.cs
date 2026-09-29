@@ -5,7 +5,8 @@ using NodeRunner.Ui.Lib;
 namespace NodeRunner.Ui.Widgets;
 
 /// <summary>
-/// One saved creation on the Creations screen. The layout is authored in
+/// One creation card: a saved creation on Creations, or a ready-made one on Examples, where the
+/// presentation leaves out Open and Delete. The layout is authored in
 /// <c>scenes/widgets/CreationCard.tscn</c>; this script binds a <see cref="CreationCardPresentation"/>
 /// and forwards the card's actions.
 /// </summary>
@@ -78,8 +79,7 @@ public partial class CreationCard : MarginContainer
         var fallback = GetNode<UiLabel>("%ThumbnailFallback");
         fallback.Text = creation.ThumbnailText;
         fallback.Visible = creation.Creature.Nodes.Count == 0;
-        GetNode<UiLabel>("%Name").Text = creation.DisplayName;
-        GetNode<UiChip>("%ExampleChip").Visible = creation.IsExample;
+        GetNode<UiLabel>("%Name").Text = creation.Name;
         GetNode<UiLabel>("%Summary").Text = creation.SummaryText;
 
         var progress = GetNode<UiSlider>("%AchievementProgress");
@@ -92,9 +92,7 @@ public partial class CreationCard : MarginContainer
         credit.Visible = !string.IsNullOrWhiteSpace(creation.UnlockCreditText);
 
         GetNode<UiButton>("%Copy").Disabled = !creation.CanDuplicate;
-        var delete = GetNode<UiButton>("%Delete");
-        delete.Disabled = !creation.CanDelete;
-        delete.Visible = !creation.IsExample;
+        GetNode<UiButton>("%Delete").Visible = creation.CanDelete;
     }
 
     private void Emit(StringName signal)

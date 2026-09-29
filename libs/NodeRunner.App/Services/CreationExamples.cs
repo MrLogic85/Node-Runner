@@ -2,16 +2,22 @@ using NodeRunner.Domain;
 
 namespace NodeRunner.App.Services;
 
-public static class DefaultCreationTemplates
+/// <summary>A ready-made creation on the Examples screen and the one line on what it shows.</summary>
+public sealed record CreationExample(CreationDef Creation, string WhatIsNew);
+
+/// <summary>
+/// The examples the app ships with. Copying one saves a new creation; the example itself never changes.
+/// </summary>
+public static class CreationExamples
 {
-    public static readonly Guid StarterWormId = Guid.Parse("17f2bd34-4f1b-46f1-a657-7e1e123d1390");
+    public static readonly Guid WormId = Guid.Parse("17f2bd34-4f1b-46f1-a657-7e1e123d1390");
 
-    public static CreationDef CreateStarterWorm()
-    {
-        return new CreationDef(StarterWormId, "Example: Worm", CreateStarterWormCreature());
-    }
+    public static IReadOnlyList<CreationExample> All { get; } =
+    [
+        new(new CreationDef(WormId, "Worm", CreateWormCreature()), "Beams and one core: the simplest crawl."),
+    ];
 
-    public static CreatureDef CreateStarterWormCreature()
+    public static CreatureDef CreateWormCreature()
     {
         const double radius = 18;
         const double spacing = 56;

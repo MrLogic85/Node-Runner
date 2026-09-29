@@ -1,0 +1,61 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" uid="uid://bwpkix14bawc8" path="res://src/ui/screens/ExamplesScreen.cs" id="1_screen"]
+[ext_resource type="PackedScene" uid="uid://dokr6l5stu6ll" path="res://scenes/ui/UiFrame.tscn" id="2_frame"]
+[ext_resource type="PackedScene" uid="uid://gydkh1xys4yo" path="res://scenes/ui/UiToolbar.tscn" id="3_toolbar"]
+[ext_resource type="Script" uid="uid://dk67qmt3brp4e" path="res://src/ui/lib/UiLabel.cs" id="4_label"]
+[ext_resource type="PackedScene" uid="uid://1x2j47badjkd" path="res://scenes/widgets/CreationCard.tscn" id="5_creation_card"]
+
+[node name="ExamplesScreen" type="Control" unique_id=342426276]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_screen")
+CardScene = ExtResource("5_creation_card")
+
+[node name="UiFrame" parent="." unique_id=422012187 instance=ExtResource("2_frame")]
+unique_name_in_owner = true
+layout_mode = 1
+
+[node name="Shell" type="VBoxContainer" parent="UiFrame/MarginContainer/Card" parent_id_path=PackedInt32Array(422012187, 1864407290) index="0" unique_id=1318224753]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="Toolbar" parent="UiFrame/MarginContainer/Card/Shell" unique_id=1901368733 instance=ExtResource("3_toolbar")]
+unique_name_in_owner = true
+layout_mode = 2
+ShowOverflow = false
+
+[node name="Title" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/HBoxContainer/MarginContainer/ToolbarContent" parent_id_path=PackedInt32Array(1901368733, 1466231439) index="0" unique_id=1878609423]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+text = "Examples"
+script = ExtResource("4_label")
+TextStyle = 1
+
+[node name="CardScroll" type="ScrollContainer" parent="UiFrame/MarginContainer/Card/Shell" unique_id=308292212]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 3
+vertical_scroll_mode = 0
+
+[node name="CardInset" type="MarginContainer" parent="UiFrame/MarginContainer/Card/Shell/CardScroll" unique_id=661191655]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 12
+
+[node name="CardRow" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/CardScroll/CardInset" unique_id=1283746501]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[editable path="UiFrame"]
+[editable path="UiFrame/MarginContainer/Card/Shell/Toolbar"]

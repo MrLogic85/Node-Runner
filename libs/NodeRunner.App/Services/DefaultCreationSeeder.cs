@@ -3,17 +3,21 @@ using NodeRunner.Domain;
 
 namespace NodeRunner.App.Services;
 
+/// <summary>
+/// Gives the player a copy of the Worm example on the app's first start, and never again: a saved
+/// marker, not an empty list, says whether this is the first start.
+/// </summary>
 public sealed class DefaultCreationSeeder
 {
-    private readonly ICreationRepository _creations;
+    private readonly IExampleCopyWorkflow _examples;
     private readonly IProgressionRepository _progression;
 
-    public DefaultCreationSeeder(ICreationRepository creations, IProgressionRepository progression)
+    public DefaultCreationSeeder(IExampleCopyWorkflow examples, IProgressionRepository progression)
     {
-        ArgumentNullException.ThrowIfNull(creations);
+        ArgumentNullException.ThrowIfNull(examples);
         ArgumentNullException.ThrowIfNull(progression);
 
-        _creations = creations;
+        _examples = examples;
         _progression = progression;
     }
 
@@ -25,23 +29,12 @@ public sealed class DefaultCreationSeeder
             return false;
         }
 
-        if (_creations.List().Count > 0)
-        {
-            MarkSeeded(progression);
-            return false;
-        }
-
-        _creations.Save(DefaultCreationTemplates.CreateStarterWorm());
-        MarkSeeded(progression);
-        return true;
-    }
-
-    private void MarkSeeded(ProgressionDef progression)
-    {
+        _examples.Copy(CreationExamples.WormId);
         _progression.Save(new ProgressionDef(
             progression.ExtraCoreUnlocked,
             progression.ExtraCoreUnlockedAtGeneration,
             progression.ExtraCoreUnlockedByCreationId,
             defaultCreationsSeeded: true));
+        return true;
     }
 }
