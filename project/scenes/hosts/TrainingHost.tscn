@@ -1,7 +1,7 @@
 [gd_scene format=3]
 
 [ext_resource type="Script" uid="uid://dhvyb7lkorpjp" path="res://src/hosts/TrainingHost.cs" id="1_host"]
-[ext_resource type="PackedScene" uid="uid://nrsimulatescreen001" path="res://scenes/screens/TrainingScreen.tscn" id="2_screen"]
+[ext_resource type="PackedScene" uid="uid://dw7rx48kgohvl" path="res://scenes/screens/TrainingScreen.tscn" id="2_screen"]
 [ext_resource type="Script" uid="uid://c7kogaptfkfv6" path="res://src/theme/ArenaBackdrop.cs" id="3_backdrop"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_ground"]
