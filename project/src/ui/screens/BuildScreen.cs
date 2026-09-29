@@ -88,6 +88,21 @@ public partial class BuildScreen : Control
         SubscribeToPresentation();
     }
 
+    /// <summary>Closes an open menu or panel, as Android Back does first. False when none was open.</summary>
+    public bool CloseOverlay()
+    {
+        if (!_brainSetupOpen && !_nameEntryOpen && !_creationOverflowOpen)
+        {
+            return false;
+        }
+
+        _brainSetupOpen = false;
+        _nameEntryOpen = false;
+        _creationOverflowOpen = false;
+        RebuildLayout();
+        return true;
+    }
+
     public override void _Ready()
     {
         Name = nameof(BuildScreen);

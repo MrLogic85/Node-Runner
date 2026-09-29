@@ -275,6 +275,8 @@ pages have nothing to save, so they are routed directly.
   not quit; it asks the screen to go back unless an open menu or dialog in
   the screen takes Back first. On the root nothing holds Back, so Android
   leaves the app.
+  `Main` holds Back the same way: an open dialog, sheet or menu closes
+  first, then Build goes one step back and Simulate goes to Build (#474).
 
 Because a scene is rebuilt from its route, anything the player expects to
 find again is saved before the scene closes. What must outlive a scene

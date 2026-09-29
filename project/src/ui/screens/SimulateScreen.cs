@@ -217,6 +217,18 @@ public partial class SimulateScreen : Control
         }
     }
 
+    /// <summary>Closes the training settings sheet, as Android Back does first. False when it was closed.</summary>
+    public bool CloseOverlay()
+    {
+        if (_settingsOverlay?.Visible != true)
+        {
+            return false;
+        }
+
+        CloseTrainingSettingsSheet();
+        return true;
+    }
+
     public override void _Ready()
     {
         Name = nameof(SimulateScreen);
