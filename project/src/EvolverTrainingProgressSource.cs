@@ -6,15 +6,12 @@ namespace NodeRunner;
 public sealed class EvolverTrainingProgressSource : ITrainingProgressSource
 {
     private readonly Evolver _evolver;
-    private readonly Func<string> _profileProvider;
 
-    public EvolverTrainingProgressSource(Evolver evolver, Func<string> profileProvider)
+    public EvolverTrainingProgressSource(Evolver evolver)
     {
         ArgumentNullException.ThrowIfNull(evolver);
-        ArgumentNullException.ThrowIfNull(profileProvider);
 
         _evolver = evolver;
-        _profileProvider = profileProvider;
         _evolver.TrainingProgressChanged += OnProgressChanged;
         _evolver.NewBestFound += OnNewBestFound;
     }
@@ -35,11 +32,7 @@ public sealed class EvolverTrainingProgressSource : ITrainingProgressSource
 
     public IReadOnlyList<double> CompletedFitness => _evolver.CompletedFitness;
 
-    public int CompletedCandidateCount => _evolver.CompletedCandidateCount;
-
     public bool IsTrialActive => _evolver.IsTrialActive;
-
-    public string Profile => _profileProvider();
 
     private void OnProgressChanged()
     {

@@ -15,6 +15,7 @@ internal static class RewrittenUi
         "ui/screens/BuildScreen.cs",
         "ui/screens/CreationsScreen.cs",
         "ui/screens/ExamplesScreen.cs",
+        "ui/screens/SimulateScreen.cs",
     ];
 
     /// <summary>Widget scripts, by path under <c>project/src</c>: held to the library's rules.</summary>
@@ -25,6 +26,7 @@ internal static class RewrittenUi
         "screens/BuildScreen.tscn",
         "screens/CreationsScreen.tscn",
         "screens/ExamplesScreen.tscn",
+        "screens/SimulateScreen.tscn",
         "widgets/CreationCard.tscn",
     ];
 }

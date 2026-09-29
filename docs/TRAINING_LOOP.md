@@ -122,20 +122,18 @@ sessions explicit rather than treating navigation or Start as completion.
   - `Evolver.Start` retains a one-slot compatibility mode when no creature
     factory is supplied. Production `SimulateHost` supplies the factory and
     uses parallel evaluation.
-- `SimulateHost` creates one `Evolver` and selects a session-scoped training
-  profile. Quick, Standard, and Deep vary population size, trial duration,
-  generation budget, tournament size, mutation rate/strength, and crossover
-  strategy. Uniform crossover preserves parent genes; Blend crossover samples
-  continuous values between the two parent genes, giving the player a direct
-  experiment for the competing-conventions plateau without changing the
-  underlying network.
-  `StartEvolution()` (`SimulateHost`) always calls `Evolver.Stop()` first (which
-  halts the in-progress trial without raising any events), then calls
-  `Evolver.Start(...)` again — unless the current creature has no brain
-  (an anatomy without motors), in which case it stops and leaves evolution
-  idle rather than starting. This is what Reset (which reseeds
-  `RngProvider`) and changing the training profile rely on to avoid a stale
-  in-flight trial outliving the restart.
+- `SimulateHost` creates one `Evolver` with the fixed Standard training
+  profile (population, trial duration, generation budget, tournament size,
+  mutation rate/strength and crossover strategy). The Quick/Deep choice and
+  its settings sheet were removed with the Training shell (#386); training
+  setup returns with TrainSetup (#194). Uniform crossover preserves parent
+  genes; Blend crossover samples continuous values between the two parent
+  genes, giving a later experiment for the competing-conventions plateau
+  without changing the underlying network.
+  `StartEvolution()` (`SimulateHost`) runs once when the scene opens. It
+  calls `Evolver.Start(...)` unless the creature has no brain (an anatomy
+  without motors), in which case evolution stays idle. `Evolver.Stop()`
+  halts the in-progress trial without raising any events.
 - Generation/fitness are logged (`GD.Print`) and shown on the Simulate
   screen (see "The Simulate scene" below).
 
@@ -144,16 +142,23 @@ reaching 50 distance units unlocks a second core slot globally. The unlock is
 recorded with the generation that crossed the threshold and remains available
 in Build after restarting the app.
 
-## The Simulate scene (issues #51, #469)
+## The Simulate scene (issues #51, #469, #386)
 
-This section documents the current prototype wiring, not the target
-navigation or presentation. The target is owned by the TrainSetup and Training
-component READMEs under `reference design/components/`.
+This section documents the current wiring. The target presentation is owned
+by the TrainSetup and Training component READMEs under `reference design/components/`.
 
 - Simulate is its own routed scene, `SimulateRoute(creationId)`, with
-  `SimulateHost` (`project/src/`) as its root. It builds the ground, the
-  camera, the creature and the `Evolver` from the creation's save, so
-  leaving the scene frees all of them.
+  `SimulateHost` (`project/src/`) as its root. `Simulate.tscn` instances the
+  Training screen (`SimulateScreen.tscn`) and authors the world inside the
+  screen's arena viewport: the backdrop, the ground and its collision shape,
+  the spawn marker and the camera. The host adds the creature and the
+  `Evolver` from the creation's save to that world, so leaving the scene
+  frees all of them.
+  - **World view.** The world renders in its own `SubViewport` through
+    `UiWorldView`, so the UI layout and scale never touch physics distances
+    or gravity. The viewport renders at the screen's pixel density to keep
+    the creature crisp, and a tap on the arena is turned into a world
+    position for part selection.
   - **Resume.** Opening it starts from the saved `TrainingStateDef`: the
     best genome seeds the population and the generation count continues.
     A creation without training starts from a fresh random population.
@@ -162,29 +167,33 @@ component READMEs under `reference design/components/`.
     the generation in progress. The save is guarded by the creation's
     training epoch, so a save still in flight when the training is reset
     is dropped.
-  - A session stops after the profile's generation budget. The profile,
-    speed and pause belong to the scene and start from Standard, 1x and
-    running each time it opens.
+  - A session stops after the profile's generation budget. Speed and pause
+    belong to the scene and start from 1x and running each time it opens.
   - Run on its own (F6) the scene trains the built-in worm without saving.
-- The Simulate screen shows the generation and fitness from
-  `TrainingPresentationViewModel`, and its controls are Pause, Speed and
-  Reset.
+- The Training screen's top bar shows the creation's name, the status
+  ("Training · Flat ground"), Brain and Stats buttons and a thin accent line
+  for progress toward the next unlock. Beside the arena, the SignalFlow column
+  shows the Senses → Brain → Outputs → Distance stages from
+  `SignalFlowPresentationViewModel`. Under the arena are Pause, Speed and the
+  generation caption from `TrainingPresentationViewModel`.
   - **Pause** toggles `GetTree().Paused`. This is the standard Godot
     pause mechanism: every node using the default `Pausable` process mode
     (all slot creatures, `Evolver`, and every `TrialController`) freezes
     immediately —
     physics stops advancing, so trial motion, fitness recording, and
     trial-boundary checks all stop mid-trial and resume exactly where they
-    left off. The scene root and the screen's layer are `ProcessMode.Always`
-    so the buttons (Pause included) keep responding while paused, and the
+    left off. The scene root is `ProcessMode.Always`, so the screen and its
+    buttons (Pause included) keep responding while paused, and the
     creature and `Evolver` pin themselves back to `Pausable`.
-  - **Reset** resets the saved training, reseeds `RngProvider` and
-    restarts evolution from a fresh random population.
   - **Speed** cycles a fixed 1x/2x/4x set via `Engine.TimeScale`.
     This scales every physics/process step uniformly and does not affect
     determinism, only how quickly a fixed tick budget plays out. Speed and
     pause are reset in `SimulateHost._Ready()`/`_ExitTree()` since both are
     global engine settings, not scoped to this scene.
+  - **Brain** (the button or the Brain stage) opens the BrainFocus sheet;
+    Android Back closes it before leaving the scene. **Stats** shows a
+    placeholder notice until the Stats screen (#198).
+  - There is no Reset: training is reset from Build.
 - Full neural-network visualization remains out of scope (later milestone).
 
 ## Deferred future work

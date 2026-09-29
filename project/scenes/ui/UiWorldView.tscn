@@ -1,0 +1,18 @@
+[gd_scene format=3 uid="uid://nruiworldview01"]
+
+[ext_resource type="Script" uid="uid://cr857y5u5urxt" path="res://src/ui/lib/UiWorldView.cs" id="1_view"]
+
+[node name="UiWorldView" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+script = ExtResource("1_view")
+
+[node name="WorldViewport" type="SubViewport" parent="."]
+unique_name_in_owner = true
+render_target_update_mode = 4

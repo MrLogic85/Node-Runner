@@ -3,7 +3,8 @@ using NodeRunner.ML.Ga;
 namespace NodeRunner.Sim;
 
 /// <summary>
-/// Session-scoped training settings exposed by the 0.7.0 training HUD.
+/// Settings for one training session: population, trial length, generation budget and GA knobs.
+/// Training uses a fixed Standard profile until TrainSetup (#194) lets the player choose.
 /// </summary>
 public sealed record TrainingProfile
 {

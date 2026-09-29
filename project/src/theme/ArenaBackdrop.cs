@@ -2,11 +2,32 @@ using Godot;
 
 namespace NodeRunner.Theme;
 
+/// <summary>The arena's background: a grid in the theme's colours, <see cref="Size"/> big from its position.</summary>
 public partial class ArenaBackdrop : Node2D
 {
-    public VisualTheme Theme { get; set; } = VisualTheme.Neon;
+    private VisualTheme _theme = VisualTheme.Neon;
+    private Vector2 _size = new(900, 540);
 
-    public Vector2 Size { get; set; } = new(900, 540);
+    public VisualTheme Theme
+    {
+        get => _theme;
+        set
+        {
+            _theme = value;
+            QueueRedraw();
+        }
+    }
+
+    [Export]
+    public Vector2 Size
+    {
+        get => _size;
+        set
+        {
+            _size = value;
+            QueueRedraw();
+        }
+    }
 
     public override void _Draw()
     {

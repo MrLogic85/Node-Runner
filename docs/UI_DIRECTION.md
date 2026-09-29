@@ -195,7 +195,7 @@ GLES3`); see the Compatibility/OpenGL renderer note in
 `antialiased: false`.** This has been applied across every existing call
 site (`UiNumber`, `UiDashedBorder`, `UiProgressRing`, `UiSlider`,
 `UiSelectionHandle`, `UiButton`, `UiBoundsDebugOverlay`,
-`BrainSetupSheet`, `SimulateScreen`, `BrainFocusNetworkView`,
+`BrainSetupSheet`, `BrainFocusNetworkView`,
 `ConstructionCanvas`, `CreatureThumbnail`, `BeamVisual`). Any new `_Draw()` code
 must follow the same rule; a stray edge without antialiasing reads as a
 sharp 1px line at any stretch factor, while `antialiased: true` reads as a

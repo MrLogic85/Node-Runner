@@ -6,7 +6,7 @@ namespace NodeRunner.App.Tests.ViewModels;
 public sealed class SignalFlowPresentationViewModelTests
 {
     [Fact]
-    public void Update_WithLiveReadings_FormatsFourStageSummaries()
+    public void Update_WithLiveReadings_NotesEachStage()
     {
         var viewModel = new SignalFlowPresentationViewModel();
         var notifications = 0;
@@ -20,38 +20,62 @@ public sealed class SignalFlowPresentationViewModelTests
                 new SensorReading("Motor relation", 1, "angular velocity", -2.0),
             ],
             [new MotorReading(1, -0.6, 12.4), new MotorReading(2, 0.2, 3.1)],
-            bestFitness: 42.25,
-            meanFitness: 8.5);
+            distance: 42.25);
 
-        viewModel.SeesSummary.ShouldBe("4 live sensor values");
-        viewModel.DecidesSummary.ShouldBe("Brain maps 4 inputs to 2 motor targets");
-        viewModel.TwistsSummary.ShouldBe("2 live motor targets");
-        viewModel.ScoresSummary.ShouldBe("Best 42.3 m · mean 8.5 m");
-        viewModel.SensorCount.ShouldBe(4);
-        viewModel.MotorCount.ShouldBe(2);
-        viewModel.SensorRows.Select(row => row.Label).ShouldBe(["Core 1 Ray down", "Core 1 Pitch", "Motor relation 1 angle"]);
-        viewModel.SensorRows.Select(row => row.ValueText).ShouldBe(["0.25", "-0.50", "0.75"]);
-        viewModel.SensorRows.Select(row => row.Fill).ShouldBe([0.25, 0.5, 0.75]);
-        viewModel.MotorRows.Select(row => row.Label).ShouldBe(["Motor relation 1", "Motor relation 2"]);
-        viewModel.MotorRows.Select(row => row.ValueText).ShouldBe(["-0.60", "0.20"]);
-        viewModel.MotorRows.Select(row => row.Fill).ShouldBe([0.6, 0.2]);
+        viewModel.SensesNote.ShouldBe("4 readings");
+        viewModel.OutputsNote.ShouldBe("2 motors");
+        viewModel.DistanceNote.ShouldBe("42.3 m");
         notifications.ShouldBe(1);
     }
 
     [Fact]
-    public void Update_WithNoReadings_ShowsWaitingState()
+    public void Update_WithOneOfEach_UsesTheSingular()
     {
         var viewModel = new SignalFlowPresentationViewModel();
 
-        viewModel.Update([], [], double.NegativeInfinity, 0);
+        viewModel.Update([new SensorReading("Core", 1, "Pitch", 0.1)], [new MotorReading(1, 0.2, 1)], 0);
 
-        viewModel.SensorRows.ShouldBeEmpty();
-        viewModel.MotorRows.ShouldBeEmpty();
-        viewModel.SensorCount.ShouldBe(0);
-        viewModel.MotorCount.ShouldBe(0);
-        viewModel.SeesSummary.ShouldBe("No sensors are active yet");
-        viewModel.DecidesSummary.ShouldBe("Brain waits for a complete body");
-        viewModel.TwistsSummary.ShouldBe("No motor relations yet");
-        viewModel.ScoresSummary.ShouldBe("Mean 0.0 m · best pending");
+        viewModel.SensesNote.ShouldBe("1 reading");
+        viewModel.OutputsNote.ShouldBe("1 motor");
+        viewModel.DistanceNote.ShouldBe("0.0 m");
+    }
+
+    [Fact]
+    public void Update_WithNoReadings_LeavesTheNotesEmpty()
+    {
+        var viewModel = new SignalFlowPresentationViewModel();
+
+        viewModel.Update([], [], double.NaN);
+
+        viewModel.SensesNote.ShouldBeEmpty();
+        viewModel.OutputsNote.ShouldBeEmpty();
+        viewModel.DistanceNote.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void Update_WithTheSameNotes_DoesNotNotifyAgain()
+    {
+        var viewModel = new SignalFlowPresentationViewModel();
+        viewModel.Update([], [new MotorReading(1, 0.2, 1)], 3);
+        var notifications = 0;
+        viewModel.PropertyChanged += (_, _) => notifications++;
+
+        viewModel.Update([], [new MotorReading(1, -0.4, 2)], 3.01);
+
+        notifications.ShouldBe(0);
+    }
+
+    [Fact]
+    public void Update_WhenOnlyTheDistanceMoves_NotifiesOnce()
+    {
+        var viewModel = new SignalFlowPresentationViewModel();
+        viewModel.Update([], [new MotorReading(1, 0.2, 1)], 3);
+        var notifications = 0;
+        viewModel.PropertyChanged += (_, _) => notifications++;
+
+        viewModel.Update([], [new MotorReading(1, 0.2, 1)], 4);
+
+        notifications.ShouldBe(1);
+        viewModel.DistanceNote.ShouldBe("4.0 m");
     }
 }
