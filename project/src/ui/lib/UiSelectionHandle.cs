@@ -84,18 +84,23 @@ public partial class UiSelectionHandle : Control, ISerializationListener
         AcceptEvent();
     }
 
-    public override void _Draw()
+    public override void _Draw() => DrawRoundButton(this, HandleCenter());
+
+    /// <summary>
+    /// The round button (<c>c_round_button</c>) behind a handle's icon: a <c>panel</c> disc with a
+    /// <c>halo</c> ring. <see cref="UiInfoRow"/> draws the same shape so it shows the handle exactly.
+    /// </summary>
+    internal static void DrawRoundButton(Control control, Vector2 center)
     {
-        var center = HandleCenter();
         const int radius = UiSize.Widget.SelectionHandleRadius;
-        DrawCircle(center, radius, UiThemeLookup.Color(this, UiTokens.Color.Panel));
-        DrawArc(
+        control.DrawCircle(center, radius, UiThemeLookup.Color(control, UiTokens.Color.Panel));
+        control.DrawArc(
             center,
             radius,
             0,
             Mathf.Tau,
             _ringPoints,
-            UiThemeLookup.Color(this, UiTokens.Color.Halo),
+            UiThemeLookup.Color(control, UiTokens.Color.Halo),
             UiSize.Stroke.SelectionHandle,
             antialiased: false);
     }

@@ -843,7 +843,7 @@ custom_minimum_size = Vector2(120, 0)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 8
-text = "one component, chip, with a kind for colour and lg for a chip beside control-height buttons and fields"
+text = "one component, chip, one size, with a kind for colour"
 autowrap_mode = 3
 script = ExtResource("2_cpfof")
 TextStyle = 9
@@ -889,47 +889,44 @@ Text = "Earned"
 Kind = 3
 IconId = 5
 
-[node name="LargeCaption" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Chips" unique_id=182633523]
+[node name="GlyphCaption" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Chips" unique_id=182633523]
 layout_mode = 2
-text = "lg, in a top bar next to a control-height button or field"
+text = "a part glyph takes icon (16), and so does a UI icon in a chip beside it"
 autowrap_mode = 3
 script = ExtResource("2_cpfof")
 TextStyle = 9
 TextColor = 8
 
-[node name="Large" type="HFlowContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Chips" unique_id=1722539990]
+[node name="Glyphs" type="HFlowContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Chips" unique_id=1722539990]
 layout_mode = 2
 theme_override_constants/h_separation = 8
 theme_override_constants/v_separation = 8
 
-[node name="Neutral" type="PanelContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Chips/Large" unique_id=895560462]
+[node name="Spring" type="PanelContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Chips/Glyphs" unique_id=895560462]
 layout_mode = 2
 size_flags_vertical = 4
 mouse_filter = 1
 script = ExtResource("25_chip")
-Text = "Brain"
-IconId = 18
-Large = true
+Text = "Spring"
+IconId = 50
 
-[node name="Warning" type="PanelContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Chips/Large" unique_id=1348361851]
+[node name="Wheel" type="PanelContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Chips/Glyphs" unique_id=1348361851]
 layout_mode = 2
 size_flags_vertical = 4
 mouse_filter = 1
 script = ExtResource("25_chip")
-Text = "62%"
-Kind = 1
-IconId = 2
-Large = true
+Text = "Wheel"
+Kind = 3
+IconId = 53
 
-[node name="Danger" type="PanelContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Chips/Large" unique_id=1626006946]
+[node name="Hills" type="PanelContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Chips/Glyphs" unique_id=1626006946]
 layout_mode = 2
 size_flags_vertical = 4
 mouse_filter = 1
 script = ExtResource("25_chip")
-Text = "0%"
-Kind = 2
-IconId = 2
-Large = true
+Text = "Hills"
+IconId = 59
+GlyphSizedIcon = true
 
 [node name="Callout" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content" unique_id=1698557057]
 layout_mode = 2
@@ -1004,7 +1001,7 @@ custom_minimum_size = Vector2(120, 0)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 8
-text = "a ringed halo icon with a title and a note, used to explain a handle or a mode"
+text = "the handle it explains, drawn as on the canvas, with a title and a note"
 autowrap_mode = 3
 script = ExtResource("2_cpfof")
 TextStyle = 9

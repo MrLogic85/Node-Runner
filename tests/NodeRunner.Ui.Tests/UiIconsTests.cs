@@ -9,6 +9,7 @@ public sealed class UiIconsTests
     {
         ((int)UiIconId.None).ShouldBe(-1);
         ((int)UiIconId.Back).ShouldBe(0);
+        ((int)UiIconId.PartWing).ShouldBe(54);
         UiIcons.AllIds.ShouldNotContain(UiIconId.None);
         Should.Throw<ArgumentOutOfRangeException>(() => UiIcons.PathFor(UiIconId.None));
     }
@@ -18,12 +19,26 @@ public sealed class UiIconsTests
     {
         var projectRoot = Path.Combine(FindRepositoryRoot(), "project");
 
-        UiIcons.AllIds.Count.ShouldBe(55);
+        UiIcons.AllIds.Count.ShouldBe(61);
 
         foreach (var icon in UiIcons.AllIds)
         {
             File.Exists(ToAssetPath(projectRoot, UiIcons.PathFor(icon))).ShouldBeTrue($"Missing icon: {icon}");
         }
+    }
+
+    [Fact]
+    public void PartGlyphs_AreNeverAllowedAtSmall()
+    {
+        foreach (var icon in UiIcons.AllIds)
+        {
+            var isGlyph = UiIcons.PathFor(icon).StartsWith(UiIcons.PartRoot, StringComparison.Ordinal);
+            UiIcons.IsPartGlyph(icon).ShouldBe(isGlyph, icon.ToString());
+            UiIcons.IsAllowed(icon, UiIconSize.Small).ShouldBe(!isGlyph, icon.ToString());
+            UiIcons.IsAllowed(icon, UiIconSize.Standard).ShouldBeTrue(icon.ToString());
+        }
+
+        Should.Throw<ArgumentException>(() => UiIcons.Load(UiIconId.PartWheel, UiIconSize.Small));
     }
 
     [Fact]

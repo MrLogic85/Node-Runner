@@ -3,8 +3,8 @@ using Godot;
 namespace NodeRunner.Ui.Lib;
 
 /// <summary>
-/// Small fact chip (<c>c_chip</c>) with an optional icon. Kind colours the border, text and icon
-/// alike; <see cref="Large"/> sits beside control-height buttons and fields.
+/// Small fact chip (<c>c_chip</c>), one size (control-xs), with an optional icon. Kind colours the
+/// border, text and icon alike. The icon is icon-sm, or icon (16) for a part glyph.
 /// </summary>
 [Tool]
 [GlobalClass]
@@ -21,7 +21,7 @@ public partial class UiChip : PanelContainer
     private ChipKind _kind;
     private string _text = string.Empty;
     private UiIconId _iconId = UiIconId.None;
-    private bool _large;
+    private bool _glyphSizedIcon;
     private UiIconCaption? _content;
 
     [Export]
@@ -69,14 +69,17 @@ public partial class UiChip : PanelContainer
         }
     }
 
-    /// <summary>Control height (40) instead of control-xs (24).</summary>
+    /// <summary>
+    /// Draws a UI icon at the part-glyph size (icon, 16), for a chip that sits beside chips
+    /// showing part glyphs. A part glyph is always that size.
+    /// </summary>
     [Export]
-    public bool Large
+    public bool GlyphSizedIcon
     {
-        get => _large;
+        get => _glyphSizedIcon;
         set
         {
-            _large = value;
+            _glyphSizedIcon = value;
             Refresh();
         }
     }
@@ -90,7 +93,9 @@ public partial class UiChip : PanelContainer
         _ => (UiTokens.Color.LineStrong, UiTokens.Color.Ink),
     };
 
-    public static int HeightFor(bool large) => large ? UiSize.Control.Default : UiSize.Control.ExtraSmall;
+    /// <summary>The icon size of a chip, and of a callout, which shares the chip's caption.</summary>
+    public static UiIconSize IconSizeFor(UiIconId icon, bool glyphSized) =>
+        glyphSized || UiIcons.IsPartGlyph(icon) ? UiIconSize.Standard : UiIconSize.Small;
 
     public override void _EnterTree() => RequestReady();
 
@@ -124,8 +129,8 @@ public partial class UiChip : PanelContainer
         _content ??= UiIconCaption.Ensure(this);
 
         var (border, content) = ColorsFor(Kind);
-        _content.Row.CustomMinimumSize = new Vector2(0, HeightFor(Large));
-        _content.Apply(Text, IconId, content, UiThemeLookup.Color(this, content));
+        _content.Row.CustomMinimumSize = new Vector2(0, UiSize.Control.ExtraSmall);
+        _content.Apply(Text, IconId, IconSizeFor(IconId, GlyphSizedIcon), content, UiThemeLookup.Color(this, content));
         AddThemeStyleboxOverride("panel", UiThemeLookup.CreateStyleBox(
             UiThemeLookup.Color(this, UiTokens.Color.PanelRaised),
             UiThemeLookup.Color(this, border),

@@ -44,7 +44,6 @@ internal sealed class UiIconCaption
             StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
             MouseFilter = Control.MouseFilterEnum.Ignore,
             SizeFlagsVertical = Control.SizeFlags.ShrinkCenter,
-            CustomMinimumSize = Vector2.One * UiIcons.Pixels(UiIconSize.Small),
         };
         var label = new UiLabel
         {
@@ -60,7 +59,7 @@ internal sealed class UiIconCaption
     }
 
     /// <summary>Applies content; the caption is styled by name, the icon is tinted with <paramref name="iconTint"/>.</summary>
-    public void Apply(string text, UiIconId iconId, UiTokens.Color textColor, Color iconTint)
+    public void Apply(string text, UiIconId iconId, UiIconSize iconSize, UiTokens.Color textColor, Color iconTint)
     {
         Label.Text = text;
         Label.TextStyle = UiTokens.Typography.NoteStrong;
@@ -68,7 +67,8 @@ internal sealed class UiIconCaption
 
         bool hasIcon = iconId != UiIconId.None;
         Icon.Visible = hasIcon;
-        Icon.Texture = hasIcon ? UiIcons.Load(iconId, UiIconSize.Small) : null;
+        Icon.CustomMinimumSize = Vector2.One * UiIcons.Pixels(iconSize);
+        Icon.Texture = hasIcon ? UiIcons.Load(iconId, iconSize) : null;
         Icon.SelfModulate = iconTint;
     }
 }

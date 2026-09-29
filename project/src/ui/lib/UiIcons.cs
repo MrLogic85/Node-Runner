@@ -11,7 +11,8 @@ public enum UiIconId
     Height, Joint, Lock, Map, Menu, Model, More, Move, Mute, Pause, Phone, Play, Plus, Restart, Rotate,
     Scale, Select, Shadow, Sound, Speed, Stop, Trash, Trophy, Unlock, Warn, Close, Eye, PartBattery,
     PartBeam, PartBrake, PartCore, PartFuel, PartGenerator, PartLineOfSight, PartNode, PartPiston,
-    PartServo, PartSpring, PartStepper, PartVelocity, PartWheel, PartWing
+    PartServo, PartSpring, PartStepper, PartVelocity, PartWheel, PartWing, Distance, TopSpeed, Elevation,
+    MapFlat, MapHills, MapStairs
 }
 
 /// <summary>The only permitted display sizes for canonical icons.</summary>
@@ -60,8 +61,19 @@ public static class UiIcons
         return source.Root + source.FileName;
     }
 
+    /// <summary>A part glyph, drawn on a 20 grid, rather than a UI icon.</summary>
+    public static bool IsPartGlyph(UiIconId icon) => icon != UiIconId.None && SourceFor(icon).Root == PartRoot;
+
+    /// <summary>Part glyphs no longer read at <see cref="UiIconSize.Small"/>; every other pairing is allowed.</summary>
+    public static bool IsAllowed(UiIconId icon, UiIconSize size) => !(IsPartGlyph(icon) && size == UiIconSize.Small);
+
     public static Texture2D Load(UiIconId icon, UiIconSize size)
     {
+        if (!IsAllowed(icon, size))
+        {
+            throw new ArgumentException($"{icon} is a part glyph and is never drawn at {size}.", nameof(size));
+        }
+
         var source = SourceFor(icon);
         return Load(source.Root + source.FileName, Pixels(size), source.SourceSize);
     }
@@ -160,6 +172,12 @@ public static class UiIcons
         UiIconId.PartVelocity => Part("velocity.svg"),
         UiIconId.PartWheel => Part("wheel.svg"),
         UiIconId.PartWing => Part("wing.svg"),
+        UiIconId.Distance => Ui("distance.svg"),
+        UiIconId.TopSpeed => Ui("top-speed.svg"),
+        UiIconId.Elevation => Ui("elevation.svg"),
+        UiIconId.MapFlat => Ui("map-flat.svg"),
+        UiIconId.MapHills => Ui("map-hills.svg"),
+        UiIconId.MapStairs => Ui("map-stairs.svg"),
         _ => throw new ArgumentOutOfRangeException(nameof(icon), icon, "Unknown UI icon."),
     };
 
