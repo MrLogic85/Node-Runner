@@ -46,6 +46,7 @@ public partial class Main : Node2D
     private PanelContainer? _creationsPanel;
     private VBoxContainer? _creationsList;
     private CreationsScreen? _creationsScreen;
+    private ExamplesScreen? _examplesScreen;
     private CanvasLayer? _componentGalleryLayer;
     private Control? _componentGalleryHost;
     private ComponentGalleryScreen? _componentGalleryScreen;
@@ -883,12 +884,21 @@ public partial class Main : Node2D
         _creationsScreen.Setup(saveManager.CreationsPresentation);
         _creationsScreen.NewRequested += StartNewCreationFromHome;
         _creationsScreen.AchievementsRequested += ShowAchievementsCueFromHome;
-        _creationsScreen.RestoreExampleRequested += RestoreExampleFromHome;
+        _creationsScreen.ExamplesRequested += OpenExamplesFromHome;
         _creationsScreen.ComponentLibraryRequested += OpenComponentLibraryFromHome;
         _creationsScreen.OpenRequested += OpenCreationFromScreen;
         _creationsScreen.DuplicateRequested += RequestDuplicateCreationFromScreen;
         _creationsScreen.DeleteRequested += RequestDeleteCreationFromScreen;
         overlayLayer.AddChild(_creationsScreen);
+
+        // Examples opens over Creations, which stays visible underneath so the rest of Main
+        // still sees the player on the home hub.
+        _examplesScreen = GD.Load<PackedScene>("res://scenes/screens/ExamplesScreen.tscn").Instantiate<ExamplesScreen>();
+        _examplesScreen.Visible = false;
+        _examplesScreen.Setup(new ExamplesPresentationViewModel());
+        _examplesScreen.BackRequested += CloseExamples;
+        _examplesScreen.CopyRequested += CopyExampleFromScreen;
+        overlayLayer.AddChild(_examplesScreen);
 
         _deleteCreationDialog = new UiDialog { ProcessMode = ProcessModeEnum.Always };
         overlayLayer.AddChild(_deleteCreationDialog);
@@ -1101,23 +1111,47 @@ public partial class Main : Node2D
     private void Notify(string title, string message) =>
         _notifications?.Enqueue(new UiNotificationSpec(UiPopupType.Default, title, message));
 
-    private void RestoreExampleFromHome()
+    private void OpenExamplesFromHome()
     {
+        if (_examplesScreen is not null)
+        {
+            _examplesScreen.Visible = true;
+        }
+    }
+
+    private void CloseExamples()
+    {
+        if (_examplesScreen is not null)
+        {
+            _examplesScreen.Visible = false;
+        }
+    }
+
+    // Copy saves the example as a new creation and opens it in Build; Back from Build lands on
+    // Creations, where the copy now has its own card.
+    private void CopyExampleFromScreen(string exampleKey, string exampleName)
+    {
+        if (!Guid.TryParse(exampleKey, out var id))
+        {
+            GD.PrintErr($"Could not copy example '{exampleName}': invalid id '{exampleKey}'.");
+            return;
+        }
+
         var saveManager = GetNode<SaveManager>("/root/SaveManager");
-        if (saveManager.Get(DefaultCreationTemplates.StarterWormId) is not null)
+        CreationDef copy = null!;
+        if (!TryRunFileOperation(() => copy = saveManager.CopyExample(id), $"Copying example '{exampleName}'"))
         {
-            Notify("Restore example", "The example is already in Creations.");
+            Notify("Examples", $"Could not copy {exampleName}. Try again.");
             return;
         }
 
-        if (!TryRunFileOperation(
-            () => saveManager.Save(DefaultCreationTemplates.CreateStarterWorm()),
-            "Restoring example Creation"))
-        {
-            return;
-        }
-
+        CloseExamples();
         RefreshCreationsPanel();
+        EditCreation(copy);
+        if (_creationsScreen is not null)
+        {
+            _creationsScreen.Visible = false;
+        }
     }
 
     private bool TryGetCreationFromScreen(string creationKey, string creationName, out CreationDef creation)

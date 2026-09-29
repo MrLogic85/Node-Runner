@@ -38,13 +38,11 @@ public sealed class CreationsPresentationViewModelTests
         walker.Name.ShouldBe("Walker");
         walker.Creature.ShouldBe(trained.Creature);
         walker.SummaryText.ShouldBe("Generation 12 · trained brain");
-        walker.DisplayName.ShouldBe("Walker");
         walker.ThumbnailText.ShouldBe("2 nodes · 1 beam · 1 core");
         walker.SavedStateText.ShouldBe("Saved training · generation 12");
         walker.UnlockCreditText.ShouldBe(string.Empty);
         walker.AchievementProgress.ShouldBe(0.6f);
         walker.AchievementProgressText.ShouldBe("Achievement progress");
-        walker.IsExample.ShouldBeFalse();
         walker.CanOpen.ShouldBeTrue();
         walker.CanDuplicate.ShouldBeTrue();
         walker.CanDelete.ShouldBeTrue();
@@ -79,31 +77,19 @@ public sealed class CreationsPresentationViewModelTests
     }
 
     [Fact]
-    public void Refresh_WithStarterExample_MarksExampleLocked()
+    public void Refresh_WithCopiedExample_ShowsAnOrdinaryCreation()
     {
         var repository = new InMemoryCreationRepository();
-        repository.Save(DefaultCreationTemplates.CreateStarterWorm());
+        var copy = new ExampleCopyWorkflow(repository).Copy(CreationExamples.WormId);
         var viewModel = new CreationsPresentationViewModel(repository);
 
         viewModel.Refresh();
 
-        var example = viewModel.Cards.Single();
-        example.IsExample.ShouldBeTrue();
-        example.DisplayName.ShouldBe("Worm");
-        example.CanDelete.ShouldBeFalse();
-        viewModel.CanRestoreExample.ShouldBeFalse();
-    }
-
-    [Fact]
-    public void Refresh_WhenStarterExampleMissing_AllowsRestore()
-    {
-        var repository = new InMemoryCreationRepository();
-        repository.Save(CreateCreation("Player", generation: 1));
-        var viewModel = new CreationsPresentationViewModel(repository);
-
-        viewModel.Refresh();
-
-        viewModel.CanRestoreExample.ShouldBeTrue();
+        var card = viewModel.Cards.Single();
+        card.Id.ShouldBe(copy.Id);
+        card.Name.ShouldBe("Worm");
+        card.CanDuplicate.ShouldBeTrue();
+        card.CanDelete.ShouldBeTrue();
     }
 
     [Fact]

@@ -15,6 +15,7 @@ public partial class SaveManager : Node
     private IConstructionDraftWorkflow? _constructionDraftWorkflow;
     private IConstructionEditWorkflow? _constructionEditWorkflow;
     private ICreationDuplicateWorkflow? _creationDuplicateWorkflow;
+    private IExampleCopyWorkflow? _exampleCopyWorkflow;
     private CreationsPresentationViewModel? _creationsPresentation;
 
     public override void _Ready()
@@ -27,7 +28,8 @@ public partial class SaveManager : Node
         var progressionDirectory = ProjectSettings.GlobalizePath("user://progression");
         _progressionRepository = new FileProgressionRepository(new GodotStorageLocation(progressionDirectory));
         _creationDuplicateWorkflow = new CreationDuplicateWorkflow(_repository);
-        new DefaultCreationSeeder(_repository, _progressionRepository).SeedIfNeeded();
+        _exampleCopyWorkflow = new ExampleCopyWorkflow(_repository);
+        new DefaultCreationSeeder(_exampleCopyWorkflow, _progressionRepository).SeedIfNeeded();
         _creationsPresentation = new CreationsPresentationViewModel(_repository, _progressionRepository);
     }
 
@@ -114,6 +116,8 @@ public partial class SaveManager : Node
         return CreationDuplicateWorkflow.Duplicate(id);
     }
 
+    public CreationDef CopyExample(Guid exampleId) => ExampleCopyWorkflow.Copy(exampleId);
+
     private ICreationRepository Repository =>
         _repository ?? throw new InvalidOperationException("SaveManager is not ready.");
 
@@ -125,6 +129,9 @@ public partial class SaveManager : Node
 
     private ICreationDuplicateWorkflow CreationDuplicateWorkflow =>
         _creationDuplicateWorkflow ?? throw new InvalidOperationException("SaveManager is not ready.");
+
+    private IExampleCopyWorkflow ExampleCopyWorkflow =>
+        _exampleCopyWorkflow ?? throw new InvalidOperationException("SaveManager is not ready.");
 
     private sealed class GodotStorageLocation(string directoryPath) : IStorageLocation
     {

@@ -1,4 +1,3 @@
-using NodeRunner.App.Builders;
 using NodeRunner.App.Repositories;
 using NodeRunner.App.Services;
 using NodeRunner.Domain;
@@ -8,45 +7,40 @@ namespace NodeRunner.App.Tests.Services;
 public sealed class DefaultCreationSeederTests
 {
     [Fact]
-    public void SeedIfNeeded_WithEmptyInstall_SavesStarterCreationAndMarker()
+    public void SeedIfNeeded_OnFirstStart_SavesACopyOfWormAndTheMarker()
     {
         var creations = new InMemoryCreationRepository();
         var progression = new InMemoryProgressionRepository();
-        var seeder = new DefaultCreationSeeder(creations, progression);
 
-        var seeded = seeder.SeedIfNeeded();
+        var seeded = CreateSeeder(creations, progression).SeedIfNeeded();
 
         seeded.ShouldBeTrue();
-        var creation = creations.Get(DefaultCreationTemplates.StarterWormId);
-        creation.ShouldNotBeNull();
-        creation.Name.ShouldBe("Example: Worm");
-        creation.Training.ShouldBeNull();
+        var worm = creations.List().ShouldHaveSingleItem();
+        worm.Id.ShouldNotBe(CreationExamples.WormId);
+        worm.Name.ShouldBe("Worm");
         progression.Load().DefaultCreationsSeeded.ShouldBeTrue();
     }
 
     [Fact]
-    public void SeedIfNeeded_WhenRunTwice_DoesNotDuplicateStarterCreation()
+    public void SeedIfNeeded_OnFirstStartWithCreations_StillSeeds()
     {
         var creations = new InMemoryCreationRepository();
-        var progression = new InMemoryProgressionRepository();
-        var seeder = new DefaultCreationSeeder(creations, progression);
+        creations.Save(new CreationDef(Guid.NewGuid(), "Player Build", CreationExamples.CreateWormCreature()));
 
-        seeder.SeedIfNeeded();
-        var seededAgain = seeder.SeedIfNeeded();
+        var seeded = CreateSeeder(creations, new InMemoryProgressionRepository()).SeedIfNeeded();
 
-        seededAgain.ShouldBeFalse();
-        creations.List().Count.ShouldBe(1);
-        creations.List()[0].Id.ShouldBe(DefaultCreationTemplates.StarterWormId);
+        seeded.ShouldBeTrue();
+        creations.List().Count.ShouldBe(2);
     }
 
     [Fact]
-    public void SeedIfNeeded_AfterStarterDeleted_DoesNotRestoreIt()
+    public void SeedIfNeeded_AfterFirstStart_DoesNothing()
     {
         var creations = new InMemoryCreationRepository();
         var progression = new InMemoryProgressionRepository();
-        var seeder = new DefaultCreationSeeder(creations, progression);
+        var seeder = CreateSeeder(creations, progression);
         seeder.SeedIfNeeded();
-        creations.Delete(DefaultCreationTemplates.StarterWormId);
+        creations.Delete(creations.List().Single().Id);
 
         var seededAgain = seeder.SeedIfNeeded();
 
@@ -55,79 +49,27 @@ public sealed class DefaultCreationSeederTests
     }
 
     [Fact]
-    public void SeedIfNeeded_AfterStarterEdited_DoesNotOverwriteIt()
+    public void SeedIfNeeded_KeepsTheRestOfProgression()
     {
-        var creations = new InMemoryCreationRepository();
         var progression = new InMemoryProgressionRepository();
-        var seeder = new DefaultCreationSeeder(creations, progression);
-        seeder.SeedIfNeeded();
-        var edited = new CreationDef(
-            DefaultCreationTemplates.StarterWormId,
-            "My Worm",
-            DefaultCreationTemplates.CreateStarterWormCreature());
-        creations.Save(edited);
+        var creditedId = Guid.NewGuid();
+        progression.Save(new ProgressionDef(true, 12, creditedId));
 
-        seeder.SeedIfNeeded();
+        CreateSeeder(new InMemoryCreationRepository(), progression).SeedIfNeeded();
 
-        creations.Get(DefaultCreationTemplates.StarterWormId)!.Name.ShouldBe("My Worm");
-    }
-
-    [Fact]
-    public void SeedIfNeeded_WithExistingCreations_TreatsInstallAsAlreadySeeded()
-    {
-        var creations = new InMemoryCreationRepository();
-        var progression = new InMemoryProgressionRepository();
-        var existing = new CreationDef(Guid.NewGuid(), "Player Build", DefaultCreationTemplates.CreateStarterWormCreature());
-        creations.Save(existing);
-        var seeder = new DefaultCreationSeeder(creations, progression);
-
-        var seeded = seeder.SeedIfNeeded();
-
-        seeded.ShouldBeFalse();
-        creations.List().ShouldBe([existing]);
-        progression.Load().DefaultCreationsSeeded.ShouldBeTrue();
-    }
-
-    [Fact]
-    public void SeedIfNeeded_WithMissingMarkerAndExistingStarter_DoesNotOverwriteIt()
-    {
-        var creations = new InMemoryCreationRepository();
-        var progression = new InMemoryProgressionRepository();
-        var edited = new CreationDef(
-            DefaultCreationTemplates.StarterWormId,
-            "Renamed Starter",
-            DefaultCreationTemplates.CreateStarterWormCreature());
-        creations.Save(edited);
-        var seeder = new DefaultCreationSeeder(creations, progression);
-
-        seeder.SeedIfNeeded();
-
-        creations.Get(DefaultCreationTemplates.StarterWormId)!.Name.ShouldBe("Renamed Starter");
-        progression.Load().DefaultCreationsSeeded.ShouldBeTrue();
-    }
-
-    [Fact]
-    public void StarterWorm_UsesOnlyStartingComponentsAndPassesConstructionValidation()
-    {
-        var creation = DefaultCreationTemplates.CreateStarterWorm();
-        var builder = new CreatureBuilder(creation.Creature);
-
-        var canBuild = builder.TryBuild(out var built, out var errors);
-
-        canBuild.ShouldBeTrue();
-        errors.ShouldBeEmpty();
-        built.ShouldNotBeNull();
-        built.Cores.Count.ShouldBeLessThanOrEqualTo(1);
-        creation.Training.ShouldBeNull();
+        progression.Load().ShouldBe(new ProgressionDef(true, 12, creditedId, defaultCreationsSeeded: true));
     }
 
     [Fact]
     public void Constructor_RequiresDependencies()
     {
-        var creations = new InMemoryCreationRepository();
+        var examples = new ExampleCopyWorkflow(new InMemoryCreationRepository());
         var progression = new InMemoryProgressionRepository();
 
         Should.Throw<ArgumentNullException>(() => new DefaultCreationSeeder(null!, progression));
-        Should.Throw<ArgumentNullException>(() => new DefaultCreationSeeder(creations, null!));
+        Should.Throw<ArgumentNullException>(() => new DefaultCreationSeeder(examples, null!));
     }
+
+    private static DefaultCreationSeeder CreateSeeder(ICreationRepository creations, IProgressionRepository progression) =>
+        new(new ExampleCopyWorkflow(creations), progression);
 }

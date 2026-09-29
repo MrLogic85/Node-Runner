@@ -25,7 +25,7 @@ public partial class CreationsScreen : Control
     public delegate void AchievementsRequestedEventHandler();
 
     [Signal]
-    public delegate void RestoreExampleRequestedEventHandler();
+    public delegate void ExamplesRequestedEventHandler();
 
     [Signal]
     public delegate void ComponentLibraryRequestedEventHandler();
@@ -88,7 +88,7 @@ public partial class CreationsScreen : Control
         GetNode<UiButton>("%Achievements").Activated += () => EmitSignal(SignalName.AchievementsRequested);
         GetNode<UiButton>("%New").Activated += () => EmitSignal(SignalName.NewRequested);
         GetNode<UiButton>("%EmptyNew").Activated += () => EmitSignal(SignalName.NewRequested);
-        BindMenuItem(toolbar, GetNode<UiMenuActionItem>("%MenuRestoreExample"), SignalName.RestoreExampleRequested);
+        BindMenuItem(toolbar, GetNode<UiMenuActionItem>("%MenuExamples"), SignalName.ExamplesRequested);
         BindMenuItem(toolbar, GetNode<UiMenuActionItem>("%MenuComponentLibrary"), SignalName.ComponentLibraryRequested);
         ApplyDebugLinks();
         Apply();

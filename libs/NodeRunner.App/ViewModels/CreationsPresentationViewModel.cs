@@ -1,6 +1,5 @@
 using System.ComponentModel;
 using NodeRunner.App.Repositories;
-using NodeRunner.App.Services;
 using NodeRunner.Domain;
 
 namespace NodeRunner.App.ViewModels;
@@ -31,8 +30,6 @@ public sealed class CreationsPresentationViewModel : INotifyPropertyChanged
     /// <summary>Marks the Achievements button while something is new; empty hides the badge.</summary>
     public string AchievementBadgeText => HasAchievementCue ? "!" : string.Empty;
 
-    public bool CanRestoreExample { get; private set; }
-
     public string? ErrorText { get; private set; }
 
     public Exception? LoadError { get; private set; }
@@ -53,7 +50,6 @@ public sealed class CreationsPresentationViewModel : INotifyPropertyChanged
             _cards.Clear();
             _cards.AddRange(cards);
             HasAchievementCue = progression?.ExtraCoreUnlocked == true;
-            CanRestoreExample = cards.All(card => card.Id != DefaultCreationTemplates.StarterWormId);
             ErrorText = null;
             LoadError = null;
         }
@@ -82,14 +78,12 @@ public sealed class CreationsPresentationViewModel : INotifyPropertyChanged
         var summary = creation.Training is { } training
             ? $"Generation {training.Generation} · trained brain"
             : "Ready to train";
-        var thumbnail = $"{FormatCount(creation.Creature.Nodes.Count, "node")} · {FormatCount(creation.Creature.Beams.Count, "beam")} · {FormatCount(creation.Creature.Cores.Count, "core")}";
         var savedState = creation.Training is null
             ? "Untrained Creation"
             : $"Saved training · generation {creation.Training.Generation}";
         var unlockCredit = progression?.ExtraCoreUnlockedByCreationId == creation.Id
             ? $"Earned extra core unlock · generation {progression.ExtraCoreUnlockedAtGeneration}"
             : string.Empty;
-        var isExample = creation.Id == DefaultCreationTemplates.StarterWormId;
         var progress = unlockCredit.Length > 0 ? 1f : creation.Training is { Generation: > 0 } trainingProgress
             ? Math.Clamp(trainingProgress.Generation / 20f, 0f, 0.95f)
             : 0f;
@@ -102,30 +96,15 @@ public sealed class CreationsPresentationViewModel : INotifyPropertyChanged
         return new CreationCardPresentation(
             creation.Id,
             creation.Name,
-            DisplayName(creation.Name, isExample),
             creation.Creature,
             summary,
-            thumbnail,
+            CreationCardPresentation.ThumbnailTextFor(creation.Creature),
             savedState,
             unlockCredit,
             progress,
             progressText,
-            isExample,
             CanOpen: true,
             CanDuplicate: true,
-            CanDelete: !isExample);
+            CanDelete: true);
     }
-
-    private const string _examplePrefix = "Example: ";
-
-    // The Example chip already says it; the card title drops the prefix.
-    private static string DisplayName(string name, bool isExample) =>
-        isExample && name.StartsWith(_examplePrefix, StringComparison.OrdinalIgnoreCase)
-            ? name[_examplePrefix.Length..]
-            : name;
-
-    private static string FormatCount(int count, string singular) =>
-        count == 1
-            ? $"1 {singular}"
-            : $"{count} {singular}s";
 }
