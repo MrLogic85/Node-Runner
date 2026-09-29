@@ -13,10 +13,10 @@ public partial class SceneRouter : Node, ISceneNavigator
     /// <summary>The scene each route opens.</summary>
     public static IReadOnlyDictionary<Type, string> ScenePaths { get; } = new Dictionary<Type, string>
     {
-        [typeof(CreationsRoute)] = "res://scenes/Creations.tscn",
-        [typeof(ExamplesRoute)] = "res://scenes/Examples.tscn",
-        [typeof(BuildRoute)] = "res://scenes/Build.tscn",
-        [typeof(SimulateRoute)] = "res://scenes/Simulate.tscn",
+        [typeof(CreationsRoute)] = "res://scenes/hosts/CreationsHost.tscn",
+        [typeof(ExamplesRoute)] = "res://scenes/hosts/ExamplesHost.tscn",
+        [typeof(BuildRoute)] = "res://scenes/hosts/BuildHost.tscn",
+        [typeof(SimulateRoute)] = "res://scenes/hosts/SimulateHost.tscn",
         [typeof(ComponentGalleryRoute)] = "res://scenes/screens/ComponentGalleryScreen.tscn",
         [typeof(ToolbarsRoute)] = "res://scenes/screens/ToolbarsScreen.tscn",
         [typeof(ColorsAndStylesRoute)] = "res://scenes/screens/ColorsAndStylesScreen.tscn",

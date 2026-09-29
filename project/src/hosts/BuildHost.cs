@@ -7,7 +7,7 @@ using NodeRunner.Managers;
 using NodeRunner.Ui.Lib;
 using NodeRunner.Ui.Screens;
 
-namespace NodeRunner;
+namespace NodeRunner.Hosts;
 
 /// <summary>
 /// The Build scene for one creation, or a new draft. Training lives in its own scene,

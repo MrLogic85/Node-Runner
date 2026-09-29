@@ -1,13 +1,13 @@
 [gd_scene format=3]
 
-[ext_resource type="Script" uid="uid://dhvyb7lkorpjp" path="res://src/SimulateHost.cs" id="1_host"]
+[ext_resource type="Script" uid="uid://dhvyb7lkorpjp" path="res://src/hosts/SimulateHost.cs" id="1_host"]
 [ext_resource type="PackedScene" uid="uid://nrsimulatescreen001" path="res://scenes/screens/SimulateScreen.tscn" id="2_screen"]
 [ext_resource type="Script" uid="uid://c7kogaptfkfv6" path="res://src/theme/ArenaBackdrop.cs" id="3_backdrop"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_ground"]
 size = Vector2(900, 48)
 
-[node name="Simulate" type="Node"]
+[node name="SimulateHost" type="Node"]
 script = ExtResource("1_host")
 
 [node name="SimulateScreen" parent="." instance=ExtResource("2_screen")]

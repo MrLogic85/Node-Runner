@@ -49,7 +49,7 @@ unchanged, it belongs in `lib/`. If it embeds project vocabulary
 - A routed screen implements `IRoutedScene`: `SceneRouter` calls
   `Enter(route, navigator)` before it joins the tree, and `_Ready()` builds
   the VM from the route and subscribes. A screen that needs saves stays
-  unrouted and emits signals; its host in `project/src/` is the routed scene.
+  unrouted and emits signals; its host in `project/src/hosts/` is the routed scene.
   See `docs/ARCHITECTURE.md` → Navigation.
 - Android Back: add a `UiBackHandler` with `InternalMode.Front`, give it a
   `CanTakeBack` as its summary describes, and handle `BackRequested`. Do not

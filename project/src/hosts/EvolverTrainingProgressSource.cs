@@ -1,7 +1,7 @@
 using NodeRunner.App.ViewModels;
 using NodeRunner.Sim;
 
-namespace NodeRunner;
+namespace NodeRunner.Hosts;
 
 public sealed class EvolverTrainingProgressSource : ITrainingProgressSource
 {

@@ -1,9 +1,9 @@
 [gd_scene format=3]
 
-[ext_resource type="Script" path="res://src/ExamplesHost.cs" id="1_host"]
+[ext_resource type="Script" path="res://src/hosts/ExamplesHost.cs" id="1_host"]
 [ext_resource type="PackedScene" path="res://scenes/screens/ExamplesScreen.tscn" id="2_screen"]
 
-[node name="Examples" type="Node"]
+[node name="ExamplesHost" type="Node"]
 script = ExtResource("1_host")
 
 [node name="ExamplesScreen" parent="." instance=ExtResource("2_screen")]

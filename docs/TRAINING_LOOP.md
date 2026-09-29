@@ -148,7 +148,7 @@ This section documents the current wiring. The target presentation is owned
 by the TrainSetup and Training component READMEs under `reference design/components/`.
 
 - Simulate is its own routed scene, `SimulateRoute(creationId)`, with
-  `SimulateHost` (`project/src/`) as its root. `Simulate.tscn` instances the
+  `SimulateHost` (`project/src/hosts/`) as its root. `SimulateHost.tscn` instances the
   Training screen (`SimulateScreen.tscn`) and authors the world inside the
   screen's arena viewport: the backdrop, the ground and its collision shape,
   the spawn marker and the camera. The host adds the creature and the

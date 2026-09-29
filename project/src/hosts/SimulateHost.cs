@@ -13,7 +13,7 @@ using NodeRunner.Theme;
 using NodeRunner.Ui.Lib;
 using NodeRunner.Ui.Screens;
 
-namespace NodeRunner;
+namespace NodeRunner.Hosts;
 
 /// <summary>
 /// The Simulate scene: trains one saved creation (#469) on the Training screen (#386). The scene
