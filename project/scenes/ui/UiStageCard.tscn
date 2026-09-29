@@ -30,6 +30,7 @@ script = ExtResource("2_number")
 [node name="HFlowContainer" type="HFlowContainer" parent="Stack/Header" unique_id=893185863]
 layout_mode = 2
 size_flags_horizontal = 3
+size_flags_vertical = 4
 theme_override_constants/v_separation = -1
 
 [node name="Title" type="Label" parent="Stack/Header/HFlowContainer" unique_id=1978293527]

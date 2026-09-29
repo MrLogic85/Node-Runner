@@ -123,6 +123,8 @@ public partial class UiStageCard : UiCard
             child.SizeFlagsHorizontal = SizeFlags.ExpandFill;
             _body.AddChild(child);
         }
+
+        ApplyCollapsed();
     }
 
     private void RefreshCardStyle()
@@ -168,10 +170,11 @@ public partial class UiStageCard : UiCard
             return;
         }
 
-        _body.Visible = !Collapsed;
+        // An empty body would still add the stack's separation under the header.
+        _body.Visible = !Collapsed && _body.GetChildCount() > 0;
     }
 
-    private readonly UiUnsavedState _unsaved = new([("%Title", Control.PropertyName.ThemeTypeVariation), ("%Title", Label.PropertyName.Uppercase), ("%Note", Control.PropertyName.ThemeTypeVariation), ("%Note", Label.PropertyName.Uppercase)]);
+    private readonly UiUnsavedState _unsaved = new([("%Title", Control.PropertyName.ThemeTypeVariation), ("%Title", Label.PropertyName.Uppercase), ("%Note", Control.PropertyName.ThemeTypeVariation), ("%Note", Label.PropertyName.Uppercase), ("%Note", CanvasItem.PropertyName.Visible), ("%Body", CanvasItem.PropertyName.Visible)]);
 
     public override void _Notification(int what)
     {
