@@ -8,6 +8,9 @@ public sealed partial class UiDialog : Window
     [Signal]
     public delegate void FinishedEventHandler(bool confirmed);
 
+    /// <summary>Scene-tree group holding every open dialog; notifications pause while it is non-empty.</summary>
+    public const string ModalGroup = "ui_modal_open";
+
     public bool IsOpen { get; private set; }
     public bool IsBusy { get; private set; }
     public string? ErrorMessage { get; private set; }
@@ -79,6 +82,7 @@ public sealed partial class UiDialog : Window
         _quitOnBack = GetTree().QuitOnGoBack;
         GetTree().QuitOnGoBack = false;
         IsOpen = true;
+        SetModalOpen(true);
         FitHost();
         Popup();
         _content.AbortButton.GrabFocus();
@@ -153,6 +157,7 @@ public sealed partial class UiDialog : Window
         _operation++;
         _spec = null;
         GetTree().QuitOnGoBack = _quitOnBack;
+        SetModalOpen(false);
         Hide();
         EmitSignal(SignalName.Finished, confirmed);
     }
@@ -193,6 +198,7 @@ public sealed partial class UiDialog : Window
         if (IsOpen)
         {
             GetTree().QuitOnGoBack = _quitOnBack;
+            SetModalOpen(false);
         }
         _root?.GoBackRequested -= OnGoBackRequested;
         _root = null;
@@ -208,6 +214,19 @@ public sealed partial class UiDialog : Window
         SizeChanged -= QueueLayout;
         _content.AbortButton.Activated -= OnCloseRequested;
         _content.ActionButton.Activated -= OnConfirm;
+    }
+
+    private void SetModalOpen(bool open)
+    {
+        if (open)
+        {
+            AddToGroup(ModalGroup);
+        }
+        else
+        {
+            RemoveFromGroup(ModalGroup);
+        }
+        GetTree().CallGroup(UiNotification.Group, UiNotification.MethodName.RefreshModalPause);
     }
 
     private void FitHost()

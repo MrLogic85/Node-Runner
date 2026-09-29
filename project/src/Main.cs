@@ -894,13 +894,6 @@ public partial class Main : Node2D
 
         _deleteCreationDialog = new UiDialog { ProcessMode = ProcessModeEnum.Always };
         overlayLayer.AddChild(_deleteCreationDialog);
-        _deleteCreationDialog.Finished += _ =>
-        {
-            if (_notifications is not null)
-            {
-                _notifications.Paused = false;
-            }
-        };
         _notifications = new UiNotification { ProcessMode = ProcessModeEnum.Always };
         overlayLayer.AddChild(_notifications);
 
@@ -1042,10 +1035,6 @@ public partial class Main : Node2D
         {
             Icon = new(UiIconId.Trash),
         });
-        if (_notifications is not null)
-        {
-            _notifications.Paused = true;
-        }
     }
 
     private bool DeleteCreation(Guid id, string name)

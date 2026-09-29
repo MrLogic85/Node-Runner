@@ -110,12 +110,10 @@ public partial class PopupGalleryScreen : GalleryScreen
     private void ShowDialog(UiDialogSpec spec)
     {
         _dialog!.Open(spec);
-        _notifications!.Paused = true;
     }
 
     private void OnDialogFinished(bool confirmed)
     {
-        _notifications!.Paused = false;
         SetStatus(confirmed ? "Action succeeded (demo only)." : "Dialog cancelled.");
     }
 
