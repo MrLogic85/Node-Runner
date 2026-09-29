@@ -128,10 +128,11 @@ swap restyles everything:
 **2. Screens reuse the library.** Every canonical component maps to one
 reusable control, and paired specimens (slider and range, power and value
 rows, every button) share that control instead of copying it
-(`UiComponentContractsTests`). The mapping to the `c_*` entries in
-`reference design/` is maintained by hand and checked in design review; a
-test that reads the reference is tracked in
-[#315](https://github.com/MrLogic85/Node-Runner/issues/315). Screens rewritten
+(`UiComponentContractsTests`). `UiComponentContracts` maps each component to
+its `c_*` entry, and the test reads every `c_*` entry under
+`reference design/`: each must be mapped or listed as having no component of
+its own, and each mapped name must exist in the reference
+([#315](https://github.com/MrLogic85/Node-Runner/issues/315)). Screens rewritten
 under [#310](https://github.com/MrLogic85/Node-Runner/issues/310) are listed in
 `RewrittenUi` and held to stricter guards: their scenes are built from library
 components, widget scenes and plain layout containers, and every `%Name` their
