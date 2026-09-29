@@ -6,8 +6,9 @@ The whole app is a hub-and-spoke around **Creations**, the home menu. **Build an
 - **BuildLocked → play (bottom of the rail) → Train setup → Training.** Train setup is where Train or Simulate, shadows, run length and map are chosen.
 - **BuildLocked → overflow → Stats** and **Power budget.** Tapping the **brain widget** opens the **Brain** view.
 - **BuildLocked → overflow → Checkpoints.** Full saves of the creation, auto-made every 100 generations and on each achievement, or made by hand with **Save**. **Restore** overwrites the current creation and its training after a warning and a hold to confirm; checkpoints can also be renamed and deleted (also a hold).
-- **Creations → Achievements** (the trophy). Achievements unlock new parts for Build and new maps for Train setup.
-- **Creations → overflow → Settings.** UI size, theme (Neon, Paper or Use phone) and sounds; nothing to reset there. **Restore example** is in the same menu.
+- **Creations → Achievements** (the trophy). Achievements unlock new parts for Build, new maps for Train setup and new examples.
+- **Creations → overflow → Settings.** UI size, theme (Neon, Paper or Use phone) and sounds; nothing to reset there.
+- **Creations → overflow → Examples.** Ready-made creations; **Copy** puts one in the player's own list and returns to Creations. Locked ones show what unlocks them.
 - **Back** returns exactly one step. Training's Back returns to the creation and leaves training saved. There is no navigation bar and no mode switch.
 
 Every top bar has the same shape: Back, one flexible field for the title and any trailing actions, then the overflow, always last.
