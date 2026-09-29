@@ -1,3 +1,5 @@
+using System.Reflection;
+using Godot;
 using NodeRunner.App.Navigation;
 using NodeRunner.Managers;
 
@@ -36,7 +38,7 @@ public sealed class SceneRouterTests
         var script = SceneNodes.InScene(scene).Single(node => node.IsRoot).Script;
         script.ShouldNotBeNull($"{scene} has no root script");
         var rootType = typeof(SceneRouter).Assembly.GetTypes()
-            .Single(type => type.Name == Path.GetFileNameWithoutExtension(script));
+            .Single(type => type.GetCustomAttribute<ScriptPathAttribute>(inherit: false)?.Path == script);
         rootType.IsAssignableTo(typeof(IRoutedScene))
             .ShouldBeTrue($"{route.Name} carries arguments but {rootType.Name} is not an IRoutedScene");
     }

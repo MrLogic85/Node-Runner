@@ -19,3 +19,12 @@ public sealed record ToolbarsRoute(int ThemeIndex = 0, bool ShowDebugBounds = fa
 public sealed record ColorsAndStylesRoute(int ThemeIndex = 0, bool ShowDebugBounds = false) : SceneRoute, IGalleryRoute;
 
 public sealed record PopupGalleryRoute(int ThemeIndex = 0, bool ShowDebugBounds = false) : SceneRoute, IGalleryRoute;
+
+/// <summary>Ready-made creations the player copies into Creations.</summary>
+public sealed record ExamplesRoute : SceneRoute;
+
+/// <summary>
+/// Build for one creation, or a new creation when <see cref="CreationId"/> is null. Its scene still
+/// holds Simulate too, until #363 and #469 split them.
+/// </summary>
+public sealed record BuildRoute(Guid? CreationId = null) : SceneRoute;

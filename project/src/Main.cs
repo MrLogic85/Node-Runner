@@ -1,7 +1,6 @@
 using System.ComponentModel;
 using Godot;
 using NodeRunner.App.Navigation;
-using NodeRunner.App.Repositories;
 using NodeRunner.App.Services;
 using NodeRunner.App.ViewModels;
 using NodeRunner.Creature;
@@ -17,7 +16,7 @@ using NodeRunner.Ui.Widgets;
 
 namespace NodeRunner;
 
-public partial class Main : Node2D
+public partial class Main : Node2D, IRoutedScene
 {
     private const double _extraCoreUnlockFitness = 50;
     private readonly VisualTheme _theme = VisualTheme.Neon;
@@ -46,9 +45,10 @@ public partial class Main : Node2D
     private Button? _creationsButton;
     private PanelContainer? _creationsPanel;
     private VBoxContainer? _creationsList;
-    private CreationsScreen? _creationsScreen;
-    private ExamplesScreen? _examplesScreen;
     private UiDialog? _deleteCreationDialog;
+    private bool _activeCreationDeleted;
+    private ISceneNavigator? _navigator;
+    private BuildRoute? _route;
     private SimulateScreen? _simulateScreen;
     private Guid? _activeCreationId;
     private Label? _seedLabel;
@@ -115,6 +115,12 @@ public partial class Main : Node2D
 
     private ConstructionPresentationViewModel ConstructionPresentation => new(Construction);
 
+    public void Enter(SceneRoute route, ISceneNavigator navigator)
+    {
+        _route = (BuildRoute)route;
+        _navigator = navigator;
+    }
+
     public override void _Ready()
     {
         // Engine.TimeScale is a global engine setting, not scoped to this
@@ -144,6 +150,33 @@ public partial class Main : Node2D
         AddHud();
         AddInspector();
         AddEvolver();
+        OpenRoute();
+    }
+
+    // Opened by the router, Main shows the route's creation in Build. Run on its own (F6) it keeps
+    // training the built-in worm.
+    private void OpenRoute()
+    {
+        if (_route is null)
+        {
+            return;
+        }
+
+        if (_route.CreationId is not { } id)
+        {
+            StartNewCreation();
+            return;
+        }
+
+        if (GetNode<SaveManager>("/root/SaveManager").Get(id) is { } creation)
+        {
+            EditCreation(creation);
+            return;
+        }
+
+        GD.PrintErr($"Creation {id} was not found.");
+        Notify("Creations", "That creation could not be found.");
+        Callable.From(ShowCreations).CallDeferred();
     }
 
     private void OnConstructionAnatomyChanged(object? sender, EventArgs eventArgs)
@@ -195,7 +228,6 @@ public partial class Main : Node2D
         if (saveManager.UnlockExtraCore(_evolver.Generation, attributionId))
         {
             ApplyProgression();
-            RefreshCreationsPanel();
             GD.Print($"Unlocked extra core at generation {_evolver.Generation}.");
         }
     }
@@ -383,7 +415,7 @@ public partial class Main : Node2D
 
         AddChild(evolver);
         _evolver = evolver;
-        if (_creationsScreen?.Visible == true)
+        if (_route is not null)
         {
             UpdateTrainingLabels();
             ResetTrainingSaveStatus(null);
@@ -568,7 +600,7 @@ public partial class Main : Node2D
         };
         _simulateScreen.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
         _simulateScreen.BrainFocusRequested += ShowBrainFocus;
-        _simulateScreen.CreationsRequested += ToggleCreationsPanel;
+        _simulateScreen.CreationsRequested += ShowCreations;
         _simulateScreen.BuildRequested += ToggleConstructionMode;
         _simulateScreen.PauseRequested += TogglePause;
         _simulateScreen.SpeedRequested += CycleTimeScale;
@@ -834,7 +866,7 @@ public partial class Main : Node2D
             CustomMinimumSize = new Vector2(180, _touchTargetHeight),
         };
         _creationsButton.AddThemeFontSizeOverride("font_size", _hudFontSize);
-        _creationsButton.Pressed += ToggleCreationsPanel;
+        _creationsButton.Pressed += ShowCreations;
         row.AddChild(_creationsButton);
         panel.AddChild(row);
         layer.AddChild(panel);
@@ -843,121 +875,26 @@ public partial class Main : Node2D
         AddConstructionToolRow(layer);
         AddRebuildConfirmationDialog(layer);
         AddTrainingPanel(layer);
-        AddCreationsPanel(layer);
+        AddDeleteCreationDialog();
     }
 
-    private void AddCreationsPanel(CanvasLayer layer)
+    // Delete from Build's overflow menu; the Creations scene has its own.
+    private void AddDeleteCreationDialog()
     {
-        var overlayLayer = new CanvasLayer
+        var layer = new CanvasLayer
         {
-            Name = "CreationsOverlay",
+            Name = "DialogLayer",
             Layer = 20,
             ProcessMode = ProcessModeEnum.Always,
         };
-        AddChild(overlayLayer);
-
-        var saveManager = GetNode<SaveManager>("/root/SaveManager");
-        _creationsScreen = GD.Load<PackedScene>("res://scenes/screens/CreationsScreen.tscn").Instantiate<CreationsScreen>();
-        _creationsScreen.ShowComponentLibraryLink = ShouldShowComponentLibraryLink();
-        _creationsScreen.Setup(saveManager.CreationsPresentation);
-        _creationsScreen.NewRequested += StartNewCreationFromHome;
-        _creationsScreen.AchievementsRequested += ShowAchievementsCueFromHome;
-        _creationsScreen.ExamplesRequested += OpenExamplesFromHome;
-        _creationsScreen.ComponentLibraryRequested += OpenComponentLibraryFromHome;
-        _creationsScreen.OpenRequested += OpenCreationFromScreen;
-        _creationsScreen.DuplicateRequested += RequestDuplicateCreationFromScreen;
-        _creationsScreen.DeleteRequested += RequestDeleteCreationFromScreen;
-        overlayLayer.AddChild(_creationsScreen);
-
-        // Examples opens over Creations, which stays visible underneath so the rest of Main
-        // still sees the player on the home hub.
-        _examplesScreen = GD.Load<PackedScene>("res://scenes/screens/ExamplesScreen.tscn").Instantiate<ExamplesScreen>();
-        _examplesScreen.Visible = false;
-        _examplesScreen.Setup(new ExamplesPresentationViewModel());
-        _examplesScreen.BackRequested += CloseExamples;
-        _examplesScreen.CopyRequested += CopyExampleFromScreen;
-        overlayLayer.AddChild(_examplesScreen);
-
+        AddChild(layer);
         _deleteCreationDialog = new UiDialog { ProcessMode = ProcessModeEnum.Always };
-        overlayLayer.AddChild(_deleteCreationDialog);
-
-        RefreshCreationsPanel();
+        _deleteCreationDialog.Finished += OnDeleteCreationDialogFinished;
+        layer.AddChild(_deleteCreationDialog);
     }
 
-    private static bool ShouldShowComponentLibraryLink()
-    {
-        return OS.IsDebugBuild()
-            && ProjectSettings.GetSetting("ui/show_component_library_link", true).AsBool();
-    }
+    private void ShowCreations() => _navigator?.ReturnToRoot();
 
-    // The library opens as its own scene in place of Main; Back rebuilds Main (#468).
-    private void OpenComponentLibraryFromHome() =>
-        GetNode<SceneRouter>("/root/SceneRouter").Navigate(new SceneNavigation(new ComponentGalleryRoute()));
-
-    private void ToggleCreationsPanel()
-    {
-        if (_creationsScreen is null)
-        {
-            return;
-        }
-
-        _creationsScreen.Visible = !_creationsScreen.Visible;
-        if (_creationsScreen.Visible)
-        {
-            RefreshCreationsPanel();
-        }
-    }
-
-    private void RefreshCreationsPanel()
-    {
-        var saveManager = GetNode<SaveManager>("/root/SaveManager");
-        saveManager.CreationsPresentation.Refresh();
-        if (saveManager.CreationsPresentation.LoadError is { } error)
-        {
-            GD.PrintErr($"Loading Creations failed: {error}");
-        }
-    }
-
-    private void OpenCreationFromScreen(string creationKey, string creationName)
-    {
-        if (TryGetCreationFromScreen(creationKey, creationName, out var creation))
-        {
-            EditCreation(creation);
-            if (_creationsScreen is not null)
-            {
-                _creationsScreen.Visible = false;
-            }
-        }
-    }
-
-    private void RequestDuplicateCreationFromScreen(string creationKey, string creationName)
-    {
-        if (!Guid.TryParse(creationKey, out var id))
-        {
-            GD.PrintErr($"Could not duplicate Creation '{creationName}': invalid id '{creationKey}'.");
-            return;
-        }
-
-        var saveManager = GetNode<SaveManager>("/root/SaveManager");
-        TryRunFileOperation(
-            () => saveManager.Duplicate(id),
-            $"Duplicating Creation '{creationName}'");
-
-        RefreshCreationsPanel();
-    }
-
-    private void RequestDeleteCreationFromScreen(string creationKey, string creationName)
-    {
-        if (!Guid.TryParse(creationKey, out var id))
-        {
-            GD.PrintErr($"Could not delete Creation '{creationName}': invalid id '{creationKey}'.");
-            return;
-        }
-
-        OpenDeleteCreationDialog(id, creationName);
-    }
-
-    // The reference's Delete dialog: danger, press-and-hold, no Undo.
     private void OpenDeleteCreationDialog(Guid id, string name)
     {
         if (_deleteCreationDialog is null || _deleteCreationDialog.IsOpen)
@@ -965,57 +902,33 @@ public partial class Main : Node2D
             return;
         }
 
-        _deleteCreationDialog.Open(new UiDialogSpec(
-            UiPopupType.Danger,
-            $"Delete {name}?",
-            "The creation and its trained brain are removed for good. Copy it first if you might want it back.",
-            "Hold to delete",
-            () => Task.FromResult(DeleteCreation(id, name)
-                ? UiDialogResult.Success
-                : UiDialogResult.Failure($"Could not delete {name}. Try again.")),
-            holdToAction: true)
-        {
-            Icon = new(UiIconId.Trash),
-        });
+        _deleteCreationDialog.Open(CreationActions.DeleteDialog(name, () => DeleteCreation(id, name)));
     }
 
     private bool DeleteCreation(Guid id, string name)
     {
-        var saveManager = GetNode<SaveManager>("/root/SaveManager");
-        var succeeded = TryRunFileOperation(
-            () =>
-            {
-                if (!saveManager.Delete(id))
-                {
-                    throw new FileNotFoundException($"Creation '{id}' was not found.");
-                }
-            },
-            $"Deleting Creation '{name}'");
-        if (!succeeded)
-        {
-            return false;
-        }
-
-        if (_activeCreationId == id)
+        var succeeded = CreationActions.TryDelete(GetNode<SaveManager>("/root/SaveManager"), id, name);
+        if (succeeded && _activeCreationId == id)
         {
             _activeCreationId = null;
+            _activeCreationDeleted = true;
             _evolver?.Stop();
-            UpdateTrainingLabels();
-            ResetTrainingSaveStatus(null);
-            Construction.IsActive = false;
-            if (_creationsScreen is not null)
-            {
-                _creationsScreen.Visible = true;
-            }
-
-            UpdateToolButtonVisibility();
         }
 
-        RefreshCreationsPanel();
-        return true;
+        return succeeded;
     }
 
-    private void StartNewCreationFromHome()
+    // Leaves once the dialog has closed, so it is not freed mid-action.
+    private void OnDeleteCreationDialogFinished(bool confirmed)
+    {
+        if (_activeCreationDeleted)
+        {
+            _activeCreationDeleted = false;
+            ShowCreations();
+        }
+    }
+
+    private void StartNewCreation()
     {
         if (GetTree().Paused)
         {
@@ -1027,88 +940,10 @@ public partial class Main : Node2D
         Construction.ResetDraft();
         Construction.IsActive = true;
         UpdateToolButtonVisibility();
-        if (_creationsScreen is not null)
-        {
-            _creationsScreen.Visible = false;
-        }
-    }
-
-    private void ShowAchievementsCueFromHome()
-    {
-        UiNotificationLayer.Enqueue(this, new UiNotificationSpec(
-            UiPopupType.Default,
-            "Achievements",
-            "Achievements open in milestone 0.13.0.",
-            Icon: new(UiIconId.Trophy)));
     }
 
     private void Notify(string title, string message) =>
         UiNotificationLayer.Enqueue(this, new UiNotificationSpec(UiPopupType.Default, title, message));
-
-    private void OpenExamplesFromHome()
-    {
-        if (_examplesScreen is not null)
-        {
-            _examplesScreen.Visible = true;
-        }
-    }
-
-    private void CloseExamples()
-    {
-        if (_examplesScreen is not null)
-        {
-            _examplesScreen.Visible = false;
-        }
-    }
-
-    // Copy saves the example as a new creation and opens it in Build; Back from Build lands on
-    // Creations, where the copy now has its own card.
-    private void CopyExampleFromScreen(string exampleKey, string exampleName)
-    {
-        if (!Guid.TryParse(exampleKey, out var id))
-        {
-            GD.PrintErr($"Could not copy example '{exampleName}': invalid id '{exampleKey}'.");
-            return;
-        }
-
-        var saveManager = GetNode<SaveManager>("/root/SaveManager");
-        CreationDef copy = null!;
-        if (!TryRunFileOperation(() => copy = saveManager.CopyExample(id), $"Copying example '{exampleName}'"))
-        {
-            Notify("Examples", $"Could not copy {exampleName}. Try again.");
-            return;
-        }
-
-        CloseExamples();
-        RefreshCreationsPanel();
-        EditCreation(copy);
-        if (_creationsScreen is not null)
-        {
-            _creationsScreen.Visible = false;
-        }
-    }
-
-    private bool TryGetCreationFromScreen(string creationKey, string creationName, out CreationDef creation)
-    {
-        creation = null!;
-        if (!Guid.TryParse(creationKey, out var id))
-        {
-            GD.PrintErr($"Could not open Creation '{creationName}': invalid id '{creationKey}'.");
-            return false;
-        }
-
-        var saveManager = GetNode<SaveManager>("/root/SaveManager");
-        var loaded = saveManager.Get(id);
-        if (loaded is null)
-        {
-            GD.PrintErr($"Creation '{creationName}' ({id}) was not found.");
-            RefreshCreationsPanel();
-            return false;
-        }
-
-        creation = loaded;
-        return true;
-    }
 
     private void OpenCreation(CreationDef creation)
     {
@@ -1224,13 +1059,13 @@ public partial class Main : Node2D
                 return;
             }
 
-            Construction.IsActive = false;
-            if (_creationsScreen is not null)
+            if (_navigator is not null)
             {
-                RefreshCreationsPanel();
-                _creationsScreen.Visible = true;
+                _navigator.Back();
+                return;
             }
 
+            Construction.IsActive = false;
             UpdateToolButtonVisibility();
             return;
         }
@@ -1264,7 +1099,7 @@ public partial class Main : Node2D
 
         var saveManager = GetNode<SaveManager>("/root/SaveManager");
         CreationDef? renamed = null;
-        if (!TryRunFileOperation(
+        if (!CreationActions.TryRunFileOperation(
             () => renamed = saveManager.UpdateIfPresent(
                 id,
                 source => new CreationDef(source.Id, name, source.Creature, source.BrainShape, source.Training)),
@@ -1279,7 +1114,6 @@ public partial class Main : Node2D
         }
 
         Construction.SetCreationName(renamed.Name);
-        RefreshCreationsPanel();
     }
 
     private void DeleteSelectedConstructionParts()
@@ -1294,7 +1128,7 @@ public partial class Main : Node2D
             return;
         }
 
-        if (!TryRunFileOperation(
+        if (!CreationActions.TryRunFileOperation(
             () => GetNode<SaveManager>("/root/SaveManager").ResetTraining(id),
             $"Resetting training for Creation {id}"))
         {
@@ -1458,7 +1292,7 @@ public partial class Main : Node2D
             // so a reset that "worked" on screen but not on disk would look
             // like it silently reverted after the next app restart. The
             // failure is already logged inside TryRunFileOperation.
-            if (!TryRunFileOperation(
+            if (!CreationActions.TryRunFileOperation(
                 () => GetNode<SaveManager>("/root/SaveManager").ResetTraining(id),
                 $"Resetting training for Creation {id}"))
             {
@@ -1784,7 +1618,7 @@ public partial class Main : Node2D
             creature,
             $"Creation {saveManager.List().Count + 1}",
             Construction.HasCustomBrainShape ? Construction.BrainShape : RecommendedBrainShape(creature));
-        if (TryRunFileOperation(
+        if (CreationActions.TryRunFileOperation(
             () => saveManager.Save(completedCreation),
             $"Saving Creation '{completedCreation.Name}'"))
         {
@@ -1793,7 +1627,6 @@ public partial class Main : Node2D
             if (saveManager.TryAttributeExtraCoreUnlock(creation.Id))
             {
                 ApplyProgression();
-                RefreshCreationsPanel();
             }
 
             Construction.SetCompletedMessage($"Saved {creation.Name}.");
@@ -1964,20 +1797,6 @@ public partial class Main : Node2D
     // can throw on unreadable or corrupt on-disk state (#114). One bad file
     // must not crash the whole app from a button press; log and let the
     // caller treat it as a no-op instead.
-    private static bool TryRunFileOperation(Action action, string description)
-    {
-        try
-        {
-            action();
-            return true;
-        }
-        catch (Exception ex) when (FilePersistenceExceptions.IsRecoverable(ex))
-        {
-            GD.PrintErr($"{description} failed: {ex}");
-            return false;
-        }
-    }
-
     private void ApplyEditedCreature(CreatureDef editedCreature)
     {
         if (_creature is null)
@@ -1997,7 +1816,7 @@ public partial class Main : Node2D
         if (_activeCreationId is { } id)
         {
             var saveManager = GetNode<SaveManager>("/root/SaveManager");
-            var succeeded = TryRunFileOperation(
+            var succeeded = CreationActions.TryRunFileOperation(
                 () => editResult = saveManager.PersistMoveOnlyEdit(id, editedCreature),
                 $"Applying creature edit for Creation {id}");
 
