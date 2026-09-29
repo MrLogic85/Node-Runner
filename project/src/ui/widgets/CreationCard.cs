@@ -15,9 +15,6 @@ public partial class CreationCard : MarginContainer
     public delegate void OpenRequestedEventHandler(string creationKey, string creationName);
 
     [Signal]
-    public delegate void EditRequestedEventHandler(string creationKey, string creationName);
-
-    [Signal]
     public delegate void DuplicateRequestedEventHandler(string creationKey, string creationName);
 
     [Signal]
@@ -40,7 +37,6 @@ public partial class CreationCard : MarginContainer
     {
         _actions = GetNode<Control>("%Actions");
         GetNode<UiButton>("%Copy").Activated += () => Emit(SignalName.DuplicateRequested);
-        GetNode<UiButton>("%Edit").Activated += () => Emit(SignalName.EditRequested);
         GetNode<UiButton>("%Delete").Activated += () => Emit(SignalName.DeleteRequested);
         Apply();
     }
@@ -96,7 +92,6 @@ public partial class CreationCard : MarginContainer
         credit.Visible = !string.IsNullOrWhiteSpace(creation.UnlockCreditText);
 
         GetNode<UiButton>("%Copy").Disabled = !creation.CanDuplicate;
-        GetNode<UiButton>("%Edit").Disabled = !creation.CanEdit;
         var delete = GetNode<UiButton>("%Delete");
         delete.Disabled = !creation.CanDelete;
         delete.Visible = !creation.IsExample;

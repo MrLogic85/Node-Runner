@@ -19,9 +19,6 @@ public partial class CreationsScreen : Control
     public delegate void OpenRequestedEventHandler(string creationKey, string creationName);
 
     [Signal]
-    public delegate void EditRequestedEventHandler(string creationKey, string creationName);
-
-    [Signal]
     public delegate void NewRequestedEventHandler();
 
     [Signal]
@@ -176,7 +173,6 @@ public partial class CreationsScreen : Control
             var card = CardScene.Instantiate<CreationCard>();
             card.Bind(creation);
             card.OpenRequested += (key, name) => EmitCardIntent(CreationCommandKind.Open, key, name);
-            card.EditRequested += (key, name) => EmitCardIntent(CreationCommandKind.Edit, key, name);
             card.DuplicateRequested += (key, name) => EmitCardIntent(CreationCommandKind.Duplicate, key, name);
             card.DeleteRequested += (key, name) => EmitCardIntent(CreationCommandKind.Delete, key, name);
             row.AddChild(card);
@@ -202,7 +198,6 @@ public partial class CreationsScreen : Control
         var intent = kind switch
         {
             CreationCommandKind.Open => _presentation.RequestOpen(id),
-            CreationCommandKind.Edit => _presentation.RequestEdit(id),
             CreationCommandKind.Duplicate => _presentation.RequestDuplicate(id),
             CreationCommandKind.Delete => _presentation.RequestDelete(id),
             _ => null,
@@ -217,9 +212,6 @@ public partial class CreationsScreen : Control
         {
             case CreationCommandKind.Open:
                 EmitSignal(SignalName.OpenRequested, creationId, name);
-                break;
-            case CreationCommandKind.Edit:
-                EmitSignal(SignalName.EditRequested, creationId, name);
                 break;
             case CreationCommandKind.Duplicate:
                 EmitSignal(SignalName.DuplicateRequested, creationId, name);

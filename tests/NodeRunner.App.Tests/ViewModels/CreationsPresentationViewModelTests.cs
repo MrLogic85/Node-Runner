@@ -46,7 +46,6 @@ public sealed class CreationsPresentationViewModelTests
         walker.AchievementProgressText.ShouldBe("Achievement progress");
         walker.IsExample.ShouldBeFalse();
         walker.CanOpen.ShouldBeTrue();
-        walker.CanEdit.ShouldBeTrue();
         walker.CanDuplicate.ShouldBeTrue();
         walker.CanDelete.ShouldBeTrue();
 
@@ -184,7 +183,6 @@ public sealed class CreationsPresentationViewModelTests
         viewModel.Refresh();
 
         viewModel.RequestOpen(creation.Id).ShouldBe(new CreationCommandIntent(CreationCommandKind.Open, creation.Id));
-        viewModel.RequestEdit(creation.Id).ShouldBe(new CreationCommandIntent(CreationCommandKind.Edit, creation.Id));
         viewModel.RequestDuplicate(creation.Id).ShouldBe(new CreationCommandIntent(CreationCommandKind.Duplicate, creation.Id));
         viewModel.RequestDelete(creation.Id).ShouldBe(new CreationCommandIntent(CreationCommandKind.Delete, creation.Id));
     }
@@ -196,7 +194,6 @@ public sealed class CreationsPresentationViewModelTests
         viewModel.Refresh();
 
         viewModel.RequestOpen(Guid.NewGuid()).ShouldBeNull();
-        viewModel.RequestEdit(Guid.NewGuid()).ShouldBeNull();
         viewModel.RequestDuplicate(Guid.NewGuid()).ShouldBeNull();
         viewModel.RequestDelete(Guid.NewGuid()).ShouldBeNull();
     }
