@@ -232,6 +232,29 @@ false`). Random brains produce visible, if uncoordinated, motor-relation
 movement without any twitch-hack overlay — the old 0.1.0 CPG/twitch blend was
 tied to the retired Muscle model and does not carry over.
 
+## Navigation
+
+Screens are moving to one scene each, where navigating replaces the current
+scene (#326): a left scene is closed, not paused, and Back rebuilds it from
+its route. Until #468 routes them, `Main` still hosts the screens and nothing
+uses the history below yet.
+
+- `SceneRoute` is one sealed record per scene. The record type is the scene;
+  its properties are the plain arguments it is built from (a creation id, an
+  achievement id). Every route is declared in `libs/NodeRunner.App/Navigation/`,
+  because the test that keeps routes to plain values scans only that assembly.
+- `SceneNavigation` opens a route with two choices: **keep current** (does
+  the scene navigated from stay in the history) and **launch mode**
+  (*unique* drops earlier entries of the same scene, *stacked* pushes on top).
+- `SceneBackStack` holds the history. Its root (Creations) is never
+  removed; opening the root's scene returns to it. `Back()` returns the
+  previous route, or null on the root, where Android leaves the app.
+  `ReturnToRoot()` clears everything above the root (e.g. after Delete).
+
+Because a scene is rebuilt from its route, anything the player expects to
+find again is saved before the scene closes. The Godot `SceneRouter`
+autoload that swaps scenes over this history lands with #468.
+
 ## Threading
 
 - Single-threaded for v1. Godot's physics runs on one thread, but `Evolver`
