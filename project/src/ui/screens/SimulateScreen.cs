@@ -16,7 +16,6 @@ public partial class SimulateScreen : Control
     private TrainingHeaderPresentation? _header;
     private TrainingPresentationViewModel? _training;
     private SignalFlowPresentationViewModel? _signalFlow;
-    private UnlockProgressPresentationViewModel? _unlockProgress;
 
     [Signal]
     public delegate void BackRequestedEventHandler();
@@ -40,19 +39,16 @@ public partial class SimulateScreen : Control
         TrainingHeaderPresentation header,
         TrainingPresentationViewModel training,
         SignalFlowPresentationViewModel signalFlow,
-        UnlockProgressPresentationViewModel unlockProgress,
         BrainFocusPresentationViewModel brainFocus)
     {
         ArgumentNullException.ThrowIfNull(header);
         ArgumentNullException.ThrowIfNull(training);
         ArgumentNullException.ThrowIfNull(signalFlow);
-        ArgumentNullException.ThrowIfNull(unlockProgress);
         ArgumentNullException.ThrowIfNull(brainFocus);
         Unsubscribe();
         _header = header;
         _training = training;
         _signalFlow = signalFlow;
-        _unlockProgress = unlockProgress;
         BrainFocus.Presentation = brainFocus;
         if (IsInsideTree())
         {
@@ -122,11 +118,6 @@ public partial class SimulateScreen : Control
         {
             _signalFlow.PropertyChanged += OnSignalFlowChanged;
         }
-
-        if (_unlockProgress is not null)
-        {
-            _unlockProgress.PropertyChanged += OnUnlockProgressChanged;
-        }
     }
 
     private void Unsubscribe()
@@ -140,18 +131,11 @@ public partial class SimulateScreen : Control
         {
             _signalFlow.PropertyChanged -= OnSignalFlowChanged;
         }
-
-        if (_unlockProgress is not null)
-        {
-            _unlockProgress.PropertyChanged -= OnUnlockProgressChanged;
-        }
     }
 
     private void OnTrainingChanged(object? sender, PropertyChangedEventArgs args) => ApplyGeneration();
 
     private void OnSignalFlowChanged(object? sender, PropertyChangedEventArgs args) => ApplySignalFlow();
-
-    private void OnUnlockProgressChanged(object? sender, PropertyChangedEventArgs args) => ApplyUnlockProgress();
 
     private void Apply()
     {
@@ -163,7 +147,6 @@ public partial class SimulateScreen : Control
 
         ApplyGeneration();
         ApplySignalFlow();
-        ApplyUnlockProgress();
     }
 
     private void ApplyGeneration()
@@ -187,7 +170,4 @@ public partial class SimulateScreen : Control
         GetNode<UiStageCard>("%OutputsStage").Note = signalFlow.OutputsNote;
         GetNode<UiStageCard>("%DistanceStage").Note = signalFlow.DistanceNote;
     }
-
-    private void ApplyUnlockProgress() =>
-        GetNode<UiDivider>("%AchievementProgress").Fill = (float)(_unlockProgress?.Progress ?? 0);
 }

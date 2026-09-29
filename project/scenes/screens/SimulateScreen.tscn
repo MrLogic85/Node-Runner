@@ -6,7 +6,7 @@
 [ext_resource type="Script" uid="uid://dk67qmt3brp4e" path="res://src/ui/lib/UiLabel.cs" id="4_label"]
 [ext_resource type="Script" uid="uid://r2ped3g3uiaa" path="res://src/ui/lib/UiButton.cs" id="5_button"]
 [ext_resource type="Script" uid="uid://fw1i2vfgkd7q" path="res://src/ui/lib/UiDivider.cs" id="6_divider"]
-[ext_resource type="PackedScene" uid="uid://nruiworldview01" path="res://scenes/ui/UiWorldView.tscn" id="7_world_view"]
+[ext_resource type="PackedScene" uid="uid://kk3td5f4uebc" path="res://scenes/ui/UiWorldView.tscn" id="7_world_view"]
 [ext_resource type="PackedScene" uid="uid://bxxwv8m0f8sml" path="res://scenes/ui/UiStageCard.tscn" id="8_stage_card"]
 [ext_resource type="Script" uid="uid://b4t4jrismbuik" path="res://src/ui/lib/UiIcon.cs" id="9_icon"]
 [ext_resource type="Script" uid="uid://p7wvirfjxxyo" path="res://src/ui/widgets/BrainFocusSheet.cs" id="10_brain_focus"]
@@ -96,16 +96,6 @@ mouse_filter = 1
 script = ExtResource("5_button")
 IconId = 4
 Kind = 1
-
-[node name="AchievementProgress" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Toolbar"]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_vertical = 8
-mouse_filter = 2
-script = ExtResource("6_divider")
-Thickness = 2
-Color = 9
-Fill = 0.0
 
 [node name="Body" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell"]
 layout_mode = 2

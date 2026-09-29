@@ -1,4 +1,4 @@
-[gd_scene format=3 uid="uid://nruiworldview01"]
+[gd_scene format=3 uid="uid://kk3td5f4uebc"]
 
 [ext_resource type="Script" uid="uid://cr857y5u5urxt" path="res://src/ui/lib/UiWorldView.cs" id="1_view"]
 

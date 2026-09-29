@@ -228,7 +228,7 @@ collision layer. See `docs/TRAINING_LOOP.md` for the full design.
 
 `Evolver` raises `GenerationCompleted`/`NewBestFound` events; the Simulate
 scene's root, `SimulateHost`, subscribes to both, saves the training after
-each finished generation and updates the unlock progress from them. The
+each finished generation and records an earned unlock from them. The
 Training screen's caption follows `TrainingPresentationViewModel`, the
 SignalFlow stages are polled every ~0.15s, and Pause and Speed arrive as screen
 signals. A dedicated `PopulationViewModel`

@@ -171,8 +171,8 @@ by the TrainSetup and Training component READMEs under `reference design/compone
     belong to the scene and start from 1x and running each time it opens.
   - Run on its own (F6) the scene trains the built-in worm without saving.
 - The Training screen's top bar shows the creation's name, the status
-  ("Training · Flat ground"), Brain and Stats buttons and a thin accent line
-  for progress toward the next unlock. Beside the arena, the SignalFlow column
+  ("Training · Flat ground") and Brain and Stats buttons; unlock progress
+  is not shown here (#488). Beside the arena, the SignalFlow column
   shows the Senses → Brain → Outputs → Distance stages from
   `SignalFlowPresentationViewModel`. Under the arena are Pause, Speed and the
   generation caption from `TrainingPresentationViewModel`.
