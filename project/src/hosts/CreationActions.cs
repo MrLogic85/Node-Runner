@@ -3,7 +3,7 @@ using NodeRunner.App.Repositories;
 using NodeRunner.Managers;
 using NodeRunner.Ui.Lib;
 
-namespace NodeRunner;
+namespace NodeRunner.Hosts;
 
 /// <summary>What the scenes that change saved creations (Creations, Examples, Build) share.</summary>
 internal static class CreationActions

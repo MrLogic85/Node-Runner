@@ -6,7 +6,7 @@ using NodeRunner.Managers;
 using NodeRunner.Ui.Lib;
 using NodeRunner.Ui.Screens;
 
-namespace NodeRunner;
+namespace NodeRunner.Hosts;
 
 /// <summary>
 /// The Examples scene: wires <see cref="ExamplesScreen"/> to the built-in examples. Copy saves the

@@ -4,7 +4,7 @@ using NodeRunner.Managers;
 using NodeRunner.Ui.Lib;
 using NodeRunner.Ui.Screens;
 
-namespace NodeRunner;
+namespace NodeRunner.Hosts;
 
 /// <summary>
 /// The Creations scene, the root of the app's navigation: wires <see cref="CreationsScreen"/> to the

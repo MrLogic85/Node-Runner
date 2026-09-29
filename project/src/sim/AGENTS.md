@@ -29,7 +29,7 @@
   beyond training orchestration.
 - `SimulationRunner.cs` (probably) — the top-level `Node` that ties the
   above together; scene entry point. Not yet built — the Simulate scene's
-  root, `SimulateHost` in `project/src/`, owns this role directly for now.
+  root, `SimulateHost` in `project/src/hosts/`, owns this role directly for now.
 
 ## What does NOT live here
 

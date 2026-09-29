@@ -68,10 +68,10 @@ Arrows only go **downward** across layer boundaries.
   repository/service interfaces), `NodeRunner.Domain`, Godot.
   Managers are the **composition root** — they wire concrete implementations
   into ViewModels at startup.
-- **Scene roots** (the `*Host` scenes in `project/src/`, with
-  their helpers there) may depend on every project layer above. They wire a
-  screen's signals to managers and the navigator; keep game rules out of
-  them. Nothing depends on them.
+- **Scene roots** (the `*Host` scenes: scripts and helpers in
+  `project/src/hosts/`, scenes in `project/scenes/hosts/`) may depend on
+  every project layer above. They wire a screen's signals to managers and
+  the navigator; keep game rules out of them. Nothing depends on them.
 - **Domain** (`libs/NodeRunner.Domain/`) depends on: nothing but the .NET BCL.
 - **ML** (`libs/NodeRunner.ML/`) depends on: `NodeRunner.Domain` only.
 
@@ -94,11 +94,11 @@ Node Runner/
 │   ├── project.godot
 │   ├── NodeRunner.csproj           # references the three libs
 │   ├── NodeRunner.sln              # classic .sln required by Godot .NET export
-│   ├── scenes/
+│   ├── scenes/                     # hosts/ (screen hosts), screens/, ui/, widgets/, tools/
 │   └── src/
 │       ├── creature/               # Godot Nodes for creatures
 │       ├── sim/                    # simulation orchestration
-│       ├── *Host.cs                # routed scene roots that wire screens to managers
+│       ├── hosts/                  # routed scene roots that wire screens to managers
 │       ├── managers/               # service autoloads / composition root
 │       ├── theme/                  # arena (world) visuals, not UI styling
 │       ├── tools/                  # editor/CLI tools; their scenes are not exported
@@ -255,13 +255,13 @@ scene, so Build has no camera and taps reach the canvas through the UI. Simulate
 builds the creature and the `Evolver` from the creation's save, resumes from its
 last finished generation and saves each finished one, so leaving drops only
 the generation in progress. Its layout is authored in `SimulateScreen.tscn`
-(#386); the physics world is authored in `Simulate.tscn` inside the screen's
+(#386); the physics world is authored in `SimulateHost.tscn` inside the screen's
 `UiWorldView`, a `SubViewport` with its own camera, so UI scale never changes
 physics distances.
 
 A screen stays in `ui/screens/` and knows nothing of saves or the router's
 type: it emits signals. The routed scene that holds it is a small host in
-`project/src/` (`CreationsHost`, `ExamplesHost`, `BuildHost`, `SimulateHost`) that wires
+`project/src/hosts/` (`CreationsHost`, `ExamplesHost`, `BuildHost`, `SimulateHost`) that wires
 those signals to `SaveManager` and the navigator. The standalone gallery
 pages have nothing to save, so they are routed directly.
 
