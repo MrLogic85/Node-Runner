@@ -347,6 +347,9 @@ expanding it.
 - Training UI shows live progress toward the next unlock (distance/metric
   and the "reached at generation G" framing already used for Best
   fitness — see `docs/TRAINING_LOOP.md`).
+  The first Training top bar progress line was removed because the
+  reference design does not show it; where this progress appears is open
+  in [#488](https://github.com/MrLogic85/Node-Runner/issues/488).
 - Deliberately narrow scope: prove the pattern works end-to-end (train →
   hit threshold → part appears in Build) before adding the other unlock
   conditions already discussed (jump height, an "agility score", etc.) —

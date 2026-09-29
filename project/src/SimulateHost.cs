@@ -39,7 +39,6 @@ public partial class SimulateHost : Node, IRoutedScene
     private readonly SelectionViewModel _selection = new();
     private readonly SignalFlowPresentationViewModel _signalFlow = new();
     private readonly BrainFocusPresentationViewModel _brainFocus = new();
-    private readonly UnlockProgressPresentationViewModel _unlockProgress = new();
     private readonly List<SensorReading> _sensorReadings = [];
     private readonly List<MotorReading> _motorReadings = [];
     private SimulateRoute? _route;
@@ -104,7 +103,6 @@ public partial class SimulateHost : Node, IRoutedScene
         Engine.TimeScale = _timeScales[0];
         GetTree().Paused = false;
         _selection.PropertyChanged -= OnSelectionPropertyChanged;
-        _trainingPresentation.PropertyChanged -= OnTrainingPresentationChanged;
         _trainingPresentation.Dispose();
     }
 
@@ -209,7 +207,6 @@ public partial class SimulateHost : Node, IRoutedScene
             TrainingHeaderPresentation.For(creation?.Name ?? _sampleCreationName, TrainingRunMode.Train, MapIds.Flat),
             _trainingPresentation,
             _signalFlow,
-            _unlockProgress,
             _brainFocus);
         _screen.ShowPaused(GetTree().Paused);
         _screen.ShowSpeed(SpeedText());
@@ -233,8 +230,6 @@ public partial class SimulateHost : Node, IRoutedScene
         evolver.NewBestFound += TryUnlockProgression;
         _trainingPresentation.Dispose();
         _trainingPresentation = new TrainingPresentationViewModel(new EvolverTrainingProgressSource(evolver));
-        _trainingPresentation.PropertyChanged += OnTrainingPresentationChanged;
-        RefreshUnlockProgress();
         World.AddChild(evolver);
         _evolver = evolver;
     }
@@ -269,18 +264,12 @@ public partial class SimulateHost : Node, IRoutedScene
     {
         GD.Print($"Generation {_evolver!.Generation} — best: {_evolver.BestFitness:0.0}, mean: {_evolver.MeanFitness:0.0}");
         PersistTraining();
-        RefreshUnlockProgress();
         if (_evolver.Generation - _sessionGenerationStart >= _profile.MaxGenerations)
         {
             _evolver.Stop();
             GD.Print($"Training session complete after {_profile.MaxGenerations} generations.");
         }
     }
-
-    private void OnTrainingPresentationChanged(object? sender, PropertyChangedEventArgs args) => RefreshUnlockProgress();
-
-    private void RefreshUnlockProgress() =>
-        _unlockProgress.Update(Saves.Progression, _trainingPresentation.BestFitness, _extraCoreUnlockFitness);
 
     private void TryUnlockProgression()
     {
@@ -292,7 +281,6 @@ public partial class SimulateHost : Node, IRoutedScene
         var attributionId = _creationId is { } id && Saves.Get(id) is not null ? id : (Guid?)null;
         if (Saves.UnlockExtraCore(_evolver.Generation, attributionId))
         {
-            RefreshUnlockProgress();
             GD.Print($"Unlocked extra core at generation {_evolver.Generation}.");
         }
     }
