@@ -150,7 +150,6 @@ public partial class CreationsScreen : Control
         var presentation = _presentation;
         if (presentation is not null)
         {
-            GetNode<UiLabel>("%SavedCue").Text = presentation.SavedCueText;
             GetNode<UiLabel>("%EmptyText").Text = presentation.EmptyText;
         }
 
