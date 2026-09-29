@@ -450,11 +450,14 @@ cubic ease-out. Vertical gestures do not move or dismiss the card, and dragging
 never invokes the click action, even when the pointer returns to its origin.
 They queue one at a time; the next card appears only after the outgoing swipe
 finishes. Cards expire after five seconds of idle display. Expiry pauses during
-gestures/animations, while hidden or unfocused, and when the host sets `Paused`
-for a modal dialog. Modal pause/focus loss cancels unfinished drags to rest and
-pauses a committed exit until resumed. Resize cancels unfinished drags and
-retargets an outgoing animation. Clear/dismiss/teardown cancel pending animation.
-The gallery wires modal pause to `UiDialog.Open`/`Finished`.
+gestures/animations, while hidden or unfocused, and while any `UiDialog` is
+open. The modal pause needs no host wiring: an open dialog sits in the
+`UiDialog.ModalGroup` scene-tree group and tells every notification (group
+`UiNotification.Group`) to re-check when it opens or closes, so the pause holds
+until the last dialog closes. Modal pause/focus loss cancels unfinished drags to
+rest and pauses a committed exit until resumed. Resize cancels unfinished drags
+and retargets an outgoing animation. Clear/dismiss/teardown cancel pending
+animation.
 Unexpected notification callback exceptions are logged and surfaced as a Danger
 notification before the remaining queue. Modal input/focus is isolated from the
 gallery. Dialogs and notifications read the Theme inherited from their host;

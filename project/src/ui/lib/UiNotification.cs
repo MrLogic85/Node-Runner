@@ -2,7 +2,7 @@ using Godot;
 
 namespace NodeRunner.Ui.Lib;
 
-/// <summary>Nonblocking notification queue. Add to an overlay parent and pause during modal UI.</summary>
+/// <summary>Nonblocking notification queue. Add to an overlay parent; it pauses itself while any UiDialog is open.</summary>
 public sealed partial class UiNotification : Control
 {
     public const double LifetimeSeconds = 5;
@@ -14,20 +14,11 @@ public sealed partial class UiNotification : Control
     public bool HasNotification => _card is not null;
     public int PendingCount => _queue.Count;
 
-    private bool _paused;
-    public bool Paused
-    {
-        get => _paused;
-        set
-        {
-            _paused = value;
-            if (value)
-            {
-                CancelGesture();
-            }
-            UpdateMotionPause();
-        }
-    }
+    /// <summary>Scene-tree group UiDialog calls when a modal opens or closes.</summary>
+    public const string Group = "ui_notifications";
+
+    /// <summary>True while any UiDialog is open; expiry, gestures and queue advance wait.</summary>
+    public bool Paused { get; private set; }
 
     private readonly Queue<UiNotificationSpec> _queue = [];
     private UiNotificationSpec? _current;
@@ -45,6 +36,12 @@ public sealed partial class UiNotification : Control
     private float _swipeOffset;
     private Vector2 _restPosition;
     private Tween? _motion;
+
+    public override void _EnterTree()
+    {
+        AddToGroup(Group);
+        RefreshModalPause();
+    }
 
     public override void _Ready()
     {
@@ -273,6 +270,22 @@ public sealed partial class UiNotification : Control
     {
         _motion?.Kill();
         _motion = null;
+    }
+
+    /// <summary>Called through <see cref="Group"/> when a dialog opens or closes.</summary>
+    public void RefreshModalPause()
+    {
+        var paused = IsInsideTree() && GetTree().GetFirstNodeInGroup(UiDialog.ModalGroup) is not null;
+        if (paused == Paused)
+        {
+            return;
+        }
+        Paused = paused;
+        if (paused)
+        {
+            CancelGesture();
+        }
+        UpdateMotionPause();
     }
 
     private void CancelGesture()
