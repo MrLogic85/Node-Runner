@@ -120,10 +120,12 @@ swap restyles everything:
   component derives on its own node (`SceneDerivedStateTests`)
 - C# source (`UiSourceGuardTests`, a Roslyn scan with types bound) has no colour
   literals anywhere in `project/src`; `project/src/ui/lib` pins no colour
-  override (it selects a generated Theme variation) and names every
-  number. Dimensions should come from `UiSize`/`UiLayout`/`UiSpacing`; the
-  test checks that a number is named, not where the name points. Identity,
-  halving and doubling stay inline; the test owns the exact list.
+  override (it selects a generated Theme variation), names every
+  number, and orders drawing by the tree rather than `ZIndex` (only `UiMenu`'s
+  top-level popup raises it, #463). Dimensions should come from
+  `UiSize`/`UiLayout`/`UiSpacing`; the test checks that a number is named,
+  not where the name points. Identity, halving and doubling stay inline; the
+  test owns the exact list.
 
 **2. Screens reuse the library.** Every canonical component maps to one
 reusable control, and paired specimens (slider and range, power and value
