@@ -17,8 +17,6 @@ public partial class PopupGalleryScreen : GalleryScreen
     public override void _Ready()
     {
         base._Ready();
-        FitViewport();
-        GetViewport().SizeChanged += FitViewport;
         MouseFilter = MouseFilterEnum.Stop;
         _status = GetNode<UiLabel>("%Status");
         UiNativeScroll.AllowGesturesToBubble(GetNode<Control>("%ContentFrame"));
@@ -34,7 +32,6 @@ public partial class PopupGalleryScreen : GalleryScreen
     public override void _ExitTree()
     {
         base._ExitTree();
-        GetViewport().SizeChanged -= FitViewport;
         _dialog?.Finished -= OnDialogFinished;
     }
 
@@ -125,16 +122,6 @@ public partial class PopupGalleryScreen : GalleryScreen
 
     // The theme switch is in the toolbar; queued notifications belong to the old theme.
     protected override void OnThemeApplied() => _notifications?.Clear();
-
-    private void FitViewport()
-    {
-        // Main is a Node2D, so anchors have no parent Control rectangle to fill.
-        if (GetParentControl() is null)
-        {
-            SetAnchorsAndOffsetsPreset(LayoutPreset.TopLeft);
-            Size = GetViewportRect().Size;
-        }
-    }
 
     private void SetStatus(string text) => _status.Text = text;
 }

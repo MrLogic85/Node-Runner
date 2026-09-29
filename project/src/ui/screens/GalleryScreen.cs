@@ -1,4 +1,5 @@
 using Godot;
+using NodeRunner.App.Navigation;
 using NodeRunner.Ui.Lib;
 
 namespace NodeRunner.Ui.Screens;
@@ -17,20 +18,13 @@ public enum GalleryPage
 /// the theme switch, debug bounds and page navigation from the overflow menu.
 /// Each page scene authors its own copy of the frame, toolbar and menu under the
 /// same unique names and marks its own page item as selected.
-/// A page with a Back action also takes Android Back and Escape; an open menu or
-/// popup handles them first. Without one, Android Back keeps its default.
+/// The router opens each page as its own scene. The pages replace each other, so
+/// Back from any of them returns to where the library was opened from. A routed
+/// page also takes Android Back and Escape; an open menu or popup handles them
+/// first. A page run on its own has no Back and leaves Android Back to its default.
 /// </summary>
-public abstract partial class GalleryScreen : Control
+public abstract partial class GalleryScreen : Control, IRoutedScene
 {
-    [Signal]
-    public delegate void CloseRequestedEventHandler();
-
-    [Signal]
-    public delegate void PageRequestedEventHandler(GalleryPage page);
-
-    [Export]
-    public bool ShowCloseAction { get; set; }
-
     [Export]
     public bool ShowDebugBounds
     {
@@ -76,24 +70,27 @@ public abstract partial class GalleryScreen : Control
     private UiMenuToggleItem? _debugBoundsItem;
     private UiSegmentedSwitch? _themeSwitcher;
     private bool _ownsBack;
+    private bool _quitOnBackBefore;
+    private ISceneNavigator? _navigator;
 
-    // A page that replaces another enters before the old one leaves, so the pages share
-    // one hold on QuitOnGoBack rather than each saving and restoring it.
-    private static int _backOwners;
-    private static bool _quitOnBackBeforePages;
+    public void Enter(SceneRoute route, ISceneNavigator navigator)
+    {
+        _navigator = navigator;
+        if (route is IGalleryRoute gallery)
+        {
+            ThemeIndex = gallery.ThemeIndex;
+            ShowDebugBounds = gallery.ShowDebugBounds;
+        }
+    }
 
     // The theme goes on before the children are ready so they measure against it (#301).
     public override void _EnterTree()
     {
         ApplyTheme();
-        if (ShowCloseAction && !Engine.IsEditorHint())
+        if (_navigator is not null && !Engine.IsEditorHint())
         {
             _ownsBack = true;
-            if (_backOwners++ == 0)
-            {
-                _quitOnBackBeforePages = GetTree().QuitOnGoBack;
-            }
-
+            _quitOnBackBefore = GetTree().QuitOnGoBack;
             GetTree().QuitOnGoBack = false;
         }
     }
@@ -103,10 +100,7 @@ public abstract partial class GalleryScreen : Control
         if (_ownsBack)
         {
             _ownsBack = false;
-            if (--_backOwners == 0)
-            {
-                GetTree().QuitOnGoBack = _quitOnBackBeforePages;
-            }
+            GetTree().QuitOnGoBack = _quitOnBackBefore;
         }
     }
 
@@ -146,11 +140,20 @@ public abstract partial class GalleryScreen : Control
     private bool CanTakeBack() =>
         _ownsBack && IsVisibleInTree() && Toolbar is { Menu.Visible: false } && !HasOpenPopup;
 
-    private void RequestClose() => EmitSignal(SignalName.CloseRequested);
+    private void RequestClose() => _navigator?.Back();
 
-    /// <summary>Opens another page. By default the page asks its host to do it.</summary>
-    protected virtual void OpenPage(GalleryPage page) =>
-        EmitSignal(SignalName.PageRequested, Variant.From(page));
+    // The pages replace each other: the page left is not kept for Back.
+    private void OpenPage(GalleryPage page) =>
+        _navigator?.Navigate(new SceneNavigation(RouteFor(page), KeepCurrent: false));
+
+    private SceneRoute RouteFor(GalleryPage page) => page switch
+    {
+        GalleryPage.Toolbars => new ToolbarsRoute(ThemeIndex, ShowDebugBounds),
+        GalleryPage.ColorsAndStyles => new ColorsAndStylesRoute(ThemeIndex, ShowDebugBounds),
+        GalleryPage.PopupGallery => new PopupGalleryRoute(ThemeIndex, ShowDebugBounds),
+        GalleryPage.Components => new ComponentGalleryRoute(ThemeIndex, ShowDebugBounds),
+        _ => throw new ArgumentOutOfRangeException(nameof(page), page, null),
+    };
 
     protected virtual void OnThemeApplied()
     {
@@ -160,7 +163,7 @@ public abstract partial class GalleryScreen : Control
     {
         var toolbar = GetNode<UiToolbar>("%Toolbar");
         Toolbar = toolbar;
-        toolbar.ShowBack = ShowCloseAction;
+        toolbar.ShowBack = _navigator is not null;
         toolbar.BackPressed += RequestClose;
 
         _themeSwitcher = GetNode<UiSegmentedSwitch>("%ThemeSwitcher");

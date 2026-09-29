@@ -34,7 +34,8 @@ layers.
 - `Navigation/` — the screen history for the `SceneRouter` autoload (#468):
   `SceneRoute` (one sealed record per scene; its properties are the plain
   arguments the scene is rebuilt from), `SceneNavigation` (a request with
-  keep-current and launch mode) and `SceneBackStack`. Declare every scene's
+  keep-current and launch mode), `SceneBackStack`, and the `ISceneNavigator` /
+  `IRoutedScene` seam between scenes and the router. Declare every scene's
   route here; the plain-value test only scans this assembly. See
   `docs/ARCHITECTURE.md` → Navigation.
 
