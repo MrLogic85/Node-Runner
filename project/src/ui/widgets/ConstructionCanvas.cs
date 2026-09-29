@@ -20,6 +20,11 @@ public partial class ConstructionCanvas : Node2D
     private const float _nodeHitRadius = 32f;
     private const float _defaultNodeRadius = 18f;
     private const float _beamHitDistance = 20f;
+    private const float _selectionBoxMinSize = 8f;
+    private const double _moveGhostSeconds = 1.8;
+    private static readonly Vector2 _rigidLabelOffset = new(12, -12);
+    private static readonly Rect2 _rigidLabelBox = new(-6, -22, 168, 30);
+    private const int _rigidLabelFontSize = 18;
 
     private ConstructionViewModel? _viewModel;
     private int _draggingNodeIndex = -1;
@@ -297,9 +302,9 @@ public partial class ConstructionCanvas : Node2D
         DrawLine(b.Lerp(center, 0.35f), c.Lerp(center, 0.35f), Theme.SelectionGlow, 2, antialiased: false);
         DrawLine(c.Lerp(center, 0.35f), a.Lerp(center, 0.35f), Theme.SelectionGlow, 2, antialiased: false);
 
-        var labelPosition = center + new Vector2(12, -12);
-        DrawRect(new Rect2(labelPosition + new Vector2(-6, -22), new Vector2(168, 30)), Theme.ArenaBackground.WithAlpha(0.86f));
-        DrawString(ThemeDB.FallbackFont, labelPosition, "Rigid: no joints", HorizontalAlignment.Left, -1, 18, Theme.GroundEdge);
+        var labelPosition = center + _rigidLabelOffset;
+        DrawRect(new Rect2(labelPosition + _rigidLabelBox.Position, _rigidLabelBox.Size), Theme.ArenaBackground.WithAlpha(0.86f));
+        DrawString(ThemeDB.FallbackFont, labelPosition, "Rigid: no joints", HorizontalAlignment.Left, -1, _rigidLabelFontSize, Theme.GroundEdge);
     }
 
     private void DrawMotorRelation(CreatureDef creature, NodeConnectionDef connection)
@@ -518,7 +523,7 @@ public partial class ConstructionCanvas : Node2D
         }
 
         var rect = RectFromPoints(start, current);
-        if (rect.Size.X < 8 && rect.Size.Y < 8)
+        if (rect.Size.X < _selectionBoxMinSize && rect.Size.Y < _selectionBoxMinSize)
         {
             _selectionBoxStart = null;
             _selectionBoxCurrent = null;
@@ -556,7 +561,7 @@ public partial class ConstructionCanvas : Node2D
         }
 
         var version = _ghostVersion;
-        tree.CreateTimer(1.8).Timeout += () =>
+        tree.CreateTimer(_moveGhostSeconds).Timeout += () =>
         {
             if (_ghostVersion != version)
             {

@@ -136,10 +136,10 @@ public abstract partial class GalleryScreen : Control, IRoutedScene
         _debugBoundsItem = GetNode<UiMenuToggleItem>("%ToolbarMenuDebugBounds");
         _debugBoundsItem.On = ShowDebugBounds;
         _debugBoundsItem.Toggled += on => ShowDebugBounds = on;
-        BindPageItem("%ToolbarMenuComponents", GalleryPage.Components);
-        BindPageItem("%ToolbarMenuToolbars", GalleryPage.Toolbars);
-        BindPageItem("%ToolbarMenuColorsAndStyles", GalleryPage.ColorsAndStyles);
-        BindPageItem("%ToolbarMenuPopupGallery", GalleryPage.PopupGallery);
+        BindPageItem(GetNode<UiMenuActionItem>("%ToolbarMenuComponents"), GalleryPage.Components);
+        BindPageItem(GetNode<UiMenuActionItem>("%ToolbarMenuToolbars"), GalleryPage.Toolbars);
+        BindPageItem(GetNode<UiMenuActionItem>("%ToolbarMenuColorsAndStyles"), GalleryPage.ColorsAndStyles);
+        BindPageItem(GetNode<UiMenuActionItem>("%ToolbarMenuPopupGallery"), GalleryPage.PopupGallery);
         VisibilityChanged += () =>
         {
             if (!IsVisibleInTree())
@@ -149,8 +149,8 @@ public abstract partial class GalleryScreen : Control, IRoutedScene
         };
     }
 
-    private void BindPageItem(string path, GalleryPage page) =>
-        GetNode<UiMenuActionItem>(path).Activated += () =>
+    private void BindPageItem(UiMenuActionItem item, GalleryPage page) =>
+        item.Activated += () =>
         {
             Toolbar?.CloseMenu();
             if (page != Page)

@@ -15,17 +15,39 @@ internal static class RewrittenUi
         "ui/screens/BuildScreen.cs",
         "ui/screens/CreationsScreen.cs",
         "ui/screens/ExamplesScreen.cs",
+        "ui/screens/GalleryScreen.cs",
+        "ui/screens/ToolbarsScreen.cs",
         "ui/screens/TrainingScreen.cs",
     ];
 
     /// <summary>Widget scripts, by path under <c>project/src</c>: held to the library's rules.</summary>
-    public static readonly string[] Widgets = ["ui/widgets/CreationCard.cs", "ui/widgets/CreatureThumbnail.cs"];
+    public static readonly string[] Widgets =
+    [
+        "ui/widgets/ConstructionCanvas.cs",
+        "ui/widgets/CreationCard.cs",
+        "ui/widgets/CreatureThumbnail.cs",
+    ];
 
-    /// <summary>Scene-authored screens and widgets, by path under <c>project/scenes</c>.</summary>
+    /// <summary>
+    /// Widgets in <see cref="Widgets"/> that draw in <c>_Draw</c>. The number rule skips every literal
+    /// inside <c>_Draw</c> and its <c>Draw*</c> helpers (proportions, strokes, dash lengths, segment
+    /// counts, alphas); numbers elsewhere in the file are still named and every other rule holds.
+    /// </summary>
+    public static readonly string[] DrawnWidgets = ["ui/widgets/ConstructionCanvas.cs"];
+
+    /// <summary>
+    /// Scene-authored screens and widgets, by path under <c>project/scenes</c>. A listed scene's
+    /// script bindings are checked even before the script joins <see cref="Screens"/> (the gallery
+    /// pages #496-#498).
+    /// </summary>
     public static readonly string[] Scenes = [
         "screens/BuildScreen.tscn",
+        "screens/ColorsAndStylesScreen.tscn",
+        "screens/ComponentGalleryScreen.tscn",
         "screens/CreationsScreen.tscn",
         "screens/ExamplesScreen.tscn",
+        "screens/PopupGalleryScreen.tscn",
+        "screens/ToolbarsScreen.tscn",
         "screens/TrainingScreen.tscn",
         "widgets/CreationCard.tscn",
     ];
@@ -88,9 +110,9 @@ public sealed class RewrittenSceneTests
         foreach (var scenePath in RewrittenUi.Scenes)
         {
             var nodes = SceneNodes.InScene(scenePath);
-            var source = SourceOf(nodes.Single(node => node.IsRoot).Script.ShouldNotBeNull());
-            var model = compilation.GetSemanticModel(source.Tree);
-            foreach (var invocation in source.Tree.GetRoot().DescendantNodes().OfType<InvocationExpressionSyntax>())
+            var root = nodes.Single(node => node.IsRoot);
+            root.Script.ShouldNotBeNull();
+            foreach (var (source, invocation, model) in ScriptAndBaseInvocations(ClassOf(root, compilation), compilation))
             {
                 if (CSharpSources.Symbol(model, invocation) is not IMethodSymbol { Name: "GetNode" or "GetNodeOrNull", TypeArguments: [var bound] }
                     || invocation.ArgumentList.Arguments is not [{ Expression: LiteralExpressionSyntax { Token.ValueText: ['%', .. var name] } }])
@@ -111,6 +133,29 @@ public sealed class RewrittenSceneTests
         }
 
         violations.ShouldBeEmpty("Every %UniqueName a script binds is a unique node of its scene that fits the bound type.");
+    }
+
+    // Invocations in the root script and in its base classes that live in project/src (the gallery
+    // pages share their toolbar bindings through GalleryScreen).
+    private static IEnumerable<(CSharpSources.Source Source, InvocationExpressionSyntax Invocation, SemanticModel Model)>
+        ScriptAndBaseInvocations(ITypeSymbol? type, Compilation compilation)
+    {
+        for (; type is not null; type = type.BaseType)
+        {
+            foreach (var reference in type.DeclaringSyntaxReferences)
+            {
+                if (CSharpSources.Project.SingleOrDefault(source => source.Tree == reference.SyntaxTree) is not { } source)
+                {
+                    continue;
+                }
+
+                var model = compilation.GetSemanticModel(source.Tree);
+                foreach (var invocation in reference.GetSyntax().DescendantNodes().OfType<InvocationExpressionSyntax>())
+                {
+                    yield return (source, invocation, model);
+                }
+            }
+        }
     }
 
     private static bool IsLibraryNode(SceneNodes.SceneNode node) => node switch
