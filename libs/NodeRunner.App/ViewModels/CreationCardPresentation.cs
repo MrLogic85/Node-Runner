@@ -15,6 +15,5 @@ public sealed record CreationCardPresentation(
     string AchievementProgressText,
     bool IsExample,
     bool CanOpen,
-    bool CanEdit,
     bool CanDuplicate,
     bool CanDelete);

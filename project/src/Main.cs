@@ -51,9 +51,6 @@ public partial class Main : Node2D
     private ComponentGalleryScreen? _componentGalleryScreen;
     private UiDialog? _deleteCreationDialog;
     private UiNotification? _notifications;
-    private DuplicateCreationSheet? _duplicateCreationSheet;
-    private Guid? _pendingDuplicateCreationId;
-    private string? _pendingDuplicateCreationName;
     private SimulateScreen? _simulateScreen;
     private Guid? _activeCreationId;
     private Label? _seedLabel;
@@ -901,7 +898,6 @@ public partial class Main : Node2D
         _creationsScreen.RestoreExampleRequested += RestoreExampleFromHome;
         _creationsScreen.ComponentLibraryRequested += OpenComponentLibraryFromHome;
         _creationsScreen.OpenRequested += OpenCreationFromScreen;
-        _creationsScreen.EditRequested += EditCreationFromScreen;
         _creationsScreen.DuplicateRequested += RequestDuplicateCreationFromScreen;
         _creationsScreen.DeleteRequested += RequestDeleteCreationFromScreen;
         overlayLayer.AddChild(_creationsScreen);
@@ -915,7 +911,6 @@ public partial class Main : Node2D
                 _notifications.Paused = false;
             }
         };
-        AddDuplicateCreationSheet(overlayLayer);
         _notifications = new UiNotification { ProcessMode = ProcessModeEnum.Always };
         overlayLayer.AddChild(_notifications);
 
@@ -974,19 +969,6 @@ public partial class Main : Node2D
         _componentGalleryScreen = null;
     }
 
-    private void AddDuplicateCreationSheet(CanvasLayer overlayLayer)
-    {
-        _duplicateCreationSheet = new DuplicateCreationSheet
-        {
-            Name = "DuplicateCreationSheet",
-            ProcessMode = ProcessModeEnum.Always,
-        };
-        _duplicateCreationSheet.CopyBrainRequested += () => ConfirmDuplicateCreationFromScreen(CreationDuplicateMode.CopyTraining);
-        _duplicateCreationSheet.StartFreshRequested += () => ConfirmDuplicateCreationFromScreen(CreationDuplicateMode.StartFresh);
-        _duplicateCreationSheet.CancelRequested += CancelDuplicateCreationFromScreen;
-        overlayLayer.AddChild(_duplicateCreationSheet);
-    }
-
     private void ToggleCreationsPanel()
     {
         if (_creationsScreen is null)
@@ -1023,18 +1005,6 @@ public partial class Main : Node2D
         }
     }
 
-    private void EditCreationFromScreen(string creationKey, string creationName)
-    {
-        if (TryGetCreationFromScreen(creationKey, creationName, out var creation))
-        {
-            EditCreation(creation);
-            if (_creationsScreen is not null)
-            {
-                _creationsScreen.Visible = false;
-            }
-        }
-    }
-
     private void RequestDuplicateCreationFromScreen(string creationKey, string creationName)
     {
         if (!Guid.TryParse(creationKey, out var id))
@@ -1049,38 +1019,6 @@ public partial class Main : Node2D
             $"Duplicating Creation '{creationName}' with {CreationDuplicateMode.CopyTraining}");
 
         RefreshCreationsPanel();
-    }
-
-    private void ConfirmDuplicateCreationFromScreen(CreationDuplicateMode mode)
-    {
-        if (_pendingDuplicateCreationId is not { } id)
-        {
-            return;
-        }
-
-        var name = _pendingDuplicateCreationName ?? id.ToString();
-        _pendingDuplicateCreationId = null;
-        _pendingDuplicateCreationName = null;
-        if (_duplicateCreationSheet is not null)
-        {
-            _duplicateCreationSheet.Visible = false;
-        }
-
-        var saveManager = GetNode<SaveManager>("/root/SaveManager");
-        TryRunFileOperation(
-            () => saveManager.Duplicate(id, mode),
-            $"Duplicating Creation '{name}' with {mode}");
-        RefreshCreationsPanel();
-    }
-
-    private void CancelDuplicateCreationFromScreen()
-    {
-        _pendingDuplicateCreationId = null;
-        _pendingDuplicateCreationName = null;
-        if (_duplicateCreationSheet is not null)
-        {
-            _duplicateCreationSheet.Visible = false;
-        }
     }
 
     private void RequestDeleteCreationFromScreen(string creationKey, string creationName)

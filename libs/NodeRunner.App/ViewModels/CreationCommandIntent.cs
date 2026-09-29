@@ -3,7 +3,6 @@ namespace NodeRunner.App.ViewModels;
 public enum CreationCommandKind
 {
     Open,
-    Edit,
     Duplicate,
     Delete,
 }

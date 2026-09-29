@@ -68,8 +68,6 @@ public sealed class CreationsPresentationViewModel : INotifyPropertyChanged
 
     public CreationCommandIntent? RequestOpen(Guid id) => Request(CreationCommandKind.Open, id);
 
-    public CreationCommandIntent? RequestEdit(Guid id) => Request(CreationCommandKind.Edit, id);
-
     public CreationCommandIntent? RequestDuplicate(Guid id) => Request(CreationCommandKind.Duplicate, id);
 
     public CreationCommandIntent? RequestDelete(Guid id) => Request(CreationCommandKind.Delete, id);
@@ -114,7 +112,6 @@ public sealed class CreationsPresentationViewModel : INotifyPropertyChanged
             progressText,
             isExample,
             CanOpen: true,
-            CanEdit: true,
             CanDuplicate: true,
             CanDelete: !isExample);
     }
