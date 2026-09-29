@@ -42,9 +42,9 @@ public sealed class CreationsPresentationViewModel : INotifyPropertyChanged
         {
             var progression = _progressionRepository?.Load();
             var cards = new List<CreationCardPresentation>();
-            foreach (var creation in _repository.List())
+            foreach (var creation in _repository.List().OrderBy(creation => creation.Name, StringComparer.CurrentCulture))
             {
-                cards.Add(ToCard(creation, progression));
+                cards.Add(ToCard(creation));
             }
 
             _cards.Clear();
@@ -73,38 +73,15 @@ public sealed class CreationsPresentationViewModel : INotifyPropertyChanged
             ? new CreationCommandIntent(kind, id)
             : null;
 
-    private static CreationCardPresentation ToCard(CreationDef creation, ProgressionDef? progression)
-    {
-        var summary = creation.Training is { } training
-            ? $"Generation {training.Generation} · trained brain"
-            : "Ready to train";
-        var savedState = creation.Training is null
-            ? "Untrained Creation"
-            : $"Saved training · generation {creation.Training.Generation}";
-        var unlockCredit = progression?.ExtraCoreUnlockedByCreationId == creation.Id
-            ? $"Earned extra core unlock · generation {progression.ExtraCoreUnlockedAtGeneration}"
-            : string.Empty;
-        var progress = unlockCredit.Length > 0 ? 1f : creation.Training is { Generation: > 0 } trainingProgress
-            ? Math.Clamp(trainingProgress.Generation / 20f, 0f, 0.95f)
-            : 0f;
-        var progressText = unlockCredit.Length > 0
-            ? "Achievement complete"
-            : progress > 0
-                ? "Achievement progress"
-                : string.Empty;
-
-        return new CreationCardPresentation(
+    private static CreationCardPresentation ToCard(CreationDef creation) =>
+        new(
             creation.Id,
             creation.Name,
             creation.Creature,
-            summary,
+            creation.Training is null ? "Not trained yet. Tap to build." : string.Empty,
             CreationCardPresentation.ThumbnailTextFor(creation.Creature),
-            savedState,
-            unlockCredit,
-            progress,
-            progressText,
+            creation.Training is { } training ? CreationCardTraining.From(training) : null,
             CanOpen: true,
             CanDuplicate: true,
             CanDelete: true);
-    }
 }

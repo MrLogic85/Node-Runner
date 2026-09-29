@@ -17,10 +17,7 @@ public sealed class ExamplesPresentationViewModel
                 example.Creation.Creature,
                 example.WhatIsNew,
                 CreationCardPresentation.ThumbnailTextFor(example.Creation.Creature),
-                SavedStateText: string.Empty,
-                UnlockCreditText: string.Empty,
-                AchievementProgress: 0f,
-                AchievementProgressText: string.Empty,
+                Training: null,
                 CanOpen: false,
                 CanDuplicate: true,
                 CanDelete: false))

@@ -25,7 +25,7 @@ public sealed class CreationsPresentationViewModelTests
     public void Refresh_WithCreations_FormatsCardsFromRepository()
     {
         var repository = new InMemoryCreationRepository();
-        var trained = CreateCreation("Walker", generation: 12);
+        var trained = CreateCreation("Walker", generation: 12, new TrainingRunDef(18.44, 3.06, 1.2, MapIds.Flat));
         var untrained = new CreationDef(Guid.NewGuid(), "Draft", trained.Creature);
         repository.Save(trained);
         repository.Save(untrained);
@@ -37,43 +37,68 @@ public sealed class CreationsPresentationViewModelTests
         var walker = viewModel.Cards.Single(card => card.Id == trained.Id);
         walker.Name.ShouldBe("Walker");
         walker.Creature.ShouldBe(trained.Creature);
-        walker.SummaryText.ShouldBe("Generation 12 · trained brain");
+        walker.SummaryText.ShouldBeEmpty();
         walker.ThumbnailText.ShouldBe("2 nodes · 1 beam · 1 core");
-        walker.SavedStateText.ShouldBe("Saved training · generation 12");
-        walker.UnlockCreditText.ShouldBe(string.Empty);
-        walker.AchievementProgress.ShouldBe(0.6f);
-        walker.AchievementProgressText.ShouldBe("Achievement progress");
+        walker.Training.ShouldBe(new CreationCardTraining("18.4", "3.1", "1.2", MapIds.Flat, "12 generations"));
         walker.CanOpen.ShouldBeTrue();
         walker.CanDuplicate.ShouldBeTrue();
         walker.CanDelete.ShouldBeTrue();
 
         var draft = viewModel.Cards.Single(card => card.Id == untrained.Id);
-        draft.SummaryText.ShouldBe("Ready to train");
-        draft.SavedStateText.ShouldBe("Untrained Creation");
+        draft.SummaryText.ShouldBe("Not trained yet. Tap to build.");
+        draft.Training.ShouldBeNull();
     }
 
     [Fact]
-    public void Refresh_WithUnlockAttribution_MarksWinningCreation()
+    public void Refresh_WithOneGeneration_SaysGenerationInTheSingular()
+    {
+        var repository = new InMemoryCreationRepository();
+        repository.Save(CreateCreation("Walker", generation: 1));
+        var viewModel = new CreationsPresentationViewModel(repository);
+
+        viewModel.Refresh();
+
+        viewModel.Cards.Single().Training!.GenerationsText.ShouldBe("1 generation");
+    }
+
+    [Fact]
+    public void Refresh_WithTrainingSavedBeforeRunsWereRecorded_ShowsDashesAndNoMap()
+    {
+        var repository = new InMemoryCreationRepository();
+        repository.Save(CreateCreation("Walker", generation: 92));
+        var viewModel = new CreationsPresentationViewModel(repository);
+
+        viewModel.Refresh();
+
+        viewModel.Cards.Single().Training.ShouldBe(new CreationCardTraining("—", "—", "—", null, "92 generations"));
+    }
+
+    [Fact]
+    public void Refresh_ListsCardsByName()
+    {
+        var repository = new ConfigurableCreationRepository(
+            [CreateCreation("Worm", generation: 1), CreateCreation("Ant", generation: 1), CreateCreation("Spider", generation: 1)]);
+        var viewModel = new CreationsPresentationViewModel(repository);
+
+        viewModel.Refresh();
+
+        viewModel.Cards.Select(card => card.Name).ShouldBe(["Ant", "Spider", "Worm"]);
+    }
+
+    [Fact]
+    public void Refresh_WithAnUnlock_MarksTheAchievementsButton()
     {
         var repository = new InMemoryCreationRepository();
         var credited = CreateCreation("Unlocker", generation: 12);
-        var other = CreateCreation("Other", generation: 20);
         repository.Save(credited);
-        repository.Save(other);
         var progression = new InMemoryProgressionRepository();
         progression.Save(new ProgressionDef(true, 12, credited.Id));
         var viewModel = new CreationsPresentationViewModel(repository, progression);
 
         viewModel.Refresh();
 
-        viewModel.Cards.Single(card => card.Id == credited.Id)
-            .UnlockCreditText.ShouldBe("Earned extra core unlock · generation 12");
-        viewModel.Cards.Single(card => card.Id == credited.Id)
-            .AchievementProgress.ShouldBe(1f);
         viewModel.HasAchievementCue.ShouldBeTrue();
         viewModel.AchievementBadgeText.ShouldBe("!");
-        viewModel.Cards.Single(card => card.Id == other.Id)
-            .UnlockCreditText.ShouldBe(string.Empty);
     }
 
     [Fact]
@@ -136,7 +161,7 @@ public sealed class CreationsPresentationViewModelTests
         viewModel.HasError.ShouldBeFalse();
         viewModel.LoadError.ShouldBeNull();
         viewModel.Cards.Single().Name.ShouldBe("Crawler");
-        viewModel.Cards.Single().SummaryText.ShouldBe("Generation 9 · trained brain");
+        viewModel.Cards.Single().Training!.GenerationsText.ShouldBe("9 generations");
     }
 
     [Fact]
@@ -190,7 +215,7 @@ public sealed class CreationsPresentationViewModelTests
         Should.Throw<ArgumentNullException>(() => new CreationsPresentationViewModel(null!));
     }
 
-    private static CreationDef CreateCreation(string name, int generation)
+    private static CreationDef CreateCreation(string name, int generation, TrainingRunDef? bestRun = null)
     {
         return new CreationDef(
             Guid.NewGuid(),
@@ -199,7 +224,7 @@ public sealed class CreationsPresentationViewModelTests
                 [new NodeDef(new Vector2D(0, 0), 1), new NodeDef(new Vector2D(2, 0), 1)],
                 [new BeamDef(0, 1)],
                 [new CoreDef(0)]),
-            new TrainingStateDef([2, 1], [0.1, -0.2, 0.3], generation, "Tanh"));
+            new TrainingStateDef([2, 1], [0.1, -0.2, 0.3], generation, "Tanh", bestRun: bestRun));
     }
 
     private sealed class ThrowingCreationRepository(Exception exception) : ICreationRepository
