@@ -7,6 +7,21 @@ which ML ideas each version teaches and how they are made visible.
 
 Time estimates assume evening/weekend hobby pace and are rough.
 
+## Project stage
+
+**Current stage: pre-alpha.**
+
+The stage decides how changes treat data already saved on a device
+(Creations, training, progression, settings):
+
+| Stage | Saved user data |
+| --- | --- |
+| **Pre-alpha** | Existing data does not matter. Save formats may change freely; no migration is needed, and old data may be discarded. |
+| **Development with testers** | Changes are fairly free, but migrating saved data on a change is preferred. |
+| **Released** | Everything saved must be migrated. |
+
+Update the current stage here when it changes.
+
 ---
 
 ## Current UI rollout — reference design adoption

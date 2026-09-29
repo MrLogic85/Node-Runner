@@ -2,7 +2,10 @@ using Godot;
 
 namespace NodeRunner.Ui.Lib;
 
-/// <summary>Icon tab strip with single active selection.</summary>
+/// <summary>
+/// Icon tab strip with single active selection. The tabs share the strip's width equally with a
+/// <c>space-1</c> gap (reference <c>flex: 1</c>), so the owner decides the width.
+/// </summary>
 [Tool]
 [GlobalClass]
 public partial class UiIconTabs : HBoxContainer
@@ -104,8 +107,6 @@ public partial class UiIconTabs : HBoxContainer
                 IconAlignment = HorizontalAlignment.Center,
                 ToggleMode = true,
                 ButtonGroup = _group,
-                CustomMinimumSize = new Vector2(UiSize.Control.Touch, UiSize.Control.Small),
-                SizeFlagsVertical = SizeFlags.ShrinkCenter,
                 MouseFilter = MouseFilterEnum.Pass,
             };
             var buttonIndex = _buttons.Count;
@@ -151,8 +152,8 @@ public partial class UiIconTabs : HBoxContainer
         {
             var button = _buttons[index];
             button.Text = string.Empty;
-            button.CustomMinimumSize = new Vector2(UiSize.Control.Touch, UiSize.Control.Small);
-            button.SizeFlagsHorizontal = SizeFlags.ShrinkBegin;
+            button.CustomMinimumSize = new Vector2(0, UiSize.Control.Small);
+            button.SizeFlagsHorizontal = SizeFlags.ExpandFill;
             button.SizeFlagsVertical = SizeFlags.ShrinkCenter;
             ApplyIcon(button, _icons[index]);
             ApplyStyle(button);
