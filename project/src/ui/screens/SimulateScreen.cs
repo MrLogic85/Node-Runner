@@ -776,10 +776,10 @@ public partial class SimulateScreen : Control
 
     private void AddSettingsOverlay()
     {
+        // Added last, so tree order draws the sheet over the rest of the screen (#464).
         _settingsOverlay = new Control
         {
             Visible = false,
-            ZIndex = 30,
         };
         _settingsOverlay.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
         AddChild(_settingsOverlay);
@@ -788,7 +788,6 @@ public partial class SimulateScreen : Control
         {
             Color = UiThemeLookup.Color(this, UiTokens.Color.Scrim).WithAlpha(0.18f),
             MouseFilter = MouseFilterEnum.Stop,
-            ZIndex = 30,
         };
         _settingsScrim.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
         _settingsScrim.GuiInput += OnSettingsScrimInput;
@@ -799,7 +798,6 @@ public partial class SimulateScreen : Control
         {
             Title = "Training settings",
             CustomMinimumSize = new Vector2(460, 0),
-            ZIndex = 31,
         };
         _settingsOverlay.AddChild(_settingsSheet);
         _settingsSheet.Hide();

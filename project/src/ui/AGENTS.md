@@ -67,12 +67,11 @@ unchanged, it belongs in `lib/`. If it embeds project vocabulary
   named `UiSize`/`UiLayout`/`UiSpacing` values, never one-off literals. A
   scene owns the paddings and sizes it authors; do not re-apply them from code
   (#331).
-- Library and widget code orders drawing with the tree, not `ZIndex`: a
-  `ZIndex` sorts across the whole `CanvasLayer`, so a raised part draws
-  through every dialog and screen above it (#463). Add a part that must draw
-  last with `InternalMode.Back`. The one exception is `UiMenu`, a top-level
-  popup that must float over its screen. `UiSourceGuardTests` enforces this;
-  screens follow once #464 removes SimulateScreen's `ZIndex`.
+- Order drawing with the tree, not `ZIndex`: a `ZIndex` sorts across the
+  whole `CanvasLayer`, so a raised part draws through every dialog and screen
+  above it (#463). Add an overlay last, or a part that must draw last with
+  `InternalMode.Back`. The one exception is `UiMenu`, a top-level popup that
+  must float over its screen. `UiSourceGuardTests` enforces this.
 - A `[Tool]` component that writes a property on itself or on a node of its
   own scene (a theme override, `clip_children`, text, an icon, a computed
   size) lists it in a `UiUnsavedState` and calls `Handle` first in
