@@ -110,34 +110,17 @@ public sealed class UiThemeExpanderTests
         theme.Constant("Label", "line_spacing").ShouldBe(0);
     }
 
-    // Palette-independent items live once, in the project theme; other palettes inherit them
+    // Palette-independent items live once, in the project theme; Paper inherits them
     // through Godot's project-theme fallback, so a copy here would be a second source.
-    [Theory]
-    [InlineData(UiTokenType.Paper)]
-    [InlineData(UiTokenType.Light)]
-    public void PaletteTheme_AuthorsOnlyPaletteDerivedItems(UiTokenType type)
+    [Fact]
+    public void PaperTheme_AuthorsOnlyPaletteDerivedItems()
     {
-        var theme = ThemeFile.For(type);
+        var theme = ThemeFile.For(UiTokenType.Paper);
 
         theme.ItemKeys.Where(key => !key.Contains("/colors/", StringComparison.Ordinal)
                 && !key.EndsWith("/base_type", StringComparison.Ordinal)
                 && !key.StartsWith($"{UiThemes.TokenType}/constants/", StringComparison.Ordinal))
             .ShouldBeEmpty();
-    }
-
-    [Fact]
-    public void EffectsLite_IsNeonPaletteWithEffectsOff()
-    {
-        var neon = ThemeFile.For(UiTokenType.Neon);
-        var lite = ThemeFile.For(UiTokenType.Light);
-
-        foreach (var color in Enum.GetValues<UiTokens.Color>())
-        {
-            lite.Color(color).ShouldBe(neon.Color(color), color.ToString());
-        }
-        lite.Alpha(UiTokens.Alpha.Soft).ShouldBe(neon.Alpha(UiTokens.Alpha.Soft));
-        neon.Flag(UiTokens.Flag.EffectsEnabled).ShouldBeTrue();
-        lite.Flag(UiTokens.Flag.EffectsEnabled).ShouldBeFalse();
     }
 
     [Fact]

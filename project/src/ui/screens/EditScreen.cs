@@ -99,7 +99,7 @@ public partial class EditScreen : Control
             var center = canvas.Size / 2;
             canvas.DrawLine(center + new Vector2(-100, 20), center + new Vector2(0, -30), UiThemeLookup.Color(this, UiTokens.Color.Accent), 6);
             canvas.DrawLine(center + new Vector2(0, -30), center + new Vector2(100, 16), UiThemeLookup.Color(this, UiTokens.Color.Accent), 6);
-            // Purely decorative illustration -- effects-lite drops the glow
+            // Purely decorative illustration -- themes without effects drop the glow
             // treatment for flat schematic dots instead of hiding them (#134).
             canvas.DrawCircle(center + new Vector2(0, -30), UiThemeLookup.EffectsEnabled(this) ? 25 : 10, UiThemeLookup.EffectsEnabled(this) ? UiThemeLookup.Color(this, UiTokens.Color.Halo) : UiThemeLookup.Color(this, UiTokens.Color.LineStrong));
             canvas.DrawCircle(

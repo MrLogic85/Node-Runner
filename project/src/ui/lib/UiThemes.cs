@@ -3,12 +3,11 @@ using GodotTheme = Godot.Theme;
 
 namespace NodeRunner.Ui.Lib;
 
-/// <summary>Selectable palettes: the neon lab skin, the paper skin, and neon with Effects Lite.</summary>
+/// <summary>Selectable palettes: the neon lab skin and the paper skin.</summary>
 public enum UiTokenType
 {
     Neon,
     Paper,
-    Light,
 }
 
 /// <summary>
@@ -24,7 +23,6 @@ public static class UiThemes
     {
         UiTokenType.Neon => "res://assets/themes/Neon.tres",
         UiTokenType.Paper => "res://assets/themes/Paper.tres",
-        UiTokenType.Light => "res://assets/themes/NeonLite.tres",
         _ => throw new ArgumentOutOfRangeException(nameof(type), type, null),
     };
 

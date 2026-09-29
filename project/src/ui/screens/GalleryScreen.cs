@@ -48,7 +48,7 @@ public abstract partial class GalleryScreen : Control
         }
     }
 
-    /// <summary>Selected theme-switch segment: Neon, Paper or Effects lite.</summary>
+    /// <summary>Selected theme-switch segment: Neon or Paper.</summary>
     public int ThemeIndex
     {
         get => _themeIndex;
@@ -195,12 +195,7 @@ public abstract partial class GalleryScreen : Control
 
     private void ApplyTheme()
     {
-        Theme = UiThemes.For(_themeIndex switch
-        {
-            1 => UiTokenType.Paper,
-            2 => UiTokenType.Light,
-            _ => UiTokenType.Neon,
-        });
+        Theme = UiThemes.For(_themeIndex == 1 ? UiTokenType.Paper : UiTokenType.Neon);
         OnThemeApplied();
     }
 }

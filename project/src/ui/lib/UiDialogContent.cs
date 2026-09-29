@@ -6,7 +6,7 @@ namespace NodeRunner.Ui.Lib;
 [Tool]
 public sealed partial class UiDialogContent : Control
 {
-    public enum PreviewTheme { Neon, Paper, EffectsLite }
+    public enum PreviewTheme { Neon, Paper }
 
     private UiPopupType _type;
     private UiNotificationIcon? _iconOverride;
@@ -36,7 +36,6 @@ public sealed partial class UiDialogContent : Control
             Theme = UiThemes.For(value switch
             {
                 PreviewTheme.Paper => UiTokenType.Paper,
-                PreviewTheme.EffectsLite => UiTokenType.Light,
                 _ => UiTokenType.Neon,
             });
             ApplyAppearance();

@@ -2,7 +2,7 @@ namespace NodeRunner.Ui.Lib;
 
 /// <summary>
 /// Typed identifiers for the values a Godot Theme supplies at runtime: the things that
-/// actually change between Neon, Paper, and Effects Lite. Theme-independent dimensions
+/// actually change between Neon and Paper. Theme-independent dimensions
 /// are constants in <see cref="UiSize"/> and <see cref="UiLayout"/>.
 /// </summary>
 public static class UiTokens
