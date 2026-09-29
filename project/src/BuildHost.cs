@@ -15,7 +15,7 @@ namespace NodeRunner;
 /// The Build scene for one creation, or a new draft. Training lives in its own scene,
 /// <see cref="SimulateHost"/> (#469).
 /// </summary>
-public partial class Main : Node2D, IRoutedScene
+public partial class BuildHost : Node2D, IRoutedScene
 {
     private readonly VisualTheme _theme = VisualTheme.Neon;
     private BuildScreen? _buildScreen;
@@ -41,7 +41,6 @@ public partial class Main : Node2D, IRoutedScene
     {
         ApplyProgression();
         AddBuildModeBackdrop();
-        AddCamera();
         AddConstructionCanvas();
         AddBuildScreen();
         AddDeleteCreationDialog();
@@ -71,7 +70,7 @@ public partial class Main : Node2D, IRoutedScene
         }
     }
 
-    // Opened by the router, Main shows the route's creation, or a new draft. Run on its own (F6) it
+    // Opened by the router, Build shows the route's creation, or a new draft. Run on its own (F6) it
     // opens a new draft.
     private void OpenRoute()
     {
@@ -112,17 +111,6 @@ public partial class Main : Node2D, IRoutedScene
         };
         backdrop.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
         layer.AddChild(backdrop);
-    }
-
-    private void AddCamera()
-    {
-        AddChild(new Camera2D
-        {
-            Name = "Camera",
-            Position = new Vector2(360, 316),
-            Zoom = new Vector2(1.15f, 1.15f),
-            Enabled = true,
-        });
     }
 
     private void AddConstructionCanvas()

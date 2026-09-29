@@ -68,7 +68,7 @@ Arrows only go **downward** across layer boundaries.
   repository/service interfaces), `NodeRunner.Domain`, Godot.
   Managers are the **composition root** — they wire concrete implementations
   into ViewModels at startup.
-- **Scene roots** (`Main` and the `*Host` scenes in `project/src/`, with
+- **Scene roots** (the `*Host` scenes in `project/src/`, with
   their helpers there) may depend on every project layer above. They wire a
   screen's signals to managers and the navigator; keep game rules out of
   them. Nothing depends on them.
@@ -98,7 +98,7 @@ Node Runner/
 │   └── src/
 │       ├── creature/               # Godot Nodes for creatures
 │       ├── sim/                    # simulation orchestration
-│       ├── Main.cs, *Host.cs       # routed scene roots that wire screens to managers
+│       ├── *Host.cs                # routed scene roots that wire screens to managers
 │       ├── managers/               # service autoloads / composition root
 │       ├── theme/                  # arena (world) visuals, not UI styling
 │       ├── tools/                  # editor/CLI tools; their scenes are not exported
@@ -243,16 +243,17 @@ tied to the retired Muscle model and does not carry over.
 Screens are moving to one scene each, where navigating replaces the current
 scene (#326): a left scene is closed, not paused, and Back rebuilds it from
 its route. #468 is routing them one by one. Creations (the root and the
-main scene), Examples, Simulate and the component-library pages are routed
-scenes; `Main` holds Build behind `BuildRoute` until #363 turns it into its
-own host. Simulate (`SimulateRoute`, #469) trains one saved creation: it
+main scene), Examples, Build, Simulate and the component-library pages are
+routed scenes. Build (`BuildRoute`, #363) edits one creation, or a new draft
+when the route has no id, and saves moved parts before it is left. Simulate
+(`SimulateRoute`, #469) trains one saved creation: it
 builds the world and the `Evolver` from the creation's save, resumes from its
 last finished generation and saves each finished one, so leaving drops only
 the generation in progress.
 
 A screen stays in `ui/screens/` and knows nothing of saves or the router's
 type: it emits signals. The routed scene that holds it is a small host in
-`project/src/` (`CreationsHost`, `ExamplesHost`, `SimulateHost`, like `Main`) that wires
+`project/src/` (`CreationsHost`, `ExamplesHost`, `BuildHost`, `SimulateHost`) that wires
 those signals to `SaveManager` and the navigator. The standalone gallery
 pages have nothing to save, so they are routed directly.
 
