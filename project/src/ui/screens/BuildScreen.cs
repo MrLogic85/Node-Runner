@@ -23,9 +23,6 @@ public partial class BuildScreen : Control
     private bool _creationOverflowOpen;
 
     [Export]
-    public bool ShowTopBar { get; set; } = true;
-
-    [Export]
     public bool Hosted { get; set; }
 
     [Export]
@@ -220,10 +217,7 @@ public partial class BuildScreen : Control
         screen.AddThemeConstantOverride("separation", 0);
         screenParent.AddChild(screen);
 
-        if (ShowTopBar)
-        {
-            screen.AddChild(CreateTopBar());
-        }
+        screen.AddChild(CreateTopBar());
 
         var contentRow = MarkHostedInputPassthrough(new HBoxContainer
         {

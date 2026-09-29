@@ -143,15 +143,6 @@ public partial class Main : Node2D
             return;
         }
 
-        if (ProjectSettings.GetSetting("ui/sample_preview", false).AsBool())
-        {
-            _trainingPresentation.Update(5, 3, 8, 12.8, 8.4, "Quick");
-            var sample = GD.Load<PackedScene>("res://scenes/screens/SampleFlowScreen.tscn").Instantiate<SampleFlowScreen>();
-            sample.Presentation = _trainingPresentation;
-            AddChild(sample);
-            return;
-        }
-
         // Engine.TimeScale is a global engine setting, not scoped to this
         // scene — reset it on entry so a previous run's time-scale choice
         // (e.g. from CycleTimeScale) can't silently carry over.
@@ -585,7 +576,6 @@ public partial class Main : Node2D
         {
             Name = "LiveSimulateScreen",
             Hosted = true,
-            ShowTopBar = true,
             ShowArenaPlaceholder = false,
             ReadOnlyControls = true,
             InputPassthrough = true,

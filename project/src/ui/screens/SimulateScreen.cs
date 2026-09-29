@@ -61,9 +61,6 @@ public partial class SimulateScreen : Control
     public delegate void ResetRequestedEventHandler();
 
     [Export]
-    public bool ShowTopBar { get; set; } = true;
-
-    [Export]
     public bool Hosted { get; set; }
 
     [Export]
@@ -383,10 +380,7 @@ public partial class SimulateScreen : Control
         screen.AddThemeConstantOverride("separation", 8);
         safeFrame.AddChild(screen);
 
-        if (ShowTopBar)
-        {
-            screen.AddChild(CreateTopBar());
-        }
+        screen.AddChild(CreateTopBar());
 
         var contentRow = new HBoxContainer
         {

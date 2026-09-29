@@ -55,11 +55,6 @@ public sealed class TrainingPresentationViewModel : INotifyPropertyChanged, IDis
 
     public string MeanFitnessText => $"Mean: {_meanFitness:0.0}";
 
-    public void Update(int generation, int candidate, int population, double bestFitness, double meanFitness, string profile)
-    {
-        Update(generation, candidate, population, bestFitness, meanFitness, profile, bestGeneration: 0, isTrialActive: candidate > 0, completedCandidateCount: 0, completedFitness: []);
-    }
-
     public void Update(
         int generation,
         int candidate,
