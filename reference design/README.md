@@ -14,7 +14,7 @@ The feeling is a **neon lab bench**, not a cute toy: a dark arena, glowing parts
 
 ## How the app is organised
 
-The app is hub and spoke around the **Creations** menu (see Navigation). **Build** and **BuildLocked** are one scene (`Build`, with a `locked` flag) in two states. **Unlocked (Build):** draw as many beams as you like, place limited parts from a **Parts tray** (Links, On a joint, Sensors, Blocks), tap any part to edit its settings, and choose the brain's shape in **Brain setup** in the overflow menu. Everything **autosaves** and the primary action is **Start training**. **Locked (BuildLocked):** after a training session has finished the parts and the brain's shape are locked, so the machine-learning model can never be broken. You can still move things, open **Stats**, tap the **brain widget** to see which senses drive which outputs, and press **play** to train more (**Train setup**, then **Training**). The **padlock** unlocks it again, which resets the training after a warning. **Achievements** unlock new parts and maps. **Settings** (UI size, theme, sounds) opens from the Creations overflow menu. A card on Creations can be **copied** (identical, brain intact) or **deleted**.
+The app is hub and spoke around the **Creations** menu (see Navigation). **Build** and **BuildLocked** are one scene (`Build`, with a `locked` flag) in two states. **Unlocked (Build):** draw as many beams as you like, place limited parts from a **Parts tray** (Links, On a joint, Sensors, Blocks), tap any part to edit its settings, and choose the brain's shape in **Brain setup** in the overflow menu. Everything **autosaves** and the primary action is **Start training**. **Locked (BuildLocked):** after a training session has finished the parts and the brain's shape are locked, so the machine-learning model can never be broken. You can still move things, open **Stats**, tap the **brain widget** to see which senses drive which outputs, and press **play** to train more (**Train setup**, then **Training**). The **padlock** unlocks it again, which resets the training after a warning. **Achievements** unlock new parts, maps and examples. **Settings** (UI size, theme, sounds) opens from the Creations overflow menu. A card on Creations can be **copied** (identical, brain intact) or **deleted**.
 
 ## Canvas and layout
 
@@ -31,7 +31,7 @@ A phone in landscape has about 360px of height, so each screen shows only what t
 - Text has three levels only: a title (`heading`), one line of `body`, and short labels. No paragraph is shown unprompted; a first-time hint is one line and appears once.
 - Numbers you must have (distance, generations) get `readout`; everything else is a shape with a name on tap.
 - Prefer a bar, dial or hatch to a number, and a dashed or filled shape to a colour legend.
-- Settings and rare actions (Brain setup, Restore example, Delete) live in the overflow menu, not on the screen.
+- Settings and rare actions (Brain setup, Examples, Delete) live in the overflow menu, not on the screen.
 
 ## Selecting a part
 
@@ -90,7 +90,7 @@ Plain words first: "Senses", "Brain", "Outputs", "How long is each try". Teach a
 
 ## Iconography
 
-A stroked glyph set on a 24px grid, 2px stroke, round caps, `currentColor`: menu, chev-l, chev-r, chev-u, chev-d (Back is chev-l), more, play, pause, speed, restart, plus, copy, trash, lock, unlock, check, x, warn, move, beam, core (eye), build, flag, brain. The part glyphs (node, beam, core, motor arc) are the same drawings used in the arena.
+A stroked glyph set on a 24px grid, 2px stroke, round caps, `currentColor`: menu, chev-l, chev-r, chev-u, chev-d (Back is chev-l), more, play, pause, speed, restart, plus, copy, trash, lock, unlock, check, x, warn, move, beam, core (eye), build, flag, brain; the training values distance, top-speed and elevation, and one per map: map-flat, map-hills, map-stairs. The part glyphs (node, beam, core, motor arc) are the same drawings used in the arena.
 
 ## Not yet drawn
 
@@ -139,6 +139,7 @@ Empty state for a first launch, onboarding, accessibility settings beyond UI siz
 - [BuildLocked](#buildlocked): BuildLocked: a trained creation, locked. Brain widget, what drives what, padlock and play
 - [Checkpoints](#checkpoints): Checkpoints: full saves of a creation, sorted by generation
 - [Creations](#creations): Creations: the home menu. Tap a card to open, Copy, Delete
+- [Examples](#examples): Examples: pick one to copy into your own creations
 - [PartSettings](#partsettings): The settings of every part, the fixed-part picker and angle limits
 - [Power](#power): Power budget, and the power chip in Build and while training
 - [Settings](#settings): Settings: UI size, theme (Neon, Paper, Use phone) and sounds
@@ -166,9 +167,9 @@ The **foundations** every component is built from: colours, text styles, radius 
 
 **Colour variants.** 7 more tokens, each a transparent or glow version of one base colour (`accent-soft`, `accent-glow`, `halo-glow`, `danger-glow`, `ink-glow`, `edge-glow`, `line-strong-glow`), shown in their own group so they are never mistaken for a colour of their own. A variant is never used as a solid colour: `accent-soft` washes a selected tool or the current stage; the `*-glow` tokens build the glow around a selected button, in that kind's own colour (`halo-glow` for primary, `accent-glow` for secondary, `danger-glow` for tertiary, `ink-glow` for flat), or around any frame that turns its own glow on (`edge-glow` for the plain panel, `accent-glow` for `sel` and `lock`, `danger-glow` for `warn`, `halo-glow` for `hint`, `line-strong-glow` for `raised`; a frame that is `disabled` never glows), and `accent-glow` also lights a menu, a dialog and firing neurons. Both `glow`, the shadow token, and every `*-glow` colour go to `none` or transparent in the paper theme and under `data-effects="lite"`.
 
-**Icon set.** Every UI icon (41) and part glyph (15) is shown by name on this page, and exported as pure white SVG (see `icons/`). Each part has exactly one glyph, named after the part: the `spring` glyph is the Spring / damper part (there is no separate damper glyph). The `model` icon is a tiny network: two inputs, three hidden neurons and two outputs, drawn as dots joined by lines. Each input reaches two hidden neurons and each output is fed by two. It is used for Brain setup and the network view. Icons are drawn with the same 2 px round stroke; a dot (the `more` icon) is a 4 px dot, not a zero-length stroke.
+**Icon set.** Every UI icon (47) and part glyph (15) is shown by name on this page, and exported as pure white SVG (see `icons/`). Each part has exactly one glyph, named after the part: the `spring` glyph is the Spring / damper part (there is no separate damper glyph). The `model` icon is a tiny network: two inputs, three hidden neurons and two outputs, drawn as dots joined by lines. Each input reaches two hidden neurons and each output is fed by two. It is used for Brain setup and the network view. Icons are drawn with the same 2 px round stroke; a dot (the `more` icon) is a 4 px dot, not a zero-length stroke.
 
-**Icons.** A stroked glyph on a 24 grid, `currentColor`, in four sizes: `icon-sm` 12 (inside a chip or dense row), `icon` 16 (beside text), `icon-lg` 20 (in an icon button or menu row) and `icon-xl` 24. No other size is used. In a button the layout picks the size, never the screen: `icon` beside text, `icon-lg` when the button has no text and in a stacked button. Part glyphs are drawn on a 20 grid and used at `icon-lg`.
+**Icons.** A stroked glyph on a 24 grid, `currentColor`, in four sizes: `icon-sm` 12 (inside a chip or dense row), `icon` 16 (beside text), `icon-lg` 20 (in an icon button or menu row) and `icon-xl` 24. No other size is used. In a button the layout picks the size, never the screen: `icon` beside text, `icon-lg` when the button has no text and in a stacked button. A chip takes `icon-sm`, a large chip (`chip lg`, `control` high) takes `icon` like a button, and the leading icon of a row takes `icon-lg` like a menu row. Part glyphs are drawn on a 20 grid and used at `icon`, `icon-lg` or `icon-xl`, never at `icon-sm`, where the drawing no longer reads; a chip that shows a glyph takes `icon`, and so does a UI icon in a chip beside it. Any other size fails the build.
 
 **Text styles.** Every piece of text is one of seventeen: `title`, `heading`, `subheading` and `stage` (Chakra Petch); `body`, `body-strong`, `small`, `small-strong`, `label`, `note`, `note-strong`, `caption` and `overline` (Barlow); `readout-lg`, `readout`, `readout-md` and `readout-sm` (JetBrains Mono). Weight carries the hierarchy: 400 for reading text, 500 for quiet labels and numbers, 600 for names, values and actions, 700 for the title only. They are in tokens.json with size, line height and weight; a screen uses these and no other size.
 
@@ -305,8 +306,9 @@ The whole app is a hub-and-spoke around **Creations**, the home menu. **Build an
 - **BuildLocked → play (bottom of the rail) → Train setup → Training.** Train setup is where Train or Simulate, shadows, run length and map are chosen.
 - **BuildLocked → overflow → Stats** and **Power budget.** Tapping the **brain widget** opens the **Brain** view.
 - **BuildLocked → overflow → Checkpoints.** Full saves of the creation, auto-made every 100 generations and on each achievement, or made by hand with **Save**. **Restore** overwrites the current creation and its training after a warning and a hold to confirm; checkpoints can also be renamed and deleted (also a hold).
-- **Creations → Achievements** (the trophy). Achievements unlock new parts for Build and new maps for Train setup.
-- **Creations → overflow → Settings.** UI size, theme (Neon, Paper or Use phone) and sounds; nothing to reset there. **Restore example** is in the same menu.
+- **Creations → Achievements** (the trophy). Achievements unlock new parts for Build, new maps for Train setup and new examples.
+- **Creations → overflow → Settings.** UI size, theme (Neon, Paper or Use phone) and sounds; nothing to reset there.
+- **Creations → overflow → Examples.** Ready-made creations; **Copy** puts one in the player's own list and returns to Creations. Locked ones show what unlocks them.
 - **Back** returns exactly one step. Training's Back returns to the creation and leaves training saved. There is no navigation bar and no mode switch.
 
 Every top bar has the same shape: Back, one flexible field for the title and any trailing actions, then the overflow, always last.
@@ -603,11 +605,32 @@ The home screen and the hub for everything: the list of saved **creations**. Thr
 
 **Tap a card to open it.** A trained creation opens in its locked state (see BuildLocked); one that has never been trained opens in Build. There is no Edit button: the padlock on the opened creation is how you unlock it.
 
-**A card** is a live thumbnail, the name and, for a trained creation, a **padlock** and three small stats with icons: **best distance** (flag), **top speed** and **peak elevation**, then the number of generations. An untrained creation says so instead. Along its bottom edge are two 48px actions: **Copy** (an identical creation with the trained model intact; the new card simply appears in the list, no dialog) and **Delete** (a hold to confirm, no undo, see Overlays). The shipped **Example** carries a tag and only Copy; **Restore example** is in the overflow menu.
+**The list** is sorted by name.
 
-**Top bar.** The title, the **Achievements** trophy with a badge at its top right corner for anything new, **+ New** (the only primary, which opens an empty Build) and the overflow menu: **Settings** (with a cog) and **Restore example**. Nothing has a Save button: everything autosaves.
+**A card** is a still thumbnail of the creation, the name, cut with an ellipsis when it is too long, and, for a trained creation, a **padlock** and three values from its **latest training** (never from a checkpoint): **distance**, **top speed** and **elevation**. They have no units, to fit; each value's own icon says which it is. Under them, the icon of the **map** it was last trained on and the number of generations. An untrained creation says so instead. Along its bottom edge are two 48px actions: **Copy** (an identical creation with the trained model intact; the new card simply appears in the list, no dialog) and **Delete** (a hold to confirm, no undo, see Overlays). A copied example is a creation like any other, with both.
+
+**Top bar.** The title, the **Achievements** trophy with a badge at its top right corner for anything new, **+ New** (the only primary, which opens an empty Build) and the overflow menu: **Settings** (with a cog) and **Examples** (see Examples). Nothing has a Save button: everything autosaves.
 
 Preview: [components/Creations/preview.html](components/Creations/preview.html)
+
+
+---
+
+# Examples
+
+*Screens · Examples: pick one to copy into your own creations*
+
+![Examples](screenshots/Examples.png)
+
+**Examples** is the list of ready-made creations, opened from the **overflow menu on Creations** (Examples). Back returns to Creations. Three cards across, scrolling sideways, the same card frame and thumbnail as Creations.
+
+**A card** is a still thumbnail of the creation, the name, and one line on **what is new in it**: the part or idea the example is there to show. Along its bottom edge is one action, **Copy**.
+
+**Copy** puts an identical creation in the player's own list and returns to Creations, where the new card appears. From then on it is a creation like any other: it can be opened, edited, trained, copied and deleted. The examples themselves are never changed, so they never need restoring.
+
+**Locked examples** are shown too, so there is something to aim for: the card is the **lock** frame, with a padlock next to the name, and instead of Copy a **trophy** button that opens Achievements, where examples are earned (the only way for now).
+
+Preview: [components/Examples/preview.html](components/Examples/preview.html)
 
 
 ---
@@ -668,7 +691,7 @@ Preview: [components/Power/preview.html](components/Power/preview.html)
 
 ![Settings](screenshots/Settings.png)
 
-**Settings** holds the three things a player may want to change for their own phone. It opens from the **overflow menu on Creations** (Settings, then Restore example), with a cog icon, so the top bars keep their two-icons-plus-overflow shape and nothing on Build or Training carries a gear. Back returns to Creations. The bar has no overflow: there is nothing to reset, since each setting is one tap from any other value.
+**Settings** holds the three things a player may want to change for their own phone. It opens from the **overflow menu on Creations** (Settings, then Examples), with a cog icon, so the top bars keep their two-icons-plus-overflow shape and nothing on Build or Training carries a gear. Back returns to Creations. The bar has no overflow: there is nothing to reset, since each setting is one tap from any other value.
 
 **UI size.** The shared slider (see Component Library) from **50% to 400%** with the value in `readout` (default 100%). It has four steps, 50%, 100%, 200% and 400%, evenly spaced, and the screen places the thumb on a logarithmic scale between them, so the everyday range from 50 to 200% is not squeezed into the left corner. A 48px **minus** and **plus** button on either side step it by 5% for precision. It scales up components and text; the arena is not scaled, it just gets what is left, so it shrinks as the panels grow. Under 100% text and spacing shrink but controls keep their 48px touch target. The screen is the preview: the change is seen on the Settings screen as it happens. Above about 200% the side panels no longer fit beside the arena, so they open over it one at a time; that layout is not drawn yet.
 
