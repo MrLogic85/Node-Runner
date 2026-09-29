@@ -649,7 +649,13 @@ unclipped overlay layer rather than inside clipped scroll content. See
 ([issue #319](https://github.com/MrLogic85/Node-Runner/issues/319)): 48px, the
 component's own Back and Overflow buttons, and between them `%ToolbarContent`,
 where the screen authors its title and actions in the editor. `ShowBack` and
-`ShowOverflow` hide the fixed buttons. The toolbar also owns the overflow
+`ShowOverflow` hide the fixed buttons. `%ToolbarContent` sits in an 8px
+(`space-2`) side margin instead of the HBox separation, so the gap to Back
+and Overflow stays the same and the content keeps 8px from the edge when
+they are hidden. A screen without Back that wants its title aligned like the
+reference adds the empty 40px `w-col-xs` slot itself (Creations'
+`TitleInset`). Nodes a screen adds live under
+`Toolbar/HBoxContainer/MarginContainer/ToolbarContent`. The toolbar also owns the overflow
 `Menu`: it anchors it under Overflow, opens it and makes it dismissible; the
 screen authors the items and decides what each does. `BackPressed` is its only
 signal. It fills with `panel`, like the button bar and side panel, over the

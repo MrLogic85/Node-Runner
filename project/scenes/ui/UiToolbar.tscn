@@ -18,6 +18,7 @@ metadata/_custom_type_script = "uid://bg3xut403ix88"
 
 [node name="HBoxContainer" type="HBoxContainer" parent="." unique_id=1560195324]
 layout_mode = 2
+theme_override_constants/separation = 0
 
 [node name="Back" type="Button" parent="HBoxContainer" unique_id=545193165]
 unique_name_in_owner = true
@@ -31,7 +32,13 @@ Kind = 3
 ContentLayout = 1
 metadata/_custom_type_script = "uid://r2ped3g3uiaa"
 
-[node name="ToolbarContent" type="HBoxContainer" parent="HBoxContainer" unique_id=1466231439]
+[node name="MarginContainer" type="MarginContainer" parent="HBoxContainer" unique_id=684803777]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_right = 8
+
+[node name="ToolbarContent" type="HBoxContainer" parent="HBoxContainer/MarginContainer" unique_id=1466231439]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3

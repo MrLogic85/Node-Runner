@@ -44,7 +44,7 @@ theme_override_constants/separation = 0
 unique_name_in_owner = true
 layout_mode = 2
 
-[node name="ToolbarTitle" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/HBoxContainer/ToolbarContent" parent_id_path=PackedInt32Array(1157572243, 1466231439) index="0" unique_id=1012869594]
+[node name="ToolbarTitle" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/HBoxContainer/MarginContainer/ToolbarContent" parent_id_path=PackedInt32Array(1157572243, 1466231439) index="0" unique_id=1012869594]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
@@ -52,7 +52,7 @@ text = "Toolbars"
 script = ExtResource("4_label")
 TextStyle = 1
 
-[node name="ThemeSwitcher" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/HBoxContainer/ToolbarContent" parent_id_path=PackedInt32Array(1157572243, 1466231439) index="1" unique_id=492577172]
+[node name="ThemeSwitcher" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/HBoxContainer/MarginContainer/ToolbarContent" parent_id_path=PackedInt32Array(1157572243, 1466231439) index="1" unique_id=492577172]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 4
