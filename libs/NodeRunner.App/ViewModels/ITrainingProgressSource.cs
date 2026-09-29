@@ -18,9 +18,5 @@ public interface ITrainingProgressSource : IDisposable
 
     IReadOnlyList<double> CompletedFitness { get; }
 
-    int CompletedCandidateCount { get; }
-
     bool IsTrialActive { get; }
-
-    string Profile { get; }
 }

@@ -11,10 +11,8 @@ public sealed class TrainingPresentationViewModel : INotifyPropertyChanged, IDis
     private int _population;
     private double _bestFitness = double.NegativeInfinity;
     private double _meanFitness;
-    private string _profile = "Standard";
     private int _bestGeneration;
     private bool _isTrialActive;
-    private int _completedCandidateCount;
     private double[] _completedFitness = [];
     private bool _disposed;
 
@@ -39,10 +37,8 @@ public sealed class TrainingPresentationViewModel : INotifyPropertyChanged, IDis
     public int Population => _population;
     public double BestFitness => _bestFitness;
     public double MeanFitness => _meanFitness;
-    public string Profile => _profile;
     public int BestGeneration => _bestGeneration;
     public bool IsTrialActive => _isTrialActive;
-    public int CompletedCandidateCount => _completedCandidateCount;
     public IReadOnlyList<double> CompletedFitness => _completedFitness;
 
     public string GenerationText => _isTrialActive
@@ -61,18 +57,14 @@ public sealed class TrainingPresentationViewModel : INotifyPropertyChanged, IDis
         int population,
         double bestFitness,
         double meanFitness,
-        string profile,
         int bestGeneration,
         bool isTrialActive,
-        int completedCandidateCount,
         IReadOnlyList<double> completedFitness)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(generation);
         ArgumentOutOfRangeException.ThrowIfNegative(candidate);
         ArgumentOutOfRangeException.ThrowIfNegative(population);
         ArgumentOutOfRangeException.ThrowIfNegative(bestGeneration);
-        ArgumentOutOfRangeException.ThrowIfNegative(completedCandidateCount);
-        ArgumentNullException.ThrowIfNull(profile);
         ArgumentNullException.ThrowIfNull(completedFitness);
 
         _generation = generation;
@@ -80,10 +72,8 @@ public sealed class TrainingPresentationViewModel : INotifyPropertyChanged, IDis
         _population = population;
         _bestFitness = bestFitness;
         _meanFitness = meanFitness;
-        _profile = profile;
         _bestGeneration = bestGeneration;
         _isTrialActive = isTrialActive;
-        _completedCandidateCount = completedCandidateCount;
         _completedFitness = completedFitness.ToArray();
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null));
     }
@@ -120,10 +110,8 @@ public sealed class TrainingPresentationViewModel : INotifyPropertyChanged, IDis
             _source.PopulationSize,
             _source.BestFitness,
             _source.MeanFitness,
-            _source.Profile,
             _bestGeneration,
             _source.IsTrialActive,
-            _source.CompletedCandidateCount,
             _source.CompletedFitness);
     }
 }

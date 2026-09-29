@@ -172,7 +172,7 @@ public sealed class CreationRepositoryTests
     {
         // Regression guard for #114: Get() must handle a corrupt file for
         // the currently active Creation the same way List() does, instead
-        // of throwing out of a caller like CycleTrainingProfile.
+        // of throwing out of a caller like LoadRouteCreation.
         var directory = Path.Combine(Path.GetTempPath(), $"node-runner-{Guid.NewGuid():N}");
         try
         {

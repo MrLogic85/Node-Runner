@@ -1,10 +1,50 @@
 [gd_scene format=3]
 
-[ext_resource type="Script" path="res://src/SimulateHost.cs" id="1_host"]
+[ext_resource type="Script" uid="uid://dhvyb7lkorpjp" path="res://src/SimulateHost.cs" id="1_host"]
+[ext_resource type="PackedScene" uid="uid://nrsimulatescreen001" path="res://scenes/screens/SimulateScreen.tscn" id="2_screen"]
+[ext_resource type="Script" uid="uid://c7kogaptfkfv6" path="res://src/theme/ArenaBackdrop.cs" id="3_backdrop"]
 
-[node name="Simulate" type="Node2D"]
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_ground"]
+size = Vector2(900, 48)
+
+[node name="Simulate" type="Node"]
 script = ExtResource("1_host")
 
-[node name="Camera" type="Camera2D" parent="."]
-position = Vector2(360, 316)
-zoom = Vector2(1.15, 1.15)
+[node name="SimulateScreen" parent="." instance=ExtResource("2_screen")]
+unique_name_in_owner = true
+
+[node name="World" type="Node2D" parent="SimulateScreen/UiFrame/MarginContainer/Card/Shell/Body/Arena/ArenaView/WorldViewport"]
+unique_name_in_owner = true
+
+[node name="ArenaBackdrop" type="Node2D" parent="SimulateScreen/UiFrame/MarginContainer/Card/Shell/Body/Arena/ArenaView/WorldViewport/World"]
+unique_name_in_owner = true
+z_index = -100
+position = Vector2(-450, 0)
+script = ExtResource("3_backdrop")
+Size = Vector2(1800, 720)
+
+[node name="Ground" type="StaticBody2D" parent="SimulateScreen/UiFrame/MarginContainer/Card/Shell/Body/Arena/ArenaView/WorldViewport/World"]
+unique_name_in_owner = true
+position = Vector2(360, 420)
+
+[node name="GroundShape" type="CollisionShape2D" parent="SimulateScreen/UiFrame/MarginContainer/Card/Shell/Body/Arena/ArenaView/WorldViewport/World/Ground"]
+unique_name_in_owner = true
+shape = SubResource("RectangleShape2D_ground")
+
+[node name="GroundFill" type="Polygon2D" parent="SimulateScreen/UiFrame/MarginContainer/Card/Shell/Body/Arena/ArenaView/WorldViewport/World/Ground"]
+unique_name_in_owner = true
+polygon = PackedVector2Array(-450, -24, 450, -24, 450, 24, -450, 24)
+
+[node name="GroundEdge" type="Line2D" parent="SimulateScreen/UiFrame/MarginContainer/Card/Shell/Body/Arena/ArenaView/WorldViewport/World/Ground"]
+unique_name_in_owner = true
+points = PackedVector2Array(-450, -24, 450, -24)
+
+[node name="Spawn" type="Marker2D" parent="SimulateScreen/UiFrame/MarginContainer/Card/Shell/Body/Arena/ArenaView/WorldViewport/World"]
+unique_name_in_owner = true
+position = Vector2(250, 260)
+
+[node name="Camera" type="Camera2D" parent="SimulateScreen/UiFrame/MarginContainer/Card/Shell/Body/Arena/ArenaView/WorldViewport/World"]
+position = Vector2(380, 320)
+
+[editable path="SimulateScreen"]
+[editable path="SimulateScreen/UiFrame/MarginContainer/Card/Shell/Body/Arena/ArenaView"]

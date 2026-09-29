@@ -52,6 +52,10 @@ public partial class Evolver : Node
     /// <summary>Number of candidates whose trials have completed in the current generation.</summary>
     public int CompletedCandidateCount => _schedule?.CompletedCount ?? 0;
 
+    /// <summary>How far the visible creature has got in its current trial; NaN when none is running.</summary>
+    public double VisibleTrialDistance =>
+        _trialControllers.Count > 0 && _trialControllers[0].IsRunning ? _trialControllers[0].Measured.Distance : double.NaN;
+
     /// <summary>Raised after every genome in a generation has been evaluated and the next generation has been produced.</summary>
     public event Action? GenerationCompleted;
 

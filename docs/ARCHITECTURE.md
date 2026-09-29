@@ -228,8 +228,10 @@ collision layer. See `docs/TRAINING_LOOP.md` for the full design.
 
 `Evolver` raises `GenerationCompleted`/`NewBestFound` events; the Simulate
 scene's root, `SimulateHost`, subscribes to both, saves the training after
-each finished generation and drives the Simulate screen (generation/best/mean,
-pause/reset/time-scale controls) from them. A dedicated `PopulationViewModel`
+each finished generation and updates the unlock progress from them. The
+Training screen's caption follows `TrainingPresentationViewModel`, the
+SignalFlow stages are polled every ~0.15s, and Pause and Speed arrive as screen
+signals. A dedicated `PopulationViewModel`
 in the App layer remains a possible later refactor if this logic outgrows
 `SimulateHost` — not required yet.
 
@@ -250,9 +252,12 @@ is authored in `BuildScreen.tscn` (#364): the construction canvas is a
 `Node2D` inside the screen's clipped canvas slot, placed and scaled in the
 scene, so Build has no camera and taps reach the canvas through the UI. Simulate
 (`SimulateRoute`, #469) trains one saved creation: it
-builds the world and the `Evolver` from the creation's save, resumes from its
+builds the creature and the `Evolver` from the creation's save, resumes from its
 last finished generation and saves each finished one, so leaving drops only
-the generation in progress.
+the generation in progress. Its layout is authored in `SimulateScreen.tscn`
+(#386); the physics world is authored in `Simulate.tscn` inside the screen's
+`UiWorldView`, a `SubViewport` with its own camera, so UI scale never changes
+physics distances.
 
 A screen stays in `ui/screens/` and knows nothing of saves or the router's
 type: it emits signals. The routed scene that holds it is a small host in

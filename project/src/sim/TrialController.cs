@@ -25,6 +25,9 @@ public partial class TrialController : Node
 
     public int ElapsedTicks => _elapsedTicks;
 
+    /// <summary>What the trial in progress (or the last one) has measured so far.</summary>
+    public TrialResult Measured => _measurement.Result;
+
     /// <summary>The Y of the ground's top edge, which elevation is measured from.</summary>
     public float GroundTopY { get; set; }
 

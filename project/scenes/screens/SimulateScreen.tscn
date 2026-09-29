@@ -1,6 +1,15 @@
-[gd_scene load_steps=2 format=3 uid="uid://nrsimulatescreen001"]
+[gd_scene format=3 uid="uid://nrsimulatescreen001"]
 
-[ext_resource type="Script" path="res://src/ui/screens/SimulateScreen.cs" id="1_simulate_screen"]
+[ext_resource type="Script" uid="uid://c27csd261geyh" path="res://src/ui/screens/SimulateScreen.cs" id="1_screen"]
+[ext_resource type="PackedScene" uid="uid://dokr6l5stu6ll" path="res://scenes/ui/UiFrame.tscn" id="2_frame"]
+[ext_resource type="PackedScene" uid="uid://gydkh1xys4yo" path="res://scenes/ui/UiToolbar.tscn" id="3_toolbar"]
+[ext_resource type="Script" uid="uid://dk67qmt3brp4e" path="res://src/ui/lib/UiLabel.cs" id="4_label"]
+[ext_resource type="Script" uid="uid://r2ped3g3uiaa" path="res://src/ui/lib/UiButton.cs" id="5_button"]
+[ext_resource type="Script" uid="uid://fw1i2vfgkd7q" path="res://src/ui/lib/UiDivider.cs" id="6_divider"]
+[ext_resource type="PackedScene" uid="uid://nruiworldview01" path="res://scenes/ui/UiWorldView.tscn" id="7_world_view"]
+[ext_resource type="PackedScene" uid="uid://bxxwv8m0f8sml" path="res://scenes/ui/UiStageCard.tscn" id="8_stage_card"]
+[ext_resource type="Script" uid="uid://b4t4jrismbuik" path="res://src/ui/lib/UiIcon.cs" id="9_icon"]
+[ext_resource type="Script" uid="uid://p7wvirfjxxyo" path="res://src/ui/widgets/BrainFocusSheet.cs" id="10_brain_focus"]
 
 [node name="SimulateScreen" type="Control"]
 layout_mode = 3
@@ -9,4 +18,297 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-script = ExtResource("1_simulate_screen")
+mouse_filter = 2
+script = ExtResource("1_screen")
+
+[node name="UiFrame" parent="." instance=ExtResource("2_frame")]
+layout_mode = 1
+
+[node name="Shell" type="VBoxContainer" parent="UiFrame/MarginContainer/Card" index="0"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 0
+
+[node name="Toolbar" parent="UiFrame/MarginContainer/Card/Shell" instance=ExtResource("3_toolbar")]
+unique_name_in_owner = true
+layout_mode = 2
+ShowOverflow = false
+
+[node name="ToolbarContent" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/HBoxContainer/MarginContainer" index="0"]
+theme_override_constants/separation = 8
+
+[node name="Heading" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/HBoxContainer/MarginContainer/ToolbarContent" index="0"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+mouse_filter = 2
+theme_override_constants/separation = 0
+
+[node name="CreationName" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/HBoxContainer/MarginContainer/ToolbarContent/Heading"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Walker-1"
+text_overrun_behavior = 3
+script = ExtResource("4_label")
+TextStyle = 1
+
+[node name="Status" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/HBoxContainer/MarginContainer/ToolbarContent/Heading"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 4
+
+[node name="StatusDot" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/HBoxContainer/MarginContainer/ToolbarContent/Heading/Status"]
+layout_mode = 2
+text = "●"
+script = ExtResource("4_label")
+TextStyle = 9
+TextColor = 9
+
+[node name="StatusText" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/HBoxContainer/MarginContainer/ToolbarContent/Heading/Status"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Training · Flat ground"
+script = ExtResource("4_label")
+TextStyle = 9
+TextColor = 8
+
+[node name="Actions" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/HBoxContainer/MarginContainer/ToolbarContent" index="1"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 16
+
+[node name="Brain" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/HBoxContainer/MarginContainer/ToolbarContent/Actions"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 4
+tooltip_text = "Brain"
+mouse_filter = 1
+script = ExtResource("5_button")
+IconId = 18
+Kind = 1
+
+[node name="Stats" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/HBoxContainer/MarginContainer/ToolbarContent/Actions"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 4
+tooltip_text = "Stats"
+mouse_filter = 1
+script = ExtResource("5_button")
+IconId = 4
+Kind = 1
+
+[node name="AchievementProgress" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Toolbar"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 8
+mouse_filter = 2
+script = ExtResource("6_divider")
+Thickness = 2
+Color = 9
+Fill = 0.0
+
+[node name="Body" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell"]
+layout_mode = 2
+size_flags_vertical = 3
+mouse_filter = 2
+theme_override_constants/separation = 0
+
+[node name="Arena" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+theme_override_constants/separation = 0
+
+[node name="ArenaView" parent="UiFrame/MarginContainer/Card/Shell/Body/Arena" instance=ExtResource("7_world_view")]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="TrayDivider" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Body/Arena"]
+layout_mode = 2
+mouse_filter = 2
+script = ExtResource("6_divider")
+
+[node name="Tray" type="MarginContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/Arena"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="TrayRow" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/Arena/Tray"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 8
+
+[node name="Pause" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Body/Arena/Tray/TrayRow"]
+unique_name_in_owner = true
+layout_mode = 2
+tooltip_text = "Pause"
+mouse_filter = 1
+script = ExtResource("5_button")
+IconId = 22
+Kind = 1
+ContentLayout = 1
+
+[node name="Speed" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Body/Arena/Tray/TrayRow"]
+unique_name_in_owner = true
+layout_mode = 2
+tooltip_text = "Speed"
+mouse_filter = 1
+text = "1x"
+script = ExtResource("5_button")
+IconId = 32
+Kind = 1
+ContentLayout = 1
+
+[node name="Generation" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/Arena/Tray/TrayRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 0
+text = "Generation 0"
+text_overrun_behavior = 3
+script = ExtResource("4_label")
+TextStyle = 7
+
+[node name="SignalDivider" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Body"]
+layout_mode = 2
+mouse_filter = 2
+script = ExtResource("6_divider")
+Orientation = 1
+
+[node name="SignalFlow" type="MarginContainer" parent="UiFrame/MarginContainer/Card/Shell/Body"]
+custom_minimum_size = Vector2(176, 0)
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="SignalStages" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SignalFlow"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 0
+
+[node name="SensesStage" parent="UiFrame/MarginContainer/Card/Shell/Body/SignalFlow/SignalStages" instance=ExtResource("8_stage_card")]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+Title = "Senses"
+Note = ""
+Collapsed = true
+
+[node name="SensesArrow" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Body/SignalFlow/SignalStages"]
+custom_minimum_size = Vector2(0, 8)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Chevron" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Body/SignalFlow/SignalStages/SensesArrow"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -6.0
+offset_top = -6.0
+offset_right = 6.0
+offset_bottom = 6.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("9_icon")
+IconId = 6
+IconSize = 0
+Color = 9
+
+[node name="BrainStage" parent="UiFrame/MarginContainer/Card/Shell/Body/SignalFlow/SignalStages" instance=ExtResource("8_stage_card")]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+NumberText = "2"
+Title = "Brain"
+Note = ""
+Collapsed = true
+
+[node name="BrainArrow" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Body/SignalFlow/SignalStages"]
+custom_minimum_size = Vector2(0, 8)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Chevron" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Body/SignalFlow/SignalStages/BrainArrow"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -6.0
+offset_top = -6.0
+offset_right = 6.0
+offset_bottom = 6.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("9_icon")
+IconId = 6
+IconSize = 0
+Color = 9
+
+[node name="OutputsStage" parent="UiFrame/MarginContainer/Card/Shell/Body/SignalFlow/SignalStages" instance=ExtResource("8_stage_card")]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+NumberText = "3"
+Title = "Outputs"
+Note = ""
+Collapsed = true
+
+[node name="OutputsArrow" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Body/SignalFlow/SignalStages"]
+custom_minimum_size = Vector2(0, 8)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Chevron" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Body/SignalFlow/SignalStages/OutputsArrow"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -6.0
+offset_top = -6.0
+offset_right = 6.0
+offset_bottom = 6.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("9_icon")
+IconId = 6
+IconSize = 0
+Color = 9
+
+[node name="DistanceStage" parent="UiFrame/MarginContainer/Card/Shell/Body/SignalFlow/SignalStages" instance=ExtResource("8_stage_card")]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+NumberText = "4"
+Title = "Distance"
+Note = ""
+Collapsed = true
+
+[node name="BrainFocusSheet" type="Control" parent="."]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("10_brain_focus")
+
+[editable path="UiFrame"]
+[editable path="UiFrame/MarginContainer/Card/Shell/Toolbar"]
