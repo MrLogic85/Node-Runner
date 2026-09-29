@@ -10,7 +10,7 @@ public sealed class CreationDuplicateWorkflowTests
     public void Duplicate_CreatesNewCreationWithTraining()
     {
         var repository = new InMemoryCreationRepository();
-        var source = CreateCreation("Walker", generation: 8);
+        var source = CreateCreation("Walker", generation: 8, isLocked: true);
         var copyId = Guid.NewGuid();
         repository.Save(source);
         var workflow = new CreationDuplicateWorkflow(repository, () => copyId);
@@ -22,6 +22,7 @@ public sealed class CreationDuplicateWorkflowTests
         copy.Creature.ShouldBe(source.Creature);
         copy.BrainShape.ShouldBe(source.BrainShape);
         copy.Training.ShouldBe(source.Training);
+        copy.IsLocked.ShouldBeTrue();
         repository.Get(copyId).ShouldBe(copy);
     }
 
@@ -39,7 +40,7 @@ public sealed class CreationDuplicateWorkflowTests
         Should.Throw<ArgumentNullException>(() => new CreationDuplicateWorkflow(null!));
     }
 
-    private static CreationDef CreateCreation(string name, int generation) =>
+    private static CreationDef CreateCreation(string name, int generation, bool isLocked = false) =>
         new(
             Guid.NewGuid(),
             name,
@@ -48,5 +49,6 @@ public sealed class CreationDuplicateWorkflowTests
                 [new BeamDef(0, 1)],
                 [new CoreDef(0)]),
             new BrainShapeDef(2, 6),
-            new TrainingStateDef([2, 1], [0.1, -0.2, 0.3], generation, "Tanh"));
+            new TrainingStateDef([2, 1], [0.1, -0.2, 0.3], generation, "Tanh"),
+            isLocked);
 }

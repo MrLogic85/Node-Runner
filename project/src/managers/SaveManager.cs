@@ -44,7 +44,7 @@ public partial class SaveManager : Node
     }
 
     // Delete/ResetTraining/ApplyCreatureEdit/UpdateIfPresent/
-    // CurrentTrainingEpoch/TryPersistTraining all delegate to
+    // CurrentTrainingEpoch/TryPersistTraining/TryFinishTrainingSession all delegate to
     // UpdateCoordinator, which serializes mutations per Creation id and
     // invalidates queued background training snapshots (see #113) that a
     // reset, edit, or delete has superseded.
@@ -64,6 +64,9 @@ public partial class SaveManager : Node
 
     public bool TryPersistTraining(Guid id, long expectedEpoch, TrainingStateDef training) =>
         UpdateCoordinator.TryPersistTraining(id, expectedEpoch, training);
+
+    public bool TryFinishTrainingSession(Guid id, long expectedEpoch, TrainingStateDef? latest) =>
+        UpdateCoordinator.TryFinishTrainingSession(id, expectedEpoch, latest);
 
     public CreationDef? UpdateIfPresent(Guid id, Func<CreationDef, CreationDef> update) =>
         UpdateCoordinator.UpdateIfPresent(id, update);

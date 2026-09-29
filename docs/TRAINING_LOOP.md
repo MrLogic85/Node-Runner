@@ -39,8 +39,18 @@ layer owns the durable lifecycle described by
 
 `Evolver` reports training progress and completion; it must not mutate the
 Creation lock by itself. The App/persistence orchestration translates a
-completed session into the durable lock transition and must make interrupted
-sessions explicit rather than treating navigation or Start as completion.
+completed session into the durable lock transition. The target (#389) makes
+interrupted sessions explicit rather than treating navigation or Start as
+completion.
+
+The lock is `CreationDef.IsLocked` (#369), set only through
+`ICreationUpdateCoordinator.TryFinishTrainingSession`; resetting the training
+clears it, and Copy keeps it. **Interim rule** until Training emits session
+completion (#195, #389): leaving Training ends the session, and the Creation
+locks if its training has at least one finished generation, counted across
+the whole training, so a first session the app closed in the middle of locks
+when the player next leaves Training. Leaving before any generation has
+finished, or the app closing, leaves the Creation unlocked.
 
 ## Trial (issue #49)
 
@@ -167,6 +177,9 @@ by the TrainSetup and Training component READMEs under `reference design/compone
     the generation in progress. The save is guarded by the creation's
     training epoch, so a save still in flight when the training is reset
     is dropped.
+  - **Leave.** Back (top bar or Android) ends the session: it saves the
+    last finished generation and locks the creation on the main thread
+    before navigating, so the next scene reads the lock (#369).
   - A session stops after the profile's generation budget. Speed and pause
     belong to the scene and start from 1x and running each time it opens.
   - Run on its own (F6) the scene trains the built-in worm without saving.

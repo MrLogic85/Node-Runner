@@ -2,7 +2,8 @@ namespace NodeRunner.Domain;
 
 /// <summary>
 /// Durable player-owned creature. Training is optional so an untrained
-/// Creation and a trained Creation share one persistence shape.
+/// Creation and a trained Creation share one persistence shape. A Creation
+/// locks when its first training session finishes (#369).
 /// </summary>
 public sealed record CreationDef
 {
@@ -12,7 +13,13 @@ public sealed record CreationDef
     }
 
     [System.Text.Json.Serialization.JsonConstructor]
-    public CreationDef(Guid id, string name, CreatureDef creature, BrainShapeDef? brainShape, TrainingStateDef? training = null)
+    public CreationDef(
+        Guid id,
+        string name,
+        CreatureDef creature,
+        BrainShapeDef? brainShape,
+        TrainingStateDef? training = null,
+        bool isLocked = false)
     {
         if (id == Guid.Empty)
         {
@@ -21,12 +28,17 @@ public sealed record CreationDef
 
         ArgumentException.ThrowIfNullOrWhiteSpace(name);
         ArgumentNullException.ThrowIfNull(creature);
+        if (isLocked && training is null)
+        {
+            throw new ArgumentException("Only a trained Creation can be locked.", nameof(isLocked));
+        }
 
         Id = id;
         Name = name;
         Creature = creature;
         BrainShape = ResolveBrainShape(brainShape, training);
         Training = training;
+        IsLocked = isLocked;
     }
 
     public Guid Id { get; }
@@ -38,6 +50,14 @@ public sealed record CreationDef
     public BrainShapeDef BrainShape { get; }
 
     public TrainingStateDef? Training { get; }
+
+    /// <summary>
+    /// Set once a training session finishes with at least one finished generation in the
+    /// Creation's training: anatomy and brain shape stay as the trained brain needs them.
+    /// Starting or pausing does not set it; resetting the training clears it. When a session
+    /// counts as finished is owned by the App layer (docs/TRAINING_LOOP.md).
+    /// </summary>
+    public bool IsLocked { get; }
 
     private static BrainShapeDef ResolveBrainShape(BrainShapeDef? brainShape, TrainingStateDef? training)
     {

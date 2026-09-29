@@ -33,12 +33,20 @@ public interface ICreationUpdateCoordinator
     /// </summary>
     bool TryPersistTraining(Guid id, long expectedEpoch, TrainingStateDef training);
 
-    /// <summary>Clears a Creation's training state, invalidating any pending training snapshot.</summary>
+    /// <summary>
+    /// Ends a training session the player left (#369). The Creation locks if its training, after
+    /// applying <paramref name="latest"/> when that is newer, has at least one finished generation.
+    /// Returns <c>false</c> without writing if the epoch changed since
+    /// <paramref name="expectedEpoch"/> or no generation has finished; otherwise <c>true</c>.
+    /// </summary>
+    bool TryFinishTrainingSession(Guid id, long expectedEpoch, TrainingStateDef? latest);
+
+    /// <summary>Clears a Creation's training state and lock, invalidating any pending training snapshot.</summary>
     void ResetTraining(Guid id);
 
     /// <summary>
     /// Replaces a Creation's <see cref="CreatureDef"/>, preserving its
-    /// current training state, and invalidates any pending training
+    /// current training state and lock, and invalidates any pending training
     /// snapshot (an edit can change brain topology, making an
     /// in-flight genome incompatible). Returns <c>null</c> if no such
     /// Creation exists.

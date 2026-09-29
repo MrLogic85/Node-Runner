@@ -18,7 +18,7 @@ public sealed class CreationDuplicateWorkflow : ICreationDuplicateWorkflow
     public CreationDef Duplicate(Guid id)
     {
         var source = _repository.Get(id) ?? throw new KeyNotFoundException($"Creation '{id}' was not found.");
-        var copy = new CreationDef(_newId(), $"Copy of {source.Name}", source.Creature, source.BrainShape, source.Training);
+        var copy = new CreationDef(_newId(), $"Copy of {source.Name}", source.Creature, source.BrainShape, source.Training, source.IsLocked);
         _repository.Save(copy);
         return copy;
     }
