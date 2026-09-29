@@ -36,6 +36,9 @@
 
 ## What does NOT live here
 
+- App-wide UI layers registered as autoloads (the `Notifications` layer,
+  `ui/lib/UiNotificationLayer`) → `project/src/ui/lib/`: managers hold no UI
+
 - Simulation logic → `project/src/sim/`
 - UI state formatting → `libs/NodeRunner.App/ViewModels/`
 - Actual file I/O implementations → `libs/NodeRunner.App/Repositories/`

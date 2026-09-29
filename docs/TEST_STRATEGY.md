@@ -125,7 +125,9 @@ swap restyles everything:
   test checks that a number is named, not where the name points. Identity,
   halving and doubling stay inline; the test owns the exact list. No code in
   `project/src/ui` sets `ZIndex`; it orders drawing by the tree (only
-  `UiMenu`'s top-level popup raises it, #463).
+  `UiMenu`'s top-level popup raises it, #463). Only the app's
+  `UiNotificationLayer` (and Popup Gallery) creates a `UiNotification`, so
+  notifications outlive scene changes (#472).
 
 **2. Screens reuse the library.** Every canonical component maps to one
 reusable control, and paired specimens (slider and range, power and value

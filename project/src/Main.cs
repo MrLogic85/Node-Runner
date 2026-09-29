@@ -49,7 +49,6 @@ public partial class Main : Node2D
     private CreationsScreen? _creationsScreen;
     private ExamplesScreen? _examplesScreen;
     private UiDialog? _deleteCreationDialog;
-    private UiNotification? _notifications;
     private SimulateScreen? _simulateScreen;
     private Guid? _activeCreationId;
     private Label? _seedLabel;
@@ -881,8 +880,6 @@ public partial class Main : Node2D
 
         _deleteCreationDialog = new UiDialog { ProcessMode = ProcessModeEnum.Always };
         overlayLayer.AddChild(_deleteCreationDialog);
-        _notifications = new UiNotification { ProcessMode = ProcessModeEnum.Always };
-        overlayLayer.AddChild(_notifications);
 
         RefreshCreationsPanel();
     }
@@ -1038,7 +1035,7 @@ public partial class Main : Node2D
 
     private void ShowAchievementsCueFromHome()
     {
-        _notifications?.Enqueue(new UiNotificationSpec(
+        UiNotificationLayer.Enqueue(this, new UiNotificationSpec(
             UiPopupType.Default,
             "Achievements",
             "Achievements open in milestone 0.13.0.",
@@ -1046,7 +1043,7 @@ public partial class Main : Node2D
     }
 
     private void Notify(string title, string message) =>
-        _notifications?.Enqueue(new UiNotificationSpec(UiPopupType.Default, title, message));
+        UiNotificationLayer.Enqueue(this, new UiNotificationSpec(UiPopupType.Default, title, message));
 
     private void OpenExamplesFromHome()
     {
