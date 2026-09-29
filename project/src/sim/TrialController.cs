@@ -1,19 +1,20 @@
 using Godot;
+using NodeRunner.ML.Ga;
 
 namespace NodeRunner.Sim;
 
 /// <summary>
 /// Runs a single creature through fixed-duration trials, resetting its pose
-/// between runs and scoring each trial with an <see cref="Evaluator"/>.
+/// between runs and measuring each trial with a <see cref="TrialMeasurement"/>.
 ///
 /// This node does not own the creature's lifecycle (creation/destruction) or
 /// brain assignment — its <see cref="Evolver"/> caller is responsible for
-/// both. TrialController only knows how to time a trial and measure how far
-/// the creature got.
+/// both. TrialController only knows how to time a trial and measure how far,
+/// how fast and how high the creature got.
 /// </summary>
 public partial class TrialController : Node
 {
-    private readonly Evaluator _evaluator = new();
+    private readonly TrialMeasurement _measurement = new(Engine.PhysicsTicksPerSecond);
     private Creature.Creature? _creature;
     private int _elapsedTicks;
 
@@ -24,10 +25,11 @@ public partial class TrialController : Node
 
     public int ElapsedTicks => _elapsedTicks;
 
-    public float Fitness => _evaluator.Fitness;
+    /// <summary>The Y of the ground's top edge, which elevation is measured from.</summary>
+    public float GroundTopY { get; set; }
 
-    /// <summary>Raised when a trial finishes, with the final fitness score.</summary>
-    public event Action<float>? TrialCompleted;
+    /// <summary>Raised when a trial finishes, with what it measured; its distance is the fitness.</summary>
+    public event Action<TrialResult>? TrialCompleted;
 
     public override void _Ready()
     {
@@ -50,8 +52,8 @@ public partial class TrialController : Node
         ArgumentNullException.ThrowIfNull(creature);
 
         _creature = creature;
-        _creature.ResetPose();
-        _evaluator.Reset(_creature.CenterOfMass.X);
+        _creature.ResetPose(GroundTopY);
+        _measurement.Reset(_creature.CenterOfMass.X);
         _elapsedTicks = 0;
         IsRunning = true;
     }
@@ -71,12 +73,12 @@ public partial class TrialController : Node
         }
 
         _elapsedTicks++;
-        _evaluator.Record(_creature.CenterOfMass.X);
+        _measurement.Record(_creature.CenterOfMass.X, GroundTopY - _creature.LowestPointY);
 
         if (_elapsedTicks >= TrialDurationTicks)
         {
             IsRunning = false;
-            TrialCompleted?.Invoke(_evaluator.Fitness);
+            TrialCompleted?.Invoke(_measurement.Result);
         }
     }
 }

@@ -84,8 +84,8 @@ Long-form descriptions and the sensor/model contract live in
 
 ## Simulation
 
-- **Evaluator** — Component that measures fitness for each creature during a
-  run.
+- **TrialMeasurement** — Measures one trial: distance (the fitness), top
+  speed and elevation.
 - **Evolver** — Component that orchestrates generations: calls the GA, resets
   the scene, assigns new brains.
 - **Fixed timestep** — Physics/NN updates happen at a locked 60 Hz regardless

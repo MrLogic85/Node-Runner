@@ -141,12 +141,13 @@ public partial class Creature : Node2D
     }
 
     /// <summary>
-    /// Returns every beam body to its original built position/rotation and
-    /// zeroes its velocity, so a new trial starts from the exact same
-    /// physical state as the last. This is plain physical reset, not
-    /// evolution/fitness logic.
+    /// Returns every beam body to its original built shape, rotation and
+    /// zero velocity, lowered or raised so its lowest point just touches
+    /// <paramref name="groundTopY"/>. A new trial therefore starts from the
+    /// exact same physical state as the last, without a drop from spawn
+    /// height. This is plain physical reset, not evolution/fitness logic.
     /// </summary>
-    public void ResetPose()
+    public void ResetPose(float groundTopY)
     {
         for (var i = 0; i < _beamBodies.Length; i++)
         {
@@ -155,6 +156,17 @@ public partial class Creature : Node2D
             body.Rotation = _beamInitialRotations[i];
             body.LinearVelocity = Vector2.Zero;
             body.AngularVelocity = 0f;
+        }
+
+        if (_beamBodies.Length == 0)
+        {
+            return;
+        }
+
+        var offset = GlobalTransform.BasisXformInv(new Vector2(0, groundTopY - LowestPointY));
+        foreach (var body in _beamBodies)
+        {
+            body.Position += offset;
         }
     }
 
@@ -175,6 +187,31 @@ public partial class Creature : Node2D
         foreach (var coreSensors in _coreSensors)
         {
             coreSensors.SetCollisionMask(1);
+        }
+    }
+
+    /// <summary>
+    /// The Y of the creature's lowest physical point: the lowest corner of any
+    /// beam's collision box. Godot's Y grows downward, so this is the largest Y.
+    /// Returns negative infinity for a creature with no beams.
+    /// </summary>
+    public float LowestPointY
+    {
+        get
+        {
+            var lowest = float.NegativeInfinity;
+            for (var i = 0; i < _beamBodies.Length; i++)
+            {
+                var transform = _beamBodies[i].GlobalTransform;
+                var halfLength = _beamHalfLengths[i];
+                const float halfThickness = _beamThickness / 2;
+                lowest = Math.Max(lowest, (transform * new Vector2(-halfLength, -halfThickness)).Y);
+                lowest = Math.Max(lowest, (transform * new Vector2(-halfLength, halfThickness)).Y);
+                lowest = Math.Max(lowest, (transform * new Vector2(halfLength, -halfThickness)).Y);
+                lowest = Math.Max(lowest, (transform * new Vector2(halfLength, halfThickness)).Y);
+            }
+
+            return lowest;
         }
     }
 

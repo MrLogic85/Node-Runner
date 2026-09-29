@@ -44,22 +44,34 @@ sessions explicit rather than treating navigation or Start as completion.
 
 ## Trial (issue #49)
 
-- `Evaluator` (`project/src/sim/Evaluator.cs`) is a plain, dependency-free
-  fitness tracker: `Reset(startX)` begins a trial, `Record(currentX)` is
-  called every tick, and `Fitness` is the **running maximum** forward
-  horizontal distance from the start position — not the final position and
-  not cumulative distance. This rewards peak forward progress without
-  penalizing a creature that surges forward and then settles or wobbles
-  back slightly before the trial ends.
+- `TrialMeasurement` (`libs/NodeRunner.ML/Ga/TrialMeasurement.cs`) is a
+  plain, engine-free tracker: `Reset(startX)` begins a trial,
+  `Record(centerX, clearance)` is called every tick, and `Result` is a
+  `TrialResult` (issue #420):
+  - `Distance` — the **running maximum** forward horizontal distance from
+    the start position, not the final position and not cumulative
+    distance. This is the fitness. It rewards peak forward progress
+    without penalizing a creature that surges forward and then settles or
+    wobbles back slightly before the trial ends.
+  - `TopSpeed` — the highest forward speed of the centre, averaged over a
+    sliding half-second window so one-tick physics jolts do not dominate.
+  - `Elevation` — the largest gap between the creature's lowest collision
+    point and the ground top; a crawler scores 0.
+- `Evolver.BestRun` is the `TrialResult` of the best genome so far. `Main`
+  persists it as `TrainingStateDef.BestRun` (`TrainingRunDef`, with
+  `MapId` `flat` until more maps exist) so the Creations card can show it.
 - `TrialController` (`project/src/sim/TrialController.cs`) is a `Node` that
   times a fixed-duration trial (`TrialDurationTicks`, default 600 ≈ 10s at
   60Hz) for one `Creature` instance at a time. It does **not** own creature
   creation/destruction or brain assignment — callers are responsible for
-  that. `StartTrial(creature)` calls `Creature.ResetPose()` (teleports every
-  beam body back to its built position/rotation and zeroes velocity) and
-  resets the `Evaluator` from the creature's current `CenterOfMass.X`.
-  `TrialCompleted` fires once the tick budget is spent, with the final
-  fitness value.
+  that. `StartTrial(creature)` calls `Creature.ResetPose(GroundTopY)` (teleports
+  every beam body back to its built shape and rotation, zeroes velocity,
+  and shifts the whole creature so its lowest point just touches the
+  ground — no drop from spawn height that would count as elevation) and
+  resets the `TrialMeasurement` from the creature's current
+  `CenterOfMass.X`. Each tick it records `CenterOfMass.X` and the clearance
+  `GroundTopY - Creature.LowestPointY`. `TrialCompleted` fires once the
+  tick budget is spent, with the final `TrialResult`.
 - `Creature.CenterOfMass` is the average `GlobalPosition` of all beam
   bodies — a simple, cheap stand-in for a true center-of-mass, adequate for
   fitness tracking.

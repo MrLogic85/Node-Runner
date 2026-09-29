@@ -1,3 +1,4 @@
+using System.Text.Json.Nodes;
 using NodeRunner.App.Repositories;
 using NodeRunner.Domain;
 
@@ -62,6 +63,36 @@ public sealed class CreationRepositoryTests
             listed.Count.ShouldBe(1);
             AssertEquivalent(listed[0], creation);
             AssertEquivalent(repository.Get(creation.Id), creation);
+        }
+        finally
+        {
+            if (Directory.Exists(directory))
+            {
+                Directory.Delete(directory, recursive: true);
+            }
+        }
+    }
+
+    [Fact]
+    public void File_LoadTrainingSavedBeforeBestRun_LeavesBestRunEmpty()
+    {
+        var directory = Path.Combine(Path.GetTempPath(), $"node-runner-{Guid.NewGuid():N}");
+        try
+        {
+            var repository = new FileCreationRepository(new TestStorageLocation(directory));
+            var creation = CreateCreation("Older");
+            repository.Save(creation);
+            var path = Directory.EnumerateFiles(directory, "*.json").Single();
+            var json = JsonNode.Parse(File.ReadAllText(path))!.AsObject();
+            var training = json.Single(property => property.Key.Equals("Training", StringComparison.OrdinalIgnoreCase)).Value!.AsObject();
+            training.Remove(training.Single(property => property.Key.Equals("BestRun", StringComparison.OrdinalIgnoreCase)).Key).ShouldBeTrue();
+            File.WriteAllText(path, json.ToJsonString());
+
+            var loaded = repository.Get(creation.Id);
+
+            loaded.ShouldNotBeNull();
+            loaded.Training!.BestRun.ShouldBeNull();
+            loaded.Training.Generation.ShouldBe(creation.Training!.Generation);
         }
         finally
         {
@@ -363,7 +394,7 @@ public sealed class CreationRepositoryTests
                 [new NodeDef(new Vector2D(0, 0), 1), new NodeDef(new Vector2D(2, 0), 1)],
                 [new BeamDef(0, 1)],
                 [new CoreDef(0)]),
-            new TrainingStateDef([2, 1], [0.1, -0.2, 0.3], 2, "Tanh"));
+            new TrainingStateDef([2, 1], [0.1, -0.2, 0.3], 2, "Tanh", 42.5, new TrainingRunDef(42.5, 88.25, 12, MapIds.Flat)));
     }
 
     private static void AssertEquivalent(CreationDef? actual, CreationDef expected)
@@ -379,6 +410,8 @@ public sealed class CreationRepositoryTests
         actual.Training.BestGenome.ShouldBe(expected.Training.BestGenome);
         actual.Training.Generation.ShouldBe(expected.Training.Generation);
         actual.Training.Activation.ShouldBe(expected.Training.Activation);
+        actual.Training.BestFitness.ShouldBe(expected.Training.BestFitness);
+        actual.Training.BestRun.ShouldBe(expected.Training.BestRun);
     }
 
     private sealed class TestStorageLocation(string directoryPath) : IStorageLocation

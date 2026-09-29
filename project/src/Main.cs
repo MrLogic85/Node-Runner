@@ -72,6 +72,7 @@ public partial class Main : Node2D
     private Label? _inspectorRole;
     private Label? _inspectorValues;
     private PanelContainer? _inspectorPanel;
+    private static readonly Vector2 _groundSize = new(900, 48);
     private StaticBody2D? _ground;
     private readonly MappingViewModel _mapping = new();
     private readonly SignalFlowPresentationViewModel _signalFlow = new();
@@ -299,6 +300,9 @@ public partial class Main : Node2D
         layer.AddChild(_buildModeBackdrop);
     }
 
+    // Every creation trains on flat ground until maps land (#443).
+    private float GroundTopY => (_ground?.GlobalPosition.Y ?? 0) - (_groundSize.Y / 2);
+
     private void AddGround()
     {
         var ground = new StaticBody2D
@@ -309,7 +313,7 @@ public partial class Main : Node2D
 
         ground.AddChild(new CollisionShape2D
         {
-            Shape = new RectangleShape2D { Size = new Vector2(900, 48) },
+            Shape = new RectangleShape2D { Size = _groundSize },
         });
 
         ground.AddChild(new Polygon2D
@@ -438,6 +442,7 @@ public partial class Main : Node2D
             _creature.Brain.LayerSizes,
             ga,
             RngProvider().Random,
+            GroundTopY,
             trialDurationTicks: profile.TrialDurationTicks,
             creatureFactory: CreateCreatureInstance);
     }
@@ -462,6 +467,7 @@ public partial class Main : Node2D
             _creature.Brain.LayerSizes,
             ga,
             RngProvider().Random,
+            GroundTopY,
             resume?.BestGenome,
             resume?.Generation ?? 0,
             profile.TrialDurationTicks,
@@ -1637,7 +1643,13 @@ public partial class Main : Node2D
             creation.Name,
             creation.Creature,
             creation.BrainShape,
-            new TrainingStateDef(_evolver.LayerSizes, genome.ToArray(), _evolver.Generation, Activation.Tanh.ToString(), _evolver.BestFitness));
+            new TrainingStateDef(
+                _evolver.LayerSizes,
+                genome.ToArray(),
+                _evolver.Generation,
+                Activation.Tanh.ToString(),
+                _evolver.BestFitness,
+                BestRunOf(_evolver) ?? creation.Training?.BestRun));
     }
 
     private void AddConstructionToolRow(CanvasLayer layer)
@@ -1900,17 +1912,24 @@ public partial class Main : Node2D
         var saveStatusVersion = BeginTrainingSaveStatus($"Saving generation {generation}...");
 
         var bestFitness = _evolver.BestFitness;
-        Task.Run(() => PersistTrainingSnapshot(saveManager, id, epoch, saveStatusVersion, layerSizes, genomeSnapshot, generation, bestFitness));
+        var bestRun = BestRunOf(_evolver);
+        Task.Run(() => PersistTrainingSnapshot(saveManager, id, epoch, saveStatusVersion, layerSizes, genomeSnapshot, generation, bestFitness, bestRun));
     }
 
-    private void PersistTrainingSnapshot(SaveManager saveManager, Guid id, long epoch, long saveStatusVersion, int[] layerSizes, double[] genome, int generation, double bestFitness)
+    // Training runs on flat ground only until maps land (#443).
+    private static TrainingRunDef? BestRunOf(Evolver evolver) =>
+        evolver.BestRun is { } run
+            ? new TrainingRunDef(run.Distance, run.TopSpeed, run.Elevation, MapIds.Flat)
+            : null;
+
+    private void PersistTrainingSnapshot(SaveManager saveManager, Guid id, long epoch, long saveStatusVersion, int[] layerSizes, double[] genome, int generation, double bestFitness, TrainingRunDef? bestRun)
     {
         try
         {
             var persisted = saveManager.TryPersistTraining(
                 id,
                 epoch,
-                new TrainingStateDef(layerSizes, genome, generation, Activation.Tanh.ToString(), bestFitness));
+                new TrainingStateDef(layerSizes, genome, generation, Activation.Tanh.ToString(), bestFitness, bestRun));
             if (persisted)
             {
                 CallDeferred(nameof(ShowTrainingPersisted), id.ToString(), saveStatusVersion, generation);
