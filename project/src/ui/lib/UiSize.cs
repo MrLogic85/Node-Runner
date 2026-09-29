@@ -2,7 +2,7 @@ namespace NodeRunner.Ui.Lib;
 
 /// <summary>
 /// Reference-design dimensions from <c>reference design/tokens.json</c>.
-/// These are theme-independent: Neon, Paper, and Effects Lite share every value,
+/// These are theme-independent: Neon and Paper share every value,
 /// so they are plain constants rather than Godot Theme entries. Keeping them out
 /// of the Theme also keeps fractional values exact, because Godot rounds theme
 /// constants to integers.

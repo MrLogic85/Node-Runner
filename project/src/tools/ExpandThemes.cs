@@ -6,7 +6,6 @@ namespace NodeRunner.Tools;
 /// <summary>
 /// Regenerates the palette-derived color items in every theme file after a palette color changed:
 /// <c>Godot --headless --path project res://scenes/tools/ExpandThemes.tscn</c>.
-/// Effects Lite is written from Neon's palette with effects off, so it has no authored values of its own.
 /// </summary>
 public partial class ExpandThemes : Node
 {
@@ -19,11 +18,8 @@ public partial class ExpandThemes : Node
             var paper = UiThemes.Paper;
             UiThemeExpander.Expand(neon);
             UiThemeExpander.Expand(paper);
-            var lite = LoadOrCreate(UiThemes.PathFor(UiTokenType.Light));
-            UiThemeExpander.ExpandVariant(neon, lite, UiTokens.Flag.EffectsEnabled, enabled: false);
             failed |= !Save(neon, UiThemes.PathFor(UiTokenType.Neon));
             failed |= !Save(paper, UiThemes.PathFor(UiTokenType.Paper));
-            failed |= !Save(lite, UiThemes.PathFor(UiTokenType.Light));
         }
         catch (Exception exception)
         {
@@ -32,9 +28,6 @@ public partial class ExpandThemes : Node
         }
         GetTree().Quit(failed ? 1 : 0);
     }
-
-    private static Godot.Theme LoadOrCreate(string path) =>
-        ResourceLoader.Exists(path) ? GD.Load<Godot.Theme>(path) : new Godot.Theme();
 
     private static bool Save(Godot.Theme theme, string path)
     {

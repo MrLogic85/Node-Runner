@@ -115,7 +115,6 @@ swap restyles everything:
   (text-colour variations, base control colours) match their palette
 - typography is authored once, in the project theme, with a font and size for
   every variation
-- effects-lite is Neon's palette with effects off
 - saved scenes pin no stylebox, colour, font or font size on any node, store
   no generated icon texture, and do not store the properties a library
   component derives on its own node (`SceneDerivedStateTests`)

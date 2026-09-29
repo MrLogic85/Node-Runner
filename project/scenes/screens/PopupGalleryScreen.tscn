@@ -19,10 +19,6 @@ Text = "Neon"
 script = ExtResource("4_43x7j")
 Text = "Paper"
 
-[sub_resource type="Resource" id="shell_Resource_theme_effects_lite"]
-script = ExtResource("4_43x7j")
-Text = "Effects lite"
-
 [node name="PopupGalleryScreen" type="Control" unique_id=1057464504]
 layout_mode = 3
 anchors_preset = 15
@@ -57,7 +53,7 @@ unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 4
 script = ExtResource("3_ejpeg")
-Segments = Array[ExtResource("4_43x7j")]([SubResource("shell_Resource_theme_neon"), SubResource("shell_Resource_theme_paper"), SubResource("shell_Resource_theme_effects_lite")])
+Segments = Array[ExtResource("4_43x7j")]([SubResource("shell_Resource_theme_neon"), SubResource("shell_Resource_theme_paper")])
 
 [node name="ToolbarMenuDebugBounds" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/ToolbarMenu" parent_id_path=PackedInt32Array(1157572243, 1208477361) index="0" unique_id=2076457439]
 unique_name_in_owner = true

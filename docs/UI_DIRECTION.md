@@ -98,12 +98,12 @@ token import does not recreate the dead mappings.
   in `StyleBoxFlat.ShadowSize`, and matching the reference's perceived glow on
   device required recalibration, not the literal number. `UiGlow` owns the
   Android-reviewed values (extent 10, opacity 12%) for every glowing surface.
-  The paper theme and Effects Lite suppress glow through `effects_enabled`,
+  The paper theme suppresses glow through `effects_enabled`,
   not through a zero radius. An earlier import did map the literal `16`; the
   constant was never read by any control and has been removed.
 - **Dimension tokens** (`spacing`, `radius`, `stroke`, and `layout`) are
   constants in `UiSize` and `UiLayout` rather than Godot theme entries. Every
-  palette shares the same dimensions — Neon, Paper, and Effects Lite differ only
+  palette shares the same dimensions — Neon and Paper differ only
   in colour, soft-fill alpha, and glow — so routing them through the Theme added
   a lookup and a per-palette copy without ever allowing a different value. Plain
   constants also keep `stroke` fractions exact, because Godot rounds theme
@@ -235,9 +235,8 @@ change between skins, and plain constants for the values that do not.
     by `UiThemeExpander`.
     `UiThemeExpander.DerivedColors` lists them; the expander clears every
     colour of those types and rewrites them, leaving other items untouched.
-    `NeonLite.tres` is Neon's palette with effects off. After editing a palette
-    colour, build the Debug assembly (`dotnet build project/NodeRunner.csproj`)
-    and run
+    After editing a palette colour, build the Debug assembly
+    (`dotnet build project/NodeRunner.csproj`) and run
     `Godot --headless --path project res://scenes/tools/ExpandThemes.tscn`.
     Saving from the command line drops the font `uid`s from `Neon.tres`'s
     `ext_resource` lines; restore them (or open and re-save the theme in the
@@ -547,8 +546,8 @@ project once after script changes so Godot can run its editor previews.
   reaches the frame. Containers own child placement; `Column` exposes its
   separation under Theme Overrides / Constants. The view keeps the card
   centered and constrains long content to the viewport.
-- Root `Type` and `Theme Preview`: preview semantic type and Neon/Paper/
-  Effects Lite. Typography and semantic colors still come from shared tokens.
+- Root `Type` and `Theme Preview`: preview semantic type and Neon/Paper.
+  Typography and semantic colors still come from shared tokens.
   Previewing an error is possible by showing the named `Error` Label.
 
 F6 on this content scene shows the standalone visual specimen; it has no
@@ -575,9 +574,9 @@ separations remain scene-owned. Keep the unique `Title`, `Message`,
 `SemanticType`, and `SemanticIcon` names when rearranging nodes.
 
 Root **Type** sets the frame's severity border and glow (`UiPopupCard`), the
-semantic overline and the icon colour; **Theme Preview** selects Neon, Paper
-or Effects Lite. Card **Size Variant** remains a normal shared-card option;
-the popup frame always glows unless effects are off. Root Custom Minimum Size X
+semantic overline and the icon colour; **Theme Preview** selects Neon or
+Paper. Card **Size Variant** remains a normal shared-card option;
+the popup frame glows wherever the theme enables effects (Neon, not Paper). Root Custom Minimum Size X
 is the preferred width (initially the 326px card-width token); the runtime
 host narrows it to the available viewport and restores that preferred width
 when space becomes available again.

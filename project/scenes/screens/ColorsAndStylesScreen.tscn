@@ -18,10 +18,6 @@ Text = "Neon"
 script = ExtResource("shell_6_theme_segment")
 Text = "Paper"
 
-[sub_resource type="Resource" id="shell_Resource_theme_effects_lite"]
-script = ExtResource("shell_6_theme_segment")
-Text = "Effects lite"
-
 [node name="ColorsAndStylesScreen" type="Control" unique_id=213652508]
 layout_mode = 3
 anchors_preset = 15
@@ -56,7 +52,7 @@ unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 4
 script = ExtResource("shell_5_theme_switch")
-Segments = Array[ExtResource("shell_6_theme_segment")]([SubResource("shell_Resource_theme_neon"), SubResource("shell_Resource_theme_paper"), SubResource("shell_Resource_theme_effects_lite")])
+Segments = Array[ExtResource("shell_6_theme_segment")]([SubResource("shell_Resource_theme_neon"), SubResource("shell_Resource_theme_paper")])
 
 [node name="ToolbarMenuDebugBounds" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/ToolbarMenu" parent_id_path=PackedInt32Array(1157572243, 1208477361) index="0" unique_id=2076457439]
 unique_name_in_owner = true

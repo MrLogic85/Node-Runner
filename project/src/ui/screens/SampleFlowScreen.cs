@@ -552,7 +552,7 @@ public partial class SampleFlowScreen : Control
 
             foreach (var node in left)
             {
-                // Illustrative network diagram -- effects-lite drops the
+                // Illustrative network diagram -- themes without effects drop the
                 // glow treatment for flat schematic dots instead of hiding
                 // them (#134).
                 network.DrawCircle(
