@@ -651,16 +651,25 @@ dialog.Open(new UiDialogSpec(
     holdToAction: false));
 dialog.Finished += confirmed => { /* Host reacts to completion or cancellation. */ };
 
-var notifications = new UiNotification();
-AddChild(notifications);
-notifications.Enqueue(new UiNotificationSpec(
+// Product screens raise notifications on the app-wide layer, from any node.
+UiNotificationLayer.Enqueue(this, new UiNotificationSpec(
     UiPopupType.Default, "Saved", "Your changes are saved.",
     OnClick: () => false));
 
-notifications.Enqueue(new UiNotificationSpec(
+UiNotificationLayer.Enqueue(this, new UiNotificationSpec(
     UiPopupType.Default, "New part unlocked: Spring", "Reached 10 m.",
     Icon: new(UiIconId.PartSpring)));
 ```
+
+The app's notifications live on `UiNotificationLayer`, the `Notifications`
+autoload: a `CanvasLayer` above every screen layer that runs while the tree
+is paused. It outlives scene changes, so a notification raised just before
+the router changes scene still shows after it
+([#472](https://github.com/MrLogic85/Node-Runner/issues/472)). Screens do not
+add their own `UiNotification`; only Popup Gallery keeps one, so its specimens
+follow the gallery's theme switch. Dialogs stay in the scene that opens them:
+none has to outlive a scene change, and a scene change closes an open dialog
+with its scene.
 
 Parts tray tabs use persistent native toggle buttons in a `ButtonGroup`,
 with the reference's part glyphs and accent-soft selected treatment, not a

@@ -157,6 +157,36 @@ public sealed class UiSourceGuardTests
             "screen above it (#463); order children in the tree instead (InternalMode.Back draws last).");
     }
 
+    // A screen's own queue is freed with its scene, dropping a notification raised just before
+    // the router changes scene (#472). Popup Gallery keeps one so its specimens follow its theme.
+    [Fact]
+    public void Notifications_are_queued_on_the_app_layer()
+    {
+        var owners = new[] { "ui/lib/UiNotificationLayer.cs", "ui/screens/PopupGalleryScreen.cs" };
+        var compilation = CSharpSources.ProjectCompilation;
+        var violations = CSharpSources.Project
+            .Where(source => !owners.Contains(source.Path))
+            .SelectMany(source =>
+            {
+                var model = compilation.GetSemanticModel(source.Tree);
+                return source.Find(node => CreatesNotificationQueue(node, model));
+            })
+            .ToList();
+
+        violations.ShouldBeEmpty("Queue notifications with UiNotificationLayer.Enqueue so they outlive scene changes (#472).");
+        SceneNodes.WithScript("UiNotification.cs").ShouldBeEmpty();
+    }
+
+    [Theory]
+    [InlineData("UiNotification M() => new UiNotification();")]
+    [InlineData("UiNotification N = new();")]
+    public void Notification_queue_is_flagged(string member)
+    {
+        var snippet = CSharpSources.Snippet(member);
+        var model = CSharpSources.Compile([.. CSharpSources.Project, snippet]).GetSemanticModel(snippet.Tree);
+        snippet.Find(node => CreatesNotificationQueue(node, model)).ShouldHaveSingleItem();
+    }
+
     [Theory]
     [InlineData("Label M() => new Label { ZIndex = 1 };")]
     [InlineData("void M(Control control) { control.ZIndex = 1; }")]
@@ -265,6 +295,10 @@ public sealed class UiSourceGuardTests
                 => invocation.ArgumentList.Arguments.Count == 4,
             _ => false,
         };
+
+    private static bool CreatesNotificationQueue(SyntaxNode node, SemanticModel model) =>
+        node is BaseObjectCreationExpressionSyntax creation
+        && model.GetTypeInfo(creation).Type is { Name: "UiNotification", ContainingNamespace.Name: "Lib" };
 
     private static bool SetsZIndex(SyntaxNode node) => node is AssignmentExpressionSyntax
     {

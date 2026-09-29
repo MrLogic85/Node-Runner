@@ -94,7 +94,7 @@ Node Runner/
 │   └── src/
 │       ├── creature/               # Godot Nodes for creatures
 │       ├── sim/                    # simulation orchestration
-│       ├── managers/               # autoloads / composition root
+│       ├── managers/               # service autoloads / composition root
 │       ├── theme/                  # arena (world) visuals, not UI styling
 │       ├── tools/                  # editor/CLI tools; their scenes are not exported
 │       └── ui/
@@ -258,7 +258,10 @@ Examples, Build and Simulate.
   `ISceneNavigator` over the history and is the only code that changes scenes.
 
 Because a scene is rebuilt from its route, anything the player expects to
-find again is saved before the scene closes.
+find again is saved before the scene closes. What must outlive a scene
+change lives outside the scenes: notifications are queued on the
+`Notifications` autoload (`UiNotificationLayer`, #472). It lives in
+`ui/lib`, not `managers/`, because managers hold no UI.
 
 ## Threading
 
