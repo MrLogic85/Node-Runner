@@ -15,16 +15,10 @@ public sealed class CreationDuplicateWorkflow : ICreationDuplicateWorkflow
         _newId = newId ?? Guid.NewGuid;
     }
 
-    public CreationDef Duplicate(Guid id, CreationDuplicateMode mode)
+    public CreationDef Duplicate(Guid id)
     {
-        if (!Enum.IsDefined(mode))
-        {
-            throw new ArgumentOutOfRangeException(nameof(mode));
-        }
-
         var source = _repository.Get(id) ?? throw new KeyNotFoundException($"Creation '{id}' was not found.");
-        var training = mode == CreationDuplicateMode.CopyTraining ? source.Training : null;
-        var copy = new CreationDef(_newId(), $"Copy of {source.Name}", source.Creature, source.BrainShape, training);
+        var copy = new CreationDef(_newId(), $"Copy of {source.Name}", source.Creature, source.BrainShape, source.Training);
         _repository.Save(copy);
         return copy;
     }

@@ -109,9 +109,9 @@ public partial class SaveManager : Node
         return true;
     }
 
-    public CreationDef Duplicate(Guid id, CreationDuplicateMode mode = CreationDuplicateMode.CopyTraining)
+    public CreationDef Duplicate(Guid id)
     {
-        return CreationDuplicateWorkflow.Duplicate(id, mode);
+        return CreationDuplicateWorkflow.Duplicate(id);
     }
 
     private ICreationRepository Repository =>

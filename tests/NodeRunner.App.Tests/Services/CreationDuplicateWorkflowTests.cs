@@ -7,7 +7,7 @@ namespace NodeRunner.App.Tests.Services;
 public sealed class CreationDuplicateWorkflowTests
 {
     [Fact]
-    public void Duplicate_CopyTraining_CreatesNewCreationWithTraining()
+    public void Duplicate_CreatesNewCreationWithTraining()
     {
         var repository = new InMemoryCreationRepository();
         var source = CreateCreation("Walker", generation: 8);
@@ -15,7 +15,7 @@ public sealed class CreationDuplicateWorkflowTests
         repository.Save(source);
         var workflow = new CreationDuplicateWorkflow(repository, () => copyId);
 
-        var copy = workflow.Duplicate(source.Id, CreationDuplicateMode.CopyTraining);
+        var copy = workflow.Duplicate(source.Id);
 
         copy.Id.ShouldBe(copyId);
         copy.Name.ShouldBe("Copy of Walker");
@@ -26,37 +26,11 @@ public sealed class CreationDuplicateWorkflowTests
     }
 
     [Fact]
-    public void Duplicate_StartFresh_CreatesNewCreationWithoutTraining()
-    {
-        var repository = new InMemoryCreationRepository();
-        var source = CreateCreation("Walker", generation: 8);
-        var copyId = Guid.NewGuid();
-        repository.Save(source);
-        var workflow = new CreationDuplicateWorkflow(repository, () => copyId);
-
-        var copy = workflow.Duplicate(source.Id, CreationDuplicateMode.StartFresh);
-
-        copy.Id.ShouldBe(copyId);
-        copy.Name.ShouldBe("Copy of Walker");
-        copy.Creature.ShouldBe(source.Creature);
-        copy.Training.ShouldBeNull();
-        repository.Get(copyId)!.Training.ShouldBeNull();
-    }
-
-    [Fact]
     public void Duplicate_MissingCreation_Throws()
     {
         var workflow = new CreationDuplicateWorkflow(new InMemoryCreationRepository());
 
-        Should.Throw<KeyNotFoundException>(() => workflow.Duplicate(Guid.NewGuid(), CreationDuplicateMode.CopyTraining));
-    }
-
-    [Fact]
-    public void Duplicate_InvalidMode_Throws()
-    {
-        var workflow = new CreationDuplicateWorkflow(new InMemoryCreationRepository());
-
-        Should.Throw<ArgumentOutOfRangeException>(() => workflow.Duplicate(Guid.NewGuid(), (CreationDuplicateMode)999));
+        Should.Throw<KeyNotFoundException>(() => workflow.Duplicate(Guid.NewGuid()));
     }
 
     [Fact]
