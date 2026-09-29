@@ -71,7 +71,6 @@ public static class UiTokens
             Beam,
             ButtonSelected,
             SelectionHandle,
-            InfoRing,
             Number
         }
     }

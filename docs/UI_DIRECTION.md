@@ -133,8 +133,8 @@ entries are not components of their own in Godot
 ([issue #306](https://github.com/MrLogic85/Node-Runner/issues/306)):
 
 - **`c_round_button`** is `UiSelectionHandle`: the round icon badge that the
-  canvas handles are, and that `c_info_row` shows (`UiInfoRow` still draws its
-  own ring until [#422](https://github.com/MrLogic85/Node-Runner/issues/422)).
+  canvas handles are, and that `c_info_row` shows (`UiInfoRow` draws it through
+  `UiSelectionHandle.DrawRoundButton`).
 - **`c_rows`** has no component of its own. It is the body of a part's
   settings panel: a plain container whose separation is the panel's
   `space-1` gap, holding rows that carry no outer padding of their own, and an
@@ -346,6 +346,21 @@ designer. This deliberately supersedes the reference's 40px-in-48px button
 target, not the touch geometry of other controls.
 The Android-reviewed shared glow uses base colours with 12% opacity
 and 10px extent rather than separate button/control glow variants.
+
+Other icon sizes follow the reference's rules
+([#422](https://github.com/MrLogic85/Node-Runner/issues/422)):
+- **Chips.** `UiChip` has one size (`control-xs`). Its icon is `icon-sm` (12),
+  or `icon` (16) when it is a part glyph. `GlyphSizedIcon` gives a UI icon the
+  same 16px when its chip sits beside glyph chips, such as a map reward among
+  part rewards.
+- **List rows.** A list row's leading icon is `icon-lg` (20): the Standard
+  menu row and the part row. The picker's option list is a compact menu row
+  and keeps the 16px accessory the reference draws there.
+- **Icons inside a ring.** An icon inside a ring is `icon` (16). The selection
+  handle and the info row that shows it both draw the same round button
+  (`UiSelectionHandle.DrawRoundButton`).
+- **Part glyphs.** A part glyph is never drawn at `icon-sm`; `UiIcons.Load`
+  rejects that pairing.
 
 Toggle and checkbox rows follow the Component Library's rendered specimens:
 transparent rows, solid indicator outlines, and 50% opacity for the whole

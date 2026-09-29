@@ -106,7 +106,12 @@ public partial class UiCallout : PanelContainer
         // Re-found after a C# assembly reload, which clears managed fields but keeps the child.
         _content ??= UiIconCaption.Ensure(this);
 
-        _content.Apply(Text, IconId, UiTokens.Color.Ink, UiThemeLookup.Color(this, UiTokens.Color.Ink));
+        _content.Apply(
+            Text,
+            IconId,
+            UiChip.IconSizeFor(IconId, glyphSized: false),
+            UiTokens.Color.Ink,
+            UiThemeLookup.Color(this, UiTokens.Color.Ink));
         AddThemeStyleboxOverride("panel", UiThemeLookup.CreateStyleBox(
             UiThemeLookup.Color(this, UiTokens.Color.Panel),
             UiThemeLookup.Color(this, BorderFor(Kind)),

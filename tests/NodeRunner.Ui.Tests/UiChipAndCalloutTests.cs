@@ -30,11 +30,13 @@ public sealed class UiChipAndCalloutTests
     }
 
     [Fact]
-    public void ChipHeights_AreControlSizes()
+    public void ChipIcons_AreSmall_UnlessAPartGlyphOrBesideOne()
     {
-        UiChip.HeightFor(large: false).ShouldBe(UiSize.Control.ExtraSmall);
-        UiChip.HeightFor(large: true).ShouldBe(UiSize.Control.Default);
+        UiChip.IconSizeFor(UiIconId.Bolt, glyphSized: false).ShouldBe(UiIconSize.Small);
+        UiChip.IconSizeFor(UiIconId.PartSpring, glyphSized: false).ShouldBe(UiIconSize.Standard);
+        UiChip.IconSizeFor(UiIconId.MapHills, glyphSized: true).ShouldBe(UiIconSize.Standard);
     }
+
 
     [Theory]
     [InlineData(UiCallout.CalloutKind.Warning, UiTokens.Color.Halo)]

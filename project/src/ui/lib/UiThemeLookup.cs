@@ -64,8 +64,6 @@ public static class UiThemeLookup
                 return UiSize.Stroke.ButtonSelected;
             case UiTokens.Size.Stroke.SelectionHandle:
                 return UiSize.Stroke.SelectionHandle;
-            case UiTokens.Size.Stroke.InfoRing:
-                return UiSize.Stroke.InfoRing;
             case UiTokens.Size.Stroke.Number:
                 return UiSize.Stroke.Number;
             default:

@@ -54,7 +54,6 @@ public static class UiSize
         public const int Beam = 3;
         public const int ButtonSelected = 2;
         public const int SelectionHandle = 2;
-        public const int InfoRing = 2;
         public const float Number = 1.5f;
     }
 

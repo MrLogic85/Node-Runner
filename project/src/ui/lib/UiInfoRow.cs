@@ -3,8 +3,8 @@ using Godot;
 namespace NodeRunner.Ui.Lib;
 
 /// <summary>
-/// Info row (<c>c_info_row</c>): a ringed halo icon with a title and one line of help, used to
-/// explain a handle or a mode.
+/// Info row (<c>c_info_row</c>): the handle it explains, drawn exactly as the round button on the
+/// canvas (<see cref="UiSelectionHandle"/>), with a title and one line of help.
 /// </summary>
 [Tool]
 [GlobalClass]
@@ -16,7 +16,7 @@ public partial class UiInfoRow : HBoxContainer
     private UiIconId _iconId = UiIconId.None;
     private string _title = string.Empty;
     private string _help = string.Empty;
-    private PanelContainer? _ring;
+    private CenterContainer? _ring;
     private TextureRect? _icon;
     private UiLabel? _titleLabel;
     private UiLabel? _helpLabel;
@@ -79,6 +79,18 @@ public partial class UiInfoRow : HBoxContainer
         {
             UiThemeRefresh.Guarded(this, Refresh);
         }
+        else if (what == NotificationSortChildren)
+        {
+            QueueRedraw();
+        }
+    }
+
+    public override void _Draw()
+    {
+        if (_ring is not null)
+        {
+            UiSelectionHandle.DrawRoundButton(this, _ring.Position + (_ring.Size * 0.5f));
+        }
     }
 
     private void Refresh()
@@ -93,11 +105,6 @@ public partial class UiInfoRow : HBoxContainer
         AddThemeConstantOverride("separation", UiSize.Space.S2);
 
         var halo = UiThemeLookup.Color(this, UiTokens.Color.Halo);
-        _ring!.AddThemeStyleboxOverride("panel", UiThemeLookup.CreateStyleBox(
-            Colors.Transparent,
-            halo,
-            borderWidth: UiSize.Stroke.InfoRing,
-            radius: UiSize.Radius.Pill));
         bool hasIcon = IconId != UiIconId.None;
         _icon!.Visible = hasIcon;
         _icon.Texture = hasIcon ? UiIcons.Load(IconId, UiIconSize.Standard) : null;
@@ -106,6 +113,7 @@ public partial class UiInfoRow : HBoxContainer
         _titleLabel!.Text = Title;
         _helpLabel!.Text = Help;
         _helpLabel.Visible = Help.Length > 0;
+        QueueRedraw();
     }
 
     private void EnsureContent()
@@ -115,7 +123,7 @@ public partial class UiInfoRow : HBoxContainer
             return;
         }
 
-        if (GetNodeOrNull<PanelContainer>(_ringName) is { } ring
+        if (GetNodeOrNull<CenterContainer>(_ringName) is { } ring
             && GetNodeOrNull<VBoxContainer>(_textName) is { } text)
         {
             _ring = ring;
@@ -125,10 +133,10 @@ public partial class UiInfoRow : HBoxContainer
             return;
         }
 
-        _ring = new PanelContainer
+        _ring = new CenterContainer
         {
             Name = _ringName,
-            CustomMinimumSize = Vector2.One * UiSize.Control.Small,
+            CustomMinimumSize = Vector2.One * (UiSize.Widget.SelectionHandleRadius * 2),
             MouseFilter = MouseFilterEnum.Ignore,
             SizeFlagsVertical = SizeFlags.ShrinkCenter,
         };
