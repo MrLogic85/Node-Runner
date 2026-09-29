@@ -169,19 +169,11 @@ public sealed class UiThemeExpanderTests
         UiLayout.CanvasWidth.ShouldBe(640);
         UiLayout.CanvasHeight.ShouldBe(360);
         UiLayout.TopBarHeight.ShouldBe(48);
-        UiLayout.ScreenBodyHeight.ShouldBe(312);
         UiLayout.ButtonBarWidth.ShouldBe(56);
         UiLayout.SidePanelWidth.ShouldBe(176);
-        UiLayout.BrainWidth.ShouldBe(460);
-        UiLayout.WellWidth.ShouldBe(250);
-        UiLayout.TileWidth.ShouldBe(156);
-        UiLayout.StageHeight.ShouldBe(170);
-        UiLayout.ThumbnailHeight.ShouldBe(100);
-        UiLayout.ColumnExtraSmallWidth.ShouldBe(40);
         UiLayout.ColumnSmallWidth.ShouldBe(52);
         UiLayout.ColumnMediumWidth.ShouldBe(76);
         UiLayout.ColumnLargeWidth.ShouldBe(96);
-        UiLayout.ColumnExtraLargeWidth.ShouldBe(128);
     }
 
     [Fact]

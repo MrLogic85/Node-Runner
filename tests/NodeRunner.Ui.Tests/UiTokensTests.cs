@@ -84,19 +84,12 @@ public sealed class UiTokensTests
         }.ShouldBe(new[] { 12, 16, 20, 24 });
         new[]
         {
-            UiLayout.ButtonBarWidth, UiLayout.SidePanelWidth, UiLayout.MenuWidth, UiLayout.DialogWidth,
-            UiLayout.BrainWidth, UiLayout.CardWidth, UiLayout.TileWidth, UiLayout.WellWidth,
-            UiLayout.SheetWidth, UiLayout.SheetWideWidth, UiLayout.SidePanelTabWidth,
-        }.ShouldBe(new[] { 56, 176, 200, 300, 460, 326, 156, 250, 720, 880, 28 });
+            UiLayout.ButtonBarWidth, UiLayout.SidePanelWidth, UiLayout.MenuWidth, UiLayout.SidePanelTabWidth,
+        }.ShouldBe(new[] { 56, 176, 200, 28 });
         new[]
         {
-            UiLayout.ScreenBodyHeight, UiLayout.StageHeight, UiLayout.ThumbnailHeight,
-        }.ShouldBe(new[] { 312, 170, 100 });
-        new[]
-        {
-            UiLayout.ColumnExtraSmallWidth, UiLayout.ColumnSmallWidth, UiLayout.ColumnMediumWidth,
-            UiLayout.ColumnLargeWidth, UiLayout.ColumnExtraLargeWidth,
-        }.ShouldBe(new[] { 40, 52, 76, 96, 128 });
+            UiLayout.ColumnSmallWidth, UiLayout.ColumnMediumWidth, UiLayout.ColumnLargeWidth,
+        }.ShouldBe(new[] { 52, 76, 96 });
         new[]
         {
             UiSize.Radius.Small, UiSize.Radius.Medium, UiSize.Radius.Large, UiSize.Radius.Pill,

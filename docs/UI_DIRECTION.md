@@ -112,6 +112,16 @@ token import does not recreate the dead mappings.
   [#299](https://github.com/MrLogic85/Node-Runner/issues/299)) works on the
   rendered viewport, not on token values. If a future theme ever needs its own
   dimensions (a compact or dense mode), that token moves back into the Theme.
+- **Scene-authored layout widths** have no C# constant
+  ([#300](https://github.com/MrLogic85/Node-Runner/issues/300)). A scene
+  owns its layout and cannot read a C# constant, so a constant only copies the
+  value. `UiLayout` keeps only the values C# reads. Use these reference values
+  in the scene directly: `w-dialog` 300 (`UiDialogContent.tscn`), `w-card` 326
+  (`UiNotificationContent.tscn`), `w-sheet` 720, `w-sheet-wide` 880,
+  `w-brain` 460, `w-well` 250, `h-well` 64, `w-tile` 156, `h-stage` 170,
+  `h-thumb` 100, `w-col-xs` 40 and `w-col-xl` 128. `h-screen` (312) needs no
+  value at all: the screen's container gives the body the height left under
+  the top bar.
 
 ### Reference component mapping
 
