@@ -31,6 +31,12 @@ layers.
   `TryBuild(...)` to attempt converting it into an immutable Domain type;
   they belong here rather than in Domain because Domain permits no
   behavior beyond validation (see `libs/NodeRunner.Domain/AGENTS.md`).
+- `Navigation/` — the screen history for the `SceneRouter` autoload (#468):
+  `SceneRoute` (one sealed record per scene; its properties are the plain
+  arguments the scene is rebuilt from), `SceneNavigation` (a request with
+  keep-current and launch mode) and `SceneBackStack`. Declare every scene's
+  route here; the plain-value test only scans this assembly. See
+  `docs/ARCHITECTURE.md` → Navigation.
 
 ## What does NOT live here
 
