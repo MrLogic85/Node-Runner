@@ -70,8 +70,9 @@ unchanged, it belongs in `lib/`. If it embeds project vocabulary
 - `[Export]` fields have sensible defaults so the Control renders something
   useful in the editor without setup.
 - Use containers and anchors for composition. Dimensions set in C# come from
-  named `UiSize`/`UiLayout`/`UiSpacing` values, never one-off literals. A
-  scene owns the paddings and sizes it authors; do not re-apply them from code
+  named `UiSize`/`UiLayout`/`UiSpacing` values, never one-off literals. The
+  exception is drawing code in a widget that draws in `_Draw`: see
+  `RewrittenUi.DrawnWidgets` in `docs/TEST_STRATEGY.md`. A scene owns the paddings and sizes it authors; do not re-apply them from code
   (#331).
 - Order drawing with the tree, not `ZIndex`: a `ZIndex` sorts across the
   whole `CanvasLayer`, so a raised part draws through every dialog and screen

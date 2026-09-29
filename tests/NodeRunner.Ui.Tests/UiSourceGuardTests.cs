@@ -59,12 +59,19 @@ public sealed class UiSourceGuardTests
     {
         var violations = CSharpSources.Project
             .Where(source => FollowsLibraryRules(source.Path))
-            .SelectMany(source => source.Find(IsInlineNumber))
+            .SelectMany(source => source.Find(node => IsUnnamedNumber(source.Path, node)))
             .ToList();
 
         violations.ShouldBeEmpty(
             "Take dimensions from UiSize, UiLayout or UiSpacing; name any other value as a const or static readonly field.");
     }
+
+    [Fact]
+    public void Only_widgets_that_draw_skip_the_number_rule() =>
+        RewrittenUi.DrawnWidgets
+            .Where(path => !RewrittenUi.Widgets.Contains(path) || !CSharpSources.Project.Single(source => source.Path == path)
+                .Tree.GetRoot().DescendantNodes().OfType<MethodDeclarationSyntax>().Any(method => method.Identifier.Text == "_Draw"))
+            .ShouldBeEmpty("A drawn widget is a rewritten widget that overrides _Draw.");
 
     [Fact]
     public void Rewritten_screens_declare_no_numbers()
@@ -96,6 +103,21 @@ public sealed class UiSourceGuardTests
             "Author static layout in the scene; code instantiates only library components and widgets " +
             "for runtime content, and never sets theme overrides, styleboxes or sizes (#310).");
     }
+
+    private const string _drawnWidget = "ui/widgets/ConstructionCanvas.cs";
+
+    [Theory]
+    [InlineData("void _Draw() { DrawCircle(Vector2.Zero, 1.7f, Colors.White); }")]
+    [InlineData("void DrawGlow() { var radius = 1.35f; }")]
+    public void Drawn_widget_drawing_number_is_exempt(string member) =>
+        CSharpSources.Snippet(member).Find(node => IsUnnamedNumber(_drawnWidget, node)).ShouldBeEmpty();
+
+    [Theory]
+    [InlineData(_drawnWidget, "void Select(Rect2 rect) { var tap = rect.Size.X < 8; }")]
+    [InlineData(_drawnWidget, "void Clear(SceneTree tree) { tree.CreateTimer(1.8); }")]
+    [InlineData("ui/lib/UiCard.cs", "void DrawGlow() { var radius = 1.35f; }")]
+    public void Number_outside_a_drawn_widget_drawing_is_flagged(string path, string member) =>
+        CSharpSources.Snippet(member).Find(node => IsUnnamedNumber(path, node)).ShouldHaveSingleItem();
 
     [Theory]
     [InlineData("const float RowHeight = 48;")]
@@ -367,6 +389,14 @@ public sealed class UiSourceGuardTests
         EnumMemberDeclarationSyntax or AttributeSyntax => true,
         _ => false,
     };
+
+    // A drawn widget's _Draw and Draw* helpers keep their drawing literals inline.
+    private static bool IsUnnamedNumber(string path, SyntaxNode node) =>
+        IsInlineNumber(node) && !(RewrittenUi.DrawnWidgets.Contains(path) && IsInDrawingMethod(node));
+
+    private static bool IsInDrawingMethod(SyntaxNode node) =>
+        node.Ancestors().OfType<MethodDeclarationSyntax>().FirstOrDefault()?.Identifier.Text is { } name
+        && (name == "_Draw" || name.StartsWith("Draw", StringComparison.Ordinal));
 
     private static bool FollowsLibraryRules(string path) =>
         path.StartsWith("ui/lib/", StringComparison.Ordinal) || RewrittenUi.Widgets.Contains(path);

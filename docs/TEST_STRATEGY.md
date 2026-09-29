@@ -140,11 +140,18 @@ its own, and each mapped name must exist in the reference
 under [#310](https://github.com/MrLogic85/Node-Runner/issues/310) are listed in
 `RewrittenUi` and held to stricter guards: their scenes are built from library
 components, widget scenes and plain layout containers, and every `%Name` their
-script binds exists in the scene with a matching type
-(`RewrittenSceneTests`); their screen scripts declare no numbers, their
+script or its `project/src` base classes bind exists in the scene with a
+matching type (`RewrittenSceneTests`). The guard reads literal
+`GetNode<T>("%Name")` calls, so helpers take nodes, not paths. Their screen scripts declare no numbers, their
 widget scripts name every number as the library does, and neither builds nor
-restyles controls (`UiSourceGuardTests`). A screen joins the lists when it is
-rewritten.
+restyles controls (`UiSourceGuardTests`). In widgets that draw
+(`RewrittenUi.DrawnWidgets`), every literal inside `_Draw` and its `Draw*`
+helpers skips the number rule: proportions, strokes, dash lengths, segment
+counts and alphas stay inline where they are drawn. Numbers elsewhere in the
+file (hit radii, timers, thresholds) are still named. Gallery pages join the lists like
+product screens. A screen joins the lists when it is rewritten;
+[#310](https://github.com/MrLogic85/Node-Runner/issues/310) tracks the rest as
+child or blocking issues.
 
 **3. Behaviour is tested apart from layout.** Rules and state live in
 `NodeRunner.App` view-models (`NodeRunner.App.Tests`), and component
