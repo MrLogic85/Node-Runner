@@ -1,0 +1,120 @@
+{
+ "generator": {
+  "size": [
+   78.2,
+   39.6
+  ],
+  "centre": [
+   39.1,
+   25.85
+  ],
+  "eyes": [
+   [
+    5.55,
+    25.85
+   ],
+   [
+    72.65,
+    25.85
+   ]
+  ],
+  "eye_radius": 5,
+  "line_width": 2,
+  "layers": {
+   "fill": "generator-fill.svg",
+   "lines": "generator-lines.svg"
+  },
+  "live": {
+   "layer": "generator-run.svg",
+   "what": "the stripes; pulse them (alpha) while the generator makes power"
+  }
+ },
+ "battery": {
+  "size": [
+   74.35,
+   39.6
+  ],
+  "centre": [
+   37.18,
+   22.55
+  ],
+  "eyes": [
+   [
+    5.55,
+    22.55
+   ],
+   [
+    68.8,
+    22.55
+   ]
+  ],
+  "eye_radius": 5,
+  "line_width": 2,
+  "layers": {
+   "fill": "battery-fill.svg",
+   "lines": "battery-lines.svg"
+  },
+  "live": {
+   "layer": "battery-cell.svg",
+   "what": "one lit cell; place one per cell, lit ones shown, from the left",
+   "cells": [
+    [
+     19.85,
+     15.4,
+     4.4,
+     14.3
+    ],
+    [
+     28.65,
+     15.4,
+     4.4,
+     14.3
+    ],
+    [
+     37.45,
+     15.4,
+     4.4,
+     14.3
+    ],
+    [
+     46.25,
+     15.4,
+     4.4,
+     14.3
+    ]
+   ]
+  }
+ },
+ "fuel": {
+  "size": [
+   65.0,
+   39.6
+  ],
+  "centre": [
+   32.5,
+   22.55
+  ],
+  "eyes": [
+   [
+    5.55,
+    22.55
+   ],
+   [
+    59.45,
+    22.55
+   ]
+  ],
+  "eye_radius": 5,
+  "line_width": 2,
+  "layers": {
+   "fill": "fuel-fill.svg",
+   "lines": "fuel-lines.svg"
+  },
+  "live": {
+   "layer": "fuel-level.svg",
+   "what": "the level line, drawn full; move it down by (1 - fuel) x travel",
+   "travel": 19.8
+  }
+ },
+ "_notes": "All sizes in canvas px at the size the block is drawn (it is never scaled). Tint fill with bg, lines and live with accent. Draw blocks behind beams and joints; between blocks, the lower one on top, an order set when a block is dropped in Build, never while it moves."
+}

@@ -75,3 +75,13 @@ Two sets. **UI icons** are stroked glyphs on a 24 grid (stroke 2, round caps and
 | <img src="icons/parts/velocity.svg" width="32"> | `velocity` |
 | <img src="icons/parts/wheel.svg" width="32"> | `wheel` |
 | <img src="icons/parts/wing.svg" width="32"> | `wing` |
+
+## Energy blocks (3)
+
+Battery, Generator and Fuel tank are drawn objects of one size each, with two **eyes** that beams attach to (see Parts in the design system). Each is exported in white layers, sized for the canvas and made at 4x so a texture stays sharp: `<block>-fill.svg` (tint with `bg`), `<block>-lines.svg` (every line and both eyes; tint with `accent`) and one live layer: `battery-cell.svg` (a lit cell, one per charged cell), `fuel-level.svg` (the level line, moved down as fuel is used) and `generator-run.svg` (the stripes, pulsed while it runs). `blocks.json` gives each block's size, its centre (the middle between the eyes), the eye positions and the live layer's positions, in canvas px. Draw blocks behind beams and joints; between blocks the lower one is drawn on top, an order set when a block is dropped, never recomputed while the creation moves.
+
+| Block | Fill | Lines |
+|---|---|---|
+| `generator` | <img src="icons/blocks/generator-fill.svg" height="40" style="background:#0d1424"> | <img src="icons/blocks/generator-lines.svg" height="40" style="background:#0d1424"> |
+| `battery` | <img src="icons/blocks/battery-fill.svg" height="40" style="background:#0d1424"> | <img src="icons/blocks/battery-lines.svg" height="40" style="background:#0d1424"> |
+| `fuel` | <img src="icons/blocks/fuel-fill.svg" height="40" style="background:#0d1424"> | <img src="icons/blocks/fuel-lines.svg" height="40" style="background:#0d1424"> |
