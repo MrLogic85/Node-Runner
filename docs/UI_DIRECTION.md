@@ -652,9 +652,11 @@ where the screen authors its title and actions in the editor. `ShowBack` and
 `ShowOverflow` hide the fixed buttons. `%ToolbarContent` sits in an 8px
 (`space-2`) side margin instead of the HBox separation, so the gap to Back
 and Overflow stays the same and the content keeps 8px from the edge when
-they are hidden. A screen without Back that wants its title aligned like the
-reference adds the empty 40px `w-col-xs` slot itself (Creations'
-`TitleInset`). Nodes a screen adds live under
+they are hidden. Creations, the only in-app screen without Back (the standalone gallery
+entry is a debug page), insets its title
+48px (`TitleInset`, the Back button's touch width) so the title sits where
+titles after Back do. The reference's empty 40px `w-col-xs` slot leaves it
+8px short. Nodes a screen adds live under
 `Toolbar/HBoxContainer/MarginContainer/ToolbarContent`. The toolbar also owns the overflow
 `Menu`: it anchors it under Overflow, opens it and makes it dismissible; the
 screen authors the items and decides what each does. `BackPressed` is its only
