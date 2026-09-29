@@ -8,7 +8,7 @@ namespace NodeRunner.Ui.Screens;
 /// <summary>
 /// Reference Examples screen: ready-made creations the player copies into Creations. The layout is
 /// authored in <c>scenes/screens/ExamplesScreen.tscn</c>; this script binds the presentation and
-/// forwards Back and Copy.
+/// forwards Back (the toolbar's, Android Back and Escape) and Copy.
 /// </summary>
 public partial class ExamplesScreen : Control
 {
@@ -37,9 +37,15 @@ public partial class ExamplesScreen : Control
     public override void _Ready()
     {
         UiLayout.ApplyScreen(this);
-        GetNode<UiToolbar>("%Toolbar").BackPressed += () => EmitSignal(SignalName.BackRequested);
+        var toolbar = GetNode<UiToolbar>("%Toolbar");
+        toolbar.BackPressed += RequestBack;
+        var back = new UiBackHandler { CanTakeBack = () => !toolbar.Menu.Visible };
+        back.BackRequested += RequestBack;
+        AddChild(back, @internal: InternalMode.Front);
         Apply();
     }
+
+    private void RequestBack() => EmitSignal(SignalName.BackRequested);
 
     private void Apply()
     {

@@ -1,0 +1,10 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://src/CreationsHost.cs" id="1_host"]
+[ext_resource type="PackedScene" path="res://scenes/screens/CreationsScreen.tscn" id="2_screen"]
+
+[node name="Creations" type="Node"]
+script = ExtResource("1_host")
+
+[node name="CreationsScreen" parent="." instance=ExtResource("2_screen")]
+unique_name_in_owner = true

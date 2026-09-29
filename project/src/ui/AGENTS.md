@@ -48,8 +48,12 @@ unchanged, it belongs in `lib/`. If it embeds project vocabulary
   ViewModel, wires input.
 - A routed screen implements `IRoutedScene`: `SceneRouter` calls
   `Enter(route, navigator)` before it joins the tree, and `_Ready()` builds
-  the VM from the route and subscribes. See `docs/ARCHITECTURE.md` →
-  Navigation.
+  the VM from the route and subscribes. A screen that needs saves stays
+  unrouted and emits signals; its host in `project/src/` is the routed scene.
+  See `docs/ARCHITECTURE.md` → Navigation.
+- Android Back: add a `UiBackHandler` with `InternalMode.Front`, give it a
+  `CanTakeBack` as its summary describes, and handle `BackRequested`. Do not
+  set `QuitOnGoBack` in a screen.
 - `_ExitTree()` unsubscribes. No leaked handlers.
 
 ### `widgets/`

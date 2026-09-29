@@ -69,13 +69,14 @@ public abstract partial class GalleryScreen : Control, IRoutedScene
     private UiBoundsDebugOverlay? _boundsOverlay;
     private UiMenuToggleItem? _debugBoundsItem;
     private UiSegmentedSwitch? _themeSwitcher;
-    private bool _ownsBack;
-    private bool _quitOnBackBefore;
     private ISceneNavigator? _navigator;
 
     public void Enter(SceneRoute route, ISceneNavigator navigator)
     {
         _navigator = navigator;
+        var back = new UiBackHandler { CanTakeBack = () => Toolbar is { Menu.Visible: false } && !HasOpenPopup };
+        back.BackRequested += RequestClose;
+        AddChild(back, @internal: InternalMode.Front);
         if (route is IGalleryRoute gallery)
         {
             ThemeIndex = gallery.ThemeIndex;
@@ -87,41 +88,6 @@ public abstract partial class GalleryScreen : Control, IRoutedScene
     public override void _EnterTree()
     {
         ApplyTheme();
-        if (_navigator is not null && !Engine.IsEditorHint())
-        {
-            _ownsBack = true;
-            _quitOnBackBefore = GetTree().QuitOnGoBack;
-            GetTree().QuitOnGoBack = false;
-        }
-    }
-
-    public override void _ExitTree()
-    {
-        if (_ownsBack)
-        {
-            _ownsBack = false;
-            GetTree().QuitOnGoBack = _quitOnBackBefore;
-        }
-    }
-
-    // The screen hears Android Back before the menu and popups inside it, so it can
-    // leave Back to them; acting deferred keeps one Back from also reaching the next page.
-    public override void _Notification(int what)
-    {
-        if (what == NotificationWMGoBackRequest && CanTakeBack())
-        {
-            Callable.From(RequestClose).CallDeferred();
-        }
-    }
-
-    // The menu takes Escape first as it is deeper in the tree.
-    public override void _UnhandledKeyInput(InputEvent inputEvent)
-    {
-        if (inputEvent.IsActionPressed("ui_cancel") && CanTakeBack())
-        {
-            GetViewport().SetInputAsHandled();
-            RequestClose();
-        }
     }
 
     public override void _Ready()
@@ -136,9 +102,6 @@ public abstract partial class GalleryScreen : Control, IRoutedScene
         AddChild(_boundsOverlay);
         ShowDebugBounds = ShowDebugBounds || ProjectSettings.GetSetting("ui/component_gallery_debug_bounds", false).AsBool();
     }
-
-    private bool CanTakeBack() =>
-        _ownsBack && IsVisibleInTree() && Toolbar is { Menu.Visible: false } && !HasOpenPopup;
 
     private void RequestClose() => _navigator?.Back();
 

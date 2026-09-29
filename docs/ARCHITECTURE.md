@@ -68,6 +68,10 @@ Arrows only go **downward** across layer boundaries.
   repository/service interfaces), `NodeRunner.Domain`, Godot.
   Managers are the **composition root** — they wire concrete implementations
   into ViewModels at startup.
+- **Scene roots** (`Main` and the `*Host` scenes in `project/src/`, with
+  their helpers there) may depend on every project layer above. They wire a
+  screen's signals to managers and the navigator; keep game rules out of
+  them. Nothing depends on them.
 - **Domain** (`libs/NodeRunner.Domain/`) depends on: nothing but the .NET BCL.
 - **ML** (`libs/NodeRunner.ML/`) depends on: `NodeRunner.Domain` only.
 
@@ -94,6 +98,7 @@ Node Runner/
 │   └── src/
 │       ├── creature/               # Godot Nodes for creatures
 │       ├── sim/                    # simulation orchestration
+│       ├── Main.cs, *Host.cs       # routed scene roots that wire screens to managers
 │       ├── managers/               # service autoloads / composition root
 │       ├── theme/                  # arena (world) visuals, not UI styling
 │       ├── tools/                  # editor/CLI tools; their scenes are not exported
@@ -236,9 +241,16 @@ tied to the retired Muscle model and does not carry over.
 
 Screens are moving to one scene each, where navigating replaces the current
 scene (#326): a left scene is closed, not paused, and Back rebuilds it from
-its route. #468 is routing them one by one: the component-library pages are
-routed, while `Main` still hosts Creations (the root route opens `Main`),
-Examples, Build and Simulate.
+its route. #468 is routing them one by one. Creations (the root and the
+main scene), Examples and the component-library pages are routed scenes;
+`Main` still holds Build and Simulate behind one route, `BuildRoute`, until
+#363 and #469 split them.
+
+A screen stays in `ui/screens/` and knows nothing of saves or the router's
+type: it emits signals. The routed scene that holds it is a small host in
+`project/src/` (`CreationsHost`, `ExamplesHost`, like `Main`) that wires
+those signals to `SaveManager` and the navigator. The standalone gallery
+pages have nothing to save, so they are routed directly.
 
 - `SceneRoute` is one sealed record per scene. The record type is the scene;
   its properties are the plain arguments it is built from (a creation id, an
@@ -256,6 +268,13 @@ Examples, Build and Simulate.
   live in App so UI scenes need not know the manager.
 - The `SceneRouter` autoload (`project/src/managers/`) implements
   `ISceneNavigator` over the history and is the only code that changes scenes.
+  Godot opens the main scene (Creations) itself at startup, so its host
+  takes the router from the autoload instead of `Enter`.
+- Android Back and Escape: a routed screen adds a `UiBackHandler`
+  (`ui/lib`) in front of its children. While it is in the tree Back does
+  not quit; it asks the screen to go back unless an open menu or dialog in
+  the screen takes Back first. On the root nothing holds Back, so Android
+  leaves the app.
 
 Because a scene is rebuilt from its route, anything the player expects to
 find again is saved before the scene closes. What must outlive a scene
