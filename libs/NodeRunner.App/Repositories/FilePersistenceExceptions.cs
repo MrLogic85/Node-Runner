@@ -6,7 +6,7 @@ namespace NodeRunner.App.Repositories;
 /// Single source of truth for "is this exception a recoverable
 /// unreadable/corrupt/missing on-disk Creation or Progression, rather than a
 /// programming error I should let crash?" Used by every file read/write/
-/// lookup guard (repositories and Main.cs) so the set can't drift between
+/// lookup guard (repositories and scene hosts) so the set can't drift between
 /// call sites (#114).
 /// </summary>
 public static class FilePersistenceExceptions

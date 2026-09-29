@@ -6,7 +6,7 @@ namespace NodeRunner.App.ViewModels;
 /// Pure presentation adapter for construction-mode shell state. Godot owns
 /// nodes/input/rendering; this class owns stable labels, hints, and command
 /// visibility so target screens can reuse the same contract without copying
-/// `Main.cs` formatting rules.
+/// the Build host's formatting rules.
 /// </summary>
 public sealed class ConstructionPresentationViewModel
 {
