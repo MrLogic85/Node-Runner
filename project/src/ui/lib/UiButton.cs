@@ -706,9 +706,10 @@ public sealed partial class UiButton : Button, ISerializationListener
                 HorizontalAlignment = HorizontalAlignment.Center,
                 VerticalAlignment = VerticalAlignment.Center,
                 MouseFilter = MouseFilterEnum.Ignore,
-                ZIndex = 1,
             };
-            AddChild(_badge);
+            // Tree order, not ZIndex, keeps the badge over the button: a ZIndex sorts across the
+            // whole CanvasLayer and would draw it through any dialog or screen above (#463).
+            AddChild(_badge, @internal: InternalMode.Back);
         }
 
         var metrics = UiButtonMetrics.Default;

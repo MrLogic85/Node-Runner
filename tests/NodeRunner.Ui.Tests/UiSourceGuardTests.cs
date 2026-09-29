@@ -27,6 +27,12 @@ public sealed class UiSourceGuardTests
     /// </summary>
     private const string _tintHelper = "ui/lib/UiIcons.cs";
 
+    /// <summary>
+    /// The one library file that raises ZIndex: an open UiMenu is a top-level popup that must float
+    /// over the screen it drops from.
+    /// </summary>
+    private const string _overlayMenu = "ui/lib/UiMenu.cs";
+
     [Fact]
     public void Source_takes_colours_from_the_theme()
     {
@@ -138,6 +144,25 @@ public sealed class UiSourceGuardTests
             "UiIcons.Apply without a tint) so a Theme swap restyles the node; add the variation to UiThemeExpander.");
     }
 
+    [Fact]
+    public void Component_library_orders_drawing_by_tree_not_z_index()
+    {
+        var violations = CSharpSources.Project
+            .Where(source => FollowsLibraryRules(source.Path) && source.Path != _overlayMenu)
+            .SelectMany(source => source.Find(SetsZIndex))
+            .ToList();
+
+        violations.ShouldBeEmpty(
+            "ZIndex sorts across the whole CanvasLayer, so a raised part draws through every dialog and " +
+            "screen above it (#463); order children in the tree instead (InternalMode.Back draws last).");
+    }
+
+    [Theory]
+    [InlineData("Label M() => new Label { ZIndex = 1 };")]
+    [InlineData("void M(Control control) { control.ZIndex = 1; }")]
+    public void Z_index_is_flagged(string member) =>
+        CSharpSources.Snippet(member).Find(SetsZIndex).ShouldHaveSingleItem();
+
     [Theory]
     [InlineData("void M(Label label) { label.AddThemeColorOverride(\"font_color\", Colors.White); }")]
     [InlineData("void M(Button button, Color tint) => UiIcons.Apply(button, UiIconId.Edit, UiIconSize.Small, tint);")]
@@ -240,6 +265,12 @@ public sealed class UiSourceGuardTests
                 => invocation.ArgumentList.Arguments.Count == 4,
             _ => false,
         };
+
+    private static bool SetsZIndex(SyntaxNode node) => node is AssignmentExpressionSyntax
+    {
+        Left: IdentifierNameSyntax { Identifier.Text: "ZIndex" }
+            or MemberAccessExpressionSyntax { Name.Identifier.Text: "ZIndex" },
+    };
 
     private static IEnumerable<string> BuildsOrRestyles(string member)
     {
