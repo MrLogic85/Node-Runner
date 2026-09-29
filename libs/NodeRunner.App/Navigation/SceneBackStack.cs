@@ -52,6 +52,21 @@ public sealed class SceneBackStack
     }
 
     /// <summary>
+    /// Updates the current entry's arguments without reopening its scene, for a scene whose state
+    /// changed under it: a new creation's Build once the draft is saved. Only the same scene.
+    /// </summary>
+    public void ReplaceCurrent(SceneRoute route)
+    {
+        ArgumentNullException.ThrowIfNull(route);
+        if (!route.IsSameScene(Current))
+        {
+            throw new ArgumentException($"{route.GetType().Name} is not the current scene, {Current.GetType().Name}.", nameof(route));
+        }
+
+        _entries[^1] = route;
+    }
+
+    /// <summary>
     /// Closes the current scene and returns the previous one to rebuild, or null on the root, where
     /// Back belongs to the platform (Android leaves the app).
     /// </summary>

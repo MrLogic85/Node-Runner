@@ -13,7 +13,6 @@ namespace NodeRunner.Ui.Screens;
 public partial class BuildScreen : Control
 {
     private const string _hostedInputPassthroughMeta = "HostedInputPassthrough";
-    private const int _modeSwitchHeight = 52;
     private const int _toolButtonHeight = 56;
     private ConstructionPresentationViewModel? _presentation;
     private bool _isSubscribedToPresentation;
@@ -30,9 +29,6 @@ public partial class BuildScreen : Control
 
     [Signal]
     public delegate void SaveRequestedEventHandler();
-
-    [Signal]
-    public delegate void SimulateRequestedEventHandler();
 
     [Signal]
     public delegate void BackRequestedEventHandler();
@@ -1390,41 +1386,6 @@ public partial class BuildScreen : Control
         };
     }
 
-    private Control CreateModeSwitch()
-    {
-        var frame = new HBoxContainer
-        {
-            CustomMinimumSize = new Vector2(0, _modeSwitchHeight),
-        };
-        frame.AddThemeConstantOverride("separation", 0);
-        frame.AddChild(CreateModeSegment("Simulate", active: false, first: true, last: false));
-        frame.AddChild(CreateModeSegment("Build", active: true, first: false, last: true));
-        return frame;
-    }
-
-    private Button CreateModeSegment(string label, bool active, bool first, bool last)
-    {
-        var button = new Button
-        {
-            Text = label.ToUpperInvariant(),
-            CustomMinimumSize = new Vector2(148, _modeSwitchHeight),
-            Disabled = active,
-        };
-        button.AddThemeFontSizeOverride("font_size", 16);
-        button.AddThemeColorOverride("font_color", UiThemeLookup.Color(this, UiTokens.Color.Ink));
-        button.AddThemeColorOverride("font_disabled_color", UiThemeLookup.Color(this, UiTokens.Color.Ink));
-        button.AddThemeColorOverride("font_hover_color", UiThemeLookup.Color(this, UiTokens.Color.Ink));
-        button.AddThemeStyleboxOverride("normal", CreateSegmentStyle(active, first, last));
-        button.AddThemeStyleboxOverride("hover", CreateSegmentStyle(true, first, last));
-        button.AddThemeStyleboxOverride("pressed", CreateSegmentStyle(true, first, last));
-        button.AddThemeStyleboxOverride("disabled", CreateSegmentStyle(active, first, last));
-        if (!active)
-        {
-            button.Pressed += () => EmitSignal(SignalName.SimulateRequested);
-        }
-        return button;
-    }
-
     private UiButton CreateButton(string label, UiButtonKind kind, string tooltip, UiIconId? iconId = null)
     {
         return new UiButton
@@ -1434,28 +1395,6 @@ public partial class BuildScreen : Control
             IconId = iconId ?? UiIconId.None,
             TooltipText = tooltip,
             CustomMinimumSize = new Vector2(0, UiSize.Control.Touch),
-        };
-    }
-
-    private StyleBoxFlat CreateSegmentStyle(bool active, bool first, bool last)
-    {
-        var radius = (int)UiSize.Radius.Medium;
-        return new StyleBoxFlat
-        {
-            BgColor = active
-                ? UiThemeLookup.Color(this, UiTokens.Color.Accent).WithAlpha(UiThemeLookup.Alpha(this, UiTokens.Alpha.Soft))
-                : UiThemeLookup.Color(this, UiTokens.Color.PanelRaised),
-            BorderColor = active ? UiThemeLookup.Color(this, UiTokens.Color.Accent) : UiThemeLookup.Color(this, UiTokens.Color.LineStrong),
-            BorderWidthLeft = 1,
-            BorderWidthTop = 1,
-            BorderWidthRight = last ? 1 : 0,
-            BorderWidthBottom = 1,
-            CornerRadiusTopLeft = first ? radius : 0,
-            CornerRadiusBottomLeft = first ? radius : 0,
-            CornerRadiusTopRight = last ? radius : 0,
-            CornerRadiusBottomRight = last ? radius : 0,
-            ContentMarginLeft = 12,
-            ContentMarginRight = 12,
         };
     }
 

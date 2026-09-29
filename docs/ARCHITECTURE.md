@@ -226,11 +226,12 @@ creature; up to 15 hidden clones run alongside it. Each slot owns a
 `TrialController`, resets independently between trials, and uses an isolated
 collision layer. See `docs/TRAINING_LOOP.md` for the full design.
 
-`Evolver` raises `GenerationCompleted`/`NewBestFound` events; `Main.cs`
-subscribes to both, logs the former, and drives a training HUD panel
-(generation/best/mean, run/pause/reset/time-scale controls) from them. A
-dedicated `PopulationViewModel` in the App layer remains a possible later
-refactor if this HUD logic outgrows `Main.cs` — not required yet.
+`Evolver` raises `GenerationCompleted`/`NewBestFound` events; the Simulate
+scene's root, `SimulateHost`, subscribes to both, saves the training after
+each finished generation and drives the Simulate screen (generation/best/mean,
+pause/reset/time-scale controls) from them. A dedicated `PopulationViewModel`
+in the App layer remains a possible later refactor if this logic outgrows
+`SimulateHost` — not required yet.
 
 For 0.2.0 the hardcoded creature keeps its beam bodies awake (`CanSleep =
 false`). Random brains produce visible, if uncoordinated, motor-relation
@@ -242,13 +243,16 @@ tied to the retired Muscle model and does not carry over.
 Screens are moving to one scene each, where navigating replaces the current
 scene (#326): a left scene is closed, not paused, and Back rebuilds it from
 its route. #468 is routing them one by one. Creations (the root and the
-main scene), Examples and the component-library pages are routed scenes;
-`Main` still holds Build and Simulate behind one route, `BuildRoute`, until
-#363 and #469 split them.
+main scene), Examples, Simulate and the component-library pages are routed
+scenes; `Main` holds Build behind `BuildRoute` until #363 turns it into its
+own host. Simulate (`SimulateRoute`, #469) trains one saved creation: it
+builds the world and the `Evolver` from the creation's save, resumes from its
+last finished generation and saves each finished one, so leaving drops only
+the generation in progress.
 
 A screen stays in `ui/screens/` and knows nothing of saves or the router's
 type: it emits signals. The routed scene that holds it is a small host in
-`project/src/` (`CreationsHost`, `ExamplesHost`, like `Main`) that wires
+`project/src/` (`CreationsHost`, `ExamplesHost`, `SimulateHost`, like `Main`) that wires
 those signals to `SaveManager` and the navigator. The standalone gallery
 pages have nothing to save, so they are routed directly.
 
@@ -263,6 +267,10 @@ pages have nothing to save, so they are routed directly.
   removed; opening the root's scene returns to it. `Back()` returns the
   previous route, or null on the root, where Android leaves the app.
   `ReturnToRoot()` clears everything above the root (e.g. after Delete).
+  `ReplaceCurrent()` gives the current entry new arguments without reopening
+  it: a new draft's `BuildRoute` becomes the saved creation's when Save opens
+  its training, so Back from training rebuilds that creation, not a blank
+  draft.
 - `ISceneNavigator` is what a scene asks to navigate; `IRoutedScene` is how
   a scene receives its route and navigator before it joins the tree. Both
   live in App so UI scenes need not know the manager.
@@ -275,8 +283,9 @@ pages have nothing to save, so they are routed directly.
   not quit; it asks the screen to go back unless an open menu or dialog in
   the screen takes Back first. On the root nothing holds Back, so Android
   leaves the app.
-  `Main` holds Back the same way: an open dialog, sheet or menu closes
-  first, then Build goes one step back and Simulate goes to Build (#474).
+  Build and Simulate hold Back the same way: an open dialog, sheet or menu
+  closes first, then the scene goes one step back (#474). Simulate has a
+  Back button in its top bar and no Build/Simulate mode switch.
 
 Because a scene is rebuilt from its route, anything the player expects to
 find again is saved before the scene closes. What must outlive a scene

@@ -9,4 +9,10 @@ public interface ISceneNavigator
     void Back();
 
     void ReturnToRoot();
+
+    /// <summary>
+    /// Gives the current scene's history entry new arguments without reopening it, so Back later
+    /// rebuilds what the scene shows now (a saved draft's Build).
+    /// </summary>
+    void ReplaceCurrent(SceneRoute route);
 }

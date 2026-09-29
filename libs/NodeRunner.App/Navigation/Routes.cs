@@ -23,8 +23,11 @@ public sealed record PopupGalleryRoute(int ThemeIndex = 0, bool ShowDebugBounds 
 /// <summary>Ready-made creations the player copies into Creations.</summary>
 public sealed record ExamplesRoute : SceneRoute;
 
-/// <summary>
-/// Build for one creation, or a new creation when <see cref="CreationId"/> is null. Its scene still
-/// holds Simulate too, until #363 and #469 split them.
-/// </summary>
+/// <summary>Build for one creation, or a new creation when <see cref="CreationId"/> is null.</summary>
 public sealed record BuildRoute(Guid? CreationId = null) : SceneRoute;
+
+/// <summary>
+/// Training for one saved creation. It resumes from the creation's last finished generation; leaving
+/// drops only the generation in progress.
+/// </summary>
+public sealed record SimulateRoute(Guid CreationId) : SceneRoute;

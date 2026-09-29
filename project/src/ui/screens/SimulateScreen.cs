@@ -11,7 +11,6 @@ namespace NodeRunner.Ui.Screens;
 public partial class SimulateScreen : Control
 {
     private const int _topBarHeight = 64;
-    private const int _modeSwitchHeight = 52;
     private const int _signalPanelWidth = 340;
     private readonly List<UiCard> _signalCards = new();
     private readonly List<Label> _signalBodies = new();
@@ -31,7 +30,6 @@ public partial class SimulateScreen : Control
     private Control? _settingsOverlay;
     private ColorRect? _settingsScrim;
     private UiSheet? _settingsSheet;
-    private Control? _buildModeSegment;
     private UiButton? _livePauseButton;
     private bool _inputPassthrough;
     private string _pauseActionText = "Pause";
@@ -49,7 +47,7 @@ public partial class SimulateScreen : Control
     public delegate void CreationsRequestedEventHandler();
 
     [Signal]
-    public delegate void BuildRequestedEventHandler();
+    public delegate void BackRequestedEventHandler();
 
     [Signal]
     public delegate void PauseRequestedEventHandler();
@@ -352,7 +350,6 @@ public partial class SimulateScreen : Control
         _decidesStatusLabel = null;
         _twistsStatusLabel = null;
         _scoresStatusLabel = null;
-        _buildModeSegment = null;
         _livePauseButton = null;
         _selectedSignalIndex = -1;
         foreach (var child in GetChildren())
@@ -423,11 +420,10 @@ public partial class SimulateScreen : Control
         var panel = CreatePanel(raised: true);
         panel.CustomMinimumSize = new Vector2(0, _topBarHeight);
         panel.SizeFlagsHorizontal = SizeFlags.ExpandFill;
-        panel.GuiInput += OnTopBarInput;
         _inputPassthroughExceptions.Add(panel);
 
         var margin = CreateMargin(0);
-        margin.AddThemeConstantOverride("margin_left", 12);
+        margin.AddThemeConstantOverride("margin_left", 4);
         margin.AddThemeConstantOverride("margin_right", 0);
         panel.AddChild(margin);
 
@@ -438,6 +434,16 @@ public partial class SimulateScreen : Control
         };
         topBar.AddThemeConstantOverride("separation", 8);
         margin.AddChild(topBar);
+
+        var back = new UiButton
+        {
+            ContentLayout = UiButtonContentLayout.Stacked,
+            IconId = UiIconId.Back,
+            TooltipText = "Back",
+        };
+        back.Pressed += () => EmitSignal(SignalName.BackRequested);
+        _inputPassthroughExceptions.Add(back);
+        topBar.AddChild(back);
 
         var title = new VBoxContainer
         {
@@ -452,8 +458,6 @@ public partial class SimulateScreen : Control
         creations.Pressed += () => EmitSignal(SignalName.CreationsRequested);
         _inputPassthroughExceptions.Add(creations);
         topBar.AddChild(creations);
-
-        topBar.AddChild(CreateModeSwitch());
 
         var settings = new UiButton
         {
@@ -492,78 +496,6 @@ public partial class SimulateScreen : Control
         panel.AddChild(progress);
 
         return panel;
-    }
-
-    private Control CreateModeSwitch()
-    {
-        var frame = new HBoxContainer
-        {
-            CustomMinimumSize = new Vector2(0, _modeSwitchHeight),
-        };
-        frame.AddThemeConstantOverride("separation", 0);
-        frame.AddChild(CreateModeSegment("Simulate", active: true, first: true, last: false));
-        frame.AddChild(CreateModeSegment("Build", active: false, first: false, last: true));
-        return frame;
-    }
-
-    private Control CreateModeSegment(string label, bool active, bool first, bool last)
-    {
-        var segment = new PanelContainer
-        {
-            CustomMinimumSize = new Vector2(148, _modeSwitchHeight),
-        };
-        segment.AddThemeStyleboxOverride("panel", CreateSegmentStyle(active, first, last));
-        var text = CreateLabel(label.ToUpperInvariant(), 16, UiThemeLookup.Color(this, UiTokens.Color.Ink));
-        text.HorizontalAlignment = HorizontalAlignment.Center;
-        text.VerticalAlignment = VerticalAlignment.Center;
-        text.MouseFilter = MouseFilterEnum.Ignore;
-        segment.AddChild(text);
-        if (!active)
-        {
-            _buildModeSegment = segment;
-            void RequestBuild(InputEvent @event)
-            {
-                if (@event is InputEventMouseButton { Pressed: true })
-                {
-                    EmitSignal(SignalName.BuildRequested);
-                    segment.AcceptEvent();
-                }
-            }
-
-            segment.MouseDefaultCursorShape = CursorShape.PointingHand;
-            segment.GuiInput += RequestBuild;
-            text.GuiInput += RequestBuild;
-            _inputPassthroughExceptions.Add(segment);
-        }
-
-        return segment;
-    }
-
-    private void OnTopBarInput(InputEvent @event)
-    {
-        if (_buildModeSegment is null || !TryGetPressedPosition(@event, out var position))
-        {
-            return;
-        }
-
-        if (_buildModeSegment.GetGlobalRect().HasPoint(position))
-        {
-            EmitSignal(SignalName.BuildRequested);
-            AcceptEvent();
-        }
-    }
-
-    private static bool TryGetPressedPosition(InputEvent @event, out Vector2 position)
-    {
-        switch (@event)
-        {
-            case InputEventMouseButton { Pressed: true } mouse:
-                position = mouse.GlobalPosition;
-                return true;
-            default:
-                position = default;
-                return false;
-        }
     }
 
     private Control CreateArenaPanel()
@@ -1257,38 +1189,6 @@ public partial class SimulateScreen : Control
             Kind = raised
                 ? UiCard.CardVariant.Raised
                 : UiCard.CardVariant.Frame,
-        };
-    }
-
-    private UiButton CreateModeButton(string label, bool active)
-    {
-        return new UiButton
-        {
-            Kind = active ? UiButtonKind.Primary : UiButtonKind.Secondary,
-            Text = label,
-            CustomMinimumSize = new Vector2(96, UiSize.Control.Touch),
-        };
-    }
-
-    private StyleBoxFlat CreateSegmentStyle(bool active, bool first, bool last)
-    {
-        var radius = (int)UiSize.Radius.Medium;
-        return new StyleBoxFlat
-        {
-            BgColor = active
-                ? UiThemeLookup.Color(this, UiTokens.Color.Accent).WithAlpha(UiThemeLookup.Alpha(this, UiTokens.Alpha.Soft))
-                : UiThemeLookup.Color(this, UiTokens.Color.PanelRaised),
-            BorderColor = active ? UiThemeLookup.Color(this, UiTokens.Color.Accent) : UiThemeLookup.Color(this, UiTokens.Color.LineStrong),
-            BorderWidthLeft = 1,
-            BorderWidthTop = 1,
-            BorderWidthRight = last ? 1 : 0,
-            BorderWidthBottom = 1,
-            CornerRadiusTopLeft = first ? radius : 0,
-            CornerRadiusBottomLeft = first ? radius : 0,
-            CornerRadiusTopRight = last ? radius : 0,
-            CornerRadiusBottomRight = last ? radius : 0,
-            ContentMarginLeft = 12,
-            ContentMarginRight = 12,
         };
     }
 

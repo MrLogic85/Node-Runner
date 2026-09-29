@@ -124,11 +124,10 @@ shapes (e.g. a bare quadrilateral) with their genuine remaining freedom.
   `Creature.ReadSensors()` for the authoritative order.
 - A creature with zero motor relations (e.g. a single node/beam) has no
   brain at all — nothing to control, nothing to sense from motor relations.
-- **Visible in the UI (issue #42):** the inspector panel's "Mapping" view
-  shows every live sensor reading and every motor relation's current model
-  output (target) and last-applied torque, refreshed on a ~0.15s cadence
-  while visible (not every rendered frame — see `Main._Process`). See
-  `Creature.ReadMapping()` and `NodeRunner.App.ViewModels.MappingViewModel`.
+- **Visible in the UI (issue #42):** Simulate's signal flow and brain focus
+  show the live sensor readings and each motor relation's model output,
+  refreshed on a ~0.15s cadence (not every rendered frame — see
+  `SimulateHost._Process`). See `Creature.ReadMapping()`.
 
 ## Worked example: the 0.2.0 hardcoded creature
 

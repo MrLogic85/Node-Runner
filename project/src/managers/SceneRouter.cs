@@ -10,12 +10,13 @@ namespace NodeRunner.Managers;
 /// </summary>
 public partial class SceneRouter : Node, ISceneNavigator
 {
-    /// <summary>The scene each route opens. Build and Simulate still share Main until #363 and #469 split them.</summary>
+    /// <summary>The scene each route opens.</summary>
     public static IReadOnlyDictionary<Type, string> ScenePaths { get; } = new Dictionary<Type, string>
     {
         [typeof(CreationsRoute)] = "res://scenes/Creations.tscn",
         [typeof(ExamplesRoute)] = "res://scenes/Examples.tscn",
         [typeof(BuildRoute)] = "res://scenes/Main.tscn",
+        [typeof(SimulateRoute)] = "res://scenes/Simulate.tscn",
         [typeof(ComponentGalleryRoute)] = "res://scenes/screens/ComponentGalleryScreen.tscn",
         [typeof(ToolbarsRoute)] = "res://scenes/screens/ToolbarsScreen.tscn",
         [typeof(ColorsAndStylesRoute)] = "res://scenes/screens/ColorsAndStylesScreen.tscn",
@@ -61,6 +62,14 @@ public partial class SceneRouter : Node, ISceneNavigator
         if (!_changing)
         {
             Open(_history.ReturnToRoot());
+        }
+    }
+
+    public void ReplaceCurrent(SceneRoute route)
+    {
+        if (!_changing)
+        {
+            _history.ReplaceCurrent(route);
         }
     }
 

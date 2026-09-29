@@ -11,16 +11,13 @@ The active target is owned by `reference design/components/Build/README.md`,
 
 ## Mode
 
-- The main screen has exactly two modes: **Simulate** (default) and
-  **Build**. A single HUD toggle button switches between them; its label
-  reflects the mode you would switch *to* ("Build" while simulating,
-  "Simulate" while building).
-- Entering Build hides the running creature and shows an empty (or
-  in-progress) construction canvas at the same screen position. Leaving Build
-  hides the canvas and shows the running creature again.
+- The 0.3.0 prototype had one main screen with two modes, **Simulate** and
+  **Build**, and a HUD toggle between them. That toggle is gone: Build and
+  Simulate are separate routed scenes (#469), and Build opens a new draft or
+  a saved creation's construction canvas.
 - Construction state lives in `NodeRunner.App.ViewModels.ConstructionViewModel`
-  for the duration the app is open. It is not persisted across app restarts
-  (no save/load yet — that is a later concern, not part of 0.3.0).
+  while Build is open. A new draft is dropped when Build closes unless it
+  was saved; a saved creation's moved nodes are saved when Build closes.
 
 ## Coordinates
 
@@ -58,22 +55,17 @@ The active target is owned by `reference design/components/Build/README.md`,
   the Beam/Core tools, so adding a persistent cross-mode selection concept
   here would add lifecycle risk (stale indices if mode switches mid-edit)
   without a corresponding benefit.
-- **Wire into simulation** (issue #72): implemented. Leaving Build mode
-  (`Main.ToggleConstructionMode`) calls `ConstructionViewModel.TryLeave`,
-  which returns the built `CreatureDef` when the anatomy is non-empty and
-  valid. If a `CreatureDef` comes back, `Main` rebuilds the running
-  `Creature` node from it (`Creature.BuildFrom`), which generically derives
-  the model's input/output counts (cores' sensor values plus
-  `MotorTopology`'s derived motor-relation sensor values, and one output per
-  motor relation) for whatever anatomy it is given — no special-casing
-  between the hardcoded worm and an edited creature. If the anatomy is
-  empty (nothing edited), `TryLeave` returns a null `CreatureDef` and the
-  currently running creature is left untouched; this is how the original
-  hardcoded worm keeps working with no extra UI:
-  it is simply what's already running until (and unless) the user builds
-  and leaves with a non-empty anatomy. There is no "reset to example"
-  action in this slice — restarting the app is the way back to the
-  hardcoded worm once it has been replaced.
+- **Wire into simulation** (issues #72, #469): Build and Simulate are
+  separate scenes, joined only through the save. Save on a new draft calls
+  `ConstructionViewModel.TryLeave`, saves the built `CreatureDef` as a new
+  creation and opens its training (`SimulateRoute`). On a saved creation,
+  Back and Resume training first save the moved nodes, then leave. The
+  Simulate scene builds its `Creature` node from the saved `CreatureDef`
+  (`Creature.BuildFrom`), which generically derives the model's
+  input/output counts (cores' sensor values plus `MotorTopology`'s derived
+  motor-relation sensor values, and one output per motor relation) for
+  whatever anatomy it is given — no special-casing between the hardcoded
+  worm and an edited creature.
 
 ## Validation
 
@@ -81,16 +73,12 @@ The active target is owned by `reference design/components/Build/README.md`,
 truth for whether an in-progress creature can be simulated. UI surfaces its
 error messages verbatim; it does not duplicate the validation rules.
 
-Leaving Build mode (toggling back to Simulate) is gated by
-`ConstructionViewModel.TryLeave`: an anatomy with zero nodes (nothing edited
-yet) is always allowed to leave, so opening Build mode is never a one-way
-door before you've made any change — `TryLeave` returns a null
-`CreatureDef` in that case, so `Main` knows to leave the running creature
-untouched. Once at least one node exists, leaving requires `TryBuild` to
-succeed; a failed attempt keeps Build mode active and shows the validation
+Save on a new draft, and Back or Resume training on a saved creation, are
+gated by `ConstructionViewModel.TryLeave`: with at least one node, `TryBuild`
+must succeed; a failed attempt keeps Build open and shows the validation
 errors via `StatusMessage` (`ConstructionViewModel.SetBlockedLeaveMessage`).
-A successful, non-empty leave returns the built `CreatureDef`, which `Main`
-uses to replace the running creature (see #72 above).
+An empty draft cannot be saved. Back from a new draft drops it without
+validating (#474).
 
 ## Touch input
 
