@@ -20,6 +20,7 @@ public partial class SampleFlowScreen : Control
     private UiMenu? _overflowMenu;
     private UiNotification? _toast;
     private UiSheet? _sheet;
+    private UiDialog? _dialog;
     private int _selectedMode;
     private Control? _sampleView;
     private TrainingPresentationViewModel? _presentation;
@@ -73,6 +74,7 @@ public partial class SampleFlowScreen : Control
         _overflowMenu = null;
         _toast = null;
         _sheet = null;
+        _dialog = null;
         _sampleView = null;
         BuildLayout();
         if (_selectedMode == 0)
@@ -207,6 +209,16 @@ public partial class SampleFlowScreen : Control
         };
         _overlay.AddChild(_sheet);
         _sheet.Hide();
+
+        _dialog = new UiDialog();
+        _overlay.AddChild(_dialog);
+        _dialog.Finished += _ =>
+        {
+            if (_toast is not null)
+            {
+                _toast.Paused = false;
+            }
+        };
     }
 
     private void ShowSimulate()
@@ -293,8 +305,8 @@ public partial class SampleFlowScreen : Control
         ClearContent();
         var creations = GD.Load<PackedScene>("res://scenes/screens/CreationsScreen.tscn").Instantiate<CreationsScreen>();
         creations.OpenRequested += (_, name) => ShowEdit(name);
-        creations.DuplicateRequested += (_, name) => ShowSheet("Duplicate " + name + "?", CreateDuplicateBody(name));
-        creations.DeleteRequested += (_, name) => ShowSheet("Delete " + name + "?", CreateDeleteBody(name));
+        creations.DuplicateRequested += (_, name) => Notify($"Sample only: copy of {name} created.");
+        creations.DeleteRequested += (_, name) => OpenDeleteDialog(name);
         _sampleView = creations;
         _content.AddChild(creations);
     }
@@ -616,87 +628,31 @@ public partial class SampleFlowScreen : Control
         return stack;
     }
 
-    private Control CreateDuplicateBody(string name)
+    private void OpenDeleteDialog(string name)
     {
-        var stack = new VBoxContainer();
-        stack.AddThemeConstantOverride("separation", 12);
-        stack.AddChild(new Label
+        if (_dialog is null || _dialog.IsOpen)
         {
-            Text = "Copy brain is selected. Start fresh creates a new random brain while keeping the body.",
-            AutowrapMode = TextServer.AutowrapMode.WordSmart,
-        });
-        var choice = new UiSegmentedSwitch
-        {
-            Segments = [new() { Text = "Copy brain" }, new() { Text = "Start fresh" }],
-            SelectedIndex = 0,
-        };
-        stack.AddChild(choice);
-        var done = new UiButton
-        {
-            Text = "Copy brain",
-            Kind = UiButtonKind.Primary,
-        };
-        choice.SelectionChanged += index => done.Text = index == 0 ? "Copy brain" : "Start fresh";
-        done.Pressed += () =>
-        {
-            CloseOverlays();
-            Notify($"Sample only: {name} duplicate created using {done.Text.ToLowerInvariant()}.");
-        };
-        stack.AddChild(done);
-        return stack;
-    }
+            return;
+        }
 
-    private Control CreateDeleteBody(string name)
-    {
-        var stack = new VBoxContainer();
-        stack.AddThemeConstantOverride("separation", 12);
-        stack.AddChild(new Label
-        {
-            Text = $"Hold to delete {name} and its training data. Undo remains available for 10 seconds.",
-            AutowrapMode = TextServer.AutowrapMode.WordSmart,
-        });
-        var actions = new HBoxContainer();
-        var cancel = new UiButton
-        {
-            Text = "Cancel",
-            Kind = UiButtonKind.Secondary,
-        };
-        cancel.Pressed += CloseOverlays;
-        actions.AddChild(cancel);
-        var confirm = new UiButton
-        {
-            Text = "Hold to delete",
-            Kind = UiButtonKind.Tertiary,
-        };
-        var holdTimer = new Godot.Timer { OneShot = true, WaitTime = 1.2f };
-        _activeHoldTimer = holdTimer;
-        _activeHoldButton = confirm;
-        _activeHoldLabel = "Hold to delete";
-        holdTimer.Timeout += () =>
-        {
-            _activeHoldTimer = null;
-            _activeHoldButton = null;
-            _activeHoldLabel = string.Empty;
-            CloseOverlays();
-            Notify($"Sample only: {name} deleted.");
-        };
-        confirm.ButtonDown += () =>
-        {
-            confirm.Text = "Keep holding…";
-            holdTimer.Start();
-        };
-        confirm.ButtonUp += () =>
-        {
-            if (holdTimer.TimeLeft > 0)
+        _dialog.Open(new UiDialogSpec(
+            UiPopupType.Danger,
+            $"Delete {name}?",
+            "The creation and its trained brain are removed for good. Copy it first if you might want it back.",
+            "Hold to delete",
+            () =>
             {
-                holdTimer.Stop();
-                confirm.Text = "Hold to delete";
-            }
-        };
-        stack.AddChild(holdTimer);
-        actions.AddChild(confirm);
-        stack.AddChild(actions);
-        return stack;
+                Notify($"Sample only: {name} deleted.");
+                return Task.FromResult(UiDialogResult.Success);
+            },
+            holdToAction: true)
+        {
+            Icon = new(UiIconId.Trash),
+        });
+        if (_toast is not null)
+        {
+            _toast.Paused = true;
+        }
     }
 
     private void Notify(string message) =>

@@ -4,5 +4,5 @@ namespace NodeRunner.App.Services;
 
 public interface ICreationDuplicateWorkflow
 {
-    CreationDef Duplicate(Guid id, CreationDuplicateMode mode);
+    CreationDef Duplicate(Guid id);
 }

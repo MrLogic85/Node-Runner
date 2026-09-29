@@ -1015,8 +1015,8 @@ public partial class Main : Node2D
 
         var saveManager = GetNode<SaveManager>("/root/SaveManager");
         TryRunFileOperation(
-            () => saveManager.Duplicate(id, CreationDuplicateMode.CopyTraining),
-            $"Duplicating Creation '{creationName}' with {CreationDuplicateMode.CopyTraining}");
+            () => saveManager.Duplicate(id),
+            $"Duplicating Creation '{creationName}'");
 
         RefreshCreationsPanel();
     }
