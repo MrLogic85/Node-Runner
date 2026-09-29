@@ -56,10 +56,12 @@ The active target is owned by `reference design/components/Build/README.md`,
   here would add lifecycle risk (stale indices if mode switches mid-edit)
   without a corresponding benefit.
 - **Wire into simulation** (issues #72, #469): Build and Simulate are
-  separate scenes, joined only through the save. Save on a new draft calls
-  `ConstructionViewModel.TryLeave`, saves the built `CreatureDef` as a new
-  creation and opens its training (`SimulateRoute`). On a saved creation,
-  Back and Resume training first save the moved nodes, then leave. The
+  separate scenes, joined only through the save. Start training on a new
+  draft calls `ConstructionViewModel.TryLeave`, saves the built
+  `CreatureDef` as a new creation and opens its training (`SimulateRoute`).
+  The new creation keeps a name the user typed in the toolbar; otherwise it
+  is named `Creation N`. On a saved creation, Back and Start training first
+  save the moved nodes, then leave. The
   Simulate scene builds its `Creature` node from the saved `CreatureDef`
   (`Creature.BuildFrom`), which generically derives the model's
   input/output counts (cores' sensor values plus `MotorTopology`'s derived
@@ -71,10 +73,13 @@ The active target is owned by `reference design/components/Build/README.md`,
 
 `NodeRunner.App.Builders.CreatureBuilder.TryBuild` is the single source of
 truth for whether an in-progress creature can be simulated. UI surfaces its
-error messages verbatim; it does not duplicate the validation rules.
+error messages and does not duplicate the validation rules. The one
+exception is Build's readiness line, which shortens the errors for the
+narrow side panel (for example "1 node not connected"); it only changes the
+wording, and only `TryLeave` decides whether training may start.
 
-Save on a new draft, and Back or Resume training on a saved creation, are
-gated by `ConstructionViewModel.TryLeave`: with at least one node, `TryBuild`
+Start training on a new draft, and Back or Start training on a saved
+creation, are gated by `ConstructionViewModel.TryLeave`: with at least one node, `TryBuild`
 must succeed; a failed attempt keeps Build open and shows the validation
 errors via `StatusMessage` (`ConstructionViewModel.SetBlockedLeaveMessage`).
 An empty draft cannot be saved. Back from a new draft drops it without

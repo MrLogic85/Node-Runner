@@ -16,9 +16,6 @@ public static class UiLayout
     /// <summary>The top bar is exactly one touch target tall.</summary>
     public const int TopBarHeight = UiSize.Control.Touch;
 
-    /// <summary>The button bar fits one touch target plus its inset (the reference token <c>w-rail</c>).</summary>
-    public const int ButtonBarWidth = UiSize.Control.Touch + UiSize.Space.S2;
-
     /// <summary>The side panel's width (the reference token <c>w-side</c>).</summary>
     public const int SidePanelWidth = 176;
 

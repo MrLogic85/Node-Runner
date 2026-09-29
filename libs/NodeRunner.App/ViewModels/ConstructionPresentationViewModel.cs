@@ -45,10 +45,6 @@ public sealed class ConstructionPresentationViewModel
 
     public string CreationName => _construction.CreationName;
 
-    public string CreationSubtitle => _construction.IsMoveOnly
-        ? "Saved Creation · anatomy locked"
-        : "Unsaved anatomy draft";
-
     public string InspectorRole => _construction.IsMoveOnly ? "Tool: Move" : $"Tool: {_construction.ActiveTool}";
 
     public string InspectorValues => _construction.StatusMessage ?? (_construction.IsMoveOnly
@@ -71,15 +67,13 @@ public sealed class ConstructionPresentationViewModel
 
     public string MoveOnlyLockReason => "Move only · training kept";
 
-    public string PartsLockedChipText => "Parts locked · drag to move";
-
     public string TrainingSummaryTitle => _construction.TrainingGeneration is { } generation
         ? $"Trained {generation} generations"
         : "Not trained yet";
 
     public string TrainingSummaryBody => _construction.TrainingGeneration is { } generation
         ? $"Generation {generation}. Best distance {BestDistanceText}. Anatomy is locked so this brain stays valid."
-        : "Start training when you are ready. Anatomy is locked after Save.";
+        : "Start training when you are ready. Parts are locked so the brain stays valid.";
 
     public string BestDistanceText => _construction.BestFitness is { } bestFitness
         ? $"{bestFitness:0.0} m"
@@ -159,15 +153,12 @@ public sealed class ConstructionPresentationViewModel
 
     public bool LockTopologyTools => _construction.IsMoveOnly;
 
-    public string BeamToolText => _construction.IsMoveOnly ? "Beam · locked" : "Beam";
-
     public string CoreToolText => _construction.IsMoveOnly ? "Core · locked" : BuildCoreToolText();
 
     public string DeleteToolText => _construction.IsMoveOnly ? "Delete · locked" : "Delete";
 
-    public string SelectToolText => "Select";
-
-    public bool ShowCompleteAction => !_construction.IsMoveOnly;
+    /// <summary>True for a saved creation: its anatomy is locked and only moving parts is allowed.</summary>
+    public bool IsSaved => _construction.IsMoveOnly;
 
     public bool ShowRebuildAction => _construction.IsMoveOnly;
 
@@ -202,9 +193,6 @@ public sealed class ConstructionPresentationViewModel
     {
         if (!_construction.TryLeave(out var creature, out var errors) || creature is null)
         {
-            var disabledReason = errors.Count > 0
-                ? errors[0]
-                : "Add nodes and beams before training a new creature.";
             var inputSummary = errors.Count > 0
                 ? BuildInvalidDraftInputSummary(_construction.Cores.Count)
                 : BuildInputSummary(_construction.Cores.Count, motorRelationCount: 0);
@@ -214,10 +202,8 @@ public sealed class ConstructionPresentationViewModel
             return new ConstructionBuildPanelPresentation(
                 inputSummary,
                 motorRelationSummary,
-                $"Not ready: {disabledReason}",
                 CanStartTraining: false,
-                CanCompleteCreation: false,
-                DisabledReason: disabledReason,
+                ReadinessText: ShortReadiness(errors),
                 InputCount: _construction.Cores.Count * _coreSensorValueCount,
                 OutputCount: 0);
         }
@@ -227,14 +213,11 @@ public sealed class ConstructionPresentationViewModel
         var inputCount = BuildInputCount(creature.Cores.Count, motorRelationCount);
         if (motorRelationCount == 0)
         {
-            const string disabledReason = "Add a two-beam node. Closed triangles cannot twist.";
             return new ConstructionBuildPanelPresentation(
                 BuildInputSummary(creature.Cores.Count, motorRelationCount),
                 "0 motor relations can twist",
-                $"Not ready: {disabledReason}",
                 CanStartTraining: false,
-                CanCompleteCreation: true,
-                DisabledReason: disabledReason,
+                ReadinessText: "Add a two-beam node",
                 InputCount: inputCount,
                 OutputCount: 0);
         }
@@ -242,12 +225,28 @@ public sealed class ConstructionPresentationViewModel
         return new ConstructionBuildPanelPresentation(
             BuildInputSummary(creature.Cores.Count, motorRelationCount),
             motorRelationCount == 1 ? "1 motor relation can twist" : $"{motorRelationCount} motor relations can twist",
-            $"Ready: {inputCount} inputs -> {motorRelationCount} outputs",
             CanStartTraining: true,
-            CanCompleteCreation: true,
-            DisabledReason: null,
+            ReadinessText: "Ready to train",
             InputCount: inputCount,
             OutputCount: motorRelationCount);
+    }
+
+    // A short form of the builder's errors for the readiness line; only TryLeave decides whether training may start.
+    private string ShortReadiness(IReadOnlyList<string> errors)
+    {
+        if (errors.Count == 0)
+        {
+            return "Add nodes + beams";
+        }
+
+        var unconnected = Enumerable.Range(0, _construction.Nodes.Count)
+            .Count(node => !_construction.Beams.Any(beam => beam.NodeA == node || beam.NodeB == node));
+        return unconnected switch
+        {
+            0 => errors[0],
+            1 => "1 node not connected",
+            _ => $"{unconnected} nodes not connected",
+        };
     }
 
     private string BuildCoreToolText()

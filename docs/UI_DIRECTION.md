@@ -45,10 +45,10 @@ runtime (one card per creation) is instantiated from library components or
 scenes. Widgets in `project/src/ui/widgets` are components that draw
 app-specific content: they may use the app's vocabulary and view-models, and
 follow the library's styling and size rules; their scenes live in
-`project/scenes/widgets`. Most product screens predate this split and still
-build themselves in code; they move to it as they are rewritten
-([#310](https://github.com/MrLogic85/Node-Runner/issues/310)), starting with
-Creations ([#314](https://github.com/MrLogic85/Node-Runner/issues/314)).
+`project/scenes/widgets`. Screens not yet rewritten still build themselves
+in code; they move to this split as they are rewritten
+([#310](https://github.com/MrLogic85/Node-Runner/issues/310)), and
+`RewrittenUi` in the UI tests is the one list of those that have.
 `docs/TEST_STRATEGY.md` lists the guard for each boundary.
 
 ## Product feel
@@ -195,7 +195,7 @@ GLES3`); see the Compatibility/OpenGL renderer note in
 `antialiased: false`.** This has been applied across every existing call
 site (`UiNumber`, `UiDashedBorder`, `UiProgressRing`, `UiSlider`,
 `UiSelectionHandle`, `UiButton`, `UiBoundsDebugOverlay`,
-`BuildScreen`, `SimulateScreen`, `BrainFocusNetworkView`,
+`BrainSetupSheet`, `SimulateScreen`, `BrainFocusNetworkView`,
 `ConstructionCanvas`, `CreatureThumbnail`, `BeamVisual`). Any new `_Draw()` code
 must follow the same rule; a stray edge without antialiasing reads as a
 sharp 1px line at any stretch factor, while `antialiased: true` reads as a
@@ -711,8 +711,7 @@ shell stands out from the screen's content (#347).
 ([issue #320](https://github.com/MrLogic85/Node-Runner/issues/320)): 56px
 wide, one touch target plus `space-2` (the reference token is `w-rail`), with
 a divider down its right edge and a `panel` background (#347). Its width, padding
-and separation live in `UiButtonBar.tscn` (#335); the code-built Build screen
-uses the same width as `UiLayout.ButtonBarWidth`. Unlike `UiToolbar` it has no fixed buttons: `%ButtonBarContent` is a plain
+and separation live in `UiButtonBar.tscn` (#335). Unlike `UiToolbar` it has no fixed buttons: `%ButtonBarContent` is a plain
 VBox, and everything in it (which tools, which is selected or locked, a play
 button at the bottom) belongs to the screen. By human decision on #320 it
 deliberately differs from the reference's `.rail`: the divider is in `edge`

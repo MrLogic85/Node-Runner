@@ -58,16 +58,13 @@ public sealed class ConstructionPresentationViewModelTests
         presentation.PlaceToolText.ShouldBe("Move");
         presentation.LockTopologyTools.ShouldBeTrue();
         presentation.LockedTopologyToolsText.ShouldBe("Beam, Core, Delete locked: Move only · training kept");
-        presentation.BeamToolText.ShouldBe("Beam · locked");
         presentation.CoreToolText.ShouldBe("Core · locked");
         presentation.CoreToolTooltip.ShouldBe("Move only · training kept");
         presentation.DeleteToolText.ShouldBe("Delete · locked");
         presentation.InspectorRole.ShouldBe("Tool: Move");
         presentation.InspectorValues.ShouldBe("Drag an existing node to reposition it. Training is kept.");
-        presentation.ShowCompleteAction.ShouldBeFalse();
+        presentation.IsSaved.ShouldBeTrue();
         presentation.ShowRebuildAction.ShouldBeTrue();
-        presentation.CreationSubtitle.ShouldBe("Saved Creation · anatomy locked");
-        presentation.PartsLockedChipText.ShouldBe("Parts locked · drag to move");
         presentation.RebuildActionText.ShouldBe("Rebuild body");
         presentation.RebuildConfirmationTitle.ShouldBe("Rebuild body?");
         presentation.RebuildConfirmationBody.ShouldBe("Rebuild creates a new body and a new brain. The original Creation and its training stay unchanged.");
@@ -94,16 +91,15 @@ public sealed class ConstructionPresentationViewModelTests
     }
 
     [Fact]
-    public void BuildMode_ShowsTopologyToolsAndCompleteAction()
+    public void BuildMode_ShowsTopologyToolsForADraft()
     {
         var construction = new ConstructionViewModel();
         var presentation = new ConstructionPresentationViewModel(construction);
 
         presentation.PlaceToolText.ShouldBe("Place");
         presentation.LockTopologyTools.ShouldBeFalse();
-        presentation.BeamToolText.ShouldBe("Beam");
         presentation.DeleteToolText.ShouldBe("Delete");
-        presentation.ShowCompleteAction.ShouldBeTrue();
+        presentation.IsSaved.ShouldBeFalse();
         presentation.ShowRebuildAction.ShouldBeFalse();
     }
 
@@ -246,13 +242,11 @@ public sealed class ConstructionPresentationViewModelTests
         var buildPanel = presentation.BuildPanel;
 
         buildPanel.CanStartTraining.ShouldBeFalse();
-        buildPanel.CanCompleteCreation.ShouldBeFalse();
-        buildPanel.DisabledReason.ShouldBe("Add nodes and beams before training a new creature.");
-        buildPanel.ValidationLine.ShouldBe("Not ready: Add nodes and beams before training a new creature.");
+        buildPanel.ReadinessText.ShouldBe("Add nodes + beams");
     }
 
     [Fact]
-    public void BuildPanel_WhenAnatomyIsInvalid_UsesFirstBuilderValidationError()
+    public void BuildPanel_WhenANodeIsUnconnected_SaysSoInReadiness()
     {
         var construction = new ConstructionViewModel();
         construction.PlaceNode(new Vector2D(0, 0), 18);
@@ -261,11 +255,20 @@ public sealed class ConstructionPresentationViewModelTests
         var buildPanel = presentation.BuildPanel;
 
         buildPanel.CanStartTraining.ShouldBeFalse();
-        buildPanel.CanCompleteCreation.ShouldBeFalse();
-        buildPanel.DisabledReason.ShouldBe("Node 0 has no beams attached. Connect it with a beam or remove it.");
+        buildPanel.ReadinessText.ShouldBe("1 node not connected");
         buildPanel.InputSummary.ShouldBe("0 cores placed; fix anatomy to count inputs.");
         buildPanel.MotorRelationSummary.ShouldBe("Fix anatomy to count motor relations.");
-        buildPanel.ValidationLine.ShouldBe("Not ready: Node 0 has no beams attached. Connect it with a beam or remove it.");
+    }
+
+    [Fact]
+    public void BuildPanel_WhenSeveralNodesAreUnconnected_CountsThemInReadiness()
+    {
+        var construction = new ConstructionViewModel();
+        construction.PlaceNode(new Vector2D(0, 0), 18);
+        construction.PlaceNode(new Vector2D(80, 0), 18);
+        var presentation = new ConstructionPresentationViewModel(construction);
+
+        presentation.BuildPanel.ReadinessText.ShouldBe("2 nodes not connected");
     }
 
     [Fact]
@@ -288,11 +291,9 @@ public sealed class ConstructionPresentationViewModelTests
         var buildPanel = presentation.BuildPanel;
 
         buildPanel.CanStartTraining.ShouldBeTrue();
-        buildPanel.CanCompleteCreation.ShouldBeTrue();
-        buildPanel.DisabledReason.ShouldBeNull();
+        buildPanel.ReadinessText.ShouldBe("Ready to train");
         buildPanel.InputSummary.ShouldBe("1 core: 6 sensors; 3 motor relations: 6 sensors; 12 inputs total");
         buildPanel.MotorRelationSummary.ShouldBe("3 motor relations can twist");
-        buildPanel.ValidationLine.ShouldBe("Ready: 12 inputs -> 3 outputs");
     }
 
     [Fact]
@@ -309,11 +310,9 @@ public sealed class ConstructionPresentationViewModelTests
         var buildPanel = presentation.BuildPanel;
 
         buildPanel.CanStartTraining.ShouldBeFalse();
-        buildPanel.CanCompleteCreation.ShouldBeTrue();
-        buildPanel.DisabledReason.ShouldBe("Add a two-beam node. Closed triangles cannot twist.");
+        buildPanel.ReadinessText.ShouldBe("Add a two-beam node");
         buildPanel.InputSummary.ShouldBe("1 core: 6 sensors; 0 motor relations: 0 sensors; 6 inputs total");
         buildPanel.MotorRelationSummary.ShouldBe("0 motor relations can twist");
-        buildPanel.ValidationLine.ShouldBe("Not ready: Add a two-beam node. Closed triangles cannot twist.");
     }
 
     [Fact]

@@ -245,7 +245,10 @@ scene (#326): a left scene is closed, not paused, and Back rebuilds it from
 its route. #468 is routing them one by one. Creations (the root and the
 main scene), Examples, Build, Simulate and the component-library pages are
 routed scenes. Build (`BuildRoute`, #363) edits one creation, or a new draft
-when the route has no id, and saves moved parts before it is left. Simulate
+when the route has no id, and saves moved parts before it is left. Its layout
+is authored in `BuildScreen.tscn` (#364): the construction canvas is a
+`Node2D` inside the screen's clipped canvas slot, placed and scaled in the
+scene, so Build has no camera and taps reach the canvas through the UI. Simulate
 (`SimulateRoute`, #469) trains one saved creation: it
 builds the world and the `Evolver` from the creation's save, resumes from its
 last finished generation and saves each finished one, so leaving drops only
@@ -269,8 +272,8 @@ pages have nothing to save, so they are routed directly.
   previous route, or null on the root, where Android leaves the app.
   `ReturnToRoot()` clears everything above the root (e.g. after Delete).
   `ReplaceCurrent()` gives the current entry new arguments without reopening
-  it: a new draft's `BuildRoute` becomes the saved creation's when Save opens
-  its training, so Back from training rebuilds that creation, not a blank
+  it: a new draft's `BuildRoute` becomes the saved creation's when Start
+  training saves the draft and opens its training, so Back from training rebuilds that creation, not a blank
   draft.
 - `ISceneNavigator` is what a scene asks to navigate; `IRoutedScene` is how
   a scene receives its route and navigator before it joins the tree. Both

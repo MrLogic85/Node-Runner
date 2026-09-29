@@ -18,7 +18,7 @@ public partial class UiValueRow : HBoxContainer
         set
         {
             _labelText = value;
-            Rebuild();
+            Refresh();
         }
     }
 
@@ -29,7 +29,7 @@ public partial class UiValueRow : HBoxContainer
         set
         {
             _valueText = value;
-            Rebuild();
+            Refresh();
         }
     }
 
@@ -40,30 +40,34 @@ public partial class UiValueRow : HBoxContainer
         set
         {
             _iconId = value;
-            Rebuild();
+            Refresh();
         }
     }
 
     public override void _Ready()
     {
         MouseFilter = MouseFilterEnum.Ignore;
-        Rebuild();
+        Refresh();
     }
 
     private readonly UiUnsavedState _unsaved = new("theme_override_constants/separation");
 
     public override void _Notification(int what)
     {
-        if (_unsaved.Handle(this, what, Rebuild))
+        if (_unsaved.Handle(this, what, Refresh))
         {
             return;
         }
 
         if (what == NotificationThemeChanged && IsNodeReady())
         {
-            UiThemeRefresh.Guarded(this, Rebuild);
+            Refresh();
         }
     }
+
+    // Rebuild writes its own separation override, which re-sends NotificationThemeChanged; without
+    // the guard a runtime text change rebuilds twice and doubles the row's children.
+    private void Refresh() => UiThemeRefresh.Guarded(this, Rebuild);
 
     private void Rebuild()
     {
