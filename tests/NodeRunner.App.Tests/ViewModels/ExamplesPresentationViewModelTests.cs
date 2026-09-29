@@ -17,8 +17,7 @@ public sealed class ExamplesPresentationViewModelTests
         card.Name.ShouldBe("Walker");
         card.Creature.ShouldBe(example.Creation.Creature);
         card.SummaryText.ShouldBe(example.WhatIsNew);
-        card.AchievementProgress.ShouldBe(0f);
-        card.UnlockCreditText.ShouldBeEmpty();
+        card.Training.ShouldBeNull();
         card.CanOpen.ShouldBeFalse();
         card.CanDuplicate.ShouldBeTrue();
         card.CanDelete.ShouldBeFalse();

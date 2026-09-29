@@ -361,6 +361,10 @@ Other icon sizes follow the reference's rules
   (`UiSelectionHandle.DrawRoundButton`).
 - **Part glyphs.** A part glyph is never drawn at `icon-sm`; `UiIcons.Load`
   rejects that pairing.
+- **A lone icon in a scene.** `UiIcon` places one canonical icon beside text a
+  scene authors, such as the padlock, stat and map icons on a Creations card
+  (#350). The scene picks its `IconId`, `IconSize` and theme `Color`; it draws
+  the icon itself, so it follows a theme swap and saves nothing derived.
 
 Toggle and checkbox rows follow the Component Library's rendered specimens:
 transparent rows, solid indicator outlines, and 50% opacity for the whole

@@ -5,7 +5,7 @@
 [ext_resource type="Script" uid="uid://8edfdt3hsnj0" path="res://src/ui/widgets/CreatureThumbnail.cs" id="3_thumb"]
 [ext_resource type="Script" uid="uid://dk67qmt3brp4e" path="res://src/ui/lib/UiLabel.cs" id="4_label"]
 [ext_resource type="Script" uid="uid://fw1i2vfgkd7q" path="res://src/ui/lib/UiDivider.cs" id="5_divider"]
-[ext_resource type="Script" uid="uid://bau3bwe6tkv48" path="res://src/ui/lib/UiSlider.cs" id="7_slider"]
+[ext_resource type="Script" uid="uid://b4t4jrismbuik" path="res://src/ui/lib/UiIcon.cs" id="7_icon"]
 [ext_resource type="Script" uid="uid://r2ped3g3uiaa" path="res://src/ui/lib/UiButton.cs" id="8_button"]
 [ext_resource type="Script" uid="uid://bjt8et7kcs50x" path="res://src/ui/lib/UiCardActions.cs" id="9_card_actions"]
 
@@ -86,33 +86,102 @@ text_overrun_behavior = 3
 script = ExtResource("4_label")
 TextStyle = 1
 
+[node name="Padlock" type="Control" parent="Frame/Stack/Body/BodyStack/TitleRow" unique_id=312216405]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+size_flags_vertical = 4
+script = ExtResource("7_icon")
+IconId = 15
+Color = 8
+
 [node name="Summary" type="Label" parent="Frame/Stack/Body/BodyStack" unique_id=128398721]
 unique_name_in_owner = true
 layout_mode = 2
-text = "Ready to train"
+text = "Not trained yet. Tap to build."
 autowrap_mode = 3
 script = ExtResource("4_label")
 TextStyle = 9
 TextColor = 8
 
-[node name="AchievementProgress" type="Control" parent="Frame/Stack/Body/BodyStack" unique_id=74681728]
+[node name="Stats" type="HBoxContainer" parent="Frame/Stack/Body/BodyStack" unique_id=1570972950]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
-mouse_filter = 1
-script = ExtResource("7_slider")
-LabelText = "Achievement progress"
-ReadoutText = ""
-ValueKind = 2
+theme_override_constants/separation = 8
 
-[node name="UnlockCredit" type="Label" parent="Frame/Stack/Body/BodyStack" unique_id=852071140]
+[node name="DistanceStat" type="HBoxContainer" parent="Frame/Stack/Body/BodyStack/Stats" unique_id=557270608]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="DistanceIcon" type="Control" parent="Frame/Stack/Body/BodyStack/Stats/DistanceStat" unique_id=1739156700]
+layout_mode = 2
+size_flags_vertical = 4
+script = ExtResource("7_icon")
+IconId = 55
+
+[node name="Distance" type="Label" parent="Frame/Stack/Body/BodyStack/Stats/DistanceStat" unique_id=1780172800]
+unique_name_in_owner = true
+layout_mode = 2
+text = "18.4"
+script = ExtResource("4_label")
+TextStyle = 16
+
+[node name="TopSpeedStat" type="HBoxContainer" parent="Frame/Stack/Body/BodyStack/Stats" unique_id=1703166914]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="TopSpeedIcon" type="Control" parent="Frame/Stack/Body/BodyStack/Stats/TopSpeedStat" unique_id=1674680544]
+layout_mode = 2
+size_flags_vertical = 4
+script = ExtResource("7_icon")
+IconId = 56
+
+[node name="TopSpeed" type="Label" parent="Frame/Stack/Body/BodyStack/Stats/TopSpeedStat" unique_id=1614091944]
+unique_name_in_owner = true
+layout_mode = 2
+text = "3.1"
+script = ExtResource("4_label")
+TextStyle = 16
+
+[node name="ElevationStat" type="HBoxContainer" parent="Frame/Stack/Body/BodyStack/Stats" unique_id=1225635259]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="ElevationIcon" type="Control" parent="Frame/Stack/Body/BodyStack/Stats/ElevationStat" unique_id=1189782947]
+layout_mode = 2
+size_flags_vertical = 4
+script = ExtResource("7_icon")
+IconId = 57
+
+[node name="Elevation" type="Label" parent="Frame/Stack/Body/BodyStack/Stats/ElevationStat" unique_id=1699769664]
+unique_name_in_owner = true
+layout_mode = 2
+text = "1.2"
+script = ExtResource("4_label")
+TextStyle = 16
+
+[node name="Trained" type="HBoxContainer" parent="Frame/Stack/Body/BodyStack" unique_id=543161245]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
-autowrap_mode = 3
+theme_override_constants/separation = 4
+
+[node name="Map" type="Control" parent="Frame/Stack/Body/BodyStack/Trained" unique_id=1627622263]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 4
+script = ExtResource("7_icon")
+IconId = 58
+Color = 8
+
+[node name="Generations" type="Label" parent="Frame/Stack/Body/BodyStack/Trained" unique_id=460645363]
+unique_name_in_owner = true
+layout_mode = 2
+text = "142 generations"
 script = ExtResource("4_label")
 TextStyle = 9
-TextColor = 9
+TextColor = 8
 
 [node name="Spacer" type="Control" parent="Frame/Stack" unique_id=1517837891]
 layout_mode = 2
