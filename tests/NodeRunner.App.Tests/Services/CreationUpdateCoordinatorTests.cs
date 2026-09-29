@@ -121,6 +121,84 @@ public sealed class CreationUpdateCoordinatorTests
     }
 
     [Fact]
+    public void TryFinishTrainingSession_WithFinishedGeneration_LocksAndSavesLatestTraining()
+    {
+        var (repository, coordinator, creation) = Saved(withTraining: false);
+
+        var locked = coordinator.TryFinishTrainingSession(creation.Id, coordinator.CurrentTrainingEpoch(creation.Id), Training(generation: 1));
+
+        locked.ShouldBeTrue();
+        var saved = repository.Get(creation.Id)!;
+        saved.IsLocked.ShouldBeTrue();
+        saved.Training!.Generation.ShouldBe(1);
+    }
+
+    [Fact]
+    public void TryFinishTrainingSession_BeforeFirstGeneration_LeavesCreationUnlocked()
+    {
+        var (repository, coordinator, creation) = Saved(withTraining: false);
+
+        var locked = coordinator.TryFinishTrainingSession(creation.Id, coordinator.CurrentTrainingEpoch(creation.Id), latest: null);
+
+        locked.ShouldBeFalse();
+        repository.Get(creation.Id)!.IsLocked.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void TryFinishTrainingSession_ResumedWithoutNewGeneration_LocksSavedTraining()
+    {
+        // A first session that was interrupted (app closed) saved generations but never finished.
+        var (repository, coordinator, creation) = Saved(withTraining: true);
+
+        var locked = coordinator.TryFinishTrainingSession(creation.Id, coordinator.CurrentTrainingEpoch(creation.Id), latest: null);
+
+        locked.ShouldBeTrue();
+        var saved = repository.Get(creation.Id)!;
+        saved.IsLocked.ShouldBeTrue();
+        saved.Training.ShouldBe(creation.Training);
+    }
+
+    [Fact]
+    public void TryFinishTrainingSession_OlderSnapshot_KeepsNewerSavedTraining()
+    {
+        var (repository, coordinator, creation) = Saved(withTraining: false);
+        var epoch = coordinator.CurrentTrainingEpoch(creation.Id);
+        coordinator.TryPersistTraining(creation.Id, epoch, Training(generation: 5));
+
+        coordinator.TryFinishTrainingSession(creation.Id, epoch, Training(generation: 4)).ShouldBeTrue();
+
+        repository.Get(creation.Id)!.Training!.Generation.ShouldBe(5);
+    }
+
+    [Fact]
+    public void TryFinishTrainingSession_AfterReset_DoesNotLock()
+    {
+        var (repository, coordinator, creation) = Saved(withTraining: true);
+        var epochBeforeReset = coordinator.CurrentTrainingEpoch(creation.Id);
+        coordinator.ResetTraining(creation.Id);
+
+        coordinator.TryFinishTrainingSession(creation.Id, epochBeforeReset, Training(generation: 3)).ShouldBeFalse();
+
+        var saved = repository.Get(creation.Id)!;
+        saved.IsLocked.ShouldBeFalse();
+        saved.Training.ShouldBeNull();
+    }
+
+    [Fact]
+    public void Lock_SurvivesLaterTrainingAndMoveEdits_AndResetClearsIt()
+    {
+        var (repository, coordinator, creation) = Saved(withTraining: true);
+        coordinator.TryFinishTrainingSession(creation.Id, coordinator.CurrentTrainingEpoch(creation.Id), latest: null);
+
+        coordinator.TryPersistTraining(creation.Id, coordinator.CurrentTrainingEpoch(creation.Id), Training(generation: 9));
+        coordinator.ApplyCreatureEdit(creation.Id, creation.Creature);
+        repository.Get(creation.Id)!.IsLocked.ShouldBeTrue();
+
+        coordinator.ResetTraining(creation.Id);
+        repository.Get(creation.Id)!.IsLocked.ShouldBeFalse();
+    }
+
+    [Fact]
     public void UpdateIfPresent_MissingCreation_ReturnsNullWithoutWriting()
     {
         var repository = new InMemoryCreationRepository();
@@ -141,6 +219,16 @@ public sealed class CreationUpdateCoordinatorTests
         // bug elsewhere in the call chain.
         Should.Throw<KeyNotFoundException>(() => coordinator.ResetTraining(Guid.NewGuid()));
     }
+
+    private static (InMemoryCreationRepository Repository, CreationUpdateCoordinator Coordinator, CreationDef Creation) Saved(bool withTraining)
+    {
+        var repository = new InMemoryCreationRepository();
+        var creation = CreateCreation("Alpha", withTraining);
+        repository.Save(creation);
+        return (repository, new CreationUpdateCoordinator(repository), creation);
+    }
+
+    private static TrainingStateDef Training(int generation) => new([2, 1], [0.5, -0.5, 0.1], generation, "Tanh");
 
     private static CreationDef CreateCreation(string name, bool withTraining = false)
     {
