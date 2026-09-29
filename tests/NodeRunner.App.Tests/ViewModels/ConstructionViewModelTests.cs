@@ -132,6 +132,57 @@ public sealed class ConstructionViewModelTests
     }
 
     [Fact]
+    public void SetCreationName_ChangesTheName()
+    {
+        var viewModel = new ConstructionViewModel();
+
+        viewModel.SetCreationName("Hopper");
+
+        viewModel.CreationName.ShouldBe("Hopper");
+    }
+
+    [Fact]
+    public void SaveName_WithoutCustomName_NumbersTheNextCreation()
+    {
+        new ConstructionViewModel().SaveName(savedCreationCount: 2).ShouldBe("Creation 3");
+    }
+
+    [Fact]
+    public void SaveName_AfterRename_UsesTheUsersName()
+    {
+        var viewModel = new ConstructionViewModel();
+        viewModel.SetCreationName("Hopper");
+
+        viewModel.SaveName(savedCreationCount: 2).ShouldBe("Hopper");
+    }
+
+    [Fact]
+    public void SaveName_ForLoadedCreation_KeepsItsName()
+    {
+        var viewModel = new ConstructionViewModel();
+        viewModel.Load(
+            new CreatureDef(
+                [new NodeDef(new Vector2D(0, 0), 18), new NodeDef(new Vector2D(20, 0), 18)],
+                [new BeamDef(0, 1)],
+                []),
+            creationName: "Worm");
+
+        viewModel.SaveName(savedCreationCount: 2).ShouldBe("Worm");
+    }
+
+    [Fact]
+    public void ResetDraft_ClearsCustomCreationName()
+    {
+        var viewModel = new ConstructionViewModel();
+        viewModel.SetCreationName("Hopper");
+
+        viewModel.ResetDraft();
+
+        viewModel.CreationName.ShouldBe("Untitled Creation");
+        viewModel.SaveName(savedCreationCount: 0).ShouldBe("Creation 1");
+    }
+
+    [Fact]
     public void TryFindNodeNear_WithNoNodes_ReturnsFalse()
     {
         var viewModel = new ConstructionViewModel();

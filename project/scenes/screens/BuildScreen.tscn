@@ -1,6 +1,19 @@
-[gd_scene load_steps=2 format=3 uid="uid://nrbuildscreen001"]
+[gd_scene format=3 uid="uid://nrbuildscreen001"]
 
-[ext_resource type="Script" path="res://src/ui/screens/BuildScreen.cs" id="1_build_screen"]
+[ext_resource type="Script" uid="uid://b00eqlnle2c1o" path="res://src/ui/screens/BuildScreen.cs" id="1_screen"]
+[ext_resource type="PackedScene" uid="uid://dokr6l5stu6ll" path="res://scenes/ui/UiFrame.tscn" id="2_frame"]
+[ext_resource type="PackedScene" uid="uid://gydkh1xys4yo" path="res://scenes/ui/UiToolbar.tscn" id="3_toolbar"]
+[ext_resource type="Script" uid="uid://ceoq80oxw56og" path="res://src/ui/lib/UiTextField.cs" id="4_text_field"]
+[ext_resource type="Script" uid="uid://r2ped3g3uiaa" path="res://src/ui/lib/UiButton.cs" id="5_button"]
+[ext_resource type="Script" uid="uid://dah3q1p7ikjlm" path="res://src/ui/lib/UiMenuActionItem.cs" id="6_menu_item"]
+[ext_resource type="PackedScene" uid="uid://xh7n0i08nbrq" path="res://scenes/ui/UiButtonBar.tscn" id="7_button_bar"]
+[ext_resource type="Script" uid="uid://p55oa8ljjmna" path="res://src/ui/widgets/ConstructionCanvas.cs" id="8_canvas"]
+[ext_resource type="Script" uid="uid://b32bnhbgasedd" path="res://src/ui/lib/UiChip.cs" id="9_chip"]
+[ext_resource type="PackedScene" uid="uid://c7sdp4nel2qx" path="res://scenes/ui/UiSidePanel.tscn" id="10_side_panel"]
+[ext_resource type="Script" uid="uid://bss6jgv5hcc3q" path="res://src/ui/lib/UiPartRow.cs" id="11_part_row"]
+[ext_resource type="Script" uid="uid://dk67qmt3brp4e" path="res://src/ui/lib/UiLabel.cs" id="12_label"]
+[ext_resource type="Script" uid="uid://b4t4jrismbuik" path="res://src/ui/lib/UiIcon.cs" id="14_icon"]
+[ext_resource type="Script" path="res://src/ui/widgets/BrainSetupSheet.cs" id="15_brain_setup"]
 
 [node name="BuildScreen" type="Control"]
 layout_mode = 3
@@ -9,4 +22,419 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-script = ExtResource("1_build_screen")
+mouse_filter = 2
+script = ExtResource("1_screen")
+
+[node name="UiFrame" parent="." instance=ExtResource("2_frame")]
+unique_name_in_owner = true
+layout_mode = 1
+
+[node name="Shell" type="VBoxContainer" parent="UiFrame/MarginContainer/Card" index="0"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 0
+
+[node name="Toolbar" parent="UiFrame/MarginContainer/Card/Shell" instance=ExtResource("3_toolbar")]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="ToolbarContent" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/HBoxContainer/MarginContainer" index="0"]
+theme_override_constants/separation = 8
+
+[node name="CreationName" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/HBoxContainer/MarginContainer/ToolbarContent" index="0"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+script = ExtResource("4_text_field")
+TextValue = "Untitled Creation"
+
+[node name="StartTraining" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/HBoxContainer/MarginContainer/ToolbarContent" index="1"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 1
+text = "Start training"
+script = ExtResource("5_button")
+IconId = 24
+Kind = 0
+
+[node name="MenuBrainSetup" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/ToolbarMenu" index="0"]
+unique_name_in_owner = true
+layout_mode = 2
+script = ExtResource("6_menu_item")
+LabelText = "Brain setup"
+IconId = 18
+
+[node name="MenuPowerBudget" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/ToolbarMenu" index="1"]
+unique_name_in_owner = true
+layout_mode = 2
+script = ExtResource("6_menu_item")
+LabelText = "Power budget"
+NoteText = "Coming soon"
+IconId = 2
+Disabled = true
+
+[node name="MenuResetTraining" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/ToolbarMenu" index="2"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+script = ExtResource("6_menu_item")
+LabelText = "Reset training"
+IconId = 26
+
+[node name="MenuDeleteCreation" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/ToolbarMenu" index="3"]
+unique_name_in_owner = true
+layout_mode = 2
+script = ExtResource("6_menu_item")
+LabelText = "Delete creation"
+IconId = 34
+Kind = 1
+
+[node name="Body" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell"]
+layout_mode = 2
+size_flags_vertical = 3
+mouse_filter = 2
+theme_override_constants/separation = 0
+
+[node name="ButtonBar" parent="UiFrame/MarginContainer/Card/Shell/Body" instance=ExtResource("7_button_bar")]
+layout_mode = 2
+mouse_filter = 0
+
+[node name="MoveTool" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Body/ButtonBar/ButtonBarPadding/ButtonBarContent" index="0"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+mouse_filter = 1
+text = "Move"
+script = ExtResource("5_button")
+IconId = 20
+ContentLayout = 1
+Selected = true
+
+[node name="BeamTool" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Body/ButtonBar/ButtonBarPadding/ButtonBarContent" index="1"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+mouse_filter = 1
+text = "Beam"
+script = ExtResource("5_button")
+IconId = 1
+ContentLayout = 1
+
+[node name="SelectTool" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Body/ButtonBar/ButtonBarPadding/ButtonBarContent" index="2"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+mouse_filter = 1
+text = "Select"
+script = ExtResource("5_button")
+IconId = 29
+ContentLayout = 1
+
+[node name="CanvasSlot" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Body"]
+unique_name_in_owner = true
+clip_contents = true
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+
+[node name="ConstructionCanvas" type="Node2D" parent="UiFrame/MarginContainer/Card/Shell/Body/CanvasSlot"]
+unique_name_in_owner = true
+position = Vector2(136, 66)
+scale = Vector2(1.15, 1.15)
+script = ExtResource("8_canvas")
+
+[node name="CanvasOverlay" type="MarginContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/CanvasSlot"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="PartsLockedChip" type="PanelContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/CanvasSlot/CanvasOverlay"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 0
+mouse_filter = 2
+script = ExtResource("9_chip")
+Text = "Parts locked · drag to move"
+IconId = 15
+
+[node name="SidePanel" parent="UiFrame/MarginContainer/Card/Shell/Body" instance=ExtResource("10_side_panel")]
+unique_name_in_owner = true
+layout_mode = 2
+Title = "Parts"
+
+[node name="SidePanelContent" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded" index="1"]
+theme_override_constants/separation = 8
+
+[node name="PartsTray" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent" index="0"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="CorePart" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/PartsTray"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 1
+script = ExtResource("11_part_row")
+IconId = 43
+Label = "Core"
+ValueText = "1 left"
+
+[node name="SpringPart" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/PartsTray"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 1
+script = ExtResource("11_part_row")
+IconId = 50
+Label = "Spring"
+State = 2
+
+[node name="ToolHint" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/PartsTray"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Tap empty space to place a node. Drag a node to move it."
+autowrap_mode = 3
+script = ExtResource("12_label")
+TextStyle = 9
+TextColor = 8
+
+[node name="SavedCreation" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent" index="1"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="SavedTitle" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/SavedCreation"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Not trained yet"
+autowrap_mode = 3
+script = ExtResource("12_label")
+TextStyle = 5
+
+[node name="SavedBest" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/SavedCreation"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Best distance —"
+autowrap_mode = 3
+script = ExtResource("12_label")
+TextStyle = 6
+TextColor = 9
+
+[node name="SavedBody" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/SavedCreation"]
+unique_name_in_owner = true
+layout_mode = 2
+autowrap_mode = 3
+script = ExtResource("12_label")
+TextStyle = 9
+TextColor = 8
+
+[node name="Stats" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/SavedCreation"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 1
+text = "Stats"
+script = ExtResource("5_button")
+IconId = 4
+
+[node name="Brain" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/SavedCreation"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 1
+text = "Brain"
+script = ExtResource("5_button")
+IconId = 18
+
+[node name="PartSettings" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent" index="2"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="PartPrimary" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/PartSettings"]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="PartPrimaryLabel" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/PartSettings/PartPrimary"]
+unique_name_in_owner = true
+layout_mode = 2
+script = ExtResource("12_label")
+TextStyle = 11
+TextColor = 8
+
+[node name="PartPrimaryValue" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/PartSettings/PartPrimary"]
+unique_name_in_owner = true
+layout_mode = 2
+autowrap_mode = 3
+script = ExtResource("12_label")
+TextStyle = 15
+TextColor = 7
+
+[node name="PartConnections" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/PartSettings"]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="PartConnectionsLabel" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/PartSettings/PartConnections"]
+unique_name_in_owner = true
+layout_mode = 2
+script = ExtResource("12_label")
+TextStyle = 11
+TextColor = 8
+
+[node name="PartConnectionsValue" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/PartSettings/PartConnections"]
+unique_name_in_owner = true
+layout_mode = 2
+autowrap_mode = 3
+script = ExtResource("12_label")
+TextStyle = 15
+TextColor = 7
+
+[node name="PartFacts" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/PartSettings"]
+unique_name_in_owner = true
+layout_mode = 2
+autowrap_mode = 3
+script = ExtResource("12_label")
+TextStyle = 9
+TextColor = 8
+
+[node name="PartBody" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/PartSettings"]
+unique_name_in_owner = true
+layout_mode = 2
+autowrap_mode = 3
+script = ExtResource("12_label")
+TextStyle = 9
+TextColor = 8
+
+[node name="PartActions" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/PartSettings"]
+layout_mode = 2
+alignment = 2
+theme_override_constants/separation = 4
+
+[node name="PartDelete" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/PartSettings/PartActions"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 1
+text = "Delete"
+script = ExtResource("5_button")
+IconId = 34
+Kind = 2
+ContentLayout = 2
+
+[node name="PartClose" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/PartSettings/PartActions"]
+unique_name_in_owner = true
+layout_mode = 2
+tooltip_text = "Close settings"
+mouse_filter = 1
+script = ExtResource("5_button")
+IconId = 38
+Kind = 3
+ContentLayout = 2
+
+[node name="Selection" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent" index="3"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="SelectionCounts" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/Selection"]
+unique_name_in_owner = true
+layout_mode = 2
+autowrap_mode = 3
+script = ExtResource("12_label")
+TextStyle = 6
+
+[node name="SelectionBody" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/Selection"]
+unique_name_in_owner = true
+layout_mode = 2
+autowrap_mode = 3
+script = ExtResource("12_label")
+TextStyle = 9
+TextColor = 8
+
+[node name="SelectionActions" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/Selection"]
+layout_mode = 2
+alignment = 2
+theme_override_constants/separation = 4
+
+[node name="SelectionDelete" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/Selection/SelectionActions"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 1
+text = "Delete"
+script = ExtResource("5_button")
+IconId = 34
+Kind = 2
+ContentLayout = 2
+
+[node name="SelectionClear" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/Selection/SelectionActions"]
+unique_name_in_owner = true
+layout_mode = 2
+tooltip_text = "Close selection"
+mouse_filter = 1
+script = ExtResource("5_button")
+IconId = 38
+Kind = 3
+ContentLayout = 2
+
+[node name="PanelSpacer" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent" index="4"]
+layout_mode = 2
+size_flags_vertical = 3
+mouse_filter = 2
+
+[node name="Readiness" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent" index="5"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="ReadinessIcon" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/Readiness"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 0
+mouse_filter = 2
+script = ExtResource("14_icon")
+IconId = 37
+IconSize = 0
+Color = 12
+
+[node name="ReadinessText" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/Readiness"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Add nodes + beams"
+autowrap_mode = 3
+script = ExtResource("12_label")
+TextStyle = 6
+TextColor = 12
+
+[node name="BrainSetupSheet" type="Control" parent="."]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("15_brain_setup")
+
+[editable path="UiFrame"]
+[editable path="UiFrame/MarginContainer/Card/Shell/Toolbar"]
+[editable path="UiFrame/MarginContainer/Card/Shell/Body/ButtonBar"]
+[editable path="UiFrame/MarginContainer/Card/Shell/Body/SidePanel"]

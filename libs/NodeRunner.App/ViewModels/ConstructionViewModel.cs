@@ -35,6 +35,7 @@ public sealed class ConstructionViewModel : INotifyPropertyChanged
     private BrainShapeDef _brainShape = BrainShapeDef.Default;
     private bool _hasCustomBrainShape;
     private string _creationName = "Untitled Creation";
+    private bool _hasCustomCreationName;
     private int? _trainingGeneration;
     private double? _bestFitness;
     private int? _selectedBeamIndex;
@@ -52,7 +53,8 @@ public sealed class ConstructionViewModel : INotifyPropertyChanged
         _selectedBeamIndex = null;
         _brainShape = brainShape ?? BrainShapeDef.Default;
         _hasCustomBrainShape = brainShape is not null;
-        _creationName = string.IsNullOrWhiteSpace(creationName) ? "Untitled Creation" : creationName;
+        _hasCustomCreationName = !string.IsNullOrWhiteSpace(creationName);
+        _creationName = _hasCustomCreationName ? creationName! : "Untitled Creation";
         _trainingGeneration = training?.Generation;
         _bestFitness = training?.BestFitness;
         _moveOnly = moveOnly;
@@ -74,6 +76,7 @@ public sealed class ConstructionViewModel : INotifyPropertyChanged
         _brainShape = BrainShapeDef.Default;
         _hasCustomBrainShape = false;
         _creationName = "Untitled Creation";
+        _hasCustomCreationName = false;
         _trainingGeneration = null;
         _bestFitness = null;
         _moveOnly = false;
@@ -91,6 +94,11 @@ public sealed class ConstructionViewModel : INotifyPropertyChanged
     public bool IsMoveOnly => _moveOnly;
 
     public string CreationName => _creationName;
+
+    /// <summary>The name a draft is saved under: the user's own, else the next <c>Creation N</c>.</summary>
+    public string SaveName(int savedCreationCount) => _hasCustomCreationName
+        ? _creationName
+        : $"Creation {savedCreationCount + 1}";
 
     public int? TrainingGeneration => _trainingGeneration;
 
@@ -116,6 +124,7 @@ public sealed class ConstructionViewModel : INotifyPropertyChanged
     public void SetCreationName(string creationName)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(creationName);
+        _hasCustomCreationName = true;
         if (_creationName == creationName)
         {
             return;

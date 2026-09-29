@@ -1,10 +1,15 @@
 [gd_scene format=3]
 
-[ext_resource type="Script" path="res://src/BuildHost.cs" id="1_host"]
+[ext_resource type="Script" uid="uid://3nvk5601fle2" path="res://src/BuildHost.cs" id="1_host"]
+[ext_resource type="PackedScene" uid="uid://nrbuildscreen001" path="res://scenes/screens/BuildScreen.tscn" id="2_screen"]
+[ext_resource type="Script" uid="uid://cbdercgul0a4h" path="res://src/ui/lib/UiDialog.cs" id="3_dialog"]
 
-[node name="Build" type="Node2D"]
+[node name="Build" type="Node"]
 script = ExtResource("1_host")
 
-[node name="Camera" type="Camera2D" parent="."]
-position = Vector2(360, 316)
-zoom = Vector2(1.15, 1.15)
+[node name="BuildScreen" parent="." instance=ExtResource("2_screen")]
+unique_name_in_owner = true
+
+[node name="DeleteDialog" type="Window" parent="."]
+unique_name_in_owner = true
+script = ExtResource("3_dialog")

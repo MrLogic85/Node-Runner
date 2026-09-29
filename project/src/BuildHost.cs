@@ -4,10 +4,8 @@ using NodeRunner.App.Services;
 using NodeRunner.App.ViewModels;
 using NodeRunner.Domain;
 using NodeRunner.Managers;
-using NodeRunner.Theme;
 using NodeRunner.Ui.Lib;
 using NodeRunner.Ui.Screens;
-using NodeRunner.Ui.Widgets;
 
 namespace NodeRunner;
 
@@ -15,19 +13,16 @@ namespace NodeRunner;
 /// The Build scene for one creation, or a new draft. Training lives in its own scene,
 /// <see cref="SimulateHost"/> (#469).
 /// </summary>
-public partial class BuildHost : Node2D, IRoutedScene
+public partial class BuildHost : Node, IRoutedScene
 {
-    private readonly VisualTheme _theme = VisualTheme.Neon;
-    private BuildScreen? _buildScreen;
-    private UiDialog? _deleteCreationDialog;
+    private BuildScreen _buildScreen = null!;
+    private UiDialog _deleteCreationDialog = null!;
     private bool _activeCreationDeleted;
     private ISceneNavigator? _navigator;
     private BuildRoute? _route;
     private Guid? _activeCreationId;
 
     public ConstructionViewModel Construction { get; } = new();
-
-    private ConstructionPresentationViewModel ConstructionPresentation => new(Construction);
 
     private SaveManager Saves => GetNode<SaveManager>("/root/SaveManager");
 
@@ -40,10 +35,9 @@ public partial class BuildHost : Node2D, IRoutedScene
     public override void _Ready()
     {
         ApplyProgression();
-        AddBuildModeBackdrop();
-        AddConstructionCanvas();
-        AddBuildScreen();
-        AddDeleteCreationDialog();
+        BindBuildScreen();
+        _deleteCreationDialog = GetNode<UiDialog>("%DeleteDialog");
+        _deleteCreationDialog.Finished += OnDeleteCreationDialogFinished;
         AddBackHandler();
         OpenRoute();
     }
@@ -57,14 +51,14 @@ public partial class BuildHost : Node2D, IRoutedScene
             return;
         }
 
-        var back = new UiBackHandler { CanTakeBack = () => _deleteCreationDialog?.IsOpen != true };
+        var back = new UiBackHandler { CanTakeBack = () => !_deleteCreationDialog.IsOpen && _buildScreen.CanTakeBack };
         back.BackRequested += OnBackRequested;
         AddChild(back, @internal: InternalMode.Front);
     }
 
     private void OnBackRequested()
     {
-        if (_buildScreen?.CloseOverlay() != true)
+        if (!_buildScreen.CloseOverlay())
         {
             BackFromBuildScreen();
         }
@@ -94,54 +88,11 @@ public partial class BuildHost : Node2D, IRoutedScene
     private void ApplyProgression() =>
         Construction.SetMaxCores(Saves.Progression.ExtraCoreUnlocked ? 2 : 1);
 
-    private void AddBuildModeBackdrop()
+    private void BindBuildScreen()
     {
-        var layer = new CanvasLayer
-        {
-            Name = "BuildModeBackdropLayer",
-            Layer = -1,
-        };
-        AddChild(layer);
-
-        var backdrop = new ColorRect
-        {
-            Name = "BuildModeBackdrop",
-            Color = UiThemes.Color(UiThemes.Neon, UiTokens.Color.Background),
-            MouseFilter = Control.MouseFilterEnum.Ignore,
-        };
-        backdrop.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
-        layer.AddChild(backdrop);
-    }
-
-    private void AddConstructionCanvas()
-    {
-        AddChild(new ConstructionCanvas
-        {
-            Name = "ConstructionCanvas",
-            Theme = _theme,
-            ViewModel = Construction,
-            Position = new Vector2(250, 260),
-        });
-    }
-
-    private void AddBuildScreen()
-    {
-        var buildLayer = new CanvasLayer
-        {
-            Name = "BuildOverlay",
-            Layer = 2,
-        };
-        AddChild(buildLayer);
-
-        _buildScreen = new BuildScreen
-        {
-            Name = "LiveBuildScreen",
-            Hosted = true,
-            ShowCanvasPreview = false,
-            Presentation = ConstructionPresentation,
-        };
-        _buildScreen.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
-        _buildScreen.ToolRequested += tool => Construction.ActiveTool = (ConstructionTool)(int)tool;
+        _buildScreen = GetNode<BuildScreen>("%BuildScreen");
+        _buildScreen.Setup(Construction);
+        _buildScreen.ToolRequested += tool => Construction.ActiveTool = tool;
         _buildScreen.BrainShapeChanged += (layers, neurons) =>
         {
             if (!Construction.IsMoveOnly)
@@ -149,37 +100,34 @@ public partial class BuildHost : Node2D, IRoutedScene
                 Construction.SetBrainShape(new BrainShapeDef(layers, neurons));
             }
         };
-        _buildScreen.SaveRequested += SaveCreationFromBuild;
+        _buildScreen.StartTrainingRequested += StartTraining;
         _buildScreen.BackRequested += BackFromBuildScreen;
         _buildScreen.CreationNameChanged += RenameActiveCreation;
         _buildScreen.ResetTrainingRequested += ResetActiveCreationTraining;
         _buildScreen.DeleteCreationRequested += RequestDeleteActiveCreation;
         _buildScreen.ClearSelectionRequested += Construction.ClearSelection;
         _buildScreen.DeleteSelectionRequested += Construction.DeleteSelectedParts;
-        _buildScreen.ResumeTrainingRequested += ResumeTrainingFromSavedCreation;
         _buildScreen.StatsRequested += () => Notify("Stats", "Stats open in milestone 0.12.0.");
         _buildScreen.BrainRequested += () => Notify("Brain view", "Brain view opens in milestone 0.12.0.");
-        buildLayer.AddChild(_buildScreen);
     }
 
-    // Delete from Build's overflow menu; the Creations scene has its own.
-    private void AddDeleteCreationDialog()
+    // Start training saves a new draft first; a saved creation opens its training straight away.
+    private void StartTraining()
     {
-        var layer = new CanvasLayer
+        if (_activeCreationId is null)
         {
-            Name = "DialogLayer",
-            Layer = 20,
-        };
-        AddChild(layer);
-        _deleteCreationDialog = new UiDialog();
-        _deleteCreationDialog.Finished += OnDeleteCreationDialogFinished;
-        layer.AddChild(_deleteCreationDialog);
+            SaveCreationFromBuild();
+        }
+        else
+        {
+            ResumeTrainingFromSavedCreation();
+        }
     }
 
     private void ShowCreations() => _navigator?.ReturnToRoot();
 
-    private void Notify(string title, string message) =>
-        UiNotificationLayer.Enqueue(this, new UiNotificationSpec(UiPopupType.Default, title, message));
+    private void Notify(string title, string message, UiPopupType type = UiPopupType.Default) =>
+        UiNotificationLayer.Enqueue(this, new UiNotificationSpec(type, title, message));
 
     private void StartNewCreation()
     {
@@ -237,9 +185,14 @@ public partial class BuildHost : Node2D, IRoutedScene
         var succeeded = CreationActions.TryRunFileOperation(
             () => editResult = Saves.PersistMoveOnlyEdit(id, editedCreature),
             $"Applying creature edit for Creation {id}");
-        Construction.SetCompletedMessage(succeeded && editResult is not null
-            ? editResult.StatusMessage
-            : "Could not save the edited creature; your edit was discarded.");
+        if (succeeded && editResult is not null)
+        {
+            Construction.SetCompletedMessage(editResult.StatusMessage);
+            return true;
+        }
+
+        Construction.SetCompletedMessage("Could not save the edited creature; your edit was discarded.");
+        Notify("Save failed", "The moved parts could not be saved.", UiPopupType.Danger);
         return true;
     }
 
@@ -274,13 +227,14 @@ public partial class BuildHost : Node2D, IRoutedScene
         var saves = Saves;
         var completedCreation = saves.ConstructionDraftWorkflow.CompleteDraft(
             creature,
-            $"Creation {saves.List().Count + 1}",
+            Construction.SaveName(saves.List().Count),
             Construction.HasCustomBrainShape ? Construction.BrainShape : RecommendedBrainShape(creature));
         if (!CreationActions.TryRunFileOperation(
             () => saves.Save(completedCreation),
             $"Saving Creation '{completedCreation.Name}'"))
         {
             Construction.SetCompletedMessage("Save failed — see log.");
+            Notify("Save failed", "The creation could not be saved.", UiPopupType.Danger);
             return false;
         }
 
@@ -355,7 +309,7 @@ public partial class BuildHost : Node2D, IRoutedScene
 
     private void RequestDeleteActiveCreation()
     {
-        if (_activeCreationId is not { } id || _deleteCreationDialog is null || _deleteCreationDialog.IsOpen)
+        if (_activeCreationId is not { } id || _deleteCreationDialog.IsOpen)
         {
             return;
         }

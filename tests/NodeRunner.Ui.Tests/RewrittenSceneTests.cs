@@ -10,13 +10,19 @@ namespace NodeRunner.Ui.Tests;
 internal static class RewrittenUi
 {
     /// <summary>Screen scripts, by path under <c>project/src</c>: thin, with no numbers of their own.</summary>
-    public static readonly string[] Screens = ["ui/screens/CreationsScreen.cs", "ui/screens/ExamplesScreen.cs"];
+    public static readonly string[] Screens =
+    [
+        "ui/screens/BuildScreen.cs",
+        "ui/screens/CreationsScreen.cs",
+        "ui/screens/ExamplesScreen.cs",
+    ];
 
     /// <summary>Widget scripts, by path under <c>project/src</c>: held to the library's rules.</summary>
     public static readonly string[] Widgets = ["ui/widgets/CreationCard.cs", "ui/widgets/CreatureThumbnail.cs"];
 
     /// <summary>Scene-authored screens and widgets, by path under <c>project/scenes</c>.</summary>
     public static readonly string[] Scenes = [
+        "screens/BuildScreen.tscn",
         "screens/CreationsScreen.tscn",
         "screens/ExamplesScreen.tscn",
         "widgets/CreationCard.tscn",

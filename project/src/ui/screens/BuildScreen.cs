@@ -1,37 +1,26 @@
 using Godot;
 using NodeRunner.App.ViewModels;
-using NodeRunner.Domain;
 using NodeRunner.Ui.Lib;
+using NodeRunner.Ui.Widgets;
 
 namespace NodeRunner.Ui.Screens;
 
 /// <summary>
-/// Build shell using sample presentation data by default, or injected App
-/// presentation state when hosted by the live game. This scene does not bind
-/// to simulation, managers, or persistence.
+/// Build screen, unlocked state (<c>reference design/components/Build</c>). The layout is authored
+/// in <c>scenes/screens/BuildScreen.tscn</c>; this script binds the construction presentation and
+/// forwards intents to its host, which owns saves and navigation.
 /// </summary>
 public partial class BuildScreen : Control
 {
-    private const string _hostedInputPassthroughMeta = "HostedInputPassthrough";
-    private const int _toolButtonHeight = 56;
+    private ConstructionViewModel? _construction;
     private ConstructionPresentationViewModel? _presentation;
-    private bool _isSubscribedToPresentation;
-    private bool _partsTrayCollapsed;
-    private bool _brainSetupOpen;
-    private bool _nameEntryOpen;
-    private bool _creationOverflowOpen;
-
-    [Export]
-    public bool Hosted { get; set; }
-
-    [Export]
-    public bool ShowCanvasPreview { get; set; } = true;
-
-    [Signal]
-    public delegate void SaveRequestedEventHandler();
+    private bool _subscribedToPresentation;
 
     [Signal]
     public delegate void BackRequestedEventHandler();
+
+    [Signal]
+    public delegate void StartTrainingRequestedEventHandler();
 
     [Signal]
     public delegate void CreationNameChangedEventHandler(string name);
@@ -49,9 +38,6 @@ public partial class BuildScreen : Control
     public delegate void DeleteSelectionRequestedEventHandler();
 
     [Signal]
-    public delegate void ResumeTrainingRequestedEventHandler();
-
-    [Signal]
     public delegate void StatsRequestedEventHandler();
 
     [Signal]
@@ -63,20 +49,42 @@ public partial class BuildScreen : Control
     [Signal]
     public delegate void BrainShapeChangedEventHandler(int hiddenLayers, int neuronsPerLayer);
 
-    public ConstructionPresentationViewModel? Presentation
-    {
-        get => _presentation;
-        set
-        {
-            UnsubscribeFromPresentation();
-            _presentation = value;
+    /// <summary>False while the overflow menu is open; it takes Android Back itself.</summary>
+    public bool CanTakeBack => !Toolbar.Menu.Visible;
 
-            if (IsInsideTree())
-            {
-                SubscribeToPresentation();
-                RebuildLayout();
-            }
+    private UiToolbar Toolbar => GetNode<UiToolbar>("%Toolbar");
+
+    private BrainSetupSheet BrainSetup => GetNode<BrainSetupSheet>("%BrainSetupSheet");
+
+    /// <summary>Binds the creation being built: the canvas edits it and the panels show it.</summary>
+    public void Setup(ConstructionViewModel construction)
+    {
+        ArgumentNullException.ThrowIfNull(construction);
+        UnsubscribeFromPresentation();
+        _construction = construction;
+        _presentation = new ConstructionPresentationViewModel(construction);
+        if (IsInsideTree())
+        {
+            SubscribeToPresentation();
         }
+
+        if (IsNodeReady())
+        {
+            BindViewModels();
+            Apply();
+        }
+    }
+
+    /// <summary>Closes an open sheet, as Android Back does first. False when none was open.</summary>
+    public bool CloseOverlay()
+    {
+        if (!BrainSetup.IsOpen)
+        {
+            return false;
+        }
+
+        BrainSetup.Close();
+        return true;
     }
 
     public override void _EnterTree()
@@ -84,40 +92,31 @@ public partial class BuildScreen : Control
         SubscribeToPresentation();
     }
 
-    /// <summary>Closes an open menu or panel, as Android Back does first. False when none was open.</summary>
-    public bool CloseOverlay()
-    {
-        if (!_brainSetupOpen && !_nameEntryOpen && !_creationOverflowOpen)
-        {
-            return false;
-        }
-
-        _brainSetupOpen = false;
-        _nameEntryOpen = false;
-        _creationOverflowOpen = false;
-        RebuildLayout();
-        return true;
-    }
-
     public override void _Ready()
     {
-        Name = nameof(BuildScreen);
-        MouseFilter = MouseFilterEnum.Ignore;
         UiLayout.ApplyScreen(this);
-        if (!Hosted)
-        {
-            Size = GetViewportRect().Size;
-        }
-
-        RebuildLayout();
-    }
-
-    public override void _Notification(int what)
-    {
-        if (what == NotificationThemeChanged && IsNodeReady())
-        {
-            UiThemeRefresh.Guarded(this, RebuildLayout);
-        }
+        var toolbar = Toolbar;
+        toolbar.BackPressed += () => EmitSignal(SignalName.BackRequested);
+        var name = GetNode<UiTextField>("%CreationName");
+        name.ValidateValue = static value => !string.IsNullOrWhiteSpace(value);
+        name.EditingFinished += OnNameEdited;
+        GetNode<UiButton>("%StartTraining").Activated += () => EmitSignal(SignalName.StartTrainingRequested);
+        BindMenuItem(toolbar, GetNode<UiMenuActionItem>("%MenuBrainSetup"), BrainSetup.Open);
+        BindMenuItem(toolbar, GetNode<UiMenuActionItem>("%MenuResetTraining"), () => EmitSignal(SignalName.ResetTrainingRequested));
+        BindMenuItem(toolbar, GetNode<UiMenuActionItem>("%MenuDeleteCreation"), () => EmitSignal(SignalName.DeleteCreationRequested));
+        BindTool(GetNode<UiButton>("%MoveTool"), ConstructionTool.Place);
+        BindTool(GetNode<UiButton>("%BeamTool"), ConstructionTool.Beam);
+        BindTool(GetNode<UiButton>("%SelectTool"), ConstructionTool.Select);
+        GetNode<UiPartRow>("%CorePart").PartSelected += () => EmitSignal(SignalName.ToolRequested, (int)ConstructionTool.Core);
+        GetNode<UiButton>("%Stats").Activated += () => EmitSignal(SignalName.StatsRequested);
+        GetNode<UiButton>("%Brain").Activated += () => EmitSignal(SignalName.BrainRequested);
+        GetNode<UiButton>("%PartDelete").Activated += () => EmitSignal(SignalName.DeleteSelectionRequested);
+        GetNode<UiButton>("%SelectionDelete").Activated += () => EmitSignal(SignalName.DeleteSelectionRequested);
+        GetNode<UiButton>("%PartClose").Activated += () => EmitSignal(SignalName.ClearSelectionRequested);
+        GetNode<UiButton>("%SelectionClear").Activated += () => EmitSignal(SignalName.ClearSelectionRequested);
+        BrainSetup.BrainShapeChanged += (layers, neurons) => EmitSignal(SignalName.BrainShapeChanged, layers, neurons);
+        BindViewModels();
+        Apply();
     }
 
     public override void _ExitTree()
@@ -125,1360 +124,190 @@ public partial class BuildScreen : Control
         UnsubscribeFromPresentation();
     }
 
-    private void RebuildLayout()
+    private static void BindMenuItem(UiToolbar toolbar, UiMenuActionItem item, Action action) =>
+        item.Activated += () =>
+        {
+            toolbar.CloseMenu();
+            action();
+        };
+
+    private void BindTool(UiButton button, ConstructionTool tool) =>
+        button.Activated += () => EmitSignal(SignalName.ToolRequested, (int)tool);
+
+    private void BindViewModels()
     {
-        foreach (var child in GetChildren())
+        GetNode<ConstructionCanvas>("%ConstructionCanvas").ViewModel = _construction;
+        BrainSetup.Presentation = _presentation;
+    }
+
+    private void OnNameEdited(string value)
+    {
+        var name = value.Trim();
+        if (name.Length > 0 && name != _presentation?.CreationName)
         {
-            RemoveChild(child);
-            child.QueueFree();
+            EmitSignal(SignalName.CreationNameChanged, name);
         }
 
-        BuildLayout();
-        if (_brainSetupOpen)
-        {
-            AddChild(CreateBrainSetupOverlay());
-        }
-
-        if (_nameEntryOpen)
-        {
-            AddChild(CreateNameEntryOverlay());
-        }
-
-        if (_creationOverflowOpen)
-        {
-            AddChild(CreateCreationOverflowOverlay());
-        }
-
-        if (Hosted)
-        {
-            ApplyHostedInputPassthrough(this);
-        }
+        // Show the name the creation really has: a rename the host could not save leaves it unchanged.
+        GetNode<UiTextField>("%CreationName").TextValue = _presentation?.CreationName ?? string.Empty;
     }
 
     private void OnPresentationChanged(object? sender, EventArgs eventArgs)
     {
-        if (IsInsideTree())
+        if (IsNodeReady())
         {
-            RebuildLayout();
+            Apply();
         }
+    }
+
+    private void Apply()
+    {
+        if (_presentation is not { } presentation)
+        {
+            return;
+        }
+
+        var saved = presentation.IsSaved;
+        var buildPanel = presentation.BuildPanel;
+        ApplyToolbar(presentation, buildPanel, saved);
+        ApplyTools(presentation);
+        GetNode<UiChip>("%PartsLockedChip").Visible = saved;
+        ApplySidePanel(presentation, buildPanel, saved);
+    }
+
+    private void ApplyToolbar(ConstructionPresentationViewModel presentation, ConstructionBuildPanelPresentation buildPanel, bool saved)
+    {
+        var name = GetNode<UiTextField>("%CreationName");
+        if (name.State != UiTextField.TextInputState.Editing)
+        {
+            name.TextValue = presentation.CreationName;
+        }
+
+        GetNode<UiButton>("%StartTraining").Disabled = !buildPanel.CanStartTraining;
+        var brainSetup = GetNode<UiMenuActionItem>("%MenuBrainSetup");
+        brainSetup.Disabled = presentation.IsBrainShapeLocked;
+        brainSetup.NoteText = presentation.IsBrainShapeLocked ? "Locked once saved" : string.Empty;
+        GetNode<UiMenuActionItem>("%MenuResetTraining").Visible = saved;
+        GetNode<UiMenuActionItem>("%MenuDeleteCreation").Disabled = !saved;
+        if (presentation.IsBrainShapeLocked && BrainSetup.IsOpen)
+        {
+            BrainSetup.Close();
+        }
+    }
+
+    private void ApplyTools(ConstructionPresentationViewModel presentation)
+    {
+        GetNode<UiButton>("%MoveTool").Selected = presentation.ActiveTool == ConstructionTool.Place;
+        var beam = GetNode<UiButton>("%BeamTool");
+        beam.Selected = presentation.ActiveTool == ConstructionTool.Beam;
+        beam.Disabled = presentation.LockTopologyTools;
+        GetNode<UiButton>("%SelectTool").Selected = presentation.ActiveTool == ConstructionTool.Select;
+    }
+
+    private void ApplySidePanel(ConstructionPresentationViewModel presentation, ConstructionBuildPanelPresentation buildPanel, bool saved)
+    {
+        var selected = presentation.SelectedPartCount;
+        var tray = GetNode<Control>("%PartsTray");
+        var savedPanel = GetNode<Control>("%SavedCreation");
+        var partSettings = GetNode<Control>("%PartSettings");
+        var selection = GetNode<Control>("%Selection");
+        tray.Visible = selected == 0 && !saved;
+        savedPanel.Visible = selected == 0 && saved;
+        partSettings.Visible = selected == 1;
+        selection.Visible = selected > 1;
+        GetNode<Control>("%Readiness").Visible = selected == 0;
+        GetNode<UiSidePanel>("%SidePanel").Title = selected switch
+        {
+            0 when saved => "Training",
+            0 => "Parts",
+            1 => presentation.SinglePartTitle,
+            _ => presentation.MultiSelectionTitle,
+        };
+
+        if (tray.Visible)
+        {
+            ApplyTray(presentation);
+        }
+
+        if (savedPanel.Visible)
+        {
+            GetNode<UiLabel>("%SavedTitle").Text = presentation.TrainingSummaryTitle;
+            GetNode<UiLabel>("%SavedBest").Text = $"Best distance {presentation.BestDistanceText}";
+            GetNode<UiLabel>("%SavedBody").Text = presentation.TrainingSummaryBody;
+        }
+
+        if (partSettings.Visible)
+        {
+            ApplyPartSettings(presentation, saved);
+        }
+
+        if (selection.Visible)
+        {
+            GetNode<UiLabel>("%SelectionCounts").Text = presentation.MultiSelectionCounts;
+            GetNode<UiLabel>("%SelectionBody").Text = saved
+                ? presentation.MultiSelectionBody
+                : "Drag any selected part to move them together, or delete the selection.";
+            GetNode<UiButton>("%SelectionDelete").Visible = !saved;
+        }
+
+        ApplyReadiness(buildPanel);
+    }
+
+    private void ApplyTray(ConstructionPresentationViewModel presentation)
+    {
+        var coresLeft = Math.Max(0, presentation.MaxCores - presentation.CoreCount);
+        var core = GetNode<UiPartRow>("%CorePart");
+        core.ValueText = $"{coresLeft} left";
+        core.State = presentation.ActiveTool == ConstructionTool.Core
+            ? UiPartRow.PartRowState.Selected
+            : coresLeft == 0
+                ? UiPartRow.PartRowState.NoneLeft
+                : UiPartRow.PartRowState.Rest;
+        GetNode<UiLabel>("%ToolHint").Text = ConstructionPresentationViewModel.ToolHint(presentation.ActiveTool);
+    }
+
+    private void ApplyPartSettings(ConstructionPresentationViewModel presentation, bool saved)
+    {
+        GetNode<UiLabel>("%PartPrimaryLabel").Text = presentation.SinglePartPrimaryLabel;
+        GetNode<UiLabel>("%PartPrimaryValue").Text = presentation.SinglePartPrimaryValue;
+        GetNode<UiLabel>("%PartConnectionsLabel").Text = presentation.SinglePartConnectionsLabel;
+        GetNode<UiLabel>("%PartConnectionsValue").Text = presentation.SinglePartConnectionsValue;
+        GetNode<UiLabel>("%PartFacts").Text = presentation.SinglePartFacts;
+        GetNode<UiLabel>("%PartBody").Text = presentation.SinglePartBody;
+        GetNode<UiButton>("%PartDelete").Visible = !saved;
+    }
+
+    private void ApplyReadiness(ConstructionBuildPanelPresentation buildPanel)
+    {
+        var ready = buildPanel.CanStartTraining;
+        var color = ready ? UiTokens.Color.Accent : UiTokens.Color.Danger;
+        var icon = GetNode<UiIcon>("%ReadinessIcon");
+        icon.IconId = ready ? UiIconId.Check : UiIconId.Warn;
+        icon.Color = color;
+        var text = GetNode<UiLabel>("%ReadinessText");
+        text.Text = buildPanel.ReadinessText;
+        text.TextColor = color;
     }
 
     private void SubscribeToPresentation()
     {
-        if (_presentation is null || _isSubscribedToPresentation)
+        if (_presentation is null || _subscribedToPresentation)
         {
             return;
         }
 
         _presentation.PresentationChanged += OnPresentationChanged;
-        _isSubscribedToPresentation = true;
+        _subscribedToPresentation = true;
     }
 
     private void UnsubscribeFromPresentation()
     {
-        if (_presentation is null || !_isSubscribedToPresentation)
+        if (_presentation is null || !_subscribedToPresentation)
         {
             return;
         }
 
         _presentation.PresentationChanged -= OnPresentationChanged;
-        _isSubscribedToPresentation = false;
-    }
-
-    private void BuildLayout()
-    {
-        if (!Hosted)
-        {
-            AddChild(new ColorRect
-            {
-                Color = UiThemeLookup.Color(this, UiTokens.Color.Background),
-                MouseFilter = MouseFilterEnum.Ignore,
-                AnchorRight = 1,
-                AnchorBottom = 1,
-            });
-        }
-
-        var safeFrame = MarkHostedInputPassthrough(CreateMargin(UiSpacing.ScreenEdgeInset));
-        AddChild(safeFrame);
-
-        var screenParent = safeFrame;
-        if (!Hosted)
-        {
-            var frame = CreatePanel(raised: false);
-            frame.SizeFlagsHorizontal = SizeFlags.ExpandFill;
-            frame.SizeFlagsVertical = SizeFlags.ExpandFill;
-            safeFrame.AddChild(frame);
-
-            var screenMargin = MarkHostedInputPassthrough(CreateMargin(0));
-            frame.AddChild(screenMargin);
-            screenParent = screenMargin;
-        }
-
-        var screen = MarkHostedInputPassthrough(new VBoxContainer
-        {
-            SizeFlagsHorizontal = SizeFlags.ExpandFill,
-            SizeFlagsVertical = SizeFlags.ExpandFill,
-        });
-        screen.AddThemeConstantOverride("separation", 0);
-        screenParent.AddChild(screen);
-
-        screen.AddChild(CreateTopBar());
-
-        var contentRow = MarkHostedInputPassthrough(new HBoxContainer
-        {
-            SizeFlagsHorizontal = SizeFlags.ExpandFill,
-            SizeFlagsVertical = SizeFlags.ExpandFill,
-        });
-        contentRow.AddThemeConstantOverride("separation", 0);
-        screen.AddChild(contentRow);
-
-        contentRow.AddChild(CreateToolRail());
-        contentRow.AddChild(CreateBuildCanvasPanel());
-        contentRow.AddChild(CreateBrainPanel());
-    }
-
-    private Control CreateTopBar()
-    {
-        var topBarPanel = CreatePanel(raised: true);
-        topBarPanel.CustomMinimumSize = new Vector2(0, UiLayout.TopBarHeight);
-        topBarPanel.SizeFlagsHorizontal = SizeFlags.ExpandFill;
-
-        var margin = new MarginContainer();
-        margin.AddThemeConstantOverride("margin_left", 4);
-        margin.AddThemeConstantOverride("margin_top", 0);
-        margin.AddThemeConstantOverride("margin_right", 4);
-        margin.AddThemeConstantOverride("margin_bottom", 0);
-        topBarPanel.AddChild(margin);
-
-        var topBar = new HBoxContainer
-        {
-            SizeFlagsHorizontal = SizeFlags.ExpandFill,
-            CustomMinimumSize = new Vector2(0, UiLayout.TopBarHeight),
-        };
-        topBar.AddThemeConstantOverride("separation", (int)UiSize.Space.S2);
-        margin.AddChild(topBar);
-
-        var back = new UiButton
-        {
-            ContentLayout = UiButtonContentLayout.Stacked,
-            IconId = UiIconId.Back,
-            TooltipText = "Back",
-        };
-        back.Pressed += () => EmitSignal(SignalName.BackRequested);
-        topBar.AddChild(back);
-
-        var titleStack = new VBoxContainer
-        {
-            SizeFlagsHorizontal = SizeFlags.ExpandFill,
-        };
-        titleStack.AddThemeConstantOverride("separation", 0);
-        topBar.AddChild(titleStack);
-        var title = new Button
-        {
-            Text = Presentation?.CreationName ?? "Untitled Creation",
-            Flat = true,
-            Alignment = HorizontalAlignment.Left,
-            SizeFlagsHorizontal = SizeFlags.ExpandFill,
-            CustomMinimumSize = new Vector2(0, 28),
-        };
-        UiThemeLookup.ApplyTypography(title, UiTokens.Typography.Heading);
-        UiIcons.Apply(title, UiIconId.Edit, UiIconSize.Small, UiThemeLookup.Color(this, UiTokens.Color.Ink));
-        title.AddThemeColorOverride("font_color", UiThemeLookup.Color(this, UiTokens.Color.Ink));
-        title.Pressed += () =>
-        {
-            _nameEntryOpen = true;
-            RebuildLayout();
-        };
-        titleStack.AddChild(title);
-        titleStack.AddChild(CreateLabel(Presentation?.CreationSubtitle ?? "Unsaved anatomy draft", 11, UiThemeLookup.Color(this, UiTokens.Color.Muted)));
-
-        var buildPanel = Presentation?.BuildPanel ?? ConstructionBuildPanelPresentation.Sample;
-        topBar.AddChild(CreateBrainChip(buildPanel));
-        if (Presentation?.ShowCompleteAction != false)
-        {
-            var save = CreateButton("Save", buildPanel.CanCompleteCreation ? UiButtonKind.Primary : UiButtonKind.Secondary, buildPanel.DisabledReason ?? "Save this Creation");
-            save.CustomMinimumSize = new Vector2(88, UiSize.Control.Touch);
-            save.Disabled = !buildPanel.CanCompleteCreation;
-            if (buildPanel.CanCompleteCreation)
-            {
-                save.Pressed += () => EmitSignal(SignalName.SaveRequested);
-            }
-            topBar.AddChild(save);
-        }
-        var overflow = new UiButton
-        {
-            ContentLayout = UiButtonContentLayout.Stacked,
-            IconId = UiIconId.More,
-            TooltipText = Presentation?.ShowCompleteAction == false ? "Reset training or delete creation" : "More build actions",
-        };
-        overflow.Pressed += () =>
-        {
-            _creationOverflowOpen = true;
-            RebuildLayout();
-        };
-        topBar.AddChild(overflow);
-
-        return topBarPanel;
-    }
-
-    private Control CreateBrainChip(ConstructionBuildPanelPresentation buildPanel)
-    {
-        var shape = Presentation?.BrainShape ?? BrainShapeDef.Default;
-        var locked = Presentation?.IsBrainShapeLocked ?? false;
-        var chip = new Button
-        {
-            Text = locked ? $"Brain {shape.HiddenLayers} × {shape.NeuronsPerLayer} locked" : $"Brain {shape.HiddenLayers} × {shape.NeuronsPerLayer}",
-            CustomMinimumSize = new Vector2(112, 32),
-            TooltipText = locked ? "Brain shape is locked after Save" : $"{buildPanel.InputCount} senses · {buildPanel.OutputCount} motors",
-            Disabled = locked,
-        };
-        UiThemeLookup.ApplyTypography(chip, UiTokens.Typography.Label);
-        chip.AddThemeColorOverride("font_color", UiThemeLookup.Color(this, UiTokens.Color.Accent));
-        chip.AddThemeColorOverride("font_hover_color", UiThemeLookup.Color(this, UiTokens.Color.Ink));
-        chip.AddThemeStyleboxOverride("normal", UiThemeLookup.CreateStyleBox(UiThemeLookup.Color(this, UiTokens.Color.PanelRaised), UiThemeLookup.Color(this, UiTokens.Color.Accent), radius: UiSize.Radius.Pill));
-        chip.AddThemeStyleboxOverride(
-            "hover",
-            UiThemeLookup.CreateStyleBox(UiThemeLookup.Color(this, UiTokens.Color.Accent).WithAlpha(UiThemeLookup.Alpha(this, UiTokens.Alpha.Soft)),
-                UiThemeLookup.Color(this, UiTokens.Color.Accent),
-                radius: UiSize.Radius.Pill));
-        if (!locked)
-        {
-            chip.Pressed += () =>
-            {
-                _brainSetupOpen = true;
-                RebuildLayout();
-            };
-        }
-        return chip;
-    }
-
-    private Control CreateToolRail()
-    {
-        var presentation = Presentation;
-        var panel = CreatePanel(raised: true);
-        panel.CustomMinimumSize = new Vector2(UiLayout.ButtonBarWidth, 0);
-        panel.SizeFlagsVertical = SizeFlags.ExpandFill;
-
-        var margin = CreateMargin(0);
-        panel.AddChild(margin);
-
-        var buttonBar = new VBoxContainer
-        {
-            SizeFlagsHorizontal = SizeFlags.ExpandFill,
-            SizeFlagsVertical = SizeFlags.ExpandFill,
-        };
-        buttonBar.AddThemeConstantOverride("separation", 2);
-        margin.AddChild(buttonBar);
-
-        buttonBar.AddChild(CreateBuildToolButton(
-            ConstructionTool.Place,
-            "Move",
-            ToolButtonKind(ConstructionTool.Place),
-            presentation is null ? "Move sample nodes" : ConstructionPresentationViewModel.ToolHint(ConstructionTool.Place),
-            locked: false));
-        buttonBar.AddChild(CreateBuildToolButton(
-            ConstructionTool.Beam,
-            presentation?.BeamToolText ?? "Beam",
-            ToolButtonKind(ConstructionTool.Beam),
-            presentation is null
-                ? "Connect two sample nodes"
-                : presentation.LockTopologyTools
-                    ? presentation.MoveOnlyLockReason
-                    : ConstructionPresentationViewModel.ToolHint(ConstructionTool.Beam),
-            presentation?.LockTopologyTools ?? false));
-        buttonBar.AddChild(CreateBuildToolButton(
-            ConstructionTool.Select,
-            presentation?.SelectToolText ?? "Select",
-            ToolButtonKind(ConstructionTool.Select),
-            presentation is null ? "Select parts" : ConstructionPresentationViewModel.ToolHint(ConstructionTool.Select),
-            locked: false));
-        buttonBar.AddChild(CreateSpacer());
-
-        return panel;
-    }
-
-    private static string? CompactCoreToolText(string? text)
-    {
-        if (string.IsNullOrWhiteSpace(text))
-        {
-            return text;
-        }
-
-        var hintStart = text.IndexOf(" (", StringComparison.Ordinal);
-        return hintStart < 0 ? text : text[..hintStart];
-    }
-
-    private UiButtonKind ToolButtonKind(ConstructionTool tool) =>
-        Presentation?.ActiveTool == tool ? UiButtonKind.Primary : UiButtonKind.Secondary;
-
-    private Button CreateBuildToolButton(ConstructionTool tool, string label, UiButtonKind kind, string tooltip, bool locked)
-    {
-        var active = kind == UiButtonKind.Primary;
-        var button = new Button
-        {
-            Text = label.ToUpperInvariant(),
-            TooltipText = tooltip,
-            Disabled = locked,
-            CustomMinimumSize = new Vector2(UiLayout.ButtonBarWidth, _toolButtonHeight),
-            SizeFlagsHorizontal = SizeFlags.ExpandFill,
-        };
-        button.AddThemeFontSizeOverride("font_size", 11);
-        button.AddThemeColorOverride("font_color", locked ? UiThemeLookup.Color(this, UiTokens.Color.Muted) : UiThemeLookup.Color(this, UiTokens.Color.Ink));
-        button.AddThemeColorOverride("font_hover_color", UiThemeLookup.Color(this, UiTokens.Color.Ink));
-        button.AddThemeColorOverride("font_pressed_color", UiThemeLookup.Color(this, UiTokens.Color.Ink));
-        button.AddThemeColorOverride("font_disabled_color", UiThemeLookup.Color(this, UiTokens.Color.Muted));
-        button.AddThemeStyleboxOverride("normal", CreateToolStyle(active, locked));
-        button.AddThemeStyleboxOverride("hover", CreateToolStyle(true, locked));
-        button.AddThemeStyleboxOverride("pressed", CreateToolStyle(true, locked));
-        button.AddThemeStyleboxOverride("focus", CreateToolStyle(true, locked, 3));
-        button.AddThemeStyleboxOverride("disabled", CreateToolStyle(false, locked, opacity: 0.5f));
-        if (locked)
-        {
-            button.Draw += () => DrawLockedToolBorder(button);
-        }
-
-        if (locked)
-        {
-            return button;
-        }
-
-        button.Pressed += () => EmitSignal(SignalName.ToolRequested, (int)tool);
-        return button;
-    }
-
-    private void DrawLockedToolBorder(Button button)
-    {
-        var rect = new Rect2(Vector2.Zero, button.Size).Grow(-4);
-        var color = UiThemeLookup.Color(this, UiTokens.Color.Muted);
-        color.A = 0.72f;
-        button.DrawDashedLine(rect.Position, rect.Position + new Vector2(rect.Size.X, 0), color, 2, 6, antialiased: false);
-        button.DrawDashedLine(rect.Position + new Vector2(rect.Size.X, 0), rect.End, color, 2, 6, antialiased: false);
-        button.DrawDashedLine(rect.End, rect.Position + new Vector2(0, rect.Size.Y), color, 2, 6, antialiased: false);
-        button.DrawDashedLine(rect.Position + new Vector2(0, rect.Size.Y), rect.Position, color, 2, 6, antialiased: false);
-    }
-
-    private Control CreateBuildCanvasPanel()
-    {
-        var panel = MarkHostedInputPassthrough(ShowCanvasPreview ? CreatePanel(raised: true) : new Control());
-        panel.MouseFilter = MouseFilterEnum.Ignore;
-        panel.SizeFlagsHorizontal = SizeFlags.ExpandFill;
-        panel.SizeFlagsVertical = SizeFlags.ExpandFill;
-
-        var margin = MarkHostedInputPassthrough(CreateMargin(0));
-        margin.MouseFilter = MouseFilterEnum.Ignore;
-        panel.AddChild(margin);
-
-        var layout = MarkHostedInputPassthrough(new Control
-        {
-            SizeFlagsHorizontal = SizeFlags.ExpandFill,
-            SizeFlagsVertical = SizeFlags.ExpandFill,
-            MouseFilter = MouseFilterEnum.Ignore,
-        });
-        margin.AddChild(layout);
-
-        var placeholder = MarkHostedInputPassthrough(new Control
-        {
-            SizeFlagsHorizontal = SizeFlags.ExpandFill,
-            SizeFlagsVertical = SizeFlags.ExpandFill,
-            MouseFilter = MouseFilterEnum.Ignore,
-        });
-        placeholder.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
-        placeholder.Draw += () =>
-        {
-            DrawBuildGrid(placeholder);
-            if (ShowCanvasPreview)
-            {
-                DrawBuildPreview(placeholder);
-            }
-        };
-        layout.AddChild(placeholder);
-
-        if (Presentation is { ShowCompleteAction: false } presentation)
-        {
-            var chip = new UiChip
-            {
-                Text = presentation.PartsLockedChipText,
-                Kind = UiChip.ChipKind.Neutral,
-                IconId = UiIconId.Lock,
-                Position = new Vector2(18, 18),
-                MouseFilter = MouseFilterEnum.Ignore,
-            };
-            layout.AddChild(chip);
-        }
-
-        return panel;
-    }
-
-    private Control CreateBrainPanel()
-    {
-        var buildPanel = Presentation?.BuildPanel ?? ConstructionBuildPanelPresentation.Sample;
-        var panel = CreatePanel(raised: true);
-        panel.CustomMinimumSize = new Vector2(_partsTrayCollapsed ? UiLayout.SidePanelTabWidth : UiLayout.SidePanelWidth, 0);
-        panel.SizeFlagsVertical = SizeFlags.ExpandFill;
-
-        if (_partsTrayCollapsed)
-        {
-            var handle = new Button
-            {
-                Text = "‹",
-                CustomMinimumSize = new Vector2(UiLayout.SidePanelTabWidth, 0),
-                SizeFlagsVertical = SizeFlags.ExpandFill,
-            };
-            UiThemeLookup.ApplyTypography(handle, UiTokens.Typography.Heading);
-            handle.AddThemeColorOverride("font_color", UiThemeLookup.Color(this, UiTokens.Color.Accent));
-            handle.AddThemeStyleboxOverride("normal", UiThemeLookup.CreateStyleBox(UiThemeLookup.Color(this, UiTokens.Color.PanelRaised), UiThemeLookup.Color(this, UiTokens.Color.Edge)));
-            handle.AddThemeStyleboxOverride(
-                "hover",
-                UiThemeLookup.CreateStyleBox(UiThemeLookup.Color(this, UiTokens.Color.Accent).WithAlpha(UiThemeLookup.Alpha(this, UiTokens.Alpha.Soft)),
-                    UiThemeLookup.Color(this, UiTokens.Color.Accent)));
-            handle.Pressed += TogglePartsTrayCollapsed;
-            panel.AddChild(handle);
-            return panel;
-        }
-
-        var margin = CreateMargin(UiSpacing.ControlGap);
-        panel.AddChild(margin);
-
-        var stack = new VBoxContainer
-        {
-            SizeFlagsHorizontal = SizeFlags.ExpandFill,
-            SizeFlagsVertical = SizeFlags.ExpandFill,
-        };
-        stack.AddThemeConstantOverride("separation", UiSpacing.StackGap);
-        margin.AddChild(stack);
-
-        var presentation = Presentation;
-        if (presentation?.SelectedPartCount > 0)
-        {
-            stack.AddChild(presentation.SelectedPartCount == 1
-                ? CreatePartSettingsPanel(presentation, allowDelete: presentation.ShowCompleteAction)
-                : CreateSelectionPanel(presentation, allowDelete: presentation.ShowCompleteAction));
-        }
-        else if (presentation?.ShowCompleteAction == false)
-        {
-            stack.AddChild(CreateSavedCreationPanel(presentation));
-        }
-        else
-        {
-            stack.AddChild(CreatePartsTrayHeader());
-            stack.AddChild(CreatePartButton("Node", "1 left", locked: false, ConstructionTool.Place));
-            stack.AddChild(CreatePartButton("Core", $"{Mathf.Max(0, (presentation?.MaxCores ?? 1) - (presentation?.CoreCount ?? 0))} left", locked: presentation?.LockTopologyTools ?? false, ConstructionTool.Core));
-            stack.AddChild(CreatePartButton("Motor", "1 left", locked: false, ConstructionTool.Beam));
-            stack.AddChild(CreatePartButton("Spring", "locked", locked: true, null));
-            stack.AddChild(CreateCompactValidationLine(buildPanel));
-        }
-
-        return panel;
-    }
-
-    private Control CreateSavedCreationPanel(ConstructionPresentationViewModel presentation)
-    {
-        var stack = new VBoxContainer
-        {
-            SizeFlagsHorizontal = SizeFlags.ExpandFill,
-            SizeFlagsVertical = SizeFlags.ExpandFill,
-        };
-        stack.AddThemeConstantOverride("separation", UiSpacing.StackGap);
-        stack.AddChild(CreateLabel(presentation.TrainingSummaryTitle, 14, UiThemeLookup.Color(this, UiTokens.Color.Ink), expand: true));
-        stack.AddChild(CreateLabel($"Best distance {presentation.BestDistanceText}", 12, UiThemeLookup.Color(this, UiTokens.Color.Accent), expand: true));
-        stack.AddChild(CreateLabel(presentation.TrainingSummaryBody, 11, UiThemeLookup.Color(this, UiTokens.Color.Muted), expand: true));
-        var resume = CreateButton("Resume training", UiButtonKind.Primary, "Open Train setup");
-        resume.Pressed += () => EmitSignal(SignalName.ResumeTrainingRequested);
-        stack.AddChild(resume);
-        var stats = CreateButton("Stats", UiButtonKind.Secondary, "Open stats");
-        stats.Pressed += () => EmitSignal(SignalName.StatsRequested);
-        stack.AddChild(stats);
-        var brain = CreateButton("Brain", UiButtonKind.Secondary, "Open brain view");
-        brain.Pressed += () => EmitSignal(SignalName.BrainRequested);
-        stack.AddChild(brain);
-        stack.AddChild(CreateSpacer());
-        return stack;
-    }
-
-    private Control CreatePartSettingsPanel(ConstructionPresentationViewModel presentation, bool allowDelete)
-    {
-        var stack = new VBoxContainer
-        {
-            SizeFlagsHorizontal = SizeFlags.ExpandFill,
-            SizeFlagsVertical = SizeFlags.ExpandFill,
-        };
-        stack.AddThemeConstantOverride("separation", UiSpacing.DenseStackGap);
-        var header = new HBoxContainer();
-        header.AddChild(CreateLabel(presentation.SinglePartTitle, 14, UiThemeLookup.Color(this, UiTokens.Color.Ink), expand: true));
-        if (allowDelete)
-        {
-            var delete = CreateButton("Delete", UiButtonKind.Tertiary, "Delete selected part", UiIconId.Trash);
-            delete.CustomMinimumSize = new Vector2(38, 34);
-            delete.Pressed += () => EmitSignal(SignalName.DeleteSelectionRequested);
-            header.AddChild(delete);
-        }
-
-        var close = new UiButton
-        {
-            ContentLayout = UiButtonContentLayout.RowCompact,
-            Kind = UiButtonKind.Flat,
-            IconId = UiIconId.Close,
-            TooltipText = "Close settings",
-        };
-        close.Pressed += () => EmitSignal(SignalName.ClearSelectionRequested);
-        header.AddChild(close);
-        stack.AddChild(header);
-        stack.AddChild(CreateLabel(presentation.SinglePartPrimaryLabel, 10, UiThemeLookup.Color(this, UiTokens.Color.Muted)));
-        stack.AddChild(CreateLabel(presentation.SinglePartPrimaryValue, 12, UiThemeLookup.Color(this, UiTokens.Color.Ink), expand: true));
-        stack.AddChild(CreateLabel(presentation.SinglePartConnectionsLabel, 10, UiThemeLookup.Color(this, UiTokens.Color.Muted)));
-        stack.AddChild(CreateLabel(presentation.SinglePartConnectionsValue, 11, UiThemeLookup.Color(this, UiTokens.Color.Ink), expand: true));
-        stack.AddChild(CreateLabel("Facts", 10, UiThemeLookup.Color(this, UiTokens.Color.Muted)));
-        stack.AddChild(CreateLabel(presentation.SinglePartFacts, 10, UiThemeLookup.Color(this, UiTokens.Color.Muted), expand: true));
-        stack.AddChild(CreateLabel(allowDelete ? "Structure" : "Locked topology", 10, UiThemeLookup.Color(this, UiTokens.Color.Muted)));
-        stack.AddChild(CreateLabel(presentation.SinglePartBody, 11, UiThemeLookup.Color(this, UiTokens.Color.Muted), expand: true));
-        if (!allowDelete)
-        {
-            stack.AddChild(CreateLabel("No Delete in saved Creation", 11, UiThemeLookup.Color(this, UiTokens.Color.Muted), expand: true));
-        }
-
-        stack.AddChild(CreateSpacer());
-        return stack;
-    }
-
-    private Control CreateSelectionPanel(ConstructionPresentationViewModel presentation, bool allowDelete)
-    {
-        var stack = new VBoxContainer
-        {
-            SizeFlagsHorizontal = SizeFlags.ExpandFill,
-            SizeFlagsVertical = SizeFlags.ExpandFill,
-        };
-        stack.AddThemeConstantOverride("separation", UiSpacing.StackGap);
-        var header = new HBoxContainer();
-        header.AddChild(CreateLabel(presentation.MultiSelectionTitle, 14, UiThemeLookup.Color(this, UiTokens.Color.Ink), expand: true));
-        if (allowDelete)
-        {
-            var delete = CreateButton("Delete", UiButtonKind.Tertiary, "Delete selected parts");
-            delete.CustomMinimumSize = new Vector2(82, 34);
-            delete.Pressed += () => EmitSignal(SignalName.DeleteSelectionRequested);
-            header.AddChild(delete);
-        }
-
-        var close = new UiButton
-        {
-            ContentLayout = UiButtonContentLayout.RowCompact,
-            Kind = UiButtonKind.Flat,
-            IconId = UiIconId.Close,
-            TooltipText = "Close selection",
-        };
-        close.Pressed += () => EmitSignal(SignalName.ClearSelectionRequested);
-        header.AddChild(close);
-        stack.AddChild(header);
-        stack.AddChild(CreateLabel(presentation.MultiSelectionCounts, 12, UiThemeLookup.Color(this, UiTokens.Color.Ink), expand: true));
-        stack.AddChild(CreateLabel(allowDelete ? "Drag any selected part to move them together, or delete the selection." : presentation.MultiSelectionBody, 11, UiThemeLookup.Color(this, UiTokens.Color.Muted), expand: true));
-        stack.AddChild(new UiChip
-        {
-            Text = allowDelete ? "Move · Delete" : "Move only",
-            Kind = UiChip.ChipKind.Neutral,
-        });
-        stack.AddChild(CreateSpacer());
-        return stack;
-    }
-
-    private Control CreateNameEntryOverlay()
-    {
-        var overlay = CreateDismissOverlay(() =>
-        {
-            _nameEntryOpen = false;
-            RebuildLayout();
-        });
-        var panel = CreatePanel(raised: true);
-        panel.Position = new Vector2(96, 58);
-        panel.CustomMinimumSize = new Vector2(280, 104);
-        overlay.AddChild(panel);
-
-        var margin = CreateMargin((int)UiSize.Space.S3);
-        panel.AddChild(margin);
-        var stack = new VBoxContainer();
-        stack.AddThemeConstantOverride("separation", (int)UiSize.Space.S2);
-        margin.AddChild(stack);
-        stack.AddChild(CreateLabel("Creation name", 14, UiThemeLookup.Color(this, UiTokens.Color.Ink)));
-        var entry = new LineEdit
-        {
-            Text = Presentation?.CreationName ?? "Untitled Creation",
-            CustomMinimumSize = new Vector2(0, 36),
-        };
-        entry.TextSubmitted += text =>
-        {
-            SubmitCreationName(text);
-        };
-        stack.AddChild(entry);
-        var apply = CreateButton("Apply", UiButtonKind.Primary, "Rename Creation");
-        apply.Pressed += () => SubmitCreationName(entry.Text);
-        stack.AddChild(apply);
-        entry.CallDeferred(LineEdit.MethodName.GrabFocus);
-        return overlay;
-    }
-
-    private void SubmitCreationName(string text)
-    {
-        var name = text.Trim();
-        if (string.IsNullOrWhiteSpace(name))
-        {
-            return;
-        }
-
-        _nameEntryOpen = false;
-        EmitSignal(SignalName.CreationNameChanged, name);
-    }
-
-    private Control CreateCreationOverflowOverlay()
-    {
-        var overlay = CreateDismissOverlay(() =>
-        {
-            _creationOverflowOpen = false;
-            RebuildLayout();
-        });
-        var panel = CreatePanel(raised: true);
-        panel.Position = new Vector2(458, 58);
-        panel.CustomMinimumSize = new Vector2(170, 130);
-        overlay.AddChild(panel);
-        var margin = CreateMargin((int)UiSize.Space.S2);
-        panel.AddChild(margin);
-        var stack = new VBoxContainer();
-        stack.AddThemeConstantOverride("separation", (int)UiSize.Space.S2);
-        margin.AddChild(stack);
-
-        if (Presentation?.ShowCompleteAction == false)
-        {
-            var reset = CreateButton("Reset training", UiButtonKind.Secondary, "Reset saved training");
-            reset.Pressed += () =>
-            {
-                _creationOverflowOpen = false;
-                RebuildLayout();
-                EmitSignal(SignalName.ResetTrainingRequested);
-            };
-            stack.AddChild(reset);
-            var delete = CreateButton("Delete creation", UiButtonKind.Tertiary, "Delete this Creation");
-            delete.Pressed += () =>
-            {
-                _creationOverflowOpen = false;
-                RebuildLayout();
-                EmitSignal(SignalName.DeleteCreationRequested);
-            };
-            stack.AddChild(delete);
-        }
-        else
-        {
-            stack.AddChild(CreateLabel("More actions arrive in later milestones.", 11, UiThemeLookup.Color(this, UiTokens.Color.Muted), expand: true));
-        }
-
-        return overlay;
-    }
-
-    private Control CreateDismissOverlay(Action dismissed)
-    {
-        var overlay = new Control
-        {
-            MouseFilter = MouseFilterEnum.Stop,
-            AnchorRight = 1,
-            AnchorBottom = 1,
-        };
-        var dim = new ColorRect
-        {
-            Color = UiThemeLookup.Color(this, UiTokens.Color.Scrim).WithAlpha(0.25f),
-            AnchorRight = 1,
-            AnchorBottom = 1,
-            MouseFilter = MouseFilterEnum.Stop,
-        };
-        dim.GuiInput += @event =>
-        {
-            if (@event is InputEventMouseButton { Pressed: true })
-            {
-                dismissed();
-            }
-        };
-        overlay.AddChild(dim);
-        return overlay;
-    }
-
-    private Control CreatePartsTrayHeader()
-    {
-        var row = new HBoxContainer();
-        row.AddThemeConstantOverride("separation", (int)UiSize.Space.S1);
-        row.AddChild(CreateLabel("Parts tray", 14, UiThemeLookup.Color(this, UiTokens.Color.Ink), expand: true));
-        var collapse = new Button
-        {
-            Text = "›",
-            CustomMinimumSize = new Vector2(28, 28),
-        };
-        UiThemeLookup.ApplyTypography(collapse, UiTokens.Typography.Label);
-        collapse.AddThemeColorOverride("font_color", UiThemeLookup.Color(this, UiTokens.Color.Accent));
-        collapse.AddThemeStyleboxOverride("normal", UiThemeLookup.CreateStyleBox(UiThemeLookup.Color(this, UiTokens.Color.PanelRaised), UiThemeLookup.Color(this, UiTokens.Color.Edge), radius: (int)UiSize.Radius.Small));
-        collapse.AddThemeStyleboxOverride(
-            "hover",
-            UiThemeLookup.CreateStyleBox(UiThemeLookup.Color(this, UiTokens.Color.Accent).WithAlpha(UiThemeLookup.Alpha(this, UiTokens.Alpha.Soft)),
-                UiThemeLookup.Color(this, UiTokens.Color.Accent),
-                radius: (int)UiSize.Radius.Small));
-        collapse.Pressed += TogglePartsTrayCollapsed;
-        row.AddChild(collapse);
-        return row;
-    }
-
-    private void TogglePartsTrayCollapsed()
-    {
-        _partsTrayCollapsed = !_partsTrayCollapsed;
-        RebuildLayout();
-    }
-
-    private Control CreateCompactValidationLine(ConstructionBuildPanelPresentation buildPanel)
-    {
-        var row = new HBoxContainer
-        {
-            CustomMinimumSize = new Vector2(0, 34),
-            SizeFlagsHorizontal = SizeFlags.ExpandFill,
-        };
-        row.AddThemeConstantOverride("separation", (int)UiSize.Space.S1);
-        row.AddChild(UiFieldAndRows.Icon(buildPanel.CanStartTraining ? UiIconId.Check : UiIconId.Warn, UiIconSize.Small, buildPanel.CanStartTraining ? UiThemeLookup.Color(this, UiTokens.Color.Accent) : UiThemeLookup.Color(this, UiTokens.Color.Danger)));
-        var reason = buildPanel.CanStartTraining
-            ? "Ready to save"
-            : ShortValidationText(buildPanel.DisabledReason ?? buildPanel.ValidationLine);
-        row.AddChild(CreateLabel(reason, 12, buildPanel.CanStartTraining ? UiThemeLookup.Color(this, UiTokens.Color.Accent) : UiThemeLookup.Color(this, UiTokens.Color.Danger), expand: true));
-        return row;
-    }
-
-    private Control CreateBrainSetupOverlay()
-    {
-        var overlay = new Control
-        {
-            Name = "BrainSetupOverlay",
-            MouseFilter = MouseFilterEnum.Stop,
-            AnchorRight = 1,
-            AnchorBottom = 1,
-        };
-        overlay.AddChild(new ColorRect
-        {
-            Color = UiThemeLookup.Color(this, UiTokens.Color.Scrim).WithAlpha(0.45f),
-            AnchorRight = 1,
-            AnchorBottom = 1,
-            MouseFilter = MouseFilterEnum.Stop,
-        });
-
-        var sheet = CreatePanel(raised: true);
-        sheet.Position = new Vector2(76, 52);
-        sheet.CustomMinimumSize = new Vector2(488, 260);
-        overlay.AddChild(sheet);
-
-        var margin = CreateMargin((int)UiSize.Space.S3);
-        sheet.AddChild(margin);
-
-        var layout = new VBoxContainer();
-        layout.AddThemeConstantOverride("separation", (int)UiSize.Space.S2);
-        margin.AddChild(layout);
-        layout.AddChild(CreateBrainSetupTopBar());
-
-        var body = new HBoxContainer();
-        body.AddThemeConstantOverride("separation", (int)UiSize.Space.S3);
-        layout.AddChild(body);
-
-        var controls = new VBoxContainer
-        {
-            CustomMinimumSize = new Vector2(270, 0),
-            SizeFlagsVertical = SizeFlags.ExpandFill,
-        };
-        controls.AddThemeConstantOverride("separation", (int)UiSize.Space.S2);
-        body.AddChild(controls);
-        controls.AddChild(CreateLayerChooser());
-        controls.AddChild(CreateNeuronControl());
-
-        body.AddChild(CreateBrainPreviewPanel());
-        return overlay;
-    }
-
-    private Control CreateBrainSetupTopBar()
-    {
-        var buildPanel = Presentation?.BuildPanel ?? ConstructionBuildPanelPresentation.Sample;
-        var row = new HBoxContainer();
-        row.AddThemeConstantOverride("separation", (int)UiSize.Space.S2);
-        row.AddChild(CreateLabel("Brain setup", 16, UiThemeLookup.Color(this, UiTokens.Color.Ink), expand: true));
-        var recommended = new Button
-        {
-            Text = "Use recommended",
-            CustomMinimumSize = new Vector2(124, 32),
-            SizeFlagsVertical = SizeFlags.ShrinkCenter,
-            TooltipText = "Reset layers and neurons",
-        };
-        UiThemeLookup.ApplyTypography(recommended, UiTokens.Typography.Caption);
-        recommended.AddThemeColorOverride("font_color", UiThemeLookup.Color(this, UiTokens.Color.Ink));
-        recommended.AddThemeStyleboxOverride("normal", UiThemeLookup.CreateStyleBox(UiThemeLookup.Color(this, UiTokens.Color.PanelRaised), UiThemeLookup.Color(this, UiTokens.Color.Edge), radius: (int)UiSize.Radius.Small));
-        recommended.AddThemeStyleboxOverride(
-            "hover",
-            UiThemeLookup.CreateStyleBox(UiThemeLookup.Color(this, UiTokens.Color.Accent).WithAlpha(UiThemeLookup.Alpha(this, UiTokens.Alpha.Soft)),
-                UiThemeLookup.Color(this, UiTokens.Color.Accent),
-                radius: (int)UiSize.Radius.Small));
-        recommended.Pressed += () => EmitBrainShape(BrainShapeDef.DefaultHiddenLayers, RecommendedNeurons(buildPanel));
-        row.AddChild(recommended);
-        var close = new Button
-        {
-            Text = string.Empty,
-            CustomMinimumSize = new Vector2(36, 36),
-            SizeFlagsVertical = SizeFlags.ShrinkCenter,
-            TooltipText = "Close brain setup",
-        };
-        UiThemeLookup.ApplyTypography(close, UiTokens.Typography.Heading);
-        close.AddThemeColorOverride("font_color", UiThemeLookup.Color(this, UiTokens.Color.Accent));
-        UiIcons.Apply(close, UiIconId.Close, UiIconSize.Standard, UiThemeLookup.Color(this, UiTokens.Color.Accent));
-        close.AddThemeStyleboxOverride("normal", UiThemeLookup.CreateStyleBox(UiThemeLookup.Color(this, UiTokens.Color.PanelRaised), UiThemeLookup.Color(this, UiTokens.Color.Edge), radius: (int)UiSize.Radius.Small));
-        close.AddThemeStyleboxOverride(
-            "hover",
-            UiThemeLookup.CreateStyleBox(UiThemeLookup.Color(this, UiTokens.Color.Accent).WithAlpha(UiThemeLookup.Alpha(this, UiTokens.Alpha.Soft)),
-                UiThemeLookup.Color(this, UiTokens.Color.Accent),
-                radius: (int)UiSize.Radius.Small));
-        close.Pressed += () =>
-        {
-            _brainSetupOpen = false;
-            RebuildLayout();
-        };
-        row.AddChild(close);
-        return row;
-    }
-
-    private Control CreateLayerChooser()
-    {
-        var shape = Presentation?.BrainShape ?? BrainShapeDef.Default;
-        var stack = new VBoxContainer();
-        stack.AddThemeConstantOverride("separation", (int)UiSize.Space.S1);
-        var row = new HBoxContainer();
-        row.AddThemeConstantOverride("separation", (int)UiSize.Space.S1);
-        stack.AddChild(row);
-        row.AddChild(CreateLayerButton(1, "simple", shape.HiddenLayers == 1));
-        row.AddChild(CreateLayerButton(2, "navigation", shape.HiddenLayers == 2));
-        row.AddChild(CreateLayerButton(3, "experiment", shape.HiddenLayers == 3));
-        var help = shape.HiddenLayers switch
-        {
-            1 => "Recommended for simple tasks",
-            2 => "Recommended for harder navigation",
-            _ => "! Not recommended: slow to learn. For experiments.",
-        };
-        stack.AddChild(CreateLabel(help, 12, shape.HiddenLayers == 3 ? UiThemeLookup.Color(this, UiTokens.Color.Halo) : UiThemeLookup.Color(this, UiTokens.Color.Muted), expand: true));
-        return stack;
-    }
-
-    private Control CreateLayerButton(int layers, string caption, bool active)
-    {
-        var shape = Presentation?.BrainShape ?? BrainShapeDef.Default;
-        var button = new Button
-        {
-            Text = $"{layers}\n{caption}".ToUpperInvariant(),
-            CustomMinimumSize = new Vector2(82, 42),
-        };
-        UiThemeLookup.ApplyTypography(button, UiTokens.Typography.Caption);
-        button.AddThemeColorOverride("font_color", active ? UiThemeLookup.Color(this, UiTokens.Color.OnAccent) : UiThemeLookup.Color(this, UiTokens.Color.Ink));
-        button.AddThemeStyleboxOverride("normal", UiThemeLookup.CreateStyleBox(active ? UiThemeLookup.Color(this, UiTokens.Color.Accent) : UiThemeLookup.Color(this, UiTokens.Color.PanelRaised), active ? UiThemeLookup.Color(this, UiTokens.Color.Accent) : UiThemeLookup.Color(this, UiTokens.Color.Edge)));
-        button.AddThemeStyleboxOverride(
-            "hover",
-            UiThemeLookup.CreateStyleBox(UiThemeLookup.Color(this, UiTokens.Color.Accent).WithAlpha(UiThemeLookup.Alpha(this, UiTokens.Alpha.Soft)),
-                UiThemeLookup.Color(this, UiTokens.Color.Accent)));
-        button.Pressed += () => EmitBrainShape(layers, shape.NeuronsPerLayer);
-        return button;
-    }
-
-    private Control CreateNeuronControl()
-    {
-        var shape = Presentation?.BrainShape ?? BrainShapeDef.Default;
-        var buildPanel = Presentation?.BuildPanel ?? ConstructionBuildPanelPresentation.Sample;
-        var stack = new VBoxContainer();
-        stack.AddThemeConstantOverride("separation", (int)UiSize.Space.S1);
-        stack.AddChild(CreateLabel($"Neurons per layer · tick = default {RecommendedNeurons(buildPanel)}", 12, UiThemeLookup.Color(this, UiTokens.Color.Muted)));
-        stack.AddChild(CreateLabel(shape.HiddenLayers == 1 ? "Layer 1 shares this value" : $"Layers 1-{shape.HiddenLayers} share this value", 10, UiThemeLookup.Color(this, UiTokens.Color.Muted)));
-
-        var row = new HBoxContainer();
-        row.AddThemeConstantOverride("separation", (int)UiSize.Space.S1);
-        stack.AddChild(row);
-        row.AddChild(CreateStepper("−", -1, "Decrease neurons"));
-        var minimumNeurons = BrainShapeDef.MinimumNeuronsPerLayer;
-        var maximumNeurons = BrainShapeDef.MaximumNeuronsPerLayer;
-        var slider = new UiSlider
-        {
-            LabelText = "Neurons",
-            ReadoutText = shape.NeuronsPerLayer.ToString(),
-            Value = UiSliderValue.Thumb(
-                (shape.NeuronsPerLayer - minimumNeurons) /
-                (double)(maximumNeurons - minimumNeurons)),
-            StepLabels = [minimumNeurons.ToString(), maximumNeurons.ToString()],
-            MarkerPosition =
-                (RecommendedNeurons(buildPanel) - minimumNeurons) /
-                (double)(maximumNeurons - minimumNeurons),
-            MarkerText = $"default {RecommendedNeurons(buildPanel)}",
-            SizeFlagsHorizontal = SizeFlags.ExpandFill,
-        };
-        slider.ThumbChangeCommitted += (_, position) =>
-        {
-            var neurons = (int)Math.Round(minimumNeurons + (position * (maximumNeurons - minimumNeurons)));
-            EmitBrainShape(shape.HiddenLayers, neurons);
-        };
-        row.AddChild(slider);
-        row.AddChild(CreateStepper("+", 1, "Increase neurons"));
-        return stack;
-    }
-
-    private UiButton CreateStepper(string label, int delta, string accessibleLabel)
-    {
-        var shape = Presentation?.BrainShape ?? BrainShapeDef.Default;
-        var button = new UiButton
-        {
-            Text = label,
-            TooltipText = accessibleLabel,
-            ContentLayout = UiButtonContentLayout.RowCompact,
-        };
-        button.Activated += () => EmitBrainShape(
-            shape.HiddenLayers,
-            Mathf.Clamp(shape.NeuronsPerLayer + delta, BrainShapeDef.MinimumNeuronsPerLayer, BrainShapeDef.MaximumNeuronsPerLayer));
-        return button;
-    }
-
-    private Control CreateBrainPreviewPanel()
-    {
-        var panel = CreatePanel(raised: false);
-        panel.CustomMinimumSize = new Vector2(170, 176);
-        var margin = CreateMargin((int)UiSize.Space.S2);
-        panel.AddChild(margin);
-        var stack = new VBoxContainer();
-        stack.AddThemeConstantOverride("separation", (int)UiSize.Space.S2);
-        margin.AddChild(stack);
-        stack.AddChild(CreateLabel("Live preview", 14, UiThemeLookup.Color(this, UiTokens.Color.Ink)));
-        stack.AddChild(CreateBrainSetupPreview());
-        var connections = ConnectionCount();
-        stack.AddChild(CreateLabel($"{connections:0} connections", 14, UiThemeLookup.Color(this, UiTokens.Color.Accent)));
-        return panel;
-    }
-
-    private Control CreateBrainSetupPreview()
-    {
-        var preview = new Control
-        {
-            CustomMinimumSize = new Vector2(0, 96),
-            SizeFlagsHorizontal = SizeFlags.ExpandFill,
-        };
-        preview.Draw += () => DrawBrainSetupPreview(preview);
-        return preview;
-    }
-
-    private void DrawBrainSetupPreview(Control control)
-    {
-        var buildPanel = Presentation?.BuildPanel ?? ConstructionBuildPanelPresentation.Sample;
-        var shape = Presentation?.BrainShape ?? BrainShapeDef.Default;
-        if (buildPanel.InputCount <= 0 || buildPanel.OutputCount <= 0)
-        {
-            control.DrawString(
-                ThemeDB.FallbackFont,
-                new Vector2(12, control.Size.Y / 2),
-                "Add anatomy to preview brain",
-                HorizontalAlignment.Left,
-                control.Size.X - 24,
-                10,
-                UiThemeLookup.Color(this, UiTokens.Color.Muted));
-            return;
-        }
-
-        var layers = new[] { buildPanel.InputCount }.Concat(Enumerable.Repeat(shape.NeuronsPerLayer, shape.HiddenLayers)).Concat([buildPanel.OutputCount]).ToArray();
-        var spacingX = control.Size.X / (layers.Length + 1);
-        var font = ThemeDB.FallbackFont;
-        var nodeColumns = new List<List<Vector2>>();
-        for (var layer = 0; layer < layers.Length; layer++)
-        {
-            var count = layers[layer];
-            var shown = Math.Min(6, Math.Max(1, count));
-            var x = spacingX * (layer + 1);
-            var column = new List<Vector2>();
-            var header = layer == 0
-                ? "Senses"
-                : layer == layers.Length - 1
-                    ? "Motors"
-                    : $"H{layer}";
-            control.DrawString(font, new Vector2(x - 24, 10), header, HorizontalAlignment.Center, 48, 8, UiThemeLookup.Color(this, UiTokens.Color.Muted));
-            for (var i = 0; i < shown; i++)
-            {
-                var y = 14 + ((control.Size.Y - 34) / (shown + 1) * (i + 1));
-                var point = new Vector2(x, y);
-                column.Add(point);
-                var color = layer == 0 || layer == layers.Length - 1 ? UiThemeLookup.Color(this, UiTokens.Color.Accent) : UiThemeLookup.Color(this, UiTokens.Color.LineStrong);
-                control.DrawArc(point, 4, 0, Mathf.Tau, 18, color, 1.5f, antialiased: false);
-            }
-
-            var label = count > 6 ? $"+{count - 6} more" : $"{count}";
-            control.DrawString(font, new Vector2(x - 22, control.Size.Y - 3), label, HorizontalAlignment.Center, 44, 10, UiThemeLookup.Color(this, UiTokens.Color.Muted));
-            nodeColumns.Add(column);
-        }
-
-        for (var layer = 0; layer < nodeColumns.Count - 1; layer++)
-        {
-            foreach (var from in nodeColumns[layer])
-            {
-                foreach (var to in nodeColumns[layer + 1])
-                {
-                    control.DrawLine(from, to, new Color(UiThemeLookup.Color(this, UiTokens.Color.Edge), 0.35f), 0.5f, antialiased: false);
-                }
-            }
-        }
-    }
-
-    private void EmitBrainShape(int hiddenLayers, int neuronsPerLayer)
-    {
-        EmitSignal(SignalName.BrainShapeChanged, hiddenLayers, neuronsPerLayer);
-    }
-
-    private int RecommendedNeurons(ConstructionBuildPanelPresentation buildPanel) =>
-        Mathf.Clamp((int)Math.Ceiling((buildPanel.InputCount + buildPanel.OutputCount) / 2.0), BrainShapeDef.MinimumNeuronsPerLayer, BrainShapeDef.MaximumNeuronsPerLayer);
-
-    private int ConnectionCount()
-    {
-        var buildPanel = Presentation?.BuildPanel ?? ConstructionBuildPanelPresentation.Sample;
-        var shape = Presentation?.BrainShape ?? BrainShapeDef.Default;
-        var layers = new[] { buildPanel.InputCount }.Concat(Enumerable.Repeat(shape.NeuronsPerLayer, shape.HiddenLayers)).Concat([buildPanel.OutputCount]).ToArray();
-        var total = 0;
-        for (var i = 0; i < layers.Length - 1; i++)
-        {
-            total += layers[i] * layers[i + 1];
-        }
-
-        return total;
-    }
-
-    private Control CreatePartButton(string label, string countText, bool locked, ConstructionTool? tool)
-    {
-        var button = new UiButton
-        {
-            Text = $"{label} · {countText}",
-            Kind = UiButtonKind.Secondary,
-            Disabled = locked,
-            TooltipText = locked ? countText : string.Empty,
-            CustomMinimumSize = new Vector2(0, UiSize.Control.Touch),
-            SizeFlagsHorizontal = SizeFlags.ExpandFill,
-        };
-        if (!locked && tool is { } activeTool)
-        {
-            button.Pressed += () => EmitSignal(SignalName.ToolRequested, (int)activeTool);
-        }
-
-        return button;
-    }
-
-    private Control CreateBrainPreview(ConstructionBuildPanelPresentation buildPanel)
-    {
-        var preview = new Control
-        {
-            CustomMinimumSize = new Vector2(0, 72),
-            SizeFlagsHorizontal = SizeFlags.ExpandFill,
-        };
-        preview.Draw += () => DrawBrainPreview(preview, buildPanel);
-        return preview;
-    }
-
-    private static string BuildBrainCountLine(ConstructionBuildPanelPresentation buildPanel)
-    {
-        var motorWord = buildPanel.OutputCount == 1 ? "motor" : "motors";
-        return $"{buildPanel.InputCount} senses · {buildPanel.OutputCount} {motorWord}";
-    }
-
-    private Control CreateValidationLine(ConstructionBuildPanelPresentation buildPanel)
-    {
-        var text = buildPanel.CanStartTraining
-            ? "Ready to train"
-            : ShortValidationText(buildPanel.DisabledReason ?? buildPanel.ValidationLine);
-        var row = new HBoxContainer();
-        row.AddThemeConstantOverride("separation", 8);
-        var icon = UiFieldAndRows.Icon(buildPanel.CanStartTraining ? UiIconId.Check : UiIconId.Warn, UiIconSize.Large, buildPanel.CanStartTraining ? UiThemeLookup.Color(this, UiTokens.Color.Accent) : UiThemeLookup.Color(this, UiTokens.Color.Danger));
-        icon.CustomMinimumSize = new Vector2(28, 0);
-        row.AddChild(icon);
-        row.AddChild(CreateLabel(text, 18, buildPanel.CanStartTraining ? UiThemeLookup.Color(this, UiTokens.Color.Accent) : UiThemeLookup.Color(this, UiTokens.Color.Danger), expand: true));
-        return row;
-    }
-
-    private static string ShortValidationText(string text) =>
-        text.StartsWith("Add nodes and beams", StringComparison.Ordinal)
-            ? "Add nodes + beams"
-            : text.Contains("has no beams attached", StringComparison.Ordinal)
-                ? "1 node not connected"
-                : text;
-
-    private void DrawBuildGrid(Control control)
-    {
-        var size = control.Size;
-        for (var x = 48f; x < size.X; x += 48f)
-        {
-            control.DrawLine(new Vector2(x, 0), new Vector2(x, size.Y), UiThemeLookup.Color(this, UiTokens.Color.Line), 1);
-        }
-
-        for (var y = 48f; y < size.Y; y += 48f)
-        {
-            control.DrawLine(new Vector2(0, y), new Vector2(size.X, y), UiThemeLookup.Color(this, UiTokens.Color.Line), 1);
-        }
-
-        DrawCornerMarks(control, size);
-    }
-
-    private void DrawBuildPreview(Control control)
-    {
-        var size = control.Size;
-        var leftHip = new Vector2(size.X * 0.28f, size.Y * 0.42f);
-        var top = new Vector2(size.X * 0.36f, size.Y * 0.26f);
-        var rightHip = new Vector2(size.X * 0.44f, size.Y * 0.42f);
-        var leftKnee = new Vector2(size.X * 0.24f, size.Y * 0.58f);
-        var leftFoot = new Vector2(size.X * 0.20f, size.Y * 0.76f);
-        var rightKnee = new Vector2(size.X * 0.50f, size.Y * 0.60f);
-        var rightFoot = new Vector2(size.X * 0.58f, size.Y * 0.76f);
-        var brokenA = new Vector2(size.X * 0.72f, size.Y * 0.66f);
-        var brokenB = new Vector2(size.X * 0.84f, size.Y * 0.86f);
-
-        DrawTriangleFill(control, leftHip, top, rightHip);
-        DrawBeam(control, leftHip, top, UiThemeLookup.Color(this, UiTokens.Color.Edge));
-        DrawBeam(control, top, rightHip, UiThemeLookup.Color(this, UiTokens.Color.Edge));
-        DrawBeam(control, leftHip, rightHip, UiThemeLookup.Color(this, UiTokens.Color.Edge));
-        DrawBeam(control, leftHip, leftKnee, UiThemeLookup.Color(this, UiTokens.Color.Edge));
-        DrawBeam(control, leftKnee, leftFoot, UiThemeLookup.Color(this, UiTokens.Color.Edge));
-        DrawBeam(control, rightHip, rightKnee, UiThemeLookup.Color(this, UiTokens.Color.Edge));
-        DrawBeam(control, rightKnee, rightFoot, UiThemeLookup.Color(this, UiTokens.Color.Edge));
-        control.DrawDashedLine(brokenA, brokenB, UiThemeLookup.Color(this, UiTokens.Color.Danger), 4, 7, antialiased: false);
-
-        DrawMotorArc(control, leftHip, clockwise: false);
-        DrawMotorArc(control, rightHip, clockwise: true);
-        DrawMotorArc(control, leftKnee, clockwise: false);
-        DrawMotorArc(control, rightKnee, clockwise: true);
-
-        DrawNode(control, leftHip, hasCore: false);
-        DrawNode(control, top, hasCore: true);
-        DrawNode(control, rightHip, hasCore: false);
-        DrawNode(control, leftKnee, hasCore: false);
-        DrawNode(control, leftFoot, hasCore: true, selected: true);
-        DrawNode(control, rightKnee, hasCore: false);
-        DrawNode(control, rightFoot, hasCore: true);
-        DrawInvalidNode(control, brokenA);
-        DrawInvalidNode(control, brokenB);
-
-        DrawTag(control, "Rigid: no joints", top + new Vector2(-70, -42), UiThemeLookup.Color(this, UiTokens.Color.Halo));
-        DrawTag(control, "Not connected", brokenA + new Vector2(-48, -46), UiThemeLookup.Color(this, UiTokens.Color.Danger));
-    }
-
-    private void DrawBrainPreview(Control control, ConstructionBuildPanelPresentation buildPanel)
-    {
-        var size = control.Size;
-        if (buildPanel.InputCount == 0 || buildPanel.OutputCount == 0)
-        {
-            control.DrawString(
-                ThemeDB.FallbackFont,
-                new Vector2(8, size.Y * 0.58f),
-                "Build anatomy to preview brain",
-                HorizontalAlignment.Left,
-                -1,
-                17,
-                UiThemeLookup.Color(this, UiTokens.Color.Muted));
-            return;
-        }
-
-        var inputX = size.X * 0.08f;
-        var hiddenX = size.X * 0.52f;
-        var outputX = size.X * 0.92f;
-        var inputPreviewCount = Mathf.Clamp(buildPanel.InputCount, 1, 6);
-        var outputPreviewCount = Mathf.Clamp(buildPanel.OutputCount, 1, 6);
-        var hiddenPreviewCount = Mathf.Clamp((inputPreviewCount + outputPreviewCount) / 2 + 1, 3, 6);
-        var inputs = Enumerable.Range(0, inputPreviewCount).Select(index => PreviewPoint(inputX, size.Y, inputPreviewCount, index)).ToArray();
-        var hidden = Enumerable.Range(0, hiddenPreviewCount).Select(index => PreviewPoint(hiddenX, size.Y, hiddenPreviewCount, index)).ToArray();
-        var outputs = Enumerable.Range(0, outputPreviewCount).Select(index => PreviewPoint(outputX, size.Y, outputPreviewCount, index)).ToArray();
-        foreach (var from in inputs)
-        {
-            foreach (var to in hidden)
-            {
-                control.DrawLine(from, to, UiThemeLookup.Color(this, UiTokens.Color.Accent) with { A = 0.45f }, 1.2f, antialiased: false);
-            }
-        }
-
-        foreach (var from in hidden)
-        {
-            foreach (var to in outputs)
-            {
-                control.DrawLine(from, to, UiThemeLookup.Color(this, UiTokens.Color.Accent) with { A = 0.55f }, 1.2f, antialiased: false);
-            }
-        }
-
-        foreach (var point in inputs.Concat(hidden).Concat(outputs))
-        {
-            control.DrawCircle(point, 5, UiThemeLookup.Color(this, UiTokens.Color.PanelRaised));
-            control.DrawArc(point, 5, 0, Mathf.Tau, 18, UiThemeLookup.Color(this, UiTokens.Color.LineStrong), 1.5f, antialiased: false);
-        }
-    }
-
-    private static Vector2 PreviewPoint(float x, float height, int count, int index)
-    {
-        var spacing = height / (count + 1);
-        return new Vector2(x, spacing * (index + 1));
-    }
-
-    private void DrawCornerMarks(Control control, Vector2 size)
-    {
-        control.DrawLine(new Vector2(14, 14), new Vector2(42, 14), UiThemeLookup.Color(this, UiTokens.Color.Accent), 3);
-        control.DrawLine(new Vector2(14, 14), new Vector2(14, 42), UiThemeLookup.Color(this, UiTokens.Color.Accent), 3);
-        control.DrawLine(new Vector2(size.X - 42, 14), new Vector2(size.X - 14, 14), UiThemeLookup.Color(this, UiTokens.Color.Accent), 3);
-        control.DrawLine(new Vector2(size.X - 14, 14), new Vector2(size.X - 14, 42), UiThemeLookup.Color(this, UiTokens.Color.Accent), 3);
-    }
-
-    private void DrawTriangleFill(Control control, Vector2 a, Vector2 b, Vector2 c)
-    {
-        control.DrawColoredPolygon([a, b, c], UiThemeLookup.Color(this, UiTokens.Color.Muted) with { A = 0.10f });
-    }
-
-    private void DrawBeam(Control control, Vector2 start, Vector2 end, Color color)
-    {
-        control.DrawLine(start, end, color, 5, antialiased: false);
-    }
-
-    private void DrawNode(Control control, Vector2 position, bool hasCore, bool selected = false)
-    {
-        if (selected)
-        {
-            control.DrawCircle(position, 28, UiThemeLookup.Color(this, UiTokens.Color.Halo));
-            control.DrawCircle(position, 23, UiThemeLookup.Color(this, UiTokens.Color.Background));
-        }
-
-        if (UiThemeLookup.EffectsEnabled(this))
-        {
-            control.DrawCircle(position, 22, UiGlow.FromBase(UiThemeLookup.Color(this, UiTokens.Color.Accent), UiThemeLookup.EffectsEnabled(this)));
-        }
-
-        control.DrawCircle(position, 12, UiThemeLookup.Color(this, UiTokens.Color.Panel));
-        control.DrawArc(position, 12, 0, Mathf.Tau, 24, UiThemeLookup.Color(this, UiTokens.Color.LineStrong), 3, antialiased: false);
-        if (hasCore)
-        {
-            var half = new Vector2(12, 12);
-            var points = new[]
-            {
-                position + new Vector2(0, -half.Y),
-                position + new Vector2(half.X, 0),
-                position + new Vector2(0, half.Y),
-                position + new Vector2(-half.X, 0),
-            };
-            control.DrawPolyline(points.Append(points[0]).ToArray(), UiThemeLookup.Color(this, UiTokens.Color.Accent), 3, antialiased: false);
-        }
-    }
-
-    private void DrawInvalidNode(Control control, Vector2 position)
-    {
-        control.DrawCircle(position, 12, UiThemeLookup.Color(this, UiTokens.Color.Panel));
-        control.DrawArc(position, 12, 0, Mathf.Tau, 24, UiThemeLookup.Color(this, UiTokens.Color.Danger), 3, antialiased: false);
-    }
-
-    private void DrawMotorArc(Control control, Vector2 center, bool clockwise)
-    {
-        var start = clockwise ? -0.35f : 0.8f;
-        var end = clockwise ? 1.0f : 2.1f;
-        control.DrawArc(center, 28, start, end, 20, UiThemeLookup.Color(this, UiTokens.Color.Accent), 3, antialiased: false);
-    }
-
-    private void DrawTag(Control control, string text, Vector2 position, Color borderColor)
-    {
-        var width = Mathf.Max(126, text.Length * 10);
-        control.DrawRect(new Rect2(position, new Vector2(width, 30)), UiThemeLookup.Color(this, UiTokens.Color.PanelRaised));
-        control.DrawRect(new Rect2(position, new Vector2(width, 30)), borderColor, filled: false, width: 2);
-        control.DrawString(ThemeDB.FallbackFont, position + new Vector2(12, 21), text, HorizontalAlignment.Left, -1, 16, UiThemeLookup.Color(this, UiTokens.Color.Ink));
-    }
-
-    private UiCard CreatePanel(bool raised)
-    {
-        return new UiCard
-        {
-            Kind = raised
-                ? UiCard.CardVariant.Raised
-                : UiCard.CardVariant.Frame,
-        };
-    }
-
-    private UiButton CreateButton(string label, UiButtonKind kind, string tooltip, UiIconId? iconId = null)
-    {
-        return new UiButton
-        {
-            Kind = kind,
-            Text = label,
-            IconId = iconId ?? UiIconId.None,
-            TooltipText = tooltip,
-            CustomMinimumSize = new Vector2(0, UiSize.Control.Touch),
-        };
-    }
-
-    private StyleBoxFlat CreateToolStyle(bool active, bool locked, int borderWidth = 1, float opacity = 1)
-    {
-        var radius = (int)UiSize.Radius.Medium;
-        var border = active ? UiThemeLookup.Color(this, UiTokens.Color.Accent) : UiThemeLookup.Color(this, UiTokens.Color.LineStrong);
-        var alpha = opacity * (locked ? 0.5f : 1f);
-        return new StyleBoxFlat
-        {
-            BgColor = active
-                ? UiThemeLookup.Color(this, UiTokens.Color.Accent).WithAlpha(UiThemeLookup.Alpha(this, UiTokens.Alpha.Soft)).ScaleAlpha(alpha)
-                : new Color(UiThemeLookup.Color(this, UiTokens.Color.PanelRaised).R, UiThemeLookup.Color(this, UiTokens.Color.PanelRaised).G, UiThemeLookup.Color(this, UiTokens.Color.PanelRaised).B, UiThemeLookup.Color(this, UiTokens.Color.PanelRaised).A * alpha),
-            BorderColor = new Color(border.R, border.G, border.B, border.A * alpha),
-            BorderWidthLeft = locked ? 2 : active ? 2 : borderWidth,
-            BorderWidthTop = locked ? 1 : active ? 2 : borderWidth,
-            BorderWidthRight = locked ? 2 : active ? 2 : borderWidth,
-            BorderWidthBottom = locked ? 1 : active ? 2 : borderWidth,
-            CornerRadiusTopLeft = radius,
-            CornerRadiusTopRight = radius,
-            CornerRadiusBottomLeft = radius,
-            CornerRadiusBottomRight = radius,
-            ContentMarginLeft = 2,
-            ContentMarginRight = 2,
-        };
-    }
-
-    private Control CreateSpacer()
-    {
-        return new Control
-        {
-            SizeFlagsVertical = SizeFlags.ExpandFill,
-        };
-    }
-
-    private MarginContainer CreateMargin(int margin)
-    {
-        var container = new MarginContainer();
-        container.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
-        container.AddThemeConstantOverride("margin_left", margin);
-        container.AddThemeConstantOverride("margin_top", margin);
-        container.AddThemeConstantOverride("margin_right", margin);
-        container.AddThemeConstantOverride("margin_bottom", margin);
-        return container;
-    }
-
-    private static T MarkHostedInputPassthrough<T>(T control) where T : Control
-    {
-        control.SetMeta(_hostedInputPassthroughMeta, true);
-        return control;
-    }
-
-    private Label CreateLabel(string text, int fontSize, Color color, bool expand = false)
-    {
-        var label = new Label
-        {
-            Text = text,
-            AutowrapMode = TextServer.AutowrapMode.WordSmart,
-            SizeFlagsHorizontal = expand ? SizeFlags.ExpandFill : SizeFlags.Fill,
-        };
-        label.AddThemeFontSizeOverride("font_size", fontSize);
-        label.AddThemeColorOverride("font_color", color);
-        return label;
-    }
-
-    private void ApplyHostedInputPassthrough(Node node)
-    {
-        if (node is Control control)
-        {
-            control.MouseFilter = control == this || control.HasMeta(_hostedInputPassthroughMeta)
-                ? MouseFilterEnum.Ignore
-                : MouseFilterEnum.Stop;
-
-            // Library components own their internal mouse filters; forcing Stop on a
-            // UiButton's caption would swallow the press before it reaches the button.
-            if (control != this && control.GetType().Namespace == typeof(UiButton).Namespace)
-            {
-                return;
-            }
-        }
-
-        foreach (var child in node.GetChildren())
-        {
-            ApplyHostedInputPassthrough(child);
-        }
+        _subscribedToPresentation = false;
     }
 }
