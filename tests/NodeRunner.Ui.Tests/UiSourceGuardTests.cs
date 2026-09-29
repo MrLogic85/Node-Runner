@@ -28,7 +28,7 @@ public sealed class UiSourceGuardTests
     private const string _tintHelper = "ui/lib/UiIcons.cs";
 
     /// <summary>
-    /// The one library file that raises ZIndex: an open UiMenu is a top-level popup that must float
+    /// The one UI file that raises ZIndex: an open UiMenu is a top-level popup that must float
     /// over the screen it drops from.
     /// </summary>
     private const string _overlayMenu = "ui/lib/UiMenu.cs";
@@ -145,10 +145,10 @@ public sealed class UiSourceGuardTests
     }
 
     [Fact]
-    public void Component_library_orders_drawing_by_tree_not_z_index()
+    public void Ui_orders_drawing_by_tree_not_z_index()
     {
         var violations = CSharpSources.Project
-            .Where(source => FollowsLibraryRules(source.Path) && source.Path != _overlayMenu)
+            .Where(source => source.Path.StartsWith("ui/", StringComparison.Ordinal) && source.Path != _overlayMenu)
             .SelectMany(source => source.Find(SetsZIndex))
             .ToList();
 
