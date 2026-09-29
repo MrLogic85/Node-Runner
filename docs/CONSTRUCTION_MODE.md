@@ -13,7 +13,7 @@ The active target is owned by `reference design/components/Build/README.md`,
 
 - The 0.3.0 prototype had one main screen with two modes, **Simulate** and
   **Build**, and a HUD toggle between them. That toggle is gone: Build and
-  Simulate are separate routed scenes (#469), and Build opens a new draft or
+  Training are separate routed scenes (#469), and Build opens a new draft or
   a saved creation's construction canvas.
 - Construction state lives in `NodeRunner.App.ViewModels.ConstructionViewModel`
   while Build is open. A new draft is dropped when Build closes unless it
@@ -55,14 +55,14 @@ The active target is owned by `reference design/components/Build/README.md`,
   the Beam/Core tools, so adding a persistent cross-mode selection concept
   here would add lifecycle risk (stale indices if mode switches mid-edit)
   without a corresponding benefit.
-- **Wire into simulation** (issues #72, #469): Build and Simulate are
+- **Wire into simulation** (issues #72, #469): Build and Training are
   separate scenes, joined only through the save. Start training on a new
   draft calls `ConstructionViewModel.TryLeave`, saves the built
-  `CreatureDef` as a new creation and opens its training (`SimulateRoute`).
+  `CreatureDef` as a new creation and opens its training (`TrainingRoute`).
   The new creation keeps a name the user typed in the toolbar; otherwise it
   is named `Creation N`. On a saved creation, Back and Start training first
   save the moved nodes, then leave. The
-  Simulate scene builds its `Creature` node from the saved `CreatureDef`
+  Training scene builds its `Creature` node from the saved `CreatureDef`
   (`Creature.BuildFrom`), which generically derives the model's
   input/output counts (cores' sensor values plus `MotorTopology`'s derived
   motor-relation sensor values, and one output per motor relation) for

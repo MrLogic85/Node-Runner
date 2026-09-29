@@ -16,13 +16,13 @@ using NodeRunner.Ui.Screens;
 namespace NodeRunner.Hosts;
 
 /// <summary>
-/// The Simulate scene: trains one saved creation (#469) on the Training screen (#386). The scene
+/// The Training scene: trains one saved creation (#469) on the Training screen (#386). The scene
 /// authors the screen and the world in its arena: camera, backdrop and ground. This root adds the
 /// creature and the <see cref="Evolver"/> to that world, resumes from the creation's last finished
 /// generation and saves every finished generation, so leaving drops only the one in progress. Run
 /// on its own (F6) it trains the built-in worm without saving.
 /// </summary>
-public partial class SimulateHost : Node, IRoutedScene
+public partial class TrainingHost : Node, IRoutedScene
 {
     private const double _extraCoreUnlockFitness = 50;
     private const double _signalRefreshIntervalSeconds = 0.15;
@@ -41,12 +41,12 @@ public partial class SimulateHost : Node, IRoutedScene
     private readonly BrainFocusPresentationViewModel _brainFocus = new();
     private readonly List<SensorReading> _sensorReadings = [];
     private readonly List<MotorReading> _motorReadings = [];
-    private SimulateRoute? _route;
+    private TrainingRoute? _route;
     private ISceneNavigator? _navigator;
     private Guid? _creationId;
     private Creature.Creature? _creature;
     private Evolver? _evolver;
-    private SimulateScreen _screen = null!;
+    private TrainingScreen _screen = null!;
     private TrainingPresentationViewModel _trainingPresentation = new();
     private int _sessionGenerationStart;
     private int _timeScaleIndex;
@@ -71,7 +71,7 @@ public partial class SimulateHost : Node, IRoutedScene
 
     public void Enter(SceneRoute route, ISceneNavigator navigator)
     {
-        _route = (SimulateRoute)route;
+        _route = (TrainingRoute)route;
         _navigator = navigator;
     }
 
@@ -202,7 +202,7 @@ public partial class SimulateHost : Node, IRoutedScene
 
     private void BindScreen(CreationDef? creation)
     {
-        _screen = GetNode<SimulateScreen>("%SimulateScreen");
+        _screen = GetNode<TrainingScreen>("%TrainingScreen");
         _screen.Setup(
             TrainingHeaderPresentation.For(creation?.Name ?? _sampleCreationName, TrainingRunMode.Train, MapIds.Flat),
             _trainingPresentation,

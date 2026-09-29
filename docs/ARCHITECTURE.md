@@ -226,14 +226,14 @@ creature; up to 15 hidden clones run alongside it. Each slot owns a
 `TrialController`, resets independently between trials, and uses an isolated
 collision layer. See `docs/TRAINING_LOOP.md` for the full design.
 
-`Evolver` raises `GenerationCompleted`/`NewBestFound` events; the Simulate
-scene's root, `SimulateHost`, subscribes to both, saves the training after
+`Evolver` raises `GenerationCompleted`/`NewBestFound` events; the Training
+scene's root, `TrainingHost`, subscribes to both, saves the training after
 each finished generation and records an earned unlock from them. The
 Training screen's caption follows `TrainingPresentationViewModel`, the
 SignalFlow stages are polled every ~0.15s, and Pause and Speed arrive as screen
 signals. A dedicated `PopulationViewModel`
 in the App layer remains a possible later refactor if this logic outgrows
-`SimulateHost` — not required yet.
+`TrainingHost` — not required yet.
 
 For 0.2.0 the hardcoded creature keeps its beam bodies awake (`CanSleep =
 false`). Random brains produce visible, if uncoordinated, motor-relation
@@ -245,23 +245,23 @@ tied to the retired Muscle model and does not carry over.
 Screens are moving to one scene each, where navigating replaces the current
 scene (#326): a left scene is closed, not paused, and Back rebuilds it from
 its route. #468 is routing them one by one. Creations (the root and the
-main scene), Examples, Build, Simulate and the component-library pages are
+main scene), Examples, Build, Training and the component-library pages are
 routed scenes. Build (`BuildRoute`, #363) edits one creation, or a new draft
 when the route has no id, and saves moved parts before it is left. Its layout
 is authored in `BuildScreen.tscn` (#364): the construction canvas is a
 `Node2D` inside the screen's clipped canvas slot, placed and scaled in the
-scene, so Build has no camera and taps reach the canvas through the UI. Simulate
-(`SimulateRoute`, #469) trains one saved creation: it
+scene, so Build has no camera and taps reach the canvas through the UI. Training
+(`TrainingRoute`, #469) trains one saved creation: it
 builds the creature and the `Evolver` from the creation's save, resumes from its
 last finished generation and saves each finished one, so leaving drops only
-the generation in progress. Its layout is authored in `SimulateScreen.tscn`
-(#386); the physics world is authored in `SimulateHost.tscn` inside the screen's
+the generation in progress. Its layout is authored in `TrainingScreen.tscn`
+(#386); the physics world is authored in `TrainingHost.tscn` inside the screen's
 `UiWorldView`, a `SubViewport` with its own camera, so UI scale never changes
 physics distances.
 
 A screen stays in `ui/screens/` and knows nothing of saves or the router's
 type: it emits signals. The routed scene that holds it is a small host in
-`project/src/hosts/` (`CreationsHost`, `ExamplesHost`, `BuildHost`, `SimulateHost`) that wires
+`project/src/hosts/` (`CreationsHost`, `ExamplesHost`, `BuildHost`, `TrainingHost`) that wires
 those signals to `SaveManager` and the navigator. The standalone gallery
 pages have nothing to save, so they are routed directly.
 
@@ -292,8 +292,8 @@ pages have nothing to save, so they are routed directly.
   not quit; it asks the screen to go back unless an open menu or dialog in
   the screen takes Back first. On the root nothing holds Back, so Android
   leaves the app.
-  Build and Simulate hold Back the same way: an open dialog, sheet or menu
-  closes first, then the scene goes one step back (#474). Simulate has a
+  Build and Training hold Back the same way: an open dialog, sheet or menu
+  closes first, then the scene goes one step back (#474). Training has a
   Back button in its top bar and no Build/Simulate mode switch.
 
 Because a scene is rebuilt from its route, anything the player expects to
