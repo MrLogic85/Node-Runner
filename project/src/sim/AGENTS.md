@@ -28,8 +28,8 @@
   population lifecycle directly; extract it only if that lifecycle grows
   beyond training orchestration.
 - `SimulationRunner.cs` (probably) — the top-level `Node` that ties the
-  above together; scene entry point. Not yet built — `Main.cs` owns this
-  role directly for now.
+  above together; scene entry point. Not yet built — the Simulate scene's
+  root, `SimulateHost` in `project/src/`, owns this role directly for now.
 
 ## What does NOT live here
 

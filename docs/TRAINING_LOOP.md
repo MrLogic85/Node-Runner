@@ -57,8 +57,8 @@ sessions explicit rather than treating navigation or Start as completion.
     sliding half-second window so one-tick physics jolts do not dominate.
   - `Elevation` — the largest gap between the creature's lowest collision
     point and the ground top; a crawler scores 0.
-- `Evolver.BestRun` is the `TrialResult` of the best genome so far. `Main`
-  persists it as `TrainingStateDef.BestRun` (`TrainingRunDef`, with
+- `Evolver.BestRun` is the `TrialResult` of the best genome so far.
+  `SimulateHost` persists it as `TrainingStateDef.BestRun` (`TrainingRunDef`, with
   `MapId` `flat` until more maps exist) so the Creations card can show it.
 - `TrialController` (`project/src/sim/TrialController.cs`) is a `Node` that
   times a fixed-duration trial (`TrialDurationTicks`, default 600 ≈ 10s at
@@ -111,8 +111,8 @@ sessions explicit rather than treating navigation or Start as completion.
   next generation automatically. `Evolver` tracks `Generation`,
   `BestFitness` (running best across all generations), and `MeanFitness`
   (current generation's average), and raises
-  `GenerationCompleted`/`NewBestFound`, which `Main.cs`'s training HUD (see
-  "Training HUD (issue #51)" below) subscribes to.
+  `GenerationCompleted`/`NewBestFound`, which the Simulate scene (see
+  "The Simulate scene" below) subscribes to.
   - Concurrency is capped at 16 and never exceeds population size. Layer 1 is
     reserved for ground; zero-based slot `i` uses layer `2+i` and collides
     only with ground and its own slot. Core sensor rays remain ground-only.
@@ -120,75 +120,71 @@ sessions explicit rather than treating navigation or Start as completion.
     slot count, build, and platform. Sequential and parallel fitness parity
     is not promised because physics ordering can differ.
   - `Evolver.Start` retains a one-slot compatibility mode when no creature
-    factory is supplied. Production `Main.cs` supplies the factory and uses
-    parallel evaluation.
-- `Main.cs` creates one `Evolver` and selects a session-scoped training
+    factory is supplied. Production `SimulateHost` supplies the factory and
+    uses parallel evaluation.
+- `SimulateHost` creates one `Evolver` and selects a session-scoped training
   profile. Quick, Standard, and Deep vary population size, trial duration,
   generation budget, tournament size, mutation rate/strength, and crossover
   strategy. Uniform crossover preserves parent genes; Blend crossover samples
   continuous values between the two parent genes, giving the player a direct
   experiment for the competing-conventions plateau without changing the
   underlying network.
-  `StartEvolution()` (`Main.cs`) always calls `Evolver.Stop()` first (which
+  `StartEvolution()` (`SimulateHost`) always calls `Evolver.Stop()` first (which
   halts the in-progress trial without raising any events), then calls
   `Evolver.Start(...)` again — unless the current creature has no brain
-  (a just-cleared construction-mode anatomy), in which case it stops and
-  leaves evolution idle rather than starting. This is what
-  restarting-on-rebuild/"Randomize" (which reseeds `RngProvider`) relies on
-  to avoid a stale in-flight trial for the old creature outliving the
-  rebuild.
-- Generation/fitness are logged (`GD.Print`) and shown in the training HUD
-  (see below).
+  (an anatomy without motors), in which case it stops and leaves evolution
+  idle rather than starting. This is what Reset (which reseeds
+  `RngProvider`) and changing the training profile rely on to avoid a stale
+  in-flight trial outliving the restart.
+- Generation/fitness are logged (`GD.Print`) and shown on the Simulate
+  screen (see "The Simulate scene" below).
 
 The first progression milestone uses the running best fitness as its metric:
 reaching 50 distance units unlocks a second core slot globally. The unlock is
 recorded with the generation that crossed the threshold and remains available
 in Build after restarting the app.
 
-## Legacy training HUD (issue #51)
+## The Simulate scene (issues #51, #469)
 
 This section documents the current prototype wiring, not the target
 navigation or presentation. The target is owned by the TrainSetup and Training
 component READMEs under `reference design/components/`.
 
-- `Main.cs` adds a training panel below the top Randomize/Build/Seed row
-  (mutually exclusive with the construction tool row — training and
-  construction modes never show at once): "Gen: N", "Best: X.X (gen G)",
-  "Mean: X.X", and Run/Pause, Reset, and time-scale buttons.
-  - **Generation/Best/Mean** update only when `Evolver.GenerationCompleted`
-    fires (once per completed generation), driven by
-    `Main.UpdateTrainingLabels()`. "Best" shows the running best fitness
-    and the generation it was found at (tracked via `NewBestFound`); there
-    is no per-genome reproducibility seed to show (see #50's tradeoffs),
-    so "current/best seed" from the original issue scope became "run seed
-    (existing Seed label) + best generation."
-  - **Run/Pause** toggles `GetTree().Paused`. This is the standard Godot
+- Simulate is its own routed scene, `SimulateRoute(creationId)`, with
+  `SimulateHost` (`project/src/`) as its root. It builds the ground, the
+  camera, the creature and the `Evolver` from the creation's save, so
+  leaving the scene frees all of them.
+  - **Resume.** Opening it starts from the saved `TrainingStateDef`: the
+    best genome seeds the population and the generation count continues.
+    A creation without training starts from a fresh random population.
+  - **Save.** Each finished generation is saved on the thread pool (the
+    file round trip would stall physics). Leaving mid-generation drops only
+    the generation in progress. The save is guarded by the creation's
+    training epoch, so a save still in flight when the training is reset
+    is dropped.
+  - A session stops after the profile's generation budget. The profile,
+    speed and pause belong to the scene and start from Standard, 1x and
+    running each time it opens.
+  - Run on its own (F6) the scene trains the built-in worm without saving.
+- The Simulate screen shows the generation and fitness from
+  `TrainingPresentationViewModel`, and its controls are Pause, Speed and
+  Reset.
+  - **Pause** toggles `GetTree().Paused`. This is the standard Godot
     pause mechanism: every node using the default `Pausable` process mode
     (all slot creatures, `Evolver`, and every `TrialController`) freezes
     immediately —
     physics stops advancing, so trial motion, fitness recording, and
     trial-boundary checks all stop mid-trial and resume exactly where they
-    left off. The `Hud` `CanvasLayer` is set to `ProcessMode.Always` so its
-    buttons (Pause included) keep responding while paused — otherwise
-    pausing would lock out the only way to un-pause.
-  - **Reset** reseeds `RngProvider` and restarts evolution from a fresh
-    random population — identical to "Randomize"'s existing behavior,
-    exposed as its own control per the issue's acceptance criteria.
-  - **Time-scale** cycles a fixed 1x/2x/4x set via `Engine.TimeScale`.
+    left off. The scene root and the screen's layer are `ProcessMode.Always`
+    so the buttons (Pause included) keep responding while paused, and the
+    creature and `Evolver` pin themselves back to `Pausable`.
+  - **Reset** resets the saved training, reseeds `RngProvider` and
+    restarts evolution from a fresh random population.
+  - **Speed** cycles a fixed 1x/2x/4x set via `Engine.TimeScale`.
     This scales every physics/process step uniformly and does not affect
-    determinism, only how quickly a fixed tick budget plays out. It's
-    reset to 1x in `Main._Ready()`/`_ExitTree()` since it's a global engine
-    setting, not scoped to this scene.
-  - Toggling construction mode always resumes first (`GetTree().Paused =
-    false`) — the construction canvas uses the default `Pausable` process
-    mode, so editing while paused would silently not work even though the
-    Build button (on the `Always`-mode Hud layer) stayed tappable.
-  - `Main.cs` now owns scene composition, construction UI, the inspector,
-    *and* this training presentation directly subscribing to `Evolver`.
-    That's a growing pile of responsibility in one file; extracting the
-    training panel into its own UI widget backed by an App-layer view
-    model (matching how `CreatureInspectorViewModel` already works) is a
-    reasonable later cleanup, tracked in issue #106.
+    determinism, only how quickly a fixed tick budget plays out. Speed and
+    pause are reset in `SimulateHost._Ready()`/`_ExitTree()` since both are
+    global engine settings, not scoped to this scene.
 - Full neural-network visualization remains out of scope (later milestone).
 
 ## Deferred future work

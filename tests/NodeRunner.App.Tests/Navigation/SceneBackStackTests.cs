@@ -147,6 +147,29 @@ public sealed class SceneBackStackTests
     }
 
     [Fact]
+    public void Replace_current_gives_the_current_scene_new_arguments_that_Back_rebuilds()
+    {
+        var stack = new SceneBackStack(new CreationsRoute());
+        stack.Navigate(new SceneNavigation(new BuildRoute(_wormId)));
+
+        stack.ReplaceCurrent(new BuildRoute(_antId));
+        stack.Navigate(new SceneNavigation(new AchievementRoute("first-steps")));
+
+        stack.Back().ShouldBe(new BuildRoute(_antId));
+        stack.Entries.ShouldBe([new CreationsRoute(), new BuildRoute(_antId)]);
+    }
+
+    [Fact]
+    public void Replace_current_refuses_another_scene()
+    {
+        var stack = new SceneBackStack(new CreationsRoute());
+        stack.Navigate(new SceneNavigation(new BuildRoute(_wormId)));
+
+        Should.Throw<ArgumentException>(() => stack.ReplaceCurrent(new ExamplesRoute()));
+        stack.Entries.ShouldBe([new CreationsRoute(), new BuildRoute(_wormId)]);
+    }
+
+    [Fact]
     public void Entries_cannot_be_changed_from_outside()
     {
         var stack = new SceneBackStack(new CreationsRoute());

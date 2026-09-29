@@ -1,0 +1,10 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://src/SimulateHost.cs" id="1_host"]
+
+[node name="Simulate" type="Node2D"]
+script = ExtResource("1_host")
+
+[node name="Camera" type="Camera2D" parent="."]
+position = Vector2(360, 316)
+zoom = Vector2(1.15, 1.15)
