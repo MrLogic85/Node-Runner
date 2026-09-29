@@ -45,7 +45,7 @@ public sealed class TrainingPresentationViewModelTests
         var raised = false;
         presentation.PropertyChanged += (_, _) => raised = true;
 
-        presentation.Update(1, 1, 2, 0, 0, "Standard");
+        presentation.Update(1, 1, 2, 0, 0, "Standard", 0, true, 0, []);
 
         raised.ShouldBeTrue();
     }
