@@ -6,6 +6,6 @@ Powered parts need power. The design says so where it matters: a chip on the can
 
 **Power budget.** Opened from the overflow menu of Build and BuildLocked, or by tapping the chip. The left column lists what makes power and what each part can use at most. The right card is one number, the **strength every powered part gets**, with a bar and a plain sentence. Enough is `accent` with a check; too little is `halo` with a warn icon.
 
-**Power chip.** A chip in the top left of the canvas, only when the creation has powered parts. In Build it reads "Uses 1.6 · makes 1.0 · 62%"; while training it shows the battery percentage and a small bar. **Limited** adds a warn icon and "50% strength" in `halo`; **Empty** is `danger` with "Out of power", and that shadow's run ends. Tapping it opens a popover with battery, fuel, draw, output and the resulting strength.
+**Power chip.** The standard chip (see Component Library) in the top left of the canvas, only when the creation has powered parts: the bolt and one fact, the chip's kind for colour. In Build it reads "Uses 1.6 · makes 1.0 · 62%"; while training "Battery 62%". **Limited** is `warn` with "50% strength"; **Empty** is `danger` with "Out of power", and that shadow's run ends. Tapping it opens a popover with battery, fuel, draw, output and the resulting strength.
 
 **Not designed yet:** charging and refuelling between runs, and how several generators share one fuel tank.

@@ -9,6 +9,7 @@
 .slot-fill{position:absolute;left:0;right:0;top:0;bottom:0}
 .slot-foot{position:absolute;left:var(--space-4);right:var(--space-4);bottom:var(--space-1)}
 .slot-brain{position:absolute;left:50%;margin-left:calc(var(--w-brain) / -2);top:0;bottom:0;width:var(--w-brain)}
+.slot-form{position:absolute;left:0;right:0;top:var(--space-3);margin:0 auto;width:min(var(--w-form), calc(100% - var(--space-3) * 2))}
 .slot-corner{position:absolute;right:var(--space-2);top:var(--space-1)}
 .pg{position:absolute;top:var(--space-2)}
 .pg.col-a{left:var(--space-3);width:calc(50% - var(--space-4))}
@@ -40,4 +41,3 @@
 .chip.warn{border-color:var(--halo);color:var(--halo)}
 .chip.danger{border-color:var(--danger);color:var(--danger)}
 .chip.ok{border-color:var(--accent);color:var(--accent)}
-.chip.lg{height:var(--control)}

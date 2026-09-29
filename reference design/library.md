@@ -98,11 +98,10 @@ inside c_rows: the list owns the gap between rows, this one carries none of its 
 
 Overflow menu list of (icon, label, state) items.
 
-## `c_chip(text, icn=None, kind='neutral', lg=False)`
+## `c_chip(text, icn=None, kind='neutral')`
 
-Small fact chip. kind: neutral (default, no class needed beyond chip), warn (halo), danger, ok (accent) —
-border and text/icon always share the one colour, set by the class, never inline. lg is the one size step up
-(control, 40, instead of control-xs, 24) for a chip sitting beside control-height buttons and fields, e.g. in a top bar.
+Small fact chip, control-xs high, icon-sm. kind: neutral (default, no class needed beyond chip), warn (halo), danger,
+ok (accent) — border and text/icon always share the one colour, set by the class, never inline. One size only.
 
 ## `c_call(x, y, text, col=None, icn=None, kind='warn')`
 
@@ -157,7 +156,7 @@ A part's settings panel: c_panel_head (glyph, title, close) then c_rows (its row
 
 ## `c_info_row(icn, title, sub)`
 
-Icon, title and one line of help.
+A handle explained: the handle itself (c_round_button, exactly as it sits on the canvas), a title and a note.
 
 ## `c_card_actions(buttons)`
 

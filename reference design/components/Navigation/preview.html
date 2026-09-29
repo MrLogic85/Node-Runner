@@ -18,6 +18,7 @@
 .slot-fill{position:absolute;left:0;right:0;top:0;bottom:0}
 .slot-foot{position:absolute;left:var(--space-4);right:var(--space-4);bottom:var(--space-1)}
 .slot-brain{position:absolute;left:50%;margin-left:calc(var(--w-brain) / -2);top:0;bottom:0;width:var(--w-brain)}
+.slot-form{position:absolute;left:0;right:0;top:var(--space-3);margin:0 auto;width:min(var(--w-form), calc(100% - var(--space-3) * 2))}
 .slot-corner{position:absolute;right:var(--space-2);top:var(--space-1)}
 .pg{position:absolute;top:var(--space-2)}
 .pg.col-a{left:var(--space-3);width:calc(50% - var(--space-4))}
@@ -49,7 +50,6 @@
 .chip.warn{border-color:var(--halo);color:var(--halo)}
 .chip.danger{border-color:var(--danger);color:var(--danger)}
 .chip.ok{border-color:var(--accent);color:var(--accent)}
-.chip.lg{height:var(--control)}
 </style></head><body><!-- @dsCard page="true" group="Foundations" height=492 width=940 subtitle="How the screens connect" -->
 <style>html,body{margin:0;background:transparent}</style>
 <div data-theme="dark" style="--t-title:700 28px/32px var(--font-display);--t-heading:600 16px/20px var(--font-display);--t-subheading:600 14px/18px var(--font-display);--t-stage:600 11px/14px var(--font-display);--t-body:400 13px/18px var(--font-body);--t-body-strong:600 13px/18px var(--font-body);--t-small:400 12px/16px var(--font-body);--t-small-strong:600 12px/16px var(--font-body);--t-label:600 12px/16px var(--font-body);--t-note:400 11px/14px var(--font-body);--t-note-strong:600 11px/14px var(--font-body);--t-caption:500 10px/13px var(--font-body);--t-overline:600 10px/13px var(--font-body);--t-readout-lg:600 22px/24px var(--font-mono);--t-readout:500 13px/16px var(--font-mono);--t-readout-md:500 12px/16px var(--font-mono);--t-readout-sm:500 10px/13px var(--font-mono);background:var(--bg);color:var(--ink);min-height:100vh" class="t-body">
@@ -127,6 +127,7 @@
 .slot-fill{position:absolute;left:0;right:0;top:0;bottom:0}
 .slot-foot{position:absolute;left:var(--space-4);right:var(--space-4);bottom:var(--space-1)}
 .slot-brain{position:absolute;left:50%;margin-left:calc(var(--w-brain) / -2);top:0;bottom:0;width:var(--w-brain)}
+.slot-form{position:absolute;left:0;right:0;top:var(--space-3);margin:0 auto;width:min(var(--w-form), calc(100% - var(--space-3) * 2))}
 .slot-corner{position:absolute;right:var(--space-2);top:var(--space-1)}
 .pg{position:absolute;top:var(--space-2)}
 .pg.col-a{left:var(--space-3);width:calc(50% - var(--space-4))}
@@ -160,6 +161,5 @@
 .chip.warn{border-color:var(--halo);color:var(--halo)}
 .chip.danger{border-color:var(--danger);color:var(--danger)}
 .chip.ok{border-color:var(--accent);color:var(--accent)}
-.chip.lg{height:var(--control)}
 </style>
 </body></html>
