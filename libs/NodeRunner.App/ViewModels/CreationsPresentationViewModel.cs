@@ -26,8 +26,6 @@ public sealed class CreationsPresentationViewModel : INotifyPropertyChanged
 
     public string EmptyText => "No saved Creations yet.";
 
-    public string SavedCueText => "Saved";
-
     public bool HasAchievementCue { get; private set; }
 
     /// <summary>Marks the Achievements button while something is new; empty hides the badge.</summary>
