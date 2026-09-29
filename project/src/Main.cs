@@ -150,7 +150,45 @@ public partial class Main : Node2D, IRoutedScene
         AddHud();
         AddInspector();
         AddEvolver();
+        AddBackHandler();
         OpenRoute();
+    }
+
+    // Android Back and Escape: an open dialog, sheet or menu closes first; then Build goes one
+    // step back and Simulate goes to Build.
+    private void AddBackHandler()
+    {
+        if (_navigator is null)
+        {
+            return;
+        }
+
+        var back = new UiBackHandler { CanTakeBack = () => _deleteCreationDialog?.IsOpen != true };
+        back.BackRequested += OnBackRequested;
+        AddChild(back, @internal: InternalMode.Front);
+    }
+
+    private void OnBackRequested()
+    {
+        if (_rebuildConfirmationDialog?.Visible == true)
+        {
+            _rebuildConfirmationDialog.Hide();
+        }
+        else if (_brainFocusLayer?.Visible == true)
+        {
+            HideBrainFocus();
+        }
+        else if (Construction.IsActive)
+        {
+            if (_buildScreen?.CloseOverlay() != true)
+            {
+                BackFromBuildScreen();
+            }
+        }
+        else if (_simulateScreen?.CloseOverlay() != true)
+        {
+            ToggleConstructionMode();
+        }
     }
 
     // Opened by the router, Main shows the route's creation in Build. Run on its own (F6) it keeps
@@ -1067,6 +1105,13 @@ public partial class Main : Node2D, IRoutedScene
 
             Construction.IsActive = false;
             UpdateToolButtonVisibility();
+            return;
+        }
+
+        // Back from an unsaved draft (New or Rebuild) is one step back and drops the draft (#474).
+        if (_navigator is not null)
+        {
+            _navigator.Back();
             return;
         }
 
