@@ -1,8 +1,9 @@
+using System.Text.RegularExpressions;
 using NodeRunner.Ui.Lib;
 
 namespace NodeRunner.Ui.Tests;
 
-public sealed class UiComponentContractsTests
+public sealed partial class UiComponentContractsTests
 {
     [Fact]
     public void SegmentedChoices_KeepTextAndIconInOneResource()
@@ -99,13 +100,29 @@ public sealed class UiComponentContractsTests
     [Fact]
     public void ComponentLibraryComponents_MapToReferenceDesignEntryNames()
     {
-        var referenceNames = UiComponentContracts.AllCanonicalComponents
-            .Select(ReferenceEntryName)
+        var mapped = UiComponentContracts.AllCanonicalComponents
+            .Select(UiComponentContracts.ReferenceEntryFor)
             .ToArray();
+        var unmapped = UiComponentContracts.ReferenceEntriesWithoutComponent;
 
-        referenceNames.Distinct().Count().ShouldBe(UiComponentContracts.AllCanonicalComponents.Count);
-        referenceNames.ShouldAllBe(name => name.StartsWith("c_", StringComparison.Ordinal));
+        mapped.ShouldBeUnique();
+        mapped.Intersect(unmapped).ShouldBeEmpty();
+        mapped.Concat(unmapped).Order(StringComparer.Ordinal).ShouldBe(
+            ReferenceEntries().Order(StringComparer.Ordinal),
+            "Every c_* entry under reference design/ is mapped to a component or listed as having none, and nothing else.");
     }
+
+    private static HashSet<string> ReferenceEntries()
+    {
+        var reference = Path.Combine(SceneNodes.FindRepositoryRoot(), "reference design");
+        return Directory.EnumerateFiles(reference, "*.md", SearchOption.AllDirectories)
+            .SelectMany(path => ReferenceEntry().Matches(File.ReadAllText(path)))
+            .Select(match => match.Groups["name"].Value)
+            .ToHashSet(StringComparer.Ordinal);
+    }
+
+    [GeneratedRegex(@"\b(?<name>c_[a-z_]+)\(")]
+    private static partial Regex ReferenceEntry();
 
     [Fact]
     public void SliderAndRange_ShareImplementation()
@@ -478,38 +495,4 @@ public sealed class UiComponentContractsTests
             UiComponentContracts.NormalizeTabIndex(once, 3).ShouldBe(once);
         }
     }
-
-    private static string ReferenceEntryName(UiComponentContracts.CanonicalComponent component) =>
-        component switch
-        {
-            UiComponentContracts.CanonicalComponent.Button => "c_btn",
-            UiComponentContracts.CanonicalComponent.IconButton => "c_ib",
-            UiComponentContracts.CanonicalComponent.HoldButton => "c_hold",
-            UiComponentContracts.CanonicalComponent.Slider => "c_slider",
-            UiComponentContracts.CanonicalComponent.Range => "c_range",
-            UiComponentContracts.CanonicalComponent.Toggle => "c_toggle",
-            UiComponentContracts.CanonicalComponent.Checkbox => "c_check",
-            UiComponentContracts.CanonicalComponent.Segmented => "c_seg",
-            UiComponentContracts.CanonicalComponent.Picker => "c_pick",
-            UiComponentContracts.CanonicalComponent.Menu => "c_menu",
-            UiComponentContracts.CanonicalComponent.Chip => "c_chip",
-            UiComponentContracts.CanonicalComponent.Callout => "c_call",
-            UiComponentContracts.CanonicalComponent.ProgressBar => "c_prog",
-            UiComponentContracts.CanonicalComponent.TextField => "c_textfield",
-            UiComponentContracts.CanonicalComponent.NameField => "c_name",
-            UiComponentContracts.CanonicalComponent.Note => "c_note",
-            UiComponentContracts.CanonicalComponent.ValueRow => "c_value",
-            UiComponentContracts.CanonicalComponent.PowerRow => "c_power",
-            UiComponentContracts.CanonicalComponent.MeterRow => "c_meter",
-            UiComponentContracts.CanonicalComponent.PartRow => "c_row",
-            UiComponentContracts.CanonicalComponent.IconTabs => "c_tabs",
-            UiComponentContracts.CanonicalComponent.SelectionHandle => "c_handle",
-            UiComponentContracts.CanonicalComponent.InfoRow => "c_info_row",
-            UiComponentContracts.CanonicalComponent.Card => "c_card",
-            UiComponentContracts.CanonicalComponent.ProgressRing => "c_ring",
-            UiComponentContracts.CanonicalComponent.Number => "c_num",
-            UiComponentContracts.CanonicalComponent.StageCard => "c_stage",
-            UiComponentContracts.CanonicalComponent.CardActions => "c_card_actions",
-            _ => throw new ArgumentOutOfRangeException(nameof(component), component, null),
-        };
 }

@@ -125,9 +125,21 @@ token import does not recreate the dead mappings.
 
 ### Reference component mapping
 
-Some `c_*` entries are not components of their own in Godot
+`UiComponentContracts.ReferenceEntryFor` maps each library component to its
+`c_*` entry, and `ReferenceEntriesWithoutComponent` lists the entries built
+another way; a test keeps both in step with `reference design/`
+([#315](https://github.com/MrLogic85/Node-Runner/issues/315)). Some `c_*`
+entries are not components of their own in Godot
 ([issue #306](https://github.com/MrLogic85/Node-Runner/issues/306)):
 
+- **`c_round_button`** is `UiSelectionHandle`: the round icon badge that the
+  canvas handles are, and that `c_info_row` shows (`UiInfoRow` still draws its
+  own ring until [#422](https://github.com/MrLogic85/Node-Runner/issues/422)).
+- **`c_rows`** has no component of its own. It is the body of a part's
+  settings panel: a plain container whose separation is the panel's
+  `space-1` gap, holding rows that carry no outer padding of their own, and an
+  optional full-width danger Delete at the end with `space-2` above it
+  ([#343](https://github.com/MrLogic85/Node-Runner/issues/343)).
 - **`c_prog` and `c_meter`** are `UiSlider` with `ValueKind` Progress (no
   thumb). `c_meter` is the same slider with a label and value, as the reference
   says.

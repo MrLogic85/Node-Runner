@@ -113,6 +113,48 @@ public static class UiComponentContracts
             _ => throw new ArgumentOutOfRangeException(nameof(component), component, null),
         };
 
+    /// <summary>The <c>c_*</c> entry in <c>reference design/library.md</c> that a component implements.</summary>
+    public static string ReferenceEntryFor(CanonicalComponent component) =>
+        component switch
+        {
+            CanonicalComponent.Button => "c_btn",
+            CanonicalComponent.IconButton => "c_ib",
+            CanonicalComponent.HoldButton => "c_hold",
+            CanonicalComponent.Slider => "c_slider",
+            CanonicalComponent.Range => "c_range",
+            CanonicalComponent.Toggle => "c_toggle",
+            CanonicalComponent.Checkbox => "c_check",
+            CanonicalComponent.Segmented => "c_seg",
+            CanonicalComponent.Picker => "c_pick",
+            CanonicalComponent.Menu => "c_menu",
+            CanonicalComponent.Chip => "c_chip",
+            CanonicalComponent.Callout => "c_call",
+            CanonicalComponent.ProgressBar => "c_prog",
+            CanonicalComponent.TextField => "c_textfield",
+            CanonicalComponent.NameField => "c_name",
+            CanonicalComponent.Note => "c_note",
+            CanonicalComponent.ValueRow => "c_value",
+            CanonicalComponent.PowerRow => "c_power",
+            CanonicalComponent.MeterRow => "c_meter",
+            CanonicalComponent.PartRow => "c_row",
+            CanonicalComponent.IconTabs => "c_tabs",
+            CanonicalComponent.SelectionHandle => "c_round_button",
+            CanonicalComponent.InfoRow => "c_info_row",
+            CanonicalComponent.Card => "c_card",
+            CanonicalComponent.ProgressRing => "c_ring",
+            CanonicalComponent.Number => "c_num",
+            CanonicalComponent.StageCard => "c_stage",
+            CanonicalComponent.CardActions => "c_card_actions",
+            _ => throw new ArgumentOutOfRangeException(nameof(component), component, null),
+        };
+
+    /// <summary>
+    /// Reference entries with no component of their own; <c>docs/UI_DIRECTION.md</c>
+    /// ("Reference component mapping") says what builds each one instead.
+    /// </summary>
+    public static IReadOnlyList<string> ReferenceEntriesWithoutComponent { get; } =
+        ["c_panel_head", "c_inspector", "c_rows"];
+
     public static bool SharesImplementation(CanonicalComponent component, CanonicalComponent other) =>
         ControlTypeFor(component) == ControlTypeFor(other);
 
