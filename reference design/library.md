@@ -94,9 +94,13 @@ can't be opened right now, and a line nearby should say why. The two never combi
 selected shows a check, note is a short word ("swaps") for a choice that needs explaining instead of being refused. pad=False for a row
 inside c_rows: the list owns the gap between rows, this one carries none of its own.
 
-## `c_menu(items, w=210)`
+## `c_menu(items, w=210, compact=False)`
 
-Overflow menu list of (icon, label, state) items.
+The menu: rows in the menu frame. items: (icon, text, kind[, accessory[, tail]]) -- icon is a UI icon name or None,
+kind '' / 'hi' (the current or chosen row, an accent-soft wash) / 'danger', accessory any small HTML the caller draws
+first (a swatch), tail anything at the row's end (a check, a short note). Two sizes: standard, touch-high rows with
+body-strong text, an icon-lg icon and a hairline between rows (the overflow menu); compact, control-sm rows with
+small-strong text and an icon at icon, no hairlines (the list a picker opens). w: a width, or None to fill the parent.
 
 ## `c_chip(text, icn=None, kind='neutral')`
 

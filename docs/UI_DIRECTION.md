@@ -353,9 +353,9 @@ Other icon sizes follow the reference's rules
   or `icon` (16) when it is a part glyph. `GlyphSizedIcon` gives a UI icon the
   same 16px when its chip sits beside glyph chips, such as a map reward among
   part rewards.
-- **List rows.** A list row's leading icon is `icon-lg` (20): the Standard
-  menu row and the part row. The picker's option list is a compact menu row
-  and keeps the 16px accessory the reference draws there.
+- **List rows.** A list row's leading icon follows the row height:
+  `icon-lg` (20) in a `touch` row (a Standard menu row, a part row) and
+  `icon` (16) in a `control-sm` row (a Compact menu row, the picker's list).
 - **Icons inside a ring.** An icon inside a ring is `icon` (16). The selection
   handle and the info row that shows it both draw the same round button
   (`UiSelectionHandle.DrawRoundButton`).

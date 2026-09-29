@@ -4,6 +4,8 @@ Powered parts need power. The design says so where it matters: a chip on the can
 
 **How long it lasts.** The right-hand summary says "Battery lasts 20 s" and "Fuel lasts 90 s", and says both are **at full draw**: the real time is longer when parts use less or sit idle, because they only draw what they actually use.
 
+**On the blocks.** While a creation runs, the blocks show the same thing where they are: the battery's cells go out one by one, the tank's level line sinks, and the generator's stripes pulse while it makes power (see Parts).
+
 **Power budget.** Opened from the overflow menu of Build and BuildLocked, or by tapping the chip. The left column lists what makes power and what each part can use at most. The right card is one number, the **strength every powered part gets**, with a bar and a plain sentence. Enough is `accent` with a check; too little is `halo` with a warn icon.
 
 **Power chip.** The standard chip (see Component Library) in the top left of the canvas, only when the creation has powered parts: the bolt and one fact, the chip's kind for colour. In Build it reads "Uses 1.6 · makes 1.0 · 62%"; while training "Battery 62%". **Limited** is `warn` with "50% strength"; **Empty** is `danger` with "Out of power", and that shadow's run ends. Tapping it opens a popover with battery, fuel, draw, output and the resulting strength.
