@@ -29,6 +29,9 @@ internal static partial class SceneNodes
 
         public bool IsRoot => Attribute("parent") is null;
 
+        /// <summary>The saved parent path relative to the scene root; null on the root.</summary>
+        public string? Parent => Attribute("parent");
+
         public bool IsUnique => Node.Body.Contains("\nunique_name_in_owner = true", StringComparison.Ordinal);
 
         private string? Attribute(string name)
@@ -59,13 +62,14 @@ internal static partial class SceneNodes
     private static IEnumerable<(Node Node, string? Script)> Read() =>
         Files().SelectMany(file => Parse(file.Scene, file.Text)).Select(node => (node.Node, node.Script));
 
-    private static IEnumerable<SceneNode> Parse(string scene, string text)
+    internal static IEnumerable<SceneNode> Parse(string scene, string text)
     {
         var resourcePaths = ExtResource().Matches(text)
             .ToDictionary(match => match.Groups["id"].Value, match => match.Groups["path"].Value);
         foreach (var block in NodeBlock().Split(text).Where(block => block.StartsWith("[node ", StringComparison.Ordinal)))
         {
-            var header = block[..block.IndexOf('\n')];
+            var end = block.IndexOf('\n');
+            var header = end < 0 ? block : block[..end];
             yield return new SceneNode(
                 new Node(scene, header, block),
                 Resource(ScriptRef().Match(block)),

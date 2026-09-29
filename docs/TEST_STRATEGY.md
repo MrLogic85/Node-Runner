@@ -153,7 +153,13 @@ view-model action is verified on device until Godot-side tests exist.
 `PackedScene.Pack` drops nodes added inside an instance unless the scene marks
 that instance `[editable]`. Such a scene still loads on desktop, so the bug
 only shows on device. `SceneEditableChildrenTests` requires the marker
-([#333](https://github.com/MrLogic85/Node-Runner/issues/333)).
+([#333](https://github.com/MrLogic85/Node-Runner/issues/333)). A node added
+inside an instance also disappears when the instanced scene is restructured
+and its saved parent path no longer exists; Godot only warns when the scene
+is instantiated. `SceneParentPathTests` resolves every saved parent path, and
+the path of every override block, through the nodes the scene creates and,
+recursively, its instanced scenes
+([#407](https://github.com/MrLogic85/Node-Runner/issues/407)).
 
 Do not write tests that lock a scene's arrangement: which components it uses,
 their order and its layout sizes are free to change in the editor. Do not
