@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://nrsimulatescreen001"]
 
-[ext_resource type="Script" uid="uid://c27csd261geyh" path="res://src/ui/screens/SimulateScreen.cs" id="1_screen"]
+[ext_resource type="Script" uid="uid://c27csd261geyh" path="res://src/ui/screens/TrainingScreen.cs" id="1_screen"]
 [ext_resource type="PackedScene" uid="uid://dokr6l5stu6ll" path="res://scenes/ui/UiFrame.tscn" id="2_frame"]
 [ext_resource type="PackedScene" uid="uid://gydkh1xys4yo" path="res://scenes/ui/UiToolbar.tscn" id="3_toolbar"]
 [ext_resource type="Script" uid="uid://dk67qmt3brp4e" path="res://src/ui/lib/UiLabel.cs" id="4_label"]
@@ -11,7 +11,7 @@
 [ext_resource type="Script" uid="uid://b4t4jrismbuik" path="res://src/ui/lib/UiIcon.cs" id="9_icon"]
 [ext_resource type="Script" uid="uid://p7wvirfjxxyo" path="res://src/ui/widgets/BrainFocusSheet.cs" id="10_brain_focus"]
 
-[node name="SimulateScreen" type="Control"]
+[node name="TrainingScreen" type="Control"]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0

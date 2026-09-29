@@ -2,7 +2,7 @@ using System.ComponentModel;
 
 namespace NodeRunner.App.ViewModels;
 
-/// <summary>Presentation-only training state consumed by the Simulate surface.</summary>
+/// <summary>Presentation-only training state consumed by the Training screen.</summary>
 public sealed class TrainingPresentationViewModel : INotifyPropertyChanged, IDisposable
 {
     private readonly ITrainingProgressSource? _source;

@@ -58,7 +58,7 @@ sessions explicit rather than treating navigation or Start as completion.
   - `Elevation` — the largest gap between the creature's lowest collision
     point and the ground top; a crawler scores 0.
 - `Evolver.BestRun` is the `TrialResult` of the best genome so far.
-  `SimulateHost` persists it as `TrainingStateDef.BestRun` (`TrainingRunDef`, with
+  `TrainingHost` persists it as `TrainingStateDef.BestRun` (`TrainingRunDef`, with
   `MapId` `flat` until more maps exist) so the Creations card can show it.
 - `TrialController` (`project/src/sim/TrialController.cs`) is a `Node` that
   times a fixed-duration trial (`TrialDurationTicks`, default 600 ≈ 10s at
@@ -111,8 +111,8 @@ sessions explicit rather than treating navigation or Start as completion.
   next generation automatically. `Evolver` tracks `Generation`,
   `BestFitness` (running best across all generations), and `MeanFitness`
   (current generation's average), and raises
-  `GenerationCompleted`/`NewBestFound`, which the Simulate scene (see
-  "The Simulate scene" below) subscribes to.
+  `GenerationCompleted`/`NewBestFound`, which the Training scene (see
+  "The Training scene" below) subscribes to.
   - Concurrency is capped at 16 and never exceeds population size. Layer 1 is
     reserved for ground; zero-based slot `i` uses layer `2+i` and collides
     only with ground and its own slot. Core sensor rays remain ground-only.
@@ -120,9 +120,9 @@ sessions explicit rather than treating navigation or Start as completion.
     slot count, build, and platform. Sequential and parallel fitness parity
     is not promised because physics ordering can differ.
   - `Evolver.Start` retains a one-slot compatibility mode when no creature
-    factory is supplied. Production `SimulateHost` supplies the factory and
+    factory is supplied. Production `TrainingHost` supplies the factory and
     uses parallel evaluation.
-- `SimulateHost` creates one `Evolver` with the fixed Standard training
+- `TrainingHost` creates one `Evolver` with the fixed Standard training
   profile (population, trial duration, generation budget, tournament size,
   mutation rate/strength and crossover strategy). The Quick/Deep choice and
   its settings sheet were removed with the Training shell (#386); training
@@ -130,26 +130,26 @@ sessions explicit rather than treating navigation or Start as completion.
   genes; Blend crossover samples continuous values between the two parent
   genes, giving a later experiment for the competing-conventions plateau
   without changing the underlying network.
-  `StartEvolution()` (`SimulateHost`) runs once when the scene opens. It
+  `StartEvolution()` (`TrainingHost`) runs once when the scene opens. It
   calls `Evolver.Start(...)` unless the creature has no brain (an anatomy
   without motors), in which case evolution stays idle. `Evolver.Stop()`
   halts the in-progress trial without raising any events.
-- Generation/fitness are logged (`GD.Print`) and shown on the Simulate
-  screen (see "The Simulate scene" below).
+- Generation/fitness are logged (`GD.Print`) and shown on the Training
+  screen (see "The Training scene" below).
 
 The first progression milestone uses the running best fitness as its metric:
 reaching 50 distance units unlocks a second core slot globally. The unlock is
 recorded with the generation that crossed the threshold and remains available
 in Build after restarting the app.
 
-## The Simulate scene (issues #51, #469, #386)
+## The Training scene (issues #51, #469, #386)
 
 This section documents the current wiring. The target presentation is owned
 by the TrainSetup and Training component READMEs under `reference design/components/`.
 
-- Simulate is its own routed scene, `SimulateRoute(creationId)`, with
-  `SimulateHost` (`project/src/hosts/`) as its root. `SimulateHost.tscn` instances the
-  Training screen (`SimulateScreen.tscn`) and authors the world inside the
+- Training is its own routed scene, `TrainingRoute(creationId)`, with
+  `TrainingHost` (`project/src/hosts/`) as its root. `TrainingHost.tscn` instances the
+  Training screen (`TrainingScreen.tscn`) and authors the world inside the
   screen's arena viewport: the backdrop, the ground and its collision shape,
   the spawn marker and the camera. The host adds the creature and the
   `Evolver` from the creation's save to that world, so leaving the scene
@@ -188,7 +188,7 @@ by the TrainSetup and Training component READMEs under `reference design/compone
   - **Speed** cycles a fixed 1x/2x/4x set via `Engine.TimeScale`.
     This scales every physics/process step uniformly and does not affect
     determinism, only how quickly a fixed tick budget plays out. Speed and
-    pause are reset in `SimulateHost._Ready()`/`_ExitTree()` since both are
+    pause are reset in `TrainingHost._Ready()`/`_ExitTree()` since both are
     global engine settings, not scoped to this scene.
   - **Brain** (the button or the Brain stage) opens the BrainFocus sheet;
     Android Back closes it before leaving the scene. **Stats** shows a

@@ -5,7 +5,7 @@ namespace NodeRunner.Ui.Widgets;
 
 /// <summary>
 /// Displays one cell per candidate in the active generation. This is the
-/// first visual Simulate slice; the surrounding Simulate shell and live trial
+/// first visual Training slice; the surrounding Training shell and live trial
 /// treatment remain future work.
 /// </summary>
 public partial class GenerationStrip : Control

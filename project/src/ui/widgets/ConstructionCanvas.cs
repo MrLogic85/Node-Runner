@@ -625,7 +625,7 @@ public partial class ConstructionCanvas : Node2D
         // Regular ToLocal()/GetGlobalTransform() do not include the
         // viewport's stretch transform (see [display] in project.godot), so
         // raw screen-pixel input positions need GetGlobalTransformWithCanvas
-        // to land on the right spot. Mirrors SimulateHost._UnhandledInput's
+        // to land on the right spot. Mirrors TrainingHost._UnhandledInput's
         // creature-selection math.
         return GetGlobalTransformWithCanvas().AffineInverse() * screenPosition;
     }

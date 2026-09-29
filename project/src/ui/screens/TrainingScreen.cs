@@ -8,10 +8,10 @@ namespace NodeRunner.Ui.Screens;
 
 /// <summary>
 /// The Training screen (<c>reference design/components/Training</c>), also used to simulate a saved
-/// brain. The layout is authored in <c>scenes/screens/SimulateScreen.tscn</c>; its host authors the
+/// brain. The layout is authored in <c>scenes/screens/TrainingScreen.tscn</c>; its host authors the
 /// world inside <c>%ArenaView</c>, feeds the view-models and owns the run.
 /// </summary>
-public partial class SimulateScreen : Control
+public partial class TrainingScreen : Control
 {
     private TrainingHeaderPresentation? _header;
     private TrainingPresentationViewModel? _training;

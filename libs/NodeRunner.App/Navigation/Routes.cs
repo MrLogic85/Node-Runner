@@ -30,4 +30,4 @@ public sealed record BuildRoute(Guid? CreationId = null) : SceneRoute;
 /// Training for one saved creation. It resumes from the creation's last finished generation; leaving
 /// drops only the generation in progress.
 /// </summary>
-public sealed record SimulateRoute(Guid CreationId) : SceneRoute;
+public sealed record TrainingRoute(Guid CreationId) : SceneRoute;

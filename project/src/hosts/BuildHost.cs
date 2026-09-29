@@ -11,7 +11,7 @@ namespace NodeRunner.Hosts;
 
 /// <summary>
 /// The Build scene for one creation, or a new draft. Training lives in its own scene,
-/// <see cref="SimulateHost"/> (#469).
+/// <see cref="TrainingHost"/> (#469).
 /// </summary>
 public partial class BuildHost : Node, IRoutedScene
 {
@@ -152,7 +152,7 @@ public partial class BuildHost : Node, IRoutedScene
         }
 
         Notify("Train setup", "Train setup opens in milestone 0.12.0.");
-        _navigator?.Navigate(new SceneNavigation(new SimulateRoute(id)));
+        _navigator?.Navigate(new SceneNavigation(new TrainingRoute(id)));
     }
 
     private void BackFromBuildScreen()
@@ -212,7 +212,7 @@ public partial class BuildHost : Node, IRoutedScene
         }
 
         _navigator.ReplaceCurrent(new BuildRoute(creation.Id));
-        _navigator.Navigate(new SceneNavigation(new SimulateRoute(creation.Id)));
+        _navigator.Navigate(new SceneNavigation(new TrainingRoute(creation.Id)));
     }
 
     private bool TryCompleteCreation(out CreationDef? creation)
