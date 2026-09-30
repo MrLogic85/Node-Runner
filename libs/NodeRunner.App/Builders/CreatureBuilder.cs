@@ -1,12 +1,13 @@
+using NodeRunner.App.Lifecycle;
 using NodeRunner.Domain;
 
 namespace NodeRunner.App.Builders;
 
 /// <summary>
 /// Mutable, in-progress creature anatomy driven by construction-mode UI
-/// (0.3.0). Add/move/remove nodes, beams, and cores here; call
-/// <see cref="TryBuild"/> to attempt converting the current state into an
-/// immutable <see cref="CreatureDef"/> once the user is done editing. See
+/// (0.3.0). Add/move/remove nodes, beams, and cores here; <see cref="Build"/>
+/// returns the drawing as an immutable <see cref="CreatureDef"/> for saving, and
+/// <see cref="TryBuild"/> returns it only once it can be simulated. See
 /// docs/CREATURE_MODEL.md for the vocabulary and docs/ROADMAP.md 0.3.0 for
 /// the feature this supports.
 ///
@@ -122,48 +123,16 @@ public sealed class CreatureBuilder
         _cores.RemoveAt(coreIndex);
     }
 
-    /// <summary>
-    /// Attempts to convert the current builder state into an immutable
-    /// <see cref="CreatureDef"/>. Returns false with understandable,
-    /// beginner-facing error messages (not raw exception text) instead of
-    /// throwing when the current anatomy is not yet valid to simulate.
-    /// </summary>
+    /// <summary>The current drawing, finished or not: what a saved Creation stores.</summary>
+    public CreatureDef Build() => new(_nodes, _beams, _cores);
+
+    /// <summary>The current drawing if it can be simulated, else the player-facing problems that stop it.</summary>
     public bool TryBuild(out CreatureDef? creature, out IReadOnlyList<string> errors)
     {
-        var problems = new List<string>();
-
-        if (_nodes.Count == 0)
-        {
-            problems.Add("Add at least one node before running the creature.");
-        }
-
-        for (var i = 0; i < _nodes.Count; i++)
-        {
-            var beamCount = _beams.Count(beam => beam.NodeA == i || beam.NodeB == i);
-            if (beamCount == 0)
-            {
-                problems.Add($"Node {i} has no beams attached. Connect it with a beam or remove it.");
-            }
-        }
-
-        foreach (var beam in _beams)
-        {
-            if (_nodes[beam.NodeA].Position == _nodes[beam.NodeB].Position)
-            {
-                problems.Add($"The beam between node {beam.NodeA} and node {beam.NodeB} has zero length. Move one of the nodes apart.");
-            }
-        }
-
-        if (problems.Count > 0)
-        {
-            creature = null;
-            errors = problems;
-            return false;
-        }
-
-        creature = new CreatureDef(_nodes, _beams, _cores);
-        errors = [];
-        return true;
+        var built = Build();
+        errors = CreatureReadiness.Problems(built);
+        creature = errors.Count == 0 ? built : null;
+        return creature is not null;
     }
 
     private static bool IsSamePair(BeamDef beam, int nodeA, int nodeB)

@@ -2,6 +2,12 @@ using System.Collections.ObjectModel;
 
 namespace NodeRunner.Domain;
 
+/// <summary>
+/// A drawn creature: nodes, the beams between them and the cores on them. Any drawing is a valid
+/// <see cref="CreatureDef"/>, so an unfinished one can be saved; only its part indices must point
+/// at existing nodes. Whether it can be simulated and trained is checked before training
+/// (<c>CreatureReadiness</c> in <c>NodeRunner.App</c>).
+/// </summary>
 public sealed record CreatureDef
 {
     private readonly ReadOnlyCollection<NodeDef> _nodes;
@@ -14,44 +20,15 @@ public sealed record CreatureDef
         ArgumentNullException.ThrowIfNull(beams);
         ArgumentNullException.ThrowIfNull(cores);
 
-        if (nodes.Count == 0)
-        {
-            throw new ArgumentException("A creature needs at least one node.", nameof(nodes));
-        }
-
         foreach (var beam in beams)
         {
             ValidateNodeIndex(beam.NodeA, nodes.Count);
             ValidateNodeIndex(beam.NodeB, nodes.Count);
-
-            if (nodes[beam.NodeA].Position == nodes[beam.NodeB].Position)
-            {
-                throw new ArgumentException(
-                    $"Beam between node {beam.NodeA} and node {beam.NodeB} has zero length: both nodes share the same position.",
-                    nameof(beams));
-            }
         }
 
         foreach (var core in cores)
         {
             ValidateNodeIndex(core.NodeIndex, nodes.Count);
-        }
-
-        var beamCountPerNode = new int[nodes.Count];
-        foreach (var beam in beams)
-        {
-            beamCountPerNode[beam.NodeA]++;
-            beamCountPerNode[beam.NodeB]++;
-        }
-
-        for (var i = 0; i < beamCountPerNode.Length; i++)
-        {
-            if (beamCountPerNode[i] == 0)
-            {
-                throw new ArgumentException(
-                    $"Node {i} has no beams attached. A node with no beams is just a loose point and cannot be simulated.",
-                    nameof(beams));
-            }
         }
 
         _nodes = Array.AsReadOnly(nodes.ToArray());

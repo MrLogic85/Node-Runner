@@ -47,12 +47,14 @@ public sealed class ConstructionPresentationViewModelTests
     public void EditMode_LocksTopologyToolsAndShowsRebuildAction()
     {
         var construction = new ConstructionViewModel();
-        construction.Load(
+        construction.LoadCreation(new CreationDef(
+            Guid.NewGuid(),
+            "Worm",
             new CreatureDef(
                 [new NodeDef(new Vector2D(0, 0), 18), new NodeDef(new Vector2D(20, 0), 18)],
                 [new BeamDef(0, 1)],
                 []),
-            moveOnly: true);
+            new TrainingStateDef([2, 1], [0.1, -0.2, 0.3], 3, "Tanh")));
         var presentation = new ConstructionPresentationViewModel(construction);
 
         presentation.PlaceToolText.ShouldBe("Move");
@@ -64,6 +66,7 @@ public sealed class ConstructionPresentationViewModelTests
         presentation.InspectorRole.ShouldBe("Tool: Move");
         presentation.InspectorValues.ShouldBe("Drag an existing node to reposition it. Training is kept.");
         presentation.IsSaved.ShouldBeTrue();
+        presentation.IsLocked.ShouldBeTrue();
         presentation.ShowRebuildAction.ShouldBeTrue();
         presentation.RebuildActionText.ShouldBe("Rebuild body");
         presentation.RebuildConfirmationTitle.ShouldBe("Rebuild body?");
@@ -100,6 +103,7 @@ public sealed class ConstructionPresentationViewModelTests
         presentation.LockTopologyTools.ShouldBeFalse();
         presentation.DeleteToolText.ShouldBe("Delete");
         presentation.IsSaved.ShouldBeFalse();
+        presentation.IsLocked.ShouldBeFalse();
         presentation.ShowRebuildAction.ShouldBeFalse();
     }
 

@@ -160,6 +160,21 @@ public sealed class CreatureBuilderTests
     }
 
     [Fact]
+    public void Build_WithUnfinishedDrawing_ReturnsItAsItStands()
+    {
+        var builder = new CreatureBuilder();
+        builder.AddNode(new Vector2D(0, 0), 1);
+        builder.AddNode(new Vector2D(2, 0), 1);
+        builder.AddCore(0);
+
+        var creature = builder.Build();
+
+        creature.Nodes.Count.ShouldBe(2);
+        creature.Beams.ShouldBeEmpty();
+        creature.Cores.Count.ShouldBe(1);
+    }
+
+    [Fact]
     public void TryBuild_WithNoNodes_ReturnsUnderstandableError()
     {
         var builder = new CreatureBuilder();

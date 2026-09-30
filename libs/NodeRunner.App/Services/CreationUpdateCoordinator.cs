@@ -83,13 +83,16 @@ public sealed class CreationUpdateCoordinator : ICreationUpdateCoordinator
         }
     }
 
-    public CreationDef? ApplyCreatureEdit(Guid id, CreatureDef editedCreature)
+    public CreationDef? ApplyEdit(Guid id, CreatureDef editedCreature, BrainShapeDef brainShape, bool moveOnly)
     {
         ArgumentNullException.ThrowIfNull(editedCreature);
+        ArgumentNullException.ThrowIfNull(brainShape);
         return UpdateIfPresent(id, source =>
         {
             BumpTrainingEpoch(id);
-            return new CreationDef(source.Id, source.Name, editedCreature, source.BrainShape, source.Training);
+            return moveOnly
+                ? new CreationDef(source.Id, source.Name, editedCreature, source.BrainShape, source.Training)
+                : new CreationDef(source.Id, source.Name, editedCreature, brainShape);
         });
     }
 

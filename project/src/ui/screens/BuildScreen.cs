@@ -167,15 +167,15 @@ public partial class BuildScreen : Control
             return;
         }
 
-        var saved = presentation.IsSaved;
+        var locked = presentation.IsLocked;
         var buildPanel = presentation.BuildPanel;
-        ApplyToolbar(presentation, buildPanel, saved);
+        ApplyToolbar(presentation, buildPanel, locked);
         ApplyTools(presentation);
-        GetNode<UiChip>("%PartsLockedChip").Visible = saved;
-        ApplySidePanel(presentation, buildPanel, saved);
+        GetNode<UiChip>("%PartsLockedChip").Visible = locked;
+        ApplySidePanel(presentation, buildPanel, locked);
     }
 
-    private void ApplyToolbar(ConstructionPresentationViewModel presentation, ConstructionBuildPanelPresentation buildPanel, bool saved)
+    private void ApplyToolbar(ConstructionPresentationViewModel presentation, ConstructionBuildPanelPresentation buildPanel, bool locked)
     {
         var name = GetNode<UiTextField>("%CreationName");
         if (name.State != UiTextField.TextInputState.Editing)
@@ -186,9 +186,9 @@ public partial class BuildScreen : Control
         GetNode<UiButton>("%StartTraining").Disabled = !buildPanel.CanStartTraining;
         var brainSetup = GetNode<UiMenuActionItem>("%MenuBrainSetup");
         brainSetup.Disabled = presentation.IsBrainShapeLocked;
-        brainSetup.NoteText = presentation.IsBrainShapeLocked ? "Locked once saved" : string.Empty;
-        GetNode<UiMenuActionItem>("%MenuResetTraining").Visible = saved;
-        GetNode<UiMenuActionItem>("%MenuDeleteCreation").Disabled = !saved;
+        brainSetup.NoteText = presentation.IsBrainShapeLocked ? "Locked once trained" : string.Empty;
+        GetNode<UiMenuActionItem>("%MenuResetTraining").Visible = locked;
+        GetNode<UiMenuActionItem>("%MenuDeleteCreation").Disabled = !presentation.IsSaved;
         if (presentation.IsBrainShapeLocked && BrainSetup.IsOpen)
         {
             BrainSetup.Close();
@@ -204,21 +204,21 @@ public partial class BuildScreen : Control
         GetNode<UiButton>("%SelectTool").Selected = presentation.ActiveTool == ConstructionTool.Select;
     }
 
-    private void ApplySidePanel(ConstructionPresentationViewModel presentation, ConstructionBuildPanelPresentation buildPanel, bool saved)
+    private void ApplySidePanel(ConstructionPresentationViewModel presentation, ConstructionBuildPanelPresentation buildPanel, bool locked)
     {
         var selected = presentation.SelectedPartCount;
         var tray = GetNode<Control>("%PartsTray");
         var savedPanel = GetNode<Control>("%SavedCreation");
         var partSettings = GetNode<Control>("%PartSettings");
         var selection = GetNode<Control>("%Selection");
-        tray.Visible = selected == 0 && !saved;
-        savedPanel.Visible = selected == 0 && saved;
+        tray.Visible = selected == 0 && !locked;
+        savedPanel.Visible = selected == 0 && locked;
         partSettings.Visible = selected == 1;
         selection.Visible = selected > 1;
         GetNode<Control>("%Readiness").Visible = selected == 0;
         GetNode<UiSidePanel>("%SidePanel").Title = selected switch
         {
-            0 when saved => "Training",
+            0 when locked => "Training",
             0 => "Parts",
             1 => presentation.SinglePartTitle,
             _ => presentation.MultiSelectionTitle,
@@ -238,16 +238,16 @@ public partial class BuildScreen : Control
 
         if (partSettings.Visible)
         {
-            ApplyPartSettings(presentation, saved);
+            ApplyPartSettings(presentation, locked);
         }
 
         if (selection.Visible)
         {
             GetNode<UiLabel>("%SelectionCounts").Text = presentation.MultiSelectionCounts;
-            GetNode<UiLabel>("%SelectionBody").Text = saved
+            GetNode<UiLabel>("%SelectionBody").Text = locked
                 ? presentation.MultiSelectionBody
                 : "Drag any selected part to move them together, or delete the selection.";
-            GetNode<UiButton>("%SelectionDelete").Visible = !saved;
+            GetNode<UiButton>("%SelectionDelete").Visible = !locked;
         }
 
         ApplyReadiness(buildPanel);
@@ -266,7 +266,7 @@ public partial class BuildScreen : Control
         GetNode<UiLabel>("%ToolHint").Text = ConstructionPresentationViewModel.ToolHint(presentation.ActiveTool);
     }
 
-    private void ApplyPartSettings(ConstructionPresentationViewModel presentation, bool saved)
+    private void ApplyPartSettings(ConstructionPresentationViewModel presentation, bool locked)
     {
         GetNode<UiLabel>("%PartPrimaryLabel").Text = presentation.SinglePartPrimaryLabel;
         GetNode<UiLabel>("%PartPrimaryValue").Text = presentation.SinglePartPrimaryValue;
@@ -274,7 +274,7 @@ public partial class BuildScreen : Control
         GetNode<UiLabel>("%PartConnectionsValue").Text = presentation.SinglePartConnectionsValue;
         GetNode<UiLabel>("%PartFacts").Text = presentation.SinglePartFacts;
         GetNode<UiLabel>("%PartBody").Text = presentation.SinglePartBody;
-        GetNode<UiButton>("%PartDelete").Visible = !saved;
+        GetNode<UiButton>("%PartDelete").Visible = !locked;
     }
 
     private void ApplyReadiness(ConstructionBuildPanelPresentation buildPanel)

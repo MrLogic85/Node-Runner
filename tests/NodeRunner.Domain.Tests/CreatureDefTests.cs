@@ -23,26 +23,28 @@ public sealed class CreatureDefTests
     }
 
     [Fact]
-    public void Constructor_WithNoNodes_Throws()
+    public void Constructor_WithNoNodes_AcceptsAnEmptyDrawing()
     {
-        var action = () => new CreatureDef([], [], []);
+        var creature = new CreatureDef([], [], []);
 
-        action.ShouldThrow<ArgumentException>();
+        creature.Nodes.ShouldBeEmpty();
     }
 
     [Fact]
-    public void Constructor_WithNodeMissingAnyBeam_Throws()
+    public void Constructor_WithUnfinishedDrawing_AcceptsLooseNodesAndZeroLengthBeams()
     {
-        var action = () => new CreatureDef(
+        var creature = new CreatureDef(
             new[]
             {
                 new NodeDef(new Vector2D(0, 0), 1),
-                new NodeDef(new Vector2D(2, 0), 1),
+                new NodeDef(new Vector2D(0, 0), 1),
+                new NodeDef(new Vector2D(4, 0), 1),
             },
-            [],
+            [new BeamDef(0, 1)],
             []);
 
-        action.ShouldThrow<ArgumentException>();
+        creature.Nodes.Count.ShouldBe(3);
+        creature.Beams.Count.ShouldBe(1);
     }
 
     [Fact]

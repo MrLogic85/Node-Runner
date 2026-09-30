@@ -66,6 +66,44 @@ public sealed class ConstructionViewModelTests
         raised.ShouldBeTrue();
     }
 
+    [Theory]
+    [InlineData(null, false)]
+    [InlineData(0, false)]
+    [InlineData(1, true)]
+    public void LoadCreation_IsMoveOnlyExactlyWhenLocked(int? generation, bool moveOnly)
+    {
+        var training = generation is { } trained ? new TrainingStateDef([2, 1], [0.1, -0.2, 0.3], trained, "Tanh") : null;
+        var viewModel = new ConstructionViewModel();
+
+        viewModel.LoadCreation(new CreationDef(Guid.NewGuid(), "Worm", TwoNodeCreature(), training));
+
+        viewModel.IsSaved.ShouldBeTrue();
+        viewModel.IsMoveOnly.ShouldBe(moveOnly);
+    }
+
+    [Fact]
+    public void LoadCreation_IsSavedBeforeAnatomyChangedFires()
+    {
+        var viewModel = new ConstructionViewModel();
+        bool? savedDuringEvent = null;
+        viewModel.AnatomyChanged += (_, _) => savedDuringEvent = viewModel.IsSaved;
+
+        viewModel.LoadCreation(new CreationDef(Guid.NewGuid(), "Worm", TwoNodeCreature()));
+
+        savedDuringEvent.ShouldBe(true);
+    }
+
+    [Fact]
+    public void ResetDraft_AfterLoadCreation_IsNoLongerSaved()
+    {
+        var viewModel = new ConstructionViewModel();
+        viewModel.LoadCreation(new CreationDef(Guid.NewGuid(), "Worm", TwoNodeCreature()));
+
+        viewModel.ResetDraft();
+
+        viewModel.IsSaved.ShouldBeFalse();
+    }
+
     [Fact]
     public void LoadMoveOnly_AllowsMovingExistingNodesButRejectsTopologyChanges()
     {
@@ -572,6 +610,57 @@ public sealed class ConstructionViewModelTests
     }
 
     [Fact]
+    public void Snapshot_WithUnconnectedNode_ReturnsTheDrawingForSaving()
+    {
+        var viewModel = new ConstructionViewModel();
+        viewModel.PlaceNode(new Vector2D(0, 0), 18);
+
+        var creature = viewModel.Snapshot();
+
+        creature.Nodes.Count.ShouldBe(1);
+        creature.Beams.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void TryGetTrainableCreature_WithUnconnectedNode_RefusesAndSaysWhy()
+    {
+        var viewModel = new ConstructionViewModel();
+        viewModel.PlaceNode(new Vector2D(0, 0), 18);
+
+        viewModel.TryGetTrainableCreature(out var creature).ShouldBeFalse();
+
+        creature.ShouldBeNull();
+        viewModel.StatusMessage.ShouldNotBeNull();
+        viewModel.StatusMessage.ShouldContain("no beams attached");
+    }
+
+    [Fact]
+    public void TryGetTrainableCreature_WithNothingToDrive_Refuses()
+    {
+        var viewModel = new ConstructionViewModel();
+        viewModel.Load(TwoNodeCreature());
+
+        viewModel.TryGetTrainableCreature(out var creature).ShouldBeFalse();
+
+        creature.ShouldBeNull();
+    }
+
+    [Fact]
+    public void TryGetTrainableCreature_WithAMotorRelation_ReturnsTheCreature()
+    {
+        var viewModel = new ConstructionViewModel();
+        viewModel.Load(new CreatureDef(
+            [new NodeDef(new Vector2D(0, 0), 18), new NodeDef(new Vector2D(20, 0), 18), new NodeDef(new Vector2D(40, 10), 18)],
+            [new BeamDef(0, 1), new BeamDef(1, 2)],
+            []));
+
+        viewModel.TryGetTrainableCreature(out var creature).ShouldBeTrue();
+
+        creature.ShouldNotBeNull();
+        creature.Beams.Count.ShouldBe(2);
+    }
+
+    [Fact]
     public void TryLeave_WithValidCreature_ReturnsTrue()
     {
         var viewModel = new ConstructionViewModel();
@@ -598,4 +687,9 @@ public sealed class ConstructionViewModelTests
         viewModel.StatusMessage.ShouldNotBeNullOrEmpty();
         viewModel.StatusMessage!.ShouldContain("Add at least one node");
     }
+
+    private static CreatureDef TwoNodeCreature() => new(
+        [new NodeDef(new Vector2D(0, 0), 18), new NodeDef(new Vector2D(20, 0), 18)],
+        [new BeamDef(0, 1)],
+        []);
 }

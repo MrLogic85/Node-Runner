@@ -18,7 +18,10 @@ locked is overridden in `docs/TRAINING_LOOP.md` → Product lifecycle boundary.
   a saved creation's construction canvas.
 - Construction state lives in `NodeRunner.App.ViewModels.ConstructionViewModel`
   while Build is open. A new draft is dropped when Build closes unless it
-  was saved; a saved creation's moved nodes are saved when Build closes.
+  was saved; a saved creation's edits are saved when Build closes (#515).
+- A saved creation opens fully editable until it is locked
+  (`CreationLock`, see `docs/TRAINING_LOOP.md`). A locked one opens
+  move-only: nodes can move, but no parts or brain shape change.
 
 ## Coordinates
 
@@ -62,7 +65,8 @@ locked is overridden in `docs/TRAINING_LOOP.md` → Product lifecycle boundary.
   `CreatureDef` as a new creation and opens its training (`TrainingRoute`).
   The new creation keeps a name the user typed in the toolbar; otherwise it
   is named `Creation N`. On a saved creation, Back and Start training first
-  save the moved nodes, then leave. The
+  save the drawing as it stands, then leave; Start training stays in Build
+  if the creature cannot train yet. The
   Training scene builds its `Creature` node from the saved `CreatureDef`
   (`Creature.BuildFrom`), which generically derives the model's
   input/output counts (cores' sensor values plus `MotorTopology`'s derived
@@ -72,19 +76,27 @@ locked is overridden in `docs/TRAINING_LOOP.md` → Product lifecycle boundary.
 
 ## Validation
 
-`NodeRunner.App.Builders.CreatureBuilder.TryBuild` is the single source of
-truth for whether an in-progress creature can be simulated. UI surfaces its
-error messages and does not duplicate the validation rules. The one
+A saved Creation stores any drawing: `CreatureDef` only checks that part
+indices point at existing nodes, so an empty or unfinished creature is still
+a Creation (#515). Only training needs a finished creature.
+`NodeRunner.App.Lifecycle.CreatureReadiness` is the single source of truth
+for that, in two steps: `Problems` lists why the creature cannot be
+simulated yet (no nodes, a node without beams, a zero-length beam), and
+`CanTrain` also needs at least one motor relation for the brain to drive.
+`CreatureBuilder.TryBuild` applies `Problems` to the in-progress creature.
+UI surfaces those messages and does not duplicate the rules. The one
 exception is Build's readiness line, which shortens the errors for the
 narrow side panel (for example "1 node not connected"); it only changes the
-wording, and only `TryLeave` decides whether training may start.
+wording.
 
-Start training on a new draft, and Back or Start training on a saved
-creation, are gated by `ConstructionViewModel.TryLeave`: with at least one node, `TryBuild`
-must succeed; a failed attempt keeps Build open and shows the validation
+Start training is gated by `ConstructionViewModel.TryLeave` and
+`CanTrain`: a failed `TryLeave` keeps Build open and shows the validation
 errors via `StatusMessage` (`ConstructionViewModel.SetBlockedLeaveMessage`).
-An empty draft cannot be saved. Back from a new draft drops it without
-validating (#474).
+On a saved Creation the edits are saved first either way. Back never
+validates: it saves a saved Creation's drawing as it stands, and drops a new
+draft (#474). A new draft is saved only through Start training, so it still
+needs a finished creature until #368 autosaves drafts. Training refuses a
+saved creature that cannot train and returns to Creations.
 
 ## Touch input
 
