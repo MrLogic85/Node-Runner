@@ -1,0 +1,92 @@
+[gd_scene format=3 uid="uid://dahbkjg42p0vs"]
+
+[ext_resource type="Script" uid="uid://p7wvirfjxxyo" path="res://src/ui/widgets/BrainFocusSheet.cs" id="1_sheet"]
+[ext_resource type="Script" uid="uid://c7oujf13m8toy" path="res://src/ui/lib/UiSheet.cs" id="2_uisheet"]
+[ext_resource type="Script" uid="uid://dk67qmt3brp4e" path="res://src/ui/lib/UiLabel.cs" id="3_label"]
+[ext_resource type="Script" uid="uid://byhbh5da7rpk8" path="res://src/ui/lib/UiCard.cs" id="4_card"]
+[ext_resource type="Script" uid="uid://dbvd666r72oex" path="res://src/ui/widgets/BrainFocusNetworkView.cs" id="5_network"]
+[ext_resource type="Script" uid="uid://r2ped3g3uiaa" path="res://src/ui/lib/UiButton.cs" id="6_button"]
+
+[node name="BrainFocusSheet" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_sheet")
+
+[node name="Inset" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 56
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 12
+
+[node name="Sheet" type="PanelContainer" parent="Inset"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(540, 0)
+layout_mode = 2
+size_flags_horizontal = 4
+script = ExtResource("2_uisheet")
+
+[node name="Margin" type="MarginContainer" parent="Inset/Sheet"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 16
+
+[node name="Stack" type="VBoxContainer" parent="Inset/Sheet/Margin"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 8
+
+[node name="Title" type="Label" parent="Inset/Sheet/Margin/Stack"]
+layout_mode = 2
+text = "BrainFocus · Decides"
+script = ExtResource("3_label")
+TextStyle = 1
+
+[node name="Summary" type="Label" parent="Inset/Sheet/Margin/Stack"]
+unique_name_in_owner = true
+layout_mode = 2
+autowrap_mode = 3
+script = ExtResource("3_label")
+
+[node name="NetworkCard" type="PanelContainer" parent="Inset/Sheet/Margin/Stack"]
+layout_mode = 2
+size_flags_vertical = 3
+script = ExtResource("4_card")
+SizeVariant = 4
+
+[node name="Network" type="Control" parent="Inset/Sheet/Margin/Stack/NetworkCard"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 96)
+layout_mode = 2
+script = ExtResource("5_network")
+
+[node name="Footer" type="HBoxContainer" parent="Inset/Sheet/Margin/Stack"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 12
+
+[node name="Selected" type="Label" parent="Inset/Sheet/Margin/Stack/Footer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+autowrap_mode = 3
+script = ExtResource("3_label")
+
+[node name="Close" type="Button" parent="Inset/Sheet/Margin/Stack/Footer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 4
+text = "Back to SignalFlow"
+script = ExtResource("6_button")

@@ -9,7 +9,7 @@
 [ext_resource type="PackedScene" uid="uid://kk3td5f4uebc" path="res://scenes/ui/UiWorldView.tscn" id="7_world_view"]
 [ext_resource type="PackedScene" uid="uid://bxxwv8m0f8sml" path="res://scenes/ui/UiStageCard.tscn" id="8_stage_card"]
 [ext_resource type="Script" uid="uid://b4t4jrismbuik" path="res://src/ui/lib/UiIcon.cs" id="9_icon"]
-[ext_resource type="Script" uid="uid://p7wvirfjxxyo" path="res://src/ui/widgets/BrainFocusSheet.cs" id="10_brain_focus"]
+[ext_resource type="PackedScene" uid="uid://dahbkjg42p0vs" path="res://scenes/widgets/BrainFocusSheet.tscn" id="10_brain_focus"]
 
 [node name="TrainingScreen" type="Control"]
 layout_mode = 3
@@ -289,16 +289,10 @@ Title = "Distance"
 Note = ""
 Collapsed = true
 
-[node name="BrainFocusSheet" type="Control" parent="."]
+[node name="BrainFocusSheet" parent="." instance=ExtResource("10_brain_focus")]
 unique_name_in_owner = true
 visible = false
 layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-script = ExtResource("10_brain_focus")
 
 [editable path="UiFrame"]
 [editable path="UiFrame/MarginContainer/Card/Shell/Toolbar"]
