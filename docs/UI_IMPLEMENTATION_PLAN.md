@@ -16,15 +16,18 @@ structured reference.
 | --- | --- | --- |
 | A — Foundations | Exact colors, text styles, spacing, sizes, radius, strokes, and font resources | #226 |
 | B — Component Library | Complete reusable component inventory and all states, proven in isolation | #227 |
-| C — Creation lifecycle | Autosave, single Build unlocked/locked state, first-training lock, destructive Unlock | #229 |
-| D — Product scenes | Build parts, Train setup/Training, teaching surfaces, progression, settings | #194-#202, #211, #220 |
+| C — Creation lifecycle | Autosave, single Build unlocked/locked state, first-training lock, Unlock without resetting training | #229, #371 |
+| D — Product scenes | Build parts, Train setup/Training, teaching surfaces, progression, settings | #194-#202, #211, #220, per milestone below |
 
 A rewritten product screen follows "Who owns what" in `docs/UI_DIRECTION.md`
 and joins the UI guards in the same PR
 ([#310](https://github.com/MrLogic85/Node-Runner/issues/310)).
 
-Related existing issues still fit where their underlying behavior remains
-valid: #91, #92, #105, #127, #137, and #175.
+Product scenes follow the milestone phases in `docs/ROADMAP.md` → "Active
+plan" (#522). Each milestone that changes UI has a design brief (#531, #542,
+#549, #552) that `design-lead` reviews before its screens are built. Where the
+plan replaces the reference flow, `docs/UI_DIRECTION.md` → "Reference flow
+overrides" records it.
 
 ## Gate A — foundations (#226)
 
@@ -54,21 +57,25 @@ documented non-runtime reason, with passing automated and visual evidence.
 **Exit criteria:** screens can be composed without private visual copies or
 one-off styling, and design review has no unresolved fidelity findings.
 
-## Phase 1 — Creation lifecycle and Build (#229, #211, #220)
+## Build (0.12.0: #211, #202, #220)
 
-Implement the persistence and navigation lifecycle in #229, expanded parts in
-#211/#202, and durable part identity in #220. The Build and BuildLocked
-component READMEs own visible behavior.
+Implement expanded parts in #211, vocabulary in #202, and durable part
+identity in #220. The Build and BuildLocked component READMEs own visible
+behavior.
 
-## Phase 2 — Train setup, Training, SignalFlow, Brain, Stats (#194-#198)
+## Train, save and load (0.13.0: #229, #371, #194, #195, #137)
 
-Implement the TrainSetup, Training, SignalFlow, BrainFocus/BrainScale, and
-Stats component contracts through their linked issues.
+Implement the persistence and navigation lifecycle in #229, where the lock
+only prevents mistakes and unlocking keeps training (#371), and the TrainSetup
+and Training contracts with shadows in the arena. The brain (views and editing)
+stays hidden until 0.16.0 (#539).
 
-## Phase 3 — Achievements, overlays, themes, vocabulary (#199-#202)
+## Later scenes
 
-Implement the Achievements, Overlays, Settings/Themes, and vocabulary/model
-contracts through their linked issues.
+- Stats (#198): 0.15.0.
+- SignalFlow and BrainFocus/BrainScale (#196, #197, #393): 0.16.0.
+- Overlays (#200) and Settings/Themes (#201): 0.17.0.
+- Achievements (#199): 0.19.0.
 
 ## Review and verification gates
 

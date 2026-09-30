@@ -15,16 +15,18 @@ For each concept:
 - **What:** A function `f(x) = σ(W₃ σ(W₂ σ(W₁ x + b₁) + b₂) + b₃)`. Layers of
   linear maps with a nonlinearity in between.
 - **Where:** 0.1.0 · `libs/NodeRunner.ML/NeuralNetwork.cs`
-- **How we show it:** The creature moves at all. Later (0.9.0) the network is
-  drawn on-screen with nodes and edges.
+- **How we show it:** The creature moves at all. The 0.16.0 brain views draw
+  the network on-screen with nodes and edges. From 0.13.0 until then the brain
+  is direct: inputs connect straight to outputs with no hidden layer (#536).
 
 ## Activation functions
 
 - **What:** The nonlinearity between layers. Without it, a deep network
   collapses to a single linear map.
 - **Where:** 0.1.0 hidden-layer support in `libs/NodeRunner.ML/Activation.cs`
-  (`Tanh`, `ReLU`, `Sigmoid`); 0.1.0 gameplay uses `Tanh`, and a later
-  visualization/tuning milestone exposes a UI toggle.
+  (`Tanh`, `ReLU`, `Sigmoid`); 0.1.0 gameplay uses `Tanh`. From 0.13.0 each
+  output has its own activation: tanh for position, sigmoid for strength
+  (#535).
 - **How we show it:** Later slider. Same trained brain, different activation —
   watch behavior change.
 
@@ -32,7 +34,10 @@ For each concept:
 
 - **What:** Search weights by simulating a population, keeping the fit ones,
   recombining them, mutating a bit, repeating.
-- **Where:** 0.4.0 · `libs/NodeRunner.ML/Ga/GeneticAlgorithm.cs`
+- **Where:** 0.4.0 · `libs/NodeRunner.ML/Ga/GeneticAlgorithm.cs`. 0.13.0
+  resumes from the saved elites instead of restarting (#538); 0.14.0 saves the
+  population size (Shadows) per Creation (#528); 0.16.0 puts the GA behind an
+  ask/tell optimizer interface (#545).
 - **How we show it:** Candidate genomes run concurrently in fixed,
   collision-isolated slots while the fitness chart climbs and mutations
   produce weird outliers. The first candidate is visible; showing the hidden
@@ -43,9 +48,9 @@ For each concept:
 - **What:** The scalar that says "this individual was this good". *Choice of
   fitness is the most important design decision in evolutionary ML.*
 - **Where:** 0.4.0 · `project/src/sim/`
-- **How we show it:** 0.4.0 displays the active fitness value. Later, the user
-  can toggle fitness definition ("distance" vs "distance − energy" vs "height
-  reached") and see how it changes behavior.
+- **How we show it:** 0.4.0 displays the active fitness value. Fitness stays
+  distance only until 0.16.0, which adds several fitness functions at once:
+  the winner of each one parents the next generation (#317, #546).
 
 ## Mutation rate & exploration/exploitation
 
@@ -73,6 +78,9 @@ For each concept:
   `docs/CREATURE_MODEL.md`): each core contributes rays/pitch/elevation/speed,
   and each motor relation contributes a relative angle and angular velocity.
   0.3.0 expands this into topology-derived sensors for user-built creatures.
+  0.13.0 lets each part declare its ports, with the convention "0 = as
+  built" (#534); 0.14.0 changes the Core sensors (#127) and adds Pulse, a
+  rhythm input (#527).
 - **How we show it:** 0.1.0 proves observation → action by making the worm
   twitch. 0.2.0 lists what the network sees each tick. A later, uncommitted
   teaching mode may let the user toggle a sensor off, retrain from scratch, and
@@ -82,16 +90,28 @@ For each concept:
 
 - **What:** Bigger networks can represent more, but need more data/generations
   to train, and can overfit.
-- **Where:** 0.9.0 or later sliders
-- **How we show it:** Tiny nets can't even walk. Huge nets learn slowly and
+- **Where:** 0.16.0 · hidden layers added on top of kept direct connections
+  (#543)
+- **How we show it:** Adding a hidden layer keeps the skill the direct brain
+  already had. Too little capacity plateaus; huge nets learn slowly and
   behave erratically. Sweet spot is visible.
 
 ## Live activation visualization
 
 - **What:** Which neuron fires at which moment, and how strongly.
-- **Where:** 0.9.0 · `project/src/ui/`
+- **Where:** 0.16.0 brain views (#196, #197, #548)
 - **How we show it:** Nodes glow. Edges pulse. You literally see the thought
   behind each step.
+
+## Generalisation across maps
+
+- **What:** A brain that only ever sees one map can overfit to it. Training
+  on several maps rewards behavior that works everywhere.
+- **Where:** 0.15.0 · map checkboxes and the map loop (#540), stats per map
+  (#541)
+- **How we show it:** One generation runs on one map. Stats shows a learning
+  curve per map, so a creature that is great on one map and useless on
+  another is visible at a glance.
 
 ## Backpropagation
 
@@ -101,7 +121,8 @@ For each concept:
 - **How we show it:** "Imitation mode". User demonstrates the first X steps by
   moving nodes while beam lengths and constraints stay fixed. The network is
   trained to reproduce the target motion or derived motor-relation commands.
-  Loss curve visualized. First the copy is bad, then it's good.
+  Loss curve visualized. First the copy is bad, then it's good. #522 records
+  an agreed shape ("learn from mother") for a later imitation mode.
 
 ## Loss functions
 
@@ -141,9 +162,9 @@ For each concept:
 
 Not built yet; parked so we don't forget:
 
-- NEAT (topology evolution)
+- NEAT (topology evolution); the 0.13.0 brain format is ready for it (#522)
 - Novelty search
-- Recurrent networks (memory)
+- Memory cells as a brain part (#126); full recurrent networks later
 - Reinforcement learning (DQN, policy gradients)
 - Curriculum learning
 - Adversarial co-evolution
