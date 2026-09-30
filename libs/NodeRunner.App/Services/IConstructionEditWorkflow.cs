@@ -4,5 +4,6 @@ namespace NodeRunner.App.Services;
 
 public interface IConstructionEditWorkflow
 {
-    ConstructionEditResult PersistEdit(Guid activeCreationId, CreatureDef editedCreature, BrainShapeDef brainShape, bool moveOnly);
+    /// <summary>Saves the edit and returns the saved creation, or null when it no longer exists.</summary>
+    CreationDef? PersistEdit(Guid activeCreationId, CreatureDef editedCreature, BrainShapeDef brainShape, bool moveOnly);
 }

@@ -65,7 +65,6 @@ public sealed class ConstructionPresentationViewModelTests
         presentation.DeleteToolText.ShouldBe("Delete · locked");
         presentation.InspectorRole.ShouldBe("Tool: Move");
         presentation.InspectorValues.ShouldBe("Drag an existing node to reposition it. Training is kept.");
-        presentation.IsSaved.ShouldBeTrue();
         presentation.IsLocked.ShouldBeTrue();
         presentation.ShowRebuildAction.ShouldBeTrue();
         presentation.RebuildActionText.ShouldBe("Rebuild body");
@@ -102,7 +101,6 @@ public sealed class ConstructionPresentationViewModelTests
         presentation.PlaceToolText.ShouldBe("Place");
         presentation.LockTopologyTools.ShouldBeFalse();
         presentation.DeleteToolText.ShouldBe("Delete");
-        presentation.IsSaved.ShouldBeFalse();
         presentation.IsLocked.ShouldBeFalse();
         presentation.ShowRebuildAction.ShouldBeFalse();
     }
@@ -188,7 +186,7 @@ public sealed class ConstructionPresentationViewModelTests
     }
 
     [Fact]
-    public void BrainShape_WhenNotCustomized_UsesRecommendedNeuronCount()
+    public void BrainShape_WhenNotChosen_IsTheFixedDefault()
     {
         var construction = new ConstructionViewModel();
         var a = construction.PlaceNode(new Vector2D(0, 0), 18);
@@ -201,7 +199,7 @@ public sealed class ConstructionPresentationViewModelTests
         construction.ToggleCoreOnNode(a);
         var presentation = new ConstructionPresentationViewModel(construction);
 
-        presentation.BrainShape.ShouldBe(new BrainShapeDef(1, 5));
+        presentation.BrainShape.ShouldBe(BrainShapeDef.Default);
     }
 
     [Fact]

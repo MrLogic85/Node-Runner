@@ -1,5 +1,6 @@
 using Godot;
 using NodeRunner.App.Navigation;
+using NodeRunner.Domain;
 using NodeRunner.Managers;
 using NodeRunner.Ui.Lib;
 using NodeRunner.Ui.Screens;
@@ -28,7 +29,7 @@ public partial class CreationsHost : Node, IRoutedScene
             && ProjectSettings.GetSetting("ui/show_component_library_link", true).AsBool();
         screen.Setup(Saves.CreationsPresentation);
         screen.OpenRequested += OpenCreation;
-        screen.NewRequested += () => Navigate(new BuildRoute());
+        screen.NewRequested += CreateCreation;
         screen.DuplicateRequested += DuplicateCreation;
         screen.DeleteRequested += RequestDelete;
         screen.AchievementsRequested += ShowAchievementsCue;
@@ -66,6 +67,20 @@ public partial class CreationsHost : Node, IRoutedScene
         }
 
         Navigate(new BuildRoute(id));
+    }
+
+    // + New saves an empty creation and opens it; Build removes it again if it is left empty (#368).
+    private void CreateCreation()
+    {
+        CreationDef creation = null!;
+        if (!CreationActions.TryRunFileOperation(() => creation = Saves.CreateNew(), "Creating a new Creation"))
+        {
+            UiNotificationLayer.Enqueue(this, new UiNotificationSpec(
+                UiPopupType.Default, "Creations", "Could not start a new creation. Try again."));
+            return;
+        }
+
+        Navigate(new BuildRoute(creation.Id, IsNew: true));
     }
 
     private void DuplicateCreation(string key, string name)

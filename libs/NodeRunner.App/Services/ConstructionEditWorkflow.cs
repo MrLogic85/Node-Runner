@@ -13,7 +13,7 @@ public sealed class ConstructionEditWorkflow : IConstructionEditWorkflow
         _coordinator = coordinator;
     }
 
-    public ConstructionEditResult PersistEdit(Guid activeCreationId, CreatureDef editedCreature, BrainShapeDef brainShape, bool moveOnly)
+    public CreationDef? PersistEdit(Guid activeCreationId, CreatureDef editedCreature, BrainShapeDef brainShape, bool moveOnly)
     {
         ArgumentNullException.ThrowIfNull(editedCreature);
         ArgumentNullException.ThrowIfNull(brainShape);
@@ -22,9 +22,6 @@ public sealed class ConstructionEditWorkflow : IConstructionEditWorkflow
             throw new ArgumentException("An active Creation id is required.", nameof(activeCreationId));
         }
 
-        var updated = _coordinator.ApplyEdit(activeCreationId, editedCreature, brainShape, moveOnly);
-        return updated is null
-            ? new ConstructionEditResult(null, "Could not save the edited creature; your edit was discarded.")
-            : new ConstructionEditResult(updated, $"Saved edits to {updated.Name}.");
+        return _coordinator.ApplyEdit(activeCreationId, editedCreature, brainShape, moveOnly);
     }
 }

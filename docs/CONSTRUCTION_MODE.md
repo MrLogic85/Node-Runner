@@ -14,11 +14,23 @@ locked is overridden in `docs/TRAINING_LOOP.md` → Product lifecycle boundary.
 
 - The 0.3.0 prototype had one main screen with two modes, **Simulate** and
   **Build**, and a HUD toggle between them. That toggle is gone: Build and
-  Training are separate routed scenes (#469), and Build opens a new draft or
-  a saved creation's construction canvas.
+  Training are separate routed scenes (#469), and Build opens one saved
+  creation's construction canvas.
 - Construction state lives in `NodeRunner.App.ViewModels.ConstructionViewModel`
-  while Build is open. A new draft is dropped when Build closes unless it
-  was saved; a saved creation's edits are saved when Build closes (#515).
+  while Build is open. Build always edits a saved creation: + New saves an
+  empty "Untitled Creation" with the default brain shape
+  (`NewCreationWorkflow`) before Build opens.
+- Every edit saves itself; there is no Save button (#368).
+  `ConstructionAutosave` marks the drawing unsaved on each edit, and
+  `BuildHost` saves it once edits have settled for 0.5 s, and when Build is
+  left (Back, Start training, another scene) or the app pauses or closes.
+  A creation opened by + New that has no nodes when Build is left is removed
+  again, so + New then Back leaves no empty creation behind. A save that
+  fails keeps the edits unsaved and tries again on the next save; Back,
+  Start training and Reset training report every failure, background saves
+  only the first in a row. Back still leaves, so a failing disk never traps
+  the player in Build. If Android ends the app while it is in the
+  background, an empty + New creation stays in the list (accepted on #368).
 - A saved creation opens fully editable until it is locked
   (`CreationLock`, see `docs/TRAINING_LOOP.md`). A locked one opens
   move-only: nodes can move, but no parts or brain shape change.
@@ -60,13 +72,9 @@ locked is overridden in `docs/TRAINING_LOOP.md` → Product lifecycle boundary.
   here would add lifecycle risk (stale indices if mode switches mid-edit)
   without a corresponding benefit.
 - **Wire into simulation** (issues #72, #469): Build and Training are
-  separate scenes, joined only through the save. Start training on a new
-  draft calls `ConstructionViewModel.TryLeave`, saves the built
-  `CreatureDef` as a new creation and opens its training (`TrainingRoute`).
-  The new creation keeps a name the user typed in the toolbar; otherwise it
-  is named `Creation N`. On a saved creation, Back and Start training first
-  save the drawing as it stands, then leave; Start training stays in Build
-  if the creature cannot train yet. The
+  separate scenes, joined only through the save. Start training saves the
+  drawing, then opens the creation's training (`TrainingRoute`); it stays in
+  Build if the creature cannot train yet. The
   Training scene builds its `Creature` node from the saved `CreatureDef`
   (`Creature.BuildFrom`), which generically derives the model's
   input/output counts (cores' sensor values plus `MotorTopology`'s derived
@@ -92,11 +100,9 @@ wording.
 Start training is gated by `ConstructionViewModel.TryLeave` and
 `CanTrain`: a failed `TryLeave` keeps Build open and shows the validation
 errors via `StatusMessage` (`ConstructionViewModel.SetBlockedLeaveMessage`).
-On a saved Creation the edits are saved first either way. Back never
-validates: it saves a saved Creation's drawing as it stands, and drops a new
-draft (#474). A new draft is saved only through Start training, so it still
-needs a finished creature until #368 autosaves drafts. Training refuses a
-saved creature that cannot train and returns to Creations.
+The edits are saved first either way. Back never validates: it saves the
+drawing as it stands (#474, #368). Training refuses a saved creature that
+cannot train and returns to Creations.
 
 ## Touch input
 

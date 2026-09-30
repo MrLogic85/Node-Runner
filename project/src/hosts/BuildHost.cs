@@ -1,6 +1,5 @@
 using Godot;
 using NodeRunner.App.Navigation;
-using NodeRunner.App.Services;
 using NodeRunner.App.ViewModels;
 using NodeRunner.Domain;
 using NodeRunner.Managers;
@@ -10,7 +9,8 @@ using NodeRunner.Ui.Screens;
 namespace NodeRunner.Hosts;
 
 /// <summary>
-/// The Build scene for one creation, or a new draft. Training lives in its own scene,
+/// The Build scene for one saved creation. Every edit saves itself (#368): once edits settle, and
+/// whenever the player leaves Build or the app pauses. Training lives in its own scene,
 /// <see cref="TrainingHost"/> (#469).
 /// </summary>
 public partial class BuildHost : Node, IRoutedScene
@@ -20,7 +20,13 @@ public partial class BuildHost : Node, IRoutedScene
     private bool _activeCreationDeleted;
     private ISceneNavigator? _navigator;
     private BuildRoute? _route;
-    private Guid? _activeCreationId;
+    // The open creation: it holds its id and saves its edits. Null once the creation is deleted.
+    private ConstructionAutosave? _autosave;
+    private Godot.Timer _autosaveTimer = null!;
+    private bool _saveFailureShown;
+
+    // How long edits must settle before they save; a drag saves once, when it stops.
+    private const double _autosaveDelaySeconds = 0.5;
 
     public ConstructionViewModel Construction { get; } = new();
 
@@ -38,8 +44,31 @@ public partial class BuildHost : Node, IRoutedScene
         BindBuildScreen();
         _deleteCreationDialog = GetNode<UiDialog>("%DeleteDialog");
         _deleteCreationDialog.Finished += OnDeleteCreationDialogFinished;
+        AddAutosaveTimer();
         AddBackHandler();
         OpenRoute();
+    }
+
+    public override void _Notification(int what)
+    {
+        if (what == NotificationApplicationPaused)
+        {
+            SaveEdits(playerAsked: false);
+        }
+        else if (what == NotificationWMCloseRequest)
+        {
+            LeaveCreation(playerAsked: false);
+        }
+    }
+
+    // Build left for another scene saves, or removes an untouched new creation.
+    public override void _ExitTree() => LeaveCreation(playerAsked: false);
+
+    private void AddAutosaveTimer()
+    {
+        _autosaveTimer = new Godot.Timer { OneShot = true, WaitTime = _autosaveDelaySeconds };
+        _autosaveTimer.Timeout += () => SaveEdits(playerAsked: false);
+        AddChild(_autosaveTimer);
     }
 
     // Android Back and Escape: an open dialog, sheet or menu closes first, then Build goes one step
@@ -64,19 +93,20 @@ public partial class BuildHost : Node, IRoutedScene
         }
     }
 
-    // Opened by the router, Build shows the route's creation, or a new draft. Run on its own (F6) it
-    // opens a new draft.
+    // Opened by the router, Build shows the route's creation. Run on its own (F6) it makes a new one,
+    // as + New does.
     private void OpenRoute()
     {
-        if (_route?.CreationId is not { } id)
+        if (_route is null)
         {
-            StartNewCreation();
+            EditCreation(Saves.CreateNew(), openedAsNew: true);
             return;
         }
 
+        var id = _route.CreationId;
         if (Saves.Get(id) is { } creation)
         {
-            EditCreation(creation);
+            EditCreation(creation, _route.IsNew);
             return;
         }
 
@@ -111,17 +141,24 @@ public partial class BuildHost : Node, IRoutedScene
         _buildScreen.BrainRequested += () => Notify("Brain view", "Brain view opens in milestone 0.12.0.");
     }
 
-    // Start training saves a new draft first; a saved creation opens its training straight away.
+    // Training opens in its own scene from the saved creation, so the edits save first; only a
+    // creature that cannot train stays in Build.
     private void StartTraining()
     {
-        if (_activeCreationId is null)
+        if (_autosave?.CreationId is not { } id || !SaveEdits(playerAsked: true) || !Construction.TryGetTrainableCreature(out _))
         {
-            SaveCreationFromBuild();
+            return;
         }
-        else
+
+        // Training made it a real creation: Back from training must not treat it as an untouched New.
+        if (_route?.IsNew == true)
         {
-            ResumeTrainingFromSavedCreation();
+            _route = new BuildRoute(id);
+            _navigator?.ReplaceCurrent(_route);
         }
+
+        Notify("Train setup", "Train setup opens in milestone 0.12.0.");
+        _navigator?.Navigate(new SceneNavigation(new TrainingRoute(id)));
     }
 
     private void ShowCreations() => _navigator?.ReturnToRoot();
@@ -129,141 +166,88 @@ public partial class BuildHost : Node, IRoutedScene
     private void Notify(string title, string message, UiPopupType type = UiPopupType.Default) =>
         UiNotificationLayer.Enqueue(this, new UiNotificationSpec(type, title, message));
 
-    private void StartNewCreation()
+    private void EditCreation(CreationDef creation, bool openedAsNew)
     {
-        _activeCreationId = null;
-        Construction.ResetDraft();
-        Construction.IsActive = true;
-    }
-
-    private void EditCreation(CreationDef creation)
-    {
-        _activeCreationId = creation.Id;
+        StopAutosave();
         Construction.LoadCreation(creation);
         Construction.IsActive = true;
+        _autosave = new ConstructionAutosave(Construction, Saves.ConstructionEditWorkflow, creation.Id, openedAsNew);
+        _autosave.Changed += OnConstructionEdited;
     }
 
-    // Training opens in its own scene; Back from there rebuilds Build from the saved creation.
-    // The edit is saved either way; only a creature that cannot train stays in Build.
-    private void ResumeTrainingFromSavedCreation()
+    private void OnConstructionEdited(object? sender, EventArgs e) => _autosaveTimer.Start();
+
+    private void StopAutosave()
     {
-        if (_activeCreationId is not { } id)
+        _autosaveTimer.Stop();
+        if (_autosave is not null)
         {
-            return;
+            _autosave.Changed -= OnConstructionEdited;
+            _autosave.Dispose();
+            _autosave = null;
         }
-
-        PersistEdits(id);
-        if (!Construction.TryGetTrainableCreature(out _))
-        {
-            return;
-        }
-
-        Notify("Train setup", "Train setup opens in milestone 0.12.0.");
-        _navigator?.Navigate(new SceneNavigation(new TrainingRoute(id)));
     }
 
+    // Back leaves even if the save fails, so a broken disk never traps the player in Build; the
+    // failure notice outlives the scene.
     private void BackFromBuildScreen()
     {
-        // Back from an unsaved draft (New) is one step back and drops the draft (#474).
-        if (_activeCreationId is { } id)
-        {
-            PersistEdits(id);
-        }
-
+        LeaveCreation(playerAsked: true);
         _navigator?.Back();
     }
 
-    // Saves a saved creation's drawing as it stands, finished or not: only training needs a
-    // creature that can be simulated (#515). A locked creation opened move-only and keeps its brain
-    // and training (CreationLock). An edit that cannot be saved is discarded (#114).
-    private void PersistEdits(Guid id)
+    // Saves the drawing as it stands, finished or not: only training needs a creature that can be
+    // simulated (#515). A locked creation is move-only and keeps its brain and training
+    // (CreationLock). Returns false when edits are left unsaved; the next save tries again. A save
+    // the player asked for reports every failure; background saves report only the first in a row.
+    private bool SaveEdits(bool playerAsked)
     {
-        ConstructionEditResult? editResult = null;
-        var editedCreature = Construction.Snapshot();
-        var succeeded = CreationActions.TryRunFileOperation(
-            () => editResult = Saves.PersistEdit(id, editedCreature, Construction.BrainShape, Construction.IsMoveOnly),
-            $"Applying creature edit for Creation {id}");
-        if (succeeded && editResult is not null)
+        _autosaveTimer.Stop();
+        if (_autosave is not { HasUnsavedEdits: true } autosave)
         {
-            Construction.SetCompletedMessage(editResult.StatusMessage);
+            return true;
+        }
+
+        var saved = false;
+        CreationActions.TryRunFileOperation(
+            () => saved = autosave.Save(),
+            $"Saving edits to Creation {autosave.CreationId}");
+        if (saved)
+        {
+            _saveFailureShown = false;
+        }
+        else if (playerAsked || !_saveFailureShown)
+        {
+            _saveFailureShown = true;
+            Notify("Save failed", "Your latest edits could not be saved.", UiPopupType.Danger);
+        }
+
+        return saved;
+    }
+
+    // A + New creation left with no nodes is removed again, so it leaves no empty creation behind.
+    private void LeaveCreation(bool playerAsked)
+    {
+        if (_autosave is null)
+        {
             return;
         }
 
-        Construction.SetCompletedMessage("Could not save the edited creature; your edit was discarded.");
-        Notify("Save failed", "The edits could not be saved.", UiPopupType.Danger);
-    }
-
-    // Saving a new draft opens its training, like Start training in the reference. The history
-    // entry becomes the saved creation first, so Back from training rebuilds it, not a blank draft.
-    private void SaveCreationFromBuild()
-    {
-        if (!TryCompleteCreation(out var creation) || creation is null)
+        if (_autosave.ShouldDiscardOnLeave)
         {
+            var id = _autosave.CreationId;
+            StopAutosave();
+            CreationActions.TryRunFileOperation(() => Saves.Delete(id), $"Removing empty new Creation {id}");
             return;
         }
 
-        if (_navigator is null)
-        {
-            EditCreation(creation);
-            return;
-        }
-
-        _navigator.ReplaceCurrent(new BuildRoute(creation.Id));
-        _navigator.Navigate(new SceneNavigation(new TrainingRoute(creation.Id)));
-    }
-
-    private bool TryCompleteCreation(out CreationDef? creation)
-    {
-        creation = null;
-        if (!Construction.TryGetTrainableCreature(out var creature) || creature is null)
-        {
-            return false;
-        }
-
-        var saves = Saves;
-        var completedCreation = saves.ConstructionDraftWorkflow.CompleteDraft(
-            creature,
-            Construction.SaveName(saves.List().Count),
-            Construction.HasCustomBrainShape ? Construction.BrainShape : RecommendedBrainShape(creature));
-        if (!CreationActions.TryRunFileOperation(
-            () => saves.Save(completedCreation),
-            $"Saving Creation '{completedCreation.Name}'"))
-        {
-            Construction.SetCompletedMessage("Save failed — see log.");
-            Notify("Save failed", "The creation could not be saved.", UiPopupType.Danger);
-            return false;
-        }
-
-        creation = completedCreation;
-        _activeCreationId = creation.Id;
-        if (saves.TryAttributeExtraCoreUnlock(creation.Id))
-        {
-            ApplyProgression();
-        }
-
-        Construction.SetCompletedMessage($"Saved {creation.Name}.");
-        return true;
-    }
-
-    private static BrainShapeDef RecommendedBrainShape(CreatureDef creature)
-    {
-        var motorRelationCount = MotorTopology.BuildNodeConnections(creature)
-            .Count(connection => connection.IsMotorized);
-        var inputCount = (creature.Cores.Count * 6) + (motorRelationCount * 2);
-        var outputCount = motorRelationCount;
-        return new BrainShapeDef(
-            BrainShapeDef.DefaultHiddenLayers,
-            Math.Clamp(
-                (int)Math.Ceiling((inputCount + outputCount) / 2.0),
-                BrainShapeDef.MinimumNeuronsPerLayer,
-                BrainShapeDef.MaximumNeuronsPerLayer));
+        SaveEdits(playerAsked);
     }
 
     private void RenameActiveCreation(string name)
     {
-        if (_activeCreationId is not { } id)
+        if (_autosave?.CreationId is not { } id)
         {
-            Construction.SetCreationName(name);
             return;
         }
 
@@ -285,7 +269,7 @@ public partial class BuildHost : Node, IRoutedScene
 
     private void ResetActiveCreationTraining()
     {
-        if (_activeCreationId is not { } id)
+        if (_autosave?.CreationId is not { } id || !SaveEdits(playerAsked: true))
         {
             return;
         }
@@ -299,13 +283,13 @@ public partial class BuildHost : Node, IRoutedScene
 
         if (Saves.Get(id) is { } creation)
         {
-            EditCreation(creation);
+            EditCreation(creation, openedAsNew: false);
         }
     }
 
     private void RequestDeleteActiveCreation()
     {
-        if (_activeCreationId is not { } id || _deleteCreationDialog.IsOpen)
+        if (_autosave?.CreationId is not { } id || _deleteCreationDialog.IsOpen)
         {
             return;
         }
@@ -317,9 +301,9 @@ public partial class BuildHost : Node, IRoutedScene
     private bool DeleteCreation(Guid id, string name)
     {
         var succeeded = CreationActions.TryDelete(Saves, id, name);
-        if (succeeded && _activeCreationId == id)
+        if (succeeded && _autosave?.CreationId == id)
         {
-            _activeCreationId = null;
+            StopAutosave();
             _activeCreationDeleted = true;
         }
 

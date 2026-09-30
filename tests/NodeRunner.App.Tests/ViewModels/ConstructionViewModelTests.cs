@@ -1,3 +1,4 @@
+using NodeRunner.App.Services;
 using NodeRunner.App.ViewModels;
 using NodeRunner.Domain;
 
@@ -77,31 +78,7 @@ public sealed class ConstructionViewModelTests
 
         viewModel.LoadCreation(new CreationDef(Guid.NewGuid(), "Worm", TwoNodeCreature(), training));
 
-        viewModel.IsSaved.ShouldBeTrue();
         viewModel.IsMoveOnly.ShouldBe(moveOnly);
-    }
-
-    [Fact]
-    public void LoadCreation_IsSavedBeforeAnatomyChangedFires()
-    {
-        var viewModel = new ConstructionViewModel();
-        bool? savedDuringEvent = null;
-        viewModel.AnatomyChanged += (_, _) => savedDuringEvent = viewModel.IsSaved;
-
-        viewModel.LoadCreation(new CreationDef(Guid.NewGuid(), "Worm", TwoNodeCreature()));
-
-        savedDuringEvent.ShouldBe(true);
-    }
-
-    [Fact]
-    public void ResetDraft_AfterLoadCreation_IsNoLongerSaved()
-    {
-        var viewModel = new ConstructionViewModel();
-        viewModel.LoadCreation(new CreationDef(Guid.NewGuid(), "Worm", TwoNodeCreature()));
-
-        viewModel.ResetDraft();
-
-        viewModel.IsSaved.ShouldBeFalse();
     }
 
     [Fact]
@@ -180,44 +157,13 @@ public sealed class ConstructionViewModelTests
     }
 
     [Fact]
-    public void SaveName_WithoutCustomName_NumbersTheNextCreation()
-    {
-        new ConstructionViewModel().SaveName(savedCreationCount: 2).ShouldBe("Creation 3");
-    }
-
-    [Fact]
-    public void SaveName_AfterRename_UsesTheUsersName()
+    public void Load_WithoutName_IsUntitled()
     {
         var viewModel = new ConstructionViewModel();
-        viewModel.SetCreationName("Hopper");
 
-        viewModel.SaveName(savedCreationCount: 2).ShouldBe("Hopper");
-    }
+        viewModel.Load(new CreatureDef([], [], []));
 
-    [Fact]
-    public void SaveName_ForLoadedCreation_KeepsItsName()
-    {
-        var viewModel = new ConstructionViewModel();
-        viewModel.Load(
-            new CreatureDef(
-                [new NodeDef(new Vector2D(0, 0), 18), new NodeDef(new Vector2D(20, 0), 18)],
-                [new BeamDef(0, 1)],
-                []),
-            creationName: "Worm");
-
-        viewModel.SaveName(savedCreationCount: 2).ShouldBe("Worm");
-    }
-
-    [Fact]
-    public void ResetDraft_ClearsCustomCreationName()
-    {
-        var viewModel = new ConstructionViewModel();
-        viewModel.SetCreationName("Hopper");
-
-        viewModel.ResetDraft();
-
-        viewModel.CreationName.ShouldBe("Untitled Creation");
-        viewModel.SaveName(savedCreationCount: 0).ShouldBe("Creation 1");
+        viewModel.CreationName.ShouldBe(NewCreationWorkflow.UntitledName);
     }
 
     [Fact]

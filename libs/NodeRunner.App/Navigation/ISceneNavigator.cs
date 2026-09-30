@@ -12,7 +12,7 @@ public interface ISceneNavigator
 
     /// <summary>
     /// Gives the current scene's history entry new arguments without reopening it, so Back later
-    /// rebuilds what the scene shows now (a saved draft's Build).
+    /// rebuilds what the scene shows now (a new creation's Build once it starts training).
     /// </summary>
     void ReplaceCurrent(SceneRoute route);
 }

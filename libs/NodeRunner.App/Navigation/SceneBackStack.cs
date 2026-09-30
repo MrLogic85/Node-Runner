@@ -53,7 +53,8 @@ public sealed class SceneBackStack
 
     /// <summary>
     /// Updates the current entry's arguments without reopening its scene, for a scene whose state
-    /// changed under it: a new creation's Build once the draft is saved. Only the same scene.
+    /// changed under it: a new creation's Build stops being new once it starts training. Only the
+    /// same scene.
     /// </summary>
     public void ReplaceCurrent(SceneRoute route)
     {
