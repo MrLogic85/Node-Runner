@@ -3,7 +3,7 @@ using Godot;
 namespace NodeRunner.Ui.Lib;
 
 /// <summary>
-/// Semantic spacing roles for the fixed 640 x 360 phone canvas. Use these names
+/// Semantic spacing roles for the 640 x 360 reference canvas. Use these names
 /// instead of one-off pixel values or a raw <see cref="UiSize.Space"/> step, so the
 /// intent of a gap stays visible at the call site.
 /// </summary>

@@ -164,6 +164,30 @@ entries are not components of their own in Godot
   header row; its icon actions are decided when the Build inspector is
   migrated.
 
+## Screen size and safe area
+
+`reference design/README.md` → "Screen size" owns how the canvas grows and
+which parts keep their size. In this project `window/stretch/aspect="expand"`
+implements it. A screen narrower than 16:9 (4:3 tablets, square foldables)
+keeps 640 units of width and gains height instead, which the reference does
+not cover. 640 x 360 (`UiLayout.CanvasWidth`/`CanvasHeight`) is the reference
+and minimum canvas, not a fixed size.
+
+On Android the app runs immersive, so the status and navigation bars are
+hidden and only the camera cutout has to be avoided. Godot's
+`DisplayServer.GetDisplaySafeArea()` reports that area, and the `SafeArea`
+autoload (`UiSafeArea`) turns it into canvas-unit insets. `UiFrame` adds them
+at runtime to the card margin its scene authors, so each screen's background
+still reaches the screen edge and only the card with the content is inset.
+A 180-degree turn moves the cutout without changing the window size or
+sending a Godot event, so on a phone the autoload also polls. Dialogs are
+centred and notifications sit at the bottom centre, so both stay clear of a
+cutout without an inset. The game runs in both landscape orientations
+(`window/handheld/orientation` is sensor landscape) (#513). Android's sensor
+landscape ignores the phone's rotation lock; the orientation that respects it
+(`userLandscape`) is not offered by Godot's setting and would need a Gradle
+build, so a lying-flat phone may flip 180 degrees.
+
 ## Immediate-mode drawing and antialiasing
 
 The project renders at a low logical canvas (`window/size/viewport_width=640`,
