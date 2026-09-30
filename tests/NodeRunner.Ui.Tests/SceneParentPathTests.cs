@@ -27,6 +27,21 @@ public sealed class SceneParentPathTests
     }
 
     [Fact]
+    public void Sibling_nodes_have_distinct_names()
+    {
+        // Godot renames a duplicate sibling on load, so the second node's children lose their parent.
+        var duplicates = SceneNodes.Files()
+            .SelectMany(file => SceneNodes.Parse(file.Scene, file.Text)
+                .Where(node => !node.IsRoot)
+                .GroupBy(node => (node.Parent, node.Name))
+                .Where(group => group.Count() > 1)
+                .Select(group => $"{file.Scene}: {group.Key.Parent}/{group.Key.Name}"))
+            .ToList();
+
+        duplicates.ShouldBeEmpty();
+    }
+
+    [Fact]
     public void Guard_flags_a_parent_that_vanished_from_a_nested_instance()
     {
         const string toolbar = """

@@ -86,10 +86,7 @@ public sealed class UiTokensTests
         {
             UiLayout.SidePanelWidth, UiLayout.MenuWidth, UiLayout.SidePanelTabWidth,
         }.ShouldBe(new[] { 176, 200, 28 });
-        new[]
-        {
-            UiLayout.ColumnSmallWidth, UiLayout.ColumnMediumWidth, UiLayout.ColumnLargeWidth,
-        }.ShouldBe(new[] { 52, 76, 96 });
+        UiLayout.ColumnSmallWidth.ShouldBe(52);
         new[]
         {
             UiSize.Radius.Small, UiSize.Radius.Medium, UiSize.Radius.Large, UiSize.Radius.Pill,

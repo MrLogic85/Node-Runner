@@ -26,8 +26,6 @@ public static class UiLayout
 
     public const int MenuWidth = 200;
     public const int ColumnSmallWidth = 52;
-    public const int ColumnMediumWidth = 76;
-    public const int ColumnLargeWidth = 96;
 
     public static Vector2 CanvasSize { get; } = new(CanvasWidth, CanvasHeight);
 

@@ -13,6 +13,7 @@ internal static class RewrittenUi
     public static readonly string[] Screens =
     [
         "ui/screens/BuildScreen.cs",
+        "ui/screens/ColorsAndStylesScreen.cs",
         "ui/screens/ComponentGalleryScreen.cs",
         "ui/screens/CreationsScreen.cs",
         "ui/screens/ExamplesScreen.cs",
@@ -41,8 +42,7 @@ internal static class RewrittenUi
 
     /// <summary>
     /// Scene-authored screens and widgets, by path under <c>project/scenes</c>. A listed scene's
-    /// script bindings are checked even before the script joins <see cref="Screens"/> (the gallery
-    /// page #496).
+    /// script bindings are checked even before the script joins <see cref="Screens"/>.
     /// </summary>
     public static readonly string[] Scenes = [
         "screens/BuildScreen.tscn",
