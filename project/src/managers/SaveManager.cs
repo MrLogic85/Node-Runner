@@ -12,7 +12,7 @@ public partial class SaveManager : Node
     private ICreationRepository? _repository;
     private IProgressionRepository? _progressionRepository;
     private ICreationUpdateCoordinator? _updateCoordinator;
-    private IConstructionDraftWorkflow? _constructionDraftWorkflow;
+    private INewCreationWorkflow? _newCreationWorkflow;
     private IConstructionEditWorkflow? _constructionEditWorkflow;
     private ICreationDuplicateWorkflow? _creationDuplicateWorkflow;
     private IExampleCopyWorkflow? _exampleCopyWorkflow;
@@ -23,7 +23,7 @@ public partial class SaveManager : Node
         var directory = ProjectSettings.GlobalizePath("user://creations");
         _repository = new FileCreationRepository(new GodotStorageLocation(directory));
         _updateCoordinator = new CreationUpdateCoordinator(_repository);
-        _constructionDraftWorkflow = new ConstructionDraftWorkflow();
+        _newCreationWorkflow = new NewCreationWorkflow(_repository);
         _constructionEditWorkflow = new ConstructionEditWorkflow(_updateCoordinator);
         var progressionDirectory = ProjectSettings.GlobalizePath("user://progression");
         _progressionRepository = new FileProgressionRepository(new GodotStorageLocation(progressionDirectory));
@@ -55,9 +55,6 @@ public partial class SaveManager : Node
         return Repository.Get(id);
     }
 
-    public ConstructionEditResult PersistEdit(Guid id, CreatureDef editedCreature, BrainShapeDef brainShape, bool moveOnly) =>
-        ConstructionEditWorkflow.PersistEdit(id, editedCreature, brainShape, moveOnly);
-
     public void ResetTraining(Guid id) => UpdateCoordinator.ResetTraining(id);
 
     public long CurrentTrainingEpoch(Guid id) => UpdateCoordinator.CurrentTrainingEpoch(id);
@@ -68,13 +65,10 @@ public partial class SaveManager : Node
     public CreationDef? UpdateIfPresent(Guid id, Func<CreationDef, CreationDef> update) =>
         UpdateCoordinator.UpdateIfPresent(id, update);
 
-    public IConstructionDraftWorkflow ConstructionDraftWorkflow =>
-        _constructionDraftWorkflow ?? throw new InvalidOperationException("SaveManager is not ready.");
-
     public CreationsPresentationViewModel CreationsPresentation =>
         _creationsPresentation ?? throw new InvalidOperationException("SaveManager is not ready.");
 
-    private IConstructionEditWorkflow ConstructionEditWorkflow =>
+    public IConstructionEditWorkflow ConstructionEditWorkflow =>
         _constructionEditWorkflow ?? throw new InvalidOperationException("SaveManager is not ready.");
 
     public ProgressionDef Progression => ProgressionRepository.Load();
@@ -95,7 +89,7 @@ public partial class SaveManager : Node
         return true;
     }
 
-    public bool TryAttributeExtraCoreUnlock(Guid creationId)
+    private bool TryAttributeExtraCoreUnlock(Guid creationId)
     {
         var current = ProgressionRepository.Load();
         if (!current.ExtraCoreUnlocked || current.ExtraCoreUnlockedByCreationId is not null)
@@ -118,6 +112,8 @@ public partial class SaveManager : Node
 
     public CreationDef CopyExample(Guid exampleId) => ExampleCopyWorkflow.Copy(exampleId);
 
+    public CreationDef CreateNew() => NewCreationWorkflow.Create();
+
     private ICreationRepository Repository =>
         _repository ?? throw new InvalidOperationException("SaveManager is not ready.");
 
@@ -132,6 +128,9 @@ public partial class SaveManager : Node
 
     private IExampleCopyWorkflow ExampleCopyWorkflow =>
         _exampleCopyWorkflow ?? throw new InvalidOperationException("SaveManager is not ready.");
+
+    private INewCreationWorkflow NewCreationWorkflow =>
+        _newCreationWorkflow ?? throw new InvalidOperationException("SaveManager is not ready.");
 
     private sealed class GodotStorageLocation(string directoryPath) : IStorageLocation
     {

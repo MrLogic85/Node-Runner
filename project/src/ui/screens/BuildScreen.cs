@@ -188,7 +188,6 @@ public partial class BuildScreen : Control
         brainSetup.Disabled = presentation.IsBrainShapeLocked;
         brainSetup.NoteText = presentation.IsBrainShapeLocked ? "Locked once trained" : string.Empty;
         GetNode<UiMenuActionItem>("%MenuResetTraining").Visible = locked;
-        GetNode<UiMenuActionItem>("%MenuDeleteCreation").Disabled = !presentation.IsSaved;
         if (presentation.IsBrainShapeLocked && BrainSetup.IsOpen)
         {
             BrainSetup.Close();

@@ -60,9 +60,7 @@ public sealed class ConstructionPresentationViewModel
 
     public int MaxCores => _construction.MaxCores;
 
-    public BrainShapeDef BrainShape => _construction.HasCustomBrainShape
-        ? _construction.BrainShape
-        : new BrainShapeDef(BrainShapeDef.DefaultHiddenLayers, RecommendedNeurons(BuildPanel));
+    public BrainShapeDef BrainShape => _construction.BrainShape;
 
     public BrainSetupPresentation BrainSetup
     {
@@ -166,9 +164,6 @@ public sealed class ConstructionPresentationViewModel
     public string CoreToolText => _construction.IsMoveOnly ? "Core · locked" : BuildCoreToolText();
 
     public string DeleteToolText => _construction.IsMoveOnly ? "Delete · locked" : "Delete";
-
-    /// <summary>True for a saved Creation rather than a new draft.</summary>
-    public bool IsSaved => _construction.IsSaved;
 
     /// <summary>True for a locked Creation: its anatomy is fixed and only moving nodes is allowed.</summary>
     public bool IsLocked => _construction.IsMoveOnly;
@@ -304,9 +299,6 @@ public sealed class ConstructionPresentationViewModel
     {
         return (coreCount * _coreSensorValueCount) + (motorRelationCount * _motorRelationSensorValueCount);
     }
-
-    private static int RecommendedNeurons(ConstructionBuildPanelPresentation buildPanel) =>
-        BrainSetupPresentation.RecommendedNeuronsFor(buildPanel.InputCount, buildPanel.OutputCount);
 
     private static string BuildInvalidDraftInputSummary(int coreCount)
     {

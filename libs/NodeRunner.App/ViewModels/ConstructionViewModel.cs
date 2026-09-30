@@ -2,6 +2,7 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using NodeRunner.App.Builders;
 using NodeRunner.App.Lifecycle;
+using NodeRunner.App.Services;
 using NodeRunner.Domain;
 
 namespace NodeRunner.App.ViewModels;
@@ -31,13 +32,10 @@ public sealed class ConstructionViewModel : INotifyPropertyChanged
     private int? _pendingBeamStartNode;
     private string? _statusMessage;
     private bool _moveOnly;
-    private bool _isSaved;
     private int _maxCores = 1;
     private readonly HashSet<int> _selectedNodeIndices = [];
     private BrainShapeDef _brainShape = BrainShapeDef.Default;
-    private bool _hasCustomBrainShape;
-    private string _creationName = "Untitled Creation";
-    private bool _hasCustomCreationName;
+    private string _creationName = NewCreationWorkflow.UntitledName;
     private int? _trainingGeneration;
     private double? _bestFitness;
     private int? _selectedBeamIndex;
@@ -47,33 +45,17 @@ public sealed class ConstructionViewModel : INotifyPropertyChanged
         _builder = builder ?? new CreatureBuilder();
     }
 
-    public void Load(CreatureDef creature, bool moveOnly = false, BrainShapeDef? brainShape = null, string? creationName = null, TrainingStateDef? training = null) =>
-        Load(creature, moveOnly, brainShape, creationName, training, isSaved: false);
-
-    /// <summary>
-    /// Opens a saved Creation. It is fully editable until it is locked (<see cref="CreationLock"/>);
-    /// a locked one only moves its nodes, so its trained brain still fits.
-    /// </summary>
-    public void LoadCreation(CreationDef creation)
-    {
-        ArgumentNullException.ThrowIfNull(creation);
-        Load(creation.Creature, CreationLock.IsLocked(creation), creation.BrainShape, creation.Name, creation.Training, isSaved: true);
-    }
-
-    private void Load(CreatureDef creature, bool moveOnly, BrainShapeDef? brainShape, string? creationName, TrainingStateDef? training, bool isSaved)
+    public void Load(CreatureDef creature, bool moveOnly = false, BrainShapeDef? brainShape = null, string? creationName = null, TrainingStateDef? training = null)
     {
         ArgumentNullException.ThrowIfNull(creature);
         _builder = new CreatureBuilder(creature);
         _selectedNodeIndices.Clear();
         _selectedBeamIndex = null;
         _brainShape = brainShape ?? BrainShapeDef.Default;
-        _hasCustomBrainShape = brainShape is not null;
-        _hasCustomCreationName = !string.IsNullOrWhiteSpace(creationName);
-        _creationName = _hasCustomCreationName ? creationName! : "Untitled Creation";
+        _creationName = string.IsNullOrWhiteSpace(creationName) ? NewCreationWorkflow.UntitledName : creationName;
         _trainingGeneration = training?.Generation;
         _bestFitness = training?.BestFitness;
         _moveOnly = moveOnly;
-        _isSaved = isSaved;
         if (moveOnly)
         {
             ActiveTool = ConstructionTool.Place;
@@ -84,23 +66,14 @@ public sealed class ConstructionViewModel : INotifyPropertyChanged
         AnatomyChanged?.Invoke(this, EventArgs.Empty);
     }
 
-    public void ResetDraft()
+    /// <summary>
+    /// Opens a saved Creation. It is fully editable until it is locked (<see cref="CreationLock"/>);
+    /// a locked one only moves its nodes, so its trained brain still fits.
+    /// </summary>
+    public void LoadCreation(CreationDef creation)
     {
-        _builder = new CreatureBuilder();
-        _selectedNodeIndices.Clear();
-        _selectedBeamIndex = null;
-        _brainShape = BrainShapeDef.Default;
-        _hasCustomBrainShape = false;
-        _creationName = "Untitled Creation";
-        _hasCustomCreationName = false;
-        _trainingGeneration = null;
-        _bestFitness = null;
-        _moveOnly = false;
-        _isSaved = false;
-        ActiveTool = ConstructionTool.Place;
-        PendingBeamStartNode = null;
-        StatusMessage = null;
-        AnatomyChanged?.Invoke(this, EventArgs.Empty);
+        ArgumentNullException.ThrowIfNull(creation);
+        Load(creation.Creature, CreationLock.IsLocked(creation), creation.BrainShape, creation.Name, creation.Training);
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
@@ -111,15 +84,7 @@ public sealed class ConstructionViewModel : INotifyPropertyChanged
     /// <summary>True for a locked Creation: parts and brain shape are fixed, and only nodes move.</summary>
     public bool IsMoveOnly => _moveOnly;
 
-    /// <summary>True when Build shows a saved Creation rather than a new draft.</summary>
-    public bool IsSaved => _isSaved;
-
     public string CreationName => _creationName;
-
-    /// <summary>The name a draft is saved under: the user's own, else the next <c>Creation N</c>.</summary>
-    public string SaveName(int savedCreationCount) => _hasCustomCreationName
-        ? _creationName
-        : $"Creation {savedCreationCount + 1}";
 
     public int? TrainingGeneration => _trainingGeneration;
 
@@ -145,7 +110,6 @@ public sealed class ConstructionViewModel : INotifyPropertyChanged
     public void SetCreationName(string creationName)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(creationName);
-        _hasCustomCreationName = true;
         if (_creationName == creationName)
         {
             return;
@@ -231,8 +195,6 @@ public sealed class ConstructionViewModel : INotifyPropertyChanged
 
     public BrainShapeDef BrainShape => _brainShape;
 
-    public bool HasCustomBrainShape => _hasCustomBrainShape;
-
     public void SetBrainShape(BrainShapeDef brainShape)
     {
         ArgumentNullException.ThrowIfNull(brainShape);
@@ -242,9 +204,7 @@ public sealed class ConstructionViewModel : INotifyPropertyChanged
         }
 
         _brainShape = brainShape;
-        _hasCustomBrainShape = true;
         OnPropertyChanged(nameof(BrainShape));
-        OnPropertyChanged(nameof(HasCustomBrainShape));
     }
 
     public void SetMaxCores(int maxCores)
@@ -603,12 +563,6 @@ public sealed class ConstructionViewModel : INotifyPropertyChanged
     public void SetBlockedLeaveMessage(IReadOnlyList<string> errors)
     {
         StatusMessage = $"Not ready to simulate yet: {string.Join(" ", errors)}";
-    }
-
-    public void SetCompletedMessage(string message)
-    {
-        ArgumentException.ThrowIfNullOrWhiteSpace(message);
-        StatusMessage = message;
     }
 
     private int FindCoreIndexForNode(int nodeIndex)

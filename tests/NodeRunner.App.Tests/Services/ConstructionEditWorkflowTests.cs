@@ -7,7 +7,7 @@ namespace NodeRunner.App.Tests.Services;
 public sealed class ConstructionEditWorkflowTests
 {
     [Fact]
-    public void PersistEdit_WhenCreationExists_PersistsBeforeAllowingLiveApply()
+    public void PersistEdit_WhenCreationExists_SavesAndReturnsIt()
     {
         var repository = new InMemoryCreationRepository();
         var coordinator = new CreationUpdateCoordinator(repository);
@@ -18,16 +18,14 @@ public sealed class ConstructionEditWorkflowTests
 
         var result = workflow.PersistEdit(original.Id, editedCreature, BrainShapeDef.Default, moveOnly: true);
 
-        result.ShouldApplyLive.ShouldBeTrue();
-        result.UpdatedCreation.ShouldNotBeNull();
-        result.UpdatedCreation.Creature.ShouldBe(editedCreature);
-        result.UpdatedCreation.Training.ShouldBe(original.Training);
-        result.StatusMessage.ShouldBe("Saved edits to Original.");
+        result.ShouldNotBeNull();
+        result.Creature.ShouldBe(editedCreature);
+        result.Training.ShouldBe(original.Training);
         repository.Get(original.Id)!.Creature.ShouldBe(editedCreature);
     }
 
     [Fact]
-    public void PersistEdit_WhenCreationIsMissing_DiscardsLiveEdit()
+    public void PersistEdit_WhenCreationIsMissing_ReturnsNull()
     {
         var repository = new InMemoryCreationRepository();
         var coordinator = new CreationUpdateCoordinator(repository);
@@ -35,9 +33,7 @@ public sealed class ConstructionEditWorkflowTests
 
         var result = workflow.PersistEdit(Guid.NewGuid(), CreateCreature(x: 3), BrainShapeDef.Default, moveOnly: true);
 
-        result.ShouldApplyLive.ShouldBeFalse();
-        result.UpdatedCreation.ShouldBeNull();
-        result.StatusMessage.ShouldBe("Could not save the edited creature; your edit was discarded.");
+        result.ShouldBeNull();
         repository.List().ShouldBeEmpty();
     }
 
