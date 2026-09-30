@@ -26,7 +26,7 @@
 src/ui/
 ├── lib/          Reusable, app-agnostic Controls (UiButton, UiCard)
 ├── screens/      Full-screen scenes (BuildScreen, CreationsScreen)
-└── widgets/      App-specific composites (ConstructionCanvas, GenerationStrip)
+└── widgets/      App-specific composites (ConstructionCanvas, CreationCard)
 ```
 
 Rule of thumb: if a Control could be lifted into another Godot project

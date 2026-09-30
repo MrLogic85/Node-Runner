@@ -4,8 +4,13 @@ using NodeRunner.Ui.Lib;
 
 namespace NodeRunner.Ui.Widgets;
 
+/// <summary>Draws the live network: neurons by layer, weighted edges and the selected neuron.</summary>
 public partial class BrainFocusNetworkView : Control
 {
+    private const float _sideInset = 42f;
+    private const float _verticalInset = 26f;
+    private const float _tapRadius = 24f;
+
     private readonly Dictionary<(int Layer, int Neuron), Vector2> _positions = new();
     private BrainFocusPresentationViewModel? _viewModel;
 
@@ -98,32 +103,16 @@ public partial class BrainFocusNetworkView : Control
         }
     }
 
-    private void DrawWaitingState()
-    {
-        var style = new StyleBoxFlat
-        {
-            BgColor = UiThemeLookup.Color(this, UiTokens.Color.Panel),
-            BorderColor = UiThemeLookup.Color(this, UiTokens.Color.Line),
-            BorderWidthLeft = (int)UiSize.Stroke.Hair,
-            BorderWidthTop = (int)UiSize.Stroke.Hair,
-            BorderWidthRight = (int)UiSize.Stroke.Hair,
-            BorderWidthBottom = (int)UiSize.Stroke.Hair,
-            CornerRadiusTopLeft = (int)UiSize.Radius.Large,
-            CornerRadiusTopRight = (int)UiSize.Radius.Large,
-            CornerRadiusBottomLeft = (int)UiSize.Radius.Large,
-            CornerRadiusBottomRight = (int)UiSize.Radius.Large,
-        };
-        DrawStyleBox(style, new Rect2(Vector2.Zero, Size));
+    private void DrawWaitingState() =>
         DrawCircle(Size / 2, 14, UiThemeLookup.Color(this, UiTokens.Color.LineStrong));
-    }
 
     private void CacheNeuronPositions()
     {
         var layers = _viewModel!.Layers;
-        var left = 42f;
-        var right = Math.Max(left + 1, Size.X - 42f);
-        var top = 26f;
-        var bottom = Math.Max(top + 1, Size.Y - 26f);
+        var left = _sideInset;
+        var right = Math.Max(left + 1, Size.X - _sideInset);
+        var top = _verticalInset;
+        var bottom = Math.Max(top + 1, Size.Y - _verticalInset);
 
         for (var layerIndex = 0; layerIndex < layers.Count; layerIndex++)
         {
@@ -197,7 +186,7 @@ public partial class BrainFocusNetworkView : Control
 
     private void SelectNearestNeuron(Vector2 position)
     {
-        var bestDistanceSquared = 24f * 24f;
+        var bestDistanceSquared = _tapRadius * _tapRadius;
         (int Layer, int Neuron)? best = null;
         foreach (var candidate in _positions)
         {

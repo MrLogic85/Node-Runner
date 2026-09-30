@@ -151,7 +151,7 @@ counts and alphas stay inline where they are drawn. Numbers elsewhere in the
 file (hit radii, timers, thresholds) are still named. Gallery pages join the lists like
 product screens. A screen joins the lists when it is rewritten;
 [#310](https://github.com/MrLogic85/Node-Runner/issues/310) tracks the rest as
-child or blocking issues.
+child issues.
 
 **3. Behaviour is tested apart from layout.** Rules and state live in
 `NodeRunner.App` view-models (`NodeRunner.App.Tests`), and component

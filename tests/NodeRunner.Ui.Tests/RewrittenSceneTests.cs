@@ -23,6 +23,8 @@ internal static class RewrittenUi
     /// <summary>Widget scripts, by path under <c>project/src</c>: held to the library's rules.</summary>
     public static readonly string[] Widgets =
     [
+        "ui/widgets/BrainFocusNetworkView.cs",
+        "ui/widgets/BrainFocusSheet.cs",
         "ui/widgets/ConstructionCanvas.cs",
         "ui/widgets/CreationCard.cs",
         "ui/widgets/CreatureThumbnail.cs",
@@ -33,7 +35,7 @@ internal static class RewrittenUi
     /// inside <c>_Draw</c> and its <c>Draw*</c> helpers (proportions, strokes, dash lengths, segment
     /// counts, alphas); numbers elsewhere in the file are still named and every other rule holds.
     /// </summary>
-    public static readonly string[] DrawnWidgets = ["ui/widgets/ConstructionCanvas.cs"];
+    public static readonly string[] DrawnWidgets = ["ui/widgets/BrainFocusNetworkView.cs", "ui/widgets/ConstructionCanvas.cs"];
 
     /// <summary>
     /// Scene-authored screens and widgets, by path under <c>project/scenes</c>. A listed scene's
@@ -49,6 +51,7 @@ internal static class RewrittenUi
         "screens/PopupGalleryScreen.tscn",
         "screens/ToolbarsScreen.tscn",
         "screens/TrainingScreen.tscn",
+        "widgets/BrainFocusSheet.tscn",
         "widgets/CreationCard.tscn",
     ];
 }

@@ -7,15 +7,19 @@ namespace NodeRunner.Ui.Widgets;
 
 /// <summary>
 /// The Training screen's brain sheet: the live network, its summary and the selected neuron.
-/// Still built in code with its own sizes, outside the rewritten-scene checks; the Brain view
-/// (#393) replaces it.
+/// The scene owns the layout; a tap outside the sheet closes it. The Brain view (#393) replaces it.
 /// </summary>
 public partial class BrainFocusSheet : Control
 {
     private BrainFocusPresentationViewModel? _presentation;
-    private UiSheet? _sheet;
-    private Label? _summaryLabel;
-    private Label? _selectedLabel;
+
+    private Control Sheet => GetNode<Control>("%Sheet");
+
+    private Label Summary => GetNode<Label>("%Summary");
+
+    private Label Selected => GetNode<Label>("%Selected");
+
+    private BrainFocusNetworkView Network => GetNode<BrainFocusNetworkView>("%Network");
 
     public bool IsOpen => Visible;
 
@@ -30,6 +34,11 @@ public partial class BrainFocusSheet : Control
             }
 
             _presentation = value;
+            if (IsNodeReady())
+            {
+                Network.ViewModel = _presentation;
+            }
+
             if (_presentation is not null && IsInsideTree())
             {
                 _presentation.PropertyChanged += OnPresentationChanged;
@@ -55,89 +64,40 @@ public partial class BrainFocusSheet : Control
 
     public override void _Ready()
     {
-        var dismiss = new Button
-        {
-            Name = "BrainFocusDismiss",
-            Flat = true,
-            Text = string.Empty,
-            MouseFilter = MouseFilterEnum.Stop,
-        };
-        dismiss.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
-        dismiss.Pressed += Close;
-        AddChild(dismiss);
+        Network.ViewModel = _presentation;
+        GetNode<UiButton>("%Close").Activated += Close;
+    }
 
-        _sheet = new UiSheet
+    public override void _GuiInput(InputEvent @event)
+    {
+        if (@event is InputEventMouseButton { Pressed: true } press &&
+            !Sheet.GetGlobalRect().HasPoint(GetGlobalTransform() * press.Position))
         {
-            Name = "BrainFocusSheet",
-            Title = "BrainFocus · Decides",
-            CustomMinimumSize = new Vector2(540, 0),
-        };
-        AddChild(_sheet);
+            Close();
+            AcceptEvent();
+        }
     }
 
     public void Open()
     {
-        if (_sheet is null)
-        {
-            return;
-        }
-
-        _sheet.Position = new Vector2(Mathf.Max(24, (Size.X - _sheet.CustomMinimumSize.X) / 2), 72);
-        _sheet.SetBody(CreateBody());
         UpdateLabels();
         Show();
     }
 
     public void Close() => Hide();
 
-    private Control CreateBody()
-    {
-        var stack = new VBoxContainer();
-        stack.AddThemeConstantOverride("separation", 10);
-
-        _summaryLabel = new Label { AutowrapMode = TextServer.AutowrapMode.WordSmart };
-        stack.AddChild(_summaryLabel);
-
-        stack.AddChild(new BrainFocusNetworkView
-        {
-            ViewModel = _presentation,
-            CustomMinimumSize = new Vector2(500, 220),
-            MouseFilter = MouseFilterEnum.Stop,
-        });
-
-        _selectedLabel = new Label { AutowrapMode = TextServer.AutowrapMode.WordSmart };
-        stack.AddChild(_selectedLabel);
-
-        var close = new UiButton
-        {
-            Kind = UiButtonKind.Primary,
-            Text = "Back to SignalFlow",
-        };
-        close.Pressed += Close;
-        stack.AddChild(close);
-
-        return stack;
-    }
-
     private void OnPresentationChanged(object? sender, PropertyChangedEventArgs args) => UpdateLabels();
 
     private void UpdateLabels()
     {
-        if (_presentation is null)
+        if (_presentation is null || !IsNodeReady())
         {
             return;
         }
 
-        if (_summaryLabel is not null)
-        {
-            _summaryLabel.Text = _presentation.HasNetwork
-                ? $"{_presentation.Summary}. Circles/solid cyan are positive; diamonds/dashed red are negative; stronger signals draw brighter/thicker."
-                : _presentation.Summary;
-        }
-
-        if (_selectedLabel is not null)
-        {
-            _selectedLabel.Text = $"{_presentation.SelectedNeuronLabel}: {_presentation.SelectedNeuronSummary}";
-        }
+        Summary.Text = _presentation.HasNetwork
+            ? $"{_presentation.Summary}. Circles/solid cyan are positive; diamonds/dashed red are negative; stronger signals draw brighter/thicker."
+            : _presentation.Summary;
+        Selected.Text = $"{_presentation.SelectedNeuronLabel}: {_presentation.SelectedNeuronSummary}";
     }
 }
