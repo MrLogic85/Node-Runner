@@ -63,6 +63,15 @@ public sealed class ConstructionPresentationViewModel
         ? _construction.BrainShape
         : new BrainShapeDef(BrainShapeDef.DefaultHiddenLayers, RecommendedNeurons(BuildPanel));
 
+    public BrainSetupPresentation BrainSetup
+    {
+        get
+        {
+            var buildPanel = BuildPanel;
+            return BrainSetupPresentation.For(BrainShape, buildPanel.InputCount, buildPanel.OutputCount);
+        }
+    }
+
     public bool IsBrainShapeLocked => _construction.IsMoveOnly;
 
     public string MoveOnlyLockReason => "Move only · training kept";
@@ -293,10 +302,7 @@ public sealed class ConstructionPresentationViewModel
     }
 
     private static int RecommendedNeurons(ConstructionBuildPanelPresentation buildPanel) =>
-        Math.Clamp(
-            (int)Math.Ceiling((buildPanel.InputCount + buildPanel.OutputCount) / 2.0),
-            BrainShapeDef.MinimumNeuronsPerLayer,
-            BrainShapeDef.MaximumNeuronsPerLayer);
+        BrainSetupPresentation.RecommendedNeuronsFor(buildPanel.InputCount, buildPanel.OutputCount);
 
     private static string BuildInvalidDraftInputSummary(int coreCount)
     {
