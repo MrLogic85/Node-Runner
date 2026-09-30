@@ -104,29 +104,6 @@ public partial class UiStageCard : UiCard
         }
     }
 
-    public void SetBody(params Control[] body)
-    {
-        ArgumentNullException.ThrowIfNull(body);
-        if (!_ready)
-        {
-            return;
-        }
-
-        foreach (var child in _body.GetChildren().OfType<Control>().ToArray())
-        {
-            _body.RemoveChild(child);
-            child.QueueFree();
-        }
-
-        foreach (var child in body)
-        {
-            child.SizeFlagsHorizontal = SizeFlags.ExpandFill;
-            _body.AddChild(child);
-        }
-
-        ApplyCollapsed();
-    }
-
     private void RefreshCardStyle()
     {
         Kind = Selected ? CardVariant.Selected : CardVariant.Frame;

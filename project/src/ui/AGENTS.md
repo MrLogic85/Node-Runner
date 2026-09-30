@@ -68,7 +68,9 @@ unchanged, it belongs in `lib/`. If it embeds project vocabulary
 - Godot signals for Control-to-Control events. C# events for
   ViewModel-to-Control notifications.
 - `[Export]` fields have sensible defaults so the Control renders something
-  useful in the editor without setup.
+  useful in the editor without setup. A rewritten screen declares no numbers
+  (`docs/TEST_STRATEGY.md`), so its numeric exports take their value from its
+  scene instead.
 - Use containers and anchors for composition. Dimensions set in C# come from
   named `UiSize`/`UiLayout`/`UiSpacing` values, never one-off literals. The
   exception is drawing code in a widget that draws in `_Draw`: see

@@ -10,6 +10,16 @@ public partial class PopupGalleryScreen : GalleryScreen
     private UiDialog? _dialog;
     private UiNotification? _notifications;
 
+    // Demo values are authored in the scene; screen code declares no numbers (#310).
+    [Export]
+    public int LongBodyRepeats { get; set; }
+
+    [Export(PropertyHint.None, "suffix:s")]
+    public double TryActionSeconds { get; set; }
+
+    [Export(PropertyHint.None, "suffix:s")]
+    public double WaitActionSeconds { get; set; }
+
     protected override GalleryPage Page => GalleryPage.PopupGallery;
 
     protected override bool HasOpenPopup => _dialog is { IsOpen: true };
@@ -52,7 +62,7 @@ public partial class PopupGalleryScreen : GalleryScreen
 
     private void ShowLongDialog() => ShowDialog(new(
         UiPopupType.Default, "Review the details",
-        string.Join("\n\n", Enumerable.Repeat("The content scrolls while the title and actions remain visible. Cancel, Escape or Android Back safely dismisses the dialog.", 6)),
+        string.Join("\n\n", Enumerable.Repeat("The content scrolls while the title and actions remain visible. Cancel, Escape or Android Back safely dismisses the dialog.", LongBodyRepeats)),
         "Continue", Succeed));
 
     private void ShowErrorDialog()
@@ -62,7 +72,7 @@ public partial class PopupGalleryScreen : GalleryScreen
             "Both buttons are disabled while the callback runs. The first attempt fails; retry succeeds.",
             "Hold to try", async () =>
             {
-                await Task.Delay(1500);
+                await Task.Delay(TimeSpan.FromSeconds(TryActionSeconds));
                 return ++attempts == 1
                     ? UiDialogResult.Failure("The example action failed. Nothing changed; retry or cancel.")
                     : UiDialogResult.Success;
@@ -70,8 +80,8 @@ public partial class PopupGalleryScreen : GalleryScreen
     }
 
     private void ShowAsyncDialog() => ShowDialog(new(
-        UiPopupType.Default, "Wait for the action", "The callback takes two seconds. Closing and repeated activation are blocked until it finishes.",
-        "Run action", async () => { await Task.Delay(2000); return UiDialogResult.Success; }));
+        UiPopupType.Default, "Wait for the action", $"The callback takes {WaitActionSeconds:0.#} seconds. Closing and repeated activation are blocked until it finishes.",
+        "Run action", async () => { await Task.Delay(TimeSpan.FromSeconds(WaitActionSeconds)); return UiDialogResult.Success; }));
 
     private void ShowCloseDialog() => ShowDialog(new(
         UiPopupType.Default, "Information", "No action button. Close fills the entire action row.", AbortText: "Close"));

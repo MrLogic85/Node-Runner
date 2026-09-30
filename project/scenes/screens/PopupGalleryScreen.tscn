@@ -27,6 +27,9 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1")
+LongBodyRepeats = 6
+TryActionSeconds = 1.5
+WaitActionSeconds = 2.0
 
 [node name="UiFrame" parent="." unique_id=1226224121 instance=ExtResource("shell_2_frame")]
 unique_name_in_owner = true
