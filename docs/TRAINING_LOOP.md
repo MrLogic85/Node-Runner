@@ -26,8 +26,9 @@ but do not redefine it here.
 The training engine does not decide whether a Creation is editable. The App
 layer owns the durable lifecycle described by
 `reference design/components/Navigation/README.md`. One owner decision
-overrides it (#369, 2026-09-30): "locked" means exactly "has trained at least
-one generation", not "a training session has finished".
+overrides it and `reference design/components/BuildLocked/README.md` (#369,
+2026-09-30): "locked" means exactly "has trained at least one generation",
+not "a training session has finished".
 
 1. An unlocked Build autosaves and opens Train setup through Start training.
 2. Train setup opens Training.
