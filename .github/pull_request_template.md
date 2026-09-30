@@ -6,7 +6,7 @@ owned by docs/REVIEW.md; do not copy it into this template.
 ## What & why
 
 <!-- 1–3 sentences. What does this PR do, and why? Link the issue. -->
-<!-- PR title format: type(#123): Description -->
+<!-- PR title: type(#123): Description, or type(#123, #124) for several issues; see docs/REVIEW.md "PR title and commit hygiene". -->
 
 Closes #123
 
