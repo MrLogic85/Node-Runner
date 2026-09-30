@@ -4,7 +4,8 @@ Node Runner's UI source of truth is the tracked package in
 `reference design/`. Start at its `index.html`, then read the relevant
 component README and preview. `tokens.json` owns visual values, `library.md`
 owns reusable controls, and the component READMEs own screens and interaction
-flows. Do not copy those contracts into `docs/`.
+flows. Do not copy those contracts into `docs/`. Recorded exceptions to the
+reference live only in "Reference flow overrides" below.
 
 This document contains only repository-specific direction that the design
 package does not own. `docs/UI_IMPLEMENTATION_PLAN.md` owns delivery order and
@@ -50,6 +51,23 @@ in code; they move to this split as they are rewritten
 ([#310](https://github.com/MrLogic85/Node-Runner/issues/310)), and
 `RewrittenUi` in the UI tests is the one list of those that have.
 `docs/TEST_STRATEGY.md` lists the guard for each boundary.
+
+## Reference flow overrides
+
+The active plan (`docs/ROADMAP.md` → "Active plan", #522) deliberately replaces
+parts of the reference flow. Each override lands with the issue named; until
+then the app follows the reference.
+
+- **Unlocking keeps training (#371, 0.13.0).** The reference's padlock resets
+  training after a warning, and its "One reset" rule says training is only
+  lost by unlocking (`reference design/README.md`, BuildLocked and Overlays).
+  Instead the lock only prevents accidental changes, and a rebuild keeps the
+  brain through port matching (#516).
+- **The brain is hidden until 0.16.0 (#539).** While the brain is direct, the
+  player neither sees nor edits it: Brain setup (hidden layers, neurons per
+  layer), the BuildLocked brain widget, and the Training Brain button and
+  Signal flow Brain stage are hidden. The brain graph (#543) and its design
+  brief (#549) bring them back.
 
 ## Product feel
 

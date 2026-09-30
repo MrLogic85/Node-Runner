@@ -342,7 +342,7 @@ distinct arrays. The network itself does not keep per-call scratch state.
 Open design questions are tracked as GitHub Issues rather than listed here,
 so they get labels, milestones, and a closing decision instead of going
 stale in prose. Of the three questions previously recorded in this section:
-the large-network-visualization question is now tracked on issue #97
-(0.9.0); the sensor-configurability question is now tracked on issue #107;
+the large-network-visualization question belongs to the 0.16.0 brain views
+(#196, #197, #393); the sensor-configurability question is now tracked on issue #107;
 and the ViewModel-base question is resolved: `INotifyPropertyChanged` per
 `libs/NodeRunner.App/AGENTS.md`.

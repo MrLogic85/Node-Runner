@@ -15,8 +15,9 @@ Read before every task:
   reference-design rollout is active. Read the relevant component README,
   previews, `tokens.json`, and `library.md` for any touched surface.
 - `docs/UI_DIRECTION.md` — repository-specific fidelity, architecture, and
-  verification boundaries. Product and component behavior lives only in
-  `reference design/`.
+  verification boundaries. Product and component behavior lives in
+  `reference design/`, except the recorded exceptions in `UI_DIRECTION.md` →
+  "Reference flow overrides", which are approved and not deviations.
 - `docs/ROADMAP.md` — what the current and next version are trying to teach,
   so design decisions serve the pedagogical goal, not just aesthetics.
 - `docs/ARCHITECTURE.md` and the nearest `project/src/**/AGENTS.md` — so your

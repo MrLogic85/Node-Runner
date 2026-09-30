@@ -24,33 +24,174 @@ Update the current stage here when it changes.
 
 ---
 
-## Current UI rollout — reference design adoption
+## Active plan — 0.12.0 to 0.20.0
 
-The tracked package in `reference design/` owns the detailed UI and product
-flow. Do not duplicate that contract in this roadmap.
+Source: the Brain v2 epic
+[#522](https://github.com/MrLogic85/Node-Runner/issues/522). GitHub milestones
+own issue lists and status; this section holds the durable narrative.
+`reference design/` owns UI and product flow, and
+`docs/UI_IMPLEMENTATION_PLAN.md` owns UI implementation order. Where this plan
+replaces the reference flow, `docs/UI_DIRECTION.md` → "Reference flow
+overrides" records it.
 
-Current delivery is gated by:
+Rules that hold across the phases:
 
-1. **Foundations (#226):** exact colors, typography, spacing, dimensions,
-   radii, strokes, and font resources from the structured export.
-2. **Component Library (#227):** every reusable component and meaningful state
-   built and verified in isolation.
-3. **Creation lifecycle (#229):** autosave, training-driven lock, and
-   destructive Unlock in one Build scene.
-4. **Scene delivery:** Build parts and the remaining Training, explanation,
-   progression, and settings surfaces (#194-#202, #211, #220).
+- From 0.13.0 until 0.16.0 the brain is direct (inputs straight to outputs,
+  #536), fitness is distance only, and the brain cannot be seen or edited
+  (#539).
+- From 0.13.0 a rebuild keeps the brain. Parts declare ports; kept ports keep
+  their weights and new parts join almost passive. The lock only prevents
+  accidental changes; unlocking does not reset training.
+- Each milestone that changes UI has a design brief before implementation.
+- When parts and brain abilities unlock is decided by play-test spikes
+  (#530, #550), not up front.
 
-Earlier #186-#193 established the first reference-based shell and scene
-slices. They remain useful implementation history, but completion against the
-previous export does not bypass the current foundation and component gates.
+### 0.12.0 — Build on the reference design
 
-`docs/UI_IMPLEMENTATION_PLAN.md` owns implementation order and acceptance
-gates. Older milestone text below remains historical context for how the
-current prototype arrived here. Terms such as Complete, Save, Edit, Rebuild,
-and the global Build/Simulate switch describe those shipped increments, not
-the active product target.
+**Goal:** Build works on the reference design, and every part has a durable
+identity.
+
+- Build tools, parts tray and placement, vocabulary, and the reference-design
+  UI foundations.
+- Stable part ids (#220): the prerequisite for a brain that survives rebuilds.
+
+**Ship criterion:** A player builds a creature on the reference-design Build
+screen, and every part keeps its id across edits and saves.
+
+### 0.13.0 — Train, save and load
+
+**Goal:** The minimum loop on the new design: build, train, leave, come back,
+rebuild, and keep training.
+
+- One save format defined before fields are added (#553).
+- Parts declare ports with the input convention "0 = as built" (#534).
+  Outputs are position (tanh, 0 = built pose) and strength (sigmoid) (#535).
+- A direct brain keyed by port ids, stored as a connection-gene graph (#536).
+- Fixed start height and generation 0 (#537).
+- Autosave after every generation; resuming continues from the saved elites
+  (#538).
+- A rebuild keeps the brain through port matching (#516); lock and unlock
+  without reset (#371).
+- One map, distance-only fitness, and shadows in the Training arena (#137).
+- Basic sound design and the first sounds (#378, #285).
+- The brain (views and editing) hidden until 0.16.0 (#539).
+
+**ML concepts introduced:** A direct policy (observation → action with no
+hidden layer); training resumes instead of restarting; a changed body keeps
+what it has learned.
+
+**Ship criterion:** A player trains on the phone, closes and reopens the app,
+and training continues. Adding a part keeps the skill the creature already had.
+
+### 0.14.0 — More parts
+
+**Goal:** Enough parts to find out what is worth unlocking and when.
+
+- Motors, passive parts, sensors, power and blocks (#92 and its children).
+- Core sensor changes (#127) and Pulse, a rhythm part whose tempo is itself
+  an output (#527).
+- Shadows (population size) saved per Creation, with phone calibration (#528).
+- Investigation of a good start creature (#529) and a spike on part unlocks
+  (#530).
+
+**ML concepts introduced:** Feature engineering (what each sensor adds), a
+rhythm generator as an input, population size as a hyperparameter.
+
+**Ship criterion:** The new parts work in Build and Training, and play-testing
+has produced the data to decide unlock order.
+
+### 0.15.0 — More maps
+
+**Goal:** Train one Creation on several maps.
+
+- Map model and maps (#442, #445, #446).
+- Map checkboxes and the map loop: one generation is one run on one map
+  (#540).
+- Stats per generation and map (#541) and the Stats screen (#198).
+
+**ML concepts introduced:** Generalisation versus overfitting to one map;
+learning curves per map.
+
+**Ship criterion:** A Creation trained on two maps performs on both, and Stats
+shows its history per map.
+
+### 0.16.0 — Brain graph
+
+**Goal:** Make the brain visible and let it grow.
+
+- Hidden layers on top of kept direct connections, with the cascade rule
+  (#543).
+- Brain views (#196, #197, #393) and neuron statistics and operations (#548).
+- The GA behind an ask/tell optimizer interface (#545).
+- Several fitness functions (#317) and a spike on their formulas (#546).
+
+**ML concepts introduced:** Network capacity, hidden features, skip
+connections, several objectives at once, live activations.
+
+**Ship criterion:** A player adds a hidden layer without losing the skill and
+watches its neurons respond.
+
+### 0.17.0 — Safe building and user interaction
+
+**Goal:** Changing a Creation feels safe, and the app is comfortable to use.
+
+- Helpers for changing a Creation safely.
+- Overlays and toasts (#200).
+- Settings: UI size, theme, sounds and the Shadows default (#201,
+  #379–#381).
+- Hiding the training shadows (#284).
+
+### 0.18.0 — Checkpoints
+
+**Goal:** Go back to an earlier point in training (#256).
+
+- A checkpoint whenever training stops (at most 5 automatic per Creation),
+  manual checkpoints, and restore. Restoring rewinds the training history.
+
+**ML concepts introduced:** Model checkpoints; training is a path you can
+return along.
+
+### 0.19.0 — Basic achievements
+
+**Goal:** Reward visible progress.
+
+- Achievement model, screen, training progress and toast (#199, #390–#392,
+  #488).
+- Part rewards (#525) and locked examples (#175, #429–#438).
+
+### 0.20.0 — Advanced achievements
+
+**Goal:** Reward understanding, not only distance.
+
+- Plateau and other non-obvious achievements (#547).
+- Post-training summary (#544).
+- Brain-ability rewards (#551) and a spike on when they unlock (#550).
+
+**ML concepts introduced:** Plateaus, stagnation and local optima; reading a
+learning curve.
+
+### Backlog
+
+No milestone yet: memory cells (#126), sensor configurability (#107) and
+procedural maps (#91).
 
 ---
+
+## History — 0.1.0 to 0.11.0
+
+The sections below describe shipped increments and how the prototype arrived
+here. Terms such as Complete, Save, Edit, Rebuild, and the global
+Build/Simulate switch describe those increments, not the active product.
+0.10.0 and 0.11.0 adopted the reference design (tokens, component primitives,
+the Creations hub and the Build-only creation flow); their GitHub milestones
+hold the details.
+
+Superseded by the active plan:
+
+- 0.6.0 Rebuild started a new Creation without the previous training. From
+  0.13.0 a rebuild keeps the brain (#516).
+- 0.8.0 progress toward the next unlock moves to 0.19.0 (#488).
+- 0.9.0 brain visualization and sliders return as the 0.16.0 brain views.
 
 ## 0.1.0 — "Ryckningar" (Twitches)
 
@@ -394,7 +535,9 @@ hyperparameter sensitivity, interpretability.
 - **Imitation mode:** the player demonstrates the first X steps by moving
   nodes while beam lengths and constraints stay fixed. Recorded target motion
   or derived motor-relation commands become supervised data. Backprop trains
-  the network to imitate. Release and observe.
+  the network to imitate. Release and observe. #522 records an agreed shape
+  ("learn from mother"), to use if a brain without direct connections or a
+  large removal ever needs it.
 - **Classification mini-mode:** draw creatures, label them ("hopper", "crawler",
   "swimmer"). Train a classifier. Visualize the decision boundary.
 - Live loss curve
@@ -412,13 +555,15 @@ gradient-based) and the user can articulate the difference.
 
 Picked from as time and interest allow:
 
-- **NEAT** — topology evolves, not just weights. Very visual.
+- **NEAT** — topology evolves, not just weights. Very visual. The 0.13.0
+  connection-gene brain format is ready for it (#522).
 - **Novelty search** — reward for new behavior instead of raw fitness.
 - **Reinforcement Learning mode** — DQN or policy gradients as a third training
   method.
-- **Environments** — hills, water, ceilings, platforms, climbing walls.
+- **Procedural maps** (#91). Hand-made maps are in 0.15.0.
 - **Curriculum learning** — auto-scaling difficulty.
-- **Recurrent networks** (GRU/LSTM) — memory tasks.
+- **Memory** — memory cells as a brain part (#126): a late unlock for complex
+  maps. Full recurrent networks (GRU/LSTM) stay later.
 - **Adversarial** — a predator that also evolves; prey must survive.
 - **Attention / small transformer** — if we ever get there, huge visualization
   payoff.
