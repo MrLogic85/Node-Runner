@@ -512,26 +512,21 @@ with F6. Editor authoring is being introduced in
 [issue #282](https://github.com/MrLogic85/Node-Runner/issues/282). Dialog content
 and notification content, as well as Popup Gallery, are scene-authored.
 
-Component Gallery is migrating one component at a time. Open
+Component Gallery is fully scene-authored. Open
 `project/scenes/screens/ComponentGalleryScreen.tscn` and expand
 `UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content` to edit the
-authored component sections. They are the actual runtime controls, not
-editor-only copies; components still missing a section are tracked in
-[issue #306](https://github.com/MrLogic85/Node-Runner/issues/306). The scene may group and rename
-those sections freely; tests should cover component behavior, not lock the
-gallery's visual arrangement.
+component sections. They are the actual runtime controls, not editor-only
+copies. The scene may group and rename those sections freely; tests should
+cover component behavior, not lock the gallery's visual arrangement.
 Edit normal exported properties, UiLabel Text Style presets and native
 container separations; theme switching does not recreate or reset those
-choices.
+choices. Demo content inside a component's slot, such as the stage cards'
+`Stack/Body` text, is added through Editable Children on that instance.
 Keep the unique binding names: `UiFrame`, `Toolbar`, `ThemeSwitcher` and the
 `ToolbarMenuDebugBounds`, `ToolbarMenuComponents`, `ToolbarMenuToolbars`,
 `ToolbarMenuColorsAndStyles` and `ToolbarMenuPopupGallery` menu items on every
-page that carries the gallery toolbar, plus `Scroll`, `ContentFrame` and
-`RuntimeSections` in the Component Gallery. The toolbar and authored component
-sections are scene-owned; the remaining component sections are still built at
-runtime in `RuntimeSections`, so they appear with F6 but are deliberately not
-yet authored in the editor. Do not copy generated component internals into the
-scene.
+page that carries the gallery toolbar, plus `Scroll` and `ContentFrame` in the
+Component Gallery. Do not copy generated component internals into the scene.
 
 Open `project/scenes/screens/PopupGalleryScreen.tscn` to edit the actual popup
 gallery. Under the gallery toolbar, `Scroll/ContentFrame` holds the disclaimer

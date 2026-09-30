@@ -20,8 +20,7 @@ public partial class ComponentGalleryScreen : GalleryScreen
         base._Ready();
         _scroll = GetNode<ScrollContainer>("%Scroll");
         _scrollContent = GetNode<MarginContainer>("%ContentFrame");
-        var runtimeSections = GetNode<VBoxContainer>("%RuntimeSections");
-        BindAuthoredControls(runtimeSections.GetParent<Control>());
+        BindAuthoredControls(_scrollContent);
         UiNativeScroll.AllowGesturesToBubble(_scrollContent);
         Callable.From(ResetScrollPosition).CallDeferred();
     }
@@ -50,12 +49,6 @@ public partial class ComponentGalleryScreen : GalleryScreen
             {
                 button.Activated += () => button.Selected = !button.Selected;
             }
-            return;
-        }
-
-        if (control is UiStageCard stageCard)
-        {
-            BindAuthoredStageCard(stageCard);
             return;
         }
 
@@ -127,25 +120,6 @@ public partial class ComponentGalleryScreen : GalleryScreen
             ],
             _ => picker.Options,
         };
-    }
-
-    private static void BindAuthoredStageCard(UiStageCard stageCard)
-    {
-        var body = stageCard.Name.ToString() switch
-        {
-            "Senses" => "9 readings · top first",
-            "Thinks" => "24 neurons · 8 outputs",
-            _ => string.Empty,
-        };
-        if (!string.IsNullOrWhiteSpace(body))
-        {
-            stageCard.SetBody(new Label
-            {
-                Text = body,
-                AutowrapMode = TextServer.AutowrapMode.WordSmart,
-                MouseFilter = MouseFilterEnum.Ignore,
-            });
-        }
     }
 
 }

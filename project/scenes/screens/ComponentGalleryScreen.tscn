@@ -2473,10 +2473,23 @@ Title = "Moves"
 Note = "Servo"
 Collapsed = true
 
-[node name="RuntimeSections" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content" unique_id=1093177179]
-unique_name_in_owner = true
+[node name="Detail" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/StageCard/Examples/Senses/Stack/Body" parent_id_path=PackedInt32Array(-2010556226, 188724460) unique_id=-2010556223]
 layout_mode = 2
-theme_override_constants/separation = 8
+size_flags_horizontal = 3
+mouse_filter = 2
+text = "9 readings · top first"
+autowrap_mode = 3
+script = ExtResource("2_cpfof")
+
+[node name="Detail" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/StageCard/Examples/Thinks/Stack/Body" parent_id_path=PackedInt32Array(-2010556225, 188724460) unique_id=-2010556222]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+text = "24 neurons · 8 outputs"
+autowrap_mode = 3
+script = ExtResource("2_cpfof")
 
 [editable path="UiFrame"]
 [editable path="UiFrame/MarginContainer/Card/Shell/HeaderHost/Toolbar"]
+[editable path="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/StageCard/Examples/Senses"]
+[editable path="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/StageCard/Examples/Thinks"]
