@@ -163,7 +163,8 @@ CI jobs to pass and then run `gh pr merge --squash` without `--auto`.
   Example: `feat(#11): Add feedforward neural network`.
 - Allowed types: `feat`, `fix`, `docs`, `chore`, `refactor`, `test`, `build`,
   `ci`, `perf`, `style`, `revert`.
-- The scope is the GitHub Issue number, including `#`.
+- The scope is the GitHub Issue number, including `#`. A PR that closes several
+  issues lists them: `refactor(#497, #498): Description`.
 - The description starts with an uppercase letter.
 - Squash-merge PRs and use the PR title as the squash commit subject. Individual
   commits inside the PR can be messy; the squash commit tells the story.

@@ -20,7 +20,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          headerPattern: '^(\w+)(?:\((#[1-9][0-9]*)\))?: (.+)$'
+          headerPattern: '^(\w+)(?:\((#[1-9][0-9]*(?:, #[1-9][0-9]*)*)\))?: (.+)$'
           headerPatternCorrespondence: type, scope, subject
           requireScope: true
           scopes: |
@@ -39,7 +39,8 @@ jobs:
             revert
           subjectPattern: ^[A-Z].+$
           subjectPatternError: |
-            PR title must be `type(#123): Description`, e.g.
+            PR title must be `type(#123): Description` or
+            `type(#123, #124): Description`, e.g.
             `ci(#15): Preserve CI test results`.
 
   build:
