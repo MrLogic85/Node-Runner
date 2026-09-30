@@ -104,6 +104,34 @@ public sealed class CreationRepositoryTests
     }
 
     [Fact]
+    public void File_LoadCreationWithTheOldStoredLock_IgnoresIt()
+    {
+        var directory = Path.Combine(Path.GetTempPath(), $"node-runner-{Guid.NewGuid():N}");
+        try
+        {
+            var repository = new FileCreationRepository(new TestStorageLocation(directory));
+            var creation = CreateCreation("Saved by #502");
+            repository.Save(creation);
+            var path = Directory.EnumerateFiles(directory, "*.json").Single();
+            var json = JsonNode.Parse(File.ReadAllText(path))!.AsObject();
+            json["IsLocked"] = true;
+            File.WriteAllText(path, json.ToJsonString());
+
+            var loaded = repository.Get(creation.Id);
+
+            loaded.ShouldNotBeNull();
+            AssertEquivalent(loaded, creation);
+        }
+        finally
+        {
+            if (Directory.Exists(directory))
+            {
+                Directory.Delete(directory, recursive: true);
+            }
+        }
+    }
+
+    [Fact]
     public void File_ConcurrentSaves_NeverLeaveACorruptOrMissingFile()
     {
         // Regression guard for #113: persistence now runs off the main

@@ -58,37 +58,10 @@ public sealed class CreationUpdateCoordinator : ICreationUpdateCoordinator
             }
 
             wrote = true;
-            return new CreationDef(source.Id, source.Name, source.Creature, source.BrainShape, training, source.IsLocked);
+            return new CreationDef(source.Id, source.Name, source.Creature, source.BrainShape, training);
         });
 
         return wrote;
-    }
-
-    public bool TryFinishTrainingSession(Guid id, long expectedEpoch, TrainingStateDef? latest)
-    {
-        var locked = false;
-        UpdateIfPresent(id, source =>
-        {
-            if (_trainingEpochs.GetValueOrDefault(id) != expectedEpoch)
-            {
-                return source;
-            }
-
-            var training = latest is not null && (source.Training is null || latest.Generation > source.Training.Generation)
-                ? latest
-                : source.Training;
-            if (training is not { Generation: > 0 })
-            {
-                return source;
-            }
-
-            locked = true;
-            return source.IsLocked && ReferenceEquals(training, source.Training)
-                ? source
-                : new CreationDef(source.Id, source.Name, source.Creature, source.BrainShape, training, isLocked: true);
-        });
-
-        return locked;
     }
 
     public void ResetTraining(Guid id)
@@ -116,7 +89,7 @@ public sealed class CreationUpdateCoordinator : ICreationUpdateCoordinator
         return UpdateIfPresent(id, source =>
         {
             BumpTrainingEpoch(id);
-            return new CreationDef(source.Id, source.Name, editedCreature, source.BrainShape, source.Training, source.IsLocked);
+            return new CreationDef(source.Id, source.Name, editedCreature, source.BrainShape, source.Training);
         });
     }
 

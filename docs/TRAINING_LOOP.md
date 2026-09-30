@@ -25,32 +25,25 @@ but do not redefine it here.
 
 The training engine does not decide whether a Creation is editable. The App
 layer owns the durable lifecycle described by
-`reference design/components/Navigation/README.md`:
+`reference design/components/Navigation/README.md`. One owner decision
+overrides it (#369, 2026-09-30): "locked" means exactly "has trained at least
+one generation", not "a training session has finished".
 
 1. An unlocked Build autosaves and opens Train setup through Start training.
 2. Train setup opens Training.
-3. The Creation remains unlocked while its first training session is in
-   progress.
-4. Finishing that session persists the trained state and locks anatomy plus
-   brain shape.
+3. Each finished generation is saved. Once the Creation has trained at
+   least one generation it is locked (`CreationLock.IsLocked`, #369): anatomy
+   and brain shape stay as the trained model needs them, so the model cannot
+   be lost by accident. The lock is derived from the training, not stored.
+4. Leaving Training before the first generation finishes leaves the Creation
+   unlocked.
 5. Later Train or Simulate sessions start from the locked Build state.
 6. Unlock is a destructive App operation: after hold-to-confirm it removes
    the trained model/history and returns the same Creation to unlocked Build.
 
-`Evolver` reports training progress and completion; it must not mutate the
-Creation lock by itself. The App/persistence orchestration translates a
-completed session into the durable lock transition. The target (#389) makes
-interrupted sessions explicit rather than treating navigation or Start as
-completion.
-
-The lock is `CreationDef.IsLocked` (#369), set only through
-`ICreationUpdateCoordinator.TryFinishTrainingSession`; resetting the training
-clears it, and Copy keeps it. **Interim rule** until Training emits session
-completion (#195, #389): leaving Training ends the session, and the Creation
-locks if its training has at least one finished generation, counted across
-the whole training, so a first session the app closed in the middle of locks
-when the player next leaves Training. Leaving before any generation has
-finished, or the app closing, leaves the Creation unlocked.
+`Evolver` reports training progress; it does not know about the lock. The
+lock follows from the saved training alone, so there is no separate lock
+transition to keep in step with it.
 
 ## Trial (issue #49)
 
@@ -177,9 +170,6 @@ by the TrainSetup and Training component READMEs under `reference design/compone
     the generation in progress. The save is guarded by the creation's
     training epoch, so a save still in flight when the training is reset
     is dropped.
-  - **Leave.** Back (top bar or Android) ends the session: it saves the
-    last finished generation and locks the creation on the main thread
-    before navigating, so the next scene reads the lock (#369).
   - A session stops after the profile's generation budget. Speed and pause
     belong to the scene and start from 1x and running each time it opens.
   - Run on its own (F6) the scene trains the built-in worm without saving.
