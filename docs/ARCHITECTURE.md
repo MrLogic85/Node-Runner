@@ -299,8 +299,10 @@ pages have nothing to save, so they are routed directly.
 Because a scene is rebuilt from its route, anything the player expects to
 find again is saved before the scene closes. What must outlive a scene
 change lives outside the scenes: notifications are queued on the
-`Notifications` autoload (`UiNotificationLayer`, #472). It lives in
-`ui/lib`, not `managers/`, because managers hold no UI.
+`Notifications` autoload (`UiNotificationLayer`, #472). The `BackPress`
+autoload (`UiBackPress`, #506) follows the Back key across scenes so one
+Android Back press acts once. Both live in `ui/lib`, not `managers/`,
+because managers hold no UI.
 
 ## Threading
 

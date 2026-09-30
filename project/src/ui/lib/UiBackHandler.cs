@@ -39,10 +39,11 @@ public sealed partial class UiBackHandler : Node
         }
     }
 
-    // Deferred, so one Back press cannot also reach the screen that opens next.
+    // Deferred, so one Back press cannot also reach the screen that opens next. Android repeats the
+    // press; UiBackPress lets only the first act.
     public override void _Notification(int what)
     {
-        if (what == NotificationWMGoBackRequest && CanTake())
+        if (what == NotificationWMGoBackRequest && CanTake() && UiBackPress.TryTake(this))
         {
             Callable.From(RequestBack).CallDeferred();
         }
