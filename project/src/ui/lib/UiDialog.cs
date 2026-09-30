@@ -178,7 +178,7 @@ public sealed partial class UiDialog : Window
     // Only the dialog open at the press closes; one a screen opens deferred from this Back stays open.
     private void OnGoBackRequested()
     {
-        if (!IsOpen)
+        if (!IsOpen || !UiBackPress.TryTake(this))
         {
             return;
         }

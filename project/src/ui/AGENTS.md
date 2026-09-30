@@ -54,6 +54,12 @@ unchanged, it belongs in `lib/`. If it embeds project vocabulary
 - Android Back: add a `UiBackHandler` with `InternalMode.Front`, give it a
   `CanTakeBack` as its summary describes, and handle `BackRequested`. Do not
   set `QuitOnGoBack` in a screen.
+- Android sends several Back signals for one press, on key-down, key
+  repeat and release (#506). Anything else that acts on
+  `NotificationWMGoBackRequest` or `GoBackRequested` calls
+  `UiBackPress.TryTake(this)` once it has decided to act, and acts only if
+  it returns true. Taking uses up the press, so never take it before
+  checking your own condition. `UiBackPressGuardTests` enforces the call.
 - `_ExitTree()` unsubscribes. No leaked handlers.
 
 ### `widgets/`

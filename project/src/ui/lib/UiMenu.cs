@@ -254,7 +254,7 @@ public partial class UiMenu : Container, IUiClipping
 
         if (what == NotificationWMGoBackRequest)
         {
-            if (_ownsBack)
+            if (_ownsBack && UiBackPress.TryTake(this))
             {
                 _closingFromBack = true;
                 Close();
