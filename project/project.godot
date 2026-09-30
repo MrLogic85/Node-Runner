@@ -22,13 +22,15 @@ SaveManager="*res://src/managers/SaveManager.cs"
 SceneRouter="*res://src/managers/SceneRouter.cs"
 Notifications="*res://src/ui/lib/UiNotificationLayer.cs"
 BackPress="*res://src/ui/lib/UiBackPress.cs"
+SafeArea="*res://src/ui/lib/UiSafeArea.cs"
 
 [display]
 
 window/size/viewport_width=640
 window/size/viewport_height=360
 window/stretch/mode="canvas_items"
-window/handheld/orientation="landscape"
+window/stretch/aspect="expand"
+window/handheld/orientation=4
 
 [dotnet]
 

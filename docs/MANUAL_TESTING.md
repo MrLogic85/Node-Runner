@@ -105,6 +105,11 @@ Desktop is the first manual target because it is fast and close to the editor:
 If Godot is unavailable to the agent, the PR should say so and leave the
 desktop check for the human.
 
+When an issue changes how screens fill the display, its test plan should
+consider resizing the desktop window to 16:9, 20:9, 4:3 and 1:1, and on
+Android a wide phone and a phone with a camera cutout in both landscape
+orientations (see "Screen size and safe area" in `docs/UI_DIRECTION.md`).
+
 ## Android checks
 
 Android checks are required when the issue affects export, install, device

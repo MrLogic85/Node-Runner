@@ -33,7 +33,7 @@ shape = SubResource("RectangleShape2D_ground")
 
 [node name="GroundFill" type="Polygon2D" parent="TrainingScreen/UiFrame/MarginContainer/Card/Shell/Body/Arena/ArenaView/WorldViewport/World/Ground"]
 unique_name_in_owner = true
-polygon = PackedVector2Array(-450, -24, 450, -24, 450, 24, -450, 24)
+polygon = PackedVector2Array(-450, -24, 450, -24, 450, 300, -450, 300)
 
 [node name="GroundEdge" type="Line2D" parent="TrainingScreen/UiFrame/MarginContainer/Card/Shell/Body/Arena/ArenaView/WorldViewport/World/Ground"]
 unique_name_in_owner = true

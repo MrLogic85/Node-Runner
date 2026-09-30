@@ -3,7 +3,8 @@ using Godot;
 namespace NodeRunner.Ui.Lib;
 
 /// <summary>
-/// Reference-design layout metrics that C# reads, for the fixed 640 x 360 landscape shell.
+/// Reference-design layout metrics that C# reads, for the 640 x 360 reference canvas.
+/// The canvas grows past that to fit the screen's shape; see "Screen size and safe area" in docs/UI_DIRECTION.md.
 /// Widths a scene authors itself (dialogs, cards, figures) stay in the scene; see
 /// "Reference token mapping deviations" in docs/UI_DIRECTION.md.
 /// Component-scale values live in <see cref="UiSize"/>.

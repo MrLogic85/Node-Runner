@@ -2,6 +2,10 @@ using Godot;
 
 namespace NodeRunner.Ui.Lib;
 
+/// <summary>
+/// A screen's frame: the background fills the whole window, and the card with the screen's content
+/// sits inside the display safe area, so no control lands under a camera cutout (#513).
+/// </summary>
 [Tool]
 [GlobalClass]
 public partial class UiFrame : PanelContainer
@@ -10,15 +14,42 @@ public partial class UiFrame : PanelContainer
 
     private ColorRect? _background;
     private UiCard? _card;
+    private MarginContainer? _margin;
+    private UiSafeArea? _safeArea;
+
+    // The margins the scene authors; the safe-area inset is added on top of them at runtime.
+    private int _baseLeft;
+    private int _baseTop;
+    private int _baseRight;
+    private int _baseBottom;
 
     public override void _Ready()
     {
         MouseFilter = MouseFilterEnum.Pass;
         _card = GetNode<UiCard>("%Card");
         _background = GetNode<ColorRect>("%Background");
+        _margin = GetNode<MarginContainer>("MarginContainer");
+        _baseLeft = _margin.GetThemeConstant("margin_left");
+        _baseTop = _margin.GetThemeConstant("margin_top");
+        _baseRight = _margin.GetThemeConstant("margin_right");
+        _baseBottom = _margin.GetThemeConstant("margin_bottom");
         base._Ready();
         _ready = true;
         ApplyTokens();
+        ApplySafeArea();
+    }
+
+    public override void _EnterTree()
+    {
+        _safeArea = UiSafeArea.Of(this);
+        _safeArea?.Changed += ApplySafeArea;
+        ApplySafeArea();
+    }
+
+    public override void _ExitTree()
+    {
+        _safeArea?.Changed -= ApplySafeArea;
+        _safeArea = null;
     }
 
     public override void _Notification(int what)
@@ -33,5 +64,18 @@ public partial class UiFrame : PanelContainer
             return;
 
         _background?.Color = UiThemeLookup.Color(this, UiTokens.Color.Background);
+    }
+
+    // Only runs outside the editor (there is no safe area there), so no runtime margin is saved into a scene.
+    private void ApplySafeArea()
+    {
+        if (!_ready || _margin is null || _safeArea is null)
+            return;
+
+        var insets = _safeArea.Current;
+        _margin.AddThemeConstantOverride("margin_left", _baseLeft + Mathf.CeilToInt(insets.Left));
+        _margin.AddThemeConstantOverride("margin_top", _baseTop + Mathf.CeilToInt(insets.Top));
+        _margin.AddThemeConstantOverride("margin_right", _baseRight + Mathf.CeilToInt(insets.Right));
+        _margin.AddThemeConstantOverride("margin_bottom", _baseBottom + Mathf.CeilToInt(insets.Bottom));
     }
 }
