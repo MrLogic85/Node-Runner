@@ -10,6 +10,12 @@
 [ext_resource type="Script" uid="uid://ddvhocc4qru2x" path="res://src/ui/lib/UiMenuItemDivider.cs" id="shell_8_menu_divider"]
 [ext_resource type="Script" uid="uid://dah3q1p7ikjlm" path="res://src/ui/lib/UiMenuActionItem.cs" id="shell_9_menu_item"]
 
+[ext_resource type="Script" uid="uid://byhbh5da7rpk8" path="res://src/ui/lib/UiCard.cs" id="cs_card"]
+[ext_resource type="Script" uid="uid://cjsd1vjtjoe5" path="res://src/ui/lib/UiSwatch.cs" id="cs_swatch"]
+[ext_resource type="Script" uid="uid://b4t4jrismbuik" path="res://src/ui/lib/UiIcon.cs" id="cs_icon"]
+[ext_resource type="Theme" uid="uid://dij64ycvi5dec" path="res://assets/themes/Neon.tres" id="cs_neon"]
+[ext_resource type="Theme" path="res://assets/themes/Paper.tres" id="cs_paper"]
+
 [sub_resource type="Resource" id="shell_Resource_theme_neon"]
 script = ExtResource("shell_6_theme_segment")
 Text = "Neon"
@@ -119,6 +125,2937 @@ theme_override_constants/margin_left = 12
 theme_override_constants/margin_top = 12
 theme_override_constants/margin_right = 12
 theme_override_constants/margin_bottom = 12
+
+[node name="Content" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 16
+
+[node name="Colours" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Header" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Title" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/Header"]
+layout_mode = 2
+size_flags_vertical = 0
+text = "Colours"
+script = ExtResource("shell_4_label")
+TextStyle = 12
+TextColor = 7
+
+[node name="Note" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/Header"]
+layout_mode = 2
+custom_minimum_size = Vector2(120, 0)
+size_flags_horizontal = 3
+size_flags_vertical = 8
+autowrap_mode = 3
+text = "every colour is one of these tokens, defined once per theme and used by name; nothing else"
+script = ExtResource("shell_4_label")
+TextStyle = 9
+TextColor = 8
+
+[node name="NeonCard" type="PanelContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours"]
+layout_mode = 2
+theme = ExtResource("cs_neon")
+script = ExtResource("cs_card")
+
+[node name="Stack" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/NeonCard"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="ThemeName" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/NeonCard/Stack"]
+layout_mode = 2
+text = "Neon lab (dark)"
+script = ExtResource("shell_4_label")
+TextStyle = 12
+TextColor = 8
+
+[node name="Swatches" type="HFlowContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/NeonCard/Stack"]
+layout_mode = 2
+theme_override_constants/h_separation = 8
+theme_override_constants/v_separation = 8
+
+[node name="Bg" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/NeonCard/Stack/Swatches"]
+layout_mode = 2
+custom_minimum_size = Vector2(280, 0)
+theme_override_constants/separation = 12
+
+[node name="Swatch" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/NeonCard/Stack/Swatches/Bg"]
+layout_mode = 2
+script = ExtResource("cs_swatch")
+Token = 1
+
+[node name="Text" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/NeonCard/Stack/Swatches/Bg"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme_override_constants/separation = 0
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/NeonCard/Stack/Swatches/Bg/Text"]
+layout_mode = 2
+text = "bg"
+script = ExtResource("shell_4_label")
+TextStyle = 15
+TextColor = 7
+
+[node name="Description" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/NeonCard/Stack/Swatches/Bg/Text"]
+layout_mode = 2
+autowrap_mode = 3
+text = "App background and the arena. Text on it: ink, muted, accent."
+script = ExtResource("shell_4_label")
+TextStyle = 9
+TextColor = 8
+
+[node name="Panel" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/NeonCard/Stack/Swatches"]
+layout_mode = 2
+custom_minimum_size = Vector2(280, 0)
+theme_override_constants/separation = 12
+
+[node name="Swatch" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/NeonCard/Stack/Swatches/Panel"]
+layout_mode = 2
+script = ExtResource("cs_swatch")
+Token = 2
+
+[node name="Text" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/NeonCard/Stack/Swatches/Panel"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme_override_constants/separation = 0
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/NeonCard/Stack/Swatches/Panel/Text"]
+layout_mode = 2
+text = "panel"
+script = ExtResource("shell_4_label")
+TextStyle = 15
+TextColor = 7
+
+[node name="Description" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/NeonCard/Stack/Swatches/Panel/Text"]
+layout_mode = 2
+autowrap_mode = 3
+text = "Top bar, side panels, stage cards, sheets. Text on it: ink, muted, accent."
+script = ExtResource("shell_4_label")
+TextStyle = 9
+TextColor = 8
+
+[node name="PanelRaised" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/NeonCard/Stack/Swatches"]
+layout_mode = 2
+custom_minimum_size = Vector2(280, 0)
+theme_override_constants/separation = 12
+
+[node name="Swatch" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/NeonCard/Stack/Swatches/PanelRaised"]
+layout_mode = 2
+script = ExtResource("cs_swatch")
+Token = 3
+
+[node name="Text" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/NeonCard/Stack/Swatches/PanelRaised"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme_override_constants/separation = 0
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/NeonCard/Stack/Swatches/PanelRaised/Text"]
+layout_mode = 2
+text = "panel-raised"
+script = ExtResource("shell_4_label")
+TextStyle = 15
+TextColor = 7
+
+[node name="Description" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/NeonCard/Stack/Swatches/PanelRaised/Text"]
+layout_mode = 2
+autowrap_mode = 3
+text = "Buttons, fields, segmented controls, cards sitting on bg or panel. Text on it: ink, muted."
+script = ExtResource("shell_4_label")
+TextStyle = 9
+TextColor = 8
+
+[node name="Line" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/NeonCard/Stack/Swatches"]
+layout_mode = 2
+custom_minimum_size = Vector2(280, 0)
+theme_override_constants/separation = 12
+
+[node name="Swatch" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/NeonCard/Stack/Swatches/Line"]
+layout_mode = 2
+script = ExtResource("cs_swatch")
+Token = 4
+
+[node name="Text" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/NeonCard/Stack/Swatches/Line"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme_override_constants/separation = 0
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/NeonCard/Stack/Swatches/Line/Text"]
+layout_mode = 2
+text = "line"
+script = ExtResource("shell_4_label")
+TextStyle = 15
+TextColor = 7
+
+[node name="Description" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/NeonCard/Stack/Swatches/Line/Text"]
+layout_mode = 2
+autowrap_mode = 3
+text = "Decorative hairlines, grid dots, track of a progress bar. Never the only cue for a control."
+script = ExtResource("shell_4_label")
+TextStyle = 9
+TextColor = 8
+
+[node name="LineStrong" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/NeonCard/Stack/Swatches"]
+layout_mode = 2
+custom_minimum_size = Vector2(280, 0)
+theme_override_constants/separation = 12
+
+[node name="Swatch" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/NeonCard/Stack/Swatches/LineStrong"]
+layout_mode = 2
+script = ExtResource("cs_swatch")
+Token = 5
+
+[node name="Text" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/NeonCard/Stack/Swatches/LineStrong"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme_override_constants/separation = 0
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/NeonCard/Stack/Swatches/LineStrong/Text"]
+layout_mode = 2
+text = "line-strong"
+script = ExtResource("shell_4_label")
+TextStyle = 15
+TextColor = 7
+
+[node name="Description" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/NeonCard/Stack/Swatches/LineStrong/Text"]
+layout_mode = 2
+autowrap_mode = 3
+text = "Control borders, beams, unselected node outlines, empty-slot outlines. At least 3:1 on bg, panel and panel-raised in both themes."
+script = ExtResource("shell_4_label")
+TextStyle = 9
+TextColor = 8
+
+[node name="Ink" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/NeonCard/Stack/Swatches"]
+layout_mode = 2
+custom_minimum_size = Vector2(280, 0)
+theme_override_constants/separation = 12
+
+[node name="Swatch" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/NeonCard/Stack/Swatches/Ink"]
+layout_mode = 2
+script = ExtResource("cs_swatch")
+Token = 7
+
+[node name="Text" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/NeonCard/Stack/Swatches/Ink"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme_override_constants/separation = 0
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/NeonCard/Stack/Swatches/Ink/Text"]
+layout_mode = 2
+text = "ink"
+script = ExtResource("shell_4_label")
+TextStyle = 15
+TextColor = 7
+
+[node name="Description" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/NeonCard/Stack/Swatches/Ink/Text"]
+layout_mode = 2
+autowrap_mode = 3
+text = "Primary text, node outlines, readout values on bg, panel and panel-raised."
+script = ExtResource("shell_4_label")
+TextStyle = 9
+TextColor = 8
+
+[node name="Muted" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/NeonCard/Stack/Swatches"]
+layout_mode = 2
+custom_minimum_size = Vector2(280, 0)
+theme_override_constants/separation = 12
+
+[node name="Swatch" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/NeonCard/Stack/Swatches/Muted"]
+layout_mode = 2
+script = ExtResource("cs_swatch")
+Token = 8
+
+[node name="Text" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/NeonCard/Stack/Swatches/Muted"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme_override_constants/separation = 0
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/NeonCard/Stack/Swatches/Muted/Text"]
+layout_mode = 2
+text = "muted"
+script = ExtResource("shell_4_label")
+TextStyle = 15
+TextColor = 7
+
+[node name="Description" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/NeonCard/Stack/Swatches/Muted/Text"]
+layout_mode = 2
+autowrap_mode = 3
+text = "Labels, units, captions, disabled explanations on bg, panel and panel-raised (4.5:1 or better)."
+script = ExtResource("shell_4_label")
+TextStyle = 9
+TextColor = 8
+
+[node name="Accent" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/NeonCard/Stack/Swatches"]
+layout_mode = 2
+custom_minimum_size = Vector2(280, 0)
+theme_override_constants/separation = 12
+
+[node name="Swatch" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/NeonCard/Stack/Swatches/Accent"]
+layout_mode = 2
+script = ExtResource("cs_swatch")
+Token = 9
+
+[node name="Text" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/NeonCard/Stack/Swatches/Accent"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme_override_constants/separation = 0
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/NeonCard/Stack/Swatches/Accent/Text"]
+layout_mode = 2
+text = "accent"
+script = ExtResource("shell_4_label")
+TextStyle = 15
+TextColor = 7
+
+[node name="Description" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/NeonCard/Stack/Swatches/Accent/Text"]
+layout_mode = 2
+autowrap_mode = 3
+text = "The one signal colour: primary action, live signal, firing neurons, motor arcs, cores, focus ring, progress fill. Reads on bg, panel and panel-raised."
+script = ExtResource("shell_4_label")
+TextStyle = 9
+TextColor = 8
+
+[node name="Edge" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/NeonCard/Stack/Swatches"]
+layout_mode = 2
+custom_minimum_size = Vector2(280, 0)
+theme_override_constants/separation = 12
+
+[node name="Swatch" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/NeonCard/Stack/Swatches/Edge"]
+layout_mode = 2
+script = ExtResource("cs_swatch")
+Token = 6
+
+[node name="Text" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/NeonCard/Stack/Swatches/Edge"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme_override_constants/separation = 0
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/NeonCard/Stack/Swatches/Edge/Text"]
+layout_mode = 2
+text = "edge"
+script = ExtResource("shell_4_label")
+TextStyle = 15
+TextColor = 7
+
+[node name="Description" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/NeonCard/Stack/Swatches/Edge/Text"]
+layout_mode = 2
+autowrap_mode = 3
+text = "Outline of the frame, top bar, side panels and cards: a solid teal in neon, a neutral warm grey in paper. Decorative; controls use line-strong."
+script = ExtResource("shell_4_label")
+TextStyle = 9
+TextColor = 8
+
+[node name="OnAccent" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/NeonCard/Stack/Swatches"]
+layout_mode = 2
+custom_minimum_size = Vector2(280, 0)
+theme_override_constants/separation = 12
+
+[node name="Swatch" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/NeonCard/Stack/Swatches/OnAccent"]
+layout_mode = 2
+script = ExtResource("cs_swatch")
+Token = 11
+
+[node name="Text" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/NeonCard/Stack/Swatches/OnAccent"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme_override_constants/separation = 0
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/NeonCard/Stack/Swatches/OnAccent/Text"]
+layout_mode = 2
+text = "on-accent"
+script = ExtResource("shell_4_label")
+TextStyle = 15
+TextColor = 7
+
+[node name="Description" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/NeonCard/Stack/Swatches/OnAccent/Text"]
+layout_mode = 2
+autowrap_mode = 3
+text = "Text and icons on accent fills."
+script = ExtResource("shell_4_label")
+TextStyle = 9
+TextColor = 8
+
+[node name="Halo" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/NeonCard/Stack/Swatches"]
+layout_mode = 2
+custom_minimum_size = Vector2(280, 0)
+theme_override_constants/separation = 12
+
+[node name="Swatch" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/NeonCard/Stack/Swatches/Halo"]
+layout_mode = 2
+script = ExtResource("cs_swatch")
+Token = 10
+
+[node name="Text" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/NeonCard/Stack/Swatches/Halo"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme_override_constants/separation = 0
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/NeonCard/Stack/Swatches/Halo/Text"]
+layout_mode = 2
+text = "halo"
+script = ExtResource("shell_4_label")
+TextStyle = 15
+TextColor = 7
+
+[node name="Description" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/NeonCard/Stack/Swatches/Halo/Text"]
+layout_mode = 2
+autowrap_mode = 3
+text = "Selection and focus of a thing the player tapped: ring around a part, outline of a selected stage. Static, never pulses. Always with a name label."
+script = ExtResource("shell_4_label")
+TextStyle = 9
+TextColor = 8
+
+[node name="Danger" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/NeonCard/Stack/Swatches"]
+layout_mode = 2
+custom_minimum_size = Vector2(280, 0)
+theme_override_constants/separation = 12
+
+[node name="Swatch" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/NeonCard/Stack/Swatches/Danger"]
+layout_mode = 2
+script = ExtResource("cs_swatch")
+Token = 12
+
+[node name="Text" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/NeonCard/Stack/Swatches/Danger"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme_override_constants/separation = 0
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/NeonCard/Stack/Swatches/Danger/Text"]
+layout_mode = 2
+text = "danger"
+script = ExtResource("shell_4_label")
+TextStyle = 15
+TextColor = 7
+
+[node name="Description" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/NeonCard/Stack/Swatches/Danger/Text"]
+layout_mode = 2
+autowrap_mode = 3
+text = "Invalid anatomy and destructive actions, always with a warn icon and a plain sentence. Reads on bg and panel."
+script = ExtResource("shell_4_label")
+TextStyle = 9
+TextColor = 8
+
+[node name="Scrim" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/NeonCard/Stack/Swatches"]
+layout_mode = 2
+custom_minimum_size = Vector2(280, 0)
+theme_override_constants/separation = 12
+
+[node name="Swatch" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/NeonCard/Stack/Swatches/Scrim"]
+layout_mode = 2
+script = ExtResource("cs_swatch")
+Token = 13
+
+[node name="Text" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/NeonCard/Stack/Swatches/Scrim"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme_override_constants/separation = 0
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/NeonCard/Stack/Swatches/Scrim/Text"]
+layout_mode = 2
+text = "scrim"
+script = ExtResource("shell_4_label")
+TextStyle = 15
+TextColor = 7
+
+[node name="Description" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/NeonCard/Stack/Swatches/Scrim/Text"]
+layout_mode = 2
+autowrap_mode = 3
+text = "Dims the screen behind a dialog or sheet. Decorative; the dialog itself carries the message."
+script = ExtResource("shell_4_label")
+TextStyle = 9
+TextColor = 8
+
+[node name="Output" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/NeonCard/Stack/Swatches"]
+layout_mode = 2
+custom_minimum_size = Vector2(280, 0)
+theme_override_constants/separation = 12
+
+[node name="Swatch" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/NeonCard/Stack/Swatches/Output"]
+layout_mode = 2
+script = ExtResource("cs_swatch")
+Token = 14
+
+[node name="Text" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/NeonCard/Stack/Swatches/Output"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme_override_constants/separation = 0
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/NeonCard/Stack/Swatches/Output/Text"]
+layout_mode = 2
+text = "output"
+script = ExtResource("shell_4_label")
+TextStyle = 15
+TextColor = 7
+
+[node name="Description" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/NeonCard/Stack/Swatches/Output/Text"]
+layout_mode = 2
+autowrap_mode = 3
+text = "Outputs: motors and the neurons that drive them, when a part is inspected. Senses use accent. Never alone: always with a tag or a position."
+script = ExtResource("shell_4_label")
+TextStyle = 9
+TextColor = 8
+
+[node name="PaperCard" type="PanelContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours"]
+layout_mode = 2
+theme = ExtResource("cs_paper")
+script = ExtResource("cs_card")
+
+[node name="Stack" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/PaperCard"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="ThemeName" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/PaperCard/Stack"]
+layout_mode = 2
+text = "Paper (light)"
+script = ExtResource("shell_4_label")
+TextStyle = 12
+TextColor = 8
+
+[node name="Swatches" type="HFlowContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/PaperCard/Stack"]
+layout_mode = 2
+theme_override_constants/h_separation = 8
+theme_override_constants/v_separation = 8
+
+[node name="Bg" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/PaperCard/Stack/Swatches"]
+layout_mode = 2
+custom_minimum_size = Vector2(280, 0)
+theme_override_constants/separation = 12
+
+[node name="Swatch" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/PaperCard/Stack/Swatches/Bg"]
+layout_mode = 2
+script = ExtResource("cs_swatch")
+Token = 1
+
+[node name="Text" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/PaperCard/Stack/Swatches/Bg"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme_override_constants/separation = 0
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/PaperCard/Stack/Swatches/Bg/Text"]
+layout_mode = 2
+text = "bg"
+script = ExtResource("shell_4_label")
+TextStyle = 15
+TextColor = 7
+
+[node name="Description" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/PaperCard/Stack/Swatches/Bg/Text"]
+layout_mode = 2
+autowrap_mode = 3
+text = "App background and the arena. Text on it: ink, muted, accent."
+script = ExtResource("shell_4_label")
+TextStyle = 9
+TextColor = 8
+
+[node name="Panel" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/PaperCard/Stack/Swatches"]
+layout_mode = 2
+custom_minimum_size = Vector2(280, 0)
+theme_override_constants/separation = 12
+
+[node name="Swatch" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/PaperCard/Stack/Swatches/Panel"]
+layout_mode = 2
+script = ExtResource("cs_swatch")
+Token = 2
+
+[node name="Text" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/PaperCard/Stack/Swatches/Panel"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme_override_constants/separation = 0
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/PaperCard/Stack/Swatches/Panel/Text"]
+layout_mode = 2
+text = "panel"
+script = ExtResource("shell_4_label")
+TextStyle = 15
+TextColor = 7
+
+[node name="Description" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/PaperCard/Stack/Swatches/Panel/Text"]
+layout_mode = 2
+autowrap_mode = 3
+text = "Top bar, side panels, stage cards, sheets. Text on it: ink, muted, accent."
+script = ExtResource("shell_4_label")
+TextStyle = 9
+TextColor = 8
+
+[node name="PanelRaised" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/PaperCard/Stack/Swatches"]
+layout_mode = 2
+custom_minimum_size = Vector2(280, 0)
+theme_override_constants/separation = 12
+
+[node name="Swatch" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/PaperCard/Stack/Swatches/PanelRaised"]
+layout_mode = 2
+script = ExtResource("cs_swatch")
+Token = 3
+
+[node name="Text" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/PaperCard/Stack/Swatches/PanelRaised"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme_override_constants/separation = 0
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/PaperCard/Stack/Swatches/PanelRaised/Text"]
+layout_mode = 2
+text = "panel-raised"
+script = ExtResource("shell_4_label")
+TextStyle = 15
+TextColor = 7
+
+[node name="Description" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/PaperCard/Stack/Swatches/PanelRaised/Text"]
+layout_mode = 2
+autowrap_mode = 3
+text = "Buttons, fields, segmented controls, cards sitting on bg or panel. Text on it: ink, muted."
+script = ExtResource("shell_4_label")
+TextStyle = 9
+TextColor = 8
+
+[node name="Line" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/PaperCard/Stack/Swatches"]
+layout_mode = 2
+custom_minimum_size = Vector2(280, 0)
+theme_override_constants/separation = 12
+
+[node name="Swatch" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/PaperCard/Stack/Swatches/Line"]
+layout_mode = 2
+script = ExtResource("cs_swatch")
+Token = 4
+
+[node name="Text" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/PaperCard/Stack/Swatches/Line"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme_override_constants/separation = 0
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/PaperCard/Stack/Swatches/Line/Text"]
+layout_mode = 2
+text = "line"
+script = ExtResource("shell_4_label")
+TextStyle = 15
+TextColor = 7
+
+[node name="Description" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/PaperCard/Stack/Swatches/Line/Text"]
+layout_mode = 2
+autowrap_mode = 3
+text = "Decorative hairlines, grid dots, track of a progress bar. Never the only cue for a control."
+script = ExtResource("shell_4_label")
+TextStyle = 9
+TextColor = 8
+
+[node name="LineStrong" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/PaperCard/Stack/Swatches"]
+layout_mode = 2
+custom_minimum_size = Vector2(280, 0)
+theme_override_constants/separation = 12
+
+[node name="Swatch" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/PaperCard/Stack/Swatches/LineStrong"]
+layout_mode = 2
+script = ExtResource("cs_swatch")
+Token = 5
+
+[node name="Text" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/PaperCard/Stack/Swatches/LineStrong"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme_override_constants/separation = 0
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/PaperCard/Stack/Swatches/LineStrong/Text"]
+layout_mode = 2
+text = "line-strong"
+script = ExtResource("shell_4_label")
+TextStyle = 15
+TextColor = 7
+
+[node name="Description" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/PaperCard/Stack/Swatches/LineStrong/Text"]
+layout_mode = 2
+autowrap_mode = 3
+text = "Control borders, beams, unselected node outlines, empty-slot outlines. At least 3:1 on bg, panel and panel-raised in both themes."
+script = ExtResource("shell_4_label")
+TextStyle = 9
+TextColor = 8
+
+[node name="Ink" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/PaperCard/Stack/Swatches"]
+layout_mode = 2
+custom_minimum_size = Vector2(280, 0)
+theme_override_constants/separation = 12
+
+[node name="Swatch" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/PaperCard/Stack/Swatches/Ink"]
+layout_mode = 2
+script = ExtResource("cs_swatch")
+Token = 7
+
+[node name="Text" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/PaperCard/Stack/Swatches/Ink"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme_override_constants/separation = 0
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/PaperCard/Stack/Swatches/Ink/Text"]
+layout_mode = 2
+text = "ink"
+script = ExtResource("shell_4_label")
+TextStyle = 15
+TextColor = 7
+
+[node name="Description" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/PaperCard/Stack/Swatches/Ink/Text"]
+layout_mode = 2
+autowrap_mode = 3
+text = "Primary text, node outlines, readout values on bg, panel and panel-raised."
+script = ExtResource("shell_4_label")
+TextStyle = 9
+TextColor = 8
+
+[node name="Muted" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/PaperCard/Stack/Swatches"]
+layout_mode = 2
+custom_minimum_size = Vector2(280, 0)
+theme_override_constants/separation = 12
+
+[node name="Swatch" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/PaperCard/Stack/Swatches/Muted"]
+layout_mode = 2
+script = ExtResource("cs_swatch")
+Token = 8
+
+[node name="Text" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/PaperCard/Stack/Swatches/Muted"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme_override_constants/separation = 0
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/PaperCard/Stack/Swatches/Muted/Text"]
+layout_mode = 2
+text = "muted"
+script = ExtResource("shell_4_label")
+TextStyle = 15
+TextColor = 7
+
+[node name="Description" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/PaperCard/Stack/Swatches/Muted/Text"]
+layout_mode = 2
+autowrap_mode = 3
+text = "Labels, units, captions, disabled explanations on bg, panel and panel-raised (4.5:1 or better)."
+script = ExtResource("shell_4_label")
+TextStyle = 9
+TextColor = 8
+
+[node name="Accent" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/PaperCard/Stack/Swatches"]
+layout_mode = 2
+custom_minimum_size = Vector2(280, 0)
+theme_override_constants/separation = 12
+
+[node name="Swatch" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/PaperCard/Stack/Swatches/Accent"]
+layout_mode = 2
+script = ExtResource("cs_swatch")
+Token = 9
+
+[node name="Text" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/PaperCard/Stack/Swatches/Accent"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme_override_constants/separation = 0
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/PaperCard/Stack/Swatches/Accent/Text"]
+layout_mode = 2
+text = "accent"
+script = ExtResource("shell_4_label")
+TextStyle = 15
+TextColor = 7
+
+[node name="Description" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/PaperCard/Stack/Swatches/Accent/Text"]
+layout_mode = 2
+autowrap_mode = 3
+text = "The one signal colour: primary action, live signal, firing neurons, motor arcs, cores, focus ring, progress fill. Reads on bg, panel and panel-raised."
+script = ExtResource("shell_4_label")
+TextStyle = 9
+TextColor = 8
+
+[node name="Edge" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/PaperCard/Stack/Swatches"]
+layout_mode = 2
+custom_minimum_size = Vector2(280, 0)
+theme_override_constants/separation = 12
+
+[node name="Swatch" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/PaperCard/Stack/Swatches/Edge"]
+layout_mode = 2
+script = ExtResource("cs_swatch")
+Token = 6
+
+[node name="Text" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/PaperCard/Stack/Swatches/Edge"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme_override_constants/separation = 0
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/PaperCard/Stack/Swatches/Edge/Text"]
+layout_mode = 2
+text = "edge"
+script = ExtResource("shell_4_label")
+TextStyle = 15
+TextColor = 7
+
+[node name="Description" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/PaperCard/Stack/Swatches/Edge/Text"]
+layout_mode = 2
+autowrap_mode = 3
+text = "Outline of the frame, top bar, side panels and cards: a solid teal in neon, a neutral warm grey in paper. Decorative; controls use line-strong."
+script = ExtResource("shell_4_label")
+TextStyle = 9
+TextColor = 8
+
+[node name="OnAccent" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/PaperCard/Stack/Swatches"]
+layout_mode = 2
+custom_minimum_size = Vector2(280, 0)
+theme_override_constants/separation = 12
+
+[node name="Swatch" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/PaperCard/Stack/Swatches/OnAccent"]
+layout_mode = 2
+script = ExtResource("cs_swatch")
+Token = 11
+
+[node name="Text" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/PaperCard/Stack/Swatches/OnAccent"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme_override_constants/separation = 0
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/PaperCard/Stack/Swatches/OnAccent/Text"]
+layout_mode = 2
+text = "on-accent"
+script = ExtResource("shell_4_label")
+TextStyle = 15
+TextColor = 7
+
+[node name="Description" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/PaperCard/Stack/Swatches/OnAccent/Text"]
+layout_mode = 2
+autowrap_mode = 3
+text = "Text and icons on accent fills."
+script = ExtResource("shell_4_label")
+TextStyle = 9
+TextColor = 8
+
+[node name="Halo" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/PaperCard/Stack/Swatches"]
+layout_mode = 2
+custom_minimum_size = Vector2(280, 0)
+theme_override_constants/separation = 12
+
+[node name="Swatch" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/PaperCard/Stack/Swatches/Halo"]
+layout_mode = 2
+script = ExtResource("cs_swatch")
+Token = 10
+
+[node name="Text" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/PaperCard/Stack/Swatches/Halo"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme_override_constants/separation = 0
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/PaperCard/Stack/Swatches/Halo/Text"]
+layout_mode = 2
+text = "halo"
+script = ExtResource("shell_4_label")
+TextStyle = 15
+TextColor = 7
+
+[node name="Description" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/PaperCard/Stack/Swatches/Halo/Text"]
+layout_mode = 2
+autowrap_mode = 3
+text = "Selection and focus of a thing the player tapped: ring around a part, outline of a selected stage. Static, never pulses. Always with a name label."
+script = ExtResource("shell_4_label")
+TextStyle = 9
+TextColor = 8
+
+[node name="Danger" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/PaperCard/Stack/Swatches"]
+layout_mode = 2
+custom_minimum_size = Vector2(280, 0)
+theme_override_constants/separation = 12
+
+[node name="Swatch" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/PaperCard/Stack/Swatches/Danger"]
+layout_mode = 2
+script = ExtResource("cs_swatch")
+Token = 12
+
+[node name="Text" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/PaperCard/Stack/Swatches/Danger"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme_override_constants/separation = 0
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/PaperCard/Stack/Swatches/Danger/Text"]
+layout_mode = 2
+text = "danger"
+script = ExtResource("shell_4_label")
+TextStyle = 15
+TextColor = 7
+
+[node name="Description" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/PaperCard/Stack/Swatches/Danger/Text"]
+layout_mode = 2
+autowrap_mode = 3
+text = "Invalid anatomy and destructive actions, always with a warn icon and a plain sentence. Reads on bg and panel."
+script = ExtResource("shell_4_label")
+TextStyle = 9
+TextColor = 8
+
+[node name="Scrim" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/PaperCard/Stack/Swatches"]
+layout_mode = 2
+custom_minimum_size = Vector2(280, 0)
+theme_override_constants/separation = 12
+
+[node name="Swatch" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/PaperCard/Stack/Swatches/Scrim"]
+layout_mode = 2
+script = ExtResource("cs_swatch")
+Token = 13
+
+[node name="Text" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/PaperCard/Stack/Swatches/Scrim"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme_override_constants/separation = 0
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/PaperCard/Stack/Swatches/Scrim/Text"]
+layout_mode = 2
+text = "scrim"
+script = ExtResource("shell_4_label")
+TextStyle = 15
+TextColor = 7
+
+[node name="Description" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/PaperCard/Stack/Swatches/Scrim/Text"]
+layout_mode = 2
+autowrap_mode = 3
+text = "Dims the screen behind a dialog or sheet. Decorative; the dialog itself carries the message."
+script = ExtResource("shell_4_label")
+TextStyle = 9
+TextColor = 8
+
+[node name="Output" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/PaperCard/Stack/Swatches"]
+layout_mode = 2
+custom_minimum_size = Vector2(280, 0)
+theme_override_constants/separation = 12
+
+[node name="Swatch" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/PaperCard/Stack/Swatches/Output"]
+layout_mode = 2
+script = ExtResource("cs_swatch")
+Token = 14
+
+[node name="Text" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/PaperCard/Stack/Swatches/Output"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme_override_constants/separation = 0
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/PaperCard/Stack/Swatches/Output/Text"]
+layout_mode = 2
+text = "output"
+script = ExtResource("shell_4_label")
+TextStyle = 15
+TextColor = 7
+
+[node name="Description" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/PaperCard/Stack/Swatches/Output/Text"]
+layout_mode = 2
+autowrap_mode = 3
+text = "Outputs: motors and the neurons that drive them, when a part is inspected. Senses use accent. Never alone: always with a tag or a position."
+script = ExtResource("shell_4_label")
+TextStyle = 9
+TextColor = 8
+
+[node name="Icons" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Header" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Icons"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Title" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Icons/Header"]
+layout_mode = 2
+size_flags_vertical = 0
+text = "Icons"
+script = ExtResource("shell_4_label")
+TextStyle = 12
+TextColor = 7
+
+[node name="Note" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Icons/Header"]
+layout_mode = 2
+custom_minimum_size = Vector2(120, 0)
+size_flags_horizontal = 3
+size_flags_vertical = 8
+autowrap_mode = 3
+text = "a stroked glyph on a 24 grid, four sizes, always currentColor"
+script = ExtResource("shell_4_label")
+TextStyle = 9
+TextColor = 8
+
+[node name="Sizes" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Icons"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="IconSm" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Icons/Sizes"]
+layout_mode = 2
+custom_minimum_size = Vector2(76, 0)
+theme_override_constants/separation = 4
+
+[node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Icons/Sizes/IconSm" groups=["inventory_icon_size"]]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 24)
+script = ExtResource("cs_icon")
+IconId = 12
+IconSize = 0
+Color = 9
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Icons/Sizes/IconSm"]
+layout_mode = 2
+horizontal_alignment = 1
+text = "icon-sm"
+script = ExtResource("shell_4_label")
+TextStyle = 15
+TextColor = 7
+
+[node name="Pixels" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Icons/Sizes/IconSm"]
+layout_mode = 2
+horizontal_alignment = 1
+text = "12px"
+script = ExtResource("shell_4_label")
+TextStyle = 9
+TextColor = 8
+
+[node name="Icon" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Icons/Sizes"]
+layout_mode = 2
+custom_minimum_size = Vector2(76, 0)
+theme_override_constants/separation = 4
+
+[node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Icons/Sizes/Icon" groups=["inventory_icon_size"]]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 24)
+script = ExtResource("cs_icon")
+IconId = 12
+IconSize = 1
+Color = 9
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Icons/Sizes/Icon"]
+layout_mode = 2
+horizontal_alignment = 1
+text = "icon"
+script = ExtResource("shell_4_label")
+TextStyle = 15
+TextColor = 7
+
+[node name="Pixels" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Icons/Sizes/Icon"]
+layout_mode = 2
+horizontal_alignment = 1
+text = "16px"
+script = ExtResource("shell_4_label")
+TextStyle = 9
+TextColor = 8
+
+[node name="IconLg" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Icons/Sizes"]
+layout_mode = 2
+custom_minimum_size = Vector2(76, 0)
+theme_override_constants/separation = 4
+
+[node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Icons/Sizes/IconLg" groups=["inventory_icon_size"]]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 24)
+script = ExtResource("cs_icon")
+IconId = 12
+IconSize = 2
+Color = 9
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Icons/Sizes/IconLg"]
+layout_mode = 2
+horizontal_alignment = 1
+text = "icon-lg"
+script = ExtResource("shell_4_label")
+TextStyle = 15
+TextColor = 7
+
+[node name="Pixels" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Icons/Sizes/IconLg"]
+layout_mode = 2
+horizontal_alignment = 1
+text = "20px"
+script = ExtResource("shell_4_label")
+TextStyle = 9
+TextColor = 8
+
+[node name="IconXl" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Icons/Sizes"]
+layout_mode = 2
+custom_minimum_size = Vector2(76, 0)
+theme_override_constants/separation = 4
+
+[node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Icons/Sizes/IconXl" groups=["inventory_icon_size"]]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 24)
+script = ExtResource("cs_icon")
+IconId = 12
+IconSize = 3
+Color = 9
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Icons/Sizes/IconXl"]
+layout_mode = 2
+horizontal_alignment = 1
+text = "icon-xl"
+script = ExtResource("shell_4_label")
+TextStyle = 15
+TextColor = 7
+
+[node name="Pixels" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Icons/Sizes/IconXl"]
+layout_mode = 2
+horizontal_alignment = 1
+text = "24px"
+script = ExtResource("shell_4_label")
+TextStyle = 9
+TextColor = 8
+
+[node name="IconSet" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Header" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Title" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/Header"]
+layout_mode = 2
+size_flags_vertical = 0
+text = "Icon set"
+script = ExtResource("shell_4_label")
+TextStyle = 12
+TextColor = 7
+
+[node name="Note" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/Header"]
+layout_mode = 2
+custom_minimum_size = Vector2(120, 0)
+size_flags_horizontal = 3
+size_flags_vertical = 8
+autowrap_mode = 3
+text = "every icon the app uses; import as SVG and tint with modulate"
+script = ExtResource("shell_4_label")
+TextStyle = 9
+TextColor = 8
+
+[node name="UiIconsTitle" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet"]
+layout_mode = 2
+text = "UI icons (46): stroked, 24 grid, one colour"
+script = ExtResource("shell_4_label")
+TextStyle = 12
+TextColor = 8
+
+[node name="UiIcons" type="HFlowContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet"]
+layout_mode = 2
+theme_override_constants/h_separation = 8
+theme_override_constants/v_separation = 8
+
+[node name="Back" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
+layout_mode = 2
+custom_minimum_size = Vector2(88, 0)
+theme_override_constants/separation = 4
+
+[node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Back" groups=["inventory_icon"]]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 40)
+script = ExtResource("cs_icon")
+IconId = 0
+IconSize = 3
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Back"]
+layout_mode = 2
+horizontal_alignment = 1
+text = "back"
+script = ExtResource("shell_4_label")
+TextStyle = 16
+TextColor = 8
+
+[node name="Beam" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
+layout_mode = 2
+custom_minimum_size = Vector2(88, 0)
+theme_override_constants/separation = 4
+
+[node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Beam" groups=["inventory_icon"]]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 40)
+script = ExtResource("cs_icon")
+IconId = 1
+IconSize = 3
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Beam"]
+layout_mode = 2
+horizontal_alignment = 1
+text = "beam"
+script = ExtResource("shell_4_label")
+TextStyle = 16
+TextColor = 8
+
+[node name="Bolt" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
+layout_mode = 2
+custom_minimum_size = Vector2(88, 0)
+theme_override_constants/separation = 4
+
+[node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Bolt" groups=["inventory_icon"]]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 40)
+script = ExtResource("cs_icon")
+IconId = 2
+IconSize = 3
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Bolt"]
+layout_mode = 2
+horizontal_alignment = 1
+text = "bolt"
+script = ExtResource("shell_4_label")
+TextStyle = 16
+TextColor = 8
+
+[node name="Build" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
+layout_mode = 2
+custom_minimum_size = Vector2(88, 0)
+theme_override_constants/separation = 4
+
+[node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Build" groups=["inventory_icon"]]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 40)
+script = ExtResource("cs_icon")
+IconId = 3
+IconSize = 3
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Build"]
+layout_mode = 2
+horizontal_alignment = 1
+text = "build"
+script = ExtResource("shell_4_label")
+TextStyle = 16
+TextColor = 8
+
+[node name="Chart" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
+layout_mode = 2
+custom_minimum_size = Vector2(88, 0)
+theme_override_constants/separation = 4
+
+[node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Chart" groups=["inventory_icon"]]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 40)
+script = ExtResource("cs_icon")
+IconId = 4
+IconSize = 3
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Chart"]
+layout_mode = 2
+horizontal_alignment = 1
+text = "chart"
+script = ExtResource("shell_4_label")
+TextStyle = 16
+TextColor = 8
+
+[node name="Check" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
+layout_mode = 2
+custom_minimum_size = Vector2(88, 0)
+theme_override_constants/separation = 4
+
+[node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Check" groups=["inventory_icon"]]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 40)
+script = ExtResource("cs_icon")
+IconId = 5
+IconSize = 3
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Check"]
+layout_mode = 2
+horizontal_alignment = 1
+text = "check"
+script = ExtResource("shell_4_label")
+TextStyle = 16
+TextColor = 8
+
+[node name="ChevD" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
+layout_mode = 2
+custom_minimum_size = Vector2(88, 0)
+theme_override_constants/separation = 4
+
+[node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/ChevD" groups=["inventory_icon"]]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 40)
+script = ExtResource("cs_icon")
+IconId = 6
+IconSize = 3
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/ChevD"]
+layout_mode = 2
+horizontal_alignment = 1
+text = "chev-d"
+script = ExtResource("shell_4_label")
+TextStyle = 16
+TextColor = 8
+
+[node name="ChevR" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
+layout_mode = 2
+custom_minimum_size = Vector2(88, 0)
+theme_override_constants/separation = 4
+
+[node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/ChevR" groups=["inventory_icon"]]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 40)
+script = ExtResource("cs_icon")
+IconId = 7
+IconSize = 3
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/ChevR"]
+layout_mode = 2
+horizontal_alignment = 1
+text = "chev-r"
+script = ExtResource("shell_4_label")
+TextStyle = 16
+TextColor = 8
+
+[node name="Copy" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
+layout_mode = 2
+custom_minimum_size = Vector2(88, 0)
+theme_override_constants/separation = 4
+
+[node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Copy" groups=["inventory_icon"]]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 40)
+script = ExtResource("cs_icon")
+IconId = 8
+IconSize = 3
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Copy"]
+layout_mode = 2
+horizontal_alignment = 1
+text = "copy"
+script = ExtResource("shell_4_label")
+TextStyle = 16
+TextColor = 8
+
+[node name="Core" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
+layout_mode = 2
+custom_minimum_size = Vector2(88, 0)
+theme_override_constants/separation = 4
+
+[node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Core" groups=["inventory_icon"]]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 40)
+script = ExtResource("cs_icon")
+IconId = 9
+IconSize = 3
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Core"]
+layout_mode = 2
+horizontal_alignment = 1
+text = "core"
+script = ExtResource("shell_4_label")
+TextStyle = 16
+TextColor = 8
+
+[node name="Distance" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
+layout_mode = 2
+custom_minimum_size = Vector2(88, 0)
+theme_override_constants/separation = 4
+
+[node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Distance" groups=["inventory_icon"]]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 40)
+script = ExtResource("cs_icon")
+IconId = 55
+IconSize = 3
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Distance"]
+layout_mode = 2
+horizontal_alignment = 1
+text = "distance"
+script = ExtResource("shell_4_label")
+TextStyle = 16
+TextColor = 8
+
+[node name="Edit" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
+layout_mode = 2
+custom_minimum_size = Vector2(88, 0)
+theme_override_constants/separation = 4
+
+[node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Edit" groups=["inventory_icon"]]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 40)
+script = ExtResource("cs_icon")
+IconId = 10
+IconSize = 3
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Edit"]
+layout_mode = 2
+horizontal_alignment = 1
+text = "edit"
+script = ExtResource("shell_4_label")
+TextStyle = 16
+TextColor = 8
+
+[node name="Elevation" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
+layout_mode = 2
+custom_minimum_size = Vector2(88, 0)
+theme_override_constants/separation = 4
+
+[node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Elevation" groups=["inventory_icon"]]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 40)
+script = ExtResource("cs_icon")
+IconId = 57
+IconSize = 3
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Elevation"]
+layout_mode = 2
+horizontal_alignment = 1
+text = "elevation"
+script = ExtResource("shell_4_label")
+TextStyle = 16
+TextColor = 8
+
+[node name="Eye" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
+layout_mode = 2
+custom_minimum_size = Vector2(88, 0)
+theme_override_constants/separation = 4
+
+[node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Eye" groups=["inventory_icon"]]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 40)
+script = ExtResource("cs_icon")
+IconId = 39
+IconSize = 3
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Eye"]
+layout_mode = 2
+horizontal_alignment = 1
+text = "eye"
+script = ExtResource("shell_4_label")
+TextStyle = 16
+TextColor = 8
+
+[node name="Flag" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
+layout_mode = 2
+custom_minimum_size = Vector2(88, 0)
+theme_override_constants/separation = 4
+
+[node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Flag" groups=["inventory_icon"]]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 40)
+script = ExtResource("cs_icon")
+IconId = 11
+IconSize = 3
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Flag"]
+layout_mode = 2
+horizontal_alignment = 1
+text = "flag"
+script = ExtResource("shell_4_label")
+TextStyle = 16
+TextColor = 8
+
+[node name="Gear" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
+layout_mode = 2
+custom_minimum_size = Vector2(88, 0)
+theme_override_constants/separation = 4
+
+[node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Gear" groups=["inventory_icon"]]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 40)
+script = ExtResource("cs_icon")
+IconId = 12
+IconSize = 3
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Gear"]
+layout_mode = 2
+horizontal_alignment = 1
+text = "gear"
+script = ExtResource("shell_4_label")
+TextStyle = 16
+TextColor = 8
+
+[node name="Height" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
+layout_mode = 2
+custom_minimum_size = Vector2(88, 0)
+theme_override_constants/separation = 4
+
+[node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Height" groups=["inventory_icon"]]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 40)
+script = ExtResource("cs_icon")
+IconId = 13
+IconSize = 3
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Height"]
+layout_mode = 2
+horizontal_alignment = 1
+text = "height"
+script = ExtResource("shell_4_label")
+TextStyle = 16
+TextColor = 8
+
+[node name="Joint" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
+layout_mode = 2
+custom_minimum_size = Vector2(88, 0)
+theme_override_constants/separation = 4
+
+[node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Joint" groups=["inventory_icon"]]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 40)
+script = ExtResource("cs_icon")
+IconId = 14
+IconSize = 3
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Joint"]
+layout_mode = 2
+horizontal_alignment = 1
+text = "joint"
+script = ExtResource("shell_4_label")
+TextStyle = 16
+TextColor = 8
+
+[node name="Lock" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
+layout_mode = 2
+custom_minimum_size = Vector2(88, 0)
+theme_override_constants/separation = 4
+
+[node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Lock" groups=["inventory_icon"]]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 40)
+script = ExtResource("cs_icon")
+IconId = 15
+IconSize = 3
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Lock"]
+layout_mode = 2
+horizontal_alignment = 1
+text = "lock"
+script = ExtResource("shell_4_label")
+TextStyle = 16
+TextColor = 8
+
+[node name="Map" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
+layout_mode = 2
+custom_minimum_size = Vector2(88, 0)
+theme_override_constants/separation = 4
+
+[node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Map" groups=["inventory_icon"]]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 40)
+script = ExtResource("cs_icon")
+IconId = 16
+IconSize = 3
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Map"]
+layout_mode = 2
+horizontal_alignment = 1
+text = "map"
+script = ExtResource("shell_4_label")
+TextStyle = 16
+TextColor = 8
+
+[node name="MapFlat" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
+layout_mode = 2
+custom_minimum_size = Vector2(88, 0)
+theme_override_constants/separation = 4
+
+[node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/MapFlat" groups=["inventory_icon"]]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 40)
+script = ExtResource("cs_icon")
+IconId = 58
+IconSize = 3
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/MapFlat"]
+layout_mode = 2
+horizontal_alignment = 1
+text = "map-flat"
+script = ExtResource("shell_4_label")
+TextStyle = 16
+TextColor = 8
+
+[node name="MapHills" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
+layout_mode = 2
+custom_minimum_size = Vector2(88, 0)
+theme_override_constants/separation = 4
+
+[node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/MapHills" groups=["inventory_icon"]]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 40)
+script = ExtResource("cs_icon")
+IconId = 59
+IconSize = 3
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/MapHills"]
+layout_mode = 2
+horizontal_alignment = 1
+text = "map-hills"
+script = ExtResource("shell_4_label")
+TextStyle = 16
+TextColor = 8
+
+[node name="MapStairs" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
+layout_mode = 2
+custom_minimum_size = Vector2(88, 0)
+theme_override_constants/separation = 4
+
+[node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/MapStairs" groups=["inventory_icon"]]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 40)
+script = ExtResource("cs_icon")
+IconId = 60
+IconSize = 3
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/MapStairs"]
+layout_mode = 2
+horizontal_alignment = 1
+text = "map-stairs"
+script = ExtResource("shell_4_label")
+TextStyle = 16
+TextColor = 8
+
+[node name="Menu" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
+layout_mode = 2
+custom_minimum_size = Vector2(88, 0)
+theme_override_constants/separation = 4
+
+[node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Menu" groups=["inventory_icon"]]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 40)
+script = ExtResource("cs_icon")
+IconId = 17
+IconSize = 3
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Menu"]
+layout_mode = 2
+horizontal_alignment = 1
+text = "menu"
+script = ExtResource("shell_4_label")
+TextStyle = 16
+TextColor = 8
+
+[node name="Model" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
+layout_mode = 2
+custom_minimum_size = Vector2(88, 0)
+theme_override_constants/separation = 4
+
+[node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Model" groups=["inventory_icon"]]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 40)
+script = ExtResource("cs_icon")
+IconId = 18
+IconSize = 3
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Model"]
+layout_mode = 2
+horizontal_alignment = 1
+text = "model"
+script = ExtResource("shell_4_label")
+TextStyle = 16
+TextColor = 8
+
+[node name="More" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
+layout_mode = 2
+custom_minimum_size = Vector2(88, 0)
+theme_override_constants/separation = 4
+
+[node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/More" groups=["inventory_icon"]]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 40)
+script = ExtResource("cs_icon")
+IconId = 19
+IconSize = 3
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/More"]
+layout_mode = 2
+horizontal_alignment = 1
+text = "more"
+script = ExtResource("shell_4_label")
+TextStyle = 16
+TextColor = 8
+
+[node name="Move" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
+layout_mode = 2
+custom_minimum_size = Vector2(88, 0)
+theme_override_constants/separation = 4
+
+[node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Move" groups=["inventory_icon"]]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 40)
+script = ExtResource("cs_icon")
+IconId = 20
+IconSize = 3
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Move"]
+layout_mode = 2
+horizontal_alignment = 1
+text = "move"
+script = ExtResource("shell_4_label")
+TextStyle = 16
+TextColor = 8
+
+[node name="Mute" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
+layout_mode = 2
+custom_minimum_size = Vector2(88, 0)
+theme_override_constants/separation = 4
+
+[node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Mute" groups=["inventory_icon"]]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 40)
+script = ExtResource("cs_icon")
+IconId = 21
+IconSize = 3
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Mute"]
+layout_mode = 2
+horizontal_alignment = 1
+text = "mute"
+script = ExtResource("shell_4_label")
+TextStyle = 16
+TextColor = 8
+
+[node name="Pause" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
+layout_mode = 2
+custom_minimum_size = Vector2(88, 0)
+theme_override_constants/separation = 4
+
+[node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Pause" groups=["inventory_icon"]]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 40)
+script = ExtResource("cs_icon")
+IconId = 22
+IconSize = 3
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Pause"]
+layout_mode = 2
+horizontal_alignment = 1
+text = "pause"
+script = ExtResource("shell_4_label")
+TextStyle = 16
+TextColor = 8
+
+[node name="Phone" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
+layout_mode = 2
+custom_minimum_size = Vector2(88, 0)
+theme_override_constants/separation = 4
+
+[node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Phone" groups=["inventory_icon"]]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 40)
+script = ExtResource("cs_icon")
+IconId = 23
+IconSize = 3
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Phone"]
+layout_mode = 2
+horizontal_alignment = 1
+text = "phone"
+script = ExtResource("shell_4_label")
+TextStyle = 16
+TextColor = 8
+
+[node name="Play" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
+layout_mode = 2
+custom_minimum_size = Vector2(88, 0)
+theme_override_constants/separation = 4
+
+[node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Play" groups=["inventory_icon"]]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 40)
+script = ExtResource("cs_icon")
+IconId = 24
+IconSize = 3
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Play"]
+layout_mode = 2
+horizontal_alignment = 1
+text = "play"
+script = ExtResource("shell_4_label")
+TextStyle = 16
+TextColor = 8
+
+[node name="Plus" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
+layout_mode = 2
+custom_minimum_size = Vector2(88, 0)
+theme_override_constants/separation = 4
+
+[node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Plus" groups=["inventory_icon"]]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 40)
+script = ExtResource("cs_icon")
+IconId = 25
+IconSize = 3
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Plus"]
+layout_mode = 2
+horizontal_alignment = 1
+text = "plus"
+script = ExtResource("shell_4_label")
+TextStyle = 16
+TextColor = 8
+
+[node name="Restart" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
+layout_mode = 2
+custom_minimum_size = Vector2(88, 0)
+theme_override_constants/separation = 4
+
+[node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Restart" groups=["inventory_icon"]]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 40)
+script = ExtResource("cs_icon")
+IconId = 26
+IconSize = 3
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Restart"]
+layout_mode = 2
+horizontal_alignment = 1
+text = "restart"
+script = ExtResource("shell_4_label")
+TextStyle = 16
+TextColor = 8
+
+[node name="Rotate" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
+layout_mode = 2
+custom_minimum_size = Vector2(88, 0)
+theme_override_constants/separation = 4
+
+[node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Rotate" groups=["inventory_icon"]]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 40)
+script = ExtResource("cs_icon")
+IconId = 27
+IconSize = 3
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Rotate"]
+layout_mode = 2
+horizontal_alignment = 1
+text = "rotate"
+script = ExtResource("shell_4_label")
+TextStyle = 16
+TextColor = 8
+
+[node name="Scale" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
+layout_mode = 2
+custom_minimum_size = Vector2(88, 0)
+theme_override_constants/separation = 4
+
+[node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Scale" groups=["inventory_icon"]]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 40)
+script = ExtResource("cs_icon")
+IconId = 28
+IconSize = 3
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Scale"]
+layout_mode = 2
+horizontal_alignment = 1
+text = "scale"
+script = ExtResource("shell_4_label")
+TextStyle = 16
+TextColor = 8
+
+[node name="Select" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
+layout_mode = 2
+custom_minimum_size = Vector2(88, 0)
+theme_override_constants/separation = 4
+
+[node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Select" groups=["inventory_icon"]]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 40)
+script = ExtResource("cs_icon")
+IconId = 29
+IconSize = 3
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Select"]
+layout_mode = 2
+horizontal_alignment = 1
+text = "select"
+script = ExtResource("shell_4_label")
+TextStyle = 16
+TextColor = 8
+
+[node name="Shadow" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
+layout_mode = 2
+custom_minimum_size = Vector2(88, 0)
+theme_override_constants/separation = 4
+
+[node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Shadow" groups=["inventory_icon"]]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 40)
+script = ExtResource("cs_icon")
+IconId = 30
+IconSize = 3
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Shadow"]
+layout_mode = 2
+horizontal_alignment = 1
+text = "shadow"
+script = ExtResource("shell_4_label")
+TextStyle = 16
+TextColor = 8
+
+[node name="Sound" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
+layout_mode = 2
+custom_minimum_size = Vector2(88, 0)
+theme_override_constants/separation = 4
+
+[node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Sound" groups=["inventory_icon"]]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 40)
+script = ExtResource("cs_icon")
+IconId = 31
+IconSize = 3
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Sound"]
+layout_mode = 2
+horizontal_alignment = 1
+text = "sound"
+script = ExtResource("shell_4_label")
+TextStyle = 16
+TextColor = 8
+
+[node name="Speed" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
+layout_mode = 2
+custom_minimum_size = Vector2(88, 0)
+theme_override_constants/separation = 4
+
+[node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Speed" groups=["inventory_icon"]]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 40)
+script = ExtResource("cs_icon")
+IconId = 32
+IconSize = 3
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Speed"]
+layout_mode = 2
+horizontal_alignment = 1
+text = "speed"
+script = ExtResource("shell_4_label")
+TextStyle = 16
+TextColor = 8
+
+[node name="Stop" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
+layout_mode = 2
+custom_minimum_size = Vector2(88, 0)
+theme_override_constants/separation = 4
+
+[node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Stop" groups=["inventory_icon"]]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 40)
+script = ExtResource("cs_icon")
+IconId = 33
+IconSize = 3
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Stop"]
+layout_mode = 2
+horizontal_alignment = 1
+text = "stop"
+script = ExtResource("shell_4_label")
+TextStyle = 16
+TextColor = 8
+
+[node name="TopSpeed" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
+layout_mode = 2
+custom_minimum_size = Vector2(88, 0)
+theme_override_constants/separation = 4
+
+[node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/TopSpeed" groups=["inventory_icon"]]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 40)
+script = ExtResource("cs_icon")
+IconId = 56
+IconSize = 3
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/TopSpeed"]
+layout_mode = 2
+horizontal_alignment = 1
+text = "top-speed"
+script = ExtResource("shell_4_label")
+TextStyle = 16
+TextColor = 8
+
+[node name="Trash" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
+layout_mode = 2
+custom_minimum_size = Vector2(88, 0)
+theme_override_constants/separation = 4
+
+[node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Trash" groups=["inventory_icon"]]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 40)
+script = ExtResource("cs_icon")
+IconId = 34
+IconSize = 3
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Trash"]
+layout_mode = 2
+horizontal_alignment = 1
+text = "trash"
+script = ExtResource("shell_4_label")
+TextStyle = 16
+TextColor = 8
+
+[node name="Trophy" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
+layout_mode = 2
+custom_minimum_size = Vector2(88, 0)
+theme_override_constants/separation = 4
+
+[node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Trophy" groups=["inventory_icon"]]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 40)
+script = ExtResource("cs_icon")
+IconId = 35
+IconSize = 3
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Trophy"]
+layout_mode = 2
+horizontal_alignment = 1
+text = "trophy"
+script = ExtResource("shell_4_label")
+TextStyle = 16
+TextColor = 8
+
+[node name="Unlock" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
+layout_mode = 2
+custom_minimum_size = Vector2(88, 0)
+theme_override_constants/separation = 4
+
+[node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Unlock" groups=["inventory_icon"]]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 40)
+script = ExtResource("cs_icon")
+IconId = 36
+IconSize = 3
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Unlock"]
+layout_mode = 2
+horizontal_alignment = 1
+text = "unlock"
+script = ExtResource("shell_4_label")
+TextStyle = 16
+TextColor = 8
+
+[node name="Warn" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
+layout_mode = 2
+custom_minimum_size = Vector2(88, 0)
+theme_override_constants/separation = 4
+
+[node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Warn" groups=["inventory_icon"]]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 40)
+script = ExtResource("cs_icon")
+IconId = 37
+IconSize = 3
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Warn"]
+layout_mode = 2
+horizontal_alignment = 1
+text = "warn"
+script = ExtResource("shell_4_label")
+TextStyle = 16
+TextColor = 8
+
+[node name="X" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
+layout_mode = 2
+custom_minimum_size = Vector2(88, 0)
+theme_override_constants/separation = 4
+
+[node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/X" groups=["inventory_icon"]]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 40)
+script = ExtResource("cs_icon")
+IconId = 38
+IconSize = 3
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/X"]
+layout_mode = 2
+horizontal_alignment = 1
+text = "x"
+script = ExtResource("shell_4_label")
+TextStyle = 16
+TextColor = 8
+
+[node name="PartGlyphsTitle" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet"]
+layout_mode = 2
+text = "Part glyphs (15): one colour, stroke 1.67, drawn on 20"
+script = ExtResource("shell_4_label")
+TextStyle = 12
+TextColor = 8
+
+[node name="PartGlyphs" type="HFlowContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet"]
+layout_mode = 2
+theme_override_constants/h_separation = 8
+theme_override_constants/v_separation = 8
+
+[node name="Battery" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs"]
+layout_mode = 2
+custom_minimum_size = Vector2(88, 0)
+theme_override_constants/separation = 4
+
+[node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs/Battery" groups=["inventory_icon"]]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 40)
+script = ExtResource("cs_icon")
+IconId = 40
+IconSize = 3
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs/Battery"]
+layout_mode = 2
+horizontal_alignment = 1
+text = "battery"
+script = ExtResource("shell_4_label")
+TextStyle = 16
+TextColor = 8
+
+[node name="Beam" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs"]
+layout_mode = 2
+custom_minimum_size = Vector2(88, 0)
+theme_override_constants/separation = 4
+
+[node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs/Beam" groups=["inventory_icon"]]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 40)
+script = ExtResource("cs_icon")
+IconId = 41
+IconSize = 3
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs/Beam"]
+layout_mode = 2
+horizontal_alignment = 1
+text = "beam"
+script = ExtResource("shell_4_label")
+TextStyle = 16
+TextColor = 8
+
+[node name="Brake" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs"]
+layout_mode = 2
+custom_minimum_size = Vector2(88, 0)
+theme_override_constants/separation = 4
+
+[node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs/Brake" groups=["inventory_icon"]]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 40)
+script = ExtResource("cs_icon")
+IconId = 42
+IconSize = 3
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs/Brake"]
+layout_mode = 2
+horizontal_alignment = 1
+text = "brake"
+script = ExtResource("shell_4_label")
+TextStyle = 16
+TextColor = 8
+
+[node name="Core" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs"]
+layout_mode = 2
+custom_minimum_size = Vector2(88, 0)
+theme_override_constants/separation = 4
+
+[node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs/Core" groups=["inventory_icon"]]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 40)
+script = ExtResource("cs_icon")
+IconId = 43
+IconSize = 3
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs/Core"]
+layout_mode = 2
+horizontal_alignment = 1
+text = "core"
+script = ExtResource("shell_4_label")
+TextStyle = 16
+TextColor = 8
+
+[node name="Fuel" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs"]
+layout_mode = 2
+custom_minimum_size = Vector2(88, 0)
+theme_override_constants/separation = 4
+
+[node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs/Fuel" groups=["inventory_icon"]]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 40)
+script = ExtResource("cs_icon")
+IconId = 44
+IconSize = 3
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs/Fuel"]
+layout_mode = 2
+horizontal_alignment = 1
+text = "fuel"
+script = ExtResource("shell_4_label")
+TextStyle = 16
+TextColor = 8
+
+[node name="Generator" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs"]
+layout_mode = 2
+custom_minimum_size = Vector2(88, 0)
+theme_override_constants/separation = 4
+
+[node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs/Generator" groups=["inventory_icon"]]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 40)
+script = ExtResource("cs_icon")
+IconId = 45
+IconSize = 3
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs/Generator"]
+layout_mode = 2
+horizontal_alignment = 1
+text = "generator"
+script = ExtResource("shell_4_label")
+TextStyle = 16
+TextColor = 8
+
+[node name="Los" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs"]
+layout_mode = 2
+custom_minimum_size = Vector2(88, 0)
+theme_override_constants/separation = 4
+
+[node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs/Los" groups=["inventory_icon"]]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 40)
+script = ExtResource("cs_icon")
+IconId = 46
+IconSize = 3
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs/Los"]
+layout_mode = 2
+horizontal_alignment = 1
+text = "los"
+script = ExtResource("shell_4_label")
+TextStyle = 16
+TextColor = 8
+
+[node name="Node" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs"]
+layout_mode = 2
+custom_minimum_size = Vector2(88, 0)
+theme_override_constants/separation = 4
+
+[node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs/Node" groups=["inventory_icon"]]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 40)
+script = ExtResource("cs_icon")
+IconId = 47
+IconSize = 3
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs/Node"]
+layout_mode = 2
+horizontal_alignment = 1
+text = "node"
+script = ExtResource("shell_4_label")
+TextStyle = 16
+TextColor = 8
+
+[node name="Piston" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs"]
+layout_mode = 2
+custom_minimum_size = Vector2(88, 0)
+theme_override_constants/separation = 4
+
+[node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs/Piston" groups=["inventory_icon"]]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 40)
+script = ExtResource("cs_icon")
+IconId = 48
+IconSize = 3
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs/Piston"]
+layout_mode = 2
+horizontal_alignment = 1
+text = "piston"
+script = ExtResource("shell_4_label")
+TextStyle = 16
+TextColor = 8
+
+[node name="Servo" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs"]
+layout_mode = 2
+custom_minimum_size = Vector2(88, 0)
+theme_override_constants/separation = 4
+
+[node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs/Servo" groups=["inventory_icon"]]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 40)
+script = ExtResource("cs_icon")
+IconId = 49
+IconSize = 3
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs/Servo"]
+layout_mode = 2
+horizontal_alignment = 1
+text = "servo"
+script = ExtResource("shell_4_label")
+TextStyle = 16
+TextColor = 8
+
+[node name="Spring" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs"]
+layout_mode = 2
+custom_minimum_size = Vector2(88, 0)
+theme_override_constants/separation = 4
+
+[node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs/Spring" groups=["inventory_icon"]]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 40)
+script = ExtResource("cs_icon")
+IconId = 50
+IconSize = 3
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs/Spring"]
+layout_mode = 2
+horizontal_alignment = 1
+text = "spring"
+script = ExtResource("shell_4_label")
+TextStyle = 16
+TextColor = 8
+
+[node name="Stepper" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs"]
+layout_mode = 2
+custom_minimum_size = Vector2(88, 0)
+theme_override_constants/separation = 4
+
+[node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs/Stepper" groups=["inventory_icon"]]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 40)
+script = ExtResource("cs_icon")
+IconId = 51
+IconSize = 3
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs/Stepper"]
+layout_mode = 2
+horizontal_alignment = 1
+text = "stepper"
+script = ExtResource("shell_4_label")
+TextStyle = 16
+TextColor = 8
+
+[node name="Velocity" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs"]
+layout_mode = 2
+custom_minimum_size = Vector2(88, 0)
+theme_override_constants/separation = 4
+
+[node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs/Velocity" groups=["inventory_icon"]]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 40)
+script = ExtResource("cs_icon")
+IconId = 52
+IconSize = 3
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs/Velocity"]
+layout_mode = 2
+horizontal_alignment = 1
+text = "velocity"
+script = ExtResource("shell_4_label")
+TextStyle = 16
+TextColor = 8
+
+[node name="Wheel" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs"]
+layout_mode = 2
+custom_minimum_size = Vector2(88, 0)
+theme_override_constants/separation = 4
+
+[node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs/Wheel" groups=["inventory_icon"]]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 40)
+script = ExtResource("cs_icon")
+IconId = 53
+IconSize = 3
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs/Wheel"]
+layout_mode = 2
+horizontal_alignment = 1
+text = "wheel"
+script = ExtResource("shell_4_label")
+TextStyle = 16
+TextColor = 8
+
+[node name="Wing" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs"]
+layout_mode = 2
+custom_minimum_size = Vector2(88, 0)
+theme_override_constants/separation = 4
+
+[node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs/Wing" groups=["inventory_icon"]]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 40)
+script = ExtResource("cs_icon")
+IconId = 54
+IconSize = 3
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs/Wing"]
+layout_mode = 2
+horizontal_alignment = 1
+text = "wing"
+script = ExtResource("shell_4_label")
+TextStyle = 16
+TextColor = 8
+
+[node name="TextStyles" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content"]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="Header" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/TextStyles"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Title" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/TextStyles/Header"]
+layout_mode = 2
+size_flags_vertical = 0
+text = "Text styles"
+script = ExtResource("shell_4_label")
+TextStyle = 12
+TextColor = 7
+
+[node name="Note" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/TextStyles/Header"]
+layout_mode = 2
+custom_minimum_size = Vector2(120, 0)
+size_flags_horizontal = 3
+size_flags_vertical = 8
+autowrap_mode = 3
+text = "every piece of text in the app is one of these seventeen; nothing else"
+script = ExtResource("shell_4_label")
+TextStyle = 9
+TextColor = 8
+
+[node name="Title" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/TextStyles"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 32)
+theme_override_constants/separation = 12
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/TextStyles/Title"]
+layout_mode = 2
+custom_minimum_size = Vector2(96, 0)
+size_flags_vertical = 4
+text = "title"
+script = ExtResource("shell_4_label")
+TextStyle = 15
+TextColor = 7
+
+[node name="Spec" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/TextStyles/Title"]
+layout_mode = 2
+custom_minimum_size = Vector2(176, 0)
+size_flags_vertical = 4
+text = "700 28/32 Chakra Petch"
+script = ExtResource("shell_4_label")
+TextStyle = 9
+TextColor = 8
+
+[node name="Sample" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/TextStyles/Title" groups=["inventory_text_style"]]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+text = "Walker-1"
+script = ExtResource("shell_4_label")
+TextStyle = 0
+TextColor = 7
+
+[node name="Heading" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/TextStyles"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 32)
+theme_override_constants/separation = 12
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/TextStyles/Heading"]
+layout_mode = 2
+custom_minimum_size = Vector2(96, 0)
+size_flags_vertical = 4
+text = "heading"
+script = ExtResource("shell_4_label")
+TextStyle = 15
+TextColor = 7
+
+[node name="Spec" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/TextStyles/Heading"]
+layout_mode = 2
+custom_minimum_size = Vector2(176, 0)
+size_flags_vertical = 4
+text = "600 16/20 Chakra Petch"
+script = ExtResource("shell_4_label")
+TextStyle = 9
+TextColor = 8
+
+[node name="Sample" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/TextStyles/Heading" groups=["inventory_text_style"]]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+text = "Train Walker-1"
+script = ExtResource("shell_4_label")
+TextStyle = 1
+TextColor = 7
+
+[node name="Subheading" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/TextStyles"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 32)
+theme_override_constants/separation = 12
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/TextStyles/Subheading"]
+layout_mode = 2
+custom_minimum_size = Vector2(96, 0)
+size_flags_vertical = 4
+text = "subheading"
+script = ExtResource("shell_4_label")
+TextStyle = 15
+TextColor = 7
+
+[node name="Spec" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/TextStyles/Subheading"]
+layout_mode = 2
+custom_minimum_size = Vector2(176, 0)
+size_flags_vertical = 4
+text = "600 14/18 Chakra Petch"
+script = ExtResource("shell_4_label")
+TextStyle = 9
+TextColor = 8
+
+[node name="Sample" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/TextStyles/Subheading" groups=["inventory_text_style"]]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+text = "Front knee"
+script = ExtResource("shell_4_label")
+TextStyle = 2
+TextColor = 7
+
+[node name="Stage" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/TextStyles"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 32)
+theme_override_constants/separation = 12
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/TextStyles/Stage"]
+layout_mode = 2
+custom_minimum_size = Vector2(96, 0)
+size_flags_vertical = 4
+text = "stage"
+script = ExtResource("shell_4_label")
+TextStyle = 15
+TextColor = 7
+
+[node name="Spec" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/TextStyles/Stage"]
+layout_mode = 2
+custom_minimum_size = Vector2(176, 0)
+size_flags_vertical = 4
+text = "600 11/14 Chakra Petch, upper"
+script = ExtResource("shell_4_label")
+TextStyle = 9
+TextColor = 8
+
+[node name="Sample" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/TextStyles/Stage" groups=["inventory_text_style"]]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+text = "Senses"
+script = ExtResource("shell_4_label")
+TextStyle = 3
+TextColor = 7
+
+[node name="Body" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/TextStyles"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 32)
+theme_override_constants/separation = 12
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/TextStyles/Body"]
+layout_mode = 2
+custom_minimum_size = Vector2(96, 0)
+size_flags_vertical = 4
+text = "body"
+script = ExtResource("shell_4_label")
+TextStyle = 15
+TextColor = 7
+
+[node name="Spec" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/TextStyles/Body"]
+layout_mode = 2
+custom_minimum_size = Vector2(176, 0)
+size_flags_vertical = 4
+text = "400 13/18 Barlow"
+script = ExtResource("shell_4_label")
+TextStyle = 9
+TextColor = 8
+
+[node name="Sample" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/TextStyles/Body" groups=["inventory_text_style"]]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+text = "Shadows race and the brain keeps learning."
+script = ExtResource("shell_4_label")
+TextStyle = 4
+TextColor = 7
+
+[node name="BodyStrong" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/TextStyles"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 32)
+theme_override_constants/separation = 12
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/TextStyles/BodyStrong"]
+layout_mode = 2
+custom_minimum_size = Vector2(96, 0)
+size_flags_vertical = 4
+text = "body-strong"
+script = ExtResource("shell_4_label")
+TextStyle = 15
+TextColor = 7
+
+[node name="Spec" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/TextStyles/BodyStrong"]
+layout_mode = 2
+custom_minimum_size = Vector2(176, 0)
+size_flags_vertical = 4
+text = "600 13/18 Barlow"
+script = ExtResource("shell_4_label")
+TextStyle = 9
+TextColor = 8
+
+[node name="Sample" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/TextStyles/BodyStrong" groups=["inventory_text_style"]]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+text = "Left thigh"
+script = ExtResource("shell_4_label")
+TextStyle = 5
+TextColor = 7
+
+[node name="Small" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/TextStyles"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 32)
+theme_override_constants/separation = 12
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/TextStyles/Small"]
+layout_mode = 2
+custom_minimum_size = Vector2(96, 0)
+size_flags_vertical = 4
+text = "small"
+script = ExtResource("shell_4_label")
+TextStyle = 15
+TextColor = 7
+
+[node name="Spec" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/TextStyles/Small"]
+layout_mode = 2
+custom_minimum_size = Vector2(176, 0)
+size_flags_vertical = 4
+text = "400 12/16 Barlow"
+script = ExtResource("shell_4_label")
+TextStyle = 9
+TextColor = 8
+
+[node name="Sample" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/TextStyles/Small" groups=["inventory_text_style"]]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+text = "Replays the best brain."
+script = ExtResource("shell_4_label")
+TextStyle = 6
+TextColor = 7
+
+[node name="SmallStrong" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/TextStyles"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 32)
+theme_override_constants/separation = 12
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/TextStyles/SmallStrong"]
+layout_mode = 2
+custom_minimum_size = Vector2(96, 0)
+size_flags_vertical = 4
+text = "small-strong"
+script = ExtResource("shell_4_label")
+TextStyle = 15
+TextColor = 7
+
+[node name="Spec" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/TextStyles/SmallStrong"]
+layout_mode = 2
+custom_minimum_size = Vector2(176, 0)
+size_flags_vertical = 4
+text = "600 12/16 Barlow"
+script = ExtResource("shell_4_label")
+TextStyle = 9
+TextColor = 8
+
+[node name="Sample" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/TextStyles/SmallStrong" groups=["inventory_text_style"]]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+text = "Front thigh"
+script = ExtResource("shell_4_label")
+TextStyle = 7
+TextColor = 7
+
+[node name="Label" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/TextStyles"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 32)
+theme_override_constants/separation = 12
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/TextStyles/Label"]
+layout_mode = 2
+custom_minimum_size = Vector2(96, 0)
+size_flags_vertical = 4
+text = "label"
+script = ExtResource("shell_4_label")
+TextStyle = 15
+TextColor = 7
+
+[node name="Spec" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/TextStyles/Label"]
+layout_mode = 2
+custom_minimum_size = Vector2(176, 0)
+size_flags_vertical = 4
+text = "600 12/16 Barlow, upper"
+script = ExtResource("shell_4_label")
+TextStyle = 9
+TextColor = 8
+
+[node name="Sample" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/TextStyles/Label" groups=["inventory_text_style"]]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+text = "Start training"
+script = ExtResource("shell_4_label")
+TextStyle = 8
+TextColor = 7
+
+[node name="Note" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/TextStyles"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 32)
+theme_override_constants/separation = 12
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/TextStyles/Note"]
+layout_mode = 2
+custom_minimum_size = Vector2(96, 0)
+size_flags_vertical = 4
+text = "note"
+script = ExtResource("shell_4_label")
+TextStyle = 15
+TextColor = 7
+
+[node name="Spec" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/TextStyles/Note"]
+layout_mode = 2
+custom_minimum_size = Vector2(176, 0)
+size_flags_vertical = 4
+text = "400 11/14 Barlow"
+script = ExtResource("shell_4_label")
+TextStyle = 9
+TextColor = 8
+
+[node name="Sample" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/TextStyles/Note" groups=["inventory_text_style"]]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+text = "Beams meet here. Nodes have no weight."
+script = ExtResource("shell_4_label")
+TextStyle = 9
+TextColor = 7
+
+[node name="NoteStrong" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/TextStyles"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 32)
+theme_override_constants/separation = 12
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/TextStyles/NoteStrong"]
+layout_mode = 2
+custom_minimum_size = Vector2(96, 0)
+size_flags_vertical = 4
+text = "note-strong"
+script = ExtResource("shell_4_label")
+TextStyle = 15
+TextColor = 7
+
+[node name="Spec" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/TextStyles/NoteStrong"]
+layout_mode = 2
+custom_minimum_size = Vector2(176, 0)
+size_flags_vertical = 4
+text = "600 11/14 Barlow"
+script = ExtResource("shell_4_label")
+TextStyle = 9
+TextColor = 8
+
+[node name="Sample" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/TextStyles/NoteStrong" groups=["inventory_text_style"]]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+text = "Saved"
+script = ExtResource("shell_4_label")
+TextStyle = 10
+TextColor = 7
+
+[node name="Caption" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/TextStyles"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 32)
+theme_override_constants/separation = 12
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/TextStyles/Caption"]
+layout_mode = 2
+custom_minimum_size = Vector2(96, 0)
+size_flags_vertical = 4
+text = "caption"
+script = ExtResource("shell_4_label")
+TextStyle = 15
+TextColor = 7
+
+[node name="Spec" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/TextStyles/Caption"]
+layout_mode = 2
+custom_minimum_size = Vector2(176, 0)
+size_flags_vertical = 4
+text = "500 10/13 Barlow"
+script = ExtResource("shell_4_label")
+TextStyle = 9
+TextColor = 8
+
+[node name="Sample" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/TextStyles/Caption" groups=["inventory_text_style"]]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+text = "Left foot"
+script = ExtResource("shell_4_label")
+TextStyle = 11
+TextColor = 7
+
+[node name="Overline" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/TextStyles"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 32)
+theme_override_constants/separation = 12
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/TextStyles/Overline"]
+layout_mode = 2
+custom_minimum_size = Vector2(96, 0)
+size_flags_vertical = 4
+text = "overline"
+script = ExtResource("shell_4_label")
+TextStyle = 15
+TextColor = 7
+
+[node name="Spec" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/TextStyles/Overline"]
+layout_mode = 2
+custom_minimum_size = Vector2(176, 0)
+size_flags_vertical = 4
+text = "600 10/13 Barlow, upper"
+script = ExtResource("shell_4_label")
+TextStyle = 9
+TextColor = 8
+
+[node name="Sample" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/TextStyles/Overline" groups=["inventory_text_style"]]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+text = "Max strength"
+script = ExtResource("shell_4_label")
+TextStyle = 12
+TextColor = 7
+
+[node name="ReadoutLg" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/TextStyles"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 32)
+theme_override_constants/separation = 12
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/TextStyles/ReadoutLg"]
+layout_mode = 2
+custom_minimum_size = Vector2(96, 0)
+size_flags_vertical = 4
+text = "readout-lg"
+script = ExtResource("shell_4_label")
+TextStyle = 15
+TextColor = 7
+
+[node name="Spec" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/TextStyles/ReadoutLg"]
+layout_mode = 2
+custom_minimum_size = Vector2(176, 0)
+size_flags_vertical = 4
+text = "600 22/24 JetBrains Mono"
+script = ExtResource("shell_4_label")
+TextStyle = 9
+TextColor = 8
+
+[node name="Sample" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/TextStyles/ReadoutLg" groups=["inventory_text_style"]]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+text = "12.4 m"
+script = ExtResource("shell_4_label")
+TextStyle = 13
+TextColor = 7
+
+[node name="Readout" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/TextStyles"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 32)
+theme_override_constants/separation = 12
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/TextStyles/Readout"]
+layout_mode = 2
+custom_minimum_size = Vector2(96, 0)
+size_flags_vertical = 4
+text = "readout"
+script = ExtResource("shell_4_label")
+TextStyle = 15
+TextColor = 7
+
+[node name="Spec" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/TextStyles/Readout"]
+layout_mode = 2
+custom_minimum_size = Vector2(176, 0)
+size_flags_vertical = 4
+text = "500 13/16 JetBrains Mono"
+script = ExtResource("shell_4_label")
+TextStyle = 9
+TextColor = 8
+
+[node name="Sample" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/TextStyles/Readout" groups=["inventory_text_style"]]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+text = "1.0"
+script = ExtResource("shell_4_label")
+TextStyle = 14
+TextColor = 7
+
+[node name="ReadoutMd" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/TextStyles"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 32)
+theme_override_constants/separation = 12
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/TextStyles/ReadoutMd"]
+layout_mode = 2
+custom_minimum_size = Vector2(96, 0)
+size_flags_vertical = 4
+text = "readout-md"
+script = ExtResource("shell_4_label")
+TextStyle = 15
+TextColor = 7
+
+[node name="Spec" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/TextStyles/ReadoutMd"]
+layout_mode = 2
+custom_minimum_size = Vector2(176, 0)
+size_flags_vertical = 4
+text = "500 12/16 JetBrains Mono"
+script = ExtResource("shell_4_label")
+TextStyle = 9
+TextColor = 8
+
+[node name="Sample" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/TextStyles/ReadoutMd" groups=["inventory_text_style"]]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+text = "40 N·m"
+script = ExtResource("shell_4_label")
+TextStyle = 15
+TextColor = 7
+
+[node name="ReadoutSm" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/TextStyles"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 32)
+theme_override_constants/separation = 12
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/TextStyles/ReadoutSm"]
+layout_mode = 2
+custom_minimum_size = Vector2(96, 0)
+size_flags_vertical = 4
+text = "readout-sm"
+script = ExtResource("shell_4_label")
+TextStyle = 15
+TextColor = 7
+
+[node name="Spec" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/TextStyles/ReadoutSm"]
+layout_mode = 2
+custom_minimum_size = Vector2(176, 0)
+size_flags_vertical = 4
+text = "500 10/13 JetBrains Mono"
+script = ExtResource("shell_4_label")
+TextStyle = 9
+TextColor = 8
+
+[node name="Sample" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/TextStyles/ReadoutSm" groups=["inventory_text_style"]]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+text = "100%"
+script = ExtResource("shell_4_label")
+TextStyle = 16
+TextColor = 7
 
 [editable path="UiFrame"]
 [editable path="UiFrame/MarginContainer/Card/Shell/Toolbar"]

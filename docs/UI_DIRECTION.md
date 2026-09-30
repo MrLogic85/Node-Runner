@@ -119,7 +119,8 @@ token import does not recreate the dead mappings.
   in the scene directly: `w-dialog` 300 (`UiDialogContent.tscn`), `w-card` 326
   (`UiNotificationContent.tscn`), `w-sheet` 720, `w-sheet-wide` 880,
   `w-brain` 460, `w-well` 250, `h-well` 64, `w-tile` 156, `h-stage` 170,
-  `h-thumb` 100, `w-col-xs` 40 and `w-col-xl` 128. `h-screen` (312) needs no
+  `h-thumb` 100, `w-col-xs` 40, `w-col-md` 76, `w-col-lg` 96 and `w-col-xl`
+  128. `h-screen` (312) needs no
   value at all: the screen's container gives the body the height left under
   the top bar.
 
@@ -539,9 +540,18 @@ the page, preserving authored layout and scroll position. Switching theme
 clears queued notifications; an open dialog is modal, so the toolbar cannot
 switch theme under it.
 
-Colors & Styles authors only its frame, toolbar, menu, `Scroll` and an empty
-`ContentFrame` in `project/scenes/screens/ColorsAndStylesScreen.tscn`; the
-inventory inside is built in code.
+Colors & Styles authors its whole inventory in
+`project/scenes/screens/ColorsAndStylesScreen.tscn` (#496): the colours in a
+Neon and a Paper card that each set their own `theme`, icon sizes, the icon
+set, and the text styles. Each colour is a `UiSwatch`, a library control that
+draws the token its scene picks as a bordered square. The page leaves out what
+is only a base colour with an alpha (the glows and `accent-soft`), and radius
+and surface samples; radius shows on every component in the Component Gallery.
+Scene tests check that every colour token appears once per theme and that each
+icon, icon size and text style has one specimen, found by its Godot group
+(`inventory_icon`, `inventory_icon_size`, `inventory_text_style`); a new token
+needs a new row in the scene. Colour rows sit in a native `HFlowContainer` at a
+fixed width, so the last odd row keeps its width.
 Gallery launcher buttons use ordinary clicks; hold requirements belong to the
 dialogs they open. F6 exercises the same scene that the Component Gallery opens.
 

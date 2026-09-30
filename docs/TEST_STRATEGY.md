@@ -171,7 +171,9 @@ and its saved parent path no longer exists; Godot only warns when the scene
 is instantiated. `SceneParentPathTests` resolves every saved parent path, and
 the path of every override block, through the nodes the scene creates and,
 recursively, its instanced scenes
-([#407](https://github.com/MrLogic85/Node-Runner/issues/407)).
+([#407](https://github.com/MrLogic85/Node-Runner/issues/407)). It also
+requires sibling nodes to have distinct names: Godot renames a duplicate
+sibling on load, so the children saved under it lose their parent (#496).
 
 **5. Every route opens its scene.** `SceneRouterTests` requires every App
 route to map to an existing scene, and a route that carries arguments to open

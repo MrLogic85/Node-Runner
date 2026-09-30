@@ -171,8 +171,6 @@ public sealed class UiThemeExpanderTests
         UiLayout.TopBarHeight.ShouldBe(48);
         UiLayout.SidePanelWidth.ShouldBe(176);
         UiLayout.ColumnSmallWidth.ShouldBe(52);
-        UiLayout.ColumnMediumWidth.ShouldBe(76);
-        UiLayout.ColumnLargeWidth.ShouldBe(96);
     }
 
     [Fact]
