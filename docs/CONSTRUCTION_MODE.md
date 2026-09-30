@@ -7,7 +7,8 @@ the transitional implementation.
 
 The active target is owned by `reference design/components/Build/README.md`,
 `reference design/components/BuildLocked/README.md`, and
-`reference design/components/Navigation/README.md`.
+`reference design/components/Navigation/README.md`. When a Creation counts as
+locked is overridden in `docs/TRAINING_LOOP.md` → Product lifecycle boundary.
 
 ## Mode
 
