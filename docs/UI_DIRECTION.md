@@ -158,6 +158,13 @@ entries are not components of their own in Godot
   corners to the card's, since a card inside a page cannot clip. Other button groups that need a
   look of their own use the same API. The pressed look of a cell waits for
   [#286](https://github.com/MrLogic85/Node-Runner/issues/286).
+- **`c_textfield`** in a bar does not size to its text, as the Build
+  reference shows ("Walker-1 ✎" with empty toolbar space after it). The field
+  fills the toolbar width instead. Godot's `LineEdit` has no "…" for long text,
+  and no scene setting can cap a width that grows with the text at the space
+  left in the bar, so sizing to text would need hand-written text measurement.
+  The owner chose a fixed width
+  ([#485](https://github.com/MrLogic85/Node-Runner/issues/485)).
 - **`c_panel_head`** is dropped by human decision: it is not part of the future
   design exports, so there is no panel header component. A side panel's
   header, including the inspector's (`c_inspector`), is `UiSidePanel`'s own
