@@ -169,23 +169,8 @@ public partial class TrainingHost : Node, IRoutedScene
     {
         if (!_screen.CloseOverlay())
         {
-            LeaveTraining();
+            _navigator?.Back();
         }
-    }
-
-    // Leaving ends the session: with at least one finished generation the creation locks (#369).
-    // Written here on the main thread, so the next scene reads the lock.
-    private void LeaveTraining()
-    {
-        if (_creationId is { } id)
-        {
-            var saves = Saves;
-            CreationActions.TryRunFileOperation(
-                () => saves.TryFinishTrainingSession(id, saves.CurrentTrainingEpoch(id), SessionSnapshot()),
-                $"Finishing the training session of Creation '{id}'");
-        }
-
-        _navigator?.Back();
     }
 
     // The world's colours come from the same theme as the creature's.
@@ -225,7 +210,7 @@ public partial class TrainingHost : Node, IRoutedScene
             _brainFocus);
         _screen.ShowPaused(GetTree().Paused);
         _screen.ShowSpeed(SpeedText());
-        _screen.BackRequested += LeaveTraining;
+        _screen.BackRequested += () => _navigator?.Back();
         _screen.PauseRequested += TogglePause;
         _screen.SpeedRequested += CycleTimeScale;
         _screen.StatsRequested += () => Notify("Stats", "Stats open in milestone 0.12.0.");
@@ -312,24 +297,15 @@ public partial class TrainingHost : Node, IRoutedScene
 
         var saves = Saves;
         var epoch = saves.CurrentTrainingEpoch(id);
-        var training = SnapshotOf(_evolver, genome);
+        var training = new TrainingStateDef(
+            _evolver.LayerSizes,
+            genome.ToArray(),
+            _evolver.Generation,
+            Activation.Tanh.ToString(),
+            _evolver.BestFitness,
+            BestRunOf(_evolver));
         Task.Run(() => PersistTrainingSnapshot(saves, id, epoch, training));
     }
-
-    // The training as of the last generation this session finished, or null if it finished none.
-    private TrainingStateDef? SessionSnapshot() =>
-        _evolver is { BestGenome: { } genome } evolver && evolver.Generation > _sessionGenerationStart
-            ? SnapshotOf(evolver, genome)
-            : null;
-
-    private static TrainingStateDef SnapshotOf(Evolver evolver, double[] genome) =>
-        new(
-            evolver.LayerSizes,
-            genome.ToArray(),
-            evolver.Generation,
-            Activation.Tanh.ToString(),
-            evolver.BestFitness,
-            BestRunOf(evolver));
 
     // Training runs on flat ground only until maps land (#443).
     private static TrainingRunDef? BestRunOf(Evolver evolver) =>

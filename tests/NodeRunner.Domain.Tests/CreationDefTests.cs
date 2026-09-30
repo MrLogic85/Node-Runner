@@ -24,27 +24,6 @@ public sealed class CreationDefTests
         roundTripped.Training.BestGenome.ShouldBe(original.Training.BestGenome);
         roundTripped.Training.Generation.ShouldBe(original.Training.Generation);
         roundTripped.Training.Activation.ShouldBe(original.Training.Activation);
-        roundTripped.IsLocked.ShouldBeTrue();
-    }
-
-    [Fact]
-    public void JsonWithoutLock_ReadsAsUnlocked()
-    {
-        // Saves from before #369 have no lock field.
-        const string lockField = ",\"IsLocked\":false";
-        var json = JsonSerializer.Serialize(new CreationDef(Guid.NewGuid(), "Worm", CreateCreature()));
-        json.ShouldContain(lockField);
-
-        JsonSerializer.Deserialize<CreationDef>(json.Replace(lockField, string.Empty, StringComparison.Ordinal))!
-            .IsLocked.ShouldBeFalse();
-    }
-
-    [Fact]
-    public void Constructor_LockedWithoutTraining_Throws()
-    {
-        var action = () => new CreationDef(Guid.NewGuid(), "Worm", CreateCreature(), BrainShapeDef.Default, training: null, isLocked: true);
-
-        action.ShouldThrow<ArgumentException>();
     }
 
     [Fact]
@@ -75,8 +54,7 @@ public sealed class CreationDefTests
             "Worm",
             CreateCreature(),
             new BrainShapeDef(2, 5),
-            new TrainingStateDef([2, 3, 1], [0.1, -0.2, 0.3], 7, "Tanh"),
-            isLocked: true);
+            new TrainingStateDef([2, 3, 1], [0.1, -0.2, 0.3], 7, "Tanh"));
     }
 
     private static CreatureDef CreateCreature()

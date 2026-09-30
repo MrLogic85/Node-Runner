@@ -38,6 +38,9 @@ layers.
   `IRoutedScene` seam between scenes and the router. Declare every scene's
   route here; the plain-value test only scans this assembly. See
   `docs/ARCHITECTURE.md` → Navigation.
+- `Lifecycle/` — Creation lifecycle rules read from Domain records, e.g.
+  `CreationLock` (#369). See `docs/TRAINING_LOOP.md` → Product lifecycle
+  boundary.
 
 ## What does NOT live here
 

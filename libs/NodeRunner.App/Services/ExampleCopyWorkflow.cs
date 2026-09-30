@@ -25,7 +25,7 @@ public sealed class ExampleCopyWorkflow : IExampleCopyWorkflow
     {
         var example = _examples.FirstOrDefault(example => example.Creation.Id == exampleId)?.Creation
             ?? throw new KeyNotFoundException($"Example '{exampleId}' was not found.");
-        var copy = new CreationDef(_newId(), example.Name, example.Creature, example.BrainShape, example.Training, example.IsLocked);
+        var copy = new CreationDef(_newId(), example.Name, example.Creature, example.BrainShape, example.Training);
         _repository.Save(copy);
         return copy;
     }
