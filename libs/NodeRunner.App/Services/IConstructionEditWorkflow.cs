@@ -4,5 +4,5 @@ namespace NodeRunner.App.Services;
 
 public interface IConstructionEditWorkflow
 {
-    ConstructionEditResult PersistMoveOnlyEdit(Guid activeCreationId, CreatureDef editedCreature);
+    ConstructionEditResult PersistEdit(Guid activeCreationId, CreatureDef editedCreature, BrainShapeDef brainShape, bool moveOnly);
 }

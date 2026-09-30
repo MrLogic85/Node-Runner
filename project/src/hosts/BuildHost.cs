@@ -139,14 +139,21 @@ public partial class BuildHost : Node, IRoutedScene
     private void EditCreation(CreationDef creation)
     {
         _activeCreationId = creation.Id;
-        Construction.Load(creation.Creature, moveOnly: true, brainShape: creation.BrainShape, creationName: creation.Name, training: creation.Training);
+        Construction.LoadCreation(creation);
         Construction.IsActive = true;
     }
 
     // Training opens in its own scene; Back from there rebuilds Build from the saved creation.
+    // The edit is saved either way; only a creature that cannot train stays in Build.
     private void ResumeTrainingFromSavedCreation()
     {
-        if (_activeCreationId is not { } id || !PersistMoveOnlyEdits())
+        if (_activeCreationId is not { } id)
+        {
+            return;
+        }
+
+        PersistEdits(id);
+        if (!Construction.TryGetTrainableCreature(out _))
         {
             return;
         }
@@ -158,42 +165,32 @@ public partial class BuildHost : Node, IRoutedScene
     private void BackFromBuildScreen()
     {
         // Back from an unsaved draft (New) is one step back and drops the draft (#474).
-        if (Construction.IsMoveOnly && !PersistMoveOnlyEdits())
+        if (_activeCreationId is { } id)
         {
-            return;
+            PersistEdits(id);
         }
 
         _navigator?.Back();
     }
 
-    // Saves a saved creation's moved nodes before Build closes. An edit that cannot be saved is
-    // discarded (#114): the saved creation stays as it was.
-    private bool PersistMoveOnlyEdits()
+    // Saves a saved creation's drawing as it stands, finished or not: only training needs a
+    // creature that can be simulated (#515). A locked creation opened move-only and keeps its brain
+    // and training (CreationLock). An edit that cannot be saved is discarded (#114).
+    private void PersistEdits(Guid id)
     {
-        if (!Construction.TryLeave(out var editedCreature, out var errors))
-        {
-            Construction.SetBlockedLeaveMessage(errors);
-            return false;
-        }
-
-        if (editedCreature is null || _activeCreationId is not { } id)
-        {
-            return true;
-        }
-
         ConstructionEditResult? editResult = null;
+        var editedCreature = Construction.Snapshot();
         var succeeded = CreationActions.TryRunFileOperation(
-            () => editResult = Saves.PersistMoveOnlyEdit(id, editedCreature),
+            () => editResult = Saves.PersistEdit(id, editedCreature, Construction.BrainShape, Construction.IsMoveOnly),
             $"Applying creature edit for Creation {id}");
         if (succeeded && editResult is not null)
         {
             Construction.SetCompletedMessage(editResult.StatusMessage);
-            return true;
+            return;
         }
 
         Construction.SetCompletedMessage("Could not save the edited creature; your edit was discarded.");
-        Notify("Save failed", "The moved parts could not be saved.", UiPopupType.Danger);
-        return true;
+        Notify("Save failed", "The edits could not be saved.", UiPopupType.Danger);
     }
 
     // Saving a new draft opens its training, like Start training in the reference. The history
@@ -218,9 +215,8 @@ public partial class BuildHost : Node, IRoutedScene
     private bool TryCompleteCreation(out CreationDef? creation)
     {
         creation = null;
-        if (!Construction.TryLeave(out var creature, out var errors) || creature is null)
+        if (!Construction.TryGetTrainableCreature(out var creature) || creature is null)
         {
-            Construction.SetBlockedLeaveMessage(errors);
             return false;
         }
 

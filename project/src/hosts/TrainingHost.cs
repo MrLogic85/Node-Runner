@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Globalization;
 using Godot;
+using NodeRunner.App.Lifecycle;
 using NodeRunner.App.Navigation;
 using NodeRunner.App.ViewModels;
 using NodeRunner.Creature;
@@ -134,14 +135,24 @@ public partial class TrainingHost : Node, IRoutedScene
             return null;
         }
 
-        if (Saves.Get(_route.CreationId) is { } creation)
+        var creation = Saves.Get(_route.CreationId);
+        if (creation is null)
+        {
+            GD.PrintErr($"Creation {_route.CreationId} was not found.");
+            Notify("Creations", "That creation could not be found.");
+        }
+        else if (!CreatureReadiness.CanTrain(creation.Creature))
+        {
+            // A saved drawing may be unfinished (#515); Build stops it before training.
+            GD.PrintErr($"Creation {_route.CreationId} cannot train yet.");
+            Notify("Creations", "Finish the creature in Build before training it.");
+        }
+        else
         {
             _creationId = creation.Id;
             return creation;
         }
 
-        GD.PrintErr($"Creation {_route.CreationId} was not found.");
-        Notify("Creations", "That creation could not be found.");
         Callable.From(ReturnToCreations).CallDeferred();
         return null;
     }

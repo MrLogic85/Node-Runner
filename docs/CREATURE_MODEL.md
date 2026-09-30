@@ -32,9 +32,10 @@ CreatureDef  ──build──▶  physical body  ──sensors──▶  model 
   own — physically it's just the shared point where beam bodies are pinned
   together (see Beam below).
 - **Degree rules** (how many beams touch a node):
-  - **0 beams** — invalid. A node with nothing attached is just a loose
-    point and cannot be simulated; `CreatureDef`'s constructor rejects it
-    before simulation can start.
+  - **0 beams** — not ready. A node with nothing attached is just a loose
+    point and cannot be simulated. It can be saved as part of an unfinished
+    drawing, but `CreatureReadiness` stops training until it is connected
+    or removed.
   - **1 beam** — static/passive end. It contributes no motor relations (a
     dangling tip, like a chain's last link).
   - **2+ beams** — one beam is chosen as that node's *reference beam* (its

@@ -7,7 +7,7 @@ namespace NodeRunner.App.Tests.Services;
 public sealed class ConstructionEditWorkflowTests
 {
     [Fact]
-    public void PersistMoveOnlyEdit_WhenCreationExists_PersistsBeforeAllowingLiveApply()
+    public void PersistEdit_WhenCreationExists_PersistsBeforeAllowingLiveApply()
     {
         var repository = new InMemoryCreationRepository();
         var coordinator = new CreationUpdateCoordinator(repository);
@@ -16,7 +16,7 @@ public sealed class ConstructionEditWorkflowTests
         repository.Save(original);
         var workflow = new ConstructionEditWorkflow(coordinator);
 
-        var result = workflow.PersistMoveOnlyEdit(original.Id, editedCreature);
+        var result = workflow.PersistEdit(original.Id, editedCreature, BrainShapeDef.Default, moveOnly: true);
 
         result.ShouldApplyLive.ShouldBeTrue();
         result.UpdatedCreation.ShouldNotBeNull();
@@ -27,13 +27,13 @@ public sealed class ConstructionEditWorkflowTests
     }
 
     [Fact]
-    public void PersistMoveOnlyEdit_WhenCreationIsMissing_DiscardsLiveEdit()
+    public void PersistEdit_WhenCreationIsMissing_DiscardsLiveEdit()
     {
         var repository = new InMemoryCreationRepository();
         var coordinator = new CreationUpdateCoordinator(repository);
         var workflow = new ConstructionEditWorkflow(coordinator);
 
-        var result = workflow.PersistMoveOnlyEdit(Guid.NewGuid(), CreateCreature(x: 3));
+        var result = workflow.PersistEdit(Guid.NewGuid(), CreateCreature(x: 3), BrainShapeDef.Default, moveOnly: true);
 
         result.ShouldApplyLive.ShouldBeFalse();
         result.UpdatedCreation.ShouldBeNull();
@@ -42,15 +42,15 @@ public sealed class ConstructionEditWorkflowTests
     }
 
     [Fact]
-    public void PersistMoveOnlyEdit_WhenCoordinatorThrows_DoesNotReturnSuccessShapedFallback()
+    public void PersistEdit_WhenCoordinatorThrows_DoesNotReturnSuccessShapedFallback()
     {
         var coordinator = Substitute.For<ICreationUpdateCoordinator>();
         var id = Guid.NewGuid();
         var editedCreature = CreateCreature(x: 3);
-        coordinator.ApplyCreatureEdit(id, editedCreature).Returns(_ => throw new IOException("disk full"));
+        coordinator.ApplyEdit(id, editedCreature, BrainShapeDef.Default, moveOnly: true).Returns(_ => throw new IOException("disk full"));
         var workflow = new ConstructionEditWorkflow(coordinator);
 
-        Should.Throw<IOException>(() => workflow.PersistMoveOnlyEdit(id, editedCreature));
+        Should.Throw<IOException>(() => workflow.PersistEdit(id, editedCreature, BrainShapeDef.Default, moveOnly: true));
     }
 
     [Fact]
@@ -60,19 +60,27 @@ public sealed class ConstructionEditWorkflowTests
     }
 
     [Fact]
-    public void PersistMoveOnlyEdit_WithNullCreature_Throws()
+    public void PersistEdit_WithNullCreature_Throws()
     {
         var workflow = new ConstructionEditWorkflow(Substitute.For<ICreationUpdateCoordinator>());
 
-        Should.Throw<ArgumentNullException>(() => workflow.PersistMoveOnlyEdit(Guid.NewGuid(), null!));
+        Should.Throw<ArgumentNullException>(() => workflow.PersistEdit(Guid.NewGuid(), null!, BrainShapeDef.Default, moveOnly: true));
     }
 
     [Fact]
-    public void PersistMoveOnlyEdit_WithEmptyCreationId_Throws()
+    public void PersistEdit_WithNullBrainShape_Throws()
     {
         var workflow = new ConstructionEditWorkflow(Substitute.For<ICreationUpdateCoordinator>());
 
-        Should.Throw<ArgumentException>(() => workflow.PersistMoveOnlyEdit(Guid.Empty, CreateCreature(x: 3)));
+        Should.Throw<ArgumentNullException>(() => workflow.PersistEdit(Guid.NewGuid(), CreateCreature(x: 3), null!, moveOnly: true));
+    }
+
+    [Fact]
+    public void PersistEdit_WithEmptyCreationId_Throws()
+    {
+        var workflow = new ConstructionEditWorkflow(Substitute.For<ICreationUpdateCoordinator>());
+
+        Should.Throw<ArgumentException>(() => workflow.PersistEdit(Guid.Empty, CreateCreature(x: 3), BrainShapeDef.Default, moveOnly: true));
     }
 
     private static CreationDef CreateCreation(string name, double x, int generation)

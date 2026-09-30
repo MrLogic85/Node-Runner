@@ -31,6 +31,11 @@ overrides it and `reference design/components/BuildLocked/README.md` (#369,
 not "a training session has finished".
 
 1. An unlocked Build autosaves and opens Train setup through Start training.
+   Saving a Creation never needs a finished creature; only training does
+   (`CreatureReadiness`, #515). A new draft is still saved only through
+   Start training until #368. An edit saved from an unlocked Build replaces
+   the anatomy and brain shape and drops any training, even a generation
+   that finished while Build was open, so no genome outlives its anatomy.
 2. Train setup opens Training.
 3. Each finished generation is saved. Once the Creation has trained at
    least one generation it is locked (`CreationLock.IsLocked`, #369): anatomy

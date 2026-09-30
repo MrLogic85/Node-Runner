@@ -1,3 +1,4 @@
+using NodeRunner.App.Lifecycle;
 using NodeRunner.Domain;
 
 namespace NodeRunner.App.ViewModels;
@@ -166,8 +167,11 @@ public sealed class ConstructionPresentationViewModel
 
     public string DeleteToolText => _construction.IsMoveOnly ? "Delete · locked" : "Delete";
 
-    /// <summary>True for a saved creation: its anatomy is locked and only moving parts is allowed.</summary>
-    public bool IsSaved => _construction.IsMoveOnly;
+    /// <summary>True for a saved Creation rather than a new draft.</summary>
+    public bool IsSaved => _construction.IsSaved;
+
+    /// <summary>True for a locked Creation: its anatomy is fixed and only moving nodes is allowed.</summary>
+    public bool IsLocked => _construction.IsMoveOnly;
 
     public bool ShowRebuildAction => _construction.IsMoveOnly;
 
@@ -220,7 +224,7 @@ public sealed class ConstructionPresentationViewModel
         var motorRelationCount = MotorTopology.BuildNodeConnections(creature)
             .Count(connection => connection.IsMotorized);
         var inputCount = BuildInputCount(creature.Cores.Count, motorRelationCount);
-        if (motorRelationCount == 0)
+        if (!CreatureReadiness.CanTrain(creature))
         {
             return new ConstructionBuildPanelPresentation(
                 BuildInputSummary(creature.Cores.Count, motorRelationCount),
@@ -240,7 +244,7 @@ public sealed class ConstructionPresentationViewModel
             OutputCount: motorRelationCount);
     }
 
-    // A short form of the builder's errors for the readiness line; only TryLeave decides whether training may start.
+    // A short form of the builder's errors for the readiness line; CreatureReadiness decides whether training may start.
     private string ShortReadiness(IReadOnlyList<string> errors)
     {
         if (errors.Count == 0)

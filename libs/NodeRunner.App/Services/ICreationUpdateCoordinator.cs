@@ -37,13 +37,15 @@ public interface ICreationUpdateCoordinator
     void ResetTraining(Guid id);
 
     /// <summary>
-    /// Replaces a Creation's <see cref="CreatureDef"/>, preserving its
-    /// current training state, and invalidates any pending training
-    /// snapshot (an edit can change brain topology, making an
-    /// in-flight genome incompatible). Returns <c>null</c> if no such
-    /// Creation exists.
+    /// Saves a Build edit and invalidates any pending training snapshot. A move-only edit (Build
+    /// opened the Creation locked, <see cref="Lifecycle.CreationLock"/>) takes only the creature and
+    /// keeps the brain shape and training, which still fit. A full edit takes the creature and brain
+    /// shape and drops the training, since the old genome may not fit the new anatomy; Build only
+    /// allows it on a Creation with no finished generation. The caller's mode decides, not the lock
+    /// at save time, so a generation saved while Build was open cannot keep a genome that no longer
+    /// fits. Returns <c>null</c> if no such Creation exists.
     /// </summary>
-    CreationDef? ApplyCreatureEdit(Guid id, CreatureDef editedCreature);
+    CreationDef? ApplyEdit(Guid id, CreatureDef editedCreature, BrainShapeDef brainShape, bool moveOnly);
 
     /// <summary>Deletes a Creation, invalidating any pending training snapshot.</summary>
     bool Delete(Guid id);

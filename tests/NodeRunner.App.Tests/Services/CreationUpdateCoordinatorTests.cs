@@ -51,10 +51,57 @@ public sealed class CreationUpdateCoordinatorTests
         repository.Save(creation);
         var epochBeforeEdit = coordinator.CurrentTrainingEpoch(creation.Id);
 
-        coordinator.ApplyCreatureEdit(creation.Id, creation.Creature);
+        coordinator.ApplyEdit(creation.Id, creation.Creature, creation.BrainShape, moveOnly: true);
         var applied = coordinator.TryPersistTraining(creation.Id, epochBeforeEdit, new TrainingStateDef([2, 1], [0.9, 0.9, 0.9], 5, "Tanh"));
 
         applied.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void ApplyEdit_MoveOnly_KeepsBrainShapeAndTraining()
+    {
+        var repository = new InMemoryCreationRepository();
+        var coordinator = new CreationUpdateCoordinator(repository);
+        var creation = CreateCreation("Alpha", withTraining: true);
+        repository.Save(creation);
+        var moved = MovedCreature();
+
+        var updated = coordinator.ApplyEdit(creation.Id, moved, new BrainShapeDef(3, 5), moveOnly: true);
+
+        updated.ShouldNotBeNull();
+        updated.Creature.ShouldBe(moved);
+        updated.BrainShape.ShouldBe(creation.BrainShape);
+        updated.Training.ShouldBe(creation.Training);
+        repository.Get(creation.Id).ShouldBe(updated);
+    }
+
+    [Fact]
+    public void ApplyEdit_FullEdit_TakesBrainShapeAndDropsTraining()
+    {
+        var repository = new InMemoryCreationRepository();
+        var coordinator = new CreationUpdateCoordinator(repository);
+        // A generation can finish while Build is open on an unlocked Creation; the full edit still
+        // drops it rather than keep a genome sized for the old anatomy.
+        var creation = CreateCreation("Alpha", withTraining: true);
+        repository.Save(creation);
+        var loose = new CreatureDef([new NodeDef(new Vector2D(0, 0), 1)], [], []);
+        var shape = new BrainShapeDef(3, 5);
+
+        var updated = coordinator.ApplyEdit(creation.Id, loose, shape, moveOnly: false);
+
+        updated.ShouldNotBeNull();
+        updated.Creature.ShouldBe(loose);
+        updated.BrainShape.ShouldBe(shape);
+        updated.Training.ShouldBeNull();
+        repository.Get(creation.Id).ShouldBe(updated);
+    }
+
+    [Fact]
+    public void ApplyEdit_WhenMissing_ReturnsNull()
+    {
+        var coordinator = new CreationUpdateCoordinator(new InMemoryCreationRepository());
+
+        coordinator.ApplyEdit(Guid.NewGuid(), MovedCreature(), BrainShapeDef.Default, moveOnly: false).ShouldBeNull();
     }
 
     [Fact]
@@ -141,6 +188,11 @@ public sealed class CreationUpdateCoordinatorTests
         // bug elsewhere in the call chain.
         Should.Throw<KeyNotFoundException>(() => coordinator.ResetTraining(Guid.NewGuid()));
     }
+
+    private static CreatureDef MovedCreature() => new(
+        [new NodeDef(new Vector2D(5, 0), 1), new NodeDef(new Vector2D(7, 0), 1)],
+        [new BeamDef(0, 1)],
+        [new CoreDef(0)]);
 
     private static CreationDef CreateCreation(string name, bool withTraining = false)
     {

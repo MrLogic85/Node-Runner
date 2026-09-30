@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using NodeRunner.App.Builders;
+using NodeRunner.App.Lifecycle;
 using NodeRunner.Domain;
 
 namespace NodeRunner.App.ViewModels;
@@ -30,6 +31,7 @@ public sealed class ConstructionViewModel : INotifyPropertyChanged
     private int? _pendingBeamStartNode;
     private string? _statusMessage;
     private bool _moveOnly;
+    private bool _isSaved;
     private int _maxCores = 1;
     private readonly HashSet<int> _selectedNodeIndices = [];
     private BrainShapeDef _brainShape = BrainShapeDef.Default;
@@ -45,7 +47,20 @@ public sealed class ConstructionViewModel : INotifyPropertyChanged
         _builder = builder ?? new CreatureBuilder();
     }
 
-    public void Load(CreatureDef creature, bool moveOnly = false, BrainShapeDef? brainShape = null, string? creationName = null, TrainingStateDef? training = null)
+    public void Load(CreatureDef creature, bool moveOnly = false, BrainShapeDef? brainShape = null, string? creationName = null, TrainingStateDef? training = null) =>
+        Load(creature, moveOnly, brainShape, creationName, training, isSaved: false);
+
+    /// <summary>
+    /// Opens a saved Creation. It is fully editable until it is locked (<see cref="CreationLock"/>);
+    /// a locked one only moves its nodes, so its trained brain still fits.
+    /// </summary>
+    public void LoadCreation(CreationDef creation)
+    {
+        ArgumentNullException.ThrowIfNull(creation);
+        Load(creation.Creature, CreationLock.IsLocked(creation), creation.BrainShape, creation.Name, creation.Training, isSaved: true);
+    }
+
+    private void Load(CreatureDef creature, bool moveOnly, BrainShapeDef? brainShape, string? creationName, TrainingStateDef? training, bool isSaved)
     {
         ArgumentNullException.ThrowIfNull(creature);
         _builder = new CreatureBuilder(creature);
@@ -58,6 +73,7 @@ public sealed class ConstructionViewModel : INotifyPropertyChanged
         _trainingGeneration = training?.Generation;
         _bestFitness = training?.BestFitness;
         _moveOnly = moveOnly;
+        _isSaved = isSaved;
         if (moveOnly)
         {
             ActiveTool = ConstructionTool.Place;
@@ -80,6 +96,7 @@ public sealed class ConstructionViewModel : INotifyPropertyChanged
         _trainingGeneration = null;
         _bestFitness = null;
         _moveOnly = false;
+        _isSaved = false;
         ActiveTool = ConstructionTool.Place;
         PendingBeamStartNode = null;
         StatusMessage = null;
@@ -91,7 +108,11 @@ public sealed class ConstructionViewModel : INotifyPropertyChanged
     /// <summary>Raised whenever the placed anatomy (nodes/beams/cores) changes, so the UI can redraw.</summary>
     public event EventHandler? AnatomyChanged;
 
+    /// <summary>True for a locked Creation: parts and brain shape are fixed, and only nodes move.</summary>
     public bool IsMoveOnly => _moveOnly;
+
+    /// <summary>True when Build shows a saved Creation rather than a new draft.</summary>
+    public bool IsSaved => _isSaved;
 
     public string CreationName => _creationName;
 
@@ -551,6 +572,31 @@ public sealed class ConstructionViewModel : INotifyPropertyChanged
         }
 
         return _builder.TryBuild(out creature, out errors);
+    }
+
+    /// <summary>The drawing as it stands, finished or not: what leaving Build saves on a saved Creation.</summary>
+    public CreatureDef Snapshot() => _builder.Build();
+
+    /// <summary>
+    /// The creature for Start training, if it can train (<see cref="CreatureReadiness"/>). A creature
+    /// that cannot be simulated yet shows why via <see cref="StatusMessage"/>; an empty one, or one
+    /// without a motor relation, is refused quietly because Build already shows it is not ready.
+    /// </summary>
+    public bool TryGetTrainableCreature(out CreatureDef? creature)
+    {
+        if (!TryLeave(out creature, out var errors))
+        {
+            SetBlockedLeaveMessage(errors);
+            return false;
+        }
+
+        if (creature is null || !CreatureReadiness.CanTrain(creature))
+        {
+            creature = null;
+            return false;
+        }
+
+        return true;
     }
 
     /// <summary>Surfaces why leaving Build mode was blocked, via <see cref="StatusMessage"/>.</summary>

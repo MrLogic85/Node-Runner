@@ -43,7 +43,7 @@ public partial class SaveManager : Node
         Repository.Save(creation);
     }
 
-    // Delete/ResetTraining/ApplyCreatureEdit/UpdateIfPresent/
+    // Delete/ResetTraining/ApplyEdit/UpdateIfPresent/
     // CurrentTrainingEpoch/TryPersistTraining all delegate to
     // UpdateCoordinator, which serializes mutations per Creation id and
     // invalidates queued background training snapshots (see #113) that a
@@ -55,8 +55,8 @@ public partial class SaveManager : Node
         return Repository.Get(id);
     }
 
-    public ConstructionEditResult PersistMoveOnlyEdit(Guid id, CreatureDef editedCreature) =>
-        ConstructionEditWorkflow.PersistMoveOnlyEdit(id, editedCreature);
+    public ConstructionEditResult PersistEdit(Guid id, CreatureDef editedCreature, BrainShapeDef brainShape, bool moveOnly) =>
+        ConstructionEditWorkflow.PersistEdit(id, editedCreature, brainShape, moveOnly);
 
     public void ResetTraining(Guid id) => UpdateCoordinator.ResetTraining(id);
 
