@@ -13,7 +13,7 @@
 [ext_resource type="Script" uid="uid://bss6jgv5hcc3q" path="res://src/ui/lib/UiPartRow.cs" id="11_part_row"]
 [ext_resource type="Script" uid="uid://dk67qmt3brp4e" path="res://src/ui/lib/UiLabel.cs" id="12_label"]
 [ext_resource type="Script" uid="uid://b4t4jrismbuik" path="res://src/ui/lib/UiIcon.cs" id="14_icon"]
-[ext_resource type="Script" path="res://src/ui/widgets/BrainSetupSheet.cs" id="15_brain_setup"]
+[ext_resource type="PackedScene" path="res://scenes/widgets/BrainSetupSheet.tscn" id="15_brain_setup"]
 
 [node name="BuildScreen" type="Control"]
 layout_mode = 3
@@ -423,16 +423,10 @@ script = ExtResource("12_label")
 TextStyle = 6
 TextColor = 12
 
-[node name="BrainSetupSheet" type="Control" parent="."]
+[node name="BrainSetupSheet" parent="." instance=ExtResource("15_brain_setup")]
 unique_name_in_owner = true
 visible = false
 layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-script = ExtResource("15_brain_setup")
 
 [editable path="UiFrame"]
 [editable path="UiFrame/MarginContainer/Card/Shell/Toolbar"]
