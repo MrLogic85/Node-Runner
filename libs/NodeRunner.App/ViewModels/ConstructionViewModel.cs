@@ -31,16 +31,24 @@ public sealed class ConstructionViewModel : INotifyPropertyChanged
     /// <summary>
     /// Where joints may go, in canvas units: about six screens wide at 1×,
     /// centred on the origin. Placing and moving keep a joint's disc inside;
-    /// the Build view never shows past it. Its sides are whole multiples of
-    /// 8 × <see cref="BuildGridStep"/> so the grid's cells fill it exactly
-    /// at every step <see cref="CanvasView.GridStep"/> draws.
+    /// the Build view shows it plus <see cref="BuildViewMargin"/>. Its sides
+    /// are whole multiples of <see cref="BuildGridStep"/> so the grid's cells
+    /// fill it exactly.
     /// </summary>
     public static readonly CanvasRect BuildArea = new(
         new Vector2D(-24 * BuildGridStep, -12 * BuildGridStep),
         new Vector2D(24 * BuildGridStep, 12 * BuildGridStep));
 
-    /// <summary>The Build grid's cell size in canvas units, before it thins out when zoomed out.</summary>
+    /// <summary>The Build grid's cell size in canvas units.</summary>
     public const double BuildGridStep = 48;
+
+    /// <summary>How far past <see cref="BuildArea"/> the Build view can show, in canvas units, at any zoom.</summary>
+    public const double BuildViewMargin = BuildGridStep;
+
+    /// <summary>The part of the canvas the Build view can show: <see cref="BuildArea"/> plus <see cref="BuildViewMargin"/>.</summary>
+    public static readonly CanvasRect BuildViewBounds = new(
+        new Vector2D(BuildArea.Min.X - BuildViewMargin, BuildArea.Min.Y - BuildViewMargin),
+        new Vector2D(BuildArea.Max.X + BuildViewMargin, BuildArea.Max.Y + BuildViewMargin));
 
     private CreatureBuilder _builder;
     private bool _isActive;

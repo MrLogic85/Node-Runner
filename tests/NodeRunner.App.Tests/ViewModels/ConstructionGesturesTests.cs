@@ -347,16 +347,21 @@ public class ConstructionGesturesTests
     }
 
     [Fact]
-    public void View_StaysWithinTheBuildArea()
+    public void View_ShowsTheMarginPastTheBuildArea_AtEveryZoom()
     {
         var (_, gestures) = TwoJointsAndABeam();
         gestures.View.VisibleArea = new CanvasRect(new Vector2D(0, 0), new Vector2D(1000, 500));
+        foreach (var factor in new[] { 1.0, 3, 0.25 })
+        {
+            gestures.View.ZoomAbout(new Vector2D(500, 250), factor);
 
-        gestures.Press(new Vector2D(500, 400));
-        gestures.Drag(new Vector2D(100000, 400));
-        gestures.Release(new Vector2D(100000, 400));
+            gestures.Press(new Vector2D(500, 400));
+            gestures.Drag(new Vector2D(100000, 400));
+            gestures.Release(new Vector2D(100000, 400));
 
-        gestures.View.ToView(ConstructionViewModel.BuildArea.Min).X.ShouldBe(CanvasView.EdgeMargin, 1e-9);
+            var areaEdge = gestures.View.ToCanvas(new Vector2D(0, 0)).X + ConstructionViewModel.BuildViewMargin;
+            areaEdge.ShouldBe(ConstructionViewModel.BuildArea.Min.X, 1e-6);
+        }
     }
 
     [Fact]

@@ -587,14 +587,14 @@ public partial class ConstructionCanvas : Node2D
 
     /// <summary>
     /// A faint blueprint grid over the Build area, the only place joints can
-    /// go. Hairlines stay one pixel at any zoom, and <see cref="CanvasView.GridStep"/>
-    /// thins the lines out as the view zooms out.
+    /// go: fixed <see cref="ConstructionViewModel.BuildGridStep"/> cells that
+    /// zoom with the picture, drawn as hairlines that stay one pixel wide.
     /// </summary>
     private void DrawBuildGrid()
     {
         var view = _gestures!.View;
-        var area = view.Area;
-        var step = view.GridStep(ConstructionViewModel.BuildGridStep);
+        var area = ConstructionViewModel.BuildArea;
+        var step = ConstructionViewModel.BuildGridStep;
 
         var shown = view.VisibleArea is { } visible
             ? new CanvasRect(view.ToCanvas(visible.Min), view.ToCanvas(visible.Max))
@@ -625,12 +625,11 @@ public partial class ConstructionCanvas : Node2D
     /// <summary>Marks the corners of the Build area, zooming with the rest of the picture.</summary>
     private void DrawAreaCorners()
     {
-        var view = _gestures!.View;
-        var area = view.Area;
+        var area = ConstructionViewModel.BuildArea;
         var topLeft = ToGodot(area.Min);
         var bottomRight = ToGodot(area.Max);
-        // One grid cell as drawn at this zoom, so the marks always end on a grid line.
-        var length = (float)view.GridStep(ConstructionViewModel.BuildGridStep);
+        // Two grid cells, so the marks end on a grid line.
+        var length = (float)(2 * ConstructionViewModel.BuildGridStep);
         foreach (var (corner, inward) in new[]
         {
             (topLeft, new Vector2(1, 1)),
