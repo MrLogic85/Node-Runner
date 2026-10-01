@@ -49,18 +49,6 @@ public sealed class DefaultCreationSeederTests
     }
 
     [Fact]
-    public void SeedIfNeeded_KeepsTheRestOfProgression()
-    {
-        var progression = new InMemoryProgressionRepository();
-        var creditedId = Guid.NewGuid();
-        progression.Save(new ProgressionDef(true, 12, creditedId));
-
-        CreateSeeder(new InMemoryCreationRepository(), progression).SeedIfNeeded();
-
-        progression.Load().ShouldBe(new ProgressionDef(true, 12, creditedId, defaultCreationsSeeded: true));
-    }
-
-    [Fact]
     public void Constructor_RequiresDependencies()
     {
         var examples = new ExampleCopyWorkflow(new InMemoryCreationRepository());

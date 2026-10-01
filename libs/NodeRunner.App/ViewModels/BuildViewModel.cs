@@ -61,7 +61,6 @@ public sealed class BuildViewModel : INotifyPropertyChanged
     private BuildTool _activeTool = BuildTool.Move;
     private string? _statusMessage;
     private bool _moveOnly;
-    private int _maxCores = 1;
     private readonly HashSet<int> _selectedNodeIndices = [];
     private BrainShapeDef _brainShape = BrainShapeDef.Default;
     private string _creationName = NewCreationWorkflow.UntitledName;
@@ -198,8 +197,6 @@ public sealed class BuildViewModel : INotifyPropertyChanged
 
     public IReadOnlyCollection<int> SelectedNodeIndices => _selectedNodeIndices;
 
-    public int MaxCores => _maxCores;
-
     public BrainShapeDef BrainShape => _brainShape;
 
     public void SetBrainShape(BrainShapeDef brainShape)
@@ -212,17 +209,6 @@ public sealed class BuildViewModel : INotifyPropertyChanged
 
         _brainShape = brainShape;
         OnPropertyChanged(nameof(BrainShape));
-    }
-
-    public void SetMaxCores(int maxCores)
-    {
-        if (maxCores < 1)
-        {
-            throw new ArgumentOutOfRangeException(nameof(maxCores));
-        }
-
-        _maxCores = maxCores;
-        OnPropertyChanged(nameof(MaxCores));
     }
 
     /// <summary>Places a new node, moved inside <see cref="BuildArea"/>, and returns its index.</summary>
@@ -525,12 +511,6 @@ public sealed class BuildViewModel : INotifyPropertyChanged
         }
         else
         {
-            if (_builder.Cores.Count >= _maxCores)
-            {
-                StatusMessage = $"Core limit reached ({_maxCores}). Train to unlock another core slot.";
-                return;
-            }
-
             _builder.AddCore(nodeIndex);
             StatusMessage = $"Attached core to node {nodeIndex}.";
         }

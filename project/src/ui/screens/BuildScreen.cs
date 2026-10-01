@@ -258,14 +258,9 @@ public partial class BuildScreen : Control
 
     private void ApplyTray(BuildPresentationViewModel presentation)
     {
-        var coresLeft = Math.Max(0, presentation.MaxCores - presentation.CoreCount);
-        var core = GetNode<UiPartRow>("%CorePart");
-        core.ValueText = $"{coresLeft} left";
-        core.State = presentation.ActiveTool == BuildTool.Core
+        GetNode<UiPartRow>("%CorePart").State = presentation.ActiveTool == BuildTool.Core
             ? UiPartRow.PartRowState.Selected
-            : coresLeft == 0
-                ? UiPartRow.PartRowState.NoneLeft
-                : UiPartRow.PartRowState.Rest;
+            : UiPartRow.PartRowState.Rest;
         GetNode<UiLabel>("%ToolHint").Text = BuildPresentationViewModel.ToolHint(presentation.ActiveTool);
     }
 

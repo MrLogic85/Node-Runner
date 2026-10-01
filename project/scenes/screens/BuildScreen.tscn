@@ -228,7 +228,6 @@ mouse_filter = 1
 script = ExtResource("11_part_row")
 IconId = 43
 Label = "Core"
-ValueText = "1 left"
 
 [node name="SpringPart" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/PartsTray"]
 layout_mode = 2

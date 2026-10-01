@@ -150,8 +150,6 @@ public partial class CreationsScreen : Control
             GetNode<UiLabel>("%EmptyText").Text = presentation.EmptyText;
         }
 
-        GetNode<UiButton>("%Achievements").BadgeText = presentation?.AchievementBadgeText ?? string.Empty;
-
         var row = GetNode<Control>("%CardRow");
         foreach (var card in row.GetChildren().OfType<CreationCard>())
         {

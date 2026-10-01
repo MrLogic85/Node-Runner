@@ -1,34 +1,3 @@
 namespace NodeRunner.Domain;
 
-public sealed record ProgressionDef
-{
-    public ProgressionDef(
-        bool extraCoreUnlocked = false,
-        int? extraCoreUnlockedAtGeneration = null,
-        Guid? extraCoreUnlockedByCreationId = null,
-        bool defaultCreationsSeeded = false)
-    {
-        if (extraCoreUnlocked && extraCoreUnlockedAtGeneration is null)
-        {
-            throw new ArgumentException("An unlocked extra core needs a generation.", nameof(extraCoreUnlockedAtGeneration));
-        }
-
-        if (extraCoreUnlockedAtGeneration is < 1)
-        {
-            throw new ArgumentOutOfRangeException(nameof(extraCoreUnlockedAtGeneration));
-        }
-
-        ExtraCoreUnlocked = extraCoreUnlocked;
-        ExtraCoreUnlockedAtGeneration = extraCoreUnlockedAtGeneration;
-        ExtraCoreUnlockedByCreationId = extraCoreUnlockedByCreationId;
-        DefaultCreationsSeeded = defaultCreationsSeeded;
-    }
-
-    public bool ExtraCoreUnlocked { get; }
-
-    public int? ExtraCoreUnlockedAtGeneration { get; }
-
-    public Guid? ExtraCoreUnlockedByCreationId { get; }
-
-    public bool DefaultCreationsSeeded { get; }
-}
+public sealed record ProgressionDef(bool DefaultCreationsSeeded = false);

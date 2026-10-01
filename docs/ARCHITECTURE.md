@@ -227,8 +227,9 @@ creature; up to 15 hidden clones run alongside it. Each slot owns a
 collision layer. See `docs/TRAINING_LOOP.md` for the full design.
 
 `Evolver` raises `GenerationCompleted`/`NewBestFound` events; the Training
-scene's root, `TrainingHost`, subscribes to both, saves the training after
-each finished generation and records an earned unlock from them. The
+scene's root, `TrainingHost`, saves the training after each finished
+generation, and `NewBestFound` reaches `TrainingPresentationViewModel`
+through `EvolverTrainingProgressSource`. Training unlocks nothing (#557). The
 Training screen's caption follows `TrainingPresentationViewModel`, the
 SignalFlow stages are polled every ~0.15s, and Pause and Speed arrive as screen
 signals. A dedicated `PopulationViewModel`

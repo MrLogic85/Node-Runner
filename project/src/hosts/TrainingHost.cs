@@ -25,7 +25,6 @@ namespace NodeRunner.Hosts;
 /// </summary>
 public partial class TrainingHost : Node, IRoutedScene
 {
-    private const double _extraCoreUnlockFitness = 50;
     private const double _signalRefreshIntervalSeconds = 0.15;
     private const string _sampleCreationName = "Worm";
 
@@ -238,7 +237,6 @@ public partial class TrainingHost : Node, IRoutedScene
             ProcessMode = ProcessModeEnum.Pausable,
         };
         evolver.GenerationCompleted += OnGenerationCompleted;
-        evolver.NewBestFound += TryUnlockProgression;
         _trainingPresentation.Dispose();
         _trainingPresentation = new TrainingPresentationViewModel(new EvolverTrainingProgressSource(evolver));
         World.AddChild(evolver);
@@ -279,20 +277,6 @@ public partial class TrainingHost : Node, IRoutedScene
         {
             _evolver.Stop();
             GD.Print($"Training session complete after {_profile.MaxGenerations} generations.");
-        }
-    }
-
-    private void TryUnlockProgression()
-    {
-        if (_evolver is null || _evolver.BestFitness < _extraCoreUnlockFitness)
-        {
-            return;
-        }
-
-        var attributionId = _creationId is { } id && Saves.Get(id) is not null ? id : (Guid?)null;
-        if (Saves.UnlockExtraCore(_evolver.Generation, attributionId))
-        {
-            GD.Print($"Unlocked extra core at generation {_evolver.Generation}.");
         }
     }
 
