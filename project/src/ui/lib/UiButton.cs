@@ -475,6 +475,8 @@ public sealed partial class UiButton : Button, ISerializationListener
             _progressClip.Modulate = modulation;
         if (!Disabled && Selected && UiThemeLookup.EffectsEnabled(this))
             DrawSelectedGlow();
+        if (UiPressFeedback.Shows(this, Selected))
+            UiPressFeedback.Draw(this, Design.Corners, Design.Style.BackgroundColor, Design.Style.Kind == UiButtonKind.Tertiary);
 
         if (!Disabled)
             return;

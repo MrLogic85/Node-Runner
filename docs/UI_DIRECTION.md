@@ -285,8 +285,8 @@ entries are not components of their own in Godot
   and Flat are ink. A cell may be text only (no icon), as in `UiDialog`. The
   outer cells round their bottom
   corners to the card's, since a card inside a page cannot clip. Other button groups that need a
-  look of their own use the same API. The pressed look of a cell waits for
-  [#286](https://github.com/MrLogic85/Node-Runner/issues/286).
+  look of their own use the same API. A held cell shows the shared press
+  tint inside its own corners (see "Press feedback").
 - **`c_textfield`** in a bar does not size to its text, as the Build
   reference shows ("Walker-1 ✎" with empty toolbar space after it). The field
   fills the toolbar width instead. Godot's `LineEdit` has no "…" for long text,
@@ -384,6 +384,31 @@ below it. 640 x 360 is still the smallest canvas the layouts fit: on a phone,
 whose canvas is already 360 units high at 100%, any larger size makes screens
 taller than the window, and Godot centres them, cutting off both edges.
 Keeping sizes above 100% usable on phones is #609.
+
+## Press feedback
+
+A control shows it is held with one flat tint, `UiPressFeedback`
+([#286](https://github.com/MrLogic85/Node-Runner/issues/286)). There is no
+ripple, glow, animation or hover look; on a touch screen hover only lingers
+after a tap.
+
+- The tint shows only while the control is held (`Pressed` or `HoverPressed`
+  draw mode). Sliding off cancels it, and so does a scroll that starts on the
+  control.
+- It is accent at `Alpha.Soft`, filled inside the control's own corners and
+  drawn under its content, badge and hold progress.
+- A destructive control (Tertiary button, danger card cell, Danger menu row)
+  tints with danger instead, so committing to a delete never flashes the
+  "go" colour.
+- Over an accent fill (Primary) the tint is on-accent at `Alpha.Soft`
+  instead, since accent over accent does not show.
+- Both exceptions are best guesses until design review (#574).
+- Selected and disabled controls show no tint: selected already has its own
+  look, and disabled does not react.
+
+`UiButton` (with every kind, format and button-group design such as
+`UiCardActions`) and `UiMenuActionItem` use it. Other controls follow in
+[#325](https://github.com/MrLogic85/Node-Runner/issues/325).
 
 ## Immediate-mode drawing and antialiasing
 
@@ -1010,7 +1035,8 @@ availability, size, padding, and the square selected highlight.
 `UiMenuActionItem` is the recommended optional action child: an icon centred on
 the row, the label with an optional note under it, and a check for the selected
 choice, laid out by containers over a transparent Button that handles press,
-hover and focus. The row shows accent soft while pressed or hovered. `Kind` distinguishes
+hover and focus. The row shows the shared press tint while held (see "Press
+feedback"), and nothing on hover. `Kind` distinguishes
 only Default and Danger actions; availability uses the base item's independent
 `Disabled` property. It listens for and emits its own `Activated` signal but
 defaults to `MouseFilter.Pass`, so the menu's index handler also receives the

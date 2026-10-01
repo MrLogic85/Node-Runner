@@ -182,10 +182,9 @@ public partial class UiMenuActionItem : UiMenuItem, ISerializationListener
 
     public override void _Draw()
     {
-        // Pressed is the feedback on touch; hover is for a desktop pointer.
-        if (!Selected && !Disabled && _button?.GetDrawMode() is BaseButton.DrawMode.Pressed or BaseButton.DrawMode.Hover or BaseButton.DrawMode.HoverPressed)
+        if (_button is { } button && UiPressFeedback.Shows(button, Selected))
         {
-            DrawRect(new Rect2(Vector2.Zero, Size), UiThemeLookup.Color(this, UiTokens.Color.Accent).WithAlpha(UiThemeLookup.Alpha(this, UiTokens.Alpha.Soft)));
+            UiPressFeedback.Draw(this, UiCorners.Uniform(0), UiTokens.Color.Panel, Kind == MenuItemKind.Danger);
         }
 
         base._Draw();
