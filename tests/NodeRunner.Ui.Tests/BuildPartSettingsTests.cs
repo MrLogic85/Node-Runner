@@ -4,7 +4,10 @@ using NodeRunner.Ui.Screens;
 
 namespace NodeRunner.Ui.Tests;
 
-/// <summary>Part settings for one selected part (#343): Name first, read-only rows, Delete in its own column.</summary>
+/// <summary>
+/// Part settings for one selected part (#343): Name first, read-only rows, Delete in its own column;
+/// and the selection panel for several (#558).
+/// </summary>
 public sealed class BuildPartSettingsTests
 {
     private static readonly SceneNodes.SceneNode[] _build = [.. SceneNodes.InScene("screens/BuildScreen.tscn")];
@@ -46,6 +49,21 @@ public sealed class BuildPartSettingsTests
 
         icons.ShouldNotContain(UiIconId.None);
         icons.ShouldBeUnique();
+    }
+
+    [Fact]
+    public void Selection_ExplainsTheThreeHandles_ThenDeleteAndItsNote_WithNoCloseButton()
+    {
+        Children("/Selection").ShouldBe(["SelectionRows", "SelectionActions"]);
+        Children("/Selection/SelectionRows").ShouldBe(["SelectionMove", "SelectionRotate", "SelectionScale"]);
+        Children("/Selection/SelectionActions").ShouldBe(["SelectionDelete", "SelectionDeleteNote"]);
+        _build.ShouldNotContain(node => node.Name == "SelectionClear");
+
+        int[] icons = [(int)UiIconId.Move, (int)UiIconId.Rotate, (int)UiIconId.Scale];
+        var rows = _build.Where(node => node.Parent?.EndsWith("/SelectionRows", StringComparison.Ordinal) == true).ToList();
+        rows.ShouldAllBe(row => row.Script == "res://src/ui/lib/UiInfoRow.cs");
+        rows.Select(row => row.Node.Body).Zip(icons).ShouldAllBe(pair => pair.First.Contains($"IconId = {pair.Second}"));
+        _build.Single(node => node.Name == "SelectionDelete").Node.Body.ShouldContain($"Kind = {(int)UiButtonKind.Tertiary}");
     }
 
     private static string[] Children(string parent) =>
