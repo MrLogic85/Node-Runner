@@ -36,6 +36,9 @@ overrides" records it.
 
 Rules that hold across the phases:
 
+- A part sits on what it senses or moves: a part on one body sits on that
+  beam (sensors), a part between two beams sits on a joint (motors, brake,
+  wheel), and a part between two nodes is a link (spring, piston, wing).
 - From 0.13.0 until 0.16.0 the brain is direct (inputs straight to outputs,
   #536), fitness is distance only, and the brain cannot be seen or edited
   (#539).
@@ -56,6 +59,9 @@ identity.
 - Build tools, parts tray and placement, vocabulary, and the reference-design
   UI foundations.
 - Stable part ids (#220): the prerequisite for a brain that survives rebuilds.
+- Core is removed. Its readings become sensor parts that sit on a beam: an
+  Accelerometer, a damped proof mass whose swing is the reading (#127, #576),
+  and an LOS sensor with three fixed rays (#575). Design brief: #574.
 
 **Ship criterion:** A player builds a creature on the reference-design Build
 screen, and every part keeps its id across edits and saves.
@@ -90,8 +96,8 @@ and training continues. Adding a part keeps the skill the creature already had.
 **Goal:** Enough parts to find out what is worth unlocking and when.
 
 - Motors, passive parts, sensors, power and blocks (#92 and its children).
-- Core sensor changes (#127) and Pulse, a rhythm part whose tempo is itself
-  an output (#527).
+- LOS sensor settings with power draw (#578), joint-part placement (#577) and
+  Pulse, a rhythm part whose tempo is itself an output (#527).
 - Shadows (population size) saved per Creation, with phone calibration (#528).
 - Investigation of a good start creature (#529) and a spike on part unlocks
   (#530).
@@ -175,8 +181,7 @@ learning curve.
 
 ### Backlog
 
-No milestone yet: memory cells (#126), sensor configurability (#107) and
-procedural maps (#91).
+No milestone yet: memory cells (#126) and procedural maps (#91).
 
 ---
 

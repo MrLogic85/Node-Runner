@@ -79,8 +79,9 @@ For each concept:
   and each motor relation contributes a relative angle and angular velocity.
   0.3.0 expands this into topology-derived sensors for user-built creatures.
   0.13.0 lets each part declare its ports, with the convention "0 = as
-  built" (#534); 0.14.0 changes the Core sensors (#127) and adds Pulse, a
-  rhythm input (#527).
+  built" (#534). 0.12.0 replaces Core with sensor parts on beams, an
+  Accelerometer and an LOS sensor (#127, #575); 0.14.0 adds LOS settings
+  (#578) and Pulse, a rhythm input (#527).
 - **How we show it:** 0.1.0 proves observation → action by making the worm
   twitch. 0.2.0 lists what the network sees each tick. A later, uncommitted
   teaching mode may let the user toggle a sensor off, retrain from scratch, and
