@@ -155,15 +155,9 @@ public sealed class ConstructionPresentationViewModel
 
     public string MultiSelectionBody => "Drag any selected part to move them together. Parts are locked, so this selection can only be moved.";
 
-    public string LockedTopologyToolsText => $"Beam, Core, Delete locked: {MoveOnlyLockReason}";
-
-    public string PlaceToolText => _construction.IsMoveOnly ? "Move" : "Place";
-
     public bool LockTopologyTools => _construction.IsMoveOnly;
 
     public string CoreToolText => _construction.IsMoveOnly ? "Core · locked" : BuildCoreToolText();
-
-    public string DeleteToolText => _construction.IsMoveOnly ? "Delete · locked" : "Delete";
 
     /// <summary>True for a locked Creation: its anatomy is fixed and only moving nodes is allowed.</summary>
     public bool IsLocked => _construction.IsMoveOnly;
@@ -188,11 +182,11 @@ public sealed class ConstructionPresentationViewModel
     {
         return tool switch
         {
-            ConstructionTool.Place => "Tap empty space to place a node. Drag a node to move it.",
-            ConstructionTool.Beam => "Tap a node, then another node, to connect them with a beam.",
+            ConstructionTool.Move => "Drag a joint to move it. Tap a part to select it.",
+            ConstructionTool.Beam => "Drag from one joint to another to join them with a beam.",
+            ConstructionTool.Joint => "Tap empty space to add a joint, or tap a beam to split it.",
             ConstructionTool.Select => "Tap parts to select them. Drag selected parts to move them together.",
             ConstructionTool.Core => "Tap a node to attach a core, tap again to remove it.",
-            ConstructionTool.Delete => "Tap a node or beam to delete it.",
             _ => string.Empty,
         };
     }

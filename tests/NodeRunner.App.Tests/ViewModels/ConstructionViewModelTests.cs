@@ -102,7 +102,7 @@ public sealed class ConstructionViewModelTests
     }
 
     [Fact]
-    public void LoadMoveOnly_ResetsActiveToolToPlaceForMoving()
+    public void Load_ResetsActiveToolToMove()
     {
         var creature = new CreatureDef(
             [new NodeDef(new Vector2D(0, 0), 18), new NodeDef(new Vector2D(20, 0), 18)],
@@ -110,9 +110,9 @@ public sealed class ConstructionViewModelTests
             []);
         var viewModel = new ConstructionViewModel { ActiveTool = ConstructionTool.Beam };
 
-        viewModel.Load(creature, moveOnly: true);
+        viewModel.Load(creature);
 
-        viewModel.ActiveTool.ShouldBe(ConstructionTool.Place);
+        viewModel.ActiveTool.ShouldBe(ConstructionTool.Move);
     }
 
     [Fact]
@@ -204,39 +204,27 @@ public sealed class ConstructionViewModelTests
     }
 
     [Fact]
-    public void ActiveTool_DefaultsToPlace()
+    public void ActiveTool_DefaultsToMove()
     {
         var viewModel = new ConstructionViewModel();
 
-        viewModel.ActiveTool.ShouldBe(ConstructionTool.Place);
+        viewModel.ActiveTool.ShouldBe(ConstructionTool.Move);
     }
 
     [Fact]
-    public void ActiveTool_WhenChanged_ClearsPendingBeamAndStatus()
+    public void ActiveTool_WhenChanged_ClearsStatus()
     {
         var viewModel = new ConstructionViewModel();
         var a = viewModel.PlaceNode(new Vector2D(0, 0), 18);
-        viewModel.SelectNodeForBeam(a);
+        viewModel.ConnectBeam(a, a);
 
         viewModel.ActiveTool = ConstructionTool.Core;
 
-        viewModel.PendingBeamStartNode.ShouldBeNull();
         viewModel.StatusMessage.ShouldBeNull();
     }
 
     [Fact]
-    public void SelectNodeForBeam_FirstCall_SetsPendingStartNode()
-    {
-        var viewModel = new ConstructionViewModel();
-        var a = viewModel.PlaceNode(new Vector2D(0, 0), 18);
-
-        viewModel.SelectNodeForBeam(a);
-
-        viewModel.PendingBeamStartNode.ShouldBe(a);
-    }
-
-    [Fact]
-    public void SelectNodeForBeam_SecondCallOnDifferentNode_CreatesBeam()
+    public void ConnectBeam_DifferentNodes_CreatesBeam()
     {
         var viewModel = new ConstructionViewModel();
         var a = viewModel.PlaceNode(new Vector2D(0, 0), 18);
@@ -244,43 +232,112 @@ public sealed class ConstructionViewModelTests
         var raised = false;
         viewModel.AnatomyChanged += (_, _) => raised = true;
 
-        viewModel.SelectNodeForBeam(a);
-        viewModel.SelectNodeForBeam(b);
+        viewModel.ConnectBeam(a, b);
 
         viewModel.Beams.Count.ShouldBe(1);
         viewModel.Beams[0].NodeA.ShouldBe(a);
         viewModel.Beams[0].NodeB.ShouldBe(b);
-        viewModel.PendingBeamStartNode.ShouldBeNull();
         raised.ShouldBeTrue();
     }
 
     [Fact]
-    public void SelectNodeForBeam_SameNodeTwice_ClearsSelectionWithoutCreatingBeam()
+    public void ConnectBeam_SameNode_CreatesNoBeam()
     {
         var viewModel = new ConstructionViewModel();
         var a = viewModel.PlaceNode(new Vector2D(0, 0), 18);
 
-        viewModel.SelectNodeForBeam(a);
-        viewModel.SelectNodeForBeam(a);
+        viewModel.ConnectBeam(a, a).ShouldBeFalse();
 
         viewModel.Beams.Count.ShouldBe(0);
-        viewModel.PendingBeamStartNode.ShouldBeNull();
     }
 
     [Fact]
-    public void SelectNodeForBeam_DuplicateBeam_SurfacesErrorInsteadOfThrowing()
+    public void ConnectBeam_DuplicateBeam_SurfacesErrorInsteadOfThrowing()
     {
         var viewModel = new ConstructionViewModel();
         var a = viewModel.PlaceNode(new Vector2D(0, 0), 18);
         var b = viewModel.PlaceNode(new Vector2D(10, 0), 18);
-        viewModel.SelectNodeForBeam(a);
-        viewModel.SelectNodeForBeam(b);
+        viewModel.ConnectBeam(a, b);
 
-        viewModel.SelectNodeForBeam(a);
-        viewModel.SelectNodeForBeam(b);
+        viewModel.ConnectBeam(a, b);
 
         viewModel.Beams.Count.ShouldBe(1);
         viewModel.StatusMessage.ShouldNotBeNullOrEmpty();
+    }
+
+    [Fact]
+    public void ConnectBeam_WhenLocked_CreatesNoBeam()
+    {
+        var viewModel = new ConstructionViewModel();
+        viewModel.Load(
+            new CreatureDef([new NodeDef(new Vector2D(0, 0), 18), new NodeDef(new Vector2D(20, 0), 18)], [], []),
+            moveOnly: true);
+
+        viewModel.CanConnect(0, 1).ShouldBeFalse();
+        viewModel.ConnectBeam(0, 1).ShouldBeFalse();
+
+        viewModel.Beams.ShouldBeEmpty();
+        viewModel.StatusMessage.ShouldBe("Edit mode only allows moving existing nodes.");
+    }
+
+    [Fact]
+    public void SplitBeam_ReplacesBeamWithTwoThroughNewNodeInOneChange()
+    {
+        var viewModel = new ConstructionViewModel();
+        var a = viewModel.PlaceNode(new Vector2D(0, 0), 18);
+        var b = viewModel.PlaceNode(new Vector2D(100, 0), 18);
+        var c = viewModel.PlaceNode(new Vector2D(100, 100), 18);
+        viewModel.ConnectBeam(a, b);
+        viewModel.ConnectBeam(b, c);
+        viewModel.ToggleCoreOnNode(c);
+        viewModel.SelectBeam(0);
+        var changes = 0;
+        viewModel.AnatomyChanged += (_, _) => changes++;
+
+        var joint = viewModel.SplitBeam(0, new Vector2D(30, 12), 18);
+
+        joint.ShouldBe(3);
+        viewModel.Nodes[3].Position.ShouldBe(new Vector2D(30, 0));
+        viewModel.Beams.ShouldBe([new BeamDef(b, c), new BeamDef(a, 3), new BeamDef(3, b)]);
+        viewModel.Cores.ShouldBe([new CoreDef(c)]);
+        viewModel.SelectedPartCount.ShouldBe(0);
+        changes.ShouldBe(1);
+    }
+
+    [Theory]
+    [InlineData(-10, 0)]
+    [InlineData(110, 0)]
+    public void SplitBeam_AtAnEnd_ChangesNothing(double x, double y)
+    {
+        var viewModel = new ConstructionViewModel();
+        viewModel.PlaceNode(new Vector2D(0, 0), 18);
+        viewModel.PlaceNode(new Vector2D(100, 0), 18);
+        viewModel.ConnectBeam(0, 1);
+
+        viewModel.SplitBeam(0, new Vector2D(x, y), 18).ShouldBeNull();
+
+        viewModel.Nodes.Count.ShouldBe(2);
+        viewModel.Beams.Count.ShouldBe(1);
+    }
+
+    [Fact]
+    public void SplitBeam_WhenLocked_ChangesNothing()
+    {
+        var viewModel = LockedPair();
+
+        viewModel.SplitBeam(0, new Vector2D(10, 0), 18).ShouldBeNull();
+
+        viewModel.Nodes.Count.ShouldBe(2);
+        viewModel.Beams.Count.ShouldBe(1);
+    }
+
+    private static ConstructionViewModel LockedPair()
+    {
+        var viewModel = new ConstructionViewModel();
+        viewModel.Load(
+            new CreatureDef([new NodeDef(new Vector2D(0, 0), 18), new NodeDef(new Vector2D(20, 0), 18)], [new BeamDef(0, 1)], []),
+            moveOnly: true);
+        return viewModel;
     }
 
     [Fact]
@@ -328,51 +385,12 @@ public sealed class ConstructionViewModelTests
     }
 
     [Fact]
-    public void DeleteNode_RemovesNodeAndCascadesToBeamsAndCores()
-    {
-        var viewModel = new ConstructionViewModel();
-        var a = viewModel.PlaceNode(new Vector2D(0, 0), 18);
-        var b = viewModel.PlaceNode(new Vector2D(10, 0), 18);
-        viewModel.SelectNodeForBeam(a);
-        viewModel.SelectNodeForBeam(b);
-        viewModel.ToggleCoreOnNode(a);
-        var raised = false;
-        viewModel.AnatomyChanged += (_, _) => raised = true;
-
-        viewModel.DeleteNode(a);
-
-        viewModel.Nodes.Count.ShouldBe(1);
-        viewModel.Beams.Count.ShouldBe(0);
-        viewModel.Cores.Count.ShouldBe(0);
-        raised.ShouldBeTrue();
-    }
-
-    [Fact]
-    public void DeleteBeam_RemovesBeamButKeepsNodes()
-    {
-        var viewModel = new ConstructionViewModel();
-        var a = viewModel.PlaceNode(new Vector2D(0, 0), 18);
-        var b = viewModel.PlaceNode(new Vector2D(10, 0), 18);
-        viewModel.SelectNodeForBeam(a);
-        viewModel.SelectNodeForBeam(b);
-        var raised = false;
-        viewModel.AnatomyChanged += (_, _) => raised = true;
-
-        viewModel.DeleteBeam(0);
-
-        viewModel.Beams.Count.ShouldBe(0);
-        viewModel.Nodes.Count.ShouldBe(2);
-        raised.ShouldBeTrue();
-    }
-
-    [Fact]
     public void TryFindBeamNear_WithinDistance_ReturnsBeam()
     {
         var viewModel = new ConstructionViewModel();
         var a = viewModel.PlaceNode(new Vector2D(0, 0), 18);
         var b = viewModel.PlaceNode(new Vector2D(10, 0), 18);
-        viewModel.SelectNodeForBeam(a);
-        viewModel.SelectNodeForBeam(b);
+        viewModel.ConnectBeam(a, b);
 
         var found = viewModel.TryFindBeamNear(new Vector2D(5, 0), 2, out var beamIndex);
 
@@ -386,8 +404,7 @@ public sealed class ConstructionViewModelTests
         var viewModel = new ConstructionViewModel();
         var a = viewModel.PlaceNode(new Vector2D(0, 0), 18);
         var b = viewModel.PlaceNode(new Vector2D(10, 0), 18);
-        viewModel.SelectNodeForBeam(a);
-        viewModel.SelectNodeForBeam(b);
+        viewModel.ConnectBeam(a, b);
 
         var found = viewModel.TryFindBeamNear(new Vector2D(5, 50), 2, out var beamIndex);
 
@@ -401,8 +418,7 @@ public sealed class ConstructionViewModelTests
         var viewModel = new ConstructionViewModel();
         var a = viewModel.PlaceNode(new Vector2D(0, 0), 18);
         var b = viewModel.PlaceNode(new Vector2D(10, 0), 18);
-        viewModel.SelectNodeForBeam(a);
-        viewModel.SelectNodeForBeam(b);
+        viewModel.ConnectBeam(a, b);
         viewModel.ToggleSelectedNode(a);
         var raisedFor = new List<string?>();
         var anatomyChanged = false;
@@ -427,8 +443,7 @@ public sealed class ConstructionViewModelTests
         var viewModel = new ConstructionViewModel();
         var a = viewModel.PlaceNode(new Vector2D(0, 0), 18);
         var b = viewModel.PlaceNode(new Vector2D(10, 0), 18);
-        viewModel.SelectNodeForBeam(a);
-        viewModel.SelectNodeForBeam(b);
+        viewModel.ConnectBeam(a, b);
         viewModel.SelectBeam(0);
         var raisedFor = new List<string?>();
         var anatomyChanged = false;
@@ -451,8 +466,7 @@ public sealed class ConstructionViewModelTests
         var viewModel = new ConstructionViewModel();
         var a = viewModel.PlaceNode(new Vector2D(0, 0), 18);
         var b = viewModel.PlaceNode(new Vector2D(10, 0), 18);
-        viewModel.SelectNodeForBeam(a);
-        viewModel.SelectNodeForBeam(b);
+        viewModel.ConnectBeam(a, b);
         viewModel.SelectBeam(0);
 
         viewModel.DeleteSelectedParts();
@@ -487,10 +501,8 @@ public sealed class ConstructionViewModelTests
         var a = viewModel.PlaceNode(new Vector2D(0, 0), 18);
         var b = viewModel.PlaceNode(new Vector2D(10, 0), 18);
         var c = viewModel.PlaceNode(new Vector2D(20, 0), 18);
-        viewModel.SelectNodeForBeam(a);
-        viewModel.SelectNodeForBeam(b);
-        viewModel.SelectNodeForBeam(b);
-        viewModel.SelectNodeForBeam(c);
+        viewModel.ConnectBeam(a, b);
+        viewModel.ConnectBeam(b, c);
         viewModel.ToggleCoreOnNode(b);
         viewModel.ToggleSelectedNode(b);
         var anatomyChanged = false;
@@ -512,10 +524,8 @@ public sealed class ConstructionViewModelTests
         var a = viewModel.PlaceNode(new Vector2D(0, 0), 18);
         var b = viewModel.PlaceNode(new Vector2D(10, 0), 18);
         var c = viewModel.PlaceNode(new Vector2D(20, 0), 18);
-        viewModel.SelectNodeForBeam(a);
-        viewModel.SelectNodeForBeam(b);
-        viewModel.SelectNodeForBeam(b);
-        viewModel.SelectNodeForBeam(c);
+        viewModel.ConnectBeam(a, b);
+        viewModel.ConnectBeam(b, c);
         viewModel.ToggleCoreOnNode(b);
         viewModel.ToggleSelectedNode(a);
         viewModel.ToggleSelectedNode(c);
@@ -612,8 +622,7 @@ public sealed class ConstructionViewModelTests
         var viewModel = new ConstructionViewModel();
         var a = viewModel.PlaceNode(new Vector2D(0, 0), 18);
         var b = viewModel.PlaceNode(new Vector2D(10, 0), 18);
-        viewModel.SelectNodeForBeam(a);
-        viewModel.SelectNodeForBeam(b);
+        viewModel.ConnectBeam(a, b);
 
         var canLeave = viewModel.TryLeave(out var creature, out var errors);
 

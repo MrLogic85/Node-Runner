@@ -24,6 +24,10 @@ Long-form descriptions and the sensor/model contract live in
   corresponding `CreatureDef` list.
 - **CreatureDef** — Pure-data description of a creature; the "genome" of the
   body, distinct from the brain's genome. See: `docs/CREATURE_MODEL.md`.
+- **Joint** — The player-facing name for a node in Build (the reference
+  design's Joint tool adds one). Not the retired 0.1.0 Joint/Bone/Muscle
+  prototype part, and not a Godot physics joint. See:
+  `docs/CONSTRUCTION_MODE.md`.
 - **Model input** — One slot in the neural network's input vector, populated
   one-to-one from a sensor value (a core's or a motor relation's). See:
   `docs/CREATURE_MODEL.md`.

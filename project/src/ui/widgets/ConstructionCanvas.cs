@@ -8,30 +8,23 @@ using NodeRunner.Ui.Lib;
 namespace NodeRunner.Ui.Widgets;
 
 /// <summary>
-/// Renders the anatomy placed so far in construction mode and lets the user
-/// edit it with touch, per the active <see cref="ConstructionTool"/>: place
-/// or drag nodes, connect two nodes with a beam, attach/remove a core, or
-/// delete a node/beam. Binds to <see cref="ConstructionViewModel"/> per
-/// `project/src/ui/AGENTS.md`; does not own any anatomy state itself. See
-/// docs/CONSTRUCTION_MODE.md.
+/// Renders the anatomy placed so far in Build and forwards touch to
+/// <see cref="ConstructionGestures"/>, which decides what the active
+/// <see cref="ConstructionTool"/> does. Binds to
+/// <see cref="ConstructionViewModel"/> per `project/src/ui/AGENTS.md`; does
+/// not own any anatomy state itself. See docs/CONSTRUCTION_MODE.md.
 /// </summary>
 public partial class ConstructionCanvas : Node2D
 {
-    private const float _nodeHitRadius = 32f;
-    private const float _defaultNodeRadius = 18f;
-    private const float _beamHitDistance = 20f;
-    private const float _selectionBoxMinSize = 8f;
     private const double _moveGhostSeconds = 1.8;
     private static readonly Vector2 _rigidLabelOffset = new(12, -12);
     private static readonly Rect2 _rigidLabelBox = new(-6, -22, 168, 30);
     private const int _rigidLabelFontSize = 18;
 
     private ConstructionViewModel? _viewModel;
-    private int _draggingNodeIndex = -1;
+    private ConstructionGestures? _gestures;
     private readonly Dictionary<int, Vector2D> _ghostNodePositions = [];
     private int _ghostVersion;
-    private Vector2? _selectionBoxStart;
-    private Vector2? _selectionBoxCurrent;
 
     public VisualTheme Theme { get; set; } = VisualTheme.Neon;
 
@@ -40,68 +33,60 @@ public partial class ConstructionCanvas : Node2D
         get => _viewModel;
         set
         {
-            if (_viewModel is not null)
-            {
-                _viewModel.AnatomyChanged -= OnAnatomyChanged;
-                _viewModel.PropertyChanged -= OnViewModelPropertyChanged;
-            }
-
+            Unbind();
             _viewModel = value;
             ClearMoveGhosts();
             if (_viewModel is not null)
             {
                 _viewModel.AnatomyChanged += OnAnatomyChanged;
                 _viewModel.PropertyChanged += OnViewModelPropertyChanged;
+                _gestures = new ConstructionGestures(_viewModel);
+                _gestures.Changed += OnGesturesChanged;
+                _gestures.NodeDragStarting += OnNodeDragStarting;
             }
 
             QueueRedraw();
         }
     }
 
-    public override void _ExitTree()
+    public override void _ExitTree() => Unbind();
+
+    private void Unbind()
     {
         if (_viewModel is not null)
         {
             _viewModel.AnatomyChanged -= OnAnatomyChanged;
             _viewModel.PropertyChanged -= OnViewModelPropertyChanged;
         }
+
+        if (_gestures is not null)
+        {
+            _gestures.Changed -= OnGesturesChanged;
+            _gestures.NodeDragStarting -= OnNodeDragStarting;
+            _gestures = null;
+        }
     }
 
     public override void _UnhandledInput(InputEvent inputEvent)
     {
-        if (_viewModel is null || !_viewModel.IsActive)
+        if (_viewModel is null || _gestures is null || !_viewModel.IsActive)
         {
             return;
         }
 
         if (PointerInput.TryGetPressPosition(inputEvent, out var pressPosition))
         {
-            HandlePress(ToCanvasLocal(pressPosition));
+            _gestures.Press(ToDomain(ToCanvasLocal(pressPosition)));
             GetViewport().SetInputAsHandled();
-            return;
         }
-
-        if (PointerInput.TryGetDragPosition(inputEvent, out var dragPosition))
+        else if (PointerInput.TryGetDragPosition(inputEvent, out var dragPosition))
         {
-            if (_selectionBoxStart is not null)
-            {
-                _selectionBoxCurrent = ToCanvasLocal(dragPosition);
-                QueueRedraw();
-                GetViewport().SetInputAsHandled();
-            }
-            else if (_draggingNodeIndex >= 0)
-            {
-                HandleDrag(ToCanvasLocal(dragPosition));
-                GetViewport().SetInputAsHandled();
-            }
-
-            return;
+            _gestures.Drag(ToDomain(ToCanvasLocal(dragPosition)));
+            GetViewport().SetInputAsHandled();
         }
-
-        if (PointerInput.TryGetReleasePosition(inputEvent, out _))
+        else if (PointerInput.TryGetReleasePosition(inputEvent, out var releasePosition))
         {
-            CompleteSelectionBox();
-            _draggingNodeIndex = -1;
+            _gestures.Release(ToDomain(ToCanvasLocal(releasePosition)));
             ScheduleMoveGhostClear();
         }
     }
@@ -115,6 +100,7 @@ public partial class ConstructionCanvas : Node2D
 
         DrawMoveGhosts();
         DrawSelectionBox();
+        DrawBeamPreview();
 
         foreach (var beam in _viewModel.Beams)
         {
@@ -157,22 +143,45 @@ public partial class ConstructionCanvas : Node2D
 
         DrawMotorCenterMarkers();
 
-        if (_viewModel.PendingBeamStartNode is { } pendingIndex)
+        DrawBeamEndRings();
+    }
+
+    private void DrawBeamPreview()
+    {
+        if (_viewModel is null || _gestures?.BeamStartNode is not { } start || _gestures.BeamEnd is not { } end)
         {
-            var position = ToGodot(_viewModel.Nodes[pendingIndex].Position);
-            var radius = (float)_viewModel.Nodes[pendingIndex].Radius;
-            DrawCircle(position, radius * 1.65f, Theme.SelectionGlow);
+            return;
+        }
+
+        var to = _gestures.BeamTargetNode is { } target ? _viewModel.Nodes[target].Position : end;
+        DrawDashedLine(ToGodot(_viewModel.Nodes[start].Position), ToGodot(to), Theme.SelectionGlow, Theme.BeamWidth, 8, antialiased: false);
+    }
+
+    private void DrawBeamEndRings()
+    {
+        if (_viewModel is null || _gestures is null)
+        {
+            return;
+        }
+
+        foreach (var nodeIndex in new[] { _gestures.BeamStartNode, _gestures.BeamTargetNode })
+        {
+            if (nodeIndex is { } index)
+            {
+                var node = _viewModel.Nodes[index];
+                DrawArc(ToGodot(node.Position), (float)node.Radius * 1.65f, 0, Mathf.Tau, 32, Theme.SelectionGlow, Theme.MotorSignalWidth, antialiased: false);
+            }
         }
     }
 
     private void DrawSelectionBox()
     {
-        if (_selectionBoxStart is not { } start || _selectionBoxCurrent is not { } current)
+        if (_gestures?.SelectionBox is not { } box)
         {
             return;
         }
 
-        var rect = RectFromPoints(start, current);
+        var rect = RectFromPoints(ToGodot(box.Start), ToGodot(box.End));
         var fill = Theme.SelectionGlow;
         fill.A = 0.16f;
         DrawRect(rect, fill, filled: true);
@@ -355,7 +364,10 @@ public partial class ConstructionCanvas : Node2D
 
         for (var nodeIndex = 0; nodeIndex < _viewModel.Nodes.Count; nodeIndex++)
         {
-            if (_viewModel.Beams.Any(beam => beam.NodeA == nodeIndex || beam.NodeB == nodeIndex))
+            // The beam drag's own rings replace the warning on the joints being joined.
+            if (_viewModel.Beams.Any(beam => beam.NodeA == nodeIndex || beam.NodeB == nodeIndex)
+                || nodeIndex == _gestures?.BeamStartNode
+                || nodeIndex == _gestures?.BeamTargetNode)
             {
                 continue;
             }
@@ -393,106 +405,7 @@ public partial class ConstructionCanvas : Node2D
         }
     }
 
-    private void HandlePress(Vector2 localPosition)
-    {
-        if (_viewModel is null)
-        {
-            return;
-        }
-
-        var domainPosition = ToDomain(localPosition);
-        var foundNode = _viewModel.TryFindNodeNear(domainPosition, _nodeHitRadius, out var nodeIndex);
-
-        switch (_viewModel.ActiveTool)
-        {
-            case ConstructionTool.Beam:
-                if (foundNode)
-                {
-                    _viewModel.SelectNodeForBeam(nodeIndex);
-                }
-
-                break;
-            case ConstructionTool.Core:
-                if (foundNode)
-                {
-                    _viewModel.ToggleCoreOnNode(nodeIndex);
-                }
-
-                break;
-            case ConstructionTool.Delete:
-                if (foundNode)
-                {
-                    _viewModel.DeleteNode(nodeIndex);
-                }
-                else if (_viewModel.TryFindBeamNear(domainPosition, _beamHitDistance, out var beamIndex))
-                {
-                    _viewModel.DeleteBeam(beamIndex);
-                }
-
-                break;
-            case ConstructionTool.Select:
-                if (foundNode)
-                {
-                    if (!_viewModel.SelectedNodeIndices.Contains(nodeIndex))
-                    {
-                        _viewModel.ToggleSelectedNode(nodeIndex);
-                    }
-
-                    CaptureMoveGhosts(nodeIndex);
-                    _draggingNodeIndex = nodeIndex;
-                }
-                else
-                {
-                    if (_viewModel.TryFindBeamNear(domainPosition, _beamHitDistance, out var beamIndex))
-                    {
-                        _viewModel.SelectBeam(beamIndex);
-                    }
-                    else
-                    {
-                        _viewModel.ClearSelection();
-                        _selectionBoxStart = localPosition;
-                        _selectionBoxCurrent = localPosition;
-                    }
-                }
-
-                break;
-            case ConstructionTool.Place:
-            default:
-                if (foundNode)
-                {
-                    if (_viewModel.IsMoveOnly)
-                    {
-                        _viewModel.ClearSelection();
-                        _viewModel.ToggleSelectedNode(nodeIndex);
-                        CaptureMoveGhosts(nodeIndex);
-                    }
-
-                    _draggingNodeIndex = nodeIndex;
-                }
-                else
-                {
-                    if (_viewModel.IsMoveOnly)
-                    {
-                        if (_viewModel.TryFindBeamNear(domainPosition, _beamHitDistance, out var beamIndex))
-                        {
-                            _viewModel.SelectBeam(beamIndex);
-                        }
-                        else
-                        {
-                            _viewModel.ClearSelection();
-                        }
-                    }
-                    else
-                    {
-                        _draggingNodeIndex = _viewModel.PlaceNode(domainPosition, _defaultNodeRadius);
-                    }
-                }
-
-                break;
-        }
-    }
-
-    private void CaptureMoveGhosts(int anchorNodeIndex)
+    private void CaptureMoveGhosts(IReadOnlyCollection<int> movingNodes)
     {
         if (_viewModel is null || !_viewModel.IsMoveOnly)
         {
@@ -501,49 +414,13 @@ public partial class ConstructionCanvas : Node2D
 
         _ghostNodePositions.Clear();
         _ghostVersion++;
-        var indices = _viewModel.SelectedNodeIndices.Count > 0
-            ? _viewModel.SelectedNodeIndices
-            : [anchorNodeIndex];
-        foreach (var index in indices)
+        foreach (var index in movingNodes)
         {
             if (index >= 0 && index < _viewModel.Nodes.Count)
             {
                 _ghostNodePositions[index] = _viewModel.Nodes[index].Position;
             }
         }
-    }
-
-    private void CompleteSelectionBox()
-    {
-        if (_viewModel is null || _selectionBoxStart is not { } start || _selectionBoxCurrent is not { } current)
-        {
-            _selectionBoxStart = null;
-            _selectionBoxCurrent = null;
-            return;
-        }
-
-        var rect = RectFromPoints(start, current);
-        if (rect.Size.X < _selectionBoxMinSize && rect.Size.Y < _selectionBoxMinSize)
-        {
-            _selectionBoxStart = null;
-            _selectionBoxCurrent = null;
-            QueueRedraw();
-            return;
-        }
-
-        var selected = new List<int>();
-        for (var i = 0; i < _viewModel.Nodes.Count; i++)
-        {
-            if (rect.HasPoint(ToGodot(_viewModel.Nodes[i].Position)))
-            {
-                selected.Add(i);
-            }
-        }
-
-        _viewModel.ReplaceSelection(selected);
-        _selectionBoxStart = null;
-        _selectionBoxCurrent = null;
-        QueueRedraw();
     }
 
     private static Rect2 RectFromPoints(Vector2 first, Vector2 second)
@@ -584,39 +461,31 @@ public partial class ConstructionCanvas : Node2D
         QueueRedraw();
     }
 
-    private void HandleDrag(Vector2 localPosition)
-    {
-        if (_viewModel is null || (_viewModel.ActiveTool != ConstructionTool.Place && _viewModel.ActiveTool != ConstructionTool.Select))
-        {
-            return;
-        }
-
-        if (_draggingNodeIndex < 0 || _draggingNodeIndex >= _viewModel.Nodes.Count)
-        {
-            return;
-        }
-
-        if (_viewModel.ActiveTool == ConstructionTool.Select)
-        {
-            _viewModel.MoveSelectedNodes(_draggingNodeIndex, ToDomain(localPosition));
-        }
-        else
-        {
-            _viewModel.MoveNode(_draggingNodeIndex, ToDomain(localPosition));
-        }
-    }
-
     private void OnAnatomyChanged(object? sender, EventArgs eventArgs)
     {
         QueueRedraw();
     }
 
+    private void OnGesturesChanged(object? sender, EventArgs eventArgs)
+    {
+        QueueRedraw();
+    }
+
+    private void OnNodeDragStarting(object? sender, IReadOnlyCollection<int> movingNodes)
+    {
+        CaptureMoveGhosts(movingNodes);
+    }
+
     private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs eventArgs)
     {
-        if (eventArgs.PropertyName == nameof(ConstructionViewModel.PendingBeamStartNode)
-            || eventArgs.PropertyName == nameof(ConstructionViewModel.SelectedNodeCount))
+        if (eventArgs.PropertyName == nameof(ConstructionViewModel.SelectedNodeCount))
         {
             QueueRedraw();
+        }
+
+        if (eventArgs.PropertyName == nameof(ConstructionViewModel.ActiveTool))
+        {
+            _gestures?.Cancel();
         }
 
         if (eventArgs.PropertyName == nameof(ConstructionViewModel.IsMoveOnly) && _viewModel?.IsMoveOnly != true)

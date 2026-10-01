@@ -101,6 +101,13 @@ public sealed class CreatureBuilder
         return _beams.Count - 1;
     }
 
+    /// <summary>Whether <see cref="AddBeam"/> would accept this pair: two distinct, existing nodes not yet joined.</summary>
+    public bool CanAddBeam(int nodeA, int nodeB) =>
+        nodeA >= 0 && nodeA < _nodes.Count
+        && nodeB >= 0 && nodeB < _nodes.Count
+        && nodeA != nodeB
+        && !_beams.Any(beam => IsSamePair(beam, nodeA, nodeB));
+
     /// <summary>Removes a beam by index.</summary>
     public void RemoveBeam(int beamIndex)
     {

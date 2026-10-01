@@ -104,8 +104,9 @@ public partial class BuildScreen : Control
         BindMenuItem(toolbar, GetNode<UiMenuActionItem>("%MenuBrainSetup"), BrainSetup.Open);
         BindMenuItem(toolbar, GetNode<UiMenuActionItem>("%MenuResetTraining"), () => EmitSignal(SignalName.ResetTrainingRequested));
         BindMenuItem(toolbar, GetNode<UiMenuActionItem>("%MenuDeleteCreation"), () => EmitSignal(SignalName.DeleteCreationRequested));
-        BindTool(GetNode<UiButton>("%MoveTool"), ConstructionTool.Place);
+        BindTool(GetNode<UiButton>("%MoveTool"), ConstructionTool.Move);
         BindTool(GetNode<UiButton>("%BeamTool"), ConstructionTool.Beam);
+        BindTool(GetNode<UiButton>("%JointTool"), ConstructionTool.Joint);
         BindTool(GetNode<UiButton>("%SelectTool"), ConstructionTool.Select);
         GetNode<UiPartRow>("%CorePart").PartSelected += () => EmitSignal(SignalName.ToolRequested, (int)ConstructionTool.Core);
         GetNode<UiButton>("%Stats").Activated += () => EmitSignal(SignalName.StatsRequested);
@@ -196,10 +197,13 @@ public partial class BuildScreen : Control
 
     private void ApplyTools(ConstructionPresentationViewModel presentation)
     {
-        GetNode<UiButton>("%MoveTool").Selected = presentation.ActiveTool == ConstructionTool.Place;
+        GetNode<UiButton>("%MoveTool").Selected = presentation.ActiveTool == ConstructionTool.Move;
         var beam = GetNode<UiButton>("%BeamTool");
         beam.Selected = presentation.ActiveTool == ConstructionTool.Beam;
         beam.Disabled = presentation.LockTopologyTools;
+        var joint = GetNode<UiButton>("%JointTool");
+        joint.Selected = presentation.ActiveTool == ConstructionTool.Joint;
+        joint.Disabled = presentation.LockTopologyTools;
         GetNode<UiButton>("%SelectTool").Selected = presentation.ActiveTool == ConstructionTool.Select;
     }
 

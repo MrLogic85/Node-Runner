@@ -7,14 +7,16 @@ using NodeRunner.Domain;
 
 namespace NodeRunner.App.ViewModels;
 
-/// <summary>Which construction-mode touch interaction is active.</summary>
+/// <summary>Which Build touch interaction is active; see <see cref="ConstructionGestures"/>.</summary>
 public enum ConstructionTool
 {
-    Place,
+    Move,
     Beam,
+    Joint,
     Select,
+
+    /// <summary>Transitional: tap a node to add or remove a core, until the Parts tray drags parts onto joints (#376).</summary>
     Core,
-    Delete,
 }
 
 /// <summary>
@@ -28,8 +30,7 @@ public sealed class ConstructionViewModel : INotifyPropertyChanged
 {
     private CreatureBuilder _builder;
     private bool _isActive;
-    private ConstructionTool _activeTool = ConstructionTool.Place;
-    private int? _pendingBeamStartNode;
+    private ConstructionTool _activeTool = ConstructionTool.Move;
     private string? _statusMessage;
     private bool _moveOnly;
     private int _maxCores = 1;
@@ -56,12 +57,7 @@ public sealed class ConstructionViewModel : INotifyPropertyChanged
         _trainingGeneration = training?.Generation;
         _bestFitness = training?.BestFitness;
         _moveOnly = moveOnly;
-        if (moveOnly)
-        {
-            ActiveTool = ConstructionTool.Place;
-        }
-
-        PendingBeamStartNode = null;
+        ActiveTool = ConstructionTool.Move;
         StatusMessage = null;
         AnatomyChanged?.Invoke(this, EventArgs.Empty);
     }
@@ -145,24 +141,7 @@ public sealed class ConstructionViewModel : INotifyPropertyChanged
             }
 
             _activeTool = value;
-            PendingBeamStartNode = null;
             StatusMessage = null;
-            OnPropertyChanged();
-        }
-    }
-
-    /// <summary>The first node tapped while connecting a beam, awaiting a second node.</summary>
-    public int? PendingBeamStartNode
-    {
-        get => _pendingBeamStartNode;
-        private set
-        {
-            if (_pendingBeamStartNode == value)
-            {
-                return;
-            }
-
-            _pendingBeamStartNode = value;
             OnPropertyChanged();
         }
     }
@@ -327,8 +306,7 @@ public sealed class ConstructionViewModel : INotifyPropertyChanged
 
     /// <summary>
     /// Finds the closest placed node within <paramref name="maxDistance"/> of
-    /// <paramref name="position"/>, if any. Used to decide whether a touch
-    /// should start dragging an existing node instead of placing a new one.
+    /// <paramref name="position"/>, if any. Used to hit-test nodes.
     /// </summary>
     public bool TryFindNodeNear(Vector2D position, double maxDistance, out int nodeIndex)
     {
@@ -350,47 +328,77 @@ public sealed class ConstructionViewModel : INotifyPropertyChanged
         return nodeIndex >= 0;
     }
 
+    /// <summary>Whether <see cref="ConnectBeam"/> would join this pair: unlocked, and the builder accepts the beam.</summary>
+    public bool CanConnect(int nodeA, int nodeB) => !_moveOnly && _builder.CanAddBeam(nodeA, nodeB);
+
     /// <summary>
-    /// Advances beam connection: the first call selects a start node, the
-    /// second call (on a different node) attempts to connect them. Rejected
-    /// attempts (self-connect, duplicate beam) surface via
+    /// Joins two existing nodes with a beam. Rejected attempts (locked
+    /// Creation, self-connect, duplicate beam) surface via
     /// <see cref="StatusMessage"/> instead of throwing.
     /// </summary>
-    public void SelectNodeForBeam(int nodeIndex)
+    public bool ConnectBeam(int nodeA, int nodeB)
     {
         if (_moveOnly)
         {
             StatusMessage = "Edit mode only allows moving existing nodes.";
-            return;
+            return false;
         }
-
-        if (PendingBeamStartNode is null)
-        {
-            PendingBeamStartNode = nodeIndex;
-            StatusMessage = $"Node {nodeIndex} selected. Tap another node to connect.";
-            return;
-        }
-
-        if (PendingBeamStartNode == nodeIndex)
-        {
-            PendingBeamStartNode = null;
-            StatusMessage = "Beam selection cleared.";
-            return;
-        }
-
-        var startNode = PendingBeamStartNode.Value;
-        PendingBeamStartNode = null;
 
         try
         {
-            _builder.AddBeam(startNode, nodeIndex);
-            StatusMessage = $"Connected node {startNode} to node {nodeIndex}.";
-            AnatomyChanged?.Invoke(this, EventArgs.Empty);
+            _builder.AddBeam(nodeA, nodeB);
         }
         catch (ArgumentException exception)
         {
             StatusMessage = exception.Message;
+            return false;
         }
+
+        StatusMessage = $"Connected node {nodeA} to node {nodeB}.";
+        AnatomyChanged?.Invoke(this, EventArgs.Empty);
+        return true;
+    }
+
+    /// <summary>
+    /// Adds a node at the point on beam <paramref name="beamIndex"/> closest to
+    /// <paramref name="position"/> and replaces the beam with two beams through
+    /// it, as one change. Returns the new node's index, or null when the
+    /// Creation is locked or the closest point is an end of the beam (or the
+    /// beam has no length), where a split would stack two nodes.
+    /// </summary>
+    public int? SplitBeam(int beamIndex, Vector2D position, double radius)
+    {
+        if (beamIndex < 0 || beamIndex >= _builder.Beams.Count)
+        {
+            throw new ArgumentOutOfRangeException(nameof(beamIndex));
+        }
+
+        if (_moveOnly)
+        {
+            StatusMessage = "Edit mode only allows moving existing nodes.";
+            return null;
+        }
+
+        var beam = _builder.Beams[beamIndex];
+        var start = _builder.Nodes[beam.NodeA].Position;
+        var end = _builder.Nodes[beam.NodeB].Position;
+        var t = ClosestPointParameter(position, start, end);
+        if (t <= 0 || t >= 1)
+        {
+            return null;
+        }
+
+        var splitPoint = new Vector2D(start.X + (t * (end.X - start.X)), start.Y + (t * (end.Y - start.Y)));
+        var nodeIndex = _builder.AddNode(splitPoint, radius);
+        _builder.RemoveBeam(beamIndex);
+        _builder.AddBeam(beam.NodeA, nodeIndex);
+        _builder.AddBeam(nodeIndex, beam.NodeB);
+        _selectedNodeIndices.Clear();
+        _selectedBeamIndex = null;
+        StatusMessage = "Split the beam with a new joint.";
+        NotifySelectionChanged();
+        AnatomyChanged?.Invoke(this, EventArgs.Empty);
+        return nodeIndex;
     }
 
     /// <summary>Attaches a core to <paramref name="nodeIndex"/>, or removes it if one is already there.</summary>
@@ -426,8 +434,8 @@ public sealed class ConstructionViewModel : INotifyPropertyChanged
     /// <summary>
     /// Finds the closest beam within <paramref name="maxDistance"/> of
     /// <paramref name="position"/> (measured to the beam's line segment), if
-    /// any. Used to hit-test beams for the Delete tool, since a beam has no
-    /// single point like a node does.
+    /// any. Used to hit-test beams, since a beam has no single point like a
+    /// node does.
     /// </summary>
     public bool TryFindBeamNear(Vector2D position, double maxDistance, out int beamIndex)
     {
@@ -446,23 +454,6 @@ public sealed class ConstructionViewModel : INotifyPropertyChanged
         }
 
         return beamIndex >= 0;
-    }
-
-    /// <summary>Removes a node, cascading to any beams/cores attached to it (see <see cref="CreatureBuilder.RemoveNode"/>).</summary>
-    public void DeleteNode(int nodeIndex)
-    {
-        if (_moveOnly)
-        {
-            StatusMessage = "Edit mode only allows moving existing nodes.";
-            return;
-        }
-
-        _builder.RemoveNode(nodeIndex);
-        _selectedNodeIndices.Clear();
-        _selectedBeamIndex = null;
-        StatusMessage = $"Removed node {nodeIndex} and anything attached to it.";
-        NotifySelectionChanged();
-        AnatomyChanged?.Invoke(this, EventArgs.Empty);
     }
 
     public void DeleteSelectedParts()
@@ -492,22 +483,6 @@ public sealed class ConstructionViewModel : INotifyPropertyChanged
         _selectedNodeIndices.Clear();
         _selectedBeamIndex = null;
         StatusMessage = "Deleted selected parts.";
-        NotifySelectionChanged();
-        AnatomyChanged?.Invoke(this, EventArgs.Empty);
-    }
-
-    /// <summary>Removes a beam, leaving both of its nodes in place.</summary>
-    public void DeleteBeam(int beamIndex)
-    {
-        if (_moveOnly)
-        {
-            StatusMessage = "Edit mode only allows moving existing nodes.";
-            return;
-        }
-
-        _builder.RemoveBeam(beamIndex);
-        _selectedBeamIndex = null;
-        StatusMessage = "Removed beam.";
         NotifySelectionChanged();
         AnatomyChanged?.Invoke(this, EventArgs.Empty);
     }
@@ -591,21 +566,29 @@ public sealed class ConstructionViewModel : INotifyPropertyChanged
 
     private static double DistanceSquaredToSegment(Vector2D point, Vector2D segmentStart, Vector2D segmentEnd)
     {
-        var segmentX = segmentEnd.X - segmentStart.X;
-        var segmentY = segmentEnd.Y - segmentStart.Y;
-        var segmentLengthSquared = (segmentX * segmentX) + (segmentY * segmentY);
-
-        var pointX = point.X - segmentStart.X;
-        var pointY = point.Y - segmentStart.Y;
-
-        var t = segmentLengthSquared > 0 ? Math.Clamp(((pointX * segmentX) + (pointY * segmentY)) / segmentLengthSquared, 0, 1) : 0;
-
-        var closestX = segmentStart.X + (t * segmentX);
-        var closestY = segmentStart.Y + (t * segmentY);
+        var t = ClosestPointParameter(point, segmentStart, segmentEnd);
+        var closestX = segmentStart.X + (t * (segmentEnd.X - segmentStart.X));
+        var closestY = segmentStart.Y + (t * (segmentEnd.Y - segmentStart.Y));
 
         var dx = point.X - closestX;
         var dy = point.Y - closestY;
         return (dx * dx) + (dy * dy);
+    }
+
+    /// <summary>Where along the segment (0 at its start, 1 at its end) the point closest to <paramref name="point"/> lies.</summary>
+    private static double ClosestPointParameter(Vector2D point, Vector2D segmentStart, Vector2D segmentEnd)
+    {
+        var segmentX = segmentEnd.X - segmentStart.X;
+        var segmentY = segmentEnd.Y - segmentStart.Y;
+        var segmentLengthSquared = (segmentX * segmentX) + (segmentY * segmentY);
+        if (segmentLengthSquared <= 0)
+        {
+            return 0;
+        }
+
+        var pointX = point.X - segmentStart.X;
+        var pointY = point.Y - segmentStart.Y;
+        return Math.Clamp(((pointX * segmentX) + (pointY * segmentY)) / segmentLengthSquared, 0, 1);
     }
 
     private void OnPropertyChanged([CallerMemberName] string? propertyName = null)

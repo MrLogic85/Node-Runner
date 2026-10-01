@@ -81,6 +81,22 @@ public sealed class CreatureBuilderTests
     }
 
     [Fact]
+    public void CanAddBeam_MatchesWhatAddBeamAccepts()
+    {
+        var builder = new CreatureBuilder();
+        var a = builder.AddNode(new Vector2D(0, 0), 1);
+        var b = builder.AddNode(new Vector2D(2, 0), 1);
+        var c = builder.AddNode(new Vector2D(4, 0), 1);
+        builder.AddBeam(a, b);
+
+        builder.CanAddBeam(b, c).ShouldBeTrue();
+        builder.CanAddBeam(b, a).ShouldBeFalse();
+        builder.CanAddBeam(c, c).ShouldBeFalse();
+        builder.CanAddBeam(c, 3).ShouldBeFalse();
+        builder.CanAddBeam(-1, c).ShouldBeFalse();
+    }
+
+    [Fact]
     public void AddCore_OnExistingNode_ReturnsIndex()
     {
         var builder = new CreatureBuilder();

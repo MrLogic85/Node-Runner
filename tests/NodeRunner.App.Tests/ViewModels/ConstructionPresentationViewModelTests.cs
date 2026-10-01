@@ -6,10 +6,10 @@ namespace NodeRunner.App.Tests.ViewModels;
 public sealed class ConstructionPresentationViewModelTests
 {
     [Theory]
-    [InlineData(ConstructionTool.Place, "Tap empty space to place a node. Drag a node to move it.")]
-    [InlineData(ConstructionTool.Beam, "Tap a node, then another node, to connect them with a beam.")]
+    [InlineData(ConstructionTool.Move, "Drag a joint to move it. Tap a part to select it.")]
+    [InlineData(ConstructionTool.Beam, "Drag from one joint to another to join them with a beam.")]
+    [InlineData(ConstructionTool.Joint, "Tap empty space to add a joint, or tap a beam to split it.")]
     [InlineData(ConstructionTool.Core, "Tap a node to attach a core, tap again to remove it.")]
-    [InlineData(ConstructionTool.Delete, "Tap a node or beam to delete it.")]
     public void ToolHint_ReturnsUserFacingHintForTool(ConstructionTool tool, string expected)
     {
         ConstructionPresentationViewModel.ToolHint(tool).ShouldBe(expected);
@@ -37,10 +37,11 @@ public sealed class ConstructionPresentationViewModelTests
     public void InspectorValues_UsesStatusMessageBeforeToolHint()
     {
         var construction = new ConstructionViewModel();
-        construction.SelectNodeForBeam(0);
+        construction.PlaceNode(new Vector2D(0, 0), 18);
+        construction.ConnectBeam(0, 0);
         var presentation = new ConstructionPresentationViewModel(construction);
 
-        presentation.InspectorValues.ShouldBe("Node 0 selected. Tap another node to connect.");
+        presentation.InspectorValues.ShouldBe("A beam must connect two different nodes.");
     }
 
     [Fact]
@@ -57,12 +58,9 @@ public sealed class ConstructionPresentationViewModelTests
             new TrainingStateDef([2, 1], [0.1, -0.2, 0.3], 3, "Tanh")));
         var presentation = new ConstructionPresentationViewModel(construction);
 
-        presentation.PlaceToolText.ShouldBe("Move");
         presentation.LockTopologyTools.ShouldBeTrue();
-        presentation.LockedTopologyToolsText.ShouldBe("Beam, Core, Delete locked: Move only · training kept");
         presentation.CoreToolText.ShouldBe("Core · locked");
         presentation.CoreToolTooltip.ShouldBe("Move only · training kept");
-        presentation.DeleteToolText.ShouldBe("Delete · locked");
         presentation.InspectorRole.ShouldBe("Tool: Move");
         presentation.InspectorValues.ShouldBe("Drag an existing node to reposition it. Training is kept.");
         presentation.IsLocked.ShouldBeTrue();
@@ -98,9 +96,7 @@ public sealed class ConstructionPresentationViewModelTests
         var construction = new ConstructionViewModel();
         var presentation = new ConstructionPresentationViewModel(construction);
 
-        presentation.PlaceToolText.ShouldBe("Place");
         presentation.LockTopologyTools.ShouldBeFalse();
-        presentation.DeleteToolText.ShouldBe("Delete");
         presentation.IsLocked.ShouldBeFalse();
         presentation.ShowRebuildAction.ShouldBeFalse();
     }
@@ -192,10 +188,8 @@ public sealed class ConstructionPresentationViewModelTests
         var a = construction.PlaceNode(new Vector2D(0, 0), 18);
         var b = construction.PlaceNode(new Vector2D(20, 0), 18);
         var c = construction.PlaceNode(new Vector2D(40, 0), 18);
-        construction.SelectNodeForBeam(a);
-        construction.SelectNodeForBeam(b);
-        construction.SelectNodeForBeam(b);
-        construction.SelectNodeForBeam(c);
+        construction.ConnectBeam(a, b);
+        construction.ConnectBeam(b, c);
         construction.ToggleCoreOnNode(a);
         var presentation = new ConstructionPresentationViewModel(construction);
 
