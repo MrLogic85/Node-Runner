@@ -51,15 +51,15 @@ public static class MotorTopology
     }
 
     /// <summary>
-    /// Builds every physical pin between beams that share a node, plus which
-    /// of those pins are genuinely independent motor relations: a node with
+    /// Builds every relation between beams that share a node, plus which
+    /// of those are genuinely independent motor relations: a node with
     /// N beams grouped into K rigid clusters (clusters of size 1 unless a
-    /// triangle locks two or more beams together) contributes N-1 physical
-    /// pins but only K-1 motorized ones — beams inside the same cluster
+    /// triangle locks two or more beams together) contributes N-1
+    /// relations but only K-1 motorized ones — beams inside the same cluster
     /// share a single physical degree of freedom, so only one connection
     /// per cluster may carry a sensor/brain output. A node with zero beams
     /// is rejected by <see cref="CreatureDef"/> already; a node with exactly
-    /// one beam contributes no pins (a static, passive end).
+    /// one beam contributes no relations (a static, passive end).
     /// </summary>
     public static IReadOnlyList<NodeConnectionDef> BuildNodeConnections(CreatureDef creature)
     {
@@ -84,13 +84,12 @@ public static class MotorTopology
     }
 
     // Beams locked pairwise by a triangle can be locked transitively too (a
-    // beam shared by two overlapping triangles, for example), so the pins at
+    // beam shared by two overlapping triangles, for example), so the beams at
     // a node must be grouped into rigid clusters, not just paired up. Every
     // beam in the same cluster shares one true rotational degree of freedom
     // relative to the rest of the node; only one connection per *cluster*
     // (beyond the node's own reference cluster) is motorized. Beams inside a
-    // cluster still need physical pins to hold them at the shared point, so
-    // they get non-motorized connections chained to their cluster's leader.
+    // cluster get non-motorized connections chained to their cluster's leader.
     private static List<NodeConnectionDef> BuildNodeConnectionsForNode(
         int nodeIndex, List<int> beams, HashSet<(int, int)> lockedPairsAtNode)
     {
@@ -113,8 +112,8 @@ public static class MotorTopology
             var leader = leaderOf[beam];
             if (leader == referenceLeader)
             {
-                // Same rigid cluster as the reference: physically pinned,
-                // but not an independent motor relation.
+                // Same rigid cluster as the reference: not an independent
+                // motor relation.
                 connections.Add(new NodeConnectionDef(nodeIndex, reference, beam, IsMotorized: false));
             }
             else if (beam == leader)
@@ -125,8 +124,8 @@ public static class MotorTopology
             }
             else
             {
-                // A non-leader member of another cluster: pin it to its own
-                // cluster's leader instead of duplicating the leader's
+                // A non-leader member of another cluster: relate it to its
+                // own cluster's leader instead of duplicating the leader's
                 // motor relation.
                 connections.Add(new NodeConnectionDef(nodeIndex, leader, beam, IsMotorized: false));
             }

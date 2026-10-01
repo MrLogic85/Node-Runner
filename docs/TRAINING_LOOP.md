@@ -73,7 +73,7 @@ transition to keep in step with it.
   60Hz) for one `Creature` instance at a time. It does **not** own creature
   creation/destruction or brain assignment — callers are responsible for
   that. `StartTrial(creature)` calls `Creature.ResetPose(GroundTopY)` (teleports
-  every beam body back to its built shape and rotation, zeroes velocity,
+  every node and beam body back to its built shape and rotation, zeroes velocity,
   and shifts the whole creature so its lowest point just touches the
   ground — no drop from spawn height that would count as elevation) and
   resets the `TrialMeasurement` from the creature's current

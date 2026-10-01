@@ -9,14 +9,25 @@ public partial class Creature : Node2D
 {
     public const int MaximumCollisionSlots = 16;
 
-    private const float _beamThickness = 12f;
+    // A beam's weight is simulated as half on each of its end nodes, so a node's
+    // mass is the sum of half of every beam it joins.
+    private const float _beamWeight = 1.2f;
 
-    // Tuned empirically: a beam resting flat on the ground has both ends of
-    // its bottom edge in contact, so tipping it up (the only way to rotate
-    // while grounded) must overcome gravity + friction across the whole
-    // beam, not just spin freely in open air. 4000 (the original guess)
-    // could never lift a resting beam; 60000 reliably does across multiple
-    // random creatures/seeds — see MotorRelation for the matching gain fix.
+    // The beam body itself is nearly massless (Godot needs some mass) and only
+    // carries motor torque and sensors between its two nodes.
+    private const float _beamBodyMass = 0.1f;
+
+    // Beams have no collider, so Godot cannot derive their turning inertia; it is
+    // set as a solid bar this thick.
+    private const float _beamInertiaThickness = 12f;
+
+    // A node's collider is a hair smaller than its drawn circle, so the drawing sinks a
+    // little into the ground and reads as resting on it.
+    private const float _nodeColliderInset = 2f;
+
+    // Tuned empirically: a beam resting on the ground must be tipped up against
+    // gravity and friction at its nodes. 4000 (the original guess) could never
+    // lift a resting beam; 60000 reliably did — see MotorRelation for the gain.
     private const float _maxMotorTorque = 60000f;
     private const float _maxAngularVelocityRadPerSec = 6f;
     private const double _relativeAngularVelocityScale = 8.0;
@@ -26,6 +37,9 @@ public partial class Creature : Node2D
     private float[] _beamHalfLengths = [];
     private Vector2[] _beamInitialPositions = [];
     private float[] _beamInitialRotations = [];
+    private RigidBody2D[] _nodeBodies = [];
+    private Vector2[] _nodeInitialPositions = [];
+    private float[] _nodeColliderRadii = [];
     private NodeVisual[] _nodeVisuals = [];
     private BeamVisual[] _beamVisuals = [];
     private IBeamSensor[] _sensors = [];
@@ -87,13 +101,12 @@ public partial class Creature : Node2D
 
         _isBuilt = true;
 
-        var anchorBeamPerNode = new int[definition.Nodes.Count];
-        var anchorOffsetPerNode = new Vector2[definition.Nodes.Count];
-        CreateBeams(definition, anchorBeamPerNode, anchorOffsetPerNode);
+        CreateBeams(definition);
+        CreateNodes(definition);
         DisableSelfCollisions();
-        CreateNodeVisuals(definition, anchorBeamPerNode, anchorOffsetPerNode);
+        PinBeamsToNodes(definition);
         CreateSensors(definition);
-        CreateNodeConnections(definition);
+        CreateMotorRelations(definition);
         ConfigureBrainBuffers();
         ResetSensors();
 
@@ -143,7 +156,7 @@ public partial class Creature : Node2D
     }
 
     /// <summary>
-    /// Returns every beam body to its original built shape, rotation and
+    /// Returns every body to its original built shape, rotation and
     /// zero velocity, lowered or raised so its lowest point just touches
     /// <paramref name="groundTopY"/>. A new trial therefore starts from the
     /// exact same physical state as the last, without a drop from spawn
@@ -160,13 +173,20 @@ public partial class Creature : Node2D
             body.AngularVelocity = 0f;
         }
 
-        if (_beamBodies.Length == 0)
+        for (var i = 0; i < _nodeBodies.Length; i++)
+        {
+            var body = _nodeBodies[i];
+            body.Position = _nodeInitialPositions[i];
+            body.LinearVelocity = Vector2.Zero;
+        }
+
+        if (_nodeBodies.Length == 0)
         {
             return;
         }
 
         var offset = GlobalTransform.BasisXformInv(new Vector2(0, groundTopY - LowestPointY));
-        foreach (var body in _beamBodies)
+        foreach (var body in _beamBodies.Concat(_nodeBodies))
         {
             body.Position += offset;
         }
@@ -182,7 +202,7 @@ public partial class Creature : Node2D
         }
 
         var slotLayer = 1u << slot;
-        foreach (var body in _beamBodies)
+        foreach (var body in _beamBodies.Concat(_nodeBodies))
         {
             body.CollisionLayer = slotLayer;
             body.CollisionMask = 1u | slotLayer;
@@ -190,24 +210,18 @@ public partial class Creature : Node2D
     }
 
     /// <summary>
-    /// The Y of the creature's lowest physical point: the lowest corner of any
-    /// beam's collision box. Godot's Y grows downward, so this is the largest Y.
-    /// Returns negative infinity for a creature with no beams.
+    /// The Y of the creature's lowest physical point: the bottom of the lowest
+    /// node collider (beams do not collide). Godot's Y grows downward, so this
+    /// is the largest Y. Returns negative infinity for a creature with no nodes.
     /// </summary>
     public float LowestPointY
     {
         get
         {
             var lowest = float.NegativeInfinity;
-            for (var i = 0; i < _beamBodies.Length; i++)
+            for (var i = 0; i < _nodeBodies.Length; i++)
             {
-                var transform = _beamBodies[i].GlobalTransform;
-                var halfLength = _beamHalfLengths[i];
-                const float halfThickness = _beamThickness / 2;
-                lowest = Math.Max(lowest, (transform * new Vector2(-halfLength, -halfThickness)).Y);
-                lowest = Math.Max(lowest, (transform * new Vector2(-halfLength, halfThickness)).Y);
-                lowest = Math.Max(lowest, (transform * new Vector2(halfLength, -halfThickness)).Y);
-                lowest = Math.Max(lowest, (transform * new Vector2(halfLength, halfThickness)).Y);
+                lowest = Math.Max(lowest, _nodeBodies[i].GlobalPosition.Y + _nodeColliderRadii[i]);
             }
 
             return lowest;
@@ -304,7 +318,9 @@ public partial class Creature : Node2D
         }
     }
 
-    private void CreateBeams(CreatureDef definition, int[] anchorBeamPerNode, Vector2[] anchorOffsetPerNode)
+    // A beam is a body without a collider: it carries mass, turning inertia and sensors,
+    // and is pinned at both ends to its nodes, which are what touch the world.
+    private void CreateBeams(CreatureDef definition)
     {
         var beamDefs = definition.Beams;
         _beamBodies = new RigidBody2D[beamDefs.Count];
@@ -313,15 +329,11 @@ public partial class Creature : Node2D
         _beamInitialRotations = new float[beamDefs.Count];
         _beamVisuals = new BeamVisual[beamDefs.Count];
 
-        Array.Fill(anchorBeamPerNode, -1);
-
         for (var i = 0; i < beamDefs.Count; i++)
         {
             var beamDef = beamDefs[i];
-            var nodeAIndex = definition.NodeIndexOf(beamDef.NodeA);
-            var nodeBIndex = definition.NodeIndexOf(beamDef.NodeB);
-            var nodeAPos = ToGodot(definition.Nodes[nodeAIndex].Position);
-            var nodeBPos = ToGodot(definition.Nodes[nodeBIndex].Position);
+            var nodeAPos = ToGodot(definition.Nodes[definition.NodeIndexOf(beamDef.NodeA)].Position);
+            var nodeBPos = ToGodot(definition.Nodes[definition.NodeIndexOf(beamDef.NodeB)].Position);
             var midpoint = (nodeAPos + nodeBPos) / 2;
             var direction = nodeBPos - nodeAPos;
             var halfLength = direction.Length() / 2;
@@ -332,17 +344,15 @@ public partial class Creature : Node2D
                 Name = $"Beam{i}",
                 Position = midpoint,
                 Rotation = rotation,
-                Mass = 1.2f,
+                Mass = _beamBodyMass,
+                CenterOfMassMode = RigidBody2D.CenterOfMassModeEnum.Custom,
+                CenterOfMass = Vector2.Zero,
+                Inertia = _beamBodyMass * ((4 * halfLength * halfLength) + (_beamInertiaThickness * _beamInertiaThickness)) / 12,
                 LinearDamp = 0.55f,
                 AngularDamp = 0.55f,
                 CanSleep = false,
                 ContinuousCd = RigidBody2D.CcdMode.CastRay,
             };
-
-            body.AddChild(new CollisionShape2D
-            {
-                Shape = new RectangleShape2D { Size = new Vector2(halfLength * 2, _beamThickness) },
-            });
 
             var visual = new BeamVisual
             {
@@ -362,53 +372,93 @@ public partial class Creature : Node2D
             _beamHalfLengths[i] = halfLength;
             _beamInitialPositions[i] = midpoint;
             _beamInitialRotations[i] = rotation;
-
-            RegisterAnchor(nodeAIndex, i, new Vector2(-halfLength, 0), anchorBeamPerNode, anchorOffsetPerNode);
-            RegisterAnchor(nodeBIndex, i, new Vector2(halfLength, 0), anchorBeamPerNode, anchorOffsetPerNode);
         }
     }
 
-    private static void RegisterAnchor(int nodeIndex, int beamIndex, Vector2 localOffset, int[] anchorBeamPerNode, Vector2[] anchorOffsetPerNode)
+    // A node is its own body with a circle collider, weighing half of each beam it joins. Its rotation is locked:
+    // a free-spinning circle pinned at its centre would roll like a wheel and give
+    // the creature no grip on the ground.
+    private void CreateNodes(CreatureDef definition)
     {
-        // The lowest-indexed beam touching a node anchors its visual;
-        // any incident beam works equally well since they all meet
-        // at the same physical point.
-        if (anchorBeamPerNode[nodeIndex] != -1 && anchorBeamPerNode[nodeIndex] < beamIndex)
+        var count = definition.Nodes.Count;
+        _nodeBodies = new RigidBody2D[count];
+        _nodeInitialPositions = new Vector2[count];
+        _nodeColliderRadii = new float[count];
+        _nodeVisuals = new NodeVisual[count];
+
+        var masses = new float[count];
+        foreach (var beam in definition.Beams)
         {
-            return;
+            masses[definition.NodeIndexOf(beam.NodeA)] += _beamWeight / 2;
+            masses[definition.NodeIndexOf(beam.NodeB)] += _beamWeight / 2;
         }
 
-        anchorBeamPerNode[nodeIndex] = beamIndex;
-        anchorOffsetPerNode[nodeIndex] = localOffset;
-    }
-
-    private void DisableSelfCollisions()
-    {
-        for (var i = 0; i < _beamBodies.Length; i++)
+        for (var i = 0; i < count; i++)
         {
-            for (var j = i + 1; j < _beamBodies.Length; j++)
+            var position = ToGodot(definition.Nodes[i].Position);
+            var radius = ToGodotFloat(definition.Nodes[i].Radius, nameof(NodeDef.Radius));
+            var colliderRadius = Math.Max(radius - _nodeColliderInset, 1f);
+
+            var body = new RigidBody2D
             {
-                _beamBodies[i].AddCollisionExceptionWith(_beamBodies[j]);
-            }
-        }
-    }
+                Name = $"Node{i}",
+                Position = position,
+                Mass = Math.Max(masses[i], _beamBodyMass),
+                LockRotation = true,
+                LinearDamp = 0.55f,
+                CanSleep = false,
+                ContinuousCd = RigidBody2D.CcdMode.CastRay,
+            };
+            body.AddChild(new CollisionShape2D { Shape = new CircleShape2D { Radius = colliderRadius } });
 
-    private void CreateNodeVisuals(CreatureDef definition, int[] anchorBeamPerNode, Vector2[] anchorOffsetPerNode)
-    {
-        _nodeVisuals = new NodeVisual[definition.Nodes.Count];
-
-        for (var i = 0; i < definition.Nodes.Count; i++)
-        {
             var visual = new NodeVisual
             {
                 Name = $"Node{i}Visual",
                 Theme = Theme,
-                Position = anchorOffsetPerNode[i],
-                Radius = ToGodotFloat(definition.Nodes[i].Radius, nameof(NodeDef.Radius)),
+                Radius = radius,
             };
-            _beamBodies[anchorBeamPerNode[i]].AddChild(visual);
+            body.AddChild(visual);
+
+            AddChild(body);
+            _nodeBodies[i] = body;
+            _nodeInitialPositions[i] = position;
+            _nodeColliderRadii[i] = colliderRadius;
             _nodeVisuals[i] = visual;
         }
+    }
+
+    private void DisableSelfCollisions()
+    {
+        var bodies = _beamBodies.Concat(_nodeBodies).ToArray();
+        for (var i = 0; i < bodies.Length; i++)
+        {
+            for (var j = i + 1; j < bodies.Length; j++)
+            {
+                bodies[i].AddCollisionExceptionWith(bodies[j]);
+            }
+        }
+    }
+
+    private void PinBeamsToNodes(CreatureDef definition)
+    {
+        for (var i = 0; i < definition.Beams.Count; i++)
+        {
+            var beamDef = definition.Beams[i];
+            PinBeamToNode(i, definition.NodeIndexOf(beamDef.NodeA));
+            PinBeamToNode(i, definition.NodeIndexOf(beamDef.NodeB));
+        }
+    }
+
+    private void PinBeamToNode(int beamIndex, int nodeIndex)
+    {
+        var pin = new PinJoint2D
+        {
+            Name = $"Beam{beamIndex}Node{nodeIndex}Pin",
+            Position = _nodeInitialPositions[nodeIndex],
+        };
+        AddChild(pin);
+        pin.NodeA = pin.GetPathTo(_nodeBodies[nodeIndex]);
+        pin.NodeB = pin.GetPathTo(_beamBodies[beamIndex]);
     }
 
     private void CreateSensors(CreatureDef definition)
@@ -439,31 +489,16 @@ public partial class Creature : Node2D
         return new AccelerometerSensor(_beamBodies[beamIndex], Accelerometer.UpSign(nodeA, nodeB), gravity);
     }
 
-    private void CreateNodeConnections(CreatureDef definition)
+    private void CreateMotorRelations(CreatureDef definition)
     {
         var connections = MotorTopology.BuildNodeConnections(definition);
         var motorRelations = new List<MotorRelation>();
 
-        foreach (var connection in connections)
+        foreach (var connection in connections.Where(connection => connection.IsMotorized))
         {
-            var nodePosition = ToGodot(definition.Nodes[connection.NodeIndex].Position);
             var referenceBody = _beamBodies[connection.ReferenceBeamIndex];
             var otherBody = _beamBodies[connection.OtherBeamIndex];
-
-            var pin = new PinJoint2D
-            {
-                Name = $"Node{connection.NodeIndex}Pin{connection.ReferenceBeamIndex}-{connection.OtherBeamIndex}",
-                Position = nodePosition,
-                MotorEnabled = false, // driven manually via MotorRelation.Drive so torque stays capped.
-            };
-            AddChild(pin);
-            pin.NodeA = pin.GetPathTo(referenceBody);
-            pin.NodeB = pin.GetPathTo(otherBody);
-
-            if (connection.IsMotorized)
-            {
-                motorRelations.Add(new MotorRelation(referenceBody, otherBody, _maxMotorTorque, _maxAngularVelocityRadPerSec));
-            }
+            motorRelations.Add(new MotorRelation(referenceBody, otherBody, _maxMotorTorque, _maxAngularVelocityRadPerSec));
         }
 
         _motorRelations = motorRelations.ToArray();

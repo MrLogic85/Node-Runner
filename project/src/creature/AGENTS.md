@@ -12,13 +12,14 @@ the model this implements.**
 2. **No game logic here.** No evolution, no fitness, no UI. Just: "given this
    def and this brain, become a physical thing on screen that reacts to
    forces and drives motor relations."
-3. **Physics uses Godot built-ins.** Each beam is its own `RigidBody2D`;
-   `PinJoint2D` connects beams that share a node. Beam rigidity is
-   geometric (fixed collision-shape length), not spring-based. Do not
-   introduce Box2D.NET or a custom solver.
+3. **Physics uses Godot built-ins.** Each node and each beam is its own
+   `RigidBody2D`; a `PinJoint2D` pins every beam to its two nodes. Only
+   nodes collide (a circle each); beams have no collider and their weight
+   sits on their nodes. Beam rigidity is geometric (fixed pin distance), not
+   spring-based. Do not introduce Box2D.NET or a custom solver.
 4. **`MotorTopology.BuildNodeConnections` (in `NodeRunner.Domain`) is the
-   single source of truth for which beam pairs get a physical pin and which
-   of those are motorized.** Do not re-derive this logic here.
+   single source of truth for which beam pairs at a node are motorized.** Do
+   not re-derive this logic here.
 5. **Sensors return `double[]` in a deterministic order.** That order must
    match what the brain was trained for. Document the order in a comment
    above `Creature.ReadSensors()`.
@@ -27,7 +28,7 @@ the model this implements.**
 
 ## What lives here
 
-- `Creature.cs` — root `Node2D` that builds beams/pins/sensors from a
+- `Creature.cs` — root `Node2D` that builds nodes/beams/pins/sensors from a
   `CreatureDef` and owns the brain wiring
 - `MotorRelation.cs` — one controllable connection; drives torque (capped at
   a static `MaxTorque`) to chase a target angular velocity
