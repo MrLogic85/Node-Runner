@@ -422,6 +422,54 @@ public sealed class BuildViewModel : INotifyPropertyChanged
         _ => throw new ArgumentOutOfRangeException(nameof(kind)),
     };
 
+    /// <summary>The name a part shows: its own name if it has one, else <see cref="DefaultPartName"/>.</summary>
+    public string PartDisplayName(int partId) => PartName(partId) ?? DefaultPartName(partId);
+
+    /// <summary>The name a part shows until it is renamed: "Node 2", "Beam 1" or its sensor kind.</summary>
+    public string DefaultPartName(int partId)
+    {
+        if (_builder.Sensors.FirstOrDefault(sensor => sensor.Id == partId) is { } sensor)
+        {
+            return SensorName(sensor.Kind);
+        }
+
+        return _builder.Beams.Any(beam => beam.Id == partId)
+            ? $"Beam {_builder.BeamIndexOf(partId) + 1}"
+            : $"Node {_builder.NodeIndexOf(partId) + 1}";
+    }
+
+    /// <summary>
+    /// Renames a part by id, so an edit lands on the part it started on even if the selection
+    /// moved meanwhile; a part deleted since is ignored. A blank name, or the part's default name,
+    /// clears its own name so it shows the default again. Names are labels only (#220), so a
+    /// locked Creation can be renamed too.
+    /// </summary>
+    public void RenamePart(int partId, string name)
+    {
+        ArgumentNullException.ThrowIfNull(name);
+        if (!_builder.Nodes.Any(node => node.Id == partId)
+            && !_builder.Beams.Any(beam => beam.Id == partId)
+            && !_builder.Sensors.Any(sensor => sensor.Id == partId))
+        {
+            return;
+        }
+
+        var trimmed = name.Trim();
+        var newName = trimmed.Length == 0 || trimmed == DefaultPartName(partId) ? null : trimmed;
+        if (newName == PartName(partId))
+        {
+            return;
+        }
+
+        _builder.Rename(partId, newName);
+        AnatomyChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    private string? PartName(int partId) =>
+        _builder.Nodes.FirstOrDefault(node => node.Id == partId)?.Name
+        ?? _builder.Beams.FirstOrDefault(beam => beam.Id == partId)?.Name
+        ?? _builder.Sensors.FirstOrDefault(sensor => sensor.Id == partId)?.Name;
+
     public void ClearSelection()
     {
         if (SelectedPartCount == 0)

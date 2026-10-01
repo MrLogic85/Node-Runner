@@ -356,47 +356,38 @@ IconId = 18
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="PartRows" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/PartSettings"]
+layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="PartPrimary" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/PartSettings"]
+[node name="PartName" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/PartSettings/PartRows"]
+unique_name_in_owner = true
+layout_mode = 2
+script = ExtResource("4_text_field")
+LabelText = "Name"
+
+[node name="PartConnections" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/PartSettings/PartRows"]
 layout_mode = 2
 theme_override_constants/separation = 0
 
-[node name="PartPrimaryLabel" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/PartSettings/PartPrimary"]
+[node name="PartConnectionsLabel" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/PartSettings/PartRows/PartConnections"]
 unique_name_in_owner = true
 layout_mode = 2
 script = ExtResource("12_label")
-TextStyle = 11
+TextStyle = 12
 TextColor = 8
 
-[node name="PartPrimaryValue" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/PartSettings/PartPrimary"]
+[node name="PartConnectionsValue" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/PartSettings/PartRows/PartConnections"]
 unique_name_in_owner = true
 layout_mode = 2
 autowrap_mode = 3
 script = ExtResource("12_label")
-TextStyle = 15
+TextStyle = 4
 TextColor = 7
 
-[node name="PartConnections" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/PartSettings"]
-layout_mode = 2
-theme_override_constants/separation = 0
-
-[node name="PartConnectionsLabel" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/PartSettings/PartConnections"]
-unique_name_in_owner = true
-layout_mode = 2
-script = ExtResource("12_label")
-TextStyle = 11
-TextColor = 8
-
-[node name="PartConnectionsValue" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/PartSettings/PartConnections"]
-unique_name_in_owner = true
-layout_mode = 2
-autowrap_mode = 3
-script = ExtResource("12_label")
-TextStyle = 15
-TextColor = 7
-
-[node name="PartFacts" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/PartSettings"]
+[node name="PartNote" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/PartSettings/PartRows"]
 unique_name_in_owner = true
 layout_mode = 2
 autowrap_mode = 3
@@ -404,38 +395,17 @@ script = ExtResource("12_label")
 TextStyle = 9
 TextColor = 8
 
-[node name="PartBody" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/PartSettings"]
-unique_name_in_owner = true
+[node name="PartActions" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/PartSettings"]
 layout_mode = 2
-autowrap_mode = 3
-script = ExtResource("12_label")
-TextStyle = 9
-TextColor = 8
-
-[node name="PartActions" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/PartSettings"]
-layout_mode = 2
-alignment = 2
-theme_override_constants/separation = 4
 
 [node name="PartDelete" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/PartSettings/PartActions"]
 unique_name_in_owner = true
 layout_mode = 2
-size_flags_horizontal = 3
 mouse_filter = 1
 text = "Delete"
 script = ExtResource("5_button")
 IconId = 34
 Kind = 2
-ContentLayout = 2
-
-[node name="PartClose" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/PartSettings/PartActions"]
-unique_name_in_owner = true
-layout_mode = 2
-tooltip_text = "Close settings"
-mouse_filter = 1
-script = ExtResource("5_button")
-IconId = 38
-Kind = 3
 ContentLayout = 2
 
 [node name="Selection" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent" index="3"]
