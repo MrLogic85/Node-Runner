@@ -119,6 +119,26 @@ For each concept:
   curve per map, so a creature that is great on one map and useless on
   another is visible at a glance.
 
+## Cost of acting (power budget)
+
+- **What:** Actions are not free. A limited budget, and an episode that ends
+  early when it runs out, shape what is worth learning: the brain trades
+  force now against staying in the run.
+- **Where:** 0.18.0 · power (#128): battery and power draw (#458), the power
+  budget screen (#460)
+- **How we show it:** The power chip and the battery's cells empty as the
+  creature moves; a shadow that spends too fast stops early. The budget
+  screen shows each part's maximum next to what it uses.
+
+## Checkpoints
+
+- **What:** A saved snapshot of training that you can return to. Training
+  is a path, not only its end point.
+- **Where:** 0.19.0 · checkpoints when training stops, manual checkpoints and
+  restore (#256)
+- **How we show it:** A checkpoint is made whenever training stops; restoring
+  one rewinds the training history to that point.
+
 ## Backpropagation
 
 - **What:** Compute the gradient of loss w.r.t. every weight, via the chain

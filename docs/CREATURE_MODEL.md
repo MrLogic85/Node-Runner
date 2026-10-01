@@ -154,8 +154,8 @@ CreatureDef  ──build──▶  physical body  ──sensors──▶  model 
   distance over the ray length, so `1` when nothing is in range and `0` at
   contact (`LineOfSight.Reading`). A level beam reads what a level Core did
   before #127.
-- **Fixed in 0.12:** no settings. Ray count, range, rotation and their power
-  draw come with LOS settings in 0.14 (#578).
+- **Fixed in 0.12:** no settings. Ray count, range and rotation come with LOS
+  settings in 0.14 (#578); their power draw comes with power in 0.18 (#599).
 
 ### Motor relation
 

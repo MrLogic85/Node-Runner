@@ -96,8 +96,9 @@ and training continues. Adding a part keeps the skill the creature already had.
 
 **Goal:** Enough parts to find out what is worth unlocking and when.
 
-- Motors, passive parts, sensors, power and blocks (#92 and its children).
-- LOS sensor settings with power draw (#578), joint-part placement (#577) and
+- Motors, passive parts and sensors (#92 and its children). Power and the
+  Wing come in 0.18.0.
+- LOS sensor settings (#578), joint-part placement (#577) and
   Pulse, a rhythm part whose tempo is itself an output (#527).
 - Shadows (population size) saved per Creation, with phone calibration (#528).
 - Investigation of a good start creature (#529) and a spike on part unlocks
@@ -150,24 +151,34 @@ watches its neurons respond.
   #379–#381).
 - Hiding the training shadows (#284).
 
-### 0.18.0 — Checkpoints
+### 0.18.0 — Power and wings
 
-**Goal:** Go back to an earlier point in training (#256).
+**Goal:** Advanced parts, once the core game is complete.
 
-- A checkpoint whenever training stops (at most 5 automatic per Creation),
-  manual checkpoints, and restore. Restoring rewinds the training history.
+- Power (#128): blocks (#457), battery and power draw from used strength
+  (#458), generator and fuel tank (#459), the power budget screen (#460) and
+  LOS sensor power draw (#599). A shadow's run ends when its power is gone.
+- The Wing (#130).
+- Design brief for power, blocks and the Wing (#600).
 
-**ML concepts introduced:** Model checkpoints; training is a path you can
-return along.
+**ML concepts introduced:** Acting has a cost; a limited budget and an
+episode that can end early shape what the brain learns.
 
-### 0.19.0 — Basic achievements
+### 0.19.0 — Basic achievements and checkpoints
 
-**Goal:** Reward visible progress.
+**Goal:** Reward visible progress, and go back to an earlier point in
+training.
 
 - Achievement model, screen, training progress and toast (#199, #390–#392,
   #488).
 - Part counts and achievement locks (#525) and locked examples (#175,
-  #429–#438).
+  #429–#438), including the Power and Wing examples.
+- A checkpoint whenever training stops (at most 5 automatic per Creation),
+  manual checkpoints, and restore (#256). Restoring rewinds the training
+  history.
+
+**ML concepts introduced:** Model checkpoints; training is a path you can
+return along.
 
 ### 0.20.0 — Advanced achievements
 
