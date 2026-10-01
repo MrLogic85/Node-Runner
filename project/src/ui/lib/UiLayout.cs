@@ -4,7 +4,8 @@ namespace NodeRunner.Ui.Lib;
 
 /// <summary>
 /// Reference-design layout metrics that C# reads, for the 640 x 360 reference canvas.
-/// The canvas grows past that to fit the screen's shape; see "Screen size and safe area" in docs/UI_DIRECTION.md.
+/// The canvas grows past that to fit the screen's shape and shrinks below it as the UI size grows
+/// (<see cref="UiScale"/>); see "Screen size and safe area" and "UI size" in docs/UI_DIRECTION.md.
 /// Widths a scene authors itself (dialogs, cards, figures) stay in the scene; see
 /// "Reference token mapping deviations" in docs/UI_DIRECTION.md.
 /// Component-scale values live in <see cref="UiSize"/>.
@@ -28,12 +29,9 @@ public static class UiLayout
     public const int MenuWidth = 200;
     public const int ColumnSmallWidth = 52;
 
-    public static Vector2 CanvasSize { get; } = new(CanvasWidth, CanvasHeight);
-
     public static void ApplyScreen(Control root)
     {
         root.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
         root.Size = root.GetViewportRect().Size;
-        root.CustomMinimumSize = CanvasSize;
     }
 }

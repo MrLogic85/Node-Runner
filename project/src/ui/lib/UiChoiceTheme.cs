@@ -134,8 +134,7 @@ internal static class UiChoiceTheme
             root.Add(glyph);
         }
 
-        var window = DisplayServer.WindowGetSize();
-        var scale = Mathf.Max(1, Mathf.Min(window.X / UiLayout.CanvasWidth, window.Y / UiLayout.CanvasHeight));
+        var scale = Mathf.Max(1, UiScale.PixelsPerUnit());
         var image = new Image();
         var error = image.LoadSvgFromString(root.ToString(), scale);
         if (error != Error.Ok)

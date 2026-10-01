@@ -933,7 +933,8 @@ public partial class BuildCanvas : Node2D
         }
 
         var toView = Transform.AffineInverse();
-        _gestures!.View.VisibleArea = new CanvasRect(ToDomain(toView * Vector2.Zero), ToDomain(toView * slot.Size));
+        _gestures!.View.UiScale = UiScale.FactorOf(this);
+        _gestures.View.VisibleArea = new CanvasRect(ToDomain(toView * Vector2.Zero), ToDomain(toView * slot.Size));
         if (!_viewFitted)
         {
             _viewFitted = true;

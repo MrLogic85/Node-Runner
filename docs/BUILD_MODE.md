@@ -106,8 +106,10 @@ a node's own disc always hits.
 - **View:** `CanvasView` (App) holds zoom and pan and maps view units to
   canvas units. It is not saved: Build opens with the creation centred and
   `FitMargin` (20%) of air on every side, zoomed out if needed but never
-  magnified past 1×; an empty creation opens at 1× on the middle of the
-  area. The view can show `BuildViewBounds`: the area plus
+  magnified past true size; an empty creation opens at true size on the
+  middle of the area. True size is 1× at 100% UI size; the zoom limits are
+  divided by the UI size (`CanvasView.UiScale`), so the creation keeps its
+  size on screen and only the space around it changes (#299). The view can show `BuildViewBounds`: the area plus
   `BuildViewMargin` (one cell, 48 canvas units) on every side, the same at
   any zoom. Zooming out stops when all of it is in view (`MinZoom`), up to
   `MaxZoom` in. Along an axis where the bounds are larger than the view,

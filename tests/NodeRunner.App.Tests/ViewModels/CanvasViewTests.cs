@@ -174,6 +174,36 @@ public class CanvasViewTests
         view.ToView(_area.Center).ShouldBe(_middle);
     }
 
+    [Theory]
+    [InlineData(0.5)]
+    [InlineData(2)]
+    [InlineData(4)]
+    public void UiScale_KeepsTheCreationsSizeOnScreen(double uiScale)
+    {
+        var view = new CanvasView(_area, () => new CanvasRect(new Vector2D(10, 10), new Vector2D(50, 30)))
+        {
+            UiScale = uiScale,
+            VisibleArea = new CanvasRect(new Vector2D(0, 0), new Vector2D(1000 / uiScale, 500 / uiScale)),
+        };
+
+        view.Fit();
+        view.Zoom.ShouldBe(1 / uiScale, 1e-9);
+
+        view.ZoomAbout(view.VisibleArea!.Value.Center, 100);
+        (view.Zoom * uiScale).ShouldBe(CanvasView.MaxZoom, 1e-9);
+    }
+
+    [Fact]
+    public void UiScale_WhenItChanges_KeepsTheZoomOnScreen()
+    {
+        var view = Centred();
+        view.ZoomAbout(_middle, 2);
+
+        view.UiScale = 2;
+
+        view.Zoom.ShouldBe(1);
+    }
+
     [Fact]
     public void Fit_BeforeTheVisibleAreaIsKnown_DoesNothing()
     {

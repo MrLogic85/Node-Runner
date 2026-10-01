@@ -159,6 +159,12 @@ then the app follows the reference.
     theme or `data-effects="lite"` turns glow off.
   - *Copy:* Training and SignalFlow say "sensor" where the reference says
     "core".
+- **UI size has no touch floor and no over-200% layout (#299, 0.12.0).** The
+  reference (`Settings`) keeps 48px controls under 100% and opens side panels
+  over the arena above about 200%. Instead everything around the arena and
+  the Build canvas scales uniformly, touch targets included, and panels simply
+  grow; see "UI size". Keeping sizes above 100% within a phone's screen is
+  #609.
 - **Parts tray details (#374, best guess).** The reference tray has no line
   for the rail tools and no reason on a locked row. Instead:
   - Tray rows are compact `UiPartRow`s (`control-sm` high) that still use
@@ -231,9 +237,9 @@ token import does not recreate the dead mappings.
   a lookup and a per-palette copy without ever allowing a different value. Plain
   constants also keep `stroke` fractions exact, because Godot rounds theme
   constants to integers. Godot performs no scaling of theme constants, so
-  nothing is lost: UI scaling (issue
-  [#299](https://github.com/MrLogic85/Node-Runner/issues/299)) works on the
-  rendered viewport, not on token values. If a future theme ever needs its own
+  nothing is lost: the UI size (issue
+  [#299](https://github.com/MrLogic85/Node-Runner/issues/299), see "UI size")
+  works on the root window's content scale, not on token values. If a future theme ever needs its own
   dimensions (a compact or dense mode), that token moves back into the Theme.
 - **Scene-authored layout widths** have no C# constant
   ([#300](https://github.com/MrLogic85/Node-Runner/issues/300)). A scene
@@ -317,7 +323,7 @@ which parts keep their size. In this project `window/stretch/aspect="expand"`
 implements it. A screen narrower than 16:9 (4:3 tablets, square foldables)
 keeps 640 units of width and gains height instead, which the reference does
 not cover. 640 x 360 (`UiLayout.CanvasWidth`/`CanvasHeight`) is the reference
-and minimum canvas, not a fixed size. The card row on Creations and Examples
+canvas at 100% UI size, not a fixed size; see "UI size". The card row on Creations and Examples
 keeps its 16:9 height on a taller canvas instead of stretching: `CardInset`
 does not expand and its minimum height is what is left under the top bar at
 360 units, so the row sits at the top with the extra height empty below
@@ -339,6 +345,45 @@ cutout without an inset. The game runs in both landscape orientations
 landscape ignores the phone's rotation lock; the orientation that respects it
 (`userLandscape`) is not offered by Godot's setting and would need a Gradle
 build, so a lying-flat phone may flip 180 degrees.
+
+## UI size
+
+The UI size (#299) is one factor, 50% to 400%, that scales everything around
+the arena and the Build canvas uniformly, touch targets included: at 50% a
+48-unit target shows as 24 reference pixels, at 200% as 96, with no floor.
+The `UiScale` autoload owns it and applies it once, as the root window's
+`Window.ContentScaleFactor`. Under `canvas_items` stretch Godot multiplies
+that into the stretch, so the visible canvas shrinks in canvas units as the
+UI grows (780 x 360 on an S25 at 100%, 390 x 180 at 200%); fonts are
+re-rasterized for the new scale. Nothing else multiplies by it: tokens,
+scenes and components keep their numbers, and `UiSafeArea` already converts
+the cutout through the visible canvas, so its inset keeps its pixels at every
+size. Neon and Paper are Themes and are independent of it.
+
+`ContentScaleFactor` is not UI-only; it scales every canvas item in the root
+window. The two views of a world undo it for themselves, so they keep their
+size on screen and only get the space that is left:
+
+- `UiWorldView` lays its SubViewport out at its slot's size times the factor,
+  so the arena keeps its units per pixel.
+- `CanvasView` divides its zoom limits by the factor (`UiScale`): fitting
+  never magnifies past true size, and pinch zoom stops at `MaxZoom` times true
+  size on screen, whatever the UI size. Build's finger-sized hit radii and handles are in view units, so they
+  scale with the UI, as touch targets should.
+
+Controls that rasterize (`UiIcons`, the choice indicators) draw at
+`UiScale.PixelsPerUnit()`, the stretch times the factor, and round to whole
+pixels. A change sends every node the theme-change notification, which they
+already handle by reloading icons and rebuilding indicators; nothing walks the
+tree to assign values. Settings (#201) chooses and saves the value; until then
+the Colors & Styles page sets it for the session. The Settings slider snaps to
+5% steps (`UiScale.Snap`).
+
+A screen's root no longer has a 640 x 360 minimum, so the canvas may shrink
+below it. 640 x 360 is still the smallest canvas the layouts fit: on a phone,
+whose canvas is already 360 units high at 100%, any larger size makes screens
+taller than the window, and Godot centres them, cutting off both edges.
+Keeping sizes above 100% usable on phones is #609.
 
 ## Immediate-mode drawing and antialiasing
 
@@ -459,11 +504,8 @@ change between skins, and plain constants for the values that do not.
 Custom-drawn and cached controls refresh their drawing or layout locally on
 theme change. No per-control palette propagation or subtree adapter is used.
 Issue [#236](https://github.com/MrLogic85/Node-Runner/issues/236) tracks the
-native theme migration. User-selectable UI-only scaling is separate work tracked in
-[issue #299](https://github.com/MrLogic85/Node-Runner/issues/299). Do not assume
-`Window.content_scale_factor` is UI-only; the scaling issue owns verifying a
-mechanism that leaves the simulation at its existing scale and applies the UI
-factor only once.
+native theme migration. The UI size is independent of the theme; see
+"UI size".
 
 For buttons, the Component Library's **Buttons** paragraph defines the four
 current kinds. Older reference summaries still call `secondary` "default"

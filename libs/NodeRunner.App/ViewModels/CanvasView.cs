@@ -9,10 +9,13 @@ namespace NodeRunner.App.ViewModels;
 /// <c>view = canvas * Zoom + Offset</c>. Not saved: Build opens with the
 /// creation fitted (<see cref="Fit"/>). The view never shows anything outside
 /// <see cref="Bounds"/>, and zooming out goes just far enough to show all of
-/// it. See `docs/BUILD_MODE.md`.
+/// it. Zoom limits are on screen, not in view units: view units grow with
+/// the UI size (<see cref="UiScale"/>, #299), so the limits shrink by it and the
+/// creation keeps its size on screen. See `docs/BUILD_MODE.md`.
 /// </summary>
 public sealed class CanvasView
 {
+    /// <summary>The closest zoom at 100% UI size; <see cref="ZoomLimit"/> is the one in effect.</summary>
     public const double MaxZoom = 3;
 
     /// <summary>The share of the visible area left empty on each side when fitting.</summary>
@@ -20,6 +23,7 @@ public sealed class CanvasView
 
     private readonly Func<CanvasRect?> _contentBounds;
     private CanvasRect? _visibleArea;
+    private double _uiScale = 1;
 
     /// <param name="bounds">The fixed part of the canvas the view may show, in canvas units.</param>
     /// <param name="contentBounds">What <see cref="Fit"/> frames, or null when there is nothing.</param>
@@ -31,6 +35,32 @@ public sealed class CanvasView
 
     public CanvasRect Bounds { get; }
 
+    /// <summary>
+    /// The UI size as a factor (1 at 100%): how many times bigger a view unit
+    /// shows than at 100%. Zoom 1 at 100% is zoom 1 / UiScale here.
+    /// </summary>
+    public double UiScale
+    {
+        get => _uiScale;
+        set
+        {
+            if (!double.IsFinite(value) || value <= 0 || value == _uiScale)
+            {
+                return;
+            }
+
+            var zoom = Zoom * _uiScale / value;
+            _uiScale = value;
+            Apply(zoom, Offset);
+        }
+    }
+
+    /// <summary>The closest zoom: <see cref="MaxZoom"/> on screen.</summary>
+    public double ZoomLimit => MaxZoom / UiScale;
+
+    /// <summary>The zoom that shows the creation at its true size on screen: 1 at 100% UI size.</summary>
+    public double TrueSizeZoom => 1 / UiScale;
+
     public double Zoom { get; private set; } = 1;
 
     /// <summary>Where the canvas origin sits, in view units.</summary>
@@ -41,7 +71,7 @@ public sealed class CanvasView
     /// lower limit until the <see cref="VisibleArea"/> is known.
     /// </summary>
     public double MinZoom => VisibleArea is { } visible
-        ? Math.Clamp(Math.Min(visible.Width / Bounds.Width, visible.Height / Bounds.Height), double.Epsilon, MaxZoom)
+        ? Math.Clamp(Math.Min(visible.Width / Bounds.Width, visible.Height / Bounds.Height), double.Epsilon, ZoomLimit)
         : 0;
 
     /// <summary>The part of view space the player sees, once the canvas knows its size.</summary>
@@ -76,7 +106,7 @@ public sealed class CanvasView
 
     /// <summary>
     /// Multiplies the zoom by <paramref name="factor"/>, clamped to
-    /// <see cref="MinZoom"/>..<see cref="MaxZoom"/>, keeping the canvas point
+    /// <see cref="MinZoom"/>..<see cref="ZoomLimit"/>, keeping the canvas point
     /// under <paramref name="focus"/> (view units) in place as far as the bounds allow.
     /// </summary>
     public void ZoomAbout(Vector2D focus, double factor)
@@ -93,9 +123,10 @@ public sealed class CanvasView
 
     /// <summary>
     /// Centres the content in <see cref="VisibleArea"/> with <see cref="FitMargin"/>
-    /// on every side, zooming out if it does not fit but never in past 1×.
-    /// Does nothing until the visible area is known; with no content the view
-    /// shows the middle of the bounds at 1×.
+    /// on every side, zooming out if it does not fit but never in past
+    /// <see cref="TrueSizeZoom"/>. Does nothing until the visible area is
+    /// known; with no content the view shows the middle of the bounds at
+    /// <see cref="TrueSizeZoom"/>.
     /// </summary>
     public void Fit()
     {
@@ -107,13 +138,14 @@ public sealed class CanvasView
         var target = visible.Center;
         if (_contentBounds() is not { } content)
         {
-            Apply(1, new Vector2D(target.X - Bounds.Center.X, target.Y - Bounds.Center.Y));
+            var trueSize = ClampZoom(TrueSizeZoom);
+            Apply(trueSize, new Vector2D(target.X - (Bounds.Center.X * trueSize), target.Y - (Bounds.Center.Y * trueSize)));
             return;
         }
 
         var room = 1 - (2 * FitMargin);
         var zoom = Math.Min(
-            1,
+            TrueSizeZoom,
             Math.Min(
                 content.Width > 0 ? visible.Width * room / content.Width : double.PositiveInfinity,
                 content.Height > 0 ? visible.Height * room / content.Height : double.PositiveInfinity));
@@ -122,7 +154,7 @@ public sealed class CanvasView
         Apply(zoom, new Vector2D(target.X - (center.X * zoom), target.Y - (center.Y * zoom)));
     }
 
-    private double ClampZoom(double zoom) => Math.Clamp(zoom, MinZoom, MaxZoom);
+    private double ClampZoom(double zoom) => Math.Clamp(zoom, MinZoom, ZoomLimit);
 
     private void Apply(double zoom, Vector2D offset)
     {
