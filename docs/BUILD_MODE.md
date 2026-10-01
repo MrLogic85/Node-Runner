@@ -178,6 +178,16 @@ the selection moves) trims the text, and a blank name or the default
 clears the part's own name. Names are labels only (#220), so a locked
 creation can be renamed too; the rename autosaves like any edit.
 
+## Selection panel
+
+Several selected joints show the selection panel instead (#558). Its title
+row carries the Select glyph and "N selected"; there is no close button.
+Three `UiInfoRow`s explain the canvas handles (Move, Rotate, Scale), then a
+full-width danger **Delete N** with the note "Beams on a deleted node go with
+it." (`BuildViewModel.DeleteSelectedParts`). A locked creation keeps the three
+rows, because all three handles still work there, and hides Delete.
+`BuildPresentationViewModel.Selection` owns the title and Delete copy.
+
 ## Validation
 
 A saved Creation stores any drawing: `CreatureDef` only checks that part

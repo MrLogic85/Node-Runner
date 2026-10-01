@@ -162,13 +162,14 @@ public sealed class BuildPresentationViewModel
         _ => throw new ArgumentOutOfRangeException(nameof(kind)),
     };
 
-    public string MultiSelectionTitle => $"{_build.SelectedPartCount} selected";
-
-    public string MultiSelectionCounts => _build.SelectedBeamCount > 0
-        ? $"Beam · {_build.SelectedBeamCount}"
-        : $"Nodes · {_build.SelectedNodeCount}";
-
-    public string MultiSelectionBody => "Drag any selected part to move them together. Parts are locked, so this selection can only be moved.";
+    /// <summary>The selection panel, or null unless several parts are selected.</summary>
+    public SelectionPanelPresentation? Selection => _build.SelectedPartCount > 1
+        ? new SelectionPanelPresentation(
+            $"{_build.SelectedPartCount} selected",
+            $"Delete {_build.SelectedPartCount}",
+            "Beams on a deleted node go with it.",
+            CanDelete: !_build.IsMoveOnly)
+        : null;
 
     public bool LockTopologyTools => _build.IsMoveOnly;
 

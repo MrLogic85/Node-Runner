@@ -15,6 +15,7 @@
 [ext_resource type="PackedScene" path="res://scenes/widgets/BrainSetupSheet.tscn" id="15_brain_setup"]
 [ext_resource type="Script" uid="uid://s2v37pyy3fn8" path="res://src/ui/lib/UiSelectionHandle.cs" id="16_handle"]
 [ext_resource type="Script" uid="uid://cxlb7vq8iocpi" path="res://src/ui/lib/UiIconTabs.cs" id="18_icon_tabs"]
+[ext_resource type="Script" uid="uid://c6loxvqr7tfvr" path="res://src/ui/lib/UiInfoRow.cs" id="19_info_row"]
 [ext_resource type="Script" path="res://src/ui/lib/UiCalloutLayer.cs" id="40_callout_layer"]
 
 [node name="BuildScreen" type="Control"]
@@ -412,32 +413,41 @@ ContentLayout = 2
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
-theme_override_constants/separation = 4
+theme_override_constants/separation = 8
 
-[node name="SelectionCounts" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/Selection"]
+[node name="SelectionRows" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/Selection"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="SelectionMove" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/Selection/SelectionRows"]
+layout_mode = 2
+script = ExtResource("19_info_row")
+IconId = 20
+Title = "Move"
+Help = "Drag inside the box"
+
+[node name="SelectionRotate" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/Selection/SelectionRows"]
+layout_mode = 2
+script = ExtResource("19_info_row")
+IconId = 27
+Title = "Rotate"
+Help = "Turn it around its middle"
+
+[node name="SelectionScale" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/Selection/SelectionRows"]
+layout_mode = 2
+script = ExtResource("19_info_row")
+IconId = 28
+Title = "Scale"
+Help = "Drag the corner: closer together or further apart"
+
+[node name="SelectionActions" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/Selection"]
 unique_name_in_owner = true
 layout_mode = 2
-autowrap_mode = 3
-script = ExtResource("12_label")
-TextStyle = 6
-
-[node name="SelectionBody" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/Selection"]
-unique_name_in_owner = true
-layout_mode = 2
-autowrap_mode = 3
-script = ExtResource("12_label")
-TextStyle = 9
-TextColor = 8
-
-[node name="SelectionActions" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/Selection"]
-layout_mode = 2
-alignment = 2
 theme_override_constants/separation = 4
 
 [node name="SelectionDelete" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/Selection/SelectionActions"]
 unique_name_in_owner = true
 layout_mode = 2
-size_flags_horizontal = 3
 mouse_filter = 1
 text = "Delete"
 script = ExtResource("5_button")
@@ -445,15 +455,13 @@ IconId = 34
 Kind = 2
 ContentLayout = 2
 
-[node name="SelectionClear" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/Selection/SelectionActions"]
+[node name="SelectionDeleteNote" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/Selection/SelectionActions"]
 unique_name_in_owner = true
 layout_mode = 2
-tooltip_text = "Close selection"
-mouse_filter = 1
-script = ExtResource("5_button")
-IconId = 38
-Kind = 3
-ContentLayout = 2
+autowrap_mode = 3
+script = ExtResource("12_label")
+TextStyle = 9
+TextColor = 8
 
 [node name="PanelSpacer" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent" index="4"]
 unique_name_in_owner = true

@@ -37,9 +37,6 @@ public partial class BuildScreen : Control
     public delegate void DeleteCreationRequestedEventHandler();
 
     [Signal]
-    public delegate void ClearSelectionRequestedEventHandler();
-
-    [Signal]
     public delegate void DeleteSelectionRequestedEventHandler();
 
     [Signal]
@@ -121,7 +118,6 @@ public partial class BuildScreen : Control
         var partName = GetNode<UiTextField>("%PartName");
         partName.EditingStarted += () => _renamingPartId = _presentation?.SinglePart?.Id;
         partName.EditingFinished += OnPartNameEdited;
-        GetNode<UiButton>("%SelectionClear").Activated += () => EmitSignal(SignalName.ClearSelectionRequested);
         BrainSetup.BrainShapeChanged += (layers, neurons) => EmitSignal(SignalName.BrainShapeChanged, layers, neurons);
         BindViewModels();
         Apply();
@@ -253,9 +249,9 @@ public partial class BuildScreen : Control
             0 when locked => "Training",
             0 => "Parts",
             1 => part?.Name ?? string.Empty,
-            _ => presentation.MultiSelectionTitle,
+            _ => presentation.Selection?.Title ?? string.Empty,
         };
-        sidePanel.IconId = part is null ? UiIconId.None : PartSettingsIcon(part.Kind);
+        sidePanel.IconId = selected > 1 ? UiIconId.Select : part is null ? UiIconId.None : PartSettingsIcon(part.Kind);
 
         if (tray.Visible)
         {
@@ -274,13 +270,11 @@ public partial class BuildScreen : Control
             ApplyPartSettings(part);
         }
 
-        if (selection.Visible)
+        if (selection.Visible && presentation.Selection is { } group)
         {
-            GetNode<UiLabel>("%SelectionCounts").Text = presentation.MultiSelectionCounts;
-            GetNode<UiLabel>("%SelectionBody").Text = locked
-                ? presentation.MultiSelectionBody
-                : "Drag any selected part to move them together, or delete the selection.";
-            GetNode<UiButton>("%SelectionDelete").Visible = !locked;
+            GetNode<UiButton>("%SelectionDelete").Text = group.DeleteText;
+            GetNode<UiLabel>("%SelectionDeleteNote").Text = group.DeleteNote;
+            GetNode<Control>("%SelectionActions").Visible = group.CanDelete;
         }
 
         ApplyReadiness(buildPanel);

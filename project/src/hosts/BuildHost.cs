@@ -132,7 +132,6 @@ public partial class BuildHost : Node, IRoutedScene
         _buildScreen.ResetTrainingRequested += ResetActiveCreationTraining;
         _buildScreen.DeleteCreationRequested += RequestDeleteActiveCreation;
         _buildScreen.PartNameChanged += Build.RenamePart;
-        _buildScreen.ClearSelectionRequested += Build.ClearSelection;
         _buildScreen.DeleteSelectionRequested += Build.DeleteSelectedParts;
         _buildScreen.StatsRequested += () => Notify("Stats", "Stats open in milestone 0.12.0.");
         _buildScreen.BrainRequested += () => Notify("Brain view", "Brain view opens in milestone 0.12.0.");

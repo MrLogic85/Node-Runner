@@ -151,17 +151,44 @@ public sealed class BuildPresentationViewModelTests
     }
 
     [Fact]
-    public void MultiSelection_SummarizesSelectedNodes()
+    public void Selection_CountsTheJointsAndOffersDelete()
     {
         var build = new BuildViewModel();
         build.Load(PairCreature());
         build.ToggleSelectedNode(1);
         build.ToggleSelectedNode(2);
+
+        new BuildPresentationViewModel(build).Selection.ShouldBe(new SelectionPanelPresentation(
+            "2 selected",
+            "Delete 2",
+            "Beams on a deleted node go with it.",
+            CanDelete: true));
+    }
+
+    [Fact]
+    public void Selection_OnALockedCreation_HasNoDelete()
+    {
+        var build = new BuildViewModel();
+        build.LoadCreation(new CreationDef(
+            Guid.NewGuid(),
+            "Worm",
+            PairCreature(),
+            new TrainingStateDef([2, 1], [0.1, -0.2, 0.3], 3, "Tanh")));
+        build.ReplaceSelection([1, 2]);
+
+        new BuildPresentationViewModel(build).Selection!.CanDelete.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Selection_NeedsSeveralParts()
+    {
+        var build = new BuildViewModel();
+        build.Load(PairCreature());
         var presentation = new BuildPresentationViewModel(build);
 
-        presentation.SelectedPartCount.ShouldBe(2);
-        presentation.MultiSelectionTitle.ShouldBe("2 selected");
-        presentation.MultiSelectionCounts.ShouldBe("Nodes · 2");
+        presentation.Selection.ShouldBeNull();
+        build.ToggleSelectedNode(1);
+        presentation.Selection.ShouldBeNull();
     }
 
     [Fact]
