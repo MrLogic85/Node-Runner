@@ -104,65 +104,63 @@ public sealed class BuildPresentationViewModel
 
     public int SelectedPartCount => _build.SelectedPartCount;
 
-    public string SinglePartTitle => _build.SingleSelectedSensorId is { } sensorId
-        ? BuildViewModel.SensorName(SensorById(sensorId).Kind)
-        : _build.SingleSelectedBeamId is { } beamId
-        ? $"Beam {_build.BeamIndexOf(beamId) + 1}"
-        : _build.SingleSelectedNodeId is { } nodeId
-        ? $"Node {_build.NodeIndexOf(nodeId) + 1}"
-        : "Part";
-
-    public string SinglePartBody => _build.SingleSelectedSensorId is { } sensorId
-        ? SensorById(sensorId).Kind switch
+    /// <summary>The Part settings for the one selected part, or null unless exactly one part is selected.</summary>
+    public PartSettingsPresentation? SinglePart
+    {
+        get
         {
-            SensorKind.Accelerometer => "Feels how its beam speeds up, slows down and tilts.",
-            _ => "Three rays see how far the ground is.",
+            var canDelete = !_build.IsMoveOnly;
+            if (_build.SingleSelectedSensorId is { } sensorId)
+            {
+                var sensor = SensorById(sensorId);
+                return new PartSettingsPresentation(
+                    sensorId,
+                    sensor.Kind == SensorKind.Accelerometer ? PartSettingsKind.Accelerometer : PartSettingsKind.LosSensor,
+                    _build.PartDisplayName(sensorId),
+                    _build.DefaultPartName(sensorId),
+                    "On",
+                    _build.PartDisplayName(sensor.BeamId),
+                    SensorNote(sensor.Kind),
+                    canDelete);
+            }
+
+            if (_build.SingleSelectedBeamId is { } beamId)
+            {
+                var beam = BeamById(beamId);
+                return new PartSettingsPresentation(
+                    beamId,
+                    PartSettingsKind.Beam,
+                    _build.PartDisplayName(beamId),
+                    _build.DefaultPartName(beamId),
+                    "Between",
+                    $"{_build.PartDisplayName(beam.NodeA)} ↔ {_build.PartDisplayName(beam.NodeB)}",
+                    "Drag its ends to change the length.",
+                    canDelete);
+            }
+
+            if (_build.SingleSelectedNodeId is { } nodeId)
+            {
+                return new PartSettingsPresentation(
+                    nodeId,
+                    PartSettingsKind.Node,
+                    _build.PartDisplayName(nodeId),
+                    _build.DefaultPartName(nodeId),
+                    "Beams",
+                    ConnectedBeamText(nodeId),
+                    "Beams meet and turn here. Drag it to move them.",
+                    canDelete);
+            }
+
+            return null;
         }
-        : _build.SingleSelectedBeamId is not null
-        ? _build.IsMoveOnly
-            ? "Select and move an endpoint Node to reposition it. The Beam follows its Nodes."
-            : "Move either endpoint Node to change the Beam length."
-        : "Move the Node to change its position and connected Beam lengths.";
+    }
 
-    public string SinglePartPrimaryLabel => _build.SingleSelectedSensorId is not null
-        ? "On"
-        : _build.SingleSelectedBeamId is not null
-        ? "Length"
-        : "Position";
-
-    public string SinglePartPrimaryValue => _build.SingleSelectedSensorId is { } sensorId
-        ? $"Beam {_build.BeamIndexOf(SensorById(sensorId).BeamId) + 1}"
-        : _build.SingleSelectedBeamId is { } beamId
-        ? $"{BeamLength(beamId):0.0} units"
-        : _build.SingleSelectedNodeId is { } nodeId
-            ? $"{NodeById(nodeId).Position.X:0}, {NodeById(nodeId).Position.Y:0}"
-            : "—";
-
-    public string SinglePartConnectionsLabel => _build.SingleSelectedSensorId is not null
-        ? "Feels"
-        : _build.SingleSelectedBeamId is not null
-        ? "Between"
-        : "Connections";
-
-    public string SinglePartConnectionsValue => _build.SingleSelectedSensorId is { } sensorId
-        ? SensorById(sensorId).Kind switch
-        {
-            SensorKind.Accelerometer => "Along and across its beam",
-            _ => "Down, forward and forward-down",
-        }
-        : _build.SingleSelectedBeamId is { } beamId
-        ? $"Node {_build.NodeIndexOf(BeamById(beamId).NodeA) + 1} ↔ Node {_build.NodeIndexOf(BeamById(beamId).NodeB) + 1}"
-        : _build.SingleSelectedNodeId is { } nodeId
-            ? ConnectedBeamText(nodeId)
-            : "—";
-
-    public string SinglePartFacts => _build.SingleSelectedSensorId is not null
-        ? "Sits at the middle of its beam"
-        : _build.SingleSelectedBeamId is not null
-        ? "Rigid connection"
-        : _build.SingleSelectedNodeId is { } nodeId
-            ? $"Radius {NodeById(nodeId).Radius:0.0} · {_build.Beams.Count(beam => beam.NodeA == nodeId || beam.NodeB == nodeId)} attached Beam(s)"
-            : string.Empty;
+    public static string SensorNote(SensorKind kind) => kind switch
+    {
+        SensorKind.Accelerometer => "Feels how its beam speeds up, slows down and tilts.",
+        SensorKind.LineOfSight => "Three rays see how far the ground is.",
+        _ => throw new ArgumentOutOfRangeException(nameof(kind)),
+    };
 
     public string MultiSelectionTitle => $"{_build.SelectedPartCount} selected";
 
@@ -272,24 +270,13 @@ public sealed class BuildPresentationViewModel
         };
     }
 
-    private double BeamLength(int beamId)
-    {
-        var beam = BeamById(beamId);
-        var start = NodeById(beam.NodeA).Position;
-        var end = NodeById(beam.NodeB).Position;
-        var deltaX = end.X - start.X;
-        var deltaY = end.Y - start.Y;
-        return Math.Sqrt((deltaX * deltaX) + (deltaY * deltaY));
-    }
-
     private string ConnectedBeamText(int nodeId)
     {
         var connected = _build.Beams
-            .Select((beam, index) => (beam, index))
-            .Where(item => item.beam.NodeA == nodeId || item.beam.NodeB == nodeId)
-            .Select(item => $"Beam {item.index + 1}")
+            .Where(beam => beam.NodeA == nodeId || beam.NodeB == nodeId)
+            .Select(beam => _build.PartDisplayName(beam.Id))
             .ToArray();
-        return connected.Length == 0 ? "No Beams" : string.Join(" · ", connected);
+        return connected.Length == 0 ? "None yet" : string.Join(" · ", connected);
     }
 
     private NodeDef NodeById(int nodeId) => _build.Nodes[_build.NodeIndexOf(nodeId)];

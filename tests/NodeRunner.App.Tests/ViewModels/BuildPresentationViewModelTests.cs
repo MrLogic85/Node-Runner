@@ -34,7 +34,7 @@ public sealed class BuildPresentationViewModelTests
     }
 
     [Fact]
-    public void SelectedBeam_ShowsLengthEndpointsAndFixedStructureFacts()
+    public void SelectedBeam_ShowsNameEndsAndLengthGuidance()
     {
         var build = new BuildViewModel();
         build.Load(new CreatureDef(
@@ -44,56 +44,110 @@ public sealed class BuildPresentationViewModelTests
         build.SelectBeam(101);
         var presentation = new BuildPresentationViewModel(build);
 
-        presentation.SinglePartTitle.ShouldBe("Beam 1");
-        presentation.SinglePartPrimaryLabel.ShouldBe("Length");
-        presentation.SinglePartPrimaryValue.ShouldBe("5.0 units");
-        presentation.SinglePartConnectionsLabel.ShouldBe("Between");
-        presentation.SinglePartConnectionsValue.ShouldBe("Node 1 ↔ Node 2");
-        presentation.SinglePartFacts.ShouldBe("Rigid connection");
+        presentation.SinglePart.ShouldBe(new PartSettingsPresentation(
+            101,
+            PartSettingsKind.Beam,
+            "Beam 1",
+            "Beam 1",
+            "Between",
+            "Node 1 ↔ Node 2",
+            "Drag its ends to change the length.",
+            CanDelete: true));
     }
 
     [Theory]
-    [InlineData(SensorKind.Accelerometer, "Accelerometer", "Feels how its beam speeds up, slows down and tilts.")]
-    [InlineData(SensorKind.LineOfSight, "LOS sensor", "Three rays see how far the ground is.")]
-    public void SelectedSensor_ShowsItsNameBeamAndWhatItFeels(SensorKind kind, string title, string body)
+    [InlineData(SensorKind.Accelerometer, PartSettingsKind.Accelerometer, "Accelerometer", "Feels how its beam speeds up, slows down and tilts.")]
+    [InlineData(SensorKind.LineOfSight, PartSettingsKind.LosSensor, "LOS sensor", "Three rays see how far the ground is.")]
+    public void SelectedSensor_ShowsNameBeamAndWhatItFeels(SensorKind kind, PartSettingsKind partKind, string name, string note)
     {
         var build = new BuildViewModel();
         build.Load(new CreatureDef(
             [new NodeDef(1, new Vector2D(0, 0), 18), new NodeDef(2, new Vector2D(3, 4), 18)],
-            [new BeamDef(101, 1, 2)],
+            [new BeamDef(101, 1, 2, "Thigh")],
             [new SensorDef(7, 101, kind)]));
         build.SelectSensor(7);
         var presentation = new BuildPresentationViewModel(build);
 
-        presentation.SelectedPartCount.ShouldBe(1);
-        presentation.SinglePartTitle.ShouldBe(title);
-        presentation.SinglePartBody.ShouldBe(body);
-        presentation.SinglePartPrimaryLabel.ShouldBe("On");
-        presentation.SinglePartPrimaryValue.ShouldBe("Beam 1");
-        presentation.SinglePartConnectionsLabel.ShouldBe("Feels");
-        presentation.SinglePartFacts.ShouldBe("Sits at the middle of its beam");
+        presentation.SinglePart.ShouldBe(new PartSettingsPresentation(7, partKind, name, name, "On", "Thigh", note, CanDelete: true));
     }
 
     [Fact]
-    public void SelectedNode_ShowsPositionRadiusAndConnectedBeams()
+    public void SelectedNode_ShowsNameAndTheBeamsThatMeetThere()
     {
         var build = new BuildViewModel();
         build.Load(new CreatureDef(
             [
                 new NodeDef(1, new Vector2D(0, 0), 18),
-                new NodeDef(2, new Vector2D(20, 5), 12),
+                new NodeDef(2, new Vector2D(20, 5), 12, "Knee"),
                 new NodeDef(3, new Vector2D(40, 0), 18),
             ],
-            [new BeamDef(101, 1, 2), new BeamDef(102, 2, 3)],
+            [new BeamDef(101, 1, 2), new BeamDef(102, 2, 3, "Shin")],
             []));
         build.ToggleSelectedNode(2);
         var presentation = new BuildPresentationViewModel(build);
 
-        presentation.SelectedPartCount.ShouldBe(1);
-        presentation.SinglePartTitle.ShouldBe("Node 2");
-        presentation.SinglePartPrimaryValue.ShouldBe("20, 5");
-        presentation.SinglePartConnectionsValue.ShouldBe("Beam 1 · Beam 2");
-        presentation.SinglePartFacts.ShouldBe("Radius 12.0 · 2 attached Beam(s)");
+        presentation.SinglePart.ShouldBe(new PartSettingsPresentation(
+            2,
+            PartSettingsKind.Node,
+            "Knee",
+            "Node 2",
+            "Beams",
+            "Beam 1 · Shin",
+            "Beams meet and turn here. Drag it to move them.",
+            CanDelete: true));
+    }
+
+    [Fact]
+    public void SelectedNodeWithoutBeams_SaysNoneYet()
+    {
+        var build = new BuildViewModel();
+        build.Load(new CreatureDef([new NodeDef(1, new Vector2D(0, 0), 18)], [], []));
+        build.ToggleSelectedNode(1);
+
+        new BuildPresentationViewModel(build).SinglePart!.ConnectionsValue.ShouldBe("None yet");
+    }
+
+    [Fact]
+    public void LockedCreation_PartSettingsHaveNoDelete()
+    {
+        var build = new BuildViewModel();
+        build.LoadCreation(new CreationDef(
+            Guid.NewGuid(),
+            "Worm",
+            PairCreature(),
+            new TrainingStateDef([2, 1], [0.1, -0.2, 0.3], 3, "Tanh")));
+        build.ToggleSelectedNode(build.Nodes[0].Id);
+
+        new BuildPresentationViewModel(build).SinglePart!.CanDelete.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void NoOrManySelected_HasNoPartSettings()
+    {
+        var build = new BuildViewModel();
+        build.Load(new CreatureDef(
+            [new NodeDef(1, new Vector2D(0, 0), 18), new NodeDef(2, new Vector2D(3, 4), 18)],
+            [new BeamDef(101, 1, 2)],
+            []));
+        var presentation = new BuildPresentationViewModel(build);
+
+        presentation.SinglePart.ShouldBeNull();
+        build.ToggleSelectedNode(1);
+        build.ToggleSelectedNode(2);
+        presentation.SinglePart.ShouldBeNull();
+    }
+
+    [Theory]
+    [InlineData(SensorKind.Accelerometer)]
+    [InlineData(SensorKind.LineOfSight)]
+    public void SensorNote_AvoidsBrainWording(SensorKind kind)
+    {
+        var note = BuildPresentationViewModel.SensorNote(kind).ToLowerInvariant();
+
+        foreach (var word in new[] { "brain", "port", "neuron", "input", "layer" })
+        {
+            note.ShouldNotContain(word);
+        }
     }
 
     [Fact]

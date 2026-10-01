@@ -145,9 +145,10 @@ then the app follows the reference.
     a beam". The callout goes at the next touch or after 3 s. Over a free
     beam, the sensor's picture shows at its midpoint where it would land.
     Dropping on empty canvas cancels silently.
-  - *Part settings (#343):* sensors show Name and Delete only. Accelerometer:
-    "Feels how its beam speeds up, slows down and tilts." LOS sensor: "Three
-    rays see how far the ground is."
+  - *Part settings (#343):* sensors show Name, the beam they are on, a note
+    and Delete; no settings until #578. Accelerometer: "Feels how its beam
+    speeds up, slows down and tilts." LOS sensor: "Three rays see how far the
+    ground is."
   - *In motion (#576):* the Accelerometer's weight moves inside its frame by
     the proof-mass displacement, clamped to the frame, with 1 g at half the
     weight's travel and the spring stretched from the frame's top to it.

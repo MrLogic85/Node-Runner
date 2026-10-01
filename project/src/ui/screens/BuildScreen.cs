@@ -14,6 +14,7 @@ public partial class BuildScreen : Control
 {
     private BuildViewModel? _build;
     private BuildPresentationViewModel? _presentation;
+    private int? _renamingPartId;
     private bool _subscribedToPresentation;
     private string? _shownPartGroup;
 
@@ -25,6 +26,9 @@ public partial class BuildScreen : Control
 
     [Signal]
     public delegate void CreationNameChangedEventHandler(string name);
+
+    [Signal]
+    public delegate void PartNameChangedEventHandler(int partId, string name);
 
     [Signal]
     public delegate void ResetTrainingRequestedEventHandler();
@@ -114,7 +118,9 @@ public partial class BuildScreen : Control
         GetNode<UiButton>("%Brain").Activated += () => EmitSignal(SignalName.BrainRequested);
         GetNode<UiButton>("%PartDelete").Activated += () => EmitSignal(SignalName.DeleteSelectionRequested);
         GetNode<UiButton>("%SelectionDelete").Activated += () => EmitSignal(SignalName.DeleteSelectionRequested);
-        GetNode<UiButton>("%PartClose").Activated += () => EmitSignal(SignalName.ClearSelectionRequested);
+        var partName = GetNode<UiTextField>("%PartName");
+        partName.EditingStarted += () => _renamingPartId = _presentation?.SinglePart?.Id;
+        partName.EditingFinished += OnPartNameEdited;
         GetNode<UiButton>("%SelectionClear").Activated += () => EmitSignal(SignalName.ClearSelectionRequested);
         BrainSetup.BrainShapeChanged += (layers, neurons) => EmitSignal(SignalName.BrainShapeChanged, layers, neurons);
         BindViewModels();
@@ -152,6 +158,15 @@ public partial class BuildScreen : Control
 
         // Show the name the creation really has: a rename the host could not save leaves it unchanged.
         GetNode<UiTextField>("%CreationName").TextValue = _presentation?.CreationName ?? string.Empty;
+    }
+
+    private void OnPartNameEdited(string value)
+    {
+        if (_renamingPartId is { } partId)
+        {
+            _renamingPartId = null;
+            EmitSignal(SignalName.PartNameChanged, partId, value);
+        }
     }
 
     private void OnPresentationChanged(object? sender, EventArgs eventArgs)
@@ -210,6 +225,13 @@ public partial class BuildScreen : Control
 
     private void ApplySidePanel(BuildPresentationViewModel presentation, BuildPanelPresentation buildPanel, bool locked)
     {
+        // A name being typed belongs to the part it was started on: finish it before another part shows.
+        var partName = GetNode<UiTextField>("%PartName");
+        if (partName.State == UiTextField.TextInputState.Editing && presentation.SinglePart?.Id != _renamingPartId)
+        {
+            partName.FinishEditing();
+        }
+
         var selected = presentation.SelectedPartCount;
         var tray = GetNode<Control>("%PartsTray");
         var savedPanel = GetNode<Control>("%SavedCreation");
@@ -224,13 +246,16 @@ public partial class BuildScreen : Control
         partSettings.Visible = selected == 1;
         selection.Visible = selected > 1;
         GetNode<Control>("%Readiness").Visible = selected == 0;
-        GetNode<UiSidePanel>("%SidePanel").Title = selected switch
+        var part = presentation.SinglePart;
+        var sidePanel = GetNode<UiSidePanel>("%SidePanel");
+        sidePanel.Title = selected switch
         {
             0 when locked => "Training",
             0 => "Parts",
-            1 => presentation.SinglePartTitle,
+            1 => part?.Name ?? string.Empty,
             _ => presentation.MultiSelectionTitle,
         };
+        sidePanel.IconId = part is null ? UiIconId.None : PartSettingsIcon(part.Kind);
 
         if (tray.Visible)
         {
@@ -244,9 +269,9 @@ public partial class BuildScreen : Control
             GetNode<UiLabel>("%SavedBody").Text = presentation.TrainingSummaryBody;
         }
 
-        if (partSettings.Visible)
+        if (partSettings.Visible && part is not null)
         {
-            ApplyPartSettings(presentation, locked);
+            ApplyPartSettings(part);
         }
 
         if (selection.Visible)
@@ -354,16 +379,30 @@ public partial class BuildScreen : Control
         _ => UiIconId.None,
     };
 
-    private void ApplyPartSettings(BuildPresentationViewModel presentation, bool locked)
+    private void ApplyPartSettings(PartSettingsPresentation part)
     {
-        GetNode<UiLabel>("%PartPrimaryLabel").Text = presentation.SinglePartPrimaryLabel;
-        GetNode<UiLabel>("%PartPrimaryValue").Text = presentation.SinglePartPrimaryValue;
-        GetNode<UiLabel>("%PartConnectionsLabel").Text = presentation.SinglePartConnectionsLabel;
-        GetNode<UiLabel>("%PartConnectionsValue").Text = presentation.SinglePartConnectionsValue;
-        GetNode<UiLabel>("%PartFacts").Text = presentation.SinglePartFacts;
-        GetNode<UiLabel>("%PartBody").Text = presentation.SinglePartBody;
-        GetNode<UiButton>("%PartDelete").Visible = !locked;
+        var name = GetNode<UiTextField>("%PartName");
+        name.PlaceholderText = part.DefaultName;
+        if (name.State != UiTextField.TextInputState.Editing)
+        {
+            name.TextValue = part.Name;
+        }
+
+        GetNode<UiLabel>("%PartConnectionsLabel").Text = part.ConnectionsLabel;
+        GetNode<UiLabel>("%PartConnectionsValue").Text = part.ConnectionsValue;
+        GetNode<UiLabel>("%PartNote").Text = part.Note;
+        GetNode<UiButton>("%PartDelete").Visible = part.CanDelete;
     }
+
+    /// <summary>The side panel glyph for the part whose settings are open.</summary>
+    public static UiIconId PartSettingsIcon(PartSettingsKind kind) => kind switch
+    {
+        PartSettingsKind.Node => UiIconId.Joint,
+        PartSettingsKind.Beam => UiIconId.Beam,
+        PartSettingsKind.Accelerometer => UiIconId.PartAccelerometer,
+        PartSettingsKind.LosSensor => UiIconId.PartLineOfSight,
+        _ => UiIconId.None,
+    };
 
     private void ApplyReadiness(BuildPanelPresentation buildPanel)
     {

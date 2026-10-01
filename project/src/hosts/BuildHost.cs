@@ -131,6 +131,7 @@ public partial class BuildHost : Node, IRoutedScene
         _buildScreen.CreationNameChanged += RenameActiveCreation;
         _buildScreen.ResetTrainingRequested += ResetActiveCreationTraining;
         _buildScreen.DeleteCreationRequested += RequestDeleteActiveCreation;
+        _buildScreen.PartNameChanged += Build.RenamePart;
         _buildScreen.ClearSelectionRequested += Build.ClearSelection;
         _buildScreen.DeleteSelectionRequested += Build.DeleteSelectedParts;
         _buildScreen.StatsRequested += () => Notify("Stats", "Stats open in milestone 0.12.0.");

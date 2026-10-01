@@ -160,6 +160,24 @@ Joint and Select show a short status line with the tool's glyph above the
 readiness line; Move shows none. One selected part shows its settings and
 several show the selection panel instead.
 
+## Part settings
+
+One selected joint, beam or sensor shows its Part settings in the side
+panel (#343). The panel's own title row carries the part's glyph and name;
+there is no close button, and tapping empty canvas deselects. The rows are
+`UiTextField` **Name** first, then what the part is joined to (a joint's
+beams, a beam's two joints, a sensor's beam), then a short note, and one
+full-width danger **Delete** in its own column after them, absent on a
+locked creation. Structure is read-only here: a beam's length is drawn, so
+its note says "Drag its ends to change the length." instead of a number.
+`BuildPresentationViewModel.SinglePart` owns the rows and copy. A part with
+no name of its own shows a default (`BuildViewModel.DefaultPartName`: "Node 2",
+"Beam 1" or the sensor kind) that follows its place in the lists; renaming
+(`RenamePart`, by id, so an edit lands on the part it started on even if
+the selection moves) trims the text, and a blank name or the default
+clears the part's own name. Names are labels only (#220), so a locked
+creation can be renamed too; the rename autosaves like any edit.
+
 ## Validation
 
 A saved Creation stores any drawing: `CreatureDef` only checks that part
