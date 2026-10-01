@@ -60,13 +60,13 @@ public sealed record CreatureDef
         }
 
         var beamIds = beams.Select(beam => beam.Id).ToHashSet();
-        var sensorSlots = new HashSet<(int BeamId, SensorKind Kind)>();
+        var beamsWithSensor = new HashSet<int>();
         foreach (var sensor in sensors)
         {
             ValidateBeamId(sensor.BeamId, beamIds);
-            if (!sensorSlots.Add((sensor.BeamId, sensor.Kind)))
+            if (!beamsWithSensor.Add(sensor.BeamId))
             {
-                throw new ArgumentException($"Beam id {sensor.BeamId} already has a {sensor.Kind} sensor.");
+                throw new ArgumentException($"Beam id {sensor.BeamId} already has a sensor; a beam holds at most one.");
             }
         }
 

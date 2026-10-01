@@ -97,9 +97,9 @@ public sealed class CreatureDefTests
     }
 
     [Fact]
-    public void Constructor_WithOneOfEachSensorKindOnBeam_Succeeds()
+    public void Constructor_WithTwoSensorKindsOnOneBeam_Throws()
     {
-        var creature = new CreatureDef(
+        var action = () => new CreatureDef(
             new[]
             {
                 new NodeDef(1, new Vector2D(0, 0), 1),
@@ -112,7 +112,7 @@ public sealed class CreatureDefTests
                 new SensorDef(202, 101, SensorKind.LineOfSight),
             });
 
-        creature.Sensors.Count.ShouldBe(2);
+        action.ShouldThrow<ArgumentException>();
     }
 
     [Fact]
@@ -123,12 +123,13 @@ public sealed class CreatureDefTests
             {
                 new NodeDef(1, new Vector2D(0, 0), 1),
                 new NodeDef(2, new Vector2D(2, 0), 1.5),
+                new NodeDef(3, new Vector2D(4, 0), 1),
             },
-            new[] { new BeamDef(101, 1, 2) },
+            new[] { new BeamDef(101, 1, 2), new BeamDef(102, 2, 3) },
             new[]
             {
                 new SensorDef(201, 101, SensorKind.Accelerometer),
-                new SensorDef(202, 101, SensorKind.LineOfSight),
+                new SensorDef(202, 102, SensorKind.LineOfSight),
             });
 
         var json = JsonSerializer.Serialize(original);

@@ -74,7 +74,7 @@ Long-form descriptions and the sensor/model contract live in
 - **Proof mass** — The accelerometer's inner weight; its displacement is the
   reading. See: `docs/CREATURE_MODEL.md`.
 - **Sensor (part)** — A part that sits on a beam and feels that beam
-  (`SensorDef`, `SensorKind`); one of each kind per beam, at its midpoint.
+  (`SensorDef`, `SensorKind`); one sensor per beam, at its midpoint.
   Not the brain. See: `docs/CREATURE_MODEL.md`.
 
 ## Build canvas

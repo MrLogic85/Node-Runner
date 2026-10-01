@@ -233,11 +233,20 @@ public sealed class BuildPresentationViewModel
                 var nodeId = _build.Nodes[index].Id;
                 return !_build.Beams.Any(beam => beam.NodeA == nodeId || beam.NodeB == nodeId);
             });
-        return unconnected switch
+        if (unconnected > 0)
+        {
+            return unconnected == 1 ? "1 node not connected" : $"{unconnected} nodes not connected";
+        }
+
+        // Build's canvas names each short beam with a callout (#593), so the line only counts them.
+        var tooShort = _build.Beams.Count(beam =>
+            NodeById(beam.NodeA).Position != NodeById(beam.NodeB).Position
+            && CreatureReadiness.IsTooShort(NodeById(beam.NodeA), NodeById(beam.NodeB)));
+        return tooShort switch
         {
             0 => errors[0],
-            1 => "1 node not connected",
-            _ => $"{unconnected} nodes not connected",
+            1 => "1 beam too short",
+            _ => $"{tooShort} beams too short",
         };
     }
 

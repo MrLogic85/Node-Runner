@@ -1,6 +1,6 @@
 namespace NodeRunner.Domain;
 
-/// <summary>The kinds of sensor part; a beam holds one of each (#127, #575).</summary>
+/// <summary>The kinds of sensor part; a beam holds at most one sensor (#593).</summary>
 public enum SensorKind
 {
     Accelerometer,

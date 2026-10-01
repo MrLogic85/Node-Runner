@@ -156,11 +156,12 @@ several show the selection panel instead.
 
 A saved Creation stores any drawing: `CreatureDef` only checks that part
 ids are unique and below `NextPartId`, that beams point at existing node
-ids and sensors at existing beam ids (one of each kind per beam), so an empty or unfinished creature is still
+ids and sensors at existing beam ids (one sensor per beam), so an empty or unfinished creature is still
 a Creation (#515). Only training needs a finished creature.
 `NodeRunner.App.Lifecycle.CreatureReadiness` is the single source of truth
 for that, in two steps: `Problems` lists why the creature cannot be
-simulated yet (no nodes, a node without beams, a zero-length beam), and
+simulated yet (no nodes, a node without beams, a zero-length beam, or a beam
+shorter than `CreatureReadiness.MinimumBeamGap` between its joint discs, #593), and
 `CanTrain` also needs at least one motor relation for the brain to drive.
 `CreatureBuilder.TryBuild` applies `Problems` to the in-progress creature.
 UI surfaces those messages and does not duplicate the rules. The one

@@ -26,7 +26,7 @@ public sealed class VisualTheme
         MotorAccent = UiThemes.Color(theme, UiTokens.Color.Accent),
         Danger = UiThemes.Color(theme, UiTokens.Color.Danger),
         AreaCorner = UiThemes.Color(theme, UiTokens.Color.Accent),
-        BeamWidth = UiSize.Stroke.Beam,
+        BeamWidth = UiSize.Widget.CreatureBeamWidth,
         MotorSignalWidth = UiSize.Stroke.Signal,
         GroundEdgeWidth = UiSize.Stroke.Signal,
         GridSpacing = UiSize.Control.Touch,

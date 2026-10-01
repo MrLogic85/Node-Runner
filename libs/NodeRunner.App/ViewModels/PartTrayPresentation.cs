@@ -64,7 +64,7 @@ public static class PartTray
             Locked(BuildPart.VelocityMotor, "Velocity motor"),
             Locked(BuildPart.Wheel, "Wheel"),
         ]),
-        new("Sensors", "Drag onto a beam. A beam holds one of each sensor.",
+        new("Sensors", "Drag onto a beam. A beam holds one sensor.",
         [
             Available(BuildPart.Accelerometer, "Accelerometer"),
             Available(BuildPart.LosSensor, "LOS sensor"),
