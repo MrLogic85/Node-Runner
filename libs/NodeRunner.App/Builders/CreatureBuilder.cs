@@ -18,6 +18,9 @@ namespace NodeRunner.App.Builders;
 /// </summary>
 public sealed class CreatureBuilder
 {
+    /// <summary>Why a sensor cannot go on a beam that already has one.</summary>
+    public const string OneSensorPerBeamReason = "One sensor per beam";
+
     private readonly List<NodeDef> _nodes = [];
     private readonly List<BeamDef> _beams = [];
     private readonly List<SensorDef> _sensors = [];
@@ -143,7 +146,7 @@ public sealed class CreatureBuilder
         return (firstBeamId, secondBeamId);
     }
 
-    /// <summary>Adds a sensor mounted on an existing beam unless that beam already has this kind.</summary>
+    /// <summary>Adds a sensor mounted on an existing beam unless that beam already has a sensor.</summary>
     public bool AddSensor(int beamId, SensorKind kind, out int sensorId, out string reason)
     {
         ValidateBeamId(beamId);
@@ -152,10 +155,10 @@ public sealed class CreatureBuilder
             throw new ArgumentOutOfRangeException(nameof(kind), "Sensor kind must be defined.");
         }
 
-        if (_sensors.Any(sensor => sensor.BeamId == beamId && sensor.Kind == kind))
+        if (_sensors.Any(sensor => sensor.BeamId == beamId))
         {
             sensorId = 0;
-            reason = DuplicateSensorReason(kind);
+            reason = OneSensorPerBeamReason;
             return false;
         }
 
@@ -251,12 +254,6 @@ public sealed class CreatureBuilder
         return index;
     }
 
-    private static string DuplicateSensorReason(SensorKind kind) => kind switch
-    {
-        SensorKind.Accelerometer => "One accelerometer per beam",
-        SensorKind.LineOfSight => "One LOS sensor per beam",
-        _ => "One sensor of each kind per beam",
-    };
 
     private static bool IsSamePair(BeamDef beam, int nodeA, int nodeB)
     {

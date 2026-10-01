@@ -73,6 +73,9 @@ public static class UiSize
         public const int SliderDisabledDashLength = 4;
         public const int SliderSteppedHeight = 60;
 
+        /// <summary>A creature's beam in Build and Training (#593); thumbnails keep <see cref="Stroke.Beam"/>.</summary>
+        public const int CreatureBeamWidth = 6;
+
         /// <summary>
         /// Line height minus font size of the small note, overline and readout-small styles
         /// (reference 11/14 and 10/13); larger styles have more leading.

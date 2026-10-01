@@ -9,6 +9,22 @@ namespace NodeRunner.App.Lifecycle;
 /// </summary>
 public static class CreatureReadiness
 {
+    /// <summary>
+    /// The least free length between a beam's two joint discs (#593): room for a 22-unit sensor
+    /// drawing with a 4-unit gap on each side.
+    /// </summary>
+    public const double MinimumBeamGap = 30;
+
+    /// <summary>True when the beam between <paramref name="a"/> and <paramref name="b"/> leaves less than <see cref="MinimumBeamGap"/> between their discs.</summary>
+    public static bool IsTooShort(NodeDef a, NodeDef b)
+    {
+        ArgumentNullException.ThrowIfNull(a);
+        ArgumentNullException.ThrowIfNull(b);
+        var dx = b.Position.X - a.Position.X;
+        var dy = b.Position.Y - a.Position.Y;
+        return Math.Sqrt((dx * dx) + (dy * dy)) - a.Radius - b.Radius < MinimumBeamGap;
+    }
+
     /// <summary>Why the creature cannot be simulated yet; empty when it can.</summary>
     public static IReadOnlyList<string> Problems(CreatureDef creature)
     {
@@ -35,6 +51,10 @@ public static class CreatureReadiness
             if (creature.Nodes[indexA].Position == creature.Nodes[indexB].Position)
             {
                 problems.Add($"The beam between node {indexA + 1} and node {indexB + 1} has zero length. Move one of the nodes apart.");
+            }
+            else if (IsTooShort(creature.Nodes[indexA], creature.Nodes[indexB]))
+            {
+                problems.Add($"The beam between node {indexA + 1} and node {indexB + 1} is too short. Move one of the nodes apart.");
             }
         }
 

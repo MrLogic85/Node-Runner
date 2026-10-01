@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using Godot;
+using NodeRunner.App.Lifecycle;
 using NodeRunner.App.ViewModels;
 using NodeRunner.Domain;
 using NodeRunner.Theme;
@@ -42,6 +43,10 @@ public partial class BuildCanvas : Node2D
 
     [Export]
     public UiSelectionHandle? ScaleHandle { get; set; }
+
+    /// <summary>Shows <see cref="BuildViewModel.CanvasNotes"/> beside their parts, authored in the slot above the canvas.</summary>
+    [Export]
+    public UiCalloutLayer? CalloutLayer { get; set; }
 
     public BuildViewModel? ViewModel
     {
@@ -162,11 +167,13 @@ public partial class BuildCanvas : Node2D
         if (_viewModel is null || _gestures is null)
         {
             LayoutSelectionHandles();
+            LayoutCanvasNotes();
             return;
         }
 
         UpdateView();
         LayoutSelectionHandles();
+        LayoutCanvasNotes();
         DrawThroughView();
         DrawBuildGrid();
         DrawAreaCorners();
@@ -176,13 +183,18 @@ public partial class BuildCanvas : Node2D
 
         foreach (var beam in _viewModel.Beams)
         {
-            var start = ToGodot(NodeById(beam.NodeA).Position);
-            var end = ToGodot(NodeById(beam.NodeB).Position);
+            var nodeA = NodeById(beam.NodeA);
+            var nodeB = NodeById(beam.NodeB);
+            var start = ToGodot(nodeA.Position);
+            var end = ToGodot(nodeB.Position);
             if (_viewModel.SingleSelectedBeamId == beam.Id)
             {
                 DrawLine(start, end, Theme.SelectionGlow, Stroke(Theme.BeamWidth * 2.2f), antialiased: false);
             }
-            DrawLine(start, end, Theme.Beam, Stroke(Theme.BeamWidth), antialiased: false);
+
+            // A beam too short for training (#593) is drawn in danger until its joints move apart.
+            var color = CreatureReadiness.IsTooShort(nodeA, nodeB) ? Theme.Danger : Theme.Beam;
+            DrawLine(start, end, color, Stroke(Theme.BeamWidth), antialiased: false);
         }
 
         DrawTopologyFeedback();
@@ -238,6 +250,79 @@ public partial class BuildCanvas : Node2D
             }
         }
     }
+
+    /// <summary>
+    /// Hands each canvas note to the callout layer at its part, in the slot's coordinates: a beam's
+    /// note leaves from its middle on its upper side, past its joints; a node's from above it.
+    /// </summary>
+    private void LayoutCanvasNotes()
+    {
+        if (CalloutLayer is null)
+        {
+            return;
+        }
+
+        if (_viewModel is null || _gestures is null)
+        {
+            CalloutLayer.SetCallouts([]);
+            return;
+        }
+
+        var placements = new List<UiCalloutLayout.Placement>();
+        foreach (var note in _viewModel.CanvasNotes())
+        {
+            if (TryPlaceNote(note, out var anchor, out var direction, out var clearance))
+            {
+                placements.Add(new UiCalloutLayout.Placement(anchor, direction, clearance, CalloutKindOf(note.Kind), IconOf(note.Kind), note.Text));
+            }
+        }
+
+        CalloutLayer.SetCallouts(placements);
+    }
+
+    private bool TryPlaceNote(CanvasNote note, out Vector2 anchor, out Vector2 direction, out float clearance)
+    {
+        var view = _gestures!.View;
+        Vector2 ToSlot(Vector2D position) => Transform * ToGodot(view.ToView(position));
+        float OnScreen(double length) => (float)(length * view.Zoom) * Scale.X;
+        switch (note.Target.Kind)
+        {
+            case CreatureElementKind.Beam:
+                var beam = _viewModel!.Beams[_viewModel.BeamIndexOf(note.Target.Id)];
+                var a = NodeById(beam.NodeA);
+                var b = NodeById(beam.NodeB);
+                var start = ToSlot(a.Position);
+                var end = ToSlot(b.Position);
+                anchor = (start + end) / 2;
+                direction = (end - start).Normalized().Orthogonal();
+                if (direction.Y > 0 || (Mathf.IsZeroApprox(direction.Y) && direction.X < 0))
+                {
+                    direction = -direction;
+                }
+
+                clearance = OnScreen(Math.Max(a.Radius, b.Radius));
+                return true;
+            case CreatureElementKind.Node:
+                var node = NodeById(note.Target.Id);
+                anchor = ToSlot(node.Position);
+                direction = Vector2.Up;
+                clearance = OnScreen(node.Radius);
+                return true;
+            default:
+                anchor = direction = Vector2.Zero;
+                clearance = 0;
+                return false;
+        }
+    }
+
+    private static UiCallout.CalloutKind CalloutKindOf(CanvasNoteKind kind) => kind switch
+    {
+        CanvasNoteKind.Danger => UiCallout.CalloutKind.Danger,
+        CanvasNoteKind.Ok => UiCallout.CalloutKind.Ok,
+        _ => UiCallout.CalloutKind.Warning,
+    };
+
+    private static UiIconId IconOf(CanvasNoteKind kind) => kind == CanvasNoteKind.Ok ? UiIconId.None : UiIconId.Warn;
 
     /// <summary>Shows the handles <see cref="BuildGestures.SelectionHandles"/> lists, centred on their spots, and hides the rest.</summary>
     private void LayoutSelectionHandles()

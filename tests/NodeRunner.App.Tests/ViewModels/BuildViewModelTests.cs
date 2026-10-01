@@ -673,7 +673,7 @@ public sealed class BuildViewModelTests
     {
         var viewModel = new BuildViewModel();
         viewModel.Load(new CreatureDef(
-            [new NodeDef(1, new Vector2D(0, 0), 18), new NodeDef(2, new Vector2D(20, 0), 18), new NodeDef(3, new Vector2D(40, 10), 18)],
+            [new NodeDef(1, new Vector2D(0, 0), 18), new NodeDef(2, new Vector2D(70, 0), 18), new NodeDef(3, new Vector2D(140, 20), 18)],
             [new BeamDef(101, 1, 2), new BeamDef(102, 2, 3)],
             []));
 
@@ -688,7 +688,7 @@ public sealed class BuildViewModelTests
     {
         var viewModel = new BuildViewModel();
         var a = viewModel.PlaceNode(new Vector2D(0, 0), 18);
-        var b = viewModel.PlaceNode(new Vector2D(10, 0), 18);
+        var b = viewModel.PlaceNode(new Vector2D(70, 0), 18);
         viewModel.ConnectBeam(a, b);
 
         var canLeave = viewModel.TryLeave(out var creature, out var errors);
@@ -714,4 +714,19 @@ public sealed class BuildViewModelTests
         [new NodeDef(1, new Vector2D(0, 0), 18), new NodeDef(2, new Vector2D(20, 0), 18)],
         [new BeamDef(3, 1, 2)],
         []);
+
+    [Fact]
+    public void CanvasNotes_NameEachBeamTooShortToTrain()
+    {
+        var viewModel = new BuildViewModel();
+        viewModel.Load(new CreatureDef(
+            [new NodeDef(1, new Vector2D(0, 0), 18), new NodeDef(2, new Vector2D(50, 0), 18), new NodeDef(3, new Vector2D(150, 0), 18), new NodeDef(4, new Vector2D(150, 0), 18)],
+            [new BeamDef(5, 1, 2), new BeamDef(6, 2, 3), new BeamDef(7, 3, 4)],
+            []));
+
+        viewModel.CanvasNotes().ShouldBe(
+        [
+            new CanvasNote(CanvasNoteKind.Danger, new CreatureElementSelection(CreatureElementKind.Beam, 5), "Too short"),
+        ]);
+    }
 }

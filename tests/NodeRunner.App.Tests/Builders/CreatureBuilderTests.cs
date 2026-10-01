@@ -73,50 +73,23 @@ public sealed class CreatureBuilderTests
         builder.Sensors.ShouldBe([new SensorDef(4, beam, SensorKind.Accelerometer)]);
     }
 
-    [Fact]
-    public void AddSensor_DuplicateKindOnBeam_ReturnsReasonAndDoesNotMutate()
+    [Theory]
+    [InlineData(SensorKind.Accelerometer, SensorKind.Accelerometer)]
+    [InlineData(SensorKind.Accelerometer, SensorKind.LineOfSight)]
+    [InlineData(SensorKind.LineOfSight, SensorKind.Accelerometer)]
+    [InlineData(SensorKind.LineOfSight, SensorKind.LineOfSight)]
+    public void AddSensor_OnABeamThatHasOne_ReturnsReasonAndDoesNotMutate(SensorKind first, SensorKind second)
     {
         var builder = PairBuilder();
         var beam = builder.Beams[0].Id;
-        builder.AddSensor(beam, SensorKind.Accelerometer, out var firstId, out _);
+        builder.AddSensor(beam, first, out var firstId, out _);
 
-        var added = builder.AddSensor(beam, SensorKind.Accelerometer, out var secondId, out var reason);
+        var added = builder.AddSensor(beam, second, out var secondId, out var reason);
 
         added.ShouldBeFalse();
         secondId.ShouldBe(0);
-        reason.ShouldBe("One accelerometer per beam");
-        builder.Sensors.ShouldBe([new SensorDef(firstId, beam, SensorKind.Accelerometer)]);
-    }
-
-    [Fact]
-    public void AddSensor_DuplicateLosSensorOnBeam_ReturnsLosReason()
-    {
-        var builder = PairBuilder();
-        var beam = builder.Beams[0].Id;
-        builder.AddSensor(beam, SensorKind.LineOfSight, out _, out _);
-
-        var added = builder.AddSensor(beam, SensorKind.LineOfSight, out _, out var reason);
-
-        added.ShouldBeFalse();
-        reason.ShouldBe("One LOS sensor per beam");
-        builder.Sensors.Count.ShouldBe(1);
-    }
-
-    [Fact]
-    public void AddSensor_OneOfEachKindOnBeam_AddsBoth()
-    {
-        var builder = PairBuilder();
-        var beam = builder.Beams[0].Id;
-        builder.AddSensor(beam, SensorKind.Accelerometer, out var accelerometer, out _);
-
-        var added = builder.AddSensor(beam, SensorKind.LineOfSight, out var los, out _);
-
-        added.ShouldBeTrue();
-        builder.Sensors.ShouldBe(
-        [
-            new SensorDef(accelerometer, beam, SensorKind.Accelerometer),
-            new SensorDef(los, beam, SensorKind.LineOfSight),
-        ]);
+        reason.ShouldBe("One sensor per beam");
+        builder.Sensors.ShouldBe([new SensorDef(firstId, beam, first)]);
     }
 
     [Fact]
@@ -288,7 +261,7 @@ public sealed class CreatureBuilderTests
         int? headBeam = null;
         for (var i = 1; i < 5; i++)
         {
-            var next = builder.AddNode(new Vector2D(i * 56, 0), 18);
+            var next = builder.AddNode(new Vector2D(i * 70, 0), 18);
             var beam = builder.AddBeam(previous, next);
             headBeam ??= beam;
             previous = next;
@@ -313,7 +286,7 @@ public sealed class CreatureBuilderTests
     {
         var builder = new CreatureBuilder();
         var a = builder.AddNode(new Vector2D(0, 0), 1);
-        var b = builder.AddNode(new Vector2D(2, 0), 1);
+        var b = builder.AddNode(new Vector2D(40, 0), 1);
         builder.AddBeam(a, b);
         return builder;
     }

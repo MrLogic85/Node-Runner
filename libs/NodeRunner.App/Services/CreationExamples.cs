@@ -20,7 +20,7 @@ public static class CreationExamples
     public static CreatureDef CreateWormCreature()
     {
         const double radius = 18;
-        const double spacing = 56;
+        const double spacing = 70;
         const double y = 0;
 
         var nodes = new[]
@@ -43,7 +43,7 @@ public static class CreationExamples
         var sensors = new[]
         {
             new SensorDef(10, 6, SensorKind.Accelerometer),
-            new SensorDef(11, 6, SensorKind.LineOfSight),
+            new SensorDef(11, 9, SensorKind.LineOfSight),
         };
 
         return new CreatureDef(nodes, beams, sensors, nextPartId: 12);

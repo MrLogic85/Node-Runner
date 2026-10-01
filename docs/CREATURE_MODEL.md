@@ -76,6 +76,10 @@ CreatureDef  ──build──▶  physical body  ──sensors──▶  model 
   solid bar. Parts of the same creature never collide with each other
   (collision exceptions are added pairwise), which is what allows car-like,
   closed-loop construction.
+- **Minimum length (#593):** a beam must leave
+  `CreatureReadiness.MinimumBeamGap` (30) free between its two joint discs,
+  room for a sensor. A shorter beam can be drawn and saved, but it blocks
+  training until its joints move apart.
 - **Future ideas (not implemented):** beams breaking on hard impact, joints
   tearing apart under load.
 
@@ -87,10 +91,9 @@ CreatureDef  ──build──▶  physical body  ──sensors──▶  model 
   stores an id, optional display name, its `SensorKind` and the id of the
   beam it sits on. A sensor measures its own beam, at the beam's midpoint,
   with no position setting.
-- **One of each kind per beam.** `CreatureDef` rejects a second sensor of
-  the same kind on one beam; the App refuses it first with a reason
-  ("One accelerometer per beam", "One LOS sensor per beam",
-  `CreatureBuilder.AddSensor`).
+- **One sensor per beam (#593).** `CreatureDef` rejects a second sensor on
+  a beam, of any kind; the App refuses it first with the reason "One sensor
+  per beam" (`CreatureBuilder.AddSensor`).
 - **Frame fixed as built:** the side of the beam that faces up in the built
   pose is the sensor's "up", and "along" points right as built. The frame
   then turns with the beam and never flips during a run

@@ -101,11 +101,12 @@ then the app follows the reference.
 - **No Core; sensors sit on beams (#127, 0.12.0).** The reference has a Core
   part on a joint with toggles for its built-in senses (Parts, PartSettings,
   SignalFlow, Training). Instead Core is removed: an Accelerometer (#127) and
-  an LOS sensor (#575) sit on a beam, one of each per beam, at its midpoint.
+  an LOS sensor (#575) sit on a beam, one sensor per beam (#593), at its
+  midpoint.
   The designer is not available, so 0.12 follows these best guesses (#580);
   #574 updates the reference later and lists any differences as follow-ups:
   - *Parts tray:* the Sensors tab lists Accelerometer, then LOS sensor, with
-    the help line "Drag onto a beam. A beam holds one of each sensor." There
+    the help line "Drag onto a beam. A beam holds one sensor." There
     is no Core row.
   - *Glyphs:* LOS sensor uses the reference `los` glyph. Accelerometer uses
     the project-owned `accelerometer` part glyph (an upright frame with a
@@ -114,10 +115,15 @@ then the app follows the reference.
   - *On a beam:* a sensor is drawn as the reference part badge: a 22 px
     rounded square (not a circle, so it never reads as a joint) with a panel
     fill and 2 px lines, and the glyph at 15 px in `accent`. It sits at the
-    beam's midpoint at any beam length; two sensors on one beam sit side by
-    side along it, centred on the midpoint, and both still measure at the
-    midpoint. A beam shorter than the badge still takes a sensor. Selected,
-    it gets the `halo` outline.
+    beam's midpoint. Selected, it gets the `halo` outline.
+  - *Beams (#593):* a creature's beams are 6 wide in Build and Training
+    (thumbnails keep the thin line). A beam must leave 30 free between its
+    joint discs, room for a sensor with a gap on each side; a shorter beam
+    can still be drawn, is drawn in `danger`, and blocks training. Its
+    canvas note is a `danger` callout "Too short", out
+    past its joints on the beam's upper side with a leader line to the
+    beam's middle (see `c_call` in a figure). The readiness line says "1
+    beam too short".
   - *Orientation:* the side of the beam that faces up as built is the
     sensor's top, and it then turns with the beam; it never flips during a
     run. The LOS glyph is turned to match its as-built ray fan (#576), and a
@@ -125,12 +131,11 @@ then the app follows the reference.
   - *Order:* joints, then sensors, then beams, for both tapping and drawing.
     A sensor's tap area is its badge. Dragging a sensor in Move does
     nothing, and a Joint-tool tap on a sensor does not split the beam.
-  - *Split:* splitting a beam moves its sensors, with their ids, to the
+  - *Split:* splitting a beam moves its sensor, with its id, to the
     longer half (the half at the beam's first node on a tie).
-  - *Placing (#376):* beams that can take the dragged sensor show `halo`.
-    A beam that already has it shows a dashed `danger` stroke, and dropping
-    there shows "One accelerometer per beam" or "One LOS sensor per beam" as
-    a danger callout at that beam. Dropping on a joint shows "Sensors go on
+  - *Placing (#376):* beams without a sensor show `halo`.
+    A beam that already has one shows a dashed `danger` stroke, and dropping
+    there shows "One sensor per beam" as a danger callout at that beam. Dropping on a joint shows "Sensors go on
     a beam". Dropping on empty canvas cancels silently.
   - *Part settings (#343):* sensors show Name and Delete only. Accelerometer:
     "Feels how its beam speeds up, slows down and tilts." LOS sensor: "Three
@@ -272,6 +277,22 @@ entries are not components of their own in Godot
   left in the bar, so sizing to text would need hand-written text measurement.
   The owner chose a fixed width
   ([#485](https://github.com/MrLogic85/Node-Runner/issues/485)).
+- **`c_call` in a figure** goes through `UiCalloutLayer`, the one way to put
+  a message in a drawing (#593). The figure's view model lists notes (kind,
+  the part it is about, text; for Build `BuildViewModel.CanvasNotes`), most
+  important first, and the figure turns each into a spot, a direction clear
+  of the part and how far the part reaches that way. `UiCalloutLayout` (its
+  own class, apart from any screen) decides where each goes, and the layer
+  shows them. Every note is shown; none is left out:
+  - A callout sits out past its part, joined to the spot by a leader line
+    with a dot in the callout's colour. It keeps its screen size at any zoom.
+  - Near an edge it is pushed along the edge, never to the part's other
+    side, so it does not jump while the user pans or zooms.
+  - Callouts that would overlap form one stack, a column growing away from
+    the first one's part, in list order (the most important nearest). A note
+    with the same text as one in the stack adds only its leader to that
+    callout. A stack that grows into another takes it in.
+  - Leaders are drawn behind all callouts.
 - **`c_panel_head`** is dropped by human decision: it is not part of the future
   design exports, so there is no panel header component. A side panel's
   header, including the inspector's (`c_inspector`), is `UiSidePanel`'s own

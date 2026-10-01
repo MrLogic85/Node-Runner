@@ -187,6 +187,30 @@ public sealed class BuildViewModel : INotifyPropertyChanged
 
     public IReadOnlyList<SensorDef> Sensors => _builder.Sensors;
 
+    /// <summary>
+    /// The messages Build shows in the drawing, each beside the part it is about: today a beam too
+    /// short to train (#593). Listed most important first: notes that would overlap stack, the first
+    /// listed nearest its part.
+    /// </summary>
+    public IReadOnlyList<CanvasNote> CanvasNotes()
+    {
+        var notes = new List<CanvasNote>();
+        foreach (var beam in Beams)
+        {
+            var a = Nodes[NodeIndexOf(beam.NodeA)];
+            var b = Nodes[NodeIndexOf(beam.NodeB)];
+            if (a.Position != b.Position && CreatureReadiness.IsTooShort(a, b))
+            {
+                notes.Add(new CanvasNote(
+                    CanvasNoteKind.Danger,
+                    new CreatureElementSelection(CreatureElementKind.Beam, beam.Id),
+                    "Too short"));
+            }
+        }
+
+        return notes;
+    }
+
     public IReadOnlyCollection<int> SelectedNodeIds => _selectedNodeIds;
 
     public BrainShapeDef BrainShape => _brainShape;

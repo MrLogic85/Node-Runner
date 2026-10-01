@@ -37,7 +37,7 @@ public sealed class PartTrayTests
         [
             "Pick one, then drag from one node to another, like the Beam tool.",
             "Drag onto a joint. A joint holds one part.",
-            "Drag onto a beam. A beam holds one of each sensor.",
+            "Drag onto a beam. A beam holds one sensor.",
             "Drag it onto the canvas, then draw beams to its two eyes.",
         ]);
     }

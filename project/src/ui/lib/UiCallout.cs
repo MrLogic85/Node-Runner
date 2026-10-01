@@ -29,6 +29,11 @@ public partial class UiCallout : PanelContainer
         get => _text;
         set
         {
+            if (_text == value)
+            {
+                return;
+            }
+
             _text = value;
             Refresh();
         }
@@ -46,6 +51,11 @@ public partial class UiCallout : PanelContainer
                 return;
             }
 
+            if (_kind == value)
+            {
+                return;
+            }
+
             _kind = value;
             Refresh();
         }
@@ -60,6 +70,11 @@ public partial class UiCallout : PanelContainer
             if (!Enum.IsDefined(value))
             {
                 GD.PushError($"Invalid callout icon: {value}. Keeping {_iconId}.");
+                return;
+            }
+
+            if (_iconId == value)
+            {
                 return;
             }
 
