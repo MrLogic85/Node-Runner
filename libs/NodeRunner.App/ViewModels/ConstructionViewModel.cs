@@ -42,6 +42,12 @@ public sealed class ConstructionViewModel : INotifyPropertyChanged
     /// <summary>The Build grid's cell size in canvas units.</summary>
     public const double BuildGridStep = 48;
 
+    /// <summary>The smallest factor one Scale drag can shrink a selection by.</summary>
+    public const double MinSelectionScale = 0.25;
+
+    /// <summary>The largest factor one Scale drag can grow a selection by.</summary>
+    public const double MaxSelectionScale = 4;
+
     /// <summary>How far past <see cref="BuildArea"/> the Build view can show, in canvas units, at any zoom.</summary>
     public const double BuildViewMargin = BuildGridStep;
 
@@ -307,37 +313,104 @@ public sealed class ConstructionViewModel : INotifyPropertyChanged
         AnatomyChanged?.Invoke(this, EventArgs.Empty);
     }
 
-    public void MoveSelectedNodes(int anchorNodeIndex, Vector2D anchorPosition)
+    /// <summary>The selected joints' positions and pivot, for a Select drag to transform.</summary>
+    public SelectionSnapshot SnapshotSelection()
     {
-        if (!_selectedNodeIndices.Contains(anchorNodeIndex))
+        if (_selectedNodeIndices.Count == 0)
         {
-            MoveNode(anchorNodeIndex, anchorPosition);
-            return;
+            throw new InvalidOperationException("Nothing is selected.");
         }
 
-        var anchor = _builder.Nodes[anchorNodeIndex].Position;
-        var delta = KeepSelectionInBuildArea(new Vector2D(anchorPosition.X - anchor.X, anchorPosition.Y - anchor.Y));
-        foreach (var selectedIndex in _selectedNodeIndices.ToArray())
-        {
-            var current = _builder.Nodes[selectedIndex].Position;
-            _builder.MoveNode(selectedIndex, new Vector2D(current.X + delta.X, current.Y + delta.Y));
-        }
-
-        AnatomyChanged?.Invoke(this, EventArgs.Empty);
+        var positions = _selectedNodeIndices.ToDictionary(index => index, index => _builder.Nodes[index].Position);
+        var pivot = new Vector2D(
+            (positions.Values.Min(p => p.X) + positions.Values.Max(p => p.X)) / 2,
+            (positions.Values.Min(p => p.Y) + positions.Values.Max(p => p.Y)) / 2);
+        return new SelectionSnapshot(positions, pivot);
     }
 
-    /// <summary>Shortens <paramref name="delta"/> so every selected joint's disc stays inside <see cref="BuildArea"/>.</summary>
-    private Vector2D KeepSelectionInBuildArea(Vector2D delta)
+    /// <summary>Moves the snapshot's joints by <paramref name="delta"/>, shortened so the whole group stays inside <see cref="BuildArea"/>.</summary>
+    public void TranslateSelection(SelectionSnapshot start, Vector2D delta)
     {
-        foreach (var selectedIndex in _selectedNodeIndices)
+        ArgumentNullException.ThrowIfNull(start);
+        foreach (var (index, position) in start.Positions)
         {
-            var node = _builder.Nodes[selectedIndex];
-            var moved = new Vector2D(node.Position.X + delta.X, node.Position.Y + delta.Y);
-            var allowed = BuildArea.Clamp(moved, node.Radius);
+            var moved = new Vector2D(position.X + delta.X, position.Y + delta.Y);
+            var allowed = BuildArea.Clamp(moved, _builder.Nodes[index].Radius);
             delta = new Vector2D(delta.X + allowed.X - moved.X, delta.Y + allowed.Y - moved.Y);
         }
 
-        return delta;
+        // Clamping each joint too absorbs the rounding in the shortened delta.
+        PlaceSelection(start, (index, position) =>
+            BuildArea.Clamp(new Vector2D(position.X + delta.X, position.Y + delta.Y), _builder.Nodes[index].Radius));
+    }
+
+    /// <summary>Turns the snapshot's joints <paramref name="radians"/> about its pivot; a turn that would leave <see cref="BuildArea"/> is ignored.</summary>
+    public void RotateSelection(SelectionSnapshot start, double radians)
+    {
+        ArgumentNullException.ThrowIfNull(start);
+        if (!double.IsFinite(radians))
+        {
+            throw new ArgumentOutOfRangeException(nameof(radians));
+        }
+
+        var cos = Math.Cos(radians);
+        var sin = Math.Sin(radians);
+        var pivot = start.Pivot;
+        PlaceSelection(start, (_, position) =>
+        {
+            var dx = position.X - pivot.X;
+            var dy = position.Y - pivot.Y;
+            return new Vector2D(pivot.X + (dx * cos) - (dy * sin), pivot.Y + (dx * sin) + (dy * cos));
+        });
+    }
+
+    /// <summary>
+    /// Spreads the snapshot's joints from its pivot by <paramref name="factor"/>, clamped to
+    /// <see cref="MinSelectionScale"/>..<see cref="MaxSelectionScale"/> so it never collapses or
+    /// reflects; a scale that would leave <see cref="BuildArea"/> is ignored. A locked creation
+    /// keeps its beam lengths, so it refuses.
+    /// </summary>
+    public void ScaleSelection(SelectionSnapshot start, double factor)
+    {
+        ArgumentNullException.ThrowIfNull(start);
+        if (_moveOnly)
+        {
+            throw new InvalidOperationException("A locked creation keeps its beam lengths.");
+        }
+
+        if (!double.IsFinite(factor))
+        {
+            throw new ArgumentOutOfRangeException(nameof(factor));
+        }
+
+        factor = Math.Clamp(factor, MinSelectionScale, MaxSelectionScale);
+        var pivot = start.Pivot;
+        PlaceSelection(start, (_, position) => new Vector2D(
+            pivot.X + ((position.X - pivot.X) * factor),
+            pivot.Y + ((position.Y - pivot.Y) * factor)));
+    }
+
+    /// <summary>Puts the snapshot's joints back where they were.</summary>
+    public void RestoreSelection(SelectionSnapshot start)
+    {
+        ArgumentNullException.ThrowIfNull(start);
+        PlaceSelection(start, (_, position) => position, keepInBuildArea: false);
+    }
+
+    private void PlaceSelection(SelectionSnapshot start, Func<int, Vector2D, Vector2D> place, bool keepInBuildArea = true)
+    {
+        var placed = start.Positions.ToDictionary(entry => entry.Key, entry => place(entry.Key, entry.Value));
+        if (keepInBuildArea && placed.Any(entry => BuildArea.Clamp(entry.Value, _builder.Nodes[entry.Key].Radius) != entry.Value))
+        {
+            return;
+        }
+
+        foreach (var (index, position) in placed)
+        {
+            _builder.MoveNode(index, position);
+        }
+
+        AnatomyChanged?.Invoke(this, EventArgs.Empty);
     }
 
     /// <summary>

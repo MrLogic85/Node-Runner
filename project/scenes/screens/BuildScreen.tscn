@@ -14,6 +14,7 @@
 [ext_resource type="Script" uid="uid://dk67qmt3brp4e" path="res://src/ui/lib/UiLabel.cs" id="12_label"]
 [ext_resource type="Script" uid="uid://b4t4jrismbuik" path="res://src/ui/lib/UiIcon.cs" id="14_icon"]
 [ext_resource type="PackedScene" path="res://scenes/widgets/BrainSetupSheet.tscn" id="15_brain_setup"]
+[ext_resource type="Script" uid="uid://s2v37pyy3fn8" path="res://src/ui/lib/UiSelectionHandle.cs" id="16_handle"]
 
 [node name="BuildScreen" type="Control"]
 layout_mode = 3
@@ -153,11 +154,34 @@ layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 2
 
-[node name="ConstructionCanvas" type="Node2D" parent="UiFrame/MarginContainer/Card/Shell/Body/CanvasSlot"]
+[node name="ConstructionCanvas" type="Node2D" parent="UiFrame/MarginContainer/Card/Shell/Body/CanvasSlot" node_paths=PackedStringArray("MoveHandle", "RotateHandle", "ScaleHandle")]
 unique_name_in_owner = true
 position = Vector2(136, 66)
 scale = Vector2(1.15, 1.15)
 script = ExtResource("8_canvas")
+MoveHandle = NodePath("../MoveHandle")
+RotateHandle = NodePath("../RotateHandle")
+ScaleHandle = NodePath("../ScaleHandle")
+
+[node name="MoveHandle" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Body/CanvasSlot"]
+visible = false
+layout_mode = 0
+mouse_filter = 2
+script = ExtResource("16_handle")
+
+[node name="RotateHandle" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Body/CanvasSlot"]
+visible = false
+layout_mode = 0
+mouse_filter = 2
+script = ExtResource("16_handle")
+Type = 1
+
+[node name="ScaleHandle" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Body/CanvasSlot"]
+visible = false
+layout_mode = 0
+mouse_filter = 2
+script = ExtResource("16_handle")
+Type = 2
 
 [node name="CanvasOverlay" type="MarginContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/CanvasSlot"]
 layout_mode = 1

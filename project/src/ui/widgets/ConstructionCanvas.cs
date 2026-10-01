@@ -33,6 +33,16 @@ public partial class ConstructionCanvas : Node2D
 
     public VisualTheme Theme { get; set; } = VisualTheme.Neon;
 
+    /// <summary>The Select handles, authored in the slot above the canvas; placed here, hit-tested by <see cref="ConstructionGestures"/>.</summary>
+    [Export]
+    public UiSelectionHandle? MoveHandle { get; set; }
+
+    [Export]
+    public UiSelectionHandle? RotateHandle { get; set; }
+
+    [Export]
+    public UiSelectionHandle? ScaleHandle { get; set; }
+
     public ConstructionViewModel? ViewModel
     {
         get => _viewModel;
@@ -151,10 +161,12 @@ public partial class ConstructionCanvas : Node2D
     {
         if (_viewModel is null || _gestures is null)
         {
+            LayoutSelectionHandles();
             return;
         }
 
         UpdateView();
+        LayoutSelectionHandles();
         DrawThroughView();
         DrawBuildGrid();
         DrawAreaCorners();
@@ -181,7 +193,7 @@ public partial class ConstructionCanvas : Node2D
             var position = ToGodot(node.Position);
             if (_viewModel.SelectedNodeIndices.Contains(nodeIndex))
             {
-                DrawCircle(position, (float)node.Radius * 1.7f, Theme.SelectionGlow);
+                DrawCircle(position, (float)(node.Radius * ConstructionGestures.SelectedHaloScale), Theme.SelectionGlow);
             }
 
             DrawCircle(
@@ -204,6 +216,54 @@ public partial class ConstructionCanvas : Node2D
         DrawMotorCenterMarkers();
 
         DrawBeamEndRings();
+        DrawSelectionFrame();
+    }
+
+    /// <summary>
+    /// The dashed frame and rotate stem around a Select selection, drawn last
+    /// and at screen size like its handles.
+    /// </summary>
+    private void DrawSelectionFrame()
+    {
+        if (_gestures!.SelectionFrame is not { } frame)
+        {
+            return;
+        }
+
+        var view = _gestures.View;
+        DrawSetTransform(Vector2.Zero);
+        var rect = RectFromPoints(ToGodot(view.ToView(frame.Min)), ToGodot(view.ToView(frame.Max)));
+        // The canvas node is scaled in the scene; undo it so the frame is a true screen-size hairline.
+        var width = UiSize.Stroke.SelectionFrame / Scale.X;
+        DrawDashedRect(rect, width);
+        foreach (var (handle, position) in _gestures.SelectionHandles)
+        {
+            if (handle == SelectionHandle.Rotate)
+            {
+                var top = new Vector2(rect.GetCenter().X, rect.Position.Y);
+                DrawLine(top, ToGodot(view.ToView(position)), Theme.SelectionGlow, width, antialiased: false);
+            }
+        }
+    }
+
+    /// <summary>Shows the handles <see cref="ConstructionGestures.SelectionHandles"/> lists, centred on their spots, and hides the rest.</summary>
+    private void LayoutSelectionHandles()
+    {
+        var shown = _gestures?.SelectionHandles ?? [];
+        foreach (var (handle, control) in new[] { (SelectionHandle.Move, MoveHandle), (SelectionHandle.Rotate, RotateHandle), (SelectionHandle.Scale, ScaleHandle) })
+        {
+            if (control is null)
+            {
+                continue;
+            }
+
+            var index = shown.ToList().FindIndex(entry => entry.Handle == handle);
+            control.Visible = index >= 0;
+            if (index >= 0)
+            {
+                control.Position = (Transform * ToGodot(_gestures!.View.ToView(shown[index].Position))) - (control.Size / 2);
+            }
+        }
     }
 
     private void DrawBeamPreview()
@@ -245,10 +305,17 @@ public partial class ConstructionCanvas : Node2D
         var fill = Theme.SelectionGlow;
         fill.A = 0.16f;
         DrawRect(rect, fill, filled: true);
-        DrawDashedLine(rect.Position, rect.Position + new Vector2(rect.Size.X, 0), Theme.SelectionGlow, Stroke(2), 6, antialiased: false);
-        DrawDashedLine(rect.Position + new Vector2(rect.Size.X, 0), rect.End, Theme.SelectionGlow, Stroke(2), 6, antialiased: false);
-        DrawDashedLine(rect.End, rect.Position + new Vector2(0, rect.Size.Y), Theme.SelectionGlow, Stroke(2), 6, antialiased: false);
-        DrawDashedLine(rect.Position + new Vector2(0, rect.Size.Y), rect.Position, Theme.SelectionGlow, Stroke(2), 6, antialiased: false);
+        DrawDashedRect(rect, Stroke(2));
+    }
+
+    private void DrawDashedRect(Rect2 rect, float width)
+    {
+        var topRight = rect.Position + new Vector2(rect.Size.X, 0);
+        var bottomLeft = rect.Position + new Vector2(0, rect.Size.Y);
+        DrawDashedLine(rect.Position, topRight, Theme.SelectionGlow, width, 6, antialiased: false);
+        DrawDashedLine(topRight, rect.End, Theme.SelectionGlow, width, 6, antialiased: false);
+        DrawDashedLine(rect.End, bottomLeft, Theme.SelectionGlow, width, 6, antialiased: false);
+        DrawDashedLine(bottomLeft, rect.Position, Theme.SelectionGlow, width, 6, antialiased: false);
     }
 
     private void DrawMoveGhosts()
@@ -554,6 +621,7 @@ public partial class ConstructionCanvas : Node2D
         if (eventArgs.PropertyName == nameof(ConstructionViewModel.ActiveTool))
         {
             _gestures?.Cancel();
+            QueueRedraw();
         }
 
         if (eventArgs.PropertyName == nameof(ConstructionViewModel.IsMoveOnly) && _viewModel?.IsMoveOnly != true)

@@ -66,9 +66,10 @@ then the app follows the reference.
 - **Build zoom scales lines too (#400).** The reference keeps a block's
   lines at 2px and its eyes node-sized at any zoom. Instead zoom scales the
   whole picture, lines included, the build area's corner marks too; kept
-  after the owner's S25 check. Two things keep their screen size: text
-  labels, and the build grid's hairlines (1 px at any zoom, so the grid
-  stays faint). It may still change later: `ConstructionCanvas.Stroke` is
+  after the owner's S25 check. Three things keep their screen size: text
+  labels, the build grid's hairlines (1 px at any zoom, so the grid stays
+  faint), and the Select frame with its handles, which are controls to
+  grab rather than part of the picture (#366). It may still change later: `ConstructionCanvas.Stroke` is
   the one place to keep the picture's lines at screen width.
 - **The Build grid marks the build area (#400).** The reference's grid floor
   fills the canvas at 24 to 32px, fades toward the edges, and has fixed HUD
