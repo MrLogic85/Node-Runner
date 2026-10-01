@@ -19,10 +19,6 @@ namespace NodeRunner.Ui.Widgets;
 public partial class BuildCanvas : Node2D
 {
     private const double _moveGhostSeconds = 1.8;
-    private static readonly Vector2 _rigidLabelOffset = new(12, -12);
-    private const string _rigidLabelText = "Rigid: no joints";
-    private const float _rigidLabelPadding = UiSize.Space.S1;
-    private const int _rigidLabelFontSize = 18;
     private const int _mousePointer = -1;
 
     private BuildViewModel? _viewModel;
@@ -723,18 +719,6 @@ public partial class BuildCanvas : Node2D
         DrawLine(a.Lerp(center, 0.35f), b.Lerp(center, 0.35f), Theme.SelectionGlow, Stroke(2), antialiased: false);
         DrawLine(b.Lerp(center, 0.35f), c.Lerp(center, 0.35f), Theme.SelectionGlow, Stroke(2), antialiased: false);
         DrawLine(c.Lerp(center, 0.35f), a.Lerp(center, 0.35f), Theme.SelectionGlow, Stroke(2), antialiased: false);
-
-        // The label is text, not part of the picture: it keeps its size at any zoom.
-        var view = _gestures!.View;
-        var labelPosition = (center * (float)view.Zoom) + ToGodot(view.Offset) + _rigidLabelOffset;
-        DrawSetTransform(Vector2.Zero);
-        var font = ThemeDB.FallbackFont;
-        var textSize = font.GetStringSize(_rigidLabelText, HorizontalAlignment.Left, -1, _rigidLabelFontSize);
-        var textTop = labelPosition - new Vector2(0, font.GetAscent(_rigidLabelFontSize));
-        var box = new Rect2(textTop, textSize).Grow(_rigidLabelPadding);
-        DrawRect(box, Theme.ArenaBackground.WithAlpha(0.86f));
-        DrawString(font, labelPosition, _rigidLabelText, HorizontalAlignment.Left, -1, _rigidLabelFontSize, Theme.GroundEdge);
-        DrawThroughView();
     }
 
     private void DrawMotorRelation(CreatureDef creature, NodeConnectionDef connection)
