@@ -3,6 +3,12 @@ namespace NodeRunner.Domain.Tests;
 public sealed class AccelerometerTests
 {
     [Fact]
+    public void ReadingNames_AreAlongThenAcross()
+    {
+        Accelerometer.ReadingNames.ShouldBe(["along", "across"]);
+    }
+
+    [Fact]
     public void Rest_OnLevelBeam_ReadsOneGUp()
     {
         var frameForce = Accelerometer.ToSensorFrame(new Vector2D(0, -1), beamRotation: 0, upSign: -1);

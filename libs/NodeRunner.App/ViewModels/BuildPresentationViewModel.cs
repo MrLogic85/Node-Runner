@@ -11,7 +11,6 @@ namespace NodeRunner.App.ViewModels;
 /// </summary>
 public sealed class BuildPresentationViewModel
 {
-    private const int _accelerometerSensorValueCount = 2;
     private const int _motorRelationSensorValueCount = 2;
 
     private readonly BuildViewModel _build;
@@ -184,7 +183,7 @@ public sealed class BuildPresentationViewModel
         {
             var inputSummary = errors.Count > 0
                 ? BuildInvalidDraftInputSummary(_build.Sensors.Count)
-                : BuildInputSummary(_build.Sensors.Count, motorRelationCount: 0);
+                : BuildInputSummary(_build.Sensors, motorRelationCount: 0);
             var motorRelationSummary = errors.Count > 0
                 ? "Fix anatomy to count motor relations."
                 : "Two beams at one node create a motor relation; closed triangles do not twist.";
@@ -193,17 +192,17 @@ public sealed class BuildPresentationViewModel
                 motorRelationSummary,
                 CanStartTraining: false,
                 ReadinessText: ShortReadiness(errors),
-                InputCount: _build.Sensors.Count * _accelerometerSensorValueCount,
+                InputCount: SensorInputCount(_build.Sensors),
                 OutputCount: 0);
         }
 
         var motorRelationCount = MotorTopology.BuildNodeConnections(creature)
             .Count(connection => connection.IsMotorized);
-        var inputCount = BuildInputCount(creature.Sensors.Count, motorRelationCount);
+        var inputCount = SensorInputCount(creature.Sensors) + (motorRelationCount * _motorRelationSensorValueCount);
         if (!CreatureReadiness.CanTrain(creature))
         {
             return new BuildPanelPresentation(
-                BuildInputSummary(creature.Sensors.Count, motorRelationCount),
+                BuildInputSummary(creature.Sensors, motorRelationCount),
                 "0 motor relations can twist",
                 CanStartTraining: false,
                 ReadinessText: "Add a two-beam node",
@@ -212,7 +211,7 @@ public sealed class BuildPresentationViewModel
         }
 
         return new BuildPanelPresentation(
-            BuildInputSummary(creature.Sensors.Count, motorRelationCount),
+            BuildInputSummary(creature.Sensors, motorRelationCount),
             motorRelationCount == 1 ? "1 motor relation can twist" : $"{motorRelationCount} motor relations can twist",
             CanStartTraining: true,
             ReadinessText: "Ready to train",
@@ -266,22 +265,25 @@ public sealed class BuildPresentationViewModel
 
     private BeamDef BeamById(int beamId) => _build.Beams[_build.BeamIndexOf(beamId)];
 
-    private static string BuildInputSummary(int accelerometerCount, int motorRelationCount)
+    private static string BuildInputSummary(IReadOnlyList<SensorDef> sensors, int motorRelationCount)
     {
-        var inputCount = BuildInputCount(accelerometerCount, motorRelationCount);
-        var accelerometerInputCount = accelerometerCount * _accelerometerSensorValueCount;
+        var sensorInputCount = SensorInputCount(sensors);
         var motorInputCount = motorRelationCount * _motorRelationSensorValueCount;
-        var accelerometerWord = accelerometerCount == 1 ? "accelerometer" : "accelerometers";
+        var inputCount = sensorInputCount + motorInputCount;
+        var sensorWord = sensors.Count == 1 ? "sensor" : "sensors";
         var relationWord = motorRelationCount == 1 ? "motor relation" : "motor relations";
-        var accelerometerInputWord = accelerometerInputCount == 1 ? "input" : "inputs";
+        var sensorInputWord = sensorInputCount == 1 ? "input" : "inputs";
         var motorInputWord = motorInputCount == 1 ? "input" : "inputs";
-        return $"{accelerometerCount} {accelerometerWord}: {accelerometerInputCount} {accelerometerInputWord}; {motorRelationCount} {relationWord}: {motorInputCount} {motorInputWord}; {inputCount} inputs total";
+        return $"{sensors.Count} {sensorWord}: {sensorInputCount} {sensorInputWord}; {motorRelationCount} {relationWord}: {motorInputCount} {motorInputWord}; {inputCount} inputs total";
     }
 
-    private static int BuildInputCount(int accelerometerCount, int motorRelationCount)
-    {
-        return (accelerometerCount * _accelerometerSensorValueCount) + (motorRelationCount * _motorRelationSensorValueCount);
-    }
+    private static int SensorInputCount(IReadOnlyList<SensorDef> sensors) =>
+        sensors.Sum(sensor => sensor.Kind switch
+        {
+            SensorKind.Accelerometer => Accelerometer.ReadingNames.Count,
+            SensorKind.LineOfSight => LineOfSight.RayCount,
+            _ => throw new InvalidOperationException($"Unknown sensor kind {sensor.Kind}."),
+        });
 
     private static string BuildInvalidDraftInputSummary(int sensorCount)
     {

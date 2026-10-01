@@ -80,9 +80,10 @@ a node's own disc always hits.
   joint under a handle still adds or removes that joint. A locked
   creation keeps all three handles: like a move, scaling changes only
   beam lengths, never which parts there are.
-- **Sensors:** an Accelerometer sits on a beam (#127). Build cannot place
-  one yet: dragging sensors from the tray onto beams is #376, so until then
-  only the seeded Worm and the examples have one (from data). Deleting a
+- **Sensors:** an Accelerometer (#127) and an LOS sensor (#575) sit on a
+  beam. Build cannot place one yet: dragging sensors from the tray onto beams
+  is #376, so until then only the seeded Worm and the examples have them
+  (from data). Deleting a
   beam deletes its sensors; splitting a beam with the Joint tool moves them,
   with their ids, to the longer half.
 - There is no Delete tool: the part settings and selection panels delete the
@@ -131,7 +132,7 @@ a node's own disc always hits.
   Build if the creature cannot train yet. The
   Training scene builds its `Creature` node from the saved `CreatureDef`
   (`Creature.BuildFrom`), which generically derives the model's
-  input/output counts (accelerometers' readings plus `MotorTopology`'s derived
+  input/output counts (the sensor parts' readings plus `MotorTopology`'s derived
   motor-relation sensor values, and one output per motor relation) for
   whatever anatomy it is given — no special-casing between the hardcoded
   worm and an edited creature.
@@ -146,7 +147,7 @@ owns the groups, their order, the help lines and each row's state; the screen
 only maps parts to glyphs. Every implemented part is unlimited until #525, so
 rows show no count. A part not yet implemented is a dashed row with a lock,
 and the tab's name row says "Coming later" once. Available rows (today the
-Accelerometer) do nothing on tap: placing parts from the tray is #376. Beam,
+Accelerometer and the LOS sensor) do nothing on tap: placing parts from the tray is #376. Beam,
 Joint and Select show a short status line with the tool's glyph above the
 readiness line; Move shows none. One selected part shows its settings and
 several show the selection panel instead.

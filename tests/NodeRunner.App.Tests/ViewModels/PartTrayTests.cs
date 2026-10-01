@@ -43,16 +43,12 @@ public sealed class PartTrayTests
     }
 
     [Fact]
-    public void SensorsTab_HasAccelerometerAvailableAndLosComingLater()
+    public void SensorsTab_HasBothSensorsAvailable()
     {
         var sensors = PartTray.Groups()[2].Rows;
 
-        sensors[0].Part.ShouldBe(BuildPart.Accelerometer);
-        sensors[0].State.ShouldBe(PartTrayRowState.Available);
-        sensors[0].LockedReason.ShouldBeEmpty();
-        sensors[1].Part.ShouldBe(BuildPart.LosSensor);
-        sensors[1].State.ShouldBe(PartTrayRowState.ComingLater);
-        sensors[1].LockedReason.ShouldBe("Coming later");
+        sensors.Select(row => row.Part).ShouldBe([BuildPart.Accelerometer, BuildPart.LosSensor]);
+        sensors.ShouldAllBe(row => row.State == PartTrayRowState.Available && row.LockedReason == string.Empty);
     }
 
     [Fact]
@@ -60,14 +56,14 @@ public sealed class PartTrayTests
     {
         var rows = PartTray.Groups().SelectMany(group => group.Rows).ToList();
 
-        rows.Where(row => row.Part != BuildPart.Accelerometer).ShouldAllBe(row =>
+        rows.Where(row => row.Part is not (BuildPart.Accelerometer or BuildPart.LosSensor)).ShouldAllBe(row =>
             row.State == PartTrayRowState.ComingLater && !row.IsAvailable && row.LockedReason == "Coming later");
     }
 
     [Fact]
     public void LockedNote_ShowsOnTabsWithALockedRow()
     {
-        PartTray.Groups().Select(group => group.LockedNote).ShouldBe(["Coming later", "Coming later", "Coming later", "Coming later"]);
+        PartTray.Groups().Select(group => group.LockedNote).ShouldBe(["Coming later", "Coming later", "", "Coming later"]);
     }
 
     [Theory]

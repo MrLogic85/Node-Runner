@@ -4,9 +4,10 @@ namespace NodeRunner.Creature;
 
 /// <summary>
 /// First concrete instance of the node/beam/sensor model: a 5-node chain
-/// (mirrors the shape of the old 0.1.0 worm) with an accelerometer on the head
-/// beam. Nodes 1-3 each sit between two beams, giving 3 motorized
-/// connections; the end nodes (0 and 4) have a single beam and stay passive.
+/// (mirrors the shape of the old 0.1.0 worm) with an accelerometer and an LOS
+/// sensor on the head beam. Nodes 1-3 each sit between two beams, giving 3
+/// motorized connections; the end nodes (0 and 4) have a single beam and stay
+/// passive.
 /// </summary>
 public static class HardcodedCreatureFactory
 {
@@ -36,8 +37,9 @@ public static class HardcodedCreatureFactory
         var sensors = new[]
         {
             new SensorDef(10, 6, SensorKind.Accelerometer),
+            new SensorDef(11, 6, SensorKind.LineOfSight),
         };
 
-        return new CreatureDef(nodes, beams, sensors, nextPartId: 11);
+        return new CreatureDef(nodes, beams, sensors, nextPartId: 12);
     }
 }

@@ -198,6 +198,12 @@ public static class Accelerometer   // proof mass on a damped spring, pure math
     public static ProofMass Step(ProofMass state, Vector2D specificForceG, double dt);
     public static Vector2D Reading(ProofMass state);
 }
+
+public static class LineOfSight     // the LOS sensor's three fixed rays, pure math
+{
+    public static Vector2D LocalRayTarget(int ray, double builtRotation);
+    public static double Reading(double? hitDistance);
+}
 ```
 
 Note: `Vector2D` in `NodeRunner.Domain` is our own `readonly record struct`,
@@ -212,8 +218,9 @@ model.
 
 At 60 Hz (`_physics_process`), for the creature currently under evaluation:
 
-1. **Sense.** Each accelerometer steps its proof mass and reads 2 values
-   (along and across its beam); each motor relation reads 2 (relative angle, relative angular velocity) →
+1. **Sense.** Each sensor part reads its values in part order (an
+   accelerometer steps its proof mass and reads 2, along and across its
+   beam; an LOS sensor reads its 3 rays); each motor relation reads 2 (relative angle, relative angular velocity) →
    `double[]`, in the fixed order documented in `docs/CREATURE_MODEL.md`.
 2. **Think.** `Brain.Forward(input, output, scratchA, scratchB)` writes a
    target angular velocity in `[-1, 1]` per motor relation, without

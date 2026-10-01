@@ -13,7 +13,7 @@ than defaulting to what is easiest to implement.
 ## Parts: Node, Beam, Sensor, Motor relation
 
 A creature is built from two structural parts (Node, Beam), sensor parts
-that sit on beams (today the Accelerometer), and one derived control concept
+that sit on beams (the Accelerometer and the LOS sensor), and one derived control concept
 (Motor relation). Keeping "what senses" (sensors) and "what thinks" (the
 neural model) conceptually separate is the most important rule in this
 document — **a sensor is not the brain.**
@@ -81,12 +81,13 @@ CreatureDef  ──build──▶  physical body  ──sensors──▶  model 
   with no position setting.
 - **One of each kind per beam.** `CreatureDef` rejects a second sensor of
   the same kind on one beam; the App refuses it first with a reason
-  ("One accelerometer per beam", `CreatureBuilder.AddSensor`).
+  ("One accelerometer per beam", "One LOS sensor per beam",
+  `CreatureBuilder.AddSensor`).
 - **Frame fixed as built:** the side of the beam that faces up in the built
   pose is the sensor's "up", and "along" points right as built. The frame
   then turns with the beam and never flips during a run
   (`Accelerometer.UpSign`).
-- Kinds today: **Accelerometer** (#127). The LOS sensor (#575) is next.
+- Kinds today: **Accelerometer** (#127) and **LOS sensor** (#575).
 
 #### Accelerometer
 
@@ -116,6 +117,24 @@ CreatureDef  ──build──▶  physical body  ──sensors──▶  model 
   the brain reads.
 - **There is no speed or elevation sensor:** the brain learns movement from
   acceleration, joint readings and its own outputs.
+
+#### LOS sensor
+
+- **Beginner:** Three rays that tell the brain how far away the ground is:
+  straight down, straight ahead, and ahead-and-down.
+- **Implementation:** `project/src/creature/LosSensor.cs` adds three
+  `RayCast2D` children at the beam's midpoint. They are aimed **as built**:
+  when the creature is built they point down, forward (+x) and forward-down
+  in the world, and after that they turn with the beam
+  (`LineOfSight.LocalRayTarget` in `libs/NodeRunner.Domain/LineOfSight.cs`).
+  They see the ground only (collision layer 1), `LineOfSight.RayLength`
+  (220) long.
+- **Reading:** three brain inputs, down, forward and forward-down: the hit
+  distance over the ray length, so `1` when nothing is in range and `0` at
+  contact (`LineOfSight.Reading`). A level beam reads what a level Core did
+  before #127.
+- **Fixed in 0.12:** no settings. Ray count, range, rotation and their power
+  draw come with LOS settings in 0.14 (#578).
 
 ### Motor relation
 
@@ -161,11 +180,13 @@ shapes (e.g. a bare quadrilateral) with their genuine remaining freedom.
 
 ## Sensor–model contract
 
-- **Input count** = `(accelerometer count × 2) + (motor relation count × 2)`.
+- **Input count** = `(accelerometer count × 2) + (LOS sensor count × 3) +
+  (motor relation count × 2)`.
 - **Output count** = motor relation count.
-- **Order matters and is fixed at build time:** every accelerometer (in
-  `CreatureDef.Sensors` order) contributes its 2 values (along, across)
-  first, then every motor relation (in the
+- **Order matters and is fixed at build time:** every sensor, in
+  `CreatureDef.Sensors` (part) order, contributes its values first (an
+  Accelerometer: along, across; an LOS sensor: down, forward,
+  forward-down), then every motor relation (in the
   order `MotorTopology` produced it) contributes its 2 values. Output slot
   `i` always drives motor relation `i`. Reordering either side silently
   invalidates a trained brain. See the comment above
@@ -204,16 +225,17 @@ shapes (e.g. a bare quadrilateral) with their genuine remaining freedom.
    ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐
    │      │ │      │ │      │ │      │
   (N0)───(N1)───(N2)───(N3)───(N4)
-     accel
+   accel + LOS
 ```
 
 - **5 nodes** (`N0`-`N4`) spaced 56 units apart, radius 18.
 - **4 beams**, one per adjacent pair, referencing node ids.
-- **1 accelerometer**, on the head beam (`N0`–`N1`).
+- **1 accelerometer and 1 LOS sensor**, both on the head beam (`N0`–`N1`).
 - **Node degrees:** `N0` and `N4` have 1 beam each (passive ends); `N1`,
   `N2`, `N3` each have 2 beams, giving 3 motor relations total — no closed
   loops, so no triangle exclusions apply here.
-- **Sensors:** `1 accelerometer × 2` + `3 motor relations × 2` = 8.
+- **Sensors:** `1 accelerometer × 2` + `1 LOS sensor × 3` +
+  `3 motor relations × 2` = 11.
 - **Brain outputs:** 3, one per motor relation.
 
 ## What this model does not cover yet
@@ -227,7 +249,7 @@ without a fresh design conversation:
   progression system, rather than unlimited from the start. Today every
   part is unlimited (#557); achievements (#525) own the first unlocks.
 - Sensors on blocks, and sensor types beyond the Accelerometer and the LOS
-  sensor (#575).
+  sensor.
 - Exposing `MaxTorque`/`MaxAngularVelocity` as player- or
   upgrade-configurable settings, rather than fixed constants.
 - Whether `relativeAngularVelocity` should always be included as a sensor,

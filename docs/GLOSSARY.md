@@ -53,8 +53,12 @@ Long-form descriptions and the sensor/model contract live in
   design's Joint tool adds one). Not the retired 0.1.0 Joint/Bone/Muscle
   prototype part, and not a Godot physics joint. See:
   `docs/BUILD_MODE.md`.
+- **LOS sensor** — A sensor on a beam: three fixed rays (down, forward,
+  forward-down as built) that read how far the ground is, 1 with nothing in
+  range and 0 at contact. Gives three model inputs. See:
+  `docs/CREATURE_MODEL.md`.
 - **Model input** — One slot in the neural network's input vector, populated
-  one-to-one from a sensor value (an accelerometer's or a motor relation's). See:
+  one-to-one from a sensor value (a sensor part's or a motor relation's). See:
   `docs/CREATURE_MODEL.md`.
 - **Model output** — One slot in the neural network's output vector,
   consumed one-to-one as a motor relation's target angular velocity. See:

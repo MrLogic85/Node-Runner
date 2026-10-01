@@ -8,15 +8,8 @@ namespace NodeRunner.Creature;
 /// (the body origin), turns it into specific force (at rest 1 g up), steps the Domain <see cref="Accelerometer"/> proof mass and
 /// writes its two readings. <see cref="CurrentProofMass"/> is what the brain reads.
 /// </summary>
-public sealed class AccelerometerSensor
+public sealed class AccelerometerSensor : IBeamSensor
 {
-    public const int ValueCount = 2;
-
-    public static readonly string[] ValueNames =
-    {
-        "along", "across",
-    };
-
     private readonly RigidBody2D _beamBody;
     private readonly int _upSign;
     private readonly double _gravity;
@@ -35,6 +28,10 @@ public sealed class AccelerometerSensor
     public ProofMass CurrentProofMass { get; private set; }
 
     public int UpSign => _upSign;
+
+    public string GroupKind => "Accelerometer";
+
+    public IReadOnlyList<string> ValueNames => Accelerometer.ReadingNames;
 
     public void Reset()
     {
