@@ -104,39 +104,61 @@ public sealed class BuildPresentationViewModel
 
     public int SelectedPartCount => _build.SelectedPartCount;
 
-    public string SinglePartTitle => _build.SingleSelectedBeamId is { } beamId
+    public string SinglePartTitle => _build.SingleSelectedSensorId is { } sensorId
+        ? BuildViewModel.SensorName(SensorById(sensorId).Kind)
+        : _build.SingleSelectedBeamId is { } beamId
         ? $"Beam {_build.BeamIndexOf(beamId) + 1}"
         : _build.SingleSelectedNodeId is { } nodeId
         ? $"Node {_build.NodeIndexOf(nodeId) + 1}"
         : "Part";
 
-    public string SinglePartBody => _build.SingleSelectedBeamId is not null
+    public string SinglePartBody => _build.SingleSelectedSensorId is { } sensorId
+        ? SensorById(sensorId).Kind switch
+        {
+            SensorKind.Accelerometer => "Feels how its beam speeds up, slows down and tilts.",
+            _ => "Three rays see how far the ground is.",
+        }
+        : _build.SingleSelectedBeamId is not null
         ? _build.IsMoveOnly
             ? "Select and move an endpoint Node to reposition it. The Beam follows its Nodes."
             : "Move either endpoint Node to change the Beam length."
         : "Move the Node to change its position and connected Beam lengths.";
 
-    public string SinglePartPrimaryLabel => _build.SingleSelectedBeamId is not null
+    public string SinglePartPrimaryLabel => _build.SingleSelectedSensorId is not null
+        ? "On"
+        : _build.SingleSelectedBeamId is not null
         ? "Length"
         : "Position";
 
-    public string SinglePartPrimaryValue => _build.SingleSelectedBeamId is { } beamId
+    public string SinglePartPrimaryValue => _build.SingleSelectedSensorId is { } sensorId
+        ? $"Beam {_build.BeamIndexOf(SensorById(sensorId).BeamId) + 1}"
+        : _build.SingleSelectedBeamId is { } beamId
         ? $"{BeamLength(beamId):0.0} units"
         : _build.SingleSelectedNodeId is { } nodeId
             ? $"{NodeById(nodeId).Position.X:0}, {NodeById(nodeId).Position.Y:0}"
             : "—";
 
-    public string SinglePartConnectionsLabel => _build.SingleSelectedBeamId is not null
+    public string SinglePartConnectionsLabel => _build.SingleSelectedSensorId is not null
+        ? "Feels"
+        : _build.SingleSelectedBeamId is not null
         ? "Between"
         : "Connections";
 
-    public string SinglePartConnectionsValue => _build.SingleSelectedBeamId is { } beamId
+    public string SinglePartConnectionsValue => _build.SingleSelectedSensorId is { } sensorId
+        ? SensorById(sensorId).Kind switch
+        {
+            SensorKind.Accelerometer => "Along and across its beam",
+            _ => "Down, forward and forward-down",
+        }
+        : _build.SingleSelectedBeamId is { } beamId
         ? $"Node {_build.NodeIndexOf(BeamById(beamId).NodeA) + 1} ↔ Node {_build.NodeIndexOf(BeamById(beamId).NodeB) + 1}"
         : _build.SingleSelectedNodeId is { } nodeId
             ? ConnectedBeamText(nodeId)
             : "—";
 
-    public string SinglePartFacts => _build.SingleSelectedBeamId is not null
+    public string SinglePartFacts => _build.SingleSelectedSensorId is not null
+        ? "Sits at the middle of its beam"
+        : _build.SingleSelectedBeamId is not null
         ? "Rigid connection"
         : _build.SingleSelectedNodeId is { } nodeId
             ? $"Radius {NodeById(nodeId).Radius:0.0} · {_build.Beams.Count(beam => beam.NodeA == nodeId || beam.NodeB == nodeId)} attached Beam(s)"
@@ -273,6 +295,8 @@ public sealed class BuildPresentationViewModel
     private NodeDef NodeById(int nodeId) => _build.Nodes[_build.NodeIndexOf(nodeId)];
 
     private BeamDef BeamById(int beamId) => _build.Beams[_build.BeamIndexOf(beamId)];
+
+    private SensorDef SensorById(int sensorId) => _build.Sensors.First(sensor => sensor.Id == sensorId);
 
     private static string BuildInputSummary(IReadOnlyList<SensorDef> sensors, int motorRelationCount)
     {

@@ -28,6 +28,60 @@ public sealed class AccelerometerTests
         reading.Y.ShouldBe(Math.Tanh(Math.Sqrt(0.5)), 1e-12);
     }
 
+    [Fact]
+    public void SpecificForce_AtRest_IsOneGUp_AndFallingFreely_IsNothing()
+    {
+        Accelerometer.SpecificForce(new Vector2D(0, 0), 980).ShouldBe(new Vector2D(0, -1));
+        Accelerometer.SpecificForce(new Vector2D(490, 980), 980).ShouldBe(new Vector2D(0.5, 0));
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-1)]
+    [InlineData(double.NaN)]
+    public void SpecificForce_WithoutGravity_Throws(double gravity)
+    {
+        Should.Throw<ArgumentOutOfRangeException>(() => Accelerometer.SpecificForce(new Vector2D(0, 0), gravity));
+    }
+
+    [Fact]
+    public void RestWeightOffset_OnLevelBeam_SitsHalfItsTravelDown()
+    {
+        var offset = Accelerometer.RestWeightOffset(beamRotation: 0, upSign: -1);
+
+        offset.X.ShouldBe(0, 1e-12);
+        offset.Y.ShouldBe(Accelerometer.WeightTravelPerG, 1e-12);
+    }
+
+    [Fact]
+    public void RestWeightOffset_OnTiltedBeam_SlidesTowardsTheLowerEnd()
+    {
+        // Rising to the right: along points up the slope, so the weight moves back along it.
+        var offset = Accelerometer.RestWeightOffset(beamRotation: -Math.PI / 4, upSign: -1);
+
+        offset.X.ShouldBe(-Accelerometer.WeightTravelPerG * Math.Sqrt(0.5), 1e-12);
+        offset.Y.ShouldBe(Accelerometer.WeightTravelPerG * Math.Sqrt(0.5), 1e-12);
+    }
+
+    [Fact]
+    public void RestWeightOffset_IsTheSameForEitherBuiltDirection()
+    {
+        // A beam drawn right to left has its top on the other local side, so the glyph is turned and reads the same.
+        var leftToRight = Accelerometer.RestWeightOffset(beamRotation: 0, upSign: -1);
+        var rightToLeft = Accelerometer.RestWeightOffset(beamRotation: Math.PI, upSign: 1);
+
+        rightToLeft.X.ShouldBe(leftToRight.X, 1e-12);
+        rightToLeft.Y.ShouldBe(leftToRight.Y, 1e-12);
+    }
+
+    [Fact]
+    public void WeightOffset_ClampsToTheFrame()
+    {
+        var hard = new ProofMass(new Vector2D(10 * Accelerometer.ReferenceDisplacement, 10 * Accelerometer.ReferenceDisplacement), new Vector2D(0, 0));
+
+        Accelerometer.WeightOffset(hard).ShouldBe(new Vector2D(1, -1));
+    }
+
     [Theory]
     [InlineData(1)]
     [InlineData(2)]

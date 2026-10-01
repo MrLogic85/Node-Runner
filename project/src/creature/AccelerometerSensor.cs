@@ -45,7 +45,7 @@ public sealed class AccelerometerSensor : IBeamSensor
         var acceleration = (velocity - _previousMidpointVelocity) / (float)dt;
         _previousMidpointVelocity = velocity;
 
-        var worldSpecificForce = new Vector2D(acceleration.X / _gravity, (acceleration.Y - _gravity) / _gravity);
+        var worldSpecificForce = Accelerometer.SpecificForce(new Vector2D(acceleration.X, acceleration.Y), _gravity);
         var sensorForce = Accelerometer.ToSensorFrame(worldSpecificForce, _beamBody.Rotation, _upSign);
         CurrentProofMass = Accelerometer.Step(CurrentProofMass, sensorForce, dt);
         var reading = Accelerometer.Reading(CurrentProofMass);

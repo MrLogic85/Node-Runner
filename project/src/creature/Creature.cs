@@ -42,6 +42,7 @@ public partial class Creature : Node2D
     private float[] _nodeColliderRadii = [];
     private NodeVisual[] _nodeVisuals = [];
     private BeamVisual[] _beamVisuals = [];
+    private SensorVisual[] _sensorVisuals = [];
     private IBeamSensor[] _sensors = [];
     private AccelerometerSensor[] _accelerometers = [];
     private MotorRelation[] _motorRelations = [];
@@ -264,6 +265,18 @@ public partial class Creature : Node2D
             }
         }
 
+        for (var sensorIndex = 0; sensorIndex < _sensorVisuals.Length; sensorIndex++)
+        {
+            var beamIndex = Definition!.BeamIndexOf(Definition.Sensors[sensorIndex].BeamId);
+            var local = _beamBodies[beamIndex].ToLocal(globalPosition);
+            var halfLength = _beamHalfLengths[beamIndex];
+            if (SensorPicture.Contains(new Vector2D(local.X, local.Y), new Vector2D(-halfLength, 0), new Vector2D(halfLength, 0)))
+            {
+                selection = new CreatureElementSelection(CreatureElementKind.Sensor, Definition.Sensors[sensorIndex].Id);
+                return true;
+            }
+        }
+
         var tolerance = GetLineHitTolerance();
         for (var beamIndex = 0; beamIndex < _beamBodies.Length; beamIndex++)
         {
@@ -294,6 +307,11 @@ public partial class Creature : Node2D
             visual.IsSelected = false;
         }
 
+        foreach (var visual in _sensorVisuals)
+        {
+            visual.IsSelected = false;
+        }
+
         if (selection is null)
         {
             return;
@@ -306,6 +324,9 @@ public partial class Creature : Node2D
                 break;
             case CreatureElementKind.Beam:
                 _beamVisuals[Definition!.BeamIndexOf(selection.Id)].IsSelected = true;
+                break;
+            case CreatureElementKind.Sensor:
+                _sensorVisuals[Definition!.Sensors.ToList().FindIndex(sensor => sensor.Id == selection.Id)].IsSelected = true;
                 break;
         }
     }
@@ -479,6 +500,35 @@ public partial class Creature : Node2D
         }
 
         _accelerometers = _sensors.OfType<AccelerometerSensor>().ToArray();
+        CreateSensorVisuals(definition);
+    }
+
+    // Each sensor's picture rides its beam body (#576); node bodies are added later, so joints draw over sensors.
+    private void CreateSensorVisuals(CreatureDef definition)
+    {
+        _sensorVisuals = new SensorVisual[_sensors.Length];
+        for (var i = 0; i < _sensors.Length; i++)
+        {
+            var sensor = definition.Sensors[i];
+            var beamIndex = definition.BeamIndexOf(sensor.BeamId);
+            var beam = definition.Beams[beamIndex];
+            var upSign = Accelerometer.UpSign(
+                definition.Nodes[definition.NodeIndexOf(beam.NodeA)].Position,
+                definition.Nodes[definition.NodeIndexOf(beam.NodeB)].Position);
+            var glyphRotation = upSign == 1 ? Mathf.Pi : 0;
+            var visual = new SensorVisual
+            {
+                Name = $"Sensor{i}Picture",
+                Theme = Theme,
+                Rotation = glyphRotation,
+                Accelerometer = _sensors[i] as AccelerometerSensor,
+                Los = _sensors[i] as LosSensor,
+                LosAim = SensorDrawing.Aim(Enumerable.Range(0, LineOfSight.RayCount)
+                    .Select(ray => ToGodot(LineOfSight.LocalRayTarget(ray, _beamInitialRotations[beamIndex])))).Rotated(-glyphRotation),
+            };
+            _beamBodies[beamIndex].AddChild(visual);
+            _sensorVisuals[i] = visual;
+        }
     }
 
     private AccelerometerSensor CreateAccelerometer(CreatureDef definition, int beamIndex, double gravity)

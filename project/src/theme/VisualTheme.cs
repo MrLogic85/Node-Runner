@@ -25,6 +25,8 @@ public sealed class VisualTheme
         Beam = UiThemes.Color(theme, UiTokens.Color.LineStrong),
         MotorAccent = UiThemes.Color(theme, UiTokens.Color.Accent),
         Danger = UiThemes.Color(theme, UiTokens.Color.Danger),
+        SensorFill = UiThemes.Color(theme, UiTokens.Color.Panel),
+        SensorLine = UiThemes.Color(theme, UiTokens.Color.Accent),
         AreaCorner = UiThemes.Color(theme, UiTokens.Color.Accent),
         BeamWidth = UiSize.Widget.CreatureBeamWidth,
         MotorSignalWidth = UiSize.Stroke.Signal,
@@ -52,6 +54,12 @@ public sealed class VisualTheme
     public Color MotorAccent { get; private init; }
 
     public Color Danger { get; private init; }
+
+    /// <summary>The inside of a sensor's picture on its beam (#576), so the beam does not show through.</summary>
+    public Color SensorFill { get; private init; }
+
+    /// <summary>The lines of a sensor's picture on its beam.</summary>
+    public Color SensorLine { get; private init; }
 
     /// <summary>The corner marks that show where the Build area ends.</summary>
     public Color AreaCorner { get; private init; }

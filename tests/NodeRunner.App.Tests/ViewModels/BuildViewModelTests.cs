@@ -588,6 +588,61 @@ public sealed class BuildViewModelTests
     }
 
     [Fact]
+    public void SelectSensor_ReplacesAnyOtherSelection_AndDeleteRemovesOnlyTheSensor()
+    {
+        var viewModel = new BuildViewModel();
+        viewModel.Load(SensorCreature());
+        viewModel.ReplaceSelection([1]);
+
+        viewModel.SelectSensor(5);
+
+        viewModel.SelectedPartCount.ShouldBe(1);
+        viewModel.SingleSelectedSensorId.ShouldBe(5);
+        viewModel.StatusMessage.ShouldBe("LOS sensor selected.");
+
+        viewModel.DeleteSelectedParts();
+
+        viewModel.Sensors.Select(sensor => sensor.Id).ShouldBe([4]);
+        viewModel.Beams.Count.ShouldBe(2);
+        viewModel.SelectedPartCount.ShouldBe(0);
+    }
+
+    [Fact]
+    public void SelectingAJointOrBeam_DropsTheSelectedSensor()
+    {
+        var viewModel = new BuildViewModel();
+        viewModel.Load(SensorCreature());
+        viewModel.SelectSensor(4);
+
+        viewModel.ToggleSelectedNode(1);
+        viewModel.SingleSelectedSensorId.ShouldBeNull();
+        viewModel.SelectedPartCount.ShouldBe(1);
+
+        viewModel.SelectSensor(4);
+        viewModel.SelectBeam(3);
+        viewModel.SingleSelectedSensorId.ShouldBeNull();
+        viewModel.SelectedPartCount.ShouldBe(1);
+    }
+
+    [Fact]
+    public void TryFindSensorAt_HitsOnlyThePicture()
+    {
+        var viewModel = new BuildViewModel();
+        viewModel.Load(SensorCreature());
+
+        viewModel.TryFindSensorAt(new Vector2D(50, 0), out var accelerometer).ShouldBeTrue();
+        accelerometer.ShouldBe(4);
+        viewModel.TryFindSensorAt(new Vector2D(100, 50), out var los).ShouldBeTrue();
+        los.ShouldBe(5);
+        viewModel.TryFindSensorAt(new Vector2D(50, SensorPicture.Size), out _).ShouldBeFalse();
+    }
+
+    private static CreatureDef SensorCreature() => new(
+        [new NodeDef(1, new Vector2D(0, 0), 18), new NodeDef(2, new Vector2D(100, 0), 18), new NodeDef(6, new Vector2D(100, 100), 18)],
+        [new BeamDef(3, 1, 2), new BeamDef(7, 2, 6)],
+        [new SensorDef(4, 3, SensorKind.Accelerometer), new SensorDef(5, 7, SensorKind.LineOfSight)]);
+
+    [Fact]
     public void DeleteSelectedParts_InMoveOnlyMode_PreservesAnatomy()
     {
         var viewModel = new BuildViewModel();

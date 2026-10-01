@@ -52,6 +52,28 @@ public sealed class BuildPresentationViewModelTests
         presentation.SinglePartFacts.ShouldBe("Rigid connection");
     }
 
+    [Theory]
+    [InlineData(SensorKind.Accelerometer, "Accelerometer", "Feels how its beam speeds up, slows down and tilts.")]
+    [InlineData(SensorKind.LineOfSight, "LOS sensor", "Three rays see how far the ground is.")]
+    public void SelectedSensor_ShowsItsNameBeamAndWhatItFeels(SensorKind kind, string title, string body)
+    {
+        var build = new BuildViewModel();
+        build.Load(new CreatureDef(
+            [new NodeDef(1, new Vector2D(0, 0), 18), new NodeDef(2, new Vector2D(3, 4), 18)],
+            [new BeamDef(101, 1, 2)],
+            [new SensorDef(7, 101, kind)]));
+        build.SelectSensor(7);
+        var presentation = new BuildPresentationViewModel(build);
+
+        presentation.SelectedPartCount.ShouldBe(1);
+        presentation.SinglePartTitle.ShouldBe(title);
+        presentation.SinglePartBody.ShouldBe(body);
+        presentation.SinglePartPrimaryLabel.ShouldBe("On");
+        presentation.SinglePartPrimaryValue.ShouldBe("Beam 1");
+        presentation.SinglePartConnectionsLabel.ShouldBe("Feels");
+        presentation.SinglePartFacts.ShouldBe("Sits at the middle of its beam");
+    }
+
     [Fact]
     public void SelectedNode_ShowsPositionRadiusAndConnectedBeams()
     {

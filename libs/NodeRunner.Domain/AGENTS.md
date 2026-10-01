@@ -18,7 +18,10 @@ Pure C# data types. The vocabulary of the app, no behavior beyond invariants.
     `Accelerometer` is the second: the proof-mass step, reading and sensor
     frame, shared by the sim and the visual (#576) and unit-tested here.
     `LineOfSight` is the third: the LOS sensor's as-built ray targets and
-    reading, shared by the sim and the canvas glyph.
+    reading, shared by the sim and the sensor picture.
+    `SensorPicture` is the fourth: the area a tap on a sensor's picture
+    hits, shared by Build's canvas and gestures and by the
+    creature in Training (#576).
 - **Serialisable via `System.Text.Json` without custom converters.**
 
 ## What lives here
@@ -28,6 +31,7 @@ Pure C# data types. The vocabulary of the app, no behavior beyond invariants.
 - `Accelerometer`, `ProofMass` — the accelerometer's pure math (see the
   exception above)
 - `LineOfSight` — the LOS sensor's pure math (see the exception above)
+- `SensorPicture` — a sensor picture's tap area (see the exception above)
 - `MotorTopology` — derives `NodeConnectionDef`s from a `CreatureDef` (see
   the exception above)
 - `SimulationConfig`, `GaConfig` — hyperparameters

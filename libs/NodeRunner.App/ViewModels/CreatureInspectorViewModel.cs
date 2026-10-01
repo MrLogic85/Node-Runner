@@ -47,7 +47,7 @@ public sealed class CreatureInspectorViewModel : INotifyPropertyChanged, IDispos
         {
             SetContent(
                 "Creature inspector",
-                "Tap a node or beam to inspect it.",
+                "Tap a node, sensor or beam to inspect it.",
                 "The creature is built from nodes and beams; sensors sit on beams.");
             return;
         }
@@ -72,6 +72,13 @@ public sealed class CreatureInspectorViewModel : INotifyPropertyChanged, IDispos
                     $"Beam {beamIndex + 1}",
                     "A rigid, fixed-length connection. It never stretches or compresses.",
                     $"Connects: Node {nodeAIndex + 1} to Node {nodeBIndex + 1}\nLength: {length:0.#}");
+                break;
+            case CreatureElementKind.Sensor:
+                var sensor = _creature.Sensors[_creature.SensorIndexOf(selection.Id)];
+                SetContent(
+                    BuildViewModel.SensorName(sensor.Kind),
+                    "A sensor on a beam. It feels something about its beam at the beam's middle.",
+                    $"On: Beam {_creature.BeamIndexOf(sensor.BeamId) + 1}");
                 break;
         }
     }

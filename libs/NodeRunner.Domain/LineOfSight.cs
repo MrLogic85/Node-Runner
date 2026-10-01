@@ -4,7 +4,7 @@ namespace NodeRunner.Domain;
 /// The LOS sensor's pure math (#575): three fixed rays from its beam's midpoint, aimed down,
 /// forward and forward-down in the world as built and turning with the beam after that. Each ray
 /// reads 1 when nothing is in range and 0 at contact. Stateless and shared by the sim and the
-/// canvas glyph, like <see cref="Accelerometer"/>. See docs/CREATURE_MODEL.md.
+/// sensor picture, like <see cref="Accelerometer"/>. See docs/CREATURE_MODEL.md.
 /// </summary>
 public static class LineOfSight
 {
