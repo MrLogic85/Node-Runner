@@ -6,6 +6,43 @@ namespace NodeRunner.App.Tests.ViewModels;
 
 public sealed class ConstructionViewModelTests
 {
+    private static readonly CanvasRect _area = ConstructionViewModel.BuildArea;
+
+    [Fact]
+    public void PlaceNode_OutsideTheBuildArea_LandsWithItsDiscJustInside()
+    {
+        var viewModel = new ConstructionViewModel();
+
+        viewModel.PlaceNode(new Vector2D(_area.Max.X + 500, _area.Min.Y - 500), 18);
+
+        viewModel.Nodes[0].Position.ShouldBe(new Vector2D(_area.Max.X - 18, _area.Min.Y + 18));
+    }
+
+    [Fact]
+    public void MoveNode_PastTheBuildArea_StopsAtTheEdge()
+    {
+        var viewModel = new ConstructionViewModel();
+        viewModel.PlaceNode(new Vector2D(0, 0), 18);
+
+        viewModel.MoveNode(0, new Vector2D(_area.Min.X - 500, 40));
+
+        viewModel.Nodes[0].Position.ShouldBe(new Vector2D(_area.Min.X + 18, 40));
+    }
+
+    [Fact]
+    public void MoveSelectedNodes_PastTheBuildArea_StopsTheWholeGroupAndKeepsItsShape()
+    {
+        var viewModel = new ConstructionViewModel();
+        viewModel.PlaceNode(new Vector2D(0, 0), 18);
+        viewModel.PlaceNode(new Vector2D(100, 0), 18);
+        viewModel.ReplaceSelection([0, 1]);
+
+        viewModel.MoveSelectedNodes(0, new Vector2D(_area.Max.X, 30));
+
+        viewModel.Nodes[1].Position.ShouldBe(new Vector2D(_area.Max.X - 18, 30));
+        viewModel.Nodes[0].Position.ShouldBe(new Vector2D(_area.Max.X - 118, 30));
+    }
+
     [Fact]
     public void IsActive_DefaultsToFalse()
     {

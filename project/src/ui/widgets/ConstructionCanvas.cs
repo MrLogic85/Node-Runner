@@ -8,9 +8,10 @@ using NodeRunner.Ui.Lib;
 namespace NodeRunner.Ui.Widgets;
 
 /// <summary>
-/// Renders the anatomy placed so far in Build and forwards touch to
+/// Renders the anatomy placed so far in Build through the zoom and pan of
+/// <see cref="ConstructionGestures.View"/>, and forwards every pointer to
 /// <see cref="ConstructionGestures"/>, which decides what the active
-/// <see cref="ConstructionTool"/> does. Binds to
+/// <see cref="ConstructionTool"/> does and when to zoom or pan. Binds to
 /// <see cref="ConstructionViewModel"/> per `project/src/ui/AGENTS.md`; does
 /// not own any anatomy state itself. See docs/CONSTRUCTION_MODE.md.
 /// </summary>
@@ -18,13 +19,17 @@ public partial class ConstructionCanvas : Node2D
 {
     private const double _moveGhostSeconds = 1.8;
     private static readonly Vector2 _rigidLabelOffset = new(12, -12);
-    private static readonly Rect2 _rigidLabelBox = new(-6, -22, 168, 30);
+    private const string _rigidLabelText = "Rigid: no joints";
+    private const float _rigidLabelPadding = UiSize.Space.S1;
     private const int _rigidLabelFontSize = 18;
+    private const int _mousePointer = -1;
 
     private ConstructionViewModel? _viewModel;
     private ConstructionGestures? _gestures;
     private readonly Dictionary<int, Vector2D> _ghostNodePositions = [];
     private int _ghostVersion;
+    private bool _viewFitted;
+    private Control? _slot;
 
     public VisualTheme Theme { get; set; } = VisualTheme.Neon;
 
@@ -35,6 +40,7 @@ public partial class ConstructionCanvas : Node2D
         {
             Unbind();
             _viewModel = value;
+            _viewFitted = false;
             ClearMoveGhosts();
             if (_viewModel is not null)
             {
@@ -42,6 +48,7 @@ public partial class ConstructionCanvas : Node2D
                 _viewModel.PropertyChanged += OnViewModelPropertyChanged;
                 _gestures = new ConstructionGestures(_viewModel);
                 _gestures.Changed += OnGesturesChanged;
+                _gestures.View.Changed += OnGesturesChanged;
                 _gestures.NodeDragStarting += OnNodeDragStarting;
             }
 
@@ -49,7 +56,25 @@ public partial class ConstructionCanvas : Node2D
         }
     }
 
-    public override void _ExitTree() => Unbind();
+    public override void _EnterTree()
+    {
+        _slot = GetParent() as Control;
+        if (_slot is not null)
+        {
+            _slot.Resized += QueueRedraw;
+        }
+    }
+
+    public override void _ExitTree()
+    {
+        if (_slot is not null)
+        {
+            _slot.Resized -= QueueRedraw;
+            _slot = null;
+        }
+
+        Unbind();
+    }
 
     private void Unbind()
     {
@@ -62,6 +87,7 @@ public partial class ConstructionCanvas : Node2D
         if (_gestures is not null)
         {
             _gestures.Changed -= OnGesturesChanged;
+            _gestures.View.Changed -= OnGesturesChanged;
             _gestures.NodeDragStarting -= OnNodeDragStarting;
             _gestures = null;
         }
@@ -74,30 +100,64 @@ public partial class ConstructionCanvas : Node2D
             return;
         }
 
+        switch (inputEvent)
+        {
+            case InputEventScreenTouch { Pressed: true } touch:
+                _gestures.Press(ToView(touch.Position), touch.Index);
+                GetViewport().SetInputAsHandled();
+                break;
+            case InputEventScreenTouch touch:
+                if (touch.Canceled)
+                {
+                    _gestures.Cancel();
+                }
+
+                _gestures.Release(ToView(touch.Position), touch.Index);
+                ScheduleMoveGhostClear();
+                break;
+            case InputEventScreenDrag drag:
+                _gestures.Drag(ToView(drag.Position), drag.Index);
+                GetViewport().SetInputAsHandled();
+                break;
+            case InputEventMouse mouse when mouse.Device == InputEvent.DeviceIdEmulation:
+                // Godot's mouse copy of a touch; the touch itself arrives as ScreenTouch/ScreenDrag.
+                break;
+            default:
+                HandleMouse(inputEvent);
+                break;
+        }
+    }
+
+    private void HandleMouse(InputEvent inputEvent)
+    {
         if (PointerInput.TryGetPressPosition(inputEvent, out var pressPosition))
         {
-            _gestures.Press(ToDomain(ToCanvasLocal(pressPosition)));
+            _gestures!.Press(ToView(pressPosition), _mousePointer);
             GetViewport().SetInputAsHandled();
         }
         else if (PointerInput.TryGetDragPosition(inputEvent, out var dragPosition))
         {
-            _gestures.Drag(ToDomain(ToCanvasLocal(dragPosition)));
+            _gestures!.Drag(ToView(dragPosition), _mousePointer);
             GetViewport().SetInputAsHandled();
         }
         else if (PointerInput.TryGetReleasePosition(inputEvent, out var releasePosition))
         {
-            _gestures.Release(ToDomain(ToCanvasLocal(releasePosition)));
+            _gestures!.Release(ToView(releasePosition), _mousePointer);
             ScheduleMoveGhostClear();
         }
     }
 
     public override void _Draw()
     {
-        if (_viewModel is null)
+        if (_viewModel is null || _gestures is null)
         {
             return;
         }
 
+        UpdateView();
+        DrawThroughView();
+        DrawBuildGrid();
+        DrawAreaCorners();
         DrawMoveGhosts();
         DrawSelectionBox();
         DrawBeamPreview();
@@ -108,9 +168,9 @@ public partial class ConstructionCanvas : Node2D
             var end = ToGodot(_viewModel.Nodes[beam.NodeB].Position);
             if (_viewModel.SingleSelectedBeamIndex is { } selectedBeamIndex && _viewModel.Beams[selectedBeamIndex] == beam)
             {
-                DrawLine(start, end, Theme.SelectionGlow, Theme.BeamWidth * 2.2f, antialiased: false);
+                DrawLine(start, end, Theme.SelectionGlow, Stroke(Theme.BeamWidth * 2.2f), antialiased: false);
             }
-            DrawLine(start, end, Theme.Beam, Theme.BeamWidth, antialiased: false);
+            DrawLine(start, end, Theme.Beam, Stroke(Theme.BeamWidth), antialiased: false);
         }
 
         DrawTopologyFeedback();
@@ -154,7 +214,7 @@ public partial class ConstructionCanvas : Node2D
         }
 
         var to = _gestures.BeamTargetNode is { } target ? _viewModel.Nodes[target].Position : end;
-        DrawDashedLine(ToGodot(_viewModel.Nodes[start].Position), ToGodot(to), Theme.SelectionGlow, Theme.BeamWidth, 8, antialiased: false);
+        DrawDashedLine(ToGodot(_viewModel.Nodes[start].Position), ToGodot(to), Theme.SelectionGlow, Stroke(Theme.BeamWidth), 8, antialiased: false);
     }
 
     private void DrawBeamEndRings()
@@ -169,7 +229,7 @@ public partial class ConstructionCanvas : Node2D
             if (nodeIndex is { } index)
             {
                 var node = _viewModel.Nodes[index];
-                DrawArc(ToGodot(node.Position), (float)node.Radius * 1.65f, 0, Mathf.Tau, 32, Theme.SelectionGlow, Theme.MotorSignalWidth, antialiased: false);
+                DrawArc(ToGodot(node.Position), (float)node.Radius * 1.65f, 0, Mathf.Tau, 32, Theme.SelectionGlow, Stroke(Theme.MotorSignalWidth), antialiased: false);
             }
         }
     }
@@ -185,10 +245,10 @@ public partial class ConstructionCanvas : Node2D
         var fill = Theme.SelectionGlow;
         fill.A = 0.16f;
         DrawRect(rect, fill, filled: true);
-        DrawDashedLine(rect.Position, rect.Position + new Vector2(rect.Size.X, 0), Theme.SelectionGlow, 2, 6, antialiased: false);
-        DrawDashedLine(rect.Position + new Vector2(rect.Size.X, 0), rect.End, Theme.SelectionGlow, 2, 6, antialiased: false);
-        DrawDashedLine(rect.End, rect.Position + new Vector2(0, rect.Size.Y), Theme.SelectionGlow, 2, 6, antialiased: false);
-        DrawDashedLine(rect.Position + new Vector2(0, rect.Size.Y), rect.Position, Theme.SelectionGlow, 2, 6, antialiased: false);
+        DrawDashedLine(rect.Position, rect.Position + new Vector2(rect.Size.X, 0), Theme.SelectionGlow, Stroke(2), 6, antialiased: false);
+        DrawDashedLine(rect.Position + new Vector2(rect.Size.X, 0), rect.End, Theme.SelectionGlow, Stroke(2), 6, antialiased: false);
+        DrawDashedLine(rect.End, rect.Position + new Vector2(0, rect.Size.Y), Theme.SelectionGlow, Stroke(2), 6, antialiased: false);
+        DrawDashedLine(rect.Position + new Vector2(0, rect.Size.Y), rect.Position, Theme.SelectionGlow, Stroke(2), 6, antialiased: false);
     }
 
     private void DrawMoveGhosts()
@@ -208,7 +268,7 @@ public partial class ConstructionCanvas : Node2D
 
             startPosition = _ghostNodePositions.GetValueOrDefault(beam.NodeA, _viewModel.Nodes[beam.NodeA].Position);
             endPosition = _ghostNodePositions.GetValueOrDefault(beam.NodeB, _viewModel.Nodes[beam.NodeB].Position);
-            DrawDashedLine(ToGodot(startPosition), ToGodot(endPosition), Theme.SelectionGlow, 4, 8, antialiased: false);
+            DrawDashedLine(ToGodot(startPosition), ToGodot(endPosition), Theme.SelectionGlow, Stroke(4), 8, antialiased: false);
         }
 
         foreach (var (nodeIndex, position) in _ghostNodePositions)
@@ -219,7 +279,7 @@ public partial class ConstructionCanvas : Node2D
             }
 
             var radius = (float)_viewModel.Nodes[nodeIndex].Radius;
-            DrawArc(ToGodot(position), radius * 1.35f, 0, Mathf.Tau, 32, Theme.SelectionGlow, 2, antialiased: false);
+            DrawArc(ToGodot(position), radius * 1.35f, 0, Mathf.Tau, 32, Theme.SelectionGlow, Stroke(2), antialiased: false);
         }
     }
 
@@ -307,13 +367,21 @@ public partial class ConstructionCanvas : Node2D
         DrawColoredPolygon([a, b, c], fill);
 
         var center = (a + b + c) / 3f;
-        DrawLine(a.Lerp(center, 0.35f), b.Lerp(center, 0.35f), Theme.SelectionGlow, 2, antialiased: false);
-        DrawLine(b.Lerp(center, 0.35f), c.Lerp(center, 0.35f), Theme.SelectionGlow, 2, antialiased: false);
-        DrawLine(c.Lerp(center, 0.35f), a.Lerp(center, 0.35f), Theme.SelectionGlow, 2, antialiased: false);
+        DrawLine(a.Lerp(center, 0.35f), b.Lerp(center, 0.35f), Theme.SelectionGlow, Stroke(2), antialiased: false);
+        DrawLine(b.Lerp(center, 0.35f), c.Lerp(center, 0.35f), Theme.SelectionGlow, Stroke(2), antialiased: false);
+        DrawLine(c.Lerp(center, 0.35f), a.Lerp(center, 0.35f), Theme.SelectionGlow, Stroke(2), antialiased: false);
 
-        var labelPosition = center + _rigidLabelOffset;
-        DrawRect(new Rect2(labelPosition + _rigidLabelBox.Position, _rigidLabelBox.Size), Theme.ArenaBackground.WithAlpha(0.86f));
-        DrawString(ThemeDB.FallbackFont, labelPosition, "Rigid: no joints", HorizontalAlignment.Left, -1, _rigidLabelFontSize, Theme.GroundEdge);
+        // The label is text, not part of the picture: it keeps its size at any zoom.
+        var view = _gestures!.View;
+        var labelPosition = (center * (float)view.Zoom) + ToGodot(view.Offset) + _rigidLabelOffset;
+        DrawSetTransform(Vector2.Zero);
+        var font = ThemeDB.FallbackFont;
+        var textSize = font.GetStringSize(_rigidLabelText, HorizontalAlignment.Left, -1, _rigidLabelFontSize);
+        var textTop = labelPosition - new Vector2(0, font.GetAscent(_rigidLabelFontSize));
+        var box = new Rect2(textTop, textSize).Grow(_rigidLabelPadding);
+        DrawRect(box, Theme.ArenaBackground.WithAlpha(0.86f));
+        DrawString(font, labelPosition, _rigidLabelText, HorizontalAlignment.Left, -1, _rigidLabelFontSize, Theme.GroundEdge);
+        DrawThroughView();
     }
 
     private void DrawMotorRelation(CreatureDef creature, NodeConnectionDef connection)
@@ -327,7 +395,7 @@ public partial class ConstructionCanvas : Node2D
         var arcEnd = delta < 0 ? start : start + delta;
 
         var radius = (float)node.Radius * 2.0f;
-        DrawArc(center, radius, arcStart, arcEnd, 28, Theme.MotorAccent, Theme.MotorSignalWidth, antialiased: false);
+        DrawArc(center, radius, arcStart, arcEnd, 28, Theme.MotorAccent, Stroke(Theme.MotorSignalWidth), antialiased: false);
     }
 
     private void DrawMotorCenterMarkers()
@@ -343,7 +411,7 @@ public partial class ConstructionCanvas : Node2D
             .Distinct())
         {
             var node = creature.Nodes[nodeIndex];
-            DrawArc(ToGodot(node.Position), (float)node.Radius * 0.72f, 0, Mathf.Tau, 32, Theme.MotorAccent, Theme.MotorSignalWidth, antialiased: false);
+            DrawArc(ToGodot(node.Position), (float)node.Radius * 0.72f, 0, Mathf.Tau, 32, Theme.MotorAccent, Stroke(Theme.MotorSignalWidth), antialiased: false);
         }
     }
 
@@ -375,9 +443,9 @@ public partial class ConstructionCanvas : Node2D
             var node = _viewModel.Nodes[nodeIndex];
             var position = ToGodot(node.Position);
             var radius = (float)node.Radius * 1.55f;
-            DrawArc(position, radius, 0, Mathf.Tau, 32, Theme.Danger, Theme.MotorSignalWidth, antialiased: false);
-            DrawLine(position + new Vector2(-radius * 0.45f, -radius * 0.45f), position + new Vector2(radius * 0.45f, radius * 0.45f), Theme.Danger, Theme.MotorSignalWidth, antialiased: false);
-            DrawLine(position + new Vector2(radius * 0.45f, -radius * 0.45f), position + new Vector2(-radius * 0.45f, radius * 0.45f), Theme.Danger, Theme.MotorSignalWidth, antialiased: false);
+            DrawArc(position, radius, 0, Mathf.Tau, 32, Theme.Danger, Stroke(Theme.MotorSignalWidth), antialiased: false);
+            DrawLine(position + new Vector2(-radius * 0.45f, -radius * 0.45f), position + new Vector2(radius * 0.45f, radius * 0.45f), Theme.Danger, Stroke(Theme.MotorSignalWidth), antialiased: false);
+            DrawLine(position + new Vector2(radius * 0.45f, -radius * 0.45f), position + new Vector2(-radius * 0.45f, radius * 0.45f), Theme.Danger, Stroke(Theme.MotorSignalWidth), antialiased: false);
         }
     }
 
@@ -399,9 +467,9 @@ public partial class ConstructionCanvas : Node2D
 
             var position = ToGodot(start.Position);
             var radius = (float)Math.Max(start.Radius, end.Radius) * 1.95f;
-            DrawArc(position, radius, 0, Mathf.Tau, 32, Theme.Danger, Theme.MotorSignalWidth, antialiased: false);
-            DrawLine(position + new Vector2(-radius * 0.55f, 0), position + new Vector2(radius * 0.55f, 0), Theme.Danger, Theme.MotorSignalWidth, antialiased: false);
-            DrawLine(position + new Vector2(0, -radius * 0.55f), position + new Vector2(0, radius * 0.55f), Theme.Danger, Theme.MotorSignalWidth, antialiased: false);
+            DrawArc(position, radius, 0, Mathf.Tau, 32, Theme.Danger, Stroke(Theme.MotorSignalWidth), antialiased: false);
+            DrawLine(position + new Vector2(-radius * 0.55f, 0), position + new Vector2(radius * 0.55f, 0), Theme.Danger, Stroke(Theme.MotorSignalWidth), antialiased: false);
+            DrawLine(position + new Vector2(0, -radius * 0.55f), position + new Vector2(0, radius * 0.55f), Theme.Danger, Stroke(Theme.MotorSignalWidth), antialiased: false);
         }
     }
 
@@ -493,6 +561,106 @@ public partial class ConstructionCanvas : Node2D
             ClearMoveGhosts();
         }
     }
+
+    /// <summary>
+    /// Tells the view what part of it the clipping slot shows, and fits the
+    /// creation the first time that is known: by the first draw the host has
+    /// loaded the creation and the containers have sized the slot. A slot
+    /// resize (such as the Parts panel collapsing) redraws, so the view's
+    /// limits follow at once.
+    /// </summary>
+    private void UpdateView()
+    {
+        if (_slot is not { } slot || slot.Size == Vector2.Zero)
+        {
+            return;
+        }
+
+        var toView = Transform.AffineInverse();
+        _gestures!.View.VisibleArea = new CanvasRect(ToDomain(toView * Vector2.Zero), ToDomain(toView * slot.Size));
+        if (!_viewFitted)
+        {
+            _viewFitted = true;
+            _gestures.View.Fit();
+        }
+    }
+
+    /// <summary>
+    /// A faint blueprint grid over the Build area, the only place joints can
+    /// go. Hairlines stay one pixel at any zoom, and <see cref="CanvasView.GridStep"/>
+    /// thins the lines out as the view zooms out.
+    /// </summary>
+    private void DrawBuildGrid()
+    {
+        var view = _gestures!.View;
+        var area = view.Area;
+        var step = view.GridStep(ConstructionViewModel.BuildGridStep);
+
+        var shown = view.VisibleArea is { } visible
+            ? new CanvasRect(view.ToCanvas(visible.Min), view.ToCanvas(visible.Max))
+            : area;
+        var top = (float)area.Min.Y;
+        var bottom = (float)area.Max.Y;
+        var left = (float)area.Min.X;
+        var right = (float)area.Max.X;
+        for (var x = area.Min.X; x <= area.Max.X; x += step)
+        {
+            if (x >= shown.Min.X && x <= shown.Max.X)
+            {
+                DrawLine(new Vector2((float)x, top), new Vector2((float)x, bottom), Theme.ArenaGrid, -1);
+            }
+        }
+
+        for (var y = area.Min.Y; y <= area.Max.Y; y += step)
+        {
+            if (y >= shown.Min.Y && y <= shown.Max.Y)
+            {
+                DrawLine(new Vector2(left, (float)y), new Vector2(right, (float)y), Theme.ArenaGrid, -1);
+            }
+        }
+
+        DrawRect(new Rect2(left, top, right - left, bottom - top), Theme.ArenaGrid, filled: false, width: -1);
+    }
+
+    /// <summary>Marks the corners of the Build area, zooming with the rest of the picture.</summary>
+    private void DrawAreaCorners()
+    {
+        var view = _gestures!.View;
+        var area = view.Area;
+        var topLeft = ToGodot(area.Min);
+        var bottomRight = ToGodot(area.Max);
+        // One grid cell as drawn at this zoom, so the marks always end on a grid line.
+        var length = (float)view.GridStep(ConstructionViewModel.BuildGridStep);
+        foreach (var (corner, inward) in new[]
+        {
+            (topLeft, new Vector2(1, 1)),
+            (new Vector2(bottomRight.X, topLeft.Y), new Vector2(-1, 1)),
+            (new Vector2(topLeft.X, bottomRight.Y), new Vector2(1, -1)),
+            (bottomRight, new Vector2(-1, -1)),
+        })
+        {
+            DrawPolyline(
+                [corner + new Vector2(inward.X * length, 0), corner, corner + new Vector2(0, inward.Y * length)],
+                Theme.AreaCorner,
+                Stroke(Theme.AreaCornerWidth));
+        }
+    }
+
+    /// <summary>Draws everything after this in canvas units, zoomed and panned by the view.</summary>
+    private void DrawThroughView()
+    {
+        var view = _gestures!.View;
+        DrawSetTransform(ToGodot(view.Offset), 0, Vector2.One * (float)view.Zoom);
+    }
+
+    /// <summary>
+    /// The width every line is drawn at (`docs/UI_DIRECTION.md` → Reference
+    /// flow overrides); to keep lines at their screen width instead, return
+    /// <c>width / (float)_gestures.View.Zoom</c> here.
+    /// </summary>
+    private float Stroke(float width) => width;
+
+    private Vector2D ToView(Vector2 screenPosition) => ToDomain(ToCanvasLocal(screenPosition));
 
     private Vector2 ToCanvasLocal(Vector2 screenPosition)
     {

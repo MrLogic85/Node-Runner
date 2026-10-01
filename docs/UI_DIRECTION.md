@@ -63,6 +63,20 @@ then the app follows the reference.
   lost by unlocking (`reference design/README.md`, BuildLocked and Overlays).
   Instead the lock only prevents accidental changes, and a rebuild keeps the
   brain through port matching (#516).
+- **Build zoom scales lines too (#400).** The reference keeps a block's
+  lines at 2px and its eyes node-sized at any zoom. Instead zoom scales the
+  whole picture, lines included, the build area's corner marks too; kept
+  after the owner's S25 check. Two things keep their screen size: text
+  labels, and the build grid's hairlines (1 px at any zoom, so the grid
+  stays faint). It may still change later: `ConstructionCanvas.Stroke` is
+  the one place to keep the picture's lines at screen width.
+- **The Build grid marks the build area (#400).** The reference's grid floor
+  fills the canvas at 24 to 32px, fades toward the edges, and has fixed HUD
+  corner brackets. In Build the `line` grid instead covers exactly the
+  build area, with no fade; its cells double as the view zooms out
+  (`CanvasView.GridStep`), and the `accent` corner marks sit on the area's
+  corners and zoom with the picture, one drawn cell long. Owner decision:
+  the grid is a blueprint showing where joints can go.
 - **The brain is hidden until 0.16.0 (#539).** While the brain is direct, the
   player neither sees nor edits it: Brain setup (hidden layers, neurons per
   layer), the BuildLocked brain widget, and the Training Brain button and

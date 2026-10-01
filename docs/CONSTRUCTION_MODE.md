@@ -39,22 +39,23 @@ locked is overridden in `docs/TRAINING_LOOP.md` → Product lifecycle boundary.
 
 - Construction-mode positions are plain 2D coordinates in the same local
   space the hardcoded creature uses (see `HardcodedCreatureFactory`): no unit
-  conversion, no camera-relative math. A placed node's `Vector2D` maps
-  directly to a Godot `Vector2` in the canvas's local space.
+  conversion. The only view math is the Build canvas's zoom and pan
+  (`CanvasView`), which never touches saved positions.
 
 ## Interactions
 
 The rail holds the reference tools Move, Beam, Joint and Select (#365);
 "joint" is the player-facing name for a node.
-Build always opens in Move. `ConstructionGestures` (App) turns one pointer's
-press, drag and release into edits for the active tool, and
-`ConstructionCanvas` only converts input to canvas units and draws. A
-pointer that travels at most `TapSlop` counts as a tap. Hit tests prefer a
-node over a beam under it.
+Build always opens in Move. `ConstructionGestures` (App) turns pointer
+presses, drags and releases into edits for the active tool and into zoom and
+pan, and `ConstructionCanvas` only forwards input and draws. A pointer that
+travels at most `TapSlop` view units counts as a tap. Hit tests prefer a node
+over a beam under it; hit sizes are finger-sized on screen at any zoom, and
+a node's own disc always hits.
 
 - **Move:** tap a node or beam to select it (its settings open), tap empty
-  canvas to deselect, drag a node to move it. A drag on empty canvas changes
-  nothing (#400 makes it pan). Move never adds a node.
+  canvas to deselect, drag a node to move it, drag anywhere else (empty
+  canvas or a beam) to pan the view (#400). Move never adds a node.
 - **Beam:** drag from one node to a different node to join them. The preview
   only snaps to a node the beam could join (`ConstructionViewModel.CanConnect`);
   releasing anywhere else, including over a node already joined to the start,
@@ -73,7 +74,33 @@ node over a beam under it.
   (`CreatureBuilder.RemoveNode`).
 - A locked creation opens in Move with Beam and Joint disabled, and
   `ConstructionViewModel` refuses topology edits on its own.
-- Changing tool mid-gesture cancels the gesture without an edit.
+- **Two fingers, any tool (#400):** pinch zooms about the point between the
+  fingers and dragging both pans. The second finger cancels the first
+  finger's gesture, putting back any node it moved and any selection a
+  Select press changed, and nothing edits
+  until every finger lifts, so navigation never changes the creature. The
+  Core mode toggles on a tap's release for the same reason.
+- **Build area (#400):** joints live inside the fixed
+  `ConstructionViewModel.BuildArea` (x −1152..1152, y −576..576 canvas
+  units, about six screens wide at 1×). Placing or moving a joint keeps its
+  disc inside; a group move stops as a whole at the edge, and a Joint tap
+  outside adds nothing. A faint blueprint grid (the `line` token,
+  `BuildGridStep` cells doubling as the view zooms out) covers exactly the
+  area, and accent corner marks one drawn cell long frame it.
+- **View:** `CanvasView` (App) holds zoom and pan and maps view units to
+  canvas units. It is not saved: Build opens with the creation centred and
+  `FitMargin` (20%) of air on every side, zoomed out if needed but never
+  magnified past 1×; an empty creation opens at 1× on the middle of the
+  area. There is no Fit button. Zooming out stops when the whole area is in
+  view (`MinZoom`), up to `MaxZoom` in. Along an axis where the area is
+  larger than the view, the view stops `EdgeMargin` past its edge, so the
+  corner marks stay clear of the screen edge; along an axis where it fits,
+  the area is centred. Zoomed in, the creation can be off screen; zooming
+  out finds it. Distances are in view or canvas units (`docs/GLOSSARY.md` →
+  Build canvas). How zoom treats lines, the grid and labels is owned by
+  `docs/UI_DIRECTION.md` → Reference flow overrides.
+- Changing tool mid-gesture, or Android cancelling the touch, cancels the
+  gesture the same way.
 - `ConstructionViewModel.StatusMessage` records the outcome of the last
   edit (including `ConnectBeam` refusing a pair as a safety net); the Build
   screen does not show it yet.
@@ -119,11 +146,14 @@ cannot train and returns to Creations.
   with `GetGlobalTransformWithCanvas().AffineInverse() * screenPosition`, not
   plain `ToLocal()`. Plain `ToLocal()`/`GetGlobalTransform()` ignore the
   project's `canvas_items` stretch transform, so on a device whose native
-  resolution differs from the 1280x720 viewport, taps would land on the
+  resolution differs from the logical viewport (see `docs/UI_DIRECTION.md`), taps would land on the
   wrong in-canvas position relative to what's rendered. Any future widget
   that hit-tests pointer input against drawn content should use the same
   pattern.
 - `project.godot` keeps `input_devices/pointing/emulate_mouse_from_touch`
   enabled so Godot controls receive their native mouse-style input on Android
-  touch devices. App pointer helpers consume those native pointer events
-  instead of branching on raw touch events.
+  touch devices. `ConstructionCanvas` is the exception: it needs every finger
+  for pinch zoom, so it reads `InputEventScreenTouch`/`InputEventScreenDrag`
+  by index and ignores the emulated mouse copy
+  (`InputEvent.DeviceIdEmulation`). A real mouse still drives one pointer on
+  desktop; mouse zoom is out of scope.
