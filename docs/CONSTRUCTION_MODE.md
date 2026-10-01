@@ -77,8 +77,9 @@ a node's own disc always hits.
   scale that would leave it is ignored. The frame and handles keep their
   screen size at any zoom, the frame clears the selected joints' halos,
   and each handle hits within `HandleHitRadius`; a tap (not a drag) on a
-  joint under a handle still adds or removes that joint. A locked creation shows only Move and Rotate, and
-  `ConstructionViewModel.ScaleSelection` refuses it.
+  joint under a handle still adds or removes that joint. A locked
+  creation keeps all three handles: like a move, scaling changes only
+  beam lengths, never which parts there are.
 - **Core (transitional):** the Core row in the Parts tray turns taps on a
   node into adding or removing its core, until parts are dragged from the
   tray onto joints (#376).

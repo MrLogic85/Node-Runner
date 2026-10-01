@@ -707,7 +707,7 @@ public class ConstructionGesturesTests
     }
 
     [Fact]
-    public void Select_WhenLocked_OffersOnlyMoveAndRotate()
+    public void Select_WhenLocked_StillOffersAllThreeHandles()
     {
         var construction = new ConstructionViewModel();
         construction.Load(
@@ -717,7 +717,7 @@ public class ConstructionGesturesTests
         construction.ReplaceSelection([0, 1]);
         var gestures = new ConstructionGestures(construction);
 
-        gestures.SelectionHandles.Select(entry => entry.Handle).ShouldBe([SelectionHandle.Move, SelectionHandle.Rotate]);
+        gestures.SelectionHandles.Select(entry => entry.Handle).ShouldBe([SelectionHandle.Move, SelectionHandle.Rotate, SelectionHandle.Scale]);
     }
 
     [Fact]

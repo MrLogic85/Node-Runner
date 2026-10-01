@@ -82,6 +82,11 @@ then the app follows the reference.
   only where the whole view is zoomed out past the area along one axis is
   the area centred on that axis. Owner decision: the grid is a blueprint
   showing where joints can go.
+- **Locked Select can scale (#366).** The reference turns Scale off in
+  BuildLocked because beams keep their length. Instead a locked creation
+  keeps all three Select handles: moving a joint already changes the
+  lengths of its beams, so scaling changes nothing the lock protects.
+  Owner decision.
 - **The brain is hidden until 0.16.0 (#539).** While the brain is direct, the
   player neither sees nor edits it: Brain setup (hidden layers, neurons per
   layer), the BuildLocked brain widget, and the Training Brain button and

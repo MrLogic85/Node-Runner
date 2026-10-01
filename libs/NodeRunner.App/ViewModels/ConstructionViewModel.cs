@@ -368,16 +368,11 @@ public sealed class ConstructionViewModel : INotifyPropertyChanged
     /// Spreads the snapshot's joints from its pivot by <paramref name="factor"/>, clamped to
     /// <see cref="MinSelectionScale"/>..<see cref="MaxSelectionScale"/> so it never collapses or
     /// reflects; a scale that would leave <see cref="BuildArea"/> is ignored. A locked creation
-    /// keeps its beam lengths, so it refuses.
+    /// scales too: like a move, it only changes beam lengths, not the parts.
     /// </summary>
     public void ScaleSelection(SelectionSnapshot start, double factor)
     {
         ArgumentNullException.ThrowIfNull(start);
-        if (_moveOnly)
-        {
-            throw new InvalidOperationException("A locked creation keeps its beam lengths.");
-        }
-
         if (!double.IsFinite(factor))
         {
             throw new ArgumentOutOfRangeException(nameof(factor));
