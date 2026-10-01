@@ -41,9 +41,13 @@ CreatureDef  ──build──▶  physical body  ──sensors──▶  model 
 - **Beginner:** A physical attachment point. Beams meet here and can rotate
   relative to each other.
 - **Implementation:** `NodeDef` in `libs/NodeRunner.Domain/NodeDef.cs` stores
-  an id, optional display name, a position (`Vector2D`) and a radius. A node
-  has no `RigidBody2D` of its own — physically it's just the shared point
-  where beam bodies are pinned together (see Beam below).
+  an id, optional display name, a position (`Vector2D`) and a radius. At
+  runtime each node is its own `RigidBody2D` with a circle collider a little
+  smaller than its drawn radius (so it looks like it rests slightly in the
+  ground). Its rotation is locked, so it grips instead of rolling like a
+  wheel. A node weighs half of every beam it joins: the beam's weight is
+  simulated at its two ends. Nodes are what touch the world; every beam is
+  pinned to its two nodes (see Beam below).
 - **Degree rules** (how many beams touch a node):
   - **0 beams** — not ready. A node with nothing attached is just a loose
     point and cannot be simulated. It can be saved as part of an unfinished
@@ -64,10 +68,14 @@ CreatureDef  ──build──▶  physical body  ──sensors──▶  model 
 - **Implementation:** `BeamDef` in `libs/NodeRunner.Domain/BeamDef.cs` stores
   an id, optional display name, and two node ids (`NodeA`, `NodeB`). At
   runtime it becomes its own
-  `RigidBody2D` in `project/src/creature/Creature.cs`, sized to the distance
-  between its two nodes' positions. Beams from the same creature never
-  collide with each other (collision exceptions are added pairwise), which
-  is what allows car-like, closed-loop construction.
+  `RigidBody2D` in `project/src/creature/Creature.cs`, pinned with a
+  `PinJoint2D` to each of its two node bodies, so its length is fixed by
+  geometry. A beam has **no collider**: it carries motor torque and sensors
+  between its nodes, while its weight sits on those nodes (see Node above).
+  Its own body is nearly massless, with a turning inertia set as a thin
+  solid bar. Parts of the same creature never collide with each other
+  (collision exceptions are added pairwise), which is what allows car-like,
+  closed-loop construction.
 - **Future ideas (not implemented):** beams breaking on hard impact, joints
   tearing apart under load.
 
@@ -142,7 +150,7 @@ CreatureDef  ──build──▶  physical body  ──sensors──▶  model 
   node — this is how the model actually moves the body.
 - **Implementation:** derived, not stored. `MotorTopology.BuildNodeConnections`
   in `libs/NodeRunner.Domain/MotorTopology.cs` computes, from a
-  `CreatureDef`'s topology alone, every physical pin between beams at a node
+  `CreatureDef`'s topology alone, every relation between beams at a node
   (`NodeConnectionDef`), and marks which of those are motorized. Motor
   relations have no stable ids because they are not saved parts; they are
   recomputed from the current node/beam list order. At runtime,
@@ -170,9 +178,9 @@ Three beams that close a triangle between three nodes are geometrically
 rigid (SSS: three fixed side lengths fully determine all three vertex
 angles). `MotorTopology` detects every such closed triangle and excludes the
 one motor relation it would otherwise create at each of its three vertices —
-the physical pin still exists (so the triangle stays connected), it just
-carries no sensor or brain output, because driving it would either do
-nothing or fight the other two pins.
+the beams stay pinned to their nodes (so the triangle stays connected), the
+relation just carries no sensor or brain output, because driving it would
+either do nothing or fight the other two vertices.
 
 This generalizes to any rigid, triangulated structure (a larger truss is a
 composition of triangles), while correctly leaving non-triangulated closed

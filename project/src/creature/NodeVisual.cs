@@ -5,8 +5,7 @@ using NodeRunner.Ui.Lib;
 namespace NodeRunner.Creature;
 
 /// <summary>
-/// Draws the shared attachment point between beams. Lives as a child of
-/// whichever beam "anchors" the node, so it moves with physics for free.
+/// Draws a node: rendering only, a child of the node's own physics body.
 /// </summary>
 public partial class NodeVisual : Node2D
 {
