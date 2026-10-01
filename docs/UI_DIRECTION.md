@@ -102,8 +102,48 @@ then the app follows the reference.
   part on a joint with toggles for its built-in senses (Parts, PartSettings,
   SignalFlow, Training). Instead Core is removed: an Accelerometer (#127) and
   an LOS sensor (#575) sit on a beam, one of each per beam, at its midpoint.
-  The design brief #574 updates the reference; until it lands, follow #127,
-  #575 and #376.
+  The designer is not available, so 0.12 follows these best guesses (#580);
+  #574 updates the reference later and lists any differences as follow-ups:
+  - *Parts tray:* the Sensors tab lists Accelerometer, then LOS sensor, with
+    the help line "Drag onto a beam. A beam holds one of each sensor." No
+    Core row.
+  - *Glyphs:* LOS sensor uses the reference `los` glyph. Accelerometer uses
+    the project-owned `accelerometer` part glyph (an upright frame with a
+    weight on a spring), which is not in the reference package. The
+    reference `core` glyphs stay in the package but are unused once #127
+    lands.
+  - *On a beam:* a sensor is drawn as the reference part badge: a 22 px
+    rounded square (not a circle, so it never reads as a joint) with a panel
+    fill and 2 px lines, and the glyph at 15 px in `accent`. It sits at the
+    beam's midpoint at any beam length; two sensors on one beam sit side by
+    side along it, centred on the midpoint, and both still measure at the
+    midpoint. A beam shorter than the badge still takes a sensor. Selected,
+    it gets the `halo` outline.
+  - *Orientation:* the side of the beam that faces up as built is the
+    sensor's top, and it then turns with the beam; it never flips during a
+    run. The LOS glyph is turned to match its as-built ray fan (#575), and a
+    selected LOS sensor draws its rays from the midpoint.
+  - *Order:* joints, then sensors, then beams, for both tapping and drawing.
+    A sensor's tap area is its badge. Dragging a sensor in Move does
+    nothing, and a Joint-tool tap on a sensor does not split the beam.
+  - *Split:* splitting a beam moves its sensors, with their ids, to the
+    longer half (the half at the beam's first node on a tie).
+  - *Placing (#376):* beams that can take the dragged sensor show `halo`.
+    A beam that already has it shows a dashed `danger` stroke, and dropping
+    there shows "One accelerometer per beam" or "One LOS sensor per beam" as
+    a danger callout at that beam. Dropping on a joint shows "Sensors go on
+    a beam". Dropping on empty canvas cancels silently.
+  - *Part settings (#343):* sensors show Name and Delete only. Accelerometer:
+    "Feels how its beam speeds up, slows down and tilts." LOS sensor: "Three
+    rays see how far the ground is."
+  - *In motion (#576):* the Accelerometer's weight moves inside its frame by
+    the proof-mass displacement, clamped to the frame, with 1 g at half the
+    weight's travel and the spring stretched from the frame's top to it.
+    Build draws the gravity rest pose for the beam's current angle with the
+    same mapping, so nothing jumps when a run starts. No glow where the
+    theme or `data-effects="lite"` turns glow off.
+  - *Copy:* Training and SignalFlow say "sensor" where the reference says
+    "core".
 
 ## Product feel
 

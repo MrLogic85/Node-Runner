@@ -61,7 +61,8 @@ identity.
 - Stable part ids (#220): the prerequisite for a brain that survives rebuilds.
 - Core is removed. Its readings become sensor parts that sit on a beam: an
   Accelerometer, a damped proof mass whose swing is the reading (#127, #576),
-  and an LOS sensor with three fixed rays (#575). Design brief: #574.
+  and an LOS sensor with three fixed rays (#575). Design: best guess #580
+  (follow-up #574).
 
 **Ship criterion:** A player builds a creature on the reference-design Build
 screen, and every part keeps its id across edits and saves.
