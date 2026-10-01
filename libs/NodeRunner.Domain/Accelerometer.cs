@@ -54,6 +54,23 @@ public static class Accelerometer
             Math.Tanh(-state.Displacement.X / ReferenceDisplacement),
             Math.Tanh(-state.Displacement.Y / ReferenceDisplacement));
 
+    /// <summary>How far 1 g moves the drawn weight, as a share of its travel from the frame's centre (#576).</summary>
+    public const double WeightTravelPerG = 0.5;
+
+    /// <summary>
+    /// Where the drawn weight sits (#576): the proof-mass displacement in units of the weight's
+    /// travel from the frame's centre, clamped to -1…1 per axis. X is along the beam and Y is down
+    /// the picture, so a level beam at rest gives (0, <see cref="WeightTravelPerG"/>).
+    /// </summary>
+    public static Vector2D WeightOffset(ProofMass state) =>
+        new(
+            Math.Clamp(state.Displacement.X / ReferenceDisplacement * WeightTravelPerG, -1, 1),
+            Math.Clamp(-state.Displacement.Y / ReferenceDisplacement * WeightTravelPerG, -1, 1));
+
+    /// <summary>The drawn weight at rest under gravity for a beam at <paramref name="beamRotation"/> (Build's pose).</summary>
+    public static Vector2D RestWeightOffset(double beamRotation, int upSign) =>
+        WeightOffset(Rest(ToSensorFrame(new Vector2D(0, -1), beamRotation, upSign)));
+
     /// <summary>
     /// Which local side of a beam (local +x from NodeA to NodeB) is "up" as built: local
     /// (0, UpSign) points up in the built pose (y grows downward). A vertical beam uses -1.
@@ -62,6 +79,21 @@ public static class Accelerometer
     {
         var dx = nodeB.X - nodeA.X;
         return dx < 0 ? 1 : -1;
+    }
+
+    /// <summary>
+    /// The specific force, in g, on a point moving with world <paramref name="acceleration"/>
+    /// (y down) under <paramref name="gravity"/>, both in world units per second squared: at rest
+    /// it is (0, -1), 1 g up. The sim and Build's moving weight (#576) both start here.
+    /// </summary>
+    public static Vector2D SpecificForce(Vector2D acceleration, double gravity)
+    {
+        if (!double.IsFinite(gravity) || gravity <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(gravity), "Gravity must be finite and positive.");
+        }
+
+        return new Vector2D(acceleration.X / gravity, (acceleration.Y - gravity) / gravity);
     }
 
     /// <summary>A world specific force as (along, up) in a beam's sensor frame at its current rotation.</summary>

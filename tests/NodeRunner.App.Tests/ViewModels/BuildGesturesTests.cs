@@ -1,3 +1,4 @@
+using NodeRunner.App.Builders;
 using NodeRunner.App.ViewModels;
 using NodeRunner.Domain;
 
@@ -818,6 +819,76 @@ public class BuildGesturesTests
 
         build.Nodes[0].Position.ShouldNotBe(new Vector2D(0, 0));
         build.SelectedNodeIds.OrderBy(id => id).ShouldBe([1, 2]);
+    }
+
+    [Fact]
+    public void Move_TapOnASensorPicture_SelectsTheSensorNotTheBeam()
+    {
+        var (build, gestures) = BeamWithSensor(100, SensorKind.Accelerometer);
+
+        Tap(gestures, new Vector2D(50, 9));
+
+        build.SingleSelectedSensorId.ShouldBe(4);
+        build.SingleSelectedBeamId.ShouldBeNull();
+    }
+
+    [Fact]
+    public void Move_TapOnAPictureWithinAJointsReach_SelectsTheSensor()
+    {
+        // A short beam: the picture sits inside both joints' touch reach but off their discs.
+        var (build, gestures) = BeamWithSensor(50, SensorKind.Accelerometer);
+
+        Tap(gestures, new Vector2D(22, 0));
+
+        build.SingleSelectedSensorId.ShouldBe(4);
+    }
+
+    [Fact]
+    public void Move_TapOnAJointDisc_StillWinsOverASensor()
+    {
+        var (build, gestures) = BeamWithSensor(30, SensorKind.Accelerometer);
+
+        Tap(gestures, new Vector2D(10, 0));
+
+        build.SelectedNodeIds.ShouldBe([1]);
+    }
+
+    [Fact]
+    public void Joint_TapOnASensorPicture_DoesNotSplitTheBeam()
+    {
+        var (build, gestures) = BeamWithSensor(100, SensorKind.Accelerometer);
+        build.ActiveTool = BuildTool.Joint;
+        var changes = CountChanges(build);
+
+        Tap(gestures, new Vector2D(50, 0));
+
+        changes().ShouldBe(0);
+        build.Beams.Count.ShouldBe(1);
+    }
+
+    [Fact]
+    public void SecondFinger_PutsBackASelectedSensorASelectPressReplaced()
+    {
+        var (build, gestures) = BeamWithSensor(100, SensorKind.Accelerometer);
+        build.ActiveTool = BuildTool.Select;
+        build.SelectSensor(4);
+
+        gestures.Press(new Vector2D(300, 300), 0);
+        gestures.Press(new Vector2D(400, 400), 1);
+
+        build.SingleSelectedSensorId.ShouldBe(4);
+    }
+
+    private static (BuildViewModel Build, BuildGestures Gestures) BeamWithSensor(double length, SensorKind kind = SensorKind.Accelerometer)
+    {
+        var builder = new CreatureBuilder();
+        builder.AddNode(new Vector2D(0, 0), 18);
+        builder.AddNode(new Vector2D(length, 0), 18);
+        var beam = builder.AddBeam(1, 2);
+        builder.AddSensor(beam, kind, out _, out _);
+
+        var build = new BuildViewModel(builder);
+        return (build, new BuildGestures(build));
     }
 
     private static (BuildViewModel Build, BuildGestures Gestures) TwoJointsAndABeam()

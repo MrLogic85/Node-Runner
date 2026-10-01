@@ -32,6 +32,14 @@ public sealed class LosSensor : IBeamSensor
         }
     }
 
+    /// <summary>Where each ray starts, in global space (the beam's midpoint).</summary>
+    public Vector2 GlobalOrigin => _rays[0].GlobalPosition;
+
+    /// <summary>Where each ray ends as of the last physics step: its ground hit, or its full length.</summary>
+    public IEnumerable<Vector2> GlobalRayEnds => _rays.Select(ray => ray.IsColliding()
+        ? ray.GetCollisionPoint()
+        : ray.ToGlobal(ray.TargetPosition));
+
     public string GroupKind => "LOS sensor";
 
     public IReadOnlyList<string> ValueNames => LineOfSight.RayNames;

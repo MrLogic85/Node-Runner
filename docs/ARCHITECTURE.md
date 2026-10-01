@@ -197,12 +197,18 @@ public static class Accelerometer   // proof mass on a damped spring, pure math
 {
     public static ProofMass Step(ProofMass state, Vector2D specificForceG, double dt);
     public static Vector2D Reading(ProofMass state);
+    public static Vector2D SpecificForce(Vector2D acceleration, double gravity);
 }
 
 public static class LineOfSight     // the LOS sensor's three fixed rays, pure math
 {
     public static Vector2D LocalRayTarget(int ray, double builtRotation);
     public static double Reading(double? hitDistance);
+}
+
+public static class SensorPicture   // a sensor picture's tap area at its beam's middle
+{
+    public static bool Contains(Vector2D point, Vector2D nodeA, Vector2D nodeB);
 }
 ```
 

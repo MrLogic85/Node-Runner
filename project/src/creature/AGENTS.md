@@ -40,6 +40,8 @@ the model this implements.**
 - `LosSensor.cs` — one LOS sensor: three `RayCast2D` children aimed as
   built by the Domain `LineOfSight`, writing 3 readings
 - `NodeVisual.cs` / `BeamVisual.cs` — rendering only, no physics
+- `SensorVisual.cs` — a sensor's picture, a rendering-only child of its
+  beam body; the Accelerometer weight follows the live proof mass
 - `HardcodedCreatureFactory.cs` — the first concrete `CreatureDef`
 - `Creature.tscn` (in `scenes/`) — the scene template
 

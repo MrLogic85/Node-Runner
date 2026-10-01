@@ -11,7 +11,7 @@ public sealed class CreatureInspectorViewModelTests
         using var inspector = new CreatureInspectorViewModel(CreateCreature(), new SelectionViewModel());
 
         inspector.Title.ShouldBe("Creature inspector");
-        inspector.Role.ShouldBe("Tap a node or beam to inspect it.");
+        inspector.Role.ShouldBe("Tap a node, sensor or beam to inspect it.");
         inspector.Values.ShouldBe("The creature is built from nodes and beams; sensors sit on beams.");
     }
 
@@ -41,7 +41,17 @@ public sealed class CreatureInspectorViewModelTests
         inspector.Values.ShouldBe("Connects: Node 1 to Node 2\nLength: 20");
     }
 
+    [Fact]
+    public void Selection_WithSensor_ShowsItsKindAndBeam()
+    {
+        var selection = new SelectionViewModel();
+        using var inspector = new CreatureInspectorViewModel(CreateCreature(), selection);
 
+        selection.Select(new CreatureElementSelection(CreatureElementKind.Sensor, 201));
+
+        inspector.Title.ShouldBe("Accelerometer");
+        inspector.Values.ShouldBe("On: Beam 1");
+    }
 
     private static CreatureDef CreateCreature()
     {

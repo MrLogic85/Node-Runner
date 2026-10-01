@@ -112,10 +112,14 @@ then the app follows the reference.
     the project-owned `accelerometer` part glyph (an upright frame with a
     weight on a spring), which is not in the reference package. The
     reference `core` glyphs stay in the package but are unused.
-  - *On a beam:* a sensor is drawn as the reference part badge: a 22 px
-    rounded square (not a circle, so it never reads as a joint) with a panel
-    fill and 2 px lines, and the glyph at 15 px in `accent`. It sits at the
-    beam's midpoint. Selected, it gets the `halo` outline.
+  - *On a beam (#576):* a sensor is drawn as a picture of itself, not as a
+    badge with a glyph, at the beam's midpoint, in panel fill with 2 px
+    `accent` lines. The Accelerometer is a 16 × 22 rounded frame with a
+    zigzag spring from its top to a round weight. The LOS sensor is a small
+    camera (body, lens ring and hood) that looks along its rays. Neither is
+    a circle, so it never reads as a joint. Selected, the picture gets a
+    `halo` outline. Its tap area is a 24 square turned with the beam
+    (`SensorPicture`).
   - *Beams (#593):* a creature's beams are 6 wide in Build and Training
     (thumbnails keep the thin line). A beam must leave 30 free between its
     joint discs, room for a sensor with a gap on each side; a shorter beam
@@ -126,10 +130,10 @@ then the app follows the reference.
     beam too short".
   - *Orientation:* the side of the beam that faces up as built is the
     sensor's top, and it then turns with the beam; it never flips during a
-    run. The LOS glyph is turned to match its as-built ray fan (#576), and a
+    run. The LOS camera looks along its as-built ray fan (#576), and a
     selected LOS sensor draws its rays from the midpoint.
   - *Order:* joints, then sensors, then beams, for both tapping and drawing.
-    A sensor's tap area is its badge. Dragging a sensor in Move does
+    A sensor's tap area is its picture. Dragging a sensor in Move does
     nothing, and a Joint-tool tap on a sensor does not split the beam.
   - *Split:* splitting a beam moves its sensor, with its id, to the
     longer half (the half at the beam's first node on a tie).
@@ -143,8 +147,10 @@ then the app follows the reference.
   - *In motion (#576):* the Accelerometer's weight moves inside its frame by
     the proof-mass displacement, clamped to the frame, with 1 g at half the
     weight's travel and the spring stretched from the frame's top to it.
-    Build draws the gravity rest pose for the beam's current angle with the
-    same mapping, so nothing jumps when a run starts. No glow where the
+    In Build the weight hangs in the gravity rest pose for the beam's
+    current angle, swings when the beam is moved and settles again
+    (`BuildSensorMotion`, the same spring as in a run), so nothing jumps
+    when a run starts. No glow where the
     theme or `data-effects="lite"` turns glow off.
   - *Copy:* Training and SignalFlow say "sensor" where the reference says
     "core".

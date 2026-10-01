@@ -59,8 +59,9 @@ public sealed class BuildGestures
     private bool _dragging;
     private int? _pressedNode;
     private int? _pressedBeam;
+    private int? _pressedSensor;
     private Vector2D? _dragOrigin;
-    private (int[] Nodes, int? Beam)? _selectionBefore;
+    private (int[] Nodes, int? Beam, int? Sensor)? _selectionBefore;
     private SelectionHandle? _pressedHandle;
     private bool _pressedNodeWasSelected;
     private SelectionSnapshot? _selectionStart;
@@ -187,7 +188,7 @@ public sealed class BuildGestures
 
         if (_selectionBefore is { } before)
         {
-            RestoreSelection(before.Nodes, before.Beam);
+            RestoreSelection(before.Nodes, before.Beam, before.Sensor);
         }
 
         ResetTool();
@@ -208,7 +209,17 @@ public sealed class BuildGestures
             _pressedHandle = handle;
         }
 
-        if (_build.TryFindNodeNear(position, HitDistance(NodeHitRadius), out var nodeId))
+        // Joints, then sensors, then beams; a joint's wider touch reach only counts off its disc,
+        // so it never covers a sensor picture next to it.
+        if (_build.TryFindNodeNear(position, 0, out var nodeId))
+        {
+            _pressedNode = nodeId;
+        }
+        else if (_pressedHandle is null && _build.TryFindSensorAt(position, out var sensorId))
+        {
+            _pressedSensor = sensorId;
+        }
+        else if (_build.TryFindNodeNear(position, HitDistance(NodeHitRadius), out nodeId))
         {
             _pressedNode = nodeId;
         }
@@ -225,7 +236,7 @@ public sealed class BuildGestures
                 Changed?.Invoke(this, EventArgs.Empty);
                 break;
             case BuildTool.Select when _pressedHandle is null:
-                _selectionBefore = ([.. _build.SelectedNodeIds], _build.SingleSelectedBeamId);
+                _selectionBefore = ([.. _build.SelectedNodeIds], _build.SingleSelectedBeamId, _build.SingleSelectedSensorId);
                 PressSelect(viewPosition, position);
                 break;
         }
@@ -318,9 +329,16 @@ public sealed class BuildGestures
         Changed?.Invoke(this, EventArgs.Empty);
     }
 
-    private void RestoreSelection(int[] nodes, int? beam)
+    private void RestoreSelection(int[] nodes, int? beam, int? sensor)
     {
-        if (beam is { } selectedBeam)
+        if (sensor is { } selectedSensor)
+        {
+            if (_build.SingleSelectedSensorId != selectedSensor)
+            {
+                _build.SelectSensor(selectedSensor);
+            }
+        }
+        else if (beam is { } selectedBeam)
         {
             if (_build.SingleSelectedBeamId != selectedBeam)
             {
@@ -328,6 +346,7 @@ public sealed class BuildGestures
             }
         }
         else if (_build.SelectedBeamCount != 0
+            || _build.SelectedSensorCount != 0
             || _build.SelectedNodeIds.Count != nodes.Length
             || !nodes.All(_build.SelectedNodeIds.Contains))
         {
@@ -356,7 +375,7 @@ public sealed class BuildGestures
     /// <summary>
     /// A press on a joint adds it (a tap on one already selected removes it
     /// on release); a press inside the frame drags the selection; anywhere
-    /// else, beams included, clears the selection and starts a box.
+    /// else, sensors and beams included, clears the selection and starts a box.
     /// </summary>
     private void PressSelect(Vector2D viewPosition, Vector2D position)
     {
@@ -386,6 +405,10 @@ public sealed class BuildGestures
         {
             _build.ReplaceSelection([node]);
         }
+        else if (_pressedSensor is { } sensor)
+        {
+            _build.SelectSensor(sensor);
+        }
         else if (_pressedBeam is { } beam)
         {
             _build.SelectBeam(beam);
@@ -398,7 +421,7 @@ public sealed class BuildGestures
 
     private void TapJoint()
     {
-        if (_pressedNode is not null || _build.IsMoveOnly)
+        if (_pressedNode is not null || _pressedSensor is not null || _build.IsMoveOnly)
         {
             return;
         }
@@ -531,6 +554,7 @@ public sealed class BuildGestures
         _selectionStart = null;
         _pressedNode = null;
         _pressedBeam = null;
+        _pressedSensor = null;
         BeamStartNodeId = null;
         BeamEnd = null;
         BeamTargetNodeId = null;

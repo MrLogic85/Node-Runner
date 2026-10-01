@@ -64,6 +64,7 @@ public sealed class BuildViewModel : INotifyPropertyChanged
     private int? _trainingGeneration;
     private double? _bestFitness;
     private int? _selectedBeamId;
+    private int? _selectedSensorId;
 
     public BuildViewModel(CreatureBuilder? builder = null)
     {
@@ -76,6 +77,7 @@ public sealed class BuildViewModel : INotifyPropertyChanged
         _builder = new CreatureBuilder(creature);
         _selectedNodeIds.Clear();
         _selectedBeamId = null;
+        _selectedSensorId = null;
         _brainShape = brainShape ?? BrainShapeDef.Default;
         _creationName = string.IsNullOrWhiteSpace(creationName) ? NewCreationWorkflow.UntitledName : creationName;
         _trainingGeneration = training?.Generation;
@@ -114,13 +116,17 @@ public sealed class BuildViewModel : INotifyPropertyChanged
 
     public int SelectedBeamCount => _selectedBeamId is null ? 0 : 1;
 
-    public int SelectedPartCount => SelectedNodeCount + SelectedBeamCount;
+    public int SelectedSensorCount => _selectedSensorId is null ? 0 : 1;
+
+    public int SelectedPartCount => SelectedNodeCount + SelectedBeamCount + SelectedSensorCount;
 
     public int? SingleSelectedNodeId => _selectedNodeIds.Count == 1
         ? _selectedNodeIds.First()
         : null;
 
     public int? SingleSelectedBeamId => SelectedPartCount == 1 ? _selectedBeamId : null;
+
+    public int? SingleSelectedSensorId => SelectedPartCount == 1 ? _selectedSensorId : null;
 
     public void SetCreationName(string creationName)
     {
@@ -257,6 +263,8 @@ public sealed class BuildViewModel : INotifyPropertyChanged
         }
 
         _selectedBeamId = null;
+
+        _selectedSensorId = null;
         StatusMessage = _selectedNodeIds.Count == 0
             ? "Selection cleared."
             : $"{_selectedNodeIds.Count} selected. Drag one selected node to move them together.";
@@ -270,10 +278,47 @@ public sealed class BuildViewModel : INotifyPropertyChanged
 
         _selectedNodeIds.Clear();
         _selectedBeamId = beamId;
+        _selectedSensorId = null;
         StatusMessage = $"Beam {beamIndex + 1} selected.";
         NotifySelectionChanged();
         AnatomyChanged?.Invoke(this, EventArgs.Empty);
     }
+
+    public void SelectSensor(int sensorId)
+    {
+        var sensor = _builder.Sensors[_builder.SensorIndexOf(sensorId)];
+
+        _selectedNodeIds.Clear();
+        _selectedBeamId = null;
+        _selectedSensorId = sensorId;
+        StatusMessage = $"{SensorName(sensor.Kind)} selected.";
+        NotifySelectionChanged();
+        AnatomyChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    /// <summary>The sensor whose picture (<see cref="SensorPicture"/>) is under <paramref name="position"/>, if any.</summary>
+    public bool TryFindSensorAt(Vector2D position, out int sensorId)
+    {
+        foreach (var sensor in _builder.Sensors)
+        {
+            var beam = _builder.Beams[_builder.BeamIndexOf(sensor.BeamId)];
+            if (SensorPicture.Contains(position, NodeById(beam.NodeA).Position, NodeById(beam.NodeB).Position))
+            {
+                sensorId = sensor.Id;
+                return true;
+            }
+        }
+
+        sensorId = -1;
+        return false;
+    }
+
+    public static string SensorName(SensorKind kind) => kind switch
+    {
+        SensorKind.Accelerometer => "Accelerometer",
+        SensorKind.LineOfSight => "LOS sensor",
+        _ => throw new ArgumentOutOfRangeException(nameof(kind)),
+    };
 
     public void ClearSelection()
     {
@@ -284,6 +329,7 @@ public sealed class BuildViewModel : INotifyPropertyChanged
 
         _selectedNodeIds.Clear();
         _selectedBeamId = null;
+        _selectedSensorId = null;
         StatusMessage = "Selection cleared.";
         NotifySelectionChanged();
         AnatomyChanged?.Invoke(this, EventArgs.Empty);
@@ -294,6 +340,7 @@ public sealed class BuildViewModel : INotifyPropertyChanged
         ArgumentNullException.ThrowIfNull(nodeIds);
         _selectedNodeIds.Clear();
         _selectedBeamId = null;
+        _selectedSensorId = null;
         foreach (var nodeId in nodeIds)
         {
             if (_builder.Nodes.Any(node => node.Id == nodeId))
@@ -493,6 +540,7 @@ public sealed class BuildViewModel : INotifyPropertyChanged
         _builder.SplitBeamAtNode(beamId, nodeId);
         _selectedNodeIds.Clear();
         _selectedBeamId = null;
+        _selectedSensorId = null;
         StatusMessage = "Split the beam with a new joint.";
         NotifySelectionChanged();
         AnatomyChanged?.Invoke(this, EventArgs.Empty);
@@ -543,6 +591,11 @@ public sealed class BuildViewModel : INotifyPropertyChanged
             _builder.RemoveBeam(beamId);
         }
 
+        if (_selectedSensorId is { } sensorId)
+        {
+            _builder.RemoveSensor(sensorId);
+        }
+
         foreach (var nodeId in _selectedNodeIds)
         {
             _builder.RemoveNode(nodeId);
@@ -550,6 +603,7 @@ public sealed class BuildViewModel : INotifyPropertyChanged
 
         _selectedNodeIds.Clear();
         _selectedBeamId = null;
+        _selectedSensorId = null;
         StatusMessage = "Deleted selected parts.";
         NotifySelectionChanged();
         AnatomyChanged?.Invoke(this, EventArgs.Empty);
@@ -621,6 +675,8 @@ public sealed class BuildViewModel : INotifyPropertyChanged
         OnPropertyChanged(nameof(SelectedPartCount));
         OnPropertyChanged(nameof(SingleSelectedNodeId));
         OnPropertyChanged(nameof(SingleSelectedBeamId));
+        OnPropertyChanged(nameof(SelectedSensorCount));
+        OnPropertyChanged(nameof(SingleSelectedSensorId));
     }
 
     private static double DistanceSquaredToSegment(Vector2D point, Vector2D segmentStart, Vector2D segmentEnd)

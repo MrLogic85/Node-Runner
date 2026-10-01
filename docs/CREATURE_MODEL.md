@@ -99,6 +99,16 @@ CreatureDef  ──build──▶  physical body  ──sensors──▶  model 
   then turns with the beam and never flips during a run
   (`Accelerometer.UpSign`).
 - Kinds today: **Accelerometer** (#127) and **LOS sensor** (#575).
+- **Seen and tapped as a picture (#576):** a small picture of the sensor at
+  the middle of its beam, upright on the built up side and turned with the
+  beam; its tap area is a square there (`SensorPicture`). The
+  Accelerometer's weight hangs on its spring: in Build it swings when the
+  beam is moved and settles at rest (`BuildSensorMotion`), in Training it
+  follows the live proof mass. The LOS sensor is a camera looking along its
+  rays, and shows them when selected. A tap hits a joint first, then a
+  sensor, then a beam, in Build and Training alike
+  (`project/src/theme/SensorDrawing.cs`,
+  `project/src/creature/SensorVisual.cs`).
 
 #### Accelerometer
 

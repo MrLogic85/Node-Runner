@@ -31,6 +31,8 @@ public partial class BuildCanvas : Node2D
     private int _ghostVersion;
     private bool _viewFitted;
     private Control? _slot;
+    private readonly BuildSensorMotion _sensorMotion = new();
+    private double _gravity;
 
     public VisualTheme Theme { get; set; } = VisualTheme.Neon;
 
@@ -77,6 +79,25 @@ public partial class BuildCanvas : Node2D
         if (_slot is not null)
         {
             _slot.Resized += QueueRedraw;
+        }
+    }
+
+    public override void _Ready()
+    {
+        _gravity = ProjectSettings.GetSetting("physics/2d/default_gravity").AsDouble();
+    }
+
+    /// <summary>Swings each Accelerometer's weight as its beam moves, and draws again while one is still moving (#576).</summary>
+    public override void _Process(double delta)
+    {
+        if (_viewModel is null || delta <= 0 || _gravity <= 0)
+        {
+            return;
+        }
+
+        if (_sensorMotion.Advance(AccelerometerPoses(), delta, _gravity))
+        {
+            QueueRedraw();
         }
     }
 
@@ -198,6 +219,7 @@ public partial class BuildCanvas : Node2D
         }
 
         DrawTopologyFeedback();
+        DrawSensors();
 
         for (var nodeIndex = 0; nodeIndex < _viewModel.Nodes.Count; nodeIndex++)
         {
@@ -222,6 +244,71 @@ public partial class BuildCanvas : Node2D
 
         DrawBeamEndRings();
         DrawSelectionFrame();
+    }
+
+    /// <summary>
+    /// Each sensor as a picture at the middle of its beam (#576), upright on the beam's built up
+    /// side: the Accelerometer with its weight where <see cref="BuildSensorMotion"/> has it, and
+    /// the LOS camera looking along its rays, which it draws when selected.
+    /// </summary>
+    private void DrawSensors()
+    {
+        var view = _gestures!.View;
+        var viewTransform = new Transform2D(0, Vector2.One * (float)view.Zoom, 0, ToGodot(view.Offset));
+        var rays = Enumerable.Range(0, LineOfSight.RayCount)
+            .Select(ray => ToGodot(LineOfSight.LocalRayTarget(ray, 0)))
+            .ToArray();
+        foreach (var sensor in _viewModel!.Sensors)
+        {
+            var beam = _viewModel.Beams[_viewModel.BeamIndexOf(sensor.BeamId)];
+            var nodeA = NodeById(beam.NodeA).Position;
+            var nodeB = NodeById(beam.NodeB).Position;
+            var start = ToGodot(nodeA);
+            var end = ToGodot(nodeB);
+            var beamRotation = start == end ? 0 : (end - start).Angle();
+            var upSign = Accelerometer.UpSign(nodeA, nodeB);
+            var pictureRotation = beamRotation + (upSign == 1 ? Mathf.Pi : 0);
+            var middle = (start + end) / 2;
+            var selected = _viewModel.SingleSelectedSensorId == sensor.Id;
+            if (selected && sensor.Kind == SensorKind.LineOfSight)
+            {
+                SensorDrawing.DrawRays(this, Theme, middle, rays.Select(ray => middle + ray));
+            }
+
+            DrawSetTransformMatrix(viewTransform * new Transform2D(pictureRotation, middle));
+            if (sensor.Kind == SensorKind.Accelerometer)
+            {
+                var weight = _sensorMotion.WeightOffset(sensor.Id) ?? Accelerometer.RestWeightOffset(beamRotation, upSign);
+                SensorDrawing.DrawAccelerometer(this, Theme, weight, selected);
+            }
+            else
+            {
+                SensorDrawing.DrawLos(this, Theme, SensorDrawing.Aim(rays).Rotated(-pictureRotation), selected);
+            }
+
+            DrawThroughView();
+        }
+    }
+
+    /// <summary>Where each Accelerometer's beam is now, in creature units, for <see cref="BuildSensorMotion"/>.</summary>
+    private List<SensorPose> AccelerometerPoses()
+    {
+        var poses = new List<SensorPose>();
+        foreach (var sensor in _viewModel!.Sensors)
+        {
+            if (sensor.Kind != SensorKind.Accelerometer)
+            {
+                continue;
+            }
+
+            var beam = _viewModel.Beams[_viewModel.BeamIndexOf(sensor.BeamId)];
+            var nodeA = NodeById(beam.NodeA).Position;
+            var nodeB = NodeById(beam.NodeB).Position;
+            var midpoint = new Vector2D((nodeA.X + nodeB.X) / 2, (nodeA.Y + nodeB.Y) / 2);
+            poses.Add(new SensorPose(sensor.Id, midpoint, Math.Atan2(nodeB.Y - nodeA.Y, nodeB.X - nodeA.X), Accelerometer.UpSign(nodeA, nodeB)));
+        }
+
+        return poses;
     }
 
     /// <summary>
