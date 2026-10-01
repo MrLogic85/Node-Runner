@@ -28,7 +28,7 @@ declared in each `*.Tests.csproj`. Do not import them per file.
 | `NodeRunner.Domain.Tests` | Records, enums, invariants, JSON round-trip |
 | `NodeRunner.ML.Tests` | NN math, GA, backprop — the pure engine |
 | `NodeRunner.App.Tests` | View-models, repositories, service abstractions |
-| `NodeRunner.Arch.Tests` | Layer/dependency rules from `docs/ARCHITECTURE.md` |
+| `NodeRunner.Arch.Tests` | Layer/dependency rules from `docs/ARCHITECTURE.md` and source conventions such as the file-size limit |
 | `NodeRunner.Ui.Tests` | Static Godot UI contracts that do not require a scene tree |
 
 ## Rules
@@ -37,7 +37,8 @@ declared in each `*.Tests.csproj`. Do not import them per file.
   outside a per-test temp directory.
 - **Deterministic.** Seed all RNG. Never use wall-clock time.
 - **One test class per production class.** `NeuralNetworkTests.cs` sits under
-  `NodeRunner.ML.Tests/` and mirrors the production layout.
+  `NodeRunner.ML.Tests/` and mirrors the production layout, also after a
+  split (`docs/TEST_STRATEGY.md` § "Test file layout").
 - **AAA layout.** Arrange / blank line / Act / blank line / Assert.
 - **Test names describe behaviour.**
   `Forward_WithZeroInput_ReturnsZeroesForTanh()` — not `Test1()`.
@@ -48,7 +49,7 @@ declared in each `*.Tests.csproj`. Do not import them per file.
 ## What we test where
 
 - **Business rules & math** → the lib's own test project. Bulk of test mass.
-- **Layer rules** → `NodeRunner.Arch.Tests/ArchitectureSpec.cs`. Add a new
+- **Layer rules and source conventions** → `NodeRunner.Arch.Tests/ArchitectureSpec.cs`. Add a new
   fact whenever a convention emerges that the compiler can't enforce.
 - **Static Godot UI contracts** → `NodeRunner.Ui.Tests`; tests may inspect
   token/style data but must not instantiate Nodes or require a scene tree.

@@ -53,7 +53,15 @@ seed 4711". Regressions become detectable.
 
 ## 4. Small, composable units
 
-- A file should do one thing. If `Creature.cs` grows past ~300 lines, split it.
+- A file should do one thing. Aim for about 300 lines; past that, check
+  whether it still does one thing and split it if not.
+- **Soft limit, 1000 lines.** A production file past 1000 lines gets reviewed:
+  split out functionality, or the change says why it stays whole. Code review
+  flags it.
+- **Hard limit, 2000 lines.** No `.cs` file under `libs/` or `project/src/`
+  may exceed it. `NodeRunner.Arch.Tests` fails the build.
+- Test files have no size limit; see `docs/TEST_STRATEGY.md` § "Test file
+  layout".
 - Prefer composition over inheritance. A creature *has* nodes, beams, sensors
   and a brain — it doesn't *inherit* from any of them.
 - No abstract base classes "just in case". Introduce them when the second
@@ -103,8 +111,8 @@ about *that* invariant.
 
 - **Unit tests** for `libs/NodeRunner.ML/` and `libs/NodeRunner.Domain/` —
   mandatory. Small, fast, no Godot.
-- **Architecture tests** (`NodeRunner.Arch.Tests`) — enforce layer rules that
-  the compiler can't. Add a fact whenever a new convention emerges.
+- **Architecture tests** (`NodeRunner.Arch.Tests`) — enforce layer rules and
+  source conventions that the compiler can't. Add a fact whenever a new convention emerges.
 - **Property tests** where cheap (a network's output shape equals the output
   layer size for any random input).
 - **Manual tests** are decided per issue/change. See

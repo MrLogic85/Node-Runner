@@ -110,7 +110,7 @@ Node Runner/
     ├── NodeRunner.Domain.Tests/
     ├── NodeRunner.ML.Tests/
     ├── NodeRunner.App.Tests/
-    ├── NodeRunner.Arch.Tests/      # NetArchTest layer rules
+    ├── NodeRunner.Arch.Tests/      # layer rules and source conventions
     └── NodeRunner.Ui.Tests/        # static Godot UI contracts; no scene tree
 ```
 

@@ -48,6 +48,52 @@ public sealed class ArchitectureSpec
             .ShouldNotContain("NodeRunner.App");
     }
 
+    [Fact]
+    public void ProductionSourceFiles_StayWithinHardLineLimit()
+    {
+        const int hardLimit = 2000;
+        var root = FindRepositoryRoot();
+        string[] skipped = ["bin", "obj", ".godot"];
+        var offenders = new List<string>();
+
+        foreach (var dir in new[] { "libs", Path.Combine("project", "src") })
+        {
+            foreach (var path in Directory.EnumerateFiles(Path.Combine(root, dir), "*.cs", SearchOption.AllDirectories))
+            {
+                var relative = Path.GetRelativePath(root, path);
+                if (relative.Split(Path.DirectorySeparatorChar).Any(skipped.Contains))
+                {
+                    continue;
+                }
+
+                var lines = File.ReadLines(path).Count();
+                if (lines > hardLimit)
+                {
+                    offenders.Add($"{relative} ({lines} lines)");
+                }
+            }
+        }
+
+        offenders.ShouldBeEmpty(
+            $"Production files must stay within {hardLimit} lines; split out functionality. " +
+            "See docs/CODE_DESIGN_PRINCIPLES.md §4.");
+    }
+
+    private static string FindRepositoryRoot()
+    {
+        for (var directory = new DirectoryInfo(AppContext.BaseDirectory);
+             directory is not null;
+             directory = directory.Parent)
+        {
+            if (File.Exists(Path.Combine(directory.FullName, "NodeRunner.slnx")))
+            {
+                return directory.FullName;
+            }
+        }
+
+        throw new DirectoryNotFoundException("Could not find NodeRunner.slnx.");
+    }
+
     private static void AssertNoGodotReference(Assembly assembly)
     {
         var offenders = assembly.GetReferencedAssemblies()
