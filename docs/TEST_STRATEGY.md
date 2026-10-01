@@ -148,7 +148,9 @@ restyles controls (`UiSourceGuardTests`). In widgets that draw
 (`RewrittenUi.DrawnWidgets`), every literal inside `_Draw` and its `Draw*`
 helpers skips the number rule: proportions, strokes, dash lengths, segment
 counts and alphas stay inline where they are drawn. Numbers elsewhere in the
-file (hit radii, timers, thresholds) are still named. Gallery pages join the lists like
+file (hit radii, timers, thresholds) are still named. A drawn widget may also
+set the `Position` of scene-authored controls so they follow its drawing
+(the Select handles, #366); sizes stay in the scene. Gallery pages join the lists like
 product screens. A screen joins the lists when it is rewritten;
 [#310](https://github.com/MrLogic85/Node-Runner/issues/310) tracks the rest as
 child issues.

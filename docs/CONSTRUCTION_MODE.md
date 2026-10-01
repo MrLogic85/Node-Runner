@@ -63,9 +63,22 @@ a node's own disc always hits.
 - **Joint:** tap empty canvas to add a node, or tap a beam to split it at the
   closest point: one change that replaces the beam with two through the new
   node (`ConstructionViewModel.SplitBeam`).
-- **Select:** tap nodes to add them, drag on empty canvas for a box that
-  replaces the selection, drag a selected node to move the selection. The
-  box with handles is #366.
+- **Select (#366):** tap a node to add it and tap a selected one to remove
+  it; drag on empty canvas (beams count as empty) for a box that replaces
+  the selection; an empty tap clears it. Two or more selected joints get a
+  dashed frame with three `UiSelectionHandle`s: **Move** in the middle (or
+  drag anywhere inside the frame, or a selected joint), **Rotate** on a stem
+  above and **Scale** at the bottom-right corner. Rotate and Scale turn
+  about the centre of the joints' bounds; Scale counts only the drag along
+  its diagonal and is clamped to `MinSelectionScale`..`MaxSelectionScale`,
+  so the group never collapses or reflects. Every drag frame is computed
+  from a `SelectionSnapshot` taken when the drag starts, so nothing drifts.
+  A move stops the group as a whole at the build area's edge; a turn or
+  scale that would leave it is ignored. The frame and handles keep their
+  screen size at any zoom, the frame clears the selected joints' halos,
+  and each handle hits within `HandleHitRadius`; a tap (not a drag) on a
+  joint under a handle still adds or removes that joint. A locked creation shows only Move and Rotate, and
+  `ConstructionViewModel.ScaleSelection` refuses it.
 - **Core (transitional):** the Core row in the Parts tray turns taps on a
   node into adding or removing its core, until parts are dragged from the
   tray onto joints (#376).

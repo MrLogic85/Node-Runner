@@ -30,17 +30,164 @@ public sealed class ConstructionViewModelTests
     }
 
     [Fact]
-    public void MoveSelectedNodes_PastTheBuildArea_StopsTheWholeGroupAndKeepsItsShape()
+    public void TranslateSelection_PastTheBuildArea_StopsTheWholeGroupAndKeepsItsShape()
+    {
+        var viewModel = SelectedPair();
+
+        viewModel.TranslateSelection(viewModel.SnapshotSelection(), new Vector2D(_area.Max.X, 30));
+
+        viewModel.Nodes[1].Position.ShouldBe(new Vector2D(_area.Max.X - 18, 30));
+        viewModel.Nodes[0].Position.ShouldBe(new Vector2D(_area.Max.X - 118, 30));
+    }
+
+    [Fact]
+    public void TranslateSelection_WithFractionalCoordinates_StillReachesTheEdge()
+    {
+        var viewModel = new ConstructionViewModel();
+        viewModel.PlaceNode(new Vector2D(0.1, 0), 14);
+        viewModel.PlaceNode(new Vector2D(100.1, 0), 14);
+        viewModel.ReplaceSelection([0, 1]);
+
+        viewModel.TranslateSelection(viewModel.SnapshotSelection(), new Vector2D(1500.3, 0));
+
+        viewModel.Nodes[1].Position.X.ShouldBe(_area.Max.X - 14);
+        viewModel.Nodes[0].Position.X.ShouldBe(_area.Max.X - 114, 1e-9);
+    }
+
+    [Fact]
+    public void SnapshotSelection_PivotsOnTheCentreOfTheJointsBounds()
+    {
+        var viewModel = SelectedPair();
+
+        viewModel.SnapshotSelection().Pivot.ShouldBe(new Vector2D(50, 0));
+    }
+
+    [Theory]
+    [InlineData(Math.PI / 2)]
+    [InlineData(-Math.PI / 2)]
+    [InlineData(3 * Math.PI / 2)]
+    public void RotateSelection_TurnsAboutThePivotAndKeepsDistances(double radians)
+    {
+        var viewModel = SelectedPair();
+        var start = viewModel.SnapshotSelection();
+
+        viewModel.RotateSelection(start, radians);
+
+        var turned = new Vector2D(50, -50 * Math.Sin(radians));
+        viewModel.Nodes[0].Position.X.ShouldBe(turned.X, 1e-9);
+        viewModel.Nodes[0].Position.Y.ShouldBe(turned.Y, 1e-9);
+        viewModel.Nodes[1].Position.Y.ShouldBe(-turned.Y, 1e-9);
+    }
+
+    [Fact]
+    public void RotateSelection_FromTheSnapshot_DoesNotDrift()
+    {
+        var viewModel = SelectedPair();
+        var start = viewModel.SnapshotSelection();
+
+        for (var i = 0; i < 1000; i++)
+        {
+            viewModel.RotateSelection(start, i * 0.37);
+        }
+
+        viewModel.RotateSelection(start, 0);
+
+        viewModel.Nodes[0].Position.ShouldBe(new Vector2D(0, 0));
+        viewModel.Nodes[1].Position.ShouldBe(new Vector2D(100, 0));
+    }
+
+    [Fact]
+    public void RotateSelection_ThatWouldLeaveTheBuildArea_IsIgnored()
+    {
+        var viewModel = new ConstructionViewModel();
+        viewModel.PlaceNode(new Vector2D(_area.Max.X - 18, -100), 18);
+        viewModel.PlaceNode(new Vector2D(_area.Max.X - 18, 100), 18);
+        viewModel.ReplaceSelection([0, 1]);
+        var start = viewModel.SnapshotSelection();
+
+        viewModel.RotateSelection(start, Math.PI / 4);
+
+        viewModel.Nodes[0].Position.ShouldBe(new Vector2D(_area.Max.X - 18, -100));
+        viewModel.Nodes[1].Position.ShouldBe(new Vector2D(_area.Max.X - 18, 100));
+    }
+
+    [Theory]
+    [InlineData(2, 2)]
+    [InlineData(0.5, 0.5)]
+    [InlineData(100, ConstructionViewModel.MaxSelectionScale)]
+    [InlineData(-3, ConstructionViewModel.MinSelectionScale)]
+    public void ScaleSelection_SpreadsFromThePivotWithinTheClamps(double factor, double applied)
+    {
+        var viewModel = SelectedPair();
+
+        viewModel.ScaleSelection(viewModel.SnapshotSelection(), factor);
+
+        viewModel.Nodes[0].Position.X.ShouldBe(50 - (50 * applied), 1e-9);
+        viewModel.Nodes[1].Position.X.ShouldBe(50 + (50 * applied), 1e-9);
+    }
+
+    [Fact]
+    public void ScaleSelection_OfCoincidentJoints_LeavesThemInPlace()
+    {
+        var viewModel = new ConstructionViewModel();
+        viewModel.PlaceNode(new Vector2D(10, 10), 18);
+        viewModel.PlaceNode(new Vector2D(10, 10), 18);
+        viewModel.ReplaceSelection([0, 1]);
+
+        viewModel.ScaleSelection(viewModel.SnapshotSelection(), 3);
+
+        viewModel.Nodes.ShouldAllBe(node => node.Position == new Vector2D(10, 10));
+    }
+
+    [Fact]
+    public void ScaleSelection_WithANonFiniteFactor_Throws()
+    {
+        var viewModel = SelectedPair();
+
+        Should.Throw<ArgumentOutOfRangeException>(() => viewModel.ScaleSelection(viewModel.SnapshotSelection(), double.NaN));
+    }
+
+    [Fact]
+    public void ScaleSelection_WhenLocked_IsRefused()
+    {
+        var viewModel = LockedPair();
+        viewModel.ReplaceSelection([0, 1]);
+
+        Should.Throw<InvalidOperationException>(() => viewModel.ScaleSelection(viewModel.SnapshotSelection(), 2));
+        viewModel.Nodes[1].Position.ShouldBe(new Vector2D(20, 0));
+    }
+
+    [Fact]
+    public void RotateSelection_WhenLocked_Turns()
+    {
+        var viewModel = LockedPair();
+        viewModel.ReplaceSelection([0, 1]);
+
+        viewModel.RotateSelection(viewModel.SnapshotSelection(), Math.PI);
+
+        viewModel.Nodes[0].Position.X.ShouldBe(20, 1e-9);
+    }
+
+    [Fact]
+    public void RestoreSelection_PutsTheJointsBack()
+    {
+        var viewModel = SelectedPair();
+        var start = viewModel.SnapshotSelection();
+        viewModel.ScaleSelection(start, 2);
+
+        viewModel.RestoreSelection(start);
+
+        viewModel.Nodes[0].Position.ShouldBe(new Vector2D(0, 0));
+        viewModel.Nodes[1].Position.ShouldBe(new Vector2D(100, 0));
+    }
+
+    private static ConstructionViewModel SelectedPair()
     {
         var viewModel = new ConstructionViewModel();
         viewModel.PlaceNode(new Vector2D(0, 0), 18);
         viewModel.PlaceNode(new Vector2D(100, 0), 18);
         viewModel.ReplaceSelection([0, 1]);
-
-        viewModel.MoveSelectedNodes(0, new Vector2D(_area.Max.X, 30));
-
-        viewModel.Nodes[1].Position.ShouldBe(new Vector2D(_area.Max.X - 18, 30));
-        viewModel.Nodes[0].Position.ShouldBe(new Vector2D(_area.Max.X - 118, 30));
+        return viewModel;
     }
 
     [Fact]

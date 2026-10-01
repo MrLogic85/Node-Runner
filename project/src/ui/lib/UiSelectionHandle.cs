@@ -36,7 +36,6 @@ public partial class UiSelectionHandle : Control, ISerializationListener
 
     public override void _Ready()
     {
-        MouseFilter = MouseFilterEnum.Pass;
         RecoverIcon();
         RefreshIcon();
     }
