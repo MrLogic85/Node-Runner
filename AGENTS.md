@@ -41,8 +41,10 @@ of the project before starting to work.
    break them down into milestones, new issues or subtasks.
 4. When new milestones, feature bugs are found or discussed. Add or update them
    on GitHub. Status, Priority and Size live in the GitHub Project, not in
-   labels (`docs/ISSUE_LABELS.md`). Dont leave desicions undocumented. Review broad, risky, or ambiguous
-   issues under docs/ISSUE_REVIEW.md before implementation.
+   labels. Set them, and blocked-by relationships, when you create an issue,
+   then run `.github/scripts/issue-audit.sh` (`docs/ISSUE_LABELS.md` →
+   "Creating an issue"). Dont leave desicions undocumented. Review broad,
+   risky, or ambiguous issues under docs/ISSUE_REVIEW.md before implementation.
 5. Keep *.md files up to date and as clean as possible.
 
 ## Architecture map

@@ -40,6 +40,27 @@ The script uses the caller's `gh` login, whose token needs the `project`
 scope (`gh auth refresh -h github.com -s project`). In the web UI the same
 fields are in the issue sidebar under the project.
 
+## Creating an issue
+
+The project's automation only adds a new issue with Status **Needs review**.
+Everything else is up to whoever creates the issue, in the same step:
+
+1. The rest of the "Required metadata" above. Use **Idea** instead of Needs
+   review if the issue is not shaped yet.
+2. Its parent as a sub-issue, and every issue it waits on as a GitHub
+   **blocked-by** relationship. Text such as "Blocked by #N" in the body
+   explains a dependency but does not record it.
+
+Then check the whole tracker:
+
+```bash
+.github/scripts/issue-audit.sh   # lists open issues that break these rules
+```
+
+It flags missing labels and fields, a Size on a parent, a **Blocked**
+issue without an open blocked-by issue, and a **Ready** or **In progress**
+issue that still has one.
+
 ## Type labels
 
 Use one:
@@ -51,6 +72,7 @@ Use one:
 - `type: docs` — Documentation-only change
 - `type: test` — Test-only change
 - `type: question` — Open decision needing discussion
+- `type: epic` — A large outcome tracked through its sub-issues
 - `type: spike` — Time-boxed investigation that should produce a decision or
   follow-up issue
 
@@ -98,7 +120,7 @@ Use one or more:
 ## Size
 
 Project field, a number in story points. Set it once the issue is shaped;
-leave it empty on **Idea** issues and `type: question` issues. To see the
+leave it empty on **Idea**, `type: question` and `type: epic` issues. To see the
 total per milestone, group a table view by Milestone and turn on the Size sum.
 
 - **1** — Simple fix, about a oneliner
@@ -122,8 +144,10 @@ between them.
 - **Needs design** — Waiting for a new or revised design in
   `reference design/`
 - **Needs decision** — Design/product choice required before work starts
-- **Blocked** — Waiting on another issue, or an external tool or person.
-  Record the blocking issue as a GitHub blocked-by relationship too.
+- **Blocked** — Waiting on another issue, recorded as a GitHub blocked-by
+  relationship. If it waits on an external tool or person, open an issue for
+  that wait and block on it, so `issue-audit.sh` can check every Blocked
+  issue.
 - **Ready** — Reviewed and actionable
 - **In progress** — Work has started but is not complete. Set it when you
   start.
