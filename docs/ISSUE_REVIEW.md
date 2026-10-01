@@ -35,6 +35,9 @@ open decision is settled. When an issue's last open blocked-by issue closes
 and nothing else (a person or an external tool) still blocks it, move it from
 **Blocked** to **Ready**.
 
+Size set before review is a first estimate. Review confirms or corrects it; an
+issue with Size 8 is split into sub-issues before it can become **Ready**.
+
 ## How to run issue review
 
 Give the review agent either the GitHub Issue URL or the full issue text.

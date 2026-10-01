@@ -32,7 +32,7 @@ with `.github/scripts/issue-fields.sh`:
 ```bash
 .github/scripts/issue-fields.sh 286                       # print Status, Priority, Size
 .github/scripts/issue-fields.sh 286 --status Ready
-.github/scripts/issue-fields.sh 286 --priority P1 --size 3
+.github/scripts/issue-fields.sh 286 --priority Major --size 3
 .github/scripts/issue-fields.sh 286 --size none           # clear a field
 ```
 
@@ -66,16 +66,16 @@ Roadmap features do not automatically outrank process or correctness work: if
 the way we build, test, review, or merge is unsafe, fixing that is higher
 priority than adding more feature code on top.
 
-- **P0** — Fix now. Broken build/demo, data loss, unusable core flow,
-  or broken required delivery gate that prevents safe work.
-- **P1** — Blocks safe progress toward the next roadmap version. Use
+- **1 Critical** — Fix now. Broken build/demo, data loss, unusable core
+  flow, or broken required delivery gate that prevents safe work.
+- **2 Major** — Blocks safe progress toward the next roadmap version. Use
   for roadmap-critical features **and** process/correctness work that protects
   CI, review, branch protection, release, architecture boundaries, or issue
   quality.
-- **P2** — Important for the next version or for maintainability, but
+- **3 Default** — Important for the next version or for maintainability, but
   safe work can continue with a clear workaround or without accumulating
   serious risk.
-- **P3** — Nice-to-have, polish, or backlog
+- **4 Minor** — Nice-to-have, polish, or backlog
 
 ## Area labels
 
@@ -146,7 +146,7 @@ When migrating a file issue to GitHub:
 - File `type` maps to the matching `type: ...` label. Legacy file issues may
   use `bug`, `feature`, `chore`, `refactor`, `docs`, `test`, `question`, or
   `spike`.
-- `priority: p0..p3` maps to the matching Priority field value.
+- `priority: p0..p3` maps to Priority 1 Critical, 2 Major, 3 Default and 4 Minor.
 - File status maps as follows:
   - `open` → open GitHub Issue with Status **Needs review**
   - `in-progress` → open GitHub Issue with Status **In progress**
