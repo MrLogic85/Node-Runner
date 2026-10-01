@@ -4,8 +4,9 @@ GitHub Issues are the source of truth after the migration from file issues.
 Issue review happens by reviewing the GitHub Issue text or URL directly — not
 by creating a PR just to edit an issue.
 
-Apply the required label rules in `docs/ISSUE_LABELS.md` when creating,
-updating, or reviewing an issue.
+Apply the label and project-field rules in `docs/ISSUE_LABELS.md` when
+creating, updating, or reviewing an issue. Status below means the project
+Status field.
 
 ## When to review an issue
 
@@ -17,21 +18,22 @@ implementation when it is:
   release process
 - Ambiguous about expected behavior or acceptance criteria
 - Likely to need manual testing
-- Marked with `status: needs-review` or `status: needs-decision`
+- In Status **Needs review** or **Needs decision**
 
-Issues marked `status: idea` are not actionable and are not reviewed or
-implemented yet. Shape them first through discussion; once the issue states
-one clear outcome and acceptance criteria, replace `status: idea` with
-`status: needs-review`.
+**Idea** issues are not actionable and are not reviewed or implemented yet.
+Shape them first through discussion; once the issue states one clear outcome
+and acceptance criteria, set Status to **Needs review**.
 
-Issues marked `status: needs-design` wait for the design to land in
-`reference design/`; then replace the label with `status: needs-review`. Go
-straight to `status: ready` only if the issue already passed review and the
-new design does not change its scope or acceptance criteria.
+**Needs design** issues wait for the design to land in `reference design/`;
+then set Status to **Needs review**. Go straight to **Ready** only if the
+issue already passed review and the new design does not change its scope or
+acceptance criteria.
 
-After review, replace `status: needs-review` with `status: ready` when the
-issue is actionable. Keep `status: needs-decision` until the open decision is
-settled.
+After review, set Status to **Ready** when the issue is actionable, or
+**Blocked** when it waits on another issue. Keep **Needs decision** until the
+open decision is settled. When an issue's last open blocked-by issue closes
+and nothing else (a person or an external tool) still blocks it, move it from
+**Blocked** to **Ready**.
 
 ## How to run issue review
 
@@ -40,8 +42,8 @@ Ask it to check:
 
 - Scope: one clear problem/outcome, or a suggested split
 - Acceptance criteria: concrete, testable, and not implementation-biased
-- Ownership: labels follow `docs/ISSUE_LABELS.md`, with the correct milestone
-  and linked docs
+- Ownership: labels and project fields follow `docs/ISSUE_LABELS.md`, with the
+  correct milestone and linked docs
 - Dependencies: blocked-by/follow-up relationships are explicit
 - Test plan: whether automated or manual testing is expected
 - Risk: architecture, data loss, determinism, performance, Android/device

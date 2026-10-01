@@ -40,7 +40,8 @@ of the project before starting to work.
    tasks from recent discussions with a human or from GitHub. If GitHub tasks are big,
    break them down into milestones, new issues or subtasks.
 4. When new milestones, feature bugs are found or discussed. Add or update them
-   on GitHub. Dont leave desicions undocumented. Review broad, risky, or ambiguous
+   on GitHub. Status, Priority and Size live in the GitHub Project, not in
+   labels (`docs/ISSUE_LABELS.md`). Dont leave desicions undocumented. Review broad, risky, or ambiguous
    issues under docs/ISSUE_REVIEW.md before implementation.
 5. Keep *.md files up to date and as clean as possible.
 
@@ -65,6 +66,7 @@ paths) lives in `LOCAL_CONFIG.md` at the repo root. That file is git-ignored;
 each clone maintains its own. Read it before running `gh`, `git push`, or any
 command that touches an external account — the primary `gh` login on a
 machine is not necessarily the account that has write access to this repo.
+Its token needs the `project` scope to set issue Status, Priority and Size.
 
 ## Definition of Done
 
