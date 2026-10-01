@@ -89,6 +89,37 @@ public sealed class CreatureBuilderTests
     }
 
     [Fact]
+    public void AddSensor_DuplicateLosSensorOnBeam_ReturnsLosReason()
+    {
+        var builder = PairBuilder();
+        var beam = builder.Beams[0].Id;
+        builder.AddSensor(beam, SensorKind.LineOfSight, out _, out _);
+
+        var added = builder.AddSensor(beam, SensorKind.LineOfSight, out _, out var reason);
+
+        added.ShouldBeFalse();
+        reason.ShouldBe("One LOS sensor per beam");
+        builder.Sensors.Count.ShouldBe(1);
+    }
+
+    [Fact]
+    public void AddSensor_OneOfEachKindOnBeam_AddsBoth()
+    {
+        var builder = PairBuilder();
+        var beam = builder.Beams[0].Id;
+        builder.AddSensor(beam, SensorKind.Accelerometer, out var accelerometer, out _);
+
+        var added = builder.AddSensor(beam, SensorKind.LineOfSight, out var los, out _);
+
+        added.ShouldBeTrue();
+        builder.Sensors.ShouldBe(
+        [
+            new SensorDef(accelerometer, beam, SensorKind.Accelerometer),
+            new SensorDef(los, beam, SensorKind.LineOfSight),
+        ]);
+    }
+
+    [Fact]
     public void RemoveSensor_RemovesOnlyThatSensor()
     {
         var builder = PairBuilder();
@@ -105,6 +136,7 @@ public sealed class CreatureBuilderTests
         var builder = PairBuilder();
         var beam = builder.Beams[0].Id;
         builder.AddSensor(beam, SensorKind.Accelerometer, out _, out _);
+        builder.AddSensor(beam, SensorKind.LineOfSight, out _, out _);
 
         builder.RemoveBeam(beam);
 

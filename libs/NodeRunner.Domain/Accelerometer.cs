@@ -19,6 +19,9 @@ public static class Accelerometer
     /// <summary>The longest integration substep; a faster time scale (2×, 4×) takes several per tick.</summary>
     public const double MaxSubstep = 1.0 / 60;
 
+    /// <summary>The brain inputs one accelerometer gives, in order: along and across its beam.</summary>
+    public static IReadOnlyList<string> ReadingNames { get; } = ["along", "across"];
+
     /// <summary>The proof mass at rest under a constant specific force.</summary>
     public static ProofMass Rest(Vector2D specificForceG) =>
         new(Divide(Negate(specificForceG), AngularFrequency * AngularFrequency), new Vector2D(0, 0));

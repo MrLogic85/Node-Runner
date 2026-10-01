@@ -254,6 +254,7 @@ public sealed class CreatureBuilder
     private static string DuplicateSensorReason(SensorKind kind) => kind switch
     {
         SensorKind.Accelerometer => "One accelerometer per beam",
+        SensorKind.LineOfSight => "One LOS sensor per beam",
         _ => "One sensor of each kind per beam",
     };
 

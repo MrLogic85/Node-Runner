@@ -120,7 +120,7 @@ then the app follows the reference.
     it gets the `halo` outline.
   - *Orientation:* the side of the beam that faces up as built is the
     sensor's top, and it then turns with the beam; it never flips during a
-    run. The LOS glyph is turned to match its as-built ray fan (#575), and a
+    run. The LOS glyph is turned to match its as-built ray fan (#576), and a
     selected LOS sensor draws its rays from the midpoint.
   - *Order:* joints, then sensors, then beams, for both tapping and drawing.
     A sensor's tap area is its badge. Dragging a sensor in Move does

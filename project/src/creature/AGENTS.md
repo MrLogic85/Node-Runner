@@ -1,7 +1,7 @@
 # AGENTS.md — `src/creature/`
 
-**The Godot-side representation of a creature: nodes, beams, sensors, motor
-relations, sensors, and the brain wiring. See `docs/CREATURE_MODEL.md` for
+**The Godot-side representation of a creature: nodes, beams, sensor parts, motor
+relations, and the brain wiring. See `docs/CREATURE_MODEL.md` for
 the model this implements.**
 
 ## Rules
@@ -31,9 +31,13 @@ the model this implements.**
   `CreatureDef` and owns the brain wiring
 - `MotorRelation.cs` — one controllable connection; drives torque (capped at
   a static `MaxTorque`) to chase a target angular velocity
+- `IBeamSensor.cs` — what `Creature` needs from a sensor part: its value
+  names, `Read` into the sensor buffer, and `Reset`
 - `AccelerometerSensor.cs` — one accelerometer: measures its beam's
   midpoint acceleration each tick, steps the Domain `Accelerometer` proof
   mass and writes its 2 readings into the sensor buffer
+- `LosSensor.cs` — one LOS sensor: three `RayCast2D` children aimed as
+  built by the Domain `LineOfSight`, writing 3 readings
 - `NodeVisual.cs` / `BeamVisual.cs` — rendering only, no physics
 - `HardcodedCreatureFactory.cs` — the first concrete `CreatureDef`
 - `Creature.tscn` (in `scenes/`) — the scene template

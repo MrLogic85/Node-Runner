@@ -67,7 +67,7 @@ public static class PartTray
         new("Sensors", "Drag onto a beam. A beam holds one of each sensor.",
         [
             Available(BuildPart.Accelerometer, "Accelerometer"),
-            Locked(BuildPart.LosSensor, "LOS sensor"),
+            Available(BuildPart.LosSensor, "LOS sensor"),
         ]),
         new("Blocks", "Drag it onto the canvas, then draw beams to its two eyes.",
         [

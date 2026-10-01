@@ -17,6 +17,8 @@ Pure C# data types. The vocabulary of the app, no behavior beyond invariants.
     like it must stay side-effect-free and take/return only Domain types.
     `Accelerometer` is the second: the proof-mass step, reading and sensor
     frame, shared by the sim and the visual (#576) and unit-tested here.
+    `LineOfSight` is the third: the LOS sensor's as-built ray targets and
+    reading, shared by the sim and the canvas glyph.
 - **Serialisable via `System.Text.Json` without custom converters.**
 
 ## What lives here
@@ -25,6 +27,7 @@ Pure C# data types. The vocabulary of the app, no behavior beyond invariants.
   `NodeConnectionDef` — anatomy
 - `Accelerometer`, `ProofMass` — the accelerometer's pure math (see the
   exception above)
+- `LineOfSight` — the LOS sensor's pure math (see the exception above)
 - `MotorTopology` — derives `NodeConnectionDef`s from a `CreatureDef` (see
   the exception above)
 - `SimulationConfig`, `GaConfig` — hyperparameters

@@ -114,13 +114,13 @@ public sealed class BuildPresentationViewModelTests
 
         buildPanel.CanStartTraining.ShouldBeTrue();
         buildPanel.ReadinessText.ShouldBe("Ready to train");
-        buildPanel.InputSummary.ShouldBe("1 accelerometer: 2 inputs; 3 motor relations: 6 inputs; 8 inputs total");
+        buildPanel.InputSummary.ShouldBe("1 sensor: 2 inputs; 3 motor relations: 6 inputs; 8 inputs total");
         buildPanel.InputCount.ShouldBe(8);
         buildPanel.MotorRelationSummary.ShouldBe("3 motor relations can twist");
     }
 
     [Fact]
-    public void BuildPanel_WithTwoAccelerometers_GrowsInputsPerSensor()
+    public void BuildPanel_WithAccelerometerAndLosSensor_CountsInputsPerSensorKind()
     {
         var build = new BuildViewModel();
         build.Load(WormCreature(sensorCount: 2));
@@ -129,8 +129,8 @@ public sealed class BuildPresentationViewModelTests
         var buildPanel = presentation.BuildPanel;
 
         buildPanel.CanStartTraining.ShouldBeTrue();
-        buildPanel.InputSummary.ShouldBe("2 accelerometers: 4 inputs; 3 motor relations: 6 inputs; 10 inputs total");
-        buildPanel.InputCount.ShouldBe(10);
+        buildPanel.InputSummary.ShouldBe("2 sensors: 5 inputs; 3 motor relations: 6 inputs; 11 inputs total");
+        buildPanel.InputCount.ShouldBe(11);
     }
 
     [Fact]
@@ -144,7 +144,7 @@ public sealed class BuildPresentationViewModelTests
 
         buildPanel.CanStartTraining.ShouldBeFalse();
         buildPanel.ReadinessText.ShouldBe("Add a two-beam node");
-        buildPanel.InputSummary.ShouldBe("1 accelerometer: 2 inputs; 0 motor relations: 0 inputs; 2 inputs total");
+        buildPanel.InputSummary.ShouldBe("1 sensor: 2 inputs; 0 motor relations: 0 inputs; 2 inputs total");
         buildPanel.MotorRelationSummary.ShouldBe("0 motor relations can twist");
     }
 
@@ -170,7 +170,7 @@ public sealed class BuildPresentationViewModelTests
     {
         var sensors = sensorCount == 1
             ? new[] { new SensorDef(201, 101, SensorKind.Accelerometer) }
-            : [new SensorDef(201, 101, SensorKind.Accelerometer), new SensorDef(202, 102, SensorKind.Accelerometer)];
+            : [new SensorDef(201, 101, SensorKind.Accelerometer), new SensorDef(202, 102, SensorKind.LineOfSight)];
         return new CreatureDef(
             [
                 new NodeDef(1, new Vector2D(0, 0), 18),

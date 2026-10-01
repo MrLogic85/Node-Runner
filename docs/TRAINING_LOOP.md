@@ -123,7 +123,8 @@ transition to keep in step with it.
   "The Training scene" below) subscribes to.
   - Concurrency is capped at 16 and never exceeds population size. Layer 1 is
     reserved for ground; zero-based slot `i` uses layer `2+i` and collides
-    only with ground and its own slot.
+    only with ground and its own slot. LOS sensor rays see the ground only
+    (mask 1), never another creature.
   - Candidate assignment is deterministic for the same seed, parallel mode,
     slot count, build, and platform. Sequential and parallel fitness parity
     is not promised because physics ordering can differ.

@@ -82,7 +82,8 @@ For each concept:
   built" (#534). 0.12.0 replaces that package with sensor parts on beams
   (see `docs/CREATURE_MODEL.md`): an Accelerometer, whose proof mass on a
   damped spring gives two readings along and across its beam and filters
-  spiky contacts (#127), and an LOS sensor (#575). There is no speed or
+  spiky contacts (#127), and an LOS sensor whose three fixed rays read how
+  far the ground is (#575). There is no speed or
   elevation input: the brain must learn movement from acceleration, joint
   readings and its own outputs; 0.14.0 adds LOS settings
   (#578) and Pulse, a rhythm input (#527).

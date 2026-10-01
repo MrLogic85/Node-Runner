@@ -97,6 +97,25 @@ public sealed class CreatureDefTests
     }
 
     [Fact]
+    public void Constructor_WithOneOfEachSensorKindOnBeam_Succeeds()
+    {
+        var creature = new CreatureDef(
+            new[]
+            {
+                new NodeDef(1, new Vector2D(0, 0), 1),
+                new NodeDef(2, new Vector2D(2, 0), 1),
+            },
+            new[] { new BeamDef(101, 1, 2) },
+            new[]
+            {
+                new SensorDef(201, 101, SensorKind.Accelerometer),
+                new SensorDef(202, 101, SensorKind.LineOfSight),
+            });
+
+        creature.Sensors.Count.ShouldBe(2);
+    }
+
+    [Fact]
     public void JsonRoundTrip_PreservesCreatureDefinition()
     {
         var original = new CreatureDef(
@@ -106,7 +125,11 @@ public sealed class CreatureDefTests
                 new NodeDef(2, new Vector2D(2, 0), 1.5),
             },
             new[] { new BeamDef(101, 1, 2) },
-            new[] { new SensorDef(201, 101, SensorKind.Accelerometer) });
+            new[]
+            {
+                new SensorDef(201, 101, SensorKind.Accelerometer),
+                new SensorDef(202, 101, SensorKind.LineOfSight),
+            });
 
         var json = JsonSerializer.Serialize(original);
 
@@ -119,7 +142,7 @@ public sealed class CreatureDefTests
         roundTripped.NextPartId.ShouldBe(original.NextPartId);
         json.ShouldContain("\"sensors\":");
         json.ShouldContain("\"Id\":1");
-        json.ShouldContain("\"NextPartId\":202");
+        json.ShouldContain("\"NextPartId\":203");
     }
 
     [Fact]
