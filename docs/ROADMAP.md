@@ -505,6 +505,8 @@ threshold approach during training and see a new part become available in
 Build immediately after crossing it.
 
 **Implementation status:** tracked in [#96](https://github.com/MrLogic85/Node-Runner/issues/96).
+The extra-Core slice it shipped was removed in #557; part unlocks return with
+achievements in 0.19 (#525).
 
 ---
 

@@ -10,7 +10,6 @@ namespace NodeRunner.Managers;
 public partial class SaveManager : Node
 {
     private ICreationRepository? _repository;
-    private IProgressionRepository? _progressionRepository;
     private ICreationUpdateCoordinator? _updateCoordinator;
     private INewCreationWorkflow? _newCreationWorkflow;
     private IBuildEditWorkflow? _buildEditWorkflow;
@@ -26,11 +25,11 @@ public partial class SaveManager : Node
         _newCreationWorkflow = new NewCreationWorkflow(_repository);
         _buildEditWorkflow = new BuildEditWorkflow(_updateCoordinator);
         var progressionDirectory = ProjectSettings.GlobalizePath("user://progression");
-        _progressionRepository = new FileProgressionRepository(new GodotStorageLocation(progressionDirectory));
+        var progression = new FileProgressionRepository(new GodotStorageLocation(progressionDirectory));
         _creationDuplicateWorkflow = new CreationDuplicateWorkflow(_repository);
         _exampleCopyWorkflow = new ExampleCopyWorkflow(_repository);
-        new DefaultCreationSeeder(_exampleCopyWorkflow, _progressionRepository).SeedIfNeeded();
-        _creationsPresentation = new CreationsPresentationViewModel(_repository, _progressionRepository);
+        new DefaultCreationSeeder(_exampleCopyWorkflow, progression).SeedIfNeeded();
+        _creationsPresentation = new CreationsPresentationViewModel(_repository);
     }
 
     public IReadOnlyList<CreationDef> List()
@@ -71,40 +70,6 @@ public partial class SaveManager : Node
     public IBuildEditWorkflow BuildEditWorkflow =>
         _buildEditWorkflow ?? throw new InvalidOperationException("SaveManager is not ready.");
 
-    public ProgressionDef Progression => ProgressionRepository.Load();
-
-    public bool UnlockExtraCore(int generation, Guid? creationId = null)
-    {
-        var current = ProgressionRepository.Load();
-        if (current.ExtraCoreUnlocked)
-        {
-            return creationId is { } id && TryAttributeExtraCoreUnlock(id);
-        }
-
-        ProgressionRepository.Save(new ProgressionDef(
-            true,
-            generation,
-            creationId,
-            current.DefaultCreationsSeeded));
-        return true;
-    }
-
-    private bool TryAttributeExtraCoreUnlock(Guid creationId)
-    {
-        var current = ProgressionRepository.Load();
-        if (!current.ExtraCoreUnlocked || current.ExtraCoreUnlockedByCreationId is not null)
-        {
-            return false;
-        }
-
-        ProgressionRepository.Save(new ProgressionDef(
-            true,
-            current.ExtraCoreUnlockedAtGeneration,
-            creationId,
-            current.DefaultCreationsSeeded));
-        return true;
-    }
-
     public CreationDef Duplicate(Guid id)
     {
         return CreationDuplicateWorkflow.Duplicate(id);
@@ -116,9 +81,6 @@ public partial class SaveManager : Node
 
     private ICreationRepository Repository =>
         _repository ?? throw new InvalidOperationException("SaveManager is not ready.");
-
-    private IProgressionRepository ProgressionRepository =>
-        _progressionRepository ?? throw new InvalidOperationException("SaveManager is not ready.");
 
     private ICreationUpdateCoordinator UpdateCoordinator =>
         _updateCoordinator ?? throw new InvalidOperationException("SaveManager is not ready.");

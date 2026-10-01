@@ -145,10 +145,9 @@ transition to keep in step with it.
 - Generation/fitness are logged (`GD.Print`) and shown on the Training
   screen (see "The Training scene" below).
 
-The first progression milestone uses the running best fitness as its metric:
-reaching 50 distance units unlocks a second core slot globally. The unlock is
-recorded with the generation that crossed the threshold and remains available
-in Build after restarting the app.
+Training unlocks nothing today. The first slice (a second Core slot at 50
+fitness) was removed in #557: every part is unlimited until achievements
+arrive in 0.19 (#525).
 
 ## The Training scene (issues #51, #469, #386)
 

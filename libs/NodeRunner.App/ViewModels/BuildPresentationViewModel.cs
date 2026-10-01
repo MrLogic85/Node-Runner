@@ -58,8 +58,6 @@ public sealed class BuildPresentationViewModel
 
     public int CoreCount => _build.Cores.Count;
 
-    public int MaxCores => _build.MaxCores;
-
     public BrainShapeDef BrainShape => _build.BrainShape;
 
     public BrainSetupPresentation BrainSetup
@@ -157,7 +155,7 @@ public sealed class BuildPresentationViewModel
 
     public bool LockTopologyTools => _build.IsMoveOnly;
 
-    public string CoreToolText => _build.IsMoveOnly ? "Core · locked" : BuildCoreToolText();
+    public string CoreToolText => _build.IsMoveOnly ? "Core · locked" : "Core";
 
     /// <summary>True for a locked Creation: its anatomy is fixed and only moving nodes is allowed.</summary>
     public bool IsLocked => _build.IsMoveOnly;
@@ -172,9 +170,7 @@ public sealed class BuildPresentationViewModel
 
     public string CoreToolTooltip => _build.IsMoveOnly
         ? MoveOnlyLockReason
-        : _build.MaxCores > 1
-        ? "Attach or remove a core. Extra core slot unlocked."
-        : "Attach or remove a core. Train to unlock a second core slot.";
+        : "Attach or remove a core.";
 
     public BuildPanelPresentation BuildPanel => CreateBuildPanel();
 
@@ -249,12 +245,6 @@ public sealed class BuildPresentationViewModel
             1 => "1 node not connected",
             _ => $"{unconnected} nodes not connected",
         };
-    }
-
-    private string BuildCoreToolText()
-    {
-        var unlockHint = _build.MaxCores > 1 ? "unlocked" : "50 fitness";
-        return $"Core {_build.Cores.Count}/{_build.MaxCores} ({unlockHint})";
     }
 
     private double BeamLength(int beamIndex)

@@ -7,14 +7,12 @@ namespace NodeRunner.App.ViewModels;
 public sealed class CreationsPresentationViewModel : INotifyPropertyChanged
 {
     private readonly ICreationRepository _repository;
-    private readonly IProgressionRepository? _progressionRepository;
     private readonly List<CreationCardPresentation> _cards = [];
 
-    public CreationsPresentationViewModel(ICreationRepository repository, IProgressionRepository? progressionRepository = null)
+    public CreationsPresentationViewModel(ICreationRepository repository)
     {
         ArgumentNullException.ThrowIfNull(repository);
         _repository = repository;
-        _progressionRepository = progressionRepository;
     }
 
     public IReadOnlyList<CreationCardPresentation> Cards => _cards;
@@ -24,11 +22,6 @@ public sealed class CreationsPresentationViewModel : INotifyPropertyChanged
     public bool HasCards => _cards.Count > 0;
 
     public string EmptyText => "No saved Creations yet.";
-
-    public bool HasAchievementCue { get; private set; }
-
-    /// <summary>Marks the Achievements button while something is new; empty hides the badge.</summary>
-    public string AchievementBadgeText => HasAchievementCue ? "!" : string.Empty;
 
     public string? ErrorText { get; private set; }
 
@@ -40,7 +33,6 @@ public sealed class CreationsPresentationViewModel : INotifyPropertyChanged
     {
         try
         {
-            var progression = _progressionRepository?.Load();
             var cards = new List<CreationCardPresentation>();
             foreach (var creation in _repository.List().OrderBy(creation => creation.Name, StringComparer.CurrentCulture))
             {
@@ -49,7 +41,6 @@ public sealed class CreationsPresentationViewModel : INotifyPropertyChanged
 
             _cards.Clear();
             _cards.AddRange(cards);
-            HasAchievementCue = progression?.ExtraCoreUnlocked == true;
             ErrorText = null;
             LoadError = null;
         }

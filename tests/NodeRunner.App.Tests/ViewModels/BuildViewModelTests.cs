@@ -554,20 +554,19 @@ public sealed class BuildViewModelTests
     }
 
     [Fact]
-    public void ToggleCoreOnNode_RespectsUnlockedCoreLimit()
+    public void ToggleCoreOnNode_AcceptsAnyNumberOfCores()
     {
         var viewModel = new BuildViewModel();
         var a = viewModel.PlaceNode(new Vector2D(0, 0), 18);
         var b = viewModel.PlaceNode(new Vector2D(20, 0), 18);
         var c = viewModel.PlaceNode(new Vector2D(40, 0), 18);
-        viewModel.SetMaxCores(2);
 
         viewModel.ToggleCoreOnNode(a);
         viewModel.ToggleCoreOnNode(b);
         viewModel.ToggleCoreOnNode(c);
 
-        viewModel.Cores.Count.ShouldBe(2);
-        viewModel.StatusMessage.ShouldBe("Core limit reached (2). Train to unlock another core slot.");
+        viewModel.Cores.Select(core => core.NodeIndex).ShouldBe([a, b, c]);
+        viewModel.StatusMessage.ShouldBe($"Attached core to node {c}.");
     }
 
     [Fact]

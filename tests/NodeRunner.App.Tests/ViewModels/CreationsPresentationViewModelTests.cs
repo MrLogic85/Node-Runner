@@ -17,7 +17,6 @@ public sealed class CreationsPresentationViewModelTests
         viewModel.Cards.ShouldBeEmpty();
         viewModel.HasCards.ShouldBeFalse();
         viewModel.EmptyText.ShouldBe("No saved Creations yet.");
-        viewModel.AchievementBadgeText.ShouldBeEmpty();
         viewModel.HasError.ShouldBeFalse();
     }
 
@@ -83,22 +82,6 @@ public sealed class CreationsPresentationViewModelTests
         viewModel.Refresh();
 
         viewModel.Cards.Select(card => card.Name).ShouldBe(["Ant", "Spider", "Worm"]);
-    }
-
-    [Fact]
-    public void Refresh_WithAnUnlock_MarksTheAchievementsButton()
-    {
-        var repository = new InMemoryCreationRepository();
-        var credited = CreateCreation("Unlocker", generation: 12);
-        repository.Save(credited);
-        var progression = new InMemoryProgressionRepository();
-        progression.Save(new ProgressionDef(true, 12, credited.Id));
-        var viewModel = new CreationsPresentationViewModel(repository, progression);
-
-        viewModel.Refresh();
-
-        viewModel.HasAchievementCue.ShouldBeTrue();
-        viewModel.AchievementBadgeText.ShouldBe("!");
     }
 
     [Fact]

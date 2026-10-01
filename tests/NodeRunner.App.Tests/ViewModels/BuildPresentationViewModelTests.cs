@@ -207,26 +207,15 @@ public sealed class BuildPresentationViewModelTests
     }
 
     [Fact]
-    public void CoreToolText_WhenExtraCoreLocked_ShowsFitnessUnlockHint()
+    public void CoreToolText_ShowsNoCountOrUnlock()
     {
         var build = new BuildViewModel();
         build.PlaceNode(new Vector2D(0, 0), 18);
         build.ToggleCoreOnNode(0);
         var presentation = new BuildPresentationViewModel(build);
 
-        presentation.CoreToolText.ShouldBe("Core 1/1 (50 fitness)");
-        presentation.CoreToolTooltip.ShouldBe("Attach or remove a core. Train to unlock a second core slot.");
-    }
-
-    [Fact]
-    public void CoreToolText_WhenExtraCoreUnlocked_ShowsUnlockedHint()
-    {
-        var build = new BuildViewModel();
-        build.SetMaxCores(2);
-        var presentation = new BuildPresentationViewModel(build);
-
-        presentation.CoreToolText.ShouldBe("Core 0/2 (unlocked)");
-        presentation.CoreToolTooltip.ShouldBe("Attach or remove a core. Extra core slot unlocked.");
+        presentation.CoreToolText.ShouldBe("Core");
+        presentation.CoreToolTooltip.ShouldBe("Attach or remove a core.");
     }
 
     [Fact]
@@ -290,6 +279,33 @@ public sealed class BuildPresentationViewModelTests
         buildPanel.ReadinessText.ShouldBe("Ready to train");
         buildPanel.InputSummary.ShouldBe("1 core: 6 sensors; 3 motor relations: 6 sensors; 12 inputs total");
         buildPanel.MotorRelationSummary.ShouldBe("3 motor relations can twist");
+    }
+
+    [Fact]
+    public void BuildPanel_WithThreeCores_GrowsInputsPerCore()
+    {
+        var build = new BuildViewModel();
+        build.Load(
+            new CreatureDef(
+                [
+                    new NodeDef(new Vector2D(0, 0), 18),
+                    new NodeDef(new Vector2D(56, 0), 18),
+                    new NodeDef(new Vector2D(112, 0), 18),
+                    new NodeDef(new Vector2D(168, 0), 18),
+                    new NodeDef(new Vector2D(224, 0), 18),
+                ],
+                [new BeamDef(0, 1), new BeamDef(1, 2), new BeamDef(2, 3), new BeamDef(3, 4)],
+                [new CoreDef(0)]));
+        build.ToggleCoreOnNode(2);
+        build.ToggleCoreOnNode(4);
+        var presentation = new BuildPresentationViewModel(build);
+
+        var buildPanel = presentation.BuildPanel;
+
+        build.Cores.Count.ShouldBe(3);
+        buildPanel.CanStartTraining.ShouldBeTrue();
+        buildPanel.InputSummary.ShouldBe("3 cores: 18 sensors; 3 motor relations: 6 sensors; 24 inputs total");
+        buildPanel.InputCount.ShouldBe(24);
     }
 
     [Fact]

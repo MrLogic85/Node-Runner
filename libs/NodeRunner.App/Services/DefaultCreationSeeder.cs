@@ -1,5 +1,4 @@
 using NodeRunner.App.Repositories;
-using NodeRunner.Domain;
 
 namespace NodeRunner.App.Services;
 
@@ -30,11 +29,7 @@ public sealed class DefaultCreationSeeder
         }
 
         _examples.Copy(CreationExamples.WormId);
-        _progression.Save(new ProgressionDef(
-            progression.ExtraCoreUnlocked,
-            progression.ExtraCoreUnlockedAtGeneration,
-            progression.ExtraCoreUnlockedByCreationId,
-            defaultCreationsSeeded: true));
+        _progression.Save(progression with { DefaultCreationsSeeded = true });
         return true;
     }
 }

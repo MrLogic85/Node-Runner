@@ -40,7 +40,6 @@ public partial class BuildHost : Node, IRoutedScene
 
     public override void _Ready()
     {
-        ApplyProgression();
         BindBuildScreen();
         _deleteCreationDialog = GetNode<UiDialog>("%DeleteDialog");
         _deleteCreationDialog.Finished += OnDeleteCreationDialogFinished;
@@ -114,9 +113,6 @@ public partial class BuildHost : Node, IRoutedScene
         Notify("Creations", "That creation could not be found.");
         Callable.From(ShowCreations).CallDeferred();
     }
-
-    private void ApplyProgression() =>
-        Build.SetMaxCores(Saves.Progression.ExtraCoreUnlocked ? 2 : 1);
 
     private void BindBuildScreen()
     {

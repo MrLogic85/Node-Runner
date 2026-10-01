@@ -230,10 +230,10 @@ public sealed class CreationRepositoryTests
     }
 
     [Fact]
-    public void InMemoryProgression_SaveAndLoad_RoundTripsUnlock()
+    public void InMemoryProgression_SaveAndLoad_RoundTripsSeeding()
     {
         var repository = new InMemoryProgressionRepository();
-        var progression = new ProgressionDef(true, 12);
+        var progression = new ProgressionDef(DefaultCreationsSeeded: true);
 
         repository.Save(progression);
 
@@ -241,13 +241,13 @@ public sealed class CreationRepositoryTests
     }
 
     [Fact]
-    public void FileProgression_SaveAndLoad_RoundTripsUnlock()
+    public void FileProgression_SaveAndLoad_RoundTripsSeeding()
     {
         var directory = Path.Combine(Path.GetTempPath(), $"node-runner-progression-{Guid.NewGuid():N}");
         try
         {
             var repository = new FileProgressionRepository(new TestStorageLocation(directory));
-            var progression = new ProgressionDef(true, 12, defaultCreationsSeeded: true);
+            var progression = new ProgressionDef(DefaultCreationsSeeded: true);
 
             repository.Save(progression);
 
@@ -263,8 +263,9 @@ public sealed class CreationRepositoryTests
     }
 
     [Fact]
-    public void FileProgression_LoadWithoutUnlockAttribution_RetainsOlderProgressionFiles()
+    public void FileProgression_LoadWithUnknownFields_KeepsSeedingFlag()
     {
+        // Files written before #557 still carry fields that were removed since.
         var directory = Path.Combine(Path.GetTempPath(), $"node-runner-progression-{Guid.NewGuid():N}");
         try
         {
@@ -273,15 +274,16 @@ public sealed class CreationRepositoryTests
                 Path.Combine(directory, "progression.json"),
                 """
                 {
-                  "ExtraCoreUnlocked": true,
-                  "ExtraCoreUnlockedAtGeneration": 12
+                  "RemovedFlag": true,
+                  "RemovedGeneration": 12,
+                  "DefaultCreationsSeeded": true
                 }
                 """);
             var repository = new FileProgressionRepository(new TestStorageLocation(directory));
 
             var progression = repository.Load();
 
-            progression.ShouldBe(new ProgressionDef(true, 12));
+            progression.ShouldBe(new ProgressionDef(DefaultCreationsSeeded: true));
         }
         finally
         {
@@ -332,19 +334,19 @@ public sealed class CreationRepositoryTests
         try
         {
             var storageLocation = new TestStorageLocation(directory);
-            new FileProgressionRepository(storageLocation).Save(new ProgressionDef(true, 5));
+            new FileProgressionRepository(storageLocation).Save(new ProgressionDef(DefaultCreationsSeeded: true));
 
             Parallel.For(0, 16, i =>
             {
                 // A fresh instance per iteration exercises the cross-instance
                 // path, not just cross-call reuse of the same object.
                 var repository = new FileProgressionRepository(storageLocation);
-                repository.Save(new ProgressionDef(true, 5 + i));
+                repository.Save(new ProgressionDef(DefaultCreationsSeeded: true));
                 repository.Load();
             });
 
             Directory.EnumerateFiles(directory, "progression.json.corrupt-*").ShouldBeEmpty();
-            new FileProgressionRepository(storageLocation).Load().ExtraCoreUnlocked.ShouldBeTrue();
+            new FileProgressionRepository(storageLocation).Load().DefaultCreationsSeeded.ShouldBeTrue();
         }
         finally
         {

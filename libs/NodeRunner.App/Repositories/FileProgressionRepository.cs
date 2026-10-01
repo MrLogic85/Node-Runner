@@ -50,17 +50,13 @@ public sealed class FileProgressionRepository : IProgressionRepository
                 // defaults, so structurally incomplete JSON (e.g. "{}")
                 // would otherwise silently deserialize as a fresh/reset
                 // progression instead of being recognized as corrupt (#114).
-                // Every file we write always contains the original unlock
-                // fields as an object, so anything else didn't come from
-                // Save() and must be treated as invalid. Newer fields stay
-                // optional so older valid progression files can migrate
-                // through the ProgressionDef constructor defaults.
+                // Every file we write is an object with the seeding flag, so
+                // anything else didn't come from Save() and is invalid.
                 using (var document = JsonDocument.Parse(json))
                 {
                     var root = document.RootElement;
                     if (root.ValueKind != JsonValueKind.Object
-                        || !HasProperty(root, nameof(ProgressionDef.ExtraCoreUnlocked))
-                        || !HasProperty(root, nameof(ProgressionDef.ExtraCoreUnlockedAtGeneration)))
+                        || !HasProperty(root, nameof(ProgressionDef.DefaultCreationsSeeded)))
                     {
                         throw new InvalidDataException($"Progression file '{_path}' is missing required fields.");
                     }
@@ -71,9 +67,8 @@ public sealed class FileProgressionRepository : IProgressionRepository
             }
             catch (Exception ex) when (FilePersistenceExceptions.IsRecoverable(ex))
             {
-                // A corrupt progression file must not crash training (it's
-                // read on nearly every generation-completion tick); log it,
-                // quarantine it so it isn't reported again on the next
+                // A corrupt progression file must not crash startup seeding;
+                // log it, quarantine it so it isn't reported again on the next
                 // Load(), and recover to a fresh progression rather than
                 // letting the exception propagate (#114).
                 Console.Error.WriteLine(
