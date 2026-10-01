@@ -5,6 +5,31 @@ codebase, it should appear here. When you introduce a new term, add it.
 
 Ordered alphabetically within sections.
 
+## Product words
+
+The player's words, from `reference design/README.md` → "The words" (#202).
+Code, docs and copy use them; the ML layer keeps its textbook terms.
+
+- **Build** — The editor where a Creation's body is drawn and changed. Code
+  says Build (`BuildViewModel`, `BuildTool`, `BuildCanvas`), never
+  Construction. See: `docs/BUILD_MODE.md`.
+- **Creation** — The thing the player saves, names, lists and copies
+  (`CreationDef`): a creature body plus its brain and training.
+- **Creature** — The body inside a Creation; see "Creature anatomy". Copy
+  never calls the saved item a creature.
+- **Shadow** — One of the ghost copies that race at once during training.
+  The App maps the GA's candidates and population to shadows at its
+  boundary (`ITrainingProgressSource.CurrentShadow`, `ShadowCount`).
+
+Kept on purpose:
+
+- `Node` / `NodeDef` — the reference uses both Node and Joint; a joint is a
+  node where beams meet.
+- GA terms (population, candidate, genome, generation, fitness) in
+  `NodeRunner.ML` and the sim's `Evolver` — `docs/ML_CONCEPTS.md` teaches them.
+- `MotorRelation`, `MotorTopology`, `NodeConnectionDef` — removed by #450.
+- `CreatureElementSelection` / `CreatureElementKind` — replaced by #220.
+
 ## Creature anatomy
 
 Long-form descriptions and the sensor/model contract live in
@@ -16,8 +41,8 @@ Long-form descriptions and the sensor/model contract live in
 - **Core** — A sensor package mounted on a node: rays, pitch, elevation,
   speed. **Not the neural model** — it only produces sensor readings. See:
   `docs/CREATURE_MODEL.md`.
-- **Creature** — A single agent: nodes + beams (+ optional cores) + the
-  sensors/motor relations they derive + a brain. See:
+- **Creature** — A single agent's body: nodes + beams (+ optional cores) +
+  the sensors/motor relations they derive, driven by a brain. See:
   `docs/CREATURE_MODEL.md`.
 - **Creature element selection** — A selected node, beam, or core,
   represented as a `CreatureElementKind` plus its zero-based index in the
@@ -27,7 +52,7 @@ Long-form descriptions and the sensor/model contract live in
 - **Joint** — The player-facing name for a node in Build (the reference
   design's Joint tool adds one). Not the retired 0.1.0 Joint/Bone/Muscle
   prototype part, and not a Godot physics joint. See:
-  `docs/CONSTRUCTION_MODE.md`.
+  `docs/BUILD_MODE.md`.
 - **Model input** — One slot in the neural network's input vector, populated
   one-to-one from a sensor value (a core's or a motor relation's). See:
   `docs/CREATURE_MODEL.md`.
@@ -46,8 +71,8 @@ Long-form descriptions and the sensor/model contract live in
 ## Build canvas
 
 - **Build area** — The fixed rectangle joints must stay inside
-  (`ConstructionViewModel.BuildArea`), drawn as a faint grid with corner
-  marks. See: `docs/CONSTRUCTION_MODE.md`.
+  (`BuildViewModel.BuildArea`), drawn as a faint grid with corner
+  marks. See: `docs/BUILD_MODE.md`.
 - **Canvas unit** — A distance in creature coordinates, the same as
   `NodeDef.Position` and node radii. Zoom and pan never change it.
 - **View unit** — A distance in the Build canvas widget's own space before
@@ -87,7 +112,8 @@ Long-form descriptions and the sensor/model contract live in
 - **Population** — The set of candidate genomes (brains) evaluated in one
   generation. `Evolver` evaluates up to 16 candidates concurrently in fixed,
   collision-isolated slots. The first slot is visible; additional slots are
-  hidden until population visualization is implemented.
+  hidden until population visualization is implemented. The player sees
+  the candidates as **shadows**.
 - **Reinforcement Learning (RL)** — Training via reward signals from
   environment interaction. Not used in the early roadmap; considered for later.
 - **Selection** — GA operator that picks parents for the next generation. We

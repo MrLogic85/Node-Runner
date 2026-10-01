@@ -145,7 +145,7 @@ public partial class TrainingHost : Node, IRoutedScene
         {
             // A saved drawing may be unfinished (#515); Build stops it before training.
             GD.PrintErr($"Creation {_route.CreationId} cannot train yet.");
-            Notify("Creations", "Finish the creature in Build before training it.");
+            Notify("Creations", "Finish the creation in Build before training it.");
         }
         else
         {

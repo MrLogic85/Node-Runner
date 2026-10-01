@@ -8,9 +8,9 @@ public interface ITrainingProgressSource : IDisposable
 
     int Generation { get; }
 
-    int CurrentCandidate { get; }
+    int CurrentShadow { get; }
 
-    int PopulationSize { get; }
+    int ShadowCount { get; }
 
     double BestFitness { get; }
 

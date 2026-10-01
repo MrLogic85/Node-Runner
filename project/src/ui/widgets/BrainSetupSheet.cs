@@ -12,14 +12,14 @@ namespace NodeRunner.Ui.Widgets;
 /// </summary>
 public partial class BrainSetupSheet : Control
 {
-    private ConstructionPresentationViewModel? _presentation;
+    private BuildPresentationViewModel? _presentation;
 
     [Signal]
     public delegate void BrainShapeChangedEventHandler(int hiddenLayers, int neuronsPerLayer);
 
     public bool IsOpen => Visible;
 
-    public ConstructionPresentationViewModel? Presentation
+    public BuildPresentationViewModel? Presentation
     {
         get => _presentation;
         set

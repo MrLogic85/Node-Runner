@@ -248,9 +248,9 @@ its route. #468 is routing them one by one. Creations (the root and the
 main scene), Examples, Build, Training and the component-library pages are
 routed scenes. Build (`BuildRoute`, #363) edits one saved creation and saves
 each edit as it settles and before it is left (#368); + New saves an empty
-creation first and opens it with `IsNew` (see `docs/CONSTRUCTION_MODE.md`
+creation first and opens it with `IsNew` (see `docs/BUILD_MODE.md`
 for when Build removes it again). Its layout
-is authored in `BuildScreen.tscn` (#364): the construction canvas is a
+is authored in `BuildScreen.tscn` (#364): the Build canvas is a
 `Node2D` inside the screen's clipped canvas slot, placed and scaled in the
 scene, so Build has no camera and taps reach the canvas through the UI. Training
 (`TrainingRoute`, #469) trains one saved creation: it

@@ -7,13 +7,13 @@ namespace NodeRunner.Ui.Screens;
 
 /// <summary>
 /// Build screen, unlocked state (<c>reference design/components/Build</c>). The layout is authored
-/// in <c>scenes/screens/BuildScreen.tscn</c>; this script binds the construction presentation and
+/// in <c>scenes/screens/BuildScreen.tscn</c>; this script binds the Build presentation and
 /// forwards intents to its host, which owns saves and navigation.
 /// </summary>
 public partial class BuildScreen : Control
 {
-    private ConstructionViewModel? _construction;
-    private ConstructionPresentationViewModel? _presentation;
+    private BuildViewModel? _build;
+    private BuildPresentationViewModel? _presentation;
     private bool _subscribedToPresentation;
 
     [Signal]
@@ -44,7 +44,7 @@ public partial class BuildScreen : Control
     public delegate void BrainRequestedEventHandler();
 
     [Signal]
-    public delegate void ToolRequestedEventHandler(ConstructionTool tool);
+    public delegate void ToolRequestedEventHandler(BuildTool tool);
 
     [Signal]
     public delegate void BrainShapeChangedEventHandler(int hiddenLayers, int neuronsPerLayer);
@@ -57,12 +57,12 @@ public partial class BuildScreen : Control
     private BrainSetupSheet BrainSetup => GetNode<BrainSetupSheet>("%BrainSetupSheet");
 
     /// <summary>Binds the creation being built: the canvas edits it and the panels show it.</summary>
-    public void Setup(ConstructionViewModel construction)
+    public void Setup(BuildViewModel build)
     {
-        ArgumentNullException.ThrowIfNull(construction);
+        ArgumentNullException.ThrowIfNull(build);
         UnsubscribeFromPresentation();
-        _construction = construction;
-        _presentation = new ConstructionPresentationViewModel(construction);
+        _build = build;
+        _presentation = new BuildPresentationViewModel(build);
         if (IsInsideTree())
         {
             SubscribeToPresentation();
@@ -104,11 +104,11 @@ public partial class BuildScreen : Control
         BindMenuItem(toolbar, GetNode<UiMenuActionItem>("%MenuBrainSetup"), BrainSetup.Open);
         BindMenuItem(toolbar, GetNode<UiMenuActionItem>("%MenuResetTraining"), () => EmitSignal(SignalName.ResetTrainingRequested));
         BindMenuItem(toolbar, GetNode<UiMenuActionItem>("%MenuDeleteCreation"), () => EmitSignal(SignalName.DeleteCreationRequested));
-        BindTool(GetNode<UiButton>("%MoveTool"), ConstructionTool.Move);
-        BindTool(GetNode<UiButton>("%BeamTool"), ConstructionTool.Beam);
-        BindTool(GetNode<UiButton>("%JointTool"), ConstructionTool.Joint);
-        BindTool(GetNode<UiButton>("%SelectTool"), ConstructionTool.Select);
-        GetNode<UiPartRow>("%CorePart").PartSelected += () => EmitSignal(SignalName.ToolRequested, (int)ConstructionTool.Core);
+        BindTool(GetNode<UiButton>("%MoveTool"), BuildTool.Move);
+        BindTool(GetNode<UiButton>("%BeamTool"), BuildTool.Beam);
+        BindTool(GetNode<UiButton>("%JointTool"), BuildTool.Joint);
+        BindTool(GetNode<UiButton>("%SelectTool"), BuildTool.Select);
+        GetNode<UiPartRow>("%CorePart").PartSelected += () => EmitSignal(SignalName.ToolRequested, (int)BuildTool.Core);
         GetNode<UiButton>("%Stats").Activated += () => EmitSignal(SignalName.StatsRequested);
         GetNode<UiButton>("%Brain").Activated += () => EmitSignal(SignalName.BrainRequested);
         GetNode<UiButton>("%PartDelete").Activated += () => EmitSignal(SignalName.DeleteSelectionRequested);
@@ -132,12 +132,12 @@ public partial class BuildScreen : Control
             action();
         };
 
-    private void BindTool(UiButton button, ConstructionTool tool) =>
+    private void BindTool(UiButton button, BuildTool tool) =>
         button.Activated += () => EmitSignal(SignalName.ToolRequested, (int)tool);
 
     private void BindViewModels()
     {
-        GetNode<ConstructionCanvas>("%ConstructionCanvas").ViewModel = _construction;
+        GetNode<BuildCanvas>("%BuildCanvas").ViewModel = _build;
         BrainSetup.Presentation = _presentation;
     }
 
@@ -176,7 +176,7 @@ public partial class BuildScreen : Control
         ApplySidePanel(presentation, buildPanel, locked);
     }
 
-    private void ApplyToolbar(ConstructionPresentationViewModel presentation, ConstructionBuildPanelPresentation buildPanel, bool locked)
+    private void ApplyToolbar(BuildPresentationViewModel presentation, BuildPanelPresentation buildPanel, bool locked)
     {
         var name = GetNode<UiTextField>("%CreationName");
         if (name.State != UiTextField.TextInputState.Editing)
@@ -195,19 +195,19 @@ public partial class BuildScreen : Control
         }
     }
 
-    private void ApplyTools(ConstructionPresentationViewModel presentation)
+    private void ApplyTools(BuildPresentationViewModel presentation)
     {
-        GetNode<UiButton>("%MoveTool").Selected = presentation.ActiveTool == ConstructionTool.Move;
+        GetNode<UiButton>("%MoveTool").Selected = presentation.ActiveTool == BuildTool.Move;
         var beam = GetNode<UiButton>("%BeamTool");
-        beam.Selected = presentation.ActiveTool == ConstructionTool.Beam;
+        beam.Selected = presentation.ActiveTool == BuildTool.Beam;
         beam.Disabled = presentation.LockTopologyTools;
         var joint = GetNode<UiButton>("%JointTool");
-        joint.Selected = presentation.ActiveTool == ConstructionTool.Joint;
+        joint.Selected = presentation.ActiveTool == BuildTool.Joint;
         joint.Disabled = presentation.LockTopologyTools;
-        GetNode<UiButton>("%SelectTool").Selected = presentation.ActiveTool == ConstructionTool.Select;
+        GetNode<UiButton>("%SelectTool").Selected = presentation.ActiveTool == BuildTool.Select;
     }
 
-    private void ApplySidePanel(ConstructionPresentationViewModel presentation, ConstructionBuildPanelPresentation buildPanel, bool locked)
+    private void ApplySidePanel(BuildPresentationViewModel presentation, BuildPanelPresentation buildPanel, bool locked)
     {
         var selected = presentation.SelectedPartCount;
         var tray = GetNode<Control>("%PartsTray");
@@ -256,20 +256,20 @@ public partial class BuildScreen : Control
         ApplyReadiness(buildPanel);
     }
 
-    private void ApplyTray(ConstructionPresentationViewModel presentation)
+    private void ApplyTray(BuildPresentationViewModel presentation)
     {
         var coresLeft = Math.Max(0, presentation.MaxCores - presentation.CoreCount);
         var core = GetNode<UiPartRow>("%CorePart");
         core.ValueText = $"{coresLeft} left";
-        core.State = presentation.ActiveTool == ConstructionTool.Core
+        core.State = presentation.ActiveTool == BuildTool.Core
             ? UiPartRow.PartRowState.Selected
             : coresLeft == 0
                 ? UiPartRow.PartRowState.NoneLeft
                 : UiPartRow.PartRowState.Rest;
-        GetNode<UiLabel>("%ToolHint").Text = ConstructionPresentationViewModel.ToolHint(presentation.ActiveTool);
+        GetNode<UiLabel>("%ToolHint").Text = BuildPresentationViewModel.ToolHint(presentation.ActiveTool);
     }
 
-    private void ApplyPartSettings(ConstructionPresentationViewModel presentation, bool locked)
+    private void ApplyPartSettings(BuildPresentationViewModel presentation, bool locked)
     {
         GetNode<UiLabel>("%PartPrimaryLabel").Text = presentation.SinglePartPrimaryLabel;
         GetNode<UiLabel>("%PartPrimaryValue").Text = presentation.SinglePartPrimaryValue;
@@ -280,7 +280,7 @@ public partial class BuildScreen : Control
         GetNode<UiButton>("%PartDelete").Visible = !locked;
     }
 
-    private void ApplyReadiness(ConstructionBuildPanelPresentation buildPanel)
+    private void ApplyReadiness(BuildPanelPresentation buildPanel)
     {
         var ready = buildPanel.CanStartTraining;
         var color = ready ? UiTokens.Color.Accent : UiTokens.Color.Danger;

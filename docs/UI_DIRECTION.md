@@ -69,7 +69,7 @@ then the app follows the reference.
   after the owner's S25 check. Three things keep their screen size: text
   labels, the build grid's hairlines (1 px at any zoom, so the grid stays
   faint), and the Select frame with its handles, which are controls to
-  grab rather than part of the picture (#366). It may still change later: `ConstructionCanvas.Stroke` is
+  grab rather than part of the picture (#366). It may still change later: `BuildCanvas.Stroke` is
   the one place to keep the picture's lines at screen width.
 - **The Build grid marks the build area (#400).** The reference's grid floor
   fills the canvas at 24 to 32px, fades toward the edges, and has fixed HUD
@@ -282,7 +282,7 @@ GLES3`); see the Compatibility/OpenGL renderer note in
 site (`UiNumber`, `UiDashedBorder`, `UiProgressRing`, `UiSlider`,
 `UiSelectionHandle`, `UiButton`, `UiBoundsDebugOverlay`,
 `BrainSetupNetwork`, `BrainFocusNetworkView`,
-`ConstructionCanvas`, `CreatureThumbnail`, `BeamVisual`). Any new `_Draw()` code
+`BuildCanvas`, `CreatureThumbnail`, `BeamVisual`). Any new `_Draw()` code
 must follow the same rule; a stray edge without antialiasing reads as a
 sharp 1px line at any stretch factor, while `antialiased: true` reads as a
 blurry, stretch-factor-wide halo.

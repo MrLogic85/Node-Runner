@@ -6,7 +6,7 @@ namespace NodeRunner.App.Tests.Services;
 public sealed class CreationExamplesTests
 {
     [Fact]
-    public void EveryExample_PassesConstructionValidationAndSaysWhatIsNew()
+    public void EveryExample_PassesBuildValidationAndSaysWhatIsNew()
     {
         foreach (var example in CreationExamples.All)
         {

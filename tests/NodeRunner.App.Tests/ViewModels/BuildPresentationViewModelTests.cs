@@ -3,23 +3,23 @@ using NodeRunner.Domain;
 
 namespace NodeRunner.App.Tests.ViewModels;
 
-public sealed class ConstructionPresentationViewModelTests
+public sealed class BuildPresentationViewModelTests
 {
     [Theory]
-    [InlineData(ConstructionTool.Move, "Drag a joint to move it. Tap a part to select it.")]
-    [InlineData(ConstructionTool.Beam, "Drag from one joint to another to join them with a beam.")]
-    [InlineData(ConstructionTool.Joint, "Tap empty space to add a joint, or tap a beam to split it.")]
-    [InlineData(ConstructionTool.Core, "Tap a node to attach a core, tap again to remove it.")]
-    public void ToolHint_ReturnsUserFacingHintForTool(ConstructionTool tool, string expected)
+    [InlineData(BuildTool.Move, "Drag a joint to move it. Tap a part to select it.")]
+    [InlineData(BuildTool.Beam, "Drag from one joint to another to join them with a beam.")]
+    [InlineData(BuildTool.Joint, "Tap empty space to add a joint, or tap a beam to split it.")]
+    [InlineData(BuildTool.Core, "Tap a node to attach a core, tap again to remove it.")]
+    public void ToolHint_ReturnsUserFacingHintForTool(BuildTool tool, string expected)
     {
-        ConstructionPresentationViewModel.ToolHint(tool).ShouldBe(expected);
+        BuildPresentationViewModel.ToolHint(tool).ShouldBe(expected);
     }
 
     [Fact]
     public void BuildModeButtonText_WhenInactive_ShowsBuild()
     {
-        var construction = new ConstructionViewModel();
-        var presentation = new ConstructionPresentationViewModel(construction);
+        var build = new BuildViewModel();
+        var presentation = new BuildPresentationViewModel(build);
 
         presentation.BuildModeButtonText.ShouldBe("Build");
     }
@@ -27,8 +27,8 @@ public sealed class ConstructionPresentationViewModelTests
     [Fact]
     public void BuildModeButtonText_WhenActive_ShowsSimulate()
     {
-        var construction = new ConstructionViewModel { IsActive = true };
-        var presentation = new ConstructionPresentationViewModel(construction);
+        var build = new BuildViewModel { IsActive = true };
+        var presentation = new BuildPresentationViewModel(build);
 
         presentation.BuildModeButtonText.ShouldBe("Simulate");
     }
@@ -36,10 +36,10 @@ public sealed class ConstructionPresentationViewModelTests
     [Fact]
     public void InspectorValues_UsesStatusMessageBeforeToolHint()
     {
-        var construction = new ConstructionViewModel();
-        construction.PlaceNode(new Vector2D(0, 0), 18);
-        construction.ConnectBeam(0, 0);
-        var presentation = new ConstructionPresentationViewModel(construction);
+        var build = new BuildViewModel();
+        build.PlaceNode(new Vector2D(0, 0), 18);
+        build.ConnectBeam(0, 0);
+        var presentation = new BuildPresentationViewModel(build);
 
         presentation.InspectorValues.ShouldBe("A beam must connect two different nodes.");
     }
@@ -47,8 +47,8 @@ public sealed class ConstructionPresentationViewModelTests
     [Fact]
     public void EditMode_LocksTopologyToolsAndShowsRebuildAction()
     {
-        var construction = new ConstructionViewModel();
-        construction.LoadCreation(new CreationDef(
+        var build = new BuildViewModel();
+        build.LoadCreation(new CreationDef(
             Guid.NewGuid(),
             "Worm",
             new CreatureDef(
@@ -56,7 +56,7 @@ public sealed class ConstructionPresentationViewModelTests
                 [new BeamDef(0, 1)],
                 []),
             new TrainingStateDef([2, 1], [0.1, -0.2, 0.3], 3, "Tanh")));
-        var presentation = new ConstructionPresentationViewModel(construction);
+        var presentation = new BuildPresentationViewModel(build);
 
         presentation.LockTopologyTools.ShouldBeTrue();
         presentation.CoreToolText.ShouldBe("Core · locked");
@@ -73,8 +73,8 @@ public sealed class ConstructionPresentationViewModelTests
     [Fact]
     public void EditMode_WithTraining_ShowsTrainingSummary()
     {
-        var construction = new ConstructionViewModel();
-        construction.Load(
+        var build = new BuildViewModel();
+        build.Load(
             new CreatureDef(
                 [new NodeDef(new Vector2D(0, 0), 18), new NodeDef(new Vector2D(20, 0), 18)],
                 [new BeamDef(0, 1)],
@@ -82,7 +82,7 @@ public sealed class ConstructionPresentationViewModelTests
             moveOnly: true,
             creationName: "Worm",
             training: new TrainingStateDef([2, 4, 1], Enumerable.Repeat(0.1, 17).ToArray(), 12, "Tanh", 42.25));
-        var presentation = new ConstructionPresentationViewModel(construction);
+        var presentation = new BuildPresentationViewModel(build);
 
         presentation.CreationName.ShouldBe("Worm");
         presentation.TrainingSummaryTitle.ShouldBe("Trained 12 generations");
@@ -93,8 +93,8 @@ public sealed class ConstructionPresentationViewModelTests
     [Fact]
     public void BuildMode_ShowsTopologyToolsForADraft()
     {
-        var construction = new ConstructionViewModel();
-        var presentation = new ConstructionPresentationViewModel(construction);
+        var build = new BuildViewModel();
+        var presentation = new BuildPresentationViewModel(build);
 
         presentation.LockTopologyTools.ShouldBeFalse();
         presentation.IsLocked.ShouldBeFalse();
@@ -104,14 +104,14 @@ public sealed class ConstructionPresentationViewModelTests
     [Fact]
     public void SelectedBeam_ShowsLengthEndpointsAndFixedStructureFacts()
     {
-        var construction = new ConstructionViewModel();
-        construction.Load(
+        var build = new BuildViewModel();
+        build.Load(
             new CreatureDef(
                 [new NodeDef(new Vector2D(0, 0), 18), new NodeDef(new Vector2D(3, 4), 18)],
                 [new BeamDef(0, 1)],
                 []));
-        construction.SelectBeam(0);
-        var presentation = new ConstructionPresentationViewModel(construction);
+        build.SelectBeam(0);
+        var presentation = new BuildPresentationViewModel(build);
 
         presentation.SinglePartTitle.ShouldBe("Beam 1");
         presentation.SinglePartPrimaryLabel.ShouldBe("Length");
@@ -124,14 +124,14 @@ public sealed class ConstructionPresentationViewModelTests
     [Fact]
     public void SelectedCore_ShowsActualBuiltInSensorContract()
     {
-        var construction = new ConstructionViewModel();
-        construction.Load(
+        var build = new BuildViewModel();
+        build.Load(
             new CreatureDef(
                 [new NodeDef(new Vector2D(0, 0), 18), new NodeDef(new Vector2D(20, 0), 18)],
                 [new BeamDef(0, 1)],
                 [new CoreDef(0)]));
-        construction.ToggleSelectedNode(0);
-        var presentation = new ConstructionPresentationViewModel(construction);
+        build.ToggleSelectedNode(0);
+        var presentation = new BuildPresentationViewModel(build);
 
         presentation.SinglePartTitle.ShouldBe("Core · Node 1");
         presentation.SinglePartPrimaryLabel.ShouldBe("Built-in senses");
@@ -143,8 +143,8 @@ public sealed class ConstructionPresentationViewModelTests
     [Fact]
     public void SelectedNode_ShowsPositionRadiusAndConnectedBeams()
     {
-        var construction = new ConstructionViewModel();
-        construction.Load(
+        var build = new BuildViewModel();
+        build.Load(
             new CreatureDef(
                 [
                     new NodeDef(new Vector2D(0, 0), 18),
@@ -153,8 +153,8 @@ public sealed class ConstructionPresentationViewModelTests
                 ],
                 [new BeamDef(0, 1), new BeamDef(1, 2)],
                 []));
-        construction.ToggleSelectedNode(1);
-        var presentation = new ConstructionPresentationViewModel(construction);
+        build.ToggleSelectedNode(1);
+        var presentation = new BuildPresentationViewModel(build);
 
         presentation.SelectedPartCount.ShouldBe(1);
         presentation.SinglePartTitle.ShouldBe("Node 2");
@@ -166,15 +166,15 @@ public sealed class ConstructionPresentationViewModelTests
     [Fact]
     public void MultiSelection_WithCore_SummarizesSelectedNodesAndCore()
     {
-        var construction = new ConstructionViewModel();
-        construction.Load(
+        var build = new BuildViewModel();
+        build.Load(
             new CreatureDef(
                 [new NodeDef(new Vector2D(0, 0), 18), new NodeDef(new Vector2D(20, 0), 18)],
                 [new BeamDef(0, 1)],
                 [new CoreDef(0)]));
-        construction.ToggleSelectedNode(0);
-        construction.ToggleSelectedNode(1);
-        var presentation = new ConstructionPresentationViewModel(construction);
+        build.ToggleSelectedNode(0);
+        build.ToggleSelectedNode(1);
+        var presentation = new BuildPresentationViewModel(build);
 
         presentation.SelectedPartCount.ShouldBe(2);
         presentation.MultiSelectionTitle.ShouldBe("2 selected");
@@ -184,14 +184,14 @@ public sealed class ConstructionPresentationViewModelTests
     [Fact]
     public void BrainShape_WhenNotChosen_IsTheFixedDefault()
     {
-        var construction = new ConstructionViewModel();
-        var a = construction.PlaceNode(new Vector2D(0, 0), 18);
-        var b = construction.PlaceNode(new Vector2D(20, 0), 18);
-        var c = construction.PlaceNode(new Vector2D(40, 0), 18);
-        construction.ConnectBeam(a, b);
-        construction.ConnectBeam(b, c);
-        construction.ToggleCoreOnNode(a);
-        var presentation = new ConstructionPresentationViewModel(construction);
+        var build = new BuildViewModel();
+        var a = build.PlaceNode(new Vector2D(0, 0), 18);
+        var b = build.PlaceNode(new Vector2D(20, 0), 18);
+        var c = build.PlaceNode(new Vector2D(40, 0), 18);
+        build.ConnectBeam(a, b);
+        build.ConnectBeam(b, c);
+        build.ToggleCoreOnNode(a);
+        var presentation = new BuildPresentationViewModel(build);
 
         presentation.BrainShape.ShouldBe(BrainShapeDef.Default);
     }
@@ -199,9 +199,9 @@ public sealed class ConstructionPresentationViewModelTests
     [Fact]
     public void BrainShape_WhenCustomized_UsesExplicitShape()
     {
-        var construction = new ConstructionViewModel();
-        construction.SetBrainShape(new BrainShapeDef(2, 9));
-        var presentation = new ConstructionPresentationViewModel(construction);
+        var build = new BuildViewModel();
+        build.SetBrainShape(new BrainShapeDef(2, 9));
+        var presentation = new BuildPresentationViewModel(build);
 
         presentation.BrainShape.ShouldBe(new BrainShapeDef(2, 9));
     }
@@ -209,10 +209,10 @@ public sealed class ConstructionPresentationViewModelTests
     [Fact]
     public void CoreToolText_WhenExtraCoreLocked_ShowsFitnessUnlockHint()
     {
-        var construction = new ConstructionViewModel();
-        construction.PlaceNode(new Vector2D(0, 0), 18);
-        construction.ToggleCoreOnNode(0);
-        var presentation = new ConstructionPresentationViewModel(construction);
+        var build = new BuildViewModel();
+        build.PlaceNode(new Vector2D(0, 0), 18);
+        build.ToggleCoreOnNode(0);
+        var presentation = new BuildPresentationViewModel(build);
 
         presentation.CoreToolText.ShouldBe("Core 1/1 (50 fitness)");
         presentation.CoreToolTooltip.ShouldBe("Attach or remove a core. Train to unlock a second core slot.");
@@ -221,9 +221,9 @@ public sealed class ConstructionPresentationViewModelTests
     [Fact]
     public void CoreToolText_WhenExtraCoreUnlocked_ShowsUnlockedHint()
     {
-        var construction = new ConstructionViewModel();
-        construction.SetMaxCores(2);
-        var presentation = new ConstructionPresentationViewModel(construction);
+        var build = new BuildViewModel();
+        build.SetMaxCores(2);
+        var presentation = new BuildPresentationViewModel(build);
 
         presentation.CoreToolText.ShouldBe("Core 0/2 (unlocked)");
         presentation.CoreToolTooltip.ShouldBe("Attach or remove a core. Extra core slot unlocked.");
@@ -232,8 +232,8 @@ public sealed class ConstructionPresentationViewModelTests
     [Fact]
     public void BuildPanel_WhenAnatomyIsEmpty_DisablesTrainingWithBeginnerReason()
     {
-        var construction = new ConstructionViewModel();
-        var presentation = new ConstructionPresentationViewModel(construction);
+        var build = new BuildViewModel();
+        var presentation = new BuildPresentationViewModel(build);
 
         var buildPanel = presentation.BuildPanel;
 
@@ -244,9 +244,9 @@ public sealed class ConstructionPresentationViewModelTests
     [Fact]
     public void BuildPanel_WhenANodeIsUnconnected_SaysSoInReadiness()
     {
-        var construction = new ConstructionViewModel();
-        construction.PlaceNode(new Vector2D(0, 0), 18);
-        var presentation = new ConstructionPresentationViewModel(construction);
+        var build = new BuildViewModel();
+        build.PlaceNode(new Vector2D(0, 0), 18);
+        var presentation = new BuildPresentationViewModel(build);
 
         var buildPanel = presentation.BuildPanel;
 
@@ -259,10 +259,10 @@ public sealed class ConstructionPresentationViewModelTests
     [Fact]
     public void BuildPanel_WhenSeveralNodesAreUnconnected_CountsThemInReadiness()
     {
-        var construction = new ConstructionViewModel();
-        construction.PlaceNode(new Vector2D(0, 0), 18);
-        construction.PlaceNode(new Vector2D(80, 0), 18);
-        var presentation = new ConstructionPresentationViewModel(construction);
+        var build = new BuildViewModel();
+        build.PlaceNode(new Vector2D(0, 0), 18);
+        build.PlaceNode(new Vector2D(80, 0), 18);
+        var presentation = new BuildPresentationViewModel(build);
 
         presentation.BuildPanel.ReadinessText.ShouldBe("2 nodes not connected");
     }
@@ -270,8 +270,8 @@ public sealed class ConstructionPresentationViewModelTests
     [Fact]
     public void BuildPanel_WhenAnatomyIsValid_SummarizesInputsAndMotorRelations()
     {
-        var construction = new ConstructionViewModel();
-        construction.Load(
+        var build = new BuildViewModel();
+        build.Load(
             new CreatureDef(
                 [
                     new NodeDef(new Vector2D(0, 0), 18),
@@ -282,7 +282,7 @@ public sealed class ConstructionPresentationViewModelTests
                 ],
                 [new BeamDef(0, 1), new BeamDef(1, 2), new BeamDef(2, 3), new BeamDef(3, 4)],
                 [new CoreDef(0)]));
-        var presentation = new ConstructionPresentationViewModel(construction);
+        var presentation = new BuildPresentationViewModel(build);
 
         var buildPanel = presentation.BuildPanel;
 
@@ -295,13 +295,13 @@ public sealed class ConstructionPresentationViewModelTests
     [Fact]
     public void BuildPanel_WhenValidAnatomyHasNoMotorRelations_DisablesTrainingWithFlexibleJointReason()
     {
-        var construction = new ConstructionViewModel();
-        construction.Load(
+        var build = new BuildViewModel();
+        build.Load(
             new CreatureDef(
                 [new NodeDef(new Vector2D(0, 0), 18), new NodeDef(new Vector2D(56, 0), 18)],
                 [new BeamDef(0, 1)],
                 [new CoreDef(0)]));
-        var presentation = new ConstructionPresentationViewModel(construction);
+        var presentation = new BuildPresentationViewModel(build);
 
         var buildPanel = presentation.BuildPanel;
 
@@ -314,12 +314,12 @@ public sealed class ConstructionPresentationViewModelTests
     [Fact]
     public void PresentationChanged_WhenAnatomyChanges_RaisesForLiveBuildScreenRefresh()
     {
-        var construction = new ConstructionViewModel();
-        var presentation = new ConstructionPresentationViewModel(construction);
+        var build = new BuildViewModel();
+        var presentation = new BuildPresentationViewModel(build);
         var raiseCount = 0;
         presentation.PresentationChanged += (_, _) => raiseCount++;
 
-        construction.PlaceNode(new Vector2D(0, 0), 18);
+        build.PlaceNode(new Vector2D(0, 0), 18);
 
         raiseCount.ShouldBe(1);
     }

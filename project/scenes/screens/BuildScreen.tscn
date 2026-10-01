@@ -7,7 +7,7 @@
 [ext_resource type="Script" uid="uid://r2ped3g3uiaa" path="res://src/ui/lib/UiButton.cs" id="5_button"]
 [ext_resource type="Script" uid="uid://dah3q1p7ikjlm" path="res://src/ui/lib/UiMenuActionItem.cs" id="6_menu_item"]
 [ext_resource type="PackedScene" uid="uid://xh7n0i08nbrq" path="res://scenes/ui/UiButtonBar.tscn" id="7_button_bar"]
-[ext_resource type="Script" uid="uid://p55oa8ljjmna" path="res://src/ui/widgets/ConstructionCanvas.cs" id="8_canvas"]
+[ext_resource type="Script" uid="uid://p55oa8ljjmna" path="res://src/ui/widgets/BuildCanvas.cs" id="8_canvas"]
 [ext_resource type="Script" uid="uid://b32bnhbgasedd" path="res://src/ui/lib/UiChip.cs" id="9_chip"]
 [ext_resource type="PackedScene" uid="uid://c7sdp4nel2qx" path="res://scenes/ui/UiSidePanel.tscn" id="10_side_panel"]
 [ext_resource type="Script" uid="uid://bss6jgv5hcc3q" path="res://src/ui/lib/UiPartRow.cs" id="11_part_row"]
@@ -154,7 +154,7 @@ layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 2
 
-[node name="ConstructionCanvas" type="Node2D" parent="UiFrame/MarginContainer/Card/Shell/Body/CanvasSlot" node_paths=PackedStringArray("MoveHandle", "RotateHandle", "ScaleHandle")]
+[node name="BuildCanvas" type="Node2D" parent="UiFrame/MarginContainer/Card/Shell/Body/CanvasSlot" node_paths=PackedStringArray("MoveHandle", "RotateHandle", "ScaleHandle")]
 unique_name_in_owner = true
 position = Vector2(136, 66)
 scale = Vector2(1.15, 1.15)

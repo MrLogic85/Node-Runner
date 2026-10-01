@@ -17,8 +17,10 @@ layers.
 
 ## What lives here
 
-- `ViewModels/` — `MainViewModel`, `PopulationViewModel`, `NetworkViewModel`,
-  `ObservableObject` base (raises `INotifyPropertyChanged`)
+- `ViewModels/` — screen state and presentation: `BuildViewModel` and its
+  `BuildGestures`, `CreationsPresentationViewModel`,
+  `TrainingPresentationViewModel` (shadows, not population), the Brain
+  focus and Signal flow presentations
 - `Repositories/` — `ICreatureRepository`, `FileCreatureRepository`,
   `InMemoryCreatureRepository` (test fake, also usable in production)
 - `Services/` — `IRngProvider`, `ISettings`, cross-cutting service
@@ -27,7 +29,7 @@ layers.
   first I/O lands)
 - `Builders/` — mutable, stateful construction helpers that assemble
   `NodeRunner.Domain` records over several steps (e.g. `CreatureBuilder` for
-  0.3.0's construction mode). These hold in-progress state and expose
+  0.3.0's Build mode). These hold in-progress state and expose
   `TryBuild(...)` to attempt converting it into an immutable Domain type;
   they belong here rather than in Domain because Domain permits no
   behavior beyond validation (see `libs/NodeRunner.Domain/AGENTS.md`).

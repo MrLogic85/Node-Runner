@@ -269,7 +269,7 @@ node, beam, core, motor relation, input, and output are in the current demo.
 **Goal:** Let the user construct a small valid creature from the same model
 introduced in 0.2.0.
 
-- Construction mode:
+- Build mode:
   - Place and move nodes
   - Connect two nodes with a beam
   - Attach a core to a node
@@ -296,8 +296,8 @@ see which motor relations became neural-network outputs.
 
 **Done checklist:**
 
-- [x] Construction workflow is documented before implementation starts (see
-  `docs/CONSTRUCTION_MODE.md`).
+- [x] Build workflow is documented before implementation starts (see
+  `docs/BUILD_MODE.md`).
 - [x] User can place at least two nodes with Android touch.
 - [x] User can move nodes before simulation starts.
 - [x] User can connect nodes with beams.
@@ -307,7 +307,7 @@ see which motor relations became neural-network outputs.
   tool with deleting from the selection panels.)
 - [x] A non-empty, invalid creature is blocked with understandable validation
   messages when attempting to leave Build mode; an untouched empty canvas
-  may always leave (see `docs/CONSTRUCTION_MODE.md`'s Validation section).
+  may always leave (see `docs/BUILD_MODE.md`'s Validation section).
 - [x] A valid edited creature can be converted into a `CreatureDef`.
 - [x] Simulation can instantiate and run the edited creature.
 - [x] Model input count comes from the creature's core sensor values plus
@@ -369,7 +369,7 @@ short demo, and can see the fitness signal that caused the improvement.
   on the HUD at every generation boundary).
 - [x] The release gates in `docs/REVIEW.md` and Android checks in
   `docs/MANUAL_TESTING.md` are satisfied for 0.4.0 (see #52: on-device
-  verification of ≥5 generations, all HUD controls, and construction-mode
+  verification of ≥5 generations, all HUD controls, and Build-mode
   interaction, with no crashes/hangs/exceptions in `adb logcat`).
 
 ---
@@ -398,8 +398,8 @@ closes. This is a prerequisite for every later milestone in this sequence
 built on top of "a Creation is a real, addressable thing").
 
 - Build mode gains a **Complete** action: validates the anatomy (same
-  structural-completeness rules as current construction-mode validation,
-  see `docs/CONSTRUCTION_MODE.md` § Validation) and saves it as a Creation.
+  structural-completeness rules as current Build-mode validation,
+  see `docs/BUILD_MODE.md` § Validation) and saves it as a Creation.
 - A **Creations** screen: list saved Creations, delete, duplicate.
   - Duplicate creates an independent copy, including the current training
     state. The copy can later be reset to a new seed with random weights.
@@ -435,7 +435,7 @@ not just a static save file.
   training model because topology changes can invalidate the old genome's
   shape.
 - This is also the natural point to evaluate whether the current
-  construction-mode UI (`project/src/creature/` construction tools) needs
+  Build-mode UI (`project/src/creature/` Build tools) needs
   a genuine reimplementation to support Edit's move-only interaction, or
   can be extended. Run a `design-lead` review pass (see
   `docs/UI_DIRECTION.md` § Design review) before deciding reimplement vs.
