@@ -107,6 +107,7 @@ public static class UiIcons
         button.AddThemeColorOverride("icon_normal_color", tint);
         button.AddThemeColorOverride("icon_hover_color", tint);
         button.AddThemeColorOverride("icon_pressed_color", tint);
+        button.AddThemeColorOverride("icon_hover_pressed_color", tint);
         button.AddThemeColorOverride("icon_disabled_color", tint);
     }
 

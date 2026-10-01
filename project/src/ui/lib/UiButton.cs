@@ -419,6 +419,7 @@ public sealed partial class UiButton : Button, ISerializationListener
         AddThemeStyleboxOverride("normal", CreateStyle());
         AddThemeStyleboxOverride("hover", CreateStyle());
         AddThemeStyleboxOverride("pressed", CreateStyle());
+        AddThemeStyleboxOverride("hover_pressed", CreateStyle());
         AddThemeStyleboxOverride("focus", new StyleBoxEmpty());
         AddThemeStyleboxOverride("disabled", CreateStyle(_disabledOpacity, transparentBorder: true));
         RefreshProgress();

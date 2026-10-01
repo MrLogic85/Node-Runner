@@ -187,9 +187,18 @@ public partial class UiPicker : PanelContainer
             TooltipText = LabelText,
         };
         rowButton.Pressed += () => SetState(IsExpanded ? PickerState.Collapsed : PickerState.Expanded, emit: true);
+        // The one press look (#325); the row's content is its children and draws over the tint.
+        rowButton.Draw += () =>
+        {
+            if (UiPressFeedback.Shows(rowButton, selected: false))
+            {
+                UiPressFeedback.Draw(rowButton, UiCorners.Uniform(UiSize.Radius.Medium), UiTokens.Color.PanelRaised, danger: false);
+            }
+        };
         rowButton.AddThemeStyleboxOverride("normal", ClosedRowStyle());
-        rowButton.AddThemeStyleboxOverride("hover", ClosedRowStyle(focused: true));
-        rowButton.AddThemeStyleboxOverride("pressed", ClosedRowStyle(focused: true));
+        rowButton.AddThemeStyleboxOverride("hover", ClosedRowStyle());
+        rowButton.AddThemeStyleboxOverride("pressed", ClosedRowStyle());
+        rowButton.AddThemeStyleboxOverride("hover_pressed", ClosedRowStyle());
         rowButton.AddThemeStyleboxOverride("focus", ClosedRowStyle(focused: true));
         rowButton.AddThemeStyleboxOverride("disabled", ClosedRowStyle(disabled: true));
         if (IsLocked)

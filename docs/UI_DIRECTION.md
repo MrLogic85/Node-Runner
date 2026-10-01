@@ -407,9 +407,36 @@ after a tap.
 - Selected and disabled controls show no tint: selected already has its own
   look, and disabled does not react.
 
-`UiButton` (with every kind, format and button-group design such as
-`UiCardActions`) and `UiMenuActionItem` use it. Other controls follow in
-[#325](https://github.com/MrLogic85/Node-Runner/issues/325).
+Every control that reacts to a tap shows it
+([#325](https://github.com/MrLogic85/Node-Runner/issues/325)):
+
+- The tint covers exactly the control's tap area. Parts of it that are
+  buttons of their own show their own tint instead.
+- `UiButton` (with every kind, format and button-group design such as
+  `UiCardActions`), `UiMenuActionItem`, the picker's closed row and the
+  switch and checkbox rows (`UiChoiceRow`) tint while held. A choice row's
+  tint reaches `Space.S2` past its sides so its corners clear the text and
+  the indicator.
+- The creation card tints above its action bar, over the thumbnail too; a
+  drag-scroll of the card row clears it.
+- A notification whose tap does something sets `UiCard.ShowsPress`; a swipe
+  clears it.
+- The side panel's collapse chevron and collapsed tab tint their touch area.
+- Controls whose press already changes something need no tint: tabs, segmented
+  switches and stage cards select on press, a part row starts a drag, and a
+  slider moves.
+
+Two rules keep it that way; `UiPressFeedbackTests` guards the first:
+
+- **No hover look.** A `hover` stylebox repeats `normal`, and a button that
+  sets `pressed` also sets `hover_pressed` to the same box, so Godot's
+  default theme never shows through. Nothing branches on `DrawMode.Hover`.
+- **One input source per tap.** Touch reaches controls as Godot's emulated
+  mouse events, so a control reads mouse events (through `PointerInput`) and
+  not touch events too, which would handle one tap twice. The build canvas
+  needs several fingers, so it reads touch and skips the emulated mouse copy;
+  `UiMenu`'s outside-tap dismissal swallows both copies of the tap so neither
+  reaches the screen below.
 
 ## Immediate-mode drawing and antialiasing
 

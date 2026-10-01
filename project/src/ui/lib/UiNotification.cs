@@ -174,6 +174,7 @@ public sealed partial class UiNotification : Control
             _pointerTravel = 0;
             _horizontalDrag = !Mathf.IsZeroApprox(_swipeOffset);
             _verticalDrag = false;
+            UpdatePress();
             _card.AcceptEvent();
         }
         else if (input.IsActionPressed("ui_accept") && !input.IsEcho())
@@ -198,6 +199,7 @@ public sealed partial class UiNotification : Control
         {
             var distance = TrackPointer(mouse.Position);
             _pointerDown = false;
+            UpdatePress();
             GetViewport().SetInputAsHandled();
             if (_horizontalDrag && Mathf.Abs(distance.X) >= SwipeDistance && Mathf.Abs(distance.X) > Mathf.Abs(distance.Y))
             {
@@ -229,7 +231,18 @@ public sealed partial class UiNotification : Control
         {
             SetSwipeOffset(distance.X);
         }
+        UpdatePress();
         return distance;
+    }
+
+    // The card shows the press tint while a held pointer would still tap it, and only when a tap
+    // does something; a swipe or a drag clears it (#325).
+    private void UpdatePress()
+    {
+        if (_card is not null)
+        {
+            _card.ShowsPress = _pointerDown && !_horizontalDrag && !_verticalDrag && _current?.OnClick is not null;
+        }
     }
 
     private void SetSwipeOffset(float offset)
@@ -293,6 +306,7 @@ public sealed partial class UiNotification : Control
         _pointerDown = false;
         _horizontalDrag = false;
         _verticalDrag = false;
+        UpdatePress();
         if (!_dismissing)
         {
             StopMotion();

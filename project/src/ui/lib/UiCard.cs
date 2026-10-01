@@ -31,6 +31,7 @@ public partial class UiCard : PanelContainer, IUiClipping
     private bool _disabled;
     private bool _refreshingStyle;
     private bool _clipContent;
+    private bool _showsPress;
     private Control? _borderOverlay;
     private StyleBoxFlat? _borderOnlyStyle;
 
@@ -91,6 +92,25 @@ public partial class UiCard : PanelContainer, IUiClipping
         {
             _clipContent = value;
             RefreshClip();
+        }
+    }
+
+    /// <summary>
+    /// Shows the press tint (<see cref="UiPressFeedback"/>) over the card's fill and under its
+    /// content. Set by a card that handles its own input, for as long as it is held (#325).
+    /// </summary>
+    public bool ShowsPress
+    {
+        get => _showsPress;
+        set
+        {
+            if (_showsPress == value)
+            {
+                return;
+            }
+
+            _showsPress = value;
+            QueueRedraw();
         }
     }
 
@@ -174,6 +194,11 @@ public partial class UiCard : PanelContainer, IUiClipping
     public override void _Draw()
     {
         base._Draw();
+        if (_showsPress && !Disabled && GetThemeStylebox("panel") is StyleBoxFlat panel)
+        {
+            UiPressFeedback.Draw(this, UiCorners.Uniform(panel.CornerRadiusTopLeft), UiTokens.Color.Panel, danger: false);
+        }
+
         if (!HasDashedBorder)
         {
             return;

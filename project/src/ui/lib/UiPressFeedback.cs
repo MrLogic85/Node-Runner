@@ -17,12 +17,20 @@ public static class UiPressFeedback
     public static bool Shows(BaseButton button, bool selected)
     {
         ArgumentNullException.ThrowIfNull(button);
-        return !selected && !button.Disabled && Shows(button.GetDrawMode());
+        return !selected && !button.Disabled && IsHeld(button.GetDrawMode(), button.ToggleMode && button.ButtonPressed);
     }
 
     /// <summary>Pressed draw modes show the tint; hover alone does not.</summary>
     public static bool Shows(BaseButton.DrawMode mode) =>
         mode is BaseButton.DrawMode.Pressed or BaseButton.DrawMode.HoverPressed;
+
+    /// <summary>
+    /// Whether a button is held, from its draw mode and toggled state. Godot draws a held toggle
+    /// button in the state it would switch to, so a held one draws the opposite of
+    /// <paramref name="toggledOn"/>. A plain button is never toggled on: its
+    /// <c>ButtonPressed</c> means held, not on.
+    /// </summary>
+    public static bool IsHeld(BaseButton.DrawMode mode, bool toggledOn) => Shows(mode) != toggledOn;
 
     /// <summary>
     /// The tint's colour over a control filled with <paramref name="fill"/>;
@@ -43,6 +51,13 @@ public static class UiPressFeedback
     public static void Draw(Control control, UiCorners corners, UiTokens.Color fill, bool danger)
     {
         ArgumentNullException.ThrowIfNull(control);
-        corners.Fill(control, new Rect2(Vector2.Zero, control.Size), Tint(control, fill, danger));
+        Draw(control, corners, new Rect2(Vector2.Zero, control.Size), fill, danger);
+    }
+
+    /// <summary>Draws the tint over <paramref name="rect"/> of <paramref name="control"/>.</summary>
+    public static void Draw(Control control, UiCorners corners, Rect2 rect, UiTokens.Color fill, bool danger)
+    {
+        ArgumentNullException.ThrowIfNull(control);
+        corners.Fill(control, rect, Tint(control, fill, danger));
     }
 }
