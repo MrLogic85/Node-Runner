@@ -9,13 +9,13 @@ namespace NodeRunner.Ui.Widgets;
 
 /// <summary>
 /// Renders the anatomy placed so far in Build through the zoom and pan of
-/// <see cref="ConstructionGestures.View"/>, and forwards every pointer to
-/// <see cref="ConstructionGestures"/>, which decides what the active
-/// <see cref="ConstructionTool"/> does and when to zoom or pan. Binds to
-/// <see cref="ConstructionViewModel"/> per `project/src/ui/AGENTS.md`; does
-/// not own any anatomy state itself. See docs/CONSTRUCTION_MODE.md.
+/// <see cref="BuildGestures.View"/>, and forwards every pointer to
+/// <see cref="BuildGestures"/>, which decides what the active
+/// <see cref="BuildTool"/> does and when to zoom or pan. Binds to
+/// <see cref="BuildViewModel"/> per `project/src/ui/AGENTS.md`; does
+/// not own any anatomy state itself. See docs/BUILD_MODE.md.
 /// </summary>
-public partial class ConstructionCanvas : Node2D
+public partial class BuildCanvas : Node2D
 {
     private const double _moveGhostSeconds = 1.8;
     private static readonly Vector2 _rigidLabelOffset = new(12, -12);
@@ -24,8 +24,8 @@ public partial class ConstructionCanvas : Node2D
     private const int _rigidLabelFontSize = 18;
     private const int _mousePointer = -1;
 
-    private ConstructionViewModel? _viewModel;
-    private ConstructionGestures? _gestures;
+    private BuildViewModel? _viewModel;
+    private BuildGestures? _gestures;
     private readonly Dictionary<int, Vector2D> _ghostNodePositions = [];
     private int _ghostVersion;
     private bool _viewFitted;
@@ -33,7 +33,7 @@ public partial class ConstructionCanvas : Node2D
 
     public VisualTheme Theme { get; set; } = VisualTheme.Neon;
 
-    /// <summary>The Select handles, authored in the slot above the canvas; placed here, hit-tested by <see cref="ConstructionGestures"/>.</summary>
+    /// <summary>The Select handles, authored in the slot above the canvas; placed here, hit-tested by <see cref="BuildGestures"/>.</summary>
     [Export]
     public UiSelectionHandle? MoveHandle { get; set; }
 
@@ -43,7 +43,7 @@ public partial class ConstructionCanvas : Node2D
     [Export]
     public UiSelectionHandle? ScaleHandle { get; set; }
 
-    public ConstructionViewModel? ViewModel
+    public BuildViewModel? ViewModel
     {
         get => _viewModel;
         set
@@ -56,7 +56,7 @@ public partial class ConstructionCanvas : Node2D
             {
                 _viewModel.AnatomyChanged += OnAnatomyChanged;
                 _viewModel.PropertyChanged += OnViewModelPropertyChanged;
-                _gestures = new ConstructionGestures(_viewModel);
+                _gestures = new BuildGestures(_viewModel);
                 _gestures.Changed += OnGesturesChanged;
                 _gestures.View.Changed += OnGesturesChanged;
                 _gestures.NodeDragStarting += OnNodeDragStarting;
@@ -193,7 +193,7 @@ public partial class ConstructionCanvas : Node2D
             var position = ToGodot(node.Position);
             if (_viewModel.SelectedNodeIndices.Contains(nodeIndex))
             {
-                DrawCircle(position, (float)(node.Radius * ConstructionGestures.SelectedHaloScale), Theme.SelectionGlow);
+                DrawCircle(position, (float)(node.Radius * BuildGestures.SelectedHaloScale), Theme.SelectionGlow);
             }
 
             DrawCircle(
@@ -246,7 +246,7 @@ public partial class ConstructionCanvas : Node2D
         }
     }
 
-    /// <summary>Shows the handles <see cref="ConstructionGestures.SelectionHandles"/> lists, centred on their spots, and hides the rest.</summary>
+    /// <summary>Shows the handles <see cref="BuildGestures.SelectionHandles"/> lists, centred on their spots, and hides the rest.</summary>
     private void LayoutSelectionHandles()
     {
         var shown = _gestures?.SelectionHandles ?? [];
@@ -603,18 +603,18 @@ public partial class ConstructionCanvas : Node2D
 
     private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs eventArgs)
     {
-        if (eventArgs.PropertyName == nameof(ConstructionViewModel.SelectedNodeCount))
+        if (eventArgs.PropertyName == nameof(BuildViewModel.SelectedNodeCount))
         {
             QueueRedraw();
         }
 
-        if (eventArgs.PropertyName == nameof(ConstructionViewModel.ActiveTool))
+        if (eventArgs.PropertyName == nameof(BuildViewModel.ActiveTool))
         {
             _gestures?.Cancel();
             QueueRedraw();
         }
 
-        if (eventArgs.PropertyName == nameof(ConstructionViewModel.IsMoveOnly) && _viewModel?.IsMoveOnly != true)
+        if (eventArgs.PropertyName == nameof(BuildViewModel.IsMoveOnly) && _viewModel?.IsMoveOnly != true)
         {
             ClearMoveGhosts();
         }
@@ -645,14 +645,14 @@ public partial class ConstructionCanvas : Node2D
 
     /// <summary>
     /// A faint blueprint grid over the Build area, the only place joints can
-    /// go: fixed <see cref="ConstructionViewModel.BuildGridStep"/> cells that
+    /// go: fixed <see cref="BuildViewModel.BuildGridStep"/> cells that
     /// zoom with the picture, drawn as hairlines that stay one pixel wide.
     /// </summary>
     private void DrawBuildGrid()
     {
         var view = _gestures!.View;
-        var area = ConstructionViewModel.BuildArea;
-        var step = ConstructionViewModel.BuildGridStep;
+        var area = BuildViewModel.BuildArea;
+        var step = BuildViewModel.BuildGridStep;
 
         var shown = view.VisibleArea is { } visible
             ? new CanvasRect(view.ToCanvas(visible.Min), view.ToCanvas(visible.Max))
@@ -683,11 +683,11 @@ public partial class ConstructionCanvas : Node2D
     /// <summary>Marks the corners of the Build area, zooming with the rest of the picture.</summary>
     private void DrawAreaCorners()
     {
-        var area = ConstructionViewModel.BuildArea;
+        var area = BuildViewModel.BuildArea;
         var topLeft = ToGodot(area.Min);
         var bottomRight = ToGodot(area.Max);
         // Two grid cells, so the marks end on a grid line.
-        var length = (float)(2 * ConstructionViewModel.BuildGridStep);
+        var length = (float)(2 * BuildViewModel.BuildGridStep);
         foreach (var (corner, inward) in new[]
         {
             (topLeft, new Vector2(1, 1)),

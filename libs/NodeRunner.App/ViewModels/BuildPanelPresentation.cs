@@ -1,6 +1,6 @@
 namespace NodeRunner.App.ViewModels;
 
-public sealed record ConstructionBuildPanelPresentation(
+public sealed record BuildPanelPresentation(
     string InputSummary,
     string MotorRelationSummary,
     bool CanStartTraining,
@@ -12,7 +12,7 @@ public sealed record ConstructionBuildPanelPresentation(
 
     public const string TeachingNote = "Sees sensor values, decides joint targets, twists beams, then scores distance.";
 
-    public static ConstructionBuildPanelPresentation Sample { get; } = new(
+    public static BuildPanelPresentation Sample { get; } = new(
         "2 cores: 12 sensors; 3 motor relations: 6 sensors; 18 inputs total",
         "3 motor relations can twist",
         CanStartTraining: true,

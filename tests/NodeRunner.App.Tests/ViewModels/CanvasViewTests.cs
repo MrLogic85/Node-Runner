@@ -199,10 +199,10 @@ public class CanvasViewTests
     [Fact]
     public void BuildArea_IsFilledByWholeGridCells()
     {
-        var area = ConstructionViewModel.BuildArea;
+        var area = BuildViewModel.BuildArea;
 
-        (area.Width % ConstructionViewModel.BuildGridStep).ShouldBe(0);
-        (area.Height % ConstructionViewModel.BuildGridStep).ShouldBe(0);
+        (area.Width % BuildViewModel.BuildGridStep).ShouldBe(0);
+        (area.Height % BuildViewModel.BuildGridStep).ShouldBe(0);
     }
 
     private static CanvasView Centred()

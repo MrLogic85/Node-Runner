@@ -21,14 +21,14 @@ public partial class BuildHost : Node, IRoutedScene
     private ISceneNavigator? _navigator;
     private BuildRoute? _route;
     // The open creation: it holds its id and saves its edits. Null once the creation is deleted.
-    private ConstructionAutosave? _autosave;
+    private BuildAutosave? _autosave;
     private Godot.Timer _autosaveTimer = null!;
     private bool _saveFailureShown;
 
     // How long edits must settle before they save; a drag saves once, when it stops.
     private const double _autosaveDelaySeconds = 0.5;
 
-    public ConstructionViewModel Construction { get; } = new();
+    public BuildViewModel Build { get; } = new();
 
     private SaveManager Saves => GetNode<SaveManager>("/root/SaveManager");
 
@@ -116,18 +116,18 @@ public partial class BuildHost : Node, IRoutedScene
     }
 
     private void ApplyProgression() =>
-        Construction.SetMaxCores(Saves.Progression.ExtraCoreUnlocked ? 2 : 1);
+        Build.SetMaxCores(Saves.Progression.ExtraCoreUnlocked ? 2 : 1);
 
     private void BindBuildScreen()
     {
         _buildScreen = GetNode<BuildScreen>("%BuildScreen");
-        _buildScreen.Setup(Construction);
-        _buildScreen.ToolRequested += tool => Construction.ActiveTool = tool;
+        _buildScreen.Setup(Build);
+        _buildScreen.ToolRequested += tool => Build.ActiveTool = tool;
         _buildScreen.BrainShapeChanged += (layers, neurons) =>
         {
-            if (!Construction.IsMoveOnly)
+            if (!Build.IsMoveOnly)
             {
-                Construction.SetBrainShape(new BrainShapeDef(layers, neurons));
+                Build.SetBrainShape(new BrainShapeDef(layers, neurons));
             }
         };
         _buildScreen.StartTrainingRequested += StartTraining;
@@ -135,8 +135,8 @@ public partial class BuildHost : Node, IRoutedScene
         _buildScreen.CreationNameChanged += RenameActiveCreation;
         _buildScreen.ResetTrainingRequested += ResetActiveCreationTraining;
         _buildScreen.DeleteCreationRequested += RequestDeleteActiveCreation;
-        _buildScreen.ClearSelectionRequested += Construction.ClearSelection;
-        _buildScreen.DeleteSelectionRequested += Construction.DeleteSelectedParts;
+        _buildScreen.ClearSelectionRequested += Build.ClearSelection;
+        _buildScreen.DeleteSelectionRequested += Build.DeleteSelectedParts;
         _buildScreen.StatsRequested += () => Notify("Stats", "Stats open in milestone 0.12.0.");
         _buildScreen.BrainRequested += () => Notify("Brain view", "Brain view opens in milestone 0.12.0.");
     }
@@ -145,7 +145,7 @@ public partial class BuildHost : Node, IRoutedScene
     // creature that cannot train stays in Build.
     private void StartTraining()
     {
-        if (_autosave?.CreationId is not { } id || !SaveEdits(playerAsked: true) || !Construction.TryGetTrainableCreature(out _))
+        if (_autosave?.CreationId is not { } id || !SaveEdits(playerAsked: true) || !Build.TryGetTrainableCreature(out _))
         {
             return;
         }
@@ -169,20 +169,20 @@ public partial class BuildHost : Node, IRoutedScene
     private void EditCreation(CreationDef creation, bool openedAsNew)
     {
         StopAutosave();
-        Construction.LoadCreation(creation);
-        Construction.IsActive = true;
-        _autosave = new ConstructionAutosave(Construction, Saves.ConstructionEditWorkflow, creation.Id, openedAsNew);
-        _autosave.Changed += OnConstructionEdited;
+        Build.LoadCreation(creation);
+        Build.IsActive = true;
+        _autosave = new BuildAutosave(Build, Saves.BuildEditWorkflow, creation.Id, openedAsNew);
+        _autosave.Changed += OnBuildEdited;
     }
 
-    private void OnConstructionEdited(object? sender, EventArgs e) => _autosaveTimer.Start();
+    private void OnBuildEdited(object? sender, EventArgs e) => _autosaveTimer.Start();
 
     private void StopAutosave()
     {
         _autosaveTimer.Stop();
         if (_autosave is not null)
         {
-            _autosave.Changed -= OnConstructionEdited;
+            _autosave.Changed -= OnBuildEdited;
             _autosave.Dispose();
             _autosave = null;
         }
@@ -263,7 +263,7 @@ public partial class BuildHost : Node, IRoutedScene
 
         if (renamed is not null)
         {
-            Construction.SetCreationName(renamed.Name);
+            Build.SetCreationName(renamed.Name);
         }
     }
 
@@ -294,7 +294,7 @@ public partial class BuildHost : Node, IRoutedScene
             return;
         }
 
-        var name = Construction.CreationName;
+        var name = Build.CreationName;
         _deleteCreationDialog.Open(CreationActions.DeleteDialog(name, () => DeleteCreation(id, name)));
     }
 

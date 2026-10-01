@@ -9,7 +9,7 @@ public sealed class CreatureReadinessTests
     public void Problems_WithEmptyDrawing_AsksForANode()
     {
         CreatureReadiness.Problems(new CreatureDef([], [], []))
-            .ShouldBe(["Add at least one node before running the creature."]);
+            .ShouldBe(["Add at least one node before training this creation."]);
     }
 
     [Fact]

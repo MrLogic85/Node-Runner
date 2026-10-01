@@ -16,7 +16,7 @@ public static class CreatureReadiness
         var problems = new List<string>();
         if (creature.Nodes.Count == 0)
         {
-            problems.Add("Add at least one node before running the creature.");
+            problems.Add("Add at least one node before training this creation.");
         }
 
         for (var i = 0; i < creature.Nodes.Count; i++)

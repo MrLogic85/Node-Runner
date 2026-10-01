@@ -30,7 +30,7 @@ internal static class RewrittenUi
         "ui/widgets/BrainFocusSheet.cs",
         "ui/widgets/BrainSetupNetwork.cs",
         "ui/widgets/BrainSetupSheet.cs",
-        "ui/widgets/ConstructionCanvas.cs",
+        "ui/widgets/BuildCanvas.cs",
         "ui/widgets/CreationCard.cs",
         "ui/widgets/CreatureThumbnail.cs",
     ];
@@ -44,7 +44,7 @@ internal static class RewrittenUi
     [
         "ui/widgets/BrainFocusNetworkView.cs",
         "ui/widgets/BrainSetupNetwork.cs",
-        "ui/widgets/ConstructionCanvas.cs",
+        "ui/widgets/BuildCanvas.cs",
     ];
 
     /// <summary>

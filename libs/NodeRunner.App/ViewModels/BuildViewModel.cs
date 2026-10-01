@@ -7,8 +7,8 @@ using NodeRunner.Domain;
 
 namespace NodeRunner.App.ViewModels;
 
-/// <summary>Which Build touch interaction is active; see <see cref="ConstructionGestures"/>.</summary>
-public enum ConstructionTool
+/// <summary>Which Build touch interaction is active; see <see cref="BuildGestures"/>.</summary>
+public enum BuildTool
 {
     Move,
     Beam,
@@ -20,13 +20,13 @@ public enum ConstructionTool
 }
 
 /// <summary>
-/// Drives 0.3.0's construction mode: whether it is active, which tool is
+/// Drives 0.3.0's Build mode: whether it is active, which tool is
 /// selected, and the anatomy placed so far via a <see cref="CreatureBuilder"/>.
 /// UI (see `project/src/ui/AGENTS.md`) binds to this instead of mutating the
 /// builder directly; it may still read the Domain DTOs (<see cref="NodeDef"/>
-/// etc.) this view-model exposes. See `docs/CONSTRUCTION_MODE.md`.
+/// etc.) this view-model exposes. See `docs/BUILD_MODE.md`.
 /// </summary>
-public sealed class ConstructionViewModel : INotifyPropertyChanged
+public sealed class BuildViewModel : INotifyPropertyChanged
 {
     /// <summary>
     /// Where joints may go, in canvas units: about six screens wide at 1×,
@@ -58,7 +58,7 @@ public sealed class ConstructionViewModel : INotifyPropertyChanged
 
     private CreatureBuilder _builder;
     private bool _isActive;
-    private ConstructionTool _activeTool = ConstructionTool.Move;
+    private BuildTool _activeTool = BuildTool.Move;
     private string? _statusMessage;
     private bool _moveOnly;
     private int _maxCores = 1;
@@ -69,7 +69,7 @@ public sealed class ConstructionViewModel : INotifyPropertyChanged
     private double? _bestFitness;
     private int? _selectedBeamIndex;
 
-    public ConstructionViewModel(CreatureBuilder? builder = null)
+    public BuildViewModel(CreatureBuilder? builder = null)
     {
         _builder = builder ?? new CreatureBuilder();
     }
@@ -85,7 +85,7 @@ public sealed class ConstructionViewModel : INotifyPropertyChanged
         _trainingGeneration = training?.Generation;
         _bestFitness = training?.BestFitness;
         _moveOnly = moveOnly;
-        ActiveTool = ConstructionTool.Move;
+        ActiveTool = BuildTool.Move;
         StatusMessage = null;
         AnatomyChanged?.Invoke(this, EventArgs.Empty);
     }
@@ -158,7 +158,7 @@ public sealed class ConstructionViewModel : INotifyPropertyChanged
         }
     }
 
-    public ConstructionTool ActiveTool
+    public BuildTool ActiveTool
     {
         get => _activeTool;
         set
@@ -596,7 +596,7 @@ public sealed class ConstructionViewModel : INotifyPropertyChanged
 
     /// <summary>
     /// Checks whether the current anatomy is valid enough to leave
-    /// construction mode. An empty anatomy (nothing placed yet) is always
+    /// Build mode. An empty anatomy (nothing placed yet) is always
     /// allowed, so a user who opens Build mode without editing anything can
     /// freely return to Simulate; in that case <paramref name="creature"/>
     /// is null and the caller should keep whatever creature is already

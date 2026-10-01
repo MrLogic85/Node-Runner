@@ -13,7 +13,7 @@ public partial class SaveManager : Node
     private IProgressionRepository? _progressionRepository;
     private ICreationUpdateCoordinator? _updateCoordinator;
     private INewCreationWorkflow? _newCreationWorkflow;
-    private IConstructionEditWorkflow? _constructionEditWorkflow;
+    private IBuildEditWorkflow? _buildEditWorkflow;
     private ICreationDuplicateWorkflow? _creationDuplicateWorkflow;
     private IExampleCopyWorkflow? _exampleCopyWorkflow;
     private CreationsPresentationViewModel? _creationsPresentation;
@@ -24,7 +24,7 @@ public partial class SaveManager : Node
         _repository = new FileCreationRepository(new GodotStorageLocation(directory));
         _updateCoordinator = new CreationUpdateCoordinator(_repository);
         _newCreationWorkflow = new NewCreationWorkflow(_repository);
-        _constructionEditWorkflow = new ConstructionEditWorkflow(_updateCoordinator);
+        _buildEditWorkflow = new BuildEditWorkflow(_updateCoordinator);
         var progressionDirectory = ProjectSettings.GlobalizePath("user://progression");
         _progressionRepository = new FileProgressionRepository(new GodotStorageLocation(progressionDirectory));
         _creationDuplicateWorkflow = new CreationDuplicateWorkflow(_repository);
@@ -68,8 +68,8 @@ public partial class SaveManager : Node
     public CreationsPresentationViewModel CreationsPresentation =>
         _creationsPresentation ?? throw new InvalidOperationException("SaveManager is not ready.");
 
-    public IConstructionEditWorkflow ConstructionEditWorkflow =>
-        _constructionEditWorkflow ?? throw new InvalidOperationException("SaveManager is not ready.");
+    public IBuildEditWorkflow BuildEditWorkflow =>
+        _buildEditWorkflow ?? throw new InvalidOperationException("SaveManager is not ready.");
 
     public ProgressionDef Progression => ProgressionRepository.Load();
 

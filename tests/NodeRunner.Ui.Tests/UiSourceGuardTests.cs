@@ -104,7 +104,7 @@ public sealed class UiSourceGuardTests
             "for runtime content, and never sets theme overrides, styleboxes or sizes (#310).");
     }
 
-    private const string _drawnWidget = "ui/widgets/ConstructionCanvas.cs";
+    private const string _drawnWidget = "ui/widgets/BuildCanvas.cs";
 
     [Theory]
     [InlineData("void _Draw() { DrawCircle(Vector2.Zero, 1.7f, Colors.White); }")]

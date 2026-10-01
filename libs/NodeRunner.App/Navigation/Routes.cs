@@ -25,7 +25,7 @@ public sealed record ExamplesRoute : SceneRoute;
 
 /// <summary>
 /// Build for one saved creation. <see cref="IsNew"/> is true when + New just made it; see
-/// docs/CONSTRUCTION_MODE.md for when Build removes such a creation again (#368).
+/// docs/BUILD_MODE.md for when Build removes such a creation again (#368).
 /// </summary>
 public sealed record BuildRoute(Guid CreationId, bool IsNew = false) : SceneRoute;
 

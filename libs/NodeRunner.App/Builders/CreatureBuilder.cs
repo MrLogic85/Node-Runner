@@ -4,7 +4,7 @@ using NodeRunner.Domain;
 namespace NodeRunner.App.Builders;
 
 /// <summary>
-/// Mutable, in-progress creature anatomy driven by construction-mode UI
+/// Mutable, in-progress creature anatomy driven by Build-mode UI
 /// (0.3.0). Add/move/remove nodes, beams, and cores here; <see cref="Build"/>
 /// returns the drawing as an immutable <see cref="CreatureDef"/> for saving, and
 /// <see cref="TryBuild"/> returns it only once it can be simulated. See

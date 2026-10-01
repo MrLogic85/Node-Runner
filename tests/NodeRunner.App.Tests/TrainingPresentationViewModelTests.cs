@@ -12,8 +12,8 @@ public sealed class TrainingPresentationViewModelTests
         presentation.Update(5, 3, 8, 12.8, 8.4, 4, true, [10.1, 11.2]);
 
         presentation.Generation.ShouldBe(5);
-        presentation.Candidate.ShouldBe(3);
-        presentation.Population.ShouldBe(8);
+        presentation.Shadow.ShouldBe(3);
+        presentation.ShadowCount.ShouldBe(8);
         presentation.BestFitness.ShouldBe(12.8);
         presentation.MeanFitness.ShouldBe(8.4);
         presentation.BestGeneration.ShouldBe(4);
@@ -54,8 +54,8 @@ public sealed class TrainingPresentationViewModelTests
         var source = new FakeTrainingProgressSource
         {
             Generation = 2,
-            CurrentCandidate = 1,
-            PopulationSize = 4,
+            CurrentShadow = 1,
+            ShadowCount = 4,
             BestFitness = double.NegativeInfinity,
             MeanFitness = 0,
             IsTrialActive = true,
@@ -65,7 +65,7 @@ public sealed class TrainingPresentationViewModelTests
         presentation.PropertyChanged += (_, _) => raised = true;
 
         source.Generation = 3;
-        source.CurrentCandidate = 2;
+        source.CurrentShadow = 2;
         source.BestFitness = 9.4;
         source.MeanFitness = 5.1;
         source.CompletedFitness = [9.4];
@@ -73,7 +73,7 @@ public sealed class TrainingPresentationViewModelTests
 
         raised.ShouldBeTrue();
         presentation.Generation.ShouldBe(3);
-        presentation.Candidate.ShouldBe(2);
+        presentation.Shadow.ShouldBe(2);
         presentation.BestFitness.ShouldBe(9.4);
         presentation.MeanFitness.ShouldBe(5.1);
         presentation.CompletedFitness.ShouldBe([9.4]);
@@ -85,8 +85,8 @@ public sealed class TrainingPresentationViewModelTests
         var source = new FakeTrainingProgressSource
         {
             Generation = 7,
-            CurrentCandidate = 4,
-            PopulationSize = 8,
+            CurrentShadow = 4,
+            ShadowCount = 8,
             BestFitness = 21.3,
             MeanFitness = 10.5,
             IsTrialActive = true,
@@ -99,7 +99,7 @@ public sealed class TrainingPresentationViewModelTests
         presentation.BestFitnessText.ShouldBe("Best: 21.3 (gen 7)");
 
         source.Generation = 8;
-        source.CurrentCandidate = 1;
+        source.CurrentShadow = 1;
         source.RaiseProgressChanged();
 
         presentation.Generation.ShouldBe(8);
@@ -113,8 +113,8 @@ public sealed class TrainingPresentationViewModelTests
         var source = new FakeTrainingProgressSource
         {
             Generation = 1,
-            CurrentCandidate = 1,
-            PopulationSize = 2,
+            CurrentShadow = 1,
+            ShadowCount = 2,
             BestFitness = 4,
             MeanFitness = 3,
             IsTrialActive = true,
@@ -178,9 +178,9 @@ public sealed class TrainingPresentationViewModelTests
 
         public int Generation { get; set; }
 
-        public int CurrentCandidate { get; set; }
+        public int CurrentShadow { get; set; }
 
-        public int PopulationSize { get; set; }
+        public int ShadowCount { get; set; }
 
         public double BestFitness { get; set; }
 

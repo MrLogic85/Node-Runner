@@ -12,7 +12,7 @@ public enum SelectionHandle
 
 /// <summary>
 /// Turns pointer presses, drags and releases on the Build canvas into edits
-/// for the active <see cref="ConstructionTool"/> and into zoom and pan of
+/// for the active <see cref="BuildTool"/> and into zoom and pan of
 /// <see cref="View"/>, so the canvas only forwards input and draws. Pointer
 /// positions are in view units (see <see cref="CanvasView"/>); the gesture
 /// state it exposes for drawing is in canvas units, the same as
@@ -21,10 +21,10 @@ public enum SelectionHandle
 /// The first pointer down drives the tool. A second pointer cancels that
 /// gesture, putting back any node it moved, and the two pointers pinch to
 /// zoom and drag to pan until every pointer is up. See
-/// `docs/CONSTRUCTION_MODE.md`.
+/// `docs/BUILD_MODE.md`.
 /// </para>
 /// </summary>
-public sealed class ConstructionGestures
+public sealed class BuildGestures
 {
     /// <summary>Node hit radius in view units, so it stays finger-sized at any zoom; a node's own disc always hits too.</summary>
     public const double NodeHitRadius = 32;
@@ -48,11 +48,11 @@ public sealed class ConstructionGestures
     private const double _frameMinSize = 96;
     private const double _rotateStem = 32;
 
-    private readonly ConstructionViewModel _construction;
+    private readonly BuildViewModel _build;
     private readonly Dictionary<int, Vector2D> _pointers = [];
     private bool _navigating;
     private int? _toolPointer;
-    private ConstructionTool _pressTool;
+    private BuildTool _pressTool;
     private Vector2D _pressViewPosition;
     private Vector2D _pressPosition;
     private Vector2D _lastViewPosition;
@@ -65,10 +65,10 @@ public sealed class ConstructionGestures
     private bool _pressedNodeWasSelected;
     private SelectionSnapshot? _selectionStart;
 
-    public ConstructionGestures(ConstructionViewModel construction)
+    public BuildGestures(BuildViewModel build)
     {
-        _construction = construction ?? throw new ArgumentNullException(nameof(construction));
-        View = new CanvasView(ConstructionViewModel.BuildViewBounds, ContentBounds);
+        _build = build ?? throw new ArgumentNullException(nameof(build));
+        View = new CanvasView(BuildViewModel.BuildViewBounds, ContentBounds);
     }
 
     public CanvasView View { get; }
@@ -178,11 +178,11 @@ public sealed class ConstructionGestures
 
         if (_selectionStart is { } start)
         {
-            _construction.RestoreSelection(start);
+            _build.RestoreSelection(start);
         }
         else if (_dragOrigin is { } origin && _pressedNode is { } node)
         {
-            _construction.MoveNode(node, origin);
+            _build.MoveNode(node, origin);
         }
 
         if (_selectionBefore is { } before)
@@ -198,34 +198,34 @@ public sealed class ConstructionGestures
     {
         ResetTool();
         _toolPointer = pointer;
-        _pressTool = _construction.ActiveTool;
+        _pressTool = _build.ActiveTool;
         _pressViewPosition = viewPosition;
         _lastViewPosition = viewPosition;
         var position = View.ToCanvas(viewPosition);
         _pressPosition = position;
-        if (_pressTool == ConstructionTool.Select && FindHandle(viewPosition) is { } handle)
+        if (_pressTool == BuildTool.Select && FindHandle(viewPosition) is { } handle)
         {
             _pressedHandle = handle;
         }
 
-        if (_construction.TryFindNodeNear(position, HitDistance(NodeHitRadius), out var nodeIndex))
+        if (_build.TryFindNodeNear(position, HitDistance(NodeHitRadius), out var nodeIndex))
         {
             _pressedNode = nodeIndex;
         }
-        else if (_pressedHandle is null && _construction.TryFindBeamNear(position, HitDistance(BeamHitDistance), out var beamIndex))
+        else if (_pressedHandle is null && _build.TryFindBeamNear(position, HitDistance(BeamHitDistance), out var beamIndex))
         {
             _pressedBeam = beamIndex;
         }
 
         switch (_pressTool)
         {
-            case ConstructionTool.Beam when _pressedNode is { } start && !_construction.IsMoveOnly:
+            case BuildTool.Beam when _pressedNode is { } start && !_build.IsMoveOnly:
                 BeamStartNode = start;
                 BeamEnd = position;
                 Changed?.Invoke(this, EventArgs.Empty);
                 break;
-            case ConstructionTool.Select when _pressedHandle is null:
-                _selectionBefore = ([.. _construction.SelectedNodeIndices], _construction.SingleSelectedBeamIndex);
+            case BuildTool.Select when _pressedHandle is null:
+                _selectionBefore = ([.. _build.SelectedNodeIndices], _build.SingleSelectedBeamIndex);
                 PressSelect(viewPosition, position);
                 break;
         }
@@ -233,7 +233,7 @@ public sealed class ConstructionGestures
 
     private void DragTool(Vector2D viewPosition)
     {
-        if (_construction.ActiveTool != _pressTool)
+        if (_build.ActiveTool != _pressTool)
         {
             Cancel();
             return;
@@ -247,14 +247,14 @@ public sealed class ConstructionGestures
             }
 
             _dragging = true;
-            if (_pressTool == ConstructionTool.Select && (_pressedHandle is not null || _pressedNode is not null))
+            if (_pressTool == BuildTool.Select && (_pressedHandle is not null || _pressedNode is not null))
             {
-                _selectionStart = _construction.SnapshotSelection();
+                _selectionStart = _build.SnapshotSelection();
                 NodeDragStarting?.Invoke(this, [.. _selectionStart.Positions.Keys]);
             }
-            else if (_pressTool == ConstructionTool.Move && _pressedNode is { } dragged)
+            else if (_pressTool == BuildTool.Move && _pressedNode is { } dragged)
             {
-                _dragOrigin = _construction.Nodes[dragged].Position;
+                _dragOrigin = _build.Nodes[dragged].Position;
                 NodeDragStarting?.Invoke(this, [dragged]);
             }
         }
@@ -264,21 +264,21 @@ public sealed class ConstructionGestures
         var position = View.ToCanvas(viewPosition);
         switch (_pressTool)
         {
-            case ConstructionTool.Move when _pressedNode is { } node:
-                _construction.MoveNode(node, position);
+            case BuildTool.Move when _pressedNode is { } node:
+                _build.MoveNode(node, position);
                 break;
-            case ConstructionTool.Move:
+            case BuildTool.Move:
                 View.PanBy(new Vector2D(viewPosition.X - lastViewPosition.X, viewPosition.Y - lastViewPosition.Y));
                 break;
-            case ConstructionTool.Beam when BeamStartNode is { } start:
+            case BuildTool.Beam when BeamStartNode is { } start:
                 BeamEnd = position;
                 BeamTargetNode = FindBeamTarget(start, position);
                 Changed?.Invoke(this, EventArgs.Empty);
                 break;
-            case ConstructionTool.Select when _selectionStart is { } start:
+            case BuildTool.Select when _selectionStart is { } start:
                 TransformSelection(start, position);
                 break;
-            case ConstructionTool.Select when SelectionBox is { } box:
+            case BuildTool.Select when SelectionBox is { } box:
                 SelectionBox = (box.Start, position);
                 Changed?.Invoke(this, EventArgs.Empty);
                 break;
@@ -287,7 +287,7 @@ public sealed class ConstructionGestures
 
     private void ReleaseTool(Vector2D viewPosition)
     {
-        if (_construction.ActiveTool != _pressTool)
+        if (_build.ActiveTool != _pressTool)
         {
             Cancel();
             return;
@@ -296,24 +296,24 @@ public sealed class ConstructionGestures
         var position = View.ToCanvas(viewPosition);
         switch (_pressTool)
         {
-            case ConstructionTool.Move when !_dragging:
+            case BuildTool.Move when !_dragging:
                 TapMove();
                 break;
-            case ConstructionTool.Beam when BeamStartNode is { } start && FindBeamTarget(start, position) is { } end:
-                _construction.ConnectBeam(start, end);
+            case BuildTool.Beam when BeamStartNode is { } start && FindBeamTarget(start, position) is { } end:
+                _build.ConnectBeam(start, end);
                 break;
-            case ConstructionTool.Joint when !_dragging:
+            case BuildTool.Joint when !_dragging:
                 TapJoint();
                 break;
-            case ConstructionTool.Select when SelectionBox is { } box:
+            case BuildTool.Select when SelectionBox is { } box:
                 CompleteSelectionBox(box.Start, position);
                 break;
-            case ConstructionTool.Select when !_dragging && (_pressedNodeWasSelected || _pressedHandle is not null) && _pressedNode is { } tapped:
+            case BuildTool.Select when !_dragging && (_pressedNodeWasSelected || _pressedHandle is not null) && _pressedNode is { } tapped:
                 // A handle drags; a tap on a joint under it still adds or removes that joint.
-                _construction.ToggleSelectedNode(tapped);
+                _build.ToggleSelectedNode(tapped);
                 break;
-            case ConstructionTool.Core when !_dragging && _pressedNode is { } coreNode:
-                _construction.ToggleCoreOnNode(coreNode);
+            case BuildTool.Core when !_dragging && _pressedNode is { } coreNode:
+                _build.ToggleCoreOnNode(coreNode);
                 break;
         }
 
@@ -325,16 +325,16 @@ public sealed class ConstructionGestures
     {
         if (beam is { } selectedBeam)
         {
-            if (_construction.SingleSelectedBeamIndex != selectedBeam)
+            if (_build.SingleSelectedBeamIndex != selectedBeam)
             {
-                _construction.SelectBeam(selectedBeam);
+                _build.SelectBeam(selectedBeam);
             }
         }
-        else if (_construction.SelectedBeamCount != 0
-            || _construction.SelectedNodeIndices.Count != nodes.Length
-            || !nodes.All(_construction.SelectedNodeIndices.Contains))
+        else if (_build.SelectedBeamCount != 0
+            || _build.SelectedNodeIndices.Count != nodes.Length
+            || !nodes.All(_build.SelectedNodeIndices.Contains))
         {
-            _construction.ReplaceSelection(nodes);
+            _build.ReplaceSelection(nodes);
         }
     }
 
@@ -365,10 +365,10 @@ public sealed class ConstructionGestures
     {
         if (_pressedNode is { } node)
         {
-            _pressedNodeWasSelected = _construction.SelectedNodeIndices.Contains(node);
+            _pressedNodeWasSelected = _build.SelectedNodeIndices.Contains(node);
             if (!_pressedNodeWasSelected)
             {
-                _construction.ToggleSelectedNode(node);
+                _build.ToggleSelectedNode(node);
             }
         }
         else if (FrameInView() is { } frame && frame.Contains(viewPosition))
@@ -377,7 +377,7 @@ public sealed class ConstructionGestures
         }
         else
         {
-            _construction.ClearSelection();
+            _build.ClearSelection();
             SelectionBox = (position, position);
             Changed?.Invoke(this, EventArgs.Empty);
         }
@@ -387,32 +387,32 @@ public sealed class ConstructionGestures
     {
         if (_pressedNode is { } node)
         {
-            _construction.ReplaceSelection([node]);
+            _build.ReplaceSelection([node]);
         }
         else if (_pressedBeam is { } beam)
         {
-            _construction.SelectBeam(beam);
+            _build.SelectBeam(beam);
         }
         else
         {
-            _construction.ClearSelection();
+            _build.ClearSelection();
         }
     }
 
     private void TapJoint()
     {
-        if (_pressedNode is not null || _construction.IsMoveOnly)
+        if (_pressedNode is not null || _build.IsMoveOnly)
         {
             return;
         }
 
         if (_pressedBeam is { } beam)
         {
-            _construction.SplitBeam(beam, _pressPosition, NewNodeRadius);
+            _build.SplitBeam(beam, _pressPosition, NewNodeRadius);
         }
-        else if (ConstructionViewModel.BuildArea.Contains(_pressPosition))
+        else if (BuildViewModel.BuildArea.Contains(_pressPosition))
         {
-            _construction.PlaceNode(_pressPosition, NewNodeRadius);
+            _build.PlaceNode(_pressPosition, NewNodeRadius);
         }
     }
 
@@ -425,16 +425,16 @@ public sealed class ConstructionGestures
         switch (_pressedHandle)
         {
             case SelectionHandle.Rotate:
-                _construction.RotateSelection(start, Math.Atan2(to.Y, to.X) - Math.Atan2(from.Y, from.X));
+                _build.RotateSelection(start, Math.Atan2(to.Y, to.X) - Math.Atan2(from.Y, from.X));
                 break;
             case SelectionHandle.Scale when (from.X * from.X) + (from.Y * from.Y) > 0:
                 // Only the drag along the handle's diagonal counts, so the group never reflects.
-                _construction.ScaleSelection(start, ((to.X * from.X) + (to.Y * from.Y)) / ((from.X * from.X) + (from.Y * from.Y)));
+                _build.ScaleSelection(start, ((to.X * from.X) + (to.Y * from.Y)) / ((from.X * from.X) + (from.Y * from.Y)));
                 break;
             case SelectionHandle.Scale:
                 break;
             default:
-                _construction.TranslateSelection(start, new Vector2D(position.X - _pressPosition.X, position.Y - _pressPosition.Y));
+                _build.TranslateSelection(start, new Vector2D(position.X - _pressPosition.X, position.Y - _pressPosition.Y));
                 break;
         }
     }
@@ -442,12 +442,12 @@ public sealed class ConstructionGestures
     /// <summary>The frame in view units, while Select has two or more joints and no box is being dragged.</summary>
     private CanvasRect? FrameInView()
     {
-        if (_construction.ActiveTool != ConstructionTool.Select || _construction.SelectedNodeCount < 2 || SelectionBox is not null)
+        if (_build.ActiveTool != BuildTool.Select || _build.SelectedNodeCount < 2 || SelectionBox is not null)
         {
             return null;
         }
 
-        var nodes = _construction.SelectedNodeIndices.Select(index => _construction.Nodes[index]).ToArray();
+        var nodes = _build.SelectedNodeIndices.Select(index => _build.Nodes[index]).ToArray();
         var min = View.ToView(new Vector2D(nodes.Min(node => node.Position.X - Halo(node)), nodes.Min(node => node.Position.Y - Halo(node))));
         var max = View.ToView(new Vector2D(nodes.Max(node => node.Position.X + Halo(node)), nodes.Max(node => node.Position.Y + Halo(node))));
         var center = new Vector2D((min.X + max.X) / 2, (min.Y + max.Y) / 2);
@@ -481,7 +481,7 @@ public sealed class ConstructionGestures
 
     /// <summary>Snaps only to joints the beam could actually join, so the preview never promises a refused connection.</summary>
     private int? FindBeamTarget(int start, Vector2D position) =>
-        _construction.TryFindNodeNear(position, HitDistance(NodeHitRadius), out var end) && _construction.CanConnect(start, end) ? end : null;
+        _build.TryFindNodeNear(position, HitDistance(NodeHitRadius), out var end) && _build.CanConnect(start, end) ? end : null;
 
     private void CompleteSelectionBox(Vector2D start, Vector2D end)
     {
@@ -495,16 +495,16 @@ public sealed class ConstructionGestures
         }
 
         var selected = new List<int>();
-        for (var i = 0; i < _construction.Nodes.Count; i++)
+        for (var i = 0; i < _build.Nodes.Count; i++)
         {
-            var node = _construction.Nodes[i].Position;
+            var node = _build.Nodes[i].Position;
             if (node.X >= minX && node.X <= maxX && node.Y >= minY && node.Y <= maxY)
             {
                 selected.Add(i);
             }
         }
 
-        _construction.ReplaceSelection(selected);
+        _build.ReplaceSelection(selected);
     }
 
     private double HitDistance(double viewDistance) => viewDistance / View.Zoom;
@@ -512,7 +512,7 @@ public sealed class ConstructionGestures
     /// <summary>What the view fits on open: every node with room for its motor arc (twice its radius).</summary>
     private CanvasRect? ContentBounds()
     {
-        var nodes = _construction.Nodes;
+        var nodes = _build.Nodes;
         if (nodes.Count == 0)
         {
             return null;

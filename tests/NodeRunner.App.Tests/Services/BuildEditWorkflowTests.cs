@@ -4,7 +4,7 @@ using NodeRunner.Domain;
 
 namespace NodeRunner.App.Tests.Services;
 
-public sealed class ConstructionEditWorkflowTests
+public sealed class BuildEditWorkflowTests
 {
     [Fact]
     public void PersistEdit_WhenCreationExists_SavesAndReturnsIt()
@@ -14,7 +14,7 @@ public sealed class ConstructionEditWorkflowTests
         var original = CreateCreation("Original", x: 0, generation: 6);
         var editedCreature = CreateCreature(x: 3);
         repository.Save(original);
-        var workflow = new ConstructionEditWorkflow(coordinator);
+        var workflow = new BuildEditWorkflow(coordinator);
 
         var result = workflow.PersistEdit(original.Id, editedCreature, BrainShapeDef.Default, moveOnly: true);
 
@@ -29,7 +29,7 @@ public sealed class ConstructionEditWorkflowTests
     {
         var repository = new InMemoryCreationRepository();
         var coordinator = new CreationUpdateCoordinator(repository);
-        var workflow = new ConstructionEditWorkflow(coordinator);
+        var workflow = new BuildEditWorkflow(coordinator);
 
         var result = workflow.PersistEdit(Guid.NewGuid(), CreateCreature(x: 3), BrainShapeDef.Default, moveOnly: true);
 
@@ -44,7 +44,7 @@ public sealed class ConstructionEditWorkflowTests
         var id = Guid.NewGuid();
         var editedCreature = CreateCreature(x: 3);
         coordinator.ApplyEdit(id, editedCreature, BrainShapeDef.Default, moveOnly: true).Returns(_ => throw new IOException("disk full"));
-        var workflow = new ConstructionEditWorkflow(coordinator);
+        var workflow = new BuildEditWorkflow(coordinator);
 
         Should.Throw<IOException>(() => workflow.PersistEdit(id, editedCreature, BrainShapeDef.Default, moveOnly: true));
     }
@@ -52,13 +52,13 @@ public sealed class ConstructionEditWorkflowTests
     [Fact]
     public void Constructor_WithNullCoordinator_Throws()
     {
-        Should.Throw<ArgumentNullException>(() => new ConstructionEditWorkflow(null!));
+        Should.Throw<ArgumentNullException>(() => new BuildEditWorkflow(null!));
     }
 
     [Fact]
     public void PersistEdit_WithNullCreature_Throws()
     {
-        var workflow = new ConstructionEditWorkflow(Substitute.For<ICreationUpdateCoordinator>());
+        var workflow = new BuildEditWorkflow(Substitute.For<ICreationUpdateCoordinator>());
 
         Should.Throw<ArgumentNullException>(() => workflow.PersistEdit(Guid.NewGuid(), null!, BrainShapeDef.Default, moveOnly: true));
     }
@@ -66,7 +66,7 @@ public sealed class ConstructionEditWorkflowTests
     [Fact]
     public void PersistEdit_WithNullBrainShape_Throws()
     {
-        var workflow = new ConstructionEditWorkflow(Substitute.For<ICreationUpdateCoordinator>());
+        var workflow = new BuildEditWorkflow(Substitute.For<ICreationUpdateCoordinator>());
 
         Should.Throw<ArgumentNullException>(() => workflow.PersistEdit(Guid.NewGuid(), CreateCreature(x: 3), null!, moveOnly: true));
     }
@@ -74,7 +74,7 @@ public sealed class ConstructionEditWorkflowTests
     [Fact]
     public void PersistEdit_WithEmptyCreationId_Throws()
     {
-        var workflow = new ConstructionEditWorkflow(Substitute.For<ICreationUpdateCoordinator>());
+        var workflow = new BuildEditWorkflow(Substitute.For<ICreationUpdateCoordinator>());
 
         Should.Throw<ArgumentException>(() => workflow.PersistEdit(Guid.Empty, CreateCreature(x: 3), BrainShapeDef.Default, moveOnly: true));
     }

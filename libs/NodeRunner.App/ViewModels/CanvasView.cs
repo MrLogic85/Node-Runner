@@ -9,7 +9,7 @@ namespace NodeRunner.App.ViewModels;
 /// <c>view = canvas * Zoom + Offset</c>. Not saved: Build opens with the
 /// creation fitted (<see cref="Fit"/>). The view never shows anything outside
 /// <see cref="Bounds"/>, and zooming out goes just far enough to show all of
-/// it. See `docs/CONSTRUCTION_MODE.md`.
+/// it. See `docs/BUILD_MODE.md`.
 /// </summary>
 public sealed class CanvasView
 {

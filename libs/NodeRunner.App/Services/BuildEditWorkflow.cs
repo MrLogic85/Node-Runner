@@ -3,11 +3,11 @@ using NodeRunner.Domain;
 namespace NodeRunner.App.Services;
 
 /// <summary>Saves a saved Creation's Build edits; the lock rule is <see cref="ICreationUpdateCoordinator.ApplyEdit"/>'s.</summary>
-public sealed class ConstructionEditWorkflow : IConstructionEditWorkflow
+public sealed class BuildEditWorkflow : IBuildEditWorkflow
 {
     private readonly ICreationUpdateCoordinator _coordinator;
 
-    public ConstructionEditWorkflow(ICreationUpdateCoordinator coordinator)
+    public BuildEditWorkflow(ICreationUpdateCoordinator coordinator)
     {
         ArgumentNullException.ThrowIfNull(coordinator);
         _coordinator = coordinator;
