@@ -235,7 +235,7 @@ public partial class ConstructionCanvas : Node2D
         var rect = RectFromPoints(ToGodot(view.ToView(frame.Min)), ToGodot(view.ToView(frame.Max)));
         // The canvas node is scaled in the scene; undo it so the frame is a true screen-size hairline.
         var width = UiSize.Stroke.SelectionFrame / Scale.X;
-        DrawDashedRect(rect, width);
+        UiDashedBorder.DrawRoundedRect(this, rect, UiSize.Radius.Small / Scale.X, Theme.SelectionGlow, width);
         foreach (var (handle, position) in _gestures.SelectionHandles)
         {
             if (handle == SelectionHandle.Rotate)
@@ -305,17 +305,7 @@ public partial class ConstructionCanvas : Node2D
         var fill = Theme.SelectionGlow;
         fill.A = 0.16f;
         DrawRect(rect, fill, filled: true);
-        DrawDashedRect(rect, Stroke(2));
-    }
-
-    private void DrawDashedRect(Rect2 rect, float width)
-    {
-        var topRight = rect.Position + new Vector2(rect.Size.X, 0);
-        var bottomLeft = rect.Position + new Vector2(0, rect.Size.Y);
-        DrawDashedLine(rect.Position, topRight, Theme.SelectionGlow, width, 6, antialiased: false);
-        DrawDashedLine(topRight, rect.End, Theme.SelectionGlow, width, 6, antialiased: false);
-        DrawDashedLine(rect.End, bottomLeft, Theme.SelectionGlow, width, 6, antialiased: false);
-        DrawDashedLine(bottomLeft, rect.Position, Theme.SelectionGlow, width, 6, antialiased: false);
+        UiDashedBorder.DrawRoundedRect(this, rect, 0, Theme.SelectionGlow, Stroke(2));
     }
 
     private void DrawMoveGhosts()
