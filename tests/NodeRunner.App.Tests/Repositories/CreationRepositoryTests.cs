@@ -531,7 +531,7 @@ public sealed class CreationRepositoryTests
             new CreatureDef(
                 [new NodeDef(1, new Vector2D(0, 0), 1), new NodeDef(2, new Vector2D(2, 0), 1), new NodeDef(3, new Vector2D(4, 0), 1)],
                 [new BeamDef(101, 1, 2), new BeamDef(102, 2, 3)],
-                [new SensorDef(201, 101, SensorKind.Accelerometer), new SensorDef(202, 102, SensorKind.LineOfSight)]),
+                [new SensorDef(201, 101, SensorKind.Accelerometer), new SensorDef(202, 102, SensorKind.Camera)]),
             new TrainingStateDef([2, 1], [0.1, -0.2, 0.3], 2, "Tanh", 42.5, new TrainingRunDef(42.5, 88.25, 12, MapIds.Flat)));
     }
 

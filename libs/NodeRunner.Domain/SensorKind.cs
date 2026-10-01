@@ -4,5 +4,5 @@ namespace NodeRunner.Domain;
 public enum SensorKind
 {
     Accelerometer,
-    LineOfSight,
+    Camera,
 }

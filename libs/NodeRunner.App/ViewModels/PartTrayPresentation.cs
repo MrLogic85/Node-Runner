@@ -14,7 +14,7 @@ public enum BuildPart
     VelocityMotor,
     Wheel,
     Accelerometer,
-    LosSensor,
+    Camera,
     Battery,
     Generator,
     FuelTank,
@@ -58,7 +58,7 @@ public static class PartTray
     public static SensorKind? SensorKindOf(BuildPart part) => part switch
     {
         BuildPart.Accelerometer => SensorKind.Accelerometer,
-        BuildPart.LosSensor => SensorKind.LineOfSight,
+        BuildPart.Camera => SensorKind.Camera,
         _ => null,
     };
 
@@ -81,7 +81,7 @@ public static class PartTray
         new("Sensors", "Drag onto a beam. A beam holds one sensor.",
         [
             Available(BuildPart.Accelerometer, "Accelerometer"),
-            Available(BuildPart.LosSensor, "LOS sensor"),
+            Available(BuildPart.Camera, "Camera"),
         ]),
         new("Blocks", "Drag it onto the canvas, then draw beams to its two eyes.",
         [

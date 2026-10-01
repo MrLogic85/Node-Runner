@@ -27,7 +27,7 @@ public sealed class CreationExamplesTests
         worm.Creature.Sensors.ShouldBe(
         [
             new NodeRunner.Domain.SensorDef(10, 6, NodeRunner.Domain.SensorKind.Accelerometer),
-            new NodeRunner.Domain.SensorDef(11, 9, NodeRunner.Domain.SensorKind.LineOfSight),
+            new NodeRunner.Domain.SensorDef(11, 9, NodeRunner.Domain.SensorKind.Camera),
         ]);
         NodeRunner.App.Lifecycle.CreatureReadiness.CanTrain(worm.Creature).ShouldBeTrue();
         worm.Training.ShouldBeNull();

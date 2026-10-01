@@ -418,7 +418,7 @@ public sealed class BuildViewModel : INotifyPropertyChanged
     public static string SensorName(SensorKind kind) => kind switch
     {
         SensorKind.Accelerometer => "Accelerometer",
-        SensorKind.LineOfSight => "LOS sensor",
+        SensorKind.Camera => "Camera",
         _ => throw new ArgumentOutOfRangeException(nameof(kind)),
     };
 

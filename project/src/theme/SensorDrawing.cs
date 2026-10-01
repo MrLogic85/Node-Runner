@@ -24,7 +24,7 @@ public static class SensorDrawing
     private const float _weightTravelY = _frameHalfHeight - _weightRadius - 2.5f;
     private const int _springTurns = 3;
 
-    // The LOS sensor: a camera body with a lens ring and a hood on the side it looks out of.
+    // The camera: a body with a lens ring and a hood on the side it looks out of.
     private const float _bodyHalfLength = 7;
     private const float _bodyHalfHeight = 5.5f;
     private const float _bodyBack = -9;
@@ -59,7 +59,7 @@ public static class SensorDrawing
     }
 
     /// <summary>A camera looking along <paramref name="aim"/>, a unit vector in the picture's frame (the middle of its ray fan).</summary>
-    public static void DrawLos(CanvasItem canvas, VisualTheme theme, Vector2 aim, bool selected)
+    public static void DrawCamera(CanvasItem canvas, VisualTheme theme, Vector2 aim, bool selected)
     {
         ArgumentNullException.ThrowIfNull(canvas);
         ArgumentNullException.ThrowIfNull(theme);
@@ -83,7 +83,7 @@ public static class SensorDrawing
         canvas.DrawArc(bodyCentre.Rotated(turn), _lensRadius, 0, Mathf.Tau, 16, theme.SensorLine, _line * 0.75f, antialiased: true);
     }
 
-    /// <summary>A selected LOS sensor's rays from <paramref name="origin"/> to each end.</summary>
+    /// <summary>A selected camera's rays from <paramref name="origin"/> to each end.</summary>
     public static void DrawRays(CanvasItem canvas, VisualTheme theme, Vector2 origin, IEnumerable<Vector2> ends)
     {
         ArgumentNullException.ThrowIfNull(canvas);

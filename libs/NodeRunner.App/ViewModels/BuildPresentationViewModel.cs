@@ -115,7 +115,7 @@ public sealed class BuildPresentationViewModel
                 var sensor = SensorById(sensorId);
                 return new PartSettingsPresentation(
                     sensorId,
-                    sensor.Kind == SensorKind.Accelerometer ? PartSettingsKind.Accelerometer : PartSettingsKind.LosSensor,
+                    sensor.Kind == SensorKind.Accelerometer ? PartSettingsKind.Accelerometer : PartSettingsKind.Camera,
                     _build.PartDisplayName(sensorId),
                     _build.DefaultPartName(sensorId),
                     "On",
@@ -158,7 +158,7 @@ public sealed class BuildPresentationViewModel
     public static string SensorNote(SensorKind kind) => kind switch
     {
         SensorKind.Accelerometer => "Feels how its beam speeds up, slows down and tilts.",
-        SensorKind.LineOfSight => "Three rays see how far the ground is.",
+        SensorKind.Camera => "Three rays see how near the ground is.",
         _ => throw new ArgumentOutOfRangeException(nameof(kind)),
     };
 
@@ -302,7 +302,7 @@ public sealed class BuildPresentationViewModel
         sensors.Sum(sensor => sensor.Kind switch
         {
             SensorKind.Accelerometer => Accelerometer.ReadingNames.Count,
-            SensorKind.LineOfSight => LineOfSight.RayCount,
+            SensorKind.Camera => CameraRays.RayCount,
             _ => throw new InvalidOperationException($"Unknown sensor kind {sensor.Kind}."),
         });
 

@@ -6,7 +6,7 @@ public enum PartSettingsKind
     Node,
     Beam,
     Accelerometer,
-    LosSensor,
+    Camera,
 }
 
 /// <summary>

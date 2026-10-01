@@ -15,7 +15,7 @@ public sealed class BuildPartsTrayTests
         var tabs = _build.Single(node => node.Name == "PartTabs");
 
         tabs.Script.ShouldBe("res://src/ui/lib/UiIconTabs.cs");
-        int[] icons = [(int)UiIconId.PartSpring, (int)UiIconId.PartServo, (int)UiIconId.PartLineOfSight, (int)UiIconId.PartBattery];
+        int[] icons = [(int)UiIconId.PartSpring, (int)UiIconId.PartServo, (int)UiIconId.PartCamera, (int)UiIconId.PartBattery];
         tabs.Node.Body.ShouldContain($"Icons = Array[int]([{string.Join(", ", icons)}])");
         icons.Length.ShouldBe(PartTray.Groups().Count);
     }
@@ -56,7 +56,7 @@ public sealed class BuildPartsTrayTests
             .Where(row => BuildScreen.DraggablePart(row) is not null)
             .Select(row => row.Part);
 
-        draggable.ShouldBe([BuildPart.Accelerometer, BuildPart.LosSensor]);
+        draggable.ShouldBe([BuildPart.Accelerometer, BuildPart.Camera]);
     }
 
     [Fact]

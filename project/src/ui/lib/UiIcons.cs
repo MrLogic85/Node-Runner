@@ -10,7 +10,7 @@ public enum UiIconId
     Back, Beam, Bolt, Build, Chart, Check, ChevronDown, ChevronRight, Copy, Core, Edit, Flag, Gear,
     Height, Joint, Lock, Map, Menu, Model, More, Move, Mute, Pause, Phone, Play, Plus, Restart, Rotate,
     Scale, Select, Shadow, Sound, Speed, Stop, Trash, Trophy, Unlock, Warn, Close, Eye, PartBattery,
-    PartBeam, PartBrake, PartCore, PartFuel, PartGenerator, PartLineOfSight, PartNode, PartPiston,
+    PartBeam, PartBrake, PartCore, PartFuel, PartGenerator, PartCamera, PartNode, PartPiston,
     PartServo, PartSpring, PartStepper, PartVelocity, PartWheel, PartWing, Distance, TopSpeed, Elevation,
     MapFlat, MapHills, MapStairs, PartAccelerometer
 }
@@ -161,7 +161,7 @@ public static class UiIcons
         UiIconId.PartCore => Part("core.svg"),
         UiIconId.PartFuel => Part("fuel.svg"),
         UiIconId.PartGenerator => Part("generator.svg"),
-        UiIconId.PartLineOfSight => Part("los.svg"),
+        UiIconId.PartCamera => Part("los.svg"),
         UiIconId.PartNode => Part("node.svg"),
         UiIconId.PartPiston => Part("piston.svg"),
         UiIconId.PartServo => Part("servo.svg"),

@@ -4,26 +4,26 @@ using NodeRunner.Domain;
 namespace NodeRunner.Creature;
 
 /// <summary>
-/// One LOS sensor on its beam (#575): three <see cref="RayCast2D"/> children at the beam's midpoint,
-/// aimed by the Domain <see cref="LineOfSight"/> as built so they turn with the beam. They see the
-/// ground only and each writes 1 with nothing in range, 0 at contact.
+/// One camera on its beam (#575, #604): three <see cref="RayCast2D"/> children at the beam's midpoint,
+/// aimed by the Domain <see cref="CameraRays"/> as built so they turn with the beam. They see the
+/// ground only and each writes its nearness: 0 with nothing in range, 1 at contact.
 /// </summary>
-public sealed class LosSensor : IBeamSensor
+public sealed class CameraSensor : IBeamSensor
 {
     private const uint _groundMask = 1;
 
-    private readonly RayCast2D[] _rays = new RayCast2D[LineOfSight.RayCount];
+    private readonly RayCast2D[] _rays = new RayCast2D[CameraRays.RayCount];
 
-    public LosSensor(RigidBody2D beamBody, double builtRotation)
+    public CameraSensor(RigidBody2D beamBody, double builtRotation)
     {
         ArgumentNullException.ThrowIfNull(beamBody);
 
         for (var i = 0; i < _rays.Length; i++)
         {
-            var target = LineOfSight.LocalRayTarget(i, builtRotation);
+            var target = CameraRays.LocalRayTarget(i, builtRotation);
             _rays[i] = new RayCast2D
             {
-                Name = $"LosRay{i}",
+                Name = $"CameraRay{i}",
                 TargetPosition = new Vector2((float)target.X, (float)target.Y),
                 CollisionMask = _groundMask,
                 Enabled = true,
@@ -40,9 +40,9 @@ public sealed class LosSensor : IBeamSensor
         ? ray.GetCollisionPoint()
         : ray.ToGlobal(ray.TargetPosition));
 
-    public string GroupKind => "LOS sensor";
+    public string GroupKind => "Camera";
 
-    public IReadOnlyList<string> ValueNames => LineOfSight.RayNames;
+    public IReadOnlyList<string> ValueNames => CameraRays.RayNames;
 
     public void Read(double[] values, int startIndex, double dt)
     {
@@ -52,7 +52,7 @@ public sealed class LosSensor : IBeamSensor
             double? hitDistance = ray.IsColliding()
                 ? ray.GlobalPosition.DistanceTo(ray.GetCollisionPoint())
                 : null;
-            values[startIndex + i] = LineOfSight.Reading(hitDistance);
+            values[startIndex + i] = CameraRays.Reading(hitDistance);
         }
     }
 

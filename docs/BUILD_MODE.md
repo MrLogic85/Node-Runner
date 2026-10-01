@@ -80,7 +80,7 @@ a node's own disc always hits.
   joint under a handle still adds or removes that joint. A locked
   creation keeps all three handles: like a move, scaling changes only
   beam lengths, never which parts there are.
-- **Sensors:** an Accelerometer (#127) and an LOS sensor (#575) sit on a
+- **Sensors:** an Accelerometer (#127) and a Camera (#575) sit on a
   beam, one per beam. Drag one from the Parts tray onto a beam to place it
   (#376; see Parts tray below). Deleting a beam deletes its sensor;
   splitting a beam with the Joint tool moves it, with its id, to the
@@ -148,7 +148,7 @@ owns the groups, their order, the help lines and each row's state; the screen
 only maps parts to glyphs. Every implemented part is unlimited until #525, so
 rows show no count. A part not yet implemented is a dashed row with a lock,
 and the tab's name row says "Coming later" once. Available rows (today the
-Accelerometer and the LOS sensor) do nothing on tap; they are dragged out
+Accelerometer and the Camera) do nothing on tap; they are dragged out
 instead (#376). Godot's drag-and-drop carries the part: the row starts it and
 floats its glyph above the finger (`UiPartRow.CreateDragPreview`), and
 `BuildCanvas` takes the drop in `PartDropZone`, a control over the canvas

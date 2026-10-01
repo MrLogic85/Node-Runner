@@ -36,7 +36,7 @@ public sealed class MappingViewModel : INotifyPropertyChanged
         for (var i = 0; i < sensors.Count; i++)
         {
             var sensor = sensors[i];
-            lines[i] = $"{sensor.GroupKind} {sensor.GroupIndex} {sensor.Name}: {sensor.Value:0.00}";
+            lines[i] = $"{sensor.GroupKind} {sensor.GroupIndex} · {sensor.Name}: {sensor.Value:0.00}";
         }
 
         return string.Join('\n', lines);

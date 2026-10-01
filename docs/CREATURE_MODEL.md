@@ -13,7 +13,7 @@ than defaulting to what is easiest to implement.
 ## Parts: Node, Beam, Sensor, Motor relation
 
 A creature is built from two structural parts (Node, Beam), sensor parts
-that sit on beams (the Accelerometer and the LOS sensor), and one derived control concept
+that sit on beams (the Accelerometer and the Camera), and one derived control concept
 (Motor relation). Keeping "what senses" (sensors) and "what thinks" (the
 neural model) conceptually separate is the most important rule in this
 document — **a sensor is not the brain.**
@@ -98,13 +98,13 @@ CreatureDef  ──build──▶  physical body  ──sensors──▶  model 
   pose is the sensor's "up", and "along" points right as built. The frame
   then turns with the beam and never flips during a run
   (`Accelerometer.UpSign`).
-- Kinds today: **Accelerometer** (#127) and **LOS sensor** (#575).
+- Kinds today: **Accelerometer** (#127) and **Camera** (#575, #604).
 - **Seen and tapped as a picture (#576):** a small picture of the sensor at
   the middle of its beam, upright on the built up side and turned with the
   beam; its tap area is a square there (`SensorPicture`). The
   Accelerometer's weight hangs on its spring: in Build it swings when the
   beam is moved and settles at rest (`BuildSensorMotion`), in Training it
-  follows the live proof mass. The LOS sensor is a camera looking along its
+  follows the live proof mass. The Camera looks along its
   rays, and shows them when selected. A tap hits a joint first, then a
   sensor, then a beam, in Build and Training alike
   (`project/src/theme/SensorDrawing.cs`,
@@ -139,23 +139,32 @@ CreatureDef  ──build──▶  physical body  ──sensors──▶  model 
 - **There is no speed or elevation sensor:** the brain learns movement from
   acceleration, joint readings and its own outputs.
 
-#### LOS sensor
+#### Camera
 
-- **Beginner:** Three rays that tell the brain how far away the ground is:
-  straight down, straight ahead, and ahead-and-down.
-- **Implementation:** `project/src/creature/LosSensor.cs` adds three
+- **Beginner:** Three rays that tell the brain how near the ground is:
+  straight ahead, ahead-and-down, and straight down. A ray lights up more
+  the closer the ground is.
+- **Implementation:** `project/src/creature/CameraSensor.cs` adds three
   `RayCast2D` children at the beam's midpoint. They are aimed **as built**:
-  when the creature is built they point down, forward (+x) and forward-down
+  when the creature is built they point forward (+x), forward-down and down
   in the world, and after that they turn with the beam
-  (`LineOfSight.LocalRayTarget` in `libs/NodeRunner.Domain/LineOfSight.cs`).
-  They see the ground only (collision layer 1), `LineOfSight.RayLength`
-  (220) long.
-- **Reading:** three brain inputs, down, forward and forward-down: the hit
-  distance over the ray length, so `1` when nothing is in range and `0` at
-  contact (`LineOfSight.Reading`). A level beam reads what a level Core did
-  before #127.
-- **Fixed in 0.12:** no settings. Ray count, range and rotation come with LOS
-  settings in 0.14 (#578); their power draw comes with power in 0.18 (#599).
+  (`CameraRays.LocalRayTarget` in `libs/NodeRunner.Domain/CameraRays.cs`).
+  They see the ground only (collision layer 1), `CameraRays.RayLength`
+  (220) long. (It is not Godot's `Camera2D`.)
+- **Ray names** are symmetric around the centre ray, seen from the camera
+  looking along its rays: **left 1**, **centre**, **right 1** (later also
+  left 2 / right 2). Today left 1 looks forward, centre forward-down and
+  right 1 down. Every ray count the camera will offer (1, 3 or 5, #578) has
+  a centre ray, so the names of the inner rays survive a rebuild with
+  another count.
+- **Reading:** three brain inputs, left to right: the ray's **nearness**,
+  `1 − distance / range` clamped to 0–1, so `0` when nothing is in range,
+  rising linearly to `1` at contact (`CameraRays.Reading`). Nothing seen
+  feeds 0, which adds nothing to the brain's weighted sum (see
+  `docs/ML_CONCEPTS.md`).
+- **Fixed in 0.12:** no settings. Ray count, range and rotation come with
+  camera settings in 0.14 (#578), turning the camera with #594; their power
+  draw comes with power in 0.18 (#599).
 
 ### Motor relation
 
@@ -201,13 +210,13 @@ shapes (e.g. a bare quadrilateral) with their genuine remaining freedom.
 
 ## Sensor–model contract
 
-- **Input count** = `(accelerometer count × 2) + (LOS sensor count × 3) +
+- **Input count** = `(accelerometer count × 2) + (camera count × 3) +
   (motor relation count × 2)`.
 - **Output count** = motor relation count.
 - **Order matters and is fixed at build time:** every sensor, in
   `CreatureDef.Sensors` (part) order, contributes its values first (an
-  Accelerometer: along, across; an LOS sensor: down, forward,
-  forward-down), then every motor relation (in the
+  Accelerometer: along, across; a Camera: left 1, centre,
+  right 1), then every motor relation (in the
   order `MotorTopology` produced it) contributes its 2 values. Output slot
   `i` always drives motor relation `i`. Reordering either side silently
   invalidates a trained brain. See the comment above
@@ -246,16 +255,16 @@ shapes (e.g. a bare quadrilateral) with their genuine remaining freedom.
    ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐
    │      │ │      │ │      │ │      │
   (N0)───(N1)───(N2)───(N3)───(N4)
-   accel + LOS
+   accel + camera
 ```
 
 - **5 nodes** (`N0`-`N4`) spaced 56 units apart, radius 18.
 - **4 beams**, one per adjacent pair, referencing node ids.
-- **1 accelerometer and 1 LOS sensor**, both on the head beam (`N0`–`N1`).
+- **1 accelerometer and 1 camera**, both on the head beam (`N0`–`N1`).
 - **Node degrees:** `N0` and `N4` have 1 beam each (passive ends); `N1`,
   `N2`, `N3` each have 2 beams, giving 3 motor relations total — no closed
   loops, so no triangle exclusions apply here.
-- **Sensors:** `1 accelerometer × 2` + `1 LOS sensor × 3` +
+- **Sensors:** `1 accelerometer × 2` + `1 camera × 3` +
   `3 motor relations × 2` = 11.
 - **Brain outputs:** 3, one per motor relation.
 
@@ -269,8 +278,8 @@ without a fresh design conversation:
 - Parts as unlockable resources via an achievement/quest
   progression system, rather than unlimited from the start. Today every
   part is unlimited (#557); achievements (#525) own the first unlocks.
-- Sensors on blocks, and sensor types beyond the Accelerometer and the LOS
-  sensor.
+- Sensors on blocks, and sensor types beyond the Accelerometer and the
+  Camera.
 - Exposing `MaxTorque`/`MaxAngularVelocity` as player- or
   upgrade-configurable settings, rather than fixed constants.
 - Whether `relativeAngularVelocity` should always be included as a sensor,

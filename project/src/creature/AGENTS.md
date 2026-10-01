@@ -37,8 +37,8 @@ the model this implements.**
 - `AccelerometerSensor.cs` — one accelerometer: measures its beam's
   midpoint acceleration each tick, steps the Domain `Accelerometer` proof
   mass and writes its 2 readings into the sensor buffer
-- `LosSensor.cs` — one LOS sensor: three `RayCast2D` children aimed as
-  built by the Domain `LineOfSight`, writing 3 readings
+- `CameraSensor.cs` — one camera: three `RayCast2D` children aimed as
+  built by the Domain `CameraRays`, writing 3 nearness readings
 - `NodeVisual.cs` / `BeamVisual.cs` — rendering only, no physics
 - `SensorVisual.cs` — a sensor's picture, a rendering-only child of its
   beam body; the Accelerometer weight follows the live proof mass

@@ -12,7 +12,7 @@ public sealed class BuildPlacementTests
 
     [Theory]
     [InlineData(BuildPart.Accelerometer, SensorKind.Accelerometer)]
-    [InlineData(BuildPart.LosSensor, SensorKind.LineOfSight)]
+    [InlineData(BuildPart.Camera, SensorKind.Camera)]
     public void PlacePart_OnAFreeBeam_AddsTheSensorThereWithAFreshId(BuildPart part, SensorKind kind)
     {
         var build = TwoBeams();
@@ -59,7 +59,7 @@ public sealed class BuildPlacementTests
         var build = TwoBeams();
         var changes = CountChanges(build);
 
-        build.PlacePart(BuildPart.LosSensor, _firstJoint).ShouldBeNull();
+        build.PlacePart(BuildPart.Camera, _firstJoint).ShouldBeNull();
 
         build.Sensors.ShouldBeEmpty();
         changes().ShouldBe(0);
@@ -73,7 +73,7 @@ public sealed class BuildPlacementTests
         build.PlacePart(BuildPart.Accelerometer, _firstBeam);
         var changes = CountChanges(build);
 
-        build.PlacePart(BuildPart.LosSensor, _firstBeam).ShouldBeNull();
+        build.PlacePart(BuildPart.Camera, _firstBeam).ShouldBeNull();
 
         build.Sensors.Count.ShouldBe(1);
         changes().ShouldBe(0);
@@ -110,9 +110,9 @@ public sealed class BuildPlacementTests
         var build = TwoBeams();
         build.PlacePart(BuildPart.Accelerometer, _firstBeam);
 
-        build.CanPlacePart(BuildPart.LosSensor, _firstBeam, out var taken).ShouldBeFalse();
+        build.CanPlacePart(BuildPart.Camera, _firstBeam, out var taken).ShouldBeFalse();
         taken.ShouldBe("One sensor per beam");
-        build.CanPlacePart(BuildPart.LosSensor, _secondBeam, out var free).ShouldBeTrue();
+        build.CanPlacePart(BuildPart.Camera, _secondBeam, out var free).ShouldBeTrue();
         free.ShouldBeEmpty();
     }
 
@@ -163,7 +163,7 @@ public sealed class BuildPlacementTests
         var build = TwoBeams();
         var gestures = new BuildGestures(build);
 
-        gestures.DropPart(BuildPart.LosSensor, new Vector2D(40, 0)).ShouldNotBeNull();
+        gestures.DropPart(BuildPart.Camera, new Vector2D(40, 0)).ShouldNotBeNull();
 
         build.Sensors.Single().BeamId.ShouldBe(4);
     }
@@ -185,7 +185,7 @@ public sealed class BuildPlacementTests
     public void PartTray_KnowsWhichPartsAreSensors_AndWhichCanBeDragged()
     {
         PartTray.SensorKindOf(BuildPart.Accelerometer).ShouldBe(SensorKind.Accelerometer);
-        PartTray.SensorKindOf(BuildPart.LosSensor).ShouldBe(SensorKind.LineOfSight);
+        PartTray.SensorKindOf(BuildPart.Camera).ShouldBe(SensorKind.Camera);
         PartTray.SensorKindOf(BuildPart.Servo).ShouldBeNull();
         PartTray.IsAvailable(BuildPart.Accelerometer).ShouldBeTrue();
         PartTray.IsAvailable(BuildPart.Spring).ShouldBeFalse();

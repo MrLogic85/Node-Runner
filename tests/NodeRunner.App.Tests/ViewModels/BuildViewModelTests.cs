@@ -598,7 +598,7 @@ public sealed class BuildViewModelTests
 
         viewModel.SelectedPartCount.ShouldBe(1);
         viewModel.SingleSelectedSensorId.ShouldBe(5);
-        viewModel.StatusMessage.ShouldBe("LOS sensor selected.");
+        viewModel.StatusMessage.ShouldBe("Camera selected.");
 
         viewModel.DeleteSelectedParts();
 
@@ -632,15 +632,15 @@ public sealed class BuildViewModelTests
 
         viewModel.TryFindSensorAt(new Vector2D(50, 0), out var accelerometer).ShouldBeTrue();
         accelerometer.ShouldBe(4);
-        viewModel.TryFindSensorAt(new Vector2D(100, 50), out var los).ShouldBeTrue();
-        los.ShouldBe(5);
+        viewModel.TryFindSensorAt(new Vector2D(100, 50), out var camera).ShouldBeTrue();
+        camera.ShouldBe(5);
         viewModel.TryFindSensorAt(new Vector2D(50, SensorPicture.Size), out _).ShouldBeFalse();
     }
 
     private static CreatureDef SensorCreature() => new(
         [new NodeDef(1, new Vector2D(0, 0), 18), new NodeDef(2, new Vector2D(100, 0), 18), new NodeDef(6, new Vector2D(100, 100), 18)],
         [new BeamDef(3, 1, 2), new BeamDef(7, 2, 6)],
-        [new SensorDef(4, 3, SensorKind.Accelerometer), new SensorDef(5, 7, SensorKind.LineOfSight)]);
+        [new SensorDef(4, 3, SensorKind.Accelerometer), new SensorDef(5, 7, SensorKind.Camera)]);
 
     [Fact]
     public void DeleteSelectedParts_InMoveOnlyMode_PreservesAnatomy()

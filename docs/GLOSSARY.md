@@ -42,6 +42,11 @@ Long-form descriptions and the sensor/model contract live in
 - **Beam** — A rigid, fixed-length connection between two nodes. Never
   stretches or compresses. Its own `RigidBody2D` at runtime. See:
   `docs/CREATURE_MODEL.md`.
+- **Camera** — A sensor on a beam: three fixed rays (left 1, centre, right
+  1; as built they look forward, forward-down and down) that read how near
+  the ground is, 0 with nothing in range and 1 at contact. Gives three model
+  inputs. Formerly the "LOS sensor". Not Godot's `Camera2D`. See:
+  `docs/CREATURE_MODEL.md`.
 - **Creature** — A single agent's body: nodes + beams (+ optional sensors) +
   the sensors/motor relations they derive, driven by a brain. See:
   `docs/CREATURE_MODEL.md`.
@@ -53,10 +58,6 @@ Long-form descriptions and the sensor/model contract live in
   design's Joint tool adds one). Not the retired 0.1.0 Joint/Bone/Muscle
   prototype part, and not a Godot physics joint. See:
   `docs/BUILD_MODE.md`.
-- **LOS sensor** — A sensor on a beam: three fixed rays (down, forward,
-  forward-down as built) that read how far the ground is, 1 with nothing in
-  range and 0 at contact. Gives three model inputs. See:
-  `docs/CREATURE_MODEL.md`.
 - **Model input** — One slot in the neural network's input vector, populated
   one-to-one from a sensor value (a sensor part's or a motor relation's). See:
   `docs/CREATURE_MODEL.md`.

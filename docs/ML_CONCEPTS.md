@@ -82,11 +82,20 @@ For each concept:
   built" (#534). 0.12.0 replaces that package with sensor parts on beams
   (see `docs/CREATURE_MODEL.md`): an Accelerometer, whose proof mass on a
   damped spring gives two readings along and across its beam and filters
-  spiky contacts (#127), and an LOS sensor whose three fixed rays read how
-  far the ground is (#575). There is no speed or
+  spiky contacts (#127), and a Camera whose three fixed rays read how
+  near the ground is (#575, #604). There is no speed or
   elevation input: the brain must learn movement from acceleration, joint
-  readings and its own outputs; 0.14.0 adds LOS settings
+  readings and its own outputs; 0.14.0 adds camera settings
   (#578) and Pulse, a rhythm input (#527).
+- **Why "nothing seen" reads 0 (#604):** a zero input adds nothing to the
+  brain's weighted sum, so the weight on a camera ray only matters while
+  something is in view. Mutating that weight adds no noise while the
+  camera sees nothing, and the brain learns to react to something being
+  there. Reading 1 for "nothing" would act like an extra bias that vanishes
+  the moment the ground appears. The reading is also linear and smooth at
+  the range edge: something just inside range reads about 0, the same as
+  nothing, so the input never jumps, and half the bar means half the
+  range.
 - **How we show it:** 0.1.0 proves observation → action by making the worm
   twitch. 0.2.0 lists what the network sees each tick. A later, uncommitted
   teaching mode may let the user toggle a sensor off, retrain from scratch, and

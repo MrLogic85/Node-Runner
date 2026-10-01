@@ -28,7 +28,7 @@ public sealed class BrainFocusPresentationViewModelTests
         viewModel.HasNetwork.ShouldBeTrue();
         viewModel.Summary.ShouldBe("2 inputs -> 2 hidden -> 1 outputs");
         viewModel.Layers.Select(layer => layer.Title).ShouldBe(["Inputs", "Hidden", "Outputs"]);
-        viewModel.Layers[0].Neurons.Select(neuron => neuron.Label).ShouldBe(["Accelerometer 1 along", "Motor relation 1 angle"]);
+        viewModel.Layers[0].Neurons.Select(neuron => neuron.Label).ShouldBe(["Accelerometer 1 · along", "Motor relation 1 · angle"]);
         viewModel.Layers[2].Neurons[0].Label.ShouldBe("Motor 1 target");
         viewModel.Edges.Count.ShouldBe(6);
         viewModel.Edges[0].Weight.ShouldBe(1.0);
@@ -51,7 +51,7 @@ public sealed class BrainFocusPresentationViewModelTests
 
         viewModel.SelectedLayerIndex.ShouldBe(0);
         viewModel.SelectedNeuronIndex.ShouldBe(0);
-        viewModel.SelectedNeuronLabel.ShouldBe("Accelerometer 1 along");
+        viewModel.SelectedNeuronLabel.ShouldBe("Accelerometer 1 · along");
         viewModel.SelectedNeuronSummary.ShouldBe("Inputs neuron 1 activation 0.50");
     }
 
