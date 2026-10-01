@@ -95,19 +95,6 @@ public static class SensorDrawing
         }
     }
 
-    /// <summary>The middle of a ray fan: the unit vector along the sum of its directions.</summary>
-    public static Vector2 Aim(IEnumerable<Vector2> rayDirections)
-    {
-        ArgumentNullException.ThrowIfNull(rayDirections);
-        var sum = Vector2.Zero;
-        foreach (var direction in rayDirections)
-        {
-            sum += direction.Normalized();
-        }
-
-        return sum.IsZeroApprox() ? Vector2.Down : sum.Normalized();
-    }
-
     private static void DrawShape(CanvasItem canvas, VisualTheme theme, Vector2[] outline, Vector2[]? halo)
     {
         if (halo is not null)

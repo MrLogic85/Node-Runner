@@ -42,8 +42,9 @@ Long-form descriptions and the sensor/model contract live in
 - **Beam** — A rigid, fixed-length connection between two nodes. Never
   stretches or compresses. Its own `RigidBody2D` at runtime. See:
   `docs/CREATURE_MODEL.md`.
-- **Camera** — A sensor on a beam: three fixed rays (left 1, centre, right
-  1; as built they look forward, forward-down and down) that read how near
+- **Camera** — A sensor on a beam: three rays (left 1, centre, right 1)
+  fanned around its aim, which turns in Build (#594; a new one looks
+  forward, forward-down and down) and turns with the beam, that read how near
   the ground is, 0 with nothing in range and 1 at contact. Gives three model
   inputs. Formerly the "LOS sensor". Not Godot's `Camera2D`. See:
   `docs/CREATURE_MODEL.md`.

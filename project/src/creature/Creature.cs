@@ -494,7 +494,7 @@ public partial class Creature : Node2D
             _sensors[i] = sensor.Kind switch
             {
                 SensorKind.Accelerometer => CreateAccelerometer(definition, beamIndex, gravity),
-                SensorKind.Camera => new CameraSensor(_beamBodies[beamIndex], _beamInitialRotations[beamIndex]),
+                SensorKind.Camera => new CameraSensor(_beamBodies[beamIndex], sensor.Aim ?? 0),
                 _ => throw new InvalidOperationException($"Unknown sensor kind {sensor.Kind}."),
             };
         }
@@ -523,8 +523,7 @@ public partial class Creature : Node2D
                 Rotation = glyphRotation,
                 Accelerometer = _sensors[i] as AccelerometerSensor,
                 Camera = _sensors[i] as CameraSensor,
-                CameraAim = SensorDrawing.Aim(Enumerable.Range(0, CameraRays.RayCount)
-                    .Select(ray => ToGodot(CameraRays.LocalRayTarget(ray, _beamInitialRotations[beamIndex])))).Rotated(-glyphRotation),
+                CameraAim = Vector2.FromAngle((float)(sensor.Aim ?? 0)).Rotated(-glyphRotation),
             };
             _beamBodies[beamIndex].AddChild(visual);
             _sensorVisuals[i] = visual;

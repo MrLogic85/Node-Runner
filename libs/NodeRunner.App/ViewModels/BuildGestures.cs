@@ -2,12 +2,16 @@ using NodeRunner.Domain;
 
 namespace NodeRunner.App.ViewModels;
 
-/// <summary>The Select tool's handles on a selection of two or more joints.</summary>
+/// <summary>
+/// The Select tool's handles on a selection of two or more joints, and the handle that turns a
+/// selected Camera in any tool (#594).
+/// </summary>
 public enum SelectionHandle
 {
     Move,
     Rotate,
     Scale,
+    Aim,
 }
 
 /// <summary>
@@ -47,6 +51,7 @@ public sealed class BuildGestures
     private const double _framePadding = 8;
     private const double _frameMinSize = 96;
     private const double _rotateStem = 32;
+    private const double _aimReachCap = 3;
 
     private readonly BuildViewModel _build;
     private readonly Dictionary<int, Vector2D> _pointers = [];
@@ -65,6 +70,7 @@ public sealed class BuildGestures
     private SelectionHandle? _pressedHandle;
     private bool _pressedNodeWasSelected;
     private SelectionSnapshot? _selectionStart;
+    private (int Sensor, double Aim)? _aimStart;
 
     public BuildGestures(BuildViewModel build)
     {
@@ -102,9 +108,9 @@ public sealed class BuildGestures
         : null;
 
     /// <summary>
-    /// Where each handle on <see cref="SelectionFrame"/> sits, in canvas
-    /// units: Move in the middle, Rotate on a stem above, Scale at the
-    /// bottom-right corner.
+    /// Where each handle sits, in canvas units: on <see cref="SelectionFrame"/>, Move in the
+    /// middle, Rotate on a stem above and Scale at the bottom-right corner; on a selected Camera,
+    /// Aim on a stem out along its aim.
     /// </summary>
     public IReadOnlyList<(SelectionHandle Handle, Vector2D Position)> SelectionHandles =>
         [.. HandlesInView().Select(entry => (entry.Handle, View.ToCanvas(entry.Position)))];
@@ -211,7 +217,11 @@ public sealed class BuildGestures
             return;
         }
 
-        if (_selectionStart is { } start)
+        if (_aimStart is { } aim)
+        {
+            _build.SetCameraAim(aim.Sensor, aim.Aim);
+        }
+        else if (_selectionStart is { } start)
         {
             _build.RestoreSelection(start);
         }
@@ -238,9 +248,11 @@ public sealed class BuildGestures
         _lastViewPosition = viewPosition;
         var position = View.ToCanvas(viewPosition);
         _pressPosition = position;
-        if (_pressTool == BuildTool.Select && FindHandle(viewPosition) is { } handle)
+        _pressedHandle = FindHandle(viewPosition);
+        if (_pressedHandle == SelectionHandle.Aim)
         {
-            _pressedHandle = handle;
+            // The Aim handle comes first, so nothing under it is pressed.
+            return;
         }
 
         // Joints, then sensors, then beams; a joint's wider touch reach only counts off its disc,
@@ -292,7 +304,14 @@ public sealed class BuildGestures
             }
 
             _dragging = true;
-            if (_pressTool == BuildTool.Select && (_pressedHandle is not null || _pressedNode is not null))
+            if (_pressedHandle == SelectionHandle.Aim)
+            {
+                if (_build.AimableCameraId is { } camera)
+                {
+                    _aimStart = (camera, _build.Sensors.Single(sensor => sensor.Id == camera).Aim ?? 0);
+                }
+            }
+            else if (_pressTool == BuildTool.Select && (_pressedHandle is not null || _pressedNode is not null))
             {
                 _selectionStart = _build.SnapshotSelection();
                 NodeDragStarting?.Invoke(this, [.. _selectionStart.Positions.Keys]);
@@ -307,6 +326,12 @@ public sealed class BuildGestures
         var lastViewPosition = _lastViewPosition;
         _lastViewPosition = viewPosition;
         var position = View.ToCanvas(viewPosition);
+        if (_pressedHandle == SelectionHandle.Aim)
+        {
+            AimCamera(position);
+            return;
+        }
+
         switch (_pressTool)
         {
             case BuildTool.Move when _pressedNode is { } node:
@@ -341,6 +366,8 @@ public sealed class BuildGestures
         var position = View.ToCanvas(viewPosition);
         switch (_pressTool)
         {
+            case BuildTool when _pressedHandle == SelectionHandle.Aim:
+                break;
             case BuildTool.Move when !_dragging:
                 TapMove();
                 break;
@@ -470,6 +497,31 @@ public sealed class BuildGestures
         }
     }
 
+    /// <summary>Turns the Camera the Aim drag started on to look at <paramref name="position"/>, in <see cref="CameraRays.AimStep"/> steps in the world.</summary>
+    private void AimCamera(Vector2D position)
+    {
+        if (_aimStart is not { } start)
+        {
+            return;
+        }
+
+        var (nodeA, nodeB) = CameraBeam(start.Sensor);
+        var middle = Midpoint(nodeA, nodeB);
+        if (position == middle)
+        {
+            return;
+        }
+
+        _build.SetCameraAim(start.Sensor, CameraRays.SnappedAim(Math.Atan2(position.Y - middle.Y, position.X - middle.X), nodeA, nodeB));
+    }
+
+    private (Vector2D NodeA, Vector2D NodeB) CameraBeam(int sensorId)
+    {
+        var sensor = _build.Sensors.Single(entry => entry.Id == sensorId);
+        var beam = _build.Beams[_build.BeamIndexOf(sensor.BeamId)];
+        return (NodeById(beam.NodeA).Position, NodeById(beam.NodeB).Position);
+    }
+
     /// <summary>Applies a Select drag to <paramref name="position"/>, always measured from the press and the start snapshot.</summary>
     private void TransformSelection(SelectionSnapshot start, Vector2D position)
     {
@@ -516,6 +568,11 @@ public sealed class BuildGestures
 
     private IEnumerable<(SelectionHandle Handle, Vector2D Position)> HandlesInView()
     {
+        if (_build.AimableCameraId is { } camera)
+        {
+            yield return (SelectionHandle.Aim, AimHandleInView(camera));
+        }
+
         if (FrameInView() is not { } frame)
         {
             yield break;
@@ -524,6 +581,30 @@ public sealed class BuildGestures
         yield return (SelectionHandle.Move, frame.Center);
         yield return (SelectionHandle.Rotate, new Vector2D(frame.Center.X, frame.Min.Y - _rotateStem));
         yield return (SelectionHandle.Scale, frame.Max);
+    }
+
+    /// <summary>
+    /// The Aim handle on a stem out along the camera's centre ray, past its picture; pushed further
+    /// out, up to <see cref="_aimReachCap"/> times as far, while it would cover a joint's touch area.
+    /// </summary>
+    private Vector2D AimHandleInView(int camera)
+    {
+        var (nodeA, nodeB) = CameraBeam(camera);
+        var aim = CameraRays.BeamAngle(nodeA, nodeB) + (_build.Sensors.Single(sensor => sensor.Id == camera).Aim ?? 0);
+        var middle = View.ToView(Midpoint(nodeA, nodeB));
+        var direction = new Vector2D(Math.Cos(aim), Math.Sin(aim));
+        var minimum = (SensorPicture.Size / Math.Sqrt(2) * View.Zoom) + _rotateStem + HandleHitRadius;
+        Vector2D At(double reach) => new(middle.X + (direction.X * reach), middle.Y + (direction.Y * reach));
+        bool CoversAJoint(Vector2D handle) => _build.Nodes.Any(node =>
+            Distance(View.ToView(node.Position), handle) < HandleHitRadius + Math.Max(NodeHitRadius, node.Radius * View.Zoom));
+
+        var reach = minimum;
+        while (CoversAJoint(At(reach)) && reach + NodeHitRadius <= minimum * _aimReachCap)
+        {
+            reach += NodeHitRadius;
+        }
+
+        return At(reach);
     }
 
     private SelectionHandle? FindHandle(Vector2D viewPosition) =>
@@ -586,6 +667,7 @@ public sealed class BuildGestures
         _pressedHandle = null;
         _pressedNodeWasSelected = false;
         _selectionStart = null;
+        _aimStart = null;
         _pressedNode = null;
         _pressedBeam = null;
         _pressedSensor = null;

@@ -140,7 +140,7 @@ public sealed class CreatureBuilder
         foreach (var sensor in movedSensors)
         {
             var sensorIndex = SensorIndexOf(sensor.Id);
-            _sensors[sensorIndex] = new SensorDef(sensor.Id, targetBeamId, sensor.Kind, sensor.Name);
+            _sensors[sensorIndex] = sensor.WithBeam(targetBeamId);
         }
 
         return (firstBeamId, secondBeamId);
@@ -163,9 +163,26 @@ public sealed class CreatureBuilder
         }
 
         sensorId = AllocatePartId();
-        _sensors.Add(new SensorDef(sensorId, beamId, kind));
+        var beam = _beams[BeamIndexOf(beamId)];
+        double? aim = kind == SensorKind.Camera
+            ? CameraRays.DefaultAim(_nodes[NodeIndexOf(beam.NodeA)].Position, _nodes[NodeIndexOf(beam.NodeB)].Position)
+            : null;
+        _sensors.Add(new SensorDef(sensorId, beamId, kind, aim: aim));
         reason = string.Empty;
         return true;
+    }
+
+    /// <summary>Turns a Camera to <paramref name="aim"/>, relative to its beam (#594).</summary>
+    public void SetCameraAim(int sensorId, double aim)
+    {
+        var sensorIndex = SensorIndexOf(sensorId);
+        var sensor = _sensors[sensorIndex];
+        if (sensor.Kind != SensorKind.Camera)
+        {
+            throw new ArgumentOutOfRangeException(nameof(sensorId), "Only a Camera has an aim.");
+        }
+
+        _sensors[sensorIndex] = sensor.WithAim(aim);
     }
 
     /// <summary>Removes a sensor by id.</summary>
@@ -202,7 +219,7 @@ public sealed class CreatureBuilder
         if (sensorIndex >= 0)
         {
             var sensor = _sensors[sensorIndex];
-            _sensors[sensorIndex] = new SensorDef(sensor.Id, sensor.BeamId, sensor.Kind, name);
+            _sensors[sensorIndex] = sensor.WithName(name);
             return;
         }
 

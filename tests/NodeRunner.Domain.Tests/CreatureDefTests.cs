@@ -116,6 +116,29 @@ public sealed class CreatureDefTests
     }
 
     [Fact]
+    public void Constructor_WithCameraWithoutAim_GivesItTheDefaultAimFromItsBeam()
+    {
+        var creature = new CreatureDef(
+            new[] { new NodeDef(1, new Vector2D(0, 0), 1), new NodeDef(2, new Vector2D(0, 2), 1) },
+            new[] { new BeamDef(101, 1, 2) },
+            new[] { new SensorDef(201, 101, SensorKind.Camera) });
+
+        creature.Sensors[0].Aim.ShouldBe(CameraRays.DefaultAim(new Vector2D(0, 0), new Vector2D(0, 2)));
+    }
+
+    [Fact]
+    public void Constructor_KeepsAGivenAimAndLeavesAccelerometersWithout()
+    {
+        var creature = new CreatureDef(
+            new[] { new NodeDef(1, new Vector2D(0, 0), 1), new NodeDef(2, new Vector2D(2, 0), 1), new NodeDef(3, new Vector2D(4, 0), 1) },
+            new[] { new BeamDef(101, 1, 2), new BeamDef(102, 2, 3) },
+            new[] { new SensorDef(201, 101, SensorKind.Camera, aim: 2), new SensorDef(202, 102, SensorKind.Accelerometer) });
+
+        creature.Sensors[0].Aim.ShouldBe(2);
+        creature.Sensors[1].Aim.ShouldBeNull();
+    }
+
+    [Fact]
     public void JsonRoundTrip_PreservesCreatureDefinition()
     {
         var original = new CreatureDef(
@@ -129,7 +152,7 @@ public sealed class CreatureDefTests
             new[]
             {
                 new SensorDef(201, 101, SensorKind.Accelerometer),
-                new SensorDef(202, 102, SensorKind.Camera),
+                new SensorDef(202, 102, SensorKind.Camera, aim: -0.75),
             });
 
         var json = JsonSerializer.Serialize(original);
@@ -144,6 +167,22 @@ public sealed class CreatureDefTests
         json.ShouldContain("\"sensors\":");
         json.ShouldContain("\"Id\":1");
         json.ShouldContain("\"NextPartId\":203");
+    }
+
+    [Fact]
+    public void JsonRoundTrip_OfCameraSavedWithoutAim_GivesTheDefaultAim()
+    {
+        var original = new CreatureDef(
+            new[] { new NodeDef(1, new Vector2D(0, 0), 1), new NodeDef(2, new Vector2D(-2, 1), 1) },
+            new[] { new BeamDef(101, 1, 2) },
+            new[] { new SensorDef(201, 101, SensorKind.Camera, aim: 1) });
+        var json = JsonSerializer.Serialize(original);
+        json.ShouldContain("\"Aim\":1");
+
+        var loaded = JsonSerializer.Deserialize<CreatureDef>(json.Replace("\"Aim\":1", "\"Aim\":null", StringComparison.Ordinal));
+
+        loaded.ShouldNotBeNull();
+        loaded.Sensors[0].Aim.ShouldBe(CameraRays.DefaultAim(new Vector2D(0, 0), new Vector2D(-2, 1)));
     }
 
     [Fact]

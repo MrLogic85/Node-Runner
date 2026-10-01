@@ -184,7 +184,7 @@ public sealed class GeneticAlgorithm
 // libs/NodeRunner.Domain/
 public sealed record NodeDef(int Id, Vector2D Position, double Radius, string? Name = null);
 public sealed record BeamDef(int Id, int NodeA, int NodeB, string? Name = null);   // node ids
-public sealed record SensorDef(int Id, int BeamId, SensorKind Kind, string? Name = null); // beam id
+public sealed record SensorDef(int Id, int BeamId, SensorKind Kind, string? Name = null, double? Aim = null); // beam id; Aim: Camera only
 public sealed record CreatureDef(NodeDef[] Nodes, BeamDef[] Beams, SensorDef[] Sensors, int NextPartId);
 public sealed record NodeConnectionDef(int NodeIndex, int ReferenceBeamIndex, int OtherBeamIndex, bool IsMotorized);
 
@@ -200,9 +200,11 @@ public static class Accelerometer   // proof mass on a damped spring, pure math
     public static Vector2D SpecificForce(Vector2D acceleration, double gravity);
 }
 
-public static class CameraRays      // the camera's three fixed rays, pure math
+public static class CameraRays      // the camera's three rays around its aim, pure math
 {
-    public static Vector2D LocalRayTarget(int ray, double builtRotation);
+    public static double DefaultAim(Vector2D nodeA, Vector2D nodeB);
+    public static double SnappedAim(double worldAngle, Vector2D nodeA, Vector2D nodeB);
+    public static Vector2D LocalRayTarget(int ray, double aim);
     public static double Reading(double? hitDistance);
 }
 

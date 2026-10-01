@@ -22,7 +22,7 @@ public sealed class BuildPlacementTests
         var id = build.PlacePart(part, _firstBeam);
 
         id.ShouldBe(freshId);
-        build.Sensors.ShouldBe([new SensorDef(freshId, 4, kind)]);
+        build.Sensors.Select(sensor => (sensor.Id, sensor.BeamId, sensor.Kind)).ShouldBe([(freshId, 4, kind)]);
         changes().ShouldBe(1);
         build.PlacementNote.ShouldBeNull();
     }

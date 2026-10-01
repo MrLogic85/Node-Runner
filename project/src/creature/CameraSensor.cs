@@ -4,9 +4,9 @@ using NodeRunner.Domain;
 namespace NodeRunner.Creature;
 
 /// <summary>
-/// One camera on its beam (#575, #604): three <see cref="RayCast2D"/> children at the beam's midpoint,
-/// aimed by the Domain <see cref="CameraRays"/> as built so they turn with the beam. They see the
-/// ground only and each writes its nearness: 0 with nothing in range, 1 at contact.
+/// One camera on its beam (#575, #604, #594): three <see cref="RayCast2D"/> children at the beam's
+/// midpoint, fanned around its aim by the Domain <see cref="CameraRays"/> so they turn with the beam.
+/// They see the ground only and each writes its nearness: 0 with nothing in range, 1 at contact.
 /// </summary>
 public sealed class CameraSensor : IBeamSensor
 {
@@ -14,13 +14,15 @@ public sealed class CameraSensor : IBeamSensor
 
     private readonly RayCast2D[] _rays = new RayCast2D[CameraRays.RayCount];
 
-    public CameraSensor(RigidBody2D beamBody, double builtRotation)
+    /// <param name="beamBody">The camera's beam; its +x runs along the beam, from node A to node B.</param>
+    /// <param name="aim">The camera's aim relative to its beam (<see cref="SensorDef.Aim"/>).</param>
+    public CameraSensor(RigidBody2D beamBody, double aim)
     {
         ArgumentNullException.ThrowIfNull(beamBody);
 
         for (var i = 0; i < _rays.Length; i++)
         {
-            var target = CameraRays.LocalRayTarget(i, builtRotation);
+            var target = CameraRays.LocalRayTarget(i, aim);
             _rays[i] = new RayCast2D
             {
                 Name = $"CameraRay{i}",

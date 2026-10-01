@@ -28,4 +28,38 @@ public sealed class SensorDefTests
 
         action.ShouldThrow<ArgumentOutOfRangeException>();
     }
+
+    [Fact]
+    public void Constructor_WithCameraAim_StoresIt()
+    {
+        new SensorDef(3, 2, SensorKind.Camera, aim: 0.5).Aim.ShouldBe(0.5);
+    }
+
+    [Fact]
+    public void Constructor_WithAimOnAccelerometer_Throws()
+    {
+        var action = () => new SensorDef(3, 2, SensorKind.Accelerometer, aim: 0.5);
+
+        action.ShouldThrow<ArgumentOutOfRangeException>();
+    }
+
+    [Theory]
+    [InlineData(double.NaN)]
+    [InlineData(double.NegativeInfinity)]
+    public void Constructor_WithNonFiniteAim_Throws(double aim)
+    {
+        var action = () => new SensorDef(3, 2, SensorKind.Camera, aim: aim);
+
+        action.ShouldThrow<ArgumentOutOfRangeException>();
+    }
+
+    [Fact]
+    public void With_KeepTheOtherValues()
+    {
+        var sensor = new SensorDef(3, 2, SensorKind.Camera, "Eye", 0.5);
+
+        sensor.WithBeam(4).ShouldBe(new SensorDef(3, 4, SensorKind.Camera, "Eye", 0.5));
+        sensor.WithName("Look").ShouldBe(new SensorDef(3, 2, SensorKind.Camera, "Look", 0.5));
+        sensor.WithAim(-1).ShouldBe(new SensorDef(3, 2, SensorKind.Camera, "Eye", -1));
+    }
 }

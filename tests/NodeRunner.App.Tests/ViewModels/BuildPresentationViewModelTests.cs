@@ -57,7 +57,7 @@ public sealed class BuildPresentationViewModelTests
 
     [Theory]
     [InlineData(SensorKind.Accelerometer, PartSettingsKind.Accelerometer, "Accelerometer", "Feels how its beam speeds up, slows down and tilts.")]
-    [InlineData(SensorKind.Camera, PartSettingsKind.Camera, "Camera", "Three rays see how near the ground is.")]
+    [InlineData(SensorKind.Camera, PartSettingsKind.Camera, "Camera", "Three rays see how near the ground is. Drag the round handle to aim it.")]
     public void SelectedSensor_ShowsNameBeamAndWhatItFeels(SensorKind kind, PartSettingsKind partKind, string name, string note)
     {
         var build = new BuildViewModel();
@@ -69,6 +69,21 @@ public sealed class BuildPresentationViewModelTests
         var presentation = new BuildPresentationViewModel(build);
 
         presentation.SinglePart.ShouldBe(new PartSettingsPresentation(7, partKind, name, name, "On", "Thigh", note, CanDelete: true));
+    }
+
+    [Fact]
+    public void SelectedCamera_WhenLocked_DoesNotOfferToAimIt()
+    {
+        var build = new BuildViewModel();
+        build.Load(
+            new CreatureDef(
+                [new NodeDef(1, new Vector2D(0, 0), 18), new NodeDef(2, new Vector2D(3, 4), 18)],
+                [new BeamDef(101, 1, 2)],
+                [new SensorDef(7, 101, SensorKind.Camera)]),
+            moveOnly: true);
+        build.SelectSensor(7);
+
+        new BuildPresentationViewModel(build).SinglePart!.Note.ShouldBe("Three rays see how near the ground is.");
     }
 
     [Fact]

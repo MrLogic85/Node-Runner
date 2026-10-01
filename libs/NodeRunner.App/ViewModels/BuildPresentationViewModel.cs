@@ -120,7 +120,7 @@ public sealed class BuildPresentationViewModel
                     _build.DefaultPartName(sensorId),
                     "On",
                     _build.PartDisplayName(sensor.BeamId),
-                    SensorNote(sensor.Kind),
+                    _build.AimableCameraId == sensorId ? $"{SensorNote(sensor.Kind)} {AimNote}" : SensorNote(sensor.Kind),
                     canDelete);
             }
 
@@ -154,6 +154,9 @@ public sealed class BuildPresentationViewModel
             return null;
         }
     }
+
+    /// <summary>Added to an unlocked Camera's note: what its Aim handle does (#594).</summary>
+    public const string AimNote = "Drag the round handle to aim it.";
 
     public static string SensorNote(SensorKind kind) => kind switch
     {

@@ -89,7 +89,46 @@ public sealed class CreatureBuilderTests
         added.ShouldBeFalse();
         secondId.ShouldBe(0);
         reason.ShouldBe("One sensor per beam");
-        builder.Sensors.ShouldBe([new SensorDef(firstId, beam, first)]);
+        builder.Sensors.Select(sensor => (sensor.Id, sensor.BeamId, sensor.Kind)).ShouldBe([(firstId, beam, first)]);
+    }
+
+    [Fact]
+    public void AddSensor_Camera_AimsAtTheWorldsForwardDownAsBuilt()
+    {
+        var builder = new CreatureBuilder();
+        builder.AddNode(new Vector2D(0, 0), 18);
+        builder.AddNode(new Vector2D(0, 100), 18);
+        var beam = builder.AddBeam(1, 2);
+
+        builder.AddSensor(beam, SensorKind.Camera, out _, out _);
+
+        builder.Sensors[0].Aim.ShouldBe(CameraRays.DefaultAim(new Vector2D(0, 0), new Vector2D(0, 100)));
+    }
+
+    [Fact]
+    public void SetCameraAim_IsKeptThroughSplitAndRename()
+    {
+        var builder = new CreatureBuilder();
+        var a = builder.AddNode(new Vector2D(0, 0), 1);
+        var b = builder.AddNode(new Vector2D(100, 0), 1);
+        var joint = builder.AddNode(new Vector2D(30, 0), 1);
+        var beam = builder.AddBeam(a, b);
+        builder.AddSensor(beam, SensorKind.Camera, out var sensor, out _);
+
+        builder.SetCameraAim(sensor, 2);
+        var split = builder.SplitBeamAtNode(beam, joint);
+        builder.Rename(sensor, "Eye");
+
+        builder.Sensors.ShouldBe([new SensorDef(sensor, split.SecondBeamId, SensorKind.Camera, "Eye", 2)]);
+    }
+
+    [Fact]
+    public void SetCameraAim_OnAnAccelerometer_Throws()
+    {
+        var builder = PairBuilder();
+        builder.AddSensor(builder.Beams[0].Id, SensorKind.Accelerometer, out var sensor, out _);
+
+        Should.Throw<ArgumentOutOfRangeException>(() => builder.SetCameraAim(sensor, 1));
     }
 
     [Fact]
