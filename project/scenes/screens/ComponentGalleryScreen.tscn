@@ -2294,7 +2294,7 @@ TextStyle = 12
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 8
-text = "a build part in the tray: glyph, name, count, and four states"
+text = "a build part in the tray: glyph, name, count, and four states; compact (control-sm) in the Build Parts tray"
 autowrap_mode = 3
 script = ExtResource("2_cpfof")
 TextStyle = 9
@@ -2331,7 +2331,6 @@ mouse_filter = 1
 script = ExtResource("19_part_row")
 IconId = 51
 Label = "Stepper"
-ValueText = "Locked"
 State = 2
 
 [node name="NoneLeft" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/PartRows/Rows" unique_id=639492777]
@@ -2343,6 +2342,25 @@ IconId = 53
 Label = "Wheel"
 ValueText = "0 left"
 State = 3
+
+[node name="CompactRest" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/PartRows/Rows"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 1
+script = ExtResource("19_part_row")
+IconId = 49
+Label = "Servo"
+Compact = true
+
+[node name="CompactLocked" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/PartRows/Rows"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 1
+script = ExtResource("19_part_row")
+IconId = 51
+Label = "Stepper"
+State = 2
+Compact = true
 
 [node name="PanelRows" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content" unique_id=-1126537795]
 layout_mode = 2

@@ -54,6 +54,20 @@ public sealed class BuildPresentationViewModel
 
     public BuildTool ActiveTool => _build.ActiveTool;
 
+    public IReadOnlyList<PartTrayGroup> PartGroups => PartTray.Groups(_build.ActiveTool);
+
+    /// <summary>
+    /// The side panel's one-line status for the rail tools that need one (Beam, Joint, Select);
+    /// empty for Move and for a tray tool, whose hint replaces its tab's help line.
+    /// </summary>
+    public string PanelToolHint => ActiveTool switch
+    {
+        BuildTool.Beam => "Drag joint to joint.",
+        BuildTool.Joint => "Tap space or a beam.",
+        BuildTool.Select => "Tap or box parts.",
+        _ => string.Empty,
+    };
+
     public int NodeCount => _build.Nodes.Count;
 
     public int CoreCount => _build.Cores.Count;
