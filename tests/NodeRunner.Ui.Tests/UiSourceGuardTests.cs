@@ -95,7 +95,7 @@ public sealed class UiSourceGuardTests
             .SelectMany(source =>
             {
                 var model = compilation.GetSemanticModel(source.Tree);
-                return source.Find(node => BuildsOrRestyles(node, model));
+                return source.Find(node => BuildsOrRestyles(source.Path, node, model));
             })
             .ToList();
 
@@ -152,6 +152,14 @@ public sealed class UiSourceGuardTests
     [InlineData("void M(Control control) { control.Visible = false; }")]
     public void Library_instances_and_state_pass(string member) =>
         BuildsOrRestyles(member).ShouldBeEmpty();
+
+    [Fact]
+    public void Drawn_widget_may_place_a_control_over_its_drawing() =>
+        BuildsOrRestyles("void M(Control handle) { handle.Position = Vector2.One; }", _drawnWidget).ShouldBeEmpty();
+
+    [Fact]
+    public void Drawn_widget_still_may_not_size_a_control() =>
+        BuildsOrRestyles("void M(Control handle) { handle.Size = Vector2.One; }", _drawnWidget).ShouldHaveSingleItem();
 
     [Fact]
     public void Component_library_selects_colours_by_theme_variation()
@@ -328,15 +336,16 @@ public sealed class UiSourceGuardTests
             or MemberAccessExpressionSyntax { Name.Identifier.Text: "ZIndex" },
     };
 
-    private static IEnumerable<string> BuildsOrRestyles(string member)
+    private static IEnumerable<string> BuildsOrRestyles(string member, string path = "ui/screens/Snippet.cs")
     {
         var snippet = CSharpSources.Snippet(member);
         var compilation = CSharpSources.Compile([.. CSharpSources.Project, snippet]);
         var model = compilation.GetSemanticModel(snippet.Tree);
-        return snippet.Find(node => BuildsOrRestyles(node, model));
+        return snippet.Find(node => BuildsOrRestyles(path, node, model));
     }
 
-    private static bool BuildsOrRestyles(SyntaxNode node, SemanticModel model) => node switch
+    // A drawn widget may move scene-authored controls (the Select handles) to where its drawing is.
+    private static bool BuildsOrRestyles(string path, SyntaxNode node, SemanticModel model) => node switch
     {
         BaseObjectCreationExpressionSyntax creation => model.GetTypeInfo(creation).Type is { } type
             && (IsGodotSubclass(type, "StyleBox")
@@ -348,7 +357,8 @@ public sealed class UiSourceGuardTests
             && method.ContainingType.ContainingNamespace.Name == "Godot",
         AssignmentExpressionSyntax assignment =>
             CSharpSources.Symbol(model, assignment.Left) is IPropertySymbol { Name: "CustomMinimumSize" or "Size" or "Position" } property
-            && property.ContainingType.ContainingNamespace.Name == "Godot",
+            && property.ContainingType.ContainingNamespace.Name == "Godot"
+            && !(property.Name == "Position" && RewrittenUi.DrawnWidgets.Contains(path)),
         _ => false,
     };
 
