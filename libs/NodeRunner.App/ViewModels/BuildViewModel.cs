@@ -14,9 +14,6 @@ public enum BuildTool
     Beam,
     Joint,
     Select,
-
-    /// <summary>Transitional: tap a node to add or remove a core, until the Parts tray drags parts onto joints (#376).</summary>
-    Core,
 }
 
 /// <summary>
@@ -101,7 +98,7 @@ public sealed class BuildViewModel : INotifyPropertyChanged
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
-    /// <summary>Raised whenever the placed anatomy (nodes/beams/cores) changes, so the UI can redraw.</summary>
+    /// <summary>Raised whenever the placed anatomy (nodes, beams, or sensors) changes, so the UI can redraw.</summary>
     public event EventHandler? AnatomyChanged;
 
     /// <summary>True for a locked Creation: parts and brain shape are fixed, and only nodes move.</summary>
@@ -119,16 +116,11 @@ public sealed class BuildViewModel : INotifyPropertyChanged
 
     public int SelectedPartCount => SelectedNodeCount + SelectedBeamCount;
 
-    public int SelectedCoreCount => _builder.Cores.Count(core => _selectedNodeIds.Contains(core.NodeId));
-
     public int? SingleSelectedNodeId => _selectedNodeIds.Count == 1
         ? _selectedNodeIds.First()
         : null;
 
     public int? SingleSelectedBeamId => SelectedPartCount == 1 ? _selectedBeamId : null;
-
-    public bool SingleSelectionHasCore => SingleSelectedNodeId is { } id
-        && _builder.Cores.Any(core => core.NodeId == id);
 
     public void SetCreationName(string creationName)
     {
@@ -193,7 +185,7 @@ public sealed class BuildViewModel : INotifyPropertyChanged
 
     public IReadOnlyList<BeamDef> Beams => _builder.Beams;
 
-    public IReadOnlyList<CoreDef> Cores => _builder.Cores;
+    public IReadOnlyList<SensorDef> Sensors => _builder.Sensors;
 
     public IReadOnlyCollection<int> SelectedNodeIds => _selectedNodeIds;
 
@@ -474,39 +466,13 @@ public sealed class BuildViewModel : INotifyPropertyChanged
 
         var splitPoint = new Vector2D(start.X + (t * (end.X - start.X)), start.Y + (t * (end.Y - start.Y)));
         var nodeId = _builder.AddNode(splitPoint, radius);
-        _builder.RemoveBeam(beamId);
-        _builder.AddBeam(beam.NodeA, nodeId);
-        _builder.AddBeam(nodeId, beam.NodeB);
+        _builder.SplitBeamAtNode(beamId, nodeId);
         _selectedNodeIds.Clear();
         _selectedBeamId = null;
         StatusMessage = "Split the beam with a new joint.";
         NotifySelectionChanged();
         AnatomyChanged?.Invoke(this, EventArgs.Empty);
         return nodeId;
-    }
-
-    /// <summary>Attaches a core to <paramref name="nodeId"/>, or removes it if one is already there.</summary>
-    public void ToggleCoreOnNode(int nodeId)
-    {
-        if (_moveOnly)
-        {
-            StatusMessage = "Edit mode only allows moving existing nodes.";
-            return;
-        }
-
-        var existingCoreId = FindCoreIdForNode(nodeId);
-        if (existingCoreId is not null)
-        {
-            _builder.RemoveCore(existingCoreId.Value);
-            StatusMessage = $"Removed core from node {nodeId}.";
-        }
-        else
-        {
-            _builder.AddCore(nodeId);
-            StatusMessage = $"Attached core to node {nodeId}.";
-        }
-
-        AnatomyChanged?.Invoke(this, EventArgs.Empty);
     }
 
     /// <summary>
@@ -622,19 +588,6 @@ public sealed class BuildViewModel : INotifyPropertyChanged
 
     public int BeamIndexOf(int beamId) => _builder.BeamIndexOf(beamId);
 
-    private int? FindCoreIdForNode(int nodeId)
-    {
-        for (var i = 0; i < _builder.Cores.Count; i++)
-        {
-            if (_builder.Cores[i].NodeId == nodeId)
-            {
-                return _builder.Cores[i].Id;
-            }
-        }
-
-        return null;
-    }
-
     private NodeDef NodeById(int nodeId) => _builder.Nodes[_builder.NodeIndexOf(nodeId)];
 
     private void NotifySelectionChanged()
@@ -642,10 +595,8 @@ public sealed class BuildViewModel : INotifyPropertyChanged
         OnPropertyChanged(nameof(SelectedNodeCount));
         OnPropertyChanged(nameof(SelectedBeamCount));
         OnPropertyChanged(nameof(SelectedPartCount));
-        OnPropertyChanged(nameof(SelectedCoreCount));
         OnPropertyChanged(nameof(SingleSelectedNodeId));
         OnPropertyChanged(nameof(SingleSelectedBeamId));
-        OnPropertyChanged(nameof(SingleSelectionHasCore));
     }
 
     private static double DistanceSquaredToSegment(Vector2D point, Vector2D segmentStart, Vector2D segmentEnd)

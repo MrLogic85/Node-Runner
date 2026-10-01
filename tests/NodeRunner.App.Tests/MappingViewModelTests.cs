@@ -31,10 +31,10 @@ public sealed class MappingViewModelTests
         var mapping = new MappingViewModel();
 
         mapping.Update(
-            [new SensorReading("Core", 1, "Ray down", 0.5), new SensorReading("Core", 1, "Pitch", -0.25)],
+            [new SensorReading("Accelerometer", 1, "along", 0.5), new SensorReading("Accelerometer", 1, "across", -0.25)],
             []);
 
-        mapping.SensorsText.ShouldBe("Core 1 Ray down: 0.50\nCore 1 Pitch: -0.25");
+        mapping.SensorsText.ShouldBe("Accelerometer 1 along: 0.50\nAccelerometer 1 across: -0.25");
     }
 
     [Fact]
@@ -54,7 +54,7 @@ public sealed class MappingViewModelTests
         var raised = false;
         mapping.PropertyChanged += (_, _) => raised = true;
 
-        mapping.Update([new SensorReading("Core", 1, "s", 1)], []);
+        mapping.Update([new SensorReading("Accelerometer", 1, "s", 1)], []);
 
         raised.ShouldBeTrue();
     }

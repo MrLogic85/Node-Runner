@@ -15,12 +15,16 @@ Pure C# data types. The vocabulary of the app, no behavior beyond invariants.
     exact same answer, and Domain is the only layer both can depend on
     without violating `docs/ARCHITECTURE.md`'s layer graph. Any new class
     like it must stay side-effect-free and take/return only Domain types.
+    `Accelerometer` is the second: the proof-mass step, reading and sensor
+    frame, shared by the sim and the visual (#576) and unit-tested here.
 - **Serialisable via `System.Text.Json` without custom converters.**
 
 ## What lives here
 
-- `CreatureDef`, `NodeDef`, `BeamDef`, `CoreDef`, `NodeConnectionDef` —
-  anatomy
+- `CreatureDef`, `NodeDef`, `BeamDef`, `SensorDef`, `SensorKind`,
+  `NodeConnectionDef` — anatomy
+- `Accelerometer`, `ProofMass` — the accelerometer's pure math (see the
+  exception above)
 - `MotorTopology` — derives `NodeConnectionDef`s from a `CreatureDef` (see
   the exception above)
 - `SimulationConfig`, `GaConfig` — hyperparameters

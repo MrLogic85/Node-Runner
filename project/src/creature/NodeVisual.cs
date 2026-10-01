@@ -16,8 +16,6 @@ public partial class NodeVisual : Node2D
 
     public float Radius { get; set; }
 
-    public bool HasCore { get; set; }
-
     public bool IsSelected
     {
         get => _isSelected;
@@ -45,12 +43,5 @@ public partial class NodeVisual : Node2D
             Radius * 1.18f,
             UiGlow.FromBase(Theme.GroundEdge, Theme.EffectsEnabled));
         DrawCircle(Vector2.Zero, Radius, Theme.NodeFill);
-
-        if (!HasCore)
-        {
-            return;
-        }
-
-        DrawCircle(Vector2.Zero, Radius * 0.42f, Theme.CoreMarker);
     }
 }

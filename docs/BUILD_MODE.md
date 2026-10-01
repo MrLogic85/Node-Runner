@@ -80,20 +80,21 @@ a node's own disc always hits.
   joint under a handle still adds or removes that joint. A locked
   creation keeps all three handles: like a move, scaling changes only
   beam lengths, never which parts there are.
-- **Core (transitional):** the Core row, last in the Parts tray's Sensors
-  tab, turns taps on a node into adding or removing its core, until Core is
-  removed and sensors are dragged from the tray onto beams (#127, #376).
+- **Sensors:** an Accelerometer sits on a beam (#127). Build cannot place
+  one yet: dragging sensors from the tray onto beams is #376, so until then
+  only the seeded Worm and the examples have one (from data). Deleting a
+  beam deletes its sensors; splitting a beam with the Joint tool moves them,
+  with their ids, to the longer half.
 - There is no Delete tool: the part settings and selection panels delete the
-  selection, and deleting a node removes every beam and core on it
-  (`CreatureBuilder.RemoveNode`).
+  selection, and deleting a node removes every beam on it and those beams'
+  sensors (`CreatureBuilder.RemoveNode`).
 - A locked creation opens in Move with Beam and Joint disabled, and
   `BuildViewModel` refuses topology edits on its own.
 - **Two fingers, any tool (#400):** pinch zooms about the point between the
   fingers and dragging both pans. The second finger cancels the first
   finger's gesture, putting back any node it moved and any selection a
   Select press changed, and nothing edits
-  until every finger lifts, so navigation never changes the creature. The
-  Core mode toggles on a tap's release for the same reason.
+  until every finger lifts, so navigation never changes the creature.
 - **Build area (#400):** joints live inside the fixed
   `BuildViewModel.BuildArea` (x −1152..1152, y −576..576 canvas
   units, about six screens wide at 1×). Placing or moving a joint keeps its
@@ -130,7 +131,7 @@ a node's own disc always hits.
   Build if the creature cannot train yet. The
   Training scene builds its `Creature` node from the saved `CreatureDef`
   (`Creature.BuildFrom`), which generically derives the model's
-  input/output counts (cores' sensor values plus `MotorTopology`'s derived
+  input/output counts (accelerometers' readings plus `MotorTopology`'s derived
   motor-relation sensor values, and one output per motor relation) for
   whatever anatomy it is given — no special-casing between the hardcoded
   worm and an edited creature.
@@ -144,17 +145,17 @@ the top, then a scrolling list with the open tab's name, its parts as compact
 owns the groups, their order, the help lines and each row's state; the screen
 only maps parts to glyphs. Every implemented part is unlimited until #525, so
 rows show no count. A part not yet implemented is a dashed row with a lock,
-and the tab's name row says "Coming later" once. While a tray tool is active
-(only the transitional Core today) its tab's help line is that tool's hint,
-and opening another tab puts Move back. Beam, Joint and Select show a short
-status line with the tool's glyph above the readiness line; Move shows none. Placing parts from the tray is #376. One selected part shows
-its settings and several show the selection panel instead.
+and the tab's name row says "Coming later" once. Available rows (today the
+Accelerometer) do nothing on tap: placing parts from the tray is #376. Beam,
+Joint and Select show a short status line with the tool's glyph above the
+readiness line; Move shows none. One selected part shows its settings and
+several show the selection panel instead.
 
 ## Validation
 
 A saved Creation stores any drawing: `CreatureDef` only checks that part
-ids are unique and below `NextPartId` and that beams and cores point at
-existing node ids, so an empty or unfinished creature is still
+ids are unique and below `NextPartId`, that beams point at existing node
+ids and sensors at existing beam ids (one of each kind per beam), so an empty or unfinished creature is still
 a Creation (#515). Only training needs a finished creature.
 `NodeRunner.App.Lifecycle.CreatureReadiness` is the single source of truth
 for that, in two steps: `Problems` lists why the creature cannot be

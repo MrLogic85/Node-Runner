@@ -22,7 +22,6 @@ public sealed class VisualTheme
         NodeFill = UiThemes.Color(theme, UiTokens.Color.PanelRaised),
         EffectsEnabled = UiThemes.Flag(theme, UiTokens.Flag.EffectsEnabled),
         SelectionGlow = UiThemes.Color(theme, UiTokens.Color.Halo),
-        CoreMarker = UiThemes.Color(theme, UiTokens.Color.Accent),
         Beam = UiThemes.Color(theme, UiTokens.Color.LineStrong),
         MotorAccent = UiThemes.Color(theme, UiTokens.Color.Accent),
         Danger = UiThemes.Color(theme, UiTokens.Color.Danger),
@@ -47,8 +46,6 @@ public sealed class VisualTheme
     public bool EffectsEnabled { get; private init; }
 
     public Color SelectionGlow { get; private init; }
-
-    public Color CoreMarker { get; private init; }
 
     public Color Beam { get; private init; }
 

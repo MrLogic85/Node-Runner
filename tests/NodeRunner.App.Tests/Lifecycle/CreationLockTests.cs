@@ -16,7 +16,7 @@ public sealed class CreationLockTests
         var creature = new CreatureDef(
             [new NodeDef(1, new Vector2D(0, 0), 1), new NodeDef(2, new Vector2D(2, 0), 1)],
             [new BeamDef(101, 1, 2)],
-            [new CoreDef(201, 1)]);
+            [new SensorDef(201, 101, SensorKind.Accelerometer)]);
 
         CreationLock.IsLocked(new CreationDef(Guid.NewGuid(), "Worm", creature, training)).ShouldBe(locked);
     }

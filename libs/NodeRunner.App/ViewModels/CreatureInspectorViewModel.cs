@@ -47,8 +47,8 @@ public sealed class CreatureInspectorViewModel : INotifyPropertyChanged, IDispos
         {
             SetContent(
                 "Creature inspector",
-                "Tap a node, beam, or core to inspect it.",
-                "The creature is built from nodes, beams, and cores.");
+                "Tap a node or beam to inspect it.",
+                "The creature is built from nodes and beams; sensors sit on beams.");
             return;
         }
 
@@ -72,14 +72,6 @@ public sealed class CreatureInspectorViewModel : INotifyPropertyChanged, IDispos
                     $"Beam {beamIndex + 1}",
                     "A rigid, fixed-length connection. It never stretches or compresses.",
                     $"Connects: Node {nodeAIndex + 1} to Node {nodeBIndex + 1}\nLength: {length:0.#}");
-                break;
-            case CreatureElementKind.Core:
-                var coreIndex = _creature.CoreIndexOf(selection.Id);
-                var core = _creature.Cores[coreIndex];
-                SetContent(
-                    $"Core {coreIndex + 1}",
-                    "A sensor package. Not the brain itself — it feeds sensor readings (rays, pitch, elevation, speed) to the model.",
-                    $"Mounted on: Node {_creature.NodeIndexOf(core.NodeId) + 1}");
                 break;
         }
     }

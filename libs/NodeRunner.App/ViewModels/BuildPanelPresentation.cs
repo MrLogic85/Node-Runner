@@ -13,10 +13,10 @@ public sealed record BuildPanelPresentation(
     public const string TeachingNote = "Sees sensor values, decides joint targets, twists beams, then scores distance.";
 
     public static BuildPanelPresentation Sample { get; } = new(
-        "2 cores: 12 sensors; 3 motor relations: 6 sensors; 18 inputs total",
+        "2 accelerometers: 4 inputs; 3 motor relations: 6 inputs; 10 inputs total",
         "3 motor relations can twist",
         CanStartTraining: true,
         ReadinessText: "Ready to train",
-        InputCount: 18,
+        InputCount: 10,
         OutputCount: 3);
 }

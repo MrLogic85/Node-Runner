@@ -206,14 +206,6 @@ public partial class BuildCanvas : Node2D
         DrawInvalidNodeMarkers();
         DrawInvalidBeamMarkers();
 
-        foreach (var core in _viewModel.Cores)
-        {
-            var node = NodeById(core.NodeId);
-            var position = ToGodot(node.Position);
-            var radius = (float)node.Radius;
-            DrawCircle(position, radius * 0.42f, Theme.CoreMarker);
-        }
-
         DrawMotorCenterMarkers();
 
         DrawBeamEndRings();
@@ -393,13 +385,16 @@ public partial class BuildCanvas : Node2D
         var beams = drawableBeamSourceIndices
             .Select(beamIndex => _viewModel.Beams[beamIndex])
             .ToArray();
-        var cores = _viewModel.Cores
-            .Where(core => drawableNodeSourceIndices.Contains(_viewModel.NodeIndexOf(core.NodeId)))
+        var drawableBeamIds = drawableBeamSourceIndices
+            .Select(beamIndex => _viewModel.Beams[beamIndex].Id)
+            .ToHashSet();
+        var sensors = _viewModel.Sensors
+            .Where(sensor => drawableBeamIds.Contains(sensor.BeamId))
             .ToArray();
 
         try
         {
-            creature = new CreatureDef(nodes, beams, cores);
+            creature = new CreatureDef(nodes, beams, sensors);
             return true;
         }
         catch (ArgumentException)

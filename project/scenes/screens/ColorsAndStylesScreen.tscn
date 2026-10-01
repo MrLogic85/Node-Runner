@@ -422,7 +422,7 @@ TextColor = 7
 [node name="Description" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/NeonCard/Stack/Swatches/Accent/Text"]
 layout_mode = 2
 autowrap_mode = 3
-text = "The one signal colour: primary action, live signal, firing neurons, motor arcs, cores, focus ring, progress fill. Reads on bg, panel and panel-raised."
+text = "The one signal colour: primary action, live signal, firing neurons, motor arcs, sensor badges, focus ring, progress fill. Reads on bg, panel and panel-raised."
 script = ExtResource("shell_4_label")
 TextStyle = 9
 TextColor = 8
@@ -877,7 +877,7 @@ TextColor = 7
 [node name="Description" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/PaperCard/Stack/Swatches/Accent/Text"]
 layout_mode = 2
 autowrap_mode = 3
-text = "The one signal colour: primary action, live signal, firing neurons, motor arcs, cores, focus ring, progress fill. Reads on bg, panel and panel-raised."
+text = "The one signal colour: primary action, live signal, firing neurons, motor arcs, sensor badges, focus ring, progress fill. Reads on bg, panel and panel-raised."
 script = ExtResource("shell_4_label")
 TextStyle = 9
 TextColor = 8
@@ -1434,22 +1434,22 @@ script = ExtResource("shell_4_label")
 TextStyle = 16
 TextColor = 8
 
-[node name="Core" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
+[node name="ReservedCore" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
 layout_mode = 2
 custom_minimum_size = Vector2(88, 0)
 theme_override_constants/separation = 4
 
-[node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Core" groups=["inventory_icon"]]
+[node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/ReservedCore" groups=["inventory_icon"]]
 layout_mode = 2
 custom_minimum_size = Vector2(0, 40)
 script = ExtResource("cs_icon")
 IconId = 9
 IconSize = 3
 
-[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Core"]
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/ReservedCore"]
 layout_mode = 2
 horizontal_alignment = 1
-text = "core"
+text = "reserved"
 script = ExtResource("shell_4_label")
 TextStyle = 16
 TextColor = 8
@@ -2266,22 +2266,22 @@ script = ExtResource("shell_4_label")
 TextStyle = 16
 TextColor = 8
 
-[node name="Core" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs"]
+[node name="ReservedCore" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs"]
 layout_mode = 2
 custom_minimum_size = Vector2(88, 0)
 theme_override_constants/separation = 4
 
-[node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs/Core" groups=["inventory_icon"]]
+[node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs/ReservedCore" groups=["inventory_icon"]]
 layout_mode = 2
 custom_minimum_size = Vector2(0, 40)
 script = ExtResource("cs_icon")
 IconId = 43
 IconSize = 3
 
-[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs/Core"]
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs/ReservedCore"]
 layout_mode = 2
 horizontal_alignment = 1
-text = "core"
+text = "reserved"
 script = ExtResource("shell_4_label")
 TextStyle = 16
 TextColor = 8

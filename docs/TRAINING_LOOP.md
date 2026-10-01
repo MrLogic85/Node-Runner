@@ -123,7 +123,7 @@ transition to keep in step with it.
   "The Training scene" below) subscribes to.
   - Concurrency is capped at 16 and never exceeds population size. Layer 1 is
     reserved for ground; zero-based slot `i` uses layer `2+i` and collides
-    only with ground and its own slot. Core sensor rays remain ground-only.
+    only with ground and its own slot.
   - Candidate assignment is deterministic for the same seed, parallel mode,
     slot count, build, and platform. Sequential and parallel fitness parity
     is not promised because physics ordering can differ.
@@ -145,8 +145,8 @@ transition to keep in step with it.
 - Generation/fitness are logged (`GD.Print`) and shown on the Training
   screen (see "The Training scene" below).
 
-Training unlocks nothing today. The first slice (a second Core slot at 50
-fitness) was removed in #557: every part is unlimited until achievements
+Training unlocks nothing today. The first slice (a second sensor-package slot
+at 50 fitness) was removed in #557: every part is unlimited until achievements
 arrive in 0.19 (#525).
 
 ## The Training scene (issues #51, #469, #386)

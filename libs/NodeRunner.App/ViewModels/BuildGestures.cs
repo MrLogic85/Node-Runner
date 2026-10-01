@@ -312,9 +312,6 @@ public sealed class BuildGestures
                 // A handle drags; a tap on a joint under it still adds or removes that joint.
                 _build.ToggleSelectedNode(tapped);
                 break;
-            case BuildTool.Core when !_dragging && _pressedNode is { } coreNode:
-                _build.ToggleCoreOnNode(coreNode);
-                break;
         }
 
         ResetTool();

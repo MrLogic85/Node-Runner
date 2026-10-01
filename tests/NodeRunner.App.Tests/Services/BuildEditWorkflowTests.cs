@@ -93,6 +93,6 @@ public sealed class BuildEditWorkflowTests
         return new CreatureDef(
             [new NodeDef(1, new Vector2D(x, 0), 1), new NodeDef(2, new Vector2D(x + 2, 0), 1)],
             [new BeamDef(101, 1, 2)],
-            [new CoreDef(201, 1)]);
+            [new SensorDef(201, 101, SensorKind.Accelerometer)]);
     }
 }

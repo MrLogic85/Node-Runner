@@ -17,7 +17,7 @@ public sealed class CreationDefTests
         roundTripped.Name.ShouldBe(original.Name);
         roundTripped.Creature.Nodes.ToArray().ShouldBe(original.Creature.Nodes.ToArray());
         roundTripped.Creature.Beams.ToArray().ShouldBe(original.Creature.Beams.ToArray());
-        roundTripped.Creature.Cores.ToArray().ShouldBe(original.Creature.Cores.ToArray());
+        roundTripped.Creature.Sensors.ToArray().ShouldBe(original.Creature.Sensors.ToArray());
         roundTripped.BrainShape.ShouldBe(original.BrainShape);
         roundTripped.Training.ShouldNotBeNull();
         roundTripped.Training.LayerSizes.ShouldBe(original.Training!.LayerSizes);
@@ -62,6 +62,6 @@ public sealed class CreationDefTests
         return new CreatureDef(
             [new NodeDef(1, new Vector2D(0, 0), 1), new NodeDef(2, new Vector2D(2, 0), 1)],
             [new BeamDef(101, 1, 2)],
-            [new CoreDef(201, 1)]);
+            [new SensorDef(201, 101, SensorKind.Accelerometer)]);
     }
 }

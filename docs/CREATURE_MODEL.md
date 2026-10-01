@@ -10,15 +10,21 @@ below was designed by the project owner, not inferred from the old code — if
 you are extending it, keep asking "what would the owner want here" rather
 than defaulting to what is easiest to implement.
 
-## Four parts: Node, Beam, Core, Motor relation
+## Parts: Node, Beam, Sensor, Motor relation
 
-A creature is built from two structural parts (Node, Beam), one sensor part
-(Core), and one derived control concept (Motor relation). Keeping "what
-senses" (Core) and "what thinks" (the neural model) conceptually separate is
-the most important rule in this document — **a Core is a sensor package, not
-the brain.**
+A creature is built from two structural parts (Node, Beam), sensor parts
+that sit on beams (today the Accelerometer), and one derived control concept
+(Motor relation). Keeping "what senses" (sensors) and "what thinks" (the
+neural model) conceptually separate is the most important rule in this
+document — **a sensor is not the brain.**
 
-Every saved Node, Beam, and Core has a stable positive integer id from the
+**A part sits on what it senses or moves** (owner decision, #127): sensors
+sense one body, so they sit on a beam; motors, brake and wheel act between
+two beams, so they will sit on a joint; spring, piston and wing join two
+nodes, so they are links. Each sensor is one clear idea, the way real
+sensors are.
+
+Every saved Node, Beam, and sensor has a stable positive integer id from the
 creature's single part counter (`CreatureDef.NextPartId`). The counter is
 saved with the creature, only increases, and deleted ids are never reused.
 Ids are machine identity only: they are not display order, draw order, brain
@@ -65,22 +71,51 @@ CreatureDef  ──build──▶  physical body  ──sensors──▶  model 
 - **Future ideas (not implemented):** beams breaking on hard impact, joints
   tearing apart under load.
 
-### Core
+### Sensor
 
-- **Beginner:** A sensor package mounted on a node. It is *not* the brain —
-  it's where the model's inputs come from.
-- **Implementation:** `CoreDef` in `libs/NodeRunner.Domain/CoreDef.cs` stores
-  an id, optional display name, and the node id it is mounted on. At runtime
-  `project/src/creature/CoreSensors.cs`
-  reads 6 values per core, all relative to the mounting beam's own frame:
-  three fixed rays (down, forward, forward-down), pitch (the mounting beam's
-  rotation), elevation (height above the world origin), and speed (the
-  mounting beam's linear speed).
-- A `CreatureDef` can have zero, one, or many cores — the data model does
-  not assume exactly one.
-- **Future ideas (not implemented):** more rays or additional sensor types
-  once a performance budget is known; cores (and nodes/beams generally) as
-  an unlockable resource via an achievement/quest progression system.
+- **Beginner:** A part on a beam that feels something about that beam and
+  feeds it to the brain. It is *not* the brain.
+- **Implementation:** `SensorDef` in `libs/NodeRunner.Domain/SensorDef.cs`
+  stores an id, optional display name, its `SensorKind` and the id of the
+  beam it sits on. A sensor measures its own beam, at the beam's midpoint,
+  with no position setting.
+- **One of each kind per beam.** `CreatureDef` rejects a second sensor of
+  the same kind on one beam; the App refuses it first with a reason
+  ("One accelerometer per beam", `CreatureBuilder.AddSensor`).
+- **Frame fixed as built:** the side of the beam that faces up in the built
+  pose is the sensor's "up", and "along" points right as built. The frame
+  then turns with the beam and never flips during a run
+  (`Accelerometer.UpSign`).
+- Kinds today: **Accelerometer** (#127). The LOS sensor (#575) is next.
+
+#### Accelerometer
+
+- **Beginner:** A small weight on a spring inside a box. When the beam
+  speeds up, slows down or tilts, the weight shifts — that shift is what the
+  brain feels. At rest it feels gravity, so it also knows which way is down.
+- **Implementation:** a proof mass on a damped spring, in the beam's sensor
+  frame. Each physics tick `project/src/creature/AccelerometerSensor.cs`
+  measures the beam's acceleration at its midpoint from the change in its
+  velocity, turns it into specific force (at rest 1 g "up", so its
+  direction gives the tilt) in the beam's frame and steps the proof mass
+  (`Accelerometer.Step` in `libs/NodeRunner.Domain/Accelerometer.cs`).
+- **Reading:** two brain inputs, along the beam and across it:
+  `tanh(−d / d_ref)` of the proof mass displacement `d`, where `d_ref` is
+  the displacement at 1 g. At rest on a level beam it reads about 0 along
+  and 0.76 (`tanh 1`) across; it always stays in −1…1.
+- **The spring is the filter:** it smooths spiky per-tick acceleration from
+  contacts but still shows impacts as a spike that decays, and gives the
+  reading a short memory of recent motion. Natural frequency, damping and
+  `d_ref` are named constants in `Accelerometer`, tuned by playtesting.
+  `Step` integrates in substeps of at most 1/60 s, so 2× and 4× training
+  speed stay stable.
+- **Deterministic:** the proof mass starts at rest for gravity as built,
+  on every build and every `ResetPose`, so the same brain, build and map
+  give the same readings. The state (`AccelerometerSensor.CurrentProofMass`)
+  is exposed for the visual (#576) and SignalFlow, which show exactly what
+  the brain reads.
+- **There is no speed or elevation sensor:** the brain learns movement from
+  acceleration, joint readings and its own outputs.
 
 ### Motor relation
 
@@ -97,8 +132,8 @@ CreatureDef  ──build──▶  physical body  ──sensors──▶  model 
     `[-1, 1]` representing `[-180°, +180°]` — never `[0°, 360°]`, to avoid a
     discontinuity at the wrap-around point) and `relativeAngularVelocity`
     (also normalized). Both are genuinely sensor values *going into* the
-    model, exactly like a core's rays or pitch — a motor relation is not
-    part of a core and a core is not the source of these values.
+    model, exactly like an accelerometer's readings — a motor relation is
+    not a sensor part, and no sensor part is the source of these values.
   - **Output it accepts:** a single `targetAngularVelocity` in `[-1, 1]`,
     scaled by a static `MaxAngularVelocity`.
   - **How the physical motor behaves:** it drives torque (capped at a
@@ -126,10 +161,11 @@ shapes (e.g. a bare quadrilateral) with their genuine remaining freedom.
 
 ## Sensor–model contract
 
-- **Input count** = `(core count × 6) + (motor relation count × 2)`.
+- **Input count** = `(accelerometer count × 2) + (motor relation count × 2)`.
 - **Output count** = motor relation count.
-- **Order matters and is fixed at build time:** every core (in `CreatureDef`
-  order) contributes its 6 values first, then every motor relation (in the
+- **Order matters and is fixed at build time:** every accelerometer (in
+  `CreatureDef.Sensors` order) contributes its 2 values (along, across)
+  first, then every motor relation (in the
   order `MotorTopology` produced it) contributes its 2 values. Output slot
   `i` always drives motor relation `i`. Reordering either side silently
   invalidates a trained brain. See the comment above
@@ -144,13 +180,14 @@ shapes (e.g. a bare quadrilateral) with their genuine remaining freedom.
 
 ## Editing identity rules
 
-- Creating a Node, Beam, or Core takes the current `NextPartId` and then
+- Creating a Node, Beam, or sensor takes the current `NextPartId` and then
   advances the counter.
-- Removing a Node, Beam, or Core retires that id forever. Removing a Node also
-  removes beams and cores that reference its node id; surviving parts keep
-  their ids because no list reindexing is needed.
+- Removing a Node, Beam, or sensor retires that id forever. Removing a Node
+  also removes the beams on it, and removing a Beam removes its sensors;
+  surviving parts keep their ids because no list reindexing is needed.
 - Beam split by the Joint tool removes the original beam id and creates one
-  fresh node id plus two fresh beam ids.
+  fresh node id plus two fresh beam ids. The beam's sensors move, with their
+  ids, to the longer half (the half at the beam's first node on a tie).
 - Saving, loading, moving, renaming, reordering lists, rebuilding a body, and
   copying a whole Creation preserve part ids and the counter.
 - Part-to-part references are by stable id. Code that needs an array position
@@ -167,16 +204,16 @@ shapes (e.g. a bare quadrilateral) with their genuine remaining freedom.
    ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐
    │      │ │      │ │      │ │      │
   (N0)───(N1)───(N2)───(N3)───(N4)
-   core
+     accel
 ```
 
 - **5 nodes** (`N0`-`N4`) spaced 56 units apart, radius 18.
 - **4 beams**, one per adjacent pair, referencing node ids.
-- **1 core**, mounted on `N0`'s node id.
+- **1 accelerometer**, on the head beam (`N0`–`N1`).
 - **Node degrees:** `N0` and `N4` have 1 beam each (passive ends); `N1`,
   `N2`, `N3` each have 2 beams, giving 3 motor relations total — no closed
   loops, so no triangle exclusions apply here.
-- **Sensors:** `1 core × 6` + `3 motor relations × 2` = 12.
+- **Sensors:** `1 accelerometer × 2` + `3 motor relations × 2` = 8.
 - **Brain outputs:** 3, one per motor relation.
 
 ## What this model does not cover yet
@@ -186,11 +223,11 @@ without a fresh design conversation:
 
 - Beams breaking on impact; joints tearing apart under load.
 - Collision between a creature's own parts (currently always disabled).
-- Node/Beam/Core as unlockable resources via an achievement/quest
+- Parts as unlockable resources via an achievement/quest
   progression system, rather than unlimited from the start. Today every
   part is unlimited (#557); achievements (#525) own the first unlocks.
-- More than 3 rays, or additional sensor types, once ray-casting
-  performance is a known quantity (especially on Android).
+- Sensors on blocks, and sensor types beyond the Accelerometer and the LOS
+  sensor (#575).
 - Exposing `MaxTorque`/`MaxAngularVelocity` as player- or
   upgrade-configurable settings, rather than fixed constants.
 - Whether `relativeAngularVelocity` should always be included as a sensor,

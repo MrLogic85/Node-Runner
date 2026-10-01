@@ -622,28 +622,7 @@ public class BuildGesturesTests
         build.Nodes[1].Position.ShouldBe(new Vector2D(100, 0));
     }
 
-    [Fact]
-    public void Core_TapOnJoint_TogglesItsCore()
-    {
-        var (build, gestures) = ThreeLooseJoints(BuildTool.Core);
 
-        Tap(gestures, new Vector2D(0, 0));
-
-        build.Cores.ShouldBe([new CoreDef(4, 1)]);
-    }
-
-    [Fact]
-    public void Core_PressThatBecomesAPinch_AddsNoCore()
-    {
-        var (build, gestures) = ThreeLooseJoints(BuildTool.Core);
-
-        gestures.Press(new Vector2D(0, 0), 0);
-        gestures.Press(new Vector2D(200, 200), 1);
-        gestures.Release(new Vector2D(0, 0), 0);
-        gestures.Release(new Vector2D(200, 200), 1);
-
-        build.Cores.ShouldBeEmpty();
-    }
 
     // With joints 0 and 1 of ThreeLooseJoints selected at 1×, the frame clears both halos by 8
     // across and meets the 96 minimum down: Move sits at (50, 0), Rotate at (50, -80), Scale at its corner.

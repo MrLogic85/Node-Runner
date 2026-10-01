@@ -466,7 +466,44 @@ public sealed class CreationRepositoryTests
                   "Creature": {
                     "Nodes": [{ "Position": { "X": 0, "Y": 0 }, "Radius": 1 }],
                     "Beams": [],
-                    "Cores": []
+                    "{{"Cor" + "es"}}": []
+                  },
+                  "BrainShape": null,
+                  "Training": null
+                }
+                """);
+            var repository = new FileCreationRepository(new TestStorageLocation(directory));
+
+            repository.List().ShouldBeEmpty();
+            repository.Get(id).ShouldBeNull();
+        }
+        finally
+        {
+            if (Directory.Exists(directory))
+            {
+                Directory.Delete(directory, recursive: true);
+            }
+        }
+    }
+
+    [Fact]
+    public void FileCreation_List_WithLegacySensorPackageSave_SkipsItAsInvalid()
+    {
+        var directory = Path.Combine(Environment.CurrentDirectory, $"node-runner-legacy-save-{Guid.NewGuid():N}");
+        try
+        {
+            Directory.CreateDirectory(directory);
+            var id = Guid.NewGuid();
+            var path = Path.Combine(directory, $"{id:N}.json");
+            File.WriteAllText(path, $$"""
+                {
+                  "Id": "{{id}}",
+                  "Name": "Old",
+                  "Creature": {
+                    "Nodes": [{ "Id": 1, "Position": { "X": 0, "Y": 0 }, "Radius": 1 }, { "Id": 2, "Position": { "X": 2, "Y": 0 }, "Radius": 1 }],
+                    "Beams": [{ "Id": 101, "NodeA": 1, "NodeB": 2 }],
+                    "Cores": [{ "Id": 201, "NodeId": 1 }],
+                    "NextPartId": 202
                   },
                   "BrainShape": null,
                   "Training": null
@@ -494,7 +531,7 @@ public sealed class CreationRepositoryTests
             new CreatureDef(
                 [new NodeDef(1, new Vector2D(0, 0), 1), new NodeDef(2, new Vector2D(2, 0), 1)],
                 [new BeamDef(101, 1, 2)],
-                [new CoreDef(201, 1)]),
+                [new SensorDef(201, 101, SensorKind.Accelerometer)]),
             new TrainingStateDef([2, 1], [0.1, -0.2, 0.3], 2, "Tanh", 42.5, new TrainingRunDef(42.5, 88.25, 12, MapIds.Flat)));
     }
 
@@ -505,7 +542,7 @@ public sealed class CreationRepositoryTests
         actual.Name.ShouldBe(expected.Name);
         actual.Creature.Nodes.ToArray().ShouldBe(expected.Creature.Nodes.ToArray());
         actual.Creature.Beams.ToArray().ShouldBe(expected.Creature.Beams.ToArray());
-        actual.Creature.Cores.ToArray().ShouldBe(expected.Creature.Cores.ToArray());
+        actual.Creature.Sensors.ToArray().ShouldBe(expected.Creature.Sensors.ToArray());
         actual.Training.ShouldNotBeNull();
         actual.Training.LayerSizes.ShouldBe(expected.Training!.LayerSizes);
         actual.Training.BestGenome.ShouldBe(expected.Training.BestGenome);
