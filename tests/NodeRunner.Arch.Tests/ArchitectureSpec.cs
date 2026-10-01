@@ -51,7 +51,7 @@ public sealed class ArchitectureSpec
     [Fact]
     public void ProductionSourceFiles_StayWithinHardLineLimit()
     {
-        const int HardLimit = 2000;
+        const int hardLimit = 2000;
         var root = FindRepositoryRoot();
         string[] skipped = ["bin", "obj", ".godot"];
         var offenders = new List<string>();
@@ -67,7 +67,7 @@ public sealed class ArchitectureSpec
                 }
 
                 var lines = File.ReadLines(path).Count();
-                if (lines > HardLimit)
+                if (lines > hardLimit)
                 {
                     offenders.Add($"{relative} ({lines} lines)");
                 }
@@ -75,7 +75,7 @@ public sealed class ArchitectureSpec
         }
 
         offenders.ShouldBeEmpty(
-            $"Production files must stay within {HardLimit} lines; split out functionality. " +
+            $"Production files must stay within {hardLimit} lines; split out functionality. " +
             "See docs/CODE_DESIGN_PRINCIPLES.md §4.");
     }
 
