@@ -68,6 +68,12 @@ then the app follows the reference.
   layer), the BuildLocked brain widget, and the Training Brain button and
   Signal flow Brain stage are hidden. The brain graph (#543) and its design
   brief (#549) bring them back.
+- **No part counts until 0.19.0 (#374, 0.12.0).** The reference limits the
+  parts you place and shows counts ("1 left") in the tray and in Build
+  feedback (`reference design/README.md`, Build and "Rules that fix the known
+  problems"). Instead every implemented part is unlimited and the tray shows
+  no counts; parts not yet implemented show "Coming later". Counts and
+  achievement locks (#525) bring the reference behavior back.
 
 ## Product feel
 

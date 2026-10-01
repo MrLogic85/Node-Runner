@@ -42,6 +42,8 @@ Rules that hold across the phases:
 - From 0.13.0 a rebuild keeps the brain. Parts declare ports; kept ports keep
   their weights and new parts join almost passive. The lock only prevents
   accidental changes; unlocking does not reset training.
+- Until 0.19.0 every implemented part is unlimited and the Build tray shows
+  no part counts (#374). Counts and achievement locks arrive with #525.
 - Each milestone that changes UI has a design brief before implementation.
 - When parts and brain abilities unlock is decided by play-test spikes
   (#530, #550), not up front.
@@ -157,7 +159,8 @@ return along.
 
 - Achievement model, screen, training progress and toast (#199, #390–#392,
   #488).
-- Part rewards (#525) and locked examples (#175, #429–#438).
+- Part counts and achievement locks (#525) and locked examples (#175,
+  #429–#438).
 
 ### 0.20.0 — Advanced achievements
 
