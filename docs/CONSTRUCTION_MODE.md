@@ -97,7 +97,8 @@ a node's own disc always hits.
   any zoom. Zooming out stops when all of it is in view (`MinZoom`), up to
   `MaxZoom` in. Along an axis where the bounds are larger than the view,
   panning stops at their edge; along an axis where they fit, they are
-  centred. Zoomed in, the creation can be off screen; zooming
+  centred. Godot's Camera2D would replace only this clamp, so Build keeps
+  `CanvasView` (#564). Zoomed in, the creation can be off screen; zooming
   out finds it. Distances are in view or canvas units (`docs/GLOSSARY.md` →
   Build canvas). How zoom treats lines, the grid and labels is owned by
   `docs/UI_DIRECTION.md` → Reference flow overrides.
@@ -158,4 +159,9 @@ cannot train and returns to Creations.
   for pinch zoom, so it reads `InputEventScreenTouch`/`InputEventScreenDrag`
   by index and ignores the emulated mouse copy
   (`InputEvent.DeviceIdEmulation`). A real mouse still drives one pointer on
-  desktop; mouse zoom is out of scope.
+  desktop; mouse zoom is out of scope. Godot's Android pan and scale
+  gestures (`input_devices/pointing/android/enable_pan_and_scale_gestures`)
+  stay off: on the S25 each event arrived twice and two-finger drags mostly
+  stopped, and Godot scales pan to a scroll distance, drops large pinch
+  steps and gives no pinch while one finger is already dragging, which is
+  how Build's two-finger gesture starts (#564).
