@@ -84,7 +84,7 @@ Use one or more:
 - `area: ml` — Neural networks, GA, backprop, math, determinism
 - `area: domain` — Pure domain records, invariants, serialization types
 - `area: app` — View-models, repositories, services
-- `area: creature` — Creature nodes, beams, cores
+- `area: creature` — Creature nodes, beams, sensors
 - `area: sim` — Population orchestration, evolver loop, scoring
 - `area: physics` — Godot physics behavior and tuning
 - `area: ui` — Screens, controls, presentation logic

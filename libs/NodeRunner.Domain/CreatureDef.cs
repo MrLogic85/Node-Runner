@@ -1,44 +1,45 @@
 using System.Collections.ObjectModel;
+using System.Text.Json.Serialization;
 
 namespace NodeRunner.Domain;
 
 /// <summary>
-/// A drawn creature: nodes, the beams between them and the cores on them. Any drawing is a valid
+/// A drawn creature: nodes, the beams between them and the sensors on them. Any drawing is a valid
 /// <see cref="CreatureDef"/>, so an unfinished one can be saved; only its part references must point
-/// at existing nodes. Whether it can be simulated and trained is checked before training
+/// at existing parts. Whether it can be simulated and trained is checked before training
 /// (<c>CreatureReadiness</c> in <c>NodeRunner.App</c>).
 /// </summary>
 public sealed record CreatureDef
 {
     private readonly ReadOnlyCollection<NodeDef> _nodes;
     private readonly ReadOnlyCollection<BeamDef> _beams;
-    private readonly ReadOnlyCollection<CoreDef> _cores;
+    private readonly ReadOnlyCollection<SensorDef> _sensors;
     private readonly Dictionary<int, int> _nodeIndexById;
     private readonly Dictionary<int, int> _beamIndexById;
-    private readonly Dictionary<int, int> _coreIndexById;
+    private readonly Dictionary<int, int> _sensorIndexById;
 
-    public CreatureDef(IReadOnlyList<NodeDef> nodes, IReadOnlyList<BeamDef> beams, IReadOnlyList<CoreDef> cores)
-        : this(nodes, beams, cores, nextPartId: null)
+    public CreatureDef(IReadOnlyList<NodeDef> nodes, IReadOnlyList<BeamDef> beams, IReadOnlyList<SensorDef> sensors)
+        : this(nodes, beams, sensors, nextPartId: null)
     {
     }
 
-    [System.Text.Json.Serialization.JsonConstructor]
-    public CreatureDef(IReadOnlyList<NodeDef> nodes, IReadOnlyList<BeamDef> beams, IReadOnlyList<CoreDef> cores, int nextPartId)
-        : this(nodes, beams, cores, (int?)nextPartId)
+    [JsonConstructor]
+    public CreatureDef(IReadOnlyList<NodeDef> nodes, IReadOnlyList<BeamDef> beams, IReadOnlyList<SensorDef> sensors, int nextPartId)
+        : this(nodes, beams, sensors, (int?)nextPartId)
     {
     }
 
-    private CreatureDef(IReadOnlyList<NodeDef> nodes, IReadOnlyList<BeamDef> beams, IReadOnlyList<CoreDef> cores, int? nextPartId)
+    private CreatureDef(IReadOnlyList<NodeDef> nodes, IReadOnlyList<BeamDef> beams, IReadOnlyList<SensorDef> sensors, int? nextPartId)
     {
         ArgumentNullException.ThrowIfNull(nodes);
         ArgumentNullException.ThrowIfNull(beams);
-        ArgumentNullException.ThrowIfNull(cores);
+        ArgumentNullException.ThrowIfNull(sensors);
 
         var maxId = 0;
         var ids = new HashSet<int>();
         ValidatePartIds(nodes.Select(node => node.Id), ids, ref maxId);
         ValidatePartIds(beams.Select(beam => beam.Id), ids, ref maxId);
-        ValidatePartIds(cores.Select(core => core.Id), ids, ref maxId);
+        ValidatePartIds(sensors.Select(sensor => sensor.Id), ids, ref maxId);
 
         var resolvedNextPartId = nextPartId ?? maxId + 1;
         if (resolvedNextPartId <= 0)
@@ -58,25 +59,31 @@ public sealed record CreatureDef
             ValidateNodeId(beam.NodeB, nodeIds);
         }
 
-        foreach (var core in cores)
+        var beamIds = beams.Select(beam => beam.Id).ToHashSet();
+        var sensorSlots = new HashSet<(int BeamId, SensorKind Kind)>();
+        foreach (var sensor in sensors)
         {
-            ValidateNodeId(core.NodeId, nodeIds);
+            ValidateBeamId(sensor.BeamId, beamIds);
+            if (!sensorSlots.Add((sensor.BeamId, sensor.Kind)))
+            {
+                throw new ArgumentException($"Beam id {sensor.BeamId} already has a {sensor.Kind} sensor.");
+            }
         }
 
         _nodes = Array.AsReadOnly(nodes.ToArray());
         _beams = Array.AsReadOnly(beams.ToArray());
-        _cores = Array.AsReadOnly(cores.ToArray());
+        _sensors = Array.AsReadOnly(sensors.ToArray());
         NextPartId = resolvedNextPartId;
         _nodeIndexById = BuildIndex(_nodes, node => node.Id);
         _beamIndexById = BuildIndex(_beams, beam => beam.Id);
-        _coreIndexById = BuildIndex(_cores, core => core.Id);
+        _sensorIndexById = BuildIndex(_sensors, sensor => sensor.Id);
     }
 
     public IReadOnlyList<NodeDef> Nodes => _nodes;
 
     public IReadOnlyList<BeamDef> Beams => _beams;
 
-    public IReadOnlyList<CoreDef> Cores => _cores;
+    public IReadOnlyList<SensorDef> Sensors => _sensors;
 
     public int NextPartId { get; }
 
@@ -84,7 +91,7 @@ public sealed record CreatureDef
 
     public int BeamIndexOf(int beamId) => IndexOf(_beamIndexById, beamId, "Beam id must point to an existing beam.");
 
-    public int CoreIndexOf(int coreId) => IndexOf(_coreIndexById, coreId, "Core id must point to an existing core.");
+    public int SensorIndexOf(int sensorId) => IndexOf(_sensorIndexById, sensorId, "Sensor id must point to an existing sensor.");
 
     private static void ValidatePartIds(IEnumerable<int> partIds, HashSet<int> ids, ref int maxId)
     {
@@ -104,6 +111,14 @@ public sealed record CreatureDef
         if (!nodeIds.Contains(nodeId))
         {
             throw new ArgumentOutOfRangeException(nameof(nodeId), "Node id must point to an existing node.");
+        }
+    }
+
+    private static void ValidateBeamId(int beamId, HashSet<int> beamIds)
+    {
+        if (!beamIds.Contains(beamId))
+        {
+            throw new ArgumentOutOfRangeException(nameof(beamId), "Beam id must point to an existing beam.");
         }
     }
 

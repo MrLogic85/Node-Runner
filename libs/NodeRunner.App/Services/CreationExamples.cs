@@ -14,7 +14,7 @@ public static class CreationExamples
 
     public static IReadOnlyList<CreationExample> All { get; } =
     [
-        new(new CreationDef(WormId, "Worm", CreateWormCreature()), "Beams and one core: the simplest crawl."),
+        new(new CreationDef(WormId, "Worm", CreateWormCreature()), "Beams and one accelerometer: the simplest crawl."),
     ];
 
     public static CreatureDef CreateWormCreature()
@@ -40,11 +40,11 @@ public static class CreationExamples
             new BeamDef(9, 4, 5),
         };
 
-        var cores = new[]
+        var sensors = new[]
         {
-            new CoreDef(10, 1),
+            new SensorDef(10, 6, SensorKind.Accelerometer),
         };
 
-        return new CreatureDef(nodes, beams, cores, nextPartId: 11);
+        return new CreatureDef(nodes, beams, sensors, nextPartId: 11);
     }
 }

@@ -283,11 +283,6 @@ public partial class BuildScreen : Control
             foreach (var part in group.Rows)
             {
                 var row = new UiPartRow { IconId = PartIcon(part.Part), Label = part.Name, Compact = true };
-                if (PartTray.ToolFor(part.Part) is { } tool)
-                {
-                    row.PartSelected += () => EmitSignal(SignalName.ToolRequested, (int)tool);
-                }
-
                 rows.AddChild(row);
             }
         }
@@ -296,7 +291,6 @@ public partial class BuildScreen : Control
         {
             rows.GetChild<UiPartRow>(index).State = group.Rows[index].State switch
             {
-                PartTrayRowState.Selected => UiPartRow.PartRowState.Selected,
                 PartTrayRowState.ComingLater => UiPartRow.PartRowState.Locked,
                 _ => UiPartRow.PartRowState.Rest,
             };
@@ -306,11 +300,6 @@ public partial class BuildScreen : Control
     private void OnPartTabSelected(int index)
     {
         GetNode<ScrollContainer>("%PartScroll").ScrollVertical = 0;
-        if (_presentation is { } presentation && PartTray.ToolOnTabOpened(presentation.ActiveTool, index) is { } tool)
-        {
-            EmitSignal(SignalName.ToolRequested, (int)tool);
-        }
-
         Apply();
     }
 
@@ -335,7 +324,6 @@ public partial class BuildScreen : Control
         BuildPart.Wheel => UiIconId.PartWheel,
         BuildPart.Accelerometer => UiIconId.PartAccelerometer,
         BuildPart.LosSensor => UiIconId.PartLineOfSight,
-        BuildPart.Core => UiIconId.PartCore,
         BuildPart.Battery => UiIconId.PartBattery,
         BuildPart.Generator => UiIconId.PartGenerator,
         BuildPart.FuelTank => UiIconId.PartFuel,

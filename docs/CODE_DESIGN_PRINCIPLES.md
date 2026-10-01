@@ -54,8 +54,8 @@ seed 4711". Regressions become detectable.
 ## 4. Small, composable units
 
 - A file should do one thing. If `Creature.cs` grows past ~300 lines, split it.
-- Prefer composition over inheritance. A creature *has* nodes, beams, cores,
-  sensors, and a brain — it doesn't *inherit* from any of them.
+- Prefer composition over inheritance. A creature *has* nodes, beams, sensors
+  and a brain — it doesn't *inherit* from any of them.
 - No abstract base classes "just in case". Introduce them when the second
   concrete case appears, not before.
 
@@ -65,7 +65,7 @@ seed 4711". Regressions become detectable.
   ```csharp
   public sealed record NodeDef(int Id, Vector2 Position, double Radius);
   public sealed record BeamDef(int Id, int NodeA, int NodeB);
-  public sealed record CoreDef(int Id, int NodeId);
+  public sealed record SensorDef(int Id, int BeamId, SensorKind Kind);
   ```
 - This makes serialization (save/load creatures), diffing (evolution!), and
   hashing (dedup) trivial.

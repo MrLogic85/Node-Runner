@@ -32,7 +32,7 @@ build; the *shape* below should stay stable.
 ┌─────────────────────────────────────────────────────────────────┐
 │                    Domain data (pure C#)                         │
 │                    libs/NodeRunner.Domain/                       │
-│           CreatureDef · NodeDef · BeamDef · CoreDef · Vector2D            │
+│           CreatureDef · NodeDef · BeamDef · SensorDef · Vector2D          │
 └─────────────────────────────────────────────────────────────────┘
                                            │
                                            ▼
@@ -184,30 +184,36 @@ public sealed class GeneticAlgorithm
 // libs/NodeRunner.Domain/
 public sealed record NodeDef(int Id, Vector2D Position, double Radius, string? Name = null);
 public sealed record BeamDef(int Id, int NodeA, int NodeB, string? Name = null);   // node ids
-public sealed record CoreDef(int Id, int NodeId, string? Name = null);
-public sealed record CreatureDef(NodeDef[] Nodes, BeamDef[] Beams, CoreDef[] Cores, int NextPartId);
+public sealed record SensorDef(int Id, int BeamId, SensorKind Kind, string? Name = null); // beam id
+public sealed record CreatureDef(NodeDef[] Nodes, BeamDef[] Beams, SensorDef[] Sensors, int NextPartId);
 public sealed record NodeConnectionDef(int NodeIndex, int ReferenceBeamIndex, int OtherBeamIndex, bool IsMotorized);
 
 public static class MotorTopology
 {
     public static IReadOnlyList<NodeConnectionDef> BuildNodeConnections(CreatureDef creature);
 }
+
+public static class Accelerometer   // proof mass on a damped spring, pure math
+{
+    public static ProofMass Step(ProofMass state, Vector2D specificForceG, double dt);
+    public static Vector2D Reading(ProofMass state);
+}
 ```
 
 Note: `Vector2D` in `NodeRunner.Domain` is our own `readonly record struct`,
 **not** `Godot.Vector2`. The creature layer converts at its boundary.
 
-See `docs/CREATURE_MODEL.md` for the full Node/Beam/Core/motor-relation model
-these types encode — including how motor relations are derived from a
-`CreatureDef`'s topology, and why a Core is a sensor package rather than the
-neural model.
+See `docs/CREATURE_MODEL.md` for the full Node/Beam/Sensor/motor-relation
+model these types encode — including how motor relations are derived from a
+`CreatureDef`'s topology, and why sensors sit on beams and are not the neural
+model.
 
 ## The tick
 
 At 60 Hz (`_physics_process`), for the creature currently under evaluation:
 
-1. **Sense.** Each core reads 6 values (rays, pitch, elevation, speed); each
-   motor relation reads 2 (relative angle, relative angular velocity) →
+1. **Sense.** Each accelerometer steps its proof mass and reads 2 values
+   (along and across its beam); each motor relation reads 2 (relative angle, relative angular velocity) →
    `double[]`, in the fixed order documented in `docs/CREATURE_MODEL.md`.
 2. **Think.** `Brain.Forward(input, output, scratchA, scratchB)` writes a
    target angular velocity in `[-1, 1]` per motor relation, without
@@ -323,7 +329,7 @@ Creatures and their trained brains save as JSON via `FileCreatureRepository`:
 
 ```json
 {
-  "def":   { "nodes": [...], "beams": [...], "cores": [...] },
+  "def":   { "nodes": [...], "beams": [...], "sensors": [...] },
   "brain": { "layers": [8, 12, 4], "genome": [...], "activation": "Tanh" },
   "meta":  { "seed": 4711, "generation": 137, "fitness": 42.7 }
 }

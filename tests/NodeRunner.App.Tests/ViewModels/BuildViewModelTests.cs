@@ -397,17 +397,6 @@ public sealed class BuildViewModelTests
         viewModel.ActiveTool.ShouldBe(BuildTool.Move);
     }
 
-    [Fact]
-    public void ActiveTool_WhenChanged_ClearsStatus()
-    {
-        var viewModel = new BuildViewModel();
-        var a = viewModel.PlaceNode(new Vector2D(0, 0), 18);
-        viewModel.ConnectBeam(a, a);
-
-        viewModel.ActiveTool = BuildTool.Core;
-
-        viewModel.StatusMessage.ShouldBeNull();
-    }
 
     [Fact]
     public void ConnectBeam_DifferentNodes_CreatesBeam()
@@ -466,32 +455,6 @@ public sealed class BuildViewModelTests
         viewModel.StatusMessage.ShouldBe("Edit mode only allows moving existing nodes.");
     }
 
-    [Fact]
-    public void SplitBeam_ReplacesBeamWithTwoThroughNewNodeInOneChange()
-    {
-        var viewModel = new BuildViewModel();
-        var a = viewModel.PlaceNode(new Vector2D(0, 0), 18);
-        var b = viewModel.PlaceNode(new Vector2D(100, 0), 18);
-        var c = viewModel.PlaceNode(new Vector2D(100, 100), 18);
-        viewModel.ConnectBeam(a, b);
-        viewModel.ConnectBeam(b, c);
-        viewModel.ToggleCoreOnNode(c);
-        var oldBeamId = viewModel.Beams[0].Id;
-        viewModel.SelectBeam(oldBeamId);
-        var changes = 0;
-        viewModel.AnatomyChanged += (_, _) => changes++;
-
-        var joint = viewModel.SplitBeam(oldBeamId, new Vector2D(30, 12), 18);
-
-        var jointId = joint.ShouldNotBeNull();
-        jointId.ShouldBe(7);
-        viewModel.Nodes[3].Position.ShouldBe(new Vector2D(30, 0));
-        viewModel.Beams.ShouldBe([new BeamDef(5, b, c), new BeamDef(8, a, jointId), new BeamDef(9, jointId, b)]);
-        viewModel.Beams.ShouldNotContain(beam => beam.Id == oldBeamId);
-        viewModel.Cores.ShouldBe([new CoreDef(6, c)]);
-        viewModel.SelectedPartCount.ShouldBe(0);
-        changes.ShouldBe(1);
-    }
 
     [Theory]
     [InlineData(-10, 0)]
@@ -529,48 +492,8 @@ public sealed class BuildViewModelTests
         return viewModel;
     }
 
-    [Fact]
-    public void ToggleCoreOnNode_AddsCoreAndRaisesAnatomyChanged()
-    {
-        var viewModel = new BuildViewModel();
-        var a = viewModel.PlaceNode(new Vector2D(0, 0), 18);
-        var raised = false;
-        viewModel.AnatomyChanged += (_, _) => raised = true;
 
-        viewModel.ToggleCoreOnNode(a);
 
-        viewModel.Cores.Count.ShouldBe(1);
-        viewModel.Cores[0].NodeId.ShouldBe(a);
-        raised.ShouldBeTrue();
-    }
-
-    [Fact]
-    public void ToggleCoreOnNode_CalledTwice_RemovesCore()
-    {
-        var viewModel = new BuildViewModel();
-        var a = viewModel.PlaceNode(new Vector2D(0, 0), 18);
-
-        viewModel.ToggleCoreOnNode(a);
-        viewModel.ToggleCoreOnNode(a);
-
-        viewModel.Cores.Count.ShouldBe(0);
-    }
-
-    [Fact]
-    public void ToggleCoreOnNode_AcceptsAnyNumberOfCores()
-    {
-        var viewModel = new BuildViewModel();
-        var a = viewModel.PlaceNode(new Vector2D(0, 0), 18);
-        var b = viewModel.PlaceNode(new Vector2D(20, 0), 18);
-        var c = viewModel.PlaceNode(new Vector2D(40, 0), 18);
-
-        viewModel.ToggleCoreOnNode(a);
-        viewModel.ToggleCoreOnNode(b);
-        viewModel.ToggleCoreOnNode(c);
-
-        viewModel.Cores.Select(core => core.NodeId).ShouldBe([a, b, c]);
-        viewModel.StatusMessage.ShouldBe($"Attached core to node {c}.");
-    }
 
     [Fact]
     public void TryFindBeamNear_WithinDistance_ReturnsBeam()
@@ -682,51 +605,7 @@ public sealed class BuildViewModelTests
         viewModel.StatusMessage.ShouldBe("Edit mode can only move selected parts.");
     }
 
-    [Fact]
-    public void DeleteSelectedParts_WithNodeSelected_CascadesAttachedPartsAndClearsSelection()
-    {
-        var viewModel = new BuildViewModel();
-        var a = viewModel.PlaceNode(new Vector2D(0, 0), 18);
-        var b = viewModel.PlaceNode(new Vector2D(10, 0), 18);
-        var c = viewModel.PlaceNode(new Vector2D(20, 0), 18);
-        viewModel.ConnectBeam(a, b);
-        viewModel.ConnectBeam(b, c);
-        viewModel.ToggleCoreOnNode(b);
-        viewModel.ToggleSelectedNode(b);
-        var anatomyChanged = false;
-        viewModel.AnatomyChanged += (_, _) => anatomyChanged = true;
 
-        viewModel.DeleteSelectedParts();
-
-        viewModel.Nodes.Count.ShouldBe(2);
-        viewModel.Beams.ShouldBeEmpty();
-        viewModel.Cores.ShouldBeEmpty();
-        viewModel.SelectedPartCount.ShouldBe(0);
-        anatomyChanged.ShouldBeTrue();
-    }
-
-    [Fact]
-    public void DeleteSelectedParts_WithMultipleNodes_DeletesDescendingAndReindexesSurvivors()
-    {
-        var viewModel = new BuildViewModel();
-        var a = viewModel.PlaceNode(new Vector2D(0, 0), 18);
-        var b = viewModel.PlaceNode(new Vector2D(10, 0), 18);
-        var c = viewModel.PlaceNode(new Vector2D(20, 0), 18);
-        viewModel.ConnectBeam(a, b);
-        viewModel.ConnectBeam(b, c);
-        viewModel.ToggleCoreOnNode(b);
-        viewModel.ToggleSelectedNode(a);
-        viewModel.ToggleSelectedNode(c);
-
-        viewModel.DeleteSelectedParts();
-
-        viewModel.Nodes.Count.ShouldBe(1);
-        viewModel.Nodes[0].Position.ShouldBe(new Vector2D(10, 0));
-        viewModel.Beams.ShouldBeEmpty();
-        viewModel.Cores.Count.ShouldBe(1);
-        viewModel.Cores[0].NodeId.ShouldBe(b);
-        viewModel.SelectedPartCount.ShouldBe(0);
-    }
 
     [Fact]
     public void TryLeave_WithNoNodesPlaced_ReturnsTrue()

@@ -96,7 +96,7 @@ public sealed class MotorTopologyTests
                 new BeamDef(8, 3, 4),
                 new BeamDef(9, 4, 5),
             ],
-            [new CoreDef(10, 1)]);
+            [new SensorDef(10, 6, SensorKind.Accelerometer)]);
 
         var motorized = MotorTopology.BuildNodeConnections(creature)
             .Where(connection => connection.IsMotorized)

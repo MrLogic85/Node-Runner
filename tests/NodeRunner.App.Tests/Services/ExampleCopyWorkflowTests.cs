@@ -57,7 +57,7 @@ public sealed class ExampleCopyWorkflowTests
         var creature = new CreatureDef(
             [new NodeDef(1, new Vector2D(0, 0), 1), new NodeDef(2, new Vector2D(2, 0), 1)],
             [new BeamDef(101, 1, 2)],
-            [new CoreDef(201, 1)]);
+            [new SensorDef(201, 101, SensorKind.Accelerometer)]);
         var training = new TrainingStateDef([2, 1], [0.1, -0.2, 0.3], 8, "Tanh");
         var creation = new CreationDef(Guid.NewGuid(), "Walker", creature, new BrainShapeDef(2, 6), training);
         return new CreationExample(creation, "Servos in the knees: the basic walk.");

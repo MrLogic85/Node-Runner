@@ -5,7 +5,7 @@ using NodeRunner.Ui.Lib;
 namespace NodeRunner.Ui.Widgets;
 
 /// <summary>
-/// A creature's body drawn to fit its rectangle, as on a Creations card: beams, nodes and cores.
+/// A creature's body drawn to fit its rectangle, as on a Creations card: beams and nodes.
 /// Colours are read from the Theme while drawing, so a theme swap redraws it. Its top corners
 /// round to the card's, because it sits at the top of a flush card.
 /// </summary>
@@ -16,7 +16,6 @@ public partial class CreatureThumbnail : Control
     private const float _inset = UiSize.Space.S3;
     private const float _fill = 0.74f;
     private const float _nodeRadius = 5.5f;
-    private const float _coreRadius = 2.8f;
     private const int _ringPoints = 24;
 
     private CreatureDef? _creature;
@@ -61,12 +60,6 @@ public partial class CreatureThumbnail : Control
         {
             DrawCircle(MapIndex(i), _nodeRadius, fill);
             DrawArc(MapIndex(i), _nodeRadius, 0, Mathf.Tau, _ringPoints, line, UiSize.Stroke.Signal, antialiased: false);
-        }
-
-        var accent = UiThemeLookup.Color(this, UiTokens.Color.Accent);
-        foreach (var core in _creature.Cores)
-        {
-            DrawCircle(MapNode(core.NodeId), _coreRadius, accent);
         }
     }
 }

@@ -14,8 +14,8 @@ public sealed class SignalFlowPresentationViewModelTests
 
         viewModel.Update(
             [
-                new SensorReading("Core", 1, "Ray down", 0.25),
-                new SensorReading("Core", 1, "Pitch", -0.50),
+                new SensorReading("Accelerometer", 1, "along", 0.25),
+                new SensorReading("Accelerometer", 1, "across", -0.50),
                 new SensorReading("Motor relation", 1, "angle", 0.75),
                 new SensorReading("Motor relation", 1, "angular velocity", -2.0),
             ],
@@ -33,7 +33,7 @@ public sealed class SignalFlowPresentationViewModelTests
     {
         var viewModel = new SignalFlowPresentationViewModel();
 
-        viewModel.Update([new SensorReading("Core", 1, "Pitch", 0.1)], [new MotorReading(1, 0.2, 1)], 0);
+        viewModel.Update([new SensorReading("Accelerometer", 1, "across", 0.1)], [new MotorReading(1, 0.2, 1)], 0);
 
         viewModel.SensesNote.ShouldBe("1 reading");
         viewModel.OutputsNote.ShouldBe("1 motor");

@@ -11,8 +11,8 @@ public sealed class CreatureInspectorViewModelTests
         using var inspector = new CreatureInspectorViewModel(CreateCreature(), new SelectionViewModel());
 
         inspector.Title.ShouldBe("Creature inspector");
-        inspector.Role.ShouldBe("Tap a node, beam, or core to inspect it.");
-        inspector.Values.ShouldBe("The creature is built from nodes, beams, and cores.");
+        inspector.Role.ShouldBe("Tap a node or beam to inspect it.");
+        inspector.Values.ShouldBe("The creature is built from nodes and beams; sensors sit on beams.");
     }
 
     [Fact]
@@ -41,38 +41,13 @@ public sealed class CreatureInspectorViewModelTests
         inspector.Values.ShouldBe("Connects: Node 1 to Node 2\nLength: 20");
     }
 
-    [Fact]
-    public void Selection_WithCore_ShowsSensorPackage()
-    {
-        var selection = new SelectionViewModel();
-        using var inspector = new CreatureInspectorViewModel(CreateCreature(), selection);
 
-        selection.Select(new CreatureElementSelection(CreatureElementKind.Core, 201));
-
-        inspector.Title.ShouldBe("Core 1");
-        inspector.Role.ShouldBe("A sensor package. Not the brain itself — it feeds sensor readings (rays, pitch, elevation, speed) to the model.");
-        inspector.Values.ShouldBe("Mounted on: Node 1");
-    }
-
-    [Fact]
-    public void Clear_AfterSelection_RestoresTapHint()
-    {
-        var selection = new SelectionViewModel();
-        using var inspector = new CreatureInspectorViewModel(CreateCreature(), selection);
-        selection.Select(new CreatureElementSelection(CreatureElementKind.Core, 201));
-
-        selection.Clear();
-
-        inspector.Title.ShouldBe("Creature inspector");
-        inspector.Role.ShouldBe("Tap a node, beam, or core to inspect it.");
-        inspector.Values.ShouldBe("The creature is built from nodes, beams, and cores.");
-    }
 
     private static CreatureDef CreateCreature()
     {
         return new CreatureDef(
             [new NodeDef(1, new Vector2D(0, 0), 10), new NodeDef(2, new Vector2D(20, 0), 10)],
             [new BeamDef(101, 1, 2)],
-            [new CoreDef(201, 1)]);
+            [new SensorDef(201, 101, SensorKind.Accelerometer)]);
     }
 }

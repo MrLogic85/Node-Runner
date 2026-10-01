@@ -24,7 +24,7 @@ public sealed class CreationExamplesTests
     {
         var worm = CreationExamples.All.Single(example => example.Creation.Id == CreationExamples.WormId).Creation;
 
-        worm.Creature.Cores.Count.ShouldBeLessThanOrEqualTo(1);
+        worm.Creature.Sensors.ShouldBe([new NodeRunner.Domain.SensorDef(10, 6, NodeRunner.Domain.SensorKind.Accelerometer)]);
         worm.Training.ShouldBeNull();
     }
 

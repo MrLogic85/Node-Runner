@@ -4,5 +4,4 @@ public enum CreatureElementKind
 {
     Node,
     Beam,
-    Core,
 }

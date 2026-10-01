@@ -17,7 +17,7 @@ public sealed class BuildPartsTrayTests
         tabs.Script.ShouldBe("res://src/ui/lib/UiIconTabs.cs");
         int[] icons = [(int)UiIconId.PartSpring, (int)UiIconId.PartServo, (int)UiIconId.PartLineOfSight, (int)UiIconId.PartBattery];
         tabs.Node.Body.ShouldContain($"Icons = Array[int]([{string.Join(", ", icons)}])");
-        icons.Length.ShouldBe(PartTray.Groups(BuildTool.Move).Count);
+        icons.Length.ShouldBe(PartTray.Groups().Count);
     }
 
     [Fact]

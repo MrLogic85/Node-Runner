@@ -10,7 +10,6 @@ public partial class Creature : Node2D
     public const int MaximumCollisionSlots = 16;
 
     private const float _beamThickness = 12f;
-    private const float _rayLength = 220f;
 
     // Tuned empirically: a beam resting flat on the ground has both ends of
     // its bottom edge in contact, so tipping it up (the only way to rotate
@@ -29,8 +28,7 @@ public partial class Creature : Node2D
     private float[] _beamInitialRotations = [];
     private NodeVisual[] _nodeVisuals = [];
     private BeamVisual[] _beamVisuals = [];
-    private CoreSensors[] _coreSensors = [];
-    private int[] _coreIndexByNode = [];
+    private AccelerometerSensor[] _accelerometers = [];
     private MotorRelation[] _motorRelations = [];
     private double[] _sensorValues = [];
     private double[] _motorTargets = [];
@@ -50,6 +48,8 @@ public partial class Creature : Node2D
 
     public bool IsBuilt => _isBuilt;
 
+    public IReadOnlyList<AccelerometerSensor> Accelerometers => _accelerometers;
+
     public override void _Ready()
     {
         if (!_isBuilt)
@@ -65,7 +65,7 @@ public partial class Creature : Node2D
             return;
         }
 
-        ReadSensors(_sensorValues);
+        ReadSensors(_sensorValues, delta);
         Brain.Forward(_sensorValues, _motorTargets, _scratchA, _scratchB);
 
         for (var i = 0; i < _motorRelations.Length; i++)
@@ -91,9 +91,10 @@ public partial class Creature : Node2D
         CreateBeams(definition, anchorBeamPerNode, anchorOffsetPerNode);
         DisableSelfCollisions();
         CreateNodeVisuals(definition, anchorBeamPerNode, anchorOffsetPerNode);
-        CreateCores(definition, anchorBeamPerNode, anchorOffsetPerNode);
+        CreateAccelerometers(definition);
         CreateNodeConnections(definition);
         ConfigureBrainBuffers();
+        ResetAccelerometers();
 
         if (_motorRelations.Length > 0)
         {
@@ -168,6 +169,8 @@ public partial class Creature : Node2D
         {
             body.Position += offset;
         }
+
+        ResetAccelerometers();
     }
 
     public void ConfigureCollisionSlot(int slot)
@@ -182,11 +185,6 @@ public partial class Creature : Node2D
         {
             body.CollisionLayer = slotLayer;
             body.CollisionMask = 1u | slotLayer;
-        }
-
-        foreach (var coreSensors in _coreSensors)
-        {
-            coreSensors.SetCollisionMask(1);
         }
     }
 
@@ -246,9 +244,7 @@ public partial class Creature : Node2D
             var radius = ToGodotFloat(Definition!.Nodes[nodeIndex].Radius, nameof(NodeDef.Radius));
             if (_nodeVisuals[nodeIndex].GlobalPosition.DistanceSquaredTo(globalPosition) <= radius * radius)
             {
-                selection = _coreIndexByNode[nodeIndex] >= 0
-                    ? new CreatureElementSelection(CreatureElementKind.Core, Definition!.Cores[_coreIndexByNode[nodeIndex]].Id)
-                    : new CreatureElementSelection(CreatureElementKind.Node, Definition!.Nodes[nodeIndex].Id);
+                selection = new CreatureElementSelection(CreatureElementKind.Node, Definition!.Nodes[nodeIndex].Id);
                 return true;
             }
         }
@@ -296,9 +292,14 @@ public partial class Creature : Node2D
             case CreatureElementKind.Beam:
                 _beamVisuals[Definition!.BeamIndexOf(selection.Id)].IsSelected = true;
                 break;
-            case CreatureElementKind.Core:
-                _nodeVisuals[Definition!.NodeIndexOf(Definition.Cores[Definition.CoreIndexOf(selection.Id)].NodeId)].IsSelected = true;
-                break;
+        }
+    }
+
+    private void ResetAccelerometers()
+    {
+        foreach (var accelerometer in _accelerometers)
+        {
+            accelerometer.Reset();
         }
     }
 
@@ -368,8 +369,8 @@ public partial class Creature : Node2D
 
     private static void RegisterAnchor(int nodeIndex, int beamIndex, Vector2 localOffset, int[] anchorBeamPerNode, Vector2[] anchorOffsetPerNode)
     {
-        // The lowest-indexed beam touching a node anchors its visual/core
-        // mounting; any incident beam works equally well since they all meet
+        // The lowest-indexed beam touching a node anchors its visual;
+        // any incident beam works equally well since they all meet
         // at the same physical point.
         if (anchorBeamPerNode[nodeIndex] != -1 && anchorBeamPerNode[nodeIndex] < beamIndex)
         {
@@ -394,8 +395,6 @@ public partial class Creature : Node2D
     private void CreateNodeVisuals(CreatureDef definition, int[] anchorBeamPerNode, Vector2[] anchorOffsetPerNode)
     {
         _nodeVisuals = new NodeVisual[definition.Nodes.Count];
-        _coreIndexByNode = new int[definition.Nodes.Count];
-        Array.Fill(_coreIndexByNode, -1);
 
         for (var i = 0; i < definition.Nodes.Count; i++)
         {
@@ -411,38 +410,27 @@ public partial class Creature : Node2D
         }
     }
 
-    private void CreateCores(CreatureDef definition, int[] anchorBeamPerNode, Vector2[] anchorOffsetPerNode)
+    private void CreateAccelerometers(CreatureDef definition)
     {
-        _coreSensors = new CoreSensors[definition.Cores.Count];
+        var accelerometers = new List<AccelerometerSensor>();
+        var gravity = ProjectSettings.GetSetting("physics/2d/default_gravity").AsDouble();
 
-        for (var i = 0; i < definition.Cores.Count; i++)
+        foreach (var sensor in definition.Sensors)
         {
-            var core = definition.Cores[i];
-            var nodeIndex = definition.NodeIndexOf(core.NodeId);
-            _coreIndexByNode[nodeIndex] = i;
-            _nodeVisuals[nodeIndex].HasCore = true;
+            if (sensor.Kind != SensorKind.Accelerometer)
+            {
+                continue;
+            }
 
-            var anchorBeam = _beamBodies[anchorBeamPerNode[nodeIndex]];
-            var origin = anchorOffsetPerNode[nodeIndex];
-
-            var rayDown = CreateRay(anchorBeam, origin, new Vector2(0, _rayLength));
-            var rayForward = CreateRay(anchorBeam, origin, new Vector2(_rayLength, 0));
-            var rayForwardDown = CreateRay(anchorBeam, origin, new Vector2(_rayLength, _rayLength).Normalized() * _rayLength);
-
-            _coreSensors[i] = new CoreSensors(anchorBeam, rayDown, rayForward, rayForwardDown);
+            var beamIndex = definition.BeamIndexOf(sensor.BeamId);
+            var beam = definition.Beams[beamIndex];
+            var nodeA = definition.Nodes[definition.NodeIndexOf(beam.NodeA)].Position;
+            var nodeB = definition.Nodes[definition.NodeIndexOf(beam.NodeB)].Position;
+            var upSign = Accelerometer.UpSign(nodeA, nodeB);
+            accelerometers.Add(new AccelerometerSensor(_beamBodies[beamIndex], upSign, gravity));
         }
-    }
 
-    private static RayCast2D CreateRay(RigidBody2D anchorBeam, Vector2 origin, Vector2 targetPosition)
-    {
-        var ray = new RayCast2D
-        {
-            Position = origin,
-            TargetPosition = targetPosition,
-            Enabled = true,
-        };
-        anchorBeam.AddChild(ray);
-        return ray;
+        _accelerometers = accelerometers.ToArray();
     }
 
     private void CreateNodeConnections(CreatureDef definition)
@@ -487,7 +475,7 @@ public partial class Creature : Node2D
             return;
         }
 
-        var sensorCount = (_coreSensors.Length * CoreSensors.ValueCount) + (_motorRelations.Length * 2);
+        var sensorCount = (_accelerometers.Length * AccelerometerSensor.ValueCount) + (_motorRelations.Length * 2);
         _sensorValues = new double[sensorCount];
         _motorTargets = new double[_motorRelations.Length];
 
@@ -497,15 +485,15 @@ public partial class Creature : Node2D
         _scratchB = new double[scratchSize];
     }
 
-    // Stable order: each core's 6 values (see CoreSensors), then each motor
-    // relation's (relativeAngle, relativeAngularVelocity), in creation order.
-    private void ReadSensors(double[] values)
+    // Stable order: each Accelerometer sensor's two values (along, across),
+    // then each motor relation's (relativeAngle, relativeAngularVelocity), in creation order.
+    private void ReadSensors(double[] values, double delta)
     {
         var index = 0;
-        foreach (var core in _coreSensors)
+        foreach (var accelerometer in _accelerometers)
         {
-            core.Read(values, index);
-            index += CoreSensors.ValueCount;
+            accelerometer.Read(values, index, delta);
+            index += AccelerometerSensor.ValueCount;
         }
 
         foreach (var relation in _motorRelations)
@@ -531,11 +519,11 @@ public partial class Creature : Node2D
         }
 
         var index = 0;
-        for (var c = 0; c < _coreSensors.Length; c++)
+        for (var a = 0; a < _accelerometers.Length; a++)
         {
-            for (var n = 0; n < CoreSensors.ValueCount; n++)
+            for (var n = 0; n < AccelerometerSensor.ValueCount; n++)
             {
-                sensors.Add(new SensorReading("Core", c + 1, CoreSensors.ValueNames[n], _sensorValues[index++]));
+                sensors.Add(new SensorReading("Accelerometer", a + 1, AccelerometerSensor.ValueNames[n], _sensorValues[index++]));
             }
         }
 

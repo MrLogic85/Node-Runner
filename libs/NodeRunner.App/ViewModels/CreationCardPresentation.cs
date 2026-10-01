@@ -20,7 +20,7 @@ public sealed record CreationCardPresentation(
 {
     /// <summary>The part counts the card shows when the creature has nothing to draw.</summary>
     public static string ThumbnailTextFor(CreatureDef creature) =>
-        $"{FormatCount(creature.Nodes.Count, "node")} · {FormatCount(creature.Beams.Count, "beam")} · {FormatCount(creature.Cores.Count, "core")}";
+        $"{FormatCount(creature.Nodes.Count, "node")} · {FormatCount(creature.Beams.Count, "beam")} · {FormatCount(creature.Sensors.Count, "sensor")}";
 
     internal static string FormatCount(int count, string singular) =>
         count == 1

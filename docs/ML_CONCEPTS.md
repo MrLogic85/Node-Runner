@@ -74,13 +74,17 @@ For each concept:
   redundant inputs waste capacity.
 - **Where:** 0.1.0 started with `project/src/creature/Sensors.cs` reading a
   sin/cos oscillator clock, then joint angle and angular velocity in stable
-  order. 0.2.0 replaced this with the Node/Beam/Core model (see
-  `docs/CREATURE_MODEL.md`): each core contributes rays/pitch/elevation/speed,
-  and each motor relation contributes a relative angle and angular velocity.
+  order. 0.2.0 replaced this with a node/beam model with a "core" sensor
+  package (rays, pitch, elevation, speed) on a node, and each motor relation
+  contributing a relative angle and angular velocity.
   0.3.0 expands this into topology-derived sensors for user-built creatures.
   0.13.0 lets each part declare its ports, with the convention "0 = as
-  built" (#534). 0.12.0 replaces Core with sensor parts on beams, an
-  Accelerometer and an LOS sensor (#127, #575); 0.14.0 adds LOS settings
+  built" (#534). 0.12.0 replaces that package with sensor parts on beams
+  (see `docs/CREATURE_MODEL.md`): an Accelerometer, whose proof mass on a
+  damped spring gives two readings along and across its beam and filters
+  spiky contacts (#127), and an LOS sensor (#575). There is no speed or
+  elevation input: the brain must learn movement from acceleration, joint
+  readings and its own outputs; 0.14.0 adds LOS settings
   (#578) and Pulse, a rhythm input (#527).
 - **How we show it:** 0.1.0 proves observation → action by making the worm
   twitch. 0.2.0 lists what the network sees each tick. A later, uncommitted

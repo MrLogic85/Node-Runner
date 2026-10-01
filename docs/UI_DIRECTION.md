@@ -105,14 +105,12 @@ then the app follows the reference.
   The designer is not available, so 0.12 follows these best guesses (#580);
   #574 updates the reference later and lists any differences as follow-ups:
   - *Parts tray:* the Sensors tab lists Accelerometer, then LOS sensor, with
-    the help line "Drag onto a beam. A beam holds one of each sensor." No
-    Core row once #127 lands; until then a transitional Core row sits last
-    in the tab so cores can still be added (#374).
+    the help line "Drag onto a beam. A beam holds one of each sensor." There
+    is no Core row.
   - *Glyphs:* LOS sensor uses the reference `los` glyph. Accelerometer uses
     the project-owned `accelerometer` part glyph (an upright frame with a
     weight on a spring), which is not in the reference package. The
-    reference `core` glyphs stay in the package but are unused once #127
-    lands.
+    reference `core` glyphs stay in the package but are unused.
   - *On a beam:* a sensor is drawn as the reference part badge: a 22 px
     rounded square (not a circle, so it never reads as a joint) with a panel
     fill and 2 px lines, and the glyph at 15 px in `accent`. It sits at the
@@ -156,9 +154,7 @@ then the app follows the reference.
   - The tray shows only guidance that applies now: Move has no tool line;
     Beam, Joint and Select show a status line above the readiness line, the
     tool's glyph at `icon-sm` in `muted` and one short `t-note` line ("Drag
-    joint to joint.", "Tap space or a beam.", "Tap or box parts."); a tray
-    tool's hint replaces its tab's help line.
-  - A part's tool belongs to its tab: opening another tab puts Move back.
+    joint to joint.", "Tap space or a beam.", "Tap or box parts.").
   - Locked and "0 left" rows fade as a whole (glyph, name and lock), not
     only their fill.
 

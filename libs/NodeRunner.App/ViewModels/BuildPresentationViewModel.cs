@@ -11,7 +11,7 @@ namespace NodeRunner.App.ViewModels;
 /// </summary>
 public sealed class BuildPresentationViewModel
 {
-    private const int _coreSensorValueCount = 6;
+    private const int _accelerometerSensorValueCount = 2;
     private const int _motorRelationSensorValueCount = 2;
 
     private readonly BuildViewModel _build;
@@ -54,11 +54,11 @@ public sealed class BuildPresentationViewModel
 
     public BuildTool ActiveTool => _build.ActiveTool;
 
-    public IReadOnlyList<PartTrayGroup> PartGroups => PartTray.Groups(_build.ActiveTool);
+    public IReadOnlyList<PartTrayGroup> PartGroups => PartTray.Groups();
 
     /// <summary>
     /// The side panel's one-line status for the rail tools that need one (Beam, Joint, Select);
-    /// empty for Move and for a tray tool, whose hint replaces its tab's help line.
+    /// empty for Move and tools without a short side-panel hint.
     /// </summary>
     public string PanelToolHint => ActiveTool switch
     {
@@ -70,7 +70,7 @@ public sealed class BuildPresentationViewModel
 
     public int NodeCount => _build.Nodes.Count;
 
-    public int CoreCount => _build.Cores.Count;
+    public int SensorCount => _build.Sensors.Count;
 
     public BrainShapeDef BrainShape => _build.BrainShape;
 
@@ -105,71 +105,53 @@ public sealed class BuildPresentationViewModel
 
     public int SelectedPartCount => _build.SelectedPartCount;
 
-    public int SelectedCoreCount => _build.SelectedCoreCount;
-
     public string SinglePartTitle => _build.SingleSelectedBeamId is { } beamId
         ? $"Beam {_build.BeamIndexOf(beamId) + 1}"
         : _build.SingleSelectedNodeId is { } nodeId
-        ? _build.SingleSelectionHasCore ? $"Core · Node {_build.NodeIndexOf(nodeId) + 1}" : $"Node {_build.NodeIndexOf(nodeId) + 1}"
+        ? $"Node {_build.NodeIndexOf(nodeId) + 1}"
         : "Part";
 
     public string SinglePartBody => _build.SingleSelectedBeamId is not null
         ? _build.IsMoveOnly
             ? "Select and move an endpoint Node to reposition it. The Beam follows its Nodes."
             : "Move either endpoint Node to change the Beam length."
-        : _build.SingleSelectionHasCore
-            ? "The Core contributes six sensor inputs. Move its Node to reposition it."
-            : "Move the Node to change its position and connected Beam lengths.";
+        : "Move the Node to change its position and connected Beam lengths.";
 
     public string SinglePartPrimaryLabel => _build.SingleSelectedBeamId is not null
         ? "Length"
-        : _build.SingleSelectionHasCore
-            ? "Built-in senses"
-            : "Position";
+        : "Position";
 
     public string SinglePartPrimaryValue => _build.SingleSelectedBeamId is { } beamId
         ? $"{BeamLength(beamId):0.0} units"
         : _build.SingleSelectedNodeId is { } nodeId
-            ? _build.SingleSelectionHasCore
-                ? "6 inputs"
-                : $"{NodeById(nodeId).Position.X:0}, {NodeById(nodeId).Position.Y:0}"
+            ? $"{NodeById(nodeId).Position.X:0}, {NodeById(nodeId).Position.Y:0}"
             : "—";
 
     public string SinglePartConnectionsLabel => _build.SingleSelectedBeamId is not null
         ? "Between"
-        : _build.SingleSelectionHasCore
-            ? "Mounted on"
-            : "Connections";
+        : "Connections";
 
     public string SinglePartConnectionsValue => _build.SingleSelectedBeamId is { } beamId
         ? $"Node {_build.NodeIndexOf(BeamById(beamId).NodeA) + 1} ↔ Node {_build.NodeIndexOf(BeamById(beamId).NodeB) + 1}"
         : _build.SingleSelectedNodeId is { } nodeId
-            ? _build.SingleSelectionHasCore
-                ? $"Node {_build.NodeIndexOf(nodeId) + 1}"
-                : ConnectedBeamText(nodeId)
+            ? ConnectedBeamText(nodeId)
             : "—";
 
     public string SinglePartFacts => _build.SingleSelectedBeamId is not null
         ? "Rigid connection"
-        : _build.SingleSelectionHasCore
-            ? "Down ray · Forward ray · Forward-down ray · Pitch · Elevation · Speed"
-            : _build.SingleSelectedNodeId is { } nodeId
-                ? $"Radius {NodeById(nodeId).Radius:0.0} · {_build.Beams.Count(beam => beam.NodeA == nodeId || beam.NodeB == nodeId)} attached Beam(s)"
-                : string.Empty;
+        : _build.SingleSelectedNodeId is { } nodeId
+            ? $"Radius {NodeById(nodeId).Radius:0.0} · {_build.Beams.Count(beam => beam.NodeA == nodeId || beam.NodeB == nodeId)} attached Beam(s)"
+            : string.Empty;
 
     public string MultiSelectionTitle => $"{_build.SelectedPartCount} selected";
 
-    public string MultiSelectionCounts => _build.SelectedCoreCount > 0
-        ? $"Nodes · {_build.SelectedNodeCount}    Core · {_build.SelectedCoreCount}"
-        : _build.SelectedBeamCount > 0
+    public string MultiSelectionCounts => _build.SelectedBeamCount > 0
         ? $"Beam · {_build.SelectedBeamCount}"
         : $"Nodes · {_build.SelectedNodeCount}";
 
     public string MultiSelectionBody => "Drag any selected part to move them together. Parts are locked, so this selection can only be moved.";
 
     public bool LockTopologyTools => _build.IsMoveOnly;
-
-    public string CoreToolText => _build.IsMoveOnly ? "Core · locked" : "Core";
 
     /// <summary>True for a locked Creation: its anatomy is fixed and only moving nodes is allowed.</summary>
     public bool IsLocked => _build.IsMoveOnly;
@@ -182,10 +164,6 @@ public sealed class BuildPresentationViewModel
 
     public string RebuildConfirmationBody => "Rebuild creates a new body and a new brain. The original Creation and its training stay unchanged.";
 
-    public string CoreToolTooltip => _build.IsMoveOnly
-        ? MoveOnlyLockReason
-        : "Attach or remove a core.";
-
     public BuildPanelPresentation BuildPanel => CreateBuildPanel();
 
     public static string ToolHint(BuildTool tool)
@@ -196,7 +174,6 @@ public sealed class BuildPresentationViewModel
             BuildTool.Beam => "Drag from one joint to another to join them with a beam.",
             BuildTool.Joint => "Tap empty space to add a joint, or tap a beam to split it.",
             BuildTool.Select => "Tap parts to select them. Drag selected parts to move them together.",
-            BuildTool.Core => "Tap a node to attach a core, tap again to remove it.",
             _ => string.Empty,
         };
     }
@@ -206,8 +183,8 @@ public sealed class BuildPresentationViewModel
         if (!_build.TryLeave(out var creature, out var errors) || creature is null)
         {
             var inputSummary = errors.Count > 0
-                ? BuildInvalidDraftInputSummary(_build.Cores.Count)
-                : BuildInputSummary(_build.Cores.Count, motorRelationCount: 0);
+                ? BuildInvalidDraftInputSummary(_build.Sensors.Count)
+                : BuildInputSummary(_build.Sensors.Count, motorRelationCount: 0);
             var motorRelationSummary = errors.Count > 0
                 ? "Fix anatomy to count motor relations."
                 : "Two beams at one node create a motor relation; closed triangles do not twist.";
@@ -216,17 +193,17 @@ public sealed class BuildPresentationViewModel
                 motorRelationSummary,
                 CanStartTraining: false,
                 ReadinessText: ShortReadiness(errors),
-                InputCount: _build.Cores.Count * _coreSensorValueCount,
+                InputCount: _build.Sensors.Count * _accelerometerSensorValueCount,
                 OutputCount: 0);
         }
 
         var motorRelationCount = MotorTopology.BuildNodeConnections(creature)
             .Count(connection => connection.IsMotorized);
-        var inputCount = BuildInputCount(creature.Cores.Count, motorRelationCount);
+        var inputCount = BuildInputCount(creature.Sensors.Count, motorRelationCount);
         if (!CreatureReadiness.CanTrain(creature))
         {
             return new BuildPanelPresentation(
-                BuildInputSummary(creature.Cores.Count, motorRelationCount),
+                BuildInputSummary(creature.Sensors.Count, motorRelationCount),
                 "0 motor relations can twist",
                 CanStartTraining: false,
                 ReadinessText: "Add a two-beam node",
@@ -235,7 +212,7 @@ public sealed class BuildPresentationViewModel
         }
 
         return new BuildPanelPresentation(
-            BuildInputSummary(creature.Cores.Count, motorRelationCount),
+            BuildInputSummary(creature.Sensors.Count, motorRelationCount),
             motorRelationCount == 1 ? "1 motor relation can twist" : $"{motorRelationCount} motor relations can twist",
             CanStartTraining: true,
             ReadinessText: "Ready to train",
@@ -289,27 +266,27 @@ public sealed class BuildPresentationViewModel
 
     private BeamDef BeamById(int beamId) => _build.Beams[_build.BeamIndexOf(beamId)];
 
-    private static string BuildInputSummary(int coreCount, int motorRelationCount)
+    private static string BuildInputSummary(int accelerometerCount, int motorRelationCount)
     {
-        var inputCount = BuildInputCount(coreCount, motorRelationCount);
-        var coreSensorCount = coreCount * _coreSensorValueCount;
-        var motorSensorCount = motorRelationCount * _motorRelationSensorValueCount;
-        var coreWord = coreCount == 1 ? "core" : "cores";
+        var inputCount = BuildInputCount(accelerometerCount, motorRelationCount);
+        var accelerometerInputCount = accelerometerCount * _accelerometerSensorValueCount;
+        var motorInputCount = motorRelationCount * _motorRelationSensorValueCount;
+        var accelerometerWord = accelerometerCount == 1 ? "accelerometer" : "accelerometers";
         var relationWord = motorRelationCount == 1 ? "motor relation" : "motor relations";
-        var coreSensorWord = coreSensorCount == 1 ? "sensor" : "sensors";
-        var motorSensorWord = motorSensorCount == 1 ? "sensor" : "sensors";
-        return $"{coreCount} {coreWord}: {coreSensorCount} {coreSensorWord}; {motorRelationCount} {relationWord}: {motorSensorCount} {motorSensorWord}; {inputCount} inputs total";
+        var accelerometerInputWord = accelerometerInputCount == 1 ? "input" : "inputs";
+        var motorInputWord = motorInputCount == 1 ? "input" : "inputs";
+        return $"{accelerometerCount} {accelerometerWord}: {accelerometerInputCount} {accelerometerInputWord}; {motorRelationCount} {relationWord}: {motorInputCount} {motorInputWord}; {inputCount} inputs total";
     }
 
-    private static int BuildInputCount(int coreCount, int motorRelationCount)
+    private static int BuildInputCount(int accelerometerCount, int motorRelationCount)
     {
-        return (coreCount * _coreSensorValueCount) + (motorRelationCount * _motorRelationSensorValueCount);
+        return (accelerometerCount * _accelerometerSensorValueCount) + (motorRelationCount * _motorRelationSensorValueCount);
     }
 
-    private static string BuildInvalidDraftInputSummary(int coreCount)
+    private static string BuildInvalidDraftInputSummary(int sensorCount)
     {
-        var coreWord = coreCount == 1 ? "core" : "cores";
-        return $"{coreCount} {coreWord} placed; fix anatomy to count inputs.";
+        var sensorWord = sensorCount == 1 ? "sensor" : "sensors";
+        return $"{sensorCount} {sensorWord} placed; fix anatomy to count inputs.";
     }
 
     private void SubscribeToBuild()

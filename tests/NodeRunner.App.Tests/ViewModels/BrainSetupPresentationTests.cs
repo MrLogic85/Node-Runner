@@ -58,7 +58,7 @@ public sealed class BrainSetupPresentationTests
         setup.RecommendedNeurons.ShouldBe(BrainShapeDef.MinimumNeuronsPerLayer);
     }
 
-    // Cores without motor beams give senses but no outputs, the state Build shows while drawing.
+    // Sensors without motor beams give inputs but no outputs, the state Build shows while drawing.
     [Theory]
     [InlineData(6, 0)]
     [InlineData(0, 3)]

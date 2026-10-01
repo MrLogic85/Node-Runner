@@ -5,7 +5,7 @@ namespace NodeRunner.App.Builders;
 
 /// <summary>
 /// Mutable, in-progress creature anatomy driven by Build-mode UI
-/// (0.3.0). Add/move/remove nodes, beams, and cores here; <see cref="Build"/>
+/// (0.3.0). Add/move/remove nodes, beams, and sensors here; <see cref="Build"/>
 /// returns the drawing as an immutable <see cref="CreatureDef"/> for saving, and
 /// <see cref="TryBuild"/> returns it only once it can be simulated. See
 /// docs/CREATURE_MODEL.md for the vocabulary and docs/ROADMAP.md 0.3.0 for
@@ -20,7 +20,7 @@ public sealed class CreatureBuilder
 {
     private readonly List<NodeDef> _nodes = [];
     private readonly List<BeamDef> _beams = [];
-    private readonly List<CoreDef> _cores = [];
+    private readonly List<SensorDef> _sensors = [];
     private int _nextPartId = 1;
 
     public CreatureBuilder()
@@ -32,7 +32,7 @@ public sealed class CreatureBuilder
         ArgumentNullException.ThrowIfNull(creature);
         _nodes.AddRange(creature.Nodes);
         _beams.AddRange(creature.Beams);
-        _cores.AddRange(creature.Cores);
+        _sensors.AddRange(creature.Sensors);
         _nextPartId = creature.NextPartId;
     }
 
@@ -40,7 +40,7 @@ public sealed class CreatureBuilder
 
     public IReadOnlyList<BeamDef> Beams => _beams;
 
-    public IReadOnlyList<CoreDef> Cores => _cores;
+    public IReadOnlyList<SensorDef> Sensors => _sensors;
 
     public int NextPartId => _nextPartId;
 
@@ -61,14 +61,18 @@ public sealed class CreatureBuilder
     }
 
     /// <summary>
-    /// Removes a node, cascading to every beam and core that referenced it.
+    /// Removes a node, cascading to every beam and sensor that referenced it.
     /// </summary>
     public void RemoveNode(int nodeId)
     {
         var nodeIndex = NodeIndexOf(nodeId);
+        var removedBeamIds = _beams
+            .Where(beam => beam.NodeA == nodeId || beam.NodeB == nodeId)
+            .Select(beam => beam.Id)
+            .ToHashSet();
 
-        _beams.RemoveAll(beam => beam.NodeA == nodeId || beam.NodeB == nodeId);
-        _cores.RemoveAll(core => core.NodeId == nodeId);
+        _beams.RemoveAll(beam => removedBeamIds.Contains(beam.Id));
+        _sensors.RemoveAll(sensor => removedBeamIds.Contains(sensor.BeamId));
         _nodes.RemoveAt(nodeIndex);
     }
 
@@ -104,27 +108,68 @@ public sealed class CreatureBuilder
         && nodeIdA != nodeIdB
         && !_beams.Any(beam => IsSamePair(beam, nodeIdA, nodeIdB));
 
-    /// <summary>Removes a beam by id.</summary>
+    /// <summary>Removes a beam by id, cascading to sensors on it.</summary>
     public void RemoveBeam(int beamId)
     {
         var beamIndex = BeamIndexOf(beamId);
         _beams.RemoveAt(beamIndex);
+        _sensors.RemoveAll(sensor => sensor.BeamId == beamId);
     }
 
-    /// <summary>Adds a core mounted on an existing node and returns its id.</summary>
-    public int AddCore(int nodeId)
+    /// <summary>
+    /// Replaces a beam with two beams through an existing node. The beam's sensors move, keeping
+    /// their ids, to the longer half (the half at the beam's NodeA on a tie).
+    /// </summary>
+    public (int FirstBeamId, int SecondBeamId) SplitBeamAtNode(int beamId, int nodeId)
     {
         ValidateNodeId(nodeId);
-        var id = AllocatePartId();
-        _cores.Add(new CoreDef(id, nodeId));
-        return id;
+        var beamIndex = BeamIndexOf(beamId);
+        var beam = _beams[beamIndex];
+        var movedSensors = _sensors
+            .Where(sensor => sensor.BeamId == beamId)
+            .ToArray();
+
+        _beams.RemoveAt(beamIndex);
+        var firstBeamId = AddBeam(beam.NodeA, nodeId);
+        var secondBeamId = AddBeam(nodeId, beam.NodeB);
+        var sensorsToFirstHalf = DistanceSquared(beam.NodeA, nodeId) >= DistanceSquared(nodeId, beam.NodeB);
+        var targetBeamId = sensorsToFirstHalf ? firstBeamId : secondBeamId;
+        foreach (var sensor in movedSensors)
+        {
+            var sensorIndex = SensorIndexOf(sensor.Id);
+            _sensors[sensorIndex] = new SensorDef(sensor.Id, targetBeamId, sensor.Kind, sensor.Name);
+        }
+
+        return (firstBeamId, secondBeamId);
     }
 
-    /// <summary>Removes a core by id.</summary>
-    public void RemoveCore(int coreId)
+    /// <summary>Adds a sensor mounted on an existing beam unless that beam already has this kind.</summary>
+    public bool AddSensor(int beamId, SensorKind kind, out int sensorId, out string reason)
     {
-        var coreIndex = CoreIndexOf(coreId);
-        _cores.RemoveAt(coreIndex);
+        ValidateBeamId(beamId);
+        if (!Enum.IsDefined(kind))
+        {
+            throw new ArgumentOutOfRangeException(nameof(kind), "Sensor kind must be defined.");
+        }
+
+        if (_sensors.Any(sensor => sensor.BeamId == beamId && sensor.Kind == kind))
+        {
+            sensorId = 0;
+            reason = DuplicateSensorReason(kind);
+            return false;
+        }
+
+        sensorId = AllocatePartId();
+        _sensors.Add(new SensorDef(sensorId, beamId, kind));
+        reason = string.Empty;
+        return true;
+    }
+
+    /// <summary>Removes a sensor by id.</summary>
+    public void RemoveSensor(int sensorId)
+    {
+        var sensorIndex = SensorIndexOf(sensorId);
+        _sensors.RemoveAt(sensorIndex);
     }
 
     public void Rename(int partId, string? name)
@@ -150,11 +195,11 @@ public sealed class CreatureBuilder
             return;
         }
 
-        var coreIndex = _cores.FindIndex(core => core.Id == partId);
-        if (coreIndex >= 0)
+        var sensorIndex = _sensors.FindIndex(sensor => sensor.Id == partId);
+        if (sensorIndex >= 0)
         {
-            var core = _cores[coreIndex];
-            _cores[coreIndex] = new CoreDef(core.Id, core.NodeId, name);
+            var sensor = _sensors[sensorIndex];
+            _sensors[sensorIndex] = new SensorDef(sensor.Id, sensor.BeamId, sensor.Kind, name);
             return;
         }
 
@@ -162,7 +207,7 @@ public sealed class CreatureBuilder
     }
 
     /// <summary>The current drawing, finished or not: what a saved Creation stores.</summary>
-    public CreatureDef Build() => new(_nodes, _beams, _cores, _nextPartId);
+    public CreatureDef Build() => new(_nodes, _beams, _sensors, _nextPartId);
 
     /// <summary>The current drawing if it can be simulated, else the player-facing problems that stop it.</summary>
     public bool TryBuild(out CreatureDef? creature, out IReadOnlyList<string> errors)
@@ -195,29 +240,52 @@ public sealed class CreatureBuilder
         return index;
     }
 
-    public int CoreIndexOf(int coreId)
+    public int SensorIndexOf(int sensorId)
     {
-        var index = _cores.FindIndex(core => core.Id == coreId);
+        var index = _sensors.FindIndex(sensor => sensor.Id == sensorId);
         if (index < 0)
         {
-            throw new ArgumentOutOfRangeException(nameof(coreId), "Core id must point to an existing core.");
+            throw new ArgumentOutOfRangeException(nameof(sensorId), "Sensor id must point to an existing sensor.");
         }
 
         return index;
     }
+
+    private static string DuplicateSensorReason(SensorKind kind) => kind switch
+    {
+        SensorKind.Accelerometer => "One accelerometer per beam",
+        _ => "One sensor of each kind per beam",
+    };
 
     private static bool IsSamePair(BeamDef beam, int nodeA, int nodeB)
     {
         return (beam.NodeA == nodeA && beam.NodeB == nodeB) || (beam.NodeA == nodeB && beam.NodeB == nodeA);
     }
 
+    private double DistanceSquared(int nodeIdA, int nodeIdB)
+    {
+        var a = _nodes[NodeIndexOf(nodeIdA)].Position;
+        var b = _nodes[NodeIndexOf(nodeIdB)].Position;
+        return ((a.X - b.X) * (a.X - b.X)) + ((a.Y - b.Y) * (a.Y - b.Y));
+    }
+
     private bool HasNode(int nodeId) => _nodes.Any(node => node.Id == nodeId);
+
+    private bool HasBeam(int beamId) => _beams.Any(beam => beam.Id == beamId);
 
     private void ValidateNodeId(int nodeId)
     {
         if (!HasNode(nodeId))
         {
             throw new ArgumentOutOfRangeException(nameof(nodeId), "Node id must point to an existing node.");
+        }
+    }
+
+    private void ValidateBeamId(int beamId)
+    {
+        if (!HasBeam(beamId))
+        {
+            throw new ArgumentOutOfRangeException(nameof(beamId), "Beam id must point to an existing beam.");
         }
     }
 

@@ -192,14 +192,14 @@ public sealed class CreationUpdateCoordinatorTests
     private static CreatureDef MovedCreature() => new(
         [new NodeDef(1, new Vector2D(5, 0), 1), new NodeDef(2, new Vector2D(7, 0), 1)],
         [new BeamDef(3, 1, 2)],
-        [new CoreDef(4, 1)]);
+        [new SensorDef(4, 3, SensorKind.Accelerometer)]);
 
     private static CreationDef CreateCreation(string name, bool withTraining = false)
     {
         var creature = new CreatureDef(
             [new NodeDef(1, new Vector2D(0, 0), 1), new NodeDef(2, new Vector2D(2, 0), 1)],
             [new BeamDef(101, 1, 2)],
-            [new CoreDef(201, 1)]);
+            [new SensorDef(201, 101, SensorKind.Accelerometer)]);
 
         return new CreationDef(
             Guid.NewGuid(),

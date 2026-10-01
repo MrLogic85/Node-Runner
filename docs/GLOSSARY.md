@@ -35,16 +35,17 @@ Kept on purpose:
 Long-form descriptions and the sensor/model contract live in
 `docs/CREATURE_MODEL.md`. The entries below are quick references.
 
+- **Accelerometer** — A sensor on a beam: a proof mass on a damped spring
+  that feels its beam speed up, slow down and tilt (gravity reads as 1 g
+  "up"). Gives two model inputs, along and across the beam. See:
+  `docs/CREATURE_MODEL.md`.
 - **Beam** — A rigid, fixed-length connection between two nodes. Never
   stretches or compresses. Its own `RigidBody2D` at runtime. See:
   `docs/CREATURE_MODEL.md`.
-- **Core** — A sensor package mounted on a node: rays, pitch, elevation,
-  speed. **Not the neural model** — it only produces sensor readings. See:
-  `docs/CREATURE_MODEL.md`.
-- **Creature** — A single agent's body: nodes + beams (+ optional cores) +
+- **Creature** — A single agent's body: nodes + beams (+ optional sensors) +
   the sensors/motor relations they derive, driven by a brain. See:
   `docs/CREATURE_MODEL.md`.
-- **Creature element selection** — A selected node, beam, or core,
+- **Creature element selection** — A selected node or beam,
   represented as a `CreatureElementKind` plus the part's stable id (#220).
 - **CreatureDef** — Pure-data description of a creature; the "genome" of the
   body, distinct from the brain's genome. See: `docs/CREATURE_MODEL.md`.
@@ -53,7 +54,7 @@ Long-form descriptions and the sensor/model contract live in
   prototype part, and not a Godot physics joint. See:
   `docs/BUILD_MODE.md`.
 - **Model input** — One slot in the neural network's input vector, populated
-  one-to-one from a sensor value (a core's or a motor relation's). See:
+  one-to-one from a sensor value (an accelerometer's or a motor relation's). See:
   `docs/CREATURE_MODEL.md`.
 - **Model output** — One slot in the neural network's output vector,
   consumed one-to-one as a motor relation's target angular velocity. See:
@@ -66,6 +67,11 @@ Long-form descriptions and the sensor/model contract live in
 - **Node** — A physical attachment point where beams meet and can rotate
   relative to each other. Has a position and a small radius. Rendered as a
   circle. See: `docs/CREATURE_MODEL.md`.
+- **Proof mass** — The accelerometer's inner weight; its displacement is the
+  reading. See: `docs/CREATURE_MODEL.md`.
+- **Sensor (part)** — A part that sits on a beam and feels that beam
+  (`SensorDef`, `SensorKind`); one of each kind per beam, at its midpoint.
+  Not the brain. See: `docs/CREATURE_MODEL.md`.
 
 ## Build canvas
 
