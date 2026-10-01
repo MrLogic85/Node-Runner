@@ -5,10 +5,9 @@ namespace NodeRunner.App.Tests.ViewModels;
 
 public class CanvasViewTests
 {
-    // A 4000×2000 area seen through a window that holds it at 0.25× with the edge margin around it.
-    private const double _margin = CanvasView.EdgeMargin;
+    // 4000×2000 bounds seen through a window that holds them at 0.25×.
     private static readonly CanvasRect _area = new(new Vector2D(-2000, -1000), new Vector2D(2000, 1000));
-    private static readonly CanvasRect _screen = new(new Vector2D(0, 0), new Vector2D(1000 + (2 * _margin), 500 + (2 * _margin)));
+    private static readonly CanvasRect _screen = new(new Vector2D(0, 0), new Vector2D(1000, 500));
     private static readonly Vector2D _middle = _screen.Center;
 
     [Fact]
@@ -45,8 +44,8 @@ public class CanvasViewTests
         view.ZoomAbout(_middle, 0.001);
         view.Zoom.ShouldBe(0.25);
         view.MinZoom.ShouldBe(0.25);
-        view.ToView(_area.Min).ShouldBe(new Vector2D(_margin, _margin));
-        view.ToView(_area.Max).ShouldBe(new Vector2D(1000 + _margin, 500 + _margin));
+        view.ToView(_area.Min).ShouldBe(new Vector2D(0, 0));
+        view.ToView(_area.Max).ShouldBe(new Vector2D(1000, 500));
     }
 
     [Fact]
@@ -57,8 +56,8 @@ public class CanvasViewTests
         view.ZoomAbout(_middle, 0.001);
 
         view.Zoom.ShouldBe(0.5);
-        view.ToView(new Vector2D(-500, -500)).ShouldBe(new Vector2D(250 + _margin, _margin));
-        view.ToView(new Vector2D(500, 500)).ShouldBe(new Vector2D(750 + _margin, 500 + _margin));
+        view.ToView(new Vector2D(-500, -500)).ShouldBe(new Vector2D(250, 0));
+        view.ToView(new Vector2D(500, 500)).ShouldBe(new Vector2D(750, 500));
     }
 
     [Fact]
@@ -107,10 +106,24 @@ public class CanvasViewTests
         var view = Centred();
 
         view.PanBy(new Vector2D(100000, 100000));
-        view.ToView(_area.Min).ShouldBe(new Vector2D(_margin, _margin));
+        view.ToView(_area.Min).ShouldBe(new Vector2D(0, 0));
 
         view.PanBy(new Vector2D(-100000, -100000));
-        view.ToView(_area.Max).ShouldBe(new Vector2D(_screen.Max.X - _margin, _screen.Max.Y - _margin));
+        view.ToView(_area.Max).ShouldBe(_screen.Max);
+    }
+
+    [Fact]
+    public void PanBy_StopsAtTheSameCanvasEdgeAtEveryZoom()
+    {
+        var view = Centred();
+        foreach (var factor in new[] { 1.0, 3, 0.1 })
+        {
+            view.ZoomAbout(_middle, factor);
+
+            view.PanBy(new Vector2D(100000, 100000));
+
+            view.ToCanvas(new Vector2D(0, 0)).X.ShouldBe(_area.Min.X, 1e-6);
+        }
     }
 
     [Fact]
@@ -146,7 +159,7 @@ public class CanvasViewTests
 
         view.Fit();
 
-        view.ToView(_area.Max).ShouldBe(new Vector2D(_screen.Max.X - _margin, _screen.Max.Y - _margin));
+        view.ToView(_area.Max).ShouldBe(_screen.Max);
     }
 
     [Fact]
@@ -177,39 +190,19 @@ public class CanvasViewTests
         var view = Centred();
         view.ZoomAbout(new Vector2D(0, 0), 0.001);
 
-        view.VisibleArea = new CanvasRect(new Vector2D(0, 0), new Vector2D(2000 + (2 * _margin), 1000 + (2 * _margin)));
+        view.VisibleArea = new CanvasRect(new Vector2D(0, 0), new Vector2D(2000, 1000));
 
         view.Zoom.ShouldBe(0.5);
-        view.ToView(_area.Min).ShouldBe(new Vector2D(_margin, _margin));
+        view.ToView(_area.Min).ShouldBe(new Vector2D(0, 0));
     }
 
     [Fact]
-    public void GridStep_DoublesAsTheViewZoomsOut()
-    {
-        var view = Centred();
-        view.GridStep(48).ShouldBe(48);
-
-        view.ZoomAbout(_middle, 0.5);
-        view.GridStep(48).ShouldBe(48);
-
-        view.ZoomAbout(_middle, 0.5);
-        view.GridStep(48).ShouldBe(96);
-    }
-
-    [Fact]
-    public void BuildArea_IsFilledByWholeGridCellsAtEveryStep()
+    public void BuildArea_IsFilledByWholeGridCells()
     {
         var area = ConstructionViewModel.BuildArea;
-        // A phone-sized slot at full zoom-out draws the coarsest grid.
-        var view = new CanvasView(area) { VisibleArea = new CanvasRect(new Vector2D(0, 0), new Vector2D(300, 150)) };
-        view.ZoomAbout(new Vector2D(150, 75), 0.001);
-        var coarsest = view.GridStep(ConstructionViewModel.BuildGridStep);
-        coarsest.ShouldBeGreaterThanOrEqualTo(8 * ConstructionViewModel.BuildGridStep);
-        for (var step = ConstructionViewModel.BuildGridStep; step <= coarsest; step *= 2)
-        {
-            (area.Width % step).ShouldBe(0);
-            (area.Height % step).ShouldBe(0);
-        }
+
+        (area.Width % ConstructionViewModel.BuildGridStep).ShouldBe(0);
+        (area.Height % ConstructionViewModel.BuildGridStep).ShouldBe(0);
     }
 
     private static CanvasView Centred()

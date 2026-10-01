@@ -48,7 +48,7 @@ public sealed class ConstructionGestures
     public ConstructionGestures(ConstructionViewModel construction)
     {
         _construction = construction ?? throw new ArgumentNullException(nameof(construction));
-        View = new CanvasView(ConstructionViewModel.BuildArea, ContentBounds);
+        View = new CanvasView(ConstructionViewModel.BuildViewBounds, ContentBounds);
     }
 
     public CanvasView View { get; }

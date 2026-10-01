@@ -84,18 +84,20 @@ a node's own disc always hits.
   `ConstructionViewModel.BuildArea` (x −1152..1152, y −576..576 canvas
   units, about six screens wide at 1×). Placing or moving a joint keeps its
   disc inside; a group move stops as a whole at the edge, and a Joint tap
-  outside adds nothing. A faint blueprint grid (the `line` token,
-  `BuildGridStep` cells doubling as the view zooms out) covers exactly the
-  area, and accent corner marks one drawn cell long frame it.
+  outside adds nothing. A faint blueprint grid (the `line` token, fixed
+  `BuildGridStep` 48-unit cells) covers exactly the area, and accent corner
+  marks two cells long frame it. Grid and corners are fixed parts of the
+  picture; zoom never changes their cells or length.
 - **View:** `CanvasView` (App) holds zoom and pan and maps view units to
   canvas units. It is not saved: Build opens with the creation centred and
   `FitMargin` (20%) of air on every side, zoomed out if needed but never
   magnified past 1×; an empty creation opens at 1× on the middle of the
-  area. There is no Fit button. Zooming out stops when the whole area is in
-  view (`MinZoom`), up to `MaxZoom` in. Along an axis where the area is
-  larger than the view, the view stops `EdgeMargin` past its edge, so the
-  corner marks stay clear of the screen edge; along an axis where it fits,
-  the area is centred. Zoomed in, the creation can be off screen; zooming
+  area. The view can show `BuildViewBounds`: the area plus
+  `BuildViewMargin` (one cell, 48 canvas units) on every side, the same at
+  any zoom. Zooming out stops when all of it is in view (`MinZoom`), up to
+  `MaxZoom` in. Along an axis where the bounds are larger than the view,
+  panning stops at their edge; along an axis where they fit, they are
+  centred. Zoomed in, the creation can be off screen; zooming
   out finds it. Distances are in view or canvas units (`docs/GLOSSARY.md` →
   Build canvas). How zoom treats lines, the grid and labels is owned by
   `docs/UI_DIRECTION.md` → Reference flow overrides.

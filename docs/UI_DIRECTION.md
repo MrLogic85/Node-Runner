@@ -73,10 +73,14 @@ then the app follows the reference.
 - **The Build grid marks the build area (#400).** The reference's grid floor
   fills the canvas at 24 to 32px, fades toward the edges, and has fixed HUD
   corner brackets. In Build the `line` grid instead covers exactly the
-  build area, with no fade; its cells double as the view zooms out
-  (`CanvasView.GridStep`), and the `accent` corner marks sit on the area's
-  corners and zoom with the picture, one drawn cell long. Owner decision:
-  the grid is a blueprint showing where joints can go.
+  build area, with no fade, in fixed 48-canvas-unit cells (1 px hairlines,
+  above), and the `accent` corner marks sit on the area's corners, two cells
+  long. Cells and marks zoom with the picture; zoom never changes their
+  count or length. The view shows the area plus one cell
+  (`BuildViewMargin`) on every side and nothing beyond it, at any zoom;
+  only where the whole view is zoomed out past the area along one axis is
+  the area centred on that axis. Owner decision: the grid is a blueprint
+  showing where joints can go.
 - **The brain is hidden until 0.16.0 (#539).** While the brain is direct, the
   player neither sees nor edits it: Brain setup (hidden layers, neurons per
   layer), the BuildLocked brain widget, and the Training Brain button and
