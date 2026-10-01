@@ -4,7 +4,7 @@
 #
 #   issue-fields.sh 286                         print the fields
 #   issue-fields.sh 286 --status Ready          set one or more fields
-#   issue-fields.sh 286 --priority P1 --size 3
+#   issue-fields.sh 286 --priority Major --size 3   (also "2" or "2 Major")
 #   issue-fields.sh 286 --size none             clear a field
 #
 # Adds the issue to the project if it is not there yet. Uses the caller's gh login;
@@ -66,8 +66,15 @@ for pair in "${want[@]}"; do
     [[ $value =~ ^(1|2|3|5|8)$ ]] || { echo "Size must be 1, 2, 3, 5 or 8" >&2; exit 2; }
     plan+=("number|$field|$field_id|$value")
   else
-    option_id=$(jq -r --arg f "$field" --arg v "$value" '.fields.nodes[]|select(.name==$f)|.options[]|select((.name|ascii_downcase)==($v|ascii_downcase))|.id' <<<"$project")
-    [[ -n $option_id ]] || { echo "Unknown $field '$value'. Options: $(jq -r --arg f "$field" '[.fields.nodes[]|select(.name==$f)|.options[].name]|join(", ")' <<<"$project")" >&2; exit 2; }
+    # Match the full name, or for numbered options ("2 Major") just the number or just the name.
+    matches=$(jq -r --arg f "$field" --arg v "$value" '[.fields.nodes[]|select(.name==$f)|.options[]
+      |(.name|ascii_downcase) as $n|($v|ascii_downcase) as $w|($n|split(" ")) as $t
+      |select($n==$w or ($t[0]|test("^[0-9]+$")) and ($t[0]==$w or ($t[1:]|join(" "))==$w))]
+      |map("\(.id)|\(.name)")|join("\n")' <<<"$project")
+    options=$(jq -r --arg f "$field" '[.fields.nodes[]|select(.name==$f)|.options[].name]|join(", ")' <<<"$project")
+    [[ -n $matches ]] || { echo "Unknown $field '$value'. Options: $options" >&2; exit 2; }
+    [[ $matches != *$'\n'* ]] || { echo "Ambiguous $field '$value'. Options: $options" >&2; exit 2; }
+    option_id=${matches%%|*}
     plan+=("option|$field|$field_id|$option_id")
   fi
 done
