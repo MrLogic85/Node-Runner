@@ -96,12 +96,13 @@ unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 3
 horizontal_scroll_mode = 3
-vertical_scroll_mode = 0
+vertical_scroll_mode = 3
+scroll_horizontal_by_default = true
 
 [node name="CardInset" type="MarginContainer" parent="UiFrame/MarginContainer/Card/Shell/CardScroll" unique_id=1400314017]
+custom_minimum_size = Vector2(0, 306)
 layout_mode = 2
 size_flags_horizontal = 3
-size_flags_vertical = 3
 theme_override_constants/margin_left = 16
 theme_override_constants/margin_top = 12
 theme_override_constants/margin_right = 16

@@ -196,7 +196,13 @@ which parts keep their size. In this project `window/stretch/aspect="expand"`
 implements it. A screen narrower than 16:9 (4:3 tablets, square foldables)
 keeps 640 units of width and gains height instead, which the reference does
 not cover. 640 x 360 (`UiLayout.CanvasWidth`/`CanvasHeight`) is the reference
-and minimum canvas, not a fixed size.
+and minimum canvas, not a fixed size. The card row on Creations and Examples
+keeps its 16:9 height on a taller canvas instead of stretching: `CardInset`
+does not expand and its minimum height is what is left under the top bar at
+360 units, so the row sits at the top with the extra height empty below
+(#520). `CardScroll` scrolls vertically with a hidden bar, so that minimum
+does not push the screen past a window shortened by a safe-area inset; it
+sets `scroll_horizontal_by_default` so a mouse wheel still moves the row.
 
 On Android the app runs immersive, so the status and navigation bars are
 hidden and only the camera cutout has to be avoided. Godot's
