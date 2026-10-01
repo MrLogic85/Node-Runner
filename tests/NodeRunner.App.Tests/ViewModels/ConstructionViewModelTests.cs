@@ -148,13 +148,15 @@ public sealed class ConstructionViewModelTests
     }
 
     [Fact]
-    public void ScaleSelection_WhenLocked_IsRefused()
+    public void ScaleSelection_WhenLocked_StillSpreadsTheJoints()
     {
         var viewModel = LockedPair();
         viewModel.ReplaceSelection([0, 1]);
 
-        Should.Throw<InvalidOperationException>(() => viewModel.ScaleSelection(viewModel.SnapshotSelection(), 2));
-        viewModel.Nodes[1].Position.ShouldBe(new Vector2D(20, 0));
+        viewModel.ScaleSelection(viewModel.SnapshotSelection(), 2);
+
+        viewModel.Nodes[0].Position.ShouldBe(new Vector2D(-10, 0));
+        viewModel.Nodes[1].Position.ShouldBe(new Vector2D(30, 0));
     }
 
     [Fact]

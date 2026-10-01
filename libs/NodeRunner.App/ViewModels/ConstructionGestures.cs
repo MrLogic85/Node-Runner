@@ -103,7 +103,7 @@ public sealed class ConstructionGestures
     /// <summary>
     /// Where each handle on <see cref="SelectionFrame"/> sits, in canvas
     /// units: Move in the middle, Rotate on a stem above, Scale at the
-    /// bottom-right corner. A locked creation has no Scale handle.
+    /// bottom-right corner.
     /// </summary>
     public IReadOnlyList<(SelectionHandle Handle, Vector2D Position)> SelectionHandles =>
         [.. HandlesInView().Select(entry => (entry.Handle, View.ToCanvas(entry.Position)))];
@@ -469,10 +469,7 @@ public sealed class ConstructionGestures
 
         yield return (SelectionHandle.Move, frame.Center);
         yield return (SelectionHandle.Rotate, new Vector2D(frame.Center.X, frame.Min.Y - _rotateStem));
-        if (!_construction.IsMoveOnly)
-        {
-            yield return (SelectionHandle.Scale, frame.Max);
-        }
+        yield return (SelectionHandle.Scale, frame.Max);
     }
 
     private SelectionHandle? FindHandle(Vector2D viewPosition) =>
