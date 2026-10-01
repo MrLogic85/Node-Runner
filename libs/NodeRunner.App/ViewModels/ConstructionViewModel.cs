@@ -28,6 +28,20 @@ public enum ConstructionTool
 /// </summary>
 public sealed class ConstructionViewModel : INotifyPropertyChanged
 {
+    /// <summary>
+    /// Where joints may go, in canvas units: about six screens wide at 1×,
+    /// centred on the origin. Placing and moving keep a joint's disc inside;
+    /// the Build view never shows past it. Its sides are whole multiples of
+    /// 8 × <see cref="BuildGridStep"/> so the grid's cells fill it exactly
+    /// at every step <see cref="CanvasView.GridStep"/> draws.
+    /// </summary>
+    public static readonly CanvasRect BuildArea = new(
+        new Vector2D(-24 * BuildGridStep, -12 * BuildGridStep),
+        new Vector2D(24 * BuildGridStep, 12 * BuildGridStep));
+
+    /// <summary>The Build grid's cell size in canvas units, before it thins out when zoomed out.</summary>
+    public const double BuildGridStep = 48;
+
     private CreatureBuilder _builder;
     private bool _isActive;
     private ConstructionTool _activeTool = ConstructionTool.Move;
@@ -197,7 +211,7 @@ public sealed class ConstructionViewModel : INotifyPropertyChanged
         OnPropertyChanged(nameof(MaxCores));
     }
 
-    /// <summary>Places a new node and returns its index.</summary>
+    /// <summary>Places a new node, moved inside <see cref="BuildArea"/>, and returns its index.</summary>
     public int PlaceNode(Vector2D position, double radius)
     {
         if (_moveOnly)
@@ -205,15 +219,15 @@ public sealed class ConstructionViewModel : INotifyPropertyChanged
             throw new InvalidOperationException("Edit mode can only move existing nodes.");
         }
 
-        var index = _builder.AddNode(position, radius);
+        var index = _builder.AddNode(BuildArea.Clamp(position, radius), radius);
         AnatomyChanged?.Invoke(this, EventArgs.Empty);
         return index;
     }
 
-    /// <summary>Moves an already-placed node to a new position.</summary>
+    /// <summary>Moves an already-placed node to a new position, as far as <see cref="BuildArea"/> reaches.</summary>
     public void MoveNode(int nodeIndex, Vector2D position)
     {
-        _builder.MoveNode(nodeIndex, position);
+        _builder.MoveNode(nodeIndex, BuildArea.Clamp(position, _builder.Nodes[nodeIndex].Radius));
         AnatomyChanged?.Invoke(this, EventArgs.Empty);
     }
 
@@ -294,7 +308,7 @@ public sealed class ConstructionViewModel : INotifyPropertyChanged
         }
 
         var anchor = _builder.Nodes[anchorNodeIndex].Position;
-        var delta = new Vector2D(anchorPosition.X - anchor.X, anchorPosition.Y - anchor.Y);
+        var delta = KeepSelectionInBuildArea(new Vector2D(anchorPosition.X - anchor.X, anchorPosition.Y - anchor.Y));
         foreach (var selectedIndex in _selectedNodeIndices.ToArray())
         {
             var current = _builder.Nodes[selectedIndex].Position;
@@ -304,21 +318,38 @@ public sealed class ConstructionViewModel : INotifyPropertyChanged
         AnatomyChanged?.Invoke(this, EventArgs.Empty);
     }
 
+    /// <summary>Shortens <paramref name="delta"/> so every selected joint's disc stays inside <see cref="BuildArea"/>.</summary>
+    private Vector2D KeepSelectionInBuildArea(Vector2D delta)
+    {
+        foreach (var selectedIndex in _selectedNodeIndices)
+        {
+            var node = _builder.Nodes[selectedIndex];
+            var moved = new Vector2D(node.Position.X + delta.X, node.Position.Y + delta.Y);
+            var allowed = BuildArea.Clamp(moved, node.Radius);
+            delta = new Vector2D(delta.X + allowed.X - moved.X, delta.Y + allowed.Y - moved.Y);
+        }
+
+        return delta;
+    }
+
     /// <summary>
-    /// Finds the closest placed node within <paramref name="maxDistance"/> of
-    /// <paramref name="position"/>, if any. Used to hit-test nodes.
+    /// Finds the closest placed node whose centre is within
+    /// <paramref name="maxDistance"/> of <paramref name="position"/>, or whose
+    /// disc contains it, if any. Used to hit-test nodes.
     /// </summary>
     public bool TryFindNodeNear(Vector2D position, double maxDistance, out int nodeIndex)
     {
         nodeIndex = -1;
-        var bestDistanceSquared = maxDistance * maxDistance;
+        var bestDistanceSquared = double.PositiveInfinity;
 
         for (var i = 0; i < _builder.Nodes.Count; i++)
         {
-            var dx = _builder.Nodes[i].Position.X - position.X;
-            var dy = _builder.Nodes[i].Position.Y - position.Y;
+            var node = _builder.Nodes[i];
+            var dx = node.Position.X - position.X;
+            var dy = node.Position.Y - position.Y;
             var distanceSquared = (dx * dx) + (dy * dy);
-            if (distanceSquared <= bestDistanceSquared)
+            var reach = Math.Max(maxDistance, node.Radius);
+            if (distanceSquared <= reach * reach && distanceSquared < bestDistanceSquared)
             {
                 bestDistanceSquared = distanceSquared;
                 nodeIndex = i;

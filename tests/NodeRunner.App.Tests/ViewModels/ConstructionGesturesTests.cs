@@ -70,18 +70,305 @@ public class ConstructionGesturesTests
     }
 
     [Fact]
-    public void Move_DragOnEmptyCanvas_ChangesNothing()
+    public void Move_DragOnEmptyCanvas_PansTheViewWithoutEditing()
     {
         var (construction, gestures) = TwoJointsAndABeam();
         construction.ReplaceSelection([0]);
         var changes = CountChanges(construction);
 
         gestures.Press(_empty);
-        gestures.Drag(new Vector2D(400, 300));
-        gestures.Release(new Vector2D(400, 300));
+        gestures.Drag(new Vector2D(350, 300));
+        gestures.Drag(new Vector2D(400, 280));
+        gestures.Release(new Vector2D(400, 280));
 
         changes().ShouldBe(0);
         construction.SelectedNodeIndices.ShouldBe([0]);
+        gestures.View.Offset.ShouldBe(new Vector2D(100, -20));
+    }
+
+    [Fact]
+    public void Move_DragOnEmptyCanvas_TellsTheCanvasToRedraw()
+    {
+        var (_, gestures) = TwoJointsAndABeam();
+        var changes = 0;
+        gestures.View.Changed += (_, _) => changes++;
+
+        gestures.Press(_empty);
+        gestures.Drag(new Vector2D(_empty.X + 40, _empty.Y));
+
+        changes.ShouldBeGreaterThan(0);
+    }
+
+    [Fact]
+    public void Move_DragOnABeam_PansWithoutEditing()
+    {
+        var (construction, gestures) = TwoJointsAndABeam();
+        var changes = CountChanges(construction);
+
+        gestures.Press(new Vector2D(50, 0));
+        gestures.Drag(new Vector2D(50, 60));
+        gestures.Release(new Vector2D(50, 60));
+
+        changes().ShouldBe(0);
+        gestures.View.Offset.ShouldBe(new Vector2D(0, 60));
+    }
+
+    [Fact]
+    public void Pinch_ZoomsAboutTheFingersAndPansWithThem()
+    {
+        var (construction, gestures) = ThreeLooseJoints(ConstructionTool.Joint);
+        var changes = CountChanges(construction);
+
+        gestures.Press(new Vector2D(300, 300), 0);
+        gestures.Press(new Vector2D(400, 300), 1);
+        gestures.Drag(new Vector2D(250, 300), 0);
+        gestures.Drag(new Vector2D(450, 300), 1);
+        gestures.Release(new Vector2D(250, 300), 0);
+        gestures.Release(new Vector2D(450, 300), 1);
+
+        gestures.View.Zoom.ShouldBe(2, 1e-9);
+        gestures.View.ToCanvas(new Vector2D(350, 300)).X.ShouldBe(350, 1e-9);
+        gestures.View.ToCanvas(new Vector2D(350, 300)).Y.ShouldBe(300, 1e-9);
+        changes().ShouldBe(0);
+    }
+
+    [Fact]
+    public void TwoFingerDrag_PansWhateverTheTool()
+    {
+        var (_, gestures) = ThreeLooseJoints(ConstructionTool.Beam);
+
+        gestures.Press(new Vector2D(300, 300), 0);
+        gestures.Press(new Vector2D(400, 300), 1);
+        gestures.Drag(new Vector2D(300, 340), 0);
+        gestures.Drag(new Vector2D(400, 340), 1);
+
+        gestures.View.Zoom.ShouldBe(1, 1e-9);
+        gestures.View.Offset.X.ShouldBe(0, 1e-9);
+        gestures.View.Offset.Y.ShouldBe(40, 1e-9);
+    }
+
+    [Fact]
+    public void SecondFinger_PutsBackAJointTheFirstFingerAlreadyMoved()
+    {
+        var (construction, gestures) = ThreeLooseJoints(ConstructionTool.Move);
+
+        gestures.Press(new Vector2D(0, 0), 0);
+        gestures.Drag(new Vector2D(0, 40), 0);
+        gestures.Press(new Vector2D(200, 200), 1);
+
+        construction.Nodes[0].Position.ShouldBe(new Vector2D(0, 0));
+    }
+
+    [Fact]
+    public void SecondFinger_PutsBackASelectionTheFirstFingerAlreadyMoved()
+    {
+        var (construction, gestures) = ThreeLooseJoints(ConstructionTool.Select);
+        construction.ReplaceSelection([0, 1]);
+
+        gestures.Press(new Vector2D(0, 0), 0);
+        gestures.Drag(new Vector2D(0, 40), 0);
+        gestures.Press(new Vector2D(200, 200), 1);
+
+        construction.Nodes[0].Position.ShouldBe(new Vector2D(0, 0));
+        construction.Nodes[1].Position.ShouldBe(new Vector2D(100, 0));
+    }
+
+    [Fact]
+    public void SecondFinger_DropsTheBeamPreviewAndNothingIsJoinedOnRelease()
+    {
+        var (construction, gestures) = ThreeLooseJoints(ConstructionTool.Beam);
+
+        gestures.Press(new Vector2D(0, 0), 0);
+        gestures.Drag(new Vector2D(100, 0), 0);
+        gestures.Press(new Vector2D(200, 200), 1);
+        gestures.BeamStartNode.ShouldBeNull();
+        gestures.Release(new Vector2D(100, 0), 0);
+        gestures.Release(new Vector2D(200, 200), 1);
+
+        construction.Beams.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void AfterAPinch_TheFingerLeftDownDoesNothingUntilAllLift()
+    {
+        var (construction, gestures) = ThreeLooseJoints(ConstructionTool.Joint);
+
+        gestures.Press(new Vector2D(300, 300), 0);
+        gestures.Press(new Vector2D(400, 300), 1);
+        gestures.Release(new Vector2D(400, 300), 1);
+        gestures.Drag(new Vector2D(320, 300), 0);
+        gestures.Release(new Vector2D(320, 300), 0);
+        construction.Nodes.Count.ShouldBe(3);
+        gestures.View.Offset.ShouldBe(new Vector2D(0, 0));
+
+        Tap(gestures, _empty);
+
+        construction.Nodes.Count.ShouldBe(4);
+    }
+
+    [Fact]
+    public void ZoomedIn_TapsLandOnTheCreatureUnderTheFinger()
+    {
+        var (construction, gestures) = ThreeLooseJoints(ConstructionTool.Move);
+        gestures.View.ZoomAbout(new Vector2D(0, 0), 2);
+        gestures.View.PanBy(new Vector2D(50, 50));
+
+        Tap(gestures, new Vector2D(250, 50));
+
+        construction.SelectedNodeIndices.ShouldBe([1]);
+    }
+
+    [Fact]
+    public void ZoomedIn_JointIsAddedAtTheCanvasPointUnderTheFinger()
+    {
+        var (construction, gestures) = ThreeLooseJoints(ConstructionTool.Joint);
+        gestures.View.ZoomAbout(new Vector2D(0, 0), 2);
+
+        Tap(gestures, new Vector2D(600, 600));
+
+        construction.Nodes[^1].Position.ShouldBe(new Vector2D(300, 300));
+    }
+
+    [Fact]
+    public void ZoomedIn_HitZoneStaysFingerSizedButCoversTheWholeJoint()
+    {
+        var (construction, gestures) = ThreeLooseJoints(ConstructionTool.Joint);
+        gestures.View.ZoomAbout(new Vector2D(0, 0), CanvasView.MaxZoom);
+
+        Tap(gestures, gestures.View.ToView(new Vector2D(-(ConstructionGestures.NewNodeRadius - 2), 0)));
+        construction.Nodes.Count.ShouldBe(3);
+
+        Tap(gestures, gestures.View.ToView(new Vector2D(-25, 0)));
+        construction.Nodes.Count.ShouldBe(4);
+    }
+
+    [Fact]
+    public void ZoomedIn_JointTapBesideABeamPlacesAFreeJoint()
+    {
+        var (construction, gestures) = TwoJointsAndABeam();
+        construction.ActiveTool = ConstructionTool.Joint;
+        gestures.View.ZoomAbout(new Vector2D(0, 0), CanvasView.MaxZoom);
+
+        Tap(gestures, gestures.View.ToView(new Vector2D(50, 12)));
+
+        construction.Beams.Count.ShouldBe(1);
+        construction.Nodes.Count.ShouldBe(3);
+    }
+
+    [Fact]
+    public void SecondFinger_PutsBackTheSelectionASelectPressChanged()
+    {
+        var (construction, gestures) = ThreeLooseJoints(ConstructionTool.Select);
+        construction.ReplaceSelection([0, 1]);
+
+        gestures.Press(_empty, 0);
+        construction.SelectedNodeIndices.ShouldBeEmpty();
+        gestures.Press(new Vector2D(400, 400), 1);
+
+        construction.SelectedNodeIndices.OrderBy(index => index).ShouldBe([0, 1]);
+    }
+
+    [Fact]
+    public void SecondFinger_PutsBackASelectedBeamASelectPressReplaced()
+    {
+        var (construction, gestures) = TwoJointsAndABeam();
+        construction.ActiveTool = ConstructionTool.Select;
+        construction.SelectBeam(0);
+
+        gestures.Press(new Vector2D(0, 0), 0);
+        gestures.Press(new Vector2D(400, 400), 1);
+
+        construction.SingleSelectedBeamIndex.ShouldBe(0);
+        construction.SelectedNodeIndices.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void Cancel_PutsBackAJointTheDragAlreadyMoved()
+    {
+        var (construction, gestures) = ThreeLooseJoints(ConstructionTool.Move);
+
+        gestures.Press(new Vector2D(0, 0));
+        gestures.Drag(new Vector2D(0, 40));
+        gestures.Cancel();
+        gestures.Release(new Vector2D(0, 40));
+
+        construction.Nodes[0].Position.ShouldBe(new Vector2D(0, 0));
+    }
+
+    [Fact]
+    public void ZoomedOut_HitRadiusStaysFingerSized()
+    {
+        var (construction, gestures) = ThreeLooseJoints(ConstructionTool.Move);
+        gestures.View.ZoomAbout(new Vector2D(0, 0), 0.5);
+
+        Tap(gestures, new Vector2D(-(ConstructionGestures.NodeHitRadius - 2), 0));
+
+        construction.SelectedNodeIndices.ShouldBe([0]);
+    }
+
+    [Fact]
+    public void ZoomedOut_SmallWobbleOnJoint_IsStillATap()
+    {
+        var (construction, gestures) = TwoJointsAndABeam();
+        gestures.View.ZoomAbout(new Vector2D(0, 0), 0.125);
+
+        gestures.Press(new Vector2D(0, 0));
+        gestures.Drag(new Vector2D(ConstructionGestures.TapSlop - 2, 0));
+        gestures.Release(new Vector2D(ConstructionGestures.TapSlop - 2, 0));
+
+        construction.Nodes[0].Position.ShouldBe(new Vector2D(0, 0));
+        construction.SelectedNodeIndices.ShouldBe([0]);
+    }
+
+    [Fact]
+    public void Fit_FramesEveryJointWithRoomForItsMotorArc()
+    {
+        var (_, gestures) = TwoJointsAndABeam();
+        gestures.View.VisibleArea = new CanvasRect(new Vector2D(0, 0), new Vector2D(1000, 500));
+
+        gestures.View.Fit();
+
+        gestures.View.ToView(new Vector2D(50, 0)).ShouldBe(new Vector2D(500, 250));
+        gestures.View.ZoomAbout(new Vector2D(0, 0), 0.5);
+        gestures.View.Fit();
+        gestures.View.Zoom.ShouldBe(1);
+    }
+
+    [Fact]
+    public void Fit_ZoomsOutToShowTheMotorArcs()
+    {
+        var (_, gestures) = TwoJointsAndABeam();
+        gestures.View.VisibleArea = new CanvasRect(new Vector2D(0, 0), new Vector2D(100, 100));
+
+        gestures.View.Fit();
+
+        // Joints at x 0 and 100, radius 18: arcs span -36..136 = 172 units into 60% of 100.
+        gestures.View.Zoom.ShouldBe(60.0 / 172, 1e-9);
+    }
+
+    [Fact]
+    public void View_StaysWithinTheBuildArea()
+    {
+        var (_, gestures) = TwoJointsAndABeam();
+        gestures.View.VisibleArea = new CanvasRect(new Vector2D(0, 0), new Vector2D(1000, 500));
+
+        gestures.Press(new Vector2D(500, 400));
+        gestures.Drag(new Vector2D(100000, 400));
+        gestures.Release(new Vector2D(100000, 400));
+
+        gestures.View.ToView(ConstructionViewModel.BuildArea.Min).X.ShouldBe(CanvasView.EdgeMargin, 1e-9);
+    }
+
+    [Fact]
+    public void Joint_TapOutsideTheBuildArea_PlacesNothing()
+    {
+        var construction = new ConstructionViewModel { ActiveTool = ConstructionTool.Joint };
+        var gestures = new ConstructionGestures(construction);
+        gestures.View.ZoomAbout(new Vector2D(0, 0), 0.001);
+
+        Tap(gestures, gestures.View.ToView(new Vector2D(ConstructionViewModel.BuildArea.Max.X + 50, 0)));
+
+        construction.Nodes.Count.ShouldBe(0);
     }
 
     [Fact]
@@ -338,6 +625,19 @@ public class ConstructionGesturesTests
         Tap(gestures, new Vector2D(0, 0));
 
         construction.Cores.ShouldBe([new CoreDef(0)]);
+    }
+
+    [Fact]
+    public void Core_PressThatBecomesAPinch_AddsNoCore()
+    {
+        var (construction, gestures) = ThreeLooseJoints(ConstructionTool.Core);
+
+        gestures.Press(new Vector2D(0, 0), 0);
+        gestures.Press(new Vector2D(200, 200), 1);
+        gestures.Release(new Vector2D(0, 0), 0);
+        gestures.Release(new Vector2D(200, 200), 1);
+
+        construction.Cores.ShouldBeEmpty();
     }
 
     private static (ConstructionViewModel Construction, ConstructionGestures Gestures) TwoJointsAndABeam()

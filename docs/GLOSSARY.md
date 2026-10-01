@@ -43,6 +43,17 @@ Long-form descriptions and the sensor/model contract live in
   relative to each other. Has a position and a small radius. Rendered as a
   circle. See: `docs/CREATURE_MODEL.md`.
 
+## Build canvas
+
+- **Build area** — The fixed rectangle joints must stay inside
+  (`ConstructionViewModel.BuildArea`), drawn as a faint grid with corner
+  marks. See: `docs/CONSTRUCTION_MODE.md`.
+- **Canvas unit** — A distance in creature coordinates, the same as
+  `NodeDef.Position` and node radii. Zoom and pan never change it.
+- **View unit** — A distance in the Build canvas widget's own space before
+  zoom and pan; touch positions, tap slop and hit sizes use it, so they stay
+  finger-sized at any zoom. `view = canvas × Zoom + Offset` (`CanvasView`).
+
 ## ML
 
 - **Activation** — The nonlinear function applied element-wise after each

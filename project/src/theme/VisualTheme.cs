@@ -26,10 +26,12 @@ public sealed class VisualTheme
         Beam = UiThemes.Color(theme, UiTokens.Color.LineStrong),
         MotorAccent = UiThemes.Color(theme, UiTokens.Color.Accent),
         Danger = UiThemes.Color(theme, UiTokens.Color.Danger),
+        AreaCorner = UiThemes.Color(theme, UiTokens.Color.Accent),
         BeamWidth = UiSize.Stroke.Beam,
         MotorSignalWidth = UiSize.Stroke.Signal,
         GroundEdgeWidth = UiSize.Stroke.Signal,
         GridSpacing = UiSize.Control.Touch,
+        AreaCornerWidth = UiSize.Stroke.Signal,
     };
 
     public Color ArenaBackground { get; private init; }
@@ -53,6 +55,11 @@ public sealed class VisualTheme
     public Color MotorAccent { get; private init; }
 
     public Color Danger { get; private init; }
+
+    /// <summary>The corner marks that show where the Build area ends.</summary>
+    public Color AreaCorner { get; private init; }
+
+    public float AreaCornerWidth { get; private init; }
 
     public float BeamWidth { get; private init; }
 
