@@ -25,7 +25,10 @@ public partial class CreationCard : MarginContainer
 
     private CreationCardPresentation? _creation;
     private Control _actions = null!;
+    private UiCard _frame = null!;
+    private Control _pressOverlay = null!;
     private bool _openPending;
+    private bool _pressShown;
 
     public void Bind(CreationCardPresentation creation)
     {
@@ -39,6 +42,10 @@ public partial class CreationCard : MarginContainer
     public override void _Ready()
     {
         _actions = GetNode<Control>("%Actions");
+        _frame = GetNode<UiCard>("Frame");
+        // The frame's last child, so the tint lies over the thumbnail's own background.
+        _pressOverlay = GetNode<Control>("%PressOverlay");
+        _pressOverlay.Draw += DrawPress;
         GetNode<UiButton>("%Copy").Activated += () => Emit(SignalName.DuplicateRequested);
         GetNode<UiButton>("%Delete").Activated += () => Emit(SignalName.DeleteRequested);
         Apply();
@@ -46,16 +53,21 @@ public partial class CreationCard : MarginContainer
 
     // A tap on the card, outside its action buttons, opens it on release. Drag-scrolling the card
     // row sends ScrollBegin, which cancels the tap as Godot cancels a Button press in a ScrollContainer.
+    // While the tap would open the card, the card shows the press tint (#325).
     public override void _GuiInput(InputEvent inputEvent)
     {
         if (PointerInput.TryGetPressPosition(inputEvent, out var pressed))
         {
-            _openPending = _creation?.CanOpen == true && !_actions.GetGlobalRect().HasPoint(GetGlobalTransform() * pressed);
+            SetOpenPending(_creation?.CanOpen == true && !_actions.GetGlobalRect().HasPoint(GetGlobalTransform() * pressed));
+        }
+        else if (PointerInput.TryGetDragPosition(inputEvent, out var dragged) && _openPending)
+        {
+            SetPressShown(IsInside(dragged));
         }
         else if (PointerInput.TryGetReleasePosition(inputEvent, out var released) && _openPending)
         {
-            _openPending = false;
-            if (new Rect2(Vector2.Zero, Size).HasPoint(released))
+            SetOpenPending(false);
+            if (IsInside(released))
             {
                 Emit(SignalName.OpenRequested);
             }
@@ -66,9 +78,44 @@ public partial class CreationCard : MarginContainer
     {
         if (what == NotificationScrollBegin)
         {
-            _openPending = false;
+            SetOpenPending(false);
         }
     }
+
+    private void SetOpenPending(bool pending)
+    {
+        _openPending = pending;
+        SetPressShown(pending);
+    }
+
+    private void SetPressShown(bool shown)
+    {
+        if (_pressShown != shown)
+        {
+            _pressShown = shown;
+            _pressOverlay.QueueRedraw();
+        }
+    }
+
+    // The tint covers exactly the tap area: the card above its action bar, whose Copy and
+    // Delete are buttons with their own tint.
+    private void DrawPress()
+    {
+        if (!_pressShown || _frame.GetThemeStylebox("panel") is not StyleBoxFlat panel)
+        {
+            return;
+        }
+
+        var bottom = _actions.IsVisibleInTree()
+            ? (_pressOverlay.GetGlobalTransform().AffineInverse() * _actions.GlobalPosition).Y
+            : _pressOverlay.Size.Y;
+        var corners = _actions.IsVisibleInTree()
+            ? UiCorners.Top(panel.CornerRadiusTopLeft)
+            : UiCorners.Uniform(panel.CornerRadiusTopLeft);
+        UiPressFeedback.Draw(_pressOverlay, corners, new Rect2(0, 0, _pressOverlay.Size.X, bottom), UiTokens.Color.Panel, danger: false);
+    }
+
+    private bool IsInside(Vector2 position) => new Rect2(Vector2.Zero, Size).HasPoint(position);
 
     private void Apply()
     {

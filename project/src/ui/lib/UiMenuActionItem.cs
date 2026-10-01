@@ -229,7 +229,7 @@ public partial class UiMenuActionItem : UiMenuItem, ISerializationListener
             MouseFilter = MouseFilterEnum.Pass,
         };
         var empty = new StyleBoxEmpty();
-        foreach (var state in new[] { "normal", "hover", "pressed", "focus", "disabled" })
+        foreach (var state in new[] { "normal", "hover", "pressed", "hover_pressed", "focus", "disabled" })
         {
             _button.AddThemeStyleboxOverride(state, empty);
         }

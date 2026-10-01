@@ -24,6 +24,7 @@ public partial class UiSidePanel : MarginContainer
     private UiIconId _iconId = UiIconId.None;
     private bool _collapsed;
     private Control? _pressedTarget;
+    private bool _pressInside;
     private float _width = UiLayout.SidePanelWidth;
     private Tween? _collapseTween;
 
@@ -83,6 +84,7 @@ public partial class UiSidePanel : MarginContainer
         GetNode<Control>("%SidePanelIcon").Draw += DrawHeaderIcon;
         GetNode<Control>("%SidePanelChevron").Draw += DrawCollapseChevron;
         GetNode<Control>("%SidePanelTabChevron").Draw += DrawExpandChevron;
+        GetNode<Control>("%SidePanelTab").Draw += DrawTabPress;
         if (!Engine.IsEditorHint())
         {
             GetNode<Control>("%SidePanelChevron").GuiInput += OnChevronInput;
@@ -210,8 +212,24 @@ public partial class UiSidePanel : MarginContainer
     }
 
     // The reference's handle is a bare muted chevron, not a button; its control is the touch area.
-    private void DrawCollapseChevron() =>
-        DrawIcon(GetNode<Control>("%SidePanelChevron"), UiIconId.ChevronRight, UiIconSize.Standard, UiTokens.Color.Muted);
+    private void DrawCollapseChevron()
+    {
+        var chevron = GetNode<Control>("%SidePanelChevron");
+        DrawPress(chevron);
+        DrawIcon(chevron, UiIconId.ChevronRight, UiIconSize.Standard, UiTokens.Color.Muted);
+    }
+
+    // The tab's chevron and label are its children, so they draw over the tint.
+    private void DrawTabPress() => DrawPress(GetNode<Control>("%SidePanelTab"));
+
+    // The press tint (#325) over the touch area while it is held and the pointer is still on it.
+    private void DrawPress(Control target)
+    {
+        if (_pressedTarget == target && _pressInside)
+        {
+            UiPressFeedback.Draw(target, UiCorners.Uniform(UiSize.Radius.Small), UiTokens.Color.Panel, danger: false);
+        }
+    }
 
     // The reference's left chevron is named back.
     private void DrawExpandChevron() =>
@@ -234,7 +252,20 @@ public partial class UiSidePanel : MarginContainer
         if (PointerInput.TryGetPressPosition(inputEvent, out _))
         {
             _pressedTarget = control;
+            _pressInside = true;
+            control.QueueRedraw();
             control.AcceptEvent();
+            return;
+        }
+
+        if (PointerInput.TryGetDragPosition(inputEvent, out var dragged) && _pressedTarget == control)
+        {
+            var inside = new Rect2(Vector2.Zero, control.Size).HasPoint(dragged);
+            if (inside != _pressInside)
+            {
+                _pressInside = inside;
+                control.QueueRedraw();
+            }
             return;
         }
 
@@ -242,6 +273,8 @@ public partial class UiSidePanel : MarginContainer
         {
             bool toggles = _pressedTarget == control && new Rect2(Vector2.Zero, control.Size).HasPoint(position);
             _pressedTarget = null;
+            _pressInside = false;
+            control.QueueRedraw();
             control.AcceptEvent();
             if (toggles)
             {
