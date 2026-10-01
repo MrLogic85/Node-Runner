@@ -30,10 +30,11 @@ issue already passed review and the new design does not change its scope or
 acceptance criteria.
 
 After review, set Status to **Ready** when the issue is actionable, or
-**Blocked** when it waits on another issue. Keep **Needs decision** until the
-open decision is settled. When an issue's last open blocked-by issue closes
-and nothing else (a person or an external tool) still blocks it, move it from
-**Blocked** to **Ready**.
+**Blocked** when it waits on another issue (recorded as blocked-by, see
+`docs/ISSUE_LABELS.md` → Status). Keep **Needs decision** until the open
+decision is settled. When an issue's last open blocked-by issue closes, move
+it from **Blocked** to **Ready**; `.github/scripts/issue-audit.sh` lists any
+that were missed.
 
 Size set before review is a first estimate. Review confirms or corrects it; an
 issue with Size 8 is split into sub-issues before it can become **Ready**.
