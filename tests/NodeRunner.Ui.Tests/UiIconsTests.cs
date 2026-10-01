@@ -10,6 +10,7 @@ public sealed class UiIconsTests
         ((int)UiIconId.None).ShouldBe(-1);
         ((int)UiIconId.Back).ShouldBe(0);
         ((int)UiIconId.PartWing).ShouldBe(54);
+        ((int)UiIconId.MapStairs).ShouldBe(60);
         UiIcons.AllIds.ShouldNotContain(UiIconId.None);
         Should.Throw<ArgumentOutOfRangeException>(() => UiIcons.PathFor(UiIconId.None));
     }
@@ -19,7 +20,7 @@ public sealed class UiIconsTests
     {
         var projectRoot = Path.Combine(FindRepositoryRoot(), "project");
 
-        UiIcons.AllIds.Count.ShouldBe(61);
+        UiIcons.AllIds.Count.ShouldBe(62);
 
         foreach (var icon in UiIcons.AllIds)
         {
