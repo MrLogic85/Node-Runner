@@ -25,7 +25,7 @@ and joins the UI guards in the same PR
 
 Product scenes follow the milestone phases in `docs/ROADMAP.md` → "Active
 plan" (#522). Each milestone that changes UI has a design brief (#531, #542,
-#549, #552) that `design-lead` reviews before its screens are built. Where the
+#549, #600, #552) that `design-lead` reviews before its screens are built. Where the
 plan replaces the reference flow, `docs/UI_DIRECTION.md` → "Reference flow
 overrides" records it.
 
