@@ -124,7 +124,18 @@ script = ExtResource("5_button")
 IconId = 1
 ContentLayout = 1
 
-[node name="SelectTool" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Body/ButtonBar/ButtonBarPadding/ButtonBarContent" index="2"]
+[node name="JointTool" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Body/ButtonBar/ButtonBarPadding/ButtonBarContent" index="2"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+mouse_filter = 1
+text = "Joint"
+script = ExtResource("5_button")
+IconId = 14
+ContentLayout = 1
+
+[node name="SelectTool" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Body/ButtonBar/ButtonBarPadding/ButtonBarContent" index="3"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 4

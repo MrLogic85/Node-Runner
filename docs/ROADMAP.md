@@ -300,8 +300,8 @@ see which motor relations became neural-network outputs.
 - [x] User can connect nodes with beams.
 - [x] User can attach a core to a node.
 - [x] User can delete a node or beam (Delete tool, tap to act); a core is
-  removed via the Core tool's tap-to-toggle (see `docs/CONSTRUCTION_MODE.md`
-  for why this doesn't use a separate select-then-delete step).
+  removed via the Core tool's tap-to-toggle. (#365 later replaced the Delete
+  tool with deleting from the selection panels.)
 - [x] A non-empty, invalid creature is blocked with understandable validation
   messages when attempting to leave Build mode; an untouched empty canvas
   may always leave (see `docs/CONSTRUCTION_MODE.md`'s Validation section).

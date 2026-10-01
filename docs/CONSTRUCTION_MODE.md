@@ -42,35 +42,44 @@ locked is overridden in `docs/TRAINING_LOOP.md` → Product lifecycle boundary.
   conversion, no camera-relative math. A placed node's `Vector2D` maps
   directly to a Godot `Vector2` in the canvas's local space.
 
-## Interactions, slice by slice
+## Interactions
 
-- **Place/move nodes** (issue #69): tapping empty space places a new node at
-  that position. Tapping within a node's hit radius and dragging moves that
-  node instead of placing a new one. There is no separate "select" step for
-  moving — press-and-drag is the whole interaction.
-- **Connect beams / attach cores** (issue #70): implemented. A tool sub-row
-  (Place / Beam / Core) below the mode toggle selects the active
-  interaction. In the Beam tool, tapping a node selects it (shown with a
-  selection-glow ring); tapping a second, different node connects them with
-  a beam, tapping the same node again clears the selection, and tapping a
-  pair that is already connected surfaces a status message instead of
-  throwing. In the Core tool, tapping a node attaches a core if it doesn't
-  have one, or removes it if it does. `ConstructionViewModel.StatusMessage`
-  carries all of this feedback and is shown in the Build-mode inspector
-  panel alongside the active tool name.
-- **Delete + validation messaging** (issue #71): implemented. A fourth tool,
-  Delete, is added to the tool row. Tapping a node deletes it and cascades to
-  every beam/core attached to it (`CreatureBuilder.RemoveNode`'s documented
-  behavior); tapping a beam (hit-tested against its line segment, not just
-  its endpoints) deletes just that beam, leaving its nodes in place. Cores
-  are removed via the existing Core tool's tap-to-toggle, not the Delete
-  tool, since a core has no separate touch target from its node. This
-  intentionally does not reuse the shared `SelectionViewModel` (which drives
-  Simulate-mode part inspection): construction-mode edits are transient,
-  index-based, and already follow the same "tap immediately acts" pattern as
-  the Beam/Core tools, so adding a persistent cross-mode selection concept
-  here would add lifecycle risk (stale indices if mode switches mid-edit)
-  without a corresponding benefit.
+The rail holds the reference tools Move, Beam, Joint and Select (#365);
+"joint" is the player-facing name for a node.
+Build always opens in Move. `ConstructionGestures` (App) turns one pointer's
+press, drag and release into edits for the active tool, and
+`ConstructionCanvas` only converts input to canvas units and draws. A
+pointer that travels at most `TapSlop` counts as a tap. Hit tests prefer a
+node over a beam under it.
+
+- **Move:** tap a node or beam to select it (its settings open), tap empty
+  canvas to deselect, drag a node to move it. A drag on empty canvas changes
+  nothing (#400 makes it pan). Move never adds a node.
+- **Beam:** drag from one node to a different node to join them. The preview
+  only snaps to a node the beam could join (`ConstructionViewModel.CanConnect`);
+  releasing anywhere else, including over a node already joined to the start,
+  adds nothing. Beam never adds a node.
+- **Joint:** tap empty canvas to add a node, or tap a beam to split it at the
+  closest point: one change that replaces the beam with two through the new
+  node (`ConstructionViewModel.SplitBeam`).
+- **Select:** tap nodes to add them, drag on empty canvas for a box that
+  replaces the selection, drag a selected node to move the selection. The
+  box with handles is #366.
+- **Core (transitional):** the Core row in the Parts tray turns taps on a
+  node into adding or removing its core, until parts are dragged from the
+  tray onto joints (#376).
+- There is no Delete tool: the part settings and selection panels delete the
+  selection, and deleting a node removes every beam and core on it
+  (`CreatureBuilder.RemoveNode`).
+- A locked creation opens in Move with Beam and Joint disabled, and
+  `ConstructionViewModel` refuses topology edits on its own.
+- Changing tool mid-gesture cancels the gesture without an edit.
+- `ConstructionViewModel.StatusMessage` records the outcome of the last
+  edit (including `ConnectBeam` refusing a pair as a safety net); the Build
+  screen does not show it yet.
+
+## Build to Training
+
 - **Wire into simulation** (issues #72, #469): Build and Training are
   separate scenes, joined only through the save. Start training saves the
   drawing, then opens the creation's training (`TrainingRoute`); it stays in
