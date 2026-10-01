@@ -10,11 +10,11 @@
 [ext_resource type="Script" uid="uid://p55oa8ljjmna" path="res://src/ui/widgets/BuildCanvas.cs" id="8_canvas"]
 [ext_resource type="Script" uid="uid://b32bnhbgasedd" path="res://src/ui/lib/UiChip.cs" id="9_chip"]
 [ext_resource type="PackedScene" uid="uid://c7sdp4nel2qx" path="res://scenes/ui/UiSidePanel.tscn" id="10_side_panel"]
-[ext_resource type="Script" uid="uid://bss6jgv5hcc3q" path="res://src/ui/lib/UiPartRow.cs" id="11_part_row"]
 [ext_resource type="Script" uid="uid://dk67qmt3brp4e" path="res://src/ui/lib/UiLabel.cs" id="12_label"]
 [ext_resource type="Script" uid="uid://b4t4jrismbuik" path="res://src/ui/lib/UiIcon.cs" id="14_icon"]
 [ext_resource type="PackedScene" path="res://scenes/widgets/BrainSetupSheet.tscn" id="15_brain_setup"]
 [ext_resource type="Script" uid="uid://s2v37pyy3fn8" path="res://src/ui/lib/UiSelectionHandle.cs" id="16_handle"]
+[ext_resource type="Script" uid="uid://cxlb7vq8iocpi" path="res://src/ui/lib/UiIconTabs.cs" id="18_icon_tabs"]
 
 [node name="BuildScreen" type="Control"]
 layout_mode = 3
@@ -218,30 +218,66 @@ theme_override_constants/separation = 8
 [node name="PartsTray" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent" index="0"]
 unique_name_in_owner = true
 layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 8
+
+[node name="PartTabs" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/PartsTray"]
+unique_name_in_owner = true
+layout_mode = 2
+script = ExtResource("18_icon_tabs")
+Icons = Array[int]([50, 49, 46, 40])
+
+[node name="PartScroll" type="ScrollContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/PartsTray"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+vertical_scroll_mode = 3
+
+[node name="PartList" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/PartsTray/PartScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
 theme_override_constants/separation = 4
 
-[node name="CorePart" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/PartsTray"]
+[node name="PartGroupHeader" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/PartsTray/PartScroll/PartList"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="PartGroupName" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/PartsTray/PartScroll/PartList/PartGroupHeader"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
-mouse_filter = 1
-script = ExtResource("11_part_row")
-IconId = 43
-Label = "Core"
+text = "Links"
+script = ExtResource("12_label")
+TextStyle = 12
+TextColor = 8
 
-[node name="SpringPart" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/PartsTray"]
-layout_mode = 2
-size_flags_horizontal = 3
-mouse_filter = 1
-script = ExtResource("11_part_row")
-IconId = 50
-Label = "Spring"
-State = 2
-
-[node name="ToolHint" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/PartsTray"]
+[node name="PartLockedIcon" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/PartsTray/PartScroll/PartList/PartGroupHeader"]
 unique_name_in_owner = true
 layout_mode = 2
-text = "Tap empty space to place a node. Drag a node to move it."
+size_flags_vertical = 4
+script = ExtResource("14_icon")
+IconId = 15
+IconSize = 0
+Color = 8
+
+[node name="PartLockedNote" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/PartsTray/PartScroll/PartList/PartGroupHeader"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Coming later"
+script = ExtResource("12_label")
+TextStyle = 9
+TextColor = 8
+
+[node name="PartRows" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/PartsTray/PartScroll/PartList"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="PartHelp" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/PartsTray/PartScroll/PartList"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Pick one, then drag from one node to another, like the Beam tool."
 autowrap_mode = 3
 script = ExtResource("12_label")
 TextStyle = 9
@@ -428,11 +464,36 @@ Kind = 3
 ContentLayout = 2
 
 [node name="PanelSpacer" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent" index="4"]
+unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 3
 mouse_filter = 2
 
-[node name="Readiness" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent" index="5"]
+[node name="ToolLine" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent" index="5"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="ToolLineIcon" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/ToolLine"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+script = ExtResource("14_icon")
+IconId = 1
+IconSize = 0
+Color = 8
+
+[node name="ToolHint" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/ToolLine"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+script = ExtResource("12_label")
+TextStyle = 9
+TextColor = 8
+
+[node name="Readiness" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent" index="6"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_constants/separation = 8

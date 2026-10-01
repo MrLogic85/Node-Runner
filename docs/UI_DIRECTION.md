@@ -106,7 +106,8 @@ then the app follows the reference.
   #574 updates the reference later and lists any differences as follow-ups:
   - *Parts tray:* the Sensors tab lists Accelerometer, then LOS sensor, with
     the help line "Drag onto a beam. A beam holds one of each sensor." No
-    Core row.
+    Core row once #127 lands; until then a transitional Core row sits last
+    in the tab so cores can still be added (#374).
   - *Glyphs:* LOS sensor uses the reference `los` glyph. Accelerometer uses
     the project-owned `accelerometer` part glyph (an upright frame with a
     weight on a spring), which is not in the reference package. The
@@ -144,6 +145,22 @@ then the app follows the reference.
     theme or `data-effects="lite"` turns glow off.
   - *Copy:* Training and SignalFlow say "sensor" where the reference says
     "core".
+- **Parts tray details (#374, best guess).** The reference tray has no line
+  for the rail tools and no reason on a locked row. Instead:
+  - Tray rows are compact `UiPartRow`s (`control-sm` high) that still use
+    the `icon-lg` glyph.
+  - A part not yet implemented shows only its lock; the tab's name row ends
+    with a `muted` lock at `icon-sm` and "Coming later" in `t-note`. This is
+    temporary until those parts ship; #525's achievement locks need their
+    own reason.
+  - The tray shows only guidance that applies now: Move has no tool line;
+    Beam, Joint and Select show a status line above the readiness line, the
+    tool's glyph at `icon-sm` in `muted` and one short `t-note` line ("Drag
+    joint to joint.", "Tap space or a beam.", "Tap or box parts."); a tray
+    tool's hint replaces its tab's help line.
+  - A part's tool belongs to its tab: opening another tab puts Move back.
+  - Locked and "0 left" rows fade as a whole (glyph, name and lock), not
+    only their fill.
 
 ## Product feel
 

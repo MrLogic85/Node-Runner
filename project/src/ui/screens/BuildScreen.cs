@@ -15,6 +15,7 @@ public partial class BuildScreen : Control
     private BuildViewModel? _build;
     private BuildPresentationViewModel? _presentation;
     private bool _subscribedToPresentation;
+    private string? _shownPartGroup;
 
     [Signal]
     public delegate void BackRequestedEventHandler();
@@ -108,7 +109,7 @@ public partial class BuildScreen : Control
         BindTool(GetNode<UiButton>("%BeamTool"), BuildTool.Beam);
         BindTool(GetNode<UiButton>("%JointTool"), BuildTool.Joint);
         BindTool(GetNode<UiButton>("%SelectTool"), BuildTool.Select);
-        GetNode<UiPartRow>("%CorePart").PartSelected += () => EmitSignal(SignalName.ToolRequested, (int)BuildTool.Core);
+        GetNode<UiIconTabs>("%PartTabs").TabSelected += OnPartTabSelected;
         GetNode<UiButton>("%Stats").Activated += () => EmitSignal(SignalName.StatsRequested);
         GetNode<UiButton>("%Brain").Activated += () => EmitSignal(SignalName.BrainRequested);
         GetNode<UiButton>("%PartDelete").Activated += () => EmitSignal(SignalName.DeleteSelectionRequested);
@@ -215,6 +216,10 @@ public partial class BuildScreen : Control
         var partSettings = GetNode<Control>("%PartSettings");
         var selection = GetNode<Control>("%Selection");
         tray.Visible = selected == 0 && !locked;
+        GetNode<Control>("%PanelSpacer").Visible = !tray.Visible;
+        GetNode<UiLabel>("%ToolHint").Text = presentation.PanelToolHint;
+        GetNode<UiIcon>("%ToolLineIcon").IconId = RailIcon(presentation.ActiveTool);
+        GetNode<Control>("%ToolLine").Visible = tray.Visible && presentation.PanelToolHint.Length > 0;
         savedPanel.Visible = selected == 0 && locked;
         partSettings.Visible = selected == 1;
         selection.Visible = selected > 1;
@@ -258,11 +263,84 @@ public partial class BuildScreen : Control
 
     private void ApplyTray(BuildPresentationViewModel presentation)
     {
-        GetNode<UiPartRow>("%CorePart").State = presentation.ActiveTool == BuildTool.Core
-            ? UiPartRow.PartRowState.Selected
-            : UiPartRow.PartRowState.Rest;
-        GetNode<UiLabel>("%ToolHint").Text = BuildPresentationViewModel.ToolHint(presentation.ActiveTool);
+        var group = presentation.PartGroups[GetNode<UiIconTabs>("%PartTabs").SelectedIndex];
+        GetNode<UiLabel>("%PartGroupName").Text = group.Name;
+        GetNode<UiLabel>("%PartHelp").Text = group.HelpText;
+        var lockedNote = GetNode<UiLabel>("%PartLockedNote");
+        lockedNote.Text = group.LockedNote;
+        lockedNote.Visible = group.LockedNote.Length > 0;
+        GetNode<Control>("%PartLockedIcon").Visible = lockedNote.Visible;
+        var rows = GetNode<Container>("%PartRows");
+        if (_shownPartGroup != group.Name)
+        {
+            _shownPartGroup = group.Name;
+            foreach (var child in rows.GetChildren())
+            {
+                rows.RemoveChild(child);
+                child.QueueFree();
+            }
+
+            foreach (var part in group.Rows)
+            {
+                var row = new UiPartRow { IconId = PartIcon(part.Part), Label = part.Name, Compact = true };
+                if (PartTray.ToolFor(part.Part) is { } tool)
+                {
+                    row.PartSelected += () => EmitSignal(SignalName.ToolRequested, (int)tool);
+                }
+
+                rows.AddChild(row);
+            }
+        }
+
+        for (var index = 0; index < group.Rows.Count; index++)
+        {
+            rows.GetChild<UiPartRow>(index).State = group.Rows[index].State switch
+            {
+                PartTrayRowState.Selected => UiPartRow.PartRowState.Selected,
+                PartTrayRowState.ComingLater => UiPartRow.PartRowState.Locked,
+                _ => UiPartRow.PartRowState.Rest,
+            };
+        }
     }
+
+    private void OnPartTabSelected(int index)
+    {
+        GetNode<ScrollContainer>("%PartScroll").ScrollVertical = 0;
+        if (_presentation is { } presentation && PartTray.ToolOnTabOpened(presentation.ActiveTool, index) is { } tool)
+        {
+            EmitSignal(SignalName.ToolRequested, (int)tool);
+        }
+
+        Apply();
+    }
+
+    private static UiIconId RailIcon(BuildTool tool) => tool switch
+    {
+        BuildTool.Beam => UiIconId.Beam,
+        BuildTool.Joint => UiIconId.Joint,
+        BuildTool.Select => UiIconId.Select,
+        _ => UiIconId.Move,
+    };
+
+    /// <summary>The tray glyph for a part.</summary>
+    public static UiIconId PartIcon(BuildPart part) => part switch
+    {
+        BuildPart.Spring => UiIconId.PartSpring,
+        BuildPart.Piston => UiIconId.PartPiston,
+        BuildPart.Wing => UiIconId.PartWing,
+        BuildPart.Brake => UiIconId.PartBrake,
+        BuildPart.Servo => UiIconId.PartServo,
+        BuildPart.Stepper => UiIconId.PartStepper,
+        BuildPart.VelocityMotor => UiIconId.PartVelocity,
+        BuildPart.Wheel => UiIconId.PartWheel,
+        BuildPart.Accelerometer => UiIconId.PartAccelerometer,
+        BuildPart.LosSensor => UiIconId.PartLineOfSight,
+        BuildPart.Core => UiIconId.PartCore,
+        BuildPart.Battery => UiIconId.PartBattery,
+        BuildPart.Generator => UiIconId.PartGenerator,
+        BuildPart.FuelTank => UiIconId.PartFuel,
+        _ => UiIconId.None,
+    };
 
     private void ApplyPartSettings(BuildPresentationViewModel presentation, bool locked)
     {

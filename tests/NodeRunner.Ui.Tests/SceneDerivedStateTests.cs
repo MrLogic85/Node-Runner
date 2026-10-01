@@ -20,7 +20,7 @@ public sealed class SceneDerivedStateTests
         ["UiPopupCard.cs"] = ["clip_children"],
         ["UiNotificationContent.cs"] = ["clip_children"],
         ["UiMenu.cs"] = ["clip_children"],
-        ["UiPartRow.cs"] = ["self_modulate"],
+        ["UiPartRow.cs"] = ["modulate"],
         ["UiIconTabs.cs"] = ["theme_override_constants/separation"],
         ["UiInfoRow.cs"] = ["theme_override_constants/separation"],
         ["UiSegmentedSwitch.cs"] = ["theme_override_constants/separation"],

@@ -80,9 +80,9 @@ a node's own disc always hits.
   joint under a handle still adds or removes that joint. A locked
   creation keeps all three handles: like a move, scaling changes only
   beam lengths, never which parts there are.
-- **Core (transitional):** the Core row in the Parts tray turns taps on a
-  node into adding or removing its core, until Core is removed and sensors
-  are dragged from the tray onto beams (#127, #376).
+- **Core (transitional):** the Core row, last in the Parts tray's Sensors
+  tab, turns taps on a node into adding or removing its core, until Core is
+  removed and sensors are dragged from the tray onto beams (#127, #376).
 - There is no Delete tool: the part settings and selection panels delete the
   selection, and deleting a node removes every beam and core on it
   (`CreatureBuilder.RemoveNode`).
@@ -134,6 +134,21 @@ a node's own disc always hits.
   motor-relation sensor values, and one output per motor relation) for
   whatever anatomy it is given — no special-casing between the hardcoded
   worm and an edited creature.
+
+## Parts tray
+
+With nothing selected, an unlocked creation's side panel shows the Parts
+tray (#374): four `UiIconTabs` (Links, On a joint, Sensors, Blocks) pinned at
+the top, then a scrolling list with the open tab's name, its parts as compact
+`UiPartRow`s and one help line for the tab. `NodeRunner.App.ViewModels.PartTray`
+owns the groups, their order, the help lines and each row's state; the screen
+only maps parts to glyphs. Every implemented part is unlimited until #525, so
+rows show no count. A part not yet implemented is a dashed row with a lock,
+and the tab's name row says "Coming later" once. While a tray tool is active
+(only the transitional Core today) its tab's help line is that tool's hint,
+and opening another tab puts Move back. Beam, Joint and Select show a short
+status line with the tool's glyph above the readiness line; Move shows none. Placing parts from the tray is #376. One selected part shows
+its settings and several show the selection panel instead.
 
 ## Validation
 

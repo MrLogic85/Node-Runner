@@ -2,7 +2,11 @@ using Godot;
 
 namespace NodeRunner.Ui.Lib;
 
-/// <summary>Canonical row for build parts: icon, name, count, and four reference states.</summary>
+/// <summary>
+/// Canonical row for build parts: icon, name, count, and four reference states. A locked row shows
+/// only its lock; its owner explains the lock once (#374). <see cref="Compact"/> rows are
+/// <c>control-sm</c> high, as in the Build Parts tray.
+/// </summary>
 [Tool]
 [GlobalClass]
 public partial class UiPartRow : Control
@@ -24,6 +28,7 @@ public partial class UiPartRow : Control
     private string _label = "";
     private string _valueText = "";
     private PartRowState _state;
+    private bool _compact;
     private StyleBoxFlat? _style;
 
     [Export]
@@ -32,6 +37,11 @@ public partial class UiPartRow : Control
         get => _iconId;
         set
         {
+            if (_iconId == value)
+            {
+                return;
+            }
+
             _iconId = value;
             Rebuild();
         }
@@ -43,6 +53,11 @@ public partial class UiPartRow : Control
         get => _label;
         set
         {
+            if (_label == value)
+            {
+                return;
+            }
+
             _label = value;
             Rebuild();
         }
@@ -54,6 +69,11 @@ public partial class UiPartRow : Control
         get => _valueText;
         set
         {
+            if (_valueText == value)
+            {
+                return;
+            }
+
             _valueText = value;
             Rebuild();
         }
@@ -65,7 +85,28 @@ public partial class UiPartRow : Control
         get => _state;
         set
         {
+            if (_state == value)
+            {
+                return;
+            }
+
             _state = value;
+            Rebuild();
+        }
+    }
+
+    [Export]
+    public bool Compact
+    {
+        get => _compact;
+        set
+        {
+            if (_compact == value)
+            {
+                return;
+            }
+
+            _compact = value;
             Rebuild();
         }
     }
@@ -77,7 +118,7 @@ public partial class UiPartRow : Control
         Rebuild();
     }
 
-    private readonly UiUnsavedState _unsaved = new(CanvasItem.PropertyName.SelfModulate);
+    private readonly UiUnsavedState _unsaved = new(CanvasItem.PropertyName.Modulate);
 
     public override void _Notification(int what)
     {
@@ -103,7 +144,7 @@ public partial class UiPartRow : Control
     }
 
     public override Vector2 _GetMinimumSize() =>
-        new(0, UiSize.Control.Default);
+        new(0, Compact ? UiSize.Control.Small : UiSize.Control.Default);
 
     private void Rebuild()
     {
@@ -133,7 +174,7 @@ public partial class UiPartRow : Control
             _style.BorderWidthBottom = 0;
         }
 
-        SelfModulate = State is PartRowState.Locked or PartRowState.NoneLeft
+        Modulate = State is PartRowState.Locked or PartRowState.NoneLeft
             ? Colors.White with { A = _unavailableOpacity }
             : Colors.White;
         UpdateMinimumSize();
@@ -162,14 +203,9 @@ public partial class UiPartRow : Control
 
         if (State == PartRowState.Locked)
         {
-            if (!string.IsNullOrWhiteSpace(ValueText))
-            {
-                row.AddChild(CreateTrailingLabel(ValueText));
-            }
-
             row.AddChild(UiFieldAndRows.Icon(UiIconId.Lock, UiIconSize.Standard, UiThemeLookup.Color(this, UiTokens.Color.Ink)));
         }
-        else
+        else if (!string.IsNullOrWhiteSpace(ValueText))
         {
             row.AddChild(CreateTrailingLabel(ValueText));
         }
