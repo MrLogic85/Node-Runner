@@ -138,7 +138,8 @@ a node's own disc always hits.
 ## Validation
 
 A saved Creation stores any drawing: `CreatureDef` only checks that part
-indices point at existing nodes, so an empty or unfinished creature is still
+ids are unique and below `NextPartId` and that beams and cores point at
+existing node ids, so an empty or unfinished creature is still
 a Creation (#515). Only training needs a finished creature.
 `NodeRunner.App.Lifecycle.CreatureReadiness` is the single source of truth
 for that, in two steps: `Problems` lists why the creature cannot be

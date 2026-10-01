@@ -41,7 +41,7 @@ public sealed class BuildAutosaveTests
         var changes = 0;
         autosave.Changed += (_, _) => changes++;
 
-        build.MoveNode(0, new Vector2D(5, 5));
+        build.MoveNode(1, new Vector2D(5, 5));
         build.SetBrainShape(new BrainShapeDef(2, 6));
 
         changes.ShouldBe(2);
@@ -55,7 +55,7 @@ public sealed class BuildAutosaveTests
         var (repository, build, autosave) = Open(creation);
         repository.Delete(creation.Id);
 
-        build.MoveNode(0, new Vector2D(5, 5));
+        build.MoveNode(1, new Vector2D(5, 5));
         autosave.Save().ShouldBeFalse();
 
         autosave.HasUnsavedEdits.ShouldBeTrue();
@@ -71,7 +71,7 @@ public sealed class BuildAutosaveTests
         build.LoadCreation(creation);
         using var autosave = new BuildAutosave(build, edits, creation.Id, openedAsNew: false);
 
-        build.MoveNode(0, new Vector2D(5, 5));
+        build.MoveNode(1, new Vector2D(5, 5));
 
         Should.Throw<IOException>(() => autosave.Save());
         autosave.HasUnsavedEdits.ShouldBeTrue();
@@ -97,7 +97,7 @@ public sealed class BuildAutosaveTests
         var trained = new CreationDef(drawn.Id, drawn.Name, drawn.Creature, new BrainShapeDef(1, 3), training);
         var (repository, build, autosave) = Open(trained);
 
-        build.MoveNode(0, new Vector2D(5, 5));
+        build.MoveNode(1, new Vector2D(5, 5));
         autosave.Save();
 
         var saved = repository.Get(trained.Id).ShouldNotBeNull();
@@ -120,7 +120,7 @@ public sealed class BuildAutosaveTests
             using (var autosave = new BuildAutosave(
                 build, new BuildEditWorkflow(new CreationUpdateCoordinator(repository)), creation.Id, openedAsNew: false))
             {
-                build.MoveNode(1, new Vector2D(60, 0));
+                build.MoveNode(2, new Vector2D(60, 0));
                 autosave.Save();
             }
 
@@ -156,7 +156,7 @@ public sealed class BuildAutosaveTests
         var (_, build, autosave) = Open(TwoNodeCreation());
         autosave.Dispose();
 
-        build.MoveNode(0, new Vector2D(5, 5));
+        build.MoveNode(1, new Vector2D(5, 5));
 
         autosave.HasUnsavedEdits.ShouldBeFalse();
     }
@@ -178,8 +178,8 @@ public sealed class BuildAutosaveTests
         Guid.NewGuid(),
         "Worm",
         new CreatureDef(
-            [new NodeDef(new Vector2D(0, 0), 18), new NodeDef(new Vector2D(20, 0), 18)],
-            [new BeamDef(0, 1)],
+            [new NodeDef(1, new Vector2D(0, 0), 18), new NodeDef(2, new Vector2D(20, 0), 18)],
+            [new BeamDef(101, 1, 2)],
             []));
 
     private sealed class TempStorageLocation(string directoryPath) : IStorageLocation

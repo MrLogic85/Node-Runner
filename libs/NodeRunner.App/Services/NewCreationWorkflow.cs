@@ -23,7 +23,7 @@ public sealed class NewCreationWorkflow : INewCreationWorkflow
 
     public CreationDef Create()
     {
-        var creation = new CreationDef(_newId(), UntitledName, new CreatureDef([], [], []), BrainShapeDef.Default);
+        var creation = new CreationDef(_newId(), UntitledName, new CreatureDef([], [], [], nextPartId: 1), BrainShapeDef.Default);
         _repository.Save(creation);
         return creation;
     }

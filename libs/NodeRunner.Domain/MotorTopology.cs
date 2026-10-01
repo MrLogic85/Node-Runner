@@ -26,7 +26,7 @@ public static class MotorTopology
         ArgumentNullException.ThrowIfNull(creature);
 
         var triangles = new HashSet<RigidTriangleDef>();
-        var beams = creature.Beams;
+        var beams = BuildIndexedBeams(creature);
         for (var a = 0; a < beams.Count; a++)
         {
             for (var b = a + 1; b < beams.Count; b++)
@@ -181,8 +181,8 @@ public static class MotorTopology
         for (var beamIndex = 0; beamIndex < creature.Beams.Count; beamIndex++)
         {
             var beam = creature.Beams[beamIndex];
-            incident[beam.NodeA].Add(beamIndex);
-            incident[beam.NodeB].Add(beamIndex);
+            incident[creature.NodeIndexOf(beam.NodeA)].Add(beamIndex);
+            incident[creature.NodeIndexOf(beam.NodeB)].Add(beamIndex);
         }
 
         foreach (var list in incident)
@@ -206,7 +206,7 @@ public static class MotorTopology
         }
 
         var triangleSet = BuildRigidTriangles(creature).ToHashSet();
-        var beams = creature.Beams;
+        var beams = BuildIndexedBeams(creature);
         for (var a = 0; a < beams.Count; a++)
         {
             for (var b = a + 1; b < beams.Count; b++)
@@ -228,7 +228,7 @@ public static class MotorTopology
         return locked;
     }
 
-    private static bool TryShareNode(BeamDef beamA, BeamDef beamB, out int sharedNode, out int farA, out int farB)
+    private static bool TryShareNode(IndexedBeam beamA, IndexedBeam beamB, out int sharedNode, out int farA, out int farB)
     {
         (int Shared, int Far)? match = null;
 
@@ -270,9 +270,10 @@ public static class MotorTopology
 
     private static bool TryFindBeamBetween(CreatureDef creature, int nodeX, int nodeY, out int beamIndex)
     {
+        var beams = BuildIndexedBeams(creature);
         for (var i = 0; i < creature.Beams.Count; i++)
         {
-            var beam = creature.Beams[i];
+            var beam = beams[i];
             if ((beam.NodeA == nodeX && beam.NodeB == nodeY) || (beam.NodeA == nodeY && beam.NodeB == nodeX))
             {
                 beamIndex = i;
@@ -285,4 +286,11 @@ public static class MotorTopology
     }
 
     private static (int, int) PairKey(int a, int b) => (Math.Min(a, b), Math.Max(a, b));
+
+    private static IReadOnlyList<IndexedBeam> BuildIndexedBeams(CreatureDef creature) =>
+        creature.Beams
+            .Select(beam => new IndexedBeam(creature.NodeIndexOf(beam.NodeA), creature.NodeIndexOf(beam.NodeB)))
+            .ToArray();
+
+    private sealed record IndexedBeam(int NodeA, int NodeB);
 }

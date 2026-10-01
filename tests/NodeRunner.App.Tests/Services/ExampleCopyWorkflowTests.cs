@@ -19,6 +19,7 @@ public sealed class ExampleCopyWorkflowTests
         copy.Id.ShouldBe(copyId);
         copy.Name.ShouldBe("Walker");
         copy.Creature.ShouldBe(example.Creation.Creature);
+        copy.Creature.NextPartId.ShouldBe(example.Creation.Creature.NextPartId);
         copy.BrainShape.ShouldBe(example.Creation.BrainShape);
         copy.Training.ShouldBe(example.Creation.Training);
         repository.Get(copyId).ShouldBe(copy);
@@ -54,9 +55,9 @@ public sealed class ExampleCopyWorkflowTests
     private static CreationExample CreateExample()
     {
         var creature = new CreatureDef(
-            [new NodeDef(new Vector2D(0, 0), 1), new NodeDef(new Vector2D(2, 0), 1)],
-            [new BeamDef(0, 1)],
-            [new CoreDef(0)]);
+            [new NodeDef(1, new Vector2D(0, 0), 1), new NodeDef(2, new Vector2D(2, 0), 1)],
+            [new BeamDef(101, 1, 2)],
+            [new CoreDef(201, 1)]);
         var training = new TrainingStateDef([2, 1], [0.1, -0.2, 0.3], 8, "Tanh");
         var creation = new CreationDef(Guid.NewGuid(), "Walker", creature, new BrainShapeDef(2, 6), training);
         return new CreationExample(creation, "Servos in the knees: the basic walk.");

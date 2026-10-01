@@ -5,16 +5,17 @@ public sealed class BeamDefTests
     [Fact]
     public void Constructor_WithDistinctNodes_StoresValues()
     {
-        var beam = new BeamDef(0, 1);
+        var beam = new BeamDef(3, 1, 2);
 
-        beam.NodeA.ShouldBe(0);
-        beam.NodeB.ShouldBe(1);
+        beam.Id.ShouldBe(3);
+        beam.NodeA.ShouldBe(1);
+        beam.NodeB.ShouldBe(2);
     }
 
     [Fact]
     public void Constructor_WithSameNodeTwice_Throws()
     {
-        var action = () => new BeamDef(0, 0);
+        var action = () => new BeamDef(3, 1, 1);
 
         action.ShouldThrow<ArgumentException>();
     }
@@ -22,7 +23,7 @@ public sealed class BeamDefTests
     [Fact]
     public void Constructor_WithNegativeNodeIndex_Throws()
     {
-        var action = () => new BeamDef(-1, 0);
+        var action = () => new BeamDef(3, -1, 1);
 
         action.ShouldThrow<ArgumentOutOfRangeException>();
     }

@@ -247,8 +247,8 @@ public partial class Creature : Node2D
             if (_nodeVisuals[nodeIndex].GlobalPosition.DistanceSquaredTo(globalPosition) <= radius * radius)
             {
                 selection = _coreIndexByNode[nodeIndex] >= 0
-                    ? new CreatureElementSelection(CreatureElementKind.Core, _coreIndexByNode[nodeIndex])
-                    : new CreatureElementSelection(CreatureElementKind.Node, nodeIndex);
+                    ? new CreatureElementSelection(CreatureElementKind.Core, Definition!.Cores[_coreIndexByNode[nodeIndex]].Id)
+                    : new CreatureElementSelection(CreatureElementKind.Node, Definition!.Nodes[nodeIndex].Id);
                 return true;
             }
         }
@@ -262,7 +262,7 @@ public partial class Creature : Node2D
             var end = body.ToGlobal(new Vector2(halfLength, 0));
             if (DistanceSquaredToSegment(globalPosition, start, end) <= tolerance * tolerance)
             {
-                selection = new CreatureElementSelection(CreatureElementKind.Beam, beamIndex);
+                selection = new CreatureElementSelection(CreatureElementKind.Beam, Definition!.Beams[beamIndex].Id);
                 return true;
             }
         }
@@ -290,14 +290,14 @@ public partial class Creature : Node2D
 
         switch (selection.Kind)
         {
-            case CreatureElementKind.Node when selection.Index < _nodeVisuals.Length:
-                _nodeVisuals[selection.Index].IsSelected = true;
+            case CreatureElementKind.Node:
+                _nodeVisuals[Definition!.NodeIndexOf(selection.Id)].IsSelected = true;
                 break;
-            case CreatureElementKind.Beam when selection.Index < _beamVisuals.Length:
-                _beamVisuals[selection.Index].IsSelected = true;
+            case CreatureElementKind.Beam:
+                _beamVisuals[Definition!.BeamIndexOf(selection.Id)].IsSelected = true;
                 break;
-            case CreatureElementKind.Core when selection.Index < Definition!.Cores.Count:
-                _nodeVisuals[Definition.Cores[selection.Index].NodeIndex].IsSelected = true;
+            case CreatureElementKind.Core:
+                _nodeVisuals[Definition!.NodeIndexOf(Definition.Cores[Definition.CoreIndexOf(selection.Id)].NodeId)].IsSelected = true;
                 break;
         }
     }
@@ -316,8 +316,10 @@ public partial class Creature : Node2D
         for (var i = 0; i < beamDefs.Count; i++)
         {
             var beamDef = beamDefs[i];
-            var nodeAPos = ToGodot(definition.Nodes[beamDef.NodeA].Position);
-            var nodeBPos = ToGodot(definition.Nodes[beamDef.NodeB].Position);
+            var nodeAIndex = definition.NodeIndexOf(beamDef.NodeA);
+            var nodeBIndex = definition.NodeIndexOf(beamDef.NodeB);
+            var nodeAPos = ToGodot(definition.Nodes[nodeAIndex].Position);
+            var nodeBPos = ToGodot(definition.Nodes[nodeBIndex].Position);
             var midpoint = (nodeAPos + nodeBPos) / 2;
             var direction = nodeBPos - nodeAPos;
             var halfLength = direction.Length() / 2;
@@ -359,8 +361,8 @@ public partial class Creature : Node2D
             _beamInitialPositions[i] = midpoint;
             _beamInitialRotations[i] = rotation;
 
-            RegisterAnchor(beamDef.NodeA, i, new Vector2(-halfLength, 0), anchorBeamPerNode, anchorOffsetPerNode);
-            RegisterAnchor(beamDef.NodeB, i, new Vector2(halfLength, 0), anchorBeamPerNode, anchorOffsetPerNode);
+            RegisterAnchor(nodeAIndex, i, new Vector2(-halfLength, 0), anchorBeamPerNode, anchorOffsetPerNode);
+            RegisterAnchor(nodeBIndex, i, new Vector2(halfLength, 0), anchorBeamPerNode, anchorOffsetPerNode);
         }
     }
 
@@ -416,11 +418,12 @@ public partial class Creature : Node2D
         for (var i = 0; i < definition.Cores.Count; i++)
         {
             var core = definition.Cores[i];
-            _coreIndexByNode[core.NodeIndex] = i;
-            _nodeVisuals[core.NodeIndex].HasCore = true;
+            var nodeIndex = definition.NodeIndexOf(core.NodeId);
+            _coreIndexByNode[nodeIndex] = i;
+            _nodeVisuals[nodeIndex].HasCore = true;
 
-            var anchorBeam = _beamBodies[anchorBeamPerNode[core.NodeIndex]];
-            var origin = anchorOffsetPerNode[core.NodeIndex];
+            var anchorBeam = _beamBodies[anchorBeamPerNode[nodeIndex]];
+            var origin = anchorOffsetPerNode[nodeIndex];
 
             var rayDown = CreateRay(anchorBeam, origin, new Vector2(0, _rayLength));
             var rayForward = CreateRay(anchorBeam, origin, new Vector2(_rayLength, 0));

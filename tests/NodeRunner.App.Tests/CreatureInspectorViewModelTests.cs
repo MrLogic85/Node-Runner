@@ -21,7 +21,7 @@ public sealed class CreatureInspectorViewModelTests
         var selection = new SelectionViewModel();
         using var inspector = new CreatureInspectorViewModel(CreateCreature(), selection);
 
-        selection.Select(new CreatureElementSelection(CreatureElementKind.Node, 0));
+        selection.Select(new CreatureElementSelection(CreatureElementKind.Node, 1));
 
         inspector.Title.ShouldBe("Node 1");
         inspector.Role.ShouldBe("A physical attachment point. Beams meet here and can rotate relative to each other.");
@@ -34,7 +34,7 @@ public sealed class CreatureInspectorViewModelTests
         var selection = new SelectionViewModel();
         using var inspector = new CreatureInspectorViewModel(CreateCreature(), selection);
 
-        selection.Select(new CreatureElementSelection(CreatureElementKind.Beam, 0));
+        selection.Select(new CreatureElementSelection(CreatureElementKind.Beam, 101));
 
         inspector.Title.ShouldBe("Beam 1");
         inspector.Role.ShouldBe("A rigid, fixed-length connection. It never stretches or compresses.");
@@ -47,7 +47,7 @@ public sealed class CreatureInspectorViewModelTests
         var selection = new SelectionViewModel();
         using var inspector = new CreatureInspectorViewModel(CreateCreature(), selection);
 
-        selection.Select(new CreatureElementSelection(CreatureElementKind.Core, 0));
+        selection.Select(new CreatureElementSelection(CreatureElementKind.Core, 201));
 
         inspector.Title.ShouldBe("Core 1");
         inspector.Role.ShouldBe("A sensor package. Not the brain itself — it feeds sensor readings (rays, pitch, elevation, speed) to the model.");
@@ -59,7 +59,7 @@ public sealed class CreatureInspectorViewModelTests
     {
         var selection = new SelectionViewModel();
         using var inspector = new CreatureInspectorViewModel(CreateCreature(), selection);
-        selection.Select(new CreatureElementSelection(CreatureElementKind.Core, 0));
+        selection.Select(new CreatureElementSelection(CreatureElementKind.Core, 201));
 
         selection.Clear();
 
@@ -71,8 +71,8 @@ public sealed class CreatureInspectorViewModelTests
     private static CreatureDef CreateCreature()
     {
         return new CreatureDef(
-            [new NodeDef(new Vector2D(0, 0), 10), new NodeDef(new Vector2D(20, 0), 10)],
-            [new BeamDef(0, 1)],
-            [new CoreDef(0)]);
+            [new NodeDef(1, new Vector2D(0, 0), 10), new NodeDef(2, new Vector2D(20, 0), 10)],
+            [new BeamDef(101, 1, 2)],
+            [new CoreDef(201, 1)]);
     }
 }

@@ -47,25 +47,26 @@ public partial class CreatureThumbnail : Control
         var scale = Mathf.Min(content.Size.X / span.X, content.Size.Y / span.Y) * _fill;
         var offset = content.GetCenter() - ((min + max) * 0.5f * scale);
 
-        Vector2 Map(int index) => (points[index] * scale) + offset;
+        Vector2 MapNode(int nodeId) => (points[_creature.NodeIndexOf(nodeId)] * scale) + offset;
+        Vector2 MapIndex(int index) => (points[index] * scale) + offset;
 
         var line = UiThemeLookup.Color(this, UiTokens.Color.LineStrong);
         foreach (var beam in _creature.Beams)
         {
-            DrawLine(Map(beam.NodeA), Map(beam.NodeB), line, UiSize.Stroke.Beam, antialiased: false);
+            DrawLine(MapNode(beam.NodeA), MapNode(beam.NodeB), line, UiSize.Stroke.Beam, antialiased: false);
         }
 
         var fill = UiThemeLookup.Color(this, UiTokens.Color.Panel);
         for (var i = 0; i < points.Length; i++)
         {
-            DrawCircle(Map(i), _nodeRadius, fill);
-            DrawArc(Map(i), _nodeRadius, 0, Mathf.Tau, _ringPoints, line, UiSize.Stroke.Signal, antialiased: false);
+            DrawCircle(MapIndex(i), _nodeRadius, fill);
+            DrawArc(MapIndex(i), _nodeRadius, 0, Mathf.Tau, _ringPoints, line, UiSize.Stroke.Signal, antialiased: false);
         }
 
         var accent = UiThemeLookup.Color(this, UiTokens.Color.Accent);
         foreach (var core in _creature.Cores)
         {
-            DrawCircle(Map(core.NodeIndex), _coreRadius, accent);
+            DrawCircle(MapNode(core.NodeId), _coreRadius, accent);
         }
     }
 }

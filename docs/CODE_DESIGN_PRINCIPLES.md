@@ -63,9 +63,9 @@ seed 4711". Regressions become detectable.
 
 - Represent things as data first, then add behavior:
   ```csharp
-  public sealed record NodeDef(Vector2 Position, double Radius);
-  public sealed record BeamDef(int NodeA, int NodeB);
-  public sealed record CoreDef(int NodeIndex);
+  public sealed record NodeDef(int Id, Vector2 Position, double Radius);
+  public sealed record BeamDef(int Id, int NodeA, int NodeB);
+  public sealed record CoreDef(int Id, int NodeId);
   ```
 - This makes serialization (save/load creatures), diffing (evolution!), and
   hashing (dedup) trivial.

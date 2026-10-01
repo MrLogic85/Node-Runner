@@ -11,7 +11,7 @@ public class BuildGesturesTests
     public void Move_TapOnEmptyCanvas_DeselectsWithoutAddingAJoint()
     {
         var (build, gestures) = TwoJointsAndABeam();
-        build.ReplaceSelection([0]);
+        build.ReplaceSelection([1]);
 
         Tap(gestures, _empty);
 
@@ -23,11 +23,11 @@ public class BuildGesturesTests
     public void Move_TapOnJoint_SelectsOnlyThatJoint()
     {
         var (build, gestures) = TwoJointsAndABeam();
-        build.ReplaceSelection([0]);
+        build.ReplaceSelection([1]);
 
         Tap(gestures, new Vector2D(102, 1));
 
-        build.SelectedNodeIndices.ShouldBe([1]);
+        build.SelectedNodeIds.ShouldBe([2]);
     }
 
     [Fact]
@@ -37,7 +37,7 @@ public class BuildGesturesTests
 
         Tap(gestures, new Vector2D(50, 5));
 
-        build.SingleSelectedBeamIndex.ShouldBe(0);
+        build.SingleSelectedBeamId.ShouldBe(3);
     }
 
     [Fact]
@@ -53,7 +53,7 @@ public class BuildGesturesTests
 
         build.Nodes[0].Position.ShouldBe(new Vector2D(0, 40));
         build.SelectedPartCount.ShouldBe(0);
-        dragStarted.ShouldBe([0]);
+        dragStarted.ShouldBe([1]);
     }
 
     [Fact]
@@ -66,14 +66,14 @@ public class BuildGesturesTests
         gestures.Release(new Vector2D(3, 3));
 
         build.Nodes[0].Position.ShouldBe(new Vector2D(0, 0));
-        build.SelectedNodeIndices.ShouldBe([0]);
+        build.SelectedNodeIds.ShouldBe([1]);
     }
 
     [Fact]
     public void Move_DragOnEmptyCanvas_PansTheViewWithoutEditing()
     {
         var (build, gestures) = TwoJointsAndABeam();
-        build.ReplaceSelection([0]);
+        build.ReplaceSelection([1]);
         var changes = CountChanges(build);
 
         gestures.Press(_empty);
@@ -82,7 +82,7 @@ public class BuildGesturesTests
         gestures.Release(new Vector2D(400, 280));
 
         changes().ShouldBe(0);
-        build.SelectedNodeIndices.ShouldBe([0]);
+        build.SelectedNodeIds.ShouldBe([1]);
         gestures.View.Offset.ShouldBe(new Vector2D(100, -20));
     }
 
@@ -163,7 +163,7 @@ public class BuildGesturesTests
     public void SecondFinger_PutsBackASelectionTheFirstFingerAlreadyMoved()
     {
         var (build, gestures) = ThreeLooseJoints(BuildTool.Select);
-        build.ReplaceSelection([0, 1]);
+        build.ReplaceSelection([1, 2]);
 
         gestures.Press(new Vector2D(0, 0), 0);
         gestures.Drag(new Vector2D(0, 40), 0);
@@ -181,7 +181,7 @@ public class BuildGesturesTests
         gestures.Press(new Vector2D(0, 0), 0);
         gestures.Drag(new Vector2D(100, 0), 0);
         gestures.Press(new Vector2D(200, 200), 1);
-        gestures.BeamStartNode.ShouldBeNull();
+        gestures.BeamStartNodeId.ShouldBeNull();
         gestures.Release(new Vector2D(100, 0), 0);
         gestures.Release(new Vector2D(200, 200), 1);
 
@@ -215,7 +215,7 @@ public class BuildGesturesTests
 
         Tap(gestures, new Vector2D(250, 50));
 
-        build.SelectedNodeIndices.ShouldBe([1]);
+        build.SelectedNodeIds.ShouldBe([2]);
     }
 
     [Fact]
@@ -259,13 +259,13 @@ public class BuildGesturesTests
     public void SecondFinger_PutsBackTheSelectionASelectPressChanged()
     {
         var (build, gestures) = ThreeLooseJoints(BuildTool.Select);
-        build.ReplaceSelection([0, 1]);
+        build.ReplaceSelection([1, 2]);
 
         gestures.Press(_empty, 0);
-        build.SelectedNodeIndices.ShouldBeEmpty();
+        build.SelectedNodeIds.ShouldBeEmpty();
         gestures.Press(new Vector2D(400, 400), 1);
 
-        build.SelectedNodeIndices.OrderBy(index => index).ShouldBe([0, 1]);
+        build.SelectedNodeIds.OrderBy(id => id).ShouldBe([1, 2]);
     }
 
     [Fact]
@@ -273,13 +273,13 @@ public class BuildGesturesTests
     {
         var (build, gestures) = TwoJointsAndABeam();
         build.ActiveTool = BuildTool.Select;
-        build.SelectBeam(0);
+        build.SelectBeam(build.Beams[0].Id);
 
         gestures.Press(new Vector2D(0, 0), 0);
         gestures.Press(new Vector2D(400, 400), 1);
 
-        build.SingleSelectedBeamIndex.ShouldBe(0);
-        build.SelectedNodeIndices.ShouldBeEmpty();
+        build.SingleSelectedBeamId.ShouldBe(3);
+        build.SelectedNodeIds.ShouldBeEmpty();
     }
 
     [Fact]
@@ -303,7 +303,7 @@ public class BuildGesturesTests
 
         Tap(gestures, new Vector2D(-(BuildGestures.NodeHitRadius - 2), 0));
 
-        build.SelectedNodeIndices.ShouldBe([0]);
+        build.SelectedNodeIds.ShouldBe([1]);
     }
 
     [Fact]
@@ -317,7 +317,7 @@ public class BuildGesturesTests
         gestures.Release(new Vector2D(BuildGestures.TapSlop - 2, 0));
 
         build.Nodes[0].Position.ShouldBe(new Vector2D(0, 0));
-        build.SelectedNodeIndices.ShouldBe([0]);
+        build.SelectedNodeIds.ShouldBe([1]);
     }
 
     [Fact]
@@ -383,14 +383,14 @@ public class BuildGesturesTests
 
         gestures.Press(new Vector2D(0, 0));
         gestures.Drag(new Vector2D(60, 0));
-        gestures.BeamStartNode.ShouldBe(0);
+        gestures.BeamStartNodeId.ShouldBe(1);
         gestures.BeamEnd.ShouldBe(new Vector2D(60, 0));
         gestures.Drag(new Vector2D(98, 2));
-        gestures.BeamTargetNode.ShouldBe(1);
+        gestures.BeamTargetNodeId.ShouldBe(2);
         gestures.Release(new Vector2D(98, 2));
 
-        build.Beams.ShouldBe([new BeamDef(0, 1)]);
-        gestures.BeamStartNode.ShouldBeNull();
+        build.Beams.ShouldBe([new BeamDef(4, 1, 2)]);
+        gestures.BeamStartNodeId.ShouldBeNull();
     }
 
     [Fact]
@@ -438,13 +438,13 @@ public class BuildGesturesTests
     {
         var build = new BuildViewModel();
         build.Load(
-            new CreatureDef([new NodeDef(new Vector2D(0, 0), 18), new NodeDef(new Vector2D(100, 0), 18), new NodeDef(new Vector2D(0, 100), 18)], [new BeamDef(0, 1), new BeamDef(0, 2)], []),
+            new CreatureDef([new NodeDef(1, new Vector2D(0, 0), 18), new NodeDef(2, new Vector2D(100, 0), 18), new NodeDef(3, new Vector2D(0, 100), 18)], [new BeamDef(101, 1, 2), new BeamDef(102, 1, 3)], []),
             moveOnly: true);
         build.ActiveTool = BuildTool.Beam;
         var gestures = new BuildGestures(build);
 
         gestures.Press(new Vector2D(100, 0));
-        gestures.BeamStartNode.ShouldBeNull();
+        gestures.BeamStartNodeId.ShouldBeNull();
         gestures.Drag(new Vector2D(0, 100));
         gestures.BeamEnd.ShouldBeNull();
         gestures.Release(new Vector2D(0, 100));
@@ -473,7 +473,7 @@ public class BuildGesturesTests
         Tap(gestures, new Vector2D(50, 6));
 
         build.Nodes[2].Position.ShouldBe(new Vector2D(50, 0));
-        build.Beams.ShouldBe([new BeamDef(0, 2), new BeamDef(2, 1)]);
+        build.Beams.ShouldBe([new BeamDef(5, 1, 4), new BeamDef(6, 4, 2)]);
     }
 
     [Fact]
@@ -505,7 +505,7 @@ public class BuildGesturesTests
     {
         var build = new BuildViewModel();
         build.Load(
-            new CreatureDef([new NodeDef(new Vector2D(0, 0), 18), new NodeDef(new Vector2D(100, 0), 18)], [new BeamDef(0, 1)], []),
+            new CreatureDef([new NodeDef(1, new Vector2D(0, 0), 18), new NodeDef(2, new Vector2D(100, 0), 18)], [new BeamDef(101, 1, 2)], []),
             moveOnly: true);
         build.ActiveTool = BuildTool.Joint;
         var gestures = new BuildGestures(build);
@@ -530,7 +530,7 @@ public class BuildGesturesTests
 
         build.Beams.ShouldBeEmpty();
         build.Nodes.Count.ShouldBe(3);
-        gestures.BeamStartNode.ShouldBeNull();
+        gestures.BeamStartNodeId.ShouldBeNull();
     }
 
     [Fact]
@@ -546,7 +546,7 @@ public class BuildGesturesTests
         gestures.Release(new Vector2D(100, 0));
 
         build.Beams.ShouldBeEmpty();
-        gestures.BeamStartNode.ShouldBeNull();
+        gestures.BeamStartNodeId.ShouldBeNull();
         redraws.ShouldBe(1);
     }
 
@@ -554,14 +554,14 @@ public class BuildGesturesTests
     public void Select_BoxDraggedInAnyDirection_ReplacesSelection()
     {
         var (build, gestures) = ThreeLooseJoints(BuildTool.Select);
-        build.ReplaceSelection([2]);
+        build.ReplaceSelection([3]);
 
         gestures.Press(new Vector2D(150, -50));
         gestures.Drag(new Vector2D(-50, 50));
         gestures.SelectionBox.ShouldBe((new Vector2D(150, -50), new Vector2D(-50, 50)));
         gestures.Release(new Vector2D(-50, 50));
 
-        build.SelectedNodeIndices.OrderBy(index => index).ShouldBe([0, 1]);
+        build.SelectedNodeIds.OrderBy(id => id).ShouldBe([1, 2]);
         gestures.SelectionBox.ShouldBeNull();
     }
 
@@ -569,12 +569,12 @@ public class BuildGesturesTests
     public void Beam_DragOverAnAlreadyJoinedJoint_DoesNotSnapToIt()
     {
         var (build, gestures) = ThreeLooseJoints(BuildTool.Beam);
-        build.ConnectBeam(0, 1);
+        build.ConnectBeam(1, 2);
 
         gestures.Press(new Vector2D(0, 0));
         gestures.Drag(new Vector2D(100, 0));
 
-        gestures.BeamTargetNode.ShouldBeNull();
+        gestures.BeamTargetNodeId.ShouldBeNull();
         gestures.BeamEnd.ShouldBe(new Vector2D(100, 0));
     }
 
@@ -582,7 +582,7 @@ public class BuildGesturesTests
     public void Select_DragASelectedJoint_MovesTheSelectionTogether()
     {
         var (build, gestures) = ThreeLooseJoints(BuildTool.Select);
-        build.ReplaceSelection([0, 1]);
+        build.ReplaceSelection([1, 2]);
 
         gestures.Press(new Vector2D(0, 0));
         gestures.Drag(new Vector2D(0, 30));
@@ -597,28 +597,28 @@ public class BuildGesturesTests
     public void Select_DragASelectedJoint_ReportsTheWholeSelectionAsMoving()
     {
         var (build, gestures) = ThreeLooseJoints(BuildTool.Select);
-        build.ReplaceSelection([0, 1]);
+        build.ReplaceSelection([1, 2]);
         IReadOnlyCollection<int>? moving = null;
         gestures.NodeDragStarting += (_, nodes) => moving = nodes;
 
         gestures.Press(new Vector2D(0, 0));
         gestures.Drag(new Vector2D(0, 30));
 
-        moving!.OrderBy(index => index).ShouldBe([0, 1]);
+        moving!.OrderBy(id => id).ShouldBe([1, 2]);
     }
 
     [Fact]
     public void Move_DragWithASelection_ReportsOnlyTheDraggedJointAsMoving()
     {
         var (build, gestures) = ThreeLooseJoints(BuildTool.Move);
-        build.ReplaceSelection([0, 1]);
+        build.ReplaceSelection([1, 2]);
         IReadOnlyCollection<int>? moving = null;
         gestures.NodeDragStarting += (_, nodes) => moving = nodes;
 
         gestures.Press(new Vector2D(0, 0));
         gestures.Drag(new Vector2D(0, 30));
 
-        moving.ShouldBe([0]);
+        moving.ShouldBe([1]);
         build.Nodes[1].Position.ShouldBe(new Vector2D(100, 0));
     }
 
@@ -629,7 +629,7 @@ public class BuildGesturesTests
 
         Tap(gestures, new Vector2D(0, 0));
 
-        build.Cores.ShouldBe([new CoreDef(0)]);
+        build.Cores.ShouldBe([new CoreDef(4, 1)]);
     }
 
     [Fact]
@@ -656,22 +656,22 @@ public class BuildGesturesTests
     public void Select_TapOnAnUnselectedJoint_AddsIt()
     {
         var (build, gestures) = ThreeLooseJoints(BuildTool.Select);
-        build.ReplaceSelection([0]);
+        build.ReplaceSelection([1]);
 
         Tap(gestures, new Vector2D(0, 100));
 
-        build.SelectedNodeIndices.OrderBy(index => index).ShouldBe([0, 2]);
+        build.SelectedNodeIds.OrderBy(id => id).ShouldBe([1, 3]);
     }
 
     [Fact]
     public void Select_TapOnASelectedJoint_RemovesIt()
     {
         var (build, gestures) = ThreeLooseJoints(BuildTool.Select);
-        build.ReplaceSelection([0, 1]);
+        build.ReplaceSelection([1, 2]);
 
         Tap(gestures, new Vector2D(0, 0));
 
-        build.SelectedNodeIndices.ShouldBe([1]);
+        build.SelectedNodeIds.ShouldBe([2]);
     }
 
     [Fact]
@@ -679,7 +679,7 @@ public class BuildGesturesTests
     {
         var (build, gestures) = TwoJointsAndABeam();
         build.ActiveTool = BuildTool.Select;
-        build.ReplaceSelection([0]);
+        build.ReplaceSelection([1]);
 
         Tap(gestures, new Vector2D(50, 0));
 
@@ -690,10 +690,10 @@ public class BuildGesturesTests
     public void Select_TwoJoints_ShowAFrameWithThreeHandles()
     {
         var (build, gestures) = ThreeLooseJoints(BuildTool.Select);
-        build.ReplaceSelection([0]);
+        build.ReplaceSelection([1]);
         gestures.SelectionFrame.ShouldBeNull();
 
-        build.ReplaceSelection([0, 1]);
+        build.ReplaceSelection([1, 2]);
 
         var frame = gestures.SelectionFrame.ShouldNotBeNull();
         frame.Min.X.ShouldBe(100 - _frameRight, 1e-9);
@@ -711,10 +711,10 @@ public class BuildGesturesTests
     {
         var build = new BuildViewModel();
         build.Load(
-            new CreatureDef([new NodeDef(new Vector2D(0, 0), 18), new NodeDef(new Vector2D(100, 0), 18)], [new BeamDef(0, 1)], []),
+            new CreatureDef([new NodeDef(1, new Vector2D(0, 0), 18), new NodeDef(2, new Vector2D(100, 0), 18)], [new BeamDef(101, 1, 2)], []),
             moveOnly: true);
         build.ActiveTool = BuildTool.Select;
-        build.ReplaceSelection([0, 1]);
+        build.ReplaceSelection([1, 2]);
         var gestures = new BuildGestures(build);
 
         gestures.SelectionHandles.Select(entry => entry.Handle).ShouldBe([SelectionHandle.Move, SelectionHandle.Rotate, SelectionHandle.Scale]);
@@ -724,7 +724,7 @@ public class BuildGesturesTests
     public void Select_DragInsideTheFrame_MovesTheSelection()
     {
         var (build, gestures) = ThreeLooseJoints(BuildTool.Select);
-        build.ReplaceSelection([0, 1]);
+        build.ReplaceSelection([1, 2]);
 
         gestures.Press(new Vector2D(50, 30));
         gestures.Drag(new Vector2D(50, 60));
@@ -733,14 +733,14 @@ public class BuildGesturesTests
         build.Nodes[0].Position.ShouldBe(new Vector2D(0, 30));
         build.Nodes[1].Position.ShouldBe(new Vector2D(100, 30));
         build.Nodes[2].Position.ShouldBe(new Vector2D(0, 100));
-        build.SelectedNodeIndices.OrderBy(index => index).ShouldBe([0, 1]);
+        build.SelectedNodeIds.OrderBy(id => id).ShouldBe([1, 2]);
     }
 
     [Fact]
     public void Select_RotateHandle_TurnsTheSelectionAboutItsCentre()
     {
         var (build, gestures) = ThreeLooseJoints(BuildTool.Select);
-        build.ReplaceSelection([0, 1]);
+        build.ReplaceSelection([1, 2]);
 
         gestures.Press(_rotateHandle);
         gestures.Drag(new Vector2D(130, 0));
@@ -756,7 +756,7 @@ public class BuildGesturesTests
     public void Select_ScaleHandle_SpreadsTheSelectionAlongItsDiagonal()
     {
         var (build, gestures) = ThreeLooseJoints(BuildTool.Select);
-        build.ReplaceSelection([0, 1]);
+        build.ReplaceSelection([1, 2]);
 
         gestures.Press(_scaleHandle);
         gestures.Drag(new Vector2D(50 + (2 * (_scaleHandle.X - 50)), 96));
@@ -770,13 +770,13 @@ public class BuildGesturesTests
     {
         var (build, gestures) = ThreeLooseJoints(BuildTool.Select);
         build.PlaceNode(_moveHandle, 18);
-        build.ReplaceSelection([0, 1]);
+        build.ReplaceSelection([1, 2]);
 
         Tap(gestures, _moveHandle);
-        build.SelectedNodeIndices.ShouldBe([0, 1, 3], ignoreOrder: true);
+        build.SelectedNodeIds.ShouldBe([1, 2, 4], ignoreOrder: true);
 
         Tap(gestures, _moveHandle);
-        build.SelectedNodeIndices.ShouldBe([0, 1], ignoreOrder: true);
+        build.SelectedNodeIds.ShouldBe([1, 2], ignoreOrder: true);
     }
 
     [Fact]
@@ -784,7 +784,7 @@ public class BuildGesturesTests
     {
         var (build, gestures) = ThreeLooseJoints(BuildTool.Select);
         build.PlaceNode(_moveHandle, 18);
-        build.ReplaceSelection([0, 1]);
+        build.ReplaceSelection([1, 2]);
 
         gestures.Press(_moveHandle);
         gestures.Drag(new Vector2D(_moveHandle.X, 40));
@@ -792,14 +792,14 @@ public class BuildGesturesTests
 
         build.Nodes[0].Position.ShouldBe(new Vector2D(0, 40));
         build.Nodes[3].Position.ShouldBe(_moveHandle);
-        build.SelectedNodeIndices.ShouldBe([0, 1], ignoreOrder: true);
+        build.SelectedNodeIds.ShouldBe([1, 2], ignoreOrder: true);
     }
 
     [Fact]
     public void Select_ScaleHandleDraggedPastTheCentre_NeverReflects()
     {
         var (build, gestures) = ThreeLooseJoints(BuildTool.Select);
-        build.ReplaceSelection([0, 1]);
+        build.ReplaceSelection([1, 2]);
 
         gestures.Press(_scaleHandle);
         gestures.Drag(new Vector2D(-200, -200));
@@ -811,7 +811,7 @@ public class BuildGesturesTests
     public void SecondFinger_PutsBackASelectionTheRotateHandleTurned()
     {
         var (build, gestures) = ThreeLooseJoints(BuildTool.Select);
-        build.ReplaceSelection([0, 1]);
+        build.ReplaceSelection([1, 2]);
 
         gestures.Press(_rotateHandle, 0);
         gestures.Drag(new Vector2D(130, 0), 0);
@@ -830,7 +830,7 @@ public class BuildGesturesTests
         var (build, gestures) = ThreeLooseJoints(BuildTool.Select);
         gestures.View.VisibleArea = new CanvasRect(new Vector2D(0, 0), new Vector2D(1000, 500));
         gestures.View.ZoomAbout(new Vector2D(0, 0), zoom);
-        build.ReplaceSelection([0, 1]);
+        build.ReplaceSelection([1, 2]);
         var rotate = gestures.View.ToView(gestures.SelectionHandles.Single(entry => entry.Handle == SelectionHandle.Rotate).Position);
 
         var edge = new Vector2D(rotate.X + BuildGestures.HandleHitRadius - 1, rotate.Y);
@@ -838,7 +838,7 @@ public class BuildGesturesTests
         gestures.Drag(new Vector2D(edge.X + 200, edge.Y + 200));
 
         build.Nodes[0].Position.ShouldNotBe(new Vector2D(0, 0));
-        build.SelectedNodeIndices.OrderBy(index => index).ShouldBe([0, 1]);
+        build.SelectedNodeIds.OrderBy(id => id).ShouldBe([1, 2]);
     }
 
     private static (BuildViewModel Build, BuildGestures Gestures) TwoJointsAndABeam()
@@ -846,7 +846,7 @@ public class BuildGesturesTests
         var build = new BuildViewModel();
         build.PlaceNode(new Vector2D(0, 0), 18);
         build.PlaceNode(new Vector2D(100, 0), 18);
-        build.ConnectBeam(0, 1);
+        build.ConnectBeam(1, 2);
         return (build, new BuildGestures(build));
     }
 

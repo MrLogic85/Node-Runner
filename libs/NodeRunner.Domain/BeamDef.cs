@@ -8,16 +8,21 @@ namespace NodeRunner.Domain;
 /// </summary>
 public sealed record BeamDef
 {
-    public BeamDef(int nodeA, int nodeB)
+    public BeamDef(int id, int nodeA, int nodeB, string? name = null)
     {
-        if (nodeA < 0)
+        if (id <= 0)
         {
-            throw new ArgumentOutOfRangeException(nameof(nodeA), "Node index must be non-negative.");
+            throw new ArgumentOutOfRangeException(nameof(id), "Beam id must be positive.");
         }
 
-        if (nodeB < 0)
+        if (nodeA <= 0)
         {
-            throw new ArgumentOutOfRangeException(nameof(nodeB), "Node index must be non-negative.");
+            throw new ArgumentOutOfRangeException(nameof(nodeA), "Node id must be positive.");
+        }
+
+        if (nodeB <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(nodeB), "Node id must be positive.");
         }
 
         if (nodeA == nodeB)
@@ -25,11 +30,17 @@ public sealed record BeamDef
             throw new ArgumentException("A beam must connect two different nodes.");
         }
 
+        Id = id;
         NodeA = nodeA;
         NodeB = nodeB;
+        Name = name;
     }
+
+    public int Id { get; }
 
     public int NodeA { get; }
 
     public int NodeB { get; }
+
+    public string? Name { get; }
 }

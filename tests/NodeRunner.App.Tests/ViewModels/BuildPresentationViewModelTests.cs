@@ -37,8 +37,8 @@ public sealed class BuildPresentationViewModelTests
     public void InspectorValues_UsesStatusMessageBeforeToolHint()
     {
         var build = new BuildViewModel();
-        build.PlaceNode(new Vector2D(0, 0), 18);
-        build.ConnectBeam(0, 0);
+        var nodeId = build.PlaceNode(new Vector2D(0, 0), 18);
+        build.ConnectBeam(nodeId, nodeId);
         var presentation = new BuildPresentationViewModel(build);
 
         presentation.InspectorValues.ShouldBe("A beam must connect two different nodes.");
@@ -52,8 +52,8 @@ public sealed class BuildPresentationViewModelTests
             Guid.NewGuid(),
             "Worm",
             new CreatureDef(
-                [new NodeDef(new Vector2D(0, 0), 18), new NodeDef(new Vector2D(20, 0), 18)],
-                [new BeamDef(0, 1)],
+                [new NodeDef(1, new Vector2D(0, 0), 18), new NodeDef(2, new Vector2D(20, 0), 18)],
+                [new BeamDef(101, 1, 2)],
                 []),
             new TrainingStateDef([2, 1], [0.1, -0.2, 0.3], 3, "Tanh")));
         var presentation = new BuildPresentationViewModel(build);
@@ -76,8 +76,8 @@ public sealed class BuildPresentationViewModelTests
         var build = new BuildViewModel();
         build.Load(
             new CreatureDef(
-                [new NodeDef(new Vector2D(0, 0), 18), new NodeDef(new Vector2D(20, 0), 18)],
-                [new BeamDef(0, 1)],
+                [new NodeDef(1, new Vector2D(0, 0), 18), new NodeDef(2, new Vector2D(20, 0), 18)],
+                [new BeamDef(101, 1, 2)],
                 []),
             moveOnly: true,
             creationName: "Worm",
@@ -107,10 +107,10 @@ public sealed class BuildPresentationViewModelTests
         var build = new BuildViewModel();
         build.Load(
             new CreatureDef(
-                [new NodeDef(new Vector2D(0, 0), 18), new NodeDef(new Vector2D(3, 4), 18)],
-                [new BeamDef(0, 1)],
+                [new NodeDef(1, new Vector2D(0, 0), 18), new NodeDef(2, new Vector2D(3, 4), 18)],
+                [new BeamDef(101, 1, 2)],
                 []));
-        build.SelectBeam(0);
+        build.SelectBeam(101);
         var presentation = new BuildPresentationViewModel(build);
 
         presentation.SinglePartTitle.ShouldBe("Beam 1");
@@ -127,10 +127,10 @@ public sealed class BuildPresentationViewModelTests
         var build = new BuildViewModel();
         build.Load(
             new CreatureDef(
-                [new NodeDef(new Vector2D(0, 0), 18), new NodeDef(new Vector2D(20, 0), 18)],
-                [new BeamDef(0, 1)],
-                [new CoreDef(0)]));
-        build.ToggleSelectedNode(0);
+                [new NodeDef(1, new Vector2D(0, 0), 18), new NodeDef(2, new Vector2D(20, 0), 18)],
+                [new BeamDef(101, 1, 2)],
+                [new CoreDef(201, 1)]));
+        build.ToggleSelectedNode(1);
         var presentation = new BuildPresentationViewModel(build);
 
         presentation.SinglePartTitle.ShouldBe("Core · Node 1");
@@ -147,13 +147,13 @@ public sealed class BuildPresentationViewModelTests
         build.Load(
             new CreatureDef(
                 [
-                    new NodeDef(new Vector2D(0, 0), 18),
-                    new NodeDef(new Vector2D(20, 5), 12),
-                    new NodeDef(new Vector2D(40, 0), 18),
+                    new NodeDef(1, new Vector2D(0, 0), 18),
+                    new NodeDef(2, new Vector2D(20, 5), 12),
+                    new NodeDef(3, new Vector2D(40, 0), 18),
                 ],
-                [new BeamDef(0, 1), new BeamDef(1, 2)],
+                [new BeamDef(101, 1, 2), new BeamDef(102, 2, 3)],
                 []));
-        build.ToggleSelectedNode(1);
+        build.ToggleSelectedNode(2);
         var presentation = new BuildPresentationViewModel(build);
 
         presentation.SelectedPartCount.ShouldBe(1);
@@ -169,11 +169,11 @@ public sealed class BuildPresentationViewModelTests
         var build = new BuildViewModel();
         build.Load(
             new CreatureDef(
-                [new NodeDef(new Vector2D(0, 0), 18), new NodeDef(new Vector2D(20, 0), 18)],
-                [new BeamDef(0, 1)],
-                [new CoreDef(0)]));
-        build.ToggleSelectedNode(0);
+                [new NodeDef(1, new Vector2D(0, 0), 18), new NodeDef(2, new Vector2D(20, 0), 18)],
+                [new BeamDef(101, 1, 2)],
+                [new CoreDef(201, 1)]));
         build.ToggleSelectedNode(1);
+        build.ToggleSelectedNode(2);
         var presentation = new BuildPresentationViewModel(build);
 
         presentation.SelectedPartCount.ShouldBe(2);
@@ -211,7 +211,7 @@ public sealed class BuildPresentationViewModelTests
     {
         var build = new BuildViewModel();
         build.PlaceNode(new Vector2D(0, 0), 18);
-        build.ToggleCoreOnNode(0);
+        build.ToggleCoreOnNode(1);
         var presentation = new BuildPresentationViewModel(build);
 
         presentation.CoreToolText.ShouldBe("Core");
@@ -263,14 +263,14 @@ public sealed class BuildPresentationViewModelTests
         build.Load(
             new CreatureDef(
                 [
-                    new NodeDef(new Vector2D(0, 0), 18),
-                    new NodeDef(new Vector2D(56, 0), 18),
-                    new NodeDef(new Vector2D(112, 0), 18),
-                    new NodeDef(new Vector2D(168, 0), 18),
-                    new NodeDef(new Vector2D(224, 0), 18),
+                    new NodeDef(1, new Vector2D(0, 0), 18),
+                    new NodeDef(2, new Vector2D(56, 0), 18),
+                    new NodeDef(3, new Vector2D(112, 0), 18),
+                    new NodeDef(4, new Vector2D(168, 0), 18),
+                    new NodeDef(5, new Vector2D(224, 0), 18),
                 ],
-                [new BeamDef(0, 1), new BeamDef(1, 2), new BeamDef(2, 3), new BeamDef(3, 4)],
-                [new CoreDef(0)]));
+                [new BeamDef(101, 1, 2), new BeamDef(102, 2, 3), new BeamDef(103, 3, 4), new BeamDef(104, 4, 5)],
+                [new CoreDef(201, 1)]));
         var presentation = new BuildPresentationViewModel(build);
 
         var buildPanel = presentation.BuildPanel;
@@ -288,16 +288,16 @@ public sealed class BuildPresentationViewModelTests
         build.Load(
             new CreatureDef(
                 [
-                    new NodeDef(new Vector2D(0, 0), 18),
-                    new NodeDef(new Vector2D(56, 0), 18),
-                    new NodeDef(new Vector2D(112, 0), 18),
-                    new NodeDef(new Vector2D(168, 0), 18),
-                    new NodeDef(new Vector2D(224, 0), 18),
+                    new NodeDef(1, new Vector2D(0, 0), 18),
+                    new NodeDef(2, new Vector2D(56, 0), 18),
+                    new NodeDef(3, new Vector2D(112, 0), 18),
+                    new NodeDef(4, new Vector2D(168, 0), 18),
+                    new NodeDef(5, new Vector2D(224, 0), 18),
                 ],
-                [new BeamDef(0, 1), new BeamDef(1, 2), new BeamDef(2, 3), new BeamDef(3, 4)],
-                [new CoreDef(0)]));
-        build.ToggleCoreOnNode(2);
-        build.ToggleCoreOnNode(4);
+                [new BeamDef(101, 1, 2), new BeamDef(102, 2, 3), new BeamDef(103, 3, 4), new BeamDef(104, 4, 5)],
+                [new CoreDef(201, 1)]));
+        build.ToggleCoreOnNode(3);
+        build.ToggleCoreOnNode(5);
         var presentation = new BuildPresentationViewModel(build);
 
         var buildPanel = presentation.BuildPanel;
@@ -314,9 +314,9 @@ public sealed class BuildPresentationViewModelTests
         var build = new BuildViewModel();
         build.Load(
             new CreatureDef(
-                [new NodeDef(new Vector2D(0, 0), 18), new NodeDef(new Vector2D(56, 0), 18)],
-                [new BeamDef(0, 1)],
-                [new CoreDef(0)]));
+                [new NodeDef(1, new Vector2D(0, 0), 18), new NodeDef(2, new Vector2D(56, 0), 18)],
+                [new BeamDef(101, 1, 2)],
+                [new CoreDef(201, 1)]));
         var presentation = new BuildPresentationViewModel(build);
 
         var buildPanel = presentation.BuildPanel;

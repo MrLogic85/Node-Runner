@@ -8,15 +8,26 @@ namespace NodeRunner.Domain;
 /// </summary>
 public sealed record CoreDef
 {
-    public CoreDef(int nodeIndex)
+    public CoreDef(int id, int nodeId, string? name = null)
     {
-        if (nodeIndex < 0)
+        if (id <= 0)
         {
-            throw new ArgumentOutOfRangeException(nameof(nodeIndex), "Node index must be non-negative.");
+            throw new ArgumentOutOfRangeException(nameof(id), "Core id must be positive.");
         }
 
-        NodeIndex = nodeIndex;
+        if (nodeId <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(nodeId), "Node id must be positive.");
+        }
+
+        Id = id;
+        NodeId = nodeId;
+        Name = name;
     }
 
-    public int NodeIndex { get; }
+    public int Id { get; }
+
+    public int NodeId { get; }
+
+    public string? Name { get; }
 }

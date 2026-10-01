@@ -19,10 +19,20 @@ public sealed class SelectionViewModelTests
     }
 
     [Fact]
+    public void Select_StoresPartIdNotListPosition()
+    {
+        var viewModel = new SelectionViewModel();
+
+        viewModel.Select(new CreatureElementSelection(CreatureElementKind.Node, 42));
+
+        viewModel.SelectedElement.ShouldBe(new CreatureElementSelection(CreatureElementKind.Node, 42));
+    }
+
+    [Fact]
     public void Clear_WithSelection_ClearsSelectionAndRaisesPropertyChanged()
     {
         var viewModel = new SelectionViewModel();
-        viewModel.Select(new CreatureElementSelection(CreatureElementKind.Node, 0));
+        viewModel.Select(new CreatureElementSelection(CreatureElementKind.Node, 1));
         var changedProperties = new List<string?>();
         viewModel.PropertyChanged += (_, eventArgs) => changedProperties.Add(eventArgs.PropertyName);
 

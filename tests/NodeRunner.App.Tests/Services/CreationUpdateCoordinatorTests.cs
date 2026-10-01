@@ -84,7 +84,7 @@ public sealed class CreationUpdateCoordinatorTests
         // drops it rather than keep a genome sized for the old anatomy.
         var creation = CreateCreation("Alpha", withTraining: true);
         repository.Save(creation);
-        var loose = new CreatureDef([new NodeDef(new Vector2D(0, 0), 1)], [], []);
+        var loose = new CreatureDef([new NodeDef(1, new Vector2D(0, 0), 1)], [], []);
         var shape = new BrainShapeDef(3, 5);
 
         var updated = coordinator.ApplyEdit(creation.Id, loose, shape, moveOnly: false);
@@ -190,16 +190,16 @@ public sealed class CreationUpdateCoordinatorTests
     }
 
     private static CreatureDef MovedCreature() => new(
-        [new NodeDef(new Vector2D(5, 0), 1), new NodeDef(new Vector2D(7, 0), 1)],
-        [new BeamDef(0, 1)],
-        [new CoreDef(0)]);
+        [new NodeDef(1, new Vector2D(5, 0), 1), new NodeDef(2, new Vector2D(7, 0), 1)],
+        [new BeamDef(3, 1, 2)],
+        [new CoreDef(4, 1)]);
 
     private static CreationDef CreateCreation(string name, bool withTraining = false)
     {
         var creature = new CreatureDef(
-            [new NodeDef(new Vector2D(0, 0), 1), new NodeDef(new Vector2D(2, 0), 1)],
-            [new BeamDef(0, 1)],
-            [new CoreDef(0)]);
+            [new NodeDef(1, new Vector2D(0, 0), 1), new NodeDef(2, new Vector2D(2, 0), 1)],
+            [new BeamDef(101, 1, 2)],
+            [new CoreDef(201, 1)]);
 
         return new CreationDef(
             Guid.NewGuid(),

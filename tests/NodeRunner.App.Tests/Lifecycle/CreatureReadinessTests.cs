@@ -13,24 +13,24 @@ public sealed class CreatureReadinessTests
     }
 
     [Fact]
-    public void Problems_WithLooseNodeAndZeroLengthBeam_NamesEach()
+    public void Problems_WithLooseNodeAndZeroLengthBeam_NamesEachByListPosition()
     {
         var creature = new CreatureDef(
-            [Node(0, 0), Node(0, 0), Node(4, 0)],
-            [new BeamDef(0, 1)],
+            [new NodeDef(5, new Vector2D(0, 0), 1), new NodeDef(9, new Vector2D(0, 0), 1), new NodeDef(12, new Vector2D(4, 0), 1)],
+            [new BeamDef(20, 5, 9)],
             []);
 
         CreatureReadiness.Problems(creature).ShouldBe(
         [
-            "Node 2 has no beams attached. Connect it with a beam or remove it.",
-            "The beam between node 0 and node 1 has zero length. Move one of the nodes apart.",
+            "Node 3 has no beams attached. Connect it with a beam or remove it.",
+            "The beam between node 1 and node 2 has zero length. Move one of the nodes apart.",
         ]);
     }
 
     [Fact]
     public void CanTrain_WithSingleBeam_IsFalseBecauseNothingMoves()
     {
-        var creature = new CreatureDef([Node(0, 0), Node(2, 0)], [new BeamDef(0, 1)], []);
+        var creature = new CreatureDef([new NodeDef(1, new Vector2D(0, 0), 1), new NodeDef(2, new Vector2D(2, 0), 1)], [new BeamDef(101, 1, 2)], []);
 
         CreatureReadiness.Problems(creature).ShouldBeEmpty();
         CreatureReadiness.CanTrain(creature).ShouldBeFalse();
@@ -40,9 +40,9 @@ public sealed class CreatureReadinessTests
     public void CanTrain_WithAMotorRelation_IsTrue()
     {
         var creature = new CreatureDef(
-            [Node(0, 0), Node(2, 0), Node(4, 1)],
-            [new BeamDef(0, 1), new BeamDef(1, 2)],
-            [new CoreDef(0)]);
+            [new NodeDef(1, new Vector2D(0, 0), 1), new NodeDef(2, new Vector2D(2, 0), 1), new NodeDef(3, new Vector2D(4, 1), 1)],
+            [new BeamDef(101, 1, 2), new BeamDef(102, 2, 3)],
+            [new CoreDef(201, 1)]);
 
         CreatureReadiness.CanTrain(creature).ShouldBeTrue();
     }
@@ -51,9 +51,9 @@ public sealed class CreatureReadinessTests
     public void CanTrain_WithAMotorRelationAndALooseNode_IsFalse()
     {
         var creature = new CreatureDef(
-            [Node(0, 0), Node(2, 0), Node(4, 1), Node(8, 8)],
-            [new BeamDef(0, 1), new BeamDef(1, 2)],
-            [new CoreDef(0)]);
+            [new NodeDef(1, new Vector2D(0, 0), 1), new NodeDef(2, new Vector2D(2, 0), 1), new NodeDef(3, new Vector2D(4, 1), 1), new NodeDef(4, new Vector2D(8, 8), 1)],
+            [new BeamDef(101, 1, 2), new BeamDef(102, 2, 3)],
+            [new CoreDef(201, 1)]);
 
         CreatureReadiness.CanTrain(creature).ShouldBeFalse();
     }
@@ -63,6 +63,4 @@ public sealed class CreatureReadinessTests
     {
         Should.Throw<ArgumentNullException>(() => CreatureReadiness.Problems(null!));
     }
-
-    private static NodeDef Node(double x, double y) => new(new Vector2D(x, y), 1);
 }
