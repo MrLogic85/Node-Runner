@@ -18,6 +18,13 @@ senses" (Core) and "what thinks" (the neural model) conceptually separate is
 the most important rule in this document — **a Core is a sensor package, not
 the brain.**
 
+Every saved Node, Beam, and Core has a stable positive integer id from the
+creature's single part counter (`CreatureDef.NextPartId`). The counter is
+saved with the creature, only increases, and deleted ids are never reused.
+Ids are machine identity only: they are not display order, draw order, brain
+port order, or names. Display names are optional metadata on parts; they may
+be duplicated and are never keys.
+
 ```
 CreatureDef  ──build──▶  physical body  ──sensors──▶  model  ──outputs──▶  motor relations  ──torque──▶  physical body
    (data)                    (physics)                (control)                                            (physics)
@@ -28,9 +35,9 @@ CreatureDef  ──build──▶  physical body  ──sensors──▶  model 
 - **Beginner:** A physical attachment point. Beams meet here and can rotate
   relative to each other.
 - **Implementation:** `NodeDef` in `libs/NodeRunner.Domain/NodeDef.cs` stores
-  a position (`Vector2D`) and a radius. A node has no `RigidBody2D` of its
-  own — physically it's just the shared point where beam bodies are pinned
-  together (see Beam below).
+  an id, optional display name, a position (`Vector2D`) and a radius. A node
+  has no `RigidBody2D` of its own — physically it's just the shared point
+  where beam bodies are pinned together (see Beam below).
 - **Degree rules** (how many beams touch a node):
   - **0 beams** — not ready. A node with nothing attached is just a loose
     point and cannot be simulated. It can be saved as part of an unfinished
@@ -49,7 +56,8 @@ CreatureDef  ──build──▶  physical body  ──sensors──▶  model 
 - **Beginner:** A rigid, fixed-length connection between two nodes. It never
   stretches or compresses — think steel rod, not rubber band.
 - **Implementation:** `BeamDef` in `libs/NodeRunner.Domain/BeamDef.cs` stores
-  two node indices (`NodeA`, `NodeB`). At runtime it becomes its own
+  an id, optional display name, and two node ids (`NodeA`, `NodeB`). At
+  runtime it becomes its own
   `RigidBody2D` in `project/src/creature/Creature.cs`, sized to the distance
   between its two nodes' positions. Beams from the same creature never
   collide with each other (collision exceptions are added pairwise), which
@@ -62,7 +70,8 @@ CreatureDef  ──build──▶  physical body  ──sensors──▶  model 
 - **Beginner:** A sensor package mounted on a node. It is *not* the brain —
   it's where the model's inputs come from.
 - **Implementation:** `CoreDef` in `libs/NodeRunner.Domain/CoreDef.cs` stores
-  the node it is mounted on. At runtime `project/src/creature/CoreSensors.cs`
+  an id, optional display name, and the node id it is mounted on. At runtime
+  `project/src/creature/CoreSensors.cs`
   reads 6 values per core, all relative to the mounting beam's own frame:
   three fixed rays (down, forward, forward-down), pitch (the mounting beam's
   rotation), elevation (height above the world origin), and speed (the
@@ -80,7 +89,9 @@ CreatureDef  ──build──▶  physical body  ──sensors──▶  model 
 - **Implementation:** derived, not stored. `MotorTopology.BuildNodeConnections`
   in `libs/NodeRunner.Domain/MotorTopology.cs` computes, from a
   `CreatureDef`'s topology alone, every physical pin between beams at a node
-  (`NodeConnectionDef`), and marks which of those are motorized. At runtime,
+  (`NodeConnectionDef`), and marks which of those are motorized. Motor
+  relations have no stable ids because they are not saved parts; they are
+  recomputed from the current node/beam list order. At runtime,
   `project/src/creature/MotorRelation.cs` wraps each motorized connection:
   - **Sensors it exposes:** `relativeAngle` (signed, normalized to
     `[-1, 1]` representing `[-180°, +180°]` — never `[0°, 360°]`, to avoid a
@@ -131,6 +142,20 @@ shapes (e.g. a bare quadrilateral) with their genuine remaining freedom.
   The SignalFlow stages only count readings and motors until #196 draws
   them. See `Creature.ReadMapping()`.
 
+## Editing identity rules
+
+- Creating a Node, Beam, or Core takes the current `NextPartId` and then
+  advances the counter.
+- Removing a Node, Beam, or Core retires that id forever. Removing a Node also
+  removes beams and cores that reference its node id; surviving parts keep
+  their ids because no list reindexing is needed.
+- Beam split by the Joint tool removes the original beam id and creates one
+  fresh node id plus two fresh beam ids.
+- Saving, loading, moving, renaming, reordering lists, rebuilding a body, and
+  copying a whole Creation preserve part ids and the counter.
+- Part-to-part references are by stable id. Code that needs an array position
+  uses `CreatureDef`'s id-to-index lookups at the boundary.
+
 ## Worked example: the 0.2.0 hardcoded creature
 
 `project/src/creature/HardcodedCreatureFactory.cs` builds the first concrete
@@ -146,8 +171,8 @@ shapes (e.g. a bare quadrilateral) with their genuine remaining freedom.
 ```
 
 - **5 nodes** (`N0`-`N4`) spaced 56 units apart, radius 18.
-- **4 beams**, one per adjacent pair.
-- **1 core**, mounted on `N0`.
+- **4 beams**, one per adjacent pair, referencing node ids.
+- **1 core**, mounted on `N0`'s node id.
 - **Node degrees:** `N0` and `N4` have 1 beam each (passive ends); `N1`,
   `N2`, `N3` each have 2 beams, giving 3 motor relations total — no closed
   loops, so no triangle exclusions apply here.

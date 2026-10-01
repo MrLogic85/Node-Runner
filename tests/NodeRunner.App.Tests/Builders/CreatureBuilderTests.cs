@@ -6,15 +6,15 @@ namespace NodeRunner.App.Tests.Builders;
 public sealed class CreatureBuilderTests
 {
     [Fact]
-    public void AddNode_ReturnsSequentialIndices()
+    public void AddNode_ReturnsSequentialIds()
     {
         var builder = new CreatureBuilder();
 
         var first = builder.AddNode(new Vector2D(0, 0), 1);
         var second = builder.AddNode(new Vector2D(2, 0), 1);
 
-        first.ShouldBe(0);
-        second.ShouldBe(1);
+        first.ShouldBe(1);
+        second.ShouldBe(2);
         builder.Nodes.Count.ShouldBe(2);
     }
 
@@ -26,30 +26,30 @@ public sealed class CreatureBuilderTests
 
         builder.MoveNode(node, new Vector2D(5, 7));
 
-        builder.Nodes[node].Position.ShouldBe(new Vector2D(5, 7));
-        builder.Nodes[node].Radius.ShouldBe(1.5);
+        builder.Nodes[builder.NodeIndexOf(node)].Position.ShouldBe(new Vector2D(5, 7));
+        builder.Nodes[builder.NodeIndexOf(node)].Radius.ShouldBe(1.5);
     }
 
     [Fact]
-    public void MoveNode_WithInvalidIndex_Throws()
+    public void MoveNode_WithInvalidId_Throws()
     {
         var builder = new CreatureBuilder();
 
-        var action = () => builder.MoveNode(0, new Vector2D(1, 1));
+        var action = () => builder.MoveNode(1, new Vector2D(1, 1));
 
         action.ShouldThrow<ArgumentOutOfRangeException>();
     }
 
     [Fact]
-    public void AddBeam_BetweenDistinctNodes_ReturnsIndex()
+    public void AddBeam_BetweenDistinctNodes_ReturnsId()
     {
         var builder = new CreatureBuilder();
         var a = builder.AddNode(new Vector2D(0, 0), 1);
         var b = builder.AddNode(new Vector2D(2, 0), 1);
 
-        var beamIndex = builder.AddBeam(a, b);
+        var beamId = builder.AddBeam(a, b);
 
-        beamIndex.ShouldBe(0);
+        beamId.ShouldBe(3);
         builder.Beams[0].NodeA.ShouldBe(a);
         builder.Beams[0].NodeB.ShouldBe(b);
     }
@@ -92,20 +92,20 @@ public sealed class CreatureBuilderTests
         builder.CanAddBeam(b, c).ShouldBeTrue();
         builder.CanAddBeam(b, a).ShouldBeFalse();
         builder.CanAddBeam(c, c).ShouldBeFalse();
-        builder.CanAddBeam(c, 3).ShouldBeFalse();
+        builder.CanAddBeam(c, 99).ShouldBeFalse();
         builder.CanAddBeam(-1, c).ShouldBeFalse();
     }
 
     [Fact]
-    public void AddCore_OnExistingNode_ReturnsIndex()
+    public void AddCore_OnExistingNode_ReturnsId()
     {
         var builder = new CreatureBuilder();
         var node = builder.AddNode(new Vector2D(0, 0), 1);
 
-        var coreIndex = builder.AddCore(node);
+        var coreId = builder.AddCore(node);
 
-        coreIndex.ShouldBe(0);
-        builder.Cores[0].NodeIndex.ShouldBe(node);
+        coreId.ShouldBe(2);
+        builder.Cores[0].NodeId.ShouldBe(node);
     }
 
     [Fact]
@@ -118,12 +118,12 @@ public sealed class CreatureBuilderTests
         builder.AddBeam(a, b);
         var second = builder.AddBeam(b, c);
 
-        builder.RemoveBeam(0);
+        builder.RemoveBeam(builder.Beams[0].Id);
 
         builder.Beams.Count.ShouldBe(1);
         builder.Beams[0].NodeA.ShouldBe(b);
         builder.Beams[0].NodeB.ShouldBe(c);
-        second.ShouldBe(1);
+        second.ShouldBe(5);
     }
 
     [Fact]
@@ -134,7 +134,7 @@ public sealed class CreatureBuilderTests
         builder.AddCore(node);
         builder.AddCore(node);
 
-        builder.RemoveCore(0);
+        builder.RemoveCore(builder.Cores[0].Id);
 
         builder.Cores.Count.ShouldBe(1);
     }
@@ -158,7 +158,63 @@ public sealed class CreatureBuilderTests
     }
 
     [Fact]
-    public void RemoveNode_ReindexesSurvivingBeamsAndCores()
+    public void RemovedIds_AreNotReused()
+    {
+        var builder = new CreatureBuilder();
+        var a = builder.AddNode(new Vector2D(0, 0), 1);
+        var b = builder.AddNode(new Vector2D(2, 0), 1);
+        var beam = builder.AddBeam(a, b);
+
+        builder.RemoveBeam(beam);
+        builder.RemoveNode(b);
+
+        var c = builder.AddNode(new Vector2D(4, 0), 1);
+        var newBeam = builder.AddBeam(a, c);
+
+        c.ShouldBeGreaterThan(beam);
+        newBeam.ShouldBeGreaterThan(c);
+        builder.Build().NextPartId.ShouldBe(newBeam + 1);
+    }
+
+    [Fact]
+    public void Constructor_FromCreature_KeepsIdsAndCounter()
+    {
+        var source = new CreatureDef(
+            [new NodeDef(10, new Vector2D(0, 0), 1), new NodeDef(20, new Vector2D(2, 0), 1)],
+            [new BeamDef(30, 10, 20)],
+            [new CoreDef(40, 10)],
+            nextPartId: 99);
+
+        var builder = new CreatureBuilder(source);
+        var next = builder.AddNode(new Vector2D(4, 0), 1);
+
+        builder.Build().Nodes.Take(2).ToArray().ShouldBe(source.Nodes.ToArray());
+        next.ShouldBe(99);
+        builder.Build().NextPartId.ShouldBe(100);
+    }
+
+    [Fact]
+    public void Rename_ChangesOnlyTheMatchingPartName()
+    {
+        var builder = new CreatureBuilder();
+        var a = builder.AddNode(new Vector2D(0, 0), 1);
+        var b = builder.AddNode(new Vector2D(2, 0), 1);
+        var beam = builder.AddBeam(a, b);
+        var core = builder.AddCore(a);
+
+        builder.Rename(a, "Node");
+        builder.Rename(beam, "Beam");
+        builder.Rename(core, "Core");
+
+        builder.Nodes[0].Name.ShouldBe("Node");
+        builder.Beams[0].Name.ShouldBe("Beam");
+        builder.Cores[0].Name.ShouldBe("Core");
+        builder.Beams[0].NodeA.ShouldBe(a);
+        builder.Cores[0].NodeId.ShouldBe(a);
+    }
+
+    [Fact]
+    public void RemoveNode_KeepsSurvivingBeamAndCoreReferencesById()
     {
         var builder = new CreatureBuilder();
         var a = builder.AddNode(new Vector2D(0, 0), 1);
@@ -170,9 +226,9 @@ public sealed class CreatureBuilderTests
         builder.RemoveNode(a);
 
         builder.Nodes.Count.ShouldBe(2);
-        builder.Beams[0].NodeA.ShouldBe(0);
-        builder.Beams[0].NodeB.ShouldBe(1);
-        builder.Cores[0].NodeIndex.ShouldBe(1);
+        builder.Beams[0].NodeA.ShouldBe(b);
+        builder.Beams[0].NodeB.ShouldBe(c);
+        builder.Cores[0].NodeId.ShouldBe(c);
     }
 
     [Fact]
@@ -181,7 +237,7 @@ public sealed class CreatureBuilderTests
         var builder = new CreatureBuilder();
         builder.AddNode(new Vector2D(0, 0), 1);
         builder.AddNode(new Vector2D(2, 0), 1);
-        builder.AddCore(0);
+        builder.AddCore(builder.Nodes[0].Id);
 
         var creature = builder.Build();
 
@@ -262,7 +318,7 @@ public sealed class CreatureBuilderTests
             previous = next;
         }
 
-        builder.AddCore(0);
+        builder.AddCore(builder.Nodes[0].Id);
 
         var succeeded = builder.TryBuild(out var creature, out var errors);
 

@@ -80,13 +80,13 @@ public sealed class BuildGestures
     public event EventHandler<IReadOnlyCollection<int>>? NodeDragStarting;
 
     /// <summary>The node a Beam drag started from.</summary>
-    public int? BeamStartNode { get; private set; }
+    public int? BeamStartNodeId { get; private set; }
 
     /// <summary>Where the pointer is during a Beam drag.</summary>
     public Vector2D? BeamEnd { get; private set; }
 
     /// <summary>The joint a Beam drag would connect to if released now.</summary>
-    public int? BeamTargetNode { get; private set; }
+    public int? BeamTargetNodeId { get; private set; }
 
     /// <summary>The corners of the Select tool's box while it is dragged.</summary>
     public (Vector2D Start, Vector2D End)? SelectionBox { get; private set; }
@@ -208,24 +208,24 @@ public sealed class BuildGestures
             _pressedHandle = handle;
         }
 
-        if (_build.TryFindNodeNear(position, HitDistance(NodeHitRadius), out var nodeIndex))
+        if (_build.TryFindNodeNear(position, HitDistance(NodeHitRadius), out var nodeId))
         {
-            _pressedNode = nodeIndex;
+            _pressedNode = nodeId;
         }
-        else if (_pressedHandle is null && _build.TryFindBeamNear(position, HitDistance(BeamHitDistance), out var beamIndex))
+        else if (_pressedHandle is null && _build.TryFindBeamNear(position, HitDistance(BeamHitDistance), out var beamId))
         {
-            _pressedBeam = beamIndex;
+            _pressedBeam = beamId;
         }
 
         switch (_pressTool)
         {
             case BuildTool.Beam when _pressedNode is { } start && !_build.IsMoveOnly:
-                BeamStartNode = start;
+                BeamStartNodeId = start;
                 BeamEnd = position;
                 Changed?.Invoke(this, EventArgs.Empty);
                 break;
             case BuildTool.Select when _pressedHandle is null:
-                _selectionBefore = ([.. _build.SelectedNodeIndices], _build.SingleSelectedBeamIndex);
+                _selectionBefore = ([.. _build.SelectedNodeIds], _build.SingleSelectedBeamId);
                 PressSelect(viewPosition, position);
                 break;
         }
@@ -254,7 +254,7 @@ public sealed class BuildGestures
             }
             else if (_pressTool == BuildTool.Move && _pressedNode is { } dragged)
             {
-                _dragOrigin = _build.Nodes[dragged].Position;
+                _dragOrigin = NodeById(dragged).Position;
                 NodeDragStarting?.Invoke(this, [dragged]);
             }
         }
@@ -270,9 +270,9 @@ public sealed class BuildGestures
             case BuildTool.Move:
                 View.PanBy(new Vector2D(viewPosition.X - lastViewPosition.X, viewPosition.Y - lastViewPosition.Y));
                 break;
-            case BuildTool.Beam when BeamStartNode is { } start:
+            case BuildTool.Beam when BeamStartNodeId is { } start:
                 BeamEnd = position;
-                BeamTargetNode = FindBeamTarget(start, position);
+                BeamTargetNodeId = FindBeamTarget(start, position);
                 Changed?.Invoke(this, EventArgs.Empty);
                 break;
             case BuildTool.Select when _selectionStart is { } start:
@@ -299,7 +299,7 @@ public sealed class BuildGestures
             case BuildTool.Move when !_dragging:
                 TapMove();
                 break;
-            case BuildTool.Beam when BeamStartNode is { } start && FindBeamTarget(start, position) is { } end:
+            case BuildTool.Beam when BeamStartNodeId is { } start && FindBeamTarget(start, position) is { } end:
                 _build.ConnectBeam(start, end);
                 break;
             case BuildTool.Joint when !_dragging:
@@ -325,14 +325,14 @@ public sealed class BuildGestures
     {
         if (beam is { } selectedBeam)
         {
-            if (_build.SingleSelectedBeamIndex != selectedBeam)
+            if (_build.SingleSelectedBeamId != selectedBeam)
             {
                 _build.SelectBeam(selectedBeam);
             }
         }
         else if (_build.SelectedBeamCount != 0
-            || _build.SelectedNodeIndices.Count != nodes.Length
-            || !nodes.All(_build.SelectedNodeIndices.Contains))
+            || _build.SelectedNodeIds.Count != nodes.Length
+            || !nodes.All(_build.SelectedNodeIds.Contains))
         {
             _build.ReplaceSelection(nodes);
         }
@@ -365,7 +365,7 @@ public sealed class BuildGestures
     {
         if (_pressedNode is { } node)
         {
-            _pressedNodeWasSelected = _build.SelectedNodeIndices.Contains(node);
+            _pressedNodeWasSelected = _build.SelectedNodeIds.Contains(node);
             if (!_pressedNodeWasSelected)
             {
                 _build.ToggleSelectedNode(node);
@@ -447,7 +447,7 @@ public sealed class BuildGestures
             return null;
         }
 
-        var nodes = _build.SelectedNodeIndices.Select(index => _build.Nodes[index]).ToArray();
+        var nodes = _build.SelectedNodeIds.Select(NodeById).ToArray();
         var min = View.ToView(new Vector2D(nodes.Min(node => node.Position.X - Halo(node)), nodes.Min(node => node.Position.Y - Halo(node))));
         var max = View.ToView(new Vector2D(nodes.Max(node => node.Position.X + Halo(node)), nodes.Max(node => node.Position.Y + Halo(node))));
         var center = new Vector2D((min.X + max.X) / 2, (min.Y + max.Y) / 2);
@@ -500,7 +500,7 @@ public sealed class BuildGestures
             var node = _build.Nodes[i].Position;
             if (node.X >= minX && node.X <= maxX && node.Y >= minY && node.Y <= maxY)
             {
-                selected.Add(i);
+                selected.Add(_build.Nodes[i].Id);
             }
         }
 
@@ -534,11 +534,13 @@ public sealed class BuildGestures
         _selectionStart = null;
         _pressedNode = null;
         _pressedBeam = null;
-        BeamStartNode = null;
+        BeamStartNodeId = null;
         BeamEnd = null;
-        BeamTargetNode = null;
+        BeamTargetNodeId = null;
         SelectionBox = null;
     }
+
+    private NodeDef NodeById(int nodeId) => _build.Nodes[_build.NodeIndexOf(nodeId)];
 
     private static Vector2D Midpoint(Vector2D a, Vector2D b) => new((a.X + b.X) / 2, (a.Y + b.Y) / 2);
 

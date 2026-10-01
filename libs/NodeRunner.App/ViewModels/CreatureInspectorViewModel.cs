@@ -55,26 +55,31 @@ public sealed class CreatureInspectorViewModel : INotifyPropertyChanged, IDispos
         switch (selection.Kind)
         {
             case CreatureElementKind.Node:
-                var node = _creature.Nodes[selection.Index];
+                var nodeIndex = _creature.NodeIndexOf(selection.Id);
+                var node = _creature.Nodes[nodeIndex];
                 SetContent(
-                    $"Node {selection.Index + 1}",
+                    $"Node {nodeIndex + 1}",
                     "A physical attachment point. Beams meet here and can rotate relative to each other.",
                     $"Position: ({node.Position.X:0.#}, {node.Position.Y:0.#})\nRadius: {node.Radius:0.#}");
                 break;
             case CreatureElementKind.Beam:
-                var beam = _creature.Beams[selection.Index];
-                var length = Distance(_creature.Nodes[beam.NodeA].Position, _creature.Nodes[beam.NodeB].Position);
+                var beamIndex = _creature.BeamIndexOf(selection.Id);
+                var beam = _creature.Beams[beamIndex];
+                var nodeAIndex = _creature.NodeIndexOf(beam.NodeA);
+                var nodeBIndex = _creature.NodeIndexOf(beam.NodeB);
+                var length = Distance(_creature.Nodes[nodeAIndex].Position, _creature.Nodes[nodeBIndex].Position);
                 SetContent(
-                    $"Beam {selection.Index + 1}",
+                    $"Beam {beamIndex + 1}",
                     "A rigid, fixed-length connection. It never stretches or compresses.",
-                    $"Connects: Node {beam.NodeA + 1} to Node {beam.NodeB + 1}\nLength: {length:0.#}");
+                    $"Connects: Node {nodeAIndex + 1} to Node {nodeBIndex + 1}\nLength: {length:0.#}");
                 break;
             case CreatureElementKind.Core:
-                var core = _creature.Cores[selection.Index];
+                var coreIndex = _creature.CoreIndexOf(selection.Id);
+                var core = _creature.Cores[coreIndex];
                 SetContent(
-                    $"Core {selection.Index + 1}",
+                    $"Core {coreIndex + 1}",
                     "A sensor package. Not the brain itself — it feeds sensor readings (rays, pitch, elevation, speed) to the model.",
-                    $"Mounted on: Node {core.NodeIndex + 1}");
+                    $"Mounted on: Node {_creature.NodeIndexOf(core.NodeId) + 1}");
                 break;
         }
     }

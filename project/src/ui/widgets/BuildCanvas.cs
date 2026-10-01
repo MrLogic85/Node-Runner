@@ -176,9 +176,9 @@ public partial class BuildCanvas : Node2D
 
         foreach (var beam in _viewModel.Beams)
         {
-            var start = ToGodot(_viewModel.Nodes[beam.NodeA].Position);
-            var end = ToGodot(_viewModel.Nodes[beam.NodeB].Position);
-            if (_viewModel.SingleSelectedBeamIndex is { } selectedBeamIndex && _viewModel.Beams[selectedBeamIndex] == beam)
+            var start = ToGodot(NodeById(beam.NodeA).Position);
+            var end = ToGodot(NodeById(beam.NodeB).Position);
+            if (_viewModel.SingleSelectedBeamId == beam.Id)
             {
                 DrawLine(start, end, Theme.SelectionGlow, Stroke(Theme.BeamWidth * 2.2f), antialiased: false);
             }
@@ -191,7 +191,7 @@ public partial class BuildCanvas : Node2D
         {
             var node = _viewModel.Nodes[nodeIndex];
             var position = ToGodot(node.Position);
-            if (_viewModel.SelectedNodeIndices.Contains(nodeIndex))
+            if (_viewModel.SelectedNodeIds.Contains(node.Id))
             {
                 DrawCircle(position, (float)(node.Radius * BuildGestures.SelectedHaloScale), Theme.SelectionGlow);
             }
@@ -208,8 +208,9 @@ public partial class BuildCanvas : Node2D
 
         foreach (var core in _viewModel.Cores)
         {
-            var position = ToGodot(_viewModel.Nodes[core.NodeIndex].Position);
-            var radius = (float)_viewModel.Nodes[core.NodeIndex].Radius;
+            var node = NodeById(core.NodeId);
+            var position = ToGodot(node.Position);
+            var radius = (float)node.Radius;
             DrawCircle(position, radius * 0.42f, Theme.CoreMarker);
         }
 
@@ -268,13 +269,13 @@ public partial class BuildCanvas : Node2D
 
     private void DrawBeamPreview()
     {
-        if (_viewModel is null || _gestures?.BeamStartNode is not { } start || _gestures.BeamEnd is not { } end)
+        if (_viewModel is null || _gestures?.BeamStartNodeId is not { } start || _gestures.BeamEnd is not { } end)
         {
             return;
         }
 
-        var to = _gestures.BeamTargetNode is { } target ? _viewModel.Nodes[target].Position : end;
-        DrawDashedLine(ToGodot(_viewModel.Nodes[start].Position), ToGodot(to), Theme.SelectionGlow, Stroke(Theme.BeamWidth), 8, antialiased: false);
+        var to = _gestures.BeamTargetNodeId is { } target ? NodeById(target).Position : end;
+        DrawDashedLine(ToGodot(NodeById(start).Position), ToGodot(to), Theme.SelectionGlow, Stroke(Theme.BeamWidth), 8, antialiased: false);
     }
 
     private void DrawBeamEndRings()
@@ -284,11 +285,11 @@ public partial class BuildCanvas : Node2D
             return;
         }
 
-        foreach (var nodeIndex in new[] { _gestures.BeamStartNode, _gestures.BeamTargetNode })
+        foreach (var nodeId in new[] { _gestures.BeamStartNodeId, _gestures.BeamTargetNodeId })
         {
-            if (nodeIndex is { } index)
+            if (nodeId is { } id)
             {
-                var node = _viewModel.Nodes[index];
+                var node = NodeById(id);
                 DrawArc(ToGodot(node.Position), (float)node.Radius * 1.65f, 0, Mathf.Tau, 32, Theme.SelectionGlow, Stroke(Theme.MotorSignalWidth), antialiased: false);
             }
         }
@@ -323,19 +324,19 @@ public partial class BuildCanvas : Node2D
                 continue;
             }
 
-            startPosition = _ghostNodePositions.GetValueOrDefault(beam.NodeA, _viewModel.Nodes[beam.NodeA].Position);
-            endPosition = _ghostNodePositions.GetValueOrDefault(beam.NodeB, _viewModel.Nodes[beam.NodeB].Position);
+            startPosition = _ghostNodePositions.GetValueOrDefault(beam.NodeA, NodeById(beam.NodeA).Position);
+            endPosition = _ghostNodePositions.GetValueOrDefault(beam.NodeB, NodeById(beam.NodeB).Position);
             DrawDashedLine(ToGodot(startPosition), ToGodot(endPosition), Theme.SelectionGlow, Stroke(4), 8, antialiased: false);
         }
 
-        foreach (var (nodeIndex, position) in _ghostNodePositions)
+        foreach (var (nodeId, position) in _ghostNodePositions)
         {
-            if (nodeIndex < 0 || nodeIndex >= _viewModel.Nodes.Count)
+            if (!_viewModel.Nodes.Any(node => node.Id == nodeId))
             {
                 continue;
             }
 
-            var radius = (float)_viewModel.Nodes[nodeIndex].Radius;
+            var radius = (float)NodeById(nodeId).Radius;
             DrawArc(ToGodot(position), radius * 1.35f, 0, Mathf.Tau, 32, Theme.SelectionGlow, Stroke(2), antialiased: false);
         }
     }
@@ -371,14 +372,14 @@ public partial class BuildCanvas : Node2D
         for (var beamIndex = 0; beamIndex < _viewModel.Beams.Count; beamIndex++)
         {
             var beam = _viewModel.Beams[beamIndex];
-            if (_viewModel.Nodes[beam.NodeA].Position == _viewModel.Nodes[beam.NodeB].Position)
+            if (NodeById(beam.NodeA).Position == NodeById(beam.NodeB).Position)
             {
                 continue;
             }
 
             drawableBeamSourceIndices.Add(beamIndex);
-            drawableNodeSourceIndices.Add(beam.NodeA);
-            drawableNodeSourceIndices.Add(beam.NodeB);
+            drawableNodeSourceIndices.Add(_viewModel.NodeIndexOf(beam.NodeA));
+            drawableNodeSourceIndices.Add(_viewModel.NodeIndexOf(beam.NodeB));
         }
 
         if (drawableBeamSourceIndices.Count == 0)
@@ -386,22 +387,14 @@ public partial class BuildCanvas : Node2D
             return false;
         }
 
-        var nodeMap = drawableNodeSourceIndices
-            .Select((sourceIndex, drawableIndex) => (sourceIndex, drawableIndex))
-            .ToDictionary(pair => pair.sourceIndex, pair => pair.drawableIndex);
         var nodes = drawableNodeSourceIndices
             .Select(sourceIndex => _viewModel.Nodes[sourceIndex])
             .ToArray();
         var beams = drawableBeamSourceIndices
-            .Select(beamIndex =>
-            {
-                var beam = _viewModel.Beams[beamIndex];
-                return new BeamDef(nodeMap[beam.NodeA], nodeMap[beam.NodeB]);
-            })
+            .Select(beamIndex => _viewModel.Beams[beamIndex])
             .ToArray();
         var cores = _viewModel.Cores
-            .Where(core => nodeMap.ContainsKey(core.NodeIndex))
-            .Select(core => new CoreDef(nodeMap[core.NodeIndex]))
+            .Where(core => drawableNodeSourceIndices.Contains(_viewModel.NodeIndexOf(core.NodeId)))
             .ToArray();
 
         try
@@ -474,9 +467,10 @@ public partial class BuildCanvas : Node2D
 
     private static float BeamAngleFromNode(CreatureDef creature, BeamDef beam, int nodeIndex)
     {
-        var otherNodeIndex = beam.NodeA == nodeIndex ? beam.NodeB : beam.NodeA;
+        var nodeId = creature.Nodes[nodeIndex].Id;
+        var otherNodeId = beam.NodeA == nodeId ? beam.NodeB : beam.NodeA;
         var node = creature.Nodes[nodeIndex].Position;
-        var other = creature.Nodes[otherNodeIndex].Position;
+        var other = creature.Nodes[creature.NodeIndexOf(otherNodeId)].Position;
         return Mathf.Atan2((float)(other.Y - node.Y), (float)(other.X - node.X));
     }
 
@@ -490,9 +484,10 @@ public partial class BuildCanvas : Node2D
         for (var nodeIndex = 0; nodeIndex < _viewModel.Nodes.Count; nodeIndex++)
         {
             // The beam drag's own rings replace the warning on the joints being joined.
-            if (_viewModel.Beams.Any(beam => beam.NodeA == nodeIndex || beam.NodeB == nodeIndex)
-                || nodeIndex == _gestures?.BeamStartNode
-                || nodeIndex == _gestures?.BeamTargetNode)
+            var nodeId = _viewModel.Nodes[nodeIndex].Id;
+            if (_viewModel.Beams.Any(beam => beam.NodeA == nodeId || beam.NodeB == nodeId)
+                || nodeId == _gestures?.BeamStartNodeId
+                || nodeId == _gestures?.BeamTargetNodeId)
             {
                 continue;
             }
@@ -515,8 +510,8 @@ public partial class BuildCanvas : Node2D
 
         foreach (var beam in _viewModel.Beams)
         {
-            var start = _viewModel.Nodes[beam.NodeA];
-            var end = _viewModel.Nodes[beam.NodeB];
+            var start = NodeById(beam.NodeA);
+            var end = NodeById(beam.NodeB);
             if (start.Position != end.Position)
             {
                 continue;
@@ -539,11 +534,11 @@ public partial class BuildCanvas : Node2D
 
         _ghostNodePositions.Clear();
         _ghostVersion++;
-        foreach (var index in movingNodes)
+        foreach (var id in movingNodes)
         {
-            if (index >= 0 && index < _viewModel.Nodes.Count)
+            if (_viewModel.Nodes.Any(node => node.Id == id))
             {
-                _ghostNodePositions[index] = _viewModel.Nodes[index].Position;
+                _ghostNodePositions[id] = NodeById(id).Position;
             }
         }
     }
@@ -732,6 +727,11 @@ public partial class BuildCanvas : Node2D
     private static Vector2D ToDomain(Vector2 position)
     {
         return new Vector2D(position.X, position.Y);
+    }
+
+    private NodeDef NodeById(int nodeId)
+    {
+        return _viewModel!.Nodes[_viewModel.NodeIndexOf(nodeId)];
     }
 
     private static Vector2 ToGodot(Vector2D position)

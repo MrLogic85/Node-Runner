@@ -93,13 +93,13 @@ public sealed class BuildPresentationViewModel
 
     public int SelectedCoreCount => _build.SelectedCoreCount;
 
-    public string SinglePartTitle => _build.SingleSelectedBeamIndex is { } beamIndex
-        ? $"Beam {beamIndex + 1}"
-        : _build.SingleSelectedNodeIndex is { } index
-        ? _build.SingleSelectionHasCore ? $"Core · Node {index + 1}" : $"Node {index + 1}"
+    public string SinglePartTitle => _build.SingleSelectedBeamId is { } beamId
+        ? $"Beam {_build.BeamIndexOf(beamId) + 1}"
+        : _build.SingleSelectedNodeId is { } nodeId
+        ? _build.SingleSelectionHasCore ? $"Core · Node {_build.NodeIndexOf(nodeId) + 1}" : $"Node {_build.NodeIndexOf(nodeId) + 1}"
         : "Part";
 
-    public string SinglePartBody => _build.SingleSelectedBeamIndex is not null
+    public string SinglePartBody => _build.SingleSelectedBeamId is not null
         ? _build.IsMoveOnly
             ? "Select and move an endpoint Node to reposition it. The Beam follows its Nodes."
             : "Move either endpoint Node to change the Beam length."
@@ -107,40 +107,40 @@ public sealed class BuildPresentationViewModel
             ? "The Core contributes six sensor inputs. Move its Node to reposition it."
             : "Move the Node to change its position and connected Beam lengths.";
 
-    public string SinglePartPrimaryLabel => _build.SingleSelectedBeamIndex is not null
+    public string SinglePartPrimaryLabel => _build.SingleSelectedBeamId is not null
         ? "Length"
         : _build.SingleSelectionHasCore
             ? "Built-in senses"
             : "Position";
 
-    public string SinglePartPrimaryValue => _build.SingleSelectedBeamIndex is { } beamIndex
-        ? $"{BeamLength(beamIndex):0.0} units"
-        : _build.SingleSelectedNodeIndex is { } nodeIndex
+    public string SinglePartPrimaryValue => _build.SingleSelectedBeamId is { } beamId
+        ? $"{BeamLength(beamId):0.0} units"
+        : _build.SingleSelectedNodeId is { } nodeId
             ? _build.SingleSelectionHasCore
                 ? "6 inputs"
-                : $"{_build.Nodes[nodeIndex].Position.X:0}, {_build.Nodes[nodeIndex].Position.Y:0}"
+                : $"{NodeById(nodeId).Position.X:0}, {NodeById(nodeId).Position.Y:0}"
             : "—";
 
-    public string SinglePartConnectionsLabel => _build.SingleSelectedBeamIndex is not null
+    public string SinglePartConnectionsLabel => _build.SingleSelectedBeamId is not null
         ? "Between"
         : _build.SingleSelectionHasCore
             ? "Mounted on"
             : "Connections";
 
-    public string SinglePartConnectionsValue => _build.SingleSelectedBeamIndex is { } beamIndex
-        ? $"Node {_build.Beams[beamIndex].NodeA + 1} ↔ Node {_build.Beams[beamIndex].NodeB + 1}"
-        : _build.SingleSelectedNodeIndex is { } nodeIndex
+    public string SinglePartConnectionsValue => _build.SingleSelectedBeamId is { } beamId
+        ? $"Node {_build.NodeIndexOf(BeamById(beamId).NodeA) + 1} ↔ Node {_build.NodeIndexOf(BeamById(beamId).NodeB) + 1}"
+        : _build.SingleSelectedNodeId is { } nodeId
             ? _build.SingleSelectionHasCore
-                ? $"Node {nodeIndex + 1}"
-                : ConnectedBeamText(nodeIndex)
+                ? $"Node {_build.NodeIndexOf(nodeId) + 1}"
+                : ConnectedBeamText(nodeId)
             : "—";
 
-    public string SinglePartFacts => _build.SingleSelectedBeamIndex is not null
+    public string SinglePartFacts => _build.SingleSelectedBeamId is not null
         ? "Rigid connection"
         : _build.SingleSelectionHasCore
             ? "Down ray · Forward ray · Forward-down ray · Pitch · Elevation · Speed"
-            : _build.SingleSelectedNodeIndex is { } nodeIndex
-                ? $"Radius {_build.Nodes[nodeIndex].Radius:0.0} · {_build.Beams.Count(beam => beam.NodeA == nodeIndex || beam.NodeB == nodeIndex)} attached Beam(s)"
+            : _build.SingleSelectedNodeId is { } nodeId
+                ? $"Radius {NodeById(nodeId).Radius:0.0} · {_build.Beams.Count(beam => beam.NodeA == nodeId || beam.NodeB == nodeId)} attached Beam(s)"
                 : string.Empty;
 
     public string MultiSelectionTitle => $"{_build.SelectedPartCount} selected";
@@ -238,7 +238,11 @@ public sealed class BuildPresentationViewModel
         }
 
         var unconnected = Enumerable.Range(0, _build.Nodes.Count)
-            .Count(node => !_build.Beams.Any(beam => beam.NodeA == node || beam.NodeB == node));
+            .Count(index =>
+            {
+                var nodeId = _build.Nodes[index].Id;
+                return !_build.Beams.Any(beam => beam.NodeA == nodeId || beam.NodeB == nodeId);
+            });
         return unconnected switch
         {
             0 => errors[0],
@@ -247,25 +251,29 @@ public sealed class BuildPresentationViewModel
         };
     }
 
-    private double BeamLength(int beamIndex)
+    private double BeamLength(int beamId)
     {
-        var beam = _build.Beams[beamIndex];
-        var start = _build.Nodes[beam.NodeA].Position;
-        var end = _build.Nodes[beam.NodeB].Position;
+        var beam = BeamById(beamId);
+        var start = NodeById(beam.NodeA).Position;
+        var end = NodeById(beam.NodeB).Position;
         var deltaX = end.X - start.X;
         var deltaY = end.Y - start.Y;
         return Math.Sqrt((deltaX * deltaX) + (deltaY * deltaY));
     }
 
-    private string ConnectedBeamText(int nodeIndex)
+    private string ConnectedBeamText(int nodeId)
     {
         var connected = _build.Beams
             .Select((beam, index) => (beam, index))
-            .Where(item => item.beam.NodeA == nodeIndex || item.beam.NodeB == nodeIndex)
+            .Where(item => item.beam.NodeA == nodeId || item.beam.NodeB == nodeId)
             .Select(item => $"Beam {item.index + 1}")
             .ToArray();
         return connected.Length == 0 ? "No Beams" : string.Join(" · ", connected);
     }
+
+    private NodeDef NodeById(int nodeId) => _build.Nodes[_build.NodeIndexOf(nodeId)];
+
+    private BeamDef BeamById(int beamId) => _build.Beams[_build.BeamIndexOf(beamId)];
 
     private static string BuildInputSummary(int coreCount, int motorRelationCount)
     {

@@ -18,26 +18,26 @@ public static class HardcodedCreatureFactory
 
         var nodes = new[]
         {
-            new NodeDef(new Vector2D(0, y), radius),
-            new NodeDef(new Vector2D(spacing, y), radius),
-            new NodeDef(new Vector2D(spacing * 2, y), radius),
-            new NodeDef(new Vector2D(spacing * 3, y), radius),
-            new NodeDef(new Vector2D(spacing * 4, y), radius),
+            new NodeDef(1, new Vector2D(0, y), radius),
+            new NodeDef(2, new Vector2D(spacing, y), radius),
+            new NodeDef(3, new Vector2D(spacing * 2, y), radius),
+            new NodeDef(4, new Vector2D(spacing * 3, y), radius),
+            new NodeDef(5, new Vector2D(spacing * 4, y), radius),
         };
 
         var beams = new[]
         {
-            new BeamDef(0, 1),
-            new BeamDef(1, 2),
-            new BeamDef(2, 3),
-            new BeamDef(3, 4),
+            new BeamDef(6, 1, 2),
+            new BeamDef(7, 2, 3),
+            new BeamDef(8, 3, 4),
+            new BeamDef(9, 4, 5),
         };
 
         var cores = new[]
         {
-            new CoreDef(0),
+            new CoreDef(10, 1),
         };
 
-        return new CreatureDef(nodes, beams, cores);
+        return new CreatureDef(nodes, beams, cores, nextPartId: 11);
     }
 }

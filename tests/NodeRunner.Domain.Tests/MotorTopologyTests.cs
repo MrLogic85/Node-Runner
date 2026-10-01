@@ -8,11 +8,11 @@ public sealed class MotorTopologyTests
         var creature = new CreatureDef(
             new[]
             {
-                new NodeDef(new Vector2D(0, 0), 1),
-                new NodeDef(new Vector2D(1, 0), 1),
-                new NodeDef(new Vector2D(0, 1), 1),
+                new NodeDef(1, new Vector2D(0, 0), 1),
+                new NodeDef(2, new Vector2D(1, 0), 1),
+                new NodeDef(3, new Vector2D(0, 1), 1),
             },
-            new[] { new BeamDef(1, 2), new BeamDef(2, 0), new BeamDef(0, 1) },
+            new[] { new BeamDef(101, 2, 3), new BeamDef(102, 3, 1), new BeamDef(103, 1, 2) },
             []);
 
         var triangles = MotorTopology.BuildRigidTriangles(creature);
@@ -26,11 +26,11 @@ public sealed class MotorTopologyTests
         var creature = new CreatureDef(
             new[]
             {
-                new NodeDef(new Vector2D(0, 0), 1),
-                new NodeDef(new Vector2D(1, 0), 1),
-                new NodeDef(new Vector2D(2, 0), 1),
+                new NodeDef(1, new Vector2D(0, 0), 1),
+                new NodeDef(2, new Vector2D(1, 0), 1),
+                new NodeDef(3, new Vector2D(2, 0), 1),
             },
-            new[] { new BeamDef(0, 1), new BeamDef(1, 2) },
+            new[] { new BeamDef(101, 1, 2), new BeamDef(102, 2, 3) },
             []);
 
         var triangles = MotorTopology.BuildRigidTriangles(creature);
@@ -45,10 +45,10 @@ public sealed class MotorTopologyTests
         var creature = new CreatureDef(
             new[]
             {
-                new NodeDef(new Vector2D(0, 0), 1),
-                new NodeDef(new Vector2D(1, 0), 1),
+                new NodeDef(1, new Vector2D(0, 0), 1),
+                new NodeDef(2, new Vector2D(1, 0), 1),
             },
-            new[] { new BeamDef(0, 1) },
+            new[] { new BeamDef(101, 1, 2) },
             []);
 
         var connections = MotorTopology.BuildNodeConnections(creature);
@@ -63,11 +63,11 @@ public sealed class MotorTopologyTests
         var creature = new CreatureDef(
             new[]
             {
-                new NodeDef(new Vector2D(0, 0), 1),
-                new NodeDef(new Vector2D(1, 0), 1),
-                new NodeDef(new Vector2D(2, 0), 1),
+                new NodeDef(1, new Vector2D(0, 0), 1),
+                new NodeDef(2, new Vector2D(1, 0), 1),
+                new NodeDef(3, new Vector2D(2, 0), 1),
             },
-            new[] { new BeamDef(0, 1), new BeamDef(1, 2) },
+            new[] { new BeamDef(101, 1, 2), new BeamDef(102, 2, 3) },
             []);
 
         var connections = MotorTopology.BuildNodeConnections(creature);
@@ -80,6 +80,34 @@ public sealed class MotorTopologyTests
     }
 
     [Fact]
+    public void BuildNodeConnections_Worm_KeepsMotorRelationOrderFromBeamList()
+    {
+        var creature = new CreatureDef(
+            [
+                new NodeDef(1, new Vector2D(0, 0), 1),
+                new NodeDef(2, new Vector2D(1, 0), 1),
+                new NodeDef(3, new Vector2D(2, 0), 1),
+                new NodeDef(4, new Vector2D(3, 0), 1),
+                new NodeDef(5, new Vector2D(4, 0), 1),
+            ],
+            [
+                new BeamDef(6, 1, 2),
+                new BeamDef(7, 2, 3),
+                new BeamDef(8, 3, 4),
+                new BeamDef(9, 4, 5),
+            ],
+            [new CoreDef(10, 1)]);
+
+        var motorized = MotorTopology.BuildNodeConnections(creature)
+            .Where(connection => connection.IsMotorized)
+            .ToArray();
+
+        motorized.Select(connection => connection.NodeIndex).ShouldBe([1, 2, 3]);
+        motorized.Select(connection => connection.ReferenceBeamIndex).ShouldBe([0, 1, 2]);
+        motorized.Select(connection => connection.OtherBeamIndex).ShouldBe([1, 2, 3]);
+    }
+
+    [Fact]
     public void BuildNodeConnections_ClosedTriangle_HasNoMotorizedConnections()
     {
         // Three nodes, three beams closing a triangle: every vertex angle is
@@ -87,11 +115,11 @@ public sealed class MotorTopologyTests
         var creature = new CreatureDef(
             new[]
             {
-                new NodeDef(new Vector2D(0, 0), 1),
-                new NodeDef(new Vector2D(1, 0), 1),
-                new NodeDef(new Vector2D(0, 1), 1),
+                new NodeDef(1, new Vector2D(0, 0), 1),
+                new NodeDef(2, new Vector2D(1, 0), 1),
+                new NodeDef(3, new Vector2D(0, 1), 1),
             },
-            new[] { new BeamDef(0, 1), new BeamDef(1, 2), new BeamDef(2, 0) },
+            new[] { new BeamDef(101, 1, 2), new BeamDef(102, 2, 3), new BeamDef(103, 3, 1) },
             []);
 
         var connections = MotorTopology.BuildNodeConnections(creature);
@@ -110,17 +138,17 @@ public sealed class MotorTopologyTests
         var creature = new CreatureDef(
             new[]
             {
-                new NodeDef(new Vector2D(0, 0), 1),
-                new NodeDef(new Vector2D(1, 0), 1),
-                new NodeDef(new Vector2D(0, 1), 1),
-                new NodeDef(new Vector2D(-1, 0), 1),
+                new NodeDef(1, new Vector2D(0, 0), 1),
+                new NodeDef(2, new Vector2D(1, 0), 1),
+                new NodeDef(3, new Vector2D(0, 1), 1),
+                new NodeDef(4, new Vector2D(-1, 0), 1),
             },
             new[]
             {
-                new BeamDef(0, 1),
-                new BeamDef(1, 2),
-                new BeamDef(2, 0),
-                new BeamDef(0, 3),
+                new BeamDef(101, 1, 2),
+                new BeamDef(102, 2, 3),
+                new BeamDef(103, 3, 1),
+                new BeamDef(104, 1, 4),
             },
             []);
 
@@ -150,18 +178,18 @@ public sealed class MotorTopologyTests
         var creature = new CreatureDef(
             new[]
             {
-                new NodeDef(new Vector2D(0, 0), 1),
-                new NodeDef(new Vector2D(1, 0), 1),
-                new NodeDef(new Vector2D(1, 1), 1),
-                new NodeDef(new Vector2D(0, 1), 1),
+                new NodeDef(1, new Vector2D(0, 0), 1),
+                new NodeDef(2, new Vector2D(1, 0), 1),
+                new NodeDef(3, new Vector2D(1, 1), 1),
+                new NodeDef(4, new Vector2D(0, 1), 1),
             },
             new[]
             {
-                new BeamDef(0, 1),
-                new BeamDef(1, 2),
-                new BeamDef(2, 3),
-                new BeamDef(3, 0),
-                new BeamDef(0, 2),
+                new BeamDef(101, 1, 2),
+                new BeamDef(102, 2, 3),
+                new BeamDef(103, 3, 4),
+                new BeamDef(104, 4, 1),
+                new BeamDef(105, 1, 3),
             },
             []);
 

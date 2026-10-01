@@ -1,4 +1,5 @@
 using System.Text.Json.Nodes;
+using NodeRunner.App.Builders;
 using NodeRunner.App.Repositories;
 using NodeRunner.Domain;
 
@@ -415,15 +416,85 @@ public sealed class CreationRepositoryTests
         }
     }
 
+    [Fact]
+    public void FileCreation_SaveAndReload_KeepsNamesAndRetiredIds()
+    {
+        var directory = Path.Combine(Path.GetTempPath(), $"node-runner-ids-{Guid.NewGuid():N}");
+        try
+        {
+            var builder = new CreatureBuilder();
+            var left = builder.AddNode(new Vector2D(0, 0), 1);
+            var right = builder.AddNode(new Vector2D(2, 0), 1);
+            var beam = builder.AddBeam(left, right);
+            var extra = builder.AddNode(new Vector2D(4, 0), 1);
+            builder.Rename(left, "Hip");
+            builder.Rename(beam, "Thigh");
+            builder.RemoveNode(extra);
+            var creation = new CreationDef(Guid.NewGuid(), "Named", builder.Build(), null);
+            var repository = new FileCreationRepository(new TestStorageLocation(directory));
+
+            repository.Save(creation);
+            var reloaded = repository.Get(creation.Id)!.Creature;
+
+            reloaded.Nodes[reloaded.NodeIndexOf(left)].Name.ShouldBe("Hip");
+            reloaded.Beams[reloaded.BeamIndexOf(beam)].Name.ShouldBe("Thigh");
+            reloaded.NextPartId.ShouldBe(extra + 1);
+            new CreatureBuilder(reloaded).AddNode(new Vector2D(6, 0), 1).ShouldBeGreaterThan(extra);
+        }
+        finally
+        {
+            if (Directory.Exists(directory))
+            {
+                Directory.Delete(directory, recursive: true);
+            }
+        }
+    }
+
+    [Fact]
+    public void FileCreation_List_WithPreStableIdSave_SkipsItAsInvalid()
+    {
+        var directory = Path.Combine(Path.GetTempPath(), $"node-runner-old-save-{Guid.NewGuid():N}");
+        try
+        {
+            Directory.CreateDirectory(directory);
+            var id = Guid.NewGuid();
+            var path = Path.Combine(directory, $"{id:N}.json");
+            File.WriteAllText(path, $$"""
+                {
+                  "Id": "{{id}}",
+                  "Name": "Old",
+                  "Creature": {
+                    "Nodes": [{ "Position": { "X": 0, "Y": 0 }, "Radius": 1 }],
+                    "Beams": [],
+                    "Cores": []
+                  },
+                  "BrainShape": null,
+                  "Training": null
+                }
+                """);
+            var repository = new FileCreationRepository(new TestStorageLocation(directory));
+
+            repository.List().ShouldBeEmpty();
+            repository.Get(id).ShouldBeNull();
+        }
+        finally
+        {
+            if (Directory.Exists(directory))
+            {
+                Directory.Delete(directory, recursive: true);
+            }
+        }
+    }
+
     private static CreationDef CreateCreation(string name)
     {
         return new CreationDef(
             Guid.NewGuid(),
             name,
             new CreatureDef(
-                [new NodeDef(new Vector2D(0, 0), 1), new NodeDef(new Vector2D(2, 0), 1)],
-                [new BeamDef(0, 1)],
-                [new CoreDef(0)]),
+                [new NodeDef(1, new Vector2D(0, 0), 1), new NodeDef(2, new Vector2D(2, 0), 1)],
+                [new BeamDef(101, 1, 2)],
+                [new CoreDef(201, 1)]),
             new TrainingStateDef([2, 1], [0.1, -0.2, 0.3], 2, "Tanh", 42.5, new TrainingRunDef(42.5, 88.25, 12, MapIds.Flat)));
     }
 

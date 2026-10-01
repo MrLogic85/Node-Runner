@@ -182,10 +182,10 @@ public sealed class GeneticAlgorithm
 }
 
 // libs/NodeRunner.Domain/
-public sealed record NodeDef(Vector2D Position, double Radius);
-public sealed record BeamDef(int NodeA, int NodeB);
-public sealed record CoreDef(int NodeIndex);
-public sealed record CreatureDef(NodeDef[] Nodes, BeamDef[] Beams, CoreDef[] Cores);
+public sealed record NodeDef(int Id, Vector2D Position, double Radius, string? Name = null);
+public sealed record BeamDef(int Id, int NodeA, int NodeB, string? Name = null);   // node ids
+public sealed record CoreDef(int Id, int NodeId, string? Name = null);
+public sealed record CreatureDef(NodeDef[] Nodes, BeamDef[] Beams, CoreDef[] Cores, int NextPartId);
 public sealed record NodeConnectionDef(int NodeIndex, int ReferenceBeamIndex, int OtherBeamIndex, bool IsMotorized);
 
 public static class MotorTopology

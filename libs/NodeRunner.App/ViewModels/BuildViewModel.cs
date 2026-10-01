@@ -61,12 +61,12 @@ public sealed class BuildViewModel : INotifyPropertyChanged
     private BuildTool _activeTool = BuildTool.Move;
     private string? _statusMessage;
     private bool _moveOnly;
-    private readonly HashSet<int> _selectedNodeIndices = [];
+    private readonly HashSet<int> _selectedNodeIds = [];
     private BrainShapeDef _brainShape = BrainShapeDef.Default;
     private string _creationName = NewCreationWorkflow.UntitledName;
     private int? _trainingGeneration;
     private double? _bestFitness;
-    private int? _selectedBeamIndex;
+    private int? _selectedBeamId;
 
     public BuildViewModel(CreatureBuilder? builder = null)
     {
@@ -77,8 +77,8 @@ public sealed class BuildViewModel : INotifyPropertyChanged
     {
         ArgumentNullException.ThrowIfNull(creature);
         _builder = new CreatureBuilder(creature);
-        _selectedNodeIndices.Clear();
-        _selectedBeamIndex = null;
+        _selectedNodeIds.Clear();
+        _selectedBeamId = null;
         _brainShape = brainShape ?? BrainShapeDef.Default;
         _creationName = string.IsNullOrWhiteSpace(creationName) ? NewCreationWorkflow.UntitledName : creationName;
         _trainingGeneration = training?.Generation;
@@ -113,22 +113,22 @@ public sealed class BuildViewModel : INotifyPropertyChanged
 
     public double? BestFitness => _bestFitness;
 
-    public int SelectedNodeCount => _selectedNodeIndices.Count;
+    public int SelectedNodeCount => _selectedNodeIds.Count;
 
-    public int SelectedBeamCount => _selectedBeamIndex is null ? 0 : 1;
+    public int SelectedBeamCount => _selectedBeamId is null ? 0 : 1;
 
     public int SelectedPartCount => SelectedNodeCount + SelectedBeamCount;
 
-    public int SelectedCoreCount => _builder.Cores.Count(core => _selectedNodeIndices.Contains(core.NodeIndex));
+    public int SelectedCoreCount => _builder.Cores.Count(core => _selectedNodeIds.Contains(core.NodeId));
 
-    public int? SingleSelectedNodeIndex => _selectedNodeIndices.Count == 1
-        ? _selectedNodeIndices.First()
+    public int? SingleSelectedNodeId => _selectedNodeIds.Count == 1
+        ? _selectedNodeIds.First()
         : null;
 
-    public int? SingleSelectedBeamIndex => SelectedPartCount == 1 ? _selectedBeamIndex : null;
+    public int? SingleSelectedBeamId => SelectedPartCount == 1 ? _selectedBeamId : null;
 
-    public bool SingleSelectionHasCore => SingleSelectedNodeIndex is { } index
-        && _builder.Cores.Any(core => core.NodeIndex == index);
+    public bool SingleSelectionHasCore => SingleSelectedNodeId is { } id
+        && _builder.Cores.Any(core => core.NodeId == id);
 
     public void SetCreationName(string creationName)
     {
@@ -195,7 +195,7 @@ public sealed class BuildViewModel : INotifyPropertyChanged
 
     public IReadOnlyList<CoreDef> Cores => _builder.Cores;
 
-    public IReadOnlyCollection<int> SelectedNodeIndices => _selectedNodeIndices;
+    public IReadOnlyCollection<int> SelectedNodeIds => _selectedNodeIds;
 
     public BrainShapeDef BrainShape => _brainShape;
 
@@ -211,7 +211,7 @@ public sealed class BuildViewModel : INotifyPropertyChanged
         OnPropertyChanged(nameof(BrainShape));
     }
 
-    /// <summary>Places a new node, moved inside <see cref="BuildArea"/>, and returns its index.</summary>
+    /// <summary>Places a new node, moved inside <see cref="BuildArea"/>, and returns its id.</summary>
     public int PlaceNode(Vector2D position, double radius)
     {
         if (_moveOnly)
@@ -219,47 +219,41 @@ public sealed class BuildViewModel : INotifyPropertyChanged
             throw new InvalidOperationException("Edit mode can only move existing nodes.");
         }
 
-        var index = _builder.AddNode(BuildArea.Clamp(position, radius), radius);
+        var id = _builder.AddNode(BuildArea.Clamp(position, radius), radius);
         AnatomyChanged?.Invoke(this, EventArgs.Empty);
-        return index;
+        return id;
     }
 
     /// <summary>Moves an already-placed node to a new position, as far as <see cref="BuildArea"/> reaches.</summary>
-    public void MoveNode(int nodeIndex, Vector2D position)
+    public void MoveNode(int nodeId, Vector2D position)
     {
-        _builder.MoveNode(nodeIndex, BuildArea.Clamp(position, _builder.Nodes[nodeIndex].Radius));
+        _builder.MoveNode(nodeId, BuildArea.Clamp(position, NodeById(nodeId).Radius));
         AnatomyChanged?.Invoke(this, EventArgs.Empty);
     }
 
-    public void ToggleSelectedNode(int nodeIndex)
+    public void ToggleSelectedNode(int nodeId)
     {
-        if (nodeIndex < 0 || nodeIndex >= _builder.Nodes.Count)
+        _builder.NodeIndexOf(nodeId);
+
+        if (!_selectedNodeIds.Add(nodeId))
         {
-            throw new ArgumentOutOfRangeException(nameof(nodeIndex));
+            _selectedNodeIds.Remove(nodeId);
         }
 
-        if (!_selectedNodeIndices.Add(nodeIndex))
-        {
-            _selectedNodeIndices.Remove(nodeIndex);
-        }
-
-        _selectedBeamIndex = null;
-        StatusMessage = _selectedNodeIndices.Count == 0
+        _selectedBeamId = null;
+        StatusMessage = _selectedNodeIds.Count == 0
             ? "Selection cleared."
-            : $"{_selectedNodeIndices.Count} selected. Drag one selected node to move them together.";
+            : $"{_selectedNodeIds.Count} selected. Drag one selected node to move them together.";
         NotifySelectionChanged();
         AnatomyChanged?.Invoke(this, EventArgs.Empty);
     }
 
-    public void SelectBeam(int beamIndex)
+    public void SelectBeam(int beamId)
     {
-        if (beamIndex < 0 || beamIndex >= _builder.Beams.Count)
-        {
-            throw new ArgumentOutOfRangeException(nameof(beamIndex));
-        }
+        var beamIndex = _builder.BeamIndexOf(beamId);
 
-        _selectedNodeIndices.Clear();
-        _selectedBeamIndex = beamIndex;
+        _selectedNodeIds.Clear();
+        _selectedBeamId = beamId;
         StatusMessage = $"Beam {beamIndex + 1} selected.";
         NotifySelectionChanged();
         AnatomyChanged?.Invoke(this, EventArgs.Empty);
@@ -272,29 +266,29 @@ public sealed class BuildViewModel : INotifyPropertyChanged
             return;
         }
 
-        _selectedNodeIndices.Clear();
-        _selectedBeamIndex = null;
+        _selectedNodeIds.Clear();
+        _selectedBeamId = null;
         StatusMessage = "Selection cleared.";
         NotifySelectionChanged();
         AnatomyChanged?.Invoke(this, EventArgs.Empty);
     }
 
-    public void ReplaceSelection(IEnumerable<int> nodeIndices)
+    public void ReplaceSelection(IEnumerable<int> nodeIds)
     {
-        ArgumentNullException.ThrowIfNull(nodeIndices);
-        _selectedNodeIndices.Clear();
-        _selectedBeamIndex = null;
-        foreach (var nodeIndex in nodeIndices)
+        ArgumentNullException.ThrowIfNull(nodeIds);
+        _selectedNodeIds.Clear();
+        _selectedBeamId = null;
+        foreach (var nodeId in nodeIds)
         {
-            if (nodeIndex >= 0 && nodeIndex < _builder.Nodes.Count)
+            if (_builder.Nodes.Any(node => node.Id == nodeId))
             {
-                _selectedNodeIndices.Add(nodeIndex);
+                _selectedNodeIds.Add(nodeId);
             }
         }
 
-        StatusMessage = _selectedNodeIndices.Count == 0
+        StatusMessage = _selectedNodeIds.Count == 0
             ? "Selection cleared."
-            : $"{_selectedNodeIndices.Count} selected. Drag one selected node to move them together.";
+            : $"{_selectedNodeIds.Count} selected. Drag one selected node to move them together.";
         NotifySelectionChanged();
         AnatomyChanged?.Invoke(this, EventArgs.Empty);
     }
@@ -302,12 +296,12 @@ public sealed class BuildViewModel : INotifyPropertyChanged
     /// <summary>The selected joints' positions and pivot, for a Select drag to transform.</summary>
     public SelectionSnapshot SnapshotSelection()
     {
-        if (_selectedNodeIndices.Count == 0)
+        if (_selectedNodeIds.Count == 0)
         {
             throw new InvalidOperationException("Nothing is selected.");
         }
 
-        var positions = _selectedNodeIndices.ToDictionary(index => index, index => _builder.Nodes[index].Position);
+        var positions = _selectedNodeIds.ToDictionary(id => id, id => NodeById(id).Position);
         var pivot = new Vector2D(
             (positions.Values.Min(p => p.X) + positions.Values.Max(p => p.X)) / 2,
             (positions.Values.Min(p => p.Y) + positions.Values.Max(p => p.Y)) / 2);
@@ -318,16 +312,16 @@ public sealed class BuildViewModel : INotifyPropertyChanged
     public void TranslateSelection(SelectionSnapshot start, Vector2D delta)
     {
         ArgumentNullException.ThrowIfNull(start);
-        foreach (var (index, position) in start.Positions)
+        foreach (var (id, position) in start.Positions)
         {
             var moved = new Vector2D(position.X + delta.X, position.Y + delta.Y);
-            var allowed = BuildArea.Clamp(moved, _builder.Nodes[index].Radius);
+            var allowed = BuildArea.Clamp(moved, NodeById(id).Radius);
             delta = new Vector2D(delta.X + allowed.X - moved.X, delta.Y + allowed.Y - moved.Y);
         }
 
         // Clamping each joint too absorbs the rounding in the shortened delta.
-        PlaceSelection(start, (index, position) =>
-            BuildArea.Clamp(new Vector2D(position.X + delta.X, position.Y + delta.Y), _builder.Nodes[index].Radius));
+        PlaceSelection(start, (id, position) =>
+            BuildArea.Clamp(new Vector2D(position.X + delta.X, position.Y + delta.Y), NodeById(id).Radius));
     }
 
     /// <summary>Turns the snapshot's joints <paramref name="radians"/> about its pivot; a turn that would leave <see cref="BuildArea"/> is ignored.</summary>
@@ -381,14 +375,14 @@ public sealed class BuildViewModel : INotifyPropertyChanged
     private void PlaceSelection(SelectionSnapshot start, Func<int, Vector2D, Vector2D> place, bool keepInBuildArea = true)
     {
         var placed = start.Positions.ToDictionary(entry => entry.Key, entry => place(entry.Key, entry.Value));
-        if (keepInBuildArea && placed.Any(entry => BuildArea.Clamp(entry.Value, _builder.Nodes[entry.Key].Radius) != entry.Value))
+        if (keepInBuildArea && placed.Any(entry => BuildArea.Clamp(entry.Value, NodeById(entry.Key).Radius) != entry.Value))
         {
             return;
         }
 
-        foreach (var (index, position) in placed)
+        foreach (var (id, position) in placed)
         {
-            _builder.MoveNode(index, position);
+            _builder.MoveNode(id, position);
         }
 
         AnatomyChanged?.Invoke(this, EventArgs.Empty);
@@ -399,9 +393,9 @@ public sealed class BuildViewModel : INotifyPropertyChanged
     /// <paramref name="maxDistance"/> of <paramref name="position"/>, or whose
     /// disc contains it, if any. Used to hit-test nodes.
     /// </summary>
-    public bool TryFindNodeNear(Vector2D position, double maxDistance, out int nodeIndex)
+    public bool TryFindNodeNear(Vector2D position, double maxDistance, out int nodeId)
     {
-        nodeIndex = -1;
+        nodeId = -1;
         var bestDistanceSquared = double.PositiveInfinity;
 
         for (var i = 0; i < _builder.Nodes.Count; i++)
@@ -414,22 +408,22 @@ public sealed class BuildViewModel : INotifyPropertyChanged
             if (distanceSquared <= reach * reach && distanceSquared < bestDistanceSquared)
             {
                 bestDistanceSquared = distanceSquared;
-                nodeIndex = i;
+                nodeId = node.Id;
             }
         }
 
-        return nodeIndex >= 0;
+        return nodeId >= 0;
     }
 
     /// <summary>Whether <see cref="ConnectBeam"/> would join this pair: unlocked, and the builder accepts the beam.</summary>
-    public bool CanConnect(int nodeA, int nodeB) => !_moveOnly && _builder.CanAddBeam(nodeA, nodeB);
+    public bool CanConnect(int nodeIdA, int nodeIdB) => !_moveOnly && _builder.CanAddBeam(nodeIdA, nodeIdB);
 
     /// <summary>
     /// Joins two existing nodes with a beam. Rejected attempts (locked
     /// Creation, self-connect, duplicate beam) surface via
     /// <see cref="StatusMessage"/> instead of throwing.
     /// </summary>
-    public bool ConnectBeam(int nodeA, int nodeB)
+    public bool ConnectBeam(int nodeIdA, int nodeIdB)
     {
         if (_moveOnly)
         {
@@ -439,7 +433,7 @@ public sealed class BuildViewModel : INotifyPropertyChanged
 
         try
         {
-            _builder.AddBeam(nodeA, nodeB);
+            _builder.AddBeam(nodeIdA, nodeIdB);
         }
         catch (ArgumentException exception)
         {
@@ -447,24 +441,21 @@ public sealed class BuildViewModel : INotifyPropertyChanged
             return false;
         }
 
-        StatusMessage = $"Connected node {nodeA} to node {nodeB}.";
+        StatusMessage = $"Connected node {nodeIdA} to node {nodeIdB}.";
         AnatomyChanged?.Invoke(this, EventArgs.Empty);
         return true;
     }
 
     /// <summary>
-    /// Adds a node at the point on beam <paramref name="beamIndex"/> closest to
+    /// Adds a node at the point on beam <paramref name="beamId"/> closest to
     /// <paramref name="position"/> and replaces the beam with two beams through
-    /// it, as one change. Returns the new node's index, or null when the
+    /// it, as one change. Returns the new node's id, or null when the
     /// Creation is locked or the closest point is an end of the beam (or the
     /// beam has no length), where a split would stack two nodes.
     /// </summary>
-    public int? SplitBeam(int beamIndex, Vector2D position, double radius)
+    public int? SplitBeam(int beamId, Vector2D position, double radius)
     {
-        if (beamIndex < 0 || beamIndex >= _builder.Beams.Count)
-        {
-            throw new ArgumentOutOfRangeException(nameof(beamIndex));
-        }
+        var beamIndex = _builder.BeamIndexOf(beamId);
 
         if (_moveOnly)
         {
@@ -473,8 +464,8 @@ public sealed class BuildViewModel : INotifyPropertyChanged
         }
 
         var beam = _builder.Beams[beamIndex];
-        var start = _builder.Nodes[beam.NodeA].Position;
-        var end = _builder.Nodes[beam.NodeB].Position;
+        var start = NodeById(beam.NodeA).Position;
+        var end = NodeById(beam.NodeB).Position;
         var t = ClosestPointParameter(position, start, end);
         if (t <= 0 || t >= 1)
         {
@@ -482,20 +473,20 @@ public sealed class BuildViewModel : INotifyPropertyChanged
         }
 
         var splitPoint = new Vector2D(start.X + (t * (end.X - start.X)), start.Y + (t * (end.Y - start.Y)));
-        var nodeIndex = _builder.AddNode(splitPoint, radius);
-        _builder.RemoveBeam(beamIndex);
-        _builder.AddBeam(beam.NodeA, nodeIndex);
-        _builder.AddBeam(nodeIndex, beam.NodeB);
-        _selectedNodeIndices.Clear();
-        _selectedBeamIndex = null;
+        var nodeId = _builder.AddNode(splitPoint, radius);
+        _builder.RemoveBeam(beamId);
+        _builder.AddBeam(beam.NodeA, nodeId);
+        _builder.AddBeam(nodeId, beam.NodeB);
+        _selectedNodeIds.Clear();
+        _selectedBeamId = null;
         StatusMessage = "Split the beam with a new joint.";
         NotifySelectionChanged();
         AnatomyChanged?.Invoke(this, EventArgs.Empty);
-        return nodeIndex;
+        return nodeId;
     }
 
-    /// <summary>Attaches a core to <paramref name="nodeIndex"/>, or removes it if one is already there.</summary>
-    public void ToggleCoreOnNode(int nodeIndex)
+    /// <summary>Attaches a core to <paramref name="nodeId"/>, or removes it if one is already there.</summary>
+    public void ToggleCoreOnNode(int nodeId)
     {
         if (_moveOnly)
         {
@@ -503,16 +494,16 @@ public sealed class BuildViewModel : INotifyPropertyChanged
             return;
         }
 
-        var existingCoreIndex = FindCoreIndexForNode(nodeIndex);
-        if (existingCoreIndex >= 0)
+        var existingCoreId = FindCoreIdForNode(nodeId);
+        if (existingCoreId is not null)
         {
-            _builder.RemoveCore(existingCoreIndex);
-            StatusMessage = $"Removed core from node {nodeIndex}.";
+            _builder.RemoveCore(existingCoreId.Value);
+            StatusMessage = $"Removed core from node {nodeId}.";
         }
         else
         {
-            _builder.AddCore(nodeIndex);
-            StatusMessage = $"Attached core to node {nodeIndex}.";
+            _builder.AddCore(nodeId);
+            StatusMessage = $"Attached core to node {nodeId}.";
         }
 
         AnatomyChanged?.Invoke(this, EventArgs.Empty);
@@ -524,23 +515,23 @@ public sealed class BuildViewModel : INotifyPropertyChanged
     /// any. Used to hit-test beams, since a beam has no single point like a
     /// node does.
     /// </summary>
-    public bool TryFindBeamNear(Vector2D position, double maxDistance, out int beamIndex)
+    public bool TryFindBeamNear(Vector2D position, double maxDistance, out int beamId)
     {
-        beamIndex = -1;
+        beamId = -1;
         var bestDistanceSquared = maxDistance * maxDistance;
 
         for (var i = 0; i < _builder.Beams.Count; i++)
         {
             var beam = _builder.Beams[i];
-            var distanceSquared = DistanceSquaredToSegment(position, _builder.Nodes[beam.NodeA].Position, _builder.Nodes[beam.NodeB].Position);
+            var distanceSquared = DistanceSquaredToSegment(position, NodeById(beam.NodeA).Position, NodeById(beam.NodeB).Position);
             if (distanceSquared <= bestDistanceSquared)
             {
                 bestDistanceSquared = distanceSquared;
-                beamIndex = i;
+                beamId = beam.Id;
             }
         }
 
-        return beamIndex >= 0;
+        return beamId >= 0;
     }
 
     public void DeleteSelectedParts()
@@ -557,18 +548,18 @@ public sealed class BuildViewModel : INotifyPropertyChanged
             return;
         }
 
-        if (_selectedBeamIndex is { } beamIndex)
+        if (_selectedBeamId is { } beamId)
         {
-            _builder.RemoveBeam(beamIndex);
+            _builder.RemoveBeam(beamId);
         }
 
-        foreach (var nodeIndex in _selectedNodeIndices.OrderByDescending(index => index))
+        foreach (var nodeId in _selectedNodeIds)
         {
-            _builder.RemoveNode(nodeIndex);
+            _builder.RemoveNode(nodeId);
         }
 
-        _selectedNodeIndices.Clear();
-        _selectedBeamIndex = null;
+        _selectedNodeIds.Clear();
+        _selectedBeamId = null;
         StatusMessage = "Deleted selected parts.";
         NotifySelectionChanged();
         AnatomyChanged?.Invoke(this, EventArgs.Empty);
@@ -627,18 +618,24 @@ public sealed class BuildViewModel : INotifyPropertyChanged
         StatusMessage = $"Not ready to simulate yet: {string.Join(" ", errors)}";
     }
 
-    private int FindCoreIndexForNode(int nodeIndex)
+    public int NodeIndexOf(int nodeId) => _builder.NodeIndexOf(nodeId);
+
+    public int BeamIndexOf(int beamId) => _builder.BeamIndexOf(beamId);
+
+    private int? FindCoreIdForNode(int nodeId)
     {
         for (var i = 0; i < _builder.Cores.Count; i++)
         {
-            if (_builder.Cores[i].NodeIndex == nodeIndex)
+            if (_builder.Cores[i].NodeId == nodeId)
             {
-                return i;
+                return _builder.Cores[i].Id;
             }
         }
 
-        return -1;
+        return null;
     }
+
+    private NodeDef NodeById(int nodeId) => _builder.Nodes[_builder.NodeIndexOf(nodeId)];
 
     private void NotifySelectionChanged()
     {
@@ -646,8 +643,8 @@ public sealed class BuildViewModel : INotifyPropertyChanged
         OnPropertyChanged(nameof(SelectedBeamCount));
         OnPropertyChanged(nameof(SelectedPartCount));
         OnPropertyChanged(nameof(SelectedCoreCount));
-        OnPropertyChanged(nameof(SingleSelectedNodeIndex));
-        OnPropertyChanged(nameof(SingleSelectedBeamIndex));
+        OnPropertyChanged(nameof(SingleSelectedNodeId));
+        OnPropertyChanged(nameof(SingleSelectedBeamId));
         OnPropertyChanged(nameof(SingleSelectionHasCore));
     }
 

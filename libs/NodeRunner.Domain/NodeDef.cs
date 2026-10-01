@@ -7,18 +7,29 @@ namespace NodeRunner.Domain;
 /// </summary>
 public sealed record NodeDef
 {
-    public NodeDef(Vector2D position, double radius)
+    public NodeDef(int id, Vector2D position, double radius, string? name = null)
     {
+        if (id <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(id), "Node id must be positive.");
+        }
+
         if (!double.IsFinite(radius) || radius <= 0)
         {
             throw new ArgumentOutOfRangeException(nameof(radius), "Node radius must be finite and positive.");
         }
 
+        Id = id;
         Position = position;
         Radius = radius;
+        Name = name;
     }
+
+    public int Id { get; }
 
     public Vector2D Position { get; }
 
     public double Radius { get; }
+
+    public string? Name { get; }
 }

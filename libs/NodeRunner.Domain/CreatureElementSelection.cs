@@ -2,18 +2,18 @@ namespace NodeRunner.Domain;
 
 public sealed record CreatureElementSelection
 {
-    public CreatureElementSelection(CreatureElementKind kind, int index)
+    public CreatureElementSelection(CreatureElementKind kind, int id)
     {
-        if (index < 0)
+        if (id <= 0)
         {
-            throw new ArgumentOutOfRangeException(nameof(index), "Creature element index must be non-negative.");
+            throw new ArgumentOutOfRangeException(nameof(id), "Creature element id must be positive.");
         }
 
         Kind = kind;
-        Index = index;
+        Id = id;
     }
 
     public CreatureElementKind Kind { get; }
 
-    public int Index { get; }
+    public int Id { get; }
 }

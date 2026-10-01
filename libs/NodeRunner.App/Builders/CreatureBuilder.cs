@@ -12,7 +12,7 @@ namespace NodeRunner.App.Builders;
 /// the feature this supports.
 ///
 /// Lives in `NodeRunner.App`, not `NodeRunner.Domain`: this is mutable
-/// business logic (add/remove/cascade/reindex), which
+/// business logic (add/remove/cascade), which
 /// `libs/NodeRunner.Domain/AGENTS.md` explicitly reserves for
 /// <c>MotorTopology</c> only.
 /// </summary>
@@ -21,6 +21,7 @@ public sealed class CreatureBuilder
     private readonly List<NodeDef> _nodes = [];
     private readonly List<BeamDef> _beams = [];
     private readonly List<CoreDef> _cores = [];
+    private int _nextPartId = 1;
 
     public CreatureBuilder()
     {
@@ -32,6 +33,7 @@ public sealed class CreatureBuilder
         _nodes.AddRange(creature.Nodes);
         _beams.AddRange(creature.Beams);
         _cores.AddRange(creature.Cores);
+        _nextPartId = creature.NextPartId;
     }
 
     public IReadOnlyList<NodeDef> Nodes => _nodes;
@@ -40,98 +42,127 @@ public sealed class CreatureBuilder
 
     public IReadOnlyList<CoreDef> Cores => _cores;
 
-    /// <summary>Adds a node and returns its index.</summary>
+    public int NextPartId => _nextPartId;
+
+    /// <summary>Adds a node and returns its id.</summary>
     public int AddNode(Vector2D position, double radius)
     {
-        _nodes.Add(new NodeDef(position, radius));
-        return _nodes.Count - 1;
+        var id = AllocatePartId();
+        _nodes.Add(new NodeDef(id, position, radius));
+        return id;
     }
 
     /// <summary>Moves an existing node to a new position, keeping its radius.</summary>
-    public void MoveNode(int nodeIndex, Vector2D position)
+    public void MoveNode(int nodeId, Vector2D position)
     {
-        ValidateNodeIndex(nodeIndex);
-        _nodes[nodeIndex] = new NodeDef(position, _nodes[nodeIndex].Radius);
+        var nodeIndex = NodeIndexOf(nodeId);
+        var node = _nodes[nodeIndex];
+        _nodes[nodeIndex] = new NodeDef(node.Id, position, node.Radius, node.Name);
     }
 
     /// <summary>
-    /// Removes a node, cascading to every beam and core that referenced it,
-    /// and reindexes the remaining nodes' references so they stay valid.
+    /// Removes a node, cascading to every beam and core that referenced it.
     /// </summary>
-    public void RemoveNode(int nodeIndex)
+    public void RemoveNode(int nodeId)
     {
-        ValidateNodeIndex(nodeIndex);
+        var nodeIndex = NodeIndexOf(nodeId);
 
-        _beams.RemoveAll(beam => beam.NodeA == nodeIndex || beam.NodeB == nodeIndex);
-        _cores.RemoveAll(core => core.NodeIndex == nodeIndex);
+        _beams.RemoveAll(beam => beam.NodeA == nodeId || beam.NodeB == nodeId);
+        _cores.RemoveAll(core => core.NodeId == nodeId);
         _nodes.RemoveAt(nodeIndex);
-
-        for (var i = 0; i < _beams.Count; i++)
-        {
-            _beams[i] = new BeamDef(ReindexAfterRemoval(_beams[i].NodeA, nodeIndex), ReindexAfterRemoval(_beams[i].NodeB, nodeIndex));
-        }
-
-        for (var i = 0; i < _cores.Count; i++)
-        {
-            _cores[i] = new CoreDef(ReindexAfterRemoval(_cores[i].NodeIndex, nodeIndex));
-        }
     }
 
     /// <summary>
     /// Adds a beam between two distinct, existing nodes and returns its
-    /// index. Throws if either node index is invalid, the nodes are the
+    /// id. Throws if either node id is invalid, the nodes are the
     /// same, or a beam between them already exists.
     /// </summary>
-    public int AddBeam(int nodeA, int nodeB)
+    public int AddBeam(int nodeIdA, int nodeIdB)
     {
-        ValidateNodeIndex(nodeA);
-        ValidateNodeIndex(nodeB);
+        ValidateNodeId(nodeIdA);
+        ValidateNodeId(nodeIdB);
 
-        if (nodeA == nodeB)
+        if (nodeIdA == nodeIdB)
         {
             throw new ArgumentException("A beam must connect two different nodes.");
         }
 
-        if (_beams.Any(beam => IsSamePair(beam, nodeA, nodeB)))
+        if (_beams.Any(beam => IsSamePair(beam, nodeIdA, nodeIdB)))
         {
-            throw new ArgumentException($"A beam already connects node {nodeA} and node {nodeB}.");
+            throw new ArgumentException($"A beam already connects node {nodeIdA} and node {nodeIdB}.");
         }
 
-        _beams.Add(new BeamDef(nodeA, nodeB));
-        return _beams.Count - 1;
+        var id = AllocatePartId();
+        _beams.Add(new BeamDef(id, nodeIdA, nodeIdB));
+        return id;
     }
 
     /// <summary>Whether <see cref="AddBeam"/> would accept this pair: two distinct, existing nodes not yet joined.</summary>
-    public bool CanAddBeam(int nodeA, int nodeB) =>
-        nodeA >= 0 && nodeA < _nodes.Count
-        && nodeB >= 0 && nodeB < _nodes.Count
-        && nodeA != nodeB
-        && !_beams.Any(beam => IsSamePair(beam, nodeA, nodeB));
+    public bool CanAddBeam(int nodeIdA, int nodeIdB) =>
+        HasNode(nodeIdA)
+        && HasNode(nodeIdB)
+        && nodeIdA != nodeIdB
+        && !_beams.Any(beam => IsSamePair(beam, nodeIdA, nodeIdB));
 
-    /// <summary>Removes a beam by index.</summary>
-    public void RemoveBeam(int beamIndex)
+    /// <summary>Removes a beam by id.</summary>
+    public void RemoveBeam(int beamId)
     {
-        ValidateBeamIndex(beamIndex);
+        var beamIndex = BeamIndexOf(beamId);
         _beams.RemoveAt(beamIndex);
     }
 
-    /// <summary>Adds a core mounted on an existing node and returns its index.</summary>
-    public int AddCore(int nodeIndex)
+    /// <summary>Adds a core mounted on an existing node and returns its id.</summary>
+    public int AddCore(int nodeId)
     {
-        ValidateNodeIndex(nodeIndex);
-        _cores.Add(new CoreDef(nodeIndex));
-        return _cores.Count - 1;
+        ValidateNodeId(nodeId);
+        var id = AllocatePartId();
+        _cores.Add(new CoreDef(id, nodeId));
+        return id;
     }
 
-    /// <summary>Removes a core by index.</summary>
-    public void RemoveCore(int coreIndex)
+    /// <summary>Removes a core by id.</summary>
+    public void RemoveCore(int coreId)
     {
-        ValidateCoreIndex(coreIndex);
+        var coreIndex = CoreIndexOf(coreId);
         _cores.RemoveAt(coreIndex);
     }
 
+    public void Rename(int partId, string? name)
+    {
+        if (partId <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(partId), "Part id must be positive.");
+        }
+
+        var nodeIndex = _nodes.FindIndex(node => node.Id == partId);
+        if (nodeIndex >= 0)
+        {
+            var node = _nodes[nodeIndex];
+            _nodes[nodeIndex] = new NodeDef(node.Id, node.Position, node.Radius, name);
+            return;
+        }
+
+        var beamIndex = _beams.FindIndex(beam => beam.Id == partId);
+        if (beamIndex >= 0)
+        {
+            var beam = _beams[beamIndex];
+            _beams[beamIndex] = new BeamDef(beam.Id, beam.NodeA, beam.NodeB, name);
+            return;
+        }
+
+        var coreIndex = _cores.FindIndex(core => core.Id == partId);
+        if (coreIndex >= 0)
+        {
+            var core = _cores[coreIndex];
+            _cores[coreIndex] = new CoreDef(core.Id, core.NodeId, name);
+            return;
+        }
+
+        throw new ArgumentOutOfRangeException(nameof(partId), "Part id must point to an existing part.");
+    }
+
     /// <summary>The current drawing, finished or not: what a saved Creation stores.</summary>
-    public CreatureDef Build() => new(_nodes, _beams, _cores);
+    public CreatureDef Build() => new(_nodes, _beams, _cores, _nextPartId);
 
     /// <summary>The current drawing if it can be simulated, else the player-facing problems that stop it.</summary>
     public bool TryBuild(out CreatureDef? creature, out IReadOnlyList<string> errors)
@@ -142,37 +173,53 @@ public sealed class CreatureBuilder
         return creature is not null;
     }
 
+    public int NodeIndexOf(int nodeId)
+    {
+        var index = _nodes.FindIndex(node => node.Id == nodeId);
+        if (index < 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(nodeId), "Node id must point to an existing node.");
+        }
+
+        return index;
+    }
+
+    public int BeamIndexOf(int beamId)
+    {
+        var index = _beams.FindIndex(beam => beam.Id == beamId);
+        if (index < 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(beamId), "Beam id must point to an existing beam.");
+        }
+
+        return index;
+    }
+
+    public int CoreIndexOf(int coreId)
+    {
+        var index = _cores.FindIndex(core => core.Id == coreId);
+        if (index < 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(coreId), "Core id must point to an existing core.");
+        }
+
+        return index;
+    }
+
     private static bool IsSamePair(BeamDef beam, int nodeA, int nodeB)
     {
         return (beam.NodeA == nodeA && beam.NodeB == nodeB) || (beam.NodeA == nodeB && beam.NodeB == nodeA);
     }
 
-    private static int ReindexAfterRemoval(int nodeIndex, int removedIndex)
-    {
-        return nodeIndex > removedIndex ? nodeIndex - 1 : nodeIndex;
-    }
+    private bool HasNode(int nodeId) => _nodes.Any(node => node.Id == nodeId);
 
-    private void ValidateNodeIndex(int nodeIndex)
+    private void ValidateNodeId(int nodeId)
     {
-        if (nodeIndex < 0 || nodeIndex >= _nodes.Count)
+        if (!HasNode(nodeId))
         {
-            throw new ArgumentOutOfRangeException(nameof(nodeIndex), "Node index must point to an existing node.");
+            throw new ArgumentOutOfRangeException(nameof(nodeId), "Node id must point to an existing node.");
         }
     }
 
-    private void ValidateBeamIndex(int beamIndex)
-    {
-        if (beamIndex < 0 || beamIndex >= _beams.Count)
-        {
-            throw new ArgumentOutOfRangeException(nameof(beamIndex), "Beam index must point to an existing beam.");
-        }
-    }
-
-    private void ValidateCoreIndex(int coreIndex)
-    {
-        if (coreIndex < 0 || coreIndex >= _cores.Count)
-        {
-            throw new ArgumentOutOfRangeException(nameof(coreIndex), "Core index must point to an existing core.");
-        }
-    }
+    private int AllocatePartId() => _nextPartId++;
 }

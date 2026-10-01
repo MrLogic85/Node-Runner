@@ -5,8 +5,9 @@ public sealed class NodeDefTests
     [Fact]
     public void Constructor_WithValidRadius_StoresValues()
     {
-        var node = new NodeDef(new Vector2D(1, 2), 3);
+        var node = new NodeDef(1, new Vector2D(1, 2), 3);
 
+        node.Id.ShouldBe(1);
         node.Position.ShouldBe(new Vector2D(1, 2));
         node.Radius.ShouldBe(3);
     }
@@ -18,7 +19,7 @@ public sealed class NodeDefTests
     [InlineData(double.PositiveInfinity)]
     public void Constructor_WithInvalidRadius_Throws(double radius)
     {
-        var action = () => new NodeDef(new Vector2D(0, 0), radius);
+        var action = () => new NodeDef(1, new Vector2D(0, 0), radius);
 
         action.ShouldThrow<ArgumentOutOfRangeException>();
     }

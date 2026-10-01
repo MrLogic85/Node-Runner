@@ -21,17 +21,20 @@ public static class CreatureReadiness
 
         for (var i = 0; i < creature.Nodes.Count; i++)
         {
-            if (!creature.Beams.Any(beam => beam.NodeA == i || beam.NodeB == i))
+            var nodeId = creature.Nodes[i].Id;
+            if (!creature.Beams.Any(beam => beam.NodeA == nodeId || beam.NodeB == nodeId))
             {
-                problems.Add($"Node {i} has no beams attached. Connect it with a beam or remove it.");
+                problems.Add($"Node {i + 1} has no beams attached. Connect it with a beam or remove it.");
             }
         }
 
         foreach (var beam in creature.Beams)
         {
-            if (creature.Nodes[beam.NodeA].Position == creature.Nodes[beam.NodeB].Position)
+            var indexA = creature.NodeIndexOf(beam.NodeA);
+            var indexB = creature.NodeIndexOf(beam.NodeB);
+            if (creature.Nodes[indexA].Position == creature.Nodes[indexB].Position)
             {
-                problems.Add($"The beam between node {beam.NodeA} and node {beam.NodeB} has zero length. Move one of the nodes apart.");
+                problems.Add($"The beam between node {indexA + 1} and node {indexB + 1} has zero length. Move one of the nodes apart.");
             }
         }
 

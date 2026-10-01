@@ -14,9 +14,9 @@ public sealed class CreationLockTests
     {
         var training = generation is { } trained ? new TrainingStateDef([2, 1], [0.1, 0.2, 0.3], trained, "Tanh") : null;
         var creature = new CreatureDef(
-            [new NodeDef(new Vector2D(0, 0), 1), new NodeDef(new Vector2D(2, 0), 1)],
-            [new BeamDef(0, 1)],
-            [new CoreDef(0)]);
+            [new NodeDef(1, new Vector2D(0, 0), 1), new NodeDef(2, new Vector2D(2, 0), 1)],
+            [new BeamDef(101, 1, 2)],
+            [new CoreDef(201, 1)]);
 
         CreationLock.IsLocked(new CreationDef(Guid.NewGuid(), "Worm", creature, training)).ShouldBe(locked);
     }
