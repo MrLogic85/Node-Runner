@@ -105,7 +105,7 @@ CreatureDef  ──build──▶  physical body  ──sensors──▶  model 
   Accelerometer's weight hangs on its spring: in Build it swings when the
   beam is moved and settles at rest (`BuildSensorMotion`), in Training it
   follows the live proof mass. The Camera looks along its
-  rays, and shows them when selected. A tap hits a joint first, then a
+  aim, and shows its rays when selected. A tap hits a joint first, then a
   sensor, then a beam, in Build and Training alike
   (`project/src/theme/SensorDrawing.cs`,
   `project/src/creature/SensorVisual.cs`).
@@ -141,20 +141,26 @@ CreatureDef  ──build──▶  physical body  ──sensors──▶  model 
 
 #### Camera
 
-- **Beginner:** Three rays that tell the brain how near the ground is:
-  straight ahead, ahead-and-down, and straight down. A ray lights up more
-  the closer the ground is.
+- **Beginner:** Three rays that tell the brain how near the ground is. A
+  new camera looks straight ahead, ahead-and-down, and straight down; you
+  can turn it in Build. A ray lights up more the closer the ground is.
+- **Aim (#594):** `SensorDef.Aim`, the angle of the centre ray from the
+  beam's direction (from its first node to its second), in radians. The
+  three rays fan `CameraRays.Spread` (45°) apart around it, and the camera
+  turns with its beam. A camera placed in Build, or loaded without an aim,
+  gets `CameraRays.DefaultAim`: its centre ray looks forward-down in the
+  world as built, so its rays look forward, forward-down and down. Only a
+  Camera has an aim.
 - **Implementation:** `project/src/creature/CameraSensor.cs` adds three
-  `RayCast2D` children at the beam's midpoint. They are aimed **as built**:
-  when the creature is built they point forward (+x), forward-down and down
-  in the world, and after that they turn with the beam
-  (`CameraRays.LocalRayTarget` in `libs/NodeRunner.Domain/CameraRays.cs`).
+  `RayCast2D` children at the beam's midpoint, aimed by
+  `CameraRays.LocalRayTarget` (`libs/NodeRunner.Domain/CameraRays.cs`) in
+  the beam body's frame, so they turn with the beam.
   They see the ground only (collision layer 1), `CameraRays.RayLength`
   (220) long. (It is not Godot's `Camera2D`.)
 - **Ray names** are symmetric around the centre ray, seen from the camera
   looking along its rays: **left 1**, **centre**, **right 1** (later also
-  left 2 / right 2). Today left 1 looks forward, centre forward-down and
-  right 1 down. Every ray count the camera will offer (1, 3 or 5, #578) has
+  left 2 / right 2). With the default aim, left 1 looks forward, centre
+  forward-down and right 1 down. Every ray count the camera will offer (1, 3 or 5, #578) has
   a centre ray, so the names of the inner rays survive a rebuild with
   another count.
 - **Reading:** three brain inputs, left to right: the ray's **nearness**,
@@ -162,9 +168,9 @@ CreatureDef  ──build──▶  physical body  ──sensors──▶  model 
   rising linearly to `1` at contact (`CameraRays.Reading`). Nothing seen
   feeds 0, which adds nothing to the brain's weighted sum (see
   `docs/ML_CONCEPTS.md`).
-- **Fixed in 0.12:** no settings. Ray count, range and rotation come with
-  camera settings in 0.14 (#578), turning the camera with #594; their power
-  draw comes with power in 0.18 (#599).
+- **Settings in 0.12:** only the aim. Ray count and range come with
+  camera settings in 0.14 (#578); their power draw comes with power in
+  0.18 (#599).
 
 ### Motor relation
 

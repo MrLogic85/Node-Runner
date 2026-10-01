@@ -131,8 +131,10 @@ then the app follows the reference.
     beam too short".
   - *Orientation:* the side of the beam that faces up as built is the
     sensor's top, and it then turns with the beam; it never flips during a
-    run. The Camera looks along its as-built ray fan (#576), and a
-    selected Camera draws its rays from the midpoint.
+    run. The Camera looks along its aim (#594), and a selected Camera
+    draws its rays from the midpoint plus an Aim handle (the rotate
+    handle's glyph) on a hairline stem out along its centre ray, like the
+    Select rotate handle. Its drag snaps to 15° in the world.
   - *Order:* joints, then sensors, then beams, for both tapping and drawing.
     A sensor's tap area is its picture. Dragging a sensor in Move does
     nothing, and a Joint-tool tap on a sensor does not split the beam.

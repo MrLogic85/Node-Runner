@@ -879,6 +879,136 @@ public class BuildGesturesTests
         build.SingleSelectedSensorId.ShouldBe(4);
     }
 
+    [Fact]
+    public void Camera_WhenSelected_ShowsAnAimHandleOutAlongItsAim()
+    {
+        var (build, gestures) = BeamWithSensor(300, SensorKind.Camera);
+
+        Tap(gestures, new Vector2D(150, 0));
+
+        var handle = gestures.SelectionHandles.ShouldHaveSingleItem();
+        handle.Handle.ShouldBe(SelectionHandle.Aim);
+        var reach = (SensorPicture.Size / Math.Sqrt(2)) + 32 + BuildGestures.HandleHitRadius;
+        handle.Position.X.ShouldBe(150 + (reach * Math.Sqrt(0.5)), 1e-9);
+        handle.Position.Y.ShouldBe(reach * Math.Sqrt(0.5), 1e-9);
+    }
+
+    [Fact]
+    public void Camera_AimHandle_StepsOutPastAJointItWouldCover()
+    {
+        var (build, gestures) = BeamWithSensor(100, SensorKind.Camera);
+        build.SelectSensor(4);
+        build.SetCameraAim(4, 0);
+
+        var handle = gestures.SelectionHandles.Single().Position;
+
+        handle.Y.ShouldBe(0, 1e-9);
+        (handle.X - 100).ShouldBeGreaterThanOrEqualTo(BuildGestures.HandleHitRadius + BuildGestures.NodeHitRadius);
+        var reach = (SensorPicture.Size / Math.Sqrt(2)) + 32 + BuildGestures.HandleHitRadius;
+        (handle.X - 50).ShouldBeLessThanOrEqualTo(3 * reach);
+    }
+
+    [Fact]
+    public void Accelerometer_WhenSelected_HasNoAimHandle()
+    {
+        var (build, gestures) = BeamWithSensor(100, SensorKind.Accelerometer);
+
+        build.SelectSensor(4);
+
+        gestures.SelectionHandles.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void Camera_WhenLocked_HasNoAimHandle()
+    {
+        var build = new BuildViewModel();
+        build.Load(
+            new CreatureDef([new NodeDef(1, new Vector2D(0, 0), 18), new NodeDef(2, new Vector2D(100, 0), 18)], [new BeamDef(3, 1, 2)], [new SensorDef(4, 3, SensorKind.Camera)]),
+            moveOnly: true);
+        var gestures = new BuildGestures(build);
+
+        build.SelectSensor(4);
+
+        build.AimableCameraId.ShouldBeNull();
+        gestures.SelectionHandles.ShouldBeEmpty();
+    }
+
+    [Theory]
+    [InlineData(BuildTool.Move)]
+    [InlineData(BuildTool.Joint)]
+    [InlineData(BuildTool.Beam)]
+    [InlineData(BuildTool.Select)]
+    public void Camera_DraggingTheAimHandle_TurnsItInWorldStepsInAnyTool(BuildTool tool)
+    {
+        var (build, gestures) = BeamWithSensor(100, SensorKind.Camera);
+        build.SelectSensor(4);
+        build.ActiveTool = tool;
+        var handle = gestures.SelectionHandles.Single().Position;
+
+        gestures.Press(handle);
+        gestures.Drag(new Vector2D(50 + 100, -5));
+        gestures.Release(new Vector2D(50 + 100, -5));
+
+        build.Sensors[0].Aim.ShouldBe(0);
+        build.SingleSelectedSensorId.ShouldBe(4);
+        build.Nodes[0].Position.ShouldBe(new Vector2D(0, 0));
+        build.Nodes.Count.ShouldBe(2);
+    }
+
+    [Fact]
+    public void Camera_AimOnATurnedBeam_IsRelativeToTheBeam()
+    {
+        var (build, gestures) = BeamWithSensor(100, SensorKind.Camera);
+        build.MoveNode(2, new Vector2D(0, 100));
+        build.SelectSensor(4);
+        var handle = gestures.SelectionHandles.Single().Position;
+
+        gestures.Press(handle);
+        gestures.Drag(new Vector2D(200, 50));
+
+        build.Sensors[0].Aim!.Value.ShouldBe(-Math.PI / 2, 1e-9);
+    }
+
+    [Fact]
+    public void Camera_TapOnTheAimHandle_KeepsTheCameraSelected()
+    {
+        var (build, gestures) = BeamWithSensor(100, SensorKind.Camera);
+        build.SelectSensor(4);
+        var aim = build.Sensors[0].Aim;
+
+        Tap(gestures, gestures.SelectionHandles.Single().Position);
+
+        build.SingleSelectedSensorId.ShouldBe(4);
+        build.Sensors[0].Aim.ShouldBe(aim);
+    }
+
+    [Fact]
+    public void Joint_TapOnTheAimHandle_AddsNoJoint()
+    {
+        var (build, gestures) = BeamWithSensor(100, SensorKind.Camera);
+        build.SelectSensor(4);
+        build.ActiveTool = BuildTool.Joint;
+
+        Tap(gestures, gestures.SelectionHandles.Single().Position);
+
+        build.Nodes.Count.ShouldBe(2);
+    }
+
+    [Fact]
+    public void SecondFinger_PutsBackTheAimAnAimDragTurned()
+    {
+        var (build, gestures) = BeamWithSensor(100, SensorKind.Camera);
+        build.SelectSensor(4);
+        var aim = build.Sensors[0].Aim;
+        gestures.Press(gestures.SelectionHandles.Single().Position, 0);
+        gestures.Drag(new Vector2D(0, -100), 0);
+        build.Sensors[0].Aim.ShouldNotBe(aim);
+
+        gestures.Press(new Vector2D(400, 400), 1);
+
+        build.Sensors[0].Aim.ShouldBe(aim);
+    }
+
     private static (BuildViewModel Build, BuildGestures Gestures) BeamWithSensor(double length, SensorKind kind = SensorKind.Accelerometer)
     {
         var builder = new CreatureBuilder();

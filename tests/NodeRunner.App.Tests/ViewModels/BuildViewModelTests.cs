@@ -784,4 +784,33 @@ public sealed class BuildViewModelTests
             new CanvasNote(CanvasNoteKind.Danger, new CreatureElementSelection(CreatureElementKind.Beam, 5), "Too short"),
         ]);
     }
+
+    [Fact]
+    public void SetCameraAim_TurnsTheCameraAndRedrawsOnlyOnAChange()
+    {
+        var build = new BuildViewModel();
+        build.Load(CameraPair(), moveOnly: false);
+        var changes = 0;
+        build.AnatomyChanged += (_, _) => changes++;
+
+        build.SetCameraAim(4, 1);
+        build.SetCameraAim(4, 1);
+
+        build.Sensors[0].Aim.ShouldBe(1);
+        changes.ShouldBe(1);
+    }
+
+    [Fact]
+    public void SetCameraAim_WhenLocked_Throws()
+    {
+        var build = new BuildViewModel();
+        build.Load(CameraPair(), moveOnly: true);
+
+        Should.Throw<InvalidOperationException>(() => build.SetCameraAim(4, 1));
+    }
+
+    private static CreatureDef CameraPair() => new(
+        [new NodeDef(1, new Vector2D(0, 0), 18), new NodeDef(2, new Vector2D(100, 0), 18)],
+        [new BeamDef(3, 1, 2)],
+        [new SensorDef(4, 3, SensorKind.Camera)]);
 }

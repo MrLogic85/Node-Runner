@@ -42,6 +42,10 @@ public partial class BuildCanvas : Node2D
     [Export]
     public UiSelectionHandle? ScaleHandle { get; set; }
 
+    /// <summary>Turns a selected Camera (#594); placed and hit-tested like the Select handles.</summary>
+    [Export]
+    public UiSelectionHandle? AimHandle { get; set; }
+
     /// <summary>Shows <see cref="BuildViewModel.CanvasNotes"/> beside their parts, authored in the slot above the canvas.</summary>
     [Export]
     public UiCalloutLayer? CalloutLayer { get; set; }
@@ -352,13 +356,10 @@ public partial class BuildCanvas : Node2D
     {
         var view = _gestures!.View;
         var viewTransform = new Transform2D(0, Vector2.One * (float)view.Zoom, 0, ToGodot(view.Offset));
-        var rays = Enumerable.Range(0, CameraRays.RayCount)
-            .Select(ray => ToGodot(CameraRays.LocalRayTarget(ray, 0)))
-            .ToArray();
         foreach (var sensor in _viewModel!.Sensors)
         {
             var beam = _viewModel.Beams[_viewModel.BeamIndexOf(sensor.BeamId)];
-            DrawSensor(beam, sensor.Kind, sensor.Id, _viewModel.SingleSelectedSensorId == sensor.Id, viewTransform, rays);
+            DrawSensor(beam, sensor.Kind, sensor.Aim, sensor.Id, _viewModel.SingleSelectedSensorId == sensor.Id, viewTransform);
         }
 
         // The sensor a tray drag would place on the free beam under the finger (#376).
@@ -366,23 +367,25 @@ public partial class BuildCanvas : Node2D
             && _dropHover is { Kind: CreatureElementKind.Beam } hover
             && _viewModel.CanPlacePart(part, hover, out _))
         {
-            DrawSensor(_viewModel.Beams[_viewModel.BeamIndexOf(hover.Id)], kind, null, false, viewTransform, rays);
+            DrawSensor(_viewModel.Beams[_viewModel.BeamIndexOf(hover.Id)], kind, null, null, false, viewTransform);
         }
     }
 
-    private void DrawSensor(BeamDef beam, SensorKind kind, int? sensorId, bool selected, Transform2D viewTransform, Vector2[] rays)
+    private void DrawSensor(BeamDef beam, SensorKind kind, double? aim, int? sensorId, bool selected, Transform2D viewTransform)
     {
         var nodeA = NodeById(beam.NodeA).Position;
         var nodeB = NodeById(beam.NodeB).Position;
         var start = ToGodot(nodeA);
         var end = ToGodot(nodeB);
-        var beamRotation = start == end ? 0 : (end - start).Angle();
+        var beamRotation = (float)CameraRays.BeamAngle(nodeA, nodeB);
         var upSign = Accelerometer.UpSign(nodeA, nodeB);
         var pictureRotation = beamRotation + (upSign == 1 ? Mathf.Pi : 0);
         var middle = (start + end) / 2;
+        var cameraAim = aim ?? CameraRays.DefaultAim(nodeA, nodeB);
         if (selected && kind == SensorKind.Camera)
         {
-            SensorDrawing.DrawRays(this, Theme, middle, rays.Select(ray => middle + ray));
+            SensorDrawing.DrawRays(this, Theme, middle, Enumerable.Range(0, CameraRays.RayCount)
+                .Select(ray => middle + ToGodot(CameraRays.LocalRayTarget(ray, cameraAim)).Rotated(beamRotation)));
         }
 
         DrawSetTransformMatrix(viewTransform * new Transform2D(pictureRotation, middle));
@@ -394,7 +397,7 @@ public partial class BuildCanvas : Node2D
         }
         else
         {
-            SensorDrawing.DrawCamera(this, Theme, SensorDrawing.Aim(rays).Rotated(-pictureRotation), selected);
+            SensorDrawing.DrawCamera(this, Theme, Vector2.FromAngle((float)cameraAim + beamRotation - pictureRotation), selected);
         }
 
         DrawThroughView();
@@ -449,16 +452,17 @@ public partial class BuildCanvas : Node2D
     /// </summary>
     private void DrawSelectionFrame()
     {
-        if (_gestures!.SelectionFrame is not { } frame)
+        var view = _gestures!.View;
+        DrawSetTransform(Vector2.Zero);
+        // The canvas node is scaled in the scene; undo it so the frame is a true screen-size hairline.
+        var width = UiSize.Stroke.SelectionFrame / Scale.X;
+        DrawAimStem(view, width);
+        if (_gestures.SelectionFrame is not { } frame)
         {
             return;
         }
 
-        var view = _gestures.View;
-        DrawSetTransform(Vector2.Zero);
         var rect = RectFromPoints(ToGodot(view.ToView(frame.Min)), ToGodot(view.ToView(frame.Max)));
-        // The canvas node is scaled in the scene; undo it so the frame is a true screen-size hairline.
-        var width = UiSize.Stroke.SelectionFrame / Scale.X;
         UiDashedBorder.DrawRoundedRect(this, rect, UiSize.Radius.Small / Scale.X, Theme.SelectionGlow, width);
         foreach (var (handle, position) in _gestures.SelectionHandles)
         {
@@ -468,6 +472,21 @@ public partial class BuildCanvas : Node2D
                 DrawLine(top, ToGodot(view.ToView(position)), Theme.SelectionGlow, width, antialiased: false);
             }
         }
+    }
+
+    /// <summary>The Aim handle's stem, from the selected Camera's picture out to the handle (#594).</summary>
+    private void DrawAimStem(CanvasView view, float width)
+    {
+        if (_viewModel!.AimableCameraId is not { } camera)
+        {
+            return;
+        }
+
+        var beam = _viewModel.Beams[_viewModel.BeamIndexOf(_viewModel.Sensors.Single(sensor => sensor.Id == camera).BeamId)];
+        var middle = (ToGodot(view.ToView(NodeById(beam.NodeA).Position)) + ToGodot(view.ToView(NodeById(beam.NodeB).Position))) / 2;
+        var handle = ToGodot(view.ToView(_gestures!.SelectionHandles.Single(entry => entry.Handle == SelectionHandle.Aim).Position));
+        var start = middle + ((handle - middle).Normalized() * (float)(SensorPicture.Size / Math.Sqrt(2) * view.Zoom));
+        DrawLine(start, handle, Theme.SelectionGlow, width, antialiased: false);
     }
 
     /// <summary>
@@ -547,7 +566,7 @@ public partial class BuildCanvas : Node2D
     private void LayoutSelectionHandles()
     {
         var shown = _gestures?.SelectionHandles ?? [];
-        foreach (var (handle, control) in new[] { (SelectionHandle.Move, MoveHandle), (SelectionHandle.Rotate, RotateHandle), (SelectionHandle.Scale, ScaleHandle) })
+        foreach (var (handle, control) in new[] { (SelectionHandle.Move, MoveHandle), (SelectionHandle.Rotate, RotateHandle), (SelectionHandle.Scale, ScaleHandle), (SelectionHandle.Aim, AimHandle) })
         {
             if (control is null)
             {

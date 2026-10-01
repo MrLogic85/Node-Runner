@@ -7,7 +7,8 @@ namespace NodeRunner.Domain;
 /// A drawn creature: nodes, the beams between them and the sensors on them. Any drawing is a valid
 /// <see cref="CreatureDef"/>, so an unfinished one can be saved; only its part references must point
 /// at existing parts. Whether it can be simulated and trained is checked before training
-/// (<c>CreatureReadiness</c> in <c>NodeRunner.App</c>).
+/// (<c>CreatureReadiness</c> in <c>NodeRunner.App</c>). A Camera saved without an aim gets
+/// <see cref="CameraRays.DefaultAim"/> from its beam's pose here, so every Camera has one.
 /// </summary>
 public sealed record CreatureDef
 {
@@ -72,7 +73,7 @@ public sealed record CreatureDef
 
         _nodes = Array.AsReadOnly(nodes.ToArray());
         _beams = Array.AsReadOnly(beams.ToArray());
-        _sensors = Array.AsReadOnly(sensors.ToArray());
+        _sensors = Array.AsReadOnly(sensors.Select(sensor => WithAim(sensor, nodes, beams)).ToArray());
         NextPartId = resolvedNextPartId;
         _nodeIndexById = BuildIndex(_nodes, node => node.Id);
         _beamIndexById = BuildIndex(_beams, beam => beam.Id);
@@ -92,6 +93,19 @@ public sealed record CreatureDef
     public int BeamIndexOf(int beamId) => IndexOf(_beamIndexById, beamId, "Beam id must point to an existing beam.");
 
     public int SensorIndexOf(int sensorId) => IndexOf(_sensorIndexById, sensorId, "Sensor id must point to an existing sensor.");
+
+    private static SensorDef WithAim(SensorDef sensor, IReadOnlyList<NodeDef> nodes, IReadOnlyList<BeamDef> beams)
+    {
+        if (sensor.Kind != SensorKind.Camera || sensor.Aim is not null)
+        {
+            return sensor;
+        }
+
+        var beam = beams.First(entry => entry.Id == sensor.BeamId);
+        return sensor.WithAim(CameraRays.DefaultAim(
+            nodes.First(node => node.Id == beam.NodeA).Position,
+            nodes.First(node => node.Id == beam.NodeB).Position));
+    }
 
     private static void ValidatePartIds(IEnumerable<int> partIds, HashSet<int> ids, ref int maxId)
     {

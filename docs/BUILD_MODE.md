@@ -85,6 +85,16 @@ a node's own disc always hits.
   (#376; see Parts tray below). Deleting a beam deletes its sensor;
   splitting a beam with the Joint tool moves it, with its id, to the
   longer half.
+- **Camera aim (#594):** a selected Camera shows its rays and an Aim
+  handle on a stem out along its centre ray, in any tool; the stem grows,
+  up to three times its length, while the handle would cover a joint's
+  touch area. Its Part settings note adds "Drag the round handle to aim
+  it." Dragging the
+  handle turns the camera to look at the finger, in 15° steps
+  (`CameraRays.AimStep`) measured in the world; the aim is saved relative
+  to the beam, so the camera turns with it. The handle is hit before
+  anything under it, a tap on it does nothing, and a second finger puts the
+  aim back (Build has no undo). A locked creation shows no Aim handle.
 - There is no Delete tool: the part settings and selection panels delete the
   selection, and deleting a node removes every beam on it and those beams'
   sensors (`CreatureBuilder.RemoveNode`).
