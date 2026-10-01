@@ -98,6 +98,12 @@ then the app follows the reference.
   problems"). Instead every implemented part is unlimited and the tray shows
   no counts; parts not yet implemented show "Coming later". Counts and
   achievement locks (#525) bring the reference behavior back.
+- **No Core; sensors sit on beams (#127, 0.12.0).** The reference has a Core
+  part on a joint with toggles for its built-in senses (Parts, PartSettings,
+  SignalFlow, Training). Instead Core is removed: an Accelerometer (#127) and
+  an LOS sensor (#575) sit on a beam, one of each per beam, at its midpoint.
+  The design brief #574 updates the reference; until it lands, follow #127,
+  #575 and #376.
 
 ## Product feel
 

@@ -81,8 +81,8 @@ a node's own disc always hits.
   creation keeps all three handles: like a move, scaling changes only
   beam lengths, never which parts there are.
 - **Core (transitional):** the Core row in the Parts tray turns taps on a
-  node into adding or removing its core, until parts are dragged from the
-  tray onto joints (#376).
+  node into adding or removing its core, until Core is removed and sensors
+  are dragged from the tray onto beams (#127, #376).
 - There is no Delete tool: the part settings and selection panels delete the
   selection, and deleting a node removes every beam and core on it
   (`CreatureBuilder.RemoveNode`).
