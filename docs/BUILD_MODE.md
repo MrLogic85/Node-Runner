@@ -81,11 +81,10 @@ a node's own disc always hits.
   creation keeps all three handles: like a move, scaling changes only
   beam lengths, never which parts there are.
 - **Sensors:** an Accelerometer (#127) and an LOS sensor (#575) sit on a
-  beam. Build cannot place one yet: dragging sensors from the tray onto beams
-  is #376, so until then only the seeded Worm and the examples have them
-  (from data). Deleting a
-  beam deletes its sensors; splitting a beam with the Joint tool moves them,
-  with their ids, to the longer half.
+  beam, one per beam. Drag one from the Parts tray onto a beam to place it
+  (#376; see Parts tray below). Deleting a beam deletes its sensor;
+  splitting a beam with the Joint tool moves it, with its id, to the
+  longer half.
 - There is no Delete tool: the part settings and selection panels delete the
   selection, and deleting a node removes every beam on it and those beams'
   sensors (`CreatureBuilder.RemoveNode`).
@@ -147,7 +146,16 @@ owns the groups, their order, the help lines and each row's state; the screen
 only maps parts to glyphs. Every implemented part is unlimited until #525, so
 rows show no count. A part not yet implemented is a dashed row with a lock,
 and the tab's name row says "Coming later" once. Available rows (today the
-Accelerometer and the LOS sensor) do nothing on tap: placing parts from the tray is #376. Beam,
+Accelerometer and the LOS sensor) do nothing on tap; they are dragged out
+instead (#376). Godot's drag-and-drop carries the part: the row starts it and
+floats its glyph above the finger (`UiPartRow.CreateDragPreview`), and
+`BuildCanvas` takes the drop in `PartDropZone`, a control over the canvas
+that lets touches through except during a part drag. `BuildGestures.DropTargetAt`
+finds what the part is over (a joint's disc, a sensor picture's beam, a beam
+within reach, then a joint within reach) and `BuildViewModel.PlacePart`
+validates and places it with a fresh id, or refuses it and keeps the reason as
+`PlacementNote`, a canvas note at that part until the next touch or after
+3 s. A drop on empty canvas or back on the panel changes nothing. Beam,
 Joint and Select show a short status line with the tool's glyph above the
 readiness line; Move shows none. One selected part shows its settings and
 several show the selection panel instead.

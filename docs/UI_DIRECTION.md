@@ -137,10 +137,14 @@ then the app follows the reference.
     nothing, and a Joint-tool tap on a sensor does not split the beam.
   - *Split:* splitting a beam moves its sensor, with its id, to the
     longer half (the half at the beam's first node on a tie).
-  - *Placing (#376):* beams without a sensor show `halo`.
+  - *Placing (#376):* the dragged part's glyph rides on a 48 px raised
+    tile with an `accent` line, centred above the finger. While dragging,
+    beams without a sensor show `halo`.
     A beam that already has one shows a dashed `danger` stroke, and dropping
     there shows "One sensor per beam" as a danger callout at that beam. Dropping on a joint shows "Sensors go on
-    a beam". Dropping on empty canvas cancels silently.
+    a beam". The callout goes at the next touch or after 3 s. Over a free
+    beam, the sensor's picture shows at its midpoint where it would land.
+    Dropping on empty canvas cancels silently.
   - *Part settings (#343):* sensors show Name and Delete only. Accelerometer:
     "Feels how its beam speeds up, slows down and tilts." LOS sensor: "Three
     rays see how far the ground is."

@@ -50,6 +50,37 @@ public partial class BuildCanvas : Node2D
     [Export]
     public UiCalloutLayer? CalloutLayer { get; set; }
 
+    /// <summary>
+    /// Takes a part dropped from the Parts tray (#376), authored over the slot. It lets touches
+    /// through to the canvas and only catches the pointer while a part is being dragged.
+    /// </summary>
+    [Export]
+    public Control? PartDropZone { get; set; }
+
+    private const string _partDragKey = "build_part";
+    private const double _placementNoteSeconds = 3;
+    private BuildPart? _partDrag;
+    private CreatureElementSelection? _dropHover;
+
+    /// <summary>What a tray row hands Godot's drag-and-drop when a part is lifted out of it.</summary>
+    public static Variant PartDragData(BuildPart part) =>
+        new Godot.Collections.Dictionary { [_partDragKey] = (int)part };
+
+    /// <summary>The part a drag carries, if it is a part from the tray.</summary>
+    public static bool TryReadPartDrag(Variant data, out BuildPart part)
+    {
+        part = default;
+        if (data.VariantType != Variant.Type.Dictionary
+            || !data.AsGodotDictionary().TryGetValue(_partDragKey, out var value)
+            || value.VariantType != Variant.Type.Int)
+        {
+            return false;
+        }
+
+        part = (BuildPart)value.AsInt32();
+        return Enum.IsDefined(part);
+    }
+
     public BuildViewModel? ViewModel
     {
         get => _viewModel;
@@ -85,12 +116,26 @@ public partial class BuildCanvas : Node2D
     public override void _Ready()
     {
         _gravity = ProjectSettings.GetSetting("physics/2d/default_gravity").AsDouble();
+        if (PartDropZone is { } zone)
+        {
+            zone.MouseFilter = Control.MouseFilterEnum.Ignore;
+            zone.SetDragForwarding(
+                new Callable(),
+                Callable.From<Vector2, Variant, bool>(CanDropPart),
+                Callable.From<Vector2, Variant>(DropPart));
+        }
     }
 
     /// <summary>Swings each Accelerometer's weight as its beam moves, and draws again while one is still moving (#576).</summary>
     public override void _Process(double delta)
     {
-        if (_viewModel is null || delta <= 0 || _gravity <= 0)
+        if (_viewModel is null)
+        {
+            return;
+        }
+
+        TrackPartDrag();
+        if (delta <= 0 || _gravity <= 0)
         {
             return;
         }
@@ -98,6 +143,61 @@ public partial class BuildCanvas : Node2D
         if (_sensorMotion.Advance(AccelerometerPoses(), delta, _gravity))
         {
             QueueRedraw();
+        }
+    }
+
+    /// <summary>
+    /// While a tray part is dragged, opens the drop zone and follows what it is over, so the
+    /// drawing can show where it may go; Godot's drag ends on its own when the finger lifts.
+    /// </summary>
+    private void TrackPartDrag()
+    {
+        var viewport = GetViewport();
+        BuildPart? part = viewport.GuiIsDragging() && TryReadPartDrag(viewport.GuiGetDragData(), out var dragged) && !_viewModel!.IsMoveOnly
+            ? dragged
+            : null;
+        CreatureElementSelection? hover = null;
+        if (part is not null && _slot is { } slot && _gestures is { } gestures
+            && new Rect2(Vector2.Zero, slot.Size).HasPoint(slot.GetLocalMousePosition()))
+        {
+            hover = gestures.DropTargetAt(ToDomain(GetLocalMousePosition()));
+        }
+
+        if (PartDropZone is { } zone)
+        {
+            zone.MouseFilter = part is null ? Control.MouseFilterEnum.Ignore : Control.MouseFilterEnum.Stop;
+        }
+
+        if (part != _partDrag || hover != _dropHover)
+        {
+            _partDrag = part;
+            _dropHover = hover;
+            QueueRedraw();
+        }
+    }
+
+    private bool CanDropPart(Vector2 atPosition, Variant data) =>
+        _viewModel is { IsMoveOnly: false } && _gestures is not null && TryReadPartDrag(data, out _);
+
+    /// <summary>Places the dropped part where it landed; a refused drop's note goes after a moment, or at the next touch.</summary>
+    private void DropPart(Vector2 atPosition, Variant data)
+    {
+        if (_gestures is null || !TryReadPartDrag(data, out var part))
+        {
+            return;
+        }
+
+        _gestures.DropPart(part, ToDomain(Transform.AffineInverse() * atPosition));
+        if (_viewModel!.PlacementNote is { } note)
+        {
+            var viewModel = _viewModel;
+            GetTree().CreateTimer(_placementNoteSeconds).Timeout += () =>
+            {
+                if (ReferenceEquals(viewModel.PlacementNote, note))
+                {
+                    viewModel.DismissPlacementNote();
+                }
+            };
         }
     }
 
@@ -213,6 +313,7 @@ public partial class BuildCanvas : Node2D
                 DrawLine(start, end, Theme.SelectionGlow, Stroke(Theme.BeamWidth * 2.2f), antialiased: false);
             }
 
+            DrawPlacingFeedback(beam, start, end);
             // A beam too short for training (#593) is drawn in danger until its joints move apart.
             var color = CreatureReadiness.IsTooShort(nodeA, nodeB) ? Theme.Danger : Theme.Beam;
             DrawLine(start, end, color, Stroke(Theme.BeamWidth), antialiased: false);
@@ -261,32 +362,67 @@ public partial class BuildCanvas : Node2D
         foreach (var sensor in _viewModel!.Sensors)
         {
             var beam = _viewModel.Beams[_viewModel.BeamIndexOf(sensor.BeamId)];
-            var nodeA = NodeById(beam.NodeA).Position;
-            var nodeB = NodeById(beam.NodeB).Position;
-            var start = ToGodot(nodeA);
-            var end = ToGodot(nodeB);
-            var beamRotation = start == end ? 0 : (end - start).Angle();
-            var upSign = Accelerometer.UpSign(nodeA, nodeB);
-            var pictureRotation = beamRotation + (upSign == 1 ? Mathf.Pi : 0);
-            var middle = (start + end) / 2;
-            var selected = _viewModel.SingleSelectedSensorId == sensor.Id;
-            if (selected && sensor.Kind == SensorKind.LineOfSight)
-            {
-                SensorDrawing.DrawRays(this, Theme, middle, rays.Select(ray => middle + ray));
-            }
+            DrawSensor(beam, sensor.Kind, sensor.Id, _viewModel.SingleSelectedSensorId == sensor.Id, viewTransform, rays);
+        }
 
-            DrawSetTransformMatrix(viewTransform * new Transform2D(pictureRotation, middle));
-            if (sensor.Kind == SensorKind.Accelerometer)
-            {
-                var weight = _sensorMotion.WeightOffset(sensor.Id) ?? Accelerometer.RestWeightOffset(beamRotation, upSign);
-                SensorDrawing.DrawAccelerometer(this, Theme, weight, selected);
-            }
-            else
-            {
-                SensorDrawing.DrawLos(this, Theme, SensorDrawing.Aim(rays).Rotated(-pictureRotation), selected);
-            }
+        // The sensor a tray drag would place on the free beam under the finger (#376).
+        if (_partDrag is { } part && PartTray.SensorKindOf(part) is { } kind
+            && _dropHover is { Kind: CreatureElementKind.Beam } hover
+            && _viewModel.CanPlacePart(part, hover, out _))
+        {
+            DrawSensor(_viewModel.Beams[_viewModel.BeamIndexOf(hover.Id)], kind, null, false, viewTransform, rays);
+        }
+    }
 
-            DrawThroughView();
+    private void DrawSensor(BeamDef beam, SensorKind kind, int? sensorId, bool selected, Transform2D viewTransform, Vector2[] rays)
+    {
+        var nodeA = NodeById(beam.NodeA).Position;
+        var nodeB = NodeById(beam.NodeB).Position;
+        var start = ToGodot(nodeA);
+        var end = ToGodot(nodeB);
+        var beamRotation = start == end ? 0 : (end - start).Angle();
+        var upSign = Accelerometer.UpSign(nodeA, nodeB);
+        var pictureRotation = beamRotation + (upSign == 1 ? Mathf.Pi : 0);
+        var middle = (start + end) / 2;
+        if (selected && kind == SensorKind.LineOfSight)
+        {
+            SensorDrawing.DrawRays(this, Theme, middle, rays.Select(ray => middle + ray));
+        }
+
+        DrawSetTransformMatrix(viewTransform * new Transform2D(pictureRotation, middle));
+        if (kind == SensorKind.Accelerometer)
+        {
+            var weight = (sensorId is { } id ? _sensorMotion.WeightOffset(id) : null)
+                ?? Accelerometer.RestWeightOffset(beamRotation, upSign);
+            SensorDrawing.DrawAccelerometer(this, Theme, weight, selected);
+        }
+        else
+        {
+            SensorDrawing.DrawLos(this, Theme, SensorDrawing.Aim(rays).Rotated(-pictureRotation), selected);
+        }
+
+        DrawThroughView();
+    }
+
+    /// <summary>
+    /// While a tray part is dragged (#376), a beam that would take it shows the <c>halo</c>, and
+    /// one that would refuse it a dashed <c>danger</c> stroke, both under the beam.
+    /// </summary>
+    private void DrawPlacingFeedback(BeamDef beam, Vector2 start, Vector2 end)
+    {
+        if (_partDrag is not { } part || start == end)
+        {
+            return;
+        }
+
+        var width = Stroke(Theme.BeamWidth * 2.2f);
+        if (_viewModel!.CanPlacePart(part, new CreatureElementSelection(CreatureElementKind.Beam, beam.Id), out _))
+        {
+            DrawLine(start, end, Theme.SelectionGlow, width, antialiased: false);
+        }
+        else
+        {
+            DrawDashedLine(start, end, Theme.Danger, width, dash: Theme.BeamWidth * 2, aligned: true, antialiased: false);
         }
     }
 
@@ -765,7 +901,7 @@ public partial class BuildCanvas : Node2D
 
     private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs eventArgs)
     {
-        if (eventArgs.PropertyName == nameof(BuildViewModel.SelectedNodeCount))
+        if (eventArgs.PropertyName is nameof(BuildViewModel.SelectedNodeCount) or nameof(BuildViewModel.PlacementNote))
         {
             QueueRedraw();
         }

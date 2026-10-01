@@ -109,9 +109,43 @@ public sealed class BuildGestures
     public IReadOnlyList<(SelectionHandle Handle, Vector2D Position)> SelectionHandles =>
         [.. HandlesInView().Select(entry => (entry.Handle, View.ToCanvas(entry.Position)))];
 
+    /// <summary>
+    /// The part a tray part dragged to <paramref name="viewPosition"/> would land on (#376): a
+    /// joint's disc, then a sensor picture (its beam), then a beam within reach, then a joint
+    /// within reach, so a drop near a joint on a short beam still reaches the beam. Null over
+    /// empty canvas.
+    /// </summary>
+    public CreatureElementSelection? DropTargetAt(Vector2D viewPosition)
+    {
+        var position = View.ToCanvas(viewPosition);
+        if (_build.TryFindNodeNear(position, 0, out var nodeId))
+        {
+            return new CreatureElementSelection(CreatureElementKind.Node, nodeId);
+        }
+
+        if (_build.TryFindSensorAt(position, out var sensorId))
+        {
+            var sensor = _build.Sensors.Single(entry => entry.Id == sensorId);
+            return new CreatureElementSelection(CreatureElementKind.Beam, sensor.BeamId);
+        }
+
+        if (_build.TryFindBeamNear(position, HitDistance(BeamHitDistance), out var beamId))
+        {
+            return new CreatureElementSelection(CreatureElementKind.Beam, beamId);
+        }
+
+        return _build.TryFindNodeNear(position, HitDistance(NodeHitRadius), out nodeId)
+            ? new CreatureElementSelection(CreatureElementKind.Node, nodeId)
+            : null;
+    }
+
+    /// <summary>Places a tray part dropped at <paramref name="viewPosition"/>; see <see cref="BuildViewModel.PlacePart"/>.</summary>
+    public int? DropPart(BuildPart part, Vector2D viewPosition) => _build.PlacePart(part, DropTargetAt(viewPosition));
+
     /// <summary>A pointer touches down at <paramref name="viewPosition"/>.</summary>
     public void Press(Vector2D viewPosition, int pointer = 0)
     {
+        _build.DismissPlacementNote();
         _pointers[pointer] = viewPosition;
         if (_navigating)
         {

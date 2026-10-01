@@ -155,7 +155,7 @@ layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 2
 
-[node name="BuildCanvas" type="Node2D" parent="UiFrame/MarginContainer/Card/Shell/Body/CanvasSlot" node_paths=PackedStringArray("MoveHandle", "RotateHandle", "ScaleHandle", "CalloutLayer")]
+[node name="BuildCanvas" type="Node2D" parent="UiFrame/MarginContainer/Card/Shell/Body/CanvasSlot" node_paths=PackedStringArray("MoveHandle", "RotateHandle", "ScaleHandle", "CalloutLayer", "PartDropZone")]
 unique_name_in_owner = true
 position = Vector2(136, 66)
 scale = Vector2(1.15, 1.15)
@@ -164,6 +164,7 @@ MoveHandle = NodePath("../MoveHandle")
 RotateHandle = NodePath("../RotateHandle")
 ScaleHandle = NodePath("../ScaleHandle")
 CalloutLayer = NodePath("../CalloutLayer")
+PartDropZone = NodePath("../PartDropZone")
 
 [node name="MoveHandle" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Body/CanvasSlot"]
 visible = false
@@ -218,6 +219,15 @@ mouse_filter = 2
 script = ExtResource("9_chip")
 Text = "Parts locked · drag to move"
 IconId = 15
+
+[node name="PartDropZone" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Body/CanvasSlot"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
 
 [node name="SidePanel" parent="UiFrame/MarginContainer/Card/Shell/Body" instance=ExtResource("10_side_panel")]
 unique_name_in_owner = true

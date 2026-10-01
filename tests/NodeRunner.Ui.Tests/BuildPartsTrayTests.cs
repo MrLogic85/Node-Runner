@@ -48,6 +48,28 @@ public sealed class BuildPartsTrayTests
         icons.ShouldBeUnique();
     }
 
+    [Fact]
+    public void OnlyAvailableSensorRows_CanBeDraggedOut()
+    {
+        var draggable = PartTray.Groups()
+            .SelectMany(group => group.Rows)
+            .Where(row => BuildScreen.DraggablePart(row) is not null)
+            .Select(row => row.Part);
+
+        draggable.ShouldBe([BuildPart.Accelerometer, BuildPart.LosSensor]);
+    }
+
+    [Fact]
+    public void Canvas_TakesTrayDrops_InAZoneThatLetsTouchesThrough()
+    {
+        var zone = _build.Single(node => node.Name == "PartDropZone");
+        var canvas = _build.Single(node => node.Name == "BuildCanvas");
+
+        zone.Parent.ShouldEndWith("/CanvasSlot");
+        zone.Node.Body.ShouldContain("mouse_filter = 2");
+        canvas.Node.Body.ShouldContain("PartDropZone = NodePath(\"../PartDropZone\")");
+    }
+
     private static string[] Children(string parent) =>
         [.. _build.Where(node => node.Parent?.EndsWith(parent, StringComparison.Ordinal) == true).Select(node => node.Name)];
 }
