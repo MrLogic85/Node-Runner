@@ -8,6 +8,8 @@ namespace NodeRunner.Ui.Lib;
 /// layout never moves or scales a physics scene. Unlike a stretched
 /// <see cref="SubViewportContainer"/>, it renders at the screen's pixel density rather than the
 /// canvas size, so lines stay sharp on a phone. A press reports the world position under it.
+/// The world keeps its size on screen whatever the UI size (<see cref="UiScale"/>): the slot shows
+/// more or less of it as the UI around it shrinks or grows.
 /// </summary>
 public partial class UiWorldView : Control
 {
@@ -38,15 +40,17 @@ public partial class UiWorldView : Control
             return;
         }
 
-        EmitSignal(SignalName.WorldPressed, WorldViewport.CanvasTransform.AffineInverse() * position);
+        var toWorld = (Vector2)WorldViewport.Size2DOverride / Size;
+        EmitSignal(SignalName.WorldPressed, WorldViewport.CanvasTransform.AffineInverse() * (position * toWorld));
         AcceptEvent();
     }
 
-    // The world lays out in the slot's canvas units and renders at the pixels the slot covers.
+    // The world lays out in canvas units at 100% UI size, which undoes the UI size for it alone,
+    // and renders at the pixels the slot covers.
     private void Fit()
     {
-        var canvasSize = (Vector2I)Size.Round();
-        if (canvasSize.X <= 0 || canvasSize.Y <= 0)
+        var worldSize = (Vector2I)(Size * UiScale.FactorOf(this)).Round();
+        if (worldSize.X <= 0 || worldSize.Y <= 0)
         {
             return;
         }
@@ -54,7 +58,7 @@ public partial class UiWorldView : Control
         var density = (GetViewport().GetFinalTransform().Scale * GetGlobalTransformWithCanvas().Scale).Abs();
         var viewport = WorldViewport;
         viewport.Size = (Vector2I)(Size * density).Ceil();
-        viewport.Size2DOverride = canvasSize;
+        viewport.Size2DOverride = worldSize;
         viewport.Size2DOverrideStretch = true;
         QueueRedraw();
     }

@@ -23,6 +23,7 @@ SceneRouter="*res://src/managers/SceneRouter.cs"
 Notifications="*res://src/ui/lib/UiNotificationLayer.cs"
 BackPress="*res://src/ui/lib/UiBackPress.cs"
 SafeArea="*res://src/ui/lib/UiSafeArea.cs"
+UiScale="*res://src/ui/lib/UiScale.cs"
 
 [display]
 

@@ -24,6 +24,22 @@ Text = "Neon"
 script = ExtResource("shell_6_theme_segment")
 Text = "Paper"
 
+[sub_resource type="Resource" id="cs_Resource_size_50"]
+script = ExtResource("shell_6_theme_segment")
+Text = "50%"
+
+[sub_resource type="Resource" id="cs_Resource_size_100"]
+script = ExtResource("shell_6_theme_segment")
+Text = "100%"
+
+[sub_resource type="Resource" id="cs_Resource_size_200"]
+script = ExtResource("shell_6_theme_segment")
+Text = "200%"
+
+[sub_resource type="Resource" id="cs_Resource_size_400"]
+script = ExtResource("shell_6_theme_segment")
+Text = "400%"
+
 [node name="ColorsAndStylesScreen" type="Control" unique_id=213652508]
 layout_mode = 3
 anchors_preset = 15
@@ -130,6 +146,40 @@ theme_override_constants/margin_bottom = 12
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 16
+
+[node name="UiSize" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Header" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/UiSize"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Title" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/UiSize/Header"]
+layout_mode = 2
+size_flags_vertical = 0
+text = "UI size"
+script = ExtResource("shell_4_label")
+TextStyle = 12
+TextColor = 7
+
+[node name="Note" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/UiSize/Header"]
+layout_mode = 2
+custom_minimum_size = Vector2(120, 0)
+size_flags_horizontal = 3
+size_flags_vertical = 8
+autowrap_mode = 3
+text = "scales everything around the arena and the Build canvas, for this session; Settings will keep it. Above 100% a phone cuts the screen off (#609): restart the app to get back"
+script = ExtResource("shell_4_label")
+TextStyle = 9
+TextColor = 8
+
+[node name="UiSizeSwitcher" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/UiSize"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 0
+script = ExtResource("shell_5_theme_switch")
+Segments = Array[ExtResource("shell_6_theme_segment")]([SubResource("cs_Resource_size_50"), SubResource("cs_Resource_size_100"), SubResource("cs_Resource_size_200"), SubResource("cs_Resource_size_400")])
 
 [node name="Colours" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content"]
 layout_mode = 2

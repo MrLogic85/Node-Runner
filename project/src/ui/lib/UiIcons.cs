@@ -36,7 +36,7 @@ public static class UiIcons
     private static readonly string[] _iconStates =
         ["icon_normal_color", "icon_hover_color", "icon_pressed_color", "icon_hover_pressed_color", "icon_focus_color", "icon_disabled_color"];
     private static readonly Dictionary<(string Path, int PixelSize), Texture2D> _textures = [];
-    private static float _cachedUiScale = float.NaN;
+    private static float _cachedPixelsPerUnit = float.NaN;
 
     public static IReadOnlyList<UiIconId> AllIds { get; } = Enum.GetValues<UiIconId>()
         .Where(icon => icon != UiIconId.None).ToArray();
@@ -50,10 +50,8 @@ public static class UiIcons
         _ => throw new ArgumentOutOfRangeException(nameof(size), size, "Only canonical icon sizes are supported."),
     };
 
-    public static int RasterPixels(UiIconSize size, int windowWidth, int windowHeight) =>
-        Mathf.Max(1, Mathf.RoundToInt(Pixels(size) * Math.Min(
-            windowWidth / UiLayout.CanvasWidth,
-            windowHeight / UiLayout.CanvasHeight)));
+    /// <summary>The icon's raster size in window pixels at <paramref name="pixelsPerUnit"/> (see <see cref="UiScale.PixelsPerUnit()"/>).</summary>
+    public static int RasterPixels(UiIconSize size, float pixelsPerUnit) => UiScale.RasterPixels(Pixels(size), pixelsPerUnit);
 
     public static string PathFor(UiIconId icon)
     {
@@ -189,14 +187,14 @@ public static class UiIcons
 
     private static Texture2D Load(string path, int logicalPixels, float sourceSize)
     {
-        var uiScale = UiScale();
-        if (!Mathf.IsEqualApprox(uiScale, _cachedUiScale))
+        var pixelsPerUnit = UiScale.PixelsPerUnit();
+        if (!Mathf.IsEqualApprox(pixelsPerUnit, _cachedPixelsPerUnit))
         {
             _textures.Clear();
-            _cachedUiScale = uiScale;
+            _cachedPixelsPerUnit = pixelsPerUnit;
         }
 
-        var physicalPixels = Mathf.Max(1, Mathf.RoundToInt(logicalPixels * uiScale));
+        var physicalPixels = UiScale.RasterPixels(logicalPixels, pixelsPerUnit);
         var key = (path, physicalPixels);
         if (_textures.TryGetValue(key, out var cached))
         {
@@ -239,14 +237,6 @@ public static class UiIcons
         GD.PushError($"Imported icon fallback could not be loaded: {path}");
         throw new InvalidOperationException(message);
 #endif
-    }
-
-    private static float UiScale()
-    {
-        var windowSize = DisplayServer.WindowGetSize();
-        return Mathf.Min(
-            windowSize.X / UiLayout.CanvasWidth,
-            windowSize.Y / UiLayout.CanvasHeight);
     }
 
     private static TextureRect Create(Texture2D texture, UiIconSize size, Color tint)
