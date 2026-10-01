@@ -1,25 +1,27 @@
 namespace NodeRunner.Domain;
 
 /// <summary>
-/// The LOS sensor's pure math (#575): three fixed rays from its beam's midpoint, aimed down,
-/// forward and forward-down in the world as built and turning with the beam after that. Each ray
-/// reads 1 when nothing is in range and 0 at contact. Stateless and shared by the sim and the
-/// sensor picture, like <see cref="Accelerometer"/>. See docs/CREATURE_MODEL.md.
+/// The camera's pure math (#575, #604): three fixed rays from its beam's midpoint, aimed forward,
+/// forward-down and down in the world as built and turning with the beam after that. Rays are named
+/// symmetrically around the centre ray, seen from the camera looking along them, and run left to
+/// right. Each ray reads how near the ground is: 0 when nothing is in range, rising linearly to 1
+/// at contact. Stateless and shared by the sim and the sensor picture, like
+/// <see cref="Accelerometer"/>. See docs/CREATURE_MODEL.md.
 /// </summary>
-public static class LineOfSight
+public static class CameraRays
 {
     public const int RayCount = 3;
 
     public const double RayLength = 220;
 
-    public static IReadOnlyList<string> RayNames { get; } = ["down", "forward", "forward-down"];
+    public static IReadOnlyList<string> RayNames { get; } = ["left 1", "centre", "right 1"];
 
-    // World directions as built; y grows downward, forward is +x.
+    // World directions as built, in RayNames order; y grows downward, forward is +x.
     private static readonly Vector2D[] _builtDirections =
     [
-        new(0, 1),
         new(1, 0),
         new(Math.Sqrt(0.5), Math.Sqrt(0.5)),
+        new(0, 1),
     ];
 
     /// <summary>
@@ -46,7 +48,10 @@ public static class LineOfSight
             ((-direction.X * sin) + (direction.Y * cos)) * RayLength);
     }
 
-    /// <summary>One ray's brain input: the hit distance over <see cref="RayLength"/>, or 1 with no hit.</summary>
+    /// <summary>
+    /// One ray's brain input, its nearness: <c>1 − distance / <see cref="RayLength"/></c> clamped to
+    /// 0–1, and 0 with no hit, so nothing in view adds nothing to the brain's weighted sum.
+    /// </summary>
     public static double Reading(double? hitDistance) =>
-        hitDistance is { } distance ? Math.Clamp(distance / RayLength, 0, 1) : 1;
+        hitDistance is { } distance ? Math.Clamp(1 - (distance / RayLength), 0, 1) : 0;
 }

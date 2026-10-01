@@ -346,14 +346,14 @@ public partial class BuildCanvas : Node2D
     /// <summary>
     /// Each sensor as a picture at the middle of its beam (#576), upright on the beam's built up
     /// side: the Accelerometer with its weight where <see cref="BuildSensorMotion"/> has it, and
-    /// the LOS camera looking along its rays, which it draws when selected.
+    /// the camera looking along its rays, which it draws when selected.
     /// </summary>
     private void DrawSensors()
     {
         var view = _gestures!.View;
         var viewTransform = new Transform2D(0, Vector2.One * (float)view.Zoom, 0, ToGodot(view.Offset));
-        var rays = Enumerable.Range(0, LineOfSight.RayCount)
-            .Select(ray => ToGodot(LineOfSight.LocalRayTarget(ray, 0)))
+        var rays = Enumerable.Range(0, CameraRays.RayCount)
+            .Select(ray => ToGodot(CameraRays.LocalRayTarget(ray, 0)))
             .ToArray();
         foreach (var sensor in _viewModel!.Sensors)
         {
@@ -380,7 +380,7 @@ public partial class BuildCanvas : Node2D
         var upSign = Accelerometer.UpSign(nodeA, nodeB);
         var pictureRotation = beamRotation + (upSign == 1 ? Mathf.Pi : 0);
         var middle = (start + end) / 2;
-        if (selected && kind == SensorKind.LineOfSight)
+        if (selected && kind == SensorKind.Camera)
         {
             SensorDrawing.DrawRays(this, Theme, middle, rays.Select(ray => middle + ray));
         }
@@ -394,7 +394,7 @@ public partial class BuildCanvas : Node2D
         }
         else
         {
-            SensorDrawing.DrawLos(this, Theme, SensorDrawing.Aim(rays).Rotated(-pictureRotation), selected);
+            SensorDrawing.DrawCamera(this, Theme, SensorDrawing.Aim(rays).Rotated(-pictureRotation), selected);
         }
 
         DrawThroughView();

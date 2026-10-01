@@ -75,9 +75,9 @@ public sealed class CreatureBuilderTests
 
     [Theory]
     [InlineData(SensorKind.Accelerometer, SensorKind.Accelerometer)]
-    [InlineData(SensorKind.Accelerometer, SensorKind.LineOfSight)]
-    [InlineData(SensorKind.LineOfSight, SensorKind.Accelerometer)]
-    [InlineData(SensorKind.LineOfSight, SensorKind.LineOfSight)]
+    [InlineData(SensorKind.Accelerometer, SensorKind.Camera)]
+    [InlineData(SensorKind.Camera, SensorKind.Accelerometer)]
+    [InlineData(SensorKind.Camera, SensorKind.Camera)]
     public void AddSensor_OnABeamThatHasOne_ReturnsReasonAndDoesNotMutate(SensorKind first, SensorKind second)
     {
         var builder = PairBuilder();
@@ -109,7 +109,7 @@ public sealed class CreatureBuilderTests
         var builder = PairBuilder();
         var beam = builder.Beams[0].Id;
         builder.AddSensor(beam, SensorKind.Accelerometer, out _, out _);
-        builder.AddSensor(beam, SensorKind.LineOfSight, out _, out _);
+        builder.AddSensor(beam, SensorKind.Camera, out _, out _);
 
         builder.RemoveBeam(beam);
 

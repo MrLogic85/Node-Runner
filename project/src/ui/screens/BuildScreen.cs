@@ -366,7 +366,7 @@ public partial class BuildScreen : Control
         BuildPart.VelocityMotor => UiIconId.PartVelocity,
         BuildPart.Wheel => UiIconId.PartWheel,
         BuildPart.Accelerometer => UiIconId.PartAccelerometer,
-        BuildPart.LosSensor => UiIconId.PartLineOfSight,
+        BuildPart.Camera => UiIconId.PartCamera,
         BuildPart.Battery => UiIconId.PartBattery,
         BuildPart.Generator => UiIconId.PartGenerator,
         BuildPart.FuelTank => UiIconId.PartFuel,
@@ -394,7 +394,7 @@ public partial class BuildScreen : Control
         PartSettingsKind.Node => UiIconId.Joint,
         PartSettingsKind.Beam => UiIconId.Beam,
         PartSettingsKind.Accelerometer => UiIconId.PartAccelerometer,
-        PartSettingsKind.LosSensor => UiIconId.PartLineOfSight,
+        PartSettingsKind.Camera => UiIconId.PartCamera,
         _ => UiIconId.None,
     };
 

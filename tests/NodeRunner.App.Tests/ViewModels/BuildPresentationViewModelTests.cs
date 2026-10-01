@@ -57,7 +57,7 @@ public sealed class BuildPresentationViewModelTests
 
     [Theory]
     [InlineData(SensorKind.Accelerometer, PartSettingsKind.Accelerometer, "Accelerometer", "Feels how its beam speeds up, slows down and tilts.")]
-    [InlineData(SensorKind.LineOfSight, PartSettingsKind.LosSensor, "LOS sensor", "Three rays see how far the ground is.")]
+    [InlineData(SensorKind.Camera, PartSettingsKind.Camera, "Camera", "Three rays see how near the ground is.")]
     public void SelectedSensor_ShowsNameBeamAndWhatItFeels(SensorKind kind, PartSettingsKind partKind, string name, string note)
     {
         var build = new BuildViewModel();
@@ -139,7 +139,7 @@ public sealed class BuildPresentationViewModelTests
 
     [Theory]
     [InlineData(SensorKind.Accelerometer)]
-    [InlineData(SensorKind.LineOfSight)]
+    [InlineData(SensorKind.Camera)]
     public void SensorNote_AvoidsBrainWording(SensorKind kind)
     {
         var note = BuildPresentationViewModel.SensorNote(kind).ToLowerInvariant();
@@ -237,7 +237,7 @@ public sealed class BuildPresentationViewModelTests
     }
 
     [Fact]
-    public void BuildPanel_WithAccelerometerAndLosSensor_CountsInputsPerSensorKind()
+    public void BuildPanel_WithAccelerometerAndCamera_CountsInputsPerSensorKind()
     {
         var build = new BuildViewModel();
         build.Load(WormCreature(sensorCount: 2));
@@ -287,7 +287,7 @@ public sealed class BuildPresentationViewModelTests
     {
         var sensors = sensorCount == 1
             ? new[] { new SensorDef(201, 101, SensorKind.Accelerometer) }
-            : [new SensorDef(201, 101, SensorKind.Accelerometer), new SensorDef(202, 102, SensorKind.LineOfSight)];
+            : [new SensorDef(201, 101, SensorKind.Accelerometer), new SensorDef(202, 102, SensorKind.Camera)];
         return new CreatureDef(
             [
                 new NodeDef(1, new Vector2D(0, 0), 18),

@@ -18,7 +18,7 @@ public sealed class PartTrayTests
         [
             ["Spring", "Piston", "Wing"],
             ["Brake", "Servo", "Stepper", "Velocity motor", "Wheel"],
-            ["Accelerometer", "LOS sensor"],
+            ["Accelerometer", "Camera"],
             ["Battery", "Generator", "Fuel tank"],
         ]);
     }
@@ -47,7 +47,7 @@ public sealed class PartTrayTests
     {
         var sensors = PartTray.Groups()[2].Rows;
 
-        sensors.Select(row => row.Part).ShouldBe([BuildPart.Accelerometer, BuildPart.LosSensor]);
+        sensors.Select(row => row.Part).ShouldBe([BuildPart.Accelerometer, BuildPart.Camera]);
         sensors.ShouldAllBe(row => row.State == PartTrayRowState.Available && row.LockedReason == string.Empty);
     }
 
@@ -56,7 +56,7 @@ public sealed class PartTrayTests
     {
         var rows = PartTray.Groups().SelectMany(group => group.Rows).ToList();
 
-        rows.Where(row => row.Part is not (BuildPart.Accelerometer or BuildPart.LosSensor)).ShouldAllBe(row =>
+        rows.Where(row => row.Part is not (BuildPart.Accelerometer or BuildPart.Camera)).ShouldAllBe(row =>
             row.State == PartTrayRowState.ComingLater && !row.IsAvailable && row.LockedReason == "Coming later");
     }
 

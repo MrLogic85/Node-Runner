@@ -6,7 +6,7 @@ namespace NodeRunner.Creature;
 /// <summary>
 /// A sensor's picture on its beam in Training (#576): a child of the beam body at the beam's
 /// midpoint, turned so its top faces the beam's built up side. The Accelerometer's weight follows
-/// the live proof mass every frame; a selected LOS sensor also draws its rays to what they see.
+/// the live proof mass every frame; a selected camera also draws its rays to what they see.
 /// </summary>
 public partial class SensorVisual : Node2D
 {
@@ -16,10 +16,10 @@ public partial class SensorVisual : Node2D
 
     public AccelerometerSensor? Accelerometer { get; init; }
 
-    public LosSensor? Los { get; init; }
+    public CameraSensor? Camera { get; init; }
 
-    /// <summary>The middle of the LOS sensor's ray fan in this picture's frame, the way the camera looks.</summary>
-    public Vector2 LosAim { get; init; } = Vector2.Down;
+    /// <summary>The middle of the camera's ray fan in this picture's frame, the way the camera looks.</summary>
+    public Vector2 CameraAim { get; init; } = Vector2.Down;
 
     public bool IsSelected
     {
@@ -38,7 +38,7 @@ public partial class SensorVisual : Node2D
 
     public override void _Process(double delta)
     {
-        if (Accelerometer is not null || (IsSelected && Los is not null))
+        if (Accelerometer is not null || (IsSelected && Camera is not null))
         {
             QueueRedraw();
         }
@@ -46,9 +46,9 @@ public partial class SensorVisual : Node2D
 
     public override void _Draw()
     {
-        if (IsSelected && Los is not null)
+        if (IsSelected && Camera is not null)
         {
-            SensorDrawing.DrawRays(this, Theme, ToLocal(Los.GlobalOrigin), Los.GlobalRayEnds.Select(ToLocal));
+            SensorDrawing.DrawRays(this, Theme, ToLocal(Camera.GlobalOrigin), Camera.GlobalRayEnds.Select(ToLocal));
         }
 
         if (Accelerometer is not null)
@@ -57,7 +57,7 @@ public partial class SensorVisual : Node2D
         }
         else
         {
-            SensorDrawing.DrawLos(this, Theme, LosAim, IsSelected);
+            SensorDrawing.DrawCamera(this, Theme, CameraAim, IsSelected);
         }
     }
 }

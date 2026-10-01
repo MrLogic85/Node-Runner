@@ -109,7 +109,7 @@ public sealed class CreatureDefTests
             new[]
             {
                 new SensorDef(201, 101, SensorKind.Accelerometer),
-                new SensorDef(202, 101, SensorKind.LineOfSight),
+                new SensorDef(202, 101, SensorKind.Camera),
             });
 
         action.ShouldThrow<ArgumentException>();
@@ -129,7 +129,7 @@ public sealed class CreatureDefTests
             new[]
             {
                 new SensorDef(201, 101, SensorKind.Accelerometer),
-                new SensorDef(202, 102, SensorKind.LineOfSight),
+                new SensorDef(202, 102, SensorKind.Camera),
             });
 
         var json = JsonSerializer.Serialize(original);

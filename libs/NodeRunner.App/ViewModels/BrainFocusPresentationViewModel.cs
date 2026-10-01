@@ -112,7 +112,7 @@ public sealed class BrainFocusPresentationViewModel : INotifyPropertyChanged
         if (layerIndex == 0 && neuronIndex < sensors.Count)
         {
             var sensor = sensors[neuronIndex];
-            return $"{sensor.GroupKind} {sensor.GroupIndex} {sensor.Name}";
+            return $"{sensor.GroupKind} {sensor.GroupIndex} · {sensor.Name}";
         }
 
         if (layerIndex > 1 && neuronIndex < motors.Count)

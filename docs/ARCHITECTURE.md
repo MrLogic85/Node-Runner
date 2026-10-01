@@ -200,7 +200,7 @@ public static class Accelerometer   // proof mass on a damped spring, pure math
     public static Vector2D SpecificForce(Vector2D acceleration, double gravity);
 }
 
-public static class LineOfSight     // the LOS sensor's three fixed rays, pure math
+public static class CameraRays      // the camera's three fixed rays, pure math
 {
     public static Vector2D LocalRayTarget(int ray, double builtRotation);
     public static double Reading(double? hitDistance);
@@ -226,7 +226,7 @@ At 60 Hz (`_physics_process`), for the creature currently under evaluation:
 
 1. **Sense.** Each sensor part reads its values in part order (an
    accelerometer steps its proof mass and reads 2, along and across its
-   beam; an LOS sensor reads its 3 rays); each motor relation reads 2 (relative angle, relative angular velocity) →
+   beam; a camera reads its 3 rays' nearness); each motor relation reads 2 (relative angle, relative angular velocity) →
    `double[]`, in the fixed order documented in `docs/CREATURE_MODEL.md`.
 2. **Think.** `Brain.Forward(input, output, scratchA, scratchB)` writes a
    target angular velocity in `[-1, 1]` per motor relation, without
@@ -365,6 +365,6 @@ so they get labels, milestones, and a closing decision instead of going
 stale in prose. Of the three questions previously recorded in this section:
 the large-network-visualization question belongs to the 0.16.0 brain views
 (#196, #197, #393); the sensor-configurability question is decided on issue #107 (sensors are
-configured through their own part settings, LOS first in #578);
+configured through their own part settings, the camera first in #578);
 and the ViewModel-base question is resolved: `INotifyPropertyChanged` per
 `libs/NodeRunner.App/AGENTS.md`.

@@ -101,21 +101,22 @@ then the app follows the reference.
 - **No Core; sensors sit on beams (#127, 0.12.0).** The reference has a Core
   part on a joint with toggles for its built-in senses (Parts, PartSettings,
   SignalFlow, Training). Instead Core is removed: an Accelerometer (#127) and
-  an LOS sensor (#575) sit on a beam, one sensor per beam (#593), at its
+  a Camera (#575) sit on a beam, one sensor per beam (#593), at its
   midpoint.
   The designer is not available, so 0.12 follows these best guesses (#580);
   #574 updates the reference later and lists any differences as follow-ups:
-  - *Parts tray:* the Sensors tab lists Accelerometer, then LOS sensor, with
+  - *Parts tray:* the Sensors tab lists Accelerometer, then Camera, with
     the help line "Drag onto a beam. A beam holds one sensor." There
     is no Core row.
-  - *Glyphs:* LOS sensor uses the reference `los` glyph. Accelerometer uses
+  - *Glyphs:* Camera uses the reference `los` glyph (line of sight; the
+    part was renamed Camera in #604). Accelerometer uses
     the project-owned `accelerometer` part glyph (an upright frame with a
     weight on a spring), which is not in the reference package. The
     reference `core` glyphs stay in the package but are unused.
   - *On a beam (#576):* a sensor is drawn as a picture of itself, not as a
     badge with a glyph, at the beam's midpoint, in panel fill with 2 px
     `accent` lines. The Accelerometer is a 16 × 22 rounded frame with a
-    zigzag spring from its top to a round weight. The LOS sensor is a small
+    zigzag spring from its top to a round weight. The Camera is a small
     camera (body, lens ring and hood) that looks along its rays. Neither is
     a circle, so it never reads as a joint. Selected, the picture gets a
     `halo` outline. Its tap area is a 24 square turned with the beam
@@ -130,8 +131,8 @@ then the app follows the reference.
     beam too short".
   - *Orientation:* the side of the beam that faces up as built is the
     sensor's top, and it then turns with the beam; it never flips during a
-    run. The LOS camera looks along its as-built ray fan (#576), and a
-    selected LOS sensor draws its rays from the midpoint.
+    run. The Camera looks along its as-built ray fan (#576), and a
+    selected Camera draws its rays from the midpoint.
   - *Order:* joints, then sensors, then beams, for both tapping and drawing.
     A sensor's tap area is its picture. Dragging a sensor in Move does
     nothing, and a Joint-tool tap on a sensor does not split the beam.
@@ -147,7 +148,7 @@ then the app follows the reference.
     Dropping on empty canvas cancels silently.
   - *Part settings (#343):* sensors show Name, the beam they are on, a note
     and Delete; no settings until #578. Accelerometer: "Feels how its beam
-    speeds up, slows down and tilts." LOS sensor: "Three rays see how far the
+    speeds up, slows down and tilts." Camera: "Three rays see how near the
     ground is."
   - *In motion (#576):* the Accelerometer's weight moves inside its frame by
     the proof-mass displacement, clamped to the frame, with 1 g at half the

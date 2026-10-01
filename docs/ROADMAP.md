@@ -61,7 +61,7 @@ identity.
 - Stable part ids (#220): the prerequisite for a brain that survives rebuilds.
 - Core is removed. Its readings become sensor parts that sit on a beam: an
   Accelerometer, a damped proof mass whose swing is the reading (#127, #576),
-  and an LOS sensor with three fixed rays (#575). Design: best guess #580
+  and a Camera with three fixed rays that read nearness (#575, #604). Design: best guess #580
   (follow-up #574).
 
 **Ship criterion:** A player builds a creature on the reference-design Build
@@ -98,7 +98,7 @@ and training continues. Adding a part keeps the skill the creature already had.
 
 - Motors, passive parts and sensors (#92 and its children). Power and the
   Wing come in 0.18.0.
-- LOS sensor settings (#578), joint-part placement (#577) and
+- Camera settings (#578), joint-part placement (#577) and
   Pulse, a rhythm part whose tempo is itself an output (#527).
 - Shadows (population size) saved per Creation, with phone calibration (#528).
 - Investigation of a good start creature (#529) and a spike on part unlocks
@@ -157,7 +157,7 @@ watches its neurons respond.
 
 - Power (#128): blocks (#457), battery and power draw from used strength
   (#458), generator and fuel tank (#459), the power budget screen (#460) and
-  LOS sensor power draw (#599). A shadow's run ends when its power is gone.
+  camera power draw (#599). A shadow's run ends when its power is gone.
 - The Wing (#130).
 - Design brief for power, blocks and the Wing (#600).
 

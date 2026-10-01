@@ -34,7 +34,7 @@ public sealed class MappingViewModelTests
             [new SensorReading("Accelerometer", 1, "along", 0.5), new SensorReading("Accelerometer", 1, "across", -0.25)],
             []);
 
-        mapping.SensorsText.ShouldBe("Accelerometer 1 along: 0.50\nAccelerometer 1 across: -0.25");
+        mapping.SensorsText.ShouldBe("Accelerometer 1 · along: 0.50\nAccelerometer 1 · across: -0.25");
     }
 
     [Fact]

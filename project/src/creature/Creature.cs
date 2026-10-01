@@ -494,7 +494,7 @@ public partial class Creature : Node2D
             _sensors[i] = sensor.Kind switch
             {
                 SensorKind.Accelerometer => CreateAccelerometer(definition, beamIndex, gravity),
-                SensorKind.LineOfSight => new LosSensor(_beamBodies[beamIndex], _beamInitialRotations[beamIndex]),
+                SensorKind.Camera => new CameraSensor(_beamBodies[beamIndex], _beamInitialRotations[beamIndex]),
                 _ => throw new InvalidOperationException($"Unknown sensor kind {sensor.Kind}."),
             };
         }
@@ -522,9 +522,9 @@ public partial class Creature : Node2D
                 Theme = Theme,
                 Rotation = glyphRotation,
                 Accelerometer = _sensors[i] as AccelerometerSensor,
-                Los = _sensors[i] as LosSensor,
-                LosAim = SensorDrawing.Aim(Enumerable.Range(0, LineOfSight.RayCount)
-                    .Select(ray => ToGodot(LineOfSight.LocalRayTarget(ray, _beamInitialRotations[beamIndex])))).Rotated(-glyphRotation),
+                Camera = _sensors[i] as CameraSensor,
+                CameraAim = SensorDrawing.Aim(Enumerable.Range(0, CameraRays.RayCount)
+                    .Select(ray => ToGodot(CameraRays.LocalRayTarget(ray, _beamInitialRotations[beamIndex])))).Rotated(-glyphRotation),
             };
             _beamBodies[beamIndex].AddChild(visual);
             _sensorVisuals[i] = visual;
@@ -577,7 +577,7 @@ public partial class Creature : Node2D
     }
 
     // Stable order: each sensor part's values in part order (Accelerometer: along, across;
-    // LOS sensor: down, forward, forward-down), then each motor relation's
+    // camera: left 1, centre, right 1), then each motor relation's
     // (relativeAngle, relativeAngularVelocity), in creation order.
     private void ReadSensors(double[] values, double delta)
     {
