@@ -283,6 +283,14 @@ public partial class BuildScreen : Control
             foreach (var part in group.Rows)
             {
                 var row = new UiPartRow { IconId = PartIcon(part.Part), Label = part.Name, Compact = true };
+                if (DraggablePart(part) is { } draggable)
+                {
+                    row.SetDragForwarding(
+                        Callable.From<Vector2, Variant>(_ => StartPartDrag(row, draggable)),
+                        new Callable(),
+                        new Callable());
+                }
+
                 rows.AddChild(row);
             }
         }
@@ -301,6 +309,22 @@ public partial class BuildScreen : Control
     {
         GetNode<ScrollContainer>("%PartScroll").ScrollVertical = 0;
         Apply();
+    }
+
+    /// <summary>The part a tray row can be dragged out as (#376): an available sensor, or null.</summary>
+    public static BuildPart? DraggablePart(PartTrayRow row) =>
+        row.IsAvailable && PartTray.SensorKindOf(row.Part) is not null ? row.Part : null;
+
+    /// <summary>Lifts the part out of its row: the canvas takes the drop, and the row's glyph floats above the finger.</summary>
+    private Variant StartPartDrag(UiPartRow row, BuildPart part)
+    {
+        if (_presentation?.IsLocked != false)
+        {
+            return default;
+        }
+
+        row.SetDragPreview(row.CreateDragPreview());
+        return BuildCanvas.PartDragData(part);
     }
 
     private static UiIconId RailIcon(BuildTool tool) => tool switch

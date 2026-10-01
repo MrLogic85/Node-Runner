@@ -65,6 +65,10 @@ public sealed class BuildViewModel : INotifyPropertyChanged
     private double? _bestFitness;
     private int? _selectedBeamId;
     private int? _selectedSensorId;
+    private CanvasNote? _placementNote;
+
+    /// <summary>Why a sensor dropped on a joint was not placed.</summary>
+    public const string SensorsGoOnABeamReason = "Sensors go on a beam";
 
     public BuildViewModel(CreatureBuilder? builder = null)
     {
@@ -85,6 +89,7 @@ public sealed class BuildViewModel : INotifyPropertyChanged
         _moveOnly = moveOnly;
         ActiveTool = BuildTool.Move;
         StatusMessage = null;
+        PlacementNote = null;
         AnatomyChanged?.Invoke(this, EventArgs.Empty);
     }
 
@@ -194,13 +199,18 @@ public sealed class BuildViewModel : INotifyPropertyChanged
     public IReadOnlyList<SensorDef> Sensors => _builder.Sensors;
 
     /// <summary>
-    /// The messages Build shows in the drawing, each beside the part it is about: today a beam too
-    /// short to train (#593). Listed most important first: notes that would overlap stack, the first
-    /// listed nearest its part.
+    /// The messages Build shows in the drawing, each beside the part it is about: why the last
+    /// dropped part was refused (#376), then each beam too short to train (#593). Listed most
+    /// important first: notes that would overlap stack, the first listed nearest its part.
     /// </summary>
     public IReadOnlyList<CanvasNote> CanvasNotes()
     {
         var notes = new List<CanvasNote>();
+        if (_placementNote is { } placement && Exists(placement.Target))
+        {
+            notes.Add(placement);
+        }
+
         foreach (var beam in Beams)
         {
             var a = Nodes[NodeIndexOf(beam.NodeA)];
@@ -216,6 +226,98 @@ public sealed class BuildViewModel : INotifyPropertyChanged
 
         return notes;
     }
+
+    /// <summary>Why the last part dropped from the tray was refused, shown at the part it was dropped on; null when there is none.</summary>
+    public CanvasNote? PlacementNote
+    {
+        get => _placementNote;
+        private set
+        {
+            if (_placementNote == value)
+            {
+                return;
+            }
+
+            _placementNote = value;
+            OnPropertyChanged();
+        }
+    }
+
+    /// <summary>Hides <see cref="PlacementNote"/>: the canvas does so on the next touch, or once it has been read.</summary>
+    public void DismissPlacementNote() => PlacementNote = null;
+
+    /// <summary>
+    /// Whether a tray part dropped on <paramref name="target"/> would be placed there (#376); if
+    /// not, <paramref name="reason"/> says why. Sensors go on a beam that has none yet.
+    /// </summary>
+    public bool CanPlacePart(BuildPart part, CreatureElementSelection target, out string reason)
+    {
+        ArgumentNullException.ThrowIfNull(target);
+        if (_moveOnly)
+        {
+            reason = "Edit mode only allows moving existing nodes.";
+            return false;
+        }
+
+        if (!PartTray.IsAvailable(part) || PartTray.SensorKindOf(part) is null)
+        {
+            reason = PartTray.ComingLater;
+            return false;
+        }
+
+        if (target.Kind != CreatureElementKind.Beam)
+        {
+            reason = SensorsGoOnABeamReason;
+            return false;
+        }
+
+        _builder.BeamIndexOf(target.Id);
+        if (_builder.Sensors.Any(sensor => sensor.BeamId == target.Id))
+        {
+            reason = CreatureBuilder.OneSensorPerBeamReason;
+            return false;
+        }
+
+        reason = string.Empty;
+        return true;
+    }
+
+    /// <summary>
+    /// Places a tray part dropped on <paramref name="target"/> and returns its new id (#376). A drop
+    /// on empty canvas (<paramref name="target"/> null) changes nothing and says nothing; a refused
+    /// drop changes nothing and shows why as <see cref="PlacementNote"/> at that part.
+    /// </summary>
+    public int? PlacePart(BuildPart part, CreatureElementSelection? target)
+    {
+        PlacementNote = null;
+        if (target is null)
+        {
+            return null;
+        }
+
+        if (!CanPlacePart(part, target, out var reason))
+        {
+            StatusMessage = reason;
+            if (!_moveOnly)
+            {
+                PlacementNote = new CanvasNote(CanvasNoteKind.Danger, target, reason);
+            }
+
+            return null;
+        }
+
+        _builder.AddSensor(target.Id, PartTray.SensorKindOf(part)!.Value, out var sensorId, out _);
+        StatusMessage = $"Placed {SensorName(PartTray.SensorKindOf(part)!.Value)} on beam {_builder.BeamIndexOf(target.Id) + 1}.";
+        AnatomyChanged?.Invoke(this, EventArgs.Empty);
+        return sensorId;
+    }
+
+    private bool Exists(CreatureElementSelection element) => element.Kind switch
+    {
+        CreatureElementKind.Node => _builder.Nodes.Any(node => node.Id == element.Id),
+        CreatureElementKind.Beam => _builder.Beams.Any(beam => beam.Id == element.Id),
+        _ => _builder.Sensors.Any(sensor => sensor.Id == element.Id),
+    };
 
     public IReadOnlyCollection<int> SelectedNodeIds => _selectedNodeIds;
 

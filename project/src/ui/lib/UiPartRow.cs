@@ -233,6 +233,35 @@ public partial class UiPartRow : Control
 
     private bool IsAvailable => State is PartRowState.Rest or PartRowState.Selected;
 
+    /// <summary>
+    /// What follows the finger while this row's part is dragged out (#376): its glyph on a raised
+    /// <c>accent</c> tile, centred above the touch point so the finger does not hide it.
+    /// </summary>
+    public Control CreateDragPreview()
+    {
+        var size = UiSize.Control.Touch;
+        var tile = new PanelContainer
+        {
+            Size = new Vector2(size, size),
+            Position = new Vector2(-size / 2f, -size - UiSize.Space.S5),
+            MouseFilter = MouseFilterEnum.Ignore,
+        };
+        tile.AddThemeStyleboxOverride("panel", UiThemeLookup.CreateStyleBox(
+            UiThemeLookup.Color(this, UiTokens.Color.PanelRaised),
+            UiThemeLookup.Color(this, UiTokens.Color.Accent),
+            UiSize.Stroke.Signal,
+            UiSize.Radius.Medium));
+        var icon = UiIcons.Create(IconId, UiIconSize.Large, UiThemeLookup.Color(this, UiTokens.Color.Accent));
+        icon.SizeFlagsHorizontal = SizeFlags.ShrinkCenter;
+        icon.SizeFlagsVertical = SizeFlags.ShrinkCenter;
+        tile.AddChild(icon);
+
+        // Godot puts the preview's origin at the finger; the tile hangs off it.
+        var preview = new Control { MouseFilter = MouseFilterEnum.Ignore };
+        preview.AddChild(tile);
+        return preview;
+    }
+
     private Label CreateTrailingLabel(string text)
     {
         var label = UiFieldAndRows.Label(text, UiTokens.Typography.ReadoutMedium, UiTokens.Color.Ink, HorizontalAlignment.Right);

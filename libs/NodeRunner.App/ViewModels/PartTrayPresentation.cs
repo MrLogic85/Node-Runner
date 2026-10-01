@@ -1,3 +1,5 @@
+using NodeRunner.Domain;
+
 namespace NodeRunner.App.ViewModels;
 
 /// <summary>Every part the Build tray lists, implemented or not (#374).</summary>
@@ -47,6 +49,18 @@ public static class PartTray
     public const string ComingLater = "Coming later";
 
     public static IReadOnlyList<PartTrayGroup> Groups() => Catalog();
+
+    /// <summary>Whether the tray lets the player pick or drag this part: false while it is "Coming later".</summary>
+    public static bool IsAvailable(BuildPart part) =>
+        Catalog().SelectMany(group => group.Rows).Single(row => row.Part == part).IsAvailable;
+
+    /// <summary>The sensor a tray part places, or null for a part that is not a sensor.</summary>
+    public static SensorKind? SensorKindOf(BuildPart part) => part switch
+    {
+        BuildPart.Accelerometer => SensorKind.Accelerometer,
+        BuildPart.LosSensor => SensorKind.LineOfSight,
+        _ => null,
+    };
 
     private static PartTrayGroup[] Catalog() =>
     [
