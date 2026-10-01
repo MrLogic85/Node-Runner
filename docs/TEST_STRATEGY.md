@@ -24,7 +24,7 @@ inspired by `kappuccino`'s `docs/TEST_STRATEGY.md`.
 | Domain | `libs/NodeRunner.Domain/` | net8.0 | xUnit + Shouldly | Invariants, JSON round-trip, record semantics |
 | ML | `libs/NodeRunner.ML/` | net8.0 | xUnit + Shouldly | Forward pass, GA math, backprop, activation math |
 | App | `libs/NodeRunner.App/` | net8.0 | xUnit + Shouldly + NSubstitute | View-models, repositories, service contracts |
-| Architecture | (all libs) | net10.0 tests | xUnit + NetArchTest | No Godot leaks, correct layer graph |
+| Architecture | `libs/`, `project/src/` | net10.0 tests | xUnit + NetArchTest | No Godot leaks, correct layer graph, file-size limit |
 | Static UI contracts | `project/src/`, `project/scenes/`, theme files | net10.0 tests referencing Godot | xUnit + Shouldly + Roslyn | Theme files, component contracts, scene and source guards |
 | Godot Nodes | `project/src/{creature,sim,managers,ui}/` | Godot runtime | **GdUnit4** (deferred, v1.0+) | Node lifecycle, physics scenarios |
 | End-to-end | full app on device | Android | Manual, per-issue decision | Feel, latency, battery |
@@ -99,6 +99,8 @@ Current facts (see `ArchitectureSpec.cs`):
 - `NodeRunner.Domain` references nothing but the BCL
 - `NodeRunner.ML` references only `NodeRunner.Domain`
 - `NodeRunner.App` references only `NodeRunner.Domain` and `NodeRunner.ML`
+- No production `.cs` file (`libs/`, `project/src/`) exceeds 2000 lines
+  (`docs/CODE_DESIGN_PRINCIPLES.md` §4)
 
 Add a fact whenever a convention emerges that we've decided to enforce.
 
@@ -216,7 +218,11 @@ tests/NodeRunner.ML.Tests/
     └── TournamentSelectionTests.cs
 ```
 
-One test class per production class. Test method names describe behaviour:
+One test class per production class. Test files have no size limit, but they
+follow the file they test: when a production file is split, split its tests
+the same way, so each test class still mirrors one production class.
+
+Test method names describe behaviour:
 
 ```csharp
 [Fact]
