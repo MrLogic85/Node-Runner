@@ -22,7 +22,8 @@ Pure C# data types. The vocabulary of the app, no behavior beyond invariants.
     `SensorPicture` is the fourth: the area a tap on a sensor's picture
     hits, shared by Build's canvas and gestures and by the
     creature in Training (#576).
-- **Serialisable via `System.Text.Json` without custom converters.**
+- **Serialisable via `System.Text.Json` without custom converters.** Saved
+  records are the save shape: changing one follows `docs/SAVE_FORMAT.md`.
 
 ## What lives here
 

@@ -61,18 +61,6 @@ public sealed class CreationsPresentationViewModelTests
     }
 
     [Fact]
-    public void Refresh_WithTrainingSavedBeforeRunsWereRecorded_ShowsDashesAndNoMap()
-    {
-        var repository = new InMemoryCreationRepository();
-        repository.Save(CreateCreation("Walker", generation: 92));
-        var viewModel = new CreationsPresentationViewModel(repository);
-
-        viewModel.Refresh();
-
-        viewModel.Cards.Single().Training.ShouldBe(new CreationCardTraining("—", "—", "—", null, "92 generations"));
-    }
-
-    [Fact]
     public void Refresh_ListsCardsByName()
     {
         var repository = new ConfigurableCreationRepository(
@@ -207,7 +195,7 @@ public sealed class CreationsPresentationViewModelTests
                 [new NodeDef(1, new Vector2D(0, 0), 1), new NodeDef(2, new Vector2D(2, 0), 1)],
                 [new BeamDef(101, 1, 2)],
                 [new SensorDef(201, 101, SensorKind.Accelerometer)]),
-            new TrainingStateDef([2, 1], [0.1, -0.2, 0.3], generation, "Tanh", bestRun: bestRun));
+            new TrainingStateDef([2, 1], [0.1, -0.2, 0.3], generation, "Tanh", 1, bestRun ?? TestTraining.Run));
     }
 
     private sealed class ThrowingCreationRepository(Exception exception) : ICreationRepository

@@ -15,7 +15,7 @@ public sealed class CreationUpdateCoordinatorTests
         repository.Save(creation);
         var epoch = coordinator.CurrentTrainingEpoch(creation.Id);
 
-        var applied = coordinator.TryPersistTraining(creation.Id, epoch, new TrainingStateDef([2, 1], [0.5, -0.5, 0.1], 3, "Tanh"));
+        var applied = coordinator.TryPersistTraining(creation.Id, epoch, new TrainingStateDef([2, 1], [0.5, -0.5, 0.1], 3, "Tanh", 1, TestTraining.Run));
 
         applied.ShouldBeTrue();
         repository.Get(creation.Id)!.Training!.Generation.ShouldBe(3);
@@ -34,7 +34,7 @@ public sealed class CreationUpdateCoordinatorTests
         var epochBeforeReset = coordinator.CurrentTrainingEpoch(creation.Id);
 
         coordinator.ResetTraining(creation.Id);
-        var applied = coordinator.TryPersistTraining(creation.Id, epochBeforeReset, new TrainingStateDef([2, 1], [0.9, 0.9, 0.9], 5, "Tanh"));
+        var applied = coordinator.TryPersistTraining(creation.Id, epochBeforeReset, new TrainingStateDef([2, 1], [0.9, 0.9, 0.9], 5, "Tanh", 1, TestTraining.Run));
 
         applied.ShouldBeFalse();
         repository.Get(creation.Id)!.Training.ShouldBeNull();
@@ -52,7 +52,7 @@ public sealed class CreationUpdateCoordinatorTests
         var epochBeforeEdit = coordinator.CurrentTrainingEpoch(creation.Id);
 
         coordinator.ApplyEdit(creation.Id, creation.Creature, creation.BrainShape, moveOnly: true);
-        var applied = coordinator.TryPersistTraining(creation.Id, epochBeforeEdit, new TrainingStateDef([2, 1], [0.9, 0.9, 0.9], 5, "Tanh"));
+        var applied = coordinator.TryPersistTraining(creation.Id, epochBeforeEdit, new TrainingStateDef([2, 1], [0.9, 0.9, 0.9], 5, "Tanh", 1, TestTraining.Run));
 
         applied.ShouldBeFalse();
     }
@@ -114,7 +114,7 @@ public sealed class CreationUpdateCoordinatorTests
         var epochBeforeDelete = coordinator.CurrentTrainingEpoch(creation.Id);
 
         coordinator.Delete(creation.Id).ShouldBeTrue();
-        var applied = coordinator.TryPersistTraining(creation.Id, epochBeforeDelete, new TrainingStateDef([2, 1], [0.9, 0.9, 0.9], 5, "Tanh"));
+        var applied = coordinator.TryPersistTraining(creation.Id, epochBeforeDelete, new TrainingStateDef([2, 1], [0.9, 0.9, 0.9], 5, "Tanh", 1, TestTraining.Run));
 
         applied.ShouldBeFalse();
         repository.Get(creation.Id).ShouldBeNull();
@@ -143,9 +143,9 @@ public sealed class CreationUpdateCoordinatorTests
         var creation = CreateCreation("Alpha");
         repository.Save(creation);
         var epoch = coordinator.CurrentTrainingEpoch(creation.Id);
-        coordinator.TryPersistTraining(creation.Id, epoch, new TrainingStateDef([2, 1], [0.2, 0.2, 0.2], 10, "Tanh"));
+        coordinator.TryPersistTraining(creation.Id, epoch, new TrainingStateDef([2, 1], [0.2, 0.2, 0.2], 10, "Tanh", 1, TestTraining.Run));
 
-        var applied = coordinator.TryPersistTraining(creation.Id, epoch, new TrainingStateDef([2, 1], [0.1, 0.1, 0.1], 4, "Tanh"));
+        var applied = coordinator.TryPersistTraining(creation.Id, epoch, new TrainingStateDef([2, 1], [0.1, 0.1, 0.1], 4, "Tanh", 1, TestTraining.Run));
 
         applied.ShouldBeFalse();
         repository.Get(creation.Id)!.Training!.Generation.ShouldBe(10);
@@ -159,9 +159,9 @@ public sealed class CreationUpdateCoordinatorTests
         var creation = CreateCreation("Alpha");
         repository.Save(creation);
         var epoch = coordinator.CurrentTrainingEpoch(creation.Id);
-        coordinator.TryPersistTraining(creation.Id, epoch, new TrainingStateDef([2, 1], [0.2, 0.2, 0.2], 7, "Tanh"));
+        coordinator.TryPersistTraining(creation.Id, epoch, new TrainingStateDef([2, 1], [0.2, 0.2, 0.2], 7, "Tanh", 1, TestTraining.Run));
 
-        var applied = coordinator.TryPersistTraining(creation.Id, epoch, new TrainingStateDef([2, 1], [0.3, 0.3, 0.3], 7, "Tanh"));
+        var applied = coordinator.TryPersistTraining(creation.Id, epoch, new TrainingStateDef([2, 1], [0.3, 0.3, 0.3], 7, "Tanh", 1, TestTraining.Run));
 
         applied.ShouldBeFalse();
         repository.Get(creation.Id)!.Training!.BestGenome.ShouldBe([0.2, 0.2, 0.2]);
@@ -205,6 +205,6 @@ public sealed class CreationUpdateCoordinatorTests
             Guid.NewGuid(),
             name,
             creature,
-            withTraining ? new TrainingStateDef([2, 1], [0.1, -0.2, 0.3], 2, "Tanh") : null);
+            withTraining ? new TrainingStateDef([2, 1], [0.1, -0.2, 0.3], 2, "Tanh", 1, TestTraining.Run) : null);
     }
 }

@@ -32,6 +32,6 @@ public sealed class TrainingRunDefTests
         var run = new TrainingRunDef(1, 2, 3, MapIds.Flat);
 
         new TrainingStateDef([2, 1], [0.1, 0.2, 0.3], 4, "Tanh", 1, run).BestRun.ShouldBe(run);
-        new TrainingStateDef([2, 1], [0.1, 0.2, 0.3], 4, "Tanh").BestRun.ShouldBeNull();
+        Should.Throw<ArgumentNullException>(() => new TrainingStateDef([2, 1], [0.1, 0.2, 0.3], 4, "Tanh", 1, null!));
     }
 }

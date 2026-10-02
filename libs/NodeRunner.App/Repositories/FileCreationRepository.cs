@@ -1,16 +1,16 @@
-using System.Text.Json;
 using NodeRunner.Domain;
 
 namespace NodeRunner.App.Repositories;
 
+/// <summary>
+/// Keeps each Creation in its own folder, <c>&lt;id&gt;/creation.json</c>, under the storage location.
+/// The layout and every field are owned by docs/SAVE_FORMAT.md.
+/// </summary>
 public sealed class FileCreationRepository : ICreationRepository
 {
+    public const string CreationFileName = "creation.json";
+
     private readonly string _directoryPath;
-    private readonly JsonSerializerOptions _jsonOptions = new(JsonSerializerDefaults.General)
-    {
-        WriteIndented = true,
-        PropertyNameCaseInsensitive = true,
-    };
 
     // Saves can now be dispatched from a background thread (see #113), so a
     // synchronous main-thread Save and a background one could otherwise race
@@ -35,9 +35,10 @@ public sealed class FileCreationRepository : ICreationRepository
         // Creations list (#114): skip and log it instead of letting
         // Read()'s exception propagate out of the LINQ pipeline.
         var creations = new List<CreationDef>();
-        foreach (var path in Directory.EnumerateFiles(_directoryPath, "*.json"))
+        foreach (var folder in Directory.EnumerateDirectories(_directoryPath))
         {
-            if (TryRead(path, out var creation))
+            var path = Path.Combine(folder, CreationFileName);
+            if (File.Exists(path) && TryRead(path, out var creation))
             {
                 creations.Add(creation);
             }
@@ -64,14 +65,14 @@ public sealed class FileCreationRepository : ICreationRepository
     public void Save(CreationDef creation)
     {
         ArgumentNullException.ThrowIfNull(creation);
-        Directory.CreateDirectory(_directoryPath);
+        Directory.CreateDirectory(FolderFor(creation.Id));
 
         var path = PathFor(creation.Id);
         // A per-save unique name (rather than a shared "<path>.tmp") means
         // no two Save() calls, even from different repository instances,
         // can ever contend on the same temp path (#114).
         var temporaryPath = $"{path}.{Guid.NewGuid():N}.tmp";
-        var json = JsonSerializer.Serialize(creation, _jsonOptions);
+        var json = SaveJson.Serialize(creation);
 
         lock (_writeLock)
         {
@@ -82,28 +83,21 @@ public sealed class FileCreationRepository : ICreationRepository
 
     public bool Delete(Guid id)
     {
-        var path = PathFor(id);
-        if (!File.Exists(path))
+        var folder = FolderFor(id);
+        if (!Directory.Exists(folder))
         {
             return false;
         }
 
-        File.Delete(path);
+        Directory.Delete(folder, recursive: true);
         return true;
     }
 
-    private CreationDef Read(string path)
-    {
-        var json = File.ReadAllText(path);
-        return JsonSerializer.Deserialize<CreationDef>(json, _jsonOptions)
-            ?? throw new InvalidDataException($"Creation file '{path}' is empty or invalid.");
-    }
-
-    private bool TryRead(string path, out CreationDef creation)
+    private static bool TryRead(string path, out CreationDef creation)
     {
         try
         {
-            creation = Read(path);
+            creation = SaveJson.Deserialize<CreationDef>(File.ReadAllText(path), path);
             return true;
         }
         catch (Exception ex) when (FilePersistenceExceptions.IsRecoverable(ex))
@@ -114,5 +108,7 @@ public sealed class FileCreationRepository : ICreationRepository
         }
     }
 
-    private string PathFor(Guid id) => Path.Combine(_directoryPath, $"{id:N}.json");
+    private string FolderFor(Guid id) => Path.Combine(_directoryPath, id.ToString("N"));
+
+    private string PathFor(Guid id) => Path.Combine(FolderFor(id), CreationFileName);
 }

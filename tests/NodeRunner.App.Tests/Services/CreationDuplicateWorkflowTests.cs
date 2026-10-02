@@ -49,5 +49,5 @@ public sealed class CreationDuplicateWorkflowTests
                 [new BeamDef(101, 1, 2)],
                 [new SensorDef(201, 101, SensorKind.Accelerometer)]),
             new BrainShapeDef(2, 6),
-            new TrainingStateDef([2, 1], [0.1, -0.2, 0.3], generation, "Tanh"));
+            new TrainingStateDef([2, 1], [0.1, -0.2, 0.3], generation, "Tanh", 1, TestTraining.Run));
 }

@@ -85,7 +85,7 @@ public sealed class BuildEditWorkflowTests
             Guid.NewGuid(),
             name,
             CreateCreature(x),
-            new TrainingStateDef([2, 1], [0.1, -0.2, 0.3], generation, "Tanh"));
+            new TrainingStateDef([2, 1], [0.1, -0.2, 0.3], generation, "Tanh", 1, TestTraining.Run));
     }
 
     private static CreatureDef CreateCreature(double x)

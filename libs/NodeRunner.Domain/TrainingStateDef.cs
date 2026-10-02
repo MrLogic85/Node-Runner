@@ -6,11 +6,12 @@ namespace NodeRunner.Domain;
 /// </summary>
 public sealed record TrainingStateDef
 {
-    public TrainingStateDef(int[] layerSizes, double[] bestGenome, int generation, string activation, double? bestFitness = null, TrainingRunDef? bestRun = null)
+    public TrainingStateDef(int[] layerSizes, double[] bestGenome, int generation, string activation, double bestFitness, TrainingRunDef bestRun)
     {
         ArgumentNullException.ThrowIfNull(layerSizes);
         ArgumentNullException.ThrowIfNull(bestGenome);
         ArgumentException.ThrowIfNullOrWhiteSpace(activation);
+        ArgumentNullException.ThrowIfNull(bestRun);
 
         if (layerSizes.Length < 2 || layerSizes.Any(size => size <= 0))
         {
@@ -20,6 +21,11 @@ public sealed record TrainingStateDef
         if (generation < 0)
         {
             throw new ArgumentOutOfRangeException(nameof(generation), "Generation cannot be negative.");
+        }
+
+        if (!double.IsFinite(bestFitness))
+        {
+            throw new ArgumentOutOfRangeException(nameof(bestFitness), "Best fitness must be finite.");
         }
 
         LayerSizes = layerSizes.ToArray();
@@ -38,8 +44,8 @@ public sealed record TrainingStateDef
 
     public string Activation { get; }
 
-    public double? BestFitness { get; }
+    public double BestFitness { get; }
 
-    /// <summary>The winning run behind <see cref="BestGenome"/>; null in saves from before it was recorded.</summary>
-    public TrainingRunDef? BestRun { get; }
+    /// <summary>The winning run behind <see cref="BestGenome"/>.</summary>
+    public TrainingRunDef BestRun { get; }
 }

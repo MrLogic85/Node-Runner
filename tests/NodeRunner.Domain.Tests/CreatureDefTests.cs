@@ -170,22 +170,6 @@ public sealed class CreatureDefTests
     }
 
     [Fact]
-    public void JsonRoundTrip_OfCameraSavedWithoutAim_GivesTheDefaultAim()
-    {
-        var original = new CreatureDef(
-            new[] { new NodeDef(1, new Vector2D(0, 0), 1), new NodeDef(2, new Vector2D(-2, 1), 1) },
-            new[] { new BeamDef(101, 1, 2) },
-            new[] { new SensorDef(201, 101, SensorKind.Camera, aim: 1) });
-        var json = JsonSerializer.Serialize(original);
-        json.ShouldContain("\"Aim\":1");
-
-        var loaded = JsonSerializer.Deserialize<CreatureDef>(json.Replace("\"Aim\":1", "\"Aim\":null", StringComparison.Ordinal));
-
-        loaded.ShouldNotBeNull();
-        loaded.Sensors[0].Aim.ShouldBe(CameraRays.DefaultAim(new Vector2D(0, 0), new Vector2D(-2, 1)));
-    }
-
-    [Fact]
     public void Constructor_WithOmittedNextPartId_DefaultsToMaxIdPlusOne()
     {
         var creature = new CreatureDef(

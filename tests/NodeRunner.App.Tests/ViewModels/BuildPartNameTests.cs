@@ -80,7 +80,7 @@ public sealed class BuildPartNameTests
             Guid.NewGuid(),
             "Worm",
             Loaded().Snapshot(),
-            new TrainingStateDef([2, 1], [0.1, -0.2, 0.3], 3, "Tanh")));
+            new TrainingStateDef([2, 1], [0.1, -0.2, 0.3], 3, "Tanh", 1, TestTraining.Run)));
         build.IsMoveOnly.ShouldBeTrue();
 
         build.RenamePart(7, "Balance");

@@ -1,0 +1,97 @@
+{
+  "id": "0f3c6a52-7d1e-4b8a-9c2f-5e6d7a8b9c0d",
+  "name": "Golden",
+  "creature": {
+    "nodes": [
+      {
+        "id": 1,
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "radius": 1,
+        "name": "Hip"
+      },
+      {
+        "id": 2,
+        "position": {
+          "x": 2,
+          "y": 0.5
+        },
+        "radius": 1,
+        "name": null
+      },
+      {
+        "id": 3,
+        "position": {
+          "x": 4,
+          "y": 0
+        },
+        "radius": 1,
+        "name": null
+      }
+    ],
+    "beams": [
+      {
+        "id": 4,
+        "nodeA": 1,
+        "nodeB": 2,
+        "name": "Thigh"
+      },
+      {
+        "id": 5,
+        "nodeA": 2,
+        "nodeB": 3,
+        "name": null
+      }
+    ],
+    "sensors": [
+      {
+        "id": 6,
+        "beamId": 4,
+        "kind": "accelerometer",
+        "name": null,
+        "aim": null
+      },
+      {
+        "id": 7,
+        "beamId": 5,
+        "kind": "camera",
+        "name": "Eye",
+        "aim": -0.5
+      }
+    ],
+    "nextPartId": 9
+  },
+  "brainShape": {
+    "hiddenLayers": 1,
+    "neuronsPerLayer": 2
+  },
+  "training": {
+    "layerSizes": [
+      2,
+      2,
+      1
+    ],
+    "bestGenome": [
+      0.5,
+      -0.25,
+      0.125,
+      1,
+      -1,
+      0.75,
+      0.25,
+      -0.5,
+      0
+    ],
+    "generation": 12,
+    "activation": "Tanh",
+    "bestFitness": 3.5,
+    "bestRun": {
+      "distance": 3.5,
+      "topSpeed": 1.25,
+      "elevation": 0.5,
+      "mapId": "flat"
+    }
+  }
+}

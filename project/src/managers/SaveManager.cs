@@ -19,13 +19,13 @@ public partial class SaveManager : Node
 
     public override void _Ready()
     {
+        // The save layout is owned by docs/SAVE_FORMAT.md.
         var directory = ProjectSettings.GlobalizePath("user://creations");
         _repository = new FileCreationRepository(new GodotStorageLocation(directory));
         _updateCoordinator = new CreationUpdateCoordinator(_repository);
         _newCreationWorkflow = new NewCreationWorkflow(_repository);
         _buildEditWorkflow = new BuildEditWorkflow(_updateCoordinator);
-        var progressionDirectory = ProjectSettings.GlobalizePath("user://progression");
-        var progression = new FileProgressionRepository(new GodotStorageLocation(progressionDirectory));
+        var progression = new FileProgressionRepository(new GodotStorageLocation(ProjectSettings.GlobalizePath("user://")));
         _creationDuplicateWorkflow = new CreationDuplicateWorkflow(_repository);
         _exampleCopyWorkflow = new ExampleCopyWorkflow(_repository);
         new DefaultCreationSeeder(_exampleCopyWorkflow, progression).SeedIfNeeded();

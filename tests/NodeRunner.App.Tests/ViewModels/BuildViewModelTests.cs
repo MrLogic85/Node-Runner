@@ -259,7 +259,7 @@ public sealed class BuildViewModelTests
     [InlineData(1, true)]
     public void LoadCreation_IsMoveOnlyExactlyWhenLocked(int? generation, bool moveOnly)
     {
-        var training = generation is { } trained ? new TrainingStateDef([2, 1], [0.1, -0.2, 0.3], trained, "Tanh") : null;
+        var training = generation is { } trained ? new TrainingStateDef([2, 1], [0.1, -0.2, 0.3], trained, "Tanh", 1, TestTraining.Run) : null;
         var viewModel = new BuildViewModel();
 
         viewModel.LoadCreation(new CreationDef(Guid.NewGuid(), "Worm", TwoNodeCreature(), training));
@@ -323,7 +323,7 @@ public sealed class BuildViewModelTests
             [new NodeDef(1, new Vector2D(0, 0), 18), new NodeDef(2, new Vector2D(20, 0), 18)],
             [new BeamDef(101, 1, 2)],
             []);
-        var training = new TrainingStateDef([2, 4, 1], Enumerable.Repeat(0.1, 17).ToArray(), 9, "Tanh");
+        var training = new TrainingStateDef([2, 4, 1], Enumerable.Repeat(0.1, 17).ToArray(), 9, "Tanh", 1, TestTraining.Run);
         var viewModel = new BuildViewModel();
 
         viewModel.Load(creature, moveOnly: true, creationName: "Worm", training: training);

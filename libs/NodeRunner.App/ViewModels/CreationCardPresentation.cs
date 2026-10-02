@@ -36,26 +36,20 @@ public sealed record CreationCardTraining(
     string DistanceText,
     string TopSpeedText,
     string ElevationText,
-    string? MapId,
+    string MapId,
     string GenerationsText)
 {
-    private const string _unknown = "—";
-
-    /// <summary>Training saved before runs were recorded has no <see cref="TrainingStateDef.BestRun"/>; its values read "—".</summary>
     public static CreationCardTraining From(TrainingStateDef training)
     {
         ArgumentNullException.ThrowIfNull(training);
         var run = training.BestRun;
         return new CreationCardTraining(
-            Format(run?.Distance),
-            Format(run?.TopSpeed),
-            Format(run?.Elevation),
-            run?.MapId,
+            Format(run.Distance),
+            Format(run.TopSpeed),
+            Format(run.Elevation),
+            run.MapId,
             CreationCardPresentation.FormatCount(training.Generation, "generation"));
     }
 
-    private static string Format(double? value) =>
-        value is { } number
-            ? number.ToString("0.0", CultureInfo.InvariantCulture)
-            : _unknown;
+    private static string Format(double value) => value.ToString("0.0", CultureInfo.InvariantCulture);
 }
