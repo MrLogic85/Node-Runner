@@ -20,7 +20,7 @@ public static class CreationExamples
     public static CreatureDef CreateWormCreature()
     {
         const double radius = 18;
-        const double spacing = 70;
+        const double spacing = 90;
         const double y = 0;
 
         var nodes = new[]

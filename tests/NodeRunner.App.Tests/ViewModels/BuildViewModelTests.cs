@@ -634,7 +634,7 @@ public sealed class BuildViewModelTests
         accelerometer.ShouldBe(4);
         viewModel.TryFindSensorAt(new Vector2D(100, 50), out var camera).ShouldBeTrue();
         camera.ShouldBe(5);
-        viewModel.TryFindSensorAt(new Vector2D(50, SensorPicture.Size), out _).ShouldBeFalse();
+        viewModel.TryFindSensorAt(new Vector2D(50, SensorPicture.AccelerometerSize), out _).ShouldBeFalse();
     }
 
     private static CreatureDef SensorCreature() => new(
@@ -728,7 +728,7 @@ public sealed class BuildViewModelTests
     {
         var viewModel = new BuildViewModel();
         viewModel.Load(new CreatureDef(
-            [new NodeDef(1, new Vector2D(0, 0), 18), new NodeDef(2, new Vector2D(70, 0), 18), new NodeDef(3, new Vector2D(140, 20), 18)],
+            [new NodeDef(1, new Vector2D(0, 0), 18), new NodeDef(2, new Vector2D(90, 0), 18), new NodeDef(3, new Vector2D(180, 20), 18)],
             [new BeamDef(101, 1, 2), new BeamDef(102, 2, 3)],
             []));
 
@@ -743,7 +743,7 @@ public sealed class BuildViewModelTests
     {
         var viewModel = new BuildViewModel();
         var a = viewModel.PlaceNode(new Vector2D(0, 0), 18);
-        var b = viewModel.PlaceNode(new Vector2D(70, 0), 18);
+        var b = viewModel.PlaceNode(new Vector2D(90, 0), 18);
         viewModel.ConnectBeam(a, b);
 
         var canLeave = viewModel.TryLeave(out var creature, out var errors);

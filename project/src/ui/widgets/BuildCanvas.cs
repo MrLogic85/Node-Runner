@@ -456,7 +456,6 @@ public partial class BuildCanvas : Node2D
         DrawSetTransform(Vector2.Zero);
         // The canvas node is scaled in the scene; undo it so the frame is a true screen-size hairline.
         var width = UiSize.Stroke.SelectionFrame / Scale.X;
-        DrawAimStem(view, width);
         if (_gestures.SelectionFrame is not { } frame)
         {
             return;
@@ -472,21 +471,6 @@ public partial class BuildCanvas : Node2D
                 DrawLine(top, ToGodot(view.ToView(position)), Theme.SelectionGlow, width, antialiased: false);
             }
         }
-    }
-
-    /// <summary>The Aim handle's stem, from the selected Camera's picture out to the handle (#594).</summary>
-    private void DrawAimStem(CanvasView view, float width)
-    {
-        if (_viewModel!.AimableCameraId is not { } camera)
-        {
-            return;
-        }
-
-        var beam = _viewModel.Beams[_viewModel.BeamIndexOf(_viewModel.Sensors.Single(sensor => sensor.Id == camera).BeamId)];
-        var middle = (ToGodot(view.ToView(NodeById(beam.NodeA).Position)) + ToGodot(view.ToView(NodeById(beam.NodeB).Position))) / 2;
-        var handle = ToGodot(view.ToView(_gestures!.SelectionHandles.Single(entry => entry.Handle == SelectionHandle.Aim).Position));
-        var start = middle + ((handle - middle).Normalized() * (float)(SensorPicture.Size / Math.Sqrt(2) * view.Zoom));
-        DrawLine(start, handle, Theme.SelectionGlow, width, antialiased: false);
     }
 
     /// <summary>

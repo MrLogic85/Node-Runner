@@ -270,7 +270,7 @@ public partial class Creature : Node2D
             var beamIndex = Definition!.BeamIndexOf(Definition.Sensors[sensorIndex].BeamId);
             var local = _beamBodies[beamIndex].ToLocal(globalPosition);
             var halfLength = _beamHalfLengths[beamIndex];
-            if (SensorPicture.Contains(new Vector2D(local.X, local.Y), new Vector2D(-halfLength, 0), new Vector2D(halfLength, 0)))
+            if (SensorPicture.Contains(Definition.Sensors[sensorIndex].Kind, new Vector2D(local.X, local.Y), new Vector2D(-halfLength, 0), new Vector2D(halfLength, 0)))
             {
                 selection = new CreatureElementSelection(CreatureElementKind.Sensor, Definition.Sensors[sensorIndex].Id);
                 return true;

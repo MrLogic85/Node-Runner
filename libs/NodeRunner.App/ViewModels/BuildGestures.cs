@@ -51,6 +51,9 @@ public sealed class BuildGestures
     private const double _framePadding = 8;
     private const double _frameMinSize = 96;
     private const double _rotateStem = 32;
+
+    // The Aim handle's gap past the camera picture; no stem joins them (#622).
+    private const double _aimGap = 8;
     private const double _aimReachCap = 3;
 
     private readonly BuildViewModel _build;
@@ -110,7 +113,7 @@ public sealed class BuildGestures
     /// <summary>
     /// Where each handle sits, in canvas units: on <see cref="SelectionFrame"/>, Move in the
     /// middle, Rotate on a stem above and Scale at the bottom-right corner; on a selected Camera,
-    /// Aim on a stem out along its aim.
+    /// Aim out along its aim.
     /// </summary>
     public IReadOnlyList<(SelectionHandle Handle, Vector2D Position)> SelectionHandles =>
         [.. HandlesInView().Select(entry => (entry.Handle, View.ToCanvas(entry.Position)))];
@@ -497,7 +500,7 @@ public sealed class BuildGestures
         }
     }
 
-    /// <summary>Turns the Camera the Aim drag started on to look at <paramref name="position"/>, in <see cref="CameraRays.AimStep"/> steps in the world.</summary>
+    /// <summary>Turns the Camera the Aim drag started on to look at <paramref name="position"/>, smoothly (#622).</summary>
     private void AimCamera(Vector2D position)
     {
         if (_aimStart is not { } start)
@@ -512,7 +515,7 @@ public sealed class BuildGestures
             return;
         }
 
-        _build.SetCameraAim(start.Sensor, CameraRays.SnappedAim(Math.Atan2(position.Y - middle.Y, position.X - middle.X), nodeA, nodeB));
+        _build.SetCameraAim(start.Sensor, CameraRays.AimAlong(Math.Atan2(position.Y - middle.Y, position.X - middle.X), nodeA, nodeB));
     }
 
     private (Vector2D NodeA, Vector2D NodeB) CameraBeam(int sensorId)
@@ -584,7 +587,7 @@ public sealed class BuildGestures
     }
 
     /// <summary>
-    /// The Aim handle on a stem out along the camera's centre ray, past its picture; pushed further
+    /// The Aim handle out along the camera's centre ray, past its picture; pushed further
     /// out, up to <see cref="_aimReachCap"/> times as far, while it would cover a joint's touch area.
     /// </summary>
     private Vector2D AimHandleInView(int camera)
@@ -593,7 +596,7 @@ public sealed class BuildGestures
         var aim = CameraRays.BeamAngle(nodeA, nodeB) + (_build.Sensors.Single(sensor => sensor.Id == camera).Aim ?? 0);
         var middle = View.ToView(Midpoint(nodeA, nodeB));
         var direction = new Vector2D(Math.Cos(aim), Math.Sin(aim));
-        var minimum = (SensorPicture.Size / Math.Sqrt(2) * View.Zoom) + _rotateStem + HandleHitRadius;
+        var minimum = (SensorPicture.CameraSize / Math.Sqrt(2) * View.Zoom) + _aimGap + HandleHitRadius;
         Vector2D At(double reach) => new(middle.X + (direction.X * reach), middle.Y + (direction.Y * reach));
         bool CoversAJoint(Vector2D handle) => _build.Nodes.Any(node =>
             Distance(View.ToView(node.Position), handle) < HandleHitRadius + Math.Max(NodeHitRadius, node.Radius * View.Zoom));

@@ -44,7 +44,7 @@ Long-form descriptions and the sensor/model contract live in
   `docs/CREATURE_MODEL.md`.
 - **Camera** — A sensor on a beam: three rays (left 1, centre, right 1)
   fanned around its aim, which turns in Build (#594; a new one looks
-  forward, forward-down and down) and turns with the beam, that read how near
+  forward-up, forward and forward-down) and turns with the beam, that read how near
   the ground is, 0 with nothing in range and 1 at contact. Gives three model
   inputs. Formerly the "LOS sensor". Not Godot's `Camera2D`. See:
   `docs/CREATURE_MODEL.md`.

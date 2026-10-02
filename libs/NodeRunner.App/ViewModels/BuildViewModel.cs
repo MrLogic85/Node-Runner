@@ -432,7 +432,7 @@ public sealed class BuildViewModel : INotifyPropertyChanged
         foreach (var sensor in _builder.Sensors)
         {
             var beam = _builder.Beams[_builder.BeamIndexOf(sensor.BeamId)];
-            if (SensorPicture.Contains(position, NodeById(beam.NodeA).Position, NodeById(beam.NodeB).Position))
+            if (SensorPicture.Contains(sensor.Kind, position, NodeById(beam.NodeA).Position, NodeById(beam.NodeB).Position))
             {
                 sensorId = sensor.Id;
                 return true;

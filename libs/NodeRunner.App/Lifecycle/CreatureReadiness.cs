@@ -10,10 +10,12 @@ namespace NodeRunner.App.Lifecycle;
 public static class CreatureReadiness
 {
     /// <summary>
-    /// The least free length between a beam's two joint discs (#593): room for a 22-unit sensor
-    /// drawing with a 4-unit gap on each side.
+    /// The least free length between a beam's two joint discs (#593, #622): room for the largest
+    /// sensor picture with a 4-unit gap on each side.
     /// </summary>
-    public const double MinimumBeamGap = 30;
+    public const double MinimumBeamGap = SensorPicture.LargestSize + (2 * _sensorGap);
+
+    private const double _sensorGap = 4;
 
     /// <summary>True when the beam between <paramref name="a"/> and <paramref name="b"/> leaves less than <see cref="MinimumBeamGap"/> between their discs.</summary>
     public static bool IsTooShort(NodeDef a, NodeDef b)

@@ -7,8 +7,8 @@ namespace NodeRunner.Theme;
 /// <summary>
 /// Draws a sensor on its beam as a small picture of the real thing (#576), shared by Build's canvas
 /// and the creature in Training. Callers set the transform first so the origin is the beam's
-/// midpoint and -y is the sensor's top (the beam's built up side). Both pictures fit the
-/// <see cref="SensorPicture.Size"/> square, which is also their tap area.
+/// midpoint and -y is the sensor's top (the beam's built up side). Each picture fits its kind's
+/// <see cref="SensorPicture.SizeOf"/> square, which is also its tap area.
 /// </summary>
 public static class SensorDrawing
 {
@@ -24,14 +24,16 @@ public static class SensorDrawing
     private const float _weightTravelY = _frameHalfHeight - _weightRadius - 2.5f;
     private const int _springTurns = 3;
 
-    // The camera: a body with a lens ring and a hood on the side it looks out of.
-    private const float _bodyHalfLength = 7;
-    private const float _bodyHalfHeight = 5.5f;
-    private const float _bodyBack = -9;
-    private const float _hoodLength = 4;
-    private const float _hoodNarrow = 2.5f;
-    private const float _hoodWide = 4.5f;
-    private const float _lensRadius = 2.5f;
+    // The camera: a body with a lens ring and a hood on the side it looks out of, twice the
+    // Accelerometer's scale (#622). It turns freely within a circle of radius 21, inside its square.
+    private const float _bodyHalfLength = 14;
+    private const float _bodyHalfHeight = 11;
+    private const float _bodyBack = -18;
+    private const float _bodyRadius = 4;
+    private const float _hoodLength = 8;
+    private const float _hoodNarrow = 5;
+    private const float _hoodWide = 9;
+    private const float _lensRadius = 5;
 
     private const int _cornerSegments = 4;
 
@@ -65,7 +67,7 @@ public static class SensorDrawing
         ArgumentNullException.ThrowIfNull(theme);
         var turn = aim.IsZeroApprox() ? 0 : aim.Angle();
         var bodyCentre = new Vector2(_bodyBack + _bodyHalfLength, 0);
-        var body = Turned(RoundedRect(bodyCentre, _bodyHalfLength, _bodyHalfHeight, 2), turn);
+        var body = Turned(RoundedRect(bodyCentre, _bodyHalfLength, _bodyHalfHeight, _bodyRadius), turn);
         var front = _bodyBack + (2 * _bodyHalfLength);
         var hood = Turned(
             [
@@ -76,11 +78,11 @@ public static class SensorDrawing
             ],
             turn);
         var halo = selected
-            ? Turned(RoundedRect(new Vector2((_bodyBack + front + _hoodLength) / 2, 0), ((front + _hoodLength - _bodyBack) / 2) + _halo, _hoodWide + _halo, 2 + _halo), turn)
+            ? Turned(RoundedRect(new Vector2((_bodyBack + front + _hoodLength) / 2, 0), ((front + _hoodLength - _bodyBack) / 2) + _halo, _bodyHalfHeight + _halo, _bodyRadius + _halo), turn)
             : null;
         DrawShape(canvas, theme, body, halo);
         DrawShape(canvas, theme, hood, null);
-        canvas.DrawArc(bodyCentre.Rotated(turn), _lensRadius, 0, Mathf.Tau, 16, theme.SensorLine, _line * 0.75f, antialiased: true);
+        canvas.DrawArc(bodyCentre.Rotated(turn), _lensRadius, 0, Mathf.Tau, 24, theme.SensorLine, _line, antialiased: true);
     }
 
     /// <summary>A selected camera's rays from <paramref name="origin"/> to each end.</summary>

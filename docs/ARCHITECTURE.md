@@ -203,14 +203,15 @@ public static class Accelerometer   // proof mass on a damped spring, pure math
 public static class CameraRays      // the camera's three rays around its aim, pure math
 {
     public static double DefaultAim(Vector2D nodeA, Vector2D nodeB);
-    public static double SnappedAim(double worldAngle, Vector2D nodeA, Vector2D nodeB);
+    public static double AimAlong(double worldAngle, Vector2D nodeA, Vector2D nodeB);
     public static Vector2D LocalRayTarget(int ray, double aim);
     public static double Reading(double? hitDistance);
 }
 
-public static class SensorPicture   // a sensor picture's tap area at its beam's middle
+public static class SensorPicture   // a sensor picture's tap area at its beam's middle, sized per kind
 {
-    public static bool Contains(Vector2D point, Vector2D nodeA, Vector2D nodeB);
+    public static double SizeOf(SensorKind kind);
+    public static bool Contains(SensorKind kind, Vector2D point, Vector2D nodeA, Vector2D nodeB);
 }
 ```
 
