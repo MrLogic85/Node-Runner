@@ -888,7 +888,7 @@ public class BuildGesturesTests
 
         var handle = gestures.SelectionHandles.ShouldHaveSingleItem();
         handle.Handle.ShouldBe(SelectionHandle.Aim);
-        var reach = (SensorPicture.CameraSize / Math.Sqrt(2)) + 8 + BuildGestures.HandleHitRadius;
+        var reach = 2 * ((SensorPicture.CameraSize / Math.Sqrt(2)) + 8 + BuildGestures.HandleHitRadius);
         handle.Position.X.ShouldBe(150 + reach, 1e-9);
         handle.Position.Y.ShouldBe(0, 1e-9);
     }
@@ -902,7 +902,7 @@ public class BuildGesturesTests
 
         var handle = gestures.SelectionHandles.Single().Position;
 
-        var reach = (SensorPicture.CameraSize / Math.Sqrt(2)) + 8 + BuildGestures.HandleHitRadius;
+        var reach = 2 * ((SensorPicture.CameraSize / Math.Sqrt(2)) + 8 + BuildGestures.HandleHitRadius);
         handle.X.ShouldBe(50 + reach, 1e-9);
         handle.Y.ShouldBe(0, 1e-9);
     }
@@ -922,7 +922,7 @@ public class BuildGesturesTests
             var zoom = gestures.View.Zoom;
 
             // In canvas units: the picture part stays put, the on-screen gaps shrink as the view zooms in.
-            gestures.SelectionHandles.Single().Position.X.ShouldBe(50 + pictureReach + (gaps / zoom), 1e-9);
+            gestures.SelectionHandles.Single().Position.X.ShouldBe(50 + (2 * (pictureReach + (gaps / zoom))), 1e-9);
         }
     }
 

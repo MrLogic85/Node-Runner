@@ -55,6 +55,9 @@ public sealed class BuildGestures
     // The Aim handle's gap past the camera picture; no stem joins them (#622).
     private const double _aimGap = 8;
 
+    // The owner wanted the Aim handle twice as far from the camera (#639).
+    private const double _aimReachScale = 2;
+
     private readonly BuildViewModel _build;
     private readonly Dictionary<int, Vector2D> _pointers = [];
     private bool _navigating;
@@ -595,7 +598,7 @@ public sealed class BuildGestures
         var aim = CameraRays.BeamAngle(nodeA, nodeB) + (_build.Sensors.Single(sensor => sensor.Id == camera).Aim ?? 0);
         var middle = View.ToView(Midpoint(nodeA, nodeB));
         var direction = new Vector2D(Math.Cos(aim), Math.Sin(aim));
-        var reach = (SensorPicture.CameraSize / Math.Sqrt(2) * View.Zoom) + _aimGap + HandleHitRadius;
+        var reach = _aimReachScale * ((SensorPicture.CameraSize / Math.Sqrt(2) * View.Zoom) + _aimGap + HandleHitRadius);
         return new Vector2D(middle.X + (direction.X * reach), middle.Y + (direction.Y * reach));
     }
 
