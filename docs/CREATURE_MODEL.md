@@ -73,9 +73,10 @@ CreatureDef  ──build──▶  physical body  ──sensors──▶  model 
   geometry. A beam has **no collider**: it carries motor torque and sensors
   between its nodes, while its weight sits on those nodes (see Node above).
   Its own body is nearly massless, with a turning inertia set as a thin
-  solid bar. Parts of the same creature never collide with each other
-  (collision exceptions are added pairwise), which is what allows car-like,
-  closed-loop construction.
+  solid bar. Parts of the same creature never collide with each other:
+  every creature body sits on collision layer 2 and masks only the ground
+  (layer 1). That allows car-like, closed-loop construction and also keeps
+  shadows from touching each other.
 - **Minimum length (#593):** a beam must leave
   `CreatureReadiness.MinimumBeamGap` (52) free between its two joint discs,
   room for the largest sensor picture, the Camera's, with a 4-unit gap on

@@ -8,8 +8,6 @@ public interface ITrainingProgressSource : IDisposable
 
     int Generation { get; }
 
-    int CurrentShadow { get; }
-
     int ShadowCount { get; }
 
     double BestFitness { get; }

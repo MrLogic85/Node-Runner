@@ -22,9 +22,7 @@ public sealed class EvolverTrainingProgressSource : ITrainingProgressSource
 
     public int Generation => _evolver.Generation;
 
-    // The GA's candidates and population are the player's shadows.
-    public int CurrentShadow => _evolver.CurrentCandidate;
-
+    // The GA's population is the player's shadows.
     public int ShadowCount => _evolver.PopulationSize;
 
     public double BestFitness => _evolver.BestFitness;
