@@ -58,8 +58,9 @@ Then check the whole tracker:
 ```
 
 It flags missing labels and fields, a Size on a parent, a **Blocked**
-issue without an open blocked-by issue, and a **Ready** or **In progress**
-issue that still has one.
+issue without an open blocked-by issue, a **Ready** or **In progress**
+issue that still has one, and a parent that breaks
+`docs/ISSUE_REVIEW.md` → "Parent issues".
 
 ## Type labels
 

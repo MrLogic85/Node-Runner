@@ -172,7 +172,8 @@ training.
 - Achievement model, screen, training progress and toast (#199, #390–#392,
   #488).
 - Part counts and achievement locks (#525) and locked examples (#175,
-  #429–#438), including the Power and Wing examples.
+  #429–#438), including the Power and Wing examples, and the Piston start
+  example that replaces Worm (#461).
 - A checkpoint whenever training stops (at most 5 automatic per Creation),
   manual checkpoints, and restore (#256). Restoring rewinds the training
   history.
