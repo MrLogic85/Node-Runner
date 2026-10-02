@@ -42,7 +42,7 @@ public sealed class MappingViewModelTests
     {
         var mapping = new MappingViewModel();
 
-        mapping.Update([], [new MotorReading(1, 0.75, 1200)]);
+        mapping.Update([], [new MotorReading(MotorReading.MotorRelationKind, 1, 0.75, 1200)]);
 
         mapping.OutputsText.ShouldBe("Motor relation 1 \u2192 target 0.75, torque 1200");
     }

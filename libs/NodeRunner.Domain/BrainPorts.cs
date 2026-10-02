@@ -26,6 +26,11 @@ public static class BrainPorts
             blocks.Add((nodeId, beamId, [.. JointMotorInputs(nodeId, beamId), JointMotorOutput(nodeId, beamId)]));
         }
 
+        foreach (var piston in creature.Pistons)
+        {
+            blocks.Add((piston.Id, 0, [.. PistonInputs(piston.Id), .. PistonOutputs(piston.Id)]));
+        }
+
         var ports = blocks
             .OrderBy(block => block.PartId)
             .ThenBy(block => block.Order)
@@ -60,4 +65,18 @@ public static class BrainPorts
     /// <summary>A joint motor's velocity target output port.</summary>
     public static BrainPort JointMotorOutput(int nodeId, int beamId) =>
         BrainPort.Output(nodeId, JointMotor.TargetChannel(beamId), PortSignal.Velocity);
+
+    /// <summary>A Piston's input ports, length then speed (<see cref="Piston"/>).</summary>
+    public static IEnumerable<BrainPort> PistonInputs(int pistonId) =>
+    [
+        BrainPort.Input(pistonId, Piston.LengthChannel),
+        BrainPort.Input(pistonId, Piston.SpeedChannel),
+    ];
+
+    /// <summary>A Piston's output ports, position then strength (<see cref="Piston"/>).</summary>
+    public static IEnumerable<BrainPort> PistonOutputs(int pistonId) =>
+    [
+        BrainPort.Output(pistonId, Piston.PositionChannel, PortSignal.Position),
+        BrainPort.Output(pistonId, Piston.StrengthChannel, PortSignal.Strength),
+    ];
 }

@@ -6,7 +6,7 @@ namespace NodeRunner.App.ViewModels;
 /// What the brain's ports are called, in port order (<see cref="BrainPorts"/>): a sense is its
 /// part's name and reading, such as "Accelerometer: along" or "Front knee: speed", and an output
 /// is the joint it drives, such as "Rear knee". A joint with more than one motor adds the beam
-/// each one turns.
+/// each one turns. A Piston's ports are its name and channel, such as "Piston 1: position".
 /// </summary>
 public sealed record BrainPortLabels(IReadOnlyList<string> Inputs, IReadOnlyList<string> Outputs)
 {
@@ -16,7 +16,7 @@ public sealed record BrainPortLabels(IReadOnlyList<string> Inputs, IReadOnlyList
     {
         ArgumentNullException.ThrowIfNull(creature);
 
-        string Name(int partId) => PartNames.Display(creature.Nodes, creature.Beams, creature.Sensors, partId);
+        string Name(int partId) => PartNames.Display(creature.Nodes, creature.Beams, creature.Sensors, creature.Pistons, partId);
 
         var labels = new Dictionary<BrainPort, string>();
         foreach (var sensor in creature.Sensors)
@@ -47,6 +47,16 @@ public sealed record BrainPortLabels(IReadOnlyList<string> Inputs, IReadOnlyList
             labels[inputs[0]] = $"{motor}: angle";
             labels[inputs[1]] = $"{motor}: speed";
             labels[BrainPorts.JointMotorOutput(nodeId, beamId)] = motor;
+        }
+
+        foreach (var piston in creature.Pistons)
+        {
+            var inputs = BrainPorts.PistonInputs(piston.Id).ToArray();
+            var outputs = BrainPorts.PistonOutputs(piston.Id).ToArray();
+            labels[inputs[0]] = $"{Name(piston.Id)}: length";
+            labels[inputs[1]] = $"{Name(piston.Id)}: speed";
+            labels[outputs[0]] = $"{Name(piston.Id)}: position";
+            labels[outputs[1]] = $"{Name(piston.Id)}: strength";
         }
 
         var layout = BrainPorts.Of(creature);

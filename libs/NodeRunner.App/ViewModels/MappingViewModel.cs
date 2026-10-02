@@ -48,7 +48,7 @@ public sealed class MappingViewModel : INotifyPropertyChanged
         for (var i = 0; i < motors.Count; i++)
         {
             var motor = motors[i];
-            lines[i] = $"Motor relation {motor.GroupIndex} \u2192 target {motor.Target:0.00}, torque {motor.Torque:0}";
+            lines[i] = $"{motor.GroupKind} {motor.GroupIndex} \u2192 target {motor.Target:0.00}, torque {motor.Torque:0}";
         }
 
         return string.Join('\n', lines);

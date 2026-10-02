@@ -48,6 +48,13 @@ public partial class BuildScreen : Control
     [Signal]
     public delegate void ToolRequestedEventHandler(BuildTool tool);
 
+    /// <summary>A link row in the tray was tapped (#451): it picks the link's tool, or puts Move back.</summary>
+    [Signal]
+    public delegate void PartPickedEventHandler(BuildPart part);
+
+    [Signal]
+    public delegate void PistonSettingsChangedEventHandler(int pistonId, double strength, double stroke, double maxSpeed);
+
     /// <summary>False while the overflow menu is open; it takes Android Back itself.</summary>
     public bool CanTakeBack => !Toolbar.Menu.Visible;
 
@@ -100,6 +107,11 @@ public partial class BuildScreen : Control
         var partName = GetNode<UiTextField>("%PartName");
         partName.EditingStarted += () => _renamingPartId = _presentation?.SinglePart?.Id;
         partName.EditingFinished += OnPartNameEdited;
+        foreach (var slider in PistonSliders)
+        {
+            slider.ThumbChanged += (_, _) => OnPistonSliderChanged();
+        }
+
         BindViewModels();
         Apply();
     }
@@ -143,6 +155,25 @@ public partial class BuildScreen : Control
             _renamingPartId = null;
             EmitSignal(SignalName.PartNameChanged, partId, value);
         }
+    }
+
+    private UiSlider[] PistonSliders =>
+        [GetNode<UiSlider>("%PistonStrength"), GetNode<UiSlider>("%PistonStroke"), GetNode<UiSlider>("%PistonMaxSpeed")];
+
+    private void OnPistonSliderChanged()
+    {
+        if (_presentation?.SinglePart is not { Kind: PartSettingsKind.Piston } part)
+        {
+            return;
+        }
+
+        var sliders = PistonSliders;
+        EmitSignal(
+            SignalName.PistonSettingsChanged,
+            part.Id,
+            PistonSettings.StrengthAt(sliders[0].HighPosition),
+            PistonSettings.StrokeAt(sliders[1].HighPosition),
+            PistonSettings.MaxSpeedAt(sliders[2].HighPosition));
     }
 
     private void OnPresentationChanged(object? sender, EventArgs eventArgs)
@@ -275,7 +306,11 @@ public partial class BuildScreen : Control
             foreach (var part in group.Rows)
             {
                 var row = new UiPartRow { IconId = PartIcon(part.Part), Label = part.Name, Compact = true };
-                if (DraggablePart(part) is { } draggable)
+                if (PickablePart(part) is { } pickable)
+                {
+                    row.PartSelected += () => EmitSignal(SignalName.PartPicked, (int)pickable);
+                }
+                else if (DraggablePart(part) is { } draggable)
                 {
                     row.SetDragForwarding(
                         Callable.From<Vector2, Variant>(_ => StartPartDrag(row, draggable)),
@@ -289,9 +324,11 @@ public partial class BuildScreen : Control
 
         for (var index = 0; index < group.Rows.Count; index++)
         {
-            rows.GetChild<UiPartRow>(index).State = group.Rows[index].State switch
+            var row = group.Rows[index];
+            rows.GetChild<UiPartRow>(index).State = row.State switch
             {
                 PartTrayRowState.ComingLater => UiPartRow.PartRowState.Locked,
+                _ when PartTray.ToolOf(row.Part) is { } tool && tool == presentation.ActiveTool => UiPartRow.PartRowState.Selected,
                 _ => UiPartRow.PartRowState.Rest,
             };
         }
@@ -300,8 +337,18 @@ public partial class BuildScreen : Control
     private void OnPartTabSelected(int index)
     {
         GetNode<ScrollContainer>("%PartScroll").ScrollVertical = 0;
+        // A picked link belongs to its tab: changing tab puts it down (#451).
+        if (_presentation is { ActiveTool: BuildTool.Piston })
+        {
+            EmitSignal(SignalName.ToolRequested, (int)BuildTool.Move);
+        }
+
         Apply();
     }
+
+    /// <summary>The link a tray row picks with a tap (#451), or null for a row that is dragged out or locked.</summary>
+    public static BuildPart? PickablePart(PartTrayRow row) =>
+        row.IsAvailable && PartTray.ToolOf(row.Part) is not null ? row.Part : null;
 
     /// <summary>The part a tray row can be dragged out as (#376): an available sensor, or null.</summary>
     public static BuildPart? DraggablePart(PartTrayRow row) =>
@@ -324,6 +371,7 @@ public partial class BuildScreen : Control
         BuildTool.Beam => UiIconId.Beam,
         BuildTool.Joint => UiIconId.Joint,
         BuildTool.Select => UiIconId.Select,
+        BuildTool.Piston => UiIconId.PartPiston,
         _ => UiIconId.Move,
     };
 
@@ -357,6 +405,20 @@ public partial class BuildScreen : Control
 
         GetNode<UiLabel>("%PartConnectionsLabel").Text = part.ConnectionsLabel;
         GetNode<UiLabel>("%PartConnectionsValue").Text = part.ConnectionsValue;
+        GetNode<Control>("%PartConnectionsLabel").GetParent<Control>().Visible = part.ConnectionsLabel.Length > 0;
+        GetNode<Control>("%PistonSettings").Visible = part.Piston is not null;
+        if (part.Piston is { } piston)
+        {
+            var sliders = PistonSliders;
+            PartSlider[] values = [piston.Strength, piston.Stroke, piston.MaxSpeed];
+            for (var index = 0; index < sliders.Length; index++)
+            {
+                sliders[index].LabelText = values[index].Label;
+                sliders[index].ReadoutText = values[index].Readout;
+                sliders[index].HighPosition = values[index].Position;
+            }
+        }
+
         GetNode<UiLabel>("%PartNote").Text = part.Note;
         GetNode<UiButton>("%PartDelete").Visible = part.CanDelete;
     }
@@ -368,6 +430,7 @@ public partial class BuildScreen : Control
         PartSettingsKind.Beam => UiIconId.Beam,
         PartSettingsKind.Accelerometer => UiIconId.PartAccelerometer,
         PartSettingsKind.Camera => UiIconId.PartCamera,
+        PartSettingsKind.Piston => UiIconId.PartPiston,
         _ => UiIconId.None,
     };
 

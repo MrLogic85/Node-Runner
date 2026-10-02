@@ -140,11 +140,13 @@ public sealed class SaveFormatTests : IDisposable
                 [new NodeDef(1, new Vector2D(0, 0), 1, "Hip"), new NodeDef(2, new Vector2D(2, 0.5), 1), new NodeDef(3, new Vector2D(4, 0), 1)],
                 [new BeamDef(4, 1, 2, "Thigh"), new BeamDef(5, 2, 3)],
                 [new SensorDef(6, 4, SensorKind.Accelerometer), new SensorDef(7, 5, SensorKind.Camera, "Eye", aim: -0.5)],
-                nextPartId: 9),
+                [new PistonDef(9, 1, 3)],
+                nextPartId: 10),
             new TrainingStateDef(ExampleBrain(), 12, 3.5, new TrainingRunDef(3.5, 1.25, 0.5, MapIds.Flat)));
 
     // The direct brain for ExampleCreation's ports: the motor at node 2 turning beam 5, then the
-    // Accelerometer (6) and the Camera (7). One connection is disabled.
+    // Accelerometer (6) and the Camera (7). One connection is disabled. The Piston (9) was added
+    // later, so its neurons come last: its strength starts passive with no connection.
     private static BrainDef ExampleBrain()
     {
         (int Part, string Channel)[] inputs = [(2, "angle:5"), (2, "speed:5"), (6, "along"), (6, "across"), (7, "left1"), (7, "centre"), (7, "right1")];
@@ -152,11 +154,16 @@ public sealed class SaveFormatTests : IDisposable
         var neurons = inputs
             .Select((input, index) => new NeuronDef(index + 1, NeuronKind.Input, input.Part, input.Channel, 0, 0, NeuronActivation.Identity))
             .Append(new NeuronDef(8, NeuronKind.Output, 2, "target:5", 1, 0.25, NeuronActivation.Tanh))
+            .Append(new NeuronDef(9, NeuronKind.Input, 9, Piston.LengthChannel, 0, 0, NeuronActivation.Identity))
+            .Append(new NeuronDef(10, NeuronKind.Input, 9, Piston.SpeedChannel, 0, 0, NeuronActivation.Identity))
+            .Append(new NeuronDef(11, NeuronKind.Output, 9, Piston.PositionChannel, 1, 0, NeuronActivation.Tanh))
+            .Append(new NeuronDef(12, NeuronKind.Output, 9, Piston.StrengthChannel, 1, -4, NeuronActivation.Sigmoid))
             .ToArray();
         var connections = weights
             .Select((weight, index) => new ConnectionGeneDef(index + 1, 8, weight, enabled: index != 4))
+            .Append(new ConnectionGeneDef(9, 11, 0.5, enabled: true))
             .ToArray();
-        return new BrainDef(neurons, connections, nextNeuronId: 9);
+        return new BrainDef(neurons, connections, nextNeuronId: 13);
     }
 
     private static string Example() =>

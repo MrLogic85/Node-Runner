@@ -61,7 +61,18 @@
         "aim": -0.5
       }
     ],
-    "nextPartId": 9
+    "pistons": [
+      {
+        "id": 9,
+        "nodeA": 1,
+        "nodeB": 3,
+        "name": null,
+        "strength": 15000,
+        "stroke": 0.3,
+        "maxSpeed": 200
+      }
+    ],
+    "nextPartId": 10
   },
   "training": {
     "brain": {
@@ -137,6 +148,42 @@
           "layer": 1,
           "bias": 0.25,
           "activation": "tanh"
+        },
+        {
+          "id": 9,
+          "kind": "input",
+          "partId": 9,
+          "channel": "length",
+          "layer": 0,
+          "bias": 0,
+          "activation": "identity"
+        },
+        {
+          "id": 10,
+          "kind": "input",
+          "partId": 9,
+          "channel": "speed",
+          "layer": 0,
+          "bias": 0,
+          "activation": "identity"
+        },
+        {
+          "id": 11,
+          "kind": "output",
+          "partId": 9,
+          "channel": "position",
+          "layer": 1,
+          "bias": 0,
+          "activation": "tanh"
+        },
+        {
+          "id": 12,
+          "kind": "output",
+          "partId": 9,
+          "channel": "strength",
+          "layer": 1,
+          "bias": -4,
+          "activation": "sigmoid"
         }
       ],
       "connections": [
@@ -181,9 +228,15 @@
           "to": 8,
           "weight": -0.5,
           "enabled": true
+        },
+        {
+          "from": 9,
+          "to": 11,
+          "weight": 0.5,
+          "enabled": true
         }
       ],
-      "nextNeuronId": 9
+      "nextNeuronId": 13
     },
     "generation": 12,
     "bestFitness": 3.5,

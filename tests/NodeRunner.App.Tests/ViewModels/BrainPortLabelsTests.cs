@@ -35,4 +35,19 @@ public sealed class BrainPortLabelsTests
         labels.Outputs.ShouldBe(["Node 1 · Beam 2", "Node 1 · Beam 3"]);
         labels.Inputs[0].ShouldBe("Node 1 · Beam 2: angle");
     }
+
+    [Fact]
+    public void For_APiston_NamesItsTwoInputsAndTwoOutputs()
+    {
+        var creature = new CreatureDef(
+            [new NodeDef(1, new Vector2D(0, 0), 1), new NodeDef(2, new Vector2D(2, 0), 1)],
+            [],
+            [],
+            [new PistonDef(3, 1, 2, "Ram")]);
+
+        var labels = BrainPortLabels.For(creature);
+
+        labels.Inputs.ShouldBe(["Ram: length", "Ram: speed"]);
+        labels.Outputs.ShouldBe(["Ram: position", "Ram: strength"]);
+    }
 }

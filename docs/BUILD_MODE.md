@@ -86,6 +86,18 @@ a node's own disc always hits.
   (#376; see Parts tray below). Deleting a beam deletes its sensor;
   splitting a beam with the Joint tool moves it, with its id, to the
   longer half.
+- **Piston (#451):** tap the Piston row in the Links tab to pick it: the
+  row shows Selected, no rail tool is, and the status line says "Drag joint
+  to joint." Drag from one joint to another to place a Piston; the preview
+  looks like the Beam preview. Over a joint that would refuse it, the line
+  and that joint's ring turn dashed danger, and dropping there shows the
+  reason at the joint: "A beam already joins these nodes" or "These nodes
+  already have a piston". Dropping away from a joint says "Drop it on
+  another node." and never adds one. The tool stays picked after a
+  placement and ends (back to Move) on a rail tool, a second tap on the row,
+  a tab change or leaving Build. A new Piston is not selected. Taps hit a
+  joint, then a sensor, then a Piston, then a beam. Deleting a joint deletes
+  its Pistons.
 - **Camera aim (#594, #622):** a selected Camera shows its rays and an Aim
   handle out along its centre ray past its picture, in any tool, with no
   stem line. It always sits twice as far from the camera's middle as a
@@ -145,8 +157,8 @@ a node's own disc always hits.
   Build if the creature cannot train yet. The
   Training scene builds its `Creature` node from the saved `CreatureDef`
   (`Creature.BuildFrom`), which generically derives the model's
-  input/output counts (the sensor parts' readings plus `MotorTopology`'s derived
-  motor-relation sensor values, and one output per motor relation) for
+  input/output counts (`BrainPorts.Of`: the sensor parts' readings, each motor
+  relation's and Piston's inputs, and their outputs) for
   whatever anatomy it is given — no special-casing between the hardcoded
   worm and an edited creature.
 
@@ -159,9 +171,10 @@ the top, then a scrolling list with the open tab's name, its parts as compact
 owns the groups, their order, the help lines and each row's state; the screen
 only maps parts to glyphs. Every implemented part is unlimited until #525, so
 rows show no count. A part not yet implemented is a dashed row with a lock,
-and the tab's name row says "Coming later" once. Available rows (today the
-Accelerometer and the Camera) do nothing on tap; they are dragged out
-instead (#376). Godot's drag-and-drop carries the part: the row starts it and
+and the tab's name row says "Coming later" once. A link row (today the
+Piston) picks its tool on tap (`BuildViewModel.PickPart`, see Interactions).
+The other available rows (today the Accelerometer and the Camera) do nothing
+on tap; they are dragged out instead (#376). Godot's drag-and-drop carries the part: the row starts it and
 floats its glyph above the finger (`UiPartRow.CreateDragPreview`), and
 `BuildCanvas` takes the drop in `PartDropZone`, a control over the canvas
 that lets touches through except during a part drag. `BuildGestures.DropTargetAt`
@@ -176,7 +189,7 @@ several show the selection panel instead.
 
 ## Part settings
 
-One selected joint, beam or sensor shows its Part settings in the side
+One selected joint, beam, sensor or Piston shows its Part settings in the side
 panel (#343). The panel's own title row carries the part's glyph and name;
 there is no close button, and tapping empty canvas deselects. The rows are
 `UiTextField` **Name** first, then what the part is joined to (a joint's
@@ -191,6 +204,13 @@ no name of its own shows a default (`BuildViewModel.DefaultPartName`: "Node 2",
 the selection moves) trims the text, and a blank name or the default
 clears the part's own name. Names are labels only (#220), so a locked
 creation can be renamed too; the rename autosaves like any edit.
+
+A Piston's rows are Name, then three `UiSlider`s instead of what it is
+joined to: **Max strength** (20–400 N, step 10), **Stroke** (±10–50%, step
+5) and **Max speed** (0.5–4.0 m/s, step 0.1), then the note "The brain
+pushes it out and pulls it in, within its stroke." (`PistonSettings`). Like a
+Camera's aim, the settings change no brain port, so a locked creation keeps
+them.
 
 ## Selection panel
 
@@ -210,9 +230,10 @@ ids and sensors at existing beam ids (one sensor per beam), so an empty or unfin
 a Creation (#515). Only training needs a finished creature.
 `NodeRunner.App.Lifecycle.CreatureReadiness` is the single source of truth
 for that, in two steps: `Problems` lists why the creature cannot be
-simulated yet (no nodes, a node without beams, a zero-length beam, or a beam
-shorter than `CreatureReadiness.MinimumBeamGap` between its joint discs, #593), and
-`CanTrain` also needs at least one motor relation for the brain to drive.
+simulated yet (no nodes, a node with no beam or Piston, a zero-length beam
+or Piston, or one shorter than `CreatureReadiness.MinimumBeamGap` between its
+joint discs, #593), and `CanTrain` also needs at least one brain output (a
+motor relation or a Piston) to drive.
 `CreatureBuilder.TryBuild` applies `Problems` to the in-progress creature.
 UI surfaces those messages and does not duplicate the rules. The one
 exception is Build's readiness line, which shortens the errors for the

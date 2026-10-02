@@ -22,7 +22,7 @@ public sealed class CreatureReadinessTests
 
         CreatureReadiness.Problems(creature).ShouldBe(
         [
-            "Node 3 has no beams attached. Connect it with a beam or remove it.",
+            "Node 3 has nothing attached. Connect it with a beam or a piston, or remove it.",
             "The beam between node 1 and node 2 has zero length. Move one of the nodes apart.",
         ]);
     }

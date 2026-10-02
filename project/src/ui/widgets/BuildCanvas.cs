@@ -21,6 +21,10 @@ public partial class BuildCanvas : Node2D
     private const double _moveGhostSeconds = 1.8;
     private const int _mousePointer = -1;
 
+    // A refused Piston target's ring is dashed (#451): this many dashes, each this many segments.
+    private const int _refusedRingDashes = 12;
+    private const int _refusedDashSegments = 6;
+
     private BuildViewModel? _viewModel;
     private BuildGestures? _gestures;
     private readonly Dictionary<int, Vector2D> _ghostNodePositions = [];
@@ -319,6 +323,7 @@ public partial class BuildCanvas : Node2D
             }
         }
 
+        DrawPistons();
         DrawMotorRelations();
         DrawSensors();
 
@@ -345,6 +350,37 @@ public partial class BuildCanvas : Node2D
 
         DrawBeamEndRings();
         DrawSelectionFrame();
+    }
+
+    /// <summary>Each Piston over the beams (#451); one too short to train is drawn in danger, like a beam.</summary>
+    private void DrawPistons()
+    {
+        var viewTransform = ViewTransform();
+        foreach (var piston in _viewModel!.Pistons)
+        {
+            var nodeA = NodeById(piston.NodeA);
+            var nodeB = NodeById(piston.NodeB);
+            var built = DistanceBetween(nodeA, nodeB);
+            PistonDrawing.Draw(
+                this,
+                viewTransform,
+                Theme,
+                ToGodot(nodeA.Position),
+                ToGodot(nodeB.Position),
+                (float)nodeA.Radius,
+                (float)nodeB.Radius,
+                (float)Piston.ShortestLength(built, piston.Stroke),
+                (float)Piston.LongestLength(built, piston.Stroke),
+                CreatureReadiness.IsTooShort(nodeA, nodeB) ? Theme.Danger : Theme.MotorAccent,
+                _viewModel.SingleSelectedPistonId == piston.Id);
+        }
+    }
+
+    private static double DistanceBetween(NodeDef a, NodeDef b)
+    {
+        var dx = b.Position.X - a.Position.X;
+        var dy = b.Position.Y - a.Position.Y;
+        return Math.Sqrt((dx * dx) + (dy * dy));
     }
 
     /// <summary>
@@ -521,10 +557,12 @@ public partial class BuildCanvas : Node2D
         float OnScreen(double length) => (float)(length * view.Zoom) * Scale.X;
         switch (note.Target.Kind)
         {
-            case CreatureElementKind.Beam:
-                var beam = _viewModel!.Beams[_viewModel.BeamIndexOf(note.Target.Id)];
-                var a = NodeById(beam.NodeA);
-                var b = NodeById(beam.NodeB);
+            case CreatureElementKind.Beam or CreatureElementKind.Piston:
+                var (nodeA, nodeB) = note.Target.Kind == CreatureElementKind.Beam
+                    ? (_viewModel!.Beams[_viewModel.BeamIndexOf(note.Target.Id)].NodeA, _viewModel.Beams[_viewModel.BeamIndexOf(note.Target.Id)].NodeB)
+                    : (_viewModel!.Pistons[_viewModel.PistonIndexOf(note.Target.Id)].NodeA, _viewModel.Pistons[_viewModel.PistonIndexOf(note.Target.Id)].NodeB);
+                var a = NodeById(nodeA);
+                var b = NodeById(nodeB);
                 var start = ToSlot(a.Position);
                 var end = ToSlot(b.Position);
                 anchor = (start + end) / 2;
@@ -585,8 +623,11 @@ public partial class BuildCanvas : Node2D
             return;
         }
 
-        var to = _gestures.BeamTargetNodeId is { } target ? NodeById(target).Position : end;
-        DrawDashedLine(ToGodot(NodeById(start).Position), ToGodot(to), Theme.SelectionGlow, Stroke(Theme.BeamWidth), 8, antialiased: false);
+        // A Piston drag over a joint that would refuse it turns danger (#451).
+        var refused = _gestures.RefusedTargetNodeId;
+        var to = (_gestures.BeamTargetNodeId ?? refused) is { } target ? NodeById(target).Position : end;
+        var color = refused is null ? Theme.SelectionGlow : Theme.Danger;
+        DrawDashedLine(ToGodot(NodeById(start).Position), ToGodot(to), color, Stroke(Theme.BeamWidth), 8, antialiased: false);
     }
 
     private void DrawBeamEndRings()
@@ -602,6 +643,17 @@ public partial class BuildCanvas : Node2D
             {
                 var node = NodeById(id);
                 DrawArc(ToGodot(node.Position), (float)node.Radius * 1.65f, 0, Mathf.Tau, 32, Theme.SelectionGlow, Stroke(Theme.MotorSignalWidth), antialiased: false);
+            }
+        }
+
+        if (_gestures.RefusedTargetNodeId is { } refused)
+        {
+            var node = NodeById(refused);
+            var radius = (float)node.Radius * 1.65f;
+            for (var dash = 0; dash < _refusedRingDashes; dash++)
+            {
+                var from = dash * Mathf.Tau / _refusedRingDashes;
+                DrawArc(ToGodot(node.Position), radius, from, from + (Mathf.Tau / _refusedRingDashes / 2), _refusedDashSegments, Theme.Danger, Stroke(Theme.MotorSignalWidth), antialiased: false);
             }
         }
     }
@@ -794,6 +846,7 @@ public partial class BuildCanvas : Node2D
             // The beam drag's own rings replace the warning on the joints being joined.
             var nodeId = _viewModel.Nodes[nodeIndex].Id;
             if (_viewModel.Beams.Any(beam => beam.NodeA == nodeId || beam.NodeB == nodeId)
+                || _viewModel.Pistons.Any(piston => piston.NodeA == nodeId || piston.NodeB == nodeId)
                 || nodeId == _gestures?.BeamStartNodeId
                 || nodeId == _gestures?.BeamTargetNodeId)
             {

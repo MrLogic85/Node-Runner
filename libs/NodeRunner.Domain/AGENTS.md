@@ -28,13 +28,16 @@ Pure C# data types. The vocabulary of the app, no behavior beyond invariants.
     `PortSignals` is the seventh: each output signal's activation, passive
     start and position/strength mapping (#535), shared by the brain and the
     sim.
+    `Piston` is the eighth: a Piston's port values and force (#451), shared
+    by the sim and tests.
 - **Serialisable via `System.Text.Json` without custom converters.** Saved
   records are the save shape: changing one follows `docs/SAVE_FORMAT.md`.
 
 ## What lives here
 
 - `CreatureDef`, `NodeDef`, `BeamDef`, `SensorDef`, `SensorKind`,
-  `NodeConnectionDef` — anatomy
+  `PistonDef`, `NodeConnectionDef` — anatomy
+- `Piston` — a Piston's port values and force (see the exception above)
 - `Accelerometer`, `ProofMass` — the accelerometer's pure math (see the
   exception above)
 - `CameraRays` — the camera's pure math (see the exception above)

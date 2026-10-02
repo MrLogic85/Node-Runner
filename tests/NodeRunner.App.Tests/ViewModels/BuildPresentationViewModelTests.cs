@@ -288,7 +288,7 @@ public sealed class BuildPresentationViewModelTests
         var buildPanel = presentation.BuildPanel;
 
         buildPanel.CanStartTraining.ShouldBeFalse();
-        buildPanel.ReadinessText.ShouldBe("Add a two-beam node");
+        buildPanel.ReadinessText.ShouldBe("Add a two-beam node or piston");
         buildPanel.InputSummary.ShouldBe("1 sensor: 2 inputs; 0 motor relations: 0 inputs; 2 inputs total");
         buildPanel.MotorRelationSummary.ShouldBe("0 motor relations can twist");
     }

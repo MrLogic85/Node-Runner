@@ -98,6 +98,21 @@ public sealed class BrainPortsTests
     }
 
     [Fact]
+    public void Of_GivesEachPistonLengthAndSpeedInputs_AndPositionAndStrengthOutputs()
+    {
+        var creature = new CreatureDef(
+            [new NodeDef(1, new Vector2D(0, 0), 1), new NodeDef(2, new Vector2D(1, 0), 1)],
+            [],
+            [],
+            [new PistonDef(3, 1, 2)]);
+
+        var layout = BrainPorts.Of(creature);
+
+        layout.Inputs.ShouldBe([BrainPort.Input(3, "length"), BrainPort.Input(3, "speed")]);
+        layout.Outputs.ShouldBe([BrainPort.Output(3, "position", PortSignal.Position), BrainPort.Output(3, "strength", PortSignal.Strength)]);
+    }
+
+    [Fact]
     public void SensorPorts_MatchTheReadingsEachSensorGives()
     {
         BrainPorts.SensorPorts(new SensorDef(3, 1, SensorKind.Accelerometer)).Count().ShouldBe(Accelerometer.ReadingNames.Count);

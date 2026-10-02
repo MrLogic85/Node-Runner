@@ -5,7 +5,7 @@ using NodeRunner.Ui.Lib;
 namespace NodeRunner.Ui.Widgets;
 
 /// <summary>
-/// A creature's body drawn to fit its rectangle, as on a Creations card: beams and nodes.
+/// A creature's body drawn to fit its rectangle, as on a Creations card: beams, Pistons and nodes.
 /// Colours are read from the Theme while drawing, so a theme swap redraws it. Its top corners
 /// round to the card's, because it sits at the top of a flush card.
 /// </summary>
@@ -53,6 +53,13 @@ public partial class CreatureThumbnail : Control
         foreach (var beam in _creature.Beams)
         {
             DrawLine(MapNode(beam.NodeA), MapNode(beam.NodeB), line, UiSize.Stroke.Beam, antialiased: false);
+        }
+
+        // A Piston is its rod alone at this size, in accent like on the canvas (#451).
+        var accent = UiThemeLookup.Color(this, UiTokens.Color.Accent);
+        foreach (var piston in _creature.Pistons)
+        {
+            DrawLine(MapNode(piston.NodeA), MapNode(piston.NodeB), accent, UiSize.Stroke.Signal, antialiased: false);
         }
 
         var fill = UiThemeLookup.Color(this, UiTokens.Color.Panel);
