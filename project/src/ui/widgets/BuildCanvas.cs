@@ -338,6 +338,7 @@ public partial class BuildCanvas : Node2D
             DrawCircle(position, (float)node.Radius, Theme.NodeFill);
         }
 
+        DrawSelectedCameraRays();
         DrawInvalidNodeMarkers();
         DrawInvalidBeamMarkers();
 
@@ -350,7 +351,7 @@ public partial class BuildCanvas : Node2D
     /// <summary>
     /// Each sensor as a picture at the middle of its beam (#576), upright on the beam's built up
     /// side: the Accelerometer with its weight where <see cref="BuildSensorMotion"/> has it, and
-    /// the camera looking along its rays, which it draws when selected.
+    /// the camera looking along its rays (drawn later, over the joints).
     /// </summary>
     private void DrawSensors()
     {
@@ -371,6 +372,25 @@ public partial class BuildCanvas : Node2D
         }
     }
 
+    /// <summary>The selected Camera's rays, over the joints so the creature never hides them (#623).</summary>
+    private void DrawSelectedCameraRays()
+    {
+        if (_viewModel!.SingleSelectedSensorId is not { } id
+            || _viewModel.Sensors.Single(sensor => sensor.Id == id) is not { Kind: SensorKind.Camera } camera)
+        {
+            return;
+        }
+
+        var beam = _viewModel.Beams[_viewModel.BeamIndexOf(camera.BeamId)];
+        var nodeA = NodeById(beam.NodeA).Position;
+        var nodeB = NodeById(beam.NodeB).Position;
+        var middle = (ToGodot(nodeA) + ToGodot(nodeB)) / 2;
+        var beamRotation = (float)CameraRays.BeamAngle(nodeA, nodeB);
+        var aim = camera.Aim ?? CameraRays.DefaultAim(nodeA, nodeB);
+        SensorDrawing.DrawRays(this, Theme, middle, Enumerable.Range(0, CameraRays.RayCount)
+            .Select(ray => middle + ToGodot(CameraRays.LocalRayTarget(ray, aim)).Rotated(beamRotation)));
+    }
+
     private void DrawSensor(BeamDef beam, SensorKind kind, double? aim, int? sensorId, bool selected, Transform2D viewTransform)
     {
         var nodeA = NodeById(beam.NodeA).Position;
@@ -382,12 +402,6 @@ public partial class BuildCanvas : Node2D
         var pictureRotation = beamRotation + (upSign == 1 ? Mathf.Pi : 0);
         var middle = (start + end) / 2;
         var cameraAim = aim ?? CameraRays.DefaultAim(nodeA, nodeB);
-        if (selected && kind == SensorKind.Camera)
-        {
-            SensorDrawing.DrawRays(this, Theme, middle, Enumerable.Range(0, CameraRays.RayCount)
-                .Select(ray => middle + ToGodot(CameraRays.LocalRayTarget(ray, cameraAim)).Rotated(beamRotation)));
-        }
-
         DrawSetTransformMatrix(viewTransform * new Transform2D(pictureRotation, middle));
         if (kind == SensorKind.Accelerometer)
         {

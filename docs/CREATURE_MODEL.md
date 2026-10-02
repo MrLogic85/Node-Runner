@@ -107,9 +107,13 @@ CreatureDef  ──build──▶  physical body  ──sensors──▶  model 
   Accelerometer's weight hangs on its spring: in Build it swings when the
   beam is moved and settles at rest (`BuildSensorMotion`), in Training it
   follows the live proof mass. The Camera looks along its
-  aim, and shows its rays when selected. A tap hits a joint first, then a
-  sensor, then a beam, in Build and Training alike
-  (`project/src/theme/SensorDrawing.cs`,
+  aim. In Build a selected Camera shows its full rays; in Training every
+  Camera always shows the rays that hit the ground, up to the hit, with a
+  `halo` ring there (#623), and nothing for a ray that sees nothing. Rays
+  are drawn over the joints, by draw order, not z-index (Build draws them
+  after the joints; Training's `CameraRaysVisual` is added after the joint
+  bodies). A tap hits a joint first, then a sensor, then a beam, in Build
+  and Training alike (`project/src/theme/SensorDrawing.cs`,
   `project/src/creature/SensorVisual.cs`).
 
 #### Accelerometer
@@ -145,7 +149,8 @@ CreatureDef  ──build──▶  physical body  ──sensors──▶  model 
 
 - **Beginner:** Three rays that tell the brain how near the ground is. A
   new camera looks level: ahead-and-up, straight ahead and ahead-and-down;
-  you can turn it in Build. A ray lights up more the closer the ground is.
+  you can turn it in Build. A ray that sees the ground shows where it hits
+  it; the nearer the ground, the stronger its reading.
 - **Aim (#594):** `SensorDef.Aim`, the angle of the centre ray from the
   beam's direction (from its first node to its second), in radians. The
   three rays fan `CameraRays.Spread` (45°) apart around it, and the camera

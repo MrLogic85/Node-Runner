@@ -528,6 +528,13 @@ public partial class Creature : Node2D
             _beamBodies[beamIndex].AddChild(visual);
             _sensorVisuals[i] = visual;
         }
+
+        // Added after the joint bodies, so tree order draws the rays over the whole creature (#623).
+        var cameras = _sensors.OfType<CameraSensor>().ToArray();
+        if (cameras.Length > 0)
+        {
+            AddChild(new CameraRaysVisual { Name = "CameraRays", Theme = Theme, Cameras = cameras });
+        }
     }
 
     private AccelerometerSensor CreateAccelerometer(CreatureDef definition, int beamIndex, double gravity)

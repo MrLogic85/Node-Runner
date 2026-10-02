@@ -42,6 +42,8 @@ the model this implements.**
 - `NodeVisual.cs` / `BeamVisual.cs` — rendering only, no physics
 - `SensorVisual.cs` — a sensor's picture, a rendering-only child of its
   beam body; the Accelerometer weight follows the live proof mass
+- `CameraRaysVisual.cs` — every camera ray that hits the ground, drawn up to
+  the hit; added after the joints so tree order keeps it on top
 - `HardcodedCreatureFactory.cs` — the first concrete `CreatureDef`
 - `Creature.tscn` (in `scenes/`) — the scene template
 
