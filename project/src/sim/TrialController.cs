@@ -28,6 +28,13 @@ public partial class TrialController : Node
     /// <summary>What the trial in progress (or the last one) has measured so far.</summary>
     public TrialResult Measured => _measurement.Result;
 
+    /// <summary>
+    /// The gap between the creature's lowest point and the ground when every trial starts, in
+    /// creature units. A small fixed drop gives every trial the same start (#649); the fall counts
+    /// as trial time, and distance is measured from the start X, so it doesn't change fitness.
+    /// </summary>
+    public const float StartClearance = 6f;
+
     /// <summary>The Y of the ground's top edge, which elevation is measured from.</summary>
     public float GroundTopY { get; set; }
 
@@ -47,15 +54,15 @@ public partial class TrialController : Node
     }
 
     /// <summary>
-    /// Resets the given creature to its built pose and starts a fresh trial
-    /// for it. Replaces any trial already in progress.
+    /// Resets the given creature to its built pose, <see cref="StartClearance"/> above the ground,
+    /// and starts a fresh trial for it. Replaces any trial already in progress.
     /// </summary>
     public void StartTrial(Creature.Creature creature)
     {
         ArgumentNullException.ThrowIfNull(creature);
 
         _creature = creature;
-        _creature.ResetPose(GroundTopY);
+        _creature.ResetPose(GroundTopY - StartClearance);
         _measurement.Reset(_creature.CenterOfMass.X);
         _elapsedTicks = 0;
         IsRunning = true;

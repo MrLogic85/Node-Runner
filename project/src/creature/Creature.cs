@@ -158,12 +158,12 @@ public partial class Creature : Node2D
 
     /// <summary>
     /// Returns every body to its original built shape, rotation and
-    /// zero velocity, lowered or raised so its lowest point just touches
-    /// <paramref name="groundTopY"/>. A new trial therefore starts from the
-    /// exact same physical state as the last, without a drop from spawn
-    /// height. This is plain physical reset, not evolution/fitness logic.
+    /// zero velocity, lowered or raised so its lowest point is at
+    /// <paramref name="lowestPointY"/>. A new trial therefore starts from the
+    /// exact same physical state as the last. This is plain physical reset,
+    /// not evolution/fitness logic.
     /// </summary>
-    public void ResetPose(float groundTopY)
+    public void ResetPose(float lowestPointY)
     {
         for (var i = 0; i < _beamBodies.Length; i++)
         {
@@ -186,7 +186,7 @@ public partial class Creature : Node2D
             return;
         }
 
-        var offset = GlobalTransform.BasisXformInv(new Vector2(0, groundTopY - LowestPointY));
+        var offset = GlobalTransform.BasisXformInv(new Vector2(0, lowestPointY - LowestPointY));
         foreach (var body in _beamBodies.Concat(_nodeBodies))
         {
             body.Position += offset;

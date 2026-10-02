@@ -83,6 +83,42 @@ public sealed class TrialMeasurementTests
     }
 
     [Fact]
+    public void Elevation_IgnoresTheStartingDropUntilTheCreatureLands()
+    {
+        var measurement = Start(0);
+
+        measurement.Record(0, 5);
+        measurement.Record(0, 2);
+        measurement.Record(0, 0.25);
+        measurement.Record(0, 3);
+
+        measurement.Result.Elevation.ShouldBe(3);
+    }
+
+    [Fact]
+    public void Elevation_IsZeroWhileTheCreatureHasNotLanded()
+    {
+        var measurement = Start(0);
+
+        measurement.Record(0, 5);
+        measurement.Record(0, 4);
+
+        measurement.Result.Elevation.ShouldBe(0);
+    }
+
+    [Fact]
+    public void Reset_StartsTheDropAgain()
+    {
+        var measurement = Start(0);
+        measurement.Record(0, 0);
+
+        measurement.Reset(0);
+        measurement.Record(0, 5);
+
+        measurement.Result.Elevation.ShouldBe(0);
+    }
+
+    [Fact]
     public void Elevation_IsZeroForACrawlerThatSinksSlightlyIntoTheGround()
     {
         var measurement = Start(0);
@@ -99,6 +135,7 @@ public sealed class TrialMeasurementTests
         var measurement = Start(0);
 
         measurement.Record(double.NaN, double.PositiveInfinity);
+        measurement.Record(4, 0);
         measurement.Record(5, 2);
 
         measurement.Result.ShouldBe(new TrialResult(5, 0, 2));
