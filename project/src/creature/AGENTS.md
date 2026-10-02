@@ -20,9 +20,10 @@ the model this implements.**
 4. **`MotorTopology.BuildNodeConnections` (in `NodeRunner.Domain`) is the
    single source of truth for which beam pairs at a node are motorized.** Do
    not re-derive this logic here.
-5. **Sensors return `double[]` in a deterministic order.** That order must
-   match what the brain was trained for. Document the order in a comment
-   above `Creature.ReadSensors()`.
+5. **The brain's input and output order is `BrainPorts.Of` (in
+   `NodeRunner.Domain`).** The creature reads sensors and motors in its own
+   order and copies each value to its port's place; do not hand-order brain
+   slots here.
 6. **No allocations in the tick hot path.** Reuse arrays for sensor readings
    and motor targets.
 
@@ -60,11 +61,11 @@ the model this implements.**
   ```csharp
   public override void _PhysicsProcess(double delta)
   {
-      ReadSensors(_sensorValues);
+      ReadSensors(_sensorValues, delta);
       Brain.Forward(_sensorValues, _motorTargets, _scratchA, _scratchB);
       for (var i = 0; i < _motorRelations.Length; i++)
       {
-          _motorRelations[i].Drive(_motorTargets[i]);
+          _motorRelations[i].Drive(_motorTargets[_outputPortOf[i]]);
       }
   }
   ```

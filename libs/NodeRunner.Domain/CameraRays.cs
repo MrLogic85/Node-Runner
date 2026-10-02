@@ -22,6 +22,9 @@ public static class CameraRays
 
     public static IReadOnlyList<string> RayNames { get; } = ["left 1", "centre", "right 1"];
 
+    /// <summary>The machine keys of its input ports (<see cref="BrainPorts"/>), in the order of <see cref="RayNames"/>. Never change one.</summary>
+    public static IReadOnlyList<string> ChannelKeys { get; } = ["left1", "centre", "right1"];
+
     /// <summary>The beam's direction in the world, from <paramref name="nodeA"/> to <paramref name="nodeB"/>; 0 for a beam of no length.</summary>
     public static double BeamAngle(Vector2D nodeA, Vector2D nodeB) =>
         nodeA == nodeB ? 0 : Math.Atan2(nodeB.Y - nodeA.Y, nodeB.X - nodeA.X);

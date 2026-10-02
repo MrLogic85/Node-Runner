@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using Godot;
+using NodeRunner.Domain;
 
 namespace NodeRunner.Creature;
 
@@ -8,7 +9,7 @@ namespace NodeRunner.Creature;
 /// model outputs a target angular velocity in [-1, 1]; the motor drives
 /// torque (capped at <see cref="MaxTorque"/>) to chase that target, scaled by
 /// <see cref="MaxAngularVelocity"/>. Both limits are static per relation for
-/// 0.2.0 — see docs/CREATURE_MODEL.md.
+/// 0.2.0. Its brain conventions are <see cref="JointMotor"/>'s — see docs/CREATURE_MODEL.md.
 /// </summary>
 public sealed class MotorRelation
 {
@@ -23,6 +24,7 @@ public sealed class MotorRelation
 
     public MotorRelation(RigidBody2D referenceBeam, RigidBody2D otherBeam, float maxTorque, float maxAngularVelocity)
     {
+        BuiltRelativeRotation = otherBeam.Rotation - referenceBeam.Rotation;
         // A zero (or non-finite) maxAngularVelocity would make the gain
         // below Infinity/NaN, poisoning Drive()'s torque output.
         Debug.Assert(maxAngularVelocity > 0, "maxAngularVelocity must be positive.");
@@ -41,9 +43,14 @@ public sealed class MotorRelation
 
     public float MaxAngularVelocity { get; }
 
-    public double RelativeAngle => Mathf.Wrap(OtherBeam.Rotation - ReferenceBeam.Rotation, -Mathf.Pi, Mathf.Pi);
+    /// <summary>The relative rotation as built, read when the relation is made from the beams' built pose.</summary>
+    public double BuiltRelativeRotation { get; }
 
     public double RelativeAngularVelocity => OtherBeam.AngularVelocity - ReferenceBeam.AngularVelocity;
+
+    public double AngleInput => JointMotor.AngleInput(OtherBeam.Rotation - ReferenceBeam.Rotation, BuiltRelativeRotation);
+
+    public double SpeedInput => JointMotor.SpeedInput(RelativeAngularVelocity, MaxAngularVelocity);
 
     /// <summary>
     /// The torque this relation applied to <see cref="OtherBeam"/> on the
@@ -55,7 +62,7 @@ public sealed class MotorRelation
     /// <param name="target">Desired angular velocity in [-1, 1].</param>
     public void Drive(double target)
     {
-        var targetAngularVelocity = Math.Clamp(target, -1, 1) * MaxAngularVelocity;
+        var targetAngularVelocity = JointMotor.TargetAngularVelocity(target, MaxAngularVelocity);
         var error = targetAngularVelocity - RelativeAngularVelocity;
         var torque = (float)Math.Clamp(error * _velocityGain, -MaxTorque, MaxTorque);
         OtherBeam.ApplyTorque(torque);

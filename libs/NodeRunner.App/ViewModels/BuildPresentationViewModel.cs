@@ -302,12 +302,7 @@ public sealed class BuildPresentationViewModel
     }
 
     private static int SensorInputCount(IReadOnlyList<SensorDef> sensors) =>
-        sensors.Sum(sensor => sensor.Kind switch
-        {
-            SensorKind.Accelerometer => Accelerometer.ReadingNames.Count,
-            SensorKind.Camera => CameraRays.RayCount,
-            _ => throw new InvalidOperationException($"Unknown sensor kind {sensor.Kind}."),
-        });
+        sensors.Sum(sensor => BrainPorts.SensorPorts(sensor).Count());
 
     private static string BuildInvalidDraftInputSummary(int sensorCount)
     {
