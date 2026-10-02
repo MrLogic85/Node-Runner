@@ -8,8 +8,8 @@ flows. Do not copy those contracts into `docs/`. Recorded exceptions to the
 reference live only in "Reference flow overrides" below.
 
 This document contains only repository-specific direction that the design
-package does not own. `docs/UI_IMPLEMENTATION_PLAN.md` owns delivery order and
-GitHub dependencies.
+package does not own. `docs/UI_IMPLEMENTATION_PLAN.md` owns UI delivery
+order.
 
 ## Who owns what
 
@@ -65,12 +65,11 @@ then the app follows the reference.
   brain through port matching (#516).
 - **Build zoom scales lines too (#400).** The reference keeps a block's
   lines at 2px and its eyes node-sized at any zoom. Instead zoom scales the
-  whole picture, lines included, the build area's corner marks too; kept
-  after the owner's S25 check. Three things keep their screen size: text
-  labels, the build grid's hairlines (1 px at any zoom, so the grid stays
-  faint), and the Select frame with its handles, which are controls to
-  grab rather than part of the picture (#366). It may still change later: `BuildCanvas.Stroke` is
-  the one place to keep the picture's lines at screen width.
+  whole picture, lines included, the build area's corner marks too. Three
+  things keep their screen size: text labels, the build grid's hairlines
+  (1 px at any zoom, so the grid stays faint), and the Select frame with its
+  handles, which are controls to grab rather than part of the picture
+  (#366).
 - **The Build grid marks the build area (#400).** The reference's grid floor
   fills the canvas at 24 to 32px, fades toward the edges, and has fixed HUD
   corner brackets. In Build the `line` grid instead covers exactly the
@@ -101,84 +100,69 @@ then the app follows the reference.
   achievement locks (#525) bring the reference behavior back.
 - **No Core; sensors sit on beams (#127, 0.12.0).** The reference has a Core
   part on a joint with toggles for its built-in senses (Parts, PartSettings,
-  SignalFlow, Training). Instead Core is removed: an Accelerometer (#127) and
-  a Camera (#575) sit on a beam, one sensor per beam (#593), at its
-  midpoint.
-  The designer is not available, so 0.12 follows these best guesses (#580);
-  #574 updates the reference later and lists any differences as follow-ups:
+  SignalFlow, Training). Instead Core is removed: an Accelerometer and a
+  Camera sit on a beam, one sensor per beam, at its midpoint. The designer is
+  not available, so these are best guesses until #574 updates the reference:
   - *Parts tray:* the Sensors tab lists Accelerometer, then Camera, with
     the help line "Drag onto a beam. A beam holds one sensor." There
     is no Core row.
-  - *Glyphs:* Camera uses the reference `los` glyph (line of sight; the
-    part was renamed Camera in #604). Accelerometer uses
-    the project-owned `accelerometer` part glyph (an upright frame with a
-    weight on a spring), which is not in the reference package. The
-    reference `core` glyphs stay in the package but are unused.
-  - *On a beam (#576):* a sensor is drawn as a picture of itself, not as a
-    badge with a glyph, at the beam's midpoint, in panel fill with 2 px
-    `accent` lines. The Accelerometer is a 16 × 22 rounded frame with a
-    zigzag spring from its top to a round weight. The Camera is a camera
-    (body, lens ring and hood) at twice that scale, so it reads on a phone
-    (#622), that looks along its rays. Neither is
-    a circle, so it never reads as a joint. Selected, its lines turn
-    `halo` instead of `accent`. Its tap area is a square turned with the beam, 24 for
-    the Accelerometer and 44 for the Camera (`SensorPicture`). Pictures,
-    rays and hit rings are sized in creature units but drawn at
-    window-pixel resolution (`UiPixelSpace`), so they stay crisp at any
-    Build or Training zoom (#625).
-  - *Beams (#593):* a creature's beams are 6 wide in Build and Training
+  - *Glyphs:* Camera uses the reference `los` glyph. Accelerometer uses the
+    project-owned `accelerometer` part glyph (an upright frame with a weight
+    on a spring), which is not in the reference package. The reference
+    `core` glyphs are unused.
+  - *On a beam:* a sensor is drawn as a picture of itself, not as a badge
+    with a glyph, at the beam's midpoint, in panel fill with 2 px `accent`
+    lines. The Accelerometer is a 16 × 22 rounded frame with a zigzag spring
+    from its top to a round weight. The Camera is a camera (body, lens ring
+    and hood) at twice that scale, so it reads on a phone, that looks along
+    its rays. Neither is a circle, so it never reads as a joint. Selected,
+    its lines turn `halo`. Its tap area is a square turned with the beam,
+    24 for the Accelerometer and 44 for the Camera. Pictures, rays and rings
+    stay crisp at any Build or Training zoom.
+  - *Beams:* a creature's beams are 6 wide in Build and Training
     (thumbnails keep the thin line). A beam must leave 52 free between its
     joint discs, room for the Camera with a gap on each side; a shorter beam
     can still be drawn, is drawn in `danger`, and blocks training. Its
-    canvas note is a `danger` callout "Too short", out
-    past its joints on the beam's upper side with a leader line to the
-    beam's middle (see `c_call` in a figure). The readiness line says "1
-    beam too short".
-  - *Rigid triangles (#612):* Build fills a closed triangle of beams with
-    the reference hatch: `muted` hairlines at half opacity, 7 apart at 45°,
-    one pixel wide at any zoom, with no tint or outline (`TriangleHatch`).
-    It is not drawn in the selection colour, so it never reads as selected.
-  - *Selection (#624):* a selected joint gets an unfilled `halo` ring
-    around its disc, 4 wide; a selected beam gets two 2-wide `halo`
-    lines along it, one beam-width out on each side. Both are drawn over
-    the part, in Build and Training (`SelectionDrawing`). They are sized
-    in creature units but drawn at window-pixel resolution (`UiPixelSpace`),
-    so they stay crisp at any zoom.
+    canvas note is a `danger` callout "Too short", out past its joints on
+    the beam's upper side with a leader line to the beam's middle (see
+    `c_call` in a figure). The readiness line says "1 beam too short".
+  - *Selection:* a selected joint gets an unfilled `halo` ring around its
+    disc, 4 wide; a selected beam gets two 2-wide `halo` lines along it, one
+    beam-width out on each side. Both are drawn over the part, in Build and
+    Training.
   - *Orientation:* the side of the beam that faces up as built is the
     sensor's top, and it then turns with the beam; it never flips during a
-    run. The Camera looks along its aim (#594), and a selected Camera
-    draws its rays from the midpoint plus an Aim handle (the rotate
-    handle's glyph) out along its centre ray past the picture, with no
-    stem (#622). Its drag turns the camera smoothly, with no snap. In
-    Training a Camera always draws only the rays that hit the ground,
-    dashed `halo` up to the hit and a 6-unit `halo` ring there (#623);
-    shadows (#385) draw no rays. Rays leave from the picture's edge and
-    are drawn over the joints, by draw order rather than z-index.
+    run. The Camera looks along its aim. A selected Camera draws its rays
+    from the midpoint plus an Aim handle (the rotate handle's glyph) out
+    along its centre ray past the picture, with no stem; dragging it turns
+    the camera smoothly, with no snap. In Training a Camera draws only the
+    rays that hit the ground, dashed `halo` up to the hit and a 6-unit
+    `halo` ring there; shadows draw no rays. Rays leave from the picture's
+    edge and are drawn over the joints.
   - *Order:* joints, then sensors, then beams, for both tapping and drawing.
-    A sensor's tap area is its picture. Dragging a sensor in Move does
-    nothing, and a Joint-tool tap on a sensor does not split the beam.
+    Dragging a sensor in Move does nothing, and a Joint-tool tap on a
+    sensor does not split the beam.
   - *Split:* splitting a beam moves its sensor, with its id, to the
     longer half (the half at the beam's first node on a tie).
-  - *Placing (#376):* the dragged part's glyph rides on a 48 px raised
-    tile with an `accent` line, centred above the finger. While dragging,
-    beams without a sensor show `halo`.
-    A beam that already has one shows a dashed `danger` stroke, and dropping
-    there shows "One sensor per beam" as a danger callout at that beam. Dropping on a joint shows "Sensors go on
-    a beam". The callout goes at the next touch or after 3 s. Over a free
-    beam, the sensor's picture shows at its midpoint where it would land.
-    Dropping on empty canvas cancels silently.
-  - *Part settings (#343):* sensors show Name, the beam they are on, a note
-    and Delete; no settings until #578. Accelerometer: "Feels how its beam
+  - *Placing:* the dragged part's glyph rides on a 48 px raised tile with an
+    `accent` line, centred above the finger. While dragging, beams without a
+    sensor show `halo`. A beam that already has one shows a dashed `danger`
+    stroke, and dropping there shows "One sensor per beam" as a danger
+    callout at that beam. Dropping on a joint shows "Sensors go on a beam".
+    The callout goes at the next touch or after 3 s. Over a free beam, the
+    sensor's picture shows at its midpoint where it would land. Dropping on
+    empty canvas cancels silently.
+  - *Part settings:* sensors show Name, the beam they are on, a note and
+    Delete; no settings until #578. Accelerometer: "Feels how its beam
     speeds up, slows down and tilts." Camera: "Three rays see how near the
     ground is."
-  - *In motion (#576):* the Accelerometer's weight moves inside its frame by
-    the proof-mass displacement, clamped to the frame, with 1 g at half the
-    weight's travel and the spring stretched from the frame's top to it.
-    In Build the weight hangs in the gravity rest pose for the beam's
-    current angle, swings when the beam is moved and settles again
-    (`BuildSensorMotion`, the same spring as in a run), so nothing jumps
-    when a run starts. No glow where the
-    theme or `data-effects="lite"` turns glow off.
+  - *In motion:* the Accelerometer's weight moves inside its frame by the
+    proof-mass displacement, clamped to the frame, with 1 g at half the
+    weight's travel and the spring stretched from the frame's top to it. In
+    Build the weight hangs in the gravity rest pose for the beam's current
+    angle, swings when the beam is moved and settles again, with the same
+    spring as in a run, so nothing jumps when a run starts. No glow where
+    the theme or `data-effects="lite"` turns glow off.
   - *Copy:* Training and SignalFlow say "sensor" where the reference says
     "core".
 - **UI size has no touch floor and no over-200% layout (#299, 0.12.0).** The
@@ -228,8 +212,8 @@ record the ambiguity instead of editing it or choosing silently.
 
 ### Reference token mapping deviations
 
-Gate A requires every canonical token to have either an exact named Godot
-mapping or a documented non-runtime reason. The reasons live here, so a later
+Every canonical token has either an exact named Godot mapping or a
+documented non-runtime reason. The reasons live here, so a later
 token import does not recreate the dead mappings.
 
 - **`*-glow` color tokens** (`line-strong-glow`, `ink-glow`, `edge-glow`,
@@ -403,7 +387,7 @@ tree to assign values. Settings (#201) chooses and saves the value; until then
 the Colors & Styles page sets it for the session. The Settings slider snaps to
 5% steps (`UiScale.Snap`).
 
-A screen's root no longer has a 640 x 360 minimum, so the canvas may shrink
+A screen's root has no 640 x 360 minimum, so the canvas may shrink
 below it. 640 x 360 is still the smallest canvas the layouts fit: on a phone,
 whose canvas is already 360 units high at 100%, any larger size makes screens
 taller than the window, and Godot centres them, cutting off both edges.
@@ -632,8 +616,7 @@ These sizes come from `UiSize.Control.Default`, `UiSize.Control.Small`, and
 Add UiButton directly via Add Node. Its exported `Icon Id` selects a canonical
 icon or `None`; no nullable/icon-only wrapper is needed. Existing serialized
 Row/Stacked enum values remain stable. C# callers use `UiIconId.None` instead
-of null. Any locally authored, unsaved old `Compact` setting must be replaced
-by selecting `RowCompact`; reopen scenes after rebuilding to refresh Inspector.
+of null.
 The layout picks the icon size, never the call site (#358): a row icon beside
 text is 16px, including compact; a row button with no text and every stacked
 button use 20px. Textless row buttons need no separate icon layout.
@@ -977,8 +960,7 @@ Parts tray tabs use persistent native toggle buttons in a `ButtonGroup`,
 with the reference's part glyphs and accent-soft selected treatment, not a
 solid accent fill. The tabs share the strip's width equally with 4px between
 them (the reference's `flex: 1`), 32px high, so the owner sets the width: four
-tabs fit the side panel's content width, about 35px each (#330, replacing the
-48px-wide tabs of #249). The gallery shows one unframed interactive specimen
+tabs fit the side panel's content width, about 35px each (#330). The gallery shows one unframed interactive specimen
 at the reference's 176px. See
 [issue #249](https://github.com/MrLogic85/Node-Runner/issues/249).
 
@@ -1027,8 +1009,7 @@ decision it is a panel, not a bar, because it holds any content. It is 176px
 background and a divider down its left edge. Its header row is its own: an
 optional `IconId`, an optional `Title` and a chevron. Like the reference's
 `side-handle`, the chevron is a bare 16px `muted` icon, not a button, centred
-in a 32px touch area; both chevrons match (human decision on #358, replacing
-the compact flat `UiButton` and `ink` colour from #321). Code owns only the
+in a 32px touch area; both chevrons match (human decision on #358). Code owns only the
 panel's own width, which it animates when collapsing; its paddings,
 separations and slot sizes live in `UiSidePanel.tscn` (#335). The header
 reaches past the padding on the right so the chevron's icon lines up with the
