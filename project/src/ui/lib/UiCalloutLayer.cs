@@ -12,8 +12,6 @@ namespace NodeRunner.Ui.Lib;
 [GlobalClass]
 public partial class UiCalloutLayer : Control
 {
-    private const float _dotRadius = 3;
-
     private readonly List<UiCallout> _callouts = [];
     private readonly List<(Vector2 From, Vector2 To, UiCallout.CalloutKind Kind)> _leaders = [];
 
@@ -70,11 +68,20 @@ public partial class UiCalloutLayer : Control
 
     public override void _Draw()
     {
+        if (_leaders.Count == 0)
+        {
+            return;
+        }
+
+        // Drawn in window pixels, so the antialiased edge stays one pixel wide at any UI size.
+        var toPixels = UiPixelSpace.Enter(this, Transform2D.Identity);
+        var width = UiSize.Stroke.Signal * UiPixelSpace.ScaleOf(toPixels);
         foreach (var (from, to, kind) in _leaders)
         {
             var color = UiThemeLookup.Color(this, UiCallout.BorderFor(kind));
-            DrawLine(from, to, color, UiSize.Stroke.Signal, antialiased: true);
-            DrawCircle(from, _dotRadius, color, filled: true, antialiased: true);
+            DrawLine(toPixels * from, toPixels * to, color, width, antialiased: true);
         }
+
+        DrawSetTransformMatrix(Transform2D.Identity);
     }
 }

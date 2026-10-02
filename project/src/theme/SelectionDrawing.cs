@@ -1,11 +1,12 @@
 using Godot;
+using NodeRunner.Ui.Lib;
 
 namespace NodeRunner.Theme;
 
 /// <summary>
 /// How a selected part is marked (#624), shared by Build's canvas and the creature in Training: a
 /// joint gets an unfilled <c>halo</c> ring with a gap around it, like the reference, and a beam a
-/// thin <c>halo</c> line along each side. Both are drawn in window pixels (<see cref="PixelSpace"/>)
+/// thin <c>halo</c> line along each side. Both are drawn in window pixels (<see cref="UiPixelSpace"/>)
 /// so they stay sharp at any zoom; <c>drawTransform</c> is the transform the caller draws with, and
 /// is restored afterwards.
 /// </summary>
@@ -18,8 +19,8 @@ public static class SelectionDrawing
     {
         ArgumentNullException.ThrowIfNull(canvas);
         ArgumentNullException.ThrowIfNull(theme);
-        var toPixels = PixelSpace.Enter(canvas, drawTransform);
-        var scale = PixelSpace.ScaleOf(toPixels);
+        var toPixels = UiPixelSpace.Enter(canvas, drawTransform);
+        var scale = UiPixelSpace.ScaleOf(toPixels);
         canvas.DrawArc(toPixels * center, radius * scale, 0, Mathf.Tau, _ringSegments, theme.SelectionGlow, theme.SelectionRingWidth * scale, antialiased: true);
         canvas.DrawSetTransformMatrix(drawTransform);
     }
@@ -34,8 +35,8 @@ public static class SelectionDrawing
         }
 
         var side = (end - start).Normalized().Orthogonal() * offset;
-        var toPixels = PixelSpace.Enter(canvas, drawTransform);
-        var pixelWidth = width * PixelSpace.ScaleOf(toPixels);
+        var toPixels = UiPixelSpace.Enter(canvas, drawTransform);
+        var pixelWidth = width * UiPixelSpace.ScaleOf(toPixels);
         canvas.DrawLine(toPixels * (start + side), toPixels * (end + side), color, pixelWidth, antialiased: true);
         canvas.DrawLine(toPixels * (start - side), toPixels * (end - side), color, pixelWidth, antialiased: true);
         canvas.DrawSetTransformMatrix(drawTransform);

@@ -138,7 +138,7 @@ then the app follows the reference.
     around its disc, 4 wide; a selected beam gets two 2-wide `halo`
     lines along it, one beam-width out on each side. Both are drawn over
     the part, in Build and Training (`SelectionDrawing`). They are sized
-    in creature units but drawn at window-pixel resolution (`PixelSpace`),
+    in creature units but drawn at window-pixel resolution (`UiPixelSpace`),
     so they stay crisp at any zoom.
   - *Orientation:* the side of the beam that faces up as built is the
     sensor's top, and it then turns with the beam; it never flips during a
@@ -320,7 +320,9 @@ entries are not components of their own in Godot
   own class, apart from any screen) decides where each goes, and the layer
   shows them. Every note is shown; none is left out:
   - A callout sits out past its part, joined to the spot by a leader line
-    with a dot in the callout's colour. It keeps its screen size at any zoom.
+    in the callout's colour, with no dot at the spot (#633). The leader is
+    drawn at window-pixel resolution (`UiPixelSpace`), so it stays crisp.
+    The callout keeps its screen size at any zoom.
   - Near an edge it is pushed along the edge, never to the part's other
     side, so it does not jump while the user pans or zooms.
   - Callouts that would overlap form one stack, a column growing away from
@@ -484,7 +486,10 @@ GLES3`); see the Compatibility/OpenGL renderer note in
 `docs/ARCHITECTURE.md`.
 
 **Rule: all immediate-mode `_Draw()` calls in this project must pass
-`antialiased: false`.** This has been applied across every existing call
+`antialiased: false`, unless they draw in window pixels through
+`UiPixelSpace` (#624, #633).** There the feather is one physical pixel, so
+an antialiased line is smooth and crisp; the selection look and callout
+leaders draw this way. This has been applied across every existing call
 site (`UiNumber`, `UiDashedBorder`, `UiProgressRing`, `UiSlider`,
 `UiSelectionHandle`, `UiButton`, `UiBoundsDebugOverlay`,
 `BrainSetupNetwork`, `BrainFocusNetworkView`,
