@@ -15,9 +15,9 @@ For each concept:
 - **What:** A function `f(x) = σ(W₃ σ(W₂ σ(W₁ x + b₁) + b₂) + b₃)`. Layers of
   linear maps with a nonlinearity in between.
 - **Where:** 0.1.0 · `libs/NodeRunner.ML/NeuralNetwork.cs`
-- **How we show it:** The creature moves at all. The 0.16.0 brain views draw
-  the network on-screen with nodes and edges. From 0.13.0 until then the brain
-  is direct: inputs connect straight to outputs with no hidden layer (#536).
+- **How we show it:** The creature moves at all. From 0.13.0 the brain is
+  direct, inputs straight to outputs with no hidden layer, and BrainFocus draws
+  it with nodes and edges (#536). The 0.16.0 brain views add hidden layers.
 
 ## Activation functions
 
@@ -114,7 +114,8 @@ For each concept:
 ## Live activation visualization
 
 - **What:** Which neuron fires at which moment, and how strongly.
-- **Where:** 0.16.0 brain views (#196, #197, #548)
+- **Where:** 0.13.0 BrainFocus for the direct brain (#536); 0.16.0 brain
+  views with hidden layers (#196, #197, #548)
 - **How we show it:** Nodes glow. Edges pulse. You literally see the thought
   behind each step.
 

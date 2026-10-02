@@ -42,7 +42,8 @@ Rules that hold across the phases:
   beam (sensors), a part between two beams sits on a joint (motors, brake,
   wheel), and a part between two nodes is a link (spring, piston, wing).
 - From 0.13.0 until 0.16.0 the brain is direct (inputs straight to outputs)
-  and cannot be seen or edited (#536), and fitness is distance only.
+  and cannot be edited, but stays visible (#536), and fitness is distance
+  only.
 - From 0.13.0 a rebuild keeps the brain. Parts declare ports; kept ports keep
   their weights and new parts join almost passive. The lock only prevents
   accidental changes; unlocking does not reset training.
@@ -82,8 +83,8 @@ rebuild, and keep training.
 - Basic sound design and the first sounds.
 
 **ML concepts introduced:** A direct policy (observation → action with no
-hidden layer); training resumes instead of restarting; a changed body keeps
-what it has learned.
+hidden layer), seen live as which senses drive which outputs; training resumes
+instead of restarting; a changed body keeps what it has learned.
 
 **Ship criterion:** A player trains on the phone, closes and reopens the app,
 and training continues. Adding a part keeps the skill the creature already had.
@@ -120,7 +121,7 @@ shows its history per map.
 
 ### 0.16.0 — Brain graph
 
-**Goal:** Make the brain visible and let it grow.
+**Goal:** Let the brain grow, and show it as it grows.
 
 - Hidden layers on top of kept direct connections.
 - Brain views, neuron statistics and neuron operations.
@@ -128,7 +129,7 @@ shows its history per map.
 - Several fitness functions, with a spike on their formulas.
 
 **ML concepts introduced:** Network capacity, hidden features, skip
-connections, several objectives at once, live activations.
+connections, several objectives at once.
 
 **Ship criterion:** A player adds a hidden layer without losing the skill and
 watches its neurons respond.
@@ -199,7 +200,8 @@ Superseded by the active plan:
 - 0.6.0 Rebuild started a new Creation without the previous training. From
   0.13.0 a rebuild keeps the brain (#516).
 - 0.8.0 progress toward the next unlock moves to 0.19.0 (#488).
-- 0.9.0 brain visualization and sliders return as the 0.16.0 brain views.
+- 0.9.0 brain visualization returns in 0.13.0 for the direct brain; the
+  Brain setup sliders are replaced by adding layers in the 0.16.0 Brain view.
 
 ## 0.1.0 — "Ryckningar" (Twitches)
 
