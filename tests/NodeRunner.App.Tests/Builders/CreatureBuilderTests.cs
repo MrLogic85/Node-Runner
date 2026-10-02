@@ -316,9 +316,6 @@ public sealed class CreatureBuilderTests
         creature.Nodes.Count.ShouldBe(5);
         creature.Beams.Count.ShouldBe(4);
         creature.Sensors.Count.ShouldBe(1);
-
-        var motorRelations = MotorTopology.BuildNodeConnections(creature).Count(connection => connection.IsMotorized);
-        motorRelations.ShouldBe(3);
     }
 
     private static CreatureBuilder PairBuilder()

@@ -11,7 +11,7 @@ public sealed class MappingViewModelTests
         var mapping = new MappingViewModel();
 
         mapping.SensorsText.ShouldBe("No sensors yet.");
-        mapping.OutputsText.ShouldBe("No motor relations yet.");
+        mapping.OutputsText.ShouldBe("No moving parts yet.");
     }
 
     [Fact]
@@ -22,7 +22,7 @@ public sealed class MappingViewModelTests
         mapping.Update([], []);
 
         mapping.SensorsText.ShouldBe("No sensors yet.");
-        mapping.OutputsText.ShouldBe("No motor relations yet.");
+        mapping.OutputsText.ShouldBe("No moving parts yet.");
     }
 
     [Fact]
@@ -38,13 +38,13 @@ public sealed class MappingViewModelTests
     }
 
     [Fact]
-    public void Update_WithMotors_FormatsTargetAndTorque()
+    public void Update_WithOutputs_FormatsTargetAndForce()
     {
         var mapping = new MappingViewModel();
 
-        mapping.Update([], [new MotorReading(MotorReading.MotorRelationKind, 1, 0.75, 1200)]);
+        mapping.Update([], [new MotorReading(MotorReading.PistonKind, 1, 0.75, 1200)]);
 
-        mapping.OutputsText.ShouldBe("Motor relation 1 \u2192 target 0.75, torque 1200");
+        mapping.OutputsText.ShouldBe("Piston 1 \u2192 target 0.75, force 1200");
     }
 
     [Fact]

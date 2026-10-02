@@ -10,7 +10,7 @@ public enum PortSignal
     /// <summary>An input: a sensor or motor reading.</summary>
     Reading,
 
-    /// <summary>A speed to chase, −1…1 of the maximum, as the joint motor's target.</summary>
+    /// <summary>A speed to chase, −1…1 of the maximum, as the Velocity motor's target (#454).</summary>
     Velocity,
 
     /// <summary>A pose to reach, −1…1 with 0 the built pose (<see cref="PortSignals.PositionFromTarget"/>).</summary>

@@ -17,7 +17,7 @@ public sealed class BrainFocusPresentationViewModelTests
     private static SensorReading[] Readings() =>
     [
         new("Accelerometer", 1, "along", 0.5),
-        new("Motor relation", 1, "angular velocity", -0.25),
+        new("Piston", 1, "speed", -0.25),
         new("Camera", 1, "centre", 1),
     ];
 

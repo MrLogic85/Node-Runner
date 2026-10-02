@@ -84,8 +84,8 @@ For each concept:
   damped spring gives two readings along and across its beam and filters
   spiky contacts (#127), and a Camera whose three fixed rays read how
   near the ground is (#575, #604). There is no speed or
-  elevation input: the brain must learn movement from acceleration, joint
-  readings and its own outputs; 0.14.0 adds camera settings
+  elevation input: the brain must learn movement from acceleration, Piston
+  length and speed, and its own outputs; 0.14.0 adds camera settings
   (#578) and Pulse, a rhythm input (#527).
 - **Why "nothing seen" reads 0 (#604):** a zero input adds nothing to the
   brain's weighted sum, so the weight on a camera ray only matters while
@@ -156,7 +156,7 @@ For each concept:
 - **Where:** Later · `libs/NodeRunner.ML/`
 - **How we show it:** "Imitation mode". User demonstrates the first X steps by
   moving nodes while beam lengths and constraints stay fixed. The network is
-  trained to reproduce the target motion or derived motor-relation commands.
+  trained to reproduce the target motion or derived part commands.
   Loss curve visualized. First the copy is bad, then it's good. #522 records
   an agreed shape ("learn from mother") for a later imitation mode.
 

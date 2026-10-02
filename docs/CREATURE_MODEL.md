@@ -10,12 +10,14 @@ below was designed by the project owner, not inferred from the old code — if
 you are extending it, keep asking "what would the owner want here" rather
 than defaulting to what is easiest to implement.
 
-## Parts: Node, Beam, Sensor, Motor relation, Piston
+## Parts: Node, Beam, Sensor, Piston
 
 A creature is built from two structural parts (Node, Beam), sensor parts
-that sit on beams (the Accelerometer and the Camera), one derived control concept
-(Motor relation) and links between two nodes (the Piston). Keeping "what senses" (sensors) and "what thinks" (the
-neural model) conceptually separate is the most important rule in this
+that sit on beams (the Accelerometer and the Camera) and links between two
+nodes (the Piston). Joints are passive (#450): a beam turns freely where it
+meets another, and only parts with brain ports move the body. Joint motor
+parts come with the Servo (#452) and the Velocity motor (#454). Keeping
+"what senses" (sensors) and "what thinks" (the neural model) conceptually separate is the most important rule in this
 document — **a sensor is not the brain.**
 
 **A part sits on what it senses or moves** (owner decision, #127): sensors
@@ -32,8 +34,8 @@ port order, or names. Display names are optional metadata on parts; they may
 be duplicated and are never keys.
 
 ```
-CreatureDef  ──build──▶  physical body  ──sensors──▶  model  ──outputs──▶  motor relations  ──torque──▶  physical body
-   (data)                    (physics)                (control)                                            (physics)
+CreatureDef  ──build──▶  physical body  ──sensors──▶  model  ──outputs──▶  pistons  ──force──▶  physical body
+   (data)                    (physics)                (control)                                (physics)
 ```
 
 ### Node
@@ -53,13 +55,10 @@ CreatureDef  ──build──▶  physical body  ──sensors──▶  model 
     attached is just a loose point and cannot be simulated. It can be saved as part of an unfinished
     drawing, but `CreatureReadiness` stops training until it is connected
     or removed.
-  - **1 beam** — static/passive end. It contributes no motor relations (a
-    dangling tip, like a chain's last link).
-  - **2+ beams** — one beam is chosen as that node's *reference beam* (its
-    zero-direction); every other beam at the node forms one motor relation
-    against it. A node with N beams therefore has N−1 motor relations, not
-    N and not the full pairwise count — angles relative to one reference
-    fully describe the geometry.
+  - **1 beam** — a dangling tip, like a chain's last link.
+  - **2+ beams** — a passive joint: the beams turn freely against each
+    other unless a closed triangle locks them (see Rigid triangles below).
+    A joint has no settings, no angle limits and no brain ports.
 
 ### Beam
 
@@ -70,8 +69,7 @@ CreatureDef  ──build──▶  physical body  ──sensors──▶  model 
   runtime it becomes its own
   `RigidBody2D` in `project/src/creature/Creature.cs`, pinned with a
   `PinJoint2D` to each of its two node bodies, so its length is fixed by
-  geometry. A beam has **no collider**: it carries motor torque and sensors
-  between its nodes, while its weight sits on those nodes (see Node above).
+  geometry. A beam has **no collider**: it carries sensors between its nodes, while its weight sits on those nodes (see Node above).
   Its own body is nearly massless, with a turning inertia set as a thin
   solid bar. Parts of the same creature never collide with each other:
   every creature body sits on collision layer 2 and masks only the ground
@@ -144,7 +142,7 @@ CreatureDef  ──build──▶  physical body  ──sensors──▶  model 
   is exposed for the visual (#576) and SignalFlow, which show exactly what
   the brain reads.
 - **There is no speed or elevation sensor:** the brain learns movement from
-  acceleration, joint readings and its own outputs.
+  acceleration, Piston length and speed, and its own outputs.
 
 #### Camera
 
@@ -181,53 +179,14 @@ CreatureDef  ──build──▶  physical body  ──sensors──▶  model 
   camera settings in 0.14 (#578); their power draw comes with power in
   0.18 (#599).
 
-### Motor relation
-
-- **Beginner:** One controllable rotation between two beams that share a
-  node — this is how the model actually moves the body.
-- **Implementation:** derived, not stored. `MotorTopology.BuildNodeConnections`
-  in `libs/NodeRunner.Domain/MotorTopology.cs` computes, from a
-  `CreatureDef`'s topology alone, every relation between beams at a node
-  (`NodeConnectionDef`), and marks which of those are motorized. Motor
-  relations are not saved parts, so they have no ids of their own; until
-  motors become parts (#450) a motor relation is identified by its joint's
-  node id and the id of the beam it turns. At runtime,
-  `project/src/creature/MotorRelation.cs` wraps each motorized connection.
-  Its conventions are `JointMotor`'s (`libs/NodeRunner.Domain/JointMotor.cs`):
-  - **Inputs it gives the brain** (#534), both counter-clockwise on screen
-    positive:
-    - **angle:** how far the turning beam has rotated from its built pose
-      relative to the locked (reference) beam, wrapped at ±180° and scaled
-      to `[-1, 1]`. 0 means as built. Swapping which beam is locked flips
-      the sign.
-    - **speed:** the relative angular velocity, softly saturated as
-      `tanh(v / MaxAngularVelocity)`.
-    These are sensor values *going into* the model, exactly like an
-    accelerometer's readings, but a motor relation is not a sensor part.
-  - **Output it accepts:** a single target angular velocity in `[-1, 1]`
-    of `MaxAngularVelocity`, counter-clockwise positive.
-  - **How the physical motor behaves:** it drives torque (capped at a
-    static `MaxTorque`) to chase the target velocity. There is no separate
-    "friction" concept — a target velocity of 0 combined with available
-    torque already produces braking/holding behavior, which is what
-    "friction" would have meant anyway.
-  - `MaxTorque` and `MaxAngularVelocity` are **static per relation for
-    0.2.0** (not model outputs) — fixed constants today, likely exposed as
-    creature-building/upgrade parameters later.
-
-#### Rigid triangles have no motor relations
+#### Rigid triangles
 
 Three beams that close a triangle between three nodes are geometrically
 rigid (SSS: three fixed side lengths fully determine all three vertex
-angles). `MotorTopology` detects every such closed triangle and excludes the
-one motor relation it would otherwise create at each of its three vertices —
-the beams stay pinned to their nodes (so the triangle stays connected), the
-relation just carries no sensor or brain output, because driving it would
-either do nothing or fight the other two vertices.
-
-This generalizes to any rigid, triangulated structure (a larger truss is a
-composition of triangles), while correctly leaving non-triangulated closed
-shapes (e.g. a bare quadrilateral) with their genuine remaining freedom.
+angles), so its joints cannot turn. `RigidTriangles.Of`
+(`libs/NodeRunner.Domain/RigidTriangles.cs`) finds every such triangle, and
+Build hatches it so the player sees which areas are rigid. A larger truss is
+a composition of triangles; a bare quadrilateral stays free to fold.
 
 ### Piston
 
@@ -242,8 +201,7 @@ shapes (e.g. a bare quadrilateral) with their genuine remaining freedom.
   its nodes in the drawing. At runtime `project/src/creature/PistonLink.cs`
   pushes its two node bodies apart or together along the line between them
   every physics tick; it is not a body and has no collider or weight.
-- **Not a beam:** it does not hold its length, so it adds no rigidity and no
-  motor relation, and it counts as attached for the node degree rules. A
+- **Not a beam:** it does not hold its length, so it adds no rigidity, and it counts as attached for the node degree rules. A
   Piston cannot join two nodes a beam already joins (the beam would hold
   them rigid), and two nodes hold at most one Piston (`CreatureBuilder.CanAddPiston`).
 - **Force** (`Piston.Step` in `libs/NodeRunner.Domain/Piston.cs`): it
@@ -297,16 +255,13 @@ picture but costs an offscreen pass each, so it is left out for performance.
   output names the physical signal it drives (#535).
   - **Accelerometer:** inputs `along`, `across`.
   - **Camera:** inputs `left1`, `centre`, `right1`.
-  - **Motor relation:** on its joint's node, keyed by the beam it turns:
-    inputs `angle:<beamId>` and `speed:<beamId>`, velocity output
-    `target:<beamId>`.
   - **Piston (#451):** inputs `length` (−1…1 over its stroke, 0 as built)
     and `speed` (`tanh(v / maxSpeed)`, extending positive); position output
     `position` and strength output `strength`.
-  - Nodes, beams and passive ends declare none.
+  - Nodes, beams and joints declare none.
 - **Output conventions (#535, `PortSignals`):** the signal fixes the
   output's activation and how a new output starts.
-  - **Velocity** (the joint motor's target) and **position** use `tanh`:
+  - **Velocity** (the Velocity motor's target, #454) and **position** use `tanh`:
     −1…1, where 0 means stand still or the built pose.
   - A position target maps piecewise, so 0 stays the built pose even when
     the built pose is off-centre: −1…0 spans fully in…built and 0…1 spans
@@ -319,27 +274,20 @@ picture but costs an offscreen pass each, so it is left out for performance.
   - **New ports start almost passive:** when a part joins a trained brain,
     its incoming weights are 0 and a new strength output starts at bias −4,
     about 2% force. Sigmoid has no dead zone, so mutation can still raise it.
-    Position and velocity outputs start at 0. The joint motor has no
-    strength output, so a new one holds its joint still rather than going
-    limp; motor parts with strength outputs replace it (#450, #452).
+    Position and velocity outputs start at 0.
 - **Input count** = `(accelerometer count × 2) + (camera count × 3) +
-  (motor relation count × 2) + (piston count × 2)`.
-- **Output count** = `motor relation count + (piston count × 2)`.
+  (piston count × 2)`.
+- **Output count** = `piston count × 2`.
 - **Order** comes from `BrainPorts.Of` (`libs/NodeRunner.Domain/BrainPorts.cs`):
-  ports sorted by part id, then in the order the part declares them; motors
-  at the same joint go by the id of the beam they turn. It depends only on
-  ids, so moving or resizing parts, or adding one, never reorders the
-  other ports. Which beam a motor turns still follows the beam list order
-  (`MotorTopology` locks the first beam at a joint) until motors become
-  parts (#450). `Creature` reads its sensors and
-  motors in its own order and copies each value to its port's place, and
+  ports sorted by part id, then in the order the part declares them. It
+  depends only on ids, so moving or resizing parts, or adding one, never
+  reorders the other ports. `Creature` reads its parts in its own order and copies each value to its port's place, and
   fails loud if its ports and `BrainPorts` ever disagree.
-- A creature with no outputs (no motor relation and no Piston, e.g. a single
-  node/beam) has no brain at all and cannot train: there is nothing to control.
+- A creature with no outputs (no Piston yet) has no brain at all and cannot train: there is nothing to control.
 - **Visible in the UI (issue #42):** Training's BrainFocus sheet shows the
-  live sensor readings and each motor relation's model output, refreshed on
+  live sensor readings and each output's value, refreshed on
   a ~0.15s cadence (not every rendered frame — see `TrainingHost._Process`).
-  The SignalFlow stages only count readings and motors until #196 draws
+  The SignalFlow stages only count readings and moving parts until #196 draws
   them. See `Creature.ReadMapping()`.
 
 ## Editing identity rules
@@ -357,29 +305,31 @@ picture but costs an offscreen pass each, so it is left out for performance.
 - Part-to-part references are by stable id. Code that needs an array position
   uses `CreatureDef`'s id-to-index lookups at the boundary.
 
-## Worked example: the 0.2.0 hardcoded creature
+## Worked example: the Worm
 
-`project/src/creature/HardcodedCreatureFactory.cs` builds the first concrete
-`CreatureDef` under this model — the same 5-node chain shape as the old
-0.1.0 worm, reinterpreted:
+`CreationExamples.CreateWormCreature` (`libs/NodeRunner.App/Services/CreationExamples.cs`)
+builds the Worm example, which Training also falls back to: an inchworm
+with a flat tail and a high hump at the front, and a Piston under the hump.
 
 ```
-     beam      beam      beam      beam
-   ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐
-   │      │ │      │ │      │ │      │
-  (N0)───(N1)───(N2)───(N3)───(N4)
-   accel + camera
+                  (N3)
+                 /    \
+  (N1)───────(N2)┄┄┄┄┄┄(N4)
+  accel          piston   camera
 ```
 
-- **5 nodes** (`N0`-`N4`) spaced 56 units apart, radius 18.
-- **4 beams**, one per adjacent pair, referencing node ids.
-- **1 accelerometer and 1 camera**, both on the head beam (`N0`–`N1`).
-- **Node degrees:** `N0` and `N4` have 1 beam each (passive ends); `N1`,
-  `N2`, `N3` each have 2 beams, giving 3 motor relations total — no closed
-  loops, so no triangle exclusions apply here.
-- **Sensors:** `1 accelerometer × 2` + `1 camera × 3` +
-  `3 motor relations × 2` = 11.
-- **Brain outputs:** 3, one per motor relation.
+- **4 nodes** spaced 90 units apart, radius 18; `N3` sits 90 units up.
+- **3 beams**, one per adjacent pair. Every joint is passive.
+- **1 Piston** from `N2` to `N4` with the default settings: pulling in
+  raises the hump, pushing out stretches the front forward. The hump is
+  high enough that the full ±30% stroke never flattens it (a straight push
+  through a flat chain could no longer bend it), and the flat tail makes
+  the crawl lopsided, so it has a forward direction. A headless check of
+  simple Piston rhythms moved it 1–2.5 m forward in 10 s.
+- **1 accelerometer** on the tail beam (`N1`–`N2`) and **1 camera** on the
+  front beam (`N3`–`N4`).
+- **Inputs:** `1 accelerometer × 2` + `1 camera × 3` + `1 piston × 2` = 7.
+- **Outputs:** 2, the Piston's position and strength.
 
 ## What this model does not cover yet
 
@@ -393,11 +343,6 @@ without a fresh design conversation:
   part is unlimited (#557); achievements (#525) own the first unlocks.
 - Sensors on blocks, and sensor types beyond the Accelerometer and the
   Camera.
-- Exposing `MaxTorque`/`MaxAngularVelocity` as player- or
-  upgrade-configurable settings, rather than fixed constants.
-- Whether a motor relation's speed should always be included as an input,
-  or made optional/experimental — 0.2.0 includes it; this may be revisited
-  once training exists and the difference is measurable.
 
 If you propose adding one of these, update this document first and then the
 code.

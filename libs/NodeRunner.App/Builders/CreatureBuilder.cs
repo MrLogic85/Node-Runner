@@ -14,7 +14,7 @@ namespace NodeRunner.App.Builders;
 /// Lives in `NodeRunner.App`, not `NodeRunner.Domain`: this is mutable
 /// business logic (add/remove/cascade), which
 /// `libs/NodeRunner.Domain/AGENTS.md` explicitly reserves for
-/// <c>MotorTopology</c> only.
+/// stateless derivations such as <c>RigidTriangles</c> only.
 /// </summary>
 public sealed class CreatureBuilder
 {

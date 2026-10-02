@@ -12,7 +12,7 @@ namespace NodeRunner.Domain;
 /// The force chases the target length at up to <see cref="PistonDef.MaxSpeed"/>, using at most the
 /// chosen share of its Strength. Past either end of its stroke it may use its full Strength,
 /// whatever the brain asks: the end stops are part of the cylinder, not powered.
-/// /// Stateless and shared by the sim and tests, like <see cref="JointMotor"/>.
+/// Stateless and shared by the sim and tests.
 /// </summary>
 public static class Piston
 {

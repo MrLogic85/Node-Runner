@@ -9,7 +9,7 @@ namespace NodeRunner.Domain;
 /// <item>Strength uses <c>sigmoid</c>: 0…1 of the part's Strength setting, which stays the maximum.
 /// A new strength output starts at bias −4, about 2% force, with no dead zone below it.</item>
 /// </list>
-/// Stateless, like <see cref="JointMotor"/>. See docs/CREATURE_MODEL.md.
+/// Stateless. See docs/CREATURE_MODEL.md.
 /// </summary>
 public static class PortSignals
 {

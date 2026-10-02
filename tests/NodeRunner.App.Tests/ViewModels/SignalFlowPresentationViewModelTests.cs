@@ -16,14 +16,14 @@ public sealed class SignalFlowPresentationViewModelTests
             [
                 new SensorReading("Accelerometer", 1, "along", 0.25),
                 new SensorReading("Accelerometer", 1, "across", -0.50),
-                new SensorReading("Motor relation", 1, "angle", 0.75),
-                new SensorReading("Motor relation", 1, "angular velocity", -2.0),
+                new SensorReading(MotorReading.PistonKind, 1, "length", 0.75),
+                new SensorReading(MotorReading.PistonKind, 1, "speed", -2.0),
             ],
-            [new MotorReading(MotorReading.MotorRelationKind, 1, -0.6, 12.4), new MotorReading(MotorReading.MotorRelationKind, 2, 0.2, 3.1)],
+            [new MotorReading(MotorReading.PistonKind, 1, -0.6, 12.4), new MotorReading(MotorReading.PistonKind, 2, 0.2, 3.1)],
             distance: 4225);
 
         viewModel.SensesNote.ShouldBe("4 readings");
-        viewModel.OutputsNote.ShouldBe("2 motors");
+        viewModel.OutputsNote.ShouldBe("2 pistons");
         viewModel.DistanceNote.ShouldBe("42.3 m");
         notifications.ShouldBe(1);
     }
@@ -33,10 +33,10 @@ public sealed class SignalFlowPresentationViewModelTests
     {
         var viewModel = new SignalFlowPresentationViewModel();
 
-        viewModel.Update([new SensorReading("Accelerometer", 1, "across", 0.1)], [new MotorReading(MotorReading.MotorRelationKind, 1, 0.2, 1)], 0);
+        viewModel.Update([new SensorReading("Accelerometer", 1, "across", 0.1)], [new MotorReading(MotorReading.PistonKind, 1, 0.2, 1)], 0);
 
         viewModel.SensesNote.ShouldBe("1 reading");
-        viewModel.OutputsNote.ShouldBe("1 motor");
+        viewModel.OutputsNote.ShouldBe("1 piston");
         viewModel.DistanceNote.ShouldBe("0.0 m");
     }
 
@@ -48,13 +48,12 @@ public sealed class SignalFlowPresentationViewModelTests
         viewModel.Update(
             [],
             [
-                new MotorReading(MotorReading.MotorRelationKind, 1, 0.2, 1),
                 new MotorReading(MotorReading.PistonKind, 1, 0.5, 100),
                 new MotorReading(MotorReading.PistonKind, 1, 0.1, 100),
             ],
             0);
 
-        viewModel.OutputsNote.ShouldBe("1 motor · 1 piston");
+        viewModel.OutputsNote.ShouldBe("1 piston");
     }
 
     [Fact]
@@ -73,11 +72,11 @@ public sealed class SignalFlowPresentationViewModelTests
     public void Update_WithTheSameNotes_DoesNotNotifyAgain()
     {
         var viewModel = new SignalFlowPresentationViewModel();
-        viewModel.Update([], [new MotorReading(MotorReading.MotorRelationKind, 1, 0.2, 1)], 300);
+        viewModel.Update([], [new MotorReading(MotorReading.PistonKind, 1, 0.2, 1)], 300);
         var notifications = 0;
         viewModel.PropertyChanged += (_, _) => notifications++;
 
-        viewModel.Update([], [new MotorReading(MotorReading.MotorRelationKind, 1, -0.4, 2)], 301);
+        viewModel.Update([], [new MotorReading(MotorReading.PistonKind, 1, -0.4, 2)], 301);
 
         notifications.ShouldBe(0);
     }
@@ -86,11 +85,11 @@ public sealed class SignalFlowPresentationViewModelTests
     public void Update_WhenOnlyTheDistanceMoves_NotifiesOnce()
     {
         var viewModel = new SignalFlowPresentationViewModel();
-        viewModel.Update([], [new MotorReading(MotorReading.MotorRelationKind, 1, 0.2, 1)], 300);
+        viewModel.Update([], [new MotorReading(MotorReading.PistonKind, 1, 0.2, 1)], 300);
         var notifications = 0;
         viewModel.PropertyChanged += (_, _) => notifications++;
 
-        viewModel.Update([], [new MotorReading(MotorReading.MotorRelationKind, 1, 0.2, 1)], 400);
+        viewModel.Update([], [new MotorReading(MotorReading.PistonKind, 1, 0.2, 1)], 400);
 
         notifications.ShouldBe(1);
         viewModel.DistanceNote.ShouldBe("4.0 m");

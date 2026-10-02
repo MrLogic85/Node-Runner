@@ -3,7 +3,7 @@ namespace NodeRunner.Domain;
 /// <summary>
 /// A Piston (#451): a powered link between two nodes that pushes them apart or pulls them together
 /// along the line between them. It is not a beam: it does not hold its length, so it adds no
-/// rigidity and no motor relation. Its length as built is the distance between its nodes in the
+/// rigidity. Its length as built is the distance between its nodes in the
 /// drawing. The brain sets where it goes and how much of <see cref="Strength"/> it uses
 /// (<see cref="Piston"/>). See docs/CREATURE_MODEL.md.
 /// </summary>

@@ -2,9 +2,8 @@ namespace NodeRunner.Domain;
 
 /// <summary>
 /// A rigid, fixed-length connection between two nodes. A beam never changes
-/// length; a creature moves by rotating beams relative to each other at the
-/// nodes they share (see <see cref="MotorTopology"/>). See
-/// docs/CREATURE_MODEL.md.
+/// length; beams turn freely at the nodes they share unless a closed triangle
+/// locks them (see <see cref="RigidTriangles"/>). See docs/CREATURE_MODEL.md.
 /// </summary>
 public sealed record BeamDef
 {

@@ -230,7 +230,7 @@ then the app follows the reference.
 - **Neon simulator:** the app feels like a digital petri dish for synthetic
   life — more Tron/circuit lab than cute toy.
 - **Learning by watching:** visuals and controls should help the user connect
-  cause and effect: sensors → model → motor relations → movement.
+  cause and effect: sensors → model → moving parts → movement.
 - **Low ceremony:** opening the app should quickly show something alive on
   screen.
 - **Experiment-first:** the user should be able to change one thing and see

@@ -244,42 +244,23 @@ public sealed class BuildPresentationViewModelTests
 
         buildPanel.CanStartTraining.ShouldBeFalse();
         buildPanel.ReadinessText.ShouldBe("1 node not connected");
-        buildPanel.InputSummary.ShouldBe("0 sensors placed; fix anatomy to count inputs.");
-        buildPanel.MotorRelationSummary.ShouldBe("Fix anatomy to count motor relations.");
     }
 
     [Fact]
-    public void BuildPanel_WhenAnatomyIsValid_SummarizesInputsAndMotorRelations()
+    public void BuildPanel_WithAPiston_IsReadyToTrain()
     {
         var build = new BuildViewModel();
-        build.Load(WormCreature(sensorCount: 1));
+        build.Load(PistonCreature());
         var presentation = new BuildPresentationViewModel(build);
 
         var buildPanel = presentation.BuildPanel;
 
         buildPanel.CanStartTraining.ShouldBeTrue();
         buildPanel.ReadinessText.ShouldBe("Ready to train");
-        buildPanel.InputSummary.ShouldBe("1 sensor: 2 inputs; 3 motor relations: 6 inputs; 8 inputs total");
-        buildPanel.InputCount.ShouldBe(8);
-        buildPanel.MotorRelationSummary.ShouldBe("3 motor relations can twist");
     }
 
     [Fact]
-    public void BuildPanel_WithAccelerometerAndCamera_CountsInputsPerSensorKind()
-    {
-        var build = new BuildViewModel();
-        build.Load(WormCreature(sensorCount: 2));
-        var presentation = new BuildPresentationViewModel(build);
-
-        var buildPanel = presentation.BuildPanel;
-
-        buildPanel.CanStartTraining.ShouldBeTrue();
-        buildPanel.InputSummary.ShouldBe("2 sensors: 5 inputs; 3 motor relations: 6 inputs; 11 inputs total");
-        buildPanel.InputCount.ShouldBe(11);
-    }
-
-    [Fact]
-    public void BuildPanel_WhenValidAnatomyHasNoMotorRelations_DisablesTrainingWithFlexibleJointReason()
+    public void BuildPanel_WithoutAPiston_AsksForOne()
     {
         var build = new BuildViewModel();
         build.Load(PairCreature());
@@ -288,9 +269,7 @@ public sealed class BuildPresentationViewModelTests
         var buildPanel = presentation.BuildPanel;
 
         buildPanel.CanStartTraining.ShouldBeFalse();
-        buildPanel.ReadinessText.ShouldBe("Add a two-beam node or piston");
-        buildPanel.InputSummary.ShouldBe("1 sensor: 2 inputs; 0 motor relations: 0 inputs; 2 inputs total");
-        buildPanel.MotorRelationSummary.ShouldBe("0 motor relations can twist");
+        buildPanel.ReadinessText.ShouldBe("Add a piston");
     }
 
     [Fact]
@@ -311,20 +290,9 @@ public sealed class BuildPresentationViewModelTests
         [new BeamDef(101, 1, 2)],
         [new SensorDef(201, 101, SensorKind.Accelerometer)]);
 
-    private static CreatureDef WormCreature(int sensorCount)
-    {
-        var sensors = sensorCount == 1
-            ? new[] { new SensorDef(201, 101, SensorKind.Accelerometer) }
-            : [new SensorDef(201, 101, SensorKind.Accelerometer), new SensorDef(202, 102, SensorKind.Camera)];
-        return new CreatureDef(
-            [
-                new NodeDef(1, new Vector2D(0, 0), 18),
-                new NodeDef(2, new Vector2D(90, 0), 18),
-                new NodeDef(3, new Vector2D(180, 0), 18),
-                new NodeDef(4, new Vector2D(270, 0), 18),
-                new NodeDef(5, new Vector2D(360, 0), 18),
-            ],
-            [new BeamDef(101, 1, 2), new BeamDef(102, 2, 3), new BeamDef(103, 3, 4), new BeamDef(104, 4, 5)],
-            sensors);
-    }
+    private static CreatureDef PistonCreature() => new(
+        [new NodeDef(1, new Vector2D(0, 0), 18), new NodeDef(2, new Vector2D(90, 0), 18), new NodeDef(3, new Vector2D(180, 0), 18)],
+        [new BeamDef(101, 1, 2), new BeamDef(102, 2, 3)],
+        [new SensorDef(201, 101, SensorKind.Accelerometer)],
+        [new PistonDef(301, 1, 3)]);
 }

@@ -39,7 +39,7 @@ locked is overridden in `docs/TRAINING_LOOP.md` → Product lifecycle boundary.
 ## Coordinates
 
 - Build-mode positions are plain 2D coordinates in the same local
-  space the hardcoded creature uses (see `HardcodedCreatureFactory`): no unit
+  space the Worm example uses (see `CreationExamples`): no unit
   conversion. The only view math is the Build canvas's zoom and pan
   (`CanvasView`), which never touches saved positions.
 
@@ -157,10 +157,9 @@ a node's own disc always hits.
   Build if the creature cannot train yet. The
   Training scene builds its `Creature` node from the saved `CreatureDef`
   (`Creature.BuildFrom`), which generically derives the model's
-  input/output counts (`BrainPorts.Of`: the sensor parts' readings, each motor
-  relation's and Piston's inputs, and their outputs) for
-  whatever anatomy it is given — no special-casing between the hardcoded
-  worm and an edited creature.
+  input/output counts (`BrainPorts.Of`: the sensor parts' readings, each Piston's
+  inputs, and its outputs) for whatever anatomy it is given — no
+  special-casing between the Worm example and an edited creature.
 
 ## Parts tray
 
@@ -232,8 +231,9 @@ a Creation (#515). Only training needs a finished creature.
 for that, in two steps: `Problems` lists why the creature cannot be
 simulated yet (no nodes, a node with no beam or Piston, a zero-length beam
 or Piston, or one shorter than `CreatureReadiness.MinimumBeamGap` between its
-joint discs, #593), and `CanTrain` also needs at least one brain output (a
-motor relation or a Piston) to drive.
+joint discs, #593), and `CanTrain` also needs at least one brain output to
+drive. Joints are passive (#450), so today that means a Piston; Build says
+"Add a piston" until there is one.
 `CreatureBuilder.TryBuild` applies `Problems` to the in-progress creature.
 UI surfaces those messages and does not duplicate the rules. The one
 exception is Build's readiness line, which shortens the errors for the

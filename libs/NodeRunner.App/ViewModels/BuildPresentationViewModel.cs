@@ -11,8 +11,6 @@ namespace NodeRunner.App.ViewModels;
 /// </summary>
 public sealed class BuildPresentationViewModel
 {
-    private const int _motorRelationSensorValueCount = 2;
-
     private readonly BuildViewModel _build;
     private EventHandler? _presentationChanged;
     private bool _isSubscribedToBuild;
@@ -208,49 +206,12 @@ public sealed class BuildPresentationViewModel
     {
         if (!_build.TryLeave(out var creature, out var errors) || creature is null)
         {
-            var inputSummary = errors.Count > 0
-                ? BuildInvalidDraftInputSummary(_build.Sensors.Count)
-                : BuildInputSummary(_build.Sensors, motorRelationCount: 0);
-            var motorRelationSummary = errors.Count > 0
-                ? "Fix anatomy to count motor relations."
-                : "Two beams at one node create a motor relation; closed triangles do not twist.";
-            return new BuildPanelPresentation(
-                inputSummary,
-                motorRelationSummary,
-                CanStartTraining: false,
-                ReadinessText: ShortReadiness(errors),
-                InputCount: SensorInputCount(_build.Sensors),
-                OutputCount: 0);
+            return new BuildPanelPresentation(CanStartTraining: false, ShortReadiness(errors));
         }
 
-        var motorRelationCount = MotorTopology.BuildNodeConnections(creature)
-            .Count(connection => connection.IsMotorized);
-        var ports = BrainPorts.Of(creature);
-        if (!CreatureReadiness.CanTrain(creature))
-        {
-            return new BuildPanelPresentation(
-                BuildInputSummary(creature.Sensors, motorRelationCount),
-                "0 motor relations can twist",
-                CanStartTraining: false,
-                ReadinessText: "Add a two-beam node or piston",
-                InputCount: ports.Inputs.Count,
-                OutputCount: 0);
-        }
-
-        var motorSummary = motorRelationCount == 1 ? "1 motor relation can twist" : $"{motorRelationCount} motor relations can twist";
-        var pistonCount = creature.Pistons.Count;
-        return new BuildPanelPresentation(
-            BuildInputSummary(creature.Sensors, motorRelationCount),
-            pistonCount switch
-            {
-                0 => motorSummary,
-                1 => $"{motorSummary}; 1 piston can push",
-                _ => $"{motorSummary}; {pistonCount} pistons can push",
-            },
-            CanStartTraining: true,
-            ReadinessText: "Ready to train",
-            InputCount: ports.Inputs.Count,
-            OutputCount: ports.Outputs.Count);
+        return CreatureReadiness.CanTrain(creature)
+            ? new BuildPanelPresentation(CanStartTraining: true, "Ready to train")
+            : new BuildPanelPresentation(CanStartTraining: false, "Add a piston");
     }
 
     // A short form of the builder's errors for the readiness line; CreatureReadiness decides whether training may start.
@@ -304,27 +265,6 @@ public sealed class BuildPresentationViewModel
     private BeamDef BeamById(int beamId) => _build.Beams[_build.BeamIndexOf(beamId)];
 
     private SensorDef SensorById(int sensorId) => _build.Sensors.First(sensor => sensor.Id == sensorId);
-
-    private static string BuildInputSummary(IReadOnlyList<SensorDef> sensors, int motorRelationCount)
-    {
-        var sensorInputCount = SensorInputCount(sensors);
-        var motorInputCount = motorRelationCount * _motorRelationSensorValueCount;
-        var inputCount = sensorInputCount + motorInputCount;
-        var sensorWord = sensors.Count == 1 ? "sensor" : "sensors";
-        var relationWord = motorRelationCount == 1 ? "motor relation" : "motor relations";
-        var sensorInputWord = sensorInputCount == 1 ? "input" : "inputs";
-        var motorInputWord = motorInputCount == 1 ? "input" : "inputs";
-        return $"{sensors.Count} {sensorWord}: {sensorInputCount} {sensorInputWord}; {motorRelationCount} {relationWord}: {motorInputCount} {motorInputWord}; {inputCount} inputs total";
-    }
-
-    private static int SensorInputCount(IReadOnlyList<SensorDef> sensors) =>
-        sensors.Sum(sensor => BrainPorts.SensorPorts(sensor).Count());
-
-    private static string BuildInvalidDraftInputSummary(int sensorCount)
-    {
-        var sensorWord = sensorCount == 1 ? "sensor" : "sensors";
-        return $"{sensorCount} {sensorWord} placed; fix anatomy to count inputs.";
-    }
 
     private void SubscribeToBuild()
     {

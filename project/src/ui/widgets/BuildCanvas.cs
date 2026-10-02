@@ -324,7 +324,6 @@ public partial class BuildCanvas : Node2D
         }
 
         DrawPistons();
-        DrawMotorRelations();
         DrawSensors();
 
         for (var nodeIndex = 0; nodeIndex < _viewModel.Nodes.Count; nodeIndex++)
@@ -345,8 +344,6 @@ public partial class BuildCanvas : Node2D
         DrawSelectedCameraRays();
         DrawInvalidNodeMarkers();
         DrawInvalidBeamMarkers();
-
-        DrawMotorCenterMarkers();
 
         DrawBeamEndRings();
         DrawSelectionFrame();
@@ -712,22 +709,9 @@ public partial class BuildCanvas : Node2D
             return;
         }
 
-        foreach (var triangle in MotorTopology.BuildRigidTriangles(creature))
+        foreach (var triangle in RigidTriangles.Of(creature))
         {
             DrawRigidTriangle(creature, triangle);
-        }
-    }
-
-    private void DrawMotorRelations()
-    {
-        if (!TryBuildDrawableTopology(out var creature) || creature is null)
-        {
-            return;
-        }
-
-        foreach (var connection in MotorTopology.BuildNodeConnections(creature).Where(connection => connection.IsMotorized))
-        {
-            DrawMotorRelation(creature, connection);
         }
     }
 
@@ -792,46 +776,6 @@ public partial class BuildCanvas : Node2D
         {
             DrawLine(start, end, Theme.RigidHatch, -1);
         }
-    }
-
-    private void DrawMotorRelation(CreatureDef creature, NodeConnectionDef connection)
-    {
-        var node = creature.Nodes[connection.NodeIndex];
-        var center = ToGodot(node.Position);
-        var start = BeamAngleFromNode(creature, creature.Beams[connection.ReferenceBeamIndex], connection.NodeIndex);
-        var end = BeamAngleFromNode(creature, creature.Beams[connection.OtherBeamIndex], connection.NodeIndex);
-        var delta = Mathf.Wrap(end - start, -Mathf.Pi, Mathf.Pi);
-        var arcStart = delta < 0 ? start + delta : start;
-        var arcEnd = delta < 0 ? start : start + delta;
-
-        var radius = (float)node.Radius * 2.0f;
-        DrawArc(center, radius, arcStart, arcEnd, 28, Theme.MotorAccent, Stroke(Theme.MotorSignalWidth), antialiased: false);
-    }
-
-    private void DrawMotorCenterMarkers()
-    {
-        if (!TryBuildDrawableTopology(out var creature) || creature is null)
-        {
-            return;
-        }
-
-        foreach (var nodeIndex in MotorTopology.BuildNodeConnections(creature)
-            .Where(connection => connection.IsMotorized)
-            .Select(connection => connection.NodeIndex)
-            .Distinct())
-        {
-            var node = creature.Nodes[nodeIndex];
-            DrawArc(ToGodot(node.Position), (float)node.Radius * 0.72f, 0, Mathf.Tau, 32, Theme.MotorAccent, Stroke(Theme.MotorSignalWidth), antialiased: false);
-        }
-    }
-
-    private static float BeamAngleFromNode(CreatureDef creature, BeamDef beam, int nodeIndex)
-    {
-        var nodeId = creature.Nodes[nodeIndex].Id;
-        var otherNodeId = beam.NodeA == nodeId ? beam.NodeB : beam.NodeA;
-        var node = creature.Nodes[nodeIndex].Position;
-        var other = creature.Nodes[creature.NodeIndexOf(otherNodeId)].Position;
-        return Mathf.Atan2((float)(other.Y - node.Y), (float)(other.X - node.X));
     }
 
     private void DrawInvalidNodeMarkers()

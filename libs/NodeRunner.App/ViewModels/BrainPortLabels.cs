@@ -4,9 +4,8 @@ namespace NodeRunner.App.ViewModels;
 
 /// <summary>
 /// What the brain's ports are called, in port order (<see cref="BrainPorts"/>): a sense is its
-/// part's name and reading, such as "Accelerometer: along" or "Front knee: speed", and an output
-/// is the joint it drives, such as "Rear knee". A joint with more than one motor adds the beam
-/// each one turns. A Piston's ports are its name and channel, such as "Piston 1: position".
+/// part's name and reading, such as "Accelerometer: along", and a Piston's ports are its name and
+/// channel, such as "Piston 1: length" or "Piston 1: position".
 /// </summary>
 public sealed record BrainPortLabels(IReadOnlyList<string> Inputs, IReadOnlyList<string> Outputs)
 {
@@ -32,21 +31,6 @@ public sealed record BrainPortLabels(IReadOnlyList<string> Inputs, IReadOnlyList
             {
                 labels[ports[index]] = $"{Name(sensor.Id)}: {readings[index]}";
             }
-        }
-
-        var motors = MotorTopology.BuildNodeConnections(creature)
-            .Where(connection => connection.IsMotorized)
-            .Select(connection => (NodeId: creature.Nodes[connection.NodeIndex].Id, BeamId: creature.Beams[connection.OtherBeamIndex].Id))
-            .ToArray();
-        foreach (var (nodeId, beamId) in motors)
-        {
-            var motor = motors.Count(other => other.NodeId == nodeId) > 1
-                ? $"{Name(nodeId)} · {Name(beamId)}"
-                : Name(nodeId);
-            var inputs = BrainPorts.JointMotorInputs(nodeId, beamId).ToArray();
-            labels[inputs[0]] = $"{motor}: angle";
-            labels[inputs[1]] = $"{motor}: speed";
-            labels[BrainPorts.JointMotorOutput(nodeId, beamId)] = motor;
         }
 
         foreach (var piston in creature.Pistons)

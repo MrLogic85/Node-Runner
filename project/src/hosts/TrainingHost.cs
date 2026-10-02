@@ -3,8 +3,8 @@ using System.Globalization;
 using Godot;
 using NodeRunner.App.Lifecycle;
 using NodeRunner.App.Navigation;
+using NodeRunner.App.Services;
 using NodeRunner.App.ViewModels;
-using NodeRunner.Creature;
 using NodeRunner.Domain;
 using NodeRunner.Managers;
 using NodeRunner.ML.Brains;
@@ -204,7 +204,7 @@ public partial class TrainingHost : Node, IRoutedScene
         creature.Name = "Creature";
         // Pausable, not Inherit, so it stops simulating while the tree is paused.
         creature.ProcessMode = ProcessModeEnum.Pausable;
-        creature.Definition = creation?.Creature ?? HardcodedCreatureFactory.Create();
+        creature.Definition = creation?.Creature ?? CreationExamples.CreateWormCreature();
         creature.Theme = _theme;
         creature.Position = GetNode<Marker2D>("%Spawn").Position;
         World.AddChild(creature);
