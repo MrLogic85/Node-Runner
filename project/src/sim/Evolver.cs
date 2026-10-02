@@ -80,6 +80,9 @@ public partial class Evolver : Node
     /// <summary>Raised when the followed shadow changes.</summary>
     public event Action? FollowedShadowChanged;
 
+    /// <summary>Raised when the followed shadow starts a new trial, back at the start.</summary>
+    public event Action? FollowedTrialStarted;
+
     /// <summary>Raised after every genome in a generation has been evaluated and the next generation has been produced.</summary>
     public event Action? GenerationCompleted;
 
@@ -291,6 +294,10 @@ public partial class Evolver : Node
         var brain = NeuralNetwork.FromGenome(_layerSizes, _genomes[genomeIndex], Activation.Tanh, _outputActivations);
         _creatures[slot].SetBrain(brain, seed: (Generation * _genomes.Length) + genomeIndex);
         _trialControllers[slot].StartTrial(_creatures[slot]);
+        if (slot == _followedShadow)
+        {
+            FollowedTrialStarted?.Invoke();
+        }
     }
 
     private void OnTrialCompleted(int slot, TrialResult result)

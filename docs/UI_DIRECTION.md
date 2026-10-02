@@ -117,6 +117,13 @@ then the app follows the reference.
   is marked only in the shadow strip. The reference's camera follows the
   leader; here it follows the previous best by default (shadow 1 in
   generation 0) and never switches to the leader by itself. Owner decision.
+- **No grid in Training (#668).** The reference draws a faint grid behind
+  the Training arena. Instead the arena background is plain: the grid is a
+  Build blueprint, not part of the world. Motion shows against the ruler
+  along the ground, labelled every 1 m (the reference labels every 2 m) with
+  a minor tick every 0.5 m. Owner decision. The reference does not say what
+  the camera does between trials: a new trial cuts back to the start, and
+  switching shadows glides (`docs/TRAINING_LOOP.md` → Camera). Owner decision.
 - **No part counts until 0.19.0 (#374, 0.12.0).** The reference limits the
   parts you place and shows counts ("1 left") in the tray and in Build
   feedback (`reference design/README.md`, Build and "Rules that fix the known

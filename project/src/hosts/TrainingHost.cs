@@ -13,13 +13,15 @@ using NodeRunner.Sim;
 using NodeRunner.Theme;
 using NodeRunner.Ui.Lib;
 using NodeRunner.Ui.Screens;
+using NodeRunner.Ui.Widgets;
 
 namespace NodeRunner.Hosts;
 
 /// <summary>
 /// The Training scene: trains one saved creation (#469) on the Training screen (#386). The scene
-/// authors the screen and the world in its arena: camera, backdrop and ground. This root adds the
-/// creature and the <see cref="Evolver"/> to that world, resumes from the creation's last finished
+/// authors the screen and the world in its arena: camera, background, ground and ruler. This root
+/// adds the creature and the <see cref="Evolver"/> to that world, points the camera and the ruler at
+/// it, resumes from the creation's last finished
 /// generation and saves every finished generation, so leaving drops only the one in progress. Run
 /// on its own (F6) it trains the built-in worm without saving.
 /// </summary>
@@ -62,16 +64,12 @@ public partial class TrainingHost : Node, IRoutedScene
 
     private Node2D World => GetNode<Node2D>("%World");
 
-    // Every creation trains on flat ground until maps land (#443).
-    private float GroundTopY
-    {
-        get
-        {
-            var ground = GetNode<StaticBody2D>("%Ground");
-            var shape = (RectangleShape2D)GetNode<CollisionShape2D>("%GroundShape").Shape;
-            return ground.GlobalPosition.Y - (shape.Size.Y / 2);
-        }
-    }
+    // Every creation trains on flat ground until maps land (#443): an endless ground line through
+    // the Ground node (a WorldBoundaryShape2D), so a creature can never walk off its end.
+    private float GroundTopY => GetNode<StaticBody2D>("%Ground").GlobalPosition.Y;
+
+    private ArenaRuler Ruler => GetNode<ArenaRuler>("%Ruler");
+    private ArenaCamera Camera => GetNode<ArenaCamera>("%Camera");
 
     public void Enter(SceneRoute route, ISceneNavigator navigator)
     {
@@ -99,6 +97,8 @@ public partial class TrainingHost : Node, IRoutedScene
         {
             StartEvolution(creation);
         }
+
+        FollowCreature();
     }
 
     public override void _ExitTree()
@@ -190,7 +190,8 @@ public partial class TrainingHost : Node, IRoutedScene
     // The world's colours come from the same theme as the creature's.
     private void ApplyWorldTheme()
     {
-        GetNode<ArenaBackdrop>("%ArenaBackdrop").Theme = _theme;
+        GetNode<ColorRect>("%ArenaFill").Color = _theme.ArenaBackground;
+        Ruler.Theme = _theme;
         GetNode<Polygon2D>("%GroundFill").Color = _theme.GroundFill;
         var edge = GetNode<Line2D>("%GroundEdge");
         edge.DefaultColor = _theme.GroundEdge;
@@ -209,6 +210,22 @@ public partial class TrainingHost : Node, IRoutedScene
         World.AddChild(creature);
         _creature = creature;
         _followed = creature;
+    }
+
+    // The camera follows the followed shadow's centre, the point its distance is measured from, and
+    // glides to the new one when following changes (#668). The ruler counts from where that point
+    // starts: every trial resets every shadow to the same pose, so it starts there every time.
+    private void FollowCreature()
+    {
+        if (_creature is not { } creature)
+        {
+            return;
+        }
+
+        Ruler.StartX = Ruler.ToLocal(creature.CenterOfMass).X;
+
+        // Read every frame; OnFollowedShadowChanged retargets it when the followed shadow changes.
+        Camera.Follow(() => (_followed ?? creature).CenterOfMass);
     }
 
     private static Creature.Creature CreateCreatureInstance() =>
@@ -242,6 +259,7 @@ public partial class TrainingHost : Node, IRoutedScene
         };
         evolver.GenerationCompleted += OnGenerationCompleted;
         evolver.FollowedShadowChanged += OnFollowedShadowChanged;
+        evolver.FollowedTrialStarted += () => Camera.Cut();
         _trainingPresentation.Dispose();
         _trainingPresentation = new TrainingPresentationViewModel(new EvolverTrainingProgressSource(evolver));
         World.AddChild(evolver);
@@ -278,7 +296,8 @@ public partial class TrainingHost : Node, IRoutedScene
             disabledGenes: disabledGenes);
     }
 
-    // The selection moves with the camera's subject: the old shadow drops it, the new one shows it.
+    // The selection and the camera move to the new subject: the old shadow drops the selection, the
+    // new one shows it, and the camera glides over.
     private void OnFollowedShadowChanged()
     {
         var followed = _evolver?.FollowedCreature ?? _creature;
@@ -290,6 +309,7 @@ public partial class TrainingHost : Node, IRoutedScene
         _followed?.SetSelectedElement(null);
         _followed = followed;
         _followed?.SetSelectedElement(_selection.SelectedElement);
+        Camera.Retarget();
     }
 
     private void OnGenerationCompleted()
