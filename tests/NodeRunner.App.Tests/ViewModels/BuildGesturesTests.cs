@@ -919,7 +919,7 @@ public class BuildGesturesTests
     }
 
     [Fact]
-    public void Camera_WhenLocked_HasNoAimHandle()
+    public void Camera_WhenLocked_StillHasItsAimHandle()
     {
         var build = new BuildViewModel();
         build.Load(
@@ -929,8 +929,8 @@ public class BuildGesturesTests
 
         build.SelectSensor(4);
 
-        build.AimableCameraId.ShouldBeNull();
-        gestures.SelectionHandles.ShouldBeEmpty();
+        build.AimableCameraId.ShouldBe(4);
+        gestures.SelectionHandles.Select(handle => handle.Handle).ShouldBe([SelectionHandle.Aim]);
     }
 
     [Theory]

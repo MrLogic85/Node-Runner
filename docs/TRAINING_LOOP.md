@@ -39,7 +39,8 @@ not "a training session has finished".
 3. Each finished generation is saved. Once the Creation has trained at
    least one generation it is locked (`CreationLock.IsLocked`, #369): anatomy
    and brain shape stay as the trained model needs them, so the model cannot
-   be lost by accident. The lock is derived from the training, not stored.
+   be lost by accident. Only what changes the model is locked: joints can
+   still move and cameras can still be aimed (#638). The lock is derived from the training, not stored.
 4. Leaving Training before the first generation finishes leaves the Creation
    unlocked.
 5. Later Train or Simulate sessions start from the locked Build state.

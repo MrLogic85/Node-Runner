@@ -86,7 +86,8 @@ then the app follows the reference.
   BuildLocked because beams keep their length. Instead a locked creation
   keeps all three Select handles: moving a joint already changes the
   lengths of its beams, so scaling changes nothing the lock protects.
-  Owner decision.
+  Owner decision. Likewise a locked Camera can still be aimed (#638):
+  only what changes the model is locked.
 - **The brain is hidden until 0.16.0 (#539).** While the brain is direct, the
   player neither sees nor edits it: Brain setup (hidden layers, neurons per
   layer), the BuildLocked brain widget, and the Training Brain button and
