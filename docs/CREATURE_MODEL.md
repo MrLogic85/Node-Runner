@@ -10,11 +10,11 @@ below was designed by the project owner, not inferred from the old code — if
 you are extending it, keep asking "what would the owner want here" rather
 than defaulting to what is easiest to implement.
 
-## Parts: Node, Beam, Sensor, Motor relation
+## Parts: Node, Beam, Sensor, Motor relation, Piston
 
 A creature is built from two structural parts (Node, Beam), sensor parts
-that sit on beams (the Accelerometer and the Camera), and one derived control concept
-(Motor relation). Keeping "what senses" (sensors) and "what thinks" (the
+that sit on beams (the Accelerometer and the Camera), one derived control concept
+(Motor relation) and links between two nodes (the Piston). Keeping "what senses" (sensors) and "what thinks" (the
 neural model) conceptually separate is the most important rule in this
 document — **a sensor is not the brain.**
 
@@ -24,7 +24,7 @@ two beams, so they will sit on a joint; spring, piston and wing join two
 nodes, so they are links. Each sensor is one clear idea, the way real
 sensors are.
 
-Every saved Node, Beam, and sensor has a stable positive integer id from the
+Every saved Node, Beam, sensor and Piston has a stable positive integer id from the
 creature's single part counter (`CreatureDef.NextPartId`). The counter is
 saved with the creature, only increases, and deleted ids are never reused.
 Ids are machine identity only: they are not display order, draw order, brain
@@ -49,8 +49,8 @@ CreatureDef  ──build──▶  physical body  ──sensors──▶  model 
   simulated at its two ends. Nodes are what touch the world; every beam is
   pinned to its two nodes (see Beam below).
 - **Degree rules** (how many beams touch a node):
-  - **0 beams** — not ready. A node with nothing attached is just a loose
-    point and cannot be simulated. It can be saved as part of an unfinished
+  - **0 beams** — not ready unless a Piston joins it. A node with nothing
+    attached is just a loose point and cannot be simulated. It can be saved as part of an unfinished
     drawing, but `CreatureReadiness` stops training until it is connected
     or removed.
   - **1 beam** — static/passive end. It contributes no motor relations (a
@@ -229,6 +229,36 @@ This generalizes to any rigid, triangulated structure (a larger truss is a
 composition of triangles), while correctly leaving non-triangulated closed
 shapes (e.g. a bare quadrilateral) with their genuine remaining freedom.
 
+### Piston
+
+- **Beginner:** A powered link between two nodes that pushes them apart or
+  pulls them together, in a straight line. The brain chooses how far out it
+  goes and how hard it may push.
+- **Implementation:** `PistonDef` in `libs/NodeRunner.Domain/PistonDef.cs`
+  stores an id, optional display name, two node ids and three settings
+  chosen in Build: **Strength** (its most force; 150 N new), **Stroke** (how
+  far it moves each way from its built length, as a share of it; ±30% new)
+  and **Max speed** (2 m/s new). Its built length is the distance between
+  its nodes in the drawing. At runtime `project/src/creature/PistonLink.cs`
+  pushes its two node bodies apart or together along the line between them
+  every physics tick; it is not a body and has no collider or weight.
+- **Not a beam:** it does not hold its length, so it adds no rigidity and no
+  motor relation, and it counts as attached for the node degree rules. A
+  Piston cannot join two nodes a beam already joins (the beam would hold
+  them rigid), and two nodes hold at most one Piston (`CreatureBuilder.CanAddPiston`).
+- **Force** (`Piston.Step` in `libs/NodeRunner.Domain/Piston.cs`): it
+  chases the target length from its position output at up to Max speed,
+  slowing as it arrives, with at most the strength output's share of its
+  Strength. Past either end of its stroke it may use its full Strength,
+  whatever the brain asks: the end stops belong to the cylinder. The speed
+  control is a PI controller with gains from the reduced mass of its two
+  nodes, the lightest load it can move, so it stays steady on a light limb
+  tip and holds a load such as the body's weight at its target.
+- **Minimum length:** the same as a beam's (`CreatureReadiness.MinimumBeamGap`).
+- **Drawn** as a rod from node A to node B with a cylinder at A and a cap at
+  B (`project/src/theme/PistonDrawing.cs`), over beams and under joints. A
+  selected Piston shows ticks at its shortest and longest lengths.
+
 ## Drawing as a shadow
 
 In Training (#385) every shadow except the followed one
@@ -270,6 +300,9 @@ picture but costs an offscreen pass each, so it is left out for performance.
   - **Motor relation:** on its joint's node, keyed by the beam it turns:
     inputs `angle:<beamId>` and `speed:<beamId>`, velocity output
     `target:<beamId>`.
+  - **Piston (#451):** inputs `length` (−1…1 over its stroke, 0 as built)
+    and `speed` (`tanh(v / maxSpeed)`, extending positive); position output
+    `position` and strength output `strength`.
   - Nodes, beams and passive ends declare none.
 - **Output conventions (#535, `PortSignals`):** the signal fixes the
   output's activation and how a new output starts.
@@ -290,8 +323,8 @@ picture but costs an offscreen pass each, so it is left out for performance.
     strength output, so a new one holds its joint still rather than going
     limp; motor parts with strength outputs replace it (#450, #452).
 - **Input count** = `(accelerometer count × 2) + (camera count × 3) +
-  (motor relation count × 2)`.
-- **Output count** = motor relation count.
+  (motor relation count × 2) + (piston count × 2)`.
+- **Output count** = `motor relation count + (piston count × 2)`.
 - **Order** comes from `BrainPorts.Of` (`libs/NodeRunner.Domain/BrainPorts.cs`):
   ports sorted by part id, then in the order the part declares them; motors
   at the same joint go by the id of the beam they turn. It depends only on
@@ -301,8 +334,8 @@ picture but costs an offscreen pass each, so it is left out for performance.
   parts (#450). `Creature` reads its sensors and
   motors in its own order and copies each value to its port's place, and
   fails loud if its ports and `BrainPorts` ever disagree.
-- A creature with zero motor relations (e.g. a single node/beam) has no
-  brain at all — nothing to control, nothing to sense from motor relations.
+- A creature with no outputs (no motor relation and no Piston, e.g. a single
+  node/beam) has no brain at all and cannot train: there is nothing to control.
 - **Visible in the UI (issue #42):** Training's BrainFocus sheet shows the
   live sensor readings and each motor relation's model output, refreshed on
   a ~0.15s cadence (not every rendered frame — see `TrainingHost._Process`).
@@ -311,10 +344,10 @@ picture but costs an offscreen pass each, so it is left out for performance.
 
 ## Editing identity rules
 
-- Creating a Node, Beam, or sensor takes the current `NextPartId` and then
+- Creating a Node, Beam, sensor or Piston takes the current `NextPartId` and then
   advances the counter.
-- Removing a Node, Beam, or sensor retires that id forever. Removing a Node
-  also removes the beams on it, and removing a Beam removes its sensors;
+- Removing a Node, Beam, sensor or Piston retires that id forever. Removing a
+  Node also removes the beams and Pistons on it, and removing a Beam removes its sensors;
   surviving parts keep their ids because no list reindexing is needed.
 - Beam split by the Joint tool removes the original beam id and creates one
   fresh node id plus two fresh beam ids. The beam's sensors move, with their

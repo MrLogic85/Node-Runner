@@ -70,8 +70,9 @@ public sealed class BuildGestures
     private int? _pressedNode;
     private int? _pressedBeam;
     private int? _pressedSensor;
+    private int? _pressedPiston;
     private Vector2D? _dragOrigin;
-    private (int[] Nodes, int? Beam, int? Sensor)? _selectionBefore;
+    private (int[] Nodes, int? Beam, int? Sensor, int? Piston)? _selectionBefore;
     private SelectionHandle? _pressedHandle;
     private bool _pressedNodeWasSelected;
     private SelectionSnapshot? _selectionStart;
@@ -91,14 +92,17 @@ public sealed class BuildGestures
     /// <summary>Raised just before a Move or Select drag first moves nodes; the argument is every node it moves.</summary>
     public event EventHandler<IReadOnlyCollection<int>>? NodeDragStarting;
 
-    /// <summary>The node a Beam drag started from.</summary>
+    /// <summary>The node a Beam or Piston drag started from.</summary>
     public int? BeamStartNodeId { get; private set; }
 
-    /// <summary>Where the pointer is during a Beam drag.</summary>
+    /// <summary>Where the pointer is during a Beam or Piston drag.</summary>
     public Vector2D? BeamEnd { get; private set; }
 
-    /// <summary>The joint a Beam drag would connect to if released now.</summary>
+    /// <summary>The joint a Beam or Piston drag would connect to if released now.</summary>
     public int? BeamTargetNodeId { get; private set; }
+
+    /// <summary>The joint under a Piston drag that would refuse it (#451), such as one a beam already joins to the start.</summary>
+    public int? RefusedTargetNodeId { get; private set; }
 
     /// <summary>The corners of the Select tool's box while it is dragged.</summary>
     public (Vector2D Start, Vector2D End)? SelectionBox { get; private set; }
@@ -237,7 +241,7 @@ public sealed class BuildGestures
 
         if (_selectionBefore is { } before)
         {
-            RestoreSelection(before.Nodes, before.Beam, before.Sensor);
+            RestoreSelection(before.Nodes, before.Beam, before.Sensor, before.Piston);
         }
 
         ResetTool();
@@ -260,8 +264,9 @@ public sealed class BuildGestures
             return;
         }
 
-        // Joints, then sensors, then beams; a joint's wider touch reach only counts off its disc,
-        // so it never covers a sensor picture next to it.
+        // Joints, then sensors, then Pistons, then beams; a joint's wider touch reach only counts off
+        // its disc, so it never covers a sensor picture next to it. A Piston draws over the beams it
+        // crosses, so it is hit first.
         if (_build.TryFindNodeNear(position, 0, out var nodeId))
         {
             _pressedNode = nodeId;
@@ -274,6 +279,10 @@ public sealed class BuildGestures
         {
             _pressedNode = nodeId;
         }
+        else if (_pressedHandle is null && _build.TryFindPistonNear(position, HitDistance(BeamHitDistance), out var pistonId))
+        {
+            _pressedPiston = pistonId;
+        }
         else if (_pressedHandle is null && _build.TryFindBeamNear(position, HitDistance(BeamHitDistance), out var beamId))
         {
             _pressedBeam = beamId;
@@ -281,13 +290,13 @@ public sealed class BuildGestures
 
         switch (_pressTool)
         {
-            case BuildTool.Beam when _pressedNode is { } start && !_build.IsMoveOnly:
+            case BuildTool.Beam or BuildTool.Piston when _pressedNode is { } start && !_build.IsMoveOnly:
                 BeamStartNodeId = start;
                 BeamEnd = position;
                 Changed?.Invoke(this, EventArgs.Empty);
                 break;
             case BuildTool.Select when _pressedHandle is null:
-                _selectionBefore = ([.. _build.SelectedNodeIds], _build.SingleSelectedBeamId, _build.SingleSelectedSensorId);
+                _selectionBefore = ([.. _build.SelectedNodeIds], _build.SingleSelectedBeamId, _build.SingleSelectedSensorId, _build.SingleSelectedPistonId);
                 PressSelect(viewPosition, position);
                 break;
         }
@@ -350,6 +359,14 @@ public sealed class BuildGestures
                 BeamTargetNodeId = FindBeamTarget(start, position);
                 Changed?.Invoke(this, EventArgs.Empty);
                 break;
+            case BuildTool.Piston when BeamStartNodeId is { } start:
+                BeamEnd = position;
+                var target = FindPistonTarget(start, position);
+                var refused = target is { } end && !_build.CanConnectPiston(start, end, out _);
+                BeamTargetNodeId = refused ? null : target;
+                RefusedTargetNodeId = refused ? target : null;
+                Changed?.Invoke(this, EventArgs.Empty);
+                break;
             case BuildTool.Select when _selectionStart is { } start:
                 TransformSelection(start, position);
                 break;
@@ -379,6 +396,17 @@ public sealed class BuildGestures
             case BuildTool.Beam when BeamStartNodeId is { } start && FindBeamTarget(start, position) is { } end:
                 _build.ConnectBeam(start, end);
                 break;
+            case BuildTool.Piston when BeamStartNodeId is { } start && _dragging:
+                if (FindPistonTarget(start, position) is { } pistonEnd)
+                {
+                    _build.ConnectPiston(start, pistonEnd);
+                }
+                else
+                {
+                    _build.PistonDropMissed();
+                }
+
+                break;
             case BuildTool.Joint when !_dragging:
                 TapJoint();
                 break;
@@ -395,9 +423,16 @@ public sealed class BuildGestures
         Changed?.Invoke(this, EventArgs.Empty);
     }
 
-    private void RestoreSelection(int[] nodes, int? beam, int? sensor)
+    private void RestoreSelection(int[] nodes, int? beam, int? sensor, int? piston)
     {
-        if (sensor is { } selectedSensor)
+        if (piston is { } selectedPiston)
+        {
+            if (_build.SingleSelectedPistonId != selectedPiston)
+            {
+                _build.SelectPiston(selectedPiston);
+            }
+        }
+        else if (sensor is { } selectedSensor)
         {
             if (_build.SingleSelectedSensorId != selectedSensor)
             {
@@ -413,6 +448,7 @@ public sealed class BuildGestures
         }
         else if (_build.SelectedBeamCount != 0
             || _build.SelectedSensorCount != 0
+            || _build.SelectedPistonCount != 0
             || _build.SelectedNodeIds.Count != nodes.Length
             || !nodes.All(_build.SelectedNodeIds.Contains))
         {
@@ -475,6 +511,10 @@ public sealed class BuildGestures
         {
             _build.SelectSensor(sensor);
         }
+        else if (_pressedPiston is { } piston)
+        {
+            _build.SelectPiston(piston);
+        }
         else if (_pressedBeam is { } beam)
         {
             _build.SelectBeam(beam);
@@ -487,7 +527,7 @@ public sealed class BuildGestures
 
     private void TapJoint()
     {
-        if (_pressedNode is not null || _pressedSensor is not null || _build.IsMoveOnly)
+        if (_pressedNode is not null || _pressedSensor is not null || _pressedPiston is not null || _build.IsMoveOnly)
         {
             return;
         }
@@ -613,6 +653,10 @@ public sealed class BuildGestures
     private int? FindBeamTarget(int start, Vector2D position) =>
         _build.TryFindNodeNear(position, HitDistance(NodeHitRadius), out var end) && _build.CanConnect(start, end) ? end : null;
 
+    /// <summary>Any other joint under the pointer, so a refused Piston drop can say why there.</summary>
+    private int? FindPistonTarget(int start, Vector2D position) =>
+        _build.TryFindNodeNear(position, HitDistance(NodeHitRadius), out var end) && end != start ? end : null;
+
     private void CompleteSelectionBox(Vector2D start, Vector2D end)
     {
         var minX = Math.Min(start.X, end.X);
@@ -666,9 +710,11 @@ public sealed class BuildGestures
         _pressedNode = null;
         _pressedBeam = null;
         _pressedSensor = null;
+        _pressedPiston = null;
         BeamStartNodeId = null;
         BeamEnd = null;
         BeamTargetNodeId = null;
+        RefusedTargetNodeId = null;
         SelectionBox = null;
     }
 

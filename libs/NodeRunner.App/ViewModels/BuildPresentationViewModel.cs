@@ -64,6 +64,7 @@ public sealed class BuildPresentationViewModel
         BuildTool.Beam => "Drag joint to joint.",
         BuildTool.Joint => "Tap space or a beam.",
         BuildTool.Select => "Tap or box parts.",
+        BuildTool.Piston => "Drag joint to joint.",
         _ => string.Empty,
     };
 
@@ -97,6 +98,20 @@ public sealed class BuildPresentationViewModel
         get
         {
             var canDelete = !_build.IsMoveOnly;
+            if (_build.SingleSelectedPistonId is { } pistonId)
+            {
+                return new PartSettingsPresentation(
+                    pistonId,
+                    PartSettingsKind.Piston,
+                    _build.PartDisplayName(pistonId),
+                    _build.DefaultPartName(pistonId),
+                    string.Empty,
+                    string.Empty,
+                    PistonSettings.Note,
+                    canDelete,
+                    PistonSettings.For(_build.Pistons[_build.PistonIndexOf(pistonId)]));
+            }
+
             if (_build.SingleSelectedSensorId is { } sensorId)
             {
                 var sensor = SensorById(sensorId);
@@ -184,6 +199,7 @@ public sealed class BuildPresentationViewModel
             BuildTool.Beam => "Drag from one joint to another to join them with a beam.",
             BuildTool.Joint => "Tap empty space to add a joint, or tap a beam to split it.",
             BuildTool.Select => "Tap parts to select them. Drag selected parts to move them together.",
+            BuildTool.Piston => "Drag from one joint to another to place a piston.",
             _ => string.Empty,
         };
     }
@@ -209,25 +225,32 @@ public sealed class BuildPresentationViewModel
 
         var motorRelationCount = MotorTopology.BuildNodeConnections(creature)
             .Count(connection => connection.IsMotorized);
-        var inputCount = SensorInputCount(creature.Sensors) + (motorRelationCount * _motorRelationSensorValueCount);
+        var ports = BrainPorts.Of(creature);
         if (!CreatureReadiness.CanTrain(creature))
         {
             return new BuildPanelPresentation(
                 BuildInputSummary(creature.Sensors, motorRelationCount),
                 "0 motor relations can twist",
                 CanStartTraining: false,
-                ReadinessText: "Add a two-beam node",
-                InputCount: inputCount,
+                ReadinessText: "Add a two-beam node or piston",
+                InputCount: ports.Inputs.Count,
                 OutputCount: 0);
         }
 
+        var motorSummary = motorRelationCount == 1 ? "1 motor relation can twist" : $"{motorRelationCount} motor relations can twist";
+        var pistonCount = creature.Pistons.Count;
         return new BuildPanelPresentation(
             BuildInputSummary(creature.Sensors, motorRelationCount),
-            motorRelationCount == 1 ? "1 motor relation can twist" : $"{motorRelationCount} motor relations can twist",
+            pistonCount switch
+            {
+                0 => motorSummary,
+                1 => $"{motorSummary}; 1 piston can push",
+                _ => $"{motorSummary}; {pistonCount} pistons can push",
+            },
             CanStartTraining: true,
             ReadinessText: "Ready to train",
-            InputCount: inputCount,
-            OutputCount: motorRelationCount);
+            InputCount: ports.Inputs.Count,
+            OutputCount: ports.Outputs.Count);
     }
 
     // A short form of the builder's errors for the readiness line; CreatureReadiness decides whether training may start.
@@ -242,7 +265,8 @@ public sealed class BuildPresentationViewModel
             .Count(index =>
             {
                 var nodeId = _build.Nodes[index].Id;
-                return !_build.Beams.Any(beam => beam.NodeA == nodeId || beam.NodeB == nodeId);
+                return !_build.Beams.Any(beam => beam.NodeA == nodeId || beam.NodeB == nodeId)
+                    && !_build.Pistons.Any(piston => piston.NodeA == nodeId || piston.NodeB == nodeId);
             });
         if (unconnected > 0)
         {
@@ -253,10 +277,15 @@ public sealed class BuildPresentationViewModel
         var tooShort = _build.Beams.Count(beam =>
             NodeById(beam.NodeA).Position != NodeById(beam.NodeB).Position
             && CreatureReadiness.IsTooShort(NodeById(beam.NodeA), NodeById(beam.NodeB)));
-        return tooShort switch
+        var tooShortPistons = _build.Pistons.Count(piston =>
+            NodeById(piston.NodeA).Position != NodeById(piston.NodeB).Position
+            && CreatureReadiness.IsTooShort(NodeById(piston.NodeA), NodeById(piston.NodeB)));
+        return (tooShort, tooShortPistons) switch
         {
-            0 => errors[0],
-            1 => "1 beam too short",
+            (0, 0) => errors[0],
+            (0, 1) => "1 piston too short",
+            (0, _) => $"{tooShortPistons} pistons too short",
+            (1, _) => "1 beam too short",
             _ => $"{tooShort} beams too short",
         };
     }

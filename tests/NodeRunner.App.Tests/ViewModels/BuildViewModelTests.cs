@@ -694,7 +694,7 @@ public sealed class BuildViewModelTests
 
         creature.ShouldBeNull();
         viewModel.StatusMessage.ShouldNotBeNull();
-        viewModel.StatusMessage.ShouldContain("no beams attached");
+        viewModel.StatusMessage.ShouldContain("nothing attached");
     }
 
     [Fact]

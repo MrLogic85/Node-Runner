@@ -14,7 +14,7 @@ public sealed class SignalFlowPresentationViewModel : INotifyPropertyChanged
     /// <summary>How many readings the brain senses, such as "9 readings"; empty with none.</summary>
     public string SensesNote { get; private set; } = string.Empty;
 
-    /// <summary>How many outputs the brain drives, such as "2 motors"; empty with none.</summary>
+    /// <summary>The parts the brain drives, such as "2 motors" or "1 motor · 1 piston"; empty with none.</summary>
     public string OutputsNote { get; private set; } = string.Empty;
 
     /// <summary>How far the visible creature has got in this try, such as "12.4 m"; empty when no try runs.</summary>
@@ -30,7 +30,7 @@ public sealed class SignalFlowPresentationViewModel : INotifyPropertyChanged
         ArgumentNullException.ThrowIfNull(motors);
 
         var sensesNote = Count(sensors.Count, "reading");
-        var outputsNote = Count(motors.Count, "motor");
+        var outputsNote = PartsNote(motors);
         var distanceNote = double.IsFinite(distance)
             ? Metres.FormatWithUnit(distance)
             : string.Empty;
@@ -44,6 +44,14 @@ public sealed class SignalFlowPresentationViewModel : INotifyPropertyChanged
         DistanceNote = distanceNote;
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null));
     }
+
+    // A Piston drives two outputs, so the note counts parts, not outputs.
+    private static string PartsNote(IReadOnlyList<MotorReading> motors) =>
+        string.Join(
+            " · ",
+            new[] { (MotorReading.MotorRelationKind, "motor"), (MotorReading.PistonKind, "piston") }
+                .Select(kind => Count(motors.Where(motor => motor.GroupKind == kind.Item1).Select(motor => motor.GroupIndex).Distinct().Count(), kind.Item2))
+                .Where(note => note.Length > 0));
 
     private static string Count(int count, string noun) => count switch
     {

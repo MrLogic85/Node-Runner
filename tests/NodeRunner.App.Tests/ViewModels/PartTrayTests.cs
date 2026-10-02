@@ -56,7 +56,7 @@ public sealed class PartTrayTests
     {
         var rows = PartTray.Groups().SelectMany(group => group.Rows).ToList();
 
-        rows.Where(row => row.Part is not (BuildPart.Accelerometer or BuildPart.Camera)).ShouldAllBe(row =>
+        rows.Where(row => row.Part is not (BuildPart.Accelerometer or BuildPart.Camera or BuildPart.Piston)).ShouldAllBe(row =>
             row.State == PartTrayRowState.ComingLater && !row.IsAvailable && row.LockedReason == "Coming later");
     }
 

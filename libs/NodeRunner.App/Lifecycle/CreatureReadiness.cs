@@ -17,7 +17,7 @@ public static class CreatureReadiness
 
     private const double _sensorGap = 4;
 
-    /// <summary>True when the beam between <paramref name="a"/> and <paramref name="b"/> leaves less than <see cref="MinimumBeamGap"/> between their discs.</summary>
+    /// <summary>True when the beam or Piston between <paramref name="a"/> and <paramref name="b"/> leaves less than <see cref="MinimumBeamGap"/> between their discs.</summary>
     public static bool IsTooShort(NodeDef a, NodeDef b)
     {
         ArgumentNullException.ThrowIfNull(a);
@@ -40,31 +40,49 @@ public static class CreatureReadiness
         for (var i = 0; i < creature.Nodes.Count; i++)
         {
             var nodeId = creature.Nodes[i].Id;
-            if (!creature.Beams.Any(beam => beam.NodeA == nodeId || beam.NodeB == nodeId))
+            if (!IsAttached(creature, nodeId))
             {
-                problems.Add($"Node {i + 1} has no beams attached. Connect it with a beam or remove it.");
+                problems.Add($"Node {i + 1} has nothing attached. Connect it with a beam or a piston, or remove it.");
             }
         }
 
         foreach (var beam in creature.Beams)
         {
-            var indexA = creature.NodeIndexOf(beam.NodeA);
-            var indexB = creature.NodeIndexOf(beam.NodeB);
-            if (creature.Nodes[indexA].Position == creature.Nodes[indexB].Position)
-            {
-                problems.Add($"The beam between node {indexA + 1} and node {indexB + 1} has zero length. Move one of the nodes apart.");
-            }
-            else if (IsTooShort(creature.Nodes[indexA], creature.Nodes[indexB]))
-            {
-                problems.Add($"The beam between node {indexA + 1} and node {indexB + 1} is too short. Move one of the nodes apart.");
-            }
+            AddLengthProblem(creature, "beam", beam.NodeA, beam.NodeB, problems);
+        }
+
+        foreach (var piston in creature.Pistons)
+        {
+            AddLengthProblem(creature, "piston", piston.NodeA, piston.NodeB, problems);
         }
 
         return problems;
     }
 
-    /// <summary>True when the creature can be simulated and has a motor relation for its brain to drive.</summary>
+    /// <summary>Whether a beam or a Piston (#451) holds the node to the rest of the creature.</summary>
+    public static bool IsAttached(CreatureDef creature, int nodeId)
+    {
+        ArgumentNullException.ThrowIfNull(creature);
+        return creature.Beams.Any(beam => beam.NodeA == nodeId || beam.NodeB == nodeId)
+            || creature.Pistons.Any(piston => piston.NodeA == nodeId || piston.NodeB == nodeId);
+    }
+
+    private static void AddLengthProblem(CreatureDef creature, string kind, int nodeA, int nodeB, List<string> problems)
+    {
+        var indexA = creature.NodeIndexOf(nodeA);
+        var indexB = creature.NodeIndexOf(nodeB);
+        if (creature.Nodes[indexA].Position == creature.Nodes[indexB].Position)
+        {
+            problems.Add($"The {kind} between node {indexA + 1} and node {indexB + 1} has zero length. Move one of the nodes apart.");
+        }
+        else if (IsTooShort(creature.Nodes[indexA], creature.Nodes[indexB]))
+        {
+            problems.Add($"The {kind} between node {indexA + 1} and node {indexB + 1} is too short. Move one of the nodes apart.");
+        }
+    }
+
+    /// <summary>True when the creature can be simulated and has something for its brain to drive: a motor relation or a Piston.</summary>
     public static bool CanTrain(CreatureDef creature) =>
         Problems(creature).Count == 0
-        && MotorTopology.BuildNodeConnections(creature).Any(connection => connection.IsMotorized);
+        && BrainPorts.Of(creature).Outputs.Count > 0;
 }

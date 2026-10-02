@@ -111,6 +111,8 @@ public partial class BuildHost : Node, IRoutedScene
         _buildScreen = GetNode<BuildScreen>("%BuildScreen");
         _buildScreen.Setup(Build);
         _buildScreen.ToolRequested += tool => Build.ActiveTool = tool;
+        _buildScreen.PartPicked += Build.PickPart;
+        _buildScreen.PistonSettingsChanged += Build.SetPistonSettings;
         _buildScreen.StartTrainingRequested += StartTraining;
         _buildScreen.BackRequested += BackFromBuildScreen;
         _buildScreen.CreationNameChanged += RenameActiveCreation;

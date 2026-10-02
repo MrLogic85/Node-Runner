@@ -5,4 +5,5 @@ public enum CreatureElementKind
     Node,
     Beam,
     Sensor,
+    Piston,
 }

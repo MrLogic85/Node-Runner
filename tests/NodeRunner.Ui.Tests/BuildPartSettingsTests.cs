@@ -16,9 +16,21 @@ public sealed class BuildPartSettingsTests
     public void PartSettings_IsRowsThenDelete_WithNoCloseButton()
     {
         Children("/PartSettings").ShouldBe(["PartRows", "PartActions"]);
-        Children("/PartSettings/PartRows").ShouldBe(["PartName", "PartConnections", "PartNote"]);
+        Children("/PartSettings/PartRows").ShouldBe(["PartName", "PistonSettings", "PartConnections", "PartNote"]);
         Children("/PartSettings/PartActions").ShouldBe(["PartDelete"]);
         _build.ShouldNotContain(node => node.Name == "PartClose");
+    }
+
+    [Fact]
+    public void PistonSettings_AreThreeLibrarySliders_HiddenUntilAPistonIsPicked()
+    {
+        var settings = _build.Single(node => node.Name == "PistonSettings");
+
+        settings.IsUnique.ShouldBeTrue();
+        settings.Node.Body.ShouldContain("visible = false");
+        Children("/PartSettings/PartRows/PistonSettings").ShouldBe(["PistonStrength", "PistonStroke", "PistonMaxSpeed"]);
+        _build.Where(node => node.Name.StartsWith("Piston") && node.Name != "PistonSettings")
+            .ShouldAllBe(node => node.IsUnique && node.Script == "res://src/ui/lib/UiSlider.cs");
     }
 
     [Fact]

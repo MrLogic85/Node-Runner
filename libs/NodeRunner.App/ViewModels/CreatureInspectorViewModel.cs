@@ -80,6 +80,14 @@ public sealed class CreatureInspectorViewModel : INotifyPropertyChanged, IDispos
                     "A sensor on a beam. It feels something about its beam at the beam's middle.",
                     $"On: Beam {_creature.BeamIndexOf(sensor.BeamId) + 1}");
                 break;
+            case CreatureElementKind.Piston:
+                var pistonIndex = _creature.PistonIndexOf(selection.Id);
+                var piston = _creature.Pistons[pistonIndex];
+                SetContent(
+                    $"Piston {pistonIndex + 1}",
+                    "A powered link. The brain pushes it out and pulls it in, within its stroke.",
+                    $"Connects: Node {_creature.NodeIndexOf(piston.NodeA) + 1} to Node {_creature.NodeIndexOf(piston.NodeB) + 1}");
+                break;
         }
     }
 

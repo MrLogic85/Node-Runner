@@ -53,6 +53,8 @@ public partial class Creature : Node2D
     private NodeVisual[] _nodeVisuals = [];
     private BeamVisual[] _beamVisuals = [];
     private SensorVisual[] _sensorVisuals = [];
+    private PistonLink[] _pistons = [];
+    private PistonVisual[] _pistonVisuals = [];
     private CameraRaysVisual? _cameraRaysVisual;
     private bool _isShadow;
     private IBeamSensor[] _sensors = [];
@@ -64,6 +66,7 @@ public partial class Creature : Node2D
     private int[] _outputPortOf = [];
     private double[] _sensorValues = [];
     private double[] _motorTargets = [];
+    private int _outputCount;
     private double[] _scratchA = [];
     private double[] _scratchB = [];
     private bool _isBuilt;
@@ -108,7 +111,7 @@ public partial class Creature : Node2D
 
     public override void _PhysicsProcess(double delta)
     {
-        if (Brain is null || _motorRelations.Length == 0)
+        if (Brain is null || _outputCount == 0)
         {
             return;
         }
@@ -119,6 +122,14 @@ public partial class Creature : Node2D
         for (var i = 0; i < _motorRelations.Length; i++)
         {
             _motorRelations[i].Drive(_motorTargets[_outputPortOf[i]]);
+        }
+
+        // Each Piston's two outputs follow the motors' in sim order: position, then strength.
+        var output = _motorRelations.Length;
+        foreach (var piston in _pistons)
+        {
+            piston.Drive(_motorTargets[_outputPortOf[output]], _motorTargets[_outputPortOf[output + 1]], delta);
+            output += 2;
         }
     }
 
@@ -138,12 +149,13 @@ public partial class Creature : Node2D
         CreateNodes(definition);
         PinBeamsToNodes(definition);
         CreateSensors(definition);
+        CreatePistons(definition);
         CreateMotorRelations(definition);
         ConfigureBrainBuffers(definition);
         ResetSensors();
         ApplyShadow();
 
-        if (_motorRelations.Length > 0)
+        if (_outputCount > 0)
         {
             RandomizeBrain(CreateSeed());
         }
@@ -151,7 +163,7 @@ public partial class Creature : Node2D
 
     public void RandomizeBrain(int seed)
     {
-        if (_motorRelations.Length == 0)
+        if (_outputCount == 0)
         {
             Brain = null;
             BrainSeed = seed;
@@ -175,12 +187,12 @@ public partial class Creature : Node2D
         ArgumentNullException.ThrowIfNull(brain);
 
         var expectedInputs = _sensorValues.Length;
-        var expectedOutputs = _motorRelations.Length;
+        var expectedOutputs = _outputCount;
         if (brain.LayerSizes[0] != expectedInputs || brain.LayerSizes[^1] != expectedOutputs)
         {
             throw new ArgumentException(
                 $"Brain shape [{string.Join(',', brain.LayerSizes)}] does not match this creature's " +
-                $"sensor/motor counts [{expectedInputs}, ..., {expectedOutputs}].",
+                $"input/output counts [{expectedInputs}, ..., {expectedOutputs}].",
                 nameof(brain));
         }
 
@@ -211,6 +223,11 @@ public partial class Creature : Node2D
             var body = _nodeBodies[i];
             body.Position = _nodeInitialPositions[i];
             body.LinearVelocity = Vector2.Zero;
+        }
+
+        foreach (var piston in _pistons)
+        {
+            piston.Reset();
         }
 
         if (_nodeBodies.Length == 0)
@@ -295,6 +312,16 @@ public partial class Creature : Node2D
         }
 
         var tolerance = GetLineHitTolerance();
+        for (var pistonIndex = 0; pistonIndex < _pistons.Length; pistonIndex++)
+        {
+            var piston = _pistons[pistonIndex];
+            if (DistanceSquaredToSegment(globalPosition, piston.NodeA.GlobalPosition, piston.NodeB.GlobalPosition) <= tolerance * tolerance)
+            {
+                selection = new CreatureElementSelection(CreatureElementKind.Piston, piston.Definition.Id);
+                return true;
+            }
+        }
+
         for (var beamIndex = 0; beamIndex < _beamBodies.Length; beamIndex++)
         {
             var body = _beamBodies[beamIndex];
@@ -329,6 +356,11 @@ public partial class Creature : Node2D
             visual.IsSelected = false;
         }
 
+        foreach (var visual in _pistonVisuals)
+        {
+            visual.IsSelected = false;
+        }
+
         if (selection is null)
         {
             return;
@@ -344,6 +376,9 @@ public partial class Creature : Node2D
                 break;
             case CreatureElementKind.Sensor:
                 _sensorVisuals[Definition!.Sensors.ToList().FindIndex(sensor => sensor.Id == selection.Id)].IsSelected = true;
+                break;
+            case CreatureElementKind.Piston:
+                _pistonVisuals[Definition!.PistonIndexOf(selection.Id)].IsSelected = true;
                 break;
         }
     }
@@ -363,6 +398,11 @@ public partial class Creature : Node2D
         }
 
         foreach (var visual in _sensorVisuals)
+        {
+            visual.IsShadow = _isShadow;
+        }
+
+        foreach (var visual in _pistonVisuals)
         {
             visual.IsShadow = _isShadow;
         }
@@ -582,6 +622,32 @@ public partial class Creature : Node2D
         return new AccelerometerSensor(_beamBodies[beamIndex], Accelerometer.UpSign(nodeA, nodeB), gravity);
     }
 
+    // A Piston pushes on its two node bodies; it has no body of its own. Its picture is a child of
+    // the creature one z step down, with the beams, so the joints still draw over it.
+    private void CreatePistons(CreatureDef definition)
+    {
+        _pistons = new PistonLink[definition.Pistons.Count];
+        _pistonVisuals = new PistonVisual[definition.Pistons.Count];
+        for (var i = 0; i < _pistons.Length; i++)
+        {
+            var piston = definition.Pistons[i];
+            var indexA = definition.NodeIndexOf(piston.NodeA);
+            var indexB = definition.NodeIndexOf(piston.NodeB);
+            _pistons[i] = new PistonLink(piston, _nodeBodies[indexA], _nodeBodies[indexB]);
+            var visual = new PistonVisual
+            {
+                Name = $"Piston{i}Visual",
+                ZIndex = -1,
+                Theme = Theme,
+                Link = _pistons[i],
+                RadiusA = ToGodotFloat(definition.Nodes[indexA].Radius, nameof(NodeDef.Radius)),
+                RadiusB = ToGodotFloat(definition.Nodes[indexB].Radius, nameof(NodeDef.Radius)),
+            };
+            AddChild(visual);
+            _pistonVisuals[i] = visual;
+        }
+    }
+
     private void CreateMotorRelations(CreatureDef definition)
     {
         var connections = MotorTopology.BuildNodeConnections(definition);
@@ -602,7 +668,8 @@ public partial class Creature : Node2D
 
     private void ConfigureBrainBuffers(CreatureDef definition)
     {
-        if (_motorRelations.Length == 0)
+        _outputCount = _motorRelations.Length + (2 * _pistons.Length);
+        if (_outputCount == 0)
         {
             Brain = null;
             Ports = BrainPortLayout.Empty;
@@ -621,10 +688,14 @@ public partial class Creature : Node2D
             [
                 .. definition.Sensors.SelectMany(BrainPorts.SensorPorts),
                 .. _motorJoints.SelectMany(joint => BrainPorts.JointMotorInputs(joint.NodeId, joint.BeamId)),
+                .. definition.Pistons.SelectMany(piston => BrainPorts.PistonInputs(piston.Id)),
             ],
             Ports.Inputs);
         _outputPortOf = PortPositions(
-            _motorJoints.Select(joint => BrainPorts.JointMotorOutput(joint.NodeId, joint.BeamId)).ToArray(),
+            [
+                .. _motorJoints.Select(joint => BrainPorts.JointMotorOutput(joint.NodeId, joint.BeamId)),
+                .. definition.Pistons.SelectMany(piston => BrainPorts.PistonOutputs(piston.Id)),
+            ],
             Ports.Outputs);
         _rawInputs = new double[_inputPortOf.Length];
         _sensorValues = new double[_inputPortOf.Length];
@@ -658,7 +729,8 @@ public partial class Creature : Node2D
     }
 
     // Each sensor part writes its values (Accelerometer: along, across; Camera: left 1, centre,
-    // right 1), then each motor relation its angle and speed, into the raw buffer in sim order;
+    // right 1), then each motor relation its angle and speed, then each Piston its length and
+    // speed, into the raw buffer in sim order;
     // they are then copied into the brain's port order (BrainPorts).
     private void ReadSensors(double[] values, double delta)
     {
@@ -673,6 +745,12 @@ public partial class Creature : Node2D
         {
             _rawInputs[index++] = relation.AngleInput;
             _rawInputs[index++] = relation.SpeedInput;
+        }
+
+        foreach (var piston in _pistons)
+        {
+            _rawInputs[index++] = piston.LengthInput;
+            _rawInputs[index++] = piston.SpeedInput;
         }
 
         for (var i = 0; i < _rawInputs.Length; i++)
@@ -692,7 +770,7 @@ public partial class Creature : Node2D
 
         sensors.Clear();
         motors.Clear();
-        if (Brain is null || _motorRelations.Length == 0)
+        if (Brain is null || _outputCount == 0)
         {
             return;
         }
@@ -726,10 +804,28 @@ public partial class Creature : Node2D
             index++;
         }
 
-        var outputs = new MotorReading[_motorRelations.Length];
+        for (var p = 0; p < _pistons.Length; p++)
+        {
+            inputs[_inputPortOf[index]] = new SensorReading(MotorReading.PistonKind, p + 1, "length", _rawInputs[index]);
+            index++;
+            inputs[_inputPortOf[index]] = new SensorReading(MotorReading.PistonKind, p + 1, "speed", _rawInputs[index]);
+            index++;
+        }
+
+        var outputs = new MotorReading[_outputCount];
         for (var m = 0; m < _motorRelations.Length; m++)
         {
-            outputs[_outputPortOf[m]] = new MotorReading(m + 1, _motorTargets[_outputPortOf[m]], _motorRelations[m].LastAppliedTorque);
+            outputs[_outputPortOf[m]] = new MotorReading(MotorReading.MotorRelationKind, m + 1, _motorTargets[_outputPortOf[m]], _motorRelations[m].LastAppliedTorque);
+        }
+
+        // A Piston's position and strength outputs both report the force it last pushed with.
+        for (var p = 0; p < _pistons.Length; p++)
+        {
+            for (var channel = 0; channel < 2; channel++)
+            {
+                var output = _outputPortOf[_motorRelations.Length + (2 * p) + channel];
+                outputs[output] = new MotorReading(MotorReading.PistonKind, p + 1, _motorTargets[output], _pistons[p].LastForce);
+            }
         }
 
         sensors.AddRange(inputs);

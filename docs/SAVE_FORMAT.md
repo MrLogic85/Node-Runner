@@ -76,6 +76,7 @@ Schema: [`save-schema/creation.schema.json`](save-schema/creation.schema.json).
 | `nodes[]` | `{ id, position: { x, y }, radius, name }` | Joints. `name` is `null` until renamed. |
 | `beams[]` | `{ id, nodeA, nodeB, name }` | Beams between two node ids. |
 | `sensors[]` | `{ id, beamId, kind, name, aim }` | One sensor per beam. `kind` is `accelerometer` or `camera`. `aim` is the Camera's centre ray from its beam, and `null` for other kinds. |
+| `pistons[]` | `{ id, nodeA, nodeB, name, strength, stroke, maxSpeed }` | Pistons between two node ids (#451). `strength` is in world force units (100 per newton), `stroke` a share of its built length (0.3 is ±30%), `maxSpeed` in world units per second (100 per m/s). |
 | `nextPartId` | int | The next free part id. Higher than every id in use; removed ids are never reused. |
 
 `training`:

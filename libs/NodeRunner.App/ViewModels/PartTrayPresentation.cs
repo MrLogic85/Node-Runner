@@ -62,12 +62,19 @@ public static class PartTray
         _ => null,
     };
 
+    /// <summary>The tool a tray part picks (#451): a link is picked, then dragged joint to joint. Null for a part that is dragged out instead.</summary>
+    public static BuildTool? ToolOf(BuildPart part) => part switch
+    {
+        BuildPart.Piston => BuildTool.Piston,
+        _ => null,
+    };
+
     private static PartTrayGroup[] Catalog() =>
     [
         new("Links", "Pick one, then drag from one node to another, like the Beam tool.",
         [
             Locked(BuildPart.Spring, "Spring"),
-            Locked(BuildPart.Piston, "Piston"),
+            Available(BuildPart.Piston, "Piston"),
             Locked(BuildPart.Wing, "Wing"),
         ]),
         new("On a joint", "Drag onto a joint. A joint holds one part.",

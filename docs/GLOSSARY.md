@@ -71,6 +71,10 @@ Long-form descriptions and the sensor/model contract live in
 - **Node** — A physical attachment point where beams meet and can rotate
   relative to each other. Has a position and a small radius. Rendered as a
   circle. See: `docs/CREATURE_MODEL.md`.
+- **Piston** — A powered link between two nodes (#451) that pushes them
+  apart or pulls them together. Not a beam: it adds no rigidity and no
+  weight. Gives the brain its length and speed, and takes a position and a
+  strength output. See: `docs/CREATURE_MODEL.md`.
 - **Port** — One brain channel a part declares (`BrainPort`): the part's id,
   a channel key that never changes, whether it is an input or an output, and
   the signal it carries (reading, velocity, position or strength).
@@ -81,6 +85,9 @@ Long-form descriptions and the sensor/model contract live in
 - **Sensor (part)** — A part that sits on a beam and feels that beam
   (`SensorDef`, `SensorKind`); one sensor per beam, at its midpoint.
   Not the brain. See: `docs/CREATURE_MODEL.md`.
+- **Stroke** — How far a Piston moves each way from its built length, as a
+  share of that length: ±30% means it reaches 70%…130%. Past it, the end
+  stops push back with full Strength. See: `docs/CREATURE_MODEL.md`.
 - **Strength output / Strength setting** — A powered part's Strength
   setting, chosen in Build, is its maximum force. Its strength output is the
   brain's sigmoid choice, 0…1, of how much of that maximum to use this tick.

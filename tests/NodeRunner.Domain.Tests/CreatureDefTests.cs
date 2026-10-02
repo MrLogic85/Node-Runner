@@ -170,6 +170,33 @@ public sealed class CreatureDefTests
     }
 
     [Fact]
+    public void Constructor_WithAPistonToAMissingNode_Throws()
+    {
+        Should.Throw<ArgumentOutOfRangeException>(() => new CreatureDef(
+            [new NodeDef(1, new Vector2D(0, 0), 1), new NodeDef(2, new Vector2D(1, 0), 1)],
+            [],
+            [],
+            [new PistonDef(3, 1, 9)]));
+    }
+
+    [Fact]
+    public void JsonRoundTrip_PreservesPistons()
+    {
+        var original = new CreatureDef(
+            [new NodeDef(1, new Vector2D(0, 0), 1), new NodeDef(2, new Vector2D(1, 0), 1)],
+            [],
+            [],
+            [new PistonDef(3, 1, 2, "Ram", 20000, 0.4, 150)]);
+
+        var roundTripped = JsonSerializer.Deserialize<CreatureDef>(JsonSerializer.Serialize(original));
+
+        roundTripped.ShouldNotBeNull();
+        roundTripped.Pistons.ToArray().ShouldBe(original.Pistons.ToArray());
+        roundTripped.PistonIndexOf(3).ShouldBe(0);
+        roundTripped.NextPartId.ShouldBe(4);
+    }
+
+    [Fact]
     public void Constructor_WithANullPart_Throws()
     {
         NodeDef[] nodes = [new NodeDef(1, new Vector2D(0, 0), 1), null!];

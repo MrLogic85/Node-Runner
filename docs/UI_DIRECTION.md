@@ -87,6 +87,12 @@ then the app follows the reference.
   lengths of its beams, so scaling changes nothing the lock protects.
   Owner decision. Likewise a locked Camera can still be aimed (#638):
   only what changes the model is locked.
+- **Piston settings are sliders (#451).** The reference's Piston panel
+  lists what it joins ("Between"), its power draw and its weight. Instead
+  its Part settings show three `UiSlider`s, Max strength, Stroke and Max
+  speed, and leave those rows out: a Piston has no weight, power comes in
+  0.18.0, and the canvas already shows its two joints. Owner decision: every
+  setting is editable, and like a Camera's aim a locked creation keeps them.
 - **No Brain setup (#536).** The reference's Brain setup screen (hidden
   layers, neurons per layer) and its **Brain setup** item in the Build
   overflow menu (Navigation and Build top bar in `reference design/README.md`)
