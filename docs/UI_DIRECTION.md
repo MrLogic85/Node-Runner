@@ -87,11 +87,22 @@ then the app follows the reference.
   lengths of its beams, so scaling changes nothing the lock protects.
   Owner decision. Likewise a locked Camera can still be aimed (#638):
   only what changes the model is locked.
-- **The brain is hidden until 0.16.0 (#536).** While the brain is direct, the
-  player neither sees nor edits it: Brain setup (hidden layers, neurons per
-  layer), the BuildLocked brain widget, and the Training Brain button and
-  Signal flow Brain stage are hidden. The brain graph (#543) and its design
-  brief (#549) bring them back.
+- **No Brain setup (#536).** The reference's Brain setup screen (hidden
+  layers, neurons per layer) and its **Brain setup** item in the Build
+  overflow menu (Navigation and Build top bar in `reference design/README.md`)
+  are removed: a direct brain has no hidden layers to choose. From 0.16.0
+  layers are added in the Brain view instead (#543, designed by #549). Owner
+  decision.
+- **The brain stays visible (#536).** The BuildLocked brain widget, the
+  Training Brain button, the Signal flow Brain stage and BrainFocus show the
+  direct brain, inputs straight to outputs. Owner decision. The reference
+  BrainFocus assumes hidden neurons, so these are best guesses until #549:
+  - nothing is selected at first;
+  - tapping an output highlights the senses that drive it directly, and the
+    sentence reads like "Rear knee is driven most by Front knee: speed and
+    Accelerometer: along.";
+  - tapping a sense highlights the outputs it drives;
+  - Signal flow leaves out the hidden-layer size header ("64 · 32").
 - **No part counts until 0.19.0 (#374, 0.12.0).** The reference limits the
   parts you place and shows counts ("1 left") in the tray and in Build
   feedback (`reference design/README.md`, Build and "Rules that fix the known
