@@ -19,8 +19,14 @@ public sealed class VisualTheme
     // A selected beam's lines run half its width outside its edges (#624).
     private const float _selectedBeamOffsetPerBeam = 0.5f + 0.5f;
 
+    // The reference's rigid hatch: muted hairlines at half opacity, 7 apart (#612).
+    private const float _rigidHatchOpacity = 0.5f;
+    private const float _rigidHatchSpacing = 7f;
+
     public static VisualTheme FromTheme(Godot.Theme theme) => new()
     {
+        RigidHatch = UiThemes.Color(theme, UiTokens.Color.Muted) with { A = _rigidHatchOpacity },
+        RigidHatchSpacing = _rigidHatchSpacing,
         ArenaBackground = UiThemes.Color(theme, UiTokens.Color.Background),
         ArenaGrid = UiThemes.Color(theme, UiTokens.Color.Line),
         GroundFill = UiThemes.Color(theme, UiTokens.Color.Panel),
@@ -91,4 +97,10 @@ public sealed class VisualTheme
     public float GroundEdgeWidth { get; private init; }
 
     public float GridSpacing { get; private init; }
+
+    /// <summary>The hatch lines inside a rigid triangle in Build: one pixel wide at any zoom.</summary>
+    public Color RigidHatch { get; private init; }
+
+    /// <summary>How far apart a rigid triangle's hatch lines are, in creature units.</summary>
+    public float RigidHatchSpacing { get; private init; }
 }

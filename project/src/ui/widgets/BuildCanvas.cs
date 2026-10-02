@@ -301,6 +301,7 @@ public partial class BuildCanvas : Node2D
         DrawMoveGhosts();
         DrawSelectionBox();
         DrawBeamPreview();
+        DrawRigidTriangles();
 
         foreach (var beam in _viewModel.Beams)
         {
@@ -318,7 +319,7 @@ public partial class BuildCanvas : Node2D
             }
         }
 
-        DrawTopologyFeedback();
+        DrawMotorRelations();
         DrawSensors();
 
         for (var nodeIndex = 0; nodeIndex < _viewModel.Nodes.Count; nodeIndex++)
@@ -651,7 +652,8 @@ public partial class BuildCanvas : Node2D
         }
     }
 
-    private void DrawTopologyFeedback()
+    /// <summary>The rigid hatch goes under the beams, so it shows only between them.</summary>
+    private void DrawRigidTriangles()
     {
         if (!TryBuildDrawableTopology(out var creature) || creature is null)
         {
@@ -661,6 +663,14 @@ public partial class BuildCanvas : Node2D
         foreach (var triangle in MotorTopology.BuildRigidTriangles(creature))
         {
             DrawRigidTriangle(creature, triangle);
+        }
+    }
+
+    private void DrawMotorRelations()
+    {
+        if (!TryBuildDrawableTopology(out var creature) || creature is null)
+        {
+            return;
         }
 
         foreach (var connection in MotorTopology.BuildNodeConnections(creature).Where(connection => connection.IsMotorized))
@@ -726,13 +736,10 @@ public partial class BuildCanvas : Node2D
         var a = ToGodot(creature.Nodes[triangle.NodeA].Position);
         var b = ToGodot(creature.Nodes[triangle.NodeB].Position);
         var c = ToGodot(creature.Nodes[triangle.NodeC].Position);
-        var fill = new Color(Theme.SelectionGlow.R, Theme.SelectionGlow.G, Theme.SelectionGlow.B, 0.10f);
-        DrawColoredPolygon([a, b, c], fill);
-
-        var center = (a + b + c) / 3f;
-        DrawLine(a.Lerp(center, 0.35f), b.Lerp(center, 0.35f), Theme.SelectionGlow, Stroke(2), antialiased: false);
-        DrawLine(b.Lerp(center, 0.35f), c.Lerp(center, 0.35f), Theme.SelectionGlow, Stroke(2), antialiased: false);
-        DrawLine(c.Lerp(center, 0.35f), a.Lerp(center, 0.35f), Theme.SelectionGlow, Stroke(2), antialiased: false);
+        foreach (var (start, end) in TriangleHatch.Lines(a, b, c, Theme.RigidHatchSpacing))
+        {
+            DrawLine(start, end, Theme.RigidHatch, -1);
+        }
     }
 
     private void DrawMotorRelation(CreatureDef creature, NodeConnectionDef connection)
