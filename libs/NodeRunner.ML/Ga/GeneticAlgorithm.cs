@@ -163,19 +163,9 @@ public sealed class GeneticAlgorithm
         {
             if (random.NextDouble() < _mutationRate)
             {
-                genome[i] += NextGaussian(random) * _mutationStrength;
+                genome[i] += Gaussian.Next(random) * _mutationStrength;
             }
         }
-    }
-
-    // Box-Muller transform: turns two uniform samples into one standard
-    // normal sample. u1 is drawn from (0, 1] (never exactly 0) so Log(u1)
-    // is always defined.
-    private static double NextGaussian(Random random)
-    {
-        var u1 = 1.0 - random.NextDouble();
-        var u2 = random.NextDouble();
-        return Math.Sqrt(-2.0 * Math.Log(u1)) * Math.Cos(2.0 * Math.PI * u2);
     }
 
     private static IEnumerable<int> RankValidByFitnessDescending(double[] fitness)

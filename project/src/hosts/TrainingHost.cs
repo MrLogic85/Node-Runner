@@ -266,8 +266,8 @@ public partial class TrainingHost : Node, IRoutedScene
         _evolver = evolver;
     }
 
-    // Resumes from the creation's saved best genome and generation, or starts a fresh random
-    // population without one.
+    // Resumes from the creation's saved best genome and generation, or starts at generation 0
+    // (#537) without one.
     private void StartEvolution(CreationDef? creation)
     {
         _evolver?.Stop();
