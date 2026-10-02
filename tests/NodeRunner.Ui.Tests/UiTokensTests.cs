@@ -32,6 +32,7 @@ public sealed class UiTokensTests
         AssertColor(tokens.Color(UiTokens.Color.Accent), 0x19, 0xf0, 0xff);
         AssertColor(tokens.Color(UiTokens.Color.Edge), 0x1a, 0x7f, 0x79);
         tokens.Constant(UiThemes.TokenType, UiTokens.Name(UiTokens.Alpha.Soft)).ShouldBe(0x1f);
+        tokens.Constant(UiThemes.TokenType, UiTokens.Name(UiTokens.Alpha.Shadow)).ShouldBe(0x52);
         AssertColor(tokens.Color(UiTokens.Color.OnAccent), 0x04, 0x12, 0x1a);
         AssertColor(tokens.Color(UiTokens.Color.Halo), 0xff, 0xb3, 0x47);
         AssertColor(tokens.Color(UiTokens.Color.Danger), 0xff, 0x6b, 0x87);
@@ -55,6 +56,7 @@ public sealed class UiTokensTests
         AssertColor(tokens.Color(UiTokens.Color.Accent), 0x00, 0x6d, 0x77);
         AssertColor(tokens.Color(UiTokens.Color.Edge), 0xcf, 0xc8, 0xb8);
         tokens.Constant(UiThemes.TokenType, UiTokens.Name(UiTokens.Alpha.Soft)).ShouldBe(0x1a);
+        tokens.Constant(UiThemes.TokenType, UiTokens.Name(UiTokens.Alpha.Shadow)).ShouldBe(0x52);
         AssertColor(tokens.Color(UiTokens.Color.OnAccent), 0xff, 0xff, 0xff);
         AssertColor(tokens.Color(UiTokens.Color.Halo), 0xb4, 0x5f, 0x00);
         AssertColor(tokens.Color(UiTokens.Color.Danger), 0xb3, 0x26, 0x1e);

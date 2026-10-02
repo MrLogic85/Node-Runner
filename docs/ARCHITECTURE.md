@@ -246,8 +246,8 @@ After N ticks (say 600 = 10 s at 60 Hz) each slot's trial ends. `Evolver`
 records its fitness, assigns the slot the next pending genome, and, once every
 genome in the current generation has completed, produces the next generation
 via `GeneticAlgorithm.NextGeneration(...)`. The first slot reuses the visible
-creature; the rest of the generation runs alongside it as hidden clones,
-all at once (up to 32). Each slot owns a `TrialController` and resets
+creature; the rest of the generation runs alongside it as clones, all at
+once (up to 32), drawn as transparent shadows behind the followed one. Each slot owns a `TrialController` and resets
 independently between trials. Creature bodies collide only with the ground. See `docs/TRAINING_LOOP.md` for the full design.
 
 `Evolver` raises `GenerationCompleted`/`NewBestFound` events; the Training

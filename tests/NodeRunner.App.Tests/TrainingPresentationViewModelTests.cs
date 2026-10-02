@@ -128,6 +128,73 @@ public sealed class TrainingPresentationViewModelTests
         presentation.Generation.ShouldBe(1);
     }
 
+    [Fact]
+    public void Shadows_MarkFollowedLeaderAndPreviousBestSeparately()
+    {
+        var source = new FakeTrainingProgressSource
+        {
+            ShadowCount = 4,
+            IsTrialActive = true,
+            HasPreviousBest = true,
+            ShadowDistances = [1.5, 3.2, double.NaN, 2.0],
+        };
+        var presentation = new TrainingPresentationViewModel(source);
+
+        presentation.Shadows.ShouldBe(
+        [
+            new ShadowStanding(1, 1.5, IsFollowed: true, IsLeader: false, IsPreviousBest: true),
+            new ShadowStanding(2, 3.2, IsFollowed: false, IsLeader: true, IsPreviousBest: false),
+            new ShadowStanding(3, double.NaN, IsFollowed: false, IsLeader: false, IsPreviousBest: false),
+            new ShadowStanding(4, 2.0, IsFollowed: false, IsLeader: false, IsPreviousBest: false),
+        ]);
+        presentation.FollowedShadow.ShouldBe(1);
+    }
+
+    [Fact]
+    public void Follow_ChangesOnlyWhenThePlayerPicks()
+    {
+        var source = new FakeTrainingProgressSource { ShadowDistances = [1, 2, 3] };
+        var presentation = new TrainingPresentationViewModel(source);
+
+        presentation.Follow(3);
+        source.ShadowDistances = [9, 2, 3];
+
+        presentation.FollowedShadow.ShouldBe(3);
+        presentation.Shadows.Single(shadow => shadow.IsLeader).Number.ShouldBe(1);
+        presentation.Shadows.Single(shadow => shadow.IsFollowed).Number.ShouldBe(3);
+        Should.Throw<ArgumentOutOfRangeException>(() => presentation.Follow(0));
+    }
+
+    [Fact]
+    public void FreshGenerationZero_FollowsShadowOneWithoutAPreviousBest()
+    {
+        var source = new FakeTrainingProgressSource { ShadowDistances = [0, 0] };
+        var presentation = new TrainingPresentationViewModel(source);
+
+        presentation.FollowedShadow.ShouldBe(1);
+        presentation.Shadows.ShouldAllBe(shadow => !shadow.IsPreviousBest);
+    }
+
+    [Theory]
+    [InlineData(new double[0], -1)]
+    [InlineData(new[] { double.NaN, double.NaN }, -1)]
+    [InlineData(new[] { double.NaN, -1.0, -0.5 }, 2)]
+    [InlineData(new[] { 2.0, 2.0, 1.0 }, 0)]
+    public void Leader_IsTheFurthestRunningShadow(double[] distances, int leader)
+    {
+        TrainingPresentationViewModel.Leader(distances).ShouldBe(leader);
+    }
+
+    [Fact]
+    public void WithoutASource_ThereAreNoShadowsToFollow()
+    {
+        var presentation = new TrainingPresentationViewModel();
+
+        presentation.Shadows.ShouldBeEmpty();
+        presentation.FollowedShadow.ShouldBe(0);
+        Should.Throw<InvalidOperationException>(() => presentation.Follow(1));
+    }
+
     private sealed class FakeTrainingProgressSource : ITrainingProgressSource
     {
         private Action? _progressChanged;
@@ -180,6 +247,17 @@ public sealed class TrainingPresentationViewModelTests
         public IReadOnlyList<double> CompletedFitness { get; set; } = [];
 
         public bool IsTrialActive { get; set; }
+
+        public int FollowedShadow { get; set; }
+
+        public bool HasPreviousBest { get; set; }
+
+        public IReadOnlyList<double> ShadowDistances { get; set; } = [];
+
+        public void Follow(int shadow)
+        {
+            FollowedShadow = shadow;
+        }
 
         public void RaiseProgressChanged()
         {

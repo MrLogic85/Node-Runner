@@ -39,6 +39,10 @@ public partial class Creature : Node2D
     private const float _maxAngularVelocityRadPerSec = 6f;
     private const float _lineHitTolerancePixels = 16;
 
+    // Beams draw one z step under their creature's joints, so the followed creature sits two steps
+    // above the shadows: even its beams are never drawn under a shadow's joints (#385).
+    private const int _followedZIndex = 2;
+
     private RigidBody2D[] _beamBodies = [];
     private float[] _beamHalfLengths = [];
     private Vector2[] _beamInitialPositions = [];
@@ -49,6 +53,8 @@ public partial class Creature : Node2D
     private NodeVisual[] _nodeVisuals = [];
     private BeamVisual[] _beamVisuals = [];
     private SensorVisual[] _sensorVisuals = [];
+    private CameraRaysVisual? _cameraRaysVisual;
+    private bool _isShadow;
     private IBeamSensor[] _sensors = [];
     private AccelerometerSensor[] _accelerometers = [];
     private MotorRelation[] _motorRelations = [];
@@ -76,6 +82,21 @@ public partial class Creature : Node2D
     public BrainPortLayout Ports { get; private set; } = BrainPortLayout.Empty;
 
     public IReadOnlyList<AccelerometerSensor> Accelerometers => _accelerometers;
+
+    /// <summary>
+    /// True for every shadow except the followed one (#385): each visual draws as it declares in
+    /// <see cref="IShadowVisual.AsShadow"/>, the whole creature fades to the theme's shadow alpha
+    /// and draws behind the followed creature.
+    /// </summary>
+    public bool IsShadow
+    {
+        get => _isShadow;
+        set
+        {
+            _isShadow = value;
+            ApplyShadow();
+        }
+    }
 
     public override void _Ready()
     {
@@ -120,6 +141,7 @@ public partial class Creature : Node2D
         CreateMotorRelations(definition);
         ConfigureBrainBuffers(definition);
         ResetSensors();
+        ApplyShadow();
 
         if (_motorRelations.Length > 0)
         {
@@ -326,6 +348,31 @@ public partial class Creature : Node2D
         }
     }
 
+    private void ApplyShadow()
+    {
+        Modulate = Colors.White with { A = _isShadow ? Theme.ShadowAlpha : 1f };
+        ZIndex = _isShadow ? 0 : _followedZIndex;
+        foreach (var visual in _nodeVisuals)
+        {
+            visual.IsShadow = _isShadow;
+        }
+
+        foreach (var visual in _beamVisuals)
+        {
+            visual.IsShadow = _isShadow;
+        }
+
+        foreach (var visual in _sensorVisuals)
+        {
+            visual.IsShadow = _isShadow;
+        }
+
+        if (_cameraRaysVisual is not null)
+        {
+            _cameraRaysVisual.IsShadow = _isShadow;
+        }
+    }
+
     private void ResetSensors()
     {
         foreach (var sensor in _sensors)
@@ -518,10 +565,12 @@ public partial class Creature : Node2D
         }
 
         // Added after the joint bodies, so tree order draws the rays over the whole creature (#623).
+        _cameraRaysVisual = null;
         var cameras = _sensors.OfType<CameraSensor>().ToArray();
         if (cameras.Length > 0)
         {
-            AddChild(new CameraRaysVisual { Name = "CameraRays", Theme = Theme, Cameras = cameras });
+            _cameraRaysVisual = new CameraRaysVisual { Name = "CameraRays", Theme = Theme, Cameras = cameras };
+            AddChild(_cameraRaysVisual);
         }
     }
 

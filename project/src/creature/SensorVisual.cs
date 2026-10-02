@@ -8,9 +8,12 @@ namespace NodeRunner.Creature;
 /// midpoint, turned so its top faces the beam's built up side. The Accelerometer's weight follows
 /// the live proof mass every frame. A camera's rays are drawn by <see cref="CameraRaysVisual"/>.
 /// </summary>
-public partial class SensorVisual : Node2D
+public partial class SensorVisual : Node2D, IShadowVisual
 {
     private bool _isSelected;
+
+    /// <summary>Sensors are not drawn on a shadow; hiding also stops the Accelerometer's redraws.</summary>
+    public static ShadowDrawing AsShadow => ShadowDrawing.Hidden;
 
     public required VisualTheme Theme { get; init; }
 
@@ -33,6 +36,16 @@ public partial class SensorVisual : Node2D
 
             _isSelected = value;
             QueueRedraw();
+        }
+    }
+
+    public bool IsShadow
+    {
+        get => !Visible;
+        set
+        {
+            Visible = !value;
+            SetProcess(!value);
         }
     }
 

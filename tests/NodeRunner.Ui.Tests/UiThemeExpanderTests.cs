@@ -21,7 +21,7 @@ public sealed class UiThemeExpanderTests
             .ShouldBe(new[] { "effects_enabled" });
         Enum.GetValues<UiTokens.Alpha>()
             .Select(UiTokens.Name)
-            .ShouldBe(new[] { "alpha_soft" });
+            .ShouldBe(new[] { "alpha_soft", "alpha_shadow" });
         Enum.GetValues<UiTokens.Typography>()
             .Select(UiTokens.Variation)
             .ShouldBe(new[]

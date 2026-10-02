@@ -45,6 +45,8 @@ the model this implements.**
   beam body; the Accelerometer weight follows the live proof mass
 - `CameraRaysVisual.cs` — every camera ray that hits the ground, drawn up to
   the hit; added after the joints so tree order keeps it on top
+- `ShadowDrawing.cs` — `IShadowVisual`: every visual above declares how it
+  draws on a shadow that is not followed (#385); a test checks each one
 - `HardcodedCreatureFactory.cs` — the first concrete `CreatureDef`
 - `Creature.tscn` (in `scenes/`) — the scene template
 

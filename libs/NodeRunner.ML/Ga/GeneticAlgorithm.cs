@@ -58,6 +58,9 @@ public sealed class GeneticAlgorithm
         _crossoverStrategy = crossoverStrategy;
     }
 
+    /// <summary>How many of the fittest genomes open the next generation unchanged, from index 0.</summary>
+    public int ElitismCount => _elitismCount;
+
     /// <summary>
     /// Produces the next generation of genomes from the current generation's
     /// fitness scores: the fittest <c>elitismCount</c> genomes carry over

@@ -23,7 +23,8 @@
 - `Evolver.cs` — orchestrates the generation cycle: evaluate every genome
   in fixed parallel slots (one `TrialController` per slot) → GA → next
   generation. Slot 0 reuses the visible creature; additional slots are
-  hidden clones; creature bodies collide only with the ground.
+  clones drawn as shadows; creature bodies collide only with the ground.
+  `Evolver` owns which shadow is followed (`Follow`, `FollowedCreature`).
 - `Population.cs` — not currently needed. `Evolver` owns the fixed-slot
   population lifecycle directly; extract it only if that lifecycle grows
   beyond training orchestration.

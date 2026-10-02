@@ -33,6 +33,7 @@ public sealed class VisualTheme
         GroundEdge = UiThemes.Color(theme, UiTokens.Color.Accent),
         NodeFill = UiThemes.Color(theme, UiTokens.Color.PanelRaised),
         EffectsEnabled = UiThemes.Flag(theme, UiTokens.Flag.EffectsEnabled),
+        ShadowAlpha = UiThemes.Alpha(theme, UiTokens.Alpha.Shadow),
         SelectionGlow = UiThemes.Color(theme, UiTokens.Color.Halo),
         Beam = UiThemes.Color(theme, UiTokens.Color.LineStrong),
         MotorAccent = UiThemes.Color(theme, UiTokens.Color.Accent),
@@ -61,6 +62,9 @@ public sealed class VisualTheme
     public Color NodeFill { get; private init; }
 
     public bool EffectsEnabled { get; private init; }
+
+    /// <summary>How opaque every shadow except the followed one is drawn in Training (#385).</summary>
+    public float ShadowAlpha { get; private init; }
 
     public Color SelectionGlow { get; private init; }
 

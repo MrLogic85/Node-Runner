@@ -17,6 +17,8 @@ public enum UiTokenType
 /// </summary>
 public static class UiThemes
 {
+    private const float _alphaByteMax = 255f;
+
     public const string TokenType = "NodeRunner";
 
     public static string PathFor(UiTokenType type) => type switch
@@ -42,5 +44,12 @@ public static class UiThemes
     {
         ArgumentNullException.ThrowIfNull(theme);
         return theme.GetConstant(UiTokens.Name(token), TokenType) != 0;
+    }
+
+    /// <summary>The palette's opacity for <paramref name="token"/>, authored as 0-255.</summary>
+    public static float Alpha(GodotTheme theme, UiTokens.Alpha token)
+    {
+        ArgumentNullException.ThrowIfNull(theme);
+        return theme.GetConstant(UiTokens.Name(token), TokenType) / _alphaByteMax;
     }
 }

@@ -47,6 +47,8 @@ public partial class TrainingHost : Node, IRoutedScene
     // The brain last saved, so the next save keeps its neuron ids and disabled genes.
     private BrainDef? _savedBrain;
     private Creature.Creature? _creature;
+    // The shadow drawn in full, read by signal flow, the brain and part selection (#385).
+    private Creature.Creature? _followed;
     private Evolver? _evolver;
     private TrainingScreen _screen = null!;
     private TrainingPresentationViewModel _trainingPresentation = new();
@@ -112,7 +114,7 @@ public partial class TrainingHost : Node, IRoutedScene
     // cadence: the numbers are for a person to read, so every rendered frame is wasted work.
     public override void _Process(double delta)
     {
-        if (_creature is null)
+        if (_followed is null)
         {
             return;
         }
@@ -124,9 +126,9 @@ public partial class TrainingHost : Node, IRoutedScene
         }
 
         _signalRefreshElapsed = 0;
-        _creature.ReadMapping(_sensorReadings, _motorReadings);
-        _signalFlow.Update(_sensorReadings, _motorReadings, _evolver?.VisibleTrialDistance ?? double.NaN);
-        _brainFocus.Update(_creature.Brain, _sensorReadings);
+        _followed.ReadMapping(_sensorReadings, _motorReadings);
+        _signalFlow.Update(_sensorReadings, _motorReadings, _evolver?.FollowedTrialDistance ?? double.NaN);
+        _brainFocus.Update(_followed.Brain, _sensorReadings);
     }
 
     private CreationDef? LoadRouteCreation()
@@ -206,6 +208,7 @@ public partial class TrainingHost : Node, IRoutedScene
         creature.Position = GetNode<Marker2D>("%Spawn").Position;
         World.AddChild(creature);
         _creature = creature;
+        _followed = creature;
     }
 
     private static Creature.Creature CreateCreatureInstance() =>
@@ -238,6 +241,7 @@ public partial class TrainingHost : Node, IRoutedScene
             ProcessMode = ProcessModeEnum.Pausable,
         };
         evolver.GenerationCompleted += OnGenerationCompleted;
+        evolver.FollowedShadowChanged += OnFollowedShadowChanged;
         _trainingPresentation.Dispose();
         _trainingPresentation = new TrainingPresentationViewModel(new EvolverTrainingProgressSource(evolver));
         World.AddChild(evolver);
@@ -272,6 +276,20 @@ public partial class TrainingHost : Node, IRoutedScene
             _profile.TrialDurationTicks,
             CreateCreatureInstance,
             disabledGenes: disabledGenes);
+    }
+
+    // The selection moves with the camera's subject: the old shadow drops it, the new one shows it.
+    private void OnFollowedShadowChanged()
+    {
+        var followed = _evolver?.FollowedCreature ?? _creature;
+        if (followed == _followed)
+        {
+            return;
+        }
+
+        _followed?.SetSelectedElement(null);
+        _followed = followed;
+        _followed?.SetSelectedElement(_selection.SelectedElement);
     }
 
     private void OnGenerationCompleted()
@@ -346,7 +364,7 @@ public partial class TrainingHost : Node, IRoutedScene
     // A tap in the arena selects the part of the creature under it, or clears the selection.
     private void SelectPartAt(Vector2 worldPosition)
     {
-        if (_creature is not null && _creature.TrySelectPart(worldPosition, out var selection) && selection is not null)
+        if (_followed is not null && _followed.TrySelectPart(worldPosition, out var selection) && selection is not null)
         {
             _selection.Select(selection);
         }
@@ -360,7 +378,7 @@ public partial class TrainingHost : Node, IRoutedScene
     {
         if (eventArgs.PropertyName == nameof(SelectionViewModel.SelectedElement))
         {
-            _creature?.SetSelectedElement(_selection.SelectedElement);
+            _followed?.SetSelectedElement(_selection.SelectedElement);
         }
     }
 }
