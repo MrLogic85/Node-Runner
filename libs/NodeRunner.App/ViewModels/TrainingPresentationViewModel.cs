@@ -45,9 +45,9 @@ public sealed class TrainingPresentationViewModel : INotifyPropertyChanged, IDis
 
     public string BestFitnessText => double.IsNegativeInfinity(_bestFitness)
         ? "Best: —"
-        : $"Best: {_bestFitness:0.0} (gen {_bestGeneration})";
+        : $"Best: {Metres.FormatWithUnit(_bestFitness)} (gen {_bestGeneration})";
 
-    public string MeanFitnessText => $"Mean: {_meanFitness:0.0}";
+    public string MeanFitnessText => $"Mean: {Metres.FormatWithUnit(_meanFitness)}";
 
     public void Update(
         int generation,

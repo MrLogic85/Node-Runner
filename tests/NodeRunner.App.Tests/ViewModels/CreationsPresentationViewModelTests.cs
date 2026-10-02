@@ -24,7 +24,7 @@ public sealed class CreationsPresentationViewModelTests
     public void Refresh_WithCreations_FormatsCardsFromRepository()
     {
         var repository = new InMemoryCreationRepository();
-        var trained = CreateCreation("Walker", generation: 12, new TrainingRunDef(18.44, 3.06, 1.2, MapIds.Flat));
+        var trained = CreateCreation("Walker", generation: 12, new TrainingRunDef(1844, 306, 120, MapIds.Flat));
         var untrained = new CreationDef(Guid.NewGuid(), "Draft", trained.Creature);
         repository.Save(trained);
         repository.Save(untrained);

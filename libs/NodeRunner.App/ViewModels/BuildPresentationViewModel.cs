@@ -82,7 +82,7 @@ public sealed class BuildPresentationViewModel
         : "Start training when you are ready. Parts are locked so the brain stays valid.";
 
     public string BestDistanceText => _build.BestFitness is { } bestFitness
-        ? $"{bestFitness:0.0} m"
+        ? Metres.FormatWithUnit(bestFitness)
         : "—";
 
     public int SelectedNodeCount => _build.SelectedNodeCount;

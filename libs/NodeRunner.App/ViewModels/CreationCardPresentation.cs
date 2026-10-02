@@ -1,4 +1,3 @@
-using System.Globalization;
 using NodeRunner.Domain;
 
 namespace NodeRunner.App.ViewModels;
@@ -29,8 +28,9 @@ public sealed record CreationCardPresentation(
 }
 
 /// <summary>
-/// What a trained card shows of its latest training: the best run's distance, top speed and
-/// elevation without units, the map it ran on and how many generations it has trained.
+/// What a trained card shows of its latest training: the best run's distance and elevation in
+/// metres and top speed in m/s, all without units, the map it ran on and how many generations it
+/// has trained.
 /// </summary>
 public sealed record CreationCardTraining(
     string DistanceText,
@@ -44,12 +44,10 @@ public sealed record CreationCardTraining(
         ArgumentNullException.ThrowIfNull(training);
         var run = training.BestRun;
         return new CreationCardTraining(
-            Format(run.Distance),
-            Format(run.TopSpeed),
-            Format(run.Elevation),
+            Metres.Format(run.Distance),
+            Metres.Format(run.TopSpeed),
+            Metres.Format(run.Elevation),
             run.MapId,
             CreationCardPresentation.FormatCount(training.Generation, "generation"));
     }
-
-    private static string Format(double value) => value.ToString("0.0", CultureInfo.InvariantCulture);
 }

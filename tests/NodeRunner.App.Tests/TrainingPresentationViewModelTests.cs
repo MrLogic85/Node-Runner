@@ -9,18 +9,18 @@ public sealed class TrainingPresentationViewModelTests
     {
         var presentation = new TrainingPresentationViewModel();
 
-        presentation.Update(5, 8, 12.8, 8.4, 4, true, [10.1, 11.2]);
+        presentation.Update(5, 8, 1280, 840, 4, true, [10.1, 11.2]);
 
         presentation.Generation.ShouldBe(5);
         presentation.ShadowCount.ShouldBe(8);
-        presentation.BestFitness.ShouldBe(12.8);
-        presentation.MeanFitness.ShouldBe(8.4);
+        presentation.BestFitness.ShouldBe(1280);
+        presentation.MeanFitness.ShouldBe(840);
         presentation.BestGeneration.ShouldBe(4);
         presentation.IsTrialActive.ShouldBeTrue();
         presentation.CompletedFitness.ShouldBe([10.1, 11.2]);
         presentation.GenerationText.ShouldBe("Generation 5 · 8 shadows racing");
-        presentation.BestFitnessText.ShouldBe("Best: 12.8 (gen 4)");
-        presentation.MeanFitnessText.ShouldBe("Mean: 8.4");
+        presentation.BestFitnessText.ShouldBe("Best: 12.8 m (gen 4)");
+        presentation.MeanFitnessText.ShouldBe("Mean: 8.4 m");
     }
 
     [Fact]
@@ -32,7 +32,7 @@ public sealed class TrainingPresentationViewModelTests
 
         presentation.GenerationText.ShouldBe("Generation 5 · Training finished");
         presentation.BestFitnessText.ShouldBe("Best: —");
-        presentation.MeanFitnessText.ShouldBe("Mean: 0.0");
+        presentation.MeanFitnessText.ShouldBe("Mean: 0.0 m");
     }
 
     [Fact]
@@ -82,7 +82,7 @@ public sealed class TrainingPresentationViewModelTests
         {
             Generation = 7,
             ShadowCount = 8,
-            BestFitness = 21.3,
+            BestFitness = 2130,
             MeanFitness = 10.5,
             IsTrialActive = true,
         };
@@ -91,14 +91,14 @@ public sealed class TrainingPresentationViewModelTests
         source.RaiseNewBestFound();
 
         presentation.BestGeneration.ShouldBe(7);
-        presentation.BestFitnessText.ShouldBe("Best: 21.3 (gen 7)");
+        presentation.BestFitnessText.ShouldBe("Best: 21.3 m (gen 7)");
 
         source.Generation = 8;
         source.RaiseProgressChanged();
 
         presentation.Generation.ShouldBe(8);
         presentation.BestGeneration.ShouldBe(7);
-        presentation.BestFitnessText.ShouldBe("Best: 21.3 (gen 7)");
+        presentation.BestFitnessText.ShouldBe("Best: 21.3 m (gen 7)");
     }
 
     [Fact]

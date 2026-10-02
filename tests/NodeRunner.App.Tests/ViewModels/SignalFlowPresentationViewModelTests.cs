@@ -20,7 +20,7 @@ public sealed class SignalFlowPresentationViewModelTests
                 new SensorReading("Motor relation", 1, "angular velocity", -2.0),
             ],
             [new MotorReading(1, -0.6, 12.4), new MotorReading(2, 0.2, 3.1)],
-            distance: 42.25);
+            distance: 4225);
 
         viewModel.SensesNote.ShouldBe("4 readings");
         viewModel.OutputsNote.ShouldBe("2 motors");
@@ -56,11 +56,11 @@ public sealed class SignalFlowPresentationViewModelTests
     public void Update_WithTheSameNotes_DoesNotNotifyAgain()
     {
         var viewModel = new SignalFlowPresentationViewModel();
-        viewModel.Update([], [new MotorReading(1, 0.2, 1)], 3);
+        viewModel.Update([], [new MotorReading(1, 0.2, 1)], 300);
         var notifications = 0;
         viewModel.PropertyChanged += (_, _) => notifications++;
 
-        viewModel.Update([], [new MotorReading(1, -0.4, 2)], 3.01);
+        viewModel.Update([], [new MotorReading(1, -0.4, 2)], 301);
 
         notifications.ShouldBe(0);
     }
@@ -69,11 +69,11 @@ public sealed class SignalFlowPresentationViewModelTests
     public void Update_WhenOnlyTheDistanceMoves_NotifiesOnce()
     {
         var viewModel = new SignalFlowPresentationViewModel();
-        viewModel.Update([], [new MotorReading(1, 0.2, 1)], 3);
+        viewModel.Update([], [new MotorReading(1, 0.2, 1)], 300);
         var notifications = 0;
         viewModel.PropertyChanged += (_, _) => notifications++;
 
-        viewModel.Update([], [new MotorReading(1, 0.2, 1)], 4);
+        viewModel.Update([], [new MotorReading(1, 0.2, 1)], 400);
 
         notifications.ShouldBe(1);
         viewModel.DistanceNote.ShouldBe("4.0 m");

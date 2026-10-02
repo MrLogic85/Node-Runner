@@ -92,7 +92,12 @@ Long-form descriptions and the sensor/model contract live in
   (`BuildViewModel.BuildArea`), drawn as a faint grid with corner
   marks. See: `docs/BUILD_MODE.md`.
 - **Canvas unit** — A distance in creature coordinates, the same as
-  `NodeDef.Position` and node radii. Zoom and pan never change it.
+  `NodeDef.Position` and node radii. Zoom and pan never change it. In
+  Training it is also the world (physics) unit.
+- **Metre** — 100 world units (`Metres.WorldUnitsPerMetre`, #670). Godot
+  defines no 2D metre; its default 2D gravity, 980 units/s², is Earth's
+  9.8 m/s² at this scale. The sim, fitness and saves stay in world units;
+  text the player reads converts to metres.
 - **View unit** — A distance in the Build canvas widget's own space before
   zoom and pan; touch positions, tap slop and hit sizes use it, so they stay
   finger-sized at any zoom. `view = canvas × Zoom + Offset` (`CanvasView`).

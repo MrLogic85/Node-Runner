@@ -1,5 +1,4 @@
 using System.ComponentModel;
-using System.Globalization;
 using NodeRunner.Domain;
 
 namespace NodeRunner.App.ViewModels;
@@ -21,6 +20,10 @@ public sealed class SignalFlowPresentationViewModel : INotifyPropertyChanged
     /// <summary>How far the visible creature has got in this try, such as "12.4 m"; empty when no try runs.</summary>
     public string DistanceNote { get; private set; } = string.Empty;
 
+    /// <summary>Refreshes the stage notes from this tick's readings.</summary>
+    /// <param name="sensors">The visible creature's sensor readings.</param>
+    /// <param name="motors">The visible creature's motor readings.</param>
+    /// <param name="distance">How far the visible creature has got, in world units; NaN when no try runs.</param>
     public void Update(IReadOnlyList<SensorReading> sensors, IReadOnlyList<MotorReading> motors, double distance)
     {
         ArgumentNullException.ThrowIfNull(sensors);
@@ -29,7 +32,7 @@ public sealed class SignalFlowPresentationViewModel : INotifyPropertyChanged
         var sensesNote = Count(sensors.Count, "reading");
         var outputsNote = Count(motors.Count, "motor");
         var distanceNote = double.IsFinite(distance)
-            ? string.Create(CultureInfo.InvariantCulture, $"{distance:0.0} m")
+            ? Metres.FormatWithUnit(distance)
             : string.Empty;
         if (SensesNote == sensesNote && OutputsNote == outputsNote && DistanceNote == distanceNote)
         {
