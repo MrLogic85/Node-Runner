@@ -108,12 +108,12 @@ CreatureDef  ──build──▶  physical body  ──sensors──▶  model 
   beam is moved and settles at rest (`BuildSensorMotion`), in Training it
   follows the live proof mass. The Camera looks along its
   aim. In Build a selected Camera shows its full rays; in Training every
-  Camera always shows the rays that hit the ground, up to the hit, with a
-  `halo` ring there (#623), and nothing for a ray that sees nothing. Rays
-  are drawn over the joints, by draw order, not z-index (Build draws them
-  after the joints; Training's `CameraRaysVisual` is added after the joint
-  bodies). A tap hits a joint first, then a sensor, then a beam, in Build
-  and Training alike (`project/src/theme/SensorDrawing.cs`,
+  Camera on the followed shadow shows the rays that hit the ground, up to
+  the hit, with a `halo` ring there (#623), and nothing for a ray that sees
+  nothing. Rays are drawn over the joints, by draw order, not z-index
+  (Build draws them after the joints; Training's `CameraRaysVisual` is added
+  after the joint bodies). A tap hits a joint first, then a sensor, then a
+  beam, in Build and Training alike (`project/src/theme/SensorDrawing.cs`,
   `project/src/creature/SensorVisual.cs`).
 
 #### Accelerometer
@@ -227,6 +227,28 @@ either do nothing or fight the other two vertices.
 This generalizes to any rigid, triangulated structure (a larger truss is a
 composition of triangles), while correctly leaving non-triangulated closed
 shapes (e.g. a bare quadrilateral) with their genuine remaining freedom.
+
+## Drawing as a shadow
+
+Planned for #385 (0.13.0). In Training every shadow except the followed one
+is drawn simplified: the same shapes and colours as the followed creature,
+without detail, and transparent. This keeps drawing cheap with up to 32
+shadows and cuts the clutter when they overlap. Every node, beam and part
+visual declares how it draws as a shadow (not at all, simplified, or the same
+as on the followed creature), and a test checks that every kind has made that
+choice, so a new part cannot forget it.
+
+- **Node:** its ring at its drawn size, without a glyph. Joint parts that make
+  a node larger (motor joints, #626; later the Wheel, #129, and a touch
+  sensor, #665) only change that size.
+- **Beam:** its line, without angle marks, the rigid-area hatch or labels.
+- **Links** (Piston, Spring and later Wing): drawn as on the followed
+  creature. The Wing may lose detail; #600 decides.
+- **Blocks** (Battery, Generator and Fuel tank, 0.18.0): drawn as on the
+  followed creature, possibly with less detail; #600 decides.
+- **Sensors, Pulse and Camera rays:** not drawn.
+
+`docs/UI_DIRECTION.md` owns the transparency.
 
 ## Sensor–model contract
 
