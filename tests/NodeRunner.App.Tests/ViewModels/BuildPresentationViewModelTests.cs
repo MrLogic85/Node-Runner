@@ -34,6 +34,19 @@ public sealed class BuildPresentationViewModelTests
     }
 
     [Fact]
+    public void BestDistanceText_ShowsTheSavedBestInMetres()
+    {
+        var build = new BuildViewModel();
+        build.LoadCreation(new CreationDef(
+            Guid.NewGuid(),
+            "Worm",
+            PairCreature(),
+            TestTraining.State(3, bestFitness: 250, TestTraining.Run)));
+
+        new BuildPresentationViewModel(build).BestDistanceText.ShouldBe("2.5 m");
+    }
+
+    [Fact]
     public void SelectedBeam_ShowsNameEndsAndLengthGuidance()
     {
         var build = new BuildViewModel();

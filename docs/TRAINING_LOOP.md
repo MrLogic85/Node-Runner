@@ -78,6 +78,9 @@ transition to keep in step with it.
     invalid trial with its generation and candidate. Invalid results never
     become `BestRun`, never count toward `MeanFitness`, and must never be
     shown as real results (for example in Stats, #541).
+  - `Distance`, `TopSpeed` (units/s), `Elevation` and `Fitness` are in
+    world units. Text the player reads shows them in metres (see
+    `docs/GLOSSARY.md` → Metre).
 - `Evolver.BestRun` is the `TrialResult` of the best genome so far.
   `TrainingHost` persists it as `TrainingStateDef.BestRun` (`TrainingRunDef`, with
   `MapId` `flat` until more maps exist) so the Creations card can show it.
