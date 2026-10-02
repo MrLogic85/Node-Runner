@@ -130,15 +130,81 @@ public sealed class TrialMeasurementTests
     }
 
     [Fact]
-    public void Record_SkipsNonFiniteSamples()
+    public void Result_IsValidForAnOrdinaryTrial()
     {
         var measurement = Start(0);
 
-        measurement.Record(double.NaN, double.PositiveInfinity);
-        measurement.Record(4, 0);
-        measurement.Record(5, 2);
+        Record(measurement, 1, 2, 3);
 
-        measurement.Result.ShouldBe(new TrialResult(5, 0, 2));
+        measurement.Result.IsValid.ShouldBeTrue();
+        measurement.Result.Fitness.ShouldBe(3);
+    }
+
+    [Theory]
+    [InlineData(double.NaN, 0)]
+    [InlineData(double.PositiveInfinity, 0)]
+    [InlineData(0, double.NaN)]
+    [InlineData(0, double.NegativeInfinity)]
+    public void Result_IsInvalidAfterANonFiniteSample(double centerX, double groundClearance)
+    {
+        var measurement = Start(0);
+        measurement.Record(1, 0);
+
+        measurement.Record(centerX, groundClearance);
+
+        measurement.Result.IsValid.ShouldBeFalse();
+        measurement.Result.Fitness.ShouldBe(double.NegativeInfinity);
+    }
+
+    [Fact]
+    public void Result_IsInvalidWhenTheCentreJumpsFurtherThanAnythingCanMoveInOneTick()
+    {
+        var maxStep = TrialMeasurement.MaxPlausibleSpeed / _ticksPerSecond;
+        var measurement = Start(0);
+
+        measurement.Record(maxStep, 0);
+        measurement.Result.IsValid.ShouldBeTrue();
+
+        measurement.Record((2 * maxStep) + 1, 0);
+        measurement.Result.IsValid.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Result_IsInvalidWhenTheLowestPointJumpsFurtherThanAnythingCanMoveInOneTick()
+    {
+        var maxStep = TrialMeasurement.MaxPlausibleSpeed / _ticksPerSecond;
+        var measurement = Start(0);
+
+        // The first clearance has nothing to compare with, so a high start is fine.
+        measurement.Record(0, 5 * maxStep);
+        measurement.Record(0, 4 * maxStep);
+        measurement.Result.IsValid.ShouldBeTrue();
+
+        measurement.Record(0, (5 * maxStep) + 1);
+        measurement.Result.IsValid.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Result_StaysInvalidWhenTheTrialCarriesOn()
+    {
+        var measurement = Start(0);
+
+        measurement.Record(double.NaN, 0);
+        Record(measurement, 1, 2, 3);
+
+        measurement.Result.IsValid.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Reset_MakesTheNextTrialValidAgain()
+    {
+        var measurement = Start(0);
+        measurement.Record(double.NaN, 0);
+
+        measurement.Reset(0);
+        measurement.Record(1, 0);
+
+        measurement.Result.ShouldBe(new TrialResult(1, 0, 0));
     }
 
     [Fact]

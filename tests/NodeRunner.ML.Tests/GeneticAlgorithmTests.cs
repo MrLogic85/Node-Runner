@@ -157,6 +157,24 @@ public sealed class GeneticAlgorithmTests
     }
 
     [Fact]
+    public void NextGeneration_NeverKeepsAnInvalidGenomeAsAnElite()
+    {
+        var ga = new GeneticAlgorithm(2, mutationRate: 1.0, mutationStrength: 5.0, elitismCount: 2);
+        var genomes = new[]
+        {
+            new double[] { 1, 1 },
+            new double[] { 2, 2 },
+            new double[] { 100, 100 },
+        };
+        var fitness = new[] { double.NegativeInfinity, 2, double.NaN };
+
+        var next = ga.NextGeneration(genomes, fitness, new Random(3));
+
+        next[0].ShouldBe(new double[] { 2, 2 });
+        next.Skip(1).ShouldAllBe(genome => !genome.SequenceEqual(new double[] { 1, 1 }) && !genome.SequenceEqual(new double[] { 100, 100 }));
+    }
+
+    [Fact]
     public void NextGeneration_WithSameSeed_IsDeterministic()
     {
         var ga = new GeneticAlgorithm(2, 0.3, 0.2, elitismCount: 1);

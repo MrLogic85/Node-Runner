@@ -63,7 +63,8 @@ public sealed class GeneticAlgorithm
     /// fitness scores: the fittest <c>elitismCount</c> genomes carry over
     /// unchanged, and the rest are filled by tournament-selecting two
     /// parents, applying the configured crossover strategy, and mutating the
-    /// result.
+    /// result. A non-finite fitness marks an invalid trial: that genome is
+    /// never an elite, and loses any tournament it meets a valid genome in.
     /// </summary>
     public double[][] NextGeneration(double[][] genomes, double[] fitness, Random random)
     {
@@ -103,7 +104,7 @@ public sealed class GeneticAlgorithm
         var nextGeneration = new double[genomes.Length][];
         var slot = 0;
 
-        foreach (var eliteIndex in RankByFitnessDescending(fitness).Take(_elitismCount))
+        foreach (var eliteIndex in RankValidByFitnessDescending(fitness).Take(_elitismCount))
         {
             nextGeneration[slot] = (double[])genomes[eliteIndex].Clone();
             slot++;
@@ -174,8 +175,10 @@ public sealed class GeneticAlgorithm
         return Math.Sqrt(-2.0 * Math.Log(u1)) * Math.Cos(2.0 * Math.PI * u2);
     }
 
-    private static IEnumerable<int> RankByFitnessDescending(double[] fitness)
+    private static IEnumerable<int> RankValidByFitnessDescending(double[] fitness)
     {
-        return Enumerable.Range(0, fitness.Length).OrderByDescending(i => fitness[i]);
+        return Enumerable.Range(0, fitness.Length)
+            .Where(i => double.IsFinite(fitness[i]))
+            .OrderByDescending(i => fitness[i]);
     }
 }
