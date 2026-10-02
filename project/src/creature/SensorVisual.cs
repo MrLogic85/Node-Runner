@@ -6,7 +6,7 @@ namespace NodeRunner.Creature;
 /// <summary>
 /// A sensor's picture on its beam in Training (#576): a child of the beam body at the beam's
 /// midpoint, turned so its top faces the beam's built up side. The Accelerometer's weight follows
-/// the live proof mass every frame; a selected camera also draws its rays to what they see.
+/// the live proof mass every frame. A camera's rays are drawn by <see cref="CameraRaysVisual"/>.
 /// </summary>
 public partial class SensorVisual : Node2D
 {
@@ -38,7 +38,7 @@ public partial class SensorVisual : Node2D
 
     public override void _Process(double delta)
     {
-        if (Accelerometer is not null || (IsSelected && Camera is not null))
+        if (Accelerometer is not null)
         {
             QueueRedraw();
         }
@@ -46,11 +46,6 @@ public partial class SensorVisual : Node2D
 
     public override void _Draw()
     {
-        if (IsSelected && Camera is not null)
-        {
-            SensorDrawing.DrawRays(this, Theme, ToLocal(Camera.GlobalOrigin), Camera.GlobalRayEnds.Select(ToLocal));
-        }
-
         if (Accelerometer is not null)
         {
             SensorDrawing.DrawAccelerometer(this, Theme, Domain.Accelerometer.WeightOffset(Accelerometer.CurrentProofMass), IsSelected);

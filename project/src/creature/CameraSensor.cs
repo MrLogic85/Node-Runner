@@ -37,10 +37,8 @@ public sealed class CameraSensor : IBeamSensor
     /// <summary>Where each ray starts, in global space (the beam's midpoint).</summary>
     public Vector2 GlobalOrigin => _rays[0].GlobalPosition;
 
-    /// <summary>Where each ray ends as of the last physics step: its ground hit, or its full length.</summary>
-    public IEnumerable<Vector2> GlobalRayEnds => _rays.Select(ray => ray.IsColliding()
-        ? ray.GetCollisionPoint()
-        : ray.ToGlobal(ray.TargetPosition));
+    /// <summary>Each ray's ground hit as of the last physics step, in global space; a ray that sees nothing has none.</summary>
+    public IEnumerable<Vector2> GlobalHits => _rays.Where(ray => ray.IsColliding()).Select(ray => ray.GetCollisionPoint());
 
     public string GroupKind => "Camera";
 

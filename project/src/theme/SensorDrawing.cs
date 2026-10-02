@@ -14,6 +14,11 @@ public static class SensorDrawing
 {
     private const float _line = UiSize.Stroke.Signal;
     private const float _halo = 3;
+    private const float _rayDash = 8;
+    private const float _hitRadius = 6;
+
+    // Rays are drawn over the creature, so they leave from the camera picture's edge, not across it.
+    private const float _rayStart = (float)(SensorPicture.CameraSize / 2);
 
     // The Accelerometer: an upright frame, a spring from its top, and the weight.
     private const float _frameHalfWidth = 8;
@@ -85,7 +90,7 @@ public static class SensorDrawing
         canvas.DrawArc(bodyCentre.Rotated(turn), _lensRadius, 0, Mathf.Tau, 24, theme.SensorLine, _line, antialiased: true);
     }
 
-    /// <summary>A selected camera's rays from <paramref name="origin"/> to each end.</summary>
+    /// <summary>A selected camera's rays in Build, from <paramref name="origin"/> to each end.</summary>
     public static void DrawRays(CanvasItem canvas, VisualTheme theme, Vector2 origin, IEnumerable<Vector2> ends)
     {
         ArgumentNullException.ThrowIfNull(canvas);
@@ -93,7 +98,28 @@ public static class SensorDrawing
         ArgumentNullException.ThrowIfNull(ends);
         foreach (var end in ends)
         {
-            canvas.DrawDashedLine(origin, end, theme.SelectionGlow, UiSize.Stroke.Signal, 8, antialiased: false);
+            DrawRay(canvas, theme, origin, end);
+        }
+    }
+
+    /// <summary>A camera's rays in Training (#623): from <paramref name="origin"/> to each ground hit, with a <c>halo</c> ring at the hit.</summary>
+    public static void DrawRayHits(CanvasItem canvas, VisualTheme theme, Vector2 origin, IEnumerable<Vector2> hits)
+    {
+        ArgumentNullException.ThrowIfNull(canvas);
+        ArgumentNullException.ThrowIfNull(theme);
+        ArgumentNullException.ThrowIfNull(hits);
+        foreach (var hit in hits)
+        {
+            DrawRay(canvas, theme, origin, hit);
+            canvas.DrawArc(hit, _hitRadius, 0, Mathf.Tau, 24, theme.SelectionGlow, _line, antialiased: true);
+        }
+    }
+
+    private static void DrawRay(CanvasItem canvas, VisualTheme theme, Vector2 origin, Vector2 end)
+    {
+        if (origin.DistanceTo(end) > _rayStart)
+        {
+            canvas.DrawDashedLine(origin + (origin.DirectionTo(end) * _rayStart), end, theme.SelectionGlow, UiSize.Stroke.Signal, _rayDash, antialiased: false);
         }
     }
 

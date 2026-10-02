@@ -135,7 +135,11 @@ then the app follows the reference.
     run. The Camera looks along its aim (#594), and a selected Camera
     draws its rays from the midpoint plus an Aim handle (the rotate
     handle's glyph) out along its centre ray past the picture, with no
-    stem (#622). Its drag turns the camera smoothly, with no snap.
+    stem (#622). Its drag turns the camera smoothly, with no snap. In
+    Training a Camera always draws only the rays that hit the ground,
+    dashed `halo` up to the hit and a 6-unit `halo` ring there (#623);
+    shadows (#385) draw no rays. Rays leave from the picture's edge and
+    are drawn over the joints, by draw order rather than z-index.
   - *Order:* joints, then sensors, then beams, for both tapping and drawing.
     A sensor's tap area is its picture. Dragging a sensor in Move does
     nothing, and a Joint-tool tap on a sensor does not split the beam.
