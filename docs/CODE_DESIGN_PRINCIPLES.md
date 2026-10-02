@@ -132,6 +132,10 @@ See `docs/TEST_STRATEGY.md` for the full tooling table and per-layer detail.
 ## 11. Dependencies are a debt
 
 - Every added NuGet package or Godot addon is future maintenance.
+- Use what Godot already provides before writing our own: built-in nodes,
+  resources and settings (stretch, `ContentScaleFactor`, `DPITexture`,
+  themes, physics) win over a custom version of the same thing. Write our
+  own only when Godot has nothing that fits, and say why in the code or doc.
 - No ML libraries. We're building this to learn.
 - Physics: use Godot's built-in `RigidBody2D` + joints. Don't pull Box2D.NET.
 - Math: `System`, `System.Numerics`. If we need more, we implement it in
