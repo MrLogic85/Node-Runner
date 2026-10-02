@@ -20,7 +20,7 @@ public partial class CameraRaysVisual : Node2D
     {
         foreach (var camera in Cameras)
         {
-            SensorDrawing.DrawRayHits(this, Theme, ToLocal(camera.GlobalOrigin), camera.GlobalHits.Select(ToLocal));
+            SensorDrawing.DrawRayHits(this, Transform2D.Identity, Theme, ToLocal(camera.GlobalOrigin), camera.GlobalHits.Select(ToLocal));
         }
     }
 }

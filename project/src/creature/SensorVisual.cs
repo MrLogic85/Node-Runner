@@ -48,11 +48,11 @@ public partial class SensorVisual : Node2D
     {
         if (Accelerometer is not null)
         {
-            SensorDrawing.DrawAccelerometer(this, Theme, Domain.Accelerometer.WeightOffset(Accelerometer.CurrentProofMass), IsSelected);
+            SensorDrawing.DrawAccelerometer(this, Transform2D.Identity, Theme, Domain.Accelerometer.WeightOffset(Accelerometer.CurrentProofMass), IsSelected);
         }
         else
         {
-            SensorDrawing.DrawCamera(this, Theme, CameraAim, IsSelected);
+            SensorDrawing.DrawCamera(this, Transform2D.Identity, Theme, CameraAim, IsSelected);
         }
     }
 }
