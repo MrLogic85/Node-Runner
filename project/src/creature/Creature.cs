@@ -8,7 +8,13 @@ namespace NodeRunner.Creature;
 
 public partial class Creature : Node2D
 {
-    public const int MaximumCollisionSlots = 16;
+    /// <summary>The most shadows a generation runs at once (#384).</summary>
+    public const int MaximumShadows = 32;
+
+    // Ground is layer 1. Every creature body, in every shadow, shares layer 2 and masks only the
+    // ground, so shadows never touch each other or their own parts (#384).
+    private const uint _groundLayer = 1u;
+    private const uint _creatureLayer = 1u << 1;
 
     // A beam's weight is simulated as half on each of its end nodes, so a node's
     // mass is the sum of half of every beam it joins.
@@ -109,7 +115,6 @@ public partial class Creature : Node2D
 
         CreateBeams(definition);
         CreateNodes(definition);
-        DisableSelfCollisions();
         PinBeamsToNodes(definition);
         CreateSensors(definition);
         CreateMotorRelations(definition);
@@ -198,21 +203,6 @@ public partial class Creature : Node2D
         }
 
         ResetSensors();
-    }
-
-    public void ConfigureCollisionSlot(int slot)
-    {
-        if (slot is < 1 or > MaximumCollisionSlots)
-        {
-            throw new ArgumentOutOfRangeException(nameof(slot));
-        }
-
-        var slotLayer = 1u << slot;
-        foreach (var body in _beamBodies.Concat(_nodeBodies))
-        {
-            body.CollisionLayer = slotLayer;
-            body.CollisionMask = 1u | slotLayer;
-        }
     }
 
     /// <summary>
@@ -368,6 +358,8 @@ public partial class Creature : Node2D
             var body = new RigidBody2D
             {
                 Name = $"Beam{i}",
+                CollisionLayer = _creatureLayer,
+                CollisionMask = _groundLayer,
                 Position = midpoint,
                 Rotation = rotation,
                 Mass = _beamBodyMass,
@@ -429,6 +421,8 @@ public partial class Creature : Node2D
             var body = new RigidBody2D
             {
                 Name = $"Node{i}",
+                CollisionLayer = _creatureLayer,
+                CollisionMask = _groundLayer,
                 Position = position,
                 Mass = Math.Max(masses[i], _beamBodyMass),
                 LockRotation = true,
@@ -451,18 +445,6 @@ public partial class Creature : Node2D
             _nodeInitialPositions[i] = position;
             _nodeColliderRadii[i] = colliderRadius;
             _nodeVisuals[i] = visual;
-        }
-    }
-
-    private void DisableSelfCollisions()
-    {
-        var bodies = _beamBodies.Concat(_nodeBodies).ToArray();
-        for (var i = 0; i < bodies.Length; i++)
-        {
-            for (var j = i + 1; j < bodies.Length; j++)
-            {
-                bodies[i].AddCollisionExceptionWith(bodies[j]);
-            }
         }
     }
 

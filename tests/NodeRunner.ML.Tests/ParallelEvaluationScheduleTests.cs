@@ -8,6 +8,7 @@ public sealed class ParallelEvaluationScheduleTests
     [InlineData(1, 1)]
     [InlineData(4, 4)]
     [InlineData(20, 16)]
+    [InlineData(32, 32)]
     public void AssignAndComplete_EvaluatesEveryCandidateExactlyOnce(int populationSize, int slotCount)
     {
         var schedule = new ParallelEvaluationSchedule(populationSize, slotCount);
@@ -41,7 +42,18 @@ public sealed class ParallelEvaluationScheduleTests
         evaluated.Order().ShouldBe(Enumerable.Range(0, populationSize));
         evaluated.Distinct().Count().ShouldBe(populationSize);
         schedule.CompletedCount.ShouldBe(populationSize);
-        schedule.LowestActiveCandidate.ShouldBe(-1);
+    }
+
+    [Fact]
+    public void OneSlotPerShadow_StartsTheWholeGenerationAtOnce()
+    {
+        var schedule = new ParallelEvaluationSchedule(populationSize: 32, slotCount: 32);
+
+        var started = Enumerable.Range(0, 32).Select(slot => schedule.TryAssignNext(slot, out var candidate) ? candidate : -1).ToArray();
+
+        started.ShouldBe(Enumerable.Range(0, 32));
+        schedule.Complete(0);
+        schedule.TryAssignNext(0, out _).ShouldBeFalse();
     }
 
     [Fact]
@@ -57,7 +69,6 @@ public sealed class ParallelEvaluationScheduleTests
         schedule.CompletedCount.ShouldBe(0);
         schedule.TryAssignNext(0, out var firstCandidate).ShouldBeTrue();
         firstCandidate.ShouldBe(0);
-        schedule.LowestActiveCandidate.ShouldBe(0);
     }
 
     [Fact]

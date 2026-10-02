@@ -43,9 +43,6 @@ public partial class Evolver : Node
     /// <summary>Number of candidates in the active generation.</summary>
     public int PopulationSize => _genomes.Length;
 
-    /// <summary>Lowest one-based candidate number currently being evaluated, or zero when stopped.</summary>
-    public int CurrentCandidate => (_schedule?.LowestActiveCandidate ?? -1) + 1;
-
     /// <summary>Whether any candidate trial is currently active.</summary>
     public bool IsTrialActive => _primaryCreature is not null && _trialControllers.Any(controller => controller.IsRunning);
 
@@ -84,9 +81,10 @@ public partial class Evolver : Node
     /// <summary>
     /// Begins evolving brains for the given creature. <paramref name="layerSizes"/>
     /// must match the creature's sensor/motor counts (its input/output layers).
-    /// Supplying <paramref name="creatureFactory"/> enables fixed parallel
-    /// slots up to <paramref name="maxParallelSlots"/>; without it, evaluation
-    /// remains sequential for compatibility. <paramref name="groundTopY"/> is the
+    /// Supplying <paramref name="creatureFactory"/> runs every shadow of a
+    /// generation at once, one slot per genome, so <paramref name="populationSize"/>
+    /// is the Shadows value and at most <see cref="Creature.Creature.MaximumShadows"/>
+    /// (#384); without it, evaluation remains sequential for compatibility. <paramref name="groundTopY"/> is the
     /// ground's top edge, which each trial measures elevation from.
     /// <paramref name="disabledGenes"/> are genome positions that stay 0 in every
     /// candidate: a saved brain's disabled connection genes.
@@ -102,7 +100,6 @@ public partial class Evolver : Node
         int resumeGeneration = 0,
         int trialDurationTicks = 600,
         Func<Creature.Creature>? creatureFactory = null,
-        int maxParallelSlots = Creature.Creature.MaximumCollisionSlots,
         IReadOnlyList<int>? disabledGenes = null)
     {
         ArgumentNullException.ThrowIfNull(creature);
@@ -124,9 +121,9 @@ public partial class Evolver : Node
             throw new ArgumentOutOfRangeException(nameof(trialDurationTicks));
         }
 
-        if (maxParallelSlots is < 1 or > Creature.Creature.MaximumCollisionSlots)
+        if (creatureFactory is not null && populationSize > Creature.Creature.MaximumShadows)
         {
-            throw new ArgumentOutOfRangeException(nameof(maxParallelSlots));
+            throw new ArgumentOutOfRangeException(nameof(populationSize), $"At most {Creature.Creature.MaximumShadows} shadows run at once.");
         }
 
         if (resumeGenome is not null && resumeGenome.Length != NeuralNetwork.GenomeLength(layerSizes))
@@ -157,9 +154,7 @@ public partial class Evolver : Node
         _fitness = new double[populationSize];
         _results = new TrialResult[populationSize];
 
-        var slotCount = creatureFactory is null
-            ? 1
-            : Math.Min(populationSize, maxParallelSlots);
+        var slotCount = creatureFactory is null ? 1 : populationSize;
         _schedule = new ParallelEvaluationSchedule(populationSize, slotCount);
         ConfigureSlots(creature, slotCount, trialDurationTicks, groundTopY, creatureFactory);
         StartAvailableSlots();
@@ -199,7 +194,6 @@ public partial class Evolver : Node
             var creature = slot == 0
                 ? primaryCreature
                 : CreateParallelCreature(primaryCreature, creatureFactory!, slot);
-            creature.ConfigureCollisionSlot(slot + 1);
             _creatures.Add(creature);
 
             var controller = new TrialController

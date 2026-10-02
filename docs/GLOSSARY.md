@@ -19,7 +19,7 @@ Code, docs and copy use them; the ML layer keeps its textbook terms.
   never calls the saved item a creature.
 - **Shadow** — One of the ghost copies that race at once during training.
   The App maps the GA's candidates and population to shadows at its
-  boundary (`ITrainingProgressSource.CurrentShadow`, `ShadowCount`).
+  boundary (`ITrainingProgressSource.ShadowCount`).
 
 Kept on purpose:
 
@@ -137,8 +137,8 @@ Long-form descriptions and the sensor/model contract live in
 - **Optimizer** — In backprop, the rule for turning a gradient into a weight
   update. SGD, momentum, Adam.
 - **Population** — The set of candidate genomes (brains) evaluated in one
-  generation. `Evolver` evaluates up to 16 candidates concurrently in fixed,
-  collision-isolated slots. The first slot is visible; additional slots are
+  generation. `Evolver` evaluates every candidate at once (up to 32), one
+  slot each; creature bodies collide only with the ground. The first slot is visible; additional slots are
   hidden until population visualization is implemented. The player sees
   the candidates as **shadows**.
 - **Reinforcement Learning (RL)** — Training via reward signals from

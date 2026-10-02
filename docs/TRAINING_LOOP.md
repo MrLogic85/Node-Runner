@@ -136,10 +136,15 @@ transition to keep in step with it.
   (current generation's average over valid trials, 0 if none were valid), and raises
   `GenerationCompleted`/`NewBestFound`, which the Training scene (see
   "The Training scene" below) subscribes to.
-  - Concurrency is capped at 16 and never exceeds population size. Layer 1 is
-    reserved for ground; zero-based slot `i` uses layer `2+i` and collides
-    only with ground and its own slot. Camera rays see the ground only
-    (mask 1), never another creature.
+  - Every shadow runs at once: there is one slot per candidate, and
+    `Evolver.Start` rejects a population above `Creature.MaximumShadows`
+    (32). Layer 1 is the ground; every creature body uses layer 2 with mask
+    1, so a body hits the ground and nothing else, neither its own parts
+    nor another shadow. Camera rays see the ground only (mask 1).
+  - Measured on a Galaxy S25 with the Worm (#384): 32 hidden shadows keep
+    a 10 s generation at 8.3 ms frames (120 Hz) and about 366 MiB PSS;
+    drawing all 32 at 30 % opacity raised p95 to 16.6 ms and PSS to about
+    436 MiB.
   - Candidate assignment is deterministic for the same seed, parallel mode,
     slot count, build, and platform. Sequential and parallel fitness parity
     is not promised because physics ordering can differ.
@@ -229,6 +234,5 @@ by the TrainSetup and Training component READMEs under `reference design/compone
 
 ## Deferred future work
 
-- Parallel slot clones remain hidden. Showing live ghost candidates and a
-  solid previous-generation reference is tracked separately in issue #137;
-  it must reuse this slot lifecycle rather than create another population.
+- Parallel slot clones remain hidden. Drawing them as shadows is #385; it
+  must reuse this slot lifecycle rather than create another population.

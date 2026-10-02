@@ -9,17 +9,16 @@ public sealed class TrainingPresentationViewModelTests
     {
         var presentation = new TrainingPresentationViewModel();
 
-        presentation.Update(5, 3, 8, 12.8, 8.4, 4, true, [10.1, 11.2]);
+        presentation.Update(5, 8, 12.8, 8.4, 4, true, [10.1, 11.2]);
 
         presentation.Generation.ShouldBe(5);
-        presentation.Shadow.ShouldBe(3);
         presentation.ShadowCount.ShouldBe(8);
         presentation.BestFitness.ShouldBe(12.8);
         presentation.MeanFitness.ShouldBe(8.4);
         presentation.BestGeneration.ShouldBe(4);
         presentation.IsTrialActive.ShouldBeTrue();
         presentation.CompletedFitness.ShouldBe([10.1, 11.2]);
-        presentation.GenerationText.ShouldBe("Generation 5 · try 3 of 8");
+        presentation.GenerationText.ShouldBe("Generation 5 · 8 shadows racing");
         presentation.BestFitnessText.ShouldBe("Best: 12.8 (gen 4)");
         presentation.MeanFitnessText.ShouldBe("Mean: 8.4");
     }
@@ -29,9 +28,9 @@ public sealed class TrainingPresentationViewModelTests
     {
         var presentation = new TrainingPresentationViewModel();
 
-        presentation.Update(5, 0, 8, double.NegativeInfinity, 0, 0, false, []);
+        presentation.Update(5, 8, double.NegativeInfinity, 0, 0, false, []);
 
-        presentation.GenerationText.ShouldBe("Generation 5 · session complete");
+        presentation.GenerationText.ShouldBe("Generation 5 · Training finished");
         presentation.BestFitnessText.ShouldBe("Best: —");
         presentation.MeanFitnessText.ShouldBe("Mean: 0.0");
     }
@@ -43,7 +42,7 @@ public sealed class TrainingPresentationViewModelTests
         var raised = false;
         presentation.PropertyChanged += (_, _) => raised = true;
 
-        presentation.Update(1, 1, 2, 0, 0, 0, true, []);
+        presentation.Update(1, 2, 0, 0, 0, true, []);
 
         raised.ShouldBeTrue();
     }
@@ -54,7 +53,6 @@ public sealed class TrainingPresentationViewModelTests
         var source = new FakeTrainingProgressSource
         {
             Generation = 2,
-            CurrentShadow = 1,
             ShadowCount = 4,
             BestFitness = double.NegativeInfinity,
             MeanFitness = 0,
@@ -65,7 +63,6 @@ public sealed class TrainingPresentationViewModelTests
         presentation.PropertyChanged += (_, _) => raised = true;
 
         source.Generation = 3;
-        source.CurrentShadow = 2;
         source.BestFitness = 9.4;
         source.MeanFitness = 5.1;
         source.CompletedFitness = [9.4];
@@ -73,7 +70,6 @@ public sealed class TrainingPresentationViewModelTests
 
         raised.ShouldBeTrue();
         presentation.Generation.ShouldBe(3);
-        presentation.Shadow.ShouldBe(2);
         presentation.BestFitness.ShouldBe(9.4);
         presentation.MeanFitness.ShouldBe(5.1);
         presentation.CompletedFitness.ShouldBe([9.4]);
@@ -85,7 +81,6 @@ public sealed class TrainingPresentationViewModelTests
         var source = new FakeTrainingProgressSource
         {
             Generation = 7,
-            CurrentShadow = 4,
             ShadowCount = 8,
             BestFitness = 21.3,
             MeanFitness = 10.5,
@@ -99,7 +94,6 @@ public sealed class TrainingPresentationViewModelTests
         presentation.BestFitnessText.ShouldBe("Best: 21.3 (gen 7)");
 
         source.Generation = 8;
-        source.CurrentShadow = 1;
         source.RaiseProgressChanged();
 
         presentation.Generation.ShouldBe(8);
@@ -113,7 +107,6 @@ public sealed class TrainingPresentationViewModelTests
         var source = new FakeTrainingProgressSource
         {
             Generation = 1,
-            CurrentShadow = 1,
             ShadowCount = 2,
             BestFitness = 4,
             MeanFitness = 3,
@@ -177,8 +170,6 @@ public sealed class TrainingPresentationViewModelTests
         public bool IsDisposed { get; private set; }
 
         public int Generation { get; set; }
-
-        public int CurrentShadow { get; set; }
 
         public int ShadowCount { get; set; }
 

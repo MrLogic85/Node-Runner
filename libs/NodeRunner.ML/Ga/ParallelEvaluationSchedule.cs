@@ -34,23 +34,6 @@ public sealed class ParallelEvaluationSchedule
 
     public bool IsComplete => CompletedCount == PopulationSize;
 
-    public int LowestActiveCandidate
-    {
-        get
-        {
-            var lowest = int.MaxValue;
-            foreach (var candidate in _activeCandidates)
-            {
-                if (candidate >= 0)
-                {
-                    lowest = Math.Min(lowest, candidate);
-                }
-            }
-
-            return lowest == int.MaxValue ? -1 : lowest;
-        }
-    }
-
     public int ActiveCandidate(int slot)
     {
         ValidateSlot(slot);

@@ -7,7 +7,6 @@ public sealed class TrainingPresentationViewModel : INotifyPropertyChanged, IDis
 {
     private readonly ITrainingProgressSource? _source;
     private int _generation;
-    private int _shadow;
     private int _shadowCount;
     private double _bestFitness = double.NegativeInfinity;
     private double _meanFitness;
@@ -33,7 +32,6 @@ public sealed class TrainingPresentationViewModel : INotifyPropertyChanged, IDis
     }
 
     public int Generation => _generation;
-    public int Shadow => _shadow;
     public int ShadowCount => _shadowCount;
     public double BestFitness => _bestFitness;
     public double MeanFitness => _meanFitness;
@@ -42,8 +40,8 @@ public sealed class TrainingPresentationViewModel : INotifyPropertyChanged, IDis
     public IReadOnlyList<double> CompletedFitness => _completedFitness;
 
     public string GenerationText => _isTrialActive
-        ? $"Generation {_generation} · try {_shadow} of {_shadowCount}"
-        : $"Generation {_generation} · session complete";
+        ? $"Generation {_generation} · {_shadowCount} shadows racing"
+        : $"Generation {_generation} · Training finished";
 
     public string BestFitnessText => double.IsNegativeInfinity(_bestFitness)
         ? "Best: —"
@@ -53,7 +51,6 @@ public sealed class TrainingPresentationViewModel : INotifyPropertyChanged, IDis
 
     public void Update(
         int generation,
-        int shadow,
         int shadowCount,
         double bestFitness,
         double meanFitness,
@@ -62,13 +59,11 @@ public sealed class TrainingPresentationViewModel : INotifyPropertyChanged, IDis
         IReadOnlyList<double> completedFitness)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(generation);
-        ArgumentOutOfRangeException.ThrowIfNegative(shadow);
         ArgumentOutOfRangeException.ThrowIfNegative(shadowCount);
         ArgumentOutOfRangeException.ThrowIfNegative(bestGeneration);
         ArgumentNullException.ThrowIfNull(completedFitness);
 
         _generation = generation;
-        _shadow = shadow;
         _shadowCount = shadowCount;
         _bestFitness = bestFitness;
         _meanFitness = meanFitness;
@@ -106,7 +101,6 @@ public sealed class TrainingPresentationViewModel : INotifyPropertyChanged, IDis
     {
         Update(
             _source!.Generation,
-            _source.CurrentShadow,
             _source.ShadowCount,
             _source.BestFitness,
             _source.MeanFitness,
