@@ -107,6 +107,16 @@ then the app follows the reference.
   - a row is a tap band across its label and dot; tapping anywhere else
     clears the selection;
   - Signal flow leaves out the hidden-layer size header ("64 · 32").
+- **Shadows are drawn simplified (#385).** The reference draws the leader in
+  full and the other shadows faded but fully detailed, at opacity 0.32 and 0.2
+  (Training; GenerationStrip). Instead the followed shadow, which need not be
+  the leader, is drawn in full. Every other shadow, the leader included, is
+  drawn simplified (`docs/CREATURE_MODEL.md` → "Drawing as a shadow") in its
+  normal colours at one alpha, a new `UiTokens.Alpha` entry `alpha_shadow`
+  (start at 0.32, the reference's nearer shadow; tune on device). The leader
+  is marked only in the shadow strip. The reference's camera follows the
+  leader; here it follows the previous best by default (shadow 1 in
+  generation 0) and never switches to the leader by itself. Owner decision.
 - **No part counts until 0.19.0 (#374, 0.12.0).** The reference limits the
   parts you place and shows counts ("1 left") in the tray and in Build
   feedback (`reference design/README.md`, Build and "Rules that fix the known
@@ -150,10 +160,11 @@ then the app follows the reference.
     run. The Camera looks along its aim. A selected Camera draws its rays
     from the midpoint plus an Aim handle (the rotate handle's glyph) out
     along its centre ray past the picture, with no stem; dragging it turns
-    the camera smoothly, with no snap. In Training a Camera draws only the
-    rays that hit the ground, dashed `halo` up to the hit and a 6-unit
-    `halo` ring there; shadows draw no rays. Rays leave from the picture's
-    edge and are drawn over the joints.
+    the camera smoothly, with no snap. In Training a Camera on the followed
+    shadow draws only the rays that hit the ground, dashed `halo` up to the
+    hit and a 6-unit `halo` ring there; other shadows draw no rays
+    (`docs/CREATURE_MODEL.md` → "Drawing as a shadow"). Rays leave from the
+    picture's edge and are drawn over the joints.
   - *Order:* joints, then sensors, then beams, for both tapping and drawing.
     Dragging a sensor in Move does nothing, and a Joint-tool tap on a
     sensor does not split the beam.
