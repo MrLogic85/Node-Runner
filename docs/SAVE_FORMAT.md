@@ -83,10 +83,13 @@ Schema: [`save-schema/creation.schema.json`](save-schema/creation.schema.json).
 
 | Field | Type | Meaning |
 |---|---|---|
-| `brain` | object | The best brain found so far, as a graph; see below. It is the distance elite: reopening Training breeds the next generation from it (warm start, #538). |
-| `generation` | int | Finished generations. |
-| `bestFitness` | double | The GA's score for `brain`. |
-| `bestRun` | `{ distance, topSpeed, elevation, mapId }` | What the best run measured; the Creations card shows it (`docs/TRAINING_LOOP.md`). |
+| `brain` | object | The best brain of the latest finished generation, as a graph; see below. Reopening Training breeds the next generation from it (warm start, #538). |
+| `generation` | int | Finished generations, at least 1. The latest generation is this one. |
+| `latest` | `{ distance, topSpeed, elevation, mapId }` | What `brain`'s run measured in the latest generation. It can go down; the Creations card and Build show it (#479). |
+| `best` | `{ generation, distance, mapId }` | The best ever on that map, from any generation. It never goes down; the Training top bar shows it (#479). |
+
+Latest and best are explained in `docs/TRAINING_LOOP.md` → "Latest and best
+ever".
 
 `training.brain` (#536) is a graph keyed by the creature's brain ports
 (`docs/CREATURE_MODEL.md` → "Sensor–model contract"), so it never depends on
@@ -113,7 +116,7 @@ longer has are dropped on the next save.
 | Per-part `locked` flag | #371 |
 | `training.state`: map-loop position, the elites of other fitness functions | #540, #317 |
 | `training.settings`: Shadows, checked maps, fitness functions | #528, #540, #317 |
-| `training.best`: best result per map, replacing `bestRun` | #540 |
+| `training.latest` and `training.best` per map | #540 |
 | `created`, `updated` | Added with the first feature that shows them. |
 
 ## `history.json` (planned, #541)

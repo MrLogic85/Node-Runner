@@ -27,7 +27,6 @@ public sealed class TrainingPresentationViewModel : INotifyPropertyChanged, IDis
 
         _source = source;
         _source.ProgressChanged += OnProgressChanged;
-        _source.NewBestFound += OnNewBestFound;
         ApplySourceState();
     }
 
@@ -140,18 +139,11 @@ public sealed class TrainingPresentationViewModel : INotifyPropertyChanged, IDis
 
         _disposed = true;
         _source.ProgressChanged -= OnProgressChanged;
-        _source.NewBestFound -= OnNewBestFound;
         _source.Dispose();
     }
 
     private void OnProgressChanged()
     {
-        ApplySourceState();
-    }
-
-    private void OnNewBestFound()
-    {
-        _bestGeneration = _source!.Generation;
         ApplySourceState();
     }
 
@@ -162,7 +154,7 @@ public sealed class TrainingPresentationViewModel : INotifyPropertyChanged, IDis
             _source.ShadowCount,
             _source.BestFitness,
             _source.MeanFitness,
-            _bestGeneration,
+            _source.BestGeneration,
             _source.IsTrialActive,
             _source.CompletedFitness);
     }

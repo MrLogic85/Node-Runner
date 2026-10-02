@@ -64,7 +64,7 @@ public sealed class BuildViewModel : INotifyPropertyChanged
     private readonly HashSet<int> _selectedNodeIds = [];
     private string _creationName = NewCreationWorkflow.UntitledName;
     private int? _trainingGeneration;
-    private double? _bestFitness;
+    private double? _latestDistance;
     private int? _selectedBeamId;
     private int? _selectedSensorId;
     private int? _selectedPistonId;
@@ -88,7 +88,7 @@ public sealed class BuildViewModel : INotifyPropertyChanged
         _selectedPistonId = null;
         _creationName = string.IsNullOrWhiteSpace(creationName) ? NewCreationWorkflow.UntitledName : creationName;
         _trainingGeneration = training?.Generation;
-        _bestFitness = training?.BestFitness;
+        _latestDistance = training?.Latest.Distance;
         _moveOnly = moveOnly;
         ActiveTool = BuildTool.Move;
         StatusMessage = null;
@@ -118,7 +118,8 @@ public sealed class BuildViewModel : INotifyPropertyChanged
 
     public int? TrainingGeneration => _trainingGeneration;
 
-    public double? BestFitness => _bestFitness;
+    /// <summary>How far the latest finished generation's best run got (#479); it can go down.</summary>
+    public double? LatestDistance => _latestDistance;
 
     public int SelectedNodeCount => _selectedNodeIds.Count;
 

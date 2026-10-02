@@ -38,7 +38,7 @@ public sealed class CreationsPresentationViewModelTests
         walker.Creature.ShouldBe(trained.Creature);
         walker.SummaryText.ShouldBeEmpty();
         walker.ThumbnailText.ShouldBe("2 nodes · 1 beam · 1 sensor");
-        walker.Training.ShouldBe(new CreationCardTraining("18.4", "3.1", "1.2", MapIds.Flat, "12 generations"));
+        walker.Training.ShouldBe(new CreationCardTraining("18.4", "3.1", "1.2", MapIds.Flat, "Latest of 12 generations"));
         walker.CanOpen.ShouldBeTrue();
         walker.CanDuplicate.ShouldBeTrue();
         walker.CanDelete.ShouldBeTrue();
@@ -132,7 +132,7 @@ public sealed class CreationsPresentationViewModelTests
         viewModel.HasError.ShouldBeFalse();
         viewModel.LoadError.ShouldBeNull();
         viewModel.Cards.Single().Name.ShouldBe("Crawler");
-        viewModel.Cards.Single().Training!.GenerationsText.ShouldBe("9 generations");
+        viewModel.Cards.Single().Training!.GenerationsText.ShouldBe("Latest of 9 generations");
     }
 
     [Fact]
@@ -186,7 +186,7 @@ public sealed class CreationsPresentationViewModelTests
         Should.Throw<ArgumentNullException>(() => new CreationsPresentationViewModel(null!));
     }
 
-    private static CreationDef CreateCreation(string name, int generation, TrainingRunDef? bestRun = null)
+    private static CreationDef CreateCreation(string name, int generation, TrainingRunDef? latest = null)
     {
         return new CreationDef(
             Guid.NewGuid(),
@@ -195,7 +195,7 @@ public sealed class CreationsPresentationViewModelTests
                 [new NodeDef(1, new Vector2D(0, 0), 1), new NodeDef(2, new Vector2D(2, 0), 1)],
                 [new BeamDef(101, 1, 2)],
                 [new SensorDef(201, 101, SensorKind.Accelerometer)]),
-            TestTraining.State(generation, 1, bestRun ?? TestTraining.Run));
+            TestTraining.State(generation, 1, latest ?? TestTraining.Run));
     }
 
     private sealed class ThrowingCreationRepository(Exception exception) : ICreationRepository

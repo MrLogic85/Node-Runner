@@ -265,7 +265,7 @@ public partial class BuildScreen : Control
         if (savedPanel.Visible)
         {
             GetNode<UiLabel>("%SavedTitle").Text = presentation.TrainingSummaryTitle;
-            GetNode<UiLabel>("%SavedBest").Text = $"Best distance {presentation.BestDistanceText}";
+            GetNode<UiLabel>("%SavedLatest").Text = presentation.LatestDistanceText;
             GetNode<UiLabel>("%SavedBody").Text = presentation.TrainingSummaryBody;
         }
 

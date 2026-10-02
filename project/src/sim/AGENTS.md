@@ -45,7 +45,7 @@
 - Collision isolation must follow the canonical slot allocation in
   `docs/TRAINING_LOOP.md`; do not introduce an independent layer scheme here.
 - Emit C# events for milestones (`GenerationCompleted`,
-  `NewBestFound`). ViewModels subscribe.
+  `TrainingProgressChanged`). ViewModels subscribe.
 - Fitness accumulation happens in `_PhysicsProcess`, not on generation
   boundary — cheaper and monotonic.
 

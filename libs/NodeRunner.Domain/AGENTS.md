@@ -47,7 +47,8 @@ Pure C# data types. The vocabulary of the app, no behavior beyond invariants.
   output conventions (see the exception above)
 - `BrainDef`, `NeuronDef`, `ConnectionGeneDef`, `NeuronKind`,
   `NeuronActivation` — the saved brain graph (#536)
-- `CreationDef`, `TrainingStateDef`, `TrainingRunDef` — a saved Creation
+- `CreationDef`, `TrainingStateDef`, `TrainingRunDef`, `TrainingBestDef` — a
+  saved Creation
 - `SimulationConfig`, `GaConfig` — hyperparameters
 - `Vector2D` — our own `readonly record struct` (Godot.Vector2 stays on the
   Godot side)

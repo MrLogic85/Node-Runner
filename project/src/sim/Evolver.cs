@@ -31,14 +31,19 @@ public partial class Evolver : Node
 
     public int Generation { get; private set; }
 
+    /// <summary>The best score ever reached, by any generation; it never goes down (#479).</summary>
     public double BestFitness { get; private set; } = double.NegativeInfinity;
+
+    /// <summary>The generation that reached <see cref="BestFitness"/>; 0 before any has.</summary>
+    public int BestGeneration { get; private set; }
 
     public double MeanFitness { get; private set; }
 
-    public double[]? BestGenome { get; private set; }
+    /// <summary>The best genome of the latest finished generation; null before one finishes, or when none of its trials was valid.</summary>
+    public double[]? LatestGenome { get; private set; }
 
-    /// <summary>What the trial behind <see cref="BestGenome"/> measured; null until a trial in this run beats the starting best (the saved best fitness when resuming).</summary>
-    public TrialResult? BestRun { get; private set; }
+    /// <summary>What the trial behind <see cref="LatestGenome"/> measured.</summary>
+    public TrialResult? LatestRun { get; private set; }
 
     public int[] LayerSizes => _layerSizes.ToArray();
 
@@ -85,9 +90,6 @@ public partial class Evolver : Node
 
     /// <summary>Raised after every genome in a generation has been evaluated and the next generation has been produced.</summary>
     public event Action? GenerationCompleted;
-
-    /// <summary>Raised when a generation's best fitness exceeds every previous generation's best.</summary>
-    public event Action? NewBestFound;
 
     /// <summary>Raised when active candidates, completed candidates, or the generation changes.</summary>
     public event Action? TrainingProgressChanged;
@@ -137,8 +139,8 @@ public partial class Evolver : Node
     /// <paramref name="disabledGenes"/> are genome positions that stay 0 in every
     /// candidate: a saved brain's disabled connection genes. Without
     /// <paramref name="resumeGenome"/> the run starts at generation 0 (#537); with it, the saved
-    /// elite and its children open the run (#538), and only a score above
-    /// <paramref name="resumeBestFitness"/> replaces it as <see cref="BestGenome"/>.
+    /// elite and its children open the run (#538), and <see cref="BestFitness"/> starts from
+    /// <paramref name="resumeBestFitness"/>, reached in <paramref name="resumeBestGeneration"/>.
     /// </summary>
     public void Start(
         Creature.Creature creature,
@@ -150,6 +152,7 @@ public partial class Evolver : Node
         double[]? resumeGenome = null,
         int resumeGeneration = 0,
         double resumeBestFitness = double.NegativeInfinity,
+        int resumeBestGeneration = 0,
         int trialDurationTicks = 600,
         Func<Creature.Creature>? creatureFactory = null,
         IReadOnlyList<int>? disabledGenes = null)
@@ -192,9 +195,10 @@ public partial class Evolver : Node
         _disabledGenes = disabledGenes?.ToArray() ?? [];
         Generation = resumeGeneration;
         BestFitness = resumeGenome is null ? double.NegativeInfinity : resumeBestFitness;
+        BestGeneration = resumeGenome is null ? 0 : resumeBestGeneration;
         MeanFitness = 0;
-        BestGenome = resumeGenome?.ToArray();
-        BestRun = null;
+        LatestGenome = null;
+        LatestRun = null;
 
         _genomes = resumeGenome is null
             ? GenerationZero.Population(creature.Ports, populationSize, rng)
@@ -323,20 +327,28 @@ public partial class Evolver : Node
 
     private void FinishGeneration()
     {
-        var generationBest = _fitness.Max();
-        var isNewBest = generationBest > BestFitness;
+        Generation++;
+        var latestIndex = -1;
+        for (var i = 0; i < _fitness.Length; i++)
+        {
+            if (double.IsFinite(_fitness[i]) && (latestIndex < 0 || _fitness[i] > _fitness[latestIndex]))
+            {
+                latestIndex = i;
+            }
+        }
+
+        var isNewBest = latestIndex >= 0 && _fitness[latestIndex] > BestFitness;
+        LatestGenome = latestIndex >= 0 ? _genomes[latestIndex].ToArray() : null;
+        LatestRun = latestIndex >= 0 ? _results[latestIndex] : null;
 
         if (isNewBest)
         {
-            var bestIndex = Array.IndexOf(_fitness, generationBest);
-            BestGenome = _genomes[bestIndex].ToArray();
-            BestRun = _results[bestIndex];
+            BestFitness = _fitness[latestIndex];
+            BestGeneration = Generation;
         }
 
-        BestFitness = Math.Max(BestFitness, generationBest);
         var validFitness = _fitness.Where(double.IsFinite).ToArray();
         MeanFitness = validFitness.Length > 0 ? validFitness.Average() : 0;
-        Generation++;
 
         _opensWithPreviousBest = _ga!.ElitismCount > 0 && _fitness.Any(double.IsFinite);
         _genomes = _ga.NextGeneration(_genomes, _fitness, _rng!);
@@ -347,11 +359,6 @@ public partial class Evolver : Node
 
         GenerationCompleted?.Invoke();
         TrainingProgressChanged?.Invoke();
-        if (isNewBest)
-        {
-            NewBestFound?.Invoke();
-        }
-
         if (_primaryCreature is null)
         {
             return;

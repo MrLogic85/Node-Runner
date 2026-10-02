@@ -34,16 +34,16 @@ public sealed class BuildPresentationViewModelTests
     }
 
     [Fact]
-    public void BestDistanceText_ShowsTheSavedBestInMetres()
+    public void LatestDistanceText_ShowsTheLatestGenerationNotTheBestEver()
     {
         var build = new BuildViewModel();
         build.LoadCreation(new CreationDef(
             Guid.NewGuid(),
             "Worm",
             PairCreature(),
-            TestTraining.State(3, bestFitness: 250, TestTraining.Run)));
+            TestTraining.State(3, bestDistance: 400, new TrainingRunDef(250, 1, 0, MapIds.Flat))));
 
-        new BuildPresentationViewModel(build).BestDistanceText.ShouldBe("2.5 m");
+        new BuildPresentationViewModel(build).LatestDistanceText.ShouldBe("Latest distance 2.5 m");
     }
 
     [Fact]

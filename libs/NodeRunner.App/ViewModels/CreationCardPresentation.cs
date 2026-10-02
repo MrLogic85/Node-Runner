@@ -28,9 +28,9 @@ public sealed record CreationCardPresentation(
 }
 
 /// <summary>
-/// What a trained card shows of its latest training: the best run's distance and elevation in
-/// metres and top speed in m/s, all without units, the map it ran on and how many generations it
-/// has trained.
+/// What a trained card shows of its latest training (#479): the latest generation's best run's
+/// distance and elevation in metres and top speed in m/s, all without units, the map it ran on and
+/// how many generations it has trained. These can go down; the best ever belongs to Stats.
 /// </summary>
 public sealed record CreationCardTraining(
     string DistanceText,
@@ -42,12 +42,14 @@ public sealed record CreationCardTraining(
     public static CreationCardTraining From(TrainingStateDef training)
     {
         ArgumentNullException.ThrowIfNull(training);
-        var run = training.BestRun;
+        var run = training.Latest;
         return new CreationCardTraining(
             Metres.Format(run.Distance),
             Metres.Format(run.TopSpeed),
             Metres.Format(run.Elevation),
             run.MapId,
-            CreationCardPresentation.FormatCount(training.Generation, "generation"));
+            training.Generation == 1
+                ? "1 generation"
+                : $"Latest of {CreationCardPresentation.FormatCount(training.Generation, "generation")}");
     }
 }

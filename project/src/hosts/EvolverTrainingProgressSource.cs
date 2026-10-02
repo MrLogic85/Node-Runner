@@ -13,13 +13,10 @@ public sealed class EvolverTrainingProgressSource : ITrainingProgressSource
 
         _evolver = evolver;
         _evolver.TrainingProgressChanged += OnProgressChanged;
-        _evolver.NewBestFound += OnNewBestFound;
         _evolver.FollowedShadowChanged += OnProgressChanged;
     }
 
     public event Action? ProgressChanged;
-
-    public event Action? NewBestFound;
 
     public int Generation => _evolver.Generation;
 
@@ -27,6 +24,8 @@ public sealed class EvolverTrainingProgressSource : ITrainingProgressSource
     public int ShadowCount => _evolver.PopulationSize;
 
     public double BestFitness => _evolver.BestFitness;
+
+    public int BestGeneration => _evolver.BestGeneration;
 
     public double MeanFitness => _evolver.MeanFitness;
 
@@ -47,15 +46,9 @@ public sealed class EvolverTrainingProgressSource : ITrainingProgressSource
         ProgressChanged?.Invoke();
     }
 
-    private void OnNewBestFound()
-    {
-        NewBestFound?.Invoke();
-    }
-
     public void Dispose()
     {
         _evolver.TrainingProgressChanged -= OnProgressChanged;
-        _evolver.NewBestFound -= OnNewBestFound;
         _evolver.FollowedShadowChanged -= OnProgressChanged;
     }
 }

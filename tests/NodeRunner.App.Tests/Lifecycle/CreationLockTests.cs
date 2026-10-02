@@ -7,7 +7,6 @@ public sealed class CreationLockTests
 {
     [Theory]
     [InlineData(null, false)]
-    [InlineData(0, false)]
     [InlineData(1, true)]
     [InlineData(40, true)]
     public void IsLocked_OnceAtLeastOneGenerationIsTrained(int? generation, bool locked)

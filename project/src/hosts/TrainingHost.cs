@@ -47,8 +47,7 @@ public partial class TrainingHost : Node, IRoutedScene
     private ISceneNavigator? _navigator;
     private Guid? _creationId;
     // The brain last saved, so the next save keeps its neuron ids and disabled genes.
-    private BrainDef? _savedBrain;
-    private TrainingRunDef? _savedRun;
+    private TrainingStateDef? _saved;
     private Creature.Creature? _creature;
     // The shadow drawn in full, read by signal flow, the brain and part selection (#385).
     private Creature.Creature? _followed;
@@ -267,7 +266,7 @@ public partial class TrainingHost : Node, IRoutedScene
         _evolver = evolver;
     }
 
-    // Resumes from the creation's saved best genome and generation, or starts at generation 0
+    // Resumes from the creation's saved latest brain and generation (#479), or starts at generation 0
     // (#537) without one.
     private void StartEvolution(CreationDef? creation)
     {
@@ -279,8 +278,7 @@ public partial class TrainingHost : Node, IRoutedScene
         }
 
         var resume = creation?.Training;
-        _savedBrain = resume?.Brain;
-        _savedRun = resume?.BestRun;
+        _saved = resume;
         var disabledGenes = resume is null ? null : DirectBrain.DisabledGenes(resume.Brain, _creature.Ports);
         _brainFocus.Configure(BrainPortLabels.For(definition), disabledGenes ?? []);
         _sessionGenerationStart = resume?.Generation ?? 0;
@@ -293,7 +291,8 @@ public partial class TrainingHost : Node, IRoutedScene
             GroundTopY,
             resume is null ? null : DirectBrain.Compile(resume.Brain, _creature.Ports),
             resume?.Generation ?? 0,
-            resume?.BestFitness ?? double.NegativeInfinity,
+            resume?.Best.Distance ?? double.NegativeInfinity,
+            resume?.Best.Generation ?? 0,
             _profile.TrialDurationTicks,
             CreateCreatureInstance,
             disabledGenes: disabledGenes);
@@ -331,28 +330,22 @@ public partial class TrainingHost : Node, IRoutedScene
     // cross to that thread, and nothing comes back to this scene, which may be gone by then.
     private void PersistTraining()
     {
-        if (_creationId is not { } id || _evolver is null || _creature?.Brain is null)
-        {
-            return;
-        }
-
-        // The Evolver only reports a run when this session beats the saved best; until then the
-        // saved best stays and only the generation count moves on (#538).
-        if (_evolver.BestRun is { } run && _evolver.BestGenome is { } genome)
-        {
-            _savedBrain = DirectBrain.ToBrainDef(_creature.Ports, genome, _savedBrain);
-            // Training runs on flat ground only until maps land (#443).
-            _savedRun = new TrainingRunDef(run.Distance, run.TopSpeed, run.Elevation, MapIds.Flat);
-        }
-
-        if (_savedBrain is null || _savedRun is null)
+        // A generation without a valid trial has no latest brain, so it isn't saved.
+        if (_creationId is not { } id
+            || _evolver?.LatestGenome is not { } genome
+            || _evolver.LatestRun is not { } run
+            || _creature?.Brain is null)
         {
             return;
         }
 
         var saves = Saves;
         var epoch = saves.CurrentTrainingEpoch(id);
-        var training = new TrainingStateDef(_savedBrain, _evolver.Generation, _evolver.BestFitness, _savedRun);
+        var brain = DirectBrain.ToBrainDef(_creature.Ports, genome, _saved?.Brain);
+        // Training runs on flat ground only until maps land (#443).
+        var latest = new TrainingRunDef(run.Distance, run.TopSpeed, run.Elevation, MapIds.Flat);
+        var training = TrainingStateDef.Record(_saved, brain, _evolver.Generation, latest);
+        _saved = training;
         Task.Run(() => PersistTrainingSnapshot(saves, id, epoch, training));
     }
 

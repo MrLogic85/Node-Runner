@@ -1,8 +1,8 @@
 namespace NodeRunner.Domain;
 
 /// <summary>
-/// What the winning run of a creation's latest training achieved, and on which map. The Creations
-/// card shows these values; they are measured during training, never recomputed.
+/// What the best run of a creation's latest finished generation achieved, and on which map. The
+/// Creations card shows these values; they are measured during training, never recomputed.
 /// </summary>
 public sealed record TrainingRunDef
 {
@@ -20,9 +20,8 @@ public sealed record TrainingRunDef
     }
 
     /// <summary>
-    /// The furthest the creature's centre got forward from its start. This is what the card shows;
-    /// <see cref="TrainingStateDef.BestFitness"/> is the GA's score, which equals this distance today
-    /// but may change if the fitness function does.
+    /// The furthest the creature's centre got forward from its start; also the GA's score while
+    /// distance is the only fitness (#137).
     /// </summary>
     public double Distance { get; }
 

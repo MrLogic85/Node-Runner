@@ -248,10 +248,11 @@ creature; the rest of the generation runs alongside it as clones, all at
 once (up to 32), drawn as transparent shadows behind the followed one. Each slot owns a `TrialController` and resets
 independently between trials. Creature bodies collide only with the ground. See `docs/TRAINING_LOOP.md` for the full design.
 
-`Evolver` raises `GenerationCompleted`/`NewBestFound` events; the Training
-scene's root, `TrainingHost`, saves the training after each finished
-generation, and `NewBestFound` reaches `TrainingPresentationViewModel`
-through `EvolverTrainingProgressSource`. Training unlocks nothing (#557). The
+`Evolver` raises `GenerationCompleted`/`TrainingProgressChanged` events; the
+Training scene's root, `TrainingHost`, saves the training after each finished
+generation, and progress, including the best ever and its generation,
+reaches `TrainingPresentationViewModel` through
+`EvolverTrainingProgressSource`. Training unlocks nothing (#557). The
 Training screen's caption follows `TrainingPresentationViewModel`, the
 SignalFlow stages are polled every ~0.15s, and Pause and Speed arrive as screen
 signals. A dedicated `PopulationViewModel`

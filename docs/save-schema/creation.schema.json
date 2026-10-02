@@ -283,10 +283,7 @@
         "generation": {
           "type": "integer"
         },
-        "bestFitness": {
-          "type": "number"
-        },
-        "bestRun": {
+        "latest": {
           "type": "object",
           "properties": {
             "distance": {
@@ -309,13 +306,33 @@
             "mapId"
           ],
           "additionalProperties": false
+        },
+        "best": {
+          "type": "object",
+          "properties": {
+            "generation": {
+              "type": "integer"
+            },
+            "distance": {
+              "type": "number"
+            },
+            "mapId": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "generation",
+            "distance",
+            "mapId"
+          ],
+          "additionalProperties": false
         }
       },
       "required": [
         "brain",
         "generation",
-        "bestFitness",
-        "bestRun"
+        "latest",
+        "best"
       ],
       "additionalProperties": false,
       "default": null

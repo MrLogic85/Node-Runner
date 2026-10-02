@@ -161,7 +161,7 @@ public sealed class CreationUpdateCoordinatorTests
         var applied = coordinator.TryPersistTraining(creation.Id, epoch, TestTraining.State(7, 3, TestTraining.Run));
 
         applied.ShouldBeFalse();
-        repository.Get(creation.Id)!.Training!.BestFitness.ShouldBe(2);
+        repository.Get(creation.Id)!.Training!.Best.Distance.ShouldBe(2);
     }
 
     [Fact]

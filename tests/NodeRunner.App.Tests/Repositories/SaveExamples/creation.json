@@ -206,11 +206,15 @@
       "nextNeuronId": 10
     },
     "generation": 12,
-    "bestFitness": 3.5,
-    "bestRun": {
+    "latest": {
       "distance": 3.5,
       "topSpeed": 1.25,
       "elevation": 0.5,
+      "mapId": "flat"
+    },
+    "best": {
+      "generation": 9,
+      "distance": 4.25,
       "mapId": "flat"
     }
   }

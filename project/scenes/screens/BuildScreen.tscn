@@ -321,10 +321,10 @@ autowrap_mode = 3
 script = ExtResource("12_label")
 TextStyle = 5
 
-[node name="SavedBest" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/SavedCreation"]
+[node name="SavedLatest" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/SavedCreation"]
 unique_name_in_owner = true
 layout_mode = 2
-text = "Best distance —"
+text = "Latest distance —"
 autowrap_mode = 3
 script = ExtResource("12_label")
 TextStyle = 6
