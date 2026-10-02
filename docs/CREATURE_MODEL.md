@@ -231,13 +231,19 @@ shapes (e.g. a bare quadrilateral) with their genuine remaining freedom.
 
 ## Drawing as a shadow
 
-Planned for #385 (0.13.0). In Training every shadow except the followed one
+In Training (#385) every shadow except the followed one
 is drawn simplified: the same shapes and colours as the followed creature,
 without detail, and transparent. This keeps drawing cheap with up to 32
 shadows and cuts the clutter when they overlap. Every node, beam and part
 visual declares how it draws as a shadow (not at all, simplified, or the same
 as on the followed creature), and a test checks that every kind has made that
-choice, so a new part cannot forget it.
+choice, so a new part cannot forget it: each visual implements
+`IShadowVisual` (`project/src/creature/ShadowDrawing.cs`) with a static
+`AsShadow` and an `IsShadow` switch, and `Creature.IsShadow` sets them all,
+fades the creature and puts it behind the followed one. The fade is per
+item (`Modulate` on the creature), not per shadow, so a shadow's beam shows
+through its own joints; a `CanvasGroup` per shadow would fade it as one
+picture but costs an offscreen pass each, so it is left out for performance.
 
 - **Node:** its ring at its drawn size, without a glyph. Joint parts that make
   a node larger (motor joints, #626; later the Wheel, #129, and a touch
@@ -247,7 +253,8 @@ choice, so a new part cannot forget it.
   creature. The Wing may lose detail; #600 decides.
 - **Blocks** (Battery, Generator and Fuel tank, 0.18.0): drawn as on the
   followed creature, possibly with less detail; #600 decides.
-- **Sensors, Pulse and Camera rays:** not drawn.
+- **Sensors, Pulse and Camera rays:** not drawn. A hidden sensor also stops
+  redrawing every frame.
 
 `docs/UI_DIRECTION.md` owns the transparency.
 

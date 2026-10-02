@@ -34,6 +34,7 @@ NodeRunner/colors/panel = Color(1, 1, 1, 1)
 NodeRunner/colors/panel_raised = Color(0.913725, 0.898039, 0.858824, 1)
 NodeRunner/colors/scrim = Color(0.105882, 0.101961, 0.0901961, 0.45098)
 NodeRunner/colors/transparent = Color(1, 1, 1, 0)
+NodeRunner/constants/alpha_shadow = 82
 NodeRunner/constants/alpha_soft = 26
 NodeRunner/constants/effects_enabled = 0
 UiBadge/base_type = &"UiCaption"

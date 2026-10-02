@@ -8,8 +8,21 @@ namespace NodeRunner.Creature;
 /// hit with a ring there, whether or not the camera is selected. The creature adds it after its
 /// joints, so tree order keeps the rays on top.
 /// </summary>
-public partial class CameraRaysVisual : Node2D
+public partial class CameraRaysVisual : Node2D, IShadowVisual
 {
+    /// <summary>Only the followed creature shows its camera rays.</summary>
+    public static ShadowDrawing AsShadow => ShadowDrawing.Hidden;
+
+    public bool IsShadow
+    {
+        get => !Visible;
+        set
+        {
+            Visible = !value;
+            SetProcess(!value);
+        }
+    }
+
     public required VisualTheme Theme { get; init; }
 
     public required IReadOnlyList<CameraSensor> Cameras { get; init; }

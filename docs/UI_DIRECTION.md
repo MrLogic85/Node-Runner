@@ -252,7 +252,9 @@ token import does not recreate the dead mappings.
   `NodeRunner/constants/alpha_soft` (0–255, because theme constants are
   integers: Neon 31, Paper 26), and a control that wants a soft fill asks for
   `UiThemeLookup.Color(this, UiTokens.Color.Accent).WithAlpha(UiThemeLookup.Alpha(this, UiTokens.Alpha.Soft))`.
-  Any base colour can use the same alpha. Tests reject alpha-only colour
+  Any base colour can use the same alpha. `alpha_shadow` (82 = 0.32 in both
+  themes) is the opacity of every Training shadow except the followed one
+  (#385); `VisualTheme.ShadowAlpha` reads it. Tests reject alpha-only colour
   entries in the theme files.
 - **`shadow.glow`** (`0 0 16px #19f0ff40`) is **not** imported as a
   `glow_radius` constant. A CSS `box-shadow` blur radius has no 1:1 equivalent

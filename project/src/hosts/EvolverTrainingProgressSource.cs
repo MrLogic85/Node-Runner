@@ -14,6 +14,7 @@ public sealed class EvolverTrainingProgressSource : ITrainingProgressSource
         _evolver = evolver;
         _evolver.TrainingProgressChanged += OnProgressChanged;
         _evolver.NewBestFound += OnNewBestFound;
+        _evolver.FollowedShadowChanged += OnProgressChanged;
     }
 
     public event Action? ProgressChanged;
@@ -33,6 +34,14 @@ public sealed class EvolverTrainingProgressSource : ITrainingProgressSource
 
     public bool IsTrialActive => _evolver.IsTrialActive;
 
+    public int FollowedShadow => _evolver.FollowedShadow;
+
+    public bool HasPreviousBest => _evolver.HasPreviousBest;
+
+    public IReadOnlyList<double> ShadowDistances => _evolver.ShadowDistances;
+
+    public void Follow(int shadow) => _evolver.Follow(shadow);
+
     private void OnProgressChanged()
     {
         ProgressChanged?.Invoke();
@@ -47,5 +56,6 @@ public sealed class EvolverTrainingProgressSource : ITrainingProgressSource
     {
         _evolver.TrainingProgressChanged -= OnProgressChanged;
         _evolver.NewBestFound -= OnNewBestFound;
+        _evolver.FollowedShadowChanged -= OnProgressChanged;
     }
 }

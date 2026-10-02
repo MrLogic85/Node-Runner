@@ -49,6 +49,64 @@ public sealed class TrainingPresentationViewModel : INotifyPropertyChanged, IDis
 
     public string MeanFitnessText => $"Mean: {_meanFitness:0.0}";
 
+    /// <summary>The followed shadow's 1-based number, or 0 without a training source.</summary>
+    public int FollowedShadow => _source is null ? 0 : _source.FollowedShadow + 1;
+
+    /// <summary>
+    /// Every shadow's live standing for the shadow strip (#387), read from the source on each call
+    /// because distances change every physics tick. The leader is marked here only; it never takes
+    /// the camera (#385).
+    /// </summary>
+    public IReadOnlyList<ShadowStanding> Shadows
+    {
+        get
+        {
+            if (_source is null)
+            {
+                return [];
+            }
+
+            var distances = _source.ShadowDistances;
+            var leader = Leader(distances);
+            return distances
+                .Select((distance, index) => new ShadowStanding(
+                    index + 1,
+                    distance,
+                    index == _source.FollowedShadow,
+                    index == leader,
+                    index == 0 && _source.HasPreviousBest))
+                .ToArray();
+        }
+    }
+
+    /// <summary>Follows shadow <paramref name="number"/> (1-based) until another is picked.</summary>
+    public void Follow(int number)
+    {
+        if (_source is null)
+        {
+            throw new InvalidOperationException("There is no training to follow a shadow in.");
+        }
+
+        ArgumentOutOfRangeException.ThrowIfLessThan(number, 1);
+        _source.Follow(number - 1);
+    }
+
+    /// <summary>The zero-based shadow that has travelled furthest so far, or -1 when none is running.</summary>
+    public static int Leader(IReadOnlyList<double> distances)
+    {
+        ArgumentNullException.ThrowIfNull(distances);
+        var leader = -1;
+        for (var i = 0; i < distances.Count; i++)
+        {
+            if (double.IsFinite(distances[i]) && (leader < 0 || distances[i] > distances[leader]))
+            {
+                leader = i;
+            }
+        }
+
+        return leader;
+    }
+
     public void Update(
         int generation,
         int shadowCount,

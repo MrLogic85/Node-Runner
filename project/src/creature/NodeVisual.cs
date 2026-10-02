@@ -7,9 +7,13 @@ namespace NodeRunner.Creature;
 /// <summary>
 /// Draws a node: rendering only, a child of the node's own physics body.
 /// </summary>
-public partial class NodeVisual : Node2D
+public partial class NodeVisual : Node2D, IShadowVisual
 {
     private bool _isSelected;
+    private bool _isShadow;
+
+    /// <summary>A shadow's node is its ring at its drawn size, without a glyph or selection.</summary>
+    public static ShadowDrawing AsShadow => ShadowDrawing.Simplified;
 
     public VisualTheme Theme { get; set; } = VisualTheme.Neon;
 
@@ -30,6 +34,21 @@ public partial class NodeVisual : Node2D
         }
     }
 
+    public bool IsShadow
+    {
+        get => _isShadow;
+        set
+        {
+            if (_isShadow == value)
+            {
+                return;
+            }
+
+            _isShadow = value;
+            QueueRedraw();
+        }
+    }
+
     public override void _Draw()
     {
         DrawCircle(
@@ -37,7 +56,7 @@ public partial class NodeVisual : Node2D
             Radius * 1.18f,
             UiGlow.FromBase(Theme.GroundEdge, Theme.EffectsEnabled));
         DrawCircle(Vector2.Zero, Radius, Theme.NodeFill);
-        if (IsSelected)
+        if (IsSelected && !IsShadow)
         {
             SelectionDrawing.DrawJoint(this, Theme, Transform2D.Identity, Vector2.Zero, Radius * 1.65f);
         }

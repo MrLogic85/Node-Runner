@@ -8,9 +8,13 @@ namespace NodeRunner.Creature;
 /// bodies, so unlike the old muscle/bone springs this never needs to redraw
 /// per-frame — it moves with its parent automatically.
 /// </summary>
-public partial class BeamVisual : Node2D
+public partial class BeamVisual : Node2D, IShadowVisual
 {
     private bool _isSelected;
+    private bool _isShadow;
+
+    /// <summary>A shadow's beam is its line, without angle marks, hatch, labels or selection.</summary>
+    public static ShadowDrawing AsShadow => ShadowDrawing.Simplified;
 
     public float HalfLength { get; set; }
 
@@ -40,13 +44,28 @@ public partial class BeamVisual : Node2D
         }
     }
 
+    public bool IsShadow
+    {
+        get => _isShadow;
+        set
+        {
+            if (_isShadow == value)
+            {
+                return;
+            }
+
+            _isShadow = value;
+            QueueRedraw();
+        }
+    }
+
     public override void _Draw()
     {
         var start = new Vector2(-HalfLength, 0);
         var end = new Vector2(HalfLength, 0);
 
         DrawLine(start, end, Color, Width, antialiased: false);
-        if (IsSelected)
+        if (IsSelected && !IsShadow)
         {
             SelectionDrawing.DrawBeam(this, Transform2D.Identity, SelectionColor, SelectionOffset, SelectionLineWidth, start, end);
         }

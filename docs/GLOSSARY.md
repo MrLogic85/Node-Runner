@@ -138,9 +138,9 @@ Long-form descriptions and the sensor/model contract live in
   update. SGD, momentum, Adam.
 - **Population** — The set of candidate genomes (brains) evaluated in one
   generation. `Evolver` evaluates every candidate at once (up to 32), one
-  slot each; creature bodies collide only with the ground. The first slot is visible; additional slots are
-  hidden until population visualization is implemented. The player sees
-  the candidates as **shadows**.
+  slot each; creature bodies collide only with the ground. The player sees
+  the candidates as **shadows**: the followed one in full, the rest
+  simplified and transparent.
 - **Reinforcement Learning (RL)** — Training via reward signals from
   environment interaction. Not used in the early roadmap; considered for later.
 - **Selection** — GA operator that picks parents for the next generation. We

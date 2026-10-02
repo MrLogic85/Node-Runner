@@ -26,6 +26,8 @@ public partial class Evolver : Node
     private double[] _fitness = [];
     private TrialResult[] _results = [];
     private ParallelEvaluationSchedule? _schedule;
+    private int _followedShadow;
+    private bool _opensWithPreviousBest;
 
     public int Generation { get; private set; }
 
@@ -52,9 +54,31 @@ public partial class Evolver : Node
     /// <summary>Number of candidates whose trials have completed in the current generation.</summary>
     public int CompletedCandidateCount => _schedule?.CompletedCount ?? 0;
 
-    /// <summary>How far the visible creature has got in its current trial; NaN when none is running.</summary>
-    public double VisibleTrialDistance =>
-        _trialControllers.Count > 0 && _trialControllers[0].IsRunning ? _trialControllers[0].Measured.Distance : double.NaN;
+    /// <summary>
+    /// The shadow (zero-based slot, which is also its candidate index) drawn in full and shown in
+    /// signal flow and the brain. Shadow 0 by default: the previous best, or shadow 1 in a fresh
+    /// generation 0. It changes only through <see cref="Follow"/> (#385).
+    /// </summary>
+    public int FollowedShadow => _followedShadow;
+
+    /// <summary>The followed shadow's creature, or the primary creature while stopped.</summary>
+    public Creature.Creature? FollowedCreature =>
+        _followedShadow < _creatures.Count ? _creatures[_followedShadow] : _primaryCreature;
+
+    /// <summary>
+    /// Whether shadow 0 runs the previous best: the resumed genome, or the elite the genetic
+    /// algorithm carried over from the last generation.
+    /// </summary>
+    public bool HasPreviousBest => _opensWithPreviousBest;
+
+    /// <summary>How far the followed shadow has got in its current trial; NaN when none is running.</summary>
+    public double FollowedTrialDistance => ShadowDistance(_followedShadow);
+
+    /// <summary>Every shadow's distance so far this trial, NaN for a shadow that is not running.</summary>
+    public double[] ShadowDistances => Enumerable.Range(0, _trialControllers.Count).Select(ShadowDistance).ToArray();
+
+    /// <summary>Raised when the followed shadow changes.</summary>
+    public event Action? FollowedShadowChanged;
 
     /// <summary>Raised after every genome in a generation has been evaluated and the next generation has been produced.</summary>
     public event Action? GenerationCompleted;
@@ -64,6 +88,25 @@ public partial class Evolver : Node
 
     /// <summary>Raised when active candidates, completed candidates, or the generation changes.</summary>
     public event Action? TrainingProgressChanged;
+
+    /// <summary>Follows <paramref name="shadow"/> until the player picks another one.</summary>
+    public void Follow(int shadow)
+    {
+        if (shadow < 0 || shadow >= Math.Max(_creatures.Count, 1))
+        {
+            throw new ArgumentOutOfRangeException(nameof(shadow));
+        }
+
+        if (shadow == _followedShadow)
+        {
+            return;
+        }
+
+        SetShadowDrawing(_followedShadow, isShadow: true);
+        _followedShadow = shadow;
+        SetShadowDrawing(_followedShadow, isShadow: false);
+        FollowedShadowChanged?.Invoke();
+    }
 
     /// <summary>
     /// Halts the current generation cycle, removes parallel slot creatures,
@@ -75,6 +118,8 @@ public partial class Evolver : Node
     {
         ReleaseSlots();
         _primaryCreature = null;
+        // The shadows are gone, so whoever followed one goes back to the scene's creature.
+        FollowedShadowChanged?.Invoke();
         TrainingProgressChanged?.Invoke();
     }
 
@@ -150,6 +195,8 @@ public partial class Evolver : Node
             _genomes[0] = resumeGenome.ToArray();
         }
 
+        _opensWithPreviousBest = resumeGenome is not null;
+
         SilenceDisabledGenes();
         _fitness = new double[populationSize];
         _results = new TrialResult[populationSize];
@@ -158,6 +205,7 @@ public partial class Evolver : Node
         _schedule = new ParallelEvaluationSchedule(populationSize, slotCount);
         ConfigureSlots(creature, slotCount, trialDurationTicks, groundTopY, creatureFactory);
         StartAvailableSlots();
+        FollowedShadowChanged?.Invoke();
     }
 
     private void SilenceDisabledGenes()
@@ -220,7 +268,7 @@ public partial class Evolver : Node
         creature.Theme = primaryCreature.Theme;
         creature.Position = primaryCreature.Position;
         creature.ProcessMode = ProcessModeEnum.Pausable;
-        creature.Visible = false;
+        creature.IsShadow = true;
         AddChild(creature);
         return creature;
     }
@@ -293,7 +341,8 @@ public partial class Evolver : Node
         MeanFitness = validFitness.Length > 0 ? validFitness.Average() : 0;
         Generation++;
 
-        _genomes = _ga!.NextGeneration(_genomes, _fitness, _rng!);
+        _opensWithPreviousBest = _ga!.ElitismCount > 0 && _fitness.Any(double.IsFinite);
+        _genomes = _ga.NextGeneration(_genomes, _fitness, _rng!);
         SilenceDisabledGenes();
         _fitness = new double[_genomes.Length];
         _results = new TrialResult[_genomes.Length];
@@ -312,6 +361,19 @@ public partial class Evolver : Node
         }
 
         StartAvailableSlots();
+    }
+
+    private double ShadowDistance(int shadow) =>
+        shadow < _trialControllers.Count && _trialControllers[shadow].IsRunning
+            ? _trialControllers[shadow].Measured.Distance
+            : double.NaN;
+
+    private void SetShadowDrawing(int shadow, bool isShadow)
+    {
+        if (shadow < _creatures.Count)
+        {
+            _creatures[shadow].IsShadow = isShadow;
+        }
     }
 
     private void ReleaseSlots()
@@ -333,5 +395,11 @@ public partial class Evolver : Node
         _trialControllers.Clear();
         _creatures.Clear();
         _schedule = null;
+        _followedShadow = 0;
+        _opensWithPreviousBest = false;
+        if (_primaryCreature is not null)
+        {
+            _primaryCreature.IsShadow = false;
+        }
     }
 }

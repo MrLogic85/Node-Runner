@@ -127,8 +127,8 @@ transition to keep in step with it.
   (`tests/NodeRunner.ML.Tests/GeneticAlgorithmTests.cs`), including
   determinism-given-a-seed and elitism preserving the exact best genome.
 - `Evolver` (`project/src/sim/Evolver.cs`) orchestrates one generation cycle
-  in deterministic fixed slots. Slot 0 reuses the visible creature and each
-  additional slot is a hidden clone; every slot owns one `TrialController`.
+  in deterministic fixed slots. Slot 0 reuses the scene's creature and each
+  additional slot is a clone; every slot owns one `TrialController`.
   A completed slot receives the next pending genome in index order until the
   generation is complete, then `GeneticAlgorithm.NextGeneration` starts the
   next generation automatically. `Evolver` tracks `Generation`,
@@ -144,7 +144,21 @@ transition to keep in step with it.
   - Measured on a Galaxy S25 with the Worm (#384): 32 hidden shadows keep
     a 10 s generation at 8.3 ms frames (120 Hz) and about 366 MiB PSS;
     drawing all 32 at 30 % opacity raised p95 to 16.6 ms and PSS to about
-    436 MiB.
+    436 MiB. With simplified shadows (#385) 32 shadows stay at 8.3 ms and
+    about 366 MiB.
+  - Followed shadow (#385): one shadow is drawn in full, two z steps above
+    the others, and feeds signal flow, the brain and part selection; every
+    other shadow is drawn simplified (`docs/CREATURE_MODEL.md` → "Drawing
+    as a shadow") at `alpha_shadow`. Shadow `i` is slot `i`, which runs
+    candidate `i`. The default is shadow 1 (slot 0): the resumed genome or
+    the elite `GeneticAlgorithm` puts first, i.e. the previous best, and in
+    a fresh generation 0 simply shadow 1. `Evolver.Follow` is the only way
+    it changes, so a new leader never takes it, and it stays on that slot
+    across generations. `Evolver` exposes `FollowedShadow`,
+    `HasPreviousBest` and `ShadowDistances`; `TrainingPresentationViewModel`
+    turns them into `ShadowStanding` rows (followed, leader = furthest
+    running shadow, previous best) and `Follow(number)` for the shadow strip
+    (#387). The camera does not follow yet (#668).
   - Candidate assignment is deterministic for the same seed, parallel mode,
     slot count, build, and platform. Sequential and parallel fitness parity
     is not promised because physics ordering can differ.
@@ -234,5 +248,5 @@ by the TrainSetup and Training component READMEs under `reference design/compone
 
 ## Deferred future work
 
-- Parallel slot clones remain hidden. Drawing them as shadows is #385; it
-  must reuse this slot lifecycle rather than create another population.
+- Shadow visuals must reuse this slot lifecycle rather than create another
+  population.

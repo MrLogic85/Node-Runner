@@ -39,6 +39,9 @@ public static class UiTokens
     {
         /// <summary>Soft fill for selected, pressed and hovered backgrounds.</summary>
         Soft,
+
+        /// <summary>Every shadow in Training except the followed one (#385).</summary>
+        Shadow,
     }
 
     public enum Typography
@@ -104,6 +107,7 @@ public static class UiTokens
     public static string Name(Alpha token) => token switch
     {
         Alpha.Soft => "alpha_soft",
+        Alpha.Shadow => "alpha_shadow",
         _ => throw new ArgumentOutOfRangeException(nameof(token), token, null),
     };
 
