@@ -198,8 +198,7 @@ transition to keep in step with it.
     reached about 3–4 m. Weight noise from σ 0.5 to 3 gave similar
     distances, so the middle was kept; the owner confirmed the spread on
     a Galaxy S25.
-  - Resuming a saved brain is not generation 0: it seeds shadow 1 and the
-    rest start random until warm start lands (#538).
+  - Resuming a saved brain is not generation 0; see "Resume" below.
 - Generation/fitness are logged (`GD.Print`) and shown on the Training
   screen (see "The Training scene" below).
 
@@ -249,14 +248,23 @@ by the TrainSetup and Training component READMEs under `reference design/compone
     or gravity. The viewport renders at the screen's pixel density to keep
     the creature crisp, and a tap on the arena is turned into a world
     position for part selection.
-  - **Resume.** Opening it starts from the saved `TrainingStateDef`: its
-    brain graph is compiled by port (`DirectBrain`, #536) and seeds the
-    population, and the generation count continues. A disabled connection
+  - **Resume (warm start, #538).** Opening it starts from the saved
+    `TrainingStateDef`: its brain graph is compiled by port
+    (`DirectBrain`, #536) and the generation count continues. The saved
+    brain is the elite, the parent of the next generation:
+    `GeneticAlgorithm.FromElites` runs it unchanged as shadow 1 and fills
+    the other shadows with its mutated children, so training picks up
+    where it stopped instead of starting over. A disabled connection
     stays at 0 through mutation and crossover.
+  - **The best only improves.** A resumed run starts from the saved
+    `bestFitness`, so only a better trial replaces the saved brain and
+    `bestRun`. A generation that is not better still saves, with the new
+    generation count and the old best.
     A creation without training starts at generation 0 (see "Generation 0" above).
   - **Save.** Each finished generation is saved on the thread pool (the
-    file round trip would stall physics). Leaving mid-generation drops only
-    the generation in progress. The save is guarded by the creation's
+    file round trip would stall physics), as one atomic file write. Leaving
+    or closing the app mid-generation drops only the generation in
+    progress; reopening continues from the last finished one. The save is guarded by the creation's
     training epoch, so a save still in flight when the training is reset
     is dropped.
   - A session stops after the profile's generation budget. Speed and pause

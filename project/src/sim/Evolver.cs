@@ -37,7 +37,7 @@ public partial class Evolver : Node
 
     public double[]? BestGenome { get; private set; }
 
-    /// <summary>What the trial behind <see cref="BestGenome"/> measured; null until a generation of this run completes.</summary>
+    /// <summary>What the trial behind <see cref="BestGenome"/> measured; null until a trial in this run beats the starting best (the saved best fitness when resuming).</summary>
     public TrialResult? BestRun { get; private set; }
 
     public int[] LayerSizes => _layerSizes.ToArray();
@@ -135,7 +135,10 @@ public partial class Evolver : Node
     /// (#384); without it, evaluation remains sequential for compatibility. <paramref name="groundTopY"/> is the
     /// ground's top edge, which each trial measures elevation from.
     /// <paramref name="disabledGenes"/> are genome positions that stay 0 in every
-    /// candidate: a saved brain's disabled connection genes.
+    /// candidate: a saved brain's disabled connection genes. Without
+    /// <paramref name="resumeGenome"/> the run starts at generation 0 (#537); with it, the saved
+    /// elite and its children open the run (#538), and only a score above
+    /// <paramref name="resumeBestFitness"/> replaces it as <see cref="BestGenome"/>.
     /// </summary>
     public void Start(
         Creature.Creature creature,
@@ -146,6 +149,7 @@ public partial class Evolver : Node
         float groundTopY,
         double[]? resumeGenome = null,
         int resumeGeneration = 0,
+        double resumeBestFitness = double.NegativeInfinity,
         int trialDurationTicks = 600,
         Func<Creature.Creature>? creatureFactory = null,
         IReadOnlyList<int>? disabledGenes = null)
@@ -187,21 +191,14 @@ public partial class Evolver : Node
         _rng = rng;
         _disabledGenes = disabledGenes?.ToArray() ?? [];
         Generation = resumeGeneration;
-        BestFitness = double.NegativeInfinity;
+        BestFitness = resumeGenome is null ? double.NegativeInfinity : resumeBestFitness;
         MeanFitness = 0;
         BestGenome = resumeGenome?.ToArray();
         BestRun = null;
 
-        if (resumeGenome is null)
-        {
-            _genomes = GenerationZero.Population(creature.Ports, populationSize, rng);
-        }
-        else
-        {
-            _genomes = CreateRandomPopulation(populationSize);
-            _genomes[0] = resumeGenome.ToArray();
-        }
-
+        _genomes = resumeGenome is null
+            ? GenerationZero.Population(creature.Ports, populationSize, rng)
+            : ga.FromElites([resumeGenome], populationSize, rng);
         _opensWithPreviousBest = resumeGenome is not null;
 
         SilenceDisabledGenes();
@@ -224,17 +221,6 @@ public partial class Evolver : Node
                 genome[gene] = 0;
             }
         }
-    }
-
-    private double[][] CreateRandomPopulation(int populationSize)
-    {
-        var genomes = new double[populationSize][];
-        for (var i = 0; i < populationSize; i++)
-        {
-            genomes[i] = new NeuralNetwork(_layerSizes, Activation.Tanh, _rng!).FlattenGenome();
-        }
-
-        return genomes;
     }
 
     private void ConfigureSlots(
