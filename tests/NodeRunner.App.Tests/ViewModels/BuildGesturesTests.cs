@@ -888,13 +888,13 @@ public class BuildGesturesTests
 
         var handle = gestures.SelectionHandles.ShouldHaveSingleItem();
         handle.Handle.ShouldBe(SelectionHandle.Aim);
-        var reach = (SensorPicture.CameraSize / Math.Sqrt(2)) + 8 + BuildGestures.HandleHitRadius;
+        var reach = 2 * ((SensorPicture.CameraSize / Math.Sqrt(2)) + 8 + BuildGestures.HandleHitRadius);
         handle.Position.X.ShouldBe(150 + reach, 1e-9);
         handle.Position.Y.ShouldBe(0, 1e-9);
     }
 
     [Fact]
-    public void Camera_AimHandle_StepsOutPastAJointItWouldCover()
+    public void Camera_AimHandle_StaysJustPastThePictureEvenOverAJoint()
     {
         var (build, gestures) = BeamWithSensor(100, SensorKind.Camera);
         build.SelectSensor(4);
@@ -902,10 +902,28 @@ public class BuildGesturesTests
 
         var handle = gestures.SelectionHandles.Single().Position;
 
+        var reach = 2 * ((SensorPicture.CameraSize / Math.Sqrt(2)) + 8 + BuildGestures.HandleHitRadius);
+        handle.X.ShouldBe(50 + reach, 1e-9);
         handle.Y.ShouldBe(0, 1e-9);
-        (handle.X - 100).ShouldBeGreaterThanOrEqualTo(BuildGestures.HandleHitRadius + BuildGestures.NodeHitRadius);
-        var reach = (SensorPicture.CameraSize / Math.Sqrt(2)) + 8 + BuildGestures.HandleHitRadius;
-        (handle.X - 50).ShouldBeLessThanOrEqualTo(3 * reach);
+    }
+
+    [Fact]
+    public void Camera_AimHandle_FollowsTheZoomSmoothly()
+    {
+        var (build, gestures) = BeamWithSensor(100, SensorKind.Camera);
+        build.SelectSensor(4);
+        build.SetCameraAim(4, 0);
+        var pictureReach = SensorPicture.CameraSize / Math.Sqrt(2);
+        var gaps = 8 + BuildGestures.HandleHitRadius;
+
+        for (var step = 0; step < 10; step++)
+        {
+            gestures.View.ZoomAbout(new Vector2D(0, 0), 1.1);
+            var zoom = gestures.View.Zoom;
+
+            // In canvas units: the picture part stays put, the on-screen gaps shrink as the view zooms in.
+            gestures.SelectionHandles.Single().Position.X.ShouldBe(50 + (2 * (pictureReach + (gaps / zoom))), 1e-9);
+        }
     }
 
     [Fact]
