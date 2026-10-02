@@ -130,6 +130,10 @@ then the app follows the reference.
     past its joints on the beam's upper side with a leader line to the
     beam's middle (see `c_call` in a figure). The readiness line says "1
     beam too short".
+  - *Rigid triangles (#612):* Build fills a closed triangle of beams with
+    the reference hatch: `muted` hairlines at half opacity, 7 apart at 45°,
+    one pixel wide at any zoom, with no tint or outline (`TriangleHatch`).
+    It is not drawn in the selection colour, so it never reads as selected.
   - *Selection (#624):* a selected joint gets an unfilled `halo` ring
     around its disc, 4 wide; a selected beam gets two 2-wide `halo`
     lines along it, one beam-width out on each side. Both are drawn over
