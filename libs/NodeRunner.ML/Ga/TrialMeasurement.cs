@@ -31,8 +31,8 @@ public sealed class TrialMeasurement
 
     /// <summary>
     /// The fastest the centre or the lowest point can plausibly move, in creature units per second.
-    /// Motors turn at most 6 rad/s, so even a part 1000 units from its joint moves 6000 units a
-    /// second; the 360-unit Worm moves under 200. A blow-up jumps thousands of units in one tick.
+    /// Pistons move at most their Max speed (200 units a second by default) and the Worm crawls
+    /// well under that. A blow-up jumps thousands of units in one tick.
     /// </summary>
     public const double MaxPlausibleSpeed = 10_000;
 

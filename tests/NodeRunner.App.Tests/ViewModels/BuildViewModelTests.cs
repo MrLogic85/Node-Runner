@@ -709,13 +709,14 @@ public sealed class BuildViewModelTests
     }
 
     [Fact]
-    public void TryGetTrainableCreature_WithAMotorRelation_ReturnsTheCreature()
+    public void TryGetTrainableCreature_WithAPiston_ReturnsTheCreature()
     {
         var viewModel = new BuildViewModel();
         viewModel.Load(new CreatureDef(
             [new NodeDef(1, new Vector2D(0, 0), 18), new NodeDef(2, new Vector2D(90, 0), 18), new NodeDef(3, new Vector2D(180, 20), 18)],
             [new BeamDef(101, 1, 2), new BeamDef(102, 2, 3)],
-            []));
+            [],
+            [new PistonDef(301, 1, 3)]));
 
         viewModel.TryGetTrainableCreature(out var creature).ShouldBeTrue();
 

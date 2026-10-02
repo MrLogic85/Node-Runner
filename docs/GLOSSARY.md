@@ -27,7 +27,6 @@ Kept on purpose:
   node where beams meet.
 - GA terms (population, candidate, genome, generation, fitness) in
   `NodeRunner.ML` and the sim's `Evolver` — `docs/ML_CONCEPTS.md` teaches them.
-- `MotorRelation`, `MotorTopology`, `NodeConnectionDef` — removed by #450.
 - `CreatureElementSelection` / `CreatureElementKind` — replaced by #220.
 
 ## Creature anatomy
@@ -49,25 +48,22 @@ Long-form descriptions and the sensor/model contract live in
   inputs. Formerly the "LOS sensor". Not Godot's `Camera2D`. See:
   `docs/CREATURE_MODEL.md`.
 - **Creature** — A single agent's body: nodes + beams (+ optional sensors) +
-  the sensors/motor relations they derive, driven by a brain. See:
+  Pistons, driven by a brain. See:
   `docs/CREATURE_MODEL.md`.
 - **Creature element selection** — A selected node or beam,
   represented as a `CreatureElementKind` plus the part's stable id (#220).
 - **CreatureDef** — Pure-data description of a creature; the "genome" of the
   body, distinct from the brain's genome. See: `docs/CREATURE_MODEL.md`.
 - **Joint** — The player-facing name for a node in Build (the reference
-  design's Joint tool adds one). Not the retired 0.1.0 Joint/Bone/Muscle
-  prototype part, and not a Godot physics joint. See:
+  design's Joint tool adds one). Joints are passive (#450): beams turn
+  freely there, with no settings, limits or brain ports, unless a closed
+  triangle locks them. Not the retired 0.1.0 Joint/Bone/Muscle prototype
+  part, and not a Godot physics joint. See:
   `docs/BUILD_MODE.md`.
 - **Model input** — One slot in the neural network's input vector, populated
   one-to-one from an input port. See: `docs/CREATURE_MODEL.md`.
 - **Model output** — One slot in the neural network's output vector,
   consumed one-to-one by an output port. See: `docs/CREATURE_MODEL.md`.
-- **Motor relation** — A controllable rotation between two beams sharing a
-  node, derived from the creature's topology (not stored data). Gives the
-  brain its angle from the built pose and its speed, and accepts a target
-  speed, driven by torque capped at a static `MaxTorque`. See:
-  `docs/CREATURE_MODEL.md`.
 - **Node** — A physical attachment point where beams meet and can rotate
   relative to each other. Has a position and a small radius. Rendered as a
   circle. See: `docs/CREATURE_MODEL.md`.
@@ -118,7 +114,7 @@ Long-form descriptions and the sensor/model contract live in
   with respect to network weights by applying the chain rule from output back
   to input.
 - **Brain** — The neural network attached to a creature. A pure function
-  `sensors → motor relation targets`. In 0.13 it is direct: every input port
+  `inputs → output targets`. In 0.13 it is direct: every input port
   connects straight to every output port, with no hidden layer (#536).
 - **Brain graph** — How a brain is saved (`BrainDef`): neurons keyed by port
   and the connection genes between them, so it never depends on list order
@@ -173,5 +169,5 @@ Long-form descriptions and the sensor/model contract live in
 - **Run** — One evaluation episode for a population, typically 10 seconds
   (600 ticks).
 - **Seed** — Integer input to the RNG. Written to logs; shown in UI.
-- **Tick** — One fixed-step update. Sensors → brain → motor relations → physics step
+- **Tick** — One fixed-step update. Sensors → brain → Pistons → physics step
   → fitness accumulation.

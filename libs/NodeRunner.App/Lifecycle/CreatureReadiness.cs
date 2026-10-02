@@ -81,7 +81,7 @@ public static class CreatureReadiness
         }
     }
 
-    /// <summary>True when the creature can be simulated and has something for its brain to drive: a motor relation or a Piston.</summary>
+    /// <summary>True when the creature can be simulated and has something for its brain to drive: a Piston (joints are passive, #450).</summary>
     public static bool CanTrain(CreatureDef creature) =>
         Problems(creature).Count == 0
         && BrainPorts.Of(creature).Outputs.Count > 0;

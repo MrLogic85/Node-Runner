@@ -70,9 +70,9 @@ transition to keep in step with it.
     drop doesn't count; a crawler scores 0.
   - `IsValid` — false when physics blew up (#650): a sample was NaN or
     infinite, or the centre or lowest point moved further in one tick than
-    `TrialMeasurement.MaxPlausibleSpeed` (10 000 units/s) allows. Motors
-    turn at most 6 rad/s and the Worm moves under 200 units/s, so only a
-    blow-up gets near the limit. Once invalid, the trial stops measuring.
+    `TrialMeasurement.MaxPlausibleSpeed` (10 000 units/s) allows. Pistons
+    move at most their Max speed (200 units/s by default) and the Worm
+    crawls well under that, so only a blow-up gets near the limit. Once invalid, the trial stops measuring.
   - `Fitness` — what the GA scores: `Distance`, or negative infinity for an
     invalid trial so it ranks below every valid one. `Evolver` logs each
     invalid trial with its generation and candidate. Invalid results never

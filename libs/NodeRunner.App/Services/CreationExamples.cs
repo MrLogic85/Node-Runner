@@ -14,38 +14,46 @@ public static class CreationExamples
 
     public static IReadOnlyList<CreationExample> All { get; } =
     [
-        new(new CreationDef(WormId, "Worm", CreateWormCreature()), "Beams, an accelerometer and a camera: the simplest crawl."),
+        new(new CreationDef(WormId, "Worm", CreateWormCreature()), "A piston arches its back: an inchworm crawl."),
     ];
 
+    /// <summary>
+    /// An inchworm: a flat tail and a high hump at the front, with a Piston under the hump. Pulling
+    /// the Piston in raises the hump; pushing it out stretches the front forward. Its joints are
+    /// passive (#450), so the Piston is the only thing the brain drives. The hump is high enough that
+    /// the Piston's full stroke never flattens it, where a straight push could no longer bend it, and
+    /// lopsided so the crawl has a forward direction.
+    /// </summary>
     public static CreatureDef CreateWormCreature()
     {
         const double radius = 18;
         const double spacing = 90;
         const double y = 0;
+        const double hump = -90;
 
         var nodes = new[]
         {
             new NodeDef(1, new Vector2D(0, y), radius),
             new NodeDef(2, new Vector2D(spacing, y), radius),
-            new NodeDef(3, new Vector2D(spacing * 2, y), radius),
+            new NodeDef(3, new Vector2D(spacing * 2, hump), radius),
             new NodeDef(4, new Vector2D(spacing * 3, y), radius),
-            new NodeDef(5, new Vector2D(spacing * 4, y), radius),
         };
 
         var beams = new[]
         {
-            new BeamDef(6, 1, 2),
-            new BeamDef(7, 2, 3),
-            new BeamDef(8, 3, 4),
-            new BeamDef(9, 4, 5),
+            new BeamDef(5, 1, 2),
+            new BeamDef(6, 2, 3),
+            new BeamDef(7, 3, 4),
         };
 
         var sensors = new[]
         {
-            new SensorDef(10, 6, SensorKind.Accelerometer),
-            new SensorDef(11, 9, SensorKind.Camera),
+            new SensorDef(8, 5, SensorKind.Accelerometer),
+            new SensorDef(9, 7, SensorKind.Camera),
         };
 
-        return new CreatureDef(nodes, beams, sensors, nextPartId: 12);
+        var pistons = new[] { new PistonDef(10, 2, 4) };
+
+        return new CreatureDef(nodes, beams, sensors, pistons, nextPartId: 11);
     }
 }

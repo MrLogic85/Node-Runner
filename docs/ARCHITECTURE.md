@@ -187,12 +187,12 @@ public sealed class GeneticAlgorithm
 public sealed record NodeDef(int Id, Vector2D Position, double Radius, string? Name = null);
 public sealed record BeamDef(int Id, int NodeA, int NodeB, string? Name = null);   // node ids
 public sealed record SensorDef(int Id, int BeamId, SensorKind Kind, string? Name = null, double? Aim = null); // beam id; Aim: Camera only
-public sealed record CreatureDef(NodeDef[] Nodes, BeamDef[] Beams, SensorDef[] Sensors, int NextPartId);
-public sealed record NodeConnectionDef(int NodeIndex, int ReferenceBeamIndex, int OtherBeamIndex, bool IsMotorized);
+public sealed record PistonDef(int Id, int NodeA, int NodeB, string? Name = null, double Strength = 15000, double Stroke = 0.3, double MaxSpeed = 200); // node ids
+public sealed record CreatureDef(NodeDef[] Nodes, BeamDef[] Beams, SensorDef[] Sensors, PistonDef[] Pistons, int NextPartId);
 
-public static class MotorTopology
+public static class RigidTriangles  // closed beam triangles, which cannot fold
 {
-    public static IReadOnlyList<NodeConnectionDef> BuildNodeConnections(CreatureDef creature);
+    public static IReadOnlyList<RigidTriangleDef> Of(CreatureDef creature);
 }
 
 public static class Accelerometer   // proof mass on a damped spring, pure math
@@ -220,10 +220,9 @@ public static class SensorPicture   // a sensor picture's tap area at its beam's
 Note: `Vector2D` in `NodeRunner.Domain` is our own `readonly record struct`,
 **not** `Godot.Vector2`. The creature layer converts at its boundary.
 
-See `docs/CREATURE_MODEL.md` for the full Node/Beam/Sensor/motor-relation
-model these types encode — including how motor relations are derived from a
-`CreatureDef`'s topology, and why sensors sit on beams and are not the neural
-model.
+See `docs/CREATURE_MODEL.md` for the full Node/Beam/Sensor/Piston model
+these types encode — including why joints are passive, and why sensors sit
+on beams and are not the neural model.
 
 ## The tick
 
@@ -231,14 +230,13 @@ At 60 Hz (`_physics_process`), for the creature currently under evaluation:
 
 1. **Sense.** Each sensor part reads its values in part order (an
    accelerometer steps its proof mass and reads 2, along and across its
-   beam; a camera reads its 3 rays' nearness); each motor relation reads 2 (relative angle, relative angular velocity) →
+   beam; a camera reads its 3 rays' nearness); each Piston reads 2 (length, speed) →
    `double[]`, in the fixed order documented in `docs/CREATURE_MODEL.md`.
-2. **Think.** `Brain.Forward(input, output, scratchA, scratchB)` writes a
-   target angular velocity in `[-1, 1]` per motor relation, without
+2. **Think.** `Brain.Forward(input, output, scratchA, scratchB)` writes
+   each output port's value (a Piston's position and strength), without
    per-tick allocations.
-3. **Act.** `MotorRelation.Drive(target)` scales the target by a static
-   `MaxAngularVelocity` and drives torque (capped at a static `MaxTorque`)
-   to chase it.
+3. **Act.** `PistonLink.Drive(position, strength, step)` pushes its two
+   nodes toward the target length (`Piston.Step`).
 4. **Score.** `TrialMeasurement` records distance, top speed and elevation
    for this trial; distance is the fitness.
 
@@ -260,9 +258,8 @@ signals. A dedicated `PopulationViewModel`
 in the App layer remains a possible later refactor if this logic outgrows
 `TrainingHost` — not required yet.
 
-For 0.2.0 the hardcoded creature keeps its beam bodies awake (`CanSleep =
-false`). Random brains produce visible, if uncoordinated, motor-relation
-movement without any twitch-hack overlay — the old 0.1.0 CPG/twitch blend was
+Creature bodies stay awake (`CanSleep = false`). Random brains produce
+visible, if uncoordinated, Piston movement without any twitch-hack overlay — the old 0.1.0 CPG/twitch blend was
 tied to the retired Muscle model and does not carry over.
 
 ## Navigation
@@ -350,8 +347,8 @@ window. All four live in `ui/lib`, not `managers/`, because managers hold no UI.
 
 Neural-network genomes are flattened per layer transition: weights in
 row-major output-neuron order, then biases for that layer. Networks use
-the configured activation for hidden layers and `Tanh` for the output layer so
-motor-relation targets stay in `[-1, 1]`. The 0.13 brain is direct
+the configured activation for hidden layers and each output port's own
+activation (`PortSignals`). The 0.13 brain is direct
 (`NodeRunner.ML.Brains.DirectBrain`, #536): `LayerSizes` is
 `[inputs, outputs]` in port order, so the genome is one weight per
 (output, input) pair, then one bias per output. It is saved as a graph

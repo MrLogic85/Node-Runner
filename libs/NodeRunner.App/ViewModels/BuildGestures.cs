@@ -683,7 +683,7 @@ public sealed class BuildGestures
 
     private double HitDistance(double viewDistance) => viewDistance / View.Zoom;
 
-    /// <summary>What the view fits on open: every node with room for its motor arc (twice its radius).</summary>
+    /// <summary>What the view fits on open: every node with a margin of twice its radius, so selection rings stay in view.</summary>
     private CanvasRect? ContentBounds()
     {
         var nodes = _build.Nodes;

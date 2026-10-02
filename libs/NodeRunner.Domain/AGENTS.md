@@ -8,11 +8,10 @@ Pure C# data types. The vocabulary of the app, no behavior beyond invariants.
 - **No I/O.** No `System.IO`, no `System.Net`, no environment access.
 - **No behavior beyond data validation.** Records + enums + constructor
   invariants. Business logic lives elsewhere.
-  - **One deliberate exception:** `MotorTopology` is a pure, stateless static
-    class that derives how a creature's beams connect and rotate at each
-    node (see `docs/CREATURE_MODEL.md`). It is allowed here because both the
-    physics layer (`project/src/creature/`) and any future tooling need the
-    exact same answer, and Domain is the only layer both can depend on
+  - **One deliberate exception:** `RigidTriangles` is a pure, stateless static
+    class that finds the closed, rigid triangles of beams in a creature (see
+    `docs/CREATURE_MODEL.md`). It is allowed here because Build and any
+    future tooling need the exact same answer, and Domain is the only layer both can depend on
     without violating `docs/ARCHITECTURE.md`'s layer graph. Any new class
     like it must stay side-effect-free and take/return only Domain types.
     `Accelerometer` is the second: the proof-mass step, reading and sensor
@@ -22,13 +21,12 @@ Pure C# data types. The vocabulary of the app, no behavior beyond invariants.
     `SensorPicture` is the fourth: the area a tap on a sensor's picture
     hits, shared by Build's canvas and gestures and by the
     creature in Training (#576).
-    `BrainPorts` and `JointMotor` are the fifth and sixth: the brain ports
-    every part declares and their order, and a joint motor's port values
-    (#534), shared by the sim, Build and the brain.
-    `PortSignals` is the seventh: each output signal's activation, passive
+    `BrainPorts` is the fifth: the brain ports every part declares and
+    their order (#534), shared by the sim, Build and the brain.
+    `PortSignals` is the sixth: each output signal's activation, passive
     start and position/strength mapping (#535), shared by the brain and the
     sim.
-    `Piston` is the eighth: a Piston's port values and force (#451), shared
+    `Piston` is the seventh: a Piston's port values and force (#451), shared
     by the sim and tests.
 - **Serialisable via `System.Text.Json` without custom converters.** Saved
   records are the save shape: changing one follows `docs/SAVE_FORMAT.md`.
@@ -36,16 +34,16 @@ Pure C# data types. The vocabulary of the app, no behavior beyond invariants.
 ## What lives here
 
 - `CreatureDef`, `NodeDef`, `BeamDef`, `SensorDef`, `SensorKind`,
-  `PistonDef`, `NodeConnectionDef` — anatomy
+  `PistonDef` — anatomy
 - `Piston` — a Piston's port values and force (see the exception above)
 - `Accelerometer`, `ProofMass` — the accelerometer's pure math (see the
   exception above)
 - `CameraRays` — the camera's pure math (see the exception above)
 - `SensorPicture` — a sensor picture's tap area (see the exception above)
-- `MotorTopology` — derives `NodeConnectionDef`s from a `CreatureDef` (see
-  the exception above)
+- `RigidTriangles`, `RigidTriangleDef` — the closed beam triangles of a
+  `CreatureDef` (see the exception above)
 - `BrainPort`, `PortDirection`, `PortSignal`, `BrainPortLayout`,
-  `BrainPorts`, `JointMotor`, `PortSignals` — brain ports, their order and
+  `BrainPorts`, `PortSignals` — brain ports, their order and
   output conventions (see the exception above)
 - `BrainDef`, `NeuronDef`, `ConnectionGeneDef`, `NeuronKind`,
   `NeuronActivation` — the saved brain graph (#536)

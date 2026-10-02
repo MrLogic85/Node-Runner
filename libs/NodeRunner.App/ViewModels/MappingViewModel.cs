@@ -4,15 +4,15 @@ using NodeRunner.Domain;
 namespace NodeRunner.App.ViewModels;
 
 /// <summary>
-/// Formats live sensor and motor-relation readings for the sensor-to-brain-
-/// to-motor mapping display (issue #42). Pure C# so it can be unit-tested
+/// Formats live input and output readings for the sensor-to-brain-to-part
+/// mapping display (issue #42). Pure C# so it can be unit-tested
 /// without a Creature/Godot node — the Godot side (project/src/creature)
 /// reads the live values and calls <see cref="Update"/> once per frame.
 /// </summary>
 public sealed class MappingViewModel : INotifyPropertyChanged
 {
     private const string _noSensorsText = "No sensors yet.";
-    private const string _noMotorsText = "No motor relations yet.";
+    private const string _noMotorsText = "No moving parts yet.";
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -48,7 +48,7 @@ public sealed class MappingViewModel : INotifyPropertyChanged
         for (var i = 0; i < motors.Count; i++)
         {
             var motor = motors[i];
-            lines[i] = $"{motor.GroupKind} {motor.GroupIndex} \u2192 target {motor.Target:0.00}, torque {motor.Torque:0}";
+            lines[i] = $"{motor.GroupKind} {motor.GroupIndex} \u2192 target {motor.Target:0.00}, force {motor.Force:0}";
         }
 
         return string.Join('\n', lines);

@@ -50,23 +50,36 @@ public sealed class CreatureReadinessTests
     }
 
     [Fact]
-    public void CanTrain_WithAMotorRelation_IsTrue()
+    public void CanTrain_WithOnlyPassiveJoints_IsFalse()
     {
         var creature = new CreatureDef(
             [new NodeDef(1, new Vector2D(0, 0), 1), new NodeDef(2, new Vector2D(60, 0), 1), new NodeDef(3, new Vector2D(120, 10), 1)],
             [new BeamDef(101, 1, 2), new BeamDef(102, 2, 3)],
             [new SensorDef(201, 101, SensorKind.Accelerometer)]);
 
+        CreatureReadiness.CanTrain(creature).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void CanTrain_WithAPiston_IsTrue()
+    {
+        var creature = new CreatureDef(
+            [new NodeDef(1, new Vector2D(0, 0), 1), new NodeDef(2, new Vector2D(60, 0), 1), new NodeDef(3, new Vector2D(120, 10), 1)],
+            [new BeamDef(101, 1, 2), new BeamDef(102, 2, 3)],
+            [new SensorDef(201, 101, SensorKind.Accelerometer)],
+            [new PistonDef(301, 1, 3)]);
+
         CreatureReadiness.CanTrain(creature).ShouldBeTrue();
     }
 
     [Fact]
-    public void CanTrain_WithAMotorRelationAndALooseNode_IsFalse()
+    public void CanTrain_WithAPistonAndALooseNode_IsFalse()
     {
         var creature = new CreatureDef(
-            [new NodeDef(1, new Vector2D(0, 0), 1), new NodeDef(2, new Vector2D(2, 0), 1), new NodeDef(3, new Vector2D(4, 1), 1), new NodeDef(4, new Vector2D(8, 8), 1)],
+            [new NodeDef(1, new Vector2D(0, 0), 1), new NodeDef(2, new Vector2D(60, 0), 1), new NodeDef(3, new Vector2D(120, 10), 1), new NodeDef(4, new Vector2D(240, 80), 1)],
             [new BeamDef(101, 1, 2), new BeamDef(102, 2, 3)],
-            [new SensorDef(201, 101, SensorKind.Accelerometer)]);
+            [new SensorDef(201, 101, SensorKind.Accelerometer)],
+            [new PistonDef(301, 1, 3)]);
 
         CreatureReadiness.CanTrain(creature).ShouldBeFalse();
     }

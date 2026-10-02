@@ -3,7 +3,7 @@ namespace NodeRunner.Domain;
 /// <summary>
 /// The accelerometer's pure math (#127): a proof mass on a damped spring in its beam's sensor
 /// frame. Forces are specific forces in g; the frame's X is along the beam and Y is up as built.
-/// Stateless and shared by the sim and the visual (#576), like <see cref="MotorTopology"/>.
+/// Stateless and shared by the sim and the visual (#576).
 /// See docs/CREATURE_MODEL.md.
 /// </summary>
 public static class Accelerometer

@@ -916,7 +916,7 @@ public sealed class BuildViewModel : INotifyPropertyChanged
     /// <summary>
     /// The creature for Start training, if it can train (<see cref="CreatureReadiness"/>). A creature
     /// that cannot be simulated yet shows why via <see cref="StatusMessage"/>; an empty one, or one
-    /// without a motor relation, is refused quietly because Build already shows it is not ready.
+    /// without a moving part, is refused quietly because Build already shows it is not ready.
     /// </summary>
     public bool TryGetTrainableCreature(out CreatureDef? creature)
     {
