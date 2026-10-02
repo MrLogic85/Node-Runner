@@ -4,13 +4,15 @@ public interface ITrainingProgressSource : IDisposable
 {
     event Action? ProgressChanged;
 
-    event Action? NewBestFound;
-
     int Generation { get; }
 
     int ShadowCount { get; }
 
+    /// <summary>The best score ever reached; it never goes down (#479).</summary>
     double BestFitness { get; }
+
+    /// <summary>The generation that reached <see cref="BestFitness"/>, 0 before any has.</summary>
+    int BestGeneration { get; }
 
     double MeanFitness { get; }
 

@@ -255,7 +255,6 @@ public sealed class BuildViewModelTests
 
     [Theory]
     [InlineData(null, false)]
-    [InlineData(0, false)]
     [InlineData(1, true)]
     public void LoadCreation_IsMoveOnlyExactlyWhenLocked(int? generation, bool moveOnly)
     {

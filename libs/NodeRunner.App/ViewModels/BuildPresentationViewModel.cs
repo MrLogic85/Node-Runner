@@ -76,13 +76,12 @@ public sealed class BuildPresentationViewModel
         ? $"Trained {generation} generations"
         : "Not trained yet";
 
-    public string TrainingSummaryBody => _build.TrainingGeneration is { } generation
-        ? $"Generation {generation}. Best distance {BestDistanceText}. Anatomy is locked so this brain stays valid."
+    public string TrainingSummaryBody => _build.TrainingGeneration is not null
+        ? "This can drop after a noisy generation; Training's Best never does. Anatomy is locked so this brain stays valid."
         : "Start training when you are ready. Parts are locked so the brain stays valid.";
 
-    public string BestDistanceText => _build.BestFitness is { } bestFitness
-        ? Metres.FormatWithUnit(bestFitness)
-        : "—";
+    /// <summary>The latest generation's distance (#479); the best ever belongs to Stats.</summary>
+    public string LatestDistanceText => $"Latest distance {(_build.LatestDistance is { } distance ? Metres.FormatWithUnit(distance) : "—")}";
 
     public int SelectedNodeCount => _build.SelectedNodeCount;
 

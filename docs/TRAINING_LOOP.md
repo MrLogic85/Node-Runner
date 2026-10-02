@@ -76,14 +76,27 @@ transition to keep in step with it.
   - `Fitness` — what the GA scores: `Distance`, or negative infinity for an
     invalid trial so it ranks below every valid one. `Evolver` logs each
     invalid trial with its generation and candidate. Invalid results never
-    become `BestRun`, never count toward `MeanFitness`, and must never be
+    become `LatestRun` or the best, never count toward `MeanFitness`, and must never be
     shown as real results (for example in Stats, #541).
   - `Distance`, `TopSpeed` (units/s), `Elevation` and `Fitness` are in
     world units. Text the player reads shows them in metres (see
     `docs/GLOSSARY.md` → Metre).
-- `Evolver.BestRun` is the `TrialResult` of the best genome so far.
-  `TrainingHost` persists it as `TrainingStateDef.BestRun` (`TrainingRunDef`, with
-  `MapId` `flat` until more maps exist) so the Creations card can show it.
+- **Latest and best ever (#479).** Training is noisy, so a later
+  generation can do worse than an earlier one; that is not a bug. The
+  saved training keeps two records for the map it trained on (`flat`
+  until more maps exist):
+  - **Latest:** the best trial of the most recently finished generation:
+    `Evolver.LatestGenome`/`LatestRun`, saved as `TrainingStateDef.Brain`
+    and `Latest` (`TrainingRunDef`). It can go down. The Creations card
+    and Build's training summary show it, and Simulate and the warm start
+    use its brain, because that is what the creature can do now.
+  - **Best ever:** the furthest any generation got, and which generation
+    that was: `Evolver.BestFitness`/`BestGeneration`, saved as
+    `TrainingStateDef.Best` (`TrainingBestDef`). It never goes down. The
+    Training top bar's "Best" shows it, and later Stats.
+  - `TrainingStateDef.Record` is the rule: every finished generation
+    replaces latest, and replaces the best only when it goes further. A
+    generation without a valid trial has no latest, so it isn't saved.
 - `TrialController` (`project/src/sim/TrialController.cs`) is a `Node` that
   times a fixed-duration trial (`TrialDurationTicks`, default 600 ≈ 10s at
   60Hz) for one `Creature` instance at a time. It does **not** own creature
@@ -135,10 +148,12 @@ transition to keep in step with it.
   A completed slot receives the next pending genome in index order until the
   generation is complete, then `GeneticAlgorithm.NextGeneration` starts the
   next generation automatically. `Evolver` tracks `Generation`,
-  `BestFitness` (running best across all generations), and `MeanFitness`
-  (current generation's average over valid trials, 0 if none were valid), and raises
-  `GenerationCompleted`/`NewBestFound`, which the Training scene (see
-  "The Training scene" below) subscribes to.
+  `BestFitness` and `BestGeneration` (the best ever, across all
+  generations), `LatestGenome` and `LatestRun` (the best valid trial of the
+  latest finished generation), and `MeanFitness` (current generation's
+  average over valid trials, 0 if none were valid), and raises
+  `GenerationCompleted`/`TrainingProgressChanged`, which the Training scene
+  (see "The Training scene" below) subscribes to.
   - Every shadow runs at once: there is one slot per candidate, and
     `Evolver.Start` rejects a population above `Creature.MaximumShadows`
     (32). Layer 1 is the ground; every creature body uses layer 2 with mask
@@ -251,15 +266,13 @@ by the TrainSetup and Training component READMEs under `reference design/compone
   - **Resume (warm start, #538).** Opening it starts from the saved
     `TrainingStateDef`: its brain graph is compiled by port
     (`DirectBrain`, #536) and the generation count continues. The saved
-    brain is the elite, the parent of the next generation:
-    `GeneticAlgorithm.FromElites` runs it unchanged as shadow 1 and fills
-    the other shadows with its mutated children, so training picks up
-    where it stopped instead of starting over. A disabled connection
-    stays at 0 through mutation and crossover.
-  - **The best only improves.** A resumed run starts from the saved
-    `bestFitness`, so only a better trial replaces the saved brain and
-    `bestRun`. A generation that is not better still saves, with the new
-    generation count and the old best.
+    brain, the latest generation's best, is the elite, the parent of the
+    next generation: `GeneticAlgorithm.FromElites` runs it unchanged as
+    shadow 1 and fills the other shadows with its mutated children, so
+    training picks up where it stopped instead of starting over. A
+    disabled connection stays at 0 through mutation and crossover. The
+    Evolver's best ever starts from the saved `best`, so the top bar keeps
+    showing it and a worse generation never lowers it.
     A creation without training starts at generation 0 (see "Generation 0" above).
   - **Save.** Each finished generation is saved on the thread pool (the
     file round trip would stall physics), as one atomic file write. Leaving

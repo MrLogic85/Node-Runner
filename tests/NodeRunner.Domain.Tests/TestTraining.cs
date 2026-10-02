@@ -13,6 +13,7 @@ internal static class TestTraining
         [new ConnectionGeneDef(1, 2, 0.5, true)],
         nextNeuronId: 3);
 
-    public static TrainingStateDef State(int generation, double bestFitness = 1, TrainingRunDef? run = null) =>
-        new(Brain, generation, bestFitness, run ?? Run);
+    /// <summary>A training at <paramref name="generation"/> whose best ever, <paramref name="bestDistance"/>, came from that generation.</summary>
+    public static TrainingStateDef State(int generation, double bestDistance = 1, TrainingRunDef? latest = null) =>
+        new(Brain, generation, latest ?? Run, new TrainingBestDef(generation, bestDistance, MapIds.Flat));
 }

@@ -76,19 +76,18 @@ public sealed class TrainingPresentationViewModelTests
     }
 
     [Fact]
-    public void NewBestFound_RecordsBestGenerationFromSource()
+    public void BestGeneration_ComesFromTheSourceAndOutlivesWorseGenerations()
     {
         var source = new FakeTrainingProgressSource
         {
             Generation = 7,
             ShadowCount = 8,
             BestFitness = 2130,
+            BestGeneration = 7,
             MeanFitness = 10.5,
             IsTrialActive = true,
         };
         var presentation = new TrainingPresentationViewModel(source);
-
-        source.RaiseNewBestFound();
 
         presentation.BestGeneration.ShouldBe(7);
         presentation.BestFitnessText.ShouldBe("Best: 21.3 m (gen 7)");
@@ -119,11 +118,9 @@ public sealed class TrainingPresentationViewModelTests
         presentation.Dispose();
         source.Generation = 2;
         source.RaiseProgressChanged();
-        source.RaiseNewBestFound();
 
         source.IsDisposed.ShouldBeTrue();
         source.ProgressChangedSubscriberCount.ShouldBe(0);
-        source.NewBestFoundSubscriberCount.ShouldBe(0);
         raised.ShouldBeFalse();
         presentation.Generation.ShouldBe(1);
     }
@@ -198,7 +195,6 @@ public sealed class TrainingPresentationViewModelTests
     private sealed class FakeTrainingProgressSource : ITrainingProgressSource
     {
         private Action? _progressChanged;
-        private Action? _newBestFound;
 
         public event Action? ProgressChanged
         {
@@ -215,24 +211,7 @@ public sealed class TrainingPresentationViewModelTests
             }
         }
 
-        public event Action? NewBestFound
-        {
-            add
-            {
-                _newBestFound += value;
-                NewBestFoundSubscriberCount++;
-            }
-
-            remove
-            {
-                _newBestFound -= value;
-                NewBestFoundSubscriberCount--;
-            }
-        }
-
         public int ProgressChangedSubscriberCount { get; private set; }
-
-        public int NewBestFoundSubscriberCount { get; private set; }
 
         public bool IsDisposed { get; private set; }
 
@@ -241,6 +220,8 @@ public sealed class TrainingPresentationViewModelTests
         public int ShadowCount { get; set; }
 
         public double BestFitness { get; set; }
+
+        public int BestGeneration { get; set; }
 
         public double MeanFitness { get; set; }
 
@@ -262,11 +243,6 @@ public sealed class TrainingPresentationViewModelTests
         public void RaiseProgressChanged()
         {
             _progressChanged?.Invoke();
-        }
-
-        public void RaiseNewBestFound()
-        {
-            _newBestFound?.Invoke();
         }
 
         public void Dispose()

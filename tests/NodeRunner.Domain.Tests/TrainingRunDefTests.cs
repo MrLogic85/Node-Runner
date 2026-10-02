@@ -25,13 +25,4 @@ public sealed class TrainingRunDefTests
     [Fact]
     public void RequiresAMap() =>
         Should.Throw<ArgumentException>(() => new TrainingRunDef(0, 0, 0, " "));
-
-    [Fact]
-    public void TrainingState_KeepsItsBestRun()
-    {
-        var run = new TrainingRunDef(1, 2, 3, MapIds.Flat);
-
-        TestTraining.State(4, 1, run).BestRun.ShouldBe(run);
-        Should.Throw<ArgumentNullException>(() => new TrainingStateDef(TestTraining.Brain, 4, 1, null!));
-    }
 }
