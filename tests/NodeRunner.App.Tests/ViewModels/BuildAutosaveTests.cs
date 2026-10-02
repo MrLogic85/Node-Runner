@@ -31,7 +31,7 @@ public sealed class BuildAutosaveTests
 
         autosave.Save().ShouldBeTrue();
 
-        edits.DidNotReceiveWithAnyArgs().PersistEdit(default, default!, default!, default);
+        edits.DidNotReceiveWithAnyArgs().PersistEdit(default, default!, default);
     }
 
     [Fact]
@@ -42,9 +42,8 @@ public sealed class BuildAutosaveTests
         autosave.Changed += (_, _) => changes++;
 
         build.MoveNode(1, new Vector2D(5, 5));
-        build.SetBrainShape(new BrainShapeDef(2, 6));
 
-        changes.ShouldBe(2);
+        changes.ShouldBe(1);
         autosave.HasUnsavedEdits.ShouldBeTrue();
     }
 
@@ -65,7 +64,7 @@ public sealed class BuildAutosaveTests
     public void Save_WhenWritingThrows_KeepsTheEditsUnsaved()
     {
         var edits = Substitute.For<IBuildEditWorkflow>();
-        edits.PersistEdit(default, default!, default!, default).ReturnsForAnyArgs(_ => throw new IOException("disk full"));
+        edits.PersistEdit(default, default!, default).ReturnsForAnyArgs(_ => throw new IOException("disk full"));
         var build = new BuildViewModel();
         var creation = TwoNodeCreation();
         build.LoadCreation(creation);
@@ -78,23 +77,11 @@ public sealed class BuildAutosaveTests
     }
 
     [Fact]
-    public void Save_AfterABrainShapeChange_StoresTheNewShape()
+    public void Save_OnALockedCreation_KeepsItsTraining()
     {
-        var creation = TwoNodeCreation();
-        var (repository, build, autosave) = Open(creation);
-
-        build.SetBrainShape(new BrainShapeDef(2, 6));
-        autosave.Save();
-
-        repository.Get(creation.Id).ShouldNotBeNull().BrainShape.ShouldBe(new BrainShapeDef(2, 6));
-    }
-
-    [Fact]
-    public void Save_OnALockedCreation_KeepsItsTrainingAndBrainShape()
-    {
-        var training = new TrainingStateDef([6, 3, 1], Enumerable.Repeat(0.1, 25).ToArray(), 4, "Tanh", 1, TestTraining.Run);
+        var training = TestTraining.State(4, 1, TestTraining.Run);
         var drawn = TwoNodeCreation();
-        var trained = new CreationDef(drawn.Id, drawn.Name, drawn.Creature, new BrainShapeDef(1, 3), training);
+        var trained = new CreationDef(drawn.Id, drawn.Name, drawn.Creature, training);
         var (repository, build, autosave) = Open(trained);
 
         build.MoveNode(1, new Vector2D(5, 5));
@@ -103,7 +90,6 @@ public sealed class BuildAutosaveTests
         var saved = repository.Get(trained.Id).ShouldNotBeNull();
         saved.Creature.Nodes[0].Position.ShouldBe(new Vector2D(5, 5));
         saved.Training.ShouldBe(training);
-        saved.BrainShape.ShouldBe(new BrainShapeDef(1, 3));
     }
 
     [Fact]

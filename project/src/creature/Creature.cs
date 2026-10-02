@@ -1,6 +1,7 @@
 using Godot;
 using NodeRunner.Domain;
 using NodeRunner.ML;
+using NodeRunner.ML.Brains;
 using NodeRunner.Theme;
 
 namespace NodeRunner.Creature;
@@ -56,8 +57,6 @@ public partial class Creature : Node2D
     private bool _isBuilt;
 
     public CreatureDef? Definition { get; set; }
-
-    public BrainShapeDef BrainShape { get; set; } = BrainShapeDef.Default;
 
     public VisualTheme Theme { get; set; } = VisualTheme.Neon;
 
@@ -134,7 +133,7 @@ public partial class Creature : Node2D
 
         BrainSeed = seed;
         var random = new Random(seed);
-        Brain = new NeuralNetwork(BrainShape.ToLayerSizes(_sensorValues.Length, _motorRelations.Length), Activation.Tanh, random);
+        Brain = new NeuralNetwork(DirectBrain.LayerSizes(Ports), Activation.Tanh, random);
 
         GD.Print($"Node Runner brain seed: {seed}");
     }
@@ -600,8 +599,7 @@ public partial class Creature : Node2D
         _sensorValues = new double[_inputPortOf.Length];
         _motorTargets = new double[_outputPortOf.Length];
 
-        var shape = BrainShape.ToLayerSizes(_sensorValues.Length, _motorTargets.Length);
-        var scratchSize = shape.Max();
+        var scratchSize = DirectBrain.LayerSizes(Ports).Max();
         _scratchA = new double[scratchSize];
         _scratchB = new double[scratchSize];
     }

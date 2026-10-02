@@ -80,16 +80,8 @@ public partial class BuildHost : Node, IRoutedScene
         }
 
         var back = new UiBackHandler { CanTakeBack = () => !_deleteCreationDialog.IsOpen && _buildScreen.CanTakeBack };
-        back.BackRequested += OnBackRequested;
+        back.BackRequested += BackFromBuildScreen;
         AddChild(back, @internal: InternalMode.Front);
-    }
-
-    private void OnBackRequested()
-    {
-        if (!_buildScreen.CloseOverlay())
-        {
-            BackFromBuildScreen();
-        }
     }
 
     // Opened by the router, Build shows the route's creation. Run on its own (F6) it makes a new one,
@@ -119,13 +111,6 @@ public partial class BuildHost : Node, IRoutedScene
         _buildScreen = GetNode<BuildScreen>("%BuildScreen");
         _buildScreen.Setup(Build);
         _buildScreen.ToolRequested += tool => Build.ActiveTool = tool;
-        _buildScreen.BrainShapeChanged += (layers, neurons) =>
-        {
-            if (!Build.IsMoveOnly)
-            {
-                Build.SetBrainShape(new BrainShapeDef(layers, neurons));
-            }
-        };
         _buildScreen.StartTrainingRequested += StartTraining;
         _buildScreen.BackRequested += BackFromBuildScreen;
         _buildScreen.CreationNameChanged += RenameActiveCreation;
@@ -251,7 +236,7 @@ public partial class BuildHost : Node, IRoutedScene
         if (!CreationActions.TryRunFileOperation(
             () => renamed = Saves.UpdateIfPresent(
                 id,
-                source => new CreationDef(source.Id, name, source.Creature, source.BrainShape, source.Training)),
+                source => new CreationDef(source.Id, name, source.Creature, source.Training)),
             $"Renaming Creation '{id}'"))
         {
             return;

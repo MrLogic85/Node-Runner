@@ -1,4 +1,3 @@
-using System.ComponentModel;
 using NodeRunner.App.Services;
 
 namespace NodeRunner.App.ViewModels;
@@ -24,7 +23,6 @@ public sealed class BuildAutosave : IDisposable
         _creationId = creationId;
         _openedAsNew = openedAsNew;
         _build.AnatomyChanged += OnAnatomyChanged;
-        _build.PropertyChanged += OnPropertyChanged;
     }
 
     /// <summary>Raised on every edit that is not saved yet.</summary>
@@ -52,7 +50,7 @@ public sealed class BuildAutosave : IDisposable
             return true;
         }
 
-        var saved = _edits.PersistEdit(_creationId, _build.Snapshot(), _build.BrainShape, _build.IsMoveOnly);
+        var saved = _edits.PersistEdit(_creationId, _build.Snapshot(), _build.IsMoveOnly);
         HasUnsavedEdits = saved is null;
         return !HasUnsavedEdits;
     }
@@ -60,18 +58,9 @@ public sealed class BuildAutosave : IDisposable
     public void Dispose()
     {
         _build.AnatomyChanged -= OnAnatomyChanged;
-        _build.PropertyChanged -= OnPropertyChanged;
     }
 
     private void OnAnatomyChanged(object? sender, EventArgs e) => MarkUnsaved();
-
-    private void OnPropertyChanged(object? sender, PropertyChangedEventArgs e)
-    {
-        if (e.PropertyName == nameof(BuildViewModel.BrainShape))
-        {
-            MarkUnsaved();
-        }
-    }
 
     private void MarkUnsaved()
     {

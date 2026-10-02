@@ -7,12 +7,6 @@ namespace NodeRunner.Domain;
 public sealed record CreationDef
 {
     public CreationDef(Guid id, string name, CreatureDef creature, TrainingStateDef? training = null)
-        : this(id, name, creature, BrainShapeDef.Default, training)
-    {
-    }
-
-    [System.Text.Json.Serialization.JsonConstructor]
-    public CreationDef(Guid id, string name, CreatureDef creature, BrainShapeDef brainShape, TrainingStateDef? training = null)
     {
         if (id == Guid.Empty)
         {
@@ -21,12 +15,10 @@ public sealed record CreationDef
 
         ArgumentException.ThrowIfNullOrWhiteSpace(name);
         ArgumentNullException.ThrowIfNull(creature);
-        ArgumentNullException.ThrowIfNull(brainShape);
 
         Id = id;
         Name = name;
         Creature = creature;
-        BrainShape = brainShape;
         Training = training;
     }
 
@@ -35,8 +27,6 @@ public sealed record CreationDef
     public string Name { get; }
 
     public CreatureDef Creature { get; }
-
-    public BrainShapeDef BrainShape { get; }
 
     public TrainingStateDef? Training { get; }
 }

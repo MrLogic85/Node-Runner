@@ -91,7 +91,7 @@ public sealed class CreationRepositoryTests
                     creation.Id,
                     creation.Name,
                     creation.Creature,
-                    new TrainingStateDef(creation.Training!.LayerSizes, creation.Training.BestGenome, i, "Tanh", 1, TestTraining.Run));
+                    TestTraining.State(i, 1, TestTraining.Run));
                 repository.Save(withGeneration);
             });
 
@@ -395,7 +395,7 @@ public sealed class CreationRepositoryTests
                 [new NodeDef(1, new Vector2D(0, 0), 1), new NodeDef(2, new Vector2D(2, 0), 1), new NodeDef(3, new Vector2D(4, 0), 1)],
                 [new BeamDef(101, 1, 2), new BeamDef(102, 2, 3)],
                 [new SensorDef(201, 101, SensorKind.Accelerometer), new SensorDef(202, 102, SensorKind.Camera)]),
-            new TrainingStateDef([2, 1], [0.1, -0.2, 0.3], 2, "Tanh", 42.5, new TrainingRunDef(42.5, 88.25, 12, MapIds.Flat)));
+            TestTraining.State(2, 42.5, new TrainingRunDef(42.5, 88.25, 12, MapIds.Flat)));
     }
 
     private static void AssertEquivalent(CreationDef? actual, CreationDef expected)
@@ -407,10 +407,10 @@ public sealed class CreationRepositoryTests
         actual.Creature.Beams.ToArray().ShouldBe(expected.Creature.Beams.ToArray());
         actual.Creature.Sensors.ToArray().ShouldBe(expected.Creature.Sensors.ToArray());
         actual.Training.ShouldNotBeNull();
-        actual.Training.LayerSizes.ShouldBe(expected.Training!.LayerSizes);
-        actual.Training.BestGenome.ShouldBe(expected.Training.BestGenome);
+        actual.Training.Brain.Neurons.ToArray().ShouldBe(expected.Training!.Brain.Neurons.ToArray());
+        actual.Training.Brain.Connections.ToArray().ShouldBe(expected.Training.Brain.Connections.ToArray());
+        actual.Training.Brain.NextNeuronId.ShouldBe(expected.Training.Brain.NextNeuronId);
         actual.Training.Generation.ShouldBe(expected.Training.Generation);
-        actual.Training.Activation.ShouldBe(expected.Training.Activation);
         actual.Training.BestFitness.ShouldBe(expected.Training.BestFitness);
         actual.Training.BestRun.ShouldBe(expected.Training.BestRun);
     }

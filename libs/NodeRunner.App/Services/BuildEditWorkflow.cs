@@ -13,15 +13,14 @@ public sealed class BuildEditWorkflow : IBuildEditWorkflow
         _coordinator = coordinator;
     }
 
-    public CreationDef? PersistEdit(Guid activeCreationId, CreatureDef editedCreature, BrainShapeDef brainShape, bool moveOnly)
+    public CreationDef? PersistEdit(Guid activeCreationId, CreatureDef editedCreature, bool moveOnly)
     {
         ArgumentNullException.ThrowIfNull(editedCreature);
-        ArgumentNullException.ThrowIfNull(brainShape);
         if (activeCreationId == Guid.Empty)
         {
             throw new ArgumentException("An active Creation id is required.", nameof(activeCreationId));
         }
 
-        return _coordinator.ApplyEdit(activeCreationId, editedCreature, brainShape, moveOnly);
+        return _coordinator.ApplyEdit(activeCreationId, editedCreature, moveOnly);
     }
 }

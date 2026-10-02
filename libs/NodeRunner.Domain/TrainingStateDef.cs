@@ -1,22 +1,15 @@
 namespace NodeRunner.Domain;
 
 /// <summary>
-/// Persisted neural-network state for a Creation. The layer and activation
-/// metadata make the genome self-describing without coupling Domain to ML.
+/// A Creation's saved training: the best brain found so far, as a graph keyed by port ids
+/// (<see cref="BrainDef"/>), and how far training has come.
 /// </summary>
 public sealed record TrainingStateDef
 {
-    public TrainingStateDef(int[] layerSizes, double[] bestGenome, int generation, string activation, double bestFitness, TrainingRunDef bestRun)
+    public TrainingStateDef(BrainDef brain, int generation, double bestFitness, TrainingRunDef bestRun)
     {
-        ArgumentNullException.ThrowIfNull(layerSizes);
-        ArgumentNullException.ThrowIfNull(bestGenome);
-        ArgumentException.ThrowIfNullOrWhiteSpace(activation);
+        ArgumentNullException.ThrowIfNull(brain);
         ArgumentNullException.ThrowIfNull(bestRun);
-
-        if (layerSizes.Length < 2 || layerSizes.Any(size => size <= 0))
-        {
-            throw new ArgumentException("Training layers must contain at least two positive sizes.", nameof(layerSizes));
-        }
 
         if (generation < 0)
         {
@@ -28,24 +21,19 @@ public sealed record TrainingStateDef
             throw new ArgumentOutOfRangeException(nameof(bestFitness), "Best fitness must be finite.");
         }
 
-        LayerSizes = layerSizes.ToArray();
-        BestGenome = bestGenome.ToArray();
+        Brain = brain;
         Generation = generation;
-        Activation = activation;
         BestFitness = bestFitness;
         BestRun = bestRun;
     }
 
-    public int[] LayerSizes { get; }
-
-    public double[] BestGenome { get; }
+    /// <summary>The best brain found so far.</summary>
+    public BrainDef Brain { get; }
 
     public int Generation { get; }
 
-    public string Activation { get; }
-
     public double BestFitness { get; }
 
-    /// <summary>The winning run behind <see cref="BestGenome"/>.</summary>
+    /// <summary>The winning run behind <see cref="Brain"/>.</summary>
     public TrainingRunDef BestRun { get; }
 }

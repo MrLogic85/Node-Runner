@@ -71,19 +71,6 @@ public sealed class BuildPresentationViewModel
 
     public int SensorCount => _build.Sensors.Count;
 
-    public BrainShapeDef BrainShape => _build.BrainShape;
-
-    public BrainSetupPresentation BrainSetup
-    {
-        get
-        {
-            var buildPanel = BuildPanel;
-            return BrainSetupPresentation.For(BrainShape, buildPanel.InputCount, buildPanel.OutputCount);
-        }
-    }
-
-    public bool IsBrainShapeLocked => _build.IsMoveOnly;
-
     public string MoveOnlyLockReason => "Move only · training kept";
 
     public string TrainingSummaryTitle => _build.TrainingGeneration is { } generation

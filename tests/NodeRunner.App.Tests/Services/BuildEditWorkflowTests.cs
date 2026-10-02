@@ -16,7 +16,7 @@ public sealed class BuildEditWorkflowTests
         repository.Save(original);
         var workflow = new BuildEditWorkflow(coordinator);
 
-        var result = workflow.PersistEdit(original.Id, editedCreature, BrainShapeDef.Default, moveOnly: true);
+        var result = workflow.PersistEdit(original.Id, editedCreature, moveOnly: true);
 
         result.ShouldNotBeNull();
         result.Creature.ShouldBe(editedCreature);
@@ -31,7 +31,7 @@ public sealed class BuildEditWorkflowTests
         var coordinator = new CreationUpdateCoordinator(repository);
         var workflow = new BuildEditWorkflow(coordinator);
 
-        var result = workflow.PersistEdit(Guid.NewGuid(), CreateCreature(x: 3), BrainShapeDef.Default, moveOnly: true);
+        var result = workflow.PersistEdit(Guid.NewGuid(), CreateCreature(x: 3), moveOnly: true);
 
         result.ShouldBeNull();
         repository.List().ShouldBeEmpty();
@@ -43,10 +43,10 @@ public sealed class BuildEditWorkflowTests
         var coordinator = Substitute.For<ICreationUpdateCoordinator>();
         var id = Guid.NewGuid();
         var editedCreature = CreateCreature(x: 3);
-        coordinator.ApplyEdit(id, editedCreature, BrainShapeDef.Default, moveOnly: true).Returns(_ => throw new IOException("disk full"));
+        coordinator.ApplyEdit(id, editedCreature, moveOnly: true).Returns(_ => throw new IOException("disk full"));
         var workflow = new BuildEditWorkflow(coordinator);
 
-        Should.Throw<IOException>(() => workflow.PersistEdit(id, editedCreature, BrainShapeDef.Default, moveOnly: true));
+        Should.Throw<IOException>(() => workflow.PersistEdit(id, editedCreature, moveOnly: true));
     }
 
     [Fact]
@@ -60,15 +60,7 @@ public sealed class BuildEditWorkflowTests
     {
         var workflow = new BuildEditWorkflow(Substitute.For<ICreationUpdateCoordinator>());
 
-        Should.Throw<ArgumentNullException>(() => workflow.PersistEdit(Guid.NewGuid(), null!, BrainShapeDef.Default, moveOnly: true));
-    }
-
-    [Fact]
-    public void PersistEdit_WithNullBrainShape_Throws()
-    {
-        var workflow = new BuildEditWorkflow(Substitute.For<ICreationUpdateCoordinator>());
-
-        Should.Throw<ArgumentNullException>(() => workflow.PersistEdit(Guid.NewGuid(), CreateCreature(x: 3), null!, moveOnly: true));
+        Should.Throw<ArgumentNullException>(() => workflow.PersistEdit(Guid.NewGuid(), null!, moveOnly: true));
     }
 
     [Fact]
@@ -76,7 +68,7 @@ public sealed class BuildEditWorkflowTests
     {
         var workflow = new BuildEditWorkflow(Substitute.For<ICreationUpdateCoordinator>());
 
-        Should.Throw<ArgumentException>(() => workflow.PersistEdit(Guid.Empty, CreateCreature(x: 3), BrainShapeDef.Default, moveOnly: true));
+        Should.Throw<ArgumentException>(() => workflow.PersistEdit(Guid.Empty, CreateCreature(x: 3), moveOnly: true));
     }
 
     private static CreationDef CreateCreation(string name, double x, int generation)
@@ -85,7 +77,7 @@ public sealed class BuildEditWorkflowTests
             Guid.NewGuid(),
             name,
             CreateCreature(x),
-            new TrainingStateDef([2, 1], [0.1, -0.2, 0.3], generation, "Tanh", 1, TestTraining.Run));
+            TestTraining.State(generation, 1, TestTraining.Run));
     }
 
     private static CreatureDef CreateCreature(double x)

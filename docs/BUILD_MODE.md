@@ -18,8 +18,8 @@ locked is overridden in `docs/TRAINING_LOOP.md` → Product lifecycle boundary.
   creation's Build canvas.
 - Build state lives in `NodeRunner.App.ViewModels.BuildViewModel`
   while Build is open. Build always edits a saved creation: + New saves an
-  empty "Untitled Creation" with the default brain shape
-  (`NewCreationWorkflow`) before Build opens.
+  empty "Untitled Creation" (`NewCreationWorkflow`) before Build opens. Its
+  brain is direct (#536), so there is no brain to set up.
 - Every edit saves itself; there is no Save button (#368).
   `BuildAutosave` marks the drawing unsaved on each edit, and
   `BuildHost` saves it once edits have settled for 0.5 s, and when Build is
@@ -96,7 +96,7 @@ a node's own disc always hits.
   relative to the beam, so the camera turns with it. The handle is hit before
   anything under it, a tap on it does nothing, and a second finger puts the
   aim back (Build has no undo). A locked creation keeps the Aim handle:
-  aim changes no input or brain shape (#638).
+  aim changes no brain port (#638).
 - There is no Delete tool: the part settings and selection panels delete the
   selection, and deleting a node removes every beam on it and those beams'
   sensors (`CreatureBuilder.RemoveNode`).

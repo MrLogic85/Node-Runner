@@ -349,9 +349,15 @@ window. All four live in `ui/lib`, not `managers/`, because managers hold no UI.
 ## Neural-network genome layout
 
 Neural-network genomes are flattened per layer transition: weights in
-row-major output-neuron order, then biases for that layer. 0.1.0 networks use
+row-major output-neuron order, then biases for that layer. Networks use
 the configured activation for hidden layers and `Tanh` for the output layer so
-motor-relation targets stay in `[-1, 1]`. Hot paths use the overload that
+motor-relation targets stay in `[-1, 1]`. The 0.13 brain is direct
+(`NodeRunner.ML.Brains.DirectBrain`, #536): `LayerSizes` is
+`[inputs, outputs]` in port order, so the genome is one weight per
+(output, input) pair, then one bias per output. It is saved as a graph
+(`BrainDef`, `docs/SAVE_FORMAT.md`) and compiled back to this genome by port,
+never by list order; a disabled gene compiles to 0 and the Evolver keeps it
+at 0. Hot paths use the overload that
 accepts caller-owned output and scratch buffers; those buffers must be
 distinct arrays. The network itself does not keep per-call scratch state.
 

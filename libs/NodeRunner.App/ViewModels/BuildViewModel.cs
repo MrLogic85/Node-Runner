@@ -59,7 +59,6 @@ public sealed class BuildViewModel : INotifyPropertyChanged
     private string? _statusMessage;
     private bool _moveOnly;
     private readonly HashSet<int> _selectedNodeIds = [];
-    private BrainShapeDef _brainShape = BrainShapeDef.Default;
     private string _creationName = NewCreationWorkflow.UntitledName;
     private int? _trainingGeneration;
     private double? _bestFitness;
@@ -75,14 +74,13 @@ public sealed class BuildViewModel : INotifyPropertyChanged
         _builder = builder ?? new CreatureBuilder();
     }
 
-    public void Load(CreatureDef creature, bool moveOnly = false, BrainShapeDef? brainShape = null, string? creationName = null, TrainingStateDef? training = null)
+    public void Load(CreatureDef creature, bool moveOnly = false, string? creationName = null, TrainingStateDef? training = null)
     {
         ArgumentNullException.ThrowIfNull(creature);
         _builder = new CreatureBuilder(creature);
         _selectedNodeIds.Clear();
         _selectedBeamId = null;
         _selectedSensorId = null;
-        _brainShape = brainShape ?? BrainShapeDef.Default;
         _creationName = string.IsNullOrWhiteSpace(creationName) ? NewCreationWorkflow.UntitledName : creationName;
         _trainingGeneration = training?.Generation;
         _bestFitness = training?.BestFitness;
@@ -100,7 +98,7 @@ public sealed class BuildViewModel : INotifyPropertyChanged
     public void LoadCreation(CreationDef creation)
     {
         ArgumentNullException.ThrowIfNull(creation);
-        Load(creation.Creature, CreationLock.IsLocked(creation), creation.BrainShape, creation.Name, creation.Training);
+        Load(creation.Creature, CreationLock.IsLocked(creation), creation.Name, creation.Training);
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
@@ -108,7 +106,7 @@ public sealed class BuildViewModel : INotifyPropertyChanged
     /// <summary>Raised whenever the placed anatomy (nodes, beams, or sensors) changes, so the UI can redraw.</summary>
     public event EventHandler? AnatomyChanged;
 
-    /// <summary>True for a locked Creation: parts and brain shape are fixed, and only nodes move.</summary>
+    /// <summary>True for a locked Creation: parts are fixed, and only nodes move.</summary>
     public bool IsMoveOnly => _moveOnly;
 
     public string CreationName => _creationName;
@@ -327,20 +325,6 @@ public sealed class BuildViewModel : INotifyPropertyChanged
 
     public IReadOnlyCollection<int> SelectedNodeIds => _selectedNodeIds;
 
-    public BrainShapeDef BrainShape => _brainShape;
-
-    public void SetBrainShape(BrainShapeDef brainShape)
-    {
-        ArgumentNullException.ThrowIfNull(brainShape);
-        if (_brainShape == brainShape)
-        {
-            return;
-        }
-
-        _brainShape = brainShape;
-        OnPropertyChanged(nameof(BrainShape));
-    }
-
     /// <summary>Places a new node, moved inside <see cref="BuildArea"/>, and returns its id.</summary>
     public int PlaceNode(Vector2D position, double radius)
     {
@@ -438,28 +422,13 @@ public sealed class BuildViewModel : INotifyPropertyChanged
         return false;
     }
 
-    public static string SensorName(SensorKind kind) => kind switch
-    {
-        SensorKind.Accelerometer => "Accelerometer",
-        SensorKind.Camera => "Camera",
-        _ => throw new ArgumentOutOfRangeException(nameof(kind)),
-    };
+    public static string SensorName(SensorKind kind) => PartNames.SensorKind(kind);
 
     /// <summary>The name a part shows: its own name if it has one, else <see cref="DefaultPartName"/>.</summary>
-    public string PartDisplayName(int partId) => PartName(partId) ?? DefaultPartName(partId);
+    public string PartDisplayName(int partId) => PartNames.Display(_builder.Nodes, _builder.Beams, _builder.Sensors, partId);
 
     /// <summary>The name a part shows until it is renamed: "Node 2", "Beam 1" or its sensor kind.</summary>
-    public string DefaultPartName(int partId)
-    {
-        if (_builder.Sensors.FirstOrDefault(sensor => sensor.Id == partId) is { } sensor)
-        {
-            return SensorName(sensor.Kind);
-        }
-
-        return _builder.Beams.Any(beam => beam.Id == partId)
-            ? $"Beam {_builder.BeamIndexOf(partId) + 1}"
-            : $"Node {_builder.NodeIndexOf(partId) + 1}";
-    }
+    public string DefaultPartName(int partId) => PartNames.Default(_builder.Nodes, _builder.Beams, _builder.Sensors, partId);
 
     /// <summary>
     /// Renames a part by id, so an edit lands on the part it started on even if the selection
@@ -488,10 +457,7 @@ public sealed class BuildViewModel : INotifyPropertyChanged
         AnatomyChanged?.Invoke(this, EventArgs.Empty);
     }
 
-    private string? PartName(int partId) =>
-        _builder.Nodes.FirstOrDefault(node => node.Id == partId)?.Name
-        ?? _builder.Beams.FirstOrDefault(beam => beam.Id == partId)?.Name
-        ?? _builder.Sensors.FirstOrDefault(sensor => sensor.Id == partId)?.Name;
+    private string? PartName(int partId) => PartNames.Own(_builder.Nodes, _builder.Beams, _builder.Sensors, partId);
 
     public void ClearSelection()
     {

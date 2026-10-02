@@ -136,45 +136,109 @@
       ],
       "additionalProperties": false
     },
-    "brainShape": {
-      "type": "object",
-      "properties": {
-        "hiddenLayers": {
-          "type": "integer"
-        },
-        "neuronsPerLayer": {
-          "type": "integer"
-        }
-      },
-      "required": [
-        "hiddenLayers",
-        "neuronsPerLayer"
-      ],
-      "additionalProperties": false
-    },
     "training": {
       "type": [
         "object",
         "null"
       ],
       "properties": {
-        "layerSizes": {
-          "type": "array",
-          "items": {
-            "type": "integer"
-          }
-        },
-        "bestGenome": {
-          "type": "array",
-          "items": {
-            "type": "number"
-          }
+        "brain": {
+          "type": "object",
+          "properties": {
+            "neurons": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "integer"
+                  },
+                  "kind": {
+                    "enum": [
+                      "input",
+                      "output",
+                      "hidden"
+                    ]
+                  },
+                  "partId": {
+                    "type": [
+                      "integer",
+                      "null"
+                    ]
+                  },
+                  "channel": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "layer": {
+                    "type": "integer"
+                  },
+                  "bias": {
+                    "type": "number"
+                  },
+                  "activation": {
+                    "enum": [
+                      "identity",
+                      "tanh",
+                      "sigmoid",
+                      "relu"
+                    ]
+                  }
+                },
+                "required": [
+                  "id",
+                  "kind",
+                  "partId",
+                  "channel",
+                  "layer",
+                  "bias",
+                  "activation"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "connections": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "from": {
+                    "type": "integer"
+                  },
+                  "to": {
+                    "type": "integer"
+                  },
+                  "weight": {
+                    "type": "number"
+                  },
+                  "enabled": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "from",
+                  "to",
+                  "weight",
+                  "enabled"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "nextNeuronId": {
+              "type": "integer"
+            }
+          },
+          "required": [
+            "neurons",
+            "connections",
+            "nextNeuronId"
+          ],
+          "additionalProperties": false
         },
         "generation": {
           "type": "integer"
-        },
-        "activation": {
-          "type": "string"
         },
         "bestFitness": {
           "type": "number"
@@ -205,10 +269,8 @@
         }
       },
       "required": [
-        "layerSizes",
-        "bestGenome",
+        "brain",
         "generation",
-        "activation",
         "bestFitness",
         "bestRun"
       ],
@@ -219,8 +281,7 @@
   "required": [
     "id",
     "name",
-    "creature",
-    "brainShape"
+    "creature"
   ],
   "additionalProperties": false
 }

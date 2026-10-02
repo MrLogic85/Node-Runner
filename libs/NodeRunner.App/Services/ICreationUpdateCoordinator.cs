@@ -39,13 +39,13 @@ public interface ICreationUpdateCoordinator
     /// <summary>
     /// Saves a Build edit and invalidates any pending training snapshot. A move-only edit (Build
     /// opened the Creation locked, <see cref="Lifecycle.CreationLock"/>) takes only the creature and
-    /// keeps the brain shape and training, which still fit. A full edit takes the creature and brain
-    /// shape and drops the training, since the old genome may not fit the new anatomy; Build only
-    /// allows it on a Creation with no finished generation. The caller's mode decides, not the lock
+    /// keeps the training, which still fits. A full edit takes the creature and drops the training,
+    /// since the old genome may not fit the new anatomy; Build only allows it on a Creation with no
+    /// finished generation. The caller's mode decides, not the lock
     /// at save time, so a generation saved while Build was open cannot keep a genome that no longer
     /// fits. Returns <c>null</c> if no such Creation exists.
     /// </summary>
-    CreationDef? ApplyEdit(Guid id, CreatureDef editedCreature, BrainShapeDef brainShape, bool moveOnly);
+    CreationDef? ApplyEdit(Guid id, CreatureDef editedCreature, bool moveOnly);
 
     /// <summary>Deletes a Creation, invalidating any pending training snapshot.</summary>
     bool Delete(Guid id);
