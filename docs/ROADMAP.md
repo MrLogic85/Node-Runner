@@ -28,7 +28,9 @@ Update the current stage here when it changes.
 
 Source: the Brain v2 epic
 [#522](https://github.com/MrLogic85/Node-Runner/issues/522). GitHub milestones
-own issue lists and status; this section holds the durable narrative.
+own issue lists and status; this section holds the durable narrative. A
+milestone section names capabilities, not issues, so moving an issue between
+milestones does not touch this file.
 `reference design/` owns UI and product flow, and
 `docs/UI_IMPLEMENTATION_PLAN.md` owns UI implementation order. Where this plan
 replaces the reference flow, `docs/UI_DIRECTION.md` → "Reference flow
@@ -57,11 +59,9 @@ identity.
 
 - Build tools, parts tray and placement, vocabulary, and the reference-design
   UI foundations.
-- Stable part ids (#220): the prerequisite for a brain that survives rebuilds.
-- Core is removed. Its readings become sensor parts that sit on a beam: an
-  Accelerometer, a damped proof mass whose swing is the reading (#127, #576),
-  and a Camera with three fixed rays that read nearness (#575, #604). Design: best guess #580
-  (follow-up #574).
+- Stable part ids: the prerequisite for a brain that survives rebuilds.
+- Core is removed. Its readings become sensor parts on a beam: an
+  Accelerometer and a Camera whose rays read nearness.
 
 **Ship criterion:** A player builds a creature on the reference-design Build
 screen, and every part keeps its id across edits and saves.
@@ -71,18 +71,15 @@ screen, and every part keeps its id across edits and saves.
 **Goal:** The minimum loop on the new design: build, train, leave, come back,
 rebuild, and keep training.
 
-- One save format defined before fields are added (#553).
-- Parts declare ports with the input convention "0 = as built" (#534).
-  Outputs are position (tanh, 0 = built pose) and strength (sigmoid) (#535).
-- A direct brain keyed by port ids, stored as a connection-gene graph; the
-  brain (views and editing) is hidden until 0.16.0 (#536).
-- Fixed start height and generation 0 (#537).
-- Autosave after every generation; resuming continues from the saved elites
-  (#538).
-- A rebuild keeps the brain through port matching (#516); lock and unlock
-  without reset (#371).
-- One map, distance-only fitness, and shadows in the Training arena (#137).
-- Basic sound design and the first sounds (#378, #285).
+- One save format, defined before fields are added.
+- A fixed start height and a defined generation 0.
+- Parts declare brain ports; a direct brain keyed by port ids, stored as a
+  connection-gene graph.
+- Autosave after every generation; resuming continues from the saved elites.
+- A rebuild keeps the brain through port matching; lock and unlock without
+  resetting training.
+- One map, distance-only fitness, and shadows in the Training arena.
+- Basic sound design and the first sounds.
 
 **ML concepts introduced:** A direct policy (observation → action with no
 hidden layer); training resumes instead of restarting; a changed body keeps
@@ -95,13 +92,11 @@ and training continues. Adding a part keeps the skill the creature already had.
 
 **Goal:** Enough parts to find out what is worth unlocking and when.
 
-- Motors, passive parts and sensors (#92 and its children). Power and the
-  Wing come in 0.18.0.
-- Camera settings (#578), joint-part placement (#577) and
-  Pulse, a rhythm part whose tempo is itself an output (#527).
-- Shadows (population size) saved per Creation, with phone calibration (#528).
-- Investigation of a good start creature (#529) and a spike on part unlocks
-  (#530).
+- Motors, passive parts and sensors, with their settings, and placing parts
+  on joints. Power and the Wing come in 0.18.0.
+- Pulse, a rhythm part whose tempo is itself an output.
+- Shadows (population size) saved per Creation, with phone calibration.
+- A good start creature, and a play-test spike on part unlocks.
 
 **ML concepts introduced:** Feature engineering (what each sensor adds), a
 rhythm generator as an input, population size as a hyperparameter.
@@ -113,10 +108,9 @@ has produced the data to decide unlock order.
 
 **Goal:** Train one Creation on several maps.
 
-- Map model and maps (#442, #445, #446).
-- Map checkboxes and the map loop: one generation is one run on one map
-  (#540).
-- Stats per generation and map (#541) and the Stats screen (#198).
+- A map model and several maps.
+- Map checkboxes and the map loop: one generation is one run on one map.
+- Stats per generation and map, and the Stats screen.
 
 **ML concepts introduced:** Generalisation versus overfitting to one map;
 learning curves per map.
@@ -128,11 +122,10 @@ shows its history per map.
 
 **Goal:** Make the brain visible and let it grow.
 
-- Hidden layers on top of kept direct connections, with the cascade rule
-  (#543).
-- Brain views (#196, #197, #393) and neuron statistics and operations (#548).
-- The GA behind an ask/tell optimizer interface (#545).
-- Several fitness functions (#317) and a spike on their formulas (#546).
+- Hidden layers on top of kept direct connections.
+- Brain views, neuron statistics and neuron operations.
+- The GA behind an ask/tell optimizer interface.
+- Several fitness functions, with a spike on their formulas.
 
 **ML concepts introduced:** Network capacity, hidden features, skip
 connections, several objectives at once, live activations.
@@ -145,20 +138,18 @@ watches its neurons respond.
 **Goal:** Changing a Creation feels safe, and the app is comfortable to use.
 
 - Helpers for changing a Creation safely.
-- Overlays and toasts (#200).
-- Settings: UI size, theme, sounds and the Shadows default (#201,
-  #379–#381).
-- Hiding the training shadows (#284).
+- Overlays and toasts.
+- Settings: UI size, theme, sounds and the Shadows default; hiding the
+  training shadows.
 
 ### 0.18.0 — Power and wings
 
 **Goal:** Advanced parts, once the core game is complete.
 
-- Power (#128): blocks (#457), battery and power draw from used strength
-  (#458), generator and fuel tank (#459), the power budget screen (#460) and
-  camera power draw (#599). A shadow's run ends when its power is gone.
-- The Wing (#130).
-- Design brief for power, blocks and the Wing (#600).
+- Power: blocks, batteries, generators and fuel tanks, and a power budget.
+  Using strength and sensing cost power; a shadow's run ends when its power
+  is gone.
+- The Wing.
 
 **ML concepts introduced:** Acting has a cost; a limited budget and an
 episode that can end early shape what the brain learns.
@@ -168,14 +159,11 @@ episode that can end early shape what the brain learns.
 **Goal:** Reward visible progress, and go back to an earlier point in
 training.
 
-- Achievement model, screen, training progress and toast (#199, #390–#392,
-  #488).
-- Part counts and achievement locks (#525) and locked examples (#175,
-  #429–#438), including the Power and Wing examples, and the Piston start
-  example that replaces Worm (#461).
-- A checkpoint whenever training stops (at most 5 automatic per Creation),
-  manual checkpoints, and restore (#256). Restoring rewinds the training
-  history.
+- Achievements: model, screen, progress during training, and toasts.
+- Part counts and achievement locks, and locked examples, one per part; a
+  Piston start example replaces Worm.
+- Checkpoints when training stops and on demand, and restore. Restoring
+  rewinds the training history.
 
 **ML concepts introduced:** Model checkpoints; training is a path you can
 return along.
@@ -184,16 +172,16 @@ return along.
 
 **Goal:** Reward understanding, not only distance.
 
-- Plateau and other non-obvious achievements (#547).
-- Post-training summary (#544).
-- Brain-ability rewards (#551) and a spike on when they unlock (#550).
+- Plateau and other non-obvious achievements.
+- A post-training summary.
+- Brain-ability rewards, and a spike on when they unlock.
 
 **ML concepts introduced:** Plateaus, stagnation and local optima; reading a
 learning curve.
 
 ### Backlog
 
-No milestone yet: memory cells (#126) and procedural maps (#91).
+Open issues without a milestone are the backlog.
 
 ---
 

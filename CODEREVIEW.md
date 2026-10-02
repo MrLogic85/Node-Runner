@@ -59,7 +59,7 @@ Authoritative sources:
   READMEs, previews, `tokens.json`, and `library.md`
 - `docs/UI_DIRECTION.md` for repository-specific fidelity and implementation
   boundaries
-- `docs/UI_IMPLEMENTATION_PLAN.md` for staged UI rollout and dependencies
+- `docs/UI_IMPLEMENTATION_PLAN.md` for UI implementation order and review gates
 - `docs/MANUAL_TESTING.md` for device/screenshot evidence expectations
 - The nearest `project/src/**/AGENTS.md` files for UI layering constraints
 
