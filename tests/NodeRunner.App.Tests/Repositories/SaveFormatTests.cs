@@ -73,6 +73,8 @@ public sealed class SaveFormatTests : IDisposable
     [InlineData("kind")]
     [InlineData("generation")]
     [InlineData("bestFitness")]
+    [InlineData("enabled")]
+    [InlineData("nextNeuronId")]
     [InlineData("nextPartId")]
     [InlineData("x")]
     public void Loading_WithARequiredFieldMissing_FailsAndNamesIt(string field)
@@ -86,13 +88,13 @@ public sealed class SaveFormatTests : IDisposable
     }
 
     [Fact]
-    public void Loading_WithNullBrainShape_FailsAndNamesIt()
+    public void Loading_WithNullBrain_FailsAndNamesIt()
     {
         var json = JsonNode.Parse(Example())!.AsObject();
-        json["brainShape"] = null;
+        json["training"]!["brain"] = null;
 
         Should.Throw<JsonException>(() => SaveJson.Deserialize<CreationDef>(json.ToJsonString(), "creation.json"))
-            .Message.ShouldContain("brainShape");
+            .Message.ShouldContain("brain");
     }
 
     [Fact]
@@ -139,8 +141,23 @@ public sealed class SaveFormatTests : IDisposable
                 [new BeamDef(4, 1, 2, "Thigh"), new BeamDef(5, 2, 3)],
                 [new SensorDef(6, 4, SensorKind.Accelerometer), new SensorDef(7, 5, SensorKind.Camera, "Eye", aim: -0.5)],
                 nextPartId: 9),
-            new BrainShapeDef(1, 2),
-            new TrainingStateDef([2, 2, 1], [0.5, -0.25, 0.125, 1, -1, 0.75, 0.25, -0.5, 0], 12, "Tanh", 3.5, new TrainingRunDef(3.5, 1.25, 0.5, MapIds.Flat)));
+            new TrainingStateDef(ExampleBrain(), 12, 3.5, new TrainingRunDef(3.5, 1.25, 0.5, MapIds.Flat)));
+
+    // The direct brain for ExampleCreation's ports: the motor at node 2 turning beam 5, then the
+    // Accelerometer (6) and the Camera (7). One connection is disabled.
+    private static BrainDef ExampleBrain()
+    {
+        (int Part, string Channel)[] inputs = [(2, "angle:5"), (2, "speed:5"), (6, "along"), (6, "across"), (7, "left1"), (7, "centre"), (7, "right1")];
+        double[] weights = [0.5, -0.25, 0.125, 1, -1, 0.75, -0.5];
+        var neurons = inputs
+            .Select((input, index) => new NeuronDef(index + 1, NeuronKind.Input, input.Part, input.Channel, 0, 0, NeuronActivation.Identity))
+            .Append(new NeuronDef(8, NeuronKind.Output, 2, "target:5", 1, 0.25, NeuronActivation.Tanh))
+            .ToArray();
+        var connections = weights
+            .Select((weight, index) => new ConnectionGeneDef(index + 1, 8, weight, enabled: index != 4))
+            .ToArray();
+        return new BrainDef(neurons, connections, nextNeuronId: 9);
+    }
 
     private static string Example() =>
         File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Repositories", "SaveExamples", "creation.json"));

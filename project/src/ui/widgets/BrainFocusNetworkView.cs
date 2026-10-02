@@ -4,14 +4,30 @@ using NodeRunner.Ui.Lib;
 
 namespace NodeRunner.Ui.Widgets;
 
-/// <summary>Draws the live network: neurons by layer, weighted edges and the selected neuron.</summary>
+/// <summary>
+/// Draws the live direct brain: labelled inputs and outputs, weighted connections and the selected neuron.
+/// With a selection, connections that don't touch it fade and its strongest partners light up. Neurons shrink to fit tall columns; when rows
+/// get too tight for text, only highlighted neurons keep their label.
+/// </summary>
 public partial class BrainFocusNetworkView : Control
 {
-    private const float _sideInset = 42f;
-    private const float _verticalInset = 26f;
+    private const float _sideInset = 12f;
+    private const float _verticalInset = 10f;
+    private const float _labelGap = 10f;
+    private const float _maxLabelShare = 0.4f;
+    private const float _maxRadius = 16f;
+    private const float _minRadius = 3f;
+    private const float _radiusPerRow = 0.4f;
+    private const float _rowSpacingPerFontSize = 1.1f;
+    private const float _haloGap = 4f;
+    private const float _haloWidth = 3f;
+    private const float _selectedEdgeMinAlpha = 0.4f;
+    private const float _selectedEdgeMinWidth = 1.5f;
     private const float _tapRadius = 24f;
+    private const UiTokens.Typography _labelStyle = UiTokens.Typography.Caption;
 
     private readonly Dictionary<(int Layer, int Neuron), Vector2> _positions = new();
+    private float _radius = _maxRadius;
     private BrainFocusPresentationViewModel? _viewModel;
 
     public BrainFocusPresentationViewModel? ViewModel
@@ -72,10 +88,14 @@ public partial class BrainFocusNetworkView : Control
             return;
         }
 
-        CacheNeuronPositions();
+        var font = GetThemeFont("font", UiTokens.Variation(_labelStyle));
+        var fontSize = UiThemeLookup.FontSize(this, _labelStyle);
+        var labelWidths = LabelColumnWidths(font, fontSize);
+        CacheNeuronPositions(labelWidths);
         foreach (var edge in _viewModel.Edges)
         {
-            if (edge.Strength < 0.06)
+            var faded = _viewModel.Selected is not null && !edge.IsHighlighted;
+            if (edge.Strength < 0.06 && !edge.IsHighlighted)
             {
                 continue;
             }
@@ -87,33 +107,55 @@ public partial class BrainFocusNetworkView : Control
             }
 
             var color = edge.Weight >= 0 ? UiThemeLookup.Color(this, UiTokens.Color.LineStrong) : UiThemeLookup.Color(this, UiTokens.Color.Danger);
-            color.A = (float)Math.Clamp(0.06 + (edge.Strength * 0.58), 0.06, 0.64);
-            DrawEdge(from, to, color, (float)(0.5 + edge.Strength * 3.5), edge.Weight < 0);
+            var alpha = faded ? 0.06f : (float)Math.Clamp(0.06 + (edge.Strength * 0.58), 0.06, 0.64);
+            var width = (float)(0.5 + edge.Strength * 3.5);
+            if (_viewModel.Selected is not null && edge.IsHighlighted)
+            {
+                alpha = Math.Max(alpha, _selectedEdgeMinAlpha);
+                width = Math.Max(width, _selectedEdgeMinWidth);
+            }
+
+            color.A = alpha;
+            DrawEdge(from, to, color, width, edge.Weight < 0);
         }
 
         foreach (var layer in _viewModel.Layers)
         {
             foreach (var neuron in layer.Neurons)
             {
-                var position = _positions[(neuron.LayerIndex, neuron.Index)];
-                var selected = neuron.LayerIndex == _viewModel.SelectedLayerIndex &&
-                    neuron.Index == _viewModel.SelectedNeuronIndex;
-                DrawNeuron(position, neuron, selected);
+                DrawNeuron(_positions[(neuron.LayerIndex, neuron.Index)], neuron);
             }
         }
+
+        DrawLabels(font, fontSize, labelWidths);
     }
 
     private void DrawWaitingState() =>
         DrawCircle(Size / 2, 14, UiThemeLookup.Color(this, UiTokens.Color.LineStrong));
 
-    private void CacheNeuronPositions()
+    private (float Input, float Output) LabelColumnWidths(Font font, int fontSize)
     {
         var layers = _viewModel!.Layers;
-        var left = _sideInset;
-        var right = Math.Max(left + 1, Size.X - _sideInset);
+        var cap = Size.X * _maxLabelShare;
+        return (Widest(layers[0]), layers.Count > 1 ? Widest(layers[^1]) : 0);
+
+        float Widest(BrainFocusLayerPresentation layer) =>
+            layer.Neurons.Count == 0
+                ? 0
+                : Math.Min(cap, layer.Neurons.Max(neuron => font.GetStringSize(neuron.Label, fontSize: fontSize).X));
+    }
+
+    private void CacheNeuronPositions((float Input, float Output) labelWidths)
+    {
+        var layers = _viewModel!.Layers;
         var top = _verticalInset;
         var bottom = Math.Max(top + 1, Size.Y - _verticalInset);
+        var tallest = layers.Max(layer => layer.Neurons.Count);
+        var spacing = tallest > 1 ? (bottom - top) / (tallest - 1) : bottom - top;
+        _radius = Math.Clamp(spacing * _radiusPerRow, _minRadius, _maxRadius);
 
+        var left = _sideInset + labelWidths.Input + _labelGap + _radius;
+        var right = Math.Max(left + 1, Size.X - _sideInset - labelWidths.Output - _labelGap - _radius);
         for (var layerIndex = 0; layerIndex < layers.Count; layerIndex++)
         {
             var layer = layers[layerIndex];
@@ -123,19 +165,54 @@ public partial class BrainFocusNetworkView : Control
             for (var neuronIndex = 0; neuronIndex < layer.Neurons.Count; neuronIndex++)
             {
                 var y = layer.Neurons.Count == 1
-                    ? Size.Y / 2
+                    ? (top + bottom) / 2
                     : Mathf.Lerp(top, bottom, (float)neuronIndex / (layer.Neurons.Count - 1));
                 _positions[(layerIndex, neuronIndex)] = new Vector2(x, y);
             }
         }
     }
 
-    private void DrawNeuron(Vector2 position, BrainFocusNeuronPresentation neuron, bool selected)
+    private void DrawLabels(Font font, int fontSize, (float Input, float Output) labelWidths)
+    {
+        var layers = _viewModel!.Layers;
+        var minRowSpacing = fontSize * _rowSpacingPerFontSize;
+        var baselineOffset = (font.GetAscent(fontSize) - font.GetDescent(fontSize)) / 2;
+        for (var layerIndex = 0; layerIndex < layers.Count; layerIndex++)
+        {
+            var neurons = layers[layerIndex].Neurons;
+            var isInput = layerIndex == 0;
+            var width = isInput ? labelWidths.Input : labelWidths.Output;
+            var rowsFit = neurons.Count < 2 || (Size.Y - (2 * _verticalInset)) / (neurons.Count - 1) >= minRowSpacing;
+            foreach (var neuron in neurons)
+            {
+                if (!rowsFit && !neuron.IsHighlighted)
+                {
+                    continue;
+                }
+
+                var position = _positions[(neuron.LayerIndex, neuron.Index)];
+                var x = isInput
+                    ? position.X - _radius - _labelGap - width
+                    : position.X + _radius + _labelGap;
+                var color = UiThemeLookup.Color(this, neuron.IsHighlighted ? UiTokens.Color.Ink : UiTokens.Color.Muted);
+                DrawString(
+                    font,
+                    new Vector2(x, position.Y + baselineOffset),
+                    neuron.Label,
+                    isInput ? HorizontalAlignment.Right : HorizontalAlignment.Left,
+                    width,
+                    fontSize,
+                    color);
+            }
+        }
+    }
+
+    private void DrawNeuron(Vector2 position, BrainFocusNeuronPresentation neuron)
     {
         var baseColor = neuron.Activation >= 0 ? UiThemeLookup.Color(this, UiTokens.Color.LineStrong) : UiThemeLookup.Color(this, UiTokens.Color.Danger);
-        baseColor.A = (float)Math.Clamp(0.30 + (neuron.ActivationFill * 0.70), 0.30, 1);
-        var radius = 8 + (float)(neuron.ActivationFill * 8);
-        DrawCircle(position, radius + 3, UiThemeLookup.Color(this, UiTokens.Color.PanelRaised));
+        baseColor.A = neuron.IsHighlighted ? 1 : (float)Math.Clamp(0.30 + (neuron.ActivationFill * 0.70), 0.30, 1);
+        var radius = (_radius / 2) + (float)(neuron.ActivationFill * _radius / 2);
+        DrawCircle(position, radius + 2, UiThemeLookup.Color(this, UiTokens.Color.PanelRaised));
         if (neuron.Activation >= 0)
         {
             DrawCircle(position, radius, baseColor);
@@ -152,9 +229,9 @@ public partial class BrainFocusNetworkView : Control
                 baseColor);
         }
 
-        if (selected)
+        if (neuron.IsSelected)
         {
-            DrawArc(position, radius + 8, 0, Mathf.Tau, 40, UiThemeLookup.Color(this, UiTokens.Color.Halo), 3, antialiased: false);
+            DrawArc(position, _radius + _haloGap, 0, Mathf.Tau, 40, UiThemeLookup.Color(this, UiTokens.Color.Halo), _haloWidth, antialiased: false);
         }
     }
 
@@ -184,23 +261,49 @@ public partial class BrainFocusNetworkView : Control
         }
     }
 
+    // Each row is a band across its label and dot, so tapping the name works; a tap outside every row clears.
     private void SelectNearestNeuron(Vector2 position)
     {
-        var bestDistanceSquared = _tapRadius * _tapRadius;
-        (int Layer, int Neuron)? best = null;
-        foreach (var candidate in _positions)
+        var layers = _viewModel!.Layers;
+        var column = -1;
+        for (var layerIndex = 0; layerIndex < layers.Count && column < 0; layerIndex++)
         {
-            var distanceSquared = candidate.Value.DistanceSquaredTo(position);
-            if (distanceSquared < bestDistanceSquared)
+            if (layers[layerIndex].Neurons.Count == 0)
             {
-                bestDistanceSquared = distanceSquared;
-                best = candidate.Key;
+                continue;
+            }
+
+            var x = _positions[(layerIndex, 0)].X;
+            var isFirst = layerIndex == 0;
+            var isLast = layerIndex == layers.Count - 1;
+            if ((isFirst && position.X <= x + _tapRadius) || (isLast && position.X >= x - _tapRadius))
+            {
+                column = layerIndex;
             }
         }
 
-        if (best is { } selected)
+        var bestDistance = _tapRadius;
+        int? best = null;
+        if (column >= 0)
         {
-            _viewModel!.SelectNeuron(selected.Layer, selected.Neuron);
+            foreach (var neuron in layers[column].Neurons)
+            {
+                var distance = Math.Abs(_positions[(column, neuron.Index)].Y - position.Y);
+                if (distance < bestDistance)
+                {
+                    bestDistance = distance;
+                    best = neuron.Index;
+                }
+            }
+        }
+
+        if (best is { } index)
+        {
+            _viewModel.SelectNeuron(column, index);
+        }
+        else
+        {
+            _viewModel.ClearSelection();
         }
     }
 

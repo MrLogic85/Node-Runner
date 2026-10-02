@@ -7,7 +7,7 @@ using NodeRunner.App.ViewModels;
 using NodeRunner.Creature;
 using NodeRunner.Domain;
 using NodeRunner.Managers;
-using NodeRunner.ML;
+using NodeRunner.ML.Brains;
 using NodeRunner.ML.Ga;
 using NodeRunner.Sim;
 using NodeRunner.Theme;
@@ -44,6 +44,8 @@ public partial class TrainingHost : Node, IRoutedScene
     private TrainingRoute? _route;
     private ISceneNavigator? _navigator;
     private Guid? _creationId;
+    // The brain last saved, so the next save keeps its neuron ids and disabled genes.
+    private BrainDef? _savedBrain;
     private Creature.Creature? _creature;
     private Evolver? _evolver;
     private TrainingScreen _screen = null!;
@@ -124,7 +126,7 @@ public partial class TrainingHost : Node, IRoutedScene
         _signalRefreshElapsed = 0;
         _creature.ReadMapping(_sensorReadings, _motorReadings);
         _signalFlow.Update(_sensorReadings, _motorReadings, _evolver?.VisibleTrialDistance ?? double.NaN);
-        _brainFocus.Update(_creature.Brain, _sensorReadings, _motorReadings);
+        _brainFocus.Update(_creature.Brain, _sensorReadings);
     }
 
     private CreationDef? LoadRouteCreation()
@@ -200,7 +202,6 @@ public partial class TrainingHost : Node, IRoutedScene
         // Pausable, not Inherit, so it stops simulating while the tree is paused.
         creature.ProcessMode = ProcessModeEnum.Pausable;
         creature.Definition = creation?.Creature ?? HardcodedCreatureFactory.Create();
-        creature.BrainShape = creation?.BrainShape ?? BrainShapeDef.Default;
         creature.Theme = _theme;
         creature.Position = GetNode<Marker2D>("%Spawn").Position;
         World.AddChild(creature);
@@ -248,13 +249,16 @@ public partial class TrainingHost : Node, IRoutedScene
     private void StartEvolution(CreationDef? creation)
     {
         _evolver?.Stop();
-        if (_creature?.Brain is null || _evolver is null)
+        if (_creature?.Brain is null || _creature.Definition is not { } definition || _evolver is null)
         {
             // No motors: nothing to evolve.
             return;
         }
 
         var resume = creation?.Training;
+        _savedBrain = resume?.Brain;
+        var disabledGenes = resume is null ? null : DirectBrain.DisabledGenes(resume.Brain, _creature.Ports);
+        _brainFocus.Configure(BrainPortLabels.For(definition), disabledGenes ?? []);
         _sessionGenerationStart = resume?.Generation ?? 0;
         _evolver.Start(
             _creature,
@@ -263,10 +267,11 @@ public partial class TrainingHost : Node, IRoutedScene
             new GeneticAlgorithm(_profile.TournamentSize, _profile.MutationRate, _profile.MutationStrength, crossoverStrategy: _profile.CrossoverStrategy),
             Rng.Random,
             GroundTopY,
-            resume?.BestGenome,
+            resume is null ? null : DirectBrain.Compile(resume.Brain, _creature.Ports),
             resume?.Generation ?? 0,
             _profile.TrialDurationTicks,
-            CreateCreatureInstance);
+            CreateCreatureInstance,
+            disabledGenes: disabledGenes);
     }
 
     private void OnGenerationCompleted()
@@ -295,11 +300,10 @@ public partial class TrainingHost : Node, IRoutedScene
 
         var saves = Saves;
         var epoch = saves.CurrentTrainingEpoch(id);
+        _savedBrain = DirectBrain.ToBrainDef(_creature.Ports, genome, _savedBrain);
         var training = new TrainingStateDef(
-            _evolver.LayerSizes,
-            genome.ToArray(),
+            _savedBrain,
             _evolver.Generation,
-            Activation.Tanh.ToString(),
             _evolver.BestFitness,
             // Training runs on flat ground only until maps land (#443).
             new TrainingRunDef(run.Distance, run.TopSpeed, run.Elevation, MapIds.Flat));

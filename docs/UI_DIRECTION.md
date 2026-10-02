@@ -102,6 +102,10 @@ then the app follows the reference.
     sentence reads like "Rear knee is driven most by Front knee: speed and
     Accelerometer: along.";
   - tapping a sense highlights the outputs it drives;
+  - only the tapped neuron gets the `halo` ring; its strongest partners show
+    through an `ink` label and full-strength links;
+  - a row is a tap band across its label and dot; tapping anywhere else
+    clears the selection;
   - Signal flow leaves out the hidden-layer size header ("64 · 32").
 - **No part counts until 0.19.0 (#374, 0.12.0).** The reference limits the
   parts you place and shows counts ("1 left") in the tray and in Build
@@ -491,7 +495,7 @@ an antialiased line is smooth and crisp; the selection look, sensor
 pictures and rays, and callout leaders draw this way. This has been applied across every existing call
 site (`UiNumber`, `UiDashedBorder`, `UiProgressRing`, `UiSlider`,
 `UiSelectionHandle`, `UiButton`, `UiBoundsDebugOverlay`,
-`BrainSetupNetwork`, `BrainFocusNetworkView`,
+`BrainFocusNetworkView`,
 `BuildCanvas`, `CreatureThumbnail`, `BeamVisual`). Any new `_Draw()` code
 must follow the same rule; a stray edge without antialiasing reads as a
 sharp 1px line at any stretch factor, while `antialiased: true` reads as a

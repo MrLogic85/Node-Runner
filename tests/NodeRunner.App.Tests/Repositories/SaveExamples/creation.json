@@ -63,29 +63,129 @@
     ],
     "nextPartId": 9
   },
-  "brainShape": {
-    "hiddenLayers": 1,
-    "neuronsPerLayer": 2
-  },
   "training": {
-    "layerSizes": [
-      2,
-      2,
-      1
-    ],
-    "bestGenome": [
-      0.5,
-      -0.25,
-      0.125,
-      1,
-      -1,
-      0.75,
-      0.25,
-      -0.5,
-      0
-    ],
+    "brain": {
+      "neurons": [
+        {
+          "id": 1,
+          "kind": "input",
+          "partId": 2,
+          "channel": "angle:5",
+          "layer": 0,
+          "bias": 0,
+          "activation": "identity"
+        },
+        {
+          "id": 2,
+          "kind": "input",
+          "partId": 2,
+          "channel": "speed:5",
+          "layer": 0,
+          "bias": 0,
+          "activation": "identity"
+        },
+        {
+          "id": 3,
+          "kind": "input",
+          "partId": 6,
+          "channel": "along",
+          "layer": 0,
+          "bias": 0,
+          "activation": "identity"
+        },
+        {
+          "id": 4,
+          "kind": "input",
+          "partId": 6,
+          "channel": "across",
+          "layer": 0,
+          "bias": 0,
+          "activation": "identity"
+        },
+        {
+          "id": 5,
+          "kind": "input",
+          "partId": 7,
+          "channel": "left1",
+          "layer": 0,
+          "bias": 0,
+          "activation": "identity"
+        },
+        {
+          "id": 6,
+          "kind": "input",
+          "partId": 7,
+          "channel": "centre",
+          "layer": 0,
+          "bias": 0,
+          "activation": "identity"
+        },
+        {
+          "id": 7,
+          "kind": "input",
+          "partId": 7,
+          "channel": "right1",
+          "layer": 0,
+          "bias": 0,
+          "activation": "identity"
+        },
+        {
+          "id": 8,
+          "kind": "output",
+          "partId": 2,
+          "channel": "target:5",
+          "layer": 1,
+          "bias": 0.25,
+          "activation": "tanh"
+        }
+      ],
+      "connections": [
+        {
+          "from": 1,
+          "to": 8,
+          "weight": 0.5,
+          "enabled": true
+        },
+        {
+          "from": 2,
+          "to": 8,
+          "weight": -0.25,
+          "enabled": true
+        },
+        {
+          "from": 3,
+          "to": 8,
+          "weight": 0.125,
+          "enabled": true
+        },
+        {
+          "from": 4,
+          "to": 8,
+          "weight": 1,
+          "enabled": true
+        },
+        {
+          "from": 5,
+          "to": 8,
+          "weight": -1,
+          "enabled": false
+        },
+        {
+          "from": 6,
+          "to": 8,
+          "weight": 0.75,
+          "enabled": true
+        },
+        {
+          "from": 7,
+          "to": 8,
+          "weight": -0.5,
+          "enabled": true
+        }
+      ],
+      "nextNeuronId": 9
+    },
     "generation": 12,
-    "activation": "Tanh",
     "bestFitness": 3.5,
     "bestRun": {
       "distance": 3.5,

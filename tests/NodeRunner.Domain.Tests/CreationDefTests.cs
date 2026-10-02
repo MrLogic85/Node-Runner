@@ -18,12 +18,11 @@ public sealed class CreationDefTests
         roundTripped.Creature.Nodes.ToArray().ShouldBe(original.Creature.Nodes.ToArray());
         roundTripped.Creature.Beams.ToArray().ShouldBe(original.Creature.Beams.ToArray());
         roundTripped.Creature.Sensors.ToArray().ShouldBe(original.Creature.Sensors.ToArray());
-        roundTripped.BrainShape.ShouldBe(original.BrainShape);
         roundTripped.Training.ShouldNotBeNull();
-        roundTripped.Training.LayerSizes.ShouldBe(original.Training!.LayerSizes);
-        roundTripped.Training.BestGenome.ShouldBe(original.Training.BestGenome);
+        roundTripped.Training.Brain.Neurons.ToArray().ShouldBe(original.Training!.Brain.Neurons.ToArray());
+        roundTripped.Training.Brain.Connections.ToArray().ShouldBe(original.Training.Brain.Connections.ToArray());
+        roundTripped.Training.Brain.NextNeuronId.ShouldBe(original.Training.Brain.NextNeuronId);
         roundTripped.Training.Generation.ShouldBe(original.Training.Generation);
-        roundTripped.Training.Activation.ShouldBe(original.Training.Activation);
     }
 
     [Fact]
@@ -34,22 +33,13 @@ public sealed class CreationDefTests
         action.ShouldThrow<ArgumentException>();
     }
 
-    [Fact]
-    public void Constructor_WithoutBrainShape_Throws()
-    {
-        var action = () => new CreationDef(Guid.NewGuid(), "Worm", CreateCreature(), brainShape: null!);
-
-        action.ShouldThrow<ArgumentNullException>();
-    }
-
     private static CreationDef CreateCreation()
     {
         return new CreationDef(
             Guid.NewGuid(),
             "Worm",
             CreateCreature(),
-            new BrainShapeDef(2, 5),
-            new TrainingStateDef([2, 3, 1], [0.1, -0.2, 0.3], 7, "Tanh", 1, TestTraining.Run));
+            TestTraining.State(7, 1, TestTraining.Run));
     }
 
     private static CreatureDef CreateCreature()

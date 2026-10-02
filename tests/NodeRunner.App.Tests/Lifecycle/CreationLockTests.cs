@@ -12,7 +12,7 @@ public sealed class CreationLockTests
     [InlineData(40, true)]
     public void IsLocked_OnceAtLeastOneGenerationIsTrained(int? generation, bool locked)
     {
-        var training = generation is { } trained ? new TrainingStateDef([2, 1], [0.1, 0.2, 0.3], trained, "Tanh", 1, TestTraining.Run) : null;
+        var training = generation is { } trained ? TestTraining.State(trained, 1, TestTraining.Run) : null;
         var creature = new CreatureDef(
             [new NodeDef(1, new Vector2D(0, 0), 1), new NodeDef(2, new Vector2D(2, 0), 1)],
             [new BeamDef(101, 1, 2)],

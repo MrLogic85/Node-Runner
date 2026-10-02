@@ -19,6 +19,7 @@ public partial class Evolver : Node
     private readonly List<Creature.Creature> _creatures = [];
     private readonly List<TrialController> _trialControllers = [];
     private int[] _layerSizes = [];
+    private int[] _disabledGenes = [];
     private double[][] _genomes = [];
     private double[] _fitness = [];
     private TrialResult[] _results = [];
@@ -85,6 +86,8 @@ public partial class Evolver : Node
     /// slots up to <paramref name="maxParallelSlots"/>; without it, evaluation
     /// remains sequential for compatibility. <paramref name="groundTopY"/> is the
     /// ground's top edge, which each trial measures elevation from.
+    /// <paramref name="disabledGenes"/> are genome positions that stay 0 in every
+    /// candidate: a saved brain's disabled connection genes.
     /// </summary>
     public void Start(
         Creature.Creature creature,
@@ -97,7 +100,8 @@ public partial class Evolver : Node
         int resumeGeneration = 0,
         int trialDurationTicks = 600,
         Func<Creature.Creature>? creatureFactory = null,
-        int maxParallelSlots = Creature.Creature.MaximumCollisionSlots)
+        int maxParallelSlots = Creature.Creature.MaximumCollisionSlots,
+        IReadOnlyList<int>? disabledGenes = null)
     {
         ArgumentNullException.ThrowIfNull(creature);
         ArgumentNullException.ThrowIfNull(layerSizes);
@@ -133,6 +137,7 @@ public partial class Evolver : Node
         _layerSizes = layerSizes.ToArray();
         _ga = ga;
         _rng = rng;
+        _disabledGenes = disabledGenes?.ToArray() ?? [];
         Generation = resumeGeneration;
         BestFitness = double.NegativeInfinity;
         MeanFitness = 0;
@@ -144,6 +149,8 @@ public partial class Evolver : Node
         {
             _genomes[0] = resumeGenome.ToArray();
         }
+
+        SilenceDisabledGenes();
         _fitness = new double[populationSize];
         _results = new TrialResult[populationSize];
 
@@ -153,6 +160,17 @@ public partial class Evolver : Node
         _schedule = new ParallelEvaluationSchedule(populationSize, slotCount);
         ConfigureSlots(creature, slotCount, trialDurationTicks, groundTopY, creatureFactory);
         StartAvailableSlots();
+    }
+
+    private void SilenceDisabledGenes()
+    {
+        foreach (var genome in _genomes)
+        {
+            foreach (var gene in _disabledGenes)
+            {
+                genome[gene] = 0;
+            }
+        }
     }
 
     private double[][] CreateRandomPopulation(int populationSize)
@@ -202,7 +220,6 @@ public partial class Evolver : Node
         var creature = creatureFactory();
         creature.Name = $"ParallelCreature{slot + 1}";
         creature.Definition = primaryCreature.Definition;
-        creature.BrainShape = primaryCreature.BrainShape;
         creature.Theme = primaryCreature.Theme;
         creature.Position = primaryCreature.Position;
         creature.ProcessMode = ProcessModeEnum.Pausable;
@@ -280,6 +297,7 @@ public partial class Evolver : Node
         Generation++;
 
         _genomes = _ga!.NextGeneration(_genomes, _fitness, _rng!);
+        SilenceDisabledGenes();
         _fitness = new double[_genomes.Length];
         _results = new TrialResult[_genomes.Length];
         _schedule!.Reset();

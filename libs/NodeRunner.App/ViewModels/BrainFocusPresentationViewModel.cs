@@ -4,55 +4,94 @@ using NodeRunner.ML;
 
 namespace NodeRunner.App.ViewModels;
 
+/// <summary>
+/// BrainFocus on the direct brain (#536): an Inputs column and an Outputs column, the enabled
+/// connections between them and live activations. Nothing is selected at first; tapping an
+/// output names the senses that drive it most, and tapping a sense names the outputs it drives
+/// most. Best guesses until #549 designs it (docs/UI_DIRECTION.md).
+/// </summary>
 public sealed class BrainFocusPresentationViewModel : INotifyPropertyChanged
 {
-    private static readonly BrainFocusLayerPresentation[] _emptyLayers = [];
-    private static readonly BrainFocusEdgePresentation[] _emptyEdges = [];
+    public const int InputLayer = 0;
+    public const int OutputLayer = 1;
+
+    private const string _waitingSummary = "Waiting for a live brain";
+    private const string _waitingSelection = "Start training to see the live brain.";
+    private const string _noSelection = "Tap a sense or an output to see what drives what.";
+
+    private BrainPortLabels _labels = BrainPortLabels.Empty;
+    private HashSet<int> _disabledGenes = [];
+    private double[][] _activations = [];
+    private (int Input, int Output, double Weight)[] _connections = [];
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
-    public IReadOnlyList<BrainFocusLayerPresentation> Layers { get; private set; } = _emptyLayers;
+    public IReadOnlyList<BrainFocusLayerPresentation> Layers { get; private set; } = [];
 
-    public IReadOnlyList<BrainFocusEdgePresentation> Edges { get; private set; } = _emptyEdges;
+    public IReadOnlyList<BrainFocusEdgePresentation> Edges { get; private set; } = [];
 
     public bool HasNetwork { get; private set; }
 
-    public string Summary { get; private set; } = "Waiting for a live brain";
+    public string Summary { get; private set; } = _waitingSummary;
 
-    public int SelectedLayerIndex { get; private set; } = 1;
+    /// <summary>The tapped neuron as (layer, index), or null with none.</summary>
+    public (int Layer, int Index)? Selected { get; private set; }
 
-    public int SelectedNeuronIndex { get; private set; }
+    public string SelectionText { get; private set; } = _waitingSelection;
 
-    public string SelectedNeuronLabel { get; private set; } = "No neuron selected";
+    /// <summary>
+    /// Names the ports and leaves out the disabled connections, given as indices into the direct
+    /// brain's genome (<c>DirectBrain.DisabledGenes</c>). Clears the selection.
+    /// </summary>
+    public void Configure(BrainPortLabels labels, IEnumerable<int> disabledGenes)
+    {
+        ArgumentNullException.ThrowIfNull(labels);
+        ArgumentNullException.ThrowIfNull(disabledGenes);
+        _labels = labels;
+        _disabledGenes = [.. disabledGenes];
+        Selected = null;
+        Clear();
+    }
 
-    public string SelectedNeuronSummary { get; private set; } = "Start training to inspect live activations.";
-
-    public void Update(
-        NeuralNetwork? brain,
-        IReadOnlyList<SensorReading> sensors,
-        IReadOnlyList<MotorReading> motors)
+    /// <summary>Reads the live brain with this tick's inputs, in port order.</summary>
+    public void Update(NeuralNetwork? brain, IReadOnlyList<SensorReading> sensors)
     {
         ArgumentNullException.ThrowIfNull(sensors);
-        ArgumentNullException.ThrowIfNull(motors);
 
-        if (brain is null || sensors.Count != brain.LayerSizes[0])
+        var inputCount = _labels.Inputs.Count;
+        var outputCount = _labels.Outputs.Count;
+        if (brain is null
+            || brain.LayerSizes is not [var brainInputs, var brainOutputs]
+            || brainInputs != inputCount
+            || brainOutputs != outputCount
+            || sensors.Count != inputCount)
         {
             Clear();
             return;
         }
 
-        var input = sensors.Select(sensor => sensor.Value).ToArray();
-        var activations = brain.CaptureActivations(input);
-        var weights = brain.Weights;
-        Layers = activations.Select((layer, layerIndex) => ToLayer(layerIndex, activations.Length, layer, sensors, motors)).ToArray();
-        Edges = weights.SelectMany((layerWeights, layerIndex) => ToEdges(layerWeights, layerIndex, brain.LayerSizes[layerIndex])).ToArray();
+        _activations = brain.CaptureActivations(sensors.Select(sensor => sensor.Value).ToArray());
+        var weights = brain.Weights[0];
+        var connections = new List<(int, int, double)>();
+        for (var output = 0; output < outputCount; output++)
+        {
+            for (var input = 0; input < inputCount; input++)
+            {
+                var gene = (output * inputCount) + input;
+                if (!_disabledGenes.Contains(gene))
+                {
+                    connections.Add((input, output, weights[gene]));
+                }
+            }
+        }
+
+        _connections = [.. connections];
         HasNetwork = true;
-        Summary = $"{brain.LayerSizes[0]} inputs -> {brain.LayerSizes[^2]} hidden -> {brain.LayerSizes[^1]} outputs";
-        ClampSelection();
-        UpdateSelectedSummary();
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null));
+        Summary = $"{inputCount} {Plural(inputCount, "input")} → {outputCount} {Plural(outputCount, "output")}";
+        Present();
     }
 
+    /// <summary>Selects a neuron; tapping the selected one again clears the selection.</summary>
     public void SelectNeuron(int layerIndex, int neuronIndex)
     {
         if (layerIndex < 0 || layerIndex >= Layers.Count || neuronIndex < 0 || neuronIndex >= Layers[layerIndex].Neurons.Count)
@@ -60,112 +99,110 @@ public sealed class BrainFocusPresentationViewModel : INotifyPropertyChanged
             return;
         }
 
-        SelectedLayerIndex = layerIndex;
-        SelectedNeuronIndex = neuronIndex;
-        UpdateSelectedSummary();
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(SelectedNeuronIndex)));
+        Selected = Selected == (layerIndex, neuronIndex) ? null : (layerIndex, neuronIndex);
+        Present();
+    }
+
+    /// <summary>Back to the unselected view, for a tap on empty space.</summary>
+    public void ClearSelection()
+    {
+        if (Selected is null)
+        {
+            return;
+        }
+
+        Selected = null;
+        Present();
     }
 
     private void Clear()
     {
-        Layers = _emptyLayers;
-        Edges = _emptyEdges;
+        _activations = [];
+        _connections = [];
+        Layers = [];
+        Edges = [];
         HasNetwork = false;
-        Summary = "Waiting for a live brain";
-        SelectedLayerIndex = 1;
-        SelectedNeuronIndex = 0;
-        SelectedNeuronLabel = "No neuron selected";
-        SelectedNeuronSummary = "Start training to inspect live activations.";
+        Summary = _waitingSummary;
+        SelectionText = _waitingSelection;
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null));
     }
 
-    private static BrainFocusLayerPresentation ToLayer(
-        int layerIndex,
-        int layerCount,
-        IReadOnlyList<double> activations,
-        IReadOnlyList<SensorReading> sensors,
-        IReadOnlyList<MotorReading> motors)
+    private void Present()
     {
-        var title = layerIndex switch
+        var named = new HashSet<(int Layer, int Index)>();
+        SelectionText = Selected switch
         {
-            0 => "Inputs",
-            _ when layerIndex == layerCount - 1 => "Outputs",
-            _ => "Hidden",
+            null => _noSelection,
+            (OutputLayer, var output) => DrivenBy(output, named),
+            (_, var input) => Drives(input, named),
         };
-        var neurons = activations
-            .Select((activation, neuronIndex) => new BrainFocusNeuronPresentation(
-                layerIndex,
-                neuronIndex,
-                LabelFor(layerIndex, neuronIndex, sensors, motors),
-                activation,
-                Math.Clamp(Math.Abs(activation), 0, 1)))
+
+        Layers =
+        [
+            Column("Inputs", InputLayer, _labels.Inputs, named),
+            Column("Outputs", OutputLayer, _labels.Outputs, named),
+        ];
+        Edges = _connections
+            .Select(connection => new BrainFocusEdgePresentation(
+                InputLayer,
+                connection.Input,
+                OutputLayer,
+                connection.Output,
+                connection.Weight,
+                Math.Clamp(Math.Abs(connection.Weight) / 2.0, 0, 1),
+                Selected == (InputLayer, connection.Input) || Selected == (OutputLayer, connection.Output)))
             .ToArray();
-        return new BrainFocusLayerPresentation(title, neurons);
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null));
     }
 
-    private static string LabelFor(
-        int layerIndex,
-        int neuronIndex,
-        IReadOnlyList<SensorReading> sensors,
-        IReadOnlyList<MotorReading> motors)
+    private BrainFocusLayerPresentation Column(string title, int layer, IReadOnlyList<string> labels, HashSet<(int Layer, int Index)> named) =>
+        new(
+            title,
+            _activations[layer]
+                .Select((activation, index) => new BrainFocusNeuronPresentation(
+                    layer,
+                    index,
+                    labels[index],
+                    activation,
+                    Math.Clamp(Math.Abs(activation), 0, 1),
+                    Selected == (layer, index),
+                    Selected == (layer, index) || named.Contains((layer, index))))
+                .ToArray());
+
+    // "Rear knee is driven most by Front knee: speed and Accelerometer: along."
+    private string DrivenBy(int output, HashSet<(int Layer, int Index)> named)
     {
-        if (layerIndex == 0 && neuronIndex < sensors.Count)
-        {
-            var sensor = sensors[neuronIndex];
-            return $"{sensor.GroupKind} {sensor.GroupIndex} · {sensor.Name}";
-        }
-
-        if (layerIndex > 1 && neuronIndex < motors.Count)
-        {
-            return $"Motor {motors[neuronIndex].GroupIndex} target";
-        }
-
-        return $"Hidden {neuronIndex + 1}";
+        var drivers = Strongest(_connections.Where(connection => connection.Output == output), connection => connection.Input);
+        named.UnionWith(drivers.Select(input => (InputLayer, input)));
+        var name = Unbroken(_labels.Outputs[output]);
+        return drivers.Length == 0
+            ? $"{name} is not driven by any sense yet."
+            : $"{name} is driven most by {Join(drivers.Select(input => _labels.Inputs[input]))}.";
     }
 
-    private static IEnumerable<BrainFocusEdgePresentation> ToEdges(double[] weights, int layerIndex, int inputCount)
+    // "Accelerometer: along drives Rear knee most." or "... drives Rear knee and Front knee most."
+    private string Drives(int input, HashSet<(int Layer, int Index)> named)
     {
-        var outputCount = weights.Length / inputCount;
-        for (var output = 0; output < outputCount; output++)
-        {
-            for (var input = 0; input < inputCount; input++)
-            {
-                var weight = weights[(output * inputCount) + input];
-                yield return new BrainFocusEdgePresentation(
-                    layerIndex,
-                    input,
-                    layerIndex + 1,
-                    output,
-                    weight,
-                    Math.Clamp(Math.Abs(weight) / 2.0, 0, 1));
-            }
-        }
+        var driven = Strongest(_connections.Where(connection => connection.Input == input), connection => connection.Output);
+        named.UnionWith(driven.Select(output => (OutputLayer, output)));
+        var name = Unbroken(_labels.Inputs[input]);
+        return driven.Length == 0
+            ? $"{name} does not drive any output yet."
+            : $"{name} drives {Join(driven.Select(output => _labels.Outputs[output]))} most.";
     }
 
-    private void ClampSelection()
-    {
-        if (Layers.Count == 0)
-        {
-            SelectedLayerIndex = 1;
-            SelectedNeuronIndex = 0;
-            return;
-        }
+    private static int[] Strongest(IEnumerable<(int Input, int Output, double Weight)> connections, Func<(int Input, int Output, double Weight), int> other) =>
+        connections
+            .Where(connection => connection.Weight != 0)
+            .OrderByDescending(connection => Math.Abs(connection.Weight))
+            .Take(2)
+            .Select(other)
+            .ToArray();
 
-        SelectedLayerIndex = Math.Clamp(SelectedLayerIndex, 0, Layers.Count - 1);
-        SelectedNeuronIndex = Math.Clamp(SelectedNeuronIndex, 0, Layers[SelectedLayerIndex].Neurons.Count - 1);
-    }
+    private static string Join(IEnumerable<string> names) => string.Join(" and ", names.Select(Unbroken));
 
-    private void UpdateSelectedSummary()
-    {
-        if (Layers.Count == 0)
-        {
-            SelectedNeuronLabel = "No neuron selected";
-            SelectedNeuronSummary = "Start training to inspect live activations.";
-            return;
-        }
+    // Keeps "Knee: speed" on one line when the sentence wraps.
+    private static string Unbroken(string label) => label.Replace(": ", ":\u00A0", StringComparison.Ordinal);
 
-        var neuron = Layers[SelectedLayerIndex].Neurons[SelectedNeuronIndex];
-        SelectedNeuronLabel = neuron.Label;
-        SelectedNeuronSummary = $"{Layers[SelectedLayerIndex].Title} neuron {neuron.Index + 1} activation {neuron.Activation:0.00}";
-    }
+    private static string Plural(int count, string noun) => count == 1 ? noun : $"{noun}s";
 }

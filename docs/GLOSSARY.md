@@ -100,14 +100,22 @@ Long-form descriptions and the sensor/model contract live in
   with respect to network weights by applying the chain rule from output back
   to input.
 - **Brain** — The neural network attached to a creature. A pure function
-  `sensors → motor relation targets`.
+  `sensors → motor relation targets`. In 0.13 it is direct: every input port
+  connects straight to every output port, with no hidden layer (#536).
+- **Brain graph** — How a brain is saved (`BrainDef`): neurons keyed by port
+  and the connection genes between them, so it never depends on list order
+  and later hidden neurons fit without a new format.
+- **Connection gene** — One saved connection (`ConnectionGeneDef`): from and
+  to neuron ids, a weight, and whether it is enabled. A disabled gene keeps
+  its weight but carries no signal.
 - **Crossover** — GA operator that combines two parent genomes into a child.
   We use configurable uniform or blend crossover on the flat weight vector.
 - **Epoch** (supervised) — One pass through the entire training dataset.
 - **Fitness** — Scalar score for a creature after one evaluation run. Higher is
   better. Definition is per-experiment (usually distance travelled).
 - **Genome** — Flat `double[]` of all weights + biases in a brain, in a fixed
-  canonical order. This is what the GA mutates and recombines.
+  canonical order. This is what the GA mutates and recombines. The brain
+  graph compiles to it by port (`DirectBrain`).
 - **Generation** — One full cycle of GA: evaluate → select → recombine →
   mutate → replace.
 - **Loss** — Scalar the supervised trainer minimizes. Lower is better.

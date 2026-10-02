@@ -6,7 +6,8 @@ using NodeRunner.Ui.Lib;
 namespace NodeRunner.Ui.Widgets;
 
 /// <summary>
-/// The Training screen's brain sheet: the live network, its summary and the selected neuron.
+/// The Training screen's brain sheet: the live direct brain, its summary and what the selected
+/// neuron drives or is driven by.
 /// The scene owns the layout; a tap outside the sheet closes it. The Brain view (#393) replaces it.
 /// </summary>
 public partial class BrainFocusSheet : Control
@@ -96,8 +97,8 @@ public partial class BrainFocusSheet : Control
         }
 
         Summary.Text = _presentation.HasNetwork
-            ? $"{_presentation.Summary}. Circles/solid cyan are positive; diamonds/dashed red are negative; stronger signals draw brighter/thicker."
+            ? $"{_presentation.Summary}. Solid blue: pushes up. Dashed red: pushes down. Thicker: stronger."
             : _presentation.Summary;
-        Selected.Text = $"{_presentation.SelectedNeuronLabel}: {_presentation.SelectedNeuronSummary}";
+        Selected.Text = _presentation.SelectionText;
     }
 }

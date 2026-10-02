@@ -67,8 +67,6 @@ Schema: [`save-schema/creation.schema.json`](save-schema/creation.schema.json).
 | `id` | GUID | The Creation's id; also its folder name. |
 | `name` | string | Shown on the card and in Build. Not empty. |
 | `creature` | object | The drawn body; see below. |
-| `brainShape.hiddenLayers` | int 1–3 | Hidden layers chosen before training. |
-| `brainShape.neuronsPerLayer` | int 1–100 | Neurons in each hidden layer. |
 | `training` | object or `null` | `null` until a generation has finished. |
 
 `creature`:
@@ -84,12 +82,27 @@ Schema: [`save-schema/creation.schema.json`](save-schema/creation.schema.json).
 
 | Field | Type | Meaning |
 |---|---|---|
-| `layerSizes` | int[] | Input, hidden and output layer sizes of the trained network. |
-| `bestGenome` | double[] | The best network's weights and biases, laid out as in `docs/ARCHITECTURE.md` → "Neural-network genome layout". |
+| `brain` | object | The best brain found so far, as a graph; see below. |
 | `generation` | int | Finished generations. |
-| `activation` | string | Hidden-layer activation, e.g. `Tanh`. |
-| `bestFitness` | double | The GA's score for `bestGenome`. |
+| `bestFitness` | double | The GA's score for `brain`. |
 | `bestRun` | `{ distance, topSpeed, elevation, mapId }` | What the best run measured; the Creations card shows it (`docs/TRAINING_LOOP.md`). |
+
+`training.brain` (#536) is a graph keyed by the creature's brain ports
+(`docs/CREATURE_MODEL.md` → "Sensor–model contract"), so it never depends on
+list order, and later hidden neurons and structural mutation fit without a
+new format. 0.13 brains are direct: one input neuron per input port, one
+output neuron per output port, and a connection gene from every input to
+every output.
+
+| Field | Type | Meaning |
+|---|---|---|
+| `neurons[]` | `{ id, kind, partId, channel, layer, bias, activation }` | `kind` is `input`, `output` or `hidden`. An input or output neuron names its port by `partId` and `channel`; a hidden neuron has both `null`. Inputs sit in layer 0 with bias 0 and `identity`; other neurons in layer 1 or later. `activation` is `identity`, `tanh`, `sigmoid` or `relu`; direct-brain outputs use `tanh`. |
+| `connections[]` | `{ from, to, weight, enabled }` | A connection gene between two neuron ids, from a lower layer to a higher one; at most one per pair. A disabled gene keeps its weight but carries no signal. |
+| `nextNeuronId` | int | The next free neuron id. Higher than every id in use; ids are never reused. |
+
+A port with no neuron yet, such as a part added after training, starts
+silent: its connections compile to 0. Neurons for ports the creature no
+longer has are dropped on the next save.
 
 ### Planned for `creation.json`
 
@@ -97,7 +110,6 @@ Schema: [`save-schema/creation.schema.json`](save-schema/creation.schema.json).
 |---|---|
 | `revision`: bumped on every saved rebuild | #541 |
 | Per-part `locked` flag | #371 |
-| `brain`: neurons with ids and ports, connection genes; replaces `layerSizes`, `bestGenome` and `activation`. A neuron id counter joins `nextPartId`. | #536 |
 | `training.state`: map-loop position, mutation strength, the elites of every fitness function | #538, #540, #317 |
 | `training.settings`: Shadows, checked maps, fitness functions | #528, #540, #317 |
 | `training.best`: best result per map, replacing `bestRun` | #540 |

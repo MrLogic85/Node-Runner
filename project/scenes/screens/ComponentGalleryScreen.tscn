@@ -1981,11 +1981,11 @@ size_flags_horizontal = 0
 mouse_filter = 0
 script = ExtResource("14_menu")
 
-[node name="BrainSetup" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Menu/Examples/Standard/Menu" unique_id=1076717446]
+[node name="PowerBudget" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Menu/Examples/Standard/Menu" unique_id=1076717446]
 layout_mode = 2
 script = ExtResource("15_menu_item")
-LabelText = "Brain setup"
-IconId = 18
+LabelText = "Power budget"
+IconId = 2
 ShowSelectedIndicator = true
 Selected = true
 
@@ -2031,11 +2031,11 @@ mouse_filter = 0
 script = ExtResource("14_menu")
 Compact = true
 
-[node name="BrainSetup" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Menu/Examples/Compact/Menu" unique_id=1626660657]
+[node name="PowerBudget" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Menu/Examples/Compact/Menu" unique_id=1626660657]
 layout_mode = 2
 script = ExtResource("15_menu_item")
-LabelText = "Brain setup"
-IconId = 18
+LabelText = "Power budget"
+IconId = 2
 SizeVariant = 1
 
 [node name="Settings" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Menu/Examples/Compact/Menu" unique_id=1518402301]

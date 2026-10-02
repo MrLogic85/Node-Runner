@@ -33,12 +33,12 @@ not "a training session has finished".
 1. An unlocked Build autosaves and opens Train setup through Start training.
    Saving a Creation never needs a finished creature; only training does
    (`CreatureReadiness`, #515). An edit saved from an unlocked Build replaces
-   the anatomy and brain shape and drops any training, even a generation
+   the anatomy and drops any training, even a generation
    that finished while Build was open, so no genome outlives its anatomy.
 2. Train setup opens Training.
 3. Each finished generation is saved. Once the Creation has trained at
-   least one generation it is locked (`CreationLock.IsLocked`, #369): anatomy
-   and brain shape stay as the trained model needs them, so the model cannot
+   least one generation it is locked (`CreationLock.IsLocked`, #369): the
+   anatomy stays as the trained model needs it, so the model cannot
    be lost by accident. Only what changes the model is locked: joints can
    still move and cameras can still be aimed (#638). The lock is derived from the training, not stored.
 4. Leaving Training before the first generation finishes leaves the Creation
@@ -182,8 +182,10 @@ by the TrainSetup and Training component READMEs under `reference design/compone
     or gravity. The viewport renders at the screen's pixel density to keep
     the creature crisp, and a tap on the arena is turned into a world
     position for part selection.
-  - **Resume.** Opening it starts from the saved `TrainingStateDef`: the
-    best genome seeds the population and the generation count continues.
+  - **Resume.** Opening it starts from the saved `TrainingStateDef`: its
+    brain graph is compiled by port (`DirectBrain`, #536) and seeds the
+    population, and the generation count continues. A disabled connection
+    stays at 0 through mutation and crossover.
     A creation without training starts from a fresh random population.
   - **Save.** Each finished generation is saved on the thread pool (the
     file round trip would stall physics). Leaving mid-generation drops only
@@ -214,7 +216,13 @@ by the TrainSetup and Training component READMEs under `reference design/compone
     pause are reset in `TrainingHost._Ready()`/`_ExitTree()` since both are
     global engine settings, not scoped to this scene.
   - **Brain** (the button or the Brain stage) opens the BrainFocus sheet;
-    Android Back closes it before leaving the scene. **Stats** shows a
+    Android Back closes it before leaving the scene. BrainFocus shows the
+    direct brain (#536): an Inputs column named by port ("Accelerometer:
+    along", "Front knee: speed"), an Outputs column named by joint, the
+    enabled connections and live activations. Nothing is selected at first;
+    tapping an output names the two senses that drive it most, tapping a
+    sense names the outputs it drives most, and other connections fade;
+    tapping empty space clears the selection (`docs/UI_DIRECTION.md`). The brain cannot be edited until 0.16.0. **Stats** shows a
     placeholder notice until the Stats screen (#198).
   - There is no Reset: training is reset from Build.
 - Full neural-network visualization remains out of scope (later milestone).

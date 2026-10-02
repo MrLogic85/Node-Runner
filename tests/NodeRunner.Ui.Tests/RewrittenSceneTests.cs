@@ -28,8 +28,6 @@ internal static class RewrittenUi
     [
         "ui/widgets/BrainFocusNetworkView.cs",
         "ui/widgets/BrainFocusSheet.cs",
-        "ui/widgets/BrainSetupNetwork.cs",
-        "ui/widgets/BrainSetupSheet.cs",
         "ui/widgets/BuildCanvas.cs",
         "ui/widgets/CreationCard.cs",
         "ui/widgets/CreatureThumbnail.cs",
@@ -43,7 +41,6 @@ internal static class RewrittenUi
     public static readonly string[] DrawnWidgets =
     [
         "ui/widgets/BrainFocusNetworkView.cs",
-        "ui/widgets/BrainSetupNetwork.cs",
         "ui/widgets/BuildCanvas.cs",
     ];
 
@@ -61,7 +58,6 @@ internal static class RewrittenUi
         "screens/ToolbarsScreen.tscn",
         "screens/TrainingScreen.tscn",
         "widgets/BrainFocusSheet.tscn",
-        "widgets/BrainSetupSheet.tscn",
         "widgets/CreationCard.tscn",
     ];
 }

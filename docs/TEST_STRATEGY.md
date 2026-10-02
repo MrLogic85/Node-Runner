@@ -73,6 +73,8 @@ Cover:
   statistically
 - Genome round-trip: `FromGenome(nn.LayerSizes, nn.FlattenGenome(), act)`
   produces an equivalent network
+- Direct brain round-trip: `DirectBrain.Compile(DirectBrain.ToBrainDef(ports, genome, previous), ports)`
+  gives the genome back, whatever the order of the saved neurons and genes
 - Clone independence: mutating a clone doesn't touch the original
 
 Target: >90% coverage on this project once it stabilises. This is the ML

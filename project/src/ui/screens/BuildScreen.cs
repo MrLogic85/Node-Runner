@@ -48,15 +48,10 @@ public partial class BuildScreen : Control
     [Signal]
     public delegate void ToolRequestedEventHandler(BuildTool tool);
 
-    [Signal]
-    public delegate void BrainShapeChangedEventHandler(int hiddenLayers, int neuronsPerLayer);
-
     /// <summary>False while the overflow menu is open; it takes Android Back itself.</summary>
     public bool CanTakeBack => !Toolbar.Menu.Visible;
 
     private UiToolbar Toolbar => GetNode<UiToolbar>("%Toolbar");
-
-    private BrainSetupSheet BrainSetup => GetNode<BrainSetupSheet>("%BrainSetupSheet");
 
     /// <summary>Binds the creation being built: the canvas edits it and the panels show it.</summary>
     public void Setup(BuildViewModel build)
@@ -77,18 +72,6 @@ public partial class BuildScreen : Control
         }
     }
 
-    /// <summary>Closes an open sheet, as Android Back does first. False when none was open.</summary>
-    public bool CloseOverlay()
-    {
-        if (!BrainSetup.IsOpen)
-        {
-            return false;
-        }
-
-        BrainSetup.Close();
-        return true;
-    }
-
     public override void _EnterTree()
     {
         SubscribeToPresentation();
@@ -103,7 +86,6 @@ public partial class BuildScreen : Control
         name.ValidateValue = static value => !string.IsNullOrWhiteSpace(value);
         name.EditingFinished += OnNameEdited;
         GetNode<UiButton>("%StartTraining").Activated += () => EmitSignal(SignalName.StartTrainingRequested);
-        BindMenuItem(toolbar, GetNode<UiMenuActionItem>("%MenuBrainSetup"), BrainSetup.Open);
         BindMenuItem(toolbar, GetNode<UiMenuActionItem>("%MenuResetTraining"), () => EmitSignal(SignalName.ResetTrainingRequested));
         BindMenuItem(toolbar, GetNode<UiMenuActionItem>("%MenuDeleteCreation"), () => EmitSignal(SignalName.DeleteCreationRequested));
         BindTool(GetNode<UiButton>("%MoveTool"), BuildTool.Move);
@@ -118,7 +100,6 @@ public partial class BuildScreen : Control
         var partName = GetNode<UiTextField>("%PartName");
         partName.EditingStarted += () => _renamingPartId = _presentation?.SinglePart?.Id;
         partName.EditingFinished += OnPartNameEdited;
-        BrainSetup.BrainShapeChanged += (layers, neurons) => EmitSignal(SignalName.BrainShapeChanged, layers, neurons);
         BindViewModels();
         Apply();
     }
@@ -141,7 +122,6 @@ public partial class BuildScreen : Control
     private void BindViewModels()
     {
         GetNode<BuildCanvas>("%BuildCanvas").ViewModel = _build;
-        BrainSetup.Presentation = _presentation;
     }
 
     private void OnNameEdited(string value)
@@ -197,14 +177,7 @@ public partial class BuildScreen : Control
         }
 
         GetNode<UiButton>("%StartTraining").Disabled = !buildPanel.CanStartTraining;
-        var brainSetup = GetNode<UiMenuActionItem>("%MenuBrainSetup");
-        brainSetup.Disabled = presentation.IsBrainShapeLocked;
-        brainSetup.NoteText = presentation.IsBrainShapeLocked ? "Locked once trained" : string.Empty;
         GetNode<UiMenuActionItem>("%MenuResetTraining").Visible = locked;
-        if (presentation.IsBrainShapeLocked && BrainSetup.IsOpen)
-        {
-            BrainSetup.Close();
-        }
     }
 
     private void ApplyTools(BuildPresentationViewModel presentation)
