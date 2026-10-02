@@ -6,6 +6,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="System.Text.Json" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\NodeRunner.Domain\NodeRunner.Domain.csproj" />
     <ProjectReference Include="..\NodeRunner.ML\NodeRunner.ML.csproj" />
   </ItemGroup>

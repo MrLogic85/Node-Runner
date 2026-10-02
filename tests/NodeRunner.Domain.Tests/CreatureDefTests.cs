@@ -170,6 +170,14 @@ public sealed class CreatureDefTests
     }
 
     [Fact]
+    public void Constructor_WithANullPart_Throws()
+    {
+        NodeDef[] nodes = [new NodeDef(1, new Vector2D(0, 0), 1), null!];
+
+        Should.Throw<ArgumentException>(() => new CreatureDef(nodes, [], []));
+    }
+
+    [Fact]
     public void Constructor_WithOmittedNextPartId_DefaultsToMaxIdPlusOne()
     {
         var creature = new CreatureDef(

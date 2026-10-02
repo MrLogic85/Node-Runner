@@ -35,6 +35,10 @@ public sealed record CreatureDef
         ArgumentNullException.ThrowIfNull(nodes);
         ArgumentNullException.ThrowIfNull(beams);
         ArgumentNullException.ThrowIfNull(sensors);
+        if (nodes.Contains(null!) || beams.Contains(null!) || sensors.Contains(null!))
+        {
+            throw new ArgumentException("A creature's part lists cannot contain null.");
+        }
 
         var maxId = 0;
         var ids = new HashSet<int>();

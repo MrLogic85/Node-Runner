@@ -46,7 +46,9 @@ build; the *shape* below should stay stable.
 The three libraries in `libs/` are pure .NET 8 class libraries with **no
 `Godot.*` references**. The Godot project (`project/`) targets .NET 9 for
 Godot 4.7 Android export templates, references the libraries, and provides the
-runtime host: scenes, physics, input, rendering.
+runtime host: scenes, physics, input, rendering. `NodeRunner.App` references
+the System.Text.Json 9 package, the same version the host runs, for strict
+save loading (`docs/SAVE_FORMAT.md`).
 
 Enforcement: `tests/NodeRunner.Arch.Tests/ArchitectureSpec.cs` fails the build
 if any lib imports `Godot`, or if the layer graph below is violated.

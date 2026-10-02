@@ -87,8 +87,8 @@ the PR):
       "insufficient evidence" is blocking until live app access,
       screenshots/recordings, or an explicit human waiver is recorded.
 - [ ] Docs updated where behavior/architecture changed
-- [ ] A change to a saved shape updates `docs/SAVE_FORMAT.md` and the golden
-      files in `tests/NodeRunner.App.Tests/Repositories/Golden/`
+- [ ] A change to a saved shape updates `docs/SAVE_FORMAT.md` and the
+      schemas in `docs/save-schema/`
 - [ ] Local `AGENTS.md` reflects any new rule that emerged
 - [ ] Nothing under `libs/` uses `using Godot;` — arch tests enforce this
 - [ ] No secrets, credentials, or personal data

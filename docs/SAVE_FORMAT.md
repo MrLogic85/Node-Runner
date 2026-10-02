@@ -1,25 +1,34 @@
 # Save format
 
 This document owns what Node Runner writes to disk. The code follows it; a
-change to a saved shape changes this document, and the golden files, in the
-same PR.
+change to a saved shape changes this document and the schemas in
+`docs/save-schema/` in the same PR.
 
 ## Rules
 
 - **No versioning.** No `schemaVersion`, no migration, no fallbacks for older
   files. While the project is pre-alpha (`docs/ROADMAP.md` → "Project
   stage"), a format change means wiping the old saves.
-- **Strict loading.** A field this document doesn't list fails the load with
-  a `JsonException` that names it. A missing required part (`brainShape`,
-  `training.bestRun`, `progression.json`'s flag) fails too.
-- **Golden files.** `tests/NodeRunner.App.Tests/Repositories/Golden/` holds
-  one example of each file. `SaveFormatTests` fails when the written shape
-  differs from it, and checks that the golden file loads and saves unchanged.
+- **Schemas.** `docs/save-schema/` holds a JSON Schema for each file,
+  generated from the domain records by .NET's `JsonSchemaExporter`. It is
+  the exact field list: types, which fields must be present, which may be
+  `null`, allowed enum values and no other fields. `SaveFormatTests` fails
+  when the generated schema differs from the committed one and writes the
+  new one to the test output folder.
+- **Strict loading.** Loading follows the schema: an unknown field, a missing
+  required field or a `null` where the schema allows none fails with a
+  `JsonException` that names the field. `SaveJson` gets this from
+  System.Text.Json's own options; the app does not run a schema validator.
+  Those options don't check list items, so the domain records reject a
+  `null` part themselves.
+  One example `creation.json`
+  (`tests/NodeRunner.App.Tests/Repositories/SaveExamples/`) checks that a
+  real file loads.
 - **Domain records are the shape.** The files serialize the records in
   `libs/NodeRunner.Domain/` directly, through `SaveJson`
   (`libs/NodeRunner.App/Repositories/`).
 - **Planned fields** are listed here with the issue that adds them. That
-  issue adds the field, updates this document and the golden file.
+  issue adds the field and updates this document and the schema.
 
 ## Layout
 
@@ -50,6 +59,8 @@ Creation deletes its folder.
 - Lengths and positions are in creature units; angles are in radians.
 
 ## `creation.json`
+
+Schema: [`save-schema/creation.schema.json`](save-schema/creation.schema.json).
 
 | Field | Type | Meaning |
 |---|---|---|
@@ -105,6 +116,8 @@ and generation. The folder also holds copies of `creation.json` and
 checkpoints stay restorable.
 
 ## `progression.json`
+
+Schema: [`save-schema/progression.schema.json`](save-schema/progression.schema.json).
 
 | Field | Type | Meaning |
 |---|---|---|
