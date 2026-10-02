@@ -22,6 +22,9 @@ Pure C# data types. The vocabulary of the app, no behavior beyond invariants.
     `SensorPicture` is the fourth: the area a tap on a sensor's picture
     hits, shared by Build's canvas and gestures and by the
     creature in Training (#576).
+    `BrainPorts` and `JointMotor` are the fifth and sixth: the brain ports
+    every part declares and their order, and a joint motor's port values
+    (#534), shared by the sim, Build and the brain.
 - **Serialisable via `System.Text.Json` without custom converters.** Saved
   records are the save shape: changing one follows `docs/SAVE_FORMAT.md`.
 
@@ -35,6 +38,8 @@ Pure C# data types. The vocabulary of the app, no behavior beyond invariants.
 - `SensorPicture` — a sensor picture's tap area (see the exception above)
 - `MotorTopology` — derives `NodeConnectionDef`s from a `CreatureDef` (see
   the exception above)
+- `BrainPort`, `PortDirection`, `BrainPortLayout`, `BrainPorts`,
+  `JointMotor` — brain ports and their order (see the exception above)
 - `SimulationConfig`, `GaConfig` — hyperparameters
 - `Vector2D` — our own `readonly record struct` (Godot.Vector2 stays on the
   Godot side)

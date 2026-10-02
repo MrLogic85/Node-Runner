@@ -22,6 +22,9 @@ public static class Accelerometer
     /// <summary>The brain inputs one accelerometer gives, in order: along and across its beam.</summary>
     public static IReadOnlyList<string> ReadingNames { get; } = ["along", "across"];
 
+    /// <summary>The machine keys of its input ports (<see cref="BrainPorts"/>), in the order of <see cref="ReadingNames"/>. Never change one.</summary>
+    public static IReadOnlyList<string> ChannelKeys { get; } = ["along", "across"];
+
     /// <summary>The proof mass at rest under a constant specific force.</summary>
     public static ProofMass Rest(Vector2D specificForceG) =>
         new(Divide(Negate(specificForceG), AngularFrequency * AngularFrequency), new Vector2D(0, 0));

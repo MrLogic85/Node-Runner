@@ -60,19 +60,21 @@ Long-form descriptions and the sensor/model contract live in
   prototype part, and not a Godot physics joint. See:
   `docs/BUILD_MODE.md`.
 - **Model input** — One slot in the neural network's input vector, populated
-  one-to-one from a sensor value (a sensor part's or a motor relation's). See:
-  `docs/CREATURE_MODEL.md`.
+  one-to-one from an input port. See: `docs/CREATURE_MODEL.md`.
 - **Model output** — One slot in the neural network's output vector,
-  consumed one-to-one as a motor relation's target angular velocity. See:
-  `docs/CREATURE_MODEL.md`.
+  consumed one-to-one by an output port. See: `docs/CREATURE_MODEL.md`.
 - **Motor relation** — A controllable rotation between two beams sharing a
-  node, derived from the creature's topology (not stored data). Exposes
-  `relativeAngle`/`relativeAngularVelocity` sensors and accepts a
-  `targetAngularVelocity` output, driven by torque capped at a static
-  `MaxTorque`. See: `docs/CREATURE_MODEL.md`.
+  node, derived from the creature's topology (not stored data). Gives the
+  brain its angle from the built pose and its speed, and accepts a target
+  speed, driven by torque capped at a static `MaxTorque`. See:
+  `docs/CREATURE_MODEL.md`.
 - **Node** — A physical attachment point where beams meet and can rotate
   relative to each other. Has a position and a small radius. Rendered as a
   circle. See: `docs/CREATURE_MODEL.md`.
+- **Port** — One brain channel a part declares (`BrainPort`): the part's id,
+  a channel key that never changes, and whether it is an input or an output.
+  The brain's input and output order comes from the ports (`BrainPorts`).
+  See: `docs/CREATURE_MODEL.md`.
 - **Proof mass** — The accelerometer's inner weight; its displacement is the
   reading. See: `docs/CREATURE_MODEL.md`.
 - **Sensor (part)** — A part that sits on a beam and feels that beam

@@ -188,17 +188,23 @@ CreatureDef  ──build──▶  physical body  ──sensors──▶  model 
   in `libs/NodeRunner.Domain/MotorTopology.cs` computes, from a
   `CreatureDef`'s topology alone, every relation between beams at a node
   (`NodeConnectionDef`), and marks which of those are motorized. Motor
-  relations have no stable ids because they are not saved parts; they are
-  recomputed from the current node/beam list order. At runtime,
-  `project/src/creature/MotorRelation.cs` wraps each motorized connection:
-  - **Sensors it exposes:** `relativeAngle` (signed, normalized to
-    `[-1, 1]` representing `[-180°, +180°]` — never `[0°, 360°]`, to avoid a
-    discontinuity at the wrap-around point) and `relativeAngularVelocity`
-    (also normalized). Both are genuinely sensor values *going into* the
-    model, exactly like an accelerometer's readings — a motor relation is
-    not a sensor part, and no sensor part is the source of these values.
-  - **Output it accepts:** a single `targetAngularVelocity` in `[-1, 1]`,
-    scaled by a static `MaxAngularVelocity`.
+  relations are not saved parts, so they have no ids of their own; until
+  motors become parts (#450) a motor relation is identified by its joint's
+  node id and the id of the beam it turns. At runtime,
+  `project/src/creature/MotorRelation.cs` wraps each motorized connection.
+  Its conventions are `JointMotor`'s (`libs/NodeRunner.Domain/JointMotor.cs`):
+  - **Inputs it gives the brain** (#534), both counter-clockwise on screen
+    positive:
+    - **angle:** how far the turning beam has rotated from its built pose
+      relative to the locked (reference) beam, wrapped at ±180° and scaled
+      to `[-1, 1]`. 0 means as built. Swapping which beam is locked flips
+      the sign.
+    - **speed:** the relative angular velocity, softly saturated as
+      `tanh(v / MaxAngularVelocity)`.
+    These are sensor values *going into* the model, exactly like an
+    accelerometer's readings, but a motor relation is not a sensor part.
+  - **Output it accepts:** a single target angular velocity in `[-1, 1]`
+    of `MaxAngularVelocity`, counter-clockwise positive.
   - **How the physical motor behaves:** it drives torque (capped at a
     static `MaxTorque`) to chase the target velocity. There is no separate
     "friction" concept — a target velocity of 0 combined with available
@@ -224,17 +230,27 @@ shapes (e.g. a bare quadrilateral) with their genuine remaining freedom.
 
 ## Sensor–model contract
 
+- **Ports (#534):** every part that affects the brain declares its brain
+  channels as ports, `BrainPort(partId, channel, direction)`
+  (`libs/NodeRunner.Domain/BrainPort.cs`). The channel is a machine key that
+  never changes; display names are separate.
+  - **Accelerometer:** inputs `along`, `across`.
+  - **Camera:** inputs `left1`, `centre`, `right1`.
+  - **Motor relation:** on its joint's node, keyed by the beam it turns:
+    inputs `angle:<beamId>` and `speed:<beamId>`, output `target:<beamId>`.
+  - Nodes, beams and passive ends declare none.
 - **Input count** = `(accelerometer count × 2) + (camera count × 3) +
   (motor relation count × 2)`.
 - **Output count** = motor relation count.
-- **Order matters and is fixed at build time:** every sensor, in
-  `CreatureDef.Sensors` (part) order, contributes its values first (an
-  Accelerometer: along, across; a Camera: left 1, centre,
-  right 1), then every motor relation (in the
-  order `MotorTopology` produced it) contributes its 2 values. Output slot
-  `i` always drives motor relation `i`. Reordering either side silently
-  invalidates a trained brain. See the comment above
-  `Creature.ReadSensors()` for the authoritative order.
+- **Order** comes from `BrainPorts.Of` (`libs/NodeRunner.Domain/BrainPorts.cs`):
+  ports sorted by part id, then in the order the part declares them; motors
+  at the same joint go by the id of the beam they turn. It depends only on
+  ids, so moving or resizing parts, or adding one, never reorders the
+  other ports. Which beam a motor turns still follows the beam list order
+  (`MotorTopology` locks the first beam at a joint) until motors become
+  parts (#450). `Creature` reads its sensors and
+  motors in its own order and copies each value to its port's place, and
+  fails loud if its ports and `BrainPorts` ever disagree.
 - A creature with zero motor relations (e.g. a single node/beam) has no
   brain at all — nothing to control, nothing to sense from motor relations.
 - **Visible in the UI (issue #42):** Training's BrainFocus sheet shows the
@@ -296,7 +312,7 @@ without a fresh design conversation:
   Camera.
 - Exposing `MaxTorque`/`MaxAngularVelocity` as player- or
   upgrade-configurable settings, rather than fixed constants.
-- Whether `relativeAngularVelocity` should always be included as a sensor,
+- Whether a motor relation's speed should always be included as an input,
   or made optional/experimental — 0.2.0 includes it; this may be revisited
   once training exists and the difference is measurable.
 
