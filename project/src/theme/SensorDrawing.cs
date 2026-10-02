@@ -6,9 +6,11 @@ namespace NodeRunner.Theme;
 
 /// <summary>
 /// Draws a sensor on its beam as a small picture of the real thing (#576), shared by Build's canvas
-/// and the creature in Training. Callers set the transform first so the origin is the beam's
-/// midpoint and -y is the sensor's top (the beam's built up side). Each picture fits its kind's
-/// <see cref="SensorPicture.SizeOf"/> square, which is also its tap area.
+/// and the creature in Training. Callers pass the draw transform they are in, set so the origin is
+/// the beam's midpoint and -y is the sensor's top (the beam's built up side). Each picture fits its
+/// kind's <see cref="SensorPicture.SizeOf"/> square, which is also its tap area. Everything is
+/// drawn at window-pixel resolution (<see cref="UiPixelSpace"/>), so it stays crisp at any zoom
+/// (#625), and the caller's transform is restored afterwards.
 /// </summary>
 public static class SensorDrawing
 {
@@ -42,12 +44,13 @@ public static class SensorDrawing
     private const int _cornerSegments = 4;
 
     /// <summary>The frame, the spring from its top, and the weight at <paramref name="weightOffset"/> (<see cref="Accelerometer.WeightOffset"/>).</summary>
-    public static void DrawAccelerometer(CanvasItem canvas, VisualTheme theme, Vector2D weightOffset, bool selected)
+    public static void DrawAccelerometer(CanvasItem canvas, Transform2D drawTransform, VisualTheme theme, Vector2D weightOffset, bool selected)
     {
         ArgumentNullException.ThrowIfNull(canvas);
         ArgumentNullException.ThrowIfNull(theme);
+        var pen = new Pen(canvas, UiPixelSpace.Enter(canvas, drawTransform));
         var line = LineColor(theme, selected);
-        DrawShape(canvas, theme, RoundedRect(Vector2.Zero, _frameHalfWidth, _frameHalfHeight, _frameRadius), line);
+        DrawShape(pen, theme, RoundedRect(Vector2.Zero, _frameHalfWidth, _frameHalfHeight, _frameRadius), line);
 
         var weight = new Vector2((float)weightOffset.X * _weightTravelX, (float)weightOffset.Y * _weightTravelY);
         var top = new Vector2(0, -_frameHalfHeight);
@@ -60,12 +63,13 @@ public static class SensorDrawing
             spring[i] = top.Lerp(springEnd, t) + new Vector2(side, 0);
         }
 
-        canvas.DrawPolyline(spring, line, _line * 0.75f, antialiased: true);
-        canvas.DrawCircle(weight, _weightRadius, line, filled: true, antialiased: true);
+        pen.Polyline(spring, line, _line * 0.75f);
+        pen.Disc(weight, _weightRadius, line);
+        canvas.DrawSetTransformMatrix(drawTransform);
     }
 
     /// <summary>A camera looking along <paramref name="aim"/>, a unit vector in the picture's frame (the middle of its ray fan).</summary>
-    public static void DrawCamera(CanvasItem canvas, VisualTheme theme, Vector2 aim, bool selected)
+    public static void DrawCamera(CanvasItem canvas, Transform2D drawTransform, VisualTheme theme, Vector2 aim, bool selected)
     {
         ArgumentNullException.ThrowIfNull(canvas);
         ArgumentNullException.ThrowIfNull(theme);
@@ -81,52 +85,60 @@ public static class SensorDrawing
                 new Vector2(front, _hoodNarrow),
             ],
             turn);
+        var pen = new Pen(canvas, UiPixelSpace.Enter(canvas, drawTransform));
         var line = LineColor(theme, selected);
-        DrawShape(canvas, theme, body, line);
-        DrawShape(canvas, theme, hood, line);
-        canvas.DrawArc(bodyCentre.Rotated(turn), _lensRadius, 0, Mathf.Tau, 24, line, _line, antialiased: true);
+        DrawShape(pen, theme, body, line);
+        DrawShape(pen, theme, hood, line);
+        pen.Ring(bodyCentre.Rotated(turn), _lensRadius, line, _line);
+        canvas.DrawSetTransformMatrix(drawTransform);
     }
 
     /// <summary>A selected camera's rays in Build, from <paramref name="origin"/> to each end.</summary>
-    public static void DrawRays(CanvasItem canvas, VisualTheme theme, Vector2 origin, IEnumerable<Vector2> ends)
+    public static void DrawRays(CanvasItem canvas, Transform2D drawTransform, VisualTheme theme, Vector2 origin, IEnumerable<Vector2> ends)
     {
         ArgumentNullException.ThrowIfNull(canvas);
         ArgumentNullException.ThrowIfNull(theme);
         ArgumentNullException.ThrowIfNull(ends);
+        var pen = new Pen(canvas, UiPixelSpace.Enter(canvas, drawTransform));
         foreach (var end in ends)
         {
-            DrawRay(canvas, theme, origin, end);
+            DrawRay(pen, theme, origin, end);
         }
+
+        canvas.DrawSetTransformMatrix(drawTransform);
     }
 
     /// <summary>A camera's rays in Training (#623): from <paramref name="origin"/> to each ground hit, with a <c>halo</c> ring at the hit.</summary>
-    public static void DrawRayHits(CanvasItem canvas, VisualTheme theme, Vector2 origin, IEnumerable<Vector2> hits)
+    public static void DrawRayHits(CanvasItem canvas, Transform2D drawTransform, VisualTheme theme, Vector2 origin, IEnumerable<Vector2> hits)
     {
         ArgumentNullException.ThrowIfNull(canvas);
         ArgumentNullException.ThrowIfNull(theme);
         ArgumentNullException.ThrowIfNull(hits);
+        var pen = new Pen(canvas, UiPixelSpace.Enter(canvas, drawTransform));
         foreach (var hit in hits)
         {
-            DrawRay(canvas, theme, origin, hit);
-            canvas.DrawArc(hit, _hitRadius, 0, Mathf.Tau, 24, theme.SelectionGlow, _line, antialiased: true);
+            DrawRay(pen, theme, origin, hit);
+            pen.Ring(hit, _hitRadius, theme.SelectionGlow, _line);
         }
+
+        canvas.DrawSetTransformMatrix(drawTransform);
     }
 
-    private static void DrawRay(CanvasItem canvas, VisualTheme theme, Vector2 origin, Vector2 end)
+    private static void DrawRay(Pen pen, VisualTheme theme, Vector2 origin, Vector2 end)
     {
         if (origin.DistanceTo(end) > _rayStart)
         {
-            canvas.DrawDashedLine(origin + (origin.DirectionTo(end) * _rayStart), end, theme.SelectionGlow, UiSize.Stroke.Signal, _rayDash, antialiased: false);
+            pen.DashedLine(origin + (origin.DirectionTo(end) * _rayStart), end, theme.SelectionGlow, _line, _rayDash);
         }
     }
 
     // A selected picture is drawn in halo instead of accent, like a selected part in the reference (#624).
     private static Color LineColor(VisualTheme theme, bool selected) => selected ? theme.SelectionGlow : theme.SensorLine;
 
-    private static void DrawShape(CanvasItem canvas, VisualTheme theme, Vector2[] outline, Color line)
+    private static void DrawShape(Pen pen, VisualTheme theme, Vector2[] outline, Color line)
     {
-        canvas.DrawColoredPolygon(outline, theme.SensorFill);
-        canvas.DrawPolyline([.. outline, outline[0]], line, _line, antialiased: true);
+        pen.Polygon(outline, theme.SensorFill);
+        pen.Polyline([.. outline, outline[0]], line, _line);
     }
 
     private static Vector2[] Turned(Vector2[] points, float angle) => [.. points.Select(point => point.Rotated(angle))];
@@ -153,5 +165,37 @@ public static class SensorDrawing
         }
 
         return points;
+    }
+
+    /// <summary>
+    /// Draws shapes given in the picture's units at window-pixel resolution: points go through
+    /// <paramref name="ToPixels"/>, and widths, radii and dashes are scaled by it.
+    /// </summary>
+    private readonly record struct Pen(CanvasItem Canvas, Transform2D ToPixels)
+    {
+        private const int _ringSegments = 32;
+
+        private float Scale => UiPixelSpace.ScaleOf(ToPixels);
+
+        public void Polygon(Vector2[] points, Color color) =>
+            Canvas.DrawColoredPolygon(Mapped(points), color);
+
+        public void Polyline(Vector2[] points, Color color, float width) =>
+            Canvas.DrawPolyline(Mapped(points), color, width * Scale, antialiased: true);
+
+        public void Disc(Vector2 centre, float radius, Color color) =>
+            Canvas.DrawCircle(ToPixels * centre, radius * Scale, color, filled: true, antialiased: true);
+
+        public void Ring(Vector2 centre, float radius, Color color, float width) =>
+            Canvas.DrawArc(ToPixels * centre, radius * Scale, 0, Mathf.Tau, _ringSegments, color, width * Scale, antialiased: true);
+
+        public void DashedLine(Vector2 from, Vector2 to, Color color, float width, float dash) =>
+            Canvas.DrawDashedLine(ToPixels * from, ToPixels * to, color, width * Scale, dash * Scale, antialiased: true);
+
+        private Vector2[] Mapped(Vector2[] points)
+        {
+            var toPixels = ToPixels;
+            return [.. points.Select(point => toPixels * point)];
+        }
     }
 }

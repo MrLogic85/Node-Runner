@@ -385,7 +385,7 @@ public partial class BuildCanvas : Node2D
         var middle = (ToGodot(nodeA) + ToGodot(nodeB)) / 2;
         var beamRotation = (float)CameraRays.BeamAngle(nodeA, nodeB);
         var aim = camera.Aim ?? CameraRays.DefaultAim(nodeA, nodeB);
-        SensorDrawing.DrawRays(this, Theme, middle, Enumerable.Range(0, CameraRays.RayCount)
+        SensorDrawing.DrawRays(this, ViewTransform(), Theme, middle, Enumerable.Range(0, CameraRays.RayCount)
             .Select(ray => middle + ToGodot(CameraRays.LocalRayTarget(ray, aim)).Rotated(beamRotation)));
     }
 
@@ -400,16 +400,16 @@ public partial class BuildCanvas : Node2D
         var pictureRotation = beamRotation + (upSign == 1 ? Mathf.Pi : 0);
         var middle = (start + end) / 2;
         var cameraAim = aim ?? CameraRays.DefaultAim(nodeA, nodeB);
-        DrawSetTransformMatrix(viewTransform * new Transform2D(pictureRotation, middle));
+        var pictureTransform = viewTransform * new Transform2D(pictureRotation, middle);
         if (kind == SensorKind.Accelerometer)
         {
             var weight = (sensorId is { } id ? _sensorMotion.WeightOffset(id) : null)
                 ?? Accelerometer.RestWeightOffset(beamRotation, upSign);
-            SensorDrawing.DrawAccelerometer(this, Theme, weight, selected);
+            SensorDrawing.DrawAccelerometer(this, pictureTransform, Theme, weight, selected);
         }
         else
         {
-            SensorDrawing.DrawCamera(this, Theme, Vector2.FromAngle((float)cameraAim + beamRotation - pictureRotation), selected);
+            SensorDrawing.DrawCamera(this, pictureTransform, Theme, Vector2.FromAngle((float)cameraAim + beamRotation - pictureRotation), selected);
         }
 
         DrawThroughView();

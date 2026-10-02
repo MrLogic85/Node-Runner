@@ -121,7 +121,10 @@ then the app follows the reference.
     (#622), that looks along its rays. Neither is
     a circle, so it never reads as a joint. Selected, its lines turn
     `halo` instead of `accent`. Its tap area is a square turned with the beam, 24 for
-    the Accelerometer and 44 for the Camera (`SensorPicture`).
+    the Accelerometer and 44 for the Camera (`SensorPicture`). Pictures,
+    rays and hit rings are sized in creature units but drawn at
+    window-pixel resolution (`UiPixelSpace`), so they stay crisp at any
+    Build or Training zoom (#625).
   - *Beams (#593):* a creature's beams are 6 wide in Build and Training
     (thumbnails keep the thin line). A beam must leave 52 free between its
     joint discs, room for the Camera with a gap on each side; a shorter beam
@@ -488,8 +491,8 @@ GLES3`); see the Compatibility/OpenGL renderer note in
 **Rule: all immediate-mode `_Draw()` calls in this project must pass
 `antialiased: false`, unless they draw in window pixels through
 `UiPixelSpace` (#624, #633).** There the feather is one physical pixel, so
-an antialiased line is smooth and crisp; the selection look and callout
-leaders draw this way. This has been applied across every existing call
+an antialiased line is smooth and crisp; the selection look, sensor
+pictures and rays, and callout leaders draw this way. This has been applied across every existing call
 site (`UiNumber`, `UiDashedBorder`, `UiProgressRing`, `UiSlider`,
 `UiSelectionHandle`, `UiButton`, `UiBoundsDebugOverlay`,
 `BrainSetupNetwork`, `BrainFocusNetworkView`,
