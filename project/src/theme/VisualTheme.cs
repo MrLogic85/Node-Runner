@@ -47,7 +47,11 @@ public sealed class VisualTheme
         SelectedBeamLineWidth = UiSize.Stroke.Signal,
         MotorSignalWidth = UiSize.Stroke.Signal,
         GroundEdgeWidth = UiSize.Stroke.Signal,
-        GridSpacing = UiSize.Control.Touch,
+        RulerTick = UiThemes.Color(theme, UiTokens.Color.LineStrong),
+        RulerTickWidth = UiSize.Stroke.Hair,
+        RulerLabel = UiThemes.Color(theme, UiTokens.Color.Muted),
+        RulerFont = theme.GetFont("font", UiTokens.Variation(UiTokens.Typography.ReadoutMedium)),
+        RulerFontSize = theme.GetFontSize("font_size", UiTokens.Variation(UiTokens.Typography.ReadoutMedium)),
         AreaCornerWidth = UiSize.Stroke.Signal,
     };
 
@@ -100,7 +104,17 @@ public sealed class VisualTheme
 
     public float GroundEdgeWidth { get; private init; }
 
-    public float GridSpacing { get; private init; }
+    /// <summary>The Training ruler's ticks, hanging from the ground line (#668).</summary>
+    public Color RulerTick { get; private init; }
+
+    public float RulerTickWidth { get; private init; }
+
+    /// <summary>The Training ruler's distance labels, in the readout style.</summary>
+    public Color RulerLabel { get; private init; }
+
+    public Font RulerFont { get; private init; } = null!;
+
+    public int RulerFontSize { get; private init; }
 
     /// <summary>The hatch lines inside a rigid triangle in Build: one pixel wide at any zoom.</summary>
     public Color RigidHatch { get; private init; }

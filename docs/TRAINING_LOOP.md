@@ -195,10 +195,35 @@ by the TrainSetup and Training component READMEs under `reference design/compone
 - Training is its own routed scene, `TrainingRoute(creationId)`, with
   `TrainingHost` (`project/src/hosts/`) as its root. `TrainingHost.tscn` instances the
   Training screen (`TrainingScreen.tscn`) and authors the world inside the
-  screen's arena viewport: the backdrop, the ground and its collision shape,
-  the spawn marker and the camera. The host adds the creature and the
-  `Evolver` from the creation's save to that world, so leaving the scene
-  frees all of them.
+  screen's arena viewport: the background, the ground and its collision
+  shape, the ruler, the spawn marker and the camera. The host adds the
+  creature and the `Evolver` from the creation's save to that world, so
+  leaving the scene frees all of them.
+  - **Camera (#668).** `ArenaCamera` follows the followed shadow's centre
+    (`Creature.CenterOfMass`, the point its distance is measured from)
+    horizontally only, keeping it 43% from the left as in the reference.
+    Smoothing has two stages: `ArenaFollow` eases the target
+    (`EaseRate`), then the `Camera2D`'s own position smoothing
+    (`CameraSmoothingSpeed`) eases the camera. Together they damp a gait's
+    wobble so the view never shakes, and a switch to another shadow
+    (`ArenaCamera.Retarget`, on `FollowedShadowChanged`) glides in and
+    settles instead of jumping. Both stages trail a moving target, so
+    the aim leads it by the creature's slowly eased speed times that lag: a
+    fast creature stays at 43% instead of drifting off the right edge. When
+    the followed shadow starts a new trial (`Evolver.FollowedTrialStarted`)
+    the camera cuts back to the start, since a new trial is a new scene
+    (owner decision). Both stages run on scaled time, so 2x and 4x look the
+    same, only faster.
+  - **Ground and background.** The ground's collider is a
+    `WorldBoundaryShape2D` through the `Ground` node, so it has no end; its
+    fill and edge reach ±1 000 000 units (10 km), far past any trial. The
+    background is a plain `ArenaBackground` fill on a `CanvasLayer` behind
+    the world, so it does not move with the camera. There is no grid
+    (owner decision, `docs/UI_DIRECTION.md`).
+  - **Ruler.** `ArenaRuler` draws `DistanceRuler`'s marks along the ground
+    edge: a labelled tick every metre ("3 m") and a minor one every half
+    metre, counted from where the visible creature's centre starts each
+    trial (0 m), negative behind it. It draws only what the camera shows.
   - **World view.** The world renders in its own `SubViewport` through
     `UiWorldView`, so the UI layout and scale never touch physics distances
     or gravity. The viewport renders at the screen's pixel density to keep
