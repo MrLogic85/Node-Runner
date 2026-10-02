@@ -92,7 +92,7 @@ public sealed class BuildAutosaveTests
     [Fact]
     public void Save_OnALockedCreation_KeepsItsTrainingAndBrainShape()
     {
-        var training = new TrainingStateDef([6, 3, 1], Enumerable.Repeat(0.1, 25).ToArray(), 4, "Tanh");
+        var training = new TrainingStateDef([6, 3, 1], Enumerable.Repeat(0.1, 25).ToArray(), 4, "Tanh", 1, TestTraining.Run);
         var drawn = TwoNodeCreation();
         var trained = new CreationDef(drawn.Id, drawn.Name, drawn.Creature, new BrainShapeDef(1, 3), training);
         var (repository, build, autosave) = Open(trained);

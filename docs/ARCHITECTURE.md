@@ -340,19 +340,11 @@ window. All four live in `ui/lib`, not `managers/`, because managers hold no UI.
   forward-passed off the main thread since they are pure functions on
   `double[]`. Physics remains on Godot's thread.
 
-## Save format (v1.5+)
+## Save format
 
-Creatures and their trained brains save as JSON via `FileCreatureRepository`:
+`docs/SAVE_FORMAT.md` owns the files, their layout and every saved field.
 
-```json
-{
-  "def":   { "nodes": [...], "beams": [...], "sensors": [...] },
-  "brain": { "layers": [8, 12, 4], "genome": [...], "activation": "Tanh" },
-  "meta":  { "seed": 4711, "generation": 137, "fitness": 42.7 }
-}
-```
-
-Round-trip: `CreatureDef` + `NeuralNetwork` → JSON → same objects. Tested.
+## Neural-network genome layout
 
 Neural-network genomes are flattened per layer transition: weights in
 row-major output-neuron order, then biases for that layer. 0.1.0 networks use

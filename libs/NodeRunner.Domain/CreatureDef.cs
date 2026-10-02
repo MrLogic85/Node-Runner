@@ -7,7 +7,7 @@ namespace NodeRunner.Domain;
 /// A drawn creature: nodes, the beams between them and the sensors on them. Any drawing is a valid
 /// <see cref="CreatureDef"/>, so an unfinished one can be saved; only its part references must point
 /// at existing parts. Whether it can be simulated and trained is checked before training
-/// (<c>CreatureReadiness</c> in <c>NodeRunner.App</c>). A Camera saved without an aim gets
+/// (<c>CreatureReadiness</c> in <c>NodeRunner.App</c>). A Camera placed without an aim gets
 /// <see cref="CameraRays.DefaultAim"/> from its beam's pose here, so every Camera has one.
 /// </summary>
 public sealed record CreatureDef

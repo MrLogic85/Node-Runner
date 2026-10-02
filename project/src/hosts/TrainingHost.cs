@@ -285,7 +285,10 @@ public partial class TrainingHost : Node, IRoutedScene
     // cross to that thread, and nothing comes back to this scene, which may be gone by then.
     private void PersistTraining()
     {
-        if (_creationId is not { } id || _evolver?.BestGenome is not { } genome || _creature?.Brain is null)
+        if (_creationId is not { } id
+            || _evolver?.BestGenome is not { } genome
+            || _evolver.BestRun is not { } run
+            || _creature?.Brain is null)
         {
             return;
         }
@@ -298,15 +301,10 @@ public partial class TrainingHost : Node, IRoutedScene
             _evolver.Generation,
             Activation.Tanh.ToString(),
             _evolver.BestFitness,
-            BestRunOf(_evolver));
+            // Training runs on flat ground only until maps land (#443).
+            new TrainingRunDef(run.Distance, run.TopSpeed, run.Elevation, MapIds.Flat));
         Task.Run(() => PersistTrainingSnapshot(saves, id, epoch, training));
     }
-
-    // Training runs on flat ground only until maps land (#443).
-    private static TrainingRunDef? BestRunOf(Evolver evolver) =>
-        evolver.BestRun is { } run
-            ? new TrainingRunDef(run.Distance, run.TopSpeed, run.Elevation, MapIds.Flat)
-            : null;
 
     private static void PersistTrainingSnapshot(SaveManager saves, Guid id, long epoch, TrainingStateDef training)
     {

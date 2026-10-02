@@ -35,16 +35,11 @@ public sealed class CreationDefTests
     }
 
     [Fact]
-    public void Constructor_WhenBrainShapeIsMissing_UsesTrainingLayerShapeForLegacySaves()
+    public void Constructor_WithoutBrainShape_Throws()
     {
-        var creation = new CreationDef(
-            Guid.NewGuid(),
-            "Legacy worm",
-            CreateCreature(),
-            brainShape: null,
-            new TrainingStateDef([8, 8, 1], Enumerable.Repeat(0.1, 81).ToArray(), 12, "Tanh"));
+        var action = () => new CreationDef(Guid.NewGuid(), "Worm", CreateCreature(), brainShape: null!);
 
-        creation.BrainShape.ShouldBe(new BrainShapeDef(1, 8));
+        action.ShouldThrow<ArgumentNullException>();
     }
 
     private static CreationDef CreateCreation()
@@ -54,7 +49,7 @@ public sealed class CreationDefTests
             "Worm",
             CreateCreature(),
             new BrainShapeDef(2, 5),
-            new TrainingStateDef([2, 3, 1], [0.1, -0.2, 0.3], 7, "Tanh"));
+            new TrainingStateDef([2, 3, 1], [0.1, -0.2, 0.3], 7, "Tanh", 1, TestTraining.Run));
     }
 
     private static CreatureDef CreateCreature()

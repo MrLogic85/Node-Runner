@@ -152,15 +152,12 @@ public partial class CreationCard : MarginContainer
         GetNode<UiLabel>("%Distance").Text = training.DistanceText;
         GetNode<UiLabel>("%TopSpeed").Text = training.TopSpeedText;
         GetNode<UiLabel>("%Elevation").Text = training.ElevationText;
-        var map = GetNode<UiIcon>("%Map");
-        map.IconId = MapIcon(training.MapId);
-        map.Visible = map.IconId != UiIconId.None;
+        GetNode<UiIcon>("%Map").IconId = MapIcon(training.MapId);
         GetNode<UiLabel>("%Generations").Text = training.GenerationsText;
     }
 
-    private static UiIconId MapIcon(string? mapId) => mapId switch
+    private static UiIconId MapIcon(string mapId) => mapId switch
     {
-        null => UiIconId.None,
         MapIds.Flat => UiIconId.MapFlat,
         _ => UiIconId.Map,
     };

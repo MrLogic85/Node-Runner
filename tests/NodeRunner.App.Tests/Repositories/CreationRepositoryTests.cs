@@ -1,4 +1,3 @@
-using System.Text.Json.Nodes;
 using NodeRunner.App.Builders;
 using NodeRunner.App.Repositories;
 using NodeRunner.Domain;
@@ -75,64 +74,6 @@ public sealed class CreationRepositoryTests
     }
 
     [Fact]
-    public void File_LoadTrainingSavedBeforeBestRun_LeavesBestRunEmpty()
-    {
-        var directory = Path.Combine(Path.GetTempPath(), $"node-runner-{Guid.NewGuid():N}");
-        try
-        {
-            var repository = new FileCreationRepository(new TestStorageLocation(directory));
-            var creation = CreateCreation("Older");
-            repository.Save(creation);
-            var path = Directory.EnumerateFiles(directory, "*.json").Single();
-            var json = JsonNode.Parse(File.ReadAllText(path))!.AsObject();
-            var training = json.Single(property => property.Key.Equals("Training", StringComparison.OrdinalIgnoreCase)).Value!.AsObject();
-            training.Remove(training.Single(property => property.Key.Equals("BestRun", StringComparison.OrdinalIgnoreCase)).Key).ShouldBeTrue();
-            File.WriteAllText(path, json.ToJsonString());
-
-            var loaded = repository.Get(creation.Id);
-
-            loaded.ShouldNotBeNull();
-            loaded.Training!.BestRun.ShouldBeNull();
-            loaded.Training.Generation.ShouldBe(creation.Training!.Generation);
-        }
-        finally
-        {
-            if (Directory.Exists(directory))
-            {
-                Directory.Delete(directory, recursive: true);
-            }
-        }
-    }
-
-    [Fact]
-    public void File_LoadCreationWithTheOldStoredLock_IgnoresIt()
-    {
-        var directory = Path.Combine(Path.GetTempPath(), $"node-runner-{Guid.NewGuid():N}");
-        try
-        {
-            var repository = new FileCreationRepository(new TestStorageLocation(directory));
-            var creation = CreateCreation("Saved by #502");
-            repository.Save(creation);
-            var path = Directory.EnumerateFiles(directory, "*.json").Single();
-            var json = JsonNode.Parse(File.ReadAllText(path))!.AsObject();
-            json["IsLocked"] = true;
-            File.WriteAllText(path, json.ToJsonString());
-
-            var loaded = repository.Get(creation.Id);
-
-            loaded.ShouldNotBeNull();
-            AssertEquivalent(loaded, creation);
-        }
-        finally
-        {
-            if (Directory.Exists(directory))
-            {
-                Directory.Delete(directory, recursive: true);
-            }
-        }
-    }
-
-    [Fact]
     public void File_ConcurrentSaves_NeverLeaveACorruptOrMissingFile()
     {
         // Regression guard for #113: persistence now runs off the main
@@ -150,7 +91,7 @@ public sealed class CreationRepositoryTests
                     creation.Id,
                     creation.Name,
                     creation.Creature,
-                    new TrainingStateDef(creation.Training!.LayerSizes, creation.Training.BestGenome, i, "Tanh"));
+                    new TrainingStateDef(creation.Training!.LayerSizes, creation.Training.BestGenome, i, "Tanh", 1, TestTraining.Run));
                 repository.Save(withGeneration);
             });
 
@@ -179,8 +120,9 @@ public sealed class CreationRepositoryTests
             var healthy = CreateCreation("Healthy");
             repository.Save(healthy);
 
-            var corruptPath = Path.Combine(directory, $"{Guid.NewGuid():N}.json");
-            File.WriteAllText(corruptPath, "{ this is not valid json");
+            var corruptFolder = Path.Combine(directory, Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(corruptFolder);
+            File.WriteAllText(Path.Combine(corruptFolder, FileCreationRepository.CreationFileName), "{ this is not valid json");
 
             var listed = repository.List();
 
@@ -205,10 +147,11 @@ public sealed class CreationRepositoryTests
         var directory = Path.Combine(Path.GetTempPath(), $"node-runner-{Guid.NewGuid():N}");
         try
         {
-            Directory.CreateDirectory(directory);
             var id = Guid.NewGuid();
+            var folder = Path.Combine(directory, id.ToString("N"));
+            Directory.CreateDirectory(folder);
             var repository = new FileCreationRepository(new TestStorageLocation(directory));
-            File.WriteAllText(Path.Combine(directory, $"{id:N}.json"), "{ this is not valid json");
+            File.WriteAllText(Path.Combine(folder, FileCreationRepository.CreationFileName), "{ this is not valid json");
 
             repository.Get(id).ShouldBeNull();
         }
@@ -264,27 +207,20 @@ public sealed class CreationRepositoryTests
     }
 
     [Fact]
-    public void FileProgression_LoadWithUnknownFields_KeepsSeedingFlag()
+    public void FileProgression_LoadWithUnknownField_TreatsItAsCorrupt()
     {
-        // Files written before #557 still carry fields that were removed since.
         var directory = Path.Combine(Path.GetTempPath(), $"node-runner-progression-{Guid.NewGuid():N}");
         try
         {
             Directory.CreateDirectory(directory);
-            File.WriteAllText(
-                Path.Combine(directory, "progression.json"),
-                """
-                {
-                  "RemovedFlag": true,
-                  "RemovedGeneration": 12,
-                  "DefaultCreationsSeeded": true
-                }
-                """);
+            var path = Path.Combine(directory, "progression.json");
+            File.WriteAllText(path, """{ "removedFlag": true, "defaultCreationsSeeded": true }""");
             var repository = new FileProgressionRepository(new TestStorageLocation(directory));
 
-            var progression = repository.Load();
+            repository.Load().ShouldBe(new ProgressionDef());
 
-            progression.ShouldBe(new ProgressionDef(DefaultCreationsSeeded: true));
+            File.Exists(path).ShouldBeFalse();
+            Directory.EnumerateFiles(directory, "progression.json.corrupt-*").ShouldNotBeEmpty();
         }
         finally
         {
@@ -440,79 +376,6 @@ public sealed class CreationRepositoryTests
             reloaded.Beams[reloaded.BeamIndexOf(beam)].Name.ShouldBe("Thigh");
             reloaded.NextPartId.ShouldBe(extra + 1);
             new CreatureBuilder(reloaded).AddNode(new Vector2D(6, 0), 1).ShouldBeGreaterThan(extra);
-        }
-        finally
-        {
-            if (Directory.Exists(directory))
-            {
-                Directory.Delete(directory, recursive: true);
-            }
-        }
-    }
-
-    [Fact]
-    public void FileCreation_List_WithPreStableIdSave_SkipsItAsInvalid()
-    {
-        var directory = Path.Combine(Path.GetTempPath(), $"node-runner-old-save-{Guid.NewGuid():N}");
-        try
-        {
-            Directory.CreateDirectory(directory);
-            var id = Guid.NewGuid();
-            var path = Path.Combine(directory, $"{id:N}.json");
-            File.WriteAllText(path, $$"""
-                {
-                  "Id": "{{id}}",
-                  "Name": "Old",
-                  "Creature": {
-                    "Nodes": [{ "Position": { "X": 0, "Y": 0 }, "Radius": 1 }],
-                    "Beams": [],
-                    "{{"Cor" + "es"}}": []
-                  },
-                  "BrainShape": null,
-                  "Training": null
-                }
-                """);
-            var repository = new FileCreationRepository(new TestStorageLocation(directory));
-
-            repository.List().ShouldBeEmpty();
-            repository.Get(id).ShouldBeNull();
-        }
-        finally
-        {
-            if (Directory.Exists(directory))
-            {
-                Directory.Delete(directory, recursive: true);
-            }
-        }
-    }
-
-    [Fact]
-    public void FileCreation_List_WithLegacySensorPackageSave_SkipsItAsInvalid()
-    {
-        var directory = Path.Combine(Environment.CurrentDirectory, $"node-runner-legacy-save-{Guid.NewGuid():N}");
-        try
-        {
-            Directory.CreateDirectory(directory);
-            var id = Guid.NewGuid();
-            var path = Path.Combine(directory, $"{id:N}.json");
-            File.WriteAllText(path, $$"""
-                {
-                  "Id": "{{id}}",
-                  "Name": "Old",
-                  "Creature": {
-                    "Nodes": [{ "Id": 1, "Position": { "X": 0, "Y": 0 }, "Radius": 1 }, { "Id": 2, "Position": { "X": 2, "Y": 0 }, "Radius": 1 }],
-                    "Beams": [{ "Id": 101, "NodeA": 1, "NodeB": 2 }],
-                    "Cores": [{ "Id": 201, "NodeId": 1 }],
-                    "NextPartId": 202
-                  },
-                  "BrainShape": null,
-                  "Training": null
-                }
-                """);
-            var repository = new FileCreationRepository(new TestStorageLocation(directory));
-
-            repository.List().ShouldBeEmpty();
-            repository.Get(id).ShouldBeNull();
         }
         finally
         {

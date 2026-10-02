@@ -23,7 +23,7 @@ public sealed class BuildPresentationViewModelTests
             Guid.NewGuid(),
             "Worm",
             PairCreature(),
-            new TrainingStateDef([2, 1], [0.1, -0.2, 0.3], 3, "Tanh")));
+            new TrainingStateDef([2, 1], [0.1, -0.2, 0.3], 3, "Tanh", 1, TestTraining.Run)));
         var presentation = new BuildPresentationViewModel(build);
 
         presentation.LockTopologyTools.ShouldBeTrue();
@@ -130,7 +130,7 @@ public sealed class BuildPresentationViewModelTests
             Guid.NewGuid(),
             "Worm",
             PairCreature(),
-            new TrainingStateDef([2, 1], [0.1, -0.2, 0.3], 3, "Tanh")));
+            new TrainingStateDef([2, 1], [0.1, -0.2, 0.3], 3, "Tanh", 1, TestTraining.Run)));
         build.ToggleSelectedNode(build.Nodes[0].Id);
 
         new BuildPresentationViewModel(build).SinglePart!.CanDelete.ShouldBeFalse();
@@ -188,7 +188,7 @@ public sealed class BuildPresentationViewModelTests
             Guid.NewGuid(),
             "Worm",
             PairCreature(),
-            new TrainingStateDef([2, 1], [0.1, -0.2, 0.3], 3, "Tanh")));
+            new TrainingStateDef([2, 1], [0.1, -0.2, 0.3], 3, "Tanh", 1, TestTraining.Run)));
         build.ReplaceSelection([1, 2]);
 
         new BuildPresentationViewModel(build).Selection!.CanDelete.ShouldBeFalse();

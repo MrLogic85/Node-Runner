@@ -1,5 +1,4 @@
 using System.Collections.Concurrent;
-using System.Text.Json;
 using NodeRunner.Domain;
 
 namespace NodeRunner.App.Repositories;
@@ -16,11 +15,6 @@ public sealed class FileProgressionRepository : IProgressionRepository
 
     private readonly string _path;
     private readonly object _writeLock;
-    private readonly JsonSerializerOptions _jsonOptions = new(JsonSerializerDefaults.General)
-    {
-        WriteIndented = true,
-        PropertyNameCaseInsensitive = true,
-    };
 
     public FileProgressionRepository(IStorageLocation storageLocation)
     {
@@ -44,26 +38,9 @@ public sealed class FileProgressionRepository : IProgressionRepository
 
             try
             {
-                var json = File.ReadAllText(_path);
-
-                // ProgressionDef's constructor parameters all have valid
-                // defaults, so structurally incomplete JSON (e.g. "{}")
-                // would otherwise silently deserialize as a fresh/reset
-                // progression instead of being recognized as corrupt (#114).
-                // Every file we write is an object with the seeding flag, so
-                // anything else didn't come from Save() and is invalid.
-                using (var document = JsonDocument.Parse(json))
-                {
-                    var root = document.RootElement;
-                    if (root.ValueKind != JsonValueKind.Object
-                        || !HasProperty(root, nameof(ProgressionDef.DefaultCreationsSeeded)))
-                    {
-                        throw new InvalidDataException($"Progression file '{_path}' is missing required fields.");
-                    }
-                }
-
-                return JsonSerializer.Deserialize<ProgressionDef>(json, _jsonOptions)
-                    ?? throw new InvalidDataException($"Progression file '{_path}' is empty or invalid.");
+                // Strict loading (SaveJson) also rejects "{}": a missing field
+                // must not silently read as a fresh progression (#114).
+                return SaveJson.Deserialize<ProgressionDef>(File.ReadAllText(_path), _path);
             }
             catch (Exception ex) when (FilePersistenceExceptions.IsRecoverable(ex))
             {
@@ -84,7 +61,7 @@ public sealed class FileProgressionRepository : IProgressionRepository
         ArgumentNullException.ThrowIfNull(progression);
         Directory.CreateDirectory(Path.GetDirectoryName(_path)!);
         var temporaryPath = $"{_path}.{Guid.NewGuid():N}.tmp";
-        var json = JsonSerializer.Serialize(progression, _jsonOptions);
+        var json = SaveJson.Serialize(progression);
 
         lock (_writeLock)
         {
@@ -92,9 +69,6 @@ public sealed class FileProgressionRepository : IProgressionRepository
             File.Move(temporaryPath, _path, overwrite: true);
         }
     }
-
-    private static bool HasProperty(JsonElement root, string name) =>
-        root.EnumerateObject().Any(property => string.Equals(property.Name, name, StringComparison.OrdinalIgnoreCase));
 
     private void Quarantine()
     {
