@@ -155,7 +155,7 @@ transition to keep in step with it.
     as a shadow") at `alpha_shadow`. Shadow `i` is slot `i`, which runs
     candidate `i`. The default is shadow 1 (slot 0): the resumed genome or
     the elite `GeneticAlgorithm` puts first, i.e. the previous best, and in
-    a fresh generation 0 simply shadow 1. `Evolver.Follow` is the only way
+    a fresh generation 0 the first perturbed shadow. `Evolver.Follow` is the only way
     it changes, so a new leader never takes it, and it stays on that slot
     across generations. `Evolver` exposes `FollowedShadow`,
     `HasPreviousBest` and `ShadowDistances`; `TrainingPresentationViewModel`
@@ -180,6 +180,26 @@ transition to keep in step with it.
   calls `Evolver.Start(...)` unless the creature has no brain (an anatomy
   without motors), in which case evolution stays idle. `Evolver.Stop()`
   halts the in-progress trial without raising any events.
+- **Generation 0 (#537).** A new Creation has no trained brain, so its
+  base brain is the passive one every new port starts with (#535): all
+  weights 0, positions at the built pose, strength at bias −4 (about 2%).
+  `GenerationZero` (`libs/NodeRunner.ML/Brains/`) builds the first
+  population from it, and `Evolver.Start` uses it whenever there is no
+  saved brain to resume:
+  - The last shadow runs the base brain unchanged, as a reference that
+    stays near 0 m. Generation 0 never changes the base brain.
+  - Every other shadow perturbs it: Gaussian noise on every weight
+    (σ 1.5) and bias (σ 0.5), covering position and strength outputs.
+  - Each perturbed shadow also wakes one strength output, chosen at
+    random, to a bias between −1 and 3 (about 27–95% of its Strength).
+    So every perturbed shadow can move, and no generation 0 stands still.
+  - The spread was chosen with the Worm, headless over three seeds: every
+    perturbed shadow moved, the base shadow stayed at 0 m, and the best
+    reached about 3–4 m. Weight noise from σ 0.5 to 3 gave similar
+    distances, so the middle was kept; the owner confirmed the spread on
+    a Galaxy S25.
+  - Resuming a saved brain is not generation 0: it seeds shadow 1 and the
+    rest start random until warm start lands (#538).
 - Generation/fitness are logged (`GD.Print`) and shown on the Training
   screen (see "The Training scene" below).
 
@@ -233,7 +253,7 @@ by the TrainSetup and Training component READMEs under `reference design/compone
     brain graph is compiled by port (`DirectBrain`, #536) and seeds the
     population, and the generation count continues. A disabled connection
     stays at 0 through mutation and crossover.
-    A creation without training starts from a fresh random population.
+    A creation without training starts at generation 0 (see "Generation 0" above).
   - **Save.** Each finished generation is saved on the thread pool (the
     file round trip would stall physics). Leaving mid-generation drops only
     the generation in progress. The save is guarded by the creation's

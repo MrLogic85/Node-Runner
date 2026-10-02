@@ -192,9 +192,13 @@ public partial class Evolver : Node
         BestGenome = resumeGenome?.ToArray();
         BestRun = null;
 
-        _genomes = CreateRandomPopulation(populationSize);
-        if (resumeGenome is not null)
+        if (resumeGenome is null)
         {
+            _genomes = GenerationZero.Population(creature.Ports, populationSize, rng);
+        }
+        else
+        {
+            _genomes = CreateRandomPopulation(populationSize);
             _genomes[0] = resumeGenome.ToArray();
         }
 
