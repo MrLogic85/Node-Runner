@@ -96,7 +96,7 @@ every output.
 
 | Field | Type | Meaning |
 |---|---|---|
-| `neurons[]` | `{ id, kind, partId, channel, layer, bias, activation }` | `kind` is `input`, `output` or `hidden`. An input or output neuron names its port by `partId` and `channel`; a hidden neuron has both `null`. Inputs sit in layer 0 with bias 0 and `identity`; other neurons in layer 1 or later. `activation` is `identity`, `tanh`, `sigmoid` or `relu`; direct-brain outputs use `tanh`. |
+| `neurons[]` | `{ id, kind, partId, channel, layer, bias, activation }` | `kind` is `input`, `output` or `hidden`. An input or output neuron names its port by `partId` and `channel`; a hidden neuron has both `null`. Inputs sit in layer 0 with bias 0 and `identity`; other neurons in layer 1 or later. `activation` is `identity`, `tanh`, `sigmoid` or `relu`; a direct-brain output uses its port's signal activation: `tanh` for velocity and position, `sigmoid` for strength (#535). Resuming training fails loud (`DirectBrain.Compile`) if a saved output's activation does not match its port. |
 | `connections[]` | `{ from, to, weight, enabled }` | A connection gene between two neuron ids, from a lower layer to a higher one; at most one per pair. A disabled gene keeps its weight but carries no signal. |
 | `nextNeuronId` | int | The next free neuron id. Higher than every id in use; ids are never reused. |
 

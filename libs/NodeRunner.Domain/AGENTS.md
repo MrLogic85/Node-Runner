@@ -25,6 +25,9 @@ Pure C# data types. The vocabulary of the app, no behavior beyond invariants.
     `BrainPorts` and `JointMotor` are the fifth and sixth: the brain ports
     every part declares and their order, and a joint motor's port values
     (#534), shared by the sim, Build and the brain.
+    `PortSignals` is the seventh: each output signal's activation, passive
+    start and position/strength mapping (#535), shared by the brain and the
+    sim.
 - **Serialisable via `System.Text.Json` without custom converters.** Saved
   records are the save shape: changing one follows `docs/SAVE_FORMAT.md`.
 
@@ -38,8 +41,9 @@ Pure C# data types. The vocabulary of the app, no behavior beyond invariants.
 - `SensorPicture` — a sensor picture's tap area (see the exception above)
 - `MotorTopology` — derives `NodeConnectionDef`s from a `CreatureDef` (see
   the exception above)
-- `BrainPort`, `PortDirection`, `BrainPortLayout`, `BrainPorts`,
-  `JointMotor` — brain ports and their order (see the exception above)
+- `BrainPort`, `PortDirection`, `PortSignal`, `BrainPortLayout`,
+  `BrainPorts`, `JointMotor`, `PortSignals` — brain ports, their order and
+  output conventions (see the exception above)
 - `BrainDef`, `NeuronDef`, `ConnectionGeneDef`, `NeuronKind`,
   `NeuronActivation` — the saved brain graph (#536)
 - `CreationDef`, `TrainingStateDef`, `TrainingRunDef` — a saved Creation

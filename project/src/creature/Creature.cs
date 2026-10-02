@@ -133,7 +133,7 @@ public partial class Creature : Node2D
 
         BrainSeed = seed;
         var random = new Random(seed);
-        Brain = new NeuralNetwork(DirectBrain.LayerSizes(Ports), Activation.Tanh, random);
+        Brain = new NeuralNetwork(DirectBrain.LayerSizes(Ports), Activation.Tanh, random, DirectBrain.OutputActivations(Ports));
 
         GD.Print($"Node Runner brain seed: {seed}");
     }

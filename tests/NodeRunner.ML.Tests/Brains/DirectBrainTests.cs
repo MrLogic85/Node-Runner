@@ -6,8 +6,8 @@ namespace NodeRunner.ML.Tests.Brains;
 public sealed class DirectBrainTests
 {
     private static readonly BrainPortLayout _ports = new(
-        [new BrainPort(2, "angle:5", PortDirection.Input), new BrainPort(2, "speed:5", PortDirection.Input), new BrainPort(6, "along", PortDirection.Input)],
-        [new BrainPort(2, "target:5", PortDirection.Output)]);
+        [BrainPort.Input(2, "angle:5"), BrainPort.Input(2, "speed:5"), BrainPort.Input(6, "along")],
+        [BrainPort.Output(2, "target:5", PortSignal.Velocity)]);
 
     // Three weights (one per input) then the output's bias.
     private static readonly double[] _genome = [0.5, -0.25, 0.75, 0.1];
@@ -70,7 +70,7 @@ public sealed class DirectBrainTests
     public void Compile_APortWithNoNeuron_StartsSilent()
     {
         var brain = DirectBrain.ToBrainDef(_ports, _genome, previous: null);
-        var grown = _ports with { Inputs = [.. _ports.Inputs, new BrainPort(7, "centre", PortDirection.Input)] };
+        var grown = _ports with { Inputs = [.. _ports.Inputs, BrainPort.Input(7, "centre")] };
 
         DirectBrain.Compile(brain, grown).ShouldBe([0.5, -0.25, 0.75, 0, 0.1]);
     }
@@ -80,7 +80,7 @@ public sealed class DirectBrainTests
     {
         var first = DirectBrain.ToBrainDef(_ports, _genome, previous: null);
         var changed = new BrainPortLayout(
-            [_ports.Inputs[2], new BrainPort(7, "centre", PortDirection.Input)],
+            [_ports.Inputs[2], BrainPort.Input(7, "centre")],
             _ports.Outputs);
 
         var second = DirectBrain.ToBrainDef(changed, [0.1, 0.2, 0.3], first);
@@ -89,6 +89,41 @@ public sealed class DirectBrainTests
             [(3, (int?)6, "along"), (5, 7, "centre"), (4, 2, "target:5")]);
         second.NextNeuronId.ShouldBe(6);
         second.Connections.Select(gene => (gene.From, gene.To)).ShouldBe([(3, 4), (5, 4)]);
+    }
+
+    [Fact]
+    public void OutputActivations_FollowTheSignalEachPortDrives()
+    {
+        var ports = _ports with { Outputs = [.. _ports.Outputs, BrainPort.Output(9, "position", PortSignal.Position), BrainPort.Output(9, "strength", PortSignal.Strength)] };
+
+        DirectBrain.OutputActivations(ports).ShouldBe([Activation.Tanh, Activation.Tanh, Activation.Sigmoid]);
+        DirectBrain.ToBrainDef(ports, new double[12], previous: null).Neurons.TakeLast(3).Select(neuron => neuron.Activation)
+            .ShouldBe([NeuronActivation.Tanh, NeuronActivation.Tanh, NeuronActivation.Sigmoid]);
+    }
+
+    [Fact]
+    public void Compile_ANewPart_StartsAlmostPassive()
+    {
+        var trained = DirectBrain.ToBrainDef(_ports, _genome, previous: null);
+        var grown = _ports with { Outputs = [.. _ports.Outputs, BrainPort.Output(9, "position", PortSignal.Position), BrainPort.Output(9, "strength", PortSignal.Strength)] };
+
+        var genome = DirectBrain.Compile(trained, grown);
+
+        // Weights output by output (3 inputs each), then the three biases.
+        genome.ShouldBe([0.5, -0.25, 0.75, 0, 0, 0, 0, 0, 0, 0.1, 0, PortSignals.PassiveStrengthBias]);
+        var outputs = NeuralNetwork.FromGenome(DirectBrain.LayerSizes(grown), genome, Activation.Tanh, DirectBrain.OutputActivations(grown))
+            .Forward([1, -1, 1]);
+        outputs[1].ShouldBe(0);
+        outputs[2].ShouldBe(0.018, tolerance: 0.001);
+    }
+
+    [Fact]
+    public void Compile_AnOutputSavedWithAnotherActivation_IsNotSupported()
+    {
+        var brain = DirectBrain.ToBrainDef(_ports, _genome, previous: null);
+        var strength = new BrainPortLayout(_ports.Inputs, [BrainPort.Output(2, "target:5", PortSignal.Strength)]);
+
+        Should.Throw<NotSupportedException>(() => DirectBrain.Compile(brain, strength));
     }
 
     [Fact]

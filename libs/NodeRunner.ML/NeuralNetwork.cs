@@ -5,8 +5,10 @@ public sealed class NeuralNetwork
     private readonly int[] _layerSizes;
     private readonly double[][] _weights;
     private readonly double[][] _biases;
+    private readonly Activation[] _outputActivations;
 
-    public NeuralNetwork(int[] layerSizes, Activation activation, Random random)
+    /// <summary>A randomly initialized network. <paramref name="outputActivations"/> gives one activation per output (#535); <c>null</c> means tanh for every output.</summary>
+    public NeuralNetwork(int[] layerSizes, Activation activation, Random random, IReadOnlyList<Activation>? outputActivations = null)
     {
         ValidateLayerSizes(layerSizes);
         ValidateActivation(activation);
@@ -14,6 +16,7 @@ public sealed class NeuralNetwork
 
         _layerSizes = layerSizes.ToArray();
         Activation = activation;
+        _outputActivations = OutputActivationsFor(_layerSizes, outputActivations);
         _weights = new double[_layerSizes.Length - 1][];
         _biases = new double[_layerSizes.Length - 1][];
 
@@ -37,7 +40,7 @@ public sealed class NeuralNetwork
         }
     }
 
-    private NeuralNetwork(int[] layerSizes, Activation activation, double[][] weights, double[][] biases)
+    private NeuralNetwork(int[] layerSizes, Activation activation, double[][] weights, double[][] biases, IReadOnlyList<Activation>? outputActivations)
     {
         ValidateLayerSizes(layerSizes);
         ValidateActivation(activation);
@@ -45,6 +48,7 @@ public sealed class NeuralNetwork
 
         _layerSizes = layerSizes.ToArray();
         Activation = activation;
+        _outputActivations = OutputActivationsFor(_layerSizes, outputActivations);
         _weights = DeepCopy(weights);
         _biases = DeepCopy(biases);
     }
@@ -55,7 +59,11 @@ public sealed class NeuralNetwork
 
     public double[][] Biases => DeepCopy(_biases);
 
+    /// <summary>The hidden layers' activation.</summary>
     public Activation Activation { get; }
+
+    /// <summary>Each output's own activation, in output order: tanh for velocity and position, sigmoid for strength (#535).</summary>
+    public IReadOnlyList<Activation> OutputActivations => _outputActivations;
 
     public double[] Forward(double[] input)
     {
@@ -125,7 +133,7 @@ public sealed class NeuralNetwork
                     sum += _weights[layer][WeightIndex(neuron, inputIndex, inputCount)] * previous[inputIndex];
                 }
 
-                current[neuron] = isOutputLayer ? Math.Tanh(sum) : ApplyActivation(sum, Activation);
+                current[neuron] = ApplyActivation(sum, isOutputLayer ? _outputActivations[neuron] : Activation);
             }
 
             previous = current;
@@ -156,7 +164,7 @@ public sealed class NeuralNetwork
                     sum += _weights[layer][WeightIndex(neuron, inputIndex, inputCount)] * previous[inputIndex];
                 }
 
-                current[neuron] = isOutputLayer ? Math.Tanh(sum) : ApplyActivation(sum, Activation);
+                current[neuron] = ApplyActivation(sum, isOutputLayer ? _outputActivations[neuron] : Activation);
             }
 
             activations[layer + 1] = current;
@@ -166,7 +174,7 @@ public sealed class NeuralNetwork
         return activations;
     }
 
-    public NeuralNetwork Clone() => new(_layerSizes, Activation, _weights, _biases);
+    public NeuralNetwork Clone() => new(_layerSizes, Activation, _weights, _biases, _outputActivations);
 
     public double[] FlattenGenome()
     {
@@ -184,7 +192,8 @@ public sealed class NeuralNetwork
         return genome;
     }
 
-    public static NeuralNetwork FromGenome(int[] layers, double[] genome, Activation activation)
+    /// <summary>The network a flat genome describes. <paramref name="outputActivations"/> gives one activation per output (#535); <c>null</c> means tanh for every output.</summary>
+    public static NeuralNetwork FromGenome(int[] layers, double[] genome, Activation activation, IReadOnlyList<Activation>? outputActivations = null)
     {
         ValidateLayerSizes(layers);
         ValidateActivation(activation);
@@ -213,7 +222,7 @@ public sealed class NeuralNetwork
             genomeIndex += biases[layer].Length;
         }
 
-        return new NeuralNetwork(layers, activation, weights, biases);
+        return new NeuralNetwork(layers, activation, weights, biases, outputActivations);
     }
 
     public static int GenomeLength(int[] layers)
@@ -252,6 +261,26 @@ public sealed class NeuralNetwork
     private static double NextUniform(Random random, double minInclusive, double maxExclusive)
     {
         return minInclusive + (random.NextDouble() * (maxExclusive - minInclusive));
+    }
+
+    private static Activation[] OutputActivationsFor(int[] layerSizes, IReadOnlyList<Activation>? outputActivations)
+    {
+        if (outputActivations is null)
+        {
+            return Enumerable.Repeat(Activation.Tanh, layerSizes[^1]).ToArray();
+        }
+
+        if (outputActivations.Count != layerSizes[^1])
+        {
+            throw new ArgumentException("There must be one output activation per output.", nameof(outputActivations));
+        }
+
+        foreach (var activation in outputActivations)
+        {
+            ValidateActivation(activation);
+        }
+
+        return outputActivations.ToArray();
     }
 
     private static void ValidateActivation(Activation activation)

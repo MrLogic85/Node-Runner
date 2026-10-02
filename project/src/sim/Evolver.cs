@@ -1,5 +1,6 @@
 using Godot;
 using NodeRunner.ML;
+using NodeRunner.ML.Brains;
 using NodeRunner.ML.Ga;
 
 namespace NodeRunner.Sim;
@@ -19,6 +20,7 @@ public partial class Evolver : Node
     private readonly List<Creature.Creature> _creatures = [];
     private readonly List<TrialController> _trialControllers = [];
     private int[] _layerSizes = [];
+    private Activation[] _outputActivations = [];
     private int[] _disabledGenes = [];
     private double[][] _genomes = [];
     private double[] _fitness = [];
@@ -135,6 +137,7 @@ public partial class Evolver : Node
         ReleaseSlots();
         _primaryCreature = creature;
         _layerSizes = layerSizes.ToArray();
+        _outputActivations = DirectBrain.OutputActivations(creature.Ports);
         _ga = ga;
         _rng = rng;
         _disabledGenes = disabledGenes?.ToArray() ?? [];
@@ -243,7 +246,7 @@ public partial class Evolver : Node
 
     private void StartCandidate(int slot, int genomeIndex)
     {
-        var brain = NeuralNetwork.FromGenome(_layerSizes, _genomes[genomeIndex], Activation.Tanh);
+        var brain = NeuralNetwork.FromGenome(_layerSizes, _genomes[genomeIndex], Activation.Tanh, _outputActivations);
         _creatures[slot].SetBrain(brain, seed: (Generation * _genomes.Length) + genomeIndex);
         _trialControllers[slot].StartTrial(_creatures[slot]);
     }
