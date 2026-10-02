@@ -13,7 +13,6 @@ namespace NodeRunner.Theme;
 public static class SensorDrawing
 {
     private const float _line = UiSize.Stroke.Signal;
-    private const float _halo = 3;
     private const float _rayDash = 8;
     private const float _hitRadius = 6;
 
@@ -47,8 +46,8 @@ public static class SensorDrawing
     {
         ArgumentNullException.ThrowIfNull(canvas);
         ArgumentNullException.ThrowIfNull(theme);
-        var frame = RoundedRect(Vector2.Zero, _frameHalfWidth, _frameHalfHeight, _frameRadius);
-        DrawShape(canvas, theme, frame, selected ? RoundedRect(Vector2.Zero, _frameHalfWidth + _halo, _frameHalfHeight + _halo, _frameRadius + _halo) : null);
+        var line = LineColor(theme, selected);
+        DrawShape(canvas, theme, RoundedRect(Vector2.Zero, _frameHalfWidth, _frameHalfHeight, _frameRadius), line);
 
         var weight = new Vector2((float)weightOffset.X * _weightTravelX, (float)weightOffset.Y * _weightTravelY);
         var top = new Vector2(0, -_frameHalfHeight);
@@ -61,8 +60,8 @@ public static class SensorDrawing
             spring[i] = top.Lerp(springEnd, t) + new Vector2(side, 0);
         }
 
-        canvas.DrawPolyline(spring, theme.SensorLine, _line * 0.75f, antialiased: true);
-        canvas.DrawCircle(weight, _weightRadius, theme.SensorLine, filled: true, antialiased: true);
+        canvas.DrawPolyline(spring, line, _line * 0.75f, antialiased: true);
+        canvas.DrawCircle(weight, _weightRadius, line, filled: true, antialiased: true);
     }
 
     /// <summary>A camera looking along <paramref name="aim"/>, a unit vector in the picture's frame (the middle of its ray fan).</summary>
@@ -82,12 +81,10 @@ public static class SensorDrawing
                 new Vector2(front, _hoodNarrow),
             ],
             turn);
-        var halo = selected
-            ? Turned(RoundedRect(new Vector2((_bodyBack + front + _hoodLength) / 2, 0), ((front + _hoodLength - _bodyBack) / 2) + _halo, _bodyHalfHeight + _halo, _bodyRadius + _halo), turn)
-            : null;
-        DrawShape(canvas, theme, body, halo);
-        DrawShape(canvas, theme, hood, null);
-        canvas.DrawArc(bodyCentre.Rotated(turn), _lensRadius, 0, Mathf.Tau, 24, theme.SensorLine, _line, antialiased: true);
+        var line = LineColor(theme, selected);
+        DrawShape(canvas, theme, body, line);
+        DrawShape(canvas, theme, hood, line);
+        canvas.DrawArc(bodyCentre.Rotated(turn), _lensRadius, 0, Mathf.Tau, 24, line, _line, antialiased: true);
     }
 
     /// <summary>A selected camera's rays in Build, from <paramref name="origin"/> to each end.</summary>
@@ -123,15 +120,13 @@ public static class SensorDrawing
         }
     }
 
-    private static void DrawShape(CanvasItem canvas, VisualTheme theme, Vector2[] outline, Vector2[]? halo)
-    {
-        if (halo is not null)
-        {
-            canvas.DrawColoredPolygon(halo, theme.SelectionGlow);
-        }
+    // A selected picture is drawn in halo instead of accent, like a selected part in the reference (#624).
+    private static Color LineColor(VisualTheme theme, bool selected) => selected ? theme.SelectionGlow : theme.SensorLine;
 
+    private static void DrawShape(CanvasItem canvas, VisualTheme theme, Vector2[] outline, Color line)
+    {
         canvas.DrawColoredPolygon(outline, theme.SensorFill);
-        canvas.DrawPolyline([.. outline, outline[0]], theme.SensorLine, _line, antialiased: true);
+        canvas.DrawPolyline([.. outline, outline[0]], line, _line, antialiased: true);
     }
 
     private static Vector2[] Turned(Vector2[] points, float angle) => [.. points.Select(point => point.Rotated(angle))];

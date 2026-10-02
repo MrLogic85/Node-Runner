@@ -13,6 +13,12 @@ public sealed class VisualTheme
 
     public static VisualTheme Paper { get; } = FromTheme(UiThemes.Paper);
 
+    // The reference's selected joint ring is 2 wide beside 3-wide beams (#624).
+    private const float _selectionRingPerBeam = 2f / 3;
+
+    // A selected beam's lines run half its width outside its edges (#624).
+    private const float _selectedBeamOffsetPerBeam = 0.5f + 0.5f;
+
     public static VisualTheme FromTheme(Godot.Theme theme) => new()
     {
         ArenaBackground = UiThemes.Color(theme, UiTokens.Color.Background),
@@ -29,6 +35,9 @@ public sealed class VisualTheme
         SensorLine = UiThemes.Color(theme, UiTokens.Color.Accent),
         AreaCorner = UiThemes.Color(theme, UiTokens.Color.Accent),
         BeamWidth = UiSize.Widget.CreatureBeamWidth,
+        SelectionRingWidth = UiSize.Widget.CreatureBeamWidth * _selectionRingPerBeam,
+        SelectedBeamOffset = UiSize.Widget.CreatureBeamWidth * _selectedBeamOffsetPerBeam,
+        SelectedBeamLineWidth = UiSize.Stroke.Signal,
         MotorSignalWidth = UiSize.Stroke.Signal,
         GroundEdgeWidth = UiSize.Stroke.Signal,
         GridSpacing = UiSize.Control.Touch,
@@ -48,6 +57,15 @@ public sealed class VisualTheme
     public bool EffectsEnabled { get; private init; }
 
     public Color SelectionGlow { get; private init; }
+
+    /// <summary>The stroke of a selected joint's ring.</summary>
+    public float SelectionRingWidth { get; private init; }
+
+    /// <summary>How far each of a selected beam's two lines runs from its centre line: half its width plus half again.</summary>
+    public float SelectedBeamOffset { get; private init; }
+
+    /// <summary>The width of each of a selected beam's two lines.</summary>
+    public float SelectedBeamLineWidth { get; private init; }
 
     public Color Beam { get; private init; }
 

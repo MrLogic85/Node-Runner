@@ -32,15 +32,14 @@ public partial class NodeVisual : Node2D
 
     public override void _Draw()
     {
-        if (IsSelected)
-        {
-            DrawCircle(Vector2.Zero, Radius * 1.65f, Theme.SelectionGlow);
-        }
-
         DrawCircle(
             Vector2.Zero,
             Radius * 1.18f,
             UiGlow.FromBase(Theme.GroundEdge, Theme.EffectsEnabled));
         DrawCircle(Vector2.Zero, Radius, Theme.NodeFill);
+        if (IsSelected)
+        {
+            SelectionDrawing.DrawJoint(this, Theme, Transform2D.Identity, Vector2.Zero, Radius * 1.65f);
+        }
     }
 }

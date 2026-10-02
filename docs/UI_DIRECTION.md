@@ -119,8 +119,8 @@ then the app follows the reference.
     zigzag spring from its top to a round weight. The Camera is a camera
     (body, lens ring and hood) at twice that scale, so it reads on a phone
     (#622), that looks along its rays. Neither is
-    a circle, so it never reads as a joint. Selected, the picture gets a
-    `halo` outline. Its tap area is a square turned with the beam, 24 for
+    a circle, so it never reads as a joint. Selected, its lines turn
+    `halo` instead of `accent`. Its tap area is a square turned with the beam, 24 for
     the Accelerometer and 44 for the Camera (`SensorPicture`).
   - *Beams (#593):* a creature's beams are 6 wide in Build and Training
     (thumbnails keep the thin line). A beam must leave 52 free between its
@@ -130,6 +130,12 @@ then the app follows the reference.
     past its joints on the beam's upper side with a leader line to the
     beam's middle (see `c_call` in a figure). The readiness line says "1
     beam too short".
+  - *Selection (#624):* a selected joint gets an unfilled `halo` ring
+    around its disc, 4 wide; a selected beam gets two 2-wide `halo`
+    lines along it, one beam-width out on each side. Both are drawn over
+    the part, in Build and Training (`SelectionDrawing`). They are sized
+    in creature units but drawn at window-pixel resolution (`PixelSpace`),
+    so they stay crisp at any zoom.
   - *Orientation:* the side of the beam that faces up as built is the
     sensor's top, and it then turns with the beam; it never flips during a
     run. The Camera looks along its aim (#594), and a selected Camera

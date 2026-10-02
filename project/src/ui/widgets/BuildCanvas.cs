@@ -308,15 +308,14 @@ public partial class BuildCanvas : Node2D
             var nodeB = NodeById(beam.NodeB);
             var start = ToGodot(nodeA.Position);
             var end = ToGodot(nodeB.Position);
-            if (_viewModel.SingleSelectedBeamId == beam.Id)
-            {
-                DrawLine(start, end, Theme.SelectionGlow, Stroke(Theme.BeamWidth * 2.2f), antialiased: false);
-            }
-
             DrawPlacingFeedback(beam, start, end);
             // A beam too short for training (#593) is drawn in danger until its joints move apart.
             var color = CreatureReadiness.IsTooShort(nodeA, nodeB) ? Theme.Danger : Theme.Beam;
             DrawLine(start, end, color, Stroke(Theme.BeamWidth), antialiased: false);
+            if (_viewModel.SingleSelectedBeamId == beam.Id)
+            {
+                SelectionDrawing.DrawBeam(this, ViewTransform(), Theme.SelectionGlow, Stroke(Theme.SelectedBeamOffset), Stroke(Theme.SelectedBeamLineWidth), start, end);
+            }
         }
 
         DrawTopologyFeedback();
@@ -326,16 +325,15 @@ public partial class BuildCanvas : Node2D
         {
             var node = _viewModel.Nodes[nodeIndex];
             var position = ToGodot(node.Position);
-            if (_viewModel.SelectedNodeIds.Contains(node.Id))
-            {
-                DrawCircle(position, (float)(node.Radius * BuildGestures.SelectedHaloScale), Theme.SelectionGlow);
-            }
-
             DrawCircle(
                 position,
                 (float)node.Radius * 1.18f,
                 UiGlow.FromBase(Theme.GroundEdge, Theme.EffectsEnabled));
             DrawCircle(position, (float)node.Radius, Theme.NodeFill);
+            if (_viewModel.SelectedNodeIds.Contains(node.Id))
+            {
+                SelectionDrawing.DrawJoint(this, Theme, ViewTransform(), position, (float)(node.Radius * BuildGestures.SelectedHaloScale));
+            }
         }
 
         DrawSelectedCameraRays();
@@ -355,8 +353,7 @@ public partial class BuildCanvas : Node2D
     /// </summary>
     private void DrawSensors()
     {
-        var view = _gestures!.View;
-        var viewTransform = new Transform2D(0, Vector2.One * (float)view.Zoom, 0, ToGodot(view.Offset));
+        var viewTransform = ViewTransform();
         foreach (var sensor in _viewModel!.Sensors)
         {
             var beam = _viewModel.Beams[_viewModel.BeamIndexOf(sensor.BeamId)];
@@ -1004,11 +1001,11 @@ public partial class BuildCanvas : Node2D
     }
 
     /// <summary>Draws everything after this in canvas units, zoomed and panned by the view.</summary>
-    private void DrawThroughView()
-    {
-        var view = _gestures!.View;
-        DrawSetTransform(ToGodot(view.Offset), 0, Vector2.One * (float)view.Zoom);
-    }
+    private void DrawThroughView() => DrawSetTransformMatrix(ViewTransform());
+
+    /// <summary>The map from creature units to the canvas: the view's zoom, then its offset.</summary>
+    private Transform2D ViewTransform() =>
+        new(0, Vector2.One * (float)_gestures!.View.Zoom, 0, ToGodot(_gestures.View.Offset));
 
     /// <summary>
     /// The width every line is drawn at (`docs/UI_DIRECTION.md` → Reference
