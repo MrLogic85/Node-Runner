@@ -54,7 +54,6 @@ public sealed class BuildGestures
 
     // The Aim handle's gap past the camera picture; no stem joins them (#622).
     private const double _aimGap = 8;
-    private const double _aimReachCap = 3;
 
     private readonly BuildViewModel _build;
     private readonly Dictionary<int, Vector2D> _pointers = [];
@@ -587,8 +586,8 @@ public sealed class BuildGestures
     }
 
     /// <summary>
-    /// The Aim handle out along the camera's centre ray, past its picture; pushed further
-    /// out, up to <see cref="_aimReachCap"/> times as far, while it would cover a joint's touch area.
+    /// The Aim handle out along the camera's centre ray, just past its picture, so it follows the
+    /// zoom smoothly (#639). It may cover a joint; it only shows while the camera is selected.
     /// </summary>
     private Vector2D AimHandleInView(int camera)
     {
@@ -596,18 +595,8 @@ public sealed class BuildGestures
         var aim = CameraRays.BeamAngle(nodeA, nodeB) + (_build.Sensors.Single(sensor => sensor.Id == camera).Aim ?? 0);
         var middle = View.ToView(Midpoint(nodeA, nodeB));
         var direction = new Vector2D(Math.Cos(aim), Math.Sin(aim));
-        var minimum = (SensorPicture.CameraSize / Math.Sqrt(2) * View.Zoom) + _aimGap + HandleHitRadius;
-        Vector2D At(double reach) => new(middle.X + (direction.X * reach), middle.Y + (direction.Y * reach));
-        bool CoversAJoint(Vector2D handle) => _build.Nodes.Any(node =>
-            Distance(View.ToView(node.Position), handle) < HandleHitRadius + Math.Max(NodeHitRadius, node.Radius * View.Zoom));
-
-        var reach = minimum;
-        while (CoversAJoint(At(reach)) && reach + NodeHitRadius <= minimum * _aimReachCap)
-        {
-            reach += NodeHitRadius;
-        }
-
-        return At(reach);
+        var reach = (SensorPicture.CameraSize / Math.Sqrt(2) * View.Zoom) + _aimGap + HandleHitRadius;
+        return new Vector2D(middle.X + (direction.X * reach), middle.Y + (direction.Y * reach));
     }
 
     private SelectionHandle? FindHandle(Vector2D viewPosition) =>

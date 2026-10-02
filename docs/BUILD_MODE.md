@@ -88,8 +88,9 @@ a node's own disc always hits.
   longer half.
 - **Camera aim (#594, #622):** a selected Camera shows its rays and an Aim
   handle out along its centre ray past its picture, in any tool, with no
-  stem line; the handle moves further out, up to three times as far, while
-  it would cover a joint's touch area. Its Part settings note adds "Drag
+  stem line. It always sits just past the picture, so it follows the zoom
+  smoothly; it may cover a joint, which then can't be tapped there while
+  the camera is selected (#639). Its Part settings note adds "Drag
   the round handle to aim it." Dragging the handle turns the camera
   smoothly to look at the finger (`CameraRays.AimAlong`); the aim is saved
   relative to the beam, so the camera turns with it. The handle is hit before
