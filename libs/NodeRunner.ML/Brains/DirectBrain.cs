@@ -8,7 +8,8 @@ namespace NodeRunner.ML.Brains;
 /// <see cref="NeuralNetwork"/>'s layout for <see cref="LayerSizes"/>: one weight per
 /// (output, input) pair, output by output in port order, then one bias per output. The port order
 /// comes from <see cref="BrainPorts"/>, so compiling never depends on the order of the saved lists.
-/// A port with no neuron or connection yet compiles to 0, so a new part starts silent.
+/// Each output uses its port's activation (<see cref="PortSignals"/>, #535). A new port starts
+/// almost passive: its incoming weights compile to 0 and a new output takes its signal's passive bias.
 /// </summary>
 public static class DirectBrain
 {
@@ -16,6 +17,13 @@ public static class DirectBrain
     {
         ArgumentNullException.ThrowIfNull(ports);
         return [ports.Inputs.Count, ports.Outputs.Count];
+    }
+
+    /// <summary>Each output's activation, in port order, from the signal its port drives.</summary>
+    public static Activation[] OutputActivations(BrainPortLayout ports)
+    {
+        ArgumentNullException.ThrowIfNull(ports);
+        return ports.Outputs.Select(port => ToActivation(PortSignals.Activation(port.Signal))).ToArray();
     }
 
     /// <summary>The genome <paramref name="brain"/> gives this creature's ports. A disabled gene compiles to 0.</summary>
@@ -29,9 +37,16 @@ public static class DirectBrain
         var biasStart = ports.Inputs.Count * ports.Outputs.Count;
         for (var o = 0; o < ports.Outputs.Count; o++)
         {
-            if (graph.Neuron(ports.Outputs[o]) is not { } output)
+            var port = ports.Outputs[o];
+            if (graph.Neuron(port) is not { } output)
             {
+                genome[biasStart + o] = PortSignals.PassiveBias(port.Signal);
                 continue;
+            }
+
+            if (output.Activation != PortSignals.Activation(port.Signal))
+            {
+                throw new NotSupportedException($"Output {port.Channel} drives {port.Signal}, which uses {PortSignals.Activation(port.Signal)}, not {output.Activation}.");
             }
 
             genome[biasStart + o] = output.Bias;
@@ -97,7 +112,7 @@ public static class DirectBrain
             .ToArray();
         var biasStart = ports.Inputs.Count * ports.Outputs.Count;
         var outputs = ports.Outputs
-            .Select((port, o) => new NeuronDef(IdFor(port), NeuronKind.Output, port.PartId, port.Channel, layer: 1, genome[biasStart + o], NeuronActivation.Tanh))
+            .Select((port, o) => new NeuronDef(IdFor(port), NeuronKind.Output, port.PartId, port.Channel, layer: 1, genome[biasStart + o], PortSignals.Activation(port.Signal)))
             .ToArray();
 
         var genes = new List<ConnectionGeneDef>(biasStart);
@@ -115,6 +130,14 @@ public static class DirectBrain
         return new BrainDef([.. inputs, .. outputs], genes, nextId);
     }
 
+    private static Activation ToActivation(NeuronActivation activation) => activation switch
+    {
+        NeuronActivation.Tanh => Activation.Tanh,
+        NeuronActivation.Sigmoid => Activation.Sigmoid,
+        NeuronActivation.Relu => Activation.ReLU,
+        _ => throw new NotSupportedException($"An output cannot use {activation}."),
+    };
+
     private sealed class Graph
     {
         private readonly Dictionary<(NeuronKind, int?, string?), NeuronDef> _neuronByPort = [];
@@ -127,11 +150,6 @@ public static class DirectBrain
                 if (neuron.Kind == NeuronKind.Hidden)
                 {
                     throw new NotSupportedException("A direct brain has no hidden neurons; hidden layers come with the brain graph milestone (#543).");
-                }
-
-                if (neuron.Kind == NeuronKind.Output && neuron.Activation != NeuronActivation.Tanh)
-                {
-                    throw new NotSupportedException($"A direct brain's outputs use tanh, not {neuron.Activation}.");
                 }
 
                 _neuronByPort.Add((neuron.Kind, neuron.PartId, neuron.Channel), neuron);

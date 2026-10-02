@@ -11,15 +11,15 @@ public sealed class BrainPortsTests
 
         layout.Inputs.ShouldBe(
         [
-            new BrainPort(2, "angle:5", PortDirection.Input),
-            new BrainPort(2, "speed:5", PortDirection.Input),
-            new BrainPort(6, "along", PortDirection.Input),
-            new BrainPort(6, "across", PortDirection.Input),
-            new BrainPort(7, "left1", PortDirection.Input),
-            new BrainPort(7, "centre", PortDirection.Input),
-            new BrainPort(7, "right1", PortDirection.Input),
+            BrainPort.Input(2, "angle:5"),
+            BrainPort.Input(2, "speed:5"),
+            BrainPort.Input(6, "along"),
+            BrainPort.Input(6, "across"),
+            BrainPort.Input(7, "left1"),
+            BrainPort.Input(7, "centre"),
+            BrainPort.Input(7, "right1"),
         ]);
-        layout.Outputs.ShouldBe([new BrainPort(2, "target:5", PortDirection.Output)]);
+        layout.Outputs.ShouldBe([BrainPort.Output(2, "target:5", PortSignal.Velocity)]);
     }
 
     [Fact]
@@ -84,7 +84,7 @@ public sealed class BrainPortsTests
 
         after.Inputs.Where(before.Inputs.Contains).ShouldBe(before.Inputs);
         after.Outputs.Where(before.Outputs.Contains).ShouldBe(before.Outputs);
-        after.Outputs.ShouldContain(new BrainPort(3, "target:9", PortDirection.Output));
+        after.Outputs.ShouldContain(BrainPort.Output(3, "target:9", PortSignal.Velocity));
     }
 
     [Fact]

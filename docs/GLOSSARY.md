@@ -72,7 +72,8 @@ Long-form descriptions and the sensor/model contract live in
   relative to each other. Has a position and a small radius. Rendered as a
   circle. See: `docs/CREATURE_MODEL.md`.
 - **Port** — One brain channel a part declares (`BrainPort`): the part's id,
-  a channel key that never changes, and whether it is an input or an output.
+  a channel key that never changes, whether it is an input or an output, and
+  the signal it carries (reading, velocity, position or strength).
   The brain's input and output order comes from the ports (`BrainPorts`).
   See: `docs/CREATURE_MODEL.md`.
 - **Proof mass** — The accelerometer's inner weight; its displacement is the
@@ -80,6 +81,10 @@ Long-form descriptions and the sensor/model contract live in
 - **Sensor (part)** — A part that sits on a beam and feels that beam
   (`SensorDef`, `SensorKind`); one sensor per beam, at its midpoint.
   Not the brain. See: `docs/CREATURE_MODEL.md`.
+- **Strength output / Strength setting** — A powered part's Strength
+  setting, chosen in Build, is its maximum force. Its strength output is the
+  brain's sigmoid choice, 0…1, of how much of that maximum to use this tick.
+  See: `docs/CREATURE_MODEL.md`.
 
 ## Build canvas
 
@@ -95,7 +100,8 @@ Long-form descriptions and the sensor/model contract live in
 ## ML
 
 - **Activation** — The nonlinear function applied element-wise after each
-  linear layer. Options: tanh, ReLU, sigmoid.
+  linear layer. Options: tanh, ReLU, sigmoid. Each brain output uses the one
+  its signal needs: tanh for velocity and position, sigmoid for strength.
 - **Backpropagation (backprop)** — Algorithm that computes gradients of a loss
   with respect to network weights by applying the chain rule from output back
   to input.

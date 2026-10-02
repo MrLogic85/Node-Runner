@@ -231,14 +231,34 @@ shapes (e.g. a bare quadrilateral) with their genuine remaining freedom.
 ## Sensor–model contract
 
 - **Ports (#534):** every part that affects the brain declares its brain
-  channels as ports, `BrainPort(partId, channel, direction)`
+  channels as ports, `BrainPort(partId, channel, direction, signal)`
   (`libs/NodeRunner.Domain/BrainPort.cs`). The channel is a machine key that
-  never changes; display names are separate.
+  never changes; display names are separate. An input carries a reading; an
+  output names the physical signal it drives (#535).
   - **Accelerometer:** inputs `along`, `across`.
   - **Camera:** inputs `left1`, `centre`, `right1`.
   - **Motor relation:** on its joint's node, keyed by the beam it turns:
-    inputs `angle:<beamId>` and `speed:<beamId>`, output `target:<beamId>`.
+    inputs `angle:<beamId>` and `speed:<beamId>`, velocity output
+    `target:<beamId>`.
   - Nodes, beams and passive ends declare none.
+- **Output conventions (#535, `PortSignals`):** the signal fixes the
+  output's activation and how a new output starts.
+  - **Velocity** (the joint motor's target) and **position** use `tanh`:
+    −1…1, where 0 means stand still or the built pose.
+  - A position target maps piecewise, so 0 stays the built pose even when
+    the built pose is off-centre: −1…0 spans fully in…built and 0…1 spans
+    built…fully out (`PortSignals.PositionFromTarget`). For the Piston (#451)
+    −1 is fully in and +1 fully out.
+  - **Strength** uses `sigmoid`: 0…1, the share of the part's **Strength
+    setting** used this tick. The setting is the part's maximum force, chosen
+    in Build; the strength output is the brain's choice of how much of it to
+    use (`PortSignals.StrengthFromOutput`).
+  - **New ports start almost passive:** when a part joins a trained brain,
+    its incoming weights are 0 and a new strength output starts at bias −4,
+    about 2% force. Sigmoid has no dead zone, so mutation can still raise it.
+    Position and velocity outputs start at 0. The joint motor has no
+    strength output, so a new one holds its joint still rather than going
+    limp; motor parts with strength outputs replace it (#450, #452).
 - **Input count** = `(accelerometer count × 2) + (camera count × 3) +
   (motor relation count × 2)`.
 - **Output count** = motor relation count.

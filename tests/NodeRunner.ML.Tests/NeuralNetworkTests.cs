@@ -34,7 +34,7 @@ public sealed class NeuralNetworkTests
     }
 
     [Fact]
-    public void Forward_AlwaysUsesTanhOutput_ForMuscleTargets()
+    public void Forward_WithoutOutputActivations_UsesTanhOutputs()
     {
         var network = NeuralNetwork.FromGenome(
             new[] { 1, 1 },
@@ -45,6 +45,25 @@ public sealed class NeuralNetworkTests
 
         output[0].ShouldBeInRange(-1, 1);
         output[0].ShouldBe(Math.Tanh(100), tolerance: 0.000000000001);
+    }
+
+    [Fact]
+    public void Forward_UsesEachOutputsOwnActivation()
+    {
+        var network = NeuralNetwork.FromGenome([1, 2], [1.0, 1.0, 0.0, -4.0], Activation.Tanh, [Activation.Tanh, Activation.Sigmoid]);
+
+        var output = network.Forward([0.5]);
+
+        output[0].ShouldBe(Math.Tanh(0.5), tolerance: 1e-12);
+        output[1].ShouldBe(1 / (1 + Math.Exp(3.5)), tolerance: 1e-12);
+        network.CaptureActivations([0.5])[1].ShouldBe(output);
+        network.Clone().OutputActivations.ShouldBe([Activation.Tanh, Activation.Sigmoid]);
+    }
+
+    [Fact]
+    public void FromGenome_WithTheWrongNumberOfOutputActivations_Throws()
+    {
+        Should.Throw<ArgumentException>(() => NeuralNetwork.FromGenome([1, 2], [1.0, 1.0, 0.0, 0.0], Activation.Tanh, [Activation.Sigmoid]));
     }
 
     [Fact]

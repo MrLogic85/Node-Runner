@@ -47,17 +47,17 @@ public static class BrainPorts
             SensorKind.Camera => CameraRays.ChannelKeys,
             _ => throw new InvalidOperationException($"Unknown sensor kind {sensor.Kind}."),
         };
-        return channels.Select(channel => new BrainPort(sensor.Id, channel, PortDirection.Input));
+        return channels.Select(channel => BrainPort.Input(sensor.Id, channel));
     }
 
     /// <summary>A joint motor's input ports, angle then speed, for the motor at node <paramref name="nodeId"/> turning beam <paramref name="beamId"/>.</summary>
     public static IEnumerable<BrainPort> JointMotorInputs(int nodeId, int beamId) =>
     [
-        new(nodeId, JointMotor.AngleChannel(beamId), PortDirection.Input),
-        new(nodeId, JointMotor.SpeedChannel(beamId), PortDirection.Input),
+        BrainPort.Input(nodeId, JointMotor.AngleChannel(beamId)),
+        BrainPort.Input(nodeId, JointMotor.SpeedChannel(beamId)),
     ];
 
-    /// <summary>A joint motor's target output port.</summary>
+    /// <summary>A joint motor's velocity target output port.</summary>
     public static BrainPort JointMotorOutput(int nodeId, int beamId) =>
-        new(nodeId, JointMotor.TargetChannel(beamId), PortDirection.Output);
+        BrainPort.Output(nodeId, JointMotor.TargetChannel(beamId), PortSignal.Velocity);
 }
