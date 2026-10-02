@@ -58,8 +58,9 @@ Then check the whole tracker:
 ```
 
 It flags missing labels and fields, a Size on a parent, a **Blocked**
-issue without an open blocked-by issue, and a **Ready** or **In progress**
-issue that still has one.
+issue without an open blocked-by issue, a **Ready** or **In progress**
+issue that still has one, and a parent that breaks
+`docs/ISSUE_REVIEW.md` → "Parent issues".
 
 ## Type labels
 
@@ -152,12 +153,6 @@ between them.
 - **In progress** — Work has started but is not complete. Set it when you
   start.
 - **Done** — Closed. Set automatically when the issue closes.
-
-A **parent** issue is not reviewed or implemented itself; its sub-issues are
-(owner, 2026-10-01). Its Status follows them: **In progress** once any
-sub-issue has started or closed, **Ready** once every open sub-issue is
-shaped (Ready or Blocked), and until then the status of its least-shaped
-sub-issue (Idea, Needs design, Needs decision or Needs review).
 
 ## Optional labels
 

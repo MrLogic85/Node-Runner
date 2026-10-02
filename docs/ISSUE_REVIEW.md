@@ -20,9 +20,6 @@ implementation when it is:
 - Likely to need manual testing
 - In Status **Needs review** or **Needs decision**
 
-Parent issues are not reviewed; review their sub-issues (see
-`docs/ISSUE_LABELS.md` → Status).
-
 **Idea** issues are not actionable and are not reviewed or implemented yet.
 Shape them first through discussion; once the issue states one clear outcome
 and acceptance criteria, set Status to **Needs review**.
@@ -41,6 +38,20 @@ that were missed.
 
 Size set before review is a first estimate. Review confirms or corrects it; an
 issue with Size 8 is split into sub-issues before it can become **Ready**.
+
+### Parent issues
+
+A parent issue (one with sub-issues) only tracks them; it is not reviewed or
+implemented itself (owner, 2026-10-01). Its Status follows its sub-issues:
+
+- **In progress** once any sub-issue is In progress or closed.
+- Otherwise **Ready** once every open sub-issue is Ready or Blocked.
+- Until then, the least-shaped status among its open sub-issues: Idea, then
+  Needs design, Needs decision and Needs review.
+
+A parent has no blocked-by issues of its own. Record each wait on the
+sub-issues that wait; when a blocked issue is split, move its blockers to the
+new sub-issues.
 
 ## How to run issue review
 
