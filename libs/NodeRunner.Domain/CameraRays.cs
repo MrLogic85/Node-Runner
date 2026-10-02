@@ -4,8 +4,8 @@ namespace NodeRunner.Domain;
 /// The camera's pure math (#575, #604, #594): three rays from its beam's midpoint, fanned
 /// <see cref="Spread"/> apart around the camera's aim. The aim is an angle relative to its beam's
 /// direction (from its first node to its second), so the camera turns with the beam. A placed
-/// camera aims at the world's forward-down as built (<see cref="DefaultAim"/>), which makes its
-/// rays look forward, forward-down and down. Rays are named symmetrically around the centre ray,
+/// camera looks level, at the world's forward as built (<see cref="DefaultAim"/>, #622), which
+/// makes its rays look forward-up, forward and forward-down. Rays are named symmetrically around the centre ray,
 /// seen from the camera looking along them, and run left to right. Each ray reads how near the
 /// ground is: 0 when nothing is in range, rising linearly to 1 at contact. Stateless and shared
 /// by the sim, Build and the sensor picture, like <see cref="Accelerometer"/>. See
@@ -20,33 +20,24 @@ public static class CameraRays
     /// <summary>The angle between neighbouring rays: 45°, so the fan spans 90°.</summary>
     public const double Spread = Math.PI / 4;
 
-    /// <summary>The steps a camera turns in, in the world, while its handle is dragged in Build: 15°.</summary>
-    public const double AimStep = Math.PI / 12;
-
-    // Forward-down in the world: y grows downward and forward is +x.
-    private const double _forwardDown = Math.PI / 4;
-
     public static IReadOnlyList<string> RayNames { get; } = ["left 1", "centre", "right 1"];
 
     /// <summary>The beam's direction in the world, from <paramref name="nodeA"/> to <paramref name="nodeB"/>; 0 for a beam of no length.</summary>
     public static double BeamAngle(Vector2D nodeA, Vector2D nodeB) =>
         nodeA == nodeB ? 0 : Math.Atan2(nodeB.Y - nodeA.Y, nodeB.X - nodeA.X);
 
-    /// <summary>The aim that looks at the world's forward-down on the beam from <paramref name="nodeA"/> to <paramref name="nodeB"/>.</summary>
-    public static double DefaultAim(Vector2D nodeA, Vector2D nodeB) => Wrap(_forwardDown - BeamAngle(nodeA, nodeB));
+    /// <summary>The aim that looks level, at the world's forward (+x), on the beam from <paramref name="nodeA"/> to <paramref name="nodeB"/>.</summary>
+    public static double DefaultAim(Vector2D nodeA, Vector2D nodeB) => AimAlong(0, nodeA, nodeB);
 
-    /// <summary>
-    /// The aim that looks along <paramref name="worldAngle"/>, snapped to <see cref="AimStep"/> in
-    /// the world, on the beam from <paramref name="nodeA"/> to <paramref name="nodeB"/>.
-    /// </summary>
-    public static double SnappedAim(double worldAngle, Vector2D nodeA, Vector2D nodeB)
+    /// <summary>The aim that looks along <paramref name="worldAngle"/> on the beam from <paramref name="nodeA"/> to <paramref name="nodeB"/>.</summary>
+    public static double AimAlong(double worldAngle, Vector2D nodeA, Vector2D nodeB)
     {
         if (!double.IsFinite(worldAngle))
         {
             throw new ArgumentOutOfRangeException(nameof(worldAngle), "World angle must be finite.");
         }
 
-        return Wrap((Math.Round(worldAngle / AimStep) * AimStep) - BeamAngle(nodeA, nodeB));
+        return Wrap(worldAngle - BeamAngle(nodeA, nodeB));
     }
 
     /// <summary>

@@ -888,9 +888,9 @@ public class BuildGesturesTests
 
         var handle = gestures.SelectionHandles.ShouldHaveSingleItem();
         handle.Handle.ShouldBe(SelectionHandle.Aim);
-        var reach = (SensorPicture.Size / Math.Sqrt(2)) + 32 + BuildGestures.HandleHitRadius;
-        handle.Position.X.ShouldBe(150 + (reach * Math.Sqrt(0.5)), 1e-9);
-        handle.Position.Y.ShouldBe(reach * Math.Sqrt(0.5), 1e-9);
+        var reach = (SensorPicture.CameraSize / Math.Sqrt(2)) + 8 + BuildGestures.HandleHitRadius;
+        handle.Position.X.ShouldBe(150 + reach, 1e-9);
+        handle.Position.Y.ShouldBe(0, 1e-9);
     }
 
     [Fact]
@@ -904,7 +904,7 @@ public class BuildGesturesTests
 
         handle.Y.ShouldBe(0, 1e-9);
         (handle.X - 100).ShouldBeGreaterThanOrEqualTo(BuildGestures.HandleHitRadius + BuildGestures.NodeHitRadius);
-        var reach = (SensorPicture.Size / Math.Sqrt(2)) + 32 + BuildGestures.HandleHitRadius;
+        var reach = (SensorPicture.CameraSize / Math.Sqrt(2)) + 8 + BuildGestures.HandleHitRadius;
         (handle.X - 50).ShouldBeLessThanOrEqualTo(3 * reach);
     }
 
@@ -938,7 +938,7 @@ public class BuildGesturesTests
     [InlineData(BuildTool.Joint)]
     [InlineData(BuildTool.Beam)]
     [InlineData(BuildTool.Select)]
-    public void Camera_DraggingTheAimHandle_TurnsItInWorldStepsInAnyTool(BuildTool tool)
+    public void Camera_DraggingTheAimHandle_TurnsItSmoothlyInAnyTool(BuildTool tool)
     {
         var (build, gestures) = BeamWithSensor(100, SensorKind.Camera);
         build.SelectSensor(4);
@@ -949,7 +949,7 @@ public class BuildGesturesTests
         gestures.Drag(new Vector2D(50 + 100, -5));
         gestures.Release(new Vector2D(50 + 100, -5));
 
-        build.Sensors[0].Aim.ShouldBe(0);
+        build.Sensors[0].Aim!.Value.ShouldBe(Math.Atan2(-5, 100), 1e-9);
         build.SingleSelectedSensorId.ShouldBe(4);
         build.Nodes[0].Position.ShouldBe(new Vector2D(0, 0));
         build.Nodes.Count.ShouldBe(2);

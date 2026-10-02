@@ -28,8 +28,8 @@ public sealed class CreatureReadinessTests
     }
 
     [Theory]
-    [InlineData(65.9, false)]
-    [InlineData(66, true)]
+    [InlineData(87.9, false)]
+    [InlineData(88, true)]
     public void Problems_WithABeamShorterThanTheMinimumGap_SaysItIsTooShort(double length, bool fits)
     {
         var creature = new CreatureDef([new NodeDef(1, new Vector2D(0, 0), 18), new NodeDef(2, new Vector2D(0, length), 18)], [new BeamDef(101, 1, 2)], []);
@@ -43,7 +43,7 @@ public sealed class CreatureReadinessTests
     [Fact]
     public void CanTrain_WithSingleBeam_IsFalseBecauseNothingMoves()
     {
-        var creature = new CreatureDef([new NodeDef(1, new Vector2D(0, 0), 1), new NodeDef(2, new Vector2D(40, 0), 1)], [new BeamDef(101, 1, 2)], []);
+        var creature = new CreatureDef([new NodeDef(1, new Vector2D(0, 0), 1), new NodeDef(2, new Vector2D(60, 0), 1)], [new BeamDef(101, 1, 2)], []);
 
         CreatureReadiness.Problems(creature).ShouldBeEmpty();
         CreatureReadiness.CanTrain(creature).ShouldBeFalse();
@@ -53,7 +53,7 @@ public sealed class CreatureReadinessTests
     public void CanTrain_WithAMotorRelation_IsTrue()
     {
         var creature = new CreatureDef(
-            [new NodeDef(1, new Vector2D(0, 0), 1), new NodeDef(2, new Vector2D(40, 0), 1), new NodeDef(3, new Vector2D(80, 10), 1)],
+            [new NodeDef(1, new Vector2D(0, 0), 1), new NodeDef(2, new Vector2D(60, 0), 1), new NodeDef(3, new Vector2D(120, 10), 1)],
             [new BeamDef(101, 1, 2), new BeamDef(102, 2, 3)],
             [new SensorDef(201, 101, SensorKind.Accelerometer)]);
 

@@ -77,8 +77,9 @@ CreatureDef  ──build──▶  physical body  ──sensors──▶  model 
   (collision exceptions are added pairwise), which is what allows car-like,
   closed-loop construction.
 - **Minimum length (#593):** a beam must leave
-  `CreatureReadiness.MinimumBeamGap` (30) free between its two joint discs,
-  room for a sensor. A shorter beam can be drawn and saved, but it blocks
+  `CreatureReadiness.MinimumBeamGap` (52) free between its two joint discs,
+  room for the largest sensor picture, the Camera's, with a 4-unit gap on
+  each side (#622). A shorter beam can be drawn and saved, but it blocks
   training until its joints move apart.
 - **Future ideas (not implemented):** beams breaking on hard impact, joints
   tearing apart under load.
@@ -101,7 +102,8 @@ CreatureDef  ──build──▶  physical body  ──sensors──▶  model 
 - Kinds today: **Accelerometer** (#127) and **Camera** (#575, #604).
 - **Seen and tapped as a picture (#576):** a small picture of the sensor at
   the middle of its beam, upright on the built up side and turned with the
-  beam; its tap area is a square there (`SensorPicture`). The
+  beam; its tap area is a square there, sized per kind (`SensorPicture`:
+  24 for the Accelerometer, 44 for the Camera, #622). The
   Accelerometer's weight hangs on its spring: in Build it swings when the
   beam is moved and settles at rest (`BuildSensorMotion`), in Training it
   follows the live proof mass. The Camera looks along its
@@ -142,14 +144,15 @@ CreatureDef  ──build──▶  physical body  ──sensors──▶  model 
 #### Camera
 
 - **Beginner:** Three rays that tell the brain how near the ground is. A
-  new camera looks straight ahead, ahead-and-down, and straight down; you
-  can turn it in Build. A ray lights up more the closer the ground is.
+  new camera looks level: ahead-and-up, straight ahead and ahead-and-down;
+  you can turn it in Build. A ray lights up more the closer the ground is.
 - **Aim (#594):** `SensorDef.Aim`, the angle of the centre ray from the
   beam's direction (from its first node to its second), in radians. The
   three rays fan `CameraRays.Spread` (45°) apart around it, and the camera
   turns with its beam. A camera placed in Build, or loaded without an aim,
-  gets `CameraRays.DefaultAim`: its centre ray looks forward-down in the
-  world as built, so its rays look forward, forward-down and down. Only a
+  gets `CameraRays.DefaultAim`: its centre ray looks level, forward in the
+  world as built, so its rays look forward-up, forward and forward-down
+  (#622). Only a
   Camera has an aim.
 - **Implementation:** `project/src/creature/CameraSensor.cs` adds three
   `RayCast2D` children at the beam's midpoint, aimed by
@@ -159,8 +162,8 @@ CreatureDef  ──build──▶  physical body  ──sensors──▶  model 
   (220) long. (It is not Godot's `Camera2D`.)
 - **Ray names** are symmetric around the centre ray, seen from the camera
   looking along its rays: **left 1**, **centre**, **right 1** (later also
-  left 2 / right 2). With the default aim, left 1 looks forward, centre
-  forward-down and right 1 down. Every ray count the camera will offer (1, 3 or 5, #578) has
+  left 2 / right 2). With the default aim, left 1 looks forward-up, centre
+  forward and right 1 forward-down. Every ray count the camera will offer (1, 3 or 5, #578) has
   a centre ray, so the names of the inner rays survive a rebuild with
   another count.
 - **Reading:** three brain inputs, left to right: the ray's **nearness**,

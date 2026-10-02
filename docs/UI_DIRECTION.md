@@ -116,14 +116,15 @@ then the app follows the reference.
   - *On a beam (#576):* a sensor is drawn as a picture of itself, not as a
     badge with a glyph, at the beam's midpoint, in panel fill with 2 px
     `accent` lines. The Accelerometer is a 16 × 22 rounded frame with a
-    zigzag spring from its top to a round weight. The Camera is a small
-    camera (body, lens ring and hood) that looks along its rays. Neither is
+    zigzag spring from its top to a round weight. The Camera is a camera
+    (body, lens ring and hood) at twice that scale, so it reads on a phone
+    (#622), that looks along its rays. Neither is
     a circle, so it never reads as a joint. Selected, the picture gets a
-    `halo` outline. Its tap area is a 24 square turned with the beam
-    (`SensorPicture`).
+    `halo` outline. Its tap area is a square turned with the beam, 24 for
+    the Accelerometer and 44 for the Camera (`SensorPicture`).
   - *Beams (#593):* a creature's beams are 6 wide in Build and Training
-    (thumbnails keep the thin line). A beam must leave 30 free between its
-    joint discs, room for a sensor with a gap on each side; a shorter beam
+    (thumbnails keep the thin line). A beam must leave 52 free between its
+    joint discs, room for the Camera with a gap on each side; a shorter beam
     can still be drawn, is drawn in `danger`, and blocks training. Its
     canvas note is a `danger` callout "Too short", out
     past its joints on the beam's upper side with a leader line to the
@@ -133,8 +134,8 @@ then the app follows the reference.
     sensor's top, and it then turns with the beam; it never flips during a
     run. The Camera looks along its aim (#594), and a selected Camera
     draws its rays from the midpoint plus an Aim handle (the rotate
-    handle's glyph) on a hairline stem out along its centre ray, like the
-    Select rotate handle. Its drag snaps to 15° in the world.
+    handle's glyph) out along its centre ray past the picture, with no
+    stem (#622). Its drag turns the camera smoothly, with no snap.
   - *Order:* joints, then sensors, then beams, for both tapping and drawing.
     A sensor's tap area is its picture. Dragging a sensor in Move does
     nothing, and a Joint-tool tap on a sensor does not split the beam.

@@ -3,19 +3,19 @@ namespace NodeRunner.Domain.Tests;
 public sealed class CameraRaysTests
 {
     [Fact]
-    public void DefaultAim_OnLevelBeam_LooksForwardForwardDownAndDownFromLeftToRight()
+    public void DefaultAim_OnLevelBeam_LooksForwardUpForwardAndForwardDownFromLeftToRight()
     {
         var aim = CameraRays.DefaultAim(new Vector2D(0, 0), new Vector2D(10, 0));
         var left = CameraRays.LocalRayTarget(0, aim);
         var centre = CameraRays.LocalRayTarget(1, aim);
         var right = CameraRays.LocalRayTarget(2, aim);
 
-        left.X.ShouldBe(CameraRays.RayLength, 1e-9);
-        left.Y.ShouldBe(0, 1e-9);
-        centre.X.ShouldBe(CameraRays.RayLength * Math.Sqrt(0.5), 1e-9);
-        centre.Y.ShouldBe(CameraRays.RayLength * Math.Sqrt(0.5), 1e-9);
-        right.X.ShouldBe(0, 1e-9);
-        right.Y.ShouldBe(CameraRays.RayLength, 1e-9);
+        left.X.ShouldBe(CameraRays.RayLength * Math.Sqrt(0.5), 1e-9);
+        left.Y.ShouldBe(-CameraRays.RayLength * Math.Sqrt(0.5), 1e-9);
+        centre.X.ShouldBe(CameraRays.RayLength, 1e-9);
+        centre.Y.ShouldBe(0, 1e-9);
+        right.X.ShouldBe(CameraRays.RayLength * Math.Sqrt(0.5), 1e-9);
+        right.Y.ShouldBe(CameraRays.RayLength * Math.Sqrt(0.5), 1e-9);
     }
 
     [Theory]
@@ -23,12 +23,12 @@ public sealed class CameraRaysTests
     [InlineData(-5, -9)]
     [InlineData(-10, 0)]
     [InlineData(0, 10)]
-    public void DefaultAim_OnTurnedBeam_LooksForwardForwardDownAndDownInTheWorld(double dx, double dy)
+    public void DefaultAim_OnTurnedBeam_LooksForwardUpForwardAndForwardDownInTheWorld(double dx, double dy)
     {
         var nodeA = new Vector2D(3, 4);
         var nodeB = new Vector2D(3 + dx, 4 + dy);
         var aim = CameraRays.DefaultAim(nodeA, nodeB);
-        Vector2D[] world = [new(1, 0), new(Math.Sqrt(0.5), Math.Sqrt(0.5)), new(0, 1)];
+        Vector2D[] world = [new(Math.Sqrt(0.5), -Math.Sqrt(0.5)), new(1, 0), new(Math.Sqrt(0.5), Math.Sqrt(0.5))];
 
         for (var ray = 0; ray < CameraRays.RayCount; ray++)
         {
@@ -59,16 +59,22 @@ public sealed class CameraRaysTests
     }
 
     [Theory]
-    [InlineData(0.1, 0, 0)]
-    [InlineData(0.2, 0, Math.PI / 12)]
+    [InlineData(0.1, 0, 0.1)]
+    [InlineData(0.2, 0, 0.2)]
     [InlineData(Math.PI / 2, Math.PI / 2, 0)]
-    [InlineData(3.1, -0.1, -Math.PI + 0.1)]
-    public void SnappedAim_SnapsTheWorldAngleToAimStepsAndIsRelativeToTheBeam(double worldAngle, double beamAngle, double expected)
+    [InlineData(3.1, -0.1, 3.2 - (2 * Math.PI))]
+    public void AimAlong_KeepsTheWorldAngleUnsnappedAndIsRelativeToTheBeam(double worldAngle, double beamAngle, double expected)
     {
         var nodeA = new Vector2D(0, 0);
         var nodeB = new Vector2D(Math.Cos(beamAngle), Math.Sin(beamAngle));
 
-        CameraRays.SnappedAim(worldAngle, nodeA, nodeB).ShouldBe(expected, 1e-9);
+        CameraRays.AimAlong(worldAngle, nodeA, nodeB).ShouldBe(expected, 1e-9);
+    }
+
+    [Fact]
+    public void AimAlong_WithNonFiniteAngle_Throws()
+    {
+        Should.Throw<ArgumentOutOfRangeException>(() => CameraRays.AimAlong(double.NaN, new Vector2D(0, 0), new Vector2D(1, 0)));
     }
 
     [Fact]

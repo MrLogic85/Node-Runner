@@ -300,7 +300,7 @@ public sealed class CreatureBuilderTests
         int? headBeam = null;
         for (var i = 1; i < 5; i++)
         {
-            var next = builder.AddNode(new Vector2D(i * 70, 0), 18);
+            var next = builder.AddNode(new Vector2D(i * 90, 0), 18);
             var beam = builder.AddBeam(previous, next);
             headBeam ??= beam;
             previous = next;
@@ -325,7 +325,7 @@ public sealed class CreatureBuilderTests
     {
         var builder = new CreatureBuilder();
         var a = builder.AddNode(new Vector2D(0, 0), 1);
-        var b = builder.AddNode(new Vector2D(40, 0), 1);
+        var b = builder.AddNode(new Vector2D(60, 0), 1);
         builder.AddBeam(a, b);
         return builder;
     }

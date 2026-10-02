@@ -294,7 +294,7 @@ public sealed class BuildPresentationViewModelTests
     }
 
     private static CreatureDef PairCreature() => new(
-        [new NodeDef(1, new Vector2D(0, 0), 18), new NodeDef(2, new Vector2D(70, 0), 18)],
+        [new NodeDef(1, new Vector2D(0, 0), 18), new NodeDef(2, new Vector2D(90, 0), 18)],
         [new BeamDef(101, 1, 2)],
         [new SensorDef(201, 101, SensorKind.Accelerometer)]);
 
@@ -306,10 +306,10 @@ public sealed class BuildPresentationViewModelTests
         return new CreatureDef(
             [
                 new NodeDef(1, new Vector2D(0, 0), 18),
-                new NodeDef(2, new Vector2D(70, 0), 18),
-                new NodeDef(3, new Vector2D(140, 0), 18),
-                new NodeDef(4, new Vector2D(210, 0), 18),
-                new NodeDef(5, new Vector2D(280, 0), 18),
+                new NodeDef(2, new Vector2D(90, 0), 18),
+                new NodeDef(3, new Vector2D(180, 0), 18),
+                new NodeDef(4, new Vector2D(270, 0), 18),
+                new NodeDef(5, new Vector2D(360, 0), 18),
             ],
             [new BeamDef(101, 1, 2), new BeamDef(102, 2, 3), new BeamDef(103, 3, 4), new BeamDef(104, 4, 5)],
             sensors);
