@@ -72,7 +72,7 @@ public sealed class BuildPresentationViewModelTests
     }
 
     [Fact]
-    public void SelectedCamera_WhenLocked_DoesNotOfferToAimIt()
+    public void SelectedCamera_WhenLocked_StillOffersToAimIt()
     {
         var build = new BuildViewModel();
         build.Load(
@@ -83,7 +83,7 @@ public sealed class BuildPresentationViewModelTests
             moveOnly: true);
         build.SelectSensor(7);
 
-        new BuildPresentationViewModel(build).SinglePart!.Note.ShouldBe("Three rays see how near the ground is.");
+        new BuildPresentationViewModel(build).SinglePart!.Note.ShouldBe($"Three rays see how near the ground is. {BuildPresentationViewModel.AimNote}");
     }
 
     [Fact]

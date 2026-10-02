@@ -33,7 +33,8 @@ locked is overridden in `docs/TRAINING_LOOP.md` → Product lifecycle boundary.
   background, an empty + New creation stays in the list (accepted on #368).
 - A saved creation opens fully editable until it is locked
   (`CreationLock`, see `docs/TRAINING_LOOP.md`). A locked one opens
-  move-only: nodes can move, but no parts or brain shape change.
+  move-only: nodes can move and cameras can be aimed, but no parts or brain
+  shape change. Only what changes the model is locked (#638).
 
 ## Coordinates
 
@@ -93,7 +94,8 @@ a node's own disc always hits.
   smoothly to look at the finger (`CameraRays.AimAlong`); the aim is saved
   relative to the beam, so the camera turns with it. The handle is hit before
   anything under it, a tap on it does nothing, and a second finger puts the
-  aim back (Build has no undo). A locked creation shows no Aim handle.
+  aim back (Build has no undo). A locked creation keeps the Aim handle:
+  aim changes no input or brain shape (#638).
 - There is no Delete tool: the part settings and selection panels delete the
   selection, and deleting a node removes every beam on it and those beams'
   sensors (`CreatureBuilder.RemoveNode`).

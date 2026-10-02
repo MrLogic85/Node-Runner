@@ -801,12 +801,14 @@ public sealed class BuildViewModelTests
     }
 
     [Fact]
-    public void SetCameraAim_WhenLocked_Throws()
+    public void SetCameraAim_WhenLocked_TurnsTheCamera()
     {
         var build = new BuildViewModel();
         build.Load(CameraPair(), moveOnly: true);
 
-        Should.Throw<InvalidOperationException>(() => build.SetCameraAim(4, 1));
+        build.SetCameraAim(4, 1);
+
+        build.Sensors[0].Aim.ShouldBe(1);
     }
 
     private static CreatureDef CameraPair() => new(

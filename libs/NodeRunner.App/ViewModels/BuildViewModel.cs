@@ -133,8 +133,8 @@ public sealed class BuildViewModel : INotifyPropertyChanged
 
     public int? SingleSelectedSensorId => SelectedPartCount == 1 ? _selectedSensorId : null;
 
-    /// <summary>The Camera whose aim can be turned now (#594): the single selection, unless the Creation is locked.</summary>
-    public int? AimableCameraId => !_moveOnly && SingleSelectedSensorId is { } sensorId
+    /// <summary>The Camera whose aim can be turned now (#594): the single selection, even on a locked Creation, since aim does not change the model (#638).</summary>
+    public int? AimableCameraId => SingleSelectedSensorId is { } sensorId
         && _builder.Sensors[_builder.SensorIndexOf(sensorId)].Kind == SensorKind.Camera
             ? sensorId
             : null;
@@ -407,11 +407,6 @@ public sealed class BuildViewModel : INotifyPropertyChanged
     /// <summary>Turns a Camera to <paramref name="aim"/>, relative to its beam (see <see cref="SensorDef.Aim"/>).</summary>
     public void SetCameraAim(int sensorId, double aim)
     {
-        if (_moveOnly)
-        {
-            throw new InvalidOperationException("Edit mode can only move existing nodes.");
-        }
-
         if (!double.IsFinite(aim))
         {
             throw new ArgumentOutOfRangeException(nameof(aim), "Aim must be finite.");
