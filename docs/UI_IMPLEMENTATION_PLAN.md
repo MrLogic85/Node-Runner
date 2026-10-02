@@ -68,7 +68,7 @@ behavior.
 Implement the persistence and navigation lifecycle in #229, where the lock
 only prevents mistakes and unlocking keeps training (#371), and the TrainSetup
 and Training contracts with shadows in the arena. The brain (views and editing)
-stays hidden until 0.16.0 (#539).
+stays hidden until 0.16.0 (#536).
 
 ## Later scenes
 

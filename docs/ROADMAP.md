@@ -39,9 +39,8 @@ Rules that hold across the phases:
 - A part sits on what it senses or moves: a part on one body sits on that
   beam (sensors), a part between two beams sits on a joint (motors, brake,
   wheel), and a part between two nodes is a link (spring, piston, wing).
-- From 0.13.0 until 0.16.0 the brain is direct (inputs straight to outputs,
-  #536), fitness is distance only, and the brain cannot be seen or edited
-  (#539).
+- From 0.13.0 until 0.16.0 the brain is direct (inputs straight to outputs)
+  and cannot be seen or edited (#536), and fitness is distance only.
 - From 0.13.0 a rebuild keeps the brain. Parts declare ports; kept ports keep
   their weights and new parts join almost passive. The lock only prevents
   accidental changes; unlocking does not reset training.
@@ -75,7 +74,8 @@ rebuild, and keep training.
 - One save format defined before fields are added (#553).
 - Parts declare ports with the input convention "0 = as built" (#534).
   Outputs are position (tanh, 0 = built pose) and strength (sigmoid) (#535).
-- A direct brain keyed by port ids, stored as a connection-gene graph (#536).
+- A direct brain keyed by port ids, stored as a connection-gene graph; the
+  brain (views and editing) is hidden until 0.16.0 (#536).
 - Fixed start height and generation 0 (#537).
 - Autosave after every generation; resuming continues from the saved elites
   (#538).
@@ -83,7 +83,6 @@ rebuild, and keep training.
   without reset (#371).
 - One map, distance-only fitness, and shadows in the Training arena (#137).
 - Basic sound design and the first sounds (#378, #285).
-- The brain (views and editing) hidden until 0.16.0 (#539).
 
 **ML concepts introduced:** A direct policy (observation → action with no
 hidden layer); training resumes instead of restarting; a changed body keeps
