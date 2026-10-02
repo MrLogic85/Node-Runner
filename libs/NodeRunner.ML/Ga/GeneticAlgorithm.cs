@@ -126,6 +126,44 @@ public sealed class GeneticAlgorithm
         return nextGeneration;
     }
 
+    /// <summary>
+    /// The generation that follows saved <paramref name="elites"/> (warm start, #538): the elites
+    /// open it unchanged, as <see cref="NextGeneration"/> would carry them over, and the rest are
+    /// children of two elites picked at random, crossed and mutated. The elites are the only
+    /// parents, so a resumed run continues from them rather than starting over.
+    /// </summary>
+    public double[][] FromElites(IReadOnlyList<double[]> elites, int size, Random random)
+    {
+        ArgumentNullException.ThrowIfNull(elites);
+        ArgumentNullException.ThrowIfNull(random);
+        ArgumentOutOfRangeException.ThrowIfLessThan(size, 1);
+        if (elites.Count == 0)
+        {
+            throw new ArgumentException("There must be at least one elite.", nameof(elites));
+        }
+
+        if (elites.Any(elite => elite.Length != elites[0].Length))
+        {
+            throw new ArgumentException("All genomes must have the same length.", nameof(elites));
+        }
+
+        var generation = new double[size][];
+        for (var slot = 0; slot < size; slot++)
+        {
+            if (slot < elites.Count)
+            {
+                generation[slot] = elites[slot].ToArray();
+                continue;
+            }
+
+            var child = Crossover(elites[random.Next(elites.Count)], elites[random.Next(elites.Count)], random);
+            Mutate(child, random);
+            generation[slot] = child;
+        }
+
+        return generation;
+    }
+
     private double[] TournamentSelect(double[][] genomes, double[] fitness, Random random)
     {
         var bestIndex = random.Next(genomes.Length);

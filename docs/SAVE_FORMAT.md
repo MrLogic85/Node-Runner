@@ -83,7 +83,7 @@ Schema: [`save-schema/creation.schema.json`](save-schema/creation.schema.json).
 
 | Field | Type | Meaning |
 |---|---|---|
-| `brain` | object | The best brain found so far, as a graph; see below. |
+| `brain` | object | The best brain found so far, as a graph; see below. It is the distance elite: reopening Training breeds the next generation from it (warm start, #538). |
 | `generation` | int | Finished generations. |
 | `bestFitness` | double | The GA's score for `brain`. |
 | `bestRun` | `{ distance, topSpeed, elevation, mapId }` | What the best run measured; the Creations card shows it (`docs/TRAINING_LOOP.md`). |
@@ -111,7 +111,7 @@ longer has are dropped on the next save.
 |---|---|
 | `revision`: bumped on every saved rebuild | #541 |
 | Per-part `locked` flag | #371 |
-| `training.state`: map-loop position, mutation strength, the elites of every fitness function | #538, #540, #317 |
+| `training.state`: map-loop position, the elites of other fitness functions | #540, #317 |
 | `training.settings`: Shadows, checked maps, fitness functions | #528, #540, #317 |
 | `training.best`: best result per map, replacing `bestRun` | #540 |
 | `created`, `updated` | Added with the first feature that shows them. |

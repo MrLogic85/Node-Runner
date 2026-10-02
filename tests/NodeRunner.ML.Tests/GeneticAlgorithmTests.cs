@@ -212,4 +212,60 @@ public sealed class GeneticAlgorithmTests
         genomes[0].ShouldBe(original[0]);
         genomes[1].ShouldBe(original[1]);
     }
+
+    [Fact]
+    public void FromElites_OpensWithTheElitesUnchanged()
+    {
+        double[][] elites = [[1, 2, 3], [4, 5, 6]];
+
+        var generation = new GeneticAlgorithm(3, 0.5, 1).FromElites(elites, 8, new Random(1));
+
+        generation.Length.ShouldBe(8);
+        generation[0].ShouldBe(elites[0]);
+        generation[1].ShouldBe(elites[1]);
+        generation[0].ShouldNotBeSameAs(elites[0]);
+    }
+
+    [Fact]
+    public void FromElites_FillsTheRestWithMutatedChildrenOfTheElites()
+    {
+        double[] elite = [1, 2, 3, 4, 5, 6];
+
+        var generation = new GeneticAlgorithm(3, 0.5, 1).FromElites([elite], 8, new Random(2));
+
+        foreach (var child in generation[1..])
+        {
+            child.ShouldNotBe(elite);
+            // With one parent, crossover gives the elite back, so every gene mutation leaves is the elite's.
+            child.Where((gene, i) => gene == elite[i]).Count().ShouldBeGreaterThan(0);
+        }
+    }
+
+    [Fact]
+    public void FromElites_WithoutMutation_OnlyRecombinesEliteGenes()
+    {
+        double[][] elites = [[0, 0, 0, 0], [1, 1, 1, 1]];
+
+        var generation = new GeneticAlgorithm(3, 0, 0).FromElites(elites, 16, new Random(3));
+
+        generation.SelectMany(genome => genome).ShouldAllBe(gene => gene == 0 || gene == 1);
+    }
+
+    [Fact]
+    public void FromElites_IsDeterministicForASeed()
+    {
+        var ga = new GeneticAlgorithm(3, 0.3, 0.5);
+
+        ga.FromElites([[1, 2, 3]], 6, new Random(4)).ShouldBe(ga.FromElites([[1, 2, 3]], 6, new Random(4)));
+    }
+
+    [Fact]
+    public void FromElites_RejectsNoElitesOrMismatchedLengths()
+    {
+        var ga = new GeneticAlgorithm(3, 0.1, 0.1);
+
+        Should.Throw<ArgumentException>(() => ga.FromElites([], 4, new Random(5)));
+        Should.Throw<ArgumentException>(() => ga.FromElites([[1, 2], [1]], 4, new Random(5)));
+        Should.Throw<ArgumentOutOfRangeException>(() => ga.FromElites([[1, 2]], 0, new Random(5)));
+    }
 }
