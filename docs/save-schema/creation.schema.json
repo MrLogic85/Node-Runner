@@ -1,0 +1,226 @@
+{
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "name": {
+      "type": "string"
+    },
+    "creature": {
+      "type": "object",
+      "properties": {
+        "nodes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer"
+              },
+              "position": {
+                "type": "object",
+                "properties": {
+                  "x": {
+                    "type": "number"
+                  },
+                  "y": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "x",
+                  "y"
+                ],
+                "additionalProperties": false
+              },
+              "radius": {
+                "type": "number"
+              },
+              "name": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "default": null
+              }
+            },
+            "required": [
+              "id",
+              "position",
+              "radius"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "beams": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer"
+              },
+              "nodeA": {
+                "type": "integer"
+              },
+              "nodeB": {
+                "type": "integer"
+              },
+              "name": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "default": null
+              }
+            },
+            "required": [
+              "id",
+              "nodeA",
+              "nodeB"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "sensors": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer"
+              },
+              "beamId": {
+                "type": "integer"
+              },
+              "kind": {
+                "enum": [
+                  "accelerometer",
+                  "camera"
+                ]
+              },
+              "name": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "default": null
+              },
+              "aim": {
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "default": null
+              }
+            },
+            "required": [
+              "id",
+              "beamId",
+              "kind"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "nextPartId": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "nodes",
+        "beams",
+        "sensors",
+        "nextPartId"
+      ],
+      "additionalProperties": false
+    },
+    "brainShape": {
+      "type": "object",
+      "properties": {
+        "hiddenLayers": {
+          "type": "integer"
+        },
+        "neuronsPerLayer": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "hiddenLayers",
+        "neuronsPerLayer"
+      ],
+      "additionalProperties": false
+    },
+    "training": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "properties": {
+        "layerSizes": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
+        },
+        "bestGenome": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        },
+        "generation": {
+          "type": "integer"
+        },
+        "activation": {
+          "type": "string"
+        },
+        "bestFitness": {
+          "type": "number"
+        },
+        "bestRun": {
+          "type": "object",
+          "properties": {
+            "distance": {
+              "type": "number"
+            },
+            "topSpeed": {
+              "type": "number"
+            },
+            "elevation": {
+              "type": "number"
+            },
+            "mapId": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "distance",
+            "topSpeed",
+            "elevation",
+            "mapId"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "layerSizes",
+        "bestGenome",
+        "generation",
+        "activation",
+        "bestFitness",
+        "bestRun"
+      ],
+      "additionalProperties": false,
+      "default": null
+    }
+  },
+  "required": [
+    "id",
+    "name",
+    "creature",
+    "brainShape"
+  ],
+  "additionalProperties": false
+}

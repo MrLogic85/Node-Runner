@@ -23,7 +23,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="Repositories\Golden\*.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="Repositories\SaveExamples\*.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\docs\save-schema\*.json" Link="SaveSchema\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,0 +1,13 @@
+{
+  "type": "object",
+  "properties": {
+    "defaultCreationsSeeded": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "required": [
+    "defaultCreationsSeeded"
+  ],
+  "additionalProperties": false
+}

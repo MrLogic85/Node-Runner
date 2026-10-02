@@ -1,18 +1,19 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Text.Json.Schema;
 using NodeRunner.App.Repositories;
 using NodeRunner.Domain;
 
 namespace NodeRunner.App.Tests.Repositories;
 
 /// <summary>
-/// Guards docs/SAVE_FORMAT.md. A failing golden test means the saved shape changed: update the doc
-/// and the golden file in the same change (the test writes the new shape next to the golden file
-/// in the test output folder).
+/// Guards docs/SAVE_FORMAT.md. A failing schema test means the saved shape changed: update the doc
+/// and docs/save-schema/ in the same change (the test writes the new schema to the test output
+/// folder). The example file checks that a real file loads.
 /// </summary>
 public sealed class SaveFormatTests : IDisposable
 {
-    private static readonly Guid _goldenId = Guid.Parse("0f3c6a52-7d1e-4b8a-9c2f-5e6d7a8b9c0d");
+    private static readonly Guid _exampleId = Guid.Parse("0f3c6a52-7d1e-4b8a-9c2f-5e6d7a8b9c0d");
 
     private readonly string _directory = Path.Combine(Path.GetTempPath(), $"node-runner-save-format-{Guid.NewGuid():N}");
 
@@ -24,51 +25,43 @@ public sealed class SaveFormatTests : IDisposable
         }
     }
 
-    [Fact]
-    public void CreationFile_MatchesTheGoldenFile()
+    [Theory]
+    [InlineData(typeof(CreationDef), "creation.schema.json")]
+    [InlineData(typeof(ProgressionDef), "progression.schema.json")]
+    public void Schema_MatchesTheCommittedSchema(Type type, string name)
     {
-        new FileCreationRepository(new Location(_directory)).Save(GoldenCreation());
+        var generated = JsonSchemaExporter
+            .GetJsonSchemaAsNode(SaveJson.Options, type, new JsonSchemaExporterOptions { TreatNullObliviousAsNonNullable = true })
+            .ToJsonString(SaveJson.Options);
+        var committedPath = Path.Combine(AppContext.BaseDirectory, "SaveSchema", name);
+        if (Normalize(generated) == Normalize(File.ReadAllText(committedPath)))
+        {
+            return;
+        }
 
-        ShouldMatchGolden(File.ReadAllText(CreationPath(_goldenId)), "creation.json");
+        var actualPath = $"{committedPath}.actual";
+        File.WriteAllText(actualPath, generated + "\n");
+        Assert.Fail($"The saved shape behind {name} changed. Update docs/SAVE_FORMAT.md and docs/save-schema/{name} (new schema: {actualPath}).");
     }
 
     [Fact]
-    public void CreationFile_GoldenLoadsAndSavesUnchanged()
+    public void Example_Loads()
     {
-        Directory.CreateDirectory(Path.GetDirectoryName(CreationPath(_goldenId))!);
-        File.WriteAllText(CreationPath(_goldenId), Golden("creation.json"));
-        var repository = new FileCreationRepository(new Location(_directory));
+        Directory.CreateDirectory(Path.GetDirectoryName(CreationPath(_exampleId))!);
+        File.WriteAllText(CreationPath(_exampleId), Example());
 
-        var loaded = repository.Get(_goldenId);
+        var loaded = new FileCreationRepository(new Location(_directory)).Get(_exampleId);
+
         loaded.ShouldNotBeNull();
-        repository.Save(loaded);
-
-        Normalize(File.ReadAllText(CreationPath(_goldenId))).ShouldBe(Normalize(Golden("creation.json")));
-    }
-
-    [Fact]
-    public void ProgressionFile_MatchesTheGoldenFile()
-    {
-        new FileProgressionRepository(new Location(_directory)).Save(new ProgressionDef(DefaultCreationsSeeded: true));
-
-        ShouldMatchGolden(File.ReadAllText(Path.Combine(_directory, "progression.json")), "progression.json");
-    }
-
-    [Fact]
-    public void ProgressionFile_GoldenLoads()
-    {
-        Directory.CreateDirectory(_directory);
-        File.WriteAllText(Path.Combine(_directory, "progression.json"), Golden("progression.json"));
-
-        new FileProgressionRepository(new Location(_directory)).Load().ShouldBe(new ProgressionDef(DefaultCreationsSeeded: true));
+        SaveJson.Serialize(loaded).ShouldBe(SaveJson.Serialize(ExampleCreation()));
     }
 
     [Theory]
-    [InlineData("\"name\": \"Golden\",", "\"name\": \"Golden\", \"isLocked\": true,", "isLocked")]
+    [InlineData("\"name\": \"Example\",", "\"name\": \"Example\", \"isLocked\": true,", "isLocked")]
     [InlineData("\"radius\": 1,", "\"radius\": 1, \"mass\": 2,", "mass")]
     public void Loading_WithAnUnknownField_FailsAndNamesIt(string field, string withExtra, string extra)
     {
-        var json = Golden("creation.json");
+        var json = Example();
         json.ShouldContain(field);
 
         var error = Should.Throw<JsonException>(() => SaveJson.Deserialize<CreationDef>(ReplaceFirst(json, field, withExtra), "creation.json"));
@@ -76,31 +69,58 @@ public sealed class SaveFormatTests : IDisposable
         error.Message.ShouldContain(extra);
     }
 
-    [Fact]
-    public void Loading_WithoutABrainShape_FailsAndNamesIt()
+    [Theory]
+    [InlineData("kind")]
+    [InlineData("generation")]
+    [InlineData("bestFitness")]
+    [InlineData("nextPartId")]
+    [InlineData("x")]
+    public void Loading_WithARequiredFieldMissing_FailsAndNamesIt(string field)
     {
-        var json = JsonNode.Parse(Golden("creation.json"))!.AsObject();
-        json["brainShape"] = null;
+        var json = JsonNode.Parse(Example())!;
+        RemoveFirst(json, field).ShouldBeTrue();
 
-        Should.Throw<ArgumentNullException>(() => SaveJson.Deserialize<CreationDef>(json.ToJsonString(), "creation.json"))
-            .ParamName.ShouldBe("brainShape");
+        var error = Should.Throw<JsonException>(() => SaveJson.Deserialize<CreationDef>(json.ToJsonString(), "creation.json"));
+
+        error.Message.ShouldContain(field);
     }
 
     [Fact]
-    public void Loading_WithoutABestRun_FailsAndNamesIt()
+    public void Loading_WithNullBrainShape_FailsAndNamesIt()
     {
-        var json = JsonNode.Parse(Golden("creation.json"))!.AsObject();
+        var json = JsonNode.Parse(Example())!.AsObject();
+        json["brainShape"] = null;
+
+        Should.Throw<JsonException>(() => SaveJson.Deserialize<CreationDef>(json.ToJsonString(), "creation.json"))
+            .Message.ShouldContain("brainShape");
+    }
+
+    [Fact]
+    public void Loading_WithNullBestRun_FailsAndNamesIt()
+    {
+        var json = JsonNode.Parse(Example())!.AsObject();
         json["training"]!["bestRun"] = null;
 
-        Should.Throw<ArgumentNullException>(() => SaveJson.Deserialize<CreationDef>(json.ToJsonString(), "creation.json"))
-            .ParamName.ShouldBe("bestRun");
+        Should.Throw<JsonException>(() => SaveJson.Deserialize<CreationDef>(json.ToJsonString(), "creation.json"))
+            .Message.ShouldContain("bestRun");
+    }
+
+    [Fact]
+    public void List_SkipsAFileWithANullPart()
+    {
+        var json = JsonNode.Parse(Example())!;
+        json["creature"]!["nodes"]!.AsArray().Add(null);
+        Directory.CreateDirectory(Path.GetDirectoryName(CreationPath(_exampleId))!);
+        File.WriteAllText(CreationPath(_exampleId), json.ToJsonString());
+
+        new FileCreationRepository(new Location(_directory)).List().ShouldBeEmpty();
     }
 
     [Fact]
     public void Repository_KeepsEachCreationInItsOwnFolder()
     {
         var repository = new FileCreationRepository(new Location(_directory));
-        var creation = GoldenCreation();
+        var creation = ExampleCreation();
 
         repository.Save(creation);
         File.Exists(CreationPath(creation.Id)).ShouldBeTrue();
@@ -110,10 +130,10 @@ public sealed class SaveFormatTests : IDisposable
         Directory.EnumerateFileSystemEntries(_directory).ShouldBeEmpty();
     }
 
-    private static CreationDef GoldenCreation() =>
+    private static CreationDef ExampleCreation() =>
         new(
-            _goldenId,
-            "Golden",
+            _exampleId,
+            "Example",
             new CreatureDef(
                 [new NodeDef(1, new Vector2D(0, 0), 1, "Hip"), new NodeDef(2, new Vector2D(2, 0.5), 1), new NodeDef(3, new Vector2D(4, 0), 1)],
                 [new BeamDef(4, 1, 2, "Thigh"), new BeamDef(5, 2, 3)],
@@ -122,20 +142,16 @@ public sealed class SaveFormatTests : IDisposable
             new BrainShapeDef(1, 2),
             new TrainingStateDef([2, 2, 1], [0.5, -0.25, 0.125, 1, -1, 0.75, 0.25, -0.5, 0], 12, "Tanh", 3.5, new TrainingRunDef(3.5, 1.25, 0.5, MapIds.Flat)));
 
-    private static void ShouldMatchGolden(string actual, string name)
+    private static string Example() =>
+        File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Repositories", "SaveExamples", "creation.json"));
+
+    private static bool RemoveFirst(JsonNode? node, string field) => node switch
     {
-        if (Normalize(actual) == Normalize(Golden(name)))
-        {
-            return;
-        }
-
-        var actualPath = Path.Combine(AppContext.BaseDirectory, "Repositories", "Golden", $"{name}.actual");
-        File.WriteAllText(actualPath, actual);
-        Assert.Fail($"The saved shape of {name} changed. Update docs/SAVE_FORMAT.md and tests/NodeRunner.App.Tests/Repositories/Golden/{name} (new shape: {actualPath}).");
-    }
-
-    private static string Golden(string name) =>
-        File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Repositories", "Golden", name));
+        JsonObject obj when obj.Remove(field) => true,
+        JsonObject obj => obj.Any(property => RemoveFirst(property.Value, field)),
+        JsonArray array => array.Any(item => RemoveFirst(item, field)),
+        _ => false,
+    };
 
     private static string Normalize(string json) => json.ReplaceLineEndings("\n").TrimEnd();
 
