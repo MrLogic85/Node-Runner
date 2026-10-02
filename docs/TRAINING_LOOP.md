@@ -68,6 +68,16 @@ transition to keep in step with it.
     point and the ground top, counted once the creature has landed
     (clearance at most `TrialMeasurement.LandedClearance`), so the starting
     drop doesn't count; a crawler scores 0.
+  - `IsValid` — false when physics blew up (#650): a sample was NaN or
+    infinite, or the centre or lowest point moved further in one tick than
+    `TrialMeasurement.MaxPlausibleSpeed` (10 000 units/s) allows. Motors
+    turn at most 6 rad/s and the Worm moves under 200 units/s, so only a
+    blow-up gets near the limit. Once invalid, the trial stops measuring.
+  - `Fitness` — what the GA scores: `Distance`, or negative infinity for an
+    invalid trial so it ranks below every valid one. `Evolver` logs each
+    invalid trial with its generation and candidate. Invalid results never
+    become `BestRun`, never count toward `MeanFitness`, and must never be
+    shown as real results (for example in Stats, #541).
 - `Evolver.BestRun` is the `TrialResult` of the best genome so far.
   `TrainingHost` persists it as `TrainingStateDef.BestRun` (`TrainingRunDef`, with
   `MapId` `flat` until more maps exist) so the Creations card can show it.
@@ -110,8 +120,8 @@ transition to keep in step with it.
 - `GeneticAlgorithm` (`libs/NodeRunner.ML/Ga/GeneticAlgorithm.cs`) is pure,
   Godot-agnostic math over flat genome vectors (`double[]`, see
   `NeuralNetwork.FlattenGenome`/`FromGenome`). `NextGeneration(genomes,
-  fitness, random)` keeps the fittest `elitismCount` genomes unchanged,
-  then fills the rest via tournament selection, the configured crossover
+  fitness, random)` keeps the fittest `elitismCount` genomes unchanged
+  (only genomes with a finite fitness can be elites), then fills the rest via tournament selection, the configured crossover
   strategy (Uniform or Blend), and per-gene Gaussian mutation (Box-Muller).
   Fully unit-tested
   (`tests/NodeRunner.ML.Tests/GeneticAlgorithmTests.cs`), including
@@ -123,7 +133,7 @@ transition to keep in step with it.
   generation is complete, then `GeneticAlgorithm.NextGeneration` starts the
   next generation automatically. `Evolver` tracks `Generation`,
   `BestFitness` (running best across all generations), and `MeanFitness`
-  (current generation's average), and raises
+  (current generation's average over valid trials, 0 if none were valid), and raises
   `GenerationCompleted`/`NewBestFound`, which the Training scene (see
   "The Training scene" below) subscribes to.
   - Concurrency is capped at 16 and never exceeds population size. Layer 1 is

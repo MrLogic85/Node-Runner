@@ -239,8 +239,13 @@ public partial class Evolver : Node
             return;
         }
 
-        _fitness[genomeIndex] = result.Distance;
+        _fitness[genomeIndex] = result.Fitness;
         _results[genomeIndex] = result;
+        if (!result.IsValid)
+        {
+            GD.Print($"Generation {Generation}, candidate {genomeIndex}: invalid trial (physics blew up), scored worst.");
+        }
+
         _schedule.Complete(slot);
 
         if (_schedule.IsComplete)
@@ -270,7 +275,8 @@ public partial class Evolver : Node
         }
 
         BestFitness = Math.Max(BestFitness, generationBest);
-        MeanFitness = _fitness.Average();
+        var validFitness = _fitness.Where(double.IsFinite).ToArray();
+        MeanFitness = validFitness.Length > 0 ? validFitness.Average() : 0;
         Generation++;
 
         _genomes = _ga!.NextGeneration(_genomes, _fitness, _rng!);
