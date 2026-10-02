@@ -12,12 +12,16 @@ public readonly record struct TrialResult(double Distance, double TopSpeed, doub
 /// and then settles or wobbles back before the trial ends.</item>
 /// <item><see cref="TrialResult.TopSpeed"/>: the highest forward speed of the centre, averaged
 /// over a sliding window so a single physics spike does not count.</item>
-/// <item><see cref="TrialResult.Elevation"/>: the largest ground clearance. A crawler scores 0.</item>
+/// <item><see cref="TrialResult.Elevation"/>: the largest ground clearance once the creature has
+/// landed, so the drop it starts every trial with doesn't count. A crawler scores 0.</item>
 /// </list>
 /// </summary>
 public sealed class TrialMeasurement
 {
     public const double SpeedWindowSeconds = 0.5;
+
+    /// <summary>A clearance at or below this counts as touching the ground, in creature units.</summary>
+    public const double LandedClearance = 0.5;
 
     private readonly double[] _window;
     private readonly double _windowSeconds;
@@ -27,6 +31,7 @@ public sealed class TrialMeasurement
     private double _distance;
     private double _topSpeed;
     private double _elevation;
+    private bool _landed;
 
     public TrialMeasurement(int ticksPerSecond)
     {
@@ -45,6 +50,7 @@ public sealed class TrialMeasurement
         _distance = 0;
         _topSpeed = 0;
         _elevation = 0;
+        _landed = false;
         _next = 0;
         _count = 0;
         Push(startX);
@@ -57,7 +63,11 @@ public sealed class TrialMeasurement
     {
         if (double.IsFinite(groundClearance))
         {
-            _elevation = Math.Max(_elevation, groundClearance);
+            _landed |= groundClearance <= LandedClearance;
+            if (_landed)
+            {
+                _elevation = Math.Max(_elevation, groundClearance);
+            }
         }
 
         if (!double.IsFinite(centerX))

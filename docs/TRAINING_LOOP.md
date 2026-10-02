@@ -65,7 +65,9 @@ transition to keep in step with it.
   - `TopSpeed` — the highest forward speed of the centre, averaged over a
     sliding half-second window so one-tick physics jolts do not dominate.
   - `Elevation` — the largest gap between the creature's lowest collision
-    point and the ground top; a crawler scores 0.
+    point and the ground top, counted once the creature has landed
+    (clearance at most `TrialMeasurement.LandedClearance`), so the starting
+    drop doesn't count; a crawler scores 0.
 - `Evolver.BestRun` is the `TrialResult` of the best genome so far.
   `TrainingHost` persists it as `TrainingStateDef.BestRun` (`TrainingRunDef`, with
   `MapId` `flat` until more maps exist) so the Creations card can show it.
@@ -73,12 +75,14 @@ transition to keep in step with it.
   times a fixed-duration trial (`TrialDurationTicks`, default 600 ≈ 10s at
   60Hz) for one `Creature` instance at a time. It does **not** own creature
   creation/destruction or brain assignment — callers are responsible for
-  that. `StartTrial(creature)` calls `Creature.ResetPose(GroundTopY)` (teleports
+  that. `StartTrial(creature)` calls `Creature.ResetPose` (teleports
   every node and beam body back to its built shape and rotation, zeroes velocity,
-  and shifts the whole creature so its lowest point just touches the
-  ground — no drop from spawn height that would count as elevation) and
+  and shifts the whole creature so its lowest point is
+  `TrialController.StartClearance`, 6 creature units, above the ground) and
   resets the `TrialMeasurement` from the creature's current
-  `CenterOfMass.X`. Each tick it records `CenterOfMass.X` and the clearance
+  `CenterOfMass.X`. Every trial, in every parallel slot, starts from this
+  same small drop (#649). The fall counts as trial time; distance is
+  measured from the start X, so the drop doesn't change fitness. Each tick it records `CenterOfMass.X` and the clearance
   `GroundTopY - Creature.LowestPointY`. `TrialCompleted` fires once the
   tick budget is spent, with the final `TrialResult`.
 - `Creature.CenterOfMass` is the average `GlobalPosition` of all beam
