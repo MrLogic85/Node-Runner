@@ -20,6 +20,9 @@ implementation when it is:
 - Likely to need manual testing
 - In Status **Needs review** or **Needs decision**
 
+Parent issues are not reviewed; review their sub-issues (see
+`docs/ISSUE_LABELS.md` → Status).
+
 **Idea** issues are not actionable and are not reviewed or implemented yet.
 Shape them first through discussion; once the issue states one clear outcome
 and acceptance criteria, set Status to **Needs review**.

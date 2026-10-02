@@ -153,6 +153,12 @@ between them.
   start.
 - **Done** — Closed. Set automatically when the issue closes.
 
+A **parent** issue is not reviewed or implemented itself; its sub-issues are
+(owner, 2026-10-01). Its Status follows them: **In progress** once any
+sub-issue has started or closed, **Ready** once every open sub-issue is
+shaped (Ready or Blocked), and until then the status of its least-shaped
+sub-issue (Idea, Needs design, Needs decision or Needs review).
+
 ## Optional labels
 
 Use sparingly:
