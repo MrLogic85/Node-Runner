@@ -72,6 +72,7 @@ screen, and every part keeps its id across edits and saves.
 rebuild, and keep training.
 
 - One save format, defined before fields are added.
+- A fixed start height and a defined generation 0.
 - Parts declare brain ports; a direct brain keyed by port ids, stored as a
   connection-gene graph.
 - Autosave after every generation; resuming continues from the saved elites.
@@ -91,8 +92,8 @@ and training continues. Adding a part keeps the skill the creature already had.
 
 **Goal:** Enough parts to find out what is worth unlocking and when.
 
-- Motors, passive parts and sensors, with their settings. Power and the Wing
-  come in 0.18.0.
+- Motors, passive parts and sensors, with their settings, and placing parts
+  on joints. Power and the Wing come in 0.18.0.
 - Pulse, a rhythm part whose tempo is itself an output.
 - Shadows (population size) saved per Creation, with phone calibration.
 - A good start creature, and a play-test spike on part unlocks.
@@ -159,7 +160,8 @@ episode that can end early shape what the brain learns.
 training.
 
 - Achievements: model, screen, progress during training, and toasts.
-- Part counts and achievement locks, and locked examples, one per part.
+- Part counts and achievement locks, and locked examples, one per part; a
+  Piston start example replaces Worm.
 - Checkpoints when training stops and on demand, and restore. Restoring
   rewinds the training history.
 

@@ -30,7 +30,7 @@ records it.
 
 ## Review and verification gates
 
-Every visible UI issue in this plan requires:
+Every visible UI change requires:
 
 - `design-lead` Visual & UX review per `CODEREVIEW.md`;
 - live app access on Android phone first, configured emulator fallback, or
