@@ -383,7 +383,8 @@ public partial class Creature : Node2D
                 Width = Theme.BeamWidth,
                 Color = Theme.Beam,
                 SelectionColor = Theme.SelectionGlow,
-                SelectionWidth = Theme.BeamWidth,
+                SelectionOffset = Theme.SelectedBeamOffset,
+                SelectionLineWidth = Theme.SelectedBeamLineWidth,
             };
             body.AddChild(visual);
             _beamVisuals[i] = visual;

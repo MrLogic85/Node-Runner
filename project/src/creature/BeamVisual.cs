@@ -1,4 +1,5 @@
 using Godot;
+using NodeRunner.Theme;
 
 namespace NodeRunner.Creature;
 
@@ -19,7 +20,10 @@ public partial class BeamVisual : Node2D
 
     public Color SelectionColor { get; set; }
 
-    public float SelectionWidth { get; set; }
+    /// <summary>How far each selection line runs from the beam's centre line.</summary>
+    public float SelectionOffset { get; set; }
+
+    public float SelectionLineWidth { get; set; }
 
     public bool IsSelected
     {
@@ -41,11 +45,10 @@ public partial class BeamVisual : Node2D
         var start = new Vector2(-HalfLength, 0);
         var end = new Vector2(HalfLength, 0);
 
+        DrawLine(start, end, Color, Width, antialiased: false);
         if (IsSelected)
         {
-            DrawLine(start, end, SelectionColor, Width + SelectionWidth, antialiased: false);
+            SelectionDrawing.DrawBeam(this, Transform2D.Identity, SelectionColor, SelectionOffset, SelectionLineWidth, start, end);
         }
-
-        DrawLine(start, end, Color, Width, antialiased: false);
     }
 }

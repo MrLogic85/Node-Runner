@@ -1,0 +1,27 @@
+using Godot;
+
+namespace NodeRunner.Theme;
+
+/// <summary>
+/// Draws antialiased shapes crisp at any zoom (#624). Godot feathers an antialiased edge by about
+/// one unit of the space the points are given in, so under a zoomed transform the feather grows
+/// and the edge blurs. Points mapped to the window's pixels keep a one-pixel feather.
+/// </summary>
+public static class PixelSpace
+{
+    /// <summary>
+    /// Switches <paramref name="canvas"/> to drawing in window pixels and returns the map from its
+    /// <paramref name="drawTransform"/> space to them. Call <see cref="CanvasItem.DrawSetTransformMatrix"/>
+    /// with <paramref name="drawTransform"/> afterwards to go back.
+    /// </summary>
+    public static Transform2D Enter(CanvasItem canvas, Transform2D drawTransform)
+    {
+        ArgumentNullException.ThrowIfNull(canvas);
+        var itemToPixels = canvas.GetViewport().GetFinalTransform() * canvas.GetGlobalTransformWithCanvas();
+        canvas.DrawSetTransformMatrix(itemToPixels.AffineInverse());
+        return itemToPixels * drawTransform;
+    }
+
+    /// <summary>How many window pixels one unit of the mapped space is.</summary>
+    public static float ScaleOf(Transform2D toPixels) => toPixels.BasisXform(Vector2.Right).Length();
+}
