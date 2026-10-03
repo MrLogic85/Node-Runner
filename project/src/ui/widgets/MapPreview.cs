@@ -6,7 +6,8 @@ namespace NodeRunner.Ui.Widgets;
 /// <summary>
 /// A small picture of a map's ground, as on a Train setup map card (#194): one line on the arena's
 /// background, the reference's map pictures. Its top corners round to the card's, because it sits
-/// at the top of a flush card. The shapes are drawn here until maps have ground data of their own (#443).
+/// at the top of a flush card. The shapes are drawn here until Hills and Stairs have ground in the map
+/// model (#445, #446).
 /// </summary>
 [Tool]
 [GlobalClass]

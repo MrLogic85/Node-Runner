@@ -221,6 +221,7 @@ public abstract record MapGround { public abstract double HeightAt(double x); } 
 public static class Maps            // every map by id; 0.13 has only Flat ("map-flat")
 {
     public static MapDef Flat { get; }
+    public static MapDef Default { get; } // Flat until map choice (#540)
     public static MapDef Get(string id);
 }
 ```

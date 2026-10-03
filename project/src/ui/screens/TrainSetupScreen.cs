@@ -76,6 +76,7 @@ public partial class TrainSetupScreen : Control
 
         GetNode<UiLabel>("%Title").Text = _presentation.Title;
         GetNode<UiLabel>("%Subtitle").Text = _presentation.Subtitle;
+        GetNode<UiLabel>("%MapName").Text = _presentation.MapName;
         Bind(GetNode<UiSlider>("%Shadows"), _presentation.Shadows, _presentation.ShadowsEnds);
         Bind(GetNode<UiSlider>("%RunLength"), _presentation.RunLength, _presentation.RunLengthEnds);
     }

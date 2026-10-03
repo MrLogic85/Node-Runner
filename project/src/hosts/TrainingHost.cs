@@ -18,8 +18,8 @@ namespace NodeRunner.Hosts;
 
 /// <summary>
 /// The Training scene: trains one saved creation (#469) on the Training screen (#386). The scene
-/// authors the screen and the world in its arena: camera, background, ground and ruler. This root
-/// adds the creature and the <see cref="Evolver"/> to that world, points the camera and the ruler at
+/// authors the screen and the world in its arena: camera, background, ground line and ruler. This
+/// root builds the map's ground along that line, adds the creature and the <see cref="Evolver"/> to that world, points the camera and the ruler at
 /// it, resumes from the creation's last finished
 /// generation and saves every finished generation, so leaving drops only the one in progress. Run
 /// on its own (F6) it trains the built-in worm without saving.
@@ -35,8 +35,8 @@ public partial class TrainingHost : Node, IRoutedScene
 
 
     private readonly VisualTheme _theme = VisualTheme.Neon;
-    // The map Training runs on and records; Train setup offers only Flat until map choice (#540).
-    private readonly MapDef _map = Maps.Flat;
+    // The map Training runs on and records: the one Train setup selects (#444).
+    private readonly MapDef _map = Maps.Default;
     private readonly SelectionViewModel _selection = new();
     private readonly SignalFlowPresentationViewModel _signalFlow = new();
     private readonly BrainFocusPresentationViewModel _brainFocus = new();
@@ -62,9 +62,10 @@ public partial class TrainingHost : Node, IRoutedScene
 
     private Node2D World => GetNode<Node2D>("%World");
 
-    // The scene's ground is Flat's (#443): an endless ground line through the Ground node (a
-    // WorldBoundaryShape2D), so a creature can never walk off its end. Other grounds come with #540.
-    private float GroundTopY => GetNode<StaticBody2D>("%Ground").GlobalPosition.Y;
+    // The scene places the ground line; the map builds the ground along it (BuildWorld).
+    private ArenaGround Ground => GetNode<ArenaGround>("%Ground");
+
+    private float GroundTopY => Ground.GlobalPosition.Y;
 
     private ArenaRuler Ruler => GetNode<ArenaRuler>("%Ruler");
     private ArenaCamera Camera => GetNode<ArenaCamera>("%Camera");
@@ -84,13 +85,8 @@ public partial class TrainingHost : Node, IRoutedScene
         // creature and the Evolver pin themselves back to Pausable.
         ProcessMode = ProcessModeEnum.Always;
         _selection.PropertyChanged += OnSelectionPropertyChanged;
-        if (_map.Ground is not FlatGround)
-        {
-            throw new NotSupportedException($"The Training scene builds only flat ground, not {_map.Id}'s.");
-        }
-
         var creation = LoadRouteCreation();
-        ApplyWorldTheme();
+        BuildWorld();
         AddCreature(creation);
         AddEvolver();
         BindScreen(creation);
@@ -189,15 +185,12 @@ public partial class TrainingHost : Node, IRoutedScene
         }
     }
 
-    // The world's colours come from the same theme as the creature's.
-    private void ApplyWorldTheme()
+    // The world's colours come from the same theme as the creature's; the ground's shape from the map.
+    private void BuildWorld()
     {
         GetNode<ColorRect>("%ArenaFill").Color = _theme.ArenaBackground;
         Ruler.Theme = _theme;
-        GetNode<Polygon2D>("%GroundFill").Color = _theme.GroundFill;
-        var edge = GetNode<Line2D>("%GroundEdge");
-        edge.DefaultColor = _theme.GroundEdge;
-        edge.Width = _theme.GroundEdgeWidth;
+        Ground.Build(_map.Ground, _theme);
     }
 
     private void AddCreature(CreationDef? creation)

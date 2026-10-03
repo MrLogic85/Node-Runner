@@ -8,6 +8,7 @@ public sealed class MapsTests
         Maps.Flat.Id.ShouldBe("map-flat");
         Maps.Flat.Name.ShouldBe("Flat ground");
         Maps.All.ShouldBe([Maps.Flat]);
+        Maps.Default.ShouldBeSameAs(Maps.Flat);
     }
 
     [Fact]

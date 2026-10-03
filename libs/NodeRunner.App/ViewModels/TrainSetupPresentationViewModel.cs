@@ -6,7 +6,8 @@ namespace NodeRunner.App.ViewModels;
 /// <summary>
 /// Train setup (#194), between Build and Training: the Shadows and Run length sliders, filled from
 /// the Creation's saved values or the default. Start saves <see cref="Settings"/> on the Creation
-/// (#617). Simulate, the map choice and Run until power is out come later (#702, #540, 0.18).
+/// (#617). The selected map card names <see cref="Maps.Default"/> (#444). Simulate, the map choice
+/// and Run until power is out come later (#702, #540, 0.18).
 /// </summary>
 public sealed class TrainSetupPresentationViewModel
 {
@@ -32,6 +33,8 @@ public sealed class TrainSetupPresentationViewModel
     public string Title { get; }
 
     public string Subtitle { get; }
+
+    public string MapName => Maps.Default.Name;
 
     public TrainSettingsDef Settings { get; private set; }
 

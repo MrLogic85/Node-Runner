@@ -187,7 +187,8 @@ layout_mode = 2
 mouse_filter = 2
 theme_override_constants/separation = 4
 
-[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/Map/MapCards/Flat/Content/Body/BodyStack"]
+[node name="MapName" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/Map/MapCards/Flat/Content/Body/BodyStack"]
+unique_name_in_owner = true
 layout_mode = 2
 text = "Flat ground"
 text_overrun_behavior = 3
