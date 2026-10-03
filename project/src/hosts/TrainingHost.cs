@@ -35,6 +35,8 @@ public partial class TrainingHost : Node, IRoutedScene
 
 
     private readonly VisualTheme _theme = VisualTheme.Neon;
+    // The map Training runs on and records; Train setup offers only Flat until map choice (#540).
+    private readonly MapDef _map = Maps.Flat;
     private readonly SelectionViewModel _selection = new();
     private readonly SignalFlowPresentationViewModel _signalFlow = new();
     private readonly BrainFocusPresentationViewModel _brainFocus = new();
@@ -60,8 +62,8 @@ public partial class TrainingHost : Node, IRoutedScene
 
     private Node2D World => GetNode<Node2D>("%World");
 
-    // Every creation trains on flat ground until maps land (#443): an endless ground line through
-    // the Ground node (a WorldBoundaryShape2D), so a creature can never walk off its end.
+    // The scene's ground is Flat's (#443): an endless ground line through the Ground node (a
+    // WorldBoundaryShape2D), so a creature can never walk off its end. Other grounds come with #540.
     private float GroundTopY => GetNode<StaticBody2D>("%Ground").GlobalPosition.Y;
 
     private ArenaRuler Ruler => GetNode<ArenaRuler>("%Ruler");
@@ -82,6 +84,10 @@ public partial class TrainingHost : Node, IRoutedScene
         // creature and the Evolver pin themselves back to Pausable.
         ProcessMode = ProcessModeEnum.Always;
         _selection.PropertyChanged += OnSelectionPropertyChanged;
+        if (_map.Ground is not FlatGround)
+        {
+            throw new NotSupportedException($"The Training scene builds only flat ground, not {_map.Id}'s.");
+        }
 
         var creation = LoadRouteCreation();
         ApplyWorldTheme();
@@ -244,7 +250,7 @@ public partial class TrainingHost : Node, IRoutedScene
     {
         _screen = GetNode<TrainingScreen>("%TrainingScreen");
         _screen.Setup(
-            TrainingHeaderPresentation.For(creation?.Name ?? _sampleCreationName, TrainingRunMode.Train, MapIds.Flat),
+            TrainingHeaderPresentation.For(creation?.Name ?? _sampleCreationName, TrainingRunMode.Train, _map.Id),
             _trainingPresentation,
             _signalFlow,
             _brainFocus);
@@ -288,6 +294,8 @@ public partial class TrainingHost : Node, IRoutedScene
 
         var resume = creation?.Training;
         _saved = resume;
+        // A best ever is per map: one reached on another map is not this map's record to beat.
+        var resumeBest = resume?.Best is { } best && best.MapId == _map.Id ? best : null;
         var disabledGenes = resume is null ? null : DirectBrain.DisabledGenes(resume.Brain, _creature.Ports);
         _brainFocus.Configure(BrainPortLabels.For(definition), disabledGenes ?? []);
         var setup = EvolutionSetup.For(creation?.TrainSettings, Engine.PhysicsTicksPerSecond);
@@ -300,8 +308,8 @@ public partial class TrainingHost : Node, IRoutedScene
             GroundTopY,
             resume is null ? null : DirectBrain.Compile(resume.Brain, _creature.Ports),
             resume?.Generation ?? 0,
-            resume?.Best.Distance ?? double.NegativeInfinity,
-            resume?.Best.Generation ?? 0,
+            resumeBest?.Distance ?? double.NegativeInfinity,
+            resumeBest?.Generation ?? 0,
             setup.TrialTicks,
             CreateCreatureInstance,
             disabledGenes: disabledGenes);
@@ -347,8 +355,7 @@ public partial class TrainingHost : Node, IRoutedScene
         var saves = Saves;
         var epoch = saves.CurrentTrainingEpoch(id);
         var brain = DirectBrain.ToBrainDef(_creature.Ports, genome, _saved?.Brain);
-        // Training runs on flat ground only until maps land (#443).
-        var latest = new TrainingRunDef(run.Distance, run.TopSpeed, run.Elevation, MapIds.Flat);
+        var latest = new TrainingRunDef(run.Distance, run.TopSpeed, run.Elevation, _map.Id);
         var training = TrainingStateDef.Record(_saved, brain, _evolver.Generation, latest);
         _saved = training;
         saves.PersistTrainingInBackground(id, epoch, training).ContinueWith(

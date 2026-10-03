@@ -92,6 +92,8 @@ Schema: [`save-schema/creation.schema.json`](save-schema/creation.schema.json).
 | `latest` | `{ distance, topSpeed, elevation, mapId }` | What `brain`'s run measured in the latest generation. It can go down; the Creations card and Build show it (#479). |
 | `best` | `{ generation, distance, mapId }` | The best ever on that map, from any generation. It never goes down; the Training top bar shows it (#479). |
 
+`mapId` is a map's stable id from `Maps` (#443); Flat is `map-flat`.
+
 Latest and best are explained in `docs/TRAINING_LOOP.md` → "Latest and best
 ever".
 
