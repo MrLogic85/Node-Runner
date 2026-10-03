@@ -158,7 +158,7 @@ reference would mislead someone working on that surface.
   Creations card values and the Build training summary show the latest
   generation's result, which can drop: Build reads "Latest distance
   4.0 m", while the card keeps the reference's plain "12 generations".
-  The Training top bar's "Best" (and later Stats) shows the best ever.
+  The Training arena's best marker (and later Stats) shows the best ever.
   Owner decision.
 - **No Brain setup (#536).** The reference's Brain setup screen (hidden
   layers, neurons per layer) and its **Brain setup** item in the Build
@@ -182,6 +182,11 @@ reference would mislead someone working on that surface.
   - a row is a tap band across its label and dot; tapping anywhere else
     clears the selection;
   - Signal flow leaves out the hidden-layer size header ("64 · 32").
+  - the column headings "SENSES" and "OUTPUTS" (#660) sit over the label
+    columns, flush with the labels' inner edge, instead of centred over the
+    dots, so a large first dot never runs into them. The sheet's margins
+    shrink to 12 (bottom inset 8) to give the card the heading band, so
+    as many rows keep their labels as before.
 - **Shadows are drawn simplified (#385).** The reference draws the leader in
   full and the other shadows faded but fully detailed, at opacity 0.32 and 0.2
   (Training; GenerationStrip). Instead the followed shadow, which need not be
@@ -189,9 +194,18 @@ reference would mislead someone working on that surface.
   drawn simplified (`docs/CREATURE_MODEL.md` → "Drawing as a shadow") in its
   normal colours at one alpha, a new `UiTokens.Alpha` entry `alpha_shadow`
   (start at 0.32, the reference's nearer shadow; tune on device). The leader
-  is marked only in the shadow strip. The reference's camera follows the
+  is not marked anywhere (#387: it flickers). The reference's camera follows the
   leader; here it follows the previous best by default (shadow 1 in
   generation 0) and never switches to the leader by itself. Owner decision.
+- **The shadow strip pages and has a shorter caption (#387).** Past 8
+  shadows the reference shows the best 7, sorted, and a sort button.
+  Instead the strip holds a "worse" chevron, 6 shadows and a sort button,
+  which becomes a "better" chevron on later pages; the order is the
+  shadows' own until the player sorts, since nobody is best when a
+  generation starts (`docs/TRAINING_LOOP.md` → Shadow strip). The caption
+  is only "Generation 37": no time and no "Following shadow 5 · 10.3 m".
+  Only the followed shadow's cell is marked (`accent`); the leader gets no
+  mark, as the lead changes too often and flickers. Owner decisions.
 - **No grid in Training (#668).** The reference draws a faint grid behind
   the Training arena. Instead the arena background is plain: the grid is a
   Build blueprint, not part of the world. Motion shows against the ruler
@@ -208,6 +222,39 @@ reference would mislead someone working on that surface.
   (#400) zoom scales the picture, the ground edge included; the ruler's
   ticks and labels keep their screen size, and labels thin out rather than
   overlap (`docs/TRAINING_LOOP.md` → Ruler). Owner decision.
+- **Best marker reads its distance (#388).** The reference's dashed best
+  marker's flag reads "best". Instead it reads "Best 4.2 m", the best ever
+  on this map, since a zoomed-out ruler labels only every 5 or 10 m. It is
+  drawn behind every creature, keeps its screen size, is hidden until
+  its distance is known, jumps when a generation's front goes past it
+  (#725) and has no
+  off-screen indicator (`docs/TRAINING_LOOP.md` → Best marker). Owner
+  decision.
+- **Distances are shown from the creature's front (#725).** Every distance
+  the player reads (ruler, shadow strip, signal flow, best marker, cards,
+  Build, and later Stats) counts from the creature's front-most part, where
+  it ended, never below 0, so the number matches where its nose stands on
+  the ruler. The score the GA ranks by still follows the centre
+  (`docs/TRAINING_LOOP.md` → Trial). Owner decision.
+- **A tapped part is named in a callout (#388).** The reference rings a
+  tapped part of the leader in `halo` with its name. Instead the followed
+  shadow's part keeps its usual selection look, and its Build name shows
+  in a `halo` callout straight above the whole creature, its leader down
+  to the part, so it never covers the body; the best marker fades to
+  `alpha_shadow` meanwhile, since the name may cover its flag
+  (`docs/TRAINING_LOOP.md` → World view). Owner decision.
+- **Train setup has no profiles and few choices yet (#194, 0.13.0).** The
+  reference's Train setup offers Shadows from 1 and a working Simulate,
+  power checkbox and map row. Instead Shadows starts at 2 (with one, the
+  only shadow is the unchanged best brain, so nothing is learned), and
+  Simulate (#702) and the locked maps are shown but disabled with "comes in
+  a later version", not the reference's Achievements, which the player
+  cannot act on yet. Run until power is out (0.18) is disabled with the
+  reference's "Needs a battery or generator". Locked maps are disabled cards with a lock,
+  not the library's `Locked` card, which means "the only choice". Each map
+  card shows the reference's picture of its ground (`MapPreview`: one line,
+  accent only on the map in use). There is no Quick/Standard/Deep profile: Shadows and Run length are the only training
+  settings, saved per Creation (#617). Owner decision.
 - **No part counts until 0.19.0 (#374, 0.12.0).** The reference limits the
   parts you place and shows counts ("1 left") in the tray and in Build
   feedback (`reference design/README.md`, Build and "Rules that fix the known
@@ -612,7 +659,7 @@ rings, sensor pictures and rays, and callout leaders draw this way. This has bee
 site (`UiNumber`, `UiDashedBorder`, `UiProgressRing`, `UiSlider`,
 `UiSelectionHandle`, `UiButton`, `UiBoundsDebugOverlay`,
 `BrainFocusNetworkView`,
-`BuildCanvas`, `CreatureThumbnail`, `BeamVisual`). Any new `_Draw()` code
+`BuildCanvas`, `CreatureThumbnail`, `MapPreview`, `BeamVisual`). Any new `_Draw()` code
 must follow the same rule; a stray edge without antialiasing reads as a
 sharp 1px line at any stretch factor, while `antialiased: true` reads as a
 blurry, stretch-factor-wide halo.
@@ -723,7 +770,10 @@ use `Kind = Flat` for the canonical flat style.
 `UiSegmentedSwitch` is also available through Add Node with an editor preview.
 Edit `Segments`, `SelectedIndex`, and `MatchWidth` in the Inspector. Each
 `Segments` entry is a `UiSegment` resource: expand it and edit
-`Text` and the `IconId` dropdown (`None` means no icon). Resource edits update
+`Text`, the `IconId` dropdown (`None` means no icon) and `Disabled`, which
+shows a segment that cannot be chosen yet (Simulate in Train setup, #702)
+like a disabled `UiButton`: a dashed outline over a 50% fill and content,
+with the same corners as an enabled segment in that place. Resource edits update
 the preview directly. New or cleared resource slots are automatically populated
 with independent resources (numbered text, `IconId = None`); remove an array
 entry to delete a segment. Generated buttons are internal children recovered
@@ -810,6 +860,13 @@ also reconnect their resize handling when removed and re-added to the tree.
 Slider minimum height ends at the thumb/marker extent or the last visible
 text row, using the same track position as rendering rather than adding
 another track diameter below its centre.
+
+A slider whose value moves in steps sets `UiSlider.Step` (the distance between
+two stops on the 0…1 track, like Godot's `Range.step`), so a dragged thumb
+stops only where the value does (#711). The step comes from the value's
+`SettingRange` through `SettingSlider.Step` or `ParameterSlider.Step`; never
+round the value alone, or the thumb and the readout disagree and the thumb
+jumps while dragged.
 
 Inspector facts and Power share `UiValueRow`: a label on the left and a readout
 on the right, optionally prefixed by a small icon. Power is a value-row

@@ -173,6 +173,7 @@ public partial class BuildScreen : Control
             container.MoveChild(slider, index);
             slider.LabelText = setting.Label;
             slider.ReadoutText = setting.Readout;
+            slider.Step = setting.Step;
             slider.Value = setting.ValuesDiffer
                 ? new UiSliderValue(UiSliderEnd.Marker(setting.Low), UiSliderEnd.Marker(setting.High))
                 : UiSliderValue.Thumb(setting.High);

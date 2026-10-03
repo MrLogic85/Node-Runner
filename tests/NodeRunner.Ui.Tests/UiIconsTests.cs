@@ -20,7 +20,7 @@ public sealed class UiIconsTests
     {
         var projectRoot = Path.Combine(FindRepositoryRoot(), "project");
 
-        UiIcons.AllIds.Count.ShouldBe(63);
+        UiIcons.AllIds.Count.ShouldBe(65);
 
         foreach (var icon in UiIcons.AllIds)
         {

@@ -25,6 +25,10 @@
   generation. Slot 0 reuses the visible creature; additional slots are
   clones drawn as shadows; creature bodies collide only with the ground.
   `Evolver` owns which shadow is followed (`Follow`, `FollowedCreature`).
+- `ArenaGround.cs` — the arena's ground, built from the map's `MapGround`
+  along the scene's ground line: the layer-1 collider, fill and edge.
+  Flat only (Godot's `WorldBoundaryShape2D`); shaped grounds and chunks
+  come with #91.
 - `Population.cs` — not currently needed. `Evolver` owns the fixed-slot
   population lifecycle directly; extract it only if that lifecycle grows
   beyond training orchestration.

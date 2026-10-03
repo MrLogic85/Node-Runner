@@ -59,6 +59,23 @@ public sealed class CreationUpdateCoordinatorTests
     }
 
     [Fact]
+    public void Updates_KeepTheTrainSettings()
+    {
+        var repository = new InMemoryCreationRepository();
+        var coordinator = new CreationUpdateCoordinator(repository);
+        var settings = new TrainSettingsDef(16, 30);
+        var creation = CreateCreation("Alpha", withTraining: true).WithTrainSettings(settings);
+        repository.Save(creation);
+
+        coordinator.TryPersistTraining(creation.Id, coordinator.CurrentTrainingEpoch(creation.Id), TestTraining.State(3, 1, TestTraining.Run));
+        repository.Get(creation.Id)!.TrainSettings.ShouldBe(settings);
+        coordinator.ApplyEdit(creation.Id, creation.Creature);
+        repository.Get(creation.Id)!.TrainSettings.ShouldBe(settings);
+        coordinator.ResetTraining(creation.Id);
+        repository.Get(creation.Id)!.TrainSettings.ShouldBe(settings);
+    }
+
+    [Fact]
     public void ApplyEdit_GeometryOnly_KeepsTheTrainingUnchanged()
     {
         var repository = new InMemoryCreationRepository();

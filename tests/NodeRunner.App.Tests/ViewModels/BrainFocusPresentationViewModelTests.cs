@@ -35,8 +35,8 @@ public sealed class BrainFocusPresentationViewModelTests
         var viewModel = Live();
 
         viewModel.HasNetwork.ShouldBeTrue();
-        viewModel.Summary.ShouldBe("3 inputs → 2 outputs");
-        viewModel.Layers.Select(layer => layer.Title).ShouldBe(["Inputs", "Outputs"]);
+        viewModel.Summary.ShouldBe("3 senses → 2 outputs");
+        viewModel.Layers.Select(layer => layer.Title).ShouldBe(["Senses", "Outputs"]);
         viewModel.Layers[0].Neurons.Select(neuron => neuron.Label).ShouldBe(_labels.Inputs);
         viewModel.Layers[1].Neurons.Select(neuron => neuron.Label).ShouldBe(_labels.Outputs);
         viewModel.Layers[0].Neurons[0].Activation.ShouldBe(0.5);

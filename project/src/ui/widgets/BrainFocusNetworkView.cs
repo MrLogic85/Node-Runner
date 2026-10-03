@@ -5,7 +5,7 @@ using NodeRunner.Ui.Lib;
 namespace NodeRunner.Ui.Widgets;
 
 /// <summary>
-/// Draws the live direct brain: labelled inputs and outputs, weighted connections and the selected neuron.
+/// Draws the live direct brain: labelled inputs and outputs under their column headings, weighted connections and the selected neuron.
 /// With a selection, connections that don't touch it fade and its strongest partners light up. Neurons shrink to fit tall columns; when rows
 /// get too tight for text, only highlighted neurons keep their label.
 /// </summary>
@@ -13,6 +13,9 @@ public partial class BrainFocusNetworkView : Control
 {
     private const float _sideInset = 12f;
     private const float _verticalInset = 10f;
+
+    // Room above the first row for the column headings; the sheet gives the card this much more height.
+    private const float _headingBand = 12f;
     private const float _labelGap = 10f;
     private const float _maxLabelShare = 0.4f;
     private const float _maxRadius = 16f;
@@ -25,6 +28,7 @@ public partial class BrainFocusNetworkView : Control
     private const float _selectedEdgeMinWidth = 1.5f;
     private const float _tapRadius = 24f;
     private const UiTokens.Typography _labelStyle = UiTokens.Typography.Caption;
+    private const UiTokens.Typography _headingStyle = UiTokens.Typography.Overline;
 
     private readonly Dictionary<(int Layer, int Neuron), Vector2> _positions = new();
     private float _radius = _maxRadius;
@@ -90,7 +94,9 @@ public partial class BrainFocusNetworkView : Control
 
         var font = GetThemeFont("font", UiTokens.Variation(_labelStyle));
         var fontSize = UiThemeLookup.FontSize(this, _labelStyle);
-        var labelWidths = LabelColumnWidths(font, fontSize);
+        var headingFont = GetThemeFont("font", UiTokens.Variation(_headingStyle));
+        var headingSize = UiThemeLookup.FontSize(this, _headingStyle);
+        var labelWidths = LabelColumnWidths(font, fontSize, headingFont, headingSize);
         CacheNeuronPositions(labelWidths);
         foreach (var edge in _viewModel.Edges)
         {
@@ -128,27 +134,35 @@ public partial class BrainFocusNetworkView : Control
         }
 
         DrawLabels(font, fontSize, labelWidths);
+        DrawHeadings(headingFont, headingSize, labelWidths);
     }
 
     private void DrawWaitingState() =>
         DrawCircle(Size / 2, 14, UiThemeLookup.Color(this, UiTokens.Color.LineStrong));
 
-    private (float Input, float Output) LabelColumnWidths(Font font, int fontSize)
+    // Each column is as wide as its widest label or its heading, whichever is wider.
+    private (float Input, float Output) LabelColumnWidths(Font font, int fontSize, Font headingFont, int headingSize)
     {
         var layers = _viewModel!.Layers;
         var cap = Size.X * _maxLabelShare;
         return (Widest(layers[0]), layers.Count > 1 ? Widest(layers[^1]) : 0);
 
         float Widest(BrainFocusLayerPresentation layer) =>
-            layer.Neurons.Count == 0
-                ? 0
-                : Math.Min(cap, layer.Neurons.Max(neuron => font.GetStringSize(neuron.Label, fontSize: fontSize).X));
+            layer.Neurons.Count == 0 ? 0 : Math.Min(
+                cap,
+                layer.Neurons
+                    .Select(neuron => font.GetStringSize(neuron.Label, fontSize: fontSize).X)
+                    .Append(headingFont.GetStringSize(Heading(layer), fontSize: headingSize).X)
+                    .Max());
     }
+
+    private static string Heading(BrainFocusLayerPresentation layer) =>
+        UiTokens.IsUppercase(_headingStyle) ? layer.Title.ToUpperInvariant() : layer.Title;
 
     private void CacheNeuronPositions((float Input, float Output) labelWidths)
     {
         var layers = _viewModel!.Layers;
-        var top = _verticalInset;
+        var top = _verticalInset + _headingBand;
         var bottom = Math.Max(top + 1, Size.Y - _verticalInset);
         var tallest = layers.Max(layer => layer.Neurons.Count);
         var spacing = tallest > 1 ? (bottom - top) / (tallest - 1) : bottom - top;
@@ -182,7 +196,7 @@ public partial class BrainFocusNetworkView : Control
             var neurons = layers[layerIndex].Neurons;
             var isInput = layerIndex == 0;
             var width = isInput ? labelWidths.Input : labelWidths.Output;
-            var rowsFit = neurons.Count < 2 || (Size.Y - (2 * _verticalInset)) / (neurons.Count - 1) >= minRowSpacing;
+            var rowsFit = neurons.Count < 2 || (Size.Y - _headingBand - (2 * _verticalInset)) / (neurons.Count - 1) >= minRowSpacing;
             foreach (var neuron in neurons)
             {
                 if (!rowsFit && !neuron.IsHighlighted)
@@ -204,6 +218,35 @@ public partial class BrainFocusNetworkView : Control
                     fontSize,
                     color);
             }
+        }
+    }
+
+    // Each heading sits over its label column, flush with the labels' inner edge like a table header,
+    // so a large first dot never runs into it.
+    private void DrawHeadings(Font font, int fontSize, (float Input, float Output) labelWidths)
+    {
+        var layers = _viewModel!.Layers;
+        var color = UiThemeLookup.Color(this, UiTokens.Color.Muted);
+        for (var layerIndex = 0; layerIndex < layers.Count; layerIndex++)
+        {
+            var layer = layers[layerIndex];
+            if (layer.Neurons.Count == 0)
+            {
+                continue;
+            }
+
+            var isInput = layerIndex == 0;
+            var width = isInput ? labelWidths.Input : labelWidths.Output;
+            var columnX = _positions[(layerIndex, 0)].X;
+            var x = isInput ? columnX - _radius - _labelGap - width : columnX + _radius + _labelGap;
+            DrawString(
+                font,
+                new Vector2(x, font.GetAscent(fontSize)),
+                Heading(layer),
+                isInput ? HorizontalAlignment.Right : HorizontalAlignment.Left,
+                width,
+                fontSize,
+                color);
         }
     }
 
@@ -261,10 +304,17 @@ public partial class BrainFocusNetworkView : Control
         }
     }
 
-    // Each row is a band across its label and dot, so tapping the name works; a tap outside every row clears.
+    // Each row is a band across its label and dot, so tapping the name works; a tap outside every row,
+    // or on the headings, clears.
     private void SelectNearestNeuron(Vector2 position)
     {
         var layers = _viewModel!.Layers;
+        if (position.Y < _headingBand)
+        {
+            _viewModel.ClearSelection();
+            return;
+        }
+
         var column = -1;
         for (var layerIndex = 0; layerIndex < layers.Count && column < 0; layerIndex++)
         {

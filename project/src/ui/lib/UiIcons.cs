@@ -12,7 +12,7 @@ public enum UiIconId
     Scale, Select, Shadow, Sound, Speed, Stop, Trash, Trophy, Unlock, Warn, Close, Eye, PartBattery,
     PartBeam, PartBrake, PartCore, PartFuel, PartGenerator, PartCamera, PartNode, PartPiston,
     PartServo, PartSpring, PartStepper, PartVelocity, PartWheel, PartWing, Distance, TopSpeed, Elevation,
-    MapFlat, MapHills, MapStairs, PartAccelerometer, Parts
+    MapFlat, MapHills, MapStairs, PartAccelerometer, ChevronLeft, Sort, Parts
 }
 
 /// <summary>The only permitted display sizes for canonical icons.</summary>
@@ -178,6 +178,8 @@ public static class UiIcons
         UiIconId.MapHills => Ui("map-hills.svg"),
         UiIconId.MapStairs => Ui("map-stairs.svg"),
         UiIconId.PartAccelerometer => Part("accelerometer.svg"),
+        UiIconId.ChevronLeft => Ui("chev-l.svg"),
+        UiIconId.Sort => Ui("sort.svg"),
         UiIconId.Parts => Ui("parts.svg"),
         _ => throw new ArgumentOutOfRangeException(nameof(icon), icon, "Unknown UI icon."),
     };

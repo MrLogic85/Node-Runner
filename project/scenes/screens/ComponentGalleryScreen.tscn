@@ -13,6 +13,7 @@
 [ext_resource type="Script" uid="uid://s2v37pyy3fn8" path="res://src/ui/lib/UiSelectionHandle.cs" id="10_number"]
 [ext_resource type="Script" uid="uid://bau3bwe6tkv48" path="res://src/ui/lib/UiSlider.cs" id="11_slider"]
 [ext_resource type="Script" uid="uid://blnejovptj7qx" path="res://src/ui/lib/UiProgressRing.cs" id="12_progress_ring"]
+[ext_resource type="Script" uid="uid://dgr5xyvp61q2o" path="res://src/ui/lib/UiBarCell.cs" id="bar_cell"]
 [ext_resource type="Script" uid="uid://byhbh5da7rpk8" path="res://src/ui/lib/UiCard.cs" id="13_card"]
 [ext_resource type="Script" uid="uid://brbdaifjy8lyi" path="res://src/ui/lib/UiMenu.cs" id="14_menu"]
 [ext_resource type="Script" uid="uid://dah3q1p7ikjlm" path="res://src/ui/lib/UiMenuActionItem.cs" id="15_menu_item"]
@@ -60,6 +61,17 @@ IconId = 18
 [sub_resource type="Resource" id="Resource_segmented_elevation"]
 script = ExtResource("5_theme_segment")
 Text = "Short"
+
+[sub_resource type="Resource" id="Resource_segmented_available"]
+script = ExtResource("5_theme_segment")
+Text = "Available"
+IconId = 24
+
+[sub_resource type="Resource" id="Resource_segmented_disabled"]
+script = ExtResource("5_theme_segment")
+Text = "Disabled"
+IconId = 39
+Disabled = true
 
 [node name="ComponentGalleryScreen" type="Control" unique_id=435801070]
 layout_mode = 3
@@ -696,6 +708,11 @@ layout_mode = 2
 script = ExtResource("4_theme_switch")
 Segments = Array[ExtResource("5_theme_segment")]([SubResource("Resource_segmented_distance"), SubResource("Resource_segmented_speed"), SubResource("Resource_segmented_elevation")])
 MatchWidth = false
+
+[node name="DisabledSwitch" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Segmented/Examples"]
+layout_mode = 2
+script = ExtResource("4_theme_switch")
+Segments = Array[ExtResource("5_theme_segment")]([SubResource("Resource_segmented_available"), SubResource("Resource_segmented_disabled")])
 
 [node name="PartsTrayTabs" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content" unique_id=552515420]
 layout_mode = 2
@@ -1524,6 +1541,169 @@ layout_mode = 2
 mouse_filter = 2
 script = ExtResource("12_progress_ring")
 Progress = 1.0
+
+[node name="BarCells" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Heading" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/BarCells"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Title" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/BarCells/Heading"]
+layout_mode = 2
+size_flags_vertical = 8
+text = "Bar cells"
+script = ExtResource("2_cpfof")
+TextStyle = 12
+
+[node name="Description" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/BarCells/Heading"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 8
+text = "a row of tappable bars, one selected in accent; icon cells sort or page"
+autowrap_mode = 3
+script = ExtResource("2_cpfof")
+TextStyle = 9
+TextColor = 8
+
+[node name="Selected" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/BarCells"]
+layout_mode = 2
+size_flags_horizontal = 0
+theme_override_constants/separation = 4
+
+[node name="Cell1" type="BaseButton" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/BarCells/Selected"]
+layout_mode = 2
+script = ExtResource("bar_cell")
+Fill = 0.6
+
+[node name="Cell2" type="BaseButton" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/BarCells/Selected"]
+layout_mode = 2
+script = ExtResource("bar_cell")
+Fill = 0.8
+
+[node name="Cell3" type="BaseButton" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/BarCells/Selected"]
+layout_mode = 2
+script = ExtResource("bar_cell")
+Fill = 1.0
+
+[node name="Cell4" type="BaseButton" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/BarCells/Selected"]
+layout_mode = 2
+script = ExtResource("bar_cell")
+Fill = 0.5
+
+[node name="Cell5" type="BaseButton" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/BarCells/Selected"]
+layout_mode = 2
+script = ExtResource("bar_cell")
+Fill = 0.65
+Selected = true
+
+[node name="Cell6" type="BaseButton" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/BarCells/Selected"]
+layout_mode = 2
+script = ExtResource("bar_cell")
+Fill = 0.4
+
+[node name="Cell7" type="BaseButton" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/BarCells/Selected"]
+layout_mode = 2
+script = ExtResource("bar_cell")
+Fill = 0.85
+
+[node name="Cell8" type="BaseButton" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/BarCells/Selected"]
+layout_mode = 2
+script = ExtResource("bar_cell")
+Fill = 0.6
+
+[node name="Sorting" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/BarCells"]
+layout_mode = 2
+size_flags_horizontal = 0
+theme_override_constants/separation = 4
+
+[node name="Cell1" type="BaseButton" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/BarCells/Sorting"]
+layout_mode = 2
+script = ExtResource("bar_cell")
+IconId = 62
+
+[node name="Cell2" type="BaseButton" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/BarCells/Sorting"]
+layout_mode = 2
+script = ExtResource("bar_cell")
+Fill = 0.7
+
+[node name="Cell3" type="BaseButton" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/BarCells/Sorting"]
+layout_mode = 2
+script = ExtResource("bar_cell")
+Fill = 0.75
+
+[node name="Cell4" type="BaseButton" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/BarCells/Sorting"]
+layout_mode = 2
+script = ExtResource("bar_cell")
+Fill = 0.8
+
+[node name="Cell5" type="BaseButton" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/BarCells/Sorting"]
+layout_mode = 2
+script = ExtResource("bar_cell")
+Fill = 0.85
+
+[node name="Cell6" type="BaseButton" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/BarCells/Sorting"]
+layout_mode = 2
+script = ExtResource("bar_cell")
+Fill = 0.9
+
+[node name="Cell7" type="BaseButton" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/BarCells/Sorting"]
+layout_mode = 2
+script = ExtResource("bar_cell")
+Fill = 1.0
+Selected = true
+
+[node name="Cell8" type="BaseButton" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/BarCells/Sorting"]
+layout_mode = 2
+script = ExtResource("bar_cell")
+IconId = 63
+
+[node name="LastPage" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/BarCells"]
+layout_mode = 2
+size_flags_horizontal = 0
+theme_override_constants/separation = 4
+
+[node name="Cell1" type="BaseButton" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/BarCells/LastPage"]
+layout_mode = 2
+disabled = true
+script = ExtResource("bar_cell")
+IconId = 62
+
+[node name="Cell2" type="BaseButton" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/BarCells/LastPage"]
+layout_mode = 2
+script = ExtResource("bar_cell")
+Fill = 0.1
+
+[node name="Cell3" type="BaseButton" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/BarCells/LastPage"]
+layout_mode = 2
+script = ExtResource("bar_cell")
+Fill = 0.15
+
+[node name="Cell4" type="BaseButton" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/BarCells/LastPage"]
+layout_mode = 2
+script = ExtResource("bar_cell")
+Fill = 0.2
+
+[node name="Cell5" type="BaseButton" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/BarCells/LastPage"]
+layout_mode = 2
+script = ExtResource("bar_cell")
+Fill = 0.3
+
+[node name="Cell6" type="BaseButton" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/BarCells/LastPage"]
+layout_mode = 2
+script = ExtResource("bar_cell")
+Fill = 0.35
+
+[node name="Cell7" type="BaseButton" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/BarCells/LastPage"]
+layout_mode = 2
+script = ExtResource("bar_cell")
+Fill = 0.4
+
+[node name="Cell8" type="BaseButton" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/BarCells/LastPage"]
+layout_mode = 2
+script = ExtResource("bar_cell")
+IconId = 7
 
 [node name="Cards" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content" unique_id=134824687]
 layout_mode = 2

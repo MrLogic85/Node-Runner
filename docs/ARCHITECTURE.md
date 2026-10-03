@@ -215,6 +215,15 @@ public static class SensorPicture   // a sensor picture's tap area at its beam's
     public static double SizeOf(SensorKind kind);
     public static bool Contains(SensorKind kind, Vector2D point, Vector2D nodeA, Vector2D nodeB);
 }
+
+public sealed record MapDef(string Id, string Name, MapGround Ground); // #443; Id saved with training records
+public abstract record MapGround { public abstract double HeightAt(double x); } // FlatGround: 0 everywhere
+public static class Maps            // every map by id; 0.13 has only Flat ("map-flat")
+{
+    public static MapDef Flat { get; }
+    public static MapDef Default { get; } // Flat until map choice (#540)
+    public static MapDef Get(string id);
+}
 ```
 
 Note: `Vector2D` in `NodeRunner.Domain` is our own `readonly record struct`,
@@ -237,8 +246,9 @@ At 60 Hz (`_physics_process`), for the creature currently under evaluation:
    per-tick allocations.
 3. **Act.** `PistonLink.Drive(position, strength, step)` pushes its two
    nodes toward the target length (`Piston.Step`).
-4. **Score.** `TrialMeasurement` records distance, top speed and elevation
-   for this trial; distance is the fitness.
+4. **Score.** `TrialMeasurement` records this trial's centre distance (the
+   fitness), front distance (shown), top speed and elevation; see
+   `docs/TRAINING_LOOP.md` → Trial.
 
 After N ticks (say 600 = 10 s at 60 Hz) each slot's trial ends. `Evolver`
 records its fitness, assigns the slot the next pending genome, and, once every
@@ -268,8 +278,8 @@ tied to the retired Muscle model and does not carry over.
 Screens are moving to one scene each, where navigating replaces the current
 scene (#326): a left scene is closed, not paused, and Back rebuilds it from
 its route. #468 is routing them one by one. Creations (the root and the
-main scene), Examples, Build, Training and the component-library pages are
-routed scenes. Build (`BuildRoute`, #363) edits one saved creation and saves
+main scene), Examples, Build, Train setup, Training and the component-library
+pages are routed scenes. Build (`BuildRoute`, #363) edits one saved creation and saves
 each edit as it settles and before it is left (#368); + New saves an empty
 creation first and opens it with `IsNew` (see `docs/BUILD_MODE.md`
 for when Build removes it again). Its layout
@@ -282,11 +292,13 @@ last finished generation and saves each finished one, so leaving drops only
 the generation in progress. Its layout is authored in `TrainingScreen.tscn`
 (#386); the physics world is authored in `TrainingHost.tscn` inside the screen's
 `UiWorldView`, a `SubViewport` with its own camera, so UI scale never changes
-physics distances.
+physics distances. Train setup (`TrainSetupRoute`, #194) sits between
+them: Start saves Shadows and Run length on the creation and opens
+Training without keeping Train setup, so Back from Training lands on Build.
 
 A screen stays in `ui/screens/` and knows nothing of saves or the router's
 type: it emits signals. The routed scene that holds it is a small host in
-`project/src/hosts/` (`CreationsHost`, `ExamplesHost`, `BuildHost`, `TrainingHost`) that wires
+`project/src/hosts/` (`CreationsHost`, `ExamplesHost`, `BuildHost`, `TrainSetupHost`, `TrainingHost`) that wires
 those signals to `SaveManager` and the navigator. The standalone gallery
 pages have nothing to save, so they are routed directly.
 

@@ -10,20 +10,25 @@ public static class UiDashedBorder
     private const int _arcSegments = 6;
 
     public static void DrawRoundedRect(CanvasItem canvas, Rect2 rect, float radius, Color color, float width) =>
-        DrawRoundedRect(canvas, rect, radius, color, width, Transform2D.Identity, _dash, _gap, antialiased: false);
+        DrawRoundedRect(canvas, rect, UiCorners.Uniform(radius), color, width);
+
+    /// <summary>The dashed outline of <paramref name="rect"/> with its own radius for each corner.</summary>
+    public static void DrawRoundedRect(CanvasItem canvas, Rect2 rect, UiCorners corners, Color color, float width) =>
+        DrawRoundedRect(canvas, rect, corners, color, width, Transform2D.Identity, _dash, _gap, antialiased: false);
+
+    public static void DrawRoundedRect(CanvasItem canvas, Rect2 rect, float radius, Color color, float width, Transform2D transform, float dash, float gap, bool antialiased) =>
+        DrawRoundedRect(canvas, rect, UiCorners.Uniform(radius), color, width, transform, dash, gap, antialiased);
 
     /// <summary>
     /// The dashed outline of <paramref name="rect"/>, mapped through <paramref name="transform"/>.
     /// Only <paramref name="width"/> is in the transformed units. The dashes are stretched to fit
     /// the perimeter evenly.
     /// </summary>
-    public static void DrawRoundedRect(CanvasItem canvas, Rect2 rect, float radius, Color color, float width, Transform2D transform, float dash, float gap, bool antialiased)
+    public static void DrawRoundedRect(CanvasItem canvas, Rect2 rect, UiCorners corners, Color color, float width, Transform2D transform, float dash, float gap, bool antialiased)
     {
         ArgumentNullException.ThrowIfNull(canvas);
-        radius = Mathf.Min(radius, Mathf.Min(rect.Size.X, rect.Size.Y) * 0.5f);
-        var straightWidth = Mathf.Max(0, rect.Size.X - (radius * 2));
-        var straightHeight = Mathf.Max(0, rect.Size.Y - (radius * 2));
-        var perimeter = (straightWidth * 2) + (straightHeight * 2) + (Mathf.Tau * radius);
+        corners = Clamp(rect, corners);
+        var perimeter = Perimeter(rect, corners);
         if (perimeter <= 0 || dash + gap <= 0)
         {
             return;
@@ -41,7 +46,7 @@ public static class UiDashedBorder
             for (var index = 0; index < sampleCount; index++)
             {
                 var distance = start + (dashLength * index / (sampleCount - 1));
-                points[index] = transform * PointOnRoundedRect(rect, radius, distance);
+                points[index] = transform * PointOnRoundedRect(rect, corners, distance);
             }
 
             canvas.DrawPolyline(points, color, width, antialiased);
@@ -82,57 +87,68 @@ public static class UiDashedBorder
         return points;
     }
 
-    public static Vector2 PointOnRoundedRect(Rect2 rect, float radius, float distance)
+    public static Vector2 PointOnRoundedRect(Rect2 rect, float radius, float distance) =>
+        PointOnRoundedRect(rect, Clamp(rect, UiCorners.Uniform(radius)), distance);
+
+    /// <summary>
+    /// The point <paramref name="distance"/> along the outline, clockwise from the top edge's
+    /// left end. The radii must already fit <paramref name="rect"/>.
+    /// </summary>
+    public static Vector2 PointOnRoundedRect(Rect2 rect, UiCorners corners, float distance)
     {
-        var straightWidth = Mathf.Max(0, rect.Size.X - (radius * 2));
-        var straightHeight = Mathf.Max(0, rect.Size.Y - (radius * 2));
-        var arcLength = Mathf.Pi * radius * 0.5f;
-        var perimeter = (straightWidth * 2) + (straightHeight * 2) + (arcLength * _cornerCount);
-        distance = Mathf.PosMod(distance, perimeter);
+        var (left, top, right, bottom) = (rect.Position.X, rect.Position.Y, rect.End.X, rect.End.Y);
+        var quarter = Mathf.Pi * 0.5f;
+        distance = Mathf.PosMod(distance, Perimeter(rect, corners));
 
-        if (distance <= straightWidth)
+        // Each side runs from the end of one corner to the start of the next, then that corner's arc.
+        (Vector2 From, Vector2 To, float Radius, Vector2 Center, float Angle)[] sides =
+        [
+            (new(left + corners.TopLeft, top), new(right - corners.TopRight, top), corners.TopRight, new(right - corners.TopRight, top + corners.TopRight), -quarter),
+            (new(right, top + corners.TopRight), new(right, bottom - corners.BottomRight), corners.BottomRight, new(right - corners.BottomRight, bottom - corners.BottomRight), 0),
+            (new(right - corners.BottomRight, bottom), new(left + corners.BottomLeft, bottom), corners.BottomLeft, new(left + corners.BottomLeft, bottom - corners.BottomLeft), quarter),
+            (new(left, bottom - corners.BottomLeft), new(left, top + corners.TopLeft), corners.TopLeft, new(left + corners.TopLeft, top + corners.TopLeft), Mathf.Pi),
+        ];
+
+        foreach (var side in sides)
         {
-            return new Vector2(rect.Position.X + radius + distance, rect.Position.Y);
+            var straight = side.From.DistanceTo(side.To);
+            if (distance <= straight)
+            {
+                return straight > 0 ? side.From.Lerp(side.To, distance / straight) : side.From;
+            }
+
+            distance -= straight;
+            var arc = quarter * side.Radius;
+            if (distance <= arc)
+            {
+                return ArcPoint(side.Center, side.Radius, side.Angle, distance);
+            }
+
+            distance -= arc;
         }
 
-        distance -= straightWidth;
-        if (distance <= arcLength)
-        {
-            return ArcPoint(rect.Position + new Vector2(rect.Size.X - radius, radius), radius, -Mathf.Pi * 0.5f, distance);
-        }
+        return sides[0].From;
+    }
 
-        distance -= arcLength;
-        if (distance <= straightHeight)
-        {
-            return new Vector2(rect.End.X, rect.Position.Y + radius + distance);
-        }
+    // No corner may be larger than half the shorter side.
+    private static UiCorners Clamp(Rect2 rect, UiCorners corners)
+    {
+        var most = Mathf.Min(rect.Size.X, rect.Size.Y) * 0.5f;
+        return new UiCorners(
+            Mathf.Clamp(corners.TopLeft, 0, most),
+            Mathf.Clamp(corners.TopRight, 0, most),
+            Mathf.Clamp(corners.BottomRight, 0, most),
+            Mathf.Clamp(corners.BottomLeft, 0, most));
+    }
 
-        distance -= straightHeight;
-        if (distance <= arcLength)
-        {
-            return ArcPoint(rect.End - new Vector2(radius, radius), radius, 0, distance);
-        }
-
-        distance -= arcLength;
-        if (distance <= straightWidth)
-        {
-            return new Vector2(rect.End.X - radius - distance, rect.End.Y);
-        }
-
-        distance -= straightWidth;
-        if (distance <= arcLength)
-        {
-            return ArcPoint(new Vector2(rect.Position.X + radius, rect.End.Y - radius), radius, Mathf.Pi * 0.5f, distance);
-        }
-
-        distance -= arcLength;
-        if (distance <= straightHeight)
-        {
-            return new Vector2(rect.Position.X, rect.End.Y - radius - distance);
-        }
-
-        distance -= straightHeight;
-        return ArcPoint(rect.Position + new Vector2(radius, radius), radius, Mathf.Pi, distance);
+    private static float Perimeter(Rect2 rect, UiCorners corners)
+    {
+        var top = Mathf.Max(0, rect.Size.X - corners.TopLeft - corners.TopRight);
+        var right = Mathf.Max(0, rect.Size.Y - corners.TopRight - corners.BottomRight);
+        var bottom = Mathf.Max(0, rect.Size.X - corners.BottomRight - corners.BottomLeft);
+        var left = Mathf.Max(0, rect.Size.Y - corners.BottomLeft - corners.TopLeft);
+        var arcs = Mathf.Pi * 0.5f * (corners.TopLeft + corners.TopRight + corners.BottomRight + corners.BottomLeft);
+        return top + right + bottom + left + arcs;
     }
 
     private static Vector2 ArcPoint(Vector2 center, float radius, float startAngle, float distance)

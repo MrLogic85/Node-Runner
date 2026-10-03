@@ -20,12 +20,14 @@ internal static class RewrittenUi
         "ui/screens/GalleryScreen.cs",
         "ui/screens/PopupGalleryScreen.cs",
         "ui/screens/ToolbarsScreen.cs",
+        "ui/screens/TrainSetupScreen.cs",
         "ui/screens/TrainingScreen.cs",
     ];
 
     /// <summary>Widget scripts, by path under <c>project/src</c>: held to the library's rules.</summary>
     public static readonly string[] Widgets =
     [
+        "ui/widgets/ArenaBestMarker.cs",
         "ui/widgets/ArenaCamera.cs",
         "ui/widgets/ArenaRuler.cs",
         "ui/widgets/BrainFocusNetworkView.cs",
@@ -33,6 +35,8 @@ internal static class RewrittenUi
         "ui/widgets/BuildCanvas.cs",
         "ui/widgets/CreationCard.cs",
         "ui/widgets/CreatureThumbnail.cs",
+        "ui/widgets/MapPreview.cs",
+        "ui/widgets/ShadowStrip.cs",
     ];
 
     /// <summary>
@@ -42,6 +46,7 @@ internal static class RewrittenUi
     /// </summary>
     public static readonly string[] DrawnWidgets =
     [
+        "ui/widgets/ArenaBestMarker.cs",
         "ui/widgets/ArenaRuler.cs",
         "ui/widgets/BrainFocusNetworkView.cs",
         "ui/widgets/BuildCanvas.cs",
@@ -59,9 +64,11 @@ internal static class RewrittenUi
         "screens/ExamplesScreen.tscn",
         "screens/PopupGalleryScreen.tscn",
         "screens/ToolbarsScreen.tscn",
+        "screens/TrainSetupScreen.tscn",
         "screens/TrainingScreen.tscn",
         "widgets/BrainFocusSheet.tscn",
         "widgets/CreationCard.tscn",
+        "widgets/ShadowStrip.tscn",
     ];
 }
 

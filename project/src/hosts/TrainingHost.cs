@@ -8,7 +8,6 @@ using NodeRunner.App.ViewModels;
 using NodeRunner.Domain;
 using NodeRunner.Managers;
 using NodeRunner.ML.Brains;
-using NodeRunner.ML.Ga;
 using NodeRunner.Sim;
 using NodeRunner.Theme;
 using NodeRunner.Ui.Lib;
@@ -19,8 +18,8 @@ namespace NodeRunner.Hosts;
 
 /// <summary>
 /// The Training scene: trains one saved creation (#469) on the Training screen (#386). The scene
-/// authors the screen and the world in its arena: camera, background, ground and ruler. This root
-/// adds the creature and the <see cref="Evolver"/> to that world, points the camera and the ruler at
+/// authors the screen and the world in its arena: camera, background, ground line and ruler. This
+/// root builds the map's ground along that line, adds the creature and the <see cref="Evolver"/> to that world, points the camera and the ruler at
 /// it, resumes from the creation's last finished
 /// generation and saves every finished generation, so leaving drops only the one in progress. Run
 /// on its own (F6) it trains the built-in worm without saving.
@@ -34,10 +33,10 @@ public partial class TrainingHost : Node, IRoutedScene
     // of ticks plays out, never the result.
     private static readonly float[] _timeScales = [1f, 2f, 4f];
 
-    // Every run trains with these settings until Train setup (#194) offers the choice.
-    private static readonly TrainingProfile _profile = new("Standard", 8, 600, 50, 0.1, 0.3, 3, CrossoverStrategy.Uniform);
 
     private readonly VisualTheme _theme = VisualTheme.Neon;
+    // The map Training runs on and records: the one Train setup selects (#444).
+    private readonly MapDef _map = Maps.Default;
     private readonly SelectionViewModel _selection = new();
     private readonly SignalFlowPresentationViewModel _signalFlow = new();
     private readonly BrainFocusPresentationViewModel _brainFocus = new();
@@ -54,8 +53,9 @@ public partial class TrainingHost : Node, IRoutedScene
     private Evolver? _evolver;
     private TrainingScreen _screen = null!;
     private TrainingPresentationViewModel _trainingPresentation = new();
-    private int _sessionGenerationStart;
     private int _timeScaleIndex;
+    // The selected part's Build name, shown above the followed shadow (#388); null with nothing selected.
+    private string? _selectedPartName;
     private double _signalRefreshElapsed;
 
     private SaveManager Saves => GetNode<SaveManager>("/root/SaveManager");
@@ -64,11 +64,13 @@ public partial class TrainingHost : Node, IRoutedScene
 
     private Node2D World => GetNode<Node2D>("%World");
 
-    // Every creation trains on flat ground until maps land (#443): an endless ground line through
-    // the Ground node (a WorldBoundaryShape2D), so a creature can never walk off its end.
-    private float GroundTopY => GetNode<StaticBody2D>("%Ground").GlobalPosition.Y;
+    // The scene places the ground line; the map builds the ground along it (BuildWorld).
+    private ArenaGround Ground => GetNode<ArenaGround>("%Ground");
+
+    private float GroundTopY => Ground.GlobalPosition.Y;
 
     private ArenaRuler Ruler => GetNode<ArenaRuler>("%Ruler");
+    private ArenaBestMarker BestMarker => GetNode<ArenaBestMarker>("%BestMarker");
     private ArenaCamera Camera => GetNode<ArenaCamera>("%Camera");
 
     public void Enter(SceneRoute route, ISceneNavigator navigator)
@@ -85,10 +87,11 @@ public partial class TrainingHost : Node, IRoutedScene
         // Always, so tapping a part and the screen's buttons still work while paused (#85); the
         // creature and the Evolver pin themselves back to Pausable.
         ProcessMode = ProcessModeEnum.Always;
+        // After the camera has moved this frame, so the part name lands on the part.
+        ProcessPriority = 1;
         _selection.PropertyChanged += OnSelectionPropertyChanged;
-
         var creation = LoadRouteCreation();
-        ApplyWorldTheme();
+        BuildWorld();
         AddCreature(creation);
         AddEvolver();
         BindScreen(creation);
@@ -99,6 +102,7 @@ public partial class TrainingHost : Node, IRoutedScene
         }
 
         FollowCreature();
+        ShowBest();
     }
 
     public override void _ExitTree()
@@ -107,16 +111,23 @@ public partial class TrainingHost : Node, IRoutedScene
         Engine.TimeScale = _timeScales[0];
         GetTree().Paused = false;
         _selection.PropertyChanged -= OnSelectionPropertyChanged;
+        _trainingPresentation.PropertyChanged -= OnTrainingChanged;
         _trainingPresentation.Dispose();
     }
 
-    // Refreshes the signal flow and brain focus from the creature's last physics tick, at a fixed
-    // cadence: the numbers are for a person to read, so every rendered frame is wasted work.
+    // Moves the part name with the creature every frame. Refreshes the signal flow and brain focus
+    // from the creature's last physics tick at a fixed cadence: the numbers are for a person to
+    // read, so every rendered frame is wasted work.
     public override void _Process(double delta)
     {
         if (_followed is null)
         {
             return;
+        }
+
+        if (_selectedPartName is not null && _selection.SelectedElement is { } selected)
+        {
+            _screen.ShowPartName(_selectedPartName, _followed.PartAnchor(selected), _followed.Bounds);
         }
 
         _signalRefreshElapsed += delta;
@@ -187,15 +198,16 @@ public partial class TrainingHost : Node, IRoutedScene
         }
     }
 
-    // The world's colours come from the same theme as the creature's.
-    private void ApplyWorldTheme()
+    // The world's colours come from the same theme as the creature's; the ground's shape from the map.
+    private void BuildWorld()
     {
         GetNode<ColorRect>("%ArenaFill").Color = _theme.ArenaBackground;
         Ruler.Theme = _theme;
-        GetNode<Polygon2D>("%GroundFill").Color = _theme.GroundFill;
-        var edge = GetNode<Line2D>("%GroundEdge");
-        edge.DefaultColor = _theme.GroundEdge;
-        edge.Width = _theme.GroundEdgeWidth;
+        BestMarker.Theme = _theme;
+        // Behind every creature part: a shadow draws its hatch at z -2 and its beams at -1. The world
+        // has its own viewport, so this z orders only the world.
+        BestMarker.ZIndex = -3;
+        Ground.Build(_map.Ground, _theme);
     }
 
     private void AddCreature(CreationDef? creation)
@@ -212,10 +224,11 @@ public partial class TrainingHost : Node, IRoutedScene
         _followed = creature;
     }
 
-    // The camera follows the followed shadow's centre, the point its distance is measured from, and
-    // glides to the new one when following changes (#668); it zooms to fit that shadow's box and
-    // keeps the ground in place (#675). The ruler counts from where that point starts: every trial
-    // resets every shadow to the same pose, so it starts there every time.
+    // The camera follows the followed shadow's centre and glides to the new one when following
+    // changes (#668); it zooms to fit that shadow's box and keeps the ground in place (#675). The
+    // ruler counts from where the creature's front-most point starts, the point every shown
+    // distance is measured from (#725): every trial resets every shadow to the same pose, so it
+    // starts there every time.
     private void FollowCreature()
     {
         if (_creature is not { } creature)
@@ -223,7 +236,8 @@ public partial class TrainingHost : Node, IRoutedScene
             return;
         }
 
-        Ruler.StartX = Ruler.ToLocal(creature.CenterOfMass).X;
+        Ruler.StartX = Ruler.ToLocal(creature.Bounds.End).X;
+        BestMarker.StartX = Ruler.StartX;
         Camera.GroundY = GroundTopY;
 
         // Read every frame; OnFollowedShadowChanged retargets it when the followed shadow changes.
@@ -248,7 +262,7 @@ public partial class TrainingHost : Node, IRoutedScene
     {
         _screen = GetNode<TrainingScreen>("%TrainingScreen");
         _screen.Setup(
-            TrainingHeaderPresentation.For(creation?.Name ?? _sampleCreationName, TrainingRunMode.Train, MapIds.Flat),
+            TrainingHeaderPresentation.For(creation?.Name ?? _sampleCreationName, TrainingRunMode.Train, _map.Id),
             _trainingPresentation,
             _signalFlow,
             _brainFocus);
@@ -275,6 +289,7 @@ public partial class TrainingHost : Node, IRoutedScene
         evolver.FollowedTrialStarted += () => Camera.Cut();
         _trainingPresentation.Dispose();
         _trainingPresentation = new TrainingPresentationViewModel(new EvolverTrainingProgressSource(evolver));
+        _trainingPresentation.PropertyChanged += OnTrainingChanged;
         World.AddChild(evolver);
         _evolver = evolver;
     }
@@ -292,22 +307,25 @@ public partial class TrainingHost : Node, IRoutedScene
 
         var resume = creation?.Training;
         _saved = resume;
+        // A best ever is per map: one reached on another map is not this map's record to beat.
+        var resumeBest = resume?.Best is { } best && best.MapId == _map.Id ? best : null;
         var disabledGenes = resume is null ? null : DirectBrain.DisabledGenes(resume.Brain, _creature.Ports);
         _brainFocus.Configure(BrainPortLabels.For(definition), disabledGenes ?? []);
-        _sessionGenerationStart = resume?.Generation ?? 0;
+        var setup = EvolutionSetup.For(creation?.TrainSettings, Engine.PhysicsTicksPerSecond);
         _evolver.Start(
             _creature,
-            _profile.PopulationSize,
+            setup.Population,
             _creature.Brain.LayerSizes,
-            new GeneticAlgorithm(_profile.TournamentSize, _profile.MutationRate, _profile.MutationStrength, crossoverStrategy: _profile.CrossoverStrategy),
+            setup.Algorithm,
             Rng.Random,
             GroundTopY,
             resume is null ? null : DirectBrain.Compile(resume.Brain, _creature.Ports),
             resume?.Generation ?? 0,
-            resume?.Best.Distance ?? double.NegativeInfinity,
-            resume?.Best.Generation ?? 0,
-            _profile.TrialDurationTicks,
-            CreateCreatureInstance,
+            resumeBestFitness: resumeBest?.Distance ?? double.NegativeInfinity,
+            resumeBestShownDistance: resumeBest?.FrontDistance ?? double.NaN,
+            resumeBestGeneration: resumeBest?.Generation ?? 0,
+            trialDurationTicks: setup.TrialTicks,
+            creatureFactory: CreateCreatureInstance,
             disabledGenes: disabledGenes);
     }
 
@@ -327,15 +345,15 @@ public partial class TrainingHost : Node, IRoutedScene
         Camera.Retarget();
     }
 
+    // The best marker moves only when a generation's front goes past it; Show ignores the rest.
+    private void OnTrainingChanged(object? sender, PropertyChangedEventArgs eventArgs) => ShowBest();
+
+    private void ShowBest() => BestMarker.Show(_trainingPresentation.BestShownDistance, _trainingPresentation.BestMarkerText);
+
     private void OnGenerationCompleted()
     {
         GD.Print($"Generation {_evolver!.Generation} — best: {_evolver.BestFitness:0.0}, mean: {_evolver.MeanFitness:0.0}");
         PersistTraining();
-        if (_evolver.Generation - _sessionGenerationStart >= _profile.MaxGenerations)
-        {
-            _evolver.Stop();
-            GD.Print($"Training session complete after {_profile.MaxGenerations} generations.");
-        }
     }
 
     // Saving reads the creation back off disk and writes it again, synchronous file IO (#113) that
@@ -356,8 +374,7 @@ public partial class TrainingHost : Node, IRoutedScene
         var saves = Saves;
         var epoch = saves.CurrentTrainingEpoch(id);
         var brain = DirectBrain.ToBrainDef(_creature.Ports, genome, _saved?.Brain);
-        // Training runs on flat ground only until maps land (#443).
-        var latest = new TrainingRunDef(run.Distance, run.TopSpeed, run.Elevation, MapIds.Flat);
+        var latest = new TrainingRunDef(run.Distance, run.TopSpeed, run.Elevation, _map.Id, run.FrontDistance);
         var training = TrainingStateDef.Record(_saved, brain, _evolver.Generation, latest);
         _saved = training;
         saves.PersistTrainingInBackground(id, epoch, training).ContinueWith(
@@ -411,6 +428,14 @@ public partial class TrainingHost : Node, IRoutedScene
         if (eventArgs.PropertyName == nameof(SelectionViewModel.SelectedElement))
         {
             _followed?.SetSelectedElement(_selection.SelectedElement);
+            _selectedPartName = _selection.SelectedElement is { } selected && _followed?.Definition is { } definition
+                ? PartNames.Display(definition.Nodes, definition.Beams, definition.Sensors, definition.Pistons, selected.Id)
+                : null;
+            BestMarker.Faded = _selectedPartName is not null;
+            if (_selectedPartName is null)
+            {
+                _screen.ShowPartName(null, default, default);
+            }
         }
     }
 }

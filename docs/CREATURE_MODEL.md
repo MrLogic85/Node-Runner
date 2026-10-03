@@ -188,7 +188,10 @@ Three beams that close a triangle between three nodes are geometrically
 rigid (SSS: three fixed side lengths fully determine all three vertex
 angles), so its joints cannot turn. `RigidTriangles.Of`
 (`libs/NodeRunner.Domain/RigidTriangles.cs`) finds every such triangle, and
-Build hatches it so the player sees which areas are rigid. A larger truss is
+Build hatches it so the player sees which areas are rigid, and so does
+Training on the followed creature (#627), never on the other shadows. There
+the hatch rides on one of the triangle's beams, which it cannot move
+against. A larger truss is
 a composition of triangles; a bare quadrilateral stays free to fold.
 
 ### Piston

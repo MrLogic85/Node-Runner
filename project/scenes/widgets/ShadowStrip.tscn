@@ -1,0 +1,64 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" uid="uid://cr8jlumsow28s" path="res://src/ui/widgets/ShadowStrip.cs" id="1_strip"]
+[ext_resource type="Script" uid="uid://dgr5xyvp61q2o" path="res://src/ui/lib/UiBarCell.cs" id="2_cell"]
+
+[node name="ShadowStrip" type="HBoxContainer"]
+theme_override_constants/separation = 4
+script = ExtResource("1_strip")
+
+[node name="Worse" type="BaseButton" parent="."]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+tooltip_text = "Worse shadows"
+script = ExtResource("2_cell")
+IconId = 62
+
+[node name="Cell1" type="BaseButton" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
+script = ExtResource("2_cell")
+
+[node name="Cell2" type="BaseButton" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
+script = ExtResource("2_cell")
+
+[node name="Cell3" type="BaseButton" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
+script = ExtResource("2_cell")
+
+[node name="Cell4" type="BaseButton" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
+script = ExtResource("2_cell")
+
+[node name="Cell5" type="BaseButton" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
+script = ExtResource("2_cell")
+
+[node name="Cell6" type="BaseButton" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
+script = ExtResource("2_cell")
+
+[node name="Cell7" type="BaseButton" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
+script = ExtResource("2_cell")
+
+[node name="Cell8" type="BaseButton" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
+script = ExtResource("2_cell")
+
+[node name="Trailing" type="BaseButton" parent="."]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+tooltip_text = "Sort by distance"
+script = ExtResource("2_cell")
+IconId = 63
