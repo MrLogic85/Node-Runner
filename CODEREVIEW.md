@@ -131,8 +131,10 @@ Authoritative sources:
 
 Trace affected callers and dependencies far enough to verify the change.
 Flag unnecessary abstractions, dead paths, confused ownership, or code whose
-shape hides its purpose. Do not flag formatting already owned by
-`.editorconfig`.
+shape hides its purpose. Flag our own code that does what Godot already
+provides natively, unless the code or the owning doc says why Godot cannot
+(`docs/CODE_DESIGN_PRINCIPLES.md` §2 "Godot first"). Do not flag formatting
+already owned by `.editorconfig`.
 
 ---
 

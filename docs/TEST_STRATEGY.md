@@ -102,7 +102,7 @@ Current facts (see `ArchitectureSpec.cs`):
 - `NodeRunner.ML` references only `NodeRunner.Domain`
 - `NodeRunner.App` references only `NodeRunner.Domain` and `NodeRunner.ML`
 - No production `.cs` file (`libs/`, `project/src/`) exceeds 2000 lines
-  (`docs/CODE_DESIGN_PRINCIPLES.md` §4)
+  (`docs/CODE_DESIGN_PRINCIPLES.md` §5)
 
 Add a fact whenever a convention emerges that we've decided to enforce.
 

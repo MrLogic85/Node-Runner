@@ -29,23 +29,26 @@ of the project before starting to work.
    dependencies, `docs/CODE_DESIGN_PRINCIPLES.md` owns implementation rules,
    `docs/TEST_STRATEGY.md` owns testing, and `docs/REVIEW.md` owns how changes
    land. The nearest local `AGENTS.md` adds only layer-specific instructions.
-2. **Run code review agents before committing or pushing.** Dispatch the
+2. **Godot first, always.** Use Godot's own features to their full potential.
+   Write our own solution only when Godot cannot do it natively, and say why
+   (`docs/CODE_DESIGN_PRINCIPLES.md` §2).
+3. **Run code review agents before committing or pushing.** Dispatch the
    reviews in `CODEREVIEW.md` against the staged diff (or the range about
    to be pushed). Only commit/push once each *new*
    finding has either been addressed or judged
    as not useful — by the human, or by the agent.
    Code-review clean = commit/push authorised.
-3. Always try to continue to work autonomously, only pause when you are stuck
+4. Always try to continue to work autonomously, only pause when you are stuck
    due to hardware issues or when you guninely need input from a human. Pick work
    tasks from recent discussions with a human or from GitHub. If GitHub tasks are big,
    break them down into milestones, new issues or subtasks.
-4. When new milestones, feature bugs are found or discussed. Add or update them
+5. When new milestones, feature bugs are found or discussed. Add or update them
    on GitHub. Status, Priority and Size live in the GitHub Project, not in
    labels. Set them, and blocked-by relationships, when you create an issue,
    then run `.github/scripts/issue-audit.sh` (`docs/ISSUE_LABELS.md` →
    "Creating an issue"). Dont leave desicions undocumented. Review broad,
    risky, or ambiguous issues under docs/ISSUE_REVIEW.md before implementation.
-5. Keep *.md files up to date and as clean as possible.
+6. Keep *.md files up to date and as clean as possible.
 
 ## Architecture map
 

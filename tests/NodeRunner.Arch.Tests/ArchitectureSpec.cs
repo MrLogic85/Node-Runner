@@ -76,7 +76,7 @@ public sealed class ArchitectureSpec
 
         offenders.ShouldBeEmpty(
             $"Production files must stay within {hardLimit} lines; split out functionality. " +
-            "See docs/CODE_DESIGN_PRINCIPLES.md §4.");
+            "See docs/CODE_DESIGN_PRINCIPLES.md §5.");
     }
 
     private static string FindRepositoryRoot()
@@ -103,6 +103,6 @@ public sealed class ArchitectureSpec
 
         offenders.ShouldBeEmpty(
             $"{assembly.GetName().Name} must not depend on any Godot assembly. " +
-            "See docs/CODE_DESIGN_PRINCIPLES.md §2.");
+            "See docs/CODE_DESIGN_PRINCIPLES.md §3.");
     }
 }
