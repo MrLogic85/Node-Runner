@@ -38,9 +38,14 @@ public sealed class TrainSetupPresentationViewModel
     public PartSlider Shadows => new(
         "Shadows",
         Settings.Shadows.ToString(CultureInfo.InvariantCulture),
-        ShadowsRange.Position(Settings.Shadows));
+        ShadowsRange.Position(Settings.Shadows),
+        ShadowsRange.PositionStep);
 
-    public PartSlider RunLength => new("Run length", Seconds(Settings.RunLengthSeconds), RunLengthRange.Position(Settings.RunLengthSeconds));
+    public PartSlider RunLength => new(
+        "Run length",
+        Seconds(Settings.RunLengthSeconds),
+        RunLengthRange.Position(Settings.RunLengthSeconds),
+        RunLengthRange.PositionStep);
 
     /// <summary>The Shadows slider's named ends.</summary>
     public string[] ShadowsEnds { get; } =

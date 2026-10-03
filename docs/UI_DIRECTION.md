@@ -803,6 +803,12 @@ Slider minimum height ends at the thumb/marker extent or the last visible
 text row, using the same track position as rendering rather than adding
 another track diameter below its centre.
 
+A slider whose value moves in steps sets `UiSlider.Step` (the distance between
+two stops on the 0…1 track, like Godot's `Range.step`), so a dragged thumb
+stops only where the value does (#711). The step comes from the value's
+`SettingRange` through `PartSlider.Step`; never round the value alone, or the
+thumb and the readout disagree and the thumb jumps while dragged.
+
 Inspector facts and Power share `UiValueRow`: a label on the left and a readout
 on the right, optionally prefixed by a small icon. Power is a value-row
 configuration, not a separate control.

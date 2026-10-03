@@ -10,9 +10,9 @@ public sealed class PistonSettingsTests
     {
         var settings = PistonSettings.For(new PistonDef(3, 1, 2));
 
-        settings.Strength.ShouldBe(new PartSlider("Max strength", "150 N", PistonSettings.Strength.Position(150)));
-        settings.Stroke.ShouldBe(new PartSlider("Stroke", "±30%", PistonSettings.Stroke.Position(30)));
-        settings.MaxSpeed.ShouldBe(new PartSlider("Max speed", "2.0 m/s", PistonSettings.MaxSpeed.Position(2)));
+        settings.Strength.ShouldBe(new PartSlider("Max strength", "150 N", PistonSettings.Strength.Position(150), PistonSettings.Strength.PositionStep));
+        settings.Stroke.ShouldBe(new PartSlider("Stroke", "±30%", PistonSettings.Stroke.Position(30), PistonSettings.Stroke.PositionStep));
+        settings.MaxSpeed.ShouldBe(new PartSlider("Max speed", "2.0 m/s", PistonSettings.MaxSpeed.Position(2), PistonSettings.MaxSpeed.PositionStep));
     }
 
     [Fact]

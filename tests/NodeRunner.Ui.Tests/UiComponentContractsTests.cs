@@ -391,6 +391,18 @@ public sealed partial class UiComponentContractsTests
     }
 
     [Theory]
+    [InlineData(0.3, 0, 0.3)]
+    [InlineData(0.3, 0.25, 0.25)]
+    [InlineData(0.4, 0.25, 0.5)]
+    [InlineData(0.99, 0.25, 1)]
+    [InlineData(1.2, 0.25, 1)]
+    [InlineData(-0.1, 0.25, 0)]
+    public void SnapSliderPosition_StopsOnWholeSteps(double position, double step, double expected)
+    {
+        UiComponentContracts.SnapSliderPosition(position, step).ShouldBe(expected, 1e-9);
+    }
+
+    [Theory]
     [InlineData(0, "0%")]
     [InlineData(0.724, "72%")]
     [InlineData(0.999, "99%")]

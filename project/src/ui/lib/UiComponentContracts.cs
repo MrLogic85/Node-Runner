@@ -206,6 +206,16 @@ public static class UiComponentContracts
         return Math.Clamp(position, 0, 1);
     }
 
+    /// <summary>
+    /// <paramref name="position"/> on the nearest whole <paramref name="step"/>, like Godot's
+    /// <c>Range.step</c>; a step of 0 leaves it where it is (#711).
+    /// </summary>
+    public static double SnapSliderPosition(double position, double step)
+    {
+        position = ClampSliderPosition(position);
+        return step > 0 ? ClampSliderPosition(Math.Round(position / step) * step) : position;
+    }
+
     public static double ClampProgress(double progress) => ClampSliderPosition(progress);
 
     public static int ProgressPercent(double progress) =>
