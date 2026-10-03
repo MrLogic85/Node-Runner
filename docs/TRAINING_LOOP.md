@@ -40,7 +40,11 @@ generation", not "a training session has finished" (#369, 2026-09-30).
    filled from the Creation's saved values or the default (#617). Start
    saves them on the Creation and opens Training in Train setup's place,
    so Back from Training returns to Build; Back from Train setup discards
-   the changes. Simulate (#702), map choice (#540) and Run until power is
+   the changes. Simulate (#702) opens Training in Simulate mode instead
+   (`TrainingRoute(id, TrainingRunMode.Simulate)`): it plays the saved
+   brain with one shadow on the chosen map until the player leaves, and
+   saves nothing, not even the settings. It needs a trained Creation; its
+   segment is disabled otherwise. Map choice (#540) and Run until power is
    out (0.18) are shown but not available yet; Flat ground is the only map,
    and its card takes its name from `Maps.Default` (#444).
 3. Each finished generation is saved. Once the Creation has trained at
@@ -274,12 +278,19 @@ arrive in 0.19 (#525).
 This section documents the current wiring. The TrainSetup and Training
 component READMEs under `reference design/components/` guide its presentation.
 
-- Training is its own routed scene, `TrainingRoute(creationId)`, with
+- Training is its own routed scene, `TrainingRoute(creationId, mode)`, with
   `TrainingHost` (`project/src/hosts/`) as its root. `TrainingHost.tscn` instances the
   Training screen (`TrainingScreen.tscn`) and authors the world inside the
   screen's arena viewport: the background, the ground line, the ruler, the spawn marker and the camera. The host adds the
   creature and the `Evolver` from the creation's save to that world, so
   leaving the scene frees all of them.
+  - **Simulate (#702).** In Simulate mode the host adds no `Evolver`. It
+    sets the saved brain (`DirectBrain.Network`) on the creature and runs
+    one `TrialController` trial that never ends, so there is no generation,
+    no shadow strip, nothing saved and nothing counted. The header reads
+    "Simulating" without a generation caption, the Distance card reads the
+    run's front distance, and the best marker stays at the saved best on
+    this map.
   - **Camera (#668, #675).** `ArenaCamera` frames the followed shadow
     through `ArenaFraming`, read every frame from its centre
     (`Creature.CenterOfMass`, the point its score is measured from) and

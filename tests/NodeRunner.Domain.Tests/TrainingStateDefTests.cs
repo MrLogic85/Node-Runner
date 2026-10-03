@@ -5,6 +5,15 @@ public sealed class TrainingStateDefTests
     private static TrainingRunDef RunOf(double distance, string mapId = MapIds.Flat) => new(distance, 1, 0, mapId);
 
     [Fact]
+    public void BestOn_IsTheBestOnlyOnItsOwnMap()
+    {
+        var state = TestTraining.State(3, bestDistance: 50);
+
+        state.BestOn(MapIds.Flat).ShouldBe(state.Best);
+        state.BestOn("map-hills").ShouldBeNull();
+    }
+
+    [Fact]
     public void Record_FirstGeneration_IsBothLatestAndBest()
     {
         var state = TrainingStateDef.Record(null, TestTraining.Brain, 1, RunOf(120));

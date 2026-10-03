@@ -6,11 +6,13 @@ namespace NodeRunner.Sim;
 /// <summary>
 /// Runs a single creature through fixed-duration trials, resetting its pose
 /// between runs and measuring each trial with a <see cref="TrialMeasurement"/>.
+/// A <see cref="TrialDurationTicks"/> of <see cref="int.MaxValue"/> makes one
+/// trial that never ends, as Simulate (#702) plays.
 ///
 /// This node does not own the creature's lifecycle (creation/destruction) or
-/// brain assignment — its <see cref="Evolver"/> caller is responsible for
-/// both. TrialController only knows how to time a trial and measure how far,
-/// how fast and how high the creature got.
+/// brain assignment — its caller (the <see cref="Evolver"/>, or TrainingHost
+/// in Simulate) is responsible for both. TrialController only knows how to
+/// time a trial and measure how far, how fast and how high the creature got.
 /// </summary>
 public partial class TrialController : Node
 {

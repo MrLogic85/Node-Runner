@@ -10,8 +10,9 @@ namespace NodeRunner.Hosts;
 
 /// <summary>
 /// The Train setup scene (#194): wires <see cref="TrainSetupScreen"/> to the saved creation. Start
-/// saves the Shadows and Run length on the creation (#617) and opens Training in place of Train
-/// setup, so Back from Training returns to Build. Back discards the changes.
+/// opens Training in place of Train setup, so Back from Training returns to Build. To train, it
+/// first saves the Shadows and Run length on the creation (#617); Simulate (#702) saves nothing.
+/// Back discards the changes.
 /// </summary>
 public partial class TrainSetupHost : Node, IRoutedScene
 {
@@ -50,6 +51,12 @@ public partial class TrainSetupHost : Node, IRoutedScene
     {
         if (_setup is null)
         {
+            return;
+        }
+
+        if (_setup.Mode == TrainingRunMode.Simulate)
+        {
+            _navigator?.Navigate(new SceneNavigation(new TrainingRoute(_setup.CreationId, TrainingRunMode.Simulate), KeepCurrent: false));
             return;
         }
 

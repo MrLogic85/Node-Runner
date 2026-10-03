@@ -49,6 +49,18 @@ public sealed class DirectBrainTests
     }
 
     [Fact]
+    public void Network_RunsTheSavedBrainWithEachOutputsActivation()
+    {
+        var ports = _ports with { Outputs = [BrainPort.Output(2, "strength:5", PortSignal.Strength)] };
+        var brain = DirectBrain.ToBrainDef(ports, _genome, previous: null);
+
+        var network = DirectBrain.Network(brain, ports);
+
+        var sum = (0.5 * 1) + (-0.25 * 2) + (0.75 * -1) + 0.1;
+        network.Forward([1, 2, -1])[0].ShouldBe(1 / (1 + Math.Exp(-sum)), 1e-12);
+    }
+
+    [Fact]
     public void DisabledGene_CompilesToZero_AndKeepsItsWeightOnTheNextSave()
     {
         var saved = DirectBrain.ToBrainDef(_ports, _genome, previous: null);

@@ -17,12 +17,14 @@ using NodeRunner.Ui.Widgets;
 namespace NodeRunner.Hosts;
 
 /// <summary>
-/// The Training scene: trains one saved creation (#469) on the Training screen (#386). The scene
-/// authors the screen and the world in its arena: camera, background, ground line and ruler. This
-/// root builds the map's ground along that line, adds the creature and the <see cref="Evolver"/> to that world, points the camera and the ruler at
-/// it, resumes from the creation's last finished
-/// generation and saves every finished generation, so leaving drops only the one in progress. Run
-/// on its own (F6) it trains the built-in worm without saving.
+/// The Training scene: trains one saved creation (#469) on the Training screen (#386), or simulates
+/// it (#702). The scene authors the screen and the world in its arena: camera, background, ground
+/// line and ruler. This root builds the map's ground along that line, adds the creature to that
+/// world and points the camera and the ruler at it. To train, it adds the <see cref="Evolver"/>,
+/// resumes from the creation's last finished generation and saves every finished generation, so
+/// leaving drops only the one in progress. To simulate, it plays the saved brain on the creature in
+/// one run that lasts until the player leaves, and saves nothing. Run on its own (F6) it trains the
+/// built-in worm without saving.
 /// </summary>
 public partial class TrainingHost : Node, IRoutedScene
 {
@@ -51,6 +53,8 @@ public partial class TrainingHost : Node, IRoutedScene
     // The shadow drawn in full, read by signal flow, the brain and part selection (#385).
     private Creature.Creature? _followed;
     private Evolver? _evolver;
+    // Simulate's one endless run (#702); null while training.
+    private TrialController? _playback;
     private TrainingScreen _screen = null!;
     private TrainingPresentationViewModel _trainingPresentation = new();
     private int _timeScaleIndex;
@@ -68,6 +72,8 @@ public partial class TrainingHost : Node, IRoutedScene
     private ArenaGround Ground => GetNode<ArenaGround>("%Ground");
 
     private float GroundTopY => Ground.GlobalPosition.Y;
+
+    private TrainingRunMode Mode => _route?.Mode ?? TrainingRunMode.Train;
 
     private ArenaRuler Ruler => GetNode<ArenaRuler>("%Ruler");
     private ArenaBestMarker BestMarker => GetNode<ArenaBestMarker>("%BestMarker");
@@ -93,12 +99,25 @@ public partial class TrainingHost : Node, IRoutedScene
         var creation = LoadRouteCreation();
         BuildWorld();
         AddCreature(creation);
-        AddEvolver();
-        BindScreen(creation);
-        AddBackHandler();
-        if (creation is not null || _route is null)
+        if (Mode == TrainingRunMode.Simulate)
         {
-            StartEvolution(creation);
+            if (creation is not null)
+            {
+                StartPlayback(creation);
+            }
+
+            BindScreen(creation);
+            AddBackHandler();
+        }
+        else
+        {
+            AddEvolver();
+            BindScreen(creation);
+            AddBackHandler();
+            if (creation is not null || _route is null)
+            {
+                StartEvolution(creation);
+            }
         }
 
         FollowCreature();
@@ -138,7 +157,7 @@ public partial class TrainingHost : Node, IRoutedScene
 
         _signalRefreshElapsed = 0;
         _followed.ReadMapping(_sensorReadings, _motorReadings);
-        _signalFlow.Update(_sensorReadings, _motorReadings, _evolver?.FollowedTrialDistance ?? double.NaN);
+        _signalFlow.Update(_sensorReadings, _motorReadings, FollowedDistance);
         _brainFocus.Update(_followed.Brain, _sensorReadings);
     }
 
@@ -160,6 +179,12 @@ public partial class TrainingHost : Node, IRoutedScene
             // A saved drawing may be unfinished (#515); Build stops it before training.
             GD.PrintErr($"Creation {_route.CreationId} cannot train yet.");
             Notify("Creations", "Finish the creation in Build before training it.");
+        }
+        else if (_route.Mode == TrainingRunMode.Simulate && creation.Training is null)
+        {
+            // Train setup offers Simulate only for a trained creation; its training may be reset since.
+            GD.PrintErr($"Creation {_route.CreationId} has no brain to simulate.");
+            Notify("Creations", "Train the creation before simulating it.");
         }
         else
         {
@@ -262,7 +287,7 @@ public partial class TrainingHost : Node, IRoutedScene
     {
         _screen = GetNode<TrainingScreen>("%TrainingScreen");
         _screen.Setup(
-            TrainingHeaderPresentation.For(creation?.Name ?? _sampleCreationName, TrainingRunMode.Train, _map.Id),
+            TrainingHeaderPresentation.For(creation?.Name ?? _sampleCreationName, Mode, _map.Id),
             _trainingPresentation,
             _signalFlow,
             _brainFocus);
@@ -307,8 +332,7 @@ public partial class TrainingHost : Node, IRoutedScene
 
         var resume = creation?.Training;
         _saved = resume;
-        // A best ever is per map: one reached on another map is not this map's record to beat.
-        var resumeBest = resume?.Best is { } best && best.MapId == _map.Id ? best : null;
+        var resumeBest = resume?.BestOn(_map.Id);
         var disabledGenes = resume is null ? null : DirectBrain.DisabledGenes(resume.Brain, _creature.Ports);
         _brainFocus.Configure(BrainPortLabels.For(definition), disabledGenes ?? []);
         var setup = EvolutionSetup.For(creation?.TrainSettings, Engine.PhysicsTicksPerSecond);
@@ -328,6 +352,36 @@ public partial class TrainingHost : Node, IRoutedScene
             creatureFactory: CreateCreatureInstance,
             disabledGenes: disabledGenes);
     }
+
+    // Simulate (#702) plays the saved brain on the creature in one run that lasts until the player
+    // leaves: no Evolver, so no generation, nothing saved and nothing counted. The run measures how
+    // far its front has got, for the Distance card.
+    private void StartPlayback(CreationDef creation)
+    {
+        if (_creature?.Brain is null || _creature.Definition is not { } definition || creation.Training is not { } training)
+        {
+            return;
+        }
+
+        _trainingPresentation.Dispose();
+        _trainingPresentation = TrainingPresentationViewModel.Saved(training, _map.Id);
+        _brainFocus.Configure(BrainPortLabels.For(definition), DirectBrain.DisabledGenes(training.Brain, _creature.Ports));
+        _creature.SetBrain(DirectBrain.Network(training.Brain, _creature.Ports), _creature.BrainSeed);
+        var playback = new TrialController
+        {
+            Name = "Playback",
+            // Pausable, not Inherit, so the run stops while the tree is paused.
+            ProcessMode = ProcessModeEnum.Pausable,
+            TrialDurationTicks = int.MaxValue,
+            GroundTopY = GroundTopY,
+        };
+        World.AddChild(playback);
+        playback.StartTrial(_creature);
+        _playback = playback;
+    }
+
+    private double FollowedDistance =>
+        _evolver?.FollowedTrialDistance ?? (_playback is { IsRunning: true } playback ? playback.Measured.FrontDistance : double.NaN);
 
     // The selection and the camera move to the new subject: the old shadow drops the selection, the
     // new one shows it, and the camera glides over.

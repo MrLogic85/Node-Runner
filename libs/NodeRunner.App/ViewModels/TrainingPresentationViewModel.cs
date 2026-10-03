@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using NodeRunner.Domain;
 
 namespace NodeRunner.App.ViewModels;
 
@@ -30,6 +31,16 @@ public sealed class TrainingPresentationViewModel : INotifyPropertyChanged, IDis
         _source = source;
         _source.ProgressChanged += OnProgressChanged;
         ApplySourceState();
+    }
+
+    /// <summary>
+    /// Simulate's presentation (#702): nothing races or learns, so the best marker stays at
+    /// <paramref name="training"/>'s best on <paramref name="mapId"/>, or is hidden without one.
+    /// </summary>
+    public static TrainingPresentationViewModel Saved(TrainingStateDef training, string mapId)
+    {
+        ArgumentNullException.ThrowIfNull(training);
+        return new TrainingPresentationViewModel { _bestShownDistance = training.BestOn(mapId)?.FrontDistance ?? double.NaN };
     }
 
     public int Generation => _generation;

@@ -19,7 +19,8 @@
 
 - `TrialController.cs` — times one fixed-duration trial for one creature,
   resets its pose between trials, and feeds `TrialMeasurement`
-  (`libs/NodeRunner.ML/Ga`) each tick
+  (`libs/NodeRunner.ML/Ga`) each tick. Simulate (#702) runs one with no end
+  (`int.MaxValue` ticks) straight from `TrainingHost`
 - `Evolver.cs` — orchestrates the generation cycle: evaluate every genome
   in fixed parallel slots (one `TrialController` per slot) → GA → next
   generation. Slot 0 reuses the visible creature; additional slots are
