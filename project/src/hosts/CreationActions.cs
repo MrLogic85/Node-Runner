@@ -50,6 +50,25 @@ internal static class CreationActions
             Icon = new(UiIconId.Trash),
         };
 
+    /// <summary>
+    /// Unlocking keeps the training (#371): it only opens the body for this Build visit, so a plain
+    /// confirm is enough, not a hold.
+    /// </summary>
+    public static UiDialogSpec UnlockDialog(string name, Action unlock) =>
+        new(
+            UiPopupType.Default,
+            $"Unlock {name}?",
+            "You can change the body until you leave Build. Training is kept: the brain remembers the parts you keep, and new parts start almost unused.",
+            "Unlock",
+            () =>
+            {
+                unlock();
+                return Task.FromResult(UiDialogResult.Success);
+            })
+        {
+            Icon = new(UiIconId.Unlock),
+        };
+
     public static bool TryParseId(string key, string name, string action, out Guid id)
     {
         if (Guid.TryParse(key, out id))

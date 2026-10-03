@@ -62,7 +62,9 @@ then the app follows the reference.
   training after a warning, and its "One reset" rule says training is only
   lost by unlocking (`reference design/README.md`, BuildLocked and Overlays).
   Instead the lock only prevents accidental changes, and a rebuild keeps the
-  brain through port matching (#516).
+  brain through port matching (#516). So the padlock's Unlock dialog is a
+  plain confirm, not a press-and-hold. Owner decision; the lifecycle rule
+  lives in `docs/TRAINING_LOOP.md` step 6.
 - **Build zoom scales lines too (#400).** The reference keeps a block's
   lines at 2px and its eyes node-sized at any zoom. Instead zoom scales the
   whole picture, lines included, the build area's corner marks too. Four

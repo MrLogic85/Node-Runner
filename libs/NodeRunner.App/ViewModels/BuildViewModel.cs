@@ -98,7 +98,7 @@ public sealed class BuildViewModel : INotifyPropertyChanged
 
     /// <summary>
     /// Opens a saved Creation. It is fully editable until it is locked (<see cref="CreationLock"/>);
-    /// a locked one only moves its nodes, so its trained brain still fits.
+    /// a locked one only moves its nodes until <see cref="Unlock"/>.
     /// </summary>
     public void LoadCreation(CreationDef creation)
     {
@@ -113,6 +113,22 @@ public sealed class BuildViewModel : INotifyPropertyChanged
 
     /// <summary>True for a locked Creation: parts are fixed, and only nodes move.</summary>
     public bool IsMoveOnly => _moveOnly;
+
+    /// <summary>
+    /// Unlocks a locked Creation for this Build visit (#371), so its body can change. The training
+    /// is kept: each saved edit refits the brain to the new body (#516). Nothing about the unlock is
+    /// saved, so the Creation is locked again the next time Build opens it.
+    /// </summary>
+    public void Unlock()
+    {
+        if (!_moveOnly)
+        {
+            return;
+        }
+
+        _moveOnly = false;
+        OnPropertyChanged(nameof(IsMoveOnly));
+    }
 
     public string CreationName => _creationName;
 

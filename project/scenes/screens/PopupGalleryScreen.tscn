@@ -309,7 +309,7 @@ TextStyle = 9
 [connection signal="Activated" from="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/VBoxContainer/Body/Dialogs/Warning" to="." method="ShowWarningDialog"]
 [connection signal="Activated" from="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/VBoxContainer/Body/Dialogs/Danger" to="." method="ShowDangerDialog"]
 [connection signal="Activated" from="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/VBoxContainer/Body/Dialogs/HoldDelete" to="." method="ShowDeleteDialog"]
-[connection signal="Activated" from="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/VBoxContainer/Body/Dialogs/WarningHold" to="." method="ShowUnlockDialog"]
+[connection signal="Activated" from="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/VBoxContainer/Body/Dialogs/WarningHold" to="." method="ShowWarningHoldDialog"]
 [connection signal="Activated" from="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/VBoxContainer/Body/Dialogs/LongContent" to="." method="ShowLongDialog"]
 [connection signal="Activated" from="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/VBoxContainer/Body/Dialogs/ActionError" to="." method="ShowErrorDialog"]
 [connection signal="Activated" from="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/VBoxContainer/Body/Dialogs/AsyncAction" to="." method="ShowAsyncDialog"]

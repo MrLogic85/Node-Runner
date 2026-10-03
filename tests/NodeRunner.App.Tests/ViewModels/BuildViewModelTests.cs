@@ -287,6 +287,26 @@ public sealed class BuildViewModelTests
     }
 
     [Fact]
+    public void Unlock_AllowsTopologyChanges()
+    {
+        var creature = new CreatureDef(
+            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(20, 0))],
+            [new BeamDef(101, 1, 2)],
+            []);
+        var viewModel = new BuildViewModel();
+        viewModel.Load(creature, moveOnly: true);
+        var changed = new List<string?>();
+        viewModel.PropertyChanged += (_, args) => changed.Add(args.PropertyName);
+
+        viewModel.Unlock();
+        viewModel.PlaceNode(new Vector2D(30, 0));
+
+        viewModel.IsMoveOnly.ShouldBeFalse();
+        changed.ShouldContain(nameof(BuildViewModel.IsMoveOnly));
+        viewModel.Nodes.Count.ShouldBe(3);
+    }
+
+    [Fact]
     public void Load_ResetsActiveToolToMove()
     {
         var creature = new CreatureDef(

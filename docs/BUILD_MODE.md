@@ -34,7 +34,9 @@ locked is overridden in `docs/TRAINING_LOOP.md` → Product lifecycle boundary.
 - A saved creation opens fully editable until it is locked
   (`CreationLock`, see `docs/TRAINING_LOOP.md`). A locked one opens
   move-only: nodes can move and cameras can be aimed, but no parts or brain
-  shape change. Only what changes the model is locked (#638).
+  shape change. Only what changes the model is locked (#638). The padlock
+  in the top bar unlocks it for this visit and keeps the training (#371,
+  `docs/TRAINING_LOOP.md` step 6).
 
 ## Coordinates
 

@@ -16,7 +16,7 @@ namespace NodeRunner.Hosts;
 public partial class BuildHost : Node, IRoutedScene
 {
     private BuildScreen _buildScreen = null!;
-    private UiDialog _deleteCreationDialog = null!;
+    private UiDialog _dialog = null!;
     private bool _activeCreationDeleted;
     private ISceneNavigator? _navigator;
     private BuildRoute? _route;
@@ -41,8 +41,8 @@ public partial class BuildHost : Node, IRoutedScene
     public override void _Ready()
     {
         BindBuildScreen();
-        _deleteCreationDialog = GetNode<UiDialog>("%DeleteDialog");
-        _deleteCreationDialog.Finished += OnDeleteCreationDialogFinished;
+        _dialog = GetNode<UiDialog>("%Dialog");
+        _dialog.Finished += OnDialogFinished;
         AddAutosaveTimer();
         AddBackHandler();
         OpenRoute();
@@ -79,7 +79,7 @@ public partial class BuildHost : Node, IRoutedScene
             return;
         }
 
-        var back = new UiBackHandler { CanTakeBack = () => !_deleteCreationDialog.IsOpen && _buildScreen.CanTakeBack };
+        var back = new UiBackHandler { CanTakeBack = () => !_dialog.IsOpen && _buildScreen.CanTakeBack };
         back.BackRequested += BackFromBuildScreen;
         AddChild(back, @internal: InternalMode.Front);
     }
@@ -116,6 +116,7 @@ public partial class BuildHost : Node, IRoutedScene
         _buildScreen.StartTrainingRequested += StartTraining;
         _buildScreen.BackRequested += BackFromBuildScreen;
         _buildScreen.CreationNameChanged += RenameActiveCreation;
+        _buildScreen.UnlockRequested += RequestUnlock;
         _buildScreen.ResetTrainingRequested += ResetActiveCreationTraining;
         _buildScreen.DeleteCreationRequested += RequestDeleteActiveCreation;
         _buildScreen.PartNameChanged += Build.RenamePart;
@@ -270,15 +271,25 @@ public partial class BuildHost : Node, IRoutedScene
         }
     }
 
+    private void RequestUnlock()
+    {
+        if (!Build.IsMoveOnly || _dialog.IsOpen)
+        {
+            return;
+        }
+
+        _dialog.Open(CreationActions.UnlockDialog(Build.CreationName, Build.Unlock));
+    }
+
     private void RequestDeleteActiveCreation()
     {
-        if (_autosave?.CreationId is not { } id || _deleteCreationDialog.IsOpen)
+        if (_autosave?.CreationId is not { } id || _dialog.IsOpen)
         {
             return;
         }
 
         var name = Build.CreationName;
-        _deleteCreationDialog.Open(CreationActions.DeleteDialog(name, () => DeleteCreation(id, name)));
+        _dialog.Open(CreationActions.DeleteDialog(name, () => DeleteCreation(id, name)));
     }
 
     private bool DeleteCreation(Guid id, string name)
@@ -294,7 +305,7 @@ public partial class BuildHost : Node, IRoutedScene
     }
 
     // Leaves once the dialog has closed, so it is not freed mid-action.
-    private void OnDeleteCreationDialogFinished(bool confirmed)
+    private void OnDialogFinished(bool confirmed)
     {
         if (_activeCreationDeleted)
         {
