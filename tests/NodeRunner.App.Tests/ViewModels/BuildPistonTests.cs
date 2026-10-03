@@ -113,7 +113,7 @@ public sealed class BuildPistonTests
     {
         var (build, _) = ThreeLooseJoints();
         build.ConnectPiston(1, 2);
-        build.ToggleSelectedNode(2);
+        build.ToggleSelected(new(CreatureElementKind.Node, 2));
 
         build.DeleteSelectedParts();
 
@@ -134,7 +134,7 @@ public sealed class BuildPistonTests
     }
 
     [Fact]
-    public void SetPistonSettings_ChangesThem_EvenWhenLocked()
+    public void SetParameter_ChangesAPiston_EvenWhenLocked()
     {
         var builder = new CreatureBuilder();
         builder.AddNode(new Vector2D(0, 0));
@@ -142,14 +142,17 @@ public sealed class BuildPistonTests
         var piston = builder.AddPiston(1, 2);
         var build = new BuildViewModel();
         build.Load(builder.Build(), moveOnly: true);
+        build.SelectPiston(piston);
         var changes = 0;
         build.AnatomyChanged += (_, _) => changes++;
 
-        build.SetPistonSettings(piston, 20000, 0.5, 100);
-        build.SetPistonSettings(piston, 20000, 0.5, 100);
+        build.SetParameter(PartParameterId.Strength, 20000);
+        build.SetParameter(PartParameterId.Stroke, 0.5);
+        build.SetParameter(PartParameterId.MaxSpeed, 100);
+        build.SetParameter(PartParameterId.MaxSpeed, 100);
 
         build.Pistons.Single().ShouldBe(new PistonDef(piston, 1, 2, null, 20000, 0.5, 100));
-        changes.ShouldBe(1);
+        changes.ShouldBe(3);
     }
 
     [Fact]

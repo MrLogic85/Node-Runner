@@ -6,9 +6,9 @@ namespace NodeRunner.Theme;
 /// <summary>
 /// Draws a Piston between two joints (#451), shared by Build's canvas and the creature in
 /// Training: a thin <c>accent</c> rod from ring to ring, a cylinder at its first joint and a cap
-/// at its second. The cylinder's length is half the Piston's shortest length, so it never covers
-/// the rod even fully in, and a larger stroke shows as a shorter cylinder. Selected, it gets the
-/// beam's two <c>halo</c> lines and ticks at its shortest and longest length. Drawn in window
+/// at its second. The cylinder is the stroke's share of the built length from joint A's centre, so
+/// ±50% draws half the Piston. Selected, it gets the
+/// beam's two <c>halo</c> lines and, unless it is in a group, ticks at its shortest and longest length. Drawn in window
 /// pixels (<see cref="UiPixelSpace"/>) so it stays crisp at any zoom; <c>drawTransform</c> is the
 /// transform the caller draws with, and is restored afterwards.
 /// </summary>
@@ -36,7 +36,8 @@ public static class PistonDrawing
     /// <param name="shortest">The Piston's shortest length, centre to centre.</param>
     /// <param name="longest">The Piston's longest length, centre to centre.</param>
     /// <param name="line">The rod, cylinder and cap colour: <c>accent</c>, or <c>danger</c> while too short.</param>
-    /// <param name="selected">Whether to draw the selection halo and stroke ticks.</param>
+    /// <param name="selected">Whether to draw the selection halo.</param>
+    /// <param name="showStroke">Whether a selected Piston also shows its stroke ticks: only while its Stroke can be set (#704).</param>
     public static void Draw(
         CanvasItem canvas,
         Transform2D drawTransform,
@@ -48,7 +49,8 @@ public static class PistonDrawing
         float shortest,
         float longest,
         Color line,
-        bool selected)
+        bool selected,
+        bool showStroke = true)
     {
         ArgumentNullException.ThrowIfNull(canvas);
         ArgumentNullException.ThrowIfNull(theme);
@@ -67,8 +69,9 @@ public static class PistonDrawing
         var (rodStart, rodEnd) = JointDrawing.BeamSpan(theme.JointRingWidth, a, radiusA, b, radiusB) ?? (a, b);
         canvas.DrawLine(toPixels * rodStart, toPixels * rodEnd, line, theme.BeamWidth * _rodPerBeam * scale, antialiased: true);
 
+        // Half the travel, (longest − shortest) / 2, is the stroke's share of the built length.
         var cylinderStart = a + (along * radiusA);
-        var cylinderEnd = a + (along * Math.Max(shortest / 2, radiusA + _minCylinder));
+        var cylinderEnd = a + (along * Math.Max((longest - shortest) / 2, radiusA + _minCylinder));
         var cylinder = Cylinder(cylinderStart, cylinderEnd, along, across, cylinderHalf);
         canvas.DrawColoredPolygon([.. cylinder.Select(point => toPixels * point)], theme.SensorFill);
         canvas.DrawPolyline([.. cylinder.Append(cylinder[0]).Select(point => toPixels * point)], line, _line * scale, antialiased: true);
@@ -78,7 +81,11 @@ public static class PistonDrawing
 
         if (selected)
         {
-            DrawSelection(canvas, toPixels, scale, theme, a, b, along, across, cylinderHalf + _selectionGap, shortest, longest);
+            DrawSelection(canvas, toPixels, scale, theme, a, b, along, across, cylinderHalf + _selectionGap);
+            if (showStroke)
+            {
+                DrawStroke(canvas, toPixels, scale, theme, a, b, along, across, shortest, longest);
+            }
         }
 
         canvas.DrawSetTransformMatrix(drawTransform);
@@ -93,15 +100,27 @@ public static class PistonDrawing
         Vector2 b,
         Vector2 along,
         Vector2 across,
-        float offset,
-        float shortest,
-        float longest)
+        float offset)
     {
         var glow = theme.SelectionGlow;
         var width = theme.SelectedBeamLineWidth * scale;
         canvas.DrawLine(toPixels * (a + (across * offset)), toPixels * (b + (across * offset)), glow, width, antialiased: true);
         canvas.DrawLine(toPixels * (a - (across * offset)), toPixels * (b - (across * offset)), glow, width, antialiased: true);
+    }
 
+    private static void DrawStroke(
+        CanvasItem canvas,
+        Transform2D toPixels,
+        float scale,
+        VisualTheme theme,
+        Vector2 a,
+        Vector2 b,
+        Vector2 along,
+        Vector2 across,
+        float shortest,
+        float longest)
+    {
+        var glow = theme.SelectionGlow;
         var longestPoint = a + (along * longest);
         if (a.DistanceTo(b) < longest)
         {

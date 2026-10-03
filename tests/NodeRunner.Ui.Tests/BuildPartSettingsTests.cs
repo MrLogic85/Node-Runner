@@ -16,21 +16,22 @@ public sealed class BuildPartSettingsTests
     public void PartSettings_IsRowsThenDelete_WithNoCloseButton()
     {
         Children("/PartSettings").ShouldBe(["PartRows", "PartActions"]);
-        Children("/PartSettings/PartRows").ShouldBe(["PartName", "PistonSettings", "PartConnections", "PartNote"]);
+        Children("/PartSettings/PartRows").ShouldBe(["PartName", "PartParameters", "PartConnections", "PartNote"]);
         Children("/PartSettings/PartActions").ShouldBe(["PartDelete"]);
         _build.ShouldNotContain(node => node.Name == "PartClose");
     }
 
     [Fact]
-    public void PistonSettings_AreThreeLibrarySliders_HiddenUntilAPistonIsPicked()
+    public void ParameterSliders_AreMadeFromThePresentation_NotNamedInTheScene()
     {
-        var settings = _build.Single(node => node.Name == "PistonSettings");
+        var part = _build.Single(node => node.Name == "PartParameters");
 
-        settings.IsUnique.ShouldBeTrue();
-        settings.Node.Body.ShouldContain("visible = false");
-        Children("/PartSettings/PartRows/PistonSettings").ShouldBe(["PistonStrength", "PistonStroke", "PistonMaxSpeed"]);
-        _build.Where(node => node.Name.StartsWith("Piston") && node.Name != "PistonSettings")
-            .ShouldAllBe(node => node.IsUnique && node.Script == "res://src/ui/lib/UiSlider.cs");
+        part.IsUnique.ShouldBeTrue();
+        part.Node.Body.ShouldContain("visible = false");
+        _build.Single(node => node.Name == "SelectionParameters").IsUnique.ShouldBeTrue();
+        Children("/PartSettings/PartRows/PartParameters").ShouldBeEmpty();
+        Children("/Selection/SelectionSettings/SelectionParameters").ShouldBeEmpty();
+        _build.ShouldNotContain(node => node.Script == "res://src/ui/lib/UiSlider.cs");
     }
 
     [Fact]
@@ -64,9 +65,10 @@ public sealed class BuildPartSettingsTests
     }
 
     [Fact]
-    public void Selection_ExplainsTheThreeHandles_ThenDeleteAndItsNote_WithNoCloseButton()
+    public void Selection_HasSharedSettings_TheThreeHandles_ThenDeleteAndItsNote_WithNoCloseButton()
     {
-        Children("/Selection").ShouldBe(["SelectionRows", "SelectionActions"]);
+        Children("/Selection").ShouldBe(["SelectionSettings", "SelectionEmptyNote", "SelectionRows", "SelectionActions"]);
+        Children("/Selection/SelectionSettings").ShouldBe(["SelectionParameters", "SelectionSettingsNote"]);
         Children("/Selection/SelectionRows").ShouldBe(["SelectionMove", "SelectionRotate", "SelectionScale"]);
         Children("/Selection/SelectionActions").ShouldBe(["SelectionDelete", "SelectionDeleteNote"]);
         _build.ShouldNotContain(node => node.Name == "SelectionClear");

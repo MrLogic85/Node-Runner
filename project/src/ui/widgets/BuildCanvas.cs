@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using Godot;
+using NodeRunner.App.Builders;
 using NodeRunner.App.Lifecycle;
 using NodeRunner.App.ViewModels;
 using NodeRunner.Domain;
@@ -313,6 +314,9 @@ public partial class BuildCanvas : Node2D
         DrawBeamPreview();
         DrawRigidTriangles();
 
+        // A dragged Select box shows what it would catch; the selection is cleared meanwhile (#704).
+        var caught = _gestures.SelectionBoxCatches;
+        var selected = caught.Count > 0 ? caught : _viewModel.Selection;
         foreach (var beam in _viewModel.Beams)
         {
             var nodeA = NodeById(beam.NodeA);
@@ -325,25 +329,23 @@ public partial class BuildCanvas : Node2D
             // A beam too short for training (#593) is drawn in danger until its joints move apart.
             var color = CreatureReadiness.IsTooShort(nodeA, nodeB) ? Theme.Danger : Theme.Beam;
             DrawLine(start, end, color, Stroke(Theme.BeamWidth), antialiased: false);
-            if (_viewModel.SingleSelectedBeamId == beam.Id)
+            if (selected.Beams.Contains(beam.Id))
             {
                 SelectionDrawing.DrawBeam(this, ViewTransform(), Theme.SelectionGlow, Stroke(Theme.SelectedBeamOffset), Stroke(Theme.SelectedBeamLineWidth), start, end);
             }
         }
 
-        DrawPistons();
-        DrawSensors();
+        DrawPistons(selected);
+        DrawSensors(selected);
 
-        var caught = _gestures.SelectionBoxCatches.ToHashSet();
         for (var nodeIndex = 0; nodeIndex < _viewModel.Nodes.Count; nodeIndex++)
         {
             var node = _viewModel.Nodes[nodeIndex];
             var position = ToGodot(node.Position);
-            // A dragged Select box shows the halos of the joints it would catch.
-            var selected = _viewModel.SelectedNodeIds.Contains(node.Id) || caught.Contains(node.Id);
-            var look = selected ? JointLook.Selected : ShowsAsLoose(node.Id) ? JointLook.Loose : JointLook.Plain;
+            var isSelected = selected.Nodes.Contains(node.Id);
+            var look = isSelected ? JointLook.Selected : ShowsAsLoose(node.Id) ? JointLook.Loose : JointLook.Plain;
             JointDrawing.DrawPlain(this, Theme, ViewTransform(), position, (float)node.Radius, look);
-            if (selected)
+            if (isSelected)
             {
                 SelectionDrawing.DrawJoint(this, Theme, ViewTransform(), position, (float)(node.Radius * BuildGestures.SelectedHaloScale));
             }
@@ -358,10 +360,11 @@ public partial class BuildCanvas : Node2D
     }
 
     /// <summary>Each Piston over the beams (#451); one too short to train is drawn in danger, like a beam.</summary>
-    private void DrawPistons()
+    private void DrawPistons(PartSet selected)
     {
         var viewTransform = ViewTransform();
-        foreach (var piston in _viewModel!.Pistons)
+        var showStroke = _viewModel!.CanEdit(PartParameterId.Stroke);
+        foreach (var piston in _viewModel.Pistons)
         {
             var nodeA = NodeById(piston.NodeA);
             var nodeB = NodeById(piston.NodeB);
@@ -377,7 +380,8 @@ public partial class BuildCanvas : Node2D
                 (float)Piston.ShortestLength(built, piston.Stroke),
                 (float)Piston.LongestLength(built, piston.Stroke),
                 CreatureReadiness.IsTooShort(nodeA, nodeB) ? Theme.Danger : Theme.MotorAccent,
-                _viewModel.SingleSelectedPistonId == piston.Id);
+                selected.Pistons.Contains(piston.Id),
+                showStroke);
         }
     }
 
@@ -393,13 +397,13 @@ public partial class BuildCanvas : Node2D
     /// side: the Accelerometer with its weight where <see cref="BuildSensorMotion"/> has it, and
     /// the camera looking along its rays (drawn later, over the joints).
     /// </summary>
-    private void DrawSensors()
+    private void DrawSensors(PartSet selected)
     {
         var viewTransform = ViewTransform();
         foreach (var sensor in _viewModel!.Sensors)
         {
             var beam = _viewModel.Beams[_viewModel.BeamIndexOf(sensor.BeamId)];
-            DrawSensor(beam, sensor.Kind, sensor.Aim, sensor.Id, _viewModel.SingleSelectedSensorId == sensor.Id, viewTransform);
+            DrawSensor(beam, sensor.Kind, sensor.Aim, sensor.Id, selected.Sensors.Contains(sensor.Id), viewTransform);
         }
 
         // The sensor a tray drag would place on the free beam under the finger (#376).
@@ -411,10 +415,10 @@ public partial class BuildCanvas : Node2D
         }
     }
 
-    /// <summary>The selected Camera's rays, over the joints so the creature never hides them (#623).</summary>
+    /// <summary>The Camera's rays while its aim can be set, over the joints so the creature never hides them (#623).</summary>
     private void DrawSelectedCameraRays()
     {
-        if (_viewModel!.SingleSelectedSensorId is not { } id
+        if (_viewModel!.AimableCameraId is not { } id
             || _viewModel.Sensors.Single(sensor => sensor.Id == id) is not { Kind: SensorKind.Camera } camera)
         {
             return;

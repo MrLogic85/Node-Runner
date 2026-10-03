@@ -1,3 +1,4 @@
+using NodeRunner.App.Builders;
 using NodeRunner.App.ViewModels;
 using NodeRunner.Domain;
 
@@ -94,9 +95,9 @@ public sealed class BuildPresentationViewModelTests
             [new BeamDef(101, 1, 2)],
             []));
         build.SelectBeam(101);
-        var presentation = new BuildPresentationViewModel(build);
+        var part = new BuildPresentationViewModel(build).SinglePart!;
 
-        presentation.SinglePart.ShouldBe(new PartSettingsPresentation(
+        part.ShouldBe(new PartSettingsPresentation(
             101,
             PartSettingsKind.Beam,
             "Beam 1",
@@ -104,7 +105,9 @@ public sealed class BuildPresentationViewModelTests
             "Between",
             "Node 1 ↔ Node 2",
             "Drag its ends to change the length.",
-            CanDelete: true));
+            CanDelete: true,
+            part.Settings));
+        part.Settings.ShouldBeEmpty();
     }
 
     [Theory]
@@ -120,7 +123,10 @@ public sealed class BuildPresentationViewModelTests
         build.SelectSensor(7);
         var presentation = new BuildPresentationViewModel(build);
 
-        presentation.SinglePart.ShouldBe(new PartSettingsPresentation(7, partKind, name, name, "On", "Thigh", note, CanDelete: true));
+        var part = presentation.SinglePart!;
+
+        part.ShouldBe(new PartSettingsPresentation(7, partKind, name, name, "On", "Thigh", note, CanDelete: true, part.Settings));
+        part.Settings.ShouldBeEmpty();
     }
 
     [Fact]
@@ -150,10 +156,10 @@ public sealed class BuildPresentationViewModelTests
             ],
             [new BeamDef(101, 1, 2), new BeamDef(102, 2, 3, "Shin")],
             []));
-        build.ToggleSelectedNode(2);
-        var presentation = new BuildPresentationViewModel(build);
+        build.ToggleSelected(new(CreatureElementKind.Node, 2));
+        var part = new BuildPresentationViewModel(build).SinglePart!;
 
-        presentation.SinglePart.ShouldBe(new PartSettingsPresentation(
+        part.ShouldBe(new PartSettingsPresentation(
             2,
             PartSettingsKind.Node,
             "Knee",
@@ -161,7 +167,23 @@ public sealed class BuildPresentationViewModelTests
             "Beams",
             "Beam 1 · Shin",
             "Beams meet and turn here. Drag it to move them.",
-            CanDelete: true));
+            CanDelete: true,
+            part.Settings));
+        part.Settings.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void SelectedPiston_HasASliderForEachOfItsSettings()
+    {
+        var build = new BuildViewModel();
+        build.Load(TwoPistonCreature(stroke: 0.3));
+        build.SelectPiston(301);
+
+        var part = new BuildPresentationViewModel(build).SinglePart!;
+
+        part.Note.ShouldBe(BuildPresentationViewModel.PistonNote);
+        part.Settings.Select(slider => slider.Readout).ShouldBe(["250 N", "±30%", "2.0 m/s"]);
+        part.Settings.ShouldAllBe(slider => !slider.ValuesDiffer);
     }
 
     [Fact]
@@ -169,7 +191,7 @@ public sealed class BuildPresentationViewModelTests
     {
         var build = new BuildViewModel();
         build.Load(new CreatureDef([new NodeDef(1, new Vector2D(0, 0))], [], []));
-        build.ToggleSelectedNode(1);
+        build.ToggleSelected(new(CreatureElementKind.Node, 1));
 
         new BuildPresentationViewModel(build).SinglePart!.ConnectionsValue.ShouldBe("None yet");
     }
@@ -183,7 +205,7 @@ public sealed class BuildPresentationViewModelTests
             "Worm",
             PairCreature(),
             TestTraining.State(3, 1, TestTraining.Run)));
-        build.ToggleSelectedNode(build.Nodes[0].Id);
+        build.ToggleSelected(new(CreatureElementKind.Node, build.Nodes[0].Id));
 
         new BuildPresentationViewModel(build).SinglePart!.CanDelete.ShouldBeFalse();
     }
@@ -199,8 +221,8 @@ public sealed class BuildPresentationViewModelTests
         var presentation = new BuildPresentationViewModel(build);
 
         presentation.SinglePart.ShouldBeNull();
-        build.ToggleSelectedNode(1);
-        build.ToggleSelectedNode(2);
+        build.ToggleSelected(new(CreatureElementKind.Node, 1));
+        build.ToggleSelected(new(CreatureElementKind.Node, 2));
         presentation.SinglePart.ShouldBeNull();
     }
 
@@ -218,18 +240,80 @@ public sealed class BuildPresentationViewModelTests
     }
 
     [Fact]
-    public void Selection_CountsTheJointsAndOffersDelete()
+    public void Selection_OfJoints_ShowsTheFrameHelp_AndOffersDelete()
     {
         var build = new BuildViewModel();
-        build.Load(PairCreature());
-        build.ToggleSelectedNode(1);
-        build.ToggleSelectedNode(2);
+        build.Load(PistonCreature());
+        build.ReplaceSelection([1, 2, 3]);
+        var selection = new BuildPresentationViewModel(build).Selection!;
 
-        new BuildPresentationViewModel(build).Selection.ShouldBe(new SelectionPanelPresentation(
-            "2 selected",
-            "Delete 2",
+        selection.Settings.ShouldBeEmpty();
+        selection.ShouldBe(new SelectionPanelPresentation(
+            "3 selected",
+            selection.Settings,
+            string.Empty,
+            string.Empty,
+            ShowFrameRows: true,
+            "Delete 3",
             "Beams on a deleted node go with it.",
             CanDelete: true));
+    }
+
+    [Fact]
+    public void Selection_OfPistons_SharesTheirSettings_AndShowsDifferingValuesAsARange()
+    {
+        var build = new BuildViewModel();
+        build.Load(TwoPistonCreature(stroke: 0.3));
+        build.ReplaceSelection(PartSet.None with { Pistons = new HashSet<int> { 301, 302 } });
+
+        var selection = new BuildPresentationViewModel(build).Selection!;
+
+        selection.ShowFrameRows.ShouldBeFalse();
+        selection.EmptyNote.ShouldBeEmpty();
+        selection.SettingsNote.ShouldBe("A slider sets one value for all of them.");
+        selection.DeleteNote.ShouldBeEmpty();
+        selection.Settings.Select(slider => slider.Id).ShouldBe(
+            [PartParameterId.Strength, PartParameterId.Stroke, PartParameterId.MaxSpeed]);
+        var strength = selection.Settings[0];
+        strength.Readout.ShouldBe("100–250 N");
+        strength.ValuesDiffer.ShouldBeTrue();
+        strength.Low.ShouldBe(PartParameters.Strength.Slider!.Range.Position(100));
+        strength.High.ShouldBe(PartParameters.Strength.Slider!.Range.Position(250));
+        selection.Settings[1].ShouldBe(new ParameterSlider(PartParameterId.Stroke, "Stroke", "±30%", 0.5, 0.5, 5.0 / 40));
+    }
+
+    [Fact]
+    public void Selection_ValuesThatShowTheSame_DoNotDiffer()
+    {
+        var build = new BuildViewModel();
+        build.Load(TwoPistonCreature(stroke: 0.3, otherStroke: 0.3001));
+        build.ReplaceSelection(PartSet.None with { Pistons = new HashSet<int> { 301, 302 } });
+
+        new BuildPresentationViewModel(build).Selection!.Settings[1].ValuesDiffer.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Selection_OfAJointAndAPiston_SharesNothing()
+    {
+        var build = new BuildViewModel();
+        build.Load(PistonCreature());
+        build.ReplaceSelection(new PartSet(new HashSet<int> { 1 }, new HashSet<int>(), new HashSet<int>(), new HashSet<int> { 301 }));
+
+        var selection = new BuildPresentationViewModel(build).Selection!;
+
+        selection.Settings.ShouldBeEmpty();
+        selection.ShowFrameRows.ShouldBeFalse();
+        selection.EmptyNote.ShouldBe("These parts share no settings.");
+    }
+
+    [Fact]
+    public void Selection_OfBeams_WarnsThatTheirSensorsGoWithThem()
+    {
+        var build = new BuildViewModel();
+        build.Load(PistonCreature());
+        build.ReplaceSelection(PartSet.None with { Beams = new HashSet<int> { 101, 102 } });
+
+        new BuildPresentationViewModel(build).Selection!.DeleteNote.ShouldBe("A sensor on a deleted beam goes with it.");
     }
 
     [Fact]
@@ -243,7 +327,9 @@ public sealed class BuildPresentationViewModelTests
             TestTraining.State(3, 1, TestTraining.Run)));
         build.ReplaceSelection([1, 2]);
 
-        new BuildPresentationViewModel(build).Selection!.CanDelete.ShouldBeFalse();
+        var selection = new BuildPresentationViewModel(build).Selection!;
+        selection.Title.ShouldBe("2 selected");
+        selection.CanDelete.ShouldBeFalse();
     }
 
     [Fact]
@@ -254,7 +340,7 @@ public sealed class BuildPresentationViewModelTests
         var presentation = new BuildPresentationViewModel(build);
 
         presentation.Selection.ShouldBeNull();
-        build.ToggleSelectedNode(1);
+        build.ToggleSelected(new(CreatureElementKind.Node, 1));
         presentation.Selection.ShouldBeNull();
     }
 
@@ -334,4 +420,10 @@ public sealed class BuildPresentationViewModelTests
         [new BeamDef(101, 1, 2), new BeamDef(102, 2, 3)],
         [new SensorDef(201, 101, SensorKind.Accelerometer)],
         [new PistonDef(301, 1, 3)]);
+
+    private static CreatureDef TwoPistonCreature(double stroke, double otherStroke = 0.3) => new(
+        [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(90, 0)), new NodeDef(3, new Vector2D(0, 90)), new NodeDef(4, new Vector2D(90, 90))],
+        [new BeamDef(101, 1, 2), new BeamDef(102, 3, 4)],
+        [],
+        [new PistonDef(301, 1, 3, strength: 25000, stroke: stroke), new PistonDef(302, 2, 4, strength: 10000, stroke: otherStroke)]);
 }

@@ -137,7 +137,7 @@ public sealed class BuildPlacementTests
         var build = TwoBeams();
         build.PlacePart(BuildPart.Accelerometer, _firstJoint);
 
-        build.ToggleSelectedNode(1);
+        build.ToggleSelected(new(CreatureElementKind.Node, 1));
         build.DeleteSelectedParts();
 
         build.CanvasNotes().ShouldBeEmpty();

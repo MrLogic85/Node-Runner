@@ -1,3 +1,4 @@
+using NodeRunner.App.Builders;
 using NodeRunner.App.Services;
 using NodeRunner.App.ViewModels;
 using NodeRunner.Domain;
@@ -53,6 +54,129 @@ public sealed class BuildViewModelTests
         viewModel.Nodes[1].Position.X.ShouldBe(_area.Max.X - NodeDef.PlainJointRadius);
         viewModel.Nodes[0].Position.X.ShouldBe(_area.Max.X - NodeDef.PlainJointRadius - 100, 1e-9);
     }
+
+    [Fact]
+    public void ToggleSelected_AddsAndRemovesAnyPart_KeepingTheRest()
+    {
+        var build = new BuildViewModel();
+        build.Load(Carrier());
+
+        build.ToggleSelected(new(CreatureElementKind.Node, 1));
+        build.ToggleSelected(new(CreatureElementKind.Beam, 101));
+        build.ToggleSelected(new(CreatureElementKind.Piston, 301));
+        build.ToggleSelected(new(CreatureElementKind.Sensor, 201));
+        build.SelectedPartCount.ShouldBe(4);
+
+        build.ToggleSelected(new(CreatureElementKind.Beam, 101));
+        build.Selection.Beams.ShouldBeEmpty();
+        build.Selection.Nodes.ShouldBe([1]);
+        build.StatusMessage.ShouldBe("3 selected.");
+    }
+
+    [Fact]
+    public void DeleteSelectedParts_DeletesEachSelectedPart_EvenOnesADeletedBeamOrJointTakes()
+    {
+        var build = new BuildViewModel();
+        build.Load(Carrier());
+        build.ReplaceSelection(new PartSet(
+            new HashSet<int> { 3 },
+            new HashSet<int> { 101, 102 },
+            new HashSet<int> { 201 },
+            new HashSet<int> { 301 }));
+
+        build.DeleteSelectedParts();
+
+        build.Nodes.Select(node => node.Id).ShouldBe([1, 2]);
+        build.Beams.ShouldBeEmpty();
+        build.Sensors.ShouldBeEmpty();
+        build.Pistons.ShouldBeEmpty();
+        build.SelectedPartCount.ShouldBe(0);
+    }
+
+    [Fact]
+    public void SetParameter_ChangesOnlyThatSetting_OnEverySelectedPiston()
+    {
+        var build = new BuildViewModel();
+        build.Load(new CreatureDef(
+            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(90, 0)), new NodeDef(3, new Vector2D(0, 90)), new NodeDef(4, new Vector2D(90, 90))],
+            [new BeamDef(101, 1, 2), new BeamDef(102, 3, 4)],
+            [],
+            [new PistonDef(301, 1, 3, stroke: 0.2), new PistonDef(302, 2, 4, stroke: 0.4), new PistonDef(303, 1, 4)]));
+        build.ReplaceSelection(PartSet.None with { Pistons = new HashSet<int> { 301, 302 } });
+
+        build.SetParameter(PartParameterId.Strength, 20000);
+        build.SetParameter(PartParameterId.MaxSpeed, 100);
+
+        build.Pistons.Select(piston => (piston.Strength, piston.Stroke, piston.MaxSpeed)).ShouldBe([
+            (20000, 0.2, 100),
+            (20000, 0.4, 100),
+            (PistonDef.DefaultStrength, PistonDef.DefaultStroke, PistonDef.DefaultMaxSpeed)]);
+
+        build.SetParameter(PartParameterId.Stroke, 0.5);
+        build.Pistons.Select(piston => piston.Stroke).ShouldBe([0.5, 0.5, PistonDef.DefaultStroke]);
+    }
+
+    [Fact]
+    public void SetParameter_OnALockedCreation_ChangesOnce_AndNotAgainForTheSameValue()
+    {
+        var build = new BuildViewModel();
+        build.Load(new CreatureDef(
+            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(90, 0)), new NodeDef(3, new Vector2D(0, 90))],
+            [],
+            [],
+            [new PistonDef(301, 1, 2), new PistonDef(302, 1, 3, stroke: 0.4)]), moveOnly: true);
+        build.ReplaceSelection(PartSet.None with { Pistons = new HashSet<int> { 301, 302 } });
+        var changes = 0;
+        build.AnatomyChanged += (_, _) => changes++;
+
+        build.SetParameter(PartParameterId.Stroke, 0.2);
+        build.SetParameter(PartParameterId.Stroke, 0.2);
+
+        build.Pistons.Select(piston => piston.Stroke).ShouldBe([0.2, 0.2]);
+        changes.ShouldBe(1);
+    }
+
+    [Theory]
+    [InlineData(new[] { 301 }, "Strength,Stroke,MaxSpeed")]
+    [InlineData(new[] { 301, 302 }, "Strength,Stroke,MaxSpeed")]
+    [InlineData(new[] { 301, 1 }, "")]
+    [InlineData(new[] { 301, 101 }, "")]
+    [InlineData(new[] { 201 }, "Aim")]
+    [InlineData(new[] { 201, 202 }, "")]
+    [InlineData(new[] { 201, 301 }, "")]
+    [InlineData(new int[0], "")]
+    public void EditableParameters_AreOnePartsOwn_OrThoseEverySelectedPartHasAndCanShare(int[] parts, string editable)
+    {
+        var build = new BuildViewModel();
+        build.Load(new CreatureDef(
+            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(90, 0)), new NodeDef(3, new Vector2D(180, 0))],
+            [new BeamDef(101, 1, 2), new BeamDef(102, 2, 3)],
+            [new SensorDef(201, 101, SensorKind.Camera), new SensorDef(202, 102, SensorKind.Camera)],
+            [new PistonDef(301, 1, 2), new PistonDef(302, 2, 3)]));
+        build.ReplaceSelection(new PartSet(
+            parts.Where(id => id < 100).ToHashSet(),
+            parts.Where(id => id is > 100 and < 200).ToHashSet(),
+            parts.Where(id => id is > 200 and < 300).ToHashSet(),
+            parts.Where(id => id > 300).ToHashSet()));
+
+        string.Join(',', build.EditableParameters).ShouldBe(editable);
+    }
+
+    [Fact]
+    public void SetParameter_ThatNotEverySelectedPartHas_Throws()
+    {
+        var build = new BuildViewModel();
+        build.Load(Carrier());
+        build.ReplaceSelection(PartSet.None with { Nodes = new HashSet<int> { 1 }, Pistons = new HashSet<int> { 301 } });
+
+        Should.Throw<InvalidOperationException>(() => build.SetParameter(PartParameterId.Strength, 20000));
+    }
+
+    private static CreatureDef Carrier() => new(
+        [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(90, 0)), new NodeDef(3, new Vector2D(180, 0))],
+        [new BeamDef(101, 1, 2), new BeamDef(102, 2, 3)],
+        [new SensorDef(201, 101, SensorKind.Accelerometer)],
+        [new PistonDef(301, 1, 3)]);
 
     [Fact]
     public void SnapshotSelection_PivotsOnTheCentreOfTheJointsBounds()
@@ -534,7 +658,7 @@ public sealed class BuildViewModelTests
         var a = viewModel.PlaceNode(new Vector2D(0, 0));
         var b = viewModel.PlaceNode(new Vector2D(10, 0));
         viewModel.ConnectBeam(a, b);
-        viewModel.ToggleSelectedNode(a);
+        viewModel.ToggleSelected(new(CreatureElementKind.Node, a));
         var raisedFor = new List<string?>();
         var anatomyChanged = false;
         viewModel.PropertyChanged += (_, args) => raisedFor.Add(args.PropertyName);
@@ -612,17 +736,12 @@ public sealed class BuildViewModelTests
     }
 
     [Fact]
-    public void SelectingAJointOrBeam_DropsTheSelectedSensor()
+    public void SelectingABeam_DropsTheSelectedSensor()
     {
         var viewModel = new BuildViewModel();
         viewModel.Load(SensorCreature());
         viewModel.SelectSensor(4);
 
-        viewModel.ToggleSelectedNode(1);
-        viewModel.SingleSelectedSensorId.ShouldBeNull();
-        viewModel.SelectedPartCount.ShouldBe(1);
-
-        viewModel.SelectSensor(4);
         viewModel.SelectBeam(3);
         viewModel.SingleSelectedSensorId.ShouldBeNull();
         viewModel.SelectedPartCount.ShouldBe(1);
@@ -791,27 +910,29 @@ public sealed class BuildViewModelTests
     }
 
     [Fact]
-    public void SetCameraAim_TurnsTheCameraAndRedrawsOnlyOnAChange()
+    public void SetAim_TurnsTheCameraAndRedrawsOnlyOnAChange()
     {
         var build = new BuildViewModel();
         build.Load(CameraPair(), moveOnly: false);
+        build.SelectSensor(4);
         var changes = 0;
         build.AnatomyChanged += (_, _) => changes++;
 
-        build.SetCameraAim(4, 1);
-        build.SetCameraAim(4, 1);
+        build.SetParameter(PartParameterId.Aim, 1);
+        build.SetParameter(PartParameterId.Aim, 1);
 
         build.Sensors[0].Aim.ShouldBe(1);
         changes.ShouldBe(1);
     }
 
     [Fact]
-    public void SetCameraAim_WhenLocked_TurnsTheCamera()
+    public void SetAim_WhenLocked_TurnsTheCamera()
     {
         var build = new BuildViewModel();
         build.Load(CameraPair(), moveOnly: true);
+        build.SelectSensor(4);
 
-        build.SetCameraAim(4, 1);
+        build.SetParameter(PartParameterId.Aim, 1);
 
         build.Sensors[0].Aim.ShouldBe(1);
     }

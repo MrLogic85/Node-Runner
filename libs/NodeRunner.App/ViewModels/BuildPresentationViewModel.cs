@@ -108,9 +108,9 @@ public sealed class BuildPresentationViewModel
                     _build.DefaultPartName(pistonId),
                     string.Empty,
                     string.Empty,
-                    PistonSettings.Note,
+                    PistonNote,
                     canDelete,
-                    PistonSettings.For(_build.Pistons[_build.PistonIndexOf(pistonId)]));
+                    PanelSliders());
             }
 
             if (_build.SingleSelectedSensorId is { } sensorId)
@@ -124,7 +124,8 @@ public sealed class BuildPresentationViewModel
                     "On",
                     _build.PartDisplayName(sensor.BeamId),
                     _build.AimableCameraId == sensorId ? $"{SensorNote(sensor.Kind)} {AimNote}" : SensorNote(sensor.Kind),
-                    canDelete);
+                    canDelete,
+                    PanelSliders());
             }
 
             if (_build.SingleSelectedBeamId is { } beamId)
@@ -138,7 +139,8 @@ public sealed class BuildPresentationViewModel
                     "Between",
                     $"{_build.PartDisplayName(beam.NodeA)} ↔ {_build.PartDisplayName(beam.NodeB)}",
                     "Drag its ends to change the length.",
-                    canDelete);
+                    canDelete,
+                    PanelSliders());
             }
 
             if (_build.SingleSelectedNodeId is { } nodeId)
@@ -151,12 +153,21 @@ public sealed class BuildPresentationViewModel
                     "Beams",
                     ConnectedBeamText(nodeId),
                     "Beams meet and turn here. Drag it to move them.",
-                    canDelete);
+                    canDelete,
+                    PanelSliders());
             }
 
             return null;
         }
     }
+
+    public const string PistonNote = "The brain pushes it out and pulls it in, within its stroke.";
+
+    /// <summary>A slider for each setting the selection can change in the panel (#704).</summary>
+    private List<ParameterSlider> PanelSliders() =>
+        [.. _build.EditableParameters
+            .Where(id => PartParameters.Of(id).InPanel)
+            .Select(id => PartParameters.SliderOver(id, _build.SelectedValuesOf(id)))];
 
     /// <summary>Added to an unlocked Camera's note: what its Aim handle does (#594).</summary>
     public const string AimNote = "Drag the round handle to aim it.";
@@ -168,14 +179,36 @@ public sealed class BuildPresentationViewModel
         _ => throw new ArgumentOutOfRangeException(nameof(kind)),
     };
 
-    /// <summary>The selection panel, or null unless several parts are selected.</summary>
-    public SelectionPanelPresentation? Selection => _build.SelectedPartCount > 1
-        ? new SelectionPanelPresentation(
-            $"{_build.SelectedPartCount} selected",
-            $"Delete {_build.SelectedPartCount}",
-            "Beams on a deleted node go with it.",
-            CanDelete: !_build.IsMoveOnly)
-        : null;
+    /// <summary>The selection panel, or null unless several parts are selected (#704).</summary>
+    public SelectionPanelPresentation? Selection
+    {
+        get
+        {
+            var count = _build.SelectedPartCount;
+            if (count < 2)
+            {
+                return null;
+            }
+
+            var selection = _build.Selection;
+            var settings = PanelSliders();
+            var showFrameRows = _build.SelectedNodeCount >= 2;
+            var deleteNote = selection.Nodes.Count > 0
+                ? "Beams on a deleted node go with it."
+                : _build.Sensors.Any(sensor => selection.Beams.Contains(sensor.BeamId) && !selection.Sensors.Contains(sensor.Id))
+                    ? "A sensor on a deleted beam goes with it."
+                    : string.Empty;
+            return new SelectionPanelPresentation(
+                $"{count} selected",
+                settings,
+                settings.Count > 0 ? "A slider sets one value for all of them." : string.Empty,
+                settings.Count == 0 && !showFrameRows ? "These parts share no settings." : string.Empty,
+                showFrameRows,
+                $"Delete {count}",
+                deleteNote,
+                CanDelete: !_build.IsMoveOnly);
+        }
+    }
 
     public bool LockTopologyTools => _build.IsMoveOnly;
 

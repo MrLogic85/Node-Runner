@@ -4,6 +4,12 @@ using NodeRunner.Domain;
 namespace NodeRunner.App.ViewModels;
 
 /// <summary>
+/// One stepped slider row: its label, its readout, its thumb at 0…1 and the distance between two
+/// whole steps on that scale, so the thumb stops only where the value does (#711).
+/// </summary>
+public sealed record SettingSlider(string Label, string Readout, double Position, double Step);
+
+/// <summary>
 /// Train setup (#194), between Build and Training: the Shadows and Run length sliders, filled from
 /// the Creation's saved values or the default. Start saves <see cref="Settings"/> on the Creation
 /// (#617). The selected map card names <see cref="Maps.Default"/> (#444). Simulate, the map choice
@@ -38,13 +44,13 @@ public sealed class TrainSetupPresentationViewModel
 
     public TrainSettingsDef Settings { get; private set; }
 
-    public PartSlider Shadows => new(
+    public SettingSlider Shadows => new(
         "Shadows",
         Settings.Shadows.ToString(CultureInfo.InvariantCulture),
         ShadowsRange.Position(Settings.Shadows),
         ShadowsRange.PositionStep);
 
-    public PartSlider RunLength => new(
+    public SettingSlider RunLength => new(
         "Run length",
         Seconds(Settings.RunLengthSeconds),
         RunLengthRange.Position(Settings.RunLengthSeconds),

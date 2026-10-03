@@ -81,7 +81,7 @@ public partial class TrainSetupScreen : Control
         Bind(GetNode<UiSlider>("%RunLength"), _presentation.RunLength, _presentation.RunLengthEnds);
     }
 
-    private static void Bind(UiSlider slider, PartSlider value, string[] ends)
+    private static void Bind(UiSlider slider, SettingSlider value, string[] ends)
     {
         slider.LabelText = value.Label;
         slider.ReadoutText = value.Readout;

@@ -125,13 +125,17 @@ reference would mislead someone working on that surface.
   hint, which was in the way, and after a Rotate the frame and its handles
   stay turned with the group until the selection changes. The reference
   has no box select; ours is dashed like the frame, filled `halo` at
-  `alpha_soft`, and halos the joints it would catch.
+  `alpha_soft`, and shows the parts it would catch as selected.
 - **Piston settings are sliders (#451).** The reference's Piston panel
   lists what it joins ("Between"), its power draw and its weight. Instead
   its Part settings show three `UiSlider`s, Max strength, Stroke and Max
   speed, and leave those rows out: a Piston has no weight, power comes in
   0.18.0, and the canvas already shows its two joints. Owner decision: every
   setting is editable, and like a Camera's aim a locked creation keeps them.
+- **Differing values on a slider (#704).** The reference has none. Several
+  selected Pistons share their sliders; where their values differ the readout
+  shows `low–high` and the span has Marker ends and no thumb. A touch sets
+  one value and gives it a thumb.
 - **Latest, not best, on the card and in Build (#479, 0.13.0).** The
   reference BuildLocked panel shows the best distance. Instead the
   Creations card values and the Build training summary show the latest
@@ -274,7 +278,7 @@ reference would mislead someone working on that surface.
     Training.
   - *Orientation:* the side of the beam that faces up as built is the
     sensor's top, and it then turns with the beam; it never flips during a
-    run. The Camera looks along its aim. A selected Camera draws its rays
+    run. The Camera looks along its aim. A Camera selected alone draws its rays
     from the midpoint plus an Aim handle (the rotate handle's glyph) out
     along its centre ray past the picture, with no stem; dragging it turns
     the camera smoothly, with no snap. In Training a Camera on the followed
@@ -431,7 +435,11 @@ entries are not components of their own in Godot
   `space-1` gap, holding rows that carry no outer padding of their own, and an
   optional full-width danger Delete at the end with `space-2` above it
   ([#343](https://github.com/MrLogic85/Node-Runner/issues/343)).
-- **`c_prog` and `c_meter`** are `UiSlider` with `ValueKind` Progress (no
+- **`UiSlider`** draws a filled span from `Low` to `High`, each a
+  `UiSliderEnd` that is Rounded, Thumb (draggable) or Marker (square with a
+  tick). One value is Rounded + Thumb, a range Thumb + Thumb. With no thumb a
+  touch raises `TrackPressed` and its screen decides.
+- **`c_prog` and `c_meter`** are `UiSlider` with two Rounded ends (no
   thumb). `c_meter` is the same slider with a label and value, as the reference
   says.
 - **`c_power`** and read-only facts (for example "Weighs") are `UiValueRow`. The
@@ -841,8 +849,9 @@ another track diameter below its centre.
 A slider whose value moves in steps sets `UiSlider.Step` (the distance between
 two stops on the 0…1 track, like Godot's `Range.step`), so a dragged thumb
 stops only where the value does (#711). The step comes from the value's
-`SettingRange` through `PartSlider.Step`; never round the value alone, or the
-thumb and the readout disagree and the thumb jumps while dragged.
+`SettingRange` through `SettingSlider.Step` or `ParameterSlider.Step`; never
+round the value alone, or the thumb and the readout disagree and the thumb
+jumps while dragged.
 
 Inspector facts and Power share `UiValueRow`: a label on the left and a readout
 on the right, optionally prefixed by a small icon. Power is a value-row
