@@ -76,6 +76,9 @@ then the app follows the reference.
   either state, an untrained one Power budget and Delete creation. Copy
   saves edits first, keeps the brain and confirms with a notification.
   Checkpoints wait for #256. Owner decision.
+- **Popups name only warnings and danger (#692).** The reference's popup
+  overline spells the type, "DEFAULT" included. Instead a default dialog or
+  notification has no overline; the others read "Warning" and "Danger".
 - **Build zoom scales lines too (#400).** The reference keeps a block's
   lines at 2px and its eyes node-sized at any zoom. Instead zoom scales the
   whole picture, lines included, the build area's corner marks too. Four

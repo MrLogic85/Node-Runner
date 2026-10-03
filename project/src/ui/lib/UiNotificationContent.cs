@@ -70,6 +70,7 @@ public sealed partial class UiNotificationContent : UiPopupCard
             ("%SemanticIcon", TextureRect.PropertyName.Texture),
             ("%SemanticIcon", CanvasItem.PropertyName.SelfModulate),
             ("%SemanticType", Label.PropertyName.Text),
+            ("%SemanticType", CanvasItem.PropertyName.Visible),
             ("%SemanticType", UiLabel.PropertyName.TextColor),
             ("%Title", UiLabel.PropertyName.TextColor),
             ("%Message", UiLabel.PropertyName.TextColor),
@@ -112,7 +113,8 @@ public sealed partial class UiNotificationContent : UiPopupCard
             ? icon.Load(UiIconSize.Large)
             : UiIcons.Load(Type == UiPopupType.Default ? UiIconId.Model : UiIconId.Warn, UiIconSize.Large);
         _icon.SelfModulate = color;
-        _semanticType.Text = Type.ToString();
+        _semanticType.Text = UiPopupStyle.Overline(Type);
+        _semanticType.Visible = _semanticType.Text.Length > 0;
         _semanticType.TextColor = UiPopupStyle.SemanticToken(Type);
         _title.TextColor = UiTokens.Color.Ink;
         _message.TextColor = UiTokens.Color.Ink;
