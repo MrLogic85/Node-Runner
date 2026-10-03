@@ -7,8 +7,9 @@ Ordered alphabetically within sections.
 
 ## Product words
 
-The player's words, from `reference design/README.md` → "The words" (#202).
-Code, docs and copy use them; the ML layer keeps its textbook terms.
+The player's words. They started from `reference design/README.md` → "The
+words" (#202); this list now owns them. Code, docs and copy use them; the ML
+layer keeps its textbook terms.
 
 - **Build** — The editor where a Creation's body is drawn and changed. Code
   says Build (`BuildViewModel`, `BuildTool`, `BuildCanvas`), never

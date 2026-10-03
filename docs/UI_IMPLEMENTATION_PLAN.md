@@ -1,10 +1,9 @@
 # UI implementation plan
 
 This document owns UI implementation order and the gates a UI change passes;
-GitHub blocked-by relationships own dependencies. It does not repeat product
-behavior, component definitions, token values, or screen inventories from
-`reference design/`. Start from `reference design/index.html` for those
-contracts.
+GitHub blocked-by relationships own dependencies. Product behaviour and the
+design system are owned as `docs/UI_DIRECTION.md` → "Who owns what" says;
+`reference design/` is their guide.
 
 ## Delivery gates
 
@@ -24,9 +23,9 @@ plan"; the GitHub milestones list their issues. The Creation lifecycle
 (autosave, one Build screen that is unlocked or locked, the lock on first
 training, and unlocking without resetting training) comes before Train setup
 and Training. Each milestone that changes UI has a design brief that
-`design-lead` reviews before its screens are built. Where the plan replaces
-the reference flow, `docs/UI_DIRECTION.md` → "Reference flow overrides"
-records it.
+`design-lead` reviews before its screens are built. Where a screen departs
+from the reference in a way that could mislead, `docs/UI_DIRECTION.md` →
+"Departures from the reference" records it.
 
 ## Review and verification gates
 

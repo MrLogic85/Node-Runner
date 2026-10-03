@@ -16,9 +16,9 @@
    widget scenes (e.g. `CreationCard`) in `project/scenes/widgets/`.
    The scene owns the layout and the script owns behaviour; see "Who owns
    what" in `docs/UI_DIRECTION.md`.
-5. **Visual contracts come from `reference design/`.** Start at its index and
-   read the relevant component README/preview, `tokens.json`, and `library.md`.
-   `docs/UI_DIRECTION.md` adds repository-specific implementation boundaries.
+5. **The UI library is the visual contract.** Reuse its components and
+   tokens; `docs/UI_DIRECTION.md` owns the rules. `reference design/` is a
+   guide for surfaces the app does not have yet, not the source of truth.
 
 ## Folder layout inside `src/ui/`
 

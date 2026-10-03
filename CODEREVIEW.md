@@ -37,7 +37,7 @@ written reason. `AGENTS.md` owns that gate.
 ## Visual & UX design
 
 Review UI-touching changes for whether they are attractive, intuitive, and
-close enough to the current design reference for the issue.
+consistent with the rest of the app.
 
 Use the `design-lead` custom agent, not the generic `code-review` agent.
 Give it access to the user-facing result, not only the diff. Prefer a
@@ -45,7 +45,8 @@ connected Android phone for UI review. If no phone is available, the reviewer
 may start and use an Android emulator/AVD when the local environment has one
 configured. Otherwise provide fresh screenshots/recordings from the target
 device/form factor with the exact screens and interactions under review.
-Include the design reference path and the issue/PR goal in the prompt. If
+Include the issue/PR goal in the prompt, and the `reference design/` path when
+it guides a new surface. If
 neither live app access nor visual evidence is available, the design review
 must report **insufficient evidence** instead of guessing from code.
 **Insufficient evidence is a blocking, non-passing review outcome** for this
@@ -55,10 +56,12 @@ the PR.
 
 Authoritative sources:
 
-- `reference design/` for the detailed product UI target, including component
-  READMEs, previews, `tokens.json`, and `library.md`
-- `docs/UI_DIRECTION.md` for repository-specific fidelity and implementation
+- `docs/UI_DIRECTION.md` for who owns each UI decision, the visual standard
+  (the app's own UI library and finished screens) and implementation
   boundaries
+- `reference design/` as a guide, not the source of truth: component READMEs,
+  previews, `tokens.json` and `library.md` for surfaces the app does not have
+  yet
 - `docs/UI_IMPLEMENTATION_PLAN.md` for UI implementation order and review gates
 - `docs/MANUAL_TESTING.md` for device/screenshot evidence expectations
 - The nearest `project/src/**/AGENTS.md` files for UI layering constraints
@@ -66,20 +69,17 @@ Authoritative sources:
 Optional supplied evidence:
 
 - Screenshots, recordings, or additional design references attached to the
-  issue/PR. These can clarify intent, but they do not override the tracked
-  `reference design/` package unless a human explicitly records that change.
+  issue/PR. These can clarify intent.
 
 Judge the experience, not just the code. Check whether the screen/control:
 
 - Looks intentional and polished enough for the current milestone
 - Feels intuitive on Android touch: clear affordances, no dead controls,
   readable labels, and sensible primary/secondary actions
-- Follows `reference design/` and the relevant component README as a visually
-  binding target for layout, typography/text styles, spacing, contrast,
-  rhythm, corner radius, stroke widths, dividers, glow, component
-  proportions, and visual hierarchy. "Not pixel-perfect" only covers
-  unavoidable renderer/device/font differences; visible deviations must be
-  deliberate, documented, or fixed.
+- Is consistent with the app's UI library and finished screens in layout,
+  typography/text styles, spacing, contrast, rhythm, corner radius, stroke
+  widths, glow, component proportions, and visual hierarchy, reusing library
+  components instead of restyling them
 - Preserves Node Runner's neon learning-lab identity and the issue's teaching
   goal
 - Uses state indicators that do not rely on color alone
@@ -88,11 +88,11 @@ Judge the experience, not just the code. Check whether the screen/control:
   before/after or design-reference comparison when that is what the issue is
   trying to improve
 
-Do not block on personal taste or exact HTML/CSS pixel matching, but do block
-on loose interpretation of the reference: mismatched typography, token values,
-spacing, radius, line/stroke weight, glow, component proportion, or hierarchy
-is a design bug unless the PR records a concrete technical constraint or
-human-approved change. Report findings in the same format as other review
+Do not block on personal taste or on differences from `reference design/`,
+but do block on inconsistency inside the app: one-off typography, token
+values, spacing, radius, line/stroke weight, glow, component proportion, or
+hierarchy is a design bug unless the PR records a concrete technical
+constraint or human-approved change. Report findings in the same format as other review
 sections: **Major**, **Medium**, or **Minor**, **new** or **preexisting**, with
 screen/file, evidence, impact, and a concrete suggested direction.
 

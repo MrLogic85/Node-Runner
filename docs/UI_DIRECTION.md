@@ -1,24 +1,26 @@
 # UI direction
 
-Node Runner's UI source of truth is the tracked package in
-`reference design/`. Start at its `index.html`, then read the relevant
-component README and preview. `tokens.json` owns visual values, `library.md`
-owns reusable controls, and the component READMEs own screens and interaction
-flows. Do not copy those contracts into `docs/`. Recorded exceptions to the
-reference live only in "Reference flow overrides" below.
+`reference design/` is a guide, not the source of truth. It gave the app its
+look, words and flows, and it is still the place to start for a screen or
+control the app does not have yet: read its `index.html`, the relevant
+component README and preview, `tokens.json` and `library.md`. But the app has
+moved on from it. Where the two differ, the app and these docs win: the UI
+library owns how components look and behave, screen scenes own layout, and
+the product docs (this file, `docs/BUILD_MODE.md`, `docs/TRAINING_LOOP.md`,
+`docs/GLOSSARY.md`) own rules, flows and words. A new decision is recorded in
+the doc that owns its topic; the reference is never edited to match.
 
-This document contains only repository-specific direction that the design
-package does not own. `docs/UI_IMPLEMENTATION_PLAN.md` owns UI delivery
-order.
+`docs/UI_IMPLEMENTATION_PLAN.md` owns UI delivery order.
 
 ## Who owns what
 
 Each UI decision has one owner. A layer below never overrides the one above.
+`reference design/` is not in the table: it guides each owner but owns
+nothing.
 
 | Owner | Owns | Must not |
 | --- | --- | --- |
-| `reference design/` | The design: tokens, components, screens, flows | — (never edited here; record ambiguities instead) |
-| UI library: `project/src/ui/lib`, component scenes in `project/scenes/ui`, the theme files, `UiSize`/`UiLayout`/`UiSpacing` | The Godot interpretation of the design: every colour, typography, component, state and component dimension (control heights, radius, stroke, icon and font sizes) | Know about screens or app vocabulary |
+| UI library: `project/src/ui/lib`, component scenes in `project/scenes/ui`, the theme files, `UiSize`/`UiLayout`/`UiSpacing` | The design system: every colour, typography, component, state and component dimension (control heights, radius, stroke, icon and font sizes) | Know about screens or app vocabulary |
 | Screen scenes: `project/scenes/screens` | Layout: which components, their order, containers, separations, margins, a slot's minimum size, and text | Restyle a component (colour, font, font-size or stylebox overrides) or change its dimensions |
 | C#: view-models in `NodeRunner.App`, screen scripts in `project/src/ui/screens` | Functionality: state, rules, actions, formatting | Build a screen's static layout in code or restyle components |
 
@@ -52,11 +54,12 @@ in code; they move to this split as they are rewritten
 `RewrittenUi` in the UI tests is the one list of those that have.
 `docs/TEST_STRATEGY.md` lists the guard for each boundary.
 
-## Reference flow overrides
+## Departures from the reference
 
-The active plan (`docs/ROADMAP.md` → "Active plan", #522) deliberately replaces
-parts of the reference flow. Each override lands with the issue named; until
-then the app follows the reference.
+Decisions where the app deliberately differs from `reference design/`, so
+nobody follows the guide back by mistake. Each names its issue. A difference
+does not need an entry to be valid; the app wins either way. Add one when the
+reference would mislead someone working on that surface.
 
 - **Unlocking keeps training (#371, 0.13.0).** The reference's padlock resets
   training after a warning, and its "One reset" rule says training is only
@@ -188,7 +191,7 @@ then the app follows the reference.
   part on a joint with toggles for its built-in senses (Parts, PartSettings,
   SignalFlow, Training). Instead Core is removed: an Accelerometer and a
   Camera sit on a beam, one sensor per beam, at its midpoint. The designer is
-  not available, so these are best guesses until #574 updates the reference:
+  not available, so these are best guesses; a design review may change them:
   - *Parts tray:* the Sensors tab lists Accelerometer, then Camera, with
     the help line "Drag onto a beam. A beam holds one sensor." There
     is no Core row.
@@ -297,14 +300,14 @@ then the app follows the reference.
 
 ## Visual fidelity standard
 
-`reference design/` is visually binding on tokens, layout, typography/text
-styles, spacing, radius, stroke widths, dividers, glow, component proportions,
-and hierarchy. "Not pixel-perfect" only means Godot does not have to reproduce
-HTML/CSS rendering artifacts exactly across fonts, rasterization, and device
-scaling. It does **not** mean loose inspiration: visible deviations from the
-reference must be deliberate, documented in the PR/issue, or fixed before the
-milestone is considered done. When the package is contradictory or incomplete,
-record the ambiguity instead of editing it or choosing silently.
+The app's own UI library and its finished screens are the visual standard:
+a change matches their tokens, typography, spacing, radius, stroke widths,
+glow, proportions and hierarchy, and reuses library components instead of
+restyling them. `reference design/` guides new surfaces and settles questions
+the app has not answered yet; a difference from it is not a bug by itself.
+Inconsistency inside the app is: two screens that style the same thing
+differently, a one-off colour or size, or a control that departs from its
+library component.
 
 ### Reference token mapping deviations
 
@@ -424,8 +427,8 @@ entries are not components of their own in Godot
 
 ## Screen size and safe area
 
-`reference design/README.md` → "Screen size" owns how the canvas grows and
-which parts keep their size. In this project `window/stretch/aspect="expand"`
+The canvas grows as `reference design/README.md` → "Screen size" describes,
+and the same parts keep their size. In this project `window/stretch/aspect="expand"`
 implements it. A screen narrower than 16:9 (4:3 tablets, square foldables)
 keeps 640 units of width and gains height instead, which the reference does
 not cover. 640 x 360 (`UiLayout.CanvasWidth`/`CanvasHeight`) is the reference
@@ -508,7 +511,7 @@ after a tap.
   "go" colour.
 - Over an accent fill (Primary) the tint is on-accent at `Alpha.Soft`
   instead, since accent over accent does not show.
-- Both exceptions are best guesses until design review (#574).
+- Both exceptions are best guesses until a design review.
 - Selected and disabled controls show no tint: selected already has its own
   look, and disabled does not react.
 

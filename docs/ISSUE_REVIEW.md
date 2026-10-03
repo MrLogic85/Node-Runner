@@ -24,8 +24,9 @@ implementation when it is:
 Shape them first through discussion; once the issue states one clear outcome
 and acceptance criteria, set Status to **Needs review**.
 
-**Needs design** issues wait for the design to land in `reference design/`;
-then set Status to **Needs review**. Go straight to **Ready** only if the
+**Needs design** issues wait for a design: a `design-lead` proposal the owner
+approves, recorded on the issue (`reference design/` may guide it but is not
+updated); then set Status to **Needs review**. Go straight to **Ready** only if the
 issue already passed review and the new design does not change its scope or
 acceptance criteria.
 

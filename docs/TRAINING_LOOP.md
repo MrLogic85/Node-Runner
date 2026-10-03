@@ -24,11 +24,10 @@ but do not redefine it here.
 ## Product lifecycle boundary
 
 The training engine does not decide whether a Creation is editable. The App
-layer owns the durable lifecycle described by
-`reference design/components/Navigation/README.md`. One owner decision
-overrides it and `reference design/components/BuildLocked/README.md` (#369,
-2026-09-30): "locked" means exactly "has trained at least one generation",
-not "a training session has finished".
+layer owns the durable lifecycle, guided by
+`reference design/components/Navigation/README.md`. Unlike the reference
+(Navigation, BuildLocked), "locked" means exactly "has trained at least one
+generation", not "a training session has finished" (#369, 2026-09-30).
 
 1. An unlocked Build autosaves and opens Train setup through Start training.
    Saving a Creation never needs a finished creature; only training does
@@ -231,8 +230,8 @@ arrive in 0.19 (#525).
 
 ## The Training scene (issues #51, #469, #386)
 
-This section documents the current wiring. The target presentation is owned
-by the TrainSetup and Training component READMEs under `reference design/components/`.
+This section documents the current wiring. The TrainSetup and Training
+component READMEs under `reference design/components/` guide its presentation.
 
 - Training is its own routed scene, `TrainingRoute(creationId)`, with
   `TrainingHost` (`project/src/hosts/`) as its root. `TrainingHost.tscn` instances the

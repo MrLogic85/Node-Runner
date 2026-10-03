@@ -142,8 +142,7 @@ between them.
 
 - **Idea** — Unshaped idea; needs discussion and refinement
 - **Needs review** — Shaped; review before implementation
-- **Needs design** — Waiting for a new or revised design in
-  `reference design/`
+- **Needs design** — Waiting for an approved design, recorded on the issue
 - **Needs decision** — Design/product choice required before work starts
 - **Blocked** — Waiting on another issue, recorded as a GitHub blocked-by
   relationship. If it waits on an external tool or person, open an issue for
