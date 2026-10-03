@@ -89,6 +89,20 @@ public sealed class SaveFormatTests : IDisposable
     }
 
     [Fact]
+    public void Loading_ASaveFromBeforeFrontDistance_LoadsWithoutIt()
+    {
+        var json = JsonNode.Parse(Example())!;
+        RemoveFirst(json, "frontDistance").ShouldBeTrue();
+        RemoveFirst(json, "frontDistance").ShouldBeTrue();
+
+        var training = SaveJson.Deserialize<CreationDef>(json.ToJsonString(), "creation.json").Training!;
+
+        training.Latest.FrontDistance.ShouldBeNull();
+        training.Latest.ShownDistance.ShouldBe(3.5);
+        training.Best.FrontDistance.ShouldBeNull();
+    }
+
+    [Fact]
     public void Loading_WithNullBrain_FailsAndNamesIt()
     {
         var json = JsonNode.Parse(Example())!.AsObject();
@@ -143,7 +157,7 @@ public sealed class SaveFormatTests : IDisposable
                 [new SensorDef(6, 4, SensorKind.Accelerometer), new SensorDef(7, 5, SensorKind.Camera, "Eye", aim: -0.5)],
                 [new PistonDef(9, 1, 3)],
                 nextPartId: 10),
-            new TrainingStateDef(ExampleBrain(), 12, new TrainingRunDef(3.5, 1.25, 0.5, MapIds.Flat), new TrainingBestDef(9, 4.25, MapIds.Flat)),
+            new TrainingStateDef(ExampleBrain(), 12, new TrainingRunDef(3.5, 1.25, 0.5, MapIds.Flat, 3.75), new TrainingBestDef(9, 4.25, MapIds.Flat, 4.5)),
             new TrainSettingsDef(12, 20));
 
     // The direct brain for ExampleCreation's ports: the Accelerometer (6), the Camera (7) and the

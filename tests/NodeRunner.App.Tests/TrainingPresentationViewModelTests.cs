@@ -9,17 +9,18 @@ public sealed class TrainingPresentationViewModelTests
     {
         var presentation = new TrainingPresentationViewModel();
 
-        presentation.Update(5, 8, 1280, 840, 4, true, [10.1, 11.2]);
+        presentation.Update(5, 8, 1280, 1310, 840, 4, true, [10.1, 11.2]);
 
         presentation.Generation.ShouldBe(5);
         presentation.ShadowCount.ShouldBe(8);
         presentation.BestFitness.ShouldBe(1280);
+        presentation.BestShownDistance.ShouldBe(1310);
         presentation.MeanFitness.ShouldBe(840);
         presentation.BestGeneration.ShouldBe(4);
         presentation.IsTrialActive.ShouldBeTrue();
         presentation.CompletedFitness.ShouldBe([10.1, 11.2]);
         presentation.GenerationText.ShouldBe("Generation 6");
-        presentation.BestMarkerText.ShouldBe("Best 12.8 m");
+        presentation.BestMarkerText.ShouldBe("Best 13.1 m");
         presentation.MeanFitnessText.ShouldBe("Mean: 8.4 m");
     }
 
@@ -28,7 +29,7 @@ public sealed class TrainingPresentationViewModelTests
     {
         var presentation = new TrainingPresentationViewModel();
 
-        presentation.Update(5, 8, double.NegativeInfinity, 0, 0, false, []);
+        presentation.Update(5, 8, double.NegativeInfinity, double.NaN, 0, 0, false, []);
 
         presentation.GenerationText.ShouldBe("Generation 5");
         presentation.BestMarkerText.ShouldBeNull();
@@ -42,7 +43,7 @@ public sealed class TrainingPresentationViewModelTests
         var raised = false;
         presentation.PropertyChanged += (_, _) => raised = true;
 
-        presentation.Update(1, 2, 0, 0, 0, true, []);
+        presentation.Update(1, 2, 0, 0, 0, 0, true, []);
 
         raised.ShouldBeTrue();
     }
@@ -83,6 +84,7 @@ public sealed class TrainingPresentationViewModelTests
             Generation = 7,
             ShadowCount = 8,
             BestFitness = 2130,
+            BestShownDistance = 2190,
             BestGeneration = 7,
             MeanFitness = 10.5,
             IsTrialActive = true,
@@ -90,14 +92,14 @@ public sealed class TrainingPresentationViewModelTests
         var presentation = new TrainingPresentationViewModel(source);
 
         presentation.BestGeneration.ShouldBe(7);
-        presentation.BestMarkerText.ShouldBe("Best 21.3 m");
+        presentation.BestMarkerText.ShouldBe("Best 21.9 m");
 
         source.Generation = 8;
         source.RaiseProgressChanged();
 
         presentation.Generation.ShouldBe(8);
         presentation.BestGeneration.ShouldBe(7);
-        presentation.BestMarkerText.ShouldBe("Best 21.3 m");
+        presentation.BestMarkerText.ShouldBe("Best 21.9 m");
     }
 
     [Fact]
@@ -242,6 +244,8 @@ public sealed class TrainingPresentationViewModelTests
         public double BestFitness { get; set; }
 
         public int BestGeneration { get; set; }
+
+        public double BestShownDistance { get; set; } = double.NaN;
 
         public double MeanFitness { get; set; }
 

@@ -161,8 +161,11 @@ Long-form descriptions and the sensor/model contract live in
 
 ## Simulation
 
-- **TrialMeasurement** — Measures one trial: distance (the fitness), top
-  speed and elevation.
+- **TrialMeasurement** — Measures one trial: distance (the fitness, from the
+  centre), top speed, elevation and front distance.
+- **Shown distance** — The distance the player reads: how far ahead of its
+  start the creature's front-most point ended up (#725). Not the fitness,
+  which follows the centre. Where it shows: `docs/TRAINING_LOOP.md` → Trial.
 - **Evolver** — Component that orchestrates generations: calls the GA, resets
   the scene, assigns new brains.
 - **Fixed timestep** — Physics/NN updates happen at a locked 60 Hz regardless

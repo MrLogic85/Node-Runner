@@ -10,6 +10,7 @@ public sealed class TrainingPresentationViewModel : INotifyPropertyChanged, IDis
     private int _generation;
     private int _shadowCount;
     private double _bestFitness = double.NegativeInfinity;
+    private double _bestShownDistance = double.NaN;
     private double _meanFitness;
     private int _bestGeneration;
     private bool _isTrialActive;
@@ -34,6 +35,9 @@ public sealed class TrainingPresentationViewModel : INotifyPropertyChanged, IDis
     public int Generation => _generation;
     public int ShadowCount => _shadowCount;
     public double BestFitness => _bestFitness;
+
+    /// <summary>Where the best marker stands (#725): the furthest any latest run's front has ended on this map. NaN until known.</summary>
+    public double BestShownDistance => _bestShownDistance;
     public double MeanFitness => _meanFitness;
     public int BestGeneration => _bestGeneration;
     public bool IsTrialActive => _isTrialActive;
@@ -46,9 +50,9 @@ public sealed class TrainingPresentationViewModel : INotifyPropertyChanged, IDis
     public string GenerationText => $"Generation {(_isTrialActive ? _generation + 1 : _generation)}";
 
     /// <summary>The best marker's flag (#388), such as "Best 4.2 m", or null until there is a best.</summary>
-    public string? BestMarkerText => double.IsNegativeInfinity(_bestFitness)
-        ? null
-        : $"Best {Metres.FormatWithUnit(_bestFitness)}";
+    public string? BestMarkerText => double.IsFinite(_bestShownDistance)
+        ? $"Best {Metres.FormatWithUnit(_bestShownDistance)}"
+        : null;
 
     public string MeanFitnessText => $"Mean: {Metres.FormatWithUnit(_meanFitness)}";
 
@@ -126,6 +130,7 @@ public sealed class TrainingPresentationViewModel : INotifyPropertyChanged, IDis
         int generation,
         int shadowCount,
         double bestFitness,
+        double bestShownDistance,
         double meanFitness,
         int bestGeneration,
         bool isTrialActive,
@@ -139,6 +144,7 @@ public sealed class TrainingPresentationViewModel : INotifyPropertyChanged, IDis
         _generation = generation;
         _shadowCount = shadowCount;
         _bestFitness = bestFitness;
+        _bestShownDistance = bestShownDistance;
         _meanFitness = meanFitness;
         _bestGeneration = bestGeneration;
         _isTrialActive = isTrialActive;
@@ -169,6 +175,7 @@ public sealed class TrainingPresentationViewModel : INotifyPropertyChanged, IDis
             _source!.Generation,
             _source.ShadowCount,
             _source.BestFitness,
+            _source.BestShownDistance,
             _source.MeanFitness,
             _source.BestGeneration,
             _source.IsTrialActive,

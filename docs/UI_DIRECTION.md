@@ -205,9 +205,16 @@ reference would mislead someone working on that surface.
   marker's flag reads "best". Instead it reads "Best 4.2 m", the best ever
   on this map, since a zoomed-out ruler labels only every 5 or 10 m. It is
   drawn behind every creature, keeps its screen size, is hidden until
-  there is a best, jumps when a generation sets a new one and has no
+  its distance is known, jumps when a generation's front goes past it
+  (#725) and has no
   off-screen indicator (`docs/TRAINING_LOOP.md` → Best marker). Owner
   decision.
+- **Distances are shown from the creature's front (#725).** Every distance
+  the player reads (ruler, shadow strip, signal flow, best marker, cards,
+  Build, and later Stats) counts from the creature's front-most part, where
+  it ended, never below 0, so the number matches where its nose stands on
+  the ruler. The score the GA ranks by still follows the centre
+  (`docs/TRAINING_LOOP.md` → Trial). Owner decision.
 - **A tapped part is named in a callout (#388).** The reference rings a
   tapped part of the leader in `halo` with its name. Instead the followed
   shadow's part keeps its usual selection look, and its Build name shows

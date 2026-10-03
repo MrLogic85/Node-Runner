@@ -89,8 +89,11 @@ Schema: [`save-schema/creation.schema.json`](save-schema/creation.schema.json).
 |---|---|---|
 | `brain` | object | The best brain of the latest finished generation, as a graph; see below. Reopening Training breeds the next generation from it (warm start, #538). |
 | `generation` | int | Finished generations, at least 1. The latest generation is this one. |
-| `latest` | `{ distance, topSpeed, elevation, mapId }` | What `brain`'s run measured in the latest generation. It can go down; the Creations card and Build show it (#479). |
-| `best` | `{ generation, distance, mapId }` | The best ever on that map, from any generation. It never goes down; the Training best marker shows it (#479, #388). |
+| `latest` | `{ distance, topSpeed, elevation, mapId, frontDistance }` | What `brain`'s run measured in the latest generation. It can go down; the Creations card and Build show it (#479). |
+| `best` | `{ generation, distance, mapId, frontDistance }` | The best ever on that map. `generation` and `distance` are the highest-scoring run's; `frontDistance` is the furthest any latest front got on that map. Neither goes down; the Training best marker shows `frontDistance` (#479, #388, #725). |
+
+`distance` is the score; `frontDistance` is the distance shown, `null` in a save
+from before #725. See `docs/TRAINING_LOOP.md` → "Latest and best ever".
 
 `mapId` is a map's stable id from `Maps` (#443); Flat is `map-flat`.
 

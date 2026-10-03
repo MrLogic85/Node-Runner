@@ -24,7 +24,7 @@ public sealed class CreationsPresentationViewModelTests
     public void Refresh_WithCreations_FormatsCardsFromRepository()
     {
         var repository = new InMemoryCreationRepository();
-        var trained = CreateCreation("Walker", generation: 12, new TrainingRunDef(1844, 306, 120, MapIds.Flat));
+        var trained = CreateCreation("Walker", generation: 12, new TrainingRunDef(1844, 306, 120, MapIds.Flat, frontDistance: 1910));
         var untrained = new CreationDef(Guid.NewGuid(), "Draft", trained.Creature);
         repository.Save(trained);
         repository.Save(untrained);
@@ -38,7 +38,7 @@ public sealed class CreationsPresentationViewModelTests
         walker.Creature.ShouldBe(trained.Creature);
         walker.SummaryText.ShouldBeEmpty();
         walker.ThumbnailText.ShouldBe("2 nodes · 1 beam · 1 sensor");
-        walker.Training.ShouldBe(new CreationCardTraining("18.4", "3.1", "1.2", MapIds.Flat, "12 generations"));
+        walker.Training.ShouldBe(new CreationCardTraining("19.1", "3.1", "1.2", MapIds.Flat, "12 generations"));
         walker.CanOpen.ShouldBeTrue();
         walker.CanDuplicate.ShouldBeTrue();
         walker.CanDelete.ShouldBeTrue();

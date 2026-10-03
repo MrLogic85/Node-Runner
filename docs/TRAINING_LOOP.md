@@ -66,8 +66,8 @@ transition to keep in step with it.
 ## Trial (issue #49)
 
 - `TrialMeasurement` (`libs/NodeRunner.ML/Ga/TrialMeasurement.cs`) is a
-  plain, engine-free tracker: `Reset(startX)` begins a trial,
-  `Record(centerX, clearance)` is called every tick, and `Result` is a
+  plain, engine-free tracker: `Reset(startX, startFrontX)` begins a trial,
+  `Record(centerX, frontX, clearance)` is called every tick, and `Result` is a
   `TrialResult` (issue #420):
   - `Distance` — the **running maximum** forward horizontal distance from
     the start position, not the final position and not cumulative
@@ -80,8 +80,15 @@ transition to keep in step with it.
     point and the ground top, counted once the creature has landed
     (clearance at most `TrialMeasurement.LandedClearance`), so the starting
     drop doesn't count; a crawler scores 0.
+  - `FrontDistance` — how far ahead of its start the creature's front-most
+    point (`Creature.Bounds.End.X`) is at the latest tick, or was when the
+    trial ended; never below 0 (#725). It is the **shown distance**: the
+    ruler, the shadow strip, signal flow's Distance stage, the best marker, the
+    Creations card and Build all read it, so the number on screen matches
+    where the creature's nose stands on the ruler. It is not the score; the
+    GA still ranks by the centre's `Distance` (owner decision).
   - `IsValid` — false when physics blew up (#650): a sample was NaN or
-    infinite, or the centre or lowest point moved further in one tick than
+    infinite, or the centre, the front or the lowest point moved further in one tick than
     `TrialMeasurement.MaxPlausibleSpeed` (10 000 units/s) allows. Pistons
     move at most their Max speed (200 units/s by default) and the Worm
     crawls well under that, so only a blow-up gets near the limit. Once invalid, the trial stops measuring.
@@ -90,7 +97,7 @@ transition to keep in step with it.
     invalid trial with its generation and candidate. Invalid results never
     become `LatestRun` or the best, never count toward `MeanFitness`, and must never be
     shown as real results (for example in Stats, #541).
-  - `Distance`, `TopSpeed` (units/s), `Elevation` and `Fitness` are in
+  - `Distance`, `FrontDistance`, `TopSpeed` (units/s), `Elevation` and `Fitness` are in
     world units. Text the player reads shows them in metres (see
     `docs/GLOSSARY.md` → Metre).
 - **Latest and best ever (#479).** Training is noisy, so a later
@@ -102,13 +109,21 @@ transition to keep in step with it.
     and `Latest` (`TrainingRunDef`). It can go down. The Creations card
     and Build's training summary show it, and Simulate and the warm start
     use its brain, because that is what the creature can do now.
-  - **Best ever:** the furthest any generation got, and which generation
+  - **Best ever:** the highest score any generation got, and which generation
     that was: `Evolver.BestFitness`/`BestGeneration`, saved as
-    `TrainingStateDef.Best` (`TrainingBestDef`). It never goes down. The
-    Training arena's best marker shows it, and later Stats.
+    `TrainingStateDef.Best` (`TrainingBestDef`). Its score never goes down.
+    The Training arena's best marker shows it, and later Stats.
   - `TrainingStateDef.Record` is the rule: every finished generation
-    replaces latest, and replaces the best only when it goes further. A
+    replaces latest, and replaces the best only when it scores higher. A
     generation without a valid trial has no latest, so it isn't saved.
+  - Both records keep the score (`Distance`) and the shown distance
+    (`FrontDistance`, #725). The score alone decides which run is the best.
+    The best's shown distance is kept apart from it: the furthest any
+    latest run's front has ended on that map (`Evolver.BestShownDistance`),
+    whichever run holds the score (owner decision). So the best marker
+    never moves back and never reads below Latest. A save from before #725
+    has no front distance: Latest shows its score (`ShownDistance`), and
+    the best marker stays hidden until the next generation is saved.
 - `TrialController` (`project/src/sim/TrialController.cs`) is a `Node` that
   times a fixed-duration trial (`TrialDurationTicks`, default 600 ≈ 10s at
   60Hz) for one `Creature` instance at a time. It does **not** own creature
@@ -118,9 +133,9 @@ transition to keep in step with it.
   and shifts the whole creature so its lowest point is
   `TrialController.StartClearance`, 6 creature units, above the ground) and
   resets the `TrialMeasurement` from the creature's current
-  `CenterOfMass.X`. Every trial, in every parallel slot, starts from this
+  `CenterOfMass.X` and front-most X (`Bounds.End.X`). Every trial, in every parallel slot, starts from this
   same small drop (#649). The fall counts as trial time; distance is
-  measured from the start X, so the drop doesn't change fitness. Each tick it records `CenterOfMass.X` and the clearance
+  measured from the start X, so the drop doesn't change fitness. Each tick it records `CenterOfMass.X`, `Bounds.End.X` and the clearance
   `GroundTopY - Creature.LowestPointY`. `TrialCompleted` fires once the
   tick budget is spent, with the final `TrialResult`.
 - `Creature.CenterOfMass` is the average `GlobalPosition` of all beam
@@ -192,7 +207,7 @@ transition to keep in step with it.
     scene" → Camera).
   - Shadow strip (#387): `ShadowStripPresentation` turns the rows into the
     strip's cells, worst on the left and best on the right. A bar is the
-    distance so far against this generation's leader, whose bar is full;
+    shown distance so far (the front's, #725) against this generation's leader, whose bar is full;
     not against the best ever, which may come from a run with another trial
     length. Only the followed cell is marked (`accent` bar and frame);
     the leader is not, as the lead changes too often and flickers. Up to 8 shadows
@@ -267,7 +282,7 @@ component READMEs under `reference design/components/` guide its presentation.
   leaving the scene frees all of them.
   - **Camera (#668, #675).** `ArenaCamera` frames the followed shadow
     through `ArenaFraming`, read every frame from its centre
-    (`Creature.CenterOfMass`, the point its distance is measured from) and
+    (`Creature.CenterOfMass`, the point its score is measured from) and
     its box (`Creature.Bounds`, the node colliders). Only the followed
     shadow decides the framing; the others may leave the view.
     - *Sideways* `ArenaFollow` keeps the centre 43% from the left, as in
@@ -312,7 +327,7 @@ component READMEs under `reference design/components/` guide its presentation.
     (owner decision, `docs/UI_DIRECTION.md`).
   - **Ruler.** `ArenaRuler` draws `DistanceRuler`'s marks along the ground
     edge: a long tick every metre and a minor one every half metre, counted
-    from where the visible creature's centre starts each trial (0 m),
+    from where the visible creature's front-most point starts each trial (0 m, #725),
     negative behind it. Every metre is labelled ("3 m"), or every 2, 5,
     10, … m when the camera zooms out so far that labels would overlap.
     Labels come back closer only with 20% room to spare, so a zoom resting
@@ -320,12 +335,13 @@ component READMEs under `reference design/components/` guide its presentation.
     screen size at any zoom. It draws only what
     the camera shows.
   - **Best marker (#388).** `ArenaBestMarker` marks the best ever on this
-    map at its distance on the ruler: a dashed `ink` line up from the
+    map at its shown distance on the ruler (#725; see "Latest and best
+    ever"): a dashed `ink` line up from the
     ground edge to a flag reading "Best 4.2 m"
     (`TrainingPresentationViewModel.BestMarkerText`), 12 px below the top
     of the view. It is drawn behind every creature, keeps its screen size at
-    any zoom, is hidden until there is a best and jumps when a generation
-    sets a new one. Off screen it shows nothing. While a part's name shows
+    any zoom, is hidden until its distance is known and jumps when a
+    generation's front goes past it. Off screen it shows nothing. While a part's name shows
     it fades to `alpha_shadow`, since the name may cover it.
   - **World view.** The world renders in its own `SubViewport` through
     `UiWorldView`, so the UI layout and scale never touch physics distances

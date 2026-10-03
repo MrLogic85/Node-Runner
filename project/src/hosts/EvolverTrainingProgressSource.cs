@@ -27,6 +27,8 @@ public sealed class EvolverTrainingProgressSource : ITrainingProgressSource
 
     public int BestGeneration => _evolver.BestGeneration;
 
+    public double BestShownDistance => _evolver.BestShownDistance;
+
     public double MeanFitness => _evolver.MeanFitness;
 
     public IReadOnlyList<double> CompletedFitness => _evolver.CompletedFitness;
