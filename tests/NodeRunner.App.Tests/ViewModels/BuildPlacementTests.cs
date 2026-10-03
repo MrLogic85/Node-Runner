@@ -195,9 +195,9 @@ public sealed class BuildPlacementTests
     private static BuildViewModel TwoBeams()
     {
         var build = new BuildViewModel();
-        build.PlaceNode(new Vector2D(0, 0), 18);
-        build.PlaceNode(new Vector2D(100, 0), 18);
-        build.PlaceNode(new Vector2D(200, 0), 18);
+        build.PlaceNode(new Vector2D(0, 0));
+        build.PlaceNode(new Vector2D(100, 0));
+        build.PlaceNode(new Vector2D(200, 0));
         build.ConnectBeam(1, 2);
         build.ConnectBeam(2, 3);
         return build;

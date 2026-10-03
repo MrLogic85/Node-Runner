@@ -26,17 +26,16 @@ public static class CreationExamples
     /// </summary>
     public static CreatureDef CreateWormCreature()
     {
-        const double radius = 18;
         const double spacing = 90;
         const double y = 0;
         const double hump = -90;
 
         var nodes = new[]
         {
-            new NodeDef(1, new Vector2D(0, y), radius),
-            new NodeDef(2, new Vector2D(spacing, y), radius),
-            new NodeDef(3, new Vector2D(spacing * 2, hump), radius),
-            new NodeDef(4, new Vector2D(spacing * 3, y), radius),
+            new NodeDef(1, new Vector2D(0, y)),
+            new NodeDef(2, new Vector2D(spacing, y)),
+            new NodeDef(3, new Vector2D(spacing * 2, hump)),
+            new NodeDef(4, new Vector2D(spacing * 3, y)),
         };
 
         var beams = new[]

@@ -58,19 +58,19 @@ public sealed class CreatureBuilder
     public int NextPartId => _nextPartId;
 
     /// <summary>Adds a node and returns its id.</summary>
-    public int AddNode(Vector2D position, double radius)
+    public int AddNode(Vector2D position)
     {
         var id = AllocatePartId();
-        _nodes.Add(new NodeDef(id, position, radius));
+        _nodes.Add(new NodeDef(id, position));
         return id;
     }
 
-    /// <summary>Moves an existing node to a new position, keeping its radius.</summary>
+    /// <summary>Moves an existing node to a new position, keeping its name.</summary>
     public void MoveNode(int nodeId, Vector2D position)
     {
         var nodeIndex = NodeIndexOf(nodeId);
         var node = _nodes[nodeIndex];
-        _nodes[nodeIndex] = new NodeDef(node.Id, position, node.Radius, node.Name);
+        _nodes[nodeIndex] = new NodeDef(node.Id, position, node.Name);
     }
 
     /// <summary>
@@ -274,7 +274,7 @@ public sealed class CreatureBuilder
         if (nodeIndex >= 0)
         {
             var node = _nodes[nodeIndex];
-            _nodes[nodeIndex] = new NodeDef(node.Id, node.Position, node.Radius, name);
+            _nodes[nodeIndex] = new NodeDef(node.Id, node.Position, name);
             return;
         }
 

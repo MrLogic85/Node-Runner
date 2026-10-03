@@ -316,7 +316,7 @@ public partial class BuildCanvas : Node2D
             DrawPlacingFeedback(beam, start, end);
             // A beam too short for training (#593) is drawn in danger until its joints move apart.
             var color = CreatureReadiness.IsTooShort(nodeA, nodeB) ? Theme.Danger : Theme.Beam;
-            DrawLine(start, end, color, Stroke(Theme.BeamWidth), antialiased: false);
+            BeamDrawing.DrawRounded(this, start, end, color, Stroke(Theme.BeamWidth));
             if (_viewModel.SingleSelectedBeamId == beam.Id)
             {
                 SelectionDrawing.DrawBeam(this, ViewTransform(), Theme.SelectionGlow, Stroke(Theme.SelectedBeamOffset), Stroke(Theme.SelectedBeamLineWidth), start, end);
@@ -330,11 +330,7 @@ public partial class BuildCanvas : Node2D
         {
             var node = _viewModel.Nodes[nodeIndex];
             var position = ToGodot(node.Position);
-            DrawCircle(
-                position,
-                (float)node.Radius * 1.18f,
-                UiGlow.FromBase(Theme.GroundEdge, Theme.EffectsEnabled));
-            DrawCircle(position, (float)node.Radius, Theme.NodeFill);
+            JointDrawing.DrawPlain(this, Theme, ViewTransform(), position, (float)node.Radius);
             if (_viewModel.SelectedNodeIds.Contains(node.Id))
             {
                 SelectionDrawing.DrawJoint(this, Theme, ViewTransform(), position, (float)(node.Radius * BuildGestures.SelectedHaloScale));

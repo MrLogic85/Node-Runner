@@ -86,7 +86,7 @@ public sealed class BuildEditWorkflowTests
     private static CreatureDef CreateCreature(double x)
     {
         return new CreatureDef(
-            [new NodeDef(1, new Vector2D(x, 0), 1), new NodeDef(2, new Vector2D(x + 2, 0), 1)],
+            [new NodeDef(1, new Vector2D(x, 0)), new NodeDef(2, new Vector2D(x + 2, 0))],
             [new BeamDef(101, 1, 2)],
             [new SensorDef(201, 101, SensorKind.Accelerometer)],
             [new PistonDef(301, 1, 2)]);

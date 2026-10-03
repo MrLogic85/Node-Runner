@@ -250,21 +250,21 @@ public sealed class CreationUpdateCoordinatorTests
 
     // Three nodes; piston 10 joins nodes 1 and 2, the optional piston 11 joins nodes 2 and 3.
     private static CreatureDef PistonCreature(bool withSecondPiston, double nodeX) => new(
-        [new NodeDef(1, new Vector2D(nodeX, 0), 1), new NodeDef(2, new Vector2D(2, 0), 1), new NodeDef(3, new Vector2D(4, 0), 1)],
+        [new NodeDef(1, new Vector2D(nodeX, 0)), new NodeDef(2, new Vector2D(2, 0)), new NodeDef(3, new Vector2D(4, 0))],
         [new BeamDef(4, 1, 3)],
         [],
         withSecondPiston ? [new PistonDef(10, 1, 2), new PistonDef(11, 2, 3)] : [new PistonDef(10, 1, 2)],
         nextPartId: 12);
 
     private static CreatureDef MovedCreature() => new(
-        [new NodeDef(1, new Vector2D(5, 0), 1), new NodeDef(2, new Vector2D(7, 0), 1)],
+        [new NodeDef(1, new Vector2D(5, 0)), new NodeDef(2, new Vector2D(7, 0))],
         [new BeamDef(3, 1, 2)],
         [new SensorDef(4, 3, SensorKind.Accelerometer)]);
 
     private static CreationDef CreateCreation(string name, bool withTraining = false)
     {
         var creature = new CreatureDef(
-            [new NodeDef(1, new Vector2D(0, 0), 1), new NodeDef(2, new Vector2D(2, 0), 1)],
+            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(2, 0))],
             [new BeamDef(101, 1, 2)],
             [new SensorDef(201, 101, SensorKind.Accelerometer)]);
 

@@ -175,13 +175,13 @@ then the app follows the reference.
     stay crisp at any Build or Training zoom.
   - *Beams:* a creature's beams are 6 wide in Build and Training
     (thumbnails keep the thin line). A beam must leave 52 free between its
-    joint discs, room for the Camera with a gap on each side; a shorter beam
+    joint rings, room for the Camera with a gap on each side; a shorter beam
     can still be drawn, is drawn in `danger`, and blocks training. Its
     canvas note is a `danger` callout "Too short", out past its joints on
     the beam's upper side with a leader line to the beam's middle (see
     `c_call` in a figure). The readiness line says "1 beam too short".
-  - *Selection:* a selected joint gets an unfilled `halo` ring around its
-    disc, 4 wide; a selected beam gets two 2-wide `halo` lines along it, one
+  - *Selection:* a selected joint gets an unfilled `halo` ring around it,
+    4 wide; a selected beam gets two 2-wide `halo` lines along it, one
     beam-width out on each side. Both are drawn over the part, in Build and
     Training.
   - *Orientation:* the side of the beam that faces up as built is the
@@ -220,6 +220,15 @@ then the app follows the reference.
     the theme or `data-effects="lite"` turns glow off.
   - *Copy:* Training and SignalFlow say "sensor" where the reference says
     "core".
+- **Plain joints are open rings (#626, owner decision 2026-10-03).** The
+  reference draws a plain joint as an r 6 circle filled with `panel` and a
+  `line-strong` stroke ⅔ of the 3-wide beam, so the joint covers the beam
+  ends. Instead a plain joint, in Build and Training, is an unfilled ring in
+  the beam's colour and width (`line-strong`, 6) whose outer edge is
+  `NodeDef.PlainJointRadius`, the size it collides at. The beams and Piston rods
+  show through it and have round ends, so those meeting at a joint end in one
+  clean dot at its centre. A motor joint's larger ring with its glyph comes with the
+  motors (#452, #454).
 - **UI size has no touch floor and no over-200% layout (#299, 0.12.0).** The
   reference (`Settings`) keeps 48px controls under 100% and opens side panels
   over the arena above about 200%. Instead everything around the arena and
@@ -533,8 +542,8 @@ GLES3`); see the Compatibility/OpenGL renderer note in
 **Rule: all immediate-mode `_Draw()` calls in this project must pass
 `antialiased: false`, unless they draw in window pixels through
 `UiPixelSpace` (#624, #633).** There the feather is one physical pixel, so
-an antialiased line is smooth and crisp; the selection look, sensor
-pictures and rays, and callout leaders draw this way. This has been applied across every existing call
+an antialiased line is smooth and crisp; the selection look, joint
+rings, sensor pictures and rays, and callout leaders draw this way. This has been applied across every existing call
 site (`UiNumber`, `UiDashedBorder`, `UiProgressRing`, `UiSlider`,
 `UiSelectionHandle`, `UiButton`, `UiBoundsDebugOverlay`,
 `BrainFocusNetworkView`,

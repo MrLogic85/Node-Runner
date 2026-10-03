@@ -30,13 +30,11 @@ public enum SelectionHandle
 /// </summary>
 public sealed class BuildGestures
 {
-    /// <summary>Node hit radius in view units, so it stays finger-sized at any zoom; a node's own disc always hits too.</summary>
+    /// <summary>Node hit radius in view units, so it stays finger-sized at any zoom; a node's own ring always hits too.</summary>
     public const double NodeHitRadius = 32;
 
     /// <summary>Beam hit distance in view units, so it stays finger-sized at any zoom.</summary>
     public const double BeamHitDistance = 20;
-
-    public const double NewNodeRadius = 18;
 
     /// <summary>How far a pointer may travel, in view units, and still count as a tap.</summary>
     public const double TapSlop = 8;
@@ -109,7 +107,7 @@ public sealed class BuildGestures
 
     /// <summary>
     /// The dashed frame around a Select selection of two or more joints, in
-    /// canvas units: their discs plus a little padding, never smaller on
+    /// canvas units: their rings plus a little padding, never smaller on
     /// screen than room for the handles.
     /// </summary>
     public CanvasRect? SelectionFrame => FrameInView() is { } frame
@@ -126,7 +124,7 @@ public sealed class BuildGestures
 
     /// <summary>
     /// The part a tray part dragged to <paramref name="viewPosition"/> would land on (#376): a
-    /// joint's disc, then a sensor picture (its beam), then a beam within reach, then a joint
+    /// joint's ring, then a sensor picture (its beam), then a beam within reach, then a joint
     /// within reach, so a drop near a joint on a short beam still reaches the beam. Null over
     /// empty canvas.
     /// </summary>
@@ -265,7 +263,7 @@ public sealed class BuildGestures
         }
 
         // Joints, then sensors, then Pistons, then beams; a joint's wider touch reach only counts off
-        // its disc, so it never covers a sensor picture next to it. A Piston draws over the beams it
+        // its ring, so it never covers a sensor picture next to it. A Piston draws over the beams it
         // crosses, so it is hit first.
         if (_build.TryFindNodeNear(position, 0, out var nodeId))
         {
@@ -534,11 +532,11 @@ public sealed class BuildGestures
 
         if (_pressedBeam is { } beam)
         {
-            _build.SplitBeam(beam, _pressPosition, NewNodeRadius);
+            _build.SplitBeam(beam, _pressPosition);
         }
         else if (BuildViewModel.BuildArea.Contains(_pressPosition))
         {
-            _build.PlaceNode(_pressPosition, NewNodeRadius);
+            _build.PlaceNode(_pressPosition);
         }
     }
 

@@ -43,10 +43,13 @@ CreatureDef  ──build──▶  physical body  ──sensors──▶  model 
 - **Beginner:** A physical attachment point. Beams meet here and can rotate
   relative to each other.
 - **Implementation:** `NodeDef` in `libs/NodeRunner.Domain/NodeDef.cs` stores
-  an id, optional display name, a position (`Vector2D`) and a radius. At
-  runtime each node is its own `RigidBody2D` with a circle collider a little
-  smaller than its drawn radius (so it looks like it rests slightly in the
-  ground). Its rotation is locked, so it grips instead of rolling like a
+  an id, optional display name and a position (`Vector2D`). Its radius is
+  not saved: it follows from what is on the joint (#626). A plain joint,
+  today every joint, has radius `NodeDef.PlainJointRadius` (15) and is
+  drawn as an open ring (`docs/UI_DIRECTION.md`, plain joints). Joint parts (the motors, #452 and #454)
+  will make it larger and show their glyph inside. At runtime each node is
+  its own `RigidBody2D` with a circle collider at that radius, the size it
+  is drawn at. Its rotation is locked, so it grips instead of rolling like a
   wheel. A node weighs half of every beam it joins: the beam's weight is
   simulated at its two ends. Nodes are what touch the world; every beam is
   pinned to its two nodes (see Beam below).
@@ -76,7 +79,7 @@ CreatureDef  ──build──▶  physical body  ──sensors──▶  model 
   (layer 1). That allows car-like, closed-loop construction and also keeps
   shadows from touching each other.
 - **Minimum length (#593):** a beam must leave
-  `CreatureReadiness.MinimumBeamGap` (52) free between its two joint discs,
+  `CreatureReadiness.MinimumBeamGap` (52) free between its two joint rings,
   room for the largest sensor picture, the Camera's, with a 4-unit gap on
   each side (#622). A shorter beam can be drawn and saved, but it blocks
   training until its joints move apart.
@@ -233,9 +236,9 @@ item (`Modulate` on the creature), not per shadow, so a shadow's beam shows
 through its own joints; a `CanvasGroup` per shadow would fade it as one
 picture but costs an offscreen pass each, so it is left out for performance.
 
-- **Node:** its ring at its drawn size, without a glyph. Joint parts that make
-  a node larger (motor joints, #626; later the Wheel, #129, and a touch
-  sensor, #665) only change that size.
+- **Node:** its ring at its collision size, without a glyph. Joint parts
+  that make a node larger (the motors, #452 and #454; later the Wheel, #129,
+  and a touch sensor, #665) only change that size.
 - **Beam:** its line, without angle marks, the rigid-area hatch or labels.
 - **Links** (Piston, Spring and later Wing): drawn as on the followed
   creature. The Wing may lose detail; #600 decides.
@@ -325,7 +328,7 @@ with a flat tail and a high hump at the front, and a Piston under the hump.
   accel          piston   camera
 ```
 
-- **4 nodes** spaced 90 units apart, radius 18; `N3` sits 90 units up.
+- **4 nodes** spaced 90 units apart, plain joints; `N3` sits 90 units up.
 - **3 beams**, one per adjacent pair. Every joint is passive.
 - **1 Piston** from `N2` to `N4` with the default settings: pulling in
   raises the hump, pushing out stretches the front forward. The hump is

@@ -20,7 +20,8 @@ change to a saved shape changes this document and the schemas in
   `JsonException` that names the field. `SaveJson` gets this from
   System.Text.Json's own options; the app does not run a schema validator.
   Those options don't check list items, so the domain records reject a
-  `null` part themselves.
+  `null` part themselves. A name the records know but do not save (a
+  node's `radius`, #626) is skipped, not rejected.
   One example `creation.json`
   (`tests/NodeRunner.App.Tests/Repositories/SaveExamples/`) checks that a
   real file loads.
@@ -73,7 +74,7 @@ Schema: [`save-schema/creation.schema.json`](save-schema/creation.schema.json).
 
 | Field | Type | Meaning |
 |---|---|---|
-| `nodes[]` | `{ id, position: { x, y }, radius, name }` | Joints. `name` is `null` until renamed. |
+| `nodes[]` | `{ id, position: { x, y }, name }` | Joints. `name` is `null` until renamed. A joint's radius follows from its parts and is not saved (#626). |
 | `beams[]` | `{ id, nodeA, nodeB, name }` | Beams between two node ids. |
 | `sensors[]` | `{ id, beamId, kind, name, aim }` | One sensor per beam. `kind` is `accelerometer` or `camera`. `aim` is the Camera's centre ray from its beam, and `null` for other kinds. |
 | `pistons[]` | `{ id, nodeA, nodeB, name, strength, stroke, maxSpeed }` | Pistons between two node ids (#451). `strength` is in world force units (100 per newton), `stroke` a share of its built length (0.3 is ±30%), `maxSpeed` in world units per second (100 per m/s). |

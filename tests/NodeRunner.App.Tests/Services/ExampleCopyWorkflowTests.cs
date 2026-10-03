@@ -54,7 +54,7 @@ public sealed class ExampleCopyWorkflowTests
     private static CreationExample CreateExample()
     {
         var creature = new CreatureDef(
-            [new NodeDef(1, new Vector2D(0, 0), 1), new NodeDef(2, new Vector2D(2, 0), 1)],
+            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(2, 0))],
             [new BeamDef(101, 1, 2)],
             [new SensorDef(201, 101, SensorKind.Accelerometer)]);
         var training = TestTraining.State(8, 1, TestTraining.Run);

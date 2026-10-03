@@ -31,7 +31,6 @@ public sealed class VisualTheme
         ArenaGrid = UiThemes.Color(theme, UiTokens.Color.Line),
         GroundFill = UiThemes.Color(theme, UiTokens.Color.Panel),
         GroundEdge = UiThemes.Color(theme, UiTokens.Color.Accent),
-        NodeFill = UiThemes.Color(theme, UiTokens.Color.PanelRaised),
         EffectsEnabled = UiThemes.Flag(theme, UiTokens.Flag.EffectsEnabled),
         ShadowAlpha = UiThemes.Alpha(theme, UiTokens.Alpha.Shadow),
         SelectionGlow = UiThemes.Color(theme, UiTokens.Color.Halo),
@@ -62,8 +61,6 @@ public sealed class VisualTheme
     public Color GroundFill { get; private init; }
 
     public Color GroundEdge { get; private init; }
-
-    public Color NodeFill { get; private init; }
 
     public bool EffectsEnabled { get; private init; }
 

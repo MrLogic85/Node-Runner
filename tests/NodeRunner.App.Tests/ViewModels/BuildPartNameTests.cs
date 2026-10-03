@@ -92,7 +92,7 @@ public sealed class BuildPartNameTests
     {
         var build = new BuildViewModel();
         build.Load(new CreatureDef(
-            [new NodeDef(1, new Vector2D(0, 0), 18), new NodeDef(2, new Vector2D(70, 0), 18)],
+            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(70, 0))],
             [new BeamDef(101, 1, 2)],
             [new SensorDef(7, 101, SensorKind.Accelerometer)]));
         return build;

@@ -25,7 +25,7 @@ public sealed class CreatureInspectorViewModelTests
 
         inspector.Title.ShouldBe("Node 1");
         inspector.Role.ShouldBe("A physical attachment point. Beams meet here and can rotate relative to each other.");
-        inspector.Values.ShouldBe("Position: (0, 0)\nRadius: 10");
+        inspector.Values.ShouldBe("Position: (0, 0)\nRadius: 15");
     }
 
     [Fact]
@@ -56,7 +56,7 @@ public sealed class CreatureInspectorViewModelTests
     private static CreatureDef CreateCreature()
     {
         return new CreatureDef(
-            [new NodeDef(1, new Vector2D(0, 0), 10), new NodeDef(2, new Vector2D(20, 0), 10)],
+            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(20, 0))],
             [new BeamDef(101, 1, 2)],
             [new SensorDef(201, 101, SensorKind.Accelerometer)]);
     }

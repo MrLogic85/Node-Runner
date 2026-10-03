@@ -3,23 +3,27 @@ namespace NodeRunner.Domain.Tests;
 public sealed class NodeDefTests
 {
     [Fact]
-    public void Constructor_WithValidRadius_StoresValues()
+    public void Constructor_StoresValues()
     {
-        var node = new NodeDef(1, new Vector2D(1, 2), 3);
+        var node = new NodeDef(1, new Vector2D(1, 2), "Knee");
 
         node.Id.ShouldBe(1);
         node.Position.ShouldBe(new Vector2D(1, 2));
-        node.Radius.ShouldBe(3);
+        node.Name.ShouldBe("Knee");
+    }
+
+    [Fact]
+    public void Radius_OfAPlainJoint_Is15()
+    {
+        new NodeDef(1, new Vector2D(0, 0)).Radius.ShouldBe(15);
     }
 
     [Theory]
     [InlineData(0)]
     [InlineData(-1)]
-    [InlineData(double.NaN)]
-    [InlineData(double.PositiveInfinity)]
-    public void Constructor_WithInvalidRadius_Throws(double radius)
+    public void Constructor_WithInvalidId_Throws(int id)
     {
-        var action = () => new NodeDef(1, new Vector2D(0, 0), radius);
+        var action = () => new NodeDef(id, new Vector2D(0, 0));
 
         action.ShouldThrow<ArgumentOutOfRangeException>();
     }

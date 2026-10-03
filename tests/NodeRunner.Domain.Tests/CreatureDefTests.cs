@@ -9,8 +9,8 @@ public sealed class CreatureDefTests
     {
         var nodes = new[]
         {
-            new NodeDef(1, new Vector2D(0, 0), 1),
-            new NodeDef(2, new Vector2D(2, 0), 1),
+            new NodeDef(1, new Vector2D(0, 0)),
+            new NodeDef(2, new Vector2D(2, 0)),
         };
         var beams = new[] { new BeamDef(3, 1, 2) };
         var sensors = new[] { new SensorDef(4, 3, SensorKind.Accelerometer) };
@@ -36,9 +36,9 @@ public sealed class CreatureDefTests
         var creature = new CreatureDef(
             new[]
             {
-                new NodeDef(1, new Vector2D(0, 0), 1),
-                new NodeDef(2, new Vector2D(0, 0), 1),
-                new NodeDef(3, new Vector2D(4, 0), 1),
+                new NodeDef(1, new Vector2D(0, 0)),
+                new NodeDef(2, new Vector2D(0, 0)),
+                new NodeDef(3, new Vector2D(4, 0)),
             },
             [new BeamDef(101, 1, 2)],
             []);
@@ -53,8 +53,8 @@ public sealed class CreatureDefTests
         var action = () => new CreatureDef(
             new[]
             {
-                new NodeDef(1, new Vector2D(0, 0), 1),
-                new NodeDef(2, new Vector2D(2, 0), 1),
+                new NodeDef(1, new Vector2D(0, 0)),
+                new NodeDef(2, new Vector2D(2, 0)),
             },
             new[] { new BeamDef(101, 1, 3) },
             []);
@@ -68,8 +68,8 @@ public sealed class CreatureDefTests
         var action = () => new CreatureDef(
             new[]
             {
-                new NodeDef(1, new Vector2D(0, 0), 1),
-                new NodeDef(2, new Vector2D(2, 0), 1),
+                new NodeDef(1, new Vector2D(0, 0)),
+                new NodeDef(2, new Vector2D(2, 0)),
             },
             new[] { new BeamDef(101, 1, 2) },
             new[] { new SensorDef(201, 999, SensorKind.Accelerometer) });
@@ -83,8 +83,8 @@ public sealed class CreatureDefTests
         var action = () => new CreatureDef(
             new[]
             {
-                new NodeDef(1, new Vector2D(0, 0), 1),
-                new NodeDef(2, new Vector2D(2, 0), 1),
+                new NodeDef(1, new Vector2D(0, 0)),
+                new NodeDef(2, new Vector2D(2, 0)),
             },
             new[] { new BeamDef(101, 1, 2) },
             new[]
@@ -102,8 +102,8 @@ public sealed class CreatureDefTests
         var action = () => new CreatureDef(
             new[]
             {
-                new NodeDef(1, new Vector2D(0, 0), 1),
-                new NodeDef(2, new Vector2D(2, 0), 1),
+                new NodeDef(1, new Vector2D(0, 0)),
+                new NodeDef(2, new Vector2D(2, 0)),
             },
             new[] { new BeamDef(101, 1, 2) },
             new[]
@@ -119,7 +119,7 @@ public sealed class CreatureDefTests
     public void Constructor_WithCameraWithoutAim_GivesItTheDefaultAimFromItsBeam()
     {
         var creature = new CreatureDef(
-            new[] { new NodeDef(1, new Vector2D(0, 0), 1), new NodeDef(2, new Vector2D(0, 2), 1) },
+            new[] { new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(0, 2)) },
             new[] { new BeamDef(101, 1, 2) },
             new[] { new SensorDef(201, 101, SensorKind.Camera) });
 
@@ -130,7 +130,7 @@ public sealed class CreatureDefTests
     public void Constructor_KeepsAGivenAimAndLeavesAccelerometersWithout()
     {
         var creature = new CreatureDef(
-            new[] { new NodeDef(1, new Vector2D(0, 0), 1), new NodeDef(2, new Vector2D(2, 0), 1), new NodeDef(3, new Vector2D(4, 0), 1) },
+            new[] { new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(2, 0)), new NodeDef(3, new Vector2D(4, 0)) },
             new[] { new BeamDef(101, 1, 2), new BeamDef(102, 2, 3) },
             new[] { new SensorDef(201, 101, SensorKind.Camera, aim: 2), new SensorDef(202, 102, SensorKind.Accelerometer) });
 
@@ -144,9 +144,9 @@ public sealed class CreatureDefTests
         var original = new CreatureDef(
             new[]
             {
-                new NodeDef(1, new Vector2D(0, 0), 1),
-                new NodeDef(2, new Vector2D(2, 0), 1.5),
-                new NodeDef(3, new Vector2D(4, 0), 1),
+                new NodeDef(1, new Vector2D(0, 0)),
+                new NodeDef(2, new Vector2D(2, 0)),
+                new NodeDef(3, new Vector2D(4, 0)),
             },
             new[] { new BeamDef(101, 1, 2), new BeamDef(102, 2, 3) },
             new[]
@@ -173,7 +173,7 @@ public sealed class CreatureDefTests
     public void Constructor_WithAPistonToAMissingNode_Throws()
     {
         Should.Throw<ArgumentOutOfRangeException>(() => new CreatureDef(
-            [new NodeDef(1, new Vector2D(0, 0), 1), new NodeDef(2, new Vector2D(1, 0), 1)],
+            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(1, 0))],
             [],
             [],
             [new PistonDef(3, 1, 9)]));
@@ -183,7 +183,7 @@ public sealed class CreatureDefTests
     public void JsonRoundTrip_PreservesPistons()
     {
         var original = new CreatureDef(
-            [new NodeDef(1, new Vector2D(0, 0), 1), new NodeDef(2, new Vector2D(1, 0), 1)],
+            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(1, 0))],
             [],
             [],
             [new PistonDef(3, 1, 2, "Ram", 20000, 0.4, 150)]);
@@ -199,7 +199,7 @@ public sealed class CreatureDefTests
     [Fact]
     public void Constructor_WithANullPart_Throws()
     {
-        NodeDef[] nodes = [new NodeDef(1, new Vector2D(0, 0), 1), null!];
+        NodeDef[] nodes = [new NodeDef(1, new Vector2D(0, 0)), null!];
 
         Should.Throw<ArgumentException>(() => new CreatureDef(nodes, [], []));
     }
@@ -208,7 +208,7 @@ public sealed class CreatureDefTests
     public void Constructor_WithOmittedNextPartId_DefaultsToMaxIdPlusOne()
     {
         var creature = new CreatureDef(
-            [new NodeDef(7, new Vector2D(0, 0), 1), new NodeDef(3, new Vector2D(1, 0), 1)],
+            [new NodeDef(7, new Vector2D(0, 0)), new NodeDef(3, new Vector2D(1, 0))],
             [new BeamDef(12, 7, 3)],
             []);
 
@@ -219,7 +219,7 @@ public sealed class CreatureDefTests
     public void Lookups_UseIdsSoReferencesSurviveReorderedLists()
     {
         var creature = new CreatureDef(
-            [new NodeDef(20, new Vector2D(2, 0), 1), new NodeDef(10, new Vector2D(0, 0), 1)],
+            [new NodeDef(20, new Vector2D(2, 0)), new NodeDef(10, new Vector2D(0, 0))],
             [new BeamDef(30, 10, 20)],
             [new SensorDef(40, 30, SensorKind.Accelerometer)],
             nextPartId: 41);
@@ -242,7 +242,7 @@ public sealed class CreatureDefTests
     public void Constructor_WithDuplicatePartId_Throws()
     {
         var action = () => new CreatureDef(
-            [new NodeDef(1, new Vector2D(0, 0), 1), new NodeDef(2, new Vector2D(1, 0), 1)],
+            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(1, 0))],
             [new BeamDef(1, 1, 2)],
             []);
 
@@ -253,7 +253,7 @@ public sealed class CreatureDefTests
     public void Constructor_WithPartIdAtOrBeyondNextPartId_Throws()
     {
         var action = () => new CreatureDef(
-            [new NodeDef(1, new Vector2D(0, 0), 1), new NodeDef(2, new Vector2D(1, 0), 1)],
+            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(1, 0))],
             [new BeamDef(3, 1, 2)],
             [],
             nextPartId: 3);
@@ -265,7 +265,7 @@ public sealed class CreatureDefTests
     public void Names_AreDisplayMetadataAndDoNotAffectReferences()
     {
         var creature = new CreatureDef(
-            [new NodeDef(1, new Vector2D(0, 0), 1, "Leg"), new NodeDef(2, new Vector2D(1, 0), 1, "Leg")],
+            [new NodeDef(1, new Vector2D(0, 0), "Leg"), new NodeDef(2, new Vector2D(1, 0), "Leg")],
             [new BeamDef(3, 1, 2, "Leg")],
             [new SensorDef(4, 3, SensorKind.Accelerometer, "Leg")],
             nextPartId: 5);
@@ -280,14 +280,14 @@ public sealed class CreatureDefTests
     {
         var nodes = new[]
         {
-            new NodeDef(1, new Vector2D(0, 0), 1),
-            new NodeDef(2, new Vector2D(2, 0), 1),
+            new NodeDef(1, new Vector2D(0, 0)),
+            new NodeDef(2, new Vector2D(2, 0)),
         };
         var beams = new[] { new BeamDef(3, 1, 2) };
         var sensors = new[] { new SensorDef(4, 3, SensorKind.Accelerometer) };
 
         var creature = new CreatureDef(nodes, beams, sensors);
-        nodes[0] = new NodeDef(10, new Vector2D(99, 99), 1);
+        nodes[0] = new NodeDef(10, new Vector2D(99, 99));
         beams[0] = new BeamDef(11, 2, 1);
         sensors[0] = new SensorDef(12, 11, SensorKind.Accelerometer);
 

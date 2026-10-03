@@ -62,7 +62,7 @@ public sealed class BuildPresentationViewModelTests
     {
         var build = new BuildViewModel();
         build.Load(new CreatureDef(
-            [new NodeDef(1, new Vector2D(0, 0), 18), new NodeDef(2, new Vector2D(3, 4), 18)],
+            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(3, 4))],
             [new BeamDef(101, 1, 2)],
             []));
         build.SelectBeam(101);
@@ -86,7 +86,7 @@ public sealed class BuildPresentationViewModelTests
     {
         var build = new BuildViewModel();
         build.Load(new CreatureDef(
-            [new NodeDef(1, new Vector2D(0, 0), 18), new NodeDef(2, new Vector2D(3, 4), 18)],
+            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(3, 4))],
             [new BeamDef(101, 1, 2, "Thigh")],
             [new SensorDef(7, 101, kind)]));
         build.SelectSensor(7);
@@ -101,7 +101,7 @@ public sealed class BuildPresentationViewModelTests
         var build = new BuildViewModel();
         build.Load(
             new CreatureDef(
-                [new NodeDef(1, new Vector2D(0, 0), 18), new NodeDef(2, new Vector2D(3, 4), 18)],
+                [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(3, 4))],
                 [new BeamDef(101, 1, 2)],
                 [new SensorDef(7, 101, SensorKind.Camera)]),
             moveOnly: true);
@@ -116,9 +116,9 @@ public sealed class BuildPresentationViewModelTests
         var build = new BuildViewModel();
         build.Load(new CreatureDef(
             [
-                new NodeDef(1, new Vector2D(0, 0), 18),
-                new NodeDef(2, new Vector2D(20, 5), 12, "Knee"),
-                new NodeDef(3, new Vector2D(40, 0), 18),
+                new NodeDef(1, new Vector2D(0, 0)),
+                new NodeDef(2, new Vector2D(20, 5), "Knee"),
+                new NodeDef(3, new Vector2D(40, 0)),
             ],
             [new BeamDef(101, 1, 2), new BeamDef(102, 2, 3, "Shin")],
             []));
@@ -140,7 +140,7 @@ public sealed class BuildPresentationViewModelTests
     public void SelectedNodeWithoutBeams_SaysNoneYet()
     {
         var build = new BuildViewModel();
-        build.Load(new CreatureDef([new NodeDef(1, new Vector2D(0, 0), 18)], [], []));
+        build.Load(new CreatureDef([new NodeDef(1, new Vector2D(0, 0))], [], []));
         build.ToggleSelectedNode(1);
 
         new BuildPresentationViewModel(build).SinglePart!.ConnectionsValue.ShouldBe("None yet");
@@ -165,7 +165,7 @@ public sealed class BuildPresentationViewModelTests
     {
         var build = new BuildViewModel();
         build.Load(new CreatureDef(
-            [new NodeDef(1, new Vector2D(0, 0), 18), new NodeDef(2, new Vector2D(3, 4), 18)],
+            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(3, 4))],
             [new BeamDef(101, 1, 2)],
             []));
         var presentation = new BuildPresentationViewModel(build);
@@ -235,7 +235,7 @@ public sealed class BuildPresentationViewModelTests
     {
         var build = new BuildViewModel();
         build.Load(new CreatureDef(
-            [new NodeDef(1, new Vector2D(0, 0), 18), new NodeDef(2, new Vector2D(50, 0), 18), new NodeDef(3, new Vector2D(100, 0), 18)],
+            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(50, 0)), new NodeDef(3, new Vector2D(100, 0))],
             [new BeamDef(101, 1, 2), new BeamDef(102, 2, 3)],
             []));
         var presentation = new BuildPresentationViewModel(build);
@@ -248,7 +248,7 @@ public sealed class BuildPresentationViewModelTests
     public void BuildPanel_WhenANodeIsUnconnected_SaysSoInReadiness()
     {
         var build = new BuildViewModel();
-        build.PlaceNode(new Vector2D(0, 0), 18);
+        build.PlaceNode(new Vector2D(0, 0));
         var presentation = new BuildPresentationViewModel(build);
 
         var buildPanel = presentation.BuildPanel;
@@ -291,18 +291,18 @@ public sealed class BuildPresentationViewModelTests
         var raiseCount = 0;
         presentation.PresentationChanged += (_, _) => raiseCount++;
 
-        build.PlaceNode(new Vector2D(0, 0), 18);
+        build.PlaceNode(new Vector2D(0, 0));
 
         raiseCount.ShouldBe(1);
     }
 
     private static CreatureDef PairCreature() => new(
-        [new NodeDef(1, new Vector2D(0, 0), 18), new NodeDef(2, new Vector2D(90, 0), 18)],
+        [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(90, 0))],
         [new BeamDef(101, 1, 2)],
         [new SensorDef(201, 101, SensorKind.Accelerometer)]);
 
     private static CreatureDef PistonCreature() => new(
-        [new NodeDef(1, new Vector2D(0, 0), 18), new NodeDef(2, new Vector2D(90, 0), 18), new NodeDef(3, new Vector2D(180, 0), 18)],
+        [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(90, 0)), new NodeDef(3, new Vector2D(180, 0))],
         [new BeamDef(101, 1, 2), new BeamDef(102, 2, 3)],
         [new SensorDef(201, 101, SensorKind.Accelerometer)],
         [new PistonDef(301, 1, 3)]);

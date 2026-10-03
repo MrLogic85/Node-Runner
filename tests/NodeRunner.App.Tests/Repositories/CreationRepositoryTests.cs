@@ -359,10 +359,10 @@ public sealed class CreationRepositoryTests
         try
         {
             var builder = new CreatureBuilder();
-            var left = builder.AddNode(new Vector2D(0, 0), 1);
-            var right = builder.AddNode(new Vector2D(2, 0), 1);
+            var left = builder.AddNode(new Vector2D(0, 0));
+            var right = builder.AddNode(new Vector2D(2, 0));
             var beam = builder.AddBeam(left, right);
-            var extra = builder.AddNode(new Vector2D(4, 0), 1);
+            var extra = builder.AddNode(new Vector2D(4, 0));
             builder.Rename(left, "Hip");
             builder.Rename(beam, "Thigh");
             builder.RemoveNode(extra);
@@ -375,7 +375,7 @@ public sealed class CreationRepositoryTests
             reloaded.Nodes[reloaded.NodeIndexOf(left)].Name.ShouldBe("Hip");
             reloaded.Beams[reloaded.BeamIndexOf(beam)].Name.ShouldBe("Thigh");
             reloaded.NextPartId.ShouldBe(extra + 1);
-            new CreatureBuilder(reloaded).AddNode(new Vector2D(6, 0), 1).ShouldBeGreaterThan(extra);
+            new CreatureBuilder(reloaded).AddNode(new Vector2D(6, 0)).ShouldBeGreaterThan(extra);
         }
         finally
         {
@@ -392,7 +392,7 @@ public sealed class CreationRepositoryTests
             Guid.NewGuid(),
             name,
             new CreatureDef(
-                [new NodeDef(1, new Vector2D(0, 0), 1), new NodeDef(2, new Vector2D(2, 0), 1), new NodeDef(3, new Vector2D(4, 0), 1)],
+                [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(2, 0)), new NodeDef(3, new Vector2D(4, 0))],
                 [new BeamDef(101, 1, 2), new BeamDef(102, 2, 3)],
                 [new SensorDef(201, 101, SensorKind.Accelerometer), new SensorDef(202, 102, SensorKind.Camera)]),
             new TrainingStateDef(

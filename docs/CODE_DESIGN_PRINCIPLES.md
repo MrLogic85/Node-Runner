@@ -96,7 +96,7 @@ seed 4711". Regressions become detectable.
 
 - Represent things as data first, then add behavior:
   ```csharp
-  public sealed record NodeDef(int Id, Vector2 Position, double Radius);
+  public sealed record NodeDef(int Id, Vector2 Position);
   public sealed record BeamDef(int Id, int NodeA, int NodeB);
   public sealed record SensorDef(int Id, int BeamId, SensorKind Kind);
   ```
