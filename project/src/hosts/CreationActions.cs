@@ -50,6 +50,21 @@ internal static class CreationActions
             Icon = new(UiIconId.Trash),
         };
 
+    /// <summary>The reference's "One reset" dialog (#687): losing training is danger and a hold.</summary>
+    public static UiDialogSpec ResetTrainingDialog(string warning, Func<bool> reset) =>
+        new(
+            UiPopupType.Danger,
+            "Reset training?",
+            warning,
+            "Hold to reset",
+            () => Task.FromResult(reset()
+                ? UiDialogResult.Success
+                : UiDialogResult.Failure("Could not reset training. Try again.")),
+            holdToAction: true)
+        {
+            Icon = new(UiIconId.Restart),
+        };
+
     /// <summary>
     /// Unlocking keeps the training (#371): it only opens the body for this Build visit, so a plain
     /// confirm is enough, not a hold.

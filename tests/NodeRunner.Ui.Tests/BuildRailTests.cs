@@ -33,6 +33,15 @@ public sealed class BuildRailTests
         _build.Single(node => node.Name == "Unlock").Node.Body.ShouldContain($"IconId = {(int)UiIconId.Lock}");
     }
 
+    [Fact]
+    public void ResetTraining_IsDangerLikeDelete()
+    {
+        var danger = $"Kind = {(int)UiMenuActionItem.MenuItemKind.Danger}";
+
+        _build.Single(node => node.Name == "MenuResetTraining").Node.Body.ShouldContain(danger);
+        _build.Single(node => node.Name == "MenuDeleteCreation").Node.Body.ShouldContain(danger);
+    }
+
     private static string[] Children(string parent) =>
         [.. _build.Where(node => node.Parent?.EndsWith(parent, StringComparison.Ordinal) == true).Select(node => node.Name)];
 }

@@ -38,7 +38,8 @@ locked is overridden in `docs/TRAINING_LOOP.md` → Product lifecycle boundary.
   in the top bar unlocks it for this visit and keeps the training (#371,
   `docs/TRAINING_LOOP.md` step 6). Once a creation has training, the
   overflow menu also offers Stats (coming soon), Reset training and Copy
-  creation (#370); the copy keeps the trained brain.
+  creation (#370); the copy keeps the trained brain. Reset training asks
+  first with a press-and-hold (#687).
 
 ## Coordinates
 
