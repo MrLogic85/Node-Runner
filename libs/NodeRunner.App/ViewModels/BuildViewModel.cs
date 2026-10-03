@@ -414,27 +414,13 @@ public sealed class BuildViewModel : INotifyPropertyChanged
         AnatomyChanged?.Invoke(this, EventArgs.Empty);
     }
 
-    public void ToggleSelectedNode(int nodeId) => ToggleSelectedNodes([nodeId]);
-
-    /// <summary>
-    /// Adds <paramref name="nodeIds"/> to the selected joints, or removes them all when every one is
-    /// already selected.
-    /// </summary>
-    public void ToggleSelectedNodes(IReadOnlyCollection<int> nodeIds)
+    public void ToggleSelectedNode(int nodeId)
     {
-        ArgumentNullException.ThrowIfNull(nodeIds);
-        foreach (var nodeId in nodeIds)
-        {
-            _builder.NodeIndexOf(nodeId);
-        }
+        _builder.NodeIndexOf(nodeId);
 
-        if (nodeIds.All(_selectedNodeIds.Contains))
+        if (!_selectedNodeIds.Add(nodeId))
         {
-            _selectedNodeIds.ExceptWith(nodeIds);
-        }
-        else
-        {
-            _selectedNodeIds.UnionWith(nodeIds);
+            _selectedNodeIds.Remove(nodeId);
         }
 
         _selectedBeamId = null;

@@ -742,18 +742,6 @@ public class BuildGesturesTests
     }
 
     [Fact]
-    public void Select_TapOnAPartUnderTheMoveHandle_TogglesItsJoints()
-    {
-        var (build, gestures) = CarriedParts();
-        build.ReplaceSelection([1, 2, 3]);
-        gestures.SelectionHandles[0].ShouldBe((SelectionHandle.Move, new Vector2D(100, 75)));
-
-        Tap(gestures, new Vector2D(100, 75));
-
-        build.SelectedNodeIds.ShouldBe([1]);
-    }
-
-    [Fact]
     public void SecondFinger_DuringABox_PutsBackTheSelectionAndDropsTheBox()
     {
         var (build, gestures) = ThreeLooseJoints(BuildTool.Select);
@@ -785,7 +773,7 @@ public class BuildGesturesTests
         var gestures = new BuildGestures(build);
         var pan = gestures.View.Offset;
 
-        Tap(gestures, new Vector2D(60, 0));
+        Tap(gestures, new Vector2D(100, 0));
         build.SelectedNodeIds.OrderBy(id => id).ShouldBe([1, 2, 3]);
 
         gestures.Press(_empty);
@@ -820,49 +808,33 @@ public class BuildGesturesTests
         build.SelectedPartCount.ShouldBe(0);
     }
 
-    [Fact]
-    public void Select_TapOnABeam_InAGroup_TogglesItsJoints()
+    [Theory]
+    [InlineData(100, 0)]
+    [InlineData(100, 75)]
+    [InlineData(40, 0)]
+    public void Select_TapOnAPartInsideAGroup_DoesNothing(double x, double y)
     {
-        var (build, gestures) = TwoJointsAndABeam();
-        var third = build.PlaceNode(new Vector2D(0, 100));
-        build.ActiveTool = BuildTool.Select;
-        build.ReplaceSelection([1, third]);
+        var (build, gestures) = CarriedParts();
+        build.ReplaceSelection([1, 2, 3]);
 
-        Tap(gestures, new Vector2D(50, 0));
-        build.SelectedNodeIds.OrderBy(id => id).ShouldBe([1, 2, third]);
-
-        Tap(gestures, new Vector2D(50, 0));
-        build.SelectedNodeIds.ShouldBe([third]);
-    }
-
-    [Fact]
-    public void Select_TapOnASensor_InAGroup_TogglesItsBeamsJoints()
-    {
-        var (build, gestures) = BeamWithSensor(200);
-        var third = build.PlaceNode(new Vector2D(0, 150));
-        build.ActiveTool = BuildTool.Select;
-        build.ReplaceSelection([1, third]);
-
-        Tap(gestures, new Vector2D(100, 0));
-
-        build.SelectedNodeIds.OrderBy(id => id).ShouldBe([1, 2, third]);
-    }
-
-    [Fact]
-    public void Select_TapOnAPiston_InAGroup_TogglesItsJoints()
-    {
-        var build = new BuildViewModel();
-        build.PlaceNode(new Vector2D(0, 0));
-        build.PlaceNode(new Vector2D(200, 0));
-        build.PlaceNode(new Vector2D(0, 150));
-        build.ConnectPiston(1, 2);
-        var gestures = new BuildGestures(build);
-        build.ActiveTool = BuildTool.Select;
-        build.ReplaceSelection([2, 3]);
-
-        Tap(gestures, new Vector2D(100, 0));
+        Tap(gestures, new Vector2D(x, y));
 
         build.SelectedNodeIds.OrderBy(id => id).ShouldBe([1, 2, 3]);
+        build.SelectedGroupParts.Count.ShouldBe(3);
+    }
+
+    [Theory]
+    [InlineData(300, 0)]
+    [InlineData(100, 0)]
+    [InlineData(100, 75)]
+    public void Select_TapOnAPartOutsideAGroup_DoesNothing(double x, double y)
+    {
+        var (build, gestures) = CarriedParts();
+        build.ReplaceSelection([1, 3]);
+
+        Tap(gestures, new Vector2D(x, y));
+
+        build.SelectedNodeIds.OrderBy(id => id).ShouldBe([1, 3]);
     }
 
     [Fact]

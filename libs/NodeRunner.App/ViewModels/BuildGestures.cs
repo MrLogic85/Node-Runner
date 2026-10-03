@@ -297,14 +297,14 @@ public sealed class BuildGestures
             return;
         }
 
-        // Joints, then sensors, then Pistons, then beams, also under a frame handle so a tap there
-        // still reaches them; a joint's wider touch reach only counts off its ring, so it never covers
-        // a sensor picture next to it. A Piston draws over the beams it crosses, so it is hit first.
+        // Joints, then sensors, then Pistons, then beams; a joint's wider touch reach only counts off
+        // its ring, so it never covers a sensor picture next to it. A Piston draws over the beams it
+        // crosses, so it is hit first.
         if (_build.TryFindNodeNear(position, 0, out var nodeId))
         {
             _pressedNode = nodeId;
         }
-        else if (_build.TryFindSensorAt(position, out var sensorId))
+        else if (_pressedHandle is null && _build.TryFindSensorAt(position, out var sensorId))
         {
             _pressedSensor = sensorId;
         }
@@ -312,11 +312,11 @@ public sealed class BuildGestures
         {
             _pressedNode = nodeId;
         }
-        else if (_build.TryFindPistonNear(position, HitDistance(BeamHitDistance), out var pistonId))
+        else if (_pressedHandle is null && _build.TryFindPistonNear(position, HitDistance(BeamHitDistance), out var pistonId))
         {
             _pressedPiston = pistonId;
         }
-        else if (_build.TryFindBeamNear(position, HitDistance(BeamHitDistance), out var beamId))
+        else if (_pressedHandle is null && _build.TryFindBeamNear(position, HitDistance(BeamHitDistance), out var beamId))
         {
             _pressedBeam = beamId;
         }
@@ -561,7 +561,7 @@ public sealed class BuildGestures
     }
 
     /// <summary>
-    /// A Select tap (#704). In a group a joint, or a part's joints, are added or removed, and an
+    /// A Select tap (#704). In a group a joint is added or removed, a part is ignored, and an
     /// empty tap clears. With no group a joint was selected on press (a tap on the one already
     /// selected removes it), a part is selected alone, and an empty tap clears.
     /// </summary>
@@ -576,11 +576,7 @@ public sealed class BuildGestures
         }
         else if (_pressedInGroup)
         {
-            if (TappedPartJoints() is { } joints)
-            {
-                _build.ToggleSelectedNodes(joints);
-            }
-            else if (_pressedHandle is null)
+            if (_pressedHandle is null && _pressedSensor is null && _pressedPiston is null && _pressedBeam is null)
             {
                 _build.ClearSelection();
             }
@@ -589,30 +585,6 @@ public sealed class BuildGestures
         {
             TapMove();
         }
-    }
-
-    /// <summary>The joints of the beam, sensor (its beam) or Piston the press hit, if any.</summary>
-    private int[]? TappedPartJoints()
-    {
-        if (_pressedSensor is { } sensor)
-        {
-            var beam = _build.Beams[_build.BeamIndexOf(_build.Sensors.Single(entry => entry.Id == sensor).BeamId)];
-            return [beam.NodeA, beam.NodeB];
-        }
-
-        if (_pressedPiston is { } pistonId)
-        {
-            var piston = _build.Pistons.Single(entry => entry.Id == pistonId);
-            return [piston.NodeA, piston.NodeB];
-        }
-
-        if (_pressedBeam is { } beamId)
-        {
-            var beam = _build.Beams[_build.BeamIndexOf(beamId)];
-            return [beam.NodeA, beam.NodeB];
-        }
-
-        return null;
     }
 
     private void TapMove()

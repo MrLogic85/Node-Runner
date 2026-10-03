@@ -73,8 +73,7 @@ a node's own ring always hits.
   drag anywhere inside the frame, or a selected joint), **Rotate** on a stem
   above and **Scale** at the bottom-right corner.
   - With a group, any other drag pans. A tap on a joint adds or removes it,
-    a tap on a beam, sensor or Piston adds or removes its joints, and an
-    empty tap clears.
+    a tap on a beam, sensor or Piston does nothing, and an empty tap clears.
   - With no group, a tap selects one joint or part alone (a tap on the
     selected joint clears it), a drag from a joint selects and moves only
     it, and any other drag draws a box that replaces the selection.
