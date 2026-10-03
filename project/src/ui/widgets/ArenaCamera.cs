@@ -4,78 +4,94 @@ using NodeRunner.App.ViewModels;
 namespace NodeRunner.Ui.Widgets;
 
 /// <summary>
-/// The Training arena's camera (#668): it follows a centre point along the ground, eased by
-/// <see cref="ArenaFollow"/> and then by Godot's own position smoothing.
-/// The two stages together keep a wobbling gait from shaking the view and make a change of target
-/// glide in and settle. Only the horizontal position follows; the scene sets the height.
+/// The Training arena's camera (#668, #675): it frames the followed creature through
+/// <see cref="ArenaFraming"/>, which follows its centre sideways, zooms out to fit it and its
+/// speed, and keeps the ground at the same height on screen until the creature rises above the
+/// top margin. The framing does all the smoothing, so the camera's own is off: a gait's wobble
+/// never shakes the view and a change of target glides in and settles.
 /// </summary>
 public partial class ArenaCamera : Camera2D
 {
-    private readonly ArenaFollow _follow = new();
-    private Func<Vector2>? _centre;
+    private readonly ArenaFraming _framing = new();
+    private Func<FramedCreature>? _creature;
+    private Vector2 _framedView;
+
+    /// <summary>The Y of the ground's top, in world coordinates; it stays at the same height on screen.</summary>
+    public double GroundY { get; set; }
 
     /// <summary>
-    /// Follows the point <paramref name="centre"/> returns, read every frame in world coordinates.
-    /// The camera starts on it at once and glides after it as it moves; see <see cref="Retarget"/>
-    /// and <see cref="Cut"/> for when it changes creature or trial.
+    /// Frames the creature <paramref name="creature"/> describes, read every frame in world
+    /// coordinates. The camera starts on it at once and glides after it as it moves; see
+    /// <see cref="Retarget"/> and <see cref="Cut"/> for when it changes creature or trial.
     /// </summary>
-    public void Follow(Func<Vector2> centre)
+    public void Follow(Func<FramedCreature> creature)
     {
-        ArgumentNullException.ThrowIfNull(centre);
-        _centre = centre;
+        ArgumentNullException.ThrowIfNull(creature);
+        _creature = creature;
         Cut();
     }
 
-    /// <summary>Shows the followed point at once, dropping any glide: a new trial is a new scene.</summary>
+    /// <summary>Frames the followed creature at once, dropping any glide: a new trial is a new scene.</summary>
     public void Cut()
     {
-        if (_centre is null)
+        if (_creature is null)
         {
             return;
         }
 
-        _follow.SnapTo(_centre().X);
-        Aim();
-        ResetSmoothing();
+        _framedView = GetViewportRect().Size;
+        _framing.Cut(_creature(), GroundY, _framedView.X, _framedView.Y);
+        Apply();
     }
 
     /// <summary>
-    /// Tells the camera the followed point now belongs to another creature, so it glides there
-    /// without taking the jump for speed. Call it as soon as the point changes owner.
+    /// Tells the camera the followed creature is now another, so it glides there without taking
+    /// the jump for speed. Call it as soon as the creature changes.
     /// </summary>
     public void Retarget()
     {
-        if (_centre is not null)
+        if (_creature is not null)
         {
-            _follow.Retarget(_centre().X);
+            _framing.Retarget(_creature());
         }
     }
 
-    public override void _Ready()
-    {
-        PositionSmoothingEnabled = true;
-        PositionSmoothingSpeed = (float)ArenaFollow.CameraSmoothingSpeed;
-    }
+    public override void _Ready() => PositionSmoothingEnabled = false;
 
     public override void _Process(double delta)
     {
-        if (_centre is null)
+        if (_creature is null)
         {
             return;
         }
 
-        _follow.Step(_centre().X, delta);
-        Aim();
+        // A view that changes size, as when the arena is first laid out, is framed anew rather than
+        // glided into from a framing made for another size.
+        if (GetViewportRect().Size != _framedView)
+        {
+            Cut();
+            return;
+        }
+
+        // The host runs while paused, but a paused scene keeps its framing: nothing moves to follow.
+        if (GetTree().Paused)
+        {
+            return;
+        }
+
+        _framing.Step(_creature(), GroundY, _framedView.X, _framedView.Y, delta);
+        Apply();
     }
 
-    private void Aim()
+    private void Apply()
     {
-        if (!_follow.HasFocus)
+        if (!_framing.HasFrame)
         {
             return;
         }
 
-        var viewWidth = GetViewportRect().Size.X / Zoom.X;
-        GlobalPosition = GlobalPosition with { X = (float)ArenaFollow.CameraX(_follow.AimX, viewWidth) };
+        var zoom = (float)_framing.Zoom;
+        Zoom = new Vector2(zoom, zoom);
+        GlobalPosition = new Vector2((float)_framing.CameraX, (float)_framing.CameraY);
     }
 }

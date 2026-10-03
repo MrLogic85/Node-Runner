@@ -132,10 +132,19 @@ then the app follows the reference.
 - **No grid in Training (#668).** The reference draws a faint grid behind
   the Training arena. Instead the arena background is plain: the grid is a
   Build blueprint, not part of the world. Motion shows against the ruler
-  along the ground, labelled every 1 m (the reference labels every 2 m) with
-  a minor tick every 0.5 m. Owner decision. The reference does not say what
+  along the ground, labelled every 1 m at the closest zoom (the reference
+  labels every 2 m) with a minor tick every 0.5 m; zoomed out, labels thin
+  out (#675, `docs/TRAINING_LOOP.md` → Ruler). Owner decision. The reference does not say what
   the camera does between trials: a new trial cuts back to the start, and
   switching shadows glides (`docs/TRAINING_LOOP.md` → Camera). Owner decision.
+- **Training camera zooms and rises (#675).** The reference's Training
+  camera has a fixed zoom and height. Instead it zooms out to fit the
+  followed shadow and further the faster it moves, and follows it up once
+  it rises past the top margin (`docs/TRAINING_LOOP.md` → Camera). The
+  ground stays at the same height on screen while zooming. As in Build
+  (#400) zoom scales the picture, the ground edge included; the ruler's
+  ticks and labels keep their screen size, and labels thin out rather than
+  overlap (`docs/TRAINING_LOOP.md` → Ruler). Owner decision.
 - **No part counts until 0.19.0 (#374, 0.12.0).** The reference limits the
   parts you place and shows counts ("1 left") in the tray and in Build
   feedback (`reference design/README.md`, Build and "Rules that fix the known
