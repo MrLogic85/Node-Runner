@@ -191,8 +191,9 @@ transition to keep in step with it.
     scene" → Camera).
   - Shadow strip (#387): `ShadowStripPresentation` turns the rows into the
     strip's cells, worst on the left and best on the right. A bar is the
-    distance so far against the best ever, or against the leader once it
-    goes further. Only the followed cell is marked (`accent` bar and frame);
+    distance so far against this generation's leader, whose bar is full;
+    not against the best ever, which may come from a run with another trial
+    length. Only the followed cell is marked (`accent` bar and frame);
     the leader is not, as the lead changes too often and flickers. Up to 8 shadows
     each get a cell, in shadow order with shadow 1 on the right. Past 8 the
     strip keeps 8 places: a "worse" button, 6 shadows and a last button that
