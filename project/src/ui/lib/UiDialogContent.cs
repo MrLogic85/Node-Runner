@@ -74,6 +74,7 @@ public sealed partial class UiDialogContent : Control
             ("%SemanticIcon", TextureRect.PropertyName.Texture),
             ("%SemanticIcon", CanvasItem.PropertyName.SelfModulate),
             ("%SemanticType", Label.PropertyName.Text),
+            ("%SemanticType", CanvasItem.PropertyName.Visible),
             ("%SemanticType", Control.PropertyName.ThemeTypeVariation),
             ("%SemanticType", Label.PropertyName.Uppercase),
             ("%Title", Control.PropertyName.ThemeTypeVariation),
@@ -147,7 +148,8 @@ public sealed partial class UiDialogContent : Control
             : UiIcons.Load(Type == UiPopupType.Default ? UiIconId.Model : UiIconId.Warn, UiIconSize.Large);
         icon.SelfModulate = color;
         var typeLabel = GetNode<Label>("%SemanticType");
-        typeLabel.Text = Type.ToString();
+        typeLabel.Text = UiPopupStyle.Overline(Type);
+        typeLabel.Visible = typeLabel.Text.Length > 0;
         StyleText(typeLabel, UiTokens.Typography.Overline, UiPopupStyle.SemanticToken(Type));
         StyleText(GetNode<Label>("%Title"), UiTokens.Typography.Subheading, UiTokens.Color.Ink);
         StyleText(_body, UiTokens.Typography.Body, UiTokens.Color.Ink);
