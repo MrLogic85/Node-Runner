@@ -4,14 +4,19 @@ namespace NodeRunner.Theme;
 
 /// <summary>
 /// The reference's rigid hatch (#612): parallel lines at 45°, running down to
-/// the left, <c>spacing</c> apart, clipped to a triangle. The lines are laid
-/// out from the origin, so neighbouring triangles' hatches line up.
+/// the left, <c>spacing</c> apart, clipped to a triangle, and kept out of the
+/// joints at its corners (#626). The lines are laid out from the origin, so
+/// neighbouring triangles' hatches line up.
 /// </summary>
 public static class TriangleHatch
 {
     private static readonly Vector2 _across = new Vector2(1, 1).Normalized();
 
-    public static IReadOnlyList<(Vector2 Start, Vector2 End)> Lines(Vector2 a, Vector2 b, Vector2 c, float spacing)
+    /// <summary>
+    /// The hatch of triangle <paramref name="a"/>, <paramref name="b"/>, <paramref name="c"/>, lines
+    /// <paramref name="spacing"/> apart, kept <paramref name="jointRadius"/> away from its corners.
+    /// </summary>
+    public static IReadOnlyList<(Vector2 Start, Vector2 End)> Lines(Vector2 a, Vector2 b, Vector2 c, float spacing, float jointRadius = 0)
     {
         var lines = new List<(Vector2, Vector2)>();
         if (spacing <= 0)
@@ -43,10 +48,48 @@ public static class TriangleHatch
 
             if (crossings.Count == 2 && !crossings[0].IsEqualApprox(crossings[1]))
             {
-                lines.Add((crossings[0], crossings[1]));
+                AddOutside(lines, crossings[0], crossings[1], corners, jointRadius);
             }
         }
 
         return lines;
+    }
+
+    // Adds what is left of start–end outside every circle of radius round the corners. Not
+    // Geometry2D: SegmentIntersectsCircle gives only one crossing, ClipPolylineWithPolygon would
+    // need each circle as a polygon, and both need the engine, which the Ui tests run without.
+    private static void AddOutside(List<(Vector2, Vector2)> lines, Vector2 start, Vector2 end, Vector2[] corners, float radius, int corner = 0)
+    {
+        if (corner == corners.Length || radius <= 0)
+        {
+            lines.Add((start, end));
+            return;
+        }
+
+        // Where the line start + t·(end − start) is inside the circle, as t from enter to leave.
+        var along = end - start;
+        var toStart = start - corners[corner];
+        var a = along.Dot(along);
+        var b = 2 * toStart.Dot(along);
+        var c = toStart.Dot(toStart) - (radius * radius);
+        var discriminant = (b * b) - (4 * a * c);
+        if (discriminant <= 0)
+        {
+            AddOutside(lines, start, end, corners, radius, corner + 1);
+            return;
+        }
+
+        var root = MathF.Sqrt(discriminant);
+        var enter = (-b - root) / (2 * a);
+        var leave = (-b + root) / (2 * a);
+        if (enter > 0)
+        {
+            AddOutside(lines, start, start + (along * MathF.Min(enter, 1)), corners, radius, corner + 1);
+        }
+
+        if (leave < 1)
+        {
+            AddOutside(lines, start + (along * MathF.Max(leave, 0)), end, corners, radius, corner + 1);
+        }
     }
 }

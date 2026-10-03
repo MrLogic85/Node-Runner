@@ -47,7 +47,7 @@ public partial class UiCalloutLayer : Control
         for (var i = 0; i < _callouts.Count; i++)
         {
             var callout = _callouts[i];
-            callout.Visible = i < arranged.Count && !arranged[i].Joined && !arranged[i].Omitted;
+            callout.Visible = i < arranged.Count && !arranged[i].Joined;
             if (i >= arranged.Count)
             {
                 continue;
@@ -60,10 +60,7 @@ public partial class UiCalloutLayer : Control
                 callout.Position = at.Rect.Position;
             }
 
-            if (placements[i].Leader && !at.Omitted)
-            {
-                _leaders.Add((placements[i].Anchor, at.LeaderEnd, placements[i].Kind));
-            }
+            _leaders.Add((placements[i].Anchor, at.LeaderEnd, placements[i].Kind));
         }
 
         QueueRedraw();

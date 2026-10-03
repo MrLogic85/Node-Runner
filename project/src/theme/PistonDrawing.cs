@@ -5,7 +5,7 @@ namespace NodeRunner.Theme;
 
 /// <summary>
 /// Draws a Piston between two joints (#451), shared by Build's canvas and the creature in
-/// Training: a thin <c>accent</c> rod from joint to joint, a cylinder at its first joint and a cap
+/// Training: a thin <c>accent</c> rod from ring to ring, a cylinder at its first joint and a cap
 /// at its second. The cylinder's length is half the Piston's shortest length, so it never covers
 /// the rod even fully in, and a larger stroke shows as a shorter cylinder. Selected, it gets the
 /// beam's two <c>halo</c> lines and ticks at its shortest and longest length. Drawn in window
@@ -63,11 +63,9 @@ public static class PistonDrawing
         var across = along.Orthogonal();
         var cylinderHalf = theme.BeamWidth * _cylinderPerBeam / 2;
 
-        // Round rod ends, like a beam's, since they show inside an open joint ring (#626).
-        var rodWidth = theme.BeamWidth * _rodPerBeam * scale;
-        canvas.DrawLine(toPixels * a, toPixels * b, line, rodWidth, antialiased: true);
-        canvas.DrawCircle(toPixels * a, rodWidth / 2, line, antialiased: true);
-        canvas.DrawCircle(toPixels * b, rodWidth / 2, line, antialiased: true);
+        // Like a beam, the rod stops under the joint rings (#626), or, when they meet, runs centre to centre.
+        var (rodStart, rodEnd) = JointDrawing.BeamSpan(theme.JointRingWidth, a, radiusA, b, radiusB) ?? (a, b);
+        canvas.DrawLine(toPixels * rodStart, toPixels * rodEnd, line, theme.BeamWidth * _rodPerBeam * scale, antialiased: true);
 
         var cylinderStart = a + (along * radiusA);
         var cylinderEnd = a + (along * Math.Max(shortest / 2, radiusA + _minCylinder));

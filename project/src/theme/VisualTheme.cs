@@ -34,6 +34,10 @@ public sealed class VisualTheme
         SelectionFill = UiThemes.Color(theme, UiTokens.Color.Halo) with { A = UiThemes.Alpha(theme, UiTokens.Alpha.Soft) },
         SelectionCornerFill = UiThemes.Color(theme, UiTokens.Color.Panel),
         Beam = UiThemes.Color(theme, UiTokens.Color.LineStrong),
+        JointFill = UiThemes.Color(theme, UiTokens.Color.LineStrong) with { A = UiThemes.Alpha(theme, UiTokens.Alpha.Soft) },
+        DangerFill = UiThemes.Color(theme, UiTokens.Color.Danger) with { A = UiThemes.Alpha(theme, UiTokens.Alpha.Soft) },
+        JointRingWidth = UiSize.Stroke.Signal,
+        JointInnerRingWidth = UiSize.Stroke.Hair,
         MotorAccent = UiThemes.Color(theme, UiTokens.Color.Accent),
         Danger = UiThemes.Color(theme, UiTokens.Color.Danger),
         SensorFill = UiThemes.Color(theme, UiTokens.Color.Panel),
@@ -85,6 +89,18 @@ public sealed class VisualTheme
     public float SelectedBeamLineWidth { get; private init; }
 
     public Color Beam { get; private init; }
+
+    /// <summary>The soft tint inside a plain joint (#626); <see cref="SelectionFill"/> when selected, <see cref="DangerFill"/> when loose.</summary>
+    public Color JointFill { get; private init; }
+
+    /// <summary>The soft tint inside a loose joint.</summary>
+    public Color DangerFill { get; private init; }
+
+    /// <summary>The width of a plain joint's outer ring, whose outer edge is the joint's radius.</summary>
+    public float JointRingWidth { get; private init; }
+
+    /// <summary>The width of a plain joint's fine inner ring.</summary>
+    public float JointInnerRingWidth { get; private init; }
 
     public Color MotorAccent { get; private init; }
 

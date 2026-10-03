@@ -100,22 +100,17 @@ then the app follows the reference.
   lengths of its beams, so scaling changes nothing the lock protects.
   Owner decision. Likewise a locked Camera can still be aimed (#638):
   only what changes the model is locked.
-- **The Select frame stays in reach (owner decision 2026-10-03).** The
-  reference draws one fixed layout: Rotate on a stem above the frame, Scale
-  at its bottom-right corner, and the hint "Move, rotate or scale the group"
-  just under it. Instead, at the canvas edge Rotate flips below the frame,
-  Scale takes the first corner in view (bottom-right, bottom-left, top-right,
-  top-left), or else the corner nearest to the view; the other three keep
-  the corner squares. A handle still out
-  of view is pinned inside the edge, with no stem, and stays pinned while it
-  is dragged. The hint goes above the
-  frame when Rotate is below it, and is left out when there is no room or
-  while a handle is dragged. During a Rotate drag the frame, its corner
-  squares and its handles turn with the group, and the frame fits the group
-  again on release. The reference has no box select; ours matches the
-  frame: a screen-size `radius-sm` rect dashed 5 on 4 off at 1.5, filled
-  `halo` at `alpha_soft`, and the joints it would catch show their halo
-  while it is dragged.
+- **The Select frame keeps its turn (owner decision 2026-10-03).** The
+  reference draws one upright layout: Rotate on a stem above the frame,
+  Scale at its bottom-right corner, and the hint "Move, rotate or scale the
+  group" just under it. Ours keeps that layout, also at the canvas edge,
+  and leaves out the hint, which was in the way. After a Rotate drag the
+  frame, its corner squares and its handles stay turned with the group,
+  the frame fitted to the group along its own axes, until the selection
+  changes; a new selection starts upright. The reference has no box select;
+  ours matches the frame: a screen-size `radius-sm` rect dashed 5 on 4 off
+  at 1.5, filled `halo` at `alpha_soft`, and the joints it would catch show
+  their halo while it is dragged.
 - **Piston settings are sliders (#451).** The reference's Piston panel
   lists what it joins ("Between"), its power draw and its weight. Instead
   its Part settings show three `UiSlider`s, Max strength, Stroke and Max
@@ -251,15 +246,24 @@ then the app follows the reference.
     the theme or `data-effects="lite"` turns glow off.
   - *Copy:* Training and SignalFlow say "sensor" where the reference says
     "core".
-- **Plain joints are open rings (#626, owner decision 2026-10-03).** The
-  reference draws a plain joint as an r 6 circle filled with `panel` and a
+- **Plain joints are a bearing in a cell (#626, owner decisions 2026-10-03).**
+  The reference draws a plain joint as an r 6 circle filled with `panel` and a
   `line-strong` stroke ⅔ of the 3-wide beam, so the joint covers the beam
-  ends. Instead a plain joint, in Build and Training, is an unfilled ring in
-  the beam's colour and width (`line-strong`, 6) whose outer edge is
-  `NodeDef.PlainJointRadius`, the size it collides at. The beams and Piston rods
-  show through it and have round ends, so those meeting at a joint end in one
-  clean dot at its centre. A motor joint's larger ring with its glyph comes with the
-  motors (#452, #454).
+  ends. Instead a plain joint, in Build and Training, is drawn by
+  `JointDrawing` as:
+  - a `line-strong` ring, `stroke-signal` (2) wide, whose outer edge is
+    `NodeDef.PlainJointRadius`, the size it collides at;
+  - a fine `line-strong` inner ring, `stroke-hair` (1) wide, at 0.55 of the
+    radius, left out below 10 design pixels of radius on screen, where it
+    would blur into the outer ring, and on a loose joint, under its cross;
+  - a soft tint inside (`alpha_soft`) in its state colour: `line-strong`,
+    `halo` when selected or caught by a Select box, `danger` when loose
+    (with its `danger` ring and cross).
+
+  Lines scale with the zoom, with no minimum width. A Training shadow draws
+  the outer ring only. Beams and Piston rods stop under the ring, with flat
+  ends on its centre line, so nothing reaches the middle. A motor joint's
+  larger ring with its glyph comes with the motors (#452, #454).
 - **UI size has no touch floor and no over-200% layout (#299, 0.12.0).** The
   reference (`Settings`) keeps 48px controls under 100% and opens side panels
   over the arena above about 200%. Instead everything around the arena and
@@ -415,12 +419,6 @@ entries are not components of their own in Godot
     with the same text as one in the stack adds only its leader to that
     callout. A stack that grows into another takes it in.
   - Leaders are drawn behind all callouts.
-  - The one exception is the Select frame's hint (see "The Select frame
-    stays in reach"). It is not a note: `BuildCanvas` adds it after the notes
-    as an optional placement without a leader (`Placement.Leader` false,
-    `Placement.Optional` true): it sits just past its clearance, never joins
-    a stack, and `UiCalloutLayout` leaves it out when it would have to move
-    toward or away from its part to fit, or would overlap another callout.
 - **`c_panel_head`** is dropped by human decision: it is not part of the future
   design exports, so there is no panel header component. A side panel's
   header, including the inspector's (`c_inspector`), is `UiSidePanel`'s own

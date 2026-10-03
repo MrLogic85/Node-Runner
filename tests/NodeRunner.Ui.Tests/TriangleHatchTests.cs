@@ -56,6 +56,29 @@ public sealed class TriangleHatchTests
     }
 
     [Fact]
+    public void Lines_StayOutOfTheJointsAtTheCorners()
+    {
+        const float radius = 15;
+        var all = TriangleHatch.Lines(_a, _b, _c, _spacing);
+        var clipped = TriangleHatch.Lines(_a, _b, _c, _spacing, radius);
+
+        clipped.ShouldNotBeEmpty();
+        foreach (var (start, end) in clipped)
+        {
+            foreach (var corner in new[] { _a, _b, _c })
+            {
+                for (var t = 0f; t <= 1; t += 0.05f)
+                {
+                    corner.DistanceTo(start.Lerp(end, t)).ShouldBeGreaterThanOrEqualTo(radius - 1e-3f);
+                }
+            }
+        }
+
+        // Away from the corners the lines are whole.
+        clipped.Sum(line => line.Start.DistanceTo(line.End)).ShouldBeGreaterThan(all.Sum(line => line.Start.DistanceTo(line.End)) * 0.8f);
+    }
+
+    [Fact]
     public void Lines_WithNoSpacing_AreEmpty() =>
         TriangleHatch.Lines(_a, _b, _c, 0).ShouldBeEmpty();
 

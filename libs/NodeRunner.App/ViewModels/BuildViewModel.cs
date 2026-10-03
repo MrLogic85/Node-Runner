@@ -590,8 +590,11 @@ public sealed class BuildViewModel : INotifyPropertyChanged
         AnatomyChanged?.Invoke(this, EventArgs.Empty);
     }
 
-    /// <summary>The selected joints' positions and pivot, for a Select drag to transform.</summary>
-    public SelectionSnapshot SnapshotSelection()
+    /// <summary>
+    /// The selected joints' positions and pivot, for a Select drag to transform: the given
+    /// <paramref name="pivot"/>, or else the middle of the joints' centres.
+    /// </summary>
+    public SelectionSnapshot SnapshotSelection(Vector2D? pivot = null)
     {
         if (_selectedNodeIds.Count == 0)
         {
@@ -599,10 +602,10 @@ public sealed class BuildViewModel : INotifyPropertyChanged
         }
 
         var positions = _selectedNodeIds.ToDictionary(id => id, id => NodeById(id).Position);
-        var pivot = new Vector2D(
+        pivot ??= new Vector2D(
             (positions.Values.Min(p => p.X) + positions.Values.Max(p => p.X)) / 2,
             (positions.Values.Min(p => p.Y) + positions.Values.Max(p => p.Y)) / 2);
-        return new SelectionSnapshot(positions, pivot);
+        return new SelectionSnapshot(positions, pivot.Value);
     }
 
     /// <summary>Moves the snapshot's joints by <paramref name="delta"/>, shortened so the whole group stays inside <see cref="BuildArea"/>.</summary>

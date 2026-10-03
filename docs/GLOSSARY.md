@@ -65,8 +65,8 @@ Long-form descriptions and the sensor/model contract live in
 - **Model output** — One slot in the neural network's output vector,
   consumed one-to-one by an output port. See: `docs/CREATURE_MODEL.md`.
 - **Node** — A physical attachment point where beams meet and can rotate
-  relative to each other. Has a position and a small radius. Rendered as an
-  unfilled ring. See: `docs/CREATURE_MODEL.md`.
+  relative to each other. Has a position and a small radius. Rendered as a
+  thin ring with a fine inner ring and a soft tint. See: `docs/CREATURE_MODEL.md`.
 - **Piston** — A powered link between two nodes (#451) that pushes them
   apart or pulls them together. Not a beam: it adds no rigidity and no
   weight. Gives the brain its length and speed, and takes a position and a

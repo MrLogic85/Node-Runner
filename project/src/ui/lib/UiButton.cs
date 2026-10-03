@@ -335,6 +335,9 @@ public sealed partial class UiButton : Button, ISerializationListener
         SetProcess(false);
         SetProcessInput(false);
         Activate();
+        // A button that stays on screen must not look armed for its next hold.
+        _holdElapsedSeconds = 0;
+        Progress = 0;
     }
 
     private bool HasLabel => !string.IsNullOrWhiteSpace(Text);

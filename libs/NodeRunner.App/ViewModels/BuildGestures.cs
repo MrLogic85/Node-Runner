@@ -14,15 +14,6 @@ public enum SelectionHandle
     Aim,
 }
 
-/// <summary>The corner of the Select frame that holds the Scale handle, in the order it is tried.</summary>
-public enum FrameCorner
-{
-    BottomRight,
-    BottomLeft,
-    TopRight,
-    TopLeft,
-}
-
 /// <summary>
 /// Turns pointer presses, drags and releases on the Build canvas into edits
 /// for the active <see cref="BuildTool"/> and into zoom and pan of
@@ -53,9 +44,6 @@ public sealed class BuildGestures
 
     /// <summary>A selected joint's halo radius, as a multiple of its own radius; the frame clears it.</summary>
     public const double SelectedHaloScale = 1.7;
-
-    /// <summary>The reference's tip under a Select frame at rest.</summary>
-    public const string FrameHintText = "Move, rotate or scale the group";
 
     private const double _selectionBoxMinSize = 8;
     private const double _framePadding = 8;
@@ -88,12 +76,21 @@ public sealed class BuildGestures
     private SelectionSnapshot? _selectionStart;
     private FrameLayout? _dragLayout;
     private double _turn;
+    private double _frameAngle;
     private (int Sensor, double Aim)? _aimStart;
 
     public BuildGestures(BuildViewModel build)
     {
         _build = build ?? throw new ArgumentNullException(nameof(build));
         View = new CanvasView(BuildViewModel.BuildViewBounds, ContentBounds);
+        _build.PropertyChanged += (_, args) =>
+        {
+            // A new selection gets an upright frame.
+            if (args.PropertyName == nameof(BuildViewModel.SelectedNodeCount))
+            {
+                _frameAngle = 0;
+            }
+        };
     }
 
     public CanvasView View { get; }
@@ -120,47 +117,38 @@ public sealed class BuildGestures
     public (Vector2D Start, Vector2D End)? SelectionBox { get; private set; }
 
     /// <summary>
-    /// The dashed frame around a Select selection of two or more joints, in
-    /// canvas units: their rings plus a little padding, never smaller on
-    /// screen than room for the handles. While Rotate is dragged it is the
-    /// frame from the drag's start, turned with the group by
-    /// <see cref="SelectionFrameAngle"/> about its centre; it fits the group
-    /// again on release.
+    /// The dashed frame around a Select selection of two or more joints, in canvas units, before
+    /// <see cref="SelectionFrameAngle"/> turns it about its centre: their rings plus a little
+    /// padding, never smaller on screen than room for the handles.
     /// </summary>
     public CanvasRect? SelectionFrame => Layout() is { } layout
         ? new CanvasRect(View.ToCanvas(layout.Frame.Min), View.ToCanvas(layout.Frame.Max))
         : null;
 
-    /// <summary>How far <see cref="SelectionFrame"/> is turned about its centre, in radians: only during a Rotate drag.</summary>
+    /// <summary>
+    /// How far <see cref="SelectionFrame"/> is turned about its centre, in radians. A Rotate drag
+    /// turns it with the group, and it keeps that angle, fitted to the group, until the selection
+    /// changes.
+    /// </summary>
     public double SelectionFrameAngle => Layout()?.Angle ?? 0;
 
-    /// <summary>The frame corner the Scale handle sits on, so its arrows can point along that diagonal.</summary>
-    public FrameCorner? ScaleCorner => Layout()?.ScaleCorner;
-
     /// <summary>
-    /// The corners of <see cref="SelectionFrame"/> that show a corner square: all but
-    /// <see cref="ScaleCorner"/>, in canvas units, before <see cref="SelectionFrameAngle"/> turns them.
+    /// The corners of <see cref="SelectionFrame"/> that show a corner square: all but the Scale
+    /// handle's bottom-right, in canvas units, before <see cref="SelectionFrameAngle"/> turns them.
     /// </summary>
-    public IReadOnlyList<Vector2D> FrameCornerSquares => Layout() is { } layout
-        ? [.. Enum.GetValues<FrameCorner>().Where(corner => corner != layout.ScaleCorner).Select(corner => View.ToCanvas(CornerOf(layout.Frame, corner)))]
+    public IReadOnlyList<Vector2D> FrameCornerSquares => Layout() is { Frame: var frame }
+        ? [View.ToCanvas(frame.Min), View.ToCanvas(new Vector2D(frame.Max.X, frame.Min.Y)), View.ToCanvas(new Vector2D(frame.Min.X, frame.Max.Y))]
         : [];
 
-    /// <summary>Whether Rotate had to flip below the frame, so the hint goes above it instead.</summary>
-    public bool RotateBelowFrame => Layout()?.RotateBelow ?? false;
-
-    /// <summary>The line from the frame's edge to the Rotate handle, in canvas units; none when the handle had to be pinned inside the frame.</summary>
-    public (Vector2D From, Vector2D To)? RotateStem => Layout()?.Stem is { } stem
+    /// <summary>The line from the frame's top edge to the Rotate handle, in canvas units.</summary>
+    public (Vector2D From, Vector2D To)? RotateStem => Layout() is { Stem: var stem }
         ? (View.ToCanvas(stem.From), View.ToCanvas(stem.To))
         : null;
 
-    /// <summary><see cref="FrameHintText"/> while the frame is shown and not being dragged.</summary>
-    public string? FrameHint => _dragLayout is null && Layout() is not null ? FrameHintText : null;
-
     /// <summary>
     /// Where each handle sits, in canvas units: on <see cref="SelectionFrame"/>, Move in the
-    /// middle, Rotate on a stem above and Scale at the bottom-right corner; on a selected Camera,
-    /// Aim out along its aim. A handle that would leave the visible area moves to where it fits
-    /// (`docs/BUILD_MODE.md` → Select).
+    /// middle, Rotate on a stem above and Scale at the bottom-right corner, all turned with the
+    /// frame; on a selected Camera, Aim out along its aim.
     /// </summary>
     public IReadOnlyList<(SelectionHandle Handle, Vector2D Position)> SelectionHandles =>
         [.. HandlesInView().Select(entry => (entry.Handle, View.ToCanvas(entry.Position)))];
@@ -372,9 +360,9 @@ public sealed class BuildGestures
             }
             else if (_pressTool == BuildTool.Select && (_pressedHandle is not null || _pressedNode is not null))
             {
-                // Keep the handles where they were laid out at the start, so none jumps away mid-drag.
+                // The group turns and scales about the frame's centre, where the Move handle is.
                 _dragLayout = Layout();
-                _selectionStart = _build.SnapshotSelection();
+                _selectionStart = _build.SnapshotSelection(_dragLayout is { } layout ? View.ToCanvas(layout.Move) : null);
                 NodeDragStarting?.Invoke(this, [.. _selectionStart.Positions.Keys]);
             }
             else if (_pressTool == BuildTool.Move && _pressedNode is { } dragged)
@@ -460,6 +448,9 @@ public sealed class BuildGestures
             case BuildTool.Select when SelectionBox is { } box:
                 CompleteSelectionBox(box.Start, position);
                 break;
+            case BuildTool.Select when _dragging && _pressedHandle == SelectionHandle.Rotate && _dragLayout is { } turned:
+                _frameAngle = Math.IEEERemainder(turned.Angle + _turn, 2 * Math.PI);
+                break;
             case BuildTool.Select when !_dragging && (_pressedNodeWasSelected || _pressedHandle is not null) && _pressedNode is { } tapped:
                 // A handle drags; a tap on a joint under it still adds or removes that joint.
                 _build.ToggleSelectedNode(tapped);
@@ -536,7 +527,7 @@ public sealed class BuildGestures
                 _build.ToggleSelectedNode(node);
             }
         }
-        else if (FrameInView() is { } frame && frame.Contains(viewPosition))
+        else if (Layout() is { } layout && FrameContains(layout, viewPosition))
         {
             _pressedHandle = SelectionHandle.Move;
         }
@@ -642,126 +633,71 @@ public sealed class BuildGestures
         }
     }
 
-    /// <summary>The frame in view units, while Select has two or more joints and no box is being dragged.</summary>
-    private CanvasRect? FrameInView()
+    /// <summary>
+    /// The frame and its handles in view units, while Select has two or more joints and no box is
+    /// being dragged. At rest the frame is fitted to the joints' rings along its own axes, turned
+    /// by the angle the last Rotate drag left; during a Rotate drag the layout from its start turns
+    /// with the group about its centre.
+    /// </summary>
+    private FrameLayout? Layout()
     {
+        if (_dragLayout is { } started && _pressedHandle == SelectionHandle.Rotate)
+        {
+            return Place(started.Frame, started.Angle + _turn);
+        }
+
         if (_build.ActiveTool != BuildTool.Select || _build.SelectedNodeCount < 2 || SelectionBox is not null)
         {
             return null;
         }
 
-        var nodes = _build.SelectedNodeIds.Select(NodeById).ToArray();
-        var min = View.ToView(new Vector2D(nodes.Min(node => node.Position.X - Halo(node)), nodes.Min(node => node.Position.Y - Halo(node))));
-        var max = View.ToView(new Vector2D(nodes.Max(node => node.Position.X + Halo(node)), nodes.Max(node => node.Position.Y + Halo(node))));
-        var center = new Vector2D((min.X + max.X) / 2, (min.Y + max.Y) / 2);
-        var halfWidth = Math.Max((max.X - min.X) / 2 + _framePadding, _frameMinSize / 2);
-        var halfHeight = Math.Max((max.Y - min.Y) / 2 + _framePadding, _frameMinSize / 2);
-        return new CanvasRect(
+        var cos = Math.Cos(_frameAngle);
+        var sin = Math.Sin(_frameAngle);
+        var (minX, minY, maxX, maxY) = (double.MaxValue, double.MaxValue, double.MinValue, double.MinValue);
+        foreach (var node in _build.SelectedNodeIds.Select(NodeById))
+        {
+            // The joint's centre along the frame's axes; its ring reaches the halo every way.
+            var at = View.ToView(node.Position);
+            var x = (at.X * cos) + (at.Y * sin);
+            var y = (at.Y * cos) - (at.X * sin);
+            var halo = Halo(node) * View.Zoom;
+            (minX, minY, maxX, maxY) = (Math.Min(minX, x - halo), Math.Min(minY, y - halo), Math.Max(maxX, x + halo), Math.Max(maxY, y + halo));
+        }
+
+        var (middleX, middleY) = ((minX + maxX) / 2, (minY + maxY) / 2);
+        var center = new Vector2D((middleX * cos) - (middleY * sin), (middleX * sin) + (middleY * cos));
+        var halfWidth = Math.Max(((maxX - minX) / 2) + _framePadding, _frameMinSize / 2);
+        var halfHeight = Math.Max(((maxY - minY) / 2) + _framePadding, _frameMinSize / 2);
+        var frame = new CanvasRect(
             new Vector2D(center.X - halfWidth, center.Y - halfHeight),
             new Vector2D(center.X + halfWidth, center.Y + halfHeight));
+        return Place(frame, _frameAngle);
     }
 
     private static double Halo(NodeDef node) => node.Radius * SelectedHaloScale;
 
-    /// <summary>
-    /// The frame and its handles in view units. At rest they are fitted to the view: Rotate flips
-    /// below the frame when there is no room above, Scale takes the first corner in view (or else
-    /// the one nearest to it), and a handle that still does not fit is pinned inside the view's
-    /// edge. During a Select drag they
-    /// keep the side and corner from its start and stay pinned in view; during a Rotate drag the
-    /// whole layout from its start turns with the group about its pivot.
-    /// </summary>
-    private FrameLayout? Layout()
-    {
-        if (_dragLayout is { } started && _pressedHandle == SelectionHandle.Rotate && _selectionStart is { } snapshot)
-        {
-            return Turned(started, View.ToView(snapshot.Pivot), _turn);
-        }
-
-        if (FrameInView() is not { } frame)
-        {
-            return null;
-        }
-
-        var area = HandleArea();
-        if (_dragLayout is { } held)
-        {
-            return Place(frame, held.RotateBelow, held.ScaleCorner, area);
-        }
-
-        if (area is not { } inView)
-        {
-            return Place(frame, rotateBelow: false, FrameCorner.BottomRight, pinTo: null);
-        }
-
-        var rotateBelow = frame.Min.Y - _rotateStem < inView.Min.Y && frame.Max.Y + _rotateStem <= inView.Max.Y;
-        // The first corner in view, or else the one that moves least when pinned; OrderBy is stable, so ties keep the enum order.
-        var corner = Enum.GetValues<FrameCorner>().OrderBy(candidate => ShiftToFit(CornerOf(frame, candidate), inView)).First();
-        return Place(frame, rotateBelow, corner, inView);
-    }
-
-    /// <summary>Where a handle's centre may sit so all of it can be reached: the visible area inset by <see cref="HandleHitRadius"/>.</summary>
-    private CanvasRect? HandleArea() => View.VisibleArea is { } visible
-        ? new CanvasRect(
-            new Vector2D(visible.Min.X + HandleHitRadius, visible.Min.Y + HandleHitRadius),
-            new Vector2D(visible.Max.X - HandleHitRadius, visible.Max.Y - HandleHitRadius))
-        : null;
-
-    private static FrameLayout Place(CanvasRect frame, bool rotateBelow, FrameCorner corner, CanvasRect? pinTo)
+    /// <summary>The handles on <paramref name="frame"/> turned <paramref name="angle"/> about its centre.</summary>
+    private static FrameLayout Place(CanvasRect frame, double angle)
     {
         var center = frame.Center;
-        var move = center;
-        var rotate = new Vector2D(center.X, rotateBelow ? frame.Max.Y + _rotateStem : frame.Min.Y - _rotateStem);
-        var scale = CornerOf(frame, corner);
-        if (pinTo is { } area)
-        {
-            move = area.Clamp(move);
-            rotate = area.Clamp(rotate);
-            scale = area.Clamp(scale);
-        }
-
-        // The stem runs straight from the frame's edge; a handle pinned inside the frame has none.
-        (Vector2D, Vector2D)? stem = rotate.X >= frame.Min.X && rotate.X <= frame.Max.X && !frame.Contains(rotate)
-            ? (new Vector2D(rotate.X, rotateBelow ? frame.Max.Y : frame.Min.Y), rotate)
-            : null;
-        return new FrameLayout(frame, 0, move, rotate, scale, corner, rotateBelow, stem);
-    }
-
-    /// <summary><paramref name="layout"/> turned <paramref name="angle"/> about <paramref name="pivot"/>, all in view units.</summary>
-    private static FrameLayout Turned(FrameLayout layout, Vector2D pivot, double angle)
-    {
         var cos = Math.Cos(angle);
         var sin = Math.Sin(angle);
-        Vector2D Turn(Vector2D point)
-        {
-            var dx = point.X - pivot.X;
-            var dy = point.Y - pivot.Y;
-            return new Vector2D(pivot.X + (dx * cos) - (dy * sin), pivot.Y + (dx * sin) + (dy * cos));
-        }
+        Vector2D At(double x, double y) => new(center.X + (x * cos) - (y * sin), center.Y + (x * sin) + (y * cos));
 
-        var center = Turn(layout.Frame.Center);
-        var halfWidth = layout.Frame.Width / 2;
-        var halfHeight = layout.Frame.Height / 2;
-        return layout with
-        {
-            Frame = new CanvasRect(new Vector2D(center.X - halfWidth, center.Y - halfHeight), new Vector2D(center.X + halfWidth, center.Y + halfHeight)),
-            Angle = layout.Angle + angle,
-            Move = Turn(layout.Move),
-            Rotate = Turn(layout.Rotate),
-            Scale = Turn(layout.Scale),
-            Stem = layout.Stem is { } stem ? (Turn(stem.From), Turn(stem.To)) : null,
-        };
+        var rotate = At(0, -(frame.Height / 2) - _rotateStem);
+        return new FrameLayout(frame, angle, center, rotate, At(frame.Width / 2, frame.Height / 2), (At(0, -frame.Height / 2), rotate));
     }
 
-    private static double ShiftToFit(Vector2D point, CanvasRect area) => Distance(point, area.Clamp(point));
-
-    private static Vector2D CornerOf(CanvasRect frame, FrameCorner corner) => corner switch
+    /// <summary>Whether <paramref name="point"/> is inside the layout's frame, turned by its angle.</summary>
+    private static bool FrameContains(FrameLayout layout, Vector2D point)
     {
-        FrameCorner.BottomLeft => new Vector2D(frame.Min.X, frame.Max.Y),
-        FrameCorner.TopRight => new Vector2D(frame.Max.X, frame.Min.Y),
-        FrameCorner.TopLeft => frame.Min,
-        _ => frame.Max,
-    };
+        var dx = point.X - layout.Move.X;
+        var dy = point.Y - layout.Move.Y;
+        var cos = Math.Cos(layout.Angle);
+        var sin = Math.Sin(layout.Angle);
+        return Math.Abs((dx * cos) + (dy * sin)) <= layout.Frame.Width / 2
+            && Math.Abs((dy * cos) - (dx * sin)) <= layout.Frame.Height / 2;
+    }
 
     private IEnumerable<(SelectionHandle Handle, Vector2D Position)> HandlesInView()
     {
@@ -890,9 +826,7 @@ public sealed class BuildGestures
         Vector2D Move,
         Vector2D Rotate,
         Vector2D Scale,
-        FrameCorner ScaleCorner,
-        bool RotateBelow,
-        (Vector2D From, Vector2D To)? Stem);
+        (Vector2D From, Vector2D To) Stem);
 
     private static Vector2D Midpoint(Vector2D a, Vector2D b) => new((a.X + b.X) / 2, (a.Y + b.Y) / 2);
 
