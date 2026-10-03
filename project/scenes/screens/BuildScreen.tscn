@@ -52,7 +52,19 @@ size_flags_vertical = 4
 script = ExtResource("4_text_field")
 TextValue = "Untitled Creation"
 
-[node name="StartTraining" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/HBoxContainer/MarginContainer/ToolbarContent" index="1"]
+[node name="Unlock" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/HBoxContainer/MarginContainer/ToolbarContent" index="1"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+size_flags_vertical = 4
+tooltip_text = "Unlock"
+mouse_filter = 1
+script = ExtResource("5_button")
+IconId = 15
+Kind = 1
+Selected = true
+
+[node name="StartTraining" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/HBoxContainer/MarginContainer/ToolbarContent" index="2"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 4

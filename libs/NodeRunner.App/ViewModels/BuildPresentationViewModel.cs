@@ -77,8 +77,8 @@ public sealed class BuildPresentationViewModel
         : "Not trained yet";
 
     public string TrainingSummaryBody => _build.TrainingGeneration is not null
-        ? "This can drop after a noisy generation; Training's Best never does. Anatomy is locked so this brain stays valid."
-        : "Start training when you are ready. Parts are locked so the brain stays valid.";
+        ? "This can drop after a noisy generation; Training's Best never does. Tap the padlock to change the body. Training is kept."
+        : "Start training when you are ready.";
 
     /// <summary>The latest generation's distance (#479); the best ever belongs to Stats.</summary>
     public string LatestDistanceText => $"Latest distance {(_build.LatestDistance is { } distance ? Metres.FormatWithUnit(distance) : "—")}";
@@ -178,13 +178,8 @@ public sealed class BuildPresentationViewModel
     /// <summary>True for a locked Creation: its anatomy is fixed and only moving nodes is allowed.</summary>
     public bool IsLocked => _build.IsMoveOnly;
 
-    public bool ShowRebuildAction => _build.IsMoveOnly;
-
-    public string RebuildActionText => "Rebuild body";
-
-    public string RebuildConfirmationTitle => "Rebuild body?";
-
-    public string RebuildConfirmationBody => "Rebuild creates a new body and a new brain. The original Creation and its training stay unchanged.";
+    /// <summary>True when the Creation has saved training, locked or unlocked for this visit.</summary>
+    public bool IsTrained => _build.TrainingGeneration is not null;
 
     public BuildPanelPresentation BuildPanel => CreateBuildPanel();
 

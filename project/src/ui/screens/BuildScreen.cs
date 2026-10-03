@@ -31,6 +31,9 @@ public partial class BuildScreen : Control
     public delegate void PartNameChangedEventHandler(int partId, string name);
 
     [Signal]
+    public delegate void UnlockRequestedEventHandler();
+
+    [Signal]
     public delegate void ResetTrainingRequestedEventHandler();
 
     [Signal]
@@ -93,6 +96,7 @@ public partial class BuildScreen : Control
         name.ValidateValue = static value => !string.IsNullOrWhiteSpace(value);
         name.EditingFinished += OnNameEdited;
         GetNode<UiButton>("%StartTraining").Activated += () => EmitSignal(SignalName.StartTrainingRequested);
+        GetNode<UiButton>("%Unlock").Activated += () => EmitSignal(SignalName.UnlockRequested);
         BindMenuItem(toolbar, GetNode<UiMenuActionItem>("%MenuResetTraining"), () => EmitSignal(SignalName.ResetTrainingRequested));
         BindMenuItem(toolbar, GetNode<UiMenuActionItem>("%MenuDeleteCreation"), () => EmitSignal(SignalName.DeleteCreationRequested));
         BindTool(GetNode<UiButton>("%MoveTool"), BuildTool.Move);
@@ -208,7 +212,8 @@ public partial class BuildScreen : Control
         }
 
         GetNode<UiButton>("%StartTraining").Disabled = !buildPanel.CanStartTraining;
-        GetNode<UiMenuActionItem>("%MenuResetTraining").Visible = locked;
+        GetNode<UiButton>("%Unlock").Visible = locked;
+        GetNode<UiMenuActionItem>("%MenuResetTraining").Visible = presentation.IsTrained;
     }
 
     private void ApplyTools(BuildPresentationViewModel presentation)

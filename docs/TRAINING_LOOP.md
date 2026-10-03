@@ -46,8 +46,13 @@ not "a training session has finished".
 4. Leaving Training before the first generation finishes leaves the Creation
    unlocked.
 5. Later Train or Simulate sessions start from the locked Build state.
-6. Unlock is a destructive App operation: after hold-to-confirm it removes
-   the trained model/history and returns the same Creation to unlocked Build.
+6. Unlocking keeps the training (#371). The padlock in a locked Build asks
+   once (a plain confirm, no hold) and then opens the body for this Build
+   visit only (`BuildViewModel.Unlock`). Nothing about it is saved: edits
+   keep the training through step 1, and the Creation is locked again the
+   next time Build opens it. A Creation that is unlocked and not changed
+   trains on from its saved state. Reset training, in the overflow menu, is
+   the only way to start over.
 
 `Evolver` reports training progress; it does not know about the lock. The
 lock follows from the saved training alone, so there is no separate lock

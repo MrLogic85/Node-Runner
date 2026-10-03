@@ -16,7 +16,7 @@ public sealed class BuildPresentationViewModelTests
     }
 
     [Fact]
-    public void EditMode_LocksTopologyToolsAndShowsRebuildAction()
+    public void EditMode_LocksTopologyTools()
     {
         var build = new BuildViewModel();
         build.LoadCreation(new CreationDef(
@@ -30,7 +30,25 @@ public sealed class BuildPresentationViewModelTests
         presentation.InspectorRole.ShouldBe("Tool: Move");
         presentation.InspectorValues.ShouldBe("Drag an existing node to reposition it. Training is kept.");
         presentation.IsLocked.ShouldBeTrue();
-        presentation.ShowRebuildAction.ShouldBeTrue();
+        presentation.IsTrained.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Unlock_OpensTheBodyForEditing_AndKeepsTheTraining()
+    {
+        var build = new BuildViewModel();
+        build.LoadCreation(new CreationDef(Guid.NewGuid(), "Worm", PairCreature(), TestTraining.State(3)));
+        var presentation = new BuildPresentationViewModel(build);
+        var changes = 0;
+        presentation.PresentationChanged += (_, _) => changes++;
+
+        build.Unlock();
+
+        presentation.IsLocked.ShouldBeFalse();
+        presentation.LockTopologyTools.ShouldBeFalse();
+        presentation.IsTrained.ShouldBeTrue();
+        build.TrainingGeneration.ShouldBe(3);
+        changes.ShouldBeGreaterThan(0);
     }
 
     [Fact]

@@ -115,7 +115,6 @@ always matches the saved creature.
 | Field | Issue |
 |---|---|
 | `revision`: bumped on every saved rebuild | #541 |
-| Per-part `locked` flag | #371 |
 | `training.state`: map-loop position, the elites of other fitness functions | #540, #317 |
 | `training.settings`: Shadows, checked maps, fitness functions | #528, #540, #317 |
 | `training.latest` and `training.best` per map | #540 |

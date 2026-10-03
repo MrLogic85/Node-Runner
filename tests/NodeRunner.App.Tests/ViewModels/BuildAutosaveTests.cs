@@ -35,6 +35,23 @@ public sealed class BuildAutosaveTests
     }
 
     [Fact]
+    public void Unlock_AloneDoesNotWrite()
+    {
+        var edits = Substitute.For<IBuildEditWorkflow>();
+        var build = new BuildViewModel();
+        var drawing = TwoNodeCreation();
+        var creation = new CreationDef(drawing.Id, drawing.Name, drawing.Creature, TestTraining.State(3));
+        build.LoadCreation(creation);
+        using var autosave = new BuildAutosave(build, edits, creation.Id, openedAsNew: false);
+
+        build.Unlock();
+        autosave.Save().ShouldBeTrue();
+
+        autosave.HasUnsavedEdits.ShouldBeFalse();
+        edits.DidNotReceiveWithAnyArgs().PersistEdit(default, default!);
+    }
+
+    [Fact]
     public void Edit_RaisesChangedAndMarksTheDrawingUnsaved()
     {
         var (_, build, autosave) = Open(TwoNodeCreation());

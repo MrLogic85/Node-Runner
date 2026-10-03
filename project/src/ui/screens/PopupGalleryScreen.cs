@@ -56,9 +56,9 @@ public partial class PopupGalleryScreen : GalleryScreen
         UiPopupType.Danger, "Delete creation?", "\"Walker\" and its 142 generations of training would be removed permanently. Make a copy first if you want to keep it.",
         "Hold to delete", Succeed, true));
 
-    private void ShowUnlockDialog() => ShowDialog(new(
-        UiPopupType.Warn, "Unlock creation?", "This example would reset 142 generations of training while keeping the body.",
-        "Hold to unlock", Succeed, true));
+    private void ShowWarningHoldDialog() => ShowDialog(new(
+        UiPopupType.Warn, "Reset training?", "This example would reset 142 generations of training while keeping the body.",
+        "Hold to reset", Succeed, true));
 
     private void ShowLongDialog() => ShowDialog(new(
         UiPopupType.Default, "Review the details",

@@ -4,9 +4,9 @@ namespace NodeRunner.App.Lifecycle;
 
 /// <summary>
 /// A Creation is locked once it has trained at least one generation (#369), which is when it has
-/// saved training. The lock protects the
-/// trained model: the anatomy stays as that model needs it until the player unlocks,
-/// which resets the training. It follows from the saved training and is never stored.
+/// saved training. The lock only prevents accidental changes to the body: unlocking
+/// (<see cref="ViewModels.BuildViewModel.Unlock"/>, #371) keeps the training and lasts for one
+/// Build visit. It follows from the saved training and is never stored.
 /// </summary>
 public static class CreationLock
 {
