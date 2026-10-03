@@ -126,6 +126,10 @@ reference would mislead someone working on that surface.
   stay turned with the group until the selection changes. The reference
   has no box select; ours is dashed like the frame, filled `halo` at
   `alpha_soft`, and shows the parts it would catch as selected.
+- **Links live in the Beams tool (#705).** The reference tray has a Links tab
+  and the rail says Beam. Instead the rail and side-panel title say Beams,
+  and the Beams tool's panel lists Beam, Piston, Spring and Wing. The Parts
+  tray starts at On a joint.
 - **Piston settings are sliders (#451).** The reference's Piston panel
   lists what it joins ("Between"), its power draw and its weight. Instead
   its Part settings show three `UiSlider`s, Max strength, Stroke and Max
@@ -290,9 +294,10 @@ reference would mislead someone working on that surface.
     temporary until those parts ship; #525's achievement locks need their
     own reason.
   - The tray shows only guidance that applies now: Move has no tool line;
-    Beam, Joint and Select show a status line above the readiness line, the
-    tool's glyph at `icon-sm` in `muted` and one short `t-note` line ("Drag
-    joint to joint.", "Tap space or a beam.", "Tap or box parts.").
+    Joint and Select show a status line above the readiness line, the tool's
+    glyph at `icon-sm` in `muted` and one short `t-note` line ("Tap space or
+    a beam.", "Tap or box parts."). The Beams link list rules live in
+    `docs/BUILD_MODE.md`.
   - Locked and "0 left" rows fade as a whole (glyph, name and lock), not
     only their fill.
 

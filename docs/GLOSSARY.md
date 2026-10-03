@@ -11,6 +11,9 @@ The player's words. They started from `reference design/README.md` → "The
 words" (#202); this list now owns them. Code, docs and copy use them; the ML
 layer keeps its textbook terms.
 
+- **Beams tool** — The Build rail tool that draws a Beam by default, or a
+  link such as a Piston when that row is picked. Its side-panel list is
+  headed "Links".
 - **Build** — The editor where a Creation's body is drawn and changed. Code
   says Build (`BuildViewModel`, `BuildTool`, `BuildCanvas`), never
   Construction. See: `docs/BUILD_MODE.md`.
@@ -62,6 +65,10 @@ Long-form descriptions and the sensor/model contract live in
   triangle locks them. Not the retired 0.1.0 Joint/Bone/Muscle prototype
   part, and not a Godot physics joint. See:
   `docs/BUILD_MODE.md`.
+- **Link** — A non-beam part drawn joint-to-joint by the Beams tool. Today
+  that means Piston; Spring and Wing are listed for later. The UI list is
+  headed "Links" and also includes Beam, but a Beam remains the structural
+  part above.
 - **Model input** — One slot in the neural network's input vector, populated
   one-to-one from an input port. See: `docs/CREATURE_MODEL.md`.
 - **Model output** — One slot in the neural network's output vector,

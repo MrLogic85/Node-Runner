@@ -324,7 +324,7 @@ public sealed class BuildGestures
 
         switch (_pressTool)
         {
-            case BuildTool.Beam or BuildTool.Piston when _pressedNode is { } start && !_build.IsMoveOnly:
+            case BuildTool.Beam when _pressedNode is { } start && !_build.IsMoveOnly && !_build.SelectedNodeIds.Contains(start):
                 BeamStartNodeId = start;
                 BeamEnd = position;
                 Changed?.Invoke(this, EventArgs.Empty);
@@ -386,6 +386,14 @@ public sealed class BuildGestures
                 _dragOrigin = NodeById(dragged).Position;
                 NodeDragStarting?.Invoke(this, [dragged]);
             }
+            else if (_pressTool == BuildTool.Beam
+                && BeamStartNodeId is null
+                && _pressedNode is { } selected
+                && _build.SelectedNodeIds.Contains(selected))
+            {
+                _dragOrigin = NodeById(selected).Position;
+                NodeDragStarting?.Invoke(this, [selected]);
+            }
         }
 
         var lastViewPosition = _lastViewPosition;
@@ -408,16 +416,26 @@ public sealed class BuildGestures
                 break;
             case BuildTool.Beam when BeamStartNodeId is { } start:
                 BeamEnd = position;
-                BeamTargetNodeId = FindBeamTarget(start, position);
+                if (_build.PickedLink == BuildLink.Piston)
+                {
+                    var target = FindPistonTarget(start, position);
+                    var refused = target is { } end && !_build.CanConnectPiston(start, end, out _);
+                    BeamTargetNodeId = refused ? null : target;
+                    RefusedTargetNodeId = refused ? target : null;
+                }
+                else
+                {
+                    BeamTargetNodeId = FindBeamTarget(start, position);
+                    RefusedTargetNodeId = null;
+                }
+
                 Changed?.Invoke(this, EventArgs.Empty);
                 break;
-            case BuildTool.Piston when BeamStartNodeId is { } start:
-                BeamEnd = position;
-                var target = FindPistonTarget(start, position);
-                var refused = target is { } end && !_build.CanConnectPiston(start, end, out _);
-                BeamTargetNodeId = refused ? null : target;
-                RefusedTargetNodeId = refused ? target : null;
-                Changed?.Invoke(this, EventArgs.Empty);
+            case BuildTool.Beam when _pressedNode is { } node && _build.SelectedNodeIds.Contains(node):
+                _build.MoveNode(node, position);
+                break;
+            case BuildTool.Beam:
+                View.PanBy(new Vector2D(viewPosition.X - lastViewPosition.X, viewPosition.Y - lastViewPosition.Y));
                 break;
             case BuildTool.Select when _selectionStart is { } start:
                 TransformSelection(start, position);
@@ -445,17 +463,21 @@ public sealed class BuildGestures
             case BuildTool.Move when !_dragging:
                 TapMove();
                 break;
-            case BuildTool.Beam when BeamStartNodeId is { } start && FindBeamTarget(start, position) is { } end:
-                _build.ConnectBeam(start, end);
+            case BuildTool.Beam when !_dragging:
+                TapMove();
                 break;
-            case BuildTool.Piston when BeamStartNodeId is { } start && _dragging:
-                if (FindPistonTarget(start, position) is { } pistonEnd)
+            case BuildTool.Beam when BeamStartNodeId is { } start && _dragging:
+                if (_build.PickedLink == BuildLink.Piston && FindPistonTarget(start, position) is { } pistonEnd)
                 {
                     _build.ConnectPiston(start, pistonEnd);
                 }
-                else
+                else if (_build.PickedLink == BuildLink.Piston)
                 {
                     _build.PistonDropMissed();
+                }
+                else if (FindBeamTarget(start, position) is { } end)
+                {
+                    _build.ConnectBeam(start, end);
                 }
 
                 break;

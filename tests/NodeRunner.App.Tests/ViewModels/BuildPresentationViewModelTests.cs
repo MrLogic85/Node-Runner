@@ -8,12 +8,73 @@ public sealed class BuildPresentationViewModelTests
 {
     [Theory]
     [InlineData(BuildTool.Move, "Drag a joint to move it. Tap a part to select it.")]
-    [InlineData(BuildTool.Beam, "Drag from one joint to another to join them with a beam.")]
+    [InlineData(BuildTool.Beam, "Pick a link, then drag joint to joint.")]
     [InlineData(BuildTool.Joint, "Tap empty space to add a joint, or tap a beam to split it.")]
     [InlineData(BuildTool.Select, "Tap parts to select them. Drag selected parts to move them together.")]
     public void ToolHint_ReturnsUserFacingHintForTool(BuildTool tool, string expected)
     {
         BuildPresentationViewModel.ToolHint(tool).ShouldBe(expected);
+    }
+
+    [Fact]
+    public void LinkList_ShowsForUnlockedBeamsWithNothingSelected()
+    {
+        var presentation = new BuildPresentationViewModel(new BuildViewModel { ActiveTool = BuildTool.Beam });
+
+        var list = presentation.LinkList.ShouldNotBeNull();
+        list.Title.ShouldBe("Beams");
+        list.Name.ShouldBe("Links");
+        list.Rows.Select(row => (row.Link, row.State)).ShouldBe([
+            (BuildLink.Beam, LinkListRowState.Selected),
+            (BuildLink.Piston, LinkListRowState.Rest),
+            (BuildLink.Spring, LinkListRowState.Locked),
+            (BuildLink.Wing, LinkListRowState.Locked)]);
+    }
+
+    [Fact]
+    public void PickLink_RaisesPresentationChanged_AndUpdatesLinkList()
+    {
+        var build = new BuildViewModel { ActiveTool = BuildTool.Beam };
+        var presentation = new BuildPresentationViewModel(build);
+        var changes = 0;
+        presentation.PresentationChanged += (_, _) => changes++;
+
+        build.PickLink(BuildLink.Piston);
+
+        changes.ShouldBe(1);
+        var list = presentation.LinkList.ShouldNotBeNull();
+        list.HelpText.ShouldBe("The brain pushes and pulls it. Drag joint to joint.");
+        list.Rows.Single(row => row.Link == BuildLink.Piston).State.ShouldBe(LinkListRowState.Selected);
+        list.Rows.Single(row => row.Link == BuildLink.Beam).State.ShouldBe(LinkListRowState.Rest);
+    }
+
+    [Fact]
+    public void LinkList_HidesWhenAPartIsSelected()
+    {
+        var build = new BuildViewModel { ActiveTool = BuildTool.Beam };
+        build.PlaceNode(new Vector2D(0, 0));
+        build.ReplaceSelection([1]);
+
+        new BuildPresentationViewModel(build).LinkList.ShouldBeNull();
+    }
+
+    [Fact]
+    public void LinkList_HidesWhenLocked()
+    {
+        var build = new BuildViewModel();
+        build.Load(PairCreature(), moveOnly: true);
+        build.ActiveTool = BuildTool.Beam;
+
+        new BuildPresentationViewModel(build).LinkList.ShouldBeNull();
+    }
+
+    [Theory]
+    [InlineData(BuildTool.Move)]
+    [InlineData(BuildTool.Joint)]
+    [InlineData(BuildTool.Select)]
+    public void LinkList_HidesForOtherTools(BuildTool tool)
+    {
+        new BuildPresentationViewModel(new BuildViewModel { ActiveTool = tool }).LinkList.ShouldBeNull();
     }
 
     [Fact]

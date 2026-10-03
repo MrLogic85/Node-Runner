@@ -15,7 +15,7 @@ public sealed class BuildPartsTrayTests
         var tabs = _build.Single(node => node.Name == "PartTabs");
 
         tabs.Script.ShouldBe("res://src/ui/lib/UiIconTabs.cs");
-        int[] icons = [(int)UiIconId.PartSpring, (int)UiIconId.PartServo, (int)UiIconId.PartCamera, (int)UiIconId.PartBattery];
+        int[] icons = [(int)UiIconId.PartServo, (int)UiIconId.PartCamera, (int)UiIconId.PartBattery];
         tabs.Node.Body.ShouldContain($"Icons = Array[int]([{string.Join(", ", icons)}])");
         icons.Length.ShouldBe(PartTray.Groups().Count);
     }
@@ -43,6 +43,15 @@ public sealed class BuildPartsTrayTests
     public void EveryPart_HasItsOwnPartGlyph()
     {
         var icons = Enum.GetValues<BuildPart>().Select(BuildScreen.PartIcon).ToList();
+
+        icons.ShouldAllBe(icon => UiIcons.IsPartGlyph(icon));
+        icons.ShouldBeUnique();
+    }
+
+    [Fact]
+    public void EveryLink_HasItsOwnPartGlyph()
+    {
+        var icons = Enum.GetValues<BuildLink>().Select(BuildScreen.LinkIcon).ToList();
 
         icons.ShouldAllBe(icon => UiIcons.IsPartGlyph(icon));
         icons.ShouldBeUnique();

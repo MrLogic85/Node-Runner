@@ -112,7 +112,7 @@ public partial class BuildHost : Node, IRoutedScene
         _buildScreen = GetNode<BuildScreen>("%BuildScreen");
         _buildScreen.Setup(Build);
         _buildScreen.ToolRequested += tool => Build.ActiveTool = tool;
-        _buildScreen.PartPicked += Build.PickPart;
+        _buildScreen.LinkPicked += link => Build.PickLink((BuildLink)link);
         _buildScreen.ParameterChanged += (parameter, value) => Build.SetParameter((PartParameterId)parameter, value);
         _buildScreen.StartTrainingRequested += StartTraining;
         _buildScreen.BackRequested += BackFromBuildScreen;

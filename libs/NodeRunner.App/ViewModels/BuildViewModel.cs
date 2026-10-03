@@ -14,9 +14,6 @@ public enum BuildTool
     Beam,
     Joint,
     Select,
-
-    /// <summary>Picked from the tray's Links tab (#451): drag from one joint to another to place a Piston.</summary>
-    Piston,
 }
 
 /// <summary>
@@ -59,6 +56,7 @@ public sealed class BuildViewModel : INotifyPropertyChanged
     private CreatureBuilder _builder;
     private bool _isActive;
     private BuildTool _activeTool = BuildTool.Move;
+    private BuildLink _pickedLink = BuildLink.Beam;
     private string? _statusMessage;
     private bool _moveOnly;
     private readonly HashSet<int> _selectedNodeIds = [];
@@ -200,23 +198,39 @@ public sealed class BuildViewModel : INotifyPropertyChanged
             }
 
             _activeTool = value;
+            if (value == BuildTool.Beam)
+            {
+                SetPickedLink(BuildLink.Beam);
+            }
+
             StatusMessage = null;
             OnPropertyChanged();
         }
     }
 
-    /// <summary>
-    /// Picks a link from the tray (#451): its tool stays active for several placements, and picking
-    /// it again puts the Move tool back. A locked Creation places nothing, so it keeps Move.
-    /// </summary>
-    public void PickPart(BuildPart part)
+    /// <summary>The link the Beams tool draws when a drag starts from an unselected joint (#705).</summary>
+    public BuildLink PickedLink => _pickedLink;
+
+    /// <summary>Picks the link the Beams tool draws. Locked and future links do nothing.</summary>
+    public void PickLink(BuildLink link)
     {
-        if (_moveOnly || !PartTray.IsAvailable(part) || PartTray.ToolOf(part) is not { } tool)
+        if (_moveOnly || _activeTool != BuildTool.Beam || !BuildLinkList.IsAvailable(link))
         {
             return;
         }
 
-        ActiveTool = ActiveTool == tool ? BuildTool.Move : tool;
+        SetPickedLink(link);
+    }
+
+    private void SetPickedLink(BuildLink link)
+    {
+        if (_pickedLink == link)
+        {
+            return;
+        }
+
+        _pickedLink = link;
+        OnPropertyChanged(nameof(PickedLink));
     }
 
     /// <summary>Why a Piston drag that ended away from a joint placed nothing: a Piston never makes a joint.</summary>
