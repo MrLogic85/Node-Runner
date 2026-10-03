@@ -1287,7 +1287,8 @@ mouse_filter = 1
 script = ExtResource("11_slider")
 LabelText = "Angle limits"
 ReadoutText = "-20° to 110°"
-ValueKind = 1
+LowEnd = 1
+HighEnd = 1
 LowPosition = 0.18
 HighPosition = 0.72
 MarkerPosition = 0.44
@@ -1300,11 +1301,69 @@ mouse_filter = 1
 script = ExtResource("11_slider")
 LabelText = "Angle limits"
 ReadoutText = "-20° to 110°"
-ValueKind = 1
+LowEnd = 1
+HighEnd = 1
 LowPosition = 0.18
 HighPosition = 0.72
 MarkerPosition = 0.44
 MarkerText = "now 35°"
+Disabled = true
+
+[node name="Markers" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Slider" unique_id=1521338698]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="Captions" type="GridContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Slider/Markers" unique_id=265911143]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/h_separation = 40
+columns = 2
+
+[node name="Enabled" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Slider/Markers/Captions" unique_id=691007385]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Marker ends: a span with no thumb"
+autowrap_mode = 3
+script = ExtResource("2_cpfof")
+TextStyle = 9
+
+[node name="Disabled" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Slider/Markers/Captions" unique_id=361079852]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Marker ends"
+autowrap_mode = 3
+script = ExtResource("2_cpfof")
+TextStyle = 9
+
+[node name="Controls" type="GridContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Slider/Markers" unique_id=1759216220]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/h_separation = 40
+columns = 2
+
+[node name="Enabled" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Slider/Markers/Controls" unique_id=1551822550]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 1
+script = ExtResource("11_slider")
+LabelText = "Max strength"
+ReadoutText = "100–250 N"
+LowEnd = 2
+HighEnd = 2
+LowPosition = 0.21
+HighPosition = 0.61
+
+[node name="Disabled" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Slider/Markers/Controls" unique_id=530973875]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 1
+script = ExtResource("11_slider")
+LabelText = "Max strength"
+ReadoutText = "100–250 N"
+LowEnd = 2
+HighEnd = 2
+LowPosition = 0.21
+HighPosition = 0.61
 Disabled = true
 
 [node name="Progress" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Slider" unique_id=178032061]
@@ -1346,7 +1405,7 @@ mouse_filter = 1
 script = ExtResource("11_slider")
 LabelText = "Loading"
 ReadoutText = "62%"
-ValueKind = 2
+HighEnd = 0
 HighPosition = 0.62
 
 [node name="Disabled" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Slider/Progress/Controls" unique_id=1398953290]
@@ -1356,7 +1415,7 @@ mouse_filter = 1
 script = ExtResource("11_slider")
 LabelText = "Power"
 ReadoutText = "18%"
-ValueKind = 2
+HighEnd = 0
 HighPosition = 0.18
 Disabled = true
 
@@ -1397,7 +1456,7 @@ mouse_filter = 1
 script = ExtResource("11_slider")
 LabelText = ""
 ReadoutText = ""
-ValueKind = 2
+HighEnd = 0
 HighPosition = 0.78
 
 [node name="Disabled" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Slider/BareProgress/Controls" unique_id=1359565844]
@@ -1407,7 +1466,7 @@ mouse_filter = 1
 script = ExtResource("11_slider")
 LabelText = ""
 ReadoutText = ""
-ValueKind = 2
+HighEnd = 0
 HighPosition = 0.35
 Disabled = true
 

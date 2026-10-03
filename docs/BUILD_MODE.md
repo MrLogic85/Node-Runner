@@ -72,14 +72,13 @@ a node's own ring always hits.
   a dashed frame and three `UiSelectionHandle`s: **Move** in the middle (or
   drag anywhere inside the frame, or a selected joint), **Rotate** on a stem
   above and **Scale** at the bottom-right corner.
-  - With a group, any other drag pans. A tap on a joint adds or removes it,
-    a tap on a beam, sensor or Piston does nothing, and an empty tap clears.
-  - With no group, a tap selects one joint or part alone (a tap on the
-    selected joint clears it), a drag from a joint selects and moves only
-    it, and any other drag draws a box that replaces the selection.
-  - A group, and a box being dragged, shows the beams with both joints in
-    it, their sensors and the Pistons between its joints as selected
-    (`BuildViewModel.PartsWithin`); the group itself is only its joints.
+  - A tap on any joint, beam, sensor or Piston adds or removes it, even
+    under a handle; an empty tap clears (`BuildViewModel.ToggleSelected`).
+  - With a group, any other drag pans. With none, a drag from a joint moves
+    it (selecting only it unless it is selected), and any other drag draws a
+    box that selects every part whose centre is in it: a joint's centre, a
+    beam's or Piston's midpoint, a sensor's beam midpoint. It replaces the
+    selection, so a box can catch only beams.
   - After a Rotate the frame stays turned until the selection changes
     (`docs/UI_DIRECTION.md` → "The Select frame keeps its turn"). Rotate
     and Scale turn about the frame's centre; Scale counts only the drag
@@ -224,14 +223,21 @@ them.
 
 ## Selection panel
 
-Several selected joints show the selection panel instead (#558). Its title
-row carries the Select glyph and "N selected", where N counts the joints and
-the parts they carry (#704); there is no close button.
-Three `UiInfoRow`s explain the canvas handles (Move, Rotate, Scale), then a
-full-width hold-to-activate danger **Delete N** with the note "Beams on a
-deleted node go with it." (`BuildViewModel.DeleteSelectedParts`). A locked
-creation keeps the three rows, since the handles still work, and hides Delete.
-`BuildPresentationViewModel.Selection` owns the title and Delete copy.
+Several selected parts show the selection panel instead (#558, #704). Its
+title row carries the Select glyph and "N selected"; there is no close button.
+- With only Pistons selected, first their three sliders, with the note "A
+  slider sets one value for all of them." A slider sets that one setting on
+  every Piston (`BuildViewModel.SetSharedSetting`); differing values look as
+  `docs/UI_DIRECTION.md` says. A locked creation keeps them, like a single
+  Piston's.
+- With a frame, three `UiInfoRow`s explain its handles (Move, Rotate, Scale).
+  With neither settings nor a frame: "These parts share no settings."
+- Last a full-width hold-to-activate danger **Delete N**
+  (`BuildViewModel.DeleteSelectedParts`), hidden when locked. Its note is
+  "Beams on a deleted node go with it." with a joint selected, else "A sensor
+  on a deleted beam goes with it." when one would, else none.
+
+`BuildPresentationViewModel.Selection` owns the copy.
 
 ## Validation
 

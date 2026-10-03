@@ -55,6 +55,10 @@ public partial class BuildScreen : Control
     [Signal]
     public delegate void PistonSettingsChangedEventHandler(int pistonId, double strength, double stroke, double maxSpeed);
 
+    /// <summary>A shared slider moved (#704): every selected Piston takes <paramref name="value"/> for <paramref name="setting"/> (a <see cref="PistonSetting"/>).</summary>
+    [Signal]
+    public delegate void SharedSettingChangedEventHandler(int setting, double value);
+
     /// <summary>False while the overflow menu is open; it takes Android Back itself.</summary>
     public bool CanTakeBack => !Toolbar.Menu.Visible;
 
@@ -107,6 +111,20 @@ public partial class BuildScreen : Control
         var partName = GetNode<UiTextField>("%PartName");
         partName.EditingStarted += () => _renamingPartId = _presentation?.SinglePart?.Id;
         partName.EditingFinished += OnPartNameEdited;
+        foreach (var setting in Enum.GetValues<PistonSetting>())
+        {
+            var slider = SharedSlider(setting);
+            slider.ThumbChanged += (_, position) =>
+                EmitSignal(SignalName.SharedSettingChanged, (int)setting, PistonSettings.ValueAt(setting, position));
+
+            // Differing values have no thumb: a touch sets one value for all of them.
+            slider.TrackPressed += position =>
+            {
+                slider.Value = UiSliderValue.Thumb(position);
+                EmitSignal(SignalName.SharedSettingChanged, (int)setting, PistonSettings.ValueAt(setting, position));
+            };
+        }
+
         foreach (var slider in PistonSliders)
         {
             slider.ThumbChanged += (_, _) => OnPistonSliderChanged();
@@ -160,6 +178,14 @@ public partial class BuildScreen : Control
     private UiSlider[] PistonSliders =>
         [GetNode<UiSlider>("%PistonStrength"), GetNode<UiSlider>("%PistonStroke"), GetNode<UiSlider>("%PistonMaxSpeed")];
 
+    private UiSlider SharedSlider(PistonSetting setting) => setting switch
+    {
+        PistonSetting.Strength => GetNode<UiSlider>("%SharedPistonStrength"),
+        PistonSetting.Stroke => GetNode<UiSlider>("%SharedPistonStroke"),
+        PistonSetting.MaxSpeed => GetNode<UiSlider>("%SharedPistonMaxSpeed"),
+        _ => throw new ArgumentOutOfRangeException(nameof(setting)),
+    };
+
     private void OnPistonSliderChanged()
     {
         if (_presentation?.SinglePart is not { Kind: PartSettingsKind.Piston } part)
@@ -171,9 +197,9 @@ public partial class BuildScreen : Control
         EmitSignal(
             SignalName.PistonSettingsChanged,
             part.Id,
-            PistonSettings.StrengthAt(sliders[0].HighPosition),
-            PistonSettings.StrokeAt(sliders[1].HighPosition),
-            PistonSettings.MaxSpeedAt(sliders[2].HighPosition));
+            PistonSettings.ValueAt(PistonSetting.Strength, sliders[0].HighPosition),
+            PistonSettings.ValueAt(PistonSetting.Stroke, sliders[1].HighPosition),
+            PistonSettings.ValueAt(PistonSetting.MaxSpeed, sliders[2].HighPosition));
     }
 
     private void OnPresentationChanged(object? sender, EventArgs eventArgs)
@@ -279,12 +305,40 @@ public partial class BuildScreen : Control
 
         if (selection.Visible && presentation.Selection is { } group)
         {
-            GetNode<UiButton>("%SelectionDelete").Text = group.DeleteText;
-            GetNode<UiLabel>("%SelectionDeleteNote").Text = group.DeleteNote;
-            GetNode<Control>("%SelectionActions").Visible = group.CanDelete;
+            ApplySelection(group);
         }
 
         ApplyReadiness(buildPanel);
+    }
+
+    private void ApplySelection(SelectionPanelPresentation group)
+    {
+        foreach (var setting in Enum.GetValues<PistonSetting>())
+        {
+            var slider = SharedSlider(setting);
+            var shared = group.Settings.FirstOrDefault(entry => entry.Id == setting);
+            slider.Visible = shared is not null;
+            if (shared is not null)
+            {
+                slider.LabelText = shared.Label;
+                slider.ReadoutText = shared.Readout;
+                slider.Value = shared.ValuesDiffer
+                    ? new UiSliderValue(UiSliderEnd.Marker(shared.Low), UiSliderEnd.Marker(shared.High))
+                    : UiSliderValue.Thumb(shared.High);
+            }
+        }
+
+        GetNode<Control>("%SelectionSettings").Visible = group.Settings.Count > 0;
+        GetNode<UiLabel>("%SelectionSettingsNote").Text = group.SettingsNote;
+        var emptyNote = GetNode<UiLabel>("%SelectionEmptyNote");
+        emptyNote.Text = group.EmptyNote;
+        emptyNote.Visible = group.EmptyNote.Length > 0;
+        GetNode<Control>("%SelectionRows").Visible = group.ShowFrameRows;
+        GetNode<UiButton>("%SelectionDelete").Text = group.DeleteText;
+        var deleteNote = GetNode<UiLabel>("%SelectionDeleteNote");
+        deleteNote.Text = group.DeleteNote;
+        deleteNote.Visible = group.DeleteNote.Length > 0;
+        GetNode<Control>("%SelectionActions").Visible = group.CanDelete;
     }
 
     private void ApplyTray(BuildPresentationViewModel presentation)

@@ -156,32 +156,52 @@ public sealed partial class UiComponentContractsTests
             .ShouldBe(nameof(UiSlider));
         var progress = UiSliderValue.Progress(0.62);
 
-        progress.Kind.ShouldBe(UiSliderValueKind.Progress);
+        progress.ShouldBe(new UiSliderValue(UiSliderEnd.Rounded(0), UiSliderEnd.Rounded(0.62)));
         progress.ThumbCount.ShouldBe(0);
-        progress.Low.ShouldBe(0);
-        progress.High.ShouldBe(0.62);
-        progress.FillStart.ShouldBe(0);
-        progress.FillEnd.ShouldBe(0.62);
+        progress.SelectThumb(0.5).ShouldBe(-1);
     }
 
     [Fact]
-    public void SliderValue_FactoriesPreventConflictingProgressAndThumbState()
+    public void SliderValue_PresetsAreSpansWithTheirEnds()
     {
         var thumb = UiSliderValue.Thumb(0.4);
-        thumb.Kind.ShouldBe(UiSliderValueKind.Thumb);
+        thumb.ShouldBe(new UiSliderValue(UiSliderEnd.Rounded(0), UiSliderEnd.Thumb(0.4)));
         thumb.ThumbCount.ShouldBe(1);
-        thumb.Low.ShouldBe(0);
-        thumb.High.ShouldBe(0.4);
-        thumb.FillEnd.ShouldBe(0.4);
         thumb.ThumbAt(0).ShouldBe(0.4);
 
         var range = UiSliderValue.Thumbs(0.8, 0.2);
-        range.Kind.ShouldBe(UiSliderValueKind.Range);
+        range.ShouldBe(new UiSliderValue(UiSliderEnd.Thumb(0.2), UiSliderEnd.Thumb(0.8)));
         range.ThumbCount.ShouldBe(2);
-        range.Low.ShouldBe(0.2);
-        range.High.ShouldBe(0.8);
-        range.FillStart.ShouldBe(0.2);
-        range.FillEnd.ShouldBe(0.8);
+        (range.ThumbAt(0), range.ThumbAt(1)).ShouldBe((0.2, 0.8));
+    }
+
+    [Fact]
+    public void SliderValue_KeepsEachEndsKind_AndOrdersThePositions()
+    {
+        var value = new UiSliderValue(UiSliderEnd.Thumb(0.7), UiSliderEnd.Marker(0.3));
+
+        value.ShouldBe(new UiSliderValue(UiSliderEnd.Thumb(0.3), UiSliderEnd.Marker(0.7)));
+        value.ThumbAt(0).ShouldBe(0.3);
+        Should.Throw<ArgumentOutOfRangeException>(() => value.ThumbAt(1));
+    }
+
+    [Fact]
+    public void SliderValue_MarkerEnds_HaveNoThumbToDrag()
+    {
+        var markers = new UiSliderValue(UiSliderEnd.Marker(0.3), UiSliderEnd.Marker(0.7));
+
+        markers.ThumbCount.ShouldBe(0);
+        markers.SelectThumb(0.5).ShouldBe(-1);
+    }
+
+    [Fact]
+    public void SliderValue_WithThumb_MovesOnlyThatEnd_AndStopsAtTheOther()
+    {
+        var value = new UiSliderValue(UiSliderEnd.Marker(0.2), UiSliderEnd.Thumb(0.6));
+
+        value.WithThumb(0, 0.9).ShouldBe(new UiSliderValue(UiSliderEnd.Marker(0.2), UiSliderEnd.Thumb(0.9)));
+        value.WithThumb(0, 0.1).ShouldBe(new UiSliderValue(UiSliderEnd.Marker(0.2), UiSliderEnd.Thumb(0.2)));
+        UiSliderValue.Thumbs(0.2, 0.6).WithThumb(0, 0.8).ShouldBe(UiSliderValue.Thumbs(0.6, 0.6));
     }
 
     [Theory]
@@ -198,17 +218,6 @@ public sealed partial class UiComponentContractsTests
         int expected)
     {
         UiSliderValue.Thumbs(low, high).SelectThumb(position).ShouldBe(expected);
-    }
-
-    [Fact]
-    public void SliderValue_FromComposesPrimitiveSceneValuesWithoutAmbiguousInputs()
-    {
-        UiSliderValue.From(UiSliderValueKind.Progress, 0.62, 0.8)
-            .ShouldBe(UiSliderValue.Progress(0.8));
-        UiSliderValue.From(UiSliderValueKind.Thumb, 0.62, 0.8)
-            .ShouldBe(UiSliderValue.Thumb(0.8));
-        UiSliderValue.From(UiSliderValueKind.Range, 0.62, 0.8)
-            .ShouldBe(UiSliderValue.Thumbs(0.62, 0.8));
     }
 
     [Fact]

@@ -168,16 +168,39 @@ public sealed class BuildPresentationViewModel
         _ => throw new ArgumentOutOfRangeException(nameof(kind)),
     };
 
-    /// <summary>The selection panel, or null unless several parts are selected. Its count includes what a group carries (#704).</summary>
-    public SelectionPanelPresentation? Selection => _build.SelectedPartCount > 1
-        ? new SelectionPanelPresentation(
-            $"{SelectionCount} selected",
-            $"Delete {SelectionCount}",
-            "Beams on a deleted node go with it.",
-            CanDelete: !_build.IsMoveOnly)
-        : null;
+    /// <summary>The selection panel, or null unless several parts are selected (#704).</summary>
+    public SelectionPanelPresentation? Selection
+    {
+        get
+        {
+            var count = _build.SelectedPartCount;
+            if (count < 2)
+            {
+                return null;
+            }
 
-    private int SelectionCount => _build.SelectedPartCount + _build.SelectedGroupParts.Count;
+            var selection = _build.Selection;
+            List<SharedSlider> settings = _build.SelectionSharesPistonSettings
+                ? [.. Enum.GetValues<PistonSetting>().Select(setting => PistonSettings.Shared(
+                    setting, [.. selection.Pistons.Select(id => PistonSettings.ValueOf(_build.Pistons[_build.PistonIndexOf(id)], setting))]))]
+                : [];
+            var showFrameRows = _build.SelectedNodeCount >= 2;
+            var deleteNote = selection.Nodes.Count > 0
+                ? "Beams on a deleted node go with it."
+                : _build.Sensors.Any(sensor => selection.Beams.Contains(sensor.BeamId) && !selection.Sensors.Contains(sensor.Id))
+                    ? "A sensor on a deleted beam goes with it."
+                    : string.Empty;
+            return new SelectionPanelPresentation(
+                $"{count} selected",
+                settings,
+                settings.Count > 0 ? "A slider sets one value for all of them." : string.Empty,
+                settings.Count == 0 && !showFrameRows ? "These parts share no settings." : string.Empty,
+                showFrameRows,
+                $"Delete {count}",
+                deleteNote,
+                CanDelete: !_build.IsMoveOnly);
+        }
+    }
 
     public bool LockTopologyTools => _build.IsMoveOnly;
 

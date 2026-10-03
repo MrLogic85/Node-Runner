@@ -70,7 +70,7 @@ public sealed class BuildGestures
     private int? _pressedSensor;
     private int? _pressedPiston;
     private Vector2D? _dragOrigin;
-    private (int[] Nodes, int? Beam, int? Sensor, int? Piston)? _selectionBefore;
+    private PartSet? _selectionBefore;
     private SelectionHandle? _pressedHandle;
     private bool _pressedNodeWasSelected;
     private bool _pressedInGroup;
@@ -153,9 +153,9 @@ public sealed class BuildGestures
     public IReadOnlyList<(SelectionHandle Handle, Vector2D Position)> SelectionHandles =>
         [.. HandlesInView().Select(entry => (entry.Handle, View.ToCanvas(entry.Position)))];
 
-    /// <summary>The joints the Select box would select if it were released now; empty while no box is dragged.</summary>
-    public IReadOnlyList<int> SelectionBoxCatches =>
-        SelectionBox is { } box ? NodesInBox(box.Start, box.End) ?? [] : [];
+    /// <summary>The parts the Select box would select if it were released now; none while no box is dragged.</summary>
+    public PartSet SelectionBoxCatches =>
+        SelectionBox is { } box ? PartsInBox(box.Start, box.End) ?? PartSet.None : PartSet.None;
 
     /// <summary>
     /// The part a tray part dragged to <paramref name="viewPosition"/> would land on (#376): a
@@ -274,7 +274,7 @@ public sealed class BuildGestures
 
         if (_selectionBefore is { } before)
         {
-            RestoreSelection(before.Nodes, before.Beam, before.Sensor, before.Piston);
+            RestoreSelection(before);
         }
 
         ResetTool();
@@ -304,7 +304,7 @@ public sealed class BuildGestures
         {
             _pressedNode = nodeId;
         }
-        else if (_pressedHandle is null && _build.TryFindSensorAt(position, out var sensorId))
+        else if (_build.TryFindSensorAt(position, out var sensorId))
         {
             _pressedSensor = sensorId;
         }
@@ -312,11 +312,11 @@ public sealed class BuildGestures
         {
             _pressedNode = nodeId;
         }
-        else if (_pressedHandle is null && _build.TryFindPistonNear(position, HitDistance(BeamHitDistance), out var pistonId))
+        else if (_build.TryFindPistonNear(position, HitDistance(BeamHitDistance), out var pistonId))
         {
             _pressedPiston = pistonId;
         }
-        else if (_pressedHandle is null && _build.TryFindBeamNear(position, HitDistance(BeamHitDistance), out var beamId))
+        else if (_build.TryFindBeamNear(position, HitDistance(BeamHitDistance), out var beamId))
         {
             _pressedBeam = beamId;
         }
@@ -333,7 +333,7 @@ public sealed class BuildGestures
                 _pressedNodeWasSelected = _pressedNode is { } node && _build.SelectedNodeIds.Contains(node);
                 if (_pressedHandle is null)
                 {
-                    _selectionBefore = ([.. _build.SelectedNodeIds], _build.SingleSelectedBeamId, _build.SingleSelectedSensorId, _build.SingleSelectedPistonId);
+                    _selectionBefore = _build.Selection;
                     PressSelect(viewPosition, position);
                 }
 
@@ -366,6 +366,11 @@ public sealed class BuildGestures
             }
             else if (_pressTool == BuildTool.Select && (_pressedHandle is not null || _selectPress == SelectPress.Move))
             {
+                if (!_pressedInGroup && !_pressedNodeWasSelected && _pressedNode is { } joint)
+                {
+                    _build.ReplaceSelection([joint]);
+                }
+
                 // The group turns and scales about the frame's centre, where the Move handle is.
                 _dragLayout = Layout();
                 _selectionStart = _build.SnapshotSelection(_dragLayout is { } layout ? View.ToCanvas(layout.Move) : null);
@@ -471,36 +476,12 @@ public sealed class BuildGestures
         Changed?.Invoke(this, EventArgs.Empty);
     }
 
-    private void RestoreSelection(int[] nodes, int? beam, int? sensor, int? piston)
+    private void RestoreSelection(PartSet before)
     {
-        if (piston is { } selectedPiston)
+        var now = _build.Selection;
+        if (!Enum.GetValues<CreatureElementKind>().All(kind => now.SetOf(kind).SetEquals(before.SetOf(kind))))
         {
-            if (_build.SingleSelectedPistonId != selectedPiston)
-            {
-                _build.SelectPiston(selectedPiston);
-            }
-        }
-        else if (sensor is { } selectedSensor)
-        {
-            if (_build.SingleSelectedSensorId != selectedSensor)
-            {
-                _build.SelectSensor(selectedSensor);
-            }
-        }
-        else if (beam is { } selectedBeam)
-        {
-            if (_build.SingleSelectedBeamId != selectedBeam)
-            {
-                _build.SelectBeam(selectedBeam);
-            }
-        }
-        else if (_build.SelectedBeamCount != 0
-            || _build.SelectedSensorCount != 0
-            || _build.SelectedPistonCount != 0
-            || _build.SelectedNodeIds.Count != nodes.Length
-            || !nodes.All(_build.SelectedNodeIds.Contains))
-        {
-            _build.ReplaceSelection(nodes);
+            _build.ReplaceSelection(before);
         }
     }
 
@@ -524,8 +505,8 @@ public sealed class BuildGestures
 
     /// <summary>
     /// With a group (#704), a press on a selected joint or inside the frame drags the group, and
-    /// any other press pans. With none, a press on a joint selects only it and drags it, and any
-    /// other press draws a box. Taps are settled on release (<see cref="TapSelect"/>).
+    /// any other press pans. With none, a drag from a joint moves it (selecting only it unless it
+    /// is selected), and any other press draws a box. Taps are settled on release (<see cref="TapSelect"/>).
     /// </summary>
     private void PressSelect(Vector2D viewPosition, Vector2D position)
     {
@@ -544,13 +525,9 @@ public sealed class BuildGestures
                 _selectPress = SelectPress.Pan;
             }
         }
-        else if (_pressedNode is { } joint)
+        else if (_pressedNode is not null)
         {
             _selectPress = SelectPress.Move;
-            if (!_pressedNodeWasSelected)
-            {
-                _build.ReplaceSelection([joint]);
-            }
         }
         else
         {
@@ -560,32 +537,25 @@ public sealed class BuildGestures
         }
     }
 
-    /// <summary>
-    /// A Select tap (#704). In a group a joint is added or removed, a part is ignored, and an
-    /// empty tap clears. With no group a joint was selected on press (a tap on the one already
-    /// selected removes it), a part is selected alone, and an empty tap clears.
-    /// </summary>
+    /// <summary>A Select tap (#704) adds or removes the part under it; a tap on empty canvas clears, and one on a handle does nothing.</summary>
     private void TapSelect()
     {
-        if (_pressedNode is { } node)
+        if (PressedElement() is { } element)
         {
-            if (_pressedInGroup || _pressedNodeWasSelected)
-            {
-                _build.ToggleSelectedNode(node);
-            }
+            _build.ToggleSelected(element);
         }
-        else if (_pressedInGroup)
+        else if (_pressedHandle is null)
         {
-            if (_pressedHandle is null && _pressedSensor is null && _pressedPiston is null && _pressedBeam is null)
-            {
-                _build.ClearSelection();
-            }
-        }
-        else
-        {
-            TapMove();
+            _build.ClearSelection();
         }
     }
+
+    private CreatureElementSelection? PressedElement() =>
+        _pressedNode is { } node ? new(CreatureElementKind.Node, node)
+        : _pressedSensor is { } sensor ? new(CreatureElementKind.Sensor, sensor)
+        : _pressedPiston is { } piston ? new(CreatureElementKind.Piston, piston)
+        : _pressedBeam is { } beam ? new(CreatureElementKind.Beam, beam)
+        : null;
 
     private void TapMove()
     {
@@ -793,35 +763,34 @@ public sealed class BuildGestures
 
     private void CompleteSelectionBox(Vector2D start, Vector2D end)
     {
-        if (NodesInBox(start, end) is { } selected)
+        if (PartsInBox(start, end) is { } selected)
         {
             _build.ReplaceSelection(selected);
         }
     }
 
-    /// <summary>The joints whose centres lie in the box from <paramref name="start"/> to <paramref name="end"/>; null while it is too small to count as a box.</summary>
-    private List<int>? NodesInBox(Vector2D start, Vector2D end)
+    /// <summary>
+    /// The parts whose centres lie in the box from <paramref name="start"/> to <paramref name="end"/>
+    /// (#704): a joint's centre, a beam's or Piston's midpoint, and a sensor's, which is its beam's
+    /// midpoint. Null while the box is too small to count.
+    /// </summary>
+    private PartSet? PartsInBox(Vector2D start, Vector2D end)
     {
-        var minX = Math.Min(start.X, end.X);
-        var maxX = Math.Max(start.X, end.X);
-        var minY = Math.Min(start.Y, end.Y);
-        var maxY = Math.Max(start.Y, end.Y);
-        if (maxX - minX < _selectionBoxMinSize && maxY - minY < _selectionBoxMinSize)
+        var min = new Vector2D(Math.Min(start.X, end.X), Math.Min(start.Y, end.Y));
+        var max = new Vector2D(Math.Max(start.X, end.X), Math.Max(start.Y, end.Y));
+        if (max.X - min.X < _selectionBoxMinSize && max.Y - min.Y < _selectionBoxMinSize)
         {
             return null;
         }
 
-        var selected = new List<int>();
-        for (var i = 0; i < _build.Nodes.Count; i++)
-        {
-            var node = _build.Nodes[i].Position;
-            if (node.X >= minX && node.X <= maxX && node.Y >= minY && node.Y <= maxY)
-            {
-                selected.Add(_build.Nodes[i].Id);
-            }
-        }
-
-        return selected;
+        bool Inside(Vector2D point) => point.X >= min.X && point.X <= max.X && point.Y >= min.Y && point.Y <= max.Y;
+        bool MidInside(int nodeA, int nodeB) => Inside(Midpoint(NodeById(nodeA).Position, NodeById(nodeB).Position));
+        var beams = _build.Beams.Where(beam => MidInside(beam.NodeA, beam.NodeB)).Select(beam => beam.Id).ToHashSet();
+        return new PartSet(
+            _build.Nodes.Where(node => Inside(node.Position)).Select(node => node.Id).ToHashSet(),
+            beams,
+            _build.Sensors.Where(sensor => beams.Contains(sensor.BeamId)).Select(sensor => sensor.Id).ToHashSet(),
+            _build.Pistons.Where(piston => MidInside(piston.NodeA, piston.NodeB)).Select(piston => piston.Id).ToHashSet());
     }
 
     private double HitDistance(double viewDistance) => viewDistance / View.Zoom;

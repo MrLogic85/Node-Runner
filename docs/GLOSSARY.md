@@ -51,8 +51,9 @@ Long-form descriptions and the sensor/model contract live in
 - **Creature** — A single agent's body: nodes + beams (+ optional sensors) +
   Pistons, driven by a brain. See:
   `docs/CREATURE_MODEL.md`.
-- **Creature element selection** — A selected node or beam,
+- **Creature element selection** — A selected joint, beam, sensor or Piston,
   represented as a `CreatureElementKind` plus the part's stable id (#220).
+  Select holds any mix of them as a `PartSet` (#704).
 - **CreatureDef** — Pure-data description of a creature; the "genome" of the
   body, distinct from the brain's genome. See: `docs/CREATURE_MODEL.md`.
 - **Joint** — The player-facing name for a node in Build (the reference

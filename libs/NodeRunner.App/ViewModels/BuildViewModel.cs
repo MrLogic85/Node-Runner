@@ -65,9 +65,9 @@ public sealed class BuildViewModel : INotifyPropertyChanged
     private string _creationName = NewCreationWorkflow.UntitledName;
     private int? _trainingGeneration;
     private double? _latestDistance;
-    private int? _selectedBeamId;
-    private int? _selectedSensorId;
-    private int? _selectedPistonId;
+    private readonly HashSet<int> _selectedBeamIds = [];
+    private readonly HashSet<int> _selectedSensorIds = [];
+    private readonly HashSet<int> _selectedPistonIds = [];
     private CanvasNote? _placementNote;
 
     /// <summary>Why a sensor dropped on a joint was not placed.</summary>
@@ -82,10 +82,7 @@ public sealed class BuildViewModel : INotifyPropertyChanged
     {
         ArgumentNullException.ThrowIfNull(creature);
         _builder = new CreatureBuilder(creature);
-        _selectedNodeIds.Clear();
-        _selectedBeamId = null;
-        _selectedSensorId = null;
-        _selectedPistonId = null;
+        ClearSelectionSets();
         _creationName = string.IsNullOrWhiteSpace(creationName) ? NewCreationWorkflow.UntitledName : creationName;
         _trainingGeneration = training?.Generation;
         _latestDistance = training?.Latest.Distance;
@@ -139,23 +136,28 @@ public sealed class BuildViewModel : INotifyPropertyChanged
 
     public int SelectedNodeCount => _selectedNodeIds.Count;
 
-    public int SelectedBeamCount => _selectedBeamId is null ? 0 : 1;
+    public int SelectedBeamCount => _selectedBeamIds.Count;
 
-    public int SelectedSensorCount => _selectedSensorId is null ? 0 : 1;
+    public int SelectedSensorCount => _selectedSensorIds.Count;
 
-    public int SelectedPistonCount => _selectedPistonId is null ? 0 : 1;
+    public int SelectedPistonCount => _selectedPistonIds.Count;
 
     public int SelectedPartCount => SelectedNodeCount + SelectedBeamCount + SelectedSensorCount + SelectedPistonCount;
 
-    public int? SingleSelectedNodeId => _selectedNodeIds.Count == 1
-        ? _selectedNodeIds.First()
-        : null;
+    public int? SingleSelectedNodeId => Single(_selectedNodeIds);
 
-    public int? SingleSelectedBeamId => SelectedPartCount == 1 ? _selectedBeamId : null;
+    public int? SingleSelectedBeamId => Single(_selectedBeamIds);
 
-    public int? SingleSelectedSensorId => SelectedPartCount == 1 ? _selectedSensorId : null;
+    public int? SingleSelectedSensorId => Single(_selectedSensorIds);
 
-    public int? SingleSelectedPistonId => SelectedPartCount == 1 ? _selectedPistonId : null;
+    public int? SingleSelectedPistonId => Single(_selectedPistonIds);
+
+    /// <summary>A copy of everything selected (#704).</summary>
+    public PartSet Selection => new(
+        _selectedNodeIds.ToHashSet(),
+        _selectedBeamIds.ToHashSet(),
+        _selectedSensorIds.ToHashSet(),
+        _selectedPistonIds.ToHashSet());
 
     /// <summary>The Camera whose aim can be turned now (#594): the single selection, even on a locked Creation, since aim does not change the model (#638).</summary>
     public int? AimableCameraId => SingleSelectedSensorId is { } sensorId
@@ -384,16 +386,6 @@ public sealed class BuildViewModel : INotifyPropertyChanged
 
     public IReadOnlyCollection<int> SelectedNodeIds => _selectedNodeIds;
 
-    /// <summary>
-    /// What a group of joints carries (#704): each beam with both joints in
-    /// <paramref name="nodeIds"/>, those beams' sensors, and each Piston between two of them.
-    /// </summary>
-    public GroupParts PartsWithin(IReadOnlyCollection<int> nodeIds) =>
-        GroupParts.Within(nodeIds, _builder.Beams, _builder.Sensors, _builder.Pistons);
-
-    /// <summary>The parts the selected group carries; none unless two or more joints are selected.</summary>
-    public GroupParts SelectedGroupParts => _selectedNodeIds.Count < 2 ? GroupParts.None : PartsWithin(_selectedNodeIds);
-
     /// <summary>Places a new node, moved inside <see cref="BuildArea"/>, and returns its id.</summary>
     public int PlaceNode(Vector2D position)
     {
@@ -414,65 +406,31 @@ public sealed class BuildViewModel : INotifyPropertyChanged
         AnatomyChanged?.Invoke(this, EventArgs.Empty);
     }
 
-    public void ToggleSelectedNode(int nodeId)
+    /// <summary>Adds the part to the selection, or removes it if it is already selected (#704).</summary>
+    public void ToggleSelected(CreatureElementSelection element)
     {
-        _builder.NodeIndexOf(nodeId);
-
-        if (!_selectedNodeIds.Add(nodeId))
+        ArgumentNullException.ThrowIfNull(element);
+        if (!Exists(element))
         {
-            _selectedNodeIds.Remove(nodeId);
+            throw new ArgumentException($"No {element.Kind} {element.Id}.", nameof(element));
         }
 
-        _selectedBeamId = null;
+        var set = SelectedSet(element.Kind);
+        if (!set.Add(element.Id))
+        {
+            set.Remove(element.Id);
+        }
 
-        _selectedSensorId = null;
-
-        _selectedPistonId = null;
-        StatusMessage = _selectedNodeIds.Count == 0
-            ? "Selection cleared."
-            : $"{_selectedNodeIds.Count} selected. Drag one selected node to move them together.";
-        NotifySelectionChanged();
-        AnatomyChanged?.Invoke(this, EventArgs.Empty);
+        SelectionChanged();
     }
 
-    public void SelectBeam(int beamId)
-    {
-        var beamIndex = _builder.BeamIndexOf(beamId);
+    public void SelectBeam(int beamId) => SelectOnly(CreatureElementKind.Beam, beamId);
 
-        _selectedNodeIds.Clear();
-        _selectedBeamId = beamId;
-        _selectedSensorId = null;
-        _selectedPistonId = null;
-        StatusMessage = $"Beam {beamIndex + 1} selected.";
-        NotifySelectionChanged();
-        AnatomyChanged?.Invoke(this, EventArgs.Empty);
-    }
+    public void SelectSensor(int sensorId) => SelectOnly(CreatureElementKind.Sensor, sensorId);
 
-    public void SelectSensor(int sensorId)
-    {
-        var sensor = _builder.Sensors[_builder.SensorIndexOf(sensorId)];
+    public void SelectPiston(int pistonId) => SelectOnly(CreatureElementKind.Piston, pistonId);
 
-        _selectedNodeIds.Clear();
-        _selectedBeamId = null;
-        _selectedSensorId = sensorId;
-        _selectedPistonId = null;
-        StatusMessage = $"{SensorName(sensor.Kind)} selected.";
-        NotifySelectionChanged();
-        AnatomyChanged?.Invoke(this, EventArgs.Empty);
-    }
-
-    public void SelectPiston(int pistonId)
-    {
-        _builder.PistonIndexOf(pistonId);
-
-        _selectedNodeIds.Clear();
-        _selectedBeamId = null;
-        _selectedSensorId = null;
-        _selectedPistonId = pistonId;
-        StatusMessage = $"{PartDisplayName(pistonId)} selected.";
-        NotifySelectionChanged();
-        AnatomyChanged?.Invoke(this, EventArgs.Empty);
-    }
+    private void SelectOnly(CreatureElementKind kind, int id) => ReplaceSelection(PartSetOf(kind, id));
 
     /// <summary>
     /// Changes a Piston's Strength, stroke and max speed (#451). Like a Camera's aim, these tune
@@ -488,6 +446,41 @@ public sealed class BuildViewModel : INotifyPropertyChanged
 
         _builder.SetPistonSettings(pistonId, strength, stroke, maxSpeed);
         AnatomyChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    /// <summary>True when only Pistons are selected, so they share their settings (#704).</summary>
+    public bool SelectionSharesPistonSettings => SelectedPartCount > 0 && SelectedPistonCount == SelectedPartCount;
+
+    /// <summary>Sets one setting on every selected Piston (#704), keeping their other settings.</summary>
+    public void SetSharedSetting(PistonSetting setting, double value)
+    {
+        if (!SelectionSharesPistonSettings)
+        {
+            throw new InvalidOperationException("Only a selection of Pistons shares settings.");
+        }
+
+        var changed = false;
+        foreach (var pistonId in _selectedPistonIds)
+        {
+            var piston = _builder.Pistons[_builder.PistonIndexOf(pistonId)];
+            var next = setting switch
+            {
+                PistonSetting.Strength => (piston.Strength, piston.Stroke, piston.MaxSpeed) with { Item1 = value },
+                PistonSetting.Stroke => (piston.Strength, piston.Stroke, piston.MaxSpeed) with { Item2 = value },
+                PistonSetting.MaxSpeed => (piston.Strength, piston.Stroke, piston.MaxSpeed) with { Item3 = value },
+                _ => throw new ArgumentOutOfRangeException(nameof(setting)),
+            };
+            if (next != (piston.Strength, piston.Stroke, piston.MaxSpeed))
+            {
+                _builder.SetPistonSettings(pistonId, next.Item1, next.Item2, next.Item3);
+                changed = true;
+            }
+        }
+
+        if (changed)
+        {
+            AnatomyChanged?.Invoke(this, EventArgs.Empty);
+        }
     }
 
     /// <summary>Turns a Camera to <paramref name="aim"/>, relative to its beam (see <see cref="SensorDef.Aim"/>).</summary>
@@ -569,10 +562,7 @@ public sealed class BuildViewModel : INotifyPropertyChanged
             return;
         }
 
-        _selectedNodeIds.Clear();
-        _selectedBeamId = null;
-        _selectedSensorId = null;
-        _selectedPistonId = null;
+        ClearSelectionSets();
         StatusMessage = "Selection cleared.";
         NotifySelectionChanged();
         AnatomyChanged?.Invoke(this, EventArgs.Empty);
@@ -581,21 +571,61 @@ public sealed class BuildViewModel : INotifyPropertyChanged
     public void ReplaceSelection(IEnumerable<int> nodeIds)
     {
         ArgumentNullException.ThrowIfNull(nodeIds);
-        _selectedNodeIds.Clear();
-        _selectedBeamId = null;
-        _selectedSensorId = null;
-        _selectedPistonId = null;
-        foreach (var nodeId in nodeIds)
+        ReplaceSelection(PartSet.None with { Nodes = nodeIds.ToHashSet() });
+    }
+
+    /// <summary>Selects exactly the <paramref name="parts"/> that still exist.</summary>
+    public void ReplaceSelection(PartSet parts)
+    {
+        ArgumentNullException.ThrowIfNull(parts);
+        ClearSelectionSets();
+        foreach (var kind in Enum.GetValues<CreatureElementKind>())
         {
-            if (_builder.Nodes.Any(node => node.Id == nodeId))
-            {
-                _selectedNodeIds.Add(nodeId);
-            }
+            SelectedSet(kind).UnionWith(parts.SetOf(kind).Where(id => Exists(new CreatureElementSelection(kind, id))));
         }
 
-        StatusMessage = _selectedNodeIds.Count == 0
-            ? "Selection cleared."
-            : $"{_selectedNodeIds.Count} selected. Drag one selected node to move them together.";
+        SelectionChanged();
+    }
+
+    private static PartSet PartSetOf(CreatureElementKind kind, int id)
+    {
+        var one = new HashSet<int> { id };
+        return kind switch
+        {
+            CreatureElementKind.Node => PartSet.None with { Nodes = one },
+            CreatureElementKind.Beam => PartSet.None with { Beams = one },
+            CreatureElementKind.Sensor => PartSet.None with { Sensors = one },
+            _ => PartSet.None with { Pistons = one },
+        };
+    }
+
+    private HashSet<int> SelectedSet(CreatureElementKind kind) => kind switch
+    {
+        CreatureElementKind.Node => _selectedNodeIds,
+        CreatureElementKind.Beam => _selectedBeamIds,
+        CreatureElementKind.Sensor => _selectedSensorIds,
+        CreatureElementKind.Piston => _selectedPistonIds,
+        _ => throw new ArgumentOutOfRangeException(nameof(kind)),
+    };
+
+    private void ClearSelectionSets()
+    {
+        _selectedNodeIds.Clear();
+        _selectedBeamIds.Clear();
+        _selectedSensorIds.Clear();
+        _selectedPistonIds.Clear();
+    }
+
+    private int? Single(HashSet<int> set) => SelectedPartCount == 1 && set.Count == 1 ? set.First() : null;
+
+    private void SelectionChanged()
+    {
+        StatusMessage = SelectedPartCount switch
+        {
+            0 => "Selection cleared.",
+            1 => $"{PartDisplayName(_selectedNodeIds.Concat(_selectedBeamIds).Concat(_selectedSensorIds).Concat(_selectedPistonIds).First())} selected.",
+            var count => $"{count} selected.",
+        };
         NotifySelectionChanged();
         AnatomyChanged?.Invoke(this, EventArgs.Empty);
     }
@@ -826,10 +856,7 @@ public sealed class BuildViewModel : INotifyPropertyChanged
         var splitPoint = new Vector2D(start.X + (t * (end.X - start.X)), start.Y + (t * (end.Y - start.Y)));
         var nodeId = _builder.AddNode(splitPoint);
         _builder.SplitBeamAtNode(beamId, nodeId);
-        _selectedNodeIds.Clear();
-        _selectedBeamId = null;
-        _selectedSensorId = null;
-        _selectedPistonId = null;
+        ClearSelectionSets();
         StatusMessage = "Split the beam with a new joint.";
         NotifySelectionChanged();
         AnatomyChanged?.Invoke(this, EventArgs.Empty);
@@ -893,19 +920,20 @@ public sealed class BuildViewModel : INotifyPropertyChanged
             return;
         }
 
-        if (_selectedBeamId is { } beamId)
-        {
-            _builder.RemoveBeam(beamId);
-        }
-
-        if (_selectedSensorId is { } sensorId)
+        // Parts first, so none is already gone with a deleted beam or joint.
+        foreach (var sensorId in _selectedSensorIds)
         {
             _builder.RemoveSensor(sensorId);
         }
 
-        if (_selectedPistonId is { } pistonId)
+        foreach (var pistonId in _selectedPistonIds)
         {
             _builder.RemovePiston(pistonId);
+        }
+
+        foreach (var beamId in _selectedBeamIds)
+        {
+            _builder.RemoveBeam(beamId);
         }
 
         foreach (var nodeId in _selectedNodeIds)
@@ -913,10 +941,7 @@ public sealed class BuildViewModel : INotifyPropertyChanged
             _builder.RemoveNode(nodeId);
         }
 
-        _selectedNodeIds.Clear();
-        _selectedBeamId = null;
-        _selectedSensorId = null;
-        _selectedPistonId = null;
+        ClearSelectionSets();
         StatusMessage = "Deleted selected parts.";
         NotifySelectionChanged();
         AnatomyChanged?.Invoke(this, EventArgs.Empty);

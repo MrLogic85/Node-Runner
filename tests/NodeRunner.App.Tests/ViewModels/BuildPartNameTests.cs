@@ -50,7 +50,7 @@ public sealed class BuildPartNameTests
     public void RenamePart_LandsOnThatPart_WhateverIsSelected()
     {
         var build = Loaded();
-        build.ToggleSelectedNode(1);
+        build.ToggleSelected(new(CreatureElementKind.Node, 1));
 
         build.RenamePart(101, "Thigh");
 

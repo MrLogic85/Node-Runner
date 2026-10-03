@@ -113,7 +113,7 @@ public sealed class BuildPistonTests
     {
         var (build, _) = ThreeLooseJoints();
         build.ConnectPiston(1, 2);
-        build.ToggleSelectedNode(2);
+        build.ToggleSelected(new(CreatureElementKind.Node, 2));
 
         build.DeleteSelectedParts();
 

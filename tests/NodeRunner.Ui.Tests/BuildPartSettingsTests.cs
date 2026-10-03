@@ -64,9 +64,10 @@ public sealed class BuildPartSettingsTests
     }
 
     [Fact]
-    public void Selection_ExplainsTheThreeHandles_ThenDeleteAndItsNote_WithNoCloseButton()
+    public void Selection_HasSharedSettings_TheThreeHandles_ThenDeleteAndItsNote_WithNoCloseButton()
     {
-        Children("/Selection").ShouldBe(["SelectionRows", "SelectionActions"]);
+        Children("/Selection").ShouldBe(["SelectionSettings", "SelectionEmptyNote", "SelectionRows", "SelectionActions"]);
+        Children("/Selection/SelectionSettings").ShouldBe(["SharedPistonStrength", "SharedPistonStroke", "SharedPistonMaxSpeed", "SelectionSettingsNote"]);
         Children("/Selection/SelectionRows").ShouldBe(["SelectionMove", "SelectionRotate", "SelectionScale"]);
         Children("/Selection/SelectionActions").ShouldBe(["SelectionDelete", "SelectionDeleteNote"]);
         _build.ShouldNotContain(node => node.Name == "SelectionClear");

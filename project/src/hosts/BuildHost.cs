@@ -113,6 +113,7 @@ public partial class BuildHost : Node, IRoutedScene
         _buildScreen.ToolRequested += tool => Build.ActiveTool = tool;
         _buildScreen.PartPicked += Build.PickPart;
         _buildScreen.PistonSettingsChanged += Build.SetPistonSettings;
+        _buildScreen.SharedSettingChanged += (setting, value) => Build.SetSharedSetting((PistonSetting)setting, value);
         _buildScreen.StartTrainingRequested += StartTraining;
         _buildScreen.BackRequested += BackFromBuildScreen;
         _buildScreen.CreationNameChanged += RenameActiveCreation;

@@ -263,6 +263,7 @@ public class BuildGesturesTests
         build.ReplaceSelection([1]);
 
         gestures.Press(new Vector2D(100, 0), 0);
+        gestures.Drag(new Vector2D(140, 40), 0);
         build.SelectedNodeIds.ShouldBe([2]);
         gestures.Press(new Vector2D(400, 400), 1);
 
@@ -270,17 +271,23 @@ public class BuildGesturesTests
     }
 
     [Fact]
-    public void SecondFinger_PutsBackASelectedBeamASelectPressReplaced()
+    public void SecondFinger_PutsBackTheBeamSensorAndPistonAJointDragReplaced()
     {
-        var (build, gestures) = TwoJointsAndABeam();
+        var (build, gestures) = CarriedParts();
         build.ActiveTool = BuildTool.Select;
-        build.SelectBeam(build.Beams[0].Id);
+        build.ReplaceSelection(PartSet.None with
+        {
+            Beams = new HashSet<int> { 5 },
+            Sensors = new HashSet<int> { 6 },
+            Pistons = new HashSet<int> { 7 },
+        });
 
-        gestures.Press(new Vector2D(0, 0), 0);
+        gestures.Press(new Vector2D(400, 0), 0);
+        gestures.Drag(new Vector2D(440, 40), 0);
+        ShouldSelect(build, nodes: [4]);
         gestures.Press(new Vector2D(400, 400), 1);
 
-        build.SingleSelectedBeamId.ShouldBe(3);
-        build.SelectedNodeIds.ShouldBeEmpty();
+        ShouldSelect(build, beams: [5], sensors: [6], pistons: [7]);
     }
 
     [Fact]
@@ -632,14 +639,25 @@ public class BuildGesturesTests
     private static readonly Vector2D _scaleHandle = new(_frameRight, 48);
 
     [Fact]
-    public void Select_TapOnAnotherJoint_WithOneSelected_SelectsOnlyIt()
+    public void Select_TapsOnTwoJoints_SelectBoth()
+    {
+        var (build, gestures) = ThreeLooseJoints(BuildTool.Select);
+
+        Tap(gestures, new Vector2D(0, 0));
+        Tap(gestures, new Vector2D(0, 100));
+
+        build.SelectedNodeIds.ShouldBe([1, 3], ignoreOrder: true);
+    }
+
+    [Fact]
+    public void Select_PressOnAnUnselectedJoint_ChangesNothingUntilItDrags()
     {
         var (build, gestures) = ThreeLooseJoints(BuildTool.Select);
         build.ReplaceSelection([1]);
 
-        Tap(gestures, new Vector2D(0, 100));
+        gestures.Press(new Vector2D(0, 100));
 
-        build.SelectedNodeIds.ShouldBe([3]);
+        build.SelectedNodeIds.ShouldBe([1]);
     }
 
     [Fact]
@@ -726,19 +744,43 @@ public class BuildGesturesTests
         gestures.View.Offset.ShouldBe(pan);
     }
 
-    [Theory]
-    [InlineData(100, 0, 230, -30, 2)]
-    [InlineData(100, 75, -30, 160, 3)]
-    public void Select_DragFromASensorOrPiston_WithNoGroup_DrawsABox(double x, double y, double toX, double toY, int caught)
+    [Fact]
+    public void Select_ABoxFromASensor_CatchesEachPartWhoseCentreIsIn()
     {
         var (build, gestures) = CarriedParts();
 
-        gestures.Press(new Vector2D(x, y));
-        gestures.Drag(new Vector2D(toX, toY));
+        gestures.Press(new Vector2D(100, 0));
+        gestures.Drag(new Vector2D(230, -30));
         gestures.SelectionBox.ShouldNotBeNull();
-        gestures.Release(new Vector2D(toX, toY));
+        gestures.Release(new Vector2D(230, -30));
 
-        build.SelectedNodeIds.ShouldBe([caught]);
+        // Joint 2, and beam 5 and its sensor 6, whose centre is the box's corner; not beam 8 or Piston 7.
+        ShouldSelect(build, nodes: [2], beams: [5], sensors: [6]);
+    }
+
+    [Fact]
+    public void Select_ABoxFromAPiston_CatchesItByItsMidpoint()
+    {
+        var (build, gestures) = CarriedParts();
+
+        gestures.Press(new Vector2D(100, 75));
+        gestures.Drag(new Vector2D(-30, 160));
+        gestures.Release(new Vector2D(-30, 160));
+
+        ShouldSelect(build, nodes: [3], pistons: [7]);
+    }
+
+    [Fact]
+    public void Select_ABoxRoundABeamsMiddle_SelectsOnlyTheBeam()
+    {
+        var (build, gestures) = CarriedParts();
+
+        gestures.Press(new Vector2D(260, -30));
+        gestures.Drag(new Vector2D(340, 30));
+        gestures.Release(new Vector2D(340, 30));
+
+        ShouldSelect(build, beams: [8]);
+        gestures.SelectionHandles.ShouldBeEmpty();
     }
 
     [Fact]
@@ -809,32 +851,38 @@ public class BuildGesturesTests
     }
 
     [Theory]
-    [InlineData(100, 0)]
-    [InlineData(100, 75)]
-    [InlineData(40, 0)]
-    public void Select_TapOnAPartInsideAGroup_DoesNothing(double x, double y)
+    [InlineData(100, 0, CreatureElementKind.Sensor, 6)]
+    [InlineData(100, 75, CreatureElementKind.Piston, 7)]
+    [InlineData(40, 0, CreatureElementKind.Beam, 5)]
+    public void Select_TapOnAPartInsideAGroup_AddsAndRemovesIt(double x, double y, CreatureElementKind kind, int id)
     {
         var (build, gestures) = CarriedParts();
         build.ReplaceSelection([1, 2, 3]);
 
         Tap(gestures, new Vector2D(x, y));
 
-        build.SelectedNodeIds.OrderBy(id => id).ShouldBe([1, 2, 3]);
-        build.SelectedGroupParts.Count.ShouldBe(3);
+        build.Selection.SetOf(kind).ShouldBe([id]);
+        build.SelectedNodeIds.ShouldBe([1, 2, 3], ignoreOrder: true);
+        build.SelectedPartCount.ShouldBe(4);
+
+        Tap(gestures, new Vector2D(x, y));
+        ShouldSelect(build, nodes: [1, 2, 3]);
     }
 
     [Theory]
-    [InlineData(300, 0)]
-    [InlineData(100, 0)]
-    [InlineData(100, 75)]
-    public void Select_TapOnAPartOutsideAGroup_DoesNothing(double x, double y)
+    [InlineData(300, 0, CreatureElementKind.Beam, 8)]
+    [InlineData(100, 0, CreatureElementKind.Sensor, 6)]
+    [InlineData(100, 75, CreatureElementKind.Piston, 7)]
+    public void Select_TapOnAPartOutsideAGroup_AddsIt(double x, double y, CreatureElementKind kind, int id)
     {
         var (build, gestures) = CarriedParts();
         build.ReplaceSelection([1, 3]);
 
         Tap(gestures, new Vector2D(x, y));
 
-        build.SelectedNodeIds.OrderBy(id => id).ShouldBe([1, 3]);
+        build.Selection.SetOf(kind).ShouldBe([id]);
+        build.SelectedNodeIds.ShouldBe([1, 3], ignoreOrder: true);
+        build.SelectedPartCount.ShouldBe(3);
     }
 
     [Fact]
@@ -886,7 +934,7 @@ public class BuildGesturesTests
     }
 
     [Fact]
-    public void Select_TapOnABeam_WithNoGroup_SelectsIt()
+    public void Select_TapOnABeam_WithAJointSelected_AddsIt()
     {
         var (build, gestures) = TwoJointsAndABeam();
         build.ActiveTool = BuildTool.Select;
@@ -894,7 +942,8 @@ public class BuildGesturesTests
 
         Tap(gestures, new Vector2D(50, 0));
 
-        build.SingleSelectedBeamId.ShouldBe(build.Beams[0].Id);
+        build.Selection.Beams.ShouldBe([build.Beams[0].Id]);
+        build.SelectedNodeIds.ShouldBe([1]);
     }
 
     [Fact]
@@ -999,6 +1048,29 @@ public class BuildGesturesTests
 
         Tap(gestures, _moveHandle);
         build.SelectedNodeIds.ShouldBe([1, 2], ignoreOrder: true);
+    }
+
+    [Fact]
+    public void Select_TapOnAHandleOverEmptyCanvas_KeepsTheGroup()
+    {
+        var (build, gestures) = ThreeLooseJoints(BuildTool.Select);
+        build.ReplaceSelection([1, 2]);
+
+        Tap(gestures, _rotateHandle);
+
+        ShouldSelect(build, nodes: [1, 2]);
+    }
+
+    [Fact]
+    public void Select_TapOnABeamUnderTheMoveHandle_AddsIt()
+    {
+        var (build, gestures) = ThreeLooseJoints(BuildTool.Select);
+        build.ConnectBeam(1, 2);
+        build.ReplaceSelection([1, 2]);
+
+        Tap(gestures, _moveHandle);
+
+        build.Selection.Beams.ShouldBe([build.Beams[0].Id]);
     }
 
     [Fact]
@@ -1187,13 +1259,22 @@ public class BuildGesturesTests
         gestures.Press(new Vector2D(-50, -50));
         gestures.Drag(new Vector2D(150, 50));
 
-        gestures.SelectionBoxCatches.ShouldBe([1, 2], ignoreOrder: true);
+        gestures.SelectionBoxCatches.Nodes.ShouldBe([1, 2], ignoreOrder: true);
         build.SelectedNodeIds.ShouldBeEmpty();
 
         gestures.Release(new Vector2D(150, 50));
 
-        gestures.SelectionBoxCatches.ShouldBeEmpty();
+        gestures.SelectionBoxCatches.Count.ShouldBe(0);
         build.SelectedNodeIds.ShouldBe([1, 2], ignoreOrder: true);
+    }
+
+    private static void ShouldSelect(BuildViewModel build, int[]? nodes = null, int[]? beams = null, int[]? sensors = null, int[]? pistons = null)
+    {
+        var selection = build.Selection;
+        selection.Nodes.ShouldBe(nodes ?? [], ignoreOrder: true);
+        selection.Beams.ShouldBe(beams ?? [], ignoreOrder: true);
+        selection.Sensors.ShouldBe(sensors ?? [], ignoreOrder: true);
+        selection.Pistons.ShouldBe(pistons ?? [], ignoreOrder: true);
     }
 
     private static Vector2D Handle(BuildGestures gestures, SelectionHandle handle) =>
