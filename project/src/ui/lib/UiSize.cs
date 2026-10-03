@@ -56,6 +56,7 @@ public static class UiSize
         public const int SelectionHandle = 2;
         public const float Number = 1.5f;
         public const float SelectionFrame = 1.5f;
+        public const float Marker = 1.5f;
     }
 
     /// <summary>Dimensions owned by a single component rather than the token scale.</summary>

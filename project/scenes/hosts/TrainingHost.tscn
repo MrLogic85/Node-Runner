@@ -5,6 +5,7 @@
 [ext_resource type="Script" uid="uid://d1obip2ud734d" path="res://src/ui/widgets/ArenaRuler.cs" id="3_ruler"]
 [ext_resource type="Script" uid="uid://d1jtr2xviagag" path="res://src/ui/widgets/ArenaCamera.cs" id="4_camera"]
 [ext_resource type="Script" uid="uid://bgai24pbfhajy" path="res://src/sim/ArenaGround.cs" id="5_ground"]
+[ext_resource type="Script" uid="uid://c2e2q6a576ddj" path="res://src/ui/widgets/ArenaBestMarker.cs" id="6_best"]
 
 [node name="TrainingHost" type="Node"]
 script = ExtResource("1_host")
@@ -35,6 +36,10 @@ script = ExtResource("5_ground")
 [node name="Ruler" type="Node2D" parent="TrainingScreen/UiFrame/MarginContainer/Card/Shell/Body/Arena/ArenaView/WorldViewport/World/Ground"]
 unique_name_in_owner = true
 script = ExtResource("3_ruler")
+
+[node name="BestMarker" type="Node2D" parent="TrainingScreen/UiFrame/MarginContainer/Card/Shell/Body/Arena/ArenaView/WorldViewport/World/Ground"]
+unique_name_in_owner = true
+script = ExtResource("6_best")
 
 [node name="Spawn" type="Marker2D" parent="TrainingScreen/UiFrame/MarginContainer/Card/Shell/Body/Arena/ArenaView/WorldViewport/World"]
 unique_name_in_owner = true

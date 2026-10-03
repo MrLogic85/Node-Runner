@@ -137,7 +137,7 @@ reference would mislead someone working on that surface.
   Creations card values and the Build training summary show the latest
   generation's result, which can drop: Build reads "Latest distance
   4.0 m", while the card keeps the reference's plain "12 generations".
-  The Training top bar's "Best" (and later Stats) shows the best ever.
+  The Training arena's best marker (and later Stats) shows the best ever.
   Owner decision.
 - **No Brain setup (#536).** The reference's Brain setup screen (hidden
   layers, neurons per layer) and its **Brain setup** item in the Build
@@ -201,6 +201,20 @@ reference would mislead someone working on that surface.
   (#400) zoom scales the picture, the ground edge included; the ruler's
   ticks and labels keep their screen size, and labels thin out rather than
   overlap (`docs/TRAINING_LOOP.md` → Ruler). Owner decision.
+- **Best marker reads its distance (#388).** The reference's dashed best
+  marker's flag reads "best". Instead it reads "Best 4.2 m", the best ever
+  on this map, since a zoomed-out ruler labels only every 5 or 10 m. It is
+  drawn behind every creature, keeps its screen size, is hidden until
+  there is a best, jumps when a generation sets a new one and has no
+  off-screen indicator (`docs/TRAINING_LOOP.md` → Best marker). Owner
+  decision.
+- **A tapped part is named in a callout (#388).** The reference rings a
+  tapped part of the leader in `halo` with its name. Instead the followed
+  shadow's part keeps its usual selection look, and its Build name shows
+  in a `halo` callout straight above the whole creature, its leader down
+  to the part, so it never covers the body; the best marker fades to
+  `alpha_shadow` meanwhile, since the name may cover its flag
+  (`docs/TRAINING_LOOP.md` → World view). Owner decision.
 - **Train setup has no profiles and few choices yet (#194, 0.13.0).** The
   reference's Train setup offers Shadows from 1 and a working Simulate,
   power checkbox and map row. Instead Shadows starts at 2 (with one, the

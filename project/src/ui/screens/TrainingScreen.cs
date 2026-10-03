@@ -72,6 +72,34 @@ public partial class TrainingScreen : Control
     /// <summary>Shows how fast the run plays, such as "2x".</summary>
     public void ShowSpeed(string speedText) => GetNode<UiButton>("%Speed").Text = speedText;
 
+    /// <summary>
+    /// Names the selected part (#388) in a callout above the whole creature, its leader down to the
+    /// part, or with a null <paramref name="name"/> shows none. World coordinates; call every frame.
+    /// </summary>
+    public void ShowPartName(string? name, Vector2 worldAnchor, Rect2 worldCreatureBounds)
+    {
+        var layer = GetNode<UiCalloutLayer>("%PartCallouts");
+        if (name is null)
+        {
+            layer.SetCallouts([]);
+            return;
+        }
+
+        var arena = GetNode<UiWorldView>("%ArenaView");
+        var anchor = arena.FromWorld(worldAnchor);
+        var creatureTop = arena.FromWorld(worldCreatureBounds.Position).Y;
+        layer.SetCallouts(
+        [
+            new UiCalloutLayout.Placement(
+                anchor,
+                Vector2.Up,
+                Math.Max(0, anchor.Y - creatureTop) + UiSize.Space.S1,
+                UiCallout.CalloutKind.Warning,
+                UiIconId.None,
+                name),
+        ]);
+    }
+
     /// <summary>Closes the brain sheet, as Android Back does first. False when it was closed.</summary>
     public bool CloseOverlay()
     {
