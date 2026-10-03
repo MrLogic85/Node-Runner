@@ -215,6 +215,14 @@ public static class SensorPicture   // a sensor picture's tap area at its beam's
     public static double SizeOf(SensorKind kind);
     public static bool Contains(SensorKind kind, Vector2D point, Vector2D nodeA, Vector2D nodeB);
 }
+
+public sealed record MapDef(string Id, string Name, MapGround Ground); // #443; Id saved with training records
+public abstract record MapGround { public abstract double HeightAt(double x); } // FlatGround: 0 everywhere
+public static class Maps            // every map by id; 0.13 has only Flat ("map-flat")
+{
+    public static MapDef Flat { get; }
+    public static MapDef Get(string id);
+}
 ```
 
 Note: `Vector2D` in `NodeRunner.Domain` is our own `readonly record struct`,

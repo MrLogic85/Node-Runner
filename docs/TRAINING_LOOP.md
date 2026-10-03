@@ -94,7 +94,7 @@ transition to keep in step with it.
     `docs/GLOSSARY.md` → Metre).
 - **Latest and best ever (#479).** Training is noisy, so a later
   generation can do worse than an earlier one; that is not a bug. The
-  saved training keeps two records for the map it trained on (`flat`
+  saved training keeps two records for the map it trained on (`map-flat`
   until more maps exist):
   - **Latest:** the best trial of the most recently finished generation:
     `Evolver.LatestGenome`/`LatestRun`, saved as `TrainingStateDef.Brain`
@@ -297,7 +297,11 @@ component READMEs under `reference design/components/` guide its presentation.
       decision). It also cuts when the arena changes size, and holds still
       while training is paused. Everything runs
       on scaled time, so 2x and 4x look the same, only faster.
-  - **Ground and background.** The ground's collider is a
+  - **Ground and background.** The ground comes from the selected map
+    (`MapDef.Ground`, #443); Training runs and records on `Maps.Flat`
+    (`map-flat`, "Flat ground") until map choice (#540), and fails loud on
+    any other ground. A resumed best ever counts only on the map it was
+    reached on. Flat's collider is a
     `WorldBoundaryShape2D` through the `Ground` node, so it has no end; its
     fill and edge reach ±1 000 000 units (10 km), far past any trial, and the
     fill as deep, so no zoom shows its bottom. The
