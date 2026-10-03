@@ -11,6 +11,7 @@
 [ext_resource type="Script" uid="uid://b4t4jrismbuik" path="res://src/ui/lib/UiIcon.cs" id="9_icon"]
 [ext_resource type="PackedScene" uid="uid://dahbkjg42p0vs" path="res://scenes/widgets/BrainFocusSheet.tscn" id="10_brain_focus"]
 [ext_resource type="PackedScene" path="res://scenes/widgets/ShadowStrip.tscn" id="11_shadow_strip"]
+[ext_resource type="Script" uid="uid://cciq0runnobr4" path="res://src/ui/lib/UiCalloutLayer.cs" id="12_callout_layer"]
 
 [node name="TrainingScreen" type="Control"]
 layout_mode = 3
@@ -113,6 +114,17 @@ theme_override_constants/separation = 0
 [node name="ArenaView" parent="UiFrame/MarginContainer/Card/Shell/Body/Arena" instance=ExtResource("7_world_view")]
 unique_name_in_owner = true
 layout_mode = 2
+
+[node name="PartCallouts" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Body/Arena/ArenaView"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("12_callout_layer")
 
 [node name="TrayDivider" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Body/Arena"]
 layout_mode = 2

@@ -2,7 +2,7 @@ namespace NodeRunner.Domain;
 
 /// <summary>
 /// The best ever reached on a map, from any generation (#479). Unlike the latest run it never goes
-/// down; the Training top bar's "Best" and, later, Stats show it.
+/// down; the Training arena's best marker (#388) and, later, Stats show it.
 /// </summary>
 public sealed record TrainingBestDef
 {

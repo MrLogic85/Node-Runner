@@ -105,7 +105,7 @@ transition to keep in step with it.
   - **Best ever:** the furthest any generation got, and which generation
     that was: `Evolver.BestFitness`/`BestGeneration`, saved as
     `TrainingStateDef.Best` (`TrainingBestDef`). It never goes down. The
-    Training top bar's "Best" shows it, and later Stats.
+    Training arena's best marker shows it, and later Stats.
   - `TrainingStateDef.Record` is the rule: every finished generation
     replaces latest, and replaces the best only when it goes further. A
     generation without a valid trial has no latest, so it isn't saved.
@@ -319,13 +319,23 @@ component READMEs under `reference design/components/` guide its presentation.
     at the switch does not make them flicker. Ticks and labels keep their
     screen size at any zoom. It draws only what
     the camera shows.
+  - **Best marker (#388).** `ArenaBestMarker` marks the best ever on this
+    map at its distance on the ruler: a dashed `ink` line up from the
+    ground edge to a flag reading "Best 4.2 m"
+    (`TrainingPresentationViewModel.BestMarkerText`), 12 px below the top
+    of the view. It is drawn behind every creature, keeps its screen size at
+    any zoom, is hidden until there is a best and jumps when a generation
+    sets a new one. Off screen it shows nothing. While a part's name shows
+    it fades to `alpha_shadow`, since the name may cover it.
   - **World view.** The world renders in its own `SubViewport` through
     `UiWorldView`, so the UI layout and scale never touch physics distances
     or gravity. The viewport renders at the screen's pixel density to keep
     the creature crisp, and a tap on the arena is turned into a world
     position for part selection. A part takes a tap within 16 px of it on
     screen at least, so a joint or sensor stays easy to hit when the camera
-    zooms out.
+    zooms out. The selected part's Build name (`PartNames.Display`) shows
+    in a `halo` callout straight above the followed shadow, its leader
+    down to the part, and moves with it every frame (#388).
   - **Resume (warm start, #538).** Opening it starts from the saved
     `TrainingStateDef`: its brain graph is compiled by port
     (`DirectBrain`, #536) and the generation count continues. The saved
@@ -334,8 +344,8 @@ component READMEs under `reference design/components/` guide its presentation.
     shadow 1 and fills the other shadows with its mutated children, so
     training picks up where it stopped instead of starting over. A
     disabled connection stays at 0 through mutation and crossover. The
-    Evolver's best ever starts from the saved `best`, so the top bar keeps
-    showing it and a worse generation never lowers it.
+    Evolver's best ever starts from the saved `best`, so the best marker
+    keeps showing it and a worse generation never lowers it.
     A creation without training starts at generation 0 (see "Generation 0" above).
   - **Save.** Each finished generation is saved on the thread pool (the
     file round trip would stall physics), as one atomic file write. Leaving

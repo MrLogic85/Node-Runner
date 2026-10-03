@@ -19,7 +19,7 @@ public sealed class TrainingPresentationViewModelTests
         presentation.IsTrialActive.ShouldBeTrue();
         presentation.CompletedFitness.ShouldBe([10.1, 11.2]);
         presentation.GenerationText.ShouldBe("Generation 6");
-        presentation.BestFitnessText.ShouldBe("Best: 12.8 m (gen 4)");
+        presentation.BestMarkerText.ShouldBe("Best 12.8 m");
         presentation.MeanFitnessText.ShouldBe("Mean: 8.4 m");
     }
 
@@ -31,7 +31,7 @@ public sealed class TrainingPresentationViewModelTests
         presentation.Update(5, 8, double.NegativeInfinity, 0, 0, false, []);
 
         presentation.GenerationText.ShouldBe("Generation 5");
-        presentation.BestFitnessText.ShouldBe("Best: —");
+        presentation.BestMarkerText.ShouldBeNull();
         presentation.MeanFitnessText.ShouldBe("Mean: 0.0 m");
     }
 
@@ -90,14 +90,14 @@ public sealed class TrainingPresentationViewModelTests
         var presentation = new TrainingPresentationViewModel(source);
 
         presentation.BestGeneration.ShouldBe(7);
-        presentation.BestFitnessText.ShouldBe("Best: 21.3 m (gen 7)");
+        presentation.BestMarkerText.ShouldBe("Best 21.3 m");
 
         source.Generation = 8;
         source.RaiseProgressChanged();
 
         presentation.Generation.ShouldBe(8);
         presentation.BestGeneration.ShouldBe(7);
-        presentation.BestFitnessText.ShouldBe("Best: 21.3 m (gen 7)");
+        presentation.BestMarkerText.ShouldBe("Best 21.3 m");
     }
 
     [Fact]

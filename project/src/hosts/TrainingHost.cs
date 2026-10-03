@@ -54,6 +54,8 @@ public partial class TrainingHost : Node, IRoutedScene
     private TrainingScreen _screen = null!;
     private TrainingPresentationViewModel _trainingPresentation = new();
     private int _timeScaleIndex;
+    // The selected part's Build name, shown above the followed shadow (#388); null with nothing selected.
+    private string? _selectedPartName;
     private double _signalRefreshElapsed;
 
     private SaveManager Saves => GetNode<SaveManager>("/root/SaveManager");
@@ -68,6 +70,7 @@ public partial class TrainingHost : Node, IRoutedScene
     private float GroundTopY => Ground.GlobalPosition.Y;
 
     private ArenaRuler Ruler => GetNode<ArenaRuler>("%Ruler");
+    private ArenaBestMarker BestMarker => GetNode<ArenaBestMarker>("%BestMarker");
     private ArenaCamera Camera => GetNode<ArenaCamera>("%Camera");
 
     public void Enter(SceneRoute route, ISceneNavigator navigator)
@@ -84,6 +87,8 @@ public partial class TrainingHost : Node, IRoutedScene
         // Always, so tapping a part and the screen's buttons still work while paused (#85); the
         // creature and the Evolver pin themselves back to Pausable.
         ProcessMode = ProcessModeEnum.Always;
+        // After the camera has moved this frame, so the part name lands on the part.
+        ProcessPriority = 1;
         _selection.PropertyChanged += OnSelectionPropertyChanged;
         var creation = LoadRouteCreation();
         BuildWorld();
@@ -97,6 +102,7 @@ public partial class TrainingHost : Node, IRoutedScene
         }
 
         FollowCreature();
+        ShowBest();
     }
 
     public override void _ExitTree()
@@ -105,16 +111,23 @@ public partial class TrainingHost : Node, IRoutedScene
         Engine.TimeScale = _timeScales[0];
         GetTree().Paused = false;
         _selection.PropertyChanged -= OnSelectionPropertyChanged;
+        _trainingPresentation.PropertyChanged -= OnTrainingChanged;
         _trainingPresentation.Dispose();
     }
 
-    // Refreshes the signal flow and brain focus from the creature's last physics tick, at a fixed
-    // cadence: the numbers are for a person to read, so every rendered frame is wasted work.
+    // Moves the part name with the creature every frame. Refreshes the signal flow and brain focus
+    // from the creature's last physics tick at a fixed cadence: the numbers are for a person to
+    // read, so every rendered frame is wasted work.
     public override void _Process(double delta)
     {
         if (_followed is null)
         {
             return;
+        }
+
+        if (_selectedPartName is not null && _selection.SelectedElement is { } selected)
+        {
+            _screen.ShowPartName(_selectedPartName, _followed.PartAnchor(selected), _followed.Bounds);
         }
 
         _signalRefreshElapsed += delta;
@@ -190,6 +203,10 @@ public partial class TrainingHost : Node, IRoutedScene
     {
         GetNode<ColorRect>("%ArenaFill").Color = _theme.ArenaBackground;
         Ruler.Theme = _theme;
+        BestMarker.Theme = _theme;
+        // Behind every creature part: a shadow draws its hatch at z -2 and its beams at -1. The world
+        // has its own viewport, so this z orders only the world.
+        BestMarker.ZIndex = -3;
         Ground.Build(_map.Ground, _theme);
     }
 
@@ -219,6 +236,7 @@ public partial class TrainingHost : Node, IRoutedScene
         }
 
         Ruler.StartX = Ruler.ToLocal(creature.CenterOfMass).X;
+        BestMarker.StartX = Ruler.StartX;
         Camera.GroundY = GroundTopY;
 
         // Read every frame; OnFollowedShadowChanged retargets it when the followed shadow changes.
@@ -270,6 +288,7 @@ public partial class TrainingHost : Node, IRoutedScene
         evolver.FollowedTrialStarted += () => Camera.Cut();
         _trainingPresentation.Dispose();
         _trainingPresentation = new TrainingPresentationViewModel(new EvolverTrainingProgressSource(evolver));
+        _trainingPresentation.PropertyChanged += OnTrainingChanged;
         World.AddChild(evolver);
         _evolver = evolver;
     }
@@ -323,6 +342,11 @@ public partial class TrainingHost : Node, IRoutedScene
         _followed?.SetSelectedElement(_selection.SelectedElement);
         Camera.Retarget();
     }
+
+    // The best marker moves only when a generation sets a new best; Show ignores the rest.
+    private void OnTrainingChanged(object? sender, PropertyChangedEventArgs eventArgs) => ShowBest();
+
+    private void ShowBest() => BestMarker.Show(_trainingPresentation.BestFitness, _trainingPresentation.BestMarkerText);
 
     private void OnGenerationCompleted()
     {
@@ -402,6 +426,14 @@ public partial class TrainingHost : Node, IRoutedScene
         if (eventArgs.PropertyName == nameof(SelectionViewModel.SelectedElement))
         {
             _followed?.SetSelectedElement(_selection.SelectedElement);
+            _selectedPartName = _selection.SelectedElement is { } selected && _followed?.Definition is { } definition
+                ? PartNames.Display(definition.Nodes, definition.Beams, definition.Sensors, definition.Pistons, selected.Id)
+                : null;
+            BestMarker.Faded = _selectedPartName is not null;
+            if (_selectedPartName is null)
+            {
+                _screen.ShowPartName(null, default, default);
+            }
         }
     }
 }

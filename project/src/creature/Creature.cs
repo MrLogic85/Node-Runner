@@ -352,6 +352,25 @@ public partial class Creature : Node2D
         return false;
     }
 
+    /// <summary>
+    /// Where a part's name points to, in global coordinates (#388): a joint's centre, a beam's or
+    /// Piston's middle, or a sensor's picture.
+    /// </summary>
+    public Vector2 PartAnchor(CreatureElementSelection selection)
+    {
+        ArgumentNullException.ThrowIfNull(selection);
+        return selection.Kind switch
+        {
+            CreatureElementKind.Node => _nodeVisuals[Definition!.NodeIndexOf(selection.Id)].GlobalPosition,
+            CreatureElementKind.Beam => _beamBodies[Definition!.BeamIndexOf(selection.Id)].GlobalPosition,
+            CreatureElementKind.Sensor => _sensorVisuals[Definition!.Sensors.ToList().FindIndex(sensor => sensor.Id == selection.Id)].GlobalPosition,
+            CreatureElementKind.Piston => PistonMiddle(_pistons[Definition!.PistonIndexOf(selection.Id)]),
+            _ => throw new ArgumentOutOfRangeException(nameof(selection), selection.Kind, "Not a part of a creature."),
+        };
+
+        static Vector2 PistonMiddle(PistonLink piston) => (piston.NodeA.GlobalPosition + piston.NodeB.GlobalPosition) / 2;
+    }
+
     public void SetSelectedElement(CreatureElementSelection? selection)
     {
         foreach (var visual in _nodeVisuals)

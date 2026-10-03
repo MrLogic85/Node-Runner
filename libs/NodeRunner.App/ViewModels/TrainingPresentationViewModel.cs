@@ -45,9 +45,10 @@ public sealed class TrainingPresentationViewModel : INotifyPropertyChanged, IDis
     /// </summary>
     public string GenerationText => $"Generation {(_isTrialActive ? _generation + 1 : _generation)}";
 
-    public string BestFitnessText => double.IsNegativeInfinity(_bestFitness)
-        ? "Best: —"
-        : $"Best: {Metres.FormatWithUnit(_bestFitness)} (gen {_bestGeneration})";
+    /// <summary>The best marker's flag (#388), such as "Best 4.2 m", or null until there is a best.</summary>
+    public string? BestMarkerText => double.IsNegativeInfinity(_bestFitness)
+        ? null
+        : $"Best {Metres.FormatWithUnit(_bestFitness)}";
 
     public string MeanFitnessText => $"Mean: {Metres.FormatWithUnit(_meanFitness)}";
 

@@ -27,6 +27,7 @@ internal static class RewrittenUi
     /// <summary>Widget scripts, by path under <c>project/src</c>: held to the library's rules.</summary>
     public static readonly string[] Widgets =
     [
+        "ui/widgets/ArenaBestMarker.cs",
         "ui/widgets/ArenaCamera.cs",
         "ui/widgets/ArenaRuler.cs",
         "ui/widgets/BrainFocusNetworkView.cs",
@@ -45,6 +46,7 @@ internal static class RewrittenUi
     /// </summary>
     public static readonly string[] DrawnWidgets =
     [
+        "ui/widgets/ArenaBestMarker.cs",
         "ui/widgets/ArenaRuler.cs",
         "ui/widgets/BrainFocusNetworkView.cs",
         "ui/widgets/BuildCanvas.cs",
