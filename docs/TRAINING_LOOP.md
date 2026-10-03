@@ -364,8 +364,9 @@ component READMEs under `reference design/components/` guide its presentation.
     global engine settings, not scoped to this scene.
   - **Brain** (the button or the Brain stage) opens the BrainFocus sheet;
     Android Back closes it before leaving the scene. BrainFocus shows the
-    direct brain (#536): an Inputs column named by port ("Accelerometer:
-    along", "Front knee: speed"), an Outputs column named by joint, the
+    direct brain (#536): a Senses column named by port ("Accelerometer:
+    along", "Front knee: speed"), an Outputs column named by joint, both
+    under small headings (#660), the
     enabled connections and live activations. Nothing is selected at first;
     tapping an output names the two senses that drive it most, tapping a
     sense names the outputs it drives most, and other connections fade;

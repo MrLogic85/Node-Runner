@@ -161,6 +161,11 @@ reference would mislead someone working on that surface.
   - a row is a tap band across its label and dot; tapping anywhere else
     clears the selection;
   - Signal flow leaves out the hidden-layer size header ("64 · 32").
+  - the column headings "SENSES" and "OUTPUTS" (#660) sit over the label
+    columns, flush with the labels' inner edge, instead of centred over the
+    dots, so a large first dot never runs into them. The sheet's margins
+    shrink to 12 (bottom inset 8) to give the card the heading band, so
+    as many rows keep their labels as before.
 - **Shadows are drawn simplified (#385).** The reference draws the leader in
   full and the other shadows faded but fully detailed, at opacity 0.32 and 0.2
   (Training; GenerationStrip). Instead the followed shadow, which need not be
