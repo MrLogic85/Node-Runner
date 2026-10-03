@@ -149,10 +149,15 @@ public partial class TrainingScreen : Control
         ApplySignalFlow();
     }
 
+    // The shadow strip refreshes itself every frame; the caption follows progress changes.
     private void ApplyGeneration()
     {
+        var shows = _header?.ShowsGeneration == true && _training is not null;
         var generation = GetNode<UiLabel>("%Generation");
-        generation.Visible = _header?.ShowsGeneration == true && _training is not null;
+        var strip = GetNode<ShadowStrip>("%ShadowStrip");
+        generation.Visible = shows;
+        strip.Visible = shows;
+        strip.Presentation = _training;
         if (_training is not null)
         {
             generation.Text = _training.GenerationText;

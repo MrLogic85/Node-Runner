@@ -6,6 +6,7 @@ namespace NodeRunner.App.ViewModels;
 public sealed class TrainingPresentationViewModel : INotifyPropertyChanged, IDisposable
 {
     private readonly ITrainingProgressSource? _source;
+    private readonly ShadowStripPresentation _strip = new();
     private int _generation;
     private int _shadowCount;
     private double _bestFitness = double.NegativeInfinity;
@@ -38,9 +39,11 @@ public sealed class TrainingPresentationViewModel : INotifyPropertyChanged, IDis
     public bool IsTrialActive => _isTrialActive;
     public IReadOnlyList<double> CompletedFitness => _completedFitness;
 
-    public string GenerationText => _isTrialActive
-        ? $"Generation {_generation} · {_shadowCount} shadows racing"
-        : $"Generation {_generation} · Training finished";
+    /// <summary>
+    /// The generation racing now, counted from 1 like <see cref="BestGeneration"/> (#387), or the
+    /// last finished one when none is racing.
+    /// </summary>
+    public string GenerationText => $"Generation {(_isTrialActive ? _generation + 1 : _generation)}";
 
     public string BestFitnessText => double.IsNegativeInfinity(_bestFitness)
         ? "Best: —"
@@ -77,6 +80,18 @@ public sealed class TrainingPresentationViewModel : INotifyPropertyChanged, IDis
                 .ToArray();
         }
     }
+
+    /// <summary>The shadow strip (#387): which shadows it shows and how full their bars are.</summary>
+    public ShadowStripView Strip => _strip.View(Shadows, _generation, _bestFitness);
+
+    /// <summary>Ranks the strip by distance so far and shows its first page.</summary>
+    public void SortShadows() => _strip.Sort(Shadows, _generation);
+
+    /// <summary>Pages the strip toward the worse shadows.</summary>
+    public void ShowWorseShadows() => _strip.PageWorse();
+
+    /// <summary>Pages the strip back toward the better shadows.</summary>
+    public void ShowBetterShadows() => _strip.PageBetter();
 
     /// <summary>Follows shadow <paramref name="number"/> (1-based) until another is picked.</summary>
     public void Follow(int number)

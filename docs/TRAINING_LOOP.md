@@ -175,8 +175,8 @@ transition to keep in step with it.
     drawing all 32 at 30 % opacity raised p95 to 16.6 ms and PSS to about
     436 MiB. With simplified shadows (#385) 32 shadows stay at 8.3 ms and
     about 366 MiB.
-  - Followed shadow (#385): one shadow is drawn in full, two z steps above
-    the others, and feeds signal flow, the brain and part selection; every
+  - Followed shadow (#385): one shadow is drawn in full, three z steps above
+    the others (so even its rigid hatch, #627, stays above their joints), and feeds signal flow, the brain and part selection; every
     other shadow is drawn simplified (`docs/CREATURE_MODEL.md` → "Drawing
     as a shadow") at `alpha_shadow`. Shadow `i` is slot `i`, which runs
     candidate `i`. The default is shadow 1 (slot 0): the resumed genome or
@@ -189,6 +189,20 @@ transition to keep in step with it.
     running shadow, previous best) and `Follow(number)` for the shadow strip
     (#387). The camera frames the followed shadow (see "The Training
     scene" → Camera).
+  - Shadow strip (#387): `ShadowStripPresentation` turns the rows into the
+    strip's cells, worst on the left and best on the right. A bar is the
+    distance so far against the best ever, or against the leader once it
+    goes further; the leader's bar is `accent`, and the followed cell is
+    ringed (`accent` when it also leads, otherwise `halo`). Up to 8 shadows
+    each get a cell, in shadow order with shadow 1 on the right. Past 8 the
+    strip keeps 8 places: a "worse" button, 6 shadows and a last button that
+    sorts on the first page and pages back up on later ones; the last page
+    shows the worst 6. Sorting ranks by distance at that moment and holds
+    until the next sort, so cells never jump while the player watches; a
+    new generation starts over in shadow order on the first page. The
+    followed shadow can sort off the page. The caption reads only
+    "Generation N", the racing generation counted from 1 like the best's
+    generation. Owner decisions.
   - Candidate assignment is deterministic for the same seed, parallel mode,
     slot count, build, and platform. Sequential and parallel fitness parity
     is not promised because physics ordering can differ.
