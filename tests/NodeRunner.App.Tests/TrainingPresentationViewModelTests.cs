@@ -18,7 +18,7 @@ public sealed class TrainingPresentationViewModelTests
         presentation.BestGeneration.ShouldBe(4);
         presentation.IsTrialActive.ShouldBeTrue();
         presentation.CompletedFitness.ShouldBe([10.1, 11.2]);
-        presentation.GenerationText.ShouldBe("Generation 5 · 8 shadows racing");
+        presentation.GenerationText.ShouldBe("Generation 6");
         presentation.BestFitnessText.ShouldBe("Best: 12.8 m (gen 4)");
         presentation.MeanFitnessText.ShouldBe("Mean: 8.4 m");
     }
@@ -30,7 +30,7 @@ public sealed class TrainingPresentationViewModelTests
 
         presentation.Update(5, 8, double.NegativeInfinity, 0, 0, false, []);
 
-        presentation.GenerationText.ShouldBe("Generation 5 · Training finished");
+        presentation.GenerationText.ShouldBe("Generation 5");
         presentation.BestFitnessText.ShouldBe("Best: —");
         presentation.MeanFitnessText.ShouldBe("Mean: 0.0 m");
     }
@@ -160,6 +160,26 @@ public sealed class TrainingPresentationViewModelTests
         presentation.Shadows.Single(shadow => shadow.IsLeader).Number.ShouldBe(1);
         presentation.Shadows.Single(shadow => shadow.IsFollowed).Number.ShouldBe(3);
         Should.Throw<ArgumentOutOfRangeException>(() => presentation.Follow(0));
+    }
+
+    [Fact]
+    public void Strip_ShowsTheSourcesShadows_AndSortsThemOnRequest()
+    {
+        var source = new FakeTrainingProgressSource
+        {
+            IsTrialActive = true,
+            BestFitness = double.NegativeInfinity,
+            ShadowDistances = [1, 5, 3, 2, 4, 6, 9, 8, 7],
+        };
+        var presentation = new TrainingPresentationViewModel(source);
+
+        presentation.Strip.Cells.Select(cell => cell.Number).ShouldBe([6, 5, 4, 3, 2, 1]);
+        presentation.SortShadows();
+        presentation.Strip.Cells.Select(cell => cell.Number).ShouldBe([5, 2, 6, 9, 8, 7]);
+        presentation.ShowWorseShadows();
+        presentation.Strip.Trailing.ShouldBe(ShadowStripTrailing.Better);
+        presentation.ShowBetterShadows();
+        presentation.Strip.Trailing.ShouldBe(ShadowStripTrailing.Sort);
     }
 
     [Fact]

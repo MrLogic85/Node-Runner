@@ -35,6 +35,7 @@ internal static class RewrittenUi
         "ui/widgets/CreationCard.cs",
         "ui/widgets/CreatureThumbnail.cs",
         "ui/widgets/MapPreview.cs",
+        "ui/widgets/ShadowStrip.cs",
     ];
 
     /// <summary>
@@ -65,6 +66,7 @@ internal static class RewrittenUi
         "screens/TrainingScreen.tscn",
         "widgets/BrainFocusSheet.tscn",
         "widgets/CreationCard.tscn",
+        "widgets/ShadowStrip.tscn",
     ];
 }
 
