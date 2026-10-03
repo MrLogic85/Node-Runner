@@ -47,20 +47,21 @@ owned by `docs/TRAINING_LOOP.md` → Product lifecycle boundary.
 
 ## Interactions
 
-The rail holds the reference tools Move, Beams, Joint and Select (#365, #705);
+The rail holds the tools Parts, Beams, Joint and Select (#365, #705, #706);
 "joint" is the player-facing name for a node. Start training is the play
 button at the bottom of the rail in both states (#370); it is dimmed until
 the creature can train, and the panel's last line says why.
-Build always opens in Move. `BuildGestures` (App) turns pointer
+Build always opens in Parts. `BuildGestures` (App) turns pointer
 presses, drags and releases into edits for the active tool and into zoom and
 pan, and `BuildCanvas` only forwards input and draws. A pointer that
 travels at most `TapSlop` view units counts as a tap. Hit tests prefer a node
 over a beam under it; hit sizes are finger-sized on screen at any zoom, and
 a node's own ring always hits.
 
-- **Move:** tap a node or beam to select it (its settings open), tap empty
-  canvas to deselect, drag a node to move it, drag anywhere else (empty
-  canvas or a beam) to pan the view (#400). Move never adds a node.
+- **Parts:** tap a joint, beam, sensor or Piston to select it (its settings
+  open), tap empty canvas to deselect, drag a joint to move it, drag anywhere
+  else (empty canvas or a beam) to pan the view (#400). Parts never adds a
+  node.
 - **Beams:** with nothing selected, the panel lists link types: Beam, Piston
   and later Spring and Wing. Beam is picked each time the tool is entered;
   selecting a part and clearing it keeps the picked link. Tap a joint, beam,
@@ -122,7 +123,7 @@ a node's own ring always hits.
 - There is no Delete tool: the part settings and selection panels delete the
   selection, and deleting a node removes every beam on it and those beams'
   sensors (`CreatureBuilder.RemoveNode`).
-- A locked creation opens in Move with Beams and Joint disabled, and
+- A locked creation opens in Parts with Beams and Joint disabled, and
   `BuildViewModel` refuses topology edits on its own.
 - **Two fingers, any tool (#400):** pinch zooms about the point between the
   fingers and dragging both pans. The second finger cancels the first
@@ -173,8 +174,9 @@ a node's own ring always hits.
 
 ## Parts tray
 
-With nothing selected, an unlocked creation's side panel shows either the
-Beams link list for the Beams tool (#705), or the Parts tray (#374): three
+With nothing selected, an unlocked creation's side panel shows the active
+tool's panel: Parts shows the Parts tray (#374), Beams shows the link list
+(#705), and Joint and Select show scene-authored short help (#706). The tray has three
 `UiIconTabs` (On a joint, Sensors, Blocks) pinned at the top, then a scrolling
 list with the open tab's name, its parts as compact `UiPartRow`s and one help
 line for the tab. `NodeRunner.App.ViewModels.PartTray`
@@ -191,10 +193,8 @@ finds what the part is over (a joint's ring, a sensor picture's beam, a beam
 within reach, then a joint within reach) and `BuildViewModel.PlacePart`
 validates and places it with a fresh id, or refuses it and keeps the reason as
 `PlacementNote`, a canvas note at that part until the next touch or after
-3 s. A drop on empty canvas or back on the panel changes nothing. Joint and
-Select show a short status line with the tool's glyph above the readiness
-line; Move and the Beams link list show none. One selected part shows its
-settings and several show the selection panel instead.
+3 s. A drop on empty canvas or back on the panel changes nothing. One selected
+part shows its settings and several show the selection panel instead.
 
 ## Part settings
 

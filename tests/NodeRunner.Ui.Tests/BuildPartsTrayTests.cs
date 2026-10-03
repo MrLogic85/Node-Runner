@@ -30,12 +30,12 @@ public sealed class BuildPartsTrayTests
     }
 
     [Fact]
-    public void SidePanel_KeepsTray_Settings_Selection_Saved_AndToolLine()
+    public void SidePanel_KeepsTray_Help_Settings_Selection_Saved_AndReadiness()
     {
         var content = _build.Where(node => node.Parent?.EndsWith("/SidePanelContent", StringComparison.Ordinal) == true).ToList();
 
         content.Select(node => node.Name).ShouldBe(
-            ["PartsTray", "SavedCreation", "PartSettings", "Selection", "PanelSpacer", "ToolLine", "Readiness"]);
+            ["PartsTray", "SavedCreation", "PartSettings", "Selection", "JointHelp", "SelectHelp", "PanelSpacer", "Readiness"]);
         content.ShouldAllBe(node => node.IsUnique);
     }
 

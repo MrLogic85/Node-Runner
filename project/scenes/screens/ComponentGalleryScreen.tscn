@@ -1001,7 +1001,7 @@ custom_minimum_size = Vector2(120, 0)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 8
-text = "the handle it explains, drawn as on the canvas, with a title and a note"
+text = "a handle row, or a no-handle tool help row, with a title and a note"
 autowrap_mode = 3
 script = ExtResource("2_cpfof")
 TextStyle = 9
@@ -1033,6 +1033,21 @@ script = ExtResource("27_info_row")
 IconId = 28
 Title = "Scale"
 Help = "Drag the corner: closer together or further apart"
+
+[node name="ToolHelpCaption" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/InfoRows/Rows"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "No handle: tool help"
+script = ExtResource("2_cpfof")
+TextStyle = 9
+
+[node name="ToolHelp" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/InfoRows/Rows"]
+layout_mode = 2
+script = ExtResource("27_info_row")
+IconId = 14
+Title = "Tap empty space"
+Help = "Adds a joint."
+ShowHandle = false
 
 [node name="Slider" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content" unique_id=1266658681]
 layout_mode = 2

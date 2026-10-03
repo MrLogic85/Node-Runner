@@ -178,7 +178,7 @@ public sealed class BuildViewModelTests
         var build = new BuildViewModel { ActiveTool = BuildTool.Beam };
         build.PickLink(BuildLink.Piston);
 
-        build.ActiveTool = BuildTool.Move;
+        build.ActiveTool = BuildTool.Parts;
         build.ActiveTool = BuildTool.Beam;
 
         build.PickedLink.ShouldBe(BuildLink.Beam);
@@ -466,7 +466,7 @@ public sealed class BuildViewModelTests
     }
 
     [Fact]
-    public void Load_ResetsActiveToolToMove()
+    public void Load_ResetsActiveToolToParts()
     {
         var creature = new CreatureDef(
             [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(20, 0))],
@@ -476,7 +476,7 @@ public sealed class BuildViewModelTests
 
         viewModel.Load(creature);
 
-        viewModel.ActiveTool.ShouldBe(BuildTool.Move);
+        viewModel.ActiveTool.ShouldBe(BuildTool.Parts);
     }
 
     [Fact]
@@ -553,11 +553,11 @@ public sealed class BuildViewModelTests
     }
 
     [Fact]
-    public void ActiveTool_DefaultsToMove()
+    public void ActiveTool_DefaultsToParts()
     {
         var viewModel = new BuildViewModel();
 
-        viewModel.ActiveTool.ShouldBe(BuildTool.Move);
+        viewModel.ActiveTool.ShouldBe(BuildTool.Parts);
     }
 
 

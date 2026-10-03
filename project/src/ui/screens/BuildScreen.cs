@@ -99,7 +99,7 @@ public partial class BuildScreen : Control
         BindMenuItem(toolbar, GetNode<UiMenuActionItem>("%MenuResetTraining"), () => EmitSignal(SignalName.ResetTrainingRequested));
         BindMenuItem(toolbar, GetNode<UiMenuActionItem>("%MenuCopyCreation"), () => EmitSignal(SignalName.CopyCreationRequested));
         BindMenuItem(toolbar, GetNode<UiMenuActionItem>("%MenuDeleteCreation"), () => EmitSignal(SignalName.DeleteCreationRequested));
-        BindTool(GetNode<UiButton>("%MoveTool"), BuildTool.Move);
+        BindTool(GetNode<UiButton>("%PartsTool"), BuildTool.Parts);
         BindTool(GetNode<UiButton>("%BeamTool"), BuildTool.Beam);
         BindTool(GetNode<UiButton>("%JointTool"), BuildTool.Joint);
         BindTool(GetNode<UiButton>("%SelectTool"), BuildTool.Select);
@@ -213,7 +213,6 @@ public partial class BuildScreen : Control
         var buildPanel = presentation.BuildPanel;
         ApplyToolbar(presentation, buildPanel, locked);
         ApplyTools(presentation);
-        GetNode<UiChip>("%PartsLockedChip").Visible = locked;
         ApplySidePanel(presentation, buildPanel, locked);
     }
 
@@ -234,7 +233,7 @@ public partial class BuildScreen : Control
 
     private void ApplyTools(BuildPresentationViewModel presentation)
     {
-        GetNode<UiButton>("%MoveTool").Selected = presentation.ActiveTool == BuildTool.Move;
+        GetNode<UiButton>("%PartsTool").Selected = presentation.ActiveTool == BuildTool.Parts;
         var beam = GetNode<UiButton>("%BeamTool");
         beam.Selected = presentation.ActiveTool == BuildTool.Beam;
         beam.Disabled = presentation.LockTopologyTools;
@@ -255,15 +254,17 @@ public partial class BuildScreen : Control
 
         var selected = presentation.SelectedPartCount;
         var tray = GetNode<Control>("%PartsTray");
+        var jointHelp = GetNode<Control>("%JointHelp");
+        var selectHelp = GetNode<Control>("%SelectHelp");
         var savedPanel = GetNode<Control>("%SavedCreation");
         var partSettings = GetNode<Control>("%PartSettings");
         var selection = GetNode<Control>("%Selection");
+        var toolPanel = presentation.ToolPanel;
         var linkList = presentation.LinkList;
-        tray.Visible = selected == 0 && !locked;
+        tray.Visible = toolPanel.Mode is ToolPanelMode.PartsTray or ToolPanelMode.LinkList;
+        jointHelp.Visible = toolPanel.Mode == ToolPanelMode.JointHelp;
+        selectHelp.Visible = toolPanel.Mode == ToolPanelMode.SelectHelp;
         GetNode<Control>("%PanelSpacer").Visible = !tray.Visible;
-        GetNode<UiLabel>("%ToolHint").Text = presentation.PanelToolHint;
-        GetNode<UiIcon>("%ToolLineIcon").IconId = RailIcon(presentation.ActiveTool);
-        GetNode<Control>("%ToolLine").Visible = tray.Visible && presentation.PanelToolHint.Length > 0;
         savedPanel.Visible = selected == 0 && locked;
         partSettings.Visible = selected == 1;
         selection.Visible = selected > 1;
@@ -273,8 +274,7 @@ public partial class BuildScreen : Control
         sidePanel.Title = selected switch
         {
             0 when locked => "Training",
-            0 when linkList is not null => linkList.Title,
-            0 => "Parts",
+            0 when toolPanel.Mode != ToolPanelMode.None => toolPanel.Title,
             1 => part?.Name ?? string.Empty,
             _ => presentation.Selection?.Title ?? string.Empty,
         };
@@ -441,14 +441,6 @@ public partial class BuildScreen : Control
         row.SetDragPreview(row.CreateDragPreview());
         return BuildCanvas.PartDragData(part);
     }
-
-    private static UiIconId RailIcon(BuildTool tool) => tool switch
-    {
-        BuildTool.Beam => UiIconId.Beam,
-        BuildTool.Joint => UiIconId.Joint,
-        BuildTool.Select => UiIconId.Select,
-        _ => UiIconId.Move,
-    };
 
     /// <summary>The Beams list glyph for a link.</summary>
     public static UiIconId LinkIcon(BuildLink link) => link switch

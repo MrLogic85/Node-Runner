@@ -43,36 +43,19 @@ public sealed class BuildPresentationViewModel
 
     public string CreationName => _build.CreationName;
 
-    public string InspectorRole => _build.IsMoveOnly ? "Tool: Move" : $"Tool: {ToolName(_build.ActiveTool)}";
-
-    public string InspectorValues => _build.StatusMessage ?? (_build.IsMoveOnly
-        ? "Drag an existing node to reposition it. Training is kept."
-        : ToolHint(_build.ActiveTool));
-
     public BuildTool ActiveTool => _build.ActiveTool;
 
     public IReadOnlyList<PartTrayGroup> PartGroups => PartTray.Groups();
 
-    public LinkListPresentation? LinkList => ActiveTool == BuildTool.Beam && !_build.IsMoveOnly && _build.SelectedPartCount == 0
+    public LinkListPresentation? LinkList => ToolPanel.Mode == ToolPanelMode.LinkList
         ? BuildLinkList.Create(_build.PickedLink)
         : null;
 
-    /// <summary>
-    /// The side panel's one-line status for the rail tools that need one (Joint and Select);
-    /// empty for Move and tools without a short side-panel hint.
-    /// </summary>
-    public string PanelToolHint => ActiveTool switch
-    {
-        BuildTool.Joint => "Tap space or a beam.",
-        BuildTool.Select => "Tap or box parts.",
-        _ => string.Empty,
-    };
+    public ToolPanelPresentation ToolPanel => CreateToolPanel();
 
     public int NodeCount => _build.Nodes.Count;
 
     public int SensorCount => _build.Sensors.Count;
-
-    public string MoveOnlyLockReason => "Move only · training kept";
 
     public string TrainingSummaryTitle => _build.TrainingGeneration is { } generation
         ? $"Trained {CreationCardPresentation.FormatCount(generation, "generation")}"
@@ -222,19 +205,22 @@ public sealed class BuildPresentationViewModel
 
     public BuildPanelPresentation BuildPanel => CreateBuildPanel();
 
-    public static string ToolHint(BuildTool tool)
+    private ToolPanelPresentation CreateToolPanel()
     {
-        return tool switch
+        if (_build.SelectedPartCount > 0 || _build.IsMoveOnly)
         {
-            BuildTool.Move => "Drag a joint to move it. Tap a part to select it.",
-            BuildTool.Beam => "Pick a link, then drag joint to joint.",
-            BuildTool.Joint => "Tap empty space to add a joint, or tap a beam to split it.",
-            BuildTool.Select => "Tap parts to select them. Drag selected parts to move them together.",
-            _ => string.Empty,
+            return ToolPanelPresentation.None;
+        }
+
+        return ActiveTool switch
+        {
+            BuildTool.Parts => new ToolPanelPresentation(ToolPanelMode.PartsTray, "Parts"),
+            BuildTool.Beam => new ToolPanelPresentation(ToolPanelMode.LinkList, "Beams"),
+            BuildTool.Joint => new ToolPanelPresentation(ToolPanelMode.JointHelp, "Joint"),
+            BuildTool.Select => new ToolPanelPresentation(ToolPanelMode.SelectHelp, "Select"),
+            _ => ToolPanelPresentation.None,
         };
     }
-
-    public static string ToolName(BuildTool tool) => tool == BuildTool.Beam ? "Beams" : tool.ToString();
 
     private BuildPanelPresentation CreateBuildPanel()
     {

@@ -130,6 +130,19 @@ reference would mislead someone working on that surface.
   and the rail says Beam. Instead the rail and side-panel title say Beams,
   and the Beams tool's panel lists Beam, Piston, Spring and Wing. The Parts
   tray starts at On a joint.
+- **Parts replaces the reference rail's Move label (#706).** The rail starts
+  Parts, Beams, Joint, Select. Parts keeps the old move-and-select behaviour
+  and opens the Parts tray when nothing is selected. Its glyph is the
+  project-owned `assets/icons/ui/parts.svg`, like the accelerometer glyph:
+  three rounded tiles plus one lifted diamond.
+- **Tool panels give help when empty (#706).** The reference keeps the tray
+  in the side panel. Instead, with nothing selected, Parts shows the tray,
+  Beams shows Links, and Joint and Select show short help rows. A selected
+  part or selection replaces any tool panel.
+- **No locked-canvas chip (#706).** The reference's locked Build shows a
+  "Parts locked · drag to move" chip on the canvas. The owner removed it:
+  next to the Parts tool it reads as that tool being locked, and the
+  padlock and the Training panel already say the body is locked.
 - **Piston settings are sliders (#451).** The reference's Piston panel
   lists what it joins ("Between"), its power draw and its weight. Instead
   its Part settings show three `UiSlider`s, Max strength, Stroke and Max
@@ -244,7 +257,7 @@ reference would mislead someone working on that surface.
     (`docs/CREATURE_MODEL.md` → "Drawing as a shadow"). Rays leave from the
     picture's edge and are drawn over the joints.
   - *Order:* joints, then sensors, then beams, for both tapping and drawing.
-    Dragging a sensor in Move does nothing, and a Joint-tool tap on a
+    Dragging a sensor in Parts does nothing, and a Joint-tool tap on a
     sensor does not split the beam.
   - *Split:* splitting a beam moves its sensor, with its id, to the
     longer half (the half at the beam's first node on a tie).
@@ -285,19 +298,14 @@ reference would mislead someone working on that surface.
   the Build canvas scales uniformly, touch targets included, and panels simply
   grow; see "UI size". Keeping sizes above 100% within a phone's screen is
   #609.
-- **Parts tray details (#374, best guess).** The reference tray has no line
-  for the rail tools and no reason on a locked row. Instead:
+- **Parts tray details (#374, best guess).** The reference tray has no reason
+  on a locked row. Instead:
   - Tray rows are compact `UiPartRow`s (`control-sm` high) that still use
     the `icon-lg` glyph.
   - A part not yet implemented shows only its lock; the tab's name row ends
     with a `muted` lock at `icon-sm` and "Coming later" in `t-note`. This is
     temporary until those parts ship; #525's achievement locks need their
     own reason.
-  - The tray shows only guidance that applies now: Move has no tool line;
-    Joint and Select show a status line above the readiness line, the tool's
-    glyph at `icon-sm` in `muted` and one short `t-note` line ("Tap space or
-    a beam.", "Tap or box parts."). The Beams link list rules live in
-    `docs/BUILD_MODE.md`.
   - Locked and "0 left" rows fade as a whole (glyph, name and lock), not
     only their fill.
 
@@ -387,7 +395,9 @@ entries are not components of their own in Godot
 
 - **`c_round_button`** is `UiSelectionHandle`: the round icon badge that the
   canvas handles are, and that `c_info_row` shows (`UiInfoRow` draws it through
-  `UiSelectionHandle.DrawRoundButton`).
+  `UiSelectionHandle.DrawRoundButton`). `UiInfoRow.ShowHandle = false` omits
+  that round button and shows only a muted 16 px glyph in the same column; it
+  is used for Joint and Select tool help (#706).
 - **`c_rows`** has no component of its own. It is the body of a part's
   settings panel: a plain container whose separation is the panel's
   `space-1` gap, holding rows that carry no outer padding of their own, and an

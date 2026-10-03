@@ -112,7 +112,7 @@ public sealed class BuildPistonTests
         var (build, gestures) = ThreeLooseJoints();
         build.ConnectBeam(1, 3);
         build.ConnectPiston(1, 2);
-        build.ActiveTool = BuildTool.Move;
+        build.ActiveTool = BuildTool.Parts;
 
         Tap(gestures, new Vector2D(50, 0));
 

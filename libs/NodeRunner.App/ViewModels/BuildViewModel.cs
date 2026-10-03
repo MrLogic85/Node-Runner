@@ -10,7 +10,7 @@ namespace NodeRunner.App.ViewModels;
 /// <summary>Which Build touch interaction is active; see <see cref="BuildGestures"/>.</summary>
 public enum BuildTool
 {
-    Move,
+    Parts,
     Beam,
     Joint,
     Select,
@@ -55,7 +55,7 @@ public sealed class BuildViewModel : INotifyPropertyChanged
 
     private CreatureBuilder _builder;
     private bool _isActive;
-    private BuildTool _activeTool = BuildTool.Move;
+    private BuildTool _activeTool = BuildTool.Parts;
     private BuildLink _pickedLink = BuildLink.Beam;
     private string? _statusMessage;
     private bool _moveOnly;
@@ -85,7 +85,7 @@ public sealed class BuildViewModel : INotifyPropertyChanged
         _trainingGeneration = training?.Generation;
         _latestDistance = training?.Latest.Distance;
         _moveOnly = moveOnly;
-        ActiveTool = BuildTool.Move;
+        ActiveTool = BuildTool.Parts;
         StatusMessage = null;
         PlacementNote = null;
         AnatomyChanged?.Invoke(this, EventArgs.Empty);
