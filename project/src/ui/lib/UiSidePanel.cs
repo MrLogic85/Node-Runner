@@ -201,7 +201,7 @@ public partial class UiSidePanel : MarginContainer
         GetNode<Control>("%SidePanelTabChevron").QueueRedraw();
     }
 
-    // Icons are drawn rather than set as a TextureRect's texture: the rasterised texture is
+    // Icons are drawn rather than set as a TextureRect's texture: the icon texture is
     // built at runtime, and a screen that edits the panel's children would save it.
     private void DrawHeaderIcon()
     {

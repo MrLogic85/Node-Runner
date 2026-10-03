@@ -557,13 +557,15 @@ size on screen and only get the space that is left:
   size on screen, whatever the UI size. Build's finger-sized hit radii and handles are in view units, so they
   scale with the UI, as touch targets should.
 
-Controls that rasterize (`UiIcons`, the choice indicators) draw at
-`UiScale.PixelsPerUnit()`, the stretch times the factor, and round to whole
-pixels. A change sends every node the theme-change notification, which they
-already handle by reloading icons and rebuilding indicators; nothing walks the
-tree to assign values. Settings (#201) chooses and saves the value; until then
-the Colors & Styles page sets it for the session. The Settings slider snaps to
-5% steps (`UiScale.Snap`).
+Icons (`UiIcons`) and the choice indicators are Godot `DPITexture`s, sized in
+canvas units (#631). Godot re-rasterizes them, like fonts, at the viewport's
+oversampling (the stretch times the factor), so a change needs no pass of our
+own. Icon SVGs stay white and take colour from modulate or the control's icon
+colours rather than `color_map`.
+
+Settings (#201) chooses and saves the value; until then the Colors & Styles
+page sets it for the session. The Settings slider snaps to 5% steps
+(`UiScale.Snap`).
 
 A screen's root has no 640 x 360 minimum, so the canvas may shrink
 below it. 640 x 360 is still the smallest canvas the layouts fit: on a phone,

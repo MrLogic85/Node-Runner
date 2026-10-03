@@ -49,9 +49,8 @@ public sealed partial class UiScale : Node
 
     /// <summary>
     /// Sets the UI size, snapped to the <see cref="StepPercent"/> grid within
-    /// <see cref="MinPercent"/>..<see cref="MaxPercent"/>. Godot lays every control out again at
-    /// the new size; the theme-change notification then lets controls that rasterize icons or
-    /// indicators redo them at the new pixel density.
+    /// <see cref="MinPercent"/>..<see cref="MaxPercent"/>. Godot lays every control out again and
+    /// re-rasterizes fonts and <see cref="DpiTexture"/> icons at the new pixel density.
     /// </summary>
     public void SetPercent(int percent)
     {
@@ -62,13 +61,7 @@ public sealed partial class UiScale : Node
         }
 
         Percent = snapped;
-        var root = GetTree().Root;
-        root.ContentScaleFactor = Factor;
-        foreach (var child in root.GetChildren())
-        {
-            child.PropagateNotification((int)Control.NotificationThemeChanged);
-        }
-
+        GetTree().Root.ContentScaleFactor = Factor;
         EmitSignal(SignalName.Changed);
     }
 
@@ -92,22 +85,4 @@ public sealed partial class UiScale : Node
     /// measured on the 640 x 360 reference canvas: a 48 unit touch target is 24 at 50% and 96 at 200%.
     /// </summary>
     public static float OnReferenceCanvas(float units, double percent) => units * FactorFor(percent);
-
-    /// <summary>
-    /// Window pixels per canvas unit, everything included: the <c>canvas_items</c> stretch times
-    /// the UI size. Rasterized icons and indicators are drawn at this density to stay sharp.
-    /// </summary>
-    public static float PixelsPerUnit(Vector2I windowPixels, Vector2 visibleUnits) =>
-        windowPixels.X > 0 && visibleUnits.X > 0 ? windowPixels.X / visibleUnits.X : 1;
-
-    /// <summary>Window pixels per canvas unit for the running game's root window.</summary>
-    public static float PixelsPerUnit()
-    {
-        var root = (Engine.GetMainLoop() as SceneTree)?.Root;
-        return root is null ? 1 : PixelsPerUnit(DisplayServer.WindowGetSize(), root.GetVisibleRect().Size);
-    }
-
-    /// <summary>Whole pixels for a raster of <paramref name="units"/> canvas units: rounded to nearest, at least 1.</summary>
-    public static int RasterPixels(float units, float pixelsPerUnit) =>
-        Math.Max(1, (int)MathF.Round(units * pixelsPerUnit, MidpointRounding.AwayFromZero));
 }

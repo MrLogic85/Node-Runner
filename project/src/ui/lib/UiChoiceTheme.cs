@@ -8,6 +8,8 @@ namespace NodeRunner.Ui.Lib;
 /// <summary>Reference indicator textures supplied through Godot's native choice theme slots.</summary>
 internal static class UiChoiceTheme
 {
+    private const string _svgNamespace = "http://www.w3.org/2000/svg";
+
     public static Godot.Theme Create(Control control, bool isSwitch)
     {
         try
@@ -40,27 +42,21 @@ internal static class UiChoiceTheme
 
         foreach (var on in new[] { false, true })
         {
-            using var image = RenderIndicator(control, isSwitch, on);
-            var size = UiChoiceStyle.IndicatorSize(isSwitch);
+            var shapes = IndicatorShapes(control, isSwitch, on);
             var name = on ? "checked" : "unchecked";
-            var enabled = Texture(image, size);
+            var enabled = Texture(shapes, isSwitch, mirrored: false, dimmed: false);
             theme.SetIcon(name, type, enabled);
             if (isSwitch)
             {
-                using var mirrored = (Image)image.Duplicate();
-                mirrored.FlipX();
-                theme.SetIcon(name + "_mirrored", type, Texture(mirrored, size));
-                Dim(mirrored);
-                theme.SetIcon(name + "_disabled_mirrored", type, Texture(mirrored, size));
+                theme.SetIcon(name + "_mirrored", type, Texture(shapes, isSwitch, mirrored: true, dimmed: false));
+                theme.SetIcon(name + "_disabled_mirrored", type, Texture(shapes, isSwitch, mirrored: true, dimmed: true));
             }
             else
             {
                 theme.SetIcon("radio_" + name, type, enabled);
             }
 
-            // Dim the finished texture, not overlapping vector primitives.
-            Dim(image);
-            var disabled = Texture(image, size);
+            var disabled = Texture(shapes, isSwitch, mirrored: false, dimmed: true);
             theme.SetIcon(name + "_disabled", type, disabled);
             if (!isSwitch)
             {
@@ -71,48 +67,57 @@ internal static class UiChoiceTheme
         return theme;
     }
 
-    private static ImageTexture Texture(Image image, Vector2 size)
+    // A DpiTexture in canvas units: Godot re-rasterizes it for the stretch and the UI size.
+    private static DpiTexture Texture(XElement[] shapes, bool isSwitch, bool mirrored, bool dimmed)
     {
-        var texture = ImageTexture.CreateFromImage(image);
+        XNamespace ns = _svgNamespace;
+        var size = UiChoiceStyle.IndicatorSize(isSwitch);
+        // Group opacity dims the finished indicator, not each overlapping shape.
+        var group = new XElement(ns + "g", shapes);
+        if (mirrored)
+        {
+            group.SetAttributeValue("transform", $"translate({N(size.X)} 0) scale(-1 1)");
+        }
+        if (dimmed)
+        {
+            group.SetAttributeValue("opacity", N(UiChoiceStyle.DisabledOpacity));
+        }
+
+        var root = new XElement(ns + "svg",
+            new XAttribute("width", N(size.X)), new XAttribute("height", N(size.Y)),
+            new XAttribute("viewBox", $"0 0 {N(size.X)} {N(size.Y)}"),
+            group);
+        var texture = DpiTexture.CreateFromString(root.ToString());
+        if (texture.GetWidth() == 0)
+        {
+            throw new InvalidOperationException("Unable to rasterize choice theme.");
+        }
         texture.SetSizeOverride(new Vector2I((int)size.X, (int)size.Y));
         return texture;
     }
 
-    private static void Dim(Image image)
+    private static XElement[] IndicatorShapes(Control control, bool isSwitch, bool on)
     {
-        for (var y = 0; y < image.GetHeight(); y++)
-        {
-            for (var x = 0; x < image.GetWidth(); x++)
-            {
-                var color = image.GetPixel(x, y);
-                color.A *= UiChoiceStyle.DisabledOpacity;
-                image.SetPixel(x, y, color);
-            }
-        }
-    }
-
-    private static Image RenderIndicator(Control control, bool isSwitch, bool on)
-    {
-        XNamespace ns = "http://www.w3.org/2000/svg";
+        XNamespace ns = _svgNamespace;
         var size = UiChoiceStyle.IndicatorSize(isSwitch);
         var colors = UiChoiceStyle.Resolve(control, isSwitch, on);
         var stroke = UiSize.Stroke.Signal;
         var radius = isSwitch ? UiSize.Radius.Large : UiSize.Radius.Small;
-        var root = new XElement(ns + "svg",
-            new XAttribute("width", size.X), new XAttribute("height", size.Y),
-            new XAttribute("viewBox", $"0 0 {N(size.X)} {N(size.Y)}"),
-            new XElement(ns + "rect",
+        var shapes = new List<XElement>
+        {
+            new(ns + "rect",
                 new XAttribute("x", stroke / 2), new XAttribute("y", stroke / 2),
                 new XAttribute("width", size.X - stroke), new XAttribute("height", size.Y - stroke),
                 new XAttribute("rx", radius - stroke / 2),
                 new XAttribute("fill", "#" + colors.Background.ToHtml(false)),
                 new XAttribute("fill-opacity", colors.Background.A),
                 new XAttribute("stroke", "#" + colors.Border.ToHtml(false)),
-                new XAttribute("stroke-width", stroke)));
+                new XAttribute("stroke-width", stroke)),
+        };
         if (isSwitch)
         {
             var center = UiChoiceStyle.ThumbCenter(new Rect2(Vector2.Zero, size), on);
-            root.Add(new XElement(ns + "circle",
+            shapes.Add(new XElement(ns + "circle",
                 new XAttribute("cx", center.X), new XAttribute("cy", center.Y),
                 new XAttribute("r", UiSize.Icon.Default / 2),
                 new XAttribute("fill", "#" + colors.Mark.ToHtml(false))));
@@ -131,18 +136,10 @@ internal static class UiChoiceTheme
             glyph.SetAttributeValue("stroke", "#" + colors.Mark.ToHtml(false));
             glyph.SetAttributeValue("transform",
                 $"translate({N((size.X - UiSize.Icon.Default) / 2)} {N((size.Y - UiSize.Icon.Default) / 2)}) scale({N(UiSize.Icon.Default / UiIcons.UiSourceSize)})");
-            root.Add(glyph);
+            shapes.Add(glyph);
         }
 
-        var scale = Mathf.Max(1, UiScale.PixelsPerUnit());
-        var image = new Image();
-        var error = image.LoadSvgFromString(root.ToString(), scale);
-        if (error != Error.Ok)
-        {
-            image.Dispose();
-            throw new InvalidOperationException($"Unable to rasterize choice theme: {error}");
-        }
-        return image;
+        return [.. shapes];
     }
 
     private static string N(float value) => value.ToString(CultureInfo.InvariantCulture);

@@ -35,8 +35,7 @@ public static class UiIcons
 
     private static readonly string[] _iconStates =
         ["icon_normal_color", "icon_hover_color", "icon_pressed_color", "icon_hover_pressed_color", "icon_focus_color", "icon_disabled_color"];
-    private static readonly Dictionary<(string Path, int PixelSize), Texture2D> _textures = [];
-    private static float _cachedPixelsPerUnit = float.NaN;
+    private static readonly Dictionary<(string Path, int Pixels), Texture2D> _textures = [];
 
     public static IReadOnlyList<UiIconId> AllIds { get; } = Enum.GetValues<UiIconId>()
         .Where(icon => icon != UiIconId.None).ToArray();
@@ -49,9 +48,6 @@ public static class UiIcons
         UiIconSize.ExtraLarge => UiSize.Icon.ExtraLarge,
         _ => throw new ArgumentOutOfRangeException(nameof(size), size, "Only canonical icon sizes are supported."),
     };
-
-    /// <summary>The icon's raster size in window pixels at <paramref name="pixelsPerUnit"/> (see <see cref="UiScale.PixelsPerUnit()"/>).</summary>
-    public static int RasterPixels(UiIconSize size, float pixelsPerUnit) => UiScale.RasterPixels(Pixels(size), pixelsPerUnit);
 
     public static string PathFor(UiIconId icon)
     {
@@ -189,17 +185,11 @@ public static class UiIcons
 
     private readonly record struct IconSource(string Root, string FileName, float SourceSize);
 
-    private static Texture2D Load(string path, int logicalPixels, float sourceSize)
+    // A DpiTexture is sized in canvas units and re-rasterizes itself for the viewport's
+    // oversampling, which includes the stretch and the UI size.
+    private static Texture2D Load(string path, int pixels, float sourceSize)
     {
-        var pixelsPerUnit = UiScale.PixelsPerUnit();
-        if (!Mathf.IsEqualApprox(pixelsPerUnit, _cachedPixelsPerUnit))
-        {
-            _textures.Clear();
-            _cachedPixelsPerUnit = pixelsPerUnit;
-        }
-
-        var physicalPixels = UiScale.RasterPixels(logicalPixels, pixelsPerUnit);
-        var key = (path, physicalPixels);
+        var key = (path, pixels);
         if (_textures.TryGetValue(key, out var cached))
         {
             return cached;
@@ -213,15 +203,12 @@ public static class UiIcons
         }
 
         using var reader = new StreamReader(stream, Encoding.UTF8);
-        var source = reader.ReadToEnd();
-        var image = new Image();
-        var error = image.LoadSvgFromString(source, physicalPixels / sourceSize);
-        if (error != Error.Ok)
+        var texture = DpiTexture.CreateFromString(reader.ReadToEnd(), pixels / sourceSize);
+        if (texture.GetWidth() == 0)
         {
-            return HandleLoadFailure(path, $"Canonical SVG could not be rasterized at {physicalPixels}px: {path} ({error})");
+            return HandleLoadFailure(path, $"Canonical SVG could not be rasterized at {pixels}px: {path}");
         }
 
-        var texture = ImageTexture.CreateFromImage(image);
         _textures.Add(key, texture);
         return texture;
     }

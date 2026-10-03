@@ -48,19 +48,6 @@ public sealed class UiIconsTests
         Enum.GetValues<UiIconSize>().Select(UiIcons.Pixels).ShouldBe([12, 16, 20, 24]);
     }
 
-    [Theory]
-    [InlineData(UiIconSize.Small, 3f, 36)]
-    [InlineData(UiIconSize.Standard, 3f, 48)]
-    [InlineData(UiIconSize.Large, 3f, 60)]
-    [InlineData(UiIconSize.ExtraLarge, 3f, 72)]
-    [InlineData(UiIconSize.ExtraLarge, 2f, 48)]
-    [InlineData(UiIconSize.Standard, 1.5f, 24)]
-    [InlineData(UiIconSize.Standard, 12f, 192)]
-    public void RasterPixels_MatchesCanonicalSizeAtThePixelDensity(UiIconSize size, float pixelsPerUnit, int expected)
-    {
-        UiIcons.RasterPixels(size, pixelsPerUnit).ShouldBe(expected);
-    }
-
     [Fact]
     public void EveryCanonicalSvg_IsEmbeddedForRuntimeRasterization()
     {
