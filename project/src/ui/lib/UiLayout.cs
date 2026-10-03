@@ -4,7 +4,7 @@ namespace NodeRunner.Ui.Lib;
 
 /// <summary>
 /// Reference-design layout metrics that C# reads, for the 640 x 360 reference canvas.
-/// The canvas grows past that to fit the screen's shape and shrinks below it as the UI size grows
+/// The canvas grows past that to fit the screen's shape and down to it as the UI size grows
 /// (<see cref="UiScale"/>); see "Screen size and safe area" and "UI size" in docs/UI_DIRECTION.md.
 /// Widths a scene authors itself (dialogs, cards, figures) stay in the scene; see
 /// "Reference token mapping deviations" in docs/UI_DIRECTION.md.

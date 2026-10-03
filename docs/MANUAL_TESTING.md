@@ -109,10 +109,10 @@ When an issue changes how screens fill the display, its test plan should
 consider resizing the desktop window to 16:9, 20:9, 4:3 and 1:1, and on
 Android a wide phone and a phone with a camera cutout in both landscape
 orientations (see "Screen size and safe area" in `docs/UI_DIRECTION.md`).
-An issue that changes layout should also be seen at 50% and 200% UI size
-(set on the Colors & Styles page until Settings has it; see "UI size").
-Above 100% a phone cuts screens off (#609), so check those sizes last;
-restarting the app returns to 100%.
+An issue that changes layout should also be seen at Min (50%), Auto and Max
+UI size (set on the Colors & Styles page until Settings has it; see "UI
+size" in `docs/UI_DIRECTION.md`). On a phone, Max is the tightest canvas
+(640 x 360 inside the safe area); restarting the app returns to Auto.
 
 ## Android checks
 

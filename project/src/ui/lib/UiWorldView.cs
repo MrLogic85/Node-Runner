@@ -49,8 +49,8 @@ public partial class UiWorldView : Control
     public Vector2 FromWorld(Vector2 worldPosition) =>
         WorldViewport.CanvasTransform * worldPosition * (Size / WorldViewport.Size2DOverride);
 
-    // The world lays out in canvas units at 100% UI size, which undoes the UI size for it alone,
-    // and renders at the pixels the slot covers.
+    // The world lays out in canvas units without the UI size's root factor, which undoes the UI
+    // size for it alone, and renders at the pixels the slot covers.
     private void Fit()
     {
         var worldSize = (Vector2I)(Size * UiScale.FactorOf(this)).Round();

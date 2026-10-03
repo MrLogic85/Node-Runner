@@ -85,7 +85,8 @@ public partial class ArenaBestMarker : Node2D
         }
 
         var view = VisibleArea();
-        var screenScale = view.Size.X / GetViewportRect().Size.X;
+        // World units per UI unit: the arena view undoes the UI size (#738), so this applies it again.
+        var screenScale = view.Size.X / GetViewportRect().Size.X * UiScale.FactorOf(this);
         var textWidth = _theme.MarkerFont.GetStringSize(_text, HorizontalAlignment.Left, -1, _theme.MarkerFontSize).X;
         var flagWidth = (_flagPadding * 2) + textWidth + _notchDepth;
         var x = (float)(_startX + _distance);
