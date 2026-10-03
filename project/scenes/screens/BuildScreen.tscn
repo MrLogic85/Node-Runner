@@ -124,7 +124,7 @@ size_flags_vertical = 4
 mouse_filter = 1
 text = "Parts"
 script = ExtResource("5_button")
-IconId = 62
+IconId = 64
 ContentLayout = 1
 Selected = true
 

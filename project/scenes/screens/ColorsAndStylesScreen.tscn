@@ -1873,7 +1873,7 @@ theme_override_constants/separation = 4
 layout_mode = 2
 custom_minimum_size = Vector2(0, 40)
 script = ExtResource("cs_icon")
-IconId = 62
+IconId = 64
 IconSize = 3
 
 [node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Parts"]
