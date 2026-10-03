@@ -56,6 +56,11 @@ public sealed class VisualTheme
         RulerFont = theme.GetFont("font", UiTokens.Variation(UiTokens.Typography.ReadoutMedium)),
         RulerFontSize = theme.GetFontSize("font_size", UiTokens.Variation(UiTokens.Typography.ReadoutMedium)),
         AreaCornerWidth = UiSize.Stroke.Signal,
+        MarkerInk = UiThemes.Color(theme, UiTokens.Color.Ink),
+        MarkerFill = UiThemes.Color(theme, UiTokens.Color.Panel),
+        MarkerLineWidth = UiSize.Stroke.Marker,
+        MarkerFont = theme.GetFont("font", UiTokens.Variation(UiTokens.Typography.NoteStrong)),
+        MarkerFontSize = theme.GetFontSize("font_size", UiTokens.Variation(UiTokens.Typography.NoteStrong)),
     };
 
     public Color ArenaBackground { get; private init; }
@@ -134,6 +139,18 @@ public sealed class VisualTheme
     public Font RulerFont { get; private init; } = null!;
 
     public int RulerFontSize { get; private init; }
+
+    /// <summary>The Training best marker's dashed line, flag outline and text (#388).</summary>
+    public Color MarkerInk { get; private init; }
+
+    /// <summary>The Training best marker's flag.</summary>
+    public Color MarkerFill { get; private init; }
+
+    public float MarkerLineWidth { get; private init; }
+
+    public Font MarkerFont { get; private init; } = null!;
+
+    public int MarkerFontSize { get; private init; }
 
     /// <summary>The hatch lines inside a rigid triangle in Build: one pixel wide at any zoom.</summary>
     public Color RigidHatch { get; private init; }

@@ -9,6 +9,7 @@ public partial class UiSegment : Resource
 {
     private string _text = string.Empty;
     private UiIconId _iconId = UiIconId.None;
+    private bool _disabled;
 
     [Export]
     public string Text
@@ -37,6 +38,20 @@ public partial class UiSegment : Resource
             if (_iconId == value)
                 return;
             _iconId = value;
+            EmitChanged();
+        }
+    }
+
+    /// <summary>Shown but not choosable, e.g. a mode that comes in a later version.</summary>
+    [Export]
+    public bool Disabled
+    {
+        get => _disabled;
+        set
+        {
+            if (_disabled == value)
+                return;
+            _disabled = value;
             EmitChanged();
         }
     }

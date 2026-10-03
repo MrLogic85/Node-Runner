@@ -12,7 +12,7 @@ public sealed class PartParametersTests
         var piston = new PistonDef(3, 1, 2);
 
         PartParameters.SliderOver(PartParameterId.Strength, [piston.Strength])
-            .ShouldBe(new ParameterSlider(PartParameterId.Strength, "Max strength", "150 N", Position(PartParameters.Strength, 150), Position(PartParameters.Strength, 150)));
+            .ShouldBe(new ParameterSlider(PartParameterId.Strength, "Max strength", "150 N", Position(PartParameters.Strength, 150), Position(PartParameters.Strength, 150), 10.0 / 380));
         PartParameters.SliderOver(PartParameterId.Stroke, [piston.Stroke]).Readout.ShouldBe("±30%");
         PartParameters.SliderOver(PartParameterId.MaxSpeed, [piston.MaxSpeed]).Readout.ShouldBe("2.0 m/s");
     }

@@ -28,6 +28,8 @@ Pure C# data types. The vocabulary of the app, no behavior beyond invariants.
     sim.
     `Piston` is the seventh: a Piston's port values and force (#451), shared
     by the sim and tests.
+    `MapGround` is the eighth: a map's ground height at x (#443), shared by
+    the arena and, later, map previews.
 - **Serialisable via `System.Text.Json` without custom converters.** Saved
   records are the save shape: changing one follows `docs/SAVE_FORMAT.md`.
 
@@ -47,8 +49,10 @@ Pure C# data types. The vocabulary of the app, no behavior beyond invariants.
   output conventions (see the exception above)
 - `BrainDef`, `NeuronDef`, `ConnectionGeneDef`, `NeuronKind`,
   `NeuronActivation` — the saved brain graph (#536)
-- `CreationDef`, `TrainingStateDef`, `TrainingRunDef`, `TrainingBestDef` — a
-  saved Creation
+- `CreationDef`, `TrainingStateDef`, `TrainingRunDef`, `TrainingBestDef`,
+  `TrainSettingsDef` — a saved Creation
+- `MapDef`, `MapGround`, `FlatGround`, `Maps`, `MapIds` — the maps a
+  creation trains on (#443)
 - `SimulationConfig`, `GaConfig` — hyperparameters
 - `Vector2D` — our own `readonly record struct` (Godot.Vector2 stays on the
   Godot side)

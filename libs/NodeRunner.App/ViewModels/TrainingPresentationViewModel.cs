@@ -6,9 +6,11 @@ namespace NodeRunner.App.ViewModels;
 public sealed class TrainingPresentationViewModel : INotifyPropertyChanged, IDisposable
 {
     private readonly ITrainingProgressSource? _source;
+    private readonly ShadowStripPresentation _strip = new();
     private int _generation;
     private int _shadowCount;
     private double _bestFitness = double.NegativeInfinity;
+    private double _bestShownDistance = double.NaN;
     private double _meanFitness;
     private int _bestGeneration;
     private bool _isTrialActive;
@@ -33,18 +35,24 @@ public sealed class TrainingPresentationViewModel : INotifyPropertyChanged, IDis
     public int Generation => _generation;
     public int ShadowCount => _shadowCount;
     public double BestFitness => _bestFitness;
+
+    /// <summary>Where the best marker stands (#725): the furthest any latest run's front has ended on this map. NaN until known.</summary>
+    public double BestShownDistance => _bestShownDistance;
     public double MeanFitness => _meanFitness;
     public int BestGeneration => _bestGeneration;
     public bool IsTrialActive => _isTrialActive;
     public IReadOnlyList<double> CompletedFitness => _completedFitness;
 
-    public string GenerationText => _isTrialActive
-        ? $"Generation {_generation} · {_shadowCount} shadows racing"
-        : $"Generation {_generation} · Training finished";
+    /// <summary>
+    /// The generation racing now, counted from 1 like <see cref="BestGeneration"/> (#387), or the
+    /// last finished one when none is racing.
+    /// </summary>
+    public string GenerationText => $"Generation {(_isTrialActive ? _generation + 1 : _generation)}";
 
-    public string BestFitnessText => double.IsNegativeInfinity(_bestFitness)
-        ? "Best: —"
-        : $"Best: {Metres.FormatWithUnit(_bestFitness)} (gen {_bestGeneration})";
+    /// <summary>The best marker's flag (#388), such as "Best 4.2 m", or null until there is a best.</summary>
+    public string? BestMarkerText => double.IsFinite(_bestShownDistance)
+        ? $"Best {Metres.FormatWithUnit(_bestShownDistance)}"
+        : null;
 
     public string MeanFitnessText => $"Mean: {Metres.FormatWithUnit(_meanFitness)}";
 
@@ -78,6 +86,18 @@ public sealed class TrainingPresentationViewModel : INotifyPropertyChanged, IDis
         }
     }
 
+    /// <summary>The shadow strip (#387): which shadows it shows and how full their bars are.</summary>
+    public ShadowStripView Strip => _strip.View(Shadows, _generation);
+
+    /// <summary>Ranks the strip by distance so far and shows its first page.</summary>
+    public void SortShadows() => _strip.Sort(Shadows, _generation);
+
+    /// <summary>Pages the strip toward the worse shadows.</summary>
+    public void ShowWorseShadows() => _strip.PageWorse();
+
+    /// <summary>Pages the strip back toward the better shadows.</summary>
+    public void ShowBetterShadows() => _strip.PageBetter();
+
     /// <summary>Follows shadow <paramref name="number"/> (1-based) until another is picked.</summary>
     public void Follow(int number)
     {
@@ -110,6 +130,7 @@ public sealed class TrainingPresentationViewModel : INotifyPropertyChanged, IDis
         int generation,
         int shadowCount,
         double bestFitness,
+        double bestShownDistance,
         double meanFitness,
         int bestGeneration,
         bool isTrialActive,
@@ -123,6 +144,7 @@ public sealed class TrainingPresentationViewModel : INotifyPropertyChanged, IDis
         _generation = generation;
         _shadowCount = shadowCount;
         _bestFitness = bestFitness;
+        _bestShownDistance = bestShownDistance;
         _meanFitness = meanFitness;
         _bestGeneration = bestGeneration;
         _isTrialActive = isTrialActive;
@@ -153,6 +175,7 @@ public sealed class TrainingPresentationViewModel : INotifyPropertyChanged, IDis
             _source!.Generation,
             _source.ShadowCount,
             _source.BestFitness,
+            _source.BestShownDistance,
             _source.MeanFitness,
             _source.BestGeneration,
             _source.IsTrialActive,

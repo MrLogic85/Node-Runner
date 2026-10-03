@@ -1,0 +1,10 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" uid="uid://xk048lcfw270" path="res://src/hosts/TrainSetupHost.cs" id="1_host"]
+[ext_resource type="PackedScene" path="res://scenes/screens/TrainSetupScreen.tscn" id="2_screen"]
+
+[node name="TrainSetupHost" type="Node"]
+script = ExtResource("1_host")
+
+[node name="TrainSetupScreen" parent="." instance=ExtResource("2_screen")]
+unique_name_in_owner = true

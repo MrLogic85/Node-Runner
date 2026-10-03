@@ -27,9 +27,5 @@ public sealed record TrainingHeaderPresentation(string CreationName, string Stat
         return new TrainingHeaderPresentation(creationName, $"{activity} · {MapName(mapId)}", mode == TrainingRunMode.Train);
     }
 
-    public static string MapName(string mapId) => mapId switch
-    {
-        MapIds.Flat => "Flat ground",
-        _ => throw new ArgumentOutOfRangeException(nameof(mapId), mapId, "Unknown map."),
-    };
+    public static string MapName(string mapId) => Maps.Get(mapId).Name;
 }

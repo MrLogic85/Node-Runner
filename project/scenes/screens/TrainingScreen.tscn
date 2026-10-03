@@ -10,6 +10,8 @@
 [ext_resource type="PackedScene" uid="uid://bxxwv8m0f8sml" path="res://scenes/ui/UiStageCard.tscn" id="8_stage_card"]
 [ext_resource type="Script" uid="uid://b4t4jrismbuik" path="res://src/ui/lib/UiIcon.cs" id="9_icon"]
 [ext_resource type="PackedScene" uid="uid://dahbkjg42p0vs" path="res://scenes/widgets/BrainFocusSheet.tscn" id="10_brain_focus"]
+[ext_resource type="PackedScene" path="res://scenes/widgets/ShadowStrip.tscn" id="11_shadow_strip"]
+[ext_resource type="Script" uid="uid://cciq0runnobr4" path="res://src/ui/lib/UiCalloutLayer.cs" id="12_callout_layer"]
 
 [node name="TrainingScreen" type="Control"]
 layout_mode = 3
@@ -113,6 +115,17 @@ theme_override_constants/separation = 0
 unique_name_in_owner = true
 layout_mode = 2
 
+[node name="PartCallouts" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Body/Arena/ArenaView"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("12_callout_layer")
+
 [node name="TrayDivider" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Body/Arena"]
 layout_mode = 2
 mouse_filter = 2
@@ -131,7 +144,13 @@ layout_mode = 2
 mouse_filter = 2
 theme_override_constants/separation = 8
 
-[node name="Pause" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Body/Arena/Tray/TrayRow"]
+[node name="RunControls" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/Arena/Tray/TrayRow"]
+layout_mode = 2
+size_flags_vertical = 8
+mouse_filter = 2
+theme_override_constants/separation = 8
+
+[node name="Pause" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Body/Arena/Tray/TrayRow/RunControls"]
 unique_name_in_owner = true
 layout_mode = 2
 tooltip_text = "Pause"
@@ -141,7 +160,7 @@ IconId = 22
 Kind = 1
 ContentLayout = 1
 
-[node name="Speed" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Body/Arena/Tray/TrayRow"]
+[node name="Speed" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Body/Arena/Tray/TrayRow/RunControls"]
 unique_name_in_owner = true
 layout_mode = 2
 tooltip_text = "Speed"
@@ -152,15 +171,24 @@ IconId = 32
 Kind = 1
 ContentLayout = 1
 
-[node name="Generation" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/Arena/Tray/TrayRow"]
-unique_name_in_owner = true
+[node name="StripColumn" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/Arena/Tray/TrayRow"]
 layout_mode = 2
 size_flags_horizontal = 3
-size_flags_vertical = 0
-text = "Generation 0"
+size_flags_vertical = 8
+mouse_filter = 2
+theme_override_constants/separation = 4
+
+[node name="Generation" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/Arena/Tray/TrayRow/StripColumn"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Generation 1"
 text_overrun_behavior = 3
 script = ExtResource("4_label")
 TextStyle = 7
+
+[node name="ShadowStrip" parent="UiFrame/MarginContainer/Card/Shell/Body/Arena/Tray/TrayRow/StripColumn" instance=ExtResource("11_shadow_strip")]
+unique_name_in_owner = true
+layout_mode = 2
 
 [node name="SignalDivider" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Body"]
 layout_mode = 2

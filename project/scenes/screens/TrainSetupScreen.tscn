@@ -1,0 +1,354 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" uid="uid://cmgh4kwfk8h7a" path="res://src/ui/screens/TrainSetupScreen.cs" id="1_screen"]
+[ext_resource type="PackedScene" uid="uid://dokr6l5stu6ll" path="res://scenes/ui/UiFrame.tscn" id="2_frame"]
+[ext_resource type="PackedScene" uid="uid://gydkh1xys4yo" path="res://scenes/ui/UiToolbar.tscn" id="3_toolbar"]
+[ext_resource type="Script" uid="uid://dk67qmt3brp4e" path="res://src/ui/lib/UiLabel.cs" id="4_label"]
+[ext_resource type="Script" uid="uid://r2ped3g3uiaa" path="res://src/ui/lib/UiButton.cs" id="5_button"]
+[ext_resource type="Script" uid="uid://pdb6hwlullhe" path="res://src/ui/lib/UiSegmentedSwitch.cs" id="6_switch"]
+[ext_resource type="Script" uid="uid://dd0bugxsg7bvl" path="res://src/ui/lib/UiSegment.cs" id="7_segment"]
+[ext_resource type="Script" uid="uid://bau3bwe6tkv48" path="res://src/ui/lib/UiSlider.cs" id="8_slider"]
+[ext_resource type="Script" uid="uid://c6k3pwf0iv80b" path="res://src/ui/lib/UiCheckRow.cs" id="9_check_row"]
+[ext_resource type="Script" uid="uid://byhbh5da7rpk8" path="res://src/ui/lib/UiCard.cs" id="10_card"]
+[ext_resource type="Script" uid="uid://b4t4jrismbuik" path="res://src/ui/lib/UiIcon.cs" id="11_icon"]
+[ext_resource type="Script" uid="uid://c3nkqcdkwd8" path="res://src/ui/widgets/MapPreview.cs" id="12_map_preview"]
+
+[sub_resource type="Resource" id="Resource_train"]
+script = ExtResource("7_segment")
+Text = "Train"
+IconId = 24
+
+[sub_resource type="Resource" id="Resource_simulate"]
+script = ExtResource("7_segment")
+Text = "Simulate"
+IconId = 39
+Disabled = true
+
+[node name="TrainSetupScreen" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_screen")
+
+[node name="UiFrame" parent="." instance=ExtResource("2_frame")]
+layout_mode = 1
+
+[node name="Shell" type="VBoxContainer" parent="UiFrame/MarginContainer/Card" index="0"]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="Toolbar" parent="UiFrame/MarginContainer/Card/Shell" instance=ExtResource("3_toolbar")]
+unique_name_in_owner = true
+layout_mode = 2
+ShowOverflow = false
+
+[node name="ToolbarContent" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/HBoxContainer/MarginContainer" index="0"]
+theme_override_constants/separation = 8
+
+[node name="Heading" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/HBoxContainer/MarginContainer/ToolbarContent" index="0"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+mouse_filter = 2
+theme_override_constants/separation = 0
+
+[node name="Title" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/HBoxContainer/MarginContainer/ToolbarContent/Heading"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Train"
+text_overrun_behavior = 3
+script = ExtResource("4_label")
+TextStyle = 1
+
+[node name="Subtitle" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/HBoxContainer/MarginContainer/ToolbarContent/Heading"]
+unique_name_in_owner = true
+layout_mode = 2
+text = ""
+text_overrun_behavior = 3
+script = ExtResource("4_label")
+TextStyle = 9
+TextColor = 8
+
+[node name="Start" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/HBoxContainer/MarginContainer/ToolbarContent" index="1"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 1
+text = "Start"
+script = ExtResource("5_button")
+IconId = 24
+Kind = 0
+
+[node name="Body" type="MarginContainer" parent="UiFrame/MarginContainer/Card/Shell"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 12
+
+[node name="Columns" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body"]
+layout_mode = 2
+theme_override_constants/separation = 24
+
+[node name="Setup" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 12
+
+[node name="Mode" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/Setup"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="ModeSwitch" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/Setup/Mode"]
+layout_mode = 2
+script = ExtResource("6_switch")
+Segments = Array[ExtResource("7_segment")]([SubResource("Resource_train"), SubResource("Resource_simulate")])
+
+[node name="ModeNote" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/Setup/Mode"]
+layout_mode = 2
+text = "Shadows race and the brain keeps learning. Simulate comes in a later version."
+autowrap_mode = 3
+script = ExtResource("4_label")
+TextStyle = 9
+TextColor = 8
+
+[node name="Shadows" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/Setup"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 1
+script = ExtResource("8_slider")
+LabelText = "Shadows"
+
+[node name="RunLength" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/Setup"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 1
+script = ExtResource("8_slider")
+LabelText = "Run length"
+
+[node name="UntilPowerOut" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/Setup"]
+layout_mode = 2
+script = ExtResource("9_check_row")
+Disabled = true
+LabelText = "Run until power is out"
+Subtext = "Needs a battery or generator"
+
+[node name="Map" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="MapHeading" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/Map"]
+layout_mode = 2
+text = "Map"
+script = ExtResource("4_label")
+TextStyle = 2
+
+[node name="MapCards" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/Map"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Flat" type="PanelContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/Map/MapCards"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 1
+script = ExtResource("10_card")
+Kind = 1
+SizeVariant = 4
+ClipContent = true
+
+[node name="Content" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/Map/MapCards/Flat"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 0
+
+[node name="Preview" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/Map/MapCards/Flat/Content"]
+custom_minimum_size = Vector2(0, 52)
+layout_mode = 2
+mouse_filter = 2
+script = ExtResource("12_map_preview")
+
+[node name="Body" type="MarginContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/Map/MapCards/Flat/Content"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="BodyStack" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/Map/MapCards/Flat/Content/Body"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 4
+
+[node name="MapName" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/Map/MapCards/Flat/Content/Body/BodyStack"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Flat ground"
+text_overrun_behavior = 3
+script = ExtResource("4_label")
+TextStyle = 2
+
+[node name="Status" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/Map/MapCards/Flat/Content/Body/BodyStack"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 4
+
+[node name="StatusIcon" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/Map/MapCards/Flat/Content/Body/BodyStack/Status"]
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+script = ExtResource("11_icon")
+IconId = 5
+IconSize = 0
+Color = 8
+
+[node name="StatusText" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/Map/MapCards/Flat/Content/Body/BodyStack/Status"]
+layout_mode = 2
+text = "Selected"
+script = ExtResource("4_label")
+TextStyle = 9
+TextColor = 8
+
+[node name="Hills" type="PanelContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/Map/MapCards"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 1
+script = ExtResource("10_card")
+Disabled = true
+SizeVariant = 4
+ClipContent = true
+
+[node name="Content" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/Map/MapCards/Hills"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 0
+
+[node name="Preview" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/Map/MapCards/Hills/Content"]
+custom_minimum_size = Vector2(0, 52)
+layout_mode = 2
+mouse_filter = 2
+script = ExtResource("12_map_preview")
+Map = 1
+LineColor = 5
+
+[node name="Body" type="MarginContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/Map/MapCards/Hills/Content"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="BodyStack" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/Map/MapCards/Hills/Content/Body"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 4
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/Map/MapCards/Hills/Content/Body/BodyStack"]
+layout_mode = 2
+text = "Hills"
+text_overrun_behavior = 3
+script = ExtResource("4_label")
+TextStyle = 2
+
+[node name="Status" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/Map/MapCards/Hills/Content/Body/BodyStack"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 4
+
+[node name="StatusIcon" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/Map/MapCards/Hills/Content/Body/BodyStack/Status"]
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+script = ExtResource("11_icon")
+IconId = 15
+IconSize = 0
+Color = 8
+
+[node name="StatusText" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/Map/MapCards/Hills/Content/Body/BodyStack/Status"]
+layout_mode = 2
+text = "Locked"
+script = ExtResource("4_label")
+TextStyle = 9
+TextColor = 8
+
+[node name="Stairs" type="PanelContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/Map/MapCards"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 1
+script = ExtResource("10_card")
+Disabled = true
+SizeVariant = 4
+ClipContent = true
+
+[node name="Content" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/Map/MapCards/Stairs"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 0
+
+[node name="Preview" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/Map/MapCards/Stairs/Content"]
+custom_minimum_size = Vector2(0, 52)
+layout_mode = 2
+mouse_filter = 2
+script = ExtResource("12_map_preview")
+Map = 2
+LineColor = 5
+
+[node name="Body" type="MarginContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/Map/MapCards/Stairs/Content"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="BodyStack" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/Map/MapCards/Stairs/Content/Body"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 4
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/Map/MapCards/Stairs/Content/Body/BodyStack"]
+layout_mode = 2
+text = "Stairs"
+text_overrun_behavior = 3
+script = ExtResource("4_label")
+TextStyle = 2
+
+[node name="Status" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/Map/MapCards/Stairs/Content/Body/BodyStack"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 4
+
+[node name="StatusIcon" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/Map/MapCards/Stairs/Content/Body/BodyStack/Status"]
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+script = ExtResource("11_icon")
+IconId = 15
+IconSize = 0
+Color = 8
+
+[node name="StatusText" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/Map/MapCards/Stairs/Content/Body/BodyStack/Status"]
+layout_mode = 2
+text = "Locked"
+script = ExtResource("4_label")
+TextStyle = 9
+TextColor = 8
+
+[node name="MapNote" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/Map"]
+layout_mode = 2
+text = "More maps come in a later version."
+autowrap_mode = 3
+script = ExtResource("4_label")
+TextStyle = 9
+TextColor = 8
+
+[editable path="UiFrame"]
+[editable path="UiFrame/MarginContainer/Card/Shell/Toolbar"]

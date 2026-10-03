@@ -60,7 +60,7 @@ public sealed class CreationUpdateCoordinator : ICreationUpdateCoordinator
             }
 
             wrote = true;
-            return new CreationDef(source.Id, source.Name, source.Creature, training);
+            return source.WithTraining(training);
         });
 
         return wrote;
@@ -100,7 +100,7 @@ public sealed class CreationUpdateCoordinator : ICreationUpdateCoordinator
         var updated = UpdateIfPresent(id, source =>
         {
             BumpTrainingEpoch(id);
-            return new CreationDef(source.Id, source.Name, source.Creature);
+            return source.WithTraining(null);
         });
 
         if (updated is null)
@@ -120,7 +120,7 @@ public sealed class CreationUpdateCoordinator : ICreationUpdateCoordinator
         return UpdateIfPresent(id, source =>
         {
             BumpTrainingEpoch(id);
-            return new CreationDef(source.Id, source.Name, editedCreature, Refit(source.Training, editedCreature));
+            return source.WithCreature(editedCreature, Refit(source.Training, editedCreature));
         });
     }
 

@@ -45,6 +45,10 @@ public partial class UiWorldView : Control
         AcceptEvent();
     }
 
+    /// <summary>Where <paramref name="worldPosition"/> shows in this view's coordinates.</summary>
+    public Vector2 FromWorld(Vector2 worldPosition) =>
+        WorldViewport.CanvasTransform * worldPosition * (Size / WorldViewport.Size2DOverride);
+
     // The world lays out in canvas units at 100% UI size, which undoes the UI size for it alone,
     // and renders at the pixels the slot covers.
     private void Fit()

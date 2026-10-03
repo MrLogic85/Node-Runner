@@ -44,7 +44,7 @@ public sealed record CreationCardTraining(
         ArgumentNullException.ThrowIfNull(training);
         var run = training.Latest;
         return new CreationCardTraining(
-            Metres.Format(run.Distance),
+            Metres.Format(run.ShownDistance),
             Metres.Format(run.TopSpeed),
             Metres.Format(run.Elevation),
             run.MapId,

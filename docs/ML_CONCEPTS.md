@@ -48,8 +48,10 @@ For each concept:
 - **What:** The scalar that says "this individual was this good". *Choice of
   fitness is the most important design decision in evolutionary ML.*
 - **Where:** 0.4.0 · `project/src/sim/`
-- **How we show it:** 0.4.0 displays the active fitness value. Fitness stays
-  distance only until 0.16.0, which adds several fitness functions at once:
+- **How we show it:** fitness is how far the creature's centre got, but the
+  app shows where its front ended (#725, `docs/TRAINING_LOOP.md` → Trial), so
+  the number on screen matches the ruler. The GA ranks by a number the player
+  does not see directly. Fitness stays distance only until 0.16.0, which adds several fitness functions at once:
   the winner of each one parents the next generation (#317, #546).
 
 ## Mutation rate & exploration/exploitation

@@ -37,6 +37,13 @@ public partial class Evolver : Node
     /// <summary>The generation that reached <see cref="BestFitness"/>; 0 before any has.</summary>
     public int BestGeneration { get; private set; }
 
+    /// <summary>
+    /// The furthest any latest run's front has ended up on this map (#725): the distance the best
+    /// marker shows. It never goes down and never reads below the latest run, whichever run holds
+    /// <see cref="BestFitness"/>. NaN before one is known.
+    /// </summary>
+    public double BestShownDistance { get; private set; } = double.NaN;
+
     public double MeanFitness { get; private set; }
 
     /// <summary>The best genome of the latest finished generation; null before one finishes, or when none of its trials was valid.</summary>
@@ -76,10 +83,10 @@ public partial class Evolver : Node
     /// </summary>
     public bool HasPreviousBest => _opensWithPreviousBest;
 
-    /// <summary>How far the followed shadow has got in its current trial; NaN when none is running.</summary>
+    /// <summary>How far the followed shadow's front has got in its current trial (#725); NaN when none is running.</summary>
     public double FollowedTrialDistance => ShadowDistance(_followedShadow);
 
-    /// <summary>Every shadow's distance so far this trial, NaN for a shadow that is not running.</summary>
+    /// <summary>Every shadow's front distance so far this trial (#725), NaN for a shadow that is not running.</summary>
     public double[] ShadowDistances => Enumerable.Range(0, _trialControllers.Count).Select(ShadowDistance).ToArray();
 
     /// <summary>Raised when the followed shadow changes.</summary>
@@ -140,7 +147,8 @@ public partial class Evolver : Node
     /// candidate: a saved brain's disabled connection genes. Without
     /// <paramref name="resumeGenome"/> the run starts at generation 0 (#537); with it, the saved
     /// elite and its children open the run (#538), and <see cref="BestFitness"/> starts from
-    /// <paramref name="resumeBestFitness"/>, reached in <paramref name="resumeBestGeneration"/>.
+    /// <paramref name="resumeBestFitness"/>, reached in <paramref name="resumeBestGeneration"/>,
+    /// and <see cref="BestShownDistance"/> from <paramref name="resumeBestShownDistance"/>.
     /// </summary>
     public void Start(
         Creature.Creature creature,
@@ -152,6 +160,7 @@ public partial class Evolver : Node
         double[]? resumeGenome = null,
         int resumeGeneration = 0,
         double resumeBestFitness = double.NegativeInfinity,
+        double resumeBestShownDistance = double.NaN,
         int resumeBestGeneration = 0,
         int trialDurationTicks = 600,
         Func<Creature.Creature>? creatureFactory = null,
@@ -196,6 +205,7 @@ public partial class Evolver : Node
         Generation = resumeGeneration;
         BestFitness = resumeGenome is null ? double.NegativeInfinity : resumeBestFitness;
         BestGeneration = resumeGenome is null ? 0 : resumeBestGeneration;
+        BestShownDistance = resumeGenome is null ? double.NaN : resumeBestShownDistance;
         MeanFitness = 0;
         LatestGenome = null;
         LatestRun = null;
@@ -347,6 +357,11 @@ public partial class Evolver : Node
             BestGeneration = Generation;
         }
 
+        if (LatestRun is { } latest && !(latest.FrontDistance <= BestShownDistance))
+        {
+            BestShownDistance = latest.FrontDistance;
+        }
+
         var validFitness = _fitness.Where(double.IsFinite).ToArray();
         MeanFitness = validFitness.Length > 0 ? validFitness.Average() : 0;
 
@@ -369,7 +384,7 @@ public partial class Evolver : Node
 
     private double ShadowDistance(int shadow) =>
         shadow < _trialControllers.Count && _trialControllers[shadow].IsRunning
-            ? _trialControllers[shadow].Measured.Distance
+            ? _trialControllers[shadow].Measured.FrontDistance
             : double.NaN;
 
     private void SetShadowDrawing(int shadow, bool isShadow)

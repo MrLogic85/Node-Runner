@@ -60,9 +60,9 @@ public sealed class BuildPresentationViewModelTests
             Guid.NewGuid(),
             "Worm",
             PairCreature(),
-            TestTraining.State(3, bestDistance: 400, new TrainingRunDef(250, 1, 0, MapIds.Flat))));
+            TestTraining.State(3, bestDistance: 400, new TrainingRunDef(250, 1, 0, MapIds.Flat, frontDistance: 270))));
 
-        new BuildPresentationViewModel(build).LatestDistanceText.ShouldBe("Latest distance 2.5 m");
+        new BuildPresentationViewModel(build).LatestDistanceText.ShouldBe("Latest distance 2.7 m");
     }
 
     [Theory]
@@ -279,7 +279,7 @@ public sealed class BuildPresentationViewModelTests
         strength.ValuesDiffer.ShouldBeTrue();
         strength.Low.ShouldBe(PartParameters.Strength.Slider!.Range.Position(100));
         strength.High.ShouldBe(PartParameters.Strength.Slider!.Range.Position(250));
-        selection.Settings[1].ShouldBe(new ParameterSlider(PartParameterId.Stroke, "Stroke", "±30%", 0.5, 0.5));
+        selection.Settings[1].ShouldBe(new ParameterSlider(PartParameterId.Stroke, "Stroke", "±30%", 0.5, 0.5, 5.0 / 40));
     }
 
     [Fact]

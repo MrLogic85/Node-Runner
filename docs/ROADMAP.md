@@ -107,7 +107,7 @@ has produced the data to decide unlock order.
 
 **Goal:** Train one Creation on several maps.
 
-- A map model and several maps.
+- A map model and several maps, built by seeded generators in chunks (#91).
 - Map checkboxes and the map loop: one generation is one run on one map.
 - Stats per generation and map, and the Stats screen.
 
@@ -459,18 +459,10 @@ part without invalidating that progress.
 **Goal:** Let the player tune how a Creation trains, per session, instead
 of fixed engine constants.
 
-- Trial duration and population size (currently fixed:
-  `TrialController.TrialDurationTicks` defaults to 600 ticks ≈10s
-  in `project/src/sim/TrialController.cs`; `Main.cs`'s
-  `_populationSize = 8` configures the `Evolver`, see
-  `docs/TRAINING_LOOP.md`) become player-facing, session-scoped settings
-  rather than fixed constants. Generations-per-session (running a bounded
-  number of generations before stopping/reviewing, rather than evolving
-  indefinitely) is a new concept to introduce here, not an existing
-  setting.
-- Support the workflow the player described: e.g. many short trials (a
-  couple of seconds × dozens of runs) before switching to longer sessions
-  — a session-level training-profile choice, not a single fixed setup.
+- Shadows (population) and Run length (trial duration) are saved per
+  Creation (#617) and set in Train setup (#194). There are no training
+  profiles and no generation budget: training runs until the player
+  leaves, and the player shortens or lengthens runs between sessions.
 - Natural point to also address the GA-plateau behavior observed in
   practice this session (Best fitness flattening ~generation 50): larger
   population and/or a less "competing conventions"-prone recombination
@@ -570,7 +562,8 @@ Picked from as time and interest allow:
 - **Novelty search** — reward for new behavior instead of raw fitness.
 - **Reinforcement Learning mode** — DQN or policy gradients as a third training
   method.
-- **Procedural maps** (#91). Hand-made maps are in 0.15.0.
+- **More procedural maps** — the generator contract arrives in 0.15.0 (#91);
+  varied maps where different builds win come later.
 - **Curriculum learning** — auto-scaling difficulty.
 - **Memory** — memory cells as a brain part (#126): a late unlock for complex
   maps. Full recurrent networks (GRU/LSTM) stay later.

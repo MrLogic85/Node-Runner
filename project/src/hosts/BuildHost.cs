@@ -125,8 +125,8 @@ public partial class BuildHost : Node, IRoutedScene
         _buildScreen.DeleteSelectionRequested += Build.DeleteSelectedParts;
     }
 
-    // Training opens in its own scene from the saved creation, so the edits save first; only a
-    // creature that cannot train stays in Build.
+    // Train setup and Training open in their own scenes from the saved creation, so the edits save
+    // first; only a creature that cannot train stays in Build.
     private void StartTraining()
     {
         if (_autosave?.CreationId is not { } id || !SaveEdits(playerAsked: true) || !Build.TryGetTrainableCreature(out _))
@@ -141,7 +141,7 @@ public partial class BuildHost : Node, IRoutedScene
             _navigator?.ReplaceCurrent(_route);
         }
 
-        _navigator?.Navigate(new SceneNavigation(new TrainingRoute(id)));
+        _navigator?.Navigate(new SceneNavigation(new TrainSetupRoute(id)));
     }
 
     // The copy keeps the trained brain, so the player can change one and keep the other.
@@ -258,7 +258,7 @@ public partial class BuildHost : Node, IRoutedScene
         if (!CreationActions.TryRunFileOperation(
             () => renamed = Saves.UpdateIfPresent(
                 id,
-                source => new CreationDef(source.Id, name, source.Creature, source.Training)),
+                source => source.WithName(name)),
             $"Renaming Creation '{id}'"))
         {
             return;

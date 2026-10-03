@@ -46,6 +46,36 @@ public sealed class TrainingStateDefTests
     }
 
     [Fact]
+    public void Record_TheBestsFrontDistanceIsTheFurthestWhicheverRunHoldsTheScore()
+    {
+        var previous = TrainingStateDef.Record(null, TestTraining.Brain, 4, new TrainingRunDef(300, 1, 0, MapIds.Flat, frontDistance: 310));
+
+        var further = TrainingStateDef.Record(previous, TestTraining.Brain, 5, new TrainingRunDef(250, 1, 0, MapIds.Flat, frontDistance: 400));
+        var better = TrainingStateDef.Record(previous, TestTraining.Brain, 5, new TrainingRunDef(350, 1, 0, MapIds.Flat, frontDistance: 200));
+
+        further.Best.ShouldBe(new TrainingBestDef(4, 300, MapIds.Flat, 400));
+        better.Best.ShouldBe(new TrainingBestDef(5, 350, MapIds.Flat, 310));
+    }
+
+    [Fact]
+    public void Record_AfterASaveFromBeforeFrontDistance_TakesTheLatestFront()
+    {
+        var previous = new TrainingStateDef(TestTraining.Brain, 4, RunOf(300), new TrainingBestDef(4, 300, MapIds.Flat));
+
+        TrainingStateDef.Record(previous, TestTraining.Brain, 5, new TrainingRunDef(250, 1, 0, MapIds.Flat, frontDistance: 120)).Best
+            .ShouldBe(new TrainingBestDef(4, 300, MapIds.Flat, 120));
+    }
+
+    [Fact]
+    public void Record_OnAnotherMap_StartsThatMapsFrontDistance()
+    {
+        var previous = TrainingStateDef.Record(null, TestTraining.Brain, 4, new TrainingRunDef(300, 1, 0, MapIds.Flat, frontDistance: 310));
+
+        TrainingStateDef.Record(previous, TestTraining.Brain, 5, new TrainingRunDef(100, 1, 0, "hills", frontDistance: 90)).Best
+            .FrontDistance.ShouldBe(90);
+    }
+
+    [Fact]
     public void Record_OnAnotherMap_StartsThatMapsBest()
     {
         var previous = TrainingStateDef.Record(null, TestTraining.Brain, 4, RunOf(300));
@@ -70,5 +100,7 @@ public sealed class TrainingStateDefTests
         Should.Throw<ArgumentOutOfRangeException>(() => new TrainingBestDef(1, -1, MapIds.Flat));
         Should.Throw<ArgumentOutOfRangeException>(() => new TrainingBestDef(1, double.NaN, MapIds.Flat));
         Should.Throw<ArgumentException>(() => new TrainingBestDef(1, 1, " "));
+        Should.Throw<ArgumentOutOfRangeException>(() => new TrainingBestDef(1, 1, MapIds.Flat, -1));
+        Should.Throw<ArgumentOutOfRangeException>(() => new TrainingBestDef(1, 1, MapIds.Flat, double.PositiveInfinity));
     }
 }
