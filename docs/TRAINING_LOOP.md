@@ -29,14 +29,19 @@ layer owns the durable lifecycle, guided by
 (Navigation, BuildLocked), "locked" means exactly "has trained at least one
 generation", not "a training session has finished" (#369, 2026-09-30).
 
-1. An unlocked Build autosaves and opens Train setup through Start training.
+1. Build's play button autosaves and opens Train setup, unlocked or locked.
    Saving a Creation never needs a finished creature; only training does
    (`CreatureReadiness`, #515). Saving an edit keeps any training, even a
    generation that finished while Build was open, and refits its brain to
    the edited anatomy (#516, `docs/CREATURE_MODEL.md` → "A rebuild keeps
    the brain"). Generation, latest and best are kept; Training then resumes
    from the refitted brain.
-2. Train setup opens Training.
+2. Train setup (`TrainSetupRoute`, #194) sets Shadows and Run length,
+   filled from the Creation's saved values or the default (#617). Start
+   saves them on the Creation and opens Training in Train setup's place,
+   so Back from Training returns to Build; Back from Train setup discards
+   the changes. Simulate (#702), map choice (#540) and Run until power is
+   out (0.18) are shown but not available yet; Flat ground is the only map.
 3. Each finished generation is saved. Once the Creation has trained at
    least one generation it is locked (`CreationLock.IsLocked`, #369): the
    anatomy stays as the trained model needs it, so the model cannot
@@ -198,7 +203,9 @@ transition to keep in step with it.
   stores a default (#379). There are no training profiles: tournament size
   (3, or the Shadows count if smaller), mutation rate and strength and
   uniform crossover are fixed. Training runs until the player leaves; there
-  is no generation budget. Uniform crossover preserves parent genes; Blend crossover samples continuous values between the two parent
+  is no generation budget. Best is plain distance, so a longer Run length
+  reaches further: a player after the longest distance trains with the
+  longest runs (#703). Uniform crossover preserves parent genes; Blend crossover samples continuous values between the two parent
   genes, giving a later experiment for the competing-conventions plateau
   without changing the underlying network.
   `StartEvolution()` (`TrainingHost`) runs once when the scene opens. It

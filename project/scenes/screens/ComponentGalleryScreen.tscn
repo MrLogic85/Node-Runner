@@ -61,6 +61,17 @@ IconId = 18
 script = ExtResource("5_theme_segment")
 Text = "Short"
 
+[sub_resource type="Resource" id="Resource_segmented_available"]
+script = ExtResource("5_theme_segment")
+Text = "Available"
+IconId = 24
+
+[sub_resource type="Resource" id="Resource_segmented_disabled"]
+script = ExtResource("5_theme_segment")
+Text = "Disabled"
+IconId = 39
+Disabled = true
+
 [node name="ComponentGalleryScreen" type="Control" unique_id=435801070]
 layout_mode = 3
 anchors_preset = 15
@@ -696,6 +707,11 @@ layout_mode = 2
 script = ExtResource("4_theme_switch")
 Segments = Array[ExtResource("5_theme_segment")]([SubResource("Resource_segmented_distance"), SubResource("Resource_segmented_speed"), SubResource("Resource_segmented_elevation")])
 MatchWidth = false
+
+[node name="DisabledSwitch" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Segmented/Examples"]
+layout_mode = 2
+script = ExtResource("4_theme_switch")
+Segments = Array[ExtResource("5_theme_segment")]([SubResource("Resource_segmented_available"), SubResource("Resource_segmented_disabled")])
 
 [node name="PartsTrayTabs" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content" unique_id=552515420]
 layout_mode = 2
