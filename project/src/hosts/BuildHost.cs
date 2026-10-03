@@ -117,7 +117,7 @@ public partial class BuildHost : Node, IRoutedScene
         _buildScreen.BackRequested += BackFromBuildScreen;
         _buildScreen.CreationNameChanged += RenameActiveCreation;
         _buildScreen.UnlockRequested += RequestUnlock;
-        _buildScreen.ResetTrainingRequested += ResetActiveCreationTraining;
+        _buildScreen.ResetTrainingRequested += RequestResetTraining;
         _buildScreen.CopyCreationRequested += CopyActiveCreation;
         _buildScreen.DeleteCreationRequested += RequestDeleteActiveCreation;
         _buildScreen.PartNameChanged += Build.RenamePart;
@@ -269,24 +269,37 @@ public partial class BuildHost : Node, IRoutedScene
         }
     }
 
-    private void ResetActiveCreationTraining()
+    private void RequestResetTraining()
+    {
+        if (_autosave?.CreationId is null || _dialog.IsOpen)
+        {
+            return;
+        }
+
+        var warning = new BuildPresentationViewModel(Build).ResetTrainingWarning;
+        _dialog.Open(CreationActions.ResetTrainingDialog(warning, ResetActiveCreationTraining));
+    }
+
+    private bool ResetActiveCreationTraining()
     {
         if (_autosave?.CreationId is not { } id || !SaveEdits(playerAsked: true))
         {
-            return;
+            return false;
         }
 
         if (!CreationActions.TryRunFileOperation(
             () => Saves.ResetTraining(id),
             $"Resetting training for Creation {id}"))
         {
-            return;
+            return false;
         }
 
         if (Saves.Get(id) is { } creation)
         {
             EditCreation(creation, openedAsNew: false);
         }
+
+        return true;
     }
 
     private void RequestUnlock()

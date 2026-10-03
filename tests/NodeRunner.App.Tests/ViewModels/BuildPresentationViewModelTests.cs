@@ -76,6 +76,16 @@ public sealed class BuildPresentationViewModelTests
     }
 
     [Fact]
+    public void ResetTrainingWarning_NamesTheTrainingThatIsLost()
+    {
+        var build = new BuildViewModel();
+        build.LoadCreation(new CreationDef(Guid.NewGuid(), "Worm", PairCreature(), TestTraining.State(12)));
+
+        new BuildPresentationViewModel(build).ResetTrainingWarning.ShouldBe(
+            "Worm forgets its 12 generations of training and keeps its body. Copy it first to keep the trained one.");
+    }
+
+    [Fact]
     public void SelectedBeam_ShowsNameEndsAndLengthGuidance()
     {
         var build = new BuildViewModel();

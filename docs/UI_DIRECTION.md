@@ -64,7 +64,10 @@ then the app follows the reference.
   Instead the lock only prevents accidental changes, and a rebuild keeps the
   brain through port matching (#516). So the padlock's Unlock dialog is a
   plain confirm, not a press-and-hold. Owner decision; the lifecycle rule
-  lives in `docs/TRAINING_LOOP.md` step 6.
+  lives in `docs/TRAINING_LOOP.md` step 6. The "One reset" warning moves to
+  Reset training in the overflow (#687): a danger item that opens a danger
+  dialog, "Reset training?", naming the generations lost, with "Hold to
+  reset".
 - **Play is on the rail in both states (#370, 0.13.0).** The reference puts
   Start training in the unlocked top bar and the play button at the bottom
   of the rail only when locked. Instead the primary play button sits at

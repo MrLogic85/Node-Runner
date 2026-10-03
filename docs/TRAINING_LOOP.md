@@ -52,7 +52,7 @@ not "a training session has finished".
    keep the training through step 1, and the Creation is locked again the
    next time Build opens it. A Creation that is unlocked and not changed
    trains on from its saved state. Reset training, in the overflow menu, is
-   the only way to start over.
+   the only way to start over; it asks first with a press-and-hold (#687).
 
 `Evolver` reports training progress; it does not know about the lock. The
 lock follows from the saved training alone, so there is no separate lock

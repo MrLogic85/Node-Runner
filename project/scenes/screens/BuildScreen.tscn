@@ -90,6 +90,7 @@ layout_mode = 2
 script = ExtResource("6_menu_item")
 LabelText = "Reset training"
 IconId = 26
+Kind = 1
 
 [node name="MenuCopyCreation" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/ToolbarMenu" index="3"]
 unique_name_in_owner = true

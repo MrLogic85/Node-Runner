@@ -80,6 +80,10 @@ public sealed class BuildPresentationViewModel
         ? "This can drop after a noisy generation; Training's Best never does. Tap the padlock to change the body. Training is kept."
         : "Start training when you are ready.";
 
+    /// <summary>The Reset training dialog body (#687). Copy sits beside Reset in the overflow, so it is offered.</summary>
+    public string ResetTrainingWarning =>
+        $"{_build.CreationName} forgets its {CreationCardPresentation.FormatCount(_build.TrainingGeneration ?? 0, "generation")} of training and keeps its body. Copy it first to keep the trained one.";
+
     /// <summary>The latest generation's distance (#479); the best ever belongs to Stats.</summary>
     public string LatestDistanceText => $"Latest distance {(_build.LatestDistance is { } distance ? Metres.FormatWithUnit(distance) : "—")}";
 
