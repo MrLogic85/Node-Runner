@@ -12,6 +12,7 @@ public sealed class TrainSetupPresentationViewModelTests
 
         setup.Title.ShouldBe("Train Worm");
         setup.Subtitle.ShouldBe("Not trained yet");
+        setup.MapName.ShouldBe("Flat ground");
         setup.Settings.ShouldBe(TrainSettingsDef.Default);
         setup.Shadows.Readout.ShouldBe("8");
         setup.RunLength.Readout.ShouldBe("10 s");

@@ -41,7 +41,8 @@ generation", not "a training session has finished" (#369, 2026-09-30).
    saves them on the Creation and opens Training in Train setup's place,
    so Back from Training returns to Build; Back from Train setup discards
    the changes. Simulate (#702), map choice (#540) and Run until power is
-   out (0.18) are shown but not available yet; Flat ground is the only map.
+   out (0.18) are shown but not available yet; Flat ground is the only map,
+   and its card takes its name from `Maps.Default` (#444).
 3. Each finished generation is saved. Once the Creation has trained at
    least one generation it is locked (`CreationLock.IsLocked`, #369): the
    anatomy stays as the trained model needs it, so the model cannot
@@ -261,8 +262,7 @@ component READMEs under `reference design/components/` guide its presentation.
 - Training is its own routed scene, `TrainingRoute(creationId)`, with
   `TrainingHost` (`project/src/hosts/`) as its root. `TrainingHost.tscn` instances the
   Training screen (`TrainingScreen.tscn`) and authors the world inside the
-  screen's arena viewport: the background, the ground and its collision
-  shape, the ruler, the spawn marker and the camera. The host adds the
+  screen's arena viewport: the background, the ground line, the ruler, the spawn marker and the camera. The host adds the
   creature and the `Evolver` from the creation's save to that world, so
   leaving the scene frees all of them.
   - **Camera (#668, #675).** `ArenaCamera` frames the followed shadow
@@ -298,12 +298,14 @@ component READMEs under `reference design/components/` guide its presentation.
       while training is paused. Everything runs
       on scaled time, so 2x and 4x look the same, only faster.
   - **Ground and background.** The ground comes from the selected map
-    (`MapDef.Ground`, #443); Training runs and records on `Maps.Flat`
-    (`map-flat`, "Flat ground") until map choice (#540), and fails loud on
-    any other ground. A resumed best ever counts only on the map it was
-    reached on. Flat's collider is a
-    `WorldBoundaryShape2D` through the `Ground` node, so it has no end; its
-    fill and edge reach ±1 000 000 units (10 km), far past any trial, and the
+    (`MapDef.Ground`, #443); Training runs and records on `Maps.Default`
+    (`Maps.Flat`, `map-flat`, "Flat ground") until map choice (#540). A
+    resumed best ever counts only on the map it was reached on. The scene
+    places only the ground line, the `Ground` node (`ArenaGround`,
+    `project/src/sim/`); `ArenaGround.Build` makes the collider (layer 1),
+    fill and edge from the map's ground in code (#444) and fails loud on
+    anything but flat ground. Flat's collider is Godot's endless
+    `WorldBoundaryShape2D`, so it has no end; its fill and edge reach ±1 000 000 units (10 km), far past any trial, and the
     fill as deep, so no zoom shows its bottom. The
     background is a plain `ArenaBackground` fill on a `CanvasLayer` behind
     the world, so it does not move with the camera. There is no grid
