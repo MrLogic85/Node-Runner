@@ -224,10 +224,11 @@ public partial class TrainingHost : Node, IRoutedScene
         _followed = creature;
     }
 
-    // The camera follows the followed shadow's centre, the point its distance is measured from, and
-    // glides to the new one when following changes (#668); it zooms to fit that shadow's box and
-    // keeps the ground in place (#675). The ruler counts from where that point starts: every trial
-    // resets every shadow to the same pose, so it starts there every time.
+    // The camera follows the followed shadow's centre and glides to the new one when following
+    // changes (#668); it zooms to fit that shadow's box and keeps the ground in place (#675). The
+    // ruler counts from where the creature's front-most point starts, the point every shown
+    // distance is measured from (#725): every trial resets every shadow to the same pose, so it
+    // starts there every time.
     private void FollowCreature()
     {
         if (_creature is not { } creature)
@@ -235,7 +236,7 @@ public partial class TrainingHost : Node, IRoutedScene
             return;
         }
 
-        Ruler.StartX = Ruler.ToLocal(creature.CenterOfMass).X;
+        Ruler.StartX = Ruler.ToLocal(creature.Bounds.End).X;
         BestMarker.StartX = Ruler.StartX;
         Camera.GroundY = GroundTopY;
 
@@ -320,10 +321,11 @@ public partial class TrainingHost : Node, IRoutedScene
             GroundTopY,
             resume is null ? null : DirectBrain.Compile(resume.Brain, _creature.Ports),
             resume?.Generation ?? 0,
-            resumeBest?.Distance ?? double.NegativeInfinity,
-            resumeBest?.Generation ?? 0,
-            setup.TrialTicks,
-            CreateCreatureInstance,
+            resumeBestFitness: resumeBest?.Distance ?? double.NegativeInfinity,
+            resumeBestShownDistance: resumeBest?.FrontDistance ?? double.NaN,
+            resumeBestGeneration: resumeBest?.Generation ?? 0,
+            trialDurationTicks: setup.TrialTicks,
+            creatureFactory: CreateCreatureInstance,
             disabledGenes: disabledGenes);
     }
 
@@ -343,10 +345,10 @@ public partial class TrainingHost : Node, IRoutedScene
         Camera.Retarget();
     }
 
-    // The best marker moves only when a generation sets a new best; Show ignores the rest.
+    // The best marker moves only when a generation's front goes past it; Show ignores the rest.
     private void OnTrainingChanged(object? sender, PropertyChangedEventArgs eventArgs) => ShowBest();
 
-    private void ShowBest() => BestMarker.Show(_trainingPresentation.BestFitness, _trainingPresentation.BestMarkerText);
+    private void ShowBest() => BestMarker.Show(_trainingPresentation.BestShownDistance, _trainingPresentation.BestMarkerText);
 
     private void OnGenerationCompleted()
     {
@@ -372,7 +374,7 @@ public partial class TrainingHost : Node, IRoutedScene
         var saves = Saves;
         var epoch = saves.CurrentTrainingEpoch(id);
         var brain = DirectBrain.ToBrainDef(_creature.Ports, genome, _saved?.Brain);
-        var latest = new TrainingRunDef(run.Distance, run.TopSpeed, run.Elevation, _map.Id);
+        var latest = new TrainingRunDef(run.Distance, run.TopSpeed, run.Elevation, _map.Id, run.FrontDistance);
         var training = TrainingStateDef.Record(_saved, brain, _evolver.Generation, latest);
         _saved = training;
         saves.PersistTrainingInBackground(id, epoch, training).ContinueWith(

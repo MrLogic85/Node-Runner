@@ -4,15 +4,15 @@ namespace NodeRunner.ML.Ga;
 /// What one trial measured. An invalid trial (a physics blow-up, see <see cref="TrialMeasurement"/>)
 /// keeps its numbers for logging, but they mean nothing.
 /// </summary>
-public readonly record struct TrialResult(double Distance, double TopSpeed, double Elevation, bool IsValid = true)
+public readonly record struct TrialResult(double Distance, double TopSpeed, double Elevation, double FrontDistance, bool IsValid = true)
 {
     /// <summary>The GA's score: <see cref="Distance"/>, or negative infinity for an invalid trial so it sorts below every valid one.</summary>
     public double Fitness => IsValid ? Distance : double.NegativeInfinity;
 }
 
 /// <summary>
-/// Measures one trial from a sample per physics tick: the creature centre's forward position and
-/// the gap between its lowest part and the ground beneath it.
+/// Measures one trial from a sample per physics tick: the creature centre's forward position, its
+/// front-most point's forward position, and the gap between its lowest part and the ground beneath it.
 /// <list type="bullet">
 /// <item><see cref="TrialResult.Distance"/>: the furthest forward the centre gets from its start.
 /// The running maximum rewards peak progress without penalising a creature that surges forward
@@ -21,8 +21,11 @@ public readonly record struct TrialResult(double Distance, double TopSpeed, doub
 /// over a sliding window so a single physics spike does not count.</item>
 /// <item><see cref="TrialResult.Elevation"/>: the largest ground clearance once the creature has
 /// landed, so the drop it starts every trial with doesn't count. A crawler scores 0.</item>
+/// <item><see cref="TrialResult.FrontDistance"/>: how far ahead of its start the front-most point
+/// is now, or was when the trial ended; never below 0. This is the distance the player sees (#725).
+/// It is not the score.</item>
 /// </list>
-/// A trial is invalid when a sample is not finite or either value moves more than
+/// A trial is invalid when a sample is not finite or any value moves more than
 /// <see cref="MaxPlausibleSpeed"/> allows in one tick: physics blowing up, not a creature moving.
 /// </summary>
 public sealed class TrialMeasurement
@@ -30,7 +33,7 @@ public sealed class TrialMeasurement
     public const double SpeedWindowSeconds = 0.5;
 
     /// <summary>
-    /// The fastest the centre or the lowest point can plausibly move, in creature units per second.
+    /// The fastest the centre, the front or the lowest point can plausibly move, in creature units per second.
     /// Pistons move at most their Max speed (200 units a second by default) and the Worm crawls
     /// well under that. A blow-up jumps thousands of units in one tick.
     /// </summary>
@@ -45,12 +48,15 @@ public sealed class TrialMeasurement
     private int _next;
     private int _count;
     private double _startX;
+    private double _startFrontX;
     private double _distance;
+    private double _frontDistance;
     private double _topSpeed;
     private double _elevation;
     private bool _landed;
     private bool _valid;
     private double _lastX;
+    private double _lastFrontX;
     private double _lastClearance;
 
     public TrialMeasurement(int ticksPerSecond)
@@ -62,18 +68,21 @@ public sealed class TrialMeasurement
         _maxStep = MaxPlausibleSpeed / ticksPerSecond;
     }
 
-    public TrialResult Result => new(_distance, _topSpeed, _elevation, _valid);
+    public TrialResult Result => new(_distance, _topSpeed, _elevation, _frontDistance, _valid);
 
-    /// <summary>Begins a new trial from the centre's starting X position.</summary>
-    public void Reset(double startX)
+    /// <summary>Begins a new trial from the centre's and the front-most point's starting X positions.</summary>
+    public void Reset(double startX, double startFrontX)
     {
         _startX = startX;
+        _startFrontX = startFrontX;
         _distance = 0;
+        _frontDistance = 0;
         _topSpeed = 0;
         _elevation = 0;
         _landed = false;
-        _valid = double.IsFinite(startX);
+        _valid = double.IsFinite(startX) && double.IsFinite(startFrontX);
         _lastX = startX;
+        _lastFrontX = startFrontX;
         _lastClearance = double.NaN;
         _next = 0;
         _count = 0;
@@ -82,21 +91,23 @@ public sealed class TrialMeasurement
 
     /// <summary>Records one physics tick. A non-finite or implausibly far-moved sample makes the trial invalid and is not measured.</summary>
     /// <param name="centerX">The creature centre's X position.</param>
+    /// <param name="frontX">The X position of the creature's front-most point.</param>
     /// <param name="groundClearance">The gap between the lowest part and the ground beneath it; negative when it sinks in.</param>
-    public void Record(double centerX, double groundClearance)
+    public void Record(double centerX, double frontX, double groundClearance)
     {
         if (!_valid)
         {
             return;
         }
 
-        if (!IsPlausible(centerX, groundClearance))
+        if (!IsPlausible(centerX, frontX, groundClearance))
         {
             _valid = false;
             return;
         }
 
         _lastX = centerX;
+        _lastFrontX = frontX;
         _lastClearance = groundClearance;
         _landed |= groundClearance <= LandedClearance;
         if (_landed)
@@ -111,12 +122,15 @@ public sealed class TrialMeasurement
 
         Push(centerX);
         _distance = Math.Max(_distance, centerX - _startX);
+        _frontDistance = Math.Max(0, frontX - _startFrontX);
     }
 
-    private bool IsPlausible(double centerX, double groundClearance) =>
+    private bool IsPlausible(double centerX, double frontX, double groundClearance) =>
         double.IsFinite(centerX)
+        && double.IsFinite(frontX)
         && double.IsFinite(groundClearance)
         && Math.Abs(centerX - _lastX) <= _maxStep
+        && Math.Abs(frontX - _lastFrontX) <= _maxStep
         && (double.IsNaN(_lastClearance) || Math.Abs(groundClearance - _lastClearance) <= _maxStep);
 
     private void Push(double centerX)

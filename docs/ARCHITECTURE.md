@@ -246,8 +246,9 @@ At 60 Hz (`_physics_process`), for the creature currently under evaluation:
    per-tick allocations.
 3. **Act.** `PistonLink.Drive(position, strength, step)` pushes its two
    nodes toward the target length (`Piston.Step`).
-4. **Score.** `TrialMeasurement` records distance, top speed and elevation
-   for this trial; distance is the fitness.
+4. **Score.** `TrialMeasurement` records this trial's centre distance (the
+   fitness), front distance (shown), top speed and elevation; see
+   `docs/TRAINING_LOOP.md` → Trial.
 
 After N ticks (say 600 = 10 s at 60 Hz) each slot's trial ends. `Evolver`
 records its fitness, assigns the slot the next pending genome, and, once every

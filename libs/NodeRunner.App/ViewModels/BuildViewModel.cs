@@ -88,7 +88,7 @@ public sealed class BuildViewModel : INotifyPropertyChanged
         _selectedPistonId = null;
         _creationName = string.IsNullOrWhiteSpace(creationName) ? NewCreationWorkflow.UntitledName : creationName;
         _trainingGeneration = training?.Generation;
-        _latestDistance = training?.Latest.Distance;
+        _latestDistance = training?.Latest.ShownDistance;
         _moveOnly = moveOnly;
         ActiveTool = BuildTool.Move;
         StatusMessage = null;

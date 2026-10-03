@@ -207,12 +207,14 @@
       "distance": 3.5,
       "topSpeed": 1.25,
       "elevation": 0.5,
-      "mapId": "map-flat"
+      "mapId": "map-flat",
+      "frontDistance": 3.75
     },
     "best": {
       "generation": 9,
       "distance": 4.25,
-      "mapId": "map-flat"
+      "mapId": "map-flat",
+      "frontDistance": 4.5
     }
   },
   "trainSettings": {

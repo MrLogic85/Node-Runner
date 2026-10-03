@@ -5,10 +5,10 @@ using NodeRunner.Ui.Lib;
 namespace NodeRunner.Ui.Widgets;
 
 /// <summary>
-/// The best distance ever on this map, marked in the Training arena (#388): a dashed line up from
+/// The best ever on this map, marked in the Training arena at its shown distance (#388, #725): a dashed line up from
 /// the ground, the node's origin, to a flag near the top of the view that reads "Best 4.2 m". It
 /// stands at that distance on the ruler, behind every creature, and keeps its screen size at any
-/// zoom. Hidden until there is a best; it jumps when a generation sets a new one. It fades back
+/// zoom. Hidden until its distance is known; it jumps when a generation's front goes past it. It fades back
 /// like a shadow while a part's name is shown, which may cover it.
 /// </summary>
 public partial class ArenaBestMarker : Node2D

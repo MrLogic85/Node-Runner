@@ -293,6 +293,13 @@
             },
             "mapId": {
               "type": "string"
+            },
+            "frontDistance": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "default": null
             }
           },
           "required": [
@@ -314,6 +321,13 @@
             },
             "mapId": {
               "type": "string"
+            },
+            "frontDistance": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "default": null
             }
           },
           "required": [

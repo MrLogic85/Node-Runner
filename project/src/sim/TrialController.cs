@@ -38,7 +38,7 @@ public partial class TrialController : Node
     /// <summary>The Y of the ground's top edge, which elevation is measured from.</summary>
     public float GroundTopY { get; set; }
 
-    /// <summary>Raised when a trial finishes, with what it measured; its distance is the fitness.</summary>
+    /// <summary>Raised when a trial finishes, with what it measured; its centre's distance is the fitness.</summary>
     public event Action<TrialResult>? TrialCompleted;
 
     public override void _Ready()
@@ -63,7 +63,7 @@ public partial class TrialController : Node
 
         _creature = creature;
         _creature.ResetPose(GroundTopY - StartClearance);
-        _measurement.Reset(_creature.CenterOfMass.X);
+        _measurement.Reset(_creature.CenterOfMass.X, _creature.Bounds.End.X);
         _elapsedTicks = 0;
         IsRunning = true;
     }
@@ -83,7 +83,7 @@ public partial class TrialController : Node
         }
 
         _elapsedTicks++;
-        _measurement.Record(_creature.CenterOfMass.X, GroundTopY - _creature.LowestPointY);
+        _measurement.Record(_creature.CenterOfMass.X, _creature.Bounds.End.X, GroundTopY - _creature.LowestPointY);
 
         if (_elapsedTicks >= TrialDurationTicks)
         {

@@ -59,9 +59,9 @@ public sealed class BuildPresentationViewModelTests
             Guid.NewGuid(),
             "Worm",
             PairCreature(),
-            TestTraining.State(3, bestDistance: 400, new TrainingRunDef(250, 1, 0, MapIds.Flat))));
+            TestTraining.State(3, bestDistance: 400, new TrainingRunDef(250, 1, 0, MapIds.Flat, frontDistance: 270))));
 
-        new BuildPresentationViewModel(build).LatestDistanceText.ShouldBe("Latest distance 2.5 m");
+        new BuildPresentationViewModel(build).LatestDistanceText.ShouldBe("Latest distance 2.7 m");
     }
 
     [Theory]
