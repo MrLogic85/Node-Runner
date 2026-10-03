@@ -3,8 +3,8 @@ using Godot;
 namespace NodeRunner.Ui.Lib;
 
 /// <summary>
-/// Info row (<c>c_info_row</c>): the handle it explains, drawn exactly as the round button on the
-/// canvas (<see cref="UiSelectionHandle"/>), with a title and one line of help.
+/// Info row (<c>c_info_row</c>): a selection handle explanation, or with
+/// <see cref="ShowHandle"/> off, a plain muted glyph for tool help.
 /// </summary>
 [Tool]
 [GlobalClass]
@@ -16,6 +16,7 @@ public partial class UiInfoRow : HBoxContainer
     private UiIconId _iconId = UiIconId.None;
     private string _title = string.Empty;
     private string _help = string.Empty;
+    private bool _showHandle = true;
     private CenterContainer? _ring;
     private TextureRect? _icon;
     private UiLabel? _titleLabel;
@@ -62,6 +63,17 @@ public partial class UiInfoRow : HBoxContainer
         }
     }
 
+    [Export]
+    public bool ShowHandle
+    {
+        get => _showHandle;
+        set
+        {
+            _showHandle = value;
+            Refresh();
+        }
+    }
+
     public override void _EnterTree() => RequestReady();
 
     public override void _Ready() => Refresh();
@@ -87,9 +99,8 @@ public partial class UiInfoRow : HBoxContainer
 
     public override void _Draw()
     {
-        if (_ring is not null)
+        if (ShowHandle && _ring is not null)
         {
-            // The reference's panel rows show every handle on a panel disc, Move included.
             UiSelectionHandle.DrawRoundButton(this, _ring.Position + (_ring.Size * 0.5f), accentFill: false);
         }
     }
@@ -105,11 +116,11 @@ public partial class UiInfoRow : HBoxContainer
         EnsureContent();
         AddThemeConstantOverride("separation", UiSize.Space.S2);
 
-        var halo = UiThemeLookup.Color(this, UiTokens.Color.Halo);
+        var tint = UiThemeLookup.Color(this, ShowHandle ? UiTokens.Color.Halo : UiTokens.Color.Muted);
         bool hasIcon = IconId != UiIconId.None;
         _icon!.Visible = hasIcon;
         _icon.Texture = hasIcon ? UiIcons.Load(IconId, UiIconSize.Standard) : null;
-        _icon.SelfModulate = halo;
+        _icon.SelfModulate = tint;
 
         _titleLabel!.Text = Title;
         _helpLabel!.Text = Help;

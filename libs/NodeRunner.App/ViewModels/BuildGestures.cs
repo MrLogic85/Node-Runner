@@ -101,7 +101,7 @@ public sealed class BuildGestures
     /// <summary>Raised when the gesture's own visuals change (beam preview, selection box), so the canvas can redraw.</summary>
     public event EventHandler? Changed;
 
-    /// <summary>Raised just before a Move or Select drag first moves nodes; the argument is every node it moves.</summary>
+    /// <summary>Raised just before a Parts or Select drag first moves nodes; the argument is every node it moves.</summary>
     public event EventHandler<IReadOnlyCollection<int>>? NodeDragStarting;
 
     /// <summary>The node a Beam or Piston drag started from.</summary>
@@ -381,7 +381,7 @@ public sealed class BuildGestures
             {
                 _build.ClearSelection();
             }
-            else if (_pressTool == BuildTool.Move && _pressedNode is { } dragged)
+            else if (_pressTool == BuildTool.Parts && _pressedNode is { } dragged)
             {
                 _dragOrigin = NodeById(dragged).Position;
                 NodeDragStarting?.Invoke(this, [dragged]);
@@ -407,10 +407,10 @@ public sealed class BuildGestures
 
         switch (_pressTool)
         {
-            case BuildTool.Move when _pressedNode is { } node:
+            case BuildTool.Parts when _pressedNode is { } node:
                 _build.MoveNode(node, position);
                 break;
-            case BuildTool.Move:
+            case BuildTool.Parts:
             case BuildTool.Select when _selectPress == SelectPress.Pan:
                 View.PanBy(new Vector2D(viewPosition.X - lastViewPosition.X, viewPosition.Y - lastViewPosition.Y));
                 break;
@@ -460,7 +460,7 @@ public sealed class BuildGestures
         {
             case BuildTool when _pressedHandle == SelectionHandle.Aim:
                 break;
-            case BuildTool.Move when !_dragging:
+            case BuildTool.Parts when !_dragging:
                 TapMove();
                 break;
             case BuildTool.Beam when !_dragging:

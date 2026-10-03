@@ -8,7 +8,6 @@
 [ext_resource type="Script" uid="uid://dah3q1p7ikjlm" path="res://src/ui/lib/UiMenuActionItem.cs" id="6_menu_item"]
 [ext_resource type="PackedScene" uid="uid://xh7n0i08nbrq" path="res://scenes/ui/UiButtonBar.tscn" id="7_button_bar"]
 [ext_resource type="Script" uid="uid://p55oa8ljjmna" path="res://src/ui/widgets/BuildCanvas.cs" id="8_canvas"]
-[ext_resource type="Script" uid="uid://b32bnhbgasedd" path="res://src/ui/lib/UiChip.cs" id="9_chip"]
 [ext_resource type="PackedScene" uid="uid://c7sdp4nel2qx" path="res://scenes/ui/UiSidePanel.tscn" id="10_side_panel"]
 [ext_resource type="Script" uid="uid://dk67qmt3brp4e" path="res://src/ui/lib/UiLabel.cs" id="12_label"]
 [ext_resource type="Script" uid="uid://b4t4jrismbuik" path="res://src/ui/lib/UiIcon.cs" id="14_icon"]
@@ -117,15 +116,15 @@ theme_override_constants/separation = 0
 layout_mode = 2
 mouse_filter = 0
 
-[node name="MoveTool" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Body/ButtonBar/ButtonBarPadding/ButtonBarContent" index="0"]
+[node name="PartsTool" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Body/ButtonBar/ButtonBarPadding/ButtonBarContent" index="0"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 4
 size_flags_vertical = 4
 mouse_filter = 1
-text = "Move"
+text = "Parts"
 script = ExtResource("5_button")
-IconId = 20
+IconId = 64
 ContentLayout = 1
 Selected = true
 
@@ -234,30 +233,6 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 script = ExtResource("40_callout_layer")
-
-[node name="CanvasOverlay" type="MarginContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/CanvasSlot"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
-theme_override_constants/margin_left = 8
-theme_override_constants/margin_top = 8
-theme_override_constants/margin_right = 8
-theme_override_constants/margin_bottom = 8
-
-[node name="PartsLockedChip" type="PanelContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/CanvasSlot/CanvasOverlay"]
-unique_name_in_owner = true
-visible = false
-layout_mode = 2
-size_flags_horizontal = 0
-size_flags_vertical = 0
-mouse_filter = 2
-script = ExtResource("9_chip")
-Text = "Parts locked · drag to move"
-IconId = 15
 
 [node name="PartDropZone" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Body/CanvasSlot"]
 layout_mode = 1
@@ -520,37 +495,65 @@ script = ExtResource("12_label")
 TextStyle = 9
 TextColor = 8
 
-[node name="PanelSpacer" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent" index="4"]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_vertical = 3
-mouse_filter = 2
-
-[node name="ToolLine" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent" index="5"]
+[node name="JointHelp" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent" index="4"]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="ToolLineIcon" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/ToolLine"]
-unique_name_in_owner = true
+[node name="JointHelpAdd" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/JointHelp"]
 layout_mode = 2
-size_flags_vertical = 4
-mouse_filter = 2
-script = ExtResource("14_icon")
+script = ExtResource("19_info_row")
+IconId = 14
+Title = "Tap empty space"
+Help = "Adds a joint."
+ShowHandle = false
+
+[node name="JointHelpSplit" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/JointHelp"]
+layout_mode = 2
+script = ExtResource("19_info_row")
 IconId = 1
-IconSize = 1
-Color = 8
+Title = "Tap a beam"
+Help = "Splits it with a joint."
+ShowHandle = false
 
-[node name="ToolHint" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/ToolLine"]
+[node name="SelectHelp" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent" index="5"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="SelectHelpBox" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/SelectHelp"]
+layout_mode = 2
+script = ExtResource("19_info_row")
+IconId = 29
+Title = "Drag a box"
+Help = "Selects the parts inside."
+ShowHandle = false
+
+[node name="SelectHelpTap" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/SelectHelp"]
+layout_mode = 2
+script = ExtResource("19_info_row")
+IconId = 47
+Title = "Tap a part"
+Help = "Adds or removes it."
+ShowHandle = false
+
+[node name="SelectHelpHandles" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/SelectHelp"]
+layout_mode = 2
+script = ExtResource("19_info_row")
+IconId = 20
+Title = "Handles"
+Help = "Move, rotate or scale a group."
+ShowHandle = false
+
+[node name="PanelSpacer" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent" index="6"]
 unique_name_in_owner = true
 layout_mode = 2
-size_flags_horizontal = 3
-script = ExtResource("12_label")
-TextStyle = 9
-TextColor = 8
+size_flags_vertical = 3
+mouse_filter = 2
 
-[node name="Readiness" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent" index="6"]
+[node name="Readiness" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent" index="7"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_constants/separation = 8

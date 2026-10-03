@@ -6,14 +6,41 @@ namespace NodeRunner.App.Tests.ViewModels;
 
 public sealed class BuildPresentationViewModelTests
 {
-    [Theory]
-    [InlineData(BuildTool.Move, "Drag a joint to move it. Tap a part to select it.")]
-    [InlineData(BuildTool.Beam, "Pick a link, then drag joint to joint.")]
-    [InlineData(BuildTool.Joint, "Tap empty space to add a joint, or tap a beam to split it.")]
-    [InlineData(BuildTool.Select, "Tap parts to select them. Drag selected parts to move them together.")]
-    public void ToolHint_ReturnsUserFacingHintForTool(BuildTool tool, string expected)
+    [Fact]
+    public void ToolPanel_WithPartsAndNothingSelected_ShowsTray()
     {
-        BuildPresentationViewModel.ToolHint(tool).ShouldBe(expected);
+        var panel = new BuildPresentationViewModel(new BuildViewModel { ActiveTool = BuildTool.Parts }).ToolPanel;
+
+        panel.Mode.ShouldBe(ToolPanelMode.PartsTray);
+        panel.Title.ShouldBe("Parts");
+    }
+
+    [Fact]
+    public void ToolPanel_WithBeamsAndNothingSelected_ShowsLinkList()
+    {
+        var presentation = new BuildPresentationViewModel(new BuildViewModel { ActiveTool = BuildTool.Beam });
+
+        presentation.ToolPanel.Mode.ShouldBe(ToolPanelMode.LinkList);
+        presentation.ToolPanel.Title.ShouldBe("Beams");
+        presentation.LinkList.ShouldNotBeNull();
+    }
+
+    [Fact]
+    public void ToolPanel_WithJointAndNothingSelected_ShowsJointHelp()
+    {
+        var panel = new BuildPresentationViewModel(new BuildViewModel { ActiveTool = BuildTool.Joint }).ToolPanel;
+
+        panel.Mode.ShouldBe(ToolPanelMode.JointHelp);
+        panel.Title.ShouldBe("Joint");
+    }
+
+    [Fact]
+    public void ToolPanel_WithSelectAndNothingSelected_ShowsSelectHelp()
+    {
+        var panel = new BuildPresentationViewModel(new BuildViewModel { ActiveTool = BuildTool.Select }).ToolPanel;
+
+        panel.Mode.ShouldBe(ToolPanelMode.SelectHelp);
+        panel.Title.ShouldBe("Select");
     }
 
     [Fact]
@@ -22,7 +49,6 @@ public sealed class BuildPresentationViewModelTests
         var presentation = new BuildPresentationViewModel(new BuildViewModel { ActiveTool = BuildTool.Beam });
 
         var list = presentation.LinkList.ShouldNotBeNull();
-        list.Title.ShouldBe("Beams");
         list.Name.ShouldBe("Links");
         list.Rows.Select(row => (row.Link, row.State)).ShouldBe([
             (BuildLink.Beam, LinkListRowState.Selected),
@@ -69,7 +95,7 @@ public sealed class BuildPresentationViewModelTests
     }
 
     [Theory]
-    [InlineData(BuildTool.Move)]
+    [InlineData(BuildTool.Parts)]
     [InlineData(BuildTool.Joint)]
     [InlineData(BuildTool.Select)]
     public void LinkList_HidesForOtherTools(BuildTool tool)
@@ -89,10 +115,20 @@ public sealed class BuildPresentationViewModelTests
         var presentation = new BuildPresentationViewModel(build);
 
         presentation.LockTopologyTools.ShouldBeTrue();
-        presentation.InspectorRole.ShouldBe("Tool: Move");
-        presentation.InspectorValues.ShouldBe("Drag an existing node to reposition it. Training is kept.");
+        presentation.ActiveTool.ShouldBe(BuildTool.Parts);
+        presentation.ToolPanel.Mode.ShouldBe(ToolPanelMode.None);
         presentation.IsLocked.ShouldBeTrue();
         presentation.IsTrained.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Selection_ReplacesToolPanel()
+    {
+        var build = new BuildViewModel { ActiveTool = BuildTool.Select };
+        build.Load(PairCreature());
+        build.ToggleSelected(new(CreatureElementKind.Node, 1));
+
+        new BuildPresentationViewModel(build).ToolPanel.Mode.ShouldBe(ToolPanelMode.None);
     }
 
     [Fact]

@@ -9,7 +9,7 @@ public class BuildGesturesTests
     private static readonly Vector2D _empty = new(300, 300);
 
     [Fact]
-    public void Move_TapOnEmptyCanvas_DeselectsWithoutAddingAJoint()
+    public void Parts_TapOnEmptyCanvas_DeselectsWithoutAddingAJoint()
     {
         var (build, gestures) = TwoJointsAndABeam();
         build.ReplaceSelection([1]);
@@ -21,7 +21,7 @@ public class BuildGesturesTests
     }
 
     [Fact]
-    public void Move_TapOnJoint_SelectsOnlyThatJoint()
+    public void Parts_TapOnJoint_SelectsOnlyThatJoint()
     {
         var (build, gestures) = TwoJointsAndABeam();
         build.ReplaceSelection([1]);
@@ -32,7 +32,7 @@ public class BuildGesturesTests
     }
 
     [Fact]
-    public void Move_TapOnBeam_SelectsTheBeam()
+    public void Parts_TapOnBeam_SelectsTheBeam()
     {
         var (build, gestures) = TwoJointsAndABeam();
 
@@ -42,7 +42,7 @@ public class BuildGesturesTests
     }
 
     [Fact]
-    public void Move_DragJoint_MovesItWithoutChangingSelection()
+    public void Parts_DragJoint_MovesItWithoutChangingSelection()
     {
         var (build, gestures) = TwoJointsAndABeam();
         IReadOnlyCollection<int>? dragStarted = null;
@@ -58,7 +58,7 @@ public class BuildGesturesTests
     }
 
     [Fact]
-    public void Move_SmallWobbleOnJoint_IsATapNotAMove()
+    public void Parts_SmallWobbleOnJoint_IsATapNotAMove()
     {
         var (build, gestures) = TwoJointsAndABeam();
 
@@ -71,7 +71,7 @@ public class BuildGesturesTests
     }
 
     [Fact]
-    public void Move_DragOnEmptyCanvas_PansTheViewWithoutEditing()
+    public void Parts_DragOnEmptyCanvas_PansTheViewWithoutEditing()
     {
         var (build, gestures) = TwoJointsAndABeam();
         build.ReplaceSelection([1]);
@@ -88,7 +88,7 @@ public class BuildGesturesTests
     }
 
     [Fact]
-    public void Move_DragOnEmptyCanvas_TellsTheCanvasToRedraw()
+    public void Parts_DragOnEmptyCanvas_TellsTheCanvasToRedraw()
     {
         var (_, gestures) = TwoJointsAndABeam();
         var changes = 0;
@@ -101,7 +101,7 @@ public class BuildGesturesTests
     }
 
     [Fact]
-    public void Move_DragOnABeam_PansWithoutEditing()
+    public void Parts_DragOnABeam_PansWithoutEditing()
     {
         var (build, gestures) = TwoJointsAndABeam();
         var changes = CountChanges(build);
@@ -151,7 +151,7 @@ public class BuildGesturesTests
     [Fact]
     public void SecondFinger_PutsBackAJointTheFirstFingerAlreadyMoved()
     {
-        var (build, gestures) = ThreeLooseJoints(BuildTool.Move);
+        var (build, gestures) = ThreeLooseJoints(BuildTool.Parts);
 
         gestures.Press(new Vector2D(0, 0), 0);
         gestures.Drag(new Vector2D(0, 40), 0);
@@ -225,7 +225,7 @@ public class BuildGesturesTests
     [Fact]
     public void ZoomedIn_TapsLandOnTheCreatureUnderTheFinger()
     {
-        var (build, gestures) = ThreeLooseJoints(BuildTool.Move);
+        var (build, gestures) = ThreeLooseJoints(BuildTool.Parts);
         gestures.View.ZoomAbout(new Vector2D(0, 0), 2);
         gestures.View.PanBy(new Vector2D(50, 50));
 
@@ -308,7 +308,7 @@ public class BuildGesturesTests
     [Fact]
     public void Cancel_PutsBackAJointTheDragAlreadyMoved()
     {
-        var (build, gestures) = ThreeLooseJoints(BuildTool.Move);
+        var (build, gestures) = ThreeLooseJoints(BuildTool.Parts);
 
         gestures.Press(new Vector2D(0, 0));
         gestures.Drag(new Vector2D(0, 40));
@@ -321,7 +321,7 @@ public class BuildGesturesTests
     [Fact]
     public void ZoomedOut_HitRadiusStaysFingerSized()
     {
-        var (build, gestures) = ThreeLooseJoints(BuildTool.Move);
+        var (build, gestures) = ThreeLooseJoints(BuildTool.Parts);
         gestures.View.ZoomAbout(new Vector2D(0, 0), 0.5);
 
         Tap(gestures, new Vector2D(-(BuildGestures.NodeHitRadius - 2), 0));
@@ -706,9 +706,9 @@ public class BuildGesturesTests
     }
 
     [Fact]
-    public void Move_DragWithASelection_ReportsOnlyTheDraggedJointAsMoving()
+    public void Parts_DragWithASelection_ReportsOnlyTheDraggedJointAsMoving()
     {
-        var (build, gestures) = ThreeLooseJoints(BuildTool.Move);
+        var (build, gestures) = ThreeLooseJoints(BuildTool.Parts);
         build.ReplaceSelection([1, 2]);
         IReadOnlyCollection<int>? moving = null;
         gestures.NodeDragStarting += (_, nodes) => moving = nodes;
@@ -1372,7 +1372,7 @@ public class BuildGesturesTests
         gestures.SelectionHandles.Single(entry => entry.Handle == handle).Position;
 
     [Fact]
-    public void Move_TapOnASensorPicture_SelectsTheSensorNotTheBeam()
+    public void Parts_TapOnASensorPicture_SelectsTheSensorNotTheBeam()
     {
         var (build, gestures) = BeamWithSensor(100, SensorKind.Accelerometer);
 
@@ -1383,7 +1383,7 @@ public class BuildGesturesTests
     }
 
     [Fact]
-    public void Move_TapOnAPictureWithinAJointsReach_SelectsTheSensor()
+    public void Parts_TapOnAPictureWithinAJointsReach_SelectsTheSensor()
     {
         // A short beam: the picture sits inside both joints' touch reach but off their rings.
         var (build, gestures) = BeamWithSensor(50, SensorKind.Accelerometer);
@@ -1394,7 +1394,7 @@ public class BuildGesturesTests
     }
 
     [Fact]
-    public void Move_TapOnAJointDisc_StillWinsOverASensor()
+    public void Parts_TapOnAJointDisc_StillWinsOverASensor()
     {
         var (build, gestures) = BeamWithSensor(30, SensorKind.Accelerometer);
 
@@ -1502,7 +1502,7 @@ public class BuildGesturesTests
     }
 
     [Theory]
-    [InlineData(BuildTool.Move)]
+    [InlineData(BuildTool.Parts)]
     [InlineData(BuildTool.Joint)]
     [InlineData(BuildTool.Beam)]
     [InlineData(BuildTool.Select)]

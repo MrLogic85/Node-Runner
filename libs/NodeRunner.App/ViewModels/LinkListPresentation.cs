@@ -22,7 +22,6 @@ public sealed record LinkListRow(BuildLink Link, string Name, LinkListRowState S
 }
 
 public sealed record LinkListPresentation(
-    string Title,
     string Name,
     string LockedNote,
     IReadOnlyList<LinkListRow> Rows,
@@ -32,7 +31,6 @@ public sealed record LinkListPresentation(
 public static class BuildLinkList
 {
     public static LinkListPresentation Create(BuildLink picked) => new(
-        "Beams",
         "Links",
         PartTray.ComingLater,
         [

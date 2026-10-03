@@ -115,14 +115,14 @@ size_flags_vertical = 3
 [node name="ButtonBar" parent="UiFrame/MarginContainer/Card/Shell/HShell" unique_id=341812922 instance=ExtResource("10_button_bar")]
 layout_mode = 2
 
-[node name="Move" type="Button" parent="UiFrame/MarginContainer/Card/Shell/HShell/ButtonBar/ButtonBarPadding/ButtonBarContent" parent_id_path=PackedInt32Array(341812922, 1236278218) index="0" unique_id=1347996584]
+[node name="Parts" type="Button" parent="UiFrame/MarginContainer/Card/Shell/HShell/ButtonBar/ButtonBarPadding/ButtonBarContent" parent_id_path=PackedInt32Array(341812922, 1236278218) index="0" unique_id=1347996584]
 layout_mode = 2
 size_flags_horizontal = 4
 size_flags_vertical = 4
 mouse_filter = 1
-text = "Move"
+text = "Parts"
 script = ExtResource("12_button")
-IconId = 20
+IconId = 64
 ContentLayout = 1
 Selected = true
 metadata/_custom_type_script = "uid://r2ped3g3uiaa"
@@ -132,7 +132,7 @@ layout_mode = 2
 size_flags_horizontal = 4
 size_flags_vertical = 4
 mouse_filter = 1
-text = "Beam"
+text = "Beams"
 script = ExtResource("12_button")
 IconId = 1
 ContentLayout = 1

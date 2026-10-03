@@ -69,7 +69,6 @@ public sealed class PartTrayTests
     {
         var list = BuildLinkList.Create(BuildLink.Beam);
 
-        list.Title.ShouldBe("Beams");
         list.Name.ShouldBe("Links");
         list.LockedNote.ShouldBe("Coming later");
         list.HelpText.ShouldBe("A rigid rod. Drag joint to joint.");
@@ -84,16 +83,5 @@ public sealed class PartTrayTests
     public void LinkList_HelpFollowsPickedLink()
     {
         BuildLinkList.Create(BuildLink.Piston).HelpText.ShouldBe("The brain pushes and pulls it. Drag joint to joint.");
-    }
-
-    [Theory]
-    [InlineData(BuildTool.Move, "")]
-    [InlineData(BuildTool.Beam, "")]
-    [InlineData(BuildTool.Joint, "Tap space or a beam.")]
-    [InlineData(BuildTool.Select, "Tap or box parts.")]
-    public void PanelToolHint_ShowsOnlyForRailToolsThatNeedIt(BuildTool tool, string expected)
-    {
-        new BuildPresentationViewModel(new BuildViewModel { IsActive = true, ActiveTool = tool })
-            .PanelToolHint.ShouldBe(expected);
     }
 }
