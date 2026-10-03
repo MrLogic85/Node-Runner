@@ -82,7 +82,7 @@ public sealed class TrainSetupPresentationViewModelTests
         var changes = 0;
         setup.Changed += (_, _) => changes++;
 
-        setup.SetShadows(setup.Shadows.Position);
+        setup.SetShadows(setup.Shadows.Position!.Value);
         setup.SetShadows(1);
 
         changes.ShouldBe(1);
@@ -123,8 +123,8 @@ public sealed class TrainSetupPresentationViewModelTests
         changes.ShouldBe(1);
         setup.Mode.ShouldBe(TrainingRunMode.Simulate);
         setup.ModeNote.ShouldBe("Plays the trained brain with one shadow. Nothing is learned or saved.");
-        setup.Shadows.ShouldBe(new SettingSlider("Shadows", "1", 0, setup.Shadows.Step, Disabled: true));
-        setup.RunLength.ShouldBe(new SettingSlider("Run length", "Until you leave", 1, setup.RunLength.Step, Disabled: true));
+        setup.Shadows.ShouldBe(new SettingSlider("Shadows", "1", null, setup.Shadows.Step, Disabled: true));
+        setup.RunLength.ShouldBe(new SettingSlider("Run length", "Until you leave", null, setup.RunLength.Step, Disabled: true));
         setup.Settings.ShouldBe(TrainSettingsDef.Default);
     }
 

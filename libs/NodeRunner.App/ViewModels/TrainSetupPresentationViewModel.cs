@@ -7,9 +7,10 @@ namespace NodeRunner.App.ViewModels;
 /// <summary>
 /// One stepped slider row: its label, its readout, its thumb at 0…1 and the distance between two
 /// whole steps on that scale, so the thumb stops only where the value does (#711). A disabled row
-/// is shown dimmed and cannot be dragged.
+/// is shown dimmed and cannot be dragged. A null <paramref name="Position"/> shows no thumb, for a
+/// value the scale does not hold.
 /// </summary>
-public sealed record SettingSlider(string Label, string Readout, double Position, double Step, bool Disabled = false);
+public sealed record SettingSlider(string Label, string Readout, double? Position, double Step, bool Disabled = false);
 
 /// <summary>
 /// Train setup (#194), between Build and Training: Train or Simulate, and the Shadows and Run length
@@ -63,7 +64,7 @@ public sealed class TrainSetupPresentationViewModel
     };
 
     public SettingSlider Shadows => Mode == TrainingRunMode.Simulate
-        ? new("Shadows", "1", 0, ShadowsRange.PositionStep, Disabled: true)
+        ? new("Shadows", "1", null, ShadowsRange.PositionStep, Disabled: true)
         : new(
             "Shadows",
             Settings.Shadows.ToString(CultureInfo.InvariantCulture),
@@ -71,7 +72,7 @@ public sealed class TrainSetupPresentationViewModel
             ShadowsRange.PositionStep);
 
     public SettingSlider RunLength => Mode == TrainingRunMode.Simulate
-        ? new("Run length", "Until you leave", 1, RunLengthRange.PositionStep, Disabled: true)
+        ? new("Run length", "Until you leave", null, RunLengthRange.PositionStep, Disabled: true)
         : new(
             "Run length",
             Seconds(Settings.RunLengthSeconds),

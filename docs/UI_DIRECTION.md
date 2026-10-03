@@ -250,8 +250,9 @@ reference would mislead someone working on that surface.
   shown but disabled with "comes in a later version", not the reference's
   Achievements, which the player cannot act on yet. Simulate (#702) plays
   until the player leaves, so unlike the reference both sliders dim:
-  Shadows reads 1 below its 2–32 scale with its thumb at the low end, and
-  Run length reads "Until you leave" with its thumb at the high end. It
+  Shadows reads 1, below its 2–32 scale, and Run length "Until you leave".
+  Neither value is on its scale, so both tracks are empty dashed lines with
+  no thumb or fill. It
   plays the latest brain, not the reference's best (`docs/TRAINING_LOOP.md`
   → Generations), and is a disabled segment until the Creation has trained,
   with the note under the switch saying why. Owner decision. Run until power is out (0.18) is disabled with the
