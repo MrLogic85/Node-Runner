@@ -328,7 +328,11 @@ public partial class BuildCanvas : Node2D
             DrawPlacingFeedback(beam, start, end);
             // A beam too short for training (#593) is drawn in danger until its joints move apart.
             var color = CreatureReadiness.IsTooShort(nodeA, nodeB) ? Theme.Danger : Theme.Beam;
-            DrawLine(start, end, color, Stroke(Theme.BeamWidth), antialiased: false);
+            using (var pen = ViewPen())
+            {
+                pen.Line(start, end, color, Stroke(Theme.BeamWidth));
+            }
+
             if (selected.Beams.Contains(beam.Id))
             {
                 SelectionDrawing.DrawBeam(this, ViewTransform(), Theme.SelectionGlow, Stroke(Theme.SelectedBeamOffset), Stroke(Theme.SelectedBeamLineWidth), start, end);
@@ -472,13 +476,14 @@ public partial class BuildCanvas : Node2D
         }
 
         var width = Stroke(Theme.BeamWidth * 2.2f);
+        using var pen = ViewPen();
         if (_viewModel!.CanPlacePart(part, new CreatureElementSelection(CreatureElementKind.Beam, beam.Id), out _))
         {
-            DrawLine(start, end, Theme.SelectionGlow, width, antialiased: false);
+            pen.Line(start, end, Theme.SelectionGlow, width);
         }
         else
         {
-            DrawDashedLine(start, end, Theme.Danger, width, dash: Theme.BeamWidth * 2, aligned: true, antialiased: false);
+            pen.DashedLine(start, end, Theme.Danger, width, dash: Theme.BeamWidth * 2);
         }
     }
 
@@ -522,7 +527,7 @@ public partial class BuildCanvas : Node2D
         var rect = RectFromPoints(ToGodot(view.ToView(frame.Min)), ToGodot(view.ToView(frame.Max)));
         var center = rect.GetCenter();
         var turned = toPixels * new Transform2D((float)_gestures.SelectionFrameAngle, center) * new Transform2D(0, -center);
-        UiDashedBorder.DrawRoundedRect(this, rect, UiSize.Radius.Small * unit, Theme.SelectionGlow, width, turned, _frameDash * unit, _frameGap * unit, antialiased: true);
+        UiDashedBorder.DrawRoundedRect(this, rect, UiSize.Radius.Small * unit, Theme.SelectionGlow, width, turned, _frameDash * unit, _frameGap * unit);
 
         var squareSize = Vector2.One * (_frameCornerSquare * unit);
         foreach (var corner in _gestures.FrameCornerSquares)
@@ -659,7 +664,8 @@ public partial class BuildCanvas : Node2D
         // Like a beam, it starts at the joint's ring, and ends at the target's ring or the finger.
         if (JointDrawing.BeamSpan(Theme.JointRingWidth, ToGodot(from.Position), (float)from.Radius, ToGodot(to), (float)(target?.Radius ?? 0)) is (var lineStart, var lineEnd))
         {
-            DrawDashedLine(lineStart, lineEnd, color, Stroke(Theme.BeamWidth), 8, antialiased: false);
+            using var pen = ViewPen();
+            pen.DashedLine(lineStart, lineEnd, color, Stroke(Theme.BeamWidth), 8);
         }
     }
 
@@ -670,12 +676,13 @@ public partial class BuildCanvas : Node2D
             return;
         }
 
+        using var pen = ViewPen();
         foreach (var nodeId in new[] { _gestures.BeamStartNodeId, _gestures.BeamTargetNodeId })
         {
             if (nodeId is { } id)
             {
                 var node = NodeById(id);
-                DrawArc(ToGodot(node.Position), (float)node.Radius * 1.65f, 0, Mathf.Tau, 32, Theme.SelectionGlow, Stroke(Theme.MotorSignalWidth), antialiased: false);
+                pen.Ring(ToGodot(node.Position), (float)node.Radius * 1.65f, Theme.SelectionGlow, Stroke(Theme.MotorSignalWidth));
             }
         }
 
@@ -686,7 +693,7 @@ public partial class BuildCanvas : Node2D
             for (var dash = 0; dash < _refusedRingDashes; dash++)
             {
                 var from = dash * Mathf.Tau / _refusedRingDashes;
-                DrawArc(ToGodot(node.Position), radius, from, from + (Mathf.Tau / _refusedRingDashes / 2), _refusedDashSegments, Theme.Danger, Stroke(Theme.MotorSignalWidth), antialiased: false);
+                pen.Arc(ToGodot(node.Position), radius, from, from + (Mathf.Tau / _refusedRingDashes / 2), _refusedDashSegments, Theme.Danger, Stroke(Theme.MotorSignalWidth));
             }
         }
     }
@@ -711,7 +718,7 @@ public partial class BuildCanvas : Node2D
         }
 
         var width = UiSize.Stroke.SelectionFrame * unit * UiPixelSpace.ScaleOf(toPixels);
-        UiDashedBorder.DrawRoundedRect(this, rect, radius, Theme.SelectionGlow, width, toPixels, _frameDash * unit, _frameGap * unit, antialiased: true);
+        UiDashedBorder.DrawRoundedRect(this, rect, radius, Theme.SelectionGlow, width, toPixels, _frameDash * unit, _frameGap * unit);
         DrawSetTransformMatrix(viewTransform);
     }
 
@@ -722,6 +729,7 @@ public partial class BuildCanvas : Node2D
             return;
         }
 
+        using var pen = ViewPen();
         foreach (var beam in _viewModel.Beams)
         {
             if (!_ghostNodePositions.TryGetValue(beam.NodeA, out var startPosition)
@@ -732,7 +740,7 @@ public partial class BuildCanvas : Node2D
 
             startPosition = _ghostNodePositions.GetValueOrDefault(beam.NodeA, NodeById(beam.NodeA).Position);
             endPosition = _ghostNodePositions.GetValueOrDefault(beam.NodeB, NodeById(beam.NodeB).Position);
-            DrawDashedLine(ToGodot(startPosition), ToGodot(endPosition), Theme.SelectionGlow, Stroke(4), 8, antialiased: false);
+            pen.DashedLine(ToGodot(startPosition), ToGodot(endPosition), Theme.SelectionGlow, Stroke(4), 8);
         }
 
         foreach (var (nodeId, position) in _ghostNodePositions)
@@ -743,7 +751,7 @@ public partial class BuildCanvas : Node2D
             }
 
             var radius = (float)NodeById(nodeId).Radius;
-            DrawArc(ToGodot(position), radius * 1.35f, 0, Mathf.Tau, 32, Theme.SelectionGlow, Stroke(2), antialiased: false);
+            pen.Ring(ToGodot(position), radius * 1.35f, Theme.SelectionGlow, Stroke(2));
         }
     }
 
@@ -832,6 +840,7 @@ public partial class BuildCanvas : Node2D
             return;
         }
 
+        using var pen = ViewPen();
         foreach (var node in _viewModel.Nodes)
         {
             if (!ShowsAsLoose(node.Id))
@@ -841,9 +850,9 @@ public partial class BuildCanvas : Node2D
 
             var position = ToGodot(node.Position);
             var radius = (float)node.Radius * 1.55f;
-            DrawArc(position, radius, 0, Mathf.Tau, 32, Theme.Danger, Stroke(Theme.MotorSignalWidth), antialiased: false);
-            DrawLine(position + new Vector2(-radius * 0.45f, -radius * 0.45f), position + new Vector2(radius * 0.45f, radius * 0.45f), Theme.Danger, Stroke(Theme.MotorSignalWidth), antialiased: false);
-            DrawLine(position + new Vector2(radius * 0.45f, -radius * 0.45f), position + new Vector2(-radius * 0.45f, radius * 0.45f), Theme.Danger, Stroke(Theme.MotorSignalWidth), antialiased: false);
+            pen.Ring(position, radius, Theme.Danger, Stroke(Theme.MotorSignalWidth));
+            pen.Line(position + new Vector2(-radius * 0.45f, -radius * 0.45f), position + new Vector2(radius * 0.45f, radius * 0.45f), Theme.Danger, Stroke(Theme.MotorSignalWidth));
+            pen.Line(position + new Vector2(radius * 0.45f, -radius * 0.45f), position + new Vector2(-radius * 0.45f, radius * 0.45f), Theme.Danger, Stroke(Theme.MotorSignalWidth));
         }
     }
 
@@ -861,6 +870,7 @@ public partial class BuildCanvas : Node2D
             return;
         }
 
+        using var pen = ViewPen();
         foreach (var beam in _viewModel.Beams)
         {
             var start = NodeById(beam.NodeA);
@@ -872,9 +882,9 @@ public partial class BuildCanvas : Node2D
 
             var position = ToGodot(start.Position);
             var radius = (float)Math.Max(start.Radius, end.Radius) * 1.95f;
-            DrawArc(position, radius, 0, Mathf.Tau, 32, Theme.Danger, Stroke(Theme.MotorSignalWidth), antialiased: false);
-            DrawLine(position + new Vector2(-radius * 0.55f, 0), position + new Vector2(radius * 0.55f, 0), Theme.Danger, Stroke(Theme.MotorSignalWidth), antialiased: false);
-            DrawLine(position + new Vector2(0, -radius * 0.55f), position + new Vector2(0, radius * 0.55f), Theme.Danger, Stroke(Theme.MotorSignalWidth), antialiased: false);
+            pen.Ring(position, radius, Theme.Danger, Stroke(Theme.MotorSignalWidth));
+            pen.Line(position + new Vector2(-radius * 0.55f, 0), position + new Vector2(radius * 0.55f, 0), Theme.Danger, Stroke(Theme.MotorSignalWidth));
+            pen.Line(position + new Vector2(0, -radius * 0.55f), position + new Vector2(0, radius * 0.55f), Theme.Danger, Stroke(Theme.MotorSignalWidth));
         }
     }
 
@@ -1037,6 +1047,7 @@ public partial class BuildCanvas : Node2D
         var bottomRight = ToGodot(area.Max);
         // Two grid cells, so the marks end on a grid line.
         var length = (float)(2 * BuildViewModel.BuildGridStep);
+        using var pen = ViewPen();
         foreach (var (corner, inward) in new[]
         {
             (topLeft, new Vector2(1, 1)),
@@ -1045,7 +1056,7 @@ public partial class BuildCanvas : Node2D
             (bottomRight, new Vector2(-1, -1)),
         })
         {
-            DrawPolyline(
+            pen.Polyline(
                 [corner + new Vector2(inward.X * length, 0), corner, corner + new Vector2(0, inward.Y * length)],
                 Theme.AreaCorner,
                 Stroke(Theme.AreaCornerWidth));
@@ -1054,6 +1065,9 @@ public partial class BuildCanvas : Node2D
 
     /// <summary>Draws everything after this in canvas units, zoomed and panned by the view.</summary>
     private void DrawThroughView() => DrawSetTransformMatrix(ViewTransform());
+
+    /// <summary>Draws strokes given in creature units in window pixels, so they stay smooth at any zoom (#733).</summary>
+    private UiPixelPen ViewPen() => UiPixelPen.Begin(this, ViewTransform());
 
     /// <summary>The map from creature units to the canvas: the view's zoom, then its offset.</summary>
     private Transform2D ViewTransform() =>

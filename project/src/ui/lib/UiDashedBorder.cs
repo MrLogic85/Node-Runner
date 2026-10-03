@@ -12,24 +12,33 @@ public static class UiDashedBorder
     public static void DrawRoundedRect(CanvasItem canvas, Rect2 rect, float radius, Color color, float width) =>
         DrawRoundedRect(canvas, rect, UiCorners.Uniform(radius), color, width);
 
-    /// <summary>The dashed outline of <paramref name="rect"/> with its own radius for each corner.</summary>
-    public static void DrawRoundedRect(CanvasItem canvas, Rect2 rect, UiCorners corners, Color color, float width) =>
-        DrawRoundedRect(canvas, rect, corners, color, width, Transform2D.Identity, _dash, _gap, antialiased: false);
+    /// <summary>
+    /// The dashed outline of <paramref name="rect"/> with its own radius for each corner, in a
+    /// <see cref="CanvasItem._Draw"/> that has not set a draw transform. Drawn in window pixels
+    /// (<see cref="UiPixelPen"/>), so all four sides look the same at any UI size (#733).
+    /// </summary>
+    public static void DrawRoundedRect(CanvasItem canvas, Rect2 rect, UiCorners corners, Color color, float width)
+    {
+        using var pen = UiPixelPen.Begin(canvas);
+        DrawRoundedRect(canvas, rect, corners, color, width * pen.Scale, pen.ToPixels, _dash, _gap);
+    }
 
-    public static void DrawRoundedRect(CanvasItem canvas, Rect2 rect, float radius, Color color, float width, Transform2D transform, float dash, float gap, bool antialiased) =>
-        DrawRoundedRect(canvas, rect, UiCorners.Uniform(radius), color, width, transform, dash, gap, antialiased);
+    public static void DrawRoundedRect(CanvasItem canvas, Rect2 rect, float radius, Color color, float width, Transform2D toPixels, float dash, float gap) =>
+        DrawRoundedRect(canvas, rect, UiCorners.Uniform(radius), color, width, toPixels, dash, gap);
 
     /// <summary>
-    /// The dashed outline of <paramref name="rect"/>, mapped through <paramref name="transform"/>.
+    /// The dashed outline of <paramref name="rect"/>, mapped through <paramref name="toPixels"/>.
     /// Only <paramref name="width"/> is in the transformed units. The dashes are stretched to fit
-    /// the perimeter evenly.
+    /// the perimeter evenly, each dash pulled in at both ends by <see cref="UiPixelPen.DashTrim"/>.
+    /// It is antialiased, so <paramref name="toPixels"/> should map to window pixels
+    /// (<see cref="UiPixelPen.ToPixels"/>).
     /// </summary>
-    public static void DrawRoundedRect(CanvasItem canvas, Rect2 rect, UiCorners corners, Color color, float width, Transform2D transform, float dash, float gap, bool antialiased)
+    public static void DrawRoundedRect(CanvasItem canvas, Rect2 rect, UiCorners corners, Color color, float width, Transform2D toPixels, float dash, float gap)
     {
         ArgumentNullException.ThrowIfNull(canvas);
         corners = Clamp(rect, corners);
         var perimeter = Perimeter(rect, corners);
-        if (perimeter <= 0 || dash + gap <= 0)
+        if (perimeter <= 0 || dash + gap <= 0 || toPixels.BasisXform(Vector2.Right).Length() <= 0)
         {
             return;
         }
@@ -37,19 +46,21 @@ public static class UiDashedBorder
         var patternCount = Mathf.Max(1, Mathf.RoundToInt(perimeter / (dash + gap)));
         var patternLength = perimeter / patternCount;
         var dashLength = patternLength * dash / (dash + gap);
-        var samplesPerUnit = transform.BasisXform(Vector2.Right).Length();
+        var samplesPerUnit = toPixels.BasisXform(Vector2.Right).Length();
+        var trim = UiPixelPen.DashTrim(dashLength * samplesPerUnit, width) / samplesPerUnit;
+        var drawnLength = dashLength - (2 * trim);
 
-        for (var start = 0f; start < perimeter; start += patternLength)
+        for (var start = trim; start < perimeter; start += patternLength)
         {
-            var sampleCount = Mathf.Max(2, Mathf.CeilToInt(dashLength * samplesPerUnit) + 1);
+            var sampleCount = Mathf.Max(2, Mathf.CeilToInt(drawnLength * samplesPerUnit) + 1);
             var points = new Vector2[sampleCount];
             for (var index = 0; index < sampleCount; index++)
             {
-                var distance = start + (dashLength * index / (sampleCount - 1));
-                points[index] = transform * PointOnRoundedRect(rect, corners, distance);
+                var distance = start + (drawnLength * index / (sampleCount - 1));
+                points[index] = toPixels * PointOnRoundedRect(rect, corners, distance);
             }
 
-            canvas.DrawPolyline(points, color, width, antialiased);
+            canvas.DrawPolyline(points, color, width, antialiased: true);
         }
     }
 

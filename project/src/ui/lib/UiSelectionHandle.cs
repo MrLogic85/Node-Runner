@@ -88,33 +88,23 @@ public partial class UiSelectionHandle : Control, ISerializationListener
     /// <summary>
     /// The round button (<c>c_round_button</c>) behind a handle's icon, also drawn by
     /// <see cref="UiInfoRow"/>: a <c>halo</c> ring filled <c>panel</c>, or <c>accent-soft</c> over
-    /// <c>bg</c> for the Move handle. Drawn in window pixels (<see cref="UiPixelSpace"/>).
+    /// <c>bg</c> for the Move handle. Drawn in window pixels (<see cref="UiPixelPen"/>).
     /// </summary>
     internal static void DrawRoundButton(Control control, Vector2 center, bool accentFill)
     {
-        var toPixels = UiPixelSpace.Enter(control, Transform2D.Identity);
-        var scale = UiPixelSpace.ScaleOf(toPixels);
-        var radius = UiSize.Widget.SelectionHandleRadius * scale;
+        using var pen = UiPixelPen.Begin(control);
+        var radius = UiSize.Widget.SelectionHandleRadius;
         if (accentFill)
         {
-            control.DrawCircle(toPixels * center, radius, UiThemeLookup.Color(control, UiTokens.Color.Background));
-            control.DrawCircle(toPixels * center, radius, UiThemeLookup.Color(control, UiTokens.Color.Accent).WithAlpha(UiThemeLookup.Alpha(control, UiTokens.Alpha.Soft)));
+            pen.Disc(center, radius, UiThemeLookup.Color(control, UiTokens.Color.Background));
+            pen.Disc(center, radius, UiThemeLookup.Color(control, UiTokens.Color.Accent).WithAlpha(UiThemeLookup.Alpha(control, UiTokens.Alpha.Soft)));
         }
         else
         {
-            control.DrawCircle(toPixels * center, radius, UiThemeLookup.Color(control, UiTokens.Color.Panel));
+            pen.Disc(center, radius, UiThemeLookup.Color(control, UiTokens.Color.Panel));
         }
 
-        control.DrawArc(
-            toPixels * center,
-            radius,
-            0,
-            Mathf.Tau,
-            _ringPoints,
-            UiThemeLookup.Color(control, UiTokens.Color.Halo),
-            UiSize.Stroke.SelectionHandle * scale,
-            antialiased: true);
-        control.DrawSetTransformMatrix(Transform2D.Identity);
+        pen.Ring(center, radius, UiThemeLookup.Color(control, UiTokens.Color.Halo), UiSize.Stroke.SelectionHandle, _ringPoints);
     }
 
     public override Vector2 _GetMinimumSize() => Vector2.One * UiSize.Widget.SelectionHandleSize;

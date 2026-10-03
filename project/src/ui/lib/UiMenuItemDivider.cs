@@ -24,7 +24,8 @@ public partial class UiMenuItemDivider : UiMenuItem
     public override void _Draw()
     {
         var y = Size.Y * 0.5f;
-        DrawLine(
+        using var pen = UiPixelPen.Begin(this);
+        pen.Line(
             new Vector2(HorizontalPadding, y),
             new Vector2(Mathf.Max(HorizontalPadding, Size.X - HorizontalPadding), y),
             UiThemeLookup.Color(this, UiTokens.Color.Line),

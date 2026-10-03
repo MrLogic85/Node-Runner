@@ -98,7 +98,16 @@ public partial class BrainFocusNetworkView : Control
         var headingSize = UiThemeLookup.FontSize(this, _headingStyle);
         var labelWidths = LabelColumnWidths(font, fontSize, headingFont, headingSize);
         CacheNeuronPositions(labelWidths);
-        foreach (var edge in _viewModel.Edges)
+        DrawNetwork();
+        DrawLabels(font, fontSize, labelWidths);
+        DrawHeadings(headingFont, headingSize, labelWidths);
+    }
+
+    // In window pixels, so the edges, dots and halo are smooth at any UI size (#733).
+    private void DrawNetwork()
+    {
+        using var pen = UiPixelPen.Begin(this);
+        foreach (var edge in _viewModel!.Edges)
         {
             var faded = _viewModel.Selected is not null && !edge.IsHighlighted;
             if (edge.Strength < 0.06 && !edge.IsHighlighted)
@@ -122,23 +131,23 @@ public partial class BrainFocusNetworkView : Control
             }
 
             color.A = alpha;
-            DrawEdge(from, to, color, width, edge.Weight < 0);
+            DrawEdge(pen, from, to, color, width, edge.Weight < 0);
         }
 
         foreach (var layer in _viewModel.Layers)
         {
             foreach (var neuron in layer.Neurons)
             {
-                DrawNeuron(_positions[(neuron.LayerIndex, neuron.Index)], neuron);
+                DrawNeuron(pen, _positions[(neuron.LayerIndex, neuron.Index)], neuron);
             }
         }
-
-        DrawLabels(font, fontSize, labelWidths);
-        DrawHeadings(headingFont, headingSize, labelWidths);
     }
 
-    private void DrawWaitingState() =>
-        DrawCircle(Size / 2, 14, UiThemeLookup.Color(this, UiTokens.Color.LineStrong));
+    private void DrawWaitingState()
+    {
+        using var pen = UiPixelPen.Begin(this);
+        pen.Disc(Size / 2, 14, UiThemeLookup.Color(this, UiTokens.Color.LineStrong));
+    }
 
     // Each column is as wide as its widest label or its heading, whichever is wider.
     private (float Input, float Output) LabelColumnWidths(Font font, int fontSize, Font headingFont, int headingSize)
@@ -250,58 +259,38 @@ public partial class BrainFocusNetworkView : Control
         }
     }
 
-    private void DrawNeuron(Vector2 position, BrainFocusNeuronPresentation neuron)
+    private void DrawNeuron(UiPixelPen pen, Vector2 position, BrainFocusNeuronPresentation neuron)
     {
         var baseColor = neuron.Activation >= 0 ? UiThemeLookup.Color(this, UiTokens.Color.LineStrong) : UiThemeLookup.Color(this, UiTokens.Color.Danger);
         baseColor.A = neuron.IsHighlighted ? 1 : (float)Math.Clamp(0.30 + (neuron.ActivationFill * 0.70), 0.30, 1);
         var radius = (_radius / 2) + (float)(neuron.ActivationFill * _radius / 2);
-        DrawCircle(position, radius + 2, UiThemeLookup.Color(this, UiTokens.Color.PanelRaised));
+        pen.Disc(position, radius + 2, UiThemeLookup.Color(this, UiTokens.Color.PanelRaised));
         if (neuron.Activation >= 0)
         {
-            DrawCircle(position, radius, baseColor);
+            pen.Disc(position, radius, baseColor);
         }
         else
         {
-            DrawColoredPolygon(
-                [
-                    position + new Vector2(0, -radius),
-                    position + new Vector2(radius, 0),
-                    position + new Vector2(0, radius),
-                    position + new Vector2(-radius, 0),
-                ],
-                baseColor);
+            // A diamond is a square on its corner: one wide line along a diagonal, so its edges are antialiased.
+            var halfDiagonal = new Vector2(radius, radius) / 2;
+            pen.Line(position - halfDiagonal, position + halfDiagonal, baseColor, radius * Mathf.Sqrt2);
         }
 
         if (neuron.IsSelected)
         {
-            DrawArc(position, _radius + _haloGap, 0, Mathf.Tau, 40, UiThemeLookup.Color(this, UiTokens.Color.Halo), _haloWidth, antialiased: false);
+            pen.Ring(position, _radius + _haloGap, UiThemeLookup.Color(this, UiTokens.Color.Halo), _haloWidth, 40);
         }
     }
 
-    private void DrawEdge(Vector2 from, Vector2 to, Color color, float width, bool dashed)
+    private static void DrawEdge(UiPixelPen pen, Vector2 from, Vector2 to, Color color, float width, bool dashed)
     {
         if (!dashed)
         {
-            DrawLine(from, to, color, width, antialiased: false);
+            pen.Line(from, to, color, width);
             return;
         }
 
-        var delta = to - from;
-        var length = delta.Length();
-        if (length <= 0.001f)
-        {
-            return;
-        }
-
-        var direction = delta / length;
-        const float dashLength = 10f;
-        const float gapLength = 7f;
-        for (var offset = 0f; offset < length; offset += dashLength + gapLength)
-        {
-            var start = from + direction * offset;
-            var end = from + direction * Math.Min(offset + dashLength, length);
-            DrawLine(start, end, color, width, antialiased: false);
-        }
+        pen.DashedLine(from, to, color, width, dash: 10, gap: 7);
     }
 
     // Each row is a band across its label and dot, so tapping the name works; a tap outside every row,
