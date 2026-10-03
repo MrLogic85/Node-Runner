@@ -172,6 +172,41 @@ public sealed class BuildViewModelTests
         Should.Throw<InvalidOperationException>(() => build.SetParameter(PartParameterId.Strength, 20000));
     }
 
+    [Fact]
+    public void ActiveTool_EnteringBeams_PicksBeamEachTime()
+    {
+        var build = new BuildViewModel { ActiveTool = BuildTool.Beam };
+        build.PickLink(BuildLink.Piston);
+
+        build.ActiveTool = BuildTool.Move;
+        build.ActiveTool = BuildTool.Beam;
+
+        build.PickedLink.ShouldBe(BuildLink.Beam);
+    }
+
+    [Fact]
+    public void PickedLink_SurvivesSelectingAndClearingAPart()
+    {
+        var build = new BuildViewModel { ActiveTool = BuildTool.Beam };
+        build.PlaceNode(new Vector2D(0, 0));
+        build.PickLink(BuildLink.Piston);
+
+        build.ReplaceSelection([1]);
+        build.ClearSelection();
+
+        build.PickedLink.ShouldBe(BuildLink.Piston);
+    }
+
+    [Fact]
+    public void PickLink_LockedFutureRowsDoNothing()
+    {
+        var build = new BuildViewModel { ActiveTool = BuildTool.Beam };
+
+        build.PickLink(BuildLink.Spring);
+
+        build.PickedLink.ShouldBe(BuildLink.Beam);
+    }
+
     private static CreatureDef Carrier() => new(
         [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(90, 0)), new NodeDef(3, new Vector2D(180, 0))],
         [new BeamDef(101, 1, 2), new BeamDef(102, 2, 3)],

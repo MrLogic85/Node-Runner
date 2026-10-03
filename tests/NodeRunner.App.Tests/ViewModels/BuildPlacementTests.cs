@@ -85,9 +85,9 @@ public sealed class BuildPlacementTests
     {
         var build = TwoBeams();
 
-        build.CanPlacePart(BuildPart.Spring, _firstBeam, out var reason).ShouldBeFalse();
+        build.CanPlacePart(BuildPart.Battery, _firstBeam, out var reason).ShouldBeFalse();
         reason.ShouldBe(PartTray.ComingLater);
-        build.PlacePart(BuildPart.Spring, _firstBeam).ShouldBeNull();
+        build.PlacePart(BuildPart.Battery, _firstBeam).ShouldBeNull();
 
         build.Sensors.ShouldBeEmpty();
     }
@@ -188,7 +188,7 @@ public sealed class BuildPlacementTests
         PartTray.SensorKindOf(BuildPart.Camera).ShouldBe(SensorKind.Camera);
         PartTray.SensorKindOf(BuildPart.Servo).ShouldBeNull();
         PartTray.IsAvailable(BuildPart.Accelerometer).ShouldBeTrue();
-        PartTray.IsAvailable(BuildPart.Spring).ShouldBeFalse();
+        PartTray.IsAvailable(BuildPart.Battery).ShouldBeFalse();
     }
 
     /// <summary>Joints 1 (0,0), 2 (100,0) and 3 (200,0); beam 4 joins 1–2 and beam 5 joins 2–3.</summary>

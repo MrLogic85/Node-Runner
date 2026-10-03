@@ -49,9 +49,9 @@ public partial class BuildScreen : Control
     [Signal]
     public delegate void ToolRequestedEventHandler(BuildTool tool);
 
-    /// <summary>A link row in the tray was tapped (#451): it picks the link's tool, or puts Move back.</summary>
+    /// <summary>A link row in the Beams list was tapped (#705): the rail tool stays Beams.</summary>
     [Signal]
-    public delegate void PartPickedEventHandler(BuildPart part);
+    public delegate void LinkPickedEventHandler(int link);
 
     /// <summary>A setting's slider moved (#704): every selected part takes <paramref name="value"/> for <paramref name="parameter"/> (a <see cref="PartParameterId"/>).</summary>
     [Signal]
@@ -259,6 +259,7 @@ public partial class BuildScreen : Control
         var savedPanel = GetNode<Control>("%SavedCreation");
         var partSettings = GetNode<Control>("%PartSettings");
         var selection = GetNode<Control>("%Selection");
+        var linkList = presentation.LinkList;
         tray.Visible = selected == 0 && !locked;
         GetNode<Control>("%PanelSpacer").Visible = !tray.Visible;
         GetNode<UiLabel>("%ToolHint").Text = presentation.PanelToolHint;
@@ -273,6 +274,7 @@ public partial class BuildScreen : Control
         sidePanel.Title = selected switch
         {
             0 when locked => "Training",
+            0 when linkList is not null => linkList.Title,
             0 => "Parts",
             1 => part?.Name ?? string.Empty,
             _ => presentation.Selection?.Title ?? string.Empty,
@@ -281,7 +283,7 @@ public partial class BuildScreen : Control
 
         if (tray.Visible)
         {
-            ApplyTray(presentation);
+            ApplyPickList(presentation, linkList);
         }
 
         if (savedPanel.Visible)
@@ -320,6 +322,55 @@ public partial class BuildScreen : Control
         GetNode<Control>("%SelectionActions").Visible = group.CanDelete;
     }
 
+    private void ApplyPickList(BuildPresentationViewModel presentation, LinkListPresentation? linkList)
+    {
+        GetNode<UiIconTabs>("%PartTabs").Visible = linkList is null;
+        if (linkList is not null)
+        {
+            ApplyLinkList(linkList);
+        }
+        else
+        {
+            ApplyTray(presentation);
+        }
+    }
+
+    private void ApplyLinkList(LinkListPresentation list)
+    {
+        GetNode<UiLabel>("%PartGroupName").Text = list.Name;
+        GetNode<UiLabel>("%PartHelp").Text = list.HelpText;
+        var lockedNote = GetNode<UiLabel>("%PartLockedNote");
+        lockedNote.Text = list.LockedNote;
+        lockedNote.Visible = list.LockedNote.Length > 0;
+        GetNode<Control>("%PartLockedIcon").Visible = lockedNote.Visible;
+        var rows = GetNode<Container>("%PartRows");
+        if (_shownPartGroup != "links")
+        {
+            _shownPartGroup = "links";
+            ClearRows(rows);
+            foreach (var link in list.Rows)
+            {
+                var row = new UiPartRow { IconId = LinkIcon(link.Link), Label = link.Name, Compact = true };
+                if (link.IsPickable)
+                {
+                    row.PartSelected += () => EmitSignal(SignalName.LinkPicked, (int)link.Link);
+                }
+
+                rows.AddChild(row);
+            }
+        }
+
+        for (var index = 0; index < list.Rows.Count; index++)
+        {
+            rows.GetChild<UiPartRow>(index).State = list.Rows[index].State switch
+            {
+                LinkListRowState.Selected => UiPartRow.PartRowState.Selected,
+                LinkListRowState.Locked => UiPartRow.PartRowState.Locked,
+                _ => UiPartRow.PartRowState.Rest,
+            };
+        }
+    }
+
     private void ApplyTray(BuildPresentationViewModel presentation)
     {
         var group = presentation.PartGroups[GetNode<UiIconTabs>("%PartTabs").SelectedIndex];
@@ -330,23 +381,15 @@ public partial class BuildScreen : Control
         lockedNote.Visible = group.LockedNote.Length > 0;
         GetNode<Control>("%PartLockedIcon").Visible = lockedNote.Visible;
         var rows = GetNode<Container>("%PartRows");
-        if (_shownPartGroup != group.Name)
+        if (_shownPartGroup != $"tray:{group.Name}")
         {
-            _shownPartGroup = group.Name;
-            foreach (var child in rows.GetChildren())
-            {
-                rows.RemoveChild(child);
-                child.QueueFree();
-            }
+            _shownPartGroup = $"tray:{group.Name}";
+            ClearRows(rows);
 
             foreach (var part in group.Rows)
             {
                 var row = new UiPartRow { IconId = PartIcon(part.Part), Label = part.Name, Compact = true };
-                if (PickablePart(part) is { } pickable)
-                {
-                    row.PartSelected += () => EmitSignal(SignalName.PartPicked, (int)pickable);
-                }
-                else if (DraggablePart(part) is { } draggable)
+                if (DraggablePart(part) is { } draggable)
                 {
                     row.SetDragForwarding(
                         Callable.From<Vector2, Variant>(_ => StartPartDrag(row, draggable)),
@@ -364,27 +407,25 @@ public partial class BuildScreen : Control
             rows.GetChild<UiPartRow>(index).State = row.State switch
             {
                 PartTrayRowState.ComingLater => UiPartRow.PartRowState.Locked,
-                _ when PartTray.ToolOf(row.Part) is { } tool && tool == presentation.ActiveTool => UiPartRow.PartRowState.Selected,
                 _ => UiPartRow.PartRowState.Rest,
             };
+        }
+    }
+
+    private static void ClearRows(Container rows)
+    {
+        foreach (var child in rows.GetChildren())
+        {
+            rows.RemoveChild(child);
+            child.QueueFree();
         }
     }
 
     private void OnPartTabSelected(int index)
     {
         GetNode<ScrollContainer>("%PartScroll").ScrollVertical = 0;
-        // A picked link belongs to its tab: changing tab puts it down (#451).
-        if (_presentation is { ActiveTool: BuildTool.Piston })
-        {
-            EmitSignal(SignalName.ToolRequested, (int)BuildTool.Move);
-        }
-
         Apply();
     }
-
-    /// <summary>The link a tray row picks with a tap (#451), or null for a row that is dragged out or locked.</summary>
-    public static BuildPart? PickablePart(PartTrayRow row) =>
-        row.IsAvailable && PartTray.ToolOf(row.Part) is not null ? row.Part : null;
 
     /// <summary>The part a tray row can be dragged out as (#376): an available sensor, or null.</summary>
     public static BuildPart? DraggablePart(PartTrayRow row) =>
@@ -407,16 +448,22 @@ public partial class BuildScreen : Control
         BuildTool.Beam => UiIconId.Beam,
         BuildTool.Joint => UiIconId.Joint,
         BuildTool.Select => UiIconId.Select,
-        BuildTool.Piston => UiIconId.PartPiston,
         _ => UiIconId.Move,
+    };
+
+    /// <summary>The Beams list glyph for a link.</summary>
+    public static UiIconId LinkIcon(BuildLink link) => link switch
+    {
+        BuildLink.Beam => UiIconId.PartBeam,
+        BuildLink.Piston => UiIconId.PartPiston,
+        BuildLink.Spring => UiIconId.PartSpring,
+        BuildLink.Wing => UiIconId.PartWing,
+        _ => UiIconId.None,
     };
 
     /// <summary>The tray glyph for a part.</summary>
     public static UiIconId PartIcon(BuildPart part) => part switch
     {
-        BuildPart.Spring => UiIconId.PartSpring,
-        BuildPart.Piston => UiIconId.PartPiston,
-        BuildPart.Wing => UiIconId.PartWing,
         BuildPart.Brake => UiIconId.PartBrake,
         BuildPart.Servo => UiIconId.PartServo,
         BuildPart.Stepper => UiIconId.PartStepper,

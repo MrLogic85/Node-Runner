@@ -161,6 +161,21 @@ public class BuildGesturesTests
     }
 
     [Fact]
+    public void SecondFinger_PutsBackASelectedJointMovedWithBeams()
+    {
+        var (build, gestures) = ThreeLooseJoints(BuildTool.Beam);
+        build.ReplaceSelection([1]);
+
+        gestures.Press(new Vector2D(0, 0), 0);
+        gestures.Drag(new Vector2D(0, 40), 0);
+        gestures.Press(new Vector2D(200, 200), 1);
+
+        build.Nodes[0].Position.ShouldBe(new Vector2D(0, 0));
+        build.SelectedNodeIds.ShouldBe([1]);
+        build.PickedLink.ShouldBe(BuildLink.Beam);
+    }
+
+    [Fact]
     public void SecondFinger_PutsBackASelectionTheFirstFingerAlreadyMoved()
     {
         var (build, gestures) = ThreeLooseJoints(BuildTool.Select);
@@ -426,6 +441,82 @@ public class BuildGesturesTests
         Tap(gestures, new Vector2D(100, 0));
 
         build.Beams.ShouldBeEmpty();
+        build.SelectedNodeIds.ShouldBe([2]);
+    }
+
+    [Fact]
+    public void Beam_TapPart_SelectsIt_AndEmptyTapClears()
+    {
+        var (build, gestures) = TwoJointsAndABeam();
+        build.ActiveTool = BuildTool.Beam;
+
+        Tap(gestures, new Vector2D(50, 0));
+        build.SingleSelectedBeamId.ShouldBe(3);
+
+        Tap(gestures, _empty);
+        build.SelectedPartCount.ShouldBe(0);
+    }
+
+    [Fact]
+    public void Beam_DragASelectedJoint_MovesOnlyThatJointAndKeepsSelection()
+    {
+        var (build, gestures) = ThreeLooseJoints(BuildTool.Beam);
+        build.ReplaceSelection([1, 2]);
+
+        gestures.Press(new Vector2D(0, 0));
+        gestures.Drag(new Vector2D(0, 40));
+        gestures.Release(new Vector2D(0, 40));
+
+        build.Nodes.Select(node => node.Position).ShouldBe([new Vector2D(0, 40), new Vector2D(100, 0), new Vector2D(0, 100)]);
+        build.SelectedNodeIds.OrderBy(id => id).ShouldBe([1, 2]);
+        build.Beams.ShouldBeEmpty();
+    }
+
+    [Theory]
+    [InlineData(BuildLink.Beam)]
+    [InlineData(BuildLink.Piston)]
+    public void Beam_DragFromUnselectedJoint_LinksPickedType_AndKeepsTheSelection(BuildLink link)
+    {
+        var (build, gestures) = ThreeLooseJoints(BuildTool.Beam);
+        build.ReplaceSelection([3]);
+        if (link == BuildLink.Piston)
+        {
+            build.PickLink(BuildLink.Piston);
+        }
+
+        gestures.Press(new Vector2D(0, 0));
+        gestures.Drag(new Vector2D(100, 0));
+        gestures.Release(new Vector2D(100, 0));
+
+        if (link == BuildLink.Piston)
+        {
+            build.Pistons.ShouldBe([new PistonDef(4, 1, 2)]);
+            build.Beams.ShouldBeEmpty();
+        }
+        else
+        {
+            build.Beams.ShouldBe([new BeamDef(4, 1, 2)]);
+            build.Pistons.ShouldBeEmpty();
+        }
+
+        build.SelectedNodeIds.ShouldBe([3]);
+    }
+
+    [Theory]
+    [InlineData(300, 300)]
+    [InlineData(50, 0)]
+    public void Beam_DragAwayFromAJoint_Pans(double x, double y)
+    {
+        var (build, gestures) = TwoJointsAndABeam();
+        build.ActiveTool = BuildTool.Beam;
+        var changes = CountChanges(build);
+
+        gestures.Press(new Vector2D(x, y));
+        gestures.Drag(new Vector2D(x + 40, y + 20));
+        gestures.Release(new Vector2D(x + 40, y + 20));
+
+        changes().ShouldBe(0);
+        gestures.View.Offset.ShouldBe(new Vector2D(40, 20));
     }
 
     [Fact]

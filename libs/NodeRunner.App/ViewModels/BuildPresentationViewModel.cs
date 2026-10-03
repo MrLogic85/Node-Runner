@@ -43,7 +43,7 @@ public sealed class BuildPresentationViewModel
 
     public string CreationName => _build.CreationName;
 
-    public string InspectorRole => _build.IsMoveOnly ? "Tool: Move" : $"Tool: {_build.ActiveTool}";
+    public string InspectorRole => _build.IsMoveOnly ? "Tool: Move" : $"Tool: {ToolName(_build.ActiveTool)}";
 
     public string InspectorValues => _build.StatusMessage ?? (_build.IsMoveOnly
         ? "Drag an existing node to reposition it. Training is kept."
@@ -53,16 +53,18 @@ public sealed class BuildPresentationViewModel
 
     public IReadOnlyList<PartTrayGroup> PartGroups => PartTray.Groups();
 
+    public LinkListPresentation? LinkList => ActiveTool == BuildTool.Beam && !_build.IsMoveOnly && _build.SelectedPartCount == 0
+        ? BuildLinkList.Create(_build.PickedLink)
+        : null;
+
     /// <summary>
-    /// The side panel's one-line status for the rail tools that need one (Beam, Joint, Select);
+    /// The side panel's one-line status for the rail tools that need one (Joint and Select);
     /// empty for Move and tools without a short side-panel hint.
     /// </summary>
     public string PanelToolHint => ActiveTool switch
     {
-        BuildTool.Beam => "Drag joint to joint.",
         BuildTool.Joint => "Tap space or a beam.",
         BuildTool.Select => "Tap or box parts.",
-        BuildTool.Piston => "Drag joint to joint.",
         _ => string.Empty,
     };
 
@@ -225,13 +227,14 @@ public sealed class BuildPresentationViewModel
         return tool switch
         {
             BuildTool.Move => "Drag a joint to move it. Tap a part to select it.",
-            BuildTool.Beam => "Drag from one joint to another to join them with a beam.",
+            BuildTool.Beam => "Pick a link, then drag joint to joint.",
             BuildTool.Joint => "Tap empty space to add a joint, or tap a beam to split it.",
             BuildTool.Select => "Tap parts to select them. Drag selected parts to move them together.",
-            BuildTool.Piston => "Drag from one joint to another to place a piston.",
             _ => string.Empty,
         };
     }
+
+    public static string ToolName(BuildTool tool) => tool == BuildTool.Beam ? "Beams" : tool.ToString();
 
     private BuildPanelPresentation CreateBuildPanel()
     {

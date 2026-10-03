@@ -5,9 +5,6 @@ namespace NodeRunner.App.ViewModels;
 /// <summary>Every part the Build tray lists, implemented or not (#374).</summary>
 public enum BuildPart
 {
-    Spring,
-    Piston,
-    Wing,
     Brake,
     Servo,
     Stepper,
@@ -41,7 +38,7 @@ public sealed record PartTrayGroup(string Name, string HelpText, IReadOnlyList<P
 }
 
 /// <summary>
-/// The Build Parts tray: four tabs of reference parts (#374). Implemented rows are available;
+/// The Build Parts tray: three tabs of reference parts (#374). Implemented rows are available;
 /// a part not yet implemented shows "Coming later".
 /// </summary>
 public static class PartTray
@@ -62,21 +59,8 @@ public static class PartTray
         _ => null,
     };
 
-    /// <summary>The tool a tray part picks (#451): a link is picked, then dragged joint to joint. Null for a part that is dragged out instead.</summary>
-    public static BuildTool? ToolOf(BuildPart part) => part switch
-    {
-        BuildPart.Piston => BuildTool.Piston,
-        _ => null,
-    };
-
     private static PartTrayGroup[] Catalog() =>
     [
-        new("Links", "Pick one, then drag from one node to another, like the Beam tool.",
-        [
-            Locked(BuildPart.Spring, "Spring"),
-            Available(BuildPart.Piston, "Piston"),
-            Locked(BuildPart.Wing, "Wing"),
-        ]),
         new("On a joint", "Drag onto a joint. A joint holds one part.",
         [
             Locked(BuildPart.Brake, "Brake"),

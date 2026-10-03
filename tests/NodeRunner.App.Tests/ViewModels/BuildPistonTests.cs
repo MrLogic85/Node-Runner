@@ -9,24 +9,15 @@ namespace NodeRunner.App.Tests.ViewModels;
 public sealed class BuildPistonTests
 {
     [Fact]
-    public void PickPart_PicksThePistonTool_AndPickingAgainPutsMoveBack()
+    public void PickLink_PicksPiston_AndKeepsTheBeamsTool()
     {
-        var build = new BuildViewModel();
+        var build = new BuildViewModel { ActiveTool = BuildTool.Beam };
 
-        build.PickPart(BuildPart.Piston);
-        build.ActiveTool.ShouldBe(BuildTool.Piston);
-        build.PickPart(BuildPart.Piston);
-        build.ActiveTool.ShouldBe(BuildTool.Move);
-    }
+        build.PickLink(BuildLink.Piston);
+        build.PickLink(BuildLink.Piston);
 
-    [Fact]
-    public void PickPart_ADraggedPart_ChangesNoTool()
-    {
-        var build = new BuildViewModel();
-
-        build.PickPart(BuildPart.Camera);
-
-        build.ActiveTool.ShouldBe(BuildTool.Move);
+        build.ActiveTool.ShouldBe(BuildTool.Beam);
+        build.PickedLink.ShouldBe(BuildLink.Piston);
     }
 
     [Fact]
@@ -39,7 +30,8 @@ public sealed class BuildPistonTests
 
         build.Pistons.ShouldBe([new PistonDef(4, 1, 2), new PistonDef(5, 1, 3)]);
         build.Beams.ShouldBeEmpty();
-        build.ActiveTool.ShouldBe(BuildTool.Piston);
+        build.ActiveTool.ShouldBe(BuildTool.Beam);
+        build.PickedLink.ShouldBe(BuildLink.Piston);
         build.SelectedPartCount.ShouldBe(0);
     }
 
@@ -81,6 +73,26 @@ public sealed class BuildPistonTests
         build.Pistons.ShouldBeEmpty();
         build.Nodes.Count.ShouldBe(3);
         build.StatusMessage.ShouldBe("Drop it on another node.");
+    }
+
+    [Fact]
+    public void SecondFinger_CancelsAPistonPreview_AndKeepsSelectionAndPickedLink()
+    {
+        var (build, gestures) = ThreeLooseJoints();
+        build.ReplaceSelection([3]);
+
+        gestures.Press(new Vector2D(0, 0), 0);
+        gestures.Drag(new Vector2D(100, 0), 0);
+        gestures.BeamStartNodeId.ShouldBe(1);
+        gestures.Press(new Vector2D(200, 200), 1);
+        gestures.BeamStartNodeId.ShouldBeNull();
+        gestures.RefusedTargetNodeId.ShouldBeNull();
+        gestures.Release(new Vector2D(100, 0), 0);
+        gestures.Release(new Vector2D(200, 200), 1);
+
+        build.Pistons.ShouldBeEmpty();
+        build.SelectedNodeIds.ShouldBe([3]);
+        build.PickedLink.ShouldBe(BuildLink.Piston);
     }
 
     [Fact]
@@ -156,14 +168,15 @@ public sealed class BuildPistonTests
     }
 
     [Fact]
-    public void PickPart_WhenLocked_KeepsMove()
+    public void PickLink_WhenLocked_KeepsBeamPicked()
     {
         var build = new BuildViewModel();
         build.Load(new CreatureBuilder().Build(), moveOnly: true);
+        build.ActiveTool = BuildTool.Beam;
 
-        build.PickPart(BuildPart.Piston);
+        build.PickLink(BuildLink.Piston);
 
-        build.ActiveTool.ShouldBe(BuildTool.Move);
+        build.PickedLink.ShouldBe(BuildLink.Beam);
     }
 
     [Fact]
@@ -197,7 +210,8 @@ public sealed class BuildPistonTests
         build.PlaceNode(new Vector2D(0, 0));
         build.PlaceNode(new Vector2D(100, 0));
         build.PlaceNode(new Vector2D(0, 100));
-        build.ActiveTool = BuildTool.Piston;
+        build.ActiveTool = BuildTool.Beam;
+        build.PickLink(BuildLink.Piston);
         return (build, new BuildGestures(build));
     }
 

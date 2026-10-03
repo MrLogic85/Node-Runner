@@ -47,7 +47,7 @@ owned by `docs/TRAINING_LOOP.md` → Product lifecycle boundary.
 
 ## Interactions
 
-The rail holds the reference tools Move, Beam, Joint and Select (#365);
+The rail holds the reference tools Move, Beams, Joint and Select (#365, #705);
 "joint" is the player-facing name for a node. Start training is the play
 button at the bottom of the rail in both states (#370); it is dimmed until
 the creature can train, and the panel's last line says why.
@@ -61,10 +61,15 @@ a node's own ring always hits.
 - **Move:** tap a node or beam to select it (its settings open), tap empty
   canvas to deselect, drag a node to move it, drag anywhere else (empty
   canvas or a beam) to pan the view (#400). Move never adds a node.
-- **Beam:** drag from one node to a different node to join them. The preview
-  only snaps to a node the beam could join (`BuildViewModel.CanConnect`);
-  releasing anywhere else, including over a node already joined to the start,
-  adds nothing. Beam never adds a node.
+- **Beams:** with nothing selected, the panel lists link types: Beam, Piston
+  and later Spring and Wing. Beam is picked each time the tool is entered;
+  selecting a part and clearing it keeps the picked link. Tap a joint, beam,
+  sensor or Piston to select it; tap empty canvas to clear. Drag from a
+  selected joint to move only that joint. Drag from an unselected joint to a
+  different joint to draw the picked link. A Beam preview only snaps to a node
+  the beam could join (`BuildViewModel.CanConnect`); releasing anywhere else
+  adds nothing. A Piston preview uses the refusals and canvas notes in the
+  Piston bullet below. Drag anywhere else pans. Beams never adds a node.
 - **Joint:** tap empty canvas to add a node, or tap a beam to split it at the
   closest point: one change that replaces the beam with two through the new
   node (`BuildViewModel.SplitBeam`).
@@ -95,18 +100,14 @@ a node's own ring always hits.
   (#376; see Parts tray below). Deleting a beam deletes its sensor;
   splitting a beam with the Joint tool moves it, with its id, to the
   longer half.
-- **Piston (#451):** tap the Piston row in the Links tab to pick it: the
-  row shows Selected, no rail tool is, and the status line says "Drag joint
-  to joint." Drag from one joint to another to place a Piston; the preview
-  looks like the Beam preview. Over a joint that would refuse it, the line
-  and that joint's ring turn dashed danger, and dropping there shows the
-  reason at the joint: "A beam already joins these nodes" or "These nodes
-  already have a piston". Dropping away from a joint says "Drop it on
-  another node." and never adds one. The tool stays picked after a
-  placement and ends (back to Move) on a rail tool, a second tap on the row,
-  a tab change or leaving Build. A new Piston is not selected. Taps hit a
-  joint, then a sensor, then a Piston, then a beam. Deleting a joint deletes
-  its Pistons.
+- **Piston (#451, #705):** picked from the Beams link list. Drag joint to
+  joint to place one; over a joint that would refuse it, the line and that
+  joint's ring turn dashed danger, and dropping there shows the reason at the
+  joint: "A beam already joins these nodes" or "These nodes already have a
+  piston". Dropping away from a joint says "Drop it on another node." and
+  never adds one. The picked link stays after placement until another tool is
+  entered. A new Piston is not selected. Taps hit a joint, then a sensor, then
+  a Piston, then a beam. Deleting a joint deletes its Pistons.
 - **Camera aim (#594, #622):** a Camera selected alone shows its rays and an Aim
   handle out along its centre ray past its picture, in any tool, with no
   stem line. It always sits twice as far from the camera's middle as a
@@ -121,7 +122,7 @@ a node's own ring always hits.
 - There is no Delete tool: the part settings and selection panels delete the
   selection, and deleting a node removes every beam on it and those beams'
   sensors (`CreatureBuilder.RemoveNode`).
-- A locked creation opens in Move with Beam and Joint disabled, and
+- A locked creation opens in Move with Beams and Joint disabled, and
   `BuildViewModel` refuses topology edits on its own.
 - **Two fingers, any tool (#400):** pinch zooms about the point between the
   fingers and dragging both pans. The second finger cancels the first
@@ -173,17 +174,17 @@ a node's own ring always hits.
 
 ## Parts tray
 
-With nothing selected, an unlocked creation's side panel shows the Parts
-tray (#374): four `UiIconTabs` (Links, On a joint, Sensors, Blocks) pinned at
-the top, then a scrolling list with the open tab's name, its parts as compact
-`UiPartRow`s and one help line for the tab. `NodeRunner.App.ViewModels.PartTray`
+With nothing selected, an unlocked creation's side panel shows either the
+Beams link list for the Beams tool (#705), or the Parts tray (#374): three
+`UiIconTabs` (On a joint, Sensors, Blocks) pinned at the top, then a scrolling
+list with the open tab's name, its parts as compact `UiPartRow`s and one help
+line for the tab. `NodeRunner.App.ViewModels.PartTray`
 owns the groups, their order, the help lines and each row's state; the screen
 only maps parts to glyphs. Every implemented part is unlimited until #525, so
 rows show no count. A part not yet implemented is a dashed row with a lock,
-and the tab's name row says "Coming later" once. A link row (today the
-Piston) picks its tool on tap (`BuildViewModel.PickPart`, see Interactions).
-The other available rows (today the Accelerometer and the Camera) do nothing
-on tap; they are dragged out instead (#376). Godot's drag-and-drop carries the part: the row starts it and
+and the tab's name row says "Coming later" once. The available rows (today the
+Accelerometer and the Camera) do nothing on tap; they are dragged out instead
+(#376). Godot's drag-and-drop carries the part: the row starts it and
 floats its glyph above the finger (`UiPartRow.CreateDragPreview`), and
 `BuildCanvas` takes the drop in `PartDropZone`, a control over the canvas
 that lets touches through except during a part drag. `BuildGestures.DropTargetAt`
@@ -191,10 +192,10 @@ finds what the part is over (a joint's ring, a sensor picture's beam, a beam
 within reach, then a joint within reach) and `BuildViewModel.PlacePart`
 validates and places it with a fresh id, or refuses it and keeps the reason as
 `PlacementNote`, a canvas note at that part until the next touch or after
-3 s. A drop on empty canvas or back on the panel changes nothing. Beam,
-Joint and Select show a short status line with the tool's glyph above the
-readiness line; Move shows none. One selected part shows its settings and
-several show the selection panel instead.
+3 s. A drop on empty canvas or back on the panel changes nothing. Joint and
+Select show a short status line with the tool's glyph above the readiness
+line; Move and the Beams link list show none. One selected part shows its
+settings and several show the selection panel instead.
 
 ## Part settings
 

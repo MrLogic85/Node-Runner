@@ -8,7 +8,7 @@ public sealed class PartTrayTests
     public void Groups_ListReferenceTabsInOrder()
     {
         PartTray.Groups().Select(group => group.Name)
-            .ShouldBe(["Links", "On a joint", "Sensors", "Blocks"]);
+            .ShouldBe(["On a joint", "Sensors", "Blocks"]);
     }
 
     [Fact]
@@ -16,7 +16,6 @@ public sealed class PartTrayTests
     {
         PartTray.Groups().Select(group => group.Rows.Select(row => row.Name).ToArray()).ShouldBe(
         [
-            ["Spring", "Piston", "Wing"],
             ["Brake", "Servo", "Stepper", "Velocity motor", "Wheel"],
             ["Accelerometer", "Camera"],
             ["Battery", "Generator", "Fuel tank"],
@@ -35,7 +34,6 @@ public sealed class PartTrayTests
     {
         PartTray.Groups().Select(group => group.HelpText).ShouldBe(
         [
-            "Pick one, then drag from one node to another, like the Beam tool.",
             "Drag onto a joint. A joint holds one part.",
             "Drag onto a beam. A beam holds one sensor.",
             "Drag it onto the canvas, then draw beams to its two eyes.",
@@ -45,7 +43,7 @@ public sealed class PartTrayTests
     [Fact]
     public void SensorsTab_HasBothSensorsAvailable()
     {
-        var sensors = PartTray.Groups()[2].Rows;
+        var sensors = PartTray.Groups()[1].Rows;
 
         sensors.Select(row => row.Part).ShouldBe([BuildPart.Accelerometer, BuildPart.Camera]);
         sensors.ShouldAllBe(row => row.State == PartTrayRowState.Available && row.LockedReason == string.Empty);
@@ -56,19 +54,41 @@ public sealed class PartTrayTests
     {
         var rows = PartTray.Groups().SelectMany(group => group.Rows).ToList();
 
-        rows.Where(row => row.Part is not (BuildPart.Accelerometer or BuildPart.Camera or BuildPart.Piston)).ShouldAllBe(row =>
+        rows.Where(row => row.Part is not (BuildPart.Accelerometer or BuildPart.Camera)).ShouldAllBe(row =>
             row.State == PartTrayRowState.ComingLater && !row.IsAvailable && row.LockedReason == "Coming later");
     }
 
     [Fact]
     public void LockedNote_ShowsOnTabsWithALockedRow()
     {
-        PartTray.Groups().Select(group => group.LockedNote).ShouldBe(["Coming later", "Coming later", "", "Coming later"]);
+        PartTray.Groups().Select(group => group.LockedNote).ShouldBe(["Coming later", "", "Coming later"]);
+    }
+
+    [Fact]
+    public void LinkList_ShowsBeamPickedWithFutureLinksLocked()
+    {
+        var list = BuildLinkList.Create(BuildLink.Beam);
+
+        list.Title.ShouldBe("Beams");
+        list.Name.ShouldBe("Links");
+        list.LockedNote.ShouldBe("Coming later");
+        list.HelpText.ShouldBe("A rigid rod. Drag joint to joint.");
+        list.Rows.Select(row => (row.Link, row.Name, row.State)).ShouldBe([
+            (BuildLink.Beam, "Beam", LinkListRowState.Selected),
+            (BuildLink.Piston, "Piston", LinkListRowState.Rest),
+            (BuildLink.Spring, "Spring", LinkListRowState.Locked),
+            (BuildLink.Wing, "Wing", LinkListRowState.Locked)]);
+    }
+
+    [Fact]
+    public void LinkList_HelpFollowsPickedLink()
+    {
+        BuildLinkList.Create(BuildLink.Piston).HelpText.ShouldBe("The brain pushes and pulls it. Drag joint to joint.");
     }
 
     [Theory]
     [InlineData(BuildTool.Move, "")]
-    [InlineData(BuildTool.Beam, "Drag joint to joint.")]
+    [InlineData(BuildTool.Beam, "")]
     [InlineData(BuildTool.Joint, "Tap space or a beam.")]
     [InlineData(BuildTool.Select, "Tap or box parts.")]
     public void PanelToolHint_ShowsOnlyForRailToolsThatNeedIt(BuildTool tool, string expected)
