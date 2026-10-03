@@ -89,7 +89,6 @@ public partial class UiBarCell : BaseButton
             UiThemeLookup.Color(this, _selected ? UiTokens.Color.Accent : UiTokens.Color.LineStrong).ScaleAlpha(opacity),
             _selected ? UiSize.Stroke.Signal : UiSize.Stroke.Hair,
             UiSize.Radius.Small);
-        frame.AntiAliasing = false;
         DrawStyleBox(frame, rect);
 
         if (_iconId != UiIconId.None)
