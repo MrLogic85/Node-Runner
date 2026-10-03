@@ -146,8 +146,8 @@ reference would mislead someone working on that surface.
 - **Piston settings are sliders (#451).** The reference's Piston panel
   lists what it joins ("Between"), its power draw and its weight. Instead
   its Part settings show three `UiSlider`s, Max strength, Stroke and Max
-  speed, and leave those rows out: a Piston has no weight, power comes in
-  0.18.0, and the canvas already shows its two joints. Owner decision: every
+  speed, and leave those rows out: a Piston's weight is fixed, not a
+  setting (#731), power comes in 0.18.0, and the canvas already shows its two joints. Owner decision: every
   setting is editable, and like a Camera's aim a locked creation keeps them.
 - **Differing values on a slider (#704).** The reference has none. Several
   selected Pistons share their sliders; where their values differ the readout

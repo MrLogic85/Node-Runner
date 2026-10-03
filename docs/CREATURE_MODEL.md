@@ -50,8 +50,8 @@ CreatureDef  ──build──▶  physical body  ──sensors──▶  model 
   will make it larger and show their glyph inside. At runtime each node is
   its own `RigidBody2D` with a circle collider at that radius, the size it
   is drawn at. Its rotation is locked, so it grips instead of rolling like a
-  wheel. A node weighs half of every beam it joins: the beam's weight is
-  simulated at its two ends. Nodes are what touch the world; every beam is
+  wheel. A node weighs half of every beam and Piston it joins: their weight is
+  simulated at their two ends. Nodes are what touch the world; every beam is
   pinned to its two nodes (see Beam below).
 - **Degree rules** (how many beams touch a node):
   - **0 beams** — not ready unless a Piston joins it. A node with nothing
@@ -206,8 +206,8 @@ a composition of triangles; a bare quadrilateral stays free to fold.
   and **Max speed** (2 m/s new). Its built length is the distance between
   its nodes in the drawing. At runtime `project/src/creature/PistonLink.cs`
   pushes its two node bodies apart or together along the line between them
-  every physics tick; it has no collider, and its only weight is its end
-  stops' cylinder (below).
+  every physics tick; it has no collider. It weighs like a beam, half on
+  each node, plus its end stops' cylinder (below): one and a half beams.
 - **Not a beam:** inside its stroke it does not hold its length, so it adds no rigidity, and it counts as attached for the node degree rules. A
   Piston cannot join two nodes a beam already joins (the beam would hold
   them rigid), and two nodes hold at most one Piston (`CreatureBuilder.CanAddPiston`).
@@ -224,10 +224,11 @@ a composition of triangles; a bare quadrilateral stays free to fold.
   on node A itself, whose rotation is locked), and a Godot `GrooveJoint2D`
   lets node B slide only along it between the shortest and longest length (`Creature.CreateEndStops`). Inside the stroke the
   groove pushes nothing along the Piston, so it never works against the
-  force; at an end it holds like any joint, giving up to about 10% of the
-  stroke for a few ticks on a hard impact. The cylinder weighs as much as
-  the lightest node (0.1), so it adds a little weight at node A; a much
-  lighter one lets the joint give far more.
+  force; at an end it holds like any joint, giving up to about 15% of the
+  stroke for a few ticks on a hard impact. The cylinder weighs half a beam,
+  sitting at node A. Godot's joints give far more when their bodies are
+  much lighter than the rest: with a weightless Piston and a near-weightless
+  cylinder, a joint held only by Pistons tore free of its end stops (#731).
 - **Minimum length:** the same as a beam's (`CreatureReadiness.MinimumBeamGap`).
 - **Drawn** as a rod from node A to node B with a cylinder at A and a cap at
   B (`project/src/theme/PistonDrawing.cs`), over beams and under joints. The
