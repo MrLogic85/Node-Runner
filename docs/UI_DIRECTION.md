@@ -67,11 +67,15 @@ then the app follows the reference.
   lives in `docs/TRAINING_LOOP.md` step 6. The "One reset" warning moves to
   Reset training in the overflow (#687): a danger item that opens a danger
   dialog, "Reset training?", naming the generations lost, with "Hold to
-  reset". It sits under Copy creation, directly above Delete creation, so
-  the destructive items are grouped at the bottom of the menu. The
-  reference rule against placing two destructive actions side by side
-  (Overlays) gives way here: a mis-tap only opens the other item's dialog,
-  which names its action and still needs a hold. Owner decision.
+  reset". It sits under Copy creation, directly above Delete creation.
+- **Destructive actions may sit side by side if each asks first (#687).**
+  The reference never places two destructive actions side by side
+  (Overlays). Instead two may be neighbours when each opens a dialog and
+  confirms with a press-and-hold: a mis-tap then only opens the wrong
+  dialog, which names its action. A destructive action that acts on a tap,
+  or confirms with a plain tap, never sits next to another. Example: Reset
+  training and Delete creation at the bottom of Build's overflow. Owner
+  decision.
 - **Play is on the rail in both states (#370, 0.13.0).** The reference puts
   Start training in the unlocked top bar and the play button at the bottom
   of the rail only when locked. Instead the primary play button sits at
@@ -86,6 +90,9 @@ then the app follows the reference.
 - **Popups name only warnings and danger (#692).** The reference's popup
   overline spells the type, "DEFAULT" included. Instead a default dialog or
   notification has no overline; the others read "Warning" and "Danger".
+- **Menus have no row hairlines (#696).** The reference's Standard menu
+  draws a 1px line between rows. Instead rows sit without lines; spacing and
+  the press tint separate them. Owner decision.
 - **Build zoom scales lines too (#400).** The reference keeps a block's
   lines at 2px and its eyes node-sized at any zoom. Instead zoom scales the
   whole picture, lines included, the build area's corner marks too. Four
