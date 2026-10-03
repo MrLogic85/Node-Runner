@@ -12,6 +12,7 @@ public partial class UiSegmentedSwitch : HBoxContainer, ISerializationListener
 
     private Godot.Collections.Array<UiSegment> _segments =
         [new() { Text = "1" }, new() { Text = "2" }];
+    private const float _disabledOpacity = 0.5f;
     private readonly HashSet<UiSegment> _observedSegments = [];
     private readonly List<Button> _buttons = [];
     private int _selectedIndex;
@@ -86,6 +87,26 @@ public partial class UiSegmentedSwitch : HBoxContainer, ISerializationListener
         if (what == NotificationThemeChanged && IsNodeReady())
         {
             UiThemeRefresh.Guarded(this, ApplyContentAndTheme);
+        }
+        else if (what == NotificationSortChildren)
+        {
+            QueueRedraw();
+        }
+    }
+
+    // A disabled segment looks like a disabled UiButton: its own dashed outline over a 50% fill.
+    // Drawn here, under the segment, which leaves its border transparent.
+    public override void _Draw()
+    {
+        float stroke = UiSize.Stroke.Hair;
+        Color color = UiThemeLookup.Color(this, UiTokens.Color.LineStrong).ScaleAlpha(_disabledOpacity);
+        for (int index = 0; index < _buttons.Count; index++)
+        {
+            Button button = _buttons[index];
+            if (!button.Disabled)
+                continue;
+            Rect2 rect = button.GetRect().Grow(-stroke * 0.5f);
+            UiDashedBorder.DrawRoundedRect(this, rect, CornersFor(index), color, stroke);
         }
     }
 
@@ -260,7 +281,7 @@ public partial class UiSegmentedSwitch : HBoxContainer, ISerializationListener
             string text = string.IsNullOrWhiteSpace(segment?.Text) ? string.Empty : segment.Text;
             bool hasText = text.Length > 0;
             bool hasIcon = segment is { IconId: not UiIconId.None };
-            button.Disabled = segment is null;
+            button.Disabled = segment is null || segment.Disabled;
             button.Text = text;
             UiThemeLookup.ApplyTypography(button, UiTokens.Typography.Label);
 
@@ -281,6 +302,7 @@ public partial class UiSegmentedSwitch : HBoxContainer, ISerializationListener
             button.AddThemeStyleboxOverride("hover", normal);
             button.AddThemeStyleboxOverride("pressed", selected);
             button.AddThemeStyleboxOverride("hover_pressed", selected);
+            button.AddThemeStyleboxOverride("disabled", CreateDisabledStyle(index));
             StyleBoxFlat focus = CreateStyle(index, true);
             focus.DrawCenter = false;
             focus.BorderColor = UiThemeLookup.Color(this, UiTokens.Color.Halo);
@@ -288,6 +310,16 @@ public partial class UiSegmentedSwitch : HBoxContainer, ISerializationListener
         }
 
         ApplyLayout();
+        QueueRedraw();
+    }
+
+    private StyleBoxFlat CreateDisabledStyle(int index)
+    {
+        StyleBoxFlat style = CreateStyle(index, false);
+        style.BgColor = style.BgColor.ScaleAlpha(_disabledOpacity);
+        style.BorderColor = Colors.Transparent;
+        style.BorderWidthLeft = (int)UiSize.Stroke.Hair;
+        return style;
     }
 
     private void ApplyLayout()
@@ -309,9 +341,8 @@ public partial class UiSegmentedSwitch : HBoxContainer, ISerializationListener
     private StyleBoxFlat CreateStyle(int index, bool selected)
     {
         bool first = index == 0;
-        bool last = index == _segments.Count - 1;
         int stroke = (int)(selected ? UiSize.Stroke.Signal : UiSize.Stroke.Hair);
-        return new StyleBoxFlat
+        StyleBoxFlat style = new()
         {
             BgColor = selected
                 ? UiThemeLookup.Color(this, UiTokens.Color.PanelRaised).Blend(UiThemeLookup.Color(this, UiTokens.Color.Accent).WithAlpha(UiThemeLookup.Alpha(this, UiTokens.Alpha.Soft)))
@@ -321,12 +352,18 @@ public partial class UiSegmentedSwitch : HBoxContainer, ISerializationListener
             BorderWidthTop = stroke,
             BorderWidthRight = stroke,
             BorderWidthBottom = stroke,
-            CornerRadiusTopLeft = first ? (int)UiSize.Radius.Medium : 0,
-            CornerRadiusTopRight = last ? (int)UiSize.Radius.Medium : 0,
-            CornerRadiusBottomLeft = first ? (int)UiSize.Radius.Medium : 0,
-            CornerRadiusBottomRight = last ? (int)UiSize.Radius.Medium : 0,
             ContentMarginLeft = UiSpacing.SegmentedControlHorizontalPadding,
             ContentMarginRight = UiSpacing.SegmentedControlHorizontalPadding,
         };
+        CornersFor(index).ApplyTo(style);
+        return style;
+    }
+
+    // Only the switch's outer corners are round, so its segments read as one control.
+    private UiCorners CornersFor(int index)
+    {
+        float left = index == 0 ? UiSize.Radius.Medium : 0;
+        float right = index == _segments.Count - 1 ? UiSize.Radius.Medium : 0;
+        return new UiCorners(left, right, right, left);
     }
 }

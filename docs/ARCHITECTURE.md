@@ -268,8 +268,8 @@ tied to the retired Muscle model and does not carry over.
 Screens are moving to one scene each, where navigating replaces the current
 scene (#326): a left scene is closed, not paused, and Back rebuilds it from
 its route. #468 is routing them one by one. Creations (the root and the
-main scene), Examples, Build, Training and the component-library pages are
-routed scenes. Build (`BuildRoute`, #363) edits one saved creation and saves
+main scene), Examples, Build, Train setup, Training and the component-library
+pages are routed scenes. Build (`BuildRoute`, #363) edits one saved creation and saves
 each edit as it settles and before it is left (#368); + New saves an empty
 creation first and opens it with `IsNew` (see `docs/BUILD_MODE.md`
 for when Build removes it again). Its layout
@@ -282,11 +282,13 @@ last finished generation and saves each finished one, so leaving drops only
 the generation in progress. Its layout is authored in `TrainingScreen.tscn`
 (#386); the physics world is authored in `TrainingHost.tscn` inside the screen's
 `UiWorldView`, a `SubViewport` with its own camera, so UI scale never changes
-physics distances.
+physics distances. Train setup (`TrainSetupRoute`, #194) sits between
+them: Start saves Shadows and Run length on the creation and opens
+Training without keeping Train setup, so Back from Training lands on Build.
 
 A screen stays in `ui/screens/` and knows nothing of saves or the router's
 type: it emits signals. The routed scene that holds it is a small host in
-`project/src/hosts/` (`CreationsHost`, `ExamplesHost`, `BuildHost`, `TrainingHost`) that wires
+`project/src/hosts/` (`CreationsHost`, `ExamplesHost`, `BuildHost`, `TrainSetupHost`, `TrainingHost`) that wires
 those signals to `SaveManager` and the navigator. The standalone gallery
 pages have nothing to save, so they are routed directly.
 

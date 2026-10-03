@@ -20,6 +20,7 @@ internal static class RewrittenUi
         "ui/screens/GalleryScreen.cs",
         "ui/screens/PopupGalleryScreen.cs",
         "ui/screens/ToolbarsScreen.cs",
+        "ui/screens/TrainSetupScreen.cs",
         "ui/screens/TrainingScreen.cs",
     ];
 
@@ -33,6 +34,7 @@ internal static class RewrittenUi
         "ui/widgets/BuildCanvas.cs",
         "ui/widgets/CreationCard.cs",
         "ui/widgets/CreatureThumbnail.cs",
+        "ui/widgets/MapPreview.cs",
     ];
 
     /// <summary>
@@ -59,6 +61,7 @@ internal static class RewrittenUi
         "screens/ExamplesScreen.tscn",
         "screens/PopupGalleryScreen.tscn",
         "screens/ToolbarsScreen.tscn",
+        "screens/TrainSetupScreen.tscn",
         "screens/TrainingScreen.tscn",
         "widgets/BrainFocusSheet.tscn",
         "widgets/CreationCard.tscn",

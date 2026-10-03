@@ -38,4 +38,29 @@ public sealed class UiDashedBorderTests
 
         points.ShouldBe([Vector2.Zero, new Vector2(8, 0), new Vector2(8, 6), new Vector2(0, 6), Vector2.Zero]);
     }
+
+    [Fact]
+    public void PointOnRoundedRect_KeepsASquareCornerSquare()
+    {
+        // A switch's last segment: round on the right, square on the left.
+        var rect = new Rect2(0, 0, 20, 10);
+        var corners = new UiCorners(0, 4, 4, 0);
+        var arc = Mathf.Pi * 0.5f * 4;
+
+        UiDashedBorder.PointOnRoundedRect(rect, corners, 0).DistanceTo(Vector2.Zero).ShouldBe(0, 1e-3f);
+        UiDashedBorder.PointOnRoundedRect(rect, corners, 16 + arc).DistanceTo(new Vector2(20, 4)).ShouldBe(0, 1e-3f);
+        UiDashedBorder.PointOnRoundedRect(rect, corners, 16 + arc + 2 + arc + 16).DistanceTo(new Vector2(0, 10)).ShouldBe(0, 1e-3f);
+    }
+
+    [Fact]
+    public void PointOnRoundedRect_WithOneRadius_MatchesTheUniformOutline()
+    {
+        var rect = new Rect2(5, 5, 40, 20);
+
+        for (var distance = 0f; distance < 120; distance += 7)
+        {
+            UiDashedBorder.PointOnRoundedRect(rect, 6, distance)
+                .ShouldBe(UiDashedBorder.PointOnRoundedRect(rect, UiCorners.Uniform(6), distance));
+        }
+    }
 }

@@ -16,6 +16,7 @@ public partial class SceneRouter : Node, ISceneNavigator
         [typeof(CreationsRoute)] = "res://scenes/hosts/CreationsHost.tscn",
         [typeof(ExamplesRoute)] = "res://scenes/hosts/ExamplesHost.tscn",
         [typeof(BuildRoute)] = "res://scenes/hosts/BuildHost.tscn",
+        [typeof(TrainSetupRoute)] = "res://scenes/hosts/TrainSetupHost.tscn",
         [typeof(TrainingRoute)] = "res://scenes/hosts/TrainingHost.tscn",
         [typeof(ComponentGalleryRoute)] = "res://scenes/screens/ComponentGalleryScreen.tscn",
         [typeof(ToolbarsRoute)] = "res://scenes/screens/ToolbarsScreen.tscn",

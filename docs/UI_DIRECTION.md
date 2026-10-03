@@ -187,6 +187,18 @@ reference would mislead someone working on that surface.
   (#400) zoom scales the picture, the ground edge included; the ruler's
   ticks and labels keep their screen size, and labels thin out rather than
   overlap (`docs/TRAINING_LOOP.md` → Ruler). Owner decision.
+- **Train setup has no profiles and few choices yet (#194, 0.13.0).** The
+  reference's Train setup offers Shadows from 1 and a working Simulate,
+  power checkbox and map row. Instead Shadows starts at 2 (with one, the
+  only shadow is the unchanged best brain, so nothing is learned), and
+  Simulate (#702) and the locked maps are shown but disabled with "comes in
+  a later version", not the reference's Achievements, which the player
+  cannot act on yet. Run until power is out (0.18) is disabled with the
+  reference's "Needs a battery or generator". Locked maps are disabled cards with a lock,
+  not the library's `Locked` card, which means "the only choice". Each map
+  card shows the reference's picture of its ground (`MapPreview`: one line,
+  accent only on the map in use). There is no Quick/Standard/Deep profile: Shadows and Run length are the only training
+  settings, saved per Creation (#617). Owner decision.
 - **No part counts until 0.19.0 (#374, 0.12.0).** The reference limits the
   parts you place and shows counts ("1 left") in the tray and in Build
   feedback (`reference design/README.md`, Build and "Rules that fix the known
@@ -589,7 +601,7 @@ rings, sensor pictures and rays, and callout leaders draw this way. This has bee
 site (`UiNumber`, `UiDashedBorder`, `UiProgressRing`, `UiSlider`,
 `UiSelectionHandle`, `UiButton`, `UiBoundsDebugOverlay`,
 `BrainFocusNetworkView`,
-`BuildCanvas`, `CreatureThumbnail`, `BeamVisual`). Any new `_Draw()` code
+`BuildCanvas`, `CreatureThumbnail`, `MapPreview`, `BeamVisual`). Any new `_Draw()` code
 must follow the same rule; a stray edge without antialiasing reads as a
 sharp 1px line at any stretch factor, while `antialiased: true` reads as a
 blurry, stretch-factor-wide halo.
@@ -700,7 +712,10 @@ use `Kind = Flat` for the canonical flat style.
 `UiSegmentedSwitch` is also available through Add Node with an editor preview.
 Edit `Segments`, `SelectedIndex`, and `MatchWidth` in the Inspector. Each
 `Segments` entry is a `UiSegment` resource: expand it and edit
-`Text` and the `IconId` dropdown (`None` means no icon). Resource edits update
+`Text`, the `IconId` dropdown (`None` means no icon) and `Disabled`, which
+shows a segment that cannot be chosen yet (Simulate in Train setup, #702)
+like a disabled `UiButton`: a dashed outline over a 50% fill and content,
+with the same corners as an enabled segment in that place. Resource edits update
 the preview directly. New or cleared resource slots are automatically populated
 with independent resources (numbered text, `IconId = None`); remove an array
 entry to delete a segment. Generated buttons are internal children recovered
