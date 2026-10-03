@@ -96,9 +96,10 @@ then the app follows the reference.
 - **Latest, not best, on the card and in Build (#479, 0.13.0).** The
   reference BuildLocked panel shows the best distance. Instead the
   Creations card values and the Build training summary show the latest
-  generation's result, which can drop: the card's line reads "Latest of 12
-  generations" and Build reads "Latest distance 4.0 m". The Training top
-  bar's "Best" (and later Stats) shows the best ever. Owner decision.
+  generation's result, which can drop: Build reads "Latest distance
+  4.0 m", while the card keeps the reference's plain "12 generations".
+  The Training top bar's "Best" (and later Stats) shows the best ever.
+  Owner decision.
 - **No Brain setup (#536).** The reference's Brain setup screen (hidden
   layers, neurons per layer) and its **Brain setup** item in the Build
   overflow menu (Navigation and Build top bar in `reference design/README.md`)
