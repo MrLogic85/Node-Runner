@@ -75,12 +75,11 @@ a node's own ring always hits.
   the selection; an empty tap clears it. Two or more selected joints get a
   dashed frame with three `UiSelectionHandle`s: **Move** in the middle (or
   drag anywhere inside the frame, or a selected joint), **Rotate** on a stem
-  above and **Scale** at the bottom-right corner. A Rotate drag turns the
-  frame and its handles with the group, and they stay turned until the
-  selection changes (`docs/UI_DIRECTION.md` → "The Select frame keeps its
-  turn"). A dragged box shows the halos of the joints it would select.
-  Rotate and Scale turn about the frame's centre, under the Move handle,
-  given to the drag's `SelectionSnapshot`; Scale counts only the drag along
+  above and **Scale** at the bottom-right corner. After a Rotate the frame
+  stays turned until the selection changes (`docs/UI_DIRECTION.md` → "The
+  Select frame keeps its turn"). A dragged box halos the joints
+  it would select. Rotate and Scale turn about the frame's centre, under the
+  Move handle; Scale counts only the drag along
   its diagonal and is clamped to `MinSelectionScale`..`MaxSelectionScale`,
   so the group never collapses or reflects. Every drag frame is computed
   from a `SelectionSnapshot` taken when the drag starts, so nothing drifts.
@@ -204,9 +203,9 @@ there is no close button, and tapping empty canvas deselects. The rows are
 `UiTextField` **Name** first, then what the part is joined to (a joint's
 beams, a beam's two joints, a sensor's beam), then a short note, and one
 full-width danger **Delete** in its own column after them, absent on a
-locked creation. Delete is hold-to-activate (owner decision 2026-10-03),
-so a slip of the finger never removes a part. Structure is read-only here:
-a beam's length is drawn, so its note says "Drag its ends to change the length." instead of a number.
+locked creation. Delete is hold-to-activate, so a slip never removes a
+part. Structure is read-only here: a beam's length is drawn, so its note
+says "Drag its ends to change the length." instead of a number.
 `BuildPresentationViewModel.SinglePart` owns the rows and copy. A part with
 no name of its own shows a default (`BuildViewModel.DefaultPartName`: "Node 2",
 "Beam 1" or the sensor kind) that follows its place in the lists; renaming
@@ -227,9 +226,9 @@ them.
 Several selected joints show the selection panel instead (#558). Its title
 row carries the Select glyph and "N selected"; there is no close button.
 Three `UiInfoRow`s explain the canvas handles (Move, Rotate, Scale), then a
-full-width danger hold-to-activate **Delete N** with the note "Beams on a
+full-width hold-to-activate danger **Delete N** with the note "Beams on a
 deleted node go with it." (`BuildViewModel.DeleteSelectedParts`). A locked
-creation keeps the three rows, because all three handles still work there, and hides Delete.
+creation keeps the three rows, since the handles still work, and hides Delete.
 `BuildPresentationViewModel.Selection` owns the title and Delete copy.
 
 ## Validation

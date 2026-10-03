@@ -13,12 +13,9 @@ public static class UiDashedBorder
         DrawRoundedRect(canvas, rect, radius, color, width, Transform2D.Identity, _dash, _gap, antialiased: false);
 
     /// <summary>
-    /// The dashed outline of <paramref name="rect"/>, each point mapped through
-    /// <paramref name="transform"/>, so it can be drawn turned or in window pixels
-    /// (<see cref="UiPixelSpace"/>). <paramref name="rect"/>, <paramref name="radius"/>,
-    /// <paramref name="dash"/> and <paramref name="gap"/> are in the rect's units;
-    /// <paramref name="width"/> is in the units <paramref name="transform"/> maps to. The
-    /// pattern is stretched a little so the dashes fit the perimeter evenly.
+    /// The dashed outline of <paramref name="rect"/>, mapped through <paramref name="transform"/>.
+    /// Only <paramref name="width"/> is in the transformed units. The dashes are stretched to fit
+    /// the perimeter evenly.
     /// </summary>
     public static void DrawRoundedRect(CanvasItem canvas, Rect2 rect, float radius, Color color, float width, Transform2D transform, float dash, float gap, bool antialiased)
     {
@@ -52,9 +49,8 @@ public static class UiDashedBorder
     }
 
     /// <summary>
-    /// The outline of <paramref name="rect"/> with rounded corners, closed. Only the corner
-    /// arcs are sampled, so the count stays small however large the rect is, which keeps a
-    /// filled polygon cheap to triangulate.
+    /// The closed outline of <paramref name="rect"/> with rounded corners. Only the arcs are
+    /// sampled, so a filled polygon stays cheap to triangulate.
     /// </summary>
     public static Vector2[] RoundedRectPoints(Rect2 rect, float radius)
     {

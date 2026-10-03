@@ -55,9 +55,8 @@ public static class TriangleHatch
         return lines;
     }
 
-    // Adds what is left of start–end outside every circle of radius round the corners. Not
-    // Geometry2D: SegmentIntersectsCircle gives only one crossing, ClipPolylineWithPolygon would
-    // need each circle as a polygon, and both need the engine, which the Ui tests run without.
+    // Adds the parts of start–end outside the corner circles. Not Geometry2D: SegmentIntersectsCircle
+    // gives one crossing, ClipPolylineWithPolygon needs polygons, and both need the engine.
     private static void AddOutside(List<(Vector2, Vector2)> lines, Vector2 start, Vector2 end, Vector2[] corners, float radius, int corner = 0)
     {
         if (corner == corners.Length || radius <= 0)

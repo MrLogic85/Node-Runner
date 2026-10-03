@@ -117,18 +117,16 @@ public sealed class BuildGestures
     public (Vector2D Start, Vector2D End)? SelectionBox { get; private set; }
 
     /// <summary>
-    /// The dashed frame around a Select selection of two or more joints, in canvas units, before
-    /// <see cref="SelectionFrameAngle"/> turns it about its centre: their rings plus a little
-    /// padding, never smaller on screen than room for the handles.
+    /// The Select frame around two or more joints, padded and never smaller on screen than room for
+    /// the handles, in canvas units, before <see cref="SelectionFrameAngle"/> turns it.
     /// </summary>
     public CanvasRect? SelectionFrame => Layout() is { } layout
         ? new CanvasRect(View.ToCanvas(layout.Frame.Min), View.ToCanvas(layout.Frame.Max))
         : null;
 
     /// <summary>
-    /// How far <see cref="SelectionFrame"/> is turned about its centre, in radians. A Rotate drag
-    /// turns it with the group, and it keeps that angle, fitted to the group, until the selection
-    /// changes.
+    /// How far <see cref="SelectionFrame"/> is turned, in radians; kept from the last Rotate until
+    /// the selection changes.
     /// </summary>
     public double SelectionFrameAngle => Layout()?.Angle ?? 0;
 
@@ -634,10 +632,8 @@ public sealed class BuildGestures
     }
 
     /// <summary>
-    /// The frame and its handles in view units, while Select has two or more joints and no box is
-    /// being dragged. At rest the frame is fitted to the joints' rings along its own axes, turned
-    /// by the angle the last Rotate drag left; during a Rotate drag the layout from its start turns
-    /// with the group about its centre.
+    /// The frame and handles in view units while Select has two or more joints and no box is
+    /// dragged: fitted to the joints along its own axes, or during a Rotate, the start layout turned.
     /// </summary>
     private FrameLayout? Layout()
     {

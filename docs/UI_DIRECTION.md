@@ -101,16 +101,11 @@ then the app follows the reference.
   Owner decision. Likewise a locked Camera can still be aimed (#638):
   only what changes the model is locked.
 - **The Select frame keeps its turn (owner decision 2026-10-03).** The
-  reference draws one upright layout: Rotate on a stem above the frame,
-  Scale at its bottom-right corner, and the hint "Move, rotate or scale the
-  group" just under it. Ours keeps that layout, also at the canvas edge,
-  and leaves out the hint, which was in the way. After a Rotate drag the
-  frame, its corner squares and its handles stay turned with the group,
-  the frame fitted to the group along its own axes, until the selection
-  changes; a new selection starts upright. The reference has no box select;
-  ours matches the frame: a screen-size `radius-sm` rect dashed 5 on 4 off
-  at 1.5, filled `halo` at `alpha_soft`, and the joints it would catch show
-  their halo while it is dragged.
+  reference's frame is always upright, with a hint under it. Ours drops the
+  hint, which was in the way, and after a Rotate the frame and its handles
+  stay turned with the group until the selection changes. The reference
+  has no box select; ours is dashed like the frame, filled `halo` at
+  `alpha_soft`, and halos the joints it would catch.
 - **Piston settings are sliders (#451).** The reference's Piston panel
   lists what it joins ("Between"), its power draw and its weight. Instead
   its Part settings show three `UiSlider`s, Max strength, Stroke and Max
@@ -249,20 +244,13 @@ then the app follows the reference.
 - **Plain joints are a bearing in a cell (#626, owner decisions 2026-10-03).**
   The reference draws a plain joint as an r 6 circle filled with `panel` and a
   `line-strong` stroke ⅔ of the 3-wide beam, so the joint covers the beam
-  ends. Instead a plain joint, in Build and Training, is drawn by
-  `JointDrawing` as:
-  - a `line-strong` ring, `stroke-signal` (2) wide, whose outer edge is
-    `NodeDef.PlainJointRadius`, the size it collides at;
-  - a fine `line-strong` inner ring, `stroke-hair` (1) wide, at 0.55 of the
-    radius, at every zoom, left out on a loose joint, under its cross;
-  - a soft tint inside (`alpha_soft`) in its state colour: `line-strong`,
-    `halo` when selected or caught by a Select box, `danger` when loose
-    (with its `danger` ring and cross).
-
-  Lines scale with the zoom, with no minimum width. A Training shadow draws
-  the outer ring only. Beams and Piston rods stop under the ring, with flat
-  ends on its centre line, so nothing reaches the middle. A motor joint's
-  larger ring with its glyph comes with the motors (#452, #454).
+  ends. Instead `JointDrawing` draws, in Build and Training, a
+  `line-strong` `stroke-signal` ring whose outer edge is
+  `NodeDef.PlainJointRadius`, a `stroke-hair` inner ring at 0.55 of it
+  (not on a loose joint, which shows a `danger` ring and cross), and an `alpha_soft` tint: `line-strong`, `halo`
+  when selected, `danger` when loose. Lines scale with the zoom. A Training
+  shadow draws the outer ring only. Beams and Piston rods stop flat under
+  the ring. Motor joints come with #452 and #454.
 - **UI size has no touch floor and no over-200% layout (#299, 0.12.0).** The
   reference (`Settings`) keeps 48px controls under 100% and opens side panels
   over the arena above about 200%. Instead everything around the arena and
@@ -739,10 +727,8 @@ Other icon sizes follow the reference's rules
   `icon` (16) in a `control-sm` row (a Compact menu row, the picker's list).
 - **Icons inside a ring.** An icon inside a ring is `icon` (16). The selection
   handle and the info row that shows it both draw the same round button
-  (`UiSelectionHandle.DrawRoundButton`); as in the reference, only the Move
-  handle on the canvas fills it `accent-soft`, the rest `panel`. Its
-  `accent-soft` lies over a `bg` disc, so parts under the handle do not show
-  through it.
+  (`UiSelectionHandle.DrawRoundButton`). As in the reference, only the
+  canvas Move handle is filled `accent-soft` (over `bg`, so it stays opaque).
 - **Part glyphs.** A part glyph is never drawn at `icon-sm`; `UiIcons.Load`
   rejects that pairing.
 - **A lone icon in a scene.** `UiIcon` places one canonical icon beside text a

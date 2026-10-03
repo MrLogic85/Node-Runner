@@ -500,9 +500,8 @@ public partial class BuildCanvas : Node2D
     }
 
     /// <summary>
-    /// The dashed frame around a Select selection with its corner squares and rotate stem, drawn
-    /// last, at screen size like its handles and in window pixels so its edges are smooth. It is
-    /// turned as far as the group was rotated.
+    /// The Select frame, corner squares and rotate stem, drawn last at screen size in window
+    /// pixels, turned with the group.
     /// </summary>
     private void DrawSelectionFrame()
     {

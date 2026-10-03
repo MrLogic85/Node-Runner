@@ -4,12 +4,9 @@ using NodeRunner.Ui.Lib;
 namespace NodeRunner.Theme;
 
 /// <summary>
-/// Draws a plain joint (#626, owner decision 2026-10-03), shared by Build's canvas and the creature
-/// in Training: a bearing in a cell. A thin ring in the beam's colour whose outer edge is the joint's
-/// radius, so it is drawn at the size it collides at; a fine inner ring; and a soft tint inside in
-/// the joint's state colour (<see cref="JointLook"/>). Drawn in window pixels (<see cref="UiPixelSpace"/>)
-/// so it stays crisp at any zoom; <c>drawTransform</c> is the transform the caller draws with, and is
-/// restored afterwards. Beams and Pistons stop under the ring (<see cref="BeamSpan"/>).
+/// Draws a plain joint in Build and Training (#626): a ring whose outer edge is the collision
+/// radius, a fine inner ring and a tint for its <see cref="JointLook"/>. Drawn in window pixels
+/// (<see cref="UiPixelSpace"/>); <c>drawTransform</c> is the caller's transform, restored afterwards.
 /// </summary>
 public static class JointDrawing
 {
@@ -56,11 +53,9 @@ public static class JointDrawing
     }
 
     /// <summary>
-    /// The part of a beam from joint <paramref name="a"/> to joint <paramref name="b"/> that is drawn:
-    /// from ring to ring, ending on each ring's centre line. A beam has flat ends, so a joint of at
-    /// least five units' radius hides its corners under its ring, and nothing reaches the middle.
-    /// Null when the rings meet and nothing is left between them. <paramref name="ringWidth"/> is
-    /// the ring's stroke, <see cref="VisualTheme.JointRingWidth"/>.
+    /// The drawn part of a beam from <paramref name="a"/> to <paramref name="b"/>: from one ring's
+    /// centre line to the other's, so its flat ends hide under rings of radius 5 or more. Null when
+    /// the rings meet.
     /// </summary>
     public static (Vector2 Start, Vector2 End)? BeamSpan(float ringWidth, Vector2 a, float radiusA, Vector2 b, float radiusB)
     {
