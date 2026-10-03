@@ -312,7 +312,9 @@ by the TrainSetup and Training component READMEs under `reference design/compone
     or closing the app mid-generation drops only the generation in
     progress; reopening continues from the last finished one. The save is guarded by the creation's
     training epoch, so a save still in flight when the training is reset
-    is dropped.
+    is dropped. Saves for one creation land in order, and reading a
+    creation (`ICreationUpdateCoordinator.Get`) waits for them, so Build
+    opened right after Training never shows a stale lock or summary (#370).
   - A session stops after the profile's generation budget. Speed and pause
     belong to the scene and start from 1x and running each time it opens.
   - Run on its own (F6) the scene trains the built-in worm without saving.

@@ -37,16 +37,13 @@ public partial class BuildScreen : Control
     public delegate void ResetTrainingRequestedEventHandler();
 
     [Signal]
+    public delegate void CopyCreationRequestedEventHandler();
+
+    [Signal]
     public delegate void DeleteCreationRequestedEventHandler();
 
     [Signal]
     public delegate void DeleteSelectionRequestedEventHandler();
-
-    [Signal]
-    public delegate void StatsRequestedEventHandler();
-
-    [Signal]
-    public delegate void BrainRequestedEventHandler();
 
     [Signal]
     public delegate void ToolRequestedEventHandler(BuildTool tool);
@@ -98,14 +95,13 @@ public partial class BuildScreen : Control
         GetNode<UiButton>("%StartTraining").Activated += () => EmitSignal(SignalName.StartTrainingRequested);
         GetNode<UiButton>("%Unlock").Activated += () => EmitSignal(SignalName.UnlockRequested);
         BindMenuItem(toolbar, GetNode<UiMenuActionItem>("%MenuResetTraining"), () => EmitSignal(SignalName.ResetTrainingRequested));
+        BindMenuItem(toolbar, GetNode<UiMenuActionItem>("%MenuCopyCreation"), () => EmitSignal(SignalName.CopyCreationRequested));
         BindMenuItem(toolbar, GetNode<UiMenuActionItem>("%MenuDeleteCreation"), () => EmitSignal(SignalName.DeleteCreationRequested));
         BindTool(GetNode<UiButton>("%MoveTool"), BuildTool.Move);
         BindTool(GetNode<UiButton>("%BeamTool"), BuildTool.Beam);
         BindTool(GetNode<UiButton>("%JointTool"), BuildTool.Joint);
         BindTool(GetNode<UiButton>("%SelectTool"), BuildTool.Select);
         GetNode<UiIconTabs>("%PartTabs").TabSelected += OnPartTabSelected;
-        GetNode<UiButton>("%Stats").Activated += () => EmitSignal(SignalName.StatsRequested);
-        GetNode<UiButton>("%Brain").Activated += () => EmitSignal(SignalName.BrainRequested);
         GetNode<UiButton>("%PartDelete").Activated += () => EmitSignal(SignalName.DeleteSelectionRequested);
         GetNode<UiButton>("%SelectionDelete").Activated += () => EmitSignal(SignalName.DeleteSelectionRequested);
         var partName = GetNode<UiTextField>("%PartName");
@@ -213,7 +209,9 @@ public partial class BuildScreen : Control
 
         GetNode<UiButton>("%StartTraining").Disabled = !buildPanel.CanStartTraining;
         GetNode<UiButton>("%Unlock").Visible = locked;
+        GetNode<UiMenuActionItem>("%MenuStats").Visible = presentation.IsTrained;
         GetNode<UiMenuActionItem>("%MenuResetTraining").Visible = presentation.IsTrained;
+        GetNode<UiMenuActionItem>("%MenuCopyCreation").Visible = presentation.IsTrained;
     }
 
     private void ApplyTools(BuildPresentationViewModel presentation)

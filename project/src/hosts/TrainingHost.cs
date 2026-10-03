@@ -340,7 +340,8 @@ public partial class TrainingHost : Node, IRoutedScene
 
     // Saving reads the creation back off disk and writes it again, synchronous file IO (#113) that
     // would stall physics at a generation boundary, so it runs on the thread pool. Only plain values
-    // cross to that thread, and nothing comes back to this scene, which may be gone by then.
+    // cross to that thread, and nothing comes back to this scene, which may be gone by then. Build
+    // reads the creation only once the queued saves have landed (#370).
     private void PersistTraining()
     {
         // A generation without a valid trial has no latest brain, so it isn't saved.
@@ -359,22 +360,19 @@ public partial class TrainingHost : Node, IRoutedScene
         var latest = new TrainingRunDef(run.Distance, run.TopSpeed, run.Elevation, MapIds.Flat);
         var training = TrainingStateDef.Record(_saved, brain, _evolver.Generation, latest);
         _saved = training;
-        Task.Run(() => PersistTrainingSnapshot(saves, id, epoch, training));
+        saves.PersistTrainingInBackground(id, epoch, training).ContinueWith(
+            failed => ReportFailedSave(id, training.Generation, failed.Exception!),
+            CancellationToken.None,
+            TaskContinuationOptions.OnlyOnFaulted,
+            TaskScheduler.Default);
     }
 
-    private static void PersistTrainingSnapshot(SaveManager saves, Guid id, long epoch, TrainingStateDef training)
+    private static void ReportFailedSave(Guid id, int generation, Exception exception)
     {
-        try
-        {
-            saves.TryPersistTraining(id, epoch, training);
-        }
-        catch (Exception ex)
-        {
-            // A data-loss condition: keep the whole exception and fail loud (CODE_DESIGN_PRINCIPLES
-            // "Fail loud in dev"). Logged from the main thread, even after this scene is gone.
-            var error = $"Failed to persist training state for Creation {id} at generation {training.Generation}: {ex}";
-            Callable.From(() => GD.PrintErr(error)).CallDeferred();
-        }
+        // A data-loss condition: keep the whole exception and fail loud (CODE_DESIGN_PRINCIPLES
+        // "Fail loud in dev"). Logged from the main thread, even after this scene is gone.
+        var error = $"Failed to persist training state for Creation {id} at generation {generation}: {exception}";
+        Callable.From(() => GD.PrintErr(error)).CallDeferred();
     }
 
     // Pausing freezes the whole tree, so the trial in progress, its fitness and its boundary checks

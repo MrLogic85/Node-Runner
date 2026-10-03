@@ -118,11 +118,10 @@ public partial class BuildHost : Node, IRoutedScene
         _buildScreen.CreationNameChanged += RenameActiveCreation;
         _buildScreen.UnlockRequested += RequestUnlock;
         _buildScreen.ResetTrainingRequested += ResetActiveCreationTraining;
+        _buildScreen.CopyCreationRequested += CopyActiveCreation;
         _buildScreen.DeleteCreationRequested += RequestDeleteActiveCreation;
         _buildScreen.PartNameChanged += Build.RenamePart;
         _buildScreen.DeleteSelectionRequested += Build.DeleteSelectedParts;
-        _buildScreen.StatsRequested += () => Notify("Stats", "Stats open in milestone 0.12.0.");
-        _buildScreen.BrainRequested += () => Notify("Brain view", "Brain view opens in milestone 0.12.0.");
     }
 
     // Training opens in its own scene from the saved creation, so the edits save first; only a
@@ -143,6 +142,26 @@ public partial class BuildHost : Node, IRoutedScene
 
         Notify("Train setup", "Train setup opens in milestone 0.12.0.");
         _navigator?.Navigate(new SceneNavigation(new TrainingRoute(id)));
+    }
+
+    // The copy keeps the trained brain, so the player can change one and keep the other.
+    private void CopyActiveCreation()
+    {
+        if (_autosave?.CreationId is not { } id || !SaveEdits(playerAsked: true))
+        {
+            return;
+        }
+
+        CreationDef? copy = null;
+        if (!CreationActions.TryRunFileOperation(() => copy = Saves.Duplicate(id), $"Copying Creation {id}") || copy is null)
+        {
+            UiNotificationLayer.Enqueue(this, new UiNotificationSpec(
+                UiPopupType.Danger, "Copy failed", "The creation could not be copied.", Icon: new(UiIconId.Copy)));
+            return;
+        }
+
+        UiNotificationLayer.Enqueue(this, new UiNotificationSpec(
+            UiPopupType.Default, "Creation copied", $"{copy.Name} is in Creations.", Icon: new(UiIconId.Copy)));
     }
 
     private void ShowCreations() => _navigator?.ReturnToRoot();
