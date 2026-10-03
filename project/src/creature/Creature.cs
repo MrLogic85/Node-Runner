@@ -32,9 +32,10 @@ public partial class Creature : Node2D
     // Training camera zooms out (#675) still takes a finger.
     private const float _hitTolerancePixels = 16;
 
-    // Beams draw one z step under their creature's joints, so the followed creature sits two steps
-    // above the shadows: even its beams are never drawn under a shadow's joints (#385).
-    private const int _followedZIndex = 2;
+    // Beams draw one z step under their creature's joints and the rigid hatch two (#627), so the
+    // followed creature sits three steps above the shadows: even its hatch is never drawn under a
+    // shadow's joints (#385).
+    private const int _followedZIndex = 3;
 
     private RigidBody2D[] _beamBodies = [];
     private float[] _beamHalfLengths = [];
@@ -45,6 +46,7 @@ public partial class Creature : Node2D
     private float[] _nodeColliderRadii = [];
     private NodeVisual[] _nodeVisuals = [];
     private BeamVisual[] _beamVisuals = [];
+    private RigidHatchVisual[] _hatchVisuals = [];
     private SensorVisual[] _sensorVisuals = [];
     private PistonLink[] _pistons = [];
     private PistonVisual[] _pistonVisuals = [];
@@ -132,6 +134,7 @@ public partial class Creature : Node2D
         _isBuilt = true;
 
         CreateBeams(definition);
+        CreateRigidHatches(definition);
         CreateNodes(definition);
         PinBeamsToNodes(definition);
         CreateSensors(definition);
@@ -413,6 +416,11 @@ public partial class Creature : Node2D
             visual.IsShadow = _isShadow;
         }
 
+        foreach (var visual in _hatchVisuals)
+        {
+            visual.IsShadow = _isShadow;
+        }
+
         foreach (var visual in _sensorVisuals)
         {
             visual.IsShadow = _isShadow;
@@ -573,6 +581,55 @@ public partial class Creature : Node2D
         AddChild(pin);
         pin.NodeA = pin.GetPathTo(_nodeBodies[nodeIndex]);
         pin.NodeB = pin.GetPathTo(_beamBodies[beamIndex]);
+    }
+
+    // Each rigid triangle's hatch rides on one of its beams. The lines are laid out in the
+    // creature's built space, as in Build, so the hatches of triangles that share a beam line up.
+    private void CreateRigidHatches(CreatureDef definition)
+    {
+        var hatches = new List<RigidHatchVisual>();
+        foreach (var triangle in RigidTriangles.Of(definition))
+        {
+            var beamIndex = BeamIndexBetween(definition, triangle.NodeA, triangle.NodeB);
+            if (beamIndex < 0)
+            {
+                continue;
+            }
+
+            var a = ToGodot(definition.Nodes[triangle.NodeA].Position);
+            var b = ToGodot(definition.Nodes[triangle.NodeB].Position);
+            var c = ToGodot(definition.Nodes[triangle.NodeC].Position);
+            var toBeam = new Transform2D(_beamInitialRotations[beamIndex], _beamInitialPositions[beamIndex]).AffineInverse();
+            var jointRadius = ToGodotFloat(definition.Nodes[triangle.NodeA].Radius, nameof(NodeDef.Radius));
+            var visual = new RigidHatchVisual
+            {
+                Name = $"Hatch{hatches.Count}",
+                ZIndex = -2,
+                Color = Theme.RigidHatch,
+                Lines = TriangleHatch.Lines(a, b, c, Theme.RigidHatchSpacing, jointRadius)
+                    .SelectMany(line => new[] { toBeam * line.Start, toBeam * line.End })
+                    .ToArray(),
+            };
+            _beamBodies[beamIndex].AddChild(visual);
+            hatches.Add(visual);
+        }
+
+        _hatchVisuals = [.. hatches];
+    }
+
+    private static int BeamIndexBetween(CreatureDef definition, int nodeIndexA, int nodeIndexB)
+    {
+        var (idA, idB) = (definition.Nodes[nodeIndexA].Id, definition.Nodes[nodeIndexB].Id);
+        for (var i = 0; i < definition.Beams.Count; i++)
+        {
+            var beam = definition.Beams[i];
+            if ((beam.NodeA == idA && beam.NodeB == idB) || (beam.NodeA == idB && beam.NodeB == idA))
+            {
+                return i;
+            }
+        }
+
+        return -1;
     }
 
     private void CreateSensors(CreatureDef definition)
