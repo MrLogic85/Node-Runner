@@ -37,8 +37,8 @@ locked is overridden in `docs/TRAINING_LOOP.md` → Product lifecycle boundary.
   shape change. Only what changes the model is locked (#638). The padlock
   in the top bar unlocks it for this visit and keeps the training (#371,
   `docs/TRAINING_LOOP.md` step 6). Once a creation has training, the
-  overflow menu also offers Stats (coming soon), Reset training and Copy
-  creation (#370); the copy keeps the trained brain. Reset training asks
+  overflow menu also offers Stats (coming soon), Copy creation and Reset
+  training (#370); the copy keeps the trained brain. Reset training asks
   first with a press-and-hold (#687).
 
 ## Coordinates
