@@ -33,7 +33,7 @@ public static class DirectBrain
         ArgumentNullException.ThrowIfNull(ports);
 
         var graph = new Graph(brain);
-        var genome = new double[NeuralNetwork.GenomeLength(LayerSizes(ports))];
+        var genome = new double[GenomeLength(ports)];
         var biasStart = ports.Inputs.Count * ports.Outputs.Count;
         for (var o = 0; o < ports.Outputs.Count; o++)
         {
@@ -98,7 +98,7 @@ public static class DirectBrain
     {
         ArgumentNullException.ThrowIfNull(ports);
         ArgumentNullException.ThrowIfNull(genome);
-        if (genome.Length != NeuralNetwork.GenomeLength(LayerSizes(ports)))
+        if (genome.Length != GenomeLength(ports))
         {
             throw new ArgumentException("Genome length must match the ports.", nameof(genome));
         }
@@ -129,6 +129,18 @@ public static class DirectBrain
 
         return new BrainDef([.. inputs, .. outputs], genes, nextId);
     }
+
+    /// <summary>
+    /// <paramref name="brain"/> fitted to a rebuilt creature's <paramref name="ports"/> (#516). Ports
+    /// match by part id, channel and direction: a kept port keeps its neuron, connections and bias, a
+    /// new port starts almost passive, and a removed port's neuron and connections are dropped. Part
+    /// ids are never reused, so a new part never inherits a removed part's weights.
+    /// </summary>
+    public static BrainDef Refit(BrainDef brain, BrainPortLayout ports) => ToBrainDef(ports, Compile(brain, ports), brain);
+
+    // NeuralNetwork's genome length for these layer sizes, which is also defined, as empty, for a
+    // creature with no inputs or no outputs: one rebuilt down to bare sensors or bare Pistons.
+    private static int GenomeLength(BrainPortLayout ports) => (ports.Inputs.Count * ports.Outputs.Count) + ports.Outputs.Count;
 
     private static Activation ToActivation(NeuronActivation activation) => activation switch
     {

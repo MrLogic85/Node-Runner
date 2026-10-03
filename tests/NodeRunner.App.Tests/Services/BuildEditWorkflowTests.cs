@@ -16,11 +16,14 @@ public sealed class BuildEditWorkflowTests
         repository.Save(original);
         var workflow = new BuildEditWorkflow(coordinator);
 
-        var result = workflow.PersistEdit(original.Id, editedCreature, moveOnly: true);
+        var result = workflow.PersistEdit(original.Id, editedCreature);
 
         result.ShouldNotBeNull();
         result.Creature.ShouldBe(editedCreature);
-        result.Training.ShouldBe(original.Training);
+        result.Training.ShouldNotBeNull();
+        result.Training.Generation.ShouldBe(original.Training!.Generation);
+        result.Training.Brain.Neurons.ShouldBe(original.Training.Brain.Neurons);
+        result.Training.Brain.Connections.ShouldBe(original.Training.Brain.Connections);
         repository.Get(original.Id)!.Creature.ShouldBe(editedCreature);
     }
 
@@ -31,7 +34,7 @@ public sealed class BuildEditWorkflowTests
         var coordinator = new CreationUpdateCoordinator(repository);
         var workflow = new BuildEditWorkflow(coordinator);
 
-        var result = workflow.PersistEdit(Guid.NewGuid(), CreateCreature(x: 3), moveOnly: true);
+        var result = workflow.PersistEdit(Guid.NewGuid(), CreateCreature(x: 3));
 
         result.ShouldBeNull();
         repository.List().ShouldBeEmpty();
@@ -43,10 +46,10 @@ public sealed class BuildEditWorkflowTests
         var coordinator = Substitute.For<ICreationUpdateCoordinator>();
         var id = Guid.NewGuid();
         var editedCreature = CreateCreature(x: 3);
-        coordinator.ApplyEdit(id, editedCreature, moveOnly: true).Returns(_ => throw new IOException("disk full"));
+        coordinator.ApplyEdit(id, editedCreature).Returns(_ => throw new IOException("disk full"));
         var workflow = new BuildEditWorkflow(coordinator);
 
-        Should.Throw<IOException>(() => workflow.PersistEdit(id, editedCreature, moveOnly: true));
+        Should.Throw<IOException>(() => workflow.PersistEdit(id, editedCreature));
     }
 
     [Fact]
@@ -60,7 +63,7 @@ public sealed class BuildEditWorkflowTests
     {
         var workflow = new BuildEditWorkflow(Substitute.For<ICreationUpdateCoordinator>());
 
-        Should.Throw<ArgumentNullException>(() => workflow.PersistEdit(Guid.NewGuid(), null!, moveOnly: true));
+        Should.Throw<ArgumentNullException>(() => workflow.PersistEdit(Guid.NewGuid(), null!));
     }
 
     [Fact]
@@ -68,7 +71,7 @@ public sealed class BuildEditWorkflowTests
     {
         var workflow = new BuildEditWorkflow(Substitute.For<ICreationUpdateCoordinator>());
 
-        Should.Throw<ArgumentException>(() => workflow.PersistEdit(Guid.Empty, CreateCreature(x: 3), moveOnly: true));
+        Should.Throw<ArgumentException>(() => workflow.PersistEdit(Guid.Empty, CreateCreature(x: 3)));
     }
 
     private static CreationDef CreateCreation(string name, double x, int generation)
@@ -77,7 +80,7 @@ public sealed class BuildEditWorkflowTests
             Guid.NewGuid(),
             name,
             CreateCreature(x),
-            TestTraining.State(generation, 1, TestTraining.Run));
+            TestTraining.StateFor(CreateCreature(x), generation));
     }
 
     private static CreatureDef CreateCreature(double x)
@@ -85,6 +88,7 @@ public sealed class BuildEditWorkflowTests
         return new CreatureDef(
             [new NodeDef(1, new Vector2D(x, 0), 1), new NodeDef(2, new Vector2D(x + 2, 0), 1)],
             [new BeamDef(101, 1, 2)],
-            [new SensorDef(201, 101, SensorKind.Accelerometer)]);
+            [new SensorDef(201, 101, SensorKind.Accelerometer)],
+            [new PistonDef(301, 1, 2)]);
     }
 }

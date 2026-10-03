@@ -180,8 +180,8 @@ public partial class BuildHost : Node, IRoutedScene
     }
 
     // Saves the drawing as it stands, finished or not: only training needs a creature that can be
-    // simulated (#515). A locked creation is move-only and keeps its brain and training
-    // (CreationLock). Returns false when edits are left unsaved; the next save tries again. A save
+    // simulated (#515). Every saved edit keeps the training, with its brain refitted to the edited
+    // creature's ports (ICreationUpdateCoordinator.ApplyEdit, #516). Returns false when edits are left unsaved; the next save tries again. A save
     // the player asked for reports every failure; background saves report only the first in a row.
     private bool SaveEdits(bool playerAsked)
     {

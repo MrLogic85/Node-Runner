@@ -104,9 +104,10 @@ every output.
 | `connections[]` | `{ from, to, weight, enabled }` | A connection gene between two neuron ids, from a lower layer to a higher one; at most one per pair. A disabled gene keeps its weight but carries no signal. |
 | `nextNeuronId` | int | The next free neuron id. Higher than every id in use; ids are never reused. |
 
-A port with no neuron yet, such as a part added after training, starts
-silent: its connections compile to 0. Neurons for ports the creature no
-longer has are dropped on the next save.
+A port with no neuron yet starts silent: its connections compile to 0.
+Saving a Build edit refits the brain to the edited creature's ports (#516,
+`docs/CREATURE_MODEL.md` → "A rebuild keeps the brain"), so the saved brain
+always matches the saved creature.
 
 ### Planned for `creation.json`
 

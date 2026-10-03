@@ -275,6 +275,13 @@ picture but costs an offscreen pass each, so it is left out for performance.
     its incoming weights are 0 and a new strength output starts at bias −4,
     about 2% force. Sigmoid has no dead zone, so mutation can still raise it.
     Position and velocity outputs start at 0.
+  - **A rebuild keeps the brain (#516):** saving a Build edit to a trained
+    creature refits its saved brain to the new ports (`DirectBrain.Refit`).
+    Ports match by part id, channel and direction: a kept port keeps its
+    weights and bias, a new port starts almost passive as above, and a
+    removed part's neurons and connections are dropped. Moving nodes or
+    changing a part's settings keeps every port. Part ids are never reused,
+    so a part removed and added again is a new part that starts passive.
 - **Input count** = `(accelerometer count × 2) + (camera count × 3) +
   (piston count × 2)`.
 - **Output count** = `piston count × 2`.

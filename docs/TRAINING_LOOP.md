@@ -32,9 +32,11 @@ not "a training session has finished".
 
 1. An unlocked Build autosaves and opens Train setup through Start training.
    Saving a Creation never needs a finished creature; only training does
-   (`CreatureReadiness`, #515). An edit saved from an unlocked Build replaces
-   the anatomy and drops any training, even a generation
-   that finished while Build was open, so no genome outlives its anatomy.
+   (`CreatureReadiness`, #515). Saving an edit keeps any training, even a
+   generation that finished while Build was open, and refits its brain to
+   the edited anatomy (#516, `docs/CREATURE_MODEL.md` → "A rebuild keeps
+   the brain"). Generation, latest and best are kept; Training then resumes
+   from the refitted brain.
 2. Train setup opens Training.
 3. Each finished generation is saved. Once the Creation has trained at
    least one generation it is locked (`CreationLock.IsLocked`, #369): the
