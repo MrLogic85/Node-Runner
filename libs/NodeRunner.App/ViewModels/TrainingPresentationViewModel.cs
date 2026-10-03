@@ -82,7 +82,7 @@ public sealed class TrainingPresentationViewModel : INotifyPropertyChanged, IDis
     }
 
     /// <summary>The shadow strip (#387): which shadows it shows and how full their bars are.</summary>
-    public ShadowStripView Strip => _strip.View(Shadows, _generation, _bestFitness);
+    public ShadowStripView Strip => _strip.View(Shadows, _generation);
 
     /// <summary>Ranks the strip by distance so far and shows its first page.</summary>
     public void SortShadows() => _strip.Sort(Shadows, _generation);

@@ -51,10 +51,10 @@ public sealed class ShadowStripPresentation
 
     /// <summary>
     /// The strip for <paramref name="shadows"/> in <paramref name="generation"/>. Bars measure each
-    /// shadow's distance against the best ever, <paramref name="bestFitness"/>, or against the
-    /// leader once it goes further, so the bars grow during a run.
+    /// shadow's distance against this generation's leader, whose bar is full. Not against the
+    /// best ever: that may come from a run with another trial length (owner decision).
     /// </summary>
-    public ShadowStripView View(IReadOnlyList<ShadowStanding> shadows, int generation, double bestFitness)
+    public ShadowStripView View(IReadOnlyList<ShadowStanding> shadows, int generation)
     {
         ArgumentNullException.ThrowIfNull(shadows);
         if (generation != _generation || shadows.Count != _ranking.Length)
@@ -69,7 +69,7 @@ public sealed class ShadowStripPresentation
             return ShadowStripView.Empty;
         }
 
-        var scale = Scale(shadows, bestFitness);
+        var scale = Scale(shadows);
         var pages = shadows.Count > Places;
         var shown = pages ? _ranking.Skip(PageStart(shadows.Count)).Take(CellsPerPage) : _ranking;
         var cells = shown
@@ -113,9 +113,9 @@ public sealed class ShadowStripPresentation
 
     private static int LastPage(int count) => count <= Places ? 0 : (count - 1) / CellsPerPage;
 
-    private static double Scale(IReadOnlyList<ShadowStanding> shadows, double bestFitness)
+    private static double Scale(IReadOnlyList<ShadowStanding> shadows)
     {
-        var scale = double.IsFinite(bestFitness) ? bestFitness : 0;
+        var scale = 0.0;
         foreach (var shadow in shadows)
         {
             if (double.IsFinite(shadow.Distance))
