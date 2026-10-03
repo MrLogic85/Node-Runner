@@ -39,10 +39,10 @@ theme_override_constants/separation = 0
 unique_name_in_owner = true
 layout_mode = 2
 
-[node name="ToolbarContent" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/HBoxContainer/MarginContainer" index="0"]
+[node name="ToolbarContent" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/HBoxContainer/Field/MarginContainer" index="0"]
 theme_override_constants/separation = 8
 
-[node name="CreationName" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/HBoxContainer/MarginContainer/ToolbarContent" index="0"]
+[node name="CreationName" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/HBoxContainer/Field/MarginContainer/ToolbarContent" index="0"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
@@ -50,7 +50,7 @@ size_flags_vertical = 4
 script = ExtResource("4_text_field")
 TextValue = "Untitled Creation"
 
-[node name="Unlock" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/HBoxContainer/MarginContainer/ToolbarContent" index="1"]
+[node name="Unlock" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/HBoxContainer/Field/MarginContainer/ToolbarContent" index="1"]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2

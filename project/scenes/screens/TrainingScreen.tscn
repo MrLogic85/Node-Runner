@@ -36,17 +36,17 @@ unique_name_in_owner = true
 layout_mode = 2
 ShowOverflow = false
 
-[node name="ToolbarContent" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/HBoxContainer/MarginContainer" index="0"]
+[node name="ToolbarContent" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/HBoxContainer/Field/MarginContainer" index="0"]
 theme_override_constants/separation = 8
 
-[node name="Heading" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/HBoxContainer/MarginContainer/ToolbarContent" index="0"]
+[node name="Heading" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/HBoxContainer/Field/MarginContainer/ToolbarContent" index="0"]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 4
 mouse_filter = 2
 theme_override_constants/separation = 0
 
-[node name="CreationName" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/HBoxContainer/MarginContainer/ToolbarContent/Heading"]
+[node name="CreationName" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/HBoxContainer/Field/MarginContainer/ToolbarContent/Heading"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "Walker-1"
@@ -54,19 +54,19 @@ text_overrun_behavior = 3
 script = ExtResource("4_label")
 TextStyle = 1
 
-[node name="Status" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/HBoxContainer/MarginContainer/ToolbarContent/Heading"]
+[node name="Status" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/HBoxContainer/Field/MarginContainer/ToolbarContent/Heading"]
 layout_mode = 2
 mouse_filter = 2
 theme_override_constants/separation = 4
 
-[node name="StatusDot" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/HBoxContainer/MarginContainer/ToolbarContent/Heading/Status"]
+[node name="StatusDot" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/HBoxContainer/Field/MarginContainer/ToolbarContent/Heading/Status"]
 layout_mode = 2
 text = "●"
 script = ExtResource("4_label")
 TextStyle = 9
 TextColor = 9
 
-[node name="StatusText" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/HBoxContainer/MarginContainer/ToolbarContent/Heading/Status"]
+[node name="StatusText" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/HBoxContainer/Field/MarginContainer/ToolbarContent/Heading/Status"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "Training · Flat ground"
@@ -74,12 +74,12 @@ script = ExtResource("4_label")
 TextStyle = 9
 TextColor = 8
 
-[node name="Actions" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/HBoxContainer/MarginContainer/ToolbarContent" index="1"]
+[node name="Actions" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/HBoxContainer/Field/MarginContainer/ToolbarContent" index="1"]
 layout_mode = 2
 mouse_filter = 2
 theme_override_constants/separation = 16
 
-[node name="Brain" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/HBoxContainer/MarginContainer/ToolbarContent/Actions"]
+[node name="Brain" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/HBoxContainer/Field/MarginContainer/ToolbarContent/Actions"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 4
@@ -89,7 +89,7 @@ script = ExtResource("5_button")
 IconId = 18
 Kind = 1
 
-[node name="Stats" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/HBoxContainer/MarginContainer/ToolbarContent/Actions"]
+[node name="Stats" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/HBoxContainer/Field/MarginContainer/ToolbarContent/Actions"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 4

@@ -5,6 +5,9 @@ namespace NodeRunner.Ui.Lib;
 /// <summary>
 /// Reference toolbar (<c>ComponentToolbars</c>): Back, one flexible field for the
 /// screen's title and trailing actions, then the overflow, always last.
+/// The field scrolls sideways and has no minimum width, so content that does not
+/// fit is clipped and never pushes Back or the overflow off screen (#737); it
+/// clips only then, so the glow of actions that fit is not cut.
 /// The toolbar owns the overflow menu's node, its position under the overflow
 /// button, opening it, and closing it on a tap outside or Back; the screen fills
 /// <see cref="Menu"/> and decides what each item does.
@@ -20,6 +23,8 @@ public partial class UiToolbar : MarginContainer
     private static readonly Vector2 _overflowBottomRight = Vector2.One;
 
     private UiButton? _back;
+    private ScrollContainer? _field;
+    private Control? _fieldContent;
     private UiButton? _overflow;
     private bool _showBack = true;
     private bool _showOverflow = true;
@@ -86,6 +91,11 @@ public partial class UiToolbar : MarginContainer
         _overflow.Activated += ToggleMenu;
         Menu.Dismissible = true;
         Menu.Resized += FollowOverflow;
+        _field = GetNode<ScrollContainer>("%Field");
+        _fieldContent = _field.GetChild<Control>(0);
+        _field.Resized += ClipOnlyOverflow;
+        _fieldContent.MinimumSizeChanged += ClipOnlyOverflow;
+        ClipOnlyOverflow();
     }
 
     public override void _ExitTree()
@@ -108,6 +118,17 @@ public partial class UiToolbar : MarginContainer
 
         Menu.Show();
         FollowOverflow();
+    }
+
+    // A ScrollContainer always clips, which would cut the glow of toolbar actions even when they fit.
+    private void ClipOnlyOverflow()
+    {
+        if (_field is null || _fieldContent is null)
+        {
+            return;
+        }
+
+        _field.ClipContents = _fieldContent.GetCombinedMinimumSize().X > _field.Size.X;
     }
 
     private void OnBackActivated() => EmitSignal(SignalName.BackPressed);

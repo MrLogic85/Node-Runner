@@ -523,6 +523,10 @@ hidden and only the camera cutout has to be avoided. Godot's
 autoload (`UiSafeArea`) turns it into canvas-unit insets. `UiFrame` adds them
 at runtime to the card margin its scene authors, so each screen's background
 still reaches the screen edge and only the card with the content is inset.
+`UiFrame` is never larger than the window: it sets its maximum size to the
+visible canvas, and its scene propagates that maximum down to the card, so a
+screen whose content needs more room is clipped by the card instead of
+growing the frame off screen (#737).
 A 180-degree turn moves the cutout without changing the window size or
 sending a Godot event, so on a phone the autoload also polls. Dialogs are
 centred and notifications sit at the bottom centre, so both stay clear of a
@@ -569,9 +573,9 @@ page sets it for the session. The Settings slider snaps to 5% steps
 
 A screen's root has no 640 x 360 minimum, so the canvas may shrink
 below it. 640 x 360 is still the smallest canvas the layouts fit: on a phone,
-whose canvas is already 360 units high at 100%, any larger size makes screens
-taller than the window, and Godot centres them, cutting off both edges.
-Keeping sizes above 100% usable on phones is #609.
+whose canvas is already 360 units high at 100%, any larger size keeps the
+frame and toolbar on screen but clips the content below them (see "Screen
+size and safe area"). Keeping sizes above 100% usable on phones is #609.
 
 ## Press feedback
 
@@ -1175,7 +1179,11 @@ navigation (the standalone gallery entry is a debug page), insets its title
 48px (`TitleInset`, the Back button's touch width) so the title sits where
 titles after Back do. The reference's empty 40px `w-col-xs` slot leaves it
 8px short. Nodes a screen adds live under
-`Toolbar/HBoxContainer/MarginContainer/ToolbarContent`. The toolbar also owns the overflow
+`Toolbar/HBoxContainer/Field/MarginContainer/ToolbarContent`. `Field` is a
+`ScrollContainer` that scrolls sideways with a hidden bar, so the field has no
+minimum width: content wider than the space between Back and Overflow is
+clipped and can be dragged, and never pushes them out (#737). The field clips
+only while its content overflows, so actions that fit keep their whole glow. The toolbar also owns the overflow
 `Menu`: it anchors it under Overflow, opens it and makes it dismissible; the
 screen authors the items and decides what each does. `BackPressed` is its only
 signal. It fills with `panel`, like the button bar and side panel, over the

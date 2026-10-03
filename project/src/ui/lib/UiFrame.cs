@@ -5,6 +5,9 @@ namespace NodeRunner.Ui.Lib;
 /// <summary>
 /// A screen's frame: the background fills the whole window, and the card with the screen's content
 /// sits inside the display safe area, so no control lands under a camera cutout (#513).
+/// The frame is never larger than the window, and the scene propagates that maximum down to the
+/// card, so content that needs more room is clipped by the card instead of pushing the frame off
+/// screen (#737).
 /// </summary>
 [Tool]
 [GlobalClass]
@@ -44,12 +47,19 @@ public partial class UiFrame : PanelContainer
         _safeArea = UiSafeArea.Of(this);
         _safeArea?.Changed += ApplySafeArea;
         ApplySafeArea();
+        if (!Engine.IsEditorHint())
+        {
+            GetViewport().SizeChanged += FitWindow;
+            FitWindow();
+        }
     }
 
     public override void _ExitTree()
     {
         _safeArea?.Changed -= ApplySafeArea;
         _safeArea = null;
+        if (!Engine.IsEditorHint())
+            GetViewport().SizeChanged -= FitWindow;
     }
 
     public override void _Notification(int what)
@@ -65,6 +75,8 @@ public partial class UiFrame : PanelContainer
 
         _background?.Color = UiThemeLookup.Color(this, UiTokens.Color.Background);
     }
+
+    private void FitWindow() => CustomMaximumSize = GetViewport().GetVisibleRect().Size;
 
     // Only runs outside the editor (there is no safe area there), so no runtime margin is saved into a scene.
     private void ApplySafeArea()
