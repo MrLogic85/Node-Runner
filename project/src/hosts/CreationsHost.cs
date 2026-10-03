@@ -114,6 +114,6 @@ public partial class CreationsHost : Node, IRoutedScene
         UiNotificationLayer.Enqueue(this, new UiNotificationSpec(
             UiPopupType.Default,
             "Achievements",
-            "Achievements open in milestone 0.13.0.",
+            "Achievements come in a later version.",
             Icon: new(UiIconId.Trophy)));
 }

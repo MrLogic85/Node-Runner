@@ -140,7 +140,6 @@ public partial class BuildHost : Node, IRoutedScene
             _navigator?.ReplaceCurrent(_route);
         }
 
-        Notify("Train setup", "Train setup opens in milestone 0.12.0.");
         _navigator?.Navigate(new SceneNavigation(new TrainingRoute(id)));
     }
 
