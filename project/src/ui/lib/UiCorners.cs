@@ -26,7 +26,7 @@ public readonly record struct UiCorners(float TopLeft, float TopRight, float Bot
     /// <summary>Fills <paramref name="rect"/> on <paramref name="canvas"/> with these corners.</summary>
     public void Fill(CanvasItem canvas, Rect2 rect, Color color)
     {
-        var style = new StyleBoxFlat { BgColor = color, AntiAliasing = false };
+        var style = new StyleBoxFlat { BgColor = color };
         ApplyTo(style);
         canvas.DrawStyleBox(style, rect);
     }

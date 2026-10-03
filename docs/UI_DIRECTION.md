@@ -666,6 +666,11 @@ must follow the same rule; a stray edge without antialiasing reads as a
 sharp 1px line at any stretch factor, while `antialiased: true` reads as a
 blurry, stretch-factor-wide halo.
 
+The rule does not cover `DrawStyleBox`: Godot divides a `StyleBoxFlat`'s
+feather by the viewport's oversampling, so it stays about one device pixel at
+any stretch or UI size, even when drawn from `_Draw()`. Keep
+`StyleBoxFlat.AntiAliasing` on, its default (#732).
+
 ## Theme boundaries
 
 Tron/neon is the reference theme, not a permanent constraint. Implementation
