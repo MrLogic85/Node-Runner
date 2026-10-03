@@ -167,8 +167,8 @@ Long-form descriptions and the sensor/model contract live in
   the scene, assigns new brains.
 - **Fixed timestep** — Physics/NN updates happen at a locked 60 Hz regardless
   of frame rate. Required for determinism.
-- **Run** — One evaluation episode for a population, typically 10 seconds
-  (600 ticks).
+- **Run** — One evaluation episode for a population. Its length is the
+  Creation's Run length in Train setup, 10 seconds by default.
 - **Seed** — Integer input to the RNG. Written to logs; shown in UI.
 - **Tick** — One fixed-step update. Sensors → brain → Pistons → physics step
   → fitness accumulation.

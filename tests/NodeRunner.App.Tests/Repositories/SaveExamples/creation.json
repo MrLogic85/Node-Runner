@@ -214,5 +214,9 @@
       "distance": 4.25,
       "mapId": "flat"
     }
+  },
+  "trainSettings": {
+    "shadows": 12,
+    "runLengthSeconds": 20
   }
 }

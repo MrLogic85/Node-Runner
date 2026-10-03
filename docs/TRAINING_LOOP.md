@@ -190,12 +190,15 @@ transition to keep in step with it.
   - `Evolver.Start` retains a one-slot compatibility mode when no creature
     factory is supplied. Production `TrainingHost` supplies the factory and
     uses parallel evaluation.
-- `TrainingHost` creates one `Evolver` with the fixed Standard training
-  profile (population, trial duration, generation budget, tournament size,
-  mutation rate/strength and crossover strategy). The Quick/Deep choice and
-  its settings sheet were removed with the Training shell (#386); training
-  setup returns with TrainSetup (#194). Uniform crossover preserves parent
-  genes; Blend crossover samples continuous values between the two parent
+- `TrainingHost` creates one `Evolver` from the Creation's Train setup
+  values (`TrainSettingsDef`, turned into Evolver inputs by
+  `EvolutionSetup`, #617): Shadows is the population and Run
+  length the trial duration. A Creation that has not been through Train
+  setup uses `TrainSettingsDef.Default` (8 shadows, 10 s) until Settings
+  stores a default (#379). There are no training profiles: tournament size
+  (3, or the Shadows count if smaller), mutation rate and strength and
+  uniform crossover are fixed. Training runs until the player leaves; there
+  is no generation budget. Uniform crossover preserves parent genes; Blend crossover samples continuous values between the two parent
   genes, giving a later experiment for the competing-conventions plateau
   without changing the underlying network.
   `StartEvolution()` (`TrainingHost`) runs once when the scene opens. It
@@ -314,7 +317,7 @@ component READMEs under `reference design/components/` guide its presentation.
     is dropped. Saves for one creation land in order, and reading a
     creation (`ICreationUpdateCoordinator.Get`) waits for them, so Build
     opened right after Training never shows a stale lock or summary (#370).
-  - A session stops after the profile's generation budget. Speed and pause
+  - Training runs until the player leaves. Speed and pause
     belong to the scene and start from 1x and running each time it opens.
   - Run on its own (F6) the scene trains the built-in worm without saving.
 - The Training screen's top bar shows the creation's name, the status

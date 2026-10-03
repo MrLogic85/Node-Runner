@@ -20,7 +20,9 @@ change to a saved shape changes this document and the schemas in
   `JsonException` that names the field. `SaveJson` gets this from
   System.Text.Json's own options; the app does not run a schema validator.
   Those options don't check list items, so the domain records reject a
-  `null` part themselves. A name the records know but do not save (a
+  `null` part themselves, and values outside their range (such as
+  `trainSettings.shadows` above 32), so narrowing a range is a format
+  change. A name the records know but do not save (a
   node's `radius`, #626) is skipped, not rejected.
   One example `creation.json`
   (`tests/NodeRunner.App.Tests/Repositories/SaveExamples/`) checks that a
@@ -69,6 +71,7 @@ Schema: [`save-schema/creation.schema.json`](save-schema/creation.schema.json).
 | `name` | string | Shown on the card and in Build. Not empty. |
 | `creature` | object | The drawn body; see below. |
 | `training` | object or `null` | `null` until a generation has finished. |
+| `trainSettings` | `{ shadows, runLengthSeconds }` or `null` | Train setup's values from its last Start (#617). `null` until then; Train setup and Training use the default (8 shadows, 10 s) until Settings stores one (#379). `shadows` is 2–32, `runLengthSeconds` 5–60. |
 
 `creature`:
 
@@ -116,7 +119,7 @@ always matches the saved creature.
 |---|---|
 | `revision`: bumped on every saved rebuild | #541 |
 | `training.state`: map-loop position, the elites of other fitness functions | #540, #317 |
-| `training.settings`: Shadows, checked maps, fitness functions | #528, #540, #317 |
+| `trainSettings`: checked maps, fitness functions | #540, #317 |
 | `training.latest` and `training.best` per map | #540 |
 | `created`, `updated` | Added with the first feature that shows them. |
 

@@ -9,7 +9,7 @@ namespace NodeRunner.Creature;
 public partial class Creature : Node2D
 {
     /// <summary>The most shadows a generation runs at once (#384).</summary>
-    public const int MaximumShadows = 32;
+    public const int MaximumShadows = TrainSettingsDef.MaxShadows;
 
     // Ground is layer 1. Every creature body, in every shadow, shares layer 2 and masks only the
     // ground, so shadows never touch each other or their own parts (#384).

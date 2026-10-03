@@ -23,6 +23,19 @@ public sealed class CreationDefTests
         roundTripped.Training.Brain.Connections.ToArray().ShouldBe(original.Training.Brain.Connections.ToArray());
         roundTripped.Training.Brain.NextNeuronId.ShouldBe(original.Training.Brain.NextNeuronId);
         roundTripped.Training.Generation.ShouldBe(original.Training.Generation);
+        roundTripped.TrainSettings.ShouldBe(original.TrainSettings);
+    }
+
+    [Fact]
+    public void WithHelpers_KeepTheTrainSettings()
+    {
+        var original = CreateCreation();
+
+        original.WithName("Crawler").TrainSettings.ShouldBe(original.TrainSettings);
+        original.WithTraining(null).TrainSettings.ShouldBe(original.TrainSettings);
+        original.WithCreature(CreateCreature(), null).TrainSettings.ShouldBe(original.TrainSettings);
+        original.CopyAs(Guid.NewGuid(), "Copy").TrainSettings.ShouldBe(original.TrainSettings);
+        original.WithTrainSettings(new TrainSettingsDef(4, 30)).TrainSettings.ShouldBe(new TrainSettingsDef(4, 30));
     }
 
     [Fact]
@@ -39,7 +52,8 @@ public sealed class CreationDefTests
             Guid.NewGuid(),
             "Worm",
             CreateCreature(),
-            TestTraining.State(7, 1, TestTraining.Run));
+            TestTraining.State(7, 1, TestTraining.Run),
+            new TrainSettingsDef(12, 20));
     }
 
     private static CreatureDef CreateCreature()

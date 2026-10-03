@@ -257,7 +257,7 @@ public partial class BuildHost : Node, IRoutedScene
         if (!CreationActions.TryRunFileOperation(
             () => renamed = Saves.UpdateIfPresent(
                 id,
-                source => new CreationDef(source.Id, name, source.Creature, source.Training)),
+                source => source.WithName(name)),
             $"Renaming Creation '{id}'"))
         {
             return;
