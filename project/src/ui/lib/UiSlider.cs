@@ -120,6 +120,7 @@ public partial class UiSlider : Control, ISerializationListener
     private double _lowPosition = 0.5;
     private double _highPosition = 0.5;
     private string[] _stepLabels = [];
+    private double _step;
     private double _markerPosition = -1;
     private string _markerText = string.Empty;
     private bool _disabled;
@@ -209,6 +210,17 @@ public partial class UiSlider : Control, ISerializationListener
             NormalizeRangePositionsIfReady();
             QueueRedraw();
         }
+    }
+
+    /// <summary>
+    /// The distance between two stops on the 0…1 track, like Godot's <c>Range.step</c>: a dragged
+    /// thumb stops only on whole steps, so it never runs ahead of a stepped value (#711). 0 moves smoothly.
+    /// </summary>
+    [Export(PropertyHint.Range, "0,1,0.001")]
+    public double Step
+    {
+        get => _step;
+        set => _step = Math.Max(0, value);
     }
 
     public override void _ValidateProperty(Godot.Collections.Dictionary property)
@@ -809,7 +821,7 @@ public partial class UiSlider : Control, ISerializationListener
         var trackRight = Mathf.Max(trackLeft, Size.X - _style.ThumbRadius);
         var position = trackRight <= trackLeft
             ? 0
-            : UiComponentContracts.ClampSliderPosition((x - trackLeft) / (trackRight - trackLeft));
+            : UiComponentContracts.SnapSliderPosition((x - trackLeft) / (trackRight - trackLeft), Step);
         var next = Value.WithThumb(_draggedThumb, position);
 
         if (Mathf.IsEqualApprox((float)Value.ThumbAt(_draggedThumb), (float)next.ThumbAt(_draggedThumb)))

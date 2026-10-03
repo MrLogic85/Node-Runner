@@ -84,6 +84,7 @@ public partial class TrainSetupScreen : Control
     {
         slider.LabelText = value.Label;
         slider.ReadoutText = value.Readout;
+        slider.Step = value.Step;
         slider.HighPosition = value.Position;
         if (!slider.StepLabels.SequenceEqual(ends))
         {

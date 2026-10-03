@@ -418,6 +418,7 @@ public partial class BuildScreen : Control
             {
                 sliders[index].LabelText = values[index].Label;
                 sliders[index].ReadoutText = values[index].Readout;
+                sliders[index].Step = values[index].Step;
                 sliders[index].HighPosition = values[index].Position;
             }
         }

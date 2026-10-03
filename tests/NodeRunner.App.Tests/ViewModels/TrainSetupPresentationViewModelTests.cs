@@ -28,6 +28,15 @@ public sealed class TrainSetupPresentationViewModelTests
     }
 
     [Fact]
+    public void Steps_AreOneShadowAndFiveSeconds()
+    {
+        var setup = new TrainSetupPresentationViewModel(Creation());
+
+        setup.Shadows.Step.ShouldBe(1.0 / 30, 1e-9);
+        setup.RunLength.Step.ShouldBe(5.0 / 55, 1e-9);
+    }
+
+    [Fact]
     public void Ends_AreTheSettingsLimits()
     {
         var setup = new TrainSetupPresentationViewModel(Creation());

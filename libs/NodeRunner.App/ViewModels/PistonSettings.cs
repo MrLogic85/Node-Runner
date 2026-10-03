@@ -3,8 +3,11 @@ using NodeRunner.Domain;
 
 namespace NodeRunner.App.ViewModels;
 
-/// <summary>One slider row in Part settings: its label, its readout and its thumb at 0…1.</summary>
-public sealed record PartSlider(string Label, string Readout, double Position);
+/// <summary>
+/// One stepped slider row: its label, its readout, its thumb at 0…1 and the distance between two
+/// whole steps on that scale, so the thumb stops only where the value does (#711).
+/// </summary>
+public sealed record PartSlider(string Label, string Readout, double Position, double Step);
 
 /// <summary>A Piston's three sliders in Part settings (#451).</summary>
 public sealed record PistonSettingsPresentation(PartSlider Strength, PartSlider Stroke, PartSlider MaxSpeed);
@@ -14,6 +17,9 @@ public sealed record SettingRange(double Min, double Max, double Step)
 {
     /// <summary>Where <paramref name="value"/> sits on the slider, 0…1.</summary>
     public double Position(double value) => Math.Clamp((value - Min) / (Max - Min), 0, 1);
+
+    /// <summary>One step as a share of the slider, 0…1.</summary>
+    public double PositionStep => Step / (Max - Min);
 
     /// <summary>The value at slider <paramref name="position"/>, on a whole step.</summary>
     public double ValueAt(double position)
@@ -45,9 +51,9 @@ public static class PistonSettings
         var stroke = piston.Stroke * 100;
         var maxSpeed = Metres.FromWorldUnits(piston.MaxSpeed);
         return new PistonSettingsPresentation(
-            new PartSlider("Max strength", $"{strength.ToString("0", CultureInfo.InvariantCulture)} N", Strength.Position(strength)),
-            new PartSlider("Stroke", $"±{stroke.ToString("0", CultureInfo.InvariantCulture)}%", Stroke.Position(stroke)),
-            new PartSlider("Max speed", $"{maxSpeed.ToString("0.0", CultureInfo.InvariantCulture)} m/s", MaxSpeed.Position(maxSpeed)));
+            new PartSlider("Max strength", $"{strength.ToString("0", CultureInfo.InvariantCulture)} N", Strength.Position(strength), Strength.PositionStep),
+            new PartSlider("Stroke", $"±{stroke.ToString("0", CultureInfo.InvariantCulture)}%", Stroke.Position(stroke), Stroke.PositionStep),
+            new PartSlider("Max speed", $"{maxSpeed.ToString("0.0", CultureInfo.InvariantCulture)} m/s", MaxSpeed.Position(maxSpeed), MaxSpeed.PositionStep));
     }
 
     /// <summary>The Max strength, in world units, at slider <paramref name="position"/>.</summary>
