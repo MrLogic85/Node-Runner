@@ -29,14 +29,20 @@ layer owns the durable lifecycle, guided by
 (Navigation, BuildLocked), "locked" means exactly "has trained at least one
 generation", not "a training session has finished" (#369, 2026-09-30).
 
-1. An unlocked Build autosaves and opens Train setup through Start training.
+1. Build's play button autosaves and opens Train setup, unlocked or locked.
    Saving a Creation never needs a finished creature; only training does
    (`CreatureReadiness`, #515). Saving an edit keeps any training, even a
    generation that finished while Build was open, and refits its brain to
    the edited anatomy (#516, `docs/CREATURE_MODEL.md` → "A rebuild keeps
    the brain"). Generation, latest and best are kept; Training then resumes
    from the refitted brain.
-2. Train setup opens Training.
+2. Train setup (`TrainSetupRoute`, #194) sets Shadows and Run length,
+   filled from the Creation's saved values or the default (#617). Start
+   saves them on the Creation and opens Training in Train setup's place,
+   so Back from Training returns to Build; Back from Train setup discards
+   the changes. Simulate (#702), map choice (#540) and Run until power is
+   out (0.18) are shown but not available yet; Flat ground is the only map,
+   and its card takes its name from `Maps.Default` (#444).
 3. Each finished generation is saved. Once the Creation has trained at
    least one generation it is locked (`CreationLock.IsLocked`, #369): the
    anatomy stays as the trained model needs it, so the model cannot
@@ -60,8 +66,8 @@ transition to keep in step with it.
 ## Trial (issue #49)
 
 - `TrialMeasurement` (`libs/NodeRunner.ML/Ga/TrialMeasurement.cs`) is a
-  plain, engine-free tracker: `Reset(startX)` begins a trial,
-  `Record(centerX, clearance)` is called every tick, and `Result` is a
+  plain, engine-free tracker: `Reset(startX, startFrontX)` begins a trial,
+  `Record(centerX, frontX, clearance)` is called every tick, and `Result` is a
   `TrialResult` (issue #420):
   - `Distance` — the **running maximum** forward horizontal distance from
     the start position, not the final position and not cumulative
@@ -74,8 +80,15 @@ transition to keep in step with it.
     point and the ground top, counted once the creature has landed
     (clearance at most `TrialMeasurement.LandedClearance`), so the starting
     drop doesn't count; a crawler scores 0.
+  - `FrontDistance` — how far ahead of its start the creature's front-most
+    point (`Creature.Bounds.End.X`) is at the latest tick, or was when the
+    trial ended; never below 0 (#725). It is the **shown distance**: the
+    ruler, the shadow strip, signal flow's Distance stage, the best marker, the
+    Creations card and Build all read it, so the number on screen matches
+    where the creature's nose stands on the ruler. It is not the score; the
+    GA still ranks by the centre's `Distance` (owner decision).
   - `IsValid` — false when physics blew up (#650): a sample was NaN or
-    infinite, or the centre or lowest point moved further in one tick than
+    infinite, or the centre, the front or the lowest point moved further in one tick than
     `TrialMeasurement.MaxPlausibleSpeed` (10 000 units/s) allows. Pistons
     move at most their Max speed (200 units/s by default) and the Worm
     crawls well under that, so only a blow-up gets near the limit. Once invalid, the trial stops measuring.
@@ -84,25 +97,33 @@ transition to keep in step with it.
     invalid trial with its generation and candidate. Invalid results never
     become `LatestRun` or the best, never count toward `MeanFitness`, and must never be
     shown as real results (for example in Stats, #541).
-  - `Distance`, `TopSpeed` (units/s), `Elevation` and `Fitness` are in
+  - `Distance`, `FrontDistance`, `TopSpeed` (units/s), `Elevation` and `Fitness` are in
     world units. Text the player reads shows them in metres (see
     `docs/GLOSSARY.md` → Metre).
 - **Latest and best ever (#479).** Training is noisy, so a later
   generation can do worse than an earlier one; that is not a bug. The
-  saved training keeps two records for the map it trained on (`flat`
+  saved training keeps two records for the map it trained on (`map-flat`
   until more maps exist):
   - **Latest:** the best trial of the most recently finished generation:
     `Evolver.LatestGenome`/`LatestRun`, saved as `TrainingStateDef.Brain`
     and `Latest` (`TrainingRunDef`). It can go down. The Creations card
     and Build's training summary show it, and Simulate and the warm start
     use its brain, because that is what the creature can do now.
-  - **Best ever:** the furthest any generation got, and which generation
+  - **Best ever:** the highest score any generation got, and which generation
     that was: `Evolver.BestFitness`/`BestGeneration`, saved as
-    `TrainingStateDef.Best` (`TrainingBestDef`). It never goes down. The
-    Training top bar's "Best" shows it, and later Stats.
+    `TrainingStateDef.Best` (`TrainingBestDef`). Its score never goes down.
+    The Training arena's best marker shows it, and later Stats.
   - `TrainingStateDef.Record` is the rule: every finished generation
-    replaces latest, and replaces the best only when it goes further. A
+    replaces latest, and replaces the best only when it scores higher. A
     generation without a valid trial has no latest, so it isn't saved.
+  - Both records keep the score (`Distance`) and the shown distance
+    (`FrontDistance`, #725). The score alone decides which run is the best.
+    The best's shown distance is kept apart from it: the furthest any
+    latest run's front has ended on that map (`Evolver.BestShownDistance`),
+    whichever run holds the score (owner decision). So the best marker
+    never moves back and never reads below Latest. A save from before #725
+    has no front distance: Latest shows its score (`ShownDistance`), and
+    the best marker stays hidden until the next generation is saved.
 - `TrialController` (`project/src/sim/TrialController.cs`) is a `Node` that
   times a fixed-duration trial (`TrialDurationTicks`, default 600 ≈ 10s at
   60Hz) for one `Creature` instance at a time. It does **not** own creature
@@ -112,9 +133,9 @@ transition to keep in step with it.
   and shifts the whole creature so its lowest point is
   `TrialController.StartClearance`, 6 creature units, above the ground) and
   resets the `TrialMeasurement` from the creature's current
-  `CenterOfMass.X`. Every trial, in every parallel slot, starts from this
+  `CenterOfMass.X` and front-most X (`Bounds.End.X`). Every trial, in every parallel slot, starts from this
   same small drop (#649). The fall counts as trial time; distance is
-  measured from the start X, so the drop doesn't change fitness. Each tick it records `CenterOfMass.X` and the clearance
+  measured from the start X, so the drop doesn't change fitness. Each tick it records `CenterOfMass.X`, `Bounds.End.X` and the clearance
   `GroundTopY - Creature.LowestPointY`. `TrialCompleted` fires once the
   tick budget is spent, with the final `TrialResult`.
 - `Creature.CenterOfMass` is the average `GlobalPosition` of all beam
@@ -170,8 +191,8 @@ transition to keep in step with it.
     drawing all 32 at 30 % opacity raised p95 to 16.6 ms and PSS to about
     436 MiB. With simplified shadows (#385) 32 shadows stay at 8.3 ms and
     about 366 MiB.
-  - Followed shadow (#385): one shadow is drawn in full, two z steps above
-    the others, and feeds signal flow, the brain and part selection; every
+  - Followed shadow (#385): one shadow is drawn in full, three z steps above
+    the others (so even its rigid hatch, #627, stays above their joints), and feeds signal flow, the brain and part selection; every
     other shadow is drawn simplified (`docs/CREATURE_MODEL.md` → "Drawing
     as a shadow") at `alpha_shadow`. Shadow `i` is slot `i`, which runs
     candidate `i`. The default is shadow 1 (slot 0): the resumed genome or
@@ -184,18 +205,38 @@ transition to keep in step with it.
     running shadow, previous best) and `Follow(number)` for the shadow strip
     (#387). The camera frames the followed shadow (see "The Training
     scene" → Camera).
+  - Shadow strip (#387): `ShadowStripPresentation` turns the rows into the
+    strip's cells, worst on the left and best on the right. A bar is the
+    shown distance so far (the front's, #725) against this generation's leader, whose bar is full;
+    not against the best ever, which may come from a run with another trial
+    length. Only the followed cell is marked (`accent` bar and frame);
+    the leader is not, as the lead changes too often and flickers. Up to 8 shadows
+    each get a cell, in shadow order with shadow 1 on the right. Past 8 the
+    strip keeps 8 places: a "worse" button, 6 shadows and a last button that
+    sorts on the first page and pages back up on later ones; the last page
+    shows the worst 6. Sorting ranks by distance at that moment and holds
+    until the next sort, so cells never jump while the player watches; a
+    new generation starts over in shadow order on the first page. The
+    followed shadow can sort off the page. The caption reads only
+    "Generation N", the racing generation counted from 1 like the best's
+    generation. Owner decisions.
   - Candidate assignment is deterministic for the same seed, parallel mode,
     slot count, build, and platform. Sequential and parallel fitness parity
     is not promised because physics ordering can differ.
   - `Evolver.Start` retains a one-slot compatibility mode when no creature
     factory is supplied. Production `TrainingHost` supplies the factory and
     uses parallel evaluation.
-- `TrainingHost` creates one `Evolver` with the fixed Standard training
-  profile (population, trial duration, generation budget, tournament size,
-  mutation rate/strength and crossover strategy). The Quick/Deep choice and
-  its settings sheet were removed with the Training shell (#386); training
-  setup returns with TrainSetup (#194). Uniform crossover preserves parent
-  genes; Blend crossover samples continuous values between the two parent
+- `TrainingHost` creates one `Evolver` from the Creation's Train setup
+  values (`TrainSettingsDef`, turned into Evolver inputs by
+  `EvolutionSetup`, #617): Shadows is the population and Run
+  length the trial duration. A Creation that has not been through Train
+  setup uses `TrainSettingsDef.Default` (8 shadows, 10 s) until Settings
+  stores a default (#379). There are no training profiles: tournament size
+  (3, or the Shadows count if smaller), mutation rate and strength and
+  uniform crossover are fixed. Training runs until the player leaves; there
+  is no generation budget. Best is plain distance, so a longer Run length
+  reaches further: a player after the longest distance trains with the
+  longest runs (#703). Uniform crossover preserves parent genes; Blend crossover samples continuous values between the two parent
   genes, giving a later experiment for the competing-conventions plateau
   without changing the underlying network.
   `StartEvolution()` (`TrainingHost`) runs once when the scene opens. It
@@ -236,13 +277,12 @@ component READMEs under `reference design/components/` guide its presentation.
 - Training is its own routed scene, `TrainingRoute(creationId)`, with
   `TrainingHost` (`project/src/hosts/`) as its root. `TrainingHost.tscn` instances the
   Training screen (`TrainingScreen.tscn`) and authors the world inside the
-  screen's arena viewport: the background, the ground and its collision
-  shape, the ruler, the spawn marker and the camera. The host adds the
+  screen's arena viewport: the background, the ground line, the ruler, the spawn marker and the camera. The host adds the
   creature and the `Evolver` from the creation's save to that world, so
   leaving the scene frees all of them.
   - **Camera (#668, #675).** `ArenaCamera` frames the followed shadow
     through `ArenaFraming`, read every frame from its centre
-    (`Creature.CenterOfMass`, the point its distance is measured from) and
+    (`Creature.CenterOfMass`, the point its score is measured from) and
     its box (`Creature.Bounds`, the node colliders). Only the followed
     shadow decides the framing; the others may leave the view.
     - *Sideways* `ArenaFollow` keeps the centre 43% from the left, as in
@@ -272,29 +312,46 @@ component READMEs under `reference design/components/` guide its presentation.
       decision). It also cuts when the arena changes size, and holds still
       while training is paused. Everything runs
       on scaled time, so 2x and 4x look the same, only faster.
-  - **Ground and background.** The ground's collider is a
-    `WorldBoundaryShape2D` through the `Ground` node, so it has no end; its
-    fill and edge reach ±1 000 000 units (10 km), far past any trial, and the
+  - **Ground and background.** The ground comes from the selected map
+    (`MapDef.Ground`, #443); Training runs and records on `Maps.Default`
+    (`Maps.Flat`, `map-flat`, "Flat ground") until map choice (#540). A
+    resumed best ever counts only on the map it was reached on. The scene
+    places only the ground line, the `Ground` node (`ArenaGround`,
+    `project/src/sim/`); `ArenaGround.Build` makes the collider (layer 1),
+    fill and edge from the map's ground in code (#444) and fails loud on
+    anything but flat ground. Flat's collider is Godot's endless
+    `WorldBoundaryShape2D`, so it has no end; its fill and edge reach ±1 000 000 units (10 km), far past any trial, and the
     fill as deep, so no zoom shows its bottom. The
     background is a plain `ArenaBackground` fill on a `CanvasLayer` behind
     the world, so it does not move with the camera. There is no grid
     (owner decision, `docs/UI_DIRECTION.md`).
   - **Ruler.** `ArenaRuler` draws `DistanceRuler`'s marks along the ground
     edge: a long tick every metre and a minor one every half metre, counted
-    from where the visible creature's centre starts each trial (0 m),
+    from where the visible creature's front-most point starts each trial (0 m, #725),
     negative behind it. Every metre is labelled ("3 m"), or every 2, 5,
     10, … m when the camera zooms out so far that labels would overlap.
     Labels come back closer only with 20% room to spare, so a zoom resting
     at the switch does not make them flicker. Ticks and labels keep their
     screen size at any zoom. It draws only what
     the camera shows.
+  - **Best marker (#388).** `ArenaBestMarker` marks the best ever on this
+    map at its shown distance on the ruler (#725; see "Latest and best
+    ever"): a dashed `ink` line up from the
+    ground edge to a flag reading "Best 4.2 m"
+    (`TrainingPresentationViewModel.BestMarkerText`), 12 px below the top
+    of the view. It is drawn behind every creature, keeps its screen size at
+    any zoom, is hidden until its distance is known and jumps when a
+    generation's front goes past it. Off screen it shows nothing. While a part's name shows
+    it fades to `alpha_shadow`, since the name may cover it.
   - **World view.** The world renders in its own `SubViewport` through
     `UiWorldView`, so the UI layout and scale never touch physics distances
     or gravity. The viewport renders at the screen's pixel density to keep
     the creature crisp, and a tap on the arena is turned into a world
     position for part selection. A part takes a tap within 16 px of it on
     screen at least, so a joint or sensor stays easy to hit when the camera
-    zooms out.
+    zooms out. The selected part's Build name (`PartNames.Display`) shows
+    in a `halo` callout straight above the followed shadow, its leader
+    down to the part, and moves with it every frame (#388).
   - **Resume (warm start, #538).** Opening it starts from the saved
     `TrainingStateDef`: its brain graph is compiled by port
     (`DirectBrain`, #536) and the generation count continues. The saved
@@ -303,8 +360,8 @@ component READMEs under `reference design/components/` guide its presentation.
     shadow 1 and fills the other shadows with its mutated children, so
     training picks up where it stopped instead of starting over. A
     disabled connection stays at 0 through mutation and crossover. The
-    Evolver's best ever starts from the saved `best`, so the top bar keeps
-    showing it and a worse generation never lowers it.
+    Evolver's best ever starts from the saved `best`, so the best marker
+    keeps showing it and a worse generation never lowers it.
     A creation without training starts at generation 0 (see "Generation 0" above).
   - **Save.** Each finished generation is saved on the thread pool (the
     file round trip would stall physics), as one atomic file write. Leaving
@@ -314,7 +371,7 @@ component READMEs under `reference design/components/` guide its presentation.
     is dropped. Saves for one creation land in order, and reading a
     creation (`ICreationUpdateCoordinator.Get`) waits for them, so Build
     opened right after Training never shows a stale lock or summary (#370).
-  - A session stops after the profile's generation budget. Speed and pause
+  - Training runs until the player leaves. Speed and pause
     belong to the scene and start from 1x and running each time it opens.
   - Run on its own (F6) the scene trains the built-in worm without saving.
 - The Training screen's top bar shows the creation's name, the status
@@ -339,8 +396,9 @@ component READMEs under `reference design/components/` guide its presentation.
     global engine settings, not scoped to this scene.
   - **Brain** (the button or the Brain stage) opens the BrainFocus sheet;
     Android Back closes it before leaving the scene. BrainFocus shows the
-    direct brain (#536): an Inputs column named by port ("Accelerometer:
-    along", "Front knee: speed"), an Outputs column named by joint, the
+    direct brain (#536): a Senses column named by port ("Accelerometer:
+    along", "Front knee: speed"), an Outputs column named by joint, both
+    under small headings (#660), the
     enabled connections and live activations. Nothing is selected at first;
     tapping an output names the two senses that drive it most, tapping a
     sense names the outputs it drives most, and other connections fade;

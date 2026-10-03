@@ -31,6 +31,9 @@ public sealed record SettingRange(double Min, double Max, double Step)
     /// <summary>Where <paramref name="value"/> sits on the slider, 0…1.</summary>
     public double Position(double value) => Math.Clamp((value - Min) / (Max - Min), 0, 1);
 
+    /// <summary>One step as a share of the slider, 0…1.</summary>
+    public double PositionStep => Step / (Max - Min);
+
     /// <summary>The value at slider <paramref name="position"/>, on a whole step.</summary>
     public double ValueAt(double position)
     {
@@ -41,9 +44,10 @@ public sealed record SettingRange(double Min, double Max, double Step)
 
 /// <summary>
 /// A panel slider over the selected parts' values of one setting (#704). <see cref="Low"/> and
-/// <see cref="High"/> are the lowest and highest shown values at 0…1; they differ when the parts' values do.
+/// <see cref="High"/> are the lowest and highest shown values at 0…1; they differ when the parts'
+/// values do. <see cref="Step"/> is one whole step at 0…1 (#711).
 /// </summary>
-public sealed record ParameterSlider(PartParameterId Id, string Label, string Readout, double Low, double High)
+public sealed record ParameterSlider(PartParameterId Id, string Label, string Readout, double Low, double High, double Step)
 {
     public bool ValuesDiffer => Low != High;
 }
@@ -84,8 +88,8 @@ public static class PartParameters
         var high = values.Max(scale.Shown);
         var (lowText, highText) = (scale.Text(low), scale.Text(high));
         return lowText == highText
-            ? new ParameterSlider(id, scale.Label, scale.Readout(high), scale.Range.Position(high), scale.Range.Position(high))
-            : new ParameterSlider(id, scale.Label, $"{scale.Prefix}{lowText}–{highText}{scale.Unit}", scale.Range.Position(low), scale.Range.Position(high));
+            ? new ParameterSlider(id, scale.Label, scale.Readout(high), scale.Range.Position(high), scale.Range.Position(high), scale.Range.PositionStep)
+            : new ParameterSlider(id, scale.Label, $"{scale.Prefix}{lowText}–{highText}{scale.Unit}", scale.Range.Position(low), scale.Range.Position(high), scale.Range.PositionStep);
     }
 
     /// <summary>The value of <paramref name="id"/>, in world units, at slider <paramref name="position"/>.</summary>

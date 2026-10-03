@@ -39,15 +39,21 @@ public sealed record TrainingStateDef
 
     /// <summary>
     /// The training after <paramref name="generation"/> finished with <paramref name="latest"/> as its
-    /// best run: latest is always replaced, and the best only when <paramref name="latest"/> goes
-    /// further on the same map.
+    /// best run: latest is always replaced, and the best only when <paramref name="latest"/> scores
+    /// higher on the same map: its centre went further. The best's front distance is the furthest
+    /// any latest run's front got on that map, whichever run holds the score (#725).
     /// </summary>
     public static TrainingStateDef Record(TrainingStateDef? previous, BrainDef brain, int generation, TrainingRunDef latest)
     {
         ArgumentNullException.ThrowIfNull(latest);
-        var best = previous?.Best is { } kept && kept.MapId == latest.MapId && kept.Distance >= latest.Distance
-            ? kept
-            : new TrainingBestDef(generation, latest.Distance, latest.MapId);
+        var kept = previous?.Best is { } previousBest && previousBest.MapId == latest.MapId ? previousBest : null;
+        var front = Furthest(kept?.FrontDistance, latest.FrontDistance);
+        var best = kept is not null && kept.Distance >= latest.Distance
+            ? new TrainingBestDef(kept.Generation, kept.Distance, kept.MapId, front)
+            : new TrainingBestDef(generation, latest.Distance, latest.MapId, front);
         return new TrainingStateDef(brain, generation, latest, best);
     }
+
+    private static double? Furthest(double? kept, double? latest) =>
+        kept is { } a && latest is { } b ? Math.Max(a, b) : kept ?? latest;
 }

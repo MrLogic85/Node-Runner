@@ -163,8 +163,9 @@ a node's own ring always hits.
 
 - **Wire into simulation** (issues #72, #469): Build and Training are
   separate scenes, joined only through the save. Start training saves the
-  drawing, then opens the creation's training (`TrainingRoute`); it stays in
-  Build if the creature cannot train yet. The
+  drawing, then opens Train setup (`TrainSetupRoute`, #194), whose Start
+  opens Training (`TrainingRoute`); it stays in Build if the creature cannot
+  train yet. The
   Training scene builds its `Creature` node from the saved `CreatureDef`
   (`Creature.BuildFrom`), which generically derives the model's
   input/output counts (`BrainPorts.Of`: the sensor parts' readings, each Piston's

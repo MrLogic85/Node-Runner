@@ -26,7 +26,7 @@ grow_vertical = 2
 theme_override_constants/margin_left = 12
 theme_override_constants/margin_top = 56
 theme_override_constants/margin_right = 12
-theme_override_constants/margin_bottom = 12
+theme_override_constants/margin_bottom = 8
 
 [node name="Sheet" type="PanelContainer" parent="Inset"]
 unique_name_in_owner = true
@@ -38,10 +38,10 @@ script = ExtResource("2_uisheet")
 [node name="Margin" type="MarginContainer" parent="Inset/Sheet"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_constants/margin_left = 16
-theme_override_constants/margin_top = 16
-theme_override_constants/margin_right = 16
-theme_override_constants/margin_bottom = 16
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 12
 
 [node name="Stack" type="VBoxContainer" parent="Inset/Sheet/Margin"]
 layout_mode = 2

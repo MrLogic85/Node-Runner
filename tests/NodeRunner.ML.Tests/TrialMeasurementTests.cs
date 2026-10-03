@@ -28,6 +28,42 @@ public sealed class TrialMeasurementTests
     }
 
     [Fact]
+    public void FrontDistance_IsWhereTheFrontEndsUpNotItsFurthest()
+    {
+        var measurement = new TrialMeasurement(_ticksPerSecond);
+        measurement.Reset(100, 150);
+
+        measurement.Record(110, 170, 0);
+        measurement.Record(105, 160, 0);
+
+        measurement.Result.FrontDistance.ShouldBe(10);
+    }
+
+    [Fact]
+    public void FrontDistance_IsZeroWhenTheFrontEndsBehindItsStart()
+    {
+        var measurement = new TrialMeasurement(_ticksPerSecond);
+        measurement.Reset(100, 150);
+
+        measurement.Record(100, 140, 0);
+
+        measurement.Result.FrontDistance.ShouldBe(0);
+    }
+
+    [Fact]
+    public void Fitness_StaysTheCentresFurthestWhateverTheFrontDoes()
+    {
+        var measurement = new TrialMeasurement(_ticksPerSecond);
+        measurement.Reset(100, 150);
+
+        measurement.Record(130, 200, 0);
+        measurement.Record(120, 170, 0);
+
+        measurement.Result.Fitness.ShouldBe(30);
+        measurement.Result.FrontDistance.ShouldBe(20);
+    }
+
+    [Fact]
     public void TopSpeed_AveragesForwardProgressOverHalfASecond()
     {
         var measurement = Start(0);
@@ -74,10 +110,10 @@ public sealed class TrialMeasurementTests
     {
         var measurement = Start(0);
 
-        measurement.Record(0, 0);
-        measurement.Record(0, 14);
-        measurement.Record(0, 3);
-        measurement.Record(0, -2);
+        measurement.Record(0, 0, 0);
+        measurement.Record(0, 0, 14);
+        measurement.Record(0, 0, 3);
+        measurement.Record(0, 0, -2);
 
         measurement.Result.Elevation.ShouldBe(14);
     }
@@ -87,10 +123,10 @@ public sealed class TrialMeasurementTests
     {
         var measurement = Start(0);
 
-        measurement.Record(0, 5);
-        measurement.Record(0, 2);
-        measurement.Record(0, 0.25);
-        measurement.Record(0, 3);
+        measurement.Record(0, 0, 5);
+        measurement.Record(0, 0, 2);
+        measurement.Record(0, 0, 0.25);
+        measurement.Record(0, 0, 3);
 
         measurement.Result.Elevation.ShouldBe(3);
     }
@@ -100,8 +136,8 @@ public sealed class TrialMeasurementTests
     {
         var measurement = Start(0);
 
-        measurement.Record(0, 5);
-        measurement.Record(0, 4);
+        measurement.Record(0, 0, 5);
+        measurement.Record(0, 0, 4);
 
         measurement.Result.Elevation.ShouldBe(0);
     }
@@ -110,10 +146,10 @@ public sealed class TrialMeasurementTests
     public void Reset_StartsTheDropAgain()
     {
         var measurement = Start(0);
-        measurement.Record(0, 0);
+        measurement.Record(0, 0, 0);
 
-        measurement.Reset(0);
-        measurement.Record(0, 5);
+        measurement.Reset(0, 0);
+        measurement.Record(0, 0, 5);
 
         measurement.Result.Elevation.ShouldBe(0);
     }
@@ -123,8 +159,8 @@ public sealed class TrialMeasurementTests
     {
         var measurement = Start(0);
 
-        measurement.Record(1, -0.5);
-        measurement.Record(2, -0.25);
+        measurement.Record(1, 1, -0.5);
+        measurement.Record(2, 2, -0.25);
 
         measurement.Result.Elevation.ShouldBe(0);
     }
@@ -141,16 +177,18 @@ public sealed class TrialMeasurementTests
     }
 
     [Theory]
-    [InlineData(double.NaN, 0)]
-    [InlineData(double.PositiveInfinity, 0)]
-    [InlineData(0, double.NaN)]
-    [InlineData(0, double.NegativeInfinity)]
-    public void Result_IsInvalidAfterANonFiniteSample(double centerX, double groundClearance)
+    [InlineData(double.NaN, 0, 0)]
+    [InlineData(double.PositiveInfinity, 0, 0)]
+    [InlineData(0, double.NaN, 0)]
+    [InlineData(0, double.PositiveInfinity, 0)]
+    [InlineData(0, 0, double.NaN)]
+    [InlineData(0, 0, double.NegativeInfinity)]
+    public void Result_IsInvalidAfterANonFiniteSample(double centerX, double frontX, double groundClearance)
     {
         var measurement = Start(0);
-        measurement.Record(1, 0);
+        measurement.Record(1, 1, 0);
 
-        measurement.Record(centerX, groundClearance);
+        measurement.Record(centerX, frontX, groundClearance);
 
         measurement.Result.IsValid.ShouldBeFalse();
         measurement.Result.Fitness.ShouldBe(double.NegativeInfinity);
@@ -162,10 +200,23 @@ public sealed class TrialMeasurementTests
         var maxStep = TrialMeasurement.MaxPlausibleSpeed / _ticksPerSecond;
         var measurement = Start(0);
 
-        measurement.Record(maxStep, 0);
+        measurement.Record(maxStep, 0, 0);
         measurement.Result.IsValid.ShouldBeTrue();
 
-        measurement.Record((2 * maxStep) + 1, 0);
+        measurement.Record((2 * maxStep) + 1, 0, 0);
+        measurement.Result.IsValid.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Result_IsInvalidWhenTheFrontJumpsFurtherThanAnythingCanMoveInOneTick()
+    {
+        var maxStep = TrialMeasurement.MaxPlausibleSpeed / _ticksPerSecond;
+        var measurement = Start(0);
+
+        measurement.Record(0, maxStep, 0);
+        measurement.Result.IsValid.ShouldBeTrue();
+
+        measurement.Record(0, (2 * maxStep) + 1, 0);
         measurement.Result.IsValid.ShouldBeFalse();
     }
 
@@ -176,11 +227,11 @@ public sealed class TrialMeasurementTests
         var measurement = Start(0);
 
         // The first clearance has nothing to compare with, so a high start is fine.
-        measurement.Record(0, 5 * maxStep);
-        measurement.Record(0, 4 * maxStep);
+        measurement.Record(0, 0, 5 * maxStep);
+        measurement.Record(0, 0, 4 * maxStep);
         measurement.Result.IsValid.ShouldBeTrue();
 
-        measurement.Record(0, (5 * maxStep) + 1);
+        measurement.Record(0, 0, (5 * maxStep) + 1);
         measurement.Result.IsValid.ShouldBeFalse();
     }
 
@@ -189,7 +240,7 @@ public sealed class TrialMeasurementTests
     {
         var measurement = Start(0);
 
-        measurement.Record(double.NaN, 0);
+        measurement.Record(double.NaN, double.NaN, 0);
         Record(measurement, 1, 2, 3);
 
         measurement.Result.IsValid.ShouldBeFalse();
@@ -199,12 +250,12 @@ public sealed class TrialMeasurementTests
     public void Reset_MakesTheNextTrialValidAgain()
     {
         var measurement = Start(0);
-        measurement.Record(double.NaN, 0);
+        measurement.Record(double.NaN, double.NaN, 0);
 
-        measurement.Reset(0);
-        measurement.Record(1, 0);
+        measurement.Reset(0, 0);
+        measurement.Record(1, 1, 0);
 
-        measurement.Result.ShouldBe(new TrialResult(1, 0, 0));
+        measurement.Result.ShouldBe(new TrialResult(1, 0, 0, 1));
     }
 
     [Fact]
@@ -212,12 +263,12 @@ public sealed class TrialMeasurementTests
     {
         var measurement = Start(0);
         Record(measurement, 10, 20, 30, 40, 50, 60);
-        measurement.Record(60, 9);
+        measurement.Record(60, 60, 9);
 
-        measurement.Reset(500);
-        measurement.Record(501, 0);
+        measurement.Reset(500, 500);
+        measurement.Record(501, 501, 0);
 
-        measurement.Result.ShouldBe(new TrialResult(1, 0, 0));
+        measurement.Result.ShouldBe(new TrialResult(1, 0, 0, 1));
     }
 
     [Fact]
@@ -227,7 +278,7 @@ public sealed class TrialMeasurementTests
     private static TrialMeasurement Start(double startX)
     {
         var measurement = new TrialMeasurement(_ticksPerSecond);
-        measurement.Reset(startX);
+        measurement.Reset(startX, startX);
         return measurement;
     }
 
@@ -235,7 +286,7 @@ public sealed class TrialMeasurementTests
     {
         foreach (var x in positions)
         {
-            measurement.Record(x, 0);
+            measurement.Record(x, x, 0);
         }
     }
 }

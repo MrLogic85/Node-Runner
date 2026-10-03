@@ -72,6 +72,34 @@ public partial class TrainingScreen : Control
     /// <summary>Shows how fast the run plays, such as "2x".</summary>
     public void ShowSpeed(string speedText) => GetNode<UiButton>("%Speed").Text = speedText;
 
+    /// <summary>
+    /// Names the selected part (#388) in a callout above the whole creature, its leader down to the
+    /// part, or with a null <paramref name="name"/> shows none. World coordinates; call every frame.
+    /// </summary>
+    public void ShowPartName(string? name, Vector2 worldAnchor, Rect2 worldCreatureBounds)
+    {
+        var layer = GetNode<UiCalloutLayer>("%PartCallouts");
+        if (name is null)
+        {
+            layer.SetCallouts([]);
+            return;
+        }
+
+        var arena = GetNode<UiWorldView>("%ArenaView");
+        var anchor = arena.FromWorld(worldAnchor);
+        var creatureTop = arena.FromWorld(worldCreatureBounds.Position).Y;
+        layer.SetCallouts(
+        [
+            new UiCalloutLayout.Placement(
+                anchor,
+                Vector2.Up,
+                Math.Max(0, anchor.Y - creatureTop) + UiSize.Space.S1,
+                UiCallout.CalloutKind.Warning,
+                UiIconId.None,
+                name),
+        ]);
+    }
+
     /// <summary>Closes the brain sheet, as Android Back does first. False when it was closed.</summary>
     public bool CloseOverlay()
     {
@@ -149,10 +177,15 @@ public partial class TrainingScreen : Control
         ApplySignalFlow();
     }
 
+    // The shadow strip refreshes itself every frame; the caption follows progress changes.
     private void ApplyGeneration()
     {
+        var shows = _header?.ShowsGeneration == true && _training is not null;
         var generation = GetNode<UiLabel>("%Generation");
-        generation.Visible = _header?.ShowsGeneration == true && _training is not null;
+        var strip = GetNode<ShadowStrip>("%ShadowStrip");
+        generation.Visible = shows;
+        strip.Visible = shows;
+        strip.Presentation = _training;
         if (_training is not null)
         {
             generation.Text = _training.GenerationText;

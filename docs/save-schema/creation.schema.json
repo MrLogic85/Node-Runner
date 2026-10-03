@@ -293,6 +293,13 @@
             },
             "mapId": {
               "type": "string"
+            },
+            "frontDistance": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "default": null
             }
           },
           "required": [
@@ -314,6 +321,13 @@
             },
             "mapId": {
               "type": "string"
+            },
+            "frontDistance": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "default": null
             }
           },
           "required": [
@@ -329,6 +343,26 @@
         "generation",
         "latest",
         "best"
+      ],
+      "additionalProperties": false,
+      "default": null
+    },
+    "trainSettings": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "properties": {
+        "shadows": {
+          "type": "integer"
+        },
+        "runLengthSeconds": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "shadows",
+        "runLengthSeconds"
       ],
       "additionalProperties": false,
       "default": null

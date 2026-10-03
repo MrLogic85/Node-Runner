@@ -30,6 +30,12 @@ public sealed record ExamplesRoute : SceneRoute;
 public sealed record BuildRoute(Guid CreationId, bool IsNew = false) : SceneRoute;
 
 /// <summary>
+/// Train setup for one saved creation (#194): Shadows and Run length before Training. Start opens
+/// Training in its place, so Back from Training returns to Build.
+/// </summary>
+public sealed record TrainSetupRoute(Guid CreationId) : SceneRoute;
+
+/// <summary>
 /// Training for one saved creation. It resumes from the creation's last finished generation; leaving
 /// drops only the generation in progress.
 /// </summary>
