@@ -42,17 +42,15 @@ public sealed class ArenaFollowTests
         const double wobbleHertz = 2;
         var follow = new ArenaFollow();
         follow.SnapTo(0);
-        var camera = 0.0;
         var settled = new List<double>();
 
         for (var frame = 0; frame < 600; frame++)
         {
             var centre = amplitude * Math.Sin(2 * Math.PI * wobbleHertz * frame * _frame);
-            camera = SmoothCamera(camera, follow.AimX, _frame);
             follow.Step(centre, _frame);
             if (frame >= 300)
             {
-                settled.Add(camera);
+                settled.Add(follow.ShownX);
             }
         }
 
@@ -66,17 +64,15 @@ public sealed class ArenaFollowTests
         const double viewWidth = 460;
         var follow = new ArenaFollow();
         follow.SnapTo(0);
-        var camera = 0.0;
         var centre = 0.0;
 
         for (var frame = 0; frame < 600; frame++)
         {
             centre += speed * _frame;
-            camera = SmoothCamera(camera, follow.AimX, _frame);
             follow.Step(centre, _frame);
         }
 
-        var fromLeft = ArenaFollow.FocusFromLeft + ((centre - camera) / viewWidth);
+        var fromLeft = ArenaFollow.FocusFromLeft + ((centre - follow.ShownX) / viewWidth);
         fromLeft.ShouldBeInRange(0.38, 0.48);
     }
 
@@ -91,7 +87,6 @@ public sealed class ArenaFollowTests
         var switchFrame = (int)(5 / frameSeconds);
         var follow = new ArenaFollow();
         follow.SnapTo(0);
-        var camera = 0.0;
         var centre = 0.0;
         var toward = new List<double>();
 
@@ -104,11 +99,10 @@ public sealed class ArenaFollowTests
                 follow.Retarget(centre);
             }
 
-            camera = SmoothCamera(camera, follow.AimX, frameSeconds);
             follow.Step(centre, frameSeconds);
             if (frame >= switchFrame)
             {
-                toward.Add((centre - camera) * Math.Sign(gap));
+                toward.Add((centre - follow.ShownX) * Math.Sign(gap));
             }
         }
 
@@ -131,6 +125,7 @@ public sealed class ArenaFollowTests
 
         follow.SpeedX.ShouldBe(0);
         follow.AimX.ShouldBe(-50);
+        follow.ShownX.ShouldBe(-50);
     }
 
     [Fact]
@@ -186,9 +181,4 @@ public sealed class ArenaFollowTests
 
         (cameraX - (viewWidth / 2)).ShouldBe(400 - (ArenaFollow.FocusFromLeft * viewWidth), tolerance: 1e-9);
     }
-
-    // Godot's Camera2D position smoothing, one frame: the second stage, which the camera owns. It
-    // moves toward the position the camera was given on the frame before.
-    private static double SmoothCamera(double camera, double aim, double frameSeconds) =>
-        camera + ((aim - camera) * ArenaFollow.CameraSmoothingSpeed * frameSeconds);
 }

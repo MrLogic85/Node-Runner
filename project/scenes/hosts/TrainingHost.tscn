@@ -38,7 +38,7 @@ shape = SubResource("WorldBoundaryShape2D_ground")
 
 [node name="GroundFill" type="Polygon2D" parent="TrainingScreen/UiFrame/MarginContainer/Card/Shell/Body/Arena/ArenaView/WorldViewport/World/Ground"]
 unique_name_in_owner = true
-polygon = PackedVector2Array(-1000000, 0, 1000000, 0, 1000000, 324, -1000000, 324)
+polygon = PackedVector2Array(-1000000, 0, 1000000, 0, 1000000, 1000000, -1000000, 1000000)
 
 [node name="GroundEdge" type="Line2D" parent="TrainingScreen/UiFrame/MarginContainer/Card/Shell/Body/Arena/ArenaView/WorldViewport/World/Ground"]
 unique_name_in_owner = true

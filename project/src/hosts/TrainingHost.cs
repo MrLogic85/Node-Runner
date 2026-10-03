@@ -213,8 +213,9 @@ public partial class TrainingHost : Node, IRoutedScene
     }
 
     // The camera follows the followed shadow's centre, the point its distance is measured from, and
-    // glides to the new one when following changes (#668). The ruler counts from where that point
-    // starts: every trial resets every shadow to the same pose, so it starts there every time.
+    // glides to the new one when following changes (#668); it zooms to fit that shadow's box and
+    // keeps the ground in place (#675). The ruler counts from where that point starts: every trial
+    // resets every shadow to the same pose, so it starts there every time.
     private void FollowCreature()
     {
         if (_creature is not { } creature)
@@ -223,9 +224,21 @@ public partial class TrainingHost : Node, IRoutedScene
         }
 
         Ruler.StartX = Ruler.ToLocal(creature.CenterOfMass).X;
+        Camera.GroundY = GroundTopY;
 
         // Read every frame; OnFollowedShadowChanged retargets it when the followed shadow changes.
-        Camera.Follow(() => (_followed ?? creature).CenterOfMass);
+        Camera.Follow(() => Framed(_followed ?? creature));
+    }
+
+    private static FramedCreature Framed(Creature.Creature creature)
+    {
+        var bounds = creature.Bounds;
+        return new FramedCreature(
+            creature.CenterOfMass.X,
+            bounds.Position.X,
+            bounds.Position.Y,
+            bounds.End.X,
+            bounds.End.Y);
     }
 
     private static Creature.Creature CreateCreatureInstance() =>

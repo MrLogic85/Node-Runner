@@ -176,7 +176,8 @@ transition to keep in step with it.
     `HasPreviousBest` and `ShadowDistances`; `TrainingPresentationViewModel`
     turns them into `ShadowStanding` rows (followed, leader = furthest
     running shadow, previous best) and `Follow(number)` for the shadow strip
-    (#387). The camera does not follow yet (#668).
+    (#387). The camera frames the followed shadow (see "The Training
+    scene" → Camera).
   - Candidate assignment is deterministic for the same seed, parallel mode,
     slot count, build, and platform. Sequential and parallel fitness parity
     is not promised because physics ordering can differ.
@@ -233,36 +234,61 @@ by the TrainSetup and Training component READMEs under `reference design/compone
   shape, the ruler, the spawn marker and the camera. The host adds the
   creature and the `Evolver` from the creation's save to that world, so
   leaving the scene frees all of them.
-  - **Camera (#668).** `ArenaCamera` follows the followed shadow's centre
-    (`Creature.CenterOfMass`, the point its distance is measured from)
-    horizontally only, keeping it 43% from the left as in the reference.
-    Smoothing has two stages: `ArenaFollow` eases the target
-    (`EaseRate`), then the `Camera2D`'s own position smoothing
-    (`CameraSmoothingSpeed`) eases the camera. Together they damp a gait's
-    wobble so the view never shakes, and a switch to another shadow
-    (`ArenaCamera.Retarget`, on `FollowedShadowChanged`) glides in and
-    settles instead of jumping. Both stages trail a moving target, so
-    the aim leads it by the creature's slowly eased speed times that lag: a
-    fast creature stays at 43% instead of drifting off the right edge. When
-    the followed shadow starts a new trial (`Evolver.FollowedTrialStarted`)
-    the camera cuts back to the start, since a new trial is a new scene
-    (owner decision). Both stages run on scaled time, so 2x and 4x look the
-    same, only faster.
+  - **Camera (#668, #675).** `ArenaCamera` frames the followed shadow
+    through `ArenaFraming`, read every frame from its centre
+    (`Creature.CenterOfMass`, the point its distance is measured from) and
+    its box (`Creature.Bounds`, the node colliders). Only the followed
+    shadow decides the framing; the others may leave the view.
+    - *Sideways* `ArenaFollow` keeps the centre 43% from the left, as in
+      the reference. Smoothing has two stages, both in pure code (the
+      `Camera2D`'s own smoothing is off): the focus eases toward the
+      centre (`EaseRate`), then the shown point toward the aim
+      (`ShownEaseRate`). Together they damp a gait's wobble so the
+      view never shakes, and a switch to another shadow
+      (`ArenaCamera.Retarget`, on `FollowedShadowChanged`) glides in and
+      settles instead of jumping. Both stages trail a moving target, so the
+      aim leads it by the creature's slowly eased speed times that lag: a
+      fast creature stays at 43% instead of drifting off the right edge.
+    - *Zoom* fits the shadow's box inside side margins and below a top
+      margin with headroom to spare, and widens further with its speed (one
+      second of travel, `SpeedLookaheadSeconds`). Zoom 1, the closest, shows
+      one world unit per view pixel; 0.25, the farthest, shows four times
+      as much. It widens quickly; it narrows
+      only after the shadow has needed less room for 1.5 s, then slowly, so
+      a stretching gait does not make it pump.
+    - *Height:* the ground stays 80% down the view at any zoom, so zooming
+      never bobs the view. A shadow that rises into its headroom does not
+      move the camera; once its top passes the top margin the camera eases
+      up after it, and back down when it lands.
+    - When the followed shadow starts a new trial
+      (`Evolver.FollowedTrialStarted`) the camera cuts back to the start,
+      zoom and height included, since a new trial is a new scene (owner
+      decision). It also cuts when the arena changes size, and holds still
+      while training is paused. Everything runs
+      on scaled time, so 2x and 4x look the same, only faster.
   - **Ground and background.** The ground's collider is a
     `WorldBoundaryShape2D` through the `Ground` node, so it has no end; its
-    fill and edge reach ±1 000 000 units (10 km), far past any trial. The
+    fill and edge reach ±1 000 000 units (10 km), far past any trial, and the
+    fill as deep, so no zoom shows its bottom. The
     background is a plain `ArenaBackground` fill on a `CanvasLayer` behind
     the world, so it does not move with the camera. There is no grid
     (owner decision, `docs/UI_DIRECTION.md`).
   - **Ruler.** `ArenaRuler` draws `DistanceRuler`'s marks along the ground
-    edge: a labelled tick every metre ("3 m") and a minor one every half
-    metre, counted from where the visible creature's centre starts each
-    trial (0 m), negative behind it. It draws only what the camera shows.
+    edge: a long tick every metre and a minor one every half metre, counted
+    from where the visible creature's centre starts each trial (0 m),
+    negative behind it. Every metre is labelled ("3 m"), or every 2, 5,
+    10, … m when the camera zooms out so far that labels would overlap.
+    Labels come back closer only with 20% room to spare, so a zoom resting
+    at the switch does not make them flicker. Ticks and labels keep their
+    screen size at any zoom. It draws only what
+    the camera shows.
   - **World view.** The world renders in its own `SubViewport` through
     `UiWorldView`, so the UI layout and scale never touch physics distances
     or gravity. The viewport renders at the screen's pixel density to keep
     the creature crisp, and a tap on the arena is turned into a world
-    position for part selection.
+    position for part selection. A part takes a tap within 16 px of it on
+    screen at least, so a joint or sensor stays easy to hit when the camera
+    zooms out.
   - **Resume (warm start, #538).** Opening it starts from the saved
     `TrainingStateDef`: its brain graph is compiled by port
     (`DirectBrain`, #536) and the generation count continues. The saved

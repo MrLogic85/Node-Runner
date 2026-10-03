@@ -32,7 +32,9 @@ public partial class Creature : Node2D
     // little into the ground and reads as resting on it.
     private const float _nodeColliderInset = 2f;
 
-    private const float _lineHitTolerancePixels = 16;
+    // How near a tap must land to a part, on screen, at least: a part drawn smaller when the
+    // Training camera zooms out (#675) still takes a finger.
+    private const float _hitTolerancePixels = 16;
 
     // Beams draw one z step under their creature's joints, so the followed creature sits two steps
     // above the shadows: even its beams are never drawn under a shadow's joints (#385).
@@ -251,6 +253,30 @@ public partial class Creature : Node2D
     }
 
     /// <summary>
+    /// The box around the creature's node colliders, in global coordinates: what the Training
+    /// camera fits in view (#675). Beams run between nodes, so the nodes bound them. An empty
+    /// rectangle for a creature with no nodes.
+    /// </summary>
+    public Rect2 Bounds
+    {
+        get
+        {
+            if (_nodeBodies.Length == 0)
+            {
+                return default;
+            }
+
+            var bounds = NodeBox(0);
+            for (var i = 1; i < _nodeBodies.Length; i++)
+            {
+                bounds = bounds.Merge(NodeBox(i));
+            }
+
+            return bounds;
+        }
+    }
+
+    /// <summary>
     /// The average position of all beam bodies, used as a simple centroid
     /// for fitness tracking (e.g. forward distance travelled). Returns
     /// Vector2.Zero for a creature with no beams.
@@ -276,9 +302,10 @@ public partial class Creature : Node2D
 
     public bool TrySelectPart(Vector2 globalPosition, out CreatureElementSelection? selection)
     {
+        var tolerance = GetHitTolerance();
         for (var nodeIndex = 0; nodeIndex < _nodeVisuals.Length; nodeIndex++)
         {
-            var radius = ToGodotFloat(Definition!.Nodes[nodeIndex].Radius, nameof(NodeDef.Radius));
+            var radius = Math.Max(tolerance, ToGodotFloat(Definition!.Nodes[nodeIndex].Radius, nameof(NodeDef.Radius)));
             if (_nodeVisuals[nodeIndex].GlobalPosition.DistanceSquaredTo(globalPosition) <= radius * radius)
             {
                 selection = new CreatureElementSelection(CreatureElementKind.Node, Definition!.Nodes[nodeIndex].Id);
@@ -291,14 +318,14 @@ public partial class Creature : Node2D
             var beamIndex = Definition!.BeamIndexOf(Definition.Sensors[sensorIndex].BeamId);
             var local = _beamBodies[beamIndex].ToLocal(globalPosition);
             var halfLength = _beamHalfLengths[beamIndex];
-            if (SensorPicture.Contains(Definition.Sensors[sensorIndex].Kind, new Vector2D(local.X, local.Y), new Vector2D(-halfLength, 0), new Vector2D(halfLength, 0)))
+            if (SensorPicture.Contains(Definition.Sensors[sensorIndex].Kind, new Vector2D(local.X, local.Y), new Vector2D(-halfLength, 0), new Vector2D(halfLength, 0))
+                || local.LengthSquared() <= tolerance * tolerance)
             {
                 selection = new CreatureElementSelection(CreatureElementKind.Sensor, Definition.Sensors[sensorIndex].Id);
                 return true;
             }
         }
 
-        var tolerance = GetLineHitTolerance();
         for (var pistonIndex = 0; pistonIndex < _pistons.Length; pistonIndex++)
         {
             var piston = _pistons[pistonIndex];
@@ -368,6 +395,12 @@ public partial class Creature : Node2D
                 _pistonVisuals[Definition!.PistonIndexOf(selection.Id)].IsSelected = true;
                 break;
         }
+    }
+
+    private Rect2 NodeBox(int index)
+    {
+        var radius = _nodeColliderRadii[index];
+        return new Rect2(_nodeBodies[index].GlobalPosition - new Vector2(radius, radius), new Vector2(radius, radius) * 2);
     }
 
     private void ApplyShadow()
@@ -779,11 +812,11 @@ public partial class Creature : Node2D
         motors.AddRange(outputs);
     }
 
-    private float GetLineHitTolerance()
+    private float GetHitTolerance()
     {
         var canvasTransform = GetViewport().GetCanvasTransform();
         var pixelsPerWorldUnit = Math.Max(canvasTransform.X.Length(), canvasTransform.Y.Length());
-        return pixelsPerWorldUnit > 0 ? _lineHitTolerancePixels / pixelsPerWorldUnit : _lineHitTolerancePixels;
+        return pixelsPerWorldUnit > 0 ? _hitTolerancePixels / pixelsPerWorldUnit : _hitTolerancePixels;
     }
 
     private static float DistanceSquaredToSegment(Vector2 point, Vector2 start, Vector2 end)
