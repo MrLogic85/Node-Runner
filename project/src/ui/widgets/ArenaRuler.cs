@@ -68,7 +68,8 @@ public partial class ArenaRuler : Node2D
     {
         // Half a metre past each side, so a label straddling the edge fades out instead of popping.
         var view = VisibleArea();
-        var screenScale = view.Size.X / GetViewportRect().Size.X;
+        // World units per UI unit: the arena view undoes the UI size (#738), so this applies it again.
+        var screenScale = view.Size.X / GetViewportRect().Size.X * UiScale.FactorOf(this);
         DistanceRuler.Fill(
             _startX,
             view.Position.X - DistanceRuler.TickSpacing,

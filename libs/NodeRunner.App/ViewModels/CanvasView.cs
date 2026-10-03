@@ -10,12 +10,12 @@ namespace NodeRunner.App.ViewModels;
 /// creation fitted (<see cref="Fit"/>). The view never shows anything outside
 /// <see cref="Bounds"/>, and zooming out goes just far enough to show all of
 /// it. Zoom limits are on screen, not in view units: view units grow with
-/// the UI size (<see cref="UiScale"/>, #299), so the limits shrink by it and the
+/// the UI size's root factor (<see cref="UiScale"/>, #299), so the limits shrink by it and the
 /// creation keeps its size on screen. See `docs/BUILD_MODE.md`.
 /// </summary>
 public sealed class CanvasView
 {
-    /// <summary>The closest zoom at 100% UI size; <see cref="ZoomLimit"/> is the one in effect.</summary>
+    /// <summary>The closest zoom at a root factor of 1; <see cref="ZoomLimit"/> is the one in effect.</summary>
     public const double MaxZoom = 3;
 
     /// <summary>The share of the visible area left empty on each side when fitting.</summary>
@@ -36,8 +36,8 @@ public sealed class CanvasView
     public CanvasRect Bounds { get; }
 
     /// <summary>
-    /// The UI size as a factor (1 at 100%): how many times bigger a view unit
-    /// shows than at 100%. Zoom 1 at 100% is zoom 1 / UiScale here.
+    /// The UI size's root factor: how many times bigger a view unit shows
+    /// than with no factor. Zoom 1 with no factor is zoom 1 / UiScale here.
     /// </summary>
     public double UiScale
     {
@@ -58,7 +58,7 @@ public sealed class CanvasView
     /// <summary>The closest zoom: <see cref="MaxZoom"/> on screen.</summary>
     public double ZoomLimit => MaxZoom / UiScale;
 
-    /// <summary>The zoom that shows the creation at its true size on screen: 1 at 100% UI size.</summary>
+    /// <summary>The zoom that shows the creation at its true size on screen: 1 at a root factor of 1.</summary>
     public double TrueSizeZoom => 1 / UiScale;
 
     public double Zoom { get; private set; } = 1;

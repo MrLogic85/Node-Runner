@@ -345,12 +345,13 @@ reference would mislead someone working on that surface.
   when selected, `danger` when loose. Lines scale with the zoom. A Training
   shadow draws the outer ring only. Beams and Piston rods stop flat under
   the ring. Motor joints come with #452 and #454.
-- **UI size has no touch floor and no over-200% layout (#299, 0.12.0).** The
-  reference (`Settings`) keeps 48px controls under 100% and opens side panels
-  over the arena above about 200%. Instead everything around the arena and
-  the Build canvas scales uniformly, touch targets included, and panels simply
-  grow; see "UI size". Keeping sizes above 100% within a phone's screen is
-  #609.
+- **UI size is pixels per unit, with no touch floor and no over-size layout
+  (#299, #738).** The reference's % is a multiple of the 640 x 360 canvas
+  (50–400%, default 100%, marks at 50/100/200/400), keeps 48px controls under
+  100% and opens side panels over the arena above about 200%. Instead the % is
+  device pixels per unit, the default is Auto and the range is Min to Max per
+  screen; everything around the arena and the Build canvas scales uniformly,
+  touch targets included. See "UI size". #381 decides how Settings presents it.
 - **Parts tray details (#374, best guess).** The reference tray has no reason
   on a locked row. Instead:
   - Tray rows are compact `UiPartRow`s (`control-sm` high) that still use
@@ -515,7 +516,7 @@ and the same parts keep their size. In this project `window/stretch/aspect="expa
 implements it. A screen narrower than 16:9 (4:3 tablets, square foldables)
 keeps 640 units of width and gains height instead, which the reference does
 not cover. 640 x 360 (`UiLayout.CanvasWidth`/`CanvasHeight`) is the reference
-canvas at 100% UI size, not a fixed size; see "UI size". The card row on Creations and Examples
+canvas, the smallest the layouts fit, not a fixed size; see "UI size". The card row on Creations and Examples
 keeps its 16:9 height on a taller canvas instead of stretching: `CardInset`
 does not expand and its minimum height is what is left under the top bar at
 360 units, so the row sits at the top with the extra height empty below
@@ -544,25 +545,44 @@ build, so a lying-flat phone may flip 180 degrees.
 
 ## UI size
 
-The UI size (#299) is one factor, 50% to 400%, that scales everything around
-the arena and the Build canvas uniformly, touch targets included: at 50% a
-48-unit target shows as 24 reference pixels, at 200% as 96, with no floor.
+The UI size (#299, #738) is how many device pixels one canvas unit is, as a
+percentage: 100% is one pixel per unit. It scales everything around the arena
+and the Build canvas uniformly, touch targets included, with no floor. The
+range is per screen:
+
+- **Auto**, the default, is one unit per Android dp (`ScreenGetDpi() / 160`,
+  snapped to 5%), because the reference is drawn in CSS pixels, which are about
+  dp. A tablet gets more canvas, not a bigger UI. Android buckets and caps
+  `ScreenGetScale()`, so a phone does not use it; a desktop uses it as its HiDPI
+  factor.
+- **Max** is the largest size, floored to 5%, at which a 640 x 360 canvas fits
+  the safe area. A small, dense phone lands on it.
+- **Min** is 50%.
+
+On an S25 (2340 x 1080, 450 dpi, a 96-pixel cutout) Auto is 280% and Max 300%.
+Auto and Max follow the window. A fixed size is kept and limited to the range,
+so it comes back when a window grows again (`UiSizeChoice`).
+
 The `UiScale` autoload owns it and applies it once, as the root window's
-`Window.ContentScaleFactor`. Under `canvas_items` stretch Godot multiplies
-that into the stretch, so the visible canvas shrinks in canvas units as the
-UI grows (780 x 360 on an S25 at 100%, 390 x 180 at 200%); fonts are
-re-rasterized for the new scale. Nothing else multiplies by it: tokens,
-scenes and components keep their numbers, and `UiSafeArea` already converts
-the cutout through the visible canvas, so its inset keeps its pixels at every
-size. Neon and Paper are Themes and are independent of it.
+`Window.ContentScaleFactor`. Under `canvas_items` stretch Godot first scales
+the 640 x 360 base by `min(width / 640, height / 360)` window pixels, so the
+root factor is the UI size over that stretch (`UiScale.RootFactor`); the
+stretch stays fractional. `UiScale` recomputes Auto, Max and the root factor
+when the window or safe area changes. Fonts are re-rasterized for the new
+scale. Nothing else multiplies by it: tokens, scenes and components keep their
+numbers, and `UiSafeArea` already converts the cutout through the visible
+canvas, so its inset keeps its pixels at every size. Neon and Paper are Themes
+and are independent of it.
 
 `ContentScaleFactor` is not UI-only; it scales every canvas item in the root
-window. The two views of a world undo it for themselves, so they keep their
-size on screen and only get the space that is left:
+window. The two views of a world undo the root factor for themselves, so they
+keep their size on screen and only get the space that is left:
 
-- `UiWorldView` lays its SubViewport out at its slot's size times the factor,
-  so the arena keeps its units per pixel.
-- `CanvasView` divides its zoom limits by the factor (`UiScale`): fitting
+- `UiWorldView` lays its SubViewport out at its slot's size times the root
+  factor, so the arena keeps its units per pixel. Its screen-size overlays (the
+  ruler, the best marker) apply the root factor again, so they follow the UI
+  size.
+- `CanvasView` divides its zoom limits by the root factor (`UiScale`): fitting
   never magnifies past true size, and pinch zoom stops at `MaxZoom` times true
   size on screen, whatever the UI size. Build's finger-sized hit radii and handles are in view units, so they
   scale with the UI, as touch targets should.
@@ -574,14 +594,14 @@ own. Icon SVGs stay white and take colour from modulate or the control's icon
 colours rather than `color_map`.
 
 Settings (#201) chooses and saves the value; until then the Colors & Styles
-page sets it for the session. The Settings slider snaps to 5% steps
-(`UiScale.Snap`).
+page sets it for the session (Min, 100%, Auto or Max; a restart returns to Auto). The Settings slider
+snaps to 5% steps (`UiScale.Snap`).
 
-A screen's root has no 640 x 360 minimum, so the canvas may shrink
-below it. 640 x 360 is still the smallest canvas the layouts fit: on a phone,
-whose canvas is already 360 units high at 100%, any larger size keeps the
-frame and toolbar on screen but clips the content below them (see "Screen
-size and safe area"). Keeping sizes above 100% usable on phones is #609.
+640 x 360 is the smallest canvas the layouts fit, which is why Max stops
+there. A screen's root has no 640 x 360 minimum, so a desktop window too small
+for it still lays out. A screen whose content still needs more room
+keeps its frame and toolbar on screen and clips the content (see "Screen
+size and safe area").
 
 ## Press feedback
 

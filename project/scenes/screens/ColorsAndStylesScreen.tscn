@@ -24,21 +24,21 @@ Text = "Neon"
 script = ExtResource("shell_6_theme_segment")
 Text = "Paper"
 
-[sub_resource type="Resource" id="cs_Resource_size_50"]
+[sub_resource type="Resource" id="cs_Resource_size_min"]
 script = ExtResource("shell_6_theme_segment")
-Text = "50%"
+Text = "Min 50%"
 
 [sub_resource type="Resource" id="cs_Resource_size_100"]
 script = ExtResource("shell_6_theme_segment")
 Text = "100%"
 
-[sub_resource type="Resource" id="cs_Resource_size_200"]
+[sub_resource type="Resource" id="cs_Resource_size_auto"]
 script = ExtResource("shell_6_theme_segment")
-Text = "200%"
+Text = "Auto"
 
-[sub_resource type="Resource" id="cs_Resource_size_400"]
+[sub_resource type="Resource" id="cs_Resource_size_max"]
 script = ExtResource("shell_6_theme_segment")
-Text = "400%"
+Text = "Max"
 
 [node name="ColorsAndStylesScreen" type="Control" unique_id=213652508]
 layout_mode = 3
@@ -169,7 +169,7 @@ custom_minimum_size = Vector2(120, 0)
 size_flags_horizontal = 3
 size_flags_vertical = 8
 autowrap_mode = 3
-text = "scales everything around the arena and the Build canvas, for this session; Settings will keep it. Above 100% a phone clips the screen until #609 is done; scroll down to switch back"
+text = "screen pixels per unit (100% is one) for everything around the arena and the Build canvas, for this session; Settings will keep it. Auto follows the screen's density; Max is the largest size the screens fit; restarting returns to Auto"
 script = ExtResource("shell_4_label")
 TextStyle = 9
 TextColor = 8
@@ -179,7 +179,7 @@ unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 0
 script = ExtResource("shell_5_theme_switch")
-Segments = Array[ExtResource("shell_6_theme_segment")]([SubResource("cs_Resource_size_50"), SubResource("cs_Resource_size_100"), SubResource("cs_Resource_size_200"), SubResource("cs_Resource_size_400")])
+Segments = Array[ExtResource("shell_6_theme_segment")]([SubResource("cs_Resource_size_min"), SubResource("cs_Resource_size_100"), SubResource("cs_Resource_size_auto"), SubResource("cs_Resource_size_max")])
 
 [node name="Colours" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content"]
 layout_mode = 2
