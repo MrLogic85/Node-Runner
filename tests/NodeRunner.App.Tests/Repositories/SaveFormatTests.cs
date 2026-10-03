@@ -143,7 +143,8 @@ public sealed class SaveFormatTests : IDisposable
                 [new SensorDef(6, 4, SensorKind.Accelerometer), new SensorDef(7, 5, SensorKind.Camera, "Eye", aim: -0.5)],
                 [new PistonDef(9, 1, 3)],
                 nextPartId: 10),
-            new TrainingStateDef(ExampleBrain(), 12, new TrainingRunDef(3.5, 1.25, 0.5, MapIds.Flat), new TrainingBestDef(9, 4.25, MapIds.Flat)));
+            new TrainingStateDef(ExampleBrain(), 12, new TrainingRunDef(3.5, 1.25, 0.5, MapIds.Flat), new TrainingBestDef(9, 4.25, MapIds.Flat)),
+            new TrainSettingsDef(12, 20));
 
     // The direct brain for ExampleCreation's ports: the Accelerometer (6), the Camera (7) and the
     // Piston (9). Every input drives the Piston's position, one connection is disabled, and its

@@ -8,7 +8,6 @@ using NodeRunner.App.ViewModels;
 using NodeRunner.Domain;
 using NodeRunner.Managers;
 using NodeRunner.ML.Brains;
-using NodeRunner.ML.Ga;
 using NodeRunner.Sim;
 using NodeRunner.Theme;
 using NodeRunner.Ui.Lib;
@@ -34,8 +33,6 @@ public partial class TrainingHost : Node, IRoutedScene
     // of ticks plays out, never the result.
     private static readonly float[] _timeScales = [1f, 2f, 4f];
 
-    // Every run trains with these settings until Train setup (#194) offers the choice.
-    private static readonly TrainingProfile _profile = new("Standard", 8, 600, 50, 0.1, 0.3, 3, CrossoverStrategy.Uniform);
 
     private readonly VisualTheme _theme = VisualTheme.Neon;
     private readonly SelectionViewModel _selection = new();
@@ -54,7 +51,6 @@ public partial class TrainingHost : Node, IRoutedScene
     private Evolver? _evolver;
     private TrainingScreen _screen = null!;
     private TrainingPresentationViewModel _trainingPresentation = new();
-    private int _sessionGenerationStart;
     private int _timeScaleIndex;
     private double _signalRefreshElapsed;
 
@@ -294,19 +290,19 @@ public partial class TrainingHost : Node, IRoutedScene
         _saved = resume;
         var disabledGenes = resume is null ? null : DirectBrain.DisabledGenes(resume.Brain, _creature.Ports);
         _brainFocus.Configure(BrainPortLabels.For(definition), disabledGenes ?? []);
-        _sessionGenerationStart = resume?.Generation ?? 0;
+        var setup = EvolutionSetup.For(creation?.TrainSettings, Engine.PhysicsTicksPerSecond);
         _evolver.Start(
             _creature,
-            _profile.PopulationSize,
+            setup.Population,
             _creature.Brain.LayerSizes,
-            new GeneticAlgorithm(_profile.TournamentSize, _profile.MutationRate, _profile.MutationStrength, crossoverStrategy: _profile.CrossoverStrategy),
+            setup.Algorithm,
             Rng.Random,
             GroundTopY,
             resume is null ? null : DirectBrain.Compile(resume.Brain, _creature.Ports),
             resume?.Generation ?? 0,
             resume?.Best.Distance ?? double.NegativeInfinity,
             resume?.Best.Generation ?? 0,
-            _profile.TrialDurationTicks,
+            setup.TrialTicks,
             CreateCreatureInstance,
             disabledGenes: disabledGenes);
     }
@@ -331,11 +327,6 @@ public partial class TrainingHost : Node, IRoutedScene
     {
         GD.Print($"Generation {_evolver!.Generation} — best: {_evolver.BestFitness:0.0}, mean: {_evolver.MeanFitness:0.0}");
         PersistTraining();
-        if (_evolver.Generation - _sessionGenerationStart >= _profile.MaxGenerations)
-        {
-            _evolver.Stop();
-            GD.Print($"Training session complete after {_profile.MaxGenerations} generations.");
-        }
     }
 
     // Saving reads the creation back off disk and writes it again, synchronous file IO (#113) that

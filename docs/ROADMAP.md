@@ -459,18 +459,10 @@ part without invalidating that progress.
 **Goal:** Let the player tune how a Creation trains, per session, instead
 of fixed engine constants.
 
-- Trial duration and population size (currently fixed:
-  `TrialController.TrialDurationTicks` defaults to 600 ticks ≈10s
-  in `project/src/sim/TrialController.cs`; `Main.cs`'s
-  `_populationSize = 8` configures the `Evolver`, see
-  `docs/TRAINING_LOOP.md`) become player-facing, session-scoped settings
-  rather than fixed constants. Generations-per-session (running a bounded
-  number of generations before stopping/reviewing, rather than evolving
-  indefinitely) is a new concept to introduce here, not an existing
-  setting.
-- Support the workflow the player described: e.g. many short trials (a
-  couple of seconds × dozens of runs) before switching to longer sessions
-  — a session-level training-profile choice, not a single fixed setup.
+- Shadows (population) and Run length (trial duration) are saved per
+  Creation (#617) and set in Train setup (#194). There are no training
+  profiles and no generation budget: training runs until the player
+  leaves, and the player shortens or lengthens runs between sessions.
 - Natural point to also address the GA-plateau behavior observed in
   practice this session (Best fitness flattening ~generation 50): larger
   population and/or a less "competing conventions"-prone recombination

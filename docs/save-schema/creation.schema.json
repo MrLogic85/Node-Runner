@@ -332,6 +332,26 @@
       ],
       "additionalProperties": false,
       "default": null
+    },
+    "trainSettings": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "properties": {
+        "shadows": {
+          "type": "integer"
+        },
+        "runLengthSeconds": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "shadows",
+        "runLengthSeconds"
+      ],
+      "additionalProperties": false,
+      "default": null
     }
   },
   "required": [
