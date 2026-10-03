@@ -257,7 +257,7 @@ public partial class TrainingHost : Node, IRoutedScene
         _screen.BackRequested += () => _navigator?.Back();
         _screen.PauseRequested += TogglePause;
         _screen.SpeedRequested += CycleTimeScale;
-        _screen.StatsRequested += () => Notify("Stats", "Stats open in milestone 0.12.0.");
+        _screen.StatsRequested += () => Notify("Stats", "Stats come in a later version.");
         _screen.ArenaPressed += SelectPartAt;
     }
 
