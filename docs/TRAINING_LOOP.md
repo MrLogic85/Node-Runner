@@ -192,8 +192,8 @@ transition to keep in step with it.
   - Shadow strip (#387): `ShadowStripPresentation` turns the rows into the
     strip's cells, worst on the left and best on the right. A bar is the
     distance so far against the best ever, or against the leader once it
-    goes further; the leader's bar is `accent`, and the followed cell is
-    ringed (`accent` when it also leads, otherwise `halo`). Up to 8 shadows
+    goes further. Only the followed cell is marked (`accent` bar and frame);
+    the leader is not, as the lead changes too often and flickers. Up to 8 shadows
     each get a cell, in shadow order with shadow 1 on the right. Past 8 the
     strip keeps 8 places: a "worse" button, 6 shadows and a last button that
     sorts on the first page and pages back up on later ones; the last page

@@ -6,8 +6,7 @@ namespace NodeRunner.Ui.Widgets;
 
 /// <summary>
 /// The Training shadow strip (#387, reference <c>GenerationStrip</c>): one <see cref="UiBarCell"/>
-/// per shadow, its bar the distance so far, the leader's bar <c>accent</c> and the followed shadow
-/// ringed. Tapping a cell follows that shadow. Past eight shadows the strip pages: a "worse" cell
+/// per shadow, its bar the distance so far and the followed shadow selected. Tapping a cell follows that shadow. Past eight shadows the strip pages: a "worse" cell
 /// first and a sort or "better" cell last (<see cref="ShadowStripPresentation"/>). The scene
 /// authors the cells; this binds them to the training and refreshes them every frame, because
 /// distances change every physics tick.
@@ -34,18 +33,6 @@ public partial class ShadowStrip : HBoxContainer
                 Refresh();
             }
         }
-    }
-
-    /// <summary>
-    /// The ring on a cell: <c>accent</c> when the followed shadow also leads, as following the
-    /// leader needs nothing else marked, and <c>halo</c> when the player follows another one.
-    /// </summary>
-    public static UiBarCellRing RingFor(ShadowStripCell cell)
-    {
-        ArgumentNullException.ThrowIfNull(cell);
-        return !cell.IsFollowed ? UiBarCellRing.None
-            : cell.IsLeader ? UiBarCellRing.Selected
-            : UiBarCellRing.Picked;
     }
 
     public override void _Ready()
@@ -113,8 +100,7 @@ public partial class ShadowStrip : HBoxContainer
 
             var shadow = _shown.Cells[index];
             cell.Fill = (float)shadow.Fill;
-            cell.Bright = shadow.IsLeader;
-            cell.Ring = RingFor(shadow);
+            cell.Selected = shadow.IsFollowed;
         }
 
         Trailing.Visible = _shown.Trailing != ShadowStripTrailing.None;

@@ -1487,7 +1487,7 @@ TextStyle = 12
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 8
-text = "a row of tappable bars: one bright, one ringed (accent, or halo when picked); icon cells sort or page"
+text = "a row of tappable bars, one selected in accent; icon cells sort or page"
 autowrap_mode = 3
 script = ExtResource("2_cpfof")
 TextStyle = 9
@@ -1512,8 +1512,6 @@ Fill = 0.8
 layout_mode = 2
 script = ExtResource("bar_cell")
 Fill = 1.0
-Bright = true
-Ring = 1
 
 [node name="Cell4" type="BaseButton" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/BarCells/Selected"]
 layout_mode = 2
@@ -1524,6 +1522,7 @@ Fill = 0.5
 layout_mode = 2
 script = ExtResource("bar_cell")
 Fill = 0.65
+Selected = true
 
 [node name="Cell6" type="BaseButton" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/BarCells/Selected"]
 layout_mode = 2
@@ -1536,53 +1535,6 @@ script = ExtResource("bar_cell")
 Fill = 0.85
 
 [node name="Cell8" type="BaseButton" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/BarCells/Selected"]
-layout_mode = 2
-script = ExtResource("bar_cell")
-Fill = 0.6
-
-[node name="Picked" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/BarCells"]
-layout_mode = 2
-size_flags_horizontal = 0
-theme_override_constants/separation = 4
-
-[node name="Cell1" type="BaseButton" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/BarCells/Picked"]
-layout_mode = 2
-script = ExtResource("bar_cell")
-Fill = 0.6
-
-[node name="Cell2" type="BaseButton" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/BarCells/Picked"]
-layout_mode = 2
-script = ExtResource("bar_cell")
-Fill = 0.8
-
-[node name="Cell3" type="BaseButton" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/BarCells/Picked"]
-layout_mode = 2
-script = ExtResource("bar_cell")
-Fill = 1.0
-Bright = true
-
-[node name="Cell4" type="BaseButton" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/BarCells/Picked"]
-layout_mode = 2
-script = ExtResource("bar_cell")
-Fill = 0.5
-
-[node name="Cell5" type="BaseButton" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/BarCells/Picked"]
-layout_mode = 2
-script = ExtResource("bar_cell")
-Fill = 0.65
-Ring = 2
-
-[node name="Cell6" type="BaseButton" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/BarCells/Picked"]
-layout_mode = 2
-script = ExtResource("bar_cell")
-Fill = 0.4
-
-[node name="Cell7" type="BaseButton" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/BarCells/Picked"]
-layout_mode = 2
-script = ExtResource("bar_cell")
-Fill = 0.85
-
-[node name="Cell8" type="BaseButton" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/BarCells/Picked"]
 layout_mode = 2
 script = ExtResource("bar_cell")
 Fill = 0.6
@@ -1626,8 +1578,7 @@ Fill = 0.9
 layout_mode = 2
 script = ExtResource("bar_cell")
 Fill = 1.0
-Bright = true
-Ring = 1
+Selected = true
 
 [node name="Cell8" type="BaseButton" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/BarCells/Sorting"]
 layout_mode = 2

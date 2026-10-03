@@ -168,7 +168,7 @@ reference would mislead someone working on that surface.
   drawn simplified (`docs/CREATURE_MODEL.md` → "Drawing as a shadow") in its
   normal colours at one alpha, a new `UiTokens.Alpha` entry `alpha_shadow`
   (start at 0.32, the reference's nearer shadow; tune on device). The leader
-  is marked only in the shadow strip. The reference's camera follows the
+  is not marked anywhere (#387: it flickers). The reference's camera follows the
   leader; here it follows the previous best by default (shadow 1 in
   generation 0) and never switches to the leader by itself. Owner decision.
 - **The shadow strip pages and has a shorter caption (#387).** Past 8
@@ -178,7 +178,8 @@ reference would mislead someone working on that surface.
   shadows' own until the player sorts, since nobody is best when a
   generation starts (`docs/TRAINING_LOOP.md` → Shadow strip). The caption
   is only "Generation 37": no time and no "Following shadow 5 · 10.3 m".
-  Owner decisions.
+  Only the followed shadow's cell is marked (`accent`); the leader gets no
+  mark, as the lead changes too often and flickers. Owner decisions.
 - **No grid in Training (#668).** The reference draws a faint grid behind
   the Training arena. Instead the arena background is plain: the grid is a
   Build blueprint, not part of the world. Motion shows against the ruler

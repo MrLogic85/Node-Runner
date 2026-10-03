@@ -1,7 +1,7 @@
 namespace NodeRunner.App.ViewModels;
 
 /// <summary>One cell of the shadow strip: a shadow, its bar (0–1) and its marks.</summary>
-public sealed record ShadowStripCell(int Number, double Fill, bool IsLeader, bool IsFollowed);
+public sealed record ShadowStripCell(int Number, double Fill, bool IsFollowed);
 
 /// <summary>What the strip's last place holds once it pages (#387).</summary>
 public enum ShadowStripTrailing
@@ -75,7 +75,7 @@ public sealed class ShadowStripPresentation
         var cells = shown
             .Reverse()
             .Select(index => shadows[index])
-            .Select(shadow => new ShadowStripCell(shadow.Number, Fill(shadow.Distance, scale), shadow.IsLeader, shadow.IsFollowed))
+            .Select(shadow => new ShadowStripCell(shadow.Number, Fill(shadow.Distance, scale), shadow.IsFollowed))
             .ToArray();
         return new ShadowStripView(
             cells,
