@@ -217,9 +217,9 @@ a composition of triangles; a bare quadrilateral stays free to fold.
   tip and holds a load such as the body's weight at its target.
 - **Minimum length:** the same as a beam's (`CreatureReadiness.MinimumBeamGap`).
 - **Drawn** as a rod from node A to node B with a cylinder at A and a cap at
-  B (`project/src/theme/PistonDrawing.cs`), over beams and under joints. A
-  selected Piston shows ticks at its shortest and longest lengths while the
-  selection can set its Stroke (#704).
+  B (`project/src/theme/PistonDrawing.cs`), over beams and under joints. The
+  cylinder grows with the stroke. A selected Piston shows ticks at its
+  shortest and longest lengths while the selection can set its Stroke (#704).
 
 ## Drawing as a shadow
 

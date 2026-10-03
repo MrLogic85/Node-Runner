@@ -6,8 +6,8 @@ namespace NodeRunner.Theme;
 /// <summary>
 /// Draws a Piston between two joints (#451), shared by Build's canvas and the creature in
 /// Training: a thin <c>accent</c> rod from ring to ring, a cylinder at its first joint and a cap
-/// at its second. The cylinder's length is half the Piston's shortest length, so it never covers
-/// the rod even fully in, and a larger stroke shows as a shorter cylinder. Selected, it gets the
+/// at its second. The cylinder grows with the stroke, and at the largest stroke just clears the
+/// cap fully in. Selected, it gets the
 /// beam's two <c>halo</c> lines and, unless it is in a group, ticks at its shortest and longest length. Drawn in window
 /// pixels (<see cref="UiPixelSpace"/>) so it stays crisp at any zoom; <c>drawTransform</c> is the
 /// transform the caller draws with, and is restored afterwards.
@@ -69,8 +69,13 @@ public static class PistonDrawing
         var (rodStart, rodEnd) = JointDrawing.BeamSpan(theme.JointRingWidth, a, radiusA, b, radiusB) ?? (a, b);
         canvas.DrawLine(toPixels * rodStart, toPixels * rodEnd, line, theme.BeamWidth * _rodPerBeam * scale, antialiased: true);
 
+        // The cylinder grows with the stroke; at ±50% it just clears the cap when fully in.
+        var built = (shortest + longest) / 2;
+        var stroke = (longest - shortest) / (2 * built);
+        var clearance = radiusA + radiusB + _minCylinder;
+        var cylinderLength = Math.Min(stroke * (built - (2 * clearance)), shortest - clearance);
         var cylinderStart = a + (along * radiusA);
-        var cylinderEnd = a + (along * Math.Max(shortest / 2, radiusA + _minCylinder));
+        var cylinderEnd = cylinderStart + (along * Math.Max(cylinderLength, _minCylinder));
         var cylinder = Cylinder(cylinderStart, cylinderEnd, along, across, cylinderHalf);
         canvas.DrawColoredPolygon([.. cylinder.Select(point => toPixels * point)], theme.SensorFill);
         canvas.DrawPolyline([.. cylinder.Append(cylinder[0]).Select(point => toPixels * point)], line, _line * scale, antialiased: true);
