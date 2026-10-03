@@ -118,6 +118,49 @@ public sealed class DirectBrainTests
     }
 
     [Fact]
+    public void Refit_WithTheSamePorts_KeepsTheBrain()
+    {
+        var brain = DirectBrain.ToBrainDef(_ports, _genome, previous: null);
+
+        var refitted = DirectBrain.Refit(brain, _ports);
+
+        refitted.Neurons.ShouldBe(brain.Neurons);
+        refitted.Connections.ShouldBe(brain.Connections);
+        refitted.NextNeuronId.ShouldBe(brain.NextNeuronId);
+    }
+
+    [Fact]
+    public void Refit_KeepsMatchedPorts_StartsNewOnesAlmostPassive_AndDropsRemovedOnes()
+    {
+        var brain = DirectBrain.ToBrainDef(_ports, _genome, previous: null);
+        // Part 2's angle input is gone and a new part 9 brings a position and a strength output.
+        var rebuilt = new BrainPortLayout(
+            [_ports.Inputs[1], _ports.Inputs[2]],
+            [.. _ports.Outputs, BrainPort.Output(9, "position", PortSignal.Position), BrainPort.Output(9, "strength", PortSignal.Strength)]);
+
+        var refitted = DirectBrain.Refit(brain, rebuilt);
+
+        refitted.Neurons.Select(neuron => (neuron.Id, neuron.PartId, neuron.Channel)).ShouldBe(
+            [(2, (int?)2, "speed:5"), (3, 6, "along"), (4, 2, "target:5"), (5, 9, "position"), (6, 9, "strength")]);
+        refitted.Connections.ShouldNotContain(gene => gene.From == 1);
+        // The kept output keeps its two remaining weights and its bias; the new outputs start silent.
+        DirectBrain.Compile(refitted, rebuilt).ShouldBe([-0.25, 0.75, 0, 0, 0, 0, 0.1, 0, PortSignals.PassiveStrengthBias]);
+    }
+
+    [Fact]
+    public void Refit_ToACreatureWithNoOutputs_KeepsOnlyItsInputs()
+    {
+        var brain = DirectBrain.ToBrainDef(_ports, _genome, previous: null);
+        var sensorsOnly = new BrainPortLayout(_ports.Inputs, []);
+
+        var refitted = DirectBrain.Refit(brain, sensorsOnly);
+
+        refitted.Neurons.Select(neuron => neuron.Id).ShouldBe([1, 2, 3]);
+        refitted.Connections.ShouldBeEmpty();
+        DirectBrain.Refit(refitted, BrainPortLayout.Empty).Neurons.ShouldBeEmpty();
+    }
+
+    [Fact]
     public void Compile_AnOutputSavedWithAnotherActivation_IsNotSupported()
     {
         var brain = DirectBrain.ToBrainDef(_ports, _genome, previous: null);

@@ -31,7 +31,7 @@ public sealed class BuildAutosaveTests
 
         autosave.Save().ShouldBeTrue();
 
-        edits.DidNotReceiveWithAnyArgs().PersistEdit(default, default!, default);
+        edits.DidNotReceiveWithAnyArgs().PersistEdit(default, default!);
     }
 
     [Fact]
@@ -64,7 +64,7 @@ public sealed class BuildAutosaveTests
     public void Save_WhenWritingThrows_KeepsTheEditsUnsaved()
     {
         var edits = Substitute.For<IBuildEditWorkflow>();
-        edits.PersistEdit(default, default!, default).ReturnsForAnyArgs(_ => throw new IOException("disk full"));
+        edits.PersistEdit(default, default!).ReturnsForAnyArgs(_ => throw new IOException("disk full"));
         var build = new BuildViewModel();
         var creation = TwoNodeCreation();
         build.LoadCreation(creation);
@@ -79,9 +79,13 @@ public sealed class BuildAutosaveTests
     [Fact]
     public void Save_OnALockedCreation_KeepsItsTraining()
     {
-        var training = TestTraining.State(4, 1, TestTraining.Run);
-        var drawn = TwoNodeCreation();
-        var trained = new CreationDef(drawn.Id, drawn.Name, drawn.Creature, training);
+        var pair = new CreatureDef(
+            [new NodeDef(1, new Vector2D(0, 0), 18), new NodeDef(2, new Vector2D(20, 0), 18)],
+            [],
+            [],
+            [new PistonDef(3, 1, 2)]);
+        var training = TestTraining.StateFor(pair, 4);
+        var trained = new CreationDef(Guid.NewGuid(), "Pair", pair, training);
         var (repository, build, autosave) = Open(trained);
 
         build.MoveNode(1, new Vector2D(5, 5));
@@ -89,7 +93,11 @@ public sealed class BuildAutosaveTests
 
         var saved = repository.Get(trained.Id).ShouldNotBeNull();
         saved.Creature.Nodes[0].Position.ShouldBe(new Vector2D(5, 5));
-        saved.Training.ShouldBe(training);
+        saved.Training.ShouldNotBeNull();
+        saved.Training.Generation.ShouldBe(training.Generation);
+        saved.Training.Best.ShouldBe(training.Best);
+        saved.Training.Brain.Neurons.ShouldBe(training.Brain.Neurons);
+        saved.Training.Brain.Connections.ShouldBe(training.Brain.Connections);
     }
 
     [Fact]
@@ -99,7 +107,7 @@ public sealed class BuildAutosaveTests
         try
         {
             var creation = TwoNodeCreation();
-            var repository = new FileCreationRepository(new TempStorageLocation(directory));
+            var repository = new FileCreationRepository(new TestStorageLocation(directory));
             repository.Save(creation);
             var build = new BuildViewModel();
             build.LoadCreation(creation);
@@ -110,7 +118,7 @@ public sealed class BuildAutosaveTests
                 autosave.Save();
             }
 
-            var reopened = new FileCreationRepository(new TempStorageLocation(directory)).Get(creation.Id);
+            var reopened = new FileCreationRepository(new TestStorageLocation(directory)).Get(creation.Id);
 
             reopened.ShouldNotBeNull().Creature.Nodes[1].Position.ShouldBe(new Vector2D(60, 0));
         }
@@ -167,9 +175,4 @@ public sealed class BuildAutosaveTests
             [new NodeDef(1, new Vector2D(0, 0), 18), new NodeDef(2, new Vector2D(20, 0), 18)],
             [new BeamDef(101, 1, 2)],
             []));
-
-    private sealed class TempStorageLocation(string directoryPath) : IStorageLocation
-    {
-        public string DirectoryPath { get; } = directoryPath;
-    }
 }

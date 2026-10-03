@@ -50,7 +50,7 @@ public sealed class SaveFormatTests : IDisposable
         Directory.CreateDirectory(Path.GetDirectoryName(CreationPath(_exampleId))!);
         File.WriteAllText(CreationPath(_exampleId), Example());
 
-        var loaded = new FileCreationRepository(new Location(_directory)).Get(_exampleId);
+        var loaded = new FileCreationRepository(new TestStorageLocation(_directory)).Get(_exampleId);
 
         loaded.ShouldNotBeNull();
         SaveJson.Serialize(loaded).ShouldBe(SaveJson.Serialize(ExampleCreation()));
@@ -116,13 +116,13 @@ public sealed class SaveFormatTests : IDisposable
         Directory.CreateDirectory(Path.GetDirectoryName(CreationPath(_exampleId))!);
         File.WriteAllText(CreationPath(_exampleId), json.ToJsonString());
 
-        new FileCreationRepository(new Location(_directory)).List().ShouldBeEmpty();
+        new FileCreationRepository(new TestStorageLocation(_directory)).List().ShouldBeEmpty();
     }
 
     [Fact]
     public void Repository_KeepsEachCreationInItsOwnFolder()
     {
-        var repository = new FileCreationRepository(new Location(_directory));
+        var repository = new FileCreationRepository(new TestStorageLocation(_directory));
         var creation = ExampleCreation();
 
         repository.Save(creation);
@@ -183,9 +183,4 @@ public sealed class SaveFormatTests : IDisposable
     }
 
     private string CreationPath(Guid id) => Path.Combine(_directory, id.ToString("N"), FileCreationRepository.CreationFileName);
-
-    private sealed class Location(string directoryPath) : IStorageLocation
-    {
-        public string DirectoryPath { get; } = directoryPath;
-    }
 }

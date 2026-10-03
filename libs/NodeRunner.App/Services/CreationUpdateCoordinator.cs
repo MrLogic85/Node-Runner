@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 using NodeRunner.App.Repositories;
 using NodeRunner.Domain;
+using NodeRunner.ML.Brains;
 
 namespace NodeRunner.App.Services;
 
@@ -83,17 +84,20 @@ public sealed class CreationUpdateCoordinator : ICreationUpdateCoordinator
         }
     }
 
-    public CreationDef? ApplyEdit(Guid id, CreatureDef editedCreature, bool moveOnly)
+    public CreationDef? ApplyEdit(Guid id, CreatureDef editedCreature)
     {
         ArgumentNullException.ThrowIfNull(editedCreature);
         return UpdateIfPresent(id, source =>
         {
             BumpTrainingEpoch(id);
-            return moveOnly
-                ? new CreationDef(source.Id, source.Name, editedCreature, source.Training)
-                : new CreationDef(source.Id, source.Name, editedCreature);
+            return new CreationDef(source.Id, source.Name, editedCreature, Refit(source.Training, editedCreature));
         });
     }
+
+    private static TrainingStateDef? Refit(TrainingStateDef? training, CreatureDef creature) =>
+        training is null
+            ? null
+            : new TrainingStateDef(DirectBrain.Refit(training.Brain, BrainPorts.Of(creature)), training.Generation, training.Latest, training.Best);
 
     public bool Delete(Guid id)
     {

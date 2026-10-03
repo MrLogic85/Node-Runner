@@ -418,9 +418,4 @@ public sealed class CreationRepositoryTests
         actual.Training.Latest.ShouldBe(expected.Training.Latest);
         actual.Training.Best.ShouldBe(expected.Training.Best);
     }
-
-    private sealed class TestStorageLocation(string directoryPath) : IStorageLocation
-    {
-        public string DirectoryPath { get; } = directoryPath;
-    }
 }
