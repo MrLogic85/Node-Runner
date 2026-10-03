@@ -37,7 +37,7 @@ public sealed class ShadowStripPresentationTests
     }
 
     [Fact]
-    public void Cells_CarryTheLeaderAndFollowedMarks()
+    public void Cells_MarkOnlyTheFollowedShadow()
     {
         var strip = new ShadowStripPresentation();
         ShadowStanding[] shadows =
@@ -48,8 +48,8 @@ public sealed class ShadowStripPresentationTests
 
         strip.View(shadows, 0, 3).Cells.ShouldBe(
         [
-            new ShadowStripCell(2, 1, IsLeader: true, IsFollowed: false),
-            new ShadowStripCell(1, 1.0 / 3, IsLeader: false, IsFollowed: true),
+            new ShadowStripCell(2, 1, IsFollowed: false),
+            new ShadowStripCell(1, 1.0 / 3, IsFollowed: true),
         ]);
     }
 
