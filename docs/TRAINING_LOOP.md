@@ -17,7 +17,7 @@ but do not redefine it here.
   it only exposes primitives (`ResetPose`, `SetBrain`, `CenterOfMass`) that
   the sim layer composes.
 - `project/src/managers/RngProvider.cs` is the single seeded RNG source for
-  a run (a Godot autoload; see `docs/CODE_DESIGN_PRINCIPLES.md` §3 and
+  a run (a Godot autoload; see `docs/CODE_DESIGN_PRINCIPLES.md` §4 and
   `project/src/managers/AGENTS.md`). Sim/ML code receives a `Random` from
   it explicitly rather than constructing its own.
 

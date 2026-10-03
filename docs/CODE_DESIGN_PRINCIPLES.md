@@ -13,7 +13,32 @@ Tuesday — must be able to read the code and *learn* from it.
   it does**, and a link/reference for **why**
 - Do not "optimize" until a profiler says you must
 
-## 2. The ML engine is engine-agnostic
+## 2. Godot first
+
+Godot is a full engine. Using it to its full potential is the default, not
+an option.
+
+- Before writing anything, find what Godot already provides (nodes,
+  resources, servers, project settings, editor features) and use it fully,
+  even if that means learning a new part of the engine. Examples: physics
+  (`RigidBody2D` and joints), themes and theme type variations, containers
+  for layout, stretch and `ContentScaleFactor` for UI size, `DPITexture`,
+  and translation (`TranslationServer`, `Tr`/`TrN`) for text (#682).
+- Write our own only when Godot cannot do what we need. Say why in the code
+  or the owning doc, naming what was checked. "Ours is simpler" or "we
+  didn't know" is not a reason.
+- A wrapper that only renames or re-routes a Godot feature is still our own
+  solution. Extend the Godot type (subclass, theme variation, resource)
+  instead of replacing it.
+- The engine-independent `libs/` (§3) cannot call Godot. That does not
+  license re-implementing a Godot feature there: hand the Godot side the
+  data it needs (values, keys, counts) and let Godot do the work. Logic
+  Godot does not offer, such as the ML engine and the domain rules, stays
+  ours.
+- When existing code turns out to duplicate a Godot feature, file an issue
+  to replace it.
+
+## 3. The ML engine is engine-agnostic
 
 Anything under `libs/NodeRunner.ML/` must satisfy:
 
@@ -32,7 +57,7 @@ Why: it forces a clean interface, it lets us test on the CLI, and it means the
 ML code could be lifted into any other project (or a future desktop tool)
 without rewriting.
 
-## 3. Determinism by default
+## 4. Determinism by default
 
 - All randomness flows through a single seeded `System.Random`, obtained
   from `RngProvider` (see `project/src/managers/AGENTS.md`), passed to
@@ -51,7 +76,7 @@ without rewriting.
 Why: reproducibility is worth more than you'd think. Bug reports become "run
 seed 4711". Regressions become detectable.
 
-## 4. Small, composable units
+## 5. Small, composable units
 
 - A file should do one thing. Aim for about 300 lines; past that, check
   whether it still does one thing and split it if not.
@@ -67,7 +92,7 @@ seed 4711". Regressions become detectable.
 - No abstract base classes "just in case". Introduce them when the second
   concrete case appears, not before.
 
-## 5. Data before behavior
+## 6. Data before behavior
 
 - Represent things as data first, then add behavior:
   ```csharp
@@ -79,7 +104,7 @@ seed 4711". Regressions become detectable.
   hashing (dedup) trivial.
 - Godot nodes are built *from* these defs, they don't replace them.
 
-## 6. Explicit units
+## 7. Explicit units
 
 - Angles: **radians**. Always. Convert at the UI boundary.
 - Time: **seconds** (double).
@@ -87,14 +112,14 @@ seed 4711". Regressions become detectable.
   in `GLOSSARY.md`.
 - Never a bare `double angle` — call it `angleRad`.
 
-## 7. Fail loud in dev, gracefully in prod
+## 8. Fail loud in dev, gracefully in prod
 
 - Use `Debug.Assert` liberally in dev builds for invariants
   (`Debug.Assert(weights.Length == expected)`).
 - Release builds should clamp/log rather than crash the app.
 - Never `catch (Exception) { }`. Ever.
 
-## 8. Comment intent, not mechanics
+## 9. Comment intent, not mechanics
 
 ```csharp
 // BAD: increments the counter
@@ -107,7 +132,7 @@ generation++;
 Assume the reader knows C#. Do not assume they know why *this* algorithm cares
 about *that* invariant.
 
-## 9. Testing philosophy
+## 10. Testing philosophy
 
 - **Unit tests** for `libs/NodeRunner.ML/` and `libs/NodeRunner.Domain/` —
   mandatory. Small, fast, no Godot.
@@ -121,7 +146,7 @@ about *that* invariant.
 
 See `docs/TEST_STRATEGY.md` for the full tooling table and per-layer detail.
 
-## 10. Version-control hygiene
+## 11. Version-control hygiene
 
 - One logical change per commit.
 - Do **not** commit generated files: `.godot/`, `.mono/`, `bin/`, `obj/`,
@@ -129,19 +154,17 @@ See `docs/TEST_STRATEGY.md` for the full tooling table and per-layer detail.
 - PR title, squash-commit format, DoD, and merge process live in
   `docs/REVIEW.md`.
 
-## 11. Dependencies are a debt
+## 12. Dependencies are a debt
 
 - Every added NuGet package or Godot addon is future maintenance.
-- Use what Godot already provides before writing our own: built-in nodes,
-  resources and settings (stretch, `ContentScaleFactor`, `DPITexture`,
-  themes, physics) win over a custom version of the same thing. Write our
-  own only when Godot has nothing that fits, and say why in the code or doc.
+- Godot first (§2) applies here too: what Godot provides beats a package,
+  an addon or our own version.
 - No ML libraries. We're building this to learn.
 - Physics: use Godot's built-in `RigidBody2D` + joints. Don't pull Box2D.NET.
 - Math: `System`, `System.Numerics`. If we need more, we implement it in
   `libs/NodeRunner.ML/Math/`.
 
-## 12. UI is the last mile
+## 13. UI is the last mile
 
 - Never let a beautiful UI hide a broken simulation. Build sim-first, UI on top.
 - All state the UI shows must be readable from the sim, not the other way
@@ -169,6 +192,7 @@ See `docs/TEST_STRATEGY.md` for the full tooling table and per-layer detail.
 - Deep inheritance chains
 - Async/await where a simple coroutine or per-frame update would do
 - Premature ECS / DOTS-style architecture
+- Re-implementing something Godot already provides (§2)
 
 ## Chosen tooling
 
