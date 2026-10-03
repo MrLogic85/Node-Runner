@@ -67,7 +67,11 @@ then the app follows the reference.
   lives in `docs/TRAINING_LOOP.md` step 6. The "One reset" warning moves to
   Reset training in the overflow (#687): a danger item that opens a danger
   dialog, "Reset training?", naming the generations lost, with "Hold to
-  reset".
+  reset". It sits under Copy creation, directly above Delete creation, so
+  the destructive items are grouped at the bottom of the menu. The
+  reference rule against placing two destructive actions side by side
+  (Overlays) gives way here: a mis-tap only opens the other item's dialog,
+  which names its action and still needs a hold. Owner decision.
 - **Play is on the rail in both states (#370, 0.13.0).** The reference puts
   Start training in the unlocked top bar and the play button at the bottom
   of the rail only when locked. Instead the primary play button sits at
@@ -75,7 +79,7 @@ then the app follows the reference.
   bar keeps the padlock. A dimmed play button's reason is the panel's last
   line. Stats sits in the overflow menu, "Coming soon" until 0.15.0.
   The overflow follows training, not the lock: a trained creation lists
-  Stats, Power budget, Reset training, Copy creation and Delete creation in
+  Stats, Power budget, Copy creation, Reset training and Delete creation in
   either state, an untrained one Power budget and Delete creation. Copy
   saves edits first, keeps the brain and confirms with a notification.
   Checkpoints wait for #256. Owner decision.

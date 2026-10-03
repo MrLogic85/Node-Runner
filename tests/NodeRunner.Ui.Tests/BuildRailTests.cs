@@ -42,6 +42,12 @@ public sealed class BuildRailTests
         _build.Single(node => node.Name == "MenuDeleteCreation").Node.Body.ShouldContain(danger);
     }
 
+    [Fact]
+    public void Overflow_PutsResetTrainingUnderCopy_AboveDelete()
+    {
+        Children("/ToolbarMenu").ShouldBe(["MenuStats", "MenuPowerBudget", "MenuCopyCreation", "MenuResetTraining", "MenuDeleteCreation"]);
+    }
+
     private static string[] Children(string parent) =>
         [.. _build.Where(node => node.Parent?.EndsWith(parent, StringComparison.Ordinal) == true).Select(node => node.Name)];
 }
