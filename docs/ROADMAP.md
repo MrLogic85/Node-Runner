@@ -31,10 +31,8 @@ Source: the Brain v2 epic
 own issue lists and status; this section holds the durable narrative. A
 milestone section names capabilities, not issues, so moving an issue between
 milestones does not touch this file.
-`reference design/` owns UI and product flow, and
-`docs/UI_IMPLEMENTATION_PLAN.md` owns UI implementation order. Where this plan
-replaces the reference flow, `docs/UI_DIRECTION.md` → "Reference flow
-overrides" records it.
+`docs/UI_DIRECTION.md` → "Who owns what" says who owns UI and product flow,
+with `reference design/` as a guide, and `docs/UI_IMPLEMENTATION_PLAN.md` owns UI implementation order.
 
 Rules that hold across the phases:
 

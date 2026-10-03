@@ -1,14 +1,11 @@
-# Build mode workflow (historical prototype)
+# Build mode workflow
 
-Durable design notes for 0.3.0 "Bygg figuren" (see `docs/ROADMAP.md`). This is
-the authoritative description of that shipped prototype's interaction and
-state flow, not the current product target. It remains useful when maintaining
-the transitional implementation.
-
-The active target is owned by `reference design/components/Build/README.md`,
-`reference design/components/BuildLocked/README.md`, and
-`reference design/components/Navigation/README.md`. When a Creation counts as
-locked is overridden in `docs/TRAINING_LOOP.md` → Product lifecycle boundary.
+How Build works: its interaction and state flow. It began as the notes for
+the 0.3.0 prototype "Bygg figuren" (see `docs/ROADMAP.md`) and is kept up to
+date with the app; together with `docs/UI_DIRECTION.md` it owns the current
+Build. `reference design/components/Build/README.md`, `BuildLocked/README.md`
+and `Navigation/README.md` are its guide. When a Creation counts as locked is
+owned by `docs/TRAINING_LOOP.md` → Product lifecycle boundary.
 
 ## Mode
 
@@ -149,7 +146,7 @@ a node's own ring always hits.
   `CanvasView` (#564). Zoomed in, the creation can be off screen; zooming
   out finds it. Distances are in view or canvas units (`docs/GLOSSARY.md` →
   Build canvas). How zoom treats lines, the grid and labels is owned by
-  `docs/UI_DIRECTION.md` → Reference flow overrides.
+  `docs/UI_DIRECTION.md` → Departures from the reference.
 - Changing tool mid-gesture, or Android cancelling the touch, cancels the
   gesture the same way.
 - `BuildViewModel.StatusMessage` records the outcome of the last

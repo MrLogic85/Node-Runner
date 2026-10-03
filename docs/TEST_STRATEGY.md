@@ -108,8 +108,8 @@ Add a fact whenever a convention emerges that we've decided to enforce.
 
 ### `NodeRunner.Ui.Tests`
 
-`docs/UI_DIRECTION.md` ("Who owns what") splits the UI between the reference
-design, the UI library, scenes and C#. These tests guard those boundaries and
+`docs/UI_DIRECTION.md` ("Who owns what") splits the UI between the UI
+library, scenes and C#. These tests guard those boundaries and
 run without the Godot scene tree. They cover five concerns.
 
 **1. Values come from their owner.** A value is authored once, so a root Theme
