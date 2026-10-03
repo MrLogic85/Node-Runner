@@ -99,7 +99,8 @@ public partial class TrainSetupScreen : Control
         slider.LabelText = value.Label;
         slider.ReadoutText = value.Readout;
         slider.Step = value.Step;
-        slider.HighPosition = value.Position;
+        // No position: an empty track with no thumb or fill.
+        slider.Value = value.Position is { } position ? UiSliderValue.Thumb(position) : UiSliderValue.Progress(0);
         slider.Disabled = value.Disabled;
         if (!slider.StepLabels.SequenceEqual(ends))
         {
