@@ -5,8 +5,9 @@ namespace NodeRunner.Creature;
 
 /// <summary>
 /// A Piston between two node bodies (#451): each physics tick it pushes them apart or pulls them
-/// together along the line between them with <see cref="Domain.Piston.Step"/>. It has no body or
-/// weight of its own and does not hold its length, so it adds no rigidity. Its brain conventions
+/// together along the line between them with <see cref="Domain.Piston.Step"/>. It only applies the
+/// force: inside its stroke nothing holds its length, so it adds no rigidity. Its end stops (#701),
+/// a hidden cylinder body and groove, are built by <c>Creature.CreateEndStops</c>. Its brain conventions
 /// are <see cref="Domain.Piston"/>'s — see docs/CREATURE_MODEL.md.
 /// </summary>
 public sealed class PistonLink

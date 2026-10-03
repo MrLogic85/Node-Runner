@@ -206,18 +206,28 @@ a composition of triangles; a bare quadrilateral stays free to fold.
   and **Max speed** (2 m/s new). Its built length is the distance between
   its nodes in the drawing. At runtime `project/src/creature/PistonLink.cs`
   pushes its two node bodies apart or together along the line between them
-  every physics tick; it is not a body and has no collider or weight.
-- **Not a beam:** it does not hold its length, so it adds no rigidity, and it counts as attached for the node degree rules. A
+  every physics tick; it has no collider, and its only weight is its end
+  stops' cylinder (below).
+- **Not a beam:** inside its stroke it does not hold its length, so it adds no rigidity, and it counts as attached for the node degree rules. A
   Piston cannot join two nodes a beam already joins (the beam would hold
   them rigid), and two nodes hold at most one Piston (`CreatureBuilder.CanAddPiston`).
 - **Force** (`Piston.Step` in `libs/NodeRunner.Domain/Piston.cs`): it
   chases the target length from its position output at up to Max speed,
   slowing as it arrives, with at most the strength output's share of its
-  Strength. Past either end of its stroke it may use its full Strength,
-  whatever the brain asks: the end stops belong to the cylinder. The speed
-  control is a PI controller with gains from the reduced mass of its two
-  nodes, the lightest load it can move, so it stays steady on a light limb
-  tip and holds a load such as the body's weight at its target.
+  Strength. The speed control is a PI controller with gains from the
+  reduced mass of its two nodes, the lightest load it can move, so it stays
+  steady on a light limb tip and holds a load such as the body's weight at
+  its target.
+- **End stops** (#701): its length stays within its stroke, whatever the load.
+  Like a real cylinder, the ends are a hard limit, not extra force: a hidden
+  cylinder body (no collider) turns freely on node A (the groove can't sit
+  on node A itself, whose rotation is locked), and a Godot `GrooveJoint2D`
+  lets node B slide only along it between the shortest and longest length (`Creature.CreateEndStops`). Inside the stroke the
+  groove pushes nothing along the Piston, so it never works against the
+  force; at an end it holds like any joint, giving up to about 10% of the
+  stroke for a few ticks on a hard impact. The cylinder weighs as much as
+  the lightest node (0.1), so it adds a little weight at node A; a much
+  lighter one lets the joint give far more.
 - **Minimum length:** the same as a beam's (`CreatureReadiness.MinimumBeamGap`).
 - **Drawn** as a rod from node A to node B with a cylinder at A and a cap at
   B (`project/src/theme/PistonDrawing.cs`), over beams and under joints. A

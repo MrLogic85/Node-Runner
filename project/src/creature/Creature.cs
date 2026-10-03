@@ -50,6 +50,8 @@ public partial class Creature : Node2D
     private SensorVisual[] _sensorVisuals = [];
     private PistonLink[] _pistons = [];
     private PistonVisual[] _pistonVisuals = [];
+    private RigidBody2D[] _cylinderBodies = [];
+    private float[] _cylinderInitialRotations = [];
     private CameraRaysVisual? _cameraRaysVisual;
     private bool _isShadow;
     private IBeamSensor[] _sensors = [];
@@ -213,9 +215,14 @@ public partial class Creature : Node2D
             body.LinearVelocity = Vector2.Zero;
         }
 
-        foreach (var piston in _pistons)
+        for (var i = 0; i < _pistons.Length; i++)
         {
-            piston.Reset();
+            _pistons[i].Reset();
+            var cylinder = _cylinderBodies[i];
+            cylinder.Position = _pistons[i].NodeA.Position;
+            cylinder.Rotation = _cylinderInitialRotations[i];
+            cylinder.LinearVelocity = Vector2.Zero;
+            cylinder.AngularVelocity = 0f;
         }
 
         if (_nodeBodies.Length == 0)
@@ -224,7 +231,7 @@ public partial class Creature : Node2D
         }
 
         var offset = GlobalTransform.BasisXformInv(new Vector2(0, lowestPointY - LowestPointY));
-        foreach (var body in _beamBodies.Concat(_nodeBodies))
+        foreach (var body in _beamBodies.Concat(_nodeBodies).Concat(_cylinderBodies))
         {
             body.Position += offset;
         }
@@ -716,18 +723,22 @@ public partial class Creature : Node2D
         return new AccelerometerSensor(_beamBodies[beamIndex], Accelerometer.UpSign(nodeA, nodeB), gravity);
     }
 
-    // A Piston pushes on its two node bodies; it has no body of its own. Its picture is a child of
-    // the creature one z step down, with the beams, so the joints still draw over it.
+    // A Piston pushes on its two node bodies; its only body is the hidden end-stop cylinder. Its
+    // picture is a child of the creature one z step down, with the beams, so the joints still draw
+    // over it.
     private void CreatePistons(CreatureDef definition)
     {
         _pistons = new PistonLink[definition.Pistons.Count];
         _pistonVisuals = new PistonVisual[definition.Pistons.Count];
+        _cylinderBodies = new RigidBody2D[definition.Pistons.Count];
+        _cylinderInitialRotations = new float[definition.Pistons.Count];
         for (var i = 0; i < _pistons.Length; i++)
         {
             var piston = definition.Pistons[i];
             var indexA = definition.NodeIndexOf(piston.NodeA);
             var indexB = definition.NodeIndexOf(piston.NodeB);
             _pistons[i] = new PistonLink(piston, _nodeBodies[indexA], _nodeBodies[indexB]);
+            CreateEndStops(i);
             var visual = new PistonVisual
             {
                 Name = $"Piston{i}Visual",
@@ -740,6 +751,59 @@ public partial class Creature : Node2D
             AddChild(visual);
             _pistonVisuals[i] = visual;
         }
+    }
+
+    // A Piston's end stops are a hard limit, as in a real cylinder (#701): a nearly massless,
+    // collider-free cylinder body turns freely on node A, and Godot's GrooveJoint2D lets node B
+    // slide only along the cylinder between the stroke's two ends. The groove needs that body:
+    // nodes have locked rotation, so a groove on node A would keep one world direction instead of
+    // turning with the Piston. It weighs as much as the lightest node: a tenth of that let the
+    // joint give three times as far past an end (#701 probe). Inside the stroke the groove
+    // pushes nothing along the piston, so only the piston's own force moves it; at an end it
+    // holds whatever the load.
+    private void CreateEndStops(int index)
+    {
+        var link = _pistons[index];
+        var a = link.NodeA.Position;
+        var axis = (link.NodeB.Position - a).Normalized();
+        var shortest = (float)Domain.Piston.ShortestLength(link.BuiltLength, link.Definition.Stroke);
+        var longest = (float)Domain.Piston.LongestLength(link.BuiltLength, link.Definition.Stroke);
+        var rotation = axis.Angle();
+
+        var cylinder = new RigidBody2D
+        {
+            Name = $"Piston{index}Cylinder",
+            CollisionLayer = 0,
+            CollisionMask = 0,
+            Position = a,
+            Rotation = rotation,
+            Mass = _beamBodyMass,
+            CenterOfMassMode = RigidBody2D.CenterOfMassModeEnum.Custom,
+            CenterOfMass = Vector2.Zero,
+            Inertia = _beamBodyMass * _beamInertiaThickness * _beamInertiaThickness / 12,
+            CanSleep = false,
+        };
+        AddChild(cylinder);
+        _cylinderBodies[index] = cylinder;
+        _cylinderInitialRotations[index] = rotation;
+
+        var pin = new PinJoint2D { Name = $"Piston{index}CylinderPin", Position = a };
+        AddChild(pin);
+        pin.NodeA = pin.GetPathTo(link.NodeA);
+        pin.NodeB = pin.GetPathTo(cylinder);
+
+        // The groove runs along the joint's own +Y, so it is turned a quarter back from the axis.
+        var groove = new GrooveJoint2D
+        {
+            Name = $"Piston{index}EndStops",
+            Position = a + (axis * shortest),
+            Rotation = rotation - (Mathf.Pi / 2),
+            Length = longest - shortest,
+            InitialOffset = (float)link.BuiltLength - shortest,
+        };
+        AddChild(groove);
+        groove.NodeA = groove.GetPathTo(cylinder);
+        groove.NodeB = groove.GetPathTo(link.NodeB);
     }
 
     private void ConfigureBrainBuffers(CreatureDef definition)
