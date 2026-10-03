@@ -5,7 +5,7 @@ using NodeRunner.ML;
 namespace NodeRunner.App.ViewModels;
 
 /// <summary>
-/// BrainFocus on the direct brain (#536): an Inputs column and an Outputs column, the enabled
+/// BrainFocus on the direct brain (#536): a Senses column and an Outputs column, the enabled
 /// connections between them and live activations. Nothing is selected at first; tapping an
 /// output names the senses that drive it most, and tapping a sense names the outputs it drives
 /// most. Best guesses until #549 designs it (docs/UI_DIRECTION.md).
@@ -87,7 +87,7 @@ public sealed class BrainFocusPresentationViewModel : INotifyPropertyChanged
 
         _connections = [.. connections];
         HasNetwork = true;
-        Summary = $"{inputCount} {Plural(inputCount, "input")} → {outputCount} {Plural(outputCount, "output")}";
+        Summary = $"{inputCount} {Plural(inputCount, "sense")} → {outputCount} {Plural(outputCount, "output")}";
         Present();
     }
 
@@ -139,7 +139,7 @@ public sealed class BrainFocusPresentationViewModel : INotifyPropertyChanged
 
         Layers =
         [
-            Column("Inputs", InputLayer, _labels.Inputs, named),
+            Column("Senses", InputLayer, _labels.Inputs, named),
             Column("Outputs", OutputLayer, _labels.Outputs, named),
         ];
         Edges = _connections
