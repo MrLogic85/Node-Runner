@@ -58,7 +58,7 @@ public sealed class SaveFormatTests : IDisposable
 
     [Theory]
     [InlineData("\"name\": \"Example\",", "\"name\": \"Example\", \"isLocked\": true,", "isLocked")]
-    [InlineData("\"radius\": 1,", "\"radius\": 1, \"mass\": 2,", "mass")]
+    [InlineData("\"name\": \"Hip\"", "\"name\": \"Hip\", \"mass\": 2", "mass")]
     public void Loading_WithAnUnknownField_FailsAndNamesIt(string field, string withExtra, string extra)
     {
         var json = Example();
@@ -138,7 +138,7 @@ public sealed class SaveFormatTests : IDisposable
             _exampleId,
             "Example",
             new CreatureDef(
-                [new NodeDef(1, new Vector2D(0, 0), 1, "Hip"), new NodeDef(2, new Vector2D(2, 0.5), 1), new NodeDef(3, new Vector2D(4, 0), 1)],
+                [new NodeDef(1, new Vector2D(0, 0), "Hip"), new NodeDef(2, new Vector2D(2, 0.5)), new NodeDef(3, new Vector2D(4, 0))],
                 [new BeamDef(4, 1, 2, "Thigh"), new BeamDef(5, 2, 3)],
                 [new SensorDef(6, 4, SensorKind.Accelerometer), new SensorDef(7, 5, SensorKind.Camera, "Eye", aim: -0.5)],
                 [new PistonDef(9, 1, 3)],

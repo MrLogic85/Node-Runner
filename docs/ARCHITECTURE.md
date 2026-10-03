@@ -184,7 +184,7 @@ public sealed class GeneticAlgorithm
 }
 
 // libs/NodeRunner.Domain/
-public sealed record NodeDef(int Id, Vector2D Position, double Radius, string? Name = null);
+public sealed record NodeDef(int Id, Vector2D Position, string? Name = null); // Radius follows from its parts, not saved
 public sealed record BeamDef(int Id, int NodeA, int NodeB, string? Name = null);   // node ids
 public sealed record SensorDef(int Id, int BeamId, SensorKind Kind, string? Name = null, double? Aim = null); // beam id; Aim: Camera only
 public sealed record PistonDef(int Id, int NodeA, int NodeB, string? Name = null, double Strength = 15000, double Stroke = 0.3, double MaxSpeed = 200); // node ids

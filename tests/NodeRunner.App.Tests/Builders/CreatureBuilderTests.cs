@@ -10,8 +10,8 @@ public sealed class CreatureBuilderTests
     {
         var builder = new CreatureBuilder();
 
-        var first = builder.AddNode(new Vector2D(0, 0), 1);
-        var second = builder.AddNode(new Vector2D(2, 0), 1);
+        var first = builder.AddNode(new Vector2D(0, 0));
+        var second = builder.AddNode(new Vector2D(2, 0));
 
         first.ShouldBe(1);
         second.ShouldBe(2);
@@ -19,23 +19,24 @@ public sealed class CreatureBuilderTests
     }
 
     [Fact]
-    public void MoveNode_UpdatesPositionAndKeepsRadius()
+    public void MoveNode_UpdatesPositionAndKeepsName()
     {
         var builder = new CreatureBuilder();
-        var node = builder.AddNode(new Vector2D(0, 0), 1.5);
+        var node = builder.AddNode(new Vector2D(0, 0));
+        builder.Rename(node, "Knee");
 
         builder.MoveNode(node, new Vector2D(5, 7));
 
         builder.Nodes[builder.NodeIndexOf(node)].Position.ShouldBe(new Vector2D(5, 7));
-        builder.Nodes[builder.NodeIndexOf(node)].Radius.ShouldBe(1.5);
+        builder.Nodes[builder.NodeIndexOf(node)].Name.ShouldBe("Knee");
     }
 
     [Fact]
     public void AddBeam_BetweenDistinctNodes_ReturnsId()
     {
         var builder = new CreatureBuilder();
-        var a = builder.AddNode(new Vector2D(0, 0), 1);
-        var b = builder.AddNode(new Vector2D(2, 0), 1);
+        var a = builder.AddNode(new Vector2D(0, 0));
+        var b = builder.AddNode(new Vector2D(2, 0));
 
         var beamId = builder.AddBeam(a, b);
 
@@ -48,8 +49,8 @@ public sealed class CreatureBuilderTests
     public void AddBeam_DuplicateInEitherOrder_Throws()
     {
         var builder = new CreatureBuilder();
-        var a = builder.AddNode(new Vector2D(0, 0), 1);
-        var b = builder.AddNode(new Vector2D(2, 0), 1);
+        var a = builder.AddNode(new Vector2D(0, 0));
+        var b = builder.AddNode(new Vector2D(2, 0));
         builder.AddBeam(a, b);
 
         var actionSameOrder = () => { builder.AddBeam(a, b); };
@@ -96,8 +97,8 @@ public sealed class CreatureBuilderTests
     public void AddSensor_Camera_AimsAtTheWorldsForwardDownAsBuilt()
     {
         var builder = new CreatureBuilder();
-        builder.AddNode(new Vector2D(0, 0), 18);
-        builder.AddNode(new Vector2D(0, 100), 18);
+        builder.AddNode(new Vector2D(0, 0));
+        builder.AddNode(new Vector2D(0, 100));
         var beam = builder.AddBeam(1, 2);
 
         builder.AddSensor(beam, SensorKind.Camera, out _, out _);
@@ -109,9 +110,9 @@ public sealed class CreatureBuilderTests
     public void SetCameraAim_IsKeptThroughSplitAndRename()
     {
         var builder = new CreatureBuilder();
-        var a = builder.AddNode(new Vector2D(0, 0), 1);
-        var b = builder.AddNode(new Vector2D(100, 0), 1);
-        var joint = builder.AddNode(new Vector2D(30, 0), 1);
+        var a = builder.AddNode(new Vector2D(0, 0));
+        var b = builder.AddNode(new Vector2D(100, 0));
+        var joint = builder.AddNode(new Vector2D(30, 0));
         var beam = builder.AddBeam(a, b);
         builder.AddSensor(beam, SensorKind.Camera, out var sensor, out _);
 
@@ -160,9 +161,9 @@ public sealed class CreatureBuilderTests
     public void RemoveNode_CascadesToAttachedBeamsAndSensors()
     {
         var builder = new CreatureBuilder();
-        var a = builder.AddNode(new Vector2D(0, 0), 1);
-        var b = builder.AddNode(new Vector2D(2, 0), 1);
-        var c = builder.AddNode(new Vector2D(4, 0), 1);
+        var a = builder.AddNode(new Vector2D(0, 0));
+        var b = builder.AddNode(new Vector2D(2, 0));
+        var c = builder.AddNode(new Vector2D(4, 0));
         var first = builder.AddBeam(a, b);
         var second = builder.AddBeam(b, c);
         builder.AddSensor(first, SensorKind.Accelerometer, out _, out _);
@@ -179,9 +180,9 @@ public sealed class CreatureBuilderTests
     public void RemoveNode_KeepsSurvivingBeamAndSensorReferencesById()
     {
         var builder = new CreatureBuilder();
-        var a = builder.AddNode(new Vector2D(0, 0), 1);
-        var b = builder.AddNode(new Vector2D(2, 0), 1);
-        var c = builder.AddNode(new Vector2D(4, 0), 1);
+        var a = builder.AddNode(new Vector2D(0, 0));
+        var b = builder.AddNode(new Vector2D(2, 0));
+        var c = builder.AddNode(new Vector2D(4, 0));
         var beam = builder.AddBeam(b, c);
         builder.AddSensor(beam, SensorKind.Accelerometer, out var sensor, out _);
 
@@ -199,9 +200,9 @@ public sealed class CreatureBuilderTests
     public void SplitBeamAtNode_MovesSensorsToTheLongerHalf(double jointX, bool toFirstHalf)
     {
         var builder = new CreatureBuilder();
-        var a = builder.AddNode(new Vector2D(0, 0), 1);
-        var b = builder.AddNode(new Vector2D(100, 0), 1);
-        var joint = builder.AddNode(new Vector2D(jointX, 0), 1);
+        var a = builder.AddNode(new Vector2D(0, 0));
+        var b = builder.AddNode(new Vector2D(100, 0));
+        var joint = builder.AddNode(new Vector2D(jointX, 0));
         var beam = builder.AddBeam(a, b);
         builder.AddSensor(beam, SensorKind.Accelerometer, out var sensor, out _);
 
@@ -215,9 +216,9 @@ public sealed class CreatureBuilderTests
     public void SplitBeamAtNode_TieMovesSensorsToNodeAHalfKeepingIds()
     {
         var builder = new CreatureBuilder();
-        var a = builder.AddNode(new Vector2D(0, 0), 1);
-        var b = builder.AddNode(new Vector2D(100, 0), 1);
-        var joint = builder.AddNode(new Vector2D(50, 0), 1);
+        var a = builder.AddNode(new Vector2D(0, 0));
+        var b = builder.AddNode(new Vector2D(100, 0));
+        var joint = builder.AddNode(new Vector2D(50, 0));
         var beam = builder.AddBeam(a, b);
         builder.AddSensor(beam, SensorKind.Accelerometer, out var sensor, out _);
 
@@ -248,13 +249,13 @@ public sealed class CreatureBuilderTests
     public void Constructor_FromCreature_KeepsIdsAndCounter()
     {
         var source = new CreatureDef(
-            [new NodeDef(10, new Vector2D(0, 0), 1), new NodeDef(20, new Vector2D(2, 0), 1)],
+            [new NodeDef(10, new Vector2D(0, 0)), new NodeDef(20, new Vector2D(2, 0))],
             [new BeamDef(30, 10, 20)],
             [new SensorDef(40, 30, SensorKind.Accelerometer)],
             nextPartId: 99);
 
         var builder = new CreatureBuilder(source);
-        var next = builder.AddNode(new Vector2D(4, 0), 1);
+        var next = builder.AddNode(new Vector2D(4, 0));
 
         builder.Build().Nodes.Take(2).ToArray().ShouldBe(source.Nodes.ToArray());
         builder.Build().Sensors.ToArray().ShouldBe(source.Sensors.ToArray());
@@ -266,8 +267,8 @@ public sealed class CreatureBuilderTests
     public void Build_WithUnfinishedDrawing_ReturnsItAsItStands()
     {
         var builder = new CreatureBuilder();
-        builder.AddNode(new Vector2D(0, 0), 1);
-        builder.AddNode(new Vector2D(2, 0), 1);
+        builder.AddNode(new Vector2D(0, 0));
+        builder.AddNode(new Vector2D(2, 0));
 
         var creature = builder.Build();
 
@@ -296,11 +297,11 @@ public sealed class CreatureBuilderTests
     public void TryBuild_MatchesHardcodedWormShape()
     {
         var builder = new CreatureBuilder();
-        var previous = builder.AddNode(new Vector2D(0, 0), 18);
+        var previous = builder.AddNode(new Vector2D(0, 0));
         int? headBeam = null;
         for (var i = 1; i < 5; i++)
         {
-            var next = builder.AddNode(new Vector2D(i * 90, 0), 18);
+            var next = builder.AddNode(new Vector2D(i * 90, 0));
             var beam = builder.AddBeam(previous, next);
             headBeam ??= beam;
             previous = next;
@@ -321,8 +322,8 @@ public sealed class CreatureBuilderTests
     private static CreatureBuilder PairBuilder()
     {
         var builder = new CreatureBuilder();
-        var a = builder.AddNode(new Vector2D(0, 0), 1);
-        var b = builder.AddNode(new Vector2D(60, 0), 1);
+        var a = builder.AddNode(new Vector2D(0, 0));
+        var b = builder.AddNode(new Vector2D(90, 0));
         builder.AddBeam(a, b);
         return builder;
     }

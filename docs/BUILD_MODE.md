@@ -52,7 +52,7 @@ presses, drags and releases into edits for the active tool and into zoom and
 pan, and `BuildCanvas` only forwards input and draws. A pointer that
 travels at most `TapSlop` view units counts as a tap. Hit tests prefer a node
 over a beam under it; hit sizes are finger-sized on screen at any zoom, and
-a node's own disc always hits.
+a node's own ring always hits.
 
 - **Move:** tap a node or beam to select it (its settings open), tap empty
   canvas to deselect, drag a node to move it, drag anywhere else (empty
@@ -122,7 +122,7 @@ a node's own disc always hits.
 - **Build area (#400):** joints live inside the fixed
   `BuildViewModel.BuildArea` (x −1152..1152, y −576..576 canvas
   units, about six screens wide at 1×). Placing or moving a joint keeps its
-  disc inside; a group move stops as a whole at the edge, and a Joint tap
+  ring inside; a group move stops as a whole at the edge, and a Joint tap
   outside adds nothing. A faint blueprint grid (the `line` token, fixed
   `BuildGridStep` 48-unit cells) covers exactly the area, and accent corner
   marks two cells long frame it. Grid and corners are fixed parts of the
@@ -177,7 +177,7 @@ on tap; they are dragged out instead (#376). Godot's drag-and-drop carries the p
 floats its glyph above the finger (`UiPartRow.CreateDragPreview`), and
 `BuildCanvas` takes the drop in `PartDropZone`, a control over the canvas
 that lets touches through except during a part drag. `BuildGestures.DropTargetAt`
-finds what the part is over (a joint's disc, a sensor picture's beam, a beam
+finds what the part is over (a joint's ring, a sensor picture's beam, a beam
 within reach, then a joint within reach) and `BuildViewModel.PlacePart`
 validates and places it with a fresh id, or refuses it and keeps the reason as
 `PlacementNote`, a canvas note at that part until the next touch or after
@@ -231,7 +231,7 @@ a Creation (#515). Only training needs a finished creature.
 for that, in two steps: `Problems` lists why the creature cannot be
 simulated yet (no nodes, a node with no beam or Piston, a zero-length beam
 or Piston, or one shorter than `CreatureReadiness.MinimumBeamGap` between its
-joint discs, #593), and `CanTrain` also needs at least one brain output to
+joint rings, #593), and `CanTrain` also needs at least one brain output to
 drive. Joints are passive (#450), so today that means a Piston; Build says
 "Add a piston" until there is one.
 `CreatureBuilder.TryBuild` applies `Problems` to the in-progress creature.

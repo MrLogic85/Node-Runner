@@ -32,9 +32,9 @@ public sealed class BrainPortsTests
             : [new BeamDef(4, 1, 2), new BeamDef(5, 2, 3)];
         var creature = new CreatureDef(
             [
-                new NodeDef(1, new Vector2D(0, 0), 1),
-                new NodeDef(2, new Vector2D(1, 0), 1),
-                new NodeDef(3, new Vector2D(0, 1), 1),
+                new NodeDef(1, new Vector2D(0, 0)),
+                new NodeDef(2, new Vector2D(1, 0)),
+                new NodeDef(3, new Vector2D(0, 1)),
             ],
             beams,
             []);
@@ -47,7 +47,7 @@ public sealed class BrainPortsTests
     {
         var chain = Chain();
         var moved = new CreatureDef(
-            chain.Nodes.Reverse().Select(node => new NodeDef(node.Id, new Vector2D(node.Position.X * 3, node.Position.Y - 40), node.Radius)).ToArray(),
+            chain.Nodes.Reverse().Select(node => new NodeDef(node.Id, new Vector2D(node.Position.X * 3, node.Position.Y - 40))).ToArray(),
             chain.Beams,
             chain.Sensors.Reverse().ToArray(),
             chain.Pistons);
@@ -60,7 +60,7 @@ public sealed class BrainPortsTests
     {
         var chain = Chain();
         var grown = new CreatureDef(
-            [.. chain.Nodes, new NodeDef(9, new Vector2D(3, 0), 1)],
+            [.. chain.Nodes, new NodeDef(9, new Vector2D(3, 0))],
             [.. chain.Beams, new BeamDef(10, 3, 9)],
             chain.Sensors,
             [new PistonDef(11, 2, 9), .. chain.Pistons]);
@@ -87,7 +87,7 @@ public sealed class BrainPortsTests
     public void Of_GivesEachPistonLengthAndSpeedInputs_AndPositionAndStrengthOutputs()
     {
         var creature = new CreatureDef(
-            [new NodeDef(1, new Vector2D(0, 0), 1), new NodeDef(2, new Vector2D(1, 0), 1)],
+            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(1, 0))],
             [],
             [],
             [new PistonDef(3, 1, 2)]);
@@ -109,9 +109,9 @@ public sealed class BrainPortsTests
     // Accelerometer (7) sits on beam 4 and a Camera (8) on beam 5.
     private static CreatureDef Chain() => new(
         [
-            new NodeDef(1, new Vector2D(0, 0), 1),
-            new NodeDef(2, new Vector2D(1, 0), 1),
-            new NodeDef(3, new Vector2D(2, 0), 1),
+            new NodeDef(1, new Vector2D(0, 0)),
+            new NodeDef(2, new Vector2D(1, 0)),
+            new NodeDef(3, new Vector2D(2, 0)),
         ],
         [new BeamDef(4, 1, 2), new BeamDef(5, 2, 3)],
         [new SensorDef(7, 4, SensorKind.Accelerometer), new SensorDef(8, 5, SensorKind.Camera)],

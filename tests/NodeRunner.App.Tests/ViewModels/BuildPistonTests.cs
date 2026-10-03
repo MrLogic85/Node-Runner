@@ -137,8 +137,8 @@ public sealed class BuildPistonTests
     public void SetPistonSettings_ChangesThem_EvenWhenLocked()
     {
         var builder = new CreatureBuilder();
-        builder.AddNode(new Vector2D(0, 0), 18);
-        builder.AddNode(new Vector2D(100, 0), 18);
+        builder.AddNode(new Vector2D(0, 0));
+        builder.AddNode(new Vector2D(100, 0));
         var piston = builder.AddPiston(1, 2);
         var build = new BuildViewModel();
         build.Load(builder.Build(), moveOnly: true);
@@ -167,8 +167,8 @@ public sealed class BuildPistonTests
     public void APiston_AttachesItsNodes_SoTheyAreReady()
     {
         var builder = new CreatureBuilder();
-        builder.AddNode(new Vector2D(0, 0), 18);
-        builder.AddNode(new Vector2D(100, 0), 18);
+        builder.AddNode(new Vector2D(0, 0));
+        builder.AddNode(new Vector2D(100, 0));
         builder.AddPiston(1, 2);
 
         var creature = builder.Build();
@@ -181,8 +181,8 @@ public sealed class BuildPistonTests
     public void APistonTooShortForItsNodes_IsAProblem()
     {
         var builder = new CreatureBuilder();
-        builder.AddNode(new Vector2D(0, 0), 18);
-        builder.AddNode(new Vector2D(20, 0), 18);
+        builder.AddNode(new Vector2D(0, 0));
+        builder.AddNode(new Vector2D(20, 0));
         builder.AddPiston(1, 2);
 
         CreatureReadiness.Problems(builder.Build()).ShouldContain(problem => problem.StartsWith("The piston between", StringComparison.Ordinal));
@@ -191,9 +191,9 @@ public sealed class BuildPistonTests
     private static (BuildViewModel Build, BuildGestures Gestures) ThreeLooseJoints()
     {
         var build = new BuildViewModel();
-        build.PlaceNode(new Vector2D(0, 0), 18);
-        build.PlaceNode(new Vector2D(100, 0), 18);
-        build.PlaceNode(new Vector2D(0, 100), 18);
+        build.PlaceNode(new Vector2D(0, 0));
+        build.PlaceNode(new Vector2D(100, 0));
+        build.PlaceNode(new Vector2D(0, 100));
         build.ActiveTool = BuildTool.Piston;
         return (build, new BuildGestures(build));
     }

@@ -9,24 +9,24 @@ public sealed class BuildViewModelTests
     private static readonly CanvasRect _area = BuildViewModel.BuildArea;
 
     [Fact]
-    public void PlaceNode_OutsideTheBuildArea_LandsWithItsDiscJustInside()
+    public void PlaceNode_OutsideTheBuildArea_LandsWithItsRingJustInside()
     {
         var viewModel = new BuildViewModel();
 
-        viewModel.PlaceNode(new Vector2D(_area.Max.X + 500, _area.Min.Y - 500), 18);
+        viewModel.PlaceNode(new Vector2D(_area.Max.X + 500, _area.Min.Y - 500));
 
-        viewModel.Nodes[0].Position.ShouldBe(new Vector2D(_area.Max.X - 18, _area.Min.Y + 18));
+        viewModel.Nodes[0].Position.ShouldBe(new Vector2D(_area.Max.X - NodeDef.PlainJointRadius, _area.Min.Y + NodeDef.PlainJointRadius));
     }
 
     [Fact]
     public void MoveNode_PastTheBuildArea_StopsAtTheEdge()
     {
         var viewModel = new BuildViewModel();
-        viewModel.PlaceNode(new Vector2D(0, 0), 18);
+        viewModel.PlaceNode(new Vector2D(0, 0));
 
         viewModel.MoveNode(1, new Vector2D(_area.Min.X - 500, 40));
 
-        viewModel.Nodes[0].Position.ShouldBe(new Vector2D(_area.Min.X + 18, 40));
+        viewModel.Nodes[0].Position.ShouldBe(new Vector2D(_area.Min.X + NodeDef.PlainJointRadius, 40));
     }
 
     [Fact]
@@ -36,22 +36,22 @@ public sealed class BuildViewModelTests
 
         viewModel.TranslateSelection(viewModel.SnapshotSelection(), new Vector2D(_area.Max.X, 30));
 
-        viewModel.Nodes[1].Position.ShouldBe(new Vector2D(_area.Max.X - 18, 30));
-        viewModel.Nodes[0].Position.ShouldBe(new Vector2D(_area.Max.X - 118, 30));
+        viewModel.Nodes[1].Position.ShouldBe(new Vector2D(_area.Max.X - NodeDef.PlainJointRadius, 30));
+        viewModel.Nodes[0].Position.ShouldBe(new Vector2D(_area.Max.X - NodeDef.PlainJointRadius - 100, 30));
     }
 
     [Fact]
     public void TranslateSelection_WithFractionalCoordinates_StillReachesTheEdge()
     {
         var viewModel = new BuildViewModel();
-        viewModel.PlaceNode(new Vector2D(0.1, 0), 14);
-        viewModel.PlaceNode(new Vector2D(100.1, 0), 14);
+        viewModel.PlaceNode(new Vector2D(0.1, 0));
+        viewModel.PlaceNode(new Vector2D(100.1, 0));
         viewModel.ReplaceSelection([1, 2]);
 
         viewModel.TranslateSelection(viewModel.SnapshotSelection(), new Vector2D(1500.3, 0));
 
-        viewModel.Nodes[1].Position.X.ShouldBe(_area.Max.X - 14);
-        viewModel.Nodes[0].Position.X.ShouldBe(_area.Max.X - 114, 1e-9);
+        viewModel.Nodes[1].Position.X.ShouldBe(_area.Max.X - NodeDef.PlainJointRadius);
+        viewModel.Nodes[0].Position.X.ShouldBe(_area.Max.X - NodeDef.PlainJointRadius - 100, 1e-9);
     }
 
     [Fact]
@@ -100,8 +100,8 @@ public sealed class BuildViewModelTests
     public void RotateSelection_ThatWouldLeaveTheBuildArea_IsIgnored()
     {
         var viewModel = new BuildViewModel();
-        viewModel.PlaceNode(new Vector2D(_area.Max.X - 18, -100), 18);
-        viewModel.PlaceNode(new Vector2D(_area.Max.X - 18, 100), 18);
+        viewModel.PlaceNode(new Vector2D(_area.Max.X - 18, -100));
+        viewModel.PlaceNode(new Vector2D(_area.Max.X - 18, 100));
         viewModel.ReplaceSelection([1, 2]);
         var start = viewModel.SnapshotSelection();
 
@@ -130,8 +130,8 @@ public sealed class BuildViewModelTests
     public void ScaleSelection_OfCoincidentJoints_LeavesThemInPlace()
     {
         var viewModel = new BuildViewModel();
-        viewModel.PlaceNode(new Vector2D(10, 10), 18);
-        viewModel.PlaceNode(new Vector2D(10, 10), 18);
+        viewModel.PlaceNode(new Vector2D(10, 10));
+        viewModel.PlaceNode(new Vector2D(10, 10));
         viewModel.ReplaceSelection([1, 2]);
 
         viewModel.ScaleSelection(viewModel.SnapshotSelection(), 3);
@@ -186,8 +186,8 @@ public sealed class BuildViewModelTests
     private static BuildViewModel SelectedPair()
     {
         var viewModel = new BuildViewModel();
-        viewModel.PlaceNode(new Vector2D(0, 0), 18);
-        viewModel.PlaceNode(new Vector2D(100, 0), 18);
+        viewModel.PlaceNode(new Vector2D(0, 0));
+        viewModel.PlaceNode(new Vector2D(100, 0));
         viewModel.ReplaceSelection([1, 2]);
         return viewModel;
     }
@@ -231,7 +231,7 @@ public sealed class BuildViewModelTests
         var raised = false;
         viewModel.AnatomyChanged += (_, _) => raised = true;
 
-        var id = viewModel.PlaceNode(new Vector2D(3, 4), 18);
+        var id = viewModel.PlaceNode(new Vector2D(3, 4));
 
         id.ShouldBe(1);
         viewModel.Nodes.Count.ShouldBe(1);
@@ -243,7 +243,7 @@ public sealed class BuildViewModelTests
     public void MoveNode_UpdatesPositionAndRaisesAnatomyChanged()
     {
         var viewModel = new BuildViewModel();
-        var id = viewModel.PlaceNode(new Vector2D(0, 0), 18);
+        var id = viewModel.PlaceNode(new Vector2D(0, 0));
         var raised = false;
         viewModel.AnatomyChanged += (_, _) => raised = true;
 
@@ -270,7 +270,7 @@ public sealed class BuildViewModelTests
     public void LoadMoveOnly_AllowsMovingExistingNodesButRejectsTopologyChanges()
     {
         var creature = new CreatureDef(
-            [new NodeDef(1, new Vector2D(0, 0), 18), new NodeDef(2, new Vector2D(20, 0), 18)],
+            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(20, 0))],
             [new BeamDef(101, 1, 2)],
             []);
         var viewModel = new BuildViewModel();
@@ -281,7 +281,7 @@ public sealed class BuildViewModelTests
         viewModel.Nodes[0].Position.ShouldBe(new Vector2D(5, 5));
         viewModel.IsMoveOnly.ShouldBeTrue();
         viewModel.Beams.Count.ShouldBe(1);
-        Action action = () => viewModel.PlaceNode(new Vector2D(30, 0), 18);
+        Action action = () => viewModel.PlaceNode(new Vector2D(30, 0));
 
         action.ShouldThrow<InvalidOperationException>();
     }
@@ -290,7 +290,7 @@ public sealed class BuildViewModelTests
     public void Load_ResetsActiveToolToMove()
     {
         var creature = new CreatureDef(
-            [new NodeDef(1, new Vector2D(0, 0), 18), new NodeDef(2, new Vector2D(20, 0), 18)],
+            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(20, 0))],
             [new BeamDef(101, 1, 2)],
             []);
         var viewModel = new BuildViewModel { ActiveTool = BuildTool.Beam };
@@ -304,7 +304,7 @@ public sealed class BuildViewModelTests
     public void LoadMoveOnly_WithSavedCreationMetadata_ExposesNameAndTrainingGeneration()
     {
         var creature = new CreatureDef(
-            [new NodeDef(1, new Vector2D(0, 0), 18), new NodeDef(2, new Vector2D(20, 0), 18)],
+            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(20, 0))],
             [new BeamDef(101, 1, 2)],
             []);
         var training = TestTraining.State(9, 1, TestTraining.Run);
@@ -351,9 +351,9 @@ public sealed class BuildViewModelTests
     public void TryFindNodeNear_WithinDistance_ReturnsClosestNode()
     {
         var viewModel = new BuildViewModel();
-        viewModel.PlaceNode(new Vector2D(0, 0), 18);
-        var closeIndex = viewModel.PlaceNode(new Vector2D(5, 0), 18);
-        viewModel.PlaceNode(new Vector2D(100, 100), 18);
+        viewModel.PlaceNode(new Vector2D(0, 0));
+        var closeIndex = viewModel.PlaceNode(new Vector2D(5, 0));
+        viewModel.PlaceNode(new Vector2D(100, 100));
 
         var found = viewModel.TryFindNodeNear(new Vector2D(6, 0), 10, out var nodeIndex);
 
@@ -365,7 +365,7 @@ public sealed class BuildViewModelTests
     public void TryFindNodeNear_BeyondDistance_ReturnsFalse()
     {
         var viewModel = new BuildViewModel();
-        viewModel.PlaceNode(new Vector2D(0, 0), 18);
+        viewModel.PlaceNode(new Vector2D(0, 0));
 
         var found = viewModel.TryFindNodeNear(new Vector2D(100, 100), 10, out var nodeIndex);
 
@@ -386,8 +386,8 @@ public sealed class BuildViewModelTests
     public void ConnectBeam_DifferentNodes_CreatesBeam()
     {
         var viewModel = new BuildViewModel();
-        var a = viewModel.PlaceNode(new Vector2D(0, 0), 18);
-        var b = viewModel.PlaceNode(new Vector2D(10, 0), 18);
+        var a = viewModel.PlaceNode(new Vector2D(0, 0));
+        var b = viewModel.PlaceNode(new Vector2D(10, 0));
         var raised = false;
         viewModel.AnatomyChanged += (_, _) => raised = true;
 
@@ -403,7 +403,7 @@ public sealed class BuildViewModelTests
     public void ConnectBeam_SameNode_CreatesNoBeam()
     {
         var viewModel = new BuildViewModel();
-        var a = viewModel.PlaceNode(new Vector2D(0, 0), 18);
+        var a = viewModel.PlaceNode(new Vector2D(0, 0));
 
         viewModel.ConnectBeam(a, a).ShouldBeFalse();
 
@@ -414,8 +414,8 @@ public sealed class BuildViewModelTests
     public void ConnectBeam_DuplicateBeam_SurfacesErrorInsteadOfThrowing()
     {
         var viewModel = new BuildViewModel();
-        var a = viewModel.PlaceNode(new Vector2D(0, 0), 18);
-        var b = viewModel.PlaceNode(new Vector2D(10, 0), 18);
+        var a = viewModel.PlaceNode(new Vector2D(0, 0));
+        var b = viewModel.PlaceNode(new Vector2D(10, 0));
         viewModel.ConnectBeam(a, b);
 
         viewModel.ConnectBeam(a, b);
@@ -429,7 +429,7 @@ public sealed class BuildViewModelTests
     {
         var viewModel = new BuildViewModel();
         viewModel.Load(
-            new CreatureDef([new NodeDef(1, new Vector2D(0, 0), 18), new NodeDef(2, new Vector2D(20, 0), 18)], [], []),
+            new CreatureDef([new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(20, 0))], [], []),
             moveOnly: true);
 
         viewModel.CanConnect(1, 2).ShouldBeFalse();
@@ -446,11 +446,11 @@ public sealed class BuildViewModelTests
     public void SplitBeam_AtAnEnd_ChangesNothing(double x, double y)
     {
         var viewModel = new BuildViewModel();
-        viewModel.PlaceNode(new Vector2D(0, 0), 18);
-        viewModel.PlaceNode(new Vector2D(100, 0), 18);
+        viewModel.PlaceNode(new Vector2D(0, 0));
+        viewModel.PlaceNode(new Vector2D(100, 0));
         viewModel.ConnectBeam(1, 2);
 
-        viewModel.SplitBeam(viewModel.Beams[0].Id, new Vector2D(x, y), 18).ShouldBeNull();
+        viewModel.SplitBeam(viewModel.Beams[0].Id, new Vector2D(x, y)).ShouldBeNull();
 
         viewModel.Nodes.Count.ShouldBe(2);
         viewModel.Beams.Count.ShouldBe(1);
@@ -461,7 +461,7 @@ public sealed class BuildViewModelTests
     {
         var viewModel = LockedPair();
 
-        viewModel.SplitBeam(viewModel.Beams[0].Id, new Vector2D(10, 0), 18).ShouldBeNull();
+        viewModel.SplitBeam(viewModel.Beams[0].Id, new Vector2D(10, 0)).ShouldBeNull();
 
         viewModel.Nodes.Count.ShouldBe(2);
         viewModel.Beams.Count.ShouldBe(1);
@@ -471,7 +471,7 @@ public sealed class BuildViewModelTests
     {
         var viewModel = new BuildViewModel();
         viewModel.Load(
-            new CreatureDef([new NodeDef(1, new Vector2D(0, 0), 18), new NodeDef(2, new Vector2D(20, 0), 18)], [new BeamDef(101, 1, 2)], []),
+            new CreatureDef([new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(20, 0))], [new BeamDef(101, 1, 2)], []),
             moveOnly: true);
         return viewModel;
     }
@@ -483,8 +483,8 @@ public sealed class BuildViewModelTests
     public void TryFindBeamNear_WithinDistance_ReturnsBeam()
     {
         var viewModel = new BuildViewModel();
-        var a = viewModel.PlaceNode(new Vector2D(0, 0), 18);
-        var b = viewModel.PlaceNode(new Vector2D(10, 0), 18);
+        var a = viewModel.PlaceNode(new Vector2D(0, 0));
+        var b = viewModel.PlaceNode(new Vector2D(10, 0));
         viewModel.ConnectBeam(a, b);
 
         var found = viewModel.TryFindBeamNear(new Vector2D(5, 0), 2, out var beamId);
@@ -497,8 +497,8 @@ public sealed class BuildViewModelTests
     public void TryFindBeamNear_BeyondDistance_ReturnsFalse()
     {
         var viewModel = new BuildViewModel();
-        var a = viewModel.PlaceNode(new Vector2D(0, 0), 18);
-        var b = viewModel.PlaceNode(new Vector2D(10, 0), 18);
+        var a = viewModel.PlaceNode(new Vector2D(0, 0));
+        var b = viewModel.PlaceNode(new Vector2D(10, 0));
         viewModel.ConnectBeam(a, b);
 
         var found = viewModel.TryFindBeamNear(new Vector2D(5, 50), 2, out var beamIndex);
@@ -511,8 +511,8 @@ public sealed class BuildViewModelTests
     public void SelectBeam_ReplacesNodeSelectionAndExposesBeamAsSelectedPart()
     {
         var viewModel = new BuildViewModel();
-        var a = viewModel.PlaceNode(new Vector2D(0, 0), 18);
-        var b = viewModel.PlaceNode(new Vector2D(10, 0), 18);
+        var a = viewModel.PlaceNode(new Vector2D(0, 0));
+        var b = viewModel.PlaceNode(new Vector2D(10, 0));
         viewModel.ConnectBeam(a, b);
         viewModel.ToggleSelectedNode(a);
         var raisedFor = new List<string?>();
@@ -536,8 +536,8 @@ public sealed class BuildViewModelTests
     public void ClearSelection_WithOnlyBeamSelected_ClearsBeam()
     {
         var viewModel = new BuildViewModel();
-        var a = viewModel.PlaceNode(new Vector2D(0, 0), 18);
-        var b = viewModel.PlaceNode(new Vector2D(10, 0), 18);
+        var a = viewModel.PlaceNode(new Vector2D(0, 0));
+        var b = viewModel.PlaceNode(new Vector2D(10, 0));
         viewModel.ConnectBeam(a, b);
         viewModel.SelectBeam(viewModel.Beams[0].Id);
         var raisedFor = new List<string?>();
@@ -559,8 +559,8 @@ public sealed class BuildViewModelTests
     public void DeleteSelectedParts_WithBeamSelected_RemovesBeamButKeepsNodes()
     {
         var viewModel = new BuildViewModel();
-        var a = viewModel.PlaceNode(new Vector2D(0, 0), 18);
-        var b = viewModel.PlaceNode(new Vector2D(10, 0), 18);
+        var a = viewModel.PlaceNode(new Vector2D(0, 0));
+        var b = viewModel.PlaceNode(new Vector2D(10, 0));
         viewModel.ConnectBeam(a, b);
         viewModel.SelectBeam(viewModel.Beams[0].Id);
 
@@ -622,7 +622,7 @@ public sealed class BuildViewModelTests
     }
 
     private static CreatureDef SensorCreature() => new(
-        [new NodeDef(1, new Vector2D(0, 0), 18), new NodeDef(2, new Vector2D(100, 0), 18), new NodeDef(6, new Vector2D(100, 100), 18)],
+        [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(100, 0)), new NodeDef(6, new Vector2D(100, 100))],
         [new BeamDef(3, 1, 2), new BeamDef(7, 2, 6)],
         [new SensorDef(4, 3, SensorKind.Accelerometer), new SensorDef(5, 7, SensorKind.Camera)]);
 
@@ -632,7 +632,7 @@ public sealed class BuildViewModelTests
         var viewModel = new BuildViewModel();
         viewModel.Load(
             new CreatureDef(
-                [new NodeDef(1, new Vector2D(0, 0), 18), new NodeDef(2, new Vector2D(10, 0), 18)],
+                [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(10, 0))],
                 [new BeamDef(101, 1, 2)],
                 []),
             moveOnly: true);
@@ -662,7 +662,7 @@ public sealed class BuildViewModelTests
     public void TryLeave_WithUnconnectedNode_ReturnsFalseWithErrors()
     {
         var viewModel = new BuildViewModel();
-        viewModel.PlaceNode(new Vector2D(0, 0), 18);
+        viewModel.PlaceNode(new Vector2D(0, 0));
 
         var canLeave = viewModel.TryLeave(out var creature, out var errors);
 
@@ -675,7 +675,7 @@ public sealed class BuildViewModelTests
     public void Snapshot_WithUnconnectedNode_ReturnsTheDrawingForSaving()
     {
         var viewModel = new BuildViewModel();
-        viewModel.PlaceNode(new Vector2D(0, 0), 18);
+        viewModel.PlaceNode(new Vector2D(0, 0));
 
         var creature = viewModel.Snapshot();
 
@@ -687,7 +687,7 @@ public sealed class BuildViewModelTests
     public void TryGetTrainableCreature_WithUnconnectedNode_RefusesAndSaysWhy()
     {
         var viewModel = new BuildViewModel();
-        viewModel.PlaceNode(new Vector2D(0, 0), 18);
+        viewModel.PlaceNode(new Vector2D(0, 0));
 
         viewModel.TryGetTrainableCreature(out var creature).ShouldBeFalse();
 
@@ -712,7 +712,7 @@ public sealed class BuildViewModelTests
     {
         var viewModel = new BuildViewModel();
         viewModel.Load(new CreatureDef(
-            [new NodeDef(1, new Vector2D(0, 0), 18), new NodeDef(2, new Vector2D(90, 0), 18), new NodeDef(3, new Vector2D(180, 20), 18)],
+            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(90, 0)), new NodeDef(3, new Vector2D(180, 20))],
             [new BeamDef(101, 1, 2), new BeamDef(102, 2, 3)],
             [],
             [new PistonDef(301, 1, 3)]));
@@ -727,8 +727,8 @@ public sealed class BuildViewModelTests
     public void TryLeave_WithValidCreature_ReturnsTrue()
     {
         var viewModel = new BuildViewModel();
-        var a = viewModel.PlaceNode(new Vector2D(0, 0), 18);
-        var b = viewModel.PlaceNode(new Vector2D(90, 0), 18);
+        var a = viewModel.PlaceNode(new Vector2D(0, 0));
+        var b = viewModel.PlaceNode(new Vector2D(90, 0));
         viewModel.ConnectBeam(a, b);
 
         var canLeave = viewModel.TryLeave(out var creature, out var errors);
@@ -751,7 +751,7 @@ public sealed class BuildViewModelTests
     }
 
     private static CreatureDef TwoNodeCreature() => new(
-        [new NodeDef(1, new Vector2D(0, 0), 18), new NodeDef(2, new Vector2D(20, 0), 18)],
+        [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(20, 0))],
         [new BeamDef(3, 1, 2)],
         []);
 
@@ -760,7 +760,7 @@ public sealed class BuildViewModelTests
     {
         var viewModel = new BuildViewModel();
         viewModel.Load(new CreatureDef(
-            [new NodeDef(1, new Vector2D(0, 0), 18), new NodeDef(2, new Vector2D(50, 0), 18), new NodeDef(3, new Vector2D(150, 0), 18), new NodeDef(4, new Vector2D(150, 0), 18)],
+            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(50, 0)), new NodeDef(3, new Vector2D(150, 0)), new NodeDef(4, new Vector2D(150, 0))],
             [new BeamDef(5, 1, 2), new BeamDef(6, 2, 3), new BeamDef(7, 3, 4)],
             []));
 
@@ -797,7 +797,7 @@ public sealed class BuildViewModelTests
     }
 
     private static CreatureDef CameraPair() => new(
-        [new NodeDef(1, new Vector2D(0, 0), 18), new NodeDef(2, new Vector2D(100, 0), 18)],
+        [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(100, 0))],
         [new BeamDef(3, 1, 2)],
         [new SensorDef(4, 3, SensorKind.Camera)]);
 }

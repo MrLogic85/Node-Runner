@@ -30,7 +30,7 @@ public sealed class BuildViewModel : INotifyPropertyChanged
 {
     /// <summary>
     /// Where joints may go, in canvas units: about six screens wide at 1×,
-    /// centred on the origin. Placing and moving keep a joint's disc inside;
+    /// centred on the origin. Placing and moving keep a joint's ring inside;
     /// the Build view shows it plus <see cref="BuildViewMargin"/>. Its sides
     /// are whole multiples of <see cref="BuildGridStep"/> so the grid's cells
     /// fill it exactly.
@@ -369,14 +369,14 @@ public sealed class BuildViewModel : INotifyPropertyChanged
     public IReadOnlyCollection<int> SelectedNodeIds => _selectedNodeIds;
 
     /// <summary>Places a new node, moved inside <see cref="BuildArea"/>, and returns its id.</summary>
-    public int PlaceNode(Vector2D position, double radius)
+    public int PlaceNode(Vector2D position)
     {
         if (_moveOnly)
         {
             throw new InvalidOperationException("Edit mode can only move existing nodes.");
         }
 
-        var id = _builder.AddNode(BuildArea.Clamp(position, radius), radius);
+        var id = _builder.AddNode(BuildArea.Clamp(position, NodeDef.PlainJointRadius));
         AnatomyChanged?.Invoke(this, EventArgs.Empty);
         return id;
     }
@@ -672,7 +672,7 @@ public sealed class BuildViewModel : INotifyPropertyChanged
     /// <summary>
     /// Finds the closest placed node whose centre is within
     /// <paramref name="maxDistance"/> of <paramref name="position"/>, or whose
-    /// disc contains it, if any. Used to hit-test nodes.
+    /// ring contains it, if any. Used to hit-test nodes.
     /// </summary>
     public bool TryFindNodeNear(Vector2D position, double maxDistance, out int nodeId)
     {
@@ -771,7 +771,7 @@ public sealed class BuildViewModel : INotifyPropertyChanged
     /// Creation is locked or the closest point is an end of the beam (or the
     /// beam has no length), where a split would stack two nodes.
     /// </summary>
-    public int? SplitBeam(int beamId, Vector2D position, double radius)
+    public int? SplitBeam(int beamId, Vector2D position)
     {
         var beamIndex = _builder.BeamIndexOf(beamId);
 
@@ -791,7 +791,7 @@ public sealed class BuildViewModel : INotifyPropertyChanged
         }
 
         var splitPoint = new Vector2D(start.X + (t * (end.X - start.X)), start.Y + (t * (end.Y - start.Y)));
-        var nodeId = _builder.AddNode(splitPoint, radius);
+        var nodeId = _builder.AddNode(splitPoint);
         _builder.SplitBeamAtNode(beamId, nodeId);
         _selectedNodeIds.Clear();
         _selectedBeamId = null;

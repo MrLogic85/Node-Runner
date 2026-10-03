@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace NodeRunner.Domain;
 
 /// <summary>
@@ -7,21 +9,21 @@ namespace NodeRunner.Domain;
 /// </summary>
 public sealed record NodeDef
 {
-    public NodeDef(int id, Vector2D position, double radius, string? name = null)
+    /// <summary>
+    /// A plain joint's radius (#626): it is drawn and collides at this size. Its look is in
+    /// docs/UI_DIRECTION.md.
+    /// </summary>
+    public const double PlainJointRadius = 15;
+
+    public NodeDef(int id, Vector2D position, string? name = null)
     {
         if (id <= 0)
         {
             throw new ArgumentOutOfRangeException(nameof(id), "Node id must be positive.");
         }
 
-        if (!double.IsFinite(radius) || radius <= 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(radius), "Node radius must be finite and positive.");
-        }
-
         Id = id;
         Position = position;
-        Radius = radius;
         Name = name;
     }
 
@@ -29,7 +31,12 @@ public sealed record NodeDef
 
     public Vector2D Position { get; }
 
-    public double Radius { get; }
+    /// <summary>
+    /// How far the joint reaches from its position. It follows from what is on the joint and is
+    /// not saved; every joint is plain until joint parts arrive (#452, #454).
+    /// </summary>
+    [JsonIgnore]
+    public double Radius => PlainJointRadius;
 
     public string? Name { get; }
 }

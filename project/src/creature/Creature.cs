@@ -28,10 +28,6 @@ public partial class Creature : Node2D
     // set as a solid bar this thick.
     private const float _beamInertiaThickness = 12f;
 
-    // A node's collider is a hair smaller than its drawn circle, so the drawing sinks a
-    // little into the ground and reads as resting on it.
-    private const float _nodeColliderInset = 2f;
-
     // How near a tap must land to a part, on screen, at least: a part drawn smaller when the
     // Training camera zooms out (#675) still takes a finger.
     private const float _hitTolerancePixels = 16;
@@ -523,7 +519,6 @@ public partial class Creature : Node2D
         {
             var position = ToGodot(definition.Nodes[i].Position);
             var radius = ToGodotFloat(definition.Nodes[i].Radius, nameof(NodeDef.Radius));
-            var colliderRadius = Math.Max(radius - _nodeColliderInset, 1f);
 
             var body = new RigidBody2D
             {
@@ -537,7 +532,7 @@ public partial class Creature : Node2D
                 CanSleep = false,
                 ContinuousCd = RigidBody2D.CcdMode.CastRay,
             };
-            body.AddChild(new CollisionShape2D { Shape = new CircleShape2D { Radius = colliderRadius } });
+            body.AddChild(new CollisionShape2D { Shape = new CircleShape2D { Radius = radius } });
 
             var visual = new NodeVisual
             {
@@ -550,7 +545,7 @@ public partial class Creature : Node2D
             AddChild(body);
             _nodeBodies[i] = body;
             _nodeInitialPositions[i] = position;
-            _nodeColliderRadii[i] = colliderRadius;
+            _nodeColliderRadii[i] = radius;
             _nodeVisuals[i] = visual;
         }
     }

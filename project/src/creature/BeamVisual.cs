@@ -59,12 +59,27 @@ public partial class BeamVisual : Node2D, IShadowVisual
         }
     }
 
+    public override void _Ready()
+    {
+        // Round ends, since a beam's ends show inside an open joint ring (#626). Behind the parent so
+        // the selection lines drawn below stay on top.
+        AddChild(new Line2D
+        {
+            Points = [new Vector2(-HalfLength, 0), new Vector2(HalfLength, 0)],
+            Width = Width,
+            DefaultColor = Color,
+            BeginCapMode = Line2D.LineCapMode.Round,
+            EndCapMode = Line2D.LineCapMode.Round,
+            Antialiased = false,
+            ShowBehindParent = true,
+        });
+    }
+
     public override void _Draw()
     {
         var start = new Vector2(-HalfLength, 0);
         var end = new Vector2(HalfLength, 0);
 
-        DrawLine(start, end, Color, Width, antialiased: false);
         if (IsSelected && !IsShadow)
         {
             SelectionDrawing.DrawBeam(this, Transform2D.Identity, SelectionColor, SelectionOffset, SelectionLineWidth, start, end);

@@ -236,7 +236,7 @@ public class BuildGesturesTests
         var (build, gestures) = ThreeLooseJoints(BuildTool.Joint);
         gestures.View.ZoomAbout(new Vector2D(0, 0), CanvasView.MaxZoom);
 
-        Tap(gestures, gestures.View.ToView(new Vector2D(-(BuildGestures.NewNodeRadius - 2), 0)));
+        Tap(gestures, gestures.View.ToView(new Vector2D(-(NodeDef.PlainJointRadius - 2), 0)));
         build.Nodes.Count.ShouldBe(3);
 
         Tap(gestures, gestures.View.ToView(new Vector2D(-25, 0)));
@@ -343,8 +343,8 @@ public class BuildGesturesTests
 
         gestures.View.Fit();
 
-        // Joints at x 0 and 100, radius 18: arcs span -36..136 = 172 units into 60% of 100.
-        gestures.View.Zoom.ShouldBe(60.0 / 172, 1e-9);
+        // Joints at x 0 and 100, radius 15: arcs span -30..130 = 160 units into 60% of 100.
+        gestures.View.Zoom.ShouldBe(60.0 / 160, 1e-9);
     }
 
     [Fact]
@@ -439,7 +439,7 @@ public class BuildGesturesTests
     {
         var build = new BuildViewModel();
         build.Load(
-            new CreatureDef([new NodeDef(1, new Vector2D(0, 0), 18), new NodeDef(2, new Vector2D(100, 0), 18), new NodeDef(3, new Vector2D(0, 100), 18)], [new BeamDef(101, 1, 2), new BeamDef(102, 1, 3)], []),
+            new CreatureDef([new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(100, 0)), new NodeDef(3, new Vector2D(0, 100))], [new BeamDef(101, 1, 2), new BeamDef(102, 1, 3)], []),
             moveOnly: true);
         build.ActiveTool = BuildTool.Beam;
         var gestures = new BuildGestures(build);
@@ -462,7 +462,6 @@ public class BuildGesturesTests
 
         build.Nodes.Count.ShouldBe(4);
         build.Nodes[3].Position.ShouldBe(_empty);
-        build.Nodes[3].Radius.ShouldBe(BuildGestures.NewNodeRadius);
     }
 
     [Fact]
@@ -506,7 +505,7 @@ public class BuildGesturesTests
     {
         var build = new BuildViewModel();
         build.Load(
-            new CreatureDef([new NodeDef(1, new Vector2D(0, 0), 18), new NodeDef(2, new Vector2D(100, 0), 18)], [new BeamDef(101, 1, 2)], []),
+            new CreatureDef([new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(100, 0))], [new BeamDef(101, 1, 2)], []),
             moveOnly: true);
         build.ActiveTool = BuildTool.Joint;
         var gestures = new BuildGestures(build);
@@ -627,7 +626,7 @@ public class BuildGesturesTests
 
     // With joints 0 and 1 of ThreeLooseJoints selected at 1×, the frame clears both halos by 8
     // across and meets the 96 minimum down: Move sits at (50, 0), Rotate at (50, -80), Scale at its corner.
-    private static readonly double _frameRight = 100 + (18 * BuildGestures.SelectedHaloScale) + 8;
+    private static readonly double _frameRight = 100 + (NodeDef.PlainJointRadius * BuildGestures.SelectedHaloScale) + 8;
     private static readonly Vector2D _moveHandle = new(50, 0);
     private static readonly Vector2D _rotateHandle = new(50, -80);
     private static readonly Vector2D _scaleHandle = new(_frameRight, 48);
@@ -691,7 +690,7 @@ public class BuildGesturesTests
     {
         var build = new BuildViewModel();
         build.Load(
-            new CreatureDef([new NodeDef(1, new Vector2D(0, 0), 18), new NodeDef(2, new Vector2D(100, 0), 18)], [new BeamDef(101, 1, 2)], []),
+            new CreatureDef([new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(100, 0))], [new BeamDef(101, 1, 2)], []),
             moveOnly: true);
         build.ActiveTool = BuildTool.Select;
         build.ReplaceSelection([1, 2]);
@@ -749,7 +748,7 @@ public class BuildGesturesTests
     public void Select_TapOnAJointUnderTheMoveHandle_StillAddsAndRemovesIt()
     {
         var (build, gestures) = ThreeLooseJoints(BuildTool.Select);
-        build.PlaceNode(_moveHandle, 18);
+        build.PlaceNode(_moveHandle);
         build.ReplaceSelection([1, 2]);
 
         Tap(gestures, _moveHandle);
@@ -763,7 +762,7 @@ public class BuildGesturesTests
     public void Select_DragFromTheMoveHandleOverAnUnselectedJoint_MovesOnlyTheSelection()
     {
         var (build, gestures) = ThreeLooseJoints(BuildTool.Select);
-        build.PlaceNode(_moveHandle, 18);
+        build.PlaceNode(_moveHandle);
         build.ReplaceSelection([1, 2]);
 
         gestures.Press(_moveHandle);
@@ -835,7 +834,7 @@ public class BuildGesturesTests
     [Fact]
     public void Move_TapOnAPictureWithinAJointsReach_SelectsTheSensor()
     {
-        // A short beam: the picture sits inside both joints' touch reach but off their discs.
+        // A short beam: the picture sits inside both joints' touch reach but off their rings.
         var (build, gestures) = BeamWithSensor(50, SensorKind.Accelerometer);
 
         Tap(gestures, new Vector2D(22, 0));
@@ -941,7 +940,7 @@ public class BuildGesturesTests
     {
         var build = new BuildViewModel();
         build.Load(
-            new CreatureDef([new NodeDef(1, new Vector2D(0, 0), 18), new NodeDef(2, new Vector2D(100, 0), 18)], [new BeamDef(3, 1, 2)], [new SensorDef(4, 3, SensorKind.Camera)]),
+            new CreatureDef([new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(100, 0))], [new BeamDef(3, 1, 2)], [new SensorDef(4, 3, SensorKind.Camera)]),
             moveOnly: true);
         var gestures = new BuildGestures(build);
 
@@ -1030,8 +1029,8 @@ public class BuildGesturesTests
     private static (BuildViewModel Build, BuildGestures Gestures) BeamWithSensor(double length, SensorKind kind = SensorKind.Accelerometer)
     {
         var builder = new CreatureBuilder();
-        builder.AddNode(new Vector2D(0, 0), 18);
-        builder.AddNode(new Vector2D(length, 0), 18);
+        builder.AddNode(new Vector2D(0, 0));
+        builder.AddNode(new Vector2D(length, 0));
         var beam = builder.AddBeam(1, 2);
         builder.AddSensor(beam, kind, out _, out _);
 
@@ -1042,8 +1041,8 @@ public class BuildGesturesTests
     private static (BuildViewModel Build, BuildGestures Gestures) TwoJointsAndABeam()
     {
         var build = new BuildViewModel();
-        build.PlaceNode(new Vector2D(0, 0), 18);
-        build.PlaceNode(new Vector2D(100, 0), 18);
+        build.PlaceNode(new Vector2D(0, 0));
+        build.PlaceNode(new Vector2D(100, 0));
         build.ConnectBeam(1, 2);
         return (build, new BuildGestures(build));
     }
@@ -1051,9 +1050,9 @@ public class BuildGesturesTests
     private static (BuildViewModel Build, BuildGestures Gestures) ThreeLooseJoints(BuildTool tool)
     {
         var build = new BuildViewModel();
-        build.PlaceNode(new Vector2D(0, 0), 18);
-        build.PlaceNode(new Vector2D(100, 0), 18);
-        build.PlaceNode(new Vector2D(0, 100), 18);
+        build.PlaceNode(new Vector2D(0, 0));
+        build.PlaceNode(new Vector2D(100, 0));
+        build.PlaceNode(new Vector2D(0, 100));
         build.ActiveTool = tool;
         return (build, new BuildGestures(build));
     }

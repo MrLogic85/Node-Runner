@@ -35,9 +35,6 @@
                 ],
                 "additionalProperties": false
               },
-              "radius": {
-                "type": "number"
-              },
               "name": {
                 "type": [
                   "string",
@@ -48,8 +45,7 @@
             },
             "required": [
               "id",
-              "position",
-              "radius"
+              "position"
             ],
             "additionalProperties": false
           }

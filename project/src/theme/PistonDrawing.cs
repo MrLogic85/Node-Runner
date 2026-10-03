@@ -63,7 +63,11 @@ public static class PistonDrawing
         var across = along.Orthogonal();
         var cylinderHalf = theme.BeamWidth * _cylinderPerBeam / 2;
 
-        canvas.DrawLine(toPixels * a, toPixels * b, line, theme.BeamWidth * _rodPerBeam * scale, antialiased: true);
+        // Round rod ends, like a beam's, since they show inside an open joint ring (#626).
+        var rodWidth = theme.BeamWidth * _rodPerBeam * scale;
+        canvas.DrawLine(toPixels * a, toPixels * b, line, rodWidth, antialiased: true);
+        canvas.DrawCircle(toPixels * a, rodWidth / 2, line, antialiased: true);
+        canvas.DrawCircle(toPixels * b, rodWidth / 2, line, antialiased: true);
 
         var cylinderStart = a + (along * radiusA);
         var cylinderEnd = a + (along * Math.Max(shortest / 2, radiusA + _minCylinder));

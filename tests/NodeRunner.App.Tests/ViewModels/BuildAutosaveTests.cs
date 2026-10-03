@@ -13,7 +13,7 @@ public sealed class BuildAutosaveTests
         var creation = TwoNodeCreation();
         var (repository, build, autosave) = Open(creation);
 
-        build.PlaceNode(new Vector2D(40, 0), 18);
+        build.PlaceNode(new Vector2D(40, 0));
         autosave.Save().ShouldBeTrue();
 
         repository.Get(creation.Id).ShouldNotBeNull().Creature.Nodes.Count.ShouldBe(3);
@@ -80,7 +80,7 @@ public sealed class BuildAutosaveTests
     public void Save_OnALockedCreation_KeepsItsTraining()
     {
         var pair = new CreatureDef(
-            [new NodeDef(1, new Vector2D(0, 0), 18), new NodeDef(2, new Vector2D(20, 0), 18)],
+            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(20, 0))],
             [],
             [],
             [new PistonDef(3, 1, 2)]);
@@ -140,7 +140,7 @@ public sealed class BuildAutosaveTests
         Open(empty, openedAsNew: false).Autosave.ShouldDiscardOnLeave.ShouldBeFalse();
 
         var (_, build, drawnOn) = Open(empty, openedAsNew: true);
-        build.PlaceNode(new Vector2D(0, 0), 18);
+        build.PlaceNode(new Vector2D(0, 0));
         drawnOn.ShouldDiscardOnLeave.ShouldBeFalse();
     }
 
@@ -172,7 +172,7 @@ public sealed class BuildAutosaveTests
         Guid.NewGuid(),
         "Worm",
         new CreatureDef(
-            [new NodeDef(1, new Vector2D(0, 0), 18), new NodeDef(2, new Vector2D(20, 0), 18)],
+            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(20, 0))],
             [new BeamDef(101, 1, 2)],
             []));
 }
