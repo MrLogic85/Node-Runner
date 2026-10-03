@@ -10,8 +10,8 @@ namespace NodeRunner.Domain;
 /// <item>Strength output (<c>sigmoid</c>): the share of its Strength setting it may use this tick.</item>
 /// </list>
 /// The force chases the target length at up to <see cref="PistonDef.MaxSpeed"/>, using at most the
-/// chosen share of its Strength. Past either end of its stroke it may use its full Strength,
-/// whatever the brain asks: the end stops are part of the cylinder, not powered.
+/// chosen share of its Strength. Its end stops are not powered: they are a hard limit in the
+/// sim (#701), so the force never needs more than the brain chose to stay inside its stroke.
 /// Stateless and shared by the sim and tests.
 /// </summary>
 public static class Piston
@@ -90,8 +90,7 @@ public static class Piston
         var speedError = wantedSpeed - speed;
         var gain = pairMass / step;
         var force = previous.Force + (gain * ((_proportional * (speedError - previous.SpeedError)) + (_integral * speedError)));
-        var outOfStroke = length < ShortestLength(builtLength, piston.Stroke) || length > LongestLength(builtLength, piston.Stroke);
-        var limit = outOfStroke ? piston.Strength : PortSignals.StrengthFromOutput(strength, piston.Strength);
+        var limit = PortSignals.StrengthFromOutput(strength, piston.Strength);
         return new PistonControl(Math.Clamp(force, -limit, limit), speedError);
     }
 }

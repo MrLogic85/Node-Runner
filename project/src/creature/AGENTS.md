@@ -16,7 +16,10 @@ the model this implements.**
    `RigidBody2D`; a `PinJoint2D` pins every beam to its two nodes. Only
    nodes collide (a circle each); beams have no collider and their weight
    sits on their nodes. Beam rigidity is geometric (fixed pin distance), not
-   spring-based. Do not introduce Box2D.NET or a custom solver.
+   spring-based. Each Piston also has a hidden, collider-free cylinder body
+   pinned to node A and grooved to node B for its end stops (#701; see
+   `docs/CREATURE_MODEL.md`): anything that moves or resets every body must
+   include it. Do not introduce Box2D.NET or a custom solver.
 4. **Joints are passive (#450).** A beam turns freely at its nodes; only
    parts with ports (Pistons today) are driven by the brain.
 5. **The brain's input and output order is `BrainPorts.Of` (in
@@ -28,8 +31,8 @@ the model this implements.**
 
 ## What lives here
 
-- `Creature.cs` — root `Node2D` that builds nodes/beams/pins/sensors from a
-  `CreatureDef` and owns the brain wiring
+- `Creature.cs` — root `Node2D` that builds nodes/beams/pins/sensors and each
+  Piston's end-stop cylinder from a `CreatureDef` and owns the brain wiring
 - `IBeamSensor.cs` — what `Creature` needs from a sensor part: its value
   names, `Read` into the sensor buffer, and `Reset`
 - `AccelerometerSensor.cs` — one accelerometer: measures its beam's
