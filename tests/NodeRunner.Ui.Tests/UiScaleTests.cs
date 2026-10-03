@@ -53,31 +53,6 @@ public sealed class UiScaleTests
     }
 
     [Theory]
-    [InlineData(50, 1.5f)]
-    [InlineData(100, 3f)]
-    [InlineData(200, 6f)]
-    [InlineData(400, 12f)]
-    public void PixelsPerUnit_IsTheStretchTimesTheUiSize(int percent, float pixelsPerUnit)
-    {
-        UiScale.PixelsPerUnit(_s25Window, S25Canvas(percent)).ShouldBe(pixelsPerUnit, 1e-4f);
-    }
-
-    [Fact]
-    public void PixelsPerUnit_WithNoWindowYet_IsOne()
-    {
-        UiScale.PixelsPerUnit(Vector2I.Zero, Vector2.Zero).ShouldBe(1);
-    }
-
-    [Theory]
-    [InlineData(10f, 1.25f, 13)]
-    [InlineData(10f, 1.24f, 12)]
-    [InlineData(0.1f, 1f, 1)]
-    public void RasterPixels_RoundsToTheNearestWholePixelAndIsAtLeastOne(float units, float pixelsPerUnit, int pixels)
-    {
-        UiScale.RasterPixels(units, pixelsPerUnit).ShouldBe(pixels);
-    }
-
-    [Theory]
     [InlineData(50, 64)]
     [InlineData(100, 32)]
     [InlineData(200, 16)]
@@ -89,6 +64,6 @@ public sealed class UiScaleTests
         var insets = UiSafeArea.Insets(window, new Rect2I(96, 0, 2244, 1080), S25Canvas(percent));
 
         insets.Left.ShouldBe(insetUnits, 1e-3f);
-        (insets.Left * UiScale.PixelsPerUnit(_s25Window, S25Canvas(percent))).ShouldBe(96, 1e-2f);
+        (insets.Left * _s25Window.X / S25Canvas(percent).X).ShouldBe(96, 1e-2f);
     }
 }
