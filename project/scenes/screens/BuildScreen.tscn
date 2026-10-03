@@ -16,7 +16,6 @@
 [ext_resource type="Script" uid="uid://cxlb7vq8iocpi" path="res://src/ui/lib/UiIconTabs.cs" id="18_icon_tabs"]
 [ext_resource type="Script" uid="uid://c6loxvqr7tfvr" path="res://src/ui/lib/UiInfoRow.cs" id="19_info_row"]
 [ext_resource type="Script" path="res://src/ui/lib/UiCalloutLayer.cs" id="40_callout_layer"]
-[ext_resource type="Script" uid="uid://bau3bwe6tkv48" path="res://src/ui/lib/UiSlider.cs" id="41_slider"]
 
 [node name="BuildScreen" type="Control"]
 layout_mode = 3
@@ -392,35 +391,11 @@ layout_mode = 2
 script = ExtResource("4_text_field")
 LabelText = "Name"
 
-[node name="PistonSettings" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/PartSettings/PartRows"]
+[node name="PartParameters" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/PartSettings/PartRows"]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
 theme_override_constants/separation = 4
-
-[node name="PistonStrength" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/PartSettings/PartRows/PistonSettings"]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_horizontal = 3
-mouse_filter = 1
-script = ExtResource("41_slider")
-LabelText = "Max strength"
-
-[node name="PistonStroke" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/PartSettings/PartRows/PistonSettings"]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_horizontal = 3
-mouse_filter = 1
-script = ExtResource("41_slider")
-LabelText = "Stroke"
-
-[node name="PistonMaxSpeed" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/PartSettings/PartRows/PistonSettings"]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_horizontal = 3
-mouse_filter = 1
-script = ExtResource("41_slider")
-LabelText = "Max speed"
 
 [node name="PartConnections" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/PartSettings/PartRows"]
 layout_mode = 2
@@ -474,29 +449,10 @@ unique_name_in_owner = true
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="SharedPistonStrength" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/Selection/SelectionSettings"]
+[node name="SelectionParameters" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/Selection/SelectionSettings"]
 unique_name_in_owner = true
 layout_mode = 2
-size_flags_horizontal = 3
-mouse_filter = 1
-script = ExtResource("41_slider")
-LabelText = "Max strength"
-
-[node name="SharedPistonStroke" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/Selection/SelectionSettings"]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_horizontal = 3
-mouse_filter = 1
-script = ExtResource("41_slider")
-LabelText = "Stroke"
-
-[node name="SharedPistonMaxSpeed" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/Selection/SelectionSettings"]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_horizontal = 3
-mouse_filter = 1
-script = ExtResource("41_slider")
-LabelText = "Max speed"
+theme_override_constants/separation = 4
 
 [node name="SelectionSettingsNote" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/Selection/SelectionSettings"]
 unique_name_in_owner = true

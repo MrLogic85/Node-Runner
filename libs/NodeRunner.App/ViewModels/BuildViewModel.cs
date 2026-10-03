@@ -159,11 +159,8 @@ public sealed class BuildViewModel : INotifyPropertyChanged
         _selectedSensorIds.ToHashSet(),
         _selectedPistonIds.ToHashSet());
 
-    /// <summary>The Camera whose aim can be turned now (#594): the single selection, even on a locked Creation, since aim does not change the model (#638).</summary>
-    public int? AimableCameraId => SingleSelectedSensorId is { } sensorId
-        && _builder.Sensors[_builder.SensorIndexOf(sensorId)].Kind == SensorKind.Camera
-            ? sensorId
-            : null;
+    /// <summary>The Camera whose aim handle shows (#594): Aim can be set, so it is the one selected part.</summary>
+    public int? AimableCameraId => CanEdit(PartParameterId.Aim) ? SingleSelectedSensorId : null;
 
     public void SetCreationName(string creationName)
     {
@@ -433,48 +430,50 @@ public sealed class BuildViewModel : INotifyPropertyChanged
     private void SelectOnly(CreatureElementKind kind, int id) => ReplaceSelection(PartSetOf(kind, id));
 
     /// <summary>
-    /// Changes a Piston's Strength, stroke and max speed (#451). Like a Camera's aim, these tune
-    /// the body without changing the brain's ports, so a locked Creation can change them too.
+    /// The settings the selection can change now (#704): one part's own, or those every selected part
+    /// has and can share. Like a Camera's aim (#638), they tune the body without changing the brain's
+    /// ports, so a locked Creation can change them too.
     /// </summary>
-    public void SetPistonSettings(int pistonId, double strength, double stroke, double maxSpeed)
+    public IReadOnlyList<PartParameterId> EditableParameters
     {
-        var piston = _builder.Pistons[_builder.PistonIndexOf(pistonId)];
-        if (piston.Strength == strength && piston.Stroke == stroke && piston.MaxSpeed == maxSpeed)
+        get
         {
-            return;
-        }
+            var parts = SelectedPartIds().ToList();
+            if (parts.Count == 0)
+            {
+                return [];
+            }
 
-        _builder.SetPistonSettings(pistonId, strength, stroke, maxSpeed);
-        AnatomyChanged?.Invoke(this, EventArgs.Empty);
+            var shared = parts.Skip(1).Aggregate(
+                _builder.ParametersOf(parts[0]).AsEnumerable(),
+                (common, part) => common.Intersect(_builder.ParametersOf(part)));
+            return [.. parts.Count == 1 ? shared : shared.Where(id => PartParameters.Of(id).MultiEditable)];
+        }
     }
 
-    /// <summary>True when only Pistons are selected, so they share their settings (#704).</summary>
-    public bool SelectionSharesPistonSettings => SelectedPartCount > 0 && SelectedPistonCount == SelectedPartCount;
+    public bool CanEdit(PartParameterId parameter) => EditableParameters.Contains(parameter);
 
-    /// <summary>Sets one setting on every selected Piston (#704), keeping their other settings.</summary>
-    public void SetSharedSetting(PistonSetting setting, double value)
+    /// <summary>Each selected part's <paramref name="parameter"/>, in world units.</summary>
+    public IReadOnlyList<double> SelectedValuesOf(PartParameterId parameter)
     {
-        if (!SelectionSharesPistonSettings)
+        RequireEditable(parameter);
+        return [.. SelectedPartIds().Select(part => _builder.ParameterValue(part, parameter))];
+    }
+
+    /// <summary>Sets <paramref name="parameter"/> to <paramref name="value"/>, in world units, on every selected part (#704).</summary>
+    public void SetParameter(PartParameterId parameter, double value)
+    {
+        if (!double.IsFinite(value))
         {
-            throw new InvalidOperationException("Only a selection of Pistons shares settings.");
+            throw new ArgumentOutOfRangeException(nameof(value), "A setting must be finite.");
         }
 
+        RequireEditable(parameter);
         var changed = false;
-        foreach (var pistonId in _selectedPistonIds)
+        foreach (var part in SelectedPartIds().Where(part => _builder.ParameterValue(part, parameter) != value))
         {
-            var piston = _builder.Pistons[_builder.PistonIndexOf(pistonId)];
-            var next = setting switch
-            {
-                PistonSetting.Strength => (piston.Strength, piston.Stroke, piston.MaxSpeed) with { Item1 = value },
-                PistonSetting.Stroke => (piston.Strength, piston.Stroke, piston.MaxSpeed) with { Item2 = value },
-                PistonSetting.MaxSpeed => (piston.Strength, piston.Stroke, piston.MaxSpeed) with { Item3 = value },
-                _ => throw new ArgumentOutOfRangeException(nameof(setting)),
-            };
-            if (next != (piston.Strength, piston.Stroke, piston.MaxSpeed))
-            {
-                _builder.SetPistonSettings(pistonId, next.Item1, next.Item2, next.Item3);
-                changed = true;
-            }
+            _builder.SetParameter(part, parameter, value);
+            changed = true;
         }
 
         if (changed)
@@ -483,22 +482,16 @@ public sealed class BuildViewModel : INotifyPropertyChanged
         }
     }
 
-    /// <summary>Turns a Camera to <paramref name="aim"/>, relative to its beam (see <see cref="SensorDef.Aim"/>).</summary>
-    public void SetCameraAim(int sensorId, double aim)
+    private void RequireEditable(PartParameterId parameter)
     {
-        if (!double.IsFinite(aim))
+        if (!CanEdit(parameter))
         {
-            throw new ArgumentOutOfRangeException(nameof(aim), "Aim must be finite.");
+            throw new InvalidOperationException($"The selection cannot change {parameter}.");
         }
-
-        if (_builder.Sensors[_builder.SensorIndexOf(sensorId)].Aim == aim)
-        {
-            return;
-        }
-
-        _builder.SetCameraAim(sensorId, aim);
-        AnatomyChanged?.Invoke(this, EventArgs.Empty);
     }
+
+    private IEnumerable<int> SelectedPartIds() =>
+        _selectedNodeIds.Concat(_selectedBeamIds).Concat(_selectedSensorIds).Concat(_selectedPistonIds);
 
     /// <summary>The sensor whose picture (<see cref="SensorPicture"/>) is under <paramref name="position"/>, if any.</summary>
     public bool TryFindSensorAt(Vector2D position, out int sensorId)

@@ -1,3 +1,4 @@
+using NodeRunner.App.Builders;
 using NodeRunner.App.ViewModels;
 using NodeRunner.Domain;
 
@@ -94,9 +95,9 @@ public sealed class BuildPresentationViewModelTests
             [new BeamDef(101, 1, 2)],
             []));
         build.SelectBeam(101);
-        var presentation = new BuildPresentationViewModel(build);
+        var part = new BuildPresentationViewModel(build).SinglePart!;
 
-        presentation.SinglePart.ShouldBe(new PartSettingsPresentation(
+        part.ShouldBe(new PartSettingsPresentation(
             101,
             PartSettingsKind.Beam,
             "Beam 1",
@@ -104,7 +105,9 @@ public sealed class BuildPresentationViewModelTests
             "Between",
             "Node 1 ↔ Node 2",
             "Drag its ends to change the length.",
-            CanDelete: true));
+            CanDelete: true,
+            part.Settings));
+        part.Settings.ShouldBeEmpty();
     }
 
     [Theory]
@@ -120,7 +123,10 @@ public sealed class BuildPresentationViewModelTests
         build.SelectSensor(7);
         var presentation = new BuildPresentationViewModel(build);
 
-        presentation.SinglePart.ShouldBe(new PartSettingsPresentation(7, partKind, name, name, "On", "Thigh", note, CanDelete: true));
+        var part = presentation.SinglePart!;
+
+        part.ShouldBe(new PartSettingsPresentation(7, partKind, name, name, "On", "Thigh", note, CanDelete: true, part.Settings));
+        part.Settings.ShouldBeEmpty();
     }
 
     [Fact]
@@ -151,9 +157,9 @@ public sealed class BuildPresentationViewModelTests
             [new BeamDef(101, 1, 2), new BeamDef(102, 2, 3, "Shin")],
             []));
         build.ToggleSelected(new(CreatureElementKind.Node, 2));
-        var presentation = new BuildPresentationViewModel(build);
+        var part = new BuildPresentationViewModel(build).SinglePart!;
 
-        presentation.SinglePart.ShouldBe(new PartSettingsPresentation(
+        part.ShouldBe(new PartSettingsPresentation(
             2,
             PartSettingsKind.Node,
             "Knee",
@@ -161,7 +167,23 @@ public sealed class BuildPresentationViewModelTests
             "Beams",
             "Beam 1 · Shin",
             "Beams meet and turn here. Drag it to move them.",
-            CanDelete: true));
+            CanDelete: true,
+            part.Settings));
+        part.Settings.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void SelectedPiston_HasASliderForEachOfItsSettings()
+    {
+        var build = new BuildViewModel();
+        build.Load(TwoPistonCreature(stroke: 0.3));
+        build.SelectPiston(301);
+
+        var part = new BuildPresentationViewModel(build).SinglePart!;
+
+        part.Note.ShouldBe(BuildPresentationViewModel.PistonNote);
+        part.Settings.Select(slider => slider.Readout).ShouldBe(["250 N", "±30%", "2.0 m/s"]);
+        part.Settings.ShouldAllBe(slider => !slider.ValuesDiffer);
     }
 
     [Fact]
@@ -251,13 +273,13 @@ public sealed class BuildPresentationViewModelTests
         selection.SettingsNote.ShouldBe("A slider sets one value for all of them.");
         selection.DeleteNote.ShouldBeEmpty();
         selection.Settings.Select(slider => slider.Id).ShouldBe(
-            [PistonSetting.Strength, PistonSetting.Stroke, PistonSetting.MaxSpeed]);
+            [PartParameterId.Strength, PartParameterId.Stroke, PartParameterId.MaxSpeed]);
         var strength = selection.Settings[0];
         strength.Readout.ShouldBe("100–250 N");
         strength.ValuesDiffer.ShouldBeTrue();
-        strength.Low.ShouldBe(PistonSettings.Strength.Position(100));
-        strength.High.ShouldBe(PistonSettings.Strength.Position(250));
-        selection.Settings[1].ShouldBe(new SharedSlider(PistonSetting.Stroke, "Stroke", "±30%", 0.5, 0.5));
+        strength.Low.ShouldBe(PartParameters.Strength.Slider!.Range.Position(100));
+        strength.High.ShouldBe(PartParameters.Strength.Slider!.Range.Position(250));
+        selection.Settings[1].ShouldBe(new ParameterSlider(PartParameterId.Stroke, "Stroke", "±30%", 0.5, 0.5));
     }
 
     [Fact]

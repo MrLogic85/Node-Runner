@@ -214,22 +214,33 @@ the selection moves) trims the text, and a blank name or the default
 clears the part's own name. Names are labels only (#220), so a locked
 creation can be renamed too; the rename autosaves like any edit.
 
-A Piston's rows are Name, then three `UiSlider`s instead of what it is
-joined to: **Max strength** (20–400 N, step 10), **Stroke** (±10–50%, step
-5) and **Max speed** (0.5–4.0 m/s, step 0.1), then the note "The brain
-pushes it out and pulls it in, within its stroke." (`PistonSettings`). Like a
-Camera's aim, the settings change no brain port, so a locked creation keeps
-them.
+### Parameters (#704)
+
+A part's settings are parameters (`PartParameters`), plain data: an id, whether
+several selected parts can share one value (`MultiEditable`), and a slider
+when the panel shows it (`InPanel`). Each kind of part lists its own
+(`CreatureBuilder.ParametersOf`): a Piston has **Max strength** (20–400 N,
+step 10), **Stroke** (±10–50%, step 5) and **Max speed** (0.5–4.0 m/s, step
+0.1); a Camera has **Aim**, set on the canvas and one Camera at a time.
+
+The selection can change one part's own parameters, or those every selected
+part has and can share (`BuildViewModel.EditableParameters`). The panel shows a
+slider for each that is `InPanel`, and a slider sets its value on every
+selected part (`SetParameter`). The canvas shows what a parameter changes
+only while it can be changed: a Piston's stroke ticks while Stroke can, a
+Camera's rays and aim handle while Aim can. Parameters change no brain port,
+so a locked creation keeps them.
+
+A Piston's rows are Name, then its sliders instead of what it is joined to,
+then the note "The brain pushes it out and pulls it in, within its stroke."
 
 ## Selection panel
 
 Several selected parts show the selection panel instead (#558, #704). Its
 title row carries the Select glyph and "N selected"; there is no close button.
-- With only Pistons selected, first their three sliders, with the note "A
-  slider sets one value for all of them." A slider sets that one setting on
-  every Piston (`BuildViewModel.SetSharedSetting`); differing values look as
-  `docs/UI_DIRECTION.md` says. A locked creation keeps them, like a single
-  Piston's.
+- First a slider for each parameter they share (see Parameters), with the
+  note "A slider sets one value for all of them." Differing values look as
+  `docs/UI_DIRECTION.md` says.
 - With a frame, three `UiInfoRow`s explain its handles (Move, Rotate, Scale).
   With neither settings nor a frame: "These parts share no settings."
 - Last a full-width hold-to-activate danger **Delete N**

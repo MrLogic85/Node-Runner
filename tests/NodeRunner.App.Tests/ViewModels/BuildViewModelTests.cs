@@ -1,3 +1,4 @@
+using NodeRunner.App.Builders;
 using NodeRunner.App.Services;
 using NodeRunner.App.ViewModels;
 using NodeRunner.Domain;
@@ -93,7 +94,7 @@ public sealed class BuildViewModelTests
     }
 
     [Fact]
-    public void SetSharedSetting_ChangesOnlyThatSetting_OnEverySelectedPiston()
+    public void SetParameter_ChangesOnlyThatSetting_OnEverySelectedPiston()
     {
         var build = new BuildViewModel();
         build.Load(new CreatureDef(
@@ -103,20 +104,20 @@ public sealed class BuildViewModelTests
             [new PistonDef(301, 1, 3, stroke: 0.2), new PistonDef(302, 2, 4, stroke: 0.4), new PistonDef(303, 1, 4)]));
         build.ReplaceSelection(PartSet.None with { Pistons = new HashSet<int> { 301, 302 } });
 
-        build.SetSharedSetting(PistonSetting.Strength, 20000);
-        build.SetSharedSetting(PistonSetting.MaxSpeed, 100);
+        build.SetParameter(PartParameterId.Strength, 20000);
+        build.SetParameter(PartParameterId.MaxSpeed, 100);
 
         build.Pistons.Select(piston => (piston.Strength, piston.Stroke, piston.MaxSpeed)).ShouldBe([
             (20000, 0.2, 100),
             (20000, 0.4, 100),
             (PistonDef.DefaultStrength, PistonDef.DefaultStroke, PistonDef.DefaultMaxSpeed)]);
 
-        build.SetSharedSetting(PistonSetting.Stroke, 0.5);
+        build.SetParameter(PartParameterId.Stroke, 0.5);
         build.Pistons.Select(piston => piston.Stroke).ShouldBe([0.5, 0.5, PistonDef.DefaultStroke]);
     }
 
     [Fact]
-    public void SetSharedSetting_OnALockedCreation_ChangesOnce_AndNotAgainForTheSameValue()
+    public void SetParameter_OnALockedCreation_ChangesOnce_AndNotAgainForTheSameValue()
     {
         var build = new BuildViewModel();
         build.Load(new CreatureDef(
@@ -128,21 +129,47 @@ public sealed class BuildViewModelTests
         var changes = 0;
         build.AnatomyChanged += (_, _) => changes++;
 
-        build.SetSharedSetting(PistonSetting.Stroke, 0.2);
-        build.SetSharedSetting(PistonSetting.Stroke, 0.2);
+        build.SetParameter(PartParameterId.Stroke, 0.2);
+        build.SetParameter(PartParameterId.Stroke, 0.2);
 
         build.Pistons.Select(piston => piston.Stroke).ShouldBe([0.2, 0.2]);
         changes.ShouldBe(1);
     }
 
+    [Theory]
+    [InlineData(new[] { 301 }, "Strength,Stroke,MaxSpeed")]
+    [InlineData(new[] { 301, 302 }, "Strength,Stroke,MaxSpeed")]
+    [InlineData(new[] { 301, 1 }, "")]
+    [InlineData(new[] { 301, 101 }, "")]
+    [InlineData(new[] { 201 }, "Aim")]
+    [InlineData(new[] { 201, 202 }, "")]
+    [InlineData(new[] { 201, 301 }, "")]
+    [InlineData(new int[0], "")]
+    public void EditableParameters_AreOnePartsOwn_OrThoseEverySelectedPartHasAndCanShare(int[] parts, string editable)
+    {
+        var build = new BuildViewModel();
+        build.Load(new CreatureDef(
+            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(90, 0)), new NodeDef(3, new Vector2D(180, 0))],
+            [new BeamDef(101, 1, 2), new BeamDef(102, 2, 3)],
+            [new SensorDef(201, 101, SensorKind.Camera), new SensorDef(202, 102, SensorKind.Camera)],
+            [new PistonDef(301, 1, 2), new PistonDef(302, 2, 3)]));
+        build.ReplaceSelection(new PartSet(
+            parts.Where(id => id < 100).ToHashSet(),
+            parts.Where(id => id is > 100 and < 200).ToHashSet(),
+            parts.Where(id => id is > 200 and < 300).ToHashSet(),
+            parts.Where(id => id > 300).ToHashSet()));
+
+        string.Join(',', build.EditableParameters).ShouldBe(editable);
+    }
+
     [Fact]
-    public void SetSharedSetting_WithMoreThanPistonsSelected_Throws()
+    public void SetParameter_ThatNotEverySelectedPartHas_Throws()
     {
         var build = new BuildViewModel();
         build.Load(Carrier());
         build.ReplaceSelection(PartSet.None with { Nodes = new HashSet<int> { 1 }, Pistons = new HashSet<int> { 301 } });
 
-        Should.Throw<InvalidOperationException>(() => build.SetSharedSetting(PistonSetting.Strength, 20000));
+        Should.Throw<InvalidOperationException>(() => build.SetParameter(PartParameterId.Strength, 20000));
     }
 
     private static CreatureDef Carrier() => new(
@@ -883,27 +910,29 @@ public sealed class BuildViewModelTests
     }
 
     [Fact]
-    public void SetCameraAim_TurnsTheCameraAndRedrawsOnlyOnAChange()
+    public void SetAim_TurnsTheCameraAndRedrawsOnlyOnAChange()
     {
         var build = new BuildViewModel();
         build.Load(CameraPair(), moveOnly: false);
+        build.SelectSensor(4);
         var changes = 0;
         build.AnatomyChanged += (_, _) => changes++;
 
-        build.SetCameraAim(4, 1);
-        build.SetCameraAim(4, 1);
+        build.SetParameter(PartParameterId.Aim, 1);
+        build.SetParameter(PartParameterId.Aim, 1);
 
         build.Sensors[0].Aim.ShouldBe(1);
         changes.ShouldBe(1);
     }
 
     [Fact]
-    public void SetCameraAim_WhenLocked_TurnsTheCamera()
+    public void SetAim_WhenLocked_TurnsTheCamera()
     {
         var build = new BuildViewModel();
         build.Load(CameraPair(), moveOnly: true);
+        build.SelectSensor(4);
 
-        build.SetCameraAim(4, 1);
+        build.SetParameter(PartParameterId.Aim, 1);
 
         build.Sensors[0].Aim.ShouldBe(1);
     }

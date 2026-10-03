@@ -1,4 +1,5 @@
 using Godot;
+using NodeRunner.App.Builders;
 using NodeRunner.App.ViewModels;
 using NodeRunner.Ui.Lib;
 using NodeRunner.Ui.Widgets;
@@ -52,12 +53,9 @@ public partial class BuildScreen : Control
     [Signal]
     public delegate void PartPickedEventHandler(BuildPart part);
 
+    /// <summary>A setting's slider moved (#704): every selected part takes <paramref name="value"/> for <paramref name="parameter"/> (a <see cref="PartParameterId"/>).</summary>
     [Signal]
-    public delegate void PistonSettingsChangedEventHandler(int pistonId, double strength, double stroke, double maxSpeed);
-
-    /// <summary>A shared slider moved (#704): every selected Piston takes <paramref name="value"/> for <paramref name="setting"/> (a <see cref="PistonSetting"/>).</summary>
-    [Signal]
-    public delegate void SharedSettingChangedEventHandler(int setting, double value);
+    public delegate void ParameterChangedEventHandler(int parameter, double value);
 
     /// <summary>False while the overflow menu is open; it takes Android Back itself.</summary>
     public bool CanTakeBack => !Toolbar.Menu.Visible;
@@ -111,25 +109,6 @@ public partial class BuildScreen : Control
         var partName = GetNode<UiTextField>("%PartName");
         partName.EditingStarted += () => _renamingPartId = _presentation?.SinglePart?.Id;
         partName.EditingFinished += OnPartNameEdited;
-        foreach (var setting in Enum.GetValues<PistonSetting>())
-        {
-            var slider = SharedSlider(setting);
-            slider.ThumbChanged += (_, position) =>
-                EmitSignal(SignalName.SharedSettingChanged, (int)setting, PistonSettings.ValueAt(setting, position));
-
-            // Differing values have no thumb: a touch sets one value for all of them.
-            slider.TrackPressed += position =>
-            {
-                slider.Value = UiSliderValue.Thumb(position);
-                EmitSignal(SignalName.SharedSettingChanged, (int)setting, PistonSettings.ValueAt(setting, position));
-            };
-        }
-
-        foreach (var slider in PistonSliders)
-        {
-            slider.ThumbChanged += (_, _) => OnPistonSliderChanged();
-        }
-
         BindViewModels();
         Apply();
     }
@@ -175,31 +154,44 @@ public partial class BuildScreen : Control
         }
     }
 
-    private UiSlider[] PistonSliders =>
-        [GetNode<UiSlider>("%PistonStrength"), GetNode<UiSlider>("%PistonStroke"), GetNode<UiSlider>("%PistonMaxSpeed")];
-
-    private UiSlider SharedSlider(PistonSetting setting) => setting switch
+    /// <summary>
+    /// One slider per setting in <paramref name="settings"/>, in order (#704). A setting's slider is
+    /// made the first time it shows; differing values have Marker ends and no thumb.
+    /// </summary>
+    private void ApplyParameterSliders(Container container, IReadOnlyList<ParameterSlider> settings)
     {
-        PistonSetting.Strength => GetNode<UiSlider>("%SharedPistonStrength"),
-        PistonSetting.Stroke => GetNode<UiSlider>("%SharedPistonStroke"),
-        PistonSetting.MaxSpeed => GetNode<UiSlider>("%SharedPistonMaxSpeed"),
-        _ => throw new ArgumentOutOfRangeException(nameof(setting)),
-    };
-
-    private void OnPistonSliderChanged()
-    {
-        if (_presentation?.SinglePart is not { Kind: PartSettingsKind.Piston } part)
+        container.Visible = settings.Count > 0;
+        foreach (var slider in container.GetChildren().OfType<UiSlider>())
         {
-            return;
+            slider.Visible = settings.Any(setting => setting.Id.ToString() == slider.Name);
         }
 
-        var sliders = PistonSliders;
-        EmitSignal(
-            SignalName.PistonSettingsChanged,
-            part.Id,
-            PistonSettings.ValueAt(PistonSetting.Strength, sliders[0].HighPosition),
-            PistonSettings.ValueAt(PistonSetting.Stroke, sliders[1].HighPosition),
-            PistonSettings.ValueAt(PistonSetting.MaxSpeed, sliders[2].HighPosition));
+        for (var index = 0; index < settings.Count; index++)
+        {
+            var setting = settings[index];
+            var slider = container.GetNodeOrNull<UiSlider>(setting.Id.ToString()) ?? AddParameterSlider(container, setting.Id);
+            container.MoveChild(slider, index);
+            slider.LabelText = setting.Label;
+            slider.ReadoutText = setting.Readout;
+            slider.Value = setting.ValuesDiffer
+                ? new UiSliderValue(UiSliderEnd.Marker(setting.Low), UiSliderEnd.Marker(setting.High))
+                : UiSliderValue.Thumb(setting.High);
+        }
+    }
+
+    private UiSlider AddParameterSlider(Container container, PartParameterId id)
+    {
+        var slider = new UiSlider { Name = id.ToString(), SizeFlagsHorizontal = SizeFlags.ExpandFill };
+        slider.ThumbChanged += (_, position) => EmitSignal(SignalName.ParameterChanged, (int)id, PartParameters.ValueAt(id, position));
+
+        // Differing values have no thumb: a touch sets one value for all of them.
+        slider.TrackPressed += position =>
+        {
+            slider.Value = UiSliderValue.Thumb(position);
+            EmitSignal(SignalName.ParameterChanged, (int)id, PartParameters.ValueAt(id, position));
+        };
+        container.AddChild(slider);
+        return slider;
     }
 
     private void OnPresentationChanged(object? sender, EventArgs eventArgs)
@@ -313,21 +305,7 @@ public partial class BuildScreen : Control
 
     private void ApplySelection(SelectionPanelPresentation group)
     {
-        foreach (var setting in Enum.GetValues<PistonSetting>())
-        {
-            var slider = SharedSlider(setting);
-            var shared = group.Settings.FirstOrDefault(entry => entry.Id == setting);
-            slider.Visible = shared is not null;
-            if (shared is not null)
-            {
-                slider.LabelText = shared.Label;
-                slider.ReadoutText = shared.Readout;
-                slider.Value = shared.ValuesDiffer
-                    ? new UiSliderValue(UiSliderEnd.Marker(shared.Low), UiSliderEnd.Marker(shared.High))
-                    : UiSliderValue.Thumb(shared.High);
-            }
-        }
-
+        ApplyParameterSliders(GetNode<Container>("%SelectionParameters"), group.Settings);
         GetNode<Control>("%SelectionSettings").Visible = group.Settings.Count > 0;
         GetNode<UiLabel>("%SelectionSettingsNote").Text = group.SettingsNote;
         var emptyNote = GetNode<UiLabel>("%SelectionEmptyNote");
@@ -463,18 +441,7 @@ public partial class BuildScreen : Control
         GetNode<UiLabel>("%PartConnectionsLabel").Text = part.ConnectionsLabel;
         GetNode<UiLabel>("%PartConnectionsValue").Text = part.ConnectionsValue;
         GetNode<Control>("%PartConnectionsLabel").GetParent<Control>().Visible = part.ConnectionsLabel.Length > 0;
-        GetNode<Control>("%PistonSettings").Visible = part.Piston is not null;
-        if (part.Piston is { } piston)
-        {
-            var sliders = PistonSliders;
-            PartSlider[] values = [piston.Strength, piston.Stroke, piston.MaxSpeed];
-            for (var index = 0; index < sliders.Length; index++)
-            {
-                sliders[index].LabelText = values[index].Label;
-                sliders[index].ReadoutText = values[index].Readout;
-                sliders[index].HighPosition = values[index].Position;
-            }
-        }
+        ApplyParameterSliders(GetNode<Container>("%PartParameters"), part.Settings);
 
         GetNode<UiLabel>("%PartNote").Text = part.Note;
         GetNode<UiButton>("%PartDelete").Visible = part.CanDelete;

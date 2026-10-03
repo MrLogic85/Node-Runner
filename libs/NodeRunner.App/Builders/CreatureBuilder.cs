@@ -172,11 +172,55 @@ public sealed class CreatureBuilder
         return id;
     }
 
-    /// <summary>Changes a Piston's Strength, stroke and max speed (#451).</summary>
-    public void SetPistonSettings(int pistonId, double strength, double stroke, double maxSpeed)
+    /// <summary>The settings part <paramref name="partId"/> has (#704), in panel order; a joint and a beam have none.</summary>
+    public IReadOnlyList<PartParameterId> ParametersOf(int partId) =>
+        _pistons.Any(piston => piston.Id == partId) ? _pistonParameters
+        : _sensors.Any(sensor => sensor.Id == partId && sensor.Kind == SensorKind.Camera) ? _cameraParameters
+        : [];
+
+    /// <summary>Part <paramref name="partId"/>'s <paramref name="parameter"/>, in world units.</summary>
+    public double ParameterValue(int partId, PartParameterId parameter) => parameter switch
     {
-        var index = PistonIndexOf(pistonId);
-        _pistons[index] = _pistons[index].WithSettings(strength, stroke, maxSpeed);
+        PartParameterId.Strength => _pistons[PistonIndexOf(partId)].Strength,
+        PartParameterId.Stroke => _pistons[PistonIndexOf(partId)].Stroke,
+        PartParameterId.MaxSpeed => _pistons[PistonIndexOf(partId)].MaxSpeed,
+        PartParameterId.Aim => Camera(partId).Aim ?? DefaultAim(Camera(partId).BeamId),
+        _ => throw new ArgumentOutOfRangeException(nameof(parameter)),
+    };
+
+    /// <summary>Sets part <paramref name="partId"/>'s <paramref name="parameter"/>, in world units, keeping its other settings.</summary>
+    public void SetParameter(int partId, PartParameterId parameter, double value)
+    {
+        if (parameter == PartParameterId.Aim)
+        {
+            var camera = Camera(partId);
+            _sensors[SensorIndexOf(partId)] = camera.WithAim(value);
+            return;
+        }
+
+        var index = PistonIndexOf(partId);
+        var piston = _pistons[index];
+        _pistons[index] = parameter switch
+        {
+            PartParameterId.Strength => piston.WithSettings(value, piston.Stroke, piston.MaxSpeed),
+            PartParameterId.Stroke => piston.WithSettings(piston.Strength, value, piston.MaxSpeed),
+            PartParameterId.MaxSpeed => piston.WithSettings(piston.Strength, piston.Stroke, value),
+            _ => throw new ArgumentOutOfRangeException(nameof(parameter)),
+        };
+    }
+
+    private static readonly PartParameterId[] _pistonParameters = [PartParameterId.Strength, PartParameterId.Stroke, PartParameterId.MaxSpeed];
+
+    private static readonly PartParameterId[] _cameraParameters = [PartParameterId.Aim];
+
+    private SensorDef Camera(int sensorId) => _sensors[SensorIndexOf(sensorId)] is { Kind: SensorKind.Camera } camera
+        ? camera
+        : throw new ArgumentOutOfRangeException(nameof(sensorId), "Only a Camera has an aim.");
+
+    private double DefaultAim(int beamId)
+    {
+        var beam = _beams[BeamIndexOf(beamId)];
+        return CameraRays.DefaultAim(_nodes[NodeIndexOf(beam.NodeA)].Position, _nodes[NodeIndexOf(beam.NodeB)].Position);
     }
 
     /// <summary>Removes a Piston by id.</summary>
@@ -241,19 +285,6 @@ public sealed class CreatureBuilder
         _sensors.Add(new SensorDef(sensorId, beamId, kind, aim: aim));
         reason = string.Empty;
         return true;
-    }
-
-    /// <summary>Turns a Camera to <paramref name="aim"/>, relative to its beam (#594).</summary>
-    public void SetCameraAim(int sensorId, double aim)
-    {
-        var sensorIndex = SensorIndexOf(sensorId);
-        var sensor = _sensors[sensorIndex];
-        if (sensor.Kind != SensorKind.Camera)
-        {
-            throw new ArgumentOutOfRangeException(nameof(sensorId), "Only a Camera has an aim.");
-        }
-
-        _sensors[sensorIndex] = sensor.WithAim(aim);
     }
 
     /// <summary>Removes a sensor by id.</summary>

@@ -107,7 +107,7 @@ public sealed class CreatureBuilderTests
     }
 
     [Fact]
-    public void SetCameraAim_IsKeptThroughSplitAndRename()
+    public void Aim_IsKeptThroughSplitAndRename()
     {
         var builder = new CreatureBuilder();
         var a = builder.AddNode(new Vector2D(0, 0));
@@ -116,7 +116,7 @@ public sealed class CreatureBuilderTests
         var beam = builder.AddBeam(a, b);
         builder.AddSensor(beam, SensorKind.Camera, out var sensor, out _);
 
-        builder.SetCameraAim(sensor, 2);
+        builder.SetParameter(sensor, PartParameterId.Aim, 2);
         var split = builder.SplitBeamAtNode(beam, joint);
         builder.Rename(sensor, "Eye");
 
@@ -124,12 +124,28 @@ public sealed class CreatureBuilderTests
     }
 
     [Fact]
-    public void SetCameraAim_OnAnAccelerometer_Throws()
+    public void Aim_OnAnAccelerometer_Throws()
     {
         var builder = PairBuilder();
         builder.AddSensor(builder.Beams[0].Id, SensorKind.Accelerometer, out var sensor, out _);
 
-        Should.Throw<ArgumentOutOfRangeException>(() => builder.SetCameraAim(sensor, 1));
+        builder.ParametersOf(sensor).ShouldBeEmpty();
+        Should.Throw<ArgumentOutOfRangeException>(() => builder.SetParameter(sensor, PartParameterId.Aim, 1));
+    }
+
+    [Fact]
+    public void ParametersOf_APiston_AreItsThree_AndSettingOneKeepsTheOthers()
+    {
+        var builder = PairBuilder();
+        var far = builder.AddNode(new Vector2D(180, 0));
+        var piston = builder.AddPiston(builder.Nodes[0].Id, far);
+
+        builder.ParametersOf(piston).ShouldBe([PartParameterId.Strength, PartParameterId.Stroke, PartParameterId.MaxSpeed]);
+        builder.ParametersOf(builder.Beams[0].Id).ShouldBeEmpty();
+        builder.SetParameter(piston, PartParameterId.Stroke, 0.4);
+
+        builder.Pistons.Single().ShouldBe(new PistonDef(piston, builder.Nodes[0].Id, far, stroke: 0.4));
+        builder.ParameterValue(piston, PartParameterId.Stroke).ShouldBe(0.4);
     }
 
     [Fact]

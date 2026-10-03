@@ -1,3 +1,4 @@
+using NodeRunner.App.Builders;
 using NodeRunner.Domain;
 
 namespace NodeRunner.App.ViewModels;
@@ -261,7 +262,7 @@ public sealed class BuildGestures
 
         if (_aimStart is { } aim)
         {
-            _build.SetCameraAim(aim.Sensor, aim.Aim);
+            _build.SetParameter(PartParameterId.Aim, aim.Aim);
         }
         else if (_selectionStart is { } start)
         {
@@ -613,7 +614,7 @@ public sealed class BuildGestures
             return;
         }
 
-        _build.SetCameraAim(start.Sensor, CameraRays.AimAlong(Math.Atan2(position.Y - middle.Y, position.X - middle.X), nodeA, nodeB));
+        _build.SetParameter(PartParameterId.Aim, CameraRays.AimAlong(Math.Atan2(position.Y - middle.Y, position.X - middle.X), nodeA, nodeB));
     }
 
     private (Vector2D NodeA, Vector2D NodeB) CameraBeam(int sensorId)

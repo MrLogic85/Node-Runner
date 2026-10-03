@@ -37,7 +37,7 @@ public static class PistonDrawing
     /// <param name="longest">The Piston's longest length, centre to centre.</param>
     /// <param name="line">The rod, cylinder and cap colour: <c>accent</c>, or <c>danger</c> while too short.</param>
     /// <param name="selected">Whether to draw the selection halo.</param>
-    /// <param name="showStroke">Whether a selected Piston also shows its stroke ticks; not in a Select group (#704).</param>
+    /// <param name="showStroke">Whether a selected Piston also shows its stroke ticks: only while its Stroke can be set (#704).</param>
     public static void Draw(
         CanvasItem canvas,
         Transform2D drawTransform,

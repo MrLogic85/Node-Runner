@@ -1,4 +1,5 @@
 using Godot;
+using NodeRunner.App.Builders;
 using NodeRunner.App.Navigation;
 using NodeRunner.App.ViewModels;
 using NodeRunner.Domain;
@@ -112,8 +113,7 @@ public partial class BuildHost : Node, IRoutedScene
         _buildScreen.Setup(Build);
         _buildScreen.ToolRequested += tool => Build.ActiveTool = tool;
         _buildScreen.PartPicked += Build.PickPart;
-        _buildScreen.PistonSettingsChanged += Build.SetPistonSettings;
-        _buildScreen.SharedSettingChanged += (setting, value) => Build.SetSharedSetting((PistonSetting)setting, value);
+        _buildScreen.ParameterChanged += (parameter, value) => Build.SetParameter((PartParameterId)parameter, value);
         _buildScreen.StartTrainingRequested += StartTraining;
         _buildScreen.BackRequested += BackFromBuildScreen;
         _buildScreen.CreationNameChanged += RenameActiveCreation;

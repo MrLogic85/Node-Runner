@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using Godot;
+using NodeRunner.App.Builders;
 using NodeRunner.App.Lifecycle;
 using NodeRunner.App.ViewModels;
 using NodeRunner.Domain;
@@ -362,7 +363,8 @@ public partial class BuildCanvas : Node2D
     private void DrawPistons(PartSet selected)
     {
         var viewTransform = ViewTransform();
-        foreach (var piston in _viewModel!.Pistons)
+        var showStroke = _viewModel!.CanEdit(PartParameterId.Stroke);
+        foreach (var piston in _viewModel.Pistons)
         {
             var nodeA = NodeById(piston.NodeA);
             var nodeB = NodeById(piston.NodeB);
@@ -379,7 +381,7 @@ public partial class BuildCanvas : Node2D
                 (float)Piston.LongestLength(built, piston.Stroke),
                 CreatureReadiness.IsTooShort(nodeA, nodeB) ? Theme.Danger : Theme.MotorAccent,
                 selected.Pistons.Contains(piston.Id),
-                showStroke: _viewModel.SingleSelectedPistonId == piston.Id);
+                showStroke);
         }
     }
 
@@ -413,10 +415,10 @@ public partial class BuildCanvas : Node2D
         }
     }
 
-    /// <summary>The selected Camera's rays, over the joints so the creature never hides them (#623).</summary>
+    /// <summary>The Camera's rays while its aim can be set, over the joints so the creature never hides them (#623).</summary>
     private void DrawSelectedCameraRays()
     {
-        if (_viewModel!.SingleSelectedSensorId is not { } id
+        if (_viewModel!.AimableCameraId is not { } id
             || _viewModel.Sensors.Single(sensor => sensor.Id == id) is not { Kind: SensorKind.Camera } camera)
         {
             return;

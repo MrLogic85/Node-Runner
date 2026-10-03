@@ -7,7 +7,7 @@ namespace NodeRunner.App.ViewModels;
 /// </summary>
 public sealed record SelectionPanelPresentation(
     string Title,
-    IReadOnlyList<SharedSlider> Settings,
+    IReadOnlyList<ParameterSlider> Settings,
     string SettingsNote,
     string EmptyNote,
     bool ShowFrameRows,

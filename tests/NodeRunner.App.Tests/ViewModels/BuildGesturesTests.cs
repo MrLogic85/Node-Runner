@@ -1357,7 +1357,7 @@ public class BuildGesturesTests
     {
         var (build, gestures) = BeamWithSensor(100, SensorKind.Camera);
         build.SelectSensor(4);
-        build.SetCameraAim(4, 0);
+        build.SetParameter(PartParameterId.Aim, 0);
 
         var handle = gestures.SelectionHandles.Single().Position;
 
@@ -1371,7 +1371,7 @@ public class BuildGesturesTests
     {
         var (build, gestures) = BeamWithSensor(100, SensorKind.Camera);
         build.SelectSensor(4);
-        build.SetCameraAim(4, 0);
+        build.SetParameter(PartParameterId.Aim, 0);
         var pictureReach = SensorPicture.CameraSize / Math.Sqrt(2);
         var gaps = 8 + BuildGestures.HandleHitRadius;
 
