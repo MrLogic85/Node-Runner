@@ -46,6 +46,17 @@ public sealed class BuildPresentationViewModelTests
         new BuildPresentationViewModel(build).LatestDistanceText.ShouldBe("Latest distance 2.5 m");
     }
 
+    [Theory]
+    [InlineData(1, "Trained 1 generation")]
+    [InlineData(12, "Trained 12 generations")]
+    public void TrainingSummaryTitle_CountsGenerations(int generation, string expected)
+    {
+        var build = new BuildViewModel();
+        build.LoadCreation(new CreationDef(Guid.NewGuid(), "Worm", PairCreature(), TestTraining.State(generation)));
+
+        new BuildPresentationViewModel(build).TrainingSummaryTitle.ShouldBe(expected);
+    }
+
     [Fact]
     public void SelectedBeam_ShowsNameEndsAndLengthGuidance()
     {

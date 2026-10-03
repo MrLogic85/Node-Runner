@@ -73,7 +73,7 @@ public sealed class BuildPresentationViewModel
     public string MoveOnlyLockReason => "Move only · training kept";
 
     public string TrainingSummaryTitle => _build.TrainingGeneration is { } generation
-        ? $"Trained {generation} generations"
+        ? $"Trained {CreationCardPresentation.FormatCount(generation, "generation")}"
         : "Not trained yet";
 
     public string TrainingSummaryBody => _build.TrainingGeneration is not null

@@ -48,8 +48,6 @@ public sealed record CreationCardTraining(
             Metres.Format(run.TopSpeed),
             Metres.Format(run.Elevation),
             run.MapId,
-            training.Generation == 1
-                ? "1 generation"
-                : $"Latest of {CreationCardPresentation.FormatCount(training.Generation, "generation")}");
+            CreationCardPresentation.FormatCount(training.Generation, "generation"));
     }
 }
