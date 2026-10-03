@@ -16,9 +16,13 @@ public partial class Creature : Node2D
     private const uint _groundLayer = 1u;
     private const uint _creatureLayer = 1u << 1;
 
-    // A beam's weight is simulated as half on each of its end nodes, so a node's
-    // mass is the sum of half of every beam it joins.
+    // A beam's or Piston's weight is simulated as half on each of its end nodes, so a node's
+    // mass is the sum of half of every beam and Piston it joins.
     private const float _beamWeight = 1.2f;
+
+    // A Piston's end-stop cylinder weighs half a beam on top (#731), so Godot's joints can hold it
+    // on its node A.
+    private const float _cylinderMass = _beamWeight / 2;
 
     // The beam body itself is nearly massless (Godot needs some mass) and only
     // carries sensors between its two nodes.
@@ -534,7 +538,7 @@ public partial class Creature : Node2D
         }
     }
 
-    // A node is its own body with a circle collider, weighing half of each beam it joins. Its rotation is locked:
+    // A node is its own body with a circle collider, weighing half of each beam and Piston it joins. Its rotation is locked:
     // a free-spinning circle pinned at its centre would roll like a wheel and give
     // the creature no grip on the ground.
     private void CreateNodes(CreatureDef definition)
@@ -550,6 +554,12 @@ public partial class Creature : Node2D
         {
             masses[definition.NodeIndexOf(beam.NodeA)] += _beamWeight / 2;
             masses[definition.NodeIndexOf(beam.NodeB)] += _beamWeight / 2;
+        }
+
+        foreach (var piston in definition.Pistons)
+        {
+            masses[definition.NodeIndexOf(piston.NodeA)] += _beamWeight / 2;
+            masses[definition.NodeIndexOf(piston.NodeB)] += _beamWeight / 2;
         }
 
         for (var i = 0; i < count; i++)
@@ -753,12 +763,12 @@ public partial class Creature : Node2D
         }
     }
 
-    // A Piston's end stops are a hard limit, as in a real cylinder (#701): a nearly massless,
-    // collider-free cylinder body turns freely on node A, and Godot's GrooveJoint2D lets node B
+    // A Piston's end stops are a hard limit, as in a real cylinder (#701): a collider-free
+    // cylinder body turns freely on node A, and Godot's GrooveJoint2D lets node B
     // slide only along the cylinder between the stroke's two ends. The groove needs that body:
     // nodes have locked rotation, so a groove on node A would keep one world direction instead of
-    // turning with the Piston. It weighs as much as the lightest node: a tenth of that let the
-    // joint give three times as far past an end (#701 probe). Inside the stroke the groove
+    // turning with the Piston. It weighs half a beam (#731): Godot's joints give far past an end
+    // when the cylinder or its nodes are much lighter than the rest. Inside the stroke the groove
     // pushes nothing along the piston, so only the piston's own force moves it; at an end it
     // holds whatever the load.
     private void CreateEndStops(int index)
@@ -777,10 +787,10 @@ public partial class Creature : Node2D
             CollisionMask = 0,
             Position = a,
             Rotation = rotation,
-            Mass = _beamBodyMass,
+            Mass = _cylinderMass,
             CenterOfMassMode = RigidBody2D.CenterOfMassModeEnum.Custom,
             CenterOfMass = Vector2.Zero,
-            Inertia = _beamBodyMass * _beamInertiaThickness * _beamInertiaThickness / 12,
+            Inertia = _cylinderMass * _beamInertiaThickness * _beamInertiaThickness / 12,
             CanSleep = false,
         };
         AddChild(cylinder);

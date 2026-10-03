@@ -81,7 +81,7 @@ Long-form descriptions and the sensor/model contract live in
   ring with a fine inner ring. See: `docs/CREATURE_MODEL.md`.
 - **Piston** — A powered link between two nodes (#451) that pushes them
   apart or pulls them together. Not a beam: inside its stroke it adds no
-  rigidity, and it adds only a little weight; its end stops are hard. Gives the brain its length and speed, and takes a position and a
+  rigidity; it weighs one and a half beams, and its end stops are hard. Gives the brain its length and speed, and takes a position and a
   strength output. See: `docs/CREATURE_MODEL.md`.
 - **Port** — One brain channel a part declares (`BrainPort`): the part's id,
   a channel key that never changes, whether it is an input or an output, and

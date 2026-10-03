@@ -14,8 +14,8 @@ the model this implements.**
    forces and drives its moving parts."
 3. **Physics uses Godot built-ins.** Each node and each beam is its own
    `RigidBody2D`; a `PinJoint2D` pins every beam to its two nodes. Only
-   nodes collide (a circle each); beams have no collider and their weight
-   sits on their nodes. Beam rigidity is geometric (fixed pin distance), not
+   nodes collide (a circle each); beams and Pistons have no collider and
+   their weight sits on their nodes. Beam rigidity is geometric (fixed pin distance), not
    spring-based. Each Piston also has a hidden, collider-free cylinder body
    pinned to node A and grooved to node B for its end stops (#701; see
    `docs/CREATURE_MODEL.md`): anything that moves or resets every body must
