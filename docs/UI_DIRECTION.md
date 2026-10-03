@@ -227,7 +227,7 @@ reference would mislead someone working on that surface.
     Training.
   - *Orientation:* the side of the beam that faces up as built is the
     sensor's top, and it then turns with the beam; it never flips during a
-    run. The Camera looks along its aim. A selected Camera draws its rays
+    run. The Camera looks along its aim. A Camera selected alone draws its rays
     from the midpoint plus an Aim handle (the rotate handle's glyph) out
     along its centre ray past the picture, with no stem; dragging it turns
     the camera smoothly, with no snap. In Training a Camera on the followed

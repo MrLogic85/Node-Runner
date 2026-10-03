@@ -168,14 +168,16 @@ public sealed class BuildPresentationViewModel
         _ => throw new ArgumentOutOfRangeException(nameof(kind)),
     };
 
-    /// <summary>The selection panel, or null unless several parts are selected.</summary>
+    /// <summary>The selection panel, or null unless several parts are selected. Its count includes what a group carries (#704).</summary>
     public SelectionPanelPresentation? Selection => _build.SelectedPartCount > 1
         ? new SelectionPanelPresentation(
-            $"{_build.SelectedPartCount} selected",
-            $"Delete {_build.SelectedPartCount}",
+            $"{SelectionCount} selected",
+            $"Delete {SelectionCount}",
             "Beams on a deleted node go with it.",
             CanDelete: !_build.IsMoveOnly)
         : null;
+
+    private int SelectionCount => _build.SelectedPartCount + _build.SelectedGroupParts.Count;
 
     public bool LockTopologyTools => _build.IsMoveOnly;
 

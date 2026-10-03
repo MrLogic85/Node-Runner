@@ -68,26 +68,30 @@ a node's own ring always hits.
 - **Joint:** tap empty canvas to add a node, or tap a beam to split it at the
   closest point: one change that replaces the beam with two through the new
   node (`BuildViewModel.SplitBeam`).
-- **Select (#366):** tap a node to add it and tap a selected one to remove
-  it; drag on empty canvas (beams count as empty) for a box that replaces
-  the selection; an empty tap clears it. Two or more selected joints get a
-  dashed frame with three `UiSelectionHandle`s: **Move** in the middle (or
+- **Select (#366, #704):** two or more selected joints are a *group*, with
+  a dashed frame and three `UiSelectionHandle`s: **Move** in the middle (or
   drag anywhere inside the frame, or a selected joint), **Rotate** on a stem
-  above and **Scale** at the bottom-right corner. After a Rotate the frame
-  stays turned until the selection changes (`docs/UI_DIRECTION.md` → "The
-  Select frame keeps its turn"). A dragged box halos the joints
-  it would select. Rotate and Scale turn about the frame's centre, under the
-  Move handle; Scale counts only the drag along
-  its diagonal and is clamped to `MinSelectionScale`..`MaxSelectionScale`,
-  so the group never collapses or reflects. Every drag frame is computed
-  from a `SelectionSnapshot` taken when the drag starts, so nothing drifts.
-  A move stops the group as a whole at the build area's edge; a turn or
-  scale that would leave it is ignored. The frame and handles keep their
-  screen size at any zoom, the frame clears the selected joints' halos,
-  and each handle hits within `HandleHitRadius`; a tap (not a drag) on a
-  joint under a handle still adds or removes that joint. A locked
-  creation keeps all three handles: like a move, scaling changes only
-  beam lengths, never which parts there are.
+  above and **Scale** at the bottom-right corner.
+  - With a group, any other drag pans. A tap on a joint adds or removes it,
+    a tap on a beam, sensor or Piston adds or removes its joints, and an
+    empty tap clears.
+  - With no group, a tap selects one joint or part alone (a tap on the
+    selected joint clears it), a drag from a joint selects and moves only
+    it, and any other drag draws a box that replaces the selection.
+  - A group, and a box being dragged, shows the beams with both joints in
+    it, their sensors and the Pistons between its joints as selected
+    (`BuildViewModel.PartsWithin`); the group itself is only its joints.
+  - After a Rotate the frame stays turned until the selection changes
+    (`docs/UI_DIRECTION.md` → "The Select frame keeps its turn"). Rotate
+    and Scale turn about the frame's centre; Scale counts only the drag
+    along its diagonal and is clamped to
+    `MinSelectionScale`..`MaxSelectionScale`. Every drag frame is computed
+    from a `SelectionSnapshot` taken when the drag starts, so nothing
+    drifts.
+  - A move stops the group at the build area's edge; a turn or scale that
+    would leave it is ignored. The frame and handles keep their screen size
+    at any zoom, and each handle hits within `HandleHitRadius`. A locked
+    creation keeps all three handles: scaling changes only beam lengths.
 - **Sensors:** an Accelerometer (#127) and a Camera (#575) sit on a
   beam, one per beam. Drag one from the Parts tray onto a beam to place it
   (#376; see Parts tray below). Deleting a beam deletes its sensor;
@@ -105,7 +109,7 @@ a node's own ring always hits.
   a tab change or leaving Build. A new Piston is not selected. Taps hit a
   joint, then a sensor, then a Piston, then a beam. Deleting a joint deletes
   its Pistons.
-- **Camera aim (#594, #622):** a selected Camera shows its rays and an Aim
+- **Camera aim (#594, #622):** a Camera selected alone shows its rays and an Aim
   handle out along its centre ray past its picture, in any tool, with no
   stem line. It always sits twice as far from the camera's middle as a
   handle just clear of the picture would, so it follows the zoom smoothly; it may cover a joint, which then can't be tapped there while
@@ -222,7 +226,8 @@ them.
 ## Selection panel
 
 Several selected joints show the selection panel instead (#558). Its title
-row carries the Select glyph and "N selected"; there is no close button.
+row carries the Select glyph and "N selected", where N counts the joints and
+the parts they carry (#704); there is no close button.
 Three `UiInfoRow`s explain the canvas handles (Move, Rotate, Scale), then a
 full-width hold-to-activate danger **Delete N** with the note "Beams on a
 deleted node go with it." (`BuildViewModel.DeleteSelectedParts`). A locked

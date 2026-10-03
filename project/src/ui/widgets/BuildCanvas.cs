@@ -313,6 +313,9 @@ public partial class BuildCanvas : Node2D
         DrawBeamPreview();
         DrawRigidTriangles();
 
+        // A group, or the joints a dragged Select box would catch, shows what it carries (#704).
+        var caught = _gestures.SelectionBoxCatches;
+        var carried = caught.Count > 0 ? _viewModel.PartsWithin(caught) : _viewModel.SelectedGroupParts;
         foreach (var beam in _viewModel.Beams)
         {
             var nodeA = NodeById(beam.NodeA);
@@ -325,16 +328,15 @@ public partial class BuildCanvas : Node2D
             // A beam too short for training (#593) is drawn in danger until its joints move apart.
             var color = CreatureReadiness.IsTooShort(nodeA, nodeB) ? Theme.Danger : Theme.Beam;
             DrawLine(start, end, color, Stroke(Theme.BeamWidth), antialiased: false);
-            if (_viewModel.SingleSelectedBeamId == beam.Id)
+            if (_viewModel.SingleSelectedBeamId == beam.Id || carried.Beams.Contains(beam.Id))
             {
                 SelectionDrawing.DrawBeam(this, ViewTransform(), Theme.SelectionGlow, Stroke(Theme.SelectedBeamOffset), Stroke(Theme.SelectedBeamLineWidth), start, end);
             }
         }
 
-        DrawPistons();
-        DrawSensors();
+        DrawPistons(carried);
+        DrawSensors(carried);
 
-        var caught = _gestures.SelectionBoxCatches.ToHashSet();
         for (var nodeIndex = 0; nodeIndex < _viewModel.Nodes.Count; nodeIndex++)
         {
             var node = _viewModel.Nodes[nodeIndex];
@@ -358,7 +360,7 @@ public partial class BuildCanvas : Node2D
     }
 
     /// <summary>Each Piston over the beams (#451); one too short to train is drawn in danger, like a beam.</summary>
-    private void DrawPistons()
+    private void DrawPistons(GroupParts carried)
     {
         var viewTransform = ViewTransform();
         foreach (var piston in _viewModel!.Pistons)
@@ -377,7 +379,8 @@ public partial class BuildCanvas : Node2D
                 (float)Piston.ShortestLength(built, piston.Stroke),
                 (float)Piston.LongestLength(built, piston.Stroke),
                 CreatureReadiness.IsTooShort(nodeA, nodeB) ? Theme.Danger : Theme.MotorAccent,
-                _viewModel.SingleSelectedPistonId == piston.Id);
+                _viewModel.SingleSelectedPistonId == piston.Id || carried.Pistons.Contains(piston.Id),
+                showStroke: _viewModel.SingleSelectedPistonId == piston.Id);
         }
     }
 
@@ -393,13 +396,13 @@ public partial class BuildCanvas : Node2D
     /// side: the Accelerometer with its weight where <see cref="BuildSensorMotion"/> has it, and
     /// the camera looking along its rays (drawn later, over the joints).
     /// </summary>
-    private void DrawSensors()
+    private void DrawSensors(GroupParts carried)
     {
         var viewTransform = ViewTransform();
         foreach (var sensor in _viewModel!.Sensors)
         {
             var beam = _viewModel.Beams[_viewModel.BeamIndexOf(sensor.BeamId)];
-            DrawSensor(beam, sensor.Kind, sensor.Aim, sensor.Id, _viewModel.SingleSelectedSensorId == sensor.Id, viewTransform);
+            DrawSensor(beam, sensor.Kind, sensor.Aim, sensor.Id, _viewModel.SingleSelectedSensorId == sensor.Id || carried.Sensors.Contains(sensor.Id), viewTransform);
         }
 
         // The sensor a tray drag would place on the free beam under the finger (#376).

@@ -109,7 +109,7 @@ CreatureDef  ──build──▶  physical body  ──sensors──▶  model 
   Accelerometer's weight hangs on its spring: in Build it swings when the
   beam is moved and settles at rest (`BuildSensorMotion`), in Training it
   follows the live proof mass. The Camera looks along its
-  aim. In Build a selected Camera shows its full rays; in Training every
+  aim. In Build a Camera selected alone shows its full rays; in Training every
   Camera on the followed shadow shows the rays that hit the ground, up to
   the hit, with a `halo` ring there (#623), and nothing for a ray that sees
   nothing. Rays are drawn over the joints, by draw order, not z-index
@@ -218,7 +218,7 @@ a composition of triangles; a bare quadrilateral stays free to fold.
 - **Minimum length:** the same as a beam's (`CreatureReadiness.MinimumBeamGap`).
 - **Drawn** as a rod from node A to node B with a cylinder at A and a cap at
   B (`project/src/theme/PistonDrawing.cs`), over beams and under joints. A
-  selected Piston shows ticks at its shortest and longest lengths.
+  Piston selected alone shows ticks at its shortest and longest lengths.
 
 ## Drawing as a shadow
 

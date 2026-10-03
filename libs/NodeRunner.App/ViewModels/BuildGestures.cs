@@ -73,6 +73,8 @@ public sealed class BuildGestures
     private (int[] Nodes, int? Beam, int? Sensor, int? Piston)? _selectionBefore;
     private SelectionHandle? _pressedHandle;
     private bool _pressedNodeWasSelected;
+    private bool _pressedInGroup;
+    private SelectPress _selectPress;
     private SelectionSnapshot? _selectionStart;
     private FrameLayout? _dragLayout;
     private double _turn;
@@ -295,14 +297,14 @@ public sealed class BuildGestures
             return;
         }
 
-        // Joints, then sensors, then Pistons, then beams; a joint's wider touch reach only counts off
-        // its ring, so it never covers a sensor picture next to it. A Piston draws over the beams it
-        // crosses, so it is hit first.
+        // Joints, then sensors, then Pistons, then beams, also under a frame handle so a tap there
+        // still reaches them; a joint's wider touch reach only counts off its ring, so it never covers
+        // a sensor picture next to it. A Piston draws over the beams it crosses, so it is hit first.
         if (_build.TryFindNodeNear(position, 0, out var nodeId))
         {
             _pressedNode = nodeId;
         }
-        else if (_pressedHandle is null && _build.TryFindSensorAt(position, out var sensorId))
+        else if (_build.TryFindSensorAt(position, out var sensorId))
         {
             _pressedSensor = sensorId;
         }
@@ -310,11 +312,11 @@ public sealed class BuildGestures
         {
             _pressedNode = nodeId;
         }
-        else if (_pressedHandle is null && _build.TryFindPistonNear(position, HitDistance(BeamHitDistance), out var pistonId))
+        else if (_build.TryFindPistonNear(position, HitDistance(BeamHitDistance), out var pistonId))
         {
             _pressedPiston = pistonId;
         }
-        else if (_pressedHandle is null && _build.TryFindBeamNear(position, HitDistance(BeamHitDistance), out var beamId))
+        else if (_build.TryFindBeamNear(position, HitDistance(BeamHitDistance), out var beamId))
         {
             _pressedBeam = beamId;
         }
@@ -326,9 +328,15 @@ public sealed class BuildGestures
                 BeamEnd = position;
                 Changed?.Invoke(this, EventArgs.Empty);
                 break;
-            case BuildTool.Select when _pressedHandle is null:
-                _selectionBefore = ([.. _build.SelectedNodeIds], _build.SingleSelectedBeamId, _build.SingleSelectedSensorId, _build.SingleSelectedPistonId);
-                PressSelect(viewPosition, position);
+            case BuildTool.Select:
+                _pressedInGroup = _build.SelectedNodeCount >= 2;
+                _pressedNodeWasSelected = _pressedNode is { } node && _build.SelectedNodeIds.Contains(node);
+                if (_pressedHandle is null)
+                {
+                    _selectionBefore = ([.. _build.SelectedNodeIds], _build.SingleSelectedBeamId, _build.SingleSelectedSensorId, _build.SingleSelectedPistonId);
+                    PressSelect(viewPosition, position);
+                }
+
                 break;
         }
     }
@@ -356,12 +364,16 @@ public sealed class BuildGestures
                     _aimStart = (camera, _build.Sensors.Single(sensor => sensor.Id == camera).Aim ?? 0);
                 }
             }
-            else if (_pressTool == BuildTool.Select && (_pressedHandle is not null || _pressedNode is not null))
+            else if (_pressTool == BuildTool.Select && (_pressedHandle is not null || _selectPress == SelectPress.Move))
             {
                 // The group turns and scales about the frame's centre, where the Move handle is.
                 _dragLayout = Layout();
                 _selectionStart = _build.SnapshotSelection(_dragLayout is { } layout ? View.ToCanvas(layout.Move) : null);
                 NodeDragStarting?.Invoke(this, [.. _selectionStart.Positions.Keys]);
+            }
+            else if (_selectPress == SelectPress.Box)
+            {
+                _build.ClearSelection();
             }
             else if (_pressTool == BuildTool.Move && _pressedNode is { } dragged)
             {
@@ -385,6 +397,7 @@ public sealed class BuildGestures
                 _build.MoveNode(node, position);
                 break;
             case BuildTool.Move:
+            case BuildTool.Select when _selectPress == SelectPress.Pan:
                 View.PanBy(new Vector2D(viewPosition.X - lastViewPosition.X, viewPosition.Y - lastViewPosition.Y));
                 break;
             case BuildTool.Beam when BeamStartNodeId is { } start:
@@ -443,15 +456,14 @@ public sealed class BuildGestures
             case BuildTool.Joint when !_dragging:
                 TapJoint();
                 break;
+            case BuildTool.Select when !_dragging:
+                TapSelect();
+                break;
             case BuildTool.Select when SelectionBox is { } box:
                 CompleteSelectionBox(box.Start, position);
                 break;
-            case BuildTool.Select when _dragging && _pressedHandle == SelectionHandle.Rotate && _dragLayout is { } turned:
+            case BuildTool.Select when _pressedHandle == SelectionHandle.Rotate && _dragLayout is { } turned:
                 _frameAngle = Math.IEEERemainder(turned.Angle + _turn, 2 * Math.PI);
-                break;
-            case BuildTool.Select when !_dragging && (_pressedNodeWasSelected || _pressedHandle is not null) && _pressedNode is { } tapped:
-                // A handle drags; a tap on a joint under it still adds or removes that joint.
-                _build.ToggleSelectedNode(tapped);
                 break;
         }
 
@@ -511,30 +523,96 @@ public sealed class BuildGestures
     }
 
     /// <summary>
-    /// A press on a joint adds it (a tap on one already selected removes it
-    /// on release); a press inside the frame drags the selection; anywhere
-    /// else, sensors and beams included, clears the selection and starts a box.
+    /// With a group (#704), a press on a selected joint or inside the frame drags the group, and
+    /// any other press pans. With none, a press on a joint selects only it and drags it, and any
+    /// other press draws a box. Taps are settled on release (<see cref="TapSelect"/>).
     /// </summary>
     private void PressSelect(Vector2D viewPosition, Vector2D position)
     {
+        if (_pressedInGroup)
+        {
+            if (_pressedNodeWasSelected)
+            {
+                _selectPress = SelectPress.Move;
+            }
+            else if (Layout() is { } layout && FrameContains(layout, viewPosition))
+            {
+                _pressedHandle = SelectionHandle.Move;
+            }
+            else
+            {
+                _selectPress = SelectPress.Pan;
+            }
+        }
+        else if (_pressedNode is { } joint)
+        {
+            _selectPress = SelectPress.Move;
+            if (!_pressedNodeWasSelected)
+            {
+                _build.ReplaceSelection([joint]);
+            }
+        }
+        else
+        {
+            _selectPress = SelectPress.Box;
+            SelectionBox = (position, position);
+            Changed?.Invoke(this, EventArgs.Empty);
+        }
+    }
+
+    /// <summary>
+    /// A Select tap (#704). In a group a joint, or a part's joints, are added or removed, and an
+    /// empty tap clears. With no group a joint was selected on press (a tap on the one already
+    /// selected removes it), a part is selected alone, and an empty tap clears.
+    /// </summary>
+    private void TapSelect()
+    {
         if (_pressedNode is { } node)
         {
-            _pressedNodeWasSelected = _build.SelectedNodeIds.Contains(node);
-            if (!_pressedNodeWasSelected)
+            if (_pressedInGroup || _pressedNodeWasSelected)
             {
                 _build.ToggleSelectedNode(node);
             }
         }
-        else if (Layout() is { } layout && FrameContains(layout, viewPosition))
+        else if (_pressedInGroup)
         {
-            _pressedHandle = SelectionHandle.Move;
+            if (TappedPartJoints() is { } joints)
+            {
+                _build.ToggleSelectedNodes(joints);
+            }
+            else if (_pressedHandle is null)
+            {
+                _build.ClearSelection();
+            }
         }
         else
         {
-            _build.ClearSelection();
-            SelectionBox = (position, position);
-            Changed?.Invoke(this, EventArgs.Empty);
+            TapMove();
         }
+    }
+
+    /// <summary>The joints of the beam, sensor (its beam) or Piston the press hit, if any.</summary>
+    private int[]? TappedPartJoints()
+    {
+        if (_pressedSensor is { } sensor)
+        {
+            var beam = _build.Beams[_build.BeamIndexOf(_build.Sensors.Single(entry => entry.Id == sensor).BeamId)];
+            return [beam.NodeA, beam.NodeB];
+        }
+
+        if (_pressedPiston is { } pistonId)
+        {
+            var piston = _build.Pistons.Single(entry => entry.Id == pistonId);
+            return [piston.NodeA, piston.NodeB];
+        }
+
+        if (_pressedBeam is { } beamId)
+        {
+            var beam = _build.Beams[_build.BeamIndexOf(beamId)];
+            return [beam.NodeA, beam.NodeB];
+        }
+
+        return null;
     }
 
     private void TapMove()
@@ -798,6 +876,8 @@ public sealed class BuildGestures
         _selectionBefore = null;
         _pressedHandle = null;
         _pressedNodeWasSelected = false;
+        _pressedInGroup = false;
+        _selectPress = SelectPress.None;
         _selectionStart = null;
         _dragLayout = null;
         _turn = 0;
@@ -831,5 +911,14 @@ public sealed class BuildGestures
         var dx = a.X - b.X;
         var dy = a.Y - b.Y;
         return Math.Sqrt((dx * dx) + (dy * dy));
+    }
+
+    /// <summary>What a Select press away from the handles does once it drags (#704).</summary>
+    private enum SelectPress
+    {
+        None,
+        Move,
+        Pan,
+        Box,
     }
 }

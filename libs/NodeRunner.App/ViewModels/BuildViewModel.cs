@@ -384,6 +384,16 @@ public sealed class BuildViewModel : INotifyPropertyChanged
 
     public IReadOnlyCollection<int> SelectedNodeIds => _selectedNodeIds;
 
+    /// <summary>
+    /// What a group of joints carries (#704): each beam with both joints in
+    /// <paramref name="nodeIds"/>, those beams' sensors, and each Piston between two of them.
+    /// </summary>
+    public GroupParts PartsWithin(IReadOnlyCollection<int> nodeIds) =>
+        GroupParts.Within(nodeIds, _builder.Beams, _builder.Sensors, _builder.Pistons);
+
+    /// <summary>The parts the selected group carries; none unless two or more joints are selected.</summary>
+    public GroupParts SelectedGroupParts => _selectedNodeIds.Count < 2 ? GroupParts.None : PartsWithin(_selectedNodeIds);
+
     /// <summary>Places a new node, moved inside <see cref="BuildArea"/>, and returns its id.</summary>
     public int PlaceNode(Vector2D position)
     {
@@ -404,13 +414,27 @@ public sealed class BuildViewModel : INotifyPropertyChanged
         AnatomyChanged?.Invoke(this, EventArgs.Empty);
     }
 
-    public void ToggleSelectedNode(int nodeId)
-    {
-        _builder.NodeIndexOf(nodeId);
+    public void ToggleSelectedNode(int nodeId) => ToggleSelectedNodes([nodeId]);
 
-        if (!_selectedNodeIds.Add(nodeId))
+    /// <summary>
+    /// Adds <paramref name="nodeIds"/> to the selected joints, or removes them all when every one is
+    /// already selected.
+    /// </summary>
+    public void ToggleSelectedNodes(IReadOnlyCollection<int> nodeIds)
+    {
+        ArgumentNullException.ThrowIfNull(nodeIds);
+        foreach (var nodeId in nodeIds)
         {
-            _selectedNodeIds.Remove(nodeId);
+            _builder.NodeIndexOf(nodeId);
+        }
+
+        if (nodeIds.All(_selectedNodeIds.Contains))
+        {
+            _selectedNodeIds.ExceptWith(nodeIds);
+        }
+        else
+        {
+            _selectedNodeIds.UnionWith(nodeIds);
         }
 
         _selectedBeamId = null;

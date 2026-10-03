@@ -55,6 +55,42 @@ public sealed class BuildViewModelTests
     }
 
     [Fact]
+    public void PartsWithin_HoldsTheBeamsWithBothJointsIn_TheirSensors_AndThePistonsBetweenThem()
+    {
+        var build = new BuildViewModel();
+        build.Load(new CreatureDef(
+            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(90, 0)), new NodeDef(3, new Vector2D(180, 0))],
+            [new BeamDef(101, 1, 2), new BeamDef(102, 2, 3)],
+            [new SensorDef(201, 101, SensorKind.Accelerometer), new SensorDef(202, 102, SensorKind.Accelerometer)],
+            [new PistonDef(301, 1, 3)]));
+
+        var parts = build.PartsWithin([1, 2]);
+        parts.Beams.ShouldBe([101]);
+        parts.Sensors.ShouldBe([201]);
+        parts.Pistons.ShouldBeEmpty();
+
+        build.PartsWithin([1, 3]).Pistons.ShouldBe([301]);
+        build.PartsWithin([1, 3]).Beams.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void ToggleSelectedNodes_AddsTheMissingOnes_OrRemovesThemAllWhenAllAreIn()
+    {
+        var build = new BuildViewModel();
+        build.Load(new CreatureDef(
+            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(90, 0)), new NodeDef(3, new Vector2D(180, 0))],
+            [],
+            []));
+        build.ReplaceSelection([1, 3]);
+
+        build.ToggleSelectedNodes([1, 2]);
+        build.SelectedNodeIds.ShouldBe([1, 2, 3], ignoreOrder: true);
+
+        build.ToggleSelectedNodes([1, 2]);
+        build.SelectedNodeIds.ShouldBe([3]);
+    }
+
+    [Fact]
     public void SnapshotSelection_PivotsOnTheCentreOfTheJointsBounds()
     {
         var viewModel = SelectedPair();

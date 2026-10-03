@@ -218,16 +218,16 @@ public sealed class BuildPresentationViewModelTests
     }
 
     [Fact]
-    public void Selection_CountsTheJointsAndOffersDelete()
+    public void Selection_CountsTheJointsAndWhatTheyCarry_AndOffersDelete()
     {
         var build = new BuildViewModel();
-        build.Load(PairCreature());
-        build.ToggleSelectedNode(1);
-        build.ToggleSelectedNode(2);
+        build.Load(PistonCreature());
+        build.ReplaceSelection([1, 2, 3]);
 
+        // Three joints, two beams, a sensor and a Piston (#704).
         new BuildPresentationViewModel(build).Selection.ShouldBe(new SelectionPanelPresentation(
-            "2 selected",
-            "Delete 2",
+            "7 selected",
+            "Delete 7",
             "Beams on a deleted node go with it.",
             CanDelete: true));
     }
@@ -243,7 +243,9 @@ public sealed class BuildPresentationViewModelTests
             TestTraining.State(3, 1, TestTraining.Run)));
         build.ReplaceSelection([1, 2]);
 
-        new BuildPresentationViewModel(build).Selection!.CanDelete.ShouldBeFalse();
+        var selection = new BuildPresentationViewModel(build).Selection!;
+        selection.Title.ShouldBe("4 selected");
+        selection.CanDelete.ShouldBeFalse();
     }
 
     [Fact]
