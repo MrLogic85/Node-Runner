@@ -794,14 +794,10 @@ public sealed partial class UiButton : Button, ISerializationListener
 
     private void DrawRoundedRectOutline(Rect2 rect, float radius, Color color)
     {
+        using var pen = UiPixelPen.Begin(this);
         if (radius <= 0)
         {
-            DrawRect(
-                rect,
-                color,
-                filled: false,
-                width: UiSize.Stroke.Hair,
-                antialiased: false);
+            pen.Polyline([rect.Position, new Vector2(rect.End.X, rect.Position.Y), rect.End, new Vector2(rect.Position.X, rect.End.Y), rect.Position], color, UiSize.Stroke.Hair);
             return;
         }
 
@@ -815,7 +811,7 @@ public sealed partial class UiButton : Button, ISerializationListener
         for (int index = 0; index <= sampleCount; index++)
             points[index] = UiDashedBorder.PointOnRoundedRect(rect, radius, perimeter * index / sampleCount);
 
-        DrawPolyline(points, color, UiSize.Stroke.Hair, antialiased: false);
+        pen.Polyline(points, color, UiSize.Stroke.Hair);
     }
 
 }

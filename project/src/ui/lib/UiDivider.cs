@@ -68,12 +68,12 @@ public partial class UiDivider : Control
 
     public override void _Draw()
     {
-        var pixels = UiThemeLookup.Size(Thickness);
-        var line = Orientation == Orientation.Horizontal
-            ? new Rect2(0, (Size.Y - pixels) * 0.5f, Size.X, pixels)
-            : new Rect2((Size.X - pixels) * 0.5f, 0, pixels, Size.Y);
-        var color = UiThemeLookup.Color(this, _color);
-        DrawRect(line, color);
+        var middle = Size * 0.5f;
+        var (from, to) = Orientation == Orientation.Horizontal
+            ? (new Vector2(0, middle.Y), new Vector2(Size.X, middle.Y))
+            : (new Vector2(middle.X, 0), new Vector2(middle.X, Size.Y));
+        using var pen = UiPixelPen.Begin(this);
+        pen.Line(from, to, UiThemeLookup.Color(this, _color), UiThemeLookup.Size(Thickness));
     }
 
     private void Refresh()

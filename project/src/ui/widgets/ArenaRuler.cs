@@ -100,8 +100,11 @@ public partial class ArenaRuler : Node2D
     {
         var x = (float)mark.X;
         var length = (mark.IsMajor ? _majorTickLength : _minorTickLength) * screenScale;
-        DrawSetTransformMatrix(Transform2D.Identity);
-        DrawLine(new Vector2(x, 0), new Vector2(x, length), _theme.RulerTick, _theme.RulerTickWidth * screenScale);
+        using (var pen = UiPixelPen.Begin(this))
+        {
+            pen.Line(new Vector2(x, 0), new Vector2(x, length), _theme.RulerTick, _theme.RulerTickWidth * screenScale);
+        }
+
         if (mark.Label.Length == 0)
         {
             return;

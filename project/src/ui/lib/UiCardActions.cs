@@ -67,10 +67,12 @@ public partial class UiCardActions : Container, IUiButtonDesigner
     {
         var hair = Hair;
         var color = UiThemeLookup.Color(this, UiTokens.Color.Line);
-        DrawRect(new Rect2(0, 0, Size.X, hair), color);
+        using var pen = UiPixelPen.Begin(this);
+        pen.Line(new Vector2(0, hair * 0.5f), new Vector2(Size.X, hair * 0.5f), color, hair);
         foreach (var cell in Cells().Skip(1))
         {
-            DrawRect(new Rect2(cell.Position.X - hair, hair, hair, Size.Y - hair), color);
+            var x = cell.Position.X - (hair * 0.5f);
+            pen.Line(new Vector2(x, hair), new Vector2(x, Size.Y), color, hair);
         }
     }
 

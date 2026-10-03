@@ -425,12 +425,12 @@ public partial class UiSlider : Control, ISerializationListener
         if (HasMarker)
         {
             var markerX = PositionFor(MarkerPosition, trackLeft, trackRight);
-            DrawLine(
+            using var pen = UiPixelPen.Begin(this);
+            pen.Line(
                 new Vector2(markerX, trackY - _style.MarkerHalfHeight),
                 new Vector2(markerX, trackY + _style.MarkerHalfHeight),
                 UiThemeLookup.Color(this, UiTokens.Color.Halo).ScaleAlpha(opacity),
-                UiSize.Stroke.Signal,
-                antialiased: false);
+                UiSize.Stroke.Signal);
         }
 
         for (var index = 0; index < value.ThumbCount; index++)
@@ -724,10 +724,11 @@ public partial class UiSlider : Control, ISerializationListener
         }
 
         var color = UiThemeLookup.Color(this, UiTokens.Color.LineStrong).ScaleAlpha(opacity);
+        using var pen = UiPixelPen.Begin(this);
         for (var index = 0; index < StepLabels.Length; index++)
         {
             var x = Mathf.Lerp(trackLeft, trackRight, index / (float)(StepLabels.Length - 1));
-            DrawLine(
+            pen.Line(
                 new Vector2(x, trackY - _style.StepTickHalfHeight),
                 new Vector2(x, trackY + _style.StepTickHalfHeight),
                 color,
@@ -739,7 +740,8 @@ public partial class UiSlider : Control, ISerializationListener
     {
         if (end.Kind == UiSliderEndKind.Marker)
         {
-            DrawLine(
+            using var pen = UiPixelPen.Begin(this);
+            pen.Line(
                 new Vector2(x, trackY - _style.StepTickHalfHeight),
                 new Vector2(x, trackY + _style.StepTickHalfHeight),
                 color,
@@ -754,13 +756,8 @@ public partial class UiSlider : Control, ISerializationListener
             return;
         }
 
-        DrawDashedLine(
-            new Vector2(startX, trackY),
-            new Vector2(endX, trackY),
-            color,
-            _style.TrackWidth,
-            _style.DisabledDashLength,
-            antialiased: false);
+        using var pen = UiPixelPen.Begin(this);
+        pen.DashedLine(new Vector2(startX, trackY), new Vector2(endX, trackY), color, _style.TrackWidth, _style.DisabledDashLength);
     }
 
     private void DrawRoundedTrackSegment(float startX, float endX, float trackY, Color color) =>
@@ -795,21 +792,21 @@ public partial class UiSlider : Control, ISerializationListener
             return;
         }
 
-        DrawCircle(
+        using var pen = UiPixelPen.Begin(this);
+        pen.Disc(
             center,
             _style.ThumbRadius - _style.DisabledThumbInset,
             UiThemeLookup.Color(this, UiTokens.Color.PanelRaised).ScaleAlpha(UiSliderStyle.DisabledOpacity));
         for (var index = 0; index < UiSliderStyle.DisabledThumbSegments; index += 2)
         {
-            DrawArc(
+            pen.Arc(
                 center,
                 _style.ThumbRadius,
                 Mathf.Tau * index / UiSliderStyle.DisabledThumbSegments,
                 Mathf.Tau * (index + 1) / UiSliderStyle.DisabledThumbSegments,
                 UiSliderStyle.DisabledThumbArcPoints,
                 color,
-                UiSize.Stroke.Hair,
-                antialiased: false);
+                UiSize.Stroke.Hair);
         }
     }
 
