@@ -12,7 +12,9 @@ namespace NodeRunner.Sim;
 /// </summary>
 public partial class ArenaGround : StaticBody2D
 {
-    // The fill and edge reach far past any trial, and the fill as deep, so no zoom shows an end.
+    // The fill and edge reach 10 km each way, and the fill as deep, so no zoom shows an end. A run
+    // has a set length, but Simulate (#702) runs until the player leaves, so a fast walker left there
+    // for hours could pass the drawn end; the collision ground is endless.
     private const float _reach = 1_000_000f;
 
     public void Build(MapGround ground, VisualTheme theme)

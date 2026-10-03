@@ -1,3 +1,4 @@
+using NodeRunner.App.Navigation;
 using NodeRunner.App.ViewModels;
 using NodeRunner.Domain;
 

@@ -37,6 +37,9 @@ public sealed record TrainingStateDef
     /// <summary>The best ever reached on the map it trained on.</summary>
     public TrainingBestDef Best { get; }
 
+    /// <summary>The best ever reached on <paramref name="mapId"/>, or null: a best is per map, so one reached elsewhere is not that map's record.</summary>
+    public TrainingBestDef? BestOn(string mapId) => Best.MapId == mapId ? Best : null;
+
     /// <summary>
     /// The training after <paramref name="generation"/> finished with <paramref name="latest"/> as its
     /// best run: latest is always replaced, and the best only when <paramref name="latest"/> scores
@@ -46,7 +49,7 @@ public sealed record TrainingStateDef
     public static TrainingStateDef Record(TrainingStateDef? previous, BrainDef brain, int generation, TrainingRunDef latest)
     {
         ArgumentNullException.ThrowIfNull(latest);
-        var kept = previous?.Best is { } previousBest && previousBest.MapId == latest.MapId ? previousBest : null;
+        var kept = previous?.BestOn(latest.MapId);
         var front = Furthest(kept?.FrontDistance, latest.FrontDistance);
         var best = kept is not null && kept.Distance >= latest.Distance
             ? new TrainingBestDef(kept.Generation, kept.Distance, kept.MapId, front)

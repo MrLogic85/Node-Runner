@@ -26,6 +26,10 @@ public static class DirectBrain
         return ports.Outputs.Select(port => ToActivation(PortSignals.Activation(port.Signal))).ToArray();
     }
 
+    /// <summary>The network <paramref name="brain"/> runs as on this creature's ports, as Simulate plays it (#702).</summary>
+    public static NeuralNetwork Network(BrainDef brain, BrainPortLayout ports) =>
+        NeuralNetwork.FromGenome(LayerSizes(ports), Compile(brain, ports), Activation.Tanh, OutputActivations(ports));
+
     /// <summary>The genome <paramref name="brain"/> gives this creature's ports. A disabled gene compiles to 0.</summary>
     public static double[] Compile(BrainDef brain, BrainPortLayout ports)
     {

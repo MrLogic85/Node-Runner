@@ -295,6 +295,8 @@ the generation in progress. Its layout is authored in `TrainingScreen.tscn`
 physics distances. Train setup (`TrainSetupRoute`, #194) sits between
 them: Start saves Shadows and Run length on the creation and opens
 Training without keeping Train setup, so Back from Training lands on Build.
+Its Simulate mode (#702) opens Training to play the saved brain instead
+(`TrainingRoute` with `TrainingRunMode.Simulate`): no `Evolver`, nothing saved.
 
 A screen stays in `ui/screens/` and knows nothing of saves or the router's
 type: it emits signals. The routed scene that holds it is a small host in

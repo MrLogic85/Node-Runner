@@ -36,7 +36,8 @@ public sealed record BuildRoute(Guid CreationId, bool IsNew = false) : SceneRout
 public sealed record TrainSetupRoute(Guid CreationId) : SceneRoute;
 
 /// <summary>
-/// Training for one saved creation. It resumes from the creation's last finished generation; leaving
-/// drops only the generation in progress.
+/// Training for one saved creation. To train, it resumes from the creation's last finished
+/// generation; leaving drops only the generation in progress. To simulate (#702), it plays the
+/// saved brain with one shadow until the player leaves, and saves nothing.
 /// </summary>
-public sealed record TrainingRoute(Guid CreationId) : SceneRoute;
+public sealed record TrainingRoute(Guid CreationId, TrainingRunMode Mode = TrainingRunMode.Train) : SceneRoute;

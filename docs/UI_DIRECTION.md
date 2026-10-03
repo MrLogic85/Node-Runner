@@ -244,12 +244,17 @@ reference would mislead someone working on that surface.
   `alpha_shadow` meanwhile, since the name may cover its flag
   (`docs/TRAINING_LOOP.md` → World view). Owner decision.
 - **Train setup has no profiles and few choices yet (#194, 0.13.0).** The
-  reference's Train setup offers Shadows from 1 and a working Simulate,
-  power checkbox and map row. Instead Shadows starts at 2 (with one, the
-  only shadow is the unchanged best brain, so nothing is learned), and
-  Simulate (#702) and the locked maps are shown but disabled with "comes in
-  a later version", not the reference's Achievements, which the player
-  cannot act on yet. Run until power is out (0.18) is disabled with the
+  reference's Train setup offers Shadows from 1, power checkbox and map
+  row. Instead Shadows starts at 2 (with one, the only shadow is the
+  unchanged best brain, so nothing is learned), and the locked maps are
+  shown but disabled with "comes in a later version", not the reference's
+  Achievements, which the player cannot act on yet. Simulate (#702) plays
+  until the player leaves, so unlike the reference both sliders dim:
+  Shadows reads 1 below its 2–32 scale with its thumb at the low end, and
+  Run length reads "Until you leave" with its thumb at the high end. It
+  plays the latest brain, not the reference's best (`docs/TRAINING_LOOP.md`
+  → Generations), and is a disabled segment until the Creation has trained,
+  with the note under the switch saying why. Owner decision. Run until power is out (0.18) is disabled with the
   reference's "Needs a battery or generator". Locked maps are disabled cards with a lock,
   not the library's `Locked` card, which means "the only choice". Each map
   card shows the reference's picture of its ground (`MapPreview`: one line,
@@ -773,7 +778,8 @@ use `Kind = Flat` for the canonical flat style.
 Edit `Segments`, `SelectedIndex`, and `MatchWidth` in the Inspector. Each
 `Segments` entry is a `UiSegment` resource: expand it and edit
 `Text`, the `IconId` dropdown (`None` means no icon) and `Disabled`, which
-shows a segment that cannot be chosen yet (Simulate in Train setup, #702)
+shows a segment that cannot be chosen yet (Simulate in Train setup before
+the Creation has trained, #702)
 like a disabled `UiButton`: a dashed outline over a 50% fill and content,
 with the same corners as an enabled segment in that place. Resource edits update
 the preview directly. New or cleared resource slots are automatically populated

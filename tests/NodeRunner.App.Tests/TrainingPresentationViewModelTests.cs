@@ -1,4 +1,5 @@
 using NodeRunner.App.ViewModels;
+using NodeRunner.Domain;
 
 namespace NodeRunner.App.Tests;
 
@@ -22,6 +23,30 @@ public sealed class TrainingPresentationViewModelTests
         presentation.GenerationText.ShouldBe("Generation 6");
         presentation.BestMarkerText.ShouldBe("Best 13.1 m");
         presentation.MeanFitnessText.ShouldBe("Mean: 8.4 m");
+    }
+
+    [Fact]
+    public void Saved_ShowsTheSavedBestOnThisMap()
+    {
+        var training = new TrainingStateDef(TestTraining.Brain, 3, TestTraining.Run, new TrainingBestDef(2, 300, MapIds.Flat, frontDistance: 420));
+
+        var presentation = TrainingPresentationViewModel.Saved(training, MapIds.Flat);
+
+        presentation.BestShownDistance.ShouldBe(420);
+        presentation.BestMarkerText.ShouldBe("Best 4.2 m");
+    }
+
+    [Theory]
+    [InlineData(MapIds.Flat, null)]
+    [InlineData("map-hills", 420.0)]
+    public void Saved_HidesTheMarkerWithoutABestFrontOnThisMap(string mapId, double? frontDistance)
+    {
+        var training = new TrainingStateDef(TestTraining.Brain, 3, TestTraining.Run, new TrainingBestDef(2, 300, MapIds.Flat, frontDistance));
+
+        var presentation = TrainingPresentationViewModel.Saved(training, mapId);
+
+        presentation.BestShownDistance.ShouldBe(double.NaN);
+        presentation.BestMarkerText.ShouldBeNull();
     }
 
     [Fact]

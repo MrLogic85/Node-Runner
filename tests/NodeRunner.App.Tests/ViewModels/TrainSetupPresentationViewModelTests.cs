@@ -1,3 +1,4 @@
+using NodeRunner.App.Navigation;
 using NodeRunner.App.ViewModels;
 using NodeRunner.Domain;
 
@@ -85,6 +86,69 @@ public sealed class TrainSetupPresentationViewModelTests
         setup.SetShadows(1);
 
         changes.ShouldBe(1);
+    }
+
+    [Fact]
+    public void UntrainedCreation_CannotSimulate()
+    {
+        var setup = new TrainSetupPresentationViewModel(Creation());
+
+        setup.Mode.ShouldBe(TrainingRunMode.Train);
+        setup.CanSimulate.ShouldBeFalse();
+        setup.ModeNote.ShouldBe("Shadows race and the brain keeps learning. Simulate needs a trained brain.");
+        Should.Throw<InvalidOperationException>(() => setup.SetMode(TrainingRunMode.Simulate));
+    }
+
+    [Fact]
+    public void TrainedCreation_Trains_WithLiveSliders()
+    {
+        var setup = new TrainSetupPresentationViewModel(Creation(generation: 3));
+
+        setup.CanSimulate.ShouldBeTrue();
+        setup.ModeNote.ShouldBe("Shadows race and the brain keeps learning.");
+        setup.Shadows.Disabled.ShouldBeFalse();
+        setup.RunLength.Disabled.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Simulate_DimsTheSliders_ToOneShadowUntilYouLeave()
+    {
+        var setup = new TrainSetupPresentationViewModel(Creation(generation: 3));
+        var changes = 0;
+        setup.Changed += (_, _) => changes++;
+
+        setup.SetMode(TrainingRunMode.Simulate);
+        setup.SetMode(TrainingRunMode.Simulate);
+
+        changes.ShouldBe(1);
+        setup.Mode.ShouldBe(TrainingRunMode.Simulate);
+        setup.ModeNote.ShouldBe("Plays the trained brain with one shadow. Nothing is learned or saved.");
+        setup.Shadows.ShouldBe(new SettingSlider("Shadows", "1", 0, setup.Shadows.Step, Disabled: true));
+        setup.RunLength.ShouldBe(new SettingSlider("Run length", "Until you leave", 1, setup.RunLength.Step, Disabled: true));
+        setup.Settings.ShouldBe(TrainSettingsDef.Default);
+    }
+
+    [Fact]
+    public void Simulate_SetsNoSettings()
+    {
+        var setup = new TrainSetupPresentationViewModel(Creation(generation: 3));
+        setup.SetMode(TrainingRunMode.Simulate);
+
+        Should.Throw<InvalidOperationException>(() => setup.SetShadows(1));
+        Should.Throw<InvalidOperationException>(() => setup.SetRunLength(1));
+    }
+
+    [Fact]
+    public void BackToTrain_KeepsTheSettings()
+    {
+        var setup = new TrainSetupPresentationViewModel(Creation(new TrainSettingsDef(12, 30), generation: 3));
+        var before = setup.Shadows;
+
+        setup.SetMode(TrainingRunMode.Simulate);
+        setup.SetMode(TrainingRunMode.Train);
+
+        setup.Shadows.ShouldBe(before);
+        setup.RunLength.Readout.ShouldBe("30 s");
     }
 
     private static CreationDef Creation(TrainSettingsDef? settings = null, int? generation = null) =>

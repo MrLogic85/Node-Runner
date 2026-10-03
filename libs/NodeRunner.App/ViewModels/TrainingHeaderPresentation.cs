@@ -1,13 +1,7 @@
+using NodeRunner.App.Navigation;
 using NodeRunner.Domain;
 
 namespace NodeRunner.App.ViewModels;
-
-/// <summary>Whether a run on the Training screen learns, or only replays the saved brain.</summary>
-public enum TrainingRunMode
-{
-    Train,
-    Simulate,
-}
 
 /// <summary>
 /// The Training screen's top bar: the creation's name and what the run does where, such as
