@@ -46,7 +46,7 @@ CreatureDef  ──build──▶  physical body  ──sensors──▶  model 
   an id, optional display name and a position (`Vector2D`). Its radius is
   not saved: it follows from what is on the joint (#626). A plain joint,
   today every joint, has radius `NodeDef.PlainJointRadius` (15) and is
-  drawn as an open ring (`docs/UI_DIRECTION.md`, plain joints). Joint parts (the motors, #452 and #454)
+  drawn as a ring at that size (`docs/UI_DIRECTION.md`, plain joints). Joint parts (the motors, #452 and #454)
   will make it larger and show their glyph inside. At runtime each node is
   its own `RigidBody2D` with a circle collider at that radius, the size it
   is drawn at. Its rotation is locked, so it grips instead of rolling like a

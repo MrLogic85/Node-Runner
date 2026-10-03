@@ -461,6 +461,7 @@ script = ExtResource("5_button")
 IconId = 34
 Kind = 2
 ContentLayout = 2
+HoldToActivate = true
 
 [node name="Selection" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent" index="3"]
 unique_name_in_owner = true
@@ -507,6 +508,7 @@ script = ExtResource("5_button")
 IconId = 34
 Kind = 2
 ContentLayout = 2
+HoldToActivate = true
 
 [node name="SelectionDeleteNote" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/Selection/SelectionActions"]
 unique_name_in_owner = true

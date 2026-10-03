@@ -120,6 +120,12 @@ reference would mislead someone working on that surface.
   lengths of its beams, so scaling changes nothing the lock protects.
   Owner decision. Likewise a locked Camera can still be aimed (#638):
   only what changes the model is locked.
+- **The Select frame keeps its turn (owner decision 2026-10-03).** The
+  reference's frame is always upright, with a hint under it. Ours drops the
+  hint, which was in the way, and after a Rotate the frame and its handles
+  stay turned with the group until the selection changes. The reference
+  has no box select; ours is dashed like the frame, filled `halo` at
+  `alpha_soft`, and halos the joints it would catch.
 - **Piston settings are sliders (#451).** The reference's Piston panel
   lists what it joins ("Between"), its power draw and its weight. Instead
   its Part settings show three `UiSlider`s, Max strength, Stroke and Max
@@ -216,7 +222,7 @@ reference would mislead someone working on that surface.
     the beam's upper side with a leader line to the beam's middle (see
     `c_call` in a figure). The readiness line says "1 beam too short".
   - *Selection:* a selected joint gets an unfilled `halo` ring around it,
-    4 wide; a selected beam gets two 2-wide `halo` lines along it, one
+    2 wide as in the reference; a selected beam gets two 2-wide `halo` lines along it, one
     beam-width out on each side. Both are drawn over the part, in Build and
     Training.
   - *Orientation:* the side of the beam that faces up as built is the
@@ -255,15 +261,16 @@ reference would mislead someone working on that surface.
     the theme or `data-effects="lite"` turns glow off.
   - *Copy:* Training and SignalFlow say "sensor" where the reference says
     "core".
-- **Plain joints are open rings (#626, owner decision 2026-10-03).** The
-  reference draws a plain joint as an r 6 circle filled with `panel` and a
+- **Plain joints are a bearing in a cell (#626, owner decisions 2026-10-03).**
+  The reference draws a plain joint as an r 6 circle filled with `panel` and a
   `line-strong` stroke ⅔ of the 3-wide beam, so the joint covers the beam
-  ends. Instead a plain joint, in Build and Training, is an unfilled ring in
-  the beam's colour and width (`line-strong`, 6) whose outer edge is
-  `NodeDef.PlainJointRadius`, the size it collides at. The beams and Piston rods
-  show through it and have round ends, so those meeting at a joint end in one
-  clean dot at its centre. A motor joint's larger ring with its glyph comes with the
-  motors (#452, #454).
+  ends. Instead `JointDrawing` draws, in Build and Training, a
+  `line-strong` `stroke-signal` ring whose outer edge is
+  `NodeDef.PlainJointRadius`, a `stroke-hair` inner ring at 0.55 of it
+  (not on a loose joint, which shows a `danger` ring and cross), and an `alpha_soft` tint: `line-strong`, `halo`
+  when selected, `danger` when loose. Lines scale with the zoom. A Training
+  shadow draws the outer ring only. Beams and Piston rods stop flat under
+  the ring. Motor joints come with #452 and #454.
 - **UI size has no touch floor and no over-200% layout (#299, 0.12.0).** The
   reference (`Settings`) keeps 48px controls under 100% and opens side panels
   over the arena above about 200%. Instead everything around the arena and
@@ -740,7 +747,8 @@ Other icon sizes follow the reference's rules
   `icon` (16) in a `control-sm` row (a Compact menu row, the picker's list).
 - **Icons inside a ring.** An icon inside a ring is `icon` (16). The selection
   handle and the info row that shows it both draw the same round button
-  (`UiSelectionHandle.DrawRoundButton`).
+  (`UiSelectionHandle.DrawRoundButton`). As in the reference, only the
+  canvas Move handle is filled `accent-soft` (over `bg`, so it stays opaque).
 - **Part glyphs.** A part glyph is never drawn at `icon-sm`; `UiIcons.Load`
   rejects that pairing.
 - **A lone icon in a scene.** `UiIcon` places one canonical icon beside text a

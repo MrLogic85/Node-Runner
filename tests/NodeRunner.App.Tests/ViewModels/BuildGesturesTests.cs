@@ -821,6 +821,142 @@ public class BuildGesturesTests
     }
 
     [Fact]
+    public void Select_ARefusedTurn_LeavesTheFrameWhereItWas()
+    {
+        var build = new BuildViewModel();
+        build.PlaceNode(new Vector2D(BuildViewModel.BuildArea.Max.X - 18, -100));
+        build.PlaceNode(new Vector2D(BuildViewModel.BuildArea.Max.X - 18, 100));
+        build.ActiveTool = BuildTool.Select;
+        var gestures = new BuildGestures(build);
+        build.ReplaceSelection([1, 2]);
+        var rotate = Handle(gestures, SelectionHandle.Rotate);
+
+        gestures.Press(rotate);
+        gestures.Drag(new Vector2D(rotate.X - 200, 0));
+
+        gestures.SelectionFrameAngle.ShouldBe(0);
+        Handle(gestures, SelectionHandle.Rotate).ShouldBe(rotate);
+    }
+
+    [Fact]
+    public void Select_DraggingRotate_TurnsTheFrameWithTheGroupAndKeepsItTurned()
+    {
+        var (build, gestures) = ThreeLooseJoints(BuildTool.Select);
+        build.ReplaceSelection([1, 2]);
+
+        gestures.Press(_rotateHandle);
+        gestures.Drag(new Vector2D(130, 0));
+
+        gestures.SelectionFrameAngle.ShouldBe(Math.PI / 2, 1e-9);
+        gestures.SelectionFrame.ShouldNotBeNull().Width.ShouldBe(2 * _frameRight - 100, 1e-9);
+        Handle(gestures, SelectionHandle.Rotate).X.ShouldBe(130, 1e-9);
+        Handle(gestures, SelectionHandle.Rotate).Y.ShouldBe(0, 1e-9);
+        Handle(gestures, SelectionHandle.Move).ShouldBe(_moveHandle);
+
+        gestures.Release(new Vector2D(130, 0));
+
+        gestures.SelectionFrameAngle.ShouldBe(Math.PI / 2, 1e-9);
+        gestures.SelectionFrame.ShouldNotBeNull().Width.ShouldBe(2 * _frameRight - 100, 1e-9);
+        Handle(gestures, SelectionHandle.Rotate).X.ShouldBe(130, 1e-9);
+        Handle(gestures, SelectionHandle.Rotate).Y.ShouldBe(0, 1e-9);
+    }
+
+    [Fact]
+    public void Select_ScalingATurnedFrame_KeepsItsCentreUnderTheMoveHandle()
+    {
+        // Turned by π/4 the triangle's frame centre stays at (50, 50), while the middle of
+        // its joints' bounds moves to about (50, 15): only the frame centre keeps the frame on the group.
+        var (build, gestures) = ThreeLooseJoints(BuildTool.Select);
+        build.ReplaceSelection([1, 2, 3]);
+        var centre = Handle(gestures, SelectionHandle.Move);
+        var reach = centre.Y - Handle(gestures, SelectionHandle.Rotate).Y;
+        var turned = new Vector2D(centre.X + (reach / Math.Sqrt(2)), centre.Y - (reach / Math.Sqrt(2)));
+        gestures.Press(Handle(gestures, SelectionHandle.Rotate));
+        gestures.Drag(turned);
+        gestures.Release(turned);
+        Math.Abs(gestures.SelectionFrameAngle).ShouldBe(Math.PI / 4, 1e-9);
+        var width = gestures.SelectionFrame.ShouldNotBeNull().Width;
+
+        var scale = Handle(gestures, SelectionHandle.Scale);
+        gestures.Press(scale);
+        gestures.Drag(new Vector2D(centre.X + ((scale.X - centre.X) * 1.5), centre.Y + ((scale.Y - centre.Y) * 1.5)));
+
+        gestures.SelectionFrame.ShouldNotBeNull().Width.ShouldBeGreaterThan(width);
+        Handle(gestures, SelectionHandle.Move).X.ShouldBe(centre.X, 1e-9);
+        Handle(gestures, SelectionHandle.Move).Y.ShouldBe(centre.Y, 1e-9);
+    }
+
+    [Fact]
+    public void Select_ATurnedFrame_FollowsTheGroupWhenItMoves()
+    {
+        var (build, gestures) = ThreeLooseJoints(BuildTool.Select);
+        build.ReplaceSelection([1, 2]);
+        gestures.Press(_rotateHandle);
+        gestures.Drag(new Vector2D(130, 0));
+        gestures.Release(new Vector2D(130, 0));
+
+        // Inside the turned frame, though outside where the upright one was.
+        gestures.Press(new Vector2D(95, 70));
+        gestures.Drag(new Vector2D(125, 70));
+        gestures.Release(new Vector2D(125, 70));
+
+        build.Nodes[0].Position.X.ShouldBe(80, 1e-9);
+        gestures.SelectionFrameAngle.ShouldBe(Math.PI / 2, 1e-9);
+        Handle(gestures, SelectionHandle.Rotate).X.ShouldBe(160, 1e-9);
+        Handle(gestures, SelectionHandle.Rotate).Y.ShouldBe(0, 1e-9);
+    }
+
+    [Fact]
+    public void Select_ANewSelection_GetsAnUprightFrame()
+    {
+        var (build, gestures) = ThreeLooseJoints(BuildTool.Select);
+        build.ReplaceSelection([1, 2]);
+        gestures.Press(_rotateHandle);
+        gestures.Drag(new Vector2D(130, 0));
+        gestures.Release(new Vector2D(130, 0));
+
+        build.ReplaceSelection([1, 2]);
+
+        gestures.SelectionFrameAngle.ShouldBe(0);
+        Handle(gestures, SelectionHandle.Move).ShouldBe(_moveHandle);
+        Handle(gestures, SelectionHandle.Rotate).X.ShouldBe(_moveHandle.X, 1e-9);
+    }
+
+    [Fact]
+    public void Select_WithNoRoomAboveTheFrame_KeepsRotateAboveIt()
+    {
+        var (build, gestures) = ThreeLooseJoints(BuildTool.Select);
+        gestures.View.VisibleArea = new CanvasRect(new Vector2D(-300, -60), new Vector2D(300, 300));
+
+        build.ReplaceSelection([1, 2]);
+
+        Handle(gestures, SelectionHandle.Rotate).ShouldBe(_rotateHandle);
+        gestures.RotateStem.ShouldBe((new Vector2D(50, -48), _rotateHandle));
+        gestures.FrameCornerSquares.ShouldBe(
+            [new Vector2D(100 - _frameRight, -48), new Vector2D(_frameRight, -48), new Vector2D(100 - _frameRight, 48)]);
+    }
+
+    [Fact]
+    public void Select_DraggingABox_PreviewsTheJointsItWouldCatch()
+    {
+        var (build, gestures) = ThreeLooseJoints(BuildTool.Select);
+
+        gestures.Press(new Vector2D(-50, -50));
+        gestures.Drag(new Vector2D(150, 50));
+
+        gestures.SelectionBoxCatches.ShouldBe([1, 2], ignoreOrder: true);
+        build.SelectedNodeIds.ShouldBeEmpty();
+
+        gestures.Release(new Vector2D(150, 50));
+
+        gestures.SelectionBoxCatches.ShouldBeEmpty();
+        build.SelectedNodeIds.ShouldBe([1, 2], ignoreOrder: true);
+    }
+
+    private static Vector2D Handle(BuildGestures gestures, SelectionHandle handle) =>
+        gestures.SelectionHandles.Single(entry => entry.Handle == handle).Position;
+
+    [Fact]
     public void Move_TapOnASensorPicture_SelectsTheSensorNotTheBeam()
     {
         var (build, gestures) = BeamWithSensor(100, SensorKind.Accelerometer);

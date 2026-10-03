@@ -11,7 +11,7 @@ public partial class NodeVisual : Node2D, IShadowVisual
     private bool _isSelected;
     private bool _isShadow;
 
-    /// <summary>A shadow's node is its ring at its collision size, without a glyph or selection.</summary>
+    /// <summary>A shadow's node is its outer ring at its collision size, without inner ring, tint or selection.</summary>
     public static ShadowDrawing AsShadow => ShadowDrawing.Simplified;
 
     public VisualTheme Theme { get; set; } = VisualTheme.Neon;
@@ -50,7 +50,8 @@ public partial class NodeVisual : Node2D, IShadowVisual
 
     public override void _Draw()
     {
-        JointDrawing.DrawPlain(this, Theme, Transform2D.Identity, Vector2.Zero, Radius);
+        var look = IsSelected && !IsShadow ? JointLook.Selected : JointLook.Plain;
+        JointDrawing.DrawPlain(this, Theme, Transform2D.Identity, Vector2.Zero, Radius, look, simplified: IsShadow);
         if (IsSelected && !IsShadow)
         {
             SelectionDrawing.DrawJoint(this, Theme, Transform2D.Identity, Vector2.Zero, Radius * 1.65f);

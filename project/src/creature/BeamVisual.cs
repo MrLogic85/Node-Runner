@@ -18,7 +18,16 @@ public partial class BeamVisual : Node2D, IShadowVisual
 
     public float HalfLength { get; set; }
 
+    /// <summary>The radius of the joint at the start, -<see cref="HalfLength"/>, where the drawn beam stops.</summary>
+    public float RadiusA { get; set; }
+
+    /// <summary>The radius of the joint at the end, <see cref="HalfLength"/>, where the drawn beam stops.</summary>
+    public float RadiusB { get; set; }
+
     public float Width { get; set; }
+
+    /// <summary>The width of the joint rings the beam stops under.</summary>
+    public float RingWidth { get; set; }
 
     public Color Color { get; set; }
 
@@ -61,15 +70,18 @@ public partial class BeamVisual : Node2D, IShadowVisual
 
     public override void _Ready()
     {
-        // Round ends, since a beam's ends show inside an open joint ring (#626). Behind the parent so
-        // the selection lines drawn below stay on top.
+        if (Span() is not (var start, var end))
+        {
+            return;
+        }
+
+        // Flat ends, hidden under the joint rings it stops on (#626). Behind the parent so the
+        // selection lines drawn below stay on top.
         AddChild(new Line2D
         {
-            Points = [new Vector2(-HalfLength, 0), new Vector2(HalfLength, 0)],
+            Points = [start, end],
             Width = Width,
             DefaultColor = Color,
-            BeginCapMode = Line2D.LineCapMode.Round,
-            EndCapMode = Line2D.LineCapMode.Round,
             Antialiased = false,
             ShowBehindParent = true,
         });
@@ -77,12 +89,12 @@ public partial class BeamVisual : Node2D, IShadowVisual
 
     public override void _Draw()
     {
-        var start = new Vector2(-HalfLength, 0);
-        var end = new Vector2(HalfLength, 0);
-
-        if (IsSelected && !IsShadow)
+        if (IsSelected && !IsShadow && Span() is (var start, var end))
         {
             SelectionDrawing.DrawBeam(this, Transform2D.Identity, SelectionColor, SelectionOffset, SelectionLineWidth, start, end);
         }
     }
+
+    private (Vector2 Start, Vector2 End)? Span() =>
+        JointDrawing.BeamSpan(RingWidth, new Vector2(-HalfLength, 0), RadiusA, new Vector2(HalfLength, 0), RadiusB);
 }

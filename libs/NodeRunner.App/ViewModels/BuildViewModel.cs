@@ -590,8 +590,11 @@ public sealed class BuildViewModel : INotifyPropertyChanged
         AnatomyChanged?.Invoke(this, EventArgs.Empty);
     }
 
-    /// <summary>The selected joints' positions and pivot, for a Select drag to transform.</summary>
-    public SelectionSnapshot SnapshotSelection()
+    /// <summary>
+    /// The selected joints' positions and pivot, for a Select drag to transform: the given
+    /// <paramref name="pivot"/>, or else the middle of the joints' centres.
+    /// </summary>
+    public SelectionSnapshot SnapshotSelection(Vector2D? pivot = null)
     {
         if (_selectedNodeIds.Count == 0)
         {
@@ -599,10 +602,10 @@ public sealed class BuildViewModel : INotifyPropertyChanged
         }
 
         var positions = _selectedNodeIds.ToDictionary(id => id, id => NodeById(id).Position);
-        var pivot = new Vector2D(
+        pivot ??= new Vector2D(
             (positions.Values.Min(p => p.X) + positions.Values.Max(p => p.X)) / 2,
             (positions.Values.Min(p => p.Y) + positions.Values.Max(p => p.Y)) / 2);
-        return new SelectionSnapshot(positions, pivot);
+        return new SelectionSnapshot(positions, pivot.Value);
     }
 
     /// <summary>Moves the snapshot's joints by <paramref name="delta"/>, shortened so the whole group stays inside <see cref="BuildArea"/>.</summary>
@@ -621,8 +624,11 @@ public sealed class BuildViewModel : INotifyPropertyChanged
             BuildArea.Clamp(new Vector2D(position.X + delta.X, position.Y + delta.Y), NodeById(id).Radius));
     }
 
-    /// <summary>Turns the snapshot's joints <paramref name="radians"/> about its pivot; a turn that would leave <see cref="BuildArea"/> is ignored.</summary>
-    public void RotateSelection(SelectionSnapshot start, double radians)
+    /// <summary>
+    /// Turns the snapshot's joints <paramref name="radians"/> about its pivot; a turn that would
+    /// leave <see cref="BuildArea"/> is ignored. Returns whether the joints turned.
+    /// </summary>
+    public bool RotateSelection(SelectionSnapshot start, double radians)
     {
         ArgumentNullException.ThrowIfNull(start);
         if (!double.IsFinite(radians))
@@ -633,7 +639,7 @@ public sealed class BuildViewModel : INotifyPropertyChanged
         var cos = Math.Cos(radians);
         var sin = Math.Sin(radians);
         var pivot = start.Pivot;
-        PlaceSelection(start, (_, position) =>
+        return PlaceSelection(start, (_, position) =>
         {
             var dx = position.X - pivot.X;
             var dy = position.Y - pivot.Y;
@@ -669,12 +675,12 @@ public sealed class BuildViewModel : INotifyPropertyChanged
         PlaceSelection(start, (_, position) => position, keepInBuildArea: false);
     }
 
-    private void PlaceSelection(SelectionSnapshot start, Func<int, Vector2D, Vector2D> place, bool keepInBuildArea = true)
+    private bool PlaceSelection(SelectionSnapshot start, Func<int, Vector2D, Vector2D> place, bool keepInBuildArea = true)
     {
         var placed = start.Positions.ToDictionary(entry => entry.Key, entry => place(entry.Key, entry.Value));
         if (keepInBuildArea && placed.Any(entry => BuildArea.Clamp(entry.Value, NodeById(entry.Key).Radius) != entry.Value))
         {
-            return;
+            return false;
         }
 
         foreach (var (id, position) in placed)
@@ -683,6 +689,7 @@ public sealed class BuildViewModel : INotifyPropertyChanged
         }
 
         AnatomyChanged?.Invoke(this, EventArgs.Empty);
+        return true;
     }
 
     /// <summary>

@@ -25,6 +25,12 @@ public partial class BuildCanvas : Node2D
     private const int _refusedRingDashes = 12;
     private const int _refusedDashSegments = 6;
 
+    // The reference's Select frame and box: dashes 5 on 4 off, and 10-square corners rounded 2.
+    private const float _frameDash = 5;
+    private const float _frameGap = 4;
+    private const float _frameCornerSquare = 10;
+    private const float _frameCornerRadius = 2;
+
     private BuildViewModel? _viewModel;
     private BuildGestures? _gestures;
     private readonly Dictionary<int, Vector2D> _ghostNodePositions = [];
@@ -311,12 +317,14 @@ public partial class BuildCanvas : Node2D
         {
             var nodeA = NodeById(beam.NodeA);
             var nodeB = NodeById(beam.NodeB);
-            var start = ToGodot(nodeA.Position);
-            var end = ToGodot(nodeB.Position);
+            // One whose rings meet is too short, and still drawn, in danger, from centre to centre.
+            var (start, end) = JointDrawing.BeamSpan(Theme.JointRingWidth, ToGodot(nodeA.Position), (float)nodeA.Radius, ToGodot(nodeB.Position), (float)nodeB.Radius)
+                ?? (ToGodot(nodeA.Position), ToGodot(nodeB.Position));
+
             DrawPlacingFeedback(beam, start, end);
             // A beam too short for training (#593) is drawn in danger until its joints move apart.
             var color = CreatureReadiness.IsTooShort(nodeA, nodeB) ? Theme.Danger : Theme.Beam;
-            BeamDrawing.DrawRounded(this, start, end, color, Stroke(Theme.BeamWidth));
+            DrawLine(start, end, color, Stroke(Theme.BeamWidth), antialiased: false);
             if (_viewModel.SingleSelectedBeamId == beam.Id)
             {
                 SelectionDrawing.DrawBeam(this, ViewTransform(), Theme.SelectionGlow, Stroke(Theme.SelectedBeamOffset), Stroke(Theme.SelectedBeamLineWidth), start, end);
@@ -326,12 +334,16 @@ public partial class BuildCanvas : Node2D
         DrawPistons();
         DrawSensors();
 
+        var caught = _gestures.SelectionBoxCatches.ToHashSet();
         for (var nodeIndex = 0; nodeIndex < _viewModel.Nodes.Count; nodeIndex++)
         {
             var node = _viewModel.Nodes[nodeIndex];
             var position = ToGodot(node.Position);
-            JointDrawing.DrawPlain(this, Theme, ViewTransform(), position, (float)node.Radius);
-            if (_viewModel.SelectedNodeIds.Contains(node.Id))
+            // A dragged Select box shows the halos of the joints it would catch.
+            var selected = _viewModel.SelectedNodeIds.Contains(node.Id) || caught.Contains(node.Id);
+            var look = selected ? JointLook.Selected : ShowsAsLoose(node.Id) ? JointLook.Loose : JointLook.Plain;
+            JointDrawing.DrawPlain(this, Theme, ViewTransform(), position, (float)node.Radius, look);
+            if (selected)
             {
                 SelectionDrawing.DrawJoint(this, Theme, ViewTransform(), position, (float)(node.Radius * BuildGestures.SelectedHaloScale));
             }
@@ -488,30 +500,41 @@ public partial class BuildCanvas : Node2D
     }
 
     /// <summary>
-    /// The dashed frame and rotate stem around a Select selection, drawn last
-    /// and at screen size like its handles.
+    /// The Select frame, corner squares and rotate stem, drawn last at screen size in window
+    /// pixels, turned with the group.
     /// </summary>
     private void DrawSelectionFrame()
     {
-        var view = _gestures!.View;
-        DrawSetTransform(Vector2.Zero);
-        // The canvas node is scaled in the scene; undo it so the frame is a true screen-size hairline.
-        var width = UiSize.Stroke.SelectionFrame / Scale.X;
-        if (_gestures.SelectionFrame is not { } frame)
+        if (_gestures!.SelectionFrame is not { } frame)
         {
             return;
         }
 
+        var view = _gestures.View;
+        var toPixels = UiPixelSpace.Enter(this, Transform2D.Identity);
+        // The canvas node is scaled in the scene; a screen-size length is this many of its units.
+        var unit = 1 / Scale.X;
+        var width = UiSize.Stroke.SelectionFrame * unit * UiPixelSpace.ScaleOf(toPixels);
         var rect = RectFromPoints(ToGodot(view.ToView(frame.Min)), ToGodot(view.ToView(frame.Max)));
-        UiDashedBorder.DrawRoundedRect(this, rect, UiSize.Radius.Small / Scale.X, Theme.SelectionGlow, width);
-        foreach (var (handle, position) in _gestures.SelectionHandles)
+        var center = rect.GetCenter();
+        var turned = toPixels * new Transform2D((float)_gestures.SelectionFrameAngle, center) * new Transform2D(0, -center);
+        UiDashedBorder.DrawRoundedRect(this, rect, UiSize.Radius.Small * unit, Theme.SelectionGlow, width, turned, _frameDash * unit, _frameGap * unit, antialiased: true);
+
+        var squareSize = Vector2.One * (_frameCornerSquare * unit);
+        foreach (var corner in _gestures.FrameCornerSquares)
         {
-            if (handle == SelectionHandle.Rotate)
-            {
-                var top = new Vector2(rect.GetCenter().X, rect.Position.Y);
-                DrawLine(top, ToGodot(view.ToView(position)), Theme.SelectionGlow, width, antialiased: false);
-            }
+            var square = new Rect2(ToGodot(view.ToView(corner)) - (squareSize / 2), squareSize);
+            var outline = UiDashedBorder.RoundedRectPoints(square, _frameCornerRadius * unit).Select(point => turned * point).ToArray();
+            DrawColoredPolygon(outline[..^1], Theme.SelectionCornerFill);
+            DrawPolyline(outline, Theme.SelectionGlow, width, antialiased: true);
         }
+
+        if (_gestures.RotateStem is { } stem)
+        {
+            DrawLine(toPixels * ToGodot(view.ToView(stem.From)), toPixels * ToGodot(view.ToView(stem.To)), Theme.SelectionGlow, width, antialiased: true);
+        }
+
+        DrawSetTransformMatrix(Transform2D.Identity);
     }
 
     /// <summary>
@@ -606,6 +629,13 @@ public partial class BuildCanvas : Node2D
             {
                 control.Position = (Transform * ToGodot(_gestures!.View.ToView(shown[index].Position))) - (control.Size / 2);
             }
+
+            if (handle == SelectionHandle.Scale)
+            {
+                // The Scale glyph's arrows run along the frame's diagonal, so they turn with it.
+                control.PivotOffset = control.Size / 2;
+                control.Rotation = (float)(_gestures?.SelectionFrameAngle ?? 0);
+            }
         }
     }
 
@@ -618,9 +648,15 @@ public partial class BuildCanvas : Node2D
 
         // A Piston drag over a joint that would refuse it turns danger (#451).
         var refused = _gestures.RefusedTargetNodeId;
-        var to = (_gestures.BeamTargetNodeId ?? refused) is { } target ? NodeById(target).Position : end;
+        var from = NodeById(start);
+        var target = (_gestures.BeamTargetNodeId ?? refused) is { } id ? NodeById(id) : null;
+        var to = target?.Position ?? end;
         var color = refused is null ? Theme.SelectionGlow : Theme.Danger;
-        DrawDashedLine(ToGodot(NodeById(start).Position), ToGodot(to), color, Stroke(Theme.BeamWidth), 8, antialiased: false);
+        // Like a beam, it starts at the joint's ring, and ends at the target's ring or the finger.
+        if (JointDrawing.BeamSpan(Theme.JointRingWidth, ToGodot(from.Position), (float)from.Radius, ToGodot(to), (float)(target?.Radius ?? 0)) is (var lineStart, var lineEnd))
+        {
+            DrawDashedLine(lineStart, lineEnd, color, Stroke(Theme.BeamWidth), 8, antialiased: false);
+        }
     }
 
     private void DrawBeamEndRings()
@@ -658,11 +694,21 @@ public partial class BuildCanvas : Node2D
             return;
         }
 
-        var rect = RectFromPoints(ToGodot(box.Start), ToGodot(box.End));
-        var fill = Theme.SelectionGlow;
-        fill.A = 0.16f;
-        DrawRect(rect, fill, filled: true);
-        UiDashedBorder.DrawRoundedRect(this, rect, 0, Theme.SelectionGlow, Stroke(2));
+        // At screen size like the Select frame, in window pixels so its edges are smooth.
+        var viewTransform = ViewTransform();
+        var rect = RectFromPoints(viewTransform * ToGodot(box.Start), viewTransform * ToGodot(box.End));
+        var toPixels = UiPixelSpace.Enter(this, Transform2D.Identity);
+        var unit = 1 / Scale.X;
+        var radius = UiSize.Radius.Small * unit;
+        if (rect.HasArea())
+        {
+            var fill = UiDashedBorder.RoundedRectPoints(rect, radius).Select(point => toPixels * point).ToArray();
+            DrawColoredPolygon(fill[..^1], Theme.SelectionFill);
+        }
+
+        var width = UiSize.Stroke.SelectionFrame * unit * UiPixelSpace.ScaleOf(toPixels);
+        UiDashedBorder.DrawRoundedRect(this, rect, radius, Theme.SelectionGlow, width, toPixels, _frameDash * unit, _frameGap * unit, antialiased: true);
+        DrawSetTransformMatrix(viewTransform);
     }
 
     private void DrawMoveGhosts()
@@ -768,7 +814,8 @@ public partial class BuildCanvas : Node2D
         var a = ToGodot(creature.Nodes[triangle.NodeA].Position);
         var b = ToGodot(creature.Nodes[triangle.NodeB].Position);
         var c = ToGodot(creature.Nodes[triangle.NodeC].Position);
-        foreach (var (start, end) in TriangleHatch.Lines(a, b, c, Theme.RigidHatchSpacing))
+        // Every joint is plain today, so all three share one radius.
+        foreach (var (start, end) in TriangleHatch.Lines(a, b, c, Theme.RigidHatchSpacing, (float)creature.Nodes[triangle.NodeA].Radius))
         {
             DrawLine(start, end, Theme.RigidHatch, -1);
         }
@@ -781,19 +828,13 @@ public partial class BuildCanvas : Node2D
             return;
         }
 
-        for (var nodeIndex = 0; nodeIndex < _viewModel.Nodes.Count; nodeIndex++)
+        foreach (var node in _viewModel.Nodes)
         {
-            // The beam drag's own rings replace the warning on the joints being joined.
-            var nodeId = _viewModel.Nodes[nodeIndex].Id;
-            if (_viewModel.Beams.Any(beam => beam.NodeA == nodeId || beam.NodeB == nodeId)
-                || _viewModel.Pistons.Any(piston => piston.NodeA == nodeId || piston.NodeB == nodeId)
-                || nodeId == _gestures?.BeamStartNodeId
-                || nodeId == _gestures?.BeamTargetNodeId)
+            if (!ShowsAsLoose(node.Id))
             {
                 continue;
             }
 
-            var node = _viewModel.Nodes[nodeIndex];
             var position = ToGodot(node.Position);
             var radius = (float)node.Radius * 1.55f;
             DrawArc(position, radius, 0, Mathf.Tau, 32, Theme.Danger, Stroke(Theme.MotorSignalWidth), antialiased: false);
@@ -801,6 +842,13 @@ public partial class BuildCanvas : Node2D
             DrawLine(position + new Vector2(radius * 0.45f, -radius * 0.45f), position + new Vector2(-radius * 0.45f, radius * 0.45f), Theme.Danger, Stroke(Theme.MotorSignalWidth), antialiased: false);
         }
     }
+
+    // Joined to nothing. The beam drag's own rings replace the warning on the joints being joined.
+    private bool ShowsAsLoose(int nodeId) =>
+        !_viewModel!.Beams.Any(beam => beam.NodeA == nodeId || beam.NodeB == nodeId)
+        && !_viewModel.Pistons.Any(piston => piston.NodeA == nodeId || piston.NodeB == nodeId)
+        && nodeId != _gestures?.BeamStartNodeId
+        && nodeId != _gestures?.BeamTargetNodeId;
 
     private void DrawInvalidBeamMarkers()
     {
