@@ -254,8 +254,7 @@ then the app follows the reference.
   - a `line-strong` ring, `stroke-signal` (2) wide, whose outer edge is
     `NodeDef.PlainJointRadius`, the size it collides at;
   - a fine `line-strong` inner ring, `stroke-hair` (1) wide, at 0.55 of the
-    radius, left out below 10 design pixels of radius on screen, where it
-    would blur into the outer ring, and on a loose joint, under its cross;
+    radius, at every zoom, left out on a loose joint, under its cross;
   - a soft tint inside (`alpha_soft`) in its state colour: `line-strong`,
     `halo` when selected or caught by a Select box, `danger` when loose
     (with its `danger` ring and cross).

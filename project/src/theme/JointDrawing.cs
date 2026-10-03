@@ -16,9 +16,6 @@ public static class JointDrawing
     private const int _ringSegments = 48;
     private const float _innerRingPerRadius = 0.55f;
 
-    // Below this radius on screen, in design pixels, the inner ring would blur into the outer one.
-    private const float _innerRingShownFrom = 10;
-
     /// <summary>
     /// The joint at <paramref name="center"/> with <paramref name="radius"/>, tinted for its
     /// <paramref name="look"/>; <paramref name="simplified"/> for a shadow, the outer ring only.
@@ -50,24 +47,12 @@ public static class JointDrawing
 
         canvas.DrawArc(at, RingCentre(theme.JointRingWidth, radius) * scale, 0, Mathf.Tau, _ringSegments, theme.Beam, theme.JointRingWidth * scale, antialiased: true);
 
-        if (!simplified && look != JointLook.Loose && ShowsInnerRing(canvas, drawTransform, radius))
+        if (!simplified && look != JointLook.Loose)
         {
             canvas.DrawArc(at, radius * _innerRingPerRadius * scale, 0, Mathf.Tau, _ringSegments, theme.Beam, theme.JointInnerRingWidth * scale, antialiased: true);
         }
 
         canvas.DrawSetTransformMatrix(drawTransform);
-    }
-
-    /// <summary>
-    /// Whether a joint of <paramref name="radius"/> drawn by <paramref name="canvas"/> is big enough on
-    /// screen for its inner ring. One that does not redraw as the camera zooms checks it to know when to.
-    /// </summary>
-    public static bool ShowsInnerRing(CanvasItem canvas, Transform2D drawTransform, float radius)
-    {
-        ArgumentNullException.ThrowIfNull(canvas);
-        var toPixels = canvas.GetViewport().GetFinalTransform() * canvas.GetGlobalTransformWithCanvas() * drawTransform;
-        var designPixel = UiPixelSpace.ScaleOf(canvas.GetViewport().GetFinalTransform());
-        return radius * UiPixelSpace.ScaleOf(toPixels) >= _innerRingShownFrom * designPixel;
     }
 
     /// <summary>

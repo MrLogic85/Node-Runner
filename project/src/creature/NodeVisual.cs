@@ -10,7 +10,6 @@ public partial class NodeVisual : Node2D, IShadowVisual
 {
     private bool _isSelected;
     private bool _isShadow;
-    private bool _showsInnerRing;
 
     /// <summary>A shadow's node is its outer ring at its collision size, without inner ring, tint or selection.</summary>
     public static ShadowDrawing AsShadow => ShadowDrawing.Simplified;
@@ -49,19 +48,8 @@ public partial class NodeVisual : Node2D, IShadowVisual
         }
     }
 
-    // The camera zooms without redrawing the joint, so it redraws itself when its inner ring
-    // should come or go.
-    public override void _Process(double delta)
-    {
-        if (!IsShadow && JointDrawing.ShowsInnerRing(this, Transform2D.Identity, Radius) != _showsInnerRing)
-        {
-            QueueRedraw();
-        }
-    }
-
     public override void _Draw()
     {
-        _showsInnerRing = JointDrawing.ShowsInnerRing(this, Transform2D.Identity, Radius);
         var look = IsSelected && !IsShadow ? JointLook.Selected : JointLook.Plain;
         JointDrawing.DrawPlain(this, Theme, Transform2D.Identity, Vector2.Zero, Radius, look, simplified: IsShadow);
         if (IsSelected && !IsShadow)
