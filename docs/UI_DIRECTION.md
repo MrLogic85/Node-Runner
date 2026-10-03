@@ -100,6 +100,22 @@ then the app follows the reference.
   lengths of its beams, so scaling changes nothing the lock protects.
   Owner decision. Likewise a locked Camera can still be aimed (#638):
   only what changes the model is locked.
+- **The Select frame stays in reach (owner decision 2026-10-03).** The
+  reference draws one fixed layout: Rotate on a stem above the frame, Scale
+  at its bottom-right corner, and the hint "Move, rotate or scale the group"
+  just under it. Instead, at the canvas edge Rotate flips below the frame,
+  Scale takes the first corner in view (bottom-right, bottom-left, top-right,
+  top-left), or else the corner nearest to the view; the other three keep
+  the corner squares. A handle still out
+  of view is pinned inside the edge, with no stem, and stays pinned while it
+  is dragged. The hint goes above the
+  frame when Rotate is below it, and is left out when there is no room or
+  while a handle is dragged. During a Rotate drag the frame, its corner
+  squares and its handles turn with the group, and the frame fits the group
+  again on release. The reference has no box select; ours matches the
+  frame: a screen-size `radius-sm` rect dashed 5 on 4 off at 1.5, filled
+  `halo` at `alpha_soft`, and the joints it would catch show their halo
+  while it is dragged.
 - **Piston settings are sliders (#451).** The reference's Piston panel
   lists what it joins ("Between"), its power draw and its weight. Instead
   its Part settings show three `UiSlider`s, Max strength, Stroke and Max
@@ -196,7 +212,7 @@ then the app follows the reference.
     the beam's upper side with a leader line to the beam's middle (see
     `c_call` in a figure). The readiness line says "1 beam too short".
   - *Selection:* a selected joint gets an unfilled `halo` ring around it,
-    4 wide; a selected beam gets two 2-wide `halo` lines along it, one
+    2 wide as in the reference; a selected beam gets two 2-wide `halo` lines along it, one
     beam-width out on each side. Both are drawn over the part, in Build and
     Training.
   - *Orientation:* the side of the beam that faces up as built is the
@@ -399,6 +415,12 @@ entries are not components of their own in Godot
     with the same text as one in the stack adds only its leader to that
     callout. A stack that grows into another takes it in.
   - Leaders are drawn behind all callouts.
+  - The one exception is the Select frame's hint (see "The Select frame
+    stays in reach"). It is not a note: `BuildCanvas` adds it after the notes
+    as an optional placement without a leader (`Placement.Leader` false,
+    `Placement.Optional` true): it sits just past its clearance, never joins
+    a stack, and `UiCalloutLayout` leaves it out when it would have to move
+    toward or away from its part to fit, or would overlap another callout.
 - **`c_panel_head`** is dropped by human decision: it is not part of the future
   design exports, so there is no panel header component. A side panel's
   header, including the inspector's (`c_inspector`), is `UiSidePanel`'s own
@@ -720,7 +742,10 @@ Other icon sizes follow the reference's rules
   `icon` (16) in a `control-sm` row (a Compact menu row, the picker's list).
 - **Icons inside a ring.** An icon inside a ring is `icon` (16). The selection
   handle and the info row that shows it both draw the same round button
-  (`UiSelectionHandle.DrawRoundButton`).
+  (`UiSelectionHandle.DrawRoundButton`); as in the reference, only the Move
+  handle on the canvas fills it `accent-soft`, the rest `panel`. Its
+  `accent-soft` lies over a `bg` disc, so parts under the handle do not show
+  through it.
 - **Part glyphs.** A part glyph is never drawn at `icon-sm`; `UiIcons.Load`
   rejects that pairing.
 - **A lone icon in a scene.** `UiIcon` places one canonical icon beside text a

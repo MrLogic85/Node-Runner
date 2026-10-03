@@ -13,9 +13,6 @@ public sealed class VisualTheme
 
     public static VisualTheme Paper { get; } = FromTheme(UiThemes.Paper);
 
-    // The reference's selected joint ring is 2 wide beside 3-wide beams (#624).
-    private const float _selectionRingPerBeam = 2f / 3;
-
     // A selected beam's lines run half its width outside its edges (#624).
     private const float _selectedBeamOffsetPerBeam = 0.5f + 0.5f;
 
@@ -34,6 +31,8 @@ public sealed class VisualTheme
         EffectsEnabled = UiThemes.Flag(theme, UiTokens.Flag.EffectsEnabled),
         ShadowAlpha = UiThemes.Alpha(theme, UiTokens.Alpha.Shadow),
         SelectionGlow = UiThemes.Color(theme, UiTokens.Color.Halo),
+        SelectionFill = UiThemes.Color(theme, UiTokens.Color.Halo) with { A = UiThemes.Alpha(theme, UiTokens.Alpha.Soft) },
+        SelectionCornerFill = UiThemes.Color(theme, UiTokens.Color.Panel),
         Beam = UiThemes.Color(theme, UiTokens.Color.LineStrong),
         MotorAccent = UiThemes.Color(theme, UiTokens.Color.Accent),
         Danger = UiThemes.Color(theme, UiTokens.Color.Danger),
@@ -41,7 +40,8 @@ public sealed class VisualTheme
         SensorLine = UiThemes.Color(theme, UiTokens.Color.Accent),
         AreaCorner = UiThemes.Color(theme, UiTokens.Color.Accent),
         BeamWidth = UiSize.Widget.CreatureBeamWidth,
-        SelectionRingWidth = UiSize.Widget.CreatureBeamWidth * _selectionRingPerBeam,
+        // The reference's 2-wide ring, not scaled up with our wider beams (owner, 2026-10-03).
+        SelectionRingWidth = UiSize.Stroke.Signal,
         SelectedBeamOffset = UiSize.Widget.CreatureBeamWidth * _selectedBeamOffsetPerBeam,
         SelectedBeamLineWidth = UiSize.Stroke.Signal,
         MotorSignalWidth = UiSize.Stroke.Signal,
@@ -68,6 +68,12 @@ public sealed class VisualTheme
     public float ShadowAlpha { get; private init; }
 
     public Color SelectionGlow { get; private init; }
+
+    /// <summary>The inside of the Select tool's box while it is dragged: <c>halo</c> at <c>alpha_soft</c>.</summary>
+    public Color SelectionFill { get; private init; }
+
+    /// <summary>The inside of the Select frame's corner squares: <c>panel</c>.</summary>
+    public Color SelectionCornerFill { get; private init; }
 
     /// <summary>The stroke of a selected joint's ring.</summary>
     public float SelectionRingWidth { get; private init; }

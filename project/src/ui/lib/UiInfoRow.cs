@@ -89,7 +89,8 @@ public partial class UiInfoRow : HBoxContainer
     {
         if (_ring is not null)
         {
-            UiSelectionHandle.DrawRoundButton(this, _ring.Position + (_ring.Size * 0.5f));
+            // The reference's panel rows show every handle on a panel disc, Move included.
+            UiSelectionHandle.DrawRoundButton(this, _ring.Position + (_ring.Size * 0.5f), accentFill: false);
         }
     }
 

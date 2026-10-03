@@ -105,7 +105,7 @@ public sealed class BuildViewModelTests
         viewModel.ReplaceSelection([1, 2]);
         var start = viewModel.SnapshotSelection();
 
-        viewModel.RotateSelection(start, Math.PI / 4);
+        viewModel.RotateSelection(start, Math.PI / 4).ShouldBeFalse();
 
         viewModel.Nodes[0].Position.ShouldBe(new Vector2D(_area.Max.X - 18, -100));
         viewModel.Nodes[1].Position.ShouldBe(new Vector2D(_area.Max.X - 18, 100));
@@ -165,7 +165,7 @@ public sealed class BuildViewModelTests
         var viewModel = LockedPair();
         viewModel.ReplaceSelection([1, 2]);
 
-        viewModel.RotateSelection(viewModel.SnapshotSelection(), Math.PI);
+        viewModel.RotateSelection(viewModel.SnapshotSelection(), Math.PI).ShouldBeTrue();
 
         viewModel.Nodes[0].Position.X.ShouldBe(20, 1e-9);
     }

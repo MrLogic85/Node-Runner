@@ -83,25 +83,40 @@ public partial class UiSelectionHandle : Control, ISerializationListener
         AcceptEvent();
     }
 
-    public override void _Draw() => DrawRoundButton(this, HandleCenter());
+    public override void _Draw() => DrawRoundButton(this, HandleCenter(), accentFill: Type == HandleType.Drag);
 
     /// <summary>
-    /// The round button (<c>c_round_button</c>) behind a handle's icon: a <c>panel</c> disc with a
-    /// <c>halo</c> ring. <see cref="UiInfoRow"/> draws the same shape so it shows the handle exactly.
+    /// The round button (<c>c_round_button</c>) behind a handle's icon: a disc with a <c>halo</c>
+    /// ring, filled <c>panel</c>, or for the reference's Move handle <c>accent-soft</c> over
+    /// <c>bg</c> so it looks as in the reference but hides the parts under it like the others.
+    /// Drawn in window pixels (<see cref="UiPixelSpace"/>) so the ring is smooth.
+    /// <see cref="UiInfoRow"/> draws the same shape so it shows the handle exactly.
     /// </summary>
-    internal static void DrawRoundButton(Control control, Vector2 center)
+    internal static void DrawRoundButton(Control control, Vector2 center, bool accentFill)
     {
-        const int radius = UiSize.Widget.SelectionHandleRadius;
-        control.DrawCircle(center, radius, UiThemeLookup.Color(control, UiTokens.Color.Panel));
+        var toPixels = UiPixelSpace.Enter(control, Transform2D.Identity);
+        var scale = UiPixelSpace.ScaleOf(toPixels);
+        var radius = UiSize.Widget.SelectionHandleRadius * scale;
+        if (accentFill)
+        {
+            control.DrawCircle(toPixels * center, radius, UiThemeLookup.Color(control, UiTokens.Color.Background));
+            control.DrawCircle(toPixels * center, radius, UiThemeLookup.Color(control, UiTokens.Color.Accent).WithAlpha(UiThemeLookup.Alpha(control, UiTokens.Alpha.Soft)));
+        }
+        else
+        {
+            control.DrawCircle(toPixels * center, radius, UiThemeLookup.Color(control, UiTokens.Color.Panel));
+        }
+
         control.DrawArc(
-            center,
+            toPixels * center,
             radius,
             0,
             Mathf.Tau,
             _ringPoints,
             UiThemeLookup.Color(control, UiTokens.Color.Halo),
-            UiSize.Stroke.SelectionHandle,
-            antialiased: false);
+            UiSize.Stroke.SelectionHandle * scale,
+            antialiased: true);
+        control.DrawSetTransformMatrix(Transform2D.Identity);
     }
 
     public override Vector2 _GetMinimumSize() => Vector2.One * UiSize.Widget.SelectionHandleSize;

@@ -3,10 +3,11 @@ using Godot;
 namespace NodeRunner.Ui.Lib;
 
 /// <summary>
-/// Where callouts over a figure go. Every callout is shown; none is left out.
+/// Where callouts over a figure go. Every callout is shown; none is left out, except an optional one.
 /// <list type="bullet">
 /// <item>A callout sits on its direction past its clearance plus <see cref="LeaderLength"/>, with
-/// its nearest side just there, so it does not cover its own spot.</item>
+/// its nearest side just there, so it does not cover its own spot. One without a leader sits just
+/// past its clearance.</item>
 /// <item>It stays inside the bounds: near an edge it is pushed along it, never to the other side
 /// of its part.</item>
 /// <item>Callouts that would overlap form a stack: one column of callouts, in the order they are
@@ -14,6 +15,9 @@ namespace NodeRunner.Ui.Lib;
 /// first one's part. A callout with the same kind, icon and text as one already in the stack
 /// adds only its leader to that one. A stack that grows into another takes it in, until no two
 /// overlap.</item>
+/// <item>An optional callout is placed after all the others and never joins a stack. Near an edge
+/// it is pushed along it like the others, but it is left out when it would have to move along its
+/// direction to fit, or would overlap another.</item>
 /// </list>
 /// Leaders run from each spot to the centre of its callout and are drawn behind all callouts.
 /// </summary>
@@ -22,21 +26,28 @@ public static class UiCalloutLayout
     /// <summary>The gap between what is drawn at the spot and the callout, spanned by the leader.</summary>
     public const float LeaderLength = 28;
 
-    /// <summary>One callout: its spot, the clear direction from it, and how far the figure reaches that way.</summary>
+    /// <summary>
+    /// One callout: its spot, the clear direction from it, how far the figure reaches that way,
+    /// whether a <paramref name="Leader"/> line ties it to the spot, and whether it is
+    /// <paramref name="Optional"/>.
+    /// </summary>
     public readonly record struct Placement(
         Vector2 Anchor,
         Vector2 Direction,
         float Clearance,
         UiCallout.CalloutKind Kind,
         UiIconId IconId,
-        string Text);
+        string Text,
+        bool Leader = true,
+        bool Optional = false);
 
     /// <summary>
     /// Where a callout went and where its leader from the spot meets it; when it
     /// <paramref name="Joined"/> an earlier callout with the same text, the rect is that one's and
-    /// it shows no callout of its own.
+    /// it shows no callout of its own. An optional callout that did not fit is
+    /// <paramref name="Omitted"/> and shows nothing.
     /// </summary>
-    public readonly record struct Arranged(Rect2 Rect, Vector2 LeaderEnd, bool Joined = false);
+    public readonly record struct Arranged(Rect2 Rect, Vector2 LeaderEnd, bool Joined = false, bool Omitted = false);
 
     /// <summary>Where each callout goes, inside <paramref name="bounds"/> less a <see cref="UiSize.Space.S1"/> margin.</summary>
     public static IReadOnlyList<Arranged> Arrange(IReadOnlyList<Placement> placements, IReadOnlyList<Vector2> sizes, Rect2 bounds)
@@ -44,7 +55,7 @@ public static class UiCalloutLayout
         ArgumentNullException.ThrowIfNull(placements);
         ArgumentNullException.ThrowIfNull(sizes);
         var inner = bounds.Grow(-UiSize.Space.S1);
-        var stacks = Enumerable.Range(0, placements.Count).Select(i => new List<int> { i }).ToList();
+        var stacks = Enumerable.Range(0, placements.Count).Where(i => !placements[i].Optional).Select(i => new List<int> { i }).ToList();
         var laidOut = stacks.Select(stack => LayOut(stack, placements, sizes, inner)).ToList();
         while (FirstOverlap(laidOut) is var (first, second))
         {
@@ -62,6 +73,28 @@ public static class UiCalloutLayout
             {
                 result[index] = new Arranged(rect, Entry(rect, placements[index].Anchor), joined);
             }
+        }
+
+        var taken = laidOut.Select(stack => stack.Bounds).ToList();
+        for (var index = 0; index < placements.Count; index++)
+        {
+            if (!placements[index].Optional)
+            {
+                continue;
+            }
+
+            var direction = DirectionOf(placements[index]);
+            var asked = Out(placements[index], direction, sizes[index]);
+            var rect = PushInside(asked, inner);
+            var fits = Mathf.IsZeroApprox((rect.Position - asked.Position).Dot(direction))
+                && inner.Encloses(rect)
+                && !taken.Any(other => other.Grow(UiSize.Space.S1).Intersects(rect));
+            if (fits)
+            {
+                taken.Add(rect);
+            }
+
+            result[index] = new Arranged(rect, Entry(rect, placements[index].Anchor), Omitted: !fits);
         }
 
         return result;
@@ -136,7 +169,8 @@ public static class UiCalloutLayout
     private static Rect2 Out(Placement placement, Vector2 direction, Vector2 size)
     {
         var reach = (Mathf.Abs(direction.X) * size.X / 2) + (Mathf.Abs(direction.Y) * size.Y / 2);
-        var centre = placement.Anchor + (direction * (placement.Clearance + LeaderLength + reach));
+        var gap = placement.Leader ? LeaderLength : 0;
+        var centre = placement.Anchor + (direction * (placement.Clearance + gap + reach));
         return new Rect2(centre - (size / 2), size);
     }
 

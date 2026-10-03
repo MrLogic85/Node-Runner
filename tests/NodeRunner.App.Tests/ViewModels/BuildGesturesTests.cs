@@ -821,6 +821,191 @@ public class BuildGesturesTests
     }
 
     [Fact]
+    public void Select_WithNoRoomAboveTheFrame_FlipsRotateBelowIt()
+    {
+        var (build, gestures) = ThreeLooseJoints(BuildTool.Select);
+        gestures.View.VisibleArea = new CanvasRect(new Vector2D(-300, -60), new Vector2D(300, 300));
+
+        build.ReplaceSelection([1, 2]);
+
+        Handle(gestures, SelectionHandle.Rotate).ShouldBe(new Vector2D(50, 80));
+        gestures.RotateStem.ShouldBe((new Vector2D(50, 48), new Vector2D(50, 80)));
+        gestures.RotateBelowFrame.ShouldBeTrue();
+        gestures.ScaleCorner.ShouldBe(FrameCorner.BottomRight);
+    }
+
+    [Fact]
+    public void Select_WithTheScaleCornerOutOfView_MovesScaleToACornerInView()
+    {
+        var (build, gestures) = ThreeLooseJoints(BuildTool.Select);
+        gestures.View.VisibleArea = new CanvasRect(new Vector2D(-300, -300), new Vector2D(150, 300));
+
+        build.ReplaceSelection([1, 2]);
+
+        gestures.ScaleCorner.ShouldBe(FrameCorner.BottomLeft);
+        Handle(gestures, SelectionHandle.Scale).X.ShouldBe(100 - _frameRight, 1e-9);
+        Handle(gestures, SelectionHandle.Scale).Y.ShouldBe(48, 1e-9);
+        gestures.FrameCornerSquares.ShouldBe(
+            [new Vector2D(_frameRight, 48), new Vector2D(_frameRight, -48), new Vector2D(100 - _frameRight, -48)],
+            ignoreOrder: true);
+        gestures.RotateBelowFrame.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Select_WithTheBottomOutOfView_MovesScaleToTheTopRight()
+    {
+        var (build, gestures) = ThreeLooseJoints(BuildTool.Select);
+        gestures.View.VisibleArea = new CanvasRect(new Vector2D(-300, -300), new Vector2D(300, 60));
+
+        build.ReplaceSelection([1, 2]);
+
+        gestures.ScaleCorner.ShouldBe(FrameCorner.TopRight);
+        Handle(gestures, SelectionHandle.Scale).X.ShouldBe(_frameRight, 1e-9);
+        Handle(gestures, SelectionHandle.Scale).Y.ShouldBe(-48, 1e-9);
+    }
+
+    [Fact]
+    public void Select_WithNoCornerFullyInView_PutsScaleOnTheCornerNearestToIt()
+    {
+        var (build, gestures) = ThreeLooseJoints(BuildTool.Select);
+        var reach = BuildGestures.HandleHitRadius;
+
+        // Bottom-left is 1 past the reachable area, top-left 10, both right corners about 40.
+        gestures.View.VisibleArea = new CanvasRect(new Vector2D(-300, -38 - reach), new Vector2D(_frameRight - 40 + reach, 47 + reach));
+
+        build.ReplaceSelection([1, 2]);
+
+        gestures.ScaleCorner.ShouldBe(FrameCorner.BottomLeft);
+        Handle(gestures, SelectionHandle.Scale).X.ShouldBe(100 - _frameRight, 1e-9);
+        Handle(gestures, SelectionHandle.Scale).Y.ShouldBe(47, 1e-9);
+    }
+
+    [Fact]
+    public void Select_DraggingMove_KeepsRotateOnTheSideItStartedOn()
+    {
+        var (build, gestures) = ThreeLooseJoints(BuildTool.Select);
+        gestures.View.VisibleArea = new CanvasRect(new Vector2D(-300, -60), new Vector2D(300, 300));
+        build.ReplaceSelection([1, 2]);
+
+        gestures.Press(_moveHandle);
+        gestures.Drag(new Vector2D(50, 150));
+
+        Handle(gestures, SelectionHandle.Rotate).ShouldBe(new Vector2D(50, 230));
+        gestures.RotateStem.ShouldBe((new Vector2D(50, 198), new Vector2D(50, 230)));
+    }
+
+    [Fact]
+    public void Select_DraggingAPinnedHandle_KeepsEveryHandleInView()
+    {
+        var (build, gestures) = ThreeLooseJoints(BuildTool.Select);
+        var visible = new CanvasRect(new Vector2D(0, -40), new Vector2D(100, 40));
+        gestures.View.VisibleArea = visible;
+        build.ReplaceSelection([1, 2]);
+        var scale = Handle(gestures, SelectionHandle.Scale);
+
+        gestures.Press(scale);
+        gestures.Drag(new Vector2D(40, 0));
+
+        build.Nodes[1].Position.X.ShouldBeLessThan(100);
+        foreach (var (_, position) in gestures.SelectionHandles)
+        {
+            visible.Clamp(position, BuildGestures.HandleHitRadius).ShouldBe(position);
+        }
+    }
+
+    [Fact]
+    public void Select_ARefusedTurn_LeavesTheFrameWhereItWas()
+    {
+        var build = new BuildViewModel();
+        build.PlaceNode(new Vector2D(BuildViewModel.BuildArea.Max.X - 18, -100));
+        build.PlaceNode(new Vector2D(BuildViewModel.BuildArea.Max.X - 18, 100));
+        build.ActiveTool = BuildTool.Select;
+        var gestures = new BuildGestures(build);
+        build.ReplaceSelection([1, 2]);
+        var rotate = Handle(gestures, SelectionHandle.Rotate);
+
+        gestures.Press(rotate);
+        gestures.Drag(new Vector2D(rotate.X - 200, 0));
+
+        gestures.SelectionFrameAngle.ShouldBe(0);
+        Handle(gestures, SelectionHandle.Rotate).ShouldBe(rotate);
+    }
+
+    [Fact]
+    public void Select_FrameBiggerThanTheView_PinsEveryHandleInside()
+    {
+        var (build, gestures) = ThreeLooseJoints(BuildTool.Select);
+        var visible = new CanvasRect(new Vector2D(0, -40), new Vector2D(100, 40));
+        gestures.View.VisibleArea = visible;
+
+        build.ReplaceSelection([1, 2]);
+
+        foreach (var (_, position) in gestures.SelectionHandles)
+        {
+            visible.Clamp(position, BuildGestures.HandleHitRadius).ShouldBe(position);
+        }
+
+        gestures.RotateStem.ShouldBeNull();
+    }
+
+    [Fact]
+    public void Select_DraggingRotate_TurnsTheFrameWithTheGroupUntilRelease()
+    {
+        var (build, gestures) = ThreeLooseJoints(BuildTool.Select);
+        build.ReplaceSelection([1, 2]);
+
+        gestures.Press(_rotateHandle);
+        gestures.Drag(new Vector2D(130, 0));
+
+        gestures.SelectionFrameAngle.ShouldBe(Math.PI / 2, 1e-9);
+        gestures.SelectionFrame.ShouldNotBeNull().Width.ShouldBe(2 * _frameRight - 100, 1e-9);
+        Handle(gestures, SelectionHandle.Rotate).X.ShouldBe(130, 1e-9);
+        Handle(gestures, SelectionHandle.Rotate).Y.ShouldBe(0, 1e-9);
+        Handle(gestures, SelectionHandle.Move).ShouldBe(_moveHandle);
+
+        gestures.Release(new Vector2D(130, 0));
+
+        gestures.SelectionFrameAngle.ShouldBe(0);
+        var refitted = gestures.SelectionFrame.ShouldNotBeNull();
+        refitted.Height.ShouldBeGreaterThan(refitted.Width);
+    }
+
+    [Fact]
+    public void Select_FrameHint_ShowsAtRestButNotDuringADrag()
+    {
+        var (build, gestures) = ThreeLooseJoints(BuildTool.Select);
+        build.ReplaceSelection([1]);
+        gestures.FrameHint.ShouldBeNull();
+
+        build.ReplaceSelection([1, 2]);
+        gestures.FrameHint.ShouldBe(BuildGestures.FrameHintText);
+
+        gestures.Press(_moveHandle);
+        gestures.Drag(new Vector2D(_moveHandle.X, 40));
+        gestures.FrameHint.ShouldBeNull();
+    }
+
+    [Fact]
+    public void Select_DraggingABox_PreviewsTheJointsItWouldCatch()
+    {
+        var (build, gestures) = ThreeLooseJoints(BuildTool.Select);
+
+        gestures.Press(new Vector2D(-50, -50));
+        gestures.Drag(new Vector2D(150, 50));
+
+        gestures.SelectionBoxCatches.ShouldBe([1, 2], ignoreOrder: true);
+        build.SelectedNodeIds.ShouldBeEmpty();
+
+        gestures.Release(new Vector2D(150, 50));
+
+        gestures.SelectionBoxCatches.ShouldBeEmpty();
+        build.SelectedNodeIds.ShouldBe([1, 2], ignoreOrder: true);
+    }
+
+    private static Vector2D Handle(BuildGestures gestures, SelectionHandle handle) =>
+        gestures.SelectionHandles.Single(entry => entry.Handle == handle).Position;
+
+    [Fact]
     public void Move_TapOnASensorPicture_SelectsTheSensorNotTheBeam()
     {
         var (build, gestures) = BeamWithSensor(100, SensorKind.Accelerometer);

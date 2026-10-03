@@ -25,6 +25,12 @@ public partial class BuildCanvas : Node2D
     private const int _refusedRingDashes = 12;
     private const int _refusedDashSegments = 6;
 
+    // The reference's Select frame and box: dashes 5 on 4 off, and 10-square corners rounded 2.
+    private const float _frameDash = 5;
+    private const float _frameGap = 4;
+    private const float _frameCornerSquare = 10;
+    private const float _frameCornerRadius = 2;
+
     private BuildViewModel? _viewModel;
     private BuildGestures? _gestures;
     private readonly Dictionary<int, Vector2D> _ghostNodePositions = [];
@@ -326,12 +332,14 @@ public partial class BuildCanvas : Node2D
         DrawPistons();
         DrawSensors();
 
+        var caught = _gestures.SelectionBoxCatches.ToHashSet();
         for (var nodeIndex = 0; nodeIndex < _viewModel.Nodes.Count; nodeIndex++)
         {
             var node = _viewModel.Nodes[nodeIndex];
             var position = ToGodot(node.Position);
             JointDrawing.DrawPlain(this, Theme, ViewTransform(), position, (float)node.Radius);
-            if (_viewModel.SelectedNodeIds.Contains(node.Id))
+            // A dragged Select box shows the halos of the joints it would catch.
+            if (_viewModel.SelectedNodeIds.Contains(node.Id) || caught.Contains(node.Id))
             {
                 SelectionDrawing.DrawJoint(this, Theme, ViewTransform(), position, (float)(node.Radius * BuildGestures.SelectedHaloScale));
             }
@@ -488,30 +496,42 @@ public partial class BuildCanvas : Node2D
     }
 
     /// <summary>
-    /// The dashed frame and rotate stem around a Select selection, drawn last
-    /// and at screen size like its handles.
+    /// The dashed frame around a Select selection with its corner squares and rotate stem, drawn
+    /// last, at screen size like its handles and in window pixels so its edges are smooth. During a
+    /// Rotate drag it turns with the group.
     /// </summary>
     private void DrawSelectionFrame()
     {
-        var view = _gestures!.View;
-        DrawSetTransform(Vector2.Zero);
-        // The canvas node is scaled in the scene; undo it so the frame is a true screen-size hairline.
-        var width = UiSize.Stroke.SelectionFrame / Scale.X;
-        if (_gestures.SelectionFrame is not { } frame)
+        if (_gestures!.SelectionFrame is not { } frame)
         {
             return;
         }
 
+        var view = _gestures.View;
+        var toPixels = UiPixelSpace.Enter(this, Transform2D.Identity);
+        // The canvas node is scaled in the scene; a screen-size length is this many of its units.
+        var unit = 1 / Scale.X;
+        var width = UiSize.Stroke.SelectionFrame * unit * UiPixelSpace.ScaleOf(toPixels);
         var rect = RectFromPoints(ToGodot(view.ToView(frame.Min)), ToGodot(view.ToView(frame.Max)));
-        UiDashedBorder.DrawRoundedRect(this, rect, UiSize.Radius.Small / Scale.X, Theme.SelectionGlow, width);
-        foreach (var (handle, position) in _gestures.SelectionHandles)
+        var center = rect.GetCenter();
+        var turned = toPixels * new Transform2D((float)_gestures.SelectionFrameAngle, center) * new Transform2D(0, -center);
+        UiDashedBorder.DrawRoundedRect(this, rect, UiSize.Radius.Small * unit, Theme.SelectionGlow, width, turned, _frameDash * unit, _frameGap * unit, antialiased: true);
+
+        var squareSize = Vector2.One * (_frameCornerSquare * unit);
+        foreach (var corner in _gestures.FrameCornerSquares)
         {
-            if (handle == SelectionHandle.Rotate)
-            {
-                var top = new Vector2(rect.GetCenter().X, rect.Position.Y);
-                DrawLine(top, ToGodot(view.ToView(position)), Theme.SelectionGlow, width, antialiased: false);
-            }
+            var square = new Rect2(ToGodot(view.ToView(corner)) - (squareSize / 2), squareSize);
+            var outline = UiDashedBorder.RoundedRectPoints(square, _frameCornerRadius * unit).Select(point => turned * point).ToArray();
+            DrawColoredPolygon(outline[..^1], Theme.SelectionCornerFill);
+            DrawPolyline(outline, Theme.SelectionGlow, width, antialiased: true);
         }
+
+        if (_gestures.RotateStem is { } stem)
+        {
+            DrawLine(toPixels * ToGodot(view.ToView(stem.From)), toPixels * ToGodot(view.ToView(stem.To)), Theme.SelectionGlow, width, antialiased: true);
+        }
+
+        DrawSetTransformMatrix(Transform2D.Identity);
     }
 
     /// <summary>
@@ -540,7 +560,34 @@ public partial class BuildCanvas : Node2D
             }
         }
 
+        if (FrameHintPlacement() is { } hint)
+        {
+            placements.Add(hint);
+        }
+
         CalloutLayer.SetCallouts(placements);
+    }
+
+    /// <summary>
+    /// The reference's hint under the Select frame, without a leader and just clear of the Scale
+    /// handle; above the frame instead when Rotate had to flip below it. Optional, so the callout
+    /// layer leaves it out when that side has no room or another callout is there, rather than
+    /// pushing it over the handles.
+    /// </summary>
+    private UiCalloutLayout.Placement? FrameHintPlacement()
+    {
+        if (_gestures!.FrameHint is not { } text || _gestures.SelectionFrame is not { } frame)
+        {
+            return null;
+        }
+
+        var view = _gestures.View;
+        var rect = RectFromPoints(Transform * ToGodot(view.ToView(frame.Min)), Transform * ToGodot(view.ToView(frame.Max)));
+        var above = _gestures.RotateBelowFrame;
+        var anchor = new Vector2(rect.GetCenter().X, above ? rect.Position.Y : rect.End.Y);
+        const float clearance = UiSize.Widget.SelectionHandleRadius + UiSize.Space.S1;
+        var direction = above ? Vector2.Up : Vector2.Down;
+        return new UiCalloutLayout.Placement(anchor, direction, clearance, UiCallout.CalloutKind.Warning, UiIconId.None, text, Leader: false, Optional: true);
     }
 
     private bool TryPlaceNote(CanvasNote note, out Vector2 anchor, out Vector2 direction, out float clearance)
@@ -606,6 +653,15 @@ public partial class BuildCanvas : Node2D
             {
                 control.Position = (Transform * ToGodot(_gestures!.View.ToView(shown[index].Position))) - (control.Size / 2);
             }
+
+            if (handle == SelectionHandle.Scale)
+            {
+                // The Scale glyph's arrows run top-left to bottom-right; on the other diagonal's
+                // corners a quarter turn points them along it, and they turn with the frame.
+                var quarter = _gestures?.ScaleCorner is FrameCorner.TopRight or FrameCorner.BottomLeft ? Mathf.Pi / 2 : 0;
+                control.PivotOffset = control.Size / 2;
+                control.Rotation = quarter + (float)(_gestures?.SelectionFrameAngle ?? 0);
+            }
         }
     }
 
@@ -658,11 +714,21 @@ public partial class BuildCanvas : Node2D
             return;
         }
 
-        var rect = RectFromPoints(ToGodot(box.Start), ToGodot(box.End));
-        var fill = Theme.SelectionGlow;
-        fill.A = 0.16f;
-        DrawRect(rect, fill, filled: true);
-        UiDashedBorder.DrawRoundedRect(this, rect, 0, Theme.SelectionGlow, Stroke(2));
+        // At screen size like the Select frame, in window pixels so its edges are smooth.
+        var viewTransform = ViewTransform();
+        var rect = RectFromPoints(viewTransform * ToGodot(box.Start), viewTransform * ToGodot(box.End));
+        var toPixels = UiPixelSpace.Enter(this, Transform2D.Identity);
+        var unit = 1 / Scale.X;
+        var radius = UiSize.Radius.Small * unit;
+        if (rect.HasArea())
+        {
+            var fill = UiDashedBorder.RoundedRectPoints(rect, radius).Select(point => toPixels * point).ToArray();
+            DrawColoredPolygon(fill[..^1], Theme.SelectionFill);
+        }
+
+        var width = UiSize.Stroke.SelectionFrame * unit * UiPixelSpace.ScaleOf(toPixels);
+        UiDashedBorder.DrawRoundedRect(this, rect, radius, Theme.SelectionGlow, width, toPixels, _frameDash * unit, _frameGap * unit, antialiased: true);
+        DrawSetTransformMatrix(viewTransform);
     }
 
     private void DrawMoveGhosts()

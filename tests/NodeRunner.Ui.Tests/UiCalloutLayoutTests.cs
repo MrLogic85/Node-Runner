@@ -20,6 +20,60 @@ public sealed class UiCalloutLayoutTests
     }
 
     [Fact]
+    public void Arrange_WithoutALeader_PutsTheNearSideJustPastTheClearance()
+    {
+        var placement = Placement(Vector2.Zero, Vector2.Down) with { Leader = false };
+
+        var arranged = UiCalloutLayout.Arrange([placement], [_size], _bounds);
+
+        arranged[0].Rect.ShouldBe(new Rect2(-50, 18, 100, 20));
+    }
+
+    [Fact]
+    public void Arrange_AnOptionalCalloutThatFits_StaysWhereItAsked()
+    {
+        var hint = Placement(Vector2.Zero, Vector2.Down, "Hint") with { Leader = false, Optional = true };
+
+        var arranged = UiCalloutLayout.Arrange([Placement(new Vector2(500, 0), Vector2.Up), hint], [_size, _size], _bounds);
+
+        arranged[1].ShouldBe(new UiCalloutLayout.Arranged(new Rect2(-50, 18, 100, 20), new Vector2(0, 18)));
+    }
+
+    [Fact]
+    public void Arrange_AnOptionalCalloutInTheWay_IsLeftOutAndMovesNothing()
+    {
+        var note = Placement(new Vector2(0, 100), Vector2.Up);
+        var hint = Placement(Vector2.Zero, Vector2.Down, "Hint") with { Leader = false, Optional = true };
+        var alone = UiCalloutLayout.Arrange([note], [_size], _bounds)[0];
+
+        var arranged = UiCalloutLayout.Arrange([hint, note], [_size, _size], _bounds);
+
+        arranged[0].Omitted.ShouldBeTrue();
+        arranged[1].ShouldBe(alone);
+    }
+
+    [Fact]
+    public void Arrange_AnOptionalCalloutPastASideEdge_IsPushedAlongIt()
+    {
+        var hint = Placement(new Vector2(980, 0), Vector2.Down, "Hint") with { Leader = false, Optional = true };
+
+        var arranged = UiCalloutLayout.Arrange([hint], [_size], _bounds);
+
+        arranged[0].Omitted.ShouldBeFalse();
+        arranged[0].Rect.ShouldBe(new Rect2(1000 - UiSize.Space.S1 - 100, 18, 100, 20));
+    }
+
+    [Fact]
+    public void Arrange_AnOptionalCalloutPastTheBounds_IsLeftOutRatherThanPushedIn()
+    {
+        var hint = Placement(new Vector2(0, 970), Vector2.Down, "Hint") with { Leader = false, Optional = true };
+
+        var arranged = UiCalloutLayout.Arrange([hint], [_size], _bounds);
+
+        arranged[0].Omitted.ShouldBeTrue();
+    }
+
+    [Fact]
     public void Arrange_OnADiagonal_RunsTheLeaderStraightOutWithoutCoveringItsSpot()
     {
         var direction = new Vector2(-1, -1).Normalized();

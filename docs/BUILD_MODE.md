@@ -75,7 +75,12 @@ a node's own ring always hits.
   the selection; an empty tap clears it. Two or more selected joints get a
   dashed frame with three `UiSelectionHandle`s: **Move** in the middle (or
   drag anywhere inside the frame, or a selected joint), **Rotate** on a stem
-  above and **Scale** at the bottom-right corner. Rotate and Scale turn
+  above and **Scale** at the bottom-right corner, moved to stay in view near
+  the canvas edge, with a hint "Move, rotate or scale the group" (layout in
+  `docs/UI_DIRECTION.md` → "The Select frame stays in reach"). During a
+  Rotate drag the frame turns with the group; it fits the group again on
+  release. A dragged box shows the halos of the joints it would select.
+  Rotate and Scale turn
   about the centre of the joints' bounds; Scale counts only the drag along
   its diagonal and is clamped to `MinSelectionScale`..`MaxSelectionScale`,
   so the group never collapses or reflects. Every drag frame is computed
