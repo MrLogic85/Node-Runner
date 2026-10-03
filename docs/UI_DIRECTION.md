@@ -65,6 +65,17 @@ then the app follows the reference.
   brain through port matching (#516). So the padlock's Unlock dialog is a
   plain confirm, not a press-and-hold. Owner decision; the lifecycle rule
   lives in `docs/TRAINING_LOOP.md` step 6.
+- **Play is on the rail in both states (#370, 0.13.0).** The reference puts
+  Start training in the unlocked top bar and the play button at the bottom
+  of the rail only when locked. Instead the primary play button sits at
+  the bottom of the rail in both states, so it never moves; the locked top
+  bar keeps the padlock. A dimmed play button's reason is the panel's last
+  line. Stats sits in the overflow menu, "Coming soon" until 0.15.0.
+  The overflow follows training, not the lock: a trained creation lists
+  Stats, Power budget, Reset training, Copy creation and Delete creation in
+  either state, an untrained one Power budget and Delete creation. Copy
+  saves edits first, keeps the brain and confirms with a notification.
+  Checkpoints wait for #256. Owner decision.
 - **Build zoom scales lines too (#400).** The reference keeps a block's
   lines at 2px and its eyes node-sized at any zoom. Instead zoom scales the
   whole picture, lines included, the build area's corner marks too. Four
@@ -108,9 +119,11 @@ then the app follows the reference.
   are removed: a direct brain has no hidden layers to choose. From 0.16.0
   layers are added in the Brain view instead (#543, designed by #549). Owner
   decision.
-- **The brain stays visible (#536).** The BuildLocked brain widget, the
-  Training Brain button, the Signal flow Brain stage and BrainFocus show the
-  direct brain, inputs straight to outputs. Owner decision. The reference
+- **The brain stays visible (#536).** The Training Brain button, the
+  Signal flow Brain stage and BrainFocus show the direct brain, inputs
+  straight to outputs. Owner decision. The BuildLocked brain widget waits
+  for the 0.16.0 brain views (#393, #372); until then locked Build shows
+  no brain button (#370, owner decision). The reference
   BrainFocus assumes hidden neurons, so these are best guesses until #549:
   - nothing is selected at first;
   - tapping an output highlights the senses that drive it directly, and the

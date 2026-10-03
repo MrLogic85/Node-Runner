@@ -36,7 +36,9 @@ locked is overridden in `docs/TRAINING_LOOP.md` → Product lifecycle boundary.
   move-only: nodes can move and cameras can be aimed, but no parts or brain
   shape change. Only what changes the model is locked (#638). The padlock
   in the top bar unlocks it for this visit and keeps the training (#371,
-  `docs/TRAINING_LOOP.md` step 6).
+  `docs/TRAINING_LOOP.md` step 6). Once a creation has training, the
+  overflow menu also offers Stats (coming soon), Reset training and Copy
+  creation (#370); the copy keeps the trained brain.
 
 ## Coordinates
 
@@ -48,7 +50,9 @@ locked is overridden in `docs/TRAINING_LOOP.md` → Product lifecycle boundary.
 ## Interactions
 
 The rail holds the reference tools Move, Beam, Joint and Select (#365);
-"joint" is the player-facing name for a node.
+"joint" is the player-facing name for a node. Start training is the play
+button at the bottom of the rail in both states (#370); it is dimmed until
+the creature can train, and the panel's last line says why.
 Build always opens in Move. `BuildGestures` (App) turns pointer
 presses, drags and releases into edits for the active tool and into zoom and
 pan, and `BuildCanvas` only forwards input and draws. A pointer that

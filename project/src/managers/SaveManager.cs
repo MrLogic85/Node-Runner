@@ -42,24 +42,22 @@ public partial class SaveManager : Node
         Repository.Save(creation);
     }
 
-    // Delete/ResetTraining/ApplyEdit/UpdateIfPresent/
-    // CurrentTrainingEpoch/TryPersistTraining all delegate to
-    // UpdateCoordinator, which serializes mutations per Creation id and
+    // Delete/ResetTraining/ApplyEdit/UpdateIfPresent/Get/
+    // CurrentTrainingEpoch/PersistTrainingInBackground all delegate to
+    // UpdateCoordinator, which serializes mutations per Creation id,
     // invalidates queued background training snapshots (see #113) that a
-    // reset, edit, or delete has superseded.
+    // reset, edit, or delete has superseded, and reads a Creation only once
+    // its queued snapshots have landed (#370).
     public bool Delete(Guid id) => UpdateCoordinator.Delete(id);
 
-    public CreationDef? Get(Guid id)
-    {
-        return Repository.Get(id);
-    }
+    public CreationDef? Get(Guid id) => UpdateCoordinator.Get(id);
 
     public void ResetTraining(Guid id) => UpdateCoordinator.ResetTraining(id);
 
     public long CurrentTrainingEpoch(Guid id) => UpdateCoordinator.CurrentTrainingEpoch(id);
 
-    public bool TryPersistTraining(Guid id, long expectedEpoch, TrainingStateDef training) =>
-        UpdateCoordinator.TryPersistTraining(id, expectedEpoch, training);
+    public Task PersistTrainingInBackground(Guid id, long expectedEpoch, TrainingStateDef training) =>
+        UpdateCoordinator.PersistTrainingInBackground(id, expectedEpoch, training);
 
     public CreationDef? UpdateIfPresent(Guid id, Func<CreationDef, CreationDef> update) =>
         UpdateCoordinator.UpdateIfPresent(id, update);

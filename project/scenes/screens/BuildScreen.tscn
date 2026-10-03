@@ -64,17 +64,17 @@ IconId = 15
 Kind = 1
 Selected = true
 
-[node name="StartTraining" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/HBoxContainer/MarginContainer/ToolbarContent" index="2"]
+[node name="MenuStats" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/ToolbarMenu" index="0"]
 unique_name_in_owner = true
+visible = false
 layout_mode = 2
-size_flags_vertical = 4
-mouse_filter = 1
-text = "Start training"
-script = ExtResource("5_button")
-IconId = 24
-Kind = 0
+script = ExtResource("6_menu_item")
+LabelText = "Stats"
+NoteText = "Coming soon"
+IconId = 4
+Disabled = true
 
-[node name="MenuPowerBudget" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/ToolbarMenu" index="0"]
+[node name="MenuPowerBudget" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/ToolbarMenu" index="1"]
 unique_name_in_owner = true
 layout_mode = 2
 script = ExtResource("6_menu_item")
@@ -83,7 +83,7 @@ NoteText = "Coming soon"
 IconId = 2
 Disabled = true
 
-[node name="MenuResetTraining" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/ToolbarMenu" index="1"]
+[node name="MenuResetTraining" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/ToolbarMenu" index="2"]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
@@ -91,7 +91,15 @@ script = ExtResource("6_menu_item")
 LabelText = "Reset training"
 IconId = 26
 
-[node name="MenuDeleteCreation" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/ToolbarMenu" index="2"]
+[node name="MenuCopyCreation" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/ToolbarMenu" index="3"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+script = ExtResource("6_menu_item")
+LabelText = "Copy creation"
+IconId = 8
+
+[node name="MenuDeleteCreation" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/ToolbarMenu" index="4"]
 unique_name_in_owner = true
 layout_mode = 2
 script = ExtResource("6_menu_item")
@@ -152,6 +160,23 @@ mouse_filter = 1
 text = "Select"
 script = ExtResource("5_button")
 IconId = 29
+ContentLayout = 1
+
+[node name="RailSpacer" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Body/ButtonBar/ButtonBarPadding/ButtonBarContent" index="4"]
+layout_mode = 2
+size_flags_vertical = 3
+mouse_filter = 2
+
+[node name="StartTraining" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Body/ButtonBar/ButtonBarPadding/ButtonBarContent" index="5"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+tooltip_text = "Start training"
+mouse_filter = 1
+script = ExtResource("5_button")
+IconId = 24
+Kind = 0
 ContentLayout = 1
 
 [node name="CanvasSlot" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Body"]
@@ -349,22 +374,6 @@ autowrap_mode = 3
 script = ExtResource("12_label")
 TextStyle = 9
 TextColor = 8
-
-[node name="Stats" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/SavedCreation"]
-unique_name_in_owner = true
-layout_mode = 2
-mouse_filter = 1
-text = "Stats"
-script = ExtResource("5_button")
-IconId = 4
-
-[node name="Brain" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/SavedCreation"]
-unique_name_in_owner = true
-layout_mode = 2
-mouse_filter = 1
-text = "Brain"
-script = ExtResource("5_button")
-IconId = 18
 
 [node name="PartSettings" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent" index="2"]
 unique_name_in_owner = true

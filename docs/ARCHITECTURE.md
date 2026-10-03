@@ -339,6 +339,12 @@ window. All four live in `ui/lib`, not `managers/`, because managers hold no UI.
 - If profiling later shows the need for more throughput, brains can be
   forward-passed off the main thread since they are pure functions on
   `double[]`. Physics remains on Godot's thread.
+- Training saves are the one thread-pool write (#113): each finished
+  generation is queued per creation in `CreationUpdateCoordinator`, and
+  `ICreationUpdateCoordinator.Get` blocks the caller until that creation's
+  queued saves land (#370). Never call `Get` while holding a creation's
+  lock (inside an `UpdateIfPresent` update) or from a queued save. Details
+  in `docs/TRAINING_LOOP.md` → Save.
 
 ## Save format
 

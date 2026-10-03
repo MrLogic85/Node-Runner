@@ -11,6 +11,7 @@ public sealed class CreationUpdateCoordinator : ICreationUpdateCoordinator
     private readonly ICreationRepository _repository;
     private readonly ConcurrentDictionary<Guid, object> _creationLocks = new();
     private readonly ConcurrentDictionary<Guid, long> _trainingEpochs = new();
+    private readonly Dictionary<Guid, Task> _queuedTraining = new();
 
     public CreationUpdateCoordinator(ICreationRepository repository)
     {
@@ -63,6 +64,35 @@ public sealed class CreationUpdateCoordinator : ICreationUpdateCoordinator
         });
 
         return wrote;
+    }
+
+    public Task PersistTrainingInBackground(Guid id, long expectedEpoch, TrainingStateDef training)
+    {
+        ArgumentNullException.ThrowIfNull(training);
+        lock (_queuedTraining)
+        {
+            var previous = _queuedTraining.GetValueOrDefault(id, Task.CompletedTask);
+            var queued = previous.ContinueWith(
+                _ => TryPersistTraining(id, expectedEpoch, training),
+                CancellationToken.None,
+                TaskContinuationOptions.None,
+                TaskScheduler.Default);
+            _queuedTraining[id] = queued;
+            return queued;
+        }
+    }
+
+    public CreationDef? Get(Guid id)
+    {
+        Task? queued;
+        lock (_queuedTraining)
+        {
+            queued = _queuedTraining.GetValueOrDefault(id);
+        }
+
+        // Waits without rethrowing: a failed write is reported by whoever queued it, and the read goes on.
+        queued?.ContinueWith(static _ => { }, TaskScheduler.Default).Wait();
+        return _repository.Get(id);
     }
 
     public void ResetTraining(Guid id)

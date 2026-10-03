@@ -33,6 +33,20 @@ public interface ICreationUpdateCoordinator
     /// </summary>
     bool TryPersistTraining(Guid id, long expectedEpoch, TrainingStateDef training);
 
+    /// <summary>
+    /// Runs <see cref="TryPersistTraining"/> on the thread pool, after any snapshot already queued
+    /// for the same Creation, so a generation boundary never waits for file IO (#113). The task
+    /// faults if the write throws; whoever queued it reports that.
+    /// </summary>
+    Task PersistTrainingInBackground(Guid id, long expectedEpoch, TrainingStateDef training);
+
+    /// <summary>
+    /// Reads a Creation once every training snapshot queued for it has landed, so a screen that
+    /// trusts its lock or training summary never reads it early (#370). Returns <c>null</c> if no
+    /// such Creation exists.
+    /// </summary>
+    CreationDef? Get(Guid id);
+
     /// <summary>Clears a Creation's training state, invalidating any pending training snapshot.</summary>
     void ResetTraining(Guid id);
 

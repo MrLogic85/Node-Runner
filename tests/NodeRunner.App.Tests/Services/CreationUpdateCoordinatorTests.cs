@@ -224,6 +224,41 @@ public sealed class CreationUpdateCoordinatorTests
     }
 
     [Fact]
+    public async Task Get_WaitsForQueuedTraining_SoTheLockIsNeverReadEarly()
+    {
+        var repository = new GatedRepository();
+        var coordinator = new CreationUpdateCoordinator(repository);
+        var creation = CreateCreation("Alpha");
+        repository.Save(creation);
+        repository.Gate.Reset();
+
+        var queued = coordinator.PersistTrainingInBackground(creation.Id, coordinator.CurrentTrainingEpoch(creation.Id), TestTraining.State(3));
+        var read = Task.Run(() => coordinator.Get(creation.Id));
+
+        // "Still blocked" needs a timeout: with the gate shut a correct Get can never finish, so
+        // this can only miss a regression on a very slow machine, never fail falsely.
+        (await Task.WhenAny(read, Task.Delay(50))).ShouldNotBe(read);
+        repository.Gate.Set();
+        (await read).ShouldNotBeNull().Training.ShouldNotBeNull().Generation.ShouldBe(3);
+        queued.IsCompletedSuccessfully.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Get_AfterAFailedQueuedWrite_ReadsWhatIsSaved()
+    {
+        var repository = new GatedRepository();
+        var coordinator = new CreationUpdateCoordinator(repository);
+        var creation = CreateCreation("Alpha");
+        repository.Save(creation);
+        repository.FailSaves = true;
+
+        var queued = coordinator.PersistTrainingInBackground(creation.Id, coordinator.CurrentTrainingEpoch(creation.Id), TestTraining.State(3));
+
+        coordinator.Get(creation.Id).ShouldNotBeNull().Training.ShouldBeNull();
+        queued.IsFaulted.ShouldBeTrue();
+    }
+
+    [Fact]
     public void UpdateIfPresent_MissingCreation_ReturnsNullWithoutWriting()
     {
         var repository = new InMemoryCreationRepository();
@@ -273,5 +308,32 @@ public sealed class CreationUpdateCoordinatorTests
             name,
             creature,
             withTraining ? TestTraining.State(2, 1, TestTraining.Run) : null);
+    }
+
+    /// <summary>Holds every save until <see cref="Gate"/> opens, or fails it.</summary>
+    private sealed class GatedRepository : ICreationRepository
+    {
+        private readonly InMemoryCreationRepository _inner = new();
+
+        public ManualResetEventSlim Gate { get; } = new(initialState: true);
+
+        public bool FailSaves { get; set; }
+
+        public IReadOnlyList<CreationDef> List() => _inner.List();
+
+        public CreationDef? Get(Guid id) => _inner.Get(id);
+
+        public void Save(CreationDef creation)
+        {
+            Gate.Wait();
+            if (FailSaves)
+            {
+                throw new IOException("disk full");
+            }
+
+            _inner.Save(creation);
+        }
+
+        public bool Delete(Guid id) => _inner.Delete(id);
     }
 }
