@@ -31,9 +31,6 @@ public enum SelectionHandle
 /// </summary>
 public sealed class BuildGestures
 {
-    /// <summary>Node hit radius in view units, so it stays finger-sized at any zoom; a node's own ring always hits too.</summary>
-    public const double NodeHitRadius = 32;
-
     /// <summary>Beam hit distance in view units, so it stays finger-sized at any zoom.</summary>
     public const double BeamHitDistance = 20;
 
@@ -42,9 +39,6 @@ public sealed class BuildGestures
 
     /// <summary>Selection handle hit radius in view units: a 48-unit finger target at any zoom.</summary>
     public const double HandleHitRadius = 24;
-
-    /// <summary>A selected joint's halo radius, as a multiple of its own radius; the frame clears it.</summary>
-    public const double SelectedHaloScale = 1.7;
 
     private const double _selectionBoxMinSize = 8;
     private const double _framePadding = 8;
@@ -180,7 +174,7 @@ public sealed class BuildGestures
             return new CreatureElementSelection(CreatureElementKind.Beam, beamId);
         }
 
-        return _build.TryFindNodeNear(position, HitDistance(NodeHitRadius), out nodeId)
+        return _build.TryFindNodeNear(position, SelectionMarks.Gap, out nodeId)
             ? new CreatureElementSelection(CreatureElementKind.Node, nodeId)
             : null;
     }
@@ -307,7 +301,7 @@ public sealed class BuildGestures
         {
             _pressedSensor = sensorId;
         }
-        else if (_build.TryFindNodeNear(position, HitDistance(NodeHitRadius), out nodeId))
+        else if (_build.TryFindNodeNear(position, SelectionMarks.Gap, out nodeId))
         {
             _pressedNode = nodeId;
         }
@@ -714,7 +708,7 @@ public sealed class BuildGestures
         return Place(frame, _frameAngle);
     }
 
-    private static double Halo(NodeDef node) => node.Radius * SelectedHaloScale;
+    private static double Halo(NodeDef node) => SelectionMarks.JointHalo(node.Radius);
 
     /// <summary>The handles on <paramref name="frame"/> turned <paramref name="angle"/> about its centre.</summary>
     private static FrameLayout Place(CanvasRect frame, double angle)
@@ -779,11 +773,11 @@ public sealed class BuildGestures
 
     /// <summary>Snaps only to joints the beam could actually join, so the preview never promises a refused connection.</summary>
     private int? FindBeamTarget(int start, Vector2D position) =>
-        _build.TryFindNodeNear(position, HitDistance(NodeHitRadius), out var end) && _build.CanConnect(start, end) ? end : null;
+        _build.TryFindNodeNear(position, SelectionMarks.Gap, out var end) && _build.CanConnect(start, end) ? end : null;
 
     /// <summary>Any other joint under the pointer, so a refused Piston drop can say why there.</summary>
     private int? FindPistonTarget(int start, Vector2D position) =>
-        _build.TryFindNodeNear(position, HitDistance(NodeHitRadius), out var end) && end != start ? end : null;
+        _build.TryFindNodeNear(position, SelectionMarks.Gap, out var end) && end != start ? end : null;
 
     private void CompleteSelectionBox(Vector2D start, Vector2D end)
     {

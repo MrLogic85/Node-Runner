@@ -326,7 +326,8 @@ public partial class BuildCanvas : Node2D
 
             if (selected.Beams.Contains(beam.Id))
             {
-                SelectionDrawing.DrawBeam(this, ViewTransform(), Theme.SelectionGlow, Stroke(Theme.SelectedBeamOffset), Stroke(Theme.SelectedBeamLineWidth), start, end);
+                var (lineStart, lineEnd) = JoinJointHalos(nodeA, nodeB, start, end, Theme.SelectedBeamOffset, selected);
+                SelectionDrawing.DrawBeam(this, ViewTransform(), Theme.SelectionGlow, Stroke(Theme.SelectedBeamOffset), Stroke(Theme.SelectedBeamLineWidth), lineStart, lineEnd);
             }
         }
 
@@ -342,7 +343,7 @@ public partial class BuildCanvas : Node2D
             JointDrawing.DrawPlain(this, Theme, ViewTransform(), position, (float)node.Radius, look);
             if (isSelected)
             {
-                SelectionDrawing.DrawJoint(this, Theme, ViewTransform(), position, (float)(node.Radius * BuildGestures.SelectedHaloScale));
+                SelectionDrawing.DrawJoint(this, Theme, ViewTransform(), position, (float)SelectionMarks.JointHalo(node.Radius));
             }
         }
 
@@ -376,8 +377,22 @@ public partial class BuildCanvas : Node2D
                 (float)Piston.LongestLength(built, piston.Stroke),
                 CreatureReadiness.IsTooShort(nodeA, nodeB) ? Theme.Danger : Theme.MotorAccent,
                 selected.Pistons.Contains(piston.Id),
-                showStroke);
+                showStroke,
+                selected.Nodes.Contains(piston.NodeA),
+                selected.Nodes.Contains(piston.NodeB));
         }
+    }
+
+    /// <summary>
+    /// A selected beam's lines from <paramref name="start"/> to <paramref name="end"/>, each end moved
+    /// onto its joint's halo ring when that joint is selected too, so a group reads as one outline (#710).
+    /// </summary>
+    private (Vector2 Start, Vector2 End) JoinJointHalos(NodeDef nodeA, NodeDef nodeB, Vector2 start, Vector2 end, float offset, PartSet selected)
+    {
+        var (a, b) = (ToGodot(nodeA.Position), ToGodot(nodeB.Position));
+        var joinedStart = selected.Nodes.Contains(nodeA.Id) ? SelectionDrawing.LineEnd(a, b, (float)SelectionMarks.JointHalo(nodeA.Radius), offset) : start;
+        var joinedEnd = selected.Nodes.Contains(nodeB.Id) ? SelectionDrawing.LineEnd(b, a, (float)SelectionMarks.JointHalo(nodeB.Radius), offset) : end;
+        return (joinedEnd - joinedStart).Dot(b - a) > 0 ? (joinedStart, joinedEnd) : (start, end);
     }
 
     private static double DistanceBetween(NodeDef a, NodeDef b)
@@ -673,14 +688,14 @@ public partial class BuildCanvas : Node2D
             if (nodeId is { } id)
             {
                 var node = NodeById(id);
-                pen.Ring(ToGodot(node.Position), (float)node.Radius * 1.65f, Theme.SelectionGlow, Stroke(Theme.MotorSignalWidth));
+                pen.Ring(ToGodot(node.Position), (float)SelectionMarks.JointHalo(node.Radius), Theme.SelectionGlow, Stroke(Theme.MotorSignalWidth));
             }
         }
 
         if (_gestures.RefusedTargetNodeId is { } refused)
         {
             var node = NodeById(refused);
-            var radius = (float)node.Radius * 1.65f;
+            var radius = (float)SelectionMarks.JointHalo(node.Radius);
             for (var dash = 0; dash < _refusedRingDashes; dash++)
             {
                 var from = dash * Mathf.Tau / _refusedRingDashes;

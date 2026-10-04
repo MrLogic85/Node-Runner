@@ -1,4 +1,5 @@
 using Godot;
+using NodeRunner.App.ViewModels;
 using NodeRunner.Theme;
 
 namespace NodeRunner.Creature;
@@ -54,7 +55,7 @@ public partial class NodeVisual : Node2D, IShadowVisual
         JointDrawing.DrawPlain(this, Theme, Transform2D.Identity, Vector2.Zero, Radius, look, simplified: IsShadow);
         if (IsSelected && !IsShadow)
         {
-            SelectionDrawing.DrawJoint(this, Theme, Transform2D.Identity, Vector2.Zero, Radius * 1.65f);
+            SelectionDrawing.DrawJoint(this, Theme, Transform2D.Identity, Vector2.Zero, (float)SelectionMarks.JointHalo(Radius));
         }
     }
 }

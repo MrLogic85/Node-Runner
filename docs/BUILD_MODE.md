@@ -74,8 +74,10 @@ Build always opens in Parts. `BuildGestures` (App) turns pointer
 presses, drags and releases into edits for the active tool and into zoom and
 pan, and `BuildCanvas` only forwards input and draws. A pointer that
 travels at most `TapSlop` view units counts as a tap. Hit tests prefer a node
-over a beam under it; hit sizes are finger-sized on screen at any zoom, and
-a node's own ring always hits.
+over a beam under it. A joint's touch area (its ring plus the selection
+gap, #710) and a sensor's picture are in canvas units, so they grow and
+shrink with the drawing; beams, Pistons and handles have finger-sized hit
+sizes on screen at any zoom.
 
 - **Parts:** tap a joint, beam, sensor or Piston to select it (its settings
   open), tap empty canvas to deselect, drag a joint to move it, drag anywhere

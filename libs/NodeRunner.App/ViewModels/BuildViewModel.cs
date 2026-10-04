@@ -829,11 +829,10 @@ public sealed class BuildViewModel : INotifyPropertyChanged
     }
 
     /// <summary>
-    /// Finds the closest placed node whose centre is within
-    /// <paramref name="maxDistance"/> of <paramref name="position"/>, or whose
-    /// ring contains it, if any. Used to hit-test nodes.
+    /// Finds the closest placed node whose ring, grown by <paramref name="margin"/>,
+    /// contains <paramref name="position"/>, if any. Used to hit-test nodes.
     /// </summary>
-    public bool TryFindNodeNear(Vector2D position, double maxDistance, out int nodeId)
+    public bool TryFindNodeNear(Vector2D position, double margin, out int nodeId)
     {
         nodeId = -1;
         var bestDistanceSquared = double.PositiveInfinity;
@@ -844,7 +843,7 @@ public sealed class BuildViewModel : INotifyPropertyChanged
             var dx = node.Position.X - position.X;
             var dy = node.Position.Y - position.Y;
             var distanceSquared = (dx * dx) + (dy * dy);
-            var reach = Math.Max(maxDistance, node.Radius);
+            var reach = node.Radius + margin;
             if (distanceSquared <= reach * reach && distanceSquared < bestDistanceSquared)
             {
                 bestDistanceSquared = distanceSquared;

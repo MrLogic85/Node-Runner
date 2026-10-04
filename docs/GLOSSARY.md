@@ -116,8 +116,8 @@ Long-form descriptions and the sensor/model contract live in
 - **Move handle** — The Select frame's centre handle. It moves a selected
   group; it is not a rail tool.
 - **View unit** — A distance in the Build canvas widget's own space before
-  zoom and pan; touch positions, tap slop and hit sizes use it, so they stay
-  finger-sized at any zoom. `view = canvas × Zoom + Offset` (`CanvasView`).
+  zoom and pan; touch positions, tap slop and most hit sizes use it, so they
+  stay finger-sized at any zoom (see `BUILD_MODE.md` for the exceptions). `view = canvas × Zoom + Offset` (`CanvasView`).
 
 ## ML
 
