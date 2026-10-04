@@ -11,7 +11,7 @@ public enum ToolPanelMode
 
 public sealed record ToolPanelPresentation(
     ToolPanelMode Mode,
-    string Title)
+    UiText? Title)
 {
-    public static ToolPanelPresentation None { get; } = new(ToolPanelMode.None, string.Empty);
+    public static ToolPanelPresentation None { get; } = new(ToolPanelMode.None, null);
 }

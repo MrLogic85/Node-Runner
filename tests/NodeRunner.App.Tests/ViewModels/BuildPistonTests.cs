@@ -201,7 +201,7 @@ public sealed class BuildPistonTests
         builder.AddNode(new Vector2D(20, 0));
         builder.AddPiston(1, 2);
 
-        CreatureReadiness.Problems(builder.Build()).ShouldContain(problem => problem.StartsWith("The piston between", StringComparison.Ordinal));
+        CreatureReadiness.Problems(builder.Build()).ShouldContain(UiText.Format("The piston between node {0} and node {1} is too short. Move one of the nodes apart.", 1, 2));
     }
 
     private static (BuildViewModel Build, BuildGestures Gestures) ThreeLooseJoints()

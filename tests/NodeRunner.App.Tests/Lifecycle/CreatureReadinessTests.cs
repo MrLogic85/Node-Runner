@@ -1,4 +1,5 @@
 using NodeRunner.App.Lifecycle;
+using NodeRunner.App.ViewModels;
 using NodeRunner.Domain;
 
 namespace NodeRunner.App.Tests.Lifecycle;
@@ -9,7 +10,7 @@ public sealed class CreatureReadinessTests
     public void Problems_WithEmptyDrawing_AsksForANode()
     {
         CreatureReadiness.Problems(new CreatureDef([], [], []))
-            .ShouldBe(["Add at least one node before training this creation."]);
+            .ShouldBe([UiText.Plain("Add at least one node before training this creation.")]);
     }
 
     [Fact]
@@ -22,9 +23,22 @@ public sealed class CreatureReadinessTests
 
         CreatureReadiness.Problems(creature).ShouldBe(
         [
-            "Node 3 has nothing attached. Connect it with a beam or a piston, or remove it.",
-            "The beam between node 1 and node 2 has zero length. Move one of the nodes apart.",
+            UiText.Format("Node {0} has nothing attached. Connect it with a beam or a piston, or remove it.", 3),
+            UiText.Format("The beam between node {0} and node {1} has zero length. Move one of the nodes apart.", 1, 2),
         ]);
+    }
+
+    [Fact]
+    public void Problems_WithAZeroLengthPiston_SaysSo()
+    {
+        var creature = new CreatureDef(
+            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(0, 0))],
+            [],
+            [],
+            [new PistonDef(301, 1, 2)]);
+
+        CreatureReadiness.Problems(creature).ShouldBe(
+            [UiText.Format("The piston between node {0} and node {1} has zero length. Move one of the nodes apart.", 1, 2)]);
     }
 
     [Theory]
@@ -37,7 +51,7 @@ public sealed class CreatureReadinessTests
         CreatureReadiness.IsTooShort(creature.Nodes[0], creature.Nodes[1]).ShouldBe(!fits);
         CreatureReadiness.Problems(creature).ShouldBe(fits
             ? []
-            : ["The beam between node 1 and node 2 is too short. Move one of the nodes apart."]);
+            : [UiText.Format("The beam between node {0} and node {1} is too short. Move one of the nodes apart.", 1, 2)]);
     }
 
     [Fact]

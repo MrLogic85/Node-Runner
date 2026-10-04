@@ -7,7 +7,8 @@ namespace NodeRunner.Ui.Lib;
 /// figure says where each spot is, which way is clear of it, and how far its own drawing reaches
 /// there; <see cref="UiCalloutLayout"/> decides where each callout goes, and the layer shows them
 /// and draws the leaders behind them. Callouts keep their screen size at any zoom. Fill the
-/// parent; the layer ignores the mouse.
+/// parent; the layer ignores the mouse. Callout text is set in code, already in the player's
+/// language or as the player wrote it, so the layer turns auto-translation off for its callouts.
 /// </summary>
 [GlobalClass]
 public partial class UiCalloutLayer : Control
@@ -18,9 +19,10 @@ public partial class UiCalloutLayer : Control
     public UiCalloutLayer()
     {
         MouseFilter = MouseFilterEnum.Ignore;
+        AutoTranslateMode = AutoTranslateModeEnum.Disabled;
     }
 
-    /// <summary>Shows exactly these callouts, in this layer's coordinates, and hides the rest.</summary>
+    /// <summary>Shows exactly these callouts, in this layer's coordinates, and hides the rest. Their text is shown as given.</summary>
     /// <remarks>The leaders are drawn by the layer itself, so they pass behind every callout.</remarks>
     public void SetCallouts(IReadOnlyList<UiCalloutLayout.Placement> placements)
     {

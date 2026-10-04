@@ -355,8 +355,9 @@ compare `UiText` values. On the Godot side, `UiTextTranslation` (`ui/widgets`)
 is the one place that turns a `UiText` into the player's language.
 `docs/UI_DIRECTION.md` → "Text and translation" owns the rules for showing
 it. The rules apply to new and migrated text; counted text (#751), units and
-numbers (#756), and part names (#757) are migrated, and #752 moves the
-remaining App text that is still built as English.
+numbers (#756), part names (#757), and Build's messages and readiness
+reasons (#758) are migrated, and #759 moves the remaining App text that is
+still built as English.
 
 ## Threading
 

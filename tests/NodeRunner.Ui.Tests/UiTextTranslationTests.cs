@@ -19,6 +19,26 @@ public sealed class UiTextTranslationTests
         SceneNodes.InScene(scene).Single(entry => entry.Name == node).Node.Body
             .ShouldContain("\nauto_translate_mode = 2", customMessage: "AutoTranslateMode.Disabled on the label itself.");
 
+    /// <summary>
+    /// Callout text is set in code, already translated or as the player wrote it (a part they named "Thigh"),
+    /// so the layer's callouts must not translate it again.
+    /// </summary>
+    [Fact]
+    public void Callout_layers_turn_auto_translation_off()
+    {
+        var source = CSharpSources.Project.Single(source => source.Path == "ui/lib/UiCalloutLayer.cs");
+        var model = CSharpSources.ProjectCompilation.GetSemanticModel(source.Tree);
+        var assigned = source.Tree.GetRoot().DescendantNodes().OfType<ConstructorDeclarationSyntax>().Single()
+            .DescendantNodes().OfType<AssignmentExpressionSyntax>()
+            .Select(assignment => (Property: CSharpSources.Symbol(model, assignment.Left)?.Name, Value: CSharpSources.Symbol(model, assignment.Right)?.ToDisplayString()));
+        assigned.ShouldContain(("AutoTranslateMode", "Godot.Node.AutoTranslateModeEnum.Disabled"));
+
+        // A mode saved on a layer in its scene would replace the constructor's.
+        var layers = SceneNodes.WithScript("UiCalloutLayer.cs").ToList();
+        layers.ShouldNotBeEmpty();
+        layers.ShouldAllBe(layer => !layer.Body.Contains("\nauto_translate_mode"));
+    }
+
     [Fact]
     public void Ui_text_is_shown_only_through_UiTextTranslation()
     {
@@ -68,6 +88,7 @@ public sealed class UiTextTranslationTests
     [InlineData("void M(UiLabel label, NodeRunner.App.ViewModels.UiText? text) => NodeRunner.Ui.Widgets.UiTextTranslation.ShowText(label, text ?? NodeRunner.App.ViewModels.UiText.Plain(\"Delete\"));")]
     [InlineData("void M(UiStageCard card, NodeRunner.App.ViewModels.UiText? text, bool show) => card.NoteSource = NodeRunner.Ui.Widgets.UiTextTranslation.Source(show ? text : null);")]
     [InlineData("string M() => nameof(NodeRunner.App.ViewModels.SignalFlowPresentationViewModel.DistanceNote);")]
+    [InlineData("bool M(NodeRunner.App.ViewModels.BuildViewModel build) => build.CanPlacePart(NodeRunner.App.ViewModels.BuildPart.Camera, default, out _);")]
     public void Showing_ui_text_passes(string member) =>
         Bypasses(member).ShouldBeEmpty();
 
@@ -79,13 +100,14 @@ public sealed class UiTextTranslationTests
     }
 
     // The outermost expression of type UiText must be an argument to a UiTextTranslation method; type names, a
-    // nameof, and the inner parts of a larger UiText expression (a member access, ?? or ?:) are not counted.
+    // nameof, a discard, and the inner parts of a larger UiText expression (a member access, ?? or ?:) are not counted.
     private static bool BypassesShowText(SyntaxNode node, SemanticModel model)
     {
         if (node is not ExpressionSyntax expression
             || !IsUiText(model.GetTypeInfo(expression).Type)
             || CSharpSources.Symbol(model, expression) is ITypeSymbol
             || IsInNameof(expression, model)
+            || model.GetSymbolInfo(expression).Symbol is IDiscardSymbol
             || expression.Parent is ExpressionSyntax parent && IsUiText(model.GetTypeInfo(parent).Type))
         {
             return false;

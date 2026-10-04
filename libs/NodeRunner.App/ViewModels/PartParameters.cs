@@ -18,7 +18,7 @@ public sealed record PartParameter(PartParameterId Id, bool MultiEditable, Param
 /// units convert from and to world units, like <see cref="Metres"/>.
 /// </summary>
 public sealed record ParameterScale(
-    string Label,
+    UiText Label,
     SettingRange Range,
     int Decimals,
     string Readout,
@@ -51,7 +51,7 @@ public sealed record SettingRange(double Min, double Max, double Step)
 /// <see cref="High"/> are the lowest and highest shown values at 0…1; they differ when the parts'
 /// values do. <see cref="Step"/> is one whole step at 0…1 (#711).
 /// </summary>
-public sealed record ParameterSlider(PartParameterId Id, string Label, UiText Readout, double Low, double High, double Step)
+public sealed record ParameterSlider(PartParameterId Id, UiText Label, UiText Readout, double Low, double High, double Step)
 {
     public bool ValuesDiffer => Low != High;
 }
@@ -64,13 +64,13 @@ public static class PartParameters
 {
     // A newton is a kilogram metre per second squared, so world force converts like world speed.
     public static PartParameter Strength { get; } = new(
-        PartParameterId.Strength, MultiEditable: true, new("Max strength", new(20, 400, 10), 0, "{0} N", "{0}–{1} N", Metres.FromWorldUnits, ToWorld));
+        PartParameterId.Strength, MultiEditable: true, new(UiText.Plain("Max strength"), new(20, 400, 10), 0, "{0} N", "{0}–{1} N", Metres.FromWorldUnits, ToWorld));
 
     public static PartParameter Stroke { get; } = new(
-        PartParameterId.Stroke, MultiEditable: true, new("Stroke", new(10, 50, 5), 0, "±{0}%", "±{0}–{1}%", value => value * 100, value => value / 100));
+        PartParameterId.Stroke, MultiEditable: true, new(UiText.Plain("Stroke"), new(10, 50, 5), 0, "±{0}%", "±{0}–{1}%", value => value * 100, value => value / 100));
 
     public static PartParameter MaxSpeed { get; } = new(
-        PartParameterId.MaxSpeed, MultiEditable: true, new("Max speed", new(0.5, 4, 0.1), 1, "{0} m/s", "{0}–{1} m/s", Metres.FromWorldUnits, ToWorld));
+        PartParameterId.MaxSpeed, MultiEditable: true, new(UiText.Plain("Max speed"), new(0.5, 4, 0.1), 1, "{0} m/s", "{0}–{1} m/s", Metres.FromWorldUnits, ToWorld));
 
     public static PartParameter Aim { get; } = new(PartParameterId.Aim, MultiEditable: false, Slider: null);
 

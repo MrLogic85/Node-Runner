@@ -37,10 +37,6 @@ public sealed class BuildPresentationViewModel
         }
     }
 
-    public string BuildModeButtonText => _build.IsActive ? "Simulate" : "Build";
-
-    public string InspectorTitle => "Building";
-
     public string CreationName => _build.CreationName;
 
     public BuildTool ActiveTool => _build.ActiveTool;
@@ -61,9 +57,9 @@ public sealed class BuildPresentationViewModel
         ? UiText.Counted("Trained {0} generation", "Trained {0} generations", generation)
         : UiText.Plain("Not trained yet");
 
-    public string TrainingSummaryBody => _build.TrainingGeneration is not null
-        ? "This can drop after a noisy generation; Training's Best never does. Tap the padlock to change the body. Training is kept."
-        : "Start training when you are ready.";
+    public UiText TrainingSummaryBody => _build.TrainingGeneration is not null
+        ? UiText.Plain("This can drop after a noisy generation; Training's Best never does. Tap the padlock to change the body. Training is kept.")
+        : UiText.Plain("Start training when you are ready.");
 
     /// <summary>The Reset training dialog body (#687). Copy sits beside Reset in the overflow, so it is offered.</summary>
     public UiText ResetTrainingWarning =>
@@ -114,7 +110,7 @@ public sealed class BuildPresentationViewModel
                     _build.DefaultPartName(sensorId),
                     UiText.Plain("On"),
                     _build.PartDisplayName(sensor.BeamId),
-                    _build.AimableCameraId == sensorId ? $"{SensorNote(sensor.Kind)} {AimNote}" : SensorNote(sensor.Kind),
+                    SensorNote(sensor.Kind, aimable: _build.AimableCameraId == sensorId),
                     canDelete,
                     PanelSliders());
             }
@@ -129,7 +125,7 @@ public sealed class BuildPresentationViewModel
                     _build.DefaultPartName(beamId),
                     UiText.Plain("Between"),
                     UiText.Format("{0} ↔ {1}", _build.PartDisplayName(beam.NodeA), _build.PartDisplayName(beam.NodeB)),
-                    "Drag its ends to change the length.",
+                    UiText.Plain("Drag its ends to change the length."),
                     canDelete,
                     PanelSliders());
             }
@@ -143,7 +139,7 @@ public sealed class BuildPresentationViewModel
                     _build.DefaultPartName(nodeId),
                     UiText.Plain("Beams"),
                     ConnectedBeamText(nodeId),
-                    "Beams meet and turn here. Drag it to move them.",
+                    UiText.Plain("Beams meet and turn here. Drag it to move them."),
                     canDelete,
                     PanelSliders());
             }
@@ -152,7 +148,7 @@ public sealed class BuildPresentationViewModel
         }
     }
 
-    public const string PistonNote = "The brain pushes it out and pulls it in, within its stroke.";
+    public static UiText PistonNote { get; } = UiText.Plain("The brain pushes it out and pulls it in, within its stroke.");
 
     /// <summary>A slider for each setting the selection can change in the panel (#704).</summary>
     private List<ParameterSlider> PanelSliders() =>
@@ -160,13 +156,13 @@ public sealed class BuildPresentationViewModel
             .Where(id => PartParameters.Of(id).InPanel)
             .Select(id => PartParameters.SliderOver(id, _build.SelectedValuesOf(id)))];
 
-    /// <summary>Added to an unlocked Camera's note: what its Aim handle does (#594).</summary>
-    public const string AimNote = "Drag the round handle to aim it.";
-
-    public static string SensorNote(SensorKind kind) => kind switch
+    /// <summary>What a sensor does; an <paramref name="aimable"/> Camera's note also says what its Aim handle does (#594).</summary>
+    public static UiText SensorNote(SensorKind kind, bool aimable) => kind switch
     {
-        SensorKind.Accelerometer => "Feels how its beam speeds up, slows down and tilts.",
-        SensorKind.Camera => "Three rays see how near the ground is.",
+        SensorKind.Accelerometer => UiText.Plain("Feels how its beam speeds up, slows down and tilts."),
+        SensorKind.Camera => aimable
+            ? UiText.Plain("Three rays see how near the ground is. Drag the round handle to aim it.")
+            : UiText.Plain("Three rays see how near the ground is."),
         _ => throw new ArgumentOutOfRangeException(nameof(kind)),
     };
 
@@ -185,15 +181,15 @@ public sealed class BuildPresentationViewModel
             var settings = PanelSliders();
             var showFrameRows = _build.SelectedNodeCount >= 2;
             var deleteNote = selection.Nodes.Count > 0
-                ? "Beams on a deleted node go with it."
+                ? UiText.Plain("Beams on a deleted node go with it.")
                 : _build.Sensors.Any(sensor => selection.Beams.Contains(sensor.BeamId) && !selection.Sensors.Contains(sensor.Id))
-                    ? "A sensor on a deleted beam goes with it."
-                    : string.Empty;
+                    ? UiText.Plain("A sensor on a deleted beam goes with it.")
+                    : null;
             return new SelectionPanelPresentation(
                 UiText.Counted("{0} selected", "{0} selected", count),
                 settings,
-                settings.Count > 0 ? "A slider sets one value for all of them." : string.Empty,
-                settings.Count == 0 && !showFrameRows ? "These parts share no settings." : string.Empty,
+                settings.Count > 0 ? UiText.Plain("A slider sets one value for all of them.") : null,
+                settings.Count == 0 && !showFrameRows ? UiText.Plain("These parts share no settings.") : null,
                 showFrameRows,
                 UiText.Counted("Delete {0}", "Delete {0}", count),
                 deleteNote,
@@ -226,10 +222,10 @@ public sealed class BuildPresentationViewModel
 
         return ActiveTool switch
         {
-            BuildTool.Parts => new ToolPanelPresentation(ToolPanelMode.PartsTray, "Parts"),
-            BuildTool.Beam => new ToolPanelPresentation(ToolPanelMode.LinkList, "Beams"),
-            BuildTool.Joint => new ToolPanelPresentation(ToolPanelMode.JointHelp, "Joint"),
-            BuildTool.Select => new ToolPanelPresentation(ToolPanelMode.SelectHelp, "Select"),
+            BuildTool.Parts => new ToolPanelPresentation(ToolPanelMode.PartsTray, UiText.Plain("Parts")),
+            BuildTool.Beam => new ToolPanelPresentation(ToolPanelMode.LinkList, UiText.Plain("Beams")),
+            BuildTool.Joint => new ToolPanelPresentation(ToolPanelMode.JointHelp, UiText.Plain("Joint")),
+            BuildTool.Select => new ToolPanelPresentation(ToolPanelMode.SelectHelp, UiText.Plain("Select")),
             _ => ToolPanelPresentation.None,
         };
     }
@@ -247,7 +243,7 @@ public sealed class BuildPresentationViewModel
     }
 
     // A short form of the builder's errors for the readiness line; CreatureReadiness decides whether training may start.
-    private UiText ShortReadiness(IReadOnlyList<string> errors)
+    private UiText ShortReadiness(IReadOnlyList<UiText> errors)
     {
         if (errors.Count == 0)
         {
@@ -275,8 +271,7 @@ public sealed class BuildPresentationViewModel
             && CreatureReadiness.IsTooShort(NodeById(piston.NodeA), NodeById(piston.NodeB)));
         return (tooShort, tooShortPistons) switch
         {
-            // The builder's reasons are still finished English until #752 makes them UiText.
-            (0, 0) => UiText.Plain(errors[0]),
+            (0, 0) => errors[0],
             (0, _) => UiText.Counted("{0} piston too short", "{0} pistons too short", tooShortPistons),
             _ => UiText.Counted("{0} beam too short", "{0} beams too short", tooShort),
         };

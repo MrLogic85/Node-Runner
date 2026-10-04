@@ -630,14 +630,17 @@ and translation"):
   control asks it again when the language changes. Meanwhile the control's
   own auto-translation is off, so the text is not translated a second time.
   A component that shows code-set text inside, such as `UiSidePanel`'s
-  title, `UiStageCard`'s note, `UiSlider`'s readout and step labels,
+  title, `UiStageCard`'s note, `UiSlider`'s label, readout and step labels,
   `UiPartRow`'s name, `UiTextField`'s placeholder or a `UiDialogSpec`'s
   content, has a matching `…Source` property that takes
   `UiTextTranslation.Source(text)` and turns auto-translation off on that
   leaf only. Other components get one when they first need it. Text drawn
-  in code, such as the arena ruler, the best flag and BrainFocus's labels,
-  asks `UiTextTranslation.Source` itself and draws again when the language
-  changes. App text still built as English moves over in #752.
+  in code, such as the arena ruler, the best flag, BrainFocus's labels and
+  the Build canvas notes, asks `UiTextTranslation.Source` itself and draws
+  again when the language changes. A `UiCalloutLayer` shows the text it is
+  given, already translated or as the player wrote it, so it turns
+  auto-translation off for its callouts (#758). `docs/ARCHITECTURE.md` →
+  "UI text and translation" tracks which App text is still English.
 - **Text the player wrote**, such as a creation's name, is never
   translated. Its label sets `auto_translate_mode = Disabled` on itself
   only, so the static text around it still translates. A part's own name
