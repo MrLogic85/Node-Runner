@@ -112,9 +112,9 @@ CreatureDef  ──build──▶  physical body  ──sensors──▶  model 
   aim. In Build a Camera selected alone shows its full rays; in Training every
   Camera on the followed shadow shows the rays that hit the ground, up to
   the hit, with a `halo` ring there (#623), and nothing for a ray that sees
-  nothing. Rays are drawn over the joints, by draw order, not z-index
-  (Build draws them after the joints; Training's `CameraRaysVisual` is added
-  after the joint bodies). A tap hits a joint first, then a sensor, then a
+  nothing. Rays are drawn over the joints (Build draws them after the
+  joints; Training's `CameraRaysVisual` sits on the creature's overlay
+  layer, see "Draw layers" below). A tap hits a joint first, then a sensor, then a
   beam, in Build and Training alike (`project/src/theme/SensorDrawing.cs`,
   `project/src/creature/SensorVisual.cs`).
 
@@ -231,10 +231,29 @@ a composition of triangles; a bare quadrilateral stays free to fold.
   cylinder, a joint held only by Pistons tore free of its end stops (#731).
 - **Minimum length:** the same as a beam's (`CreatureReadiness.MinimumBeamGap`).
 - **Drawn** as a rod from node A to node B with a cylinder at A and a cap at
-  B (`project/src/theme/PistonDrawing.cs`), over beams and under joints. The
+  B (`project/src/theme/PistonDrawing.cs`), over beams and under joints
+  (see "Draw layers"). The
   cylinder is the stroke's share of its built length (±50% draws half). A
   selected Piston shows ticks at its shortest and longest lengths while the
   selection can set its Stroke (#704).
+
+## Draw layers
+
+A creature draws in named layers (`project/src/theme/CreatureLayers.cs`,
+#767), bottom to top: rigid hatch, beams, Pistons, a selected link, sensors,
+a selected sensor, joints, a selected joint, then overlays such as
+Training's camera rays. Each part visual (`project/src/theme/*Part.cs`) puts
+itself on its layer, so the picture never depends on the order parts are
+added.
+
+A part draws its selection with itself, never on a separate layer: a mark on
+its own layer would weave through the parts around it. Instead a selected
+part moves whole up to the selected layer of its kind, so a selected beam
+draws over the Piston that crosses it, mark and all (#766). Training's world
+stacks the ground, then every shadow, then the followed creature
+(`ArenaLayers`); the world has its own viewport, so these layers never reach
+the screen's dialogs. Build and the thumbnails move onto the same parts in
+#769 and #770.
 
 ## Drawing as a shadow
 

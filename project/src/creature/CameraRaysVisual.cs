@@ -5,11 +5,16 @@ namespace NodeRunner.Creature;
 
 /// <summary>
 /// The creature's camera rays in Training (#623): every ray that hits the ground, drawn up to the
-/// hit with a ring there, whether or not the camera is selected. The creature adds it after its
-/// joints, so tree order keeps the rays on top.
+/// hit with a ring there, whether or not the camera is selected, on the overlay layer over the
+/// whole creature.
 /// </summary>
 public partial class CameraRaysVisual : Node2D, IShadowVisual
 {
+    public CameraRaysVisual()
+    {
+        ZIndex = CreatureLayers.Overlays;
+    }
+
     /// <summary>Only the followed creature shows its camera rays.</summary>
     public static ShadowDrawing AsShadow => ShadowDrawing.Hidden;
 

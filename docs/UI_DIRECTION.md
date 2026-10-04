@@ -311,7 +311,10 @@ reference would mislead someone working on that surface.
     each side. A Piston's lines stop at the joint edges. In a selected group,
     a beam's or Piston's lines run on to the selected joints' halo rings, so
     the group reads as one outline. All are drawn over the part, in Build and
-    Training.
+    Training. A part draws its marks with itself, and a selected part rises
+    whole over the other parts of its kind, never over the kinds drawn above
+    it (`docs/CREATURE_MODEL.md` → "Draw layers"; Training now, Build in
+    #769).
   - *Orientation:* the side of the beam that faces up as built is the
     sensor's top, and it then turns with the beam; it never flips during a
     run. The Camera looks along its aim. A Camera selected alone draws its rays

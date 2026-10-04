@@ -40,11 +40,14 @@ the model this implements.**
   mass and writes its 2 readings into the sensor buffer
 - `CameraSensor.cs` — one camera: three `RayCast2D` children aimed as
   built by the Domain `CameraRays`, writing 3 nearness readings
-- `NodeVisual.cs` / `BeamVisual.cs` — rendering only, no physics
-- `SensorVisual.cs` — a sensor's picture, a rendering-only child of its
-  beam body; the Accelerometer weight follows the live proof mass
+- `NodeVisual.cs` / `BeamVisual.cs` / `PistonVisual.cs` /
+  `RigidHatchVisual.cs` — rendering only, no physics: Training's adapters
+  over the shared part visuals in `project/src/theme` (`JointPart`,
+  `BeamPart`, `PistonPart`, `HatchPart`, #767)
+- `SensorVisual.cs` — a sensor's picture (`SensorPart`), a rendering-only
+  child of its beam body; the Accelerometer weight follows the live proof mass
 - `CameraRaysVisual.cs` — every camera ray that hits the ground, drawn up to
-  the hit; added after the joints so tree order keeps it on top
+  the hit on the `CreatureLayers.Overlays` layer, over the whole creature
 - `ShadowDrawing.cs` — `IShadowVisual`: every visual above declares how it
   draws on a shadow that is not followed (#385); a test checks each one
 - `Creature.tscn` (in `scenes/`) — the scene template
