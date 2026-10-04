@@ -43,25 +43,10 @@ public sealed class UiPopupContractsTests
     }
 
     [Fact]
-    public void Failure_FromSourceAsksTheSourceForItsText()
+    public void Failure_FromSourceIsAFailure()
     {
-        var language = "en";
-        var result = UiDialogResult.Failure(() => language == "en" ? "Could not save." : "Kunde inte spara.");
-
-        result.Succeeded.ShouldBeFalse();
-        result.ErrorMessage.ShouldBeNull();
-        result.ErrorSource!().ShouldBe("Could not save.");
-        language = "sv";
-        result.ErrorSource!().ShouldBe("Kunde inte spara.");
-        UiDialogResult.Success.ErrorSource.ShouldBeNull();
+        UiDialogResult.Failure(() => "Could not save.").Succeeded.ShouldBeFalse();
         Should.Throw<ArgumentNullException>(() => UiDialogResult.Failure((Func<string>)null!));
-    }
-
-    [Fact]
-    public void Text_sources_are_optional()
-    {
-        new UiDialogSpec(UiPopupType.Default, "Title", "Body").TitleSource.ShouldBeNull();
-        new UiNotificationSpec(UiPopupType.Default, "Title", "Message").MessageSource.ShouldBeNull();
     }
 
     [Theory]

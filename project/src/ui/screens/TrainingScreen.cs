@@ -69,8 +69,7 @@ public partial class TrainingScreen : Control
         pause.TooltipText = paused ? "Run" : "Pause";
     }
 
-    /// <summary>Shows how fast the run plays, such as "2x".</summary>
-    /// <summary>Shows the speed text, already translated, and asks it again when the language changes.</summary>
+    /// <summary>Shows how fast the run plays, such as "2x": already translated, and asked again when the language changes.</summary>
     public void ShowSpeed(Func<string> speedText) => GetNode<UiButton>("%Speed").TextSource = speedText;
 
     /// <summary>

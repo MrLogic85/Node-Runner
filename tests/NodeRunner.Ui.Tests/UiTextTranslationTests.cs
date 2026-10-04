@@ -58,20 +58,15 @@ public sealed class UiTextTranslationTests
 
     /// <summary>
     /// Popup text is translated whole, so it is never put together in code (#773): "Delete {0}?" crosses as a
-    /// UiText through a …Source property, since "Delete Walker?" has no translation. The design galleries
-    /// show sample text for development and are left out.
+    /// UiText through a …Source property, since "Delete Walker?" has no translation. A host's own
+    /// <c>Notify(title, message)</c> that hands its text on to a popup counts as the popup. The design
+    /// galleries show sample text for development and are left out.
     /// </summary>
     [Fact]
     public void Popup_text_is_not_built_in_code()
     {
-        var compilation = CSharpSources.ProjectCompilation;
-        var violations = CSharpSources.Project
-            .Where(source => !source.Path.StartsWith("ui/screens/", StringComparison.Ordinal) || !source.Path.Contains("Gallery", StringComparison.Ordinal))
-            .SelectMany(source =>
-            {
-                var model = compilation.GetSemanticModel(source.Tree);
-                return source.Find(node => BuildsPopupText(node, model));
-            })
+        var violations = PopupTextBuilds(CSharpSources.ProjectCompilation, CSharpSources.Project)
+            .Where(violation => !violation.StartsWith("ui/screens/", StringComparison.Ordinal) || !violation.Contains("Gallery", StringComparison.Ordinal))
             .ToList();
 
         violations.ShouldBeEmpty("Pass a UiText through UiTextTranslation.Source to the popup's …Source property instead.");
@@ -81,12 +76,13 @@ public sealed class UiTextTranslationTests
     [InlineData("object M(string name) => new UiNotificationSpec(UiPopupType.Default, \"Examples\", $\"Could not copy {name}.\");")]
     [InlineData("object M(string name) => new UiDialogSpec(UiPopupType.Danger, \"Delete \" + name + \"?\", \"Gone for good.\");")]
     [InlineData("object M(string name) => UiDialogResult.Failure(string.Format(\"Could not delete {0}.\", name));")]
+    [InlineData("object M(string name) => Notify(\"Creations\", $\"Could not open {name}.\"); object Notify(string title, string message) => new UiNotificationSpec(UiPopupType.Default, title, message);")]
     public void Building_popup_text_is_flagged(string member) =>
         PopupTextBuilds(member).ShouldHaveSingleItem();
 
     [Theory]
     [InlineData("object M() => new UiNotificationSpec(UiPopupType.Default, \"Examples\", \"Could not copy.\");")]
-    [InlineData("object M(string title) => new UiDialogSpec(UiPopupType.Default, title, string.Empty);")]
+    [InlineData("object M() => Notify(\"Creations\", \"Could not open it.\"); object Notify(string title, string message) => new UiNotificationSpec(UiPopupType.Default, title, message);")]
     public void Whole_popup_text_passes(string member) =>
         PopupTextBuilds(member).ShouldBeEmpty();
 
@@ -155,18 +151,35 @@ public sealed class UiTextTranslationTests
     private static IEnumerable<string> PopupTextBuilds(string member)
     {
         var snippet = CSharpSources.Snippet(member);
-        var model = CSharpSources.Compile([.. CSharpSources.Project, snippet]).GetSemanticModel(snippet.Tree);
-        return snippet.Find(node => BuildsPopupText(node, model));
+        return PopupTextBuilds(CSharpSources.Compile([.. CSharpSources.Project, snippet]), [snippet]);
     }
 
     private static readonly string[] _popupTypes =
         ["NodeRunner.Ui.Lib.UiDialogSpec", "NodeRunner.Ui.Lib.UiNotificationSpec", "NodeRunner.Ui.Lib.UiDialogResult"];
 
-    private static bool BuildsPopupText(SyntaxNode node, SemanticModel model) =>
-        node is ArgumentSyntax { Parent.Parent: ExpressionSyntax call } argument
-        && CSharpSources.Symbol(model, call) is IMethodSymbol method
-        && _popupTypes.Contains(method.ContainingType.ToDisplayString())
-        && IsBuiltText(argument.Expression, model);
+    // A parameter that goes straight on as popup text is popup text too, one level up.
+    private static IEnumerable<string> PopupTextBuilds(Compilation compilation, IReadOnlyList<CSharpSources.Source> sources)
+    {
+        var models = sources.ToDictionary(source => source, source => compilation.GetSemanticModel(source.Tree));
+        var forwarded = sources
+            .SelectMany(source => source.Tree.GetRoot().DescendantNodes().OfType<ArgumentSyntax>()
+                .Where(argument => IsPopupParameter(Parameter(argument, models[source]), []))
+                .Select(argument => models[source].GetSymbolInfo(argument.Expression).Symbol)
+                .OfType<IParameterSymbol>())
+            .ToHashSet<IParameterSymbol>(SymbolEqualityComparer.Default);
+
+        return sources.SelectMany(source => source.Find(node =>
+            node is ArgumentSyntax argument
+            && IsPopupParameter(Parameter(argument, models[source]), forwarded)
+            && IsBuiltText(argument.Expression, models[source])));
+    }
+
+    private static IParameterSymbol? Parameter(ArgumentSyntax argument, SemanticModel model) =>
+        (model.GetOperation(argument) as Microsoft.CodeAnalysis.Operations.IArgumentOperation)?.Parameter;
+
+    private static bool IsPopupParameter(IParameterSymbol? parameter, HashSet<IParameterSymbol> forwarded) =>
+        parameter is not null
+        && (_popupTypes.Contains(parameter.ContainingType?.ToDisplayString()) || forwarded.Contains(parameter.OriginalDefinition));
 
     private static bool IsBuiltText(ExpressionSyntax expression, SemanticModel model) =>
         expression is InterpolatedStringExpressionSyntax

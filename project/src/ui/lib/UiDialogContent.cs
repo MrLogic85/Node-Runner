@@ -13,12 +13,9 @@ public sealed partial class UiDialogContent : Control
     private PreviewTheme _theme;
     private UiPopupCard? _card;
     private ScrollContainer _scroll = null!;
-    private Label _title = null!;
-    private Func<string>? _titleSource;
-    private Label _body = null!;
-    private Func<string>? _contentSource;
-    private Label _error = null!;
-    private Func<string>? _errorSource;
+    private UiLabel _title = null!;
+    private UiLabel _body = null!;
+    private UiLabel _error = null!;
     private UiButton _cancel = null!;
     private UiButton _confirm = null!;
     private bool _layoutQueued;
@@ -55,9 +52,9 @@ public sealed partial class UiDialogContent : Control
     {
         _card = GetNode<UiPopupCard>("%Card");
         _scroll = GetNode<ScrollContainer>("%BodyScroll");
-        _title = GetNode<Label>("%Title");
-        _body = GetNode<Label>("%Content");
-        _error = GetNode<Label>("%Error");
+        _title = GetNode<UiLabel>("%Title");
+        _body = GetNode<UiLabel>("%Content");
+        _error = GetNode<UiLabel>("%Error");
         _cancel = GetNode<UiButton>("%Cancel");
         _confirm = GetNode<UiButton>("%Confirm");
         Resized += QueueLayout;
@@ -82,12 +79,6 @@ public sealed partial class UiDialogContent : Control
             ("%SemanticType", CanvasItem.PropertyName.Visible),
             ("%SemanticType", Control.PropertyName.ThemeTypeVariation),
             ("%SemanticType", Label.PropertyName.Uppercase),
-            ("%Title", Control.PropertyName.ThemeTypeVariation),
-            ("%Title", Label.PropertyName.Uppercase),
-            ("%Content", Control.PropertyName.ThemeTypeVariation),
-            ("%Content", Label.PropertyName.Uppercase),
-            ("%Error", Control.PropertyName.ThemeTypeVariation),
-            ("%Error", Label.PropertyName.Uppercase),
             ("%BodyScroll", Control.PropertyName.CustomMinimumSize),
             ("%Confirm", UiButton.PropertyName.Kind),
         ]);
@@ -97,13 +88,6 @@ public sealed partial class UiDialogContent : Control
         if (_unsaved.Handle(this, what, ApplyAppearance))
         {
             return;
-        }
-
-        if (what == NotificationTranslationChanged)
-        {
-            Refresh(_title, _titleSource);
-            Refresh(_body, _contentSource);
-            Refresh(_error, _errorSource);
         }
 
         if (what == NotificationThemeChanged && IsNodeReady())
@@ -116,10 +100,8 @@ public sealed partial class UiDialogContent : Control
     {
         _type = spec.Type;
         _iconOverride = spec.Icon;
-        _titleSource = spec.TitleSource;
-        Show(_title, spec.Title, _titleSource);
-        _contentSource = spec.ContentSource;
-        Show(_body, spec.Content, _contentSource);
+        ShowText(_title, spec.Title, spec.TitleSource);
+        ShowText(_body, spec.Content, spec.ContentSource);
         _cancel.Text = spec.AbortText;
         _cancel.HoldDurationSeconds = 0;
         _cancel.HoldToActivate = false;
@@ -143,24 +125,17 @@ public sealed partial class UiDialogContent : Control
     /// <summary>Shows <paramref name="message"/>, or <paramref name="source"/>'s text in its place; neither hides the error.</summary>
     public void ShowError(string? message, Func<string>? source = null)
     {
-        _errorSource = source;
-        Show(_error, message ?? "", source);
+        ShowText(_error, message ?? "", source);
         _error.Visible = message is not null || source is not null;
         QueueLayout();
     }
 
-    // A source's text is already translated, so the label must not translate it again.
-    private static void Show(Label label, string text, Func<string>? source)
+    private static void ShowText(UiLabel label, string text, Func<string>? source)
     {
-        label.AutoTranslateMode = source is null ? AutoTranslateModeEnum.Inherit : AutoTranslateModeEnum.Disabled;
-        label.Text = source?.Invoke() ?? text;
-    }
-
-    private static void Refresh(Label label, Func<string>? source)
-    {
-        if (source is not null)
+        label.TextSource = source;
+        if (source is null)
         {
-            label.Text = source();
+            label.Text = text;
         }
     }
 
@@ -182,9 +157,6 @@ public sealed partial class UiDialogContent : Control
         typeLabel.Text = UiPopupStyle.Overline(Type);
         typeLabel.Visible = typeLabel.Text.Length > 0;
         StyleText(typeLabel, UiTokens.Typography.Overline, UiPopupStyle.SemanticToken(Type));
-        StyleText(GetNode<Label>("%Title"), UiTokens.Typography.Subheading, UiTokens.Color.Ink);
-        StyleText(_body, UiTokens.Typography.Body, UiTokens.Color.Ink);
-        StyleText(_error, UiTokens.Typography.Note, UiTokens.Color.Danger);
         _confirm.Kind = Type switch
         {
             UiPopupType.Warn => UiButtonKind.Flat,
