@@ -9,8 +9,8 @@ public sealed class SignalFlowPresentationViewModelTests
     public void Update_WithLiveReadings_NotesEachStage()
     {
         var viewModel = new SignalFlowPresentationViewModel();
-        var notifications = 0;
-        viewModel.PropertyChanged += (_, _) => notifications++;
+        var changed = new List<string?>();
+        viewModel.PropertyChanged += (_, args) => changed.Add(args.PropertyName);
 
         viewModel.Update(
             [
@@ -22,10 +22,10 @@ public sealed class SignalFlowPresentationViewModelTests
             [new MotorReading(MotorReading.PistonKind, 1, -0.6, 12.4), new MotorReading(MotorReading.PistonKind, 2, 0.2, 3.1)],
             distance: 4225);
 
-        viewModel.SensesNote.ShouldBe("4 readings");
-        viewModel.OutputsNote.ShouldBe("2 pistons");
+        viewModel.SensesNote.ShouldBe(Readings(4));
+        viewModel.OutputsNote.ShouldBe(Pistons(2));
         viewModel.DistanceNote.ShouldBe("42.3 m");
-        notifications.ShouldBe(1);
+        changed.ShouldBe([null], "The counts changed, so every note is new.");
     }
 
     [Fact]
@@ -35,8 +35,8 @@ public sealed class SignalFlowPresentationViewModelTests
 
         viewModel.Update([new SensorReading("Accelerometer", 1, "across", 0.1)], [new MotorReading(MotorReading.PistonKind, 1, 0.2, 1)], 0);
 
-        viewModel.SensesNote.ShouldBe("1 reading");
-        viewModel.OutputsNote.ShouldBe("1 piston");
+        viewModel.SensesNote.ShouldBe(Readings(1));
+        viewModel.OutputsNote.ShouldBe(Pistons(1));
         viewModel.DistanceNote.ShouldBe("0.0 m");
     }
 
@@ -53,7 +53,7 @@ public sealed class SignalFlowPresentationViewModelTests
             ],
             0);
 
-        viewModel.OutputsNote.ShouldBe("1 piston");
+        viewModel.OutputsNote.ShouldBe(Pistons(1));
     }
 
     [Fact]
@@ -63,8 +63,8 @@ public sealed class SignalFlowPresentationViewModelTests
 
         viewModel.Update([], [], double.NaN);
 
-        viewModel.SensesNote.ShouldBeEmpty();
-        viewModel.OutputsNote.ShouldBeEmpty();
+        viewModel.SensesNote.ShouldBeNull();
+        viewModel.OutputsNote.ShouldBeNull();
         viewModel.DistanceNote.ShouldBeEmpty();
     }
 
@@ -86,12 +86,33 @@ public sealed class SignalFlowPresentationViewModelTests
     {
         var viewModel = new SignalFlowPresentationViewModel();
         viewModel.Update([], [new MotorReading(MotorReading.PistonKind, 1, 0.2, 1)], 300);
-        var notifications = 0;
-        viewModel.PropertyChanged += (_, _) => notifications++;
+        var changed = new List<string?>();
+        viewModel.PropertyChanged += (_, args) => changed.Add(args.PropertyName);
 
         viewModel.Update([], [new MotorReading(MotorReading.PistonKind, 1, 0.2, 1)], 400);
 
-        notifications.ShouldBe(1);
+        changed.ShouldBe([nameof(SignalFlowPresentationViewModel.DistanceNote)]);
         viewModel.DistanceNote.ShouldBe("4.0 m");
     }
+
+    [Fact]
+    public void Update_WhenOnlyTheOutputsCountChanges_NotifiesEveryNote()
+    {
+        var viewModel = new SignalFlowPresentationViewModel();
+        viewModel.Update([], [new MotorReading(MotorReading.PistonKind, 1, 0.2, 1)], 300);
+        var changed = new List<string?>();
+        viewModel.PropertyChanged += (_, args) => changed.Add(args.PropertyName);
+
+        viewModel.Update(
+            [],
+            [new MotorReading(MotorReading.PistonKind, 1, 0.2, 1), new MotorReading(MotorReading.PistonKind, 2, 0.2, 1)],
+            300);
+
+        viewModel.OutputsNote.ShouldBe(Pistons(2));
+        changed.ShouldBe([null], "The Outputs count changed, so the screen must rebuild the count notes.");
+    }
+
+    private static UiText Readings(int count) => UiText.Counted("{0} reading", "{0} readings", count);
+
+    private static UiText Pistons(int count) => UiText.Counted("{0} piston", "{0} pistons", count);
 }

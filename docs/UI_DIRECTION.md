@@ -620,12 +620,15 @@ and translation"):
 - **Text written in a scene** is English and doubles as its translation key.
   The Control translates it itself (`auto_translate_mode` Inherit).
 - **Text a view-model builds** arrives as a `UiText`. Show it with
-  `UiTextTranslation.ShowText(label, text)`: it gives the `UiLabel` a
-  `TextSource` that translates the text with `Tr`/`TrN`, and the label asks
-  it again when the language changes. Meanwhile the label's own
-  auto-translation is off, so the text is not translated a second time.
-  Other components get a `ShowText` when they first need one. App text
-  still built as English moves over in #751 and #752.
+  `UiTextTranslation.ShowText(label, text)` on a `UiLabel` or `UiButton`:
+  it gives the control a `TextSource` that translates the text, and the
+  control asks it again when the language changes. Meanwhile the control's
+  own auto-translation is off, so the text is not translated a second time.
+  A component that shows code-set text inside, such as `UiSidePanel`'s
+  title, `UiStageCard`'s note or a `UiDialogSpec`'s content, has a matching
+  `…Source` property that takes `UiTextTranslation.Source(text)` and turns
+  auto-translation off on that leaf only. Other components get one when
+  they first need it. App text still built as English moves over in #752.
 - **Text the player wrote**, such as a creation's name, is never
   translated. Its label sets `auto_translate_mode = Disabled` on itself
   only, so the static text around it still translates. Part and link

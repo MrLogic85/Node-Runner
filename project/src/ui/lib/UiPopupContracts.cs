@@ -23,6 +23,12 @@ public sealed record UiDialogSpec(
     /// <summary>The glyph beside the title; null keeps the severity's default.</summary>
     public UiNotificationIcon? Icon { get; init; }
 
+    /// <summary>
+    /// Already translated text shown instead of <see cref="Content"/>; asked again when the language
+    /// changes, with the body's own auto-translation off meanwhile.
+    /// </summary>
+    public Func<string>? ContentSource { get; init; }
+
     public UiDialogSpec(
         UiPopupType type, string title, string content, string? actionText,
         Func<Task<UiDialogResult>> action, bool holdToAction = false, string abortText = "Cancel")

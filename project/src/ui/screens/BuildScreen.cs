@@ -292,8 +292,9 @@ public partial class BuildScreen : Control
             0 when locked => "Training",
             0 when toolPanel.Mode != ToolPanelMode.None => toolPanel.Title,
             1 => part?.Name ?? string.Empty,
-            _ => presentation.Selection?.Title ?? string.Empty,
+            _ => string.Empty,
         };
+        sidePanel.TitleSource = UiTextTranslation.Source(selected > 1 ? presentation.Selection?.Title : null);
         sidePanel.IconId = selected > 1 ? UiIconId.Select : part is null ? UiIconId.None : PartSettingsIcon(part.Kind);
 
         if (tray.Visible)
@@ -303,7 +304,7 @@ public partial class BuildScreen : Control
 
         if (savedPanel.Visible)
         {
-            GetNode<UiLabel>("%SavedTitle").Text = presentation.TrainingSummaryTitle;
+            GetNode<UiLabel>("%SavedTitle").ShowText(presentation.TrainingSummaryTitle);
             GetNode<UiLabel>("%SavedLatest").Text = presentation.LatestDistanceText;
             GetNode<UiLabel>("%SavedBody").Text = presentation.TrainingSummaryBody;
         }
@@ -330,7 +331,7 @@ public partial class BuildScreen : Control
         emptyNote.Text = group.EmptyNote;
         emptyNote.Visible = group.EmptyNote.Length > 0;
         GetNode<Control>("%SelectionRows").Visible = group.ShowFrameRows;
-        GetNode<UiButton>("%SelectionDelete").Text = group.DeleteText;
+        GetNode<UiButton>("%SelectionDelete").ShowText(group.DeleteText);
         var deleteNote = GetNode<UiLabel>("%SelectionDeleteNote");
         deleteNote.Text = group.DeleteNote;
         deleteNote.Visible = group.DeleteNote.Length > 0;
@@ -521,7 +522,7 @@ public partial class BuildScreen : Control
         icon.IconId = ready ? UiIconId.Check : UiIconId.Warn;
         icon.Color = color;
         var text = GetNode<UiLabel>("%ReadinessText");
-        text.Text = buildPanel.ReadinessText;
+        text.ShowText(buildPanel.ReadinessText);
         text.TextColor = color;
     }
 

@@ -20,7 +20,7 @@ public sealed class UiTextTranslationTests
             .ShouldContain("\nauto_translate_mode = 2", customMessage: "AutoTranslateMode.Disabled on the label itself.");
 
     [Fact]
-    public void Ui_text_is_shown_only_through_ShowText()
+    public void Ui_text_is_shown_only_through_UiTextTranslation()
     {
         var compilation = CSharpSources.ProjectCompilation;
         var violations = CSharpSources.Project
@@ -33,22 +33,22 @@ public sealed class UiTextTranslationTests
             .ToList();
 
         violations.ShouldBeEmpty(
-            "Hand a UiText only to UiTextTranslation.ShowText, which translates it with Tr/TrN and keeps it for the next language change.");
+            "Hand a UiText only to UiTextTranslation (ShowText, or Source for a component's …Source property), which translates it and keeps it for the next language change.");
     }
 
     [Fact]
-    public void UiTextTranslation_translates_with_Tr_and_TrN()
+    public void UiTextTranslation_translates_with_TranslationServer()
     {
         var source = CSharpSources.Project.Single(source => source.Path == _translation);
         var model = CSharpSources.ProjectCompilation.GetSemanticModel(source.Tree);
 
         var calls = source.Tree.GetRoot().DescendantNodes().OfType<InvocationExpressionSyntax>()
             .Select(call => CSharpSources.Symbol(model, call))
-            .Where(symbol => symbol?.ContainingType.ToDisplayString() == "Godot.GodotObject")
+            .Where(symbol => symbol?.ContainingType.ToDisplayString() == "Godot.TranslationServer")
             .Select(symbol => symbol!.Name)
             .ToHashSet();
 
-        calls.ShouldBe(["Tr", "TrN"], ignoreOrder: true);
+        calls.ShouldBe(["Translate", "TranslatePlural"], ignoreOrder: true);
     }
 
     [Theory]
@@ -58,13 +58,15 @@ public sealed class UiTextTranslationTests
     [InlineData("string M(NodeRunner.App.ViewModels.UiText text) => $\"{text}\";")]
     [InlineData("string M(NodeRunner.App.ViewModels.UiText text) => \"Best \" + text;")]
     [InlineData("object M(NodeRunner.App.ViewModels.UiText text) => text;")]
-    public void Bypassing_ShowText_is_flagged(string member) =>
+    [InlineData("void M(NodeRunner.App.ViewModels.UiText text) => System.Console.WriteLine(text);")]
+    public void Bypassing_UiTextTranslation_is_flagged(string member) =>
         Bypasses(member).ShouldHaveSingleItem();
 
     [Theory]
     [InlineData("void M(UiLabel label, NodeRunner.App.ViewModels.UiText text) => NodeRunner.Ui.Widgets.UiTextTranslation.ShowText(label, text);")]
     [InlineData("void M(UiLabel label, NodeRunner.App.ViewModels.CreationCardTraining training) => NodeRunner.Ui.Widgets.UiTextTranslation.ShowText(label, training.GenerationsText);")]
     [InlineData("void M(UiLabel label, NodeRunner.App.ViewModels.UiText? text) => NodeRunner.Ui.Widgets.UiTextTranslation.ShowText(label, text ?? NodeRunner.App.ViewModels.UiText.Plain(\"Delete\"));")]
+    [InlineData("void M(UiStageCard card, NodeRunner.App.ViewModels.UiText? text, bool show) => card.NoteSource = NodeRunner.Ui.Widgets.UiTextTranslation.Source(show ? text : null);")]
     public void Showing_ui_text_passes(string member) =>
         Bypasses(member).ShouldBeEmpty();
 
@@ -75,7 +77,7 @@ public sealed class UiTextTranslationTests
         return snippet.Find(node => BypassesShowText(node, model));
     }
 
-    // The outermost expression of type UiText must be an argument to ShowText; type names and the
+    // The outermost expression of type UiText must be an argument to a UiTextTranslation method; type names and the
     // inner parts of a larger UiText expression (a member access, ?? or ?:) are not counted.
     private static bool BypassesShowText(SyntaxNode node, SemanticModel model)
     {
@@ -89,7 +91,7 @@ public sealed class UiTextTranslationTests
 
         return !(expression.Parent is ArgumentSyntax { Parent.Parent: InvocationExpressionSyntax call }
             && CSharpSources.Symbol(model, call) is IMethodSymbol method
-            && (method.ReducedFrom ?? method) is { Name: "ShowText", ContainingType.Name: "UiTextTranslation" });
+            && (method.ReducedFrom ?? method).ContainingType.ToDisplayString() == "NodeRunner.Ui.Widgets.UiTextTranslation");
     }
 
     private static bool IsUiText(ITypeSymbol? type) =>

@@ -14,6 +14,7 @@ public sealed partial class UiDialogContent : Control
     private UiPopupCard? _card;
     private ScrollContainer _scroll = null!;
     private Label _body = null!;
+    private Func<string>? _contentSource;
     private Label _error = null!;
     private UiButton _cancel = null!;
     private UiButton _confirm = null!;
@@ -94,6 +95,11 @@ public sealed partial class UiDialogContent : Control
             return;
         }
 
+        if (what == NotificationTranslationChanged && _contentSource is not null)
+        {
+            _body.Text = _contentSource();
+        }
+
         if (what == NotificationThemeChanged && IsNodeReady())
         {
             ApplyAppearance();
@@ -105,7 +111,9 @@ public sealed partial class UiDialogContent : Control
         _type = spec.Type;
         _iconOverride = spec.Icon;
         GetNode<Label>("%Title").Text = spec.Title;
-        _body.Text = spec.Content;
+        _contentSource = spec.ContentSource;
+        _body.AutoTranslateMode = _contentSource is null ? AutoTranslateModeEnum.Inherit : AutoTranslateModeEnum.Disabled;
+        _body.Text = _contentSource?.Invoke() ?? spec.Content;
         _cancel.Text = spec.AbortText;
         _cancel.HoldDurationSeconds = 0;
         _cancel.HoldToActivate = false;

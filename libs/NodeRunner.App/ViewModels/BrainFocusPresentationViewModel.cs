@@ -15,7 +15,7 @@ public sealed class BrainFocusPresentationViewModel : INotifyPropertyChanged
     public const int InputLayer = 0;
     public const int OutputLayer = 1;
 
-    private const string _waitingSummary = "Waiting for a live brain";
+    private static readonly UiText _waitingSummary = UiText.Plain("Waiting for a live brain");
     private const string _waitingSelection = "Start training to see the live brain.";
     private const string _noSelection = "Tap a sense or an output to see what drives what.";
 
@@ -32,7 +32,8 @@ public sealed class BrainFocusPresentationViewModel : INotifyPropertyChanged
 
     public bool HasNetwork { get; private set; }
 
-    public string Summary { get; private set; } = _waitingSummary;
+    /// <summary>The network's size and how to read it, or that no brain runs yet.</summary>
+    public UiText Summary { get; private set; } = _waitingSummary;
 
     /// <summary>The tapped neuron as (layer, index), or null with none.</summary>
     public (int Layer, int Index)? Selected { get; private set; }
@@ -87,7 +88,10 @@ public sealed class BrainFocusPresentationViewModel : INotifyPropertyChanged
 
         _connections = [.. connections];
         HasNetwork = true;
-        Summary = $"{inputCount} {Plural(inputCount, "sense")} → {outputCount} {Plural(outputCount, "output")}";
+        Summary = UiText.Format(
+            "{0} → {1}. Solid blue: pushes up. Dashed red: pushes down. Thicker: stronger.",
+            UiText.Counted("{0} sense", "{0} senses", inputCount),
+            UiText.Counted("{0} output", "{0} outputs", outputCount));
         Present();
     }
 
@@ -204,5 +208,4 @@ public sealed class BrainFocusPresentationViewModel : INotifyPropertyChanged
     // Keeps "Knee: speed" on one line when the sentence wraps.
     private static string Unbroken(string label) => label.Replace(": ", ":\u00A0", StringComparison.Ordinal);
 
-    private static string Plural(int count, string noun) => count == 1 ? noun : $"{noun}s";
 }

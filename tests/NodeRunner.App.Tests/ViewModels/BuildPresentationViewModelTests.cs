@@ -163,24 +163,36 @@ public sealed class BuildPresentationViewModelTests
     }
 
     [Theory]
-    [InlineData(1, "Trained 1 generation")]
-    [InlineData(12, "Trained 12 generations")]
-    public void TrainingSummaryTitle_CountsGenerations(int generation, string expected)
+    [InlineData(1)]
+    [InlineData(2)]
+    [InlineData(12)]
+    public void TrainingSummaryTitle_CountsGenerations(int generation)
     {
         var build = new BuildViewModel();
         build.LoadCreation(new CreationDef(Guid.NewGuid(), "Worm", PairCreature(), TestTraining.State(generation)));
 
-        new BuildPresentationViewModel(build).TrainingSummaryTitle.ShouldBe(expected);
+        new BuildPresentationViewModel(build).TrainingSummaryTitle.ShouldBe(
+            UiText.Counted("Trained {0} generation", "Trained {0} generations", generation));
     }
 
     [Fact]
-    public void ResetTrainingWarning_NamesTheTrainingThatIsLost()
+    public void TrainingSummaryTitle_WithoutTraining_SaysSo() =>
+        new BuildPresentationViewModel(new BuildViewModel()).TrainingSummaryTitle.ShouldBe(UiText.Plain("Not trained yet"));
+
+    [Theory]
+    [InlineData(1)]
+    [InlineData(2)]
+    [InlineData(12)]
+    public void ResetTrainingWarning_NamesTheTrainingThatIsLost(int generation)
     {
         var build = new BuildViewModel();
-        build.LoadCreation(new CreationDef(Guid.NewGuid(), "Worm", PairCreature(), TestTraining.State(12)));
+        build.LoadCreation(new CreationDef(Guid.NewGuid(), "Worm", PairCreature(), TestTraining.State(generation)));
 
-        new BuildPresentationViewModel(build).ResetTrainingWarning.ShouldBe(
-            "Worm forgets its 12 generations of training and keeps its body. Copy it first to keep the trained one.");
+        new BuildPresentationViewModel(build).ResetTrainingWarning.ShouldBe(UiText.Counted(
+            "{1} forgets its {0} generation of training and keeps its body. Copy it first to keep the trained one.",
+            "{1} forgets its {0} generations of training and keeps its body. Copy it first to keep the trained one.",
+            generation,
+            "Worm"));
     }
 
     [Fact]
@@ -346,12 +358,12 @@ public sealed class BuildPresentationViewModelTests
 
         selection.Settings.ShouldBeEmpty();
         selection.ShouldBe(new SelectionPanelPresentation(
-            "3 selected",
+            UiText.Counted("{0} selected", "{0} selected", 3),
             selection.Settings,
             string.Empty,
             string.Empty,
             ShowFrameRows: true,
-            "Delete 3",
+            UiText.Counted("Delete {0}", "Delete {0}", 3),
             "Beams on a deleted node go with it.",
             CanDelete: true));
     }
@@ -425,7 +437,7 @@ public sealed class BuildPresentationViewModelTests
         build.ReplaceSelection([1, 2]);
 
         var selection = new BuildPresentationViewModel(build).Selection!;
-        selection.Title.ShouldBe("2 selected");
+        selection.Title.ShouldBe(UiText.Counted("{0} selected", "{0} selected", 2));
         selection.CanDelete.ShouldBeFalse();
     }
 
@@ -452,7 +464,35 @@ public sealed class BuildPresentationViewModelTests
         var presentation = new BuildPresentationViewModel(build);
 
         presentation.BuildPanel.CanStartTraining.ShouldBeFalse();
-        presentation.BuildPanel.ReadinessText.ShouldBe("2 beams too short");
+        presentation.BuildPanel.ReadinessText.ShouldBe(UiText.Counted("{0} beam too short", "{0} beams too short", 2));
+    }
+
+    [Theory]
+    [InlineData(1)]
+    [InlineData(2)]
+    public void BuildPanel_WhenPistonsAreTooShort_CountsThemInReadiness(int tooShort)
+    {
+        var build = new BuildViewModel();
+        build.Load(new CreatureDef(
+            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(90, 0)), new NodeDef(3, new Vector2D(0, 50)), new NodeDef(4, new Vector2D(90, 50))],
+            [new BeamDef(101, 1, 2), new BeamDef(102, 3, 4)],
+            [],
+            [new PistonDef(301, 1, 3), tooShort == 2 ? new PistonDef(302, 2, 4) : new PistonDef(302, 1, 4)]));
+        var presentation = new BuildPresentationViewModel(build);
+
+        presentation.BuildPanel.CanStartTraining.ShouldBeFalse();
+        presentation.BuildPanel.ReadinessText.ShouldBe(UiText.Counted("{0} piston too short", "{0} pistons too short", tooShort));
+    }
+
+    [Fact]
+    public void BuildPanel_WhenEmpty_AsksForNodesAndBeams()
+    {
+        var presentation = new BuildPresentationViewModel(new BuildViewModel());
+
+        var buildPanel = presentation.BuildPanel;
+
+        buildPanel.CanStartTraining.ShouldBeFalse();
+        buildPanel.ReadinessText.ShouldBe(UiText.Plain("Add nodes + beams"));
     }
 
     [Fact]
@@ -465,7 +505,7 @@ public sealed class BuildPresentationViewModelTests
         var buildPanel = presentation.BuildPanel;
 
         buildPanel.CanStartTraining.ShouldBeFalse();
-        buildPanel.ReadinessText.ShouldBe("1 node not connected");
+        buildPanel.ReadinessText.ShouldBe(UiText.Counted("{0} node not connected", "{0} nodes not connected", 1));
     }
 
     [Fact]
@@ -478,7 +518,7 @@ public sealed class BuildPresentationViewModelTests
         var buildPanel = presentation.BuildPanel;
 
         buildPanel.CanStartTraining.ShouldBeTrue();
-        buildPanel.ReadinessText.ShouldBe("Ready to train");
+        buildPanel.ReadinessText.ShouldBe(UiText.Plain("Ready to train"));
     }
 
     [Fact]
@@ -491,7 +531,7 @@ public sealed class BuildPresentationViewModelTests
         var buildPanel = presentation.BuildPanel;
 
         buildPanel.CanStartTraining.ShouldBeFalse();
-        buildPanel.ReadinessText.ShouldBe("Add a piston");
+        buildPanel.ReadinessText.ShouldBe(UiText.Plain("Add a piston"));
     }
 
     [Fact]

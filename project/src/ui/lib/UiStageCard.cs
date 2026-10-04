@@ -13,6 +13,7 @@ public partial class UiStageCard : UiCard
     private string _numberText = "1";
     private string _title = "Senses";
     private string _note = string.Empty;
+    private Func<string>? _noteSource;
     private bool _selected;
     private bool _collapsed;
     private UiNumber _number = null!;
@@ -50,6 +51,20 @@ public partial class UiStageCard : UiCard
         set
         {
             _note = value;
+            ApplyNote();
+        }
+    }
+
+    /// <summary>
+    /// Already translated text shown instead of <see cref="Note"/>; asked again when the language
+    /// changes, with the note label's own auto-translation off meanwhile. Null shows Note.
+    /// </summary>
+    public Func<string>? NoteSource
+    {
+        get => _noteSource;
+        set
+        {
+            _noteSource = value;
             ApplyNote();
         }
     }
@@ -136,8 +151,10 @@ public partial class UiStageCard : UiCard
             return;
         }
 
-        _noteLabel.Text = Note;
-        _noteLabel.Visible = !string.IsNullOrWhiteSpace(Note);
+        var note = NoteSource?.Invoke() ?? Note;
+        _noteLabel.AutoTranslateMode = NoteSource is null ? AutoTranslateModeEnum.Inherit : AutoTranslateModeEnum.Disabled;
+        _noteLabel.Text = note;
+        _noteLabel.Visible = !string.IsNullOrWhiteSpace(note);
     }
 
     private void ApplyCollapsed()
@@ -166,6 +183,10 @@ public partial class UiStageCard : UiCard
         if (what == NotificationThemeChanged && IsNodeReady())
         {
             UiThemeRefresh.Guarded(this, ApplyThemeStyles);
+        }
+        else if (what == NotificationTranslationChanged && NoteSource is not null)
+        {
+            ApplyNote();
         }
     }
 

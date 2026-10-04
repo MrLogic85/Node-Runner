@@ -57,17 +57,21 @@ public sealed class BuildPresentationViewModel
 
     public int SensorCount => _build.Sensors.Count;
 
-    public string TrainingSummaryTitle => _build.TrainingGeneration is { } generation
-        ? $"Trained {CreationCardPresentation.FormatCount(generation, "generation")}"
-        : "Not trained yet";
+    public UiText TrainingSummaryTitle => _build.TrainingGeneration is { } generation
+        ? UiText.Counted("Trained {0} generation", "Trained {0} generations", generation)
+        : UiText.Plain("Not trained yet");
 
     public string TrainingSummaryBody => _build.TrainingGeneration is not null
         ? "This can drop after a noisy generation; Training's Best never does. Tap the padlock to change the body. Training is kept."
         : "Start training when you are ready.";
 
     /// <summary>The Reset training dialog body (#687). Copy sits beside Reset in the overflow, so it is offered.</summary>
-    public string ResetTrainingWarning =>
-        $"{_build.CreationName} forgets its {CreationCardPresentation.FormatCount(_build.TrainingGeneration ?? 0, "generation")} of training and keeps its body. Copy it first to keep the trained one.";
+    public UiText ResetTrainingWarning =>
+        UiText.Counted(
+            "{1} forgets its {0} generation of training and keeps its body. Copy it first to keep the trained one.",
+            "{1} forgets its {0} generations of training and keeps its body. Copy it first to keep the trained one.",
+            _build.TrainingGeneration ?? 0,
+            _build.CreationName);
 
     /// <summary>The latest generation's distance (#479); the best ever belongs to Stats.</summary>
     public string LatestDistanceText => $"Latest distance {(_build.LatestDistance is { } distance ? Metres.FormatWithUnit(distance) : "—")}";
@@ -184,12 +188,12 @@ public sealed class BuildPresentationViewModel
                     ? "A sensor on a deleted beam goes with it."
                     : string.Empty;
             return new SelectionPanelPresentation(
-                $"{count} selected",
+                UiText.Counted("{0} selected", "{0} selected", count),
                 settings,
                 settings.Count > 0 ? "A slider sets one value for all of them." : string.Empty,
                 settings.Count == 0 && !showFrameRows ? "These parts share no settings." : string.Empty,
                 showFrameRows,
-                $"Delete {count}",
+                UiText.Counted("Delete {0}", "Delete {0}", count),
                 deleteNote,
                 CanDelete: !_build.IsMoveOnly);
         }
@@ -236,16 +240,16 @@ public sealed class BuildPresentationViewModel
         }
 
         return CreatureReadiness.CanTrain(creature)
-            ? new BuildPanelPresentation(CanStartTraining: true, "Ready to train")
-            : new BuildPanelPresentation(CanStartTraining: false, "Add a piston");
+            ? new BuildPanelPresentation(CanStartTraining: true, UiText.Plain("Ready to train"))
+            : new BuildPanelPresentation(CanStartTraining: false, UiText.Plain("Add a piston"));
     }
 
     // A short form of the builder's errors for the readiness line; CreatureReadiness decides whether training may start.
-    private string ShortReadiness(IReadOnlyList<string> errors)
+    private UiText ShortReadiness(IReadOnlyList<string> errors)
     {
         if (errors.Count == 0)
         {
-            return "Add nodes + beams";
+            return UiText.Plain("Add nodes + beams");
         }
 
         var unconnected = Enumerable.Range(0, _build.Nodes.Count)
@@ -257,7 +261,7 @@ public sealed class BuildPresentationViewModel
             });
         if (unconnected > 0)
         {
-            return unconnected == 1 ? "1 node not connected" : $"{unconnected} nodes not connected";
+            return UiText.Counted("{0} node not connected", "{0} nodes not connected", unconnected);
         }
 
         // Build's canvas names each short beam with a callout (#593), so the line only counts them.
@@ -269,11 +273,10 @@ public sealed class BuildPresentationViewModel
             && CreatureReadiness.IsTooShort(NodeById(piston.NodeA), NodeById(piston.NodeB)));
         return (tooShort, tooShortPistons) switch
         {
-            (0, 0) => errors[0],
-            (0, 1) => "1 piston too short",
-            (0, _) => $"{tooShortPistons} pistons too short",
-            (1, _) => "1 beam too short",
-            _ => $"{tooShort} beams too short",
+            // The builder's reasons are still finished English until #752 makes them UiText.
+            (0, 0) => UiText.Plain(errors[0]),
+            (0, _) => UiText.Counted("{0} piston too short", "{0} pistons too short", tooShortPistons),
+            _ => UiText.Counted("{0} beam too short", "{0} beams too short", tooShort),
         };
     }
 

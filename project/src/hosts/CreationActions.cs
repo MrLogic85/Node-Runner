@@ -51,11 +51,11 @@ internal static class CreationActions
         };
 
     /// <summary>The reference's "One reset" dialog (#687): losing training is danger and a hold.</summary>
-    public static UiDialogSpec ResetTrainingDialog(string warning, Func<bool> reset) =>
+    public static UiDialogSpec ResetTrainingDialog(Func<string> warning, Func<bool> reset) =>
         new(
             UiPopupType.Danger,
             "Reset training?",
-            warning,
+            string.Empty,
             "Hold to reset",
             () => Task.FromResult(reset()
                 ? UiDialogResult.Success
@@ -63,6 +63,7 @@ internal static class CreationActions
             holdToAction: true)
         {
             Icon = new(UiIconId.Restart),
+            ContentSource = warning,
         };
 
     /// <summary>

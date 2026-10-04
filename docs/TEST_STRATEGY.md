@@ -133,8 +133,9 @@ swap restyles everything:
   `UiNotificationLayer` (and Popup Gallery) creates a `UiNotification`, so
   notifications outlive scene changes (#472).
 - UI text is translated once (`UiTextTranslationTests`, #682). Only
-  `UiTextTranslation` reads a `UiText`'s parts, and it translates with
-  `Tr`/`TrN`. The creation-name labels turn their own auto-translation off;
+  `UiTextTranslation` takes a `UiText`, and it translates with
+  `TranslationServer.Translate`/`TranslatePlural`; plural selection itself is
+  checked on device (#751). The creation-name labels turn their own auto-translation off;
   part and link names follow in #752.
 
 **2. Screens reuse the library.** Every canonical component maps to one
