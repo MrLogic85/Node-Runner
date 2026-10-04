@@ -1,8 +1,6 @@
-using NodeRunner.App.ViewModels;
+namespace NodeRunner.Domain.Tests;
 
-namespace NodeRunner.App.Tests.ViewModels;
-
-public class SelectionMarksTests
+public sealed class SelectionMarksTests
 {
     [Fact]
     public void JointHalo_SitsTheGapOutsideTheJoint()

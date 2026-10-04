@@ -1,7 +1,7 @@
-namespace NodeRunner.App.ViewModels;
+namespace NodeRunner.Domain;
 
 /// <summary>
-/// Where a selection is marked and hit, in canvas units (#710), shared by <see cref="BuildGestures"/>
+/// Where a selection is marked and hit, in canvas units (#710), shared by Build's gestures
 /// and the drawing in Build and Training. Every mark's centre line sits <see cref="Gap"/> outside its
 /// part's edge: a joint's halo ring, and a beam's and a Piston's halo lines. A joint is also hit
 /// within that ring, so its touch area follows the zoom.

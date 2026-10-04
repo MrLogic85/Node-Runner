@@ -18,8 +18,7 @@ layers.
 ## What lives here
 
 - `ViewModels/` — screen state and presentation: `BuildViewModel` and its
-  `BuildGestures`, `SelectionMarks` (the shared selection gap),
-  `CreationsPresentationViewModel`,
+  `BuildGestures`, `CreationsPresentationViewModel`,
   `TrainingPresentationViewModel` (shadows, not population), the Brain
   focus and Signal flow presentations
 - `Repositories/` — `ICreatureRepository`, `FileCreatureRepository`,

@@ -1,5 +1,5 @@
 using Godot;
-using NodeRunner.App.ViewModels;
+using NodeRunner.Domain;
 using NodeRunner.Ui.Lib;
 
 namespace NodeRunner.Theme;

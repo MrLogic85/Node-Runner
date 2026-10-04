@@ -30,6 +30,9 @@ Pure C# data types. The vocabulary of the app, no behavior beyond invariants.
     by the sim and tests.
     `MapGround` is the eighth: a map's ground height at x (#443), shared by
     the arena and, later, map previews.
+    `SelectionMarks` is the ninth: the one selection gap, a joint's halo
+    and touch reach (#710), shared by Build's gestures and the drawing in
+    Build and Training.
 - **Serialisable via `System.Text.Json` without custom converters.** Saved
   records are the save shape: changing one follows `docs/SAVE_FORMAT.md`.
 
@@ -42,6 +45,8 @@ Pure C# data types. The vocabulary of the app, no behavior beyond invariants.
   exception above)
 - `CameraRays` — the camera's pure math (see the exception above)
 - `SensorPicture` — a sensor picture's tap area (see the exception above)
+- `SelectionMarks` — the selection gap, joint halo and touch reach (see the
+  exception above)
 - `RigidTriangles`, `RigidTriangleDef` — the closed beam triangles of a
   `CreatureDef` (see the exception above)
 - `BrainPort`, `PortDirection`, `PortSignal`, `BrainPortLayout`,
