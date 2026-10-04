@@ -33,7 +33,7 @@ internal static class UiClip
     {
         foreach (var child in node.GetChildren())
         {
-            if (child is CanvasItem { TopLevel: true })
+            if (child is CanvasLayer or CanvasItem { TopLevel: true })
             {
                 continue;
             }
@@ -47,7 +47,8 @@ internal static class UiClip
         }
     }
 
-    // A top-level item draws outside its ancestors, so their clipping does not reach it.
+    // A top-level item, or one in a CanvasLayer such as a UiLevelLayer, draws outside its
+    // ancestors, so their clipping does not reach it.
     private static bool IsInsideClip(CanvasItem item)
     {
         for (var node = item; !node.TopLevel && node.GetParent() is CanvasItem parent; node = parent)

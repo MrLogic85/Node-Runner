@@ -1250,7 +1250,8 @@ UiNotificationLayer.Enqueue(this, new UiNotificationSpec(
 ```
 
 The app's notifications live on `UiNotificationLayer`, the `Notifications`
-autoload: a `CanvasLayer` above every screen layer that runs while the tree
+autoload: a `CanvasLayer` on the `UiLayers.Notification` level, over screens
+and menus, that runs while the tree
 is paused. It outlives scene changes, so a notification raised just before
 the router changes scene still shows after it
 ([#472](https://github.com/MrLogic85/Node-Runner/issues/472)). Screens do not
@@ -1258,6 +1259,29 @@ add their own `UiNotification`; only Popup Gallery keeps one, so its specimens
 follow the gallery's theme switch. Dialogs stay in the scene that opens them:
 none has to outlive a scene change, and a scene change closes an open dialog
 with its scene.
+
+UI levels ([#768](https://github.com/MrLogic85/Node-Runner/issues/768)): no
+code in the UI sets `ZIndex`, because a `ZIndex` sorts across the whole
+`CanvasLayer` and draws a raised part through everything above it. The levels
+inside one Viewport or Window are the named CanvasLayers in `UiLayers`:
+`Screen` (the Viewport's own canvas), `Overlay` (menus) and `Notification`.
+Dialogs are embedded Windows, and every Window draws over all the levels of
+the Viewport it is embedded in. The Window stack, from the bottom up, is
+therefore:
+- the root window, with the screen, its menus and then notifications;
+- an open dialog;
+- a menu that the dialog opens, on the dialog's own `Overlay` level.
+
+A dialog thus covers notifications. A notification queued while a dialog is
+open waits until the dialog closes. A menu that floats over its opener sits
+in a `UiLevelLayer`, which stays in the opener's subtree, so the menu keeps
+the opener's lifetime and unique names. A `CanvasLayer` cuts Theme and
+visibility inheritance, so the level layer gives its controls the opener's
+theme and hides when the opener does. A scene saves no level of its own: its
+`CanvasLayer` is a `UiLevelLayer`, which keeps `Overlay`, or a world backdrop
+under the screen, and code sets any other level from `UiLayers`. Training's
+world draws in its own SubViewport, whose only layer is the arena backdrop
+under it, so its menus and dialogs always draw over the world.
 
 Parts tray tabs use persistent native toggle buttons in a `ButtonGroup`,
 with the reference's part glyphs and accent-soft selected treatment, not a
@@ -1344,7 +1368,7 @@ never covers the corners. It is off by default because each clipping card
 renders through an extra buffer; `UiFrame`'s card turns it on. Godot cannot nest
 `clip_children` (the inner node draws nothing), so `UiCard` and `UiMenu` clip
 only when no ancestor already does (`UiClip`, re-checked below a card whose
-clipping changes); a menu opened as an overlay is top-level and clips again. Inside a clipping card, a static menu's row wash is
+clipping changes); a menu floated in a `UiLevelLayer` is outside its opener's clipping and clips again. Inside a clipping card, a static menu's row wash is
 therefore not rounded at the menu's own corners. For the same reason a card
 inside a page does not clip, so content drawn flush against its edge rounds
 the corners it shares with the card itself (`UiCorners`): the creature
@@ -1366,9 +1390,10 @@ dismissing tap is swallowed whole and never reaches what is under the menu. What
 is the screen's decision. Selection belongs to individual menu items rather
 than the menu, so sectioned and nested menu layouts can manage each selectable
 item independently. Item highlights remain square; the menu clips all children
-to its rounded surface. `Follow` keeps the top-level menu attached to a
+to its rounded surface. `Follow` keeps a menu attached to a
 normalized point on an anchor control while scrolling or relayout moves that
-control.
+control. A following menu must sit in a `UiLevelLayer`, which floats it
+over its screen or dialog (see UI levels above).
 Menus default to the fixed menu-width token and can opt into content-wrapping
 width through `WidthMode`. The menu's `Compact` toggle overrides all direct
 `UiMenuItem` children to the matching 32px or 48px row variant, so one menu

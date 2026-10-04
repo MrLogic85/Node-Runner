@@ -750,7 +750,7 @@ public sealed partial class UiButton : Button, ISerializationListener
                 MouseFilter = MouseFilterEnum.Ignore,
             };
             // Tree order, not ZIndex, keeps the badge over the button: a ZIndex sorts across the
-            // whole CanvasLayer and would draw it through any dialog or screen above (#463).
+            // whole CanvasLayer and would draw it through any screen or overlay above (#463).
             AddChild(_badge, @internal: InternalMode.Back);
         }
 

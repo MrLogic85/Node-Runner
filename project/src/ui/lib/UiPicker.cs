@@ -161,7 +161,9 @@ public partial class UiPicker : PanelContainer
         if (IsExpanded)
         {
             var menu = CreateOptionsMenu();
-            AddChild(menu);
+            var overlay = new UiLevelLayer();
+            AddChild(overlay);
+            overlay.AddChild(menu);
             _openMenu = menu;
             menu.Follow(closedRow, new Vector2(0, 1), new Vector2(0, UiSize.Space.S1));
             menu.CallDeferred(CanvasItem.MethodName.Show);

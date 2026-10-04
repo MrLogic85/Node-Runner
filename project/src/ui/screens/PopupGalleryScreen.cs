@@ -30,8 +30,12 @@ public partial class PopupGalleryScreen : GalleryScreen
         MouseFilter = MouseFilterEnum.Stop;
         _status = GetNode<UiLabel>("%Status");
         UiNativeScroll.AllowGesturesToBubble(GetNode<Control>("%ContentFrame"));
+        // On the app's notification level, like the Notifications autoload, but in this
+        // screen's subtree, whose UiLevelLayer passes on the gallery's theme switch.
         _notifications = new UiNotification();
-        AddChild(_notifications);
+        var notificationLevel = new UiLevelLayer { Layer = UiLayers.Notification };
+        AddChild(notificationLevel);
+        notificationLevel.AddChild(_notifications);
         _dialog = new UiDialog();
         AddChild(_dialog);
         _dialog.Finished += OnDialogFinished;

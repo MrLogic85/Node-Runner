@@ -84,7 +84,7 @@ script = ExtResource("5_button")
 IconId = 66
 Kind = 1
 
-[node name="MenuStats" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/ToolbarMenu" index="0"]
+[node name="MenuStats" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/MenuLayer/ToolbarMenu" index="0"]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
@@ -94,7 +94,7 @@ NoteText = "Coming soon"
 IconId = 4
 Disabled = true
 
-[node name="MenuPowerBudget" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/ToolbarMenu" index="1"]
+[node name="MenuPowerBudget" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/MenuLayer/ToolbarMenu" index="1"]
 unique_name_in_owner = true
 layout_mode = 2
 script = ExtResource("6_menu_item")
@@ -103,7 +103,7 @@ NoteText = "Coming soon"
 IconId = 2
 Disabled = true
 
-[node name="MenuCopyCreation" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/ToolbarMenu" index="2"]
+[node name="MenuCopyCreation" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/MenuLayer/ToolbarMenu" index="2"]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
@@ -111,7 +111,7 @@ script = ExtResource("6_menu_item")
 LabelText = "Copy creation"
 IconId = 8
 
-[node name="MenuResetTraining" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/ToolbarMenu" index="3"]
+[node name="MenuResetTraining" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/MenuLayer/ToolbarMenu" index="3"]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
@@ -120,7 +120,7 @@ LabelText = "Reset training"
 IconId = 26
 Kind = 1
 
-[node name="MenuDeleteCreation" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/ToolbarMenu" index="4"]
+[node name="MenuDeleteCreation" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/MenuLayer/ToolbarMenu" index="4"]
 unique_name_in_owner = true
 layout_mode = 2
 script = ExtResource("6_menu_item")

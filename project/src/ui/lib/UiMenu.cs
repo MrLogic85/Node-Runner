@@ -7,9 +7,6 @@ namespace NodeRunner.Ui.Lib;
 [GlobalClass]
 public partial class UiMenu : Container, IUiClipping
 {
-    /// <summary>Keeps an open menu above the screen content it follows.</summary>
-    private const int _overlayZIndex = 100;
-
     [Signal]
     public delegate void IndexClickedEventHandler(int index);
 
@@ -181,18 +178,10 @@ public partial class UiMenu : Container, IUiClipping
 
     // Mouse only: on a phone every touch also arrives as an emulated mouse event, so handling
     // both would click twice. A click lands on release over the row it started on, like a
-    // Button, so the row shows its press first and sliding off cancels it.
+    // Button, so the row shows its press first and sliding off cancels it. The Stop filter keeps
+    // the touch itself from reaching what lies beneath, such as Build's canvas (#689).
     public override void _GuiInput(InputEvent inputEvent)
     {
-        // Touches only need stopping here. The menu is top level, and Godot stops passing an
-        // event up at a top-level control before it applies Stop, so a touch on a row would
-        // fall through to whatever lies beneath, such as Build's canvas clearing its selection.
-        if (inputEvent is InputEventScreenTouch or InputEventScreenDrag)
-        {
-            GetViewport().SetInputAsHandled();
-            return;
-        }
-
         if (inputEvent is not InputEventMouseButton { ButtonIndex: MouseButton.Left } mouse)
         {
             return;
@@ -309,19 +298,21 @@ public partial class UiMenu : Container, IUiClipping
     }
 
     /// <summary>
-    /// Keeps this top-level menu attached to a normalized point on another control.
+    /// Keeps this menu attached to a normalized point on another control.
     /// The anchor is sampled every frame so scrolling and container relayout are followed.
+    /// The menu must sit in a <see cref="UiLevelLayer"/>, which floats it over its screen (#768).
     /// </summary>
     public void Follow(Control anchor, Vector2 normalizedPoint, Vector2 offset = default)
     {
         ArgumentNullException.ThrowIfNull(anchor);
+        if (GetParent() is not UiLevelLayer)
+        {
+            throw new InvalidOperationException("Put a following UiMenu in a UiLevelLayer, so it draws over its screen.");
+        }
         _followAnchor = anchor;
         _followPoint = normalizedPoint;
         _followOffset = offset;
-        TopLevel = true;
         UiClip.Apply(this, clip: true);
-        ZAsRelative = false;
-        ZIndex = Math.Max(ZIndex, _overlayZIndex);
         SetProcess(true);
         UpdateFollowPosition();
     }
