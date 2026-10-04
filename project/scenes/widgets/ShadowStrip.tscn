@@ -3,11 +3,24 @@
 [ext_resource type="Script" uid="uid://cr8jlumsow28s" path="res://src/ui/widgets/ShadowStrip.cs" id="1_strip"]
 [ext_resource type="Script" uid="uid://dgr5xyvp61q2o" path="res://src/ui/lib/UiBarCell.cs" id="2_cell"]
 
-[node name="ShadowStrip" type="HBoxContainer"]
-theme_override_constants/separation = 4
+[node name="ShadowStrip" type="Control"]
+layout_mode = 3
+anchors_preset = 0
+mouse_filter = 2
 script = ExtResource("1_strip")
 
-[node name="Worse" type="BaseButton" parent="."]
+[node name="Row" type="HBoxContainer" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/separation = 4
+
+[node name="Worse" type="BaseButton" parent="Row"]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
@@ -15,47 +28,7 @@ tooltip_text = "Worse shadows"
 script = ExtResource("2_cell")
 IconId = 62
 
-[node name="Cell1" type="BaseButton" parent="."]
-unique_name_in_owner = true
-layout_mode = 2
-script = ExtResource("2_cell")
-
-[node name="Cell2" type="BaseButton" parent="."]
-unique_name_in_owner = true
-layout_mode = 2
-script = ExtResource("2_cell")
-
-[node name="Cell3" type="BaseButton" parent="."]
-unique_name_in_owner = true
-layout_mode = 2
-script = ExtResource("2_cell")
-
-[node name="Cell4" type="BaseButton" parent="."]
-unique_name_in_owner = true
-layout_mode = 2
-script = ExtResource("2_cell")
-
-[node name="Cell5" type="BaseButton" parent="."]
-unique_name_in_owner = true
-layout_mode = 2
-script = ExtResource("2_cell")
-
-[node name="Cell6" type="BaseButton" parent="."]
-unique_name_in_owner = true
-layout_mode = 2
-script = ExtResource("2_cell")
-
-[node name="Cell7" type="BaseButton" parent="."]
-unique_name_in_owner = true
-layout_mode = 2
-script = ExtResource("2_cell")
-
-[node name="Cell8" type="BaseButton" parent="."]
-unique_name_in_owner = true
-layout_mode = 2
-script = ExtResource("2_cell")
-
-[node name="Trailing" type="BaseButton" parent="."]
+[node name="Trailing" type="BaseButton" parent="Row"]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2

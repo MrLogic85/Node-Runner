@@ -148,6 +148,74 @@ public sealed class ShadowStripPresentationTests
     }
 
     [Fact]
+    public void MorePlaces_GiveEveryShadowACell_UntilTheyRunOut()
+    {
+        var strip = new ShadowStripPresentation { Places = 12 };
+
+        var view = strip.View(Standings(Enumerable.Repeat(1.0, 12)), 0);
+
+        view.Cells.Count.ShouldBe(12);
+        view.Pages.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void MorePlaces_ShowMoreShadowsPerPage()
+    {
+        var strip = new ShadowStripPresentation { Places = 12 };
+
+        var view = strip.View(Standings(Enumerable.Repeat(1.0, 30)), 0);
+
+        view.Cells.Select(cell => cell.Number).ShouldBe([10, 9, 8, 7, 6, 5, 4, 3, 2, 1]);
+        view.Trailing.ShouldBe(ShadowStripTrailing.Sort);
+    }
+
+    [Fact]
+    public void Places_AreNeverFewerThanTheButtonsAndOneShadow()
+    {
+        var strip = new ShadowStripPresentation { Places = 1 };
+
+        var view = strip.View(Standings(1, 2, 3, 4), 0);
+
+        strip.Places.ShouldBe(ShadowStripPresentation.FewestPlaces);
+        view.Cells.Select(cell => cell.Number).ShouldBe([1]);
+        view.Pages.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void ChangingThePlaces_KeepsTheOrder_AndGoesToTheLastPageIfThePageIsGone()
+    {
+        var strip = new ShadowStripPresentation();
+        var shadows = Standings(1, 9, 4, 8, 2, 7, 3, 6, 5, 0, 0, 0, 0, 0, 0, 0);
+        strip.Sort(shadows, 0);
+        strip.PageWorse();
+        strip.PageWorse();
+
+        strip.Places = 12;
+        var view = strip.View(shadows, 0);
+
+        view.Cells.Select(cell => cell.Number).ShouldBe([16, 15, 14, 13, 12, 11, 10, 1, 5, 7]);
+        view.CanPageWorse.ShouldBeFalse();
+        view.Trailing.ShouldBe(ShadowStripTrailing.Better);
+        strip.PageBetter();
+        strip.View(shadows, 0).Trailing.ShouldBe(ShadowStripTrailing.Sort);
+    }
+
+    [Fact]
+    public void ChangingThePlaces_KeepsAPageThatStillExists()
+    {
+        var strip = new ShadowStripPresentation();
+        var shadows = Standings(Enumerable.Repeat(1.0, 30));
+        strip.View(shadows, 0);
+        strip.PageWorse();
+
+        strip.Places = 12;
+        var view = strip.View(shadows, 0);
+
+        view.Cells.Select(cell => cell.Number).ShouldBe([20, 19, 18, 17, 16, 15, 14, 13, 12, 11]);
+        view.Trailing.ShouldBe(ShadowStripTrailing.Better);
+    }
+
+    [Fact]
     public void NoShadows_ShowAnEmptyStrip()
     {
         new ShadowStripPresentation().View([], 0).ShouldBe(ShadowStripView.Empty);

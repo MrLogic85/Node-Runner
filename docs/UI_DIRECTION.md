@@ -211,8 +211,10 @@ reference would mislead someone working on that surface.
   generation 0) and never switches to the leader by itself. Owner decision.
 - **The shadow strip pages and has a shorter caption (#387).** Past 8
   shadows the reference shows the best 7, sorted, and a sort button.
-  Instead the strip holds a "worse" chevron, 6 shadows and a sort button,
-  which becomes a "better" chevron on later pages; the order is the
+  Instead the strip holds as many places as fit its width, cells keeping
+  their size (#791), and past that many shadows a "worse" chevron, the
+  shadows and a sort button, which becomes a "better" chevron on later
+  pages; the order is the
   shadows' own until the player sorts, since nobody is best when a
   generation starts (`docs/TRAINING_LOOP.md` → Shadow strip). The caption
   is only "Generation 37": no time and no "Following shadow 5 · 10.3 m".

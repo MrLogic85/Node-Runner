@@ -241,11 +241,15 @@ transition to keep in step with it.
     shown distance so far (the front's, #725) against this generation's leader, whose bar is full;
     not against the best ever, which may come from a run with another trial
     length. Only the followed cell is marked (`accent` bar and frame);
-    the leader is not, as the lead changes too often and flickers. Up to 8 shadows
-    each get a cell, in shadow order with shadow 1 on the right. Past 8 the
-    strip keeps 8 places: a "worse" button, 6 shadows and a last button that
-    sorts on the first page and pages back up on later ones; the last page
-    shows the worst 6. Sorting ranks by distance at that moment and holds
+    the leader is not, as the lead changes too often and flickers. The strip
+    has as many places as fit its width, cells keeping their size, and at
+    least 3 (#791); until it knows its width it has 8. Up to that many
+    shadows each get a cell, in shadow order with shadow 1 on the right.
+    Past that the strip keeps its places: a "worse" button, shadows in all
+    but two places and a last button that sorts on the first page and pages
+    back up on later ones; the last page shows the worst shadows that fit.
+    When the width changes, the order and the page number stay, or the last
+    page shows if there are fewer pages now. Sorting ranks by distance at that moment and holds
     until the next sort, so cells never jump while the player watches; a
     new generation starts over in shadow order on the first page. The
     followed shadow can sort off the page. The caption reads only
