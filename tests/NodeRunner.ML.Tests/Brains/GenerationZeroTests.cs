@@ -14,12 +14,12 @@ public sealed class GenerationZeroTests
     private static readonly int[] _strengthOutputs = [1, 3];
 
     [Fact]
-    public void BaseGenome_IsThePassiveBrain()
+    public void BaseGenome_HoldsTheBuiltPoseAtFullStrength()
     {
         GenerationZero.BaseGenome(_ports).ShouldBe(
         [
             0, 0, 0, 0, 0, 0, 0, 0,
-            0, PortSignals.PassiveStrengthBias, 0, PortSignals.PassiveStrengthBias,
+            0, GenerationZero.FullStrengthBias, 0, GenerationZero.FullStrengthBias,
         ]);
     }
 
@@ -45,31 +45,21 @@ public sealed class GenerationZeroTests
                 genome.Skip(o * 2).Take(2).ShouldNotBe(baseGenome.Skip(o * 2).Take(2), $"output {o} weights");
             }
 
-            genome[_biasStart].ShouldNotBe(baseGenome[_biasStart]);
-            genome[_biasStart + 2].ShouldNotBe(baseGenome[_biasStart + 2]);
+            for (var o = 0; o < 4; o++)
+            {
+                genome[_biasStart + o].ShouldNotBe(baseGenome[_biasStart + o], $"output {o} bias");
+            }
         }
     }
 
     [Fact]
-    public void Population_WakesAStrengthOutputInEveryPerturbedShadow()
+    public void Population_KeepsEveryStrengthOutputNearFullStrength()
     {
-        foreach (var genome in GenerationZero.Population(_ports, 32, new Random(3))[..^1])
-        {
-            _strengthOutputs.ShouldContain(o =>
-                genome[_biasStart + o] >= GenerationZero.MovingStrengthBias
-                && genome[_biasStart + o] <= GenerationZero.FullStrengthBias);
-        }
-    }
+        var population = GenerationZero.Population(_ports, 32, new Random(3));
+        var biases = population.SelectMany(genome => _strengthOutputs.Select(o => genome[_biasStart + o])).ToArray();
 
-    [Fact]
-    public void Population_WakesEachStrengthOutputSomewhere()
-    {
-        var population = GenerationZero.Population(_ports, 32, new Random(4));
-
-        foreach (var o in _strengthOutputs)
-        {
-            population.ShouldContain(genome => genome[_biasStart + o] >= GenerationZero.MovingStrengthBias);
-        }
+        biases.Average().ShouldBe(GenerationZero.FullStrengthBias, tolerance: GenerationZero.BiasSpread / 2);
+        biases.ShouldAllBe(bias => Math.Abs(bias - GenerationZero.FullStrengthBias) < GenerationZero.BiasSpread * 5);
     }
 
     [Fact]
