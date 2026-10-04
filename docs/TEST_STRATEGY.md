@@ -145,8 +145,8 @@ swap restyles everything:
   `project/src` uses no .NET string casing; that text is translated before
   the TextServer cases it, in the language's own way, and redrawn when the
   language changes is checked on device (#776, #778). A `ui/lib` component
-  that puts its own text into an inner control, by setting it or through a
-  factory, also shares its translation context with that control
+  that puts its own text into an inner control, by setting it, through a
+  factory or helper, or into a nested component, also shares its translation context with that control
   (`UiTranslationContextTests`, #777); the translation it picks is checked
   on device.
 
