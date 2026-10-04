@@ -30,24 +30,43 @@ public sealed record ShadowStripView(
 
 /// <summary>
 /// Which shadows the shadow strip shows, in what order, and how full each bar is (#387). Up to
-/// <see cref="Places"/> shadows each get a cell. Past that the strip keeps its <see cref="Places"/>
-/// places: a "worse" button, <see cref="CellsPerPage"/> shadows and a last button that sorts (first
-/// page) or pages back up (later pages). The order is the shadows' own, shadow 1 (the previous best)
+/// <see cref="Places"/> shadows each get a cell; the strip sets the places to as many as fit its
+/// width (#791). Past that the strip keeps its <see cref="Places"/> places: a "worse" button,
+/// shadows in all but two places, and a last button that sorts (first page) or pages back up (later
+/// pages). The order is the shadows' own, shadow 1 (the previous best)
 /// on top, until the player sorts; a new generation starts over from that order and the first page.
 /// Sorting is a snapshot, so cells never jump around while the player watches.
 /// </summary>
 public sealed class ShadowStripPresentation
 {
-    /// <summary>The places the strip always has room for.</summary>
-    public const int Places = 8;
+    /// <summary>The places until the strip says how many fit.</summary>
+    public const int DefaultPlaces = 8;
 
-    /// <summary>The shadows on one page once the strip pages: the places less the two buttons.</summary>
-    public const int CellsPerPage = Places - 2;
+    /// <summary>The fewest places that still page: a "worse" button, one shadow and the last button.</summary>
+    public const int FewestPlaces = 3;
 
     // Zero-based shadows, best (top) first.
     private int[] _ranking = [];
     private int _page;
     private int _generation = -1;
+    private int _places = DefaultPlaces;
+
+    /// <summary>
+    /// The places the strip has, at least <see cref="FewestPlaces"/>. A change keeps the order and
+    /// the page number, or goes to the last page if there are now fewer pages.
+    /// </summary>
+    public int Places
+    {
+        get => _places;
+        set
+        {
+            _places = Math.Max(value, FewestPlaces);
+            _page = Math.Min(_page, LastPage(_ranking.Length));
+        }
+    }
+
+    // The shadows on one page once the strip pages: the places less the two buttons.
+    private int CellsPerPage => _places - 2;
 
     /// <summary>
     /// The strip for <paramref name="shadows"/> in <paramref name="generation"/>. Bars measure each
@@ -70,7 +89,7 @@ public sealed class ShadowStripPresentation
         }
 
         var scale = Scale(shadows);
-        var pages = shadows.Count > Places;
+        var pages = shadows.Count > _places;
         var shown = pages ? _ranking.Skip(PageStart(shadows.Count)).Take(CellsPerPage) : _ranking;
         var cells = shown
             .Reverse()
@@ -111,7 +130,7 @@ public sealed class ShadowStripPresentation
     // never has empty places.
     private int PageStart(int count) => Math.Min(_page * CellsPerPage, count - CellsPerPage);
 
-    private static int LastPage(int count) => count <= Places ? 0 : (count - 1) / CellsPerPage;
+    private int LastPage(int count) => count <= _places ? 0 : (count - 1) / CellsPerPage;
 
     private static double Scale(IReadOnlyList<ShadowStanding> shadows)
     {
