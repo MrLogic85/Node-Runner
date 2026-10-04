@@ -159,7 +159,7 @@ Long-form descriptions and the sensor/model contract live in
 - **Optimizer** — In backprop, the rule for turning a gradient into a weight
   update. SGD, momentum, Adam.
 - **Population** — The set of candidate genomes (brains) evaluated in one
-  generation. `Evolver` evaluates every candidate at once (up to 32), one
+  generation. `Evolver` evaluates every candidate at once (up to 100), one
   slot each; creature bodies collide only with the ground. The player sees
   the candidates as **shadows**: the followed one in full, the rest
   simplified and transparent.

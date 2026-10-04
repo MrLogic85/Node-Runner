@@ -8,10 +8,6 @@ msgstr ""
 msgid "142 generations"
 msgstr ""
 
-#: project/scenes/screens/TrainingScreen.tscn
-msgid "1x"
-msgstr ""
-
 #: libs/NodeRunner.App/Builders/CreatureBuilder.cs
 msgid "A beam already joins these nodes"
 msgstr ""
@@ -586,10 +582,6 @@ msgstr ""
 msgid "Sounds"
 msgstr ""
 
-#: project/scenes/screens/TrainingScreen.tscn
-msgid "Speed"
-msgstr ""
-
 #: project/scenes/screens/BuildScreen.tscn
 msgid "Splits it with a joint."
 msgstr ""
@@ -995,10 +987,6 @@ msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/BrainPortLabels.cs
 msgid "{0}: strength"
-msgstr ""
-
-#: project/src/hosts/TrainingHost.cs
-msgid "{0}x"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartParameters.cs

@@ -161,17 +161,6 @@ IconId = 22
 Kind = 1
 ContentLayout = 1
 
-[node name="Speed" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Body/Arena/Tray/TrayRow/RunControls"]
-unique_name_in_owner = true
-layout_mode = 2
-tooltip_text = "Speed"
-mouse_filter = 1
-text = "1x"
-script = ExtResource("5_button")
-IconId = 32
-Kind = 1
-ContentLayout = 1
-
 [node name="StripColumn" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/Arena/Tray/TrayRow"]
 layout_mode = 2
 size_flags_horizontal = 3

@@ -255,7 +255,7 @@ records its fitness, assigns the slot the next pending genome, and, once every
 genome in the current generation has completed, produces the next generation
 via `GeneticAlgorithm.NextGeneration(...)`. The first slot reuses the visible
 creature; the rest of the generation runs alongside it as clones, all at
-once (up to 32), drawn as transparent shadows behind the followed one. Each slot owns a `TrialController` and resets
+once (up to 100), drawn as transparent shadows behind the followed one. Each slot owns a `TrialController` and resets
 independently between trials. Creature bodies collide only with the ground. See `docs/TRAINING_LOOP.md` for the full design.
 
 `Evolver` raises `GenerationCompleted`/`TrainingProgressChanged` events; the
@@ -264,8 +264,8 @@ generation, and progress, including the best ever and its generation,
 reaches `TrainingPresentationViewModel` through
 `EvolverTrainingProgressSource`. Training unlocks nothing (#557). The
 Training screen's caption follows `TrainingPresentationViewModel`, the
-SignalFlow stages are polled every ~0.15s, and Pause and Speed arrive as screen
-signals. A dedicated `PopulationViewModel`
+SignalFlow stages are polled every ~0.15s, and Pause arrives as a screen
+signal. A dedicated `PopulationViewModel`
 in the App layer remains a possible later refactor if this logic outgrows
 `TrainingHost` — not required yet.
 
@@ -371,7 +371,7 @@ on the first start.
 ## Threading
 
 - Single-threaded for v1. Godot's physics runs on one thread, but `Evolver`
-  evaluates the whole generation (up to 32 candidates) concurrently in one
+  evaluates the whole generation (up to 100 candidates) concurrently in one
   scene using the ground-only collision specified in `docs/TRAINING_LOOP.md`. This is
   parallel evaluation, not multithreaded physics.
 - If profiling later shows the need for more throughput, brains can be

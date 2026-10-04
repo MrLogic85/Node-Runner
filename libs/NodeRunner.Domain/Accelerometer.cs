@@ -16,7 +16,7 @@ public static class Accelerometer
 
     public const double ReferenceDisplacement = 1.0 / (AngularFrequency * AngularFrequency);
 
-    /// <summary>The longest integration substep; a faster time scale (2×, 4×) takes several per tick.</summary>
+    /// <summary>The longest integration substep; a longer step, such as Build's frame-delta preview, takes several.</summary>
     public const double MaxSubstep = 1.0 / 60;
 
     /// <summary>The machine keys of its input ports (<see cref="BrainPorts"/>), in order: along and across its beam. Never change one.</summary>
@@ -28,8 +28,8 @@ public static class Accelerometer
 
     /// <summary>
     /// Advances the damped spring by <paramref name="dt"/> with the force held constant, in equal
-    /// semi-implicit Euler substeps of at most <see cref="MaxSubstep"/> so it stays stable at any
-    /// time scale.
+    /// semi-implicit Euler substeps of at most <see cref="MaxSubstep"/> so it stays stable for any
+    /// <paramref name="dt"/>.
     /// </summary>
     public static ProofMass Step(ProofMass state, Vector2D specificForceG, double dt)
     {

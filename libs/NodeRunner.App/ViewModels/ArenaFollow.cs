@@ -95,7 +95,8 @@ public sealed class ArenaFollow
         }
 
         // The shown point heads for the aim of the frame before, as Godot's own smoothing did: the
-        // frame's delay offsets the exponential stages' shorter lag, so the lead stays right at 4x.
+        // frame's delay offsets the exponential stages' shorter lag, so the lead stays right at a
+        // steady speed.
         ShownX += (AimX - ShownX) * (1 - Math.Exp(-ShownEaseRate * deltaSeconds));
         var speed = (centreX - _lastCentreX) / deltaSeconds;
         _lastCentreX = centreX;

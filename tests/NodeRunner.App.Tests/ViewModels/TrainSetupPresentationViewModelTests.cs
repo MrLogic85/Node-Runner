@@ -34,7 +34,7 @@ public sealed class TrainSetupPresentationViewModelTests
     {
         var setup = new TrainSetupPresentationViewModel(Creation());
 
-        setup.Shadows.Step.ShouldBe(1.0 / 30, 1e-9);
+        setup.Shadows.Step.ShouldBe(1.0 / 98, 1e-9);
         setup.RunLength.Step.ShouldBe(5.0 / 55, 1e-9);
     }
 
@@ -43,7 +43,7 @@ public sealed class TrainSetupPresentationViewModelTests
     {
         var setup = new TrainSetupPresentationViewModel(Creation());
 
-        setup.ShadowsEnds.ShouldBe([UiText.Number(2), UiText.Number(32)]);
+        setup.ShadowsEnds.ShouldBe([UiText.Number(2), UiText.Number(100)]);
         setup.RunLengthEnds.ShouldBe([UiText.Format("{0} s", 5), UiText.Format("{0} s", 60)]);
     }
 
@@ -51,7 +51,7 @@ public sealed class TrainSetupPresentationViewModelTests
     [InlineData(0, TrainSettingsDef.MinShadows)]
     [InlineData(1, TrainSettingsDef.MaxShadows)]
     [InlineData(-1, TrainSettingsDef.MinShadows)]
-    [InlineData(0.5, 17)]
+    [InlineData(0.5, 51)]
     public void SetShadows_SnapsToAWholeShadowWithinTheRange(double position, int expected)
     {
         var setup = new TrainSetupPresentationViewModel(Creation());

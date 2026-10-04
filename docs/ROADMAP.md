@@ -363,6 +363,8 @@ short demo, and can see the fitness signal that caused the improvement.
   reproducibility seed exists; see `docs/TRAINING_LOOP.md`).
 - [x] Run/pause/reset controls work with Android touch.
 - [x] Time-scale control exists if it fits the 0.2 UI shell cleanly.
+  Removed in #787: time scale stretched each physics step; more shadows
+  speed training instead.
 - [x] Backprop remains explicitly out of scope for this milestone
   (confirmed: no backprop code exists anywhere in `libs/` or `project/src/`;
   neuroevolution — `GeneticAlgorithm`/`Evolver` — is the only training
