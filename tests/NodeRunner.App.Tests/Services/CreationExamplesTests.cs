@@ -38,6 +38,20 @@ public sealed class CreationExamplesTests
     }
 
     [Fact]
+    public void Frog_IsReadyToTrainWithThreePistonsInsideTheBuildArea()
+    {
+        var frog = CreationExamples.All.Single(example => example.Id == CreationExamples.FrogId);
+
+        frog.ShouldBeSameAs(CreationExamples.Frog);
+        frog.Name.ShouldBe(UiText.Plain("Frog"));
+        frog.Creature.Pistons.Count.ShouldBe(3);
+        frog.Creature.Sensors.ShouldBe([new NodeRunner.Domain.SensorDef(13, 7, NodeRunner.Domain.SensorKind.Accelerometer)]);
+        frog.Creature.Nodes.ShouldAllBe(node => BuildViewModel.BuildArea.Contains(node.Position));
+        NodeRunner.App.Lifecycle.CreatureReadiness.CanTrain(frog.Creature).ShouldBeTrue();
+        frog.Training.ShouldBeNull();
+    }
+
+    [Fact]
     public void Examples_HaveDistinctIds() =>
         CreationExamples.All.Select(example => example.Id).ShouldBeUnique();
 }
