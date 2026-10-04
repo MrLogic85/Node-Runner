@@ -26,10 +26,6 @@
   generation. Slot 0 reuses the visible creature; additional slots are
   clones drawn as shadows; creature bodies collide only with the ground.
   `Evolver` owns which shadow is followed (`Follow`, `FollowedCreature`).
-- `SimSpeed.cs` — the fixed tick rate and the global 1x/2x/4x speed
-  (#787): raises the tick rate with the time scale so each step stays
-  1/60 s. Engine-wide settings only, no run state, so rule 5 holds. Used
-  by `TrainingHost` and `TrialController`.
 - `ArenaGround.cs` — the arena's ground, built from the map's `MapGround`
   along the scene's ground line: the layer-1 collider, fill and edge.
   Flat only (Godot's `WorldBoundaryShape2D`); shaped grounds and chunks

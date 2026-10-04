@@ -138,8 +138,8 @@ CreatureDef  ──build──▶  physical body  ──sensors──▶  model 
   reading a short memory of recent motion. Natural frequency, damping and
   `d_ref` are named constants in `Accelerometer`, tuned by playtesting.
   `Step` integrates in substeps of at most 1/60 s, so a longer `dt` stays
-  stable. Training always steps 1/60 s, at any speed (#787); Build's
-  frame-delta preview can pass longer ones.
+  stable. Training always steps 1/60 s (#787); Build's frame-delta
+  preview can pass longer ones.
 - **Deterministic:** the proof mass starts at rest for gravity as built,
   on every build and every `ResetPose`, so the same brain, build and map
   give the same readings. The state (`AccelerometerSensor.CurrentProofMass`)
@@ -262,7 +262,7 @@ handles, notes or dialogs. The thumbnails move onto the same parts in #770.
 
 In Training (#385) every shadow except the followed one
 is drawn simplified: the same shapes and colours as the followed creature,
-without detail, and transparent. This keeps drawing cheap with up to 32
+without detail, and transparent. This keeps drawing cheap with up to 100
 shadows and cuts the clutter when they overlap. Every node, beam and part
 visual declares how it draws as a shadow (not at all, simplified, or the same
 as on the followed creature), and a test checks that every kind has made that

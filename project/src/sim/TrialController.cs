@@ -16,7 +16,7 @@ namespace NodeRunner.Sim;
 /// </summary>
 public partial class TrialController : Node
 {
-    private readonly TrialMeasurement _measurement = new(SimSpeed.TicksPerSecond);
+    private readonly TrialMeasurement _measurement = new(Engine.PhysicsTicksPerSecond);
     private Creature.Creature? _creature;
     private int _elapsedTicks;
 

@@ -188,7 +188,7 @@ transition to keep in step with it.
   (see "The Training scene" below) subscribes to.
   - Every shadow runs at once: there is one slot per candidate, and
     `Evolver.Start` rejects a population above `Creature.MaximumShadows`
-    (32). Layer 1 is the ground; every creature body uses layer 2 with mask
+    (100, #787). Layer 1 is the ground; every creature body uses layer 2 with mask
     1, so a body hits the ground and nothing else, neither its own parts
     nor another shadow. Camera rays see the ground only (mask 1).
   - Measured on a Galaxy S25 with the Worm (#384): 32 hidden shadows keep
@@ -196,6 +196,12 @@ transition to keep in step with it.
     drawing all 32 at 30 % opacity raised p95 to 16.6 ms and PSS to about
     436 MiB. With simplified shadows (#385) 32 shadows stay at 8.3 ms and
     about 366 MiB.
+  - Measured again for the 100 max (#787, Worm, S25 120 Hz): drawing is
+    the limit, not physics or memory. Physics held 60 ticks/s up to about
+    200 shadows. Frames held 120/s at 96 shadows and fell to about 88/s at
+    128, 60/s at 160 and 43/s at 192; PSS grew about 0.4 MiB per shadow.
+    100 keeps the S25 at full rate with room for larger creatures; drawing
+    only the shadow strip's shadows is the noted way further (#284).
   - Followed shadow (#385): one shadow is drawn in full, wholly above
     the others (so even its rigid hatch, #627, stays above their joints;
     `docs/CREATURE_MODEL.md` → "Draw layers"), and feeds signal flow, the brain and part selection; every
@@ -323,8 +329,7 @@ component READMEs under `reference design/components/` guide its presentation.
       (`Evolver.FollowedTrialStarted`) the camera cuts back to the start,
       zoom and height included, since a new trial is a new scene (owner
       decision). It also cuts when the arena changes size, and holds still
-      while training is paused. Everything runs
-      on scaled time, so 2x and 4x look the same, only faster.
+      while training is paused.
   - **Ground and background.** The ground comes from the selected map
     (`MapDef.Ground`, #443); Training runs and records on `Maps.Default`
     (`Maps.Flat`, `map-flat`, shown as "Flat ground" by App's `MapNames`)
@@ -385,14 +390,14 @@ component READMEs under `reference design/components/` guide its presentation.
     is dropped. Saves for one creation land in order, and reading a
     creation (`ICreationUpdateCoordinator.Get`) waits for them, so Build
     opened right after Training never shows a stale lock or summary (#370).
-  - Training runs until the player leaves. Speed and pause
-    belong to the scene and start from 1x and running each time it opens.
+  - Training runs until the player leaves. Pause belongs to the scene
+    and starts running each time it opens.
   - Run on its own (F6) the scene trains the built-in worm without saving.
 - The Training screen's top bar shows the creation's name, the status
   ("Training · Flat ground") and Brain and Stats buttons; unlock progress
   is not shown here (#488). Beside the arena, the SignalFlow column
   shows the Senses → Brain → Outputs → Distance stages from
-  `SignalFlowPresentationViewModel`. Under the arena are Pause, Speed and the
+  `SignalFlowPresentationViewModel`. Under the arena are Pause and the
   generation caption from `TrainingPresentationViewModel`.
   - **Pause** toggles `GetTree().Paused`. This is the standard Godot
     pause mechanism: every node using the default `Pausable` process mode
@@ -403,16 +408,12 @@ component READMEs under `reference design/components/` guide its presentation.
     left off. The scene root is `ProcessMode.Always`, so the screen and its
     buttons (Pause included) keep responding while paused, and the
     creature and `Evolver` pin themselves back to `Pausable`.
-  - **Speed** cycles a fixed 1x/2x/4x set via `SimSpeed.Set` (#787). It
-    raises `Engine.PhysicsTicksPerSecond` and `Engine.TimeScale` together,
-    so every physics step stays 1/60 s and only more of them run per second.
-    TimeScale alone would stretch each step, which changes fitness and makes
-    stiff Springs unstable. Speed changes only how quickly a fixed tick
-    budget plays out, never the result; on a slow device 4x may play out
-    slower than 4x rather than take bigger steps. Trial lengths use
-    `SimSpeed.TicksPerSecond`, the project setting, not the live engine
-    value. Speed and pause are reset in `TrainingHost._Ready()`/`_ExitTree()`
-    since both are global engine settings, not scoped to this scene.
+    Pause is reset in `TrainingHost._Ready()`/`_ExitTree()` since it is a
+    global engine setting, not scoped to this scene.
+  - **No speed-up** (#787). Physics always steps 1/60 s at real time.
+    Godot's `Engine.TimeScale` stretches each step instead of running more
+    of them, which changed fitness with speed and made stiff Springs blow
+    up. Training goes faster by racing more shadows per generation instead.
   - **Brain** (the button or the Brain stage) opens the BrainFocus sheet;
     Android Back closes it before leaving the scene. BrainFocus shows the
     direct brain (#536): a Senses column named by port ("Accelerometer:

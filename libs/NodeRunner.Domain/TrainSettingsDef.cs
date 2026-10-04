@@ -10,7 +10,7 @@ public sealed record TrainSettingsDef
     /// <summary>Training needs one shadow to keep the best brain and one to try something new.</summary>
     public const int MinShadows = 2;
 
-    public const int MaxShadows = 32;
+    public const int MaxShadows = 100;
 
     public const int MinRunLengthSeconds = 5;
 

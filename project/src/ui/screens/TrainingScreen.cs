@@ -24,9 +24,6 @@ public partial class TrainingScreen : Control
     public delegate void PauseRequestedEventHandler();
 
     [Signal]
-    public delegate void SpeedRequestedEventHandler();
-
-    [Signal]
     public delegate void StatsRequestedEventHandler();
 
     [Signal]
@@ -68,9 +65,6 @@ public partial class TrainingScreen : Control
         pause.IconId = paused ? UiIconId.Play : UiIconId.Pause;
         pause.TooltipText = paused ? "Run" : "Pause";
     }
-
-    /// <summary>Shows how fast the run plays, such as "2x": already translated, and asked again when the language changes.</summary>
-    public void ShowSpeed(Func<string> speedText) => GetNode<UiButton>("%Speed").TextSource = speedText;
 
     /// <summary>
     /// Names the selected part (#388) in a callout above the whole creature, its leader down to the
@@ -125,7 +119,6 @@ public partial class TrainingScreen : Control
         GetNode<UiStageCard>("%BrainStage").StageSelected += BrainFocus.Open;
         GetNode<UiButton>("%Stats").Activated += () => EmitSignal(SignalName.StatsRequested);
         GetNode<UiButton>("%Pause").Activated += () => EmitSignal(SignalName.PauseRequested);
-        GetNode<UiButton>("%Speed").Activated += () => EmitSignal(SignalName.SpeedRequested);
         GetNode<UiWorldView>("%ArenaView").WorldPressed += position => EmitSignal(SignalName.ArenaPressed, position);
         Apply();
     }

@@ -86,14 +86,14 @@ public sealed class AccelerometerTests
     [InlineData(1)]
     [InlineData(2)]
     [InlineData(4)]
-    public void Step_WithConstantInput_SettlesToNewRest(int timeScale)
+    public void Step_WithConstantInput_SettlesToNewRest(int ticksPerStep)
     {
         var force = new Vector2D(0, 1);
         var state = Accelerometer.Rest(new Vector2D(0, 0));
 
-        for (var i = 0; i < 600 / timeScale; i++)
+        for (var i = 0; i < 600 / ticksPerStep; i++)
         {
-            state = Accelerometer.Step(state, force, timeScale / 60.0);
+            state = Accelerometer.Step(state, force, ticksPerStep / 60.0);
         }
 
         var reading = Accelerometer.Reading(state);
@@ -105,17 +105,17 @@ public sealed class AccelerometerTests
     [InlineData(1)]
     [InlineData(2)]
     [InlineData(4)]
-    public void Step_AfterImpulse_ProducesSpikeThatDecays(int timeScale)
+    public void Step_AfterImpulse_ProducesSpikeThatDecays(int ticksPerStep)
     {
         var restForce = new Vector2D(0, 1);
         var state = Accelerometer.Rest(restForce);
 
-        state = Accelerometer.Step(state, new Vector2D(5, 1), timeScale / 60.0);
+        state = Accelerometer.Step(state, new Vector2D(5, 1), ticksPerStep / 60.0);
         var spike = Accelerometer.Reading(state);
 
-        for (var i = 0; i < 240 / timeScale; i++)
+        for (var i = 0; i < 240 / ticksPerStep; i++)
         {
-            state = Accelerometer.Step(state, restForce, timeScale / 60.0);
+            state = Accelerometer.Step(state, restForce, ticksPerStep / 60.0);
         }
 
         var settled = Accelerometer.Reading(state);

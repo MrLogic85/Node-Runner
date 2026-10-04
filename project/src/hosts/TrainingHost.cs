@@ -29,10 +29,6 @@ public partial class TrainingHost : Node, IRoutedScene
 {
     private const double _signalRefreshIntervalSeconds = 0.15;
 
-    // SimSpeed runs more fixed-size physics ticks per second, so speed changes how fast a run plays
-    // out, never its result (#787).
-    private static readonly int[] _timeScales = [1, 2, 4];
-
 
     private readonly VisualTheme _theme = VisualTheme.Neon;
     // The map Training runs on and records: the one Train setup selects (#444).
@@ -54,7 +50,6 @@ public partial class TrainingHost : Node, IRoutedScene
     private TrialController? _playback;
     private TrainingScreen _screen = null!;
     private TrainingPresentationViewModel _trainingPresentation = new();
-    private int _timeScaleIndex;
     // The selected part's Build name in the player's language, shown above the followed shadow (#388);
     // null with nothing selected.
     private Func<string>? _selectedPartName;
@@ -86,8 +81,7 @@ public partial class TrainingHost : Node, IRoutedScene
 
     public override void _Ready()
     {
-        // Speed and pause are global, not scoped to this scene: start from 1x, running.
-        SimSpeed.Set(_timeScales[0]);
+        // Pause is global, not scoped to this scene: start running.
         GetTree().Paused = false;
         // Always, so tapping a part and the screen's buttons still work while paused (#85); the
         // creature and the Evolver pin themselves back to Pausable.
@@ -125,8 +119,7 @@ public partial class TrainingHost : Node, IRoutedScene
 
     public override void _ExitTree()
     {
-        // Don't let this scene's speed or pause leak into the next one.
-        SimSpeed.Set(_timeScales[0]);
+        // Don't let this scene's pause leak into the next one.
         GetTree().Paused = false;
         _selection.PropertyChanged -= OnSelectionPropertyChanged;
         _trainingPresentation.PropertyChanged -= OnTrainingChanged;
@@ -296,10 +289,8 @@ public partial class TrainingHost : Node, IRoutedScene
             _signalFlow,
             _brainFocus);
         _screen.ShowPaused(GetTree().Paused);
-        ShowSpeed();
         _screen.BackRequested += () => _navigator?.Back();
         _screen.PauseRequested += TogglePause;
-        _screen.SpeedRequested += CycleTimeScale;
         _screen.StatsRequested += () => Notify("Stats", "Stats come in a later version.");
         _screen.ArenaPressed += SelectPartAt;
     }
@@ -339,7 +330,7 @@ public partial class TrainingHost : Node, IRoutedScene
         var resumeBest = resume?.BestOn(_map.Id);
         var disabledGenes = resume is null ? null : DirectBrain.DisabledGenes(resume.Brain, _creature.Ports);
         _brainFocus.Configure(BrainPortLabels.For(definition), disabledGenes ?? []);
-        var setup = EvolutionSetup.For(creation?.TrainSettings, SimSpeed.TicksPerSecond);
+        var setup = EvolutionSetup.For(creation?.TrainSettings, Engine.PhysicsTicksPerSecond);
         _evolver.Start(
             _creature,
             setup.Population,
@@ -458,16 +449,6 @@ public partial class TrainingHost : Node, IRoutedScene
         tree.Paused = !tree.Paused;
         _screen.ShowPaused(tree.Paused);
     }
-
-    private void CycleTimeScale()
-    {
-        _timeScaleIndex = (_timeScaleIndex + 1) % _timeScales.Length;
-        SimSpeed.Set(_timeScales[_timeScaleIndex]);
-        ShowSpeed();
-    }
-
-    private void ShowSpeed() =>
-        _screen.ShowSpeed(UiTextTranslation.Source(UiText.Format("{0}x", _timeScales[_timeScaleIndex])));
 
     // A tap in the arena selects the part of the creature under it, or clears the selection.
     private void SelectPartAt(Vector2 worldPosition)

@@ -215,6 +215,11 @@ reference would mislead someone working on that surface.
   is only "Generation 37": no time and no "Following shadow 5 · 10.3 m".
   Only the followed shadow's cell is marked (`accent`); the leader gets no
   mark, as the lead changes too often and flickers. Owner decisions.
+- **No speed control in Training (#787).** The reference's bottom row has
+  Pause, speed and the shadow strip. Instead there is only Pause and the
+  strip: physics always runs at real time, and training goes faster by
+  racing more shadows (`docs/TRAINING_LOOP.md` → No speed-up). Owner
+  decision.
 - **No grid in Training (#668).** The reference draws a faint grid behind
   the Training arena. Instead the arena background is plain: the grid is a
   Build blueprint, not part of the world. Motion shows against the ruler
@@ -253,13 +258,14 @@ reference would mislead someone working on that surface.
   `alpha_shadow` meanwhile, since the name may cover its flag
   (`docs/TRAINING_LOOP.md` → World view). Owner decision.
 - **Train setup has no profiles and few choices yet (#194, 0.13.0).** The
-  reference's Train setup offers Shadows from 1, power checkbox and map
-  row. Instead Shadows starts at 2 (with one, the only shadow is the
-  unchanged best brain, so nothing is learned), and the locked maps are
+  reference's Train setup offers Shadows from 1 to 32, power checkbox and
+  map row. Instead Shadows runs from 2 (with one, the only shadow is the
+  unchanged best brain, so nothing is learned) to 100 (#787: more shadows
+  replace the removed speed-up), and the locked maps are
   shown but disabled with "comes in a later version", not the reference's
   Achievements, which the player cannot act on yet. Simulate (#702) plays
   until the player leaves, so unlike the reference both sliders dim:
-  Shadows reads 1, below its 2–32 scale, and Run length "Until you leave".
+  Shadows reads 1, below its 2–100 scale, and Run length "Until you leave".
   Neither value is on its scale, so both tracks are empty dashed lines with
   no thumb or fill. It
   plays the latest brain, not the reference's best (`docs/TRAINING_LOOP.md`
