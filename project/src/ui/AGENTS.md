@@ -85,7 +85,10 @@ unchanged, it belongs in `lib/`. If it embeds project vocabulary
 - Order drawing with the tree, not `ZIndex` (#463): add an overlay last, or a
   part that must draw last with `InternalMode.Back`. A menu that floats over
   its screen goes in a `UiLevelLayer`. `docs/UI_DIRECTION.md` "UI levels"
-  (#768) owns the rule and the level stack.
+  (#768) owns the rule and the level stack. Inside a world (`UiWorldView`)
+  holding creature parts, draw a view's own marks on a `ViewLayer`, not as a
+  last child: the parts sit on `CreatureLayers` (`docs/CREATURE_MODEL.md` →
+  "Draw layers").
 - A `[Tool]` component that writes a property on itself or on a node of its
   own scene (a theme override, `clip_children`, text, an icon, a computed
   size) lists it in a `UiUnsavedState` and calls `Handle` first in

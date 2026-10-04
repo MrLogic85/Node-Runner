@@ -56,6 +56,7 @@ public sealed class UiStrokeGuardTests
     [InlineData("void _Draw() { using var pen = UiPixelPen.Begin(this); UiDashedBorder.DrawRoundedRect(this, new Rect2(), 2, Colors.White, 1, pen.ToPixels, 4, 3); }")]
     [InlineData("void _Draw() { DrawRect(new Rect2(), Colors.White); }")]
     [InlineData("void _Draw() { using var pen = UiPixelPen.Begin(this); pen.Line(Vector2.Zero, Vector2.One, Colors.White, 2); }")]
+    [InlineData("float Measure(CanvasItem canvas) => UiPixelSpace.ScaleOf(UiPixelSpace.ItemToPixels(canvas));")]
     public void Smooth_stroke_or_fill_passes(string member) =>
         HardStrokes(member).ShouldBeEmpty();
 
@@ -75,7 +76,8 @@ public sealed class UiStrokeGuardTests
         }
 
         // A helper that draws through a window-pixel map is only as good as the map its caller passes.
-        if (TakesPixelMap(method))
+        // One that returns a value (UiPixelSpace.ScaleOf) only measures the map.
+        if (TakesPixelMap(method) && method.ReturnsVoid)
         {
             return !InWindowPixels(invocation, model);
         }

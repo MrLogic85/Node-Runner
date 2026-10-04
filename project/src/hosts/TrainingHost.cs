@@ -59,6 +59,7 @@ public partial class TrainingHost : Node, IRoutedScene
     // null with nothing selected.
     private Func<string>? _selectedPartName;
     private double _signalRefreshElapsed;
+    private float _partsPixelScale;
 
     private SaveManager Saves => GetNode<SaveManager>("/root/SaveManager");
 
@@ -132,11 +133,13 @@ public partial class TrainingHost : Node, IRoutedScene
         _trainingPresentation.Dispose();
     }
 
-    // Moves the part name with the creature every frame. Refreshes the signal flow and brain focus
+    // Redraws the creatures' parts once the camera has zoomed them to a new pixel scale, also
+    // while paused (a resize re-frames the camera). Moves the part name with the creature every frame. Refreshes the signal flow and brain focus
     // from the creature's last physics tick at a fixed cadence: the numbers are for a person to
     // read, so every rendered frame is wasted work.
     public override void _Process(double delta)
     {
+        PartVisual.RedrawOnNewPixelScale(World, ref _partsPixelScale);
         if (_followed is null)
         {
             return;

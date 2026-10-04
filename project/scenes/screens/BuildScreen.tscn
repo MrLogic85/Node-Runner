@@ -15,6 +15,7 @@
 [ext_resource type="Script" uid="uid://cxlb7vq8iocpi" path="res://src/ui/lib/UiIconTabs.cs" id="18_icon_tabs"]
 [ext_resource type="Script" uid="uid://c6loxvqr7tfvr" path="res://src/ui/lib/UiInfoRow.cs" id="19_info_row"]
 [ext_resource type="Script" path="res://src/ui/lib/UiCalloutLayer.cs" id="40_callout_layer"]
+[ext_resource type="PackedScene" uid="uid://kk3td5f4uebc" path="res://scenes/ui/UiWorldView.tscn" id="41_world_view"]
 
 [node name="BuildScreen" type="Control"]
 layout_mode = 3
@@ -207,17 +208,23 @@ layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 2
 
-[node name="BuildCanvas" type="Node2D" parent="UiFrame/MarginContainer/Card/Shell/Body/CanvasSlot" node_paths=PackedStringArray("MoveHandle", "RotateHandle", "ScaleHandle", "AimHandle", "CalloutLayer", "PartDropZone")]
+[node name="BuildView" parent="UiFrame/MarginContainer/Card/Shell/Body/CanvasSlot" instance=ExtResource("41_world_view")]
+unique_name_in_owner = true
+layout_mode = 1
+ScalesWithUi = true
+
+[node name="BuildCanvas" type="Node2D" parent="UiFrame/MarginContainer/Card/Shell/Body/CanvasSlot/BuildView/WorldViewport" node_paths=PackedStringArray("WorldView", "MoveHandle", "RotateHandle", "ScaleHandle", "AimHandle", "CalloutLayer", "PartDropZone")]
 unique_name_in_owner = true
 position = Vector2(136, 66)
 scale = Vector2(1.15, 1.15)
 script = ExtResource("8_canvas")
-MoveHandle = NodePath("../MoveHandle")
-RotateHandle = NodePath("../RotateHandle")
-ScaleHandle = NodePath("../ScaleHandle")
-AimHandle = NodePath("../AimHandle")
-CalloutLayer = NodePath("../CalloutLayer")
-PartDropZone = NodePath("../PartDropZone")
+WorldView = NodePath("../..")
+MoveHandle = NodePath("../../../MoveHandle")
+RotateHandle = NodePath("../../../RotateHandle")
+ScaleHandle = NodePath("../../../ScaleHandle")
+AimHandle = NodePath("../../../AimHandle")
+CalloutLayer = NodePath("../../../CalloutLayer")
+PartDropZone = NodePath("../../../PartDropZone")
 
 [node name="MoveHandle" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Body/CanvasSlot"]
 visible = false
@@ -604,3 +611,4 @@ TextColor = 12
 [editable path="UiFrame/MarginContainer/Card/Shell/Toolbar"]
 [editable path="UiFrame/MarginContainer/Card/Shell/Body/ButtonBar"]
 [editable path="UiFrame/MarginContainer/Card/Shell/Body/SidePanel"]
+[editable path="UiFrame/MarginContainer/Card/Shell/Body/CanvasSlot/BuildView"]

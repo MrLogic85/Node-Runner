@@ -28,10 +28,12 @@ shared part visuals that Build, Training and thumbnails draw with (#766).**
 - `JointDrawing.cs`, `PistonDrawing.cs`, `SensorDrawing.cs`,
   `SelectionDrawing.cs`, `TriangleHatch.cs` — static drawing helpers
 - `PartVisual.cs` — the base of every part visual: theme, selection and
-  layer
+  layer, and the redraw on a new pixel scale every view that holds parts calls
 - `JointPart.cs`, `BeamPart.cs`, `PistonPart.cs`, `SensorPart.cs`,
   `HatchPart.cs` — one visual per part kind
 - `CreatureLayers.cs`, `ArenaLayers.cs` — the named draw layers
+- `ViewLayer.cs` — an underlay or overlay a screen draws its own marks on,
+  between the parts' layers
 
 ## What does NOT live here
 

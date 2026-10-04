@@ -2,7 +2,11 @@
 
 [ext_resource type="Script" uid="uid://cr857y5u5urxt" path="res://src/ui/lib/UiWorldView.cs" id="1_view"]
 
+[sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_premult"]
+blend_mode = 4
+
 [node name="UiWorldView" type="Control"]
+material = SubResource("CanvasItemMaterial_premult")
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -15,4 +19,5 @@ script = ExtResource("1_view")
 
 [node name="WorldViewport" type="SubViewport" parent="."]
 unique_name_in_owner = true
+transparent_bg = true
 render_target_update_mode = 4

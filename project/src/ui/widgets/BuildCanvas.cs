@@ -1,7 +1,5 @@
 using System.ComponentModel;
 using Godot;
-using NodeRunner.App.Builders;
-using NodeRunner.App.Lifecycle;
 using NodeRunner.App.ViewModels;
 using NodeRunner.Domain;
 using NodeRunner.Theme;
@@ -16,6 +14,10 @@ namespace NodeRunner.Ui.Widgets;
 /// <see cref="BuildTool"/> does and when to zoom or pan. Binds to
 /// <see cref="BuildViewModel"/> per `project/src/ui/AGENTS.md`; does
 /// not own any anatomy state itself. See docs/BUILD_MODE.md.
+/// It lives in the world of a <see cref="UiWorldView"/> (#769), so its creature is drawn with the
+/// same part visuals and layers as Training's (<see cref="BuildCreature"/>) without any of them
+/// drawing over the handles and notes in the slot. Its own marks go under the creature (grid,
+/// Select box, beam preview) or on a <see cref="ViewLayer"/> under the links or over the creature.
 /// </summary>
 public partial class BuildCanvas : Node2D
 {
@@ -35,10 +37,26 @@ public partial class BuildCanvas : Node2D
     private BuildGestures? _gestures;
     private bool _viewFitted;
     private Control? _slot;
+    private readonly BuildCreature _creature = new();
+    private readonly ViewLayer _underlay = ViewLayer.Underlay();
+    private readonly ViewLayer _overlay = ViewLayer.Overlay();
     private readonly BuildSensorMotion _sensorMotion = new();
     private double _gravity;
 
+    public BuildCanvas()
+    {
+        AddChild(_creature, @internal: InternalMode.Front);
+        AddChild(_underlay, @internal: InternalMode.Front);
+        AddChild(_overlay, @internal: InternalMode.Front);
+        _underlay.Draw += () => DrawUnderlay(_underlay);
+        _overlay.Draw += () => DrawOverlay(_overlay);
+    }
+
     public VisualTheme Theme { get; set; } = VisualTheme.Neon;
+
+    /// <summary>The view this canvas is the world of; its parent is the slot the handles and notes share.</summary>
+    [Export]
+    public UiWorldView? WorldView { get; set; }
 
     /// <summary>The Select handles, authored in the slot above the canvas; placed here, hit-tested by <see cref="BuildGestures"/>.</summary>
     [Export]
@@ -121,11 +139,14 @@ public partial class BuildCanvas : Node2D
 
     public override void _EnterTree()
     {
-        _slot = GetParent() as Control;
-        if (_slot is not null)
+        if (WorldView is null)
         {
-            _slot.Resized += QueueRedraw;
+            GD.PushError($"{Name} needs its WorldView: the UiWorldView it is the world of (#769).");
+            return;
         }
+
+        _slot = WorldView.GetParent() as Control;
+        WorldView.Resized += QueueRedraw;
     }
 
     public override void _Ready()
@@ -167,7 +188,8 @@ public partial class BuildCanvas : Node2D
     /// </summary>
     private void TrackPartDrag()
     {
-        var viewport = GetViewport();
+        // Godot drags in the window, not in the world this canvas lives in.
+        var viewport = GetTree().Root;
         BuildPart? part = viewport.GuiIsDragging() && TryReadPartDrag(viewport.GuiGetDragData(), out var dragged) && !_viewModel!.IsMoveOnly
             ? dragged
             : null;
@@ -175,7 +197,7 @@ public partial class BuildCanvas : Node2D
         if (part is not null && _slot is { } slot && _gestures is { } gestures
             && new Rect2(Vector2.Zero, slot.Size).HasPoint(slot.GetLocalMousePosition()))
         {
-            hover = gestures.DropTargetAt(ToDomain(GetLocalMousePosition()));
+            hover = gestures.DropTargetAt(ToDomain(SlotTransform().AffineInverse() * slot.GetLocalMousePosition()));
         }
 
         if (PartDropZone is { } zone)
@@ -202,7 +224,7 @@ public partial class BuildCanvas : Node2D
             return;
         }
 
-        _gestures.DropPart(part, ToDomain(Transform.AffineInverse() * atPosition));
+        _gestures.DropPart(part, ToDomain(SlotTransform().AffineInverse() * atPosition));
         if (_viewModel!.PlacementNote is { } note)
         {
             var viewModel = _viewModel;
@@ -218,11 +240,12 @@ public partial class BuildCanvas : Node2D
 
     public override void _ExitTree()
     {
-        if (_slot is not null)
+        if (WorldView is not null)
         {
-            _slot.Resized -= QueueRedraw;
-            _slot = null;
+            WorldView.Resized -= QueueRedraw;
         }
+
+        _slot = null;
 
         Unbind();
     }
@@ -297,6 +320,8 @@ public partial class BuildCanvas : Node2D
 
     public override void _Draw()
     {
+        _underlay.QueueRedraw();
+        _overlay.QueueRedraw();
         if (_viewModel is null || _gestures is null)
         {
             LayoutSelectionHandles();
@@ -307,135 +332,73 @@ public partial class BuildCanvas : Node2D
         UpdateView();
         LayoutSelectionHandles();
         LayoutCanvasNotes();
+        ShowCreature();
         DrawThroughView();
         DrawBuildGrid();
         DrawAreaCorners();
         DrawSelectionBox();
         DrawBeamPreview();
-        DrawRigidTriangles();
+    }
 
+    /// <summary>Hands the creature its parts as they are now, through the view's zoom and pan.</summary>
+    private void ShowCreature()
+    {
         // A dragged Select box shows what it would catch; the selection is cleared meanwhile (#704).
+        if (_viewModel is null || _gestures is null)
+        {
+            return;
+        }
+
         var caught = _gestures.SelectionBoxCatches;
         var selected = caught.Count > 0 ? caught : _viewModel.Selection;
-        foreach (var beam in _viewModel.Beams)
-        {
-            var nodeA = NodeById(beam.NodeA);
-            var nodeB = NodeById(beam.NodeB);
-            // One whose rings meet is too short, and still drawn, in danger, from centre to centre.
-            var (start, end) = JointDrawing.BeamSpan(Theme.JointRingWidth, ToGodot(nodeA.Position), (float)nodeA.Radius, ToGodot(nodeB.Position), (float)nodeB.Radius)
-                ?? (ToGodot(nodeA.Position), ToGodot(nodeB.Position));
-
-            DrawPlacingFeedback(beam, start, end);
-            // A beam too short for training (#593) is drawn in danger until its joints move apart.
-            var color = CreatureReadiness.IsTooShort(nodeA, nodeB) ? Theme.Danger : Theme.Beam;
-            using (var pen = ViewPen())
-            {
-                pen.Line(start, end, color, Stroke(Theme.BeamWidth));
-            }
-
-            if (selected.Beams.Contains(beam.Id))
-            {
-                var (lineStart, lineEnd) = JoinJointHalos(nodeA, nodeB, start, end, Theme.SelectedBeamOffset, selected);
-                SelectionDrawing.DrawBeam(this, ViewTransform(), Theme.SelectionGlow, Stroke(Theme.SelectedBeamOffset), Stroke(Theme.SelectedBeamLineWidth), lineStart, lineEnd);
-            }
-        }
-
-        DrawPistons(selected);
-        DrawSensors(selected);
-
-        for (var nodeIndex = 0; nodeIndex < _viewModel.Nodes.Count; nodeIndex++)
-        {
-            var node = _viewModel.Nodes[nodeIndex];
-            var position = ToGodot(node.Position);
-            var isSelected = selected.Nodes.Contains(node.Id);
-            var look = isSelected ? JointLook.Selected : ShowsAsLoose(node.Id) ? JointLook.Loose : JointLook.Plain;
-            JointDrawing.DrawPlain(this, Theme, ViewTransform(), position, (float)node.Radius, look);
-            if (isSelected)
-            {
-                SelectionDrawing.DrawJoint(this, Theme, ViewTransform(), position, (float)SelectionMarks.JointHalo(node.Radius));
-            }
-        }
-
-        DrawSelectedCameraRays();
-        DrawInvalidNodeMarkers();
-        DrawInvalidBeamMarkers();
-
-        DrawBeamEndRings();
-        DrawSelectionFrame();
-    }
-
-    /// <summary>Each Piston over the beams (#451); one too short to train is drawn in danger, like a beam.</summary>
-    private void DrawPistons(PartSet selected)
-    {
-        var viewTransform = ViewTransform();
-        var showStroke = _viewModel!.CanEdit(PartParameterId.Stroke);
-        foreach (var piston in _viewModel.Pistons)
-        {
-            var nodeA = NodeById(piston.NodeA);
-            var nodeB = NodeById(piston.NodeB);
-            var built = DistanceBetween(nodeA, nodeB);
-            PistonDrawing.Draw(
-                this,
-                viewTransform,
-                Theme,
-                ToGodot(nodeA.Position),
-                ToGodot(nodeB.Position),
-                (float)nodeA.Radius,
-                (float)nodeB.Radius,
-                (float)Piston.ShortestLength(built, piston.Stroke),
-                (float)Piston.LongestLength(built, piston.Stroke),
-                CreatureReadiness.IsTooShort(nodeA, nodeB) ? Theme.Danger : Theme.MotorAccent,
-                selected.Pistons.Contains(piston.Id),
-                showStroke,
-                selected.Nodes.Contains(piston.NodeA),
-                selected.Nodes.Contains(piston.NodeB));
-        }
-    }
-
-    /// <summary>
-    /// A selected beam's lines from <paramref name="start"/> to <paramref name="end"/>, each end moved
-    /// onto its joint's halo ring when that joint is selected too, so a group reads as one outline (#710).
-    /// </summary>
-    private (Vector2 Start, Vector2 End) JoinJointHalos(NodeDef nodeA, NodeDef nodeB, Vector2 start, Vector2 end, float offset, PartSet selected)
-    {
-        var (a, b) = (ToGodot(nodeA.Position), ToGodot(nodeB.Position));
-        var joinedStart = selected.Nodes.Contains(nodeA.Id) ? SelectionDrawing.LineEnd(a, b, (float)SelectionMarks.JointHalo(nodeA.Radius), offset) : start;
-        var joinedEnd = selected.Nodes.Contains(nodeB.Id) ? SelectionDrawing.LineEnd(b, a, (float)SelectionMarks.JointHalo(nodeB.Radius), offset) : end;
-        return (joinedEnd - joinedStart).Dot(b - a) > 0 ? (joinedStart, joinedEnd) : (start, end);
-    }
-
-    private static double DistanceBetween(NodeDef a, NodeDef b)
-    {
-        var dx = b.Position.X - a.Position.X;
-        var dy = b.Position.Y - a.Position.Y;
-        return Math.Sqrt((dx * dx) + (dy * dy));
-    }
-
-    /// <summary>
-    /// Each sensor as a picture at the middle of its beam (#576), upright on the beam's built up
-    /// side: the Accelerometer with its weight where <see cref="BuildSensorMotion"/> has it, and
-    /// the camera looking along its rays (drawn later, over the joints).
-    /// </summary>
-    private void DrawSensors(PartSet selected)
-    {
-        var viewTransform = ViewTransform();
-        foreach (var sensor in _viewModel!.Sensors)
-        {
-            var beam = _viewModel.Beams[_viewModel.BeamIndexOf(sensor.BeamId)];
-            DrawSensor(beam, sensor.Kind, sensor.Aim, sensor.Id, selected.Sensors.Contains(sensor.Id), viewTransform);
-        }
-
-        // The sensor a tray drag would place on the free beam under the finger (#376).
+        (BeamDef, SensorKind)? previewSensor = null;
         if (_partDrag is { } part && PartTray.SensorKindOf(part) is { } kind
             && _dropHover is { Kind: CreatureElementKind.Beam } hover
             && _viewModel.CanPlacePart(part, hover, out _))
         {
-            DrawSensor(_viewModel.Beams[_viewModel.BeamIndexOf(hover.Id)], kind, null, null, false, viewTransform);
+            previewSensor = (_viewModel.Beams[_viewModel.BeamIndexOf(hover.Id)], kind);
+        }
+
+        _creature.Transform = ViewTransform();
+        _creature.Theme = Theme;
+        _creature.Show(_viewModel, selected, ShowsAsLoose, _sensorMotion, previewSensor);
+    }
+
+    /// <summary>What goes under the links: the placing feedback of a tray drag.</summary>
+    private void DrawUnderlay(CanvasItem canvas)
+    {
+        if (_viewModel is null || _gestures is null)
+        {
+            return;
+        }
+
+        foreach (var beam in _viewModel.Beams)
+        {
+            var nodeA = NodeById(beam.NodeA);
+            var nodeB = NodeById(beam.NodeB);
+            var (start, end) = JointDrawing.BeamSpan(Theme.JointRingWidth, ToGodot(nodeA.Position), (float)nodeA.Radius, ToGodot(nodeB.Position), (float)nodeB.Radius)
+                ?? (ToGodot(nodeA.Position), ToGodot(nodeB.Position));
+            DrawPlacingFeedback(canvas, beam, start, end);
         }
     }
 
+    /// <summary>What goes over the whole creature: the aimed camera's rays, warnings, the beam drag's rings and the Select frame.</summary>
+    private void DrawOverlay(CanvasItem canvas)
+    {
+        if (_viewModel is null || _gestures is null)
+        {
+            return;
+        }
+
+        DrawSelectedCameraRays(canvas);
+        DrawInvalidNodeMarkers(canvas);
+        DrawInvalidBeamMarkers(canvas);
+        DrawBeamEndRings(canvas);
+        DrawSelectionFrame(canvas);
+    }
+
     /// <summary>The Camera's rays while its aim can be set, over the joints so the creature never hides them (#623).</summary>
-    private void DrawSelectedCameraRays()
+    private void DrawSelectedCameraRays(CanvasItem canvas)
     {
         if (_viewModel!.AimableCameraId is not { } id
             || _viewModel.Sensors.Single(sensor => sensor.Id == id) is not { Kind: SensorKind.Camera } camera)
@@ -449,41 +412,15 @@ public partial class BuildCanvas : Node2D
         var middle = (ToGodot(nodeA) + ToGodot(nodeB)) / 2;
         var beamRotation = (float)CameraRays.BeamAngle(nodeA, nodeB);
         var aim = camera.Aim ?? CameraRays.DefaultAim(nodeA, nodeB);
-        SensorDrawing.DrawRays(this, ViewTransform(), Theme, middle, Enumerable.Range(0, CameraRays.RayCount)
+        SensorDrawing.DrawRays(canvas, ViewTransform(), Theme, middle, Enumerable.Range(0, CameraRays.RayCount)
             .Select(ray => middle + ToGodot(CameraRays.LocalRayTarget(ray, aim)).Rotated(beamRotation)));
-    }
-
-    private void DrawSensor(BeamDef beam, SensorKind kind, double? aim, int? sensorId, bool selected, Transform2D viewTransform)
-    {
-        var nodeA = NodeById(beam.NodeA).Position;
-        var nodeB = NodeById(beam.NodeB).Position;
-        var start = ToGodot(nodeA);
-        var end = ToGodot(nodeB);
-        var beamRotation = (float)CameraRays.BeamAngle(nodeA, nodeB);
-        var upSign = Accelerometer.UpSign(nodeA, nodeB);
-        var pictureRotation = beamRotation + (upSign == 1 ? Mathf.Pi : 0);
-        var middle = (start + end) / 2;
-        var cameraAim = aim ?? CameraRays.DefaultAim(nodeA, nodeB);
-        var pictureTransform = viewTransform * new Transform2D(pictureRotation, middle);
-        if (kind == SensorKind.Accelerometer)
-        {
-            var weight = (sensorId is { } id ? _sensorMotion.WeightOffset(id) : null)
-                ?? Accelerometer.RestWeightOffset(beamRotation, upSign);
-            SensorDrawing.DrawAccelerometer(this, pictureTransform, Theme, weight, selected);
-        }
-        else
-        {
-            SensorDrawing.DrawCamera(this, pictureTransform, Theme, Vector2.FromAngle((float)cameraAim + beamRotation - pictureRotation), selected);
-        }
-
-        DrawThroughView();
     }
 
     /// <summary>
     /// While a tray part is dragged (#376), a beam that would take it shows the <c>halo</c>, and
     /// one that would refuse it a dashed <c>danger</c> stroke, both under the beam.
     /// </summary>
-    private void DrawPlacingFeedback(BeamDef beam, Vector2 start, Vector2 end)
+    private void DrawPlacingFeedback(CanvasItem canvas, BeamDef beam, Vector2 start, Vector2 end)
     {
         if (_partDrag is not { } part || start == end)
         {
@@ -491,7 +428,7 @@ public partial class BuildCanvas : Node2D
         }
 
         var width = Stroke(Theme.BeamWidth * 2.2f);
-        using var pen = ViewPen();
+        using var pen = ViewPen(canvas);
         if (_viewModel!.CanPlacePart(part, new CreatureElementSelection(CreatureElementKind.Beam, beam.Id), out _))
         {
             pen.Line(start, end, Theme.SelectionGlow, width);
@@ -527,7 +464,7 @@ public partial class BuildCanvas : Node2D
     /// The Select frame, corner squares and rotate stem, drawn last at screen size in window
     /// pixels, turned with the group.
     /// </summary>
-    private void DrawSelectionFrame()
+    private void DrawSelectionFrame(CanvasItem canvas)
     {
         if (_gestures!.SelectionFrame is not { } frame)
         {
@@ -535,30 +472,30 @@ public partial class BuildCanvas : Node2D
         }
 
         var view = _gestures.View;
-        var toPixels = UiPixelSpace.Enter(this, Transform2D.Identity);
+        var toPixels = UiPixelSpace.Enter(canvas, Transform2D.Identity);
         // The canvas node is scaled in the scene; a screen-size length is this many of its units.
-        var unit = 1 / Scale.X;
+        var unit = 1 / SlotTransform().Scale.X;
         var width = UiSize.Stroke.SelectionFrame * unit * UiPixelSpace.ScaleOf(toPixels);
         var rect = RectFromPoints(ToGodot(view.ToView(frame.Min)), ToGodot(view.ToView(frame.Max)));
         var center = rect.GetCenter();
         var turned = toPixels * new Transform2D((float)_gestures.SelectionFrameAngle, center) * new Transform2D(0, -center);
-        UiDashedBorder.DrawRoundedRect(this, rect, UiSize.Radius.Small * unit, Theme.SelectionGlow, width, turned, _frameDash * unit, _frameGap * unit);
+        UiDashedBorder.DrawRoundedRect(canvas, rect, UiSize.Radius.Small * unit, Theme.SelectionGlow, width, turned, _frameDash * unit, _frameGap * unit);
 
         var squareSize = Vector2.One * (_frameCornerSquare * unit);
         foreach (var corner in _gestures.FrameCornerSquares)
         {
             var square = new Rect2(ToGodot(view.ToView(corner)) - (squareSize / 2), squareSize);
             var outline = UiDashedBorder.RoundedRectPoints(square, _frameCornerRadius * unit).Select(point => turned * point).ToArray();
-            DrawColoredPolygon(outline[..^1], Theme.SelectionCornerFill);
-            DrawPolyline(outline, Theme.SelectionGlow, width, antialiased: true);
+            canvas.DrawColoredPolygon(outline[..^1], Theme.SelectionCornerFill);
+            canvas.DrawPolyline(outline, Theme.SelectionGlow, width, antialiased: true);
         }
 
         if (_gestures.RotateStem is { } stem)
         {
-            DrawLine(toPixels * ToGodot(view.ToView(stem.From)), toPixels * ToGodot(view.ToView(stem.To)), Theme.SelectionGlow, width, antialiased: true);
+            canvas.DrawLine(toPixels * ToGodot(view.ToView(stem.From)), toPixels * ToGodot(view.ToView(stem.To)), Theme.SelectionGlow, width, antialiased: true);
         }
 
-        DrawSetTransformMatrix(Transform2D.Identity);
+        canvas.DrawSetTransformMatrix(Transform2D.Identity);
     }
 
     /// <summary>
@@ -594,8 +531,9 @@ public partial class BuildCanvas : Node2D
     private bool TryPlaceNote(CanvasNote note, out Vector2 anchor, out Vector2 direction, out float clearance)
     {
         var view = _gestures!.View;
-        Vector2 ToSlot(Vector2D position) => Transform * ToGodot(view.ToView(position));
-        float OnScreen(double length) => (float)(length * view.Zoom) * Scale.X;
+        var toSlot = SlotTransform();
+        Vector2 ToSlot(Vector2D position) => toSlot * ToGodot(view.ToView(position));
+        float OnScreen(double length) => (float)(length * view.Zoom) * toSlot.Scale.X;
         switch (note.Target.Kind)
         {
             case CreatureElementKind.Beam or CreatureElementKind.Piston:
@@ -652,7 +590,7 @@ public partial class BuildCanvas : Node2D
             control.Visible = index >= 0;
             if (index >= 0)
             {
-                control.Position = (Transform * ToGodot(_gestures!.View.ToView(shown[index].Position))) - (control.Size / 2);
+                control.Position = (SlotTransform() * ToGodot(_gestures!.View.ToView(shown[index].Position))) - (control.Size / 2);
             }
 
             if (handle == SelectionHandle.Scale)
@@ -680,19 +618,19 @@ public partial class BuildCanvas : Node2D
         // Like a beam, it starts at the joint's ring, and ends at the target's ring or the finger.
         if (JointDrawing.BeamSpan(Theme.JointRingWidth, ToGodot(from.Position), (float)from.Radius, ToGodot(to), (float)(target?.Radius ?? 0)) is (var lineStart, var lineEnd))
         {
-            using var pen = ViewPen();
+            using var pen = ViewPen(this);
             pen.DashedLine(lineStart, lineEnd, color, Stroke(Theme.BeamWidth), 8);
         }
     }
 
-    private void DrawBeamEndRings()
+    private void DrawBeamEndRings(CanvasItem canvas)
     {
         if (_viewModel is null || _gestures is null)
         {
             return;
         }
 
-        using var pen = ViewPen();
+        using var pen = ViewPen(canvas);
         foreach (var nodeId in new[] { _gestures.BeamStartNodeId, _gestures.BeamTargetNodeId })
         {
             if (nodeId is { } id)
@@ -725,7 +663,7 @@ public partial class BuildCanvas : Node2D
         var viewTransform = ViewTransform();
         var rect = RectFromPoints(viewTransform * ToGodot(box.Start), viewTransform * ToGodot(box.End));
         var toPixels = UiPixelSpace.Enter(this, Transform2D.Identity);
-        var unit = 1 / Scale.X;
+        var unit = 1 / SlotTransform().Scale.X;
         var radius = UiSize.Radius.Small * unit;
         if (rect.HasArea())
         {
@@ -738,92 +676,14 @@ public partial class BuildCanvas : Node2D
         DrawSetTransformMatrix(viewTransform);
     }
 
-    /// <summary>The rigid hatch goes under the beams, so it shows only between them.</summary>
-    private void DrawRigidTriangles()
-    {
-        if (!TryBuildDrawableTopology(out var creature) || creature is null)
-        {
-            return;
-        }
-
-        foreach (var triangle in RigidTriangles.Of(creature))
-        {
-            DrawRigidTriangle(creature, triangle);
-        }
-    }
-
-    private bool TryBuildDrawableTopology(out CreatureDef? creature)
-    {
-        creature = null;
-        if (_viewModel is null)
-        {
-            return false;
-        }
-
-        var drawableBeamSourceIndices = new List<int>();
-        var drawableNodeSourceIndices = new SortedSet<int>();
-        for (var beamIndex = 0; beamIndex < _viewModel.Beams.Count; beamIndex++)
-        {
-            var beam = _viewModel.Beams[beamIndex];
-            if (NodeById(beam.NodeA).Position == NodeById(beam.NodeB).Position)
-            {
-                continue;
-            }
-
-            drawableBeamSourceIndices.Add(beamIndex);
-            drawableNodeSourceIndices.Add(_viewModel.NodeIndexOf(beam.NodeA));
-            drawableNodeSourceIndices.Add(_viewModel.NodeIndexOf(beam.NodeB));
-        }
-
-        if (drawableBeamSourceIndices.Count == 0)
-        {
-            return false;
-        }
-
-        var nodes = drawableNodeSourceIndices
-            .Select(sourceIndex => _viewModel.Nodes[sourceIndex])
-            .ToArray();
-        var beams = drawableBeamSourceIndices
-            .Select(beamIndex => _viewModel.Beams[beamIndex])
-            .ToArray();
-        var drawableBeamIds = drawableBeamSourceIndices
-            .Select(beamIndex => _viewModel.Beams[beamIndex].Id)
-            .ToHashSet();
-        var sensors = _viewModel.Sensors
-            .Where(sensor => drawableBeamIds.Contains(sensor.BeamId))
-            .ToArray();
-
-        try
-        {
-            creature = new CreatureDef(nodes, beams, sensors);
-            return true;
-        }
-        catch (ArgumentException)
-        {
-            return false;
-        }
-    }
-
-    private void DrawRigidTriangle(CreatureDef creature, RigidTriangleDef triangle)
-    {
-        var a = ToGodot(creature.Nodes[triangle.NodeA].Position);
-        var b = ToGodot(creature.Nodes[triangle.NodeB].Position);
-        var c = ToGodot(creature.Nodes[triangle.NodeC].Position);
-        // Every joint is plain today, so all three share one radius.
-        foreach (var (start, end) in TriangleHatch.Lines(a, b, c, Theme.RigidHatchSpacing, (float)creature.Nodes[triangle.NodeA].Radius))
-        {
-            DrawLine(start, end, Theme.RigidHatch, -1);
-        }
-    }
-
-    private void DrawInvalidNodeMarkers()
+    private void DrawInvalidNodeMarkers(CanvasItem canvas)
     {
         if (_viewModel is null)
         {
             return;
         }
 
-        using var pen = ViewPen();
+        using var pen = ViewPen(canvas);
         foreach (var node in _viewModel.Nodes)
         {
             if (!ShowsAsLoose(node.Id))
@@ -846,14 +706,14 @@ public partial class BuildCanvas : Node2D
         && nodeId != _gestures?.BeamStartNodeId
         && nodeId != _gestures?.BeamTargetNodeId;
 
-    private void DrawInvalidBeamMarkers()
+    private void DrawInvalidBeamMarkers(CanvasItem canvas)
     {
         if (_viewModel is null)
         {
             return;
         }
 
-        using var pen = ViewPen();
+        using var pen = ViewPen(canvas);
         foreach (var beam in _viewModel.Beams)
         {
             var start = NodeById(beam.NodeA);
@@ -916,7 +776,7 @@ public partial class BuildCanvas : Node2D
             return;
         }
 
-        var toView = Transform.AffineInverse();
+        var toView = SlotTransform().AffineInverse();
         _gestures!.View.UiScale = UiScale.FactorOf(this);
         _gestures.View.VisibleArea = new CanvasRect(ToDomain(toView * Vector2.Zero), ToDomain(toView * slot.Size));
         if (!_viewFitted)
@@ -971,7 +831,7 @@ public partial class BuildCanvas : Node2D
         var bottomRight = ToGodot(area.Max);
         // Two grid cells, so the marks end on a grid line.
         var length = (float)(2 * BuildViewModel.BuildGridStep);
-        using var pen = ViewPen();
+        using var pen = ViewPen(this);
         foreach (var (corner, inward) in new[]
         {
             (topLeft, new Vector2(1, 1)),
@@ -990,8 +850,15 @@ public partial class BuildCanvas : Node2D
     /// <summary>Draws everything after this in canvas units, zoomed and panned by the view.</summary>
     private void DrawThroughView() => DrawSetTransformMatrix(ViewTransform());
 
-    /// <summary>Draws strokes given in creature units in window pixels, so they stay smooth at any zoom (#733).</summary>
-    private UiPixelPen ViewPen() => UiPixelPen.Begin(this, ViewTransform());
+    /// <summary>Draws strokes given in creature units on <paramref name="canvas"/> in window pixels, so they stay smooth at any zoom (#733).</summary>
+    private UiPixelPen ViewPen(CanvasItem canvas) => UiPixelPen.Begin(canvas, ViewTransform());
+
+    /// <summary>
+    /// The map from this canvas to the slot the handles and notes are laid out in: through the
+    /// world view, which shows this canvas's world at the slot's scale.
+    /// </summary>
+    private Transform2D SlotTransform() =>
+        WorldView!.GetTransform() * WorldView.LocalFromWorld * GetGlobalTransform();
 
     /// <summary>The map from creature units to the canvas: the view's zoom, then its offset.</summary>
     private Transform2D ViewTransform() =>
@@ -1008,11 +875,8 @@ public partial class BuildCanvas : Node2D
 
     private Vector2 ToCanvasLocal(Vector2 screenPosition)
     {
-        // Regular ToLocal()/GetGlobalTransform() do not include the
-        // viewport's stretch transform (see [display] in project.godot), so
-        // raw screen-pixel input positions need GetGlobalTransformWithCanvas
-        // to land on the right spot. Mirrors TrainingHost._UnhandledInput's
-        // creature-selection math.
+        // UiWorldView pushes input into the world viewport, which removes its stretch, so it arrives
+        // in the world's own coordinates with the canvas transform still applied: plain ToLocal() skips that.
         return GetGlobalTransformWithCanvas().AffineInverse() * screenPosition;
     }
 

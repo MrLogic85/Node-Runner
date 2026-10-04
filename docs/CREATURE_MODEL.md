@@ -240,20 +240,22 @@ a composition of triangles; a bare quadrilateral stays free to fold.
 ## Draw layers
 
 A creature draws in named layers (`project/src/theme/CreatureLayers.cs`,
-#767), bottom to top: rigid hatch, beams, Pistons, a selected link, sensors,
-a selected sensor, joints, a selected joint, then overlays such as
-Training's camera rays. Each part visual (`project/src/theme/*Part.cs`) puts
-itself on its layer, so the picture never depends on the order parts are
-added.
+#767), bottom to top: rigid hatch, underlays such as Build's placing
+feedback, beams, Pistons, a selected link, sensors, a selected sensor,
+joints, a selected joint, then overlays such as the camera rays. Each part
+visual (`project/src/theme/*Part.cs`) puts itself on its layer, so the
+picture never depends on the order parts are added. A screen draws its own
+marks on an underlay or overlay through `ViewLayer`.
 
 A part draws its selection with itself, never on a separate layer: a mark on
 its own layer would weave through the parts around it. Instead a selected
 part moves whole up to the selected layer of its kind, so a selected beam
 draws over the Piston that crosses it, mark and all (#766). Training's world
 stacks the ground, then every shadow, then the followed creature
-(`ArenaLayers`); the world has its own viewport, so these layers never reach
-the screen's dialogs. Build and the thumbnails move onto the same parts in
-#769 and #770.
+(`ArenaLayers`). Build draws its creature with the same parts (#769, through
+`BuildCreature`), with the grid and selection box under them. Each world has
+its own viewport (`UiWorldView`), so these layers never reach the screen's
+handles, notes or dialogs. The thumbnails move onto the same parts in #770.
 
 ## Drawing as a shadow
 

@@ -12,29 +12,32 @@ public static class CreatureLayers
     /// <summary>The rigid hatch inside closed triangles, under everything else.</summary>
     public const int Hatch = 0;
 
+    /// <summary>What a view draws under the links, such as Build's placing feedback on a beam (#769).</summary>
+    public const int Underlays = 1;
+
     /// <summary>Beams.</summary>
-    public const int Beams = 1;
+    public const int Beams = 2;
 
     /// <summary>Pistons, over the beams they cross.</summary>
-    public const int Pistons = 2;
+    public const int Pistons = 3;
 
     /// <summary>A selected beam or Piston, over every other link it crosses.</summary>
-    public const int SelectedLinks = 3;
+    public const int SelectedLinks = 4;
 
     /// <summary>Sensor pictures on their beams.</summary>
-    public const int Sensors = 4;
+    public const int Sensors = 5;
 
     /// <summary>A selected sensor picture.</summary>
-    public const int SelectedSensors = 5;
+    public const int SelectedSensors = 6;
 
     /// <summary>Joint rings, over the link ends and sensors they cover.</summary>
-    public const int Joints = 6;
+    public const int Joints = 7;
 
     /// <summary>A selected joint with its halo ring.</summary>
-    public const int SelectedJoints = 7;
+    public const int SelectedJoints = 8;
 
-    /// <summary>What a view draws over the whole creature, such as Training's camera rays.</summary>
-    public const int Overlays = 8;
+    /// <summary>What a view draws over the whole creature, such as Training's camera rays and Build's Select frame.</summary>
+    public const int Overlays = 9;
 
     /// <summary>How many ZIndex steps one creature takes, so drawn creatures can be stacked without mixing.</summary>
     public const int Count = Overlays + 1;
