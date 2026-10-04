@@ -45,10 +45,6 @@ public partial class Creature : Node2D
     private float[] _beamHalfLengths = [];
     private RigidBody2D[] _nodeBodies = [];
 
-    // The mass each node moves: its own body plus half of each beam body pinned to it. Piston control
-    // and Spring damping are tuned to this, not to the node body alone (#794).
-    private float[] _nodeLoads = [];
-
     private float[] _nodeColliderRadii = [];
     private NodeVisual[] _nodeVisuals = [];
     private BeamVisual[] _beamVisuals = [];
@@ -516,15 +512,12 @@ public partial class Creature : Node2D
         _nodeBodies = new RigidBody2D[count];
         _nodeColliderRadii = new float[count];
         _nodeVisuals = new NodeVisual[count];
-        _nodeLoads = new float[count];
 
         var masses = new float[count];
         foreach (var beam in definition.Beams)
         {
             masses[definition.NodeIndexOf(beam.NodeA)] += _beamWeight / 4;
             masses[definition.NodeIndexOf(beam.NodeB)] += _beamWeight / 4;
-            _nodeLoads[definition.NodeIndexOf(beam.NodeA)] += _beamBodyMass / 2;
-            _nodeLoads[definition.NodeIndexOf(beam.NodeB)] += _beamBodyMass / 2;
         }
 
         foreach (var piston in definition.Pistons)
@@ -557,7 +550,6 @@ public partial class Creature : Node2D
                 ContinuousCd = RigidBody2D.CcdMode.CastRay,
             };
             body.AddChild(new CollisionShape2D { Shape = new CircleShape2D { Radius = radius } });
-            _nodeLoads[i] += body.Mass;
 
             var visual = new NodeVisual
             {

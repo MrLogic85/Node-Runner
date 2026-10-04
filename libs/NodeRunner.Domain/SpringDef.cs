@@ -11,8 +11,8 @@ public sealed record SpringDef
     /// <summary>A new Spring's <see cref="Stiffness"/>: 400 N/m at 100 world units per metre.</summary>
     public const double DefaultStiffness = 400;
 
-    /// <summary>A new Spring's <see cref="Damping"/>: 30% of the damping that stops it without a bounce.</summary>
-    public const double DefaultDamping = 0.3;
+    /// <summary>A new Spring's <see cref="Damping"/>: 10 N·s/m.</summary>
+    public const double DefaultDamping = 10;
 
     public SpringDef(
         int id,
@@ -47,9 +47,9 @@ public sealed record SpringDef
             throw new ArgumentOutOfRangeException(nameof(stiffness), "Spring stiffness must be finite and positive.");
         }
 
-        if (!double.IsFinite(damping) || damping < 0 || damping > 1)
+        if (!double.IsFinite(damping) || damping < 0)
         {
-            throw new ArgumentOutOfRangeException(nameof(damping), "Spring damping must be a share between 0 and 1.");
+            throw new ArgumentOutOfRangeException(nameof(damping), "Spring damping must be finite and not negative.");
         }
 
         Id = id;
@@ -72,8 +72,9 @@ public sealed record SpringDef
     public double Stiffness { get; }
 
     /// <summary>
-    /// How much it damps, as a share of the damping that stops its two nodes without a bounce:
-    /// 0 bounces on, 1 settles without bouncing (<c>Spring.DampingCoefficient</c> in NodeRunner.Mechanics).
+    /// How hard it brakes the speed between its nodes, in world force units per world unit per second
+    /// (N·s/m). It is a plain coefficient, not tuned to the mass it moves (#801): the same Damping
+    /// bounces more on heavy nodes than on light ones.
     /// </summary>
     public double Damping { get; }
 

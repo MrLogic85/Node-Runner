@@ -184,20 +184,20 @@ mouse_filter = 2
 layout_mode = 2
 Title = "Parts"
 
-[node name="SidePanelContent" parent="UiFrame/MarginContainer/Card/Shell/HShell/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded" parent_id_path=PackedInt32Array(120066938, 1161470009) index="1" unique_id=398215167]
+[node name="SidePanelContent" parent="UiFrame/MarginContainer/Card/Shell/HShell/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset" parent_id_path=PackedInt32Array(120066938, 905137462) index="0" unique_id=398215167]
 theme_override_constants/separation = 8
 
-[node name="PartTabs" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/HShell/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent" index="0" unique_id=1392357914]
+[node name="PartTabs" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/HShell/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent" index="0" unique_id=1392357914]
 layout_mode = 2
 script = ExtResource("14_icon_tabs")
 Icons = Array[int]([50, 49, 46, 40])
 SelectedIndex = 1
 
-[node name="PartRows" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/HShell/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent" index="1" unique_id=82276107]
+[node name="PartRows" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/HShell/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent" index="1" unique_id=82276107]
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="Servo" type="Control" parent="UiFrame/MarginContainer/Card/Shell/HShell/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/PartRows" unique_id=663357980]
+[node name="Servo" type="Control" parent="UiFrame/MarginContainer/Card/Shell/HShell/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent/PartRows" unique_id=663357980]
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 1
@@ -206,7 +206,7 @@ IconId = 49
 Label = "Servo"
 ValueText = "3 left"
 
-[node name="Spring" type="Control" parent="UiFrame/MarginContainer/Card/Shell/HShell/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/PartRows" unique_id=2007275687]
+[node name="Spring" type="Control" parent="UiFrame/MarginContainer/Card/Shell/HShell/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent/PartRows" unique_id=2007275687]
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 1
@@ -215,7 +215,7 @@ IconId = 50
 Label = "Spring"
 ValueText = "2 left"
 
-[node name="Wheel" type="Control" parent="UiFrame/MarginContainer/Card/Shell/HShell/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/PartRows" unique_id=949681915]
+[node name="Wheel" type="Control" parent="UiFrame/MarginContainer/Card/Shell/HShell/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent/PartRows" unique_id=949681915]
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 1

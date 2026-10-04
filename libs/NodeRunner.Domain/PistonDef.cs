@@ -18,6 +18,9 @@ public sealed record PistonDef
     /// <summary>A new Piston's <see cref="MaxSpeed"/>: 2 m/s at 100 world units per metre.</summary>
     public const double DefaultMaxSpeed = 200;
 
+    /// <summary>A new Piston's <see cref="RiseTime"/>: 0.2 s (#801).</summary>
+    public const double DefaultRiseTime = 0.2;
+
     public PistonDef(
         int id,
         int nodeA,
@@ -25,7 +28,8 @@ public sealed record PistonDef
         string? name = null,
         double strength = DefaultStrength,
         double stroke = DefaultStroke,
-        double maxSpeed = DefaultMaxSpeed)
+        double maxSpeed = DefaultMaxSpeed,
+        double riseTime = DefaultRiseTime)
     {
         if (id <= 0)
         {
@@ -62,6 +66,11 @@ public sealed record PistonDef
             throw new ArgumentOutOfRangeException(nameof(maxSpeed), "Piston max speed must be finite and positive.");
         }
 
+        if (!double.IsFinite(riseTime) || riseTime <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(riseTime), "Piston rise time must be finite and positive.");
+        }
+
         Id = id;
         NodeA = nodeA;
         NodeB = nodeB;
@@ -69,6 +78,7 @@ public sealed record PistonDef
         Strength = strength;
         Stroke = stroke;
         MaxSpeed = maxSpeed;
+        RiseTime = riseTime;
     }
 
     public int Id { get; }
@@ -88,8 +98,11 @@ public sealed record PistonDef
     /// <summary>The fastest it extends or retracts, in world units per second.</summary>
     public double MaxSpeed { get; }
 
-    public PistonDef WithName(string? name) => new(Id, NodeA, NodeB, name, Strength, Stroke, MaxSpeed);
+    /// <summary>How long, in seconds, its force takes to build up to the strength the brain chose (#801).</summary>
+    public double RiseTime { get; }
 
-    public PistonDef WithSettings(double strength, double stroke, double maxSpeed) =>
-        new(Id, NodeA, NodeB, Name, strength, stroke, maxSpeed);
+    public PistonDef WithName(string? name) => new(Id, NodeA, NodeB, name, Strength, Stroke, MaxSpeed, RiseTime);
+
+    public PistonDef WithSettings(double strength, double stroke, double maxSpeed, double riseTime) =>
+        new(Id, NodeA, NodeB, Name, strength, stroke, maxSpeed, riseTime);
 }

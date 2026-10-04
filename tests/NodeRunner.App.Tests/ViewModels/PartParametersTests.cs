@@ -15,17 +15,49 @@ public sealed class PartParametersTests
             .ShouldBe(new ParameterSlider(PartParameterId.Strength, UiText.Plain("Max strength"), UiText.Format("{0} N", new FixedNumber(150, 0)), Position(PartParameters.Strength, 150), Position(PartParameters.Strength, 150), 10.0 / 380));
         PartParameters.SliderOver(PartParameterId.Stroke, [piston.Stroke]).Readout.ShouldBe(UiText.Format("±{0}%", new FixedNumber(30, 0)));
         PartParameters.SliderOver(PartParameterId.MaxSpeed, [piston.MaxSpeed]).Readout.ShouldBe(UiText.Format("{0} m/s", new FixedNumber(2, 1)));
+        PartParameters.SliderOver(PartParameterId.RiseTime, [piston.RiseTime]).Readout.ShouldBe(UiText.Format("{0} s", new FixedNumber(0.2, 1)));
     }
 
     [Fact]
-    public void ASpring_ShowsItsStiffnessInNewtonsPerMetreAndDampingInPercent()
+    public void RiseTime_SnapsToItsFourStops_EvenlySpacedAlongTheSlider()
+    {
+        // 0.1 and 0.2 s get as much slider as 0.5 and 1 s (#801).
+        double[] stops = [0.1, 0.2, 0.5, 1];
+        stops.Select((stop, i) => PartParameters.ValueAt(PartParameterId.RiseTime, i / 3.0)).ShouldBe(stops);
+        PartParameters.ValueAt(PartParameterId.RiseTime, 0.2).ShouldBe(0.2);
+        PartParameters.ValueAt(PartParameterId.RiseTime, 0.9).ShouldBe(1);
+        PartParameters.SliderOver(PartParameterId.RiseTime, [0.5]).High.ShouldBe(2.0 / 3, tolerance: 1e-9);
+        PartParameters.SliderOver(PartParameterId.RiseTime, [0.5]).Step.ShouldBe(1.0 / 3, tolerance: 1e-9);
+    }
+
+    [Fact]
+    public void ASteppedSlider_PlacesAValueBetweenTwoStopsBetweenTheirPositions()
+    {
+        var range = SettingRange.Of(0.1, 0.2, 0.5, 1);
+
+        range.Position(0.35).ShouldBe((1 + 0.5) / 3, tolerance: 1e-9);
+        range.Position(0.05).ShouldBe(0);
+        range.Position(3).ShouldBe(1);
+    }
+
+    [Theory]
+    [InlineData(new[] { 0.5 })]
+    [InlineData(new[] { 0.1, 0.5, 0.2 })]
+    [InlineData(new[] { 0.1, 0.1 })]
+    public void ASteppedSlider_RejectsFewerThanTwoOrNonIncreasingStops(double[] stops)
+    {
+        Should.Throw<ArgumentException>(() => SettingRange.Of(stops));
+    }
+
+    [Fact]
+    public void ASpring_ShowsItsStiffnessInNewtonsPerMetreAndDampingInNewtonSecondsPerMetre()
     {
         PartParameters.SliderOver(PartParameterId.Stiffness, [SpringDef.DefaultStiffness]).Readout.ShouldBe(UiText.Format("{0} N/m", new FixedNumber(400, 0)));
-        PartParameters.SliderOver(PartParameterId.Damping, [SpringDef.DefaultDamping]).Readout.ShouldBe(UiText.Format("{0}%", new FixedNumber(30, 0)));
+        PartParameters.SliderOver(PartParameterId.Damping, [SpringDef.DefaultDamping]).Readout.ShouldBe(UiText.Format("{0} N·s/m", new FixedNumber(10, 0)));
         PartParameters.ValueAt(PartParameterId.Stiffness, 0).ShouldBe(50);
         PartParameters.ValueAt(PartParameterId.Stiffness, 1).ShouldBe(2000);
         PartParameters.ValueAt(PartParameterId.Damping, 0).ShouldBe(0);
-        PartParameters.ValueAt(PartParameterId.Damping, 1).ShouldBe(1);
+        PartParameters.ValueAt(PartParameterId.Damping, 1).ShouldBe(100);
     }
 
     [Fact]
@@ -42,7 +74,8 @@ public sealed class PartParametersTests
     [InlineData(PartParameterId.Stroke, 0.45)]
     [InlineData(PartParameterId.MaxSpeed, 120)]
     [InlineData(PartParameterId.Stiffness, 650)]
-    [InlineData(PartParameterId.Damping, 0.45)]
+    [InlineData(PartParameterId.Damping, 45)]
+    [InlineData(PartParameterId.RiseTime, 0.5)]
     public void ASharedValue_RoundTripsThroughItsSlider(PartParameterId id, double value)
     {
         var slider = PartParameters.SliderOver(id, [value, value]);

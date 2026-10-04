@@ -254,9 +254,10 @@ A part's settings are parameters (`PartParameters`), plain data: an id, whether
 several selected parts can share one value (`MultiEditable`), and a slider
 when the panel shows it (`InPanel`). Each kind of part lists its own
 (`CreatureBuilder.ParametersOf`): a Piston has **Max strength** (20–400 N,
-step 10), **Stroke** (±10–50%, step 5) and **Max speed** (0.5–4.0 m/s, step
-0.1); a Spring has **Stiffness** (50–2000 N/m, step 50) and **Damping**
-(0–100%, step 5); a Camera has **Aim**, set on the canvas and one Camera at a time.
+step 10), **Stroke** (±10–50%, step 5), **Max speed** (0.5–4.0 m/s, step
+0.1) and **Rise time** (0.1, 0.2, 0.5 or 1 s, evenly spaced along the slider
+so the short ones are as easy to pick, #801); a Spring has **Stiffness**
+(50–2000 N/m, step 50) and **Damping** (0–100 N·s/m, step 1); a Camera has **Aim**, set on the canvas and one Camera at a time.
 
 The selection can change one part's own parameters, or those every selected
 part has and can share (`BuildViewModel.EditableParameters`). The panel shows a

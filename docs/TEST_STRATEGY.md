@@ -66,7 +66,8 @@ The compiler synthesises them.
 
 Cover each part's physics with numbers a person can check by hand: an
 accelerometer at rest reads 1 g up, a Piston pushes toward its target and
-never uses more than its chosen strength, a Spring at 100% damping is critical. Tests for
+never uses more than its chosen strength, and its force builds to full within its
+Rise time. Tests for
 types that stay in Domain stay in `NodeRunner.Domain.Tests`.
 
 ### `NodeRunner.ML.Tests`

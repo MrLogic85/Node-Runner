@@ -13,7 +13,7 @@ folder.
 - **Depends on `NodeRunner.Domain` only.** No Godot, ML or App. Enforced by
   `NodeRunner.Arch.Tests`.
 - **Pure and stateless.** Static methods that take values and return values.
-  State that carries between steps (a `ProofMass`, a `PistonControl`) is a
+  State that carries between steps (a `ProofMass`) is a
   `readonly record struct` the caller keeps and passes back.
 - **No I/O, no global state, no randomness.**
 - **Godot does the physics it can.** This library holds only what Godot has
@@ -28,8 +28,7 @@ folder.
 
 - `Accelerometer`, `ProofMass` — the proof-mass step, reading and sensor frame
 - `CameraRays` — the camera's ray targets and reading
-- `Piston`, `PistonControl` — a Piston's inputs and force
-- `Spring` — a Spring's damping coefficient
+- `Piston` — a Piston's inputs and force
 - `RigidTriangles`, `RigidTriangleDef` — the closed beam triangles of a
   creature
 - `OutputSignals` — an output's value as a Piston's target length and

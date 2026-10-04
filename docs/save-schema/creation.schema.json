@@ -152,6 +152,10 @@
               "maxSpeed": {
                 "type": "number",
                 "default": 200
+              },
+              "riseTime": {
+                "type": "number",
+                "default": 0.2
               }
             },
             "required": [
@@ -189,7 +193,7 @@
               },
               "damping": {
                 "type": "number",
-                "default": 0.3
+                "default": 10
               }
             },
             "required": [

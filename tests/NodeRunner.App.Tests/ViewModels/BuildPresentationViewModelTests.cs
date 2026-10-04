@@ -305,6 +305,7 @@ public sealed class BuildPresentationViewModelTests
             UiText.Format("{0} N", new FixedNumber(250, 0)),
             UiText.Format("±{0}%", new FixedNumber(30, 0)),
             UiText.Format("{0} m/s", new FixedNumber(2, 1)),
+            UiText.Format("{0} s", new FixedNumber(0.2, 1)),
         ]);
         part.Settings.ShouldAllBe(slider => !slider.ValuesDiffer);
     }
@@ -323,7 +324,7 @@ public sealed class BuildPresentationViewModelTests
         part.Settings.Select(slider => slider.Readout).ShouldBe(
         [
             UiText.Format("{0} N/m", new FixedNumber(400, 0)),
-            UiText.Format("{0}%", new FixedNumber(30, 0)),
+            UiText.Format("{0} N·s/m", new FixedNumber(10, 0)),
         ]);
     }
 
@@ -430,7 +431,7 @@ public sealed class BuildPresentationViewModelTests
         selection.SettingsNote.ShouldBe(UiText.Plain("A slider sets one value for all of them."));
         selection.DeleteNote.ShouldBeNull();
         selection.Settings.Select(slider => slider.Id).ShouldBe(
-            [PartParameterId.Strength, PartParameterId.Stroke, PartParameterId.MaxSpeed]);
+            [PartParameterId.Strength, PartParameterId.Stroke, PartParameterId.MaxSpeed, PartParameterId.RiseTime]);
         var strength = selection.Settings[0];
         strength.Readout.ShouldBe(UiText.Format("{0}–{1} N", new FixedNumber(100, 0), new FixedNumber(250, 0)));
         strength.ValuesDiffer.ShouldBeTrue();

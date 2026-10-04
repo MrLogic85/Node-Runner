@@ -29,18 +29,65 @@ public sealed record ParameterScale(
     public FixedNumber Number(double shown) => new(shown, Decimals);
 }
 
-/// <summary>A slider's range and step, in the units its readout shows.</summary>
+/// <summary>
+/// A slider's range and step, in the units its readout shows. With <see cref="Stops"/> it snaps to
+/// those values instead, spread evenly along the slider whatever the gaps between them (#801).
+/// </summary>
 public sealed record SettingRange(double Min, double Max, double Step)
 {
-    /// <summary>Where <paramref name="value"/> sits on the slider, 0…1.</summary>
-    public double Position(double value) => Math.Clamp((value - Min) / (Max - Min), 0, 1);
+    /// <summary>The values a stepped slider snaps to, strictly increasing; null for an even step.</summary>
+    public IReadOnlyList<double>? Stops { get; private init; }
+
+    /// <summary>A slider that snaps to <paramref name="stops"/>, given in strictly increasing order.</summary>
+    public static SettingRange Of(params double[] stops)
+    {
+        ArgumentNullException.ThrowIfNull(stops);
+        if (stops.Length < 2)
+        {
+            throw new ArgumentException("A stepped slider needs at least two stops.", nameof(stops));
+        }
+
+        for (var i = 1; i < stops.Length; i++)
+        {
+            if (!(stops[i] > stops[i - 1]))
+            {
+                throw new ArgumentException("A stepped slider's stops must strictly increase.", nameof(stops));
+            }
+        }
+
+        return new(stops[0], stops[^1], 0) { Stops = [.. stops] };
+    }
+
+    /// <summary>Where <paramref name="value"/> sits on the slider, 0…1; between two stops it sits between theirs.</summary>
+    public double Position(double value)
+    {
+        if (Stops is null)
+        {
+            return Math.Clamp((value - Min) / (Max - Min), 0, 1);
+        }
+
+        var clamped = Math.Clamp(value, Min, Max);
+        var upper = 1;
+        while (upper < Stops.Count - 1 && Stops[upper] < clamped)
+        {
+            upper++;
+        }
+
+        var lower = Stops[upper - 1];
+        return (upper - 1 + ((clamped - lower) / (Stops[upper] - lower))) / (Stops.Count - 1);
+    }
 
     /// <summary>One step as a share of the slider, 0…1.</summary>
-    public double PositionStep => Step / (Max - Min);
+    public double PositionStep => Stops is null ? Step / (Max - Min) : 1.0 / (Stops.Count - 1);
 
     /// <summary>The value at slider <paramref name="position"/>, on a whole step.</summary>
     public double ValueAt(double position)
     {
+        if (Stops is not null)
+        {
+            return Stops[(int)Math.Round(Math.Clamp(position, 0, 1) * (Stops.Count - 1))];
+        }
+
         var steps = Math.Round(Math.Clamp(position, 0, 1) * (Max - Min) / Step);
         return Math.Round(Min + (steps * Step), 6);
     }
@@ -58,8 +105,8 @@ public sealed record ParameterSlider(PartParameterId Id, UiText Label, UiText Re
 
 /// <summary>
 /// Every part setting (#704). A Piston's Max strength is in N, its Stroke ±% of its built length
-/// and its Max speed in m/s (#451); a Spring's Stiffness is in N/m and its Damping a % of the
-/// damping that stops it without a bounce (#453); a Camera's aim is turned on the canvas (#594).
+/// its Max speed in m/s (#451) and its Rise time in s (#801); a Spring's Stiffness is in N/m and its Damping in N·s/m
+/// (#453, #801); a Camera's aim is turned on the canvas (#594).
 /// </summary>
 public static class PartParameters
 {
@@ -73,12 +120,16 @@ public static class PartParameters
     public static PartParameter MaxSpeed { get; } = new(
         PartParameterId.MaxSpeed, MultiEditable: true, new(UiText.Plain("Max speed"), new(0.5, 4, 0.1), 1, "{0} m/s", "{0}–{1} m/s", Metres.FromWorldUnits, ToWorld));
 
+    public static PartParameter RiseTime { get; } = new(
+        PartParameterId.RiseTime, MultiEditable: true, new(UiText.Plain("Rise time"), SettingRange.Of(0.1, 0.2, 0.5, 1), 1, "{0} s", "{0}–{1} s", value => value, value => value));
+
     // World force per world unit is N/m: both scale by world units per metre, which cancel.
     public static PartParameter Stiffness { get; } = new(
         PartParameterId.Stiffness, MultiEditable: true, new(UiText.Plain("Stiffness"), new(50, 2000, 50), 0, "{0} N/m", "{0}–{1} N/m", value => value, value => value));
 
+    // World force per world speed is N·s/m, for the same reason.
     public static PartParameter Damping { get; } = new(
-        PartParameterId.Damping, MultiEditable: true, new(UiText.Plain("Damping"), new(0, 100, 5), 0, "{0}%", "{0}–{1}%", value => value * 100, value => value / 100));
+        PartParameterId.Damping, MultiEditable: true, new(UiText.Plain("Damping"), new(0, 100, 1), 0, "{0} N·s/m", "{0}–{1} N·s/m", value => value, value => value));
 
     public static PartParameter Aim { get; } = new(PartParameterId.Aim, MultiEditable: false, Slider: null);
 
@@ -87,6 +138,7 @@ public static class PartParameters
         PartParameterId.Strength => Strength,
         PartParameterId.Stroke => Stroke,
         PartParameterId.MaxSpeed => MaxSpeed,
+        PartParameterId.RiseTime => RiseTime,
         PartParameterId.Aim => Aim,
         PartParameterId.Stiffness => Stiffness,
         PartParameterId.Damping => Damping,

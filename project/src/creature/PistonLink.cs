@@ -1,27 +1,29 @@
 using Godot;
 using NodeRunner.Domain;
-using NodeRunner.Mechanics;
 
 namespace NodeRunner.Creature;
 
 /// <summary>
 /// A Piston between two node bodies (#451): each physics tick it pushes them apart or pulls them
-/// together along the line between them with <see cref="Mechanics.Piston.Step"/>. It only applies the
+/// together along the line between them with <see cref="Mechanics.Piston.NextForce"/>, which
+/// builds up over its rise time, so it keeps the force it pushed with last step. It only applies the
 /// force: inside its stroke nothing holds its length, so it adds no rigidity. Its end stops (#701),
 /// a hidden cylinder body and groove, are built by <c>Creature.CreateEndStops</c>. Its brain conventions
 /// are <see cref="Mechanics.Piston"/>'s — see docs/CREATURE_MODEL.md.
 /// </summary>
 public sealed class PistonLink
 {
-    // loadA and loadB are the masses its nodes move, each with its share of the beams pinned to it.
-    public PistonLink(PistonDef definition, RigidBody2D nodeA, RigidBody2D nodeB, double loadA, double loadB)
+    public PistonLink(PistonDef definition, RigidBody2D nodeA, RigidBody2D nodeB)
     {
         Definition = definition;
         NodeA = nodeA;
         NodeB = nodeB;
         BuiltLength = Math.Max(nodeA.Position.DistanceTo(nodeB.Position), 1f);
-        PairMass = loadA * loadB / (loadA + loadB);
     }
+
+    // The force it pushed with last step. Creature.ResetPose builds a fresh link each trial (#798),
+    // so a run starts from rest.
+    private double _force;
 
     public PistonDef Definition { get; }
 
@@ -48,11 +50,6 @@ public sealed class PistonLink
 
     public double SpeedInput => Mechanics.Piston.SpeedInput(Speed, Definition.MaxSpeed);
 
-    private PistonControl _control;
-
-    // The reduced mass of its two nodes' loads along its line: the lightest load it moves (see Mechanics.Piston.Step).
-    private double PairMass { get; }
-
     private Vector2 Axis => (NodeB.GlobalPosition - NodeA.GlobalPosition).Normalized();
 
     /// <param name="position">The brain's position output, −1 fully in … +1 fully out.</param>
@@ -60,8 +57,8 @@ public sealed class PistonLink
     /// <param name="step">The physics step, in seconds.</param>
     public void Drive(double position, double strength, double step)
     {
-        _control = Mechanics.Piston.Step(Definition, BuiltLength, Length, Speed, position, strength, PairMass, step, _control);
-        var push = Axis * (float)_control.Force;
+        _force = Mechanics.Piston.NextForce(Definition, BuiltLength, Length, Speed, position, strength, _force, step);
+        var push = Axis * (float)_force;
         NodeB.ApplyCentralForce(push);
         NodeA.ApplyCentralForce(-push);
     }

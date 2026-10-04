@@ -32,7 +32,7 @@ build; the *shape* below should stay stable.
 ┌─────────────────────────────────────────────────────────────────┐
 │                     Mechanics (pure C#)                          │
 │                   libs/NodeRunner.Mechanics/                     │
-│   Accelerometer · CameraRays · Piston · Spring · RigidTriangles  │
+│   Accelerometer · CameraRays · Piston · RigidTriangles           │
 └─────────────────────────────────────────────────────────────────┘
                           ▲                │
                           │                ▼
@@ -202,8 +202,8 @@ public sealed record NodeDef(int Id, Vector2D Position, string? Name = null); //
 public sealed record BeamDef(int Id, int NodeA, int NodeB, string? Name = null);   // node ids
 public sealed record SensorDef(int Id, int BeamId, SensorKind Kind, string? Name = null, double? Aim = null); // beam id; Aim: Camera only
 // SensorDef.DefaultAim(nodeA, nodeB): a new Camera's level, world-forward aim
-public sealed record PistonDef(int Id, int NodeA, int NodeB, string? Name = null, double Strength = 15000, double Stroke = 0.3, double MaxSpeed = 200); // node ids
-public sealed record SpringDef(int Id, int NodeA, int NodeB, string? Name = null, double Stiffness = 400, double Damping = 0.3); // node ids; Damping: share of critical
+public sealed record PistonDef(int Id, int NodeA, int NodeB, string? Name = null, double Strength = 15000, double Stroke = 0.3, double MaxSpeed = 200, double RiseTime = 0.2); // node ids
+public sealed record SpringDef(int Id, int NodeA, int NodeB, string? Name = null, double Stiffness = 400, double Damping = 10); // node ids; Damping in N·s/m
 public sealed record CreatureDef(NodeDef[] Nodes, BeamDef[] Beams, SensorDef[] Sensors, PistonDef[] Pistons, SpringDef[] Springs, int NextPartId);
 
 public static class SensorPicture   // a sensor picture's tap area at its beam's middle, sized per kind
@@ -243,13 +243,8 @@ public static class CameraRays      // the camera's three rays around its aim, p
 
 public static class Piston          // force toward the brain's target length, pure math
 {
-    public static PistonControl Step(PistonDef piston, double builtLength, double length, double speed,
-        double position, double strength, double pairMass, double step, PistonControl previous);
-}
-
-public static class Spring          // damping from the Damping share and the pair's mass
-{
-    public static double DampingCoefficient(SpringDef spring, double massA, double massB);
+    public static double NextForce(PistonDef piston, double builtLength, double length, double speed,
+        double position, double strength, double force, double step); // force builds up over RiseTime
 }
 ```
 
@@ -272,7 +267,8 @@ At 60 Hz (`_physics_process`), for the creature currently under evaluation:
    each output port's value (a Piston's position and strength), without
    per-tick allocations.
 3. **Act.** `PistonLink.Drive(position, strength, step)` pushes its two
-   nodes toward the target length (`Piston.Step`).
+   nodes toward the target length (`Piston.NextForce`, from the force it
+   pushed with last tick).
 4. **Score.** `TrialMeasurement` records this trial's centre distance (the
    fitness), front distance (shown), top speed and elevation; see
    `docs/TRAINING_LOOP.md` → Trial.

@@ -204,10 +204,11 @@ a composition of triangles; a bare quadrilateral stays free to fold.
   pulls them together, in a straight line. The brain chooses how far out it
   goes and how hard it may push.
 - **Implementation:** `PistonDef` in `libs/NodeRunner.Domain/PistonDef.cs`
-  stores an id, optional display name, two node ids and three settings
+  stores an id, optional display name, two node ids and four settings
   chosen in Build: **Strength** (its most force; 150 N new), **Stroke** (how
-  far it moves each way from its built length, as a share of it; ±30% new)
-  and **Max speed** (2 m/s new). Its built length is the distance between
+  far it moves each way from its built length, as a share of it; ±30% new),
+  **Max speed** (2 m/s new) and **Rise time** (how long its force takes to
+  build up to full; 0.2 s new, #801). Its built length is the distance between
   its nodes in the drawing. At runtime `project/src/creature/PistonLink.cs`
   pushes its two node bodies apart or together along the line between them
   every physics tick; it has no collider. It weighs as much as a beam, half
@@ -215,14 +216,29 @@ a composition of triangles; a bare quadrilateral stays free to fold.
 - **Not a beam:** inside its stroke it does not hold its length, so it adds no rigidity, and it counts as attached for the node degree rules. A
   Piston cannot join two nodes a beam already joins (the beam would hold
   them rigid), and two nodes hold at most one Piston (`CreatureBuilder.CanAddPiston`).
-- **Force** (`Piston.Step` in `libs/NodeRunner.Mechanics/Piston.cs`): it
-  chases the target length from its position output at up to Max speed,
-  slowing as it arrives, with at most the strength output's share of its
-  Strength. The speed control is a PI controller with gains from the
-  reduced mass of its two nodes (each with half of every beam body pinned to
-  it, #794), the lightest load it can move, so it stays
-  steady on a light limb tip and holds a load such as the body's weight at
-  its target.
+- **Force** (`Piston.NextForce` in `libs/NodeRunner.Mechanics/Piston.cs`,
+  the owner's formula, #801): it chases the target length from its position
+  output at up to Max speed, slowing as it arrives, with at most the
+  strength output's share of its Strength (`tF`). The wanted speed is ten
+  times the distance left, capped at Max speed, and `dV` is the speed it
+  lacks. Each tick
+  `F(N+1) = clamp((F(N) + dT · tF / Rise time · tanh(3 · dV / Max speed)) · σ(10 · d · dV / Max speed), ±tF)`,
+  where `d` is the sign of the raised force. While it lacks speed its force
+  builds up to full within its Rise time; the gate makes it die away once it
+  moves as fast as it wants in the direction it pushes. Built from the speed
+  it lacks rather than the distance left, it brakes before its target
+  instead of swinging past it. A force that builds up cannot jump between
+  its limits every tick, so it does not shake on light parts the way an
+  instant force did.
+- **Not tuned to its load** (owner decision, #801): the force comes from
+  the Piston's own settings and outputs, never from the mass it moves, so a
+  rebuild does not change how it responds. Holding a load, it sags until it
+  lacks enough speed to keep its force up (a quarter of its Strength sags it
+  a few world units); a heavy load can make it bob slowly. A light load at
+  the shortest Rise time and a low Max speed can swing around its target,
+  and a weak Piston with a high Max speed cannot brake in time and overshoots.
+  That is for the user's settings, the brain (less strength) and fitness
+  (#546).
 - **End stops** (#701): its length stays within its stroke, whatever the load.
   Like a real cylinder, the ends are a hard limit, not extra force: a hidden
   cylinder body (no collider) turns freely on node A (the groove can't sit
@@ -250,20 +266,17 @@ a composition of triangles; a bare quadrilateral stays free to fold.
   Piston's push can bounce, but it never chooses anything.
 - **Implementation:** `SpringDef` in `libs/NodeRunner.Domain/SpringDef.cs`
   stores an id, optional display name, two node ids and two settings chosen
-  in Build: **Stiffness** (N/m, 400 new) and **Damping** (a share of the
-  damping that just stops it bouncing, 30% new). Its rest length is the
+  in Build: **Stiffness** (N/m, 400 new) and **Damping** (N·s/m, 10 new). Its rest length is the
   distance between its nodes in the drawing. At runtime it is a Godot
   `DampedSpringJoint2D` between its two node bodies (`Creature.CreateSprings`);
   it has no collider. It weighs as much as a beam, half on each node.
-- **Damping as a share of critical** (`Spring.DampingCoefficient` in
-  `libs/NodeRunner.Mechanics/Spring.cs`): 0% bounces on, 100% settles without
-  overshoot, so the slider means the same for any stiffness. The coefficient
-  is worked out on the reduced mass of its two nodes, each with half of every
-  beam body pinned to it (#794). Godot's spring joint
-  damps on every second solver iteration rather than once per step
-  (`godot_joints_2d.cpp`, checked in 4.7), so `Creature` divides the
-  coefficient by those passes; headless, the overshoot then matched the share
-  asked for. If Godot changes that, springs will bounce more.
+- **Damping is a plain coefficient** (#801): the force braking the speed
+  between its nodes, per unit of speed. Like the Piston it is not tuned to
+  the mass it moves, so the same Damping bounces more on heavy nodes than on
+  light ones. Godot's spring joint damps on every second solver iteration
+  rather than once per step (`godot_joints_2d.cpp`, checked in 4.7), so
+  `Creature` divides the coefficient by those passes. If Godot changes
+  that, springs will bounce more.
 - **Not a beam:** it counts as attached for the node degree rules, but adds
   no rigidity. Two nodes hold at most one link (Piston or Spring), and no
   link joins two nodes a beam already joins (`CreatureBuilder.CanAddSpring`).
