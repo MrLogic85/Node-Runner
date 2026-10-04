@@ -113,7 +113,7 @@ reference would mislead someone working on that surface.
   its lines would come closer than `TriangleHatch.MinPixelSpacing` on
   screen, zoomed far out or in a thumbnail, the triangle gets a faint fill of
   the same density instead, #770), and
-  the Select frame with its handles, which are controls to grab rather than
+  the selection frame with its handles, which are controls to grab rather than
   part of the picture (#366).
 - **The Build grid marks the build area (#400).** The reference's grid floor
   fills the canvas at 24 to 32px, fades toward the edges, and has fixed HUD
@@ -128,11 +128,11 @@ reference would mislead someone working on that surface.
   showing where joints can go.
 - **Locked Select can scale (#366).** The reference turns Scale off in
   BuildLocked because beams keep their length. Instead a locked creation
-  keeps all three Select handles: moving a joint already changes the
+  keeps all three selection handles: moving a joint already changes the
   lengths of its beams, so scaling changes nothing the lock protects.
   Owner decision. Likewise a locked Camera can still be aimed (#638):
   only what changes the model is locked.
-- **The Select frame keeps its turn (owner decision 2026-10-03).** The
+- **The selection frame keeps its turn (owner decision 2026-10-03).** The
   reference's frame is always upright, with a hint under it. Ours drops the
   hint, which was in the way, and after a Rotate the frame and its handles
   stay turned with the group until the selection changes. The reference
@@ -143,10 +143,15 @@ reference would mislead someone working on that surface.
   and the Beams tool's panel lists Beam, Piston, Spring and Wing. The Parts
   tray starts at On a joint.
 - **Parts replaces the reference rail's Move label (#706).** The rail starts
-  Parts, Beams, Joint, Select. Parts keeps the old move-and-select behaviour
-  and opens the Parts tray when nothing is selected. Its glyph is the
+  Parts, Beams, Joint, Select. Parts opens the Parts tray when nothing is
+  selected. Its glyph is the
   project-owned `assets/icons/ui/parts.svg`, like the accelerometer glyph:
   three rounded tiles plus one lifted diamond.
+- **One selection model in every tool (#746).** In the reference only Move
+  selects one part and only Select selects several, and a Joint tap on a
+  beam splits it. Instead every tool adds or removes a tapped part and shows
+  the group frame and handles; Select alone draws a box, and Joint adds a
+  joint only on an empty tap with nothing selected. Beams are never split.
 - **Tool panels give help when empty (#706).** The reference keeps the tray
   in the side panel. Instead, with nothing selected, Parts shows the tray,
   Beams shows Links, and Joint and Select show short help rows. A selected
@@ -339,10 +344,7 @@ reference would mislead someone working on that surface.
     (`docs/CREATURE_MODEL.md` → "Drawing as a shadow"). Rays leave from the
     picture's edge and are drawn over the joints.
   - *Order:* joints, then sensors, then beams, for both tapping and drawing.
-    Dragging a sensor in Parts does nothing, and a Joint-tool tap on a
-    sensor does not split the beam.
-  - *Split:* splitting a beam moves its sensor, with its id, to the
-    longer half (the half at the beam's first node on a tie).
+    Dragging from a sensor never moves it.
   - *Placing:* the dragged part's glyph rides on a 48 px raised tile with an
     `accent` line, centred above the finger. While dragging, beams without a
     sensor show `halo`. A beam that already has one shows a dashed `danger`

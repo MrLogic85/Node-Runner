@@ -42,7 +42,7 @@ owned by `docs/TRAINING_LOOP.md` → Product lifecycle boundary.
   icon buttons in the top bar between the padlock and the overflow
   (`docs/UI_DIRECTION.md` → "Build has Undo"), and work on a locked
   creation too. Each finished action is one step: a placed part, a link, a
-  split, a delete, a part rename, a whole drag (a joint, a selection's move/turn/scale, a camera's aim) or a
+  delete, a part rename, a whole drag (a joint, a selection's move/turn/scale, a camera's aim) or a
   whole slider drag. A step only counts if the body changed. Selection,
   tool, zoom and pan never count, and a cancelled gesture adds nothing and
   keeps Redo. A new step clears Redo; the history holds 100 steps and
@@ -80,35 +80,22 @@ gap, #710) and a sensor's picture are in canvas units, so they grow and
 shrink with the drawing; beams, links and handles have finger-sized hit
 sizes on screen at any zoom.
 
-- **Parts:** tap a joint, beam, sensor or link to select it (its settings
-  open), tap empty canvas to deselect, drag a joint to move it, drag anywhere
-  else (empty canvas or a beam) to pan the view (#400). Parts never adds a
-  node.
-- **Beams:** with nothing selected, the panel lists link types: Beam, Piston,
-  Spring and later Wing. Beam is picked each time the tool is entered;
-  selecting a part and clearing it keeps the picked link. Tap a joint, beam,
-  sensor or link to select it; tap empty canvas to clear. Drag from a
-  selected joint to move only that joint. Drag from an unselected joint to a
-  different joint to draw the picked link. A Beam preview only snaps to a node
-  the beam could join (`BuildViewModel.CanConnect`); releasing anywhere else
-  adds nothing. A Piston or Spring preview uses the refusals and canvas notes
-  in the Piston bullet below. Drag anywhere else pans. Beams never adds a node.
-- **Joint:** tap empty canvas to add a node, or tap a beam to split it at the
-  closest point: one change that replaces the beam with two through the new
-  node (`BuildViewModel.SplitBeam`).
-- **Select (#366, #704):** two or more selected joints are a *group*, with
-  a dashed frame and three `UiSelectionHandle`s: **Move** in the middle (or
-  drag anywhere inside the frame, or a selected joint), **Rotate** on a stem
-  above and **Scale** at the bottom-right corner.
-  - A tap on any joint, beam, sensor or link adds or removes it, even
-    under a handle; an empty tap clears (`BuildViewModel.ToggleSelected`).
-  - With a group, any other drag pans. With none, a drag from a joint moves
-    it (selecting only it unless it is selected), and any other drag draws a
-    box that selects every part whose centre is in it: a joint's centre, a
-    beam's or link's midpoint, a sensor's beam midpoint. It replaces the
-    selection, so a box can catch only beams.
+- **Every tool (#746, #803)** shares one selection model; the tools differ
+  only in their main action, below.
+  - A tap on any joint, beam, sensor or link adds it to the selection or
+    removes it, even under a handle (`BuildViewModel.ToggleSelected`). A
+    tap on empty canvas clears the selection; a tap on a handle over empty
+    canvas does nothing.
+  - Two or more selected joints are a *group*, with a dashed frame and
+    three `UiSelectionHandle`s: **Move** in the middle, **Rotate** on a stem
+    above and **Scale** at the bottom-right corner.
+  - A drag is settled by where it starts, first match wins: a handle moves,
+    turns or scales the selection; a selected joint moves the selection;
+    in Beams, an unselected joint draws a link; anywhere inside a group's
+    frame moves the group; an unselected joint is selected alone and moved.
+    Any other drag draws a box in Select and pans in the other tools.
   - After a Rotate the frame stays turned until the selection changes
-    (`docs/UI_DIRECTION.md` → "The Select frame keeps its turn"). Rotate
+    (`docs/UI_DIRECTION.md` → "The selection frame keeps its turn"). Rotate
     and Scale turn about the frame's centre; Scale counts only the drag
     along its diagonal and is clamped to
     `MinSelectionScale`..`MaxSelectionScale`. Every drag frame is computed
@@ -118,11 +105,28 @@ sizes on screen at any zoom.
     would leave it is ignored. The frame and handles keep their screen size
     at any zoom, and each handle hits within `HandleHitRadius`. A locked
     creation keeps all three handles: scaling changes only beam lengths.
+- **Parts:** with nothing selected, the panel shows the Parts tray; drag a
+  part from it onto the creature (see Parts tray below). Parts never adds a
+  node.
+- **Beams:** with nothing selected, the panel lists link types: Beam, Piston,
+  Spring and later Wing. Beam is picked each time the tool is entered;
+  selecting a part and clearing it keeps the picked link. Drag from an
+  unselected joint to a different joint to draw the picked link. A Beam
+  preview only snaps to a node the beam could join
+  (`BuildViewModel.CanConnect`); releasing anywhere else adds nothing. A
+  Piston or Spring preview uses the refusals and canvas notes in the Piston
+  bullet below. Beams never adds a node.
+- **Joint:** with nothing selected, a tap on empty canvas adds a node; with
+  a selection, that tap only clears it. A beam tap selects the beam like in
+  every tool: beams are never split (#746).
+- **Select (#366, #704):** a drag on empty canvas, or from a beam, sensor or
+  link, outside any group's frame draws a box. The box selects every part whose
+  centre is in it: a joint's centre, a beam's or link's midpoint, a
+  sensor's beam midpoint. It replaces the selection, so a box can catch
+  only beams.
 - **Sensors:** an Accelerometer (#127) and a Camera (#575) sit on a
   beam, one per beam. Drag one from the Parts tray onto a beam to place it
-  (#376; see Parts tray below). Deleting a beam deletes its sensor;
-  splitting a beam with the Joint tool moves it, with its id, to the
-  longer half.
+  (#376; see Parts tray below). Deleting a beam deletes its sensor.
 - **Piston (#451, #705):** picked from the Beams link list. Drag joint to
   joint to place one; over a joint that would refuse it, the line and that
   joint's ring turn dashed danger, and dropping there shows the reason at the
@@ -154,8 +158,8 @@ sizes on screen at any zoom.
   `BuildViewModel` refuses topology edits on its own.
 - **Two fingers, any tool (#400):** pinch zooms about the point between the
   fingers and dragging both pans. The second finger cancels the first
-  finger's gesture, putting back any node it moved and any selection a
-  Select press changed, and nothing edits
+  finger's gesture, putting back any node it moved and any selection its
+  press changed, and nothing edits
   until every finger lifts, so navigation never changes the creature.
 - **Build area (#400):** joints live inside the fixed
   `BuildViewModel.BuildArea` (x −1152..1152, y −576..576 canvas

@@ -56,7 +56,7 @@ public sealed class BuildSpringTests
     {
         var (build, _) = ThreeLooseJoints();
         var spring = build.ConnectLink(BuildLink.Spring, 1, 2)!.Value;
-        build.SelectSpring(spring);
+        build.SelectOnly(CreatureElementKind.Spring, spring);
 
         build.DeleteSelectedParts();
         build.Springs.ShouldBeEmpty();
@@ -75,7 +75,7 @@ public sealed class BuildSpringTests
         var spring = builder.AddSpring(1, 2);
         var build = new BuildViewModel();
         build.Load(builder.Build(), moveOnly: true);
-        build.SelectSpring(spring);
+        build.SelectOnly(CreatureElementKind.Spring, spring);
 
         build.SetParameter(PartParameterId.Stiffness, 1200);
         build.SetParameter(PartParameterId.Damping, 0.8);

@@ -538,14 +538,6 @@ Title = "Tap empty space"
 Help = "Adds a joint."
 ShowHandle = false
 
-[node name="JointHelpSplit" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/JointHelp"]
-layout_mode = 2
-script = ExtResource("19_info_row")
-IconId = 1
-Title = "Tap a beam"
-Help = "Splits it with a joint."
-ShowHandle = false
-
 [node name="SelectHelp" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent" index="5"]
 unique_name_in_owner = true
 visible = false

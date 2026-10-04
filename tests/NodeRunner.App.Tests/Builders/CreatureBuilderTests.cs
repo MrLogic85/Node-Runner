@@ -108,20 +108,18 @@ public sealed class CreatureBuilderTests
     }
 
     [Fact]
-    public void Aim_IsKeptThroughSplitAndRename()
+    public void Aim_IsKeptThroughRename()
     {
         var builder = new CreatureBuilder();
         var a = builder.AddNode(new Vector2D(0, 0));
         var b = builder.AddNode(new Vector2D(100, 0));
-        var joint = builder.AddNode(new Vector2D(30, 0));
         var beam = builder.AddBeam(a, b);
         builder.AddSensor(beam, SensorKind.Camera, out var sensor, out _);
 
         builder.SetParameter(sensor, PartParameterId.Aim, 2);
-        var split = builder.SplitBeamAtNode(beam, joint);
         builder.Rename(sensor, "Eye");
 
-        builder.Sensors.ShouldBe([new SensorDef(sensor, split.SecondBeamId, SensorKind.Camera, "Eye", 2)]);
+        builder.Sensors.ShouldBe([new SensorDef(sensor, beam, SensorKind.Camera, "Eye", 2)]);
     }
 
     [Fact]
@@ -265,39 +263,6 @@ public sealed class CreatureBuilderTests
         builder.Beams[0].NodeA.ShouldBe(b);
         builder.Beams[0].NodeB.ShouldBe(c);
         builder.Sensors[0].ShouldBe(new SensorDef(sensor, beam, SensorKind.Accelerometer));
-    }
-
-    [Theory]
-    [InlineData(30, false)]
-    [InlineData(70, true)]
-    public void SplitBeamAtNode_MovesSensorsToTheLongerHalf(double jointX, bool toFirstHalf)
-    {
-        var builder = new CreatureBuilder();
-        var a = builder.AddNode(new Vector2D(0, 0));
-        var b = builder.AddNode(new Vector2D(100, 0));
-        var joint = builder.AddNode(new Vector2D(jointX, 0));
-        var beam = builder.AddBeam(a, b);
-        builder.AddSensor(beam, SensorKind.Accelerometer, out var sensor, out _);
-
-        var split = builder.SplitBeamAtNode(beam, joint);
-
-        builder.Sensors.Single().BeamId.ShouldBe(toFirstHalf ? split.FirstBeamId : split.SecondBeamId);
-        builder.Sensors.Single().Id.ShouldBe(sensor);
-    }
-
-    [Fact]
-    public void SplitBeamAtNode_TieMovesSensorsToNodeAHalfKeepingIds()
-    {
-        var builder = new CreatureBuilder();
-        var a = builder.AddNode(new Vector2D(0, 0));
-        var b = builder.AddNode(new Vector2D(100, 0));
-        var joint = builder.AddNode(new Vector2D(50, 0));
-        var beam = builder.AddBeam(a, b);
-        builder.AddSensor(beam, SensorKind.Accelerometer, out var sensor, out _);
-
-        var split = builder.SplitBeamAtNode(beam, joint);
-
-        builder.Sensors.ShouldBe([new SensorDef(sensor, split.FirstBeamId, SensorKind.Accelerometer)]);
     }
 
     [Fact]

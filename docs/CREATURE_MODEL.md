@@ -400,9 +400,6 @@ picture but costs an offscreen pass each, so it is left out for performance.
 - Removing a Node, Beam, sensor, Piston or Spring retires that id forever. Removing a
   Node also removes the beams and links on it, and removing a Beam removes its sensors;
   surviving parts keep their ids because no list reindexing is needed.
-- Beam split by the Joint tool removes the original beam id and creates one
-  fresh node id plus two fresh beam ids. The beam's sensors move, with their
-  ids, to the longer half (the half at the beam's first node on a tie).
 - Saving, loading, moving, renaming, reordering lists, rebuilding a body, and
   copying a whole Creation preserve part ids and the counter.
 - Part-to-part references are by stable id. Code that needs an array position

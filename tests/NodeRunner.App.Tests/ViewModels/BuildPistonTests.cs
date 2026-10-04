@@ -139,7 +139,7 @@ public sealed class BuildPistonTests
     {
         var (build, _) = ThreeLooseJoints();
         var piston = build.ConnectLink(BuildLink.Piston, 1, 2)!.Value;
-        build.SelectPiston(piston);
+        build.SelectOnly(CreatureElementKind.Piston, piston);
 
         build.DeleteSelectedParts();
 
@@ -156,7 +156,7 @@ public sealed class BuildPistonTests
         var piston = builder.AddPiston(1, 2);
         var build = new BuildViewModel();
         build.Load(builder.Build(), moveOnly: true);
-        build.SelectPiston(piston);
+        build.SelectOnly(CreatureElementKind.Piston, piston);
         var changes = 0;
         build.AnatomyChanged += (_, _) => changes++;
 

@@ -80,7 +80,7 @@ public sealed class VisualTheme
     /// <summary>The inside of the Select tool's box while it is dragged: <c>halo</c> at <c>alpha_soft</c>.</summary>
     public Color SelectionFill { get; private init; }
 
-    /// <summary>The inside of the Select frame's corner squares: <c>panel</c>.</summary>
+    /// <summary>The inside of the selection frame's corner squares: <c>panel</c>.</summary>
     public Color SelectionCornerFill { get; private init; }
 
     /// <summary>The stroke of a selected joint's ring.</summary>

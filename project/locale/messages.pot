@@ -594,10 +594,6 @@ msgstr ""
 msgid "Sounds"
 msgstr ""
 
-#: project/scenes/screens/BuildScreen.tscn
-msgid "Splits it with a joint."
-msgstr ""
-
 #: libs/NodeRunner.App/ViewModels/LinkListPresentation.cs
 msgid "Spring"
 msgstr ""
@@ -662,10 +658,6 @@ msgstr ""
 
 #: project/src/ui/lib/UiPicker.cs
 msgid "Tail"
-msgstr ""
-
-#: project/scenes/screens/BuildScreen.tscn
-msgid "Tap a beam"
 msgstr ""
 
 #: project/scenes/screens/BuildScreen.tscn
