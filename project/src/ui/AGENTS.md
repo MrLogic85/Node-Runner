@@ -119,7 +119,8 @@ unchanged, it belongs in `lib/`. If it embeds project vocabulary
   typography, color)` on a Label, Button or LineEdit (or UiLabel), never
   `ApplyTypography` plus a copied `font_color`. A Button or LineEdit takes its
   other state colours (hover, placeholder, caret) from its base type. Letter
-  case belongs to the typography (`UiTokens.IsUppercase`).
+  case belongs to the typography (`UiTokens.IsUppercase`); for text cased in
+  code see `docs/UI_DIRECTION.md` → "Text and translation".
 - Button icons use `UiIcons.Apply` without a tint; the icon state colours come
   from `Button` or a generated variation (`UiIconTab`). `UiSourceGuardTests`
   fails on any colour override in `ui/lib` outside UiIcons' tint helper (#338).

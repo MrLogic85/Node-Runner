@@ -658,6 +658,18 @@ and translation"):
   creation's default name, such as "Untitled Creation" or "Copy of Worm", is
   saved in the language the player has when it is made and is their own
   text from then on (#759).
+- **Uppercase** is display only and comes after translating, so the
+  translation key stays the authored text. A Label uses its own
+  `Uppercase`. Text cased in code, such as the side panel's vertical tab,
+  BrainFocus's headings and a segmented switch's segments (Godot's Button
+  has no `uppercase`), goes through `UiThemeLookup.LetterCase`, which uses
+  the TextServer in the current locale like a Label. Invariant casing is
+  wrong in some languages, so `project/src` uses no `string` upper- or
+  lower-casing at all (#776). `UiVerticalLabel` translates its `Text` like a Label. An exported
+  build cases by the language only with
+  `internationalization/locale/include_text_server_data` on (about 3 MB of
+  ICU data); without it, a Label and our text both fall back to plain
+  casing (#778).
 - Counted text is one whole sentence per plural form, and Godot picks the
   form for the language. Never add an "s" in code.
 - **Numbers** are arguments, never part of the English: "{0} m", not

@@ -101,6 +101,55 @@ public sealed class UiTextTranslationTests
         calls.ShouldBe(["Translate", "TranslatePlural", "FormatNumber", "GetLocale"], ignoreOrder: true);
     }
 
+    /// <summary>
+    /// No .NET string casing in the UI (#776): text is cased by the TextServer in the current locale,
+    /// as <c>Label.Uppercase</c> does, since invariant casing is wrong in some languages. That it is
+    /// translated before it is cased is checked on device.
+    /// </summary>
+    [Fact]
+    public void Shown_text_is_cased_by_the_text_server()
+    {
+        var compilation = CSharpSources.ProjectCompilation;
+        var violations = CSharpSources.Project
+            .SelectMany(source =>
+            {
+                var model = compilation.GetSemanticModel(source.Tree);
+                return source.Find(node => CasesInvariantly(node, model));
+            })
+            .ToList();
+
+        violations.ShouldBeEmpty("Case shown text with UiThemeLookup.LetterCase or Uppercase (TextServer.string_to_upper), after translating it.");
+    }
+
+    [Theory]
+    [InlineData("string M(string text) => text.ToUpperInvariant();")]
+    [InlineData("string M(string text) => text.ToUpper();")]
+    [InlineData("string M(string text) => text.ToLowerInvariant();")]
+    [InlineData("string M(string text) => text.ToLower(System.Globalization.CultureInfo.CurrentCulture);")]
+    public void Invariant_casing_is_flagged(string member) =>
+        InvariantCasing(member).ShouldHaveSingleItem();
+
+    [Theory]
+    [InlineData("string M(string text) => UiThemeLookup.Uppercase(text);")]
+    [InlineData("string M(string text) => UiThemeLookup.LetterCase(text, UiTokens.Typography.Label);")]
+    public void Text_server_casing_passes(string member) =>
+        InvariantCasing(member).ShouldBeEmpty();
+
+    private static IEnumerable<string> InvariantCasing(string member)
+    {
+        var snippet = CSharpSources.Snippet(member);
+        var model = CSharpSources.Compile([.. CSharpSources.Project, snippet]).GetSemanticModel(snippet.Tree);
+        return snippet.Find(node => CasesInvariantly(node, model));
+    }
+
+    private static bool CasesInvariantly(SyntaxNode node, SemanticModel model) =>
+        node is InvocationExpressionSyntax invocation
+        && CSharpSources.Symbol(model, invocation) is IMethodSymbol
+        {
+            ContainingType.SpecialType: SpecialType.System_String,
+            Name: "ToUpper" or "ToUpperInvariant" or "ToLower" or "ToLowerInvariant",
+        };
+
     [Theory]
     [InlineData("string M(NodeRunner.App.ViewModels.UiText text) => text.Message;")]
     [InlineData("int M(NodeRunner.App.ViewModels.UiText text) => text.Args.Count;")]

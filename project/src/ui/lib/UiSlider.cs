@@ -621,6 +621,11 @@ public partial class UiSlider : Control, ISerializationListener
         {
             Refresh();
         }
+        else
+        {
+            // An authored label translates itself; place the marker once its row has the new text.
+            CallDeferred(MethodName.LayoutContent);
+        }
     }
 
     private void RebuildStepLabels()
@@ -793,7 +798,8 @@ public partial class UiSlider : Control, ISerializationListener
     // The label fills its row, so the marker text keeps clear of its text, not its box.
     private float LabelTextWidth()
     {
-        var text = _label!.Uppercase ? _label.Text.ToUpperInvariant() : _label.Text;
+        var text = _label!.Atr(_label.Text);
+        text = _label.Uppercase ? UiThemeLookup.Uppercase(text) : text;
         var width = _label.GetThemeFont("font").GetStringSize(text, fontSize: _label.GetThemeFontSize("font_size")).X;
         return Mathf.Min(_label.Size.X, width);
     }

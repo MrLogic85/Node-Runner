@@ -174,8 +174,7 @@ public partial class BrainFocusNetworkView : Control
                     .Max());
     }
 
-    private static string Heading(string title) =>
-        UiTokens.IsUppercase(_headingStyle) ? title.ToUpperInvariant() : title;
+    private static string Heading(string title) => UiThemeLookup.LetterCase(title, _headingStyle);
 
     private void CacheNeuronPositions((float Input, float Output) labelWidths)
     {

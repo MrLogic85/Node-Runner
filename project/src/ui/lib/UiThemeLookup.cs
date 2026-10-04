@@ -88,8 +88,8 @@ public static class UiThemeLookup
 
     /// <summary>
     /// Applies a typography's font through its theme variation. Letter case is part of the
-    /// typography: a Label uses native <c>Uppercase</c>; Button has no such property, so its
-    /// current text is upper-cased.
+    /// typography: a Label uses native <c>Uppercase</c>. Button has no such property, so its
+    /// owner sets already cased text from <see cref="LetterCase"/>.
     /// </summary>
     public static void ApplyTypography(Control control, UiTokens.Typography token)
     {
@@ -113,16 +113,23 @@ public static class UiThemeLookup
 
     private static void ApplyLetterCase(Control control, UiTokens.Typography token)
     {
-        bool uppercase = UiTokens.IsUppercase(token);
         if (control is Label label)
         {
-            label.Uppercase = uppercase;
-        }
-        else if (uppercase && control is Button button)
-        {
-            button.Text = button.Text.ToUpperInvariant();
+            label.Uppercase = UiTokens.IsUppercase(token);
         }
     }
+
+    /// <summary>
+    /// Cases already translated text for a typography the way <c>Label.Uppercase</c> does: with
+    /// the TextServer in the current locale, since invariant upper-casing is wrong for some
+    /// languages. Case after translating, so the translation key stays the authored text.
+    /// </summary>
+    public static string LetterCase(string translated, UiTokens.Typography typography) =>
+        UiTokens.IsUppercase(typography) ? Uppercase(translated) : translated;
+
+    /// <inheritdoc cref="LetterCase"/>
+    public static string Uppercase(string translated) =>
+        TextServerManager.GetPrimaryInterface().StringToUpper(translated, TranslationServer.GetLocale());
 
     public static StyleBoxFlat CreateStyleBox(
         Color background,

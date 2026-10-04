@@ -92,6 +92,10 @@ public partial class UiSegmentedSwitch : HBoxContainer, ISerializationListener
         {
             QueueRedraw();
         }
+        else if (what == NotificationTranslationChanged && IsNodeReady())
+        {
+            ApplyContentAndTheme();
+        }
     }
 
     // A disabled segment looks like a disabled UiButton: its own dashed outline over a 50% fill.
@@ -282,7 +286,9 @@ public partial class UiSegmentedSwitch : HBoxContainer, ISerializationListener
             bool hasText = text.Length > 0;
             bool hasIcon = segment is { IconId: not UiIconId.None };
             button.Disabled = segment is null || segment.Disabled;
-            button.Text = text;
+            // The switch translates the text itself, so it can be cased after translating.
+            button.AutoTranslateMode = AutoTranslateModeEnum.Disabled;
+            button.Text = UiThemeLookup.LetterCase(Atr(text), UiTokens.Typography.Label);
             UiThemeLookup.ApplyTypography(button, UiTokens.Typography.Label);
 
             // The segment draws its own text, so only its icon samples Linear (#734).
