@@ -111,6 +111,8 @@ public partial class UiSlider : Control, ISerializationListener
     private double _lowPosition;
     private double _highPosition = 0.5;
     private string[] _stepLabels = [];
+    private Func<string>? _readoutSource;
+    private IReadOnlyList<Func<string>>? _stepLabelSources;
     private double _step;
     private double _markerPosition = -1;
     private string _markerText = string.Empty;
@@ -149,6 +151,20 @@ public partial class UiSlider : Control, ISerializationListener
         set
         {
             _readoutText = value;
+            Refresh();
+        }
+    }
+
+    /// <summary>
+    /// Code-set readout text, asked again when the language changes. While set it is shown instead
+    /// of <see cref="ReadoutText"/> and not translated again; null shows <see cref="ReadoutText"/> (#756).
+    /// </summary>
+    public Func<string>? ReadoutSource
+    {
+        get => _readoutSource;
+        set
+        {
+            _readoutSource = value;
             Refresh();
         }
     }
@@ -214,6 +230,21 @@ public partial class UiSlider : Control, ISerializationListener
     {
         get => _step;
         set => _step = Math.Max(0, value);
+    }
+
+    /// <summary>
+    /// Code-set step labels, asked again when the language changes. While set they are shown
+    /// instead of <see cref="StepLabels"/> and not translated again; null shows <see cref="StepLabels"/> (#756).
+    /// </summary>
+    public IReadOnlyList<Func<string>>? StepLabelSources
+    {
+        get => _stepLabelSources;
+        set
+        {
+            _stepLabelSources = value;
+            RebuildStepLabels();
+            Refresh();
+        }
     }
 
     [Export]
@@ -310,7 +341,11 @@ public partial class UiSlider : Control, ISerializationListener
 
     public override void _Notification(int what)
     {
-        if (what == NotificationThemeChanged && IsNodeReady())
+        if (what == NotificationTranslationChanged)
+        {
+            AskTextSources();
+        }
+        else if (what == NotificationThemeChanged && IsNodeReady())
         {
             UiThemeRefresh.Guarded(this, () =>
             {
@@ -546,6 +581,31 @@ public partial class UiSlider : Control, ISerializationListener
             AutowrapMode = TextServer.AutowrapMode.Off,
         };
 
+    private string ShownReadout => _readoutSource?.Invoke() ?? ReadoutText;
+
+    private IReadOnlyList<string> ShownStepLabels =>
+        _stepLabelSources is { } sources ? [.. sources.Select(source => source())] : _stepLabels;
+
+    private int StepLabelCount => _stepLabelSources?.Count ?? _stepLabels.Length;
+
+    // Godot sends a language change while it walks the tree, when this node may not add children,
+    // so the step labels keep their nodes and only take the new text.
+    private void AskTextSources()
+    {
+        if (_stepLabelSources is not null && _stepLabelNodes.Count == _stepLabelSources.Count)
+        {
+            for (var index = 0; index < _stepLabelNodes.Count; index++)
+            {
+                _stepLabelNodes[index].Text = _stepLabelSources[index]();
+            }
+        }
+
+        if (_readoutSource is not null || _stepLabelSources is not null)
+        {
+            Refresh();
+        }
+    }
+
     private void RebuildStepLabels()
     {
         if (!IsInsideTree())
@@ -565,10 +625,11 @@ public partial class UiSlider : Control, ISerializationListener
         }
 
         _stepLabelNodes.Clear();
-        foreach (var text in StepLabels)
+        foreach (var text in ShownStepLabels)
         {
             var label = CreateLabel();
             label.Name = "StepLabel";
+            label.AutoTranslateMode = _stepLabelSources is null ? AutoTranslateModeEnum.Inherit : AutoTranslateModeEnum.Disabled;
             label.Text = text;
             AddChild(label, false, InternalMode.Front);
             _stepLabelNodes.Add(label);
@@ -628,10 +689,12 @@ public partial class UiSlider : Control, ISerializationListener
         }
 
         _label!.Text = LabelText;
-        _readout!.Text = ReadoutText;
+        _readout!.AutoTranslateMode = _readoutSource is null ? AutoTranslateModeEnum.Inherit : AutoTranslateModeEnum.Disabled;
+        var readout = ShownReadout;
+        _readout.Text = readout;
         _markerLabel!.Text = MarkerText;
         _label.Visible = HasValueLabelRow && !string.IsNullOrWhiteSpace(LabelText);
-        _readout.Visible = HasValueLabelRow && !string.IsNullOrWhiteSpace(ReadoutText);
+        _readout.Visible = HasValueLabelRow && !string.IsNullOrWhiteSpace(readout);
         _header!.Visible = HasValueLabelRow;
         _header.AddThemeConstantOverride("separation", (int)UiSize.Space.S1);
         _markerLabel.Visible = HasMarkerText && (HasValueLabelRow || HasMarkerBelowRow);
@@ -718,16 +781,16 @@ public partial class UiSlider : Control, ISerializationListener
 
     private void DrawSteps(float trackLeft, float trackRight, float trackY, float opacity)
     {
-        if (StepLabels.Length < 2)
+        if (StepLabelCount < 2)
         {
             return;
         }
 
         var color = UiThemeLookup.Color(this, UiTokens.Color.LineStrong).ScaleAlpha(opacity);
         using var pen = UiPixelPen.Begin(this);
-        for (var index = 0; index < StepLabels.Length; index++)
+        for (var index = 0; index < StepLabelCount; index++)
         {
-            var x = Mathf.Lerp(trackLeft, trackRight, index / (float)(StepLabels.Length - 1));
+            var x = Mathf.Lerp(trackLeft, trackRight, index / (float)(StepLabelCount - 1));
             pen.Line(
                 new Vector2(x, trackY - _style.StepTickHalfHeight),
                 new Vector2(x, trackY + _style.StepTickHalfHeight),
@@ -849,10 +912,11 @@ public partial class UiSlider : Control, ISerializationListener
 
     private bool HasValueLabelRow =>
         !string.IsNullOrWhiteSpace(LabelText)
+        || _readoutSource is not null
         || !string.IsNullOrWhiteSpace(ReadoutText)
         || HasMarkerText && HasStepLabelRow;
 
-    private bool HasStepLabelRow => StepLabels.Length >= 2;
+    private bool HasStepLabelRow => StepLabelCount >= 2;
 
     private bool HasMarkerBelowRow => HasMarkerText && !HasStepLabelRow;
 

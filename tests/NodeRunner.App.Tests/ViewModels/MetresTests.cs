@@ -5,17 +5,18 @@ namespace NodeRunner.App.Tests.ViewModels;
 public sealed class MetresTests
 {
     [Theory]
-    [InlineData(250, "2.5")]
-    [InlineData(0, "0.0")]
-    [InlineData(-125, "-1.3")]
-    public void Format_ConvertsWorldUnitsToMetres(double worldUnits, string expected)
+    [InlineData(250, 2.5)]
+    [InlineData(0, 0.0)]
+    [InlineData(-125, -1.3)]
+    [InlineData(1309.7, 13.1)]
+    public void Number_ConvertsWorldUnitsToMetresToOneDecimal(double worldUnits, double expected)
     {
-        Metres.Format(worldUnits).ShouldBe(expected);
+        Metres.Number(worldUnits).ShouldBe(new FixedNumber(expected, 1));
     }
 
     [Fact]
-    public void FormatWithUnit_AddsTheUnit()
+    public void WithUnit_AddsTheUnit()
     {
-        Metres.FormatWithUnit(250).ShouldBe("2.5 m");
+        Metres.WithUnit(250).ShouldBe(UiText.Format("{0} m", new FixedNumber(2.5, 1)));
     }
 }

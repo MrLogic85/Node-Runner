@@ -7,10 +7,10 @@ namespace NodeRunner.App.ViewModels;
 /// <summary>
 /// UI text a view-model hands to Godot, which translates it (#682). <see cref="Message"/> is the
 /// English source text and also the gettext msgid; <see cref="Plural"/> is its English plural for
-/// <see cref="Count"/>, picked per language by Godot's <c>TrN</c>. <c>{0}</c>, <c>{1}</c>… stand
-/// for <see cref="Args"/>: numbers, strings shown as they are (user or data content, never
-/// translated), or a nested <see cref="UiText"/> for a phrase that stands on its own. App never
-/// renders the English itself, so tests compare <see cref="UiText"/> values.
+/// <see cref="Count"/>, picked per language by Godot. <c>{0}</c>, <c>{1}</c>… stand for
+/// <see cref="Args"/>: whole numbers, a <see cref="FixedNumber"/>, strings shown as they are (user or
+/// data content, never translated), or a nested <see cref="UiText"/> for a phrase that stands on
+/// its own. App never renders the English itself, so tests compare <see cref="UiText"/> values.
 /// </summary>
 public sealed partial class UiText : IEquatable<UiText>
 {
@@ -26,9 +26,9 @@ public sealed partial class UiText : IEquatable<UiText>
 
         foreach (var arg in args)
         {
-            if (arg is not (int or long or string or UiText))
+            if (arg is not (int or long or FixedNumber or string or UiText))
             {
-                throw new ArgumentException($"Unsupported argument {arg?.GetType().Name ?? "null"}: use int, long, string or UiText.", nameof(args));
+                throw new ArgumentException($"Unsupported argument {arg?.GetType().Name ?? "null"}: use int, long, FixedNumber, string or UiText.", nameof(args));
             }
         }
 
@@ -62,6 +62,12 @@ public sealed partial class UiText : IEquatable<UiText>
 
     /// <summary>Text with <c>{0}</c>, <c>{1}</c>… filled from <paramref name="args"/>.</summary>
     public static UiText Format(string message, params object[] args) => new(message, null, 0, null, [.. args]);
+
+    /// <summary>A number on its own, so Godot still writes its digits for the player's language.</summary>
+    public static UiText Number(int value) => Format("{0}", value);
+
+    /// <inheritdoc cref="Number(int)"/>
+    public static UiText Number(FixedNumber value) => Format("{0}", value);
 
     /// <summary>
     /// Counted text: <paramref name="count"/> picks the plural form and is also <c>{0}</c>;

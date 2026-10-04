@@ -1,5 +1,3 @@
-using System.Globalization;
-
 namespace NodeRunner.App.ViewModels;
 
 /// <summary>
@@ -17,12 +15,11 @@ public static class Metres
     public static double FromWorldUnits(double worldUnits) => worldUnits / WorldUnitsPerMetre;
 
     /// <summary>
-    /// A world-unit quantity at metre scale to one decimal, without a unit, such as "2.5": a length
-    /// becomes metres and a speed in units/s becomes m/s.
+    /// A world-unit quantity at metre scale to one decimal, such as 2.5: a length becomes metres
+    /// and a speed in units/s becomes m/s.
     /// </summary>
-    public static string Format(double worldUnits) =>
-        FromWorldUnits(worldUnits).ToString("0.0", CultureInfo.InvariantCulture);
+    public static FixedNumber Number(double worldUnits) => new(FromWorldUnits(worldUnits), 1);
 
     /// <summary>A world-unit length in metres with its unit, such as "2.5 m".</summary>
-    public static string FormatWithUnit(double worldUnits) => $"{Format(worldUnits)} m";
+    public static UiText WithUnit(double worldUnits) => UiText.Format("{0} m", Number(worldUnits));
 }

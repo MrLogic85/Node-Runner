@@ -32,9 +32,9 @@ public sealed record CreationCardPresentation(
 /// how many generations it has trained. These can go down; the best ever belongs to Stats.
 /// </summary>
 public sealed record CreationCardTraining(
-    string DistanceText,
-    string TopSpeedText,
-    string ElevationText,
+    UiText DistanceText,
+    UiText TopSpeedText,
+    UiText ElevationText,
     string MapId,
     UiText GenerationsText)
 {
@@ -43,9 +43,9 @@ public sealed record CreationCardTraining(
         ArgumentNullException.ThrowIfNull(training);
         var run = training.Latest;
         return new CreationCardTraining(
-            Metres.Format(run.ShownDistance),
-            Metres.Format(run.TopSpeed),
-            Metres.Format(run.Elevation),
+            UiText.Number(Metres.Number(run.ShownDistance)),
+            UiText.Number(Metres.Number(run.TopSpeed)),
+            UiText.Number(Metres.Number(run.Elevation)),
             run.MapId,
             UiText.Counted("{0} generation", "{0} generations", training.Generation));
     }

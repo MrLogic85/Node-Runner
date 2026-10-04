@@ -1,4 +1,3 @@
-using System.Globalization;
 using NodeRunner.App.Navigation;
 using NodeRunner.Domain;
 
@@ -10,7 +9,7 @@ namespace NodeRunner.App.ViewModels;
 /// is shown dimmed and cannot be dragged. A null <paramref name="Position"/> shows no thumb, for a
 /// value the scale does not hold.
 /// </summary>
-public sealed record SettingSlider(string Label, string Readout, double? Position, double Step, bool Disabled = false);
+public sealed record SettingSlider(string Label, UiText Readout, double? Position, double Step, bool Disabled = false);
 
 /// <summary>
 /// Train setup (#194), between Build and Training: Train or Simulate, and the Shadows and Run length
@@ -64,15 +63,15 @@ public sealed class TrainSetupPresentationViewModel
     };
 
     public SettingSlider Shadows => Mode == TrainingRunMode.Simulate
-        ? new("Shadows", "1", null, ShadowsRange.PositionStep, Disabled: true)
+        ? new("Shadows", UiText.Number(1), null, ShadowsRange.PositionStep, Disabled: true)
         : new(
             "Shadows",
-            Settings.Shadows.ToString(CultureInfo.InvariantCulture),
+            UiText.Number(Settings.Shadows),
             ShadowsRange.Position(Settings.Shadows),
             ShadowsRange.PositionStep);
 
     public SettingSlider RunLength => Mode == TrainingRunMode.Simulate
-        ? new("Run length", "Until you leave", null, RunLengthRange.PositionStep, Disabled: true)
+        ? new("Run length", UiText.Plain("Until you leave"), null, RunLengthRange.PositionStep, Disabled: true)
         : new(
             "Run length",
             Seconds(Settings.RunLengthSeconds),
@@ -80,11 +79,10 @@ public sealed class TrainSetupPresentationViewModel
             RunLengthRange.PositionStep);
 
     /// <summary>The Shadows slider's named ends.</summary>
-    public string[] ShadowsEnds { get; } =
-        [TrainSettingsDef.MinShadows.ToString(CultureInfo.InvariantCulture), TrainSettingsDef.MaxShadows.ToString(CultureInfo.InvariantCulture)];
+    public IReadOnlyList<UiText> ShadowsEnds { get; } = [UiText.Number(TrainSettingsDef.MinShadows), UiText.Number(TrainSettingsDef.MaxShadows)];
 
     /// <summary>The Run length slider's named ends.</summary>
-    public string[] RunLengthEnds { get; } = [Seconds(TrainSettingsDef.MinRunLengthSeconds), Seconds(TrainSettingsDef.MaxRunLengthSeconds)];
+    public IReadOnlyList<UiText> RunLengthEnds { get; } = [Seconds(TrainSettingsDef.MinRunLengthSeconds), Seconds(TrainSettingsDef.MaxRunLengthSeconds)];
 
     public void SetMode(TrainingRunMode mode)
     {
@@ -124,5 +122,5 @@ public sealed class TrainSetupPresentationViewModel
         Changed?.Invoke(this, EventArgs.Empty);
     }
 
-    private static string Seconds(int seconds) => $"{seconds.ToString(CultureInfo.InvariantCulture)} s";
+    private static UiText Seconds(int seconds) => UiText.Format("{0} s", seconds);
 }

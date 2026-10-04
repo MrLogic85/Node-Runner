@@ -184,7 +184,7 @@ public partial class BuildScreen : Control
             var slider = container.GetNodeOrNull<UiSlider>(setting.Id.ToString()) ?? AddParameterSlider(container, setting.Id);
             container.MoveChild(slider, index);
             slider.LabelText = setting.Label;
-            slider.ReadoutText = setting.Readout;
+            slider.ReadoutSource = UiTextTranslation.Source(setting.Readout);
             slider.Step = setting.Step;
             slider.Value = setting.ValuesDiffer
                 ? new UiSliderValue(UiSliderEnd.Marker(setting.Low), UiSliderEnd.Marker(setting.High))
@@ -305,7 +305,7 @@ public partial class BuildScreen : Control
         if (savedPanel.Visible)
         {
             GetNode<UiLabel>("%SavedTitle").ShowText(presentation.TrainingSummaryTitle);
-            GetNode<UiLabel>("%SavedLatest").Text = presentation.LatestDistanceText;
+            GetNode<UiLabel>("%SavedLatest").ShowText(presentation.LatestDistanceText);
             GetNode<UiLabel>("%SavedBody").Text = presentation.TrainingSummaryBody;
         }
 

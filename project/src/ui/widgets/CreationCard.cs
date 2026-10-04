@@ -149,9 +149,9 @@ public partial class CreationCard : MarginContainer
             return;
         }
 
-        GetNode<UiLabel>("%Distance").Text = training.DistanceText;
-        GetNode<UiLabel>("%TopSpeed").Text = training.TopSpeedText;
-        GetNode<UiLabel>("%Elevation").Text = training.ElevationText;
+        GetNode<UiLabel>("%Distance").ShowText(training.DistanceText);
+        GetNode<UiLabel>("%TopSpeed").ShowText(training.TopSpeedText);
+        GetNode<UiLabel>("%Elevation").ShowText(training.ElevationText);
         GetNode<UiIcon>("%Map").IconId = MapIcon(training.MapId);
         GetNode<UiLabel>("%Generations").ShowText(training.GenerationsText);
     }

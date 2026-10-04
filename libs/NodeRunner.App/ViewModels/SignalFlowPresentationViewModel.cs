@@ -17,8 +17,8 @@ public sealed class SignalFlowPresentationViewModel : INotifyPropertyChanged
     /// <summary>The parts the brain drives, such as "1 piston" or "2 pistons"; null with none.</summary>
     public UiText? OutputsNote { get; private set; }
 
-    /// <summary>How far the visible creature has got in this try, such as "12.4 m"; empty when no try runs.</summary>
-    public string DistanceNote { get; private set; } = string.Empty;
+    /// <summary>How far the visible creature has got in this try, such as "12.4 m"; null when no try runs.</summary>
+    public UiText? DistanceNote { get; private set; }
 
     /// <summary>Refreshes the stage notes from this tick's readings.</summary>
     /// <param name="sensors">The visible creature's sensor readings.</param>
@@ -31,10 +31,8 @@ public sealed class SignalFlowPresentationViewModel : INotifyPropertyChanged
 
         var sensesNote = sensors.Count > 0 ? UiText.Counted("{0} reading", "{0} readings", sensors.Count) : null;
         var outputsNote = PartsNote(motors);
-        var distanceNote = double.IsFinite(distance)
-            ? Metres.FormatWithUnit(distance)
-            : string.Empty;
-        if (Equals(SensesNote, sensesNote) && Equals(OutputsNote, outputsNote) && DistanceNote == distanceNote)
+        var distanceNote = double.IsFinite(distance) ? Metres.WithUnit(distance) : null;
+        if (Equals(SensesNote, sensesNote) && Equals(OutputsNote, outputsNote) && Equals(DistanceNote, distanceNote))
         {
             return;
         }

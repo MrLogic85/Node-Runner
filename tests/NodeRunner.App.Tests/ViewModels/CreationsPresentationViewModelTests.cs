@@ -42,7 +42,7 @@ public sealed class CreationsPresentationViewModelTests
             UiText.Counted("{0} node", "{0} nodes", 2),
             UiText.Counted("{0} beam", "{0} beams", 1),
             UiText.Counted("{0} sensor", "{0} sensors", 1)));
-        walker.Training.ShouldBe(new CreationCardTraining("19.1", "3.1", "1.2", MapIds.Flat, Generations(12)));
+        walker.Training.ShouldBe(new CreationCardTraining(Stat(19.1), Stat(3.1), Stat(1.2), MapIds.Flat, Generations(12)));
         walker.CanOpen.ShouldBeTrue();
         walker.CanDuplicate.ShouldBeTrue();
         walker.CanDelete.ShouldBeTrue();
@@ -191,6 +191,8 @@ public sealed class CreationsPresentationViewModelTests
     }
 
     private static UiText Generations(int count) => UiText.Counted("{0} generation", "{0} generations", count);
+
+    private static UiText Stat(double metres) => UiText.Number(new FixedNumber(metres, 1));
 
     private static CreationDef CreateCreation(string name, int generation, TrainingRunDef? latest = null)
     {

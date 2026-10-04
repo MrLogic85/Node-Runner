@@ -24,7 +24,7 @@ public sealed class SignalFlowPresentationViewModelTests
 
         viewModel.SensesNote.ShouldBe(Readings(4));
         viewModel.OutputsNote.ShouldBe(Pistons(2));
-        viewModel.DistanceNote.ShouldBe("42.3 m");
+        viewModel.DistanceNote.ShouldBe(UiText.Format("{0} m", new FixedNumber(42.3, 1)));
         changed.ShouldBe([null], "The counts changed, so every note is new.");
     }
 
@@ -37,7 +37,7 @@ public sealed class SignalFlowPresentationViewModelTests
 
         viewModel.SensesNote.ShouldBe(Readings(1));
         viewModel.OutputsNote.ShouldBe(Pistons(1));
-        viewModel.DistanceNote.ShouldBe("0.0 m");
+        viewModel.DistanceNote.ShouldBe(UiText.Format("{0} m", new FixedNumber(0, 1)));
     }
 
     [Fact]
@@ -65,7 +65,7 @@ public sealed class SignalFlowPresentationViewModelTests
 
         viewModel.SensesNote.ShouldBeNull();
         viewModel.OutputsNote.ShouldBeNull();
-        viewModel.DistanceNote.ShouldBeEmpty();
+        viewModel.DistanceNote.ShouldBeNull();
     }
 
     [Fact]
@@ -92,7 +92,7 @@ public sealed class SignalFlowPresentationViewModelTests
         viewModel.Update([], [new MotorReading(MotorReading.PistonKind, 1, 0.2, 1)], 400);
 
         changed.ShouldBe([nameof(SignalFlowPresentationViewModel.DistanceNote)]);
-        viewModel.DistanceNote.ShouldBe("4.0 m");
+        viewModel.DistanceNote.ShouldBe(UiText.Format("{0} m", new FixedNumber(4, 1)));
     }
 
     [Fact]

@@ -15,8 +15,8 @@ public sealed class TrainSetupPresentationViewModelTests
         setup.Subtitle.ShouldBe(UiText.Plain("Not trained yet"));
         setup.MapName.ShouldBe("Flat ground");
         setup.Settings.ShouldBe(TrainSettingsDef.Default);
-        setup.Shadows.Readout.ShouldBe("8");
-        setup.RunLength.Readout.ShouldBe("10 s");
+        setup.Shadows.Readout.ShouldBe(UiText.Number(8));
+        setup.RunLength.Readout.ShouldBe(UiText.Format("{0} s", 10));
     }
 
     [Fact]
@@ -43,8 +43,8 @@ public sealed class TrainSetupPresentationViewModelTests
     {
         var setup = new TrainSetupPresentationViewModel(Creation());
 
-        setup.ShadowsEnds.ShouldBe(["2", "32"]);
-        setup.RunLengthEnds.ShouldBe(["5 s", "60 s"]);
+        setup.ShadowsEnds.ShouldBe([UiText.Number(2), UiText.Number(32)]);
+        setup.RunLengthEnds.ShouldBe([UiText.Format("{0} s", 5), UiText.Format("{0} s", 60)]);
     }
 
     [Theory]
@@ -72,7 +72,7 @@ public sealed class TrainSetupPresentationViewModelTests
         setup.SetRunLength(position);
 
         setup.Settings.RunLengthSeconds.ShouldBe(expected);
-        setup.RunLength.Readout.ShouldBe($"{expected} s");
+        setup.RunLength.Readout.ShouldBe(UiText.Format("{0} s", expected));
     }
 
     [Fact]
@@ -123,8 +123,8 @@ public sealed class TrainSetupPresentationViewModelTests
         changes.ShouldBe(1);
         setup.Mode.ShouldBe(TrainingRunMode.Simulate);
         setup.ModeNote.ShouldBe("Plays the trained brain with one shadow. Nothing is learned or saved.");
-        setup.Shadows.ShouldBe(new SettingSlider("Shadows", "1", null, setup.Shadows.Step, Disabled: true));
-        setup.RunLength.ShouldBe(new SettingSlider("Run length", "Until you leave", null, setup.RunLength.Step, Disabled: true));
+        setup.Shadows.ShouldBe(new SettingSlider("Shadows", UiText.Number(1), null, setup.Shadows.Step, Disabled: true));
+        setup.RunLength.ShouldBe(new SettingSlider("Run length", UiText.Plain("Until you leave"), null, setup.RunLength.Step, Disabled: true));
         setup.Settings.ShouldBe(TrainSettingsDef.Default);
     }
 
@@ -148,7 +148,7 @@ public sealed class TrainSetupPresentationViewModelTests
         setup.SetMode(TrainingRunMode.Train);
 
         setup.Shadows.ShouldBe(before);
-        setup.RunLength.Readout.ShouldBe("30 s");
+        setup.RunLength.Readout.ShouldBe(UiText.Format("{0} s", 30));
     }
 
     private static CreationDef Creation(TrainSettingsDef? settings = null, int? generation = null) =>

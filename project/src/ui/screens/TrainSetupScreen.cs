@@ -95,17 +95,15 @@ public partial class TrainSetupScreen : Control
         Bind(GetNode<UiSlider>("%RunLength"), _presentation.RunLength, _presentation.RunLengthEnds);
     }
 
-    private static void Bind(UiSlider slider, SettingSlider value, string[] ends)
+    private static void Bind(UiSlider slider, SettingSlider value, IReadOnlyList<UiText> ends)
     {
         slider.LabelText = value.Label;
-        slider.ReadoutText = value.Readout;
+        slider.ReadoutSource = UiTextTranslation.Source(value.Readout);
         slider.Step = value.Step;
         // No position: an empty track with no thumb or fill.
         slider.Value = value.Position is { } position ? UiSliderValue.Thumb(position) : UiSliderValue.Progress(0);
         slider.Disabled = value.Disabled;
-        if (!slider.StepLabels.SequenceEqual(ends))
-        {
-            slider.StepLabels = ends;
-        }
+        // The ends never change, so they are set once rather than rebuilt on every drag.
+        slider.StepLabelSources ??= [.. ends.Select(end => UiTextTranslation.Source(end))];
     }
 }

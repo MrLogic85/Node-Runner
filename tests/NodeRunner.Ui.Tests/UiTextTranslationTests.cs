@@ -48,7 +48,7 @@ public sealed class UiTextTranslationTests
             .Select(symbol => symbol!.Name)
             .ToHashSet();
 
-        calls.ShouldBe(["Translate", "TranslatePlural"], ignoreOrder: true);
+        calls.ShouldBe(["Translate", "TranslatePlural", "FormatNumber", "GetLocale"], ignoreOrder: true);
     }
 
     [Theory]
@@ -67,6 +67,7 @@ public sealed class UiTextTranslationTests
     [InlineData("void M(UiLabel label, NodeRunner.App.ViewModels.CreationCardTraining training) => NodeRunner.Ui.Widgets.UiTextTranslation.ShowText(label, training.GenerationsText);")]
     [InlineData("void M(UiLabel label, NodeRunner.App.ViewModels.UiText? text) => NodeRunner.Ui.Widgets.UiTextTranslation.ShowText(label, text ?? NodeRunner.App.ViewModels.UiText.Plain(\"Delete\"));")]
     [InlineData("void M(UiStageCard card, NodeRunner.App.ViewModels.UiText? text, bool show) => card.NoteSource = NodeRunner.Ui.Widgets.UiTextTranslation.Source(show ? text : null);")]
+    [InlineData("string M() => nameof(NodeRunner.App.ViewModels.SignalFlowPresentationViewModel.DistanceNote);")]
     public void Showing_ui_text_passes(string member) =>
         Bypasses(member).ShouldBeEmpty();
 
@@ -77,13 +78,14 @@ public sealed class UiTextTranslationTests
         return snippet.Find(node => BypassesShowText(node, model));
     }
 
-    // The outermost expression of type UiText must be an argument to a UiTextTranslation method; type names and the
-    // inner parts of a larger UiText expression (a member access, ?? or ?:) are not counted.
+    // The outermost expression of type UiText must be an argument to a UiTextTranslation method; type names, a
+    // nameof, and the inner parts of a larger UiText expression (a member access, ?? or ?:) are not counted.
     private static bool BypassesShowText(SyntaxNode node, SemanticModel model)
     {
         if (node is not ExpressionSyntax expression
             || !IsUiText(model.GetTypeInfo(expression).Type)
             || CSharpSources.Symbol(model, expression) is ITypeSymbol
+            || IsInNameof(expression, model)
             || expression.Parent is ExpressionSyntax parent && IsUiText(model.GetTypeInfo(parent).Type))
         {
             return false;
@@ -93,6 +95,10 @@ public sealed class UiTextTranslationTests
             && CSharpSources.Symbol(model, call) is IMethodSymbol method
             && (method.ReducedFrom ?? method).ContainingType.ToDisplayString() == "NodeRunner.Ui.Widgets.UiTextTranslation");
     }
+
+    private static bool IsInNameof(ExpressionSyntax expression, SemanticModel model) =>
+        expression.Ancestors().OfType<InvocationExpressionSyntax>().Any(call =>
+            call.Expression is IdentifierNameSyntax { Identifier.Text: "nameof" } && model.GetSymbolInfo(call).Symbol is null);
 
     private static bool IsUiText(ITypeSymbol? type) =>
         type is { Name: "UiText" } && type.ContainingNamespace.ToDisplayString() == "NodeRunner.App.ViewModels";
