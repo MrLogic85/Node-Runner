@@ -1,5 +1,4 @@
 using NodeRunner.App.ViewModels;
-using NodeRunner.Domain;
 using NodeRunner.ML;
 
 namespace NodeRunner.App.Tests.ViewModels;
@@ -14,12 +13,7 @@ public sealed class BrainFocusPresentationViewModelTests
     private static NeuralNetwork Brain() =>
         NeuralNetwork.FromGenome([3, 2], [0.2, -1.5, 0.9, 1.0, 0.0, -0.1, 0.0, 0.0], Activation.Tanh);
 
-    private static SensorReading[] Readings() =>
-    [
-        new("Accelerometer", 1, "along", 0.5),
-        new("Piston", 1, "speed", -0.25),
-        new("Camera", 1, "centre", 1),
-    ];
+    private static double[] Readings() => [0.5, -0.25, 1];
 
     private static BrainFocusPresentationViewModel Live(params int[] disabledGenes)
     {

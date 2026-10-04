@@ -29,9 +29,7 @@ public sealed class AccelerometerSensor : IBeamSensor
 
     public int UpSign => _upSign;
 
-    public string GroupKind => "Accelerometer";
-
-    public IReadOnlyList<string> ValueNames => Accelerometer.ReadingNames;
+    public int ValueCount => Accelerometer.ChannelKeys.Count;
 
     public void Reset()
     {

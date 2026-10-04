@@ -40,9 +40,7 @@ public sealed class CameraSensor : IBeamSensor
     /// <summary>Each ray's ground hit as of the last physics step, in global space; a ray that sees nothing has none.</summary>
     public IEnumerable<Vector2> GlobalHits => _rays.Where(ray => ray.IsColliding()).Select(ray => ray.GetCollisionPoint());
 
-    public string GroupKind => "Camera";
-
-    public IReadOnlyList<string> ValueNames => CameraRays.RayNames;
+    public int ValueCount => CameraRays.ChannelKeys.Count;
 
     public void Read(double[] values, int startIndex, double dt)
     {

@@ -1,5 +1,4 @@
 using System.ComponentModel;
-using NodeRunner.Domain;
 using NodeRunner.ML;
 
 namespace NodeRunner.App.ViewModels;
@@ -55,9 +54,9 @@ public sealed class BrainFocusPresentationViewModel : INotifyPropertyChanged
     }
 
     /// <summary>Reads the live brain with this tick's inputs, in port order.</summary>
-    public void Update(NeuralNetwork? brain, IReadOnlyList<SensorReading> sensors)
+    public void Update(NeuralNetwork? brain, IReadOnlyList<double> inputs)
     {
-        ArgumentNullException.ThrowIfNull(sensors);
+        ArgumentNullException.ThrowIfNull(inputs);
 
         var inputCount = _labels.Inputs.Count;
         var outputCount = _labels.Outputs.Count;
@@ -65,13 +64,13 @@ public sealed class BrainFocusPresentationViewModel : INotifyPropertyChanged
             || brain.LayerSizes is not [var brainInputs, var brainOutputs]
             || brainInputs != inputCount
             || brainOutputs != outputCount
-            || sensors.Count != inputCount)
+            || inputs.Count != inputCount)
         {
             Clear();
             return;
         }
 
-        _activations = brain.CaptureActivations(sensors.Select(sensor => sensor.Value).ToArray());
+        _activations = brain.CaptureActivations([.. inputs]);
         var weights = brain.Weights[0];
         var connections = new List<(int, int, double)>();
         for (var output = 0; output < outputCount; output++)

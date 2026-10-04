@@ -45,9 +45,6 @@ public sealed class PistonLink
 
     public double SpeedInput => Domain.Piston.SpeedInput(Speed, Definition.MaxSpeed);
 
-    /// <summary>The force it pushed with on the last <see cref="Drive"/>; negative pulled. Read-only telemetry.</summary>
-    public double LastForce => _control.Force;
-
     private PistonControl _control;
 
     // The reduced mass of its two nodes along its line: the lightest load it moves (see Domain.Piston.Step).
