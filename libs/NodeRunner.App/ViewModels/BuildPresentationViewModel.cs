@@ -74,7 +74,9 @@ public sealed class BuildPresentationViewModel
             _build.CreationName);
 
     /// <summary>The latest generation's distance (#479); the best ever belongs to Stats.</summary>
-    public string LatestDistanceText => $"Latest distance {(_build.LatestDistance is { } distance ? Metres.FormatWithUnit(distance) : "—")}";
+    public UiText LatestDistanceText => _build.LatestDistance is { } distance
+        ? UiText.Format("Latest distance {0}", Metres.WithUnit(distance))
+        : UiText.Plain("Latest distance —");
 
     public int SelectedNodeCount => _build.SelectedNodeCount;
 

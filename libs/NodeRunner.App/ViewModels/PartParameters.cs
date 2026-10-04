@@ -1,4 +1,3 @@
-using System.Globalization;
 using NodeRunner.App.Builders;
 
 namespace NodeRunner.App.ViewModels;
@@ -14,15 +13,20 @@ public sealed record PartParameter(PartParameterId Id, bool MultiEditable, Param
 }
 
 /// <summary>
-/// How a panel slider shows a setting: its label, its range and step in shown units, and how
-/// shown units convert from and to world units, like <see cref="Metres"/>.
+/// How a panel slider shows a setting: its label, its range and step in shown units, its readout
+/// with the unit for one value ("{0} N") and for a span of values ("{0}–{1} N"), and how shown
+/// units convert from and to world units, like <see cref="Metres"/>.
 /// </summary>
 public sealed record ParameterScale(
-    string Label, SettingRange Range, string Prefix, string Format, string Unit, Func<double, double> Shown, Func<double, double> World)
+    string Label,
+    SettingRange Range,
+    int Decimals,
+    string Readout,
+    string SpanReadout,
+    Func<double, double> Shown,
+    Func<double, double> World)
 {
-    public string Text(double shown) => shown.ToString(Format, CultureInfo.InvariantCulture);
-
-    public string Readout(double shown) => $"{Prefix}{Text(shown)}{Unit}";
+    public FixedNumber Number(double shown) => new(shown, Decimals);
 }
 
 /// <summary>A slider's range and step, in the units its readout shows.</summary>
@@ -47,7 +51,7 @@ public sealed record SettingRange(double Min, double Max, double Step)
 /// <see cref="High"/> are the lowest and highest shown values at 0…1; they differ when the parts'
 /// values do. <see cref="Step"/> is one whole step at 0…1 (#711).
 /// </summary>
-public sealed record ParameterSlider(PartParameterId Id, string Label, string Readout, double Low, double High, double Step)
+public sealed record ParameterSlider(PartParameterId Id, string Label, UiText Readout, double Low, double High, double Step)
 {
     public bool ValuesDiffer => Low != High;
 }
@@ -60,13 +64,13 @@ public static class PartParameters
 {
     // A newton is a kilogram metre per second squared, so world force converts like world speed.
     public static PartParameter Strength { get; } = new(
-        PartParameterId.Strength, MultiEditable: true, new("Max strength", new(20, 400, 10), string.Empty, "0", " N", Metres.FromWorldUnits, ToWorld));
+        PartParameterId.Strength, MultiEditable: true, new("Max strength", new(20, 400, 10), 0, "{0} N", "{0}–{1} N", Metres.FromWorldUnits, ToWorld));
 
     public static PartParameter Stroke { get; } = new(
-        PartParameterId.Stroke, MultiEditable: true, new("Stroke", new(10, 50, 5), "±", "0", "%", value => value * 100, value => value / 100));
+        PartParameterId.Stroke, MultiEditable: true, new("Stroke", new(10, 50, 5), 0, "±{0}%", "±{0}–{1}%", value => value * 100, value => value / 100));
 
     public static PartParameter MaxSpeed { get; } = new(
-        PartParameterId.MaxSpeed, MultiEditable: true, new("Max speed", new(0.5, 4, 0.1), string.Empty, "0.0", " m/s", Metres.FromWorldUnits, ToWorld));
+        PartParameterId.MaxSpeed, MultiEditable: true, new("Max speed", new(0.5, 4, 0.1), 1, "{0} m/s", "{0}–{1} m/s", Metres.FromWorldUnits, ToWorld));
 
     public static PartParameter Aim { get; } = new(PartParameterId.Aim, MultiEditable: false, Slider: null);
 
@@ -86,10 +90,12 @@ public static class PartParameters
         var scale = ScaleOf(id);
         var low = values.Min(scale.Shown);
         var high = values.Max(scale.Shown);
-        var (lowText, highText) = (scale.Text(low), scale.Text(high));
-        return lowText == highText
-            ? new ParameterSlider(id, scale.Label, scale.Readout(high), scale.Range.Position(high), scale.Range.Position(high), scale.Range.PositionStep)
-            : new ParameterSlider(id, scale.Label, $"{scale.Prefix}{lowText}–{highText}{scale.Unit}", scale.Range.Position(low), scale.Range.Position(high), scale.Range.PositionStep);
+        var shownLow = scale.Number(low);
+        var shownHigh = scale.Number(high);
+        // One value when both ends read the same.
+        return shownLow == shownHigh
+            ? new ParameterSlider(id, scale.Label, UiText.Format(scale.Readout, shownHigh), scale.Range.Position(high), scale.Range.Position(high), scale.Range.PositionStep)
+            : new ParameterSlider(id, scale.Label, UiText.Format(scale.SpanReadout, shownLow, shownHigh), scale.Range.Position(low), scale.Range.Position(high), scale.Range.PositionStep);
     }
 
     /// <summary>The value of <paramref name="id"/>, in world units, at slider <paramref name="position"/>.</summary>

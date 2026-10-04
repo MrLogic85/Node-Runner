@@ -13,21 +13,21 @@ public sealed class DistanceRulerTests
 
         marks.ShouldBe(
         [
-            new RulerMark(100, false, string.Empty),
-            new RulerMark(150, true, "-1 m"),
-            new RulerMark(200, false, string.Empty),
-            new RulerMark(250, true, "0 m"),
-            new RulerMark(300, false, string.Empty),
-            new RulerMark(350, true, "1 m"),
-            new RulerMark(400, false, string.Empty),
-            new RulerMark(450, true, "2 m"),
+            new RulerMark(100, false, null),
+            new RulerMark(150, true, -1),
+            new RulerMark(200, false, null),
+            new RulerMark(250, true, 0),
+            new RulerMark(300, false, null),
+            new RulerMark(350, true, 1),
+            new RulerMark(400, false, null),
+            new RulerMark(450, true, 2),
         ]);
     }
 
     [Fact]
     public void Fill_ReplacesWhatTheListHeld()
     {
-        var marks = new List<RulerMark> { new(1, true, "stale") };
+        var marks = new List<RulerMark> { new(1, true, 7) };
 
         DistanceRuler.Fill(startX: 0, left: 1, right: 49, metresPerLabel: 1, marks);
 
@@ -41,7 +41,7 @@ public sealed class DistanceRulerTests
 
         DistanceRuler.Fill(startX: 0, left: 99_990, right: 100_010, metresPerLabel: 1, marks);
 
-        marks.ShouldBe([new RulerMark(100_000, true, "1000 m")]);
+        marks.ShouldBe([new RulerMark(100_000, true, 1000)]);
     }
 
     [Theory]
@@ -68,9 +68,15 @@ public sealed class DistanceRulerTests
 
         DistanceRuler.Fill(startX: 0, left: -200, right: 500, metresPerLabel: 2, marks);
 
-        marks.Where(mark => mark.IsMajor).Select(mark => mark.Label).ShouldBe(
-            ["-2 m", string.Empty, "0 m", string.Empty, "2 m", string.Empty, "4 m", string.Empty]);
+        marks.Where(mark => mark.IsMajor).Select(mark => mark.LabelMetre).ShouldBe(
+            [-2, null, 0, null, 2, null, 4, null]);
         marks.Count.ShouldBe(15);
+    }
+
+    [Fact]
+    public void Label_ShowsTheMetreWithItsUnit()
+    {
+        DistanceRuler.Label(-12).ShouldBe(UiText.Format("{0} m", -12L));
     }
 
     [Fact]

@@ -27,6 +27,9 @@ public partial class ArenaRuler : Node2D
 
     private const int _minLabelDigits = 2;
 
+    // DistanceRuler.Fill labels nothing farther out than this many digits of metres.
+    private const int _maxLabelDigits = 16;
+
     private readonly List<RulerMark> _marks = [];
     private VisualTheme _theme = VisualTheme.Neon;
     private double _startX;
@@ -50,6 +53,14 @@ public partial class ArenaRuler : Node2D
         set
         {
             _startX = value;
+            QueueRedraw();
+        }
+    }
+
+    public override void _Notification(int what)
+    {
+        if (what == NotificationTranslationChanged)
+        {
             QueueRedraw();
         }
     }
@@ -89,8 +100,8 @@ public partial class ArenaRuler : Node2D
     private int MetresPerLabel(Rect2 view, float screenScale)
     {
         var farthest = Math.Max(Math.Abs(view.Position.X - _startX), Math.Abs(view.End.X - _startX));
-        var digits = Math.Max(_minLabelDigits, Math.Ceiling(farthest / Metres.WorldUnitsPerMetre).ToString(CultureInfo.InvariantCulture).Length);
-        var widest = $"-{new string('0', digits)} m";
+        var digits = Math.Clamp(Math.Ceiling(farthest / Metres.WorldUnitsPerMetre).ToString(CultureInfo.InvariantCulture).Length, _minLabelDigits, _maxLabelDigits);
+        var widest = Label(-long.Parse(new string('9', digits), CultureInfo.InvariantCulture));
         var room = _theme.RulerFont.GetStringSize(widest, HorizontalAlignment.Left, -1, _theme.RulerFontSize).X + _labelGap;
         _metresPerLabel = DistanceRuler.MetresPerLabel(Metres.WorldUnitsPerMetre / screenScale, room, _metresPerLabel);
         return _metresPerLabel;
@@ -105,12 +116,13 @@ public partial class ArenaRuler : Node2D
             pen.Line(new Vector2(x, 0), new Vector2(x, length), _theme.RulerTick, _theme.RulerTickWidth * screenScale);
         }
 
-        if (mark.Label.Length == 0)
+        if (mark.LabelMetre is not { } metre)
         {
             return;
         }
 
-        var width = _theme.RulerFont.GetStringSize(mark.Label, HorizontalAlignment.Left, -1, _theme.RulerFontSize).X;
+        var label = Label(metre);
+        var width = _theme.RulerFont.GetStringSize(label, HorizontalAlignment.Left, -1, _theme.RulerFontSize).X;
         var left = x - (width * screenScale / 2);
         var room = Mathf.Min(left - view.Position.X, view.End.X - (left + (width * screenScale))) / screenScale;
         var fade = Mathf.Clamp(room / _labelFade, 0f, 1f);
@@ -124,12 +136,14 @@ public partial class ArenaRuler : Node2D
         DrawString(
             _theme.RulerFont,
             Vector2.Zero,
-            mark.Label,
+            label,
             HorizontalAlignment.Left,
             -1,
             _theme.RulerFontSize,
             _theme.RulerLabel with { A = _theme.RulerLabel.A * fade });
     }
+
+    private static string Label(long metre) => UiTextTranslation.Source(DistanceRuler.Label(metre))!();
 
     // What the camera shows, in this node's coordinates.
     private Rect2 VisibleArea() =>

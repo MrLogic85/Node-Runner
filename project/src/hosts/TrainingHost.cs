@@ -402,7 +402,7 @@ public partial class TrainingHost : Node, IRoutedScene
     // The best marker moves only when a generation's front goes past it; Show ignores the rest.
     private void OnTrainingChanged(object? sender, PropertyChangedEventArgs eventArgs) => ShowBest();
 
-    private void ShowBest() => BestMarker.Show(_trainingPresentation.BestShownDistance, _trainingPresentation.BestMarkerText);
+    private void ShowBest() => BestMarker.Show(_trainingPresentation.BestShownDistance, UiTextTranslation.Source(_trainingPresentation.BestMarkerText));
 
     private void OnGenerationCompleted()
     {

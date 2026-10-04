@@ -1,12 +1,13 @@
-using System.Globalization;
-
 namespace NodeRunner.App.ViewModels;
 
 /// <summary>One tick of the Training ruler: where it is in world units, and its label if it has one.</summary>
 /// <param name="X">The tick's position along the ground, in world units.</param>
 /// <param name="IsMajor">A whole metre: a long tick.</param>
-/// <param name="Label">The distance from the start, such as "3 m", on every labelled metre; otherwise empty.</param>
-public readonly record struct RulerMark(double X, bool IsMajor, string Label);
+/// <param name="LabelMetre">
+/// The metres from the start on every labelled metre, shown as <see cref="DistanceRuler.Label"/>;
+/// otherwise null. A number, not text, which the ruler puts in the player's language as it draws (#756).
+/// </param>
+public readonly record struct RulerMark(double X, bool IsMajor, long? LabelMetre);
 
 /// <summary>
 /// The distance marks along the Training ground (#668): a long tick every metre and a minor one
@@ -41,6 +42,9 @@ public static class DistanceRuler
     /// where the step changes does not make labels flicker in and out.
     /// </summary>
     private const double _closerLabelRoom = 1.2;
+
+    /// <summary>A labelled metre's text, such as "3 m", or "-1 m" behind the start.</summary>
+    public static UiText Label(long metre) => UiText.Format("{0} m", metre);
 
     /// <summary>
     /// The fewest metres between labels, 1, 2, 5, 10, 20, …, that leaves <paramref name="labelRoom"/>
@@ -103,10 +107,8 @@ public static class DistanceRuler
         {
             var isMajor = tick % _ticksPerMetre == 0;
             var metre = tick / _ticksPerMetre;
-            var label = isMajor && metre % metresPerLabel == 0
-                ? string.Create(CultureInfo.InvariantCulture, $"{metre} m")
-                : string.Empty;
-            marks.Add(new RulerMark(startX + (tick * TickSpacing), isMajor, label));
+            var labelMetre = isMajor && metre % metresPerLabel == 0 ? metre : (long?)null;
+            marks.Add(new RulerMark(startX + (tick * TickSpacing), isMajor, labelMetre));
         }
     }
 }

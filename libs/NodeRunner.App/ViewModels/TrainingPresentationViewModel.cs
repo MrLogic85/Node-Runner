@@ -58,14 +58,12 @@ public sealed class TrainingPresentationViewModel : INotifyPropertyChanged, IDis
     /// The generation racing now, counted from 1 like <see cref="BestGeneration"/> (#387), or the
     /// last finished one when none is racing.
     /// </summary>
-    public string GenerationText => $"Generation {(_isTrialActive ? _generation + 1 : _generation)}";
+    public UiText GenerationText => UiText.Format("Generation {0}", _isTrialActive ? _generation + 1 : _generation);
 
     /// <summary>The best marker's flag (#388), such as "Best 4.2 m", or null until there is a best.</summary>
-    public string? BestMarkerText => double.IsFinite(_bestShownDistance)
-        ? $"Best {Metres.FormatWithUnit(_bestShownDistance)}"
+    public UiText? BestMarkerText => double.IsFinite(_bestShownDistance)
+        ? UiText.Format("Best {0}", Metres.WithUnit(_bestShownDistance))
         : null;
-
-    public string MeanFitnessText => $"Mean: {Metres.FormatWithUnit(_meanFitness)}";
 
     /// <summary>The followed shadow's 1-based number, or 0 without a training source.</summary>
     public int FollowedShadow => _source is null ? 0 : _source.FollowedShadow + 1;

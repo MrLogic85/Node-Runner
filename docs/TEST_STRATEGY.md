@@ -134,8 +134,9 @@ swap restyles everything:
   notifications outlive scene changes (#472).
 - UI text is translated once (`UiTextTranslationTests`, #682). Only
   `UiTextTranslation` takes a `UiText`, and it translates with
-  `TranslationServer.Translate`/`TranslatePlural`; plural selection itself is
-  checked on device (#751). The creation-name labels turn their own auto-translation off;
+  `TranslationServer.Translate`/`TranslatePlural`, and `FormatNumber` for
+  digits; plural selection and digits themselves are checked on device (#751,
+  #756). The creation-name labels turn their own auto-translation off;
   part and link names follow in #752.
 
 **2. Screens reuse the library.** Every canonical component maps to one

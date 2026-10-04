@@ -159,7 +159,7 @@ public sealed class BuildPresentationViewModelTests
             PairCreature(),
             TestTraining.State(3, bestDistance: 400, new TrainingRunDef(250, 1, 0, MapIds.Flat, frontDistance: 270))));
 
-        new BuildPresentationViewModel(build).LatestDistanceText.ShouldBe("Latest distance 2.7 m");
+        new BuildPresentationViewModel(build).LatestDistanceText.ShouldBe(UiText.Format("Latest distance {0}", UiText.Format("{0} m", new FixedNumber(2.7, 1))));
     }
 
     [Theory]
@@ -291,7 +291,12 @@ public sealed class BuildPresentationViewModelTests
         var part = new BuildPresentationViewModel(build).SinglePart!;
 
         part.Note.ShouldBe(BuildPresentationViewModel.PistonNote);
-        part.Settings.Select(slider => slider.Readout).ShouldBe(["250 N", "±30%", "2.0 m/s"]);
+        part.Settings.Select(slider => slider.Readout).ShouldBe(
+        [
+            UiText.Format("{0} N", new FixedNumber(250, 0)),
+            UiText.Format("±{0}%", new FixedNumber(30, 0)),
+            UiText.Format("{0} m/s", new FixedNumber(2, 1)),
+        ]);
         part.Settings.ShouldAllBe(slider => !slider.ValuesDiffer);
     }
 
@@ -384,11 +389,11 @@ public sealed class BuildPresentationViewModelTests
         selection.Settings.Select(slider => slider.Id).ShouldBe(
             [PartParameterId.Strength, PartParameterId.Stroke, PartParameterId.MaxSpeed]);
         var strength = selection.Settings[0];
-        strength.Readout.ShouldBe("100–250 N");
+        strength.Readout.ShouldBe(UiText.Format("{0}–{1} N", new FixedNumber(100, 0), new FixedNumber(250, 0)));
         strength.ValuesDiffer.ShouldBeTrue();
         strength.Low.ShouldBe(PartParameters.Strength.Slider!.Range.Position(100));
         strength.High.ShouldBe(PartParameters.Strength.Slider!.Range.Position(250));
-        selection.Settings[1].ShouldBe(new ParameterSlider(PartParameterId.Stroke, "Stroke", "±30%", 0.5, 0.5, 5.0 / 40));
+        selection.Settings[1].ShouldBe(new ParameterSlider(PartParameterId.Stroke, "Stroke", UiText.Format("±{0}%", new FixedNumber(30, 0)), 0.5, 0.5, 5.0 / 40));
     }
 
     [Fact]

@@ -20,9 +20,8 @@ public sealed class TrainingPresentationViewModelTests
         presentation.BestGeneration.ShouldBe(4);
         presentation.IsTrialActive.ShouldBeTrue();
         presentation.CompletedFitness.ShouldBe([10.1, 11.2]);
-        presentation.GenerationText.ShouldBe("Generation 6");
-        presentation.BestMarkerText.ShouldBe("Best 13.1 m");
-        presentation.MeanFitnessText.ShouldBe("Mean: 8.4 m");
+        presentation.GenerationText.ShouldBe(UiText.Format("Generation {0}", 6));
+        presentation.BestMarkerText.ShouldBe(UiText.Format("Best {0}", UiText.Format("{0} m", new FixedNumber(13.1, 1))));
     }
 
     [Fact]
@@ -33,7 +32,7 @@ public sealed class TrainingPresentationViewModelTests
         var presentation = TrainingPresentationViewModel.Saved(training, MapIds.Flat);
 
         presentation.BestShownDistance.ShouldBe(420);
-        presentation.BestMarkerText.ShouldBe("Best 4.2 m");
+        presentation.BestMarkerText.ShouldBe(UiText.Format("Best {0}", UiText.Format("{0} m", new FixedNumber(4.2, 1))));
     }
 
     [Theory]
@@ -56,9 +55,8 @@ public sealed class TrainingPresentationViewModelTests
 
         presentation.Update(5, 8, double.NegativeInfinity, double.NaN, 0, 0, false, []);
 
-        presentation.GenerationText.ShouldBe("Generation 5");
+        presentation.GenerationText.ShouldBe(UiText.Format("Generation {0}", 5));
         presentation.BestMarkerText.ShouldBeNull();
-        presentation.MeanFitnessText.ShouldBe("Mean: 0.0 m");
     }
 
     [Fact]
@@ -117,14 +115,14 @@ public sealed class TrainingPresentationViewModelTests
         var presentation = new TrainingPresentationViewModel(source);
 
         presentation.BestGeneration.ShouldBe(7);
-        presentation.BestMarkerText.ShouldBe("Best 21.9 m");
+        presentation.BestMarkerText.ShouldBe(UiText.Format("Best {0}", UiText.Format("{0} m", new FixedNumber(21.9, 1))));
 
         source.Generation = 8;
         source.RaiseProgressChanged();
 
         presentation.Generation.ShouldBe(8);
         presentation.BestGeneration.ShouldBe(7);
-        presentation.BestMarkerText.ShouldBe("Best 21.9 m");
+        presentation.BestMarkerText.ShouldBe(UiText.Format("Best {0}", UiText.Format("{0} m", new FixedNumber(21.9, 1))));
     }
 
     [Fact]

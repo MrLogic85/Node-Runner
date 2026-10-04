@@ -8,7 +8,8 @@ namespace NodeRunner.Ui.Widgets;
 /// <summary>
 /// Turns a view-model's <see cref="UiText"/> into the player's language with Godot's own
 /// translation (#682): <c>Translate</c>, or <c>TranslatePlural</c> to pick the plural form, then
-/// fills in the arguments. Numbers keep the invariant format they had before. Not
+/// fills in the arguments. Numbers are written with a point and Western digits, then
+/// <c>FormatNumber</c> swaps the digits for the language's own, as Godot's number fields do. Not
 /// <c>Tr</c>/<c>TrN</c>: they follow the node's own auto-translate mode, which is off on a
 /// component part that shows a text source, so they would return the English unchanged.
 /// </summary>
@@ -32,7 +33,7 @@ public static class UiTextTranslation
         var template = text.Plural is { } plural
             ? TranslationServer.TranslatePlural(text.Message, plural, text.Count, text.Context ?? string.Empty)
             : TranslationServer.Translate(text.Message, text.Context ?? string.Empty);
-        var args = text.Args.Select(arg => arg is UiText nested ? InLanguage(nested) : arg).ToArray();
+        var args = text.Args.Select(Shown).ToArray();
         try
         {
             return string.Format(CultureInfo.InvariantCulture, template, args);
@@ -46,4 +47,14 @@ public static class UiTextTranslation
             return string.Format(CultureInfo.InvariantCulture, english, args);
         }
     }
+
+    private static object Shown(object arg) => arg switch
+    {
+        UiText nested => InLanguage(nested),
+        FixedNumber number => Digits(number.Value.ToString($"F{number.Decimals}", CultureInfo.InvariantCulture)),
+        int or long => Digits(((IFormattable)arg).ToString(null, CultureInfo.InvariantCulture)),
+        _ => arg,
+    };
+
+    private static string Digits(string number) => TranslationServer.FormatNumber(number, TranslationServer.GetLocale());
 }

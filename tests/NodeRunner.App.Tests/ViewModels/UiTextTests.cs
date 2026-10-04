@@ -91,4 +91,11 @@ public sealed class UiTextTests
         Should.Throw<ArgumentException>(() => UiText.Plain("Delete").InContext(string.Empty));
         Should.Throw<ArgumentException>(() => UiText.Format("{0} m", 1.5));
     }
+
+    [Fact]
+    public void Number_IsTheNumberAlone()
+    {
+        UiText.Number(8).ShouldBe(UiText.Format("{0}", 8));
+        UiText.Number(new FixedNumber(2.5, 1)).Args.ShouldBe([new FixedNumber(2.5, 1)]);
+    }
 }

@@ -189,7 +189,7 @@ public partial class TrainingScreen : Control
         strip.Presentation = _training;
         if (_training is not null)
         {
-            generation.Text = _training.GenerationText;
+            generation.ShowText(_training.GenerationText);
         }
     }
 
@@ -206,6 +206,6 @@ public partial class TrainingScreen : Control
             GetNode<UiStageCard>("%OutputsStage").NoteSource = UiTextTranslation.Source(signalFlow.OutputsNote);
         }
 
-        GetNode<UiStageCard>("%DistanceStage").Note = signalFlow.DistanceNote;
+        GetNode<UiStageCard>("%DistanceStage").NoteSource = UiTextTranslation.Source(signalFlow.DistanceNote);
     }
 }

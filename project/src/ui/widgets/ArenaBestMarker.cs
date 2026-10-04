@@ -24,6 +24,7 @@ public partial class ArenaBestMarker : Node2D
     private double _startX;
     private double _distance = double.NegativeInfinity;
     private string? _text;
+    private Func<string>? _textSource;
     private Rect2 _drawnView;
 
     public VisualTheme Theme
@@ -54,17 +55,31 @@ public partial class ArenaBestMarker : Node2D
         }
     }
 
-    /// <summary>Marks <paramref name="distance"/> world units past the start; a null text hides it.</summary>
-    public void Show(double distance, string? text)
+    /// <summary>
+    /// Marks <paramref name="distance"/> world units past the start with the flag's text, asked
+    /// again when the language changes; a null text hides it.
+    /// </summary>
+    public void Show(double distance, Func<string>? text)
     {
-        if (distance.Equals(_distance) && text == _text)
+        _textSource = text;
+        var shown = text?.Invoke();
+        if (distance.Equals(_distance) && shown == _text)
         {
             return;
         }
 
         _distance = distance;
-        _text = text;
+        _text = shown;
         QueueRedraw();
+    }
+
+    public override void _Notification(int what)
+    {
+        if (what == NotificationTranslationChanged && _textSource is not null)
+        {
+            _text = _textSource();
+            QueueRedraw();
+        }
     }
 
     public override void _Process(double delta)
