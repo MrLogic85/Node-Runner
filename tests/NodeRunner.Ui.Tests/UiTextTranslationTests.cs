@@ -1,0 +1,97 @@
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
+
+namespace NodeRunner.Ui.Tests;
+
+/// <summary>
+/// UI text crosses from App as <c>UiText</c> and is translated by Godot in one place (#682), and
+/// text the player wrote is never translated.
+/// </summary>
+public sealed class UiTextTranslationTests
+{
+    private const string _translation = "ui/widgets/UiTextTranslation.cs";
+
+    /// <summary>Labels that show a name the player gave, so a creation named "Train" stays "Train".</summary>
+    [Theory]
+    [InlineData("widgets/CreationCard.tscn", "Name")]
+    [InlineData("screens/TrainingScreen.tscn", "CreationName")]
+    public void Player_names_are_not_auto_translated(string scene, string node) =>
+        SceneNodes.InScene(scene).Single(entry => entry.Name == node).Node.Body
+            .ShouldContain("\nauto_translate_mode = 2", customMessage: "AutoTranslateMode.Disabled on the label itself.");
+
+    [Fact]
+    public void Ui_text_is_shown_only_through_ShowText()
+    {
+        var compilation = CSharpSources.ProjectCompilation;
+        var violations = CSharpSources.Project
+            .Where(source => source.Path != _translation)
+            .SelectMany(source =>
+            {
+                var model = compilation.GetSemanticModel(source.Tree);
+                return source.Find(node => BypassesShowText(node, model));
+            })
+            .ToList();
+
+        violations.ShouldBeEmpty(
+            "Hand a UiText only to UiTextTranslation.ShowText, which translates it with Tr/TrN and keeps it for the next language change.");
+    }
+
+    [Fact]
+    public void UiTextTranslation_translates_with_Tr_and_TrN()
+    {
+        var source = CSharpSources.Project.Single(source => source.Path == _translation);
+        var model = CSharpSources.ProjectCompilation.GetSemanticModel(source.Tree);
+
+        var calls = source.Tree.GetRoot().DescendantNodes().OfType<InvocationExpressionSyntax>()
+            .Select(call => CSharpSources.Symbol(model, call))
+            .Where(symbol => symbol?.ContainingType.ToDisplayString() == "Godot.GodotObject")
+            .Select(symbol => symbol!.Name)
+            .ToHashSet();
+
+        calls.ShouldBe(["Tr", "TrN"], ignoreOrder: true);
+    }
+
+    [Theory]
+    [InlineData("string M(NodeRunner.App.ViewModels.UiText text) => text.Message;")]
+    [InlineData("int M(NodeRunner.App.ViewModels.UiText text) => text.Args.Count;")]
+    [InlineData("string M(NodeRunner.App.ViewModels.UiText text) => text.ToString();")]
+    [InlineData("string M(NodeRunner.App.ViewModels.UiText text) => $\"{text}\";")]
+    [InlineData("string M(NodeRunner.App.ViewModels.UiText text) => \"Best \" + text;")]
+    [InlineData("object M(NodeRunner.App.ViewModels.UiText text) => text;")]
+    public void Bypassing_ShowText_is_flagged(string member) =>
+        Bypasses(member).ShouldHaveSingleItem();
+
+    [Theory]
+    [InlineData("void M(UiLabel label, NodeRunner.App.ViewModels.UiText text) => NodeRunner.Ui.Widgets.UiTextTranslation.ShowText(label, text);")]
+    [InlineData("void M(UiLabel label, NodeRunner.App.ViewModels.CreationCardTraining training) => NodeRunner.Ui.Widgets.UiTextTranslation.ShowText(label, training.GenerationsText);")]
+    [InlineData("void M(UiLabel label, NodeRunner.App.ViewModels.UiText? text) => NodeRunner.Ui.Widgets.UiTextTranslation.ShowText(label, text ?? NodeRunner.App.ViewModels.UiText.Plain(\"Delete\"));")]
+    public void Showing_ui_text_passes(string member) =>
+        Bypasses(member).ShouldBeEmpty();
+
+    private static IEnumerable<string> Bypasses(string member)
+    {
+        var snippet = CSharpSources.Snippet(member);
+        var model = CSharpSources.Compile([.. CSharpSources.Project, snippet]).GetSemanticModel(snippet.Tree);
+        return snippet.Find(node => BypassesShowText(node, model));
+    }
+
+    // The outermost expression of type UiText must be an argument to ShowText; type names and the
+    // inner parts of a larger UiText expression (a member access, ?? or ?:) are not counted.
+    private static bool BypassesShowText(SyntaxNode node, SemanticModel model)
+    {
+        if (node is not ExpressionSyntax expression
+            || !IsUiText(model.GetTypeInfo(expression).Type)
+            || CSharpSources.Symbol(model, expression) is ITypeSymbol
+            || expression.Parent is ExpressionSyntax parent && IsUiText(model.GetTypeInfo(parent).Type))
+        {
+            return false;
+        }
+
+        return !(expression.Parent is ArgumentSyntax { Parent.Parent: InvocationExpressionSyntax call }
+            && CSharpSources.Symbol(model, call) is IMethodSymbol method
+            && (method.ReducedFrom ?? method) is { Name: "ShowText", ContainingType.Name: "UiTextTranslation" });
+    }
+
+    private static bool IsUiText(ITypeSymbol? type) =>
+        type is { Name: "UiText" } && type.ContainingNamespace.ToDisplayString() == "NodeRunner.App.ViewModels";
+}

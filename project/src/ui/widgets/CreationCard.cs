@@ -126,7 +126,7 @@ public partial class CreationCard : MarginContainer
 
         GetNode<CreatureThumbnail>("%Thumbnail").Creature = creation.Creature;
         var fallback = GetNode<UiLabel>("%ThumbnailFallback");
-        fallback.Text = creation.ThumbnailText;
+        fallback.ShowText(creation.ThumbnailText);
         fallback.Visible = creation.Creature.Nodes.Count == 0;
         GetNode<UiLabel>("%Name").Text = creation.Name;
         var summary = GetNode<UiLabel>("%Summary");
@@ -153,7 +153,7 @@ public partial class CreationCard : MarginContainer
         GetNode<UiLabel>("%TopSpeed").Text = training.TopSpeedText;
         GetNode<UiLabel>("%Elevation").Text = training.ElevationText;
         GetNode<UiIcon>("%Map").IconId = MapIcon(training.MapId);
-        GetNode<UiLabel>("%Generations").Text = training.GenerationsText;
+        GetNode<UiLabel>("%Generations").ShowText(training.GenerationsText);
     }
 
     private static UiIconId MapIcon(string mapId) => mapId switch

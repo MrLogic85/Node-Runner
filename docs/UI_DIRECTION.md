@@ -612,6 +612,27 @@ for it still lays out. A screen whose content still needs more room
 keeps its frame and toolbar on screen and clips the content (see "Screen
 size and safe area").
 
+## Text and translation
+
+Text is translated once, by Godot (#682; `docs/ARCHITECTURE.md` → "UI text
+and translation"):
+
+- **Text written in a scene** is English and doubles as its translation key.
+  The Control translates it itself (`auto_translate_mode` Inherit).
+- **Text a view-model builds** arrives as a `UiText`. Show it with
+  `UiTextTranslation.ShowText(label, text)`: it gives the `UiLabel` a
+  `TextSource` that translates the text with `Tr`/`TrN`, and the label asks
+  it again when the language changes. Meanwhile the label's own
+  auto-translation is off, so the text is not translated a second time.
+  Other components get a `ShowText` when they first need one. App text
+  still built as English moves over in #751 and #752.
+- **Text the player wrote**, such as a creation's name, is never
+  translated. Its label sets `auto_translate_mode = Disabled` on itself
+  only, so the static text around it still translates. Part and link
+  names still share leaves with App text and are fixed in #752.
+- Counted text is one whole sentence per plural form, and Godot picks the
+  form for the language. Never add an "s" in code.
+
 ## Press feedback
 
 A control shows it is held with one flat tint, `UiPressFeedback`
@@ -804,7 +825,7 @@ content as well as the native button visuals.
 All button text, including the neuron stepper's plus/minus signs, is authored
 in the native `Text` property, with the layout's normal typography and padding.
 As for UiLabel, `Text` is stored exactly as written (it is also the
-translation key); an internal UiLabel renders it with the `Label` (row) or
+translation key, except on a label showing a `UiText`); an internal UiLabel renders it with the `Label` (row) or
 `Overline` (stacked) typography, so letter case follows
 `UiTokens.IsUppercase` and never changes the stored text. Godot's Button has
 no `uppercase`, so the native text is kept but made transparent by the
