@@ -3,7 +3,7 @@ namespace NodeRunner.Domain;
 /// <summary>
 /// A Spring (#453): a passive link between two nodes that pulls them back toward their distance
 /// in the drawing and damps how fast that distance changes. It limits movement without holding
-/// it rigid, has no brain ports and draws no power. See <see cref="Spring"/> and
+/// it rigid, has no brain ports and draws no power. See <c>Spring</c> in NodeRunner.Mechanics and
 /// docs/CREATURE_MODEL.md.
 /// </summary>
 public sealed record SpringDef
@@ -73,7 +73,7 @@ public sealed record SpringDef
 
     /// <summary>
     /// How much it damps, as a share of the damping that stops its two nodes without a bounce:
-    /// 0 bounces on, 1 settles without bouncing (<see cref="Spring.DampingCoefficient"/>).
+    /// 0 bounces on, 1 settles without bouncing (<c>Spring.DampingCoefficient</c> in NodeRunner.Mechanics).
     /// </summary>
     public double Damping { get; }
 

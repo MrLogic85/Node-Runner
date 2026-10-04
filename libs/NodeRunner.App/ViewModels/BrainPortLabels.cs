@@ -45,10 +45,10 @@ public sealed record BrainPortLabels(IReadOnlyList<UiText> Inputs, IReadOnlyList
 
     private static UiText PistonChannel(string channel, UiText name) => channel switch
     {
-        Piston.LengthChannel => UiText.Format("{0}:\u00A0length", name),
-        Piston.SpeedChannel => UiText.Format("{0}:\u00A0speed", name),
-        Piston.PositionChannel => UiText.Format("{0}:\u00A0position", name),
-        Piston.StrengthChannel => UiText.Format("{0}:\u00A0strength", name),
+        BrainPorts.PistonLengthChannel => UiText.Format("{0}:\u00A0length", name),
+        BrainPorts.PistonSpeedChannel => UiText.Format("{0}:\u00A0speed", name),
+        BrainPorts.PistonPositionChannel => UiText.Format("{0}:\u00A0position", name),
+        BrainPorts.PistonStrengthChannel => UiText.Format("{0}:\u00A0strength", name),
         _ => throw new InvalidOperationException($"No label for Piston channel {channel}."),
     };
 }

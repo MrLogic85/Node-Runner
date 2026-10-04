@@ -24,7 +24,7 @@ public partial class SensorPart : PartVisual
         set => Change(ref _kind, value);
     }
 
-    /// <summary>Where an Accelerometer's weight sits (<see cref="Accelerometer.WeightOffset"/>).</summary>
+    /// <summary>Where an Accelerometer's weight sits (Mechanics <c>Accelerometer.WeightOffset</c>).</summary>
     public Vector2D WeightOffset
     {
         get => _weightOffset;

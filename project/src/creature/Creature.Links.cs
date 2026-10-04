@@ -28,8 +28,8 @@ public partial class Creature
                 Link = _pistons[i],
                 RadiusA = ToGodotFloat(definition.Nodes[indexA].Radius, nameof(NodeDef.Radius)),
                 RadiusB = ToGodotFloat(definition.Nodes[indexB].Radius, nameof(NodeDef.Radius)),
-                Shortest = (float)Domain.Piston.ShortestLength(_pistons[i].BuiltLength, piston.Stroke),
-                Longest = (float)Domain.Piston.LongestLength(_pistons[i].BuiltLength, piston.Stroke),
+                Shortest = (float)Mechanics.Piston.ShortestLength(_pistons[i].BuiltLength, piston.Stroke),
+                Longest = (float)Mechanics.Piston.LongestLength(_pistons[i].BuiltLength, piston.Stroke),
             };
             AddChild(visual);
             _pistonVisuals[i] = visual;
@@ -49,8 +49,8 @@ public partial class Creature
         var link = _pistons[index];
         var a = link.NodeA.Position;
         var axis = (link.NodeB.Position - a).Normalized();
-        var shortest = (float)Domain.Piston.ShortestLength(link.BuiltLength, link.Definition.Stroke);
-        var longest = (float)Domain.Piston.LongestLength(link.BuiltLength, link.Definition.Stroke);
+        var shortest = (float)Mechanics.Piston.ShortestLength(link.BuiltLength, link.Definition.Stroke);
+        var longest = (float)Mechanics.Piston.LongestLength(link.BuiltLength, link.Definition.Stroke);
         var rotation = axis.Angle();
 
         var cylinder = new RigidBody2D
@@ -119,7 +119,7 @@ public partial class Creature
                 Length = built,
                 RestLength = built,
                 Stiffness = (float)spring.Stiffness,
-                Damping = (float)(Domain.Spring.DampingCoefficient(spring, nodeA.Mass, nodeB.Mass) / dampingPasses),
+                Damping = (float)(Mechanics.Spring.DampingCoefficient(spring, nodeA.Mass, nodeB.Mass) / dampingPasses),
             };
             AddChild(joint);
             joint.NodeA = joint.GetPathTo(nodeA);

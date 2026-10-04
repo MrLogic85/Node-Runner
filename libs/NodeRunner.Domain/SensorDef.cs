@@ -46,8 +46,8 @@ public sealed record SensorDef
 
     /// <summary>
     /// A Camera's aim (#594): the angle of its centre ray from its beam's direction, in radians
-    /// (see <see cref="CameraRays"/>). A <see cref="CreatureDef"/> gives a Camera without one
-    /// <see cref="CameraRays.DefaultAim"/> from its beam's built pose; other kinds have none.
+    /// (the ray math is <c>CameraRays</c> in NodeRunner.Mechanics). A <see cref="CreatureDef"/> gives a
+    /// Camera without one <see cref="DefaultAim"/> from its beam's built pose; other kinds have none.
     /// </summary>
     public double? Aim { get; }
 
@@ -56,4 +56,11 @@ public sealed record SensorDef
     public SensorDef WithName(string? name) => new(Id, BeamId, Kind, name, Aim);
 
     public SensorDef WithAim(double aim) => new(Id, BeamId, Kind, Name, aim);
+
+    /// <summary>
+    /// A new Camera's aim (#622): level, at the world's forward (+x), on the beam from
+    /// <paramref name="nodeA"/> to <paramref name="nodeB"/> as built, in −π..π.
+    /// </summary>
+    public static double DefaultAim(Vector2D nodeA, Vector2D nodeB) =>
+        nodeA == nodeB ? 0 : Math.IEEERemainder(-Math.Atan2(nodeB.Y - nodeA.Y, nodeB.X - nodeA.X), 2 * Math.PI);
 }

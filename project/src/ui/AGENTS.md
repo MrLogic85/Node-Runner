@@ -64,8 +64,9 @@ unchanged, it belongs in `lib/`. If it embeds project vocabulary
 
 ### `widgets/`
 
-- Domain-aware. May depend on `NodeRunner.App` (view-models) and
-  `NodeRunner.Domain`.
+- Domain-aware. May depend on `NodeRunner.App` (view-models),
+  `NodeRunner.Domain` and `NodeRunner.Mechanics` (to draw a part as the sim
+  moves it).
 - Must not depend on `project/src/sim/` directly.
 - Reusable across screens.
 

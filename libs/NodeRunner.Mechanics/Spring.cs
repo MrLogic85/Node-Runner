@@ -1,4 +1,6 @@
-namespace NodeRunner.Domain;
+using NodeRunner.Domain;
+
+namespace NodeRunner.Mechanics;
 
 /// <summary>
 /// The physics numbers of a <see cref="SpringDef"/> (#453), shared by the sim and tests. The sim

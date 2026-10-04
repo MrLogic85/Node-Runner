@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
-    <RootNamespace>NodeRunner.Arch.Tests</RootNamespace>
+    <RootNamespace>NodeRunner.Mechanics.Tests</RootNamespace>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
   </PropertyGroup>
@@ -11,20 +11,15 @@
     <PackageReference Include="xunit" />
     <PackageReference Include="xunit.runner.visualstudio" />
     <PackageReference Include="Shouldly" />
-    <PackageReference Include="NetArchTest.Rules" />
     <PackageReference Include="coverlet.collector" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\libs\NodeRunner.Domain\NodeRunner.Domain.csproj" />
     <ProjectReference Include="..\..\libs\NodeRunner.Mechanics\NodeRunner.Mechanics.csproj" />
-    <ProjectReference Include="..\..\libs\NodeRunner.ML\NodeRunner.ML.csproj" />
-    <ProjectReference Include="..\..\libs\NodeRunner.App\NodeRunner.App.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <Using Include="Xunit" />
     <Using Include="Shouldly" />
-    <Using Include="NetArchTest.Rules" />
   </ItemGroup>
 </Project>

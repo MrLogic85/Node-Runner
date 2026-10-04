@@ -55,7 +55,7 @@ of the project before starting to work.
 `docs/ARCHITECTURE.md` owns the detailed layer map and dependency graph.
 Conceptually:
 
-- `libs/` contains the engine-independent Domain, ML, and App layers.
+- `libs/` contains the engine-independent Domain, Mechanics, ML, and App layers.
 - `project/` is the Godot host: scenes, simulation, composition, and UI.
 - `tests/` mirrors the pure-C# layers and enforces architecture boundaries.
 - `docs/` owns durable design, process, roadmap, and teaching material.

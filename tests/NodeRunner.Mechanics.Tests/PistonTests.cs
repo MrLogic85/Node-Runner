@@ -1,4 +1,6 @@
-namespace NodeRunner.Domain.Tests;
+using NodeRunner.Domain;
+
+namespace NodeRunner.Mechanics.Tests;
 
 public sealed class PistonTests
 {
@@ -45,14 +47,14 @@ public sealed class PistonTests
     public void Step_NeverUsesMoreThanTheChosenShareOfItsStrength()
     {
         Step(length: _built, speed: -1000, position: 1, strength: 0, pairMass: 100).Force
-            .ShouldBe(PortSignals.StrengthFromOutput(0, _piston.Strength), tolerance: 1e-9);
+            .ShouldBe(OutputSignals.StrengthFromOutput(0, _piston.Strength), tolerance: 1e-9);
         Step(length: _built, speed: -1000, position: 1, strength: 1, pairMass: 100).Force.ShouldBe(_piston.Strength);
     }
 
     [Fact]
     public void Step_PastTheEndOfItsStroke_StillUsesOnlyTheChosenShare_TheEndStopsAreNotPowered()
     {
-        var share = PortSignals.StrengthFromOutput(0, _piston.Strength);
+        var share = OutputSignals.StrengthFromOutput(0, _piston.Strength);
         Step(length: 150, speed: 1000, position: 1, strength: 0, pairMass: 100).Force.ShouldBe(-share, tolerance: 1e-9);
         Step(length: 50, speed: -1000, position: -1, strength: 0, pairMass: 100).Force.ShouldBe(share, tolerance: 1e-9);
     }

@@ -104,7 +104,7 @@ public sealed class CreatureBuilderTests
 
         builder.AddSensor(beam, SensorKind.Camera, out _, out _);
 
-        builder.Sensors[0].Aim.ShouldBe(CameraRays.DefaultAim(new Vector2D(0, 0), new Vector2D(0, 100)));
+        builder.Sensors[0].Aim.ShouldBe(SensorDef.DefaultAim(new Vector2D(0, 0), new Vector2D(0, 100)));
     }
 
     [Fact]

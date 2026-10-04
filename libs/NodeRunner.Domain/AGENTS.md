@@ -8,33 +8,28 @@ Pure C# data types. The vocabulary of the app, no behavior beyond invariants.
 - **No I/O.** No `System.IO`, no `System.Net`, no environment access.
 - **No behavior beyond data validation.** Records + enums + constructor
   invariants. Business logic lives elsewhere.
-  - **One deliberate exception:** `RigidTriangles` is a pure, stateless static
-    class that finds the closed, rigid triangles of beams in a creature (see
-    `docs/CREATURE_MODEL.md`). It is allowed here because Build and any
-    future tooling need the exact same answer, and Domain is the only layer both can depend on
-    without violating `docs/ARCHITECTURE.md`'s layer graph. Any new class
-    like it must stay side-effect-free and take/return only Domain types.
-    `Accelerometer` is the second: the proof-mass step, reading and sensor
-    frame, shared by the sim and the visual (#576) and unit-tested here.
-    `CameraRays` is the third: the camera's as-built ray targets and
-    reading, shared by the sim and the sensor picture.
-    `SensorPicture` is the fourth: the area a tap on a sensor's picture
-    hits, shared by Build's canvas and gestures and by the
-    creature in Training (#576).
-    `BrainPorts` is the fifth: the brain ports every part declares and
-    their order (#534), shared by the sim, Build and the brain.
-    `PortSignals` is the sixth: each output signal's activation, passive
-    start and position/strength mapping (#535), shared by the brain and the
-    sim.
-    `Piston` is the seventh: a Piston's port values and force (#451), shared
-    by the sim and tests.
-    `MapGround` is the eighth: a map's ground height at x (#443), shared by
-    the arena and, later, map previews.
-    `SelectionMarks` is the ninth: the one selection gap, a joint's halo
-    and touch reach (#710), shared by Build's gestures and the drawing in
-    Build and Training.
-    `Spring` is the tenth: a Spring's damping coefficient from its share of
-    critical (#453), shared by the sim and tests.
+  - **Deliberate exceptions:** a few pure, stateless static classes that
+    take and return only Domain types. This is the one list of them.
+    These stay because a layer that cannot use `NodeRunner.Mechanics`
+    needs them (`docs/ARCHITECTURE.md`):
+    `BrainPorts` — the brain ports every part declares, their order and
+    channel keys (#534), shared by the sim, Build and the brain (ML).
+    `PortSignals` — each output signal's activation and passive start
+    (#535), the brain's half of the port contract (ML).
+    `SensorDef.DefaultAim` — a new Camera's aim, which `CreatureDef` fills
+    in at construction (#622).
+    These are not part physics and stayed when the physics moved out
+    (owner's scope decision on #596); move them only with a new issue:
+    `SensorPicture` — the area a tap on a sensor's picture hits, shared by
+    Build's canvas and gestures and the creature in Training (#576).
+    `SelectionMarks` — the one selection gap, a joint's halo and touch
+    reach (#710), shared by Build's gestures and the drawing in Build and
+    Training.
+    `MapGround` — a map's ground height at x (#443), shared by the arena
+    and, later, map previews.
+  - **Part physics does not live here.** The sums a part runs each step
+    (accelerometer, camera rays, piston, spring, rigid triangles) live in
+    `libs/NodeRunner.Mechanics` (#596). Put new physics there.
 - **Serialisable via `System.Text.Json` without custom converters.** Saved
   records are the save shape: changing one follows `docs/SAVE_FORMAT.md`.
 
@@ -42,19 +37,12 @@ Pure C# data types. The vocabulary of the app, no behavior beyond invariants.
 
 - `CreatureDef`, `NodeDef`, `BeamDef`, `SensorDef`, `SensorKind`,
   `PistonDef`, `SpringDef` — anatomy
-- `Piston` — a Piston's port values and force (see the exception above)
-- `Spring` — a Spring's damping coefficient (see the exception above)
-- `Accelerometer`, `ProofMass` — the accelerometer's pure math (see the
-  exception above)
-- `CameraRays` — the camera's pure math (see the exception above)
-- `SensorPicture` — a sensor picture's tap area (see the exception above)
+- `SensorPicture` — a sensor picture's tap area (see the exceptions above)
 - `SelectionMarks` — the selection gap, joint halo and touch reach (see the
-  exception above)
-- `RigidTriangles`, `RigidTriangleDef` — the closed beam triangles of a
-  `CreatureDef` (see the exception above)
+  exceptions above)
 - `BrainPort`, `PortDirection`, `PortSignal`, `BrainPortLayout`,
-  `BrainPorts`, `PortSignals` — brain ports, their order and
-  output conventions (see the exception above)
+  `BrainPorts`, `PortSignals` — brain ports, their order, channel keys and
+  the brain's output conventions (see the exceptions above)
 - `BrainDef`, `NeuronDef`, `ConnectionGeneDef`, `NeuronKind`,
   `NeuronActivation` — the saved brain graph (#536)
 - `CreationDef`, `TrainingStateDef`, `TrainingRunDef`, `TrainingBestDef`,

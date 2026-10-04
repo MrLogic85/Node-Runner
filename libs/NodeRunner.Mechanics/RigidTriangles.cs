@@ -1,13 +1,11 @@
-namespace NodeRunner.Domain;
+using NodeRunner.Domain;
+
+namespace NodeRunner.Mechanics;
 
 /// <summary>
 /// Finds the closed triangles of beams in a creature. Three beams between three nodes fix all three
 /// angles (SSS), so a triangle cannot fold; every other joint turns freely (#450). Build hatches
 /// these triangles so the player sees which areas are rigid. See docs/CREATURE_MODEL.md.
-///
-/// Deliberate exception to this project's "no behavior beyond data validation" rule for
-/// `libs/NodeRunner.Domain/` (see `libs/NodeRunner.Domain/AGENTS.md`): pure, stateless, and takes
-/// and returns only Domain types.
 /// </summary>
 public static class RigidTriangles
 {

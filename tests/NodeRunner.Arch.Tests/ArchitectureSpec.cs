@@ -10,6 +10,7 @@ namespace NodeRunner.Arch.Tests;
 public sealed class ArchitectureSpec
 {
     private static readonly Assembly _domain = typeof(NodeRunner.Domain.AssemblyMarker).Assembly;
+    private static readonly Assembly _mechanics = typeof(NodeRunner.Mechanics.AssemblyMarker).Assembly;
     private static readonly Assembly _ml = typeof(NodeRunner.ML.AssemblyMarker).Assembly;
     private static readonly Assembly _app = typeof(NodeRunner.App.AssemblyMarker).Assembly;
 
@@ -18,8 +19,24 @@ public sealed class ArchitectureSpec
     {
         var referenced = _domain.GetReferencedAssemblies().Select(a => a.Name).ToArray();
 
+        referenced.ShouldNotContain("NodeRunner.Mechanics");
         referenced.ShouldNotContain("NodeRunner.ML");
         referenced.ShouldNotContain("NodeRunner.App");
+    }
+
+    [Fact]
+    public void Mechanics_DependsOnlyOnDomain()
+    {
+        var referenced = _mechanics.GetReferencedAssemblies().Select(a => a.Name).ToArray();
+
+        referenced.ShouldNotContain("NodeRunner.ML");
+        referenced.ShouldNotContain("NodeRunner.App");
+    }
+
+    [Fact]
+    public void Mechanics_DoesNotReferenceGodot()
+    {
+        AssertNoGodotReference(_mechanics);
     }
 
     [Fact]
@@ -46,6 +63,14 @@ public sealed class ArchitectureSpec
         _ml.GetReferencedAssemblies()
             .Select(a => a.Name)
             .ShouldNotContain("NodeRunner.App");
+    }
+
+    [Fact]
+    public void Ml_DoesNotReferenceMechanics()
+    {
+        _ml.GetReferencedAssemblies()
+            .Select(a => a.Name)
+            .ShouldNotContain("NodeRunner.Mechanics");
     }
 
     [Fact]

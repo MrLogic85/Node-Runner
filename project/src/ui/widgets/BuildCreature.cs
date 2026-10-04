@@ -3,6 +3,7 @@ using NodeRunner.App.Builders;
 using NodeRunner.App.Lifecycle;
 using NodeRunner.App.ViewModels;
 using NodeRunner.Domain;
+using NodeRunner.Mechanics;
 using NodeRunner.Theme;
 
 namespace NodeRunner.Ui.Widgets;
@@ -173,7 +174,7 @@ public partial class BuildCreature : Node2D
         part.Rotation = pictureRotation;
         part.Kind = kind;
         part.WeightOffset = weightOffset ?? Accelerometer.RestWeightOffset(beamRotation, upSign);
-        part.CameraAim = Vector2.FromAngle((float)(aim ?? CameraRays.DefaultAim(nodeA, nodeB)) + beamRotation - pictureRotation);
+        part.CameraAim = Vector2.FromAngle((float)(aim ?? SensorDef.DefaultAim(nodeA, nodeB)) + beamRotation - pictureRotation);
     }
 
     /// <summary>The rigid hatch of the closed triangles among the beams that have length.</summary>

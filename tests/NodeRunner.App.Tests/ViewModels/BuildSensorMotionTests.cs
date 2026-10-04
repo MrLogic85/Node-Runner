@@ -1,5 +1,6 @@
 using NodeRunner.App.ViewModels;
 using NodeRunner.Domain;
+using NodeRunner.Mechanics;
 
 namespace NodeRunner.App.Tests.ViewModels;
 

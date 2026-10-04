@@ -28,7 +28,7 @@ public partial class SensorVisual : SensorPart, IShadowVisual
     {
         if (Accelerometer is not null)
         {
-            WeightOffset = Domain.Accelerometer.WeightOffset(Accelerometer.CurrentProofMass);
+            WeightOffset = Mechanics.Accelerometer.WeightOffset(Accelerometer.CurrentProofMass);
             QueueRedraw();
         }
     }

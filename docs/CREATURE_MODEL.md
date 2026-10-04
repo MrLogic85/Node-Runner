@@ -128,7 +128,7 @@ CreatureDef  ──build──▶  physical body  ──sensors──▶  model 
   measures the beam's acceleration at its midpoint from the change in its
   velocity, turns it into specific force (at rest 1 g "up", so its
   direction gives the tilt) in the beam's frame and steps the proof mass
-  (`Accelerometer.Step` in `libs/NodeRunner.Domain/Accelerometer.cs`).
+  (`Accelerometer.Step` in `libs/NodeRunner.Mechanics/Accelerometer.cs`).
 - **Reading:** two brain inputs, along the beam and across it:
   `tanh(−d / d_ref)` of the proof mass displacement `d`, where `d_ref` is
   the displacement at 1 g. At rest on a level beam it reads about 0 along
@@ -158,13 +158,13 @@ CreatureDef  ──build──▶  physical body  ──sensors──▶  model 
   beam's direction (from its first node to its second), in radians. The
   three rays fan `CameraRays.Spread` (45°) apart around it, and the camera
   turns with its beam. A camera placed in Build, or loaded without an aim,
-  gets `CameraRays.DefaultAim`: its centre ray looks level, forward in the
+  gets `SensorDef.DefaultAim`: its centre ray looks level, forward in the
   world as built, so its rays look forward-up, forward and forward-down
   (#622). Only a
   Camera has an aim.
 - **Implementation:** `project/src/creature/CameraSensor.cs` adds three
   `RayCast2D` children at the beam's midpoint, aimed by
-  `CameraRays.LocalRayTarget` (`libs/NodeRunner.Domain/CameraRays.cs`) in
+  `CameraRays.LocalRayTarget` (`libs/NodeRunner.Mechanics/CameraRays.cs`) in
   the beam body's frame, so they turn with the beam.
   They see the ground only (collision layer 1), `CameraRays.RayLength`
   (220) long. (It is not Godot's `Camera2D`.)
@@ -188,7 +188,7 @@ CreatureDef  ──build──▶  physical body  ──sensors──▶  model 
 Three beams that close a triangle between three nodes are geometrically
 rigid (SSS: three fixed side lengths fully determine all three vertex
 angles), so its joints cannot turn. `RigidTriangles.Of`
-(`libs/NodeRunner.Domain/RigidTriangles.cs`) finds every such triangle, and
+(`libs/NodeRunner.Mechanics/RigidTriangles.cs`) finds every such triangle, and
 Build hatches it so the player sees which areas are rigid, and so does
 Training on the followed creature (#627), never on the other shadows. There
 the hatch rides on one of the triangle's beams, which it cannot move
@@ -212,7 +212,7 @@ a composition of triangles; a bare quadrilateral stays free to fold.
 - **Not a beam:** inside its stroke it does not hold its length, so it adds no rigidity, and it counts as attached for the node degree rules. A
   Piston cannot join two nodes a beam already joins (the beam would hold
   them rigid), and two nodes hold at most one Piston (`CreatureBuilder.CanAddPiston`).
-- **Force** (`Piston.Step` in `libs/NodeRunner.Domain/Piston.cs`): it
+- **Force** (`Piston.Step` in `libs/NodeRunner.Mechanics/Piston.cs`): it
   chases the target length from its position output at up to Max speed,
   slowing as it arrives, with at most the strength output's share of its
   Strength. The speed control is a PI controller with gains from the
@@ -252,7 +252,7 @@ a composition of triangles; a bare quadrilateral stays free to fold.
   `DampedSpringJoint2D` between its two node bodies (`Creature.CreateSprings`);
   it has no collider. It weighs like a beam, half on each node.
 - **Damping as a share of critical** (`Spring.DampingCoefficient` in
-  `libs/NodeRunner.Domain/Spring.cs`): 0% bounces on, 100% settles without
+  `libs/NodeRunner.Mechanics/Spring.cs`): 0% bounces on, 100% settles without
   overshoot, so the slider means the same for any stiffness. The coefficient
   is worked out on the reduced mass of its two nodes. Godot's spring joint
   damps on every second solver iteration rather than once per step
@@ -344,12 +344,12 @@ picture but costs an offscreen pass each, so it is left out for performance.
     −1…1, where 0 means stand still or the built pose.
   - A position target maps piecewise, so 0 stays the built pose even when
     the built pose is off-centre: −1…0 spans fully in…built and 0…1 spans
-    built…fully out (`PortSignals.PositionFromTarget`). For the Piston (#451)
+    built…fully out (`OutputSignals.PositionFromTarget`). For the Piston (#451)
     −1 is fully in and +1 fully out.
   - **Strength** uses `sigmoid`: 0…1, the share of the part's **Strength
     setting** used this tick. The setting is the part's maximum force, chosen
     in Build; the strength output is the brain's choice of how much of it to
-    use (`PortSignals.StrengthFromOutput`).
+    use (`OutputSignals.StrengthFromOutput`).
   - **New ports start almost passive:** when a part joins a trained brain,
     its incoming weights are 0 and a new strength output starts at bias −4,
     about 2% force. Sigmoid has no dead zone, so mutation can still raise it.

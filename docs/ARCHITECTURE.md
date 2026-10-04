@@ -30,6 +30,13 @@ build; the *shape* below should stay stable.
                           ▲                │
                           │                ▼
 ┌─────────────────────────────────────────────────────────────────┐
+│                     Mechanics (pure C#)                          │
+│                   libs/NodeRunner.Mechanics/                     │
+│   Accelerometer · CameraRays · Piston · Spring · RigidTriangles  │
+└─────────────────────────────────────────────────────────────────┘
+                          ▲                │
+                          │                ▼
+┌─────────────────────────────────────────────────────────────────┐
 │                    Domain data (pure C#)                         │
 │                    libs/NodeRunner.Domain/                       │
 │           CreatureDef · NodeDef · BeamDef · SensorDef · Vector2D          │
@@ -43,7 +50,7 @@ build; the *shape* below should stay stable.
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-The three libraries in `libs/` are pure .NET 8 class libraries with **no
+The four libraries in `libs/` are pure .NET 8 class libraries with **no
 `Godot.*` references**. The Godot project (`project/`) targets .NET 9 for
 Godot 4.7 Android export templates, references the libraries, and provides the
 runtime host: scenes, physics, input, rendering. `NodeRunner.App` references
@@ -58,13 +65,14 @@ if any lib imports `Godot`, or if the layer graph below is violated.
 Arrows only go **downward** across layer boundaries.
 
 - **UI** (`project/src/ui/`) depends on: `NodeRunner.App` (ViewModels),
-  `NodeRunner.Domain` (for display types), `project/src/ui/lib` (Controls).
+  `NodeRunner.Domain` (for display types), `NodeRunner.Mechanics` (to draw a
+  part as the sim moves it), `project/src/ui/lib` (Controls).
   **Never** on: sim, managers, `NodeRunner.ML`.
 - **App** (`libs/NodeRunner.App/` — ViewModels, Repositories, Services)
-  depends on: `NodeRunner.Domain`, `NodeRunner.ML`.
+  depends on: `NodeRunner.Domain`, `NodeRunner.Mechanics`, `NodeRunner.ML`.
   **Never** on: Godot, sim, creature.
 - **Sim & Creature** (`project/src/{sim,creature}/`) depend on:
-  `NodeRunner.Domain`, `NodeRunner.ML`, and Godot.
+  `NodeRunner.Domain`, `NodeRunner.Mechanics`, `NodeRunner.ML`, and Godot.
   **Never** on: UI, ViewModels, Managers.
 - **Managers** (`project/src/managers/`) depend on: `NodeRunner.App` (for
   repository/service interfaces), `NodeRunner.Domain`, Godot.
@@ -75,6 +83,10 @@ Arrows only go **downward** across layer boundaries.
   every project layer above. They wire a screen's signals to managers and
   the navigator; keep game rules out of them. Nothing depends on them.
 - **Domain** (`libs/NodeRunner.Domain/`) depends on: nothing but the .NET BCL.
+- **Mechanics** (`libs/NodeRunner.Mechanics/`) depends on: `NodeRunner.Domain`
+  only. It holds the pure physics of creature parts — the sums the sim runs
+  each step and Build reuses to draw the same thing (#596). What stays in
+  Domain, and why, is listed in `libs/NodeRunner.Domain/AGENTS.md`.
 - **ML** (`libs/NodeRunner.ML/`) depends on: `NodeRunner.Domain` only.
 
 Every source folder has an `AGENTS.md` with its specific rules. Read those
@@ -90,11 +102,12 @@ Node Runner/
 ├── .editorconfig                   # style rules
 ├── libs/                           # pure C#, no Godot
 │   ├── NodeRunner.Domain/          # data records, enums, invariants
+│   ├── NodeRunner.Mechanics/       # pure part physics: sensors, pistons, springs
 │   ├── NodeRunner.ML/              # neural nets, GA, backprop
 │   └── NodeRunner.App/             # viewmodels, services, repositories
 ├── project/                        # Godot project (targets net9.0)
 │   ├── project.godot
-│   ├── NodeRunner.csproj           # references the three libs
+│   ├── NodeRunner.csproj           # references the four libs
 │   ├── NodeRunner.sln              # classic .sln required by Godot .NET export
 │   ├── scenes/                     # hosts/ (screen hosts), screens/, ui/, widgets/, tools/
 │   └── src/
@@ -110,6 +123,7 @@ Node Runner/
 │           └── widgets/            # app-specific composite widgets
 └── tests/                          # xUnit — libs plus static UI contracts
     ├── NodeRunner.Domain.Tests/
+    ├── NodeRunner.Mechanics.Tests/
     ├── NodeRunner.ML.Tests/
     ├── NodeRunner.App.Tests/
     ├── NodeRunner.Arch.Tests/      # layer rules and source conventions
@@ -187,29 +201,10 @@ public sealed class GeneticAlgorithm
 public sealed record NodeDef(int Id, Vector2D Position, string? Name = null); // Radius follows from its parts, not saved
 public sealed record BeamDef(int Id, int NodeA, int NodeB, string? Name = null);   // node ids
 public sealed record SensorDef(int Id, int BeamId, SensorKind Kind, string? Name = null, double? Aim = null); // beam id; Aim: Camera only
+// SensorDef.DefaultAim(nodeA, nodeB): a new Camera's level, world-forward aim
 public sealed record PistonDef(int Id, int NodeA, int NodeB, string? Name = null, double Strength = 15000, double Stroke = 0.3, double MaxSpeed = 200); // node ids
 public sealed record SpringDef(int Id, int NodeA, int NodeB, string? Name = null, double Stiffness = 400, double Damping = 0.3); // node ids; Damping: share of critical
 public sealed record CreatureDef(NodeDef[] Nodes, BeamDef[] Beams, SensorDef[] Sensors, PistonDef[] Pistons, SpringDef[] Springs, int NextPartId);
-
-public static class RigidTriangles  // closed beam triangles, which cannot fold
-{
-    public static IReadOnlyList<RigidTriangleDef> Of(CreatureDef creature);
-}
-
-public static class Accelerometer   // proof mass on a damped spring, pure math
-{
-    public static ProofMass Step(ProofMass state, Vector2D specificForceG, double dt);
-    public static Vector2D Reading(ProofMass state);
-    public static Vector2D SpecificForce(Vector2D acceleration, double gravity);
-}
-
-public static class CameraRays      // the camera's three rays around its aim, pure math
-{
-    public static double DefaultAim(Vector2D nodeA, Vector2D nodeB);
-    public static double AimAlong(double worldAngle, Vector2D nodeA, Vector2D nodeB);
-    public static Vector2D LocalRayTarget(int ray, double aim);
-    public static double Reading(double? hitDistance);
-}
 
 public static class SensorPicture   // a sensor picture's tap area at its beam's middle, sized per kind
 {
@@ -224,6 +219,37 @@ public static class Maps            // every map by id; 0.13 has only Flat ("map
     public static MapDef Flat { get; }
     public static MapDef Default { get; } // Flat until map choice (#540)
     public static MapDef Get(string id);
+}
+
+// libs/NodeRunner.Mechanics/ — pure part physics on Domain types (#596)
+public static class RigidTriangles  // closed beam triangles, which cannot fold
+{
+    public static IReadOnlyList<RigidTriangleDef> Of(CreatureDef creature);
+}
+
+public static class Accelerometer   // proof mass on a damped spring, pure math
+{
+    public static ProofMass Step(ProofMass state, Vector2D specificForceG, double dt);
+    public static Vector2D Reading(ProofMass state);
+    public static Vector2D SpecificForce(Vector2D acceleration, double gravity);
+}
+
+public static class CameraRays      // the camera's three rays around its aim, pure math
+{
+    public static double AimAlong(double worldAngle, Vector2D nodeA, Vector2D nodeB);
+    public static Vector2D LocalRayTarget(int ray, double aim);
+    public static double Reading(double? hitDistance);
+}
+
+public static class Piston          // force toward the brain's target length, pure math
+{
+    public static PistonControl Step(PistonDef piston, double builtLength, double length, double speed,
+        double position, double strength, double pairMass, double step, PistonControl previous);
+}
+
+public static class Spring          // damping from the Damping share and the pair's mass
+{
+    public static double DampingCoefficient(SpringDef spring, double massA, double massB);
 }
 ```
 

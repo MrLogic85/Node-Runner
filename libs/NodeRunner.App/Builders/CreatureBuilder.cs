@@ -275,7 +275,7 @@ public sealed class CreatureBuilder
     private double DefaultAim(int beamId)
     {
         var beam = _beams[BeamIndexOf(beamId)];
-        return CameraRays.DefaultAim(_nodes[NodeIndexOf(beam.NodeA)].Position, _nodes[NodeIndexOf(beam.NodeB)].Position);
+        return SensorDef.DefaultAim(_nodes[NodeIndexOf(beam.NodeA)].Position, _nodes[NodeIndexOf(beam.NodeB)].Position);
     }
 
     /// <summary>Removes a Piston by id.</summary>
@@ -338,7 +338,7 @@ public sealed class CreatureBuilder
         sensorId = AllocatePartId();
         var beam = _beams[BeamIndexOf(beamId)];
         double? aim = kind == SensorKind.Camera
-            ? CameraRays.DefaultAim(_nodes[NodeIndexOf(beam.NodeA)].Position, _nodes[NodeIndexOf(beam.NodeB)].Position)
+            ? SensorDef.DefaultAim(_nodes[NodeIndexOf(beam.NodeA)].Position, _nodes[NodeIndexOf(beam.NodeB)].Position)
             : null;
         _sensors.Add(new SensorDef(sensorId, beamId, kind, aim: aim));
         reason = null;

@@ -2,6 +2,7 @@ using System.ComponentModel;
 using Godot;
 using NodeRunner.App.ViewModels;
 using NodeRunner.Domain;
+using NodeRunner.Mechanics;
 using NodeRunner.Theme;
 using NodeRunner.Ui.Lib;
 
@@ -411,7 +412,7 @@ public partial class BuildCanvas : Node2D
         var nodeB = NodeById(beam.NodeB).Position;
         var middle = (ToGodot(nodeA) + ToGodot(nodeB)) / 2;
         var beamRotation = (float)CameraRays.BeamAngle(nodeA, nodeB);
-        var aim = camera.Aim ?? CameraRays.DefaultAim(nodeA, nodeB);
+        var aim = camera.Aim ?? SensorDef.DefaultAim(nodeA, nodeB);
         SensorDrawing.DrawRays(canvas, ViewTransform(), Theme, middle, Enumerable.Range(0, CameraRays.RayCount)
             .Select(ray => middle + ToGodot(CameraRays.LocalRayTarget(ray, aim)).Rotated(beamRotation)));
     }

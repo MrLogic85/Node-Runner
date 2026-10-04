@@ -1,4 +1,6 @@
-namespace NodeRunner.Domain;
+using NodeRunner.Domain;
+
+namespace NodeRunner.Mechanics;
 
 /// <summary>
 /// The accelerometer's pure math (#127): a proof mass on a damped spring in its beam's sensor
@@ -19,8 +21,6 @@ public static class Accelerometer
     /// <summary>The longest integration substep; a longer step, such as Build's frame-delta preview, takes several.</summary>
     public const double MaxSubstep = 1.0 / 60;
 
-    /// <summary>The machine keys of its input ports (<see cref="BrainPorts"/>), in order: along and across its beam. Never change one.</summary>
-    public static IReadOnlyList<string> ChannelKeys { get; } = ["along", "across"];
 
     /// <summary>The proof mass at rest under a constant specific force.</summary>
     public static ProofMass Rest(Vector2D specificForceG) =>

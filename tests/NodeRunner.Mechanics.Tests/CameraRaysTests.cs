@@ -1,11 +1,13 @@
-namespace NodeRunner.Domain.Tests;
+using NodeRunner.Domain;
+
+namespace NodeRunner.Mechanics.Tests;
 
 public sealed class CameraRaysTests
 {
     [Fact]
     public void DefaultAim_OnLevelBeam_LooksForwardUpForwardAndForwardDownFromLeftToRight()
     {
-        var aim = CameraRays.DefaultAim(new Vector2D(0, 0), new Vector2D(10, 0));
+        var aim = SensorDef.DefaultAim(new Vector2D(0, 0), new Vector2D(10, 0));
         var left = CameraRays.LocalRayTarget(0, aim);
         var centre = CameraRays.LocalRayTarget(1, aim);
         var right = CameraRays.LocalRayTarget(2, aim);
@@ -27,7 +29,7 @@ public sealed class CameraRaysTests
     {
         var nodeA = new Vector2D(3, 4);
         var nodeB = new Vector2D(3 + dx, 4 + dy);
-        var aim = CameraRays.DefaultAim(nodeA, nodeB);
+        var aim = SensorDef.DefaultAim(nodeA, nodeB);
         Vector2D[] world = [new(Math.Sqrt(0.5), -Math.Sqrt(0.5)), new(1, 0), new(Math.Sqrt(0.5), Math.Sqrt(0.5))];
 
         for (var ray = 0; ray < CameraRays.RayCount; ray++)
@@ -113,10 +115,9 @@ public sealed class CameraRaysTests
     }
 
     [Fact]
-    public void ChannelKeys_RunLeftToRightAroundTheCentre()
+    public void RayCount_MatchesTheCameraChannels()
     {
-        CameraRays.ChannelKeys.ShouldBe(["left1", "centre", "right1"]);
-        CameraRays.ChannelKeys.Count.ShouldBe(CameraRays.RayCount);
+        BrainPorts.CameraChannels.Count.ShouldBe(CameraRays.RayCount);
     }
 
     private static Vector2D ToWorld(Vector2D local, double beamAngle)

@@ -40,10 +40,10 @@ the model this implements.**
 - `IBeamSensor.cs` — what `Creature` needs from a sensor part: its value
   names, `Read` into the sensor buffer, and `Reset`
 - `AccelerometerSensor.cs` — one accelerometer: measures its beam's
-  midpoint acceleration each tick, steps the Domain `Accelerometer` proof
+  midpoint acceleration each tick, steps the Mechanics `Accelerometer` proof
   mass and writes its 2 readings into the sensor buffer
 - `CameraSensor.cs` — one camera: three `RayCast2D` children aimed as
-  built by the Domain `CameraRays`, writing 3 nearness readings
+  built by the Mechanics `CameraRays`, writing 3 nearness readings
 - `NodeVisual.cs` / `BeamVisual.cs` / `PistonVisual.cs` / `SpringVisual.cs` /
   `RigidHatchVisual.cs` — rendering only, no physics: Training's adapters
   over the shared part visuals in `project/src/theme` (`JointPart`,
@@ -61,7 +61,7 @@ the model this implements.**
 - The brain's math → `libs/NodeRunner.ML/`
 - Fitness measurement → `project/src/sim/`
 - Save/load → `libs/NodeRunner.App/Repositories/`
-- The def data types and their pure math → `libs/NodeRunner.Domain/`
+- The def data types → `libs/NodeRunner.Domain/`; their pure part physics → `libs/NodeRunner.Mechanics/`
 
 ## Style specifics
 

@@ -13,7 +13,7 @@ public enum PortSignal
     /// <summary>A speed to chase, −1…1 of the maximum, as the Velocity motor's target (#454).</summary>
     Velocity,
 
-    /// <summary>A pose to reach, −1…1 with 0 the built pose (<see cref="PortSignals.PositionFromTarget"/>).</summary>
+    /// <summary>A pose to reach, −1…1 with 0 the built pose (<c>OutputSignals.PositionFromTarget</c> in NodeRunner.Mechanics).</summary>
     Position,
 
     /// <summary>How much of the part's Strength setting to use this tick, 0…1.</summary>

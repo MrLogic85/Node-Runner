@@ -3,7 +3,7 @@ namespace NodeRunner.Domain;
 /// <summary>
 /// A rigid, fixed-length connection between two nodes. A beam never changes
 /// length; beams turn freely at the nodes they share unless a closed triangle
-/// locks them (see <see cref="RigidTriangles"/>). See docs/CREATURE_MODEL.md.
+/// locks them (see <c>RigidTriangles</c> in NodeRunner.Mechanics). See docs/CREATURE_MODEL.md.
 /// </summary>
 public sealed record BeamDef
 {

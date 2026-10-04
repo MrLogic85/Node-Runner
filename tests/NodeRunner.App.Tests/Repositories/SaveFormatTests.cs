@@ -167,12 +167,12 @@ public sealed class SaveFormatTests : IDisposable
     // strength starts passive with no connection.
     private static BrainDef ExampleBrain()
     {
-        (int Part, string Channel)[] inputs = [(6, "along"), (6, "across"), (7, "left1"), (7, "centre"), (7, "right1"), (9, Piston.LengthChannel), (9, Piston.SpeedChannel)];
+        (int Part, string Channel)[] inputs = [(6, "along"), (6, "across"), (7, "left1"), (7, "centre"), (7, "right1"), (9, BrainPorts.PistonLengthChannel), (9, BrainPorts.PistonSpeedChannel)];
         double[] weights = [0.125, 1, -1, 0.75, -0.5, 0.5, -0.25];
         var neurons = inputs
             .Select((input, index) => new NeuronDef(index + 1, NeuronKind.Input, input.Part, input.Channel, 0, 0, NeuronActivation.Identity))
-            .Append(new NeuronDef(8, NeuronKind.Output, 9, Piston.PositionChannel, 1, 0.25, NeuronActivation.Tanh))
-            .Append(new NeuronDef(9, NeuronKind.Output, 9, Piston.StrengthChannel, 1, -4, NeuronActivation.Sigmoid))
+            .Append(new NeuronDef(8, NeuronKind.Output, 9, BrainPorts.PistonPositionChannel, 1, 0.25, NeuronActivation.Tanh))
+            .Append(new NeuronDef(9, NeuronKind.Output, 9, BrainPorts.PistonStrengthChannel, 1, -4, NeuronActivation.Sigmoid))
             .ToArray();
         var connections = weights
             .Select((weight, index) => new ConnectionGeneDef(index + 1, 8, weight, enabled: index != 2))
