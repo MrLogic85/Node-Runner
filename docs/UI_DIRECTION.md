@@ -304,9 +304,13 @@ reference would mislead someone working on that surface.
     canvas note is a `danger` callout "Too short", out past its joints on
     the beam's upper side with a leader line to the beam's middle (see
     `c_call` in a figure). The readiness line says "1 beam too short".
-  - *Selection:* a selected joint gets an unfilled `halo` ring around it,
-    2 wide as in the reference; a selected beam gets two 2-wide `halo` lines along it, one
-    beam-width out on each side. Both are drawn over the part, in Build and
+  - *Selection:* every selection mark sits one shared gap
+    (`SelectionMarks.Gap`, 3) outside the part's edge (#710). A selected
+    joint gets an unfilled 2-wide `halo` ring that gap outside it; a selected
+    beam or Piston gets two 2-wide `halo` lines along it, that gap outside
+    each side. A Piston's lines stop at the joint edges. In a selected group,
+    a beam's or Piston's lines run on to the selected joints' halo rings, so
+    the group reads as one outline. All are drawn over the part, in Build and
     Training.
   - *Orientation:* the side of the beam that faces up as built is the
     sensor's top, and it then turns with the beam; it never flips during a
@@ -594,7 +598,8 @@ keep their size on screen and only get the space that is left:
 - `CanvasView` divides its zoom limits by the root factor (`UiScale`): fitting
   never magnifies past true size, and pinch zoom stops at `MaxZoom` times true
   size on screen, whatever the UI size. Build's finger-sized hit radii and handles are in view units, so they
-  scale with the UI, as touch targets should.
+  scale with the UI, as touch targets should (`BUILD_MODE.md` lists the
+  canvas-unit exceptions).
 
 Icons (`UiIcons`) and the choice indicators are Godot `DPITexture`s, sized in
 canvas units (#631). Godot re-rasterizes them, like fonts, at the viewport's

@@ -315,15 +315,21 @@ public class BuildGesturesTests
         build.Nodes[0].Position.ShouldBe(new Vector2D(0, 0));
     }
 
-    [Fact]
-    public void ZoomedOut_HitRadiusStaysFingerSized()
+    [Theory]
+    [InlineData(0.5, -1, true)]
+    [InlineData(0.5, 1, false)]
+    [InlineData(CanvasView.MaxZoom, -1, true)]
+    [InlineData(CanvasView.MaxZoom, 1, false)]
+    public void JointTouchArea_IsItsRingPlusTheSelectionGap_AtAnyZoom(double zoom, double pastReach, bool hits)
     {
         var (build, gestures) = ThreeLooseJoints(BuildTool.Parts);
-        gestures.View.ZoomAbout(new Vector2D(0, 0), 0.5);
+        gestures.View.ZoomAbout(new Vector2D(0, 0), zoom);
+        gestures.View.Zoom.ShouldBe(zoom);
+        var reach = NodeDef.PlainJointRadius + SelectionMarks.Gap;
 
-        Tap(gestures, new Vector2D(-(BuildGestures.NodeHitRadius - 2), 0));
+        Tap(gestures, gestures.View.ToView(new Vector2D(-(reach + pastReach), 0)));
 
-        build.SelectedNodeIds.ShouldBe([1]);
+        build.SelectedNodeIds.Contains(1).ShouldBe(hits);
     }
 
     [Fact]
@@ -578,7 +584,7 @@ public class BuildGesturesTests
         build.ActiveTool = BuildTool.Joint;
         var changes = CountChanges(build);
 
-        Tap(gestures, new Vector2D(20, 0));
+        Tap(gestures, new Vector2D(17, 0));
 
         changes().ShouldBe(0);
     }
@@ -705,7 +711,7 @@ public class BuildGesturesTests
 
     // With joints 0 and 1 of ThreeLooseJoints selected at 1×, the frame clears both halos by 8
     // across and meets the 96 minimum down: Move sits at (50, 0), Rotate at (50, -80), Scale at its corner.
-    private static readonly double _frameRight = 100 + (NodeDef.PlainJointRadius * BuildGestures.SelectedHaloScale) + 8;
+    private static readonly double _frameRight = 100 + SelectionMarks.JointHalo(NodeDef.PlainJointRadius) + 8;
     private static readonly Vector2D _moveHandle = new(50, 0);
     private static readonly Vector2D _rotateHandle = new(50, -80);
     private static readonly Vector2D _scaleHandle = new(_frameRight, 48);

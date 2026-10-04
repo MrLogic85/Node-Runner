@@ -153,8 +153,11 @@ public sealed class BuildPlacementTests
         gestures.DropTargetAt(new Vector2D(5, 0)).ShouldBe(_firstJoint);
         gestures.DropTargetAt(new Vector2D(150, 9)).ShouldBe(_secondBeam);
         gestures.DropTargetAt(new Vector2D(30, 10)).ShouldBe(_firstBeam);
-        gestures.DropTargetAt(new Vector2D(-30, 0)).ShouldBe(_firstJoint);
         gestures.DropTargetAt(new Vector2D(300, 300)).ShouldBeNull();
+
+        // Zoomed in, the beam's finger-sized reach is shorter than the joint's gap.
+        gestures.View.ZoomAbout(new Vector2D(0, 0), 2);
+        gestures.DropTargetAt(gestures.View.ToView(new Vector2D(-17, 0))).ShouldBe(_firstJoint);
     }
 
     [Fact]

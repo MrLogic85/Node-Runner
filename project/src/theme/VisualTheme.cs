@@ -1,4 +1,5 @@
 using Godot;
+using NodeRunner.Domain;
 using NodeRunner.Ui.Lib;
 
 namespace NodeRunner.Theme;
@@ -12,9 +13,6 @@ public sealed class VisualTheme
     public static VisualTheme Neon { get; } = FromTheme(UiThemes.Neon);
 
     public static VisualTheme Paper { get; } = FromTheme(UiThemes.Paper);
-
-    // A selected beam's lines run half its width outside its edges (#624).
-    private const float _selectedBeamOffsetPerBeam = 0.5f + 0.5f;
 
     // The reference's rigid hatch: muted hairlines at half opacity, 7 apart (#612).
     private const float _rigidHatchOpacity = 0.5f;
@@ -46,7 +44,7 @@ public sealed class VisualTheme
         BeamWidth = UiSize.Widget.CreatureBeamWidth,
         // The reference's 2-wide ring, not scaled up with our wider beams (owner, 2026-10-03).
         SelectionRingWidth = UiSize.Stroke.Signal,
-        SelectedBeamOffset = UiSize.Widget.CreatureBeamWidth * _selectedBeamOffsetPerBeam,
+        SelectedBeamOffset = (UiSize.Widget.CreatureBeamWidth / 2f) + (float)SelectionMarks.Gap,
         SelectedBeamLineWidth = UiSize.Stroke.Signal,
         MotorSignalWidth = UiSize.Stroke.Signal,
         GroundEdgeWidth = UiSize.Stroke.Signal,
@@ -87,7 +85,7 @@ public sealed class VisualTheme
     /// <summary>The stroke of a selected joint's ring.</summary>
     public float SelectionRingWidth { get; private init; }
 
-    /// <summary>How far each of a selected beam's two lines runs from its centre line: half its width plus half again.</summary>
+    /// <summary>How far each of a selected beam's two lines runs from its centre line: half its width plus <see cref="SelectionMarks.Gap"/>.</summary>
     public float SelectedBeamOffset { get; private init; }
 
     /// <summary>The width of each of a selected beam's two lines.</summary>

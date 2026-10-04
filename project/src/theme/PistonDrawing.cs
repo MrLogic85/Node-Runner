@@ -1,4 +1,5 @@
 using Godot;
+using NodeRunner.Domain;
 using NodeRunner.Ui.Lib;
 
 namespace NodeRunner.Theme;
@@ -8,7 +9,8 @@ namespace NodeRunner.Theme;
 /// Training: a thin <c>accent</c> rod from ring to ring, a cylinder at its first joint and a cap
 /// at its second. The cylinder is the stroke's share of the built length from joint A's centre, so
 /// ±50% draws half the Piston. Selected, it gets the
-/// beam's two <c>halo</c> lines and, unless it is in a group, ticks at its shortest and longest length. Drawn in window
+/// beam's two <c>halo</c> lines, which stop at the joints' edges or join a selected joint's halo
+/// (#710), and, unless it is in a group, ticks at its shortest and longest length. Drawn in window
 /// pixels (<see cref="UiPixelSpace"/>) so it stays crisp at any zoom; <c>drawTransform</c> is the
 /// transform the caller draws with, and is restored afterwards.
 /// </summary>
@@ -20,7 +22,6 @@ public static class PistonDrawing
     private const float _cylinderRadius = 2;
     private const float _capLength = 10;
     private const float _tickLength = 8;
-    private const float _selectionGap = 3;
     private const float _hairline = 1;
     private const float _dash = 6;
     private const float _minCylinder = 4;
@@ -38,6 +39,8 @@ public static class PistonDrawing
     /// <param name="line">The rod, cylinder and cap colour: <c>accent</c>, or <c>danger</c> while too short.</param>
     /// <param name="selected">Whether to draw the selection halo.</param>
     /// <param name="showStroke">Whether a selected Piston also shows its stroke ticks: only while its Stroke can be set (#704).</param>
+    /// <param name="haloA">Whether joint A is selected too, so the selection lines end on its halo ring.</param>
+    /// <param name="haloB">Whether joint B is selected too.</param>
     public static void Draw(
         CanvasItem canvas,
         Transform2D drawTransform,
@@ -50,7 +53,9 @@ public static class PistonDrawing
         float longest,
         Color line,
         bool selected,
-        bool showStroke = true)
+        bool showStroke = true,
+        bool haloA = false,
+        bool haloB = false)
     {
         ArgumentNullException.ThrowIfNull(canvas);
         ArgumentNullException.ThrowIfNull(theme);
@@ -81,7 +86,10 @@ public static class PistonDrawing
 
         if (selected)
         {
-            DrawSelection(canvas, toPixels, scale, theme, a, b, along, across, cylinderHalf + _selectionGap);
+            // The gap is measured from the cylinder outline's outer edge.
+            var offset = cylinderHalf + (_line / 2) + (float)SelectionMarks.Gap;
+            var (start, end) = SelectionSpan(a, b, radiusA, radiusB, haloA, haloB, offset, along);
+            DrawSelection(canvas, toPixels, scale, theme, start, end, across, offset);
             if (showStroke)
             {
                 DrawStroke(canvas, toPixels, scale, theme, a, b, along, across, shortest, longest);
@@ -91,21 +99,39 @@ public static class PistonDrawing
         canvas.DrawSetTransformMatrix(drawTransform);
     }
 
+    /// <summary>
+    /// Where the selection lines run: to the selected joints' halos, else to the joint edges, else,
+    /// when the joints crowd too close for either, centre to centre so the mark never vanishes.
+    /// </summary>
+    private static (Vector2 Start, Vector2 End) SelectionSpan(
+        Vector2 a, Vector2 b, float radiusA, float radiusB, bool haloA, bool haloB, float offset, Vector2 along)
+    {
+        var reachA = haloA ? (float)SelectionMarks.JointHalo(radiusA) : radiusA;
+        var reachB = haloB ? (float)SelectionMarks.JointHalo(radiusB) : radiusB;
+        var start = SelectionDrawing.LineEnd(a, b, reachA, offset);
+        var end = SelectionDrawing.LineEnd(b, a, reachB, offset);
+        if ((end - start).Dot(along) > 0)
+        {
+            return (start, end);
+        }
+
+        return haloA || haloB ? SelectionSpan(a, b, radiusA, radiusB, false, false, offset, along) : (a, b);
+    }
+
     private static void DrawSelection(
         CanvasItem canvas,
         Transform2D toPixels,
         float scale,
         VisualTheme theme,
-        Vector2 a,
-        Vector2 b,
-        Vector2 along,
+        Vector2 start,
+        Vector2 end,
         Vector2 across,
         float offset)
     {
         var glow = theme.SelectionGlow;
         var width = theme.SelectedBeamLineWidth * scale;
-        canvas.DrawLine(toPixels * (a + (across * offset)), toPixels * (b + (across * offset)), glow, width, antialiased: true);
-        canvas.DrawLine(toPixels * (a - (across * offset)), toPixels * (b - (across * offset)), glow, width, antialiased: true);
+        canvas.DrawLine(toPixels * (start + (across * offset)), toPixels * (end + (across * offset)), glow, width, antialiased: true);
+        canvas.DrawLine(toPixels * (start - (across * offset)), toPixels * (end - (across * offset)), glow, width, antialiased: true);
     }
 
     private static void DrawStroke(
