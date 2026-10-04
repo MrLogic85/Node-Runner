@@ -154,7 +154,9 @@ public partial class UiPicker : PanelContainer
         stack.AddThemeConstantOverride("separation", (int)UiSize.Space.S1);
         AddChild(stack);
 
-        stack.AddChild(UiFieldAndRows.Label(LabelText, UiTokens.Typography.Overline, UiTokens.Color.Muted));
+        var label = UiFieldAndRows.Label(LabelText, UiTokens.Typography.Overline, UiTokens.Color.Muted);
+        UiTranslation.ShareContext(this, label);
+        stack.AddChild(label);
         var closedRow = CreateClosedRow();
         stack.AddChild(closedRow);
 
@@ -170,6 +172,7 @@ public partial class UiPicker : PanelContainer
         if (!string.IsNullOrWhiteSpace(BelowText))
         {
             var below = UiFieldAndRows.Label(BelowText, UiTokens.Typography.Note, UiTokens.Color.Muted);
+            UiTranslation.ShareContext(this, below);
             below.CustomMinimumSize = new Vector2(0, UiThemeLookup.FontSize(this, UiTokens.Typography.Note) + UiSize.Widget.SmallTextLeading);
             below.ClipText = true;
             stack.AddChild(below);
@@ -186,6 +189,7 @@ public partial class UiPicker : PanelContainer
             SizeFlagsHorizontal = SizeFlags.ShrinkBegin,
             TooltipText = LabelText,
         };
+        UiTranslation.ShareContext(this, rowButton);
         rowButton.Pressed += () => SetState(IsExpanded ? PickerState.Collapsed : PickerState.Expanded, emit: true);
         // The one press look (#325); the row's content is its children and draws over the tint.
         rowButton.Draw += () =>
@@ -235,6 +239,7 @@ public partial class UiPicker : PanelContainer
         }
 
         var value = UiFieldAndRows.Label(ValueText, UiTokens.Typography.SmallStrong, ValueColor);
+        UiTranslation.ShareContext(this, value);
         value.SizeFlagsHorizontal = SizeFlags.ExpandFill;
         row.AddChild(value);
         if (TrailingIcon is { } trailingIcon)

@@ -131,6 +131,7 @@ public partial class UiMenuToggleItem : UiMenuItem, ISerializationListener
             return;
         }
 
+        UiTranslation.ShareContext(this, _toggle);
         _toggle.LabelText = LabelText;
         _toggle.Subtext = Subtext;
         _toggle.On = _on;

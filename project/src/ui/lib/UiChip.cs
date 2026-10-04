@@ -130,6 +130,7 @@ public partial class UiChip : PanelContainer
 
         var (border, content) = ColorsFor(Kind);
         _content.Row.CustomMinimumSize = new Vector2(0, UiSize.Control.ExtraSmall);
+        UiTranslation.ShareContext(this, _content.Label);
         _content.Apply(Text, IconId, IconSizeFor(IconId, GlyphSizedIcon), content, UiThemeLookup.Color(this, content));
         AddThemeStyleboxOverride("panel", UiThemeLookup.CreateStyleBox(
             UiThemeLookup.Color(this, UiTokens.Color.PanelRaised),

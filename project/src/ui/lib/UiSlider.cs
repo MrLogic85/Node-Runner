@@ -652,6 +652,7 @@ public partial class UiSlider : Control, ISerializationListener
             var label = CreateLabel();
             label.Name = "StepLabel";
             label.AutoTranslateMode = _stepLabelSources is null ? AutoTranslateModeEnum.Inherit : AutoTranslateModeEnum.Disabled;
+            UiTranslation.ShareContext(this, label);
             label.Text = text;
             AddChild(label, false, InternalMode.Front);
             _stepLabelNodes.Add(label);
@@ -711,6 +712,9 @@ public partial class UiSlider : Control, ISerializationListener
         }
 
         _label!.AutoTranslateMode = _labelSource is null ? AutoTranslateModeEnum.Inherit : AutoTranslateModeEnum.Disabled;
+        UiTranslation.ShareContext(this, _label);
+        UiTranslation.ShareContext(this, _readout!);
+        UiTranslation.ShareContext(this, _markerLabel!);
         var label = ShownLabel;
         _label.Text = label;
         _readout!.AutoTranslateMode = _readoutSource is null ? AutoTranslateModeEnum.Inherit : AutoTranslateModeEnum.Disabled;

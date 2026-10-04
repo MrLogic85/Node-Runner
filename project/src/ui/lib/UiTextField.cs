@@ -172,6 +172,7 @@ public partial class UiTextField : VBoxContainer, ISerializationListener
         }
 
         _editor.AutoTranslateMode = _placeholderSource is null ? AutoTranslateModeEnum.Inherit : AutoTranslateModeEnum.Disabled;
+        UiTranslation.ShareContext(this, _editor);
         _editor.PlaceholderText = _placeholderSource?.Invoke() ?? _placeholderText;
     }
 
@@ -343,6 +344,7 @@ public partial class UiTextField : VBoxContainer, ISerializationListener
 
         if (_label is not null)
         {
+            UiTranslation.ShareContext(this, _label);
             _label.Text = LabelText;
             _label.Visible = !string.IsNullOrWhiteSpace(LabelText);
             UiThemeLookup.ApplyTextStyle(_label, UiTokens.Typography.Overline, UiTokens.Color.Muted);
@@ -389,6 +391,7 @@ public partial class UiTextField : VBoxContainer, ISerializationListener
 
         if (_errorLabel is not null)
         {
+            UiTranslation.ShareContext(this, _errorLabel);
             _errorLabel.Text = ErrorText;
             _errorLabel.Visible = State == TextInputState.Error && !string.IsNullOrWhiteSpace(ErrorText);
             UiThemeLookup.ApplyTextStyle(_errorLabel, UiTokens.Typography.Note, UiTokens.Color.Danger);

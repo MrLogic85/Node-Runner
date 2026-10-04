@@ -696,6 +696,7 @@ public sealed partial class UiButton : Button, ISerializationListener
         _content.OffsetLeft = ContentPadding;
         _content.OffsetRight = -ContentPadding;
 
+        UiTranslation.ShareContext(this, _contentLabel!);
         _contentLabel!.Text = Text;
         _contentLabel.Visible = HasLabel;
         _contentLabel.TextStyle = CaptionStyle;
@@ -759,6 +760,7 @@ public sealed partial class UiButton : Button, ISerializationListener
         if (!_badge.Visible)
             return;
 
+        UiTranslation.ShareContext(this, _badge);
         _badge.Text = BadgeText;
         _badge.CustomMinimumSize = new Vector2(metrics.BadgeMinimumSize, metrics.BadgeMinimumSize);
         _badge.Size = _badge.CustomMinimumSize;

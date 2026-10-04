@@ -160,9 +160,11 @@ public partial class UiSidePanel : MarginContainer
         var translateMode = TitleSource is null ? AutoTranslateModeEnum.Inherit : AutoTranslateModeEnum.Disabled;
         var titleLabel = GetNode<Label>("%SidePanelTitle");
         titleLabel.AutoTranslateMode = translateMode;
+        UiTranslation.ShareContext(this, titleLabel);
         titleLabel.Text = title;
         var tabLabel = GetNode<UiVerticalLabel>("%SidePanelTabLabel");
         tabLabel.AutoTranslateMode = translateMode;
+        UiTranslation.ShareContext(this, tabLabel);
         tabLabel.Text = title;
         tabLabel.Visible = title.Length > 0;
         RedrawIcons();

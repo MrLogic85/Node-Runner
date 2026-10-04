@@ -121,6 +121,7 @@ public partial class UiCallout : PanelContainer
         // Re-found after a C# assembly reload, which clears managed fields but keeps the child.
         _content ??= UiIconCaption.Ensure(this);
 
+        UiTranslation.ShareContext(this, _content.Label);
         _content.Apply(
             Text,
             IconId,
