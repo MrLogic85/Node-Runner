@@ -5,9 +5,9 @@ namespace NodeRunner.Ui.Tests;
 
 /// <summary>
 /// Guards #766: every view draws a creature's parts through the shared part visuals in
-/// <c>theme/</c> (<c>JointPart</c>, <c>BeamPart</c>, <c>PistonPart</c>, <c>SensorPart</c>), so a
+/// <c>theme/</c> (<c>JointPart</c>, <c>BeamPart</c>, <c>PistonPart</c>, <c>SpringPart</c>, <c>SensorPart</c>), so a
 /// part looks and layers the same in Build and Training. Only those parts call the drawing
-/// helpers that paint a joint, Piston or sensor, or a selection mark; a view feeds them state
+/// helpers that paint a joint, Piston, Spring or sensor, or a selection mark; a view feeds them state
 /// instead. A beam's rod and the rigid hatch are plain pen lines with no helper to guard, so
 /// this test cannot catch a view drawing those itself.
 /// </summary>
@@ -18,6 +18,7 @@ public sealed class SharedPartVisualsTests
         ("JointDrawing", "DrawPlain"),
         ("PistonDrawing", "Draw"),
         ("SensorDrawing", "DrawAccelerometer"),
+        ("SpringDrawing", "Draw"),
         ("SensorDrawing", "DrawCamera"),
         ("SelectionDrawing", "DrawBeam"),
         ("SelectionDrawing", "DrawJoint"),

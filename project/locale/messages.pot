@@ -32,6 +32,10 @@ msgstr ""
 msgid "A slider sets one value for all of them."
 msgstr ""
 
+#: libs/NodeRunner.App/Builders/CreatureBuilder.cs
+msgid "A spring must connect two different nodes."
+msgstr ""
+
 #: libs/NodeRunner.App/ViewModels/PartNames.cs
 #: libs/NodeRunner.App/ViewModels/PartTrayPresentation.cs
 msgid "Accelerometer"
@@ -214,6 +218,10 @@ msgstr ""
 msgid "Creations"
 msgstr ""
 
+#: libs/NodeRunner.App/ViewModels/PartParameters.cs
+msgid "Damping"
+msgstr ""
+
 #: project/src/ui/lib/UiPopupStyle.cs
 msgid "Danger"
 msgstr ""
@@ -330,6 +338,10 @@ msgid "Hold to reset"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs
+msgid "It pulls back toward its drawn length. Damping stops it bouncing."
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs
 #: project/scenes/screens/BuildScreen.tscn
 msgid "Joint"
 msgstr ""
@@ -410,7 +422,7 @@ msgid "Node {0}"
 msgstr ""
 
 #: libs/NodeRunner.App/Lifecycle/CreatureReadiness.cs
-msgid "Node {0} has nothing attached. Connect it with a beam or a piston, or remove it."
+msgid "Node {0} has nothing attached. Connect it with a beam, a piston or a spring, or remove it."
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs
@@ -590,6 +602,14 @@ msgstr ""
 msgid "Spring"
 msgstr ""
 
+#: libs/NodeRunner.App/ViewModels/PartNames.cs
+msgid "Spring {0}"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/LinkListPresentation.cs
+msgid "Springs back to its drawn length. Drag joint to joint."
+msgstr ""
+
 #: project/scenes/ui/UiStageCard.tscn
 msgid "Stage"
 msgstr ""
@@ -626,6 +646,10 @@ msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartTrayPresentation.cs
 msgid "Stepper"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/PartParameters.cs
+msgid "Stiffness"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartParameters.cs
@@ -699,8 +723,20 @@ msgstr ""
 msgid "The piston between node {0} and node {1} is too short. Move one of the nodes apart."
 msgstr ""
 
+#: libs/NodeRunner.App/Lifecycle/CreatureReadiness.cs
+msgid "The spring between node {0} and node {1} has zero length. Move one of the nodes apart."
+msgstr ""
+
+#: libs/NodeRunner.App/Lifecycle/CreatureReadiness.cs
+msgid "The spring between node {0} and node {1} is too short. Move one of the nodes apart."
+msgstr ""
+
 #: libs/NodeRunner.App/Builders/CreatureBuilder.cs
 msgid "These nodes already have a piston"
+msgstr ""
+
+#: libs/NodeRunner.App/Builders/CreatureBuilder.cs
+msgid "These nodes already have a spring"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs
@@ -830,6 +866,10 @@ msgstr ""
 msgid "{0} N"
 msgstr ""
 
+#: libs/NodeRunner.App/ViewModels/PartParameters.cs
+msgid "{0} N/m"
+msgstr ""
+
 #: libs/NodeRunner.App/ViewModels/CreationCardPresentation.cs
 msgid "{0} beam"
 msgid_plural "{0} beams"
@@ -949,6 +989,12 @@ msgid_plural "{0} sensors"
 msgstr[0] ""
 msgstr[1] ""
 
+#: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs
+msgid "{0} spring too short"
+msgid_plural "{0} springs too short"
+msgstr[0] ""
+msgstr[1] ""
+
 #: libs/NodeRunner.App/ViewModels/BrainFocusPresentationViewModel.cs
 msgid "{0} → {1}. Solid blue: pushes up. Dashed red: pushes down. Thicker: stronger."
 msgstr ""
@@ -991,6 +1037,10 @@ msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartParameters.cs
 msgid "{0}–{1} N"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/PartParameters.cs
+msgid "{0}–{1} N/m"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartParameters.cs

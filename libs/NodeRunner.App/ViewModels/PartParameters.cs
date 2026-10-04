@@ -58,7 +58,8 @@ public sealed record ParameterSlider(PartParameterId Id, UiText Label, UiText Re
 
 /// <summary>
 /// Every part setting (#704). A Piston's Max strength is in N, its Stroke ±% of its built length
-/// and its Max speed in m/s (#451); a Camera's aim is turned on the canvas (#594).
+/// and its Max speed in m/s (#451); a Spring's Stiffness is in N/m and its Damping a % of the
+/// damping that stops it without a bounce (#453); a Camera's aim is turned on the canvas (#594).
 /// </summary>
 public static class PartParameters
 {
@@ -72,6 +73,13 @@ public static class PartParameters
     public static PartParameter MaxSpeed { get; } = new(
         PartParameterId.MaxSpeed, MultiEditable: true, new(UiText.Plain("Max speed"), new(0.5, 4, 0.1), 1, "{0} m/s", "{0}–{1} m/s", Metres.FromWorldUnits, ToWorld));
 
+    // World force per world unit is N/m: both scale by world units per metre, which cancel.
+    public static PartParameter Stiffness { get; } = new(
+        PartParameterId.Stiffness, MultiEditable: true, new(UiText.Plain("Stiffness"), new(50, 2000, 50), 0, "{0} N/m", "{0}–{1} N/m", value => value, value => value));
+
+    public static PartParameter Damping { get; } = new(
+        PartParameterId.Damping, MultiEditable: true, new(UiText.Plain("Damping"), new(0, 100, 5), 0, "{0}%", "{0}–{1}%", value => value * 100, value => value / 100));
+
     public static PartParameter Aim { get; } = new(PartParameterId.Aim, MultiEditable: false, Slider: null);
 
     public static PartParameter Of(PartParameterId id) => id switch
@@ -80,6 +88,8 @@ public static class PartParameters
         PartParameterId.Stroke => Stroke,
         PartParameterId.MaxSpeed => MaxSpeed,
         PartParameterId.Aim => Aim,
+        PartParameterId.Stiffness => Stiffness,
+        PartParameterId.Damping => Damping,
         _ => throw new ArgumentOutOfRangeException(nameof(id)),
     };
 

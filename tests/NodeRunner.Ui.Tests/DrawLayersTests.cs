@@ -30,7 +30,7 @@ public sealed class DrawLayersTests
             CreatureLayers.Hatch,
             CreatureLayers.Underlays,
             CreatureLayers.Beams,
-            CreatureLayers.Pistons,
+            CreatureLayers.Links,
             CreatureLayers.SelectedLinks,
             CreatureLayers.Sensors,
             CreatureLayers.SelectedSensors,

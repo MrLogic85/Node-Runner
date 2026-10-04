@@ -197,6 +197,49 @@ public sealed class CreatureDefTests
     }
 
     [Fact]
+    public void Constructor_WithASpringToAMissingNode_Throws()
+    {
+        Should.Throw<ArgumentOutOfRangeException>(() => new CreatureDef(
+            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(1, 0))],
+            [],
+            [],
+            [],
+            [new SpringDef(3, 1, 9)],
+            nextPartId: 4));
+    }
+
+    [Fact]
+    public void Constructor_WithASpringSharingAPistonsId_Throws()
+    {
+        Should.Throw<ArgumentException>(() => new CreatureDef(
+            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(1, 0)), new NodeDef(3, new Vector2D(0, 1))],
+            [],
+            [],
+            [new PistonDef(4, 1, 2)],
+            [new SpringDef(4, 2, 3)],
+            nextPartId: 5));
+    }
+
+    [Fact]
+    public void JsonRoundTrip_PreservesSprings()
+    {
+        var original = new CreatureDef(
+            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(1, 0))],
+            [],
+            [],
+            [],
+            [new SpringDef(3, 1, 2, "Tail", 800, 0.6)],
+            nextPartId: 4);
+
+        var roundTripped = JsonSerializer.Deserialize<CreatureDef>(JsonSerializer.Serialize(original));
+
+        roundTripped.ShouldNotBeNull();
+        roundTripped.Springs.ToArray().ShouldBe(original.Springs.ToArray());
+        roundTripped.SpringIndexOf(3).ShouldBe(0);
+        roundTripped.NextPartId.ShouldBe(4);
+    }
+
+    [Fact]
     public void Constructor_WithANullPart_Throws()
     {
         NodeDef[] nodes = [new NodeDef(1, new Vector2D(0, 0)), null!];

@@ -50,4 +50,53 @@ public static class SelectionDrawing
         canvas.DrawLine(toPixels * (start - side), toPixels * (end - side), color, pixelWidth, antialiased: true);
         canvas.DrawSetTransformMatrix(drawTransform);
     }
+
+    /// <summary>
+    /// The two <c>halo</c> lines along a selected link, a Piston or a Spring, from joint
+    /// <paramref name="a"/> to joint <paramref name="b"/>, <paramref name="offset"/> from its axis,
+    /// drawn with <paramref name="toPixels"/> (<see cref="UiPixelSpace"/>, already entered). They
+    /// stop at the joints' edges or, when a joint is selected too, join its halo (#710).
+    /// </summary>
+    public static void DrawLink(
+        CanvasItem canvas,
+        Transform2D toPixels,
+        float scale,
+        VisualTheme theme,
+        Vector2 a,
+        Vector2 b,
+        float radiusA,
+        float radiusB,
+        bool haloA,
+        bool haloB,
+        float offset)
+    {
+        ArgumentNullException.ThrowIfNull(canvas);
+        ArgumentNullException.ThrowIfNull(theme);
+        var along = (b - a).Normalized();
+        var across = along.Orthogonal();
+        var (start, end) = LinkSpan(a, b, radiusA, radiusB, haloA, haloB, offset, along);
+        var glow = theme.SelectionGlow;
+        var width = theme.SelectedBeamLineWidth * scale;
+        canvas.DrawLine(toPixels * (start + (across * offset)), toPixels * (end + (across * offset)), glow, width, antialiased: true);
+        canvas.DrawLine(toPixels * (start - (across * offset)), toPixels * (end - (across * offset)), glow, width, antialiased: true);
+    }
+
+    /// <summary>
+    /// Where a link's selection lines run: to the selected joints' halos, else to the joint edges,
+    /// else, when the joints crowd too close for either, centre to centre so the mark never vanishes.
+    /// </summary>
+    private static (Vector2 Start, Vector2 End) LinkSpan(
+        Vector2 a, Vector2 b, float radiusA, float radiusB, bool haloA, bool haloB, float offset, Vector2 along)
+    {
+        var reachA = haloA ? (float)SelectionMarks.JointHalo(radiusA) : radiusA;
+        var reachB = haloB ? (float)SelectionMarks.JointHalo(radiusB) : radiusB;
+        var start = LineEnd(a, b, reachA, offset);
+        var end = LineEnd(b, a, reachB, offset);
+        if ((end - start).Dot(along) > 0)
+        {
+            return (start, end);
+        }
+
+        return haloA || haloB ? LinkSpan(a, b, radiusA, radiusB, false, false, offset, along) : (a, b);
+    }
 }

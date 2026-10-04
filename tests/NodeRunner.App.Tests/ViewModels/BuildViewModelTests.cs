@@ -81,7 +81,8 @@ public sealed class BuildViewModelTests
             new HashSet<int> { 3 },
             new HashSet<int> { 101, 102 },
             new HashSet<int> { 201 },
-            new HashSet<int> { 301 }));
+            new HashSet<int> { 301 },
+            new HashSet<int>()));
 
         build.DeleteSelectedParts();
 
@@ -143,6 +144,9 @@ public sealed class BuildViewModelTests
     [InlineData(new[] { 201 }, "Aim")]
     [InlineData(new[] { 201, 202 }, "")]
     [InlineData(new[] { 201, 301 }, "")]
+    [InlineData(new[] { 401 }, "Stiffness,Damping")]
+    [InlineData(new[] { 401, 402 }, "Stiffness,Damping")]
+    [InlineData(new[] { 301, 401 }, "")]
     [InlineData(new int[0], "")]
     public void EditableParameters_AreOnePartsOwn_OrThoseEverySelectedPartHasAndCanShare(int[] parts, string editable)
     {
@@ -151,12 +155,15 @@ public sealed class BuildViewModelTests
             [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(90, 0)), new NodeDef(3, new Vector2D(180, 0))],
             [new BeamDef(101, 1, 2), new BeamDef(102, 2, 3)],
             [new SensorDef(201, 101, SensorKind.Camera), new SensorDef(202, 102, SensorKind.Camera)],
-            [new PistonDef(301, 1, 2), new PistonDef(302, 2, 3)]));
+            [new PistonDef(301, 1, 2), new PistonDef(302, 2, 3)],
+            [new SpringDef(401, 1, 3), new SpringDef(402, 2, 3)],
+            nextPartId: 403));
         build.ReplaceSelection(new PartSet(
             parts.Where(id => id < 100).ToHashSet(),
             parts.Where(id => id is > 100 and < 200).ToHashSet(),
             parts.Where(id => id is > 200 and < 300).ToHashSet(),
-            parts.Where(id => id > 300).ToHashSet()));
+            parts.Where(id => id is > 300 and < 400).ToHashSet(),
+            parts.Where(id => id > 400).ToHashSet()));
 
         string.Join(',', build.EditableParameters).ShouldBe(editable);
     }
@@ -201,7 +208,7 @@ public sealed class BuildViewModelTests
     {
         var build = new BuildViewModel { ActiveTool = BuildTool.Beam };
 
-        build.PickLink(BuildLink.Spring);
+        build.PickLink(BuildLink.Wing);
 
         build.PickedLink.ShouldBe(BuildLink.Beam);
     }

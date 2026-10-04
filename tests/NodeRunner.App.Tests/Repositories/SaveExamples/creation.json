@@ -26,6 +26,14 @@
           "y": 0
         },
         "name": null
+      },
+      {
+        "id": 10,
+        "position": {
+          "x": 2,
+          "y": -1.5
+        },
+        "name": null
       }
     ],
     "beams": [
@@ -69,7 +77,17 @@
         "maxSpeed": 200
       }
     ],
-    "nextPartId": 10
+    "springs": [
+      {
+        "id": 11,
+        "nodeA": 2,
+        "nodeB": 10,
+        "name": "Tail",
+        "stiffness": 300,
+        "damping": 0.25
+      }
+    ],
+    "nextPartId": 12
   },
   "training": {
     "brain": {

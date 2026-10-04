@@ -23,7 +23,7 @@ public sealed class CreatureReadinessTests
 
         CreatureReadiness.Problems(creature).ShouldBe(
         [
-            UiText.Format("Node {0} has nothing attached. Connect it with a beam or a piston, or remove it.", 3),
+            UiText.Format("Node {0} has nothing attached. Connect it with a beam, a piston or a spring, or remove it.", 3),
             UiText.Format("The beam between node {0} and node {1} has zero length. Move one of the nodes apart.", 1, 2),
         ]);
     }

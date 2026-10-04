@@ -9,8 +9,8 @@ namespace NodeRunner.Ui.Widgets;
 
 /// <summary>
 /// The creature Build is drawing, made of the same part visuals Training draws (#769): one
-/// <see cref="JointPart"/>, <see cref="BeamPart"/>, <see cref="PistonPart"/> and
-/// <see cref="SensorPart"/> per part, and one <see cref="HatchPart"/> for the rigid hatch, each on
+/// <see cref="JointPart"/>, <see cref="BeamPart"/>, <see cref="PistonPart"/>, <see cref="SpringPart"/>
+/// and <see cref="SensorPart"/> per part, and one <see cref="HatchPart"/> for the rigid hatch, each on
 /// its <see cref="CreatureLayers"/> layer. Its points are creature units; <see cref="BuildCanvas"/>
 /// places it through the view's zoom and pan and hands it what to show after every change.
 /// </summary>
@@ -19,6 +19,7 @@ public partial class BuildCreature : Node2D
     private readonly Dictionary<int, JointPart> _joints = [];
     private readonly Dictionary<int, BeamPart> _beams = [];
     private readonly Dictionary<int, PistonPart> _pistons = [];
+    private readonly Dictionary<int, SpringPart> _springs = [];
     private readonly Dictionary<int, SensorPart> _sensors = [];
     private readonly HatchPart _hatch = new();
     private readonly SensorPart _previewSensor = new() { Visible = false };
@@ -54,6 +55,7 @@ public partial class BuildCreature : Node2D
         ShowJoints(viewModel, selected, showsAsLoose);
         ShowBeams(viewModel, nodes, selected);
         ShowPistons(viewModel, nodes, selected);
+        ShowSprings(viewModel, nodes, selected);
         ShowSensors(viewModel, nodes, selected, sensorMotion, previewSensor);
         ShowHatch(viewModel, nodes);
         PartVisual.RedrawOnNewPixelScale(this, ref _pixelScale);
@@ -111,6 +113,24 @@ public partial class BuildCreature : Node2D
             part.HaloA = selected.Nodes.Contains(piston.NodeA);
             part.HaloB = selected.Nodes.Contains(piston.NodeB);
             part.Selected = selected.Pistons.Contains(piston.Id);
+        }
+    }
+
+    private void ShowSprings(BuildViewModel viewModel, Dictionary<int, NodeDef> nodes, PartSet selected)
+    {
+        Prune(_springs, viewModel.Springs.Select(spring => spring.Id));
+        foreach (var spring in viewModel.Springs)
+        {
+            var (nodeA, nodeB) = (nodes[spring.NodeA], nodes[spring.NodeB]);
+            var part = PartFor(_springs, spring.Id);
+            part.A = ToGodot(nodeA.Position);
+            part.B = ToGodot(nodeB.Position);
+            part.RadiusA = (float)nodeA.Radius;
+            part.RadiusB = (float)nodeB.Radius;
+            part.Danger = CreatureReadiness.IsTooShort(nodeA, nodeB);
+            part.HaloA = selected.Nodes.Contains(spring.NodeA);
+            part.HaloB = selected.Nodes.Contains(spring.NodeB);
+            part.Selected = selected.Springs.Contains(spring.Id);
         }
     }
 

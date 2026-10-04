@@ -17,7 +17,7 @@ public partial class PistonPart : PartVisual
     private bool _haloB;
 
     public PistonPart()
-        : base(CreatureLayers.Pistons, CreatureLayers.SelectedLinks)
+        : base(CreatureLayers.Links, CreatureLayers.SelectedLinks)
     {
     }
 

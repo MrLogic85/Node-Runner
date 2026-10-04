@@ -53,7 +53,7 @@ public sealed class BuildPresentationViewModelTests
         list.Rows.Select(row => (row.Link, row.State)).ShouldBe([
             (BuildLink.Beam, LinkListRowState.Selected),
             (BuildLink.Piston, LinkListRowState.Rest),
-            (BuildLink.Spring, LinkListRowState.Locked),
+            (BuildLink.Spring, LinkListRowState.Rest),
             (BuildLink.Wing, LinkListRowState.Locked)]);
     }
 
@@ -310,6 +310,39 @@ public sealed class BuildPresentationViewModelTests
     }
 
     [Fact]
+    public void SelectedSpring_HasASliderForItsStiffnessAndDamping()
+    {
+        var build = new BuildViewModel();
+        build.Load(SpringCreature());
+        build.SelectSpring(401);
+
+        var part = new BuildPresentationViewModel(build).SinglePart!;
+
+        part.Kind.ShouldBe(PartSettingsKind.Spring);
+        part.Note.ShouldBe(BuildPresentationViewModel.SpringNote);
+        part.Settings.Select(slider => slider.Readout).ShouldBe(
+        [
+            UiText.Format("{0} N/m", new FixedNumber(400, 0)),
+            UiText.Format("{0}%", new FixedNumber(30, 0)),
+        ]);
+    }
+
+    [Fact]
+    public void BuildPanel_WhenASpringIsTooShort_CountsItInReadiness()
+    {
+        var build = new BuildViewModel();
+        build.Load(new CreatureDef(
+            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(90, 0)), new NodeDef(3, new Vector2D(0, 20))],
+            [new BeamDef(101, 1, 2)],
+            [],
+            [new PistonDef(301, 2, 3)],
+            [new SpringDef(401, 1, 3)],
+            nextPartId: 402));
+
+        new BuildPresentationViewModel(build).BuildPanel.ReadinessText.ShouldBe(UiText.Counted("{0} spring too short", "{0} springs too short", 1));
+    }
+
+    [Fact]
     public void SelectedNodeWithoutBeams_SaysNoneYet()
     {
         var build = new BuildViewModel();
@@ -421,7 +454,7 @@ public sealed class BuildPresentationViewModelTests
     {
         var build = new BuildViewModel();
         build.Load(PistonCreature());
-        build.ReplaceSelection(new PartSet(new HashSet<int> { 1 }, new HashSet<int>(), new HashSet<int>(), new HashSet<int> { 301 }));
+        build.ReplaceSelection(new PartSet(new HashSet<int> { 1 }, new HashSet<int>(), new HashSet<int>(), new HashSet<int> { 301 }, new HashSet<int>()));
 
         var selection = new BuildPresentationViewModel(build).Selection!;
 
@@ -635,6 +668,14 @@ public sealed class BuildPresentationViewModelTests
         [new BeamDef(101, 1, 2), new BeamDef(102, 2, 3)],
         [new SensorDef(201, 101, SensorKind.Accelerometer)],
         [new PistonDef(301, 1, 3)]);
+
+    private static CreatureDef SpringCreature() => new(
+        [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(90, 0)), new NodeDef(3, new Vector2D(180, 0))],
+        [new BeamDef(101, 1, 2)],
+        [],
+        [new PistonDef(301, 1, 3)],
+        [new SpringDef(401, 2, 3)],
+        nextPartId: 402);
 
     private static CreatureDef TwoPistonCreature(double stroke, double otherStroke = 0.3) => new(
         [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(90, 0)), new NodeDef(3, new Vector2D(0, 90)), new NodeDef(4, new Vector2D(90, 90))],

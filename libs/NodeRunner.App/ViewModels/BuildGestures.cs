@@ -63,7 +63,7 @@ public sealed class BuildGestures
     private int? _pressedNode;
     private int? _pressedBeam;
     private int? _pressedSensor;
-    private int? _pressedPiston;
+    private CreatureElementSelection? _pressedLink;
     private Vector2D? _dragOrigin;
     private PartSet? _selectionBefore;
     private SelectionHandle? _pressedHandle;
@@ -95,16 +95,16 @@ public sealed class BuildGestures
     /// <summary>Raised when the gesture's own visuals change (beam preview, selection box), so the canvas can redraw.</summary>
     public event EventHandler? Changed;
 
-    /// <summary>The node a Beam or Piston drag started from.</summary>
+    /// <summary>The node a Beam or link drag started from.</summary>
     public int? BeamStartNodeId { get; private set; }
 
-    /// <summary>Where the pointer is during a Beam or Piston drag.</summary>
+    /// <summary>Where the pointer is during a Beam or link drag.</summary>
     public Vector2D? BeamEnd { get; private set; }
 
-    /// <summary>The joint a Beam or Piston drag would connect to if released now.</summary>
+    /// <summary>The joint a Beam or link drag would connect to if released now.</summary>
     public int? BeamTargetNodeId { get; private set; }
 
-    /// <summary>The joint under a Piston drag that would refuse it (#451), such as one a beam already joins to the start.</summary>
+    /// <summary>The joint under a Piston or Spring drag that would refuse it (#451), such as one a beam already joins to the start.</summary>
     public int? RefusedTargetNodeId { get; private set; }
 
     /// <summary>The corners of the Select tool's box while it is dragged.</summary>
@@ -290,9 +290,9 @@ public sealed class BuildGestures
             return;
         }
 
-        // Joints, then sensors, then Pistons, then beams; a joint's wider touch reach only counts off
-        // its ring, so it never covers a sensor picture next to it. A Piston draws over the beams it
-        // crosses, so it is hit first.
+        // Joints, then sensors, then links, then beams; a joint's wider touch reach only counts off
+        // its ring, so it never covers a sensor picture next to it. A Piston or Spring draws over the
+        // beams it crosses, so it is hit first.
         if (_build.TryFindNodeNear(position, 0, out var nodeId))
         {
             _pressedNode = nodeId;
@@ -305,9 +305,9 @@ public sealed class BuildGestures
         {
             _pressedNode = nodeId;
         }
-        else if (_build.TryFindPistonNear(position, HitDistance(BeamHitDistance), out var pistonId))
+        else if (_build.TryFindLinkNear(position, HitDistance(BeamHitDistance), out var link))
         {
-            _pressedPiston = pistonId;
+            _pressedLink = link;
         }
         else if (_build.TryFindBeamNear(position, HitDistance(BeamHitDistance), out var beamId))
         {
@@ -408,10 +408,10 @@ public sealed class BuildGestures
                 break;
             case BuildTool.Beam when BeamStartNodeId is { } start:
                 BeamEnd = position;
-                if (_build.PickedLink == BuildLink.Piston)
+                if (_build.PickedLink != BuildLink.Beam)
                 {
-                    var target = FindPistonTarget(start, position);
-                    var refused = target is { } end && !_build.CanConnectPiston(start, end, out _);
+                    var target = FindLinkTarget(start, position);
+                    var refused = target is { } end && !_build.CanConnectLink(_build.PickedLink, start, end, out _);
                     BeamTargetNodeId = refused ? null : target;
                     RefusedTargetNodeId = refused ? target : null;
                 }
@@ -461,12 +461,12 @@ public sealed class BuildGestures
                 TapMove();
                 break;
             case BuildTool.Beam when BeamStartNodeId is { } start && _dragging:
-                if (_build.PickedLink == BuildLink.Piston)
+                if (_build.PickedLink != BuildLink.Beam)
                 {
-                    // A Piston never makes a joint, so a drop away from one places nothing.
-                    if (FindPistonTarget(start, position) is { } pistonEnd)
+                    // A link never makes a joint, so a drop away from one places nothing.
+                    if (FindLinkTarget(start, position) is { } linkEnd)
                     {
-                        _build.ConnectPiston(start, pistonEnd);
+                        _build.ConnectLink(_build.PickedLink, start, linkEnd);
                     }
                 }
                 else if (FindBeamTarget(start, position) is { } end)
@@ -571,7 +571,7 @@ public sealed class BuildGestures
     private CreatureElementSelection? PressedElement() =>
         _pressedNode is { } node ? new(CreatureElementKind.Node, node)
         : _pressedSensor is { } sensor ? new(CreatureElementKind.Sensor, sensor)
-        : _pressedPiston is { } piston ? new(CreatureElementKind.Piston, piston)
+        : _pressedLink is { } link ? link
         : _pressedBeam is { } beam ? new(CreatureElementKind.Beam, beam)
         : null;
 
@@ -585,9 +585,13 @@ public sealed class BuildGestures
         {
             _build.SelectSensor(sensor);
         }
-        else if (_pressedPiston is { } piston)
+        else if (_pressedLink is { Kind: CreatureElementKind.Piston } piston)
         {
-            _build.SelectPiston(piston);
+            _build.SelectPiston(piston.Id);
+        }
+        else if (_pressedLink is { } spring)
+        {
+            _build.SelectSpring(spring.Id);
         }
         else if (_pressedBeam is { } beam)
         {
@@ -601,7 +605,7 @@ public sealed class BuildGestures
 
     private void TapJoint()
     {
-        if (_pressedNode is not null || _pressedSensor is not null || _pressedPiston is not null || _build.IsMoveOnly)
+        if (_pressedNode is not null || _pressedSensor is not null || _pressedLink is not null || _build.IsMoveOnly)
         {
             return;
         }
@@ -775,8 +779,8 @@ public sealed class BuildGestures
     private int? FindBeamTarget(int start, Vector2D position) =>
         _build.TryFindNodeNear(position, SelectionMarks.Gap, out var end) && _build.CanConnect(start, end) ? end : null;
 
-    /// <summary>Any other joint under the pointer, so a refused Piston drop can say why there.</summary>
-    private int? FindPistonTarget(int start, Vector2D position) =>
+    /// <summary>Any other joint under the pointer, so a refused link drop can say why there.</summary>
+    private int? FindLinkTarget(int start, Vector2D position) =>
         _build.TryFindNodeNear(position, SelectionMarks.Gap, out var end) && end != start ? end : null;
 
     private void CompleteSelectionBox(Vector2D start, Vector2D end)
@@ -789,7 +793,7 @@ public sealed class BuildGestures
 
     /// <summary>
     /// The parts whose centres lie in the box from <paramref name="start"/> to <paramref name="end"/>
-    /// (#704): a joint's centre, a beam's or Piston's midpoint, and a sensor's, which is its beam's
+    /// (#704): a joint's centre, a beam's or link's midpoint, and a sensor's, which is its beam's
     /// midpoint. Null while the box is too small to count.
     /// </summary>
     private PartSet? PartsInBox(Vector2D start, Vector2D end)
@@ -808,7 +812,8 @@ public sealed class BuildGestures
             _build.Nodes.Where(node => Inside(node.Position)).Select(node => node.Id).ToHashSet(),
             beams,
             _build.Sensors.Where(sensor => beams.Contains(sensor.BeamId)).Select(sensor => sensor.Id).ToHashSet(),
-            _build.Pistons.Where(piston => MidInside(piston.NodeA, piston.NodeB)).Select(piston => piston.Id).ToHashSet());
+            _build.Pistons.Where(piston => MidInside(piston.NodeA, piston.NodeB)).Select(piston => piston.Id).ToHashSet(),
+            _build.Springs.Where(spring => MidInside(spring.NodeA, spring.NodeB)).Select(spring => spring.Id).ToHashSet());
     }
 
     private double HitDistance(double viewDistance) => viewDistance / View.Zoom;
@@ -844,7 +849,7 @@ public sealed class BuildGestures
         _pressedNode = null;
         _pressedBeam = null;
         _pressedSensor = null;
-        _pressedPiston = null;
+        _pressedLink = null;
         BeamStartNodeId = null;
         BeamEnd = null;
         BeamTargetNodeId = null;

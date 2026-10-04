@@ -99,7 +99,7 @@ public sealed class BuildPistonTests
     public void ABeam_BetweenTwoNodesAPistonJoins_IsRefused()
     {
         var (build, _) = ThreeLooseJoints();
-        build.ConnectPiston(1, 2);
+        build.ConnectLink(BuildLink.Piston, 1, 2);
 
         build.ConnectBeam(1, 2);
 
@@ -110,13 +110,15 @@ public sealed class BuildPistonTests
     public void TapOnAPiston_SelectsIt_BeforeTheBeamUnderIt()
     {
         var (build, gestures) = ThreeLooseJoints();
-        build.ConnectBeam(1, 3);
-        build.ConnectPiston(1, 2);
+        var below = build.PlaceNode(new Vector2D(50, -60));
+        var above = build.PlaceNode(new Vector2D(50, 60));
+        build.ConnectBeam(below, above).ShouldBeTrue();
+        var link = build.ConnectLink(BuildLink.Piston, 1, 2)!.Value;
         build.ActiveTool = BuildTool.Parts;
 
         Tap(gestures, new Vector2D(50, 0));
 
-        build.SingleSelectedPistonId.ShouldBe(5);
+        build.SingleSelectedPistonId.ShouldBe(link);
         build.SelectedBeamCount.ShouldBe(0);
     }
 
@@ -124,7 +126,7 @@ public sealed class BuildPistonTests
     public void DeletingANode_RemovesItsPistons()
     {
         var (build, _) = ThreeLooseJoints();
-        build.ConnectPiston(1, 2);
+        build.ConnectLink(BuildLink.Piston, 1, 2);
         build.ToggleSelected(new(CreatureElementKind.Node, 2));
 
         build.DeleteSelectedParts();
@@ -136,7 +138,7 @@ public sealed class BuildPistonTests
     public void DeleteSelectedParts_RemovesTheSelectedPiston()
     {
         var (build, _) = ThreeLooseJoints();
-        var piston = build.ConnectPiston(1, 2)!.Value;
+        var piston = build.ConnectLink(BuildLink.Piston, 1, 2)!.Value;
         build.SelectPiston(piston);
 
         build.DeleteSelectedParts();

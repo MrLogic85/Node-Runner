@@ -1,11 +1,12 @@
 using Godot;
 using NodeRunner.Domain;
+using NodeRunner.Theme;
 using NodeRunner.Ui.Lib;
 
 namespace NodeRunner.Ui.Widgets;
 
 /// <summary>
-/// A creature's body drawn to fit its rectangle, as on a Creations card: beams, Pistons and nodes.
+/// A creature's body drawn to fit its rectangle, as on a Creations card: beams, links and nodes.
 /// Colours are read from the Theme while drawing, so a theme swap redraws it. Its top corners
 /// round to the card's, because it sits at the top of a flush card.
 /// </summary>
@@ -17,6 +18,8 @@ public partial class CreatureThumbnail : Control
     private const float _fill = 0.74f;
     private const float _nodeRadius = 5.5f;
     private const int _ringPoints = 24;
+    private const float _springHalf = 3;
+    private const float _springMinSpan = 16;
 
     private CreatureDef? _creature;
 
@@ -61,6 +64,23 @@ public partial class CreatureThumbnail : Control
         foreach (var piston in _creature.Pistons)
         {
             pen.Line(MapNode(piston.NodeA), MapNode(piston.NodeB), accent, UiSize.Stroke.Signal);
+        }
+
+        // A Spring is its coil between the node rings (#453), or a plain line when too short to read as one.
+        foreach (var spring in _creature.Springs)
+        {
+            var (a, b) = (MapNode(spring.NodeA), MapNode(spring.NodeB));
+            var along = (b - a).Normalized();
+            var (start, end) = (a + (along * _nodeRadius), b - (along * _nodeRadius));
+            if (start.DistanceTo(end) < _springMinSpan)
+            {
+                pen.Line(a, b, line, UiSize.Stroke.Signal);
+                continue;
+            }
+
+            pen.Line(a, start, line, UiSize.Stroke.Signal);
+            pen.Polyline(SpringDrawing.Coil(start, end, _springHalf), line, UiSize.Stroke.Signal);
+            pen.Line(end, b, line, UiSize.Stroke.Signal);
         }
 
         var fill = UiThemeLookup.Color(this, UiTokens.Color.Panel);

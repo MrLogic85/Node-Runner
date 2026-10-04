@@ -33,14 +33,17 @@ Pure C# data types. The vocabulary of the app, no behavior beyond invariants.
     `SelectionMarks` is the ninth: the one selection gap, a joint's halo
     and touch reach (#710), shared by Build's gestures and the drawing in
     Build and Training.
+    `Spring` is the tenth: a Spring's damping coefficient from its share of
+    critical (#453), shared by the sim and tests.
 - **Serialisable via `System.Text.Json` without custom converters.** Saved
   records are the save shape: changing one follows `docs/SAVE_FORMAT.md`.
 
 ## What lives here
 
 - `CreatureDef`, `NodeDef`, `BeamDef`, `SensorDef`, `SensorKind`,
-  `PistonDef` — anatomy
+  `PistonDef`, `SpringDef` — anatomy
 - `Piston` — a Piston's port values and force (see the exception above)
+- `Spring` — a Spring's damping coefficient (see the exception above)
 - `Accelerometer`, `ProofMass` — the accelerometer's pure math (see the
   exception above)
 - `CameraRays` — the camera's pure math (see the exception above)

@@ -77,22 +77,22 @@ pan, and `BuildCanvas` only forwards input and draws. A pointer that
 travels at most `TapSlop` view units counts as a tap. Hit tests prefer a node
 over a beam under it. A joint's touch area (its ring plus the selection
 gap, #710) and a sensor's picture are in canvas units, so they grow and
-shrink with the drawing; beams, Pistons and handles have finger-sized hit
+shrink with the drawing; beams, links and handles have finger-sized hit
 sizes on screen at any zoom.
 
-- **Parts:** tap a joint, beam, sensor or Piston to select it (its settings
+- **Parts:** tap a joint, beam, sensor or link to select it (its settings
   open), tap empty canvas to deselect, drag a joint to move it, drag anywhere
   else (empty canvas or a beam) to pan the view (#400). Parts never adds a
   node.
-- **Beams:** with nothing selected, the panel lists link types: Beam, Piston
-  and later Spring and Wing. Beam is picked each time the tool is entered;
+- **Beams:** with nothing selected, the panel lists link types: Beam, Piston,
+  Spring and later Wing. Beam is picked each time the tool is entered;
   selecting a part and clearing it keeps the picked link. Tap a joint, beam,
-  sensor or Piston to select it; tap empty canvas to clear. Drag from a
+  sensor or link to select it; tap empty canvas to clear. Drag from a
   selected joint to move only that joint. Drag from an unselected joint to a
   different joint to draw the picked link. A Beam preview only snaps to a node
   the beam could join (`BuildViewModel.CanConnect`); releasing anywhere else
-  adds nothing. A Piston preview uses the refusals and canvas notes in the
-  Piston bullet below. Drag anywhere else pans. Beams never adds a node.
+  adds nothing. A Piston or Spring preview uses the refusals and canvas notes
+  in the Piston bullet below. Drag anywhere else pans. Beams never adds a node.
 - **Joint:** tap empty canvas to add a node, or tap a beam to split it at the
   closest point: one change that replaces the beam with two through the new
   node (`BuildViewModel.SplitBeam`).
@@ -100,12 +100,12 @@ sizes on screen at any zoom.
   a dashed frame and three `UiSelectionHandle`s: **Move** in the middle (or
   drag anywhere inside the frame, or a selected joint), **Rotate** on a stem
   above and **Scale** at the bottom-right corner.
-  - A tap on any joint, beam, sensor or Piston adds or removes it, even
+  - A tap on any joint, beam, sensor or link adds or removes it, even
     under a handle; an empty tap clears (`BuildViewModel.ToggleSelected`).
   - With a group, any other drag pans. With none, a drag from a joint moves
     it (selecting only it unless it is selected), and any other drag draws a
     box that selects every part whose centre is in it: a joint's centre, a
-    beam's or Piston's midpoint, a sensor's beam midpoint. It replaces the
+    beam's or link's midpoint, a sensor's beam midpoint. It replaces the
     selection, so a box can catch only beams.
   - After a Rotate the frame stays turned until the selection changes
     (`docs/UI_DIRECTION.md` → "The Select frame keeps its turn"). Rotate
@@ -131,6 +131,11 @@ sizes on screen at any zoom.
   picked link stays after placement until another tool is
   entered. A new Piston is not selected. Taps hit a joint, then a sensor, then
   a Piston, then a beam. Deleting a joint deletes its Pistons.
+- **Spring (#453):** placed like a Piston, with the same refusals; a pair
+  that has a Spring refuses another link with "These nodes already have a
+  spring". Taps treat Pistons and Springs alike as links: after a sensor
+  and before a beam, the nearest link is hit, a Spring on a tie. Deleting a
+  joint deletes its Springs. A locked creation cannot add one.
 - **Camera aim (#594, #622):** a Camera selected alone shows its rays and an Aim
   handle out along its centre ray past its picture, in any tool, with no
   stem line. It always sits twice as far from the camera's middle as a
@@ -221,7 +226,7 @@ part shows its settings and several show the selection panel instead.
 
 ## Part settings
 
-One selected joint, beam, sensor or Piston shows its Part settings in the side
+One selected joint, beam, sensor or link shows its Part settings in the side
 panel (#343). The panel's own title row carries the part's glyph and name;
 there is no close button, and tapping empty canvas deselects. The rows are
 `UiTextField` **Name** first, then what the part is joined to (a joint's
@@ -246,7 +251,8 @@ several selected parts can share one value (`MultiEditable`), and a slider
 when the panel shows it (`InPanel`). Each kind of part lists its own
 (`CreatureBuilder.ParametersOf`): a Piston has **Max strength** (20–400 N,
 step 10), **Stroke** (±10–50%, step 5) and **Max speed** (0.5–4.0 m/s, step
-0.1); a Camera has **Aim**, set on the canvas and one Camera at a time.
+0.1); a Spring has **Stiffness** (50–2000 N/m, step 50) and **Damping**
+(0–100%, step 5); a Camera has **Aim**, set on the canvas and one Camera at a time.
 
 The selection can change one part's own parameters, or those every selected
 part has and can share (`BuildViewModel.EditableParameters`). The panel shows a
@@ -258,6 +264,8 @@ so a locked creation keeps them.
 
 A Piston's rows are Name, then its sliders instead of what it is joined to,
 then the note "The brain pushes it out and pulls it in, within its stroke."
+A Spring's are Name, its two sliders, then "It pulls back toward its drawn
+length. Damping stops it bouncing."
 
 ## Selection panel
 
@@ -283,8 +291,8 @@ ids and sensors at existing beam ids (one sensor per beam), so an empty or unfin
 a Creation (#515). Only training needs a finished creature.
 `NodeRunner.App.Lifecycle.CreatureReadiness` is the single source of truth
 for that, in two steps: `Problems` lists why the creature cannot be
-simulated yet (no nodes, a node with no beam or Piston, a zero-length beam
-or Piston, or one shorter than `CreatureReadiness.MinimumBeamGap` between its
+simulated yet (no nodes, a node with no beam or link, a zero-length beam
+or link, or one shorter than `CreatureReadiness.MinimumBeamGap` between its
 joint rings, #593), and `CanTrain` also needs at least one brain output to
 drive. Joints are passive (#450), so today that means a Piston; Build says
 "Add a piston" until there is one.

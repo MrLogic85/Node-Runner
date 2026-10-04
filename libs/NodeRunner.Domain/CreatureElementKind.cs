@@ -6,4 +6,5 @@ public enum CreatureElementKind
     Beam,
     Sensor,
     Piston,
+    Spring,
 }
