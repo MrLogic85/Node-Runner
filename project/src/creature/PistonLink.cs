@@ -13,12 +13,14 @@ namespace NodeRunner.Creature;
 /// </summary>
 public sealed class PistonLink
 {
-    public PistonLink(PistonDef definition, RigidBody2D nodeA, RigidBody2D nodeB)
+    // loadA and loadB are the masses its nodes move, each with its share of the beams pinned to it.
+    public PistonLink(PistonDef definition, RigidBody2D nodeA, RigidBody2D nodeB, double loadA, double loadB)
     {
         Definition = definition;
         NodeA = nodeA;
         NodeB = nodeB;
         BuiltLength = Math.Max(nodeA.Position.DistanceTo(nodeB.Position), 1f);
+        PairMass = loadA * loadB / (loadA + loadB);
     }
 
     public PistonDef Definition { get; }
@@ -48,8 +50,8 @@ public sealed class PistonLink
 
     private PistonControl _control;
 
-    // The reduced mass of its two nodes along its line: the lightest load it moves (see Mechanics.Piston.Step).
-    private double PairMass => NodeA.Mass * NodeB.Mass / (NodeA.Mass + NodeB.Mass);
+    // The reduced mass of its two nodes' loads along its line: the lightest load it moves (see Mechanics.Piston.Step).
+    private double PairMass { get; }
 
     private Vector2 Axis => (NodeB.GlobalPosition - NodeA.GlobalPosition).Normalized();
 

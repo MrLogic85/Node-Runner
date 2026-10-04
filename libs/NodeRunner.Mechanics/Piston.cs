@@ -64,7 +64,7 @@ public static class Piston
     /// <param name="speed">How fast its length grows, in world units per second.</param>
     /// <param name="position">The brain's position output, −1 fully in … +1 fully out.</param>
     /// <param name="strength">The brain's strength output, 0…1 of its Strength setting.</param>
-    /// <param name="pairMass">The reduced mass of its two node bodies.</param>
+    /// <param name="pairMass">The reduced mass of what its two nodes move, their bodies with any beams pinned to them.</param>
     /// <param name="step">The physics step, in seconds.</param>
     /// <param name="previous">The last step's control; <c>default</c> at the start of a try.</param>
     public static PistonControl Step(

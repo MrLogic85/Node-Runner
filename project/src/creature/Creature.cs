@@ -17,17 +17,21 @@ public partial class Creature : Node2D
     private const uint _groundLayer = 1u;
     private const uint _creatureLayer = 1u << 1;
 
-    // A beam's, Piston's or Spring's weight is simulated as half on each of its end nodes, so a
-    // node's mass is the sum of half of every beam and link it joins.
+    // A Piston's or Spring's weight is simulated as half on each of its end nodes. A beam's is split
+    // half on its own body and a quarter on each end node (#794), so a creature weighs the same.
     private const float _beamWeight = 1.2f;
 
     // A Piston's end-stop cylinder weighs half a beam on top (#731), so Godot's joints can hold it
     // on its node A.
     private const float _cylinderMass = _beamWeight / 2;
 
-    // The beam body itself is nearly massless (Godot needs some mass) and only
-    // carries sensors between its two nodes.
-    private const float _beamBodyMass = 0.1f;
+    // The beam body carries half its beam's weight (#794): Godot's solver cannot hold a nearly
+    // massless body pinned between heavy nodes, so under Piston load its pins gave way and rigid
+    // triangles folded inside out.
+    private const float _beamBodyMass = _beamWeight / 2;
+
+    // Godot needs some mass on every body; a node joined to nothing still weighs this.
+    private const float _minNodeMass = 0.1f;
 
     // Beams have no collider, so Godot cannot derive their turning inertia; it is
     // set as a solid bar this thick.
@@ -43,6 +47,11 @@ public partial class Creature : Node2D
     private float[] _beamInitialRotations = [];
     private RigidBody2D[] _nodeBodies = [];
     private Vector2[] _nodeInitialPositions = [];
+
+    // The mass each node moves: its own body plus half of each beam body pinned to it. Piston control
+    // and Spring damping are tuned to this, not to the node body alone (#794).
+    private float[] _nodeLoads = [];
+
     private float[] _nodeColliderRadii = [];
     private NodeVisual[] _nodeVisuals = [];
     private BeamVisual[] _beamVisuals = [];
@@ -538,7 +547,8 @@ public partial class Creature : Node2D
         }
     }
 
-    // A node is its own body with a circle collider, weighing half of each beam and link it joins. Its rotation is locked:
+    // A node is its own body with a circle collider, weighing a quarter of each beam and half of each
+    // link it joins (see _beamWeight). Its rotation is locked:
     // a free-spinning circle pinned at its centre would roll like a wheel and give
     // the creature no grip on the ground.
     private void CreateNodes(CreatureDef definition)
@@ -548,12 +558,15 @@ public partial class Creature : Node2D
         _nodeInitialPositions = new Vector2[count];
         _nodeColliderRadii = new float[count];
         _nodeVisuals = new NodeVisual[count];
+        _nodeLoads = new float[count];
 
         var masses = new float[count];
         foreach (var beam in definition.Beams)
         {
-            masses[definition.NodeIndexOf(beam.NodeA)] += _beamWeight / 2;
-            masses[definition.NodeIndexOf(beam.NodeB)] += _beamWeight / 2;
+            masses[definition.NodeIndexOf(beam.NodeA)] += _beamWeight / 4;
+            masses[definition.NodeIndexOf(beam.NodeB)] += _beamWeight / 4;
+            _nodeLoads[definition.NodeIndexOf(beam.NodeA)] += _beamBodyMass / 2;
+            _nodeLoads[definition.NodeIndexOf(beam.NodeB)] += _beamBodyMass / 2;
         }
 
         foreach (var piston in definition.Pistons)
@@ -579,13 +592,14 @@ public partial class Creature : Node2D
                 CollisionLayer = _creatureLayer,
                 CollisionMask = _groundLayer,
                 Position = position,
-                Mass = Math.Max(masses[i], _beamBodyMass),
+                Mass = Math.Max(masses[i], _minNodeMass),
                 LockRotation = true,
                 LinearDamp = 0.55f,
                 CanSleep = false,
                 ContinuousCd = RigidBody2D.CcdMode.CastRay,
             };
             body.AddChild(new CollisionShape2D { Shape = new CircleShape2D { Radius = radius } });
+            _nodeLoads[i] += body.Mass;
 
             var visual = new NodeVisual
             {

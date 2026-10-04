@@ -17,8 +17,8 @@ public static class Spring
     /// mA·mB / (mA + mB). Attached to a heavier body it bounces a little more.
     /// </summary>
     /// <param name="spring">The Spring and its settings.</param>
-    /// <param name="massA">The mass of its node A body.</param>
-    /// <param name="massB">The mass of its node B body.</param>
+    /// <param name="massA">The mass its node A moves, its body with any beams pinned to it.</param>
+    /// <param name="massB">The mass its node B moves.</param>
     public static double DampingCoefficient(SpringDef spring, double massA, double massB)
     {
         ArgumentNullException.ThrowIfNull(spring);
