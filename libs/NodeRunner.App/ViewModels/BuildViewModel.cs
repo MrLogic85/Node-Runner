@@ -21,9 +21,10 @@ public enum BuildTool
 /// selected, and the anatomy placed so far via a <see cref="CreatureBuilder"/>.
 /// UI (see `project/src/ui/AGENTS.md`) binds to this instead of mutating the
 /// builder directly; it may still read the Domain DTOs (<see cref="NodeDef"/>
-/// etc.) this view-model exposes. See `docs/BUILD_MODE.md`.
+/// etc.) this view-model exposes. The selection and the Select tool's transforms are in
+/// BuildViewModel.Selection.cs. See `docs/BUILD_MODE.md`.
 /// </summary>
-public sealed class BuildViewModel : INotifyPropertyChanged
+public sealed partial class BuildViewModel : INotifyPropertyChanged
 {
     /// <summary>
     /// Where joints may go, in canvas units: about six screens wide at 1×,
@@ -39,12 +40,6 @@ public sealed class BuildViewModel : INotifyPropertyChanged
     /// <summary>The Build grid's cell size in canvas units.</summary>
     public const double BuildGridStep = 48;
 
-    /// <summary>The smallest factor one Scale drag can shrink a selection by.</summary>
-    public const double MinSelectionScale = 0.25;
-
-    /// <summary>The largest factor one Scale drag can grow a selection by.</summary>
-    public const double MaxSelectionScale = 4;
-
     /// <summary>How far past <see cref="BuildArea"/> the Build view can show, in canvas units, at any zoom.</summary>
     public const double BuildViewMargin = BuildGridStep;
 
@@ -58,14 +53,9 @@ public sealed class BuildViewModel : INotifyPropertyChanged
     private BuildTool _activeTool = BuildTool.Parts;
     private BuildLink _pickedLink = BuildLink.Beam;
     private bool _moveOnly;
-    private readonly HashSet<int> _selectedNodeIds = [];
     private string _creationName = string.Empty;
     private int? _trainingGeneration;
     private double? _latestDistance;
-    private readonly HashSet<int> _selectedBeamIds = [];
-    private readonly HashSet<int> _selectedSensorIds = [];
-    private readonly HashSet<int> _selectedPistonIds = [];
-    private readonly HashSet<int> _selectedSpringIds = [];
     private CanvasNote? _placementNote;
     private readonly BuildHistory _history;
     private BrainDef? _openedBrain;
@@ -211,36 +201,6 @@ public sealed class BuildViewModel : INotifyPropertyChanged
 
     /// <summary>How far the latest finished generation's best run got (#479); it can go down.</summary>
     public double? LatestDistance => _latestDistance;
-
-    public int SelectedNodeCount => _selectedNodeIds.Count;
-
-    public int SelectedBeamCount => _selectedBeamIds.Count;
-
-    public int SelectedSensorCount => _selectedSensorIds.Count;
-
-    public int SelectedPistonCount => _selectedPistonIds.Count;
-
-    public int SelectedSpringCount => _selectedSpringIds.Count;
-
-    public int SelectedPartCount => SelectedNodeCount + SelectedBeamCount + SelectedSensorCount + SelectedPistonCount + SelectedSpringCount;
-
-    public int? SingleSelectedNodeId => Single(_selectedNodeIds);
-
-    public int? SingleSelectedBeamId => Single(_selectedBeamIds);
-
-    public int? SingleSelectedSensorId => Single(_selectedSensorIds);
-
-    public int? SingleSelectedPistonId => Single(_selectedPistonIds);
-
-    public int? SingleSelectedSpringId => Single(_selectedSpringIds);
-
-    /// <summary>A copy of everything selected (#704).</summary>
-    public PartSet Selection => new(
-        _selectedNodeIds.ToHashSet(),
-        _selectedBeamIds.ToHashSet(),
-        _selectedSensorIds.ToHashSet(),
-        _selectedPistonIds.ToHashSet(),
-        _selectedSpringIds.ToHashSet());
 
     /// <summary>The Camera whose aim handle shows (#594): Aim can be set, so it is the one selected part.</summary>
     public int? AimableCameraId => CanEdit(PartParameterId.Aim) ? SingleSelectedSensorId : null;
@@ -464,8 +424,6 @@ public sealed class BuildViewModel : INotifyPropertyChanged
         _ => _builder.Sensors.Any(sensor => sensor.Id == element.Id),
     };
 
-    public IReadOnlyCollection<int> SelectedNodeIds => _selectedNodeIds;
-
     /// <summary>Places a new node, moved inside <see cref="BuildArea"/>, and returns its id.</summary>
     public int PlaceNode(Vector2D position)
     {
@@ -485,34 +443,6 @@ public sealed class BuildViewModel : INotifyPropertyChanged
         _history.Change(() => _builder.MoveNode(nodeId, BuildArea.Clamp(position, NodeById(nodeId).Radius)));
         AnatomyChanged?.Invoke(this, EventArgs.Empty);
     }
-
-    /// <summary>Adds the part to the selection, or removes it if it is already selected (#704).</summary>
-    public void ToggleSelected(CreatureElementSelection element)
-    {
-        ArgumentNullException.ThrowIfNull(element);
-        if (!Exists(element))
-        {
-            throw new ArgumentException($"No {element.Kind} {element.Id}.", nameof(element));
-        }
-
-        var set = SelectedSet(element.Kind);
-        if (!set.Add(element.Id))
-        {
-            set.Remove(element.Id);
-        }
-
-        SelectionChanged();
-    }
-
-    public void SelectBeam(int beamId) => SelectOnly(CreatureElementKind.Beam, beamId);
-
-    public void SelectSensor(int sensorId) => SelectOnly(CreatureElementKind.Sensor, sensorId);
-
-    public void SelectPiston(int pistonId) => SelectOnly(CreatureElementKind.Piston, pistonId);
-
-    public void SelectSpring(int springId) => SelectOnly(CreatureElementKind.Spring, springId);
-
-    private void SelectOnly(CreatureElementKind kind, int id) => ReplaceSelection(PartSetOf(kind, id));
 
     /// <summary>
     /// The settings the selection can change now (#704): one part's own, or those every selected part
@@ -580,9 +510,6 @@ public sealed class BuildViewModel : INotifyPropertyChanged
         }
     }
 
-    private IEnumerable<int> SelectedPartIds() =>
-        _selectedNodeIds.Concat(_selectedBeamIds).Concat(_selectedSensorIds).Concat(_selectedPistonIds).Concat(_selectedSpringIds);
-
     /// <summary>The sensor whose picture (<see cref="SensorPicture"/>) is under <paramref name="position"/>, if any.</summary>
     public bool TryFindSensorAt(Vector2D position, out int sensorId)
     {
@@ -637,182 +564,6 @@ public sealed class BuildViewModel : INotifyPropertyChanged
     }
 
     private string? PartName(int partId) => PartNames.Own(_builder.Nodes, _builder.Beams, _builder.Sensors, _builder.Pistons, _builder.Springs, partId);
-
-    public void ClearSelection()
-    {
-        if (SelectedPartCount == 0)
-        {
-            return;
-        }
-
-        ClearSelectionSets();
-        NotifySelectionChanged();
-        AnatomyChanged?.Invoke(this, EventArgs.Empty);
-    }
-
-    public void ReplaceSelection(IEnumerable<int> nodeIds)
-    {
-        ArgumentNullException.ThrowIfNull(nodeIds);
-        ReplaceSelection(PartSet.None with { Nodes = nodeIds.ToHashSet() });
-    }
-
-    /// <summary>Selects exactly the <paramref name="parts"/> that still exist.</summary>
-    public void ReplaceSelection(PartSet parts)
-    {
-        ArgumentNullException.ThrowIfNull(parts);
-        ClearSelectionSets();
-        foreach (var kind in Enum.GetValues<CreatureElementKind>())
-        {
-            SelectedSet(kind).UnionWith(parts.SetOf(kind).Where(id => Exists(new CreatureElementSelection(kind, id))));
-        }
-
-        SelectionChanged();
-    }
-
-    private static PartSet PartSetOf(CreatureElementKind kind, int id)
-    {
-        var one = new HashSet<int> { id };
-        return kind switch
-        {
-            CreatureElementKind.Node => PartSet.None with { Nodes = one },
-            CreatureElementKind.Beam => PartSet.None with { Beams = one },
-            CreatureElementKind.Sensor => PartSet.None with { Sensors = one },
-            CreatureElementKind.Piston => PartSet.None with { Pistons = one },
-            CreatureElementKind.Spring => PartSet.None with { Springs = one },
-            _ => throw new ArgumentOutOfRangeException(nameof(kind)),
-        };
-    }
-
-    private HashSet<int> SelectedSet(CreatureElementKind kind) => kind switch
-    {
-        CreatureElementKind.Node => _selectedNodeIds,
-        CreatureElementKind.Beam => _selectedBeamIds,
-        CreatureElementKind.Sensor => _selectedSensorIds,
-        CreatureElementKind.Piston => _selectedPistonIds,
-        CreatureElementKind.Spring => _selectedSpringIds,
-        _ => throw new ArgumentOutOfRangeException(nameof(kind)),
-    };
-
-    private void ClearSelectionSets()
-    {
-        _selectedNodeIds.Clear();
-        _selectedBeamIds.Clear();
-        _selectedSensorIds.Clear();
-        _selectedPistonIds.Clear();
-        _selectedSpringIds.Clear();
-    }
-
-    private int? Single(HashSet<int> set) => SelectedPartCount == 1 && set.Count == 1 ? set.First() : null;
-
-    private void SelectionChanged()
-    {
-        NotifySelectionChanged();
-        AnatomyChanged?.Invoke(this, EventArgs.Empty);
-    }
-
-    /// <summary>
-    /// The selected joints' positions and pivot, for a Select drag to transform: the given
-    /// <paramref name="pivot"/>, or else the middle of the joints' centres.
-    /// </summary>
-    public SelectionSnapshot SnapshotSelection(Vector2D? pivot = null)
-    {
-        if (_selectedNodeIds.Count == 0)
-        {
-            throw new InvalidOperationException("Nothing is selected.");
-        }
-
-        var positions = _selectedNodeIds.ToDictionary(id => id, id => NodeById(id).Position);
-        pivot ??= new Vector2D(
-            (positions.Values.Min(p => p.X) + positions.Values.Max(p => p.X)) / 2,
-            (positions.Values.Min(p => p.Y) + positions.Values.Max(p => p.Y)) / 2);
-        return new SelectionSnapshot(positions, pivot.Value);
-    }
-
-    /// <summary>Moves the snapshot's joints by <paramref name="delta"/>, shortened so the whole group stays inside <see cref="BuildArea"/>.</summary>
-    public void TranslateSelection(SelectionSnapshot start, Vector2D delta)
-    {
-        ArgumentNullException.ThrowIfNull(start);
-        foreach (var (id, position) in start.Positions)
-        {
-            var moved = new Vector2D(position.X + delta.X, position.Y + delta.Y);
-            var allowed = BuildArea.Clamp(moved, NodeById(id).Radius);
-            delta = new Vector2D(delta.X + allowed.X - moved.X, delta.Y + allowed.Y - moved.Y);
-        }
-
-        // Clamping each joint too absorbs the rounding in the shortened delta.
-        PlaceSelection(start, (id, position) =>
-            BuildArea.Clamp(new Vector2D(position.X + delta.X, position.Y + delta.Y), NodeById(id).Radius));
-    }
-
-    /// <summary>
-    /// Turns the snapshot's joints <paramref name="radians"/> about its pivot; a turn that would
-    /// leave <see cref="BuildArea"/> is ignored. Returns whether the joints turned.
-    /// </summary>
-    public bool RotateSelection(SelectionSnapshot start, double radians)
-    {
-        ArgumentNullException.ThrowIfNull(start);
-        if (!double.IsFinite(radians))
-        {
-            throw new ArgumentOutOfRangeException(nameof(radians));
-        }
-
-        var cos = Math.Cos(radians);
-        var sin = Math.Sin(radians);
-        var pivot = start.Pivot;
-        return PlaceSelection(start, (_, position) =>
-        {
-            var dx = position.X - pivot.X;
-            var dy = position.Y - pivot.Y;
-            return new Vector2D(pivot.X + (dx * cos) - (dy * sin), pivot.Y + (dx * sin) + (dy * cos));
-        });
-    }
-
-    /// <summary>
-    /// Spreads the snapshot's joints from its pivot by <paramref name="factor"/>, clamped to
-    /// <see cref="MinSelectionScale"/>..<see cref="MaxSelectionScale"/> so it never collapses or
-    /// reflects; a scale that would leave <see cref="BuildArea"/> is ignored. A locked creation
-    /// scales too: like a move, it only changes beam lengths, not the parts.
-    /// </summary>
-    public void ScaleSelection(SelectionSnapshot start, double factor)
-    {
-        ArgumentNullException.ThrowIfNull(start);
-        if (!double.IsFinite(factor))
-        {
-            throw new ArgumentOutOfRangeException(nameof(factor));
-        }
-
-        factor = Math.Clamp(factor, MinSelectionScale, MaxSelectionScale);
-        var pivot = start.Pivot;
-        PlaceSelection(start, (_, position) => new Vector2D(
-            pivot.X + ((position.X - pivot.X) * factor),
-            pivot.Y + ((position.Y - pivot.Y) * factor)));
-    }
-
-    /// <summary>Puts the snapshot's joints back where they were.</summary>
-    public void RestoreSelection(SelectionSnapshot start)
-    {
-        ArgumentNullException.ThrowIfNull(start);
-        PlaceSelection(start, (_, position) => position, keepInBuildArea: false);
-    }
-
-    private bool PlaceSelection(SelectionSnapshot start, Func<int, Vector2D, Vector2D> place, bool keepInBuildArea = true)
-    {
-        var placed = start.Positions.ToDictionary(entry => entry.Key, entry => place(entry.Key, entry.Value));
-        if (keepInBuildArea && placed.Any(entry => BuildArea.Clamp(entry.Value, NodeById(entry.Key).Radius) != entry.Value))
-        {
-            return false;
-        }
-
-        _history.Change(() =>
-        {
-            foreach (var (id, position) in placed)
-            {
-                _builder.MoveNode(id, position);
-            }
-        });
-        AnatomyChanged?.Invoke(this, EventArgs.Empty);
-        return true;
-    }
 
     /// <summary>
     /// Finds the closest placed node whose ring, grown by <paramref name="margin"/>,
@@ -1096,21 +847,6 @@ public sealed class BuildViewModel : INotifyPropertyChanged
     public int SpringIndexOf(int springId) => _builder.SpringIndexOf(springId);
 
     private NodeDef NodeById(int nodeId) => _builder.Nodes[_builder.NodeIndexOf(nodeId)];
-
-    private void NotifySelectionChanged()
-    {
-        OnPropertyChanged(nameof(SelectedNodeCount));
-        OnPropertyChanged(nameof(SelectedBeamCount));
-        OnPropertyChanged(nameof(SelectedPartCount));
-        OnPropertyChanged(nameof(SingleSelectedNodeId));
-        OnPropertyChanged(nameof(SingleSelectedBeamId));
-        OnPropertyChanged(nameof(SelectedSensorCount));
-        OnPropertyChanged(nameof(SingleSelectedSensorId));
-        OnPropertyChanged(nameof(SelectedPistonCount));
-        OnPropertyChanged(nameof(SingleSelectedPistonId));
-        OnPropertyChanged(nameof(SelectedSpringCount));
-        OnPropertyChanged(nameof(SingleSelectedSpringId));
-    }
 
     private static double DistanceSquaredToSegment(Vector2D point, Vector2D segmentStart, Vector2D segmentEnd)
     {
