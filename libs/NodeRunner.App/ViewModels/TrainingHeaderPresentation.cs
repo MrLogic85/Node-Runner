@@ -9,17 +9,18 @@ namespace NodeRunner.App.ViewModels;
 /// </summary>
 public sealed record TrainingHeaderPresentation(UiText CreationName, UiText StatusText, bool ShowsGeneration)
 {
-    /// <summary>
-    /// The bar for the creation named <paramref name="creationName"/>, or for the Worm example that
-    /// Training falls back to when it opens without a creation (null).
-    /// </summary>
-    public static TrainingHeaderPresentation For(string? creationName, TrainingRunMode mode, string mapId)
+    public static TrainingHeaderPresentation For(string creationName, TrainingRunMode mode, string mapId)
     {
-        if (creationName is not null)
-        {
-            ArgumentException.ThrowIfNullOrWhiteSpace(creationName);
-        }
+        ArgumentException.ThrowIfNullOrWhiteSpace(creationName);
+        return For(UiText.AsWritten(creationName), mode, mapId);
+    }
 
+    /// <summary>The bar for the Worm example, which Training runs when it opens without a creation.</summary>
+    public static TrainingHeaderPresentation ForWorm(TrainingRunMode mode, string mapId) =>
+        For(CreationExamples.Worm.Name, mode, mapId);
+
+    private static TrainingHeaderPresentation For(UiText name, TrainingRunMode mode, string mapId)
+    {
         var map = MapNames.Of(mapId);
         var status = mode switch
         {
@@ -27,7 +28,6 @@ public sealed record TrainingHeaderPresentation(UiText CreationName, UiText Stat
             TrainingRunMode.Simulate => UiText.Format("Simulating · {0}", map),
             _ => throw new ArgumentOutOfRangeException(nameof(mode), mode, null),
         };
-        var name = creationName is null ? CreationExamples.Worm.Name : UiText.AsWritten(creationName);
         return new TrainingHeaderPresentation(name, status, mode == TrainingRunMode.Train);
     }
 }

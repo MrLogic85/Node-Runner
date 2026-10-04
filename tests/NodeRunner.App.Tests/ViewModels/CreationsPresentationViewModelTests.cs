@@ -79,14 +79,14 @@ public sealed class CreationsPresentationViewModelTests
     public void Refresh_WithCopiedExample_ShowsAnOrdinaryCreation()
     {
         var repository = new InMemoryCreationRepository();
-        var copy = new ExampleCopyWorkflow(repository).Copy(CreationExamples.WormId, TestLanguage.English);
+        var copy = new ExampleCopyWorkflow(repository).Copy(CreationExamples.WormId, TestLanguage.Untranslated);
         var viewModel = new CreationsPresentationViewModel(repository);
 
         viewModel.Refresh();
 
         var card = viewModel.Cards.Single();
         card.Id.ShouldBe(copy.Id);
-        card.Name.ShouldBe(UiText.AsWritten("Worm"));
+        card.Name.ShouldBe(UiText.AsWritten(copy.Name));
         card.CanDuplicate.ShouldBeTrue();
         card.CanDelete.ShouldBeTrue();
     }

@@ -37,8 +37,8 @@ public sealed class ExampleCopyWorkflowTests
         var repository = new InMemoryCreationRepository();
         var workflow = new ExampleCopyWorkflow(repository);
 
-        workflow.Copy(CreationExamples.WormId, TestLanguage.English);
-        workflow.Copy(CreationExamples.WormId, TestLanguage.English);
+        workflow.Copy(CreationExamples.WormId, TestLanguage.Untranslated);
+        workflow.Copy(CreationExamples.WormId, TestLanguage.Untranslated);
 
         repository.List().Count.ShouldBe(2);
         repository.List().ShouldAllBe(creation => creation.Id != CreationExamples.WormId);
@@ -49,7 +49,7 @@ public sealed class ExampleCopyWorkflowTests
     {
         var workflow = new ExampleCopyWorkflow(new InMemoryCreationRepository());
 
-        Should.Throw<KeyNotFoundException>(() => workflow.Copy(Guid.NewGuid(), TestLanguage.English));
+        Should.Throw<KeyNotFoundException>(() => workflow.Copy(Guid.NewGuid(), TestLanguage.Untranslated));
     }
 
     [Fact]

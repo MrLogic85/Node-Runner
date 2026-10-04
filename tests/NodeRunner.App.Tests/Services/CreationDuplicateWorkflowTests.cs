@@ -37,7 +37,7 @@ public sealed class CreationDuplicateWorkflowTests
     {
         var workflow = new CreationDuplicateWorkflow(new InMemoryCreationRepository());
 
-        Should.Throw<KeyNotFoundException>(() => workflow.Duplicate(Guid.NewGuid(), TestLanguage.English));
+        Should.Throw<KeyNotFoundException>(() => workflow.Duplicate(Guid.NewGuid(), TestLanguage.Untranslated));
     }
 
     [Fact]

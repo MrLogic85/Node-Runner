@@ -29,7 +29,8 @@ public partial class CreationsHost : Node, IRoutedScene
         screen.ShowComponentLibraryLink = OS.IsDebugBuild()
             && ProjectSettings.GetSetting("ui/show_component_library_link", true).AsBool();
         // Here, not in SaveManager: the Worm's name is saved in the player's language (#759).
-        Saves.SeedDefaultCreations(UiTextTranslation.Now);
+        CreationActions.TryRunFileOperation(
+            () => Saves.SeedDefaultCreations(UiTextTranslation.Now), "Copying the Worm on the first start");
         screen.Setup(Saves.CreationsPresentation);
         screen.OpenRequested += OpenCreation;
         screen.NewRequested += CreateCreation;

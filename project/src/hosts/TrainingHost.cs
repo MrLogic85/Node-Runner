@@ -286,7 +286,9 @@ public partial class TrainingHost : Node, IRoutedScene
     {
         _screen = GetNode<TrainingScreen>("%TrainingScreen");
         _screen.Setup(
-            TrainingHeaderPresentation.For(creation?.Name, Mode, _map.Id),
+            creation is null
+                ? TrainingHeaderPresentation.ForWorm(Mode, _map.Id)
+                : TrainingHeaderPresentation.For(creation.Name, Mode, _map.Id),
             _trainingPresentation,
             _signalFlow,
             _brainFocus);

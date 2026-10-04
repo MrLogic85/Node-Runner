@@ -28,8 +28,11 @@ public sealed class TrainingHeaderPresentationTests
     }
 
     [Fact]
-    public void For_NoCreation_NamesTheWormExampleTrainingFallsBackTo() =>
-        TrainingHeaderPresentation.For(null, TrainingRunMode.Train, MapIds.Flat).CreationName.ShouldBe(CreationExamples.Worm.Name);
+    public void ForWorm_NamesTheWormExample() =>
+        TrainingHeaderPresentation.ForWorm(TrainingRunMode.Train, MapIds.Flat).ShouldBe(new TrainingHeaderPresentation(
+            CreationExamples.Worm.Name,
+            UiText.Format("Training · {0}", UiText.Plain("Flat ground")),
+            ShowsGeneration: true));
 
     [Fact]
     public void For_AnUnknownMap_Throws() =>

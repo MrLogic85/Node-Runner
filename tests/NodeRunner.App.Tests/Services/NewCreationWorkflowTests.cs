@@ -33,8 +33,8 @@ public sealed class NewCreationWorkflowTests
         var repository = new InMemoryCreationRepository();
         var workflow = new NewCreationWorkflow(repository);
 
-        workflow.Create(TestLanguage.English);
-        workflow.Create(TestLanguage.English);
+        workflow.Create(TestLanguage.Untranslated);
+        workflow.Create(TestLanguage.Untranslated);
 
         repository.List().Count.ShouldBe(2);
     }

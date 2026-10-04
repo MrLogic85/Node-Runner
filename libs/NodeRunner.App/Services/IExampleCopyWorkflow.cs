@@ -5,6 +5,9 @@ namespace NodeRunner.App.Services;
 
 public interface IExampleCopyWorkflow
 {
-    /// <inheritdoc cref="INewCreationWorkflow.Create"/>
+    /// <summary>
+    /// Saves and returns a copy of example <paramref name="exampleId"/> under its name in the
+    /// player's language; see <see cref="INewCreationWorkflow.Create"/>.
+    /// </summary>
     CreationDef Copy(Guid exampleId, Func<UiText, string> inPlayerLanguage);
 }

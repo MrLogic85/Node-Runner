@@ -28,7 +28,7 @@ public sealed class DefaultCreationSeederTests
         var creations = new InMemoryCreationRepository();
         creations.Save(new CreationDef(Guid.NewGuid(), "Player Build", CreationExamples.CreateWormCreature()));
 
-        var seeded = CreateSeeder(creations, new InMemoryProgressionRepository()).SeedIfNeeded(TestLanguage.English);
+        var seeded = CreateSeeder(creations, new InMemoryProgressionRepository()).SeedIfNeeded(TestLanguage.Untranslated);
 
         seeded.ShouldBeTrue();
         creations.List().Count.ShouldBe(2);
@@ -40,10 +40,10 @@ public sealed class DefaultCreationSeederTests
         var creations = new InMemoryCreationRepository();
         var progression = new InMemoryProgressionRepository();
         var seeder = CreateSeeder(creations, progression);
-        seeder.SeedIfNeeded(TestLanguage.English);
+        seeder.SeedIfNeeded(TestLanguage.Untranslated);
         creations.Delete(creations.List().Single().Id);
 
-        var seededAgain = seeder.SeedIfNeeded(TestLanguage.English);
+        var seededAgain = seeder.SeedIfNeeded(TestLanguage.Untranslated);
 
         seededAgain.ShouldBeFalse();
         creations.List().ShouldBeEmpty();
