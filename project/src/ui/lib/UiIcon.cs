@@ -14,7 +14,13 @@ public partial class UiIcon : Control
     private UiIconSize _iconSize = UiIconSize.Standard;
     private UiTokens.Color _color = UiTokens.Color.Ink;
 
-    public UiIcon() => MouseFilter = MouseFilterEnum.Ignore;
+    public UiIcon()
+    {
+        MouseFilter = MouseFilterEnum.Ignore;
+        TextureFilter = UiIcons.IconFilter;
+    }
+
+    public override void _ValidateProperty(Godot.Collections.Dictionary property) => UiIcons.HideIconFilter(property);
 
     [Export]
     public UiIconId IconId

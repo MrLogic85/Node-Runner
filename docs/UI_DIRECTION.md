@@ -738,6 +738,28 @@ feather by the viewport's oversampling, so it stays about one device pixel at
 any stretch or UI size, even when drawn from `_Draw()`. Keep
 `StyleBoxFlat.AntiAliasing` on, its default (#732).
 
+### Icon filtering
+
+SVG icons rasterize at the viewport's oversampling, but at fractional UI
+sizes the image does not land on whole device pixels, so the project's
+`Nearest` filter doubles or drops rows. **Rule: icons sample `Linear`;
+text and other textures keep the project's `Nearest` (#734).** Where an
+icon is already pixel-aligned, `Linear` and `Nearest` give identical
+pixels. Text under `Linear` looks soft, so `project.godot` keeps `Nearest`.
+
+- A node whose textures are all icons calls `UiIcons.UseIconFilter` (or
+  sets `UiIcons.IconFilter`); its text children call
+  `UiIcons.UseTextFilter`. Scene-placed `[Tool]` components hide the
+  derived filter with `UiIcons.HideIconFilter`.
+- A `Button` that draws its own text next to an icon wraps the icon in
+  `UiLinearIcon`, which draws it on a `Linear` child canvas item. Godot's
+  `CanvasTexture` can set a filter but draws a `DPITexture` unscaled,
+  losing its oversampling.
+- Icons drawn on scene-authored nodes set `texture_filter = 2` in the
+  scene.
+
+`UiIconFilterGuardTests` fails any icon host without one of these.
+
 ## Theme boundaries
 
 Tron/neon is the reference theme, not a permanent constraint. Implementation

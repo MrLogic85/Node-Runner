@@ -121,6 +121,7 @@ public partial class UiInfoRow : HBoxContainer
         _icon!.Visible = hasIcon;
         _icon.Texture = hasIcon ? UiIcons.Load(IconId, UiIconSize.Standard) : null;
         _icon.SelfModulate = tint;
+        UiIcons.UseIconFilter(_icon);
 
         _titleLabel!.Text = Title;
         _helpLabel!.Text = Help;

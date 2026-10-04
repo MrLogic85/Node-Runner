@@ -18,6 +18,10 @@ public partial class UiBarCell : BaseButton
     private bool _selected;
     private UiIconId _iconId = UiIconId.None;
 
+    public UiBarCell() => TextureFilter = UiIcons.IconFilter;
+
+    public override void _ValidateProperty(Godot.Collections.Dictionary property) => UiIcons.HideIconFilter(property);
+
     /// <summary>How far up the bar reaches, from 0 (none) to 1 (the cell's inner height).</summary>
     [Export(PropertyHint.Range, "0,1,0.01")]
     public float Fill

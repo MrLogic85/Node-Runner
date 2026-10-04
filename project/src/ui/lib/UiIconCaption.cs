@@ -70,5 +70,6 @@ internal sealed class UiIconCaption
         Icon.CustomMinimumSize = Vector2.One * UiIcons.Pixels(iconSize);
         Icon.Texture = hasIcon ? UiIcons.Load(iconId, iconSize) : null;
         Icon.SelfModulate = iconTint;
+        UiIcons.UseIconFilter(Icon);
     }
 }

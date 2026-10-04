@@ -24,6 +24,10 @@ public partial class UiProgressRing : Control, ISerializationListener
         }
     }
 
+    public UiProgressRing() => TextureFilter = UiIcons.IconFilter;
+
+    public override void _ValidateProperty(Godot.Collections.Dictionary property) => UiIcons.HideIconFilter(property);
+
     public override void _Ready()
     {
         MouseFilter = MouseFilterEnum.Ignore;
@@ -46,6 +50,7 @@ public partial class UiProgressRing : Control, ISerializationListener
             };
             AddChild(_percentLabel, false, InternalMode.Front);
         }
+        UiIcons.UseTextFilter(_percentLabel);
 
         ApplyGeometry();
         RefreshLabel();

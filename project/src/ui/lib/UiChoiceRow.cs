@@ -271,6 +271,9 @@ public abstract partial class UiChoiceRow : Container, ISerializationListener
         }
 
         content.Button.Theme = UiChoiceTheme.Create(this, IsSwitch);
+        // The button draws only the indicator; its labels are text.
+        UiIcons.UseIconFilter(content.Button);
+        UiIcons.UseTextFilter(content.Labels);
         UiThemeLookup.ApplyTextStyle(content.Label, UiTokens.Typography.SmallStrong, UiTokens.Color.Ink);
         UiThemeLookup.ApplyTextStyle(content.Help, UiTokens.Typography.Note, UiTokens.Color.Muted);
         UpdateLayout();

@@ -178,6 +178,7 @@ public partial class UiIconTabs : HBoxContainer
     {
         button.ThemeTypeVariation = UiThemeExpander.IconTabVariationName;
         UiIcons.Apply(button, icon, UiIconSize.Large);
+        UiIcons.UseIconFilter(button);
         button.AddThemeConstantOverride("h_separation", 0);
     }
 
