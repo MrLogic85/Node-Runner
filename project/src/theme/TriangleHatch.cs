@@ -13,6 +13,18 @@ public static class TriangleHatch
     private static readonly Vector2 _across = new Vector2(1, 1).Normalized();
 
     /// <summary>
+    /// The closest the lines may come on screen, in window pixels. Any closer, zoomed out or in a
+    /// small thumbnail, they blur into a wash with moiré, so the triangle is filled instead (#770).
+    /// </summary>
+    public const float MinPixelSpacing = 3;
+
+    /// <summary>
+    /// Whether lines <paramref name="spacing"/> apart, drawn at <paramref name="pixelScale"/>
+    /// window pixels per unit, are too close to read, so the triangle is filled instead.
+    /// </summary>
+    public static bool IsTooDense(float spacing, float pixelScale) => spacing * pixelScale < MinPixelSpacing;
+
+    /// <summary>
     /// The hatch of triangle <paramref name="a"/>, <paramref name="b"/>, <paramref name="c"/>, lines
     /// <paramref name="spacing"/> apart, kept <paramref name="jointRadius"/> away from its corners.
     /// </summary>

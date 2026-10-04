@@ -10,6 +10,14 @@ public sealed class TriangleHatchTests
     private static readonly Vector2 _b = new(100, 0);
     private static readonly Vector2 _c = new(0, 100);
 
+    [Theory]
+    [InlineData(1f, false)]
+    [InlineData(3f / _spacing, false)]
+    [InlineData(2.9f / _spacing, true)]
+    [InlineData(0.06f, true)]
+    public void Hatch_CloserThanMinPixelSpacingOnScreen_IsTooDense(float pixelScale, bool tooDense) =>
+        TriangleHatch.IsTooDense(_spacing, pixelScale).ShouldBe(tooDense);
+
     [Fact]
     public void Lines_RunDownToTheLeftAtFortyFiveDegrees()
     {

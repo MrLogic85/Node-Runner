@@ -193,9 +193,9 @@ rigid (SSS: three fixed side lengths fully determine all three vertex
 angles), so its joints cannot turn. `RigidTriangles.Of`
 (`libs/NodeRunner.Mechanics/RigidTriangles.cs`) finds every such triangle, and
 Build hatches it so the player sees which areas are rigid, and so does
-Training on the followed creature (#627), never on the other shadows. There
-the hatch rides on one of the triangle's beams, which it cannot move
-against. A larger truss is
+Training on the followed creature (#627); the other shadows fill it
+faintly instead (#770). There the hatch rides on one of the triangle's
+beams, which it cannot move against. A larger truss is
 a composition of triangles; a bare quadrilateral stays free to fold.
 
 ### Piston
@@ -278,8 +278,8 @@ a composition of triangles; a bare quadrilateral stays free to fold.
   as wide as a Piston's cylinder. The peaks spread as it stretches and bunch
   as it squeezes. It is `line-strong`, not `accent`, because accent marks
   parts the brain drives; the damper is not drawn. Selected, it gets the
-  Piston's two halo lines (`docs/UI_DIRECTION.md` → Selection). A creation card draws a thinner coil, or a plain
-  line when too short to read.
+  Piston's two halo lines (`docs/UI_DIRECTION.md` → Selection). A creation
+  card draws the same coil, scaled down with the creature (#770).
 
 ## Draw layers
 
@@ -297,9 +297,11 @@ part moves whole up to the selected layer of its kind, so a selected beam
 draws over the link that crosses it, mark and all (#766). Training's world
 stacks the ground, then every shadow, then the followed creature
 (`ArenaLayers`). Build draws its creature with the same parts (#769, through
-`BuildCreature`), with the grid and selection box under them. Each world has
+`CreatureParts`), with the grid and selection box under them. Each world has
 its own viewport (`UiWorldView`), so these layers never reach the screen's
-handles, notes or dialogs. The thumbnails move onto the same parts in #770.
+handles, notes or dialogs. A creation card's thumbnail (#770) shows the
+same `CreatureParts`, scaled to fit its own world, without any edit-only
+marks: no selection, loose or too-short tint, stroke ticks or camera rays.
 
 ## Drawing as a shadow
 
@@ -320,7 +322,9 @@ picture but costs an offscreen pass each, so it is left out for performance.
 - **Node:** its ring at its collision size, without a glyph. Joint parts
   that make a node larger (the motors, #452 and #454; later the Wheel, #129,
   and a touch sensor, #665) only change that size.
-- **Beam:** its line, without angle marks, the rigid-area hatch or labels.
+- **Beam:** its line, without angle marks or labels.
+- **Rigid triangle:** a faint fill instead of the hatch (#770), as the hatch
+  shows when zoomed far out.
 - **Links** (Piston, Spring and later Wing): drawn as on the followed
   creature. The Wing may lose detail; #600 decides.
 - **Blocks** (Battery, Generator and Fuel tank, 0.18.0): drawn as on the

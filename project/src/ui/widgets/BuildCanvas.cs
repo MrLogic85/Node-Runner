@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using Godot;
+using NodeRunner.App.Builders;
 using NodeRunner.App.ViewModels;
 using NodeRunner.Domain;
 using NodeRunner.Mechanics;
@@ -16,7 +17,7 @@ namespace NodeRunner.Ui.Widgets;
 /// <see cref="BuildViewModel"/> per `project/src/ui/AGENTS.md`; does
 /// not own any anatomy state itself. See docs/BUILD_MODE.md.
 /// It lives in the world of a <see cref="UiWorldView"/> (#769), so its creature is drawn with the
-/// same part visuals and layers as Training's (<see cref="BuildCreature"/>) without any of them
+/// same part visuals and layers as Training's (<see cref="CreatureParts"/>) without any of them
 /// drawing over the handles and notes in the slot. Its own marks go under the creature (grid,
 /// Select box, beam preview) or on a <see cref="ViewLayer"/> under the links or over the creature.
 /// </summary>
@@ -38,7 +39,7 @@ public partial class BuildCanvas : Node2D
     private BuildGestures? _gestures;
     private bool _viewFitted;
     private Control? _slot;
-    private readonly BuildCreature _creature = new();
+    private readonly CreatureParts _creature = new();
     private readonly ViewLayer _underlay = ViewLayer.Underlay();
     private readonly ViewLayer _overlay = ViewLayer.Overlay();
     private readonly BuildSensorMotion _sensorMotion = new();
@@ -362,7 +363,15 @@ public partial class BuildCanvas : Node2D
 
         _creature.Transform = ViewTransform();
         _creature.Theme = Theme;
-        _creature.Show(_viewModel, selected, ShowsAsLoose, _sensorMotion, previewSensor);
+        _creature.Show(
+            new CreatureShape(_viewModel.Nodes, _viewModel.Beams, _viewModel.Pistons, _viewModel.Springs, _viewModel.Sensors),
+            new CreatureMarks(
+                selected,
+                ShowsAsLoose,
+                _sensorMotion.WeightOffset,
+                previewSensor,
+                ShowsTooShort: true,
+                ShowsStroke: _viewModel.CanEdit(PartParameterId.Stroke)));
     }
 
     /// <summary>What goes under the links: the placing feedback of a tray drag.</summary>

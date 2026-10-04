@@ -19,6 +19,10 @@ public partial class UiWorldView : Control
     [Signal]
     public delegate void WorldPressedEventHandler(Vector2 worldPosition);
 
+    /// <summary>The world was laid out again for a new size or pixel density.</summary>
+    [Signal]
+    public delegate void FittedEventHandler();
+
     /// <summary>
     /// Whether the world's units are the UI's, so the world grows and shrinks with the UI size like
     /// the controls over it. Build sets it: its view zoom makes up for the UI size itself
@@ -75,6 +79,20 @@ public partial class UiWorldView : Control
         AcceptEvent();
     }
 
+    /// <summary>
+    /// Renders a still world once more, after its owner changed it. A still world is one whose
+    /// <c>WorldViewport</c> is authored with <c>render_target_update_mode</c> Disabled, as a list
+    /// of thumbnails does so scrolling moves finished pictures (#770); a live world ignores it.
+    /// </summary>
+    public void RequestRender()
+    {
+        var viewport = WorldViewport;
+        if (viewport.RenderTargetUpdateMode is SubViewport.UpdateMode.Disabled or SubViewport.UpdateMode.Once)
+        {
+            viewport.RenderTargetUpdateMode = SubViewport.UpdateMode.Once;
+        }
+    }
+
     /// <summary>Where <paramref name="worldPosition"/> shows in this view's coordinates.</summary>
     public Vector2 FromWorld(Vector2 worldPosition) => LocalFromWorld * worldPosition;
 
@@ -94,6 +112,8 @@ public partial class UiWorldView : Control
         viewport.Size = (Vector2I)(Size * density).Ceil();
         viewport.Size2DOverride = worldSize;
         viewport.Size2DOverrideStretch = true;
+        RequestRender();
         QueueRedraw();
+        EmitSignal(SignalName.Fitted);
     }
 }
