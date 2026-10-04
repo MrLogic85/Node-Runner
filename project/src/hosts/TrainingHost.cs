@@ -57,8 +57,9 @@ public partial class TrainingHost : Node, IRoutedScene
     private TrainingScreen _screen = null!;
     private TrainingPresentationViewModel _trainingPresentation = new();
     private int _timeScaleIndex;
-    // The selected part's Build name, shown above the followed shadow (#388); null with nothing selected.
-    private string? _selectedPartName;
+    // The selected part's Build name in the player's language, shown above the followed shadow (#388);
+    // null with nothing selected.
+    private Func<string>? _selectedPartName;
     private double _signalRefreshElapsed;
 
     private SaveManager Saves => GetNode<SaveManager>("/root/SaveManager");
@@ -145,7 +146,7 @@ public partial class TrainingHost : Node, IRoutedScene
 
         if (_selectedPartName is not null && _selection.SelectedElement is { } selected)
         {
-            _screen.ShowPartName(_selectedPartName, _followed.PartAnchor(selected), _followed.Bounds);
+            _screen.ShowPartName(_selectedPartName(), _followed.PartAnchor(selected), _followed.Bounds);
         }
 
         _signalRefreshElapsed += delta;
@@ -482,7 +483,7 @@ public partial class TrainingHost : Node, IRoutedScene
         {
             _followed?.SetSelectedElement(_selection.SelectedElement);
             _selectedPartName = _selection.SelectedElement is { } selected && _followed?.Definition is { } definition
-                ? PartNames.Display(definition.Nodes, definition.Beams, definition.Sensors, definition.Pistons, selected.Id)
+                ? UiTextTranslation.Source(PartNames.Display(definition.Nodes, definition.Beams, definition.Sensors, definition.Pistons, selected.Id))
                 : null;
             BestMarker.Faded = _selectedPartName is not null;
             if (_selectedPartName is null)

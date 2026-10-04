@@ -113,10 +113,10 @@ public sealed class CameraRaysTests
     }
 
     [Fact]
-    public void RayNames_RunLeftToRightAroundTheCentre()
+    public void ChannelKeys_RunLeftToRightAroundTheCentre()
     {
-        CameraRays.RayNames.ShouldBe(["left 1", "centre", "right 1"]);
-        CameraRays.RayNames.Count.ShouldBe(CameraRays.RayCount);
+        CameraRays.ChannelKeys.ShouldBe(["left1", "centre", "right1"]);
+        CameraRays.ChannelKeys.Count.ShouldBe(CameraRays.RayCount);
     }
 
     private static Vector2D ToWorld(Vector2D local, double beamAngle)

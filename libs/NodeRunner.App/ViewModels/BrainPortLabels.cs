@@ -5,9 +5,11 @@ namespace NodeRunner.App.ViewModels;
 /// <summary>
 /// What the brain's ports are called, in port order (<see cref="BrainPorts"/>): a sense is its
 /// part's name and reading, such as "Accelerometer: along", and a Piston's ports are its name and
-/// channel, such as "Piston 1: length" or "Piston 1: position".
+/// channel, such as "Piston 1: length" or "Piston 1: position". Each label is one whole template
+/// with the part's name as <c>{0}</c>; its space after the colon is a no-break space, so a sentence
+/// that names the port does not wrap inside it.
 /// </summary>
-public sealed record BrainPortLabels(IReadOnlyList<string> Inputs, IReadOnlyList<string> Outputs)
+public sealed record BrainPortLabels(IReadOnlyList<UiText> Inputs, IReadOnlyList<UiText> Outputs)
 {
     public static BrainPortLabels Empty { get; } = new([], []);
 
@@ -15,37 +17,38 @@ public sealed record BrainPortLabels(IReadOnlyList<string> Inputs, IReadOnlyList
     {
         ArgumentNullException.ThrowIfNull(creature);
 
-        string Name(int partId) => PartNames.Display(creature.Nodes, creature.Beams, creature.Sensors, creature.Pistons, partId);
-
-        var labels = new Dictionary<BrainPort, string>();
-        foreach (var sensor in creature.Sensors)
+        var sensorKinds = creature.Sensors.ToDictionary(sensor => sensor.Id, sensor => sensor.Kind);
+        UiText Label(BrainPort port)
         {
-            var readings = sensor.Kind switch
-            {
-                SensorKind.Accelerometer => Accelerometer.ReadingNames,
-                SensorKind.Camera => CameraRays.RayNames,
-                _ => throw new InvalidOperationException($"Unknown sensor kind {sensor.Kind}."),
-            };
-            var ports = BrainPorts.SensorPorts(sensor).ToArray();
-            for (var index = 0; index < ports.Length; index++)
-            {
-                labels[ports[index]] = $"{Name(sensor.Id)}: {readings[index]}";
-            }
-        }
-
-        foreach (var piston in creature.Pistons)
-        {
-            var inputs = BrainPorts.PistonInputs(piston.Id).ToArray();
-            var outputs = BrainPorts.PistonOutputs(piston.Id).ToArray();
-            labels[inputs[0]] = $"{Name(piston.Id)}: length";
-            labels[inputs[1]] = $"{Name(piston.Id)}: speed";
-            labels[outputs[0]] = $"{Name(piston.Id)}: position";
-            labels[outputs[1]] = $"{Name(piston.Id)}: strength";
+            var name = PartNames.Display(creature.Nodes, creature.Beams, creature.Sensors, creature.Pistons, port.PartId);
+            return sensorKinds.TryGetValue(port.PartId, out var kind)
+                ? Reading(kind, port.Channel, name)
+                : PistonChannel(port.Channel, name);
         }
 
         var layout = BrainPorts.Of(creature);
         return new BrainPortLabels(
-            layout.Inputs.Select(port => labels[port]).ToArray(),
-            layout.Outputs.Select(port => labels[port]).ToArray());
+            layout.Inputs.Select(Label).ToArray(),
+            layout.Outputs.Select(Label).ToArray());
     }
+
+    // Keyed by the port's channel key, which never changes; whole templates, so each is translated as one.
+    private static UiText Reading(SensorKind kind, string channel, UiText name) => (kind, channel) switch
+    {
+        (SensorKind.Accelerometer, "along") => UiText.Format("{0}:\u00A0along", name),
+        (SensorKind.Accelerometer, "across") => UiText.Format("{0}:\u00A0across", name),
+        (SensorKind.Camera, "left1") => UiText.Format("{0}:\u00A0left 1", name),
+        (SensorKind.Camera, "centre") => UiText.Format("{0}:\u00A0centre", name),
+        (SensorKind.Camera, "right1") => UiText.Format("{0}:\u00A0right 1", name),
+        _ => throw new InvalidOperationException($"No label for {kind} reading {channel}."),
+    };
+
+    private static UiText PistonChannel(string channel, UiText name) => channel switch
+    {
+        Piston.LengthChannel => UiText.Format("{0}:\u00A0length", name),
+        Piston.SpeedChannel => UiText.Format("{0}:\u00A0speed", name),
+        Piston.PositionChannel => UiText.Format("{0}:\u00A0position", name),
+        Piston.StrengthChannel => UiText.Format("{0}:\u00A0strength", name),
+        _ => throw new InvalidOperationException($"No label for Piston channel {channel}."),
+    };
 }

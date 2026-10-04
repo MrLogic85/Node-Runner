@@ -20,9 +20,7 @@ public static class CameraRays
     /// <summary>The angle between neighbouring rays: 45°, so the fan spans 90°.</summary>
     public const double Spread = Math.PI / 4;
 
-    public static IReadOnlyList<string> RayNames { get; } = ["left 1", "centre", "right 1"];
-
-    /// <summary>The machine keys of its input ports (<see cref="BrainPorts"/>), in the order of <see cref="RayNames"/>. Never change one.</summary>
+    /// <summary>The machine keys of its input ports (<see cref="BrainPorts"/>), one per ray from left to right. Never change one.</summary>
     public static IReadOnlyList<string> ChannelKeys { get; } = ["left1", "centre", "right1"];
 
     /// <summary>The beam's direction in the world, from <paramref name="nodeA"/> to <paramref name="nodeB"/>; 0 for a beam of no length.</summary>

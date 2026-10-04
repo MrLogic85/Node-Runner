@@ -49,7 +49,7 @@ public sealed class BuildPresentationViewModelTests
         var presentation = new BuildPresentationViewModel(new BuildViewModel { ActiveTool = BuildTool.Beam });
 
         var list = presentation.LinkList.ShouldNotBeNull();
-        list.Name.ShouldBe("Links");
+        list.Name.ShouldBe(UiText.Plain("Links"));
         list.Rows.Select(row => (row.Link, row.State)).ShouldBe([
             (BuildLink.Beam, LinkListRowState.Selected),
             (BuildLink.Piston, LinkListRowState.Rest),
@@ -69,7 +69,7 @@ public sealed class BuildPresentationViewModelTests
 
         changes.ShouldBe(1);
         var list = presentation.LinkList.ShouldNotBeNull();
-        list.HelpText.ShouldBe("The brain pushes and pulls it. Drag joint to joint.");
+        list.HelpText.ShouldBe(UiText.Plain("The brain pushes and pulls it. Drag joint to joint."));
         list.Rows.Single(row => row.Link == BuildLink.Piston).State.ShouldBe(LinkListRowState.Selected);
         list.Rows.Single(row => row.Link == BuildLink.Beam).State.ShouldBe(LinkListRowState.Rest);
     }
@@ -209,10 +209,10 @@ public sealed class BuildPresentationViewModelTests
         part.ShouldBe(new PartSettingsPresentation(
             101,
             PartSettingsKind.Beam,
-            "Beam 1",
-            "Beam 1",
-            "Between",
-            "Node 1 ↔ Node 2",
+            UiText.Format("Beam {0}", 1),
+            UiText.Format("Beam {0}", 1),
+            UiText.Plain("Between"),
+            UiText.Format("{0} ↔ {1}", UiText.Format("Node {0}", 1), UiText.Format("Node {0}", 2)),
             "Drag its ends to change the length.",
             CanDelete: true,
             part.Settings));
@@ -234,7 +234,16 @@ public sealed class BuildPresentationViewModelTests
 
         var part = presentation.SinglePart!;
 
-        part.ShouldBe(new PartSettingsPresentation(7, partKind, name, name, "On", "Thigh", note, CanDelete: true, part.Settings));
+        part.ShouldBe(new PartSettingsPresentation(
+            7,
+            partKind,
+            UiText.Plain(name),
+            UiText.Plain(name),
+            UiText.Plain("On"),
+            UiText.AsWritten("Thigh"),
+            note,
+            CanDelete: true,
+            part.Settings));
         part.Settings.ShouldBeEmpty();
     }
 
@@ -271,10 +280,10 @@ public sealed class BuildPresentationViewModelTests
         part.ShouldBe(new PartSettingsPresentation(
             2,
             PartSettingsKind.Node,
-            "Knee",
-            "Node 2",
-            "Beams",
-            "Beam 1 · Shin",
+            UiText.AsWritten("Knee"),
+            UiText.Format("Node {0}", 2),
+            UiText.Plain("Beams"),
+            UiText.Format("{0} · {1}", UiText.Format("Beam {0}", 1), UiText.AsWritten("Shin")),
             "Beams meet and turn here. Drag it to move them.",
             CanDelete: true,
             part.Settings));
@@ -307,7 +316,7 @@ public sealed class BuildPresentationViewModelTests
         build.Load(new CreatureDef([new NodeDef(1, new Vector2D(0, 0))], [], []));
         build.ToggleSelected(new(CreatureElementKind.Node, 1));
 
-        new BuildPresentationViewModel(build).SinglePart!.ConnectionsValue.ShouldBe("None yet");
+        new BuildPresentationViewModel(build).SinglePart!.ConnectionsValue.ShouldBe(UiText.Plain("None yet"));
     }
 
     [Fact]

@@ -18,7 +18,7 @@ public partial class BrainFocusSheet : Control
 
     private UiLabel Summary => GetNode<UiLabel>("%Summary");
 
-    private Label Selected => GetNode<Label>("%Selected");
+    private UiLabel Selected => GetNode<UiLabel>("%Selected");
 
     private BrainFocusNetworkView Network => GetNode<BrainFocusNetworkView>("%Network");
 
@@ -97,6 +97,6 @@ public partial class BrainFocusSheet : Control
         }
 
         Summary.ShowText(_presentation.Summary);
-        Selected.Text = _presentation.SelectionText;
+        Selected.ShowText(_presentation.SelectionText);
     }
 }

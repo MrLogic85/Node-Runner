@@ -28,6 +28,7 @@ public partial class UiTextField : VBoxContainer, ISerializationListener
     private string _labelText = string.Empty;
     private string _errorText = string.Empty;
     private string _placeholderText = string.Empty;
+    private Func<string>? _placeholderSource;
     private TextInputSize _size = TextInputSize.Standard;
     private TextInputState _state;
     private bool _placeCaretAtEndOnFocus;
@@ -78,10 +79,22 @@ public partial class UiTextField : VBoxContainer, ISerializationListener
         set
         {
             _placeholderText = value;
-            if (_editor is not null)
-            {
-                _editor.PlaceholderText = value;
-            }
+            ApplyPlaceholder();
+        }
+    }
+
+    /// <summary>
+    /// Already translated placeholder shown instead of <see cref="PlaceholderText"/>; asked again
+    /// when the language changes, with the editor's own auto-translation off meanwhile, so it is not
+    /// translated twice. Null shows PlaceholderText.
+    /// </summary>
+    public Func<string>? PlaceholderSource
+    {
+        get => _placeholderSource;
+        set
+        {
+            _placeholderSource = value;
+            ApplyPlaceholder();
         }
     }
 
@@ -145,6 +158,21 @@ public partial class UiTextField : VBoxContainer, ISerializationListener
         {
             UiThemeRefresh.Guarded(this, Refresh);
         }
+        else if (what == NotificationTranslationChanged && _placeholderSource is not null)
+        {
+            ApplyPlaceholder();
+        }
+    }
+
+    private void ApplyPlaceholder()
+    {
+        if (_editor is null)
+        {
+            return;
+        }
+
+        _editor.AutoTranslateMode = _placeholderSource is null ? AutoTranslateModeEnum.Inherit : AutoTranslateModeEnum.Disabled;
+        _editor.PlaceholderText = _placeholderSource?.Invoke() ?? _placeholderText;
     }
 
     private void InitializeContent()
@@ -334,7 +362,7 @@ public partial class UiTextField : VBoxContainer, ISerializationListener
                 _editor.Text = _textValue;
             }
 
-            _editor.PlaceholderText = PlaceholderText;
+            ApplyPlaceholder();
             _editor.CustomMinimumSize = new Vector2(0, visibleHeight);
             UiThemeLookup.ApplyTextStyle(
                 _editor,

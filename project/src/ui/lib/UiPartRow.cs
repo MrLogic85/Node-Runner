@@ -26,6 +26,8 @@ public partial class UiPartRow : Control
 
     private UiIconId _iconId = UiIconId.None;
     private string _label = "";
+    private Func<string>? _labelSource;
+    private Label? _nameLabel;
     private string _valueText = "";
     private PartRowState _state;
     private bool _compact;
@@ -59,6 +61,20 @@ public partial class UiPartRow : Control
             }
 
             _label = value;
+            Rebuild();
+        }
+    }
+
+    /// <summary>
+    /// Already translated name shown instead of <see cref="Label"/>; asked again when the language
+    /// changes, with the name label's own auto-translation off meanwhile. Null shows Label.
+    /// </summary>
+    public Func<string>? LabelSource
+    {
+        get => _labelSource;
+        set
+        {
+            _labelSource = value;
             Rebuild();
         }
     }
@@ -131,6 +147,11 @@ public partial class UiPartRow : Control
         {
             UiThemeRefresh.Guarded(this, Rebuild);
         }
+        else if (what == NotificationTranslationChanged && _labelSource is not null && IsInstanceValid(_nameLabel))
+        {
+            // In place: a language change is propagated as a notification, which may not add children.
+            _nameLabel!.Text = _labelSource();
+        }
     }
 
     public override void _GuiInput(InputEvent @event)
@@ -197,9 +218,15 @@ public partial class UiPartRow : Control
         var iconTint = State == PartRowState.Selected ? UiThemeLookup.Color(this, UiTokens.Color.Accent) : UiThemeLookup.Color(this, UiTokens.Color.Ink);
         row.AddChild(UiIcons.Create(IconId, UiIconSize.Large, iconTint));
 
-        var label = UiFieldAndRows.Label(Label, UiTokens.Typography.SmallStrong, UiTokens.Color.Ink);
+        var label = UiFieldAndRows.Label(LabelSource?.Invoke() ?? Label, UiTokens.Typography.SmallStrong, UiTokens.Color.Ink);
         label.SizeFlagsHorizontal = SizeFlags.ExpandFill;
+        if (LabelSource is not null)
+        {
+            label.AutoTranslateMode = AutoTranslateModeEnum.Disabled;
+        }
+
         row.AddChild(label);
+        _nameLabel = label;
 
         if (State == PartRowState.Locked)
         {

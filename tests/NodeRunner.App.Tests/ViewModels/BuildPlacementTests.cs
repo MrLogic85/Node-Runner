@@ -86,7 +86,7 @@ public sealed class BuildPlacementTests
         var build = TwoBeams();
 
         build.CanPlacePart(BuildPart.Battery, _firstBeam, out var reason).ShouldBeFalse();
-        reason.ShouldBe(PartTray.ComingLater);
+        reason.ShouldBe(PartTray.ComingLater.Message);
         build.PlacePart(BuildPart.Battery, _firstBeam).ShouldBeNull();
 
         build.Sensors.ShouldBeEmpty();

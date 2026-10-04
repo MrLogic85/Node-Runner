@@ -64,7 +64,7 @@ public partial class BrainFocusNetworkView : Control
 
     public override void _Notification(int what)
     {
-        if (what == NotificationThemeChanged)
+        if (what == NotificationThemeChanged || what == NotificationTranslationChanged)
         {
             QueueRedraw();
         }
@@ -96,12 +96,22 @@ public partial class BrainFocusNetworkView : Control
         var fontSize = UiThemeLookup.FontSize(this, _labelStyle);
         var headingFont = GetThemeFont("font", UiTokens.Variation(_headingStyle));
         var headingSize = UiThemeLookup.FontSize(this, _headingStyle);
-        var labelWidths = LabelColumnWidths(font, fontSize, headingFont, headingSize);
+        var texts = InLanguage(_viewModel.Layers);
+        var labelWidths = LabelColumnWidths(texts, font, fontSize, headingFont, headingSize);
         CacheNeuronPositions(labelWidths);
         DrawNetwork();
-        DrawLabels(font, fontSize, labelWidths);
-        DrawHeadings(headingFont, headingSize, labelWidths);
+        DrawLabels(texts, font, fontSize, labelWidths);
+        DrawHeadings(texts, headingFont, headingSize, labelWidths);
     }
+
+    // Each column's heading and neuron labels in the player's language, translated once per draw
+    // and used both to measure and to draw.
+    private static ColumnText[] InLanguage(IReadOnlyList<BrainFocusLayerPresentation> layers) =>
+        [.. layers.Select(layer => new ColumnText(
+            Heading(UiTextTranslation.Source(layer.Title)()),
+            [.. layer.Neurons.Select(neuron => UiTextTranslation.Source(neuron.Label)())]))];
+
+    private sealed record ColumnText(string Heading, string[] Labels);
 
     // In window pixels, so the edges, dots and halo are smooth at any UI size (#733).
     private void DrawNetwork()
@@ -150,23 +160,22 @@ public partial class BrainFocusNetworkView : Control
     }
 
     // Each column is as wide as its widest label or its heading, whichever is wider.
-    private (float Input, float Output) LabelColumnWidths(Font font, int fontSize, Font headingFont, int headingSize)
+    private (float Input, float Output) LabelColumnWidths(ColumnText[] texts, Font font, int fontSize, Font headingFont, int headingSize)
     {
-        var layers = _viewModel!.Layers;
         var cap = Size.X * _maxLabelShare;
-        return (Widest(layers[0]), layers.Count > 1 ? Widest(layers[^1]) : 0);
+        return (Widest(texts[0]), texts.Length > 1 ? Widest(texts[^1]) : 0);
 
-        float Widest(BrainFocusLayerPresentation layer) =>
-            layer.Neurons.Count == 0 ? 0 : Math.Min(
+        float Widest(ColumnText column) =>
+            column.Labels.Length == 0 ? 0 : Math.Min(
                 cap,
-                layer.Neurons
-                    .Select(neuron => font.GetStringSize(neuron.Label, fontSize: fontSize).X)
-                    .Append(headingFont.GetStringSize(Heading(layer), fontSize: headingSize).X)
+                column.Labels
+                    .Select(label => font.GetStringSize(label, fontSize: fontSize).X)
+                    .Append(headingFont.GetStringSize(column.Heading, fontSize: headingSize).X)
                     .Max());
     }
 
-    private static string Heading(BrainFocusLayerPresentation layer) =>
-        UiTokens.IsUppercase(_headingStyle) ? layer.Title.ToUpperInvariant() : layer.Title;
+    private static string Heading(string title) =>
+        UiTokens.IsUppercase(_headingStyle) ? title.ToUpperInvariant() : title;
 
     private void CacheNeuronPositions((float Input, float Output) labelWidths)
     {
@@ -195,7 +204,7 @@ public partial class BrainFocusNetworkView : Control
         }
     }
 
-    private void DrawLabels(Font font, int fontSize, (float Input, float Output) labelWidths)
+    private void DrawLabels(ColumnText[] texts, Font font, int fontSize, (float Input, float Output) labelWidths)
     {
         var layers = _viewModel!.Layers;
         var minRowSpacing = fontSize * _rowSpacingPerFontSize;
@@ -221,7 +230,7 @@ public partial class BrainFocusNetworkView : Control
                 DrawString(
                     font,
                     new Vector2(x, position.Y + baselineOffset),
-                    neuron.Label,
+                    texts[layerIndex].Labels[neuron.Index],
                     isInput ? HorizontalAlignment.Right : HorizontalAlignment.Left,
                     width,
                     fontSize,
@@ -232,7 +241,7 @@ public partial class BrainFocusNetworkView : Control
 
     // Each heading sits over its label column, flush with the labels' inner edge like a table header,
     // so a large first dot never runs into it.
-    private void DrawHeadings(Font font, int fontSize, (float Input, float Output) labelWidths)
+    private void DrawHeadings(ColumnText[] texts, Font font, int fontSize, (float Input, float Output) labelWidths)
     {
         var layers = _viewModel!.Layers;
         var color = UiThemeLookup.Color(this, UiTokens.Color.Muted);
@@ -251,7 +260,7 @@ public partial class BrainFocusNetworkView : Control
             DrawString(
                 font,
                 new Vector2(x, font.GetAscent(fontSize)),
-                Heading(layer),
+                texts[layerIndex].Heading,
                 isInput ? HorizontalAlignment.Right : HorizontalAlignment.Left,
                 width,
                 fontSize,

@@ -70,7 +70,7 @@ public sealed class BuildViewModelTests
         build.ToggleSelected(new(CreatureElementKind.Beam, 101));
         build.Selection.Beams.ShouldBeEmpty();
         build.Selection.Nodes.ShouldBe([1]);
-        build.StatusMessage.ShouldBe("3 selected.");
+        build.SelectedPartCount.ShouldBe(3);
     }
 
     [Fact]
@@ -590,17 +590,16 @@ public sealed class BuildViewModelTests
     }
 
     [Fact]
-    public void ConnectBeam_DuplicateBeam_SurfacesErrorInsteadOfThrowing()
+    public void ConnectBeam_DuplicateBeam_RefusesInsteadOfThrowing()
     {
         var viewModel = new BuildViewModel();
         var a = viewModel.PlaceNode(new Vector2D(0, 0));
         var b = viewModel.PlaceNode(new Vector2D(10, 0));
         viewModel.ConnectBeam(a, b);
 
-        viewModel.ConnectBeam(a, b);
+        viewModel.ConnectBeam(a, b).ShouldBeFalse();
 
         viewModel.Beams.Count.ShouldBe(1);
-        viewModel.StatusMessage.ShouldNotBeNullOrEmpty();
     }
 
     [Fact]
@@ -615,7 +614,6 @@ public sealed class BuildViewModelTests
         viewModel.ConnectBeam(1, 2).ShouldBeFalse();
 
         viewModel.Beams.ShouldBeEmpty();
-        viewModel.StatusMessage.ShouldBe("Edit mode only allows moving existing nodes.");
     }
 
 
@@ -761,7 +759,6 @@ public sealed class BuildViewModelTests
 
         viewModel.SelectedPartCount.ShouldBe(1);
         viewModel.SingleSelectedSensorId.ShouldBe(5);
-        viewModel.StatusMessage.ShouldBe("Camera selected.");
 
         viewModel.DeleteSelectedParts();
 
@@ -815,7 +812,6 @@ public sealed class BuildViewModelTests
         viewModel.DeleteSelectedParts();
 
         viewModel.Beams.Count.ShouldBe(1);
-        viewModel.StatusMessage.ShouldBe("Edit mode can only move selected parts.");
     }
 
 
@@ -858,7 +854,7 @@ public sealed class BuildViewModelTests
     }
 
     [Fact]
-    public void TryGetTrainableCreature_WithUnconnectedNode_RefusesAndSaysWhy()
+    public void TryGetTrainableCreature_WithUnconnectedNode_Refuses()
     {
         var viewModel = new BuildViewModel();
         viewModel.PlaceNode(new Vector2D(0, 0));
@@ -866,8 +862,6 @@ public sealed class BuildViewModelTests
         viewModel.TryGetTrainableCreature(out var creature).ShouldBeFalse();
 
         creature.ShouldBeNull();
-        viewModel.StatusMessage.ShouldNotBeNull();
-        viewModel.StatusMessage.ShouldContain("nothing attached");
     }
 
     [Fact]
@@ -911,17 +905,6 @@ public sealed class BuildViewModelTests
         creature.ShouldNotBeNull();
         creature.Nodes.Count.ShouldBe(2);
         errors.ShouldBeEmpty();
-    }
-
-    [Fact]
-    public void SetBlockedLeaveMessage_SetsStatusMessage()
-    {
-        var viewModel = new BuildViewModel();
-
-        viewModel.SetBlockedLeaveMessage(["Add at least one node before training this creation."]);
-
-        viewModel.StatusMessage.ShouldNotBeNullOrEmpty();
-        viewModel.StatusMessage!.ShouldContain("Add at least one node");
     }
 
     private static CreatureDef TwoNodeCreature() => new(

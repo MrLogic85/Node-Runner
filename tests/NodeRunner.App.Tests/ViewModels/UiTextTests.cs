@@ -98,4 +98,13 @@ public sealed class UiTextTests
         UiText.Number(8).ShouldBe(UiText.Format("{0}", 8));
         UiText.Number(new FixedNumber(2.5, 1)).Args.ShouldBe([new FixedNumber(2.5, 1)]);
     }
+
+    [Fact]
+    public void AsWritten_IsTheTextAloneAsAnArgument_SoItIsNeverTranslated()
+    {
+        var name = UiText.AsWritten("Thigh");
+
+        name.Message.ShouldBe("{0}");
+        name.Args.ShouldBe(["Thigh"]);
+    }
 }

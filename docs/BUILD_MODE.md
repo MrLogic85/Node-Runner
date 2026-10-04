@@ -124,8 +124,8 @@ a node's own ring always hits.
   joint to place one; over a joint that would refuse it, the line and that
   joint's ring turn dashed danger, and dropping there shows the reason at the
   joint: "A beam already joins these nodes" or "These nodes already have a
-  piston". Dropping away from a joint says "Drop it on another node." and
-  never adds one. The picked link stays after placement until another tool is
+  piston". Dropping away from a joint places nothing and shows nothing. The
+  picked link stays after placement until another tool is
   entered. A new Piston is not selected. Taps hit a joint, then a sensor, then
   a Piston, then a beam. Deleting a joint deletes its Pistons.
 - **Camera aim (#594, #622):** a Camera selected alone shows its rays and an Aim
@@ -175,9 +175,9 @@ a node's own ring always hits.
   `docs/UI_DIRECTION.md` → Departures from the reference.
 - Changing tool mid-gesture, or Android cancelling the touch, cancels the
   gesture the same way.
-- `BuildViewModel.StatusMessage` records the outcome of the last
-  edit (including `ConnectBeam` refusing a pair as a safety net); the Build
-  screen does not show it yet.
+- A refused edit (for example `ConnectBeam` refusing a pair as a safety
+  net) changes nothing; where the player needs a reason, the canvas note
+  next to the part gives it.
 
 ## Build to Training
 
@@ -231,8 +231,9 @@ says "Drag its ends to change the length." instead of a number.
 no name of its own shows a default (`BuildViewModel.DefaultPartName`: "Node 2",
 "Beam 1" or the sensor kind) that follows its place in the lists; renaming
 (`RenamePart`, by id, so an edit lands on the part it started on even if
-the selection moves) trims the text, and a blank name or the default
-clears the part's own name. Names are labels only (#220), so a locked
+the selection moves) trims the text, and a blank name, or the default the
+field showed in the player's language left unchanged, clears the part's own
+name. Names are labels only (#220), so a locked
 creation can be renamed too; the rename autosaves like any edit.
 
 ### Parameters (#704)
@@ -291,8 +292,8 @@ narrow side panel (for example "1 node not connected"); it only changes the
 wording.
 
 Start training is gated by `BuildViewModel.TryLeave` and
-`CanTrain`: a failed `TryLeave` keeps Build open and shows the validation
-errors via `StatusMessage` (`BuildViewModel.SetBlockedLeaveMessage`).
+`CanTrain`: a failed `TryLeave` keeps Build open, and the readiness line
+already says why.
 The edits are saved first either way. Back never validates: it saves the
 drawing as it stands (#474, #368). Training refuses a saved creature that
 cannot train and returns to Creations.

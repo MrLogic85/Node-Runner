@@ -16,23 +16,51 @@ public sealed class BrainPortLabelsTests
 
         var labels = BrainPortLabels.For(creature);
 
-        labels.Inputs.ShouldBe(["Accelerometer: along", "Accelerometer: across", "Eye: left 1", "Eye: centre", "Eye: right 1", "Ram: length", "Ram: speed"]);
-        labels.Outputs.ShouldBe(["Ram: position", "Ram: strength"]);
+        var accelerometer = UiText.Plain("Accelerometer");
+        var eye = UiText.AsWritten("Eye");
+        var ram = UiText.AsWritten("Ram");
+        labels.Inputs.ShouldBe(
+        [
+            UiText.Format("{0}:\u00A0along", accelerometer),
+            UiText.Format("{0}:\u00A0across", accelerometer),
+            UiText.Format("{0}:\u00A0left 1", eye),
+            UiText.Format("{0}:\u00A0centre", eye),
+            UiText.Format("{0}:\u00A0right 1", eye),
+            UiText.Format("{0}:\u00A0length", ram),
+            UiText.Format("{0}:\u00A0speed", ram),
+        ]);
+        labels.Outputs.ShouldBe([UiText.Format("{0}:\u00A0position", ram), UiText.Format("{0}:\u00A0strength", ram)]);
         labels.Inputs.Count.ShouldBe(BrainPorts.Of(creature).Inputs.Count);
     }
 
     [Fact]
-    public void For_APiston_NamesItsTwoInputsAndTwoOutputs()
+    public void For_AnUnnamedPiston_NamesItsTwoInputsAndTwoOutputsByItsDefaultName()
     {
         var creature = new CreatureDef(
             [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(2, 0))],
             [],
             [],
-            [new PistonDef(3, 1, 2, "Ram")]);
+            [new PistonDef(3, 1, 2)]);
 
         var labels = BrainPortLabels.For(creature);
 
-        labels.Inputs.ShouldBe(["Ram: length", "Ram: speed"]);
-        labels.Outputs.ShouldBe(["Ram: position", "Ram: strength"]);
+        var piston = UiText.Format("Piston {0}", 1);
+        labels.Inputs.ShouldBe([UiText.Format("{0}:\u00A0length", piston), UiText.Format("{0}:\u00A0speed", piston)]);
+        labels.Outputs.ShouldBe([UiText.Format("{0}:\u00A0position", piston), UiText.Format("{0}:\u00A0strength", piston)]);
+    }
+
+    [Fact]
+    public void For_EverySensorKind_LabelsEachOfItsChannels()
+    {
+        foreach (var kind in Enum.GetValues<SensorKind>())
+        {
+            var creature = new CreatureDef(
+                [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(2, 0))],
+                [new BeamDef(3, 1, 2)],
+                [new SensorDef(4, 3, kind)],
+                []);
+
+            BrainPortLabels.For(creature).Inputs.Count.ShouldBe(BrainPorts.SensorPorts(creature.Sensors[0]).Count());
+        }
     }
 }

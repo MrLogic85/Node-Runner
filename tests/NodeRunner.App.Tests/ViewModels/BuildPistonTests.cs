@@ -60,11 +60,11 @@ public sealed class BuildPistonTests
         Drag(gestures, new Vector2D(100, 0), new Vector2D(0, 0));
 
         build.Pistons.Count.ShouldBe(1);
-        build.StatusMessage.ShouldBe(CreatureBuilder.PistonJoinsTheseNodesReason);
+        build.PlacementNote.ShouldBe(new CanvasNote(CanvasNoteKind.Danger, new CreatureElementSelection(CreatureElementKind.Node, 1), CreatureBuilder.PistonJoinsTheseNodesReason));
     }
 
     [Fact]
-    public void Drag_ReleasedAwayFromAJoint_PlacesNothing_AndSaysWhy()
+    public void Drag_ReleasedAwayFromAJoint_PlacesNothing()
     {
         var (build, gestures) = ThreeLooseJoints();
 
@@ -72,7 +72,7 @@ public sealed class BuildPistonTests
 
         build.Pistons.ShouldBeEmpty();
         build.Nodes.Count.ShouldBe(3);
-        build.StatusMessage.ShouldBe("Drop it on another node.");
+        build.PlacementNote.ShouldBeNull();
     }
 
     [Fact]

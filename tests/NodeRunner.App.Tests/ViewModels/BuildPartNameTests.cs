@@ -12,36 +12,61 @@ public sealed class BuildPartNameTests
         var changes = 0;
         build.AnatomyChanged += (_, _) => changes++;
 
-        build.RenamePart(101, "  Thigh ");
+        build.RenamePart(101, "  Thigh ", null);
 
         build.Snapshot().Beams[0].Name.ShouldBe("Thigh");
-        build.PartDisplayName(101).ShouldBe("Thigh");
+        build.PartDisplayName(101).ShouldBe(UiText.AsWritten("Thigh"));
         changes.ShouldBe(1);
     }
 
     [Theory]
     [InlineData("")]
     [InlineData("   ")]
-    [InlineData("Node 2")]
-    public void RenamePart_BlankOrDefaultName_ClearsTheName(string name)
+    public void RenamePart_BlankName_ClearsTheName(string name)
     {
         var build = Loaded();
-        build.RenamePart(2, "Hip");
+        build.RenamePart(2, "Hip", null);
 
-        build.RenamePart(2, name);
+        build.RenamePart(2, name, null);
 
         build.Snapshot().Nodes[1].Name.ShouldBeNull();
-        build.PartDisplayName(2).ShouldBe("Node 2");
+        build.PartDisplayName(2).ShouldBe(UiText.Format("Node {0}", 2));
+    }
+
+    [Fact]
+    public void RenamePart_ShownDefaultLeftUnchanged_KeepsTheDefault()
+    {
+        var build = Loaded();
+        var changes = 0;
+        build.AnatomyChanged += (_, _) => changes++;
+
+        build.RenamePart(2, " Nod 2 ", "Nod 2");
+
+        build.Snapshot().Nodes[1].Name.ShouldBeNull();
+        changes.ShouldBe(0);
+    }
+
+    // The default is compared in the language it was shown in, so the English default typed in
+    // another language is the player's own name.
+    [Fact]
+    public void RenamePart_ToTheEnglishDefaultWhileAnotherIsShown_KeepsItAsWritten()
+    {
+        var build = Loaded();
+
+        build.RenamePart(2, "Node 2", "Nod 2");
+
+        build.PartDisplayName(2).ShouldBe(UiText.AsWritten("Node 2"));
     }
 
     [Fact]
     public void RenamePart_SameName_DoesNothing()
     {
         var build = Loaded();
+        build.RenamePart(7, "Balance", null);
         var changes = 0;
         build.AnatomyChanged += (_, _) => changes++;
 
-        build.RenamePart(7, "Accelerometer");
+        build.RenamePart(7, "Balance", null);
 
         changes.ShouldBe(0);
     }
@@ -52,10 +77,10 @@ public sealed class BuildPartNameTests
         var build = Loaded();
         build.ToggleSelected(new(CreatureElementKind.Node, 1));
 
-        build.RenamePart(101, "Thigh");
+        build.RenamePart(101, "Thigh", null);
 
-        build.PartDisplayName(101).ShouldBe("Thigh");
-        build.PartDisplayName(1).ShouldBe("Node 1");
+        build.PartDisplayName(101).ShouldBe(UiText.AsWritten("Thigh"));
+        build.PartDisplayName(1).ShouldBe(UiText.Format("Node {0}", 1));
     }
 
     [Fact]
@@ -67,7 +92,7 @@ public sealed class BuildPartNameTests
         var changes = 0;
         build.AnatomyChanged += (_, _) => changes++;
 
-        build.RenamePart(7, "Balance");
+        build.RenamePart(7, "Balance", null);
 
         changes.ShouldBe(0);
     }
@@ -83,9 +108,9 @@ public sealed class BuildPartNameTests
             TestTraining.State(3, 1, TestTraining.Run)));
         build.IsMoveOnly.ShouldBeTrue();
 
-        build.RenamePart(7, "Balance");
+        build.RenamePart(7, "Balance", null);
 
-        build.PartDisplayName(7).ShouldBe("Balance");
+        build.PartDisplayName(7).ShouldBe(UiText.AsWritten("Balance"));
     }
 
     private static BuildViewModel Loaded()
