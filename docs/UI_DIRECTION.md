@@ -664,8 +664,8 @@ and translation"):
   BrainFocus's headings and a segmented switch's segments (Godot's Button
   has no `uppercase`), goes through `UiThemeLookup.LetterCase`, which uses
   the TextServer in the current locale like a Label. Invariant casing is
-  wrong in some languages, so `ToUpperInvariant` is never used on text
-  (#776). `UiVerticalLabel` translates its `Text` like a Label. An exported
+  wrong in some languages, so `project/src` uses no `string` upper- or
+  lower-casing at all (#776). `UiVerticalLabel` translates its `Text` like a Label. An exported
   build cases by the language only with
   `internationalization/locale/include_text_server_data` on (about 3 MB of
   ICU data); without it, a Label and our text both fall back to plain

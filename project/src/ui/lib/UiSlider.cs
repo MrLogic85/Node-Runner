@@ -621,6 +621,11 @@ public partial class UiSlider : Control, ISerializationListener
         {
             Refresh();
         }
+        else
+        {
+            // An authored label translates itself; place the marker once its row has the new text.
+            CallDeferred(MethodName.LayoutContent);
+        }
     }
 
     private void RebuildStepLabels()

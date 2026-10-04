@@ -142,6 +142,9 @@ swap restyles everything:
   a `UiCalloutLayer` turns it off for its callouts (#758). Popup text is
   never put together in code, also through a host's own `Notify` wrapper;
   the galleries are left out (#773, rule in `docs/UI_DIRECTION.md`).
+  `project/src` uses no .NET string casing; that text is translated before
+  the TextServer cases it, in the language's own way, and redrawn when the
+  language changes is checked on device (#776, #778).
 
 **2. Screens reuse the library.** Every canonical component maps to one
 reusable control, and paired specimens (slider and range, power and value

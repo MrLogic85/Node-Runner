@@ -102,8 +102,9 @@ public sealed class UiTextTranslationTests
     }
 
     /// <summary>
-    /// Shown text is cased by the TextServer after translating (#776), as <c>Label.Uppercase</c> does:
-    /// invariant casing is wrong in some languages, and a cased key no longer finds its translation.
+    /// No .NET string casing in the UI (#776): text is cased by the TextServer in the current locale,
+    /// as <c>Label.Uppercase</c> does, since invariant casing is wrong in some languages. That it is
+    /// translated before it is cased is checked on device.
     /// </summary>
     [Fact]
     public void Shown_text_is_cased_by_the_text_server()
@@ -117,7 +118,7 @@ public sealed class UiTextTranslationTests
             })
             .ToList();
 
-        violations.ShouldBeEmpty("Translate first, then case with UiThemeLookup.LetterCase or Uppercase (TextServer.string_to_upper).");
+        violations.ShouldBeEmpty("Case shown text with UiThemeLookup.LetterCase or Uppercase (TextServer.string_to_upper), after translating it.");
     }
 
     [Theory]
