@@ -144,7 +144,7 @@ CreatureDef  ──build──▶  physical body  ──sensors──▶  model 
   stable. Training always steps 1/60 s (#787); Build's frame-delta
   preview can pass longer ones.
 - **Deterministic:** the proof mass starts at rest for gravity as built,
-  on every build and every `ResetPose`, so the same brain, build and map
+  on every build, and `ResetPose` builds the creature afresh, so the same brain, build and map
   give the same readings. The state (`AccelerometerSensor.CurrentProofMass`)
   is exposed for the visual (#576) and SignalFlow, which show exactly what
   the brain reads.

@@ -65,7 +65,4 @@ public sealed class PistonLink
         NodeB.ApplyCentralForce(push);
         NodeA.ApplyCentralForce(-push);
     }
-
-    /// <summary>Forgets the speed control's history, for a new try from the built pose.</summary>
-    public void Reset() => _control = default;
 }

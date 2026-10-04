@@ -43,10 +43,7 @@ public partial class Creature : Node2D
 
     private RigidBody2D[] _beamBodies = [];
     private float[] _beamHalfLengths = [];
-    private Vector2[] _beamInitialPositions = [];
-    private float[] _beamInitialRotations = [];
     private RigidBody2D[] _nodeBodies = [];
-    private Vector2[] _nodeInitialPositions = [];
 
     // The mass each node moves: its own body plus half of each beam body pinned to it. Piston control
     // and Spring damping are tuned to this, not to the node body alone (#794).
@@ -61,7 +58,6 @@ public partial class Creature : Node2D
     private PistonVisual[] _pistonVisuals = [];
     private SpringVisual[] _springVisuals = [];
     private RigidBody2D[] _cylinderBodies = [];
-    private float[] _cylinderInitialRotations = [];
     private CameraRaysVisual? _cameraRaysVisual;
     private bool _isShadow;
     private CreatureElementSelection? _selection;
@@ -140,8 +136,23 @@ public partial class Creature : Node2D
 
         Definition = definition;
         _selection = null;
+        Build(definition);
+        ResetSensors();
+
+        if (_outputCount > 0)
+        {
+            RandomizeBrain(CreateSeed());
+        }
+    }
+
+    // Builds every body, joint, sensor and picture afresh from the definition, in its built shape
+    // at rest. The old parts leave the tree at once, so they never share a physics step or a frame
+    // with the new ones.
+    private void Build(CreatureDef definition)
+    {
         foreach (var child in GetChildren())
         {
+            RemoveChild(child);
             child.QueueFree();
         }
 
@@ -155,13 +166,7 @@ public partial class Creature : Node2D
         CreatePistons(definition);
         CreateSprings(definition);
         ConfigureBrainBuffers(definition);
-        ResetSensors();
         ApplyShadow();
-
-        if (_outputCount > 0)
-        {
-            RandomizeBrain(CreateSeed());
-        }
     }
 
     public void RandomizeBrain(int seed)
@@ -204,44 +209,22 @@ public partial class Creature : Node2D
     }
 
     /// <summary>
-    /// Returns every body to its original built shape, rotation and
-    /// zero velocity, lowered or raised so its lowest point is at
-    /// <paramref name="lowestPointY"/>. A new trial therefore starts from the
-    /// exact same physical state as the last. This is plain physical reset,
-    /// not evolution/fitness logic.
+    /// Starts the creature over in its built shape at rest, lowered or raised so its lowest point
+    /// is at <paramref name="lowestPointY"/>. Every body and joint is built afresh (#798): Godot's
+    /// solver remembers the last pushes of joints and contacts and applies them again on the next
+    /// step, so bodies merely moved back would start each run a little differently, and a
+    /// creature's motion is chaotic enough that the same brain then ends somewhere else. Fresh
+    /// bodies make the same brain run the same way every time. The brain, the selection and the
+    /// shadow look are kept. This is plain physical reset, not evolution/fitness logic.
     /// </summary>
     public void ResetPose(float lowestPointY)
     {
-        for (var i = 0; i < _beamBodies.Length; i++)
-        {
-            var body = _beamBodies[i];
-            body.Position = _beamInitialPositions[i];
-            body.Rotation = _beamInitialRotations[i];
-            body.LinearVelocity = Vector2.Zero;
-            body.AngularVelocity = 0f;
-        }
-
-        for (var i = 0; i < _nodeBodies.Length; i++)
-        {
-            var body = _nodeBodies[i];
-            body.Position = _nodeInitialPositions[i];
-            body.LinearVelocity = Vector2.Zero;
-        }
-
-        for (var i = 0; i < _pistons.Length; i++)
-        {
-            _pistons[i].Reset();
-            var cylinder = _cylinderBodies[i];
-            cylinder.Position = _pistons[i].NodeA.Position;
-            cylinder.Rotation = _cylinderInitialRotations[i];
-            cylinder.LinearVelocity = Vector2.Zero;
-            cylinder.AngularVelocity = 0f;
-        }
-
-        if (_nodeBodies.Length == 0)
+        if (Definition is null || _nodeBodies.Length == 0)
         {
             return;
         }
+
+        Build(Definition);
 
         var offset = GlobalTransform.BasisXformInv(new Vector2(0, lowestPointY - LowestPointY));
         foreach (var body in _beamBodies.Concat(_nodeBodies).Concat(_cylinderBodies))
@@ -496,8 +479,6 @@ public partial class Creature : Node2D
         var beamDefs = definition.Beams;
         _beamBodies = new RigidBody2D[beamDefs.Count];
         _beamHalfLengths = new float[beamDefs.Count];
-        _beamInitialPositions = new Vector2[beamDefs.Count];
-        _beamInitialRotations = new float[beamDefs.Count];
         _beamVisuals = new BeamVisual[beamDefs.Count];
 
         for (var i = 0; i < beamDefs.Count; i++)
@@ -542,8 +523,6 @@ public partial class Creature : Node2D
             AddChild(body);
             _beamBodies[i] = body;
             _beamHalfLengths[i] = halfLength;
-            _beamInitialPositions[i] = midpoint;
-            _beamInitialRotations[i] = rotation;
         }
     }
 
@@ -555,7 +534,6 @@ public partial class Creature : Node2D
     {
         var count = definition.Nodes.Count;
         _nodeBodies = new RigidBody2D[count];
-        _nodeInitialPositions = new Vector2[count];
         _nodeColliderRadii = new float[count];
         _nodeVisuals = new NodeVisual[count];
         _nodeLoads = new float[count];
@@ -611,7 +589,6 @@ public partial class Creature : Node2D
 
             AddChild(body);
             _nodeBodies[i] = body;
-            _nodeInitialPositions[i] = position;
             _nodeColliderRadii[i] = radius;
             _nodeVisuals[i] = visual;
         }
@@ -632,7 +609,7 @@ public partial class Creature : Node2D
         var pin = new PinJoint2D
         {
             Name = $"Beam{beamIndex}Node{nodeIndex}Pin",
-            Position = _nodeInitialPositions[nodeIndex],
+            Position = _nodeBodies[nodeIndex].Position,
         };
         AddChild(pin);
         pin.NodeA = pin.GetPathTo(_nodeBodies[nodeIndex]);
@@ -655,7 +632,7 @@ public partial class Creature : Node2D
             var a = ToGodot(definition.Nodes[triangle.NodeA].Position);
             var b = ToGodot(definition.Nodes[triangle.NodeB].Position);
             var c = ToGodot(definition.Nodes[triangle.NodeC].Position);
-            var toBeam = new Transform2D(_beamInitialRotations[beamIndex], _beamInitialPositions[beamIndex]).AffineInverse();
+            var toBeam = _beamBodies[beamIndex].Transform.AffineInverse();
             var jointRadius = ToGodotFloat(definition.Nodes[triangle.NodeA].Radius, nameof(NodeDef.Radius));
             var visual = new RigidHatchVisual
             {

@@ -55,8 +55,8 @@ public sealed class CameraSensor : IBeamSensor
         }
     }
 
-    // After ResetPose the rays still hold the last pose's hits until the next physics step,
-    // so refresh them now and the first reading of a trial never sees the previous trial.
+    // A ray only casts on a physics step, so after ResetPose places the creature, cast now and
+    // the first reading of a trial already sees the ground from the start pose.
     public void Reset()
     {
         foreach (var ray in _rays)
