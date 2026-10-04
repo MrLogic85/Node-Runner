@@ -278,9 +278,12 @@ transition to keep in step with it.
   calls `Evolver.Start(...)` unless the creature has no brain (an anatomy
   without motors), in which case evolution stays idle. `Evolver.Stop()`
   halts the in-progress trial without raising any events.
-- **Generation 0 (#537).** A new Creation has no trained brain, so its
-  base brain is the passive one every new port starts with (#535): all
-  weights 0, positions at the built pose, strength at bias −4 (about 2%).
+- **Generation 0 (#537, #810).** A new Creation has no trained brain, so
+  its base brain holds the built pose at full strength: all weights 0,
+  positions at the built pose, strength at bias 3 (about 95%). This is
+  how robots start in robotics ML: stiff in a default pose, with the
+  network learning offsets from it. New ports on a trained brain start
+  almost passive instead (#535, `docs/CREATURE_MODEL.md`).
   `GenerationZero` (`libs/NodeRunner.ML/Brains/`) builds the first
   population from it, and `Evolver.Start` uses it whenever there is no
   saved brain to resume:
@@ -288,14 +291,15 @@ transition to keep in step with it.
     stays near 0 m. Generation 0 never changes the base brain.
   - Every other shadow perturbs it: Gaussian noise on every weight
     (σ 1.5) and bias (σ 0.5), covering position and strength outputs.
-  - Each perturbed shadow also wakes one strength output, chosen at
-    random, to a bias between −1 and 3 (about 27–95% of its Strength).
-    So every perturbed shadow can move, and no generation 0 stands still.
-  - The spread was chosen with the Worm, headless over three seeds: every
-    perturbed shadow moved, the base shadow stayed at 0 m, and the best
-    reached about 3–4 m. Weight noise from σ 0.5 to 3 gave similar
-    distances, so the middle was kept; the owner confirmed the spread on
-    a Galaxy S25.
+    Every Piston pushes from the start, so no generation 0 stands still.
+  - The start was chosen headless in #785, 30 generations over 6–15 seeds.
+    With a three-Piston Frog, a base at about 2% strength that woke one
+    strength output per shadow reached a median best distance of about
+    0.6 m at generation 30; a base at full strength reached about 3.7 m.
+    The one-Piston Worm did about as well either way. Weight noise σ 1.5
+    and a Xavier-like σ 0.4 gave no clear difference, so σ 1.5 stays: it
+    saturates the outputs, which gives visible, decisive motion. Backprop
+    needs a different start (`docs/ROADMAP.md` → "Backprop").
   - Resuming a saved brain is not generation 0; see "Resume" below.
 - Generation/fitness are logged (`GD.Print`) and shown on the Training
   screen (see "The Training scene" below).

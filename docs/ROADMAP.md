@@ -546,6 +546,9 @@ hyperparameter sensitivity, interpretability.
   "swimmer"). Train a classifier. Visualize the decision boundary.
 - Live loss curve
 - Optimizer toggle: SGD / SGD + momentum / Adam (with tooltip explaining each)
+- A small, Xavier-like weight start for backprop: evolution's wide
+  generation 0 noise saturates the outputs, which gradients cannot learn
+  through (#785, `docs/TRAINING_LOOP.md` → "Generation 0").
 
 **ML concepts introduced:** Backpropagation, loss functions, learning rate,
 epochs, optimizers, supervised learning, overfitting.
