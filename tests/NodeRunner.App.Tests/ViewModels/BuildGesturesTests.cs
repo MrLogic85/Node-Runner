@@ -45,8 +45,6 @@ public class BuildGesturesTests
     public void Parts_DragJoint_MovesItWithoutChangingSelection()
     {
         var (build, gestures) = TwoJointsAndABeam();
-        IReadOnlyCollection<int>? dragStarted = null;
-        gestures.NodeDragStarting += (_, nodes) => dragStarted = nodes;
 
         gestures.Press(new Vector2D(0, 0));
         gestures.Drag(new Vector2D(0, 40));
@@ -54,7 +52,6 @@ public class BuildGesturesTests
 
         build.Nodes[0].Position.ShouldBe(new Vector2D(0, 40));
         build.SelectedPartCount.ShouldBe(0);
-        dragStarted.ShouldBe([1]);
     }
 
     [Fact]
@@ -692,31 +689,15 @@ public class BuildGesturesTests
     }
 
     [Fact]
-    public void Select_DragASelectedJoint_ReportsTheWholeSelectionAsMoving()
-    {
-        var (build, gestures) = ThreeLooseJoints(BuildTool.Select);
-        build.ReplaceSelection([1, 2]);
-        IReadOnlyCollection<int>? moving = null;
-        gestures.NodeDragStarting += (_, nodes) => moving = nodes;
-
-        gestures.Press(new Vector2D(0, 0));
-        gestures.Drag(new Vector2D(0, 30));
-
-        moving!.OrderBy(id => id).ShouldBe([1, 2]);
-    }
-
-    [Fact]
-    public void Parts_DragWithASelection_ReportsOnlyTheDraggedJointAsMoving()
+    public void Parts_DragWithASelection_MovesOnlyTheDraggedJoint()
     {
         var (build, gestures) = ThreeLooseJoints(BuildTool.Parts);
         build.ReplaceSelection([1, 2]);
-        IReadOnlyCollection<int>? moving = null;
-        gestures.NodeDragStarting += (_, nodes) => moving = nodes;
 
         gestures.Press(new Vector2D(0, 0));
         gestures.Drag(new Vector2D(0, 30));
 
-        moving.ShouldBe([1]);
+        build.Nodes[0].Position.ShouldBe(new Vector2D(0, 30));
         build.Nodes[1].Position.ShouldBe(new Vector2D(100, 0));
     }
 

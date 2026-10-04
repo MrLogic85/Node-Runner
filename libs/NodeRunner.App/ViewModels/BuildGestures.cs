@@ -101,9 +101,6 @@ public sealed class BuildGestures
     /// <summary>Raised when the gesture's own visuals change (beam preview, selection box), so the canvas can redraw.</summary>
     public event EventHandler? Changed;
 
-    /// <summary>Raised just before a Parts or Select drag first moves nodes; the argument is every node it moves.</summary>
-    public event EventHandler<IReadOnlyCollection<int>>? NodeDragStarting;
-
     /// <summary>The node a Beam or Piston drag started from.</summary>
     public int? BeamStartNodeId { get; private set; }
 
@@ -379,7 +376,6 @@ public sealed class BuildGestures
                 // The group turns and scales about the frame's centre, where the Move handle is.
                 _dragLayout = Layout();
                 _selectionStart = _build.SnapshotSelection(_dragLayout is { } layout ? View.ToCanvas(layout.Move) : null);
-                NodeDragStarting?.Invoke(this, [.. _selectionStart.Positions.Keys]);
             }
             else if (_selectPress == SelectPress.Box)
             {
@@ -388,7 +384,6 @@ public sealed class BuildGestures
             else if (_pressTool == BuildTool.Parts && _pressedNode is { } dragged)
             {
                 _dragOrigin = NodeById(dragged).Position;
-                NodeDragStarting?.Invoke(this, [dragged]);
             }
             else if (_pressTool == BuildTool.Beam
                 && BeamStartNodeId is null
@@ -396,7 +391,6 @@ public sealed class BuildGestures
                 && _build.SelectedNodeIds.Contains(selected))
             {
                 _dragOrigin = NodeById(selected).Position;
-                NodeDragStarting?.Invoke(this, [selected]);
             }
         }
 
