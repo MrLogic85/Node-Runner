@@ -664,6 +664,7 @@ public partial class Creature : Node2D
                 Lines = TriangleHatch.Lines(a, b, c, Theme.RigidHatchSpacing, jointRadius)
                     .SelectMany(line => new[] { toBeam * line.Start, toBeam * line.End })
                     .ToArray(),
+                Triangles = [toBeam * a, toBeam * b, toBeam * c],
             };
             _beamBodies[beamIndex].AddChild(visual);
             hatches.Add(visual);

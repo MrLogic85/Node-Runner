@@ -8,6 +8,8 @@
 [ext_resource type="Script" uid="uid://b4t4jrismbuik" path="res://src/ui/lib/UiIcon.cs" id="7_icon"]
 [ext_resource type="Script" uid="uid://r2ped3g3uiaa" path="res://src/ui/lib/UiButton.cs" id="8_button"]
 [ext_resource type="Script" uid="uid://bjt8et7kcs50x" path="res://src/ui/lib/UiCardActions.cs" id="9_card_actions"]
+[ext_resource type="PackedScene" uid="uid://kk3td5f4uebc" path="res://scenes/ui/UiWorldView.tscn" id="10_world_view"]
+[ext_resource type="Script" uid="uid://bk3fqvtfv0iau" path="res://src/ui/widgets/CreatureParts.cs" id="11_parts"]
 
 [node name="CreationCard" type="MarginContainer" unique_id=1817691574]
 custom_minimum_size = Vector2(192, 232)
@@ -40,6 +42,17 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 script = ExtResource("3_thumb")
+
+[node name="View" parent="Frame/Stack/ThumbnailSlot/Thumbnail" unique_id=918576390 instance=ExtResource("10_world_view")]
+layout_mode = 1
+mouse_filter = 2
+ScalesWithUi = true
+
+[node name="WorldViewport" parent="Frame/Stack/ThumbnailSlot/Thumbnail/View" index="0"]
+render_target_update_mode = 0
+
+[node name="Parts" type="Node2D" parent="Frame/Stack/ThumbnailSlot/Thumbnail/View/WorldViewport" unique_id=480044721]
+script = ExtResource("11_parts")
 
 [node name="ThumbnailFallback" type="Label" parent="Frame/Stack/ThumbnailSlot" unique_id=1755324262]
 unique_name_in_owner = true
@@ -222,3 +235,5 @@ ContentLayout = 1
 unique_name_in_owner = true
 layout_mode = 2
 mouse_filter = 2
+
+[editable path="Frame/Stack/ThumbnailSlot/Thumbnail/View"]

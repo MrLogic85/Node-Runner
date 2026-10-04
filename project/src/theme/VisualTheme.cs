@@ -22,6 +22,7 @@ public sealed class VisualTheme
     {
         RigidHatch = UiThemes.Color(theme, UiTokens.Color.Muted) with { A = _rigidHatchOpacity },
         RigidHatchSpacing = _rigidHatchSpacing,
+        RigidFill = UiThemes.Color(theme, UiTokens.Color.Muted) with { A = _rigidHatchOpacity / TriangleHatch.MinPixelSpacing },
         ArenaBackground = UiThemes.Color(theme, UiTokens.Color.Background),
         ArenaGrid = UiThemes.Color(theme, UiTokens.Color.Line),
         GroundFill = UiThemes.Color(theme, UiTokens.Color.Panel),
@@ -155,4 +156,11 @@ public sealed class VisualTheme
 
     /// <summary>How far apart a rigid triangle's hatch lines are, in creature units.</summary>
     public float RigidHatchSpacing { get; private init; }
+
+    /// <summary>
+    /// A rigid triangle's fill where its hatch is too dense to read (<see cref="TriangleHatch.IsTooDense"/>):
+    /// the hatch's own coverage at that point, one-pixel lines <see cref="TriangleHatch.MinPixelSpacing"/>
+    /// apart, so zooming across it does not jump.
+    /// </summary>
+    public Color RigidFill { get; private init; }
 }

@@ -109,7 +109,10 @@ reference would mislead someone working on that surface.
   lines at 2px and its eyes node-sized at any zoom. Instead zoom scales the
   whole picture, lines included, the build area's corner marks too. Four
   things keep their screen size: text labels, the build grid's hairlines
-  and the rigid-triangle hatch (1 px at any zoom, so both stay faint), and
+  and the rigid-triangle hatch (1 px at any zoom, so both stay faint; where
+  its lines would come closer than `TriangleHatch.MinPixelSpacing` on
+  screen, zoomed far out or in a thumbnail, the triangle gets a faint fill of
+  the same density instead, #770), and
   the Select frame with its handles, which are controls to grab rather than
   part of the picture (#366).
 - **The Build grid marks the build area (#400).** The reference's grid floor
@@ -303,13 +306,16 @@ reference would mislead someone working on that surface.
     its lines turn `halo`. Its tap area is a square turned with the beam,
     24 for the Accelerometer and 44 for the Camera. Pictures, rays and rings
     stay crisp at any Build or Training zoom.
-  - *Beams:* a creature's beams are 6 wide in Build and Training
-    (thumbnails keep the thin line). A beam must leave 52 free between its
-    joint rings, room for the Camera with a gap on each side; a shorter beam
+  - *Beams:* a creature's beams are 6 wide in Build, Training and the
+    creation thumbnails. A beam must leave 52 free between its joint rings, room for the Camera with a gap on each side; a shorter beam
     can still be drawn, is drawn in `danger`, and blocks training. Its
     canvas note is a `danger` callout "Too short", out past its joints on
     the beam's upper side with a leader line to the beam's middle (see
     `c_call` in a figure). The readiness line says "1 beam too short".
+  - *Thumbnails:* a Creations card shows its creature with the same parts,
+    scaled down to fit `Space.S3` inside the thumbnail and centred, but never
+    past half its size in Build at 1:1 (#770). Edit-only marks (selection,
+    loose and too-short tint, stroke ticks, camera rays) are not shown.
   - *Selection:* every selection mark sits one shared gap
     (`SelectionMarks.Gap`, 3) outside the part's edge (#710). A selected
     joint gets an unfilled 2-wide `halo` ring that gap outside it; a selected
@@ -604,7 +610,13 @@ keep their size on screen and only get the space that is left:
   ruler, the best marker) apply the root factor again, so they follow the UI
   size. Build's world sets `ScalesWithUi` instead: its SubViewport keeps the
   slot's size and scales with the UI like the rest of the screen, and
-  `CanvasView` handles the root factor for it.
+  `CanvasView` handles the root factor for it. A creation thumbnail's world
+  scales with the UI too and authors its SubViewport's update mode as
+  Disabled: it renders once (`RequestRender`) when the thumbnail refreshes or
+  is fitted again, then keeps that picture, so scrolling renders nothing
+  (#770). Each such world still holds its own render target, about 1 MB on a
+  phone, so a long list of them needs to reuse its cards (#786). Every world is 2D, so its
+  SubViewport sets `disable_3d` and allocates no 3D buffers.
 - `CanvasView` divides its zoom limits by the root factor (`UiScale`): fitting
   never magnifies past true size, and pinch zoom stops at `MaxZoom` times true
   size on screen, whatever the UI size. Build's finger-sized hit radii and handles are in view units, so they
@@ -783,8 +795,9 @@ is not `antialiased: true` inside a method that opens a pen, calls
 A part visual bakes the window pixel scale into its strokes, so it must redraw
 when that scale changes (a zoom, UI size or screen change). Every view that
 holds parts calls `PartVisual.RedrawOnNewPixelScale` as it may have zoomed:
-Build's `BuildCreature` on each draw, Training's `TrainingHost` each frame
-(also while paused) for every creature in its world. It
+Build's `CreatureParts` on each draw, a creation thumbnail's on each refresh,
+Training's `TrainingHost` each frame (also while paused) for every creature
+in its world. It
 redraws the parts once the scale has moved by `PixelScaleTolerance`, so a
 gliding camera does not redraw every creature every frame.
 

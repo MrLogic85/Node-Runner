@@ -1,27 +1,30 @@
 using Godot;
+using NodeRunner.App.ViewModels;
 using NodeRunner.Domain;
-using NodeRunner.Theme;
 using NodeRunner.Ui.Lib;
 
 namespace NodeRunner.Ui.Widgets;
 
 /// <summary>
-/// A creature's body drawn to fit its rectangle, as on a Creations card: beams, links and nodes.
-/// Colours are read from the Theme while drawing, so a theme swap redraws it. Its top corners
-/// round to the card's, because it sits at the top of a flush card.
+/// A creature fitted to its rectangle, as on a Creations card, drawn with the same part visuals as
+/// Build (#770): beams, links, joints, sensors and the rigid hatch, with no edit marks. The parts
+/// live in their own still world (<see cref="UiWorldView.RequestRender"/>), which renders again
+/// only when the creature, the size or the pixel density changes, so scrolling a list of cards
+/// moves finished pictures. Its top corners round to the card's, because it sits at the top of a flush card.
 /// </summary>
 [Tool]
 [GlobalClass]
 public partial class CreatureThumbnail : Control
 {
     private const float _inset = UiSize.Space.S3;
-    private const float _fill = 0.74f;
-    private const float _nodeRadius = 5.5f;
-    private const int _ringPoints = 24;
-    private const float _springHalf = 3;
-    private const float _springMinSpan = 16;
 
     private CreatureDef? _creature;
+    private bool _refreshQueued;
+
+    // Looked up, not exported: this is a tool script, and in the editor neither is its own type.
+    private UiWorldView View => GetNode<UiWorldView>("View");
+
+    private CreatureParts Parts => GetNode<CreatureParts>("View/WorldViewport/Parts");
 
     public CreatureDef? Creature
     {
@@ -29,65 +32,51 @@ public partial class CreatureThumbnail : Control
         set
         {
             _creature = value;
-            QueueRedraw();
+            QueueRefresh();
         }
     }
 
-    public override void _Draw()
+    // A new fit can change the pixel density alone, which the parts' strokes are drawn for.
+    public override void _Ready()
     {
-        UiCorners.Top(UiSize.Radius.Large).Fill(this, new Rect2(Vector2.Zero, Size), UiThemeLookup.Color(this, UiTokens.Color.Background));
-        if (_creature is null || _creature.Nodes.Count == 0)
+        if (Engine.IsEditorHint())
         {
             return;
         }
 
-        var points = _creature.Nodes.Select(node => new Vector2((float)node.Position.X, (float)node.Position.Y)).ToArray();
-        var min = points.Aggregate((a, b) => new Vector2(Mathf.Min(a.X, b.X), Mathf.Min(a.Y, b.Y)));
-        var max = points.Aggregate((a, b) => new Vector2(Mathf.Max(a.X, b.X), Mathf.Max(a.Y, b.Y)));
-        var content = new Rect2(Vector2.One * _inset, Size - (Vector2.One * _inset * 2));
-        var span = new Vector2(Mathf.Max(1, max.X - min.X), Mathf.Max(1, max.Y - min.Y));
-        var scale = Mathf.Min(content.Size.X / span.X, content.Size.Y / span.Y) * _fill;
-        var offset = content.GetCenter() - ((min + max) * 0.5f * scale);
+        View.Fitted += QueueRefresh;
+        QueueRefresh();
+    }
 
-        Vector2 MapNode(int nodeId) => (points[_creature.NodeIndexOf(nodeId)] * scale) + offset;
-        Vector2 MapIndex(int index) => (points[index] * scale) + offset;
+    public override void _Draw() =>
+        UiCorners.Top(UiSize.Radius.Large).Fill(this, new Rect2(Vector2.Zero, Size), UiThemeLookup.Color(this, UiTokens.Color.Background));
 
-        var line = UiThemeLookup.Color(this, UiTokens.Color.LineStrong);
-        using var pen = UiPixelPen.Begin(this);
-        foreach (var beam in _creature.Beams)
+    // Once a frame at most, after layout, so the world has its new size before it renders. The
+    // editor only draws the background: the parts are not a tool script.
+    private void QueueRefresh()
+    {
+        if (_refreshQueued || Engine.IsEditorHint())
         {
-            pen.Line(MapNode(beam.NodeA), MapNode(beam.NodeB), line, UiSize.Stroke.Beam);
+            return;
         }
 
-        // A Piston is its rod alone at this size, in accent like on the canvas (#451).
-        var accent = UiThemeLookup.Color(this, UiTokens.Color.Accent);
-        foreach (var piston in _creature.Pistons)
+        _refreshQueued = true;
+        Callable.From(Refresh).CallDeferred();
+    }
+
+    private void Refresh()
+    {
+        _refreshQueued = false;
+        var fit = _creature is null ? null : CreatureThumbnailFit.Of(_creature, Size.X, Size.Y, _inset);
+        var parts = Parts;
+        parts.Visible = fit is not null;
+        if (fit is { } placed)
         {
-            pen.Line(MapNode(piston.NodeA), MapNode(piston.NodeB), accent, UiSize.Stroke.Signal);
+            parts.Position = new Vector2((float)placed.Offset.X, (float)placed.Offset.Y);
+            parts.Scale = Vector2.One * (float)placed.Scale;
+            parts.Show(_creature!);
         }
 
-        // A Spring is its coil between the node rings (#453), or a plain line when too short to read as one.
-        foreach (var spring in _creature.Springs)
-        {
-            var (a, b) = (MapNode(spring.NodeA), MapNode(spring.NodeB));
-            var along = (b - a).Normalized();
-            var (start, end) = (a + (along * _nodeRadius), b - (along * _nodeRadius));
-            if (start.DistanceTo(end) < _springMinSpan)
-            {
-                pen.Line(a, b, line, UiSize.Stroke.Signal);
-                continue;
-            }
-
-            pen.Line(a, start, line, UiSize.Stroke.Signal);
-            pen.Polyline(SpringDrawing.Coil(start, end, _springHalf), line, UiSize.Stroke.Signal);
-            pen.Line(end, b, line, UiSize.Stroke.Signal);
-        }
-
-        var fill = UiThemeLookup.Color(this, UiTokens.Color.Panel);
-        for (var i = 0; i < points.Length; i++)
-        {
-            pen.Disc(MapIndex(i), _nodeRadius, fill);
-            pen.Ring(MapIndex(i), _nodeRadius, line, UiSize.Stroke.Signal, _ringPoints);
-        }
+        View.RequestRender();
     }
 }
