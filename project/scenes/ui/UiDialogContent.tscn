@@ -4,6 +4,7 @@
 [ext_resource type="Script" uid="uid://tj04ceasjqhg" path="res://src/ui/lib/UiPopupCard.cs" id="2"]
 [ext_resource type="Script" uid="uid://r2ped3g3uiaa" path="res://src/ui/lib/UiButton.cs" id="3"]
 [ext_resource type="Script" uid="uid://bjt8et7kcs50x" path="res://src/ui/lib/UiCardActions.cs" id="4"]
+[ext_resource type="Script" uid="uid://dk67qmt3brp4e" path="res://src/ui/lib/UiLabel.cs" id="5_label"]
 
 [node name="UiDialogContent" type="Control" unique_id=820140142]
 layout_mode = 3
@@ -80,10 +81,8 @@ metadata/ui_letter_spacing = 0.06
 unique_name_in_owner = true
 layout_mode = 2
 text = "Your dialog"
-metadata/ui_font_family = "Display"
-metadata/ui_line_height = 18.0
-metadata/ui_font_weight = 600
-metadata/ui_letter_spacing = 0.0
+script = ExtResource("5_label")
+TextStyle = 2
 
 [node name="BodyScroll" type="ScrollContainer" parent="Card/Stack/Body/Column" unique_id=620710633]
 unique_name_in_owner = true
@@ -98,10 +97,8 @@ layout_mode = 2
 size_flags_horizontal = 3
 text = "Edit this text in the Inspector. The same scene supplies the layout of every UiDialog."
 autowrap_mode = 3
-metadata/ui_font_family = "Body"
-metadata/ui_line_height = 18.0
-metadata/ui_font_weight = 400
-metadata/ui_letter_spacing = 0.0
+script = ExtResource("5_label")
+TextStyle = 4
 
 [node name="Error" type="Label" parent="Card/Stack/Body/Column" unique_id=1536230379]
 unique_name_in_owner = true
@@ -110,10 +107,9 @@ custom_minimum_size = Vector2(120, 0)
 layout_mode = 2
 text = "An example error. Toggle Visible to preview."
 autowrap_mode = 3
-metadata/ui_font_family = "Body"
-metadata/ui_line_height = 14.0
-metadata/ui_font_weight = 400
-metadata/ui_letter_spacing = 0.0
+script = ExtResource("5_label")
+TextStyle = 9
+TextColor = 12
 
 [node name="Actions" type="Container" parent="Card/Stack" unique_id=623321331]
 layout_mode = 2

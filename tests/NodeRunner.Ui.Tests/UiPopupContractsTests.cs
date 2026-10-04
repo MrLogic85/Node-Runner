@@ -42,6 +42,13 @@ public sealed class UiPopupContractsTests
         result.ErrorMessage.ShouldBe("Could not save.");
     }
 
+    [Fact]
+    public void Failure_FromSourceIsAFailure()
+    {
+        UiDialogResult.Failure(() => "Could not save.").Succeeded.ShouldBeFalse();
+        Should.Throw<ArgumentNullException>(() => UiDialogResult.Failure((Func<string>)null!));
+    }
+
     [Theory]
     [InlineData("")]
     [InlineData(" ")]

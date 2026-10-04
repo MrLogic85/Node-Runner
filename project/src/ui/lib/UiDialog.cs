@@ -13,7 +13,6 @@ public sealed partial class UiDialog : Window
 
     public bool IsOpen { get; private set; }
     public bool IsBusy { get; private set; }
-    public string? ErrorMessage { get; private set; }
 
     private UiDialogSpec? _spec;
     private UiDialogContent _content = null!;
@@ -74,7 +73,6 @@ public sealed partial class UiDialog : Window
             throw new InvalidOperationException("UiDialog requires an embedding viewport (GuiEmbedSubwindows).");
         }
         _spec = spec;
-        ErrorMessage = null;
         IsBusy = false;
         _operation++;
         _content.Bind(spec);
@@ -114,7 +112,6 @@ public sealed partial class UiDialog : Window
         var operation = _operation;
         var spec = _spec;
         IsBusy = true;
-        ErrorMessage = null;
         _content.ShowError(null);
         _content.SetBusy(true);
         QueueLayout();
@@ -143,8 +140,7 @@ public sealed partial class UiDialog : Window
             Finish(true);
             return;
         }
-        ErrorMessage = result.ErrorMessage;
-        _content.ShowError(ErrorMessage);
+        _content.ShowError(result.ErrorMessage, result.ErrorSource);
         _content.SetBusy(false);
         _content.ActionButton.HoldToActivate = spec.HoldToAction;
         _content.AbortButton.GrabFocus();

@@ -1,7 +1,9 @@
 using Godot;
 using NodeRunner.App.Repositories;
+using NodeRunner.App.ViewModels;
 using NodeRunner.Managers;
 using NodeRunner.Ui.Lib;
+using NodeRunner.Ui.Widgets;
 
 namespace NodeRunner.Hosts;
 
@@ -39,15 +41,16 @@ internal static class CreationActions
     public static UiDialogSpec DeleteDialog(string name, Func<bool> delete) =>
         new(
             UiPopupType.Danger,
-            $"Delete {name}?",
+            string.Empty,
             "The creation and its trained brain are removed for good. Copy it first if you might want it back.",
             "Hold to delete",
             () => Task.FromResult(delete()
                 ? UiDialogResult.Success
-                : UiDialogResult.Failure($"Could not delete {name}. Try again.")),
+                : UiDialogResult.Failure(UiTextTranslation.Source(UiText.Format("Could not delete {0}. Try again.", name)))),
             holdToAction: true)
         {
             Icon = new(UiIconId.Trash),
+            TitleSource = UiTextTranslation.Source(UiText.Format("Delete {0}?", name)),
         };
 
     /// <summary>The reference's "One reset" dialog (#687): losing training is danger and a hold.</summary>
@@ -73,7 +76,7 @@ internal static class CreationActions
     public static UiDialogSpec UnlockDialog(string name, Action unlock) =>
         new(
             UiPopupType.Default,
-            $"Unlock {name}?",
+            string.Empty,
             "You can change the body until you leave Build. Training is kept: the brain remembers the parts you keep, and new parts start almost unused.",
             "Unlock",
             () =>
@@ -83,6 +86,7 @@ internal static class CreationActions
             })
         {
             Icon = new(UiIconId.Unlock),
+            TitleSource = UiTextTranslation.Source(UiText.Format("Unlock {0}?", name)),
         };
 
     public static bool TryParseId(string key, string name, string action, out Guid id)

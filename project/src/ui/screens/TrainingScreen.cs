@@ -69,8 +69,8 @@ public partial class TrainingScreen : Control
         pause.TooltipText = paused ? "Run" : "Pause";
     }
 
-    /// <summary>Shows how fast the run plays, such as "2x".</summary>
-    public void ShowSpeed(string speedText) => GetNode<UiButton>("%Speed").Text = speedText;
+    /// <summary>Shows how fast the run plays, such as "2x": already translated, and asked again when the language changes.</summary>
+    public void ShowSpeed(Func<string> speedText) => GetNode<UiButton>("%Speed").TextSource = speedText;
 
     /// <summary>
     /// Names the selected part (#388) in a callout above the whole creature, its leader down to the

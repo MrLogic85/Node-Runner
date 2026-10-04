@@ -1,5 +1,4 @@
 using System.ComponentModel;
-using System.Globalization;
 using Godot;
 using NodeRunner.App.Lifecycle;
 using NodeRunner.App.Navigation;
@@ -294,7 +293,7 @@ public partial class TrainingHost : Node, IRoutedScene
             _signalFlow,
             _brainFocus);
         _screen.ShowPaused(GetTree().Paused);
-        _screen.ShowSpeed(SpeedText());
+        ShowSpeed();
         _screen.BackRequested += () => _navigator?.Back();
         _screen.PauseRequested += TogglePause;
         _screen.SpeedRequested += CycleTimeScale;
@@ -461,10 +460,11 @@ public partial class TrainingHost : Node, IRoutedScene
     {
         _timeScaleIndex = (_timeScaleIndex + 1) % _timeScales.Length;
         Engine.TimeScale = _timeScales[_timeScaleIndex];
-        _screen.ShowSpeed(SpeedText());
+        ShowSpeed();
     }
 
-    private string SpeedText() => string.Create(CultureInfo.InvariantCulture, $"{_timeScales[_timeScaleIndex]:0}x");
+    private void ShowSpeed() =>
+        _screen.ShowSpeed(UiTextTranslation.Source(UiText.Format("{0}x", (int)_timeScales[_timeScaleIndex])));
 
     // A tap in the arena selects the part of the creature under it, or clears the selection.
     private void SelectPartAt(Vector2 worldPosition)

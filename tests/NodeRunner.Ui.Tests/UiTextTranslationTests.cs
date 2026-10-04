@@ -56,6 +56,36 @@ public sealed class UiTextTranslationTests
             "Hand a UiText only to UiTextTranslation (ShowText, or Source for a component's …Source property), which translates it and keeps it for the next language change.");
     }
 
+    /// <summary>
+    /// Popup text is translated whole, so it is never put together in code (#773): "Delete {0}?" crosses as a
+    /// UiText through a …Source property, since "Delete Walker?" has no translation. A host's own
+    /// <c>Notify(title, message)</c> that hands its text on to a popup counts as the popup. The design
+    /// galleries show sample text for development and are left out.
+    /// </summary>
+    [Fact]
+    public void Popup_text_is_not_built_in_code()
+    {
+        var violations = PopupTextBuilds(CSharpSources.ProjectCompilation, CSharpSources.Project)
+            .Where(violation => !violation.StartsWith("ui/screens/", StringComparison.Ordinal) || !violation.Contains("Gallery", StringComparison.Ordinal))
+            .ToList();
+
+        violations.ShouldBeEmpty("Pass a UiText through UiTextTranslation.Source to the popup's …Source property instead.");
+    }
+
+    [Theory]
+    [InlineData("object M(string name) => new UiNotificationSpec(UiPopupType.Default, \"Examples\", $\"Could not copy {name}.\");")]
+    [InlineData("object M(string name) => new UiDialogSpec(UiPopupType.Danger, \"Delete \" + name + \"?\", \"Gone for good.\");")]
+    [InlineData("object M(string name) => UiDialogResult.Failure(string.Format(\"Could not delete {0}.\", name));")]
+    [InlineData("object M(string name) => Notify(\"Creations\", $\"Could not open {name}.\"); object Notify(string title, string message) => new UiNotificationSpec(UiPopupType.Default, title, message);")]
+    public void Building_popup_text_is_flagged(string member) =>
+        PopupTextBuilds(member).ShouldHaveSingleItem();
+
+    [Theory]
+    [InlineData("object M() => new UiNotificationSpec(UiPopupType.Default, \"Examples\", \"Could not copy.\");")]
+    [InlineData("object M() => Notify(\"Creations\", \"Could not open it.\"); object Notify(string title, string message) => new UiNotificationSpec(UiPopupType.Default, title, message);")]
+    public void Whole_popup_text_passes(string member) =>
+        PopupTextBuilds(member).ShouldBeEmpty();
+
     [Fact]
     public void UiTextTranslation_translates_with_TranslationServer()
     {
@@ -117,6 +147,47 @@ public sealed class UiTextTranslationTests
             && CSharpSources.Symbol(model, call) is IMethodSymbol method
             && (method.ReducedFrom ?? method).ContainingType.ToDisplayString() == "NodeRunner.Ui.Widgets.UiTextTranslation");
     }
+
+    private static IEnumerable<string> PopupTextBuilds(string member)
+    {
+        var snippet = CSharpSources.Snippet(member);
+        return PopupTextBuilds(CSharpSources.Compile([.. CSharpSources.Project, snippet]), [snippet]);
+    }
+
+    private static readonly string[] _popupTypes =
+        ["NodeRunner.Ui.Lib.UiDialogSpec", "NodeRunner.Ui.Lib.UiNotificationSpec", "NodeRunner.Ui.Lib.UiDialogResult"];
+
+    // A parameter that goes straight on as popup text is popup text too, one level up.
+    private static IEnumerable<string> PopupTextBuilds(Compilation compilation, IReadOnlyList<CSharpSources.Source> sources)
+    {
+        var models = sources.ToDictionary(source => source, source => compilation.GetSemanticModel(source.Tree));
+        var forwarded = sources
+            .SelectMany(source => source.Tree.GetRoot().DescendantNodes().OfType<ArgumentSyntax>()
+                .Where(argument => IsPopupParameter(Parameter(argument, models[source]), []))
+                .Select(argument => models[source].GetSymbolInfo(argument.Expression).Symbol)
+                .OfType<IParameterSymbol>())
+            .ToHashSet<IParameterSymbol>(SymbolEqualityComparer.Default);
+
+        return sources.SelectMany(source => source.Find(node =>
+            node is ArgumentSyntax argument
+            && IsPopupParameter(Parameter(argument, models[source]), forwarded)
+            && IsBuiltText(argument.Expression, models[source])));
+    }
+
+    private static IParameterSymbol? Parameter(ArgumentSyntax argument, SemanticModel model) =>
+        (model.GetOperation(argument) as Microsoft.CodeAnalysis.Operations.IArgumentOperation)?.Parameter;
+
+    private static bool IsPopupParameter(IParameterSymbol? parameter, HashSet<IParameterSymbol> forwarded) =>
+        parameter is not null
+        && (_popupTypes.Contains(parameter.ContainingType?.ToDisplayString()) || forwarded.Contains(parameter.OriginalDefinition));
+
+    private static bool IsBuiltText(ExpressionSyntax expression, SemanticModel model) =>
+        expression is InterpolatedStringExpressionSyntax
+        || expression is BinaryExpressionSyntax { RawKind: (int)Microsoft.CodeAnalysis.CSharp.SyntaxKind.AddExpression }
+            && model.GetTypeInfo(expression).Type?.SpecialType == SpecialType.System_String
+        || expression is InvocationExpressionSyntax call
+            && CSharpSources.Symbol(model, call) is IMethodSymbol { Name: "Format" or "Concat" or "Join" } method
+            && method.ContainingType.SpecialType == SpecialType.System_String;
 
     private static bool IsInNameof(ExpressionSyntax expression, SemanticModel model) =>
         expression.Ancestors().OfType<InvocationExpressionSyntax>().Any(call =>

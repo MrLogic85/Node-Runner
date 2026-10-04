@@ -97,7 +97,11 @@ public sealed partial class UiNotificationContent : UiPopupCard
         _type = spec.Type;
         _iconOverride = spec.Icon;
         _title!.Text = spec.Title;
-        _message.Text = spec.Message;
+        _message.TextSource = spec.MessageSource;
+        if (spec.MessageSource is null)
+        {
+            _message.Text = spec.Message;
+        }
         ApplyAppearance();
     }
 
