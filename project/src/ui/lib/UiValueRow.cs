@@ -85,6 +85,7 @@ public partial class UiValueRow : HBoxContainer
         var spacing = UiSize.Space.S2;
         AddThemeConstantOverride("separation", spacing);
         var label = UiFieldAndRows.Label(LabelText, UiTokens.Typography.Caption, UiTokens.Color.Muted);
+        UiTranslation.ShareContext(this, label);
         label.SizeFlagsHorizontal = SizeFlags.ExpandFill;
         AddChild(label);
         var readout = new HBoxContainer
@@ -105,6 +106,7 @@ public partial class UiValueRow : HBoxContainer
             UiTokens.Typography.ReadoutMedium,
             UiTokens.Color.Ink,
             HorizontalAlignment.Right);
+        UiTranslation.ShareContext(this, value);
         value.TextOverrunBehavior = TextServer.OverrunBehavior.NoTrimming;
         value.SizeFlagsHorizontal = SizeFlags.ShrinkEnd;
         readout.AddChild(value);

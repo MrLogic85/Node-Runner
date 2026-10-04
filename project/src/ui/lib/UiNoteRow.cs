@@ -41,6 +41,7 @@ public partial class UiNoteRow : VBoxContainer
             return;
         }
 
+        UiTranslation.ShareContext(this, _label);
         _label.Text = Text;
         UiThemeLookup.ApplyTextStyle(_label, UiTokens.Typography.Note, UiTokens.Color.Muted);
     }

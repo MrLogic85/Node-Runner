@@ -670,6 +670,14 @@ and translation"):
   `internationalization/locale/include_text_server_data` on (about 3 MB of
   ICU data); without it, a Label and our text both fall back to plain
   casing (#778).
+- **Translation context** tells two meanings of the same English apart,
+  such as "Run" the verb and "Run" the noun. Set `translation_context` on
+  the component in the Inspector. Godot does not pass it on to child
+  controls, so a component that shows its own text through an inner control
+  calls `UiTranslation.ShareContext(this, inner)` before it sets the text.
+  The inner control then translates with the component's context (#777).
+  Text given through a `…Source` replaces the scene text and is a `UiText`,
+  so its context comes from the `UiText`, not the Inspector.
 - Counted text is one whole sentence per plural form, and Godot picks the
   form for the language. Never add an "s" in code.
 - **Numbers** are arguments, never part of the English: "{0} m", not

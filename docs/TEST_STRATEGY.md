@@ -144,7 +144,11 @@ swap restyles everything:
   the galleries are left out (#773, rule in `docs/UI_DIRECTION.md`).
   `project/src` uses no .NET string casing; that text is translated before
   the TextServer cases it, in the language's own way, and redrawn when the
-  language changes is checked on device (#776, #778).
+  language changes is checked on device (#776, #778). A `ui/lib` component
+  that puts its own text into an inner control, by setting it or through a
+  factory, also shares its translation context with that control
+  (`UiTranslationContextTests`, #777); the translation it picks is checked
+  on device.
 
 **2. Screens reuse the library.** Every canonical component maps to one
 reusable control, and paired specimens (slider and range, power and value

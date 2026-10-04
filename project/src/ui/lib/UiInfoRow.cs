@@ -123,6 +123,8 @@ public partial class UiInfoRow : HBoxContainer
         _icon.SelfModulate = tint;
         UiIcons.UseIconFilter(_icon);
 
+        UiTranslation.ShareContext(this, _titleLabel!);
+        UiTranslation.ShareContext(this, _helpLabel!);
         _titleLabel!.Text = Title;
         _helpLabel!.Text = Help;
         _helpLabel.Visible = Help.Length > 0;

@@ -131,6 +131,7 @@ public partial class UiStageCard : UiCard
             return;
         }
 
+        UiTranslation.ShareContext(this, _number);
         _number.Text = NumberText;
     }
 
@@ -141,6 +142,7 @@ public partial class UiStageCard : UiCard
             return;
         }
 
+        UiTranslation.ShareContext(this, _titleLabel);
         _titleLabel.Text = Title;
     }
 
@@ -153,6 +155,7 @@ public partial class UiStageCard : UiCard
 
         var note = NoteSource?.Invoke() ?? Note;
         _noteLabel.AutoTranslateMode = NoteSource is null ? AutoTranslateModeEnum.Inherit : AutoTranslateModeEnum.Disabled;
+        UiTranslation.ShareContext(this, _noteLabel);
         _noteLabel.Text = note;
         _noteLabel.Visible = !string.IsNullOrWhiteSpace(note);
     }

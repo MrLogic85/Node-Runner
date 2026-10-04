@@ -104,6 +104,7 @@ public partial class UiNumber : Control, ISerializationListener
             return;
         }
 
+        UiTranslation.ShareContext(this, _label);
         _label.Text = Text;
         UiThemeLookup.ApplyTextStyle(_label, UiTokens.Typography.ReadoutSmall, UiTokens.Color.Accent);
         LayoutLabel();

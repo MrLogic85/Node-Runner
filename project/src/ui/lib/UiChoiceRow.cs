@@ -256,6 +256,9 @@ public abstract partial class UiChoiceRow : Container, ISerializationListener
             return;
         }
 
+        UiTranslation.ShareContext(this, content.Label);
+        UiTranslation.ShareContext(this, content.Help);
+        UiTranslation.ShareContext(this, content.Button);
         content.Label.Text = LabelText;
         content.Help.Text = Subtext;
         content.Help.Visible = !string.IsNullOrWhiteSpace(Subtext);

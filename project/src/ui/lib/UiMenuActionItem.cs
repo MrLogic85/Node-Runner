@@ -162,6 +162,8 @@ public partial class UiMenuActionItem : UiMenuItem, ISerializationListener
         _icon.Texture = _icon.Visible ? UiIcons.Load(IconId, IconSize) : null;
         _icon.CustomMinimumSize = new Vector2(iconPixels, iconPixels);
 
+        UiTranslation.ShareContext(this, _label);
+        UiTranslation.ShareContext(this, _note);
         _label.Text = LabelText;
         _label.ThemeTypeVariation = UiTokens.Variation(
             SizeVariant == MenuItemSize.Compact ? UiTokens.Typography.SmallStrong : UiTokens.Typography.BodyStrong,

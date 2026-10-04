@@ -219,6 +219,7 @@ public partial class UiPartRow : Control
         row.AddChild(UiIcons.Create(IconId, UiIconSize.Large, iconTint));
 
         var label = UiFieldAndRows.Label(LabelSource?.Invoke() ?? Label, UiTokens.Typography.SmallStrong, UiTokens.Color.Ink);
+        UiTranslation.ShareContext(this, label);
         label.SizeFlagsHorizontal = SizeFlags.ExpandFill;
         if (LabelSource is not null)
         {
@@ -234,7 +235,9 @@ public partial class UiPartRow : Control
         }
         else if (!string.IsNullOrWhiteSpace(ValueText))
         {
-            row.AddChild(CreateTrailingLabel(ValueText));
+            var value = CreateTrailingLabel(ValueText);
+            UiTranslation.ShareContext(this, value);
+            row.AddChild(value);
         }
     }
 

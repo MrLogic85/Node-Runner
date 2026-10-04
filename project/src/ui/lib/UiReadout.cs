@@ -76,6 +76,8 @@ public partial class UiReadout : VBoxContainer
             return;
         }
 
+        UiTranslation.ShareContext(this, _captionLabel);
+        UiTranslation.ShareContext(this, _valueLabel);
         _captionLabel.Text = Caption;
         _valueLabel.Text = ValueText;
         AddThemeConstantOverride("separation", UiSize.Space.S1);
