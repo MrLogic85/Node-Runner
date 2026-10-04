@@ -92,7 +92,7 @@ public partial class BuildHost : Node, IRoutedScene
     {
         if (_route is null)
         {
-            EditCreation(Saves.CreateNew(), openedAsNew: true);
+            EditCreation(Saves.CreateNew(UiTextTranslation.Now), openedAsNew: true);
             return;
         }
 
@@ -161,7 +161,7 @@ public partial class BuildHost : Node, IRoutedScene
         }
 
         CreationDef? copy = null;
-        if (!CreationActions.TryRunFileOperation(() => copy = Saves.Duplicate(id), $"Copying Creation {id}") || copy is null)
+        if (!CreationActions.TryRunFileOperation(() => copy = Saves.Duplicate(id, UiTextTranslation.Now), $"Copying Creation {id}") || copy is null)
         {
             UiNotificationLayer.Enqueue(this, new UiNotificationSpec(
                 UiPopupType.Danger, "Copy failed", "The creation could not be copied.", Icon: new(UiIconId.Copy)));

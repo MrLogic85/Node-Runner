@@ -1,4 +1,5 @@
 using NodeRunner.App.Repositories;
+using NodeRunner.App.ViewModels;
 using NodeRunner.Domain;
 
 namespace NodeRunner.App.Services;
@@ -9,7 +10,7 @@ namespace NodeRunner.App.Services;
 /// </summary>
 public sealed class NewCreationWorkflow : INewCreationWorkflow
 {
-    public const string UntitledName = "Untitled Creation";
+    public static UiText UntitledName { get; } = UiText.Plain("Untitled Creation");
 
     private readonly ICreationRepository _repository;
     private readonly Func<Guid> _newId;
@@ -21,9 +22,10 @@ public sealed class NewCreationWorkflow : INewCreationWorkflow
         _newId = newId ?? Guid.NewGuid;
     }
 
-    public CreationDef Create()
+    public CreationDef Create(Func<UiText, string> inPlayerLanguage)
     {
-        var creation = new CreationDef(_newId(), UntitledName, new CreatureDef([], [], [], nextPartId: 1));
+        ArgumentNullException.ThrowIfNull(inPlayerLanguage);
+        var creation = new CreationDef(_newId(), inPlayerLanguage(UntitledName), new CreatureDef([], [], [], nextPartId: 1));
         _repository.Save(creation);
         return creation;
     }

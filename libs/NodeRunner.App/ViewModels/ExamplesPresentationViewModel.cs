@@ -12,11 +12,11 @@ public sealed class ExamplesPresentationViewModel
     {
         Cards = (examples ?? CreationExamples.All)
             .Select(example => new CreationCardPresentation(
-                example.Creation.Id,
-                example.Creation.Name,
-                example.Creation.Creature,
+                example.Id,
+                example.Name,
+                example.Creature,
                 example.WhatIsNew,
-                CreationCardPresentation.ThumbnailTextFor(example.Creation.Creature),
+                CreationCardPresentation.ThumbnailTextFor(example.Creature),
                 Training: null,
                 CanOpen: false,
                 CanDuplicate: true,

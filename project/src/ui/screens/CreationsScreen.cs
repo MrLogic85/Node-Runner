@@ -145,11 +145,6 @@ public partial class CreationsScreen : Control
     private void Apply()
     {
         var presentation = _presentation;
-        if (presentation is not null)
-        {
-            GetNode<UiLabel>("%EmptyText").Text = presentation.EmptyText;
-        }
-
         var row = GetNode<Control>("%CardRow");
         foreach (var card in row.GetChildren().OfType<CreationCard>())
         {
@@ -159,7 +154,6 @@ public partial class CreationsScreen : Control
 
         var error = GetNode<UiLabel>("%ErrorState");
         error.Visible = presentation?.HasError == true;
-        error.Text = presentation?.ErrorText ?? error.Text;
         GetNode<UiCard>("%EmptyCard").Visible = presentation is null || (!presentation.HasError && !presentation.HasCards);
         if (presentation is null || presentation.HasError || CardScene is null)
         {

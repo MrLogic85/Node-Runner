@@ -15,6 +15,7 @@ public partial class SaveManager : Node
     private IBuildEditWorkflow? _buildEditWorkflow;
     private ICreationDuplicateWorkflow? _creationDuplicateWorkflow;
     private IExampleCopyWorkflow? _exampleCopyWorkflow;
+    private DefaultCreationSeeder? _defaultCreationSeeder;
     private CreationsPresentationViewModel? _creationsPresentation;
 
     public override void _Ready()
@@ -28,7 +29,7 @@ public partial class SaveManager : Node
         var progression = new FileProgressionRepository(new GodotStorageLocation(ProjectSettings.GlobalizePath("user://")));
         _creationDuplicateWorkflow = new CreationDuplicateWorkflow(_repository);
         _exampleCopyWorkflow = new ExampleCopyWorkflow(_repository);
-        new DefaultCreationSeeder(_exampleCopyWorkflow, progression).SeedIfNeeded();
+        _defaultCreationSeeder = new DefaultCreationSeeder(_exampleCopyWorkflow, progression);
         _creationsPresentation = new CreationsPresentationViewModel(_repository);
     }
 
@@ -68,14 +69,19 @@ public partial class SaveManager : Node
     public IBuildEditWorkflow BuildEditWorkflow =>
         _buildEditWorkflow ?? throw new InvalidOperationException("SaveManager is not ready.");
 
-    public CreationDef Duplicate(Guid id)
-    {
-        return CreationDuplicateWorkflow.Duplicate(id);
-    }
+    // The default names these save are put into the player's language once, as they are saved
+    // (#759). The caller passes the translation: managers hold no UI.
+    public CreationDef Duplicate(Guid id, Func<UiText, string> inPlayerLanguage) =>
+        CreationDuplicateWorkflow.Duplicate(id, inPlayerLanguage);
 
-    public CreationDef CopyExample(Guid exampleId) => ExampleCopyWorkflow.Copy(exampleId);
+    public CreationDef CopyExample(Guid exampleId, Func<UiText, string> inPlayerLanguage) =>
+        ExampleCopyWorkflow.Copy(exampleId, inPlayerLanguage);
 
-    public CreationDef CreateNew() => NewCreationWorkflow.Create();
+    public CreationDef CreateNew(Func<UiText, string> inPlayerLanguage) => NewCreationWorkflow.Create(inPlayerLanguage);
+
+    /// <summary>Copies the Worm on the app's first start; see <see cref="DefaultCreationSeeder"/>.</summary>
+    public bool SeedDefaultCreations(Func<UiText, string> inPlayerLanguage) =>
+        (_defaultCreationSeeder ?? throw new InvalidOperationException("SaveManager is not ready.")).SeedIfNeeded(inPlayerLanguage);
 
     private ICreationRepository Repository =>
         _repository ?? throw new InvalidOperationException("SaveManager is not ready.");

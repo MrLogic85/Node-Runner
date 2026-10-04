@@ -68,7 +68,7 @@ Schema: [`save-schema/creation.schema.json`](save-schema/creation.schema.json).
 | Field | Type | Meaning |
 |---|---|---|
 | `id` | GUID | The Creation's id; also its folder name. |
-| `name` | string | Shown on the card and in Build. Not empty. |
+| `name` | string | Shown on the card and in Build. Not empty. A default name is saved in the player's language (#759). |
 | `creature` | object | The drawn body; see below. |
 | `training` | object or `null` | `null` until a generation has finished. |
 | `trainSettings` | `{ shadows, runLengthSeconds }` or `null` | Train setup's values from its last Start (#617). `null` until then; Train setup and Training use the default (8 shadows, 10 s) until Settings stores one (#379). `shadows` is 2–32, `runLengthSeconds` 5–60. |

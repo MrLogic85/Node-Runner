@@ -29,7 +29,6 @@ namespace NodeRunner.Hosts;
 public partial class TrainingHost : Node, IRoutedScene
 {
     private const double _signalRefreshIntervalSeconds = 0.15;
-    private const string _sampleCreationName = "Worm";
 
     // Engine.TimeScale speeds every physics step up uniformly, so it changes how fast a fixed number
     // of ticks plays out, never the result.
@@ -241,7 +240,7 @@ public partial class TrainingHost : Node, IRoutedScene
         creature.Name = "Creature";
         // Pausable, not Inherit, so it stops simulating while the tree is paused.
         creature.ProcessMode = ProcessModeEnum.Pausable;
-        creature.Definition = creation?.Creature ?? CreationExamples.CreateWormCreature();
+        creature.Definition = creation?.Creature ?? CreationExamples.Worm.Creature;
         creature.Theme = _theme;
         creature.Position = GetNode<Marker2D>("%Spawn").Position;
         World.AddChild(creature);
@@ -287,7 +286,9 @@ public partial class TrainingHost : Node, IRoutedScene
     {
         _screen = GetNode<TrainingScreen>("%TrainingScreen");
         _screen.Setup(
-            TrainingHeaderPresentation.For(creation?.Name ?? _sampleCreationName, Mode, _map.Id),
+            creation is null
+                ? TrainingHeaderPresentation.ForWorm(Mode, _map.Id)
+                : TrainingHeaderPresentation.For(creation.Name, Mode, _map.Id),
             _trainingPresentation,
             _signalFlow,
             _brainFocus);

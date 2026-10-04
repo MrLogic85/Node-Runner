@@ -1,5 +1,6 @@
 using NodeRunner.App.Repositories;
 using NodeRunner.App.Services;
+using NodeRunner.App.ViewModels;
 using NodeRunner.Domain;
 
 namespace NodeRunner.App.Tests.Services;
@@ -7,18 +8,24 @@ namespace NodeRunner.App.Tests.Services;
 public sealed class CreationDuplicateWorkflowTests
 {
     [Fact]
-    public void Duplicate_CreatesNewCreationWithTraining()
+    public void Duplicate_CreatesNewCreationWithTraining_NamedACopyInThePlayersLanguage()
     {
         var repository = new InMemoryCreationRepository();
         var source = CreateCreation("Walker", generation: 8);
         var copyId = Guid.NewGuid();
         repository.Save(source);
         var workflow = new CreationDuplicateWorkflow(repository, () => copyId);
+        UiText? asked = null;
 
-        var copy = workflow.Duplicate(source.Id);
+        var copy = workflow.Duplicate(source.Id, text =>
+        {
+            asked = text;
+            return "Kopia av Walker";
+        });
 
+        asked.ShouldBe(UiText.Format("Copy of {0}", "Walker"));
         copy.Id.ShouldBe(copyId);
-        copy.Name.ShouldBe("Copy of Walker");
+        copy.Name.ShouldBe("Kopia av Walker");
         copy.Creature.ShouldBe(source.Creature);
         copy.Creature.NextPartId.ShouldBe(source.Creature.NextPartId);
         copy.Training.ShouldBe(source.Training);
@@ -30,7 +37,7 @@ public sealed class CreationDuplicateWorkflowTests
     {
         var workflow = new CreationDuplicateWorkflow(new InMemoryCreationRepository());
 
-        Should.Throw<KeyNotFoundException>(() => workflow.Duplicate(Guid.NewGuid()));
+        Should.Throw<KeyNotFoundException>(() => workflow.Duplicate(Guid.NewGuid(), TestLanguage.Untranslated));
     }
 
     [Fact]

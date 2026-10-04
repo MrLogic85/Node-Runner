@@ -4,13 +4,13 @@ namespace NodeRunner.App.ViewModels;
 
 /// <summary>
 /// One card on Creations or Examples. <see cref="SummaryText"/> is the line under the name; a
-/// trained creation shows <see cref="Training"/> there instead and leaves it empty.
+/// trained creation shows <see cref="Training"/> there instead and has none.
 /// </summary>
 public sealed record CreationCardPresentation(
     Guid Id,
-    string Name,
+    UiText Name,
     CreatureDef Creature,
-    string SummaryText,
+    UiText? SummaryText,
     UiText ThumbnailText,
     CreationCardTraining? Training,
     bool CanOpen,

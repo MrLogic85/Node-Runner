@@ -1,4 +1,5 @@
 using NodeRunner.App.Navigation;
+using NodeRunner.App.Services;
 using NodeRunner.App.ViewModels;
 using NodeRunner.Domain;
 
@@ -11,7 +12,10 @@ public sealed class TrainingHeaderPresentationTests
     {
         var header = TrainingHeaderPresentation.For("Walker-1", TrainingRunMode.Train, MapIds.Flat);
 
-        header.ShouldBe(new TrainingHeaderPresentation("Walker-1", "Training · Flat ground", ShowsGeneration: true));
+        header.ShouldBe(new TrainingHeaderPresentation(
+            UiText.AsWritten("Walker-1"),
+            UiText.Format("Training · {0}", UiText.Plain("Flat ground")),
+            ShowsGeneration: true));
     }
 
     [Fact]
@@ -19,9 +23,16 @@ public sealed class TrainingHeaderPresentationTests
     {
         var header = TrainingHeaderPresentation.For("Walker-1", TrainingRunMode.Simulate, MapIds.Flat);
 
-        header.StatusText.ShouldBe("Simulating · Flat ground");
+        header.StatusText.ShouldBe(UiText.Format("Simulating · {0}", UiText.Plain("Flat ground")));
         header.ShowsGeneration.ShouldBeFalse();
     }
+
+    [Fact]
+    public void ForWorm_NamesTheWormExample() =>
+        TrainingHeaderPresentation.ForWorm(TrainingRunMode.Train, MapIds.Flat).ShouldBe(new TrainingHeaderPresentation(
+            CreationExamples.Worm.Name,
+            UiText.Format("Training · {0}", UiText.Plain("Flat ground")),
+            ShowsGeneration: true));
 
     [Fact]
     public void For_AnUnknownMap_Throws() =>

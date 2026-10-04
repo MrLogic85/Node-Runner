@@ -1,9 +1,13 @@
+using NodeRunner.App.ViewModels;
 using NodeRunner.Domain;
 
 namespace NodeRunner.App.Services;
 
-/// <summary>A ready-made creation on the Examples screen and the one line on what it shows.</summary>
-public sealed record CreationExample(CreationDef Creation, string WhatIsNew);
+/// <summary>
+/// A ready-made creation on the Examples screen and the one line on what it shows. Its name is
+/// <see cref="UiText"/>, so a copy is saved under the name in the player's language.
+/// </summary>
+public sealed record CreationExample(Guid Id, UiText Name, UiText WhatIsNew, CreatureDef Creature, TrainingStateDef? Training = null);
 
 /// <summary>
 /// The examples the app ships with. Copying one saves a new creation; the example itself never changes.
@@ -12,10 +16,13 @@ public static class CreationExamples
 {
     public static readonly Guid WormId = Guid.Parse("17f2bd34-4f1b-46f1-a657-7e1e123d1390");
 
-    public static IReadOnlyList<CreationExample> All { get; } =
-    [
-        new(new CreationDef(WormId, "Worm", CreateWormCreature()), "A piston arches its back: an inchworm crawl."),
-    ];
+    public static CreationExample Worm { get; } = new(
+        WormId,
+        UiText.Plain("Worm"),
+        UiText.Plain("A piston arches its back: an inchworm crawl."),
+        CreateWormCreature());
+
+    public static IReadOnlyList<CreationExample> All { get; } = [Worm];
 
     /// <summary>
     /// An inchworm: a flat tail and a high hump at the front, with a Piston under the hump. Pulling

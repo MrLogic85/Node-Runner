@@ -15,8 +15,9 @@ owned by `docs/TRAINING_LOOP.md` → Product lifecycle boundary.
   creation's Build canvas.
 - Build state lives in `NodeRunner.App.ViewModels.BuildViewModel`
   while Build is open. Build always edits a saved creation: + New saves an
-  empty "Untitled Creation" (`NewCreationWorkflow`) before Build opens. Its
-  brain is direct (#536), so there is no brain to set up.
+  empty "Untitled Creation", named in the player's language
+  (`NewCreationWorkflow`), before Build opens. Its brain is direct (#536),
+  so there is no brain to set up.
 - Every edit saves itself; there is no Save button (#368).
   `BuildAutosave` marks the drawing unsaved on each edit, and
   `BuildHost` saves it once edits have settled for 0.5 s, and when Build is

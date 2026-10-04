@@ -21,13 +21,9 @@ public sealed class CreationsPresentationViewModel : INotifyPropertyChanged
 
     public bool HasCards => _cards.Count > 0;
 
-    public string EmptyText => "No saved Creations yet.";
-
-    public string? ErrorText { get; private set; }
-
     public Exception? LoadError { get; private set; }
 
-    public bool HasError => ErrorText is not null;
+    public bool HasError => LoadError is not null;
 
     public void Refresh()
     {
@@ -41,12 +37,10 @@ public sealed class CreationsPresentationViewModel : INotifyPropertyChanged
 
             _cards.Clear();
             _cards.AddRange(cards);
-            ErrorText = null;
             LoadError = null;
         }
         catch (Exception exception) when (FilePersistenceExceptions.IsRecoverable(exception))
         {
-            ErrorText = "Could not load Creations.";
             LoadError = exception;
         }
 
@@ -67,9 +61,9 @@ public sealed class CreationsPresentationViewModel : INotifyPropertyChanged
     private static CreationCardPresentation ToCard(CreationDef creation) =>
         new(
             creation.Id,
-            creation.Name,
+            UiText.AsWritten(creation.Name),
             creation.Creature,
-            creation.Training is null ? "Not trained yet. Tap to build." : string.Empty,
+            creation.Training is null ? UiText.Plain("Not trained yet. Tap to build.") : null,
             CreationCardPresentation.ThumbnailTextFor(creation.Creature),
             creation.Training is { } training ? CreationCardTraining.From(training) : null,
             CanOpen: true,

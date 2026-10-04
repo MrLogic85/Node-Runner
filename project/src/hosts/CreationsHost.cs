@@ -4,6 +4,7 @@ using NodeRunner.Domain;
 using NodeRunner.Managers;
 using NodeRunner.Ui.Lib;
 using NodeRunner.Ui.Screens;
+using NodeRunner.Ui.Widgets;
 
 namespace NodeRunner.Hosts;
 
@@ -27,6 +28,9 @@ public partial class CreationsHost : Node, IRoutedScene
         var screen = GetNode<CreationsScreen>("%CreationsScreen");
         screen.ShowComponentLibraryLink = OS.IsDebugBuild()
             && ProjectSettings.GetSetting("ui/show_component_library_link", true).AsBool();
+        // Here, not in SaveManager: the Worm's name is saved in the player's language (#759).
+        CreationActions.TryRunFileOperation(
+            () => Saves.SeedDefaultCreations(UiTextTranslation.Now), "Copying the Worm on the first start");
         screen.Setup(Saves.CreationsPresentation);
         screen.OpenRequested += OpenCreation;
         screen.NewRequested += CreateCreation;
@@ -73,7 +77,7 @@ public partial class CreationsHost : Node, IRoutedScene
     private void CreateCreation()
     {
         CreationDef creation = null!;
-        if (!CreationActions.TryRunFileOperation(() => creation = Saves.CreateNew(), "Creating a new Creation"))
+        if (!CreationActions.TryRunFileOperation(() => creation = Saves.CreateNew(UiTextTranslation.Now), "Creating a new Creation"))
         {
             UiNotificationLayer.Enqueue(this, new UiNotificationSpec(
                 UiPopupType.Default, "Creations", "Could not start a new creation. Try again."));
@@ -87,7 +91,7 @@ public partial class CreationsHost : Node, IRoutedScene
     {
         if (CreationActions.TryParseId(key, name, "duplicate Creation", out var id))
         {
-            CreationActions.TryRunFileOperation(() => Saves.Duplicate(id), $"Duplicating Creation '{name}'");
+            CreationActions.TryRunFileOperation(() => Saves.Duplicate(id, UiTextTranslation.Now), $"Duplicating Creation '{name}'");
             Refresh();
         }
     }

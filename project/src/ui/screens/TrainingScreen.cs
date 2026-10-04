@@ -170,8 +170,8 @@ public partial class TrainingScreen : Control
     {
         if (_header is { } header)
         {
-            GetNode<UiLabel>("%CreationName").Text = header.CreationName;
-            GetNode<UiLabel>("%StatusText").Text = header.StatusText;
+            GetNode<UiLabel>("%CreationName").ShowText(header.CreationName);
+            GetNode<UiLabel>("%StatusText").ShowText(header.StatusText);
         }
 
         ApplyGeneration();
