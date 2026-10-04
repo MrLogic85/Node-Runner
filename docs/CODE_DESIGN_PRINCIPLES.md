@@ -134,8 +134,8 @@ about *that* invariant.
 
 ## 10. Testing philosophy
 
-- **Unit tests** for `libs/NodeRunner.ML/` and `libs/NodeRunner.Domain/` —
-  mandatory. Small, fast, no Godot.
+- **Unit tests** for `libs/NodeRunner.ML/`, `libs/NodeRunner.Domain/` and
+  `libs/NodeRunner.Mechanics/` — mandatory. Small, fast, no Godot.
 - **Architecture tests** (`NodeRunner.Arch.Tests`) — enforce layer rules and
   source conventions that the compiler can't. Add a fact whenever a new convention emerges.
 - **Property tests** where cheap (a network's output shape equals the output

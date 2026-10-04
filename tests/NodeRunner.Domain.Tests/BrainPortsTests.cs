@@ -113,10 +113,14 @@ public sealed class BrainPortsTests
     }
 
     [Fact]
-    public void SensorPorts_MatchTheReadingsEachSensorGives()
+    public void SensorPorts_UseTheSavedChannelKeys()
     {
-        BrainPorts.SensorPorts(new SensorDef(3, 1, SensorKind.Accelerometer)).Count().ShouldBe(Accelerometer.ChannelKeys.Count);
-        BrainPorts.SensorPorts(new SensorDef(3, 1, SensorKind.Camera)).Count().ShouldBe(CameraRays.RayCount);
+        BrainPorts.AccelerometerChannels.ShouldBe(["along", "across"]);
+        BrainPorts.CameraChannels.ShouldBe(["left1", "centre", "right1"]);
+        BrainPorts.SensorPorts(new SensorDef(3, 1, SensorKind.Accelerometer)).Select(port => port.Channel)
+            .ShouldBe(BrainPorts.AccelerometerChannels);
+        BrainPorts.SensorPorts(new SensorDef(3, 1, SensorKind.Camera)).Select(port => port.Channel)
+            .ShouldBe(BrainPorts.CameraChannels);
     }
 
     // Three nodes in a row with passive joints: a Piston (6) links the end nodes, an

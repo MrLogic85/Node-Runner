@@ -8,6 +8,24 @@ namespace NodeRunner.Domain;
 /// </summary>
 public static class BrainPorts
 {
+    /// <summary>An Accelerometer's input keys, in order: along and across its beam. Never change one.</summary>
+    public static IReadOnlyList<string> AccelerometerChannels { get; } = ["along", "across"];
+
+    /// <summary>A Camera's input keys, one per ray from left to right. Never change one.</summary>
+    public static IReadOnlyList<string> CameraChannels { get; } = ["left1", "centre", "right1"];
+
+    /// <summary>A Piston's length input key: how far it is from its built length.</summary>
+    public const string PistonLengthChannel = "length";
+
+    /// <summary>A Piston's speed input key.</summary>
+    public const string PistonSpeedChannel = "speed";
+
+    /// <summary>A Piston's position output key: the length to reach.</summary>
+    public const string PistonPositionChannel = "position";
+
+    /// <summary>A Piston's strength output key: the share of its Strength to use.</summary>
+    public const string PistonStrengthChannel = "strength";
+
     public static BrainPortLayout Of(CreatureDef creature)
     {
         ArgumentNullException.ThrowIfNull(creature);
@@ -39,24 +57,24 @@ public static class BrainPorts
 
         var channels = sensor.Kind switch
         {
-            SensorKind.Accelerometer => Accelerometer.ChannelKeys,
-            SensorKind.Camera => CameraRays.ChannelKeys,
+            SensorKind.Accelerometer => AccelerometerChannels,
+            SensorKind.Camera => CameraChannels,
             _ => throw new InvalidOperationException($"Unknown sensor kind {sensor.Kind}."),
         };
         return channels.Select(channel => BrainPort.Input(sensor.Id, channel));
     }
 
-    /// <summary>A Piston's input ports, length then speed (<see cref="Piston"/>).</summary>
+    /// <summary>A Piston's input ports, length then speed.</summary>
     public static IEnumerable<BrainPort> PistonInputs(int pistonId) =>
     [
-        BrainPort.Input(pistonId, Piston.LengthChannel),
-        BrainPort.Input(pistonId, Piston.SpeedChannel),
+        BrainPort.Input(pistonId, PistonLengthChannel),
+        BrainPort.Input(pistonId, PistonSpeedChannel),
     ];
 
-    /// <summary>A Piston's output ports, position then strength (<see cref="Piston"/>).</summary>
+    /// <summary>A Piston's output ports, position then strength.</summary>
     public static IEnumerable<BrainPort> PistonOutputs(int pistonId) =>
     [
-        BrainPort.Output(pistonId, Piston.PositionChannel, PortSignal.Position),
-        BrainPort.Output(pistonId, Piston.StrengthChannel, PortSignal.Strength),
+        BrainPort.Output(pistonId, PistonPositionChannel, PortSignal.Position),
+        BrainPort.Output(pistonId, PistonStrengthChannel, PortSignal.Strength),
     ];
 }

@@ -13,6 +13,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\libs\NodeRunner.Domain\NodeRunner.Domain.csproj" />
+    <ProjectReference Include="..\libs\NodeRunner.Mechanics\NodeRunner.Mechanics.csproj" />
     <ProjectReference Include="..\libs\NodeRunner.ML\NodeRunner.ML.csproj" />
     <ProjectReference Include="..\libs\NodeRunner.App\NodeRunner.App.csproj" />
     <EmbeddedResource Include="assets/icons/**/*.svg"

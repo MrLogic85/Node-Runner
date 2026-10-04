@@ -43,7 +43,7 @@ public static class SensorDrawing
 
     private const int _cornerSegments = 4;
 
-    /// <summary>The frame, the spring from its top, and the weight at <paramref name="weightOffset"/> (<see cref="Accelerometer.WeightOffset"/>).</summary>
+    /// <summary>The frame, the spring from its top, and the weight at <paramref name="weightOffset"/> (Mechanics <c>Accelerometer.WeightOffset</c>).</summary>
     public static void DrawAccelerometer(CanvasItem canvas, Transform2D drawTransform, VisualTheme theme, Vector2D weightOffset, bool selected)
     {
         ArgumentNullException.ThrowIfNull(canvas);

@@ -22,6 +22,7 @@ inspired by `kappuccino`'s `docs/TEST_STRATEGY.md`.
 | Layer | Lives in | Runtime | Tooling | What's tested |
 |---|---|---|---|---|
 | Domain | `libs/NodeRunner.Domain/` | net8.0 | xUnit + Shouldly | Invariants, JSON round-trip, record semantics |
+| Mechanics | `libs/NodeRunner.Mechanics/` | net8.0 | xUnit + Shouldly | Part physics on hand-checkable numbers |
 | ML | `libs/NodeRunner.ML/` | net8.0 | xUnit + Shouldly | Forward pass, GA math, backprop, activation math |
 | App | `libs/NodeRunner.App/` | net8.0 | xUnit + Shouldly + NSubstitute | View-models, repositories, service contracts |
 | Architecture | `libs/`, `project/src/` | net10.0 tests | xUnit + NetArchTest | No Godot leaks, correct layer graph, file-size limit |
@@ -61,6 +62,13 @@ Cover:
 Do **not** test getters/setters, `==`/`!=`, `.Equals` overrides on records.
 The compiler synthesises them.
 
+### `NodeRunner.Mechanics.Tests`
+
+Cover each part's physics with numbers a person can check by hand: an
+accelerometer at rest reads 1 g up, a Piston pushes toward its target and
+never uses more than its chosen strength, a Spring at 100% damping is critical. Tests for
+types that stay in Domain stay in `NodeRunner.Domain.Tests`.
+
 ### `NodeRunner.ML.Tests`
 
 Cover:
@@ -99,8 +107,9 @@ CI fails.
 Current facts (see `ArchitectureSpec.cs`):
 - No lib references `Godot.*`
 - `NodeRunner.Domain` references nothing but the BCL
-- `NodeRunner.ML` references only `NodeRunner.Domain`
-- `NodeRunner.App` references only `NodeRunner.Domain` and `NodeRunner.ML`
+- `NodeRunner.Mechanics` references neither `NodeRunner.ML` nor `NodeRunner.App`,
+  and `NodeRunner.Domain` does not reference it
+- `NodeRunner.ML` references neither `NodeRunner.App` nor `NodeRunner.Mechanics`
 - No production `.cs` file (`libs/`, `project/src/`) exceeds 2000 lines
   (`docs/CODE_DESIGN_PRINCIPLES.md` §5)
 

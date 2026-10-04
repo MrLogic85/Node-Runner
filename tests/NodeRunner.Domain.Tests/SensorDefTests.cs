@@ -62,4 +62,20 @@ public sealed class SensorDefTests
         sensor.WithName("Look").ShouldBe(new SensorDef(3, 2, SensorKind.Camera, "Look", 0.5));
         sensor.WithAim(-1).ShouldBe(new SensorDef(3, 2, SensorKind.Camera, "Eye", -1));
     }
+
+    [Theory]
+    [InlineData(10, 0, 0)]
+    [InlineData(0, 10, -Math.PI / 2)]
+    [InlineData(0, -10, Math.PI / 2)]
+    [InlineData(10, 10, -Math.PI / 4)]
+    public void DefaultAim_UndoesTheBeamsTurn(double dx, double dy, double expected) =>
+        SensorDef.DefaultAim(new Vector2D(3, 4), new Vector2D(3 + dx, 4 + dy)).ShouldBe(expected, 1e-12);
+
+    [Fact]
+    public void DefaultAim_StaysWithinAHalfTurn() =>
+        Math.Abs(SensorDef.DefaultAim(new Vector2D(0, 0), new Vector2D(-10, 0))).ShouldBe(Math.PI, 1e-12);
+
+    [Fact]
+    public void DefaultAim_OnAZeroLengthBeam_IsZero() =>
+        SensorDef.DefaultAim(new Vector2D(1, 1), new Vector2D(1, 1)).ShouldBe(0);
 }

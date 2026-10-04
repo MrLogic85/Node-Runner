@@ -7,7 +7,7 @@ public sealed class GenerationZeroTests
 {
     // Two inputs and two Pistons: weights output by output (4 outputs × 2 inputs), then 4 biases.
     private static readonly BrainPortLayout _ports = new(
-        [BrainPort.Input(5, "along"), BrainPort.Input(9, Piston.LengthChannel)],
+        [BrainPort.Input(5, "along"), BrainPort.Input(9, BrainPorts.PistonLengthChannel)],
         [.. BrainPorts.PistonOutputs(9), .. BrainPorts.PistonOutputs(10)]);
 
     private const int _biasStart = 8;
@@ -87,7 +87,7 @@ public sealed class GenerationZeroTests
     [Fact]
     public void Population_WithoutStrengthOutputs_StillPerturbs()
     {
-        var ports = new BrainPortLayout([BrainPort.Input(5, "along")], [BrainPort.Output(9, Piston.PositionChannel, PortSignal.Position)]);
+        var ports = new BrainPortLayout([BrainPort.Input(5, "along")], [BrainPort.Output(9, BrainPorts.PistonPositionChannel, PortSignal.Position)]);
 
         var population = GenerationZero.Population(ports, 4, new Random(7));
 

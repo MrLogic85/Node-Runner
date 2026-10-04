@@ -123,7 +123,7 @@ public sealed class CreatureDefTests
             new[] { new BeamDef(101, 1, 2) },
             new[] { new SensorDef(201, 101, SensorKind.Camera) });
 
-        creature.Sensors[0].Aim.ShouldBe(CameraRays.DefaultAim(new Vector2D(0, 0), new Vector2D(0, 2)));
+        creature.Sensors[0].Aim.ShouldBe(SensorDef.DefaultAim(new Vector2D(0, 0), new Vector2D(0, 2)));
     }
 
     [Fact]

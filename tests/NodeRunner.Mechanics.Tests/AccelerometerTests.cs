@@ -1,13 +1,9 @@
-namespace NodeRunner.Domain.Tests;
+using NodeRunner.Domain;
+
+namespace NodeRunner.Mechanics.Tests;
 
 public sealed class AccelerometerTests
 {
-    [Fact]
-    public void ChannelKeys_AreAlongThenAcross()
-    {
-        Accelerometer.ChannelKeys.ShouldBe(["along", "across"]);
-    }
-
     [Fact]
     public void Rest_OnLevelBeam_ReadsOneGUp()
     {

@@ -1,11 +1,12 @@
 using Godot;
 using NodeRunner.Domain;
+using NodeRunner.Mechanics;
 
 namespace NodeRunner.Creature;
 
 /// <summary>
 /// One camera on its beam (#575, #604, #594): three <see cref="RayCast2D"/> children at the beam's
-/// midpoint, fanned around its aim by the Domain <see cref="CameraRays"/> so they turn with the beam.
+/// midpoint, fanned around its aim by the Mechanics <see cref="CameraRays"/> so they turn with the beam.
 /// They see the ground only and each writes its nearness: 0 with nothing in range, 1 at contact.
 /// </summary>
 public sealed class CameraSensor : IBeamSensor
@@ -40,7 +41,7 @@ public sealed class CameraSensor : IBeamSensor
     /// <summary>Each ray's ground hit as of the last physics step, in global space; a ray that sees nothing has none.</summary>
     public IEnumerable<Vector2> GlobalHits => _rays.Where(ray => ray.IsColliding()).Select(ray => ray.GetCollisionPoint());
 
-    public int ValueCount => CameraRays.ChannelKeys.Count;
+    public int ValueCount => BrainPorts.CameraChannels.Count;
 
     public void Read(double[] values, int startIndex, double dt)
     {

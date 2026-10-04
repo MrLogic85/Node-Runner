@@ -1,8 +1,10 @@
-namespace NodeRunner.Domain;
+using NodeRunner.Domain;
+
+namespace NodeRunner.Mechanics;
 
 /// <summary>
-/// The brain conventions and force of a <see cref="PistonDef"/> (#451). Its ports belong to the
-/// Piston part:
+/// The brain conventions and force of a <see cref="PistonDef"/> (#451). Its ports
+/// (<see cref="BrainPorts.PistonInputs"/>, <see cref="BrainPorts.PistonOutputs"/>) belong to the Piston part:
 /// <list type="bullet">
 /// <item>Length input: how far it is from its built length, −1…1 over its stroke; 0 is as built.</item>
 /// <item>Speed input: <c>tanh(v / maxSpeed)</c>, extending positive.</item>
@@ -16,14 +18,6 @@ namespace NodeRunner.Domain;
 /// </summary>
 public static class Piston
 {
-    public const string LengthChannel = "length";
-
-    public const string SpeedChannel = "speed";
-
-    public const string PositionChannel = "position";
-
-    public const string StrengthChannel = "strength";
-
     // How fast, per second of distance left, the piston wants to close on its target: it slows
     // as it arrives instead of overshooting at full speed.
     private const double _approachRate = 10;
@@ -46,9 +40,9 @@ public static class Piston
 
     public static double LongestLength(double builtLength, double stroke) => builtLength * (1 + stroke);
 
-    /// <summary>The length a position output asks for (<see cref="PortSignals.PositionFromTarget"/>).</summary>
+    /// <summary>The length a position output asks for (<see cref="OutputSignals.PositionFromTarget"/>).</summary>
     public static double TargetLength(double position, double builtLength, double stroke) =>
-        PortSignals.PositionFromTarget(position, ShortestLength(builtLength, stroke), builtLength, LongestLength(builtLength, stroke));
+        OutputSignals.PositionFromTarget(position, ShortestLength(builtLength, stroke), builtLength, LongestLength(builtLength, stroke));
 
     /// <summary>
     /// One physics step of the Piston's speed control: the force pushing its two nodes apart this
@@ -90,7 +84,7 @@ public static class Piston
         var speedError = wantedSpeed - speed;
         var gain = pairMass / step;
         var force = previous.Force + (gain * ((_proportional * (speedError - previous.SpeedError)) + (_integral * speedError)));
-        var limit = PortSignals.StrengthFromOutput(strength, piston.Strength);
+        var limit = OutputSignals.StrengthFromOutput(strength, piston.Strength);
         return new PistonControl(Math.Clamp(force, -limit, limit), speedError);
     }
 }

@@ -1,4 +1,6 @@
-namespace NodeRunner.Domain.Tests;
+using NodeRunner.Domain;
+
+namespace NodeRunner.Mechanics.Tests;
 
 public sealed class RigidTrianglesTests
 {

@@ -9,7 +9,7 @@ namespace NodeRunner.Domain;
 /// <see cref="CreatureDef"/>, so an unfinished one can be saved; only its part references must point
 /// at existing parts. Whether it can be simulated and trained is checked before training
 /// (<c>CreatureReadiness</c> in <c>NodeRunner.App</c>). A Camera placed without an aim gets
-/// <see cref="CameraRays.DefaultAim"/> from its beam's pose here, so every Camera has one.
+/// <see cref="SensorDef.DefaultAim"/> from its beam's pose here, so every Camera has one.
 /// </summary>
 public sealed record CreatureDef
 {
@@ -156,7 +156,7 @@ public sealed record CreatureDef
         }
 
         var beam = beams.First(entry => entry.Id == sensor.BeamId);
-        return sensor.WithAim(CameraRays.DefaultAim(
+        return sensor.WithAim(SensorDef.DefaultAim(
             nodes.First(node => node.Id == beam.NodeA).Position,
             nodes.First(node => node.Id == beam.NodeB).Position));
     }

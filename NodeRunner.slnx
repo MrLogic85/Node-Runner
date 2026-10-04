@@ -2,6 +2,7 @@
   <Folder Name="/libs/">
     <Project Path="libs/NodeRunner.App/NodeRunner.App.csproj" />
     <Project Path="libs/NodeRunner.Domain/NodeRunner.Domain.csproj" />
+    <Project Path="libs/NodeRunner.Mechanics/NodeRunner.Mechanics.csproj" />
     <Project Path="libs/NodeRunner.ML/NodeRunner.ML.csproj" />
   </Folder>
   <Folder Name="/project/">
@@ -11,6 +12,7 @@
     <Project Path="tests/NodeRunner.App.Tests/NodeRunner.App.Tests.csproj" />
     <Project Path="tests/NodeRunner.Arch.Tests/NodeRunner.Arch.Tests.csproj" />
     <Project Path="tests/NodeRunner.Domain.Tests/NodeRunner.Domain.Tests.csproj" />
+    <Project Path="tests/NodeRunner.Mechanics.Tests/NodeRunner.Mechanics.Tests.csproj" />
     <Project Path="tests/NodeRunner.ML.Tests/NodeRunner.ML.Tests.csproj" />
     <Project Path="tests/NodeRunner.Ui.Tests/NodeRunner.Ui.Tests.csproj" />
   </Folder>

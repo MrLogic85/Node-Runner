@@ -4,7 +4,7 @@ namespace NodeRunner.Domain;
 /// Where a sensor's picture sits on its beam (#576): a square of its kind's <see cref="SizeOf"/>,
 /// centred on the beam's midpoint and turned with the beam. A beam holds one sensor (#593), so this
 /// is also the sensor's tap area. Stateless and shared by Build's canvas and gestures and the
-/// creature in Training, like <see cref="CameraRays"/>. See docs/CREATURE_MODEL.md.
+/// creature in Training. See docs/CREATURE_MODEL.md.
 /// </summary>
 public static class SensorPicture
 {

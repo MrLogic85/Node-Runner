@@ -11,6 +11,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\NodeRunner.Domain\NodeRunner.Domain.csproj" />
+    <ProjectReference Include="..\NodeRunner.Mechanics\NodeRunner.Mechanics.csproj" />
     <ProjectReference Include="..\NodeRunner.ML\NodeRunner.ML.csproj" />
   </ItemGroup>
 </Project>

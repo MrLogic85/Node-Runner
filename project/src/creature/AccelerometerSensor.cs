@@ -1,11 +1,12 @@
 using Godot;
 using NodeRunner.Domain;
+using NodeRunner.Mechanics;
 
 namespace NodeRunner.Creature;
 
 /// <summary>
 /// One accelerometer on its beam: each physics tick it measures the beam's midpoint acceleration
-/// (the body origin), turns it into specific force (at rest 1 g up), steps the Domain <see cref="Accelerometer"/> proof mass and
+/// (the body origin), turns it into specific force (at rest 1 g up), steps the Mechanics <see cref="Accelerometer"/> proof mass and
 /// writes its two readings. <see cref="CurrentProofMass"/> is what the brain reads.
 /// </summary>
 public sealed class AccelerometerSensor : IBeamSensor
@@ -29,7 +30,7 @@ public sealed class AccelerometerSensor : IBeamSensor
 
     public int UpSign => _upSign;
 
-    public int ValueCount => Accelerometer.ChannelKeys.Count;
+    public int ValueCount => BrainPorts.AccelerometerChannels.Count;
 
     public void Reset()
     {

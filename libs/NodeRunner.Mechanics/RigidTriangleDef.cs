@@ -1,4 +1,4 @@
-namespace NodeRunner.Domain;
+namespace NodeRunner.Mechanics;
 
 /// <summary>
 /// Three nodes whose connecting beams form a closed, rigid triangle. Node
