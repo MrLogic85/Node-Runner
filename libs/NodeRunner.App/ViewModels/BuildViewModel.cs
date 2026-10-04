@@ -466,7 +466,7 @@ public sealed class BuildViewModel : INotifyPropertyChanged
             _builder.AddSensor(target.Id, PartTray.SensorKindOf(part)!.Value, out var id, out _);
             return id;
         });
-        StatusMessage = $"Placed {SensorName(PartTray.SensorKindOf(part)!.Value)} on beam {_builder.BeamIndexOf(target.Id) + 1}.";
+        StatusMessage = $"Placed {PartNames.SensorKind(PartTray.SensorKindOf(part)!.Value)} on beam {_builder.BeamIndexOf(target.Id) + 1}.";
         AnatomyChanged?.Invoke(this, EventArgs.Empty);
         return sensorId;
     }
@@ -612,8 +612,6 @@ public sealed class BuildViewModel : INotifyPropertyChanged
         sensorId = -1;
         return false;
     }
-
-    public static string SensorName(SensorKind kind) => PartNames.SensorKind(kind);
 
     /// <summary>The name a part shows: its own name if it has one, else <see cref="DefaultPartName"/>.</summary>
     public string PartDisplayName(int partId) => PartNames.Display(_builder.Nodes, _builder.Beams, _builder.Sensors, _builder.Pistons, partId);

@@ -1,5 +1,4 @@
 using System.ComponentModel;
-using NodeRunner.Domain;
 
 namespace NodeRunner.App.ViewModels;
 
@@ -20,17 +19,18 @@ public sealed class SignalFlowPresentationViewModel : INotifyPropertyChanged
     /// <summary>How far the visible creature has got in this try, such as "12.4 m"; null when no try runs.</summary>
     public UiText? DistanceNote { get; private set; }
 
-    /// <summary>Refreshes the stage notes from this tick's readings.</summary>
-    /// <param name="sensors">The visible creature's sensor readings.</param>
-    /// <param name="motors">The visible creature's motor readings.</param>
+    /// <summary>Refreshes the stage notes from this tick's brain.</summary>
+    /// <param name="readings">How many readings the visible creature's brain takes in.</param>
+    /// <param name="pistons">How many Pistons the brain drives; a Piston drives two outputs, so the note counts parts.</param>
     /// <param name="distance">How far the visible creature has got, in world units; NaN when no try runs.</param>
-    public void Update(IReadOnlyList<SensorReading> sensors, IReadOnlyList<MotorReading> motors, double distance)
+    public void Update(int readings, int pistons, double distance)
     {
-        ArgumentNullException.ThrowIfNull(sensors);
-        ArgumentNullException.ThrowIfNull(motors);
+        ArgumentOutOfRangeException.ThrowIfNegative(readings);
+        ArgumentOutOfRangeException.ThrowIfNegative(pistons);
 
-        var sensesNote = sensors.Count > 0 ? UiText.Counted("{0} reading", "{0} readings", sensors.Count) : null;
-        var outputsNote = PartsNote(motors);
+        var sensesNote = readings > 0 ? UiText.Counted("{0} reading", "{0} readings", readings) : null;
+        // Pistons are the only output part; a new kind needs its own counted text beside this one.
+        var outputsNote = pistons > 0 ? UiText.Counted("{0} piston", "{0} pistons", pistons) : null;
         var distanceNote = double.IsFinite(distance) ? Metres.WithUnit(distance) : null;
         if (Equals(SensesNote, sensesNote) && Equals(OutputsNote, outputsNote) && Equals(DistanceNote, distanceNote))
         {
@@ -43,19 +43,5 @@ public sealed class SignalFlowPresentationViewModel : INotifyPropertyChanged
         OutputsNote = outputsNote;
         DistanceNote = distanceNote;
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(onlyDistance ? nameof(DistanceNote) : null));
-    }
-
-    // A Piston drives two outputs, so the note counts parts, not outputs. Pistons are the only
-    // output part; a new kind needs its own counted text and a join here.
-    private static UiText? PartsNote(IReadOnlyList<MotorReading> motors)
-    {
-        System.Diagnostics.Debug.Assert(
-            motors.All(motor => motor.GroupKind == MotorReading.PistonKind),
-            "Every output part kind needs its counted text in the Outputs note.");
-        var pistons = motors.Where(motor => motor.GroupKind == MotorReading.PistonKind)
-            .Select(motor => motor.GroupIndex)
-            .Distinct()
-            .Count();
-        return pistons > 0 ? UiText.Counted("{0} piston", "{0} pistons", pistons) : null;
     }
 }

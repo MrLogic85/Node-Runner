@@ -322,7 +322,7 @@ picture but costs an offscreen pass each, so it is left out for performance.
   live sensor readings and each output's value, refreshed on
   a ~0.15s cadence (not every rendered frame — see `TrainingHost._Process`).
   The SignalFlow stages only count readings and moving parts until #196 draws
-  them. See `Creature.ReadMapping()`.
+  them. See `Creature.ReadInputs()`.
 
 ## Editing identity rules
 

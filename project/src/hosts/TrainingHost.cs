@@ -42,8 +42,7 @@ public partial class TrainingHost : Node, IRoutedScene
     private readonly SelectionViewModel _selection = new();
     private readonly SignalFlowPresentationViewModel _signalFlow = new();
     private readonly BrainFocusPresentationViewModel _brainFocus = new();
-    private readonly List<SensorReading> _sensorReadings = [];
-    private readonly List<MotorReading> _motorReadings = [];
+    private readonly List<double> _brainInputs = [];
     private TrainingRoute? _route;
     private ISceneNavigator? _navigator;
     private Guid? _creationId;
@@ -156,9 +155,9 @@ public partial class TrainingHost : Node, IRoutedScene
         }
 
         _signalRefreshElapsed = 0;
-        _followed.ReadMapping(_sensorReadings, _motorReadings);
-        _signalFlow.Update(_sensorReadings, _motorReadings, FollowedDistance);
-        _brainFocus.Update(_followed.Brain, _sensorReadings);
+        _followed.ReadInputs(_brainInputs);
+        _signalFlow.Update(_brainInputs.Count, _followed.Brain is null ? 0 : _followed.PistonCount, FollowedDistance);
+        _brainFocus.Update(_followed.Brain, _brainInputs);
     }
 
     private CreationDef? LoadRouteCreation()

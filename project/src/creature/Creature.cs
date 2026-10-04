@@ -885,7 +885,7 @@ public partial class Creature : Node2D
         foreach (var sensor in _sensors)
         {
             sensor.Read(_rawInputs, index, delta);
-            index += sensor.ValueNames.Count;
+            index += sensor.ValueCount;
         }
 
         foreach (var piston in _pistons)
@@ -900,65 +900,26 @@ public partial class Creature : Node2D
         }
     }
 
-    // Populates the sensor-to-brain-to-motor mapping display (issue #42)
-    // from the same buffers ReadSensors/_PhysicsProcess already computed
-    // this tick, in the brain's port order: reading i is brain input i and
-    // output j brain output j. Read-only telemetry: never mutates simulation state.
-    public void ReadMapping(List<SensorReading> sensors, List<MotorReading> motors)
+    /// <summary>
+    /// The brain's inputs as of the last physics step, in its port order (<see cref="BrainPorts"/>),
+    /// for BrainFocus and the stage notes; empty while no brain drives a part. Read-only: never
+    /// changes the simulation.
+    /// </summary>
+    public void ReadInputs(List<double> inputs)
     {
-        ArgumentNullException.ThrowIfNull(sensors);
-        ArgumentNullException.ThrowIfNull(motors);
+        ArgumentNullException.ThrowIfNull(inputs);
 
-        sensors.Clear();
-        motors.Clear();
+        inputs.Clear();
         if (Brain is null || _outputCount == 0)
         {
             return;
         }
 
-        var inputs = new SensorReading[_rawInputs.Length];
-        var index = 0;
-        for (var s = 0; s < _sensors.Length; s++)
-        {
-            var sensor = _sensors[s];
-            var groupIndex = 1;
-            for (var earlier = 0; earlier < s; earlier++)
-            {
-                if (_sensors[earlier].GroupKind == sensor.GroupKind)
-                {
-                    groupIndex++;
-                }
-            }
-
-            for (var n = 0; n < sensor.ValueNames.Count; n++)
-            {
-                inputs[_inputPortOf[index]] = new SensorReading(sensor.GroupKind, groupIndex, sensor.ValueNames[n], _rawInputs[index]);
-                index++;
-            }
-        }
-
-        for (var p = 0; p < _pistons.Length; p++)
-        {
-            inputs[_inputPortOf[index]] = new SensorReading(MotorReading.PistonKind, p + 1, "length", _rawInputs[index]);
-            index++;
-            inputs[_inputPortOf[index]] = new SensorReading(MotorReading.PistonKind, p + 1, "speed", _rawInputs[index]);
-            index++;
-        }
-
-        var outputs = new MotorReading[_outputCount];
-        // A Piston's position and strength outputs both report the force it last pushed with.
-        for (var p = 0; p < _pistons.Length; p++)
-        {
-            for (var channel = 0; channel < 2; channel++)
-            {
-                var output = _outputPortOf[(2 * p) + channel];
-                outputs[output] = new MotorReading(MotorReading.PistonKind, p + 1, _outputValues[output], _pistons[p].LastForce);
-            }
-        }
-
-        sensors.AddRange(inputs);
-        motors.AddRange(outputs);
+        inputs.AddRange(_sensorValues);
     }
+
+    /// <summary>How many Pistons the creature has.</summary>
+    public int PistonCount => _pistons.Length;
 
     private float GetHitTolerance()
     {
