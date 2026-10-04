@@ -84,20 +84,20 @@ public partial class TrainSetupScreen : Control
             return;
         }
 
-        GetNode<UiLabel>("%Title").Text = _presentation.Title;
+        GetNode<UiLabel>("%Title").ShowText(_presentation.Title);
         GetNode<UiLabel>("%Subtitle").ShowText(_presentation.Subtitle);
-        GetNode<UiLabel>("%MapName").Text = _presentation.MapName;
+        GetNode<UiLabel>("%MapName").ShowText(_presentation.MapName);
         var mode = GetNode<UiSegmentedSwitch>("%ModeSwitch");
         mode.Segments[_simulateSegment].Disabled = !_presentation.CanSimulate;
         mode.SelectedIndex = _presentation.Mode == TrainingRunMode.Simulate ? _simulateSegment : _trainSegment;
-        GetNode<UiLabel>("%ModeNote").Text = _presentation.ModeNote;
+        GetNode<UiLabel>("%ModeNote").ShowText(_presentation.ModeNote);
         Bind(GetNode<UiSlider>("%Shadows"), _presentation.Shadows, _presentation.ShadowsEnds);
         Bind(GetNode<UiSlider>("%RunLength"), _presentation.RunLength, _presentation.RunLengthEnds);
     }
 
     private static void Bind(UiSlider slider, SettingSlider value, IReadOnlyList<UiText> ends)
     {
-        slider.LabelText = value.Label;
+        slider.LabelSource = UiTextTranslation.Source(value.Label);
         slider.ReadoutSource = UiTextTranslation.Source(value.Readout);
         slider.Step = value.Step;
         // No position: an empty track with no thumb or fill.

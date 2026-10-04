@@ -3,7 +3,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using NodeRunner.App.Builders;
 using NodeRunner.App.Lifecycle;
-using NodeRunner.App.Services;
 using NodeRunner.Domain;
 
 namespace NodeRunner.App.ViewModels;
@@ -60,7 +59,7 @@ public sealed class BuildViewModel : INotifyPropertyChanged
     private BuildLink _pickedLink = BuildLink.Beam;
     private bool _moveOnly;
     private readonly HashSet<int> _selectedNodeIds = [];
-    private string _creationName = NewCreationWorkflow.UntitledName;
+    private string _creationName = string.Empty;
     private int? _trainingGeneration;
     private double? _latestDistance;
     private readonly HashSet<int> _selectedBeamIds = [];
@@ -89,7 +88,7 @@ public sealed class BuildViewModel : INotifyPropertyChanged
         ArgumentNullException.ThrowIfNull(creature);
         _builder = new CreatureBuilder(creature);
         ClearSelectionSets();
-        _creationName = string.IsNullOrWhiteSpace(creationName) ? NewCreationWorkflow.UntitledName : creationName;
+        _creationName = creationName ?? string.Empty;
         _trainingGeneration = training?.Generation;
         _latestDistance = training?.Latest.ShownDistance;
         _openedBrain = training?.Brain;

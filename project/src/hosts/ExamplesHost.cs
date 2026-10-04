@@ -5,6 +5,7 @@ using NodeRunner.Domain;
 using NodeRunner.Managers;
 using NodeRunner.Ui.Lib;
 using NodeRunner.Ui.Screens;
+using NodeRunner.Ui.Widgets;
 
 namespace NodeRunner.Hosts;
 
@@ -36,7 +37,7 @@ public partial class ExamplesHost : Node, IRoutedScene
 
         var saves = GetNode<SaveManager>("/root/SaveManager");
         CreationDef copy = null!;
-        if (!CreationActions.TryRunFileOperation(() => copy = saves.CopyExample(id), $"Copying example '{name}'"))
+        if (!CreationActions.TryRunFileOperation(() => copy = saves.CopyExample(id, UiTextTranslation.Now), $"Copying example '{name}'"))
         {
             UiNotificationLayer.Enqueue(this, new UiNotificationSpec(
                 UiPopupType.Default, "Examples", $"Could not copy {name}. Try again."));

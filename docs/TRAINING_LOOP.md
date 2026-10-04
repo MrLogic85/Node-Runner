@@ -326,8 +326,9 @@ component READMEs under `reference design/components/` guide its presentation.
       on scaled time, so 2x and 4x look the same, only faster.
   - **Ground and background.** The ground comes from the selected map
     (`MapDef.Ground`, #443); Training runs and records on `Maps.Default`
-    (`Maps.Flat`, `map-flat`, "Flat ground") until map choice (#540). A
-    resumed best ever counts only on the map it was reached on. The scene
+    (`Maps.Flat`, `map-flat`, shown as "Flat ground" by App's `MapNames`)
+    until map choice (#540). A resumed best ever counts only on the map it
+    was reached on. The scene
     places only the ground line, the `Ground` node (`ArenaGround`,
     `project/src/sim/`); `ArenaGround.Build` makes the collider (layer 1),
     fill and edge from the map's ground in code (#444) and fails loud on

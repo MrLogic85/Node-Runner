@@ -5,7 +5,7 @@ namespace NodeRunner.Domain;
 /// </summary>
 public static class Maps
 {
-    public static MapDef Flat { get; } = new(MapIds.Flat, "Flat ground", new FlatGround());
+    public static MapDef Flat { get; } = new(MapIds.Flat, new FlatGround());
 
     public static IReadOnlyList<MapDef> All { get; } = [Flat];
 

@@ -1,5 +1,4 @@
 using NodeRunner.App.Builders;
-using NodeRunner.App.Services;
 using NodeRunner.App.ViewModels;
 using NodeRunner.Domain;
 
@@ -506,13 +505,14 @@ public sealed class BuildViewModelTests
     }
 
     [Fact]
-    public void Load_WithoutName_IsUntitled()
+    public void Load_WithoutName_HasNoName()
     {
         var viewModel = new BuildViewModel();
+        viewModel.Load(new CreatureDef([], [], []), creationName: "Hopper");
 
         viewModel.Load(new CreatureDef([], [], []));
 
-        viewModel.CreationName.ShouldBe(NewCreationWorkflow.UntitledName);
+        viewModel.CreationName.ShouldBeEmpty();
     }
 
     [Fact]

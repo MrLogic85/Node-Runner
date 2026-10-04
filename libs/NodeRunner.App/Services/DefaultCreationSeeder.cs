@@ -1,4 +1,5 @@
 using NodeRunner.App.Repositories;
+using NodeRunner.App.ViewModels;
 
 namespace NodeRunner.App.Services;
 
@@ -20,15 +21,20 @@ public sealed class DefaultCreationSeeder
         _progression = progression;
     }
 
-    public bool SeedIfNeeded()
+    /// <summary>
+    /// Copies the Worm on the first start, under its name in the player's language; see
+    /// <see cref="INewCreationWorkflow.Create"/>.
+    /// </summary>
+    public bool SeedIfNeeded(Func<UiText, string> inPlayerLanguage)
     {
+        ArgumentNullException.ThrowIfNull(inPlayerLanguage);
         var progression = _progression.Load();
         if (progression.DefaultCreationsSeeded)
         {
             return false;
         }
 
-        _examples.Copy(CreationExamples.WormId);
+        _examples.Copy(CreationExamples.WormId, inPlayerLanguage);
         _progression.Save(progression with { DefaultCreationsSeeded = true });
         return true;
     }

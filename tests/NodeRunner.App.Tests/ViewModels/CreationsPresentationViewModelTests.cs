@@ -16,7 +16,6 @@ public sealed class CreationsPresentationViewModelTests
 
         viewModel.Cards.ShouldBeEmpty();
         viewModel.HasCards.ShouldBeFalse();
-        viewModel.EmptyText.ShouldBe("No saved Creations yet.");
         viewModel.HasError.ShouldBeFalse();
     }
 
@@ -34,9 +33,9 @@ public sealed class CreationsPresentationViewModelTests
 
         viewModel.HasCards.ShouldBeTrue();
         var walker = viewModel.Cards.Single(card => card.Id == trained.Id);
-        walker.Name.ShouldBe("Walker");
+        walker.Name.ShouldBe(UiText.AsWritten("Walker"));
         walker.Creature.ShouldBe(trained.Creature);
-        walker.SummaryText.ShouldBeEmpty();
+        walker.SummaryText.ShouldBeNull();
         walker.ThumbnailText.ShouldBe(UiText.Format(
             "{0} · {1} · {2}",
             UiText.Counted("{0} node", "{0} nodes", 2),
@@ -48,7 +47,7 @@ public sealed class CreationsPresentationViewModelTests
         walker.CanDelete.ShouldBeTrue();
 
         var draft = viewModel.Cards.Single(card => card.Id == untrained.Id);
-        draft.SummaryText.ShouldBe("Not trained yet. Tap to build.");
+        draft.SummaryText.ShouldBe(UiText.Plain("Not trained yet. Tap to build."));
         draft.Training.ShouldBeNull();
     }
 
@@ -73,21 +72,21 @@ public sealed class CreationsPresentationViewModelTests
 
         viewModel.Refresh();
 
-        viewModel.Cards.Select(card => card.Name).ShouldBe(["Ant", "Spider", "Worm"]);
+        viewModel.Cards.Select(card => card.Name).ShouldBe([UiText.AsWritten("Ant"), UiText.AsWritten("Spider"), UiText.AsWritten("Worm")]);
     }
 
     [Fact]
     public void Refresh_WithCopiedExample_ShowsAnOrdinaryCreation()
     {
         var repository = new InMemoryCreationRepository();
-        var copy = new ExampleCopyWorkflow(repository).Copy(CreationExamples.WormId);
+        var copy = new ExampleCopyWorkflow(repository).Copy(CreationExamples.WormId, TestLanguage.English);
         var viewModel = new CreationsPresentationViewModel(repository);
 
         viewModel.Refresh();
 
         var card = viewModel.Cards.Single();
         card.Id.ShouldBe(copy.Id);
-        card.Name.ShouldBe("Worm");
+        card.Name.ShouldBe(UiText.AsWritten("Worm"));
         card.CanDuplicate.ShouldBeTrue();
         card.CanDelete.ShouldBeTrue();
     }
@@ -101,7 +100,6 @@ public sealed class CreationsPresentationViewModelTests
 
         viewModel.Cards.ShouldBeEmpty();
         viewModel.HasError.ShouldBeTrue();
-        viewModel.ErrorText.ShouldBe("Could not load Creations.");
         viewModel.LoadError.ShouldBeOfType<IOException>();
     }
 
@@ -117,7 +115,7 @@ public sealed class CreationsPresentationViewModelTests
 
         viewModel.HasError.ShouldBeTrue();
         viewModel.LoadError.ShouldBeOfType<IOException>();
-        viewModel.Cards.Single().Name.ShouldBe("Walker");
+        viewModel.Cards.Single().Name.ShouldBe(UiText.AsWritten("Walker"));
     }
 
     [Fact]
@@ -135,7 +133,7 @@ public sealed class CreationsPresentationViewModelTests
 
         viewModel.HasError.ShouldBeFalse();
         viewModel.LoadError.ShouldBeNull();
-        viewModel.Cards.Single().Name.ShouldBe("Crawler");
+        viewModel.Cards.Single().Name.ShouldBe(UiText.AsWritten("Crawler"));
         viewModel.Cards.Single().Training!.GenerationsText.ShouldBe(Generations(9));
     }
 

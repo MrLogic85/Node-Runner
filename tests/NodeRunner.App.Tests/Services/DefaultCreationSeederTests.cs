@@ -1,5 +1,6 @@
 using NodeRunner.App.Repositories;
 using NodeRunner.App.Services;
+using NodeRunner.App.ViewModels;
 using NodeRunner.Domain;
 
 namespace NodeRunner.App.Tests.Services;
@@ -7,17 +8,17 @@ namespace NodeRunner.App.Tests.Services;
 public sealed class DefaultCreationSeederTests
 {
     [Fact]
-    public void SeedIfNeeded_OnFirstStart_SavesACopyOfWormAndTheMarker()
+    public void SeedIfNeeded_OnFirstStart_SavesACopyOfWormInThePlayersLanguageAndTheMarker()
     {
         var creations = new InMemoryCreationRepository();
         var progression = new InMemoryProgressionRepository();
 
-        var seeded = CreateSeeder(creations, progression).SeedIfNeeded();
+        var seeded = CreateSeeder(creations, progression).SeedIfNeeded(text => text.Equals(UiText.Plain("Worm")) ? "Mask" : "?");
 
         seeded.ShouldBeTrue();
         var worm = creations.List().ShouldHaveSingleItem();
         worm.Id.ShouldNotBe(CreationExamples.WormId);
-        worm.Name.ShouldBe("Worm");
+        worm.Name.ShouldBe("Mask");
         progression.Load().DefaultCreationsSeeded.ShouldBeTrue();
     }
 
@@ -27,7 +28,7 @@ public sealed class DefaultCreationSeederTests
         var creations = new InMemoryCreationRepository();
         creations.Save(new CreationDef(Guid.NewGuid(), "Player Build", CreationExamples.CreateWormCreature()));
 
-        var seeded = CreateSeeder(creations, new InMemoryProgressionRepository()).SeedIfNeeded();
+        var seeded = CreateSeeder(creations, new InMemoryProgressionRepository()).SeedIfNeeded(TestLanguage.English);
 
         seeded.ShouldBeTrue();
         creations.List().Count.ShouldBe(2);
@@ -39,10 +40,10 @@ public sealed class DefaultCreationSeederTests
         var creations = new InMemoryCreationRepository();
         var progression = new InMemoryProgressionRepository();
         var seeder = CreateSeeder(creations, progression);
-        seeder.SeedIfNeeded();
+        seeder.SeedIfNeeded(TestLanguage.English);
         creations.Delete(creations.List().Single().Id);
 
-        var seededAgain = seeder.SeedIfNeeded();
+        var seededAgain = seeder.SeedIfNeeded(TestLanguage.English);
 
         seededAgain.ShouldBeFalse();
         creations.List().ShouldBeEmpty();

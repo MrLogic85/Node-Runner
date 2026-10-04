@@ -3,10 +3,9 @@ namespace NodeRunner.Domain.Tests;
 public sealed class MapsTests
 {
     [Fact]
-    public void Flat_HasItsStableId_AndThePlayerFacingName()
+    public void Flat_HasItsStableId()
     {
         Maps.Flat.Id.ShouldBe("map-flat");
-        Maps.Flat.Name.ShouldBe("Flat ground");
         Maps.All.ShouldBe([Maps.Flat]);
         Maps.Default.ShouldBeSameAs(Maps.Flat);
     }
@@ -31,10 +30,9 @@ public sealed class MapsTests
     }
 
     [Fact]
-    public void MapDef_RequiresAnIdANameAndAGround()
+    public void MapDef_RequiresAnIdAndAGround()
     {
-        Should.Throw<ArgumentException>(() => new MapDef(" ", "Flat ground", new FlatGround()));
-        Should.Throw<ArgumentException>(() => new MapDef("map-flat", "", new FlatGround()));
-        Should.Throw<ArgumentNullException>(() => new MapDef("map-flat", "Flat ground", null!));
+        Should.Throw<ArgumentException>(() => new MapDef(" ", new FlatGround()));
+        Should.Throw<ArgumentNullException>(() => new MapDef("map-flat", null!));
     }
 }

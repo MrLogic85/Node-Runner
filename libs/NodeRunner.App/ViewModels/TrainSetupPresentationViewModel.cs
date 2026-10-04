@@ -9,7 +9,7 @@ namespace NodeRunner.App.ViewModels;
 /// is shown dimmed and cannot be dragged. A null <paramref name="Position"/> shows no thumb, for a
 /// value the scale does not hold.
 /// </summary>
-public sealed record SettingSlider(string Label, UiText Readout, double? Position, double Step, bool Disabled = false);
+public sealed record SettingSlider(UiText Label, UiText Readout, double? Position, double Step, bool Disabled = false);
 
 /// <summary>
 /// Train setup (#194), between Build and Training: Train or Simulate, and the Shadows and Run length
@@ -29,7 +29,7 @@ public sealed class TrainSetupPresentationViewModel
     {
         ArgumentNullException.ThrowIfNull(creation);
         CreationId = creation.Id;
-        Title = $"Train {creation.Name}";
+        Title = UiText.Format("Train {0}", creation.Name);
         Subtitle = creation.Training is { } training
             ? UiText.Counted("{0} generation so far", "{0} generations so far", training.Generation)
             : UiText.Plain("Not trained yet");
@@ -41,11 +41,11 @@ public sealed class TrainSetupPresentationViewModel
 
     public Guid CreationId { get; }
 
-    public string Title { get; }
+    public UiText Title { get; }
 
     public UiText Subtitle { get; }
 
-    public string MapName => Maps.Default.Name;
+    public UiText MapName => MapNames.Of(Maps.Default.Id);
 
     public TrainSettingsDef Settings { get; private set; }
 
@@ -55,25 +55,25 @@ public sealed class TrainSetupPresentationViewModel
     public bool CanSimulate { get; }
 
     /// <summary>The one line under Train or Simulate saying what the chosen mode does.</summary>
-    public string ModeNote => Mode switch
+    public UiText ModeNote => Mode switch
     {
-        TrainingRunMode.Simulate => "Plays the trained brain with one shadow. Nothing is learned or saved.",
-        _ when CanSimulate => "Shadows race and the brain keeps learning.",
-        _ => "Shadows race and the brain keeps learning. Simulate needs a trained brain.",
+        TrainingRunMode.Simulate => UiText.Plain("Plays the trained brain with one shadow. Nothing is learned or saved."),
+        _ when CanSimulate => UiText.Plain("Shadows race and the brain keeps learning."),
+        _ => UiText.Plain("Shadows race and the brain keeps learning. Simulate needs a trained brain."),
     };
 
     public SettingSlider Shadows => Mode == TrainingRunMode.Simulate
-        ? new("Shadows", UiText.Number(1), null, ShadowsRange.PositionStep, Disabled: true)
+        ? new(UiText.Plain("Shadows"), UiText.Number(1), null, ShadowsRange.PositionStep, Disabled: true)
         : new(
-            "Shadows",
+            UiText.Plain("Shadows"),
             UiText.Number(Settings.Shadows),
             ShadowsRange.Position(Settings.Shadows),
             ShadowsRange.PositionStep);
 
     public SettingSlider RunLength => Mode == TrainingRunMode.Simulate
-        ? new("Run length", UiText.Plain("Until you leave"), null, RunLengthRange.PositionStep, Disabled: true)
+        ? new(UiText.Plain("Run length"), UiText.Plain("Until you leave"), null, RunLengthRange.PositionStep, Disabled: true)
         : new(
-            "Run length",
+            UiText.Plain("Run length"),
             Seconds(Settings.RunLengthSeconds),
             RunLengthRange.Position(Settings.RunLengthSeconds),
             RunLengthRange.PositionStep);

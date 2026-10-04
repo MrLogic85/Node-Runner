@@ -1,5 +1,6 @@
 using NodeRunner.App.Builders;
 using NodeRunner.App.Services;
+using NodeRunner.App.ViewModels;
 
 namespace NodeRunner.App.Tests.Services;
 
@@ -10,20 +11,22 @@ public sealed class CreationExamplesTests
     {
         foreach (var example in CreationExamples.All)
         {
-            var canBuild = new CreatureBuilder(example.Creation.Creature).TryBuild(out var built, out var errors);
+            var canBuild = new CreatureBuilder(example.Creature).TryBuild(out var built, out var errors);
 
-            canBuild.ShouldBeTrue(example.Creation.Name);
+            canBuild.ShouldBeTrue(example.Name.Message);
             errors.ShouldBeEmpty();
             built.ShouldNotBeNull();
-            example.WhatIsNew.ShouldNotBeNullOrWhiteSpace();
+            example.WhatIsNew.Message.ShouldNotBeNullOrWhiteSpace();
         }
     }
 
     [Fact]
     public void Worm_UsesOnlyStartingComponents()
     {
-        var worm = CreationExamples.All.Single(example => example.Creation.Id == CreationExamples.WormId).Creation;
+        var worm = CreationExamples.All.Single(example => example.Id == CreationExamples.WormId);
 
+        worm.ShouldBeSameAs(CreationExamples.Worm);
+        worm.Name.ShouldBe(UiText.Plain("Worm"));
         worm.Creature.Sensors.ShouldBe(
         [
             new NodeRunner.Domain.SensorDef(8, 5, NodeRunner.Domain.SensorKind.Accelerometer),
@@ -36,5 +39,5 @@ public sealed class CreationExamplesTests
 
     [Fact]
     public void Examples_HaveDistinctIds() =>
-        CreationExamples.All.Select(example => example.Creation.Id).ShouldBeUnique();
+        CreationExamples.All.Select(example => example.Id).ShouldBeUnique();
 }

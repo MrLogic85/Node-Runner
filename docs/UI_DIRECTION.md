@@ -639,15 +639,17 @@ and translation"):
   the Build canvas notes, asks `UiTextTranslation.Source` itself and draws
   again when the language changes. A `UiCalloutLayer` shows the text it is
   given, already translated or as the player wrote it, so it turns
-  auto-translation off for its callouts (#758). `docs/ARCHITECTURE.md` →
-  "UI text and translation" tracks which App text is still English.
+  auto-translation off for its callouts (#758).
 - **Text the player wrote**, such as a creation's name, is never
   translated. Its label sets `auto_translate_mode = Disabled` on itself
   only, so the static text around it still translates. A part's own name
   crosses inside App text as `UiText.AsWritten`, an argument that is shown
   as written, while a default name such as "Node 2" is translated (#757).
   The part name field shows the translated default as its text, so leaving
-  it unchanged keeps the default instead of saving it as an own name.
+  it unchanged keeps the default instead of saving it as an own name. A
+  creation's default name, such as "Untitled Creation" or "Copy of Worm", is
+  saved in the language the player has when it is made and is their own
+  text from then on (#759).
 - Counted text is one whole sentence per plural form, and Godot picks the
   form for the language. Never add an "s" in code.
 - **Numbers** are arguments, never part of the English: "{0} m", not

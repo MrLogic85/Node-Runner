@@ -128,10 +128,11 @@ public partial class CreationCard : MarginContainer
         var fallback = GetNode<UiLabel>("%ThumbnailFallback");
         fallback.ShowText(creation.ThumbnailText);
         fallback.Visible = creation.Creature.Nodes.Count == 0;
-        GetNode<UiLabel>("%Name").Text = creation.Name;
+        GetNode<UiLabel>("%Name").ShowText(creation.Name);
         var summary = GetNode<UiLabel>("%Summary");
-        summary.Text = creation.SummaryText;
-        summary.Visible = creation.SummaryText.Length > 0;
+        var summarySource = UiTextTranslation.Source(creation.SummaryText);
+        summary.TextSource = summarySource;
+        summary.Visible = summarySource is not null;
         ApplyTraining(creation.Training);
 
         GetNode<UiButton>("%Copy").Disabled = !creation.CanDuplicate;
@@ -166,7 +167,7 @@ public partial class CreationCard : MarginContainer
     {
         if (_creation is { } creation)
         {
-            EmitSignal(signal, creation.Id.ToString("D"), creation.Name);
+            EmitSignal(signal, creation.Id.ToString("D"), UiTextTranslation.Now(creation.Name));
         }
     }
 }

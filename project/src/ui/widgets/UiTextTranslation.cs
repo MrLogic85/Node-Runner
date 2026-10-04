@@ -28,6 +28,13 @@ public static class UiTextTranslation
     [return: System.Diagnostics.CodeAnalysis.NotNullIfNotNull(nameof(text))]
     public static Func<string>? Source(UiText? text) => text is null ? null : () => InLanguage(text);
 
+    /// <summary>
+    /// <paramref name="text"/> in the current language, once. For text that is then kept as written,
+    /// such as a creation's default name when it is saved (#759); text on screen uses
+    /// <see cref="ShowText(UiLabel, UiText)"/> or <see cref="Source"/> to follow a language change.
+    /// </summary>
+    public static string Now(UiText text) => InLanguage(text);
+
     private static string InLanguage(UiText text)
     {
         var template = text.Plural is { } plural

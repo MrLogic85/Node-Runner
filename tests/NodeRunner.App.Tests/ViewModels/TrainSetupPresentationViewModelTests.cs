@@ -11,9 +11,9 @@ public sealed class TrainSetupPresentationViewModelTests
     {
         var setup = new TrainSetupPresentationViewModel(Creation());
 
-        setup.Title.ShouldBe("Train Worm");
+        setup.Title.ShouldBe(UiText.Format("Train {0}", "Worm"));
         setup.Subtitle.ShouldBe(UiText.Plain("Not trained yet"));
-        setup.MapName.ShouldBe("Flat ground");
+        setup.MapName.ShouldBe(UiText.Plain("Flat ground"));
         setup.Settings.ShouldBe(TrainSettingsDef.Default);
         setup.Shadows.Readout.ShouldBe(UiText.Number(8));
         setup.RunLength.Readout.ShouldBe(UiText.Format("{0} s", 10));
@@ -95,7 +95,7 @@ public sealed class TrainSetupPresentationViewModelTests
 
         setup.Mode.ShouldBe(TrainingRunMode.Train);
         setup.CanSimulate.ShouldBeFalse();
-        setup.ModeNote.ShouldBe("Shadows race and the brain keeps learning. Simulate needs a trained brain.");
+        setup.ModeNote.ShouldBe(UiText.Plain("Shadows race and the brain keeps learning. Simulate needs a trained brain."));
         Should.Throw<InvalidOperationException>(() => setup.SetMode(TrainingRunMode.Simulate));
     }
 
@@ -105,7 +105,7 @@ public sealed class TrainSetupPresentationViewModelTests
         var setup = new TrainSetupPresentationViewModel(Creation(generation: 3));
 
         setup.CanSimulate.ShouldBeTrue();
-        setup.ModeNote.ShouldBe("Shadows race and the brain keeps learning.");
+        setup.ModeNote.ShouldBe(UiText.Plain("Shadows race and the brain keeps learning."));
         setup.Shadows.Disabled.ShouldBeFalse();
         setup.RunLength.Disabled.ShouldBeFalse();
     }
@@ -122,9 +122,9 @@ public sealed class TrainSetupPresentationViewModelTests
 
         changes.ShouldBe(1);
         setup.Mode.ShouldBe(TrainingRunMode.Simulate);
-        setup.ModeNote.ShouldBe("Plays the trained brain with one shadow. Nothing is learned or saved.");
-        setup.Shadows.ShouldBe(new SettingSlider("Shadows", UiText.Number(1), null, setup.Shadows.Step, Disabled: true));
-        setup.RunLength.ShouldBe(new SettingSlider("Run length", UiText.Plain("Until you leave"), null, setup.RunLength.Step, Disabled: true));
+        setup.ModeNote.ShouldBe(UiText.Plain("Plays the trained brain with one shadow. Nothing is learned or saved."));
+        setup.Shadows.ShouldBe(new SettingSlider(UiText.Plain("Shadows"), UiText.Number(1), null, setup.Shadows.Step, Disabled: true));
+        setup.RunLength.ShouldBe(new SettingSlider(UiText.Plain("Run length"), UiText.Plain("Until you leave"), null, setup.RunLength.Step, Disabled: true));
         setup.Settings.ShouldBe(TrainSettingsDef.Default);
     }
 

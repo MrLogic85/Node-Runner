@@ -216,7 +216,7 @@ public static class SensorPicture   // a sensor picture's tap area at its beam's
     public static bool Contains(SensorKind kind, Vector2D point, Vector2D nodeA, Vector2D nodeB);
 }
 
-public sealed record MapDef(string Id, string Name, MapGround Ground); // #443; Id saved with training records
+public sealed record MapDef(string Id, MapGround Ground); // #443; Id saved with training records; App's MapNames names it
 public abstract record MapGround { public abstract double HeightAt(double x); } // FlatGround: 0 everywhere
 public static class Maps            // every map by id; 0.13 has only Flat ("map-flat")
 {
@@ -354,10 +354,16 @@ its arguments, and a context. App never renders it as English, so its tests
 compare `UiText` values. On the Godot side, `UiTextTranslation` (`ui/widgets`)
 is the one place that turns a `UiText` into the player's language.
 `docs/UI_DIRECTION.md` → "Text and translation" owns the rules for showing
-it. The rules apply to new and migrated text; counted text (#751), units and
-numbers (#756), part names (#757), and Build's messages and readiness
-reasons (#758) are migrated, and #759 moves the remaining App text that is
-still built as English.
+it. All text App builds for the player crosses as `UiText` (#752); none is
+built as English any more.
+
+A default name that is saved, such as "Untitled Creation", "Copy of {0}" or
+a copied example's name, is put into the player's language once, as it is
+saved (#759). From then on it is the player's own text, like a name they
+typed, and is never translated again. The workflows that save one take a
+`Func<UiText, string>`; the hosts pass `UiTextTranslation.Now`, since
+managers hold no UI. So `CreationsHost`, not `SaveManager`, seeds the Worm
+on the first start.
 
 ## Threading
 

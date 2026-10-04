@@ -1,9 +1,13 @@
 using NodeRunner.App.Repositories;
+using NodeRunner.App.ViewModels;
 using NodeRunner.Domain;
 
 namespace NodeRunner.App.Services;
 
-/// <summary>Saves an identical creation, trained model included, from an example under a new id.</summary>
+/// <summary>
+/// Saves an identical creation, trained model included, from an example under a new id and the
+/// example's name in the player's language.
+/// </summary>
 public sealed class ExampleCopyWorkflow : IExampleCopyWorkflow
 {
     private readonly ICreationRepository _repository;
@@ -21,11 +25,12 @@ public sealed class ExampleCopyWorkflow : IExampleCopyWorkflow
         _newId = newId ?? Guid.NewGuid;
     }
 
-    public CreationDef Copy(Guid exampleId)
+    public CreationDef Copy(Guid exampleId, Func<UiText, string> inPlayerLanguage)
     {
-        var example = _examples.FirstOrDefault(example => example.Creation.Id == exampleId)?.Creation
+        ArgumentNullException.ThrowIfNull(inPlayerLanguage);
+        var example = _examples.FirstOrDefault(example => example.Id == exampleId)
             ?? throw new KeyNotFoundException($"Example '{exampleId}' was not found.");
-        var copy = example.CopyAs(_newId(), example.Name);
+        var copy = new CreationDef(_newId(), inPlayerLanguage(example.Name), example.Creature, example.Training);
         _repository.Save(copy);
         return copy;
     }
