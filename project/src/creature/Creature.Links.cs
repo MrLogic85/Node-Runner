@@ -19,7 +19,7 @@ public partial class Creature
             var piston = definition.Pistons[i];
             var indexA = definition.NodeIndexOf(piston.NodeA);
             var indexB = definition.NodeIndexOf(piston.NodeB);
-            _pistons[i] = new PistonLink(piston, _nodeBodies[indexA], _nodeBodies[indexB]);
+            _pistons[i] = new PistonLink(piston, _nodeBodies[indexA], _nodeBodies[indexB], _nodeLoads[indexA], _nodeLoads[indexB]);
             CreateEndStops(i);
             var visual = new PistonVisual
             {
@@ -119,7 +119,7 @@ public partial class Creature
                 Length = built,
                 RestLength = built,
                 Stiffness = (float)spring.Stiffness,
-                Damping = (float)(Mechanics.Spring.DampingCoefficient(spring, nodeA.Mass, nodeB.Mass) / dampingPasses),
+                Damping = (float)(Mechanics.Spring.DampingCoefficient(spring, _nodeLoads[indexA], _nodeLoads[indexB]) / dampingPasses),
             };
             AddChild(joint);
             joint.NodeA = joint.GetPathTo(nodeA);

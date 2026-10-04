@@ -50,8 +50,9 @@ CreatureDef  ──build──▶  physical body  ──sensors──▶  model 
   will make it larger and show their glyph inside. At runtime each node is
   its own `RigidBody2D` with a circle collider at that radius, the size it
   is drawn at. Its rotation is locked, so it grips instead of rolling like a
-  wheel. A node weighs half of every beam and link it joins: their weight is
-  simulated at their two ends. Nodes are what touch the world; every beam is
+  wheel. A node weighs a quarter of every beam and half of every link it
+  joins: a link's weight is simulated at its two ends, and a beam keeps half
+  of its own (see Beam below). Nodes are what touch the world; every beam is
   pinned to its two nodes (see Beam below).
 - **Degree rules** (how many beams touch a node):
   - **0 beams** — not ready unless a Piston or Spring joins it. A node with nothing
@@ -72,9 +73,11 @@ CreatureDef  ──build──▶  physical body  ──sensors──▶  model 
   runtime it becomes its own
   `RigidBody2D` in `project/src/creature/Creature.cs`, pinned with a
   `PinJoint2D` to each of its two node bodies, so its length is fixed by
-  geometry. A beam has **no collider**: it carries sensors between its nodes, while its weight sits on those nodes (see Node above).
-  Its own body is nearly massless, with a turning inertia set as a thin
-  solid bar. Parts of the same creature never collide with each other:
+  geometry. A beam has **no collider**: it carries sensors between its nodes.
+  Half its weight is its own body, with a turning inertia set as a thin
+  solid bar, and a quarter sits on each node (see Node above). Godot's
+  solver can't hold a nearly massless body pinned between heavy nodes: under
+  Piston load the pins gave way and rigid triangles folded inside out (#794). Parts of the same creature never collide with each other:
   every creature body sits on collision layer 2 and masks only the ground
   (layer 1). That allows car-like, closed-loop construction and also keeps
   shadows from touching each other.
@@ -207,8 +210,8 @@ a composition of triangles; a bare quadrilateral stays free to fold.
   and **Max speed** (2 m/s new). Its built length is the distance between
   its nodes in the drawing. At runtime `project/src/creature/PistonLink.cs`
   pushes its two node bodies apart or together along the line between them
-  every physics tick; it has no collider. It weighs like a beam, half on
-  each node, plus its end stops' cylinder (below): one and a half beams.
+  every physics tick; it has no collider. It weighs as much as a beam, half
+  on each node, plus its end stops' cylinder (below): one and a half beams.
 - **Not a beam:** inside its stroke it does not hold its length, so it adds no rigidity, and it counts as attached for the node degree rules. A
   Piston cannot join two nodes a beam already joins (the beam would hold
   them rigid), and two nodes hold at most one Piston (`CreatureBuilder.CanAddPiston`).
@@ -216,7 +219,8 @@ a composition of triangles; a bare quadrilateral stays free to fold.
   chases the target length from its position output at up to Max speed,
   slowing as it arrives, with at most the strength output's share of its
   Strength. The speed control is a PI controller with gains from the
-  reduced mass of its two nodes, the lightest load it can move, so it stays
+  reduced mass of its two nodes (each with half of every beam body pinned to
+  it, #794), the lightest load it can move, so it stays
   steady on a light limb tip and holds a load such as the body's weight at
   its target.
 - **End stops** (#701): its length stays within its stroke, whatever the load.
@@ -250,11 +254,12 @@ a composition of triangles; a bare quadrilateral stays free to fold.
   damping that just stops it bouncing, 30% new). Its rest length is the
   distance between its nodes in the drawing. At runtime it is a Godot
   `DampedSpringJoint2D` between its two node bodies (`Creature.CreateSprings`);
-  it has no collider. It weighs like a beam, half on each node.
+  it has no collider. It weighs as much as a beam, half on each node.
 - **Damping as a share of critical** (`Spring.DampingCoefficient` in
   `libs/NodeRunner.Mechanics/Spring.cs`): 0% bounces on, 100% settles without
   overshoot, so the slider means the same for any stiffness. The coefficient
-  is worked out on the reduced mass of its two nodes. Godot's spring joint
+  is worked out on the reduced mass of its two nodes, each with half of every
+  beam body pinned to it (#794). Godot's spring joint
   damps on every second solver iteration rather than once per step
   (`godot_joints_2d.cpp`, checked in 4.7), so `Creature` divides the
   coefficient by those passes; headless, the overshoot then matched the share
