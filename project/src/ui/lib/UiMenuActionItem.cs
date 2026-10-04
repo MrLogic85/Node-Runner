@@ -242,6 +242,7 @@ public partial class UiMenuActionItem : UiMenuItem, ISerializationListener
             StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
             SizeFlagsVertical = SizeFlags.ShrinkCenter,
             MouseFilter = MouseFilterEnum.Ignore,
+            TextureFilter = UiIcons.IconFilter,
         };
         _label = new Label { Name = "Label" };
         _note = new Label { Name = "Note" };
@@ -263,6 +264,7 @@ public partial class UiMenuActionItem : UiMenuItem, ISerializationListener
             StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
             SizeFlagsVertical = SizeFlags.ShrinkCenter,
             MouseFilter = MouseFilterEnum.Ignore,
+            TextureFilter = UiIcons.IconFilter,
         };
         var row = new HBoxContainer { Name = "Row", MouseFilter = MouseFilterEnum.Ignore };
         row.AddThemeConstantOverride("separation", (int)UiSize.Space.S2);

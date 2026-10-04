@@ -53,6 +53,7 @@ theme_override_constants/separation = 4
 
 [node name="SidePanelIcon" type="Control" parent="SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelHeaderInset/SidePanelHeader" unique_id=1617606930]
 unique_name_in_owner = true
+texture_filter = 2
 custom_minimum_size = Vector2(20, 20)
 layout_mode = 2
 size_flags_vertical = 4
@@ -68,6 +69,7 @@ TextStyle = 2
 
 [node name="SidePanelChevron" type="Control" parent="SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelHeaderInset/SidePanelHeader" unique_id=599248499]
 unique_name_in_owner = true
+texture_filter = 2
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
 size_flags_horizontal = 4
@@ -89,6 +91,7 @@ alignment = 1
 
 [node name="SidePanelTabChevron" type="Control" parent="SidePanelTab" unique_id=217993199]
 unique_name_in_owner = true
+texture_filter = 2
 custom_minimum_size = Vector2(16, 16)
 layout_mode = 2
 size_flags_horizontal = 4

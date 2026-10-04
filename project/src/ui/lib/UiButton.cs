@@ -675,6 +675,7 @@ public sealed partial class UiButton : Button, ISerializationListener
         _contentIcon.Texture = hasIcon ? UiIcons.Load(IconId, iconSize) : null;
         _contentIcon.CustomMinimumSize = Vector2.One * UiIcons.Pixels(iconSize);
         _contentIcon.SelfModulate = content;
+        UiIcons.UseIconFilter(_contentIcon);
         FitContent();
     }
 

@@ -22,6 +22,7 @@ theme_override_constants/separation = 8
 
 [node name="SemanticIcon" type="TextureRect" parent="Column/Heading" unique_id=1058629624]
 unique_name_in_owner = true
+texture_filter = 2
 custom_minimum_size = Vector2(20, 20)
 layout_mode = 2
 size_flags_vertical = 4

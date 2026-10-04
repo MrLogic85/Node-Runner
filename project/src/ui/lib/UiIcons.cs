@@ -33,6 +33,16 @@ public static class UiIcons
     public const float UiSourceSize = 24;
     private const float _partSourceSize = 20;
 
+    /// <summary>
+    /// Icons sample Linear (#734). An icon rasterized for the UI size lands on fractional device
+    /// pixels, where the project's Nearest doubles or drops rows. Where it is already pixel-aligned,
+    /// Linear draws it exactly the same. Text keeps Nearest: see "Icon filtering" in docs/UI_DIRECTION.md.
+    /// </summary>
+    public const CanvasItem.TextureFilterEnum IconFilter = CanvasItem.TextureFilterEnum.Linear;
+
+    /// <summary>The project's filter, which text under an <see cref="UseIconFilter"/> item restores.</summary>
+    public const CanvasItem.TextureFilterEnum TextFilter = CanvasItem.TextureFilterEnum.Nearest;
+
     private static readonly string[] _iconStates =
         ["icon_normal_color", "icon_hover_color", "icon_pressed_color", "icon_hover_pressed_color", "icon_focus_color", "icon_disabled_color"];
     private static readonly Dictionary<(string Path, int Pixels), Texture2D> _textures = [];
@@ -109,6 +119,38 @@ public static class UiIcons
 
     public static TextureRect Create(UiIconId icon, UiIconSize size, Color tint) =>
         Create(Load(icon, size), size, tint);
+
+    /// <summary>
+    /// Samples <paramref name="item"/>'s textures with <see cref="IconFilter"/>. Only for an item whose
+    /// own textures are all icons. Its children inherit the filter, so a text child takes
+    /// <see cref="UseTextFilter"/>.
+    /// </summary>
+    public static void UseIconFilter(CanvasItem item)
+    {
+        ArgumentNullException.ThrowIfNull(item);
+        item.TextureFilter = IconFilter;
+    }
+
+    /// <summary>
+    /// For a component's <c>_ValidateProperty</c> when it sets <see cref="IconFilter"/> on itself: keeps
+    /// the derived filter out of the Inspector and saved scenes.
+    /// </summary>
+    public static void HideIconFilter(Godot.Collections.Dictionary property)
+    {
+        ArgumentNullException.ThrowIfNull(property);
+        if (property["name"].AsStringName() == CanvasItem.PropertyName.TextureFilter)
+        {
+            var usage = (PropertyUsageFlags)property["usage"].AsInt64();
+            property["usage"] = (long)(usage & ~(PropertyUsageFlags.Editor | PropertyUsageFlags.Storage));
+        }
+    }
+
+    /// <summary>Gives text under an <see cref="UseIconFilter"/> item the project's <see cref="TextFilter"/> back.</summary>
+    public static void UseTextFilter(CanvasItem item)
+    {
+        ArgumentNullException.ThrowIfNull(item);
+        item.TextureFilter = TextFilter;
+    }
 
     private static IconSource SourceFor(UiIconId icon) => icon switch
     {
@@ -243,6 +285,7 @@ public static class UiIcons
             StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
             SelfModulate = tint,
             MouseFilter = Control.MouseFilterEnum.Ignore,
+            TextureFilter = IconFilter,
         };
     }
 }
