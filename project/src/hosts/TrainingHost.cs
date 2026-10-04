@@ -319,7 +319,7 @@ public partial class TrainingHost : Node, IRoutedScene
     private void StartEvolution(CreationDef? creation)
     {
         _evolver?.Stop();
-        if (_creature?.Brain is null || _creature.Definition is not { } definition || _evolver is null)
+        if (_creature?.HasMotors != true || _creature.Definition is not { } definition || _evolver is null)
         {
             // No motors: nothing to evolve.
             return;
@@ -334,7 +334,7 @@ public partial class TrainingHost : Node, IRoutedScene
         _evolver.Start(
             _creature,
             setup.Population,
-            _creature.Brain.LayerSizes,
+            DirectBrain.LayerSizes(_creature.Ports),
             setup.Algorithm,
             Rng.Random,
             GroundTopY,
@@ -353,7 +353,7 @@ public partial class TrainingHost : Node, IRoutedScene
     // far its front has got, for the Distance card.
     private void StartPlayback(CreationDef creation)
     {
-        if (_creature?.Brain is null || _creature.Definition is not { } definition || creation.Training is not { } training)
+        if (_creature?.HasMotors != true || _creature.Definition is not { } definition || creation.Training is not { } training)
         {
             return;
         }
@@ -361,7 +361,7 @@ public partial class TrainingHost : Node, IRoutedScene
         _trainingPresentation.Dispose();
         _trainingPresentation = TrainingPresentationViewModel.Saved(training, _map.Id);
         _brainFocus.Configure(BrainPortLabels.For(definition), DirectBrain.DisabledGenes(training.Brain, _creature.Ports));
-        _creature.SetBrain(DirectBrain.Network(training.Brain, _creature.Ports), _creature.BrainSeed);
+        _creature.SetBrain(DirectBrain.Network(training.Brain, _creature.Ports));
         var playback = new TrialController
         {
             Name = "Playback",
@@ -415,7 +415,7 @@ public partial class TrainingHost : Node, IRoutedScene
         if (_creationId is not { } id
             || _evolver?.LatestGenome is not { } genome
             || _evolver.LatestRun is not { } run
-            || _creature?.Brain is null)
+            || _creature?.HasMotors != true)
         {
             return;
         }

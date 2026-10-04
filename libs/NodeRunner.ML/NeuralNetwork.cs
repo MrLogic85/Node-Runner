@@ -7,39 +7,6 @@ public sealed class NeuralNetwork
     private readonly double[][] _biases;
     private readonly Activation[] _outputActivations;
 
-    /// <summary>A randomly initialized network. <paramref name="outputActivations"/> gives one activation per output (#535); <c>null</c> means tanh for every output.</summary>
-    public NeuralNetwork(int[] layerSizes, Activation activation, Random random, IReadOnlyList<Activation>? outputActivations = null)
-    {
-        ValidateLayerSizes(layerSizes);
-        ValidateActivation(activation);
-        ArgumentNullException.ThrowIfNull(random);
-
-        _layerSizes = layerSizes.ToArray();
-        Activation = activation;
-        _outputActivations = OutputActivationsFor(_layerSizes, outputActivations);
-        _weights = new double[_layerSizes.Length - 1][];
-        _biases = new double[_layerSizes.Length - 1][];
-
-        for (var layer = 0; layer < _weights.Length; layer++)
-        {
-            var inputCount = _layerSizes[layer];
-            var outputCount = _layerSizes[layer + 1];
-            _weights[layer] = new double[inputCount * outputCount];
-            _biases[layer] = new double[outputCount];
-
-            var limit = InitializationLimit(inputCount, outputCount, activation);
-            for (var output = 0; output < outputCount; output++)
-            {
-                for (var input = 0; input < inputCount; input++)
-                {
-                    _weights[layer][WeightIndex(output, input, inputCount)] = NextUniform(random, -limit, limit);
-                }
-
-                _biases[layer][output] = NextUniform(random, -limit, limit);
-            }
-        }
-    }
-
     private NeuralNetwork(int[] layerSizes, Activation activation, double[][] weights, double[][] biases, IReadOnlyList<Activation>? outputActivations)
     {
         ValidateLayerSizes(layerSizes);
@@ -249,18 +216,6 @@ public sealed class NeuralNetwork
             Activation.Sigmoid => 1 / (1 + Math.Exp(-value)),
             _ => throw new ArgumentOutOfRangeException(nameof(activation), activation, "Unknown activation."),
         };
-    }
-
-    private static double InitializationLimit(int inputCount, int outputCount, Activation activation)
-    {
-        return activation == Activation.ReLU
-            ? Math.Sqrt(6.0 / inputCount)
-            : Math.Sqrt(6.0 / (inputCount + outputCount));
-    }
-
-    private static double NextUniform(Random random, double minInclusive, double maxExclusive)
-    {
-        return minInclusive + (random.NextDouble() * (maxExclusive - minInclusive));
     }
 
     private static Activation[] OutputActivationsFor(int[] layerSizes, IReadOnlyList<Activation>? outputActivations)

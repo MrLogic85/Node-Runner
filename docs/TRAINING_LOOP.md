@@ -148,10 +148,11 @@ transition to keep in step with it.
 - `Creature.CenterOfMass` is the average `GlobalPosition` of all beam
   bodies — a simple, cheap stand-in for a true center-of-mass, adequate for
   fitness tracking.
-- `Creature.SetBrain(brain, seed)` assigns a specific `NeuralNetwork`
-  (validated against the creature's sensor/motor counts) instead of always
-  auto-randomizing one via `BuildFrom`. This is how the population/GA step
-  (issue #50, below) plugs a candidate genome into a trial.
+- `Creature.SetBrain(brain)` assigns the `NeuralNetwork` that drives the
+  creature, validated against its sensor/motor counts. A creature has no
+  brain until training or Simulate sets one (#812): this is how the
+  population/GA step (issue #50, below) plugs a candidate genome into a
+  trial, and how Simulate plays the saved brain.
 - Historical wiring (as of issue #49, superseded by #50 and #105 below):
   `Main.cs`
   owned a single `TrialController` directly and restarted trials on
@@ -275,8 +276,8 @@ transition to keep in step with it.
   genes, giving a later experiment for the competing-conventions plateau
   without changing the underlying network.
   `StartEvolution()` (`TrainingHost`) runs once when the scene opens. It
-  calls `Evolver.Start(...)` unless the creature has no brain (an anatomy
-  without motors), in which case evolution stays idle. `Evolver.Stop()`
+  calls `Evolver.Start(...)` unless the creature has no motors
+  (`Creature.HasMotors`), in which case evolution stays idle. `Evolver.Stop()`
   halts the in-progress trial without raising any events.
 - **Generation 0 (#537, #810).** A new Creation has no trained brain, so
   its base brain holds the built pose at full strength: all weights 0,

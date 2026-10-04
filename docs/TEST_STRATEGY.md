@@ -272,7 +272,8 @@ AAA layout inside each test:
 [Fact]
 public void Forward_WithZeroInput_ReturnsZeroesForTanh()
 {
-    var nn = new NeuralNetwork(new[] { 2, 3, 1 }, Activation.Tanh, seed: 0);
+    int[] layers = [2, 3, 1];
+    var nn = NeuralNetwork.FromGenome(layers, new double[NeuralNetwork.GenomeLength(layers)], Activation.Tanh);
     var input = new double[2];
 
     var output = nn.Forward(input);
