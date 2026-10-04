@@ -12,19 +12,48 @@ public sealed class TranslationTemplateTests
     private const string _updateVariable = "NODE_RUNNER_UPDATE_POT";
 
     // The UiText factories the extractor reads, without the rest of the App layer.
-    private static readonly CSharpSources.Source _uiText = new(
-        "libs/NodeRunner.App/ViewModels/UiTextStub.cs",
-        CSharpSyntaxTree.ParseText(
-            """
-            namespace NodeRunner.App.ViewModels;
-            public sealed record UiText(string Message)
+    private static readonly CSharpSources.Source _uiText = Source(
+        "libs/NodeRunner.App/ViewModels/UiText.cs",
+        """
+        namespace NodeRunner.App.ViewModels;
+        public sealed record UiText(string Message)
+        {
+            public static UiText Plain(string message) => new(message);
+            public static UiText Format(string template, params object[] args) => new(template);
+            public static UiText Counted(string singular, string plural, long count) => new(singular);
+            public UiText InContext(string context) => this;
+        }
+        """);
+
+    // Components with exported text, like UiSlider's step labels and UiSegmentedSwitch's segments.
+    private static readonly CSharpSources.Source _components = Source(
+        "project/src/ui/lib/Components.cs",
+        """
+        namespace NodeRunner.Ui.Lib;
+        public partial class UiSteps : Godot.Control { [Godot.Export] public string[] StepLabels { get; set; } = []; }
+        public partial class UiSegment : Godot.Resource { [Godot.Export] public string Text { get; set; } = ""; }
+        """);
+
+    private static readonly CSharpSources.Source _galleryScreen = Source(
+        "project/src/ui/screens/GalleryScreen.cs",
+        """
+        namespace NodeRunner.Ui.Screens;
+        public abstract partial class GalleryScreen : Godot.Control { }
+        """);
+
+    private static readonly CSharpSources.Source _gallery = Source(
+        "project/src/ui/screens/TestGallery.cs",
+        """
+        namespace NodeRunner.Ui.Screens;
+        public partial class TestGallery : GalleryScreen
+        {
+            void Show()
             {
-                public static UiText Plain(string message) => new(message);
-                public static UiText Format(string template, params object[] args) => new(template);
-                public static UiText Counted(string singular, string plural, long count) => new(singular);
-                public UiText InContext(string context) => this;
+                new Godot.Label().Text = "Gallery label";
+                _ = NodeRunner.App.ViewModels.UiText.Plain("Gallery text");
             }
-            """));
+        }
+        """);
 
     [Fact]
     public void Template_matches_the_text_in_the_game()
@@ -40,7 +69,7 @@ public sealed class TranslationTemplateTests
 
         extraction.Problems.ShouldBeEmpty();
         File.Exists(path).ShouldBeTrue($"Create {TranslationTemplate.Path}: run the UI tests with {_updateVariable}=1.");
-        File.ReadAllText(path).ShouldBe(pot, $"Shown text changed. Regenerate {TranslationTemplate.Path}: run the UI tests with {_updateVariable}=1.");
+        File.ReadAllText(path).ReplaceLineEndings("\n").ShouldBe(pot, $"Shown text changed. Regenerate {TranslationTemplate.Path}: run the UI tests with {_updateVariable}=1.");
     }
 
     [Fact]
@@ -70,7 +99,7 @@ public sealed class TranslationTemplateTests
         var ids = Ids(Code(
             """
             void Fail() => throw new System.InvalidOperationException("Something broke.");
-            void Rename() => base.Name = "Root";
+            void Hidden() => new Label().Language = "en";
             """));
 
         ids.ShouldBeEmpty();
@@ -126,6 +155,18 @@ public sealed class TranslationTemplateTests
     }
 
     [Fact]
+    public void Ui_text_that_cannot_be_traced_to_a_literal_is_a_problem()
+    {
+        var extraction = Code(
+            """
+            NodeRunner.App.ViewModels.UiText Greeting(string name) =>
+                NodeRunner.App.ViewModels.UiText.Plain($"Hello {name}");
+            """);
+
+        extraction.Problems.ShouldHaveSingleItem().ShouldContain("a UiText needs literal text");
+    }
+
+    [Fact]
     public void One_text_cannot_be_both_plain_and_counted()
     {
         var extraction = Code(
@@ -143,7 +184,8 @@ public sealed class TranslationTemplateTests
     [Fact]
     public void Scene_text_keeps_its_own_node_context_and_skips_untranslated_nodes()
     {
-        var entries = Scene(
+        // Written with Windows line endings, as git may check scenes out.
+        var entries = SceneWithWindowsLineEndings(
             """
             [gd_scene format=3]
 
@@ -200,7 +242,7 @@ public sealed class TranslationTemplateTests
             """
             [gd_scene format=3]
 
-            [ext_resource type="Script" path="res://src/ui/screens/ComponentGalleryScreen.cs" id="1"]
+            [ext_resource type="Script" path="res://src/ui/screens/TestGallery.cs" id="1"]
 
             [node name="Root" type="Control"]
             script = ExtResource("1")
@@ -241,12 +283,25 @@ public sealed class TranslationTemplateTests
             """.ReplaceLineEndings("\n"));
     }
 
+    [Fact]
+    public void Gallery_code_stays_in_English()
+    {
+        var extraction = TranslationTemplate.Extract([_uiText, _galleryScreen, _gallery], []);
+
+        extraction.Entries.ShouldBeEmpty();
+        extraction.Problems.ShouldBeEmpty();
+    }
+
+    private static CSharpSources.Source Source(string path, string code) => new(path, CSharpSyntaxTree.ParseText(code));
+
     private static TranslationTemplate.Extraction Code(string member) =>
         TranslationTemplate.Extract([_uiText, CSharpSources.Snippet(member)], []);
 
     private static string[] Ids(TranslationTemplate.Extraction extraction) =>
         extraction.Entries.Keys.Select(entry => entry.Id).ToArray();
 
+    private static IEnumerable<TranslationTemplate.Entry> SceneWithWindowsLineEndings(string text) => Scene(text.ReplaceLineEndings("\r\n"));
+
     private static IEnumerable<TranslationTemplate.Entry> Scene(string text) =>
-        TranslationTemplate.Extract([], [("project/scenes/Test.tscn", text.ReplaceLineEndings("\n"))]).Entries.Keys;
+        TranslationTemplate.Extract([_uiText, _components, _galleryScreen, _gallery], [("project/scenes/Test.tscn", text)]).Entries.Keys;
 }

@@ -38,8 +38,11 @@ The template holds:
   `?:`/`??`/switch branches.
 
 Text without letters, such as "—" or "1", is left out. The test fails when
-it cannot read a message, for example a counted text or context that is not
-literal, or when one English text is used both alone and counted.
+a `UiText` message cannot be traced to literal text, such as an
+interpolated string, when a counted text or context is not literal, or when
+one English text is used both alone and counted. Text set directly on a
+control that does not come from a literal, such as a creation's name, is
+not in the template.
 
 The galleries (Component Gallery, Popup Gallery, Colors & Styles and
 Toolbars) are developer tools, so they stay in English and are left out.
@@ -68,9 +71,10 @@ No code changes are needed.
 3. Register the file in Project Settings → Localization → Translations. It
    is saved as `internationalization/locale/translations` in
    `project/project.godot`.
-4. Run the game with the device set to the language. Godot picks the
-   language from the system; text on open screens updates when the
-   language changes.
+4. Run the game with the device set to the language. Godot reads the
+   system language when the game starts, so restart it after changing the
+   device language. A change through `TranslationServer.SetLocale` updates
+   open screens at once.
 
 When the template changes, update each language with Poedit (Update from
 POT) or `msgmerge -U <language>.po messages.pot`.
@@ -78,6 +82,6 @@ POT) or `msgmerge -U <language>.po messages.pot`.
 ## Text server data
 
 `internationalization/locale/include_text_server_data` is on. It adds about
-3 MB of ICU data to the export. Without it, an exported build cases text
+5 MB of ICU data to the APK. Without it, an exported build cases text
 like English in every language (Turkish "i" becomes "I", not "İ") and
 cannot break lines in languages without spaces, such as Thai or Chinese.

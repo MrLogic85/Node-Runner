@@ -25,7 +25,7 @@ internal static partial class TranslationTemplate
     /// </summary>
     public sealed record Extraction(IReadOnlyDictionary<Entry, SortedSet<string>> Entries, IReadOnlyList<string> Problems);
 
-    private static readonly Lazy<Extraction> _current = new(() => Extract(Code.Sources(), SceneFiles()));
+    private static readonly Lazy<Extraction> _current = new(() => Extract(RepositorySources(), SceneFiles()));
 
     public static Extraction Current => _current.Value;
 
@@ -33,8 +33,9 @@ internal static partial class TranslationTemplate
     {
         var entries = new Dictionary<Entry, SortedSet<string>>();
         var problems = new List<string>();
-        foreach (var (entry, source) in new CodeText(code, problems).Messages()
-            .Concat(scenes.SelectMany(scene => SceneText(scene.Path, scene.Text))))
+        var codeText = new CodeText(code, problems);
+        foreach (var (entry, source) in codeText.Messages()
+            .Concat(scenes.SelectMany(scene => SceneText(scene.Path, scene.Text.ReplaceLineEndings("\n"), codeText))))
         {
             if (entry.Id.Any(char.IsLetter))
             {
@@ -94,6 +95,21 @@ internal static partial class TranslationTemplate
     private static string Quote(string text) =>
         "\"" + text.Replace("\\", "\\\\").Replace("\"", "\\\"").Replace("\n", "\\n").Replace("\t", "\\t") + "\"";
 
+    /// <summary>The pure libs and <c>project/src</c>, so text can be followed across them.</summary>
+    private static IReadOnlyList<CSharpSources.Source> RepositorySources()
+    {
+        var root = SceneNodes.FindRepositoryRoot();
+        return new[] { "libs", "project/src" }
+            .Select(folder => System.IO.Path.Combine(root, folder))
+            .SelectMany(folder => Directory.EnumerateFiles(folder, "*.cs", SearchOption.AllDirectories)
+                .Where(path => !System.IO.Path.GetRelativePath(folder, path).Split('/', '\\').Any(part => part is "obj" or "bin")))
+            .Order(StringComparer.Ordinal)
+            .Select(path => new CSharpSources.Source(
+                System.IO.Path.GetRelativePath(root, path).Replace('\\', '/'),
+                CSharpSyntaxTree.ParseText(File.ReadAllText(path).ReplaceLineEndings("\n"), path: path)))
+            .ToList();
+    }
+
     private static IEnumerable<(string Path, string Text)> SceneFiles()
     {
         var root = SceneNodes.FindRepositoryRoot();
@@ -110,10 +126,10 @@ internal static partial class TranslationTemplate
     /// </summary>
     private static readonly HashSet<string> _nativeSceneText = ["text", "tooltip_text", "placeholder_text", "title"];
 
-    private static IEnumerable<(Entry Entry, string Source)> SceneText(string path, string text)
+    private static IEnumerable<(Entry Entry, string Source)> SceneText(string path, string text, CodeText code)
     {
         var nodes = SceneNodes.Parse(path, text).ToList();
-        if (nodes.FirstOrDefault(node => node.IsRoot)?.Script is { } rootScript && Code.IsGallery(rootScript))
+        if (nodes.FirstOrDefault(node => node.IsRoot)?.Script is { } rootScript && code.IsGallery(rootScript.Replace("res://", "project/", StringComparison.Ordinal)))
         {
             yield break;
         }
@@ -134,7 +150,7 @@ internal static partial class TranslationTemplate
 
             foreach (var (key, value) in properties)
             {
-                if (IsSceneText(key))
+                if (code.IsSceneText(key))
                 {
                     foreach (var message in GodotStrings(value))
                     {
@@ -146,7 +162,7 @@ internal static partial class TranslationTemplate
             // A switch's segments are resources; it translates them with its own context.
             foreach (Match reference in SubResourceRef().Matches(node.Node.Body))
             {
-                foreach (var message in SubResourceText(text, reference.Groups["id"].Value))
+                foreach (var message in SubResourceText(text, reference.Groups["id"].Value, code))
                 {
                     yield return (new Entry(Blank(contexts[nodePath]), message, null), path);
                 }
@@ -154,14 +170,12 @@ internal static partial class TranslationTemplate
         }
     }
 
-    private static bool IsSceneText(string key) => _nativeSceneText.Contains(key) || Code.ComponentText.Contains(key);
-
-    private static IEnumerable<string> SubResourceText(string scene, string id)
+    private static IEnumerable<string> SubResourceText(string scene, string id, CodeText code)
     {
         var block = SubResourceBlock().Matches(scene).FirstOrDefault(match => match.Groups["id"].Value == id);
         return block is null
             ? []
-            : Properties(block.Value).Where(property => IsSceneText(property.Key)).SelectMany(property => GodotStrings(property.Value));
+            : Properties(block.Value).Where(property => code.IsSceneText(property.Key)).SelectMany(property => GodotStrings(property.Value));
     }
 
     private static string? Blank(string? context) => string.IsNullOrEmpty(context) ? null : context;
@@ -205,56 +219,6 @@ internal static partial class TranslationTemplate
 
     // ---- C# ----
 
-    /// <summary>The pure libs and <c>project/src</c> in one compilation, so text can be followed across them.</summary>
-    private static class Code
-    {
-        private static readonly Lazy<IReadOnlyList<CSharpSources.Source>> _sources = new(Load);
-        private static readonly Lazy<CSharpCompilation> _compilation = new(() => CSharpSources.CompileWithLibs(Sources()));
-        private static readonly Lazy<HashSet<string>> _componentText = new(ReadComponentText);
-
-        public static IReadOnlyList<CSharpSources.Source> Sources() => _sources.Value;
-
-        /// <summary>Exported text properties of our components, by their saved name.</summary>
-        public static HashSet<string> ComponentText => _componentText.Value;
-
-        public static bool IsGallery(string scriptPath) =>
-            _galleryScripts.Value.Contains(scriptPath.Replace("res://src/", "project/src/", StringComparison.Ordinal));
-
-        private static readonly Lazy<HashSet<string>> _galleryScripts = new(() =>
-        {
-            var compilation = _compilation.Value;
-            var gallery = compilation.GetTypeByMetadataName("NodeRunner.Ui.Screens.GalleryScreen");
-            return Sources()
-                .Where(source => source.Tree.GetRoot().DescendantNodes().OfType<ClassDeclarationSyntax>()
-                    .Any(type => CSharpSources.DerivesFrom(compilation.GetSemanticModel(source.Tree).GetDeclaredSymbol(type), gallery)))
-                .Select(source => source.Path)
-                .ToHashSet(StringComparer.Ordinal);
-        });
-
-        private static IReadOnlyList<CSharpSources.Source> Load()
-        {
-            var root = SceneNodes.FindRepositoryRoot();
-            return new[] { "libs", "project/src" }
-                .SelectMany(folder => Directory.EnumerateFiles(System.IO.Path.Combine(root, folder), "*.cs", SearchOption.AllDirectories))
-                .Where(path => !path.Contains("/obj/", StringComparison.Ordinal) && !path.Contains("/bin/", StringComparison.Ordinal))
-                .Order(StringComparer.Ordinal)
-                .Select(path => new CSharpSources.Source(
-                    System.IO.Path.GetRelativePath(root, path).Replace('\\', '/'),
-                    CSharpSyntaxTree.ParseText(File.ReadAllText(path), path: path)))
-                .ToList();
-        }
-
-        private static HashSet<string> ReadComponentText()
-        {
-            return _compilation.Value.GetSymbolsWithName(_ => true, SymbolFilter.Member)
-                .OfType<IPropertySymbol>()
-                .Where(property => property.GetAttributes().Any(attribute => attribute.AttributeClass?.Name == "ExportAttribute")
-                    && CodeText.IsSinkProperty(property))
-                .Select(property => property.Name)
-                .ToHashSet(StringComparer.Ordinal);
-        }
-    }
-
     /// <summary>
     /// Follows constant text in C# to where it is shown: a translated Godot text property, one of
     /// our components' or popups' text properties, or a <c>UiText</c> factory. It follows
@@ -268,16 +232,38 @@ internal static partial class TranslationTemplate
         private readonly IReadOnlyList<CSharpSources.Source> _sources;
         private readonly List<string> _problems;
         private readonly CSharpCompilation _compilation;
+        private readonly HashSet<string> _componentText;
+        private readonly HashSet<string> _galleryScripts;
 
         // Every value that flows into a symbol: what is assigned to it, passed as it, or returned by it.
-        private readonly Dictionary<ISymbol, List<(ExpressionSyntax Value, string Source)>> _feeds = new(SymbolEqualityComparer.Default);
+        private readonly Dictionary<ISymbol, List<Seed>> _feeds = new(SymbolEqualityComparer.Default);
 
         public CodeText(IReadOnlyList<CSharpSources.Source> sources, List<string> problems)
         {
             _sources = sources;
             _problems = problems;
             _compilation = CSharpSources.CompileWithLibs(sources);
+            _componentText = _compilation.GetSymbolsWithName(_ => true, SymbolFilter.Member)
+                .OfType<IPropertySymbol>()
+                .Where(property => property.GetAttributes().Any(attribute => attribute.AttributeClass?.Name == "ExportAttribute") && IsSinkProperty(property))
+                .Select(property => property.Name)
+                .ToHashSet(StringComparer.Ordinal);
+            var gallery = _compilation.GetTypeByMetadataName("NodeRunner.Ui.Screens.GalleryScreen");
+            _galleryScripts = sources
+                .Where(source => source.Tree.GetRoot().DescendantNodes().OfType<ClassDeclarationSyntax>()
+                    .Any(type => CSharpSources.DerivesFrom(_compilation.GetSemanticModel(source.Tree).GetDeclaredSymbol(type), gallery)))
+                .Select(source => source.Path)
+                .ToHashSet(StringComparer.Ordinal);
         }
+
+        /// <summary>
+        /// Godot's translated node properties, or one of our components' exported text properties,
+        /// by its saved name.
+        /// </summary>
+        public bool IsSceneText(string key) => _nativeSceneText.Contains(key) || _componentText.Contains(key);
+
+        /// <summary>A gallery screen's script, by its path from the repository root.</summary>
+        public bool IsGallery(string path) => _galleryScripts.Contains(path);
 
         /// <summary>A property whose text the player sees, translated by Godot.</summary>
         public static bool IsSinkProperty(IPropertySymbol property)
@@ -299,7 +285,7 @@ internal static partial class TranslationTemplate
 
         public IEnumerable<(Entry Entry, string Source)> Messages()
         {
-            var seeds = new List<(ExpressionSyntax Value, string Source)>();
+            var seeds = new List<Seed>();
             var messages = new List<(Entry, string)>();
             foreach (var source in _sources)
             {
@@ -310,10 +296,10 @@ internal static partial class TranslationTemplate
                 }
             }
 
-            return messages.Concat(Follow(seeds));
+            return messages.Concat(Follow(seeds)).Where(message => !IsGallery(message.Item2));
         }
 
-        private void Index(SyntaxNode node, SemanticModel model, CSharpSources.Source source, List<(ExpressionSyntax, string)> seeds, List<(Entry, string)> messages)
+        private void Index(SyntaxNode node, SemanticModel model, CSharpSources.Source source, List<Seed> seeds, List<(Entry, string)> messages)
         {
             switch (node)
             {
@@ -352,11 +338,11 @@ internal static partial class TranslationTemplate
             }
         }
 
-        private void Feed(ISymbol target, ExpressionSyntax value, CSharpSources.Source source, List<(ExpressionSyntax, string)> seeds)
+        private void Feed(ISymbol target, ExpressionSyntax value, CSharpSources.Source source, List<Seed> seeds)
         {
             if (target is IPropertySymbol property && IsSinkProperty(property))
             {
-                seeds.Add((value, source.Path));
+                seeds.Add(new Seed(value, source.Path, MustBeKnown: false));
                 return;
             }
 
@@ -365,7 +351,7 @@ internal static partial class TranslationTemplate
                 _feeds[target.OriginalDefinition] = feeds = [];
             }
 
-            feeds.Add((value, source.Path));
+            feeds.Add(new Seed(value, source.Path, MustBeKnown: false));
 
             // A record's positional parameter is its property.
             if (target is IParameterSymbol { ContainingSymbol: IMethodSymbol { MethodKind: MethodKind.Constructor } constructor } parameter
@@ -376,14 +362,15 @@ internal static partial class TranslationTemplate
             }
         }
 
-        // The constant text reachable from shown values, through the symbols that carry it.
-        private IEnumerable<(Entry, string)> Follow(List<(ExpressionSyntax Value, string Source)> seeds)
+        // The constant text reachable from shown values, through the symbols that carry it. A seed
+        // that must be known, a UiText's message, reports every value it can't trace to text.
+        private IEnumerable<(Entry, string)> Follow(List<Seed> seeds)
         {
-            var visited = new HashSet<ISymbol>(SymbolEqualityComparer.Default);
-            var pending = new Queue<(ExpressionSyntax Value, string Source)>(seeds);
+            var visited = new HashSet<(ISymbol, bool)>();
+            var pending = new Queue<Seed>(seeds);
             while (pending.TryDequeue(out var item))
             {
-                if (Code.IsGallery(item.Source))
+                if (IsGallery(item.Source))
                 {
                     continue;
                 }
@@ -391,22 +378,33 @@ internal static partial class TranslationTemplate
                 var model = _compilation.GetSemanticModel(item.Value.SyntaxTree);
                 foreach (var leaf in Leaves(item.Value, model))
                 {
-                    if (leaf is string text)
+                    switch (leaf)
                     {
-                        yield return (new Entry(null, text, null), item.Source);
-                    }
-                    else if (leaf is ISymbol symbol && visited.Add(symbol.OriginalDefinition) && _feeds.TryGetValue(symbol.OriginalDefinition, out var feeds))
-                    {
-                        foreach (var feed in feeds)
-                        {
-                            pending.Enqueue(feed);
-                        }
+                        case string text:
+                            yield return (new Entry(null, text, null), item.Source);
+                            break;
+                        case ISymbol symbol when _feeds.TryGetValue(symbol.OriginalDefinition, out var feeds):
+                            if (visited.Add((symbol.OriginalDefinition, item.MustBeKnown)))
+                            {
+                                foreach (var feed in feeds)
+                                {
+                                    pending.Enqueue(feed with { MustBeKnown = item.MustBeKnown });
+                                }
+                            }
+
+                            break;
+                        case var unknown when item.MustBeKnown:
+                            var expression = unknown as ExpressionSyntax ?? item.Value;
+                            _problems.Add(_sources.Single(source => source.Tree == expression.SyntaxTree).Describe(expression)
+                                + " — a UiText needs literal text, or text that can be traced to one");
+                            break;
                     }
                 }
             }
         }
 
-        // The constants and symbols an expression's value can come from.
+        // The constants and symbols an expression's value can come from; any other expression is
+        // returned as itself, as text that can't be traced.
         private static IEnumerable<object> Leaves(ExpressionSyntax value, SemanticModel model)
         {
             if (model.GetConstantValue(value) is { HasValue: true, Value: string constant })
@@ -427,7 +425,7 @@ internal static partial class TranslationTemplate
                 IdentifierNameSyntax or MemberAccessExpressionSyntax or InvocationExpressionSyntax or ElementAccessExpressionSyntax
                     when CSharpSources.Symbol(model, value is ElementAccessExpressionSyntax element ? element.Expression : value) is { } symbol
                     && symbol is IPropertySymbol or IFieldSymbol or ILocalSymbol or IParameterSymbol or IMethodSymbol => [symbol],
-                _ => [],
+                _ => [value],
             };
         }
 
@@ -446,7 +444,7 @@ internal static partial class TranslationTemplate
                 : null;
 
         private IEnumerable<(Entry, string)> UiTextMessages(
-            InvocationExpressionSyntax call, IMethodSymbol factory, SemanticModel model, CSharpSources.Source source, List<(ExpressionSyntax, string)> seeds)
+            InvocationExpressionSyntax call, IMethodSymbol factory, SemanticModel model, CSharpSources.Source source, List<Seed> seeds)
         {
             if (source.Path.EndsWith("/UiText.cs", StringComparison.Ordinal) || call.ArgumentList.Arguments.Count == 0)
             {
@@ -467,8 +465,8 @@ internal static partial class TranslationTemplate
             }
             else if (plural is null && context is null)
             {
-                // Plain text from elsewhere, such as a data table: follow it like shown text.
-                seeds.Add((message, source.Path));
+                // Plain text from elsewhere, such as a data table: follow it to its literal.
+                seeds.Add(new Seed(message, source.Path, MustBeKnown: true));
             }
             else
             {
@@ -483,6 +481,9 @@ internal static partial class TranslationTemplate
             type.SpecialType == SpecialType.System_String
             || type is IArrayTypeSymbol { ElementType.SpecialType: SpecialType.System_String }
             || type is INamedTypeSymbol { Name: "IEnumerable" or "IReadOnlyList", TypeArguments: [{ SpecialType: SpecialType.System_String }] };
+
+        /// <summary>A value whose text is followed, and whether it must all be traced to literals.</summary>
+        private sealed record Seed(ExpressionSyntax Value, string Source, bool MustBeKnown);
 
         private static bool Derives(ITypeSymbol? type, string godotType)
         {
