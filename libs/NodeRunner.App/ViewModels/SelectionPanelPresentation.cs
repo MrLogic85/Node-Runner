@@ -6,11 +6,11 @@ namespace NodeRunner.App.ViewModels;
 /// Creation hides. <see cref="EmptyNote"/> shows when there are neither settings nor a frame.
 /// </summary>
 public sealed record SelectionPanelPresentation(
-    string Title,
+    UiText Title,
     IReadOnlyList<ParameterSlider> Settings,
     string SettingsNote,
     string EmptyNote,
     bool ShowFrameRows,
-    string DeleteText,
+    UiText DeleteText,
     string DeleteNote,
     bool CanDelete);

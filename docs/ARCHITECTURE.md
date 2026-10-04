@@ -346,7 +346,7 @@ window. All four live in `ui/lib`, not `managers/`, because managers hold no UI.
 
 ## UI text and translation
 
-Godot translates UI text (`TranslationServer`, `Tr`/`TrN`, gettext PO), and
+Godot translates UI text (`TranslationServer`, gettext PO), and
 the English source text is the msgid (#682). Text written in a scene is
 translated by its Control. Text a view-model builds is a `UiText`
 (`NodeRunner.App/ViewModels`). It holds the message, its plural and count,
@@ -354,8 +354,8 @@ its arguments, and a context. App never renders it as English, so its tests
 compare `UiText` values. On the Godot side, `UiTextTranslation` (`ui/widgets`)
 is the one place that turns a `UiText` into the player's language.
 `docs/UI_DIRECTION.md` → "Text and translation" owns the rules for showing
-it. The rules apply to new and migrated text; the creation card is migrated,
-and #751 and #752 move the remaining App text that is still built as English.
+it. The rules apply to new and migrated text; counted text is migrated (#751),
+and #752 moves the remaining App text that is still built as English.
 
 ## Threading
 

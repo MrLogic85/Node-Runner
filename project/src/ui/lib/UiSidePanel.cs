@@ -21,6 +21,7 @@ public partial class UiSidePanel : MarginContainer
     private const double _collapseSeconds = 0.2;
 
     private string _title = "";
+    private Func<string>? _titleSource;
     private UiIconId _iconId = UiIconId.None;
     private bool _collapsed;
     private Control? _pressedTarget;
@@ -35,6 +36,20 @@ public partial class UiSidePanel : MarginContainer
         set
         {
             _title = value;
+            Refresh();
+        }
+    }
+
+    /// <summary>
+    /// Already translated text shown instead of <see cref="Title"/>; asked again when the language
+    /// changes, with the title labels' own auto-translation off meanwhile. Null shows Title.
+    /// </summary>
+    public Func<string>? TitleSource
+    {
+        get => _titleSource;
+        set
+        {
+            _titleSource = value;
             Refresh();
         }
     }
@@ -119,6 +134,10 @@ public partial class UiSidePanel : MarginContainer
             RedrawIcons();
             QueueRedraw();
         }
+        else if (what == NotificationTranslationChanged && TitleSource is not null)
+        {
+            Refresh();
+        }
     }
 
     public override void _Draw() =>
@@ -137,10 +156,13 @@ public partial class UiSidePanel : MarginContainer
         }
 
         GetNode<Control>("%SidePanelIcon").Visible = IconId != UiIconId.None;
-        GetNode<Label>("%SidePanelTitle").Text = Title;
+        var title = TitleSource?.Invoke() ?? Title;
+        var titleLabel = GetNode<Label>("%SidePanelTitle");
+        titleLabel.AutoTranslateMode = TitleSource is null ? AutoTranslateModeEnum.Inherit : AutoTranslateModeEnum.Disabled;
+        titleLabel.Text = title;
         var tabLabel = GetNode<UiVerticalLabel>("%SidePanelTabLabel");
-        tabLabel.Text = Title;
-        tabLabel.Visible = Title.Length > 0;
+        tabLabel.Text = title;
+        tabLabel.Visible = title.Length > 0;
         RedrawIcons();
     }
 

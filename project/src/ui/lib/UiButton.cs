@@ -28,6 +28,8 @@ public sealed partial class UiButton : Button, ISerializationListener
     private bool _squareContent;
     private float _progress = -1f;
     private bool _refreshingStyle;
+    private Func<string>? _textSource;
+    private AutoTranslateModeEnum _authoredTranslateMode;
     private float _holdDurationSeconds = UiComponentContracts.HoldCompletionSeconds;
     private bool _holdToActivate;
     private double _holdElapsedSeconds;
@@ -232,11 +234,44 @@ public sealed partial class UiButton : Button, ISerializationListener
         }
     }
 
+    /// <summary>
+    /// Already translated text for <c>Text</c>, as on <see cref="UiLabel.TextSource"/>: the button
+    /// asks again when the language changes, and its own auto-translation is off meanwhile.
+    /// </summary>
+    public Func<string>? TextSource
+    {
+        get => _textSource;
+        set
+        {
+            if (_textSource is null && value is not null)
+            {
+                _authoredTranslateMode = AutoTranslateMode;
+            }
+            else if (_textSource is not null && value is null)
+            {
+                AutoTranslateMode = _authoredTranslateMode;
+            }
+
+            _textSource = value;
+            if (value is not null)
+            {
+                AutoTranslateMode = AutoTranslateModeEnum.Disabled;
+                Text = value();
+            }
+        }
+    }
+
     public override void _Notification(int what)
     {
         if (_unsaved.Handle(this, what, RefreshStyle))
         {
             return;
+        }
+
+        // Like UiLabel: with auto-translation off the button gets no notice on entering the tree.
+        if (_textSource is not null && (what == NotificationTranslationChanged || what == NotificationEnterTree))
+        {
+            Text = _textSource();
         }
 
         if (what == NotificationParented)

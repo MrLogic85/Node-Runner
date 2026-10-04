@@ -32,8 +32,8 @@ public sealed class TrainSetupPresentationViewModel
         CreationId = creation.Id;
         Title = $"Train {creation.Name}";
         Subtitle = creation.Training is { } training
-            ? $"{CreationCardPresentation.FormatCount(training.Generation, "generation")} so far"
-            : "Not trained yet";
+            ? UiText.Counted("{0} generation so far", "{0} generations so far", training.Generation)
+            : UiText.Plain("Not trained yet");
         Settings = creation.TrainSettings ?? TrainSettingsDef.Default;
         CanSimulate = creation.Training is not null;
     }
@@ -44,7 +44,7 @@ public sealed class TrainSetupPresentationViewModel
 
     public string Title { get; }
 
-    public string Subtitle { get; }
+    public UiText Subtitle { get; }
 
     public string MapName => Maps.Default.Name;
 

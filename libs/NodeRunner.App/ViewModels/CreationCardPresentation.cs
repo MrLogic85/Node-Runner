@@ -24,11 +24,6 @@ public sealed record CreationCardPresentation(
             UiText.Counted("{0} node", "{0} nodes", creature.Nodes.Count),
             UiText.Counted("{0} beam", "{0} beams", creature.Beams.Count),
             UiText.Counted("{0} sensor", "{0} sensors", creature.Sensors.Count));
-
-    internal static string FormatCount(int count, string singular) =>
-        count == 1
-            ? $"1 {singular}"
-            : $"{count} {singular}s";
 }
 
 /// <summary>

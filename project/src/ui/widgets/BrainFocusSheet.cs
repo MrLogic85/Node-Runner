@@ -16,7 +16,7 @@ public partial class BrainFocusSheet : Control
 
     private Control Sheet => GetNode<Control>("%Sheet");
 
-    private Label Summary => GetNode<Label>("%Summary");
+    private UiLabel Summary => GetNode<UiLabel>("%Summary");
 
     private Label Selected => GetNode<Label>("%Selected");
 
@@ -96,9 +96,7 @@ public partial class BrainFocusSheet : Control
             return;
         }
 
-        Summary.Text = _presentation.HasNetwork
-            ? $"{_presentation.Summary}. Solid blue: pushes up. Dashed red: pushes down. Thicker: stronger."
-            : _presentation.Summary;
+        Summary.ShowText(_presentation.Summary);
         Selected.Text = _presentation.SelectionText;
     }
 }

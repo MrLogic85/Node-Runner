@@ -23,7 +23,7 @@ an option.
   even if that means learning a new part of the engine. Examples: physics
   (`RigidBody2D` and joints), themes and theme type variations, containers
   for layout, stretch and `ContentScaleFactor` for UI size, `DPITexture`,
-  and translation (`TranslationServer`, `Tr`/`TrN`) for text (#682).
+  and translation (`TranslationServer`) for text (#682).
 - Write our own only when Godot cannot do what we need. Say why in the code
   or the owning doc, naming what was checked. "Ours is simpler" or "we
   didn't know" is not a reason.

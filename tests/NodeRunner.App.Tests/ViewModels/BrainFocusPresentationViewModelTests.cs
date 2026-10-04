@@ -35,7 +35,10 @@ public sealed class BrainFocusPresentationViewModelTests
         var viewModel = Live();
 
         viewModel.HasNetwork.ShouldBeTrue();
-        viewModel.Summary.ShouldBe("3 senses → 2 outputs");
+        viewModel.Summary.ShouldBe(UiText.Format(
+            "{0} → {1}. Solid blue: pushes up. Dashed red: pushes down. Thicker: stronger.",
+            UiText.Counted("{0} sense", "{0} senses", 3),
+            UiText.Counted("{0} output", "{0} outputs", 2)));
         viewModel.Layers.Select(layer => layer.Title).ShouldBe(["Senses", "Outputs"]);
         viewModel.Layers[0].Neurons.Select(neuron => neuron.Label).ShouldBe(_labels.Inputs);
         viewModel.Layers[1].Neurons.Select(neuron => neuron.Label).ShouldBe(_labels.Outputs);
@@ -143,7 +146,7 @@ public sealed class BrainFocusPresentationViewModelTests
         viewModel.HasNetwork.ShouldBeFalse();
         viewModel.Layers.ShouldBeEmpty();
         viewModel.Edges.ShouldBeEmpty();
-        viewModel.Summary.ShouldBe("Waiting for a live brain");
+        viewModel.Summary.ShouldBe(UiText.Plain("Waiting for a live brain"));
         notifications.ShouldBe(1);
     }
 

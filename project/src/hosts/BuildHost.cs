@@ -6,6 +6,7 @@ using NodeRunner.Domain;
 using NodeRunner.Managers;
 using NodeRunner.Ui.Lib;
 using NodeRunner.Ui.Screens;
+using NodeRunner.Ui.Widgets;
 
 namespace NodeRunner.Hosts;
 
@@ -284,7 +285,7 @@ public partial class BuildHost : Node, IRoutedScene
             return;
         }
 
-        var warning = new BuildPresentationViewModel(Build).ResetTrainingWarning;
+        var warning = UiTextTranslation.Source(new BuildPresentationViewModel(Build).ResetTrainingWarning);
         _dialog.Open(CreationActions.ResetTrainingDialog(warning, ResetActiveCreationTraining));
     }
 

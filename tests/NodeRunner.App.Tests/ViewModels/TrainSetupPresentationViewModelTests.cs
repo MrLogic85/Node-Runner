@@ -12,7 +12,7 @@ public sealed class TrainSetupPresentationViewModelTests
         var setup = new TrainSetupPresentationViewModel(Creation());
 
         setup.Title.ShouldBe("Train Worm");
-        setup.Subtitle.ShouldBe("Not trained yet");
+        setup.Subtitle.ShouldBe(UiText.Plain("Not trained yet"));
         setup.MapName.ShouldBe("Flat ground");
         setup.Settings.ShouldBe(TrainSettingsDef.Default);
         setup.Shadows.Readout.ShouldBe("8");
@@ -24,7 +24,7 @@ public sealed class TrainSetupPresentationViewModelTests
     {
         var setup = new TrainSetupPresentationViewModel(Creation(new TrainSettingsDef(TrainSettingsDef.MaxShadows, TrainSettingsDef.MinRunLengthSeconds), generation: 12));
 
-        setup.Subtitle.ShouldBe("12 generations so far");
+        setup.Subtitle.ShouldBe(UiText.Counted("{0} generation so far", "{0} generations so far", 12));
         setup.Shadows.Position.ShouldBe(1);
         setup.RunLength.Position.ShouldBe(0);
     }

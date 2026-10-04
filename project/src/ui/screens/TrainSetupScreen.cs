@@ -2,6 +2,7 @@ using Godot;
 using NodeRunner.App.Navigation;
 using NodeRunner.App.ViewModels;
 using NodeRunner.Ui.Lib;
+using NodeRunner.Ui.Widgets;
 
 namespace NodeRunner.Ui.Screens;
 
@@ -84,7 +85,7 @@ public partial class TrainSetupScreen : Control
         }
 
         GetNode<UiLabel>("%Title").Text = _presentation.Title;
-        GetNode<UiLabel>("%Subtitle").Text = _presentation.Subtitle;
+        GetNode<UiLabel>("%Subtitle").ShowText(_presentation.Subtitle);
         GetNode<UiLabel>("%MapName").Text = _presentation.MapName;
         var mode = GetNode<UiSegmentedSwitch>("%ModeSwitch");
         mode.Segments[_simulateSegment].Disabled = !_presentation.CanSimulate;
