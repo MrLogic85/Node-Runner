@@ -4,10 +4,17 @@ namespace NodeRunner.ML.Tests;
 
 public sealed class NeuralNetworkTests
 {
+    private static NeuralNetwork Network(int[] layers, int seed)
+    {
+        var random = new Random(seed);
+        var genome = Enumerable.Range(0, NeuralNetwork.GenomeLength(layers)).Select(_ => (random.NextDouble() * 2) - 1).ToArray();
+        return NeuralNetwork.FromGenome(layers, genome, Activation.Tanh);
+    }
+
     [Fact]
     public void Forward_ReturnsOutputLayerShape()
     {
-        var network = new NeuralNetwork(new[] { 3, 4, 2 }, Activation.Tanh, new Random(123));
+        var network = Network(new[] { 3, 4, 2 }, 123);
 
         var output = network.Forward(new[] { 0.1, -0.2, 0.3 });
 
@@ -15,19 +22,10 @@ public sealed class NeuralNetworkTests
     }
 
     [Fact]
-    public void Constructor_WithSameSeed_InitializesDeterministically()
-    {
-        var first = new NeuralNetwork(new[] { 2, 3, 1 }, Activation.Tanh, new Random(123));
-        var second = new NeuralNetwork(new[] { 2, 3, 1 }, Activation.Tanh, new Random(123));
-
-        first.FlattenGenome().ShouldBe(second.FlattenGenome());
-    }
-
-    [Fact]
     public void Forward_WithSameSeedAndInput_IsDeterministic()
     {
-        var first = new NeuralNetwork(new[] { 2, 3, 1 }, Activation.Tanh, new Random(123));
-        var second = new NeuralNetwork(new[] { 2, 3, 1 }, Activation.Tanh, new Random(123));
+        var first = Network(new[] { 2, 3, 1 }, 123);
+        var second = Network(new[] { 2, 3, 1 }, 123);
         var input = new[] { 0.25, -0.75 };
 
         first.Forward(input).ShouldBe(second.Forward(input), tolerance: 0.000000000001);
@@ -170,18 +168,17 @@ public sealed class NeuralNetworkTests
     [Fact]
     public void InvalidArguments_ThrowClearExceptions()
     {
-        Should.Throw<ArgumentException>(() => new NeuralNetwork(new[] { 1 }, Activation.Tanh, new Random(1)));
-        Should.Throw<ArgumentOutOfRangeException>(() => new NeuralNetwork(new[] { 1, 0 }, Activation.Tanh, new Random(1)));
-        Should.Throw<ArgumentNullException>(() => new NeuralNetwork(new[] { 1, 1 }, Activation.Tanh, null!));
-        Should.Throw<ArgumentOutOfRangeException>(() => new NeuralNetwork(new[] { 1, 1 }, (Activation)999, new Random(1)));
+        Should.Throw<ArgumentException>(() => NeuralNetwork.FromGenome(new[] { 1 }, [], Activation.Tanh));
+        Should.Throw<ArgumentOutOfRangeException>(() => NeuralNetwork.FromGenome(new[] { 1, 0 }, [], Activation.Tanh));
+        Should.Throw<ArgumentNullException>(() => NeuralNetwork.FromGenome(new[] { 1, 1 }, null!, Activation.Tanh));
         Should.Throw<ArgumentOutOfRangeException>(() => NeuralNetwork.FromGenome(new[] { 1, 1 }, new[] { 1.0, 0.0 }, (Activation)999));
         Should.Throw<ArgumentException>(() => NeuralNetwork.FromGenome(new[] { 1, 1 }, new[] { 1.0 }, Activation.Tanh));
 
-        var network = new NeuralNetwork(new[] { 2, 1 }, Activation.Tanh, new Random(1));
+        var network = Network(new[] { 2, 1 }, 1);
         Should.Throw<ArgumentException>(() => network.Forward(new[] { 1.0 }));
         Should.Throw<ArgumentException>(() => network.Forward(new[] { 1.0, 2.0 }, new double[2]));
 
-        var sameShapeNetwork = new NeuralNetwork(new[] { 2, 2 }, Activation.Tanh, new Random(1));
+        var sameShapeNetwork = Network(new[] { 2, 2 }, 1);
         var aliasedBuffer = new[] { 1.0, 2.0 };
         Should.Throw<ArgumentException>(() => sameShapeNetwork.Forward(aliasedBuffer, aliasedBuffer));
 

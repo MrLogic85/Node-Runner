@@ -297,7 +297,7 @@ public partial class Evolver : Node
     private void StartCandidate(int slot, int genomeIndex)
     {
         var brain = NeuralNetwork.FromGenome(_layerSizes, _genomes[genomeIndex], Activation.Tanh, _outputActivations);
-        _creatures[slot].SetBrain(brain, seed: (Generation * _genomes.Length) + genomeIndex);
+        _creatures[slot].SetBrain(brain);
         _trialControllers[slot].StartTrial(_creatures[slot]);
     }
 

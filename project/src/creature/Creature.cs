@@ -77,9 +77,11 @@ public partial class Creature : Node2D
 
     public VisualTheme Theme { get; set; } = VisualTheme.Neon;
 
+    /// <summary>The brain driving the creature; <c>null</c> until training or Simulate sets one.</summary>
     public NeuralNetwork? Brain { get; private set; }
 
-    public int BrainSeed { get; private set; }
+    /// <summary>Whether the creature has motors for a brain to drive.</summary>
+    public bool HasMotors => _outputCount > 0;
 
     public bool IsBuilt => _isBuilt;
 
@@ -138,11 +140,7 @@ public partial class Creature : Node2D
         _selection = null;
         Build(definition);
         ResetSensors();
-
-        if (_outputCount > 0)
-        {
-            RandomizeBrain(CreateSeed());
-        }
+        Brain = null;
     }
 
     // Builds every body, joint, sensor and picture afresh from the definition, in its built shape
@@ -169,28 +167,11 @@ public partial class Creature : Node2D
         ApplyShadow();
     }
 
-    public void RandomizeBrain(int seed)
-    {
-        if (_outputCount == 0)
-        {
-            Brain = null;
-            BrainSeed = seed;
-            return;
-        }
-
-        BrainSeed = seed;
-        var random = new Random(seed);
-        Brain = new NeuralNetwork(DirectBrain.LayerSizes(Ports), Activation.Tanh, random, DirectBrain.OutputActivations(Ports));
-
-        GD.Print($"Node Runner brain seed: {seed}");
-    }
-
     /// <summary>
-    /// Assigns a specific brain (e.g. a candidate genome from a trial or
-    /// generation) instead of randomizing a new one. The brain's layer sizes
-    /// must match this creature's brain ports.
+    /// Assigns the brain to drive the creature, e.g. a candidate genome from a trial or the saved
+    /// brain in Simulate. The brain's layer sizes must match this creature's brain ports.
     /// </summary>
-    public void SetBrain(NeuralNetwork brain, int seed)
+    public void SetBrain(NeuralNetwork brain)
     {
         ArgumentNullException.ThrowIfNull(brain);
 
@@ -205,7 +186,6 @@ public partial class Creature : Node2D
         }
 
         Brain = brain;
-        BrainSeed = seed;
     }
 
     /// <summary>
@@ -853,11 +833,6 @@ public partial class Creature : Node2D
 
         var projection = Mathf.Clamp((point - start).Dot(segment) / segmentLengthSquared, 0, 1);
         return point.DistanceSquaredTo(start + (segment * projection));
-    }
-
-    private static int CreateSeed()
-    {
-        return Random.Shared.Next(int.MinValue, int.MaxValue);
     }
 
     private static Vector2 ToGodot(Vector2D value)
