@@ -22,7 +22,15 @@ public static class CreationExamples
         UiText.Plain("A piston arches its back: an inchworm crawl."),
         CreateWormCreature());
 
-    public static IReadOnlyList<CreationExample> All { get; } = [Worm];
+    public static readonly Guid FrogId = Guid.Parse("5c0f7a2e-8d41-4b6a-9f3e-2a7d1c9b4e60");
+
+    public static CreationExample Frog { get; } = new(
+        FrogId,
+        UiText.Plain("Frog"),
+        UiText.Plain("Three pistons work one leg: the brain must time them together."),
+        CreateFrogCreature());
+
+    public static IReadOnlyList<CreationExample> All { get; } = [Worm, Frog];
 
     /// <summary>
     /// An inchworm: a flat tail and a high hump at the front, with a Piston under the hump. Pulling
@@ -61,5 +69,46 @@ public static class CreationExamples
         var pistons = new[] { new PistonDef(10, 2, 4) };
 
         return new CreatureDef(nodes, beams, sensors, pistons, nextPartId: 11);
+    }
+
+    /// <summary>
+    /// A frog seen from the side, facing right (#811): a rigid body triangle (hip, head, front foot)
+    /// and a folded hind leg (hip, knee, heel, toe). Three Pistons work the leg: front foot to knee
+    /// swings the thigh, hip to heel opens the knee, knee to toe turns the foot. Every joint is
+    /// passive (#450), so the body only holds its shape while the Pistons push, and a hop needs all
+    /// three at once.
+    /// </summary>
+    public static CreatureDef CreateFrogCreature()
+    {
+        var nodes = new[]
+        {
+            new NodeDef(1, new Vector2D(0, -180)),
+            new NodeDef(2, new Vector2D(200, -190)),
+            new NodeDef(3, new Vector2D(210, 0)),
+            new NodeDef(4, new Vector2D(120, -35)),
+            new NodeDef(5, new Vector2D(-50, -12)),
+            new NodeDef(6, new Vector2D(40, 0)),
+        };
+
+        var beams = new[]
+        {
+            new BeamDef(7, 1, 2),
+            new BeamDef(8, 2, 3),
+            new BeamDef(9, 1, 3),
+            new BeamDef(10, 1, 4),
+            new BeamDef(11, 4, 5),
+            new BeamDef(12, 5, 6),
+        };
+
+        var sensors = new[] { new SensorDef(13, 7, SensorKind.Accelerometer) };
+
+        var pistons = new[]
+        {
+            new PistonDef(14, 3, 4),
+            new PistonDef(15, 1, 5),
+            new PistonDef(16, 4, 6),
+        };
+
+        return new CreatureDef(nodes, beams, sensors, pistons, nextPartId: 17);
     }
 }

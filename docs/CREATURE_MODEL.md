@@ -431,6 +431,25 @@ with a flat tail and a high hump at the front, and a Piston under the hump.
 - **Inputs:** `1 accelerometer × 2` + `1 camera × 3` + `1 piston × 2` = 7.
 - **Outputs:** 2, the Piston's position and strength.
 
+## Worked example: the Frog
+
+`CreationExamples.CreateFrogCreature` builds the Frog example (#811), the
+first with several motors: a frog seen from the side, facing right.
+
+- **6 nodes:** hip `N1`, head `N2` and front foot `N3` form a rigid body
+  triangle (beams `N1`–`N2`, `N2`–`N3`, `N1`–`N3`); the hind leg folds
+  from the hip through the knee `N4` and heel `N5` to the toe `N6`
+  (beams `N1`–`N4`, `N4`–`N5`, `N5`–`N6`).
+- **3 Pistons** with the default settings: `N3`–`N4` swings the thigh,
+  `N1`–`N5` opens the knee and `N4`–`N6` turns the foot. Joints are
+  passive, so the leg only holds its shape while the Pistons push, and a
+  hop needs all three at once.
+- **1 accelerometer** on the back beam (`N1`–`N2`).
+- **Inputs:** `1 accelerometer × 2` + `3 pistons × 2` = 8.
+- **Outputs:** 6, each Piston's position and strength.
+- A three-Piston frog like this one is the evidence for how generation 0
+  starts (`docs/TRAINING_LOOP.md` → "Generation 0").
+
 ## What this model does not cover yet
 
 These are deliberate future ideas, not oversights — do not build them
