@@ -76,7 +76,18 @@ public sealed class BuildPartsTrayTests
 
         zone.Parent.ShouldEndWith("/CanvasSlot");
         zone.Node.Body.ShouldContain("mouse_filter = 2");
-        canvas.Node.Body.ShouldContain("PartDropZone = NodePath(\"../PartDropZone\")");
+        canvas.Node.Body.ShouldContain("PartDropZone = NodePath(\"../../../PartDropZone\")");
+    }
+
+    [Fact]
+    public void Canvas_IsTheWorld_OfTheBuildView()
+    {
+        var view = _build.Single(node => node.Name == "BuildView");
+        var canvas = _build.Single(node => node.Name == "BuildCanvas");
+
+        view.Parent.ShouldEndWith("/CanvasSlot");
+        canvas.Parent.ShouldEndWith("/CanvasSlot/BuildView/WorldViewport");
+        canvas.Node.Body.ShouldContain("WorldView = NodePath(\"../..\")");
     }
 
     private static string[] Children(string parent) =>

@@ -17,10 +17,14 @@ public static class UiPixelSpace
     public static Transform2D Enter(CanvasItem canvas, Transform2D drawTransform)
     {
         ArgumentNullException.ThrowIfNull(canvas);
-        var itemToPixels = canvas.GetViewport().GetFinalTransform() * canvas.GetGlobalTransformWithCanvas();
+        var itemToPixels = ItemToPixels(canvas);
         canvas.DrawSetTransformMatrix(itemToPixels.AffineInverse());
         return itemToPixels * drawTransform;
     }
+
+    /// <summary>Maps <paramref name="canvas"/>'s own space to the window's pixels.</summary>
+    public static Transform2D ItemToPixels(CanvasItem canvas) =>
+        canvas.GetViewport().GetFinalTransform() * canvas.GetGlobalTransformWithCanvas();
 
     /// <summary>How many window pixels one unit of the mapped space is.</summary>
     public static float ScaleOf(Transform2D toPixels) => toPixels.BasisXform(Vector2.Right).Length();

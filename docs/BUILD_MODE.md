@@ -303,14 +303,16 @@ cannot train and returns to Creations.
 
 ## Touch input
 
-- `BuildCanvas` converts raw pointer positions to its own local space
-  with `GetGlobalTransformWithCanvas().AffineInverse() * screenPosition`, not
-  plain `ToLocal()`. Plain `ToLocal()`/`GetGlobalTransform()` ignore the
-  project's `canvas_items` stretch transform, so on a device whose native
-  resolution differs from the logical viewport (see `docs/UI_DIRECTION.md`), taps would land on the
-  wrong in-canvas position relative to what's rendered. Any future widget
-  that hit-tests pointer input against drawn content should use the same
-  pattern.
+- `BuildCanvas` lives in the world of the `BuildView` `UiWorldView` (#769).
+  The view takes every pointer event in its `_GuiInput`, maps it into the
+  world's pixels and pushes it in, where `BuildCanvas` reads it in
+  `_UnhandledInput`. It maps those positions to its own space with
+  `GetGlobalTransformWithCanvas().AffineInverse() * position`, which includes
+  the world viewport's canvas transform; plain `ToLocal()` does not. Any
+  widget that hit-tests pointer input against drawn content should do the
+  same. A part dragged from the tray is not a pointer event in
+  the world: the canvas asks the root viewport about the drag and maps the
+  slot's mouse position into its own space (`SlotTransform`).
 - `project.godot` keeps `input_devices/pointing/emulate_mouse_from_touch`
   enabled so Godot controls receive their native mouse-style input on Android
   touch devices. `BuildCanvas` is the exception: it needs every finger

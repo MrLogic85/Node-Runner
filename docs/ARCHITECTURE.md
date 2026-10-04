@@ -284,8 +284,10 @@ each edit as it settles and before it is left (#368); + New saves an empty
 creation first and opens it with `IsNew` (see `docs/BUILD_MODE.md`
 for when Build removes it again). Its layout
 is authored in `BuildScreen.tscn` (#364): the Build canvas is a
-`Node2D` inside the screen's clipped canvas slot, placed and scaled in the
-scene, so Build has no camera and taps reach the canvas through the UI. Training
+`Node2D` in the world of a `UiWorldView` (`BuildView`, #769) inside the
+screen's clipped canvas slot, placed and scaled in the scene. Build has no
+camera; `BuildView` passes taps into its world, and its handles and notes
+are controls in the slot above it. Training
 (`TrainingRoute`, #469) trains one saved creation: it
 builds the creature and the `Evolver` from the creation's save, resumes from its
 last finished generation and saves each finished one, so leaving drops only

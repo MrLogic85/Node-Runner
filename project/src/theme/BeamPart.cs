@@ -1,25 +1,28 @@
 using Godot;
+using NodeRunner.Domain;
+using NodeRunner.Ui.Lib;
 
 namespace NodeRunner.Theme;
 
 /// <summary>
 /// A beam (#767) from <see cref="A"/> to <see cref="B"/>: a flat rod hidden under the joint rings it
-/// stops on (#626) and, while selected, a <c>halo</c> line along each side.
+/// stops on (#626), or centre to centre when the rings meet, and, while selected, a <c>halo</c>
+/// line along each side. The rod is drawn in window pixels (<see cref="UiPixelPen"/>) like the
+/// joints, so its edges stay smooth at any zoom.
 /// </summary>
 public partial class BeamPart : PartVisual
 {
-    // A Line2D keeps the rod's edges crisp and its ends flat; behind the part, so the selection
-    // lines stay on top.
-    private readonly Line2D _rod = new() { Antialiased = false, ShowBehindParent = true, Visible = false };
     private Vector2 _a;
     private Vector2 _b;
     private float _radiusA;
     private float _radiusB;
+    private bool _danger;
+    private bool _haloA;
+    private bool _haloB;
 
     public BeamPart()
         : base(CreatureLayers.Beams, CreatureLayers.SelectedLinks)
     {
-        AddChild(_rod, @internal: InternalMode.Front);
     }
 
     public Vector2 A
@@ -48,26 +51,50 @@ public partial class BeamPart : PartVisual
         set => Change(ref _radiusB, value);
     }
 
+    /// <summary>Too short to train (#593): drawn in <c>danger</c> until its joints move apart.</summary>
+    public bool Danger
+    {
+        get => _danger;
+        set => Change(ref _danger, value);
+    }
+
+    /// <summary>Whether joint A is selected too, so the selection lines end on its halo ring (#710).</summary>
+    public bool HaloA
+    {
+        get => _haloA;
+        set => Change(ref _haloA, value);
+    }
+
+    /// <summary>Whether joint B is selected too.</summary>
+    public bool HaloB
+    {
+        get => _haloB;
+        set => Change(ref _haloB, value);
+    }
+
     public override void _Draw()
     {
-        if (Selected && Span() is (var start, var end))
+        var (start, end) = JointDrawing.BeamSpan(Theme.JointRingWidth, A, RadiusA, B, RadiusB) ?? (A, B);
+        using (var pen = UiPixelPen.Begin(this))
         {
-            SelectionDrawing.DrawBeam(this, Transform2D.Identity, Theme.SelectionGlow, Theme.SelectedBeamOffset, Theme.SelectedBeamLineWidth, start, end);
+            pen.Line(start, end, Danger ? Theme.Danger : Theme.Beam, Theme.BeamWidth);
+        }
+
+        if (Selected)
+        {
+            var (lineStart, lineEnd) = JoinHalos(start, end, Theme.SelectedBeamOffset);
+            SelectionDrawing.DrawBeam(this, Transform2D.Identity, Theme.SelectionGlow, Theme.SelectedBeamOffset, Theme.SelectedBeamLineWidth, lineStart, lineEnd);
         }
     }
 
-    protected override void Changed()
+    /// <summary>
+    /// The selection lines from <paramref name="start"/> to <paramref name="end"/>, each end moved onto
+    /// its joint's halo ring when that joint is selected too, so a group reads as one outline (#710).
+    /// </summary>
+    private (Vector2 Start, Vector2 End) JoinHalos(Vector2 start, Vector2 end, float offset)
     {
-        base.Changed();
-        var span = Span();
-        _rod.Visible = span is not null;
-        if (span is (var start, var end))
-        {
-            _rod.Points = [start, end];
-            _rod.Width = Theme.BeamWidth;
-            _rod.DefaultColor = Theme.Beam;
-        }
+        var joinedStart = HaloA ? SelectionDrawing.LineEnd(A, B, (float)SelectionMarks.JointHalo(RadiusA), offset) : start;
+        var joinedEnd = HaloB ? SelectionDrawing.LineEnd(B, A, (float)SelectionMarks.JointHalo(RadiusB), offset) : end;
+        return (joinedEnd - joinedStart).Dot(B - A) > 0 ? (joinedStart, joinedEnd) : (start, end);
     }
-
-    private (Vector2 Start, Vector2 End)? Span() => JointDrawing.BeamSpan(Theme.JointRingWidth, A, RadiusA, B, RadiusB);
 }

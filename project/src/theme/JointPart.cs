@@ -8,6 +8,7 @@ public partial class JointPart : PartVisual
 {
     private float _radius;
     private bool _simplified;
+    private bool _loose;
 
     public JointPart()
         : base(CreatureLayers.Joints, CreatureLayers.SelectedJoints)
@@ -27,9 +28,17 @@ public partial class JointPart : PartVisual
         set => Change(ref _simplified, value);
     }
 
+    /// <summary>Joined to nothing, so it cannot train: tinted in <c>danger</c> (<see cref="JointLook.Loose"/>).</summary>
+    public bool Loose
+    {
+        get => _loose;
+        set => Change(ref _loose, value);
+    }
+
     public override void _Draw()
     {
-        JointDrawing.DrawPlain(this, Theme, Transform2D.Identity, Vector2.Zero, Radius, Selected ? JointLook.Selected : JointLook.Plain, Simplified);
+        var look = Selected ? JointLook.Selected : Loose ? JointLook.Loose : JointLook.Plain;
+        JointDrawing.DrawPlain(this, Theme, Transform2D.Identity, Vector2.Zero, Radius, look, Simplified);
         if (Selected)
         {
             SelectionDrawing.DrawJoint(this, Theme, Transform2D.Identity, Vector2.Zero, (float)SelectionMarks.JointHalo(Radius));

@@ -33,6 +33,7 @@ internal static class RewrittenUi
         "ui/widgets/BrainFocusNetworkView.cs",
         "ui/widgets/BrainFocusSheet.cs",
         "ui/widgets/BuildCanvas.cs",
+        "ui/widgets/BuildCreature.cs",
         "ui/widgets/CreationCard.cs",
         "ui/widgets/CreatureThumbnail.cs",
         "ui/widgets/MapPreview.cs",

@@ -135,6 +135,7 @@ public sealed class UiSourceGuardTests
     [InlineData("StyleBox M() => new StyleBoxFlat();")]
     [InlineData("void M() { CustomMinimumSize = Vector2.One; }")]
     [InlineData("void M(Control control) { control.Size = Vector2.One; }")]
+    [InlineData("void M(SubViewport viewport) { viewport.Size = Vector2I.One; }")]
     [InlineData("UiButton M() => new UiButton { Position = Vector2.One };")]
     public void Building_or_restyling_is_flagged(string member) =>
         BuildsOrRestyles(member).ShouldHaveSingleItem();
@@ -144,6 +145,7 @@ public sealed class UiSourceGuardTests
     [InlineData("UiCard M() => new();")]
     [InlineData("Vector2 M() => new(1, 2);")]
     [InlineData("void M(Control control) { control.Visible = false; }")]
+    [InlineData("void M(Node2D part) { part.Position = Vector2.One; }")]
     public void Library_instances_and_state_pass(string member) =>
         BuildsOrRestyles(member).ShouldBeEmpty();
 
@@ -353,6 +355,7 @@ public sealed class UiSourceGuardTests
         AssignmentExpressionSyntax assignment =>
             CSharpSources.Symbol(model, assignment.Left) is IPropertySymbol { Name: "CustomMinimumSize" or "Size" or "Position" } property
             && property.ContainingType.ContainingNamespace.Name == "Godot"
+            && (property.Name != "Position" || IsGodotSubclass(property.ContainingType, "Control") || IsGodotSubclass(property.ContainingType, "Window"))
             && !(property.Name == "Position" && RewrittenUi.DrawnWidgets.Contains(path)),
         _ => false,
     };

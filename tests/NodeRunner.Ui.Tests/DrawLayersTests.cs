@@ -28,6 +28,7 @@ public sealed class DrawLayersTests
         int[] order =
         [
             CreatureLayers.Hatch,
+            CreatureLayers.Underlays,
             CreatureLayers.Beams,
             CreatureLayers.Pistons,
             CreatureLayers.SelectedLinks,

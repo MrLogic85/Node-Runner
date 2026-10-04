@@ -313,8 +313,7 @@ reference would mislead someone working on that surface.
     the group reads as one outline. All are drawn over the part, in Build and
     Training. A part draws its marks with itself, and a selected part rises
     whole over the other parts of its kind, never over the kinds drawn above
-    it (`docs/CREATURE_MODEL.md` → "Draw layers"; Training now, Build in
-    #769).
+    it (`docs/CREATURE_MODEL.md` → "Draw layers").
   - *Orientation:* the side of the beam that faces up as built is the
     sensor's top, and it then turns with the beam; it never flips during a
     run. The Camera looks along its aim. A Camera selected alone draws its rays
@@ -597,7 +596,9 @@ keep their size on screen and only get the space that is left:
 - `UiWorldView` lays its SubViewport out at its slot's size times the root
   factor, so the arena keeps its units per pixel. Its screen-size overlays (the
   ruler, the best marker) apply the root factor again, so they follow the UI
-  size.
+  size. Build's world sets `ScalesWithUi` instead: its SubViewport keeps the
+  slot's size and scales with the UI like the rest of the screen, and
+  `CanvasView` handles the root factor for it.
 - `CanvasView` divides its zoom limits by the root factor (`UiScale`): fitting
   never magnifies past true size, and pinch zoom stops at `MaxZoom` times true
   size on screen, whatever the UI size. Build's finger-sized hit radii and handles are in view units, so they
@@ -772,8 +773,14 @@ is not `antialiased: true` inside a method that opens a pen, calls
   outline (sensors, Best marker), or draw a square or diamond as one wide
   `pen.Line` (the brain's negative neuron), since line ends are feathered.
 - `UiBoundsDebugOverlay`: debug only.
-- `Line2D` is not a `_Draw()` call: the Training beam (`BeamVisual`) stays
-  a hard world-space `Line2D`, whose feather would grow with camera zoom.
+
+A part visual bakes the window pixel scale into its strokes, so it must redraw
+when that scale changes (a zoom, UI size or screen change). Every view that
+holds parts calls `PartVisual.RedrawOnNewPixelScale` as it may have zoomed:
+Build's `BuildCreature` on each draw, Training's `TrainingHost` each frame
+(also while paused) for every creature in its world. It
+redraws the parts once the scale has moved by `PixelScaleTolerance`, so a
+gliding camera does not redraw every creature every frame.
 
 The rule does not cover `DrawStyleBox`: Godot divides a `StyleBoxFlat`'s
 feather by the viewport's oversampling, so it stays about one device pixel at
