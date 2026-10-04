@@ -355,7 +355,8 @@ compare `UiText` values. On the Godot side, `UiTextTranslation` (`ui/widgets`)
 is the one place that turns a `UiText` into the player's language.
 `docs/UI_DIRECTION.md` → "Text and translation" owns the rules for showing
 it. All text App builds for the player crosses as `UiText` (#752); none is
-built as English any more.
+built as English any more. `docs/LOCALIZATION.md` owns the translation
+template and how to add a language (#778).
 
 A default name that is saved, such as "Untitled Creation", "Copy of {0}" or
 a copied example's name, is put into the player's language once, as it is

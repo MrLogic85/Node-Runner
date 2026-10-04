@@ -36,6 +36,13 @@ internal static class CSharpSources
         _references.Value,
         new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
 
+    /// <summary>Compiles sources that include the pure libs themselves, so only the BCL and GodotSharp are referenced.</summary>
+    public static CSharpCompilation CompileWithLibs(IReadOnlyList<Source> sources) => CSharpCompilation.Create(
+        "UiSourceGuard",
+        sources.Select(source => source.Tree).Append(_implicitUsings),
+        _references.Value.Where(reference => reference.Display is not { } path || !System.IO.Path.GetFileName(path).StartsWith("NodeRunner.", StringComparison.Ordinal)),
+        new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
+
     public static Source Snippet(string member) => new(
         "snippet.cs",
         CSharpSyntaxTree.ParseText(
