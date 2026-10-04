@@ -5,7 +5,8 @@ namespace NodeRunner.Ui.Lib;
 /// <summary>
 /// One line of text turned a quarter turn clockwise, so it reads top to bottom like CSS
 /// <c>writing-mode: vertical-rl</c>. It draws the text itself because a Container resets a
-/// child's rotation, so a rotated <see cref="Label"/> cannot sit in one.
+/// child's rotation, so a rotated <see cref="Label"/> cannot sit in one. Like a Label it translates
+/// <c>Text</c> by its auto-translate mode and context, and cases it after translating.
 /// </summary>
 [Tool]
 [GlobalClass]
@@ -50,13 +51,13 @@ public partial class UiVerticalLabel : Control
         }
     }
 
-    private string DisplayText => UiTokens.IsUppercase(TextStyle) ? Text.ToUpperInvariant() : Text;
+    private string DisplayText => UiThemeLookup.LetterCase(Atr(Text), TextStyle);
 
     public override void _Ready() => MouseFilter = MouseFilterEnum.Ignore;
 
     public override void _Notification(int what)
     {
-        if (what == NotificationThemeChanged)
+        if (what == NotificationThemeChanged || what == NotificationTranslationChanged)
         {
             Refresh();
         }
