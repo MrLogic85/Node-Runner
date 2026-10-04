@@ -15,4 +15,4 @@ public enum CanvasNoteKind
 /// leader line). The view model decides what to say and about which part; the canvas decides
 /// where it goes.
 /// </summary>
-public sealed record CanvasNote(CanvasNoteKind Kind, CreatureElementSelection Target, string Text);
+public sealed record CanvasNote(CanvasNoteKind Kind, CreatureElementSelection Target, UiText Text);

@@ -923,7 +923,7 @@ public sealed class BuildViewModelTests
 
         viewModel.CanvasNotes().ShouldBe(
         [
-            new CanvasNote(CanvasNoteKind.Danger, new CreatureElementSelection(CreatureElementKind.Beam, 5), "Too short"),
+            new CanvasNote(CanvasNoteKind.Danger, new CreatureElementSelection(CreatureElementKind.Beam, 5), UiText.Plain("Too short")),
         ]);
     }
 

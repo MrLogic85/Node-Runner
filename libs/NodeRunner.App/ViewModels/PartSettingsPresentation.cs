@@ -25,6 +25,6 @@ public sealed record PartSettingsPresentation(
     UiText DefaultName,
     UiText? ConnectionsLabel,
     UiText? ConnectionsValue,
-    string Note,
+    UiText Note,
     bool CanDelete,
     IReadOnlyList<ParameterSlider> Settings);

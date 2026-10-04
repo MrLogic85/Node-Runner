@@ -1,3 +1,4 @@
+using NodeRunner.App.ViewModels;
 using NodeRunner.Domain;
 
 namespace NodeRunner.App.Lifecycle;
@@ -28,13 +29,13 @@ public static class CreatureReadiness
     }
 
     /// <summary>Why the creature cannot be simulated yet; empty when it can.</summary>
-    public static IReadOnlyList<string> Problems(CreatureDef creature)
+    public static IReadOnlyList<UiText> Problems(CreatureDef creature)
     {
         ArgumentNullException.ThrowIfNull(creature);
-        var problems = new List<string>();
+        var problems = new List<UiText>();
         if (creature.Nodes.Count == 0)
         {
-            problems.Add("Add at least one node before training this creation.");
+            problems.Add(UiText.Plain("Add at least one node before training this creation."));
         }
 
         for (var i = 0; i < creature.Nodes.Count; i++)
@@ -42,18 +43,18 @@ public static class CreatureReadiness
             var nodeId = creature.Nodes[i].Id;
             if (!IsAttached(creature, nodeId))
             {
-                problems.Add($"Node {i + 1} has nothing attached. Connect it with a beam or a piston, or remove it.");
+                problems.Add(UiText.Format("Node {0} has nothing attached. Connect it with a beam or a piston, or remove it.", i + 1));
             }
         }
 
         foreach (var beam in creature.Beams)
         {
-            AddLengthProblem(creature, "beam", beam.NodeA, beam.NodeB, problems);
+            AddLengthProblem(creature, isPiston: false, beam.NodeA, beam.NodeB, problems);
         }
 
         foreach (var piston in creature.Pistons)
         {
-            AddLengthProblem(creature, "piston", piston.NodeA, piston.NodeB, problems);
+            AddLengthProblem(creature, isPiston: true, piston.NodeA, piston.NodeB, problems);
         }
 
         return problems;
@@ -67,17 +68,23 @@ public static class CreatureReadiness
             || creature.Pistons.Any(piston => piston.NodeA == nodeId || piston.NodeB == nodeId);
     }
 
-    private static void AddLengthProblem(CreatureDef creature, string kind, int nodeA, int nodeB, List<string> problems)
+    private static void AddLengthProblem(CreatureDef creature, bool isPiston, int nodeA, int nodeB, List<UiText> problems)
     {
         var indexA = creature.NodeIndexOf(nodeA);
         var indexB = creature.NodeIndexOf(nodeB);
+        var a = indexA + 1;
+        var b = indexB + 1;
         if (creature.Nodes[indexA].Position == creature.Nodes[indexB].Position)
         {
-            problems.Add($"The {kind} between node {indexA + 1} and node {indexB + 1} has zero length. Move one of the nodes apart.");
+            problems.Add(isPiston
+                ? UiText.Format("The piston between node {0} and node {1} has zero length. Move one of the nodes apart.", a, b)
+                : UiText.Format("The beam between node {0} and node {1} has zero length. Move one of the nodes apart.", a, b));
         }
         else if (IsTooShort(creature.Nodes[indexA], creature.Nodes[indexB]))
         {
-            problems.Add($"The {kind} between node {indexA + 1} and node {indexB + 1} is too short. Move one of the nodes apart.");
+            problems.Add(isPiston
+                ? UiText.Format("The piston between node {0} and node {1} is too short. Move one of the nodes apart.", a, b)
+                : UiText.Format("The beam between node {0} and node {1} is too short. Move one of the nodes apart.", a, b));
         }
     }
 

@@ -1,4 +1,5 @@
 using NodeRunner.App.Builders;
+using NodeRunner.App.ViewModels;
 using NodeRunner.Domain;
 
 namespace NodeRunner.App.Tests.Builders;
@@ -70,7 +71,7 @@ public sealed class CreatureBuilderTests
 
         added.ShouldBeTrue();
         sensorId.ShouldBe(4);
-        reason.ShouldBeEmpty();
+        reason.ShouldBeNull();
         builder.Sensors.ShouldBe([new SensorDef(4, beam, SensorKind.Accelerometer)]);
     }
 
@@ -89,7 +90,7 @@ public sealed class CreatureBuilderTests
 
         added.ShouldBeFalse();
         secondId.ShouldBe(0);
-        reason.ShouldBe("One sensor per beam");
+        reason.ShouldBe(UiText.Plain("One sensor per beam"));
         builder.Sensors.Select(sensor => (sensor.Id, sensor.BeamId, sensor.Kind)).ShouldBe([(firstId, beam, first)]);
     }
 

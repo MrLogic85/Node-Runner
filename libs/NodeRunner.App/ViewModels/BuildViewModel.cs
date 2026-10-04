@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using NodeRunner.App.Builders;
 using NodeRunner.App.Lifecycle;
@@ -72,7 +73,9 @@ public sealed class BuildViewModel : INotifyPropertyChanged
     private bool _shownCanRedo;
 
     /// <summary>Why a sensor dropped on a joint was not placed.</summary>
-    public const string SensorsGoOnABeamReason = "Sensors go on a beam";
+    public static UiText SensorsGoOnABeamReason { get; } = UiText.Plain("Sensors go on a beam");
+
+    private static UiText MoveOnlyReason { get; } = UiText.Plain("Edit mode only allows moving existing nodes.");
 
     public BuildViewModel(CreatureBuilder? builder = null)
     {
@@ -339,7 +342,7 @@ public sealed class BuildViewModel : INotifyPropertyChanged
                 notes.Add(new CanvasNote(
                     CanvasNoteKind.Danger,
                     new CreatureElementSelection(CreatureElementKind.Beam, beam.Id),
-                    "Too short"));
+                    UiText.Plain("Too short")));
             }
         }
 
@@ -352,7 +355,7 @@ public sealed class BuildViewModel : INotifyPropertyChanged
                 notes.Add(new CanvasNote(
                     CanvasNoteKind.Danger,
                     new CreatureElementSelection(CreatureElementKind.Piston, piston.Id),
-                    "Too short"));
+                    UiText.Plain("Too short")));
             }
         }
 
@@ -382,19 +385,18 @@ public sealed class BuildViewModel : INotifyPropertyChanged
     /// Whether a tray part dropped on <paramref name="target"/> would be placed there (#376); if
     /// not, <paramref name="reason"/> says why. Sensors go on a beam that has none yet.
     /// </summary>
-    public bool CanPlacePart(BuildPart part, CreatureElementSelection target, out string reason)
+    public bool CanPlacePart(BuildPart part, CreatureElementSelection target, [NotNullWhen(false)] out UiText? reason)
     {
         ArgumentNullException.ThrowIfNull(target);
         if (_moveOnly)
         {
-            reason = "Edit mode only allows moving existing nodes.";
+            reason = MoveOnlyReason;
             return false;
         }
 
         if (!PartTray.IsAvailable(part) || PartTray.SensorKindOf(part) is null)
         {
-            // Reasons are still finished English until #758 makes them UiText.
-            reason = PartTray.ComingLater.Message;
+            reason = PartTray.ComingLater;
             return false;
         }
 
@@ -411,7 +413,7 @@ public sealed class BuildViewModel : INotifyPropertyChanged
             return false;
         }
 
-        reason = string.Empty;
+        reason = null;
         return true;
     }
 
@@ -853,11 +855,11 @@ public sealed class BuildViewModel : INotifyPropertyChanged
     }
 
     /// <summary>Whether <see cref="ConnectPiston"/> would place a Piston between this pair; if not, <paramref name="reason"/> says why.</summary>
-    public bool CanConnectPiston(int nodeIdA, int nodeIdB, out string reason)
+    public bool CanConnectPiston(int nodeIdA, int nodeIdB, [NotNullWhen(false)] out UiText? reason)
     {
         if (_moveOnly)
         {
-            reason = "Edit mode only allows moving existing nodes.";
+            reason = MoveOnlyReason;
             return false;
         }
 
@@ -1015,7 +1017,7 @@ public sealed class BuildViewModel : INotifyPropertyChanged
     /// validation and, on success, returns the built <see cref="CreatureDef"/>
     /// for the caller to instantiate (see #72).
     /// </summary>
-    public bool TryLeave(out CreatureDef? creature, out IReadOnlyList<string> errors)
+    public bool TryLeave(out CreatureDef? creature, out IReadOnlyList<UiText> errors)
     {
         if (_builder.Nodes.Count == 0)
         {

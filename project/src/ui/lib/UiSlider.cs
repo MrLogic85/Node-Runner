@@ -112,6 +112,7 @@ public partial class UiSlider : Control, ISerializationListener
     private double _highPosition = 0.5;
     private string[] _stepLabels = [];
     private Func<string>? _readoutSource;
+    private Func<string>? _labelSource;
     private IReadOnlyList<Func<string>>? _stepLabelSources;
     private double _step;
     private double _markerPosition = -1;
@@ -140,6 +141,20 @@ public partial class UiSlider : Control, ISerializationListener
         set
         {
             _labelText = value;
+            Refresh();
+        }
+    }
+
+    /// <summary>
+    /// Code-set label text, asked again when the language changes. While set it is shown instead
+    /// of <see cref="LabelText"/> and not translated again; null shows <see cref="LabelText"/> (#758).
+    /// </summary>
+    public Func<string>? LabelSource
+    {
+        get => _labelSource;
+        set
+        {
+            _labelSource = value;
             Refresh();
         }
     }
@@ -583,6 +598,8 @@ public partial class UiSlider : Control, ISerializationListener
 
     private string ShownReadout => _readoutSource?.Invoke() ?? ReadoutText;
 
+    private string ShownLabel => _labelSource?.Invoke() ?? LabelText;
+
     private IReadOnlyList<string> ShownStepLabels =>
         _stepLabelSources is { } sources ? [.. sources.Select(source => source())] : _stepLabels;
 
@@ -600,7 +617,7 @@ public partial class UiSlider : Control, ISerializationListener
             }
         }
 
-        if (_readoutSource is not null || _stepLabelSources is not null)
+        if (_labelSource is not null || _readoutSource is not null || _stepLabelSources is not null)
         {
             Refresh();
         }
@@ -688,12 +705,14 @@ public partial class UiSlider : Control, ISerializationListener
             UpdateMinimumSize();
         }
 
-        _label!.Text = LabelText;
+        _label!.AutoTranslateMode = _labelSource is null ? AutoTranslateModeEnum.Inherit : AutoTranslateModeEnum.Disabled;
+        var label = ShownLabel;
+        _label.Text = label;
         _readout!.AutoTranslateMode = _readoutSource is null ? AutoTranslateModeEnum.Inherit : AutoTranslateModeEnum.Disabled;
         var readout = ShownReadout;
         _readout.Text = readout;
         _markerLabel!.Text = MarkerText;
-        _label.Visible = HasValueLabelRow && !string.IsNullOrWhiteSpace(LabelText);
+        _label.Visible = HasValueLabelRow && !string.IsNullOrWhiteSpace(label);
         _readout.Visible = HasValueLabelRow && !string.IsNullOrWhiteSpace(readout);
         _header!.Visible = HasValueLabelRow;
         _header.AddThemeConstantOverride("separation", (int)UiSize.Space.S1);
@@ -912,6 +931,7 @@ public partial class UiSlider : Control, ISerializationListener
 
     private bool HasValueLabelRow =>
         !string.IsNullOrWhiteSpace(LabelText)
+        || _labelSource is not null
         || _readoutSource is not null
         || !string.IsNullOrWhiteSpace(ReadoutText)
         || HasMarkerText && HasStepLabelRow;

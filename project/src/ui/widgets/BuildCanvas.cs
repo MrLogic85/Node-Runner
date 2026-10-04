@@ -110,6 +110,15 @@ public partial class BuildCanvas : Node2D
         }
     }
 
+    // The canvas notes are laid out, in the player's language, as the canvas draws.
+    public override void _Notification(int what)
+    {
+        if (what == NotificationTranslationChanged)
+        {
+            QueueRedraw();
+        }
+    }
+
     public override void _EnterTree()
     {
         _slot = GetParent() as Control;
@@ -574,7 +583,8 @@ public partial class BuildCanvas : Node2D
         {
             if (TryPlaceNote(note, out var anchor, out var direction, out var clearance))
             {
-                placements.Add(new UiCalloutLayout.Placement(anchor, direction, clearance, CalloutKindOf(note.Kind), IconOf(note.Kind), note.Text));
+                var text = UiTextTranslation.Source(note.Text)();
+                placements.Add(new UiCalloutLayout.Placement(anchor, direction, clearance, CalloutKindOf(note.Kind), IconOf(note.Kind), text));
             }
         }
 

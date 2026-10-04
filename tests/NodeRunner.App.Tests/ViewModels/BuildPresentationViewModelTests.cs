@@ -12,7 +12,7 @@ public sealed class BuildPresentationViewModelTests
         var panel = new BuildPresentationViewModel(new BuildViewModel { ActiveTool = BuildTool.Parts }).ToolPanel;
 
         panel.Mode.ShouldBe(ToolPanelMode.PartsTray);
-        panel.Title.ShouldBe("Parts");
+        panel.Title.ShouldBe(UiText.Plain("Parts"));
     }
 
     [Fact]
@@ -21,7 +21,7 @@ public sealed class BuildPresentationViewModelTests
         var presentation = new BuildPresentationViewModel(new BuildViewModel { ActiveTool = BuildTool.Beam });
 
         presentation.ToolPanel.Mode.ShouldBe(ToolPanelMode.LinkList);
-        presentation.ToolPanel.Title.ShouldBe("Beams");
+        presentation.ToolPanel.Title.ShouldBe(UiText.Plain("Beams"));
         presentation.LinkList.ShouldNotBeNull();
     }
 
@@ -31,7 +31,7 @@ public sealed class BuildPresentationViewModelTests
         var panel = new BuildPresentationViewModel(new BuildViewModel { ActiveTool = BuildTool.Joint }).ToolPanel;
 
         panel.Mode.ShouldBe(ToolPanelMode.JointHelp);
-        panel.Title.ShouldBe("Joint");
+        panel.Title.ShouldBe(UiText.Plain("Joint"));
     }
 
     [Fact]
@@ -40,7 +40,7 @@ public sealed class BuildPresentationViewModelTests
         var panel = new BuildPresentationViewModel(new BuildViewModel { ActiveTool = BuildTool.Select }).ToolPanel;
 
         panel.Mode.ShouldBe(ToolPanelMode.SelectHelp);
-        panel.Title.ShouldBe("Select");
+        panel.Title.ShouldBe(UiText.Plain("Select"));
     }
 
     [Fact]
@@ -213,7 +213,7 @@ public sealed class BuildPresentationViewModelTests
             UiText.Format("Beam {0}", 1),
             UiText.Plain("Between"),
             UiText.Format("{0} ↔ {1}", UiText.Format("Node {0}", 1), UiText.Format("Node {0}", 2)),
-            "Drag its ends to change the length.",
+            UiText.Plain("Drag its ends to change the length."),
             CanDelete: true,
             part.Settings));
         part.Settings.ShouldBeEmpty();
@@ -241,7 +241,7 @@ public sealed class BuildPresentationViewModelTests
             UiText.Plain(name),
             UiText.Plain("On"),
             UiText.AsWritten("Thigh"),
-            note,
+            UiText.Plain(note),
             CanDelete: true,
             part.Settings));
         part.Settings.ShouldBeEmpty();
@@ -259,7 +259,7 @@ public sealed class BuildPresentationViewModelTests
             moveOnly: true);
         build.SelectSensor(7);
 
-        new BuildPresentationViewModel(build).SinglePart!.Note.ShouldBe($"Three rays see how near the ground is. {BuildPresentationViewModel.AimNote}");
+        new BuildPresentationViewModel(build).SinglePart!.Note.ShouldBe(UiText.Plain("Three rays see how near the ground is. Drag the round handle to aim it."));
     }
 
     [Fact]
@@ -284,7 +284,7 @@ public sealed class BuildPresentationViewModelTests
             UiText.Format("Node {0}", 2),
             UiText.Plain("Beams"),
             UiText.Format("{0} · {1}", UiText.Format("Beam {0}", 1), UiText.AsWritten("Shin")),
-            "Beams meet and turn here. Drag it to move them.",
+            UiText.Plain("Beams meet and turn here. Drag it to move them."),
             CanDelete: true,
             part.Settings));
         part.Settings.ShouldBeEmpty();
@@ -350,11 +350,12 @@ public sealed class BuildPresentationViewModelTests
     }
 
     [Theory]
-    [InlineData(SensorKind.Accelerometer)]
-    [InlineData(SensorKind.Camera)]
-    public void SensorNote_AvoidsBrainWording(SensorKind kind)
+    [InlineData(SensorKind.Accelerometer, false)]
+    [InlineData(SensorKind.Camera, false)]
+    [InlineData(SensorKind.Camera, true)]
+    public void SensorNote_AvoidsBrainWording(SensorKind kind, bool aimable)
     {
-        var note = BuildPresentationViewModel.SensorNote(kind).ToLowerInvariant();
+        var note = BuildPresentationViewModel.SensorNote(kind, aimable).Message.ToLowerInvariant();
 
         foreach (var word in new[] { "brain", "port", "neuron", "input", "layer" })
         {
@@ -374,11 +375,11 @@ public sealed class BuildPresentationViewModelTests
         selection.ShouldBe(new SelectionPanelPresentation(
             UiText.Counted("{0} selected", "{0} selected", 3),
             selection.Settings,
-            string.Empty,
-            string.Empty,
+            SettingsNote: null,
+            EmptyNote: null,
             ShowFrameRows: true,
             UiText.Counted("Delete {0}", "Delete {0}", 3),
-            "Beams on a deleted node go with it.",
+            UiText.Plain("Beams on a deleted node go with it."),
             CanDelete: true));
     }
 
@@ -392,9 +393,9 @@ public sealed class BuildPresentationViewModelTests
         var selection = new BuildPresentationViewModel(build).Selection!;
 
         selection.ShowFrameRows.ShouldBeFalse();
-        selection.EmptyNote.ShouldBeEmpty();
-        selection.SettingsNote.ShouldBe("A slider sets one value for all of them.");
-        selection.DeleteNote.ShouldBeEmpty();
+        selection.EmptyNote.ShouldBeNull();
+        selection.SettingsNote.ShouldBe(UiText.Plain("A slider sets one value for all of them."));
+        selection.DeleteNote.ShouldBeNull();
         selection.Settings.Select(slider => slider.Id).ShouldBe(
             [PartParameterId.Strength, PartParameterId.Stroke, PartParameterId.MaxSpeed]);
         var strength = selection.Settings[0];
@@ -402,7 +403,7 @@ public sealed class BuildPresentationViewModelTests
         strength.ValuesDiffer.ShouldBeTrue();
         strength.Low.ShouldBe(PartParameters.Strength.Slider!.Range.Position(100));
         strength.High.ShouldBe(PartParameters.Strength.Slider!.Range.Position(250));
-        selection.Settings[1].ShouldBe(new ParameterSlider(PartParameterId.Stroke, "Stroke", UiText.Format("±{0}%", new FixedNumber(30, 0)), 0.5, 0.5, 5.0 / 40));
+        selection.Settings[1].ShouldBe(new ParameterSlider(PartParameterId.Stroke, UiText.Plain("Stroke"), UiText.Format("±{0}%", new FixedNumber(30, 0)), 0.5, 0.5, 5.0 / 40));
     }
 
     [Fact]
@@ -426,7 +427,7 @@ public sealed class BuildPresentationViewModelTests
 
         selection.Settings.ShouldBeEmpty();
         selection.ShowFrameRows.ShouldBeFalse();
-        selection.EmptyNote.ShouldBe("These parts share no settings.");
+        selection.EmptyNote.ShouldBe(UiText.Plain("These parts share no settings."));
     }
 
     [Fact]
@@ -436,7 +437,7 @@ public sealed class BuildPresentationViewModelTests
         build.Load(PistonCreature());
         build.ReplaceSelection(PartSet.None with { Beams = new HashSet<int> { 101, 102 } });
 
-        new BuildPresentationViewModel(build).Selection!.DeleteNote.ShouldBe("A sensor on a deleted beam goes with it.");
+        new BuildPresentationViewModel(build).Selection!.DeleteNote.ShouldBe(UiText.Plain("A sensor on a deleted beam goes with it."));
     }
 
     [Fact]
@@ -479,6 +480,19 @@ public sealed class BuildPresentationViewModelTests
 
         presentation.BuildPanel.CanStartTraining.ShouldBeFalse();
         presentation.BuildPanel.ReadinessText.ShouldBe(UiText.Counted("{0} beam too short", "{0} beams too short", 2));
+    }
+
+    [Fact]
+    public void BuildPanel_WithOnlyAZeroLengthBeam_ShowsTheReasonWithItsNodes()
+    {
+        var build = new BuildViewModel();
+        build.Load(new CreatureDef(
+            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(0, 0))],
+            [new BeamDef(101, 1, 2)],
+            []));
+
+        new BuildPresentationViewModel(build).BuildPanel.ReadinessText.ShouldBe(
+            UiText.Format("The beam between node {0} and node {1} has zero length. Move one of the nodes apart.", 1, 2));
     }
 
     [Theory]

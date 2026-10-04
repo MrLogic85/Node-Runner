@@ -63,7 +63,7 @@ public sealed class BuildPlacementTests
 
         build.Sensors.ShouldBeEmpty();
         changes().ShouldBe(0);
-        build.PlacementNote.ShouldBe(new CanvasNote(CanvasNoteKind.Danger, _firstJoint, "Sensors go on a beam"));
+        build.PlacementNote.ShouldBe(new CanvasNote(CanvasNoteKind.Danger, _firstJoint, UiText.Plain("Sensors go on a beam")));
     }
 
     [Fact]
@@ -77,7 +77,7 @@ public sealed class BuildPlacementTests
 
         build.Sensors.Count.ShouldBe(1);
         changes().ShouldBe(0);
-        build.PlacementNote.ShouldBe(new CanvasNote(CanvasNoteKind.Danger, _firstBeam, "One sensor per beam"));
+        build.PlacementNote.ShouldBe(new CanvasNote(CanvasNoteKind.Danger, _firstBeam, UiText.Plain("One sensor per beam")));
     }
 
     [Fact]
@@ -86,7 +86,7 @@ public sealed class BuildPlacementTests
         var build = TwoBeams();
 
         build.CanPlacePart(BuildPart.Battery, _firstBeam, out var reason).ShouldBeFalse();
-        reason.ShouldBe(PartTray.ComingLater.Message);
+        reason.ShouldBe(PartTray.ComingLater);
         build.PlacePart(BuildPart.Battery, _firstBeam).ShouldBeNull();
 
         build.Sensors.ShouldBeEmpty();
@@ -111,9 +111,9 @@ public sealed class BuildPlacementTests
         build.PlacePart(BuildPart.Accelerometer, _firstBeam);
 
         build.CanPlacePart(BuildPart.Camera, _firstBeam, out var taken).ShouldBeFalse();
-        taken.ShouldBe("One sensor per beam");
+        taken.ShouldBe(UiText.Plain("One sensor per beam"));
         build.CanPlacePart(BuildPart.Camera, _secondBeam, out var free).ShouldBeTrue();
-        free.ShouldBeEmpty();
+        free.ShouldBeNull();
     }
 
     [Fact]
@@ -122,7 +122,7 @@ public sealed class BuildPlacementTests
         var build = TwoBeams();
         build.PlacePart(BuildPart.Accelerometer, _firstJoint);
 
-        build.CanvasNotes()[0].Text.ShouldBe("Sensors go on a beam");
+        build.CanvasNotes()[0].Text.ShouldBe(UiText.Plain("Sensors go on a beam"));
         build.DismissPlacementNote();
         build.CanvasNotes().ShouldBeEmpty();
 

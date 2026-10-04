@@ -207,7 +207,7 @@ public partial class BuildScreen : Control
             var setting = settings[index];
             var slider = container.GetNodeOrNull<UiSlider>(setting.Id.ToString()) ?? AddParameterSlider(container, setting.Id);
             container.MoveChild(slider, index);
-            slider.LabelText = setting.Label;
+            slider.LabelSource = UiTextTranslation.Source(setting.Label);
             slider.ReadoutSource = UiTextTranslation.Source(setting.Readout);
             slider.Step = setting.Step;
             slider.Value = setting.ValuesDiffer
@@ -311,13 +311,12 @@ public partial class BuildScreen : Control
         GetNode<Control>("%Readiness").Visible = selected == 0;
         var part = presentation.SinglePart;
         var sidePanel = GetNode<UiSidePanel>("%SidePanel");
-        sidePanel.Title = selected switch
-        {
-            0 when locked => "Training",
-            0 when toolPanel.Mode != ToolPanelMode.None => toolPanel.Title,
-            _ => string.Empty,
-        };
-        sidePanel.TitleSource = UiTextTranslation.Source(selected == 1 ? part?.Name : selected > 1 ? presentation.Selection?.Title : null);
+        sidePanel.Title = selected == 0 && locked ? "Training" : string.Empty;
+        sidePanel.TitleSource = UiTextTranslation.Source(
+            selected == 1 ? part?.Name
+            : selected > 1 ? presentation.Selection?.Title
+            : locked ? null
+            : toolPanel.Title);
         sidePanel.IconId = selected > 1 ? UiIconId.Select : part is null ? UiIconId.None : PartSettingsIcon(part.Kind);
 
         if (tray.Visible)
@@ -329,7 +328,7 @@ public partial class BuildScreen : Control
         {
             GetNode<UiLabel>("%SavedTitle").ShowText(presentation.TrainingSummaryTitle);
             GetNode<UiLabel>("%SavedLatest").ShowText(presentation.LatestDistanceText);
-            GetNode<UiLabel>("%SavedBody").Text = presentation.TrainingSummaryBody;
+            GetNode<UiLabel>("%SavedBody").ShowText(presentation.TrainingSummaryBody);
         }
 
         if (partSettings.Visible && part is not null)
@@ -349,15 +348,15 @@ public partial class BuildScreen : Control
     {
         ApplyParameterSliders(GetNode<Container>("%SelectionParameters"), group.Settings);
         GetNode<Control>("%SelectionSettings").Visible = group.Settings.Count > 0;
-        GetNode<UiLabel>("%SelectionSettingsNote").Text = group.SettingsNote;
+        GetNode<UiLabel>("%SelectionSettingsNote").TextSource = UiTextTranslation.Source(group.SettingsNote);
         var emptyNote = GetNode<UiLabel>("%SelectionEmptyNote");
-        emptyNote.Text = group.EmptyNote;
-        emptyNote.Visible = group.EmptyNote.Length > 0;
+        emptyNote.TextSource = UiTextTranslation.Source(group.EmptyNote);
+        emptyNote.Visible = emptyNote.TextSource is not null;
         GetNode<Control>("%SelectionRows").Visible = group.ShowFrameRows;
         GetNode<UiButton>("%SelectionDelete").ShowText(group.DeleteText);
         var deleteNote = GetNode<UiLabel>("%SelectionDeleteNote");
-        deleteNote.Text = group.DeleteNote;
-        deleteNote.Visible = group.DeleteNote.Length > 0;
+        deleteNote.TextSource = UiTextTranslation.Source(group.DeleteNote);
+        deleteNote.Visible = deleteNote.TextSource is not null;
         GetNode<Control>("%SelectionActions").Visible = group.CanDelete;
     }
 
@@ -528,7 +527,7 @@ public partial class BuildScreen : Control
         connectionsLabel.GetParent<Control>().Visible = connectionsLabel.TextSource is not null;
         ApplyParameterSliders(GetNode<Container>("%PartParameters"), part.Settings);
 
-        GetNode<UiLabel>("%PartNote").Text = part.Note;
+        GetNode<UiLabel>("%PartNote").ShowText(part.Note);
         GetNode<UiButton>("%PartDelete").Visible = part.CanDelete;
     }
 

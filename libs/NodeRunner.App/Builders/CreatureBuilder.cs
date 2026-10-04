@@ -1,4 +1,6 @@
+using System.Diagnostics.CodeAnalysis;
 using NodeRunner.App.Lifecycle;
+using NodeRunner.App.ViewModels;
 using NodeRunner.Domain;
 
 namespace NodeRunner.App.Builders;
@@ -19,13 +21,13 @@ namespace NodeRunner.App.Builders;
 public sealed class CreatureBuilder
 {
     /// <summary>Why a sensor cannot go on a beam that already has one.</summary>
-    public const string OneSensorPerBeamReason = "One sensor per beam";
+    public static UiText OneSensorPerBeamReason { get; } = UiText.Plain("One sensor per beam");
 
     /// <summary>Why a Piston cannot join two nodes a beam already holds rigid (#451).</summary>
-    public const string BeamJoinsTheseNodesReason = "A beam already joins these nodes";
+    public static UiText BeamJoinsTheseNodesReason { get; } = UiText.Plain("A beam already joins these nodes");
 
     /// <summary>Why a beam or a second Piston cannot join two nodes a Piston already links.</summary>
-    public const string PistonJoinsTheseNodesReason = "These nodes already have a piston";
+    public static UiText PistonJoinsTheseNodesReason { get; } = UiText.Plain("These nodes already have a piston");
 
     private readonly List<NodeDef> _nodes = [];
     private readonly List<BeamDef> _beams = [];
@@ -112,7 +114,7 @@ public sealed class CreatureBuilder
 
         if (_pistons.Any(piston => IsSamePair(piston.NodeA, piston.NodeB, nodeIdA, nodeIdB)))
         {
-            throw new ArgumentException(PistonJoinsTheseNodesReason);
+            throw new ArgumentException(PistonJoinsTheseNodesReason.Message);
         }
 
         var id = AllocatePartId();
@@ -133,11 +135,11 @@ public sealed class CreatureBuilder
     /// with no beam between them, which would hold them rigid, and no Piston yet; if not,
     /// <paramref name="reason"/> says why.
     /// </summary>
-    public bool CanAddPiston(int nodeIdA, int nodeIdB, out string reason)
+    public bool CanAddPiston(int nodeIdA, int nodeIdB, [NotNullWhen(false)] out UiText? reason)
     {
         if (!HasNode(nodeIdA) || !HasNode(nodeIdB) || nodeIdA == nodeIdB)
         {
-            reason = "A piston must connect two different nodes.";
+            reason = UiText.Plain("A piston must connect two different nodes.");
             return false;
         }
 
@@ -153,7 +155,7 @@ public sealed class CreatureBuilder
             return false;
         }
 
-        reason = string.Empty;
+        reason = null;
         return true;
     }
 
@@ -164,7 +166,7 @@ public sealed class CreatureBuilder
         ValidateNodeId(nodeIdB);
         if (!CanAddPiston(nodeIdA, nodeIdB, out var reason))
         {
-            throw new ArgumentException(reason);
+            throw new ArgumentException(reason.Message);
         }
 
         var id = AllocatePartId();
@@ -262,7 +264,7 @@ public sealed class CreatureBuilder
     }
 
     /// <summary>Adds a sensor mounted on an existing beam unless that beam already has a sensor.</summary>
-    public bool AddSensor(int beamId, SensorKind kind, out int sensorId, out string reason)
+    public bool AddSensor(int beamId, SensorKind kind, out int sensorId, [NotNullWhen(false)] out UiText? reason)
     {
         ValidateBeamId(beamId);
         if (!Enum.IsDefined(kind))
@@ -283,7 +285,7 @@ public sealed class CreatureBuilder
             ? CameraRays.DefaultAim(_nodes[NodeIndexOf(beam.NodeA)].Position, _nodes[NodeIndexOf(beam.NodeB)].Position)
             : null;
         _sensors.Add(new SensorDef(sensorId, beamId, kind, aim: aim));
-        reason = string.Empty;
+        reason = null;
         return true;
     }
 
@@ -339,7 +341,7 @@ public sealed class CreatureBuilder
     public CreatureDef Build() => new(_nodes, _beams, _sensors, _pistons, _nextPartId);
 
     /// <summary>The current drawing if it can be simulated, else the player-facing problems that stop it.</summary>
-    public bool TryBuild(out CreatureDef? creature, out IReadOnlyList<string> errors)
+    public bool TryBuild(out CreatureDef? creature, out IReadOnlyList<UiText> errors)
     {
         var built = Build();
         errors = CreatureReadiness.Problems(built);
