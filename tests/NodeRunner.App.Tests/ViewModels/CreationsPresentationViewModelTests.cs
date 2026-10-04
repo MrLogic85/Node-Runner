@@ -37,8 +37,12 @@ public sealed class CreationsPresentationViewModelTests
         walker.Name.ShouldBe("Walker");
         walker.Creature.ShouldBe(trained.Creature);
         walker.SummaryText.ShouldBeEmpty();
-        walker.ThumbnailText.ShouldBe("2 nodes · 1 beam · 1 sensor");
-        walker.Training.ShouldBe(new CreationCardTraining("19.1", "3.1", "1.2", MapIds.Flat, "12 generations"));
+        walker.ThumbnailText.ShouldBe(UiText.Format(
+            "{0} · {1} · {2}",
+            UiText.Counted("{0} node", "{0} nodes", 2),
+            UiText.Counted("{0} beam", "{0} beams", 1),
+            UiText.Counted("{0} sensor", "{0} sensors", 1)));
+        walker.Training.ShouldBe(new CreationCardTraining("19.1", "3.1", "1.2", MapIds.Flat, Generations(12)));
         walker.CanOpen.ShouldBeTrue();
         walker.CanDuplicate.ShouldBeTrue();
         walker.CanDelete.ShouldBeTrue();
@@ -57,7 +61,7 @@ public sealed class CreationsPresentationViewModelTests
 
         viewModel.Refresh();
 
-        viewModel.Cards.Single().Training!.GenerationsText.ShouldBe("1 generation");
+        viewModel.Cards.Single().Training!.GenerationsText.ShouldBe(Generations(1));
     }
 
     [Fact]
@@ -132,7 +136,7 @@ public sealed class CreationsPresentationViewModelTests
         viewModel.HasError.ShouldBeFalse();
         viewModel.LoadError.ShouldBeNull();
         viewModel.Cards.Single().Name.ShouldBe("Crawler");
-        viewModel.Cards.Single().Training!.GenerationsText.ShouldBe("9 generations");
+        viewModel.Cards.Single().Training!.GenerationsText.ShouldBe(Generations(9));
     }
 
     [Fact]
@@ -185,6 +189,8 @@ public sealed class CreationsPresentationViewModelTests
     {
         Should.Throw<ArgumentNullException>(() => new CreationsPresentationViewModel(null!));
     }
+
+    private static UiText Generations(int count) => UiText.Counted("{0} generation", "{0} generations", count);
 
     private static CreationDef CreateCreation(string name, int generation, TrainingRunDef? latest = null)
     {

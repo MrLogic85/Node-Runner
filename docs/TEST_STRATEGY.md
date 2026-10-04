@@ -132,6 +132,10 @@ swap restyles everything:
   `UiMenu`'s top-level popup raises it, #463). Only the app's
   `UiNotificationLayer` (and Popup Gallery) creates a `UiNotification`, so
   notifications outlive scene changes (#472).
+- UI text is translated once (`UiTextTranslationTests`, #682). Only
+  `UiTextTranslation` reads a `UiText`'s parts, and it translates with
+  `Tr`/`TrN`. The creation-name labels turn their own auto-translation off;
+  part and link names follow in #752.
 
 **2. Screens reuse the library.** Every canonical component maps to one
 reusable control, and paired specimens (slider and range, power and value

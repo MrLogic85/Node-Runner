@@ -11,15 +11,19 @@ public sealed record CreationCardPresentation(
     string Name,
     CreatureDef Creature,
     string SummaryText,
-    string ThumbnailText,
+    UiText ThumbnailText,
     CreationCardTraining? Training,
     bool CanOpen,
     bool CanDuplicate,
     bool CanDelete)
 {
     /// <summary>The part counts the card shows when the creature has nothing to draw.</summary>
-    public static string ThumbnailTextFor(CreatureDef creature) =>
-        $"{FormatCount(creature.Nodes.Count, "node")} · {FormatCount(creature.Beams.Count, "beam")} · {FormatCount(creature.Sensors.Count, "sensor")}";
+    public static UiText ThumbnailTextFor(CreatureDef creature) =>
+        UiText.Format(
+            "{0} · {1} · {2}",
+            UiText.Counted("{0} node", "{0} nodes", creature.Nodes.Count),
+            UiText.Counted("{0} beam", "{0} beams", creature.Beams.Count),
+            UiText.Counted("{0} sensor", "{0} sensors", creature.Sensors.Count));
 
     internal static string FormatCount(int count, string singular) =>
         count == 1
@@ -37,7 +41,7 @@ public sealed record CreationCardTraining(
     string TopSpeedText,
     string ElevationText,
     string MapId,
-    string GenerationsText)
+    UiText GenerationsText)
 {
     public static CreationCardTraining From(TrainingStateDef training)
     {
@@ -48,6 +52,6 @@ public sealed record CreationCardTraining(
             Metres.Format(run.TopSpeed),
             Metres.Format(run.Elevation),
             run.MapId,
-            CreationCardPresentation.FormatCount(training.Generation, "generation"));
+            UiText.Counted("{0} generation", "{0} generations", training.Generation));
     }
 }
