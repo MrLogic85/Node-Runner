@@ -2,7 +2,7 @@ using NodeRunner.Ui.Lib;
 
 namespace NodeRunner.Ui.Tests;
 
-/// <summary>Build's rail and top bar (#370): play sits at the bottom of the rail in both states.</summary>
+/// <summary>Build's rail and top bar (#370): play sits at the bottom of the rail in both states; Undo and Redo sit in the top bar (#689).</summary>
 public sealed class BuildRailTests
 {
     private static readonly SceneNodes.SceneNode[] _build = [.. SceneNodes.InScene("screens/BuildScreen.tscn")];
@@ -30,10 +30,24 @@ public sealed class BuildRailTests
     }
 
     [Fact]
-    public void TopBar_HoldsTheNameAndThePadlock()
+    public void TopBar_HoldsTheName_ThePadlock_ThenUndoAndRedo()
     {
-        Children("/ToolbarContent").ShouldBe(["CreationName", "Unlock"]);
+        Children("/ToolbarContent").ShouldBe(["CreationName", "Unlock", "Undo", "Redo"]);
         _build.Single(node => node.Name == "Unlock").Node.Body.ShouldContain($"IconId = {(int)UiIconId.Lock}");
+    }
+
+    [Theory]
+    [InlineData("Undo", UiIconId.Undo)]
+    [InlineData("Redo", UiIconId.Redo)]
+    public void UndoAndRedo_AreSecondaryIconButtons_DisabledUntilThereIsAStep(string name, UiIconId icon)
+    {
+        var button = _build.Single(node => node.Name == name).Node.Body;
+
+        button.ShouldContain($"IconId = {(int)icon}");
+        button.ShouldContain($"Kind = {(int)UiButtonKind.Secondary}");
+        button.ShouldContain("\ndisabled = true");
+        button.ShouldContain($"tooltip_text = \"{name}\"");
+        button.ShouldNotContain("\ntext = ");
     }
 
     [Fact]

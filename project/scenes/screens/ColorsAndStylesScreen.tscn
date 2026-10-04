@@ -1984,6 +1984,26 @@ script = ExtResource("shell_4_label")
 TextStyle = 16
 TextColor = 8
 
+[node name="Redo" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
+layout_mode = 2
+custom_minimum_size = Vector2(88, 0)
+theme_override_constants/separation = 4
+
+[node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Redo" groups=["inventory_icon"]]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 40)
+script = ExtResource("cs_icon")
+IconId = 66
+IconSize = 3
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Redo"]
+layout_mode = 2
+horizontal_alignment = 1
+text = "redo"
+script = ExtResource("shell_4_label")
+TextStyle = 16
+TextColor = 8
+
 [node name="Restart" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
 layout_mode = 2
 custom_minimum_size = Vector2(88, 0)
@@ -2220,6 +2240,26 @@ IconSize = 3
 layout_mode = 2
 horizontal_alignment = 1
 text = "trophy"
+script = ExtResource("shell_4_label")
+TextStyle = 16
+TextColor = 8
+
+[node name="Undo" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
+layout_mode = 2
+custom_minimum_size = Vector2(88, 0)
+theme_override_constants/separation = 4
+
+[node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Undo" groups=["inventory_icon"]]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 40)
+script = ExtResource("cs_icon")
+IconId = 65
+IconSize = 3
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Undo"]
+layout_mode = 2
+horizontal_alignment = 1
+text = "undo"
 script = ExtResource("shell_4_label")
 TextStyle = 16
 TextColor = 8

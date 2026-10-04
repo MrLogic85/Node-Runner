@@ -113,7 +113,14 @@ public partial class BuildHost : Node, IRoutedScene
         _buildScreen.Setup(Build);
         _buildScreen.ToolRequested += tool => Build.ActiveTool = tool;
         _buildScreen.LinkPicked += link => Build.PickLink((BuildLink)link);
-        _buildScreen.ParameterChanged += (parameter, value) => Build.SetParameter((PartParameterId)parameter, value);
+        _buildScreen.ParameterChanged += (parameter, value) =>
+        {
+            Build.BeginEdit(_buildScreen);
+            Build.SetParameter((PartParameterId)parameter, value);
+        };
+        _buildScreen.ParameterChangeFinished += () => Build.EndEdit(_buildScreen);
+        _buildScreen.UndoRequested += Build.Undo;
+        _buildScreen.RedoRequested += Build.Redo;
         _buildScreen.StartTrainingRequested += StartTraining;
         _buildScreen.BackRequested += BackFromBuildScreen;
         _buildScreen.CreationNameChanged += RenameActiveCreation;

@@ -50,7 +50,7 @@ public sealed class BuildAutosave : IDisposable
             return true;
         }
 
-        var saved = _edits.PersistEdit(_creationId, _build.Snapshot());
+        var saved = _edits.PersistEdit(_creationId, _build.Snapshot(), _build.OpenedBrain);
         HasUnsavedEdits = saved is null;
         return !HasUnsavedEdits;
     }

@@ -96,9 +96,11 @@ public static class DirectBrain
     /// <summary>
     /// The graph for a trained <paramref name="genome"/>. Neurons keep their ids from
     /// <paramref name="previous"/> by port, and new ports get fresh ids; a disabled gene keeps its
-    /// stored weight. Neurons and genes for ports the creature no longer has are dropped.
+    /// stored weight. Neurons and genes for ports the creature no longer has are dropped. A port
+    /// <paramref name="previous"/> lacks keeps its id from <paramref name="idsFrom"/>, a later brain of
+    /// the same creature, if that has one; fresh ids start past both, so no id is ever reused.
     /// </summary>
-    public static BrainDef ToBrainDef(BrainPortLayout ports, double[] genome, BrainDef? previous)
+    public static BrainDef ToBrainDef(BrainPortLayout ports, double[] genome, BrainDef? previous, BrainDef? idsFrom = null)
     {
         ArgumentNullException.ThrowIfNull(ports);
         ArgumentNullException.ThrowIfNull(genome);
@@ -108,8 +110,9 @@ public static class DirectBrain
         }
 
         var graph = previous is null ? null : new Graph(previous);
-        var nextId = previous?.NextNeuronId ?? 1;
-        int IdFor(BrainPort port) => graph?.Neuron(port)?.Id ?? nextId++;
+        var later = idsFrom is null ? null : new Graph(idsFrom);
+        var nextId = Math.Max(previous?.NextNeuronId ?? 1, idsFrom?.NextNeuronId ?? 1);
+        int IdFor(BrainPort port) => graph?.Neuron(port)?.Id ?? later?.Neuron(port)?.Id ?? nextId++;
 
         var inputs = ports.Inputs
             .Select(port => new NeuronDef(IdFor(port), NeuronKind.Input, port.PartId, port.Channel, layer: 0, bias: 0, NeuronActivation.Identity))
@@ -138,9 +141,12 @@ public static class DirectBrain
     /// <paramref name="brain"/> fitted to a rebuilt creature's <paramref name="ports"/> (#516). Ports
     /// match by part id, channel and direction: a kept port keeps its neuron, connections and bias, a
     /// new port starts almost passive, and a removed port's neuron and connections are dropped. Part
-    /// ids are never reused, so a new part never inherits a removed part's weights.
+    /// ids are never reused, so a new part never inherits a removed part's weights. Build refits the
+    /// brain it opened with and passes the last saved one as <paramref name="idsFrom"/> (#689): see
+    /// <see cref="ToBrainDef"/>.
     /// </summary>
-    public static BrainDef Refit(BrainDef brain, BrainPortLayout ports) => ToBrainDef(ports, Compile(brain, ports), brain);
+    public static BrainDef Refit(BrainDef brain, BrainPortLayout ports, BrainDef? idsFrom = null) =>
+        ToBrainDef(ports, Compile(brain, ports), brain, idsFrom);
 
     // NeuralNetwork's genome length for these layer sizes, which is also defined, as empty, for a
     // creature with no inputs or no outputs: one rebuilt down to bare sensors or bare Pistons.

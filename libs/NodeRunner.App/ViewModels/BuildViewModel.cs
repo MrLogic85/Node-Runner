@@ -67,6 +67,10 @@ public sealed class BuildViewModel : INotifyPropertyChanged
     private readonly HashSet<int> _selectedSensorIds = [];
     private readonly HashSet<int> _selectedPistonIds = [];
     private CanvasNote? _placementNote;
+    private readonly BuildHistory _history;
+    private BrainDef? _openedBrain;
+    private bool _shownCanUndo;
+    private bool _shownCanRedo;
 
     /// <summary>Why a sensor dropped on a joint was not placed.</summary>
     public const string SensorsGoOnABeamReason = "Sensors go on a beam";
@@ -74,6 +78,8 @@ public sealed class BuildViewModel : INotifyPropertyChanged
     public BuildViewModel(CreatureBuilder? builder = null)
     {
         _builder = builder ?? new CreatureBuilder();
+        _history = new BuildHistory(Snapshot);
+        _history.Changed += (_, _) => NotifyHistoryChanged();
     }
 
     public void Load(CreatureDef creature, bool moveOnly = false, string? creationName = null, TrainingStateDef? training = null)
@@ -84,7 +90,9 @@ public sealed class BuildViewModel : INotifyPropertyChanged
         _creationName = string.IsNullOrWhiteSpace(creationName) ? NewCreationWorkflow.UntitledName : creationName;
         _trainingGeneration = training?.Generation;
         _latestDistance = training?.Latest.ShownDistance;
+        _openedBrain = training?.Brain;
         _moveOnly = moveOnly;
+        _history.Clear();
         ActiveTool = BuildTool.Parts;
         StatusMessage = null;
         PlacementNote = null;
@@ -126,6 +134,78 @@ public sealed class BuildViewModel : INotifyPropertyChanged
     }
 
     public string CreationName => _creationName;
+
+    /// <summary>
+    /// The trained brain as it was when Build opened, or null for an untrained Creation. Saves refit
+    /// this brain rather than the last saved one, so an undone delete gets its trained weights back (#689).
+    /// </summary>
+    public BrainDef? OpenedBrain => _openedBrain;
+
+    public bool CanUndo => _history.CanUndo;
+
+    public bool CanRedo => _history.CanRedo;
+
+    /// <summary>
+    /// Opens an edit for <paramref name="owner"/>, such as a drag, that lasts until its
+    /// <see cref="EndEdit"/>: all its changes are one undo step (#689). An edit another owner left open
+    /// ends first, so one source never merges into, closes or drops another's edit.
+    /// </summary>
+    public void BeginEdit(object owner) => _history.Begin(owner);
+
+    /// <summary>Ends <paramref name="owner"/>'s open edit: one undo step if it changed the body.</summary>
+    public void EndEdit(object owner) => _history.End(owner);
+
+    /// <summary>Drops <paramref name="owner"/>'s open edit without a step, once it has put the body back.</summary>
+    public void CancelEdit(object owner) => _history.Cancel(owner);
+
+    /// <summary>Puts the body back as it was before the last step.</summary>
+    public void Undo()
+    {
+        if (_history.Undo() is { } body)
+        {
+            Restore(body);
+        }
+    }
+
+    /// <summary>Applies the last undone step again.</summary>
+    public void Redo()
+    {
+        if (_history.Redo() is { } body)
+        {
+            Restore(body);
+        }
+    }
+
+    // Part ids are never reused (#220): the restored body keeps the highest NextPartId this visit reached.
+    private void Restore(CreatureDef body)
+    {
+        var nextPartId = Math.Max(body.NextPartId, _builder.NextPartId);
+        _builder = new CreatureBuilder(new CreatureDef(body.Nodes, body.Beams, body.Sensors, body.Pistons, nextPartId));
+        foreach (var kind in Enum.GetValues<CreatureElementKind>())
+        {
+            SelectedSet(kind).RemoveWhere(id => !Exists(new CreatureElementSelection(kind, id)));
+        }
+
+        StatusMessage = null;
+        PlacementNote = null;
+        NotifySelectionChanged();
+        AnatomyChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    private void NotifyHistoryChanged()
+    {
+        if (_shownCanUndo != CanUndo)
+        {
+            _shownCanUndo = CanUndo;
+            OnPropertyChanged(nameof(CanUndo));
+        }
+
+        if (_shownCanRedo != CanRedo)
+        {
+            _shownCanRedo = CanRedo;
+            OnPropertyChanged(nameof(CanRedo));
+        }
+    }
 
     public int? TrainingGeneration => _trainingGeneration;
 
@@ -381,7 +461,11 @@ public sealed class BuildViewModel : INotifyPropertyChanged
             return null;
         }
 
-        _builder.AddSensor(target.Id, PartTray.SensorKindOf(part)!.Value, out var sensorId, out _);
+        var sensorId = _history.Change(() =>
+        {
+            _builder.AddSensor(target.Id, PartTray.SensorKindOf(part)!.Value, out var id, out _);
+            return id;
+        });
         StatusMessage = $"Placed {SensorName(PartTray.SensorKindOf(part)!.Value)} on beam {_builder.BeamIndexOf(target.Id) + 1}.";
         AnatomyChanged?.Invoke(this, EventArgs.Empty);
         return sensorId;
@@ -405,7 +489,7 @@ public sealed class BuildViewModel : INotifyPropertyChanged
             throw new InvalidOperationException("Edit mode can only move existing nodes.");
         }
 
-        var id = _builder.AddNode(BuildArea.Clamp(position, NodeDef.PlainJointRadius));
+        var id = _history.Change(() => _builder.AddNode(BuildArea.Clamp(position, NodeDef.PlainJointRadius)));
         AnatomyChanged?.Invoke(this, EventArgs.Empty);
         return id;
     }
@@ -413,7 +497,7 @@ public sealed class BuildViewModel : INotifyPropertyChanged
     /// <summary>Moves an already-placed node to a new position, as far as <see cref="BuildArea"/> reaches.</summary>
     public void MoveNode(int nodeId, Vector2D position)
     {
-        _builder.MoveNode(nodeId, BuildArea.Clamp(position, NodeById(nodeId).Radius));
+        _history.Change(() => _builder.MoveNode(nodeId, BuildArea.Clamp(position, NodeById(nodeId).Radius)));
         AnatomyChanged?.Invoke(this, EventArgs.Empty);
     }
 
@@ -483,12 +567,17 @@ public sealed class BuildViewModel : INotifyPropertyChanged
         }
 
         RequireEditable(parameter);
-        var changed = false;
-        foreach (var part in SelectedPartIds().Where(part => _builder.ParameterValue(part, parameter) != value))
+        var changed = _history.Change(() =>
         {
-            _builder.SetParameter(part, parameter, value);
-            changed = true;
-        }
+            var any = false;
+            foreach (var part in SelectedPartIds().Where(part => _builder.ParameterValue(part, parameter) != value))
+            {
+                _builder.SetParameter(part, parameter, value);
+                any = true;
+            }
+
+            return any;
+        });
 
         if (changed)
         {
@@ -556,7 +645,7 @@ public sealed class BuildViewModel : INotifyPropertyChanged
             return;
         }
 
-        _builder.Rename(partId, newName);
+        _history.Change(() => _builder.Rename(partId, newName));
         AnatomyChanged?.Invoke(this, EventArgs.Empty);
     }
 
@@ -730,11 +819,13 @@ public sealed class BuildViewModel : INotifyPropertyChanged
             return false;
         }
 
-        foreach (var (id, position) in placed)
+        _history.Change(() =>
         {
-            _builder.MoveNode(id, position);
-        }
-
+            foreach (var (id, position) in placed)
+            {
+                _builder.MoveNode(id, position);
+            }
+        });
         AnatomyChanged?.Invoke(this, EventArgs.Empty);
         return true;
     }
@@ -784,7 +875,7 @@ public sealed class BuildViewModel : INotifyPropertyChanged
 
         try
         {
-            _builder.AddBeam(nodeIdA, nodeIdB);
+            _history.Change(() => _builder.AddBeam(nodeIdA, nodeIdB));
         }
         catch (ArgumentException exception)
         {
@@ -828,7 +919,7 @@ public sealed class BuildViewModel : INotifyPropertyChanged
             return null;
         }
 
-        var pistonId = _builder.AddPiston(nodeIdA, nodeIdB);
+        var pistonId = _history.Change(() => _builder.AddPiston(nodeIdA, nodeIdB));
         StatusMessage = $"Placed {PartDisplayName(pistonId)}.";
         AnatomyChanged?.Invoke(this, EventArgs.Empty);
         return pistonId;
@@ -861,9 +952,13 @@ public sealed class BuildViewModel : INotifyPropertyChanged
         }
 
         var splitPoint = new Vector2D(start.X + (t * (end.X - start.X)), start.Y + (t * (end.Y - start.Y)));
-        var nodeId = _builder.AddNode(splitPoint);
-        _builder.SplitBeamAtNode(beamId, nodeId);
-        ClearSelectionSets();
+        var nodeId = _history.Change(() =>
+        {
+            var id = _builder.AddNode(splitPoint);
+            _builder.SplitBeamAtNode(beamId, id);
+            ClearSelectionSets();
+            return id;
+        });
         StatusMessage = "Split the beam with a new joint.";
         NotifySelectionChanged();
         AnatomyChanged?.Invoke(this, EventArgs.Empty);
@@ -927,28 +1022,32 @@ public sealed class BuildViewModel : INotifyPropertyChanged
             return;
         }
 
-        // Parts first, so none is already gone with a deleted beam or joint.
-        foreach (var sensorId in _selectedSensorIds)
+        _history.Change(() =>
         {
-            _builder.RemoveSensor(sensorId);
-        }
+            // Parts first, so none is already gone with a deleted beam or joint.
+            foreach (var sensorId in _selectedSensorIds)
+            {
+                _builder.RemoveSensor(sensorId);
+            }
 
-        foreach (var pistonId in _selectedPistonIds)
-        {
-            _builder.RemovePiston(pistonId);
-        }
+            foreach (var pistonId in _selectedPistonIds)
+            {
+                _builder.RemovePiston(pistonId);
+            }
 
-        foreach (var beamId in _selectedBeamIds)
-        {
-            _builder.RemoveBeam(beamId);
-        }
+            foreach (var beamId in _selectedBeamIds)
+            {
+                _builder.RemoveBeam(beamId);
+            }
 
-        foreach (var nodeId in _selectedNodeIds)
-        {
-            _builder.RemoveNode(nodeId);
-        }
+            foreach (var nodeId in _selectedNodeIds)
+            {
+                _builder.RemoveNode(nodeId);
+            }
 
-        ClearSelectionSets();
+            // Within the step: its Undo row refresh must find no deleted part still selected.
+            ClearSelectionSets();
+        });
         StatusMessage = "Deleted selected parts.";
         NotifySelectionChanged();
         AnatomyChanged?.Invoke(this, EventArgs.Empty);

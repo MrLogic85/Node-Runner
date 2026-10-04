@@ -503,8 +503,58 @@ public sealed class BuildPresentationViewModelTests
         presentation.PresentationChanged += (_, _) => raiseCount++;
 
         build.PlaceNode(new Vector2D(0, 0));
+        raiseCount = 0;
+
+        build.PlaceNode(new Vector2D(90, 0));
 
         raiseCount.ShouldBe(1);
+    }
+
+    [Fact]
+    public void UndoAndRedoRows_FollowTheHistory_EvenWhenOnlyTheHistoryChanges()
+    {
+        var build = new BuildViewModel();
+        build.Load(PairCreature());
+        var presentation = new BuildPresentationViewModel(build);
+        var gestures = new BuildGestures(build);
+        presentation.CanUndo.ShouldBeFalse();
+        var raised = false;
+        presentation.PresentationChanged += (_, _) => raised = true;
+
+        gestures.Press(new Vector2D(0, 0));
+        gestures.Drag(new Vector2D(0, 40));
+        raised = false;
+        gestures.Release(new Vector2D(0, 40));
+
+        raised.ShouldBeTrue();
+        presentation.CanUndo.ShouldBeTrue();
+        build.Undo();
+        presentation.CanUndo.ShouldBeFalse();
+        presentation.CanRedo.ShouldBeTrue();
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void TheFirstStepsRefresh_SeesNoRemovedPartSelected(bool split)
+    {
+        var build = new BuildViewModel();
+        build.Load(PairCreature());
+        var presentation = new BuildPresentationViewModel(build);
+        presentation.PresentationChanged += (_, _) => _ = presentation.SinglePart;
+        build.SelectBeam(101);
+
+        if (split)
+        {
+            build.SplitBeam(101, new Vector2D(45, 0)).ShouldNotBeNull();
+        }
+        else
+        {
+            build.DeleteSelectedParts();
+        }
+
+        build.Beams.ShouldNotContain(beam => beam.Id == 101);
+        presentation.CanUndo.ShouldBeTrue();
     }
 
     private static CreatureDef PairCreature() => new(
