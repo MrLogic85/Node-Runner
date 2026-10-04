@@ -82,11 +82,10 @@ unchanged, it belongs in `lib/`. If it embeds project vocabulary
   exception is drawing code in a widget that draws in `_Draw`: see
   `RewrittenUi.DrawnWidgets` in `docs/TEST_STRATEGY.md`. A scene owns the paddings and sizes it authors; do not re-apply them from code
   (#331).
-- Order drawing with the tree, not `ZIndex`: a `ZIndex` sorts across the
-  whole `CanvasLayer`, so a raised part draws through every dialog and screen
-  above it (#463). Add an overlay last, or a part that must draw last with
-  `InternalMode.Back`. The one exception is `UiMenu`, a top-level popup that
-  must float over its screen. `UiSourceGuardTests` enforces this.
+- Order drawing with the tree, not `ZIndex` (#463): add an overlay last, or a
+  part that must draw last with `InternalMode.Back`. A menu that floats over
+  its screen goes in a `UiLevelLayer`. `docs/UI_DIRECTION.md` "UI levels"
+  (#768) owns the rule and the level stack.
 - A `[Tool]` component that writes a property on itself or on a node of its
   own scene (a theme override, `clip_children`, text, an icon, a computed
   size) lists it in a `UiUnsavedState` and calls `Handle` first in

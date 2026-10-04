@@ -27,12 +27,6 @@ public sealed class UiSourceGuardTests
     /// </summary>
     private const string _tintHelper = "ui/lib/UiIcons.cs";
 
-    /// <summary>
-    /// The one UI file that raises ZIndex: an open UiMenu is a top-level popup that must float
-    /// over the screen it drops from.
-    /// </summary>
-    private const string _overlayMenu = "ui/lib/UiMenu.cs";
-
     [Fact]
     public void Source_takes_colours_from_the_theme()
     {
@@ -178,13 +172,14 @@ public sealed class UiSourceGuardTests
     public void Ui_orders_drawing_by_tree_not_z_index()
     {
         var violations = CSharpSources.Project
-            .Where(source => source.Path.StartsWith("ui/", StringComparison.Ordinal) && source.Path != _overlayMenu)
+            .Where(source => source.Path.StartsWith("ui/", StringComparison.Ordinal))
             .SelectMany(source => source.Find(SetsZIndex))
             .ToList();
 
         violations.ShouldBeEmpty(
-            "ZIndex sorts across the whole CanvasLayer, so a raised part draws through every dialog and " +
-            "screen above it (#463); order children in the tree instead (InternalMode.Back draws last).");
+            "ZIndex sorts across the whole CanvasLayer, so a raised part draws through every screen and " +
+            "overlay above it (#463); order children in the tree instead (InternalMode.Back draws last), " +
+            "and float an overlay on a UiLayers level with UiLevelLayer (#768).");
     }
 
     // A screen's own queue is freed with its scene, dropping a notification raised just before

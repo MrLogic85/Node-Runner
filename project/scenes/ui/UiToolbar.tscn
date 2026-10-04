@@ -4,6 +4,7 @@
 [ext_resource type="Script" uid="uid://fw1i2vfgkd7q" path="res://src/ui/lib/UiDivider.cs" id="1_ni27y"]
 [ext_resource type="Script" uid="uid://bg3xut403ix88" path="res://src/ui/lib/UiToolbar.cs" id="3_tbar"]
 [ext_resource type="Script" uid="uid://brbdaifjy8lyi" path="res://src/ui/lib/UiMenu.cs" id="4_menu"]
+[ext_resource type="Script" uid="uid://mn6dj7hl2yd0" path="res://src/ui/lib/UiLevelLayer.cs" id="5_overlay"]
 
 [node name="UiToolbar" type="MarginContainer" unique_id=587462716]
 custom_minimum_size = Vector2(0, 48)
@@ -71,11 +72,13 @@ mouse_filter = 2
 script = ExtResource("1_ni27y")
 metadata/_custom_type_script = "uid://fw1i2vfgkd7q"
 
-[node name="ToolbarMenu" type="Container" parent="." unique_id=1208477361]
+[node name="MenuLayer" type="CanvasLayer" parent="." unique_id=1693720418]
+script = ExtResource("5_overlay")
+metadata/_custom_type_script = "uid://mn6dj7hl2yd0"
+
+[node name="ToolbarMenu" type="Container" parent="MenuLayer" unique_id=1208477361]
 unique_name_in_owner = true
 visible = false
-top_level = true
-layout_mode = 2
 size_flags_horizontal = 0
 mouse_filter = 0
 script = ExtResource("4_menu")

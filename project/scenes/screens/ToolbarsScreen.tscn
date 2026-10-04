@@ -59,7 +59,7 @@ size_flags_vertical = 4
 script = ExtResource("5_theme_switch")
 Segments = Array[ExtResource("6_theme_segment")]([SubResource("Resource_theme_neon"), SubResource("Resource_theme_paper")])
 
-[node name="ToolbarMenuDebugBounds" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/ToolbarMenu" parent_id_path=PackedInt32Array(1157572243, 1208477361) index="0" unique_id=2076457439]
+[node name="ToolbarMenuDebugBounds" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/MenuLayer/ToolbarMenu" parent_id_path=PackedInt32Array(1157572243, 1208477361) index="0" unique_id=2076457439]
 unique_name_in_owner = true
 layout_mode = 2
 mouse_filter = 0
@@ -68,13 +68,13 @@ LabelText = "Debug Bounds"
 On = true
 metadata/_custom_type_script = "uid://cuku7dsosusj4"
 
-[node name="UiMenuItemDivider" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/ToolbarMenu" parent_id_path=PackedInt32Array(1157572243, 1208477361) index="1" unique_id=1320661275]
+[node name="UiMenuItemDivider" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/MenuLayer/ToolbarMenu" parent_id_path=PackedInt32Array(1157572243, 1208477361) index="1" unique_id=1320661275]
 layout_mode = 2
 mouse_filter = 2
 script = ExtResource("8_menu_divider")
 metadata/_custom_type_script = "uid://ddvhocc4qru2x"
 
-[node name="ToolbarMenuComponents" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/ToolbarMenu" parent_id_path=PackedInt32Array(1157572243, 1208477361) index="2" unique_id=1097029948]
+[node name="ToolbarMenuComponents" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/MenuLayer/ToolbarMenu" parent_id_path=PackedInt32Array(1157572243, 1208477361) index="2" unique_id=1097029948]
 unique_name_in_owner = true
 layout_mode = 2
 script = ExtResource("9_menu_item")
@@ -82,7 +82,7 @@ LabelText = "Components"
 ShowSelectedIndicator = true
 metadata/_custom_type_script = "uid://dah3q1p7ikjlm"
 
-[node name="ToolbarMenuToolbars" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/ToolbarMenu" parent_id_path=PackedInt32Array(1157572243, 1208477361) index="3" unique_id=1067320663]
+[node name="ToolbarMenuToolbars" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/MenuLayer/ToolbarMenu" parent_id_path=PackedInt32Array(1157572243, 1208477361) index="3" unique_id=1067320663]
 unique_name_in_owner = true
 layout_mode = 2
 script = ExtResource("9_menu_item")
@@ -91,7 +91,7 @@ ShowSelectedIndicator = true
 Selected = true
 metadata/_custom_type_script = "uid://dah3q1p7ikjlm"
 
-[node name="ToolbarMenuColorsAndStyles" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/ToolbarMenu" parent_id_path=PackedInt32Array(1157572243, 1208477361) index="4" unique_id=993951496]
+[node name="ToolbarMenuColorsAndStyles" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/MenuLayer/ToolbarMenu" parent_id_path=PackedInt32Array(1157572243, 1208477361) index="4" unique_id=993951496]
 unique_name_in_owner = true
 layout_mode = 2
 script = ExtResource("9_menu_item")
@@ -99,7 +99,7 @@ LabelText = "Colors & Styles"
 ShowSelectedIndicator = true
 metadata/_custom_type_script = "uid://dah3q1p7ikjlm"
 
-[node name="ToolbarMenuPopupGallery" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/ToolbarMenu" parent_id_path=PackedInt32Array(1157572243, 1208477361) index="5" unique_id=616565866]
+[node name="ToolbarMenuPopupGallery" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/MenuLayer/ToolbarMenu" parent_id_path=PackedInt32Array(1157572243, 1208477361) index="5" unique_id=616565866]
 unique_name_in_owner = true
 layout_mode = 2
 script = ExtResource("9_menu_item")

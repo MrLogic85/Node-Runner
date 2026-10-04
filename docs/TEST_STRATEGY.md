@@ -128,8 +128,9 @@ swap restyles everything:
   number. Dimensions should come from `UiSize`/`UiLayout`/`UiSpacing`; the
   test checks that a number is named, not where the name points. Identity,
   halving and doubling stay inline; the test owns the exact list. No code in
-  `project/src/ui` sets `ZIndex`; it orders drawing by the tree (only
-  `UiMenu`'s top-level popup raises it, #463). Outside it, a `ZIndex` names
+  `project/src/ui` sets `ZIndex`; it orders drawing by the tree (#463). Code
+  sets every `CanvasLayer` level from `UiLayers`, which keep their order, and a
+  scene saves no level over the screen (`UiLayersTests`, #768). Outside it, a `ZIndex` names
   a `CreatureLayers` or `ArenaLayers` layer, and the layers keep their order
   (`DrawLayersTests`, #767). Only the app's
   `UiNotificationLayer` (and Popup Gallery) creates a `UiNotification`, so
