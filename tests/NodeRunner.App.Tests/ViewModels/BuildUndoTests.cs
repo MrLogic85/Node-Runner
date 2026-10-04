@@ -257,7 +257,7 @@ public sealed class BuildUndoTests
             new CreatureDef([new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(100, 0))], [new BeamDef(3, 1, 2)], [new SensorDef(4, 3, SensorKind.Camera)]),
             moveOnly: true);
         var gestures = new BuildGestures(build);
-        build.SelectSensor(4);
+        build.SelectOnly(CreatureElementKind.Sensor, 4);
         var aim = build.Sensors[0].Aim;
         var handle = gestures.SelectionHandles.Single().Position;
 
@@ -272,20 +272,6 @@ public sealed class BuildUndoTests
         build.Redo();
         build.Sensors[0].Aim.ShouldBe(turned);
         build.CanRedo.ShouldBeFalse();
-    }
-
-    [Fact]
-    public void ASplit_IsOneStep()
-    {
-        var build = TwoJoints();
-        build.ConnectBeam(1, 2);
-        var beam = build.Beams.Single();
-
-        build.SplitBeam(beam.Id, new Vector2D(50, 0)).ShouldNotBeNull();
-        build.Undo();
-
-        build.Nodes.Count.ShouldBe(2);
-        build.Beams.ShouldBe([beam]);
     }
 
     [Fact]
@@ -417,7 +403,7 @@ public sealed class BuildUndoTests
         build.Unlock();
         var first = build.PlacePart(BuildPart.Accelerometer, new CreatureElementSelection(CreatureElementKind.Beam, 11))!.Value;
         var second = build.PlacePart(BuildPart.Accelerometer, new CreatureElementSelection(CreatureElementKind.Beam, 12))!.Value;
-        build.SelectSensor(first);
+        build.SelectOnly(CreatureElementKind.Sensor, first);
         build.DeleteSelectedParts();
         autosave.Save();
 
@@ -452,7 +438,7 @@ public sealed class BuildUndoTests
         build.MoveNode(1, new Vector2D(0, 10));
         var firstIds = withFirst.Neurons.Where(neuron => neuron.PartId == first).Select(neuron => neuron.Id).ToList();
         SavedBrain().Neurons.Where(neuron => neuron.PartId == first).Select(neuron => neuron.Id).ShouldBe(firstIds);
-        build.SelectSensor(first);
+        build.SelectOnly(CreatureElementKind.Sensor, first);
         build.DeleteSelectedParts();
         var withoutFirst = SavedBrain();
         var second = build.PlacePart(BuildPart.Accelerometer, new CreatureElementSelection(CreatureElementKind.Beam, 12))!.Value;

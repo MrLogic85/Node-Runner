@@ -5,8 +5,8 @@ using NodeRunner.Mechanics;
 namespace NodeRunner.App.ViewModels;
 
 /// <summary>
-/// The Select tool's handles on a selection of two or more joints, and the handle that turns a
-/// selected Camera in any tool (#594).
+/// The handles on a selection of two or more joints in any tool (#803), and the handle that turns a
+/// selected Camera (#594).
 /// </summary>
 public enum SelectionHandle
 {
@@ -65,12 +65,10 @@ public sealed class BuildGestures
     private int? _pressedBeam;
     private int? _pressedSensor;
     private CreatureElementSelection? _pressedLink;
-    private Vector2D? _dragOrigin;
     private PartSet? _selectionBefore;
     private SelectionHandle? _pressedHandle;
     private bool _pressedNodeWasSelected;
-    private bool _pressedInGroup;
-    private SelectPress _selectPress;
+    private SharedPress _press;
     private SelectionSnapshot? _selectionStart;
     private FrameLayout? _dragLayout;
     private double _turn;
@@ -112,7 +110,7 @@ public sealed class BuildGestures
     public (Vector2D Start, Vector2D End)? SelectionBox { get; private set; }
 
     /// <summary>
-    /// The Select frame around two or more joints, padded and never smaller on screen than room for
+    /// The frame around two or more selected joints, padded and never smaller on screen than room for
     /// the handles, in canvas units, before <see cref="SelectionFrameAngle"/> turns it.
     /// </summary>
     public CanvasRect? SelectionFrame => Layout() is { } layout
@@ -242,7 +240,7 @@ public sealed class BuildGestures
 
     /// <summary>
     /// Undoes the tool gesture in progress: puts back any node its drag moved
-    /// and the selection a Select press changed. Pointers still down stay
+    /// and the selection its press changed. Pointers still down stay
     /// ignored until they lift.
     /// </summary>
     public void Cancel()
@@ -259,10 +257,6 @@ public sealed class BuildGestures
         else if (_selectionStart is { } start)
         {
             _build.RestoreSelection(start);
-        }
-        else if (_dragOrigin is { } origin && _pressedNode is { } node)
-        {
-            _build.MoveNode(node, origin);
         }
 
         if (_selectionBefore is { } before)
@@ -315,24 +309,22 @@ public sealed class BuildGestures
             _pressedBeam = beamId;
         }
 
-        switch (_pressTool)
+        _selectionBefore = _build.Selection;
+        _pressedNodeWasSelected = _pressedNode is { } node && _build.SelectedNodeIds.Contains(node);
+        if (_pressedHandle is not null)
         {
-            case BuildTool.Beam when _pressedNode is { } start && !_build.IsMoveOnly && !_build.SelectedNodeIds.Contains(start):
-                BeamStartNodeId = start;
-                BeamEnd = position;
-                Changed?.Invoke(this, EventArgs.Empty);
-                break;
-            case BuildTool.Select:
-                _pressedInGroup = _build.SelectedNodeCount >= 2;
-                _pressedNodeWasSelected = _pressedNode is { } node && _build.SelectedNodeIds.Contains(node);
-                if (_pressedHandle is null)
-                {
-                    _selectionBefore = _build.Selection;
-                    PressSelect(viewPosition, position);
-                }
-
-                break;
+            return;
         }
+
+        if (_pressTool == BuildTool.Beam && _pressedNode is { } start && !_build.IsMoveOnly && !_pressedNodeWasSelected)
+        {
+            BeamStartNodeId = start;
+            BeamEnd = position;
+            Changed?.Invoke(this, EventArgs.Empty);
+            return;
+        }
+
+        PressShared(viewPosition);
     }
 
     private void DragTool(Vector2D viewPosition)
@@ -361,9 +353,9 @@ public sealed class BuildGestures
                     _aimStart = (camera, _build.Sensors.Single(sensor => sensor.Id == camera).Aim ?? 0);
                 }
             }
-            else if (_pressTool == BuildTool.Select && (_pressedHandle is not null || _selectPress == SelectPress.Move))
+            else if (_pressedHandle is not null || _press is SharedPress.Move or SharedPress.Group)
             {
-                if (!_pressedInGroup && !_pressedNodeWasSelected && _pressedNode is { } joint)
+                if (_press == SharedPress.Move && !_pressedNodeWasSelected && _pressedNode is { } joint)
                 {
                     _build.ReplaceSelection([joint]);
                 }
@@ -372,20 +364,10 @@ public sealed class BuildGestures
                 _dragLayout = Layout();
                 _selectionStart = _build.SnapshotSelection(_dragLayout is { } layout ? View.ToCanvas(layout.Move) : null);
             }
-            else if (_selectPress == SelectPress.Box)
+            else if (_press == SharedPress.Box)
             {
                 _build.ClearSelection();
-            }
-            else if (_pressTool == BuildTool.Parts && _pressedNode is { } dragged)
-            {
-                _dragOrigin = NodeById(dragged).Position;
-            }
-            else if (_pressTool == BuildTool.Beam
-                && BeamStartNodeId is null
-                && _pressedNode is { } selected
-                && _build.SelectedNodeIds.Contains(selected))
-            {
-                _dragOrigin = NodeById(selected).Position;
+                SelectionBox = (_pressPosition, _pressPosition);
             }
         }
 
@@ -398,45 +380,36 @@ public sealed class BuildGestures
             return;
         }
 
-        switch (_pressTool)
+        if (BeamStartNodeId is { } start)
         {
-            case BuildTool.Parts when _pressedNode is { } node:
-                _build.MoveNode(node, position);
-                break;
-            case BuildTool.Parts:
-            case BuildTool.Select when _selectPress == SelectPress.Pan:
-                View.PanBy(new Vector2D(viewPosition.X - lastViewPosition.X, viewPosition.Y - lastViewPosition.Y));
-                break;
-            case BuildTool.Beam when BeamStartNodeId is { } start:
-                BeamEnd = position;
-                if (_build.PickedLink != BuildLink.Beam)
-                {
-                    var target = FindLinkTarget(start, position);
-                    var refused = target is { } end && !_build.CanConnectLink(_build.PickedLink, start, end, out _);
-                    BeamTargetNodeId = refused ? null : target;
-                    RefusedTargetNodeId = refused ? target : null;
-                }
-                else
-                {
-                    BeamTargetNodeId = FindBeamTarget(start, position);
-                    RefusedTargetNodeId = null;
-                }
+            BeamEnd = position;
+            if (_build.PickedLink != BuildLink.Beam)
+            {
+                var target = FindLinkTarget(start, position);
+                var refused = target is { } end && !_build.CanConnectLink(_build.PickedLink, start, end, out _);
+                BeamTargetNodeId = refused ? null : target;
+                RefusedTargetNodeId = refused ? target : null;
+            }
+            else
+            {
+                BeamTargetNodeId = FindBeamTarget(start, position);
+                RefusedTargetNodeId = null;
+            }
 
-                Changed?.Invoke(this, EventArgs.Empty);
-                break;
-            case BuildTool.Beam when _pressedNode is { } node && _build.SelectedNodeIds.Contains(node):
-                _build.MoveNode(node, position);
-                break;
-            case BuildTool.Beam:
-                View.PanBy(new Vector2D(viewPosition.X - lastViewPosition.X, viewPosition.Y - lastViewPosition.Y));
-                break;
-            case BuildTool.Select when _selectionStart is { } start:
-                TransformSelection(start, position);
-                break;
-            case BuildTool.Select when SelectionBox is { } box:
-                SelectionBox = (box.Start, position);
-                Changed?.Invoke(this, EventArgs.Empty);
-                break;
+            Changed?.Invoke(this, EventArgs.Empty);
+        }
+        else if (_selectionStart is { } snapshot)
+        {
+            TransformSelection(snapshot, position);
+        }
+        else if (SelectionBox is { } box)
+        {
+            SelectionBox = (box.Start, position);
+            Changed?.Invoke(this, EventArgs.Empty);
+        }
+        else if (_press == SharedPress.Pan)
+        {
+            View.PanBy(new Vector2D(viewPosition.X - lastViewPosition.X, viewPosition.Y - lastViewPosition.Y));
         }
     }
 
@@ -451,43 +424,32 @@ public sealed class BuildGestures
         // A tap is an edit of its own too, so it never folds into a slider edit another finger holds open.
         _build.BeginEdit(this);
         var position = View.ToCanvas(viewPosition);
-        switch (_pressTool)
+        if (!_dragging)
         {
-            case BuildTool when _pressedHandle == SelectionHandle.Aim:
-                break;
-            case BuildTool.Parts when !_dragging:
-                TapMove();
-                break;
-            case BuildTool.Beam when !_dragging:
-                TapMove();
-                break;
-            case BuildTool.Beam when BeamStartNodeId is { } start && _dragging:
-                if (_build.PickedLink != BuildLink.Beam)
+            Tap();
+        }
+        else if (BeamStartNodeId is { } start)
+        {
+            if (_build.PickedLink != BuildLink.Beam)
+            {
+                // A link never makes a joint, so a drop away from one places nothing.
+                if (FindLinkTarget(start, position) is { } linkEnd)
                 {
-                    // A link never makes a joint, so a drop away from one places nothing.
-                    if (FindLinkTarget(start, position) is { } linkEnd)
-                    {
-                        _build.ConnectLink(_build.PickedLink, start, linkEnd);
-                    }
+                    _build.ConnectLink(_build.PickedLink, start, linkEnd);
                 }
-                else if (FindBeamTarget(start, position) is { } end)
-                {
-                    _build.ConnectBeam(start, end);
-                }
-
-                break;
-            case BuildTool.Joint when !_dragging:
-                TapJoint();
-                break;
-            case BuildTool.Select when !_dragging:
-                TapSelect();
-                break;
-            case BuildTool.Select when SelectionBox is { } box:
-                CompleteSelectionBox(box.Start, position);
-                break;
-            case BuildTool.Select when _pressedHandle == SelectionHandle.Rotate && _dragLayout is { } turned:
-                _frameAngle = Math.IEEERemainder(turned.Angle + _turn, 2 * Math.PI);
-                break;
+            }
+            else if (FindBeamTarget(start, position) is { } end)
+            {
+                _build.ConnectBeam(start, end);
+            }
+        }
+        else if (SelectionBox is { } box)
+        {
+            CompleteSelectionBox(box.Start, position);
+        }
+        else if (_pressedHandle == SelectionHandle.Rotate && _dragLayout is { } turned)
+        {
+            _frameAngle = Math.IEEERemainder(turned.Angle + _turn, 2 * Math.PI);
         }
 
         _build.EndEdit(this);
@@ -523,47 +485,53 @@ public sealed class BuildGestures
     }
 
     /// <summary>
-    /// With a group (#704), a press on a selected joint or inside the frame drags the group, and
-    /// any other press pans. With none, a drag from a joint moves it (selecting only it unless it
-    /// is selected), and any other press draws a box. Taps are settled on release (<see cref="TapSelect"/>).
+    /// What a press does once it drags, the same in every tool (#803) apart from a Beams link drag:
+    /// a selected joint drags the selection, a press inside a group's frame drags the group, an
+    /// unselected joint is moved alone, and any other press draws a box in Select and pans elsewhere.
+    /// Taps are settled on release (<see cref="Tap"/>).
     /// </summary>
-    private void PressSelect(Vector2D viewPosition, Vector2D position)
+    private void PressShared(Vector2D viewPosition)
     {
-        if (_pressedInGroup)
+        if (_pressedNodeWasSelected)
         {
-            if (_pressedNodeWasSelected)
-            {
-                _selectPress = SelectPress.Move;
-            }
-            else if (Layout() is { } layout && FrameContains(layout, viewPosition))
-            {
-                _pressedHandle = SelectionHandle.Move;
-            }
-            else
-            {
-                _selectPress = SelectPress.Pan;
-            }
+            _press = SharedPress.Move;
+        }
+        else if (_build.SelectedNodeCount >= 2 && Layout() is { } layout && FrameContains(layout, viewPosition))
+        {
+            _press = SharedPress.Group;
         }
         else if (_pressedNode is not null)
         {
-            _selectPress = SelectPress.Move;
+            _press = SharedPress.Move;
         }
         else
         {
-            _selectPress = SelectPress.Box;
-            SelectionBox = (position, position);
-            Changed?.Invoke(this, EventArgs.Empty);
+            _press = _pressTool == BuildTool.Select ? SharedPress.Box : SharedPress.Pan;
         }
     }
 
-    /// <summary>A Select tap (#704) adds or removes the part under it; a tap on empty canvas clears, and one on a handle does nothing.</summary>
-    private void TapSelect()
+    /// <summary>
+    /// A tap in any tool (#803) adds or removes the part under it. A tap on empty canvas clears the
+    /// selection, or with nothing selected adds a joint in Joint; one on a handle does nothing.
+    /// </summary>
+    private void Tap()
     {
         if (PressedElement() is { } element)
         {
             _build.ToggleSelected(element);
         }
-        else if (_pressedHandle is null)
+        else if (_pressedHandle is not null)
+        {
+            return;
+        }
+        else if (_pressTool == BuildTool.Joint && _build.Selection.Count == 0)
+        {
+            if (!_build.IsMoveOnly && BuildViewModel.BuildArea.Contains(_pressPosition))
+            {
+                _build.PlaceNode(_pressPosition);
+            }
+        }
+        else
         {
             _build.ClearSelection();
         }
@@ -575,51 +543,6 @@ public sealed class BuildGestures
         : _pressedLink is { } link ? link
         : _pressedBeam is { } beam ? new(CreatureElementKind.Beam, beam)
         : null;
-
-    private void TapMove()
-    {
-        if (_pressedNode is { } node)
-        {
-            _build.ReplaceSelection([node]);
-        }
-        else if (_pressedSensor is { } sensor)
-        {
-            _build.SelectSensor(sensor);
-        }
-        else if (_pressedLink is { Kind: CreatureElementKind.Piston } piston)
-        {
-            _build.SelectPiston(piston.Id);
-        }
-        else if (_pressedLink is { } spring)
-        {
-            _build.SelectSpring(spring.Id);
-        }
-        else if (_pressedBeam is { } beam)
-        {
-            _build.SelectBeam(beam);
-        }
-        else
-        {
-            _build.ClearSelection();
-        }
-    }
-
-    private void TapJoint()
-    {
-        if (_pressedNode is not null || _pressedSensor is not null || _pressedLink is not null || _build.IsMoveOnly)
-        {
-            return;
-        }
-
-        if (_pressedBeam is { } beam)
-        {
-            _build.SplitBeam(beam, _pressPosition);
-        }
-        else if (BuildViewModel.BuildArea.Contains(_pressPosition))
-        {
-            _build.PlaceNode(_pressPosition);
-        }
-    }
 
     /// <summary>Turns the Camera the Aim drag started on to look at <paramref name="position"/>, smoothly (#622).</summary>
     private void AimCamera(Vector2D position)
@@ -646,7 +569,7 @@ public sealed class BuildGestures
         return (NodeById(beam.NodeA).Position, NodeById(beam.NodeB).Position);
     }
 
-    /// <summary>Applies a Select drag to <paramref name="position"/>, always measured from the press and the start snapshot.</summary>
+    /// <summary>Applies a selection drag to <paramref name="position"/>, always measured from the press and the start snapshot.</summary>
     private void TransformSelection(SelectionSnapshot start, Vector2D position)
     {
         var pivot = start.Pivot;
@@ -675,7 +598,7 @@ public sealed class BuildGestures
     }
 
     /// <summary>
-    /// The frame and handles in view units while Select has two or more joints and no box is
+    /// The frame and handles in view units while two or more joints are selected and no box is
     /// dragged: fitted to the joints along its own axes, or during a Rotate, the start layout turned.
     /// </summary>
     private FrameLayout? Layout()
@@ -685,7 +608,7 @@ public sealed class BuildGestures
             return Place(started.Frame, started.Angle + _turn);
         }
 
-        if (_build.ActiveTool != BuildTool.Select || _build.SelectedNodeCount < 2 || SelectionBox is not null)
+        if (_build.SelectedNodeCount < 2 || SelectionBox is not null)
         {
             return null;
         }
@@ -837,12 +760,10 @@ public sealed class BuildGestures
     {
         _toolPointer = null;
         _dragging = false;
-        _dragOrigin = null;
         _selectionBefore = null;
         _pressedHandle = null;
         _pressedNodeWasSelected = false;
-        _pressedInGroup = false;
-        _selectPress = SelectPress.None;
+        _press = SharedPress.None;
         _selectionStart = null;
         _dragLayout = null;
         _turn = 0;
@@ -860,7 +781,7 @@ public sealed class BuildGestures
 
     private NodeDef NodeById(int nodeId) => _build.Nodes[_build.NodeIndexOf(nodeId)];
 
-    /// <summary>The Select frame and handles in view units; <see cref="Angle"/> turns <see cref="Frame"/> about its centre.</summary>
+    /// <summary>The selection frame and handles in view units; <see cref="Angle"/> turns <see cref="Frame"/> about its centre.</summary>
     private sealed record FrameLayout(
         CanvasRect Frame,
         double Angle,
@@ -878,11 +799,14 @@ public sealed class BuildGestures
         return Math.Sqrt((dx * dx) + (dy * dy));
     }
 
-    /// <summary>What a Select press away from the handles does once it drags (#704).</summary>
-    private enum SelectPress
+    /// <summary>What a press away from the handles does once it drags (#803).</summary>
+    private enum SharedPress
     {
         None,
         Move,
+
+        /// <summary>Inside a group's frame: a drag moves the group, a tap acts as if outside it.</summary>
+        Group,
         Pan,
         Box,
     }

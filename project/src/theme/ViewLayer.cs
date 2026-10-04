@@ -4,7 +4,7 @@ namespace NodeRunner.Theme;
 
 /// <summary>
 /// A view's own drawing on one of a creature's named layers (#769), such as Build's placing
-/// feedback under the links or its markers and Select frame over the whole creature. The view
+/// feedback under the links or its markers and selection frame over the whole creature. The view
 /// draws on it from its <see cref="CanvasItem.Draw"/> signal, so its marks take their place
 /// among the parts without the view setting a <c>ZIndex</c>.
 /// </summary>

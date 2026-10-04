@@ -58,7 +58,6 @@ public sealed class SensorDefTests
     {
         var sensor = new SensorDef(3, 2, SensorKind.Camera, "Eye", 0.5);
 
-        sensor.WithBeam(4).ShouldBe(new SensorDef(3, 4, SensorKind.Camera, "Eye", 0.5));
         sensor.WithName("Look").ShouldBe(new SensorDef(3, 2, SensorKind.Camera, "Look", 0.5));
         sensor.WithAim(-1).ShouldBe(new SensorDef(3, 2, SensorKind.Camera, "Eye", -1));
     }

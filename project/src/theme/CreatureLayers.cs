@@ -36,7 +36,7 @@ public static class CreatureLayers
     /// <summary>A selected joint with its halo ring.</summary>
     public const int SelectedJoints = 8;
 
-    /// <summary>What a view draws over the whole creature, such as Training's camera rays and Build's Select frame.</summary>
+    /// <summary>What a view draws over the whole creature, such as Training's camera rays and Build's selection frame.</summary>
     public const int Overlays = 9;
 
     /// <summary>How many ZIndex steps one creature takes, so drawn creatures can be stacked without mixing.</summary>

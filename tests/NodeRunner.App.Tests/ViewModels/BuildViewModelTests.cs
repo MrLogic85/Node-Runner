@@ -624,33 +624,6 @@ public sealed class BuildViewModelTests
     }
 
 
-    [Theory]
-    [InlineData(-10, 0)]
-    [InlineData(110, 0)]
-    public void SplitBeam_AtAnEnd_ChangesNothing(double x, double y)
-    {
-        var viewModel = new BuildViewModel();
-        viewModel.PlaceNode(new Vector2D(0, 0));
-        viewModel.PlaceNode(new Vector2D(100, 0));
-        viewModel.ConnectBeam(1, 2);
-
-        viewModel.SplitBeam(viewModel.Beams[0].Id, new Vector2D(x, y)).ShouldBeNull();
-
-        viewModel.Nodes.Count.ShouldBe(2);
-        viewModel.Beams.Count.ShouldBe(1);
-    }
-
-    [Fact]
-    public void SplitBeam_WhenLocked_ChangesNothing()
-    {
-        var viewModel = LockedPair();
-
-        viewModel.SplitBeam(viewModel.Beams[0].Id, new Vector2D(10, 0)).ShouldBeNull();
-
-        viewModel.Nodes.Count.ShouldBe(2);
-        viewModel.Beams.Count.ShouldBe(1);
-    }
-
     private static BuildViewModel LockedPair()
     {
         var viewModel = new BuildViewModel();
@@ -704,7 +677,7 @@ public sealed class BuildViewModelTests
         viewModel.PropertyChanged += (_, args) => raisedFor.Add(args.PropertyName);
         viewModel.AnatomyChanged += (_, _) => anatomyChanged = true;
 
-        viewModel.SelectBeam(viewModel.Beams[0].Id);
+        viewModel.SelectOnly(CreatureElementKind.Beam, viewModel.Beams[0].Id);
 
         viewModel.SelectedNodeCount.ShouldBe(0);
         viewModel.SelectedBeamCount.ShouldBe(1);
@@ -723,7 +696,7 @@ public sealed class BuildViewModelTests
         var a = viewModel.PlaceNode(new Vector2D(0, 0));
         var b = viewModel.PlaceNode(new Vector2D(10, 0));
         viewModel.ConnectBeam(a, b);
-        viewModel.SelectBeam(viewModel.Beams[0].Id);
+        viewModel.SelectOnly(CreatureElementKind.Beam, viewModel.Beams[0].Id);
         var raisedFor = new List<string?>();
         var anatomyChanged = false;
         viewModel.PropertyChanged += (_, args) => raisedFor.Add(args.PropertyName);
@@ -746,7 +719,7 @@ public sealed class BuildViewModelTests
         var a = viewModel.PlaceNode(new Vector2D(0, 0));
         var b = viewModel.PlaceNode(new Vector2D(10, 0));
         viewModel.ConnectBeam(a, b);
-        viewModel.SelectBeam(viewModel.Beams[0].Id);
+        viewModel.SelectOnly(CreatureElementKind.Beam, viewModel.Beams[0].Id);
 
         viewModel.DeleteSelectedParts();
 
@@ -762,7 +735,7 @@ public sealed class BuildViewModelTests
         viewModel.Load(SensorCreature());
         viewModel.ReplaceSelection([1]);
 
-        viewModel.SelectSensor(5);
+        viewModel.SelectOnly(CreatureElementKind.Sensor, 5);
 
         viewModel.SelectedPartCount.ShouldBe(1);
         viewModel.SingleSelectedSensorId.ShouldBe(5);
@@ -779,9 +752,9 @@ public sealed class BuildViewModelTests
     {
         var viewModel = new BuildViewModel();
         viewModel.Load(SensorCreature());
-        viewModel.SelectSensor(4);
+        viewModel.SelectOnly(CreatureElementKind.Sensor, 4);
 
-        viewModel.SelectBeam(3);
+        viewModel.SelectOnly(CreatureElementKind.Beam, 3);
         viewModel.SingleSelectedSensorId.ShouldBeNull();
         viewModel.SelectedPartCount.ShouldBe(1);
     }
@@ -814,7 +787,7 @@ public sealed class BuildViewModelTests
                 [new BeamDef(101, 1, 2)],
                 []),
             moveOnly: true);
-        viewModel.SelectBeam(viewModel.Beams[0].Id);
+        viewModel.SelectOnly(CreatureElementKind.Beam, viewModel.Beams[0].Id);
 
         viewModel.DeleteSelectedParts();
 
@@ -939,7 +912,7 @@ public sealed class BuildViewModelTests
     {
         var build = new BuildViewModel();
         build.Load(CameraPair(), moveOnly: false);
-        build.SelectSensor(4);
+        build.SelectOnly(CreatureElementKind.Sensor, 4);
         var changes = 0;
         build.AnatomyChanged += (_, _) => changes++;
 
@@ -955,7 +928,7 @@ public sealed class BuildViewModelTests
     {
         var build = new BuildViewModel();
         build.Load(CameraPair(), moveOnly: true);
-        build.SelectSensor(4);
+        build.SelectOnly(CreatureElementKind.Sensor, 4);
 
         build.SetParameter(PartParameterId.Aim, 1);
 

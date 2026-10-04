@@ -203,7 +203,7 @@ public sealed class BuildPresentationViewModelTests
             [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(3, 4))],
             [new BeamDef(101, 1, 2)],
             []));
-        build.SelectBeam(101);
+        build.SelectOnly(CreatureElementKind.Beam, 101);
         var part = new BuildPresentationViewModel(build).SinglePart!;
 
         part.ShouldBe(new PartSettingsPresentation(
@@ -229,7 +229,7 @@ public sealed class BuildPresentationViewModelTests
             [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(3, 4))],
             [new BeamDef(101, 1, 2, "Thigh")],
             [new SensorDef(7, 101, kind)]));
-        build.SelectSensor(7);
+        build.SelectOnly(CreatureElementKind.Sensor, 7);
         var presentation = new BuildPresentationViewModel(build);
 
         var part = presentation.SinglePart!;
@@ -257,7 +257,7 @@ public sealed class BuildPresentationViewModelTests
                 [new BeamDef(101, 1, 2)],
                 [new SensorDef(7, 101, SensorKind.Camera)]),
             moveOnly: true);
-        build.SelectSensor(7);
+        build.SelectOnly(CreatureElementKind.Sensor, 7);
 
         new BuildPresentationViewModel(build).SinglePart!.Note.ShouldBe(UiText.Plain("Three rays see how near the ground is. Drag the round handle to aim it."));
     }
@@ -295,7 +295,7 @@ public sealed class BuildPresentationViewModelTests
     {
         var build = new BuildViewModel();
         build.Load(TwoPistonCreature(stroke: 0.3));
-        build.SelectPiston(301);
+        build.SelectOnly(CreatureElementKind.Piston, 301);
 
         var part = new BuildPresentationViewModel(build).SinglePart!;
 
@@ -314,7 +314,7 @@ public sealed class BuildPresentationViewModelTests
     {
         var build = new BuildViewModel();
         build.Load(SpringCreature());
-        build.SelectSpring(401);
+        build.SelectOnly(CreatureElementKind.Spring, 401);
 
         var part = new BuildPresentationViewModel(build).SinglePart!;
 
@@ -634,25 +634,16 @@ public sealed class BuildPresentationViewModelTests
         presentation.CanRedo.ShouldBeTrue();
     }
 
-    [Theory]
-    [InlineData(true)]
-    [InlineData(false)]
-    public void TheFirstStepsRefresh_SeesNoRemovedPartSelected(bool split)
+    [Fact]
+    public void TheFirstStepsRefresh_SeesNoRemovedPartSelected()
     {
         var build = new BuildViewModel();
         build.Load(PairCreature());
         var presentation = new BuildPresentationViewModel(build);
         presentation.PresentationChanged += (_, _) => _ = presentation.SinglePart;
-        build.SelectBeam(101);
+        build.SelectOnly(CreatureElementKind.Beam, 101);
 
-        if (split)
-        {
-            build.SplitBeam(101, new Vector2D(45, 0)).ShouldNotBeNull();
-        }
-        else
-        {
-            build.DeleteSelectedParts();
-        }
+        build.DeleteSelectedParts();
 
         build.Beams.ShouldNotContain(beam => beam.Id == 101);
         presentation.CanUndo.ShouldBeTrue();

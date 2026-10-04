@@ -4,7 +4,7 @@ namespace NodeRunner.App.ViewModels;
 
 /// <summary>
 /// The selection half of <see cref="BuildViewModel"/>: which parts are selected (#704), selecting
-/// and clearing them, and the Select tool's move, turn and scale of the selected joints.
+/// and clearing them, and the move, turn and scale of the selected joints in any tool.
 /// </summary>
 public sealed partial class BuildViewModel
 {
@@ -70,16 +70,6 @@ public sealed partial class BuildViewModel
         SelectionChanged();
     }
 
-    public void SelectBeam(int beamId) => SelectOnly(CreatureElementKind.Beam, beamId);
-
-    public void SelectSensor(int sensorId) => SelectOnly(CreatureElementKind.Sensor, sensorId);
-
-    public void SelectPiston(int pistonId) => SelectOnly(CreatureElementKind.Piston, pistonId);
-
-    public void SelectSpring(int springId) => SelectOnly(CreatureElementKind.Spring, springId);
-
-    private void SelectOnly(CreatureElementKind kind, int id) => ReplaceSelection(PartSetOf(kind, id));
-
     private IEnumerable<int> SelectedPartIds() =>
         _selectedNodeIds.Concat(_selectedBeamIds).Concat(_selectedSensorIds).Concat(_selectedPistonIds).Concat(_selectedSpringIds);
 
@@ -114,20 +104,6 @@ public sealed partial class BuildViewModel
         SelectionChanged();
     }
 
-    private static PartSet PartSetOf(CreatureElementKind kind, int id)
-    {
-        var one = new HashSet<int> { id };
-        return kind switch
-        {
-            CreatureElementKind.Node => PartSet.None with { Nodes = one },
-            CreatureElementKind.Beam => PartSet.None with { Beams = one },
-            CreatureElementKind.Sensor => PartSet.None with { Sensors = one },
-            CreatureElementKind.Piston => PartSet.None with { Pistons = one },
-            CreatureElementKind.Spring => PartSet.None with { Springs = one },
-            _ => throw new ArgumentOutOfRangeException(nameof(kind)),
-        };
-    }
-
     private HashSet<int> SelectedSet(CreatureElementKind kind) => kind switch
     {
         CreatureElementKind.Node => _selectedNodeIds,
@@ -156,7 +132,7 @@ public sealed partial class BuildViewModel
     }
 
     /// <summary>
-    /// The selected joints' positions and pivot, for a Select drag to transform: the given
+    /// The selected joints' positions and pivot, for a selection drag to transform: the given
     /// <paramref name="pivot"/>, or else the middle of the joints' centres.
     /// </summary>
     public SelectionSnapshot SnapshotSelection(Vector2D? pivot = null)

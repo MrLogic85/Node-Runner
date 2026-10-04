@@ -21,7 +21,7 @@ public enum BuildTool
 /// selected, and the anatomy placed so far via a <see cref="CreatureBuilder"/>.
 /// UI (see `project/src/ui/AGENTS.md`) binds to this instead of mutating the
 /// builder directly; it may still read the Domain DTOs (<see cref="NodeDef"/>
-/// etc.) this view-model exposes. The selection and the Select tool's transforms are in
+/// etc.) this view-model exposes. The selection and its transforms are in
 /// BuildViewModel.Selection.cs. See `docs/BUILD_MODE.md`.
 /// </summary>
 public sealed partial class BuildViewModel : INotifyPropertyChanged
@@ -662,44 +662,6 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
             : _builder.AddSpring(nodeIdA, nodeIdB));
         AnatomyChanged?.Invoke(this, EventArgs.Empty);
         return linkId;
-    }
-
-    /// <summary>
-    /// Adds a node at the point on beam <paramref name="beamId"/> closest to
-    /// <paramref name="position"/> and replaces the beam with two beams through
-    /// it, as one change. Returns the new node's id, or null when the
-    /// Creation is locked or the closest point is an end of the beam (or the
-    /// beam has no length), where a split would stack two nodes.
-    /// </summary>
-    public int? SplitBeam(int beamId, Vector2D position)
-    {
-        var beamIndex = _builder.BeamIndexOf(beamId);
-
-        if (_moveOnly)
-        {
-            return null;
-        }
-
-        var beam = _builder.Beams[beamIndex];
-        var start = NodeById(beam.NodeA).Position;
-        var end = NodeById(beam.NodeB).Position;
-        var t = ClosestPointParameter(position, start, end);
-        if (t <= 0 || t >= 1)
-        {
-            return null;
-        }
-
-        var splitPoint = new Vector2D(start.X + (t * (end.X - start.X)), start.Y + (t * (end.Y - start.Y)));
-        var nodeId = _history.Change(() =>
-        {
-            var id = _builder.AddNode(splitPoint);
-            _builder.SplitBeamAtNode(beamId, id);
-            ClearSelectionSets();
-            return id;
-        });
-        NotifySelectionChanged();
-        AnatomyChanged?.Invoke(this, EventArgs.Empty);
-        return nodeId;
     }
 
     /// <summary>

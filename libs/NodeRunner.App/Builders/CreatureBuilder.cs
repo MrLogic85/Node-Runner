@@ -292,33 +292,6 @@ public sealed class CreatureBuilder
         _sensors.RemoveAll(sensor => sensor.BeamId == beamId);
     }
 
-    /// <summary>
-    /// Replaces a beam with two beams through an existing node. The beam's sensors move, keeping
-    /// their ids, to the longer half (the half at the beam's NodeA on a tie).
-    /// </summary>
-    public (int FirstBeamId, int SecondBeamId) SplitBeamAtNode(int beamId, int nodeId)
-    {
-        ValidateNodeId(nodeId);
-        var beamIndex = BeamIndexOf(beamId);
-        var beam = _beams[beamIndex];
-        var movedSensors = _sensors
-            .Where(sensor => sensor.BeamId == beamId)
-            .ToArray();
-
-        _beams.RemoveAt(beamIndex);
-        var firstBeamId = AddBeam(beam.NodeA, nodeId);
-        var secondBeamId = AddBeam(nodeId, beam.NodeB);
-        var sensorsToFirstHalf = DistanceSquared(beam.NodeA, nodeId) >= DistanceSquared(nodeId, beam.NodeB);
-        var targetBeamId = sensorsToFirstHalf ? firstBeamId : secondBeamId;
-        foreach (var sensor in movedSensors)
-        {
-            var sensorIndex = SensorIndexOf(sensor.Id);
-            _sensors[sensorIndex] = sensor.WithBeam(targetBeamId);
-        }
-
-        return (firstBeamId, secondBeamId);
-    }
-
     /// <summary>Adds a sensor mounted on an existing beam unless that beam already has a sensor.</summary>
     public bool AddSensor(int beamId, SensorKind kind, out int sensorId, [NotNullWhen(false)] out UiText? reason)
     {
@@ -471,13 +444,6 @@ public sealed class CreatureBuilder
 
     private static bool IsSamePair(int linkA, int linkB, int nodeA, int nodeB) =>
         (linkA == nodeA && linkB == nodeB) || (linkA == nodeB && linkB == nodeA);
-
-    private double DistanceSquared(int nodeIdA, int nodeIdB)
-    {
-        var a = _nodes[NodeIndexOf(nodeIdA)].Position;
-        var b = _nodes[NodeIndexOf(nodeIdB)].Position;
-        return ((a.X - b.X) * (a.X - b.X)) + ((a.Y - b.Y) * (a.Y - b.Y));
-    }
 
     private bool HasNode(int nodeId) => _nodes.Any(node => node.Id == nodeId);
 

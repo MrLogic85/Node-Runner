@@ -22,8 +22,8 @@ layer keeps its textbook terms.
 - **Creature** — The body inside a Creation; see "Creature anatomy". Copy
   never calls the saved item a creature.
 - **Parts tool** — The first Build rail tool. It opens the Parts tray when
-  nothing is selected and otherwise keeps the basic select, drag-to-move and
-  pan behaviour.
+  nothing is selected. Selecting and moving work as in every tool; see
+  `docs/BUILD_MODE.md` → Interactions.
 - **Shadow** — One of the ghost copies that race at once during training.
   The App maps the GA's candidates and population to shadows at its
   boundary (`ITrainingProgressSource.ShadowCount`).
@@ -59,7 +59,8 @@ Long-form descriptions and the sensor/model contract live in
   `docs/CREATURE_MODEL.md`.
 - **Creature element selection** — A selected joint, beam, sensor or link,
   represented as a `CreatureElementKind` plus the part's stable id (#220).
-  Select holds any mix of them as a `PartSet` (#704).
+  The selection holds any mix of them as a `PartSet` (#704), in every tool
+  (#803).
 - **CreatureDef** — Pure-data description of a creature; the "genome" of the
   body, distinct from the brain's genome. See: `docs/CREATURE_MODEL.md`.
 - **Joint** — The player-facing name for a node in Build (the reference
@@ -117,7 +118,7 @@ Long-form descriptions and the sensor/model contract live in
   defines no 2D metre; its default 2D gravity, 980 units/s², is Earth's
   9.8 m/s² at this scale. The sim, fitness and saves stay in world units;
   text the player reads converts to metres.
-- **Move handle** — The Select frame's centre handle. It moves a selected
+- **Move handle** — The selection frame's centre handle. It moves a selected
   group; it is not a rail tool.
 - **View unit** — A distance in the Build canvas widget's own space before
   zoom and pan; touch positions, tap slop and most hit sizes use it, so they

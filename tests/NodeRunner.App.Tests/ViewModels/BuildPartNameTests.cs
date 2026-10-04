@@ -87,7 +87,7 @@ public sealed class BuildPartNameTests
     public void RenamePart_OfADeletedPart_DoesNothing()
     {
         var build = Loaded();
-        build.SelectSensor(7);
+        build.SelectOnly(CreatureElementKind.Sensor, 7);
         build.DeleteSelectedParts();
         var changes = 0;
         build.AnatomyChanged += (_, _) => changes++;

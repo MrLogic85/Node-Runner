@@ -60,7 +60,7 @@ public partial class BuildCanvas : Node2D
     [Export]
     public UiWorldView? WorldView { get; set; }
 
-    /// <summary>The Select handles, authored in the slot above the canvas; placed here, hit-tested by <see cref="BuildGestures"/>.</summary>
+    /// <summary>The selection handles, authored in the slot above the canvas; placed here, hit-tested by <see cref="BuildGestures"/>.</summary>
     [Export]
     public UiSelectionHandle? MoveHandle { get; set; }
 
@@ -70,7 +70,7 @@ public partial class BuildCanvas : Node2D
     [Export]
     public UiSelectionHandle? ScaleHandle { get; set; }
 
-    /// <summary>Turns a selected Camera (#594); placed and hit-tested like the Select handles.</summary>
+    /// <summary>Turns a selected Camera (#594); placed and hit-tested like the selection handles.</summary>
     [Export]
     public UiSelectionHandle? AimHandle { get; set; }
 
@@ -392,7 +392,7 @@ public partial class BuildCanvas : Node2D
         }
     }
 
-    /// <summary>What goes over the whole creature: the aimed camera's rays, warnings, the beam drag's rings and the Select frame.</summary>
+    /// <summary>What goes over the whole creature: the aimed camera's rays, warnings, the beam drag's rings and the selection frame.</summary>
     private void DrawOverlay(CanvasItem canvas)
     {
         if (_viewModel is null || _gestures is null)
@@ -471,7 +471,7 @@ public partial class BuildCanvas : Node2D
     }
 
     /// <summary>
-    /// The Select frame, corner squares and rotate stem, drawn last at screen size in window
+    /// The selection frame, corner squares and rotate stem, drawn last at screen size in window
     /// pixels, turned with the group.
     /// </summary>
     private void DrawSelectionFrame(CanvasItem canvas)
@@ -672,7 +672,7 @@ public partial class BuildCanvas : Node2D
             return;
         }
 
-        // At screen size like the Select frame, in window pixels so its edges are smooth.
+        // At screen size like the selection frame, in window pixels so its edges are smooth.
         var viewTransform = ViewTransform();
         var rect = RectFromPoints(viewTransform * ToGodot(box.Start), viewTransform * ToGodot(box.End));
         var toPixels = UiPixelSpace.Enter(this, Transform2D.Identity);

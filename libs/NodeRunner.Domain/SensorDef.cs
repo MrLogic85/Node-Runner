@@ -51,8 +51,6 @@ public sealed record SensorDef
     /// </summary>
     public double? Aim { get; }
 
-    public SensorDef WithBeam(int beamId) => new(Id, beamId, Kind, Name, Aim);
-
     public SensorDef WithName(string? name) => new(Id, BeamId, Kind, name, Aim);
 
     public SensorDef WithAim(double aim) => new(Id, BeamId, Kind, Name, aim);
