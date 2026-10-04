@@ -160,6 +160,24 @@ public sealed class DirectBrainTests
     }
 
     [Fact]
+    public void Refit_WithIdsFrom_KeepsALaterBrainsIdsForNewPorts_AndNeverReusesAnId()
+    {
+        var opened = DirectBrain.ToBrainDef(_ports, _genome, previous: null);
+        var centre = BrainPort.Input(7, "centre");
+        var saved = DirectBrain.Refit(opened, new BrainPortLayout([.. _ports.Inputs, centre], _ports.Outputs));
+        var withoutAlong = DirectBrain.Refit(opened, new BrainPortLayout([_ports.Inputs[0], _ports.Inputs[1], centre], _ports.Outputs), idsFrom: saved);
+
+        var restored = DirectBrain.Refit(
+            opened,
+            new BrainPortLayout([.. _ports.Inputs, centre, BrainPort.Input(8, "tilt")], _ports.Outputs),
+            idsFrom: withoutAlong);
+
+        restored.Neurons.Select(neuron => (neuron.Id, neuron.PartId, neuron.Channel)).ShouldBe(
+            [(1, (int?)2, "angle:5"), (2, 2, "speed:5"), (3, 6, "along"), (5, 7, "centre"), (6, 8, "tilt"), (4, 2, "target:5")]);
+        restored.NextNeuronId.ShouldBe(7);
+    }
+
+    [Fact]
     public void Refit_ToACreatureWithNoOutputs_KeepsOnlyItsInputs()
     {
         var brain = DirectBrain.ToBrainDef(_ports, _genome, previous: null);

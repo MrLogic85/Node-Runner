@@ -94,6 +94,26 @@ public sealed class CreationUpdateCoordinatorTests
     }
 
     [Fact]
+    public void ApplyEdit_WithTheOpenedBrain_RefitsIt_AndKeepsTheSavedRecords()
+    {
+        var repository = new InMemoryCreationRepository();
+        var coordinator = new CreationUpdateCoordinator(repository);
+        var creation = Trained(PistonCreature(withSecondPiston: true, nodeX: 0));
+        repository.Save(creation);
+        var opened = creation.Training!.Brain;
+        coordinator.ApplyEdit(creation.Id, PistonCreature(withSecondPiston: false, nodeX: 0));
+        var saved = repository.Get(creation.Id)!;
+        var training = saved.Training!;
+        repository.Save(saved.WithCreature(saved.Creature, new TrainingStateDef(training.Brain, 9, training.Latest, training.Best)));
+
+        var updated = coordinator.ApplyEdit(creation.Id, PistonCreature(withSecondPiston: true, nodeX: 0), opened)!;
+
+        updated.Training!.Generation.ShouldBe(9);
+        updated.Training.Brain.Neurons.ShouldBe(opened.Neurons, ignoreOrder: true);
+        updated.Training.Brain.Connections.ShouldBe(opened.Connections, ignoreOrder: true);
+    }
+
+    [Fact]
     public void ApplyEdit_Rebuild_KeepsMatchedPorts_AndTheTrainingRecords()
     {
         var repository = new InMemoryCreationRepository();

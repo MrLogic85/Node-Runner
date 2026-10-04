@@ -114,20 +114,26 @@ public sealed class CreationUpdateCoordinator : ICreationUpdateCoordinator
         }
     }
 
-    public CreationDef? ApplyEdit(Guid id, CreatureDef editedCreature)
+    public CreationDef? ApplyEdit(Guid id, CreatureDef editedCreature, BrainDef? openedBrain = null)
     {
         ArgumentNullException.ThrowIfNull(editedCreature);
         return UpdateIfPresent(id, source =>
         {
             BumpTrainingEpoch(id);
-            return source.WithCreature(editedCreature, Refit(source.Training, editedCreature));
+            return source.WithCreature(editedCreature, Refit(source.Training, openedBrain, editedCreature));
         });
     }
 
-    private static TrainingStateDef? Refit(TrainingStateDef? training, CreatureDef creature) =>
+    private static TrainingStateDef? Refit(TrainingStateDef? training, BrainDef? openedBrain, CreatureDef creature) =>
         training is null
             ? null
-            : new TrainingStateDef(DirectBrain.Refit(training.Brain, BrainPorts.Of(creature)), training.Generation, training.Latest, training.Best);
+            : new TrainingStateDef(
+                openedBrain is null
+                    ? DirectBrain.Refit(training.Brain, BrainPorts.Of(creature))
+                    : DirectBrain.Refit(openedBrain, BrainPorts.Of(creature), idsFrom: training.Brain),
+                training.Generation,
+                training.Latest,
+                training.Best);
 
     public bool Delete(Guid id)
     {

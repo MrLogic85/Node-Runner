@@ -200,6 +200,12 @@ public sealed class BuildPresentationViewModel
     /// <summary>True for a locked Creation: its anatomy is fixed and only moving nodes is allowed.</summary>
     public bool IsLocked => _build.IsMoveOnly;
 
+    /// <summary>Whether the overflow's Undo can be tapped (#689).</summary>
+    public bool CanUndo => _build.CanUndo;
+
+    /// <summary>Whether the overflow's Redo can be tapped (#689).</summary>
+    public bool CanRedo => _build.CanRedo;
+
     /// <summary>True when the Creation has saved training, locked or unlocked for this visit.</summary>
     public bool IsTrained => _build.TrainingGeneration is not null;
 

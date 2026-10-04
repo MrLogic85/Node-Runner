@@ -37,6 +37,25 @@ owned by `docs/TRAINING_LOOP.md` → Product lifecycle boundary.
   overflow menu also offers Stats (coming soon), Copy creation and Reset
   training (#370); the copy keeps the trained brain. Reset training asks
   first with a press-and-hold (#687).
+- Undo and Redo (#689, `BuildViewModel.Undo`/`Redo`, `BuildHistory`) are
+  icon buttons in the top bar between the padlock and the overflow
+  (`docs/UI_DIRECTION.md` → "Build has Undo"), and work on a locked
+  creation too. Each finished action is one step: a placed part, a link, a
+  split, a delete, a part rename, a whole drag (a joint, a selection's move/turn/scale, a camera's aim) or a
+  whole slider drag. A step only counts if the body changed. Selection,
+  tool, zoom and pan never count, and a cancelled gesture adds nothing and
+  keeps Redo. A new step clears Redo; the history holds 100 steps and
+  lasts for one Build visit, so opening Build (also after Train setup or
+  Reset training) starts it empty. Renaming the creation, Unlock, Reset
+  training and Copy creation are not steps. Undo keeps the selected parts
+  that still exist and never lowers `NextPartId`, so part ids stay unique
+  (#220). Saves refit the brain Build opened with (`OpenedBrain`,
+  `docs/CREATURE_MODEL.md` → "Build refits the brain it opened with"), so
+  an undone delete gets its trained weights back. Each edit has an owner,
+  the canvas or the slider, so one never closes or drops the other's; a
+  canvas tap while a slider is held is a step of its own. Undo and Redo do
+  nothing while an edit is open, so a second finger cannot undo under a
+  drag.
 
 ## Coordinates
 
@@ -118,7 +137,7 @@ a node's own ring always hits.
   smoothly to look at the finger (`CameraRays.AimAlong`); the aim is saved
   relative to the beam, so the camera turns with it. The handle is hit before
   anything under it, a tap on it does nothing, and a second finger puts the
-  aim back (Build has no undo). A locked creation keeps the Aim handle:
+  aim back; a finished aim drag is one Undo step. A locked creation keeps the Aim handle:
   aim changes no brain port (#638).
 - There is no Delete tool: the part settings and selection panels delete the
   selection, and deleting a node removes every beam on it and those beams'

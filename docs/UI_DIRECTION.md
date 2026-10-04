@@ -90,6 +90,15 @@ reference would mislead someone working on that surface.
   either state, an untrained one Power budget and Delete creation. Copy
   saves edits first, keeps the brain and confirms with a notification.
   Checkpoints wait for #256. Owner decision.
+- **Build has Undo (#689).** The reference has no Undo. Instead Undo and
+  Redo are Secondary icon buttons in Build's top bar, after the padlock and
+  before the overflow, in every state. They never name the step, are
+  disabled when there is nothing to undo or redo, and give no feedback
+  beyond the canvas updating. A locked creation's moves and aims are
+  undoable, so they work while locked too. They sit in the bar, not the
+  overflow, because the overflow has to fit a landscape phone and a menu
+  does not scroll. This covers Build body edits only; Reset training and
+  Delete creation stay final. Owner decision.
 - **Popups name only warnings and danger (#692).** The reference's popup
   overline spells the type, "DEFAULT" included. Instead a default dialog or
   notification has no overline; the others read "Warning" and "Danger".

@@ -33,9 +33,10 @@ generation", not "a training session has finished" (#369, 2026-09-30).
    Saving a Creation never needs a finished creature; only training does
    (`CreatureReadiness`, #515). Saving an edit keeps any training, even a
    generation that finished while Build was open, and refits its brain to
-   the edited anatomy (#516, `docs/CREATURE_MODEL.md` → "A rebuild keeps
-   the brain"). Generation, latest and best are kept; Training then resumes
-   from the refitted brain.
+   the edited anatomy (#516, #689, `docs/CREATURE_MODEL.md` → "A rebuild
+   keeps the brain" and "Build refits the brain it opened with").
+   Generation, latest and best are kept; Training then resumes from the
+   refitted brain.
 2. Train setup (`TrainSetupRoute`, #194) sets Shadows and Run length,
    filled from the Creation's saved values or the default (#617). Start
    saves them on the Creation and opens Training in Train setup's place,

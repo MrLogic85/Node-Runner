@@ -184,6 +184,15 @@ public partial class UiMenu : Container, IUiClipping
     // Button, so the row shows its press first and sliding off cancels it.
     public override void _GuiInput(InputEvent inputEvent)
     {
+        // Touches only need stopping here. The menu is top level, and Godot stops passing an
+        // event up at a top-level control before it applies Stop, so a touch on a row would
+        // fall through to whatever lies beneath, such as Build's canvas clearing its selection.
+        if (inputEvent is InputEventScreenTouch or InputEventScreenDrag)
+        {
+            GetViewport().SetInputAsHandled();
+            return;
+        }
+
         if (inputEvent is not InputEventMouseButton { ButtonIndex: MouseButton.Left } mouse)
         {
             return;

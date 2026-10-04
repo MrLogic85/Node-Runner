@@ -278,6 +278,7 @@ public sealed class BuildGestures
             RestoreSelection(before);
         }
 
+        _build.CancelEdit(this);
         ResetTool();
         Changed?.Invoke(this, EventArgs.Empty);
     }
@@ -358,6 +359,9 @@ public sealed class BuildGestures
             }
 
             _dragging = true;
+
+            // Everything a drag changes, up to its release, is one undo step (#689).
+            _build.BeginEdit(this);
             if (_pressedHandle == SelectionHandle.Aim)
             {
                 if (_build.AimableCameraId is { } camera)
@@ -455,6 +459,8 @@ public sealed class BuildGestures
             return;
         }
 
+        // A tap is an edit of its own too, so it never folds into a slider edit another finger holds open.
+        _build.BeginEdit(this);
         var position = View.ToCanvas(viewPosition);
         switch (_pressTool)
         {
@@ -495,6 +501,7 @@ public sealed class BuildGestures
                 break;
         }
 
+        _build.EndEdit(this);
         ResetTool();
         Changed?.Invoke(this, EventArgs.Empty);
     }

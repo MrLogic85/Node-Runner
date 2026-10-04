@@ -35,6 +35,12 @@ public partial class BuildScreen : Control
     public delegate void UnlockRequestedEventHandler();
 
     [Signal]
+    public delegate void UndoRequestedEventHandler();
+
+    [Signal]
+    public delegate void RedoRequestedEventHandler();
+
+    [Signal]
     public delegate void ResetTrainingRequestedEventHandler();
 
     [Signal]
@@ -56,6 +62,10 @@ public partial class BuildScreen : Control
     /// <summary>A setting's slider moved (#704): every selected part takes <paramref name="value"/> for <paramref name="parameter"/> (a <see cref="PartParameterId"/>).</summary>
     [Signal]
     public delegate void ParameterChangedEventHandler(int parameter, double value);
+
+    /// <summary>A setting's slider was let go: its changes since the touch are one undo step (#689).</summary>
+    [Signal]
+    public delegate void ParameterChangeFinishedEventHandler();
 
     /// <summary>False while the overflow menu is open; it takes Android Back itself.</summary>
     public bool CanTakeBack => !Toolbar.Menu.Visible;
@@ -96,6 +106,8 @@ public partial class BuildScreen : Control
         name.EditingFinished += OnNameEdited;
         GetNode<UiButton>("%StartTraining").Activated += () => EmitSignal(SignalName.StartTrainingRequested);
         GetNode<UiButton>("%Unlock").Activated += () => EmitSignal(SignalName.UnlockRequested);
+        GetNode<UiButton>("%Undo").Activated += () => EmitSignal(SignalName.UndoRequested);
+        GetNode<UiButton>("%Redo").Activated += () => EmitSignal(SignalName.RedoRequested);
         BindMenuItem(toolbar, GetNode<UiMenuActionItem>("%MenuResetTraining"), () => EmitSignal(SignalName.ResetTrainingRequested));
         BindMenuItem(toolbar, GetNode<UiMenuActionItem>("%MenuCopyCreation"), () => EmitSignal(SignalName.CopyCreationRequested));
         BindMenuItem(toolbar, GetNode<UiMenuActionItem>("%MenuDeleteCreation"), () => EmitSignal(SignalName.DeleteCreationRequested));
@@ -184,6 +196,7 @@ public partial class BuildScreen : Control
     {
         var slider = new UiSlider { Name = id.ToString(), SizeFlagsHorizontal = SizeFlags.ExpandFill };
         slider.ThumbChanged += (_, position) => EmitSignal(SignalName.ParameterChanged, (int)id, PartParameters.ValueAt(id, position));
+        slider.ThumbChangeCommitted += (_, _) => EmitSignal(SignalName.ParameterChangeFinished);
 
         // Differing values have no thumb: a touch sets one value for all of them.
         slider.TrackPressed += position =>
@@ -227,6 +240,8 @@ public partial class BuildScreen : Control
 
         GetNode<UiButton>("%StartTraining").Disabled = !buildPanel.CanStartTraining;
         GetNode<UiButton>("%Unlock").Visible = locked;
+        GetNode<UiButton>("%Undo").Disabled = !presentation.CanUndo;
+        GetNode<UiButton>("%Redo").Disabled = !presentation.CanRedo;
         GetNode<UiMenuActionItem>("%MenuStats").Visible = presentation.IsTrained;
         GetNode<UiMenuActionItem>("%MenuResetTraining").Visible = presentation.IsTrained;
         GetNode<UiMenuActionItem>("%MenuCopyCreation").Visible = presentation.IsTrained;

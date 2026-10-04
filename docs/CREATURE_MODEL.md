@@ -295,12 +295,20 @@ picture but costs an offscreen pass each, so it is left out for performance.
     about 2% force. Sigmoid has no dead zone, so mutation can still raise it.
     Position and velocity outputs start at 0.
   - **A rebuild keeps the brain (#516):** saving a Build edit to a trained
-    creature refits its saved brain to the new ports (`DirectBrain.Refit`).
-    Ports match by part id, channel and direction: a kept port keeps its
-    weights and bias, a new port starts almost passive as above, and a
-    removed part's neurons and connections are dropped. Moving nodes or
-    changing a part's settings keeps every port. Part ids are never reused,
-    so a part removed and added again is a new part that starts passive.
+    creature refits a brain to the new ports (`DirectBrain.Refit`). Ports
+    match by part id, channel and direction: a kept port keeps its weights
+    and bias, a new port starts almost passive as above, and a removed
+    part's neurons and connections are dropped. Moving nodes or changing a
+    part's settings keeps every port. Part ids are never reused, so a part
+    removed and added again is a new part that starts passive.
+  - **Build refits the brain it opened with (#689):** every save in one
+    Build visit refits the brain as it was when Build opened, not the last
+    saved one. So a part an Undo brings back in the same visit gets its
+    neurons, ids and weights back. A port that brain lacks, from a part
+    added this visit, keeps the neuron ids the last save gave it; fresh
+    ids start past both brains' `NextNeuronId`, so no neuron id is ever
+    reused, though new ports' ids need not be sequential. Generation,
+    latest and best always come from the saved training.
 - **Input count** = `(accelerometer count × 2) + (camera count × 3) +
   (piston count × 2)`.
 - **Output count** = `piston count × 2`.
