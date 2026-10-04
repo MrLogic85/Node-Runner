@@ -13,9 +13,12 @@ public sealed partial class UiDialogContent : Control
     private PreviewTheme _theme;
     private UiPopupCard? _card;
     private ScrollContainer _scroll = null!;
+    private Label _title = null!;
+    private Func<string>? _titleSource;
     private Label _body = null!;
     private Func<string>? _contentSource;
     private Label _error = null!;
+    private Func<string>? _errorSource;
     private UiButton _cancel = null!;
     private UiButton _confirm = null!;
     private bool _layoutQueued;
@@ -52,6 +55,7 @@ public sealed partial class UiDialogContent : Control
     {
         _card = GetNode<UiPopupCard>("%Card");
         _scroll = GetNode<ScrollContainer>("%BodyScroll");
+        _title = GetNode<Label>("%Title");
         _body = GetNode<Label>("%Content");
         _error = GetNode<Label>("%Error");
         _cancel = GetNode<UiButton>("%Cancel");
@@ -95,9 +99,11 @@ public sealed partial class UiDialogContent : Control
             return;
         }
 
-        if (what == NotificationTranslationChanged && _contentSource is not null)
+        if (what == NotificationTranslationChanged)
         {
-            _body.Text = _contentSource();
+            Refresh(_title, _titleSource);
+            Refresh(_body, _contentSource);
+            Refresh(_error, _errorSource);
         }
 
         if (what == NotificationThemeChanged && IsNodeReady())
@@ -110,10 +116,10 @@ public sealed partial class UiDialogContent : Control
     {
         _type = spec.Type;
         _iconOverride = spec.Icon;
-        GetNode<Label>("%Title").Text = spec.Title;
+        _titleSource = spec.TitleSource;
+        Show(_title, spec.Title, _titleSource);
         _contentSource = spec.ContentSource;
-        _body.AutoTranslateMode = _contentSource is null ? AutoTranslateModeEnum.Inherit : AutoTranslateModeEnum.Disabled;
-        _body.Text = _contentSource?.Invoke() ?? spec.Content;
+        Show(_body, spec.Content, _contentSource);
         _cancel.Text = spec.AbortText;
         _cancel.HoldDurationSeconds = 0;
         _cancel.HoldToActivate = false;
@@ -134,11 +140,28 @@ public sealed partial class UiDialogContent : Control
         QueueLayout();
     }
 
-    public void ShowError(string? message)
+    /// <summary>Shows <paramref name="message"/>, or <paramref name="source"/>'s text in its place; neither hides the error.</summary>
+    public void ShowError(string? message, Func<string>? source = null)
     {
-        _error.Text = message ?? "";
-        _error.Visible = message is not null;
+        _errorSource = source;
+        Show(_error, message ?? "", source);
+        _error.Visible = message is not null || source is not null;
         QueueLayout();
+    }
+
+    // A source's text is already translated, so the label must not translate it again.
+    private static void Show(Label label, string text, Func<string>? source)
+    {
+        label.AutoTranslateMode = source is null ? AutoTranslateModeEnum.Inherit : AutoTranslateModeEnum.Disabled;
+        label.Text = source?.Invoke() ?? text;
+    }
+
+    private static void Refresh(Label label, Func<string>? source)
+    {
+        if (source is not null)
+        {
+            label.Text = source();
+        }
     }
 
     private void ApplyAppearance()

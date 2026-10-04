@@ -39,8 +39,10 @@ public partial class ExamplesHost : Node, IRoutedScene
         CreationDef copy = null!;
         if (!CreationActions.TryRunFileOperation(() => copy = saves.CopyExample(id, UiTextTranslation.Now), $"Copying example '{name}'"))
         {
-            UiNotificationLayer.Enqueue(this, new UiNotificationSpec(
-                UiPopupType.Default, "Examples", $"Could not copy {name}. Try again."));
+            UiNotificationLayer.Enqueue(this, new UiNotificationSpec(UiPopupType.Default, "Examples", string.Empty)
+            {
+                MessageSource = UiTextTranslation.Source(UiText.Format("Could not copy {0}. Try again.", name)),
+            });
             return;
         }
 

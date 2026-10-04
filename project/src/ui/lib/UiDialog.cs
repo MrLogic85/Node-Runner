@@ -143,8 +143,8 @@ public sealed partial class UiDialog : Window
             Finish(true);
             return;
         }
-        ErrorMessage = result.ErrorMessage;
-        _content.ShowError(ErrorMessage);
+        ErrorMessage = result.ErrorSource?.Invoke() ?? result.ErrorMessage;
+        _content.ShowError(result.ErrorMessage, result.ErrorSource);
         _content.SetBusy(false);
         _content.ActionButton.HoldToActivate = spec.HoldToAction;
         _content.AbortButton.GrabFocus();

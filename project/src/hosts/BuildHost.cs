@@ -169,7 +169,10 @@ public partial class BuildHost : Node, IRoutedScene
         }
 
         UiNotificationLayer.Enqueue(this, new UiNotificationSpec(
-            UiPopupType.Default, "Creation copied", $"{copy.Name} is in Creations.", Icon: new(UiIconId.Copy)));
+            UiPopupType.Default, "Creation copied", string.Empty, Icon: new(UiIconId.Copy))
+        {
+            MessageSource = UiTextTranslation.Source(UiText.Format("{0} is in Creations.", copy.Name)),
+        });
     }
 
     private void ShowCreations() => _navigator?.ReturnToRoot();

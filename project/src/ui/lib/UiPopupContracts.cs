@@ -24,6 +24,12 @@ public sealed record UiDialogSpec(
     public UiNotificationIcon? Icon { get; init; }
 
     /// <summary>
+    /// Already translated text shown instead of <see cref="Title"/>; asked again when the language
+    /// changes, with the title's own auto-translation off meanwhile.
+    /// </summary>
+    public Func<string>? TitleSource { get; init; }
+
+    /// <summary>
     /// Already translated text shown instead of <see cref="Content"/>; asked again when the language
     /// changes, with the body's own auto-translation off meanwhile.
     /// </summary>
@@ -41,19 +47,43 @@ public sealed record UiDialogSpec(
 /// <summary>An action either succeeds or supplies a user-facing error for retry.</summary>
 public sealed record UiDialogResult
 {
-    public static UiDialogResult Success { get; } = new(errorMessage: null);
+    public static UiDialogResult Success { get; } = new(errorMessage: null, errorSource: null);
     public string? ErrorMessage { get; }
-    public bool Succeeded => ErrorMessage is null;
 
-    private UiDialogResult(string? errorMessage) => ErrorMessage = errorMessage;
+    /// <summary>
+    /// Already translated error shown instead of <see cref="ErrorMessage"/>; asked again when the
+    /// language changes, with the error's own auto-translation off meanwhile.
+    /// </summary>
+    public Func<string>? ErrorSource { get; }
+
+    public bool Succeeded => ErrorMessage is null && ErrorSource is null;
+
+    private UiDialogResult(string? errorMessage, Func<string>? errorSource)
+    {
+        ErrorMessage = errorMessage;
+        ErrorSource = errorSource;
+    }
 
     public static UiDialogResult Failure(string message)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(message);
-        return new(message);
+        return new(message, errorSource: null);
+    }
+
+    public static UiDialogResult Failure(Func<string> messageSource)
+    {
+        ArgumentNullException.ThrowIfNull(messageSource);
+        return new(errorMessage: null, messageSource);
     }
 }
 
 public sealed record UiNotificationSpec(
     UiPopupType Type, string Title, string Message, Func<bool>? OnClick = null,
-    UiNotificationIcon? Icon = null);
+    UiNotificationIcon? Icon = null)
+{
+    /// <summary>
+    /// Already translated text shown instead of <see cref="Message"/>; asked again when the language
+    /// changes, with the message's own auto-translation off meanwhile.
+    /// </summary>
+    public Func<string>? MessageSource { get; init; }
+}

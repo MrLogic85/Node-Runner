@@ -56,6 +56,40 @@ public sealed class UiTextTranslationTests
             "Hand a UiText only to UiTextTranslation (ShowText, or Source for a component's …Source property), which translates it and keeps it for the next language change.");
     }
 
+    /// <summary>
+    /// Popup text is translated whole, so it is never put together in code (#773): "Delete {0}?" crosses as a
+    /// UiText through a …Source property, since "Delete Walker?" has no translation. The design galleries
+    /// show sample text for development and are left out.
+    /// </summary>
+    [Fact]
+    public void Popup_text_is_not_built_in_code()
+    {
+        var compilation = CSharpSources.ProjectCompilation;
+        var violations = CSharpSources.Project
+            .Where(source => !source.Path.StartsWith("ui/screens/", StringComparison.Ordinal) || !source.Path.Contains("Gallery", StringComparison.Ordinal))
+            .SelectMany(source =>
+            {
+                var model = compilation.GetSemanticModel(source.Tree);
+                return source.Find(node => BuildsPopupText(node, model));
+            })
+            .ToList();
+
+        violations.ShouldBeEmpty("Pass a UiText through UiTextTranslation.Source to the popup's …Source property instead.");
+    }
+
+    [Theory]
+    [InlineData("object M(string name) => new UiNotificationSpec(UiPopupType.Default, \"Examples\", $\"Could not copy {name}.\");")]
+    [InlineData("object M(string name) => new UiDialogSpec(UiPopupType.Danger, \"Delete \" + name + \"?\", \"Gone for good.\");")]
+    [InlineData("object M(string name) => UiDialogResult.Failure(string.Format(\"Could not delete {0}.\", name));")]
+    public void Building_popup_text_is_flagged(string member) =>
+        PopupTextBuilds(member).ShouldHaveSingleItem();
+
+    [Theory]
+    [InlineData("object M() => new UiNotificationSpec(UiPopupType.Default, \"Examples\", \"Could not copy.\");")]
+    [InlineData("object M(string title) => new UiDialogSpec(UiPopupType.Default, title, string.Empty);")]
+    public void Whole_popup_text_passes(string member) =>
+        PopupTextBuilds(member).ShouldBeEmpty();
+
     [Fact]
     public void UiTextTranslation_translates_with_TranslationServer()
     {
@@ -117,6 +151,30 @@ public sealed class UiTextTranslationTests
             && CSharpSources.Symbol(model, call) is IMethodSymbol method
             && (method.ReducedFrom ?? method).ContainingType.ToDisplayString() == "NodeRunner.Ui.Widgets.UiTextTranslation");
     }
+
+    private static IEnumerable<string> PopupTextBuilds(string member)
+    {
+        var snippet = CSharpSources.Snippet(member);
+        var model = CSharpSources.Compile([.. CSharpSources.Project, snippet]).GetSemanticModel(snippet.Tree);
+        return snippet.Find(node => BuildsPopupText(node, model));
+    }
+
+    private static readonly string[] _popupTypes =
+        ["NodeRunner.Ui.Lib.UiDialogSpec", "NodeRunner.Ui.Lib.UiNotificationSpec", "NodeRunner.Ui.Lib.UiDialogResult"];
+
+    private static bool BuildsPopupText(SyntaxNode node, SemanticModel model) =>
+        node is ArgumentSyntax { Parent.Parent: ExpressionSyntax call } argument
+        && CSharpSources.Symbol(model, call) is IMethodSymbol method
+        && _popupTypes.Contains(method.ContainingType.ToDisplayString())
+        && IsBuiltText(argument.Expression, model);
+
+    private static bool IsBuiltText(ExpressionSyntax expression, SemanticModel model) =>
+        expression is InterpolatedStringExpressionSyntax
+        || expression is BinaryExpressionSyntax { RawKind: (int)Microsoft.CodeAnalysis.CSharp.SyntaxKind.AddExpression }
+            && model.GetTypeInfo(expression).Type?.SpecialType == SpecialType.System_String
+        || expression is InvocationExpressionSyntax call
+            && CSharpSources.Symbol(model, call) is IMethodSymbol { Name: "Format" or "Concat" or "Join" } method
+            && method.ContainingType.SpecialType == SpecialType.System_String;
 
     private static bool IsInNameof(ExpressionSyntax expression, SemanticModel model) =>
         expression.Ancestors().OfType<InvocationExpressionSyntax>().Any(call =>

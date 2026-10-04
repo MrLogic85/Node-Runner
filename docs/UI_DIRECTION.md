@@ -634,10 +634,15 @@ and translation"):
   own auto-translation is off, so the text is not translated a second time.
   A component that shows code-set text inside, such as `UiSidePanel`'s
   title, `UiStageCard`'s note, `UiSlider`'s label, readout and step labels,
-  `UiPartRow`'s name, `UiTextField`'s placeholder or a `UiDialogSpec`'s
-  content, has a matching `…Source` property that takes
+  `UiPartRow`'s name, `UiTextField`'s placeholder, a `UiDialogSpec`'s
+  title or content, a `UiDialogResult`'s failure or a `UiNotificationSpec`'s
+  message, has a matching `…Source` property that takes
   `UiTextTranslation.Source(text)` and turns auto-translation off on that
-  leaf only. Other components get one when they first need it. Text drawn
+  leaf only. Other components get one when they first need it. A host puts
+  popup text it builds, such as "Delete {0}?", into a `UiText` too, and
+  passes fixed text such as "Reset training?" as plain English. Godot
+  translates whole messages only, so text is never put together in code
+  (#773). Text drawn
   in code, such as the arena ruler, the best flag, BrainFocus's labels and
   the Build canvas notes, asks `UiTextTranslation.Source` itself and draws
   again when the language changes. A `UiCalloutLayer` shows the text it is
