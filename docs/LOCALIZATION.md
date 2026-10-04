@@ -6,6 +6,10 @@ English, and the English text is the translation key (gettext msgid).
 the layers; `docs/UI_DIRECTION.md` → "Text and translation" owns the rules
 for showing it.
 
+The game ships in English only (`docs/ROADMAP.md` → "Non-goals"). Text
+still goes through Godot's translation system, as the rules above say, so a
+language can be added later without code changes.
+
 ## The template
 
 `project/locale/messages.pot` lists every text the player can see, with the
@@ -60,7 +64,7 @@ checked in a test. So we generate the template ourselves.
 
 ## Adding a language
 
-No code changes are needed.
+No code changes are needed, only these steps.
 
 1. Create `project/locale/<language>.po` from `messages.pot`, for example
    with Poedit (New from POT) or `msginit --locale=sv -i messages.pot -o
@@ -71,7 +75,8 @@ No code changes are needed.
 3. Register the file in Project Settings → Localization → Translations. It
    is saved as `internationalization/locale/translations` in
    `project/project.godot`.
-4. Run the game with the device set to the language. Godot reads the
+4. Turn on the text server data (below).
+5. Run the game with the device set to the language. Godot reads the
    system language when the game starts, so restart it after changing the
    device language. A change through `TranslationServer.SetLocale` updates
    open screens at once.
@@ -81,7 +86,9 @@ POT) or `msgmerge -U <language>.po messages.pot`.
 
 ## Text server data
 
-`internationalization/locale/include_text_server_data` is on. It adds about
-5 MB of ICU data to the APK. Without it, an exported build cases text
-like English in every language (Turkish "i" becomes "I", not "İ") and
-cannot break lines in languages without spaces, such as Thai or Chinese.
+`internationalization/locale/include_text_server_data` is off, since English
+does not need it. Turn it on in Project Settings → Internationalization →
+Locale when adding a language. It adds about 5 MB of ICU data to the APK.
+Without it, an exported build cases text like English in every language
+(Turkish "i" becomes "I", not "İ") and cannot break lines in languages
+without spaces, such as Thai or Chinese.

@@ -41,10 +41,6 @@ project/assembly_name="NodeRunner"
 
 theme/custom="res://assets/themes/Neon.tres"
 
-[internationalization]
-
-locale/include_text_server_data=true
-
 [rendering]
 
 textures/canvas_textures/default_texture_filter=0

@@ -587,3 +587,5 @@ Explicitly out of scope so we don't drift:
 - 3D
 - Using existing ML libraries (PyTorch, ONNX, ML-Agents). We build from scratch.
 - Monetization
+- UI languages other than English. Text still goes through Godot's
+  translation system (`docs/LOCALIZATION.md`).

@@ -668,8 +668,8 @@ how to add a language:
   wrong in some languages, so `project/src` uses no `string` upper- or
   lower-casing at all (#776). `UiVerticalLabel` translates its `Text` like a Label. An exported
   build cases by the language only with
-  `internationalization/locale/include_text_server_data`, which is on
-  (#778, `docs/LOCALIZATION.md`).
+  `internationalization/locale/include_text_server_data`, which a new
+  language turns on (`docs/LOCALIZATION.md`).
 - **Translation context** tells two meanings of the same English apart,
   such as "Run" the verb and "Run" the noun. Set `translation_context` on
   the component in the Inspector. Godot does not pass it on to child
