@@ -102,7 +102,7 @@ Node Runner/
 │       ├── sim/                    # simulation orchestration
 │       ├── hosts/                  # routed scene roots that wire screens to managers
 │       ├── managers/               # service autoloads / composition root
-│       ├── theme/                  # arena (world) visuals, not UI styling
+│       ├── theme/                  # arena (world) visuals and shared creature parts, not UI styling
 │       ├── tools/                  # editor/CLI tools; their scenes are not exported
 │       └── ui/
 │           ├── lib/                # reusable Controls

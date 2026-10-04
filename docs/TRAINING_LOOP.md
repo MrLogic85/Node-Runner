@@ -196,8 +196,9 @@ transition to keep in step with it.
     drawing all 32 at 30 % opacity raised p95 to 16.6 ms and PSS to about
     436 MiB. With simplified shadows (#385) 32 shadows stay at 8.3 ms and
     about 366 MiB.
-  - Followed shadow (#385): one shadow is drawn in full, three z steps above
-    the others (so even its rigid hatch, #627, stays above their joints), and feeds signal flow, the brain and part selection; every
+  - Followed shadow (#385): one shadow is drawn in full, wholly above
+    the others (so even its rigid hatch, #627, stays above their joints;
+    `docs/CREATURE_MODEL.md` → "Draw layers"), and feeds signal flow, the brain and part selection; every
     other shadow is drawn simplified (`docs/CREATURE_MODEL.md` → "Drawing
     as a shadow") at `alpha_shadow`. Shadow `i` is slot `i`, which runs
     candidate `i`. The default is shadow 1 (slot 0): the resumed genome or

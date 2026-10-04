@@ -36,11 +36,6 @@ public partial class Creature : Node2D
     // Training camera zooms out (#675) still takes a finger.
     private const float _hitTolerancePixels = 16;
 
-    // Beams draw one z step under their creature's joints and the rigid hatch two (#627), so the
-    // followed creature sits three steps above the shadows: even its hatch is never drawn under a
-    // shadow's joints (#385).
-    private const int _followedZIndex = 3;
-
     private RigidBody2D[] _beamBodies = [];
     private float[] _beamHalfLengths = [];
     private Vector2[] _beamInitialPositions = [];
@@ -58,6 +53,7 @@ public partial class Creature : Node2D
     private float[] _cylinderInitialRotations = [];
     private CameraRaysVisual? _cameraRaysVisual;
     private bool _isShadow;
+    private CreatureElementSelection? _selection;
     private IBeamSensor[] _sensors = [];
     private AccelerometerSensor[] _accelerometers = [];
     private double[] _rawInputs = [];
@@ -132,6 +128,7 @@ public partial class Creature : Node2D
         ArgumentNullException.ThrowIfNull(definition);
 
         Definition = definition;
+        _selection = null;
         foreach (var child in GetChildren())
         {
             child.QueueFree();
@@ -384,46 +381,32 @@ public partial class Creature : Node2D
 
     public void SetSelectedElement(CreatureElementSelection? selection)
     {
-        foreach (var visual in _nodeVisuals)
+        _selection = selection;
+        ApplySelection();
+    }
+
+    // A shadow never shows a selection (#385), so its parts stay on their unselected layers.
+    private void ApplySelection()
+    {
+        foreach (var visual in _nodeVisuals.Concat<PartVisual>(_beamVisuals).Concat(_sensorVisuals).Concat(_pistonVisuals))
         {
-            visual.IsSelected = false;
+            visual.Selected = false;
         }
 
-        foreach (var visual in _beamVisuals)
-        {
-            visual.IsSelected = false;
-        }
-
-        foreach (var visual in _sensorVisuals)
-        {
-            visual.IsSelected = false;
-        }
-
-        foreach (var visual in _pistonVisuals)
-        {
-            visual.IsSelected = false;
-        }
-
-        if (selection is null)
+        if (_selection is null || _isShadow)
         {
             return;
         }
 
-        switch (selection.Kind)
+        PartVisual selected = _selection.Kind switch
         {
-            case CreatureElementKind.Node:
-                _nodeVisuals[Definition!.NodeIndexOf(selection.Id)].IsSelected = true;
-                break;
-            case CreatureElementKind.Beam:
-                _beamVisuals[Definition!.BeamIndexOf(selection.Id)].IsSelected = true;
-                break;
-            case CreatureElementKind.Sensor:
-                _sensorVisuals[Definition!.Sensors.ToList().FindIndex(sensor => sensor.Id == selection.Id)].IsSelected = true;
-                break;
-            case CreatureElementKind.Piston:
-                _pistonVisuals[Definition!.PistonIndexOf(selection.Id)].IsSelected = true;
-                break;
-        }
+            CreatureElementKind.Node => _nodeVisuals[Definition!.NodeIndexOf(_selection.Id)],
+            CreatureElementKind.Beam => _beamVisuals[Definition!.BeamIndexOf(_selection.Id)],
+            CreatureElementKind.Sensor => _sensorVisuals[Definition!.Sensors.ToList().FindIndex(sensor => sensor.Id == _selection.Id)],
+            CreatureElementKind.Piston => _pistonVisuals[Definition!.PistonIndexOf(_selection.Id)],
+            _ => throw new ArgumentOutOfRangeException(nameof(_selection), _selection.Kind, "Not a part of a creature."),
+        };
+        selected.Selected = true;
     }
 
     private Rect2 NodeBox(int index)
@@ -435,7 +418,7 @@ public partial class Creature : Node2D
     private void ApplyShadow()
     {
         Modulate = Colors.White with { A = _isShadow ? Theme.ShadowAlpha : 1f };
-        ZIndex = _isShadow ? 0 : _followedZIndex;
+        ZIndex = _isShadow ? ArenaLayers.Shadows : ArenaLayers.Followed;
         foreach (var visual in _nodeVisuals)
         {
             visual.IsShadow = _isShadow;
@@ -465,6 +448,8 @@ public partial class Creature : Node2D
         {
             _cameraRaysVisual.IsShadow = _isShadow;
         }
+
+        ApplySelection();
     }
 
     private void ResetSensors()
@@ -516,16 +501,11 @@ public partial class Creature : Node2D
             var visual = new BeamVisual
             {
                 Name = $"Beam{i}Visual",
-                ZIndex = -1,
-                HalfLength = halfLength,
+                Theme = Theme,
+                A = new Vector2(-halfLength, 0),
+                B = new Vector2(halfLength, 0),
                 RadiusA = ToGodotFloat(definition.Nodes[definition.NodeIndexOf(beamDef.NodeA)].Radius, nameof(NodeDef.Radius)),
                 RadiusB = ToGodotFloat(definition.Nodes[definition.NodeIndexOf(beamDef.NodeB)].Radius, nameof(NodeDef.Radius)),
-                Width = Theme.BeamWidth,
-                RingWidth = Theme.JointRingWidth,
-                Color = Theme.Beam,
-                SelectionColor = Theme.SelectionGlow,
-                SelectionOffset = Theme.SelectedBeamOffset,
-                SelectionLineWidth = Theme.SelectedBeamLineWidth,
             };
             body.AddChild(visual);
             _beamVisuals[i] = visual;
@@ -640,8 +620,7 @@ public partial class Creature : Node2D
             var visual = new RigidHatchVisual
             {
                 Name = $"Hatch{hatches.Count}",
-                ZIndex = -2,
-                Color = Theme.RigidHatch,
+                Theme = Theme,
                 Lines = TriangleHatch.Lines(a, b, c, Theme.RigidHatchSpacing, jointRadius)
                     .SelectMany(line => new[] { toBeam * line.Start, toBeam * line.End })
                     .ToArray(),
@@ -689,7 +668,7 @@ public partial class Creature : Node2D
         CreateSensorVisuals(definition);
     }
 
-    // Each sensor's picture rides its beam body (#576); node bodies are added later, so joints draw over sensors.
+    // Each sensor's picture rides its beam body (#576).
     private void CreateSensorVisuals(CreatureDef definition)
     {
         _sensorVisuals = new SensorVisual[_sensors.Length];
@@ -707,15 +686,15 @@ public partial class Creature : Node2D
                 Name = $"Sensor{i}Picture",
                 Theme = Theme,
                 Rotation = glyphRotation,
+                Kind = sensor.Kind,
                 Accelerometer = _sensors[i] as AccelerometerSensor,
-                Camera = _sensors[i] as CameraSensor,
                 CameraAim = Vector2.FromAngle((float)(sensor.Aim ?? 0)).Rotated(-glyphRotation),
             };
             _beamBodies[beamIndex].AddChild(visual);
             _sensorVisuals[i] = visual;
         }
 
-        // Added after the joint bodies, so tree order draws the rays over the whole creature (#623).
+        // On the overlay layer, over the whole creature (#623).
         _cameraRaysVisual = null;
         var cameras = _sensors.OfType<CameraSensor>().ToArray();
         if (cameras.Length > 0)
@@ -734,8 +713,7 @@ public partial class Creature : Node2D
     }
 
     // A Piston pushes on its two node bodies; its only body is the hidden end-stop cylinder. Its
-    // picture is a child of the creature one z step down, with the beams, so the joints still draw
-    // over it.
+    // picture is a child of the creature, on the Pistons layer over the beams.
     private void CreatePistons(CreatureDef definition)
     {
         _pistons = new PistonLink[definition.Pistons.Count];
@@ -752,11 +730,12 @@ public partial class Creature : Node2D
             var visual = new PistonVisual
             {
                 Name = $"Piston{i}Visual",
-                ZIndex = -1,
                 Theme = Theme,
                 Link = _pistons[i],
                 RadiusA = ToGodotFloat(definition.Nodes[indexA].Radius, nameof(NodeDef.Radius)),
                 RadiusB = ToGodotFloat(definition.Nodes[indexB].Radius, nameof(NodeDef.Radius)),
+                Shortest = (float)Domain.Piston.ShortestLength(_pistons[i].BuiltLength, piston.Stroke),
+                Longest = (float)Domain.Piston.LongestLength(_pistons[i].BuiltLength, piston.Stroke),
             };
             AddChild(visual);
             _pistonVisuals[i] = visual;

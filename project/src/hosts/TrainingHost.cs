@@ -228,9 +228,10 @@ public partial class TrainingHost : Node, IRoutedScene
         GetNode<ColorRect>("%ArenaFill").Color = _theme.ArenaBackground;
         Ruler.Theme = _theme;
         BestMarker.Theme = _theme;
-        // Behind every creature part: a shadow draws its hatch at z -2 and its beams at -1. The world
-        // has its own viewport, so this z orders only the world.
-        BestMarker.ZIndex = -3;
+        Ground.ZIndex = ArenaLayers.Ground;
+        // The marker is a child of the ground, so its layer is made absolute, not added to the ground's.
+        BestMarker.ZAsRelative = false;
+        BestMarker.ZIndex = ArenaLayers.BestMarker;
         Ground.Build(_map.Ground, _theme);
     }
 
