@@ -76,6 +76,7 @@ public sealed class SaveFormatTests : IDisposable
     [InlineData("best")]
     [InlineData("enabled")]
     [InlineData("nextNeuronId")]
+    [InlineData("springs")]
     [InlineData("nextPartId")]
     [InlineData("x")]
     public void Loading_WithARequiredFieldMissing_FailsAndNamesIt(string field)
@@ -152,11 +153,12 @@ public sealed class SaveFormatTests : IDisposable
             _exampleId,
             "Example",
             new CreatureDef(
-                [new NodeDef(1, new Vector2D(0, 0), "Hip"), new NodeDef(2, new Vector2D(2, 0.5)), new NodeDef(3, new Vector2D(4, 0))],
+                [new NodeDef(1, new Vector2D(0, 0), "Hip"), new NodeDef(2, new Vector2D(2, 0.5)), new NodeDef(3, new Vector2D(4, 0)), new NodeDef(10, new Vector2D(2, -1.5))],
                 [new BeamDef(4, 1, 2, "Thigh"), new BeamDef(5, 2, 3)],
                 [new SensorDef(6, 4, SensorKind.Accelerometer), new SensorDef(7, 5, SensorKind.Camera, "Eye", aim: -0.5)],
                 [new PistonDef(9, 1, 3)],
-                nextPartId: 10),
+                [new SpringDef(11, 2, 10, "Tail", stiffness: 300, damping: 0.25)],
+                nextPartId: 12),
             new TrainingStateDef(ExampleBrain(), 12, new TrainingRunDef(3.5, 1.25, 0.5, MapIds.Flat, 3.75), new TrainingBestDef(9, 4.25, MapIds.Flat, 4.5)),
             new TrainSettingsDef(12, 20));
 

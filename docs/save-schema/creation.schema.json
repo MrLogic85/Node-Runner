@@ -162,6 +162,44 @@
             "additionalProperties": false
           }
         },
+        "springs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer"
+              },
+              "nodeA": {
+                "type": "integer"
+              },
+              "nodeB": {
+                "type": "integer"
+              },
+              "name": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "default": null
+              },
+              "stiffness": {
+                "type": "number",
+                "default": 400
+              },
+              "damping": {
+                "type": "number",
+                "default": 0.3
+              }
+            },
+            "required": [
+              "id",
+              "nodeA",
+              "nodeB"
+            ],
+            "additionalProperties": false
+          }
+        },
         "nextPartId": {
           "type": "integer"
         }
@@ -171,6 +209,7 @@
         "beams",
         "sensors",
         "pistons",
+        "springs",
         "nextPartId"
       ],
       "additionalProperties": false

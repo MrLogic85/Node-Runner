@@ -65,6 +65,7 @@ public sealed class BuildViewModel : INotifyPropertyChanged
     private readonly HashSet<int> _selectedBeamIds = [];
     private readonly HashSet<int> _selectedSensorIds = [];
     private readonly HashSet<int> _selectedPistonIds = [];
+    private readonly HashSet<int> _selectedSpringIds = [];
     private CanvasNote? _placementNote;
     private readonly BuildHistory _history;
     private BrainDef? _openedBrain;
@@ -180,7 +181,7 @@ public sealed class BuildViewModel : INotifyPropertyChanged
     private void Restore(CreatureDef body)
     {
         var nextPartId = Math.Max(body.NextPartId, _builder.NextPartId);
-        _builder = new CreatureBuilder(new CreatureDef(body.Nodes, body.Beams, body.Sensors, body.Pistons, nextPartId));
+        _builder = new CreatureBuilder(new CreatureDef(body.Nodes, body.Beams, body.Sensors, body.Pistons, body.Springs, nextPartId));
         foreach (var kind in Enum.GetValues<CreatureElementKind>())
         {
             SelectedSet(kind).RemoveWhere(id => !Exists(new CreatureElementSelection(kind, id)));
@@ -219,7 +220,9 @@ public sealed class BuildViewModel : INotifyPropertyChanged
 
     public int SelectedPistonCount => _selectedPistonIds.Count;
 
-    public int SelectedPartCount => SelectedNodeCount + SelectedBeamCount + SelectedSensorCount + SelectedPistonCount;
+    public int SelectedSpringCount => _selectedSpringIds.Count;
+
+    public int SelectedPartCount => SelectedNodeCount + SelectedBeamCount + SelectedSensorCount + SelectedPistonCount + SelectedSpringCount;
 
     public int? SingleSelectedNodeId => Single(_selectedNodeIds);
 
@@ -229,12 +232,15 @@ public sealed class BuildViewModel : INotifyPropertyChanged
 
     public int? SingleSelectedPistonId => Single(_selectedPistonIds);
 
+    public int? SingleSelectedSpringId => Single(_selectedSpringIds);
+
     /// <summary>A copy of everything selected (#704).</summary>
     public PartSet Selection => new(
         _selectedNodeIds.ToHashSet(),
         _selectedBeamIds.ToHashSet(),
         _selectedSensorIds.ToHashSet(),
-        _selectedPistonIds.ToHashSet());
+        _selectedPistonIds.ToHashSet(),
+        _selectedSpringIds.ToHashSet());
 
     /// <summary>The Camera whose aim handle shows (#594): Aim can be set, so it is the one selected part.</summary>
     public int? AimableCameraId => CanEdit(PartParameterId.Aim) ? SingleSelectedSensorId : null;
@@ -319,9 +325,11 @@ public sealed class BuildViewModel : INotifyPropertyChanged
 
     public IReadOnlyList<PistonDef> Pistons => _builder.Pistons;
 
+    public IReadOnlyList<SpringDef> Springs => _builder.Springs;
+
     /// <summary>
     /// The messages Build shows in the drawing, each beside the part it is about: why the last
-    /// dropped part was refused (#376), then each beam or Piston too short to train (#593). Listed most
+    /// dropped part was refused (#376), then each beam or link too short to train (#593). Listed most
     /// important first: notes that would overlap stack, the first listed nearest its part.
     /// </summary>
     public IReadOnlyList<CanvasNote> CanvasNotes()
@@ -334,31 +342,30 @@ public sealed class BuildViewModel : INotifyPropertyChanged
 
         foreach (var beam in Beams)
         {
-            var a = Nodes[NodeIndexOf(beam.NodeA)];
-            var b = Nodes[NodeIndexOf(beam.NodeB)];
-            if (a.Position != b.Position && CreatureReadiness.IsTooShort(a, b))
-            {
-                notes.Add(new CanvasNote(
-                    CanvasNoteKind.Danger,
-                    new CreatureElementSelection(CreatureElementKind.Beam, beam.Id),
-                    UiText.Plain("Too short")));
-            }
+            AddTooShortNote(CreatureElementKind.Beam, beam.Id, beam.NodeA, beam.NodeB);
         }
 
         foreach (var piston in Pistons)
         {
-            var a = Nodes[NodeIndexOf(piston.NodeA)];
-            var b = Nodes[NodeIndexOf(piston.NodeB)];
-            if (a.Position != b.Position && CreatureReadiness.IsTooShort(a, b))
-            {
-                notes.Add(new CanvasNote(
-                    CanvasNoteKind.Danger,
-                    new CreatureElementSelection(CreatureElementKind.Piston, piston.Id),
-                    UiText.Plain("Too short")));
-            }
+            AddTooShortNote(CreatureElementKind.Piston, piston.Id, piston.NodeA, piston.NodeB);
+        }
+
+        foreach (var spring in Springs)
+        {
+            AddTooShortNote(CreatureElementKind.Spring, spring.Id, spring.NodeA, spring.NodeB);
         }
 
         return notes;
+
+        void AddTooShortNote(CreatureElementKind kind, int id, int nodeA, int nodeB)
+        {
+            var a = Nodes[NodeIndexOf(nodeA)];
+            var b = Nodes[NodeIndexOf(nodeB)];
+            if (a.Position != b.Position && CreatureReadiness.IsTooShort(a, b))
+            {
+                notes.Add(new CanvasNote(CanvasNoteKind.Danger, new CreatureElementSelection(kind, id), UiText.Plain("Too short")));
+            }
+        }
     }
 
     /// <summary>Why the last part dropped from the tray was refused, shown at the part it was dropped on; null when there is none.</summary>
@@ -453,6 +460,7 @@ public sealed class BuildViewModel : INotifyPropertyChanged
         CreatureElementKind.Node => _builder.Nodes.Any(node => node.Id == element.Id),
         CreatureElementKind.Beam => _builder.Beams.Any(beam => beam.Id == element.Id),
         CreatureElementKind.Piston => _builder.Pistons.Any(piston => piston.Id == element.Id),
+        CreatureElementKind.Spring => _builder.Springs.Any(spring => spring.Id == element.Id),
         _ => _builder.Sensors.Any(sensor => sensor.Id == element.Id),
     };
 
@@ -501,6 +509,8 @@ public sealed class BuildViewModel : INotifyPropertyChanged
     public void SelectSensor(int sensorId) => SelectOnly(CreatureElementKind.Sensor, sensorId);
 
     public void SelectPiston(int pistonId) => SelectOnly(CreatureElementKind.Piston, pistonId);
+
+    public void SelectSpring(int springId) => SelectOnly(CreatureElementKind.Spring, springId);
 
     private void SelectOnly(CreatureElementKind kind, int id) => ReplaceSelection(PartSetOf(kind, id));
 
@@ -571,7 +581,7 @@ public sealed class BuildViewModel : INotifyPropertyChanged
     }
 
     private IEnumerable<int> SelectedPartIds() =>
-        _selectedNodeIds.Concat(_selectedBeamIds).Concat(_selectedSensorIds).Concat(_selectedPistonIds);
+        _selectedNodeIds.Concat(_selectedBeamIds).Concat(_selectedSensorIds).Concat(_selectedPistonIds).Concat(_selectedSpringIds);
 
     /// <summary>The sensor whose picture (<see cref="SensorPicture"/>) is under <paramref name="position"/>, if any.</summary>
     public bool TryFindSensorAt(Vector2D position, out int sensorId)
@@ -591,10 +601,10 @@ public sealed class BuildViewModel : INotifyPropertyChanged
     }
 
     /// <summary>The name a part shows: its own name if it has one, else <see cref="DefaultPartName"/>.</summary>
-    public UiText PartDisplayName(int partId) => PartNames.Display(_builder.Nodes, _builder.Beams, _builder.Sensors, _builder.Pistons, partId);
+    public UiText PartDisplayName(int partId) => PartNames.Display(_builder.Nodes, _builder.Beams, _builder.Sensors, _builder.Pistons, _builder.Springs, partId);
 
-    /// <summary>The name a part shows until it is renamed: "Node 2", "Beam 1", "Piston 1" or its sensor kind.</summary>
-    public UiText DefaultPartName(int partId) => PartNames.Default(_builder.Nodes, _builder.Beams, _builder.Sensors, _builder.Pistons, partId);
+    /// <summary>The name a part shows until it is renamed: "Node 2", "Beam 1", "Piston 1", "Spring 1" or its sensor kind.</summary>
+    public UiText DefaultPartName(int partId) => PartNames.Default(_builder.Nodes, _builder.Beams, _builder.Sensors, _builder.Pistons, _builder.Springs, partId);
 
     /// <summary>
     /// Renames a part by id, so an edit lands on the part it started on even if the selection
@@ -609,7 +619,8 @@ public sealed class BuildViewModel : INotifyPropertyChanged
         if (!_builder.Nodes.Any(node => node.Id == partId)
             && !_builder.Beams.Any(beam => beam.Id == partId)
             && !_builder.Sensors.Any(sensor => sensor.Id == partId)
-            && !_builder.Pistons.Any(piston => piston.Id == partId))
+            && !_builder.Pistons.Any(piston => piston.Id == partId)
+            && !_builder.Springs.Any(spring => spring.Id == partId))
         {
             return;
         }
@@ -625,7 +636,7 @@ public sealed class BuildViewModel : INotifyPropertyChanged
         AnatomyChanged?.Invoke(this, EventArgs.Empty);
     }
 
-    private string? PartName(int partId) => PartNames.Own(_builder.Nodes, _builder.Beams, _builder.Sensors, _builder.Pistons, partId);
+    private string? PartName(int partId) => PartNames.Own(_builder.Nodes, _builder.Beams, _builder.Sensors, _builder.Pistons, _builder.Springs, partId);
 
     public void ClearSelection()
     {
@@ -666,7 +677,9 @@ public sealed class BuildViewModel : INotifyPropertyChanged
             CreatureElementKind.Node => PartSet.None with { Nodes = one },
             CreatureElementKind.Beam => PartSet.None with { Beams = one },
             CreatureElementKind.Sensor => PartSet.None with { Sensors = one },
-            _ => PartSet.None with { Pistons = one },
+            CreatureElementKind.Piston => PartSet.None with { Pistons = one },
+            CreatureElementKind.Spring => PartSet.None with { Springs = one },
+            _ => throw new ArgumentOutOfRangeException(nameof(kind)),
         };
     }
 
@@ -676,6 +689,7 @@ public sealed class BuildViewModel : INotifyPropertyChanged
         CreatureElementKind.Beam => _selectedBeamIds,
         CreatureElementKind.Sensor => _selectedSensorIds,
         CreatureElementKind.Piston => _selectedPistonIds,
+        CreatureElementKind.Spring => _selectedSpringIds,
         _ => throw new ArgumentOutOfRangeException(nameof(kind)),
     };
 
@@ -685,6 +699,7 @@ public sealed class BuildViewModel : INotifyPropertyChanged
         _selectedBeamIds.Clear();
         _selectedSensorIds.Clear();
         _selectedPistonIds.Clear();
+        _selectedSpringIds.Clear();
     }
 
     private int? Single(HashSet<int> set) => SelectedPartCount == 1 && set.Count == 1 ? set.First() : null;
@@ -853,8 +868,11 @@ public sealed class BuildViewModel : INotifyPropertyChanged
         return true;
     }
 
-    /// <summary>Whether <see cref="ConnectPiston"/> would place a Piston between this pair; if not, <paramref name="reason"/> says why.</summary>
-    public bool CanConnectPiston(int nodeIdA, int nodeIdB, [NotNullWhen(false)] out UiText? reason)
+    /// <summary>
+    /// Whether <see cref="ConnectLink"/> would place <paramref name="link"/>, a Piston or a Spring,
+    /// between this pair; if not, <paramref name="reason"/> says why.
+    /// </summary>
+    public bool CanConnectLink(BuildLink link, int nodeIdA, int nodeIdB, [NotNullWhen(false)] out UiText? reason)
     {
         if (_moveOnly)
         {
@@ -862,18 +880,23 @@ public sealed class BuildViewModel : INotifyPropertyChanged
             return false;
         }
 
-        return _builder.CanAddPiston(nodeIdA, nodeIdB, out reason);
+        return link switch
+        {
+            BuildLink.Piston => _builder.CanAddPiston(nodeIdA, nodeIdB, out reason),
+            BuildLink.Spring => _builder.CanAddSpring(nodeIdA, nodeIdB, out reason),
+            _ => throw new ArgumentOutOfRangeException(nameof(link), "Only a Piston or a Spring is a link between two joints."),
+        };
     }
 
     /// <summary>
-    /// Places a Piston between two nodes (#451) and returns its id. A refused pair changes
-    /// nothing and shows why as <see cref="PlacementNote"/> at <paramref name="nodeIdB"/>, the
-    /// joint the drag ended on.
+    /// Places <paramref name="link"/>, a Piston (#451) or a Spring (#453), between two nodes and
+    /// returns its id. A refused pair changes nothing and shows why as <see cref="PlacementNote"/>
+    /// at <paramref name="nodeIdB"/>, the joint the drag ended on.
     /// </summary>
-    public int? ConnectPiston(int nodeIdA, int nodeIdB)
+    public int? ConnectLink(BuildLink link, int nodeIdA, int nodeIdB)
     {
         PlacementNote = null;
-        if (!CanConnectPiston(nodeIdA, nodeIdB, out var reason))
+        if (!CanConnectLink(link, nodeIdA, nodeIdB, out var reason))
         {
             if (!_moveOnly && nodeIdA != nodeIdB && _builder.Nodes.Any(node => node.Id == nodeIdB))
             {
@@ -883,9 +906,11 @@ public sealed class BuildViewModel : INotifyPropertyChanged
             return null;
         }
 
-        var pistonId = _history.Change(() => _builder.AddPiston(nodeIdA, nodeIdB));
+        var linkId = _history.Change(() => link == BuildLink.Piston
+            ? _builder.AddPiston(nodeIdA, nodeIdB)
+            : _builder.AddSpring(nodeIdA, nodeIdB));
         AnatomyChanged?.Invoke(this, EventArgs.Empty);
-        return pistonId;
+        return linkId;
     }
 
     /// <summary>
@@ -951,22 +976,28 @@ public sealed class BuildViewModel : INotifyPropertyChanged
         return beamId >= 0;
     }
 
-    /// <summary>The closest Piston within <paramref name="maxDistance"/> of <paramref name="position"/>, measured to the line between its nodes.</summary>
-    public bool TryFindPistonNear(Vector2D position, double maxDistance, out int pistonId)
+    /// <summary>
+    /// The closest Piston or Spring within <paramref name="maxDistance"/> of
+    /// <paramref name="position"/>, measured to the line between its nodes.
+    /// </summary>
+    public bool TryFindLinkNear(Vector2D position, double maxDistance, [NotNullWhen(true)] out CreatureElementSelection? link)
     {
-        pistonId = -1;
+        CreatureElementSelection? best = null;
         var bestDistanceSquared = maxDistance * maxDistance;
-        foreach (var piston in _builder.Pistons)
+        var links = _builder.Pistons.Select(piston => (Kind: CreatureElementKind.Piston, piston.Id, piston.NodeA, piston.NodeB))
+            .Concat(_builder.Springs.Select(spring => (Kind: CreatureElementKind.Spring, spring.Id, spring.NodeA, spring.NodeB)));
+        foreach (var (kind, id, nodeA, nodeB) in links)
         {
-            var distanceSquared = DistanceSquaredToSegment(position, NodeById(piston.NodeA).Position, NodeById(piston.NodeB).Position);
+            var distanceSquared = DistanceSquaredToSegment(position, NodeById(nodeA).Position, NodeById(nodeB).Position);
             if (distanceSquared <= bestDistanceSquared)
             {
                 bestDistanceSquared = distanceSquared;
-                pistonId = piston.Id;
+                best = new CreatureElementSelection(kind, id);
             }
         }
 
-        return pistonId >= 0;
+        link = best;
+        return link is not null;
     }
 
     public void DeleteSelectedParts()
@@ -987,6 +1018,11 @@ public sealed class BuildViewModel : INotifyPropertyChanged
             foreach (var pistonId in _selectedPistonIds)
             {
                 _builder.RemovePiston(pistonId);
+            }
+
+            foreach (var springId in _selectedSpringIds)
+            {
+                _builder.RemoveSpring(springId);
             }
 
             foreach (var beamId in _selectedBeamIds)
@@ -1057,6 +1093,8 @@ public sealed class BuildViewModel : INotifyPropertyChanged
 
     public int PistonIndexOf(int pistonId) => _builder.PistonIndexOf(pistonId);
 
+    public int SpringIndexOf(int springId) => _builder.SpringIndexOf(springId);
+
     private NodeDef NodeById(int nodeId) => _builder.Nodes[_builder.NodeIndexOf(nodeId)];
 
     private void NotifySelectionChanged()
@@ -1070,6 +1108,8 @@ public sealed class BuildViewModel : INotifyPropertyChanged
         OnPropertyChanged(nameof(SingleSelectedSensorId));
         OnPropertyChanged(nameof(SelectedPistonCount));
         OnPropertyChanged(nameof(SingleSelectedPistonId));
+        OnPropertyChanged(nameof(SelectedSpringCount));
+        OnPropertyChanged(nameof(SingleSelectedSpringId));
     }
 
     private static double DistanceSquaredToSegment(Vector2D point, Vector2D segmentStart, Vector2D segmentEnd)

@@ -16,8 +16,8 @@ public partial class Creature : Node2D
     private const uint _groundLayer = 1u;
     private const uint _creatureLayer = 1u << 1;
 
-    // A beam's or Piston's weight is simulated as half on each of its end nodes, so a node's
-    // mass is the sum of half of every beam and Piston it joins.
+    // A beam's, Piston's or Spring's weight is simulated as half on each of its end nodes, so a
+    // node's mass is the sum of half of every beam and link it joins.
     private const float _beamWeight = 1.2f;
 
     // A Piston's end-stop cylinder weighs half a beam on top (#731), so Godot's joints can hold it
@@ -49,6 +49,7 @@ public partial class Creature : Node2D
     private SensorVisual[] _sensorVisuals = [];
     private PistonLink[] _pistons = [];
     private PistonVisual[] _pistonVisuals = [];
+    private SpringVisual[] _springVisuals = [];
     private RigidBody2D[] _cylinderBodies = [];
     private float[] _cylinderInitialRotations = [];
     private CameraRaysVisual? _cameraRaysVisual;
@@ -142,6 +143,7 @@ public partial class Creature : Node2D
         PinBeamsToNodes(definition);
         CreateSensors(definition);
         CreatePistons(definition);
+        CreateSprings(definition);
         ConfigureBrainBuffers(definition);
         ResetSensors();
         ApplyShadow();
@@ -343,6 +345,16 @@ public partial class Creature : Node2D
             }
         }
 
+        for (var springIndex = 0; springIndex < _springVisuals.Length; springIndex++)
+        {
+            var spring = _springVisuals[springIndex];
+            if (DistanceSquaredToSegment(globalPosition, spring.NodeA.GlobalPosition, spring.NodeB.GlobalPosition) <= tolerance * tolerance)
+            {
+                selection = new CreatureElementSelection(CreatureElementKind.Spring, Definition!.Springs[springIndex].Id);
+                return true;
+            }
+        }
+
         for (var beamIndex = 0; beamIndex < _beamBodies.Length; beamIndex++)
         {
             var body = _beamBodies[beamIndex];
@@ -362,7 +374,7 @@ public partial class Creature : Node2D
 
     /// <summary>
     /// Where a part's name points to, in global coordinates (#388): a joint's centre, a beam's or
-    /// Piston's middle, or a sensor's picture.
+    /// link's middle, or a sensor's picture.
     /// </summary>
     public Vector2 PartAnchor(CreatureElementSelection selection)
     {
@@ -372,11 +384,12 @@ public partial class Creature : Node2D
             CreatureElementKind.Node => _nodeVisuals[Definition!.NodeIndexOf(selection.Id)].GlobalPosition,
             CreatureElementKind.Beam => _beamBodies[Definition!.BeamIndexOf(selection.Id)].GlobalPosition,
             CreatureElementKind.Sensor => _sensorVisuals[Definition!.Sensors.ToList().FindIndex(sensor => sensor.Id == selection.Id)].GlobalPosition,
-            CreatureElementKind.Piston => PistonMiddle(_pistons[Definition!.PistonIndexOf(selection.Id)]),
+            CreatureElementKind.Piston => Middle(_pistons[Definition!.PistonIndexOf(selection.Id)].NodeA, _pistons[Definition.PistonIndexOf(selection.Id)].NodeB),
+            CreatureElementKind.Spring => Middle(_springVisuals[Definition!.SpringIndexOf(selection.Id)].NodeA, _springVisuals[Definition.SpringIndexOf(selection.Id)].NodeB),
             _ => throw new ArgumentOutOfRangeException(nameof(selection), selection.Kind, "Not a part of a creature."),
         };
 
-        static Vector2 PistonMiddle(PistonLink piston) => (piston.NodeA.GlobalPosition + piston.NodeB.GlobalPosition) / 2;
+        static Vector2 Middle(Node2D a, Node2D b) => (a.GlobalPosition + b.GlobalPosition) / 2;
     }
 
     public void SetSelectedElement(CreatureElementSelection? selection)
@@ -388,7 +401,7 @@ public partial class Creature : Node2D
     // A shadow never shows a selection (#385), so its parts stay on their unselected layers.
     private void ApplySelection()
     {
-        foreach (var visual in _nodeVisuals.Concat<PartVisual>(_beamVisuals).Concat(_sensorVisuals).Concat(_pistonVisuals))
+        foreach (var visual in _nodeVisuals.Concat<PartVisual>(_beamVisuals).Concat(_sensorVisuals).Concat(_pistonVisuals).Concat(_springVisuals))
         {
             visual.Selected = false;
         }
@@ -404,6 +417,7 @@ public partial class Creature : Node2D
             CreatureElementKind.Beam => _beamVisuals[Definition!.BeamIndexOf(_selection.Id)],
             CreatureElementKind.Sensor => _sensorVisuals[Definition!.Sensors.ToList().FindIndex(sensor => sensor.Id == _selection.Id)],
             CreatureElementKind.Piston => _pistonVisuals[Definition!.PistonIndexOf(_selection.Id)],
+            CreatureElementKind.Spring => _springVisuals[Definition!.SpringIndexOf(_selection.Id)],
             _ => throw new ArgumentOutOfRangeException(nameof(_selection), _selection.Kind, "Not a part of a creature."),
         };
         selected.Selected = true;
@@ -440,6 +454,11 @@ public partial class Creature : Node2D
         }
 
         foreach (var visual in _pistonVisuals)
+        {
+            visual.IsShadow = _isShadow;
+        }
+
+        foreach (var visual in _springVisuals)
         {
             visual.IsShadow = _isShadow;
         }
@@ -518,7 +537,7 @@ public partial class Creature : Node2D
         }
     }
 
-    // A node is its own body with a circle collider, weighing half of each beam and Piston it joins. Its rotation is locked:
+    // A node is its own body with a circle collider, weighing half of each beam and link it joins. Its rotation is locked:
     // a free-spinning circle pinned at its centre would roll like a wheel and give
     // the creature no grip on the ground.
     private void CreateNodes(CreatureDef definition)
@@ -540,6 +559,12 @@ public partial class Creature : Node2D
         {
             masses[definition.NodeIndexOf(piston.NodeA)] += _beamWeight / 2;
             masses[definition.NodeIndexOf(piston.NodeB)] += _beamWeight / 2;
+        }
+
+        foreach (var spring in definition.Springs)
+        {
+            masses[definition.NodeIndexOf(spring.NodeA)] += _beamWeight / 2;
+            masses[definition.NodeIndexOf(spring.NodeB)] += _beamWeight / 2;
         }
 
         for (var i = 0; i < count; i++)
@@ -710,89 +735,6 @@ public partial class Creature : Node2D
         var nodeA = definition.Nodes[definition.NodeIndexOf(beam.NodeA)].Position;
         var nodeB = definition.Nodes[definition.NodeIndexOf(beam.NodeB)].Position;
         return new AccelerometerSensor(_beamBodies[beamIndex], Accelerometer.UpSign(nodeA, nodeB), gravity);
-    }
-
-    // A Piston pushes on its two node bodies; its only body is the hidden end-stop cylinder. Its
-    // picture is a child of the creature, on the Pistons layer over the beams.
-    private void CreatePistons(CreatureDef definition)
-    {
-        _pistons = new PistonLink[definition.Pistons.Count];
-        _pistonVisuals = new PistonVisual[definition.Pistons.Count];
-        _cylinderBodies = new RigidBody2D[definition.Pistons.Count];
-        _cylinderInitialRotations = new float[definition.Pistons.Count];
-        for (var i = 0; i < _pistons.Length; i++)
-        {
-            var piston = definition.Pistons[i];
-            var indexA = definition.NodeIndexOf(piston.NodeA);
-            var indexB = definition.NodeIndexOf(piston.NodeB);
-            _pistons[i] = new PistonLink(piston, _nodeBodies[indexA], _nodeBodies[indexB]);
-            CreateEndStops(i);
-            var visual = new PistonVisual
-            {
-                Name = $"Piston{i}Visual",
-                Theme = Theme,
-                Link = _pistons[i],
-                RadiusA = ToGodotFloat(definition.Nodes[indexA].Radius, nameof(NodeDef.Radius)),
-                RadiusB = ToGodotFloat(definition.Nodes[indexB].Radius, nameof(NodeDef.Radius)),
-                Shortest = (float)Domain.Piston.ShortestLength(_pistons[i].BuiltLength, piston.Stroke),
-                Longest = (float)Domain.Piston.LongestLength(_pistons[i].BuiltLength, piston.Stroke),
-            };
-            AddChild(visual);
-            _pistonVisuals[i] = visual;
-        }
-    }
-
-    // A Piston's end stops are a hard limit, as in a real cylinder (#701): a collider-free
-    // cylinder body turns freely on node A, and Godot's GrooveJoint2D lets node B
-    // slide only along the cylinder between the stroke's two ends. The groove needs that body:
-    // nodes have locked rotation, so a groove on node A would keep one world direction instead of
-    // turning with the Piston. It weighs half a beam (#731): Godot's joints give far past an end
-    // when the cylinder or its nodes are much lighter than the rest. Inside the stroke the groove
-    // pushes nothing along the piston, so only the piston's own force moves it; at an end it
-    // holds whatever the load.
-    private void CreateEndStops(int index)
-    {
-        var link = _pistons[index];
-        var a = link.NodeA.Position;
-        var axis = (link.NodeB.Position - a).Normalized();
-        var shortest = (float)Domain.Piston.ShortestLength(link.BuiltLength, link.Definition.Stroke);
-        var longest = (float)Domain.Piston.LongestLength(link.BuiltLength, link.Definition.Stroke);
-        var rotation = axis.Angle();
-
-        var cylinder = new RigidBody2D
-        {
-            Name = $"Piston{index}Cylinder",
-            CollisionLayer = 0,
-            CollisionMask = 0,
-            Position = a,
-            Rotation = rotation,
-            Mass = _cylinderMass,
-            CenterOfMassMode = RigidBody2D.CenterOfMassModeEnum.Custom,
-            CenterOfMass = Vector2.Zero,
-            Inertia = _cylinderMass * _beamInertiaThickness * _beamInertiaThickness / 12,
-            CanSleep = false,
-        };
-        AddChild(cylinder);
-        _cylinderBodies[index] = cylinder;
-        _cylinderInitialRotations[index] = rotation;
-
-        var pin = new PinJoint2D { Name = $"Piston{index}CylinderPin", Position = a };
-        AddChild(pin);
-        pin.NodeA = pin.GetPathTo(link.NodeA);
-        pin.NodeB = pin.GetPathTo(cylinder);
-
-        // The groove runs along the joint's own +Y, so it is turned a quarter back from the axis.
-        var groove = new GrooveJoint2D
-        {
-            Name = $"Piston{index}EndStops",
-            Position = a + (axis * shortest),
-            Rotation = rotation - (Mathf.Pi / 2),
-            Length = longest - shortest,
-            InitialOffset = (float)link.BuiltLength - shortest,
-        };
-        AddChild(groove);
-        groove.NodeA = groove.GetPathTo(cylinder);
-        groove.NodeB = groove.GetPathTo(link.NodeB);
     }
 
     private void ConfigureBrainBuffers(CreatureDef definition)

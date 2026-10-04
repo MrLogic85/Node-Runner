@@ -10,11 +10,11 @@ below was designed by the project owner, not inferred from the old code — if
 you are extending it, keep asking "what would the owner want here" rather
 than defaulting to what is easiest to implement.
 
-## Parts: Node, Beam, Sensor, Piston
+## Parts: Node, Beam, Sensor, Piston, Spring
 
 A creature is built from two structural parts (Node, Beam), sensor parts
 that sit on beams (the Accelerometer and the Camera) and links between two
-nodes (the Piston). Joints are passive (#450): a beam turns freely where it
+nodes (the Piston and the Spring). Joints are passive (#450): a beam turns freely where it
 meets another, and only parts with brain ports move the body. Joint motor
 parts come with the Servo (#452) and the Velocity motor (#454). Keeping
 "what senses" (sensors) and "what thinks" (the neural model) conceptually separate is the most important rule in this
@@ -26,7 +26,7 @@ two beams, so they will sit on a joint; spring, piston and wing join two
 nodes, so they are links. Each sensor is one clear idea, the way real
 sensors are.
 
-Every saved Node, Beam, sensor and Piston has a stable positive integer id from the
+Every saved Node, Beam, sensor, Piston and Spring has a stable positive integer id from the
 creature's single part counter (`CreatureDef.NextPartId`). The counter is
 saved with the creature, only increases, and deleted ids are never reused.
 Ids are machine identity only: they are not display order, draw order, brain
@@ -50,11 +50,11 @@ CreatureDef  ──build──▶  physical body  ──sensors──▶  model 
   will make it larger and show their glyph inside. At runtime each node is
   its own `RigidBody2D` with a circle collider at that radius, the size it
   is drawn at. Its rotation is locked, so it grips instead of rolling like a
-  wheel. A node weighs half of every beam and Piston it joins: their weight is
+  wheel. A node weighs half of every beam and link it joins: their weight is
   simulated at their two ends. Nodes are what touch the world; every beam is
   pinned to its two nodes (see Beam below).
 - **Degree rules** (how many beams touch a node):
-  - **0 beams** — not ready unless a Piston joins it. A node with nothing
+  - **0 beams** — not ready unless a Piston or Spring joins it. A node with nothing
     attached is just a loose point and cannot be simulated. It can be saved as part of an unfinished
     drawing, but `CreatureReadiness` stops training until it is connected
     or removed.
@@ -238,11 +238,49 @@ a composition of triangles; a bare quadrilateral stays free to fold.
   selected Piston shows ticks at its shortest and longest lengths while the
   selection can set its Stroke (#704).
 
+### Spring
+
+- **Beginner:** A springy link between two nodes. Stretch or squeeze it
+  and it pulls back toward the length it was drawn at; its damping stops it
+  bouncing. It has no brain ports: it stores and gives back energy, so a
+  Piston's push can bounce, but it never chooses anything.
+- **Implementation:** `SpringDef` in `libs/NodeRunner.Domain/SpringDef.cs`
+  stores an id, optional display name, two node ids and two settings chosen
+  in Build: **Stiffness** (N/m, 400 new) and **Damping** (a share of the
+  damping that just stops it bouncing, 30% new). Its rest length is the
+  distance between its nodes in the drawing. At runtime it is a Godot
+  `DampedSpringJoint2D` between its two node bodies (`Creature.CreateSprings`);
+  it has no collider. It weighs like a beam, half on each node.
+- **Damping as a share of critical** (`Spring.DampingCoefficient` in
+  `libs/NodeRunner.Domain/Spring.cs`): 0% bounces on, 100% settles without
+  overshoot, so the slider means the same for any stiffness. The coefficient
+  is worked out on the reduced mass of its two nodes. Godot's spring joint
+  damps on every second solver iteration rather than once per step
+  (`godot_joints_2d.cpp`, checked in 4.7), so `Creature` divides the
+  coefficient by those passes; headless, the overshoot then matched the share
+  asked for. If Godot changes that, springs will bounce more.
+- **Not a beam:** it counts as attached for the node degree rules, but adds
+  no rigidity. Two nodes hold at most one link (Piston or Spring), and no
+  link joins two nodes a beam already joins (`CreatureBuilder.CanAddSpring`).
+- **Stiffness range** 50–2000 N/m. Godot integrates the spring force once
+  per step, so a stiff spring on light nodes can blow up; at 2000 N/m the
+  lightest pair (two nodes with only the spring) keeps about twice the
+  margin at Training's fixed 1/60 s step (#787), and a headless run with no
+  damping stayed bounded.
+- **Minimum length:** the same as a beam's (`CreatureReadiness.MinimumBeamGap`).
+- **Drawn** as a zigzag coil with four peaks between short straight leads
+  that start under the joint rings (`project/src/theme/SpringDrawing.cs`),
+  as wide as a Piston's cylinder. The peaks spread as it stretches and bunch
+  as it squeezes. It is `line-strong`, not `accent`, because accent marks
+  parts the brain drives; the damper is not drawn. Selected, it gets the
+  Piston's two halo lines (`docs/UI_DIRECTION.md` → Selection). A creation card draws a thinner coil, or a plain
+  line when too short to read.
+
 ## Draw layers
 
 A creature draws in named layers (`project/src/theme/CreatureLayers.cs`,
 #767), bottom to top: rigid hatch, underlays such as Build's placing
-feedback, beams, Pistons, a selected link, sensors, a selected sensor,
+feedback, beams, links (Pistons and Springs), a selected link, sensors, a selected sensor,
 joints, a selected joint, then overlays such as the camera rays. Each part
 visual (`project/src/theme/*Part.cs`) puts itself on its layer, so the
 picture never depends on the order parts are added. A screen draws its own
@@ -251,7 +289,7 @@ marks on an underlay or overlay through `ViewLayer`.
 A part draws its selection with itself, never on a separate layer: a mark on
 its own layer would weave through the parts around it. Instead a selected
 part moves whole up to the selected layer of its kind, so a selected beam
-draws over the Piston that crosses it, mark and all (#766). Training's world
+draws over the link that crosses it, mark and all (#766). Training's world
 stacks the ground, then every shadow, then the followed creature
 (`ArenaLayers`). Build draws its creature with the same parts (#769, through
 `BuildCreature`), with the grid and selection box under them. Each world has
@@ -348,10 +386,10 @@ picture but costs an offscreen pass each, so it is left out for performance.
 
 ## Editing identity rules
 
-- Creating a Node, Beam, sensor or Piston takes the current `NextPartId` and then
+- Creating a Node, Beam, sensor, Piston or Spring takes the current `NextPartId` and then
   advances the counter.
-- Removing a Node, Beam, sensor or Piston retires that id forever. Removing a
-  Node also removes the beams and Pistons on it, and removing a Beam removes its sensors;
+- Removing a Node, Beam, sensor, Piston or Spring retires that id forever. Removing a
+  Node also removes the beams and links on it, and removing a Beam removes its sensors;
   surviving parts keep their ids because no list reindexing is needed.
 - Beam split by the Joint tool removes the original beam id and creates one
   fresh node id plus two fresh beam ids. The beam's sensors move, with their

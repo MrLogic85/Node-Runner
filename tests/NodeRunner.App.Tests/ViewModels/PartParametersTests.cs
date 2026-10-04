@@ -18,6 +18,17 @@ public sealed class PartParametersTests
     }
 
     [Fact]
+    public void ASpring_ShowsItsStiffnessInNewtonsPerMetreAndDampingInPercent()
+    {
+        PartParameters.SliderOver(PartParameterId.Stiffness, [SpringDef.DefaultStiffness]).Readout.ShouldBe(UiText.Format("{0} N/m", new FixedNumber(400, 0)));
+        PartParameters.SliderOver(PartParameterId.Damping, [SpringDef.DefaultDamping]).Readout.ShouldBe(UiText.Format("{0}%", new FixedNumber(30, 0)));
+        PartParameters.ValueAt(PartParameterId.Stiffness, 0).ShouldBe(50);
+        PartParameters.ValueAt(PartParameterId.Stiffness, 1).ShouldBe(2000);
+        PartParameters.ValueAt(PartParameterId.Damping, 0).ShouldBe(0);
+        PartParameters.ValueAt(PartParameterId.Damping, 1).ShouldBe(1);
+    }
+
+    [Fact]
     public void SliderPositions_GiveWholeStepsInWorldUnits()
     {
         PartParameters.ValueAt(PartParameterId.Strength, 0).ShouldBe(2000);
@@ -30,6 +41,8 @@ public sealed class PartParametersTests
     [InlineData(PartParameterId.Strength, 15000)]
     [InlineData(PartParameterId.Stroke, 0.45)]
     [InlineData(PartParameterId.MaxSpeed, 120)]
+    [InlineData(PartParameterId.Stiffness, 650)]
+    [InlineData(PartParameterId.Damping, 0.45)]
     public void ASharedValue_RoundTripsThroughItsSlider(PartParameterId id, double value)
     {
         var slider = PartParameters.SliderOver(id, [value, value]);

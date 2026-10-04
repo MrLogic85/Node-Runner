@@ -539,6 +539,7 @@ public partial class BuildScreen : Control
         PartSettingsKind.Accelerometer => UiIconId.PartAccelerometer,
         PartSettingsKind.Camera => UiIconId.PartCamera,
         PartSettingsKind.Piston => UiIconId.PartPiston,
+        PartSettingsKind.Spring => UiIconId.PartSpring,
         _ => UiIconId.None,
     };
 

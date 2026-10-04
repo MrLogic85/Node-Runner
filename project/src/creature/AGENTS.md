@@ -14,12 +14,14 @@ the model this implements.**
    forces and drives its moving parts."
 3. **Physics uses Godot built-ins.** Each node and each beam is its own
    `RigidBody2D`; a `PinJoint2D` pins every beam to its two nodes. Only
-   nodes collide (a circle each); beams and Pistons have no collider and
-   their weight sits on their nodes. Beam rigidity is geometric (fixed pin distance), not
+   nodes collide (a circle each); beams and links (Pistons, Springs) have no
+   collider and their weight sits on their nodes. Beam rigidity is geometric (fixed pin distance), not
    spring-based. Each Piston also has a hidden, collider-free cylinder body
    pinned to node A and grooved to node B for its end stops (#701; see
    `docs/CREATURE_MODEL.md`): anything that moves or resets every body must
-   include it. Do not introduce Box2D.NET or a custom solver.
+   include it. Each Spring is a `DampedSpringJoint2D` between its two node
+   bodies (#453), with no body of its own. Do not introduce Box2D.NET or a
+   custom solver.
 4. **Joints are passive (#450).** A beam turns freely at its nodes; only
    parts with ports (Pistons today) are driven by the brain.
 5. **The brain's input and output order is `BrainPorts.Of` (in
@@ -31,8 +33,10 @@ the model this implements.**
 
 ## What lives here
 
-- `Creature.cs` — root `Node2D` that builds nodes/beams/pins/sensors and each
-  Piston's end-stop cylinder from a `CreatureDef` and owns the brain wiring
+- `Creature.cs` — root `Node2D` that builds nodes/beams/pins/sensors from a
+  `CreatureDef` and owns the brain wiring
+- `Creature.Links.cs` — the same class: builds the links, each Piston with
+  its end-stop cylinder and each Spring's `DampedSpringJoint2D`
 - `IBeamSensor.cs` — what `Creature` needs from a sensor part: its value
   names, `Read` into the sensor buffer, and `Reset`
 - `AccelerometerSensor.cs` — one accelerometer: measures its beam's
@@ -40,10 +44,10 @@ the model this implements.**
   mass and writes its 2 readings into the sensor buffer
 - `CameraSensor.cs` — one camera: three `RayCast2D` children aimed as
   built by the Domain `CameraRays`, writing 3 nearness readings
-- `NodeVisual.cs` / `BeamVisual.cs` / `PistonVisual.cs` /
+- `NodeVisual.cs` / `BeamVisual.cs` / `PistonVisual.cs` / `SpringVisual.cs` /
   `RigidHatchVisual.cs` — rendering only, no physics: Training's adapters
   over the shared part visuals in `project/src/theme` (`JointPart`,
-  `BeamPart`, `PistonPart`, `HatchPart`, #767)
+  `BeamPart`, `PistonPart`, `SpringPart`, `HatchPart`, #767)
 - `SensorVisual.cs` — a sensor's picture (`SensorPart`), a rendering-only
   child of its beam body; the Accelerometer weight follows the live proof mass
 - `CameraRaysVisual.cs` — every camera ray that hits the ground, drawn up to

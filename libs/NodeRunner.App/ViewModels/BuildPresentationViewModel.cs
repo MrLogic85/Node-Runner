@@ -100,6 +100,20 @@ public sealed class BuildPresentationViewModel
                     PanelSliders());
             }
 
+            if (_build.SingleSelectedSpringId is { } springId)
+            {
+                return new PartSettingsPresentation(
+                    springId,
+                    PartSettingsKind.Spring,
+                    _build.PartDisplayName(springId),
+                    _build.DefaultPartName(springId),
+                    null,
+                    null,
+                    SpringNote,
+                    canDelete,
+                    PanelSliders());
+            }
+
             if (_build.SingleSelectedSensorId is { } sensorId)
             {
                 var sensor = SensorById(sensorId);
@@ -149,6 +163,8 @@ public sealed class BuildPresentationViewModel
     }
 
     public static UiText PistonNote { get; } = UiText.Plain("The brain pushes it out and pulls it in, within its stroke.");
+
+    public static UiText SpringNote { get; } = UiText.Plain("It pulls back toward its drawn length. Damping stops it bouncing.");
 
     /// <summary>A slider for each setting the selection can change in the panel (#704).</summary>
     private List<ParameterSlider> PanelSliders() =>
@@ -255,7 +271,8 @@ public sealed class BuildPresentationViewModel
             {
                 var nodeId = _build.Nodes[index].Id;
                 return !_build.Beams.Any(beam => beam.NodeA == nodeId || beam.NodeB == nodeId)
-                    && !_build.Pistons.Any(piston => piston.NodeA == nodeId || piston.NodeB == nodeId);
+                    && !_build.Pistons.Any(piston => piston.NodeA == nodeId || piston.NodeB == nodeId)
+                    && !_build.Springs.Any(spring => spring.NodeA == nodeId || spring.NodeB == nodeId);
             });
         if (unconnected > 0)
         {
@@ -263,18 +280,20 @@ public sealed class BuildPresentationViewModel
         }
 
         // Build's canvas names each short beam with a callout (#593), so the line only counts them.
-        var tooShort = _build.Beams.Count(beam =>
-            NodeById(beam.NodeA).Position != NodeById(beam.NodeB).Position
-            && CreatureReadiness.IsTooShort(NodeById(beam.NodeA), NodeById(beam.NodeB)));
-        var tooShortPistons = _build.Pistons.Count(piston =>
-            NodeById(piston.NodeA).Position != NodeById(piston.NodeB).Position
-            && CreatureReadiness.IsTooShort(NodeById(piston.NodeA), NodeById(piston.NodeB)));
-        return (tooShort, tooShortPistons) switch
+        var tooShort = _build.Beams.Count(beam => IsTooShort(beam.NodeA, beam.NodeB));
+        var tooShortPistons = _build.Pistons.Count(piston => IsTooShort(piston.NodeA, piston.NodeB));
+        var tooShortSprings = _build.Springs.Count(spring => IsTooShort(spring.NodeA, spring.NodeB));
+        return (tooShort, tooShortPistons, tooShortSprings) switch
         {
-            (0, 0) => errors[0],
-            (0, _) => UiText.Counted("{0} piston too short", "{0} pistons too short", tooShortPistons),
+            (0, 0, 0) => errors[0],
+            (0, 0, _) => UiText.Counted("{0} spring too short", "{0} springs too short", tooShortSprings),
+            (0, _, _) => UiText.Counted("{0} piston too short", "{0} pistons too short", tooShortPistons),
             _ => UiText.Counted("{0} beam too short", "{0} beams too short", tooShort),
         };
+
+        bool IsTooShort(int nodeA, int nodeB) =>
+            NodeById(nodeA).Position != NodeById(nodeB).Position
+            && CreatureReadiness.IsTooShort(NodeById(nodeA), NodeById(nodeB));
     }
 
     private UiText ConnectedBeamText(int nodeId)

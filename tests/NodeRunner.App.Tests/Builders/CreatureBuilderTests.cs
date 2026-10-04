@@ -150,6 +150,62 @@ public sealed class CreatureBuilderTests
     }
 
     [Fact]
+    public void ParametersOf_ASpring_AreStiffnessAndDamping_AndSettingOneKeepsTheOther()
+    {
+        var builder = PairBuilder();
+        var far = builder.AddNode(new Vector2D(180, 0));
+        var spring = builder.AddSpring(builder.Nodes[0].Id, far);
+
+        builder.ParametersOf(spring).ShouldBe([PartParameterId.Stiffness, PartParameterId.Damping]);
+        builder.SetParameter(spring, PartParameterId.Damping, 0.6);
+
+        builder.Springs.Single().ShouldBe(new SpringDef(spring, builder.Nodes[0].Id, far, damping: 0.6));
+        builder.ParameterValue(spring, PartParameterId.Damping).ShouldBe(0.6);
+        builder.ParameterValue(spring, PartParameterId.Stiffness).ShouldBe(SpringDef.DefaultStiffness);
+    }
+
+    [Fact]
+    public void ALink_OnAPairThatHasOne_IsRefusedWithWhy()
+    {
+        var builder = PairBuilder();
+        var (a, b) = (builder.Nodes[0].Id, builder.Nodes[1].Id);
+        var c = builder.AddNode(new Vector2D(0, 90));
+        var d = builder.AddNode(new Vector2D(90, 90));
+        builder.AddSpring(a, c);
+        builder.AddPiston(b, d);
+
+        builder.CanAddSpring(a, b, out var onBeam).ShouldBeFalse();
+        onBeam.ShouldBe(CreatureBuilder.BeamJoinsTheseNodesReason);
+        builder.CanAddSpring(c, a, out var onSpring).ShouldBeFalse();
+        onSpring.ShouldBe(CreatureBuilder.SpringJoinsTheseNodesReason);
+        builder.CanAddPiston(a, c, out var pistonOnSpring).ShouldBeFalse();
+        pistonOnSpring.ShouldBe(CreatureBuilder.SpringJoinsTheseNodesReason);
+        builder.CanAddSpring(b, d, out var onPiston).ShouldBeFalse();
+        onPiston.ShouldBe(CreatureBuilder.PistonJoinsTheseNodesReason);
+        builder.CanAddBeam(a, c).ShouldBeFalse();
+        Should.Throw<ArgumentException>(() => builder.AddBeam(a, c));
+        builder.CanAddSpring(a, a, out _).ShouldBeFalse();
+        builder.CanAddSpring(c, d, out _).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void RemoveNode_RemovesItsSprings_AndRenameNamesOne()
+    {
+        var builder = PairBuilder();
+        var (a, b) = (builder.Nodes[0].Id, builder.Nodes[1].Id);
+        var c = builder.AddNode(new Vector2D(0, 90));
+        var kept = builder.AddSpring(a, c);
+        var removed = builder.AddSpring(b, c);
+        builder.Rename(kept, "Tail");
+
+        builder.RemoveNode(b);
+
+        builder.Springs.ShouldBe([new SpringDef(kept, a, c, "Tail")]);
+        builder.Build().Springs.ShouldBe(builder.Springs);
+        Should.Throw<ArgumentOutOfRangeException>(() => builder.SpringIndexOf(removed));
+    }
+
+    [Fact]
     public void RemoveSensor_RemovesOnlyThatSensor()
     {
         var builder = PairBuilder();

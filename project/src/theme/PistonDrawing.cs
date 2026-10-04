@@ -88,8 +88,7 @@ public static class PistonDrawing
         {
             // The gap is measured from the cylinder outline's outer edge.
             var offset = cylinderHalf + (_line / 2) + (float)SelectionMarks.Gap;
-            var (start, end) = SelectionSpan(a, b, radiusA, radiusB, haloA, haloB, offset, along);
-            DrawSelection(canvas, toPixels, scale, theme, start, end, across, offset);
+            SelectionDrawing.DrawLink(canvas, toPixels, scale, theme, a, b, radiusA, radiusB, haloA, haloB, offset);
             if (showStroke)
             {
                 DrawStroke(canvas, toPixels, scale, theme, a, b, along, across, shortest, longest);
@@ -97,41 +96,6 @@ public static class PistonDrawing
         }
 
         canvas.DrawSetTransformMatrix(drawTransform);
-    }
-
-    /// <summary>
-    /// Where the selection lines run: to the selected joints' halos, else to the joint edges, else,
-    /// when the joints crowd too close for either, centre to centre so the mark never vanishes.
-    /// </summary>
-    private static (Vector2 Start, Vector2 End) SelectionSpan(
-        Vector2 a, Vector2 b, float radiusA, float radiusB, bool haloA, bool haloB, float offset, Vector2 along)
-    {
-        var reachA = haloA ? (float)SelectionMarks.JointHalo(radiusA) : radiusA;
-        var reachB = haloB ? (float)SelectionMarks.JointHalo(radiusB) : radiusB;
-        var start = SelectionDrawing.LineEnd(a, b, reachA, offset);
-        var end = SelectionDrawing.LineEnd(b, a, reachB, offset);
-        if ((end - start).Dot(along) > 0)
-        {
-            return (start, end);
-        }
-
-        return haloA || haloB ? SelectionSpan(a, b, radiusA, radiusB, false, false, offset, along) : (a, b);
-    }
-
-    private static void DrawSelection(
-        CanvasItem canvas,
-        Transform2D toPixels,
-        float scale,
-        VisualTheme theme,
-        Vector2 start,
-        Vector2 end,
-        Vector2 across,
-        float offset)
-    {
-        var glow = theme.SelectionGlow;
-        var width = theme.SelectedBeamLineWidth * scale;
-        canvas.DrawLine(toPixels * (start + (across * offset)), toPixels * (end + (across * offset)), glow, width, antialiased: true);
-        canvas.DrawLine(toPixels * (start - (across * offset)), toPixels * (end - (across * offset)), glow, width, antialiased: true);
     }
 
     private static void DrawStroke(

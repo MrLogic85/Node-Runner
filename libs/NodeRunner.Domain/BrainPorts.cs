@@ -3,8 +3,8 @@ namespace NodeRunner.Domain;
 /// <summary>
 /// Collects the brain ports every part of a creature declares (#534) and puts them in runtime
 /// order: by part id, then in the order the part declares them. The order depends only on ids, so
-/// moving or resizing parts, or adding one, never reorders the others. Joints are passive and
-/// declare no ports (#450). Stateless. See docs/CREATURE_MODEL.md.
+/// moving or resizing parts, or adding one, never reorders the others. Joints and Springs are
+/// passive and declare no ports (#450, #453). Stateless. See docs/CREATURE_MODEL.md.
 /// </summary>
 public static class BrainPorts
 {

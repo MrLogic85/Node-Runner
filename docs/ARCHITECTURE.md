@@ -188,7 +188,8 @@ public sealed record NodeDef(int Id, Vector2D Position, string? Name = null); //
 public sealed record BeamDef(int Id, int NodeA, int NodeB, string? Name = null);   // node ids
 public sealed record SensorDef(int Id, int BeamId, SensorKind Kind, string? Name = null, double? Aim = null); // beam id; Aim: Camera only
 public sealed record PistonDef(int Id, int NodeA, int NodeB, string? Name = null, double Strength = 15000, double Stroke = 0.3, double MaxSpeed = 200); // node ids
-public sealed record CreatureDef(NodeDef[] Nodes, BeamDef[] Beams, SensorDef[] Sensors, PistonDef[] Pistons, int NextPartId);
+public sealed record SpringDef(int Id, int NodeA, int NodeB, string? Name = null, double Stiffness = 400, double Damping = 0.3); // node ids; Damping: share of critical
+public sealed record CreatureDef(NodeDef[] Nodes, BeamDef[] Beams, SensorDef[] Sensors, PistonDef[] Pistons, SpringDef[] Springs, int NextPartId);
 
 public static class RigidTriangles  // closed beam triangles, which cannot fold
 {
@@ -229,7 +230,7 @@ public static class Maps            // every map by id; 0.13 has only Flat ("map
 Note: `Vector2D` in `NodeRunner.Domain` is our own `readonly record struct`,
 **not** `Godot.Vector2`. The creature layer converts at its boundary.
 
-See `docs/CREATURE_MODEL.md` for the full Node/Beam/Sensor/Piston model
+See `docs/CREATURE_MODEL.md` for the full Node/Beam/Sensor/Piston/Spring model
 these types encode — including why joints are passive, and why sensors sit
 on beams and are not the neural model.
 

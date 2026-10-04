@@ -25,12 +25,12 @@ shared part visuals that Build, Training and thumbnails draw with (#766).**
 ## What lives here
 
 - `VisualTheme.cs` — the arena, creature and selection colours
-- `JointDrawing.cs`, `PistonDrawing.cs`, `SensorDrawing.cs`,
-  `SelectionDrawing.cs`, `TriangleHatch.cs` — static drawing helpers
+- `JointDrawing.cs`, `PistonDrawing.cs`, `SpringDrawing.cs`,
+  `SensorDrawing.cs`, `SelectionDrawing.cs`, `TriangleHatch.cs` — static drawing helpers
 - `PartVisual.cs` — the base of every part visual: theme, selection and
   layer, and the redraw on a new pixel scale every view that holds parts calls
-- `JointPart.cs`, `BeamPart.cs`, `PistonPart.cs`, `SensorPart.cs`,
-  `HatchPart.cs` — one visual per part kind
+- `JointPart.cs`, `BeamPart.cs`, `PistonPart.cs`, `SpringPart.cs`,
+  `SensorPart.cs`, `HatchPart.cs` — one visual per part kind
 - `CreatureLayers.cs`, `ArenaLayers.cs` — the named draw layers
 - `ViewLayer.cs` — an underlay or overlay a screen draws its own marks on,
   between the parts' layers

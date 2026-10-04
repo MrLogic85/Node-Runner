@@ -18,10 +18,10 @@ public static class CreatureLayers
     /// <summary>Beams.</summary>
     public const int Beams = 2;
 
-    /// <summary>Pistons, over the beams they cross.</summary>
-    public const int Pistons = 3;
+    /// <summary>Links, the Pistons and Springs, over the beams they cross.</summary>
+    public const int Links = 3;
 
-    /// <summary>A selected beam or Piston, over every other link it crosses.</summary>
+    /// <summary>A selected beam or link, over every other link it crosses.</summary>
     public const int SelectedLinks = 4;
 
     /// <summary>Sensor pictures on their beams.</summary>

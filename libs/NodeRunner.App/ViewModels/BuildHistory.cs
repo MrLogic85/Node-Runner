@@ -145,7 +145,8 @@ public sealed class BuildHistory
         a.Nodes.SequenceEqual(b.Nodes)
         && a.Beams.SequenceEqual(b.Beams)
         && a.Sensors.SequenceEqual(b.Sensors)
-        && a.Pistons.SequenceEqual(b.Pistons);
+        && a.Pistons.SequenceEqual(b.Pistons)
+        && a.Springs.SequenceEqual(b.Springs);
 
     private void Record(CreatureDef before)
     {

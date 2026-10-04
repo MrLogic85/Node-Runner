@@ -7,7 +7,7 @@ namespace NodeRunner.App.Builders;
 
 /// <summary>
 /// Mutable, in-progress creature anatomy driven by Build-mode UI
-/// (0.3.0). Add/move/remove nodes, beams, sensors and Pistons here; <see cref="Build"/>
+/// (0.3.0). Add/move/remove nodes, beams, sensors, Pistons and Springs here; <see cref="Build"/>
 /// returns the drawing as an immutable <see cref="CreatureDef"/> for saving, and
 /// <see cref="TryBuild"/> returns it only once it can be simulated. See
 /// docs/CREATURE_MODEL.md for the vocabulary and docs/ROADMAP.md 0.3.0 for
@@ -23,16 +23,20 @@ public sealed class CreatureBuilder
     /// <summary>Why a sensor cannot go on a beam that already has one.</summary>
     public static UiText OneSensorPerBeamReason { get; } = UiText.Plain("One sensor per beam");
 
-    /// <summary>Why a Piston cannot join two nodes a beam already holds rigid (#451).</summary>
+    /// <summary>Why a Piston or a Spring cannot join two nodes a beam already holds rigid (#451, #453).</summary>
     public static UiText BeamJoinsTheseNodesReason { get; } = UiText.Plain("A beam already joins these nodes");
 
-    /// <summary>Why a beam or a second Piston cannot join two nodes a Piston already links.</summary>
+    /// <summary>Why a beam or another link cannot join two nodes a Piston already links.</summary>
     public static UiText PistonJoinsTheseNodesReason { get; } = UiText.Plain("These nodes already have a piston");
+
+    /// <summary>Why a beam or another link cannot join two nodes a Spring already links (#453).</summary>
+    public static UiText SpringJoinsTheseNodesReason { get; } = UiText.Plain("These nodes already have a spring");
 
     private readonly List<NodeDef> _nodes = [];
     private readonly List<BeamDef> _beams = [];
     private readonly List<SensorDef> _sensors = [];
     private readonly List<PistonDef> _pistons = [];
+    private readonly List<SpringDef> _springs = [];
     private int _nextPartId = 1;
 
     public CreatureBuilder()
@@ -46,6 +50,7 @@ public sealed class CreatureBuilder
         _beams.AddRange(creature.Beams);
         _sensors.AddRange(creature.Sensors);
         _pistons.AddRange(creature.Pistons);
+        _springs.AddRange(creature.Springs);
         _nextPartId = creature.NextPartId;
     }
 
@@ -56,6 +61,8 @@ public sealed class CreatureBuilder
     public IReadOnlyList<SensorDef> Sensors => _sensors;
 
     public IReadOnlyList<PistonDef> Pistons => _pistons;
+
+    public IReadOnlyList<SpringDef> Springs => _springs;
 
     public int NextPartId => _nextPartId;
 
@@ -76,7 +83,7 @@ public sealed class CreatureBuilder
     }
 
     /// <summary>
-    /// Removes a node, cascading to every beam, sensor and Piston that referenced it.
+    /// Removes a node, cascading to every beam, sensor, Piston and Spring that referenced it.
     /// </summary>
     public void RemoveNode(int nodeId)
     {
@@ -89,13 +96,14 @@ public sealed class CreatureBuilder
         _beams.RemoveAll(beam => removedBeamIds.Contains(beam.Id));
         _sensors.RemoveAll(sensor => removedBeamIds.Contains(sensor.BeamId));
         _pistons.RemoveAll(piston => piston.NodeA == nodeId || piston.NodeB == nodeId);
+        _springs.RemoveAll(spring => spring.NodeA == nodeId || spring.NodeB == nodeId);
         _nodes.RemoveAt(nodeIndex);
     }
 
     /// <summary>
     /// Adds a beam between two distinct, existing nodes and returns its
     /// id. Throws if either node id is invalid, the nodes are the
-    /// same, or a beam or Piston between them already exists.
+    /// same, or a beam or link between them already exists.
     /// </summary>
     public int AddBeam(int nodeIdA, int nodeIdB)
     {
@@ -112,9 +120,9 @@ public sealed class CreatureBuilder
             throw new ArgumentException($"A beam already connects node {nodeIdA} and node {nodeIdB}.");
         }
 
-        if (_pistons.Any(piston => IsSamePair(piston.NodeA, piston.NodeB, nodeIdA, nodeIdB)))
+        if (LinkReason(nodeIdA, nodeIdB) is { } linked)
         {
-            throw new ArgumentException(PistonJoinsTheseNodesReason.Message);
+            throw new ArgumentException(linked.Message);
         }
 
         var id = AllocatePartId();
@@ -128,11 +136,11 @@ public sealed class CreatureBuilder
         && HasNode(nodeIdB)
         && nodeIdA != nodeIdB
         && !_beams.Any(beam => IsSamePair(beam, nodeIdA, nodeIdB))
-        && !_pistons.Any(piston => IsSamePair(piston.NodeA, piston.NodeB, nodeIdA, nodeIdB));
+        && LinkReason(nodeIdA, nodeIdB) is null;
 
     /// <summary>
     /// Whether <see cref="AddPiston"/> would accept this pair (#451): two distinct, existing nodes
-    /// with no beam between them, which would hold them rigid, and no Piston yet; if not,
+    /// with no beam between them, which would hold them rigid, and no link yet; if not,
     /// <paramref name="reason"/> says why.
     /// </summary>
     public bool CanAddPiston(int nodeIdA, int nodeIdB, [NotNullWhen(false)] out UiText? reason)
@@ -143,21 +151,36 @@ public sealed class CreatureBuilder
             return false;
         }
 
-        if (_beams.Any(beam => IsSamePair(beam, nodeIdA, nodeIdB)))
-        {
-            reason = BeamJoinsTheseNodesReason;
-            return false;
-        }
-
-        if (_pistons.Any(piston => IsSamePair(piston.NodeA, piston.NodeB, nodeIdA, nodeIdB)))
-        {
-            reason = PistonJoinsTheseNodesReason;
-            return false;
-        }
-
-        reason = null;
-        return true;
+        reason = LinkBlockedReason(nodeIdA, nodeIdB);
+        return reason is null;
     }
+
+    /// <summary>
+    /// Whether <see cref="AddSpring"/> would accept this pair (#453): the same rules as a Piston's,
+    /// two distinct, existing nodes with no beam and no link between them; if not,
+    /// <paramref name="reason"/> says why.
+    /// </summary>
+    public bool CanAddSpring(int nodeIdA, int nodeIdB, [NotNullWhen(false)] out UiText? reason)
+    {
+        if (!HasNode(nodeIdA) || !HasNode(nodeIdB) || nodeIdA == nodeIdB)
+        {
+            reason = UiText.Plain("A spring must connect two different nodes.");
+            return false;
+        }
+
+        reason = LinkBlockedReason(nodeIdA, nodeIdB);
+        return reason is null;
+    }
+
+    // Two nodes hold one link at most, and a beam between them would hold any link rigid.
+    private UiText? LinkBlockedReason(int nodeIdA, int nodeIdB) =>
+        _beams.Any(beam => IsSamePair(beam, nodeIdA, nodeIdB)) ? BeamJoinsTheseNodesReason : LinkReason(nodeIdA, nodeIdB);
+
+    // Why the link already between these nodes stops another part; null when there is none.
+    private UiText? LinkReason(int nodeIdA, int nodeIdB) =>
+        _pistons.Any(piston => IsSamePair(piston.NodeA, piston.NodeB, nodeIdA, nodeIdB)) ? PistonJoinsTheseNodesReason
+        : _springs.Any(spring => IsSamePair(spring.NodeA, spring.NodeB, nodeIdA, nodeIdB)) ? SpringJoinsTheseNodesReason
+        : null;
 
     /// <summary>Adds a Piston between two nodes with the default settings and returns its id; see <see cref="CanAddPiston"/>.</summary>
     public int AddPiston(int nodeIdA, int nodeIdB)
@@ -174,9 +197,25 @@ public sealed class CreatureBuilder
         return id;
     }
 
+    /// <summary>Adds a Spring between two nodes with the default settings and returns its id; see <see cref="CanAddSpring"/>.</summary>
+    public int AddSpring(int nodeIdA, int nodeIdB)
+    {
+        ValidateNodeId(nodeIdA);
+        ValidateNodeId(nodeIdB);
+        if (!CanAddSpring(nodeIdA, nodeIdB, out var reason))
+        {
+            throw new ArgumentException(reason.Message);
+        }
+
+        var id = AllocatePartId();
+        _springs.Add(new SpringDef(id, nodeIdA, nodeIdB));
+        return id;
+    }
+
     /// <summary>The settings part <paramref name="partId"/> has (#704), in panel order; a joint and a beam have none.</summary>
     public IReadOnlyList<PartParameterId> ParametersOf(int partId) =>
         _pistons.Any(piston => piston.Id == partId) ? _pistonParameters
+        : _springs.Any(spring => spring.Id == partId) ? _springParameters
         : _sensors.Any(sensor => sensor.Id == partId && sensor.Kind == SensorKind.Camera) ? _cameraParameters
         : [];
 
@@ -187,6 +226,8 @@ public sealed class CreatureBuilder
         PartParameterId.Stroke => _pistons[PistonIndexOf(partId)].Stroke,
         PartParameterId.MaxSpeed => _pistons[PistonIndexOf(partId)].MaxSpeed,
         PartParameterId.Aim => Camera(partId).Aim ?? DefaultAim(Camera(partId).BeamId),
+        PartParameterId.Stiffness => _springs[SpringIndexOf(partId)].Stiffness,
+        PartParameterId.Damping => _springs[SpringIndexOf(partId)].Damping,
         _ => throw new ArgumentOutOfRangeException(nameof(parameter)),
     };
 
@@ -197,6 +238,16 @@ public sealed class CreatureBuilder
         {
             var camera = Camera(partId);
             _sensors[SensorIndexOf(partId)] = camera.WithAim(value);
+            return;
+        }
+
+        if (parameter is PartParameterId.Stiffness or PartParameterId.Damping)
+        {
+            var springIndex = SpringIndexOf(partId);
+            var spring = _springs[springIndex];
+            _springs[springIndex] = parameter == PartParameterId.Stiffness
+                ? spring.WithSettings(value, spring.Damping)
+                : spring.WithSettings(spring.Stiffness, value);
             return;
         }
 
@@ -213,6 +264,8 @@ public sealed class CreatureBuilder
 
     private static readonly PartParameterId[] _pistonParameters = [PartParameterId.Strength, PartParameterId.Stroke, PartParameterId.MaxSpeed];
 
+    private static readonly PartParameterId[] _springParameters = [PartParameterId.Stiffness, PartParameterId.Damping];
+
     private static readonly PartParameterId[] _cameraParameters = [PartParameterId.Aim];
 
     private SensorDef Camera(int sensorId) => _sensors[SensorIndexOf(sensorId)] is { Kind: SensorKind.Camera } camera
@@ -227,6 +280,9 @@ public sealed class CreatureBuilder
 
     /// <summary>Removes a Piston by id.</summary>
     public void RemovePiston(int pistonId) => _pistons.RemoveAt(PistonIndexOf(pistonId));
+
+    /// <summary>Removes a Spring by id.</summary>
+    public void RemoveSpring(int springId) => _springs.RemoveAt(SpringIndexOf(springId));
 
     /// <summary>Removes a beam by id, cascading to sensors on it.</summary>
     public void RemoveBeam(int beamId)
@@ -334,11 +390,18 @@ public sealed class CreatureBuilder
             return;
         }
 
+        var springIndex = _springs.FindIndex(spring => spring.Id == partId);
+        if (springIndex >= 0)
+        {
+            _springs[springIndex] = _springs[springIndex].WithName(name);
+            return;
+        }
+
         throw new ArgumentOutOfRangeException(nameof(partId), "Part id must point to an existing part.");
     }
 
     /// <summary>The current drawing, finished or not: what a saved Creation stores.</summary>
-    public CreatureDef Build() => new(_nodes, _beams, _sensors, _pistons, _nextPartId);
+    public CreatureDef Build() => new(_nodes, _beams, _sensors, _pistons, _springs, _nextPartId);
 
     /// <summary>The current drawing if it can be simulated, else the player-facing problems that stop it.</summary>
     public bool TryBuild(out CreatureDef? creature, out IReadOnlyList<UiText> errors)
@@ -382,13 +445,23 @@ public sealed class CreatureBuilder
         return index;
     }
 
-
     public int PistonIndexOf(int pistonId)
     {
         var index = _pistons.FindIndex(piston => piston.Id == pistonId);
         if (index < 0)
         {
             throw new ArgumentOutOfRangeException(nameof(pistonId), "Piston id must point to an existing piston.");
+        }
+
+        return index;
+    }
+
+    public int SpringIndexOf(int springId)
+    {
+        var index = _springs.FindIndex(spring => spring.Id == springId);
+        if (index < 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(springId), "Spring id must point to an existing spring.");
         }
 
         return index;

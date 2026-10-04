@@ -313,9 +313,9 @@ reference would mislead someone working on that surface.
   - *Selection:* every selection mark sits one shared gap
     (`SelectionMarks.Gap`, 3) outside the part's edge (#710). A selected
     joint gets an unfilled 2-wide `halo` ring that gap outside it; a selected
-    beam or Piston gets two 2-wide `halo` lines along it, that gap outside
-    each side. A Piston's lines stop at the joint edges. In a selected group,
-    a beam's or Piston's lines run on to the selected joints' halo rings, so
+    beam or link (Piston, Spring) gets two 2-wide `halo` lines along it, that
+    gap outside each side. A link's lines stop at the joint edges. In a
+    selected group, a beam's or link's lines run on to the selected joints' halo rings, so
     the group reads as one outline. All are drawn over the part, in Build and
     Training. A part draws its marks with itself, and a selected part rises
     whole over the other parts of its kind, never over the kinds drawn above

@@ -55,9 +55,9 @@ Long-form descriptions and the sensor/model contract live in
   inputs. Formerly the "LOS sensor". Not Godot's `Camera2D`. See:
   `docs/CREATURE_MODEL.md`.
 - **Creature** — A single agent's body: nodes + beams (+ optional sensors) +
-  Pistons, driven by a brain. See:
+  links (Pistons, Springs), driven by a brain. See:
   `docs/CREATURE_MODEL.md`.
-- **Creature element selection** — A selected joint, beam, sensor or Piston,
+- **Creature element selection** — A selected joint, beam, sensor or link,
   represented as a `CreatureElementKind` plus the part's stable id (#220).
   Select holds any mix of them as a `PartSet` (#704).
 - **CreatureDef** — Pure-data description of a creature; the "genome" of the
@@ -69,7 +69,7 @@ Long-form descriptions and the sensor/model contract live in
   part, and not a Godot physics joint. See:
   `docs/BUILD_MODE.md`.
 - **Link** — A non-beam part drawn joint-to-joint by the Beams tool. Today
-  that means Piston; Spring and Wing are listed for later. The UI list is
+  that means Piston or Spring; Wing is listed for later. The UI list is
   headed "Links" and also includes Beam, but a Beam remains the structural
   part above.
 - **Model input** — One slot in the neural network's input vector, populated
@@ -93,6 +93,10 @@ Long-form descriptions and the sensor/model contract live in
 - **Sensor (part)** — A part that sits on a beam and feels that beam
   (`SensorDef`, `SensorKind`); one sensor per beam, at its midpoint.
   Not the brain. See: `docs/CREATURE_MODEL.md`.
+- **Spring** — A passive link between two nodes (#453) that pulls back
+  toward its drawn length with its Stiffness; its Damping, a share of the
+  damping that just stops a bounce, calms it. No brain ports. See:
+  `docs/CREATURE_MODEL.md`.
 - **Stroke** — How far a Piston moves each way from its built length, as a
   share of that length: ±30% means it reaches 70%…130%. Its end stops hold
   it there, whatever the load. See: `docs/CREATURE_MODEL.md`.

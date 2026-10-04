@@ -43,6 +43,20 @@ public sealed class BrainPortsTests
     }
 
     [Fact]
+    public void Of_GivesSpringsNoPorts()
+    {
+        var creature = new CreatureDef(
+            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(1, 0))],
+            [],
+            [],
+            [],
+            [new SpringDef(3, 1, 2)],
+            nextPartId: 4);
+
+        BrainPorts.Of(creature).ShouldBe(BrainPortLayout.Empty, new LayoutComparer());
+    }
+
+    [Fact]
     public void Of_IgnoresWhereThePartsAreAndTheOrderOfNodesAndSensors()
     {
         var chain = Chain();

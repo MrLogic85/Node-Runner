@@ -18,7 +18,7 @@ public static class CreatureReadiness
 
     private const double _sensorGap = 4;
 
-    /// <summary>True when the beam or Piston between <paramref name="a"/> and <paramref name="b"/> leaves less than <see cref="MinimumBeamGap"/> between their rings.</summary>
+    /// <summary>True when the beam or link between <paramref name="a"/> and <paramref name="b"/> leaves less than <see cref="MinimumBeamGap"/> between their rings.</summary>
     public static bool IsTooShort(NodeDef a, NodeDef b)
     {
         ArgumentNullException.ThrowIfNull(a);
@@ -43,32 +43,38 @@ public static class CreatureReadiness
             var nodeId = creature.Nodes[i].Id;
             if (!IsAttached(creature, nodeId))
             {
-                problems.Add(UiText.Format("Node {0} has nothing attached. Connect it with a beam or a piston, or remove it.", i + 1));
+                problems.Add(UiText.Format("Node {0} has nothing attached. Connect it with a beam, a piston or a spring, or remove it.", i + 1));
             }
         }
 
         foreach (var beam in creature.Beams)
         {
-            AddLengthProblem(creature, isPiston: false, beam.NodeA, beam.NodeB, problems);
+            AddLengthProblem(creature, CreatureElementKind.Beam, beam.NodeA, beam.NodeB, problems);
         }
 
         foreach (var piston in creature.Pistons)
         {
-            AddLengthProblem(creature, isPiston: true, piston.NodeA, piston.NodeB, problems);
+            AddLengthProblem(creature, CreatureElementKind.Piston, piston.NodeA, piston.NodeB, problems);
+        }
+
+        foreach (var spring in creature.Springs)
+        {
+            AddLengthProblem(creature, CreatureElementKind.Spring, spring.NodeA, spring.NodeB, problems);
         }
 
         return problems;
     }
 
-    /// <summary>Whether a beam or a Piston (#451) holds the node to the rest of the creature.</summary>
+    /// <summary>Whether a beam or a link, a Piston (#451) or a Spring (#453), holds the node to the rest of the creature.</summary>
     public static bool IsAttached(CreatureDef creature, int nodeId)
     {
         ArgumentNullException.ThrowIfNull(creature);
         return creature.Beams.Any(beam => beam.NodeA == nodeId || beam.NodeB == nodeId)
-            || creature.Pistons.Any(piston => piston.NodeA == nodeId || piston.NodeB == nodeId);
+            || creature.Pistons.Any(piston => piston.NodeA == nodeId || piston.NodeB == nodeId)
+            || creature.Springs.Any(spring => spring.NodeA == nodeId || spring.NodeB == nodeId);
     }
 
-    private static void AddLengthProblem(CreatureDef creature, bool isPiston, int nodeA, int nodeB, List<UiText> problems)
+    private static void AddLengthProblem(CreatureDef creature, CreatureElementKind kind, int nodeA, int nodeB, List<UiText> problems)
     {
         var indexA = creature.NodeIndexOf(nodeA);
         var indexB = creature.NodeIndexOf(nodeB);
@@ -76,15 +82,21 @@ public static class CreatureReadiness
         var b = indexB + 1;
         if (creature.Nodes[indexA].Position == creature.Nodes[indexB].Position)
         {
-            problems.Add(isPiston
-                ? UiText.Format("The piston between node {0} and node {1} has zero length. Move one of the nodes apart.", a, b)
-                : UiText.Format("The beam between node {0} and node {1} has zero length. Move one of the nodes apart.", a, b));
+            problems.Add(kind switch
+            {
+                CreatureElementKind.Piston => UiText.Format("The piston between node {0} and node {1} has zero length. Move one of the nodes apart.", a, b),
+                CreatureElementKind.Spring => UiText.Format("The spring between node {0} and node {1} has zero length. Move one of the nodes apart.", a, b),
+                _ => UiText.Format("The beam between node {0} and node {1} has zero length. Move one of the nodes apart.", a, b),
+            });
         }
         else if (IsTooShort(creature.Nodes[indexA], creature.Nodes[indexB]))
         {
-            problems.Add(isPiston
-                ? UiText.Format("The piston between node {0} and node {1} is too short. Move one of the nodes apart.", a, b)
-                : UiText.Format("The beam between node {0} and node {1} is too short. Move one of the nodes apart.", a, b));
+            problems.Add(kind switch
+            {
+                CreatureElementKind.Piston => UiText.Format("The piston between node {0} and node {1} is too short. Move one of the nodes apart.", a, b),
+                CreatureElementKind.Spring => UiText.Format("The spring between node {0} and node {1} is too short. Move one of the nodes apart.", a, b),
+                _ => UiText.Format("The beam between node {0} and node {1} is too short. Move one of the nodes apart.", a, b),
+            });
         }
     }
 

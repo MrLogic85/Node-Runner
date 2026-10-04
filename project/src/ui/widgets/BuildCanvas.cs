@@ -536,10 +536,13 @@ public partial class BuildCanvas : Node2D
         float OnScreen(double length) => (float)(length * view.Zoom) * toSlot.Scale.X;
         switch (note.Target.Kind)
         {
-            case CreatureElementKind.Beam or CreatureElementKind.Piston:
-                var (nodeA, nodeB) = note.Target.Kind == CreatureElementKind.Beam
-                    ? (_viewModel!.Beams[_viewModel.BeamIndexOf(note.Target.Id)].NodeA, _viewModel.Beams[_viewModel.BeamIndexOf(note.Target.Id)].NodeB)
-                    : (_viewModel!.Pistons[_viewModel.PistonIndexOf(note.Target.Id)].NodeA, _viewModel.Pistons[_viewModel.PistonIndexOf(note.Target.Id)].NodeB);
+            case CreatureElementKind.Beam or CreatureElementKind.Piston or CreatureElementKind.Spring:
+                var (nodeA, nodeB) = note.Target.Kind switch
+                {
+                    CreatureElementKind.Beam => (_viewModel!.Beams[_viewModel.BeamIndexOf(note.Target.Id)].NodeA, _viewModel.Beams[_viewModel.BeamIndexOf(note.Target.Id)].NodeB),
+                    CreatureElementKind.Piston => (_viewModel!.Pistons[_viewModel.PistonIndexOf(note.Target.Id)].NodeA, _viewModel.Pistons[_viewModel.PistonIndexOf(note.Target.Id)].NodeB),
+                    _ => (_viewModel!.Springs[_viewModel.SpringIndexOf(note.Target.Id)].NodeA, _viewModel.Springs[_viewModel.SpringIndexOf(note.Target.Id)].NodeB),
+                };
                 var a = NodeById(nodeA);
                 var b = NodeById(nodeB);
                 var start = ToSlot(a.Position);
@@ -703,6 +706,7 @@ public partial class BuildCanvas : Node2D
     private bool ShowsAsLoose(int nodeId) =>
         !_viewModel!.Beams.Any(beam => beam.NodeA == nodeId || beam.NodeB == nodeId)
         && !_viewModel.Pistons.Any(piston => piston.NodeA == nodeId || piston.NodeB == nodeId)
+        && !_viewModel.Springs.Any(spring => spring.NodeA == nodeId || spring.NodeB == nodeId)
         && nodeId != _gestures?.BeamStartNodeId
         && nodeId != _gestures?.BeamTargetNodeId;
 

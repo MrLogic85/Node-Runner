@@ -20,7 +20,7 @@ public sealed record BrainPortLabels(IReadOnlyList<UiText> Inputs, IReadOnlyList
         var sensorKinds = creature.Sensors.ToDictionary(sensor => sensor.Id, sensor => sensor.Kind);
         UiText Label(BrainPort port)
         {
-            var name = PartNames.Display(creature.Nodes, creature.Beams, creature.Sensors, creature.Pistons, port.PartId);
+            var name = PartNames.Display(creature.Nodes, creature.Beams, creature.Sensors, creature.Pistons, creature.Springs, port.PartId);
             return sensorKinds.TryGetValue(port.PartId, out var kind)
                 ? Reading(kind, port.Channel, name)
                 : PistonChannel(port.Channel, name);

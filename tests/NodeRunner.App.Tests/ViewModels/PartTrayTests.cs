@@ -63,7 +63,7 @@ public sealed class PartTrayTests
     }
 
     [Fact]
-    public void LinkList_ShowsBeamPickedWithFutureLinksLocked()
+    public void LinkList_ShowsBeamPickedWithWingLocked()
     {
         var list = BuildLinkList.Create(BuildLink.Beam);
 
@@ -73,7 +73,7 @@ public sealed class PartTrayTests
         list.Rows.Select(row => (row.Link, row.Name, row.State)).ShouldBe([
             (BuildLink.Beam, UiText.Plain("Beam"), LinkListRowState.Selected),
             (BuildLink.Piston, UiText.Plain("Piston"), LinkListRowState.Rest),
-            (BuildLink.Spring, UiText.Plain("Spring"), LinkListRowState.Locked),
+            (BuildLink.Spring, UiText.Plain("Spring"), LinkListRowState.Rest),
             (BuildLink.Wing, UiText.Plain("Wing"), LinkListRowState.Locked)]);
     }
 

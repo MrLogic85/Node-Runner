@@ -133,7 +133,7 @@ swap restyles everything:
   scene saves no level over the screen (`UiLayersTests`, #768). Outside it, a `ZIndex` names
   a `CreatureLayers` or `ArenaLayers` layer, and the layers keep their order
   (`DrawLayersTests`, #767). Only the shared part visuals in `theme/` call
-  the helpers that paint a joint, Piston, sensor or selection mark, so a view
+  the helpers that paint a joint, Piston, Spring, sensor or selection mark, so a view
   shows its parts through them (`SharedPartVisualsTests`, #766, #769). Only the app's
   `UiNotificationLayer` (and Popup Gallery) creates a `UiNotification`, so
   notifications outlive scene changes (#472).

@@ -27,7 +27,7 @@ public sealed record LinkListPresentation(
     IReadOnlyList<LinkListRow> Rows,
     UiText? HelpText);
 
-/// <summary>The Beams tool's list: Beam and Piston now, later links locked.</summary>
+/// <summary>The Beams tool's list: Beam, Piston and Spring now, later links locked.</summary>
 public static class BuildLinkList
 {
     public static LinkListPresentation Create(BuildLink picked) => new(
@@ -36,18 +36,19 @@ public static class BuildLinkList
         [
             Row(BuildLink.Beam, UiText.Plain("Beam"), picked),
             Row(BuildLink.Piston, UiText.Plain("Piston"), picked),
-            Locked(BuildLink.Spring, UiText.Plain("Spring")),
+            Row(BuildLink.Spring, UiText.Plain("Spring"), picked),
             Locked(BuildLink.Wing, UiText.Plain("Wing")),
         ],
         HelpText(picked));
 
-    public static bool IsAvailable(BuildLink link) => link is BuildLink.Beam or BuildLink.Piston;
+    public static bool IsAvailable(BuildLink link) => link is BuildLink.Beam or BuildLink.Piston or BuildLink.Spring;
 
     /// <summary>How to use the picked link, or null for a link that cannot be picked yet.</summary>
     public static UiText? HelpText(BuildLink link) => link switch
     {
         BuildLink.Beam => UiText.Plain("A rigid rod. Drag joint to joint."),
         BuildLink.Piston => UiText.Plain("The brain pushes and pulls it. Drag joint to joint."),
+        BuildLink.Spring => UiText.Plain("Springs back to its drawn length. Drag joint to joint."),
         _ => null,
     };
 

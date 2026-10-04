@@ -969,7 +969,7 @@ public class BuildGesturesTests
         var build = new BuildViewModel();
         build.PlaceNode(new Vector2D(0, 0));
         build.PlaceNode(new Vector2D(200, 0));
-        var piston = build.ConnectPiston(1, 2);
+        var piston = build.ConnectLink(BuildLink.Piston, 1, 2);
         var gestures = new BuildGestures(build);
         build.ActiveTool = BuildTool.Select;
 

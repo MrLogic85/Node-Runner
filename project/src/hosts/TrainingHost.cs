@@ -469,7 +469,7 @@ public partial class TrainingHost : Node, IRoutedScene
         {
             _followed?.SetSelectedElement(_selection.SelectedElement);
             _selectedPartName = _selection.SelectedElement is { } selected && _followed?.Definition is { } definition
-                ? UiTextTranslation.Source(PartNames.Display(definition.Nodes, definition.Beams, definition.Sensors, definition.Pistons, selected.Id))
+                ? UiTextTranslation.Source(PartNames.Display(definition.Nodes, definition.Beams, definition.Sensors, definition.Pistons, definition.Springs, selected.Id))
                 : null;
             BestMarker.Faded = _selectedPartName is not null;
             if (_selectedPartName is null)
