@@ -19,6 +19,7 @@ public partial class TrialController : Node
     private readonly TrialMeasurement _measurement = new(Engine.PhysicsTicksPerSecond);
     private Creature.Creature? _creature;
     private int _elapsedTicks;
+    private bool _startsNextTick;
 
     /// <summary>Trial length in physics ticks. Default is 10s at 60Hz.</summary>
     public int TrialDurationTicks { get; set; } = 600;
@@ -40,40 +41,55 @@ public partial class TrialController : Node
     /// <summary>The Y of the ground's top edge, which elevation is measured from.</summary>
     public float GroundTopY { get; set; }
 
+    /// <summary>Raised when a trial has begun, with the creature in its start pose.</summary>
+    public event Action? TrialStarted;
+
     /// <summary>Raised when a trial finishes, with what it measured; its centre's distance is the fitness.</summary>
     public event Action<TrialResult>? TrialCompleted;
 
     public override void _Ready()
     {
         // Must run its _PhysicsProcess before any Creature's (default
-        // priority 0): TrialCompleted fires synchronously on the boundary
-        // tick, and a subscriber typically calls StartTrial (ResetPose)
-        // right away. If Creature ran first, it would already have driven
-        // motors from the outgoing trial's final pose that tick, and that
-        // torque would then be integrated against the freshly-reset pose —
-        // contaminating the new trial with leftover motion from the old one.
+        // priority 0), so a trial always begins before its creature drives
+        // that tick, whether it started inside a tick or between ticks
+        // (docs/TRAINING_LOOP.md, "The same brain runs the same trial").
         ProcessPhysicsPriority = -100;
     }
 
     /// <summary>
-    /// Resets the given creature to its built pose, <see cref="StartClearance"/> above the ground,
-    /// and starts a fresh trial for it. Replaces any trial already in progress.
+    /// Starts a fresh trial for the given creature, reset to its built pose
+    /// <see cref="StartClearance"/> above the ground. Replaces any trial already in progress.
+    /// Called inside a physics tick, as <see cref="Evolver"/> starts the next trial, it begins at
+    /// once; called between ticks, as a scene starts training, it begins at the start of the next
+    /// tick (#798). Either way it begins before any creature drives that tick, so the same brain
+    /// runs the same trial every time. <see cref="TrialStarted"/> says when it has begun.
     /// </summary>
     public void StartTrial(Creature.Creature creature)
     {
         ArgumentNullException.ThrowIfNull(creature);
 
         _creature = creature;
-        _creature.ResetPose(GroundTopY - StartClearance);
+        IsRunning = true;
+        _startsNextTick = !Engine.IsInPhysicsFrame();
+        if (!_startsNextTick)
+        {
+            Begin();
+        }
+    }
+
+    private void Begin()
+    {
+        _creature!.ResetPose(GroundTopY - StartClearance);
         _measurement.Reset(_creature.CenterOfMass.X, _creature.Bounds.End.X);
         _elapsedTicks = 0;
-        IsRunning = true;
+        TrialStarted?.Invoke();
     }
 
     /// <summary>Stops the current trial without raising <see cref="TrialCompleted"/>.</summary>
     public void Stop()
     {
         IsRunning = false;
+        _startsNextTick = false;
         _creature = null;
     }
 
@@ -81,6 +97,13 @@ public partial class TrialController : Node
     {
         if (!IsRunning || _creature is null)
         {
+            return;
+        }
+
+        if (_startsNextTick)
+        {
+            _startsNextTick = false;
+            Begin();
             return;
         }
 

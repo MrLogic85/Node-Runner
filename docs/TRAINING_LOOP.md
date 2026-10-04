@@ -133,12 +133,14 @@ transition to keep in step with it.
   times a fixed-duration trial (`TrialDurationTicks`, default 600 ≈ 10s at
   60Hz) for one `Creature` instance at a time. It does **not** own creature
   creation/destruction or brain assignment — callers are responsible for
-  that. `StartTrial(creature)` calls `Creature.ResetPose` (teleports
-  every node and beam body back to its built shape and rotation, zeroes velocity,
-  and shifts the whole creature so its lowest point is
-  `TrialController.StartClearance`, 6 creature units, above the ground) and
-  resets the `TrialMeasurement` from the creature's current
-  `CenterOfMass.X` and front-most X (`Bounds.End.X`). Every trial, in every parallel slot, starts from this
+  that. `StartTrial(creature)` begins the trial at once inside a physics
+  tick, otherwise at the start of the next tick (see "The same brain runs
+  the same trial" below). Beginning calls `Creature.ResetPose` (builds every
+  body and joint afresh in the built shape at rest, and shifts the whole
+  creature so its lowest point is `TrialController.StartClearance`, 6
+  creature units, above the ground) and resets the `TrialMeasurement` from
+  the creature's current `CenterOfMass.X` and front-most X
+  (`Bounds.End.X`), then raises `TrialStarted`. Every trial, in every parallel slot, starts from this
   same small drop (#649). The fall counts as trial time; distance is
   measured from the start X, so the drop doesn't change fitness. Each tick it records `CenterOfMass.X`, `Bounds.End.X` and the clearance
   `GroundTopY - Creature.LowestPointY`. `TrialCompleted` fires once the
@@ -157,11 +159,27 @@ transition to keep in step with it.
   `Evolver` owns trial controllers internally and assigns each generation's
   candidate genomes; `Main.cs` no longer talks to `TrialController` directly.
 - `TrialController.ProcessPhysicsPriority` is set below `Creature`'s default
-  so a trial-boundary reset always runs before that tick's `Creature`
-  motor drive. Without this, a `TrialCompleted` handler that calls
-  `StartTrial` synchronously (as `Evolver` does) would reset the pose
-  *after* the outgoing trial's last motor command was already set for that
-  physics step, letting stale torque bleed into the new trial's first tick.
+  so a trial always begins before that tick's `Creature` motor drive, and
+  the new brain drives the first step. Both ways a trial starts rely on
+  this order: a `TrialCompleted` handler that calls `StartTrial` inside the
+  tick (as `Evolver` does), and a start between ticks, deferred to the next
+  one (below). If `Creature` ran first, the two would differ by one tick of
+  drive and the same brain would not replay its run.
+- **The same brain runs the same trial (#798).** The followed shadow
+  replays the previous best, so it must end where that run ended. Two
+  things made it drift, both measured on the emulator:
+  - Moving the old bodies back left Godot's solver state behind: joints
+    and contacts remember their last push and apply it again on the next
+    step. A creature's motion is chaotic, so the same brain then ended up
+    to 0.8 m off. `ResetPose` therefore builds every body and joint
+    afresh, keeping the brain, the selection and the shadow look.
+  - A trial reset between physics ticks, as a scene does in `_Ready`, did
+    not replay a reset made inside one. `StartTrial` called between ticks
+    begins at the start of the next tick, before any creature drives; inside
+    a tick, as `Evolver` starts the next trial, it begins at once.
+  - The rebuild costs about 4 ms for 8 shadows and 47 ms for 100 on the
+    emulator, once per generation as every shadow starts over; the camera
+    cuts back to the start at that moment anyway.
 
 ## Generations (issue #50)
 
@@ -209,7 +227,8 @@ transition to keep in step with it.
     as a shadow") at `alpha_shadow`. Shadow `i` is slot `i`, which runs
     candidate `i`. The default is shadow 1 (slot 0): the resumed genome or
     the elite `GeneticAlgorithm` puts first, i.e. the previous best, and in
-    a fresh generation 0 the first perturbed shadow. `Evolver.Follow` is the only way
+    a fresh generation 0 the first perturbed shadow. The previous best
+    replays its run exactly (see "The same brain runs the same trial" above). `Evolver.Follow` is the only way
     it changes, so a new leader never takes it, and it stays on that slot
     across generations. `Evolver` exposes `FollowedShadow`,
     `HasPreviousBest` and `ShadowDistances`; `TrainingPresentationViewModel`

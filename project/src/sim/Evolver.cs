@@ -259,6 +259,7 @@ public partial class Evolver : Node
             };
             var capturedSlot = slot;
             controller.TrialCompleted += result => OnTrialCompleted(capturedSlot, result);
+            controller.TrialStarted += () => OnTrialStarted(capturedSlot);
             AddChild(controller);
             _trialControllers.Add(controller);
         }
@@ -298,6 +299,10 @@ public partial class Evolver : Node
         var brain = NeuralNetwork.FromGenome(_layerSizes, _genomes[genomeIndex], Activation.Tanh, _outputActivations);
         _creatures[slot].SetBrain(brain, seed: (Generation * _genomes.Length) + genomeIndex);
         _trialControllers[slot].StartTrial(_creatures[slot]);
+    }
+
+    private void OnTrialStarted(int slot)
+    {
         if (slot == _followedShadow)
         {
             FollowedTrialStarted?.Invoke();

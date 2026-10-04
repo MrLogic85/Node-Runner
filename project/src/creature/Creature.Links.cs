@@ -13,7 +13,6 @@ public partial class Creature
         _pistons = new PistonLink[definition.Pistons.Count];
         _pistonVisuals = new PistonVisual[definition.Pistons.Count];
         _cylinderBodies = new RigidBody2D[definition.Pistons.Count];
-        _cylinderInitialRotations = new float[definition.Pistons.Count];
         for (var i = 0; i < _pistons.Length; i++)
         {
             var piston = definition.Pistons[i];
@@ -68,7 +67,6 @@ public partial class Creature
         };
         AddChild(cylinder);
         _cylinderBodies[index] = cylinder;
-        _cylinderInitialRotations[index] = rotation;
 
         var pin = new PinJoint2D { Name = $"Piston{index}CylinderPin", Position = a };
         AddChild(pin);
@@ -92,8 +90,7 @@ public partial class Creature
     // A Spring is Godot's DampedSpringJoint2D between its two node bodies (#453): it pulls them
     // toward their built distance with its Stiffness and damps the speed between them with
     // Spring.DampingCoefficient. It has no body or collider of its own and no brain ports; its
-    // picture is a child of the creature, on the Links layer over the beams. The joint keeps no
-    // state of its own, so ResetPose needs nothing for it.
+    // picture is a child of the creature, on the Links layer over the beams.
     private void CreateSprings(CreatureDef definition)
     {
         _springVisuals = new SpringVisual[definition.Springs.Count];
