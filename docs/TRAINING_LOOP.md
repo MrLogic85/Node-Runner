@@ -403,11 +403,16 @@ component READMEs under `reference design/components/` guide its presentation.
     left off. The scene root is `ProcessMode.Always`, so the screen and its
     buttons (Pause included) keep responding while paused, and the
     creature and `Evolver` pin themselves back to `Pausable`.
-  - **Speed** cycles a fixed 1x/2x/4x set via `Engine.TimeScale`.
-    This scales every physics/process step uniformly and does not affect
-    determinism, only how quickly a fixed tick budget plays out. Speed and
-    pause are reset in `TrainingHost._Ready()`/`_ExitTree()` since both are
-    global engine settings, not scoped to this scene.
+  - **Speed** cycles a fixed 1x/2x/4x set via `SimSpeed.Set` (#787). It
+    raises `Engine.PhysicsTicksPerSecond` and `Engine.TimeScale` together,
+    so every physics step stays 1/60 s and only more of them run per second.
+    TimeScale alone would stretch each step, which changes fitness and makes
+    stiff Springs unstable. Speed changes only how quickly a fixed tick
+    budget plays out, never the result; on a slow device 4x may play out
+    slower than 4x rather than take bigger steps. Trial lengths use
+    `SimSpeed.TicksPerSecond`, the project setting, not the live engine
+    value. Speed and pause are reset in `TrainingHost._Ready()`/`_ExitTree()`
+    since both are global engine settings, not scoped to this scene.
   - **Brain** (the button or the Brain stage) opens the BrainFocus sheet;
     Android Back closes it before leaving the scene. BrainFocus shows the
     direct brain (#536): a Senses column named by port ("Accelerometer:
