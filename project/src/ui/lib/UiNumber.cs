@@ -86,15 +86,8 @@ public partial class UiNumber : Control, ISerializationListener
         const float stroke = UiSize.Stroke.Number;
         var center = Size * 0.5f;
         const float radius = (UiSize.Widget.NumberDiameter - stroke) * 0.5f;
-        DrawArc(
-            center,
-            radius,
-            0,
-            Mathf.Tau,
-            _ringPoints,
-            UiThemeLookup.Color(this, UiTokens.Color.Accent),
-            stroke,
-            antialiased: false);
+        using var pen = UiPixelPen.Begin(this);
+        pen.Ring(center, radius, UiThemeLookup.Color(this, UiTokens.Color.Accent), stroke, _ringPoints);
     }
 
     public override Vector2 _GetMinimumSize() => Vector2.One * UiSize.Widget.NumberDiameter;

@@ -50,23 +50,24 @@ public partial class CreatureThumbnail : Control
         Vector2 MapIndex(int index) => (points[index] * scale) + offset;
 
         var line = UiThemeLookup.Color(this, UiTokens.Color.LineStrong);
+        using var pen = UiPixelPen.Begin(this);
         foreach (var beam in _creature.Beams)
         {
-            DrawLine(MapNode(beam.NodeA), MapNode(beam.NodeB), line, UiSize.Stroke.Beam, antialiased: false);
+            pen.Line(MapNode(beam.NodeA), MapNode(beam.NodeB), line, UiSize.Stroke.Beam);
         }
 
         // A Piston is its rod alone at this size, in accent like on the canvas (#451).
         var accent = UiThemeLookup.Color(this, UiTokens.Color.Accent);
         foreach (var piston in _creature.Pistons)
         {
-            DrawLine(MapNode(piston.NodeA), MapNode(piston.NodeB), accent, UiSize.Stroke.Signal, antialiased: false);
+            pen.Line(MapNode(piston.NodeA), MapNode(piston.NodeB), accent, UiSize.Stroke.Signal);
         }
 
         var fill = UiThemeLookup.Color(this, UiTokens.Color.Panel);
         for (var i = 0; i < points.Length; i++)
         {
-            DrawCircle(MapIndex(i), _nodeRadius, fill);
-            DrawArc(MapIndex(i), _nodeRadius, 0, Mathf.Tau, _ringPoints, line, UiSize.Stroke.Signal, antialiased: false);
+            pen.Disc(MapIndex(i), _nodeRadius, fill);
+            pen.Ring(MapIndex(i), _nodeRadius, line, UiSize.Stroke.Signal, _ringPoints);
         }
     }
 }

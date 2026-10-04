@@ -48,7 +48,7 @@ public static class SensorDrawing
     {
         ArgumentNullException.ThrowIfNull(canvas);
         ArgumentNullException.ThrowIfNull(theme);
-        var pen = new Pen(canvas, UiPixelSpace.Enter(canvas, drawTransform));
+        using var pen = UiPixelPen.Begin(canvas, drawTransform);
         var line = LineColor(theme, selected);
         DrawShape(pen, theme, RoundedRect(Vector2.Zero, _frameHalfWidth, _frameHalfHeight, _frameRadius), line);
 
@@ -65,7 +65,6 @@ public static class SensorDrawing
 
         pen.Polyline(spring, line, _line * 0.75f);
         pen.Disc(weight, _weightRadius, line);
-        canvas.DrawSetTransformMatrix(drawTransform);
     }
 
     /// <summary>A camera looking along <paramref name="aim"/>, a unit vector in the picture's frame (the middle of its ray fan).</summary>
@@ -85,12 +84,11 @@ public static class SensorDrawing
                 new Vector2(front, _hoodNarrow),
             ],
             turn);
-        var pen = new Pen(canvas, UiPixelSpace.Enter(canvas, drawTransform));
+        using var pen = UiPixelPen.Begin(canvas, drawTransform);
         var line = LineColor(theme, selected);
         DrawShape(pen, theme, body, line);
         DrawShape(pen, theme, hood, line);
         pen.Ring(bodyCentre.Rotated(turn), _lensRadius, line, _line);
-        canvas.DrawSetTransformMatrix(drawTransform);
     }
 
     /// <summary>A selected camera's rays in Build, from <paramref name="origin"/> to each end.</summary>
@@ -99,13 +97,11 @@ public static class SensorDrawing
         ArgumentNullException.ThrowIfNull(canvas);
         ArgumentNullException.ThrowIfNull(theme);
         ArgumentNullException.ThrowIfNull(ends);
-        var pen = new Pen(canvas, UiPixelSpace.Enter(canvas, drawTransform));
+        using var pen = UiPixelPen.Begin(canvas, drawTransform);
         foreach (var end in ends)
         {
             DrawRay(pen, theme, origin, end);
         }
-
-        canvas.DrawSetTransformMatrix(drawTransform);
     }
 
     /// <summary>A camera's rays in Training (#623): from <paramref name="origin"/> to each ground hit, with a <c>halo</c> ring at the hit.</summary>
@@ -114,17 +110,15 @@ public static class SensorDrawing
         ArgumentNullException.ThrowIfNull(canvas);
         ArgumentNullException.ThrowIfNull(theme);
         ArgumentNullException.ThrowIfNull(hits);
-        var pen = new Pen(canvas, UiPixelSpace.Enter(canvas, drawTransform));
+        using var pen = UiPixelPen.Begin(canvas, drawTransform);
         foreach (var hit in hits)
         {
             DrawRay(pen, theme, origin, hit);
             pen.Ring(hit, _hitRadius, theme.SelectionGlow, _line);
         }
-
-        canvas.DrawSetTransformMatrix(drawTransform);
     }
 
-    private static void DrawRay(Pen pen, VisualTheme theme, Vector2 origin, Vector2 end)
+    private static void DrawRay(UiPixelPen pen, VisualTheme theme, Vector2 origin, Vector2 end)
     {
         if (origin.DistanceTo(end) > _rayStart)
         {
@@ -135,7 +129,7 @@ public static class SensorDrawing
     // A selected picture is drawn in halo instead of accent, like a selected part in the reference (#624).
     private static Color LineColor(VisualTheme theme, bool selected) => selected ? theme.SelectionGlow : theme.SensorLine;
 
-    private static void DrawShape(Pen pen, VisualTheme theme, Vector2[] outline, Color line)
+    private static void DrawShape(UiPixelPen pen, VisualTheme theme, Vector2[] outline, Color line)
     {
         pen.Polygon(outline, theme.SensorFill);
         pen.Polyline([.. outline, outline[0]], line, _line);
@@ -165,37 +159,5 @@ public static class SensorDrawing
         }
 
         return points;
-    }
-
-    /// <summary>
-    /// Draws shapes given in the picture's units at window-pixel resolution: points go through
-    /// <paramref name="ToPixels"/>, and widths, radii and dashes are scaled by it.
-    /// </summary>
-    private readonly record struct Pen(CanvasItem Canvas, Transform2D ToPixels)
-    {
-        private const int _ringSegments = 32;
-
-        private float Scale => UiPixelSpace.ScaleOf(ToPixels);
-
-        public void Polygon(Vector2[] points, Color color) =>
-            Canvas.DrawColoredPolygon(Mapped(points), color);
-
-        public void Polyline(Vector2[] points, Color color, float width) =>
-            Canvas.DrawPolyline(Mapped(points), color, width * Scale, antialiased: true);
-
-        public void Disc(Vector2 centre, float radius, Color color) =>
-            Canvas.DrawCircle(ToPixels * centre, radius * Scale, color, filled: true, antialiased: true);
-
-        public void Ring(Vector2 centre, float radius, Color color, float width) =>
-            Canvas.DrawArc(ToPixels * centre, radius * Scale, 0, Mathf.Tau, _ringSegments, color, width * Scale, antialiased: true);
-
-        public void DashedLine(Vector2 from, Vector2 to, Color color, float width, float dash) =>
-            Canvas.DrawDashedLine(ToPixels * from, ToPixels * to, color, width * Scale, dash * Scale, antialiased: true);
-
-        private Vector2[] Mapped(Vector2[] points)
-        {
-            var toPixels = ToPixels;
-            return [.. points.Select(point => toPixels * point)];
-        }
     }
 }

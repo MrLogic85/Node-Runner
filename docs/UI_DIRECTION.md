@@ -687,44 +687,38 @@ Two rules keep it that way; `UiPressFeedbackTests` guards the first:
 
 ## Immediate-mode drawing and antialiasing
 
-The project renders at a low logical canvas (`window/size/viewport_width=640`,
-`viewport_height=360`) and relies on `window/stretch/mode="canvas_items"` to
-scale everything up to the device's physical resolution (e.g. 3x on a
-1920x1080 display). Any `_Draw()` override that calls an immediate-mode
-`CanvasItem` primitive (`DrawArc`, `DrawLine`, `DrawPolyline`,
-`DrawDashedLine`, `DrawRect`, `DrawCircle`, ...) with `antialiased: true`
-records its AA "feather" as extra geometry sized in local/object-space at
-draw time. That feather is not recomputed against the canvas stretch
-transform — it just scales up along with the rest of the shape. At 3x
-stretch, a feather meant to be ~1 physical pixel becomes ~3 physical pixels,
-producing a visibly soft/blurry halo around rings, dashed borders, and other
-hand-drawn strokes (first noticed on `UiNumber`'s ring and `UiCard`'s
-disabled dashed border).
+The canvas is 640x360 logical units stretched (`canvas_items`) up to the
+device, and the UI size multiplies that again. Godot's antialiased
+immediate-mode primitives (`DrawLine`, `DrawArc`, `DrawCircle`, ...) add a
+fixed ~1-unit feather in draw space, so drawn in local units the feather
+grows with the stretch into a blurry halo. Drawn hard instead, a 1-unit
+stroke rounds to 1 or 2 device pixels by position, so dashed borders and
+rings look uneven at fractional sizes (#733). `Nearest` texture filtering
+and `msaa_2d` (unsupported on Compatibility/GLES3) fix neither.
 
-`StyleBoxFlat`-based rendering (used for `UiCard`'s normal/rounded borders)
-does not have this problem — it uses a separate, scale-aware rendering path.
-Setting `textures/canvas_textures/default_texture_filter` to `Nearest` (done
-in `project.godot`) fixes texture-sampling blur (fonts, sprites) but does
-**not** fix this, since the AA feather is extra vector geometry, not a
-texture-filtering artifact; it was empirically confirmed to still be blurry
-under `Nearest` filtering. `anti_aliasing/quality/msaa_2d` is also enabled in
-`project.godot`, but has no effect at all under the project's
-Compatibility/GLES3 renderer (Godot logs `2D MSAA is not yet supported for
-GLES3`); see the Compatibility/OpenGL renderer note in
-`docs/ARCHITECTURE.md`.
+**Rule: every stroke in `_Draw()` is antialiased in window pixels through
+`UiPixelPen` (#733).** The feather is then one device pixel at any stretch,
+UI size or Build zoom; widths are in units and the pen scales them. Dashes
+are pulled in at each end by the length their feather adds (`DashTrim`), so
+the feather does not fill the gap and dash and gap keep their designed lengths. Thin
+lines drawn as filled rects, such as dividers, count as strokes.
+`JointDrawing`, `PistonDrawing`, `SelectionDrawing`, `UiCalloutLayer`,
+`MapPreview` and the Build selection frame predate the pen and map with
+`UiPixelSpace` directly; move them to the pen when touched.
+`UiStrokeGuardTests` fails any `DrawLine`, `DrawPolyline`, `DrawArc`,
+`DrawDashedLine`, `DrawCircle`, `DrawMultiline` or outline `DrawRect` that
+is not `antialiased: true` inside a method that opens a pen, calls
+`UiPixelSpace.Enter` or takes a `Transform2D toPixels`, and any call to a
+`toPixels` helper from outside such a method. Allowed exceptions:
 
-**Rule: all immediate-mode `_Draw()` calls in this project must pass
-`antialiased: false`, unless they draw in window pixels through
-`UiPixelSpace` (#624, #633).** There the feather is one physical pixel, so
-an antialiased line is smooth and crisp; the selection look, joint
-rings, sensor pictures and rays, and callout leaders draw this way. This has been applied across every existing call
-site (`UiNumber`, `UiDashedBorder`, `UiProgressRing`, `UiSlider`,
-`UiSelectionHandle`, `UiButton`, `UiBoundsDebugOverlay`,
-`BrainFocusNetworkView`,
-`BuildCanvas`, `CreatureThumbnail`, `MapPreview`, `BeamVisual`). Any new `_Draw()` code
-must follow the same rule; a stray edge without antialiasing reads as a
-sharp 1px line at any stretch factor, while `antialiased: true` reads as a
-blurry, stretch-factor-wide halo.
+- Width `-1` hairlines (Build grid and hatch): always one device pixel.
+- Filled `DrawRect` area fills and `pen.Polygon`: Godot cannot feather
+  `DrawColoredPolygon`, so keep a polygon's edge under an antialiased
+  outline (sensors, Best marker), or draw a square or diamond as one wide
+  `pen.Line` (the brain's negative neuron), since line ends are feathered.
+- `UiBoundsDebugOverlay`: debug only.
+- `Line2D` is not a `_Draw()` call: the Training beam (`BeamVisual`) stays
+  a hard world-space `Line2D`, whose feather would grow with camera zoom.
 
 The rule does not cover `DrawStyleBox`: Godot divides a `StyleBoxFlat`'s
 feather by the viewport's oversampling, so it stays about one device pixel at

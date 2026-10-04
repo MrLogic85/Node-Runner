@@ -97,13 +97,8 @@ public partial class ArenaBestMarker : Node2D
 
         // Drawn at screen size from the flag's top left: scaled back up by as much as the camera zooms out.
         var flagTop = view.Position.Y + (_flagTop * screenScale);
-        DrawSetTransform(new Vector2(x, flagTop), 0f, new Vector2(screenScale, screenScale));
+        var flagTransform = new Transform2D(0f, new Vector2(screenScale, screenScale), 0f, new Vector2(x, flagTop));
         var groundTop = (-_theme.GroundEdgeWidth / 2 - flagTop) / screenScale;
-        if (groundTop > _flagHeight)
-        {
-            DrawDashedLine(new Vector2(0, groundTop), new Vector2(0, _flagHeight), _theme.MarkerInk, _theme.MarkerLineWidth, _dash, aligned: true, antialiased: true);
-        }
-
         Vector2[] flag =
         [
             new(0, 0),
@@ -113,8 +108,18 @@ public partial class ArenaBestMarker : Node2D
             new(0, _flagHeight),
             new(0, 0),
         ];
-        DrawColoredPolygon(flag[..^1], _theme.MarkerFill);
-        DrawPolyline(flag, _theme.MarkerInk, _theme.MarkerLineWidth, antialiased: true);
+        using (var pen = UiPixelPen.Begin(this, flagTransform))
+        {
+            if (groundTop > _flagHeight)
+            {
+                pen.DashedLine(new Vector2(0, groundTop), new Vector2(0, _flagHeight), _theme.MarkerInk, _theme.MarkerLineWidth, _dash);
+            }
+
+            pen.Polygon(flag[..^1], _theme.MarkerFill);
+            pen.Polyline(flag, _theme.MarkerInk, _theme.MarkerLineWidth);
+        }
+
+        // The pen leaves flagTransform set, so the label is drawn in flag space.
         var font = _theme.MarkerFont;
         var size = _theme.MarkerFontSize;
         var baseline = ((_flagHeight - font.GetHeight(size)) / 2) + font.GetAscent(size);

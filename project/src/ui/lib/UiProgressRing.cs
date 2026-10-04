@@ -87,16 +87,12 @@ public partial class UiProgressRing : Control, ISerializationListener
     public override void _Draw()
     {
         var center = Size * 0.5f;
-        DrawArc(
-            center,
-            _ringRadius,
-            0,
-            Mathf.Tau,
-            _ringPoints,
-            UiThemeLookup.Color(this, UiTokens.Color.Line),
-            UiSize.Stroke.Beam,
-            antialiased: false);
-        DrawProgressArc(center);
+        using (var pen = UiPixelPen.Begin(this))
+        {
+            pen.Ring(center, _ringRadius, UiThemeLookup.Color(this, UiTokens.Color.Line), UiSize.Stroke.Beam, _ringPoints);
+            DrawProgressArc(pen, center);
+        }
+
         if (IsDone)
         {
             var check = UiIcons.Load(UiIconId.Check, UiIconSize.Standard);
@@ -142,7 +138,7 @@ public partial class UiProgressRing : Control, ISerializationListener
         _percentLabel.Size = Size;
     }
 
-    private void DrawProgressArc(Vector2 center)
+    private void DrawProgressArc(UiPixelPen pen, Vector2 center)
     {
         var percent = UiComponentContracts.ProgressPercent(Progress);
         if (percent <= 0)
@@ -153,15 +149,7 @@ public partial class UiProgressRing : Control, ISerializationListener
         var progress = percent / (float)UiComponentContracts.FullPercent;
         var startAngle = -Mathf.Pi / 2;
         var endAngle = startAngle + (Mathf.Tau * progress);
-        DrawArc(
-            center,
-            _ringRadius,
-            startAngle,
-            endAngle,
-            _ringPoints,
-            UiThemeLookup.Color(this, UiTokens.Color.Accent),
-            UiSize.Stroke.Beam,
-            antialiased: false);
+        pen.Arc(center, _ringRadius, startAngle, endAngle, _ringPoints, UiThemeLookup.Color(this, UiTokens.Color.Accent), UiSize.Stroke.Beam);
         if (percent >= UiComponentContracts.FullPercent)
         {
             return;
@@ -169,8 +157,8 @@ public partial class UiProgressRing : Control, ISerializationListener
 
         const float capRadius = UiSize.Stroke.Beam * 0.5f;
         var accent = UiThemeLookup.Color(this, UiTokens.Color.Accent);
-        DrawCircle(PointOnRing(center, startAngle), capRadius, accent);
-        DrawCircle(PointOnRing(center, endAngle), capRadius, accent);
+        pen.Disc(PointOnRing(center, startAngle), capRadius, accent);
+        pen.Disc(PointOnRing(center, endAngle), capRadius, accent);
     }
 
     private Vector2 PointOnRing(Vector2 center, float angle) =>
