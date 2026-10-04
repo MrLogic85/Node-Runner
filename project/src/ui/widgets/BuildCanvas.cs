@@ -19,7 +19,6 @@ namespace NodeRunner.Ui.Widgets;
 /// </summary>
 public partial class BuildCanvas : Node2D
 {
-    private const double _moveGhostSeconds = 1.8;
     private const int _mousePointer = -1;
 
     // A refused Piston target's ring is dashed (#451): this many dashes, each this many segments.
@@ -34,8 +33,6 @@ public partial class BuildCanvas : Node2D
 
     private BuildViewModel? _viewModel;
     private BuildGestures? _gestures;
-    private readonly Dictionary<int, Vector2D> _ghostNodePositions = [];
-    private int _ghostVersion;
     private bool _viewFitted;
     private Control? _slot;
     private readonly BuildSensorMotion _sensorMotion = new();
@@ -100,7 +97,6 @@ public partial class BuildCanvas : Node2D
             Unbind();
             _viewModel = value;
             _viewFitted = false;
-            ClearMoveGhosts();
             if (_viewModel is not null)
             {
                 _viewModel.AnatomyChanged += OnAnatomyChanged;
@@ -108,7 +104,6 @@ public partial class BuildCanvas : Node2D
                 _gestures = new BuildGestures(_viewModel);
                 _gestures.Changed += OnGesturesChanged;
                 _gestures.View.Changed += OnGesturesChanged;
-                _gestures.NodeDragStarting += OnNodeDragStarting;
             }
 
             QueueRedraw();
@@ -235,7 +230,6 @@ public partial class BuildCanvas : Node2D
         {
             _gestures.Changed -= OnGesturesChanged;
             _gestures.View.Changed -= OnGesturesChanged;
-            _gestures.NodeDragStarting -= OnNodeDragStarting;
             _gestures = null;
         }
     }
@@ -260,7 +254,6 @@ public partial class BuildCanvas : Node2D
                 }
 
                 _gestures.Release(ToView(touch.Position), touch.Index);
-                ScheduleMoveGhostClear();
                 break;
             case InputEventScreenDrag drag:
                 _gestures.Drag(ToView(drag.Position), drag.Index);
@@ -290,7 +283,6 @@ public partial class BuildCanvas : Node2D
         else if (PointerInput.TryGetReleasePosition(inputEvent, out var releasePosition))
         {
             _gestures!.Release(ToView(releasePosition), _mousePointer);
-            ScheduleMoveGhostClear();
         }
     }
 
@@ -309,7 +301,6 @@ public partial class BuildCanvas : Node2D
         DrawThroughView();
         DrawBuildGrid();
         DrawAreaCorners();
-        DrawMoveGhosts();
         DrawSelectionBox();
         DrawBeamPreview();
         DrawRigidTriangles();
@@ -722,39 +713,6 @@ public partial class BuildCanvas : Node2D
         DrawSetTransformMatrix(viewTransform);
     }
 
-    private void DrawMoveGhosts()
-    {
-        if (_viewModel is null || _ghostNodePositions.Count == 0)
-        {
-            return;
-        }
-
-        using var pen = ViewPen();
-        foreach (var beam in _viewModel.Beams)
-        {
-            if (!_ghostNodePositions.TryGetValue(beam.NodeA, out var startPosition)
-                && !_ghostNodePositions.TryGetValue(beam.NodeB, out var endPosition))
-            {
-                continue;
-            }
-
-            startPosition = _ghostNodePositions.GetValueOrDefault(beam.NodeA, NodeById(beam.NodeA).Position);
-            endPosition = _ghostNodePositions.GetValueOrDefault(beam.NodeB, NodeById(beam.NodeB).Position);
-            pen.DashedLine(ToGodot(startPosition), ToGodot(endPosition), Theme.SelectionGlow, Stroke(4), 8);
-        }
-
-        foreach (var (nodeId, position) in _ghostNodePositions)
-        {
-            if (!_viewModel.Nodes.Any(node => node.Id == nodeId))
-            {
-                continue;
-            }
-
-            var radius = (float)NodeById(nodeId).Radius;
-            pen.Ring(ToGodot(position), radius * 1.35f, Theme.SelectionGlow, Stroke(2));
-        }
-    }
-
     /// <summary>The rigid hatch goes under the beams, so it shows only between them.</summary>
     private void DrawRigidTriangles()
     {
@@ -888,60 +846,11 @@ public partial class BuildCanvas : Node2D
         }
     }
 
-    private void CaptureMoveGhosts(IReadOnlyCollection<int> movingNodes)
-    {
-        if (_viewModel is null || !_viewModel.IsMoveOnly)
-        {
-            return;
-        }
-
-        _ghostNodePositions.Clear();
-        _ghostVersion++;
-        foreach (var id in movingNodes)
-        {
-            if (_viewModel.Nodes.Any(node => node.Id == id))
-            {
-                _ghostNodePositions[id] = NodeById(id).Position;
-            }
-        }
-    }
-
     private static Rect2 RectFromPoints(Vector2 first, Vector2 second)
     {
         var min = new Vector2(Mathf.Min(first.X, second.X), Mathf.Min(first.Y, second.Y));
         var max = new Vector2(Mathf.Max(first.X, second.X), Mathf.Max(first.Y, second.Y));
         return new Rect2(min, max - min);
-    }
-
-    private void ScheduleMoveGhostClear()
-    {
-        if (_ghostNodePositions.Count == 0 || GetTree() is not { } tree)
-        {
-            return;
-        }
-
-        var version = _ghostVersion;
-        tree.CreateTimer(_moveGhostSeconds).Timeout += () =>
-        {
-            if (_ghostVersion != version)
-            {
-                return;
-            }
-
-            ClearMoveGhosts();
-        };
-    }
-
-    private void ClearMoveGhosts()
-    {
-        if (_ghostNodePositions.Count == 0)
-        {
-            return;
-        }
-
-        _ghostVersion++;
-        _ghostNodePositions.Clear();
-        QueueRedraw();
     }
 
     private void OnAnatomyChanged(object? sender, EventArgs eventArgs)
@@ -952,11 +861,6 @@ public partial class BuildCanvas : Node2D
     private void OnGesturesChanged(object? sender, EventArgs eventArgs)
     {
         QueueRedraw();
-    }
-
-    private void OnNodeDragStarting(object? sender, IReadOnlyCollection<int> movingNodes)
-    {
-        CaptureMoveGhosts(movingNodes);
     }
 
     private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs eventArgs)
@@ -970,11 +874,6 @@ public partial class BuildCanvas : Node2D
         {
             _gestures?.Cancel();
             QueueRedraw();
-        }
-
-        if (eventArgs.PropertyName == nameof(BuildViewModel.IsMoveOnly) && _viewModel?.IsMoveOnly != true)
-        {
-            ClearMoveGhosts();
         }
     }
 
