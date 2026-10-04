@@ -148,7 +148,10 @@ swap restyles everything:
   that puts its own text into an inner control, by setting it, through a
   factory or helper, or into a nested component, also shares its translation context with that control
   (`UiTranslationContextTests`, #777); the translation it picks is checked
-  on device.
+  on device. The committed translation template,
+  `project/locale/messages.pot`, lists exactly the text the scenes and code
+  show (`TranslationTemplateTests`, #778; regenerate it as
+  `docs/LOCALIZATION.md` says).
 
 **2. Screens reuse the library.** Every canonical component maps to one
 reusable control, and paired specimens (slider and range, power and value

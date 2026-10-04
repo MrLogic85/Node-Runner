@@ -623,7 +623,8 @@ size and safe area").
 ## Text and translation
 
 Text is translated once, by Godot (#682; `docs/ARCHITECTURE.md` → "UI text
-and translation"):
+and translation"). `docs/LOCALIZATION.md` owns the translation template and
+how to add a language:
 
 - **Text written in a scene** is English and doubles as its translation key.
   The Control translates it itself (`auto_translate_mode` Inherit).
@@ -667,9 +668,8 @@ and translation"):
   wrong in some languages, so `project/src` uses no `string` upper- or
   lower-casing at all (#776). `UiVerticalLabel` translates its `Text` like a Label. An exported
   build cases by the language only with
-  `internationalization/locale/include_text_server_data` on (about 3 MB of
-  ICU data); without it, a Label and our text both fall back to plain
-  casing (#778).
+  `internationalization/locale/include_text_server_data`, which is on
+  (#778, `docs/LOCALIZATION.md`).
 - **Translation context** tells two meanings of the same English apart,
   such as "Run" the verb and "Run" the noun. Set `translation_context` on
   the component in the Inspector. Godot does not pass it on to child
