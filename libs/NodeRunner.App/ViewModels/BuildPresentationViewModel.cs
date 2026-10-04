@@ -97,8 +97,8 @@ public sealed class BuildPresentationViewModel
                     PartSettingsKind.Piston,
                     _build.PartDisplayName(pistonId),
                     _build.DefaultPartName(pistonId),
-                    string.Empty,
-                    string.Empty,
+                    null,
+                    null,
                     PistonNote,
                     canDelete,
                     PanelSliders());
@@ -112,7 +112,7 @@ public sealed class BuildPresentationViewModel
                     sensor.Kind == SensorKind.Accelerometer ? PartSettingsKind.Accelerometer : PartSettingsKind.Camera,
                     _build.PartDisplayName(sensorId),
                     _build.DefaultPartName(sensorId),
-                    "On",
+                    UiText.Plain("On"),
                     _build.PartDisplayName(sensor.BeamId),
                     _build.AimableCameraId == sensorId ? $"{SensorNote(sensor.Kind)} {AimNote}" : SensorNote(sensor.Kind),
                     canDelete,
@@ -127,8 +127,8 @@ public sealed class BuildPresentationViewModel
                     PartSettingsKind.Beam,
                     _build.PartDisplayName(beamId),
                     _build.DefaultPartName(beamId),
-                    "Between",
-                    $"{_build.PartDisplayName(beam.NodeA)} ↔ {_build.PartDisplayName(beam.NodeB)}",
+                    UiText.Plain("Between"),
+                    UiText.Format("{0} ↔ {1}", _build.PartDisplayName(beam.NodeA), _build.PartDisplayName(beam.NodeB)),
                     "Drag its ends to change the length.",
                     canDelete,
                     PanelSliders());
@@ -141,7 +141,7 @@ public sealed class BuildPresentationViewModel
                     PartSettingsKind.Node,
                     _build.PartDisplayName(nodeId),
                     _build.DefaultPartName(nodeId),
-                    "Beams",
+                    UiText.Plain("Beams"),
                     ConnectedBeamText(nodeId),
                     "Beams meet and turn here. Drag it to move them.",
                     canDelete,
@@ -282,13 +282,15 @@ public sealed class BuildPresentationViewModel
         };
     }
 
-    private string ConnectedBeamText(int nodeId)
+    private UiText ConnectedBeamText(int nodeId)
     {
         var connected = _build.Beams
             .Where(beam => beam.NodeA == nodeId || beam.NodeB == nodeId)
             .Select(beam => _build.PartDisplayName(beam.Id))
             .ToArray();
-        return connected.Length == 0 ? "None yet" : string.Join(" · ", connected);
+        return connected.Length == 0
+            ? UiText.Plain("None yet")
+            : connected.Skip(1).Aggregate(connected[0], (list, next) => UiText.Format("{0} · {1}", list, next));
     }
 
     private NodeDef NodeById(int nodeId) => _build.Nodes[_build.NodeIndexOf(nodeId)];

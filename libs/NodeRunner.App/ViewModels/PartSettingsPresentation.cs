@@ -14,15 +14,17 @@ public enum PartSettingsKind
 /// The Part settings panel for one selected part (#343): its Name first, then what it is joined to,
 /// a short note, and Delete unless the Creation is locked. Structure is read-only here; it is drawn
 /// and changed on the canvas. <see cref="Settings"/> are the part's panel sliders (#704), like a
-/// Piston's (#451); a link lists no connections, as its ends are drawn on the canvas.
+/// Piston's (#451); a Piston lists no connections, as its ends are drawn on the canvas, so its
+/// <see cref="ConnectionsLabel"/> and <see cref="ConnectionsValue"/> are null. <see cref="Name"/> is
+/// the player's own name as written, or <see cref="DefaultName"/>.
 /// </summary>
 public sealed record PartSettingsPresentation(
     int Id,
     PartSettingsKind Kind,
-    string Name,
-    string DefaultName,
-    string ConnectionsLabel,
-    string ConnectionsValue,
+    UiText Name,
+    UiText DefaultName,
+    UiText? ConnectionsLabel,
+    UiText? ConnectionsValue,
     string Note,
     bool CanDelete,
     IReadOnlyList<ParameterSlider> Settings);

@@ -19,10 +19,7 @@ public static class Accelerometer
     /// <summary>The longest integration substep; a faster time scale (2×, 4×) takes several per tick.</summary>
     public const double MaxSubstep = 1.0 / 60;
 
-    /// <summary>The brain inputs one accelerometer gives, in order: along and across its beam.</summary>
-    public static IReadOnlyList<string> ReadingNames { get; } = ["along", "across"];
-
-    /// <summary>The machine keys of its input ports (<see cref="BrainPorts"/>), in the order of <see cref="ReadingNames"/>. Never change one.</summary>
+    /// <summary>The machine keys of its input ports (<see cref="BrainPorts"/>), in order: along and across its beam. Never change one.</summary>
     public static IReadOnlyList<string> ChannelKeys { get; } = ["along", "across"];
 
     /// <summary>The proof mass at rest under a constant specific force.</summary>

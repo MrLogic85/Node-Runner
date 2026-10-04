@@ -354,9 +354,9 @@ its arguments, and a context. App never renders it as English, so its tests
 compare `UiText` values. On the Godot side, `UiTextTranslation` (`ui/widgets`)
 is the one place that turns a `UiText` into the player's language.
 `docs/UI_DIRECTION.md` → "Text and translation" owns the rules for showing
-it. The rules apply to new and migrated text; counted text (#751) and units
-and numbers (#756) are migrated, and #752 moves the remaining App text that is
-still built as English.
+it. The rules apply to new and migrated text; counted text (#751), units and
+numbers (#756), and part names (#757) are migrated, and #752 moves the
+remaining App text that is still built as English.
 
 ## Threading
 

@@ -16,6 +16,7 @@ public partial class BuildScreen : Control
     private BuildViewModel? _build;
     private BuildPresentationViewModel? _presentation;
     private int? _renamingPartId;
+    private string? _renamingDefaultName;
     private bool _subscribedToPresentation;
     private string? _shownPartGroup;
 
@@ -29,7 +30,7 @@ public partial class BuildScreen : Control
     public delegate void CreationNameChangedEventHandler(string name);
 
     [Signal]
-    public delegate void PartNameChangedEventHandler(int partId, string name);
+    public delegate void PartNameChangedEventHandler(int partId, string name, string shownDefault);
 
     [Signal]
     public delegate void UnlockRequestedEventHandler();
@@ -119,7 +120,7 @@ public partial class BuildScreen : Control
         GetNode<UiButton>("%PartDelete").Activated += () => EmitSignal(SignalName.DeleteSelectionRequested);
         GetNode<UiButton>("%SelectionDelete").Activated += () => EmitSignal(SignalName.DeleteSelectionRequested);
         var partName = GetNode<UiTextField>("%PartName");
-        partName.EditingStarted += () => _renamingPartId = _presentation?.SinglePart?.Id;
+        partName.EditingStarted += OnPartNameEditingStarted;
         partName.EditingFinished += OnPartNameEdited;
         BindViewModels();
         Apply();
@@ -128,6 +129,20 @@ public partial class BuildScreen : Control
     public override void _ExitTree()
     {
         UnsubscribeFromPresentation();
+    }
+
+    // The part name field holds a translated default as editable text, which LineEdit never
+    // translates itself; refresh it in place, as a language change may not add children.
+    public override void _Notification(int what)
+    {
+        if (what == NotificationTranslationChanged && IsNodeReady() && _presentation?.SinglePart is { } part)
+        {
+            var name = GetNode<UiTextField>("%PartName");
+            if (name.State != UiTextField.TextInputState.Editing)
+            {
+                name.TextValue = UiTextTranslation.Source(part.Name)();
+            }
+        }
     }
 
     private static void BindMenuItem(UiToolbar toolbar, UiMenuActionItem item, Action action) =>
@@ -157,12 +172,21 @@ public partial class BuildScreen : Control
         GetNode<UiTextField>("%CreationName").TextValue = _presentation?.CreationName ?? string.Empty;
     }
 
+    private void OnPartNameEditingStarted()
+    {
+        var part = _presentation?.SinglePart;
+        _renamingPartId = part?.Id;
+        _renamingDefaultName = part is null ? null : UiTextTranslation.Source(part.DefaultName)();
+    }
+
+    // The field shows a part without its own name by its default in the player's language; the
+    // view-model keeps the default when that is left unchanged.
     private void OnPartNameEdited(string value)
     {
         if (_renamingPartId is { } partId)
         {
             _renamingPartId = null;
-            EmitSignal(SignalName.PartNameChanged, partId, value);
+            EmitSignal(SignalName.PartNameChanged, partId, value, _renamingDefaultName ?? string.Empty);
         }
     }
 
@@ -291,10 +315,9 @@ public partial class BuildScreen : Control
         {
             0 when locked => "Training",
             0 when toolPanel.Mode != ToolPanelMode.None => toolPanel.Title,
-            1 => part?.Name ?? string.Empty,
             _ => string.Empty,
         };
-        sidePanel.TitleSource = UiTextTranslation.Source(selected > 1 ? presentation.Selection?.Title : null);
+        sidePanel.TitleSource = UiTextTranslation.Source(selected == 1 ? part?.Name : selected > 1 ? presentation.Selection?.Title : null);
         sidePanel.IconId = selected > 1 ? UiIconId.Select : part is null ? UiIconId.None : PartSettingsIcon(part.Kind);
 
         if (tray.Visible)
@@ -353,11 +376,13 @@ public partial class BuildScreen : Control
 
     private void ApplyLinkList(LinkListPresentation list)
     {
-        GetNode<UiLabel>("%PartGroupName").Text = list.Name;
-        GetNode<UiLabel>("%PartHelp").Text = list.HelpText;
+        GetNode<UiLabel>("%PartGroupName").ShowText(list.Name);
+        var help = GetNode<UiLabel>("%PartHelp");
+        help.TextSource = UiTextTranslation.Source(list.HelpText);
+        help.Visible = help.TextSource is not null;
         var lockedNote = GetNode<UiLabel>("%PartLockedNote");
-        lockedNote.Text = list.LockedNote;
-        lockedNote.Visible = list.LockedNote.Length > 0;
+        lockedNote.TextSource = UiTextTranslation.Source(list.LockedNote);
+        lockedNote.Visible = lockedNote.TextSource is not null;
         GetNode<Control>("%PartLockedIcon").Visible = lockedNote.Visible;
         var rows = GetNode<Container>("%PartRows");
         if (_shownPartGroup != "links")
@@ -366,7 +391,7 @@ public partial class BuildScreen : Control
             ClearRows(rows);
             foreach (var link in list.Rows)
             {
-                var row = new UiPartRow { IconId = LinkIcon(link.Link), Label = link.Name, Compact = true };
+                var row = new UiPartRow { IconId = LinkIcon(link.Link), LabelSource = UiTextTranslation.Source(link.Name), Compact = true };
                 if (link.IsPickable)
                 {
                     row.PartSelected += () => EmitSignal(SignalName.LinkPicked, (int)link.Link);
@@ -389,22 +414,25 @@ public partial class BuildScreen : Control
 
     private void ApplyTray(BuildPresentationViewModel presentation)
     {
-        var group = presentation.PartGroups[GetNode<UiIconTabs>("%PartTabs").SelectedIndex];
-        GetNode<UiLabel>("%PartGroupName").Text = group.Name;
-        GetNode<UiLabel>("%PartHelp").Text = group.HelpText;
+        var tab = GetNode<UiIconTabs>("%PartTabs").SelectedIndex;
+        var group = presentation.PartGroups[tab];
+        GetNode<UiLabel>("%PartGroupName").ShowText(group.Name);
+        var help = GetNode<UiLabel>("%PartHelp");
+        help.ShowText(group.HelpText);
+        help.Visible = true;
         var lockedNote = GetNode<UiLabel>("%PartLockedNote");
-        lockedNote.Text = group.LockedNote;
-        lockedNote.Visible = group.LockedNote.Length > 0;
+        lockedNote.TextSource = UiTextTranslation.Source(group.LockedNote);
+        lockedNote.Visible = lockedNote.TextSource is not null;
         GetNode<Control>("%PartLockedIcon").Visible = lockedNote.Visible;
         var rows = GetNode<Container>("%PartRows");
-        if (_shownPartGroup != $"tray:{group.Name}")
+        if (_shownPartGroup != $"tray:{tab}")
         {
-            _shownPartGroup = $"tray:{group.Name}";
+            _shownPartGroup = $"tray:{tab}";
             ClearRows(rows);
 
             foreach (var part in group.Rows)
             {
-                var row = new UiPartRow { IconId = PartIcon(part.Part), Label = part.Name, Compact = true };
+                var row = new UiPartRow { IconId = PartIcon(part.Part), LabelSource = UiTextTranslation.Source(part.Name), Compact = true };
                 if (DraggablePart(part) is { } draggable)
                 {
                     row.SetDragForwarding(
@@ -488,15 +516,16 @@ public partial class BuildScreen : Control
     private void ApplyPartSettings(PartSettingsPresentation part)
     {
         var name = GetNode<UiTextField>("%PartName");
-        name.PlaceholderText = part.DefaultName;
+        name.PlaceholderSource = UiTextTranslation.Source(part.DefaultName);
         if (name.State != UiTextField.TextInputState.Editing)
         {
-            name.TextValue = part.Name;
+            name.TextValue = UiTextTranslation.Source(part.Name)();
         }
 
-        GetNode<UiLabel>("%PartConnectionsLabel").Text = part.ConnectionsLabel;
-        GetNode<UiLabel>("%PartConnectionsValue").Text = part.ConnectionsValue;
-        GetNode<Control>("%PartConnectionsLabel").GetParent<Control>().Visible = part.ConnectionsLabel.Length > 0;
+        var connectionsLabel = GetNode<UiLabel>("%PartConnectionsLabel");
+        connectionsLabel.TextSource = UiTextTranslation.Source(part.ConnectionsLabel);
+        GetNode<UiLabel>("%PartConnectionsValue").TextSource = UiTextTranslation.Source(part.ConnectionsValue);
+        connectionsLabel.GetParent<Control>().Visible = connectionsLabel.TextSource is not null;
         ApplyParameterSliders(GetNode<Container>("%PartParameters"), part.Settings);
 
         GetNode<UiLabel>("%PartNote").Text = part.Note;

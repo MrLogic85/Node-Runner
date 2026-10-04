@@ -625,17 +625,21 @@ and translation"):
   control asks it again when the language changes. Meanwhile the control's
   own auto-translation is off, so the text is not translated a second time.
   A component that shows code-set text inside, such as `UiSidePanel`'s
-  title, `UiStageCard`'s note, `UiSlider`'s readout and step labels or a
-  `UiDialogSpec`'s content, has a matching `…Source` property that takes
+  title, `UiStageCard`'s note, `UiSlider`'s readout and step labels,
+  `UiPartRow`'s name, `UiTextField`'s placeholder or a `UiDialogSpec`'s
+  content, has a matching `…Source` property that takes
   `UiTextTranslation.Source(text)` and turns auto-translation off on that
   leaf only. Other components get one when they first need it. Text drawn
-  in code, such as the arena ruler and best flag, asks
-  `UiTextTranslation.Source` itself and draws again when the language
+  in code, such as the arena ruler, the best flag and BrainFocus's labels,
+  asks `UiTextTranslation.Source` itself and draws again when the language
   changes. App text still built as English moves over in #752.
 - **Text the player wrote**, such as a creation's name, is never
   translated. Its label sets `auto_translate_mode = Disabled` on itself
-  only, so the static text around it still translates. Part and link
-  names still share leaves with App text and are fixed in #752.
+  only, so the static text around it still translates. A part's own name
+  crosses inside App text as `UiText.AsWritten`, an argument that is shown
+  as written, while a default name such as "Node 2" is translated (#757).
+  The part name field shows the translated default as its text, so leaving
+  it unchanged keeps the default instead of saving it as an own name.
 - Counted text is one whole sentence per plural form, and Godot picks the
   form for the language. Never add an "s" in code.
 - **Numbers** are arguments, never part of the English: "{0} m", not

@@ -3,9 +3,9 @@ namespace NodeRunner.Domain.Tests;
 public sealed class AccelerometerTests
 {
     [Fact]
-    public void ReadingNames_AreAlongThenAcross()
+    public void ChannelKeys_AreAlongThenAcross()
     {
-        Accelerometer.ReadingNames.ShouldBe(["along", "across"]);
+        Accelerometer.ChannelKeys.ShouldBe(["along", "across"]);
     }
 
     [Fact]

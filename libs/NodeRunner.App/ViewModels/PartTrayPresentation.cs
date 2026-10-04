@@ -23,18 +23,18 @@ public enum PartTrayRowState
     ComingLater,
 }
 
-public sealed record PartTrayRow(BuildPart Part, string Name, PartTrayRowState State)
+public sealed record PartTrayRow(BuildPart Part, UiText Name, PartTrayRowState State)
 {
     public bool IsAvailable => State != PartTrayRowState.ComingLater;
 
-    /// <summary>Why the row cannot be picked, or empty when it can.</summary>
-    public string LockedReason => IsAvailable ? string.Empty : PartTray.ComingLater;
+    /// <summary>Why the row cannot be picked, or null when it can.</summary>
+    public UiText? LockedReason => IsAvailable ? null : PartTray.ComingLater;
 }
 
-public sealed record PartTrayGroup(string Name, string HelpText, IReadOnlyList<PartTrayRow> Rows)
+public sealed record PartTrayGroup(UiText Name, UiText HelpText, IReadOnlyList<PartTrayRow> Rows)
 {
-    /// <summary>Explains the locked rows once for the whole tab, or empty when none is locked.</summary>
-    public string LockedNote => Rows.Any(row => !row.IsAvailable) ? PartTray.ComingLater : string.Empty;
+    /// <summary>Explains the locked rows once for the whole tab, or null when none is locked.</summary>
+    public UiText? LockedNote => Rows.Any(row => !row.IsAvailable) ? PartTray.ComingLater : null;
 }
 
 /// <summary>
@@ -43,7 +43,7 @@ public sealed record PartTrayGroup(string Name, string HelpText, IReadOnlyList<P
 /// </summary>
 public static class PartTray
 {
-    public const string ComingLater = "Coming later";
+    public static UiText ComingLater { get; } = UiText.Plain("Coming later");
 
     public static IReadOnlyList<PartTrayGroup> Groups() => Catalog();
 
@@ -61,28 +61,28 @@ public static class PartTray
 
     private static PartTrayGroup[] Catalog() =>
     [
-        new("On a joint", "Drag onto a joint. A joint holds one part.",
+        new(UiText.Plain("On a joint"), UiText.Plain("Drag onto a joint. A joint holds one part."),
         [
-            Locked(BuildPart.Brake, "Brake"),
-            Locked(BuildPart.Servo, "Servo"),
-            Locked(BuildPart.Stepper, "Stepper"),
-            Locked(BuildPart.VelocityMotor, "Velocity motor"),
-            Locked(BuildPart.Wheel, "Wheel"),
+            Locked(BuildPart.Brake, UiText.Plain("Brake")),
+            Locked(BuildPart.Servo, UiText.Plain("Servo")),
+            Locked(BuildPart.Stepper, UiText.Plain("Stepper")),
+            Locked(BuildPart.VelocityMotor, UiText.Plain("Velocity motor")),
+            Locked(BuildPart.Wheel, UiText.Plain("Wheel")),
         ]),
-        new("Sensors", "Drag onto a beam. A beam holds one sensor.",
+        new(UiText.Plain("Sensors"), UiText.Plain("Drag onto a beam. A beam holds one sensor."),
         [
-            Available(BuildPart.Accelerometer, "Accelerometer"),
-            Available(BuildPart.Camera, "Camera"),
+            Available(BuildPart.Accelerometer, UiText.Plain("Accelerometer")),
+            Available(BuildPart.Camera, UiText.Plain("Camera")),
         ]),
-        new("Blocks", "Drag it onto the canvas, then draw beams to its two eyes.",
+        new(UiText.Plain("Blocks"), UiText.Plain("Drag it onto the canvas, then draw beams to its two eyes."),
         [
-            Locked(BuildPart.Battery, "Battery"),
-            Locked(BuildPart.Generator, "Generator"),
-            Locked(BuildPart.FuelTank, "Fuel tank"),
+            Locked(BuildPart.Battery, UiText.Plain("Battery")),
+            Locked(BuildPart.Generator, UiText.Plain("Generator")),
+            Locked(BuildPart.FuelTank, UiText.Plain("Fuel tank")),
         ]),
     ];
 
-    private static PartTrayRow Available(BuildPart part, string name) => new(part, name, PartTrayRowState.Available);
+    private static PartTrayRow Available(BuildPart part, UiText name) => new(part, name, PartTrayRowState.Available);
 
-    private static PartTrayRow Locked(BuildPart part, string name) => new(part, name, PartTrayRowState.ComingLater);
+    private static PartTrayRow Locked(BuildPart part, UiText name) => new(part, name, PartTrayRowState.ComingLater);
 }

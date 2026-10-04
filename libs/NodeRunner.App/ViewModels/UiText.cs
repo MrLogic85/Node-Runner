@@ -69,6 +69,9 @@ public sealed partial class UiText : IEquatable<UiText>
     /// <inheritdoc cref="Number(int)"/>
     public static UiText Number(FixedNumber value) => Format("{0}", value);
 
+    /// <summary>Text the player wrote, such as a part's own name: shown as written, never translated.</summary>
+    public static UiText AsWritten(string text) => Format("{0}", text);
+
     /// <summary>
     /// Counted text: <paramref name="count"/> picks the plural form and is also <c>{0}</c>;
     /// <paramref name="args"/> follow as <c>{1}</c>, <c>{2}</c>…. Write whole sentences

@@ -467,13 +467,13 @@ public sealed class BuildGestures
                 TapMove();
                 break;
             case BuildTool.Beam when BeamStartNodeId is { } start && _dragging:
-                if (_build.PickedLink == BuildLink.Piston && FindPistonTarget(start, position) is { } pistonEnd)
+                if (_build.PickedLink == BuildLink.Piston)
                 {
-                    _build.ConnectPiston(start, pistonEnd);
-                }
-                else if (_build.PickedLink == BuildLink.Piston)
-                {
-                    _build.PistonDropMissed();
+                    // A Piston never makes a joint, so a drop away from one places nothing.
+                    if (FindPistonTarget(start, position) is { } pistonEnd)
+                    {
+                        _build.ConnectPiston(start, pistonEnd);
+                    }
                 }
                 else if (FindBeamTarget(start, position) is { } end)
                 {

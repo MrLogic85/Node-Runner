@@ -136,8 +136,7 @@ swap restyles everything:
   `UiTextTranslation` takes a `UiText`, and it translates with
   `TranslationServer.Translate`/`TranslatePlural`, and `FormatNumber` for
   digits; plural selection and digits themselves are checked on device (#751,
-  #756). The creation-name labels turn their own auto-translation off;
-  part and link names follow in #752.
+  #756). The creation-name labels turn their own auto-translation off.
 
 **2. Screens reuse the library.** Every canonical component maps to one
 reusable control, and paired specimens (slider and range, power and value

@@ -101,7 +101,7 @@ public sealed class BrainPortsTests
     [Fact]
     public void SensorPorts_MatchTheReadingsEachSensorGives()
     {
-        BrainPorts.SensorPorts(new SensorDef(3, 1, SensorKind.Accelerometer)).Count().ShouldBe(Accelerometer.ReadingNames.Count);
+        BrainPorts.SensorPorts(new SensorDef(3, 1, SensorKind.Accelerometer)).Count().ShouldBe(Accelerometer.ChannelKeys.Count);
         BrainPorts.SensorPorts(new SensorDef(3, 1, SensorKind.Camera)).Count().ShouldBe(CameraRays.RayCount);
     }
 

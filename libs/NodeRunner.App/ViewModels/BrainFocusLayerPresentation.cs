@@ -1,5 +1,5 @@
 namespace NodeRunner.App.ViewModels;
 
 public sealed record BrainFocusLayerPresentation(
-    string Title,
+    UiText Title,
     IReadOnlyList<BrainFocusNeuronPresentation> Neurons);

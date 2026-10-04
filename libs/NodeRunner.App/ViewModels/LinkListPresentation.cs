@@ -16,42 +16,43 @@ public enum LinkListRowState
     Locked,
 }
 
-public sealed record LinkListRow(BuildLink Link, string Name, LinkListRowState State)
+public sealed record LinkListRow(BuildLink Link, UiText Name, LinkListRowState State)
 {
     public bool IsPickable => State != LinkListRowState.Locked;
 }
 
 public sealed record LinkListPresentation(
-    string Name,
-    string LockedNote,
+    UiText Name,
+    UiText? LockedNote,
     IReadOnlyList<LinkListRow> Rows,
-    string HelpText);
+    UiText? HelpText);
 
 /// <summary>The Beams tool's list: Beam and Piston now, later links locked.</summary>
 public static class BuildLinkList
 {
     public static LinkListPresentation Create(BuildLink picked) => new(
-        "Links",
+        UiText.Plain("Links"),
         PartTray.ComingLater,
         [
-            Row(BuildLink.Beam, "Beam", picked),
-            Row(BuildLink.Piston, "Piston", picked),
-            Locked(BuildLink.Spring, "Spring"),
-            Locked(BuildLink.Wing, "Wing"),
+            Row(BuildLink.Beam, UiText.Plain("Beam"), picked),
+            Row(BuildLink.Piston, UiText.Plain("Piston"), picked),
+            Locked(BuildLink.Spring, UiText.Plain("Spring")),
+            Locked(BuildLink.Wing, UiText.Plain("Wing")),
         ],
         HelpText(picked));
 
     public static bool IsAvailable(BuildLink link) => link is BuildLink.Beam or BuildLink.Piston;
 
-    public static string HelpText(BuildLink link) => link switch
+    /// <summary>How to use the picked link, or null for a link that cannot be picked yet.</summary>
+    public static UiText? HelpText(BuildLink link) => link switch
     {
-        BuildLink.Beam => "A rigid rod. Drag joint to joint.",
-        BuildLink.Piston => "The brain pushes and pulls it. Drag joint to joint.",
-        _ => string.Empty,
+        BuildLink.Beam => UiText.Plain("A rigid rod. Drag joint to joint."),
+        BuildLink.Piston => UiText.Plain("The brain pushes and pulls it. Drag joint to joint."),
+        _ => null,
     };
 
-    private static LinkListRow Row(BuildLink link, string name, BuildLink picked) =>
+    private static LinkListRow Row(BuildLink link, UiText name, BuildLink picked) =>
         new(link, name, link == picked ? LinkListRowState.Selected : LinkListRowState.Rest);
 
-    private static LinkListRow Locked(BuildLink link, string name) => new(link, name, LinkListRowState.Locked);
+    private static LinkListRow Locked(BuildLink link, UiText name) => new(link, name, LinkListRowState.Locked);
 }

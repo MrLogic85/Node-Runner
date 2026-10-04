@@ -5,9 +5,14 @@ namespace NodeRunner.App.Tests.ViewModels;
 
 public sealed class BrainFocusPresentationViewModelTests
 {
-    private static readonly BrainPortLabels _labels = new(
-        ["Accelerometer: along", "Front knee: speed", "Camera: centre"],
-        ["Rear knee", "Front knee"]);
+    private static readonly UiText _along = UiText.Plain("Accelerometer: along");
+    private static readonly UiText _kneeSpeed = UiText.Plain("Front knee: speed");
+    private static readonly UiText _centre = UiText.Plain("Camera: centre");
+    private static readonly UiText _rearKnee = UiText.Plain("Rear knee");
+    private static readonly UiText _frontKnee = UiText.Plain("Front knee");
+    private static readonly UiText _noSelection = UiText.Plain("Tap a sense or an output to see what drives what.");
+
+    private static readonly BrainPortLabels _labels = new([_along, _kneeSpeed, _centre], [_rearKnee, _frontKnee]);
 
     // Weights by output, then input: Rear knee <- (0.2, -1.5, 0.9); Front knee <- (1.0, 0.0, -0.1).
     private static NeuralNetwork Brain() =>
@@ -33,13 +38,13 @@ public sealed class BrainFocusPresentationViewModelTests
             "{0} → {1}. Solid blue: pushes up. Dashed red: pushes down. Thicker: stronger.",
             UiText.Counted("{0} sense", "{0} senses", 3),
             UiText.Counted("{0} output", "{0} outputs", 2)));
-        viewModel.Layers.Select(layer => layer.Title).ShouldBe(["Senses", "Outputs"]);
+        viewModel.Layers.Select(layer => layer.Title).ShouldBe([UiText.Plain("Senses"), UiText.Plain("Outputs")]);
         viewModel.Layers[0].Neurons.Select(neuron => neuron.Label).ShouldBe(_labels.Inputs);
         viewModel.Layers[1].Neurons.Select(neuron => neuron.Label).ShouldBe(_labels.Outputs);
         viewModel.Layers[0].Neurons[0].Activation.ShouldBe(0.5);
         viewModel.Layers[1].Neurons[0].Activation.ShouldBe(Math.Tanh((0.2 * 0.5) + (-1.5 * -0.25) + 0.9), 1e-12);
         viewModel.Selected.ShouldBeNull();
-        viewModel.SelectionText.ShouldBe("Tap a sense or an output to see what drives what.");
+        viewModel.SelectionText.ShouldBe(_noSelection);
         viewModel.Layers.SelectMany(layer => layer.Neurons).ShouldAllBe(neuron => !neuron.IsHighlighted);
     }
 
@@ -62,7 +67,7 @@ public sealed class BrainFocusPresentationViewModelTests
 
         viewModel.SelectNeuron(BrainFocusPresentationViewModel.OutputLayer, 0);
 
-        viewModel.SelectionText.ShouldBe("Rear knee is driven most by Front knee:\u00A0speed and Camera:\u00A0centre.");
+        viewModel.SelectionText.ShouldBe(UiText.Format("{0} is driven most by {1} and {2}.", _rearKnee, _kneeSpeed, _centre));
         viewModel.Layers[1].Neurons[0].IsSelected.ShouldBeTrue();
         viewModel.Layers[0].Neurons.Select(neuron => neuron.IsHighlighted).ShouldBe([false, true, true]);
         viewModel.Edges.Where(edge => edge.IsHighlighted).Select(edge => edge.ToNeuronIndex).ShouldAllBe(output => output == 0);
@@ -76,7 +81,7 @@ public sealed class BrainFocusPresentationViewModelTests
 
         viewModel.SelectNeuron(BrainFocusPresentationViewModel.InputLayer, 1);
 
-        viewModel.SelectionText.ShouldBe("Front knee:\u00A0speed drives Rear knee most.");
+        viewModel.SelectionText.ShouldBe(UiText.Format("{0} drives {1} most.", _kneeSpeed, _rearKnee));
         viewModel.Layers[1].Neurons.Select(neuron => neuron.IsHighlighted).ShouldBe([true, false]);
     }
 
@@ -87,7 +92,27 @@ public sealed class BrainFocusPresentationViewModelTests
 
         viewModel.SelectNeuron(BrainFocusPresentationViewModel.OutputLayer, 0);
 
-        viewModel.SelectionText.ShouldBe("Rear knee is not driven by any sense yet.");
+        viewModel.SelectionText.ShouldBe(UiText.Format("{0} is not driven by any sense yet.", _rearKnee));
+    }
+
+    [Fact]
+    public void SelectOutput_WithOneSenseDrivingIt_NamesThatSense()
+    {
+        var viewModel = Live(disabledGenes: 5);
+
+        viewModel.SelectNeuron(BrainFocusPresentationViewModel.OutputLayer, 1);
+
+        viewModel.SelectionText.ShouldBe(UiText.Format("{0} is driven most by {1}.", _frontKnee, _along));
+    }
+
+    [Fact]
+    public void SelectSense_DrivingNothing_SaysItDrivesNoOutput()
+    {
+        var viewModel = Live(disabledGenes: 1);
+
+        viewModel.SelectNeuron(BrainFocusPresentationViewModel.InputLayer, 1);
+
+        viewModel.SelectionText.ShouldBe(UiText.Format("{0} does not drive any output yet.", _kneeSpeed));
     }
 
     [Fact]
@@ -111,7 +136,7 @@ public sealed class BrainFocusPresentationViewModelTests
         viewModel.ClearSelection();
 
         viewModel.Selected.ShouldBeNull();
-        viewModel.SelectionText.ShouldBe("Tap a sense or an output to see what drives what.");
+        viewModel.SelectionText.ShouldBe(_noSelection);
         viewModel.Layers.SelectMany(layer => layer.Neurons).ShouldAllBe(neuron => !neuron.IsHighlighted);
     }
 
@@ -124,7 +149,7 @@ public sealed class BrainFocusPresentationViewModelTests
         viewModel.Update(Brain(), Readings());
 
         viewModel.Selected.ShouldBe((BrainFocusPresentationViewModel.InputLayer, 0));
-        viewModel.SelectionText.ShouldBe("Accelerometer:\u00A0along drives Front knee and Rear knee most.");
+        viewModel.SelectionText.ShouldBe(UiText.Format("{0} drives {1} and {2} most.", _along, _frontKnee, _rearKnee));
     }
 
     [Fact]
@@ -141,6 +166,7 @@ public sealed class BrainFocusPresentationViewModelTests
         viewModel.Layers.ShouldBeEmpty();
         viewModel.Edges.ShouldBeEmpty();
         viewModel.Summary.ShouldBe(UiText.Plain("Waiting for a live brain"));
+        viewModel.SelectionText.ShouldBe(UiText.Plain("Start training to see the live brain."));
         notifications.ShouldBe(1);
     }
 

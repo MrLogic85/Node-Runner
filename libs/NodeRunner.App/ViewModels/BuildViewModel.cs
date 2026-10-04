@@ -57,7 +57,6 @@ public sealed class BuildViewModel : INotifyPropertyChanged
     private bool _isActive;
     private BuildTool _activeTool = BuildTool.Parts;
     private BuildLink _pickedLink = BuildLink.Beam;
-    private string? _statusMessage;
     private bool _moveOnly;
     private readonly HashSet<int> _selectedNodeIds = [];
     private string _creationName = NewCreationWorkflow.UntitledName;
@@ -94,7 +93,6 @@ public sealed class BuildViewModel : INotifyPropertyChanged
         _moveOnly = moveOnly;
         _history.Clear();
         ActiveTool = BuildTool.Parts;
-        StatusMessage = null;
         PlacementNote = null;
         AnatomyChanged?.Invoke(this, EventArgs.Empty);
     }
@@ -186,7 +184,6 @@ public sealed class BuildViewModel : INotifyPropertyChanged
             SelectedSet(kind).RemoveWhere(id => !Exists(new CreatureElementSelection(kind, id)));
         }
 
-        StatusMessage = null;
         PlacementNote = null;
         NotifySelectionChanged();
         AnatomyChanged?.Invoke(this, EventArgs.Empty);
@@ -283,7 +280,6 @@ public sealed class BuildViewModel : INotifyPropertyChanged
                 SetPickedLink(BuildLink.Beam);
             }
 
-            StatusMessage = null;
             OnPropertyChanged();
         }
     }
@@ -311,25 +307,6 @@ public sealed class BuildViewModel : INotifyPropertyChanged
 
         _pickedLink = link;
         OnPropertyChanged(nameof(PickedLink));
-    }
-
-    /// <summary>Why a Piston drag that ended away from a joint placed nothing: a Piston never makes a joint.</summary>
-    public void PistonDropMissed() => StatusMessage = "Drop it on another node.";
-
-    /// <summary>Feedback for the current tool: instructions, confirmations, or rejection messages.</summary>
-    public string? StatusMessage
-    {
-        get => _statusMessage;
-        private set
-        {
-            if (_statusMessage == value)
-            {
-                return;
-            }
-
-            _statusMessage = value;
-            OnPropertyChanged();
-        }
     }
 
     public IReadOnlyList<NodeDef> Nodes => _builder.Nodes;
@@ -416,7 +393,8 @@ public sealed class BuildViewModel : INotifyPropertyChanged
 
         if (!PartTray.IsAvailable(part) || PartTray.SensorKindOf(part) is null)
         {
-            reason = PartTray.ComingLater;
+            // Reasons are still finished English until #758 makes them UiText.
+            reason = PartTray.ComingLater.Message;
             return false;
         }
 
@@ -452,7 +430,6 @@ public sealed class BuildViewModel : INotifyPropertyChanged
 
         if (!CanPlacePart(part, target, out var reason))
         {
-            StatusMessage = reason;
             if (!_moveOnly)
             {
                 PlacementNote = new CanvasNote(CanvasNoteKind.Danger, target, reason);
@@ -466,7 +443,6 @@ public sealed class BuildViewModel : INotifyPropertyChanged
             _builder.AddSensor(target.Id, PartTray.SensorKindOf(part)!.Value, out var id, out _);
             return id;
         });
-        StatusMessage = $"Placed {PartNames.SensorKind(PartTray.SensorKindOf(part)!.Value)} on beam {_builder.BeamIndexOf(target.Id) + 1}.";
         AnatomyChanged?.Invoke(this, EventArgs.Empty);
         return sensorId;
     }
@@ -614,18 +590,19 @@ public sealed class BuildViewModel : INotifyPropertyChanged
     }
 
     /// <summary>The name a part shows: its own name if it has one, else <see cref="DefaultPartName"/>.</summary>
-    public string PartDisplayName(int partId) => PartNames.Display(_builder.Nodes, _builder.Beams, _builder.Sensors, _builder.Pistons, partId);
+    public UiText PartDisplayName(int partId) => PartNames.Display(_builder.Nodes, _builder.Beams, _builder.Sensors, _builder.Pistons, partId);
 
     /// <summary>The name a part shows until it is renamed: "Node 2", "Beam 1", "Piston 1" or its sensor kind.</summary>
-    public string DefaultPartName(int partId) => PartNames.Default(_builder.Nodes, _builder.Beams, _builder.Sensors, _builder.Pistons, partId);
+    public UiText DefaultPartName(int partId) => PartNames.Default(_builder.Nodes, _builder.Beams, _builder.Sensors, _builder.Pistons, partId);
 
     /// <summary>
     /// Renames a part by id, so an edit lands on the part it started on even if the selection
-    /// moved meanwhile; a part deleted since is ignored. A blank name, or the part's default name,
-    /// clears its own name so it shows the default again. Names are labels only (#220), so a
-    /// locked Creation can be renamed too.
+    /// moved meanwhile; a part deleted since is ignored. A blank name, or the
+    /// <paramref name="shownDefault"/> left as it is, clears its own name so it shows the default
+    /// again. Only the screen knows the default in the player's language, so it passes the one it
+    /// showed. Names are labels only (#220), so a locked Creation can be renamed too.
     /// </summary>
-    public void RenamePart(int partId, string name)
+    public void RenamePart(int partId, string name, string? shownDefault)
     {
         ArgumentNullException.ThrowIfNull(name);
         if (!_builder.Nodes.Any(node => node.Id == partId)
@@ -637,7 +614,7 @@ public sealed class BuildViewModel : INotifyPropertyChanged
         }
 
         var trimmed = name.Trim();
-        var newName = trimmed.Length == 0 || trimmed == DefaultPartName(partId) ? null : trimmed;
+        var newName = trimmed.Length == 0 || trimmed == shownDefault ? null : trimmed;
         if (newName == PartName(partId))
         {
             return;
@@ -657,7 +634,6 @@ public sealed class BuildViewModel : INotifyPropertyChanged
         }
 
         ClearSelectionSets();
-        StatusMessage = "Selection cleared.";
         NotifySelectionChanged();
         AnatomyChanged?.Invoke(this, EventArgs.Empty);
     }
@@ -714,12 +690,6 @@ public sealed class BuildViewModel : INotifyPropertyChanged
 
     private void SelectionChanged()
     {
-        StatusMessage = SelectedPartCount switch
-        {
-            0 => "Selection cleared.",
-            1 => $"{PartDisplayName(_selectedNodeIds.Concat(_selectedBeamIds).Concat(_selectedSensorIds).Concat(_selectedPistonIds).First())} selected.",
-            var count => $"{count} selected.",
-        };
         NotifySelectionChanged();
         AnatomyChanged?.Invoke(this, EventArgs.Empty);
     }
@@ -860,14 +830,13 @@ public sealed class BuildViewModel : INotifyPropertyChanged
 
     /// <summary>
     /// Joins two existing nodes with a beam. Rejected attempts (locked
-    /// Creation, self-connect, duplicate beam) surface via
-    /// <see cref="StatusMessage"/> instead of throwing.
+    /// Creation, self-connect, duplicate beam) change nothing and return false
+    /// instead of throwing.
     /// </summary>
     public bool ConnectBeam(int nodeIdA, int nodeIdB)
     {
         if (_moveOnly)
         {
-            StatusMessage = "Edit mode only allows moving existing nodes.";
             return false;
         }
 
@@ -875,13 +844,11 @@ public sealed class BuildViewModel : INotifyPropertyChanged
         {
             _history.Change(() => _builder.AddBeam(nodeIdA, nodeIdB));
         }
-        catch (ArgumentException exception)
+        catch (ArgumentException)
         {
-            StatusMessage = exception.Message;
             return false;
         }
 
-        StatusMessage = $"Connected node {nodeIdA} to node {nodeIdB}.";
         AnatomyChanged?.Invoke(this, EventArgs.Empty);
         return true;
     }
@@ -908,7 +875,6 @@ public sealed class BuildViewModel : INotifyPropertyChanged
         PlacementNote = null;
         if (!CanConnectPiston(nodeIdA, nodeIdB, out var reason))
         {
-            StatusMessage = reason;
             if (!_moveOnly && nodeIdA != nodeIdB && _builder.Nodes.Any(node => node.Id == nodeIdB))
             {
                 PlacementNote = new CanvasNote(CanvasNoteKind.Danger, new CreatureElementSelection(CreatureElementKind.Node, nodeIdB), reason);
@@ -918,7 +884,6 @@ public sealed class BuildViewModel : INotifyPropertyChanged
         }
 
         var pistonId = _history.Change(() => _builder.AddPiston(nodeIdA, nodeIdB));
-        StatusMessage = $"Placed {PartDisplayName(pistonId)}.";
         AnatomyChanged?.Invoke(this, EventArgs.Empty);
         return pistonId;
     }
@@ -936,7 +901,6 @@ public sealed class BuildViewModel : INotifyPropertyChanged
 
         if (_moveOnly)
         {
-            StatusMessage = "Edit mode only allows moving existing nodes.";
             return null;
         }
 
@@ -957,7 +921,6 @@ public sealed class BuildViewModel : INotifyPropertyChanged
             ClearSelectionSets();
             return id;
         });
-        StatusMessage = "Split the beam with a new joint.";
         NotifySelectionChanged();
         AnatomyChanged?.Invoke(this, EventArgs.Empty);
         return nodeId;
@@ -1008,15 +971,8 @@ public sealed class BuildViewModel : INotifyPropertyChanged
 
     public void DeleteSelectedParts()
     {
-        if (_moveOnly)
+        if (_moveOnly || SelectedPartCount == 0)
         {
-            StatusMessage = "Edit mode can only move selected parts.";
-            return;
-        }
-
-        if (SelectedPartCount == 0)
-        {
-            StatusMessage = "No selected parts to delete.";
             return;
         }
 
@@ -1046,7 +1002,6 @@ public sealed class BuildViewModel : INotifyPropertyChanged
             // Within the step: its Undo row refresh must find no deleted part still selected.
             ClearSelectionSets();
         });
-        StatusMessage = "Deleted selected parts.";
         NotifySelectionChanged();
         AnatomyChanged?.Invoke(this, EventArgs.Empty);
     }
@@ -1077,15 +1032,13 @@ public sealed class BuildViewModel : INotifyPropertyChanged
     public CreatureDef Snapshot() => _builder.Build();
 
     /// <summary>
-    /// The creature for Start training, if it can train (<see cref="CreatureReadiness"/>). A creature
-    /// that cannot be simulated yet shows why via <see cref="StatusMessage"/>; an empty one, or one
-    /// without a moving part, is refused quietly because Build already shows it is not ready.
+    /// The creature for Start training, if it can train (<see cref="CreatureReadiness"/>). Build's
+    /// readiness line already shows why one cannot, so a refusal says nothing more.
     /// </summary>
     public bool TryGetTrainableCreature(out CreatureDef? creature)
     {
-        if (!TryLeave(out creature, out var errors))
+        if (!TryLeave(out creature, out _))
         {
-            SetBlockedLeaveMessage(errors);
             return false;
         }
 
@@ -1096,12 +1049,6 @@ public sealed class BuildViewModel : INotifyPropertyChanged
         }
 
         return true;
-    }
-
-    /// <summary>Surfaces why leaving Build mode was blocked, via <see cref="StatusMessage"/>.</summary>
-    public void SetBlockedLeaveMessage(IReadOnlyList<string> errors)
-    {
-        StatusMessage = $"Not ready to simulate yet: {string.Join(" ", errors)}";
     }
 
     public int NodeIndexOf(int nodeId) => _builder.NodeIndexOf(nodeId);

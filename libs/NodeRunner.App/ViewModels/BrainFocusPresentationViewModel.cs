@@ -15,8 +15,8 @@ public sealed class BrainFocusPresentationViewModel : INotifyPropertyChanged
     public const int OutputLayer = 1;
 
     private static readonly UiText _waitingSummary = UiText.Plain("Waiting for a live brain");
-    private const string _waitingSelection = "Start training to see the live brain.";
-    private const string _noSelection = "Tap a sense or an output to see what drives what.";
+    private static readonly UiText _waitingSelection = UiText.Plain("Start training to see the live brain.");
+    private static readonly UiText _noSelection = UiText.Plain("Tap a sense or an output to see what drives what.");
 
     private BrainPortLabels _labels = BrainPortLabels.Empty;
     private HashSet<int> _disabledGenes = [];
@@ -37,7 +37,7 @@ public sealed class BrainFocusPresentationViewModel : INotifyPropertyChanged
     /// <summary>The tapped neuron as (layer, index), or null with none.</summary>
     public (int Layer, int Index)? Selected { get; private set; }
 
-    public string SelectionText { get; private set; } = _waitingSelection;
+    public UiText SelectionText { get; private set; } = _waitingSelection;
 
     /// <summary>
     /// Names the ports and leaves out the disabled connections, given as indices into the direct
@@ -142,8 +142,8 @@ public sealed class BrainFocusPresentationViewModel : INotifyPropertyChanged
 
         Layers =
         [
-            Column("Senses", InputLayer, _labels.Inputs, named),
-            Column("Outputs", OutputLayer, _labels.Outputs, named),
+            Column(UiText.Plain("Senses"), InputLayer, _labels.Inputs, named),
+            Column(UiText.Plain("Outputs"), OutputLayer, _labels.Outputs, named),
         ];
         Edges = _connections
             .Select(connection => new BrainFocusEdgePresentation(
@@ -158,7 +158,7 @@ public sealed class BrainFocusPresentationViewModel : INotifyPropertyChanged
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null));
     }
 
-    private BrainFocusLayerPresentation Column(string title, int layer, IReadOnlyList<string> labels, HashSet<(int Layer, int Index)> named) =>
+    private BrainFocusLayerPresentation Column(UiText title, int layer, IReadOnlyList<UiText> labels, HashSet<(int Layer, int Index)> named) =>
         new(
             title,
             _activations[layer]
@@ -172,26 +172,32 @@ public sealed class BrainFocusPresentationViewModel : INotifyPropertyChanged
                     Selected == (layer, index) || named.Contains((layer, index))))
                 .ToArray());
 
-    // "Rear knee is driven most by Front knee: speed and Accelerometer: along."
-    private string DrivenBy(int output, HashSet<(int Layer, int Index)> named)
+    // "Rear knee: position is driven most by Front knee: speed and Accelerometer: along."
+    private UiText DrivenBy(int output, HashSet<(int Layer, int Index)> named)
     {
         var drivers = Strongest(_connections.Where(connection => connection.Output == output), connection => connection.Input);
         named.UnionWith(drivers.Select(input => (InputLayer, input)));
-        var name = Unbroken(_labels.Outputs[output]);
-        return drivers.Length == 0
-            ? $"{name} is not driven by any sense yet."
-            : $"{name} is driven most by {Join(drivers.Select(input => _labels.Inputs[input]))}.";
+        var name = _labels.Outputs[output];
+        return drivers switch
+        {
+            [] => UiText.Format("{0} is not driven by any sense yet.", name),
+            [var only] => UiText.Format("{0} is driven most by {1}.", name, _labels.Inputs[only]),
+            [var first, var second, ..] => UiText.Format("{0} is driven most by {1} and {2}.", name, _labels.Inputs[first], _labels.Inputs[second]),
+        };
     }
 
-    // "Accelerometer: along drives Rear knee most." or "... drives Rear knee and Front knee most."
-    private string Drives(int input, HashSet<(int Layer, int Index)> named)
+    // "Accelerometer: along drives Rear knee: position most." or "… drives … and … most."
+    private UiText Drives(int input, HashSet<(int Layer, int Index)> named)
     {
         var driven = Strongest(_connections.Where(connection => connection.Input == input), connection => connection.Output);
         named.UnionWith(driven.Select(output => (OutputLayer, output)));
-        var name = Unbroken(_labels.Inputs[input]);
-        return driven.Length == 0
-            ? $"{name} does not drive any output yet."
-            : $"{name} drives {Join(driven.Select(output => _labels.Outputs[output]))} most.";
+        var name = _labels.Inputs[input];
+        return driven switch
+        {
+            [] => UiText.Format("{0} does not drive any output yet.", name),
+            [var only] => UiText.Format("{0} drives {1} most.", name, _labels.Outputs[only]),
+            [var first, var second, ..] => UiText.Format("{0} drives {1} and {2} most.", name, _labels.Outputs[first], _labels.Outputs[second]),
+        };
     }
 
     private static int[] Strongest(IEnumerable<(int Input, int Output, double Weight)> connections, Func<(int Input, int Output, double Weight), int> other) =>
@@ -201,10 +207,4 @@ public sealed class BrainFocusPresentationViewModel : INotifyPropertyChanged
             .Take(2)
             .Select(other)
             .ToArray();
-
-    private static string Join(IEnumerable<string> names) => string.Join(" and ", names.Select(Unbroken));
-
-    // Keeps "Knee: speed" on one line when the sentence wraps.
-    private static string Unbroken(string label) => label.Replace(": ", ":\u00A0", StringComparison.Ordinal);
-
 }
