@@ -96,7 +96,7 @@ public sealed class BuildSpringTests
     }
 
     [Fact]
-    public void ASpring_AttachesItsNodes_ButGivesTheBrainNothingToDrive()
+    public void ASpring_AttachesItsNodes_AndTrainsWithNothingToDrive()
     {
         var builder = new CreatureBuilder();
         builder.AddNode(new Vector2D(0, 0));
@@ -106,7 +106,8 @@ public sealed class BuildSpringTests
         var creature = builder.Build();
 
         CreatureReadiness.Problems(creature).ShouldBeEmpty();
-        CreatureReadiness.CanTrain(creature).ShouldBeFalse();
+        BrainPorts.Of(creature).Outputs.ShouldBeEmpty();
+        CreatureReadiness.CanTrain(creature).ShouldBeTrue();
     }
 
     [Fact]

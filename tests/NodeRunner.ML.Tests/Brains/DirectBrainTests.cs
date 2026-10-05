@@ -191,6 +191,17 @@ public sealed class DirectBrainTests
     }
 
     [Fact]
+    public void Network_WithNoOutputs_RunsAndDrivesNothing()
+    {
+        var sensorsOnly = new BrainPortLayout(_ports.Inputs, []);
+        var brain = DirectBrain.ToBrainDef(sensorsOnly, [], previous: null);
+
+        DirectBrain.Compile(brain, sensorsOnly).ShouldBeEmpty();
+        DirectBrain.Network(brain, sensorsOnly).Forward([.. _ports.Inputs.Select(_ => 0.5)]).ShouldBeEmpty();
+        DirectBrain.Network(DirectBrain.ToBrainDef(BrainPortLayout.Empty, [], previous: null), BrainPortLayout.Empty).Forward([]).ShouldBeEmpty();
+    }
+
+    [Fact]
     public void Compile_AnOutputSavedWithAnotherActivation_IsNotSupported()
     {
         var brain = DirectBrain.ToBrainDef(_ports, _genome, previous: null);

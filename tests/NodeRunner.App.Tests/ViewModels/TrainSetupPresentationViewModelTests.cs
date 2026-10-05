@@ -151,6 +151,24 @@ public sealed class TrainSetupPresentationViewModelTests
         setup.RunLength.Readout.ShouldBe(UiText.Format("{0} s", 30));
     }
 
+    [Fact]
+    public void NoPoweredParts_Warns()
+    {
+        new TrainSetupPresentationViewModel(Creation()).HasPoweredParts.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void APoweredPart_GivesNoWarning()
+    {
+        var creature = new CreatureDef(
+            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(90, 0)), new NodeDef(3, new Vector2D(180, 10))],
+            [new BeamDef(101, 1, 2), new BeamDef(102, 2, 3)],
+            [],
+            [new PistonDef(301, 1, 3)]);
+
+        new TrainSetupPresentationViewModel(new CreationDef(Guid.NewGuid(), "Worm", creature)).HasPoweredParts.ShouldBeTrue();
+    }
+
     private static CreationDef Creation(TrainSettingsDef? settings = null, int? generation = null) =>
         new(
             Guid.NewGuid(),

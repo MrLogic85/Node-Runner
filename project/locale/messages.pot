@@ -62,10 +62,6 @@ msgstr ""
 msgid "Action failed"
 msgstr ""
 
-#: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs
-msgid "Add a piston"
-msgstr ""
-
 #: libs/NodeRunner.App/Lifecycle/CreatureReadiness.cs
 msgid "Add at least one node before training this creation."
 msgstr ""
@@ -849,6 +845,11 @@ msgstr ""
 
 #: project/src/ui/lib/UiPopupStyle.cs
 msgid "Warning"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/BrainFocusPresentationViewModel.cs
+#: project/scenes/screens/TrainSetupScreen.tscn
+msgid "Warning, no powered parts added! There is nothing to train"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartTrayPresentation.cs

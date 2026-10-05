@@ -166,10 +166,20 @@ public sealed class NeuralNetworkTests
     }
 
     [Fact]
+    public void Forward_WithAnEmptyLayer_ReturnsNoOutputs()
+    {
+        // A creature with no powered parts has no outputs, and one with no sensors or parts no inputs (#845).
+        NeuralNetwork.GenomeLength([2, 0]).ShouldBe(0);
+        NeuralNetwork.FromGenome([2, 0], [], Activation.Tanh).Forward([0.5, -0.5]).ShouldBeEmpty();
+        NeuralNetwork.FromGenome([0, 0], [], Activation.Tanh).Forward([]).ShouldBeEmpty();
+        NeuralNetwork.FromGenome([0, 1], [0.25], Activation.Tanh).Forward([])[0].ShouldBe(Math.Tanh(0.25), tolerance: 1e-12);
+    }
+
+    [Fact]
     public void InvalidArguments_ThrowClearExceptions()
     {
         Should.Throw<ArgumentException>(() => NeuralNetwork.FromGenome(new[] { 1 }, [], Activation.Tanh));
-        Should.Throw<ArgumentOutOfRangeException>(() => NeuralNetwork.FromGenome(new[] { 1, 0 }, [], Activation.Tanh));
+        Should.Throw<ArgumentOutOfRangeException>(() => NeuralNetwork.FromGenome(new[] { 1, -1 }, [], Activation.Tanh));
         Should.Throw<ArgumentNullException>(() => NeuralNetwork.FromGenome(new[] { 1, 1 }, null!, Activation.Tanh));
         Should.Throw<ArgumentOutOfRangeException>(() => NeuralNetwork.FromGenome(new[] { 1, 1 }, new[] { 1.0, 0.0 }, (Activation)999));
         Should.Throw<ArgumentException>(() => NeuralNetwork.FromGenome(new[] { 1, 1 }, new[] { 1.0 }, Activation.Tanh));

@@ -55,23 +55,24 @@ public sealed class CreatureReadinessTests
     }
 
     [Fact]
-    public void CanTrain_WithSingleBeam_IsFalseBecauseNothingMoves()
+    public void CanTrain_WithSingleBeam_IsTrueThoughNothingMoves()
     {
+        // No powered part is needed (#845): it trains, and only stands still.
         var creature = new CreatureDef([new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(90, 0))], [new BeamDef(101, 1, 2)], []);
 
         CreatureReadiness.Problems(creature).ShouldBeEmpty();
-        CreatureReadiness.CanTrain(creature).ShouldBeFalse();
+        CreatureReadiness.CanTrain(creature).ShouldBeTrue();
     }
 
     [Fact]
-    public void CanTrain_WithOnlyPassiveJoints_IsFalse()
+    public void CanTrain_WithOnlyPassiveJoints_IsTrue()
     {
         var creature = new CreatureDef(
             [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(90, 0)), new NodeDef(3, new Vector2D(180, 10))],
             [new BeamDef(101, 1, 2), new BeamDef(102, 2, 3)],
             [new SensorDef(201, 101, SensorKind.Accelerometer)]);
 
-        CreatureReadiness.CanTrain(creature).ShouldBeFalse();
+        CreatureReadiness.CanTrain(creature).ShouldBeTrue();
     }
 
     [Fact]

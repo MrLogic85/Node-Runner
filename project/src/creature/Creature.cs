@@ -65,7 +65,6 @@ public partial class Creature : Node2D
     private int[] _outputPortOf = [];
     private double[] _sensorValues = [];
     private double[] _outputValues = [];
-    private int _outputCount;
     private double[] _scratchA = [];
     private double[] _scratchB = [];
     private bool _isBuilt;
@@ -76,9 +75,6 @@ public partial class Creature : Node2D
 
     /// <summary>The brain driving the creature; <c>null</c> until training or Simulate sets one.</summary>
     public NeuralNetwork? Brain { get; private set; }
-
-    /// <summary>Whether the creature has motors for a brain to drive.</summary>
-    public bool HasMotors => _outputCount > 0;
 
     public bool IsBuilt => _isBuilt;
 
@@ -113,7 +109,7 @@ public partial class Creature : Node2D
 
     public override void _PhysicsProcess(double delta)
     {
-        if (Brain is null || _outputCount == 0)
+        if (Brain is null)
         {
             return;
         }
@@ -198,7 +194,7 @@ public partial class Creature : Node2D
         ArgumentNullException.ThrowIfNull(brain);
 
         var expectedInputs = _sensorValues.Length;
-        var expectedOutputs = _outputCount;
+        var expectedOutputs = _outputValues.Length;
         if (brain.LayerSizes[0] != expectedInputs || brain.LayerSizes[^1] != expectedOutputs)
         {
             throw new ArgumentException(
@@ -737,21 +733,7 @@ public partial class Creature : Node2D
 
     private void ConfigureBrainBuffers(CreatureDef definition)
     {
-        _outputCount = 2 * _pistons.Length;
-        if (_outputCount == 0)
-        {
-            Brain = null;
-            Ports = BrainPortLayout.Empty;
-            _rawInputs = [];
-            _inputPortOf = [];
-            _outputPortOf = [];
-            _sensorValues = [];
-            _outputValues = [];
-            _scratchA = [];
-            _scratchB = [];
-            return;
-        }
-
+        // A creature with nothing to drive still has its senses: its brain runs with no outputs (#845).
         Ports = BrainPorts.Of(definition);
         _inputPortOf = PortPositions(
             [
@@ -829,7 +811,7 @@ public partial class Creature : Node2D
         ArgumentNullException.ThrowIfNull(inputs);
 
         inputs.Clear();
-        if (Brain is null || _outputCount == 0)
+        if (Brain is null)
         {
             return;
         }

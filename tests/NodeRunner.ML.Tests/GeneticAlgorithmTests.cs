@@ -16,6 +16,20 @@ public sealed class GeneticAlgorithmTests
     }
 
     [Fact]
+    public void NextGeneration_OfEmptyGenomes_KeepsThePopulation()
+    {
+        // A creature with no powered parts has nothing to evolve, but its generations still run (#845).
+        var ga = new GeneticAlgorithm(2, 0.5, 1);
+        double[][] genomes = [[], [], []];
+
+        var next = ga.NextGeneration(genomes, [0.1, 0.3, 0.2], new Random(1));
+
+        next.Length.ShouldBe(3);
+        next.ShouldAllBe(genome => genome.Length == 0);
+        ga.FromElites([[]], 3, new Random(2)).ShouldAllBe(genome => genome.Length == 0);
+    }
+
+    [Fact]
     public void NextGeneration_RejectsEmptyPopulation()
     {
         var ga = new GeneticAlgorithm(2, 0.1, 0.1);

@@ -328,6 +328,11 @@ reference would mislead someone working on that surface.
   → Generations). Until the Creation has trained there is no Train or
   Simulate switch at all (#843), not a disabled Simulate: a play tester
   tapped the dashed segment and missed the note saying why. Owner decision.
+  A creature with no powered part gets a `halo` warning row (warn icon and
+  text) at the top of the setup column: "Warning, no powered parts added!
+  There is nothing to train" (#845, owner decision); Start still trains.
+  BrainFocus for such a creature drops its line legend and shows the same
+  warning where the tap hint would be.
   Run until power is out (0.18) is disabled with the
   reference's "Needs a battery or generator". Locked maps are disabled cards with a lock,
   not the library's `Locked` card, which means "the only choice". Each map

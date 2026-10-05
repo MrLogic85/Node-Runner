@@ -17,6 +17,7 @@ public sealed class BrainFocusPresentationViewModel : INotifyPropertyChanged
     private static readonly UiText _waitingSummary = UiText.Plain("Waiting for a live brain");
     private static readonly UiText _waitingSelection = UiText.Plain("Start training to see the live brain.");
     private static readonly UiText _noSelection = UiText.Plain("Tap a sense or an output to see what drives what.");
+    private static readonly UiText _nothingToDrive = UiText.Plain("Warning, no powered parts added! There is nothing to train");
 
     private BrainPortLabels _labels = BrainPortLabels.Empty;
     private HashSet<int> _disabledGenes = [];
@@ -87,10 +88,13 @@ public sealed class BrainFocusPresentationViewModel : INotifyPropertyChanged
 
         _connections = [.. connections];
         HasNetwork = true;
-        Summary = UiText.Format(
-            "{0} → {1}. Solid blue: pushes up. Dashed red: pushes down. Thicker: stronger.",
-            UiText.Counted("{0} sense", "{0} senses", inputCount),
-            UiText.Counted("{0} output", "{0} outputs", outputCount));
+        var senses = UiText.Counted("{0} sense", "{0} senses", inputCount);
+        var outputs = UiText.Counted("{0} output", "{0} outputs", outputCount);
+
+        // With nothing to drive there are no lines to read, so the legend is left out (#845).
+        Summary = outputCount == 0
+            ? UiText.Format("{0} → {1}.", senses, outputs)
+            : UiText.Format("{0} → {1}. Solid blue: pushes up. Dashed red: pushes down. Thicker: stronger.", senses, outputs);
         Present();
     }
 
@@ -135,6 +139,7 @@ public sealed class BrainFocusPresentationViewModel : INotifyPropertyChanged
         var named = new HashSet<(int Layer, int Index)>();
         SelectionText = Selected switch
         {
+            null when _labels.Outputs.Count == 0 => _nothingToDrive,
             null => _noSelection,
             (OutputLayer, var output) => DrivenBy(output, named),
             (_, var input) => Drives(input, named),

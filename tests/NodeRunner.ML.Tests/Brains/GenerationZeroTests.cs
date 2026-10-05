@@ -86,6 +86,14 @@ public sealed class GenerationZeroTests
     }
 
     [Fact]
+    public void Population_WithoutOutputs_IsEmptyGenomes()
+    {
+        var ports = new BrainPortLayout([BrainPort.Input(5, "along")], []);
+
+        GenerationZero.Population(ports, 4, new Random(9)).ShouldAllBe(genome => genome.Length == 0);
+    }
+
+    [Fact]
     public void Population_RejectsAnEmptyPopulation()
     {
         Should.Throw<ArgumentOutOfRangeException>(() => GenerationZero.Population(_ports, 0, new Random(8)));

@@ -171,6 +171,23 @@ public sealed class BrainFocusPresentationViewModelTests
     }
 
     [Fact]
+    public void Update_WithNothingToDrive_LeavesOutTheLegendAndWarns()
+    {
+        var viewModel = new BrainFocusPresentationViewModel();
+        viewModel.Configure(new BrainPortLabels([_along], []), []);
+
+        viewModel.Update(NeuralNetwork.FromGenome([1, 0], [], Activation.Tanh), [0.5]);
+
+        viewModel.HasNetwork.ShouldBeTrue();
+        viewModel.Edges.ShouldBeEmpty();
+        viewModel.Summary.ShouldBe(UiText.Format(
+            "{0} → {1}.",
+            UiText.Counted("{0} sense", "{0} senses", 1),
+            UiText.Counted("{0} output", "{0} outputs", 0)));
+        viewModel.SelectionText.ShouldBe(UiText.Plain("Warning, no powered parts added! There is nothing to train"));
+    }
+
+    [Fact]
     public void NoViewModel_OffersBrainEditing()
     {
         string[] editing = ["SetBrainShape", "BrainShape", "BrainSetup", "HiddenLayers", "NeuronsPerLayer"];
