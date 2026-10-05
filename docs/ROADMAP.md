@@ -110,6 +110,8 @@ has produced the data to decide unlock order.
 - A map model and several maps, built by seeded generators in chunks (#91).
 - Map checkboxes and the map loop: one generation is one run on one map.
 - Stats per generation and map, and the Stats screen.
+- The Camera returns to Build's Parts tray once a map has terrain to see (#855),
+  with its settings (#578).
 
 **ML concepts introduced:** Generalisation versus overfitting to one map;
 learning curves per map.

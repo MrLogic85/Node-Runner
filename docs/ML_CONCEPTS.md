@@ -87,8 +87,9 @@ For each concept:
   spiky contacts (#127), and a Camera whose three fixed rays read how
   near the ground is (#575, #604). There is no speed or
   elevation input: the brain must learn movement from acceleration, Piston
-  length and speed, and its own outputs; 0.14.0 adds camera settings
-  (#578) and Pulse, a rhythm input (#527).
+  length and speed, and its own outputs; 0.14.0 adds Pulse, a rhythm input
+  (#527), and 0.15.0 brings the Camera back to Build's tray (#852, #855)
+  with its settings (#578).
 - **Why "nothing seen" reads 0 (#604):** a zero input adds nothing to the
   brain's weighted sum, so the weight on a camera ray only matters while
   something is in view. Mutating that weight adds no noise while the

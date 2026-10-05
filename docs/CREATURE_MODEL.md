@@ -104,7 +104,8 @@ CreatureDef  ──build──▶  physical body  ──sensors──▶  model 
   pose is the sensor's "up", and "along" points right as built. The frame
   then turns with the beam and never flips during a run
   (`Accelerometer.UpSign`).
-- Kinds today: **Accelerometer** (#127) and **Camera** (#575, #604).
+- Kinds today: **Accelerometer** (#127) and **Camera** (#575, #604). Build's
+  tray holds the Camera back for now (#852, `docs/BUILD_MODE.md`).
 - **Seen and tapped as a picture (#576):** a small picture of the sensor at
   the middle of its beam, upright on the built up side and turned with the
   beam; its tap area is a square there, sized per kind (`SensorPicture`:
@@ -183,7 +184,7 @@ CreatureDef  ──build──▶  physical body  ──sensors──▶  model 
   feeds 0, which adds nothing to the brain's weighted sum (see
   `docs/ML_CONCEPTS.md`).
 - **Settings in 0.12:** only the aim. Ray count and range come with
-  camera settings in 0.14 (#578); their power draw comes with power in
+  camera settings in 0.15 (#578); their power draw comes with power in
   0.18 (#599).
 
 #### Rigid triangles

@@ -10,19 +10,17 @@ public sealed class BuildPlacementTests
     private static readonly CreatureElementSelection _secondBeam = new(CreatureElementKind.Beam, 5);
     private static readonly CreatureElementSelection _firstJoint = new(CreatureElementKind.Node, 1);
 
-    [Theory]
-    [InlineData(BuildPart.Accelerometer, SensorKind.Accelerometer)]
-    [InlineData(BuildPart.Camera, SensorKind.Camera)]
-    public void PlacePart_OnAFreeBeam_AddsTheSensorThereWithAFreshId(BuildPart part, SensorKind kind)
+    [Fact]
+    public void PlacePart_OnAFreeBeam_AddsTheSensorThereWithAFreshId()
     {
         var build = TwoBeams();
         var freshId = build.Snapshot().NextPartId;
         var changes = CountChanges(build);
 
-        var id = build.PlacePart(part, _firstBeam);
+        var id = build.PlacePart(BuildPart.Accelerometer, _firstBeam);
 
         id.ShouldBe(freshId);
-        build.Sensors.Select(sensor => (sensor.Id, sensor.BeamId, sensor.Kind)).ShouldBe([(freshId, 4, kind)]);
+        build.Sensors.Select(sensor => (sensor.Id, sensor.BeamId, sensor.Kind)).ShouldBe([(freshId, 4, SensorKind.Accelerometer)]);
         changes().ShouldBe(1);
         build.PlacementNote.ShouldBeNull();
     }
@@ -59,7 +57,7 @@ public sealed class BuildPlacementTests
         var build = TwoBeams();
         var changes = CountChanges(build);
 
-        build.PlacePart(BuildPart.Camera, _firstJoint).ShouldBeNull();
+        build.PlacePart(BuildPart.Accelerometer, _firstJoint).ShouldBeNull();
 
         build.Sensors.ShouldBeEmpty();
         changes().ShouldBe(0);
@@ -73,21 +71,23 @@ public sealed class BuildPlacementTests
         build.PlacePart(BuildPart.Accelerometer, _firstBeam);
         var changes = CountChanges(build);
 
-        build.PlacePart(BuildPart.Camera, _firstBeam).ShouldBeNull();
+        build.PlacePart(BuildPart.Accelerometer, _firstBeam).ShouldBeNull();
 
         build.Sensors.Count.ShouldBe(1);
         changes().ShouldBe(0);
         build.PlacementNote.ShouldBe(new CanvasNote(CanvasNoteKind.Danger, _firstBeam, UiText.Plain("One sensor per beam")));
     }
 
-    [Fact]
-    public void PlacePart_ComingLater_IsRefused()
+    [Theory]
+    [InlineData(BuildPart.Battery)]
+    [InlineData(BuildPart.Camera)]
+    public void PlacePart_ComingLater_IsRefused(BuildPart part)
     {
         var build = TwoBeams();
 
-        build.CanPlacePart(BuildPart.Battery, _firstBeam, out var reason).ShouldBeFalse();
+        build.CanPlacePart(part, _firstBeam, out var reason).ShouldBeFalse();
         reason.ShouldBe(PartTray.ComingLater);
-        build.PlacePart(BuildPart.Battery, _firstBeam).ShouldBeNull();
+        build.PlacePart(part, _firstBeam).ShouldBeNull();
 
         build.Sensors.ShouldBeEmpty();
     }
@@ -110,9 +110,9 @@ public sealed class BuildPlacementTests
         var build = TwoBeams();
         build.PlacePart(BuildPart.Accelerometer, _firstBeam);
 
-        build.CanPlacePart(BuildPart.Camera, _firstBeam, out var taken).ShouldBeFalse();
+        build.CanPlacePart(BuildPart.Accelerometer, _firstBeam, out var taken).ShouldBeFalse();
         taken.ShouldBe(UiText.Plain("One sensor per beam"));
-        build.CanPlacePart(BuildPart.Camera, _secondBeam, out var free).ShouldBeTrue();
+        build.CanPlacePart(BuildPart.Accelerometer, _secondBeam, out var free).ShouldBeTrue();
         free.ShouldBeNull();
     }
 
@@ -166,7 +166,7 @@ public sealed class BuildPlacementTests
         var build = TwoBeams();
         var gestures = new BuildGestures(build);
 
-        gestures.DropPart(BuildPart.Camera, new Vector2D(40, 0)).ShouldNotBeNull();
+        gestures.DropPart(BuildPart.Accelerometer, new Vector2D(40, 0)).ShouldNotBeNull();
 
         build.Sensors.Single().BeamId.ShouldBe(4);
     }
