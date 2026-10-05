@@ -5,8 +5,9 @@ using NodeRunner.Ui.Lib;
 namespace NodeRunner.Ui.Widgets;
 
 /// <summary>
-/// A mark that stands on the Training arena's ground at a distance on the ruler and keeps its
-/// screen size at any zoom: the best marker (#388) and the start sign (#848). It is a child of the
+/// A mark that stands on the Training arena's ground at a distance on the ruler: the best marker
+/// (#388), which keeps its screen size at any zoom, and the start sign (#848), which is half a metre tall in
+/// the world (#882). It is a child of the
 /// ground, and it fades back like a shadow while a part's name is shown, which may cover it.
 /// </summary>
 public abstract partial class ArenaMark : Node2D
