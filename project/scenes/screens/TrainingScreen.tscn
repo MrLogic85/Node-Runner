@@ -100,6 +100,7 @@ mouse_filter = 1
 script = ExtResource("5_button")
 IconId = 4
 Kind = 1
+ComingLater = true
 
 [node name="Body" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell"]
 layout_mode = 2

@@ -22,6 +22,7 @@ public sealed partial class UiButton : Button, ISerializationListener
     private UiButtonKind _kind = UiButtonKind.Secondary;
     private UiIconId _iconId = UiIconId.None;
     private bool _selected;
+    private bool _comingLater;
     private string _badgeText = string.Empty;
     private UiButtonContentLayout _contentLayout;
     private SizeFlags _rowSizeFlagsHorizontal = SizeFlags.Fill;
@@ -123,6 +124,23 @@ public sealed partial class UiButton : Button, ISerializationListener
             RefreshStyle();
         }
     }
+
+    /// <summary>
+    /// A feature that comes in a later version (#841): drawn like a disabled button (dashed,
+    /// dimmed) but still pressable, so the screen can say when it comes.
+    /// </summary>
+    [Export]
+    public bool ComingLater
+    {
+        get => _comingLater;
+        set
+        {
+            _comingLater = value;
+            RefreshStyle();
+        }
+    }
+
+    private bool LooksDisabled => Disabled || ComingLater;
 
     [Export]
     public bool HoldToActivate
@@ -454,12 +472,12 @@ public sealed partial class UiButton : Button, ISerializationListener
         EnsureContent();
         RefreshContent(DrawnStyle.Resolve(this).Content);
 
-        AddThemeStyleboxOverride("normal", CreateStyle());
-        AddThemeStyleboxOverride("hover", CreateStyle());
-        AddThemeStyleboxOverride("pressed", CreateStyle());
-        AddThemeStyleboxOverride("hover_pressed", CreateStyle());
+        AddThemeStyleboxOverride("normal", ComingLater ? CreateDisabledStyle() : CreateStyle());
+        AddThemeStyleboxOverride("hover", ComingLater ? CreateDisabledStyle() : CreateStyle());
+        AddThemeStyleboxOverride("pressed", ComingLater ? CreateDisabledStyle() : CreateStyle());
+        AddThemeStyleboxOverride("hover_pressed", ComingLater ? CreateDisabledStyle() : CreateStyle());
         AddThemeStyleboxOverride("focus", new StyleBoxEmpty());
-        AddThemeStyleboxOverride("disabled", CreateStyle(_disabledOpacity, transparentBorder: true));
+        AddThemeStyleboxOverride("disabled", CreateDisabledStyle());
         RefreshProgress();
         QueueRedraw();
         RefreshBadge();
@@ -507,19 +525,20 @@ public sealed partial class UiButton : Button, ISerializationListener
         // Native Text has no change signal, but setting it always queues a redraw.
         SyncCaption();
         // Native Disabled queues a redraw; update our child visuals without a second state property.
-        var modulation = Colors.White with { A = Disabled ? _disabledOpacity : 1 };
+        var modulation = Colors.White with { A = LooksDisabled ? _disabledOpacity : 1 };
         if (_content is not null)
             _content.Modulate = modulation;
         if (_progressClip is not null)
             _progressClip.Modulate = modulation;
-        if (!Disabled && Selected && UiThemeLookup.EffectsEnabled(this))
+        if (!LooksDisabled && Selected && UiThemeLookup.EffectsEnabled(this))
             DrawSelectedGlow();
         if (UiPressFeedback.Shows(this, Selected))
             UiPressFeedback.Draw(this, Design.Corners, Design.Style.BackgroundColor, Design.Style.Kind == UiButtonKind.Tertiary);
 
-        if (!Disabled)
+        if (!LooksDisabled)
             return;
-        EndHold();
+        if (Disabled)
+            EndHold();
 
         UiResolvedButtonStyle style = DrawnStyle.Resolve(this);
         Color color = Selected ? style.Selected : style.Border.ScaleAlpha(_disabledOpacity);
@@ -528,6 +547,8 @@ public sealed partial class UiButton : Button, ISerializationListener
         float radius = Design.Corners.Smallest;
         UiDashedBorder.DrawRoundedRect(this, new Rect2(Vector2.One * halfStroke, Size - Vector2.One * stroke), radius, color, stroke);
     }
+
+    private StyleBoxFlat CreateDisabledStyle() => CreateStyle(_disabledOpacity, transparentBorder: true);
 
     private StyleBoxFlat CreateStyle(float opacity = 1, bool transparentBorder = false)
     {

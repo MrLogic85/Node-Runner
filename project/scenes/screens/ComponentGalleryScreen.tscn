@@ -323,7 +323,7 @@ custom_minimum_size = Vector2(120, 0)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 8
-text = "different states, can be combined, so a selected can be hold to activate or disabled"
+text = "different states, can be combined, so a selected can be hold to activate or disabled; coming later looks disabled but still taps"
 autowrap_mode = 3
 script = ExtResource("2_cpfof")
 TextStyle = 9
@@ -368,6 +368,16 @@ disabled = true
 text = "Disabled"
 script = ExtResource("3_h0qut")
 HoldToActivate = true
+metadata/_custom_type_script = "uid://r2ped3g3uiaa"
+
+[node name="UiButton5" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/ButtonStates/Examples" unique_id=549565153]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+mouse_filter = 1
+text = "Coming later"
+script = ExtResource("3_h0qut")
+ComingLater = true
 metadata/_custom_type_script = "uid://r2ped3g3uiaa"
 
 [node name="ButtonDecorations" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content" unique_id=459420129]
