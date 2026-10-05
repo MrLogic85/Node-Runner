@@ -328,7 +328,9 @@ component READMEs under `reference design/components/` guide its presentation.
 - Training is its own routed scene, `TrainingRoute(creationId, mode)`, with
   `TrainingHost` (`project/src/hosts/`) as its root. `TrainingHost.tscn` instances the
   Training screen (`TrainingScreen.tscn`) and authors the world inside the
-  screen's arena viewport: the background, the ground line, the ruler, the spawn marker and the camera. The host adds the
+  screen's arena viewport: the background, the ground line, the ruler, the
+  best marker, the start sign, the spawn marker, the shadows' parent and the
+  camera. The host adds the
   creature and the `Evolver` from the creation's save to that world, so
   leaving the scene frees all of them.
   - **Simulate (#702).** In Simulate mode the host adds no `Evolver`. It
@@ -401,6 +403,14 @@ component READMEs under `reference design/components/` guide its presentation.
     any zoom, is hidden until its distance is known and jumps when a
     generation's front goes past it. Off screen it shows nothing. While a part's name shows
     it fades to `alpha_shadow`, since the name may cover it.
+  - **Start sign (#848).** `ArenaStartSign` puts a `UiSignpost` reading
+    "Start" at 0 m on the ruler, in Training and Simulate alike: an `ink`
+    arrow sign pointing the way to go, on a post down to the ground edge. A
+    creature that walks backwards ends below 0 m, and its distance shows
+    0 m (see "Trial" → `FrontDistance`); the sign shows where that 0 is. It is drawn
+    behind every creature, keeps its screen size at any zoom and fades with
+    the best marker. Both share `ArenaMark`'s theme, fade and screen-size
+    logic.
   - **World view.** The world renders in its own `SubViewport` through
     `UiWorldView`, so the UI layout and scale never touch physics distances
     or gravity. The viewport renders at the screen's pixel density to keep

@@ -280,6 +280,11 @@ reference would mislead someone working on that surface.
   to the part, so it never covers the body; the best marker fades to
   `alpha_shadow` meanwhile, since the name may cover its flag
   (`docs/TRAINING_LOOP.md` → World view). Owner decision.
+- **A start sign marks 0 m (#848).** The reference has no start mark.
+  Instead an `ink` arrow signpost reading "Start" stands at 0 m in Training
+  and Simulate, so a creature that walked backwards (and shows 0 m) can be
+  seen to have gone the wrong way (`docs/TRAINING_LOOP.md` → Start sign).
+  Owner decision.
 - **Train setup has no profiles and few choices yet (#194, 0.13.0).** The
   reference's Train setup offers Shadows from 1 to 32, power checkbox and
   map row. Instead Shadows runs from 2 (with one, the only shadow is the
@@ -624,7 +629,7 @@ keep their size on screen and only get the space that is left:
 
 - `UiWorldView` lays its SubViewport out at its slot's size times the root
   factor, so the arena keeps its units per pixel. Its screen-size overlays (the
-  ruler, the best marker) apply the root factor again, so they follow the UI
+  ruler, the best marker, the start sign) apply the root factor again, so they follow the UI
   size. Build's world sets `ScalesWithUi` instead: its SubViewport keeps the
   slot's size and scales with the UI like the rest of the screen, and
   `CanvasView` handles the root factor for it. A creation thumbnail's world

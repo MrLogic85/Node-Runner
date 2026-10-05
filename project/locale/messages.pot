@@ -1065,3 +1065,8 @@ msgid "{1} forgets its {0} generation of training and keeps its body. Copy it fi
 msgid_plural "{1} forgets its {0} generations of training and keeps its body. Copy it first to keep the trained one."
 msgstr[0] ""
 msgstr[1] ""
+
+#: project/scenes/hosts/TrainingHost.tscn
+msgctxt "start line"
+msgid "Start"
+msgstr ""

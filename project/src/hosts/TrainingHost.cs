@@ -71,6 +71,8 @@ public partial class TrainingHost : Node, IRoutedScene
 
     private ArenaRuler Ruler => GetNode<ArenaRuler>("%Ruler");
     private ArenaBestMarker BestMarker => GetNode<ArenaBestMarker>("%BestMarker");
+
+    private ArenaStartSign StartSign => GetNode<ArenaStartSign>("%StartSign");
     private ArenaShadows Shadows => GetNode<ArenaShadows>("%Shadows");
     private ArenaCamera Camera => GetNode<ArenaCamera>("%Camera");
 
@@ -226,9 +228,12 @@ public partial class TrainingHost : Node, IRoutedScene
         BestMarker.Theme = _theme;
         Shadows.Theme = _theme;
         Ground.ZIndex = ArenaLayers.Ground;
-        // The marker is a child of the ground, so its layer is made absolute, not added to the ground's.
+        // The markers are children of the ground, so their layers are made absolute, not added to the ground's.
         BestMarker.ZAsRelative = false;
         BestMarker.ZIndex = ArenaLayers.BestMarker;
+        StartSign.Theme = _theme;
+        StartSign.ZAsRelative = false;
+        StartSign.ZIndex = ArenaLayers.StartSign;
         // The shadows' picture stands in for every shadow, so it takes their layer, under the followed
         // creature. Simulate runs no shadows, so its viewport is off there.
         Shadows.ZAsRelative = false;
@@ -267,6 +272,7 @@ public partial class TrainingHost : Node, IRoutedScene
 
         Ruler.StartX = Ruler.ToLocal(creature.Bounds.End).X;
         BestMarker.StartX = Ruler.StartX;
+        StartSign.StartX = Ruler.StartX;
         Camera.GroundY = GroundTopY;
 
         // Read every frame; OnFollowedShadowChanged retargets it when the followed shadow changes.
@@ -481,6 +487,7 @@ public partial class TrainingHost : Node, IRoutedScene
                 ? UiTextTranslation.Source(PartNames.Display(definition.Nodes, definition.Beams, definition.Sensors, definition.Pistons, definition.Springs, selected.Id))
                 : null;
             BestMarker.Faded = _selectedPartName is not null;
+            StartSign.Faded = BestMarker.Faded;
             if (_selectedPartName is null)
             {
                 _screen.ShowPartName(null, default, default);

@@ -10,6 +10,9 @@ public static class ArenaLayers
     /// <summary>The best distance marker, behind the ground and every creature.</summary>
     public const int BestMarker = -1;
 
+    /// <summary>The start sign (#848), with the best marker behind the ground and every creature.</summary>
+    public const int StartSign = BestMarker;
+
     /// <summary>The ground's fill and edge, and the ruler on it.</summary>
     public const int Ground = 0;
 
