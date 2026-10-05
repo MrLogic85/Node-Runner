@@ -179,6 +179,13 @@ reference would mislead someone working on that surface.
   4.0 m", while the card keeps the reference's plain "12 generations".
   The Training arena's best marker (and later Stats) shows the best ever.
   Owner decision.
+- **Card stats with units, one per row (#846, 0.13.0).** The reference
+  card shows distance, top speed and elevation on one row without units,
+  each value named only by its icon. Instead each gets its own row with
+  its unit ("14.5 m", "1.7 m/s", "0.0 m"), because play testers could not
+  tell the bare numbers apart. The `distance` icon is redrawn as `|->` (a
+  start line and an arrow to the right), `elevation` turned on its side,
+  so the two read as a pair. Owner decision.
 - **No Brain setup (#536).** The reference's Brain setup screen (hidden
   layers, neurons per layer) and its **Brain setup** item in the Build
   overflow menu (Navigation and Build top bar in `reference design/README.md`)

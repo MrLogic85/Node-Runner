@@ -5,7 +5,19 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 #: project/scenes/widgets/CreationCard.tscn
+msgid "1.2 m"
+msgstr ""
+
+#: project/scenes/widgets/CreationCard.tscn
 msgid "142 generations"
+msgstr ""
+
+#: project/scenes/widgets/CreationCard.tscn
+msgid "18.4 m"
+msgstr ""
+
+#: project/scenes/widgets/CreationCard.tscn
+msgid "3.1 m/s"
 msgstr ""
 
 #: libs/NodeRunner.App/Builders/CreatureBuilder.cs
@@ -931,6 +943,7 @@ msgstr ""
 msgid "{0} m"
 msgstr ""
 
+#: libs/NodeRunner.App/ViewModels/Metres.cs
 #: libs/NodeRunner.App/ViewModels/PartParameters.cs
 msgid "{0} m/s"
 msgstr ""
