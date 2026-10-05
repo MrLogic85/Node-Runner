@@ -38,6 +38,7 @@ public sealed class VisualTheme
         DangerFill = UiThemes.Color(theme, UiTokens.Color.Danger) with { A = UiThemes.Alpha(theme, UiTokens.Alpha.Soft) },
         JointRingWidth = UiSize.Stroke.Signal,
         JointInnerRingWidth = UiSize.Stroke.Hair,
+        SpringCoil = UiThemes.Color(theme, UiTokens.Color.Muted),
         MotorAccent = UiThemes.Color(theme, UiTokens.Color.Accent),
         Danger = UiThemes.Color(theme, UiTokens.Color.Danger),
         SensorFill = UiThemes.Color(theme, UiTokens.Color.Panel),
@@ -109,6 +110,9 @@ public sealed class VisualTheme
 
     /// <summary>The width of a plain joint's fine inner ring.</summary>
     public float JointInnerRingWidth { get; private init; }
+
+    /// <summary>The front of a Spring's coil (#807), over its damper's <see cref="SensorFill"/> body (see <c>SpringDrawing</c>).</summary>
+    public Color SpringCoil { get; private init; }
 
     public Color MotorAccent { get; private init; }
 

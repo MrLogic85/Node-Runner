@@ -123,8 +123,8 @@ public static class PistonDrawing
         }
     }
 
-    // A rounded rectangle from start to end, 2 × half thick, walked round its corners in order.
-    private static Vector2[] Cylinder(Vector2 start, Vector2 end, Vector2 along, Vector2 across, float half)
+    /// <summary>A rounded rectangle from start to end, 2 × half thick, walked round its corners in order.</summary>
+    internal static Vector2[] Cylinder(Vector2 start, Vector2 end, Vector2 along, Vector2 across, float half)
     {
         var middle = (start + end) / 2;
         var halfLength = start.DistanceTo(end) / 2;

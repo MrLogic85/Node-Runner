@@ -9,6 +9,7 @@ public partial class SpringPart : PartVisual
     private Vector2 _b;
     private float _radiusA;
     private float _radiusB;
+    private float _built;
     private bool _danger;
     private bool _haloA;
     private bool _haloB;
@@ -42,7 +43,14 @@ public partial class SpringPart : PartVisual
         set => Change(ref _radiusB, value);
     }
 
-    /// <summary>Too short to train (#593): drawn in <c>danger</c> instead of <c>line-strong</c>.</summary>
+    /// <summary>The length it was built with, centre to centre, which keeps its damper body's length as it moves (#807).</summary>
+    public float Built
+    {
+        get => _built;
+        set => Change(ref _built, value);
+    }
+
+    /// <summary>Too short to train (#593): drawn in <c>danger</c>.</summary>
     public bool Danger
     {
         get => _danger;
@@ -64,5 +72,5 @@ public partial class SpringPart : PartVisual
     }
 
     public override void _Draw() =>
-        SpringDrawing.Draw(this, Transform2D.Identity, Theme, A, B, RadiusA, RadiusB, Danger ? Theme.Danger : Theme.Beam, Selected, HaloA, HaloB);
+        SpringDrawing.Draw(this, Transform2D.Identity, Theme, A, B, RadiusA, RadiusB, Built, Danger, Selected, HaloA, HaloB);
 }

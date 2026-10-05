@@ -125,6 +125,7 @@ public partial class CreatureParts : Node2D
             var part = PartFor(_springs, spring.Id);
             part.A = ToGodot(nodeA.Position);
             part.B = ToGodot(nodeB.Position);
+            part.Built = part.A.DistanceTo(part.B);
             part.RadiusA = (float)nodeA.Radius;
             part.RadiusB = (float)nodeB.Radius;
             part.Danger = marks.ShowsTooShort && CreatureReadiness.IsTooShort(nodeA, nodeB);
