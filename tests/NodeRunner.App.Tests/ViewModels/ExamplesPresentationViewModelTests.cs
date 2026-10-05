@@ -42,5 +42,5 @@ public sealed class ExamplesPresentationViewModelTests
             Guid.NewGuid(),
             UiText.Plain("Walker"),
             UiText.Plain("Servos in the knees: the basic walk."),
-            CreationExamples.CreateWormCreature());
+            CreationExamples.CreateWalkerCreature());
 }

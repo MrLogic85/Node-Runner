@@ -28,9 +28,9 @@ public sealed class TrainingHeaderPresentationTests
     }
 
     [Fact]
-    public void ForWorm_NamesTheWormExample() =>
-        TrainingHeaderPresentation.ForWorm(TrainingRunMode.Train, MapIds.Flat).ShouldBe(new TrainingHeaderPresentation(
-            CreationExamples.Worm.Name,
+    public void ForWalker_NamesTheWalkerExample() =>
+        TrainingHeaderPresentation.ForWalker(TrainingRunMode.Train, MapIds.Flat).ShouldBe(new TrainingHeaderPresentation(
+            CreationExamples.Walker.Name,
             UiText.Format("Training · {0}", UiText.Plain("Flat ground")),
             ShowsGeneration: true));
 

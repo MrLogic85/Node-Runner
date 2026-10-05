@@ -689,7 +689,7 @@ how to add a language:
   as written, while a default name such as "Node 2" is translated (#757).
   The part name field shows the translated default as its text, so leaving
   it unchanged keeps the default instead of saving it as an own name. A
-  creation's default name, such as "Untitled Creation" or "Copy of Worm", is
+  creation's default name, such as "Untitled Creation" or "Copy of Walker", is
   saved in the language the player has when it is made and is their own
   text from then on (#759).
 - **Uppercase** is display only and comes after translating, so the

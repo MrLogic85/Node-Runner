@@ -95,8 +95,8 @@ transition to keep in step with it.
   - `IsValid` — false when physics blew up (#650): a sample was NaN or
     infinite, or the centre, the front or the lowest point moved further in one tick than
     `TrialMeasurement.MaxPlausibleSpeed` (10 000 units/s) allows. Pistons
-    move at most their Max speed (200 units/s by default) and the Worm
-    crawls well under that, so only a blow-up gets near the limit. Once invalid, the trial stops measuring.
+    move at most their Max speed (200 units/s by default) and creatures
+    move well under that, so only a blow-up gets near the limit. Once invalid, the trial stops measuring.
   - `Fitness` — what the GA scores: `Distance`, or negative infinity for an
     invalid trial so it ranks below every valid one. `Evolver` logs each
     invalid trial with its generation and candidate. Invalid results never
@@ -420,7 +420,7 @@ component READMEs under `reference design/components/` guide its presentation.
     opened right after Training never shows a stale lock or summary (#370).
   - Training runs until the player leaves. Pause belongs to the scene
     and starts running each time it opens.
-  - Run on its own (F6) the scene trains the built-in worm without saving.
+  - Run on its own (F6) the scene trains the Walker example without saving.
 - The Training screen's top bar shows the creation's name, the status
   ("Training · Flat ground") and Brain and Stats buttons; unlock progress
   is not shown here (#488). Beside the arena, a `UiSidePanel` titled

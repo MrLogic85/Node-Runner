@@ -21,34 +21,27 @@ public sealed class CreationExamplesTests
     }
 
     [Fact]
-    public void Worm_UsesOnlyStartingComponents()
+    public void Walker_IsReadyToTrainWithTwoPistonsInsideTheBuildArea()
     {
-        var worm = CreationExamples.All.Single(example => example.Id == CreationExamples.WormId);
+        var walker = CreationExamples.All.ShouldHaveSingleItem();
 
-        worm.ShouldBeSameAs(CreationExamples.Worm);
-        worm.Name.ShouldBe(UiText.Plain("Worm"));
-        worm.Creature.Sensors.ShouldBe(
+        walker.ShouldBeSameAs(CreationExamples.Walker);
+        walker.Id.ShouldBe(CreationExamples.WalkerId);
+        walker.Name.ShouldBe(UiText.Plain("Walker"));
+        walker.Creature.Nodes.Select(node => node.Position).ShouldBe(
         [
-            new NodeRunner.Domain.SensorDef(8, 5, NodeRunner.Domain.SensorKind.Accelerometer),
-            new NodeRunner.Domain.SensorDef(9, 7, NodeRunner.Domain.SensorKind.Camera, aim: -Math.PI / 4),
+            new NodeRunner.Domain.Vector2D(0, -120),
+            new NodeRunner.Domain.Vector2D(200, -120),
+            new NodeRunner.Domain.Vector2D(-40, 0),
+            new NodeRunner.Domain.Vector2D(240, 0),
         ]);
-        worm.Creature.Pistons.ShouldBe([new NodeRunner.Domain.PistonDef(10, 2, 4)]);
-        NodeRunner.App.Lifecycle.CreatureReadiness.CanTrain(worm.Creature).ShouldBeTrue();
-        worm.Training.ShouldBeNull();
-    }
-
-    [Fact]
-    public void Frog_IsReadyToTrainWithThreePistonsInsideTheBuildArea()
-    {
-        var frog = CreationExamples.All.Single(example => example.Id == CreationExamples.FrogId);
-
-        frog.ShouldBeSameAs(CreationExamples.Frog);
-        frog.Name.ShouldBe(UiText.Plain("Frog"));
-        frog.Creature.Pistons.Count.ShouldBe(3);
-        frog.Creature.Sensors.ShouldBe([new NodeRunner.Domain.SensorDef(13, 7, NodeRunner.Domain.SensorKind.Accelerometer)]);
-        frog.Creature.Nodes.ShouldAllBe(node => BuildViewModel.BuildArea.Contains(node.Position));
-        NodeRunner.App.Lifecycle.CreatureReadiness.CanTrain(frog.Creature).ShouldBeTrue();
-        frog.Training.ShouldBeNull();
+        walker.Creature.Beams.ShouldBe([new NodeRunner.Domain.BeamDef(5, 1, 2), new NodeRunner.Domain.BeamDef(6, 1, 3), new NodeRunner.Domain.BeamDef(7, 2, 4)]);
+        walker.Creature.Pistons.ShouldBe([new NodeRunner.Domain.PistonDef(9, 2, 3), new NodeRunner.Domain.PistonDef(10, 1, 4)]);
+        walker.Creature.Sensors.ShouldBe([new NodeRunner.Domain.SensorDef(8, 5, NodeRunner.Domain.SensorKind.Accelerometer)]);
+        walker.Creature.Springs.ShouldBeEmpty();
+        walker.Creature.Nodes.ShouldAllBe(node => BuildViewModel.BuildArea.Contains(node.Position));
+        NodeRunner.App.Lifecycle.CreatureReadiness.CanTrain(walker.Creature).ShouldBeTrue();
+        walker.Training.ShouldBeNull();
     }
 
     [Fact]

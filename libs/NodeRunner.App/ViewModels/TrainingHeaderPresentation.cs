@@ -15,9 +15,9 @@ public sealed record TrainingHeaderPresentation(UiText CreationName, UiText Stat
         return For(UiText.AsWritten(creationName), mode, mapId);
     }
 
-    /// <summary>The bar for the Worm example, which Training runs when it opens without a creation.</summary>
-    public static TrainingHeaderPresentation ForWorm(TrainingRunMode mode, string mapId) =>
-        For(CreationExamples.Worm.Name, mode, mapId);
+    /// <summary>The bar for the Walker example, which Training runs when it opens without a creation.</summary>
+    public static TrainingHeaderPresentation ForWalker(TrainingRunMode mode, string mapId) =>
+        For(CreationExamples.Walker.Name, mode, mapId);
 
     private static TrainingHeaderPresentation For(UiText name, TrainingRunMode mode, string mapId)
     {
