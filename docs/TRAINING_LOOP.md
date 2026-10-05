@@ -414,9 +414,9 @@ component READMEs under `reference design/components/` guide its presentation.
     arrow sign pointing the way to go, on a post down to the ground edge. A
     creature that walks backwards ends below 0 m, and its distance shows
     0 m (see "Trial" → `FrontDistance`); the sign shows where that 0 is. It is drawn
-    behind every creature, keeps its screen size at any zoom and fades with
-    the best marker. Both share `ArenaMark`'s theme, fade and screen-size
-    logic.
+    behind every creature and fades with the best marker. Unlike the best
+    marker it is sized in the world, half a metre tall, so it zooms with
+    the creatures (#882). Both share `ArenaMark`'s theme and fade logic.
   - **World view.** The world renders in its own `SubViewport` through
     `UiWorldView`, so the UI layout and scale never touch physics distances
     or gravity. The viewport renders at the screen's pixel density to keep
