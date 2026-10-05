@@ -1,4 +1,5 @@
 using NodeRunner.App.Navigation;
+using NodeRunner.App.Services;
 using NodeRunner.Domain;
 
 namespace NodeRunner.App.ViewModels;
@@ -10,6 +11,9 @@ namespace NodeRunner.App.ViewModels;
 /// value the scale does not hold.
 /// </summary>
 public sealed record SettingSlider(UiText Label, UiText Readout, double? Position, double Step, bool Disabled = false);
+
+/// <summary>One line under a setting: a quiet note, or a warning shown with the warn icon.</summary>
+public sealed record SettingNote(UiText Text, bool IsWarning);
 
 /// <summary>
 /// Train setup (#194), between Build and Training: Train or Simulate, and the Shadows and Run length
@@ -35,6 +39,7 @@ public sealed class TrainSetupPresentationViewModel
             ? UiText.Counted("{0} generation so far", "{0} generations so far", training.Generation)
             : UiText.Plain("Not trained yet");
         Settings = creation.TrainSettings ?? TrainSettingsDef.Default;
+        ShadowsBudget = ShadowsBudget.For(creation.Creature);
         CanSimulate = creation.Training is not null;
         HasPoweredParts = BrainPorts.Of(creation.Creature).Outputs.Count > 0;
     }
@@ -52,6 +57,9 @@ public sealed class TrainSetupPresentationViewModel
     public TrainSettingsDef Settings { get; private set; }
 
     public TrainingRunMode Mode { get; private set; }
+
+    /// <summary>How many shadows this creature can race smoothly, and before slow motion (#318).</summary>
+    public ShadowsBudget ShadowsBudget { get; }
 
     /// <summary>
     /// Whether Simulate can be chosen: only a trained Creation has a brain to play. Without it there
@@ -79,6 +87,19 @@ public sealed class TrainSetupPresentationViewModel
             UiText.Number(Settings.Shadows),
             ShadowsRange.Position(Settings.Shadows),
             ShadowsRange.PositionStep);
+
+    /// <summary>
+    /// The line under the Shadows slider (#318): how many should run smoothly, or a warning above
+    /// that. It never blocks Start or changes the value. Simulate has no line.
+    /// </summary>
+    public SettingNote? ShadowsNote => Mode == TrainingRunMode.Simulate
+        ? null
+        : ShadowsBudget.LoadOf(Settings.Shadows) switch
+        {
+            ShadowsLoad.TooMany => new(UiText.Plain("Too many for most phones: training may run in slow motion."), IsWarning: true),
+            ShadowsLoad.Caution => new(UiText.Format("This phone may stutter above {0}.", ShadowsBudget.SmoothLimit), IsWarning: true),
+            _ => new(UiText.Format("More shadows try more brains at once. Up to {0} should run smoothly.", ShadowsBudget.SmoothLimit), IsWarning: false),
+        };
 
     public SettingSlider RunLength => Mode == TrainingRunMode.Simulate
         ? new(UiText.Plain("Run length"), UiText.Plain("Until you leave"), null, RunLengthRange.PositionStep, Disabled: true)
