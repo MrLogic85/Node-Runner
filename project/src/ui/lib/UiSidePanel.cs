@@ -6,9 +6,11 @@ namespace NodeRunner.Ui.Lib;
 /// Reference side panel (<c>ComponentToolbars</c> "SideBar"): the fixed panel on the right,
 /// <see cref="UiLayout.SidePanelWidth"/> wide, with a divider down its left edge. Its own header
 /// row holds an optional icon, an optional title and a bare chevron; the screen authors the
-/// content below it in <c>%SidePanelContent</c> and decides what the panel shows. Tapping the
-/// chevron collapses it to a <see cref="UiLayout.SidePanelTabWidth"/> tab with a left chevron
-/// and the title on its side; tapping the tab expands it again.
+/// content below it in <c>%SidePanelContent</c> and decides what the panel shows. That content
+/// scrolls under the header with a hidden bar when it is taller than the panel; the padding sits
+/// inside the scroll so it clips at the panel's edges. Tapping the chevron collapses it to a
+/// <see cref="UiLayout.SidePanelTabWidth"/> tab with a left chevron and the title on its side;
+/// tapping the tab expands it again.
 /// </summary>
 [Tool]
 [GlobalClass]
@@ -88,6 +90,9 @@ public partial class UiSidePanel : MarginContainer
             EmitSignal(SignalName.CollapsedChanged, value);
         }
     }
+
+    /// <summary>Shows the top of the content; call it when the screen swaps what the panel shows.</summary>
+    public void ScrollContentToTop() => GetNode<ScrollContainer>("%SidePanelScroll").ScrollVertical = 0;
 
     private float TargetWidth => Collapsed ? UiLayout.SidePanelTabWidth : UiLayout.SidePanelWidth;
 

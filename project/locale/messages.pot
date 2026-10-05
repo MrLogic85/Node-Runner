@@ -511,6 +511,10 @@ msgstr ""
 msgid "Reset training?"
 msgstr ""
 
+#: libs/NodeRunner.App/ViewModels/PartParameters.cs
+msgid "Rise time"
+msgstr ""
+
 #: project/scenes/screens/BuildScreen.tscn
 msgid "Rotate"
 msgstr ""
@@ -870,6 +874,10 @@ msgstr ""
 msgid "{0} N/m"
 msgstr ""
 
+#: libs/NodeRunner.App/ViewModels/PartParameters.cs
+msgid "{0} N·s/m"
+msgstr ""
+
 #: libs/NodeRunner.App/ViewModels/CreationCardPresentation.cs
 msgid "{0} beam"
 msgid_plural "{0} beams"
@@ -967,6 +975,7 @@ msgid_plural "{0} readings"
 msgstr[0] ""
 msgstr[1] ""
 
+#: libs/NodeRunner.App/ViewModels/PartParameters.cs
 #: libs/NodeRunner.App/ViewModels/TrainSetupPresentationViewModel.cs
 msgid "{0} s"
 msgstr ""
@@ -1044,7 +1053,15 @@ msgid "{0}–{1} N/m"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartParameters.cs
+msgid "{0}–{1} N·s/m"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/PartParameters.cs
 msgid "{0}–{1} m/s"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/PartParameters.cs
+msgid "{0}–{1} s"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs

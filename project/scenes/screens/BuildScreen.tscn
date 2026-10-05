@@ -277,38 +277,38 @@ unique_name_in_owner = true
 layout_mode = 2
 Title = "Parts"
 
-[node name="SidePanelContent" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded" index="1"]
+[node name="SidePanelContent" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset" index="0"]
 theme_override_constants/separation = 8
 
-[node name="PartsTray" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent" index="0"]
+[node name="PartsTray" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent" index="0"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_constants/separation = 8
 
-[node name="PartTabs" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/PartsTray"]
+[node name="PartTabs" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent/PartsTray"]
 unique_name_in_owner = true
 layout_mode = 2
 script = ExtResource("18_icon_tabs")
 Icons = Array[int]([49, 46, 40])
 
-[node name="PartScroll" type="ScrollContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/PartsTray"]
+[node name="PartScroll" type="ScrollContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent/PartsTray"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 3
 horizontal_scroll_mode = 0
 vertical_scroll_mode = 3
 
-[node name="PartList" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/PartsTray/PartScroll"]
+[node name="PartList" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent/PartsTray/PartScroll"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 4
 
-[node name="PartGroupHeader" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/PartsTray/PartScroll/PartList"]
+[node name="PartGroupHeader" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent/PartsTray/PartScroll/PartList"]
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="PartGroupName" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/PartsTray/PartScroll/PartList/PartGroupHeader"]
+[node name="PartGroupName" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent/PartsTray/PartScroll/PartList/PartGroupHeader"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
@@ -317,7 +317,7 @@ script = ExtResource("12_label")
 TextStyle = 12
 TextColor = 8
 
-[node name="PartLockedIcon" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/PartsTray/PartScroll/PartList/PartGroupHeader"]
+[node name="PartLockedIcon" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent/PartsTray/PartScroll/PartList/PartGroupHeader"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 4
@@ -326,7 +326,7 @@ IconId = 15
 IconSize = 0
 Color = 8
 
-[node name="PartLockedNote" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/PartsTray/PartScroll/PartList/PartGroupHeader"]
+[node name="PartLockedNote" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent/PartsTray/PartScroll/PartList/PartGroupHeader"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "Coming later"
@@ -334,12 +334,12 @@ script = ExtResource("12_label")
 TextStyle = 9
 TextColor = 8
 
-[node name="PartRows" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/PartsTray/PartScroll/PartList"]
+[node name="PartRows" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent/PartsTray/PartScroll/PartList"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="PartHelp" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/PartsTray/PartScroll/PartList"]
+[node name="PartHelp" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent/PartsTray/PartScroll/PartList"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "Drag onto a joint. A joint holds one part."
@@ -348,13 +348,13 @@ script = ExtResource("12_label")
 TextStyle = 9
 TextColor = 8
 
-[node name="SavedCreation" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent" index="1"]
+[node name="SavedCreation" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent" index="1"]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="SavedTitle" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/SavedCreation"]
+[node name="SavedTitle" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent/SavedCreation"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "Not trained yet"
@@ -362,7 +362,7 @@ autowrap_mode = 3
 script = ExtResource("12_label")
 TextStyle = 5
 
-[node name="SavedLatest" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/SavedCreation"]
+[node name="SavedLatest" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent/SavedCreation"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "Latest distance —"
@@ -371,7 +371,7 @@ script = ExtResource("12_label")
 TextStyle = 6
 TextColor = 9
 
-[node name="SavedBody" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/SavedCreation"]
+[node name="SavedBody" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent/SavedCreation"]
 unique_name_in_owner = true
 layout_mode = 2
 autowrap_mode = 3
@@ -379,40 +379,40 @@ script = ExtResource("12_label")
 TextStyle = 9
 TextColor = 8
 
-[node name="PartSettings" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent" index="2"]
+[node name="PartSettings" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent" index="2"]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="PartRows" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/PartSettings"]
+[node name="PartRows" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent/PartSettings"]
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="PartName" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/PartSettings/PartRows"]
+[node name="PartName" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent/PartSettings/PartRows"]
 unique_name_in_owner = true
 layout_mode = 2
 script = ExtResource("4_text_field")
 LabelText = "Name"
 
-[node name="PartParameters" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/PartSettings/PartRows"]
+[node name="PartParameters" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent/PartSettings/PartRows"]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="PartConnections" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/PartSettings/PartRows"]
+[node name="PartConnections" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent/PartSettings/PartRows"]
 layout_mode = 2
 theme_override_constants/separation = 0
 
-[node name="PartConnectionsLabel" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/PartSettings/PartRows/PartConnections"]
+[node name="PartConnectionsLabel" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent/PartSettings/PartRows/PartConnections"]
 unique_name_in_owner = true
 layout_mode = 2
 script = ExtResource("12_label")
 TextStyle = 12
 TextColor = 8
 
-[node name="PartConnectionsValue" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/PartSettings/PartRows/PartConnections"]
+[node name="PartConnectionsValue" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent/PartSettings/PartRows/PartConnections"]
 unique_name_in_owner = true
 layout_mode = 2
 autowrap_mode = 3
@@ -420,7 +420,7 @@ script = ExtResource("12_label")
 TextStyle = 4
 TextColor = 7
 
-[node name="PartNote" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/PartSettings/PartRows"]
+[node name="PartNote" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent/PartSettings/PartRows"]
 unique_name_in_owner = true
 layout_mode = 2
 autowrap_mode = 3
@@ -428,10 +428,10 @@ script = ExtResource("12_label")
 TextStyle = 9
 TextColor = 8
 
-[node name="PartActions" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/PartSettings"]
+[node name="PartActions" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent/PartSettings"]
 layout_mode = 2
 
-[node name="PartDelete" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/PartSettings/PartActions"]
+[node name="PartDelete" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent/PartSettings/PartActions"]
 unique_name_in_owner = true
 layout_mode = 2
 mouse_filter = 1
@@ -442,23 +442,23 @@ Kind = 2
 ContentLayout = 2
 HoldToActivate = true
 
-[node name="Selection" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent" index="3"]
+[node name="Selection" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent" index="3"]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="SelectionSettings" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/Selection"]
+[node name="SelectionSettings" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent/Selection"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="SelectionParameters" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/Selection/SelectionSettings"]
+[node name="SelectionParameters" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent/Selection/SelectionSettings"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="SelectionSettingsNote" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/Selection/SelectionSettings"]
+[node name="SelectionSettingsNote" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent/Selection/SelectionSettings"]
 unique_name_in_owner = true
 layout_mode = 2
 autowrap_mode = 3
@@ -466,7 +466,7 @@ script = ExtResource("12_label")
 TextStyle = 9
 TextColor = 8
 
-[node name="SelectionEmptyNote" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/Selection"]
+[node name="SelectionEmptyNote" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent/Selection"]
 unique_name_in_owner = true
 layout_mode = 2
 autowrap_mode = 3
@@ -474,38 +474,38 @@ script = ExtResource("12_label")
 TextStyle = 9
 TextColor = 8
 
-[node name="SelectionRows" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/Selection"]
+[node name="SelectionRows" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent/Selection"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="SelectionMove" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/Selection/SelectionRows"]
+[node name="SelectionMove" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent/Selection/SelectionRows"]
 layout_mode = 2
 script = ExtResource("19_info_row")
 IconId = 20
 Title = "Move"
 Help = "Drag inside the box"
 
-[node name="SelectionRotate" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/Selection/SelectionRows"]
+[node name="SelectionRotate" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent/Selection/SelectionRows"]
 layout_mode = 2
 script = ExtResource("19_info_row")
 IconId = 27
 Title = "Rotate"
 Help = "Turn it around its middle"
 
-[node name="SelectionScale" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/Selection/SelectionRows"]
+[node name="SelectionScale" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent/Selection/SelectionRows"]
 layout_mode = 2
 script = ExtResource("19_info_row")
 IconId = 28
 Title = "Scale"
 Help = "Drag the corner: closer together or further apart"
 
-[node name="SelectionActions" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/Selection"]
+[node name="SelectionActions" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent/Selection"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="SelectionDelete" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/Selection/SelectionActions"]
+[node name="SelectionDelete" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent/Selection/SelectionActions"]
 unique_name_in_owner = true
 layout_mode = 2
 mouse_filter = 1
@@ -516,7 +516,7 @@ Kind = 2
 ContentLayout = 2
 HoldToActivate = true
 
-[node name="SelectionDeleteNote" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/Selection/SelectionActions"]
+[node name="SelectionDeleteNote" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent/Selection/SelectionActions"]
 unique_name_in_owner = true
 layout_mode = 2
 autowrap_mode = 3
@@ -524,13 +524,13 @@ script = ExtResource("12_label")
 TextStyle = 9
 TextColor = 8
 
-[node name="JointHelp" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent" index="4"]
+[node name="JointHelp" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent" index="4"]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="JointHelpAdd" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/JointHelp"]
+[node name="JointHelpAdd" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent/JointHelp"]
 layout_mode = 2
 script = ExtResource("19_info_row")
 IconId = 14
@@ -538,13 +538,13 @@ Title = "Tap empty space"
 Help = "Adds a joint."
 ShowHandle = false
 
-[node name="SelectHelp" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent" index="5"]
+[node name="SelectHelp" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent" index="5"]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="SelectHelpBox" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/SelectHelp"]
+[node name="SelectHelpBox" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent/SelectHelp"]
 layout_mode = 2
 script = ExtResource("19_info_row")
 IconId = 29
@@ -552,7 +552,7 @@ Title = "Drag a box"
 Help = "Selects the parts inside."
 ShowHandle = false
 
-[node name="SelectHelpTap" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/SelectHelp"]
+[node name="SelectHelpTap" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent/SelectHelp"]
 layout_mode = 2
 script = ExtResource("19_info_row")
 IconId = 47
@@ -560,7 +560,7 @@ Title = "Tap a part"
 Help = "Adds or removes it."
 ShowHandle = false
 
-[node name="SelectHelpHandles" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/SelectHelp"]
+[node name="SelectHelpHandles" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent/SelectHelp"]
 layout_mode = 2
 script = ExtResource("19_info_row")
 IconId = 20
@@ -568,18 +568,18 @@ Title = "Handles"
 Help = "Move, rotate or scale a group."
 ShowHandle = false
 
-[node name="PanelSpacer" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent" index="6"]
+[node name="PanelSpacer" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent" index="6"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 3
 mouse_filter = 2
 
-[node name="Readiness" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent" index="7"]
+[node name="Readiness" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent" index="7"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="ReadinessIcon" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/Readiness"]
+[node name="ReadinessIcon" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent/Readiness"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 0
@@ -589,7 +589,7 @@ IconId = 37
 IconSize = 0
 Color = 12
 
-[node name="ReadinessText" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelContent/Readiness"]
+[node name="ReadinessText" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent/Readiness"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3

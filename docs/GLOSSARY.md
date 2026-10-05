@@ -95,8 +95,8 @@ Long-form descriptions and the sensor/model contract live in
   (`SensorDef`, `SensorKind`); one sensor per beam, at its midpoint.
   Not the brain. See: `docs/CREATURE_MODEL.md`.
 - **Spring** — A passive link between two nodes (#453) that pulls back
-  toward its drawn length with its Stiffness; its Damping, a share of the
-  damping that just stops a bounce, calms it. No brain ports. See:
+  toward its drawn length with its Stiffness; its Damping (N·s/m) brakes
+  the speed between its nodes. No brain ports. See:
   `docs/CREATURE_MODEL.md`.
 - **Stroke** — How far a Piston moves each way from its built length, as a
   share of that length: ±30% means it reaches 70%…130%. Its end stops hold

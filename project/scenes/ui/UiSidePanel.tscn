@@ -30,10 +30,7 @@ anchors_preset = 9
 anchor_bottom = 1.0
 offset_right = 176.0
 grow_vertical = 2
-theme_override_constants/margin_left = 12
 theme_override_constants/margin_top = 8
-theme_override_constants/margin_right = 12
-theme_override_constants/margin_bottom = 8
 
 [node name="SidePanelExpanded" type="VBoxContainer" parent="SidePanelDrawer/SidePanelPadding" unique_id=1161470009]
 unique_name_in_owner = true
@@ -43,7 +40,8 @@ theme_override_constants/separation = 4
 [node name="SidePanelHeaderInset" type="MarginContainer" parent="SidePanelDrawer/SidePanelPadding/SidePanelExpanded" unique_id=1468473977]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_constants/margin_right = -8
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_right = 4
 
 [node name="SidePanelHeader" type="HBoxContainer" parent="SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelHeaderInset" unique_id=256454402]
 unique_name_in_owner = true
@@ -75,7 +73,23 @@ layout_mode = 2
 size_flags_horizontal = 4
 size_flags_vertical = 4
 
-[node name="SidePanelContent" type="VBoxContainer" parent="SidePanelDrawer/SidePanelPadding/SidePanelExpanded" unique_id=398215167]
+[node name="SidePanelScroll" type="ScrollContainer" parent="SidePanelDrawer/SidePanelPadding/SidePanelExpanded" unique_id=1730518846]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+vertical_scroll_mode = 3
+
+[node name="SidePanelContentInset" type="MarginContainer" parent="SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll" unique_id=905137462]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 8
+
+[node name="SidePanelContent" type="VBoxContainer" parent="SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset" unique_id=398215167]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 3

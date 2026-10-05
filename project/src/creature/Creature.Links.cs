@@ -18,7 +18,7 @@ public partial class Creature
             var piston = definition.Pistons[i];
             var indexA = definition.NodeIndexOf(piston.NodeA);
             var indexB = definition.NodeIndexOf(piston.NodeB);
-            _pistons[i] = new PistonLink(piston, _nodeBodies[indexA], _nodeBodies[indexB], _nodeLoads[indexA], _nodeLoads[indexB]);
+            _pistons[i] = new PistonLink(piston, _nodeBodies[indexA], _nodeBodies[indexB]);
             CreateEndStops(i);
             var visual = new PistonVisual
             {
@@ -88,8 +88,8 @@ public partial class Creature
     }
 
     // A Spring is Godot's DampedSpringJoint2D between its two node bodies (#453): it pulls them
-    // toward their built distance with its Stiffness and damps the speed between them with
-    // Spring.DampingCoefficient. It has no body or collider of its own and no brain ports; its
+    // toward their built distance with its Stiffness and damps the speed between them with its
+    // Damping coefficient, whatever they weigh (#801). It has no body or collider of its own and no brain ports; its
     // picture is a child of the creature, on the Links layer over the beams.
     private void CreateSprings(CreatureDef definition)
     {
@@ -97,7 +97,7 @@ public partial class Creature
 
         // Godot's damped spring (godot_joints_2d.cpp, checked in 4.7) damps on every second solver
         // iteration, not once per step, so it would damp several times harder than its coefficient.
-        // Headless, at 16 iterations, dividing by the passes gave the overshoot of the share asked for.
+        // Dividing by the passes makes it damp as its coefficient asks (measured headless at 16 iterations).
         var dampingPasses = (ProjectSettings.GetSetting("physics/2d/solver/solver_iterations").AsInt32() + 1) / 2;
         for (var i = 0; i < _springVisuals.Length; i++)
         {
@@ -116,7 +116,7 @@ public partial class Creature
                 Length = built,
                 RestLength = built,
                 Stiffness = (float)spring.Stiffness,
-                Damping = (float)(Mechanics.Spring.DampingCoefficient(spring, _nodeLoads[indexA], _nodeLoads[indexB]) / dampingPasses),
+                Damping = (float)(spring.Damping / dampingPasses),
             };
             AddChild(joint);
             joint.NodeA = joint.GetPathTo(nodeA);

@@ -162,10 +162,12 @@ reference would mislead someone working on that surface.
   padlock and the Training panel already say the body is locked.
 - **Piston settings are sliders (#451).** The reference's Piston panel
   lists what it joins ("Between"), its power draw and its weight. Instead
-  its Part settings show three `UiSlider`s, Max strength, Stroke and Max
-  speed, and leave those rows out: a Piston's weight is fixed, not a
+  its Part settings show four `UiSlider`s, Max strength, Stroke, Max
+  speed and Rise time (#801), and leave those rows out: a Piston's weight is fixed, not a
   setting (#731), power comes in 0.18.0, and the canvas already shows its two joints. Owner decision: every
   setting is editable, and like a Camera's aim a locked creation keeps them.
+  Four sliders and Delete are taller than the panel at Max UI size; the
+  side panel's content scrolls (see `UiSidePanel`).
 - **Differing values on a slider (#704).** The reference has none. Several
   selected Pistons share their sliders; where their values differ the readout
   shows `low–high` and the span has Marker ends and no thumb. A touch sets
@@ -1036,6 +1038,11 @@ stops only where the value does (#711). The step comes from the value's
 `SettingRange` through `SettingSlider.Step` or `ParameterSlider.Step`; never
 round the value alone, or the thumb and the readout disagree and the thumb
 jumps while dragged.
+A setting whose useful values are uneven, like Rise time's 0.1, 0.2, 0.5 and
+1 s, uses `SettingRange.Of(stops)` instead (#801): the stops sit evenly along
+the track whatever the gaps between them, so the short ones are as easy to
+pick as the long ones, and the thumb snaps only to them. They show no step
+labels, like every other Build slider; the readout shows the value.
 
 Inspector facts and Power share `UiValueRow`: a label on the left and a readout
 on the right, optionally prefixed by a small icon. Power is a value-row
@@ -1401,6 +1408,13 @@ separations and slot sizes live in `UiSidePanel.tscn` (#335). The header
 reaches past the padding on the right so the chevron's icon lines up with the
 content's right edge. The screen authors
 the content below it in `%SidePanelContent` and decides what the panel shows.
+That content scrolls under the fixed header with a hidden bar
+(`%SidePanelScroll`, #801) when it is taller than the panel, as a Piston's
+settings are at Max UI size. The scroll reaches the panel's sides and bottom
+and the padding sits inside it, so content is clipped at the panel's edges
+rather than short of them, and a slider thumb's glow is not cut. A screen
+part that should fill the rest of the panel (the Parts tray, a spacer) still
+does, since the content fills the scroll while it fits.
 Tapping the chevron sets `Collapsed`: the panel shrinks to a 28px tab
 (`UiLayout.SidePanelTabWidth`; the reference hardcodes 28px, it is not a
 token) holding a left chevron (the icon set names it `back`) and the title

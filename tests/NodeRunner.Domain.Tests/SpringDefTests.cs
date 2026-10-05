@@ -29,15 +29,15 @@ public sealed class SpringDefTests
     [InlineData(double.NaN, 0.3)]
     [InlineData(double.PositiveInfinity, 0.3)]
     [InlineData(400, -0.01)]
-    [InlineData(400, 1.01)]
     [InlineData(400, double.NaN)]
+    [InlineData(400, double.PositiveInfinity)]
     public void Constructor_WithAnOutOfRangeSetting_Throws(double stiffness, double damping) =>
         Should.Throw<ArgumentOutOfRangeException>(() => new SpringDef(5, 1, 2, stiffness: stiffness, damping: damping));
 
     [Theory]
     [InlineData(0)]
-    [InlineData(1)]
-    public void Constructor_AcceptsNoDampingAndCriticalDamping(double damping) =>
+    [InlineData(250)]
+    public void Constructor_AcceptsNoDampingAndAnyPositiveCoefficient(double damping) =>
         new SpringDef(5, 1, 2, damping: damping).Damping.ShouldBe(damping);
 
     [Fact]

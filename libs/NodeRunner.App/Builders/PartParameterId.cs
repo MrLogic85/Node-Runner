@@ -6,6 +6,7 @@ public enum PartParameterId
     Strength,
     Stroke,
     MaxSpeed,
+    RiseTime,
     Aim,
     Stiffness,
     Damping,
