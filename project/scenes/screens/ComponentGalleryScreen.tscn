@@ -31,6 +31,7 @@
 [ext_resource type="Script" uid="uid://c6loxvqr7tfvr" path="res://src/ui/lib/UiInfoRow.cs" id="27_info_row"]
 [ext_resource type="PackedScene" uid="uid://gydkh1xys4yo" path="res://scenes/ui/UiToolbar.tscn" id="28_toolbar"]
 [ext_resource type="Script" uid="uid://bjt8et7kcs50x" path="res://src/ui/lib/UiCardActions.cs" id="29_card_actions"]
+[ext_resource type="Script" uid="uid://bmd4r656osleb" path="res://src/ui/lib/UiSignpost.cs" id="50_signpost"]
 
 [sub_resource type="Resource" id="Resource_theme_neon"]
 script = ExtResource("5_theme_segment")
@@ -998,6 +999,59 @@ mouse_filter = 2
 script = ExtResource("26_callout")
 Text = "Target · Front shin"
 Kind = 2
+
+[node name="Signpost" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content"]
+layout_mode = 2
+
+[node name="Heading" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Signpost"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Title" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Signpost/Heading"]
+layout_mode = 2
+size_flags_vertical = 8
+text = "Signpost"
+script = ExtResource("2_cpfof")
+TextStyle = 12
+
+[node name="Description" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Signpost/Heading"]
+custom_minimum_size = Vector2(120, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 8
+text = "a sign on the ground in the arena, pointing the way: its colour is any text colour"
+autowrap_mode = 3
+script = ExtResource("2_cpfof")
+TextStyle = 9
+TextColor = 8
+
+[node name="Colors" type="HFlowContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Signpost"]
+layout_mode = 2
+theme_override_constants/h_separation = 24
+theme_override_constants/v_separation = 8
+
+[node name="Ink" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Signpost/Colors"]
+layout_mode = 2
+size_flags_vertical = 8
+mouse_filter = 2
+script = ExtResource("50_signpost")
+Text = "Start"
+
+[node name="Accent" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Signpost/Colors"]
+layout_mode = 2
+size_flags_vertical = 8
+mouse_filter = 2
+script = ExtResource("50_signpost")
+Text = "Goal"
+Color = 9
+
+[node name="Danger" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Signpost/Colors"]
+layout_mode = 2
+size_flags_vertical = 8
+mouse_filter = 2
+script = ExtResource("50_signpost")
+Text = "Wrong way"
+Color = 12
 
 [node name="InfoRows" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content" unique_id=1172648689]
 layout_mode = 2

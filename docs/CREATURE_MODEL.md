@@ -316,8 +316,8 @@ A part draws its selection with itself, never on a separate layer: a mark on
 its own layer would weave through the parts around it. Instead a selected
 part moves whole up to the selected layer of its kind, so a selected beam
 draws over the link that crosses it, mark and all (#766). Training's world
-stacks the ground, then every shadow, then the followed creature
-(`ArenaLayers`). Build draws its creature with the same parts (#769, through
+stacks its layers in `ArenaLayers`: the arena marks and the ground under
+every shadow, and the followed creature over them. Build draws its creature with the same parts (#769, through
 `CreatureParts`), with the grid and selection box under them. Each world has
 its own viewport (`UiWorldView`), so these layers never reach the screen's
 handles, notes or dialogs. A creation card's thumbnail (#770) shows the

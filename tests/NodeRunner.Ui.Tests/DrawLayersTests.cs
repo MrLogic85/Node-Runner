@@ -47,8 +47,8 @@ public sealed class DrawLayersTests
     }
 
     [Fact]
-    public void Best_marker_and_ground_are_under_every_creature() =>
-        new[] { ArenaLayers.BestMarker, ArenaLayers.Ground }.ShouldAllBe(layer => layer < ArenaLayers.Shadows + LowestCreatureLayer);
+    public void Arena_marks_and_ground_are_under_every_creature() =>
+        new[] { ArenaLayers.BestMarker, ArenaLayers.StartSign, ArenaLayers.Ground }.ShouldAllBe(layer => layer < ArenaLayers.Shadows + LowestCreatureLayer);
 
     [Fact]
     public void Followed_creature_is_wholly_over_every_shadow() =>
