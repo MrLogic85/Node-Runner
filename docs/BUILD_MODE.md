@@ -216,7 +216,9 @@ tool's panel: Parts shows the Parts tray (#374), Beams shows the link list
 (#705), and Joint and Select show scene-authored short help (#706). The tray has three
 `UiIconTabs` (On a joint, Sensors, Blocks) pinned at the top, then a scrolling
 list with the open tab's name, its parts as compact `UiPartRow`s and one help
-line for the tab. `NodeRunner.App.ViewModels.PartTray`
+line for the tab. Each Build visit opens the tray on the first tab with an
+available part (`PartTray.OpeningGroup`, today Sensors), so a tab of padlocks
+never reads as every part being locked (#887). `NodeRunner.App.ViewModels.PartTray`
 owns the groups, their order, the help lines and each row's state; the screen
 only maps parts to glyphs. Every implemented part is unlimited until #525, so
 rows show no count. A part not yet implemented is a dashed row with a lock,

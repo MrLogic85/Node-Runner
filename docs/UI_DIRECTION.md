@@ -152,7 +152,8 @@ reference would mislead someone working on that surface.
 - **Links live in the Beams tool (#705).** The reference tray has a Links tab
   and the rail says Beam. Instead the rail and side-panel title say Beams,
   and the Beams tool's panel lists Beam, Piston, Spring and Wing. The Parts
-  tray starts at On a joint.
+  tray's first tab is On a joint, but it opens on the first tab with an
+  available part (#887).
 - **Parts replaces the reference rail's Move label (#706).** The rail starts
   Parts, Beams, Joint, Select. Parts opens the Parts tray when nothing is
   selected. Its glyph is the

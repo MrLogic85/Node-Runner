@@ -47,6 +47,16 @@ public static class PartTray
 
     public static IReadOnlyList<PartTrayGroup> Groups() => Catalog();
 
+    /// <summary>
+    /// The tab the tray opens on: the first with a part the player can place (#887), so a
+    /// tab of padlocks never reads as every part being locked. The first tab when none has one.
+    /// </summary>
+    public static int OpeningGroup()
+    {
+        var index = Array.FindIndex(Catalog(), group => group.Rows.Any(row => row.IsAvailable));
+        return Math.Max(index, 0);
+    }
+
     /// <summary>Whether the tray lets the player pick or drag this part: false while it is "Coming later".</summary>
     public static bool IsAvailable(BuildPart part) =>
         Catalog().SelectMany(group => group.Rows).Single(row => row.Part == part).IsAvailable;
