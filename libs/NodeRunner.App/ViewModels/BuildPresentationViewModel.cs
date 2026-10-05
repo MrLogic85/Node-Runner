@@ -227,6 +227,12 @@ public sealed class BuildPresentationViewModel
     /// <summary>True when the Creation has saved training, locked or unlocked for this visit.</summary>
     public bool IsTrained => _build.TrainingGeneration is not null;
 
+    /// <summary>
+    /// Whether the overflow offers Copy creation: anything drawn, trained or not (#840). An empty
+    /// creation has nothing to copy.
+    /// </summary>
+    public bool CanCopy => _build.Nodes.Count > 0;
+
     public BuildPanelPresentation BuildPanel => CreateBuildPanel();
 
     private ToolPanelPresentation CreateToolPanel()

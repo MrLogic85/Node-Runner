@@ -122,6 +122,20 @@ public sealed class BuildPresentationViewModelTests
     }
 
     [Fact]
+    public void CanCopy_AnythingDrawn_TrainedOrNot()
+    {
+        var empty = new BuildViewModel();
+        var untrained = new BuildViewModel();
+        untrained.Load(PairCreature());
+        var trained = new BuildViewModel();
+        trained.LoadCreation(new CreationDef(Guid.NewGuid(), "Worm", PairCreature(), TestTraining.State(3)));
+
+        new BuildPresentationViewModel(empty).CanCopy.ShouldBeFalse();
+        new BuildPresentationViewModel(untrained).CanCopy.ShouldBeTrue();
+        new BuildPresentationViewModel(trained).CanCopy.ShouldBeTrue();
+    }
+
+    [Fact]
     public void Selection_ReplacesToolPanel()
     {
         var build = new BuildViewModel { ActiveTool = BuildTool.Select };

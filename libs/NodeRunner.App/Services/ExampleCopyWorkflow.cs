@@ -6,7 +6,8 @@ namespace NodeRunner.App.Services;
 
 /// <summary>
 /// Saves an identical creation, trained model included, from an example under a new id and the
-/// example's name in the player's language.
+/// example's name in the player's language, or "Copy of …" when a creation already has that name
+/// (#840).
 /// </summary>
 public sealed class ExampleCopyWorkflow : IExampleCopyWorkflow
 {
@@ -30,7 +31,13 @@ public sealed class ExampleCopyWorkflow : IExampleCopyWorkflow
         ArgumentNullException.ThrowIfNull(inPlayerLanguage);
         var example = _examples.FirstOrDefault(example => example.Id == exampleId)
             ?? throw new KeyNotFoundException($"Example '{exampleId}' was not found.");
-        var copy = new CreationDef(_newId(), inPlayerLanguage(example.Name), example.Creature, example.Training);
+        var name = inPlayerLanguage(example.Name);
+        if (_repository.List().Any(creation => string.Equals(creation.Name, name, StringComparison.CurrentCultureIgnoreCase)))
+        {
+            name = inPlayerLanguage(UiText.Format("Copy of {0}", name));
+        }
+
+        var copy = new CreationDef(_newId(), name, example.Creature, example.Training);
         _repository.Save(copy);
         return copy;
     }
