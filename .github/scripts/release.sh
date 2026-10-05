@@ -37,7 +37,9 @@ build_tools=$(ls -d "$android_home"/build-tools/* 2>/dev/null | sort -V | tail -
   || fail "No apksigner/aapt2 under $android_home/build-tools; set ANDROID_HOME."
 
 version=$(sed -n 's/^config\/version="\(.*\)"$/\1/p' project/project.godot)
-code=$(sed -n 's/^version\/code=\(.*\)$/\1/p' project/export_presets.cfg)
+# The release and debug presets (#898) share one build number.
+code=$(sed -n 's/^version\/code=\(.*\)$/\1/p' project/export_presets.cfg | sort -u)
+[[ $code =~ ^[0-9]+$ ]] || fail "The export presets do not share one version/code; run .github/scripts/set-version.sh."
 [[ $version =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]] || fail "No X.Y.Z config/version in project.godot."
 major=${BASH_REMATCH[1]} minor=${BASH_REMATCH[2]} patch=${BASH_REMATCH[3]}
 (( code == 10#$major * 1000000 + 10#$minor * 1000 + 10#$patch )) \
