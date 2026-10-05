@@ -75,6 +75,7 @@ A PR is mergeable when every box is true (or a skipped box is justified in
 the PR):
 
 - [ ] Linked GitHub Issue exists and the PR uses a closing keyword
+      (release-notes PRs use `Part of`; see "Releases")
 - [ ] `dotnet build NodeRunner.slnx` clean, 0 warnings
 - [ ] `dotnet test NodeRunner.slnx` all green (unit + arch)
 - [ ] Any new logic in `libs/NodeRunner.{ML,Domain}/` has unit tests
@@ -182,20 +183,33 @@ The `main` ruleset (GitHub → Settings → Rules → Rulesets) is configured wi
 (`application/config/version` in `project/project.godot`; see
 `docs/ARCHITECTURE.md` → "Android export" for the build number).
 
-When a milestone's issues are all closed:
+Every milestone has a "Release X.Y.0" issue (`type: chore`, `area: android`).
+When it is the milestone's last open issue:
 
-1. From an up-to-date `main`, run `.github/scripts/release.sh`. It exports a
+1. A PR titled `docs(#N): Release notes for X.Y.0` adds
+   `docs/release-notes/X.Y.0.md` with `Part of #N`, not a closing keyword, so
+   the issue stays open until the release is out. The notes say what the
+   version adds to the game, in English, for players: a one-line summary,
+   then "What's new", "Changed", and "Known issues" as they apply, without
+   issue numbers or code names. Draft them from the milestone's closed
+   issues; the owner approves them in that PR.
+2. From an up-to-date `main`, run `.github/scripts/release.sh`. It exports a
    signed release APK, checks its version and signature, tags `vX.Y.0`, pushes
    `release/vX.Y` at the tag, and creates the GitHub release with the APK
-   attached. `release.sh --dry-run` exports and checks without publishing.
-2. The next PR on `main` bumps to the next minor:
-   `.github/scripts/set-version.sh X.(Y+1).0`.
+   attached. The release text is the notes file; GitHub appends the merged PRs
+   since the previous release (the first release has none appended).
+   `release.sh --dry-run` exports and checks without publishing.
+3. A PR titled `chore(#N): Bump main to X.(Y+1).0` runs
+   `.github/scripts/set-version.sh X.(Y+1).0` and closes the release issue.
 
-Fixes for a released version land on `release/vX.Y` (by PR, also merged to
-`main` when they apply there), bump the patch with `set-version.sh X.Y.Z`, and
-are released with `release.sh` from that branch. CI runs on `release/**` as on
-`main`, but no ruleset protects those branches, so `release.sh` refuses to
-publish unless `Build`, `Test & coverage` and `Format check` passed on HEAD.
+A fix for a released version lands on `release/vX.Y` by PR (also on `main`
+when it applies there). That PR bumps the patch with `set-version.sh X.Y.Z`
+and adds `docs/release-notes/X.Y.Z.md`; after it merges, `release.sh` from
+that branch publishes it. GitHub only honours closing keywords on PRs into
+`main`, so close the fix's issue by hand after the patch release unless its
+`main` PR closes it. CI runs on `release/**` as on `main`, but no
+ruleset protects those branches, so `release.sh` refuses to publish unless
+`Build`, `Test & coverage` and `Format check` passed on HEAD.
 
 `release.sh` checks before tagging that the active `gh` login can push to the
 repository (`LOCAL_CONFIG.md` names the account). If `gh release create` still

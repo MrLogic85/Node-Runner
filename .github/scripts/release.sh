@@ -6,15 +6,16 @@
 #   release.sh --dry-run    export and verify only; no tag, branch or release
 #
 # Run X.Y.0 from an up-to-date main and X.Y.Z (Z > 0) from an up-to-date release/vX.Y whose
-# CI checks passed. A new minor also creates release/vX.Y at the tag. The gh login must be
-# able to push to the repo (see LOCAL_CONFIG.md). Signing key (never committed):
+# CI checks passed and that has docs/release-notes/X.Y.Z.md, the player-facing release text.
+# A new minor also creates release/vX.Y at the tag. The gh login must be able to push to the
+# repo (see LOCAL_CONFIG.md). Signing key (never committed):
 #   NODE_RUNNER_KEYSTORE           default ~/Documents/Godot/node-runner-release.jks
 #   NODE_RUNNER_KEYSTORE_ALIAS     default noderunner
 #   NODE_RUNNER_KEYSTORE_PASSWORD  default: macOS Keychain item "node-runner-release-keystore"
 # Also: GODOT (Godot Mono binary), ANDROID_HOME.
 set -euo pipefail
 
-usage() { sed -n '2,14p' "$0" | sed 's/^# \{0,1\}//'; exit 2; }
+usage() { sed -n '2,15p' "$0" | sed 's/^# \{0,1\}//'; exit 2; }
 dry_run=false
 case ${1:-} in
   '') ;;
@@ -44,6 +45,12 @@ major=${BASH_REMATCH[1]} minor=${BASH_REMATCH[2]} patch=${BASH_REMATCH[3]}
 tag="v$version"
 release_branch="release/v$major.$minor"
 apk="$root/build/node-runner-$version.apk"
+notes="docs/release-notes/$version.md"
+
+if [[ ! -s $notes ]]; then
+  $dry_run || fail "Write the release text in $notes first."
+  echo "release: $notes is missing; a real release needs it." >&2
+fi
 
 if ! $dry_run; then
   if (( patch == 0 )); then expected=main; else expected=$release_branch; fi
@@ -98,8 +105,12 @@ git push origin "$tag"
 if (( patch == 0 )); then
   git push origin "$tag^{commit}:refs/heads/$release_branch"
 fi
-gh release create "$tag" "$apk" --repo "$repo" --verify-tag --title "Node Runner $version" --generate-notes \
-  || fail "$tag is pushed but the release was not created. Retry: gh release create $tag ${apk#"$root"/} --repo $repo --verify-tag --title \"Node Runner $version\" --generate-notes"
+# GitHub appends the merged PRs since the previous release; the first release would list them all.
+generate=()
+[[ -z $(git tag -l 'v[0-9]*' | grep -vxF "$tag") ]] || generate=(--generate-notes)
+gh release create "$tag" "$apk" --repo "$repo" --verify-tag --title "Node Runner $version" \
+  --notes-file "$notes" ${generate[@]+"${generate[@]}"} \
+  || fail "$tag is pushed but the release was not created. Retry: gh release create $tag ${apk#"$root"/} --repo $repo --verify-tag --title \"Node Runner $version\" --notes-file $notes ${generate[*]:-}"
 
 if (( patch == 0 )); then
   echo "Next: open a PR on main that runs .github/scripts/set-version.sh $major.$((minor + 1)).0"
