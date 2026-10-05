@@ -6,7 +6,7 @@ namespace NodeRunner.App.Tests.ViewModels;
 
 public class BuildGesturesTests
 {
-    private static readonly Vector2D _empty = new(300, 300);
+    private static readonly Vector2D _empty = new(300, 200);
 
     [Theory]
     [InlineData(BuildTool.Parts)]
@@ -170,9 +170,9 @@ public class BuildGesturesTests
         var changes = CountChanges(build);
 
         gestures.Press(_empty);
-        gestures.Drag(new Vector2D(350, 300));
-        gestures.Drag(new Vector2D(400, 280));
-        gestures.Release(new Vector2D(400, 280));
+        gestures.Drag(new Vector2D(350, 200));
+        gestures.Drag(new Vector2D(400, 180));
+        gestures.Release(new Vector2D(400, 180));
 
         changes().ShouldBe(0);
         build.SelectedNodeIds.ShouldBe([1]);
@@ -332,9 +332,9 @@ public class BuildGesturesTests
         var (build, gestures) = ThreeLooseJoints(BuildTool.Joint);
         gestures.View.ZoomAbout(new Vector2D(0, 0), 2);
 
-        Tap(gestures, new Vector2D(600, 600));
+        Tap(gestures, new Vector2D(600, 400));
 
-        build.Nodes[^1].Position.ShouldBe(new Vector2D(300, 300));
+        build.Nodes[^1].Position.ShouldBe(new Vector2D(300, 200));
     }
 
     [Fact]
@@ -473,7 +473,8 @@ public class BuildGesturesTests
     public void View_ShowsTheMarginPastTheBuildArea_AtEveryZoom()
     {
         var (_, gestures) = TwoJointsAndABeam();
-        gestures.View.VisibleArea = new CanvasRect(new Vector2D(0, 0), new Vector2D(1000, 500));
+        // Narrower than the bounds' shape, so at the farthest zoom their sides still reach the view's.
+        gestures.View.VisibleArea = new CanvasRect(new Vector2D(0, 0), new Vector2D(1000, 600));
         foreach (var factor in new[] { 1.0, 3, 0.25 })
         {
             gestures.View.ZoomAbout(new Vector2D(500, 250), factor);

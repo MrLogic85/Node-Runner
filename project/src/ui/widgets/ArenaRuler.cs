@@ -8,9 +8,10 @@ namespace NodeRunner.Ui.Widgets;
 
 /// <summary>
 /// The distance marks along the Training ground (#668), from <see cref="DistanceRuler"/>: ticks
-/// hang from the ground line, the node's origin, a long one every metre. It draws only the
+/// hang from the ground line, the node's origin, a long one every metre until labels are 5 m apart. It draws only the
 /// part the camera shows and redraws when the view moves. Ticks and labels keep their screen size at
-/// any zoom; every metre is labelled, or every 2, 5, 10, … when labels would overlap (#675).
+/// any zoom; every metre is labelled, or every 2, 5, 10, … when labels would overlap (#675), and
+/// from 5 m between labels the ticks thin out with them (#884).
 /// </summary>
 public partial class ArenaRuler : Node2D
 {
@@ -77,16 +78,11 @@ public partial class ArenaRuler : Node2D
 
     public override void _Draw()
     {
-        // Half a metre past each side, so a label straddling the edge fades out instead of popping.
         var view = VisibleArea();
         // World units per UI unit: the arena view undoes the UI size (#738), so this applies it again.
         var screenScale = view.Size.X / GetViewportRect().Size.X * UiScale.FactorOf(this);
-        DistanceRuler.Fill(
-            _startX,
-            view.Position.X - DistanceRuler.TickSpacing,
-            view.End.X + DistanceRuler.TickSpacing,
-            MetresPerLabel(view, screenScale),
-            _marks);
+        var metresPerLabel = MetresPerLabel(view, screenScale);
+        DistanceRuler.Fill(_startX, view.Position.X, view.End.X, metresPerLabel, _marks);
         foreach (var mark in _marks)
         {
             DrawMark(mark, view, screenScale);

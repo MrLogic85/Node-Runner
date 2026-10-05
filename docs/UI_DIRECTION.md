@@ -129,8 +129,9 @@ reference would mislead someone working on that surface.
 - **The Build grid marks the build area (#400).** The reference's grid floor
   fills the canvas at 24 to 32px, fades toward the edges, and has fixed HUD
   corner brackets. In Build the `line` grid instead covers exactly the
-  build area, with no fade, in fixed 48-canvas-unit cells (1 px hairlines,
-  above), and the `accent` corner marks sit on the area's corners, two cells
+  build area, 12 × 6 m (#884), with no fade, in fixed half-metre cells
+  (`BuildGridStep`; 1 px hairlines, above), and the `accent` corner marks
+  sit on the area's corners, two cells
   long. Cells and marks zoom with the picture; zoom never changes their
   count or length. The view shows the area plus one cell
   (`BuildViewMargin`) on every side and nothing beyond it, at any zoom;
@@ -285,17 +286,19 @@ reference would mislead someone working on that surface.
   Build blueprint, not part of the world. Motion shows against the ruler
   along the ground, labelled every 1 m at the closest zoom (the reference
   labels every 2 m) with a minor tick every 0.5 m; zoomed out, labels thin
-  out (#675, `docs/TRAINING_LOOP.md` → Ruler). Owner decision. The reference does not say what
+  out (#675), and the ticks with them (#884,
+  `docs/TRAINING_LOOP.md` → Ruler). Owner decision. The reference does not say what
   the camera does between trials: a new trial cuts back to the start, and
   switching shadows glides (`docs/TRAINING_LOOP.md` → Camera). Owner decision.
 - **Training camera zooms and rises (#675).** The reference's Training
   camera has a fixed zoom and height. Instead it zooms out to fit the
-  followed shadow and further the faster it moves, and follows it up once
+  followed shadow and further the faster it moves, with no far limit but a
+  500 m guard against a physics blow-up (#884), and follows it up once
   it rises past the top margin (`docs/TRAINING_LOOP.md` → Camera). The
   ground stays at the same height on screen while zooming. As in Build
   (#400) zoom scales the picture, the ground edge included; the ruler's
-  ticks and labels keep their screen size, and labels thin out rather than
-  overlap (`docs/TRAINING_LOOP.md` → Ruler). Owner decision.
+  ticks and labels keep their screen size, and labels and ticks thin out
+  rather than overlap (`docs/TRAINING_LOOP.md` → Ruler). Owner decision.
 - **Best marker reads its distance (#388).** The reference's dashed best
   marker's flag reads "best". Instead it reads "Best 4.2 m", the best ever
   on this map, since a zoomed-out ruler labels only every 5 or 10 m. It is
