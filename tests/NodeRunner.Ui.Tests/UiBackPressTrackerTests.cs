@@ -18,15 +18,33 @@ public sealed class UiBackPressTrackerTests
         Replay(steps).ShouldBe(expected);
 
     [Theory]
-    [InlineData("g0 d13 u14 g14 g300 d313 u314 g314", "FrFr")]
-    [InlineData("g0 d13 u14 g14 g80 d93 u94 g94", "FrFr")]
-    [InlineData("d0 G5 u100 g101 d180 G185 u280 g281", "FrFr")]
-    [InlineData("d0 G5 G205 u208 d260 G265 u400 g401", "FrFr")]
+    [InlineData("d24270 u24281 g24306 d38827 u38828 g38828", "FF")]
+    [InlineData("d193955 G193956 e194373 u194374 g194377", "Fr")]
+    public void A_press_recorded_on_the_emulator_is_taken_once(string steps, string expected) =>
+        Replay(steps).ShouldBe(expected);
+
+    [Theory]
+    [InlineData("d0 G1 e500 G500 u2500 g2501", "Frr")]
+    [InlineData("g0 d13 e500 G500 u5000 g5001", "Frr")]
+    public void A_long_held_press_is_taken_once(string steps, string expected) =>
+        Replay(steps).ShouldBe(expected);
+
+    [Theory]
+    [InlineData("g0 d13 u14 g14 g150 d163 u164 g164", "FrrF")]
+    [InlineData("d0 u10 g11 d100 u110 g111", "FF")]
     public void A_quick_second_press_is_a_new_press(string steps, string expected) =>
         Replay(steps).ShouldBe(expected);
 
-    // On the S23 (#838) a press's key-down and key-up come before its only go-back, and every other
-    // press was swallowed.
+    [Theory]
+    [InlineData("d0 u1 g2 g3 d5000 G5005 u5100 g5101", "FrFr")]
+    [InlineData("g0 d13 g14 d5000 G5005 u5100 g5101", "FrFr")]
+    [InlineData("g0 d13 g14 d5000 u5001 g5002", "FrF")]
+    [InlineData("g0 d5000 G5005 u5100 g5101", "FFr")]
+    [InlineData("g0 d5000 u5010 g5035", "FF")]
+    public void A_press_after_an_odd_one_is_not_swallowed(string steps, string expected) =>
+        Replay(steps).ShouldBe(expected);
+
+    // On the S23 a press's key-down and key-up come before its only go-back.
     [Theory]
     [InlineData("d0 u60 g62 d3000 u3060 g3062 d6000 u6060 g6062", "FFF")]
     [InlineData("d0 u60 g62 g70 d3000 u3060 g3062", "FrF")]
@@ -35,7 +53,6 @@ public sealed class UiBackPressTrackerTests
     public void A_press_whose_key_up_comes_before_its_go_back_is_taken_once(string steps, string expected) =>
         Replay(steps).ShouldBe(expected);
 
-    // A key-up that never arrives must not swallow the next press (#838).
     [Theory]
     [InlineData("d0 G5 g101 d5000 G5005 u5100 g5101", "FrFr")]
     [InlineData("d0 G5 d5000 u5060 g5062", "FF")]
@@ -47,15 +64,10 @@ public sealed class UiBackPressTrackerTests
         Replay("d0 g5000 d5013 u5014 g5014").ShouldBe("Fr");
 
     [Theory]
-    [InlineData("g0 g10", "Fr")]
-    [InlineData("g0 g199", "Fr")]
-    [InlineData("g0 g200", "FF")]
-    public void Without_key_events_a_pause_ends_the_press(string steps, string expected) =>
+    [InlineData("g0 g10", "FF")]
+    [InlineData("d0 u1 g2 g500 g510", "FFF")]
+    public void A_go_back_without_a_key_is_a_gesture_press(string steps, string expected) =>
         Replay(steps).ShouldBe(expected);
-
-    [Fact]
-    public void A_go_back_well_after_the_release_is_a_new_press() =>
-        Replay("d0 G5 u100 g100 g150").ShouldBe("FrF");
 
     private static string Replay(string steps)
     {

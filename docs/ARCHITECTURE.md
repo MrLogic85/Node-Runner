@@ -383,8 +383,8 @@ Because a scene is rebuilt from its route, anything the player expects to
 find again is saved before the scene closes. What must outlive a scene
 change lives outside the scenes: notifications are queued on the
 `Notifications` autoload (`UiNotificationLayer`, #472). The `BackPress`
-autoload (`UiBackPress`, #506) follows the Back key across scenes so one
-Android Back press acts once. The `SafeArea` autoload (`UiSafeArea`, #513)
+autoload (`UiBackPress`, #506, #838) lets one go-back signal through per
+Back key-down or gesture, across scenes, so one Android Back press acts once. The `SafeArea` autoload (`UiSafeArea`, #513)
 keeps one set of display-cutout insets for every screen's frame. The
 `UiScale` autoload (#299) holds the UI size and applies it to the root
 window. All four live in `ui/lib`, not `managers/`, because managers hold no UI.
