@@ -423,9 +423,10 @@ component READMEs under `reference design/components/` guide its presentation.
   - Run on its own (F6) the scene trains the built-in worm without saving.
 - The Training screen's top bar shows the creation's name, the status
   ("Training · Flat ground") and Brain and Stats buttons; unlock progress
-  is not shown here (#488). Beside the arena, the SignalFlow column
-  shows the Senses → Brain → Outputs → Distance stages from
-  `SignalFlowPresentationViewModel`. Under the arena are Pause and the
+  is not shown here (#488). Beside the arena, a `UiSidePanel` titled
+  "Status" shows the Senses → Brain → Outputs → Distance stages from
+  `SignalFlowPresentationViewModel` (#813). Collapsing it widens the
+  arena, and the camera refits. Under the arena are Pause and the
   generation caption from `TrainingPresentationViewModel`.
   - **Pause** toggles `GetTree().Paused`. This is the standard Godot
     pause mechanism: every node using the default `Pausable` process mode

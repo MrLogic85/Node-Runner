@@ -80,7 +80,7 @@ msgid "An example error. Toggle Visible to preview."
 msgstr ""
 
 #: project/scenes/widgets/BrainFocusSheet.tscn
-msgid "Back to SignalFlow"
+msgid "Back to Status"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartTrayPresentation.cs
@@ -646,6 +646,10 @@ msgstr ""
 
 #: project/src/hosts/TrainingHost.cs
 msgid "Stats come in a later version."
+msgstr ""
+
+#: project/scenes/screens/TrainingScreen.tscn
+msgid "Status"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartTrayPresentation.cs

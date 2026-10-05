@@ -236,6 +236,10 @@ reference would mislead someone working on that surface.
   strip: physics always runs at real time, and training goes faster by
   racing more shadows (`docs/TRAINING_LOOP.md` → No speed-up). Owner
   decision.
+- **Training's signal flow is a side panel (#813).** The reference's
+  Training column has no header and cannot collapse. Instead it is a
+  `UiSidePanel` titled "Status" that collapses like Build's, so both
+  screens share one panel. Owner decision.
 - **No grid in Training (#668).** The reference draws a faint grid behind
   the Training arena. Instead the arena background is plain: the grid is a
   Build blueprint, not part of the world. Motion shows against the ruler

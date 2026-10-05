@@ -12,6 +12,7 @@
 [ext_resource type="PackedScene" uid="uid://dahbkjg42p0vs" path="res://scenes/widgets/BrainFocusSheet.tscn" id="10_brain_focus"]
 [ext_resource type="PackedScene" path="res://scenes/widgets/ShadowStrip.tscn" id="11_shadow_strip"]
 [ext_resource type="Script" uid="uid://cciq0runnobr4" path="res://src/ui/lib/UiCalloutLayer.cs" id="12_callout_layer"]
+[ext_resource type="PackedScene" uid="uid://c7sdp4nel2qx" path="res://scenes/ui/UiSidePanel.tscn" id="13_side_panel"]
 
 [node name="TrainingScreen" type="Control"]
 layout_mode = 3
@@ -180,27 +181,15 @@ TextStyle = 7
 unique_name_in_owner = true
 layout_mode = 2
 
-[node name="SignalDivider" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Body"]
+[node name="SidePanel" parent="UiFrame/MarginContainer/Card/Shell/Body" instance=ExtResource("13_side_panel")]
+unique_name_in_owner = true
 layout_mode = 2
-mouse_filter = 2
-script = ExtResource("6_divider")
-Orientation = 1
+Title = "Status"
 
-[node name="SignalFlow" type="MarginContainer" parent="UiFrame/MarginContainer/Card/Shell/Body"]
-custom_minimum_size = Vector2(176, 0)
-layout_mode = 2
-mouse_filter = 2
-theme_override_constants/margin_left = 8
-theme_override_constants/margin_top = 8
-theme_override_constants/margin_right = 8
-theme_override_constants/margin_bottom = 8
-
-[node name="SignalStages" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SignalFlow"]
-layout_mode = 2
-mouse_filter = 2
+[node name="SidePanelContent" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset" index="0"]
 theme_override_constants/separation = 0
 
-[node name="SensesStage" parent="UiFrame/MarginContainer/Card/Shell/Body/SignalFlow/SignalStages" instance=ExtResource("8_stage_card")]
+[node name="SensesStage" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent" instance=ExtResource("8_stage_card")]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
@@ -208,12 +197,12 @@ Title = "Senses"
 Note = ""
 Collapsed = true
 
-[node name="SensesArrow" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Body/SignalFlow/SignalStages"]
+[node name="SensesArrow" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent"]
 custom_minimum_size = Vector2(0, 8)
 layout_mode = 2
 mouse_filter = 2
 
-[node name="Chevron" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Body/SignalFlow/SignalStages/SensesArrow"]
+[node name="Chevron" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent/SensesArrow"]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -232,7 +221,7 @@ IconId = 6
 IconSize = 0
 Color = 9
 
-[node name="BrainStage" parent="UiFrame/MarginContainer/Card/Shell/Body/SignalFlow/SignalStages" instance=ExtResource("8_stage_card")]
+[node name="BrainStage" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent" instance=ExtResource("8_stage_card")]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
@@ -241,12 +230,12 @@ Title = "Brain"
 Note = ""
 Collapsed = true
 
-[node name="BrainArrow" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Body/SignalFlow/SignalStages"]
+[node name="BrainArrow" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent"]
 custom_minimum_size = Vector2(0, 8)
 layout_mode = 2
 mouse_filter = 2
 
-[node name="Chevron" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Body/SignalFlow/SignalStages/BrainArrow"]
+[node name="Chevron" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent/BrainArrow"]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -265,7 +254,7 @@ IconId = 6
 IconSize = 0
 Color = 9
 
-[node name="OutputsStage" parent="UiFrame/MarginContainer/Card/Shell/Body/SignalFlow/SignalStages" instance=ExtResource("8_stage_card")]
+[node name="OutputsStage" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent" instance=ExtResource("8_stage_card")]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
@@ -274,12 +263,12 @@ Title = "Outputs"
 Note = ""
 Collapsed = true
 
-[node name="OutputsArrow" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Body/SignalFlow/SignalStages"]
+[node name="OutputsArrow" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent"]
 custom_minimum_size = Vector2(0, 8)
 layout_mode = 2
 mouse_filter = 2
 
-[node name="Chevron" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Body/SignalFlow/SignalStages/OutputsArrow"]
+[node name="Chevron" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent/OutputsArrow"]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -298,7 +287,7 @@ IconId = 6
 IconSize = 0
 Color = 9
 
-[node name="DistanceStage" parent="UiFrame/MarginContainer/Card/Shell/Body/SignalFlow/SignalStages" instance=ExtResource("8_stage_card")]
+[node name="DistanceStage" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent" instance=ExtResource("8_stage_card")]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
@@ -314,3 +303,4 @@ layout_mode = 1
 
 [editable path="UiFrame"]
 [editable path="UiFrame/MarginContainer/Card/Shell/Toolbar"]
+[editable path="UiFrame/MarginContainer/Card/Shell/Body/SidePanel"]

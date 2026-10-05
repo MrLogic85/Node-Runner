@@ -88,5 +88,5 @@ script = ExtResource("3_label")
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 4
-text = "Back to SignalFlow"
+text = "Back to Status"
 script = ExtResource("6_button")
