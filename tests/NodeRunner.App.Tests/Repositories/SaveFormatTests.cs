@@ -27,7 +27,7 @@ public sealed class SaveFormatTests : IDisposable
 
     [Theory]
     [InlineData(typeof(CreationDef), "creation.schema.json", true)]
-    [InlineData(typeof(ProgressionDef), "progression.schema.json", false)]
+    [InlineData(typeof(ProgressionDef), "progression.schema.json", true)]
     public void Schema_MatchesTheCommittedSchema(Type type, string name, bool versioned)
     {
         var schema = JsonSchemaExporter

@@ -154,6 +154,7 @@ Schema: [`save-schema/progression.schema.json`](save-schema/progression.schema.j
 
 | Field | Type | Meaning |
 |---|---|---|
+| `formatVersion` | int | The file's format version, written first; see "Versions and migration". Missing in 0.13.0 files. |
 | `defaultCreationsSeeded` | bool | The example Creations were copied in on first start. Required. |
 
 Planned: unlocked parts and counts (#525), achievements and brain-ability
@@ -178,7 +179,7 @@ The baseline is the 0.13.0 shape: every `creation.json` and
 
 - A versioned file starts with `formatVersion`, a whole number. The 0.13.0
   shape is version 1, and a file without the field is version 1.
-  `creation.json` has it (#872); `progression.json` gets it in #873.
+  Both files have it (#872, #873).
 - Loading reads the version, runs the migrations from that version to the
   current one in order, then loads the result strictly as above.
 - A file without the field or in an older version is written back in the
@@ -197,7 +198,8 @@ The baseline is the 0.13.0 shape: every `creation.json` and
 
 1. Change the record, this document and the schema as usual.
 2. Append a `SaveMigration` to the file's list
-   (`FileCreationRepository.Format` for `creation.json`). It turns a file
+   (`FileCreationRepository.Format` for `creation.json`,
+   `FileProgressionRepository.Format` for `progression.json`). It turns a file
    in the previous version into the new shape; the current version goes up
    by one.
 3. Add a test that loads a file in the previous version, and keep the
@@ -205,7 +207,8 @@ The baseline is the 0.13.0 shape: every `creation.json` and
 
 The real files 0.13.0 wrote are checked in as fixtures in
 `tests/NodeRunner.App.Tests/Repositories/SaveExamples/0.13.0/` (the Walker
-example, untrained and trained), and `CreationVersioningTests` loads them.
+example, untrained and trained, and `progression.json`), and
+`CreationVersioningTests` and `ProgressionVersioningTests` load them.
 They are never rewritten in place.
 
 ## Writing and reading
