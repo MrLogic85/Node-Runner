@@ -159,6 +159,11 @@ reads it from there, and sets `version/code` to
 1000000·major + 1000·minor + patch (0.13.0 → 13000) (#809). Change both with
 `.github/scripts/set-version.sh X.Y.Z`; `ArchitectureSpec` checks they agree.
 
+The preset's `launcher_icons/*` and `splash_screen/icon` point at the SVGs in
+`project/assets/icons/app/`. Godot imports each at its declared size and the
+export scales it to every density (#820). `docs/UI_DIRECTION.md` → "App icon"
+owns the design.
+
 Local prerequisites are Godot 4.7.2 Mono export templates, JDK 21, Android SDK
 platform/build-tools, platform-tools, and a user-local debug keystore configured
 in Godot editor settings. The committed preset contains values only; keystore
