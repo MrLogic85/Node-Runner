@@ -50,6 +50,8 @@ public partial class Creature : Node2D
     private BeamVisual[] _beamVisuals = [];
     private RigidHatchVisual[] _hatchVisuals = [];
     private SensorVisual[] _sensorVisuals = [];
+    private ServoJoint[] _servos = [];
+    private ServoVisual[] _servoVisuals = [];
     private PistonLink[] _pistons = [];
     private PistonVisual[] _pistonVisuals = [];
     private SpringVisual[] _springVisuals = [];
@@ -117,8 +119,14 @@ public partial class Creature : Node2D
         ReadSensors(_sensorValues, delta);
         Brain.Forward(_sensorValues, _outputValues, _scratchA, _scratchB);
 
-        // Each Piston has two outputs in sim order: position, then strength.
+        // Each Servo and Piston has two outputs in sim order: target, then strength.
         var output = 0;
+        foreach (var servo in _servos)
+        {
+            servo.Drive(_outputValues[_outputPortOf[output]], _outputValues[_outputPortOf[output + 1]], delta);
+            output += 2;
+        }
+
         foreach (var piston in _pistons)
         {
             piston.Drive(_outputValues[_outputPortOf[output]], _outputValues[_outputPortOf[output + 1]], delta);
@@ -156,6 +164,7 @@ public partial class Creature : Node2D
         CreateNodes(definition);
         PinBeamsToNodes(definition);
         CreateSensors(definition);
+        CreateServos(definition);
         CreatePistons(definition);
         CreateSprings(definition);
         ConfigureBrainBuffers(definition);
@@ -305,10 +314,13 @@ public partial class Creature : Node2D
         var tolerance = GetHitTolerance();
         for (var nodeIndex = 0; nodeIndex < _nodeVisuals.Length; nodeIndex++)
         {
-            var radius = Math.Max(tolerance, ToGodotFloat(Definition!.Nodes[nodeIndex].Radius, nameof(NodeDef.Radius)));
+            var radius = Math.Max(tolerance, ToGodotFloat(Definition!.NodeRadius(Definition.Nodes[nodeIndex].Id), nameof(ServoDef.JointRadius)));
             if (_nodeVisuals[nodeIndex].GlobalPosition.DistanceSquaredTo(globalPosition) <= radius * radius)
             {
-                selection = new CreatureElementSelection(CreatureElementKind.Node, Definition!.Nodes[nodeIndex].Id);
+                var nodeId = Definition!.Nodes[nodeIndex].Id;
+                selection = Definition.Servos.FirstOrDefault(servo => servo.NodeId == nodeId) is { } servo
+                    ? new CreatureElementSelection(CreatureElementKind.Servo, servo.Id)
+                    : new CreatureElementSelection(CreatureElementKind.Node, nodeId);
                 return true;
             }
         }
@@ -375,6 +387,7 @@ public partial class Creature : Node2D
             CreatureElementKind.Node => _nodeVisuals[Definition!.NodeIndexOf(selection.Id)].GlobalPosition,
             CreatureElementKind.Beam => _beamBodies[Definition!.BeamIndexOf(selection.Id)].GlobalPosition,
             CreatureElementKind.Sensor => _sensorVisuals[Definition!.Sensors.ToList().FindIndex(sensor => sensor.Id == selection.Id)].GlobalPosition,
+            CreatureElementKind.Servo => _servoVisuals[Definition!.ServoIndexOf(selection.Id)].GlobalPosition,
             CreatureElementKind.Piston => Middle(_pistons[Definition!.PistonIndexOf(selection.Id)].NodeA, _pistons[Definition.PistonIndexOf(selection.Id)].NodeB),
             CreatureElementKind.Spring => Middle(_springVisuals[Definition!.SpringIndexOf(selection.Id)].NodeA, _springVisuals[Definition.SpringIndexOf(selection.Id)].NodeB),
             _ => throw new ArgumentOutOfRangeException(nameof(selection), selection.Kind, "Not a part of a creature."),
@@ -392,7 +405,7 @@ public partial class Creature : Node2D
     // A shadow never shows a selection (#385), so its parts stay on their unselected layers.
     private void ApplySelection()
     {
-        foreach (var visual in _nodeVisuals.Concat<PartVisual>(_beamVisuals).Concat(_sensorVisuals).Concat(_pistonVisuals).Concat(_springVisuals))
+        foreach (var visual in _nodeVisuals.Concat<PartVisual>(_beamVisuals).Concat(_sensorVisuals).Concat(_servoVisuals).Concat(_pistonVisuals).Concat(_springVisuals))
         {
             visual.Selected = false;
         }
@@ -407,6 +420,7 @@ public partial class Creature : Node2D
             CreatureElementKind.Node => _nodeVisuals[Definition!.NodeIndexOf(_selection.Id)],
             CreatureElementKind.Beam => _beamVisuals[Definition!.BeamIndexOf(_selection.Id)],
             CreatureElementKind.Sensor => _sensorVisuals[Definition!.Sensors.ToList().FindIndex(sensor => sensor.Id == _selection.Id)],
+            CreatureElementKind.Servo => _servoVisuals[Definition!.ServoIndexOf(_selection.Id)],
             CreatureElementKind.Piston => _pistonVisuals[Definition!.PistonIndexOf(_selection.Id)],
             CreatureElementKind.Spring => _springVisuals[Definition!.SpringIndexOf(_selection.Id)],
             _ => throw new ArgumentOutOfRangeException(nameof(_selection), _selection.Kind, "Not a part of a creature."),
@@ -445,6 +459,11 @@ public partial class Creature : Node2D
         }
 
         foreach (var visual in _sensorVisuals)
+        {
+            visual.IsShadow = _isShadow;
+        }
+
+        foreach (var visual in _servoVisuals)
         {
             visual.IsShadow = _isShadow;
         }
@@ -517,8 +536,8 @@ public partial class Creature : Node2D
                 Theme = Theme,
                 A = new Vector2(-halfLength, 0),
                 B = new Vector2(halfLength, 0),
-                RadiusA = ToGodotFloat(definition.Nodes[definition.NodeIndexOf(beamDef.NodeA)].Radius, nameof(NodeDef.Radius)),
-                RadiusB = ToGodotFloat(definition.Nodes[definition.NodeIndexOf(beamDef.NodeB)].Radius, nameof(NodeDef.Radius)),
+                RadiusA = ToGodotFloat(definition.NodeRadius(beamDef.NodeA), nameof(ServoDef.JointRadius)),
+                RadiusB = ToGodotFloat(definition.NodeRadius(beamDef.NodeB), nameof(ServoDef.JointRadius)),
             };
             body.AddChild(CreateKnockout(visual.A, visual.B, Theme.BeamWidth / 2));
             body.AddChild(visual);
@@ -563,7 +582,7 @@ public partial class Creature : Node2D
         for (var i = 0; i < count; i++)
         {
             var position = ToGodot(definition.Nodes[i].Position);
-            var radius = ToGodotFloat(definition.Nodes[i].Radius, nameof(NodeDef.Radius));
+            var radius = ToGodotFloat(definition.NodeRadius(definition.Nodes[i].Id), nameof(ServoDef.JointRadius));
 
             var body = new RigidBody2D
             {
@@ -584,6 +603,7 @@ public partial class Creature : Node2D
                 Name = $"Node{i}Visual",
                 Theme = Theme,
                 Radius = radius,
+                Visible = definition.Servos.All(servo => servo.NodeId != definition.Nodes[i].Id),
             };
             body.AddChild(CreateKnockout(Vector2.Zero, Vector2.Zero, radius));
             body.AddChild(visual);
@@ -738,11 +758,13 @@ public partial class Creature : Node2D
         _inputPortOf = PortPositions(
             [
                 .. definition.Sensors.SelectMany(BrainPorts.SensorPorts),
+                .. definition.Servos.SelectMany(servo => BrainPorts.ServoInputs(servo.Id)),
                 .. definition.Pistons.SelectMany(piston => BrainPorts.PistonInputs(piston.Id)),
             ],
             Ports.Inputs);
         _outputPortOf = PortPositions(
             [
+                .. definition.Servos.SelectMany(servo => BrainPorts.ServoOutputs(servo.Id)),
                 .. definition.Pistons.SelectMany(piston => BrainPorts.PistonOutputs(piston.Id)),
             ],
             Ports.Outputs);
@@ -789,6 +811,12 @@ public partial class Creature : Node2D
             index += sensor.ValueCount;
         }
 
+        foreach (var servo in _servos)
+        {
+            _rawInputs[index++] = servo.AngleInput;
+            _rawInputs[index++] = servo.SpeedInput;
+        }
+
         foreach (var piston in _pistons)
         {
             _rawInputs[index++] = piston.LengthInput;
@@ -819,8 +847,8 @@ public partial class Creature : Node2D
         inputs.AddRange(_sensorValues);
     }
 
-    /// <summary>How many Pistons the creature has.</summary>
-    public int PistonCount => _pistons.Length;
+    /// <summary>How many powered outputs the creature has.</summary>
+    public int PistonCount => _pistons.Length + _servos.Length;
 
     private float GetHitTolerance()
     {

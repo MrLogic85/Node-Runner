@@ -124,6 +124,70 @@
             "additionalProperties": false
           }
         },
+        "servos": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer"
+              },
+              "nodeId": {
+                "type": "integer"
+              },
+              "fixedLinkId": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "default": null
+              },
+              "targetLinkId": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "default": null
+              },
+              "name": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "default": null
+              },
+              "strength": {
+                "type": "number",
+                "default": 500000
+              },
+              "range": {
+                "type": "number",
+                "default": 3.141592653589793
+              },
+              "start": {
+                "type": "number",
+                "default": 0.5
+              },
+              "maxSpeed": {
+                "type": "number",
+                "default": 6.283185307179586
+              },
+              "riseTime": {
+                "type": "number",
+                "default": 0.2
+              }
+            },
+            "required": [
+              "id",
+              "nodeId"
+            ],
+            "additionalProperties": false
+          },
+          "default": null
+        },
         "pistons": {
           "type": "array",
           "items": {

@@ -145,6 +145,14 @@ sizes on screen at any zoom.
   spring". Taps treat Pistons and Springs alike as links: after a sensor
   and before a beam, the nearest link is hit, a Spring on a tie. Deleting a
   joint deletes its Springs. A locked creation cannot add one.
+- **Servo (#452, #577):** dragged from Parts → On a joint onto a node with
+  two or more links (Beam, Piston or Spring). Dropping on a beam, sensor, link or a one-link node
+  refuses with "Joint parts go on a joint"; a joint that already has one
+  refuses with "One part per joint". A good drop chooses the two lowest-id
+  links as Fixed and Target, records one undo step and selects the Servo.
+  Tapping that joint selects the Servo, but dragging still moves the joint.
+  Deleting a held link keeps the Servo with that role missing and blocks
+  training until a replacement is picked or the Servo is deleted.
 - **Camera aim (#594, #622):** a Camera selected alone shows its rays and an Aim
   handle out along its centre ray past its picture, in any tool, with no
   stem line. It always sits twice as far from the camera's middle as a
@@ -218,13 +226,13 @@ tool's panel: Parts shows the Parts tray (#374), Beams shows the link list
 `UiIconTabs` (On a joint, Sensors, Blocks) pinned at the top, then a scrolling
 list with the open tab's name, its parts as compact `UiPartRow`s and one help
 line for the tab. Each Build visit opens the tray on the first tab with an
-available part (`PartTray.OpeningGroup`, today Sensors), so a tab of padlocks
+available part (`PartTray.OpeningGroup`, today On a joint), so a tab of padlocks
 never reads as every part being locked (#887). `NodeRunner.App.ViewModels.PartTray`
 owns the groups, their order, the help lines and each row's state; the screen
 only maps parts to glyphs. Every implemented part is unlimited until #525, so
 rows show no count. A part not yet implemented is a dashed row with a lock,
 and the tab's name row says "Coming later" once; the Camera is held back the
-same way (#852). The available rows (today the Accelerometer) do nothing on tap; they are dragged out instead
+same way (#852). The available rows (today Servo and Accelerometer) do nothing on tap; they are dragged out instead
 (#376). Godot's drag-and-drop carries the part: the row starts it and
 floats its glyph above the finger (`UiPartRow.CreateDragPreview`), and
 `BuildCanvas` takes the drop in `PartDropZone`, a control over the canvas
@@ -266,7 +274,11 @@ when the panel shows it (`InPanel`). Each kind of part lists its own
 step 10), **Stroke** (±10–50%, step 5), **Max speed** (0.5–4.0 m/s, step
 0.1) and **Rise time** (0.1, 0.2, 0.5 or 1 s, evenly spaced along the slider
 so the short ones are as easy to pick, #801); a Spring has **Stiffness**
-(50–2000 N/m, step 50) and **Damping** (0–100 N·s/m, step 1); a Camera has **Aim**, set on the canvas and one Camera at a time.
+(50–2000 N/m, step 50) and **Damping** (0–100 N·s/m, step 1); a Servo has
+**Max strength** (5–200 N·m), **Range** (20°–360°), **Start position**
+(0–100%), **Max speed** (30°/s–720°/s) and **Rise time**, followed by
+Fixed/Target link pickers; a Camera has **Aim**, set on the canvas and one
+Camera at a time.
 
 The selection can change one part's own parameters, or those every selected
 part has and can share (`BuildViewModel.EditableParameters`). The panel shows a
@@ -278,6 +290,9 @@ so a locked creation keeps them.
 
 A Piston's rows are Name, then its sliders instead of what it is joined to,
 then the note "The brain pushes it out and pulls it in, within its stroke."
+A Servo's rows are Name, sliders, Fixed/Target pickers, then "The brain
+picks an angle and how much of its max strength to use." Changing a picker
+allocates a new Servo id so sign-dependent trained weights are not reused.
 A Spring's are Name, its two sliders, then "It pulls back toward its drawn
 length. Damping stops it bouncing."
 
@@ -305,10 +320,10 @@ ids and sensors at existing beam ids (one sensor per beam), so an empty or unfin
 a Creation (#515). Only training needs a finished creature.
 `NodeRunner.App.Lifecycle.CreatureReadiness` is the single source of truth
 for that, in two steps: `Problems` lists why the creature cannot be
-simulated yet (no nodes, a node with no beam or link, a zero-length beam
-or link, or one shorter than `CreatureReadiness.MinimumBeamGap` between its
+simulated yet (no nodes, a node with no beam or link, a Servo missing a
+Fixed or Target link, a zero-length beam or link, or one shorter than `CreatureReadiness.MinimumBeamGap` between its
 joint rings, #593), and `CanTrain` is true when there are none. It needs
-no powered part (#845): "Add a piston" would stop being right as more
+no powered part (#845): "Add a motor or piston" would stop being right as more
 powered parts come, so a creature with nothing for its brain to drive
 trains and stands still, and Train setup warns about it
 (`docs/TRAINING_LOOP.md` step 2).

@@ -120,6 +120,7 @@ public partial class BuildHost : Node, IRoutedScene
             Build.SetParameter((PartParameterId)parameter, value);
         };
         _buildScreen.ParameterChangeFinished += () => Build.EndEdit(_buildScreen);
+        _buildScreen.ServoLinkChanged += (servoId, fixedRole, linkId) => Build.SetServoLink(servoId, fixedRole, linkId);
         _buildScreen.UndoRequested += Build.Undo;
         _buildScreen.RedoRequested += Build.Redo;
         _buildScreen.StartTrainingRequested += StartTraining;

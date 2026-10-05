@@ -174,7 +174,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     private void Restore(CreatureDef body)
     {
         var nextPartId = Math.Max(body.NextPartId, _builder.NextPartId);
-        _builder = new CreatureBuilder(new CreatureDef(body.Nodes, body.Beams, body.Sensors, body.Pistons, body.Springs, nextPartId));
+        _builder = new CreatureBuilder(new CreatureDef(body.Nodes, body.Beams, body.Sensors, body.Servos, body.Pistons, body.Springs, nextPartId));
         foreach (var kind in Enum.GetValues<CreatureElementKind>())
         {
             SelectedSet(kind).RemoveWhere(id => !Exists(new CreatureElementSelection(kind, id)));
@@ -286,6 +286,8 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
 
     public IReadOnlyList<SensorDef> Sensors => _builder.Sensors;
 
+    public IReadOnlyList<ServoDef> Servos => _builder.Servos;
+
     public IReadOnlyList<PistonDef> Pistons => _builder.Pistons;
 
     public IReadOnlyList<SpringDef> Springs => _builder.Springs;
@@ -317,6 +319,11 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
             AddTooShortNote(CreatureElementKind.Beam, beam.Id, beam.NodeA, beam.NodeB);
         }
 
+        foreach (var servo in Servos.Where(servo => servo.FixedLinkId is null || servo.TargetLinkId is null))
+        {
+            notes.Add(new CanvasNote(CanvasNoteKind.Danger, new CreatureElementSelection(CreatureElementKind.Servo, servo.Id), UiText.Plain("Pick two links")));
+        }
+
         foreach (var piston in Pistons)
         {
             AddTooShortNote(CreatureElementKind.Piston, piston.Id, piston.NodeA, piston.NodeB);
@@ -333,10 +340,17 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
         {
             var a = Nodes[NodeIndexOf(nodeA)];
             var b = Nodes[NodeIndexOf(nodeB)];
-            if (a.Position != b.Position && CreatureReadiness.IsTooShort(a, b))
+            if (a.Position != b.Position && Distance(a, b) - NodeRadius(a.Id) - NodeRadius(b.Id) < CreatureReadiness.MinimumBeamGap)
             {
                 notes.Add(new CanvasNote(CanvasNoteKind.Danger, new CreatureElementSelection(kind, id), UiText.Plain("Too short")));
             }
+        }
+
+        static double Distance(NodeDef a, NodeDef b)
+        {
+            var dx = b.Position.X - a.Position.X;
+            var dy = b.Position.Y - a.Position.Y;
+            return Math.Sqrt((dx * dx) + (dy * dy));
         }
     }
 
@@ -397,10 +411,21 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
             return false;
         }
 
-        if (!PartTray.IsAvailable(part) || PartTray.SensorKindOf(part) is null)
+        if (!PartTray.IsAvailable(part) || (PartTray.SensorKindOf(part) is null && part != BuildPart.Servo))
         {
             reason = PartTray.ComingLater;
             return false;
+        }
+
+        if (part == BuildPart.Servo)
+        {
+            if (target.Kind != CreatureElementKind.Node)
+            {
+                reason = CreatureBuilder.JointPartsGoOnAJointReason;
+                return false;
+            }
+
+            return _builder.CanAddServo(target.Id, out reason);
         }
 
         if (target.Kind != CreatureElementKind.Beam)
@@ -443,12 +468,19 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
             return null;
         }
 
+        if (part == BuildPart.Servo)
+        {
+            var servoId = _history.Change(() => _builder.AddServo(target.Id));
+            ReplaceSelection(PartSet.None with { Servos = new HashSet<int> { servoId } });
+            return servoId;
+        }
+
         var sensorId = _history.Change(() =>
         {
             _builder.AddSensor(target.Id, PartTray.SensorKindOf(part)!.Value, out var id, out _);
             return id;
         });
-        AnatomyChanged?.Invoke(this, EventArgs.Empty);
+        ReplaceSelection(PartSet.None with { Sensors = new HashSet<int> { sensorId } });
         return sensorId;
     }
 
@@ -456,6 +488,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     {
         CreatureElementKind.Node => _builder.Nodes.Any(node => node.Id == element.Id),
         CreatureElementKind.Beam => _builder.Beams.Any(beam => beam.Id == element.Id),
+        CreatureElementKind.Servo => _builder.Servos.Any(servo => servo.Id == element.Id),
         CreatureElementKind.Piston => _builder.Pistons.Any(piston => piston.Id == element.Id),
         CreatureElementKind.Spring => _builder.Springs.Any(spring => spring.Id == element.Id),
         _ => _builder.Sensors.Any(sensor => sensor.Id == element.Id),
@@ -477,7 +510,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     /// <summary>Moves an already-placed node to a new position, as far as <see cref="BuildArea"/> reaches.</summary>
     public void MoveNode(int nodeId, Vector2D position)
     {
-        _history.Change(() => _builder.MoveNode(nodeId, BuildArea.Clamp(position, NodeById(nodeId).Radius)));
+        _history.Change(() => _builder.MoveNode(nodeId, BuildArea.Clamp(position, NodeRadius(nodeId))));
         AnatomyChanged?.Invoke(this, EventArgs.Empty);
     }
 
@@ -565,10 +598,10 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     }
 
     /// <summary>The name a part shows: its own name if it has one, else <see cref="DefaultPartName"/>.</summary>
-    public UiText PartDisplayName(int partId) => PartNames.Display(_builder.Nodes, _builder.Beams, _builder.Sensors, _builder.Pistons, _builder.Springs, partId);
+    public UiText PartDisplayName(int partId) => PartNames.Display(_builder.Nodes, _builder.Beams, _builder.Sensors, _builder.Servos, _builder.Pistons, _builder.Springs, partId);
 
     /// <summary>The name a part shows until it is renamed: "Node 2", "Beam 1", "Piston 1", "Spring 1" or its sensor kind.</summary>
-    public UiText DefaultPartName(int partId) => PartNames.Default(_builder.Nodes, _builder.Beams, _builder.Sensors, _builder.Pistons, _builder.Springs, partId);
+    public UiText DefaultPartName(int partId) => PartNames.Default(_builder.Nodes, _builder.Beams, _builder.Sensors, _builder.Servos, _builder.Pistons, _builder.Springs, partId);
 
     /// <summary>
     /// Renames a part by id, so an edit lands on the part it started on even if the selection
@@ -583,7 +616,8 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
         if (!_builder.Nodes.Any(node => node.Id == partId)
             && !_builder.Beams.Any(beam => beam.Id == partId)
             && !_builder.Sensors.Any(sensor => sensor.Id == partId)
-            && !_builder.Pistons.Any(piston => piston.Id == partId)
+        && !_builder.Servos.Any(servo => servo.Id == partId)
+        && !_builder.Pistons.Any(piston => piston.Id == partId)
             && !_builder.Springs.Any(spring => spring.Id == partId))
         {
             return;
@@ -600,7 +634,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
         AnatomyChanged?.Invoke(this, EventArgs.Empty);
     }
 
-    private string? PartName(int partId) => PartNames.Own(_builder.Nodes, _builder.Beams, _builder.Sensors, _builder.Pistons, _builder.Springs, partId);
+    private string? PartName(int partId) => PartNames.Own(_builder.Nodes, _builder.Beams, _builder.Sensors, _builder.Servos, _builder.Pistons, _builder.Springs, partId);
 
     /// <summary>
     /// Finds the closest placed node whose ring, grown by <paramref name="margin"/>,
@@ -617,7 +651,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
             var dx = node.Position.X - position.X;
             var dy = node.Position.Y - position.Y;
             var distanceSquared = (dx * dx) + (dy * dy);
-            var reach = node.Radius + margin;
+            var reach = NodeRadius(node.Id) + margin;
             if (distanceSquared <= reach * reach && distanceSquared < bestDistanceSquared)
             {
                 bestDistanceSquared = distanceSquared;
@@ -770,12 +804,17 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
                 _builder.RemovePiston(pistonId);
             }
 
+            foreach (var servoId in _selectedServoIds)
+            {
+                _builder.RemoveServo(servoId);
+            }
+
             foreach (var springId in _selectedSpringIds)
             {
                 _builder.RemoveSpring(springId);
             }
 
-            foreach (var beamId in _selectedBeamIds)
+            foreach (var beamId in _selectedLinkIds)
             {
                 _builder.RemoveBeam(beamId);
             }
@@ -843,7 +882,28 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
 
     public int PistonIndexOf(int pistonId) => _builder.PistonIndexOf(pistonId);
 
+    public int ServoIndexOf(int servoId) => _builder.ServoIndexOf(servoId);
+
     public int SpringIndexOf(int springId) => _builder.SpringIndexOf(springId);
+
+    public double NodeRadius(int nodeId) => _builder.Build().NodeRadius(nodeId);
+
+    public int? ServoAtNode(int nodeId) => _builder.Servos.FirstOrDefault(servo => servo.NodeId == nodeId)?.Id;
+
+    public IReadOnlyList<CreatureBuilder.LinkRef> LinksAt(int nodeId) => _builder.LinksAt(nodeId);
+
+    public int? SetServoLink(int servoId, bool fixedRole, int linkId)
+    {
+        if (_moveOnly)
+        {
+            return null;
+        }
+
+        var newId = _history.Change(() => _builder.SetServoLink(servoId, fixedRole, linkId));
+        ReplaceSelection(PartSet.None with { Servos = new HashSet<int> { newId } });
+        AnatomyChanged?.Invoke(this, EventArgs.Empty);
+        return newId;
+    }
 
     private NodeDef NodeById(int nodeId) => _builder.Nodes[_builder.NodeIndexOf(nodeId)];
 

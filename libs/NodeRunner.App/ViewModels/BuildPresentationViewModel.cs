@@ -86,6 +86,22 @@ public sealed class BuildPresentationViewModel
         get
         {
             var canDelete = !_build.IsMoveOnly;
+            if (_build.SingleSelectedServoId is { } servoId)
+            {
+                var servo = ServoById(servoId);
+                return new PartSettingsPresentation(
+                    servoId,
+                    PartSettingsKind.Servo,
+                    _build.PartDisplayName(servoId),
+                    _build.DefaultPartName(servoId),
+                    null,
+                    null,
+                    ServoNote,
+                    canDelete,
+                    PanelSliders(),
+                    ServoPickers(servo));
+            }
+
             if (_build.SingleSelectedPistonId is { } pistonId)
             {
                 return new PartSettingsPresentation(
@@ -163,6 +179,8 @@ public sealed class BuildPresentationViewModel
     }
 
     public static UiText PistonNote { get; } = UiText.Plain("The brain pushes it out and pulls it in, within its stroke.");
+
+    public static UiText ServoNote { get; } = UiText.Plain("The brain picks an angle and how much of its max strength to use.");
 
     public static UiText SpringNote { get; } = UiText.Plain("It pulls back toward its drawn length. Damping stops it bouncing.");
 
@@ -299,7 +317,14 @@ public sealed class BuildPresentationViewModel
 
         bool IsTooShort(int nodeA, int nodeB) =>
             NodeById(nodeA).Position != NodeById(nodeB).Position
-            && CreatureReadiness.IsTooShort(NodeById(nodeA), NodeById(nodeB));
+            && Distance(NodeById(nodeA), NodeById(nodeB)) - _build.NodeRadius(nodeA) - _build.NodeRadius(nodeB) < CreatureReadiness.MinimumBeamGap;
+
+        static double Distance(NodeDef a, NodeDef b)
+        {
+            var dx = b.Position.X - a.Position.X;
+            var dy = b.Position.Y - a.Position.Y;
+            return Math.Sqrt((dx * dx) + (dy * dy));
+        }
     }
 
     private UiText ConnectedBeamText(int nodeId)
@@ -318,6 +343,31 @@ public sealed class BuildPresentationViewModel
     private BeamDef BeamById(int beamId) => _build.Beams[_build.BeamIndexOf(beamId)];
 
     private SensorDef SensorById(int sensorId) => _build.Sensors.First(sensor => sensor.Id == sensorId);
+
+    private ServoDef ServoById(int servoId) => _build.Servos[_build.ServoIndexOf(servoId)];
+
+    private IReadOnlyList<PartPickerPresentation> ServoPickers(ServoDef servo)
+    {
+        var links = _build.LinksAt(servo.NodeId)
+            .OrderBy(link => link.Id)
+            .ToArray();
+        var options = links.Select(link => _build.PartDisplayName(link.Id)).ToArray();
+        var lockedNote = _build.IsMoveOnly ? UiText.Plain("Unlock to change which link is fixed.") : null;
+        var trainedNote = !_build.IsMoveOnly && _build.TrainingGeneration is not null ? UiText.Plain("Changing these makes it learn again.") : null;
+        return
+        [
+            Picker(UiText.Plain("Fixed part"), servo.FixedLinkId),
+            Picker(UiText.Plain("Target part"), servo.TargetLinkId),
+        ];
+
+        PartPickerPresentation Picker(UiText label, int? selectedLinkId)
+        {
+            var selected = selectedLinkId is { } id ? Array.FindIndex(links, link => link.Id == id) : -1;
+            return selected >= 0
+                ? new PartPickerPresentation(label, links.Select(link => link.Id).ToArray(), options, selected, _build.IsMoveOnly, lockedNote ?? trainedNote)
+                : new PartPickerPresentation(label, [0, .. links.Select(link => link.Id)], [UiText.Plain("Pick a link"), .. options], 0, _build.IsMoveOnly, UiText.Plain("Pick two links."));
+        }
+    }
 
     private void SubscribeToBuild()
     {

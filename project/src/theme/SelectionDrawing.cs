@@ -82,6 +82,70 @@ public static class SelectionDrawing
     }
 
     /// <summary>
+    /// A filled underlay band along a link, optionally hatched. Used by a selected Servo to mark
+    /// the Fixed and Target links without hiding their own drawings.
+    /// </summary>
+    public static void DrawLinkBand(
+        CanvasItem canvas,
+        Transform2D toPixels,
+        float scale,
+        Vector2 a,
+        Vector2 b,
+        float radiusA,
+        float radiusB,
+        float halfWidth,
+        Color fill,
+        Color edge,
+        Color? hatch,
+        float hatchSpacing)
+    {
+        ArgumentNullException.ThrowIfNull(canvas);
+        if (a == b)
+        {
+            return;
+        }
+
+        var along = (b - a).Normalized();
+        var across = along.Orthogonal();
+        var (start, end) = LinkSpan(a, b, radiusA, radiusB, false, false, halfWidth, along);
+        var length = (end - start).Length();
+        if (length <= 0)
+        {
+            return;
+        }
+
+        canvas.DrawColoredPolygon(
+            [
+                toPixels * (start + (across * halfWidth)),
+                toPixels * (end + (across * halfWidth)),
+                toPixels * (end - (across * halfWidth)),
+                toPixels * (start - (across * halfWidth)),
+            ],
+            fill);
+        var width = UiSize.Stroke.Hair * scale;
+        canvas.DrawLine(toPixels * (start + (across * halfWidth)), toPixels * (end + (across * halfWidth)), edge, width, antialiased: true);
+        canvas.DrawLine(toPixels * (start - (across * halfWidth)), toPixels * (end - (across * halfWidth)), edge, width, antialiased: true);
+        if (hatch is not { } hatchColor)
+        {
+            return;
+        }
+
+        for (var t = -2 * halfWidth; t < length; t += hatchSpacing)
+        {
+            var t0 = Math.Max(t, 0);
+            var t1 = Math.Min(t + (2 * halfWidth), length);
+            if (t1 <= t0)
+            {
+                continue;
+            }
+
+            var p0 = start + (along * t0) + (across * (-halfWidth + (t0 - t)));
+            var p1 = start + (along * t1) + (across * (-halfWidth + (t1 - t)));
+            canvas.DrawLine(toPixels * p0, toPixels * p1, hatchColor, 1.2f * scale, antialiased: true);
+        }
+    }
+
+    /// <summary>
     /// Where a link's selection lines run: to the selected joints' halos, else to the joint edges,
     /// else, when the joints crowd too close for either, centre to centre so the mark never vanishes.
     /// </summary>

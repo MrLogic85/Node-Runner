@@ -7,6 +7,7 @@ public enum PartSettingsKind
     Beam,
     Accelerometer,
     Camera,
+    Servo,
     Piston,
     Spring,
 }
@@ -28,4 +29,13 @@ public sealed record PartSettingsPresentation(
     UiText? ConnectionsValue,
     UiText Note,
     bool CanDelete,
-    IReadOnlyList<ParameterSlider> Settings);
+    IReadOnlyList<ParameterSlider> Settings,
+    IReadOnlyList<PartPickerPresentation>? Pickers = null);
+
+public sealed record PartPickerPresentation(
+    UiText Label,
+    IReadOnlyList<int> LinkIds,
+    IReadOnlyList<UiText> Options,
+    int SelectedIndex,
+    bool IsLocked,
+    UiText? Note);

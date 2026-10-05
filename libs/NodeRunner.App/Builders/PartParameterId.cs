@@ -4,8 +4,12 @@ namespace NodeRunner.App.Builders;
 public enum PartParameterId
 {
     Strength,
+    ServoStrength,
     Stroke,
+    Range,
+    StartPosition,
     MaxSpeed,
+    AngularMaxSpeed,
     RiseTime,
     Aim,
     Stiffness,

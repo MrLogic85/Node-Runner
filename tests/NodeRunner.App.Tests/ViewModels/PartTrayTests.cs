@@ -16,7 +16,7 @@ public sealed class PartTrayTests
     {
         PartTray.Groups().Select(group => group.Rows.Select(row => row.Name).ToArray()).ShouldBe(
         [
-            Plain("Brake", "Servo", "Stepper", "Velocity motor", "Wheel"),
+            Plain("Servo", "Stepper", "Velocity motor", "Brake", "Wheel"),
             Plain("Accelerometer", "Camera"),
             Plain("Battery", "Generator", "Fuel tank"),
         ]);
@@ -43,7 +43,7 @@ public sealed class PartTrayTests
     {
         var opening = PartTray.OpeningGroup();
 
-        opening.ShouldBe(1);
+        opening.ShouldBe(0);
         PartTray.Groups()[opening].Rows.ShouldContain(row => row.IsAvailable);
         PartTray.Groups().Take(opening).ShouldAllBe(group => group.Rows.All(row => !row.IsAvailable));
     }
@@ -63,7 +63,7 @@ public sealed class PartTrayTests
     {
         var rows = PartTray.Groups().SelectMany(group => group.Rows).ToList();
 
-        rows.Where(row => row.Part is not BuildPart.Accelerometer).ShouldAllBe(row =>
+        rows.Where(row => row.Part is not BuildPart.Accelerometer and not BuildPart.Servo).ShouldAllBe(row =>
             row.State == PartTrayRowState.ComingLater && !row.IsAvailable && Equals(row.LockedReason, UiText.Plain("Coming later")));
     }
 

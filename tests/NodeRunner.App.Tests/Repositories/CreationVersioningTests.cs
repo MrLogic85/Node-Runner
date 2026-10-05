@@ -39,7 +39,9 @@ public sealed class CreationVersioningTests : IDisposable
         written.First().Key.ShouldBe(_versionField);
         written[_versionField]!.GetValue<int>().ShouldBe(FileCreationRepository.Format.CurrentVersion);
         written.Remove(_versionField);
-        JsonNode.DeepEquals(written, JsonNode.Parse(original)).ShouldBeTrue();
+        var expected = JsonNode.Parse(original)!.AsObject();
+        expected["creature"]!.AsObject()["servos"] = new JsonArray();
+        JsonNode.DeepEquals(written, expected).ShouldBeTrue();
         new FileCreationRepository(new TestStorageLocation(_directory)).Get(loaded.Id).ShouldBe(loaded, _creationComparer);
     }
 

@@ -20,6 +20,9 @@ public partial class BuildScreen : Control
     private string? _renamingDefaultName;
     private bool _subscribedToPresentation;
     private string? _shownPartGroup;
+    private int _shownServoPickerId;
+    private int[] _fixedPickerLinkIds = [];
+    private int[] _targetPickerLinkIds = [];
 
     [Signal]
     public delegate void BackRequestedEventHandler();
@@ -68,6 +71,9 @@ public partial class BuildScreen : Control
     /// <summary>A setting's slider was let go: its changes since the touch are one undo step (#689).</summary>
     [Signal]
     public delegate void ParameterChangeFinishedEventHandler();
+
+    [Signal]
+    public delegate void ServoLinkChangedEventHandler(int servoId, bool fixedRole, int linkId);
 
     /// <summary>False while the overflow menu is open; it takes Android Back itself.</summary>
     public bool CanTakeBack => !Toolbar.Menu.Visible;
@@ -127,6 +133,8 @@ public partial class BuildScreen : Control
         partName.MaxLength = NameLimits.Part;
         partName.EditingStarted += OnPartNameEditingStarted;
         partName.EditingFinished += OnPartNameEdited;
+        GetNode<UiPicker>("%FixedPicker").SelectionChanged += selected => OnServoPickerChanged(selected, fixedRole: true);
+        GetNode<UiPicker>("%TargetPicker").SelectionChanged += selected => OnServoPickerChanged(selected, fixedRole: false);
         BindViewModels();
         Apply();
     }
@@ -482,9 +490,9 @@ public partial class BuildScreen : Control
         Apply();
     }
 
-    /// <summary>The part a tray row can be dragged out as (#376): an available sensor, or null.</summary>
+    /// <summary>The part a tray row can be dragged out as (#376, #577): an available sensor or joint part, or null.</summary>
     public static BuildPart? DraggablePart(PartTrayRow row) =>
-        row.IsAvailable && PartTray.SensorKindOf(row.Part) is not null ? row.Part : null;
+        row.IsAvailable && (PartTray.SensorKindOf(row.Part) is not null || row.Part == BuildPart.Servo) ? row.Part : null;
 
     /// <summary>Lifts the part out of its row: the canvas takes the drop, and the row's glyph floats above the finger.</summary>
     private Variant StartPartDrag(UiPartRow row, BuildPart part)
@@ -538,9 +546,58 @@ public partial class BuildScreen : Control
         GetNode<UiLabel>("%PartConnectionsValue").TextSource = UiTextTranslation.Source(part.ConnectionsValue);
         connectionsLabel.GetParent<Control>().Visible = connectionsLabel.TextSource is not null;
         ApplyParameterSliders(GetNode<Container>("%PartParameters"), part.Settings);
+        ApplyPartPickers(part);
 
         GetNode<UiLabel>("%PartNote").ShowText(part.Note);
         GetNode<UiButton>("%PartDelete").Visible = part.CanDelete;
+    }
+
+    private void ApplyPartPickers(PartSettingsPresentation part)
+    {
+        var container = GetNode<VBoxContainer>("%PartPickers");
+        var fixedPicker = GetNode<UiPicker>("%FixedPicker");
+        var targetPicker = GetNode<UiPicker>("%TargetPicker");
+        _shownServoPickerId = part.Id;
+        var pickers = part.Pickers ?? [];
+        container.Visible = pickers.Count > 0;
+        fixedPicker.Visible = pickers.Count > 0;
+        targetPicker.Visible = pickers.Count > 1;
+        _fixedPickerLinkIds = [];
+        _targetPickerLinkIds = [];
+
+        for (var index = 0; index < pickers.Count; index++)
+        {
+            var presentation = pickers[index];
+            var fixedRole = index == 0;
+            var picker = fixedRole ? fixedPicker : targetPicker;
+            picker.LabelText = UiTextTranslation.Source(presentation.Label)();
+            picker.Options = presentation.Options.Select(option =>
+                new UiPickerOption(UiTextTranslation.Source(option)(), UiIconId.PartBeam)).ToArray();
+            picker.SelectedIndex = presentation.SelectedIndex;
+            picker.Disabled = presentation.IsLocked;
+            picker.BelowText = UiTextTranslation.Source(presentation.Note)?.Invoke() ?? string.Empty;
+            if (fixedRole)
+            {
+                _fixedPickerLinkIds = presentation.LinkIds.ToArray();
+            }
+            else
+            {
+                _targetPickerLinkIds = presentation.LinkIds.ToArray();
+            }
+        }
+    }
+
+    private void OnServoPickerChanged(int selected, bool fixedRole)
+    {
+        var links = fixedRole ? _fixedPickerLinkIds : _targetPickerLinkIds;
+        if (selected >= 0 && selected < links.Length)
+        {
+            var linkId = links[selected];
+            if (linkId > 0)
+            {
+                EmitSignal(SignalName.ServoLinkChanged, _shownServoPickerId, fixedRole, linkId);
+            }
+        }
     }
 
     /// <summary>The side panel glyph for the part whose settings are open.</summary>
@@ -550,6 +607,7 @@ public partial class BuildScreen : Control
         PartSettingsKind.Beam => UiIconId.Beam,
         PartSettingsKind.Accelerometer => UiIconId.PartAccelerometer,
         PartSettingsKind.Camera => UiIconId.PartCamera,
+        PartSettingsKind.Servo => UiIconId.PartServo,
         PartSettingsKind.Piston => UiIconId.PartPiston,
         PartSettingsKind.Spring => UiIconId.PartSpring,
         _ => UiIconId.None,

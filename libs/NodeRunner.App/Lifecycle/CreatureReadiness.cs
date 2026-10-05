@@ -28,6 +28,17 @@ public static class CreatureReadiness
         return Math.Sqrt((dx * dx) + (dy * dy)) - a.Radius - b.Radius < MinimumBeamGap;
     }
 
+    /// <summary>True when the free length between two nodes' effective rings is too small.</summary>
+    public static bool IsTooShort(CreatureDef creature, int nodeA, int nodeB)
+    {
+        ArgumentNullException.ThrowIfNull(creature);
+        var a = creature.Nodes[creature.NodeIndexOf(nodeA)];
+        var b = creature.Nodes[creature.NodeIndexOf(nodeB)];
+        var dx = b.Position.X - a.Position.X;
+        var dy = b.Position.Y - a.Position.Y;
+        return Math.Sqrt((dx * dx) + (dy * dy)) - creature.NodeRadius(nodeA) - creature.NodeRadius(nodeB) < MinimumBeamGap;
+    }
+
     /// <summary>Why the creature cannot be simulated yet; empty when it can.</summary>
     public static IReadOnlyList<UiText> Problems(CreatureDef creature)
     {
@@ -50,6 +61,15 @@ public static class CreatureReadiness
         foreach (var beam in creature.Beams)
         {
             AddLengthProblem(creature, CreatureElementKind.Beam, beam.NodeA, beam.NodeB, problems);
+        }
+
+        foreach (var servo in creature.Servos)
+        {
+            if (servo.FixedLinkId is null || servo.TargetLinkId is null)
+            {
+                problems.Add(UiText.Format("{0} is missing a link. Pick two links at its joint or delete it.",
+                    PartNames.Display(creature.Nodes, creature.Beams, creature.Sensors, creature.Servos, creature.Pistons, creature.Springs, servo.Id)));
+            }
         }
 
         foreach (var piston in creature.Pistons)
@@ -89,7 +109,7 @@ public static class CreatureReadiness
                 _ => UiText.Format("The beam between node {0} and node {1} has zero length. Move one of the nodes apart.", a, b),
             });
         }
-        else if (IsTooShort(creature.Nodes[indexA], creature.Nodes[indexB]))
+        else if (IsTooShort(creature, nodeA, nodeB))
         {
             problems.Add(kind switch
             {

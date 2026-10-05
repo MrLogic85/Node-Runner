@@ -538,7 +538,7 @@ public sealed class BuildGestures
     }
 
     private CreatureElementSelection? PressedElement() =>
-        _pressedNode is { } node ? new(CreatureElementKind.Node, node)
+        _pressedNode is { } node ? (_build.ServoAtNode(node) is { } servo ? new(CreatureElementKind.Servo, servo) : new(CreatureElementKind.Node, node))
         : _pressedSensor is { } sensor ? new(CreatureElementKind.Sensor, sensor)
         : _pressedLink is { } link ? link
         : _pressedBeam is { } beam ? new(CreatureElementKind.Beam, beam)
@@ -622,7 +622,7 @@ public sealed class BuildGestures
             var at = View.ToView(node.Position);
             var x = (at.X * cos) + (at.Y * sin);
             var y = (at.Y * cos) - (at.X * sin);
-            var halo = Halo(node) * View.Zoom;
+            var halo = SelectionMarks.JointHalo(_build.NodeRadius(node.Id)) * View.Zoom;
             (minX, minY, maxX, maxY) = (Math.Min(minX, x - halo), Math.Min(minY, y - halo), Math.Max(maxX, x + halo), Math.Max(maxY, y + halo));
         }
 
@@ -635,8 +635,6 @@ public sealed class BuildGestures
             new Vector2D(center.X + halfWidth, center.Y + halfHeight));
         return Place(frame, _frameAngle);
     }
-
-    private static double Halo(NodeDef node) => SelectionMarks.JointHalo(node.Radius);
 
     /// <summary>The handles on <paramref name="frame"/> turned <paramref name="angle"/> about its centre.</summary>
     private static FrameLayout Place(CanvasRect frame, double angle)
@@ -736,6 +734,7 @@ public sealed class BuildGestures
             _build.Nodes.Where(node => Inside(node.Position)).Select(node => node.Id).ToHashSet(),
             beams,
             _build.Sensors.Where(sensor => beams.Contains(sensor.BeamId)).Select(sensor => sensor.Id).ToHashSet(),
+            _build.Servos.Where(servo => Inside(NodeById(servo.NodeId).Position)).Select(servo => servo.Id).ToHashSet(),
             _build.Pistons.Where(piston => MidInside(piston.NodeA, piston.NodeB)).Select(piston => piston.Id).ToHashSet(),
             _build.Springs.Where(spring => MidInside(spring.NodeA, spring.NodeB)).Select(spring => spring.Id).ToHashSet());
     }
@@ -752,8 +751,8 @@ public sealed class BuildGestures
         }
 
         return new CanvasRect(
-            new Vector2D(nodes.Min(node => node.Position.X - (2 * node.Radius)), nodes.Min(node => node.Position.Y - (2 * node.Radius))),
-            new Vector2D(nodes.Max(node => node.Position.X + (2 * node.Radius)), nodes.Max(node => node.Position.Y + (2 * node.Radius))));
+            new Vector2D(nodes.Min(node => node.Position.X - (2 * _build.NodeRadius(node.Id))), nodes.Min(node => node.Position.Y - (2 * _build.NodeRadius(node.Id)))),
+            new Vector2D(nodes.Max(node => node.Position.X + (2 * _build.NodeRadius(node.Id))), nodes.Max(node => node.Position.Y + (2 * _build.NodeRadius(node.Id)))));
     }
 
     private void ResetTool()

@@ -663,6 +663,37 @@ script = ExtResource("shell_4_label")
 TextStyle = 9
 TextColor = 8
 
+[node name="Detail" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/NeonCard/Stack/Swatches"]
+layout_mode = 2
+custom_minimum_size = Vector2(280, 0)
+theme_override_constants/separation = 12
+
+[node name="Swatch" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/NeonCard/Stack/Swatches/Detail"]
+layout_mode = 2
+script = ExtResource("cs_swatch")
+Token = 15
+
+[node name="Text" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/NeonCard/Stack/Swatches/Detail"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme_override_constants/separation = 0
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/NeonCard/Stack/Swatches/Detail/Text"]
+layout_mode = 2
+text = "detail"
+script = ExtResource("shell_4_label")
+TextStyle = 15
+TextColor = 7
+
+[node name="Description" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/NeonCard/Stack/Swatches/Detail/Text"]
+layout_mode = 2
+autowrap_mode = 3
+text = "Small passive part details, first used for the Servo's Fixed link mark."
+script = ExtResource("shell_4_label")
+TextStyle = 9
+TextColor = 8
+
 [node name="PaperCard" type="PanelContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours"]
 layout_mode = 2
 theme = ExtResource("cs_paper")
@@ -1114,6 +1145,37 @@ TextColor = 7
 layout_mode = 2
 autowrap_mode = 3
 text = "Outputs: motors and the neurons that drive them, when a part is inspected. Senses use accent. Never alone: always with a tag or a position."
+script = ExtResource("shell_4_label")
+TextStyle = 9
+TextColor = 8
+
+[node name="Detail" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/PaperCard/Stack/Swatches"]
+layout_mode = 2
+custom_minimum_size = Vector2(280, 0)
+theme_override_constants/separation = 12
+
+[node name="Swatch" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/PaperCard/Stack/Swatches/Detail"]
+layout_mode = 2
+script = ExtResource("cs_swatch")
+Token = 15
+
+[node name="Text" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/PaperCard/Stack/Swatches/Detail"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme_override_constants/separation = 0
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/PaperCard/Stack/Swatches/Detail/Text"]
+layout_mode = 2
+text = "detail"
+script = ExtResource("shell_4_label")
+TextStyle = 15
+TextColor = 7
+
+[node name="Description" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/PaperCard/Stack/Swatches/Detail/Text"]
+layout_mode = 2
+autowrap_mode = 3
+text = "Small passive part details, first used for the Servo's Fixed link mark."
 script = ExtResource("shell_4_label")
 TextStyle = 9
 TextColor = 8

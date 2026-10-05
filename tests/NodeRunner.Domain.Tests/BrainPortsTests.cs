@@ -113,6 +113,24 @@ public sealed class BrainPortsTests
     }
 
     [Fact]
+    public void Of_GivesEachServoAngleAndSpeedInputs_AndAngleAndStrengthOutputs()
+    {
+        var creature = new CreatureDef(
+            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(1, 0)), new NodeDef(3, new Vector2D(0, 1))],
+            [new BeamDef(4, 1, 2), new BeamDef(5, 1, 3)],
+            [],
+            [new ServoDef(6, 1, 4, 5)],
+            [],
+            [],
+            nextPartId: 7);
+
+        var layout = BrainPorts.Of(creature);
+
+        layout.Inputs.ShouldBe([BrainPort.Input(6, "angle"), BrainPort.Input(6, "speed")]);
+        layout.Outputs.ShouldBe([BrainPort.Output(6, "angle", PortSignal.Position), BrainPort.Output(6, "strength", PortSignal.Strength)]);
+    }
+
+    [Fact]
     public void SensorPorts_UseTheSavedChannelKeys()
     {
         BrainPorts.AccelerometerChannels.ShouldBe(["along", "across"]);

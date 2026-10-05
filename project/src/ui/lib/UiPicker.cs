@@ -149,7 +149,7 @@ public partial class UiPicker : PanelContainer
 
         var stack = new VBoxContainer
         {
-            SizeFlagsHorizontal = SizeFlags.ShrinkBegin,
+            SizeFlagsHorizontal = SizeFlags.ExpandFill,
         };
         stack.AddThemeConstantOverride("separation", (int)UiSize.Space.S1);
         AddChild(stack);
@@ -187,8 +187,8 @@ public partial class UiPicker : PanelContainer
         var rowButton = new Button
         {
             Disabled = IsLocked || Disabled || Options.Length == 0,
-            CustomMinimumSize = new Vector2(UiLayout.SidePanelWidth, UiSize.Control.Small),
-            SizeFlagsHorizontal = SizeFlags.ShrinkBegin,
+            CustomMinimumSize = new Vector2(0, UiSize.Control.Small),
+            SizeFlagsHorizontal = SizeFlags.ExpandFill,
             TooltipText = LabelText,
         };
         UiTranslation.ShareContext(this, rowButton);

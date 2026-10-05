@@ -46,8 +46,7 @@ Long-form descriptions and the sensor/model contract live in
   "up"). Gives two model inputs, along and across the beam. See:
   `docs/CREATURE_MODEL.md`.
 - **Beam** — A rigid, fixed-length connection between two nodes. Never
-  stretches or compresses. Its own `RigidBody2D` at runtime. See:
-  `docs/CREATURE_MODEL.md`.
+  stretches or compresses. See: `docs/CREATURE_MODEL.md`.
 - **Camera** — A sensor on a beam: three rays (left, centre, right)
   fanned around its aim, which turns in Build (#594; a new one looks
   forward-up, forward and forward-down) and turns with the beam, that read how near
@@ -69,10 +68,10 @@ Long-form descriptions and the sensor/model contract live in
   triangle locks them. Not the retired 0.1.0 Joint/Bone/Muscle prototype
   part, and not a Godot physics joint. See:
   `docs/BUILD_MODE.md`.
-- **Link** — A non-beam part drawn joint-to-joint by the Beams tool. Today
-  that means Piston or Spring; Wing is listed for later. The UI list is
-  headed "Links" and also includes Beam, but a Beam remains the structural
-  part above.
+- **Link** — A joint-to-joint connection a Servo may use as Fixed or Target:
+  Beam, Piston or Spring. In the Beams tool, "link" usually means the
+  non-beam rows (Piston, Spring; Wing later), while the UI list is headed
+  "Links" and also includes Beam.
 - **Model input** — One slot in the neural network's input vector, populated
   one-to-one from an input port. See: `docs/CREATURE_MODEL.md`.
 - **Model output** — One slot in the neural network's output vector,
@@ -94,6 +93,10 @@ Long-form descriptions and the sensor/model contract live in
 - **Sensor (part)** — A part that sits on a beam and feels that beam
   (`SensorDef`, `SensorKind`); one sensor per beam, at its midpoint.
   Not the brain. See: `docs/CREATURE_MODEL.md`.
+- **Servo** — A powered joint part (#452) that holds one touching link as
+  Fixed and turns another as Target. Its links can be Beams, Pistons or
+  Springs. Gives the brain its angle and speed, and takes a target position
+  and strength output. See: `docs/CREATURE_MODEL.md`.
 - **Spring** — A passive link between two nodes (#453) that pulls back
   toward its drawn length with its Stiffness; its Damping (N·s/m) brakes
   the speed between its nodes. No brain ports. See:

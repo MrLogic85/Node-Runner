@@ -65,7 +65,7 @@ public sealed class BuildPartsTrayTests
             .Where(row => BuildScreen.DraggablePart(row) is not null)
             .Select(row => row.Part);
 
-        draggable.ShouldBe([BuildPart.Accelerometer]);
+        draggable.ShouldBe([BuildPart.Servo, BuildPart.Accelerometer]);
     }
 
     [Fact]

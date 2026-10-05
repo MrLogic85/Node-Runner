@@ -38,6 +38,7 @@ public sealed class UiTokensTests
         AssertColor(tokens.Color(UiTokens.Color.Danger), 0xff, 0x6b, 0x87);
         AssertColor(tokens.Color(UiTokens.Color.Scrim), 0x04, 0x08, 0x10, 0xbd);
         AssertColor(tokens.Color(UiTokens.Color.Output), 0xff, 0xe1, 0x4d);
+        AssertColor(tokens.Color(UiTokens.Color.Detail), 0xb5, 0x8c, 0xff);
         tokens.Flag(UiTokens.Flag.EffectsEnabled).ShouldBeTrue();
     }
 
@@ -62,6 +63,7 @@ public sealed class UiTokensTests
         AssertColor(tokens.Color(UiTokens.Color.Danger), 0xb3, 0x26, 0x1e);
         AssertColor(tokens.Color(UiTokens.Color.Scrim), 0x1b, 0x1a, 0x17, 0x73);
         AssertColor(tokens.Color(UiTokens.Color.Output), 0x7a, 0x5c, 0x00);
+        AssertColor(tokens.Color(UiTokens.Color.Detail), 0x6b, 0x3f, 0xc0);
         tokens.Flag(UiTokens.Flag.EffectsEnabled).ShouldBeFalse();
     }
 

@@ -12,7 +12,7 @@ public sealed class UiThemeExpanderTests
         {
             "transparent", "background", "panel", "panel_raised", "line", "line_strong",
             "edge", "ink", "muted", "accent", "halo", "on_accent", "danger",
-            "scrim", "output",
+            "scrim", "output", "detail",
         };
         Enum.GetValues<UiTokens.Color>().Select(UiTokens.Name).ShouldBe(expectedColors);
 

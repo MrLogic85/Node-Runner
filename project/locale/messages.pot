@@ -153,6 +153,10 @@ msgstr ""
 msgid "Cancel"
 msgstr ""
 
+#: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs
+msgid "Changing these makes it learn again."
+msgstr ""
+
 #: libs/NodeRunner.App/ViewModels/PartTrayPresentation.cs
 #: project/scenes/screens/BuildScreen.tscn
 msgid "Coming later"
@@ -309,6 +313,11 @@ msgstr ""
 msgid "Finish the creation in Build before training it."
 msgstr ""
 
+#: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs
+#: project/scenes/screens/BuildScreen.tscn
+msgid "Fixed part"
+msgstr ""
+
 #: libs/NodeRunner.App/ViewModels/MapNames.cs
 #: project/scenes/screens/TrainSetupScreen.tscn
 msgid "Flat ground"
@@ -345,6 +354,10 @@ msgstr ""
 #: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs
 #: project/scenes/screens/BuildScreen.tscn
 msgid "Joint"
+msgstr ""
+
+#: libs/NodeRunner.App/Builders/CreatureBuilder.cs
+msgid "Joint parts go on a joint"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs
@@ -462,6 +475,10 @@ msgid "On a joint"
 msgstr ""
 
 #: libs/NodeRunner.App/Builders/CreatureBuilder.cs
+msgid "One part per joint"
+msgstr ""
+
+#: libs/NodeRunner.App/Builders/CreatureBuilder.cs
 msgid "One sensor per beam"
 msgstr ""
 
@@ -480,6 +497,18 @@ msgstr ""
 msgid "Pause"
 msgstr ""
 
+#: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs
+msgid "Pick a link"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/BuildViewModel.cs
+msgid "Pick two links"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs
+msgid "Pick two links."
+msgstr ""
+
 #: libs/NodeRunner.App/ViewModels/LinkListPresentation.cs
 msgid "Piston"
 msgstr ""
@@ -494,6 +523,10 @@ msgstr ""
 
 #: project/scenes/screens/BuildScreen.tscn
 msgid "Power budget"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/PartParameters.cs
+msgid "Range"
 msgstr ""
 
 #: project/scenes/ui/UiNotificationContent.tscn
@@ -580,6 +613,10 @@ msgstr ""
 msgid "Servo"
 msgstr ""
 
+#: libs/NodeRunner.App/ViewModels/PartNames.cs
+msgid "Servo {0}"
+msgstr ""
+
 #: libs/NodeRunner.App/ViewModels/TrainSetupPresentationViewModel.cs
 #: project/scenes/screens/TrainSetupScreen.tscn
 msgid "Shadows"
@@ -629,6 +666,10 @@ msgstr ""
 
 #: project/scenes/screens/TrainSetupScreen.tscn
 msgid "Start"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/PartParameters.cs
+msgid "Start position"
 msgstr ""
 
 #: project/scenes/screens/BuildScreen.tscn
@@ -689,6 +730,11 @@ msgstr ""
 msgid "Tap empty space"
 msgstr ""
 
+#: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs
+#: project/scenes/screens/BuildScreen.tscn
+msgid "Target part"
+msgstr ""
+
 #: project/src/hosts/BuildHost.cs
 #: project/src/hosts/TrainingHost.cs
 #: project/src/hosts/TrainSetupHost.cs
@@ -706,6 +752,10 @@ msgstr ""
 
 #: libs/NodeRunner.App/Lifecycle/CreatureReadiness.cs
 msgid "The beam between node {0} and node {1} is too short. Move one of the nodes apart."
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs
+msgid "The brain picks an angle and how much of its max strength to use."
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/LinkListPresentation.cs
@@ -819,6 +869,10 @@ msgstr ""
 msgid "Unlock"
 msgstr ""
 
+#: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs
+msgid "Unlock to change which link is fixed."
+msgstr ""
+
 #: project/src/hosts/CreationActions.cs
 msgid "Unlock {0}?"
 msgstr ""
@@ -889,6 +943,10 @@ msgid "{0} N/m"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartParameters.cs
+msgid "{0} N·m"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/PartParameters.cs
 msgid "{0} N·s/m"
 msgstr ""
 
@@ -936,6 +994,10 @@ msgstr ""
 msgid "{0} is driven most by {1}."
 msgstr ""
 
+#: libs/NodeRunner.App/Lifecycle/CreatureReadiness.cs
+msgid "{0} is missing a link. Pick two links at its joint or delete it."
+msgstr ""
+
 #: libs/NodeRunner.App/ViewModels/BrainFocusPresentationViewModel.cs
 msgid "{0} is not driven by any sense yet."
 msgstr ""
@@ -949,6 +1011,12 @@ msgstr ""
 #: libs/NodeRunner.App/ViewModels/PartParameters.cs
 msgid "{0} m/s"
 msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/SignalFlowPresentationViewModel.cs
+msgid "{0} motor"
+msgid_plural "{0} motors"
+msgstr[0] ""
+msgstr[1] ""
 
 #: libs/NodeRunner.App/ViewModels/CreationCardPresentation.cs
 msgid "{0} node"
@@ -965,12 +1033,6 @@ msgstr[1] ""
 #: libs/NodeRunner.App/ViewModels/BrainFocusPresentationViewModel.cs
 msgid "{0} output"
 msgid_plural "{0} outputs"
-msgstr[0] ""
-msgstr[1] ""
-
-#: libs/NodeRunner.App/ViewModels/SignalFlowPresentationViewModel.cs
-msgid "{0} piston"
-msgid_plural "{0} pistons"
 msgstr[0] ""
 msgstr[1] ""
 
@@ -1028,6 +1090,10 @@ msgid "{0}: along"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/BrainPortLabels.cs
+msgid "{0}: angle"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/BrainPortLabels.cs
 msgid "{0}: centre"
 msgstr ""
 
@@ -1052,11 +1118,19 @@ msgid "{0}: strength"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartParameters.cs
+msgid "{0}°/s"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/PartParameters.cs
 msgid "{0}–{1} N"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartParameters.cs
 msgid "{0}–{1} N/m"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/PartParameters.cs
+msgid "{0}–{1} N·m"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartParameters.cs
@@ -1069,6 +1143,10 @@ msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartParameters.cs
 msgid "{0}–{1} s"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/PartParameters.cs
+msgid "{0}–{1}°/s"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs
