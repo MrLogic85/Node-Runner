@@ -188,16 +188,16 @@ When it is the milestone's last open issue:
 
 1. A PR titled `docs(#N): Release notes for X.Y.0` adds
    `docs/release-notes/X.Y.0.md` with `Part of #N`, not a closing keyword, so
-   the issue stays open until the release is out. The notes say what the
-   version adds to the game, in English, for players: a one-line summary,
-   then "What's new", "Changed", and "Known issues" as they apply, without
-   issue numbers or code names. Draft them from the milestone's closed
-   issues; the owner approves them in that PR.
+   the issue stays open until the release is out. An AI agent writes the
+   notes, not a script: it reads the milestone's closed issues and merged PRs
+   and says, in English and for players, what the version adds and what it
+   fixes. Plain sentences under "What's new" and "Fixed"; no issue numbers,
+   PR lists, code names, or internal refactors. The owner approves the text
+   in that PR.
 2. From an up-to-date `main`, run `.github/scripts/release.sh`. It exports a
    signed release APK, checks its version and signature, tags `vX.Y.0`, pushes
    `release/vX.Y` at the tag, and creates the GitHub release with the APK
-   attached. The release text is the notes file; GitHub appends the merged PRs
-   since the previous release (the first release has none appended).
+   attached. The release text is exactly the notes file.
    `release.sh --dry-run` exports and checks without publishing.
 3. A PR titled `chore(#N): Bump main to X.(Y+1).0` runs
    `.github/scripts/set-version.sh X.(Y+1).0` and closes the release issue.

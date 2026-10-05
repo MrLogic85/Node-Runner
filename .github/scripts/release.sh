@@ -105,12 +105,9 @@ git push origin "$tag"
 if (( patch == 0 )); then
   git push origin "$tag^{commit}:refs/heads/$release_branch"
 fi
-# GitHub appends the merged PRs since the previous release; the first release would list them all.
-generate=()
-[[ -z $(git tag -l 'v[0-9]*' | grep -vxF "$tag") ]] || generate=(--generate-notes)
 gh release create "$tag" "$apk" --repo "$repo" --verify-tag --title "Node Runner $version" \
-  --notes-file "$notes" ${generate[@]+"${generate[@]}"} \
-  || fail "$tag is pushed but the release was not created. Retry: gh release create $tag ${apk#"$root"/} --repo $repo --verify-tag --title \"Node Runner $version\" --notes-file $notes ${generate[*]:-}"
+  --notes-file "$notes" \
+  || fail "$tag is pushed but the release was not created. Retry: gh release create $tag ${apk#"$root"/} --repo $repo --verify-tag --title \"Node Runner $version\" --notes-file $notes"
 
 if (( patch == 0 )); then
   echo "Next: open a PR on main that runs .github/scripts/set-version.sh $major.$((minor + 1)).0"
