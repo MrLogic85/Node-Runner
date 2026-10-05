@@ -176,6 +176,37 @@ The `main` ruleset (GitHub → Settings → Rules → Rulesets) is configured wi
 - Do not allow branch deletion
 - Include administrators
 
+## Releases
+
+`main` always carries the version of the milestone in progress
+(`application/config/version` in `project/project.godot`; see
+`docs/ARCHITECTURE.md` → "Android export" for the build number).
+
+When a milestone's issues are all closed:
+
+1. From an up-to-date `main`, run `.github/scripts/release.sh`. It exports a
+   signed release APK, checks its version and signature, tags `vX.Y.0`, pushes
+   `release/vX.Y` at the tag, and creates the GitHub release with the APK
+   attached. `release.sh --dry-run` exports and checks without publishing.
+2. The next PR on `main` bumps to the next minor:
+   `.github/scripts/set-version.sh X.(Y+1).0`.
+
+Fixes for a released version land on `release/vX.Y` (by PR, also merged to
+`main` when they apply there), bump the patch with `set-version.sh X.Y.Z`, and
+are released with `release.sh` from that branch. CI runs on `release/**` as on
+`main`, but no ruleset protects those branches, so `release.sh` refuses to
+publish unless `Build`, `Test & coverage` and `Format check` passed on HEAD.
+
+`release.sh` checks before tagging that the active `gh` login can push to the
+repository (`LOCAL_CONFIG.md` names the account). If `gh release create` still
+fails after the tag is pushed, the script prints the command to retry it.
+
+The release keystore is a 4096-bit RSA key kept outside the repo. Every release
+must be signed with the same key, or installed copies cannot update; back it up
+together with its password. `release.sh` reads its location, alias and password
+from `NODE_RUNNER_KEYSTORE*` environment variables or the macOS Keychain (see
+the script header). Machine-specific values belong in `LOCAL_CONFIG.md`.
+
 ## Local pre-push checklist
 
 For your own sanity before opening the PR:
