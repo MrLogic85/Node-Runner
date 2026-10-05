@@ -1,0 +1,95 @@
+{
+  "id": "df31aea6-90b3-423a-b7a1-4ab8ad5fdb0a",
+  "name": "Walker",
+  "creature": {
+    "nodes": [
+      {
+        "id": 1,
+        "position": {
+          "x": 0,
+          "y": -120
+        },
+        "name": null
+      },
+      {
+        "id": 2,
+        "position": {
+          "x": 200,
+          "y": -120
+        },
+        "name": null
+      },
+      {
+        "id": 3,
+        "position": {
+          "x": -40,
+          "y": 0
+        },
+        "name": null
+      },
+      {
+        "id": 4,
+        "position": {
+          "x": 240,
+          "y": 0
+        },
+        "name": null
+      }
+    ],
+    "beams": [
+      {
+        "id": 5,
+        "nodeA": 1,
+        "nodeB": 2,
+        "name": null
+      },
+      {
+        "id": 6,
+        "nodeA": 1,
+        "nodeB": 3,
+        "name": null
+      },
+      {
+        "id": 7,
+        "nodeA": 2,
+        "nodeB": 4,
+        "name": null
+      }
+    ],
+    "sensors": [
+      {
+        "id": 8,
+        "beamId": 5,
+        "kind": "accelerometer",
+        "name": null,
+        "aim": null
+      }
+    ],
+    "pistons": [
+      {
+        "id": 9,
+        "nodeA": 2,
+        "nodeB": 3,
+        "name": null,
+        "strength": 15000,
+        "stroke": 0.3,
+        "maxSpeed": 200,
+        "riseTime": 0.2
+      },
+      {
+        "id": 10,
+        "nodeA": 1,
+        "nodeB": 4,
+        "name": null,
+        "strength": 15000,
+        "stroke": 0.3,
+        "maxSpeed": 200,
+        "riseTime": 0.2
+      }
+    ],
+    "springs": [],
+    "nextPartId": 11
+  },
+  "training": null,
+  "trainSettings": null
+}

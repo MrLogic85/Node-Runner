@@ -1,6 +1,10 @@
 {
   "type": "object",
   "properties": {
+    "formatVersion": {
+      "type": "integer",
+      "minimum": 1
+    },
     "id": {
       "type": "string",
       "format": "uuid"
@@ -412,6 +416,7 @@
     }
   },
   "required": [
+    "formatVersion",
     "id",
     "name",
     "creature"
