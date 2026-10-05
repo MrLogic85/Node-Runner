@@ -243,6 +243,12 @@ reference would mislead someone working on that surface.
   Training column has no header and cannot collapse. Instead it is a
   `UiSidePanel` titled "Status" that collapses like Build's, so both
   screens share one panel. Owner decision.
+- **Only the Brain stage glows (#847).** In the reference every signal-flow
+  stage card glows and expands on tap. Until #196 makes them all tappable,
+  only Brain (which opens BrainFocus) keeps its glow; Senses, Outputs and
+  Distance are plain frames, so they don't look like buttons that do
+  nothing. They don't use the dashed Locked frame, which means "unlocked
+  later". #196 brings the glow back. Owner decision.
 - **No grid in Training (#668).** The reference draws a faint grid behind
   the Training arena. Instead the arena background is plain: the grid is a
   Build blueprint, not part of the world. Motion shows against the ruler
