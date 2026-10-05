@@ -129,6 +129,13 @@ public static class UiComponentContracts
         return Math.Clamp(index, 0, tabCount - 1);
     }
 
+    /// <summary>
+    /// The LineEdit limit for a text field with a cap (#868): none without a cap, and never below the
+    /// text already there, so a longer saved name is not cut and the limit closes in as it shrinks.
+    /// </summary>
+    public static int EditorMaxLength(int limit, int currentLength) =>
+        limit <= 0 ? 0 : Math.Max(limit, currentLength);
+
     public static double ClampValue(double value, double minimum, double maximum)
     {
         minimum = FiniteOrZero(minimum);

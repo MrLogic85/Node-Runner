@@ -4,7 +4,7 @@ namespace NodeRunner.App.ViewModels;
 
 /// <summary>
 /// What the brain's ports are called, in port order (<see cref="BrainPorts"/>): a sense is its
-/// part's name and reading, such as "Accelerometer: along", and a Piston's ports are its name and
+/// part's name and reading, such as "Accel: along", and a Piston's ports are its name and
 /// what they measure or set, such as "Piston 1: speed" or "Piston 1: strength" (naming rule:
 /// docs/CREATURE_MODEL.md, Sensor–model contract). Each label is one whole template
 /// with the part's name as <c>{0}</c>; its space after the colon is a no-break space, so a sentence

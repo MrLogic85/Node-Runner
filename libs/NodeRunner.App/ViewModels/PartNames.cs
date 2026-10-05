@@ -4,14 +4,15 @@ namespace NodeRunner.App.ViewModels;
 
 /// <summary>
 /// The names parts show: a part's own name if it has one, else its default, "Node 2", "Beam 1",
-/// "Piston 1", "Spring 1" or its sensor kind. Names are labels only (#220). A default name is translated; an
-/// own name is the player's and shows as written (#757).
+/// "Piston 1", "Spring 1", "Accel" or "Camera". A default fits in <see cref="NameLimits.Part"/>
+/// (#868). Names are labels only (#220). A default name is translated; an own name is the
+/// player's and shows as written (#757).
 /// </summary>
 public static class PartNames
 {
     private static UiText SensorKind(SensorKind kind) => kind switch
     {
-        Domain.SensorKind.Accelerometer => UiText.Plain("Accelerometer"),
+        Domain.SensorKind.Accelerometer => UiText.Plain("Accel"),
         Domain.SensorKind.Camera => UiText.Plain("Camera"),
         _ => throw new ArgumentOutOfRangeException(nameof(kind)),
     };

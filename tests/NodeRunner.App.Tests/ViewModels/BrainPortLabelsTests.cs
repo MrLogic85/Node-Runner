@@ -16,7 +16,7 @@ public sealed class BrainPortLabelsTests
 
         var labels = BrainPortLabels.For(creature);
 
-        var accelerometer = UiText.Plain("Accelerometer");
+        var accelerometer = UiText.Plain("Accel");
         var eye = UiText.AsWritten("Eye");
         var ram = UiText.AsWritten("Ram");
         labels.Inputs.ShouldBe(

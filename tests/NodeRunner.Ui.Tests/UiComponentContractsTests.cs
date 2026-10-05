@@ -461,4 +461,15 @@ public sealed partial class UiComponentContractsTests
             UiComponentContracts.NormalizeTabIndex(once, 3).ShouldBe(once);
         }
     }
+
+    [Theory]
+    [InlineData(0, 55, 0)]
+    [InlineData(40, 12, 40)]
+    [InlineData(40, 40, 40)]
+    [InlineData(40, 55, 55)]
+    [InlineData(40, 54, 54)]
+    public void EditorMaxLength_NeverCutsTheTextAlreadyThere(int limit, int currentLength, int expected)
+    {
+        UiComponentContracts.EditorMaxLength(limit, currentLength).ShouldBe(expected);
+    }
 }

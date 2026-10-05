@@ -1,3 +1,4 @@
+using System.Globalization;
 using NodeRunner.App.Repositories;
 using NodeRunner.App.Services;
 using NodeRunner.App.ViewModels;
@@ -30,6 +31,20 @@ public sealed class CreationDuplicateWorkflowTests
         copy.Creature.NextPartId.ShouldBe(source.Creature.NextPartId);
         copy.Training.ShouldBe(source.Training);
         repository.Get(copyId).ShouldBe(copy);
+    }
+
+    [Fact]
+    public void Duplicate_ALongName_CutsTheCopyNameToTheCreationLimit()
+    {
+        var repository = new InMemoryCreationRepository();
+        var source = CreateCreation(new string('W', NameLimits.Creation), generation: 1);
+        repository.Save(source);
+        var workflow = new CreationDuplicateWorkflow(repository);
+
+        var copy = workflow.Duplicate(source.Id, text => string.Format(CultureInfo.InvariantCulture, text.Message, [.. text.Args]));
+
+        copy.Name.ShouldBe("Copy of " + new string('W', NameLimits.Creation - "Copy of ".Length));
+        repository.Get(source.Id)!.Name.ShouldBe(source.Name);
     }
 
     [Fact]

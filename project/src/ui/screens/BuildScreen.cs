@@ -105,6 +105,7 @@ public partial class BuildScreen : Control
         toolbar.BackPressed += () => EmitSignal(SignalName.BackRequested);
         var name = GetNode<UiTextField>("%CreationName");
         name.ValidateValue = static value => !string.IsNullOrWhiteSpace(value);
+        name.MaxLength = NameLimits.Creation;
         name.EditingFinished += OnNameEdited;
         GetNode<UiButton>("%StartTraining").Activated += () => EmitSignal(SignalName.StartTrainingRequested);
         GetNode<UiButton>("%Unlock").Activated += () => EmitSignal(SignalName.UnlockRequested);
@@ -123,6 +124,7 @@ public partial class BuildScreen : Control
         GetNode<UiButton>("%PartDelete").Activated += () => EmitSignal(SignalName.DeleteSelectionRequested);
         GetNode<UiButton>("%SelectionDelete").Activated += () => EmitSignal(SignalName.DeleteSelectionRequested);
         var partName = GetNode<UiTextField>("%PartName");
+        partName.MaxLength = NameLimits.Part;
         partName.EditingStarted += OnPartNameEditingStarted;
         partName.EditingFinished += OnPartNameEdited;
         BindViewModels();

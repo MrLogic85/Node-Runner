@@ -34,7 +34,7 @@ public sealed class ExampleCopyWorkflow : IExampleCopyWorkflow
         var name = inPlayerLanguage(example.Name);
         if (_repository.List().Any(creation => string.Equals(creation.Name, name, StringComparison.CurrentCultureIgnoreCase)))
         {
-            name = inPlayerLanguage(UiText.Format("Copy of {0}", name));
+            name = NameLimits.Fit(inPlayerLanguage(UiText.Format("Copy of {0}", name)), NameLimits.Creation);
         }
 
         var copy = new CreationDef(_newId(), name, example.Creature, example.Training);

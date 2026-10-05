@@ -59,6 +59,20 @@ public sealed class ExampleCopyWorkflowTests
     }
 
     [Fact]
+    public void Copy_NameTaken_CutsTheCopyNameToTheCreationLimit()
+    {
+        var repository = new InMemoryCreationRepository();
+        var example = CreateExample();
+        repository.Save(new CreationDef(Guid.NewGuid(), "Walker", example.Creature));
+        var workflow = new ExampleCopyWorkflow(repository, [example]);
+
+        var copy = workflow.Copy(example.Id, text =>
+            text.Equals(UiText.Plain("Walker")) ? "Walker" : new string('K', 60));
+
+        copy.Name.ShouldBe(new string('K', NameLimits.Creation));
+    }
+
+    [Fact]
     public void Copy_NameFree_KeepsTheName()
     {
         var repository = new InMemoryCreationRepository();

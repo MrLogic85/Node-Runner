@@ -20,7 +20,8 @@ public sealed class CreationDuplicateWorkflow : ICreationDuplicateWorkflow
     {
         ArgumentNullException.ThrowIfNull(inPlayerLanguage);
         var source = _repository.Get(id) ?? throw new KeyNotFoundException($"Creation '{id}' was not found.");
-        var copy = source.CopyAs(_newId(), inPlayerLanguage(UiText.Format("Copy of {0}", source.Name)));
+        var name = NameLimits.Fit(inPlayerLanguage(UiText.Format("Copy of {0}", source.Name)), NameLimits.Creation);
+        var copy = source.CopyAs(_newId(), name);
         _repository.Save(copy);
         return copy;
     }
