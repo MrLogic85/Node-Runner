@@ -25,6 +25,27 @@ public sealed class UiBackPressTrackerTests
     public void A_quick_second_press_is_a_new_press(string steps, string expected) =>
         Replay(steps).ShouldBe(expected);
 
+    // On the S23 (#838) a press's key-down and key-up come before its only go-back, and every other
+    // press was swallowed.
+    [Theory]
+    [InlineData("d0 u60 g62 d3000 u3060 g3062 d6000 u6060 g6062", "FFF")]
+    [InlineData("d0 u60 g62 g70 d3000 u3060 g3062", "FrF")]
+    [InlineData("d0 u250 g252 d350 u410 g412", "FF")]
+    [InlineData("d0 e500 e550 u800 g802 d900 u960 g962", "FF")]
+    public void A_press_whose_key_up_comes_before_its_go_back_is_taken_once(string steps, string expected) =>
+        Replay(steps).ShouldBe(expected);
+
+    // A key-up that never arrives must not swallow the next press (#838).
+    [Theory]
+    [InlineData("d0 G5 g101 d5000 G5005 u5100 g5101", "FrFr")]
+    [InlineData("d0 G5 d5000 u5060 g5062", "FF")]
+    public void A_lost_key_up_does_not_swallow_the_next_press(string steps, string expected) =>
+        Replay(steps).ShouldBe(expected);
+
+    [Fact]
+    public void An_old_key_down_without_a_go_back_does_not_make_a_later_press_act_twice() =>
+        Replay("d0 g5000 d5013 u5014 g5014").ShouldBe("Fr");
+
     [Theory]
     [InlineData("g0 g10", "Fr")]
     [InlineData("g0 g199", "Fr")]
