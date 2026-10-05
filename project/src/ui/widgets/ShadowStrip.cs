@@ -46,15 +46,16 @@ public partial class ShadowStrip : Control
         Worse.Pressed += () => Act(training => training.ShowWorseShadows());
         Trailing.Pressed += OnTrailingPressed;
         Resized += Fit;
-        Row.MinimumSizeChanged += UpdateMinimumSize;
         Fit();
     }
 
     public override void _Process(double delta) => Refresh();
 
-    // As tall as the row and no wider than nothing, so the width stays the tray's.
+    // As tall as a cell and no wider than nothing, so the width stays the tray's. The height is a
+    // cell's, not the row's, so it is known before Fit adds cells: Fit runs while the tray lays the
+    // strip out, and a height that changes then is not laid out again (#825).
     public override Vector2 _GetMinimumSize() =>
-        IsInsideTree() ? new Vector2(0, Row.GetCombinedMinimumSize().Y) : Vector2.Zero;
+        IsInsideTree() ? new Vector2(0, Worse.GetCombinedMinimumSize().Y) : Vector2.Zero;
 
     // Keeps a cell per place that fits the width, every place as wide as a button. Until the strip
     // is laid out it has no width, and the training keeps its default places.
