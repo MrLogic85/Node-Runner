@@ -71,6 +71,7 @@ public partial class TrainingHost : Node, IRoutedScene
 
     private ArenaRuler Ruler => GetNode<ArenaRuler>("%Ruler");
     private ArenaBestMarker BestMarker => GetNode<ArenaBestMarker>("%BestMarker");
+    private ArenaShadows Shadows => GetNode<ArenaShadows>("%Shadows");
     private ArenaCamera Camera => GetNode<ArenaCamera>("%Camera");
 
     public void Enter(SceneRoute route, ISceneNavigator navigator)
@@ -223,10 +224,18 @@ public partial class TrainingHost : Node, IRoutedScene
         GetNode<ColorRect>("%ArenaFill").Color = _theme.ArenaBackground;
         Ruler.Theme = _theme;
         BestMarker.Theme = _theme;
+        Shadows.Theme = _theme;
         Ground.ZIndex = ArenaLayers.Ground;
         // The marker is a child of the ground, so its layer is made absolute, not added to the ground's.
         BestMarker.ZAsRelative = false;
         BestMarker.ZIndex = ArenaLayers.BestMarker;
+        // The shadows' picture stands in for every shadow, so it takes their layer, under the followed
+        // creature. Simulate runs no shadows, so its viewport is off there.
+        Shadows.ZAsRelative = false;
+        Shadows.ZIndex = ArenaLayers.Shadows;
+        Shadows.Visible = Mode == TrainingRunMode.Train;
+        // Every creature is under the world, so it must be on both arena views for either to draw one.
+        World.VisibilityLayer = ArenaVisibility.Both;
         Ground.Build(_map.Ground, _theme);
     }
 

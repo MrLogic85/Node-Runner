@@ -9,35 +9,38 @@ namespace NodeRunner.Theme;
 /// </summary>
 public static class CreatureLayers
 {
-    /// <summary>The rigid hatch inside closed triangles, under everything else.</summary>
-    public const int Hatch = 0;
+    /// <summary>The followed creature's knock-out outline (#818), under everything else.</summary>
+    public const int Knockout = 0;
+
+    /// <summary>The rigid hatch inside closed triangles.</summary>
+    public const int Hatch = 1;
 
     /// <summary>What a view draws under the links, such as Build's placing feedback on a beam (#769).</summary>
-    public const int Underlays = 1;
+    public const int Underlays = 2;
 
     /// <summary>Beams.</summary>
-    public const int Beams = 2;
+    public const int Beams = 3;
 
     /// <summary>Links, the Pistons and Springs, over the beams they cross.</summary>
-    public const int Links = 3;
+    public const int Links = 4;
 
     /// <summary>A selected beam or link, over every other link it crosses.</summary>
-    public const int SelectedLinks = 4;
+    public const int SelectedLinks = 5;
 
     /// <summary>Sensor pictures on their beams.</summary>
-    public const int Sensors = 5;
+    public const int Sensors = 6;
 
     /// <summary>A selected sensor picture.</summary>
-    public const int SelectedSensors = 6;
+    public const int SelectedSensors = 7;
 
     /// <summary>Joint rings, over the link ends and sensors they cover.</summary>
-    public const int Joints = 7;
+    public const int Joints = 8;
 
     /// <summary>A selected joint with its halo ring.</summary>
-    public const int SelectedJoints = 8;
+    public const int SelectedJoints = 9;
 
     /// <summary>What a view draws over the whole creature, such as Training's camera rays and Build's selection frame.</summary>
-    public const int Overlays = 9;
+    public const int Overlays = 10;
 
     /// <summary>How many ZIndex steps one creature takes, so drawn creatures can be stacked without mixing.</summary>
     public const int Count = Overlays + 1;

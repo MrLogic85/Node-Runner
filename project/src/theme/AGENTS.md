@@ -31,7 +31,11 @@ shared part visuals that Build, Training and thumbnails draw with (#766).**
   layer, and the redraw on a new pixel scale every view that holds parts calls
 - `JointPart.cs`, `BeamPart.cs`, `PistonPart.cs`, `SpringPart.cs`,
   `SensorPart.cs`, `HatchPart.cs` — one visual per part kind
+- `KnockoutPart.cs` — the arena background around a beam or joint, under the
+  whole creature (#818)
 - `CreatureLayers.cs`, `ArenaLayers.cs` — the named draw layers
+- `ArenaVisibility.cs` — the visibility layers that split Training's
+  shadows from the rest of the arena (#818)
 - `ViewLayer.cs` — an underlay or overlay a screen draws its own marks on,
   between the parts' layers
 

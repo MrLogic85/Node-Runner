@@ -210,7 +210,11 @@ reference would mislead someone working on that surface.
   the leader, is drawn in full. Every other shadow, the leader included, is
   drawn simplified (`docs/CREATURE_MODEL.md` → "Drawing as a shadow") in its
   normal colours at one alpha, a new `UiTokens.Alpha` entry `alpha_shadow`
-  (start at 0.32, the reference's nearer shadow; tune on device). The leader
+  (start at 0.32, the reference's nearer shadow; tune on device). All the
+  shadows fade together as one picture, so overlaps do not darken into a
+  solid mass, and the followed creature has a knock-out outline in the
+  arena background colour, `stroke-signal` wide, around its beams and
+  joints (#818). The leader
   is not marked anywhere (#387: it flickers). The reference's camera follows the
   leader; here it follows the previous best by default (shadow 1 in
   generation 0) and never switches to the leader by itself. Owner decision.
