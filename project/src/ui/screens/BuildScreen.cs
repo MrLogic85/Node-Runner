@@ -269,7 +269,7 @@ public partial class BuildScreen : Control
         GetNode<UiButton>("%Redo").Disabled = !presentation.CanRedo;
         GetNode<UiMenuActionItem>("%MenuStats").Visible = presentation.IsTrained;
         GetNode<UiMenuActionItem>("%MenuResetTraining").Visible = presentation.IsTrained;
-        GetNode<UiMenuActionItem>("%MenuCopyCreation").Visible = presentation.IsTrained;
+        GetNode<UiMenuActionItem>("%MenuCopyCreation").Visible = presentation.CanCopy;
     }
 
     private void ApplyTools(BuildPresentationViewModel presentation)

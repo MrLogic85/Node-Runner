@@ -184,6 +184,7 @@ msgid "Copy failed"
 msgstr ""
 
 #: libs/NodeRunner.App/Services/CreationDuplicateWorkflow.cs
+#: libs/NodeRunner.App/Services/ExampleCopyWorkflow.cs
 msgid "Copy of {0}"
 msgstr ""
 
@@ -450,6 +451,10 @@ msgstr ""
 
 #: project/scenes/ui/UiStageCard.tscn
 msgid "Note about stage"
+msgstr ""
+
+#: project/src/hosts/BuildHost.cs
+msgid "Now editing {0}. The original is in Creations."
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs
@@ -924,10 +929,6 @@ msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/BrainFocusPresentationViewModel.cs
 msgid "{0} is driven most by {1}."
-msgstr ""
-
-#: project/src/hosts/BuildHost.cs
-msgid "{0} is in Creations."
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/BrainFocusPresentationViewModel.cs

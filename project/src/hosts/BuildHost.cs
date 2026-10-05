@@ -152,7 +152,8 @@ public partial class BuildHost : Node, IRoutedScene
         _navigator?.Navigate(new SceneNavigation(new TrainSetupRoute(id)));
     }
 
-    // The copy keeps the trained brain, so the player can change one and keep the other.
+    // The copy keeps the trained brain, so the player can change one and keep the other. Build then
+    // opens the copy in place of the original (#840), so Back still returns to Creations.
     private void CopyActiveCreation()
     {
         if (_autosave?.CreationId is not { } id || !SaveEdits(playerAsked: true))
@@ -171,8 +172,9 @@ public partial class BuildHost : Node, IRoutedScene
         UiNotificationLayer.Enqueue(this, new UiNotificationSpec(
             UiPopupType.Default, "Creation copied", string.Empty, Icon: new(UiIconId.Copy))
         {
-            MessageSource = UiTextTranslation.Source(UiText.Format("{0} is in Creations.", copy.Name)),
+            MessageSource = UiTextTranslation.Source(UiText.Format("Now editing {0}. The original is in Creations.", copy.Name)),
         });
+        _navigator?.Navigate(new SceneNavigation(new BuildRoute(copy.Id), KeepCurrent: false));
     }
 
     private void ShowCreations() => _navigator?.ReturnToRoot();

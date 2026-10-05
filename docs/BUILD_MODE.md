@@ -35,9 +35,11 @@ owned by `docs/TRAINING_LOOP.md` → Product lifecycle boundary.
   shape change. Only what changes the model is locked (#638). The padlock
   in the top bar unlocks it for this visit and keeps the training (#371,
   `docs/TRAINING_LOOP.md` step 6). Once a creation has training, the
-  overflow menu also offers Stats (coming soon), Copy creation and Reset
-  training (#370); the copy keeps the trained brain. Reset training asks
-  first with a press-and-hold (#687).
+  overflow menu also offers Stats (coming soon) and Reset training (#370).
+  Reset training asks first with a press-and-hold (#687). Copy creation is
+  there for anything drawn, trained or not; the copy, named "Copy of …",
+  keeps any trained brain and Build opens it in place of the original
+  (#840).
 - Undo and Redo (#689, `BuildViewModel.Undo`/`Redo`, `BuildHistory`) are
   icon buttons in the top bar between the padlock and the overflow
   (`docs/UI_DIRECTION.md` → "Build has Undo"), and work on a locked
@@ -46,8 +48,8 @@ owned by `docs/TRAINING_LOOP.md` → Product lifecycle boundary.
   whole slider drag. A step only counts if the body changed. Selection,
   tool, zoom and pan never count, and a cancelled gesture adds nothing and
   keeps Redo. A new step clears Redo; the history holds 100 steps and
-  lasts for one Build visit, so opening Build (also after Train setup or
-  Reset training) starts it empty. Renaming the creation, Unlock, Reset
+  lasts for one Build visit, so opening Build (also after Train setup,
+  Reset training or Copy creation) starts it empty. Renaming the creation, Unlock, Reset
   training and Copy creation are not steps. Undo keeps the selected parts
   that still exist and never lowers `NextPartId`, so part ids stay unique
   (#220). Saves refit the brain Build opened with (`OpenedBrain`,

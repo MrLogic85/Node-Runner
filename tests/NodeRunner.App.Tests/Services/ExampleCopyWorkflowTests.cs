@@ -45,6 +45,31 @@ public sealed class ExampleCopyWorkflowTests
     }
 
     [Fact]
+    public void Copy_NameTaken_IsCopyOfTheName()
+    {
+        var repository = new InMemoryCreationRepository();
+        var example = CreateExample();
+        repository.Save(new CreationDef(Guid.NewGuid(), "walker", example.Creature));
+        var workflow = new ExampleCopyWorkflow(repository, [example]);
+
+        var copy = workflow.Copy(example.Id, text =>
+            text.Equals(UiText.Format("Copy of {0}", "Walker")) ? "Kopia av Walker" : text.Message);
+
+        copy.Name.ShouldBe("Kopia av Walker");
+    }
+
+    [Fact]
+    public void Copy_NameFree_KeepsTheName()
+    {
+        var repository = new InMemoryCreationRepository();
+        var example = CreateExample();
+        repository.Save(new CreationDef(Guid.NewGuid(), "Worm", example.Creature));
+        var workflow = new ExampleCopyWorkflow(repository, [example]);
+
+        workflow.Copy(example.Id, TestLanguage.Untranslated).Name.ShouldBe("Walker");
+    }
+
+    [Fact]
     public void Copy_UnknownExample_Throws()
     {
         var workflow = new ExampleCopyWorkflow(new InMemoryCreationRepository());

@@ -87,8 +87,10 @@ reference would mislead someone working on that surface.
   line. Stats sits in the overflow menu, "Coming soon" until 0.15.0.
   The overflow follows training, not the lock: a trained creation lists
   Stats, Power budget, Copy creation, Reset training and Delete creation in
-  either state, an untrained one Power budget and Delete creation. Copy
-  saves edits first, keeps the brain and confirms with a notification.
+  either state, an untrained one Power budget, Copy creation and Delete
+  creation (Copy is hidden only while nothing is drawn, #840). Copy saves
+  edits first, keeps the brain, opens the copy in place of the original so
+  the player sees the new name, and confirms with a notification.
   Checkpoints wait for #256. Owner decision.
 - **Build has Undo (#689).** The reference has no Undo. Instead Undo and
   Redo are Secondary icon buttons in Build's top bar, after the padlock and
