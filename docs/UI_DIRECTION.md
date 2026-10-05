@@ -230,7 +230,10 @@ reference would mislead someone working on that surface.
   generation starts (`docs/TRAINING_LOOP.md` → Shadow strip). The caption
   is only "Generation 37": no time and no "Following shadow 5 · 10.3 m".
   Only the followed shadow's cell is marked (`accent`); the leader gets no
-  mark, as the lead changes too often and flickers. Owner decisions.
+  mark, as the lead changes too often and flickers. The arena draws only
+  the shadows on the strip's current page, plus the followed one; the rest
+  race undrawn (#284, `docs/TRAINING_LOOP.md` → Drawn shadows). Owner
+  decisions.
 - **No speed control in Training (#787).** The reference's bottom row has
   Pause, speed and the shadow strip. Instead there is only Pause and the
   strip: physics always runs at real time, and training goes faster by

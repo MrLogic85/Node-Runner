@@ -219,8 +219,9 @@ transition to keep in step with it.
     the limit, not physics or memory. Physics held 60 ticks/s up to about
     200 shadows. Frames held 120/s at 96 shadows and fell to about 88/s at
     128, 60/s at 160 and 43/s at 192; PSS grew about 0.4 MiB per shadow.
-    100 keeps the S25 at full rate with room for larger creatures; drawing
-    only the shadow strip's shadows is the noted way further (#284).
+    100 keeps the S25 at full rate with room for larger creatures. Since
+    #284 only the shadow strip's shadows are drawn (see "Drawn shadows"
+    below).
   - Followed shadow (#385): one shadow is drawn in full, wholly above
     the others (so even its rigid hatch, #627, stays above their joints;
     `docs/CREATURE_MODEL.md` → "Draw layers"), and feeds signal flow, the brain and part selection; every
@@ -256,6 +257,16 @@ transition to keep in step with it.
     followed shadow can sort off the page. The caption reads only
     "Generation N", the racing generation counted from 1 like the best's
     generation. Owner decisions.
+  - Drawn shadows (#284): Training draws only the shadows on the strip's
+    current page, plus the followed shadow, which is drawn even off the
+    page. The rest keep racing and counting, undrawn: `Evolver.DrawOnly`
+    hides their creatures, which stops Godot drawing them but not their
+    physics. Paging or sorting swaps the drawn shadows at once, and a new
+    generation draws the first page again. While every shadow fits on the
+    strip, every shadow is drawn. A wider screen fits more cells and so
+    draws more shadows; smaller phones are often slower too, so this is
+    accepted. There is no setting to hide the shadows: Simulate shows the
+    creature alone. Owner decisions.
   - Candidate assignment is deterministic for the same seed, parallel mode,
     slot count, build, and platform. Sequential and parallel fitness parity
     is not promised because physics ordering can differ.

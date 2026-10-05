@@ -76,13 +76,7 @@ public sealed class ShadowStripPresentation
     public ShadowStripView View(IReadOnlyList<ShadowStanding> shadows, int generation)
     {
         ArgumentNullException.ThrowIfNull(shadows);
-        if (generation != _generation || shadows.Count != _ranking.Length)
-        {
-            _generation = generation;
-            _ranking = Enumerable.Range(0, shadows.Count).ToArray();
-            _page = 0;
-        }
-
+        var shown = Shown(shadows.Count, generation);
         if (shadows.Count == 0)
         {
             return ShadowStripView.Empty;
@@ -90,7 +84,6 @@ public sealed class ShadowStripPresentation
 
         var scale = Scale(shadows);
         var pages = shadows.Count > _places;
-        var shown = pages ? _ranking.Skip(PageStart(shadows.Count)).Take(CellsPerPage) : _ranking;
         var cells = shown
             .Reverse()
             .Select(index => shadows[index])
@@ -101,6 +94,24 @@ public sealed class ShadowStripPresentation
             pages,
             pages && _page < LastPage(shadows.Count),
             !pages ? ShadowStripTrailing.None : _page == 0 ? ShadowStripTrailing.Sort : ShadowStripTrailing.Better);
+    }
+
+    /// <summary>
+    /// The zero-based shadows on the strip's current page, best (top) first, out of
+    /// <paramref name="count"/> in <paramref name="generation"/>: all of them unless the strip pages.
+    /// Training draws only these and the followed shadow (#284).
+    /// </summary>
+    public IReadOnlyList<int> Shown(int count, int generation)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegative(count);
+        if (generation != _generation || count != _ranking.Length)
+        {
+            _generation = generation;
+            _ranking = Enumerable.Range(0, count).ToArray();
+            _page = 0;
+        }
+
+        return (count > _places ? _ranking.Skip(PageStart(count)).Take(CellsPerPage) : _ranking).ToArray();
     }
 
     /// <summary>

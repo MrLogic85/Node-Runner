@@ -27,6 +27,7 @@ public partial class Evolver : Node
     private TrialResult[] _results = [];
     private ParallelEvaluationSchedule? _schedule;
     private int _followedShadow;
+    private HashSet<int>? _drawn;
     private bool _opensWithPreviousBest;
 
     public int Generation { get; private set; }
@@ -114,10 +115,28 @@ public partial class Evolver : Node
             return;
         }
 
-        SetShadowDrawing(_followedShadow, isShadow: true);
+        var previous = _followedShadow;
+        SetShadowDrawing(previous, isShadow: true);
         _followedShadow = shadow;
         SetShadowDrawing(_followedShadow, isShadow: false);
+        ApplyDrawn(previous);
+        ApplyDrawn(_followedShadow);
         FollowedShadowChanged?.Invoke();
+    }
+
+    /// <summary>
+    /// Draws only <paramref name="shadows"/> (zero-based) and the followed shadow: the shadow strip's
+    /// page (#284). The others are hidden but still race and count. Every shadow is drawn until this
+    /// is first called; the choice holds across <see cref="Start"/>.
+    /// </summary>
+    public void DrawOnly(IReadOnlyList<int> shadows)
+    {
+        ArgumentNullException.ThrowIfNull(shadows);
+        _drawn = [.. shadows];
+        for (var slot = 0; slot < _creatures.Count; slot++)
+        {
+            ApplyDrawn(slot);
+        }
     }
 
     /// <summary>
@@ -250,6 +269,7 @@ public partial class Evolver : Node
                 ? primaryCreature
                 : CreateParallelCreature(primaryCreature, creatureFactory!, slot);
             _creatures.Add(creature);
+            ApplyDrawn(slot);
 
             var controller = new TrialController
             {
@@ -392,6 +412,15 @@ public partial class Evolver : Node
             ? _trialControllers[shadow].Measured.FrontDistance
             : double.NaN;
 
+    // Hiding a shadow's root stops Godot drawing all of its parts; its bodies still simulate.
+    private void ApplyDrawn(int slot)
+    {
+        if (slot < _creatures.Count)
+        {
+            _creatures[slot].Visible = slot == _followedShadow || _drawn is null || _drawn.Contains(slot);
+        }
+    }
+
     private void SetShadowDrawing(int shadow, bool isShadow)
     {
         if (shadow < _creatures.Count)
@@ -424,6 +453,7 @@ public partial class Evolver : Node
         if (_primaryCreature is not null)
         {
             _primaryCreature.IsShadow = false;
+            _primaryCreature.Visible = true;
         }
     }
 }

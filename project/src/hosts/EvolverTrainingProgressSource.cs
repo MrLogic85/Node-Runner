@@ -43,6 +43,8 @@ public sealed class EvolverTrainingProgressSource : ITrainingProgressSource
 
     public void Follow(int shadow) => _evolver.Follow(shadow);
 
+    public void DrawOnly(IReadOnlyList<int> shadows) => _evolver.DrawOnly(shadows);
+
     private void OnProgressChanged()
     {
         ProgressChanged?.Invoke();

@@ -16,6 +16,7 @@ public sealed class TrainingPresentationViewModel : INotifyPropertyChanged, IDis
     private int _bestGeneration;
     private bool _isTrialActive;
     private double[] _completedFitness = [];
+    private IReadOnlyList<int> _drawnShadows = [];
     private bool _disposed;
 
     public event PropertyChangedEventHandler? PropertyChanged;
@@ -102,17 +103,33 @@ public sealed class TrainingPresentationViewModel : INotifyPropertyChanged, IDis
     public int StripPlaces
     {
         get => _strip.Places;
-        set => _strip.Places = value;
+        set
+        {
+            _strip.Places = value;
+            DrawStripShadows();
+        }
     }
 
     /// <summary>Ranks the strip by distance so far and shows its first page.</summary>
-    public void SortShadows() => _strip.Sort(Shadows, _generation);
+    public void SortShadows()
+    {
+        _strip.Sort(Shadows, _generation);
+        DrawStripShadows();
+    }
 
     /// <summary>Pages the strip toward the worse shadows.</summary>
-    public void ShowWorseShadows() => _strip.PageWorse();
+    public void ShowWorseShadows()
+    {
+        _strip.PageWorse();
+        DrawStripShadows();
+    }
 
     /// <summary>Pages the strip back toward the better shadows.</summary>
-    public void ShowBetterShadows() => _strip.PageBetter();
+    public void ShowBetterShadows()
+    {
+        _strip.PageBetter();
+        DrawStripShadows();
+    }
 
     /// <summary>Follows shadow <paramref name="number"/> (1-based) until another is picked.</summary>
     public void Follow(int number)
@@ -185,6 +202,24 @@ public sealed class TrainingPresentationViewModel : INotifyPropertyChanged, IDis
         ApplySourceState();
     }
 
+    // Training draws only the shadows the strip shows (#284), so drawing does not limit Shadows
+    // (#787). Called whenever the page can change: paging, sorting, a new width or new progress,
+    // which includes a new generation going back to the first page.
+    private void DrawStripShadows()
+    {
+        if (_source is null)
+        {
+            return;
+        }
+
+        var shown = _strip.Shown(_source.ShadowDistances.Count, _generation);
+        if (!shown.SequenceEqual(_drawnShadows))
+        {
+            _drawnShadows = shown;
+            _source.DrawOnly(shown);
+        }
+    }
+
     private void ApplySourceState()
     {
         Update(
@@ -196,5 +231,6 @@ public sealed class TrainingPresentationViewModel : INotifyPropertyChanged, IDis
             _source.BestGeneration,
             _source.IsTrialActive,
             _source.CompletedFitness);
+        DrawStripShadows();
     }
 }
