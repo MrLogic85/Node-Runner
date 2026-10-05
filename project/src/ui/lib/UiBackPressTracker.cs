@@ -4,8 +4,10 @@ namespace NodeRunner.Ui.Lib;
 /// Sorts the Back signals of Android presses into each press's first signal and its repeats (#506).
 /// Godot sends a go-back signal on the Back key-down, on every key repeat while it is held, and
 /// again from the system back callback on release. The order varies: a quick tap can send its first
-/// go-back before its key-down, and a held key sends its release go-back just before or just after
-/// its key-up. Pure, so the sequences recorded on a device replay in tests.
+/// go-back before its key-down, a held key sends its release go-back just before or just after
+/// its key-up, and some phones send a press's key-down and key-up before its only go-back (#838).
+/// A key-down starts a new press unless it belongs to a go-back that came just before it, so a lost
+/// key-up cannot swallow the next press. Pure, so the sequences recorded on a device replay in tests.
 /// </summary>
 public sealed class UiBackPressTracker
 {
@@ -16,6 +18,9 @@ public sealed class UiBackPressTracker
     public const ulong PauseMsec = 200;
 
     private bool _inPress;
+    private bool _pressHasKeyDown;
+    // The last key event of a key-down whose go-back has not come yet.
+    private ulong? _waitingKeyMsec;
     private bool _pressReleased;
     private ulong _releasedMsec;
     private ulong _lastSignalMsec;
@@ -38,6 +43,8 @@ public sealed class UiBackPressTracker
         {
             _inPress = true;
             _pressReleased = false;
+            _pressHasKeyDown = _waitingKeyMsec is { } key && nowMsec - key < PauseMsec;
+            _waitingKeyMsec = null;
         }
 
         _lastSignalMsec = nowMsec;
@@ -47,15 +54,33 @@ public sealed class UiBackPressTracker
     /// <summary>Records a Back key event; an echo is a key repeat while the key is held.</summary>
     public void Key(ulong nowMsec, bool pressed, bool echo)
     {
-        if (pressed && !echo && _pressReleased)
+        if (pressed && !echo)
         {
-            // A new press whose key-down comes before its go-back.
-            _inPress = false;
+            if (_inPress && !_pressHasKeyDown && nowMsec - _lastSignalMsec < PauseMsec)
+            {
+                // The key-down of a press whose go-back came first.
+                _pressHasKeyDown = true;
+            }
+            else
+            {
+                // A new press: its go-back comes next.
+                _inPress = false;
+                _waitingKeyMsec = nowMsec;
+            }
         }
-        else if (!pressed && _inPress)
+        else
         {
-            _pressReleased = true;
-            _releasedMsec = nowMsec;
+            // A held key's go-back may come only after its echoes or its key-up.
+            if (_waitingKeyMsec is not null)
+            {
+                _waitingKeyMsec = nowMsec;
+            }
+
+            if (!pressed && _inPress)
+            {
+                _pressReleased = true;
+                _releasedMsec = nowMsec;
+            }
         }
 
         _lastSignalMsec = nowMsec;
