@@ -845,14 +845,14 @@ public sealed class BuildViewModelTests
     }
 
     [Fact]
-    public void TryGetTrainableCreature_WithNothingToDrive_Refuses()
+    public void TryGetTrainableCreature_WithNothingToDrive_ReturnsTheCreature()
     {
         var viewModel = new BuildViewModel();
-        viewModel.Load(TwoNodeCreature());
+        viewModel.Load(new CreatureDef([new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(200, 0))], [new BeamDef(3, 1, 2)], []));
 
-        viewModel.TryGetTrainableCreature(out var creature).ShouldBeFalse();
+        viewModel.TryGetTrainableCreature(out var creature).ShouldBeTrue();
 
-        creature.ShouldBeNull();
+        creature.ShouldNotBeNull();
     }
 
     [Fact]

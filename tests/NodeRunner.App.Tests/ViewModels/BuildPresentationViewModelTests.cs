@@ -598,7 +598,7 @@ public sealed class BuildPresentationViewModelTests
     }
 
     [Fact]
-    public void BuildPanel_WithoutAPiston_AsksForOne()
+    public void BuildPanel_WithoutAPiston_IsReadyToTrain()
     {
         var build = new BuildViewModel();
         build.Load(PairCreature());
@@ -606,8 +606,8 @@ public sealed class BuildPresentationViewModelTests
 
         var buildPanel = presentation.BuildPanel;
 
-        buildPanel.CanStartTraining.ShouldBeFalse();
-        buildPanel.ReadinessText.ShouldBe(UiText.Plain("Add a piston"));
+        buildPanel.CanStartTraining.ShouldBeTrue();
+        buildPanel.ReadinessText.ShouldBe(UiText.Plain("Ready to train"));
     }
 
     [Fact]

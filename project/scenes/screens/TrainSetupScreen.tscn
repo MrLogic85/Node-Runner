@@ -98,6 +98,30 @@ layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 12
 
+[node name="NoPoweredParts" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/Setup"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="NoPoweredPartsIcon" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/Setup/NoPoweredParts"]
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+script = ExtResource("11_icon")
+IconId = 37
+IconSize = 0
+Color = 10
+
+[node name="NoPoweredPartsText" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/Setup/NoPoweredParts"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Warning, no powered parts added! There is nothing to train"
+autowrap_mode = 3
+script = ExtResource("4_label")
+TextStyle = 6
+TextColor = 10
+
 [node name="Mode" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/Setup"]
 layout_mode = 2
 theme_override_constants/separation = 4

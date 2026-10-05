@@ -303,9 +303,11 @@ a Creation (#515). Only training needs a finished creature.
 for that, in two steps: `Problems` lists why the creature cannot be
 simulated yet (no nodes, a node with no beam or link, a zero-length beam
 or link, or one shorter than `CreatureReadiness.MinimumBeamGap` between its
-joint rings, #593), and `CanTrain` also needs at least one brain output to
-drive. Joints are passive (#450), so today that means a Piston; Build says
-"Add a piston" until there is one.
+joint rings, #593), and `CanTrain` is true when there are none. It needs
+no powered part (#845): "Add a piston" would stop being right as more
+powered parts come, so a creature with nothing for its brain to drive
+trains and stands still, and Train setup warns about it
+(`docs/TRAINING_LOOP.md` step 2).
 `CreatureBuilder.TryBuild` applies `Problems` to the in-progress creature.
 UI surfaces those messages and does not duplicate the rules. The one
 exception is Build's readiness line, which shortens the errors for the

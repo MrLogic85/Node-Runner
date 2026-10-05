@@ -261,7 +261,7 @@ public sealed class BuildPresentationViewModel
 
         return CreatureReadiness.CanTrain(creature)
             ? new BuildPanelPresentation(CanStartTraining: true, UiText.Plain("Ready to train"))
-            : new BuildPanelPresentation(CanStartTraining: false, UiText.Plain("Add a piston"));
+            : new BuildPanelPresentation(CanStartTraining: false, ShortReadiness(CreatureReadiness.Problems(creature)));
     }
 
     // A short form of the builder's errors for the readiness line; CreatureReadiness decides whether training may start.

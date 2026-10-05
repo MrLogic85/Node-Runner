@@ -257,9 +257,10 @@ public sealed class NeuralNetwork
 
         for (var i = 0; i < layerSizes.Length; i++)
         {
-            if (layerSizes[i] <= 0)
+            // An empty layer is allowed: a creature with no powered parts has no outputs (#845).
+            if (layerSizes[i] < 0)
             {
-                throw new ArgumentOutOfRangeException(nameof(layerSizes), "Layer sizes must be positive.");
+                throw new ArgumentOutOfRangeException(nameof(layerSizes), "Layer sizes must not be negative.");
             }
         }
     }

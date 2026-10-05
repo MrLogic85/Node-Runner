@@ -36,6 +36,7 @@ public sealed class TrainSetupPresentationViewModel
             : UiText.Plain("Not trained yet");
         Settings = creation.TrainSettings ?? TrainSettingsDef.Default;
         CanSimulate = creation.Training is not null;
+        HasPoweredParts = BrainPorts.Of(creation.Creature).Outputs.Count > 0;
     }
 
     public event EventHandler? Changed;
@@ -57,6 +58,12 @@ public sealed class TrainSetupPresentationViewModel
     /// is nothing to choose, so Train setup hides the Train or Simulate switch (#843).
     /// </summary>
     public bool CanSimulate { get; }
+
+    /// <summary>
+    /// Whether the brain has a powered part to drive. Without one the creature may still train, but
+    /// it only stands still, so Train setup warns at the top (#845).
+    /// </summary>
+    public bool HasPoweredParts { get; }
 
     /// <summary>The one line under Train or Simulate saying what the chosen mode does.</summary>
     public UiText ModeNote => Mode switch

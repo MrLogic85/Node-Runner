@@ -46,6 +46,10 @@ generation", not "a training session has finished" (#369, 2026-09-30).
    brain with one shadow on the chosen map until the player leaves, and
    saves nothing, not even the settings. It needs a trained Creation, so
    an untrained one has no Train or Simulate switch: Start trains (#843).
+   A creature with no powered part may train too (#845): its brain has no
+   outputs, so every shadow stands still and nothing is learned. Train
+   setup then warns at the top, in `halo`: "Warning, no powered parts
+   added! There is nothing to train".
    Map choice (#540) and Run until power is out (0.18) are shown but not
    available yet; Flat ground is the only map,
    and its card takes its name from `Maps.Default` (#444).
@@ -288,8 +292,8 @@ transition to keep in step with it.
   genes, giving a later experiment for the competing-conventions plateau
   without changing the underlying network.
   `StartEvolution()` (`TrainingHost`) runs once when the scene opens. It
-  calls `Evolver.Start(...)` unless the creature has no motors
-  (`Creature.HasMotors`), in which case evolution stays idle. `Evolver.Stop()`
+  calls `Evolver.Start(...)`, also for a creature with nothing to drive: its
+  brain has no outputs and its shadows stand still (#845). `Evolver.Stop()`
   halts the in-progress trial without raising any events.
 - **Generation 0 (#537, #810).** A new Creation has no trained brain, so
   its base brain holds the built pose at full strength: all weights 0,

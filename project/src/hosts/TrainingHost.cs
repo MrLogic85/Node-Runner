@@ -338,9 +338,8 @@ public partial class TrainingHost : Node, IRoutedScene
     private void StartEvolution(CreationDef? creation)
     {
         _evolver?.Stop();
-        if (_creature?.HasMotors != true || _creature.Definition is not { } definition || _evolver is null)
+        if (_creature?.Definition is not { } definition || _evolver is null)
         {
-            // No motors: nothing to evolve.
             return;
         }
 
@@ -372,7 +371,7 @@ public partial class TrainingHost : Node, IRoutedScene
     // far its front has got, for the Distance card.
     private void StartPlayback(CreationDef creation)
     {
-        if (_creature?.HasMotors != true || _creature.Definition is not { } definition || creation.Training is not { } training)
+        if (_creature?.Definition is not { } definition || creation.Training is not { } training)
         {
             return;
         }
@@ -434,7 +433,7 @@ public partial class TrainingHost : Node, IRoutedScene
         if (_creationId is not { } id
             || _evolver?.LatestGenome is not { } genome
             || _evolver.LatestRun is not { } run
-            || _creature?.HasMotors != true)
+            || _creature is null)
         {
             return;
         }
