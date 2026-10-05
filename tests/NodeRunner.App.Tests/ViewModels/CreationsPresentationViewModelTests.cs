@@ -79,7 +79,7 @@ public sealed class CreationsPresentationViewModelTests
     public void Refresh_WithCopiedExample_ShowsAnOrdinaryCreation()
     {
         var repository = new InMemoryCreationRepository();
-        var copy = new ExampleCopyWorkflow(repository).Copy(CreationExamples.WormId, TestLanguage.Untranslated);
+        var copy = new ExampleCopyWorkflow(repository).Copy(CreationExamples.WalkerId, TestLanguage.Untranslated);
         var viewModel = new CreationsPresentationViewModel(repository);
 
         viewModel.Refresh();

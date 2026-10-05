@@ -23,7 +23,7 @@ namespace NodeRunner.Hosts;
 /// resumes from the creation's last finished generation and saves every finished generation, so
 /// leaving drops only the one in progress. To simulate, it plays the saved brain on the creature in
 /// one run that lasts until the player leaves, and saves nothing. Run on its own (F6) it trains the
-/// built-in worm without saving.
+/// Walker example without saving.
 /// </summary>
 public partial class TrainingHost : Node, IRoutedScene
 {
@@ -245,7 +245,7 @@ public partial class TrainingHost : Node, IRoutedScene
         creature.Name = "Creature";
         // Pausable, not Inherit, so it stops simulating while the tree is paused.
         creature.ProcessMode = ProcessModeEnum.Pausable;
-        creature.Definition = creation?.Creature ?? CreationExamples.Worm.Creature;
+        creature.Definition = creation?.Creature ?? CreationExamples.Walker.Creature;
         creature.Theme = _theme;
         creature.Position = GetNode<Marker2D>("%Spawn").Position;
         World.AddChild(creature);
@@ -292,7 +292,7 @@ public partial class TrainingHost : Node, IRoutedScene
         _screen = GetNode<TrainingScreen>("%TrainingScreen");
         _screen.Setup(
             creation is null
-                ? TrainingHeaderPresentation.ForWorm(Mode, _map.Id)
+                ? TrainingHeaderPresentation.ForWalker(Mode, _map.Id)
                 : TrainingHeaderPresentation.For(creation.Name, Mode, _map.Id),
             _trainingPresentation,
             _signalFlow,

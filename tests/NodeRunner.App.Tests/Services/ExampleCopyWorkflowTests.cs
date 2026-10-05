@@ -37,11 +37,11 @@ public sealed class ExampleCopyWorkflowTests
         var repository = new InMemoryCreationRepository();
         var workflow = new ExampleCopyWorkflow(repository);
 
-        workflow.Copy(CreationExamples.WormId, TestLanguage.Untranslated);
-        workflow.Copy(CreationExamples.WormId, TestLanguage.Untranslated);
+        workflow.Copy(CreationExamples.WalkerId, TestLanguage.Untranslated);
+        workflow.Copy(CreationExamples.WalkerId, TestLanguage.Untranslated);
 
         repository.List().Count.ShouldBe(2);
-        repository.List().ShouldAllBe(creation => creation.Id != CreationExamples.WormId);
+        repository.List().ShouldAllBe(creation => creation.Id != CreationExamples.WalkerId);
     }
 
     [Fact]

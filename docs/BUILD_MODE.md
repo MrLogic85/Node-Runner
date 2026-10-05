@@ -61,7 +61,7 @@ owned by `docs/TRAINING_LOOP.md` → Product lifecycle boundary.
 ## Coordinates
 
 - Build-mode positions are plain 2D coordinates in the same local
-  space the Worm example uses (see `CreationExamples`): no unit
+  space the Walker example uses (see `CreationExamples`): no unit
   conversion. The only view math is the Build canvas's zoom and pan
   (`CanvasView`), which never touches saved positions.
 
@@ -202,7 +202,7 @@ sizes on screen at any zoom.
   (`Creature.BuildFrom`), which generically derives the model's
   input/output counts (`BrainPorts.Of`: the sensor parts' readings, each Piston's
   inputs, and its outputs) for whatever anatomy it is given — no
-  special-casing between the Worm example and an edited creature.
+  special-casing between the Walker example and an edited creature.
 
 ## Parts tray
 

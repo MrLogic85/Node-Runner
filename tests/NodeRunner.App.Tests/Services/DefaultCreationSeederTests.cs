@@ -8,17 +8,17 @@ namespace NodeRunner.App.Tests.Services;
 public sealed class DefaultCreationSeederTests
 {
     [Fact]
-    public void SeedIfNeeded_OnFirstStart_SavesACopyOfWormInThePlayersLanguageAndTheMarker()
+    public void SeedIfNeeded_OnFirstStart_SavesACopyOfWalkerInThePlayersLanguageAndTheMarker()
     {
         var creations = new InMemoryCreationRepository();
         var progression = new InMemoryProgressionRepository();
 
-        var seeded = CreateSeeder(creations, progression).SeedIfNeeded(text => text.Equals(UiText.Plain("Worm")) ? "Mask" : "?");
+        var seeded = CreateSeeder(creations, progression).SeedIfNeeded(text => text.Equals(UiText.Plain("Walker")) ? "Gångare" : "?");
 
         seeded.ShouldBeTrue();
-        var worm = creations.List().ShouldHaveSingleItem();
-        worm.Id.ShouldNotBe(CreationExamples.WormId);
-        worm.Name.ShouldBe("Mask");
+        var walker = creations.List().ShouldHaveSingleItem();
+        walker.Id.ShouldNotBe(CreationExamples.WalkerId);
+        walker.Name.ShouldBe("Gångare");
         progression.Load().DefaultCreationsSeeded.ShouldBeTrue();
     }
 
@@ -26,7 +26,7 @@ public sealed class DefaultCreationSeederTests
     public void SeedIfNeeded_OnFirstStartWithCreations_StillSeeds()
     {
         var creations = new InMemoryCreationRepository();
-        creations.Save(new CreationDef(Guid.NewGuid(), "Player Build", CreationExamples.CreateWormCreature()));
+        creations.Save(new CreationDef(Guid.NewGuid(), "Player Build", CreationExamples.CreateWalkerCreature()));
 
         var seeded = CreateSeeder(creations, new InMemoryProgressionRepository()).SeedIfNeeded(TestLanguage.Untranslated);
 

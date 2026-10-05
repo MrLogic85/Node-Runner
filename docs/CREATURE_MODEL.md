@@ -432,50 +432,41 @@ creature, so it stands clear of the shadows behind it.
 - Part-to-part references are by stable id. Code that needs an array position
   uses `CreatureDef`'s id-to-index lookups at the boundary.
 
-## Worked example: the Worm
+## Worked example: the Walker
 
-`CreationExamples.CreateWormCreature` (`libs/NodeRunner.App/Services/CreationExamples.cs`)
-builds the Worm example, which Training also falls back to: an inchworm
-with a flat tail and a high hump at the front, and a Piston under the hump.
+`CreationExamples.CreateWalkerCreature` (`libs/NodeRunner.App/Services/CreationExamples.cs`)
+builds the Walker (#745), the only example, which the first start copies
+and Training falls back to: a walker seen from the side, with a leg hanging
+from each end of its back and two Pistons crossing between them.
 
 ```
-                  (N3)
-                 /    \
-  (N1)───────(N2)┄┄┄┄┄┄(N4)
-  accel          piston   camera
+  (N1)────accel────(N2)
+   │  ╲          ╱  │
+   │    ╲      ╱    │
+   │      ╲  ╱      │
+   │      ╱  ╲      │
+   │    ╱      ╲    │
+  (N3)            (N4)
+       crossed pistons
 ```
 
-- **4 nodes** spaced 90 units apart, plain joints; `N3` sits 90 units up.
-- **3 beams**, one per adjacent pair. Every joint is passive.
-- **1 Piston** from `N2` to `N4` with the default settings: pulling in
-  raises the hump, pushing out stretches the front forward. The hump is
-  high enough that the full ±30% stroke never flattens it (a straight push
-  through a flat chain could no longer bend it), and the flat tail makes
-  the crawl lopsided, so it has a forward direction. A headless check of
-  simple Piston rhythms moved it 1–2.5 m forward in 10 s.
-- **1 accelerometer** on the tail beam (`N1`–`N2`) and **1 camera** on the
-  front beam (`N3`–`N4`).
-- **Inputs:** `1 accelerometer × 2` + `1 camera × 3` + `1 piston × 2` = 7.
-- **Outputs:** 2, the Piston's position and strength.
-
-## Worked example: the Frog
-
-`CreationExamples.CreateFrogCreature` builds the Frog example (#811), the
-first with several motors: a frog seen from the side, facing right.
-
-- **6 nodes:** hip `N1`, head `N2` and front foot `N3` form a rigid body
-  triangle (beams `N1`–`N2`, `N2`–`N3`, `N1`–`N3`); the hind leg folds
-  from the hip through the knee `N4` and heel `N5` to the toe `N6`
-  (beams `N1`–`N4`, `N4`–`N5`, `N5`–`N6`).
-- **3 Pistons** with the default settings: `N3`–`N4` swings the thigh,
-  `N1`–`N5` opens the knee and `N4`–`N6` turns the foot. Joints are
-  passive, so the leg only holds its shape while the Pistons push, and a
-  hop needs all three at once.
-- **1 accelerometer** on the back beam (`N1`–`N2`).
-- **Inputs:** `1 accelerometer × 2` + `3 pistons × 2` = 8.
-- **Outputs:** 6, each Piston's position and strength.
-- A three-Piston frog like this one is the evidence for how generation 0
-  starts (`docs/TRAINING_LOOP.md` → "Generation 0").
+- **4 nodes:** the back `N1` (0, −120) to `N2` (200, −120), and the feet
+  `N3` (−40, 0) and `N4` (240, 0), splayed a little wider than the back.
+- **3 beams:** the back `N1`–`N2` and the legs `N1`–`N3` and `N2`–`N4`.
+  Every joint is passive.
+- **2 Pistons** with the default settings, `N2`–`N3` and `N1`–`N4`. They
+  hold the body up and swing the legs; the brain drives nothing else.
+- **1 accelerometer** on the back.
+- **Inputs:** `1 accelerometer × 2` + `2 pistons × 2` = 6.
+- **Outputs:** 4, each Piston's position and strength.
+- **Why this one (#745).** It shows learning in the first minutes with the
+  default Train setup (8 shadows, 10 s runs). Headless on Flat over 10
+  seeds, its median best distance went from 0.8 m in generation 0 to
+  6.9 m after 18 generations (3 minutes of play), and no seed stayed below
+  3.6 m. It walks upright. The one-Piston Worm it replaced went from
+  0.3 m to 0.7 m, and the three-Piston Frog (#811) from 1.1 m to 3.5 m
+  with its worst seed at 0.75 m. A two-hump crawler did 1.5 m. A Spring
+  between the Walker's feet, or across the Worm's hump, made both worse.
 
 ## What this model does not cover yet
 

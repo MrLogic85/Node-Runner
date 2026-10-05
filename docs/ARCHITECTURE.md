@@ -406,7 +406,7 @@ a copied example's name, is put into the player's language once, as it is
 saved (#759). From then on it is the player's own text, like a name they
 typed, and is never translated again. The workflows that save one take a
 `Func<UiText, string>`; the hosts pass `UiTextTranslation.Now`, since
-managers hold no UI. So `CreationsHost`, not `SaveManager`, seeds the Worm
+managers hold no UI. So `CreationsHost`, not `SaveManager`, seeds the Walker
 on the first start.
 
 ## Threading

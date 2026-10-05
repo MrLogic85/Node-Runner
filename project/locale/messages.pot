@@ -12,10 +12,6 @@ msgstr ""
 msgid "A beam already joins these nodes"
 msgstr ""
 
-#: libs/NodeRunner.App/Services/CreationExamples.cs
-msgid "A piston arches its back: an inchworm crawl."
-msgstr ""
-
 #: libs/NodeRunner.App/Builders/CreatureBuilder.cs
 msgid "A piston must connect two different nodes."
 msgstr ""
@@ -303,10 +299,6 @@ msgstr ""
 #: libs/NodeRunner.App/ViewModels/MapNames.cs
 #: project/scenes/screens/TrainSetupScreen.tscn
 msgid "Flat ground"
-msgstr ""
-
-#: libs/NodeRunner.App/Services/CreationExamples.cs
-msgid "Frog"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartTrayPresentation.cs
@@ -751,10 +743,6 @@ msgstr ""
 msgid "This can drop after a noisy generation; Training's Best never does. Tap the padlock to change the body. Training is kept."
 msgstr ""
 
-#: libs/NodeRunner.App/Services/CreationExamples.cs
-msgid "Three pistons work one leg: the brain must time them together."
-msgstr ""
-
 #: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs
 msgid "Three rays see how near the ground is."
 msgstr ""
@@ -805,6 +793,10 @@ msgstr ""
 msgid "Turn it around its middle"
 msgstr ""
 
+#: libs/NodeRunner.App/Services/CreationExamples.cs
+msgid "Two crossed pistons swing two legs: a first walk."
+msgstr ""
+
 #: project/scenes/screens/BuildScreen.tscn
 msgid "Undo"
 msgstr ""
@@ -834,6 +826,10 @@ msgstr ""
 msgid "Waiting for a live brain"
 msgstr ""
 
+#: libs/NodeRunner.App/Services/CreationExamples.cs
+msgid "Walker"
+msgstr ""
+
 #: project/src/ui/lib/UiPopupStyle.cs
 msgid "Warning"
 msgstr ""
@@ -844,10 +840,6 @@ msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/LinkListPresentation.cs
 msgid "Wing"
-msgstr ""
-
-#: libs/NodeRunner.App/Services/CreationExamples.cs
-msgid "Worm"
 msgstr ""
 
 #: project/scenes/widgets/ShadowStrip.tscn

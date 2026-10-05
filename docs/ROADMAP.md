@@ -159,8 +159,7 @@ episode that can end early shape what the brain learns.
 training.
 
 - Achievements: model, screen, progress during training, and toasts.
-- Part counts and achievement locks, and locked examples, one per part; a
-  Piston start example replaces Worm.
+- Part counts and achievement locks, and locked examples, one per part.
 - Checkpoints when training stops and on demand, and restore. Restoring
   rewinds the training history.
 

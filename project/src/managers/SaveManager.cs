@@ -79,7 +79,7 @@ public partial class SaveManager : Node
 
     public CreationDef CreateNew(Func<UiText, string> inPlayerLanguage) => NewCreationWorkflow.Create(inPlayerLanguage);
 
-    /// <summary>Copies the Worm on the app's first start; see <see cref="DefaultCreationSeeder"/>.</summary>
+    /// <summary>Copies the Walker on the app's first start; see <see cref="DefaultCreationSeeder"/>.</summary>
     public bool SeedDefaultCreations(Func<UiText, string> inPlayerLanguage) =>
         (_defaultCreationSeeder ?? throw new InvalidOperationException("SaveManager is not ready.")).SeedIfNeeded(inPlayerLanguage);
 
