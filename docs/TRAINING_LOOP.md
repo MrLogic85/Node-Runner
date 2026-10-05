@@ -44,9 +44,10 @@ generation", not "a training session has finished" (#369, 2026-09-30).
    the changes. Simulate (#702) opens Training in Simulate mode instead
    (`TrainingRoute(id, TrainingRunMode.Simulate)`): it plays the saved
    brain with one shadow on the chosen map until the player leaves, and
-   saves nothing, not even the settings. It needs a trained Creation; its
-   segment is disabled otherwise. Map choice (#540) and Run until power is
-   out (0.18) are shown but not available yet; Flat ground is the only map,
+   saves nothing, not even the settings. It needs a trained Creation, so
+   an untrained one has no Train or Simulate switch: Start trains (#843).
+   Map choice (#540) and Run until power is out (0.18) are shown but not
+   available yet; Flat ground is the only map,
    and its card takes its name from `Maps.Default` (#444).
 3. Each finished generation is saved. Once the Creation has trained at
    least one generation it is locked (`CreationLock.IsLocked`, #369): the

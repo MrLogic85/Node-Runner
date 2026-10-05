@@ -19,11 +19,9 @@ Text = "Train"
 IconId = 24
 
 [sub_resource type="Resource" id="Resource_simulate"]
-resource_local_to_scene = true
 script = ExtResource("7_segment")
 Text = "Simulate"
 IconId = 39
-Disabled = true
 
 [node name="TrainSetupScreen" type="Control"]
 layout_mode = 3

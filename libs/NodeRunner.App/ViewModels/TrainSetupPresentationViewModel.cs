@@ -14,8 +14,9 @@ public sealed record SettingSlider(UiText Label, UiText Readout, double? Positio
 /// <summary>
 /// Train setup (#194), between Build and Training: Train or Simulate, and the Shadows and Run length
 /// sliders, filled from the Creation's saved values or the default. Training starts by saving
-/// <see cref="Settings"/> on the Creation (#617). Simulate (#702) needs a trained Creation; it plays
-/// one shadow until the player leaves, so it dims both sliders and saves nothing. The selected map
+/// <see cref="Settings"/> on the Creation (#617). Simulate (#702) needs a trained Creation, so an
+/// untrained one has no Train or Simulate choice at all (#843); it plays one shadow until the player
+/// leaves, so it dims both sliders and saves nothing. The selected map
 /// card names <see cref="Maps.Default"/> (#444). The map choice and Run until power is out come
 /// later (#540, 0.18).
 /// </summary>
@@ -51,15 +52,17 @@ public sealed class TrainSetupPresentationViewModel
 
     public TrainingRunMode Mode { get; private set; }
 
-    /// <summary>Whether Simulate can be chosen: only a trained Creation has a brain to play.</summary>
+    /// <summary>
+    /// Whether Simulate can be chosen: only a trained Creation has a brain to play. Without it there
+    /// is nothing to choose, so Train setup hides the Train or Simulate switch (#843).
+    /// </summary>
     public bool CanSimulate { get; }
 
     /// <summary>The one line under Train or Simulate saying what the chosen mode does.</summary>
     public UiText ModeNote => Mode switch
     {
         TrainingRunMode.Simulate => UiText.Plain("Plays the trained brain with one shadow. Nothing is learned or saved."),
-        _ when CanSimulate => UiText.Plain("Shadows race and the brain keeps learning."),
-        _ => UiText.Plain("Shadows race and the brain keeps learning. Simulate needs a trained brain."),
+        _ => UiText.Plain("Shadows race and the brain keeps learning."),
     };
 
     public SettingSlider Shadows => Mode == TrainingRunMode.Simulate

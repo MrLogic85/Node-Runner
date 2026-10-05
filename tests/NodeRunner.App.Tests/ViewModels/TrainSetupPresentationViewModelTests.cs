@@ -95,7 +95,7 @@ public sealed class TrainSetupPresentationViewModelTests
 
         setup.Mode.ShouldBe(TrainingRunMode.Train);
         setup.CanSimulate.ShouldBeFalse();
-        setup.ModeNote.ShouldBe(UiText.Plain("Shadows race and the brain keeps learning. Simulate needs a trained brain."));
+        setup.ModeNote.ShouldBe(UiText.Plain("Shadows race and the brain keeps learning."));
         Should.Throw<InvalidOperationException>(() => setup.SetMode(TrainingRunMode.Simulate));
     }
 

@@ -310,8 +310,10 @@ reference would mislead someone working on that surface.
   Neither value is on its scale, so both tracks are empty dashed lines with
   no thumb or fill. It
   plays the latest brain, not the reference's best (`docs/TRAINING_LOOP.md`
-  → Generations), and is a disabled segment until the Creation has trained,
-  with the note under the switch saying why. Owner decision. Run until power is out (0.18) is disabled with the
+  → Generations). Until the Creation has trained there is no Train or
+  Simulate switch at all (#843), not a disabled Simulate: a play tester
+  tapped the dashed segment and missed the note saying why. Owner decision.
+  Run until power is out (0.18) is disabled with the
   reference's "Needs a battery or generator". Locked maps are disabled cards with a lock,
   not the library's `Locked` card, which means "the only choice". Each map
   card shows the reference's picture of its ground (`MapPreview`: one line,
@@ -1005,8 +1007,8 @@ use `Kind = Flat` for the canonical flat style.
 Edit `Segments`, `SelectedIndex`, and `MatchWidth` in the Inspector. Each
 `Segments` entry is a `UiSegment` resource: expand it and edit
 `Text`, the `IconId` dropdown (`None` means no icon) and `Disabled`, which
-shows a segment that cannot be chosen yet (Simulate in Train setup before
-the Creation has trained, #702)
+shows a segment that cannot be chosen yet (a UI size that does not fit
+the screen in Colors & Styles)
 like a disabled `UiButton`: a dashed outline over a 50% fill and content,
 with the same corners as an enabled segment in that place. Resource edits update
 the preview directly. New or cleared resource slots are automatically populated
