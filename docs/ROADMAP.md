@@ -138,8 +138,7 @@ watches its neurons respond.
 
 - Helpers for changing a Creation safely.
 - Overlays and toasts.
-- Settings: UI size, theme, sounds and the Shadows default; hiding the
-  training shadows.
+- Settings: UI size, theme, sounds and the Shadows default.
 
 ### 0.18.0 — Power and wings
 

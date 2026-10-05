@@ -216,6 +216,19 @@ public sealed class ShadowStripPresentationTests
     }
 
     [Fact]
+    public void Shown_IsEveryShadow_UntilTheStripPages_ThenTheCurrentPageBestFirst()
+    {
+        var strip = new ShadowStripPresentation();
+
+        strip.Shown(8, generation: 0).ShouldBe([0, 1, 2, 3, 4, 5, 6, 7]);
+        strip.Shown(9, generation: 0).ShouldBe([0, 1, 2, 3, 4, 5]);
+        strip.PageWorse();
+        strip.Shown(9, generation: 0).ShouldBe([3, 4, 5, 6, 7, 8]);
+        strip.Shown(9, generation: 1).ShouldBe([0, 1, 2, 3, 4, 5]);
+        strip.Shown(0, generation: 1).ShouldBeEmpty();
+    }
+
+    [Fact]
     public void NoShadows_ShowAnEmptyStrip()
     {
         new ShadowStripPresentation().View([], 0).ShouldBe(ShadowStripView.Empty);

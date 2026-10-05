@@ -34,4 +34,10 @@ public interface ITrainingProgressSource : IDisposable
 
     /// <summary>Follows the zero-based <paramref name="shadow"/> until another is picked.</summary>
     void Follow(int shadow);
+
+    /// <summary>
+    /// Draws only the zero-based <paramref name="shadows"/> and the followed shadow (#284); every
+    /// other shadow still races and counts, undrawn.
+    /// </summary>
+    void DrawOnly(IReadOnlyList<int> shadows);
 }

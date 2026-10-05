@@ -296,7 +296,9 @@ records its fitness, assigns the slot the next pending genome, and, once every
 genome in the current generation has completed, produces the next generation
 via `GeneticAlgorithm.NextGeneration(...)`. The first slot reuses the visible
 creature; the rest of the generation runs alongside it as clones, all at
-once (up to 100), drawn as transparent shadows behind the followed one. Each slot owns a `TrialController` and resets
+once (up to 100). Only the shadow strip's current page and the followed one are
+drawn, as transparent shadows behind it (`docs/TRAINING_LOOP.md` → Drawn
+shadows); the rest race undrawn. Each slot owns a `TrialController` and resets
 independently between trials. Creature bodies collide only with the ground. See `docs/TRAINING_LOOP.md` for the full design.
 
 `Evolver` raises `GenerationCompleted`/`TrainingProgressChanged` events; the

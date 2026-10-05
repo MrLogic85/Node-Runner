@@ -208,6 +208,61 @@ public sealed class TrainingPresentationViewModelTests
     }
 
     [Fact]
+    public void Training_DrawsEveryShadow_WhileTheyAllFitOnTheStrip()
+    {
+        var source = new FakeTrainingProgressSource { ShadowDistances = [1, 2, 3] };
+
+        using var presentation = new TrainingPresentationViewModel(source);
+
+        source.Drawn.ShouldBe([0, 1, 2]);
+    }
+
+    [Fact]
+    public void Training_DrawsOnlyTheStripsPage_AsThePlayerPagesSortsOrResizes()
+    {
+        var source = new FakeTrainingProgressSource { ShadowDistances = [1, 5, 3, 2, 4, 6, 9, 8, 7] };
+        using var presentation = new TrainingPresentationViewModel(source);
+        source.Drawn.ShouldBe([0, 1, 2, 3, 4, 5]);
+
+        presentation.ShowWorseShadows();
+        source.Drawn.ShouldBe([3, 4, 5, 6, 7, 8]);
+
+        presentation.ShowBetterShadows();
+        source.Drawn.ShouldBe([0, 1, 2, 3, 4, 5]);
+
+        presentation.SortShadows();
+        source.Drawn.ShouldBe([6, 7, 8, 5, 1, 4]);
+
+        presentation.StripPlaces = 4;
+        source.Drawn.ShouldBe([6, 7]);
+    }
+
+    [Fact]
+    public void ANewGeneration_DrawsTheFirstPageAgain()
+    {
+        var source = new FakeTrainingProgressSource { ShadowDistances = [1, 5, 3, 2, 4, 6, 9, 8, 7] };
+        using var presentation = new TrainingPresentationViewModel(source);
+        presentation.ShowWorseShadows();
+
+        source.Generation = 1;
+        source.RaiseProgressChanged();
+
+        source.Drawn.ShouldBe([0, 1, 2, 3, 4, 5]);
+    }
+
+    [Fact]
+    public void Training_TellsTheSourceOnlyWhenTheDrawnShadowsChange()
+    {
+        var source = new FakeTrainingProgressSource { ShadowDistances = [1, 5, 3, 2, 4, 6, 9, 8, 7] };
+        using var presentation = new TrainingPresentationViewModel(source);
+
+        source.RaiseProgressChanged();
+        presentation.ShowBetterShadows();
+
+        source.DrawOnlyCalls.ShouldBe(1);
+    }
+
+    [Fact]
     public void FreshGenerationZero_FollowsShadowOneWithoutAPreviousBest()
     {
         var source = new FakeTrainingProgressSource { ShadowDistances = [0, 0] };
@@ -282,9 +337,19 @@ public sealed class TrainingPresentationViewModelTests
 
         public IReadOnlyList<double> ShadowDistances { get; set; } = [];
 
+        public IReadOnlyList<int> Drawn { get; private set; } = [];
+
+        public int DrawOnlyCalls { get; private set; }
+
         public void Follow(int shadow)
         {
             FollowedShadow = shadow;
+        }
+
+        public void DrawOnly(IReadOnlyList<int> shadows)
+        {
+            Drawn = shadows;
+            DrawOnlyCalls++;
         }
 
         public void RaiseProgressChanged()
