@@ -286,13 +286,20 @@ a composition of triangles; a bare quadrilateral stays free to fold.
   margin at Training's fixed 1/60 s step (#787), and a headless run with no
   damping stayed bounded.
 - **Minimum length:** the same as a beam's (`CreatureReadiness.MinimumBeamGap`).
-- **Drawn** as a zigzag coil with four peaks between short straight leads
-  that start under the joint rings (`project/src/theme/SpringDrawing.cs`),
-  as wide as a Piston's cylinder. The peaks spread as it stretches and bunch
-  as it squeezes. It is `line-strong`, not `accent`, because accent marks
-  parts the brain drives; the damper is not drawn. Selected, it gets the
-  Piston's two halo lines (`docs/UI_DIRECTION.md` → Selection). A creation
-  card draws the same coil, scaled down with the creature (#770).
+- **Drawn** as a coilover (#807, `project/src/theme/SpringDrawing.cs`): a
+  thin `line-strong` rod that stops under the joint rings, a seat plate just
+  outside each joint's edge, a `panel` damper body with a `line-strong` outline in
+  the middle, and a seven-turn helix wound round it. The helix's front
+  strokes are `muted` and drawn over the body. Its back strokes are
+  `line-strong` hairlines drawn under it. The turns spread as the Spring
+  stretches and bunch as it squeezes. The body keeps the length the Spring
+  was built with, but shrinks if the coil would no longer show round it.
+  There is no `accent`, because accent marks parts the brain drives. An
+  Orchid coil was tried on a device and judged too busy; the hue is kept as
+  a possible highlight token (#832). Too short, all of it turns `danger`. Selected, it gets the Piston's
+  two halo lines outside its seats (`docs/UI_DIRECTION.md` → Selection). A
+  creation card draws the same coilover, scaled down with the creature
+  (#770).
 
 ## Draw layers
 

@@ -130,6 +130,7 @@ public partial class Creature
                 NodeB = nodeB,
                 RadiusA = ToGodotFloat(definition.Nodes[indexA].Radius, nameof(NodeDef.Radius)),
                 RadiusB = ToGodotFloat(definition.Nodes[indexB].Radius, nameof(NodeDef.Radius)),
+                Built = built,
             };
             AddChild(visual);
             _springVisuals[i] = visual;
