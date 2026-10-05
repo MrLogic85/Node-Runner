@@ -88,7 +88,7 @@ public partial class TrainSetupScreen : Control
         GetNode<UiLabel>("%Subtitle").ShowText(_presentation.Subtitle);
         GetNode<UiLabel>("%MapName").ShowText(_presentation.MapName);
         var mode = GetNode<UiSegmentedSwitch>("%ModeSwitch");
-        mode.Segments[_simulateSegment].Disabled = !_presentation.CanSimulate;
+        mode.Visible = _presentation.CanSimulate;
         mode.SelectedIndex = _presentation.Mode == TrainingRunMode.Simulate ? _simulateSegment : _trainSegment;
         GetNode<UiLabel>("%ModeNote").ShowText(_presentation.ModeNote);
         Bind(GetNode<UiSlider>("%Shadows"), _presentation.Shadows, _presentation.ShadowsEnds);

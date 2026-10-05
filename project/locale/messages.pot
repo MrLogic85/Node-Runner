@@ -585,10 +585,6 @@ msgstr ""
 msgid "Shadows race and the brain keeps learning."
 msgstr ""
 
-#: libs/NodeRunner.App/ViewModels/TrainSetupPresentationViewModel.cs
-msgid "Shadows race and the brain keeps learning. Simulate needs a trained brain."
-msgstr ""
-
 #: project/scenes/screens/TrainSetupScreen.tscn
 msgid "Simulate"
 msgstr ""
