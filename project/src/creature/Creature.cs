@@ -777,8 +777,8 @@ public partial class Creature : Node2D
             .ToArray();
     }
 
-    // Each sensor part writes its values (Accelerometer: along, across; Camera: left 1, centre,
-    // right 1), then each Piston its length and speed, into the raw buffer in sim order;
+    // Each sensor part writes its values (Accelerometer: along, across; Camera: left1, centre,
+    // right1), then each Piston its length and speed, into the raw buffer in sim order;
     // they are then copied into the brain's port order (BrainPorts).
     private void ReadSensors(double[] values, double delta)
     {

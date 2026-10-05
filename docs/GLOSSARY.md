@@ -48,7 +48,7 @@ Long-form descriptions and the sensor/model contract live in
 - **Beam** — A rigid, fixed-length connection between two nodes. Never
   stretches or compresses. Its own `RigidBody2D` at runtime. See:
   `docs/CREATURE_MODEL.md`.
-- **Camera** — A sensor on a beam: three rays (left 1, centre, right 1)
+- **Camera** — A sensor on a beam: three rays (left, centre, right)
   fanned around its aim, which turns in Build (#594; a new one looks
   forward-up, forward and forward-down) and turns with the beam, that read how near
   the ground is, 0 with nothing in range and 1 at contact. Gives three model
@@ -82,7 +82,7 @@ Long-form descriptions and the sensor/model contract live in
   ring with a fine inner ring. See: `docs/CREATURE_MODEL.md`.
 - **Piston** — A powered link between two nodes (#451) that pushes them
   apart or pulls them together. Not a beam: inside its stroke it adds no
-  rigidity; it weighs one and a half beams, and its end stops are hard. Gives the brain its length and speed, and takes a position and a
+  rigidity; it weighs one and a half beams, and its end stops are hard. Gives the brain its length and speed, and takes a length and a
   strength output. See: `docs/CREATURE_MODEL.md`.
 - **Port** — One brain channel a part declares (`BrainPort`): the part's id,
   a channel key that never changes, whether it is an input or an output, and

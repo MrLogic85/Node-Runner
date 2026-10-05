@@ -173,11 +173,12 @@ CreatureDef  ──build──▶  physical body  ──sensors──▶  model 
   They see the ground only (collision layer 1), `CameraRays.RayLength`
   (220) long. (It is not Godot's `Camera2D`.)
 - **Ray names** are symmetric around the centre ray, seen from the camera
-  looking along its rays: **left 1**, **centre**, **right 1** (later also
-  left 2 / right 2). With the default aim, left 1 looks forward-up, centre
-  forward and right 1 forward-down. Every ray count the camera will offer (1, 3 or 5, #578) has
-  a centre ray, so the names of the inner rays survive a rebuild with
-  another count.
+  looking along its rays: **left**, **centre**, **right** (keys `left1`,
+  `centre`, `right1`; five rays add **far left** / **far right**, keys
+  `left2` / `right2`). With the default aim, left looks forward-up, centre
+  forward and right forward-down. Every ray count the camera will offer (1, 3 or 5, #578) has
+  a centre ray, so the keys and names of the inner rays survive a rebuild
+  with another count.
 - **Reading:** three brain inputs, left to right: the ray's **nearness**,
   `1 − distance / range` clamped to 0–1, so `0` when nothing is in range,
   rising linearly to `1` at contact (`CameraRays.Reading`). Nothing seen
@@ -375,7 +376,10 @@ creature, so it stands clear of the shadows behind it.
   channels as ports, `BrainPort(partId, channel, direction, signal)`
   (`libs/NodeRunner.Domain/BrainPort.cs`). The channel is a machine key that
   never changes; display names are separate. An input carries a reading; an
-  output names the physical signal it drives (#535).
+  output names the physical signal it drives (#535). The player sees each
+  port as its part's name and a label (`BrainPortLabels`); an output's label
+  is the quantity it sets, not "target" or "position", so the Piston's
+  position output reads **length** like its input (#869).
   - **Accelerometer:** inputs `along`, `across`.
   - **Camera:** inputs `left1`, `centre`, `right1`.
   - **Piston (#451):** inputs `length` (−1…1 over its stroke, 0 as built)

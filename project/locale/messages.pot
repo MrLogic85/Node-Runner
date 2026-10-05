@@ -1029,7 +1029,7 @@ msgid "{0}: centre"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/BrainPortLabels.cs
-msgid "{0}: left 1"
+msgid "{0}: left"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/BrainPortLabels.cs
@@ -1037,11 +1037,7 @@ msgid "{0}: length"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/BrainPortLabels.cs
-msgid "{0}: position"
-msgstr ""
-
-#: libs/NodeRunner.App/ViewModels/BrainPortLabels.cs
-msgid "{0}: right 1"
+msgid "{0}: right"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/BrainPortLabels.cs

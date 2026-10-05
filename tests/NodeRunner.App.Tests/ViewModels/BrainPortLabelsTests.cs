@@ -23,13 +23,13 @@ public sealed class BrainPortLabelsTests
         [
             UiText.Format("{0}:\u00A0along", accelerometer),
             UiText.Format("{0}:\u00A0across", accelerometer),
-            UiText.Format("{0}:\u00A0left 1", eye),
+            UiText.Format("{0}:\u00A0left", eye),
             UiText.Format("{0}:\u00A0centre", eye),
-            UiText.Format("{0}:\u00A0right 1", eye),
+            UiText.Format("{0}:\u00A0right", eye),
             UiText.Format("{0}:\u00A0length", ram),
             UiText.Format("{0}:\u00A0speed", ram),
         ]);
-        labels.Outputs.ShouldBe([UiText.Format("{0}:\u00A0position", ram), UiText.Format("{0}:\u00A0strength", ram)]);
+        labels.Outputs.ShouldBe([UiText.Format("{0}:\u00A0length", ram), UiText.Format("{0}:\u00A0strength", ram)]);
         labels.Inputs.Count.ShouldBe(BrainPorts.Of(creature).Inputs.Count);
     }
 
@@ -46,7 +46,7 @@ public sealed class BrainPortLabelsTests
 
         var piston = UiText.Format("Piston {0}", 1);
         labels.Inputs.ShouldBe([UiText.Format("{0}:\u00A0length", piston), UiText.Format("{0}:\u00A0speed", piston)]);
-        labels.Outputs.ShouldBe([UiText.Format("{0}:\u00A0position", piston), UiText.Format("{0}:\u00A0strength", piston)]);
+        labels.Outputs.ShouldBe([UiText.Format("{0}:\u00A0length", piston), UiText.Format("{0}:\u00A0strength", piston)]);
     }
 
     [Fact]
