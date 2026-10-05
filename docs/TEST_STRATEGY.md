@@ -113,8 +113,11 @@ Current facts (see `ArchitectureSpec.cs`):
 - `NodeRunner.ML` references neither `NodeRunner.App` nor `NodeRunner.Mechanics`
 - No production `.cs` file (`libs/`, `project/src/`) exceeds 2000 lines
   (`docs/CODE_DESIGN_PRINCIPLES.md` §5)
-- The Android `version/code` equals 1000000·major + 1000·minor + patch of
-  `application/config/version`, and `version/name` is empty (#809)
+- Every Android export preset has `version/code` equal to 1000000·major +
+  1000·minor + patch of `application/config/version`, and an empty
+  `version/name` (#809)
+- The `Android Debug` preset matches `Android` apart from its identity
+  (`docs/ARCHITECTURE.md` → "Android export", #898)
 
 Add a fact whenever a convention emerges that we've decided to enforce.
 
@@ -133,7 +136,7 @@ swap restyles everything:
   every variation
 - the app icon's colour SVGs use only Neon palette colours and the
   monochrome layer only white, the launcher and splash icons copy the
-  foreground art in order, and the export preset and project icon point at
+  foreground art in order, and both export presets and the project icon point at
   them at their native sizes (`AppIconTests`, #820)
 - saved scenes pin no stylebox, colour, font or font size on any node, store
   no generated icon texture, and do not store the properties a library

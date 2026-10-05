@@ -139,13 +139,57 @@ public sealed partial class ArchitectureSpec
         throw new DirectoryNotFoundException("Could not find NodeRunner.slnx.");
     }
 
+    [Fact]
+    public void AndroidDebugPreset_MatchesTheReleasePresetApartFromItsIdentity()
+    {
+        // Godot presets cannot inherit, so the debug preset repeats the release one. Only what
+        // lets a debug build install next to the release may differ (#898).
+        var release = ExportPreset("Android");
+        var debug = ExportPreset("Android Debug");
+
+        debug["package/unique_name"].ShouldBe("\"dev.mrlogic85.noderunner.debug\"");
+        debug["package/name"].ShouldBe("\"Node Runner Debug\"");
+
+        string[] identity = ["name", "package/unique_name", "package/name"];
+        var drift = release.Keys.Union(debug.Keys)
+            .Except(identity)
+            .Where(key => release.GetValueOrDefault(key) != debug.GetValueOrDefault(key))
+            .ToList();
+
+        drift.ShouldBeEmpty("Change export options in both presets of project/export_presets.cfg.");
+    }
+
+    /// <summary>One value of <paramref name="key"/>; every export preset must agree on it.</summary>
     private static string ProjectSetting(string file, string key)
     {
         var prefix = key + "=";
-        var line = File.ReadLines(Path.Combine(FindRepositoryRoot(), "project", file))
-            .SingleOrDefault(line => line.StartsWith(prefix, StringComparison.Ordinal));
-        line.ShouldNotBeNull($"{file} has no {key}.");
-        return line[prefix.Length..];
+        var values = File.ReadLines(Path.Combine(FindRepositoryRoot(), "project", file))
+            .Where(line => line.StartsWith(prefix, StringComparison.Ordinal))
+            .Select(line => line[prefix.Length..])
+            .Distinct()
+            .ToList();
+        values.ShouldNotBeEmpty($"{file} has no {key}.");
+        values.Count.ShouldBe(1, $"{file} sets {key} to more than one value.");
+        return values[0];
+    }
+
+    /// <summary>The settings of the export preset named <paramref name="name"/>, with its options.</summary>
+    private static Dictionary<string, string> ExportPreset(string name)
+    {
+        var presets = new List<Dictionary<string, string>>();
+        foreach (var line in File.ReadLines(Path.Combine(FindRepositoryRoot(), "project", "export_presets.cfg")))
+        {
+            if (line.StartsWith("[preset.", StringComparison.Ordinal) && !line.EndsWith(".options]", StringComparison.Ordinal))
+            {
+                presets.Add([]);
+            }
+            else if (presets.Count > 0 && line.IndexOf('=') is > 0 and var equals)
+            {
+                presets[^1].Add(line[..equals], line[(equals + 1)..]);
+            }
+        }
+
+        return presets.Single(preset => preset["name"] == $"\"{name}\"");
     }
 
     private static int VersionPart(Match version, string group) =>

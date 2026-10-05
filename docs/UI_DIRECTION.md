@@ -747,7 +747,7 @@ layer is white only, as Android themed icons require. The hidden neurons
 are `ink` and the 192 px border is `line`. The dot grid is `muted` at low
 alpha rather than the Build grid's `line`, because `line` dots vanish at
 launcher size. `AppIconTests` checks
-the colours, the sizes, the export preset and both copies.
+the colours, the sizes, both export presets and both copies.
 
 ## Text and translation
 

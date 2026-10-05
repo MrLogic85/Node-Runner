@@ -138,14 +138,24 @@ kept out of the pure-C# solution.
 
 ## Android export
 
-`project/export_presets.cfg` defines the `Android` export preset. A debug APK
-for development:
+`project/export_presets.cfg` defines two export presets. `Android` builds the
+release. `Android Debug` builds a debug APK with its own package,
+`dev.mrlogic85.noderunner.debug`, and app name, Node Runner Debug, so it
+installs next to the release on a tester's phone, with its own saved data
+(#898). Android will not replace an app with one signed by another key: releases
+are signed with the release keystore (`docs/RELEASING.md` → "Signing key"),
+development builds with each developer's debug key. A debug APK for
+development:
 
 ```bash
 /Applications/Godot_mono.app/Contents/MacOS/Godot \
   --headless --path project \
-  --export-debug Android ../build/node-runner-debug.apk
+  --export-debug "Android Debug" ../build/node-runner-debug.apk
 ```
+
+Godot presets cannot inherit, so `Android Debug` repeats every option of
+`Android`; change both. `ArchitectureSpec` fails if they differ in anything but
+the preset name, package and app name.
 
 Release APKs come from `.github/scripts/release.sh` (see
 `docs/RELEASING.md`), which runs `--export-release` with the release keystore passed
@@ -154,12 +164,12 @@ Release exports are not debug builds, so `OS.IsDebugBuild()` is false and
 debug-only UI such as the Component library link is hidden (#808).
 
 The version has one source, `application/config/version` in
-`project/project.godot`. The preset leaves `version/name` empty so the export
-reads it from there, and sets `version/code` to
+`project/project.godot`. Both presets leave `version/name` empty so the export
+reads it from there, and set `version/code` to
 1000000·major + 1000·minor + patch (0.13.0 → 13000) (#809). Change both with
 `.github/scripts/set-version.sh X.Y.Z`; `ArchitectureSpec` checks they agree.
 
-The preset's `launcher_icons/*` and `splash_screen/icon` point at the SVGs in
+The presets' `launcher_icons/*` and `splash_screen/icon` point at the SVGs in
 `project/assets/icons/app/`. Godot imports each at its declared size and the
 export scales it to every density (#820). `docs/UI_DIRECTION.md` → "App icon"
 owns the design.

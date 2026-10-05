@@ -94,11 +94,14 @@ public sealed partial class AppIconTests
 
     private static string Setting(string file, string key)
     {
-        var lines = File.ReadLines(Path.Combine(ThemeFile.ProjectRoot, file))
+        // The release and debug export presets (#898) must agree, so every copy is checked.
+        var values = File.ReadLines(Path.Combine(ThemeFile.ProjectRoot, file))
             .Where(line => line.StartsWith(key + "=", StringComparison.Ordinal))
+            .Select(line => line[(key.Length + 1)..].Trim('"'))
+            .Distinct()
             .ToList();
-        lines.Count.ShouldBe(1, $"{file} should set {key} once");
-        return lines[0][(key.Length + 1)..].Trim('"');
+        values.Count.ShouldBe(1, $"{file} should set {key} to one value");
+        return values[0];
     }
 
     [GeneratedRegex("^#[0-9A-Fa-f]{6}$")]

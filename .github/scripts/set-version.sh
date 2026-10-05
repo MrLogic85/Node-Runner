@@ -6,8 +6,9 @@
 #   set-version.sh 0.14.0     set the version to 0.14.0 (build number 14000)
 #
 # The version name lives in project/project.godot (application/config/version); the
-# Android preset leaves version/name empty so the export reads it from there. The build
+# Android presets leave version/name empty so the export reads it from there. The build
 # number is 1000000·major + 1000·minor + patch, so minor and patch must stay below 1000.
+# Both presets, release and debug (#898), get the same build number.
 set -euo pipefail
 
 root=$(cd "$(dirname "$0")/../.." && pwd)
@@ -18,7 +19,7 @@ usage() { sed -n '2,6p' "$0" | sed 's/^# \{0,1\}//'; exit 2; }
 
 if [[ $# -eq 0 ]]; then
   sed -n 's/^config\/version="\(.*\)"$/version \1/p' "$project"
-  sed -n 's/^version\/code=\(.*\)$/build   \1/p' "$presets"
+  sed -n 's/^version\/code=\(.*\)$/build   \1/p' "$presets" | sort -u
   exit 0
 fi
 [[ $# -eq 1 && $1 =~ ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]{0,2})\.(0|[1-9][0-9]{0,2})$ ]] || usage
