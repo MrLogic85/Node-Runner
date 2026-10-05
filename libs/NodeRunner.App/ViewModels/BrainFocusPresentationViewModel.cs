@@ -177,7 +177,7 @@ public sealed class BrainFocusPresentationViewModel : INotifyPropertyChanged
                     Selected == (layer, index) || named.Contains((layer, index))))
                 .ToArray());
 
-    // "Rear knee: length is driven most by Front knee: speed and Accelerometer: along."
+    // "Rear knee: length is driven most by Front knee: speed and Accel: along."
     private UiText DrivenBy(int output, HashSet<(int Layer, int Index)> named)
     {
         var drivers = Strongest(_connections.Where(connection => connection.Output == output), connection => connection.Input);
@@ -191,7 +191,7 @@ public sealed class BrainFocusPresentationViewModel : INotifyPropertyChanged
         };
     }
 
-    // "Accelerometer: along drives Rear knee: length most." or "… drives … and … most."
+    // "Accel: along drives Rear knee: length most." or "… drives … and … most."
     private UiText Drives(int input, HashSet<(int Layer, int Index)> named)
     {
         var driven = Strongest(_connections.Where(connection => connection.Input == input), connection => connection.Output);

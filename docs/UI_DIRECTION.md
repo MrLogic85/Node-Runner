@@ -223,7 +223,7 @@ reference would mislead someone working on that surface.
   - nothing is selected at first;
   - tapping an output highlights the senses that drive it directly, and the
     sentence reads like "Rear knee is driven most by Front knee: speed and
-    Accelerometer: along.";
+    Accel: along.";
   - tapping a sense highlights the outputs it drives;
   - only the tapped neuron gets the `halo` ring; its strongest partners show
     through an `ink` label and full-strength links;
@@ -788,6 +788,12 @@ how to add a language:
   creation's default name, such as "Untitled Creation" or "Copy of Walker", is
   saved in the language the player has when it is made and is their own
   text from then on (#759).
+- **Name length** (#868): a name field stops at `NameLimits`, 40
+  characters for a creation and 10 for a part, and a copy's "Copy of …"
+  name is cut to fit. Every default part name fits, which is why an
+  Accelerometer is named "Accel" while the Parts tray shows the type,
+  "Accelerometer". A longer saved name is never cut by the field: it shows
+  whole, cannot grow, and only gets shorter as the player deletes.
 - **Uppercase** is display only and comes after translating, so the
   translation key stays the authored text. A Label uses its own
   `Uppercase`. Text cased in code, such as the side panel's vertical tab,

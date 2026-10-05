@@ -33,6 +33,7 @@ public partial class UiTextField : VBoxContainer, ISerializationListener
     private TextInputState _state;
     private bool _placeCaretAtEndOnFocus;
     private bool _holdErrorUntilTextChanges;
+    private int _maxLength;
 
     public Func<string, bool> ValidateValue { get; set; } = static _ => true;
 
@@ -95,6 +96,26 @@ public partial class UiTextField : VBoxContainer, ISerializationListener
         {
             _placeholderSource = value;
             ApplyPlaceholder();
+        }
+    }
+
+    /// <summary>
+    /// The most characters the player can type or paste (#868); 0 for no limit. A longer saved
+    /// name is never cut: it shows whole, cannot grow, and the limit closes in as the player
+    /// deletes. Godot's LineEdit cuts any text over its own limit, so that limit is only set while
+    /// the field has focus and never below the current text.
+    /// </summary>
+    [Export(PropertyHint.Range, "0,200")]
+    public int MaxLength
+    {
+        get => _maxLength;
+        set
+        {
+            _maxLength = value;
+            if (_editor?.HasFocus() == true)
+            {
+                ApplyMaxLength();
+            }
         }
     }
 
@@ -432,6 +453,7 @@ public partial class UiTextField : VBoxContainer, ISerializationListener
 
     private void OnFocusEntered()
     {
+        ApplyMaxLength();
         if (_placeCaretAtEndOnFocus)
         {
             PlaceCaretAtEnd();
@@ -443,6 +465,8 @@ public partial class UiTextField : VBoxContainer, ISerializationListener
 
     private void OnFocusExited()
     {
+        // First, so a name set back once editing finishes is not cut.
+        _editor!.MaxLength = 0;
         if (State == TextInputState.Editing)
         {
             FinishEditing();
@@ -451,6 +475,7 @@ public partial class UiTextField : VBoxContainer, ISerializationListener
 
     private void OnTextChanged(string value)
     {
+        ApplyMaxLength();
         _textValue = value;
         if (_holdErrorUntilTextChanges)
         {
@@ -459,6 +484,20 @@ public partial class UiTextField : VBoxContainer, ISerializationListener
         }
 
         EmitSignal(SignalName.TextEdited, value);
+    }
+
+    private void ApplyMaxLength()
+    {
+        var limit = UiComponentContracts.EditorMaxLength(_maxLength, _editor!.Text.EnumerateRunes().Count());
+        if (_editor.MaxLength == limit)
+        {
+            return;
+        }
+
+        // A new MaxLength sets the text again, which moves the caret to the start.
+        var caret = _editor.CaretColumn;
+        _editor.MaxLength = limit;
+        _editor.CaretColumn = caret;
     }
 
     private void PlaceCaretAtEnd()

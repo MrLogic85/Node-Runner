@@ -45,6 +45,9 @@ msgid "A spring must connect two different nodes."
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartNames.cs
+msgid "Accel"
+msgstr ""
+
 #: libs/NodeRunner.App/ViewModels/PartTrayPresentation.cs
 msgid "Accelerometer"
 msgstr ""

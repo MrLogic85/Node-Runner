@@ -66,6 +66,9 @@ Creation deletes its folder.
 - Names are the player's free text, saved as JSON strings and never part
   of a path, so any name reads back as typed. The one exception: half of a
   UTF-16 surrogate pair is written as `U+FFFD` (#837).
+- The format has no length cap, so a longer name from an older save loads
+  unchanged. The game's own limits are in `docs/UI_DIRECTION.md`
+  "Name length" (#868).
 
 ## `creation.json`
 

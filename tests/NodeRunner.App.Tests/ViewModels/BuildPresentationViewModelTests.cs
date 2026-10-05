@@ -234,7 +234,7 @@ public sealed class BuildPresentationViewModelTests
     }
 
     [Theory]
-    [InlineData(SensorKind.Accelerometer, PartSettingsKind.Accelerometer, "Accelerometer", "Feels how its beam speeds up, slows down and tilts.")]
+    [InlineData(SensorKind.Accelerometer, PartSettingsKind.Accelerometer, "Accel", "Feels how its beam speeds up, slows down and tilts.")]
     [InlineData(SensorKind.Camera, PartSettingsKind.Camera, "Camera", "Three rays see how near the ground is. Drag the round handle to aim it.")]
     public void SelectedSensor_ShowsNameBeamAndWhatItFeels(SensorKind kind, PartSettingsKind partKind, string name, string note)
     {

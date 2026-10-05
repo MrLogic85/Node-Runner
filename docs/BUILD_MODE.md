@@ -249,7 +249,8 @@ part back (#866). Structure is read-only here: a beam's length is drawn, so its 
 says "Drag its ends to change the length." instead of a number.
 `BuildPresentationViewModel.SinglePart` owns the rows and copy. A part with
 no name of its own shows a default (`BuildViewModel.DefaultPartName`: "Node 2",
-"Beam 1" or the sensor kind) that follows its place in the lists; renaming
+"Beam 1", "Accel" or "Camera"; at most 10 characters, see `docs/UI_DIRECTION.md`
+"Name length") that follows its place in the lists; renaming
 (`RenamePart`, by id, so an edit lands on the part it started on even if
 the selection moves) trims the text, and a blank name, or the default the
 field showed in the player's language left unchanged, clears the part's own
