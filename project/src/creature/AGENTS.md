@@ -53,6 +53,8 @@ the model this implements.**
   child of its beam body; the Accelerometer weight follows the live proof mass
 - `CameraRaysVisual.cs` — every camera ray that hits the ground, drawn up to
   the hit on the `CreatureLayers.Overlays` layer, over the whole creature
+- `KnockoutVisual.cs` — the followed creature's outline around one beam or
+  node (`KnockoutPart`, #818), hidden on a shadow
 - `ShadowDrawing.cs` — `IShadowVisual`: every visual above declares how it
   draws on a shadow that is not followed (#385); a test checks each one
 - `Creature.tscn` (in `scenes/`) — the scene template

@@ -29,6 +29,7 @@ public sealed class VisualTheme
         GroundEdge = UiThemes.Color(theme, UiTokens.Color.Accent),
         EffectsEnabled = UiThemes.Flag(theme, UiTokens.Flag.EffectsEnabled),
         ShadowAlpha = UiThemes.Alpha(theme, UiTokens.Alpha.Shadow),
+        KnockoutWidth = UiSize.Stroke.Signal,
         SelectionGlow = UiThemes.Color(theme, UiTokens.Color.Halo),
         SelectionFill = UiThemes.Color(theme, UiTokens.Color.Halo) with { A = UiThemes.Alpha(theme, UiTokens.Alpha.Soft) },
         SelectionCornerFill = UiThemes.Color(theme, UiTokens.Color.Panel),
@@ -72,8 +73,11 @@ public sealed class VisualTheme
 
     public bool EffectsEnabled { get; private init; }
 
-    /// <summary>How opaque every shadow except the followed one is drawn in Training (#385).</summary>
+    /// <summary>How opaque the shadows other than the followed one are drawn in Training, as one picture (#385, #818).</summary>
     public float ShadowAlpha { get; private init; }
+
+    /// <summary>How far the followed creature's knock-out outline reaches past its beams and joints (#818).</summary>
+    public float KnockoutWidth { get; private init; }
 
     public Color SelectionGlow { get; private init; }
 

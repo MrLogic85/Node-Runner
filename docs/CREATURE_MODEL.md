@@ -297,7 +297,8 @@ a composition of triangles; a bare quadrilateral stays free to fold.
 ## Draw layers
 
 A creature draws in named layers (`project/src/theme/CreatureLayers.cs`,
-#767), bottom to top: rigid hatch, underlays such as Build's placing
+#767), bottom to top: Training's knock-out outline (#818, see "Drawing as a
+shadow"), rigid hatch, underlays such as Build's placing
 feedback, beams, links (Pistons and Springs), a selected link, sensors, a selected sensor,
 joints, a selected joint, then overlays such as the camera rays. Each part
 visual (`project/src/theme/*Part.cs`) puts itself on its layer, so the
@@ -326,11 +327,23 @@ visual declares how it draws as a shadow (not at all, simplified, or the same
 as on the followed creature), and a test checks that every kind has made that
 choice, so a new part cannot forget it: each visual implements
 `IShadowVisual` (`project/src/creature/ShadowDrawing.cs`) with a static
-`AsShadow` and an `IsShadow` switch, and `Creature.IsShadow` sets them all,
-fades the creature and puts it behind the followed one. The fade is per
-item (`Modulate` on the creature), not per shadow, so a shadow's beam shows
-through its own joints; a `CanvasGroup` per shadow would fade it as one
-picture but costs an offscreen pass each, so it is left out for performance.
+`AsShadow` and an `IsShadow` switch, and `Creature.IsShadow` sets them all
+and puts the creature behind the followed one.
+
+All the shadows fade together, once (#818): where they overlap they do not
+add up to a solid mass that hides the followed creature. The arena draws
+them in a viewport of their own (`ArenaShadows`), which shares its world and
+camera, and shows that picture at the shadows' alpha. A viewport draws an
+item only if it and every canvas item above it are on one of the viewport's
+visibility layers (`ArenaVisibility`), so the creature's root picks the
+viewport and everything inside or above it, the world included, is on both.
+A shadow is
+therefore one flat picture: its beam does not show through its own joints.
+A `CanvasGroup` would fade a group once too, but the parts' own draw layers
+escape it, and the shadows are not children of one node. The followed
+creature has a knock-out outline instead (`KnockoutVisual`): the arena's
+background a little wider than each beam and node, under the whole
+creature, so it stands clear of the shadows behind it.
 
 - **Node:** its ring at its collision size, without a glyph. Joint parts
   that make a node larger (the motors, #452 and #454; later the Wheel, #129,
@@ -344,6 +357,7 @@ picture but costs an offscreen pass each, so it is left out for performance.
   followed creature, possibly with less detail; #600 decides.
 - **Sensors, Pulse and Camera rays:** not drawn. A hidden sensor also stops
   redrawing every frame.
+- **Knock-out outline:** not drawn; only the followed creature has it.
 
 `docs/UI_DIRECTION.md` owns the transparency.
 

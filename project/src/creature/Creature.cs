@@ -55,6 +55,7 @@ public partial class Creature : Node2D
     private SpringVisual[] _springVisuals = [];
     private RigidBody2D[] _cylinderBodies = [];
     private CameraRaysVisual? _cameraRaysVisual;
+    private readonly List<KnockoutVisual> _knockoutVisuals = [];
     private bool _isShadow;
     private CreatureElementSelection? _selection;
     private IBeamSensor[] _sensors = [];
@@ -88,8 +89,9 @@ public partial class Creature : Node2D
 
     /// <summary>
     /// True for every shadow except the followed one (#385): each visual draws as it declares in
-    /// <see cref="IShadowVisual.AsShadow"/>, the whole creature fades to the theme's shadow alpha
-    /// and draws behind the followed creature.
+    /// <see cref="IShadowVisual.AsShadow"/>, and the creature is drawn with the other shadows behind
+    /// the followed creature, all faded together to the theme's shadow alpha (#818). The followed
+    /// creature has a knock-out outline in the arena's background colour instead.
     /// </summary>
     public bool IsShadow
     {
@@ -151,6 +153,7 @@ public partial class Creature : Node2D
         }
 
         _isBuilt = true;
+        _knockoutVisuals.Clear();
 
         CreateBeams(definition);
         CreateRigidHatches(definition);
@@ -160,7 +163,30 @@ public partial class Creature : Node2D
         CreatePistons(definition);
         CreateSprings(definition);
         ConfigureBrainBuffers(definition);
+        ShowInEitherArenaView(this);
         ApplyShadow();
+    }
+
+    // Whether the arena's viewport or the shadows' draws this creature is up to its root
+    // (ApplyShadow, #818), so every item under it is on both, as is the world above it.
+    private static void ShowInEitherArenaView(Node parent)
+    {
+        foreach (var child in parent.GetChildren())
+        {
+            if (child is CanvasItem item)
+            {
+                item.VisibilityLayer = ArenaVisibility.Both;
+            }
+
+            ShowInEitherArenaView(child);
+        }
+    }
+
+    private KnockoutVisual CreateKnockout(Vector2 a, Vector2 b, float radius)
+    {
+        var visual = new KnockoutVisual { Theme = Theme, A = a, B = b, Radius = radius };
+        _knockoutVisuals.Add(visual);
+        return visual;
     }
 
     /// <summary>
@@ -400,8 +426,13 @@ public partial class Creature : Node2D
 
     private void ApplyShadow()
     {
-        Modulate = Colors.White with { A = _isShadow ? Theme.ShadowAlpha : 1f };
+        VisibilityLayer = _isShadow ? ArenaVisibility.Shadows : ArenaVisibility.Arena;
         ZIndex = _isShadow ? ArenaLayers.Shadows : ArenaLayers.Followed;
+        foreach (var visual in _knockoutVisuals)
+        {
+            visual.IsShadow = _isShadow;
+        }
+
         foreach (var visual in _nodeVisuals)
         {
             visual.IsShadow = _isShadow;
@@ -493,6 +524,7 @@ public partial class Creature : Node2D
                 RadiusA = ToGodotFloat(definition.Nodes[definition.NodeIndexOf(beamDef.NodeA)].Radius, nameof(NodeDef.Radius)),
                 RadiusB = ToGodotFloat(definition.Nodes[definition.NodeIndexOf(beamDef.NodeB)].Radius, nameof(NodeDef.Radius)),
             };
+            body.AddChild(CreateKnockout(visual.A, visual.B, Theme.BeamWidth / 2));
             body.AddChild(visual);
             _beamVisuals[i] = visual;
 
@@ -557,6 +589,7 @@ public partial class Creature : Node2D
                 Theme = Theme,
                 Radius = radius,
             };
+            body.AddChild(CreateKnockout(Vector2.Zero, Vector2.Zero, radius));
             body.AddChild(visual);
 
             AddChild(body);

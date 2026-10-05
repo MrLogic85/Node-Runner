@@ -27,6 +27,7 @@ public sealed class DrawLayersTests
     {
         int[] order =
         [
+            CreatureLayers.Knockout,
             CreatureLayers.Hatch,
             CreatureLayers.Underlays,
             CreatureLayers.Beams,

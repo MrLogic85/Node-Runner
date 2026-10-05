@@ -158,6 +158,10 @@ public sealed class UiSourceGuardTests
         BuildsOrRestyles("void M(Control handle) { handle.Size = Vector2.One; }", _drawnWidget).ShouldHaveSingleItem();
 
     [Fact]
+    public void Drawn_widget_may_size_the_viewport_it_draws() =>
+        BuildsOrRestyles("void M(SubViewport picture) { picture.Size = Vector2I.One; }", _drawnWidget).ShouldBeEmpty();
+
+    [Fact]
     public void Component_library_selects_colours_by_theme_variation()
     {
         var violations = CSharpSources.Project
@@ -341,7 +345,8 @@ public sealed class UiSourceGuardTests
         return snippet.Find(node => BuildsOrRestyles(path, node, model));
     }
 
-    // A drawn widget may move scene-authored controls (the Select handles) to where its drawing is.
+    // A drawn widget may move scene-authored controls (the Select handles) to where its drawing is,
+    // and size a SubViewport it draws from (ArenaShadows, #818): its pixels, not a layout.
     private static bool BuildsOrRestyles(string path, SyntaxNode node, SemanticModel model) => node switch
     {
         BaseObjectCreationExpressionSyntax creation => model.GetTypeInfo(creation).Type is { } type
@@ -356,7 +361,8 @@ public sealed class UiSourceGuardTests
             CSharpSources.Symbol(model, assignment.Left) is IPropertySymbol { Name: "CustomMinimumSize" or "Size" or "Position" } property
             && property.ContainingType.ContainingNamespace.Name == "Godot"
             && (property.Name != "Position" || IsGodotSubclass(property.ContainingType, "Control") || IsGodotSubclass(property.ContainingType, "Window"))
-            && !(property.Name == "Position" && RewrittenUi.DrawnWidgets.Contains(path)),
+            && !(property.Name == "Position" && RewrittenUi.DrawnWidgets.Contains(path))
+            && !(property.Name == "Size" && IsGodotSubclass(property.ContainingType, "SubViewport") && RewrittenUi.DrawnWidgets.Contains(path)),
         _ => false,
     };
 

@@ -30,6 +30,7 @@ internal static class RewrittenUi
         "ui/widgets/ArenaBestMarker.cs",
         "ui/widgets/ArenaCamera.cs",
         "ui/widgets/ArenaRuler.cs",
+        "ui/widgets/ArenaShadows.cs",
         "ui/widgets/BrainFocusNetworkView.cs",
         "ui/widgets/BrainFocusSheet.cs",
         "ui/widgets/BuildCanvas.cs",
@@ -51,6 +52,7 @@ internal static class RewrittenUi
     [
         "ui/widgets/ArenaBestMarker.cs",
         "ui/widgets/ArenaRuler.cs",
+        "ui/widgets/ArenaShadows.cs",
         "ui/widgets/BrainFocusNetworkView.cs",
         "ui/widgets/BuildCanvas.cs",
     ];
