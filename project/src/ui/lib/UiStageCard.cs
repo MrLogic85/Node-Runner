@@ -95,7 +95,6 @@ public partial class UiStageCard : UiCard
     {
         MouseFilter = MouseFilterEnum.Pass;
         SizeVariant = CardSize.Snug;
-        Glow = true;
         _number = GetNode<UiNumber>("%Number");
         _titleLabel = GetNode<Label>("%Title");
         _noteLabel = GetNode<Label>("%Note");
