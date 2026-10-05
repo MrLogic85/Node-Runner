@@ -23,6 +23,10 @@ the notes PR.
   apply. Short, plain sentences, one bullet per change; group small related
   changes into one bullet. No top-level title: GitHub already shows
   "Node Runner X.Y.Z".
+- **First release (0.13.0):** with no earlier release to compare against,
+  its notes are a short player guide to the whole app instead: what it is,
+  how to install it, a walkthrough of each screen and what is coming
+  (owner decision). Later releases use the shape above.
 
 ```markdown
 Your creatures can now be trained, saved and picked up again later.
