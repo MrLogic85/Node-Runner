@@ -15,7 +15,7 @@ public sealed class SceneDerivedStateTests
         ["UiButton.cs"] = ["custom_minimum_size"],
         ["UiSidePanel.cs"] = ["custom_minimum_size"],
         ["UiCard.cs"] = ["clip_children"],
-        ["UiStageCard.cs"] = ["clip_children"],
+        ["UiStageCard.cs"] = ["clip_children", "Kind"],
         ["UiFrameCard.cs"] = ["clip_children"],
         ["UiPopupCard.cs"] = ["clip_children"],
         ["UiNotificationContent.cs"] = ["clip_children"],

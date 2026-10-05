@@ -2787,13 +2787,13 @@ NumberText = "2"
 Title = "Thinks"
 Note = "Brain"
 Selected = true
-Kind = 1
 
 [node name="Moves" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/StageCard/Examples" unique_id=-2010556224 instance=ExtResource("23_stage_card")]
 layout_mode = 2
 NumberText = "3"
 Title = "Moves"
-Note = "Servo"
+Note = "Opens"
+Opens = true
 Collapsed = true
 
 [node name="Detail" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/StageCard/Examples/Senses/Stack/Body" parent_id_path=PackedInt32Array(-2010556226, 188724460) unique_id=-2010556223]

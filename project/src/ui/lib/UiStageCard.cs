@@ -16,6 +16,7 @@ public partial class UiStageCard : UiCard
     private Func<string>? _noteSource;
     private bool _selected;
     private bool _collapsed;
+    private bool _opens;
     private UiNumber _number = null!;
     private Label _titleLabel = null!;
     private Label _noteLabel = null!;
@@ -80,6 +81,21 @@ public partial class UiStageCard : UiCard
         }
     }
 
+    /// <summary>
+    /// A stage whose tap opens something (Brain opens BrainFocus) uses the Raised surface, so it
+    /// reads as a button next to plain stages (#847).
+    /// </summary>
+    [Export]
+    public bool Opens
+    {
+        get => _opens;
+        set
+        {
+            _opens = value;
+            RefreshCardStyle();
+        }
+    }
+
     [Export]
     public bool Collapsed
     {
@@ -120,7 +136,7 @@ public partial class UiStageCard : UiCard
 
     private void RefreshCardStyle()
     {
-        Kind = Selected ? CardVariant.Selected : CardVariant.Frame;
+        Kind = Selected ? CardVariant.Selected : Opens ? CardVariant.Raised : CardVariant.Frame;
     }
 
     private void ApplyNumber()
@@ -170,7 +186,7 @@ public partial class UiStageCard : UiCard
         _body.Visible = !Collapsed && _body.GetChildCount() > 0;
     }
 
-    private readonly UiUnsavedState _unsaved = new([("%Title", Control.PropertyName.ThemeTypeVariation), ("%Title", Label.PropertyName.Uppercase), ("%Note", Control.PropertyName.ThemeTypeVariation), ("%Note", Label.PropertyName.Uppercase), ("%Note", CanvasItem.PropertyName.Visible), ("%Body", CanvasItem.PropertyName.Visible)]);
+    private readonly UiUnsavedState _unsaved = new([("%Title", Control.PropertyName.ThemeTypeVariation), ("%Title", Label.PropertyName.Uppercase), ("%Note", Control.PropertyName.ThemeTypeVariation), ("%Note", Label.PropertyName.Uppercase), ("%Note", CanvasItem.PropertyName.Visible), ("%Body", CanvasItem.PropertyName.Visible), (".", UiCard.PropertyName.Kind)]);
 
     public override void _Notification(int what)
     {

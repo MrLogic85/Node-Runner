@@ -210,7 +210,13 @@ public static class UiThemeLookup
                 }
                 break;
             case UiSurfaceContracts.FrameVariant.Raised:
-                return CreateRaisedStyleBox(control);
+                var raised = CreateRaisedStyleBox(control);
+                if (glow)
+                {
+                    UiGlow.ApplyToControl(raised, raised.BorderColor, EffectsEnabled(control));
+                }
+
+                return raised;
         }
 
         if (glow)
