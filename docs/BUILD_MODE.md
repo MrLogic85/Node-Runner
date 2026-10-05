@@ -36,7 +36,7 @@ owned by `docs/TRAINING_LOOP.md` → Product lifecycle boundary.
   in the top bar unlocks it for this visit and keeps the training (#371,
   `docs/TRAINING_LOOP.md` step 6). Once a creation has training, the
   overflow menu also offers Stats (coming soon) and Reset training (#370).
-  Reset training asks first with a press-and-hold (#687). Copy creation is
+  Reset training asks first in a dialog confirmed with a tap (#687, #866). Copy creation is
   there for anything drawn, trained or not; the copy, named "Copy of …",
   keeps any trained brain and Build opens it in place of the original
   (#840).
@@ -241,8 +241,8 @@ there is no close button, and tapping empty canvas deselects. The rows are
 `UiTextField` **Name** first, then what the part is joined to (a joint's
 beams, a beam's two joints, a sensor's beam), then a short note, and one
 full-width danger **Delete** in its own column after them, absent on a
-locked creation. Delete is hold-to-activate, so a slip never removes a
-part. Structure is read-only here: a beam's length is drawn, so its note
+locked creation. Delete acts on a tap, with no dialog; Undo brings the
+part back (#866). Structure is read-only here: a beam's length is drawn, so its note
 says "Drag its ends to change the length." instead of a number.
 `BuildPresentationViewModel.SinglePart` owns the rows and copy. A part with
 no name of its own shows a default (`BuildViewModel.DefaultPartName`: "Node 2",
@@ -286,7 +286,7 @@ title row carries the Select glyph and "N selected"; there is no close button.
   `docs/UI_DIRECTION.md` says.
 - With a frame, three `UiInfoRow`s explain its handles (Move, Rotate, Scale).
   With neither settings nor a frame: "These parts share no settings."
-- Last a full-width hold-to-activate danger **Delete N**
+- Last a full-width danger **Delete N**, which acts on a tap (Undo restores it)
   (`BuildViewModel.DeleteSelectedParts`), hidden when locked. Its note is
   "Beams on a deleted node go with it." with a joint selected, else "A sensor
   on a deleted beam goes with it." when one would, else none.

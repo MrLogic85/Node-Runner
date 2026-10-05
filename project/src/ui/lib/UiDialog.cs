@@ -142,7 +142,6 @@ public sealed partial class UiDialog : Window
         }
         _content.ShowError(result.ErrorMessage, result.ErrorSource);
         _content.SetBusy(false);
-        _content.ActionButton.HoldToActivate = spec.HoldToAction;
         _content.AbortButton.GrabFocus();
         QueueLayout();
     }

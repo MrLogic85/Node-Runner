@@ -5,50 +5,12 @@ namespace NodeRunner.Ui.Lib;
 /// <summary>Pure, testable contracts for the UI component-library inventory.</summary>
 public static class UiComponentContracts
 {
-    public const float HoldCompletionSeconds = 0.8f;
     public const int FullPercent = 100;
-    public const float ButtonProgressOpacity = 0.5f;
-
-    /// <summary>
-    /// Width of the revealed hold fill inside the visible button frame. The
-    /// fill layer itself always spans the whole frame so it keeps the frame's
-    /// rounded contour; only this reveal window changes while holding.
-    /// </summary>
-    public static float ButtonProgressRevealWidth(float frameWidth, float progress)
-    {
-        if (!float.IsFinite(frameWidth) || frameWidth <= 0)
-        {
-            return 0;
-        }
-
-        if (!float.IsFinite(progress) || progress <= 0)
-        {
-            return 0;
-        }
-
-        return progress >= 1 ? frameWidth : frameWidth * progress;
-    }
-
-    public static float HoldProgress(double elapsedSeconds, double durationSeconds)
-    {
-        if (!double.IsFinite(elapsedSeconds) || elapsedSeconds <= 0)
-        {
-            return 0;
-        }
-
-        if (!double.IsFinite(durationSeconds) || durationSeconds <= 0)
-        {
-            return 1;
-        }
-
-        return (float)Math.Clamp(elapsedSeconds / durationSeconds, 0, 1);
-    }
 
     public enum CanonicalComponent
     {
         Button,
         IconButton,
-        HoldButton,
         Slider,
         Range,
         Toggle,
@@ -84,7 +46,6 @@ public static class UiComponentContracts
         {
             CanonicalComponent.Button => nameof(UiButton),
             CanonicalComponent.IconButton => nameof(UiButton),
-            CanonicalComponent.HoldButton => nameof(UiButton),
             CanonicalComponent.Slider => nameof(UiSlider),
             CanonicalComponent.Range => nameof(UiSlider),
             CanonicalComponent.Toggle => nameof(UiToggleRow),
@@ -119,7 +80,6 @@ public static class UiComponentContracts
         {
             CanonicalComponent.Button => "c_btn",
             CanonicalComponent.IconButton => "c_ib",
-            CanonicalComponent.HoldButton => "c_hold",
             CanonicalComponent.Slider => "c_slider",
             CanonicalComponent.Range => "c_range",
             CanonicalComponent.Toggle => "c_toggle",
@@ -153,7 +113,7 @@ public static class UiComponentContracts
     /// ("Reference component mapping") says what builds each one instead.
     /// </summary>
     public static IReadOnlyList<string> ReferenceEntriesWithoutComponent { get; } =
-        ["c_panel_head", "c_inspector", "c_rows"];
+        ["c_panel_head", "c_inspector", "c_rows", "c_hold"];
 
     public static bool SharesImplementation(CanonicalComponent component, CanonicalComponent other) =>
         ControlTypeFor(component) == ControlTypeFor(other);

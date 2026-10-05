@@ -2,8 +2,8 @@ namespace NodeRunner.Ui.Lib;
 
 /// <summary>
 /// How a <see cref="UiButton"/> is drawn: its colours, how icon and caption are laid out, and
-/// the corners of its frame and hold fill. A button uses its own design unless its direct parent is an
-/// <see cref="IUiButtonDesigner"/>; its behaviour (hold to activate, disabled, badge) never changes.
+/// the corners of its frame. A button uses its own design unless its direct parent is an
+/// <see cref="IUiButtonDesigner"/>; its behaviour (disabled, badge) never changes.
 /// </summary>
 public readonly record struct UiButtonDesign(
     UiButtonStyle Style,

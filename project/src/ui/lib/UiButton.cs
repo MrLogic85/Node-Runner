@@ -3,7 +3,7 @@ using Godot;
 namespace NodeRunner.Ui.Lib;
 
 /// <summary>
-/// Canonical button with row, compact row or stacked content and optional hold activation.
+/// Canonical button with row, compact row or stacked content. It activates on a plain tap (#866).
 /// Native <c>Text</c> is the authored caption (and translation key); an internal UiLabel renders
 /// it, so letter case follows the caption's typography exactly as for UiLabel.
 /// </summary>
@@ -27,27 +27,16 @@ public sealed partial class UiButton : Button, ISerializationListener
     private UiButtonContentLayout _contentLayout;
     private SizeFlags _rowSizeFlagsHorizontal = SizeFlags.Fill;
     private bool _squareContent;
-    private float _progress = -1f;
     private bool _refreshingStyle;
     private Func<string>? _textSource;
     private AutoTranslateModeEnum _authoredTranslateMode;
-    private float _holdDurationSeconds = UiComponentContracts.HoldCompletionSeconds;
-    private bool _holdToActivate;
-    private double _holdElapsedSeconds;
-    private bool _isHolding;
-    private Control? _progressClip;
-    private Panel? _progressBackground;
-    private Control? _progressFillClip;
-    private Panel? _progressFill;
     private BoxContainer? _content;
     private TextureRect? _contentIcon;
     private UiLabel? _contentLabel;
     private Label? _badge;
     // Object/method callables survive assembly reloads without retaining managed delegates.
-    private Callable ResizedCallback => new(this, MethodName.LayoutProgress);
+    private Callable ResizedCallback => new(this, MethodName.RefreshBadge);
     private Callable PressedCallback => new(this, MethodName.HandlePressed);
-    private Callable ButtonDownCallback => new(this, MethodName.BeginHold);
-    private Callable ButtonUpCallback => new(this, MethodName.EndHold);
     private Callable ContentMinimumSizeCallback => new(this, MethodName.FitContent);
 
     [Export]
@@ -143,56 +132,6 @@ public sealed partial class UiButton : Button, ISerializationListener
 
     private bool LooksDisabled => Disabled || Unavailable;
 
-    [Export]
-    public bool HoldToActivate
-    {
-        get => _holdToActivate;
-        set
-        {
-            EndHold();
-            _holdToActivate = value;
-            Progress = value ? 0 : -1;
-        }
-    }
-
-    /// <summary>A value below zero hides progress; otherwise values are clamped to 0..1.</summary>
-    private float Progress
-    {
-        get => _progress;
-        set
-        {
-            float next = value < 0 ? -1 : Mathf.Clamp(value, 0, 1);
-            if (next.Equals(_progress))
-                return;
-
-            bool stayedVisible = _progress >= 0 && next >= 0;
-            _progress = next;
-            if (stayedVisible && IsInsideTree())
-            {
-                // Only the revealed fraction changed. Rebuilding the button
-                // styleboxes here would invalidate its minimum size on every
-                // hold frame and make containers re-sort mid-gesture.
-                RefreshProgressLayout();
-                return;
-            }
-
-            RefreshStyle();
-        }
-    }
-
-    /// <summary>Time required when HoldToActivate is enabled.</summary>
-    [Export(PropertyHint.Range, "0,2,0.05")]
-    public float HoldDurationSeconds
-    {
-        get => _holdDurationSeconds;
-        set
-        {
-            _holdDurationSeconds = Mathf.Max(value, 0);
-            EndHold();
-            Progress = HoldToActivate ? 0 : -1;
-        }
-    }
-
     // The internal content draws the icon and caption, so the native properties that would lay
     // them out are derived, hidden from the Inspector, and not saved.
     private static readonly HashSet<StringName> _derivedProperties =
@@ -231,26 +170,7 @@ public sealed partial class UiButton : Button, ISerializationListener
     public override void _Ready()
     {
         MouseFilter = MouseFilterEnum.Pass;
-        SetProcess(false);
-        SetProcessInput(false);
         RefreshStyle();
-    }
-
-    public override void _Input(InputEvent inputEvent)
-    {
-        if (!_isHolding)
-            return;
-
-        // Observe before a parent scroll container can consume the release or drag.
-        switch (inputEvent)
-        {
-            case InputEventMouseMotion motion:
-                CancelHoldOutside(motion.Position);
-                break;
-            case InputEventMouseButton { Pressed: false, ButtonIndex: MouseButton.Left }:
-                EndHold();
-                break;
-        }
     }
 
     /// <summary>
@@ -307,24 +227,10 @@ public sealed partial class UiButton : Button, ISerializationListener
         {
             RefreshStyle();
         }
-        else if (what == NotificationScrollBegin || what == NotificationDragBegin
-            || what == NotificationFocusExit || what == NotificationApplicationFocusOut
-            || (what == NotificationVisibilityChanged && !IsVisibleInTree()))
-        {
-            EndHold();
-        }
-    }
-
-    private void CancelHoldOutside(Vector2 viewportPosition)
-    {
-        Vector2 localPosition = GetGlobalTransformWithCanvas().AffineInverse() * viewportPosition;
-        if (!new Rect2(Vector2.Zero, Size).HasPoint(localPosition))
-            EndHold();
     }
 
     public override void _ExitTree()
     {
-        EndHold();
         DisconnectHandlers();
         base._ExitTree();
     }
@@ -346,16 +252,12 @@ public sealed partial class UiButton : Button, ISerializationListener
     {
         ConnectIfMissing(Control.SignalName.Resized, ResizedCallback);
         ConnectIfMissing(BaseButton.SignalName.Pressed, PressedCallback);
-        ConnectIfMissing(BaseButton.SignalName.ButtonDown, ButtonDownCallback);
-        ConnectIfMissing(BaseButton.SignalName.ButtonUp, ButtonUpCallback);
     }
 
     private void DisconnectHandlers()
     {
         DisconnectIfConnected(Control.SignalName.Resized, ResizedCallback);
         DisconnectIfConnected(BaseButton.SignalName.Pressed, PressedCallback);
-        DisconnectIfConnected(BaseButton.SignalName.ButtonDown, ButtonDownCallback);
-        DisconnectIfConnected(BaseButton.SignalName.ButtonUp, ButtonUpCallback);
     }
 
     private void ConnectIfMissing(StringName signal, Callable callback)
@@ -368,30 +270,6 @@ public sealed partial class UiButton : Button, ISerializationListener
     {
         if (IsConnected(signal, callback))
             Disconnect(signal, callback);
-    }
-
-    public override void _Process(double delta)
-    {
-        if (!_isHolding || !HoldToActivate || Disabled || !IsPressed() || !IsVisibleInTree())
-        {
-            EndHold();
-            return;
-        }
-
-        _holdElapsedSeconds += delta;
-        Progress = UiComponentContracts.HoldProgress(
-            _holdElapsedSeconds,
-            HoldDurationSeconds);
-        if (Progress < 1)
-            return;
-
-        _isHolding = false;
-        SetProcess(false);
-        SetProcessInput(false);
-        Activate();
-        // A button that stays on screen must not look armed for its next hold.
-        _holdElapsedSeconds = 0;
-        Progress = 0;
     }
 
     private bool HasLabel => !string.IsNullOrWhiteSpace(Text);
@@ -469,7 +347,6 @@ public sealed partial class UiButton : Button, ISerializationListener
             ThemeTypeVariation = UiThemeExpander.ButtonVariationName;
         }
 
-        EnsureProgressLayers();
         EnsureContent();
         RefreshContent(DrawnStyle.Resolve(this).Content);
 
@@ -479,7 +356,6 @@ public sealed partial class UiButton : Button, ISerializationListener
         AddThemeStyleboxOverride("hover_pressed", Unavailable ? CreateDisabledStyle() : CreateStyle());
         AddThemeStyleboxOverride("focus", new StyleBoxEmpty());
         AddThemeStyleboxOverride("disabled", CreateDisabledStyle());
-        RefreshProgress();
         QueueRedraw();
         RefreshBadge();
     }
@@ -492,32 +368,8 @@ public sealed partial class UiButton : Button, ISerializationListener
 
     private void HandlePressed()
     {
-        if (!Disabled && !HoldToActivate)
+        if (!Disabled)
             Activate();
-    }
-
-    private void BeginHold()
-    {
-        if (Engine.IsEditorHint() || Disabled || !HoldToActivate)
-            return;
-
-        _holdElapsedSeconds = 0;
-        _isHolding = true;
-        Progress = 0;
-        SetProcess(true);
-        SetProcessInput(true);
-    }
-
-    private void EndHold()
-    {
-        if (!_isHolding)
-            return;
-
-        _holdElapsedSeconds = 0;
-        _isHolding = false;
-        Progress = 0;
-        SetProcess(false);
-        SetProcessInput(false);
     }
 
     public override void _Draw()
@@ -529,8 +381,6 @@ public sealed partial class UiButton : Button, ISerializationListener
         var modulation = Colors.White with { A = LooksDisabled ? _disabledOpacity : 1 };
         if (_content is not null)
             _content.Modulate = modulation;
-        if (_progressClip is not null)
-            _progressClip.Modulate = modulation;
         if (!LooksDisabled && Selected && UiThemeLookup.EffectsEnabled(this))
             DrawSelectedGlow();
         if (UiPressFeedback.Shows(this, Selected))
@@ -538,8 +388,6 @@ public sealed partial class UiButton : Button, ISerializationListener
 
         if (!LooksDisabled)
             return;
-        if (Disabled)
-            EndHold();
 
         UiResolvedButtonStyle style = DrawnStyle.Resolve(this);
         Color color = Selected ? style.Selected : style.Border.ScaleAlpha(_disabledOpacity);
@@ -555,12 +403,8 @@ public sealed partial class UiButton : Button, ISerializationListener
     {
         UiButtonDesign design = Design;
         UiResolvedButtonStyle visual = design.Style.Resolve(this);
-        Color background = visual.Background;
         Color styleBorder = design.Style.BorderFor(this, Selected);
-        if (Progress >= 0)
-            background = Colors.Transparent;
-
-        StyleBoxFlat style = UiThemeLookup.CreateStyleBox(background.ScaleAlpha(opacity),
+        StyleBoxFlat style = UiThemeLookup.CreateStyleBox(visual.Background.ScaleAlpha(opacity),
             transparentBorder
                 ? Colors.Transparent
                 : styleBorder.ScaleAlpha(opacity),
@@ -573,92 +417,6 @@ public sealed partial class UiButton : Button, ISerializationListener
             UiGlow.ApplyToControl(style, color, UiThemeLookup.EffectsEnabled(this));
 
         return style;
-    }
-
-    private StyleBoxFlat CreateBackgroundStyle(Color background, float opacity)
-    {
-        StyleBoxFlat style = UiThemeLookup.CreateStyleBox(background.ScaleAlpha(opacity),
-            Colors.Transparent,
-            borderWidth: 0);
-        Design.Corners.ApplyTo(style);
-        return style;
-    }
-
-    private StyleBoxFlat CreateProgressStyle(float opacity)
-    {
-        StyleBoxFlat style = UiThemeLookup.CreateStyleBox(DrawnStyle.Resolve(this).Selected.ScaleAlpha(UiComponentContracts.ButtonProgressOpacity * opacity),
-            Colors.Transparent,
-            borderWidth: 0);
-        Design.Corners.ApplyTo(style);
-
-        // The fill always spans the whole visible frame and keeps the frame's
-        // corner radii; the revealed fraction is produced by clipping. Sizing
-        // the fill itself would make Godot shrink the corner radii to fit the
-        // narrow rect, so early hold frames would bleed outside the rounded
-        // contour of the button.
-        return style;
-    }
-
-    private void RefreshProgressLayout()
-    {
-        EnsureProgressLayers();
-        LayoutProgress();
-        _progressFill!.Visible = Progress > 0;
-    }
-
-    private void RefreshProgress()
-    {
-        EnsureProgressLayers();
-        bool visible = Progress >= 0;
-        LayoutProgress();
-        _progressClip!.Visible = visible;
-        _progressBackground!.Visible = visible;
-        _progressFill!.Visible = visible && Progress > 0;
-        if (!visible)
-            return;
-
-        Color background = DrawnStyle.Resolve(this).Background;
-        _progressBackground.AddThemeStyleboxOverride(
-            "panel",
-            CreateBackgroundStyle(background, 1));
-        _progressFill.AddThemeStyleboxOverride("panel", CreateProgressStyle(1));
-    }
-
-    private void EnsureProgressLayers()
-    {
-        if (_progressClip is null && GetNodeOrNull<Control>("_UiProgress") is { } existing)
-        {
-            _progressClip = existing;
-            _progressBackground = existing.GetNode<Panel>("Background");
-            _progressFillClip = existing.GetNode<Control>("Reveal");
-            _progressFill = _progressFillClip.GetNode<Panel>("Fill");
-        }
-        if (_progressBackground is not null)
-            return;
-
-        _progressClip = new Control
-        {
-            Name = "_UiProgress",
-            // Only hold layers must stay within the visible button frame;
-            // badges and the intentional outer glow may extend beyond it.
-            ClipContents = true,
-            MouseFilter = MouseFilterEnum.Ignore,
-            ShowBehindParent = true,
-        };
-        _progressBackground = CreateProgressLayer();
-        _progressBackground.Name = "Background";
-        _progressFillClip = new Control
-        {
-            Name = "Reveal",
-            ClipContents = true,
-            MouseFilter = MouseFilterEnum.Ignore,
-        };
-        _progressFill = CreateProgressLayer();
-        _progressFill.Name = "Fill";
-        _progressFillClip.AddChild(_progressFill);
-        _progressClip.AddChild(_progressBackground);
-        _progressClip.AddChild(_progressFillClip);
-        AddChild(_progressClip);
     }
 
     private float ContentPadding =>
@@ -795,38 +553,6 @@ public sealed partial class UiButton : Button, ISerializationListener
                 Colors.Transparent,
                 borderWidth: 0,
                 radius: UiSize.Radius.Pill));
-    }
-
-    private static Panel CreateProgressLayer() =>
-        new()
-        {
-            MouseFilter = MouseFilterEnum.Ignore,
-        };
-
-    private void LayoutProgress()
-    {
-        if (_progressClip is null
-            || _progressBackground is null
-            || _progressFillClip is null
-            || _progressFill is null)
-        {
-            return;
-        }
-
-        var frame = new Rect2(Vector2.Zero, Size);
-        UiButtonProgressLayout layout = UiButtonMetrics.ProgressLayout(frame, Progress);
-        _progressClip.Position = frame.Position;
-        _progressClip.Size = layout.Fill.Size;
-        _progressBackground.Position = layout.Fill.Position;
-        _progressBackground.Size = layout.Fill.Size;
-        _progressFillClip.Position = layout.Reveal.Position;
-        _progressFillClip.Size = layout.Reveal.Size;
-
-        // The fill keeps the full rounded frame geometry and is offset back by
-        // the reveal window's origin, so only the revealed fraction is visible.
-        _progressFill.Position = layout.Fill.Position - layout.Reveal.Position;
-        _progressFill.Size = layout.Fill.Size;
-        RefreshBadge();
     }
 
     private void DrawSelectedGlow()

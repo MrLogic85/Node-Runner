@@ -233,6 +233,7 @@ msgstr ""
 
 #: project/scenes/screens/BuildScreen.tscn
 #: project/scenes/widgets/CreationCard.tscn
+#: project/src/hosts/CreationActions.cs
 msgid "Delete"
 msgstr ""
 
@@ -332,14 +333,6 @@ msgstr ""
 
 #: project/scenes/screens/TrainSetupScreen.tscn
 msgid "Hills"
-msgstr ""
-
-#: project/src/hosts/CreationActions.cs
-msgid "Hold to delete"
-msgstr ""
-
-#: project/src/hosts/CreationActions.cs
-msgid "Hold to reset"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs
@@ -510,6 +503,10 @@ msgstr ""
 
 #: project/scenes/screens/BuildScreen.tscn
 msgid "Redo"
+msgstr ""
+
+#: project/src/hosts/CreationActions.cs
+msgid "Reset"
 msgstr ""
 
 #: project/scenes/screens/BuildScreen.tscn

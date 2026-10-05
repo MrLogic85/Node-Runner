@@ -68,7 +68,6 @@ public sealed partial class UiComponentContractsTests
             [
                 "Button",
                 "IconButton",
-                "HoldButton",
                 "Slider",
                 "Range",
                 "Toggle",
@@ -268,8 +267,6 @@ public sealed partial class UiComponentContractsTests
         UiSize.Control.Touch.ShouldBe(48);
         UiSize.Widget.NumberDiameter.ShouldBe(16);
         UiSize.Stroke.Number.ShouldBe(1.5f);
-        UiComponentContracts.HoldCompletionSeconds.ShouldBe(0.8f);
-        UiComponentContracts.ButtonProgressOpacity.ShouldBe(0.5f);
         UiGlow.Extent.ShouldBe(10);
         UiGlow.Opacity.ShouldBe(0.12f);
         UiSliderStyle.Default.ShouldBe(new UiSliderStyle(
@@ -326,27 +323,6 @@ public sealed partial class UiComponentContractsTests
             .ShouldBe(style.ThumbRadius + UiSize.Space.S2 + stepLineHeight);
         UiSlider.CalculateMinimumHeight(style, lineHeight, space3, space2, stepLineHeight, false, false, true)
             .ShouldBe(style.ThumbRadius + UiSize.Space.S2 + stepLineHeight);
-    }
-
-    [Theory]
-    [InlineData(0, 0.8, 0)]
-    [InlineData(0.4, 0.8, 0.5)]
-    [InlineData(0.8, 0.8, 1)]
-    [InlineData(1.2, 0.8, 1)]
-    [InlineData(-0.1, 0.8, 0)]
-    [InlineData(double.NaN, 0.8, 0)]
-    [InlineData(double.PositiveInfinity, 0.8, 0)]
-    [InlineData(0.4, 0, 1)]
-    [InlineData(0.4, -0.8, 1)]
-    [InlineData(0.4, double.NaN, 1)]
-    [InlineData(0.4, double.PositiveInfinity, 1)]
-    public void HoldProgress_TracksElapsedFraction(
-        double elapsedSeconds,
-        double durationSeconds,
-        float expected)
-    {
-        UiComponentContracts.HoldProgress(elapsedSeconds, durationSeconds)
-            .ShouldBe(expected);
     }
 
     [Theory]
@@ -456,7 +432,6 @@ public sealed partial class UiComponentContractsTests
         {
             UiComponentContracts.CanonicalComponent.Button,
             UiComponentContracts.CanonicalComponent.IconButton,
-            UiComponentContracts.CanonicalComponent.HoldButton,
         })
         {
             UiComponentContracts.ControlTypeFor(component).ShouldBe(nameof(UiButton));
@@ -465,36 +440,6 @@ public sealed partial class UiComponentContractsTests
         typeof(UiButton).IsSealed.ShouldBeTrue();
         typeof(UiButton).Assembly.GetTypes()
             .ShouldNotContain(type => type.IsSubclassOf(typeof(UiButton)));
-    }
-
-    [Fact]
-    public void ButtonProgressRevealWidth_StaysInsideFrameAndTracksProgress()
-    {
-        const float frame = 200;
-        UiComponentContracts.ButtonProgressRevealWidth(frame, -1).ShouldBe(0);
-        UiComponentContracts.ButtonProgressRevealWidth(frame, 0).ShouldBe(0);
-        UiComponentContracts.ButtonProgressRevealWidth(frame, 0.25f).ShouldBe(50);
-        UiComponentContracts.ButtonProgressRevealWidth(frame, 1).ShouldBe(frame);
-        UiComponentContracts.ButtonProgressRevealWidth(frame, 4).ShouldBe(frame);
-        UiComponentContracts.ButtonProgressRevealWidth(0, 0.5f).ShouldBe(0);
-        UiComponentContracts.ButtonProgressRevealWidth(float.NaN, 0.5f).ShouldBe(0);
-        UiComponentContracts.ButtonProgressRevealWidth(frame, float.NaN).ShouldBe(0);
-    }
-
-    [Fact]
-    public void ButtonProgressRevealWidth_IsMonotonicAndNeverExceedsTheVisibleFrame()
-    {
-        const float frame = 137.5f;
-        var previous = 0f;
-        for (var step = 0; step <= 20; step++)
-        {
-            var width = UiComponentContracts.ButtonProgressRevealWidth(frame, step / 20f);
-            width.ShouldBeGreaterThanOrEqualTo(previous);
-            width.ShouldBeLessThanOrEqualTo(frame);
-            previous = width;
-        }
-
-        previous.ShouldBe(frame);
     }
 
     [Fact]

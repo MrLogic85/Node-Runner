@@ -58,11 +58,7 @@ public partial class PopupGalleryScreen : GalleryScreen
 
     private void ShowDeleteDialog() => ShowDialog(new(
         UiPopupType.Danger, "Delete creation?", "\"Walker\" and its 142 generations of training would be removed permanently. Make a copy first if you want to keep it.",
-        "Hold to delete", Succeed, true));
-
-    private void ShowWarningHoldDialog() => ShowDialog(new(
-        UiPopupType.Warn, "Reset training?", "This example would reset 142 generations of training while keeping the body.",
-        "Hold to reset", Succeed, true));
+        "Delete", Succeed));
 
     private void ShowLongDialog() => ShowDialog(new(
         UiPopupType.Default, "Review the details",
@@ -74,13 +70,13 @@ public partial class PopupGalleryScreen : GalleryScreen
         var attempts = 0;
         ShowDialog(new(UiPopupType.Danger, "Try an action",
             "Both buttons are disabled while the callback runs. The first attempt fails; retry succeeds.",
-            "Hold to try", async () =>
+            "Try", async () =>
             {
                 await Task.Delay(TimeSpan.FromSeconds(TryActionSeconds));
                 return ++attempts == 1
                     ? UiDialogResult.Failure("The example action failed. Nothing changed; retry or cancel.")
                     : UiDialogResult.Success;
-            }, true));
+            }));
     }
 
     private void ShowAsyncDialog() => ShowDialog(new(

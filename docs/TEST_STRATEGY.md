@@ -201,7 +201,7 @@ child issues.
 **3. Behaviour is tested apart from layout.** Rules and state live in
 `NodeRunner.App` view-models (`NodeRunner.App.Tests`), and component
 behaviour lives in pure contract functions in the library
-(`UiComponentContracts`, slider values, hold progress), tested here. Neither
+(`UiComponentContracts`, slider values, progress), tested here. Neither
 depends on how a scene arranges its nodes, so a layout can change in the
 editor without breaking a test. Whether a scene's controls reach the right
 view-model action is verified on device until Godot-side tests exist.

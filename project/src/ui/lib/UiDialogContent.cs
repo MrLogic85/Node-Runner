@@ -103,12 +103,8 @@ public sealed partial class UiDialogContent : Control
         ShowText(_title, spec.Title, spec.TitleSource);
         ShowText(_body, spec.Content, spec.ContentSource);
         _cancel.Text = spec.AbortText;
-        _cancel.HoldDurationSeconds = 0;
-        _cancel.HoldToActivate = false;
         _confirm.Text = spec.ActionText ?? "";
         _confirm.Visible = spec.HasAction;
-        _confirm.HoldDurationSeconds = spec.HoldToAction ? UiComponentContracts.HoldCompletionSeconds : 0;
-        _confirm.HoldToActivate = spec.HoldToAction;
         SetBusy(false);
         ShowError(null);
         _scroll.ScrollVertical = 0;
