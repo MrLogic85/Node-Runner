@@ -1,12 +1,17 @@
 {
   "type": "object",
   "properties": {
+    "formatVersion": {
+      "type": "integer",
+      "minimum": 1
+    },
     "defaultCreationsSeeded": {
       "type": "boolean",
       "default": false
     }
   },
   "required": [
+    "formatVersion",
     "defaultCreationsSeeded"
   ],
   "additionalProperties": false

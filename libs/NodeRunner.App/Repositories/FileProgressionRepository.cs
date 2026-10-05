@@ -5,6 +5,12 @@ namespace NodeRunner.App.Repositories;
 
 public sealed class FileProgressionRepository : IProgressionRepository
 {
+    /// <summary>
+    /// <c>progression.json</c>'s versions. Add a migration here when its shape changes
+    /// (docs/SAVE_FORMAT.md → "Versions and migration").
+    /// </summary>
+    public static VersionedSaveFile<ProgressionDef> Format { get; } = new([]);
+
     // Keyed by absolute path (not per-instance) so that even if more than
     // one FileProgressionRepository instance ever pointed at the same file
     // (SaveManager only ever constructs one today, but nothing enforces
@@ -15,12 +21,21 @@ public sealed class FileProgressionRepository : IProgressionRepository
 
     private readonly string _path;
     private readonly object _writeLock;
+    private readonly VersionedSaveFile<ProgressionDef> _format;
 
     public FileProgressionRepository(IStorageLocation storageLocation)
+        : this(storageLocation, Format)
+    {
+    }
+
+    /// <summary>Uses <paramref name="format"/> instead of <see cref="Format"/>, so tests can add migrations.</summary>
+    public FileProgressionRepository(IStorageLocation storageLocation, VersionedSaveFile<ProgressionDef> format)
     {
         ArgumentNullException.ThrowIfNull(storageLocation);
+        ArgumentNullException.ThrowIfNull(format);
         _path = Path.Combine(storageLocation.DirectoryPath, "progression.json");
         _writeLock = _pathLocks.GetOrAdd(_path, static _ => new object());
+        _format = format;
     }
 
     public ProgressionDef Load()
@@ -36,11 +51,14 @@ public sealed class FileProgressionRepository : IProgressionRepository
                 return new ProgressionDef();
             }
 
+            VersionedLoad<ProgressionDef> load;
             try
             {
                 // Strict loading (SaveJson) also rejects "{}": a missing field
-                // must not silently read as a fresh progression (#114).
-                return SaveJson.Deserialize<ProgressionDef>(File.ReadAllText(_path), _path);
+                // must not silently read as a fresh progression (#114). A file
+                // newer than the app, or one a migration can't change, fails
+                // here too and is quarantined, never overwritten.
+                load = _format.Deserialize(File.ReadAllText(_path), _path);
             }
             catch (Exception ex) when (FilePersistenceExceptions.IsRecoverable(ex))
             {
@@ -53,6 +71,13 @@ public sealed class FileProgressionRepository : IProgressionRepository
                 Quarantine();
                 return new ProgressionDef();
             }
+
+            if (load.IsOutdated)
+            {
+                WriteBack(load.Value);
+            }
+
+            return load.Value;
         }
     }
 
@@ -60,14 +85,33 @@ public sealed class FileProgressionRepository : IProgressionRepository
     {
         ArgumentNullException.ThrowIfNull(progression);
         Directory.CreateDirectory(Path.GetDirectoryName(_path)!);
-        var temporaryPath = $"{_path}.{Guid.NewGuid():N}.tmp";
-        var json = SaveJson.Serialize(progression);
+        var json = _format.Serialize(progression);
 
         lock (_writeLock)
         {
-            File.WriteAllText(temporaryPath, json);
-            File.Move(temporaryPath, _path, overwrite: true);
+            WriteAtomically(json);
         }
+    }
+
+    // Called under _writeLock, so no Save can land between the read and this write. A failed write
+    // only leaves the file outdated, to migrate again next time.
+    private void WriteBack(ProgressionDef progression)
+    {
+        try
+        {
+            WriteAtomically(_format.Serialize(progression));
+        }
+        catch (Exception ex) when (FilePersistenceExceptions.IsRecoverable(ex))
+        {
+            Console.Error.WriteLine($"[FileProgressionRepository] Could not write back migrated progression file '{_path}': {ex}");
+        }
+    }
+
+    private void WriteAtomically(string json)
+    {
+        var temporaryPath = $"{_path}.{Guid.NewGuid():N}.tmp";
+        File.WriteAllText(temporaryPath, json);
+        File.Move(temporaryPath, _path, overwrite: true);
     }
 
     private void Quarantine()
