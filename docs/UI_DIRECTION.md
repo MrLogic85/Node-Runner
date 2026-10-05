@@ -653,6 +653,39 @@ for it still lays out. A screen whose content still needs more room
 keeps its frame and toolbar on screen and clips the content (see "Screen
 size and safe area").
 
+## App icon
+
+The launcher icon is the Brain glyph (`model.svg`, the 2-3-2 network) lit in
+the Neon palette (#820). The inputs are `accent` like the sensors, the
+connections fade from `accent` through `line_strong` to `output`, the outputs
+are `output`, and the centre neuron wears the brain view's `halo` focus ring.
+Each neuron sits on a `panel_raised` disc, and the background is a
+`panel_raised` → `panel` → `background` vignette with a faint `muted` dot grid.
+Glow is the base colour at low alpha, as in `UiGlow`; the SVGs use no filters.
+
+The sources are in `project/assets/icons/app/`:
+
+- `main.svg`: the full icon, 192 px (Android 7 and `application/config/icon`).
+  It copies the foreground art, scaled down in a group.
+- `foreground.svg` and `background.svg`: the adaptive layers, 432 px. The
+  neurons and their discs stay inside the 66 dp safe circle (radius 132 px),
+  so every launcher mask shows them; only the faint outer glow of the
+  inputs and outputs may be clipped.
+- `monochrome.svg`: one flat white silhouette for Android 13 themed icons,
+  with thicker connections and solid nodes.
+- `splash.svg`: the foreground on a dark disc that fills the Android 12+
+  launch splash mask (radius 144 px). Godot's non-Gradle export cannot set
+  the splash background, which stays light, so the badge carries the dark
+  ground. It also copies the foreground art.
+
+`foreground.svg` owns the art; change `main.svg` and `splash.svg` with it.
+Every colour in the four colour SVGs is a Neon token, and the monochrome
+layer is white only, as Android themed icons require. The hidden neurons
+are `ink` and the 192 px border is `line`. The dot grid is `muted` at low
+alpha rather than the Build grid's `line`, because `line` dots vanish at
+launcher size. `AppIconTests` checks
+the colours, the sizes, the export preset and both copies.
+
 ## Text and translation
 
 Text is translated once, by Godot (#682; `docs/ARCHITECTURE.md` → "UI text

@@ -131,6 +131,10 @@ swap restyles everything:
   (text-colour variations, base control colours) match their palette
 - typography is authored once, in the project theme, with a font and size for
   every variation
+- the app icon's colour SVGs use only Neon palette colours and the
+  monochrome layer only white, the launcher and splash icons copy the
+  foreground art in order, and the export preset and project icon point at
+  them at their native sizes (`AppIconTests`, #820)
 - saved scenes pin no stylebox, colour, font or font size on any node, store
   no generated icon texture, and do not store the properties a library
   component derives on its own node (`SceneDerivedStateTests`)

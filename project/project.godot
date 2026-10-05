@@ -15,6 +15,7 @@ config/description="Learn ML by drawing 2D creatures that evolve to move."
 config/version="0.13.0"
 run/main_scene="res://scenes/hosts/CreationsHost.tscn"
 config/features=PackedStringArray("4.7", "C#", "Mobile")
+config/icon="res://assets/icons/app/main.svg"
 
 [autoload]
 
