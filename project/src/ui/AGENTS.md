@@ -55,7 +55,8 @@ unchanged, it belongs in `lib/`. If it embeds project vocabulary
   `CanTakeBack` as its summary describes, and handle `BackRequested`. Do not
   set `QuitOnGoBack` in a screen.
 - Android sends several Back signals for one press, on key-down, key
-  repeat and release (#506). Anything else that acts on
+  repeat and release (#506, godotengine/godot#123454). `UiBackPress`
+  lets one through per Back key-down or gesture (#838). Anything else that acts on
   `NotificationWMGoBackRequest` or `GoBackRequested` calls
   `UiBackPress.TryTake(this)` once it has decided to act, and acts only if
   it returns true. Taking uses up the press, so never take it before

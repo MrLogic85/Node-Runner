@@ -1,29 +1,21 @@
 namespace NodeRunner.Ui.Lib;
 
 /// <summary>
-/// Sorts the Back signals of Android presses into each press's first signal and its repeats (#506).
-/// Godot sends a go-back signal on the Back key-down, on every key repeat while it is held, and
-/// again from the system back callback on release. The order varies: a quick tap can send its first
-/// go-back before its key-down, a held key sends its release go-back just before or just after
-/// its key-up, and some phones send a press's key-down and key-up before its only go-back (#838).
-/// A key-down starts a new press unless it belongs to a go-back that came just before it, so a lost
-/// key-up cannot swallow the next press. Pure, so the sequences recorded on a device replay in tests.
+/// Lets one go-back signal through per Android Back press (#506, #838). Godot sends one when the Back
+/// key goes down, one on every key repeat, and one from the system back callback on release
+/// (godotengine/godot#123454). So each Back key-down gets one go-back. A go-back with no Back key near
+/// it comes from a gesture, which sends no key events, and counts on its own. Godot sends the
+/// key-down's go-back before the key event, so a key-down just after a taken go-back belongs to it.
+/// Pure, so sequences recorded on a device replay in tests.
 /// </summary>
 public sealed class UiBackPressTracker
 {
-    /// <summary>A release go-back follows its key-up within a few milliseconds.</summary>
-    public const ulong ReleaseMsec = 50;
+    /// <summary>A go-back and the Back key event it belongs to arrive within this.</summary>
+    public const ulong PairMsec = 200;
 
-    /// <summary>Without a key-up, a pause this long means the next go-back belongs to a new press.</summary>
-    public const ulong PauseMsec = 200;
-
-    private bool _inPress;
-    private bool _pressHasKeyDown;
-    // The last key event of a key-down whose go-back has not come yet.
-    private ulong? _waitingKeyMsec;
-    private bool _pressReleased;
-    private ulong _releasedMsec;
-    private ulong _lastSignalMsec;
+    private ulong? _lastKeyMsec;
+    private ulong? _keylessTakenMsec;
+    private bool _pressTaken = true;
 
     /// <summary>
     /// Records a go-back signal, arriving while the Back key is held or not. True when it is the
@@ -31,24 +23,15 @@ public sealed class UiBackPressTracker
     /// </summary>
     public bool GoBack(ulong nowMsec, bool backHeld)
     {
-        if (!backHeld && _inPress)
+        if (backHeld || Near(_lastKeyMsec, nowMsec))
         {
-            _inPress = _pressReleased
-                ? nowMsec - _releasedMsec < ReleaseMsec
-                : nowMsec - _lastSignalMsec < PauseMsec;
+            var first = !_pressTaken;
+            _pressTaken = true;
+            return first;
         }
 
-        var first = !_inPress;
-        if (first)
-        {
-            _inPress = true;
-            _pressReleased = false;
-            _pressHasKeyDown = _waitingKeyMsec is { } key && nowMsec - key < PauseMsec;
-            _waitingKeyMsec = null;
-        }
-
-        _lastSignalMsec = nowMsec;
-        return first;
+        _keylessTakenMsec = nowMsec;
+        return true;
     }
 
     /// <summary>Records a Back key event; an echo is a key repeat while the key is held.</summary>
@@ -56,33 +39,12 @@ public sealed class UiBackPressTracker
     {
         if (pressed && !echo)
         {
-            if (_inPress && !_pressHasKeyDown && nowMsec - _lastSignalMsec < PauseMsec)
-            {
-                // The key-down of a press whose go-back came first.
-                _pressHasKeyDown = true;
-            }
-            else
-            {
-                // A new press: its go-back comes next.
-                _inPress = false;
-                _waitingKeyMsec = nowMsec;
-            }
-        }
-        else
-        {
-            // A held key's go-back may come only after its echoes or its key-up.
-            if (_waitingKeyMsec is not null)
-            {
-                _waitingKeyMsec = nowMsec;
-            }
-
-            if (!pressed && _inPress)
-            {
-                _pressReleased = true;
-                _releasedMsec = nowMsec;
-            }
+            _pressTaken = Near(_keylessTakenMsec, nowMsec);
+            _keylessTakenMsec = null;
         }
 
-        _lastSignalMsec = nowMsec;
+        _lastKeyMsec = nowMsec;
     }
+
+    private static bool Near(ulong? thenMsec, ulong nowMsec) => thenMsec is { } then && nowMsec - then < PairMsec;
 }
