@@ -19,4 +19,10 @@ public sealed class MetresTests
     {
         Metres.WithUnit(250).ShouldBe(UiText.Format("{0} m", new FixedNumber(2.5, 1)));
     }
+
+    [Fact]
+    public void SpeedWithUnit_AddsTheUnit()
+    {
+        Metres.SpeedWithUnit(310).ShouldBe(UiText.Format("{0} m/s", new FixedNumber(3.1, 1)));
+    }
 }

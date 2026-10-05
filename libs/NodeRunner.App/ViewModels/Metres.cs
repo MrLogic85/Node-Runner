@@ -22,4 +22,8 @@ public static class Metres
 
     /// <summary>A world-unit length in metres with its unit, such as "2.5 m".</summary>
     public static UiText WithUnit(double worldUnits) => UiText.Format("{0} m", Number(worldUnits));
+
+    /// <summary>A speed in world units/s in m/s with its unit, such as "2.5 m/s".</summary>
+    public static UiText SpeedWithUnit(double worldUnitsPerSecond) =>
+        UiText.Format("{0} m/s", Number(worldUnitsPerSecond));
 }
