@@ -126,7 +126,10 @@ sizes on screen at any zoom.
   only beams.
 - **Sensors:** an Accelerometer (#127) and a Camera (#575) sit on a
   beam, one per beam. Drag one from the Parts tray onto a beam to place it
-  (#376; see Parts tray below). Deleting a beam deletes its sensor.
+  (#376; see Parts tray below). Deleting a beam deletes its sensor. The
+  tray holds the Camera back as "Coming later" (#852): on the Flat map it
+  only adds complexity, so it returns with maps that have terrain (#855). A saved
+  creation that already has one keeps it, and it works as below.
 - **Piston (#451, #705):** picked from the Beams link list. Drag joint to
   joint to place one; over a joint that would refuse it, the line and that
   joint's ring turn dashed danger, and dropping there shows the reason at the
@@ -215,8 +218,8 @@ line for the tab. `NodeRunner.App.ViewModels.PartTray`
 owns the groups, their order, the help lines and each row's state; the screen
 only maps parts to glyphs. Every implemented part is unlimited until #525, so
 rows show no count. A part not yet implemented is a dashed row with a lock,
-and the tab's name row says "Coming later" once. The available rows (today the
-Accelerometer and the Camera) do nothing on tap; they are dragged out instead
+and the tab's name row says "Coming later" once; the Camera is held back the
+same way (#852). The available rows (today the Accelerometer) do nothing on tap; they are dragged out instead
 (#376). Godot's drag-and-drop carries the part: the row starts it and
 floats its glyph above the finger (`UiPartRow.CreateDragPreview`), and
 `BuildCanvas` takes the drop in `PartDropZone`, a control over the canvas

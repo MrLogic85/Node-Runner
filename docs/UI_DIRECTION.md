@@ -308,7 +308,8 @@ reference would mislead someone working on that surface.
   parts you place and shows counts ("1 left") in the tray and in Build
   feedback (`reference design/README.md`, Build and "Rules that fix the known
   problems"). Instead every implemented part is unlimited and the tray shows
-  no counts; parts not yet implemented show "Coming later". Counts and
+  no counts; parts not yet implemented, and the Camera until maps have
+  terrain (#852), show "Coming later". Counts and
   achievement locks (#525) bring the reference behavior back.
 - **No Core; sensors sit on beams (#127, 0.12.0).** The reference has a Core
   part on a joint with toggles for its built-in senses (Parts, PartSettings,
@@ -405,7 +406,8 @@ reference would mislead someone working on that surface.
   on a locked row. Instead:
   - Tray rows are compact `UiPartRow`s (`control-sm` high) that still use
     the `icon-lg` glyph.
-  - A part not yet implemented shows only its lock; the tab's name row ends
+  - A part not yet implemented, or held back like the Camera (#852), shows
+    only its lock; the tab's name row ends
     with a `muted` lock at `icon-sm` and "Coming later" in `t-note`. This is
     temporary until those parts ship; #525's achievement locks need their
     own reason.

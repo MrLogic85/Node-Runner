@@ -39,7 +39,7 @@ public sealed record PartTrayGroup(UiText Name, UiText HelpText, IReadOnlyList<P
 
 /// <summary>
 /// The Build Parts tray: three tabs of reference parts (#374). Implemented rows are available;
-/// a part not yet implemented shows "Coming later".
+/// a part not yet implemented, or held back like the Camera (#852), shows "Coming later".
 /// </summary>
 public static class PartTray
 {
@@ -72,7 +72,8 @@ public static class PartTray
         new(UiText.Plain("Sensors"), UiText.Plain("Drag onto a beam. A beam holds one sensor."),
         [
             Available(BuildPart.Accelerometer, UiText.Plain("Accelerometer")),
-            Available(BuildPart.Camera, UiText.Plain("Camera")),
+            // Implemented, but it adds little on the Flat map, so it waits for maps with terrain (#852).
+            Locked(BuildPart.Camera, UiText.Plain("Camera")),
         ]),
         new(UiText.Plain("Blocks"), UiText.Plain("Drag it onto the canvas, then draw beams to its two eyes."),
         [

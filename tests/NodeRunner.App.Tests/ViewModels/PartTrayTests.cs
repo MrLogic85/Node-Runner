@@ -39,12 +39,13 @@ public sealed class PartTrayTests
     }
 
     [Fact]
-    public void SensorsTab_HasBothSensorsAvailable()
+    public void SensorsTab_HasTheAccelerometerAvailable_AndTheCameraComingLater()
     {
         var sensors = PartTray.Groups()[1].Rows;
 
-        sensors.Select(row => row.Part).ShouldBe([BuildPart.Accelerometer, BuildPart.Camera]);
-        sensors.ShouldAllBe(row => row.State == PartTrayRowState.Available && row.LockedReason == null);
+        sensors.Select(row => (row.Part, row.State)).ShouldBe(
+            [(BuildPart.Accelerometer, PartTrayRowState.Available), (BuildPart.Camera, PartTrayRowState.ComingLater)]);
+        sensors[0].LockedReason.ShouldBeNull();
     }
 
     [Fact]
@@ -52,14 +53,14 @@ public sealed class PartTrayTests
     {
         var rows = PartTray.Groups().SelectMany(group => group.Rows).ToList();
 
-        rows.Where(row => row.Part is not (BuildPart.Accelerometer or BuildPart.Camera)).ShouldAllBe(row =>
+        rows.Where(row => row.Part is not BuildPart.Accelerometer).ShouldAllBe(row =>
             row.State == PartTrayRowState.ComingLater && !row.IsAvailable && Equals(row.LockedReason, UiText.Plain("Coming later")));
     }
 
     [Fact]
     public void LockedNote_ShowsOnTabsWithALockedRow()
     {
-        PartTray.Groups().Select(group => group.LockedNote).ShouldBe([UiText.Plain("Coming later"), null, UiText.Plain("Coming later")]);
+        PartTray.Groups().Select(group => group.LockedNote).ShouldAllBe(note => Equals(note, UiText.Plain("Coming later")));
     }
 
     [Fact]
