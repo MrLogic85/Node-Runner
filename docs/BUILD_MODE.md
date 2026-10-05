@@ -312,7 +312,10 @@ wording.
 
 Start training is gated by `BuildViewModel.TryLeave` and
 `CanTrain`: a failed `TryLeave` keeps Build open, and the readiness line
-already says why.
+already says why. The dimmed play button can still be tapped (#844): the
+tap starts nothing, and `BuildViewModel.ShowTrainingBlockers` gives each
+joint loose at that moment a "Not connected" canvas note until it is
+joined or removed. Too-short parts always have their "Too short" note.
 The edits are saved first either way. Back never validates: it saves the
 drawing as it stands (#474, #368). Training refuses a saved creature that
 cannot train and returns to Creations.

@@ -714,9 +714,7 @@ public partial class BuildCanvas : Node2D
 
     // Joined to nothing. The beam drag's own rings replace the warning on the joints being joined.
     private bool ShowsAsLoose(int nodeId) =>
-        !_viewModel!.Beams.Any(beam => beam.NodeA == nodeId || beam.NodeB == nodeId)
-        && !_viewModel.Pistons.Any(piston => piston.NodeA == nodeId || piston.NodeB == nodeId)
-        && !_viewModel.Springs.Any(spring => spring.NodeA == nodeId || spring.NodeB == nodeId)
+        _viewModel!.IsLoose(nodeId)
         && nodeId != _gestures?.BeamStartNodeId
         && nodeId != _gestures?.BeamTargetNodeId;
 
@@ -764,7 +762,7 @@ public partial class BuildCanvas : Node2D
 
     private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs eventArgs)
     {
-        if (eventArgs.PropertyName is nameof(BuildViewModel.SelectedNodeCount) or nameof(BuildViewModel.PlacementNote))
+        if (eventArgs.PropertyName is nameof(BuildViewModel.SelectedNodeCount) or nameof(BuildViewModel.PlacementNote) or nameof(BuildViewModel.CanvasNotes))
         {
             QueueRedraw();
         }

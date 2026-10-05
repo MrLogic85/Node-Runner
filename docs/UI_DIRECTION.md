@@ -84,7 +84,11 @@ reference would mislead someone working on that surface.
   of the rail only when locked. Instead the primary play button sits at
   the bottom of the rail in both states, so it never moves; the locked top
   bar keeps the padlock. A dimmed play button's reason is the panel's last
-  line. Stats sits in the overflow menu, "Coming soon" until 0.15.0.
+  line. The dimmed button is `UiButton.Unavailable`, so it can still be
+  tapped: the tap starts nothing and puts a `danger` "Not connected"
+  callout on each loose joint, beside the "Too short" ones that are always
+  shown (#844, owner decision). Play testers tapped it and missed the
+  panel line. Stats sits in the overflow menu, "Coming soon" until 0.15.0.
   The overflow follows training, not the lock: a trained creation lists
   Stats, Power budget, Copy creation, Reset training and Delete creation in
   either state, an untrained one Power budget and Delete creation. Copy
@@ -189,7 +193,7 @@ reference would mislead someone working on that surface.
 - **Trophy and Stats look "coming later" (#841, 0.13.0).** The reference
   draws the Creations trophy and the Training Stats chart as ordinary icon
   buttons. Until Achievements (#199) and Stats (#198) ship, both use
-  `UiButton.ComingLater`: the disabled button's dashed, dimmed look, but
+  `UiButton.Unavailable`: the disabled button's dashed, dimmed look, but
   still tappable, answering with "… come in a later version". Play testers
   tapped them first because they looked like every other button. No lock
   glyph: in a top bar it would read as the creation padlock. Build's
@@ -1000,9 +1004,10 @@ and `tertiary` "danger"; `on` and `off` are states, not kinds.
 Native `Disabled` is the sole availability setting; UiButton has no inverse
 `Enabled` property. Disabling cancels a hold and dims the custom stack/progress
 content as well as the native button visuals.
-`UiButton.ComingLater` (#841) draws the same dashed, dimmed look but leaves
-the button pressable, for a feature that comes in a later version: the
-screen answers the tap with a notification saying so.
+`UiButton.Unavailable` draws the same dashed, dimmed look but leaves the
+button pressable, so the screen can answer the tap with why: a feature that
+comes in a later version (#841) gets a notification saying so, and Build's
+dimmed play button points at the parts that block training (#844).
 All button text, including the neuron stepper's plus/minus signs, is authored
 in the native `Text` property, with the layout's normal typography and padding.
 As for UiLabel, `Text` is stored exactly as written (it is also the

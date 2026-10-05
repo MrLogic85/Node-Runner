@@ -57,6 +57,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     private int? _trainingGeneration;
     private double? _latestDistance;
     private CanvasNote? _placementNote;
+    private readonly HashSet<int> _shownLooseNodes = [];
     private readonly BuildHistory _history;
     private BrainDef? _openedBrain;
     private bool _shownCanUndo;
@@ -85,6 +86,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
         _openedBrain = training?.Brain;
         _moveOnly = moveOnly;
         _history.Clear();
+        _shownLooseNodes.Clear();
         ActiveTool = BuildTool.Parts;
         PlacementNote = null;
         AnatomyChanged?.Invoke(this, EventArgs.Empty);
@@ -289,8 +291,9 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
 
     /// <summary>
     /// The messages Build shows in the drawing, each beside the part it is about: why the last
-    /// dropped part was refused (#376), then each beam or link too short to train (#593). Listed most
-    /// important first: notes that would overlap stack, the first listed nearest its part.
+    /// dropped part was refused (#376), each loose joint <see cref="ShowTrainingBlockers"/> pointed
+    /// at (#844), then each beam or link too short to train (#593). Listed most important first:
+    /// notes that would overlap stack, the first listed nearest its part.
     /// </summary>
     public IReadOnlyList<CanvasNote> CanvasNotes()
     {
@@ -298,6 +301,14 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
         if (_placementNote is { } placement && Exists(placement.Target))
         {
             notes.Add(placement);
+        }
+
+        foreach (var node in Nodes)
+        {
+            if (_shownLooseNodes.Contains(node.Id) && IsLoose(node.Id))
+            {
+                notes.Add(new CanvasNote(CanvasNoteKind.Danger, new CreatureElementSelection(CreatureElementKind.Node, node.Id), UiText.Plain("Not connected")));
+            }
         }
 
         foreach (var beam in Beams)
@@ -346,6 +357,31 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
 
     /// <summary>Hides <see cref="PlacementNote"/>: the canvas does so on the next touch, or once it has been read.</summary>
     public void DismissPlacementNote() => PlacementNote = null;
+
+    /// <summary>Joined to nothing by a beam or a link, so the creature cannot train (<see cref="CreatureReadiness.IsAttached"/>).</summary>
+    public bool IsLoose(int nodeId) =>
+        !Beams.Any(beam => beam.NodeA == nodeId || beam.NodeB == nodeId)
+        && !Pistons.Any(piston => piston.NodeA == nodeId || piston.NodeB == nodeId)
+        && !Springs.Any(spring => spring.NodeA == nodeId || spring.NodeB == nodeId);
+
+    /// <summary>
+    /// Answers a tap on the dimmed play button (#844): every joint loose now gets a "Not connected"
+    /// note in <see cref="CanvasNotes"/>, kept until it is joined or removed. Too-short parts
+    /// already have theirs. A joint loosened later waits for the next tap.
+    /// </summary>
+    public void ShowTrainingBlockers()
+    {
+        _shownLooseNodes.Clear();
+        foreach (var node in Nodes)
+        {
+            if (IsLoose(node.Id))
+            {
+                _shownLooseNodes.Add(node.Id);
+            }
+        }
+
+        OnPropertyChanged(nameof(CanvasNotes));
+    }
 
     /// <summary>
     /// Whether a tray part dropped on <paramref name="target"/> would be placed there (#376); if
