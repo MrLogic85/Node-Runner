@@ -1,4 +1,6 @@
+using System.Globalization;
 using System.Reflection;
+using System.Text.RegularExpressions;
 
 namespace NodeRunner.Arch.Tests;
 
@@ -7,7 +9,7 @@ namespace NodeRunner.Arch.Tests;
 /// Each rule pins down a boundary declared in docs/ARCHITECTURE.md and CODE_DESIGN_PRINCIPLES.md.
 /// When adding new rules, prefer a testable convention over a documented one.
 /// </summary>
-public sealed class ArchitectureSpec
+public sealed partial class ArchitectureSpec
 {
     private static readonly Assembly _domain = typeof(NodeRunner.Domain.AssemblyMarker).Assembly;
     private static readonly Assembly _mechanics = typeof(NodeRunner.Mechanics.AssemblyMarker).Assembly;
@@ -104,6 +106,24 @@ public sealed class ArchitectureSpec
             "See docs/CODE_DESIGN_PRINCIPLES.md §5.");
     }
 
+    [Fact]
+    public void AndroidBuildNumber_IsDerivedFromProjectVersion()
+    {
+        var version = VersionPattern().Match(ProjectSetting("project.godot", "config/version"));
+        version.Success.ShouldBeTrue("application/config/version must be a quoted X.Y.Z.");
+
+        var code = int.Parse(ProjectSetting("export_presets.cfg", "version/code"), CultureInfo.InvariantCulture);
+
+        code.ShouldBe(
+            (VersionPart(version, "major") * 1_000_000) + (VersionPart(version, "minor") * 1_000) + VersionPart(version, "patch"),
+            "The build number is 1000000·major + 1000·minor + patch (#809); run .github/scripts/set-version.sh.");
+    }
+
+    [Fact]
+    public void AndroidVersionName_FallsBackToProjectVersion() =>
+        ProjectSetting("export_presets.cfg", "version/name")
+            .ShouldBe("\"\"", "An empty name makes the export read application/config/version (#809).");
+
     private static string FindRepositoryRoot()
     {
         for (var directory = new DirectoryInfo(AppContext.BaseDirectory);
@@ -118,6 +138,21 @@ public sealed class ArchitectureSpec
 
         throw new DirectoryNotFoundException("Could not find NodeRunner.slnx.");
     }
+
+    private static string ProjectSetting(string file, string key)
+    {
+        var prefix = key + "=";
+        var line = File.ReadLines(Path.Combine(FindRepositoryRoot(), "project", file))
+            .SingleOrDefault(line => line.StartsWith(prefix, StringComparison.Ordinal));
+        line.ShouldNotBeNull($"{file} has no {key}.");
+        return line[prefix.Length..];
+    }
+
+    private static int VersionPart(Match version, string group) =>
+        int.Parse(version.Groups[group].Value, CultureInfo.InvariantCulture);
+
+    [GeneratedRegex("""^"(?<major>0|[1-9][0-9]*)\.(?<minor>0|[1-9][0-9]{0,2})\.(?<patch>0|[1-9][0-9]{0,2})"$""")]
+    private static partial Regex VersionPattern();
 
     private static void AssertNoGodotReference(Assembly assembly)
     {

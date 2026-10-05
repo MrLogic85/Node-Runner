@@ -113,6 +113,8 @@ Current facts (see `ArchitectureSpec.cs`):
 - `NodeRunner.ML` references neither `NodeRunner.App` nor `NodeRunner.Mechanics`
 - No production `.cs` file (`libs/`, `project/src/`) exceeds 2000 lines
   (`docs/CODE_DESIGN_PRINCIPLES.md` §5)
+- The Android `version/code` equals 1000000·major + 1000·minor + patch of
+  `application/config/version`, and `version/name` is empty (#809)
 
 Add a fact whenever a convention emerges that we've decided to enforce.
 

@@ -75,6 +75,7 @@ A PR is mergeable when every box is true (or a skipped box is justified in
 the PR):
 
 - [ ] Linked GitHub Issue exists and the PR uses a closing keyword
+      (release-notes PRs use `Part of`; see `docs/RELEASING.md`)
 - [ ] `dotnet build NodeRunner.slnx` clean, 0 warnings
 - [ ] `dotnet test NodeRunner.slnx` all green (unit + arch)
 - [ ] Any new logic in `libs/NodeRunner.{ML,Domain}/` has unit tests
@@ -175,6 +176,11 @@ The `main` ruleset (GitHub → Settings → Rules → Rulesets) is configured wi
 - Do not allow force pushes
 - Do not allow branch deletion
 - Include administrators
+
+## Releases
+
+Publishing a version is not a change to `main`; `docs/RELEASING.md` owns
+the release flow, including its PRs on `release/vX.Y`.
 
 ## Local pre-push checklist
 

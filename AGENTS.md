@@ -27,8 +27,9 @@ of the project before starting to work.
 
 1. **Follow the owning documents.** `docs/ARCHITECTURE.md` owns layers and
    dependencies, `docs/CODE_DESIGN_PRINCIPLES.md` owns implementation rules,
-   `docs/TEST_STRATEGY.md` owns testing, and `docs/REVIEW.md` owns how changes
-   land. The nearest local `AGENTS.md` adds only layer-specific instructions.
+   `docs/TEST_STRATEGY.md` owns testing, `docs/REVIEW.md` owns how changes
+   land, and `docs/RELEASING.md` owns publishing a version. The nearest
+   local `AGENTS.md` adds only layer-specific instructions.
 2. **Godot first, always.** Use Godot's own features to their full potential.
    Write our own solution only when Godot cannot do it natively, and say why
    (`docs/CODE_DESIGN_PRINCIPLES.md` §2).
@@ -61,8 +62,9 @@ Conceptually:
 - `docs/` owns durable design, process, roadmap, and teaching material.
 - `issues/` is a read-only archive of the old file-based tracker.
 
-Folders inside `libs/` and `project/src/` have local `AGENTS.md` files.
-Read the nearest one before editing that layer.
+Several folders have local `AGENTS.md` files, including those in `libs/`,
+`project/src/`, `tests/`, and `docs/release-notes/`. Read the nearest one
+before editing there.
 
 ## Machine-local setup
 

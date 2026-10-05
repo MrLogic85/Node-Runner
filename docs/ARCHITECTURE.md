@@ -138,19 +138,32 @@ kept out of the pure-C# solution.
 
 ## Android export
 
-`project/export_presets.cfg` defines the `Android` debug export preset for the
-0.1.0 APK:
+`project/export_presets.cfg` defines the `Android` export preset. A debug APK
+for development:
 
 ```bash
 /Applications/Godot_mono.app/Contents/MacOS/Godot \
   --headless --path project \
-  --export-debug Android ../build/node-runner-0.1.0-debug.apk
+  --export-debug Android ../build/node-runner-debug.apk
 ```
+
+Release APKs come from `.github/scripts/release.sh` (see
+`docs/RELEASING.md`), which runs `--export-release` with the release keystore passed
+through Godot's `GODOT_ANDROID_KEYSTORE_RELEASE_*` environment variables.
+Release exports are not debug builds, so `OS.IsDebugBuild()` is false and
+debug-only UI such as the Component library link is hidden (#808).
+
+The version has one source, `application/config/version` in
+`project/project.godot`. The preset leaves `version/name` empty so the export
+reads it from there, and sets `version/code` to
+1000000·major + 1000·minor + patch (0.13.0 → 13000) (#809). Change both with
+`.github/scripts/set-version.sh X.Y.Z`; `ArchitectureSpec` checks they agree.
 
 Local prerequisites are Godot 4.7.2 Mono export templates, JDK 21, Android SDK
 platform/build-tools, platform-tools, and a user-local debug keystore configured
 in Godot editor settings. The committed preset contains values only; keystore
-paths/passwords stay in user-local Godot settings or ignored credential files.
+paths/passwords stay in user-local Godot settings, ignored credential files,
+or the macOS Keychain.
 
 For the non-Gradle debug export, Godot 4.7.2 currently emits min SDK 24 and
 target/compile SDK 36 from its Android template. Do not override min/target SDK
