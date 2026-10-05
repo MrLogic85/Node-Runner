@@ -11,7 +11,8 @@ change to a saved shape changes this document and the schemas in
   0.13.0 or later must load in every later version. See "Versions and
   migration" below.
 - **Schemas.** `docs/save-schema/` holds a JSON Schema for each file,
-  generated from the domain records by .NET's `JsonSchemaExporter`. It is
+  generated from the domain records by .NET's `JsonSchemaExporter`, plus
+  the `formatVersion` field of a versioned file. It is
   the exact field list: types, which fields must be present, which may be
   `null`, allowed enum values and no other fields. `SaveFormatTests` fails
   when the generated schema differs from the committed one and writes the
@@ -30,7 +31,8 @@ change to a saved shape changes this document and the schemas in
   real file loads.
 - **Domain records are the shape.** The files serialize the records in
   `libs/NodeRunner.Domain/` directly, through `SaveJson`
-  (`libs/NodeRunner.App/Repositories/`).
+  (`libs/NodeRunner.App/Repositories/`). The one field outside the records
+  is `formatVersion` (see "Versions and migration").
 - **Planned fields** are listed here with the issue that adds them. That
   issue adds the field and updates this document and the schema.
 
@@ -71,6 +73,7 @@ Schema: [`save-schema/creation.schema.json`](save-schema/creation.schema.json).
 
 | Field | Type | Meaning |
 |---|---|---|
+| `formatVersion` | int | The file's format version, written first; see "Versions and migration". Missing in 0.13.0 files. |
 | `id` | GUID | The Creation's id; also its folder name. |
 | `name` | string | Shown on the card and in Build. Not empty. A default name is saved in the player's language (#759). |
 | `creature` | object | The drawn body; see below. |
@@ -173,22 +176,37 @@ UI size, theme, sounds and the Shadows default.
 The baseline is the 0.13.0 shape: every `creation.json` and
 `progression.json` that 0.13.0 writes, documented above (#744).
 
-- Each file carries a version. A file without one is the 0.13.0 baseline.
-  The version fields are added by #872 (`creation.json`) and #873
-  (`progression.json`).
+- A versioned file starts with `formatVersion`, a whole number. The 0.13.0
+  shape is version 1, and a file without the field is version 1.
+  `creation.json` has it (#872); `progression.json` gets it in #873.
 - Loading reads the version, runs the migrations from that version to the
   current one in order, then loads the result strictly as above.
-- A file that needed migrating is written back in the current version right
-  away, when it is loaded.
-- A file newer than the app, or one whose migration fails, is handled as a
-  file that fails to load (see "Writing and reading") and is never
-  overwritten.
-- A change to the shape of either file adds a migration step and a test that
-  loads a file in the previous shape. #872 and #873 check in real 0.13.0
-  files as fixtures, so the baseline stays covered; those fixtures are
-  never rewritten in place.
-- Until #872 lands, `creation.json` keeps its 0.13.0 shape; #872 lands
-  before any other change to it.
+- A file without the field or in an older version is written back in the
+  current version right away, when it is loaded. The write is skipped if
+  the file changed after it was read.
+- A file newer than the app, one whose `formatVersion` is not a version the
+  app knows, or one whose migration fails, is handled as a file that fails
+  to load (see "Writing and reading") and is never overwritten.
+- `VersionedSaveFile` (`libs/NodeRunner.App/Repositories/`) does this for
+  any file. A `SaveMigration` edits the file's JSON one version up, so it
+  can rename, move or fill in fields before the strict load. It throws
+  `InvalidDataException` for a file it can't change; any other exception
+  is a bug and is not caught.
+
+### Changing a saved shape
+
+1. Change the record, this document and the schema as usual.
+2. Append a `SaveMigration` to the file's list
+   (`FileCreationRepository.Format` for `creation.json`). It turns a file
+   in the previous version into the new shape; the current version goes up
+   by one.
+3. Add a test that loads a file in the previous version, and keep the
+   0.13.0 fixtures loading.
+
+The real files 0.13.0 wrote are checked in as fixtures in
+`tests/NodeRunner.App.Tests/Repositories/SaveExamples/0.13.0/` (the Walker
+example, untrained and trained), and `CreationVersioningTests` loads them.
+They are never rewritten in place.
 
 ## Writing and reading
 

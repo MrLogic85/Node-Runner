@@ -10,7 +10,14 @@ public sealed class FileCreationRepository : ICreationRepository
 {
     public const string CreationFileName = "creation.json";
 
+    /// <summary>
+    /// <c>creation.json</c>'s versions. Add a migration here when its shape changes
+    /// (docs/SAVE_FORMAT.md → "Versions and migration").
+    /// </summary>
+    public static VersionedSaveFile<CreationDef> Format { get; } = new([]);
+
     private readonly string _directoryPath;
+    private readonly VersionedSaveFile<CreationDef> _format;
 
     // Saves can now be dispatched from a background thread (see #113), so a
     // synchronous main-thread Save and a background one could otherwise race
@@ -19,9 +26,17 @@ public sealed class FileCreationRepository : ICreationRepository
     private readonly object _writeLock = new();
 
     public FileCreationRepository(IStorageLocation storageLocation)
+        : this(storageLocation, Format)
+    {
+    }
+
+    /// <summary>Uses <paramref name="format"/> instead of <see cref="Format"/>, so tests can add migrations.</summary>
+    public FileCreationRepository(IStorageLocation storageLocation, VersionedSaveFile<CreationDef> format)
     {
         ArgumentNullException.ThrowIfNull(storageLocation);
+        ArgumentNullException.ThrowIfNull(format);
         _directoryPath = storageLocation.DirectoryPath;
+        _format = format;
     }
 
     public IReadOnlyList<CreationDef> List()
@@ -68,16 +83,11 @@ public sealed class FileCreationRepository : ICreationRepository
         Directory.CreateDirectory(FolderFor(creation.Id));
 
         var path = PathFor(creation.Id);
-        // A per-save unique name (rather than a shared "<path>.tmp") means
-        // no two Save() calls, even from different repository instances,
-        // can ever contend on the same temp path (#114).
-        var temporaryPath = $"{path}.{Guid.NewGuid():N}.tmp";
-        var json = SaveJson.Serialize(creation);
+        var json = _format.Serialize(creation);
 
         lock (_writeLock)
         {
-            File.WriteAllText(temporaryPath, json);
-            File.Move(temporaryPath, path, overwrite: true);
+            WriteAtomically(path, json);
         }
     }
 
@@ -93,12 +103,15 @@ public sealed class FileCreationRepository : ICreationRepository
         return true;
     }
 
-    private static bool TryRead(string path, out CreationDef creation)
+    // A file this app can't read, including one from a newer version, is skipped and never written.
+    private bool TryRead(string path, out CreationDef creation)
     {
+        string json;
+        VersionedLoad<CreationDef> load;
         try
         {
-            creation = SaveJson.Deserialize<CreationDef>(File.ReadAllText(path), path);
-            return true;
+            json = File.ReadAllText(path);
+            load = _format.Deserialize(json, path);
         }
         catch (Exception ex) when (FilePersistenceExceptions.IsRecoverable(ex))
         {
@@ -106,6 +119,45 @@ public sealed class FileCreationRepository : ICreationRepository
             creation = null!;
             return false;
         }
+
+        creation = load.Value;
+        if (load.IsOutdated)
+        {
+            WriteBack(path, json, creation);
+        }
+
+        return true;
+    }
+
+    // Writes an outdated file back in the current version. Skipped if a Save replaced the file after
+    // it was read, so a load never overwrites newer content; a failed write only leaves the file
+    // outdated, to migrate again next time.
+    private void WriteBack(string path, string readJson, CreationDef creation)
+    {
+        try
+        {
+            var json = _format.Serialize(creation);
+            lock (_writeLock)
+            {
+                if (File.ReadAllText(path) == readJson)
+                {
+                    WriteAtomically(path, json);
+                }
+            }
+        }
+        catch (Exception ex) when (FilePersistenceExceptions.IsRecoverable(ex))
+        {
+            Console.Error.WriteLine($"[FileCreationRepository] Could not write back migrated creation file '{path}': {ex}");
+        }
+    }
+
+    // A per-save unique temp name (rather than a shared "<path>.tmp") means no two writes, even from
+    // different repository instances, can ever contend on the same temp path (#114).
+    private static void WriteAtomically(string path, string json)
+    {
+        var temporaryPath = $"{path}.{Guid.NewGuid():N}.tmp";
+        File.WriteAllText(temporaryPath, json);
+        File.Move(temporaryPath, path, overwrite: true);
     }
 
     private string FolderFor(Guid id) => Path.Combine(_directoryPath, id.ToString("N"));

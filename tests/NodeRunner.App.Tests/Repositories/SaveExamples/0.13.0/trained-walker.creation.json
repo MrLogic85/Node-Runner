@@ -1,0 +1,354 @@
+{
+  "id": "d8b24a0f-2f23-4a75-a945-68ca017dfbf9",
+  "name": "Copy of Walker",
+  "creature": {
+    "nodes": [
+      {
+        "id": 1,
+        "position": {
+          "x": 0,
+          "y": -120
+        },
+        "name": null
+      },
+      {
+        "id": 2,
+        "position": {
+          "x": 200,
+          "y": -120
+        },
+        "name": null
+      },
+      {
+        "id": 3,
+        "position": {
+          "x": -40,
+          "y": 0
+        },
+        "name": null
+      },
+      {
+        "id": 4,
+        "position": {
+          "x": 240,
+          "y": 0
+        },
+        "name": null
+      }
+    ],
+    "beams": [
+      {
+        "id": 5,
+        "nodeA": 1,
+        "nodeB": 2,
+        "name": null
+      },
+      {
+        "id": 6,
+        "nodeA": 1,
+        "nodeB": 3,
+        "name": null
+      },
+      {
+        "id": 7,
+        "nodeA": 2,
+        "nodeB": 4,
+        "name": null
+      }
+    ],
+    "sensors": [
+      {
+        "id": 8,
+        "beamId": 5,
+        "kind": "accelerometer",
+        "name": null,
+        "aim": null
+      }
+    ],
+    "pistons": [
+      {
+        "id": 9,
+        "nodeA": 2,
+        "nodeB": 3,
+        "name": null,
+        "strength": 15000,
+        "stroke": 0.3,
+        "maxSpeed": 200,
+        "riseTime": 0.2
+      },
+      {
+        "id": 10,
+        "nodeA": 1,
+        "nodeB": 4,
+        "name": null,
+        "strength": 15000,
+        "stroke": 0.3,
+        "maxSpeed": 200,
+        "riseTime": 0.2
+      }
+    ],
+    "springs": [],
+    "nextPartId": 11
+  },
+  "training": {
+    "brain": {
+      "neurons": [
+        {
+          "id": 1,
+          "kind": "input",
+          "partId": 8,
+          "channel": "along",
+          "layer": 0,
+          "bias": 0,
+          "activation": "identity"
+        },
+        {
+          "id": 2,
+          "kind": "input",
+          "partId": 8,
+          "channel": "across",
+          "layer": 0,
+          "bias": 0,
+          "activation": "identity"
+        },
+        {
+          "id": 3,
+          "kind": "input",
+          "partId": 9,
+          "channel": "length",
+          "layer": 0,
+          "bias": 0,
+          "activation": "identity"
+        },
+        {
+          "id": 4,
+          "kind": "input",
+          "partId": 9,
+          "channel": "speed",
+          "layer": 0,
+          "bias": 0,
+          "activation": "identity"
+        },
+        {
+          "id": 5,
+          "kind": "input",
+          "partId": 10,
+          "channel": "length",
+          "layer": 0,
+          "bias": 0,
+          "activation": "identity"
+        },
+        {
+          "id": 6,
+          "kind": "input",
+          "partId": 10,
+          "channel": "speed",
+          "layer": 0,
+          "bias": 0,
+          "activation": "identity"
+        },
+        {
+          "id": 7,
+          "kind": "output",
+          "partId": 9,
+          "channel": "position",
+          "layer": 1,
+          "bias": -0.7436329624358102,
+          "activation": "tanh"
+        },
+        {
+          "id": 8,
+          "kind": "output",
+          "partId": 9,
+          "channel": "strength",
+          "layer": 1,
+          "bias": 2.845859930979902,
+          "activation": "sigmoid"
+        },
+        {
+          "id": 9,
+          "kind": "output",
+          "partId": 10,
+          "channel": "position",
+          "layer": 1,
+          "bias": 0.6315712995620593,
+          "activation": "tanh"
+        },
+        {
+          "id": 10,
+          "kind": "output",
+          "partId": 10,
+          "channel": "strength",
+          "layer": 1,
+          "bias": 2.3031569420638753,
+          "activation": "sigmoid"
+        }
+      ],
+      "connections": [
+        {
+          "from": 1,
+          "to": 7,
+          "weight": 1.744705054950334,
+          "enabled": true
+        },
+        {
+          "from": 2,
+          "to": 7,
+          "weight": -0.9311655858454873,
+          "enabled": true
+        },
+        {
+          "from": 3,
+          "to": 7,
+          "weight": -0.8953953455471171,
+          "enabled": true
+        },
+        {
+          "from": 4,
+          "to": 7,
+          "weight": -0.29746551238226093,
+          "enabled": true
+        },
+        {
+          "from": 5,
+          "to": 7,
+          "weight": 0.8356520645022507,
+          "enabled": true
+        },
+        {
+          "from": 6,
+          "to": 7,
+          "weight": -1.3500925200946385,
+          "enabled": true
+        },
+        {
+          "from": 1,
+          "to": 8,
+          "weight": -0.8017062627803736,
+          "enabled": true
+        },
+        {
+          "from": 2,
+          "to": 8,
+          "weight": 0.32945775091635493,
+          "enabled": true
+        },
+        {
+          "from": 3,
+          "to": 8,
+          "weight": -1.1845041397450524,
+          "enabled": true
+        },
+        {
+          "from": 4,
+          "to": 8,
+          "weight": -2.076981355863283,
+          "enabled": true
+        },
+        {
+          "from": 5,
+          "to": 8,
+          "weight": -1.3135437180884169,
+          "enabled": true
+        },
+        {
+          "from": 6,
+          "to": 8,
+          "weight": -2.1881727005723777,
+          "enabled": true
+        },
+        {
+          "from": 1,
+          "to": 9,
+          "weight": 0.1521785539365227,
+          "enabled": true
+        },
+        {
+          "from": 2,
+          "to": 9,
+          "weight": 1.5111644566923037,
+          "enabled": true
+        },
+        {
+          "from": 3,
+          "to": 9,
+          "weight": 2.621980262768842,
+          "enabled": true
+        },
+        {
+          "from": 4,
+          "to": 9,
+          "weight": -1.18670166173477,
+          "enabled": true
+        },
+        {
+          "from": 5,
+          "to": 9,
+          "weight": -1.1690344788449094,
+          "enabled": true
+        },
+        {
+          "from": 6,
+          "to": 9,
+          "weight": -0.901940719550555,
+          "enabled": true
+        },
+        {
+          "from": 1,
+          "to": 10,
+          "weight": -0.4249125391568958,
+          "enabled": true
+        },
+        {
+          "from": 2,
+          "to": 10,
+          "weight": 2.750559060961589,
+          "enabled": true
+        },
+        {
+          "from": 3,
+          "to": 10,
+          "weight": 0.5218787395458111,
+          "enabled": true
+        },
+        {
+          "from": 4,
+          "to": 10,
+          "weight": -1.4848792939526105,
+          "enabled": true
+        },
+        {
+          "from": 5,
+          "to": 10,
+          "weight": 0.413258103686039,
+          "enabled": true
+        },
+        {
+          "from": 6,
+          "to": 10,
+          "weight": -1.272909579785995,
+          "enabled": true
+        }
+      ],
+      "nextNeuronId": 11
+    },
+    "generation": 8,
+    "latest": {
+      "distance": 661.9326171875,
+      "topSpeed": 101.69580078125,
+      "elevation": 0,
+      "mapId": "map-flat",
+      "frontDistance": 634.1065673828125
+    },
+    "best": {
+      "generation": 6,
+      "distance": 661.9326171875,
+      "mapId": "map-flat",
+      "frontDistance": 634.1065673828125
+    }
+  },
+  "trainSettings": {
+    "shadows": 8,
+    "runLengthSeconds": 10
+  }
+}

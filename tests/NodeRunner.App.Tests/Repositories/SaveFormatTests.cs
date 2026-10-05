@@ -26,13 +26,19 @@ public sealed class SaveFormatTests : IDisposable
     }
 
     [Theory]
-    [InlineData(typeof(CreationDef), "creation.schema.json")]
-    [InlineData(typeof(ProgressionDef), "progression.schema.json")]
-    public void Schema_MatchesTheCommittedSchema(Type type, string name)
+    [InlineData(typeof(CreationDef), "creation.schema.json", true)]
+    [InlineData(typeof(ProgressionDef), "progression.schema.json", false)]
+    public void Schema_MatchesTheCommittedSchema(Type type, string name, bool versioned)
     {
-        var generated = JsonSchemaExporter
+        var schema = JsonSchemaExporter
             .GetJsonSchemaAsNode(SaveJson.Options, type, new JsonSchemaExporterOptions { TreatNullObliviousAsNonNullable = true })
-            .ToJsonString(SaveJson.Options);
+            .AsObject();
+        if (versioned)
+        {
+            AddVersionField(schema);
+        }
+
+        var generated = schema.ToJsonString(SaveJson.Options);
         var committedPath = Path.Combine(AppContext.BaseDirectory, "SaveSchema", name);
         if (Normalize(generated) == Normalize(File.ReadAllText(committedPath)))
         {
@@ -64,7 +70,7 @@ public sealed class SaveFormatTests : IDisposable
         var json = Example();
         json.ShouldContain(field);
 
-        var error = Should.Throw<JsonException>(() => SaveJson.Deserialize<CreationDef>(ReplaceFirst(json, field, withExtra), "creation.json"));
+        var error = Should.Throw<JsonException>(() => Load(ReplaceFirst(json, field, withExtra), "creation.json"));
 
         error.Message.ShouldContain(extra);
     }
@@ -84,7 +90,7 @@ public sealed class SaveFormatTests : IDisposable
         var json = JsonNode.Parse(Example())!;
         RemoveFirst(json, field).ShouldBeTrue();
 
-        var error = Should.Throw<JsonException>(() => SaveJson.Deserialize<CreationDef>(json.ToJsonString(), "creation.json"));
+        var error = Should.Throw<JsonException>(() => Load(json.ToJsonString(), "creation.json"));
 
         error.Message.ShouldContain(field);
     }
@@ -96,7 +102,7 @@ public sealed class SaveFormatTests : IDisposable
         RemoveFirst(json, "frontDistance").ShouldBeTrue();
         RemoveFirst(json, "frontDistance").ShouldBeTrue();
 
-        var training = SaveJson.Deserialize<CreationDef>(json.ToJsonString(), "creation.json").Training!;
+        var training = Load(json.ToJsonString(), "creation.json").Training!;
 
         training.Latest.FrontDistance.ShouldBeNull();
         training.Latest.ShownDistance.ShouldBe(3.5);
@@ -109,7 +115,7 @@ public sealed class SaveFormatTests : IDisposable
         var json = JsonNode.Parse(Example())!.AsObject();
         json["training"]!["brain"] = null;
 
-        Should.Throw<JsonException>(() => SaveJson.Deserialize<CreationDef>(json.ToJsonString(), "creation.json"))
+        Should.Throw<JsonException>(() => Load(json.ToJsonString(), "creation.json"))
             .Message.ShouldContain("brain");
     }
 
@@ -119,7 +125,7 @@ public sealed class SaveFormatTests : IDisposable
         var json = JsonNode.Parse(Example())!.AsObject();
         json["training"]!["latest"] = null;
 
-        Should.Throw<JsonException>(() => SaveJson.Deserialize<CreationDef>(json.ToJsonString(), "creation.json"))
+        Should.Throw<JsonException>(() => Load(json.ToJsonString(), "creation.json"))
             .Message.ShouldContain("latest");
     }
 
@@ -179,6 +185,16 @@ public sealed class SaveFormatTests : IDisposable
             .ToArray();
         return new BrainDef(neurons, connections, nextNeuronId: 10);
     }
+
+    // VersionedSaveFile writes the version first, outside the record.
+    private static void AddVersionField(JsonObject schema)
+    {
+        const string field = VersionedSaveFile<CreationDef>.VersionField;
+        schema["properties"]!.AsObject().Insert(0, field, new JsonObject { ["type"] = "integer", ["minimum"] = VersionedSaveFile<CreationDef>.BaselineVersion });
+        schema["required"]!.AsArray().Insert(0, field);
+    }
+
+    private static CreationDef Load(string json, string path) => FileCreationRepository.Format.Deserialize(json, path).Value;
 
     private static string Example() =>
         File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Repositories", "SaveExamples", "creation.json"));
