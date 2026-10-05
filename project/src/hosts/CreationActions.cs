@@ -37,33 +37,31 @@ internal static class CreationActions
             },
             $"Deleting Creation '{name}'");
 
-    /// <summary>The reference's Delete dialog: danger, press-and-hold, no Undo.</summary>
+    /// <summary>The reference's Delete dialog: danger, no Undo, confirmed with a tap (#866).</summary>
     public static UiDialogSpec DeleteDialog(string name, Func<bool> delete) =>
         new(
             UiPopupType.Danger,
             string.Empty,
             "The creation and its trained brain are removed for good. Copy it first if you might want it back.",
-            "Hold to delete",
+            "Delete",
             () => Task.FromResult(delete()
                 ? UiDialogResult.Success
-                : UiDialogResult.Failure(UiTextTranslation.Source(UiText.Format("Could not delete {0}. Try again.", name)))),
-            holdToAction: true)
+                : UiDialogResult.Failure(UiTextTranslation.Source(UiText.Format("Could not delete {0}. Try again.", name)))))
         {
             Icon = new(UiIconId.Trash),
             TitleSource = UiTextTranslation.Source(UiText.Format("Delete {0}?", name)),
         };
 
-    /// <summary>The reference's "One reset" dialog (#687): losing training is danger and a hold.</summary>
+    /// <summary>The reference's "One reset" dialog (#687): losing training is danger, confirmed with a tap (#866).</summary>
     public static UiDialogSpec ResetTrainingDialog(Func<string> warning, Func<bool> reset) =>
         new(
             UiPopupType.Danger,
             "Reset training?",
             string.Empty,
-            "Hold to reset",
+            "Reset",
             () => Task.FromResult(reset()
                 ? UiDialogResult.Success
-                : UiDialogResult.Failure("Could not reset training. Try again.")),
-            holdToAction: true)
+                : UiDialogResult.Failure("Could not reset training. Try again.")))
         {
             Icon = new(UiIconId.Restart),
             ContentSource = warning,
@@ -71,7 +69,7 @@ internal static class CreationActions
 
     /// <summary>
     /// Unlocking keeps the training (#371): it only opens the body for this Build visit, so a plain
-    /// confirm is enough, not a hold.
+    /// confirm is enough.
     /// </summary>
     public static UiDialogSpec UnlockDialog(string name, Action unlock) =>
         new(

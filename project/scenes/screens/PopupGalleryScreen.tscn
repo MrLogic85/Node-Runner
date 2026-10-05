@@ -145,7 +145,7 @@ theme_override_constants/separation = 8
 [node name="DialogsHeading" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/VBoxContainer/Body" unique_id=823755943]
 custom_minimum_size = Vector2(120, 0)
 layout_mode = 2
-text = "Dialogs / type and hold are independent"
+text = "Dialogs / type sets the colour"
 autowrap_mode = 3
 script = ExtResource("2_1xfhr")
 TextStyle = 2
@@ -179,19 +179,11 @@ text = "Danger"
 script = ExtResource("6_a4d2d")
 ContentLayout = 2
 
-[node name="HoldDelete" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/VBoxContainer/Body/Dialogs" unique_id=568883074]
+[node name="DeleteCreation" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/VBoxContainer/Body/Dialogs" unique_id=568883074]
 layout_mode = 2
 size_flags_vertical = 4
 mouse_filter = 1
-text = "Hold to delete"
-script = ExtResource("6_a4d2d")
-ContentLayout = 2
-
-[node name="WarningHold" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/VBoxContainer/Body/Dialogs" unique_id=230549707]
-layout_mode = 2
-size_flags_vertical = 4
-mouse_filter = 1
-text = "Warning + hold"
+text = "Delete creation"
 script = ExtResource("6_a4d2d")
 ContentLayout = 2
 
@@ -308,8 +300,7 @@ TextStyle = 9
 [connection signal="Activated" from="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/VBoxContainer/Body/Dialogs/Default" to="." method="ShowDefaultDialog"]
 [connection signal="Activated" from="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/VBoxContainer/Body/Dialogs/Warning" to="." method="ShowWarningDialog"]
 [connection signal="Activated" from="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/VBoxContainer/Body/Dialogs/Danger" to="." method="ShowDangerDialog"]
-[connection signal="Activated" from="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/VBoxContainer/Body/Dialogs/HoldDelete" to="." method="ShowDeleteDialog"]
-[connection signal="Activated" from="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/VBoxContainer/Body/Dialogs/WarningHold" to="." method="ShowWarningHoldDialog"]
+[connection signal="Activated" from="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/VBoxContainer/Body/Dialogs/DeleteCreation" to="." method="ShowDeleteDialog"]
 [connection signal="Activated" from="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/VBoxContainer/Body/Dialogs/LongContent" to="." method="ShowLongDialog"]
 [connection signal="Activated" from="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/VBoxContainer/Body/Dialogs/ActionError" to="." method="ShowErrorDialog"]
 [connection signal="Activated" from="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/VBoxContainer/Body/Dialogs/AsyncAction" to="." method="ShowAsyncDialog"]

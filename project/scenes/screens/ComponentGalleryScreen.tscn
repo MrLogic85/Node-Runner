@@ -323,7 +323,7 @@ custom_minimum_size = Vector2(120, 0)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 8
-text = "different states, can be combined, so a selected can be hold to activate or disabled; coming later looks disabled but still taps"
+text = "different states, can be combined, so a selected can be disabled; coming later looks disabled but still taps"
 autowrap_mode = 3
 script = ExtResource("2_cpfof")
 TextStyle = 9
@@ -349,16 +349,6 @@ script = ExtResource("3_h0qut")
 Selected = true
 metadata/_custom_type_script = "uid://r2ped3g3uiaa"
 
-[node name="UiButton3" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/ButtonStates/Examples" unique_id=36405401]
-layout_mode = 2
-size_flags_horizontal = 4
-size_flags_vertical = 4
-mouse_filter = 1
-text = "Hold to activate"
-script = ExtResource("3_h0qut")
-HoldToActivate = true
-metadata/_custom_type_script = "uid://r2ped3g3uiaa"
-
 [node name="UiButton4" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/ButtonStates/Examples" unique_id=1186856321]
 layout_mode = 2
 size_flags_horizontal = 4
@@ -367,7 +357,6 @@ mouse_filter = 1
 disabled = true
 text = "Disabled"
 script = ExtResource("3_h0qut")
-HoldToActivate = true
 metadata/_custom_type_script = "uid://r2ped3g3uiaa"
 
 [node name="UiButton5" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/ButtonStates/Examples" unique_id=549565153]
@@ -470,7 +459,6 @@ script = ExtResource("3_h0qut")
 IconId = 24
 Kind = 0
 ContentLayout = 1
-HoldToActivate = true
 metadata/_custom_type_script = "uid://r2ped3g3uiaa"
 
 [node name="UiLabel" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/ButtonDecorations/Examples/Play" unique_id=16984270]
@@ -2212,7 +2200,6 @@ script = ExtResource("3_h0qut")
 IconId = 34
 Kind = 2
 ContentLayout = 1
-HoldToActivate = true
 
 [node name="Example" type="PanelContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/CardActions/Examples" unique_id=1734800130]
 custom_minimum_size = Vector2(192, 0)

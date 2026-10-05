@@ -4,7 +4,7 @@ public enum UiPopupType { Default, Warn, Danger }
 
 public sealed record UiDialogSpec(
     UiPopupType Type, string Title, string Content, string? ActionText = null,
-    bool HoldToAction = false, string AbortText = "Cancel")
+    string AbortText = "Cancel")
 {
     private Func<Task<UiDialogResult>> _action = () => Task.FromResult(UiDialogResult.Success);
 
@@ -37,8 +37,8 @@ public sealed record UiDialogSpec(
 
     public UiDialogSpec(
         UiPopupType type, string title, string content, string? actionText,
-        Func<Task<UiDialogResult>> action, bool holdToAction = false, string abortText = "Cancel")
-        : this(type, title, content, actionText, holdToAction, abortText)
+        Func<Task<UiDialogResult>> action, string abortText = "Cancel")
+        : this(type, title, content, actionText, abortText)
     {
         Action = action;
     }

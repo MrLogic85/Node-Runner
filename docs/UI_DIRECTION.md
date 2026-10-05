@@ -66,19 +66,24 @@ reference would mislead someone working on that surface.
   lost by unlocking (`reference design/README.md`, BuildLocked and Overlays).
   Instead the lock only prevents accidental changes, and a rebuild keeps the
   brain through port matching (#516). So the padlock's Unlock dialog is a
-  plain confirm, not a press-and-hold. Owner decision; the lifecycle rule
-  lives in `docs/TRAINING_LOOP.md` step 6. The "One reset" warning moves to
+  plain confirm. Owner decision; the lifecycle rule lives in
+  `docs/TRAINING_LOOP.md` step 6. The "One reset" warning moves to
   Reset training in the overflow (#687): a danger item that opens a danger
-  dialog, "Reset training?", naming the generations lost, with "Hold to
-  reset". It sits under Copy creation, directly above Delete creation.
+  dialog, "Reset training?", naming the generations lost, confirmed with
+  "Reset". It sits under Copy creation, directly above Delete creation.
 - **Destructive actions may sit side by side if each asks first (#687).**
   The reference never places two destructive actions side by side
-  (Overlays). Instead two may be neighbours when each opens a dialog and
-  confirms with a press-and-hold: a mis-tap then only opens the wrong
-  dialog, which names its action. A destructive action that acts on a tap,
-  or confirms with a plain tap, never sits next to another. Example: Reset
-  training and Delete creation at the bottom of Build's overflow. Owner
-  decision.
+  (Overlays). Instead two may be neighbours when each opens a dialog that
+  names its action before anything happens: a mis-tap then only opens the
+  wrong dialog (#866). A destructive action that acts on a tap, with no
+  dialog, never sits next to another. Example: Reset training and Delete
+  creation at the bottom of Build's overflow. Owner decision.
+- **No press-and-hold (#866, 0.13.0).** The reference confirms destructive
+  actions with a hold (`c_hold`, "Hold to delete"). Play testers tapped a
+  hold button, saw nothing happen and called it broken. Instead every
+  button acts on a tap. Where care is needed, a dialog that names the
+  action confirms it (Delete creation, Reset training); Delete in Build
+  acts at once, since Undo brings the part back. Owner decision.
 - **Play is on the rail in both states (#370, 0.13.0).** The reference puts
   Start training in the unlocked top bar and the play button at the bottom
   of the rail only when locked. Instead the primary play button sits at
@@ -554,7 +559,7 @@ entries are not components of their own in Godot
   reference has no separate read-only value component.
 - **`c_card_actions`** is `UiCardActions`, a container of plain `UiButton`s
   rather than a control of its own, so each cell keeps the button's
-  behaviour (hold to activate, disabled, badge). The container implements
+  behaviour (disabled, badge). The container implements
   `IUiButtonDesigner`: a `UiButton` whose *direct* parent is a designer takes
   its colours, content layout and corners from it (`UiButtonDesign`),
   and the container sizes the cells itself. The button's kind only picks the
@@ -589,6 +594,8 @@ entries are not components of their own in Godot
     with the same text as one in the stack adds only its leader to that
     callout. A stack that grows into another takes it in.
   - Leaders are drawn behind all callouts.
+- **`c_hold`** is dropped by owner decision; see "No press-and-hold (#866)"
+  under the departures above.
 - **`c_panel_head`** is dropped by human decision: it is not part of the future
   design exports, so there is no panel header component. A side panel's
   header, including the inspector's (`c_inspector`), is `UiSidePanel`'s own
@@ -810,7 +817,7 @@ after a tap.
   draw mode). Sliding off cancels it, and so does a scroll that starts on the
   control.
 - It is accent at `Alpha.Soft`, filled inside the control's own corners and
-  drawn under its content, badge and hold progress.
+  drawn under its content and badge.
 - A destructive control (Tertiary button, danger card cell, Danger menu row)
   tints with danger instead, so committing to a delete never flashes the
   "go" colour.
@@ -1009,8 +1016,8 @@ current kinds. Older reference summaries still call `secondary` "default"
 and `tertiary` "danger"; `on` and `off` are states, not kinds.
 `UiButton.Selected` exposes that selected state in C# and the Inspector.
 Native `Disabled` is the sole availability setting; UiButton has no inverse
-`Enabled` property. Disabling cancels a hold and dims the custom stack/progress
-content as well as the native button visuals.
+`Enabled` property. Disabling dims the custom stack content as well as the
+native button visuals.
 `UiButton.Unavailable` draws the same dashed, dimmed look but leaves the
 button pressable, so the screen can answer the tap with why: a feature that
 comes in a later version (#841) gets a notification saying so, and Build's
@@ -1043,10 +1050,8 @@ in Output, not a persistent configuration warning; that child is never restyled
 or removed by segment updates. The former parallel `Options`, `Icons`, and `IconIds`
 arrays are removed; locally authored switches must move those values into
 segment resources.
-Hold-to-activate is available across kinds and layouts, not only destructive
-buttons. `HoldToActivate` enables it; `HoldDurationSeconds` only sets the
-duration. A new button uses an ordinary click even though the configured hold
-duration defaults to 0.8 seconds. Under the human-approved simplification in
+Every button acts on an ordinary tap; there is no press-and-hold (#866). Under
+the human-approved simplification in
 [issue #275](https://github.com/MrLogic85/Node-Runner/issues/275), buttons have
 no invisible touch margin: visible and clickable bounds are the same.
 `UiButton` is the only button class. In the editor-authoring follow-up, the
@@ -1182,16 +1187,15 @@ that do not mutate product data. Designer review and rollout to existing product
 overlays (#200) remain separate.
 `ui/popup_gallery=true` (or `ui/component_gallery=true`) makes a development
 export open that page on start, with Back to Creations.
-Dialogs support Default/Warn/Danger and independent `HoldToAction` on the
-confirmation button. Dialogs and notifications share `UiPopupCard`, the
-reference's dialog/toast frame: its border and glow take the severity colour,
+Dialogs support Default/Warn/Danger. Dialogs and notifications share
+`UiPopupCard`, the reference's dialog/toast frame: its border and glow take the severity colour,
 accent for Default, halo for Warn and danger for Danger (#355). It is not a
 `UiCard` variant, since the popup type picks it, not the screen. Default actions use Primary buttons, Warning actions use
 Flat (human decision pending designer review), and Danger actions use Tertiary.
 Cancel is Secondary. Both sit as text-only cells in a `UiCardActions` bar flush
 with the bottom of the dialog frame (#353): they share its width equally with
 a hairline between them, so Primary reads as accent text, Flat and Secondary as
-ink and Tertiary as danger, and a hold fill covers only its own cell.
+ink and Tertiary as danger.
 `ActionText` is optional: null, empty or whitespace omits the action button and
 the abort button fills the entire row. `AbortText` defaults to `"Cancel"` and
 must be nonblank. `Action` is non-nullable with a default implementation returning
@@ -1234,7 +1238,7 @@ designer, not new product-wide rules. All actions are demonstrations only.
 `UiDialog` uses an embedded, borderless `Window` with
 `Transient`/`Exclusive` for modal input isolation and native focus navigation.
 Its transparent viewport covers the gallery for the scrim and unclipped card
-effects. Content uses our `UiCard` and `UiButton`, including hold behavior;
+effects. Content uses our `UiCard` and `UiButton`;
 it does not hide or replace `AcceptDialog`'s built-in buttons. Godot renders it,
 not Android's system dialog. Escape/Android Back and action outcomes are wired
 by the component. `EditorToaster` is editor-only, not a runtime Notification
@@ -1287,8 +1291,7 @@ icon, icon size and text style has one specimen, found by its Godot group
 (`inventory_icon`, `inventory_icon_size`, `inventory_text_style`); a new token
 needs a new row in the scene. Colour rows sit in a native `HFlowContainer` at a
 fixed width, so the last odd row keeps its width.
-Gallery launcher buttons use ordinary clicks; hold requirements belong to the
-dialogs they open. F6 exercises the same scene that the Component Gallery opens.
+Gallery launcher buttons use ordinary clicks. F6 exercises the same scene that the Component Gallery opens.
 
 #### Editing a dialog in Godot
 
@@ -1336,8 +1339,8 @@ project once after script changes so Godot can run its editor previews.
 
 F6 on this content scene shows the standalone visual specimen; it has no
 action callbacks or modal host. Use F6 on `PopupGalleryScreen.tscn` to exercise
-the real modal, including hold, busy, retry and dismissal. Runtime
-`UiDialogSpec` supplies title/content/button labels, type and hold state;
+the real modal, including busy, retry and dismissal. Runtime
+`UiDialogSpec` supplies title/content/button labels and type;
 those values intentionally replace specimen text, while the authored node
 hierarchy, spacing and card width remain the shared runtime layout.
 
@@ -1387,8 +1390,7 @@ var dialog = new UiDialog();
 AddChild(dialog);
 dialog.Open(new UiDialogSpec(
     UiPopupType.Warn, "Continue?", "Review the changes.", "Continue",
-    async () => await ApplyChangesAsync(), // Returns UiDialogResult.
-    holdToAction: false));
+    async () => await ApplyChangesAsync())); // Returns UiDialogResult.
 dialog.Finished += confirmed => { /* Host reacts to completion or cancellation. */ };
 
 // Product screens raise notifications on the app-wide layer, from any node.

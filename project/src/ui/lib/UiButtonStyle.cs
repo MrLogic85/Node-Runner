@@ -155,28 +155,7 @@ public readonly record struct UiButtonMetrics(
         _ => throw new ArgumentOutOfRangeException(nameof(layout), layout, null),
     };
 
-    /// <summary>
-    /// Local geometry of the hold-progress layers inside the visible frame.
-    /// <c>Fill</c> is progress independent so the fill keeps the
-    /// frame's rounded contour; <c>Reveal</c> is the rectangular
-    /// window that exposes the held fraction of it.
-    /// </summary>
-    public static UiButtonProgressLayout ProgressLayout(Rect2 visibleFrame, float progress)
-    {
-        var width = Mathf.Max(0, visibleFrame.Size.X);
-        var height = Mathf.Max(0, visibleFrame.Size.Y);
-        return new UiButtonProgressLayout(
-            new Rect2(Vector2.Zero, new Vector2(width, height)),
-            new Rect2(
-                Vector2.Zero,
-                new Vector2(
-                    UiComponentContracts.ButtonProgressRevealWidth(width, progress),
-                    height)));
-    }
-
     public Vector2 BadgePosition(Vector2 controlSize) =>
         new(controlSize.X - BadgeMinimumSize + BadgeOffset, -BadgeOffset);
 }
 
-/// <summary>Local rects of the hold-progress fill and its reveal window.</summary>
-public readonly record struct UiButtonProgressLayout(Rect2 Fill, Rect2 Reveal);

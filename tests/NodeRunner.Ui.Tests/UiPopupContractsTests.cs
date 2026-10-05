@@ -10,18 +10,6 @@ public sealed class UiPopupContractsTests
         Enum.GetNames<UiPopupType>().ShouldBe(["Default", "Warn", "Danger"]);
     }
 
-    [Theory]
-    [InlineData(UiPopupType.Default)]
-    [InlineData(UiPopupType.Warn)]
-    [InlineData(UiPopupType.Danger)]
-    public void Hold_IsIndependentOfDialogType(UiPopupType type)
-    {
-        var spec = new UiDialogSpec(type, "Title", "Content", "Continue", () => Task.FromResult(UiDialogResult.Success));
-
-        spec.HoldToAction.ShouldBeFalse();
-        (spec with { HoldToAction = true }).Type.ShouldBe(type);
-    }
-
     [Fact]
     public void Notification_WithoutActionDoesNotRequestClickDismissal()
     {
@@ -94,7 +82,7 @@ public sealed class UiPopupContractsTests
     [Fact]
     public void Dialog_ExplicitNullActionIsRejected()
     {
-        Should.Throw<ArgumentNullException>(() => new UiDialogSpec(UiPopupType.Default, "Title", "Body", "OK", null!));
+        Should.Throw<ArgumentNullException>(() => new UiDialogSpec(UiPopupType.Default, "Title", "Body", "OK", action: null!));
         Should.Throw<ArgumentNullException>(() => new UiDialogSpec(UiPopupType.Default, "Title", "Body") { Action = null! });
     }
 }
