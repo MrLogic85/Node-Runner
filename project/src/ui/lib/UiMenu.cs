@@ -273,6 +273,14 @@ public partial class UiMenu : Container, IUiClipping
             return;
         }
 
+        // Godot only ever grows a free-standing Control to its minimum, so a popup menu whose items
+        // were hidden would keep its old height (#876). Inside a Container the parent sizes it; in
+        // the editor a resize would be saved into the scene.
+        if (!Engine.IsEditorHint() && GetParent() is not Container)
+        {
+            ResetSize();
+        }
+
         var stroke = UiSize.Stroke.Hair;
         var y = (float)stroke;
         foreach (var child in VisibleChildren())

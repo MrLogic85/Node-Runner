@@ -1554,7 +1554,8 @@ item independently. Item highlights remain square; the menu clips all children
 to its rounded surface. `Follow` keeps a menu attached to a
 normalized point on an anchor control while scrolling or relayout moves that
 control. A following menu must sit in a `UiLevelLayer`, which floats it
-over its screen or dialog (see UI levels above).
+over its screen or dialog (see UI levels above). Outside a Container a menu
+resizes itself to its visible children, so hiding an item shrinks it (#876).
 Menus default to the fixed menu-width token and can opt into content-wrapping
 width through `WidthMode`. The menu's `Compact` toggle overrides all direct
 `UiMenuItem` children to the matching 32px or 48px row variant, so one menu
