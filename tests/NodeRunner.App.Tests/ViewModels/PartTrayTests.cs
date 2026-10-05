@@ -39,6 +39,16 @@ public sealed class PartTrayTests
     }
 
     [Fact]
+    public void OpeningGroup_IsTheFirstTabWithAnAvailablePart()
+    {
+        var opening = PartTray.OpeningGroup();
+
+        opening.ShouldBe(1);
+        PartTray.Groups()[opening].Rows.ShouldContain(row => row.IsAvailable);
+        PartTray.Groups().Take(opening).ShouldAllBe(group => group.Rows.All(row => !row.IsAvailable));
+    }
+
+    [Fact]
     public void SensorsTab_HasTheAccelerometerAvailable_AndTheCameraComingLater()
     {
         var sensors = PartTray.Groups()[1].Rows;

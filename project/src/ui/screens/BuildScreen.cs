@@ -117,7 +117,9 @@ public partial class BuildScreen : Control
         BindTool(GetNode<UiButton>("%BeamTool"), BuildTool.Beam);
         BindTool(GetNode<UiButton>("%JointTool"), BuildTool.Joint);
         BindTool(GetNode<UiButton>("%SelectTool"), BuildTool.Select);
-        GetNode<UiIconTabs>("%PartTabs").TabSelected += OnPartTabSelected;
+        var partTabs = GetNode<UiIconTabs>("%PartTabs");
+        partTabs.SelectedIndex = PartTray.OpeningGroup();
+        partTabs.TabSelected += OnPartTabSelected;
         GetNode<UiButton>("%PartDelete").Activated += () => EmitSignal(SignalName.DeleteSelectionRequested);
         GetNode<UiButton>("%SelectionDelete").Activated += () => EmitSignal(SignalName.DeleteSelectionRequested);
         var partName = GetNode<UiTextField>("%PartName");
