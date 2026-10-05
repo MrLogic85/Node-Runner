@@ -5,7 +5,8 @@ namespace NodeRunner.App.ViewModels;
 /// <summary>
 /// What the brain's ports are called, in port order (<see cref="BrainPorts"/>): a sense is its
 /// part's name and reading, such as "Accelerometer: along", and a Piston's ports are its name and
-/// channel, such as "Piston 1: length" or "Piston 1: position". Each label is one whole template
+/// what they measure or set, such as "Piston 1: speed" or "Piston 1: strength" (naming rule:
+/// docs/CREATURE_MODEL.md, Sensor–model contract). Each label is one whole template
 /// with the part's name as <c>{0}</c>; its space after the colon is a no-break space, so a sentence
 /// that names the port does not wrap inside it.
 /// </summary>
@@ -37,9 +38,9 @@ public sealed record BrainPortLabels(IReadOnlyList<UiText> Inputs, IReadOnlyList
     {
         (SensorKind.Accelerometer, "along") => UiText.Format("{0}:\u00A0along", name),
         (SensorKind.Accelerometer, "across") => UiText.Format("{0}:\u00A0across", name),
-        (SensorKind.Camera, "left1") => UiText.Format("{0}:\u00A0left 1", name),
+        (SensorKind.Camera, "left1") => UiText.Format("{0}:\u00A0left", name),
         (SensorKind.Camera, "centre") => UiText.Format("{0}:\u00A0centre", name),
-        (SensorKind.Camera, "right1") => UiText.Format("{0}:\u00A0right 1", name),
+        (SensorKind.Camera, "right1") => UiText.Format("{0}:\u00A0right", name),
         _ => throw new InvalidOperationException($"No label for {kind} reading {channel}."),
     };
 
@@ -47,7 +48,7 @@ public sealed record BrainPortLabels(IReadOnlyList<UiText> Inputs, IReadOnlyList
     {
         BrainPorts.PistonLengthChannel => UiText.Format("{0}:\u00A0length", name),
         BrainPorts.PistonSpeedChannel => UiText.Format("{0}:\u00A0speed", name),
-        BrainPorts.PistonPositionChannel => UiText.Format("{0}:\u00A0position", name),
+        BrainPorts.PistonPositionChannel => UiText.Format("{0}:\u00A0length", name),
         BrainPorts.PistonStrengthChannel => UiText.Format("{0}:\u00A0strength", name),
         _ => throw new InvalidOperationException($"No label for Piston channel {channel}."),
     };

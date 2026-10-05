@@ -41,7 +41,7 @@ public static class CameraRays
 
     /// <summary>
     /// The ray's target in its beam's local frame (+x along the beam), <see cref="RayLength"/>
-    /// long: the centre ray along <paramref name="aim"/>, left 1 and right 1 <see cref="Spread"/>
+    /// long: the centre ray along <paramref name="aim"/>, left1 and right1 <see cref="Spread"/>
     /// before and after it.
     /// </summary>
     public static Vector2D LocalRayTarget(int ray, double aim)
