@@ -6,9 +6,10 @@ change to a saved shape changes this document and the schemas in
 
 ## Rules
 
-- **No versioning.** No `schemaVersion`, no migration, no fallbacks for older
-  files. While the project is pre-alpha (`docs/ROADMAP.md` → "Project
-  stage"), a format change means wiping the old saves.
+- **Old saves keep loading.** The project is in alpha (`docs/ROADMAP.md` →
+  "Project stage"): every `creation.json` and `progression.json` written by
+  0.13.0 or later must load in every later version. See "Versions and
+  migration" below.
 - **Schemas.** `docs/save-schema/` holds a JSON Schema for each file,
   generated from the domain records by .NET's `JsonSchemaExporter`. It is
   the exact field list: types, which fields must be present, which may be
@@ -166,6 +167,28 @@ UI size, theme, sounds and the Shadows default.
 - Memory-cell values (#126).
 - Physics state.
 - A generation that hasn't finished.
+
+## Versions and migration
+
+The baseline is the 0.13.0 shape: every `creation.json` and
+`progression.json` that 0.13.0 writes, documented above (#744).
+
+- Each file carries a version. A file without one is the 0.13.0 baseline.
+  The version fields are added by #872 (`creation.json`) and #873
+  (`progression.json`).
+- Loading reads the version, runs the migrations from that version to the
+  current one in order, then loads the result strictly as above.
+- A file that needed migrating is written back in the current version right
+  away, when it is loaded.
+- A file newer than the app, or one whose migration fails, is handled as a
+  file that fails to load (see "Writing and reading") and is never
+  overwritten.
+- A change to the shape of either file adds a migration step and a test that
+  loads a file in the previous shape. #872 and #873 check in real 0.13.0
+  files as fixtures, so the baseline stays covered; those fixtures are
+  never rewritten in place.
+- Until #872 lands, `creation.json` keeps its 0.13.0 shape; #872 lands
+  before any other change to it.
 
 ## Writing and reading
 

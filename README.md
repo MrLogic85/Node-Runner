@@ -14,7 +14,8 @@ something you can watch, poke and understand.
 
 ## Status
 
-**Pre-alpha.** The current milestone and the plan ahead are in
+**Alpha** (development with testers): creations saved since 0.13.0 keep
+loading in later versions. The current milestone and the plan ahead are in
 [`docs/ROADMAP.md`](docs/ROADMAP.md) → "Active plan". Published builds are
 signed APKs on
 [GitHub Releases](https://github.com/MrLogic85/Node-Runner/releases)

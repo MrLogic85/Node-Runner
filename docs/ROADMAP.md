@@ -9,7 +9,8 @@ Time estimates assume evening/weekend hobby pace and are rough.
 
 ## Project stage
 
-**Current stage: pre-alpha.**
+**Current stage: Development with testers (alpha)**, since 0.13.0, the first
+published build (#744).
 
 The stage decides how changes treat data already saved on a device
 (Creations, training, progression, settings):
@@ -17,7 +18,7 @@ The stage decides how changes treat data already saved on a device
 | Stage | Saved user data |
 | --- | --- |
 | **Pre-alpha** | Existing data does not matter. Save formats may change freely; no migration is needed, and old data may be discarded. |
-| **Development with testers** | Changes are fairly free, but migrating saved data on a change is preferred. |
+| **Development with testers** (alpha) | Every Creation and Progression save from 0.13.0 on must load in every later version: a change to their shape migrates older files on load (`docs/SAVE_FORMAT.md` → "Versions and migration"). Other saved data may still be reset when migrating it is not worth it. |
 | **Released** | Everything saved must be migrated. |
 
 Update the current stage here when it changes.

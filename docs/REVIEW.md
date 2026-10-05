@@ -89,7 +89,9 @@ the PR):
       screenshots/recordings, or an explicit human waiver is recorded.
 - [ ] Docs updated where behavior/architecture changed
 - [ ] A change to a saved shape updates `docs/SAVE_FORMAT.md` and the
-      schemas in `docs/save-schema/`
+      schemas in `docs/save-schema/`, and adds the migration and test the
+      current stage requires (`docs/SAVE_FORMAT.md` → "Versions and
+      migration")
 - [ ] Local `AGENTS.md` reflects any new rule that emerged
 - [ ] Nothing under `libs/` uses `using Godot;` — arch tests enforce this
 - [ ] No secrets, credentials, or personal data
