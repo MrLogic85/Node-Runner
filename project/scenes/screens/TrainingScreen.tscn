@@ -230,6 +230,7 @@ size_flags_horizontal = 3
 NumberText = "2"
 Title = "Brain"
 Note = ""
+Opens = true
 Collapsed = true
 
 [node name="BrainArrow" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent"]
