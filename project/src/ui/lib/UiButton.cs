@@ -22,7 +22,7 @@ public sealed partial class UiButton : Button, ISerializationListener
     private UiButtonKind _kind = UiButtonKind.Secondary;
     private UiIconId _iconId = UiIconId.None;
     private bool _selected;
-    private bool _comingLater;
+    private bool _unavailable;
     private string _badgeText = string.Empty;
     private UiButtonContentLayout _contentLayout;
     private SizeFlags _rowSizeFlagsHorizontal = SizeFlags.Fill;
@@ -126,21 +126,22 @@ public sealed partial class UiButton : Button, ISerializationListener
     }
 
     /// <summary>
-    /// A feature that comes in a later version (#841): drawn like a disabled button (dashed,
-    /// dimmed) but still pressable, so the screen can say when it comes.
+    /// Drawn like a disabled button (dashed, dimmed) but still pressable, so the screen can answer
+    /// the tap with why: a feature that comes in a later version (#841), or play blocked by the
+    /// drawing (#844).
     /// </summary>
     [Export]
-    public bool ComingLater
+    public bool Unavailable
     {
-        get => _comingLater;
+        get => _unavailable;
         set
         {
-            _comingLater = value;
+            _unavailable = value;
             RefreshStyle();
         }
     }
 
-    private bool LooksDisabled => Disabled || ComingLater;
+    private bool LooksDisabled => Disabled || Unavailable;
 
     [Export]
     public bool HoldToActivate
@@ -472,10 +473,10 @@ public sealed partial class UiButton : Button, ISerializationListener
         EnsureContent();
         RefreshContent(DrawnStyle.Resolve(this).Content);
 
-        AddThemeStyleboxOverride("normal", ComingLater ? CreateDisabledStyle() : CreateStyle());
-        AddThemeStyleboxOverride("hover", ComingLater ? CreateDisabledStyle() : CreateStyle());
-        AddThemeStyleboxOverride("pressed", ComingLater ? CreateDisabledStyle() : CreateStyle());
-        AddThemeStyleboxOverride("hover_pressed", ComingLater ? CreateDisabledStyle() : CreateStyle());
+        AddThemeStyleboxOverride("normal", Unavailable ? CreateDisabledStyle() : CreateStyle());
+        AddThemeStyleboxOverride("hover", Unavailable ? CreateDisabledStyle() : CreateStyle());
+        AddThemeStyleboxOverride("pressed", Unavailable ? CreateDisabledStyle() : CreateStyle());
+        AddThemeStyleboxOverride("hover_pressed", Unavailable ? CreateDisabledStyle() : CreateStyle());
         AddThemeStyleboxOverride("focus", new StyleBoxEmpty());
         AddThemeStyleboxOverride("disabled", CreateDisabledStyle());
         RefreshProgress();

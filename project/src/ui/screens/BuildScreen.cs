@@ -263,7 +263,7 @@ public partial class BuildScreen : Control
             name.TextValue = presentation.CreationName;
         }
 
-        GetNode<UiButton>("%StartTraining").Disabled = !buildPanel.CanStartTraining;
+        GetNode<UiButton>("%StartTraining").Unavailable = !buildPanel.CanStartTraining;
         GetNode<UiButton>("%Unlock").Visible = locked;
         GetNode<UiButton>("%Undo").Disabled = !presentation.CanUndo;
         GetNode<UiButton>("%Redo").Disabled = !presentation.CanRedo;

@@ -377,7 +377,7 @@ size_flags_vertical = 4
 mouse_filter = 1
 text = "Coming later"
 script = ExtResource("3_h0qut")
-ComingLater = true
+Unavailable = true
 metadata/_custom_type_script = "uid://r2ped3g3uiaa"
 
 [node name="ButtonDecorations" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content" unique_id=459420129]

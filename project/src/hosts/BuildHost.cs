@@ -134,11 +134,17 @@ public partial class BuildHost : Node, IRoutedScene
     }
 
     // Train setup and Training open in their own scenes from the saved creation, so the edits save
-    // first; only a creature that cannot train stays in Build.
+    // first; a creature that cannot train stays in Build, which points at what blocks it (#844).
     private void StartTraining()
     {
-        if (_autosave?.CreationId is not { } id || !SaveEdits(playerAsked: true) || !Build.TryGetTrainableCreature(out _))
+        if (_autosave?.CreationId is not { } id || !SaveEdits(playerAsked: true))
         {
+            return;
+        }
+
+        if (!Build.TryGetTrainableCreature(out _))
+        {
+            Build.ShowTrainingBlockers();
             return;
         }
 

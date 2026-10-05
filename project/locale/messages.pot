@@ -438,6 +438,10 @@ msgstr ""
 msgid "None yet"
 msgstr ""
 
+#: libs/NodeRunner.App/ViewModels/BuildViewModel.cs
+msgid "Not connected"
+msgstr ""
+
 #: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs
 #: libs/NodeRunner.App/ViewModels/TrainSetupPresentationViewModel.cs
 #: project/scenes/screens/BuildScreen.tscn

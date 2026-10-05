@@ -908,6 +908,57 @@ public sealed class BuildViewModelTests
     }
 
     [Fact]
+    public void ShowTrainingBlockers_NotesEachLooseJoint_UntilItIsJoined()
+    {
+        var viewModel = new BuildViewModel();
+        var first = viewModel.PlaceNode(new Vector2D(0, 0));
+        var second = viewModel.PlaceNode(new Vector2D(200, 0));
+        var changed = new List<string?>();
+        viewModel.PropertyChanged += (_, e) => changed.Add(e.PropertyName);
+        viewModel.CanvasNotes().ShouldBeEmpty();
+
+        viewModel.ShowTrainingBlockers();
+
+        changed.ShouldContain(nameof(BuildViewModel.CanvasNotes));
+        viewModel.CanvasNotes().ShouldBe(
+        [
+            new CanvasNote(CanvasNoteKind.Danger, new CreatureElementSelection(CreatureElementKind.Node, first), UiText.Plain("Not connected")),
+            new CanvasNote(CanvasNoteKind.Danger, new CreatureElementSelection(CreatureElementKind.Node, second), UiText.Plain("Not connected")),
+        ]);
+
+        viewModel.ConnectBeam(first, second).ShouldBeTrue();
+
+        viewModel.CanvasNotes().ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void ShowTrainingBlockers_LeavesAJointLoosenedLaterForTheNextTap()
+    {
+        var viewModel = new BuildViewModel();
+        viewModel.Load(new CreatureDef([new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(200, 0))], [new BeamDef(3, 1, 2)], []));
+        viewModel.ShowTrainingBlockers();
+
+        var loose = viewModel.PlaceNode(new Vector2D(400, 0));
+
+        viewModel.CanvasNotes().ShouldBeEmpty();
+        viewModel.ShowTrainingBlockers();
+        viewModel.CanvasNotes().ShouldBe(
+            [new CanvasNote(CanvasNoteKind.Danger, new CreatureElementSelection(CreatureElementKind.Node, loose), UiText.Plain("Not connected"))]);
+    }
+
+    [Fact]
+    public void Load_ForgetsTheShownBlockers()
+    {
+        var viewModel = new BuildViewModel();
+        viewModel.PlaceNode(new Vector2D(0, 0));
+        viewModel.ShowTrainingBlockers();
+
+        viewModel.Load(new CreatureDef([new NodeDef(1, new Vector2D(0, 0))], [], []));
+
+        viewModel.CanvasNotes().ShouldBeEmpty();
+    }
+
+    [Fact]
     public void SetAim_TurnsTheCameraAndRedrawsOnlyOnAChange()
     {
         var build = new BuildViewModel();
