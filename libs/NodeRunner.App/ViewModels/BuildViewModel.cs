@@ -27,18 +27,19 @@ public enum BuildTool
 public sealed partial class BuildViewModel : INotifyPropertyChanged
 {
     /// <summary>
-    /// Where joints may go, in canvas units: about six screens wide at 1×,
-    /// centred on the origin. Placing and moving keep a joint's ring inside;
-    /// the Build view shows it plus <see cref="BuildViewMargin"/>. Its sides
-    /// are whole multiples of <see cref="BuildGridStep"/> so the grid's cells
-    /// fill it exactly.
+    /// Where joints may go, in canvas units: 12 × 6 m, centred on the origin,
+    /// so a creature always fits the Training view without zooming out far
+    /// (#884). Placing and moving keep a joint's ring inside; the Build view
+    /// shows it plus <see cref="BuildViewMargin"/>. Its sides are whole
+    /// multiples of <see cref="BuildGridStep"/> so the grid's cells fill it
+    /// exactly.
     /// </summary>
     public static readonly CanvasRect BuildArea = new(
-        new Vector2D(-24 * BuildGridStep, -12 * BuildGridStep),
-        new Vector2D(24 * BuildGridStep, 12 * BuildGridStep));
+        new Vector2D(-12 * BuildGridStep, -6 * BuildGridStep),
+        new Vector2D(12 * BuildGridStep, 6 * BuildGridStep));
 
-    /// <summary>The Build grid's cell size in canvas units.</summary>
-    public const double BuildGridStep = 48;
+    /// <summary>The Build grid's cell size in canvas units: half a metre.</summary>
+    public const double BuildGridStep = Metres.WorldUnitsPerMetre / 2;
 
     /// <summary>How far past <see cref="BuildArea"/> the Build view can show, in canvas units, at any zoom.</summary>
     public const double BuildViewMargin = BuildGridStep;

@@ -74,6 +74,60 @@ public sealed class DistanceRulerTests
     }
 
     [Fact]
+    public void Fill_AtFiveMetresPerLabel_PutsALongTickUnderEachLabelAndAShortOneEveryMetre()
+    {
+        var marks = new List<RulerMark>();
+
+        DistanceRuler.Fill(startX: 0, left: -100, right: 600, metresPerLabel: 5, marks);
+
+        marks.ShouldBe(
+        [
+            new RulerMark(-100, false, null),
+            new RulerMark(0, true, 0),
+            new RulerMark(100, false, null),
+            new RulerMark(200, false, null),
+            new RulerMark(300, false, null),
+            new RulerMark(400, false, null),
+            new RulerMark(500, true, 5),
+            new RulerMark(600, false, null),
+        ]);
+    }
+
+    [Fact]
+    public void Fill_AtTenMetresPerLabel_PutsALongTickUnderEachLabelAndAShortOneHalfway()
+    {
+        var marks = new List<RulerMark>();
+
+        DistanceRuler.Fill(startX: 0, left: -500, right: 1500, metresPerLabel: 10, marks);
+
+        marks.ShouldBe(
+        [
+            new RulerMark(-500, false, null),
+            new RulerMark(0, true, 0),
+            new RulerMark(500, false, null),
+            new RulerMark(1000, true, 10),
+            new RulerMark(1500, false, null),
+        ]);
+    }
+
+    [Theory]
+    [InlineData(1, 50)]
+    [InlineData(2, 50)]
+    [InlineData(5, 100)]
+    [InlineData(10, 500)]
+    [InlineData(20, 500)]
+    [InlineData(50, 1000)]
+    [InlineData(200, 5000)]
+    public void Fill_ThinsTheTicksOutAsTheLabelsDo(int metresPerLabel, double expectedGap)
+    {
+        var marks = new List<RulerMark>();
+
+        DistanceRuler.Fill(startX: 0, left: 0, right: 20_000, metresPerLabel, marks);
+
+        (marks[1].X - marks[0].X).ShouldBe(expectedGap);
+    }
+
+    [Fact]
     public void Label_ShowsTheMetreWithItsUnit()
     {
         DistanceRuler.Label(-12).ShouldBe(UiText.Format("{0} m", -12L));

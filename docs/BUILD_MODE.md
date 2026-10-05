@@ -167,11 +167,12 @@ sizes on screen at any zoom.
   press changed, and nothing edits
   until every finger lifts, so navigation never changes the creature.
 - **Build area (#400):** joints live inside the fixed
-  `BuildViewModel.BuildArea` (x −1152..1152, y −576..576 canvas
-  units, about six screens wide at 1×). Placing or moving a joint keeps its
+  `BuildViewModel.BuildArea` (x −600..600, y −300..300 canvas
+  units, 12 × 6 m), small enough that any creature fits the Training view
+  without zooming out far (#884). Placing or moving a joint keeps its
   ring inside; a group move stops as a whole at the edge, and a Joint tap
   outside adds nothing. A faint blueprint grid (the `line` token, fixed
-  `BuildGridStep` 48-unit cells) covers exactly the area, and accent corner
+  `BuildGridStep` cells of 50 units, half a metre) covers exactly the area, and accent corner
   marks two cells long frame it. Grid and corners are fixed parts of the
   picture; zoom never changes their cells or length.
 - **View:** `CanvasView` (App) holds zoom and pan and maps view units to
@@ -181,7 +182,7 @@ sizes on screen at any zoom.
   middle of the area. True size is 1× at a UI size root factor of 1; the zoom limits are
   divided by that factor (`CanvasView.UiScale`), so true size and the zoom limits
   keep their size on screen; only the space changes, and with it how far Fit zooms out (#299). The view can show `BuildViewBounds`: the area plus
-  `BuildViewMargin` (one cell, 48 canvas units) on every side, the same at
+  `BuildViewMargin` (one cell, 50 canvas units) on every side, the same at
   any zoom. Zooming out stops when all of it is in view (`MinZoom`), up to
   `MaxZoom` in. Along an axis where the bounds are larger than the view,
   panning stops at their edge; along an axis where they fit, they are

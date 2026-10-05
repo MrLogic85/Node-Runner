@@ -50,8 +50,11 @@ public sealed class ArenaFraming
     /// <summary>The closest zoom: one world unit per view pixel, never closer.</summary>
     public const double MaxZoom = 1;
 
-    /// <summary>The farthest zoom, showing four times as much as zoom 1; only a blow-up should need more.</summary>
-    public const double MinZoom = 0.25;
+    /// <summary>
+    /// The widest view, 500 m, in world units. No creature's size or speed comes near it, so the
+    /// zoom follows them freely; it only keeps a physics blow-up from zooming out to nothing (#884).
+    /// </summary>
+    public const double MaxShownWidth = 500 * Metres.WorldUnitsPerMetre;
 
     /// <summary>How quickly the zoom widens toward the view the creature needs, per second.</summary>
     public const double ZoomOutRate = 4;
@@ -99,7 +102,7 @@ public sealed class ArenaFraming
         var tall = (creature.Bottom - creature.Top) / (GroundFromTop - TopMargin - Headroom);
         var fit = Math.Min(MaxZoom, Math.Min(viewWidth / Math.Max(left, right), viewHeight / tall));
         var shownWidth = (viewWidth / fit) + (Math.Abs(speedX) * SpeedLookaheadSeconds);
-        return Math.Clamp(viewWidth / shownWidth, MinZoom, MaxZoom);
+        return Math.Min(MaxZoom, Math.Max(viewWidth / shownWidth, viewWidth / MaxShownWidth));
     }
 
     /// <summary>

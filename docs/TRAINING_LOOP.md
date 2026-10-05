@@ -364,8 +364,10 @@ component READMEs under `reference design/components/` guide its presentation.
     - *Zoom* fits the shadow's box inside side margins and below a top
       margin with headroom to spare, and widens further with its speed (one
       second of travel, `SpeedLookaheadSeconds`). Zoom 1, the closest, shows
-      one world unit per view pixel; 0.25, the farthest, shows four times
-      as much. It widens quickly; it narrows
+      one world unit per view pixel. There is no farthest zoom for play: it
+      widens as far as the shadow's size and speed need (owner decision,
+      #884). Only a physics blow-up is stopped, at a view 500 m wide
+      (`MaxShownWidth`). It widens quickly; it narrows
       only after the shadow has needed less room for 1.5 s, then slowly, so
       a stretching gait does not make it pump.
     - *Height:* the ground stays 80% down the view at any zoom, so zooming
@@ -392,7 +394,13 @@ component READMEs under `reference design/components/` guide its presentation.
     the world, so it does not move with the camera. There is no grid
     (owner decision, `docs/UI_DIRECTION.md`).
   - **Ruler.** `ArenaRuler` draws `DistanceRuler`'s marks along the ground
-    edge: a long tick every metre and a minor one every half metre, counted
+    edge: a long tick every metre and a minor one every half metre. The
+    ticks thin out with the labels, so a far zoom does not crowd them
+    (#884, owner decision): a long tick every power of ten that divides the
+    label step with a minor one halfway (every 10 m for labels 10 or 20 m
+    apart), or, for labels 5, 50, … m apart, a long tick under each label
+    and a minor one every 1, 10, … m,
+    counted
     from where the visible creature's front-most point starts each trial (0 m, #725),
     negative behind it. Every metre is labelled ("3 m"), or every 2, 5,
     10, … m when the camera zooms out so far that labels would overlap.

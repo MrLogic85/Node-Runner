@@ -47,12 +47,27 @@ public sealed class ArenaFramingTests
         Math.Min(leftSlack, topSlack).ShouldBe(0, tolerance: 1e-9);
     }
 
-    [Fact]
-    public void ZoomToFit_NeverGoesPastTheFarthestZoom()
+    [Theory]
+    [InlineData(1200, 60, 2000)]
+    [InlineData(2400, 600, 0)]
+    [InlineData(100, 60, 10_000)]
+    public void ZoomToFit_ZoomsOutAsFarAsSizeAndSpeedNeed(double width, double height, double speedX)
     {
-        var zoom = ArenaFraming.ZoomToFit(Standing(0, 1e6, 1e6), speedX: 1e6, _viewWidth, _viewHeight);
+        var creature = Standing(0, width, height);
+        var still = ArenaFraming.ZoomToFit(creature, 0, _viewWidth, _viewHeight);
 
-        zoom.ShouldBe(ArenaFraming.MinZoom);
+        var zoom = ArenaFraming.ZoomToFit(creature, speedX, _viewWidth, _viewHeight);
+
+        zoom.ShouldBeLessThan(0.25);
+        (_viewWidth / zoom).ShouldBe((_viewWidth / still) + speedX, tolerance: 1e-6);
+    }
+
+    [Fact]
+    public void ZoomToFit_ShowsNoMoreThanTheWidestViewForABlowUp()
+    {
+        var zoom = ArenaFraming.ZoomToFit(Standing(0, 1e12, 1e12), speedX: 1e12, _viewWidth, _viewHeight);
+
+        (_viewWidth / zoom).ShouldBe(ArenaFraming.MaxShownWidth, tolerance: 1e-6);
     }
 
     [Fact]
