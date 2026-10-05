@@ -147,8 +147,8 @@ for development:
   --export-debug Android ../build/node-runner-debug.apk
 ```
 
-Release APKs come from `.github/scripts/release.sh` (see `docs/REVIEW.md` →
-"Releases"), which runs `--export-release` with the release keystore passed
+Release APKs come from `.github/scripts/release.sh` (see
+`docs/RELEASING.md`), which runs `--export-release` with the release keystore passed
 through Godot's `GODOT_ANDROID_KEYSTORE_RELEASE_*` environment variables.
 Release exports are not debug builds, so `OS.IsDebugBuild()` is false and
 debug-only UI such as the Component library link is hidden (#808).

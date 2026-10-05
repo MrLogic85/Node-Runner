@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Build a signed release APK of the version in project/project.godot and publish it as a
-# GitHub release. See docs/REVIEW.md → "Releases".
+# GitHub release. See docs/RELEASING.md.
 #
 #   release.sh              tag, export, verify and publish vX.Y.Z
 #   release.sh --dry-run    export and verify only; no tag, branch or release

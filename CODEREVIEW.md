@@ -108,7 +108,8 @@ Authoritative sources:
 - `docs/ARCHITECTURE.md` for the current system shape
 - `docs/ROADMAP.md`, `docs/ML_CONCEPTS.md`, and `docs/GLOSSARY.md` for their
   respective subject matter
-- Root and local `AGENTS.md` files for agent instructions
+- Root and local `AGENTS.md` files for agent instructions (including
+  `docs/release-notes/AGENTS.md` for release notes)
 
 Check that statements, links, commands, examples, diagrams, and ownership
 pointers are accurate and durable. Flag duplicated rules whose copies can
@@ -244,6 +245,7 @@ Authoritative sources:
 - `docs/CODE_DESIGN_PRINCIPLES.md` § "Chosen tooling"
 - `docs/TEST_STRATEGY.md`
 - `docs/REVIEW.md` for CI and merge requirements
+- `docs/RELEASING.md` for versioning, release builds, and signing
 - `.github/workflows/`, `Directory.Build.props`,
   `Directory.Packages.props`, project files, and `.editorconfig` for the
   executable configuration

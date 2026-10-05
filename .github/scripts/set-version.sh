@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Set the app version in its one source and the Android build number derived from it.
-# See docs/REVIEW.md → "Releases".
+# See docs/RELEASING.md.
 #
 #   set-version.sh            print the current version and build number
 #   set-version.sh 0.14.0     set the version to 0.14.0 (build number 14000)
