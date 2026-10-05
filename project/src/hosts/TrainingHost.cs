@@ -306,7 +306,11 @@ public partial class TrainingHost : Node, IRoutedScene
         _screen.ShowPaused(GetTree().Paused);
         _screen.BackRequested += () => _navigator?.Back();
         _screen.PauseRequested += TogglePause;
-        _screen.StatsRequested += () => Notify("Stats", "Stats come in a later version.");
+        _screen.StatsRequested += () => UiNotificationLayer.Enqueue(this, new UiNotificationSpec(
+            UiPopupType.Default,
+            "Stats",
+            "Stats come in a later version.",
+            Icon: new(UiIconId.Chart)));
         _screen.ArenaPressed += SelectPartAt;
     }
 

@@ -59,6 +59,7 @@ tooltip_text = "Achievements"
 mouse_filter = 1
 script = ExtResource("5_button")
 IconId = 35
+ComingLater = true
 
 [node name="New" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/HBoxContainer/Field/MarginContainer/ToolbarContent/TopActions" unique_id=1400314010]
 unique_name_in_owner = true

@@ -186,6 +186,15 @@ reference would mislead someone working on that surface.
   tell the bare numbers apart. The `distance` icon is redrawn as `|->` (a
   start line and an arrow to the right), `elevation` turned on its side,
   so the two read as a pair. Owner decision.
+- **Trophy and Stats look "coming later" (#841, 0.13.0).** The reference
+  draws the Creations trophy and the Training Stats chart as ordinary icon
+  buttons. Until Achievements (#199) and Stats (#198) ship, both use
+  `UiButton.ComingLater`: the disabled button's dashed, dimmed look, but
+  still tappable, answering with "… come in a later version". Play testers
+  tapped them first because they looked like every other button. No lock
+  glyph: in a top bar it would read as the creation padlock. Build's
+  overflow items Stats and Power budget keep their "Coming soon" note.
+  Owner decision.
 - **No Brain setup (#536).** The reference's Brain setup screen (hidden
   layers, neurons per layer) and its **Brain setup** item in the Build
   overflow menu (Navigation and Build top bar in `reference design/README.md`)
@@ -991,6 +1000,9 @@ and `tertiary` "danger"; `on` and `off` are states, not kinds.
 Native `Disabled` is the sole availability setting; UiButton has no inverse
 `Enabled` property. Disabling cancels a hold and dims the custom stack/progress
 content as well as the native button visuals.
+`UiButton.ComingLater` (#841) draws the same dashed, dimmed look but leaves
+the button pressable, for a feature that comes in a later version: the
+screen answers the tap with a notification saying so.
 All button text, including the neuron stepper's plus/minus signs, is authored
 in the native `Text` property, with the layout's normal typography and padding.
 As for UiLabel, `Text` is stored exactly as written (it is also the
