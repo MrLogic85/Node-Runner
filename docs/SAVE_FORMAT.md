@@ -60,6 +60,9 @@ Creation deletes its folder.
 - Ids are GUIDs (`"0f3c6a52-7d1e-…"`) for Creations and positive integers
   for parts.
 - Lengths and positions are in creature units; angles are in radians.
+- Names are the player's free text, saved as JSON strings and never part
+  of a path, so any name reads back as typed. The one exception: half of a
+  UTF-16 surrogate pair is written as `U+FFFD` (#837).
 
 ## `creation.json`
 
