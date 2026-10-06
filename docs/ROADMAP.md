@@ -28,14 +28,3 @@ each one's description holds its goal, and its issues hold the work. The
 Brain v2 epic [#522](https://github.com/MrLogic85/Node-Runner/issues/522)
 sets the direction from 0.12.0 to 0.20.0.
 
-## Non-goals
-
-- Online multiplayer or account systems
-- Social sharing / creature marketplace
-- iOS, web, or console builds
-- Real-time collaborative editing
-- 3D
-- Using existing ML libraries (PyTorch, ONNX, ML-Agents). We build from scratch.
-- Monetization
-- UI languages other than English. Text still goes through Godot's
-  translation system (`docs/LOCALIZATION.md`).

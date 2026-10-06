@@ -147,10 +147,8 @@ Documentation follows these rules:
 - Every added NuGet package or Godot addon is future maintenance.
 - Godot first (§2) applies here too: what Godot provides beats a package,
   an addon or our own version.
-- No ML libraries. We're building this to learn.
 - Physics: Godot's `RigidBody2D` and joints, not Box2D.NET.
-- Math: `System` and `System.Numerics`; anything more we write ourselves in
-  `libs/NodeRunner.ML/`.
+- Math: `System` and `System.Numerics`.
 
 ## 13. UI is the last mile
 
