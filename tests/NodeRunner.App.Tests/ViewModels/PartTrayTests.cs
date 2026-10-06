@@ -78,8 +78,6 @@ public sealed class PartTrayTests
     {
         var list = BuildLinkList.Create(BuildLink.Beam);
 
-        list.Name.ShouldBe(UiText.Plain("Links"));
-        list.LockedNote.ShouldBe(UiText.Plain("Coming later"));
         list.HelpText.ShouldBe(UiText.Plain("A rigid rod. Drag joint to joint."));
         list.Rows.Select(row => (row.Link, row.Name, row.State)).ShouldBe([
             (BuildLink.Beam, UiText.Plain("Beam"), LinkListRowState.Selected),

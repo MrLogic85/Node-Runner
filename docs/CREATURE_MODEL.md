@@ -46,7 +46,7 @@ CreatureDef  ──build──▶  physical body  ──sensors──▶  model 
 
 ### Node
 
-- **Beginner:** A physical attachment point. Beams meet here and can rotate
+- **Beginner:** A physical attachment point. Links meet here and can rotate
   relative to each other.
 - **Implementation:** `NodeDef` in `libs/NodeRunner.Domain/NodeDef.cs` stores
   an id, optional display name and a position (`Vector2D`). Its radius is

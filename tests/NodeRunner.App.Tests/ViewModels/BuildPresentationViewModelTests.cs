@@ -16,12 +16,12 @@ public sealed class BuildPresentationViewModelTests
     }
 
     [Fact]
-    public void ToolPanel_WithBeamsAndNothingSelected_ShowsLinkList()
+    public void ToolPanel_WithLinksAndNothingSelected_ShowsLinkList()
     {
         var presentation = new BuildPresentationViewModel(new BuildViewModel { ActiveTool = BuildTool.Beam });
 
         presentation.ToolPanel.Mode.ShouldBe(ToolPanelMode.LinkList);
-        presentation.ToolPanel.Title.ShouldBe(UiText.Plain("Beams"));
+        presentation.ToolPanel.Title.ShouldBe(UiText.Plain("Links"));
         presentation.LinkList.ShouldNotBeNull();
     }
 
@@ -44,12 +44,11 @@ public sealed class BuildPresentationViewModelTests
     }
 
     [Fact]
-    public void LinkList_ShowsForUnlockedBeamsWithNothingSelected()
+    public void LinkList_ShowsForUnlockedLinksToolWithNothingSelected()
     {
         var presentation = new BuildPresentationViewModel(new BuildViewModel { ActiveTool = BuildTool.Beam });
 
         var list = presentation.LinkList.ShouldNotBeNull();
-        list.Name.ShouldBe(UiText.Plain("Links"));
         list.Rows.Select(row => (row.Link, row.State)).ShouldBe([
             (BuildLink.Beam, LinkListRowState.Selected),
             (BuildLink.Piston, LinkListRowState.Rest),
@@ -295,7 +294,7 @@ public sealed class BuildPresentationViewModelTests
     }
 
     [Fact]
-    public void SelectedNode_ShowsNameAndTheBeamsThatMeetThere()
+    public void SelectedNode_ShowsNameAndNoConnections()
     {
         var build = new BuildViewModel();
         build.Load(new CreatureDef(
@@ -314,9 +313,9 @@ public sealed class BuildPresentationViewModelTests
             PartSettingsKind.Node,
             UiText.AsWritten("Knee"),
             UiText.Format("Node {0}", 2),
-            UiText.Plain("Beams"),
-            UiText.Format("{0} · {1}", UiText.Format("Beam {0}", 1), UiText.AsWritten("Shin")),
-            UiText.Plain("Beams meet and turn here. Drag it to move them."),
+            null,
+            null,
+            UiText.Plain("Links meet and turn here. Drag it to move them."),
             CanDelete: true,
             part.Settings));
         part.Settings.ShouldBeEmpty();
@@ -379,16 +378,6 @@ public sealed class BuildPresentationViewModelTests
     }
 
     [Fact]
-    public void SelectedNodeWithoutBeams_SaysNoneYet()
-    {
-        var build = new BuildViewModel();
-        build.Load(new CreatureDef([new NodeDef(1, new Vector2D(0, 0))], [], []));
-        build.ToggleSelected(new(CreatureElementKind.Node, 1));
-
-        new BuildPresentationViewModel(build).SinglePart!.ConnectionsValue.ShouldBe(UiText.Plain("None yet"));
-    }
-
-    [Fact]
     public void LockedCreation_PartSettingsHaveNoDelete()
     {
         var build = new BuildViewModel();
@@ -448,7 +437,7 @@ public sealed class BuildPresentationViewModelTests
             EmptyNote: null,
             ShowFrameRows: true,
             UiText.Counted("Delete {0}", "Delete {0}", 3),
-            UiText.Plain("Beams on a deleted node go with it."),
+            UiText.Plain("Links on a deleted node go with it."),
             CanDelete: true));
     }
 

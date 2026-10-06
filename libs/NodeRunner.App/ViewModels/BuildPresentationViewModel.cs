@@ -168,9 +168,9 @@ public sealed class BuildPresentationViewModel
                     PartSettingsKind.Node,
                     _build.PartDisplayName(nodeId),
                     _build.DefaultPartName(nodeId),
-                    UiText.Plain("Beams"),
-                    ConnectedBeamText(nodeId),
-                    UiText.Plain("Beams meet and turn here. Drag it to move them."),
+                    null,
+                    null,
+                    UiText.Plain("Links meet and turn here. Drag it to move them."),
                     canDelete,
                     PanelSliders());
             }
@@ -216,7 +216,7 @@ public sealed class BuildPresentationViewModel
             var settings = PanelSliders();
             var showFrameRows = _build.SelectedNodeCount >= 2;
             var deleteNote = selection.Nodes.Count > 0
-                ? UiText.Plain("Beams on a deleted node go with it.")
+                ? UiText.Plain("Links on a deleted node go with it.")
                 : _build.Sensors.Any(sensor => selection.Beams.Contains(sensor.BeamId) && !selection.Sensors.Contains(sensor.Id))
                     ? UiText.Plain("A sensor on a deleted beam goes with it.")
                     : null;
@@ -264,7 +264,7 @@ public sealed class BuildPresentationViewModel
         return ActiveTool switch
         {
             BuildTool.Parts => new ToolPanelPresentation(ToolPanelMode.PartsTray, UiText.Plain("Parts")),
-            BuildTool.Beam => new ToolPanelPresentation(ToolPanelMode.LinkList, UiText.Plain("Beams")),
+            BuildTool.Beam => new ToolPanelPresentation(ToolPanelMode.LinkList, UiText.Plain("Links")),
             BuildTool.Joint => new ToolPanelPresentation(ToolPanelMode.JointHelp, UiText.Plain("Joint")),
             BuildTool.Select => new ToolPanelPresentation(ToolPanelMode.SelectHelp, UiText.Plain("Select")),
             _ => ToolPanelPresentation.None,
@@ -318,17 +318,6 @@ public sealed class BuildPresentationViewModel
 
         bool IsTooShort(int nodeA, int nodeB) =>
             CreatureReadiness.IsTooShort(NodeById(nodeA), NodeById(nodeB), _build.NodeRadius(nodeA), _build.NodeRadius(nodeB));
-    }
-
-    private UiText ConnectedBeamText(int nodeId)
-    {
-        var connected = _build.Beams
-            .Where(beam => beam.NodeA == nodeId || beam.NodeB == nodeId)
-            .Select(beam => _build.PartDisplayName(beam.Id))
-            .ToArray();
-        return connected.Length == 0
-            ? UiText.Plain("None yet")
-            : connected.Skip(1).Aggregate(connected[0], (list, next) => UiText.Format("{0} · {1}", list, next));
     }
 
     private NodeDef NodeById(int nodeId) => _build.Nodes[_build.NodeIndexOf(nodeId)];

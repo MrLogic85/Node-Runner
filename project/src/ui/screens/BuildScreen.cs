@@ -61,7 +61,7 @@ public partial class BuildScreen : Control
     [Signal]
     public delegate void ToolRequestedEventHandler(BuildTool tool);
 
-    /// <summary>A link row in the Beams list was tapped (#705): the rail tool stays Beams.</summary>
+    /// <summary>A row in the Links tool's list was tapped (#705): the rail tool stays Links.</summary>
     [Signal]
     public delegate void LinkPickedEventHandler(int link);
 
@@ -383,7 +383,9 @@ public partial class BuildScreen : Control
 
     private void ApplyPickList(BuildPresentationViewModel presentation, LinkListPresentation? linkList)
     {
+        // The Links panel's title already says Links, so its list has no tabs or group header (#913).
         GetNode<UiIconTabs>("%PartTabs").Visible = linkList is null;
+        GetNode<Control>("%PartGroupHeader").Visible = linkList is null;
         if (linkList is not null)
         {
             ApplyLinkList(linkList);
@@ -396,14 +398,9 @@ public partial class BuildScreen : Control
 
     private void ApplyLinkList(LinkListPresentation list)
     {
-        GetNode<UiLabel>("%PartGroupName").ShowText(list.Name);
         var help = GetNode<UiLabel>("%PartHelp");
         help.TextSource = UiTextTranslation.Source(list.HelpText);
         help.Visible = help.TextSource is not null;
-        var lockedNote = GetNode<UiLabel>("%PartLockedNote");
-        lockedNote.TextSource = UiTextTranslation.Source(list.LockedNote);
-        lockedNote.Visible = lockedNote.TextSource is not null;
-        GetNode<Control>("%PartLockedIcon").Visible = lockedNote.Visible;
         var rows = GetNode<Container>("%PartRows");
         if (_shownPartGroup != "links")
         {
@@ -507,7 +504,7 @@ public partial class BuildScreen : Control
         return BuildCanvas.PartDragData(part);
     }
 
-    /// <summary>The Beams list glyph for a link.</summary>
+    /// <summary>The Links tool's list glyph for a link.</summary>
     public static UiIconId LinkIcon(BuildLink link) => link switch
     {
         BuildLink.Beam => UiIconId.PartBeam,

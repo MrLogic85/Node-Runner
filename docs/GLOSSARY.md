@@ -11,9 +11,6 @@ The player's words. They started from `reference design/README.md` → "The
 words" (#202); this list now owns them. Code, docs and copy use them; the ML
 layer keeps its textbook terms.
 
-- **Beams tool** — The Build rail tool that draws a Beam by default, or a
-  link such as a Piston when that row is picked. Its side-panel list is
-  headed "Links".
 - **Build** — The editor where a Creation's body is drawn and changed. Code
   says Build (`BuildViewModel`, `BuildTool`, `BuildCanvas`), never
   Construction. See: `docs/BUILD_MODE.md`.
@@ -27,6 +24,9 @@ layer keeps its textbook terms.
   `docs/CREATURE_MODEL.md`.
 - **Creature** — The body inside a Creation; see "Creature anatomy". Copy
   never calls the saved item a creature.
+- **Links tool** — The Build rail tool that draws a Beam by default, or a
+  link such as a Piston when that row is picked. Its rail label and
+  side-panel title say "Links" (#913); in code it is `BuildTool.Beam`.
 - **Parts tool** — The first Build rail tool. It opens the Parts tray when
   nothing is selected. Selecting and moving work as in every tool; see
   `docs/BUILD_MODE.md` → Interactions.
@@ -37,7 +37,7 @@ layer keeps its textbook terms.
 Kept on purpose:
 
 - `Node` / `NodeDef` — the reference uses both Node and Joint; a joint is a
-  node where beams meet.
+  node where links meet.
 - GA terms (population, candidate, genome, generation, fitness) in
   `NodeRunner.ML` and the sim's `Evolver` — `docs/ML_CONCEPTS.md` teaches them.
 - `CreatureElementSelection` / `CreatureElementKind` — replaced by #220.
@@ -69,20 +69,19 @@ Long-form descriptions and the sensor/model contract live in
 - **CreatureDef** — Pure-data description of a creature; the "genome" of the
   body, distinct from the brain's genome. See: `docs/CREATURE_MODEL.md`.
 - **Joint** — The player-facing name for a node in Build (the reference
-  design's Joint tool adds one). A plain joint is passive (#450): beams turn
+  design's Joint tool adds one). A plain joint is passive (#450): links turn
   freely there, with no settings, limits or brain ports, unless a closed
   triangle locks them. A Servo can sit on a joint and add a motor; see the
   Servo entry. Not the retired 0.1.0 Joint/Bone/Muscle prototype part, and
   not a Godot physics joint. See: `docs/BUILD_MODE.md`.
 - **Link** — A joint-to-joint connection a Servo may use as Fixed or Target:
-  Beam, Piston or Spring. In the Beams tool, "link" usually means the
-  non-beam rows (Piston, Spring; Wing later), while the UI list is headed
-  "Links" and also includes Beam.
+  Beam, Piston or Spring. The Links tool lists them all, Beam
+  included. Say Links for the group and Beam for a beam (#913).
 - **Model input** — One slot in the neural network's input vector, populated
   one-to-one from an input port. See: `docs/CREATURE_MODEL.md`.
 - **Model output** — One slot in the neural network's output vector,
   consumed one-to-one by an output port. See: `docs/CREATURE_MODEL.md`.
-- **Node** — A physical attachment point where beams meet and can rotate
+- **Node** — A physical attachment point where links meet and can rotate
   relative to each other. Has a position and a small radius. Rendered as a
   ring with a fine inner ring. See: `docs/CREATURE_MODEL.md`.
 - **Piston** — A powered link between two nodes (#451) that pushes them

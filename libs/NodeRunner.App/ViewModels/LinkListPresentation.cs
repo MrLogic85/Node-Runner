@@ -1,6 +1,6 @@
 namespace NodeRunner.App.ViewModels;
 
-/// <summary>The choices shown in the Beams tool's link list (#705).</summary>
+/// <summary>The choices shown in the Links tool's list (#705).</summary>
 public enum BuildLink
 {
     Beam,
@@ -22,17 +22,13 @@ public sealed record LinkListRow(BuildLink Link, UiText Name, LinkListRowState S
 }
 
 public sealed record LinkListPresentation(
-    UiText Name,
-    UiText? LockedNote,
     IReadOnlyList<LinkListRow> Rows,
     UiText? HelpText);
 
-/// <summary>The Beams tool's list: Beam, Piston and Spring now, later links locked.</summary>
+/// <summary>The Links tool's list: Beam, Piston and Spring now, later links locked.</summary>
 public static class BuildLinkList
 {
     public static LinkListPresentation Create(BuildLink picked) => new(
-        UiText.Plain("Links"),
-        PartTray.ComingLater,
         [
             Row(BuildLink.Beam, UiText.Plain("Beam"), picked),
             Row(BuildLink.Piston, UiText.Plain("Piston"), picked),
