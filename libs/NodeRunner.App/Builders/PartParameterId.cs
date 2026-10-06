@@ -8,6 +8,7 @@ public enum PartParameterId
     Stroke,
     Range,
     StartPosition,
+    ServoStartPosition,
     MaxSpeed,
     AngularMaxSpeed,
     RiseTime,

@@ -359,6 +359,30 @@ msgstr ""
 msgid "Hills"
 msgstr ""
 
+#: libs/NodeRunner.App/ViewModels/PartParameters.cs
+msgid "How far it can turn"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/PartParameters.cs
+msgid "How far it moves in and out"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/PartParameters.cs
+msgid "How fast it's allowed to move"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/PartParameters.cs
+msgid "How hard it springs back"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/PartParameters.cs
+msgid "How quickly it reaches full force"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/PartParameters.cs
+msgid "How quickly it stops bouncing"
+msgstr ""
+
 #: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs
 #: libs/NodeRunner.App/ViewModels/PartSettingsPresentation.cs
 #: project/scenes/screens/BuildScreen.tscn
@@ -785,6 +809,18 @@ msgstr ""
 msgid "The creation is locked so you do not change the size or values of its model by accident. Changes to how the model behaves are still allowed. Unlock to use every tool that changes the model. Adding or removing a part keeps the training, but adds or removes that part of the model. Removing a part and adding the same kind back does not bring its training back; use Undo instead."
 msgstr ""
 
+#: libs/NodeRunner.App/ViewModels/PartParameters.cs
+msgid "The length the coil wants to be"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/PartParameters.cs
+msgid "The most force it can push or pull with"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/PartParameters.cs
+msgid "The most force it can turn with"
+msgstr ""
+
 #: libs/NodeRunner.App/Lifecycle/CreatureReadiness.cs
 msgid "The piston between joint {0} and joint {1} has zero length. Move one of the joints apart."
 msgstr ""
@@ -913,6 +949,14 @@ msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartTrayPresentation.cs
 msgid "Wheel"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/PartParameters.cs
+msgid "Where it starts in its rotation"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/PartParameters.cs
+msgid "Where it starts in its stroke"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/LinkListPresentation.cs

@@ -114,5 +114,19 @@ public sealed class PartParametersTests
         Enum.GetValues<PartParameterId>().ShouldAllBe(id => PartParameters.Of(id).Id == id);
     }
 
+    [Fact]
+    public void EveryPanelSetting_HasAHelpTextOfItsOwn()
+    {
+        // Touching a slider shows this text (#867).
+        var scales = Enum.GetValues<PartParameterId>()
+            .Select(PartParameters.Of)
+            .Where(parameter => parameter.InPanel)
+            .Select(parameter => parameter.Slider!)
+            .ToArray();
+
+        scales.ShouldNotBeEmpty();
+        scales.ShouldAllBe(scale => !string.IsNullOrWhiteSpace(scale.Help.Message) && scale.Help.Message != scale.Label.Message);
+    }
+
     private static double Position(PartParameter parameter, double shown) => parameter.Slider!.Range.Position(shown);
 }

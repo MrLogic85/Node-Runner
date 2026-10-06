@@ -104,6 +104,14 @@ public partial class UiSlider : Control, ISerializationListener
     [Signal]
     public delegate void TrackPressedEventHandler(double position);
 
+    /// <summary>A finger or button went down on the slider, before it is known to be a drag or a tap.</summary>
+    [Signal]
+    public delegate void TouchStartedEventHandler();
+
+    /// <summary>The finger or button that started a touch lifted, even after the touch turned into a scroll, or the slider was disabled or hidden meanwhile.</summary>
+    [Signal]
+    public delegate void TouchEndedEventHandler();
+
     private string _labelText = "Value";
     private string _readoutText = "50";
     private UiSliderEndKind _lowEnd = UiSliderEndKind.Rounded;
@@ -130,6 +138,7 @@ public partial class UiSlider : Control, ISerializationListener
     private int _draggedThumb = -1;
     private int _pressedThumb = -1;
     private bool _pressed;
+    private bool _touching;
     private Vector2 _pressPosition;
     // Object/method callables survive assembly reloads without retaining managed delegates.
     private Callable HeaderSortCallback => new(this, MethodName.LayoutContent);
@@ -305,7 +314,7 @@ public partial class UiSlider : Control, ISerializationListener
             _disabled = value;
             if (value)
             {
-                ResetTouch();
+                EndTouch();
             }
 
             Refresh();
@@ -339,7 +348,7 @@ public partial class UiSlider : Control, ISerializationListener
     public override void _ExitTree()
     {
         DisconnectContent();
-        ResetTouch();
+        EndTouch();
     }
 
     public void OnBeforeSerialize() => DisconnectContent();
@@ -372,21 +381,28 @@ public partial class UiSlider : Control, ISerializationListener
         {
             LayoutContent();
         }
+        else if (what == NotificationVisibilityChanged && !IsVisibleInTree())
+        {
+            // A hidden slider gets no release.
+            EndTouch();
+        }
     }
 
     public override void _GuiInput(InputEvent inputEvent)
     {
         if (Disabled)
         {
-            ResetTouch();
+            EndTouch();
             return;
         }
 
         if (PointerInput.TryGetPressPosition(inputEvent, out var pressPosition))
         {
-            ResetTouch();
+            EndTouch();
             _pressed = true;
+            _touching = true;
             _pressPosition = pressPosition;
+            EmitSignal(SignalName.TouchStarted);
             return;
         }
 
@@ -422,7 +438,18 @@ public partial class UiSlider : Control, ISerializationListener
                 EmitSignal(SignalName.ThumbChangeCommitted, _draggedThumb, Value.ThumbAt(_draggedThumb));
             }
 
-            ResetTouch();
+            EndTouch();
+        }
+    }
+
+    private void EndTouch()
+    {
+        var wasTouching = _touching;
+        _touching = false;
+        ResetTouch();
+        if (wasTouching)
+        {
+            EmitSignal(SignalName.TouchEnded);
         }
     }
 

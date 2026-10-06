@@ -292,7 +292,7 @@ public sealed class CreatureBuilder
             {
                 PartParameterId.ServoStrength => servo.Strength,
                 PartParameterId.Range => servo.Range,
-                PartParameterId.StartPosition => servo.Start,
+                PartParameterId.ServoStartPosition => servo.Start,
                 PartParameterId.AngularMaxSpeed => servo.MaxSpeed,
                 PartParameterId.RiseTime => servo.RiseTime,
                 _ => throw new ArgumentOutOfRangeException(nameof(parameter)),
@@ -344,7 +344,7 @@ public sealed class CreatureBuilder
             {
                 PartParameterId.ServoStrength => servo.WithSettings(value, servo.Range, servo.Start, servo.MaxSpeed, servo.RiseTime),
                 PartParameterId.Range => servo.WithSettings(servo.Strength, value, servo.Start, servo.MaxSpeed, servo.RiseTime),
-                PartParameterId.StartPosition => servo.WithSettings(servo.Strength, servo.Range, value, servo.MaxSpeed, servo.RiseTime),
+                PartParameterId.ServoStartPosition => servo.WithSettings(servo.Strength, servo.Range, value, servo.MaxSpeed, servo.RiseTime),
                 PartParameterId.AngularMaxSpeed => servo.WithSettings(servo.Strength, servo.Range, servo.Start, value, servo.RiseTime),
                 PartParameterId.RiseTime => servo.WithSettings(servo.Strength, servo.Range, servo.Start, servo.MaxSpeed, value),
                 _ => throw new ArgumentOutOfRangeException(nameof(parameter)),
@@ -367,7 +367,7 @@ public sealed class CreatureBuilder
 
     private static readonly PartParameterId[] _pistonParameters = [PartParameterId.Strength, PartParameterId.Stroke, PartParameterId.StartPosition, PartParameterId.MaxSpeed, PartParameterId.RiseTime];
 
-    private static readonly PartParameterId[] _servoParameters = [PartParameterId.ServoStrength, PartParameterId.Range, PartParameterId.StartPosition, PartParameterId.AngularMaxSpeed, PartParameterId.RiseTime];
+    private static readonly PartParameterId[] _servoParameters = [PartParameterId.ServoStrength, PartParameterId.Range, PartParameterId.ServoStartPosition, PartParameterId.AngularMaxSpeed, PartParameterId.RiseTime];
 
     private static readonly PartParameterId[] _springParameters = [PartParameterId.Stiffness, PartParameterId.Damping, PartParameterId.Stroke, PartParameterId.CoilLength];
 

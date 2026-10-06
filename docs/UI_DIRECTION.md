@@ -200,7 +200,13 @@ The shell is filled `panel` over the frame card's `bg` (#347).
   and `ink` otherwise.
 - **Sliders:** each end is Rounded, Thumb or Marker. Where selected parts
   differ the readout shows `low–high` between Marker ends, with no thumb
-  (#704). Uneven stops sit evenly along the track (#801).
+  (#704). Uneven stops sit evenly along the track (#801). `TouchStarted`
+  and `TouchEnded` bracket a finger on a slider: it ends when the finger
+  lifts, even after a scroll took over, or when the slider is disabled or
+  hidden.
+- **Hint card** (`UiHintCard`, #867): a `UiCard` that ignores input, fades
+  in over 0.12 s, and after `HideAfterLinger` stays `LingerSeconds` (2 s)
+  then fades out over 0.2 s. The scene that uses it authors its children.
 - **Value rows:** label left, readout right, no padding.
 - **Tray tabs** (#330): glyph tabs sharing the strip's width, 4 px apart, 32
   high, selected with `accent-soft`. **Tray rows** are `control-sm`
@@ -229,6 +235,9 @@ The trophy is Unavailable (#199).
   "Coming soon".
 - **Side panel:** the tool's panel or the selection's settings
   (`docs/BUILD_MODE.md`); its last line says why play is dimmed.
+- **Setting hint** (#867): a finger on a Part settings slider shows a
+  240 px `Frame` hint card at the canvas's top right, `space-3` in: the
+  setting's name in `Overline` `accent` over one `Body` `ink` line, no icon.
 
 ### Train setup
 
@@ -288,6 +297,7 @@ repeated. The last column owns the detail (BM = `docs/BUILD_MODE.md`, TL =
 | Selecting differs per tool; Joint splits beams | One selection model (#746) | BM → Every tool |
 | Locked-canvas chip | None (#706) | — |
 | Piston lists Between, power, weight | Sliders (#451) | BM → Part settings |
+| Sliders have no help | A hint while touched; "?" buttons were dropped as clutter (#867) | BM → Parameters |
 | Part counts ("1 left") | Unlimited (#374, #525) | BM → Parts tray |
 | Core part | Sensors on beams (#127) | WV → Sensors |
 | Joint circle; Servo gauge and labels | Bearing; housing, dial and horn (#626, #452) | WV → Parts |

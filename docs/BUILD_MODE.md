@@ -251,9 +251,16 @@ panel shows it (`InPanel`). Each kind lists its own
   "Editing identity rules".
 - **Camera:** Aim, set on the canvas, one Camera at a time.
 
+A finger on a slider shows what that setting does in a box at the canvas's
+top right (`ParameterScale.Help`, one short line each, #867). It stays while
+the finger is down, scrolling included, and 2 s after it lifts; touching
+another slider swaps it, and it hides at once when the panel shows something
+else or collapses. Turning it off belongs to Settings (#381).
+
 The selection can change one part's own parameters, or those every selected
 part has and can share (`BuildViewModel.EditableParameters`); a Piston and
-a Spring selected together share Stroke. A slider sets its value on every
+a Spring selected together share Stroke, but a Piston and a Servo share no
+Start position: one is along a stroke, the other a rotation (#867). A slider sets its value on every
 selected part (`SetParameter`). The canvas shows what a parameter changes
 only while it can be changed: a Piston's stroke ticks while Stroke or Start
 position can, a Spring's ticks and rest-length ring while Stroke or Coil

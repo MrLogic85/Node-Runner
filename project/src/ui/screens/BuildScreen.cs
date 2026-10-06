@@ -20,6 +20,7 @@ public partial class BuildScreen : Control
     private (int Selected, PartSettingsKind? Kind, int? PanelId, ToolPanelMode Mode, bool Locked)? _sidePanelShows;
     private string? _renamingDefaultName;
     private bool _subscribedToPresentation;
+    private UiSlider? _hintSlider;
     private string? _shownPartGroup;
     private int _shownServoPickerId;
     private PartPickerPresentation? _fixedPicker;
@@ -134,6 +135,7 @@ public partial class BuildScreen : Control
         partName.MaxLength = NameLimits.Part;
         partName.EditingStarted += OnPartNameEditingStarted;
         partName.EditingFinished += OnPartNameEdited;
+        GetNode<UiSidePanel>("%SidePanel").CollapsedChanged += _ => HideSettingHint();
         GetNode<UiPicker>("%FixedPicker").SelectionChanged += selected => OnServoPickerChanged(selected, fixedRole: true);
         GetNode<UiPicker>("%TargetPicker").SelectionChanged += selected => OnServoPickerChanged(selected, fixedRole: false);
         BindViewModels();
@@ -235,6 +237,8 @@ public partial class BuildScreen : Control
         var slider = new UiSlider { Name = id.ToString(), SizeFlagsHorizontal = SizeFlags.ExpandFill };
         slider.ThumbChanged += (_, position) => EmitSignal(SignalName.ParameterChanged, (int)id, PartParameters.ValueAt(id, position));
         slider.ThumbChangeCommitted += (_, _) => EmitSignal(SignalName.ParameterChangeFinished);
+        slider.TouchStarted += () => ShowSettingHint(slider, id);
+        slider.TouchEnded += () => LetGoOfSettingHint(slider);
 
         // Differing values have no thumb: a touch sets one value for all of them.
         slider.TrackPressed += position =>
@@ -244,6 +248,39 @@ public partial class BuildScreen : Control
         };
         container.AddChild(slider);
         return slider;
+    }
+
+    /// <summary>
+    /// What the touched setting does, in a fixed spot over the canvas (#867). It shows at once and
+    /// stays a moment after the finger lifts; a touch on another slider swaps the text.
+    /// </summary>
+    private void ShowSettingHint(UiSlider slider, PartParameterId id)
+    {
+        if (PartParameters.Of(id).Slider is not { } scale)
+        {
+            return;
+        }
+
+        _hintSlider = slider;
+        GetNode<UiLabel>("%SettingHintTitle").TextSource = UiTextTranslation.Source(scale.Label);
+        GetNode<UiLabel>("%SettingHintBody").TextSource = UiTextTranslation.Source(scale.Help);
+        GetNode<UiHintCard>("%SettingHint").ShowNow();
+    }
+
+    // Only the finger that showed the hint lifting lets it go; a newer touch owns it.
+    private void LetGoOfSettingHint(UiSlider slider)
+    {
+        if (slider == _hintSlider)
+        {
+            _hintSlider = null;
+            GetNode<UiHintCard>("%SettingHint").HideAfterLinger();
+        }
+    }
+
+    private void HideSettingHint()
+    {
+        _hintSlider = null;
+        GetNode<UiHintCard>("%SettingHint").HideNow();
     }
 
     private void OnPresentationChanged(object? sender, EventArgs eventArgs)
@@ -327,6 +364,7 @@ public partial class BuildScreen : Control
         if (_sidePanelShows is { } showed && showed != shows)
         {
             sidePanel.ScrollContentToTop();
+            HideSettingHint();
         }
 
         _sidePanelShows = shows;
