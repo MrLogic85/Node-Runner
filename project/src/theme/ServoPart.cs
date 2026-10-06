@@ -109,81 +109,76 @@ public partial class ServoPart : PartVisual
 
     public override void _Draw()
     {
-        var toPixels = UiPixelSpace.Enter(this, Transform2D.Identity);
-        var scale = UiPixelSpace.ScaleOf(toPixels);
+        using var pen = UiPixelPen.Begin(this);
         var missing = !HasFixed || !HasTarget;
         var showHousing = HasFixed && HousingReach > 0;
         var ring = missing ? Theme.Danger : Theme.MotorAccent;
 
         if (Simplified)
         {
-            DrawSimplified(toPixels, scale, ring, showHousing, missing);
-            DrawSetTransformMatrix(Transform2D.Identity);
+            DrawSimplified(pen, ring, showHousing, missing);
             return;
         }
 
         if (showHousing)
         {
-            DrawHousing(toPixels, scale, filled: true);
+            DrawHousing(pen, filled: true);
         }
 
-        var at = toPixels.Origin;
-        DrawCircle(at, Radius * scale, missing ? Theme.DangerFill : Selected ? Theme.SelectionFill : Theme.JointFill, antialiased: true);
-        DrawArc(at, (Radius - (Theme.JointRingWidth / 2)) * scale, 0, Mathf.Tau, _ringSegments, ring, Theme.JointRingWidth * scale, antialiased: true);
+        pen.Disc(Vector2.Zero, Radius, missing ? Theme.DangerFill : Selected ? Theme.SelectionFill : Theme.JointFill);
+        pen.Ring(Vector2.Zero, Radius - (Theme.JointRingWidth / 2), ring, Theme.JointRingWidth, _ringSegments);
         if (!missing)
         {
-            DrawRangeBand(toPixels, scale, filled: true);
+            DrawRangeBand(pen, filled: true);
         }
 
         if (HasTarget)
         {
-            DrawHorn(toPixels, scale);
+            DrawHorn(pen);
         }
 
         if (Selected)
         {
-            DrawSelection(toPixels, scale, showHousing);
+            DrawSelection(pen, showHousing);
         }
 
         if (missing)
         {
-            DrawDangerBadge(toPixels, scale);
+            DrawDangerBadge(pen);
         }
-
-        DrawSetTransformMatrix(Transform2D.Identity);
     }
 
-    private void DrawSimplified(Transform2D toPixels, float scale, Color ring, bool showHousing, bool missing)
+    private void DrawSimplified(UiPixelPen pen, Color ring, bool showHousing, bool missing)
     {
         if (showHousing)
         {
-            DrawHousing(toPixels, scale, filled: false);
+            DrawHousing(pen, filled: false);
         }
 
-        DrawArc(toPixels.Origin, (Radius - (Theme.JointRingWidth / 2)) * scale, 0, Mathf.Tau, _ringSegments, ring, Theme.JointRingWidth * scale, antialiased: true);
+        pen.Ring(Vector2.Zero, Radius - (Theme.JointRingWidth / 2), ring, Theme.JointRingWidth, _ringSegments);
         if (missing)
         {
             return;
         }
 
-        DrawArcInLocal(toPixels, scale, Vector2.Zero, (_bandInnerRadius + _bandOuterRadius) / 2, BandFrom(), BandTo(), 32, Theme.MotorAccent, 3);
+        pen.Arc(Vector2.Zero, (_bandInnerRadius + _bandOuterRadius) / 2, BandFrom(), BandTo(), 32, Theme.MotorAccent, 3);
         if (IsFullTurn)
         {
-            DrawStop(toPixels, scale, BandFrom(), 3);
+            DrawStop(pen, BandFrom(), 3);
         }
 
-        DrawLine(toPixels * Vector2.Zero, toPixels * (Vector2.FromAngle(TargetAngle) * _hornLong), Theme.MotorAccent, 3 * scale, antialiased: true);
+        pen.Line(Vector2.Zero, Vector2.FromAngle(TargetAngle) * _hornLong, Theme.MotorAccent, 3);
     }
 
-    private void DrawHousing(Transform2D toPixels, float scale, bool filled)
+    private void DrawHousing(UiPixelPen pen, bool filled)
     {
         var (fill, outline) = HousingPoints();
         if (filled)
         {
-            DrawColoredPolygon(Map(toPixels, fill), Theme.ServoPanelFill);
+            pen.Polygon(fill, Theme.ServoPanelFill);
         }
 
-        DrawPolyline(Map(toPixels, outline), Theme.MotorAccent, Theme.MotorSignalWidth * scale, antialiased: true);
+        pen.Polyline(outline, Theme.MotorAccent, Theme.MotorSignalWidth);
         if (!filled || HousingReach < 6)
         {
             return;
@@ -191,7 +186,7 @@ public partial class ServoPart : PartVisual
 
         foreach (var y in new[] { -6f, 6f })
         {
-            DrawArcInLocal(toPixels, scale, new Vector2(Radius + (HousingReach / 2), y), 1.4f, 0, Mathf.Tau, 12, Theme.MotorAccent, UiSize.Stroke.Hair);
+            pen.Ring(new Vector2(Radius + (HousingReach / 2), y), 1.4f, Theme.MotorAccent, UiSize.Stroke.Hair, 12);
         }
     }
 
@@ -225,7 +220,7 @@ public partial class ServoPart : PartVisual
         }
     }
 
-    private void DrawRangeBand(Transform2D toPixels, float scale, bool filled)
+    private void DrawRangeBand(UiPixelPen pen, bool filled)
     {
         var lower = BandFrom();
         var upper = BandTo();
@@ -233,22 +228,22 @@ public partial class ServoPart : PartVisual
         {
             if (filled)
             {
-                DrawArcInLocal(toPixels, scale, Vector2.Zero, (_bandInnerRadius + _bandOuterRadius) / 2, lower, lower + Mathf.Tau, _ringSegments, Theme.ServoPanelFill, _bandOuterRadius - _bandInnerRadius);
+                pen.Arc(Vector2.Zero, (_bandInnerRadius + _bandOuterRadius) / 2, lower, lower + Mathf.Tau, _ringSegments, Theme.ServoPanelFill, _bandOuterRadius - _bandInnerRadius);
             }
 
-            DrawArcInLocal(toPixels, scale, Vector2.Zero, _bandInnerRadius, lower, lower + Mathf.Tau, _ringSegments, Theme.MotorAccent, Theme.MotorSignalWidth);
-            DrawArcInLocal(toPixels, scale, Vector2.Zero, _bandOuterRadius, lower, lower + Mathf.Tau, _ringSegments, Theme.MotorAccent, Theme.MotorSignalWidth);
-            DrawStop(toPixels, scale, lower, Theme.MotorSignalWidth);
+            pen.Arc(Vector2.Zero, _bandInnerRadius, lower, lower + Mathf.Tau, _ringSegments, Theme.MotorAccent, Theme.MotorSignalWidth);
+            pen.Arc(Vector2.Zero, _bandOuterRadius, lower, lower + Mathf.Tau, _ringSegments, Theme.MotorAccent, Theme.MotorSignalWidth);
+            DrawStop(pen, lower, Theme.MotorSignalWidth);
             return;
         }
 
         var points = RangeBandPoints(lower, upper);
         if (filled)
         {
-            DrawColoredPolygon(Map(toPixels, points), Theme.ServoPanelFill);
+            pen.Polygon(points, Theme.ServoPanelFill);
         }
 
-        DrawPolyline(Map(toPixels, Closed(points)), Theme.MotorAccent, Theme.MotorSignalWidth * scale, antialiased: true);
+        pen.Polyline(Closed(points), Theme.MotorAccent, Theme.MotorSignalWidth);
     }
 
     private bool IsFullTurn => Range >= Mathf.Tau - 0.0001f;
@@ -256,10 +251,10 @@ public partial class ServoPart : PartVisual
     /// <summary>
     /// A full turn's two stops meet at one angle, so a line across the band marks where it is.
     /// </summary>
-    private void DrawStop(Transform2D toPixels, float scale, float angle, float width)
+    private void DrawStop(UiPixelPen pen, float angle, float width)
     {
         var along = Vector2.FromAngle(angle);
-        DrawLine(toPixels * (along * _bandInnerRadius), toPixels * (along * _bandOuterRadius), Theme.MotorAccent, width * scale, antialiased: true);
+        pen.Line(along * _bandInnerRadius, along * _bandOuterRadius, Theme.MotorAccent, width);
     }
 
     private Vector2[] RangeBandPoints(float lower, float upper)
@@ -280,7 +275,7 @@ public partial class ServoPart : PartVisual
         return [.. points];
     }
 
-    private void DrawHorn(Transform2D toPixels, float scale)
+    private void DrawHorn(UiPixelPen pen)
     {
         var along = Vector2.FromAngle(TargetAngle);
         var across = along.Orthogonal();
@@ -293,42 +288,45 @@ public partial class ServoPart : PartVisual
             (-along * _hornShort) - (across * 3.5f),
             (-along * _hornShort) + (across * 3.5f),
         };
-        DrawColoredPolygon(Map(toPixels, points), Theme.ServoPanelFill);
-        DrawPolyline(Map(toPixels, Closed(points)), Theme.MotorAccent, Theme.MotorSignalWidth * scale, antialiased: true);
-        DrawCircle(toPixels.Origin, 3.5f * scale, Theme.MotorAccent, antialiased: true);
+        pen.Polygon(points, Theme.ServoPanelFill);
+        pen.Polyline(Closed(points), Theme.MotorAccent, Theme.MotorSignalWidth);
+        pen.Disc(Vector2.Zero, 3.5f, Theme.MotorAccent);
     }
 
-    private void DrawSelection(Transform2D toPixels, float scale, bool showHousing)
+    private void DrawSelection(UiPixelPen pen, bool showHousing)
     {
-        var width = Theme.SelectionRingWidth * scale;
+        var width = Theme.SelectionRingWidth;
         var haloRadius = Radius + 3;
         if (!showHousing)
         {
-            DrawArc(toPixels.Origin, haloRadius * scale, 0, Mathf.Tau, _ringSegments, Theme.SelectionGlow, width, antialiased: true);
+            pen.Ring(Vector2.Zero, haloRadius, Theme.SelectionGlow, width, _ringSegments);
             return;
         }
 
         var offset = _housingHalfWidth + 3;
         var gap = MathF.Asin(offset / haloRadius);
-        DrawArcInLocal(toPixels, scale, Vector2.Zero, haloRadius, gap, Mathf.Tau - gap, _ringSegments, Theme.SelectionGlow, Theme.SelectionRingWidth);
+        pen.Arc(Vector2.Zero, haloRadius, gap, Mathf.Tau - gap, _ringSegments, Theme.SelectionGlow, width);
 
         var x0 = MathF.Sqrt((haloRadius * haloRadius) - (offset * offset));
         var x1 = Radius + HousingReach + 3;
         foreach (var y in new[] { -offset, offset })
         {
-            DrawLine(toPixels * new Vector2(x0, y), toPixels * new Vector2(x1, y), Theme.SelectionGlow, width, antialiased: true);
+            pen.Line(new Vector2(x0, y), new Vector2(x1, y), Theme.SelectionGlow, width);
         }
 
-        DrawLine(toPixels * new Vector2(x1, -offset - 1), toPixels * new Vector2(x1, offset + 1), Theme.SelectionGlow, width, antialiased: true);
+        pen.Line(new Vector2(x1, -offset - 1), new Vector2(x1, offset + 1), Theme.SelectionGlow, width);
     }
 
-    private void DrawDangerBadge(Transform2D toPixels, float scale)
+    // The badge keeps to the screen's upper right and stays upright however the Servo turns.
+    private void DrawDangerBadge(UiPixelPen pen)
     {
-        var badge = toPixels.Origin + (Vector2.FromAngle(-Mathf.Pi / 4) * Radius * scale);
-        DrawCircle(badge, 8 * scale, Theme.ArenaBackground, antialiased: true);
-        DrawCircle(badge, 7 * scale, Theme.Danger, antialiased: true);
-        DrawLine(badge + new Vector2(0, -4.2f * scale), badge + new Vector2(0, 1.2f * scale), Theme.ArenaBackground, 2 * scale, antialiased: true);
-        DrawCircle(badge + new Vector2(0, 3.6f * scale), 1.2f * scale, Theme.ArenaBackground, antialiased: true);
+        var turn = pen.ToPixels.Rotation;
+        var up = Vector2.Up.Rotated(-turn);
+        var badge = Vector2.FromAngle((-Mathf.Pi / 4) - turn) * Radius;
+        pen.Disc(badge, 8, Theme.ArenaBackground);
+        pen.Disc(badge, 7, Theme.Danger);
+        pen.Line(badge + (up * 4.2f), badge - (up * 1.2f), Theme.ArenaBackground, 2);
+        pen.Disc(badge - (up * 3.6f), 1.2f, Theme.ArenaBackground);
     }
 
     /// <summary>
@@ -343,11 +341,5 @@ public partial class ServoPart : PartVisual
 
     private float BandTo() => BandSweep(BuiltAngle, Range, Start).To;
 
-    private void DrawArcInLocal(Transform2D toPixels, float scale, Vector2 centre, float radius, float start, float end, int segments, Color color, float width) =>
-        DrawArc(toPixels * centre, radius * scale, start + toPixels.Rotation, end + toPixels.Rotation, segments, color, width * scale, antialiased: true);
-
     private static Vector2[] Closed(Vector2[] points) => [.. points, points[0]];
-
-    private static Vector2[] Map(Transform2D transform, IEnumerable<Vector2> points) =>
-        [.. points.Select(point => transform * point)];
 }
