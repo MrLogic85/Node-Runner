@@ -82,11 +82,17 @@ password=${NODE_RUNNER_KEYSTORE_PASSWORD:-$(security find-generic-password -s no
 
 mkdir -p build
 rm -f "$apk"
+# The Gradle template is git-ignored, so a clean tree says nothing about it. Build from a
+# fresh copy; installing it overwrites the tracked build.gradle, which is put back after.
+git clean -fdXq project/android
+trap 'git checkout -- project/android/build/build.gradle' EXIT
 echo "Exporting $tag ($code) to ${apk#"$root"/}"
 (cd project && GODOT_ANDROID_KEYSTORE_RELEASE_PATH=$keystore \
   GODOT_ANDROID_KEYSTORE_RELEASE_USER=$alias \
   GODOT_ANDROID_KEYSTORE_RELEASE_PASSWORD=$password \
-  "$godot" --headless --export-release Android "$apk")
+  "$godot" --headless --install-android-build-template --export-release Android "$apk")
+git checkout -- project/android/build/build.gradle
+trap - EXIT
 [[ -f $apk ]] || fail "Godot did not write $apk."
 
 badging=$("$build_tools/aapt2" dump badging "$apk" 2>/dev/null) || fail "aapt2 could not read $apk."

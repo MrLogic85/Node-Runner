@@ -90,8 +90,10 @@ A debug APK for development, signed with the developer's debug key:
   --export-debug Android ../build/node-runner-debug.apk
 ```
 
-`release.sh` runs `--export-release`, passing the release keystore through
-Godot's `GODOT_ANDROID_KEYSTORE_RELEASE_*` environment variables. A release
+`release.sh` deletes the ignored template and runs `--export-release` with a
+fresh install, so local template edits never reach a release. It passes the
+release keystore through Godot's `GODOT_ANDROID_KEYSTORE_RELEASE_*`
+environment variables. A release
 export is not a debug build, so `OS.IsDebugBuild()` is false and debug-only
 UI such as the Component library link is hidden (#808).
 

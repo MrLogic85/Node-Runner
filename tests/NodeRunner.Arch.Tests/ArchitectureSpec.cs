@@ -154,9 +154,10 @@ public sealed partial class ArchitectureSpec
         var template = Path.Combine(FindRepositoryRoot(), "project", "android", "build");
         DebugIdSuffix().IsMatch(File.ReadAllText(Path.Combine(template, "build.gradle")))
             .ShouldBeTrue("build.gradle's debug build type must keep applicationIdSuffix \".debug\".");
-        XDocument.Load(Path.Combine(template, "src", "monoDebug", "AndroidManifest.xml"))
-            .Root?.Element("application")?.Attribute(XName.Get("label", "http://schemas.android.com/apk/res/android"))?.Value
-            .ShouldBe("Node Runner Debug");
+        var label = XDocument.Load(Path.Combine(template, "src", "monoDebug", "AndroidManifest.xml"))
+            .Root?.Element("application")?.Attribute(XName.Get("label", "http://schemas.android.com/apk/res/android"));
+        label.ShouldNotBeNull("The monoDebug manifest must set the application's android:label.");
+        label.Value.ShouldBe("Node Runner Debug");
     }
 
     /// <summary>The one value <paramref name="file"/> sets <paramref name="key"/> to.</summary>
@@ -198,7 +199,7 @@ public sealed partial class ArchitectureSpec
     [GeneratedRegex("""^"(?<major>0|[1-9][0-9]*)\.(?<minor>0|[1-9][0-9]{0,2})\.(?<patch>0|[1-9][0-9]{0,2})"$""")]
     private static partial Regex VersionPattern();
 
-    [GeneratedRegex(@"buildTypes\s*\{\s*debug\s*\{[^}]*applicationIdSuffix\s+""\.debug""")]
+    [GeneratedRegex(@"buildTypes\s*\{\s*debug\s*\{[^}]*\n[ \t]*applicationIdSuffix\s+""\.debug""")]
     private static partial Regex DebugIdSuffix();
 
     private static void AssertNoGodotReference(Assembly assembly)
