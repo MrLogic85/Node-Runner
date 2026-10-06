@@ -30,8 +30,8 @@ something you can watch, poke and understand.
 - **Change the body after training.** The brain keeps what it learned for the
   parts you keep; new parts start almost unused.
 
-A genetic algorithm trains the network, written from scratch with no ML
-libraries; all the math is in `libs/NodeRunner.ML/`, readable in an evening.
+A genetic algorithm trains the network; all the math is in
+`libs/NodeRunner.ML/`, readable in an evening.
 What comes next is in [`docs/ROADMAP.md`](docs/ROADMAP.md) and the
 [milestones](https://github.com/MrLogic85/Node-Runner/milestones).
 
@@ -53,7 +53,7 @@ Android export: `docs/RELEASING.md` → "Android export".
 | Topic | Document |
 | --- | --- |
 | Agent and contributor entry point | [`AGENTS.md`](AGENTS.md) |
-| Vision, project stage, non-goals | [`docs/ROADMAP.md`](docs/ROADMAP.md) |
+| Vision, project stage, plan | [`docs/ROADMAP.md`](docs/ROADMAP.md) |
 | Layers, dependencies, solution layout | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) |
 | Creature parts and the brain's ports | [`docs/CREATURE_MODEL.md`](docs/CREATURE_MODEL.md) |
 | Build mode | [`docs/BUILD_MODE.md`](docs/BUILD_MODE.md) |
