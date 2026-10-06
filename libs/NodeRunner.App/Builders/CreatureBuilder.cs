@@ -31,7 +31,7 @@ public sealed class CreatureBuilder
 
     public static UiText ServoNeedsTwoLinksReason { get; } = UiText.Plain("A Servo needs two links at its joint");
 
-    /// <summary>Why a Piston or a Spring cannot join two nodes a beam already holds rigid (#451, #453).</summary>
+    /// <summary>Why another beam, a Piston or a Spring cannot join two nodes a beam already holds rigid (#451, #453, #877).</summary>
     public static UiText BeamJoinsTheseNodesReason { get; } = UiText.Plain("A beam already joins these nodes");
 
     /// <summary>Why a beam or another link cannot join two nodes a Piston already links.</summary>
@@ -125,20 +125,9 @@ public sealed class CreatureBuilder
     {
         ValidateNodeId(nodeIdA);
         ValidateNodeId(nodeIdB);
-
-        if (nodeIdA == nodeIdB)
+        if (!CanAddBeam(nodeIdA, nodeIdB, out var reason))
         {
-            throw new ArgumentException("A beam must connect two different nodes.");
-        }
-
-        if (_beams.Any(beam => IsSamePair(beam, nodeIdA, nodeIdB)))
-        {
-            throw new ArgumentException($"A beam already connects node {nodeIdA} and node {nodeIdB}.");
-        }
-
-        if (LinkReason(nodeIdA, nodeIdB) is { } linked)
-        {
-            throw new ArgumentException(linked.Message);
+            throw new ArgumentException(reason.Message);
         }
 
         var id = AllocatePartId();
@@ -146,13 +135,21 @@ public sealed class CreatureBuilder
         return id;
     }
 
-    /// <summary>Whether <see cref="AddBeam"/> would accept this pair: two distinct, existing nodes not yet joined.</summary>
-    public bool CanAddBeam(int nodeIdA, int nodeIdB) =>
-        HasNode(nodeIdA)
-        && HasNode(nodeIdB)
-        && nodeIdA != nodeIdB
-        && !_beams.Any(beam => IsSamePair(beam, nodeIdA, nodeIdB))
-        && LinkReason(nodeIdA, nodeIdB) is null;
+    /// <summary>
+    /// Whether <see cref="AddBeam"/> would accept this pair (#877): two distinct, existing nodes
+    /// with no beam and no link yet; if not, <paramref name="reason"/> says why.
+    /// </summary>
+    public bool CanAddBeam(int nodeIdA, int nodeIdB, [NotNullWhen(false)] out UiText? reason)
+    {
+        if (!HasNode(nodeIdA) || !HasNode(nodeIdB) || nodeIdA == nodeIdB)
+        {
+            reason = UiText.Plain("A beam must connect two different nodes.");
+            return false;
+        }
+
+        reason = LinkBlockedReason(nodeIdA, nodeIdB);
+        return reason is null;
+    }
 
     /// <summary>
     /// Whether <see cref="AddPiston"/> would accept this pair (#451): two distinct, existing nodes

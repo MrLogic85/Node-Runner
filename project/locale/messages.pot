@@ -29,6 +29,10 @@ msgid "A beam already joins these nodes"
 msgstr ""
 
 #: libs/NodeRunner.App/Builders/CreatureBuilder.cs
+msgid "A beam must connect two different nodes."
+msgstr ""
+
+#: libs/NodeRunner.App/Builders/CreatureBuilder.cs
 msgid "A piston must connect two different nodes."
 msgstr ""
 
