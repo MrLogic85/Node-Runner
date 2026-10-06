@@ -132,7 +132,7 @@ public partial class CreatureParts : Node2D
         part.BuiltAngle = hasFixed && hasTarget ? localTarget : 0;
         part.Range = (float)range;
         part.Start = (float)start;
-        part.HousingReach = hasFixed ? HousingReach(shape, nodes, nodeId, fixedLink) : 0;
+        part.HousingReach = hasFixed ? HousingReach(shape, nodes, fixedLink) : 0;
     }
 
     private static bool TryLink(CreatureShape shape, int nodeId, int? linkId, out LinkRef link)
@@ -165,8 +165,8 @@ public partial class CreatureParts : Node2D
         return (float)Math.Atan2(far.Y - joint.Y, far.X - joint.X);
     }
 
-    private static float HousingReach(CreatureShape shape, Dictionary<int, NodeDef> nodes, int servoNodeId, LinkRef link) =>
-        ServoGeometry.HousingReach(nodes.Values.ToArray(), nodeId => NodeRadius(shape, nodeId), link, servoNodeId, SensorLength(shape, link));
+    private static float HousingReach(CreatureShape shape, Dictionary<int, NodeDef> nodes, LinkRef link) =>
+        ServoGeometry.HousingReach(nodes.Values.ToArray(), nodeId => NodeRadius(shape, nodeId), link, SensorLength(shape, link));
 
     private static float SensorLength(CreatureShape shape, LinkRef link) =>
         link.Kind == CreatureElementKind.Beam && shape.Sensors.FirstOrDefault(sensor => sensor.BeamId == link.Id) is { } sensor ? (float)SensorPicture.SizeOf(sensor.Kind) : 0;
