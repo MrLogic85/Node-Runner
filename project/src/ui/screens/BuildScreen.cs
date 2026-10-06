@@ -310,7 +310,6 @@ public partial class BuildScreen : Control
         var tray = GetNode<Control>("%PartsTray");
         var jointHelp = GetNode<Control>("%JointHelp");
         var selectHelp = GetNode<Control>("%SelectHelp");
-        var savedPanel = GetNode<Control>("%SavedCreation");
         var partSettings = GetNode<Control>("%PartSettings");
         var selection = GetNode<Control>("%Selection");
         var toolPanel = presentation.ToolPanel;
@@ -319,7 +318,6 @@ public partial class BuildScreen : Control
         jointHelp.Visible = toolPanel.Mode == ToolPanelMode.JointHelp;
         selectHelp.Visible = toolPanel.Mode == ToolPanelMode.SelectHelp;
         GetNode<Control>("%PanelSpacer").Visible = !tray.Visible;
-        savedPanel.Visible = selected == 0 && locked;
         partSettings.Visible = selected == 1;
         selection.Visible = selected > 1;
         GetNode<Control>("%Readiness").Visible = selected == 0;
@@ -332,24 +330,15 @@ public partial class BuildScreen : Control
         }
 
         _sidePanelShows = shows;
-        sidePanel.Title = selected == 0 && locked ? "Training" : string.Empty;
         sidePanel.TitleSource = UiTextTranslation.Source(
-            selected == 1 ? part?.Name
+            selected == 1 ? part?.Title
             : selected > 1 ? presentation.Selection?.Title
-            : locked ? null
             : toolPanel.Title);
         sidePanel.IconId = selected > 1 ? UiIconId.Select : part is null ? UiIconId.None : PartSettingsIcon(part.Kind);
 
         if (tray.Visible)
         {
             ApplyPickList(presentation, linkList);
-        }
-
-        if (savedPanel.Visible)
-        {
-            GetNode<UiLabel>("%SavedTitle").ShowText(presentation.TrainingSummaryTitle);
-            GetNode<UiLabel>("%SavedLatest").ShowText(presentation.LatestDistanceText);
-            GetNode<UiLabel>("%SavedBody").ShowText(presentation.TrainingSummaryBody);
         }
 
         if (partSettings.Visible && part is not null)
@@ -399,8 +388,8 @@ public partial class BuildScreen : Control
     private void ApplyLinkList(LinkListPresentation list)
     {
         var help = GetNode<UiLabel>("%PartHelp");
-        help.TextSource = UiTextTranslation.Source(list.HelpText);
-        help.Visible = help.TextSource is not null;
+        help.ShowText(list.HelpText);
+        help.Visible = true;
         var rows = GetNode<Container>("%PartRows");
         if (_shownPartGroup != "links")
         {
@@ -418,14 +407,24 @@ public partial class BuildScreen : Control
             }
         }
 
+        // The picked link's info sits right under its row.
+        var infoLabel = GetNode<UiLabel>("%PickedInfo");
+        infoLabel.TextSource = UiTextTranslation.Source(list.PickedInfo);
+        infoLabel.Visible = infoLabel.TextSource is not null;
+        var linkRows = rows.GetChildren().OfType<UiPartRow>().ToList();
         for (var index = 0; index < list.Rows.Count; index++)
         {
-            rows.GetChild<UiPartRow>(index).State = list.Rows[index].State switch
+            linkRows[index].State = list.Rows[index].State switch
             {
                 LinkListRowState.Selected => UiPartRow.PartRowState.Selected,
                 LinkListRowState.Locked => UiPartRow.PartRowState.Locked,
                 _ => UiPartRow.PartRowState.Rest,
             };
+            if (list.Rows[index].State == LinkListRowState.Selected)
+            {
+                var below = linkRows[index].GetIndex();
+                rows.MoveChild(infoLabel, infoLabel.GetIndex() < below ? below : below + 1);
+            }
         }
     }
 
@@ -437,11 +436,8 @@ public partial class BuildScreen : Control
         var help = GetNode<UiLabel>("%PartHelp");
         help.ShowText(group.HelpText);
         help.Visible = true;
-        var lockedNote = GetNode<UiLabel>("%PartLockedNote");
-        lockedNote.TextSource = UiTextTranslation.Source(group.LockedNote);
-        lockedNote.Visible = lockedNote.TextSource is not null;
-        GetNode<Control>("%PartLockedIcon").Visible = lockedNote.Visible;
         var rows = GetNode<Container>("%PartRows");
+        GetNode<UiLabel>("%PickedInfo").Visible = false;
         if (_shownPartGroup != $"tray:{tab}")
         {
             _shownPartGroup = $"tray:{tab}";
@@ -462,20 +458,22 @@ public partial class BuildScreen : Control
             }
         }
 
+        var partRows = rows.GetChildren().OfType<UiPartRow>().ToList();
         for (var index = 0; index < group.Rows.Count; index++)
         {
             var row = group.Rows[index];
-            rows.GetChild<UiPartRow>(index).State = row.State switch
+            partRows[index].State = row.State switch
             {
-                PartTrayRowState.ComingLater => UiPartRow.PartRowState.Locked,
-                _ => UiPartRow.PartRowState.Rest,
+                PartTrayRowState.Available => UiPartRow.PartRowState.Rest,
+                _ => UiPartRow.PartRowState.Locked,
             };
         }
     }
 
+    // Frees the rows built in code; the scene's %PickedInfo label stays.
     private static void ClearRows(Container rows)
     {
-        foreach (var child in rows.GetChildren())
+        foreach (var child in rows.GetChildren().OfType<UiPartRow>())
         {
             rows.RemoveChild(child);
             child.QueueFree();

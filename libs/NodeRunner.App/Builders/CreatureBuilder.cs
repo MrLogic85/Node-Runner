@@ -26,19 +26,19 @@ public sealed class CreatureBuilder
     /// <summary>Why a joint part cannot be added to a node that already has one.</summary>
     public static UiText OnePartPerJointReason { get; } = UiText.Plain("One part per joint");
 
-    /// <summary>Why a joint part needs a node where at least two links meet.</summary>
-    public static UiText JointPartsGoOnAJointReason { get; } = UiText.Plain("Joint parts go on a joint");
+    /// <summary>Why a Servo dropped on anything but a joint is refused.</summary>
+    public static UiText ServosGoOnAJointReason { get; } = UiText.Plain("Servos go on a joint");
 
     public static UiText ServoNeedsTwoLinksReason { get; } = UiText.Plain("A Servo needs two links at its joint");
 
     /// <summary>Why another beam cannot join two nodes a beam already holds rigid (#877); a Piston or Spring replaces it instead (#849).</summary>
-    public static UiText BeamJoinsTheseNodesReason { get; } = UiText.Plain("A beam already joins these nodes");
+    public static UiText BeamJoinsTheseNodesReason { get; } = UiText.Plain("A beam already joins these joints");
 
     /// <summary>Why a beam or another link cannot join two nodes a Piston already links.</summary>
-    public static UiText PistonJoinsTheseNodesReason { get; } = UiText.Plain("These nodes already have a piston");
+    public static UiText PistonJoinsTheseNodesReason { get; } = UiText.Plain("These joints already have a piston");
 
     /// <summary>Why a beam or another link cannot join two nodes a Spring already links (#453).</summary>
-    public static UiText SpringJoinsTheseNodesReason { get; } = UiText.Plain("These nodes already have a spring");
+    public static UiText SpringJoinsTheseNodesReason { get; } = UiText.Plain("These joints already have a spring");
 
     /// <summary>Why a Piston or Spring cannot replace the beam between two nodes (#849): the sensor on it is never deleted silently.</summary>
     public static UiText SensorSitsOnThisBeamReason { get; } = UiText.Plain("A sensor sits on this beam");
@@ -146,7 +146,7 @@ public sealed class CreatureBuilder
     {
         if (!HasNode(nodeIdA) || !HasNode(nodeIdB) || nodeIdA == nodeIdB)
         {
-            reason = UiText.Plain("A beam must connect two different nodes.");
+            reason = UiText.Plain("A beam must connect two different joints.");
             return false;
         }
 
@@ -163,7 +163,7 @@ public sealed class CreatureBuilder
     {
         if (!HasNode(nodeIdA) || !HasNode(nodeIdB) || nodeIdA == nodeIdB)
         {
-            reason = UiText.Plain("A piston must connect two different nodes.");
+            reason = UiText.Plain("A piston must connect two different joints.");
             return false;
         }
 
@@ -180,7 +180,7 @@ public sealed class CreatureBuilder
     {
         if (!HasNode(nodeIdA) || !HasNode(nodeIdB) || nodeIdA == nodeIdB)
         {
-            reason = UiText.Plain("A spring must connect two different nodes.");
+            reason = UiText.Plain("A spring must connect two different joints.");
             return false;
         }
 
@@ -437,13 +437,7 @@ public sealed class CreatureBuilder
     {
         if (!HasNode(nodeId))
         {
-            reason = JointPartsGoOnAJointReason;
-            return false;
-        }
-
-        if (!ServoDef.HasTwoLinks(LinksAt(nodeId)))
-        {
-            reason = ServoNeedsTwoLinksReason;
+            reason = ServosGoOnAJointReason;
             return false;
         }
 
@@ -459,7 +453,10 @@ public sealed class CreatureBuilder
 
     public bool ServoNeedsTwoLinks(int nodeId) => HasNode(nodeId) && !ServoDef.HasTwoLinks(LinksAt(nodeId));
 
-    /// <summary>Adds a Servo with the first two links at the joint as Fixed and Target.</summary>
+    /// <summary>
+    /// Adds a Servo with the first two links at the joint as Fixed and Target. A joint with fewer
+    /// links leaves the missing roles empty, so the Servo waits in its error state for a link.
+    /// </summary>
     public int AddServo(int nodeId)
     {
         if (!CanAddServo(nodeId, out var reason))
@@ -469,7 +466,7 @@ public sealed class CreatureBuilder
 
         var links = LinksAt(nodeId).OrderBy(link => link.Id).ToArray();
         var id = AllocatePartId();
-        _servos.Add(new ServoDef(id, nodeId, links[0].Id, links[1].Id));
+        _servos.Add(new ServoDef(id, nodeId, links.Length > 0 ? links[0].Id : null, links.Length > 1 ? links[1].Id : null));
         return id;
     }
 

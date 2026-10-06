@@ -68,7 +68,7 @@ public sealed class BuildPresentationViewModelTests
 
         changes.ShouldBe(1);
         var list = presentation.LinkList.ShouldNotBeNull();
-        list.HelpText.ShouldBe(UiText.Plain("The brain pushes and pulls it. Drag joint to joint."));
+        list.PickedInfo.ShouldBe(PartInfo.Piston);
         list.Rows.Single(row => row.Link == BuildLink.Piston).State.ShouldBe(LinkListRowState.Selected);
         list.Rows.Single(row => row.Link == BuildLink.Beam).State.ShouldBe(LinkListRowState.Rest);
     }
@@ -91,6 +91,22 @@ public sealed class BuildPresentationViewModelTests
         build.ActiveTool = BuildTool.Beam;
 
         new BuildPresentationViewModel(build).LinkList.ShouldBeNull();
+    }
+
+    [Fact]
+    public void PartsTray_OnALockedCreation_ShowsEveryRowLocked_AndHowToUnlock()
+    {
+        var build = new BuildViewModel();
+        build.Load(PairCreature(), moveOnly: true);
+
+        var groups = new BuildPresentationViewModel(build).PartGroups;
+
+        groups.SelectMany(group => group.Rows).ShouldAllBe(row => !row.IsAvailable);
+        groups.ShouldAllBe(group => Equals(group.HelpText, UiText.Plain("Unlock to add or remove parts.")));
+        var servo = groups.SelectMany(group => group.Rows).Single(row => row.Part == BuildPart.Servo);
+        servo.State.ShouldBe(PartTrayRowState.CreationLocked);
+        servo.LockedReason.ShouldBe(UiText.Plain("Unlock to add or remove parts."));
+        groups.SelectMany(group => group.Rows).Single(row => row.Part == BuildPart.Camera).State.ShouldBe(PartTrayRowState.ComingLater);
     }
 
     [Theory]
@@ -133,7 +149,7 @@ public sealed class BuildPresentationViewModelTests
 
         presentation.LockTopologyTools.ShouldBeTrue();
         presentation.ActiveTool.ShouldBe(BuildTool.Parts);
-        presentation.ToolPanel.Mode.ShouldBe(ToolPanelMode.None);
+        presentation.ToolPanel.Mode.ShouldBe(ToolPanelMode.PartsTray);
         presentation.IsLocked.ShouldBeTrue();
         presentation.IsTrained.ShouldBeTrue();
     }
@@ -180,36 +196,6 @@ public sealed class BuildPresentationViewModelTests
         changes.ShouldBeGreaterThan(0);
     }
 
-    [Fact]
-    public void LatestDistanceText_ShowsTheLatestGenerationNotTheBestEver()
-    {
-        var build = new BuildViewModel();
-        build.LoadCreation(new CreationDef(
-            Guid.NewGuid(),
-            "Worm",
-            PairCreature(),
-            TestTraining.State(3, bestDistance: 400, new TrainingRunDef(250, 1, 0, MapIds.Flat, frontDistance: 270))));
-
-        new BuildPresentationViewModel(build).LatestDistanceText.ShouldBe(UiText.Format("Latest distance {0}", UiText.Format("{0} m", new FixedNumber(2.7, 1))));
-    }
-
-    [Theory]
-    [InlineData(1)]
-    [InlineData(2)]
-    [InlineData(12)]
-    public void TrainingSummaryTitle_CountsGenerations(int generation)
-    {
-        var build = new BuildViewModel();
-        build.LoadCreation(new CreationDef(Guid.NewGuid(), "Worm", PairCreature(), TestTraining.State(generation)));
-
-        new BuildPresentationViewModel(build).TrainingSummaryTitle.ShouldBe(
-            UiText.Counted("Trained {0} generation", "Trained {0} generations", generation));
-    }
-
-    [Fact]
-    public void TrainingSummaryTitle_WithoutTraining_SaysSo() =>
-        new BuildPresentationViewModel(new BuildViewModel()).TrainingSummaryTitle.ShouldBe(UiText.Plain("Not trained yet"));
-
     [Theory]
     [InlineData(1)]
     [InlineData(2)]
@@ -243,15 +229,15 @@ public sealed class BuildPresentationViewModelTests
             UiText.Format("Beam {0}", 1),
             UiText.Format("Beam {0}", 1),
             UiText.Plain("Between"),
-            UiText.Format("{0} ↔ {1}", UiText.Format("Node {0}", 1), UiText.Format("Node {0}", 2)),
-            UiText.Plain("Drag its ends to change the length."),
+            UiText.Format("{0} ↔ {1}", UiText.Format("Joint {0}", 1), UiText.Format("Joint {0}", 2)),
+            PartInfo.Beam,
             CanDelete: true,
             part.Settings));
         part.Settings.ShouldBeEmpty();
     }
 
     [Theory]
-    [InlineData(SensorKind.Accelerometer, PartSettingsKind.Accelerometer, "Accel", "Feels how its beam speeds up, slows down and tilts.")]
+    [InlineData(SensorKind.Accelerometer, PartSettingsKind.Accelerometer, "Accel", "Measures its beam's acceleration.")]
     [InlineData(SensorKind.Camera, PartSettingsKind.Camera, "Camera", "Three rays see how near the ground is. Drag the round handle to aim it.")]
     public void SelectedSensor_ShowsNameBeamAndWhatItFeels(SensorKind kind, PartSettingsKind partKind, string name, string note)
     {
@@ -268,8 +254,8 @@ public sealed class BuildPresentationViewModelTests
         part.ShouldBe(new PartSettingsPresentation(
             7,
             partKind,
-            UiText.Plain(name),
-            UiText.Plain(name),
+            UiText.Format(name + " {0}", 1),
+            UiText.Format(name + " {0}", 1),
             UiText.Plain("On"),
             UiText.AsWritten("Thigh"),
             UiText.Plain(note),
@@ -312,7 +298,7 @@ public sealed class BuildPresentationViewModelTests
             2,
             PartSettingsKind.Node,
             UiText.AsWritten("Knee"),
-            UiText.Format("Node {0}", 2),
+            UiText.Format("Joint {0}", 2),
             null,
             null,
             UiText.Plain("Links meet and turn here. Drag it to move them."),
@@ -330,7 +316,7 @@ public sealed class BuildPresentationViewModelTests
 
         var part = new BuildPresentationViewModel(build).SinglePart!;
 
-        part.Note.ShouldBe(BuildPresentationViewModel.PistonNote);
+        part.Note.ShouldBe(PartInfo.Piston);
         part.Settings.Select(slider => slider.Readout).ShouldBe(
         [
             UiText.Format("{0} N", new FixedNumber(250, 0)),
@@ -352,7 +338,7 @@ public sealed class BuildPresentationViewModelTests
         var part = new BuildPresentationViewModel(build).SinglePart!;
 
         part.Kind.ShouldBe(PartSettingsKind.Spring);
-        part.Note.ShouldBe(BuildPresentationViewModel.SpringNote);
+        part.Note.ShouldBe(PartInfo.Spring);
         part.Settings.Select(slider => slider.Readout).ShouldBe(
         [
             UiText.Format("{0} N/m", new FixedNumber(400, 0)),
@@ -437,7 +423,7 @@ public sealed class BuildPresentationViewModelTests
             EmptyNote: null,
             ShowFrameRows: true,
             UiText.Counted("Delete {0}", "Delete {0}", 3),
-            UiText.Plain("Links on a deleted node go with it."),
+            UiText.Plain("Links on a deleted joint go with it."),
             CanDelete: true));
     }
 
@@ -550,7 +536,7 @@ public sealed class BuildPresentationViewModelTests
             []));
 
         new BuildPresentationViewModel(build).BuildPanel.ReadinessText.ShouldBe(
-            UiText.Format("The beam between node {0} and node {1} has zero length. Move one of the nodes apart.", 1, 2));
+            UiText.Format("The beam between joint {0} and joint {1} has zero length. Move one of the joints apart.", 1, 2));
     }
 
     [Theory]
@@ -578,7 +564,7 @@ public sealed class BuildPresentationViewModelTests
         var buildPanel = presentation.BuildPanel;
 
         buildPanel.CanStartTraining.ShouldBeFalse();
-        buildPanel.ReadinessText.ShouldBe(UiText.Plain("Add nodes + beams"));
+        buildPanel.ReadinessText.ShouldBe(UiText.Plain("Add joints and links"));
     }
 
     [Fact]
@@ -591,7 +577,7 @@ public sealed class BuildPresentationViewModelTests
         var buildPanel = presentation.BuildPanel;
 
         buildPanel.CanStartTraining.ShouldBeFalse();
-        buildPanel.ReadinessText.ShouldBe(UiText.Counted("{0} node not connected", "{0} nodes not connected", 1));
+        buildPanel.ReadinessText.ShouldBe(UiText.Counted("{0} joint not connected", "{0} joints not connected", 1));
     }
 
     [Fact]

@@ -72,11 +72,12 @@ owned by `docs/TRAINING_LOOP.md` → Product lifecycle boundary.
 
 ## Interactions
 
-The rail holds the tools Parts, Links, Joint and Select (#365, #705, #706, #913);
+The rail holds the tools Joint, Links, Parts and Select (#365, #705, #706, #913);
 "joint" is the player-facing name for a node. Start training is the play
 button at the bottom of the rail in both states (#370); it is dimmed until
 the creature can train, and the panel's last line says why.
-Build always opens in Parts. `BuildGestures` (App) turns pointer
+Build opens in Joint, the default tool; a locked creation opens in Parts
+until its Joint tool is unlocked (#896). `BuildGestures` (App) turns pointer
 presses, drags and releases into edits for the active tool and into zoom and
 pan, and `BuildCanvas` only forwards input and draws. A pointer that
 travels at most `TapSlop` view units counts as a tap. Hit tests prefer a node
@@ -116,14 +117,17 @@ sizes on screen at any zoom.
 - **Links:** with nothing selected, the panel lists link types: Beam, Piston,
   Spring and later Wing, with no group header, since the panel's title
   already says Links (#913); the locked Wing row shows only its lock, with
-  no "Coming later" line. Beam is picked when Build opens; the picked link
+  no "Coming later" line. The picked link's row shows what it does right
+  under it (`PartInfo`, the same line as its Part settings note), and one
+  help line at the end says "Drag from joint to joint to add the picked
+  link." Beam is picked when Build opens; the picked link
   then stays for the visit, across tool switches and selections (#874). It
   is not saved. Drag from an
   unselected joint to a different joint to draw the picked link. Every
   link, a Beam too (#877), shows a refusal like the Piston bullet below:
   the drag line's states and the reason at the joint
   (`BuildViewModel.CanConnectLink`). A Beam refuses a pair a link already
-  joins, with "A beam already joins these nodes" when that link is a Beam;
+  joins, with "A beam already joins these joints" when that link is a Beam;
   only a Piston or Spring replaces a beam.
   While dragging, the line is dashed over no joint, solid once it will
   attach, and dashed danger with a crossed ring at its midpoint when the
@@ -139,13 +143,13 @@ sizes on screen at any zoom.
 - **Sensors:** an Accelerometer (#127) and a Camera (#575) sit on a
   beam, one per beam. Drag one from the Parts tray onto a beam to place it
   (#376; see Parts tray below). Deleting a beam deletes its sensor. The
-  tray holds the Camera back as "Coming later" (#852): on the Flat map it
+  tray holds the Camera back as a locked row (#852): on the Flat map it
   only adds complexity, so it returns with maps that have terrain (#855). A saved
   creation that already has one keeps it, and it works as below.
 - **Piston (#451, #705):** picked from the Links tool's list. Drag joint to
   joint to place one; over a joint that would refuse it, the line and that
   joint's ring turn dashed danger, with a crossed ring on the line (#920),
-  and dropping there shows the reason at the joint: "These nodes already
+  and dropping there shows the reason at the joint: "These joints already
   have a piston", or "A sensor sits on this beam" on a beam's pair whose
   beam has a sensor. On any other pair a beam joins, the Piston replaces
   the beam (#849): while dragging, two dashed lines outline that beam, and
@@ -156,16 +160,18 @@ sizes on screen at any zoom.
   then a Piston, then a beam. Deleting a joint deletes its Pistons.
 - **Spring (#453):** placed like a Piston, with the same refusals, and it
   replaces a beam the same way (#849); a pair
-  that has a Spring refuses another link with "These nodes already have a
+  that has a Spring refuses another link with "These joints already have a
   spring". Taps treat Pistons and Springs alike as links: after a sensor
   and before a beam, the nearest link is hit, a Spring on a tie. Deleting a
   joint deletes its Springs. A locked creation cannot add one.
-- **Servo (#452, #577):** dragged from Parts → On a joint onto a node with
-  two or more links (Beam, Piston or Spring). Dropping on a beam, sensor or link
-  refuses with "Joint parts go on a joint", on a one-link node with "A Servo
-  needs two links at its joint"; a joint that already has one
-  refuses with "One part per joint". A good drop chooses the two lowest-id
-  links as Fixed and Target, records one undo step and selects the Servo.
+- **Servo (#452, #577):** dragged from Parts → Moving parts onto any joint.
+  Dropping on a beam, sensor or link refuses with "Servos go on a joint"; a
+  joint that already has one refuses with "One part per joint". A good drop
+  chooses the two lowest-id links (Beam, Piston or Spring) as Fixed and
+  Target, records one undo step and selects the Servo. On a joint with fewer
+  than two links the missing roles stay empty: the Servo lands in its error
+  state, "A Servo needs two links at its joint", until another link is drawn
+  there and picked (owner decision: drop first, finish later).
   Tapping that joint selects the Servo, but dragging still moves the joint.
   Deleting a held link keeps the Servo with that role missing and blocks
   training until a replacement is picked or the Servo is deleted.
@@ -184,7 +190,12 @@ sizes on screen at any zoom.
   selection, and deleting a node removes every link on it, its Servo, and
   those beams' sensors (`CreatureBuilder.RemoveNode`).
 - A locked creation opens in Parts with Links and Joint disabled, and
-  `BuildViewModel` refuses topology edits on its own.
+  `BuildViewModel` refuses topology edits on its own. Its side panel shows
+  the active tool's panel like an unlocked one: its Parts tray shows every
+  row locked and each tab's help line says "Unlock to add or remove parts."
+  (`PartTray.LockedGroups`), so no row looks draggable. There is no training summary
+  (owner decision): the Creations card shows the latest training, and
+  Stats (#198) will show more.
 - **Two fingers, any tool (#400):** pinch zooms about the point between the
   fingers and dragging both pans. The second finger cancels the first
   finger's gesture, putting back any node it moved and any selection its
@@ -236,22 +247,24 @@ sizes on screen at any zoom.
 
 ## Parts tray
 
-With nothing selected, an unlocked creation's side panel shows the active
+With nothing selected, the side panel shows the active
 tool's panel: Parts shows the Parts tray (#374), Links shows the link list
 (#705), and Joint and Select show scene-authored short help (#706). The tray has three
-`UiIconTabs` (On a joint, Sensors, Blocks) pinned at the top, then a scrolling
+`UiIconTabs` (Moving parts, Sensors, Blocks) pinned at the top, then a scrolling
 list with the open tab's name, its parts as compact `UiPartRow`s and one help
 line for the tab. Each Build visit opens the tray on the first tab with an
-available part (`PartTray.OpeningGroup`, today On a joint), so a tab of padlocks
+available part (`PartTray.OpeningGroup`, today Moving parts), so a tab of padlocks
 never reads as every part being locked (#887). The open tab then stays for the
 visit, across tool switches (#874). `NodeRunner.App.ViewModels.PartTray`
 owns the groups, their order, the help lines and each row's state; the screen
 only maps parts to glyphs. Every implemented part is unlimited until #525, so
-rows show no count. A part not yet implemented is a dashed row with a lock,
-and the tab's name row says "Coming later" once; the Camera is held back the
-same way (#852). Each planned joint part, sensor and block has a row, so
-the tray shows what is coming: the Touch sensor (#665) in On a joint and
-the Pulse (#527) in Sensors are locked rows too. The available rows (today
+rows show no count. A part not yet implemented is a dashed row with a lock, with no
+"Coming later" text; the Camera is held back the same way (#852). Tabs
+group parts by what they do, not where they go: Moving parts holds the
+motors, Brake and Wheel, and Sensors holds every sensor, whether it sits on
+a beam or, like the Touch sensor (#665), on a node; each part decides its
+own placement. Each planned part has a row, so the tray shows what is
+coming: the Touch sensor and the Pulse (#527) are locked rows in Sensors. The available rows (today
 Servo and Accelerometer) do nothing on tap; they are dragged out instead
 (#376). Godot's drag-and-drop carries the part: the row starts it and
 floats its glyph above the finger (`UiPartRow.CreateDragPreview`), and
@@ -267,18 +280,23 @@ part shows its settings and several show the selection panel instead.
 ## Part settings
 
 One selected joint, beam, sensor or link shows its Part settings in the side
-panel (#343). The panel's own title row carries the part's glyph and name;
+panel (#343). The panel's own title row carries the part's glyph and kind
+("Accelerometer", "Joint"; `PartSettingsPresentation.Title`), so a renamed
+part still says what it is;
 there is no close button, and tapping empty canvas deselects. The rows are
 `UiTextField` **Name** first, then what the part is joined to (a beam's two
 joints, a sensor's beam; a joint, a Piston and a Spring list nothing, as
 the canvas shows them, #913), then a short note, and one
 full-width danger **Delete** in its own column after them, absent on a
 locked creation. Delete acts on a tap, with no dialog; Undo brings the
-part back, selected again (#866, #878). Structure is read-only here: a beam's length is drawn, so its note
-says "Drag its ends to change the length." instead of a number.
+part back, selected again (#866, #878). Structure is read-only here: a beam's length is drawn, not a number.
+A part's note is its `PartInfo` line, the same line its row shows in the
+Links list: Beam "A rigid rod.", Piston "Extends and retracts.", Spring
+"Extends and retracts toward its built length.", Servo "A motor that tries
+to hold a target angle.", Accelerometer "Measures its beam's acceleration."
 `BuildPresentationViewModel.SinglePart` owns the rows and copy. A part with
-no name of its own shows a default (`BuildViewModel.DefaultPartName`: "Node 2",
-"Beam 1", "Accel" or "Camera"; at most 10 characters, see `docs/UI_DIRECTION.md`
+no name of its own shows a default (`BuildViewModel.DefaultPartName`: "Joint 2",
+"Beam 1", "Accel 1" or "Camera 1", a sensor numbered among its kind; at most 10 characters, see `docs/UI_DIRECTION.md`
 "Name length") that follows its place in the lists; renaming
 (`RenamePart`, by id, so an edit lands on the part it started on even if
 the selection moves) trims the text, and a blank name, or the default the
@@ -315,9 +333,8 @@ position can, a Spring's, with a ring at its rest length, while Stroke or Coil l
 no brain port, so a locked creation keeps them.
 
 A Piston's rows are Name, then its sliders instead of what it is joined to,
-then the note "The brain pushes it out and pulls it in, within its stroke."
-A Servo's rows are Name, sliders, "Fixed link" and "Target link" pickers,
-then "The brain picks an angle and how much of its max strength to use."
+then its note. A Servo's rows are Name, sliders, "Fixed link" and "Target
+link" pickers, then its note.
 When a role is missing, the picker reads "Pick a Fixed link" or "Pick a
 Target link" in danger colour, and its list holds only the real links. If
 the joint has fewer than two links, the note under it and the canvas
@@ -328,9 +345,7 @@ could fix it. Changing a picker follows
 to the top when it shows another part, tool or selection count; a Servo
 whose links a picker, Undo or Redo changed is still the same part, so the
 panel keeps its place (`PartSettingsPresentation.PanelId`, #910).
-A Spring's are Name, its sliders, then "It springs toward the ring, which
-Coil length moves. With the ring past an end mark, it starts pressed against
-that end. Damping stops it bouncing." A Piston
+A Spring's are Name, its sliders, then its note. A Piston
 and a Spring selected together share Stroke.
 
 ## Selection panel
@@ -344,7 +359,7 @@ title row carries the Select glyph and "N selected"; there is no close button.
   With neither settings nor a frame: "These parts share no settings."
 - Last a full-width danger **Delete N**, which acts on a tap (Undo restores it)
   (`BuildViewModel.DeleteSelectedParts`), hidden when locked. Its note is
-  "Links on a deleted node go with it." with a joint selected (#913), else "A sensor
+  "Links on a deleted joint go with it." with a joint selected (#913), else "A sensor
   on a deleted beam goes with it." when one would, else none.
 
 `BuildPresentationViewModel.Selection` owns the copy.
@@ -367,7 +382,7 @@ trains and stands still, and Train setup warns about it
 `CreatureBuilder.TryBuild` applies `Problems` to the in-progress creature.
 UI surfaces those messages and does not duplicate the rules. The one
 exception is Build's readiness line, which shortens the errors for the
-narrow side panel (for example "1 node not connected"); it only changes the
+narrow side panel (for example "1 joint not connected"); it only changes the
 wording.
 
 Start training is gated by `BuildViewModel.TryLeave` and

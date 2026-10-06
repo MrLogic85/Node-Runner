@@ -25,19 +25,23 @@ msgid "A Servo needs two links at its joint"
 msgstr ""
 
 #: libs/NodeRunner.App/Builders/CreatureBuilder.cs
-msgid "A beam already joins these nodes"
+msgid "A beam already joins these joints"
 msgstr ""
 
 #: libs/NodeRunner.App/Builders/CreatureBuilder.cs
-msgid "A beam must connect two different nodes."
+msgid "A beam must connect two different joints."
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/PartInfo.cs
+msgid "A motor that tries to hold a target angle."
 msgstr ""
 
 #: libs/NodeRunner.App/Builders/CreatureBuilder.cs
-msgid "A piston must connect two different nodes."
+msgid "A piston must connect two different joints."
 msgstr ""
 
-#: libs/NodeRunner.App/ViewModels/LinkListPresentation.cs
-msgid "A rigid rod. Drag joint to joint."
+#: libs/NodeRunner.App/ViewModels/PartInfo.cs
+msgid "A rigid rod."
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs
@@ -53,13 +57,14 @@ msgid "A slider sets one value for all of them."
 msgstr ""
 
 #: libs/NodeRunner.App/Builders/CreatureBuilder.cs
-msgid "A spring must connect two different nodes."
+msgid "A spring must connect two different joints."
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartNames.cs
-msgid "Accel"
+msgid "Accel {0}"
 msgstr ""
 
+#: libs/NodeRunner.App/ViewModels/PartSettingsPresentation.cs
 #: libs/NodeRunner.App/ViewModels/PartTrayPresentation.cs
 msgid "Accelerometer"
 msgstr ""
@@ -78,12 +83,12 @@ msgid "Action failed"
 msgstr ""
 
 #: libs/NodeRunner.App/Lifecycle/CreatureReadiness.cs
-msgid "Add at least one node before training this creation."
+msgid "Add at least one joint before training this creation."
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs
 #: project/scenes/screens/BuildScreen.tscn
-msgid "Add nodes + beams"
+msgid "Add joints and links"
 msgstr ""
 
 #: project/scenes/screens/BuildScreen.tscn
@@ -107,6 +112,7 @@ msgid "Battery"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/LinkListPresentation.cs
+#: libs/NodeRunner.App/ViewModels/PartSettingsPresentation.cs
 msgid "Beam"
 msgstr ""
 
@@ -142,9 +148,13 @@ msgstr ""
 msgid "Brake"
 msgstr ""
 
-#: libs/NodeRunner.App/ViewModels/PartNames.cs
+#: libs/NodeRunner.App/ViewModels/PartSettingsPresentation.cs
 #: libs/NodeRunner.App/ViewModels/PartTrayPresentation.cs
 msgid "Camera"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/PartNames.cs
+msgid "Camera {0}"
 msgstr ""
 
 #: project/scenes/ui/UiDialogContent.tscn
@@ -161,7 +171,6 @@ msgid "Coil length"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartTrayPresentation.cs
-#: project/scenes/screens/BuildScreen.tscn
 msgid "Coming later"
 msgstr ""
 
@@ -269,16 +278,16 @@ msgstr ""
 msgid "Drag a box"
 msgstr ""
 
+#: libs/NodeRunner.App/ViewModels/LinkListPresentation.cs
+msgid "Drag from joint to joint to add the picked link."
+msgstr ""
+
 #: project/scenes/screens/BuildScreen.tscn
 msgid "Drag inside the box"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartTrayPresentation.cs
 msgid "Drag it onto the canvas, then draw beams to its two eyes."
-msgstr ""
-
-#: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs
-msgid "Drag its ends to change the length."
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartTrayPresentation.cs
@@ -294,10 +303,6 @@ msgstr ""
 msgid "Drag the corner: closer together or further apart"
 msgstr ""
 
-#: libs/NodeRunner.App/ViewModels/BuildViewModel.cs
-msgid "Edit mode only allows moving existing nodes."
-msgstr ""
-
 #: project/scenes/ui/UiDialogContent.tscn
 msgid "Edit this text in the Inspector. The same scene supplies the layout of every UiDialog."
 msgstr ""
@@ -308,8 +313,12 @@ msgstr ""
 msgid "Examples"
 msgstr ""
 
-#: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs
-msgid "Feels how its beam speeds up, slows down and tilts."
+#: libs/NodeRunner.App/ViewModels/PartInfo.cs
+msgid "Extends and retracts toward its built length."
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/PartInfo.cs
+msgid "Extends and retracts."
 msgstr ""
 
 #: project/src/hosts/TrainingHost.cs
@@ -351,25 +360,17 @@ msgid "Hills"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs
-msgid "It springs toward the ring, which Coil length moves. With the ring past an end mark, it starts pressed against that end. Damping stops it bouncing."
-msgstr ""
-
-#: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs
+#: libs/NodeRunner.App/ViewModels/PartSettingsPresentation.cs
 #: project/scenes/screens/BuildScreen.tscn
 msgid "Joint"
 msgstr ""
 
-#: libs/NodeRunner.App/Builders/CreatureBuilder.cs
-msgid "Joint parts go on a joint"
+#: libs/NodeRunner.App/ViewModels/PartNames.cs
+msgid "Joint {0}"
 msgstr ""
 
-#: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs
-msgid "Latest distance {0}"
-msgstr ""
-
-#: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs
-#: project/scenes/screens/BuildScreen.tscn
-msgid "Latest distance —"
+#: libs/NodeRunner.App/Lifecycle/CreatureReadiness.cs
+msgid "Joint {0} has nothing attached. Connect it with a link or remove it."
 msgstr ""
 
 #: project/src/ui/lib/UiPicker.cs
@@ -390,7 +391,7 @@ msgid "Links meet and turn here. Drag it to move them."
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs
-msgid "Links on a deleted node go with it."
+msgid "Links on a deleted joint go with it."
 msgstr ""
 
 #: project/scenes/screens/TrainSetupScreen.tscn
@@ -409,6 +410,10 @@ msgstr ""
 msgid "Max strength"
 msgstr ""
 
+#: libs/NodeRunner.App/ViewModels/PartInfo.cs
+msgid "Measures its beam's acceleration."
+msgstr ""
+
 #: project/scenes/screens/TrainSetupScreen.tscn
 msgid "More maps come in a later version."
 msgstr ""
@@ -419,6 +424,10 @@ msgstr ""
 
 #: project/scenes/screens/BuildScreen.tscn
 msgid "Move, rotate or scale a group."
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/PartTrayPresentation.cs
+msgid "Moving parts"
 msgstr ""
 
 #: project/scenes/screens/BuildScreen.tscn
@@ -442,21 +451,11 @@ msgstr ""
 msgid "No saved Creations yet."
 msgstr ""
 
-#: libs/NodeRunner.App/ViewModels/PartNames.cs
-msgid "Node {0}"
-msgstr ""
-
-#: libs/NodeRunner.App/Lifecycle/CreatureReadiness.cs
-msgid "Node {0} has nothing attached. Connect it with a beam, a piston or a spring, or remove it."
-msgstr ""
-
 #: libs/NodeRunner.App/ViewModels/BuildViewModel.cs
 msgid "Not connected"
 msgstr ""
 
-#: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs
 #: libs/NodeRunner.App/ViewModels/TrainSetupPresentationViewModel.cs
-#: project/scenes/screens/BuildScreen.tscn
 msgid "Not trained yet"
 msgstr ""
 
@@ -475,10 +474,6 @@ msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs
 msgid "On"
-msgstr ""
-
-#: libs/NodeRunner.App/ViewModels/PartTrayPresentation.cs
-msgid "On a joint"
 msgstr ""
 
 #: libs/NodeRunner.App/Builders/CreatureBuilder.cs
@@ -523,6 +518,7 @@ msgid "Pick two links"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/LinkListPresentation.cs
+#: libs/NodeRunner.App/ViewModels/PartSettingsPresentation.cs
 msgid "Piston"
 msgstr ""
 
@@ -630,12 +626,17 @@ msgstr ""
 msgid "Sensors go on a beam"
 msgstr ""
 
+#: libs/NodeRunner.App/ViewModels/PartSettingsPresentation.cs
 #: libs/NodeRunner.App/ViewModels/PartTrayPresentation.cs
 msgid "Servo"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartNames.cs
 msgid "Servo {0}"
+msgstr ""
+
+#: libs/NodeRunner.App/Builders/CreatureBuilder.cs
+msgid "Servos go on a joint"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/TrainSetupPresentationViewModel.cs
@@ -666,15 +667,12 @@ msgid "Sounds"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/LinkListPresentation.cs
+#: libs/NodeRunner.App/ViewModels/PartSettingsPresentation.cs
 msgid "Spring"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartNames.cs
 msgid "Spring {0}"
-msgstr ""
-
-#: libs/NodeRunner.App/ViewModels/LinkListPresentation.cs
-msgid "Springs back to its drawn length. Drag joint to joint."
 msgstr ""
 
 #: project/scenes/ui/UiStageCard.tscn
@@ -699,10 +697,6 @@ msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/BrainFocusPresentationViewModel.cs
 msgid "Start training to see the live brain."
-msgstr ""
-
-#: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs
-msgid "Start training when you are ready."
 msgstr ""
 
 #: project/scenes/screens/BuildScreen.tscn
@@ -768,27 +762,15 @@ msgid "The action could not be completed. Please try again."
 msgstr ""
 
 #: libs/NodeRunner.App/Lifecycle/CreatureReadiness.cs
-msgid "The beam between node {0} and node {1} has zero length. Move one of the nodes apart."
+msgid "The beam between joint {0} and joint {1} has zero length. Move one of the joints apart."
 msgstr ""
 
 #: libs/NodeRunner.App/Lifecycle/CreatureReadiness.cs
-msgid "The beam between node {0} and node {1} is too short. Move one of the nodes apart."
+msgid "The beam between joint {0} and joint {1} is too short. Move one of the joints apart."
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/TrainSetupPresentationViewModel.cs
 msgid "The brain learns faster with more shadows."
-msgstr ""
-
-#: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs
-msgid "The brain picks an angle and how much of its max strength to use."
-msgstr ""
-
-#: libs/NodeRunner.App/ViewModels/LinkListPresentation.cs
-msgid "The brain pushes and pulls it. Drag joint to joint."
-msgstr ""
-
-#: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs
-msgid "The brain pushes it out and pulls it in, within its stroke."
 msgstr ""
 
 #: project/src/hosts/CreationActions.cs
@@ -799,39 +781,39 @@ msgstr ""
 msgid "The creation could not be copied."
 msgstr ""
 
-#: libs/NodeRunner.App/Lifecycle/CreatureReadiness.cs
-msgid "The piston between node {0} and node {1} has zero length. Move one of the nodes apart."
+#: project/src/hosts/CreationActions.cs
+msgid "The creation is locked so you do not change the size or values of its model by accident. Changes to how the model behaves are still allowed. Unlock to use every tool that changes the model. Adding or removing a part keeps the training, but adds or removes that part of the model. Removing a part and adding the same kind back does not bring its training back; use Undo instead."
 msgstr ""
 
 #: libs/NodeRunner.App/Lifecycle/CreatureReadiness.cs
-msgid "The piston between node {0} and node {1} is too short. Move one of the nodes apart."
+msgid "The piston between joint {0} and joint {1} has zero length. Move one of the joints apart."
 msgstr ""
 
 #: libs/NodeRunner.App/Lifecycle/CreatureReadiness.cs
-msgid "The spring between node {0} and node {1} has zero length. Move one of the nodes apart."
+msgid "The piston between joint {0} and joint {1} is too short. Move one of the joints apart."
 msgstr ""
 
 #: libs/NodeRunner.App/Lifecycle/CreatureReadiness.cs
-msgid "The spring between node {0} and node {1} is too short. Move one of the nodes apart."
+msgid "The spring between joint {0} and joint {1} has zero length. Move one of the joints apart."
+msgstr ""
+
+#: libs/NodeRunner.App/Lifecycle/CreatureReadiness.cs
+msgid "The spring between joint {0} and joint {1} is too short. Move one of the joints apart."
 msgstr ""
 
 #: libs/NodeRunner.App/Builders/CreatureBuilder.cs
-msgid "These nodes already have a piston"
+msgid "These joints already have a piston"
 msgstr ""
 
 #: libs/NodeRunner.App/Builders/CreatureBuilder.cs
-msgid "These nodes already have a spring"
+msgid "These joints already have a spring"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs
 msgid "These parts share no settings."
 msgstr ""
 
-#: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs
-msgid "This can drop after a noisy generation; Training's Best never does. Tap the padlock to change the body. Training is kept."
-msgstr ""
-
-#: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs
+#: libs/NodeRunner.App/ViewModels/PartInfo.cs
 msgid "Three rays see how near the ground is."
 msgstr ""
 
@@ -867,16 +849,6 @@ msgstr ""
 msgid "Train {0}"
 msgstr ""
 
-#: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs
-msgid "Trained {0} generation"
-msgid_plural "Trained {0} generations"
-msgstr[0] ""
-msgstr[1] ""
-
-#: project/src/ui/screens/BuildScreen.cs
-msgid "Training"
-msgstr ""
-
 #: project/scenes/screens/TrainingScreen.tscn
 msgid "Training · Flat ground"
 msgstr ""
@@ -900,6 +872,10 @@ msgstr ""
 #: project/scenes/screens/BuildScreen.tscn
 #: project/src/hosts/CreationActions.cs
 msgid "Unlock"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/PartTrayPresentation.cs
+msgid "Unlock to add or remove parts."
 msgstr ""
 
 #: project/src/hosts/CreationActions.cs
@@ -945,10 +921,6 @@ msgstr ""
 
 #: project/scenes/widgets/ShadowStrip.tscn
 msgid "Worse shadows"
-msgstr ""
-
-#: project/src/hosts/CreationActions.cs
-msgid "You can change the body until you leave Build. Training is kept: the brain remembers the parts you keep, and new parts start almost unused."
 msgstr ""
 
 #: project/scenes/ui/UiDialogContent.tscn
@@ -1031,6 +1003,18 @@ msgstr ""
 msgid "{0} is not driven by any sense yet."
 msgstr ""
 
+#: libs/NodeRunner.App/ViewModels/CreationCardPresentation.cs
+msgid "{0} joint"
+msgid_plural "{0} joints"
+msgstr[0] ""
+msgstr[1] ""
+
+#: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs
+msgid "{0} joint not connected"
+msgid_plural "{0} joints not connected"
+msgstr[0] ""
+msgstr[1] ""
+
 #: libs/NodeRunner.App/ViewModels/DistanceRuler.cs
 #: libs/NodeRunner.App/ViewModels/Metres.cs
 msgid "{0} m"
@@ -1050,18 +1034,6 @@ msgstr[1] ""
 #: libs/NodeRunner.App/Lifecycle/CreatureReadiness.cs
 msgid "{0} needs two links at its joint. Connect another link there or delete it."
 msgstr ""
-
-#: libs/NodeRunner.App/ViewModels/CreationCardPresentation.cs
-msgid "{0} node"
-msgid_plural "{0} nodes"
-msgstr[0] ""
-msgstr[1] ""
-
-#: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs
-msgid "{0} node not connected"
-msgid_plural "{0} nodes not connected"
-msgstr[0] ""
-msgstr[1] ""
 
 #: libs/NodeRunner.App/ViewModels/BrainFocusPresentationViewModel.cs
 msgid "{0} output"

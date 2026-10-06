@@ -10,7 +10,7 @@ public sealed class BuildRailTests
     [Fact]
     public void Rail_HoldsTheTools_ThenPlayAtTheBottom()
     {
-        Children("/ButtonBarContent").ShouldBe(["PartsTool", "BeamTool", "JointTool", "SelectTool", "RailSpacer", "StartTraining"]);
+        Children("/ButtonBarContent").ShouldBe(["JointTool", "BeamTool", "PartsTool", "SelectTool", "RailSpacer", "StartTraining"]);
         _build.Single(node => node.Name == "RailSpacer").Node.Body.ShouldContain("size_flags_vertical = 3");
         var parts = _build.Single(node => node.Name == "PartsTool").Node.Body;
         parts.ShouldContain("text = \"Parts\"");

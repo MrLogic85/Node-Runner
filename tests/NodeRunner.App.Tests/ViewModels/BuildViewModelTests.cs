@@ -488,7 +488,7 @@ public sealed class BuildViewModelTests
     }
 
     [Fact]
-    public void Load_ResetsActiveToolToParts()
+    public void Load_ResetsActiveToolToJoint()
     {
         var creature = new CreatureDef(
             [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(20, 0))],
@@ -497,6 +497,16 @@ public sealed class BuildViewModelTests
         var viewModel = new BuildViewModel { ActiveTool = BuildTool.Beam };
 
         viewModel.Load(creature);
+
+        viewModel.ActiveTool.ShouldBe(BuildTool.Joint);
+    }
+
+    [Fact]
+    public void LoadMoveOnly_OpensOnParts_WhileJointIsLocked()
+    {
+        var viewModel = new BuildViewModel { ActiveTool = BuildTool.Select };
+
+        viewModel.Load(new CreatureDef([new NodeDef(1, new Vector2D(0, 0))], [], []), moveOnly: true);
 
         viewModel.ActiveTool.ShouldBe(BuildTool.Parts);
     }
@@ -576,11 +586,11 @@ public sealed class BuildViewModelTests
     }
 
     [Fact]
-    public void ActiveTool_DefaultsToParts()
+    public void ActiveTool_DefaultsToJoint()
     {
         var viewModel = new BuildViewModel();
 
-        viewModel.ActiveTool.ShouldBe(BuildTool.Parts);
+        viewModel.ActiveTool.ShouldBe(BuildTool.Joint);
     }
 
 

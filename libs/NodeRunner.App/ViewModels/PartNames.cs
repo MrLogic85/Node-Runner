@@ -3,17 +3,17 @@ using NodeRunner.Domain;
 namespace NodeRunner.App.ViewModels;
 
 /// <summary>
-/// The names parts show: a part's own name if it has one, else its default, "Node 2", "Beam 1",
-/// "Piston 1", "Spring 1", "Accel" or "Camera". A default fits in <see cref="NameLimits.Part"/>
+/// The names parts show: a part's own name if it has one, else its default, "Joint 2", "Beam 1",
+/// "Piston 1", "Spring 1", "Accel 1" or "Camera 1", a sensor numbered among its own kind. A default fits in <see cref="NameLimits.Part"/>
 /// (#868). Names are labels only (#220). A default name is translated; an own name is the
 /// player's and shows as written (#757).
 /// </summary>
 public static class PartNames
 {
-    private static UiText SensorKind(SensorKind kind) => kind switch
+    private static UiText SensorKind(SensorKind kind, int number) => kind switch
     {
-        Domain.SensorKind.Accelerometer => UiText.Plain("Accel"),
-        Domain.SensorKind.Camera => UiText.Plain("Camera"),
+        Domain.SensorKind.Accelerometer => UiText.Format("Accel {0}", number),
+        Domain.SensorKind.Camera => UiText.Format("Camera {0}", number),
         _ => throw new ArgumentOutOfRangeException(nameof(kind)),
     };
 
@@ -32,7 +32,8 @@ public static class PartNames
         ArgumentNullException.ThrowIfNull(springs);
         if (sensors.FirstOrDefault(sensor => sensor.Id == partId) is { } sensor)
         {
-            return SensorKind(sensor.Kind);
+            // Numbered among sensors of its kind, like "Accel 2".
+            return SensorKind(sensor.Kind, IndexOf([.. sensors.Where(other => other.Kind == sensor.Kind)], other => other.Id == partId) + 1);
         }
 
         var servoIndex = IndexOf(servos, servo => servo.Id == partId);
@@ -61,7 +62,7 @@ public static class PartNames
 
         var nodeIndex = IndexOf(nodes, node => node.Id == partId);
         return nodeIndex >= 0
-            ? UiText.Format("Node {0}", nodeIndex + 1)
+            ? UiText.Format("Joint {0}", nodeIndex + 1)
             : throw new ArgumentOutOfRangeException(nameof(partId), "Part id must point to an existing part.");
     }
 

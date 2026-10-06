@@ -51,12 +51,11 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
 
     private CreatureBuilder _builder;
     private bool _isActive;
-    private BuildTool _activeTool = BuildTool.Parts;
+    private BuildTool _activeTool = BuildTool.Joint;
     private BuildLink _pickedLink = BuildLink.Beam;
     private bool _moveOnly;
     private string _creationName = string.Empty;
     private int? _trainingGeneration;
-    private double? _latestDistance;
     private CanvasNote? _placementNote;
     private readonly HashSet<int> _shownLooseNodes = [];
     private readonly BuildHistory _history;
@@ -67,7 +66,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     /// <summary>Why a sensor dropped on a joint was not placed.</summary>
     public static UiText SensorsGoOnABeamReason { get; } = UiText.Plain("Sensors go on a beam");
 
-    private static UiText MoveOnlyReason { get; } = UiText.Plain("Edit mode only allows moving existing nodes.");
+    private static UiText MoveOnlyReason => PartTray.CreationLockedReason;
 
     public BuildViewModel(CreatureBuilder? builder = null)
     {
@@ -83,12 +82,12 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
         ClearSelectionSets();
         _creationName = creationName ?? string.Empty;
         _trainingGeneration = training?.Generation;
-        _latestDistance = training?.Latest.ShownDistance;
         _openedBrain = training?.Brain;
         _moveOnly = moveOnly;
         _history.Clear();
         _shownLooseNodes.Clear();
-        ActiveTool = BuildTool.Parts;
+        // Joint is the default tool; a locked Creation cannot add joints yet (#896), so it opens on Parts.
+        ActiveTool = moveOnly ? BuildTool.Parts : BuildTool.Joint;
         SetPickedLink(BuildLink.Beam);
         PlacementNote = null;
         AnatomyChanged?.Invoke(this, EventArgs.Empty);
@@ -209,9 +208,6 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     }
 
     public int? TrainingGeneration => _trainingGeneration;
-
-    /// <summary>How far the latest finished generation's best run got (#479); it can go down.</summary>
-    public double? LatestDistance => _latestDistance;
 
     /// <summary>The Camera whose aim handle shows (#594): Aim can be set, so it is the one selected part.</summary>
     public int? AimableCameraId => CanEdit(PartParameterId.Aim) ? SingleSelectedSensorId : null;
@@ -428,7 +424,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
         {
             if (target.Kind != CreatureElementKind.Node)
             {
-                reason = CreatureBuilder.JointPartsGoOnAJointReason;
+                reason = CreatureBuilder.ServosGoOnAJointReason;
                 return false;
             }
 
@@ -607,7 +603,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     /// <summary>The name a part shows: its own name if it has one, else <see cref="DefaultPartName"/>.</summary>
     public UiText PartDisplayName(int partId) => PartNames.Display(_builder.Nodes, _builder.Beams, _builder.Sensors, _builder.Servos, _builder.Pistons, _builder.Springs, partId);
 
-    /// <summary>The name a part shows until it is renamed: "Node 2", "Beam 1", "Piston 1", "Spring 1" or its sensor kind.</summary>
+    /// <summary>The name a part shows until it is renamed: "Joint 2", "Beam 1", "Piston 1", "Spring 1", "Accel 1" or "Camera 1".</summary>
     public UiText DefaultPartName(int partId) => PartNames.Default(_builder.Nodes, _builder.Beams, _builder.Sensors, _builder.Servos, _builder.Pistons, _builder.Springs, partId);
 
     /// <summary>

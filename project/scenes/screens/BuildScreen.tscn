@@ -140,15 +140,15 @@ theme_override_constants/separation = 0
 layout_mode = 2
 mouse_filter = 0
 
-[node name="PartsTool" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Body/ButtonBar/ButtonBarPadding/ButtonBarContent" index="0"]
+[node name="JointTool" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Body/ButtonBar/ButtonBarPadding/ButtonBarContent" index="0"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 4
 size_flags_vertical = 4
 mouse_filter = 1
-text = "Parts"
+text = "Joint"
 script = ExtResource("5_button")
-IconId = 64
+IconId = 14
 ContentLayout = 1
 Selected = true
 
@@ -163,15 +163,15 @@ script = ExtResource("5_button")
 IconId = 1
 ContentLayout = 1
 
-[node name="JointTool" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Body/ButtonBar/ButtonBarPadding/ButtonBarContent" index="2"]
+[node name="PartsTool" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Body/ButtonBar/ButtonBarPadding/ButtonBarContent" index="2"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 4
 size_flags_vertical = 4
 mouse_filter = 1
-text = "Joint"
+text = "Parts"
 script = ExtResource("5_button")
-IconId = 14
+IconId = 64
 ContentLayout = 1
 
 [node name="SelectTool" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Body/ButtonBar/ButtonBarPadding/ButtonBarContent" index="3"]
@@ -319,27 +319,19 @@ script = ExtResource("12_label")
 TextStyle = 12
 TextColor = 8
 
-[node name="PartLockedIcon" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent/PartsTray/PartScroll/PartList/PartGroupHeader"]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_vertical = 4
-script = ExtResource("14_icon")
-IconId = 15
-IconSize = 0
-Color = 8
-
-[node name="PartLockedNote" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent/PartsTray/PartScroll/PartList/PartGroupHeader"]
-unique_name_in_owner = true
-layout_mode = 2
-text = "Coming later"
-script = ExtResource("12_label")
-TextStyle = 9
-TextColor = 8
-
 [node name="PartRows" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent/PartsTray/PartScroll/PartList"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_constants/separation = 4
+
+[node name="PickedInfo" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent/PartsTray/PartScroll/PartList/PartRows"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+autowrap_mode = 3
+script = ExtResource("12_label")
+TextStyle = 9
+TextColor = 8
 
 [node name="PartHelp" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent/PartsTray/PartScroll/PartList"]
 unique_name_in_owner = true
@@ -350,38 +342,7 @@ script = ExtResource("12_label")
 TextStyle = 9
 TextColor = 8
 
-[node name="SavedCreation" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent" index="1"]
-unique_name_in_owner = true
-visible = false
-layout_mode = 2
-theme_override_constants/separation = 8
-
-[node name="SavedTitle" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent/SavedCreation"]
-unique_name_in_owner = true
-layout_mode = 2
-text = "Not trained yet"
-autowrap_mode = 3
-script = ExtResource("12_label")
-TextStyle = 5
-
-[node name="SavedLatest" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent/SavedCreation"]
-unique_name_in_owner = true
-layout_mode = 2
-text = "Latest distance —"
-autowrap_mode = 3
-script = ExtResource("12_label")
-TextStyle = 6
-TextColor = 9
-
-[node name="SavedBody" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent/SavedCreation"]
-unique_name_in_owner = true
-layout_mode = 2
-autowrap_mode = 3
-script = ExtResource("12_label")
-TextStyle = 9
-TextColor = 8
-
-[node name="PartSettings" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent" index="2"]
+[node name="PartSettings" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent" index="1"]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
@@ -461,7 +422,7 @@ IconId = 34
 Kind = 2
 ContentLayout = 2
 
-[node name="Selection" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent" index="3"]
+[node name="Selection" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent" index="2"]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
@@ -542,7 +503,7 @@ script = ExtResource("12_label")
 TextStyle = 9
 TextColor = 8
 
-[node name="JointHelp" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent" index="4"]
+[node name="JointHelp" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent" index="3"]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
@@ -556,7 +517,7 @@ Title = "Tap empty space"
 Help = "Adds a joint."
 ShowHandle = false
 
-[node name="SelectHelp" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent" index="5"]
+[node name="SelectHelp" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent" index="4"]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
@@ -586,13 +547,13 @@ Title = "Handles"
 Help = "Move, rotate or scale a group."
 ShowHandle = false
 
-[node name="PanelSpacer" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent" index="6"]
+[node name="PanelSpacer" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent" index="5"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 3
 mouse_filter = 2
 
-[node name="Readiness" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent" index="7"]
+[node name="Readiness" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent" index="6"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_constants/separation = 8
@@ -611,7 +572,7 @@ Color = 12
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
-text = "Add nodes + beams"
+text = "Add joints and links"
 autowrap_mode = 3
 script = ExtResource("12_label")
 TextStyle = 6

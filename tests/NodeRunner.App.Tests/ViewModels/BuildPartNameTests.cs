@@ -30,7 +30,7 @@ public sealed class BuildPartNameTests
         build.RenamePart(2, name, null);
 
         build.Snapshot().Nodes[1].Name.ShouldBeNull();
-        build.PartDisplayName(2).ShouldBe(UiText.Format("Node {0}", 2));
+        build.PartDisplayName(2).ShouldBe(UiText.Format("Joint {0}", 2));
     }
 
     [Fact]
@@ -80,7 +80,7 @@ public sealed class BuildPartNameTests
         build.RenamePart(101, "Thigh", null);
 
         build.PartDisplayName(101).ShouldBe(UiText.AsWritten("Thigh"));
-        build.PartDisplayName(1).ShouldBe(UiText.Format("Node {0}", 1));
+        build.PartDisplayName(1).ShouldBe(UiText.Format("Joint {0}", 1));
     }
 
     [Fact]

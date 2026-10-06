@@ -66,7 +66,10 @@ reference would mislead someone working on that surface.
   lost by unlocking (`reference design/README.md`, BuildLocked and Overlays).
   Instead the lock only prevents accidental changes, and a rebuild keeps the
   brain through port matching (#516). So the padlock's Unlock dialog is a
-  plain confirm. Owner decision; the lifecycle rule lives in
+  plain confirm that says what the lock guards (the model's size and
+  values), that adding or removing a part keeps the training, and that
+  Undo, not re-adding the same kind, brings a removed part's training
+  back. Owner decision; the lifecycle rule lives in
   `docs/TRAINING_LOOP.md` step 6. The "One reset" warning moves to
   Reset training in the overflow (#687): a danger item that opens a danger
   dialog, "Reset training?", naming the generations lost, confirmed with
@@ -153,8 +156,10 @@ reference would mislead someone working on that surface.
 - **Links live in the Links tool (#705, #913).** The reference tray has a
   Links tab and the rail says Beam. Instead the rail and side-panel title
   say Links, and the Links tool's panel lists Beam, Piston, Spring and Wing
-  with no group header (wording: `docs/GLOSSARY.md` → Link). The Parts
-  tray's first tab is On a joint, but it opens on the first tab with an
+  with no group header (wording: `docs/GLOSSARY.md` → Link). The picked
+  link's one-line info sits right under its row, not at the end of the
+  list (#805 brings the same to the Parts tray). The Parts
+  tray's first tab is Moving parts, but it opens on the first tab with an
   available part (#887).
 - **The link drag line shows whether it will attach (#920).** The reference
   draws one line style for every drag. Instead the line is dashed `halo`
@@ -168,9 +173,10 @@ reference would mislead someone working on that surface.
   the selection's offset. Like a selected beam's lines they go under the
   creature, so a Servo's clamp, which keeps holding the new link, stays
   on top.
-- **Parts replaces the reference rail's Move label (#706).** The rail starts
-  Parts, Links, Joint, Select. Parts opens the Parts tray when nothing is
-  selected. Its glyph is the
+- **Parts replaces the reference rail's Move label (#706).** The rail reads
+  Joint, Links, Parts, Select, building order from the first joint up, and
+  Joint is the default tool (owner decision). Parts opens the Parts tray
+  when nothing is selected. Its glyph is the
   project-owned `assets/icons/ui/parts.svg`, like the accelerometer glyph:
   three rounded tiles plus one lifted diamond.
 - **One selection model in every tool (#746).** In the reference only Move
@@ -185,7 +191,8 @@ reference would mislead someone working on that surface.
 - **No locked-canvas chip (#706).** The reference's locked Build shows a
   "Parts locked · drag to move" chip on the canvas. The owner removed it:
   next to the Parts tool it reads as that tool being locked, and the
-  padlock and the Training panel already say the body is locked.
+  padlock and the disabled Joint and Links tools already say the body is
+  locked.
 - **Piston settings are sliders (#451).** The reference's Piston panel
   lists what it joins ("Between"), its power draw and its weight. Instead
   its Part settings show five `UiSlider`s, Max strength, Stroke, Start
@@ -198,11 +205,11 @@ reference would mislead someone working on that surface.
   selected Pistons share their sliders; where their values differ the readout
   shows `low–high` and the span has Marker ends and no thumb. A touch sets
   one value and gives it a thumb.
-- **Latest, not best, on the card and in Build (#479, 0.13.0).** The
+- **Latest, not best, on the card (#479, 0.13.0).** The
   reference BuildLocked panel shows the best distance. Instead the
-  Creations card values and the Build training summary show the latest
-  generation's result, which can drop: Build reads "Latest distance
-  4.0 m", while the card keeps the reference's plain "12 generations".
+  Creations card values show the latest generation's result, which can
+  drop, while the card keeps the reference's plain "12 generations". A
+  locked Build shows its tools' panels, not a training summary.
   The Training arena's best marker (and later Stats) shows the best ever.
   Owner decision.
 - **Card stats with units, one per row (#846, 0.13.0).** The reference
@@ -406,15 +413,15 @@ reference would mislead someone working on that surface.
   feedback (`reference design/README.md`, Build and "Rules that fix the known
   problems"). Instead every implemented part is unlimited and the tray shows
   no counts; parts not yet implemented, and the Camera until maps have
-  terrain (#852), show "Coming later". Counts and
+  terrain (#852), show a lock. Counts and
   achievement locks (#525) bring the reference behavior back.
 - **No Core; sensors sit on beams (#127, 0.12.0).** The reference has a Core
   part on a joint with toggles for its built-in senses (Parts, PartSettings,
   SignalFlow, Training). Instead Core is removed: an Accelerometer and a
   Camera sit on a beam, one sensor per beam, at its midpoint. The designer is
   not available, so these are best guesses; a design review may change them:
-  - *Parts tray:* the Sensors tab lists Accelerometer, Camera, then Pulse
-    (#527, locked until it ships), with the help line "Drag onto a beam. A beam holds one sensor." There
+  - *Parts tray:* the Sensors tab lists Accelerometer, Camera, Touch sensor,
+    then Pulse (locked until they ship; #665, #527), with the help line "Drag onto a beam. A beam holds one sensor." There
     is no Core row.
   - *Glyphs:* Camera uses the reference `los` glyph. Accelerometer uses the
     project-owned `accelerometer` part glyph (an upright frame with a weight
@@ -422,8 +429,8 @@ reference would mislead someone working on that surface.
     `core` glyphs are unused. Pulse and Touch sensor also use project-owned
     glyphs: `pulse` is a ring broken at 3 o'clock by the dot that travels
     round it; `touch` is a node ring resting on the ground with two impact
-    ticks. The Touch sensor (#665) sits on a node, so its locked row is in
-    the On a joint tab.
+    ticks. Tabs group parts by what they do: the Touch sensor sits on a node
+    but is listed with the sensors, and each part decides its own placement.
   - *On a beam:* a sensor is drawn as a picture of itself, not as a badge
     with a glyph, at the beam's midpoint, in panel fill with 2 px `accent`
     lines. The Accelerometer is a 16 × 22 rounded frame with a zigzag spring
@@ -484,9 +491,8 @@ reference would mislead someone working on that surface.
     sensor's picture shows at its midpoint where it would land. Dropping on
     empty canvas cancels silently.
   - *Part settings:* sensors show Name, the beam they are on, a note and
-    Delete; no settings until #578. Accelerometer: "Feels how its beam
-    speeds up, slows down and tilts." Camera: "Three rays see how near the
-    ground is."
+    Delete; no settings until #578. Accelerometer: "Measures its beam's
+    acceleration." Camera: "Three rays see how near the ground is."
   - *In motion:* the Accelerometer's weight moves inside its frame by the
     proof-mass displacement, clamped to the frame, with 1 g at half the
     weight's travel and the spring stretched from the frame's top to it. In
@@ -540,10 +546,8 @@ reference would mislead someone working on that surface.
   - Tray rows are compact `UiPartRow`s (`control-sm` high) that still use
     the `icon-lg` glyph.
   - A part not yet implemented, or held back like the Camera (#852), shows
-    only its lock; the tab's name row ends
-    with a `muted` lock at `icon-sm` and "Coming later" in `t-note`. This is
-    temporary until those parts ship; #525's achievement locks need their
-    own reason.
+    only its lock, with no "Coming later" text (owner decision: it read as
+    unclear). #525's achievement locks need their own reason.
   - Locked and "0 left" rows fade as a whole (glyph, name and lock), not
     only their fill.
 
@@ -885,7 +889,7 @@ how to add a language:
   translated. Its label sets `auto_translate_mode = Disabled` on itself
   only, so the static text around it still translates. A part's own name
   crosses inside App text as `UiText.AsWritten`, an argument that is shown
-  as written, while a default name such as "Node 2" is translated (#757).
+  as written, while a default name such as "Joint 2" is translated (#757).
   The part name field shows the translated default as its text, so leaving
   it unchanged keeps the default instead of saving it as an own name. A
   creation's default name, such as "Untitled Creation" or "Copy of Walker", is
@@ -894,8 +898,8 @@ how to add a language:
 - **Name length** (#868): a name field stops at `NameLimits`, 40
   characters for a creation and 10 for a part, and a copy's "Copy of …"
   name is cut to fit. Every default part name fits, which is why an
-  Accelerometer is named "Accel" while the Parts tray shows the type,
-  "Accelerometer". A longer saved name is never cut by the field: it shows
+  Accelerometer is named "Accel 1" while the Parts tray and the Part
+  settings title show the type, "Accelerometer". A longer saved name is never cut by the field: it shows
   whole, cannot grow, and only gets shorter as the player deletes.
 - **Uppercase** is display only and comes after translating, so the
   translation key stays the authored text. A Label uses its own
