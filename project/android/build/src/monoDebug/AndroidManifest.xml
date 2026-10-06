@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Node Runner (#914): the debug build's name in every locale. Godot generates src/debug, so this sits in monoDebug. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+    <application
+        android:label="Node Runner Debug"
+        tools:replace="android:label" />
+</manifest>

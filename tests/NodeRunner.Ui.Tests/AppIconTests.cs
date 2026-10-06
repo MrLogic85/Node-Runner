@@ -94,7 +94,6 @@ public sealed partial class AppIconTests
 
     private static string Setting(string file, string key)
     {
-        // The release and debug export presets (#898) must agree, so every copy is checked.
         var values = File.ReadLines(Path.Combine(ThemeFile.ProjectRoot, file))
             .Where(line => line.StartsWith(key + "=", StringComparison.Ordinal))
             .Select(line => line[(key.Length + 1)..].Trim('"'))

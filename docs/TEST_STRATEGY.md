@@ -50,7 +50,7 @@ versions.
 
 `NodeRunner.Arch.Tests` (`ArchitectureSpec.cs`) guards the layer graph
 (`docs/ARCHITECTURE.md`), the file-size limit
-(`docs/CODE_DESIGN_PRINCIPLES.md` §5) and the export presets
+(`docs/CODE_DESIGN_PRINCIPLES.md` §5) and the Android export
 (`docs/RELEASING.md` → "Android export"). Add a fact when we decide to
 enforce a convention.
 

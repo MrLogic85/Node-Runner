@@ -6,12 +6,11 @@ Releases. Changes still land through PRs (`docs/REVIEW.md`).
 ## Versions
 
 `application/config/version` in `project/project.godot` is the only version
-source, and `main` carries the version of the milestone in progress. Both
-export presets leave `version/name` empty so the export reads it, and set
-`version/code` to 1000000·major + 1000·minor + patch (0.13.0 → 13000,
-#809). Change the version and both codes with
-`.github/scripts/set-version.sh X.Y.Z`; `ArchitectureSpec` checks they
-agree.
+source, and `main` carries the version of the milestone in progress. The
+`Android` export preset leaves `version/name` empty so the export reads it,
+and sets `version/code` to 1000000·major + 1000·minor + patch (0.13.0 →
+13000, #809). Change both with `.github/scripts/set-version.sh X.Y.Z`;
+`ArchitectureSpec` checks they agree.
 
 ## Releasing a milestone
 
@@ -57,21 +56,38 @@ the script header). Machine-specific values belong in `LOCAL_CONFIG.md`.
 
 ## Android export
 
-`project/export_presets.cfg` has two presets. `Android` builds the release.
-`Android Debug` builds a debug APK with its own package
+The one `Android` preset in `project/export_presets.cfg` exports through
+Godot's Gradle build (#914). A debug export gets its own package
 (`dev.mrlogic85.noderunner.debug`) and app name (Node Runner Debug), so it
 installs next to the release with its own saved data (#898); Android never
-replaces an app with one signed by another key. Godot presets cannot
-inherit, so `Android Debug` repeats every option of `Android`: change both.
-`ArchitectureSpec` fails if they differ in anything but the preset name,
-package and app name.
+replaces an app with one signed by another key. Two tracked files do this
+on top of Godot's build template: `applicationIdSuffix ".debug"` in the
+`debug` build type of `project/android/build/build.gradle`, and the label in
+`project/android/build/src/monoDebug/AndroidManifest.xml` (Godot rewrites
+`src/debug` on every export). `ArchitectureSpec` checks both and the preset.
+
+The rest of `project/android/` is Godot's template, about 270 MB of
+libraries before a build, so it is git-ignored. Install it once per clone,
+and again after a Godot upgrade. Godot installs it only as part of an
+export, which then has to be redone, since the install also overwrites
+`build.gradle`:
+
+```bash
+cd project
+/Applications/Godot_mono.app/Contents/MacOS/Godot --headless \
+  --install-android-build-template --export-debug Android /tmp/template.apk
+git checkout -- android/build/build.gradle
+```
+
+After an upgrade, keep Godot's new `build.gradle` instead and add the
+`applicationIdSuffix` line back.
 
 A debug APK for development, signed with the developer's debug key:
 
 ```bash
 /Applications/Godot_mono.app/Contents/MacOS/Godot \
   --headless --path project \
-  --export-debug "Android Debug" ../build/node-runner-debug.apk
+  --export-debug Android ../build/node-runner-debug.apk
 ```
 
 `release.sh` runs `--export-release`, passing the release keystore through
@@ -80,14 +96,14 @@ export is not a debug build, so `OS.IsDebugBuild()` is false and debug-only
 UI such as the Component library link is hidden (#808).
 
 Local prerequisites: Godot 4.7.2 Mono export templates, JDK 21, Android SDK
-platform and build-tools, platform-tools, and a user-local debug keystore in
-the Godot editor settings. The committed presets hold no secrets; keystore
-paths and passwords stay in user-local Godot settings, ignored credential
-files or the macOS Keychain.
+platform 36 and build-tools 36.1, platform-tools, and a user-local debug
+keystore in the Godot editor settings. The first Gradle build downloads
+Gradle and its dependencies, so it needs a network. The committed preset
+holds no secrets; keystore paths and passwords stay in user-local Godot
+settings, ignored credential files or the macOS Keychain.
 
-The export does not use Gradle, so Godot's Android template sets min SDK 24
-and target/compile SDK 36; do not override them in `export_presets.cfg`
-without enabling Gradle export.
+Godot's template sets min SDK 24 and target/compile SDK 36
+(`android/build/config.gradle`); the preset leaves both empty to keep them.
 
 Android uses the Compatibility renderer because Mobile/Vulkan crashed in
 Godot's `VkThread` on the SM-S938B (#104); #961 re-checks it.
@@ -103,10 +119,10 @@ density (#820). `docs/UI_DIRECTION.md` → "App icon" owns the design.
   `application/config/icon`.
 - `foreground.svg` and `background.svg` (432 px): the adaptive layers.
 - `monochrome.svg` (432 px): Android 13 themed icons; white only.
-- `splash.svg`: the Android 12+ launch splash. The non-Gradle export cannot
-  set the splash background, which stays light, so the badge carries its
-  own dark disc.
+- `splash.svg`: the Android 12+ launch splash. The badge carries its own
+  dark disc from when the export could not set the splash background
+  (#829).
 
 `foreground.svg` owns the art; `main.svg` and `splash.svg` copy it, so
-change them together. `AppIconTests` checks the colours, sizes, both presets
+change them together. `AppIconTests` checks the colours, sizes, the preset
 and both copies.

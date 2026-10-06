@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Reflection;
 using System.Text.RegularExpressions;
+using System.Xml.Linq;
 
 namespace NodeRunner.Arch.Tests;
 
@@ -140,23 +141,22 @@ public sealed partial class ArchitectureSpec
     }
 
     [Fact]
-    public void AndroidDebugPreset_MatchesTheReleasePresetApartFromItsIdentity()
+    public void AndroidPreset_BuildsWithGradleAndGivesTheDebugBuildItsOwnIdentity()
     {
-        // Godot presets cannot inherit, so the debug preset repeats the release one. Only what
-        // lets a debug build install next to the release may differ (#898).
-        var release = ExportPreset("Android");
-        var debug = ExportPreset("Android Debug");
+        // One preset exports both builds; Gradle's debug build type adds what lets a debug build
+        // install next to the release (#898, #914). See docs/RELEASING.md → "Android export".
+        var preset = ExportPresets().ShouldHaveSingleItem();
+        preset["name"].ShouldBe("\"Android\"");
+        preset["gradle_build/use_gradle_build"].ShouldBe("true");
+        preset["package/unique_name"].ShouldBe("\"dev.mrlogic85.noderunner\"");
+        preset["package/name"].ShouldBe("\"Node Runner\"");
 
-        debug["package/unique_name"].ShouldBe("\"dev.mrlogic85.noderunner.debug\"");
-        debug["package/name"].ShouldBe("\"Node Runner Debug\"");
-
-        string[] identity = ["name", "package/unique_name", "package/name"];
-        var drift = release.Keys.Union(debug.Keys)
-            .Except(identity)
-            .Where(key => release.GetValueOrDefault(key) != debug.GetValueOrDefault(key))
-            .ToList();
-
-        drift.ShouldBeEmpty("Change export options in both presets of project/export_presets.cfg.");
+        var template = Path.Combine(FindRepositoryRoot(), "project", "android", "build");
+        DebugIdSuffix().IsMatch(File.ReadAllText(Path.Combine(template, "build.gradle")))
+            .ShouldBeTrue("build.gradle's debug build type must keep applicationIdSuffix \".debug\".");
+        XDocument.Load(Path.Combine(template, "src", "monoDebug", "AndroidManifest.xml"))
+            .Root?.Element("application")?.Attribute(XName.Get("label", "http://schemas.android.com/apk/res/android"))?.Value
+            .ShouldBe("Node Runner Debug");
     }
 
     /// <summary>One value of <paramref name="key"/>; every export preset must agree on it.</summary>
@@ -173,8 +173,8 @@ public sealed partial class ArchitectureSpec
         return values[0];
     }
 
-    /// <summary>The settings of the export preset named <paramref name="name"/>, with its options.</summary>
-    private static Dictionary<string, string> ExportPreset(string name)
+    /// <summary>The settings of each export preset, with its options.</summary>
+    private static List<Dictionary<string, string>> ExportPresets()
     {
         var presets = new List<Dictionary<string, string>>();
         foreach (var line in File.ReadLines(Path.Combine(FindRepositoryRoot(), "project", "export_presets.cfg")))
@@ -189,7 +189,7 @@ public sealed partial class ArchitectureSpec
             }
         }
 
-        return presets.Single(preset => preset["name"] == $"\"{name}\"");
+        return presets;
     }
 
     private static int VersionPart(Match version, string group) =>
@@ -197,6 +197,9 @@ public sealed partial class ArchitectureSpec
 
     [GeneratedRegex("""^"(?<major>0|[1-9][0-9]*)\.(?<minor>0|[1-9][0-9]{0,2})\.(?<patch>0|[1-9][0-9]{0,2})"$""")]
     private static partial Regex VersionPattern();
+
+    [GeneratedRegex(@"buildTypes\s*\{\s*debug\s*\{[^}]*applicationIdSuffix\s+""\.debug""")]
+    private static partial Regex DebugIdSuffix();
 
     private static void AssertNoGodotReference(Assembly assembly)
     {
