@@ -203,20 +203,22 @@ fold.
   spring it only moves so far: a new Spring hangs free at its drawn length
   and squeezes to half of it.
 - `SpringDef`; Mechanics: `Spring`. Settings: **Stiffness** (N/m),
-  **Damping** (N·s/m), **Stroke** (as a Piston's drawn at its longest) and
+  **Damping** (N·s/m), **Stroke** (as a Piston's) and
   **Coil length** (where its rest length sits, #835).
-- **Travel and rest length** (#835): on the gap between its joints' edges,
-  like a Piston's. Its travel is a Piston's of the same Stroke drawn at its
-  longest, whatever the Coil length. Coil length moves the rest length
-  evenly from half the gap short of the shortest stop to half the gap past
-  the longest, so a short Stroke can be pressed as hard against a stop as a
-  long one. Between the stops it rests at its drawn length and the stops
-  sit round it; past a stop the drawn length sits on that stop and the
-  Spring starts pressed against it, harder the further out
-  (`Spring.ShortestLength`, `Spring.LongestLength`, `Spring.RestLength`).
-  Example: two plain joints drawn 1 m apart (a 0.7 m gap) with Stroke 100%:
-  Coil length 0% gives 1…1.35 m resting at 0.65 m, 50% 0.83…1.18 m and 100%
-  0.65…1 m resting at 1.35 m. Changing either setting never moves a node.
+- **Travel and rest length** (#835, #974): on the gap between its joints'
+  edges, like a Piston's. Coil length moves the rest length evenly from half
+  the gap short of the shortest stop to half the gap past the longest, so a
+  short Stroke can be pressed as hard against a stop as a long one. Between
+  the stops it rests at its drawn length and the stops sit round it as a
+  Piston's of the same Stroke round a Start position there, so, as on a
+  Piston, the travel is longer the nearer the shortest stop. Past a stop
+  the stops stay as a Piston's at that end, Start 0% or 100%, the drawn
+  length sits on that stop and the Spring starts pressed against it, harder
+  the further out (`Spring.ShortestLength`, `Spring.LongestLength`,
+  `Spring.RestLength`). Example: two plain joints drawn 1 m apart (a 0.7 m
+  gap) with Stroke 100%: Coil length 0% gives 1…1.7 m resting at 0.65 m,
+  50% 0.83…1.35 m and 100% 0.65…1 m resting at 1.35 m. Changing either
+  setting never moves a node.
 - **End stops** are hard, as a Piston's (#701). **A preload stays inside the
   stop** (#835): as on a real preloaded spring, its nodes feel nothing until
   a load beats the preload. A stop that carries the creature's weight still

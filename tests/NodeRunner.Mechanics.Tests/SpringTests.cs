@@ -9,13 +9,14 @@ public sealed class SpringTests
     // Joints with no size, so the gap between their edges is the drawn length.
     private const double _pointJoints = 0;
 
-    // Drawn 1 m, Stroke 100%: a travel of 50, so Coil length spans 50 + 50 + 50 and the stops sit at ⅓ and ⅔.
-    // Inside them the stops move round the drawn length; past them only the rest length moves, evenly.
+    // Drawn 1 m, Stroke 100%: drawn at its longest a travel of 50, so Coil length spans 50 + 50 + 50 and
+    // the stops sit at ⅓ and ⅔. Inside them the stops move round the drawn length as a Piston's round its
+    // Start position, its travel growing from 50 to 100 (#974); past them only the rest length moves, evenly.
     [Theory]
-    [InlineData(0, 100, 150, 50)]
-    [InlineData(1.0 / 6, 100, 150, 75)]
-    [InlineData(1.0 / 3, 100, 150, 100)]
-    [InlineData(0.5, 75, 125, 100)]
+    [InlineData(0, 100, 200, 50)]
+    [InlineData(1.0 / 6, 100, 200, 75)]
+    [InlineData(1.0 / 3, 100, 200, 100)]
+    [InlineData(0.5, 75, 150, 100)]
     [InlineData(2.0 / 3, 50, 100, 100)]
     [InlineData(5.0 / 6, 50, 100, 125)]
     [InlineData(1, 50, 100, 150)]
@@ -28,10 +29,11 @@ public sealed class SpringTests
         Spring.RestLength(spring, _built, _pointJoints).ShouldBe(rest, tolerance: 1e-9);
     }
 
-    // Drawn 1 m between joints of radius 20, Stroke 100%: a gap of 60, so a travel of 30 and Coil length spans 30 + 30 + 30.
+    // Drawn 1 m between joints of radius 20, Stroke 100%: a gap of 60, so drawn at its longest a travel of 30
+    // and Coil length spans 30 + 30 + 30.
     [Theory]
-    [InlineData(0, 100, 130, 70)]
-    [InlineData(0.5, 85, 115, 100)]
+    [InlineData(0, 100, 160, 70)]
+    [InlineData(0.5, 85, 130, 100)]
     [InlineData(1, 70, 100, 130)]
     public void ItsTravelAndCoilLength_AreOnTheGapBetweenItsJointsEdges(double coilLength, double shortest, double longest, double rest)
     {
@@ -74,16 +76,17 @@ public sealed class SpringTests
         (Spring.ShortestLength(spring, _built, radii) - radii).ShouldBeGreaterThanOrEqualTo(Spring.TravelLength(spring, _built, radii));
     }
 
-    // Stroke 20%: a travel of 100/6, so the rest length still reaches half the drawn length past a stop.
+    // Stroke 20%: a travel of 20 on its shortest stop and 100/6 on its longest, so the rest length still
+    // reaches half the drawn length past a stop.
     [Theory]
-    [InlineData(0, 100, 50)]
-    [InlineData(1, 100, 150)]
-    public void AShortStroke_PressesAsFarPastItsStops(double coilLength, double longest, double rest)
+    [InlineData(0, 20, 120, 50)]
+    [InlineData(1, 100.0 / 6, 100, 150)]
+    public void AShortStroke_PressesAsFarPastItsStops(double coilLength, double travel, double longest, double rest)
     {
         var spring = new SpringDef(1, 2, 3, stroke: 0.2, coilLength: coilLength);
 
-        Spring.TravelLength(spring, _built, _pointJoints).ShouldBe(100.0 / 6, tolerance: 1e-9);
-        Spring.LongestLength(spring, _built, _pointJoints).ShouldBe(longest + (coilLength == 0 ? 100.0 / 6 : 0), tolerance: 1e-9);
+        Spring.TravelLength(spring, _built, _pointJoints).ShouldBe(travel, tolerance: 1e-9);
+        Spring.LongestLength(spring, _built, _pointJoints).ShouldBe(longest, tolerance: 1e-9);
         Spring.RestLength(spring, _built, _pointJoints).ShouldBe(rest, tolerance: 1e-9);
     }
 
@@ -107,6 +110,43 @@ public sealed class SpringTests
 
         Spring.ShortestLength(spring, _built, _pointJoints).ShouldBe(Piston.ShortestLength(piston, _built, _pointJoints), tolerance: 1e-9);
         Spring.LongestLength(spring, _built, _pointJoints).ShouldBe(Piston.LongestLength(piston, _built, _pointJoints), tolerance: 1e-9);
+    }
+
+    // Between joints of radius 20 at Stroke 40%, its stops match a Piston's drawn where its rest length is,
+    // and a Piston's at Start 0% or 100% past a stop (#974).
+    [Theory]
+    [InlineData(0)]
+    [InlineData(0.2)]
+    [InlineData(0.35)]
+    [InlineData(0.5)]
+    [InlineData(0.65)]
+    [InlineData(0.9)]
+    public void ItsStops_AreAPistonsOfTheSameStroke_DrawnWhereItsRestLengthIs(double coilLength)
+    {
+        const double radii = 40;
+        var spring = new SpringDef(1, 2, 3, stroke: 0.4, coilLength: coilLength);
+        var shortest = Spring.ShortestLength(spring, _built, radii);
+        var longest = Spring.LongestLength(spring, _built, radii);
+        var start = Math.Clamp((Spring.RestLength(spring, _built, radii) - shortest) / (longest - shortest), 0, 1);
+        var piston = new PistonDef(1, 2, 3, stroke: 0.4, start: start);
+
+        shortest.ShouldBe(Piston.ShortestLength(piston, _built, radii), tolerance: 1e-9);
+        longest.ShouldBe(Piston.LongestLength(piston, _built, radii), tolerance: 1e-9);
+    }
+
+    // Coil length moves its rest length and stops smoothly, with no jump where it meets a stop (#974).
+    [Fact]
+    public void CoilLength_MovesItsStopsWithoutAJump()
+    {
+        static SpringDef At(double coilLength) => new(1, 2, 3, stroke: 1, coilLength: Math.Min(coilLength, 1));
+        double Longest(double coilLength) => Spring.LongestLength(At(coilLength), _built, 40);
+        double Rest(double coilLength) => Spring.RestLength(At(coilLength), _built, 40);
+
+        foreach (var coilLength in Enumerable.Range(0, 1000).Select(step => step / 1000.0))
+        {
+            Math.Abs(Longest(coilLength + 0.001) - Longest(coilLength)).ShouldBeLessThan(0.2);
+            Math.Abs(Rest(coilLength + 0.001) - Rest(coilLength)).ShouldBeLessThan(0.2);
+        }
     }
 
     // Rest 150 past the longest stop at 100, stiffness 1000, step 0.1 s: reaching a stop d away

@@ -146,8 +146,8 @@ public sealed class FileCreationRepository : ICreationRepository
     }
 
     // Before #835 a Spring had no travel: it pushed nothing at its drawn length and nothing stopped
-    // it. Stroke 1 and coil length 0.5 rest it at its drawn length, between stops a quarter of the gap
-    // between its joints' edges either side, so it stays free there for every move but the largest.
+    // it. Stroke 1 and coil length 0.55 rest it at its drawn length, between stops about a third of the
+    // gap between its joints' edges either side (#974), so it stays free there for every move but the largest.
     private static void SpringTravel(JsonObject file)
     {
         if (file["creature"] is not JsonObject creature)
@@ -169,7 +169,7 @@ public sealed class FileCreationRepository : ICreationRepository
             }
 
             spring["stroke"] = 1.0;
-            spring["coilLength"] = 0.5;
+            spring["coilLength"] = 0.55;
         }
     }
 
