@@ -52,7 +52,9 @@ owned by `docs/TRAINING_LOOP.md` → Product lifecycle boundary.
   Reset training or Copy creation) starts it empty. Renaming the creation, Unlock, Reset
   training and Copy creation are not steps. Undo keeps the selected parts
   that still exist, except that undoing a delete selects the deleted parts
-  again (#878), and Redo of that delete clears them. Undo never lowers
+  again (#878), and Redo of that delete clears them. A selected Servo
+  stays selected when Undo or Redo swaps its links, though its id changes
+  (#911). Undo never lowers
   `NextPartId`, so part ids stay unique (#220). Saves refit the brain Build opened with (`OpenedBrain`,
   `docs/CREATURE_MODEL.md` → "Build refits the brain it opened with"), so
   an undone delete gets its trained weights back. Each edit has an owner,

@@ -172,9 +172,13 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     }
 
     // Part ids are never reused (#220): the restored body keeps the highest NextPartId this visit reached.
+    // A selected Servo stays selected through a link change's new id (#911), unless the step reselects its own parts.
     private void Restore(CreatureDef body, PartSet? reselect)
     {
         var nextPartId = Math.Max(body.NextPartId, _builder.NextPartId);
+        var selectedServoJoints = reselect is null
+            ? _builder.Servos.Where(servo => _selectedServoIds.Contains(servo.Id)).Select(servo => servo.NodeId).ToList()
+            : [];
         _builder = new CreatureBuilder(new CreatureDef(body.Nodes, body.Beams, body.Sensors, body.Servos, body.Pistons, body.Springs, nextPartId));
         if (reselect is not null)
         {
@@ -191,6 +195,9 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
 
             set.RemoveWhere(id => !Exists(new CreatureElementSelection(kind, id)));
         }
+
+        // Changing a Servo's link gives it a new id (#911): the Servo on the same joint stays selected.
+        _selectedServoIds.UnionWith(_builder.Servos.Where(servo => selectedServoJoints.Contains(servo.NodeId)).Select(servo => servo.Id));
 
         PlacementNote = null;
         NotifySelectionChanged();
