@@ -29,6 +29,38 @@ public sealed class CreatureReadinessTests
     }
 
     [Fact]
+    public void Problems_WithTwoSeparatePieces_SaysTheyAreNotConnected()
+    {
+        var creature = new CreatureDef(
+            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(100, 0)), new NodeDef(3, new Vector2D(0, 300)), new NodeDef(4, new Vector2D(100, 300))],
+            [new BeamDef(5, 1, 2)],
+            [],
+            [new PistonDef(6, 3, 4)]);
+
+        CreatureReadiness.Problems(creature).ShouldBe(
+            [UiText.Format("The creation is {0} pieces that are not connected. Connect them with links or remove all but one.", 2)]);
+        CreatureReadiness.CanTrain(creature).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Pieces_JoinedByBeamsPistonsAndSprings_AreOne_AndLeaveLooseJointsOut()
+    {
+        var nodes = Enumerable.Range(1, 5).Select(id => new NodeDef(id, new Vector2D(id * 100, 0))).ToArray();
+        var links = LinkRef.All([new BeamDef(11, 1, 2)], [new PistonDef(12, 2, 3)], [new SpringDef(13, 4, 3)]);
+
+        CreatureReadiness.Pieces(nodes, links).ShouldBe([[1, 2, 3, 4]]);
+    }
+
+    [Fact]
+    public void Pieces_ListEachInNodeOrder_ByItsFirstNode()
+    {
+        var nodes = new[] { new NodeDef(7, new Vector2D(0, 0)), new NodeDef(3, new Vector2D(100, 0)), new NodeDef(9, new Vector2D(200, 0)), new NodeDef(1, new Vector2D(300, 0)) };
+        var links = LinkRef.All([new BeamDef(20, 1, 7), new BeamDef(21, 9, 3)], [], []);
+
+        CreatureReadiness.Pieces(nodes, links).ShouldBe([[7, 1], [3, 9]]);
+    }
+
+    [Fact]
     public void Problems_WithAZeroLengthPiston_SaysSo()
     {
         var creature = new CreatureDef(

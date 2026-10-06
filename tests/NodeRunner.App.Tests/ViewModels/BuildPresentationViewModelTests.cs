@@ -654,6 +654,21 @@ public sealed class BuildPresentationViewModelTests
     }
 
     [Fact]
+    public void BuildPanel_WithSeparatePieces_SaysSoInReadiness()
+    {
+        var build = new BuildViewModel();
+        build.Load(new CreatureDef(
+            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(90, 0)), new NodeDef(3, new Vector2D(0, 300)), new NodeDef(4, new Vector2D(90, 300))],
+            [new BeamDef(5, 1, 2), new BeamDef(6, 3, 4)],
+            []));
+
+        var buildPanel = new BuildPresentationViewModel(build).BuildPanel;
+
+        buildPanel.CanStartTraining.ShouldBeFalse();
+        buildPanel.ReadinessText.ShouldBe(UiText.Counted("{0} piece not connected", "{0} pieces not connected", 2));
+    }
+
+    [Fact]
     public void BuildPanel_WithAPiston_IsReadyToTrain()
     {
         var build = new BuildViewModel();

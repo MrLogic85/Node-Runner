@@ -58,6 +58,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     private int? _trainingGeneration;
     private CanvasNote? _placementNote;
     private readonly HashSet<int> _shownLooseNodes = [];
+    private bool _showPieces;
     private bool _advancedSettingsOpen;
     private readonly BuildHistory _history;
     private BrainDef? _openedBrain;
@@ -87,6 +88,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
         _moveOnly = moveOnly;
         _history.Clear();
         _shownLooseNodes.Clear();
+        _showPieces = false;
         _advancedSettingsOpen = false;
         // Joint is the default tool; a locked Creation cannot add joints yet (#896), so it opens on Parts.
         ActiveTool = moveOnly ? BuildTool.Parts : BuildTool.Joint;
@@ -318,7 +320,8 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     /// <summary>
     /// The messages Build shows in the drawing, each beside the part it is about: why the last
     /// dropped part was refused (#376), each loose joint <see cref="ShowTrainingBlockers"/> pointed
-    /// at (#844), then each beam or link too short to train (#593). Listed most important first:
+    /// at (#844) and the first joint of each separate piece (#930), then each beam or link too short
+    /// to train (#593). Listed most important first:
     /// notes that would overlap stack, the first listed nearest its part.
     /// </summary>
     public IReadOnlyList<CanvasNote> CanvasNotes()
@@ -333,8 +336,13 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
         {
             if (_shownLooseNodes.Contains(node.Id) && IsLoose(node.Id))
             {
-                notes.Add(new CanvasNote(CanvasNoteKind.Danger, new CreatureElementSelection(CreatureElementKind.Node, node.Id), UiText.Plain("Not connected")));
+                notes.Add(NotConnected(node.Id));
             }
+        }
+
+        if (_showPieces && Pieces() is { Count: > 1 } pieces)
+        {
+            notes.AddRange(pieces.Select(piece => NotConnected(piece[0])));
         }
 
         foreach (var beam in Beams)
@@ -366,6 +374,9 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
         }
 
         return notes;
+
+        static CanvasNote NotConnected(int nodeId) =>
+            new(CanvasNoteKind.Danger, new CreatureElementSelection(CreatureElementKind.Node, nodeId), UiText.Plain("Not connected"));
 
         void AddTooShortNote(CreatureElementKind kind, int id, int nodeA, int nodeB)
         {
@@ -403,13 +414,18 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
         && !Pistons.Any(piston => piston.NodeA == nodeId || piston.NodeB == nodeId)
         && !Springs.Any(spring => spring.NodeA == nodeId || spring.NodeB == nodeId);
 
+    /// <summary>The pieces the links join the joints into (<see cref="CreatureReadiness.Pieces"/>); more than one cannot train.</summary>
+    public IReadOnlyList<IReadOnlyList<int>> Pieces() => CreatureReadiness.Pieces(Nodes, LinkRef.All(Beams, Pistons, Springs));
+
     /// <summary>
     /// Answers a tap on the dimmed play button (#844): every joint loose now gets a "Not connected"
-    /// note in <see cref="CanvasNotes"/>, kept until it is joined or removed. Too-short parts
-    /// already have theirs. A joint loosened later waits for the next tap.
+    /// note in <see cref="CanvasNotes"/>, kept until it is joined or removed, and so does every
+    /// piece while there is more than one (#930). Too-short parts already have theirs. A joint
+    /// loosened later waits for the next tap.
     /// </summary>
     public void ShowTrainingBlockers()
     {
+        _showPieces = Pieces().Count > 1;
         _shownLooseNodes.Clear();
         foreach (var node in Nodes)
         {

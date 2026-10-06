@@ -958,6 +958,29 @@ public sealed class BuildViewModelTests
     }
 
     [Fact]
+    public void ShowTrainingBlockers_NotesEveryPiece_UntilTheyAreJoined()
+    {
+        var viewModel = new BuildViewModel();
+        viewModel.Load(new CreatureDef(
+            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(200, 0)), new NodeDef(3, new Vector2D(0, 300)), new NodeDef(4, new Vector2D(200, 300))],
+            [new BeamDef(5, 1, 2), new BeamDef(6, 4, 3)],
+            []));
+        viewModel.CanvasNotes().ShouldBeEmpty();
+
+        viewModel.ShowTrainingBlockers();
+
+        viewModel.CanvasNotes().ShouldBe(
+        [
+            new CanvasNote(CanvasNoteKind.Danger, new CreatureElementSelection(CreatureElementKind.Node, 1), UiText.Plain("Not connected")),
+            new CanvasNote(CanvasNoteKind.Danger, new CreatureElementSelection(CreatureElementKind.Node, 3), UiText.Plain("Not connected")),
+        ]);
+
+        viewModel.ConnectBeam(2, 4).ShouldBeTrue();
+
+        viewModel.CanvasNotes().ShouldBeEmpty();
+    }
+
+    [Fact]
     public void ShowTrainingBlockers_LeavesAJointLoosenedLaterForTheNextTap()
     {
         var viewModel = new BuildViewModel();

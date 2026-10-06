@@ -49,6 +49,10 @@ CreatureDef  ──build──▶  physical body  ──sensors──▶  model 
   - **2+ links:** a passive joint unless a Servo sits on it: the links turn
     freely against each other unless beams close a rigid triangle. A plain
     joint has no settings, angle limits or brain ports.
+- **One piece (#930):** the links must join every linked joint into one
+  piece. Separate pieces can be saved, but `CreatureReadiness` stops training
+  until they are joined or all but one are removed. Servos and sensors join
+  nothing.
 
 ### Beam
 
