@@ -118,7 +118,9 @@ sizes on screen at any zoom.
   link, a Beam too (#877), uses the refusals and canvas notes in the Piston
   bullet below (`BuildViewModel.CanConnectLink`); a pair a Beam already
   joins refuses another Beam with "A beam already joins these nodes".
-  Beams never adds a node.
+  While dragging, the line is dashed over no joint, solid once it will
+  attach, and dashed danger with a crossed ring at its midpoint when the
+  joint would refuse (#920). Beams never adds a node.
 - **Joint:** with nothing selected, a tap on empty canvas adds a node; with
   a selection, that tap only clears it. A beam tap selects the beam like in
   every tool: beams are never split (#746).
@@ -135,11 +137,12 @@ sizes on screen at any zoom.
   creation that already has one keeps it, and it works as below.
 - **Piston (#451, #705):** picked from the Beams link list. Drag joint to
   joint to place one; over a joint that would refuse it, the line and that
-  joint's ring turn dashed danger, and dropping there shows the reason at the
-  joint: "A beam already joins these nodes" or "These nodes already have a
-  piston". Dropping away from a joint places nothing and shows nothing. The
-  picked link stays after placement. A new Piston is not selected. Taps hit a joint, then a sensor, then
-  a Piston, then a beam. Deleting a joint deletes its Pistons.
+  joint's ring turn dashed danger, with a crossed ring on the line (#920),
+  and dropping there shows the reason at the joint: "A beam already joins
+  these nodes" or "These nodes already have a piston". Dropping away from a
+  joint places nothing and shows nothing. The picked link stays after
+  placement. A new Piston is not selected. Taps hit a joint, then a sensor,
+  then a Piston, then a beam. Deleting a joint deletes its Pistons.
 - **Spring (#453):** placed like a Piston, with the same refusals; a pair
   that has a Spring refuses another link with "These nodes already have a
   spring". Taps treat Pistons and Springs alike as links: after a sensor
