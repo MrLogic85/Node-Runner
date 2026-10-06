@@ -51,8 +51,9 @@ owned by `docs/TRAINING_LOOP.md` → Product lifecycle boundary.
   lasts for one Build visit, so opening Build (also after Train setup,
   Reset training or Copy creation) starts it empty. Renaming the creation, Unlock, Reset
   training and Copy creation are not steps. Undo keeps the selected parts
-  that still exist and never lowers `NextPartId`, so part ids stay unique
-  (#220). Saves refit the brain Build opened with (`OpenedBrain`,
+  that still exist, except that undoing a delete selects the deleted parts
+  again (#878), and Redo of that delete clears them. Undo never lowers
+  `NextPartId`, so part ids stay unique (#220). Saves refit the brain Build opened with (`OpenedBrain`,
   `docs/CREATURE_MODEL.md` → "Build refits the brain it opened with"), so
   an undone delete gets its trained weights back. Each edit has an owner,
   the canvas or the slider, so one never closes or drops the other's; a
@@ -258,7 +259,7 @@ there is no close button, and tapping empty canvas deselects. The rows are
 beams, a beam's two joints, a sensor's beam), then a short note, and one
 full-width danger **Delete** in its own column after them, absent on a
 locked creation. Delete acts on a tap, with no dialog; Undo brings the
-part back (#866). Structure is read-only here: a beam's length is drawn, so its note
+part back, selected again (#866, #878). Structure is read-only here: a beam's length is drawn, so its note
 says "Drag its ends to change the length." instead of a number.
 `BuildPresentationViewModel.SinglePart` owns the rows and copy. A part with
 no name of its own shows a default (`BuildViewModel.DefaultPartName`: "Node 2",

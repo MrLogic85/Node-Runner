@@ -56,6 +56,54 @@ public sealed class BuildUndoTests
     }
 
     [Fact]
+    public void UndoingADelete_SelectsTheRestoredPartAgain_AndRedoClearsIt()
+    {
+        var build = TwoJoints();
+        build.ConnectBeam(1, 2);
+        var beam = build.Beams.Single().Id;
+        build.SelectOnly(CreatureElementKind.Beam, beam);
+        build.DeleteSelectedParts();
+        build.SelectedPartCount.ShouldBe(0);
+
+        build.Undo();
+        build.SingleSelectedBeamId.ShouldBe(beam);
+
+        build.Redo();
+        build.SelectedPartCount.ShouldBe(0);
+
+        build.Undo();
+        build.SingleSelectedBeamId.ShouldBe(beam);
+    }
+
+    [Fact]
+    public void UndoingADeleteOfSeveralParts_SelectsOnlyThoseParts()
+    {
+        var build = TwoJoints();
+        build.ConnectBeam(1, 2);
+        build.ReplaceSelection([1, 2]);
+        build.DeleteSelectedParts();
+        build.Beams.ShouldBeEmpty();
+
+        build.Undo();
+
+        build.Selection.Nodes.ShouldBe([1, 2], ignoreOrder: true);
+        build.SelectedBeamCount.ShouldBe(0);
+        build.Beams.Count.ShouldBe(1);
+    }
+
+    [Fact]
+    public void UndoingAnEditThatIsNotADelete_KeepsTheSelection()
+    {
+        var build = TwoJoints();
+        build.SelectOnly(CreatureElementKind.Node, 1);
+        build.PlaceNode(new Vector2D(0, 100));
+
+        build.Undo();
+
+        build.SingleSelectedNodeId.ShouldBe(1);
+    }
+
+    [Fact]
     public void ARefusedEdit_AddsNoStep_AndKeepsRedo()
     {
         var build = TwoJoints();

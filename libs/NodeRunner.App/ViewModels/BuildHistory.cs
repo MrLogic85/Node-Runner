@@ -6,7 +6,8 @@ namespace NodeRunner.App.ViewModels;
 /// Build's undo and redo steps for one visit (#689): the body as it was around each finished edit.
 /// A change outside an open edit is a step of its own; an open edit, such as a drag, makes all its
 /// changes one step when it ends. A step only counts if the body changed. Holds at most
-/// <see cref="MaxSteps"/> undo steps, dropping the oldest; a new step clears Redo.
+/// <see cref="MaxSteps"/> undo steps, dropping the oldest; a new step clears Redo. A step may name
+/// the parts to select again when it is undone (#878), and keeps them through Redo and Undo.
 /// </summary>
 /// <remarks>
 /// Godot's <c>UndoRedo</c> keeps the same two stacks, but it would put Build's step rules in the
@@ -18,8 +19,8 @@ public sealed class BuildHistory
     public const int MaxSteps = 100;
 
     private readonly Func<CreatureDef> _body;
-    private readonly LinkedList<CreatureDef> _undo = new();
-    private readonly Stack<CreatureDef> _redo = new();
+    private readonly LinkedList<Step> _undo = new();
+    private readonly Stack<Step> _redo = new();
     private (object Owner, CreatureDef Before)? _open;
 
     /// <param name="body">Reads the body as it is now.</param>
@@ -62,7 +63,7 @@ public sealed class BuildHistory
         if (_open is { } open && ReferenceEquals(open.Owner, owner))
         {
             _open = null;
-            Record(open.Before);
+            Record(open.Before, null);
         }
     }
 
@@ -86,8 +87,25 @@ public sealed class BuildHistory
         });
     }
 
+    /// <summary>
+    /// Makes <paramref name="change"/> a step that selects <paramref name="reselect"/> again when it
+    /// is undone; inside an open edit it is only part of that edit.
+    /// </summary>
+    public void Change(Action change, PartSet reselect)
+    {
+        ArgumentNullException.ThrowIfNull(change);
+        ArgumentNullException.ThrowIfNull(reselect);
+        Change(() =>
+        {
+            change();
+            return true;
+        }, reselect);
+    }
+
     /// <inheritdoc cref="Change(Action)"/>
-    public T Change<T>(Func<T> change)
+    public T Change<T>(Func<T> change) => Change(change, null);
+
+    private T Change<T>(Func<T> change, PartSet? reselect)
     {
         ArgumentNullException.ThrowIfNull(change);
         if (_open is not null)
@@ -97,16 +115,17 @@ public sealed class BuildHistory
 
         var before = _body();
         var result = change();
-        Record(before);
+        Record(before, reselect);
         return result;
     }
 
     /// <summary>
-    /// The body to go back to, or null when there is none; the body now becomes the redo step.
-    /// Does nothing while an edit is open: a second finger can tap Undo while the first still drags,
-    /// and the drag would carry on against a body that was swapped under it.
+    /// The body to go back to and the parts to select again, or null when there is none; the body
+    /// now becomes the redo step. Does nothing while an edit is open: a second finger can tap Undo
+    /// while the first still drags, and the drag would carry on against a body that was swapped
+    /// under it.
     /// </summary>
-    public CreatureDef? Undo()
+    public Step? Undo()
     {
         if (_open is not null || _undo.Last is not { } last)
         {
@@ -114,7 +133,7 @@ public sealed class BuildHistory
         }
 
         _undo.RemoveLast();
-        _redo.Push(_body());
+        _redo.Push(last.Value with { Body = _body() });
         Changed?.Invoke(this, EventArgs.Empty);
         return last.Value;
     }
@@ -127,9 +146,9 @@ public sealed class BuildHistory
             return null;
         }
 
-        Push(_body());
+        Push(after with { Body = _body() });
         Changed?.Invoke(this, EventArgs.Empty);
-        return after;
+        return after.Body;
     }
 
     public void Clear()
@@ -149,24 +168,27 @@ public sealed class BuildHistory
         && a.Pistons.SequenceEqual(b.Pistons)
         && a.Springs.SequenceEqual(b.Springs);
 
-    private void Record(CreatureDef before)
+    private void Record(CreatureDef before, PartSet? reselect)
     {
         if (SameBody(before, _body()))
         {
             return;
         }
 
-        Push(before);
+        Push(new Step(before, reselect));
         _redo.Clear();
         Changed?.Invoke(this, EventArgs.Empty);
     }
 
-    private void Push(CreatureDef body)
+    private void Push(Step step)
     {
-        _undo.AddLast(body);
+        _undo.AddLast(step);
         if (_undo.Count > MaxSteps)
         {
             _undo.RemoveFirst();
         }
     }
+
+    /// <summary>A body to go back to, and the parts to select again there, if any.</summary>
+    public sealed record Step(CreatureDef Body, PartSet? Reselect);
 }
