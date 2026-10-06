@@ -124,7 +124,7 @@ public static class PartParameters
         PartParameterId.Stroke, MultiEditable: true, new(UiText.Plain("Stroke"), UiText.Plain("How far it moves in and out"), new(10, 100, 5), 0, "{0}%", "{0}–{1}%", value => value * 100, value => value / 100));
 
     public static PartParameter Range { get; } = new(
-        PartParameterId.Range, MultiEditable: true, new(UiText.Plain("Range"), UiText.Plain("How far it can turn, in total"), new(20, 360, 5), 0, "{0}°", "{0}–{1}°", RadiansToDegrees, DegreesToRadians));
+        PartParameterId.Range, MultiEditable: true, new(UiText.Plain("Range"), UiText.Plain("How far it can turn"), new(20, 360, 5), 0, "{0}°", "{0}–{1}°", RadiansToDegrees, DegreesToRadians));
 
     public static PartParameter StartPosition { get; } = new(
         PartParameterId.StartPosition, MultiEditable: true, new(UiText.Plain("Start position"), UiText.Plain("Where it starts in its stroke"), new(0, 100, 5), 0, "{0}%", "{0}–{1}%", value => value * 100, value => value / 100));

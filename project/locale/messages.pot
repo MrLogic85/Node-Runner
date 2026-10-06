@@ -360,7 +360,7 @@ msgid "Hills"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartParameters.cs
-msgid "How far it can turn, in total"
+msgid "How far it can turn"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartParameters.cs
