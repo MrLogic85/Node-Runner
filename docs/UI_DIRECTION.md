@@ -1001,7 +1001,8 @@ are pulled in at each end by the length their feather adds (`DashTrim`), so
 the feather does not fill the gap and dash and gap keep their designed lengths. Thin
 lines drawn as filled rects, such as dividers, count as strokes.
 `JointDrawing`, `PistonDrawing`, `SelectionDrawing`, `UiCalloutLayer`,
-`MapPreview` and the Build selection frame predate the pen and map with
+`MapPreview`, the Build selection frame and the selected Servo's link bands
+(`BuildServoDrawing.DrawSelectedBands`) predate the pen and map with
 `UiPixelSpace` directly; move them to the pen when touched.
 `UiStrokeGuardTests` fails any `DrawLine`, `DrawPolyline`, `DrawArc`,
 `DrawDashedLine`, `DrawCircle`, `DrawMultiline` or outline `DrawRect` that
