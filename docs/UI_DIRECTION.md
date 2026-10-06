@@ -151,7 +151,8 @@ entry (#315). The entries that are not a component of their own (#306):
 
 - **Kinds:** Primary, Secondary (default), Tertiary (destructive) and Flat.
 - **Unavailable** (#841): dashed and dimmed like disabled, but tappable, so
-  the screen can say why: a later version, or what blocks training (#844).
+  the screen can say why: a later version, or what blocks the action, as
+  danger notes on the parts that block it (#844, #937).
   It has no lock glyph, which would read as the creation padlock.
 - **Icon sizes** (#358, #422): 16 beside text, 20 on a textless or stacked
   button and in a `touch` row, 16 in a `control-sm` row or inside a ring,

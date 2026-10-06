@@ -176,16 +176,24 @@ public sealed partial class BuildViewModel
     public void TranslateSelection(SelectionSnapshot start, Vector2D delta)
     {
         ArgumentNullException.ThrowIfNull(start);
-        foreach (var (id, position) in start.Positions)
-        {
-            var moved = new Vector2D(position.X + delta.X, position.Y + delta.Y);
-            var allowed = BuildArea.Clamp(moved, NodeRadius(id));
-            delta = new Vector2D(delta.X + allowed.X - moved.X, delta.Y + allowed.Y - moved.Y);
-        }
+        delta = ShortenedToBuildArea([.. start.Positions.Select(pair => (pair.Value, NodeRadius(pair.Key)))], delta);
 
         // Clamping each joint too absorbs the rounding in the shortened delta.
         PlaceSelection(start, (id, position) =>
             BuildArea.Clamp(new Vector2D(position.X + delta.X, position.Y + delta.Y), NodeRadius(id)));
+    }
+
+    // The delta shortened so every joint, moved by it together, stays inside BuildArea.
+    private static Vector2D ShortenedToBuildArea(IReadOnlyList<(Vector2D Position, double Radius)> joints, Vector2D delta)
+    {
+        foreach (var (position, radius) in joints)
+        {
+            var moved = new Vector2D(position.X + delta.X, position.Y + delta.Y);
+            var allowed = BuildArea.Clamp(moved, radius);
+            delta = new Vector2D(delta.X + allowed.X - moved.X, delta.Y + allowed.Y - moved.Y);
+        }
+
+        return delta;
     }
 
     /// <summary>

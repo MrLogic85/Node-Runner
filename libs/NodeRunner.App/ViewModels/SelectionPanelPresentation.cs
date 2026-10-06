@@ -16,6 +16,7 @@ public sealed record SelectionPanelPresentation(
     UiText? DeleteNote,
     bool CanDelete,
     UiText CopyText,
+    bool ShowCopy,
     bool CanCopy)
 {
     /// <summary>The <see cref="Settings"/> shown above the Advanced section (#903).</summary>

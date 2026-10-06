@@ -308,8 +308,9 @@ Several selected parts show the selection panel instead (#558, #704), titled
   dimmed while the selection holds a part with brain ports, since a copy
   would change the network, or a link without both its joints. A tap then
   puts a danger note on each such part until the selection changes.
+  `BuildViewModel.CopySelectedParts` and `CopyBlockers` own these rules.
 
-`BuildPresentationViewModel.Selection` owns the copy.
+`BuildPresentationViewModel.Selection` owns the panel's wording.
 
 ## Validation
 

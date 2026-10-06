@@ -426,6 +426,7 @@ public sealed class BuildPresentationViewModelTests
             UiText.Plain("Links on a deleted joint go with it."),
             CanDelete: true,
             UiText.Counted("Copy {0}", "Copy {0}", 3),
+            ShowCopy: true,
             CanCopy: true));
     }
 
@@ -583,6 +584,7 @@ public sealed class BuildPresentationViewModelTests
         var selection = new BuildPresentationViewModel(build).Selection!;
         selection.Title.ShouldBe(UiText.Counted("{0} selected", "{0} selected", 2));
         selection.CanDelete.ShouldBeFalse();
+        selection.ShowCopy.ShouldBeFalse();
     }
 
     [Fact]

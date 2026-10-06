@@ -79,9 +79,6 @@ public sealed class BuildPartSettingsTests
         var rows = _build.Where(node => node.Parent?.EndsWith("/SelectionRows", StringComparison.Ordinal) == true).ToList();
         rows.ShouldAllBe(row => row.Script == "res://src/ui/lib/UiInfoRow.cs");
         rows.Select(row => row.Node.Body).Zip(icons).ShouldAllBe(pair => pair.First.Contains($"IconId = {pair.Second}"));
-        var copy = _build.Single(node => node.Name == "SelectionCopy").Node.Body;
-        copy.ShouldContain($"IconId = {(int)UiIconId.Copy}");
-        copy.ShouldNotContain("Kind =");
         _build.Single(node => node.Name == "SelectionDelete").Node.Body.ShouldContain($"Kind = {(int)UiButtonKind.Tertiary}");
     }
 

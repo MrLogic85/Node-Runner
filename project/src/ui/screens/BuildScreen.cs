@@ -446,12 +446,15 @@ public partial class BuildScreen : Control
         GetNode<Control>("%SelectionRows").Visible = group.ShowFrameRows;
         var copy = GetNode<UiButton>("%SelectionCopy");
         copy.ShowText(group.CopyText);
+        copy.Visible = group.ShowCopy;
         copy.Unavailable = !group.CanCopy;
-        GetNode<UiButton>("%SelectionDelete").ShowText(group.DeleteText);
+        var delete = GetNode<UiButton>("%SelectionDelete");
+        delete.ShowText(group.DeleteText);
+        delete.Visible = group.CanDelete;
         var deleteNote = GetNode<UiLabel>("%SelectionDeleteNote");
         deleteNote.TextSource = UiTextTranslation.Source(group.DeleteNote);
-        deleteNote.Visible = deleteNote.TextSource is not null;
-        GetNode<Control>("%SelectionActions").Visible = group.CanDelete;
+        deleteNote.Visible = group.CanDelete && deleteNote.TextSource is not null;
+        GetNode<Control>("%SelectionActions").Visible = group.ShowCopy || group.CanDelete;
     }
 
     private void ApplyPickList(BuildPresentationViewModel presentation, LinkListPresentation? linkList)

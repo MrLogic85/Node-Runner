@@ -19,7 +19,7 @@ public sealed partial class BuildViewModel
 
     /// <summary>
     /// A danger note at each selected part a copy cannot take, in id order within each kind: a sensor,
-    /// Servo or Piston for its brain ports, and a beam, Piston or Spring without both joints selected.
+    /// Servo or Piston for its brain ports, and a beam or Spring without both joints selected.
     /// </summary>
     public IReadOnlyList<CanvasNote> CopyBlockers()
     {
@@ -91,6 +91,7 @@ public sealed partial class BuildViewModel
             foreach (var node in nodes)
             {
                 var position = new Vector2D(node.Position.X + offset.X, node.Position.Y + offset.Y);
+                // Clamping too absorbs the rounding in a shortened offset, as in TranslateSelection.
                 copies[node.Id] = _builder.AddNode(BuildArea.Clamp(position, NodeDef.PlainJointRadius));
                 _selectedNodeIds.Add(copies[node.Id]);
             }
@@ -116,9 +117,10 @@ public sealed partial class BuildViewModel
     }
 
     // One grid step down and right, or the first other diagonal that keeps every copied joint inside
-    // the build area; if none does, the joints are moved inside it.
+    // the build area; if none does, the first diagonal shortened so the copy keeps its shape.
     private static Vector2D CopyOffset(IReadOnlyList<NodeDef> nodes)
     {
+        var joints = nodes.Select(node => (node.Position, NodeDef.PlainJointRadius)).ToList();
         Vector2D[] offsets =
         [
             new(BuildGridStep, BuildGridStep),
@@ -128,14 +130,12 @@ public sealed partial class BuildViewModel
         ];
         foreach (var offset in offsets)
         {
-            if (nodes.All(node => Fits(new Vector2D(node.Position.X + offset.X, node.Position.Y + offset.Y))))
+            if (ShortenedToBuildArea(joints, offset) == offset)
             {
                 return offset;
             }
         }
 
-        return offsets[0];
-
-        static bool Fits(Vector2D position) => BuildArea.Clamp(position, NodeDef.PlainJointRadius) == position;
+        return ShortenedToBuildArea(joints, offsets[0]);
     }
 }

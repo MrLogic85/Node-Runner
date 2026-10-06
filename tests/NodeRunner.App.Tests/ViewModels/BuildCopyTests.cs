@@ -113,6 +113,48 @@ public sealed class BuildCopyTests
     }
 
     [Fact]
+    public void ADimmedCopy_MarksEveryOffendingPart_BrainPortsFirst_ThenOpenLinksInIdOrder()
+    {
+        var build = Loaded();
+        build.ReplaceSelection(new PartSet(Ids(3), Ids(12, 11), Ids(), Ids(31), Ids(), Ids()));
+
+        build.CopySelectedParts();
+
+        build.CanvasNotes().ShouldBe(
+        [
+            new CanvasNote(CanvasNoteKind.Danger, new(CreatureElementKind.Servo, 31), UiText.Plain("Would change the brain")),
+            new CanvasNote(CanvasNoteKind.Danger, new(CreatureElementKind.Beam, 11), UiText.Plain("Select both its joints")),
+            new CanvasNote(CanvasNoteKind.Danger, new(CreatureElementKind.Beam, 12), UiText.Plain("Select both its joints")),
+        ]);
+    }
+
+    [Fact]
+    public void Copy_OfASelectionAsTallAsTheBuildArea_KeepsItsShape()
+    {
+        var area = BuildViewModel.BuildArea;
+        var r = NodeDef.PlainJointRadius;
+        var build = new BuildViewModel();
+        build.Load(new CreatureDef(
+            [
+                new NodeDef(1, new Vector2D(0, area.Min.Y + r)),
+                new NodeDef(2, new Vector2D(0, area.Max.Y - r)),
+                new NodeDef(3, new Vector2D(0, area.Max.Y - r - (_step / 2))),
+            ],
+            [new BeamDef(4, 1, 2), new BeamDef(5, 2, 3)],
+            []));
+        build.ReplaceSelection(new PartSet(Ids(1, 2, 3), Ids(4, 5), Ids(), Ids(), Ids(), Ids()));
+
+        build.CopySelectedParts();
+
+        build.Nodes.Skip(3).Select(node => node.Position).ShouldBe(
+        [
+            new Vector2D(_step, area.Min.Y + r),
+            new Vector2D(_step, area.Max.Y - r),
+            new Vector2D(_step, area.Max.Y - r - (_step / 2)),
+        ]);
+    }
+
+    [Fact]
     public void ADimmedCopysNotes_GoWhenTheSelectionChanges()
     {
         var build = Loaded();
