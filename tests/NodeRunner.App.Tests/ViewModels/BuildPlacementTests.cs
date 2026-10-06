@@ -273,6 +273,56 @@ public sealed class BuildPlacementTests
     }
 
     [Fact]
+    public void UndoAndRedo_OfServoLinkChange_KeepTheServoSelected()
+    {
+        var build = PistonAndSpring();
+        var servoId = build.PlacePart(BuildPart.Servo, _middleJoint)!.Value;
+        var newId = build.SetServoLink(servoId, fixedRole: true, linkId: 5)!.Value;
+        var presentation = new BuildPresentationViewModel(build);
+        var shownIds = new List<int?>();
+        presentation.PresentationChanged += (_, _) => shownIds.Add(presentation.SinglePart?.Id);
+
+        build.Undo();
+
+        build.SingleSelectedServoId.ShouldBe(servoId);
+        build.Servos.Single().FixedLinkId.ShouldBe(4);
+
+        build.Redo();
+
+        build.SingleSelectedServoId.ShouldBe(newId);
+        shownIds.ShouldNotBeEmpty();
+        shownIds.ShouldAllBe(id => id == servoId || id == newId);
+    }
+
+    [Fact]
+    public void Undo_OfServoLinkChange_WithServoNotSelected_SelectsNothing()
+    {
+        var build = PistonAndSpring();
+        var servoId = build.PlacePart(BuildPart.Servo, _middleJoint)!.Value;
+        build.SetServoLink(servoId, fixedRole: true, linkId: 5);
+        build.ReplaceSelection(PartSet.None);
+
+        build.Undo();
+
+        build.SelectedPartCount.ShouldBe(0);
+    }
+
+    [Fact]
+    public void UndoingADelete_WithAServoSelectedSince_SelectsOnlyTheDeletedPart()
+    {
+        var build = PistonAndSpring();
+        var servoId = build.PlacePart(BuildPart.Servo, _middleJoint)!.Value;
+        build.ReplaceSelection(PartSet.None with { Pistons = new HashSet<int> { 4 } });
+        build.DeleteSelectedParts();
+        build.ReplaceSelection(PartSet.None with { Servos = new HashSet<int> { servoId } });
+
+        build.Undo();
+
+        build.SelectedServoCount.ShouldBe(0);
+        build.Selection.Pistons.ShouldBe([4]);
+    }
+
+    [Fact]
     public void SetServoLink_PickerOrder_UsesLowestIdsAcrossLinkKinds()
     {
         var build = PistonWithLowerIdThanBeam();
