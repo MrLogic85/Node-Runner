@@ -89,6 +89,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
         _history.Clear();
         _shownLooseNodes.Clear();
         ActiveTool = BuildTool.Parts;
+        SetPickedLink(BuildLink.Beam);
         PlacementNote = null;
         AnatomyChanged?.Invoke(this, EventArgs.Empty);
     }
@@ -246,16 +247,14 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
             }
 
             _activeTool = value;
-            if (value == BuildTool.Beam)
-            {
-                SetPickedLink(BuildLink.Beam);
-            }
-
             OnPropertyChanged();
         }
     }
 
-    /// <summary>The link the Beams tool draws when a drag starts from an unselected joint (#705).</summary>
+    /// <summary>
+    /// The link the Beams tool draws when a drag starts from an unselected joint (#705). Beam on
+    /// <see cref="Load"/>; a pick then stays for the visit, across tool switches (#874).
+    /// </summary>
     public BuildLink PickedLink => _pickedLink;
 
     /// <summary>Picks the link the Beams tool draws. Locked and future links do nothing.</summary>
