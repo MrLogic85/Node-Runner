@@ -389,10 +389,6 @@ msgstr ""
 msgid "More maps come in a later version."
 msgstr ""
 
-#: libs/NodeRunner.App/ViewModels/TrainSetupPresentationViewModel.cs
-msgid "More shadows try more brains at once. Up to {0} should run smoothly."
-msgstr ""
-
 #: project/scenes/screens/BuildScreen.tscn
 msgid "Move"
 msgstr ""
@@ -484,6 +480,10 @@ msgstr ""
 msgid "Pause"
 msgstr ""
 
+#: libs/NodeRunner.App/ViewModels/TrainSetupPresentationViewModel.cs
+msgid "Phone may stutter above {0}."
+msgstr ""
+
 #: libs/NodeRunner.App/ViewModels/LinkListPresentation.cs
 msgid "Piston"
 msgstr ""
@@ -498,6 +498,10 @@ msgstr ""
 
 #: project/scenes/screens/BuildScreen.tscn
 msgid "Power budget"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/TrainSetupPresentationViewModel.cs
+msgid "Probably too many shadows."
 msgstr ""
 
 #: project/scenes/ui/UiNotificationContent.tscn
@@ -600,10 +604,6 @@ msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/TrainingHeaderPresentation.cs
 msgid "Simulating · {0}"
-msgstr ""
-
-#: project/src/hosts/TrainingHost.cs
-msgid "Slow motion"
 msgstr ""
 
 #: project/scenes/widgets/ShadowStrip.tscn
@@ -716,6 +716,10 @@ msgstr ""
 msgid "The beam between node {0} and node {1} is too short. Move one of the nodes apart."
 msgstr ""
 
+#: libs/NodeRunner.App/ViewModels/TrainSetupPresentationViewModel.cs
+msgid "The brain learns faster with more shadows."
+msgstr ""
+
 #: libs/NodeRunner.App/ViewModels/LinkListPresentation.cs
 msgid "The brain pushes and pulls it. Drag joint to joint."
 msgstr ""
@@ -764,10 +768,6 @@ msgstr ""
 msgid "This can drop after a noisy generation; Training's Best never does. Tap the padlock to change the body. Training is kept."
 msgstr ""
 
-#: libs/NodeRunner.App/ViewModels/TrainSetupPresentationViewModel.cs
-msgid "This phone may stutter above {0}."
-msgstr ""
-
 #: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs
 msgid "Three rays see how near the ground is."
 msgstr ""
@@ -776,8 +776,8 @@ msgstr ""
 msgid "Three rays see how near the ground is. Drag the round handle to aim it."
 msgstr ""
 
-#: libs/NodeRunner.App/ViewModels/TrainSetupPresentationViewModel.cs
-msgid "Too many for most phones: training may run in slow motion."
+#: project/scenes/screens/TrainingScreen.tscn
+msgid "Too many shadows!"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/BuildViewModel.cs
@@ -808,10 +808,6 @@ msgstr[1] ""
 
 #: project/src/ui/screens/BuildScreen.cs
 msgid "Training"
-msgstr ""
-
-#: project/src/hosts/TrainingHost.cs
-msgid "Training is running in slow motion. Fewer shadows run smoother on this phone."
 msgstr ""
 
 #: project/scenes/screens/TrainingScreen.tscn

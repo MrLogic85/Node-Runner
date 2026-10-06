@@ -28,12 +28,37 @@ public sealed class SlowMotionWatchTests
     }
 
     [Fact]
-    public void Warns_OnlyOnce()
+    public void TheWarning_StaysAMinuteAfterSlowMotionEnds()
     {
         var watch = new SlowMotionWatch(_tickRate);
-        Run(watch, seconds: 10, speed: 0.5).ShouldNotBeNull();
+        Run(watch, seconds: 4, speed: 0.5).ShouldNotBeNull();
 
-        Run(watch, seconds: 30, speed: 0.5).ShouldBeNull();
+        // The last measured window may still hold some of the slow stretch.
+        LastShown(watch, seconds: 120, speed: 1).ShouldNotBeNull()
+            .ShouldBeInRange(SlowMotionWatch.ShowSeconds - 1, SlowMotionWatch.ShowSeconds + 1);
+        watch.Advance(_frame, 1).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void TheWarning_StaysWhileSlowMotionLasts()
+    {
+        var watch = new SlowMotionWatch(_tickRate);
+
+        LastShown(watch, seconds: 3 * SlowMotionWatch.ShowSeconds, speed: 0.5)
+            .ShouldNotBeNull().ShouldBeGreaterThan(3 * SlowMotionWatch.ShowSeconds - 1);
+    }
+
+    [Fact]
+    public void SlowMotionAgain_StartsTheMinuteOver()
+    {
+        var watch = new SlowMotionWatch(_tickRate);
+        Run(watch, seconds: 4, speed: 0.5).ShouldNotBeNull();
+        LastShown(watch, seconds: 50, speed: 1).ShouldNotBeNull().ShouldBeGreaterThan(49);
+
+        Run(watch, seconds: 4, speed: 0.5).ShouldNotBeNull();
+
+        LastShown(watch, seconds: 120, speed: 1).ShouldNotBeNull()
+            .ShouldBeInRange(SlowMotionWatch.ShowSeconds - 1, SlowMotionWatch.ShowSeconds + 1);
     }
 
     [Fact]
@@ -82,6 +107,17 @@ public sealed class SlowMotionWatchTests
     }
 
     [Fact]
+    public void Restart_KeepsAShownWarning()
+    {
+        var watch = new SlowMotionWatch(_tickRate);
+        Run(watch, seconds: 4, speed: 0.5).ShouldNotBeNull();
+
+        watch.Restart();
+
+        watch.Advance(_frame, 1).ShouldBeTrue();
+    }
+
+    [Fact]
     public void RejectsNegativeInput()
     {
         var watch = new SlowMotionWatch(_tickRate);
@@ -92,11 +128,19 @@ public sealed class SlowMotionWatchTests
     }
 
     // Feeds frames of real time with physics at a share of real time's ticks, carrying the part
-    // ticks over, and returns the time of the warning, or null without one.
-    private static double? Run(SlowMotionWatch watch, double seconds, double speed, double frameSeconds = _frame)
+    // ticks over, and returns when the warning first shows, or null if it does not.
+    private static double? Run(SlowMotionWatch watch, double seconds, double speed, double frameSeconds = _frame) =>
+        Feed(watch, seconds, speed, frameSeconds).Cast<double?>().FirstOrDefault();
+
+    // Like Run, for the whole time, and returns when the warning last showed, or null if it did not.
+    private static double? LastShown(SlowMotionWatch watch, double seconds, double speed, double frameSeconds = _frame) =>
+        Feed(watch, seconds, speed, frameSeconds).Cast<double?>().LastOrDefault();
+
+    private static IEnumerable<double> Feed(SlowMotionWatch watch, double seconds, double speed, double frameSeconds)
     {
         var ticksPerSecond = speed * _tickRate;
         var carried = 0.0;
+        var shown = new List<double>();
         for (var elapsed = 0.0; elapsed < seconds; elapsed += frameSeconds)
         {
             carried += ticksPerSecond * frameSeconds;
@@ -104,10 +148,10 @@ public sealed class SlowMotionWatchTests
             carried -= ticks;
             if (watch.Advance(frameSeconds, ticks))
             {
-                return elapsed + frameSeconds;
+                shown.Add(elapsed + frameSeconds);
             }
         }
 
-        return null;
+        return shown;
     }
 }

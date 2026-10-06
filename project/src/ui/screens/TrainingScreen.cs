@@ -66,6 +66,9 @@ public partial class TrainingScreen : Control
         pause.TooltipText = paused ? "Run" : "Pause";
     }
 
+    /// <summary>Shows or hides the "Too many shadows!" chip in the arena's top-left corner (#318).</summary>
+    public void ShowSlowMotion(bool shown) => GetNode<Control>("%SlowMotionChip").Visible = shown;
+
     /// <summary>
     /// Names the selected part (#388) in a callout above the whole creature, its leader down to the
     /// part, or with a null <paramref name="name"/> shows none. World coordinates; call every frame.
