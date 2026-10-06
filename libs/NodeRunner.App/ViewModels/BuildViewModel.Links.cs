@@ -30,7 +30,7 @@ public sealed partial class BuildViewModel
             return false;
         }
 
-        AnatomyChanged?.Invoke(this, EventArgs.Empty);
+        RaiseAnatomyChanged();
         return true;
     }
 

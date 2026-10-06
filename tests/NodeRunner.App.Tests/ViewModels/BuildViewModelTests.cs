@@ -990,6 +990,30 @@ public sealed class BuildViewModelTests
         viewModel.CanvasNotes().ShouldBe([NotConnected(2), NotConnected(a)]);
     }
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void ShowTrainingBlockers_ForgetsThePiecesOnceJoined_SoUndoOrDeletingTheLinkWaitsForTheNextTap(bool undo)
+    {
+        var viewModel = new BuildViewModel();
+        viewModel.Load(TwoPieces());
+        viewModel.ShowTrainingBlockers();
+
+        var spring = viewModel.ConnectLink(BuildLink.Spring, 2, 4).ShouldNotBeNull();
+        if (undo)
+        {
+            viewModel.Undo();
+        }
+        else
+        {
+            viewModel.SelectOnly(CreatureElementKind.Spring, spring);
+            viewModel.DeleteSelectedParts();
+        }
+
+        viewModel.Pieces().Count.ShouldBe(2);
+        viewModel.CanvasNotes().ShouldBeEmpty();
+    }
+
     [Fact]
     public void Load_ForgetsThePiecesTheLastTapPointedAt()
     {
