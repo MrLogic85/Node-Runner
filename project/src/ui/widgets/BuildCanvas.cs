@@ -447,7 +447,7 @@ public partial class BuildCanvas : Node2D
             foreach (var piston in _viewModel.Pistons.Where(piston => selected.Contains(piston.Id)))
             {
                 var (built, radii) = (BuiltLength(piston.NodeA, piston.NodeB), JointRadii(piston.NodeA, piston.NodeB));
-                DrawTravel(canvas, piston.NodeA, piston.NodeB, Piston.ShortestLength(piston, built, radii), Piston.LongestLength(piston, built, radii), PistonDrawing.TickHalf, rest: null);
+                DrawTravel(canvas, piston.NodeA, piston.NodeB, Piston.ShortestLength(piston, built, radii), Piston.LongestLength(piston, built, radii), PistonDrawing.TickHalf(Theme), rest: null);
             }
         }
 

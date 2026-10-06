@@ -22,9 +22,6 @@ public static class PistonDrawing
     private const float _cylinderRadius = 2;
     private const float _capLength = 10;
 
-    /// <summary>Half a Piston's stroke tick, across it; a Spring's spans its seats (<see cref="SpringDrawing.SeatHalf"/>).</summary>
-    public const float TickHalf = 4;
-
     private const float _hairline = 1;
     private const float _dash = 6;
     private const float _minCylinder = 4;
@@ -70,7 +67,7 @@ public static class PistonDrawing
         var scale = UiPixelSpace.ScaleOf(toPixels);
         var along = (b - a).Normalized();
         var across = along.Orthogonal();
-        var cylinderHalf = theme.BeamWidth * _cylinderPerBeam / 2;
+        var cylinderHalf = CylinderHalf(theme);
 
         // Like a beam, the rod stops under the joint rings (#626), or, when they meet, runs centre to centre.
         var (rodStart, rodEnd) = JointDrawing.BeamSpan(theme.JointRingWidth, a, radiusA, b, radiusB) ?? (a, b);
@@ -90,13 +87,27 @@ public static class PistonDrawing
 
         if (selected)
         {
-            // The gap is measured from the cylinder outline's outer edge.
-            var offset = cylinderHalf + (_line / 2) + (float)SelectionMarks.Gap;
-            SelectionDrawing.DrawLink(canvas, toPixels, scale, theme, a, b, radiusA, radiusB, haloA, haloB, offset);
+            SelectionDrawing.DrawLink(canvas, toPixels, scale, theme, a, b, radiusA, radiusB, haloA, haloB, SelectionOffset(theme));
         }
 
         canvas.DrawSetTransformMatrix(drawTransform);
     }
+
+    /// <summary>
+    /// Half a Piston's stroke tick, across it: out to the cylinder's outer edge, so the shortest tick is
+    /// as wide as the cylinder whose end it marks (#931). A Spring's spans its seats
+    /// (<see cref="SpringDrawing.SeatHalf"/>); both stop a gap inside the selection outline.
+    /// </summary>
+    public static float TickHalf(VisualTheme theme) => CylinderHalf(theme) + (_line / 2);
+
+    private static float CylinderHalf(VisualTheme theme)
+    {
+        ArgumentNullException.ThrowIfNull(theme);
+        return theme.BeamWidth * _cylinderPerBeam / 2;
+    }
+
+    // The selection outline's distance from the axis, a gap past the cylinder outline's outer edge.
+    private static float SelectionOffset(VisualTheme theme) => TickHalf(theme) + (float)SelectionMarks.Gap;
 
     /// <summary>
     /// A Piston's stroke (#704): <c>halo</c> ticks at its shortest and longest length from joint A's
