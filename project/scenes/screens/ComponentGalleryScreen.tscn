@@ -2755,7 +2755,7 @@ layout_mode = 2
 mouse_filter = 2
 script = ExtResource("20_value_row")
 LabelText = "Power"
-ValueText = "Draws up to 0.6"
+ValueText = "Up to 0.6"
 IconId = 2
 
 [node name="Note" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/PanelRows/Panel/Rows" unique_id=-1126537784]
