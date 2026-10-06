@@ -103,7 +103,7 @@ public sealed class BuildGestures
     /// <summary>The joint a Beam or link drag would connect to if released now.</summary>
     public int? BeamTargetNodeId { get; private set; }
 
-    /// <summary>The joint under a Piston or Spring drag that would refuse it (#451), such as one a beam already joins to the start.</summary>
+    /// <summary>The joint under a link drag that would refuse it (#451, #877), such as one a beam already joins to the start.</summary>
     public int? RefusedTargetNodeId { get; private set; }
 
     /// <summary>The corners of the Select tool's box while it is dragged.</summary>
@@ -383,18 +383,10 @@ public sealed class BuildGestures
         if (BeamStartNodeId is { } start)
         {
             BeamEnd = position;
-            if (_build.PickedLink != BuildLink.Beam)
-            {
-                var target = FindLinkTarget(start, position);
-                var refused = target is { } end && !_build.CanConnectLink(_build.PickedLink, start, end, out _);
-                BeamTargetNodeId = refused ? null : target;
-                RefusedTargetNodeId = refused ? target : null;
-            }
-            else
-            {
-                BeamTargetNodeId = FindBeamTarget(start, position);
-                RefusedTargetNodeId = null;
-            }
+            var target = FindLinkTarget(start, position);
+            var refused = target is { } end && !_build.CanConnectLink(_build.PickedLink, start, end, out _);
+            BeamTargetNodeId = refused ? null : target;
+            RefusedTargetNodeId = refused ? target : null;
 
             Changed?.Invoke(this, EventArgs.Empty);
         }
@@ -430,17 +422,10 @@ public sealed class BuildGestures
         }
         else if (BeamStartNodeId is { } start)
         {
-            if (_build.PickedLink != BuildLink.Beam)
+            // A link never makes a joint, so a drop away from one places nothing.
+            if (FindLinkTarget(start, position) is { } end)
             {
-                // A link never makes a joint, so a drop away from one places nothing.
-                if (FindLinkTarget(start, position) is { } linkEnd)
-                {
-                    _build.ConnectLink(_build.PickedLink, start, linkEnd);
-                }
-            }
-            else if (FindBeamTarget(start, position) is { } end)
-            {
-                _build.ConnectBeam(start, end);
+                _build.ConnectLink(_build.PickedLink, start, end);
             }
         }
         else if (SelectionBox is { } box)
@@ -696,10 +681,6 @@ public sealed class BuildGestures
             .OrderBy(entry => Distance(entry.Position, viewPosition))
             .Select(entry => (SelectionHandle?)entry.Handle)
             .FirstOrDefault();
-
-    /// <summary>Snaps only to joints the beam could actually join, so the preview never promises a refused connection.</summary>
-    private int? FindBeamTarget(int start, Vector2D position) =>
-        _build.TryFindNodeNear(position, SelectionMarks.Gap, out var end) && _build.CanConnect(start, end) ? end : null;
 
     /// <summary>Any other joint under the pointer, so a refused link drop can say why there.</summary>
     private int? FindLinkTarget(int start, Vector2D position) =>

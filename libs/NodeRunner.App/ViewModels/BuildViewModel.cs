@@ -662,9 +662,6 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
         return nodeId >= 0;
     }
 
-    /// <summary>Whether <see cref="ConnectBeam"/> would join this pair: unlocked, and the builder accepts the beam.</summary>
-    public bool CanConnect(int nodeIdA, int nodeIdB) => !_moveOnly && _builder.CanAddBeam(nodeIdA, nodeIdB);
-
     /// <summary>
     /// Joins two existing nodes with a beam. Rejected attempts (locked
     /// Creation, self-connect, duplicate beam) change nothing and return false
@@ -691,8 +688,8 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     }
 
     /// <summary>
-    /// Whether <see cref="ConnectLink"/> would place <paramref name="link"/>, a Piston or a Spring,
-    /// between this pair; if not, <paramref name="reason"/> says why.
+    /// Whether <see cref="ConnectLink"/> would place <paramref name="link"/> between this pair;
+    /// if not, <paramref name="reason"/> says why.
     /// </summary>
     public bool CanConnectLink(BuildLink link, int nodeIdA, int nodeIdB, [NotNullWhen(false)] out UiText? reason)
     {
@@ -704,14 +701,15 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
 
         return link switch
         {
+            BuildLink.Beam => _builder.CanAddBeam(nodeIdA, nodeIdB, out reason),
             BuildLink.Piston => _builder.CanAddPiston(nodeIdA, nodeIdB, out reason),
             BuildLink.Spring => _builder.CanAddSpring(nodeIdA, nodeIdB, out reason),
-            _ => throw new ArgumentOutOfRangeException(nameof(link), "Only a Piston or a Spring is a link between two joints."),
+            _ => throw new ArgumentOutOfRangeException(nameof(link), "Only a Beam, a Piston or a Spring is drawn between two joints."),
         };
     }
 
     /// <summary>
-    /// Places <paramref name="link"/>, a Piston (#451) or a Spring (#453), between two nodes and
+    /// Places <paramref name="link"/>, a Beam, a Piston (#451) or a Spring (#453), between two nodes and
     /// returns its id. A refused pair changes nothing and shows why as <see cref="PlacementNote"/>
     /// at <paramref name="nodeIdB"/>, the joint the drag ended on.
     /// </summary>
@@ -728,9 +726,12 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
             return null;
         }
 
-        var linkId = _history.Change(() => link == BuildLink.Piston
-            ? _builder.AddPiston(nodeIdA, nodeIdB)
-            : _builder.AddSpring(nodeIdA, nodeIdB));
+        var linkId = _history.Change(() => link switch
+        {
+            BuildLink.Beam => _builder.AddBeam(nodeIdA, nodeIdB),
+            BuildLink.Piston => _builder.AddPiston(nodeIdA, nodeIdB),
+            _ => _builder.AddSpring(nodeIdA, nodeIdB),
+        });
         AnatomyChanged?.Invoke(this, EventArgs.Empty);
         return linkId;
     }

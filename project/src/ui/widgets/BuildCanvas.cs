@@ -651,7 +651,7 @@ public partial class BuildCanvas : Node2D
             return;
         }
 
-        // A Piston drag over a joint that would refuse it turns danger (#451).
+        // A link drag over a joint that would refuse it turns danger (#451, #877).
         var refused = _gestures.RefusedTargetNodeId;
         var from = NodeById(start);
         var target = (_gestures.BeamTargetNodeId ?? refused) is { } id ? NodeById(id) : null;

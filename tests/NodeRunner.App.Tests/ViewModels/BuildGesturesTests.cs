@@ -593,16 +593,49 @@ public class BuildGesturesTests
     }
 
     [Fact]
-    public void Beam_DuplicatePair_AddsNothing()
+    public void Beam_DuplicatePair_AddsNothing_AndSaysWhyThere()
     {
         var (build, gestures) = TwoJointsAndABeam();
         build.ActiveTool = BuildTool.Beam;
 
         gestures.Press(new Vector2D(0, 0));
         gestures.Drag(new Vector2D(100, 0));
+        gestures.RefusedTargetNodeId.ShouldBe(2);
+        gestures.BeamTargetNodeId.ShouldBeNull();
         gestures.Release(new Vector2D(100, 0));
 
         build.Beams.Count.ShouldBe(1);
+        build.PlacementNote.ShouldBe(new CanvasNote(CanvasNoteKind.Danger, new CreatureElementSelection(CreatureElementKind.Node, 2), CreatureBuilder.BeamJoinsTheseNodesReason));
+    }
+
+    [Fact]
+    public void Beam_OntoAJointAPistonJoins_SaysWhyThere()
+    {
+        var (build, gestures) = ThreeLooseJoints(BuildTool.Beam);
+        build.ConnectLink(BuildLink.Piston, 1, 2);
+
+        gestures.Press(new Vector2D(0, 0));
+        gestures.Drag(new Vector2D(100, 0));
+        gestures.RefusedTargetNodeId.ShouldBe(2);
+        gestures.Release(new Vector2D(100, 0));
+
+        build.Beams.ShouldBeEmpty();
+        build.PlacementNote.ShouldBe(new CanvasNote(CanvasNoteKind.Danger, new CreatureElementSelection(CreatureElementKind.Node, 2), CreatureBuilder.PistonJoinsTheseNodesReason));
+    }
+
+    [Fact]
+    public void Beam_DropAwayFromAJoint_PlacesAndSaysNothing()
+    {
+        var (build, gestures) = ThreeLooseJoints(BuildTool.Beam);
+
+        gestures.Press(new Vector2D(0, 0));
+        gestures.Drag(new Vector2D(300, 300));
+        gestures.RefusedTargetNodeId.ShouldBeNull();
+        gestures.Release(new Vector2D(300, 300));
+
+        build.Beams.ShouldBeEmpty();
+        build.Nodes.Count.ShouldBe(3);
+        build.PlacementNote.ShouldBeNull();
     }
 
     [Fact]

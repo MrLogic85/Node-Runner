@@ -633,7 +633,7 @@ public sealed class BuildViewModelTests
             new CreatureDef([new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(20, 0))], [], []),
             moveOnly: true);
 
-        viewModel.CanConnect(1, 2).ShouldBeFalse();
+        viewModel.CanConnectLink(BuildLink.Beam, 1, 2, out _).ShouldBeFalse();
         viewModel.ConnectBeam(1, 2).ShouldBeFalse();
 
         viewModel.Beams.ShouldBeEmpty();

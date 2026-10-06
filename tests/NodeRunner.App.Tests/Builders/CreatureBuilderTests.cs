@@ -186,7 +186,8 @@ public sealed class CreatureBuilderTests
         pistonOnSpring.ShouldBe(CreatureBuilder.SpringJoinsTheseNodesReason);
         builder.CanAddSpring(b, d, out var onPiston).ShouldBeFalse();
         onPiston.ShouldBe(CreatureBuilder.PistonJoinsTheseNodesReason);
-        builder.CanAddBeam(a, c).ShouldBeFalse();
+        builder.CanAddBeam(a, c, out var beamOnSpring).ShouldBeFalse();
+        beamOnSpring.ShouldBe(CreatureBuilder.SpringJoinsTheseNodesReason);
         Should.Throw<ArgumentException>(() => builder.AddBeam(a, c));
         builder.CanAddSpring(a, a, out _).ShouldBeFalse();
         builder.CanAddSpring(c, d, out _).ShouldBeTrue();

@@ -114,11 +114,11 @@ sizes on screen at any zoom.
   Spring and later Wing. Beam is picked when Build opens; the picked link
   then stays for the visit, across tool switches and selections (#874). It
   is not saved. Drag from an
-  unselected joint to a different joint to draw the picked link. A Beam
-  preview only snaps to a node the beam could join
-  (`BuildViewModel.CanConnect`); releasing anywhere else adds nothing. A
-  Piston or Spring preview uses the refusals and canvas notes in the Piston
-  bullet below. Beams never adds a node.
+  unselected joint to a different joint to draw the picked link. Every
+  link, a Beam too (#877), uses the refusals and canvas notes in the Piston
+  bullet below (`BuildViewModel.CanConnectLink`); a pair a Beam already
+  joins refuses another Beam with "A beam already joins these nodes".
+  Beams never adds a node.
 - **Joint:** with nothing selected, a tap on empty canvas adds a node; with
   a selection, that tap only clears it. A beam tap selects the beam like in
   every tool: beams are never split (#746).
