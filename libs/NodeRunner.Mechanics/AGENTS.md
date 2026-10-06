@@ -30,6 +30,9 @@ folder.
 - `CameraRays` — the camera's ray targets and reading
 - `Servo` — a Servo's angle inputs, torque and endpoint force couple
 - `Piston` — a Piston's travel, inputs, target length and force
+- `Spring` — a Spring's travel
+- `Travel` — the shortest and longest length a Piston's or Spring's stroke
+  gives
 - `RigidTriangles`, `RigidTriangleDef` — the closed beam triangles of a
   creature
 - `OutputSignals` — an output's value as a Servo's target angle and as a

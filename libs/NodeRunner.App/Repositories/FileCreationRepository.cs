@@ -18,7 +18,7 @@ public sealed class FileCreationRepository : ICreationRepository
     /// <c>creation.json</c>'s versions. Add a migration here when its shape changes
     /// (docs/SAVE_FORMAT.md → "Versions and migration").
     /// </summary>
-    public static VersionedSaveFile<CreationDef> Format { get; } = new([AddServosArray, PistonStrokeFromShortest]);
+    public static VersionedSaveFile<CreationDef> Format { get; } = new([AddServosArray, PistonStrokeFromShortest, SpringTravel]);
 
     private readonly string _directoryPath;
     private readonly VersionedSaveFile<CreationDef> _format;
@@ -141,6 +141,34 @@ public sealed class FileCreationRepository : ICreationRepository
                 var target = neuronsById[IntOf(connection["to"], "connection to")];
                 target["bias"] = NumberOf(target["bias"], "neuron bias") - weight;
             }
+        }
+    }
+
+    // Before #835 a Spring had no travel: it pushed nothing at its drawn length and nothing stopped
+    // it. The widest travel with the drawn length in the middle, 0.67…1.33 of it, keeps that for
+    // every move but the largest.
+    private static void SpringTravel(JsonObject file)
+    {
+        if (file["creature"] is not JsonObject creature)
+        {
+            throw new InvalidDataException("creation.json is missing its creature object.");
+        }
+
+        // A file without springs fails the strict load, which names the missing field.
+        if (creature["springs"] is not JsonArray springs)
+        {
+            return;
+        }
+
+        foreach (var node in springs)
+        {
+            if (node is not JsonObject spring)
+            {
+                throw new InvalidDataException("creation.json has a spring that is not an object.");
+            }
+
+            spring["stroke"] = 1.0;
+            spring["preload"] = 0.5;
         }
     }
 

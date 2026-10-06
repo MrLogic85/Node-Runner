@@ -14,4 +14,5 @@ public enum PartParameterId
     Aim,
     Stiffness,
     Damping,
+    Preload,
 }

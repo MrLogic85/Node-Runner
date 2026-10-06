@@ -1,4 +1,5 @@
 using Godot;
+using NodeRunner.Domain;
 
 namespace NodeRunner.Theme;
 
@@ -9,7 +10,9 @@ public partial class SpringPart : PartVisual
     private Vector2 _b;
     private float _radiusA;
     private float _radiusB;
-    private float _built;
+    private float _travel;
+    private float _rest;
+    private double _stiffness = SpringDef.DefaultStiffness;
     private bool _danger;
     private bool _haloA;
     private bool _haloB;
@@ -43,11 +46,25 @@ public partial class SpringPart : PartVisual
         set => Change(ref _radiusB, value);
     }
 
-    /// <summary>The length it was built with, centre to centre, which keeps its damper body's length as it moves (#807).</summary>
-    public float Built
+    /// <summary>Its travel, longest length less shortest, which sets its damper body's length (#835).</summary>
+    public float Travel
     {
-        get => _built;
-        set => Change(ref _built, value);
+        get => _travel;
+        set => Change(ref _travel, value);
+    }
+
+    /// <summary>Its rest length, centre to centre, which sets its coil's turns (#835).</summary>
+    public float Rest
+    {
+        get => _rest;
+        set => Change(ref _rest, value);
+    }
+
+    /// <summary>Its Stiffness in N/m, which sets its coil's wire (#835).</summary>
+    public double Stiffness
+    {
+        get => _stiffness;
+        set => Change(ref _stiffness, value);
     }
 
     /// <summary>Too short to train (#593): drawn in <c>danger</c>.</summary>
@@ -72,5 +89,5 @@ public partial class SpringPart : PartVisual
     }
 
     public override void _Draw() =>
-        SpringDrawing.Draw(this, Transform2D.Identity, Theme, A, B, RadiusA, RadiusB, Built, Danger, Selected, HaloA, HaloB);
+        SpringDrawing.Draw(this, Transform2D.Identity, Theme, A, B, RadiusA, RadiusB, Travel, Rest, Stiffness, Danger, Selected, HaloA, HaloB);
 }

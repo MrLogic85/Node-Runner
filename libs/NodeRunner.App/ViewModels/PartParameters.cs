@@ -1,4 +1,5 @@
 using NodeRunner.App.Builders;
+using NodeRunner.Domain;
 
 namespace NodeRunner.App.ViewModels;
 
@@ -106,8 +107,8 @@ public sealed record ParameterSlider(PartParameterId Id, UiText Label, UiText Re
 /// <summary>
 /// Every part setting (#704). A Piston's Max strength is in N, its Stroke % of its shortest length,
 /// its Start position % of its travel (#870), its Max speed in m/s (#451) and its Rise time in s
-/// (#801); a Spring's Stiffness is in N/m and its Damping in N·s/m
-/// (#453, #801); a Camera's aim is turned on the canvas (#594).
+/// (#801); a Spring's Stiffness is in N/m, its Damping in N·s/m (#453, #801), and its Stroke and
+/// Preload in % like a Piston's Stroke and Start position (#835); a Camera's aim is turned on the canvas (#594).
 /// </summary>
 public static class PartParameters
 {
@@ -138,11 +139,15 @@ public static class PartParameters
 
     // World force per world unit is N/m: both scale by world units per metre, which cancel.
     public static PartParameter Stiffness { get; } = new(
-        PartParameterId.Stiffness, MultiEditable: true, new(UiText.Plain("Stiffness"), new(50, 2000, 50), 0, "{0} N/m", "{0}–{1} N/m", value => value, value => value));
+        PartParameterId.Stiffness, MultiEditable: true, new(UiText.Plain("Stiffness"), new(SpringDef.SoftestStiffness, SpringDef.StiffestStiffness, 50), 0, "{0} N/m", "{0}–{1} N/m", value => value, value => value));
 
     // World force per world speed is N·s/m, for the same reason.
     public static PartParameter Damping { get; } = new(
         PartParameterId.Damping, MultiEditable: true, new(UiText.Plain("Damping"), new(0, 100, 1), 0, "{0} N·s/m", "{0}–{1} N·s/m", value => value, value => value));
+
+    // Preload may press the Spring against a stop, so it reaches past 0–100% (#835).
+    public static PartParameter Preload { get; } = new(
+        PartParameterId.Preload, MultiEditable: true, new(UiText.Plain("Preload"), new(SpringDef.MinPreload * 100, SpringDef.MaxPreload * 100, 5), 0, "{0}%", "{0}–{1}%", value => value * 100, value => value / 100));
 
     public static PartParameter Aim { get; } = new(PartParameterId.Aim, MultiEditable: false, Slider: null);
 
@@ -159,6 +164,7 @@ public static class PartParameters
         PartParameterId.Aim => Aim,
         PartParameterId.Stiffness => Stiffness,
         PartParameterId.Damping => Damping,
+        PartParameterId.Preload => Preload,
         _ => throw new ArgumentOutOfRangeException(nameof(id)),
     };
 

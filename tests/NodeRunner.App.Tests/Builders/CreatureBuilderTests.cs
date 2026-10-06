@@ -154,18 +154,23 @@ public sealed class CreatureBuilderTests
     }
 
     [Fact]
-    public void ParametersOf_ASpring_AreStiffnessAndDamping_AndSettingOneKeepsTheOther()
+    public void ParametersOf_ASpring_AreItsFourSettings_AndSettingOneKeepsTheOthers()
     {
         var builder = PairBuilder();
         var far = builder.AddNode(new Vector2D(180, 0));
         var spring = builder.AddSpring(builder.Nodes[0].Id, far);
 
-        builder.ParametersOf(spring).ShouldBe([PartParameterId.Stiffness, PartParameterId.Damping]);
+        builder.ParametersOf(spring).ShouldBe(
+            [PartParameterId.Stiffness, PartParameterId.Damping, PartParameterId.Stroke, PartParameterId.Preload]);
         builder.SetParameter(spring, PartParameterId.Damping, 0.6);
+        builder.SetParameter(spring, PartParameterId.Stroke, 0.3);
+        builder.SetParameter(spring, PartParameterId.Preload, -0.5);
 
-        builder.Springs.Single().ShouldBe(new SpringDef(spring, builder.Nodes[0].Id, far, damping: 0.6));
-        builder.ParameterValue(spring, PartParameterId.Damping).ShouldBe(0.6);
+        builder.Springs.Single().ShouldBe(new SpringDef(spring, builder.Nodes[0].Id, far, damping: 0.6, stroke: 0.3, preload: -0.5));
         builder.ParameterValue(spring, PartParameterId.Stiffness).ShouldBe(SpringDef.DefaultStiffness);
+        builder.ParameterValue(spring, PartParameterId.Stroke).ShouldBe(0.3);
+        builder.ParameterValue(spring, PartParameterId.Preload).ShouldBe(-0.5);
+        builder.Nodes.Single(node => node.Id == far).Position.ShouldBe(new Vector2D(180, 0));
     }
 
     [Fact]

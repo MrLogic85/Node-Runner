@@ -278,7 +278,9 @@ position** (0–100%, step 5; where its drawn length sits in its travel, #870),
 **Max speed** (0.5–4.0 m/s, step
 0.1) and **Rise time** (0.1, 0.2, 0.5 or 1 s, evenly spaced along the slider
 so the short ones are as easy to pick, #801); a Spring has **Stiffness**
-(50–2000 N/m, step 50) and **Damping** (0–100 N·s/m, step 1); a Servo has
+(50–2000 N/m, step 50), **Damping** (0–100 N·s/m, step 1), **Stroke** (as
+the Piston's) and **Preload** (−50–200%, step 5; where its drawn length sits
+in its travel, #835); a Servo has
 **Max strength** (5–200 N·m), **Range** (20°–360°), **Start position**
 (0–100%), **Max speed** (30°/s–720°/s) and **Rise time**, followed by
 Fixed/Target link pickers; a Camera has **Aim**, set on the canvas and one
@@ -289,7 +291,7 @@ part has and can share (`BuildViewModel.EditableParameters`). The panel shows a
 slider for each that is `InPanel`, and a slider sets its value on every
 selected part (`SetParameter`). The canvas shows what a parameter changes
 only while it can be changed: a Piston's stroke ticks while Stroke or Start
-position can, a Camera's rays and aim handle while Aim can. Parameters change
+position can, a Spring's while Stroke or Preload can, a Camera's rays and aim handle while Aim can. Parameters change
 no brain port, so a locked creation keeps them.
 
 A Piston's rows are Name, then its sliders instead of what it is joined to,
@@ -303,8 +305,10 @@ callout say "A Servo needs two links at its joint" instead, and the
 Play-blocked reason asks to connect another link there, because no pick
 could fix it. Changing a picker follows
 `docs/CREATURE_MODEL.md` → "Editing identity rules".
-A Spring's are Name, its two sliders, then "It pulls back toward its drawn
-length. Damping stops it bouncing."
+A Spring's are Name, its sliders, then "It springs toward the length its
+Preload sets, within its stroke. Past 100% or under 0%, it presses against
+a stop. Damping stops it bouncing." A Piston
+and a Spring selected together share Stroke.
 
 ## Selection panel
 

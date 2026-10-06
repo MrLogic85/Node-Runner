@@ -262,6 +262,14 @@
               "damping": {
                 "type": "number",
                 "default": 10
+              },
+              "stroke": {
+                "type": "number",
+                "default": 1
+              },
+              "preload": {
+                "type": "number",
+                "default": 1
               }
             },
             "required": [

@@ -356,7 +356,7 @@ msgid "Hills"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs
-msgid "It pulls back toward its drawn length. Damping stops it bouncing."
+msgid "It springs toward the length its Preload sets, within its stroke. Past 100% or under 0%, it presses against a stop. Damping stops it bouncing."
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs
@@ -537,6 +537,10 @@ msgstr ""
 
 #: project/scenes/screens/BuildScreen.tscn
 msgid "Power budget"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/PartParameters.cs
+msgid "Preload"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/TrainSetupPresentationViewModel.cs

@@ -76,6 +76,46 @@ public sealed class CreationVersioningTests : IDisposable
         pistons[1].Start.ShouldBe(0.5);
     }
 
+    // #835: a Spring had no travel; it gets the widest one with its drawn length in the middle.
+    [Fact]
+    public void Fixture013_WithASpring_GivesItTheWidestTravelAroundItsDrawnLength()
+    {
+        var file = JsonNode.Parse(Fixture013("walker.creation.json"))!.AsObject();
+        file["creature"]!["springs"] = JsonNode.Parse("""[{ "id": 50, "nodeA": 3, "nodeB": 4, "name": null, "stiffness": 300, "damping": 5 }]""");
+        file["creature"]!["nextPartId"] = 51;
+        WriteCreation(file.ToJsonString());
+
+        var spring = new FileCreationRepository(new TestStorageLocation(_directory)).List().ShouldHaveSingleItem().Creature.Springs.ShouldHaveSingleItem();
+
+        spring.ShouldBe(new SpringDef(50, 3, 4, null, 300, 5, stroke: 1, preload: 0.5));
+    }
+
+    [Fact]
+    public void AVersion3Save_WhoseCreatureIsNotAnObject_IsSkipped_AndTheOthersStillList()
+    {
+        var bad = JsonNode.Parse(Fixture013("walker.creation.json"))!.AsObject();
+        bad["id"] = Guid.NewGuid().ToString();
+        bad["creature"] = new JsonArray();
+        WriteCreation(WithVersion(bad.ToJsonString(), 3));
+        WriteCreation(Fixture013("walker.creation.json"));
+
+        new FileCreationRepository(new TestStorageLocation(_directory)).List().ShouldHaveSingleItem();
+    }
+
+    [Theory]
+    [InlineData("null")]
+    [InlineData("5")]
+    public void AVersion3Save_WithASpringThatIsNotAnObject_IsSkipped_AndTheOthersStillList(string spring)
+    {
+        var bad = JsonNode.Parse(Fixture013("walker.creation.json"))!.AsObject();
+        bad["id"] = Guid.NewGuid().ToString();
+        bad["creature"]!["springs"] = JsonNode.Parse($"[{spring}]");
+        WriteCreation(WithVersion(bad.ToJsonString(), 3));
+        WriteCreation(Fixture013("walker.creation.json"));
+
+        new FileCreationRepository(new TestStorageLocation(_directory)).List().ShouldHaveSingleItem();
+    }
+
     [Theory]
     [InlineData("0")]
     [InlineData("1")]

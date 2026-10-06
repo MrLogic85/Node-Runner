@@ -53,12 +53,24 @@ public sealed class PartParametersTests
     [Fact]
     public void ASpring_ShowsItsStiffnessInNewtonsPerMetreAndDampingInNewtonSecondsPerMetre()
     {
+        var spring = new SpringDef(4, 1, 2);
+
         PartParameters.SliderOver(PartParameterId.Stiffness, [SpringDef.DefaultStiffness]).Readout.ShouldBe(UiText.Format("{0} N/m", new FixedNumber(400, 0)));
         PartParameters.SliderOver(PartParameterId.Damping, [SpringDef.DefaultDamping]).Readout.ShouldBe(UiText.Format("{0} N·s/m", new FixedNumber(10, 0)));
         PartParameters.ValueAt(PartParameterId.Stiffness, 0).ShouldBe(50);
         PartParameters.ValueAt(PartParameterId.Stiffness, 1).ShouldBe(2000);
         PartParameters.ValueAt(PartParameterId.Damping, 0).ShouldBe(0);
         PartParameters.ValueAt(PartParameterId.Damping, 1).ShouldBe(100);
+        PartParameters.SliderOver(PartParameterId.Stroke, [spring.Stroke]).Readout.ShouldBe(UiText.Format("{0}%", new FixedNumber(100, 0)));
+        PartParameters.SliderOver(PartParameterId.Preload, [spring.Preload]).Readout.ShouldBe(UiText.Format("{0}%", new FixedNumber(100, 0)));
+    }
+
+    [Fact]
+    public void Preload_RunsFromMinusFiftyToTwoHundredPercent_InStepsOfFive()
+    {
+        PartParameters.ValueAt(PartParameterId.Preload, 0).ShouldBe(SpringDef.MinPreload);
+        PartParameters.ValueAt(PartParameterId.Preload, 1).ShouldBe(SpringDef.MaxPreload);
+        PartParameters.ValueAt(PartParameterId.Preload, 0.212).ShouldBe(0.05, tolerance: 1e-9);
     }
 
     [Fact]
@@ -79,6 +91,7 @@ public sealed class PartParametersTests
     [InlineData(PartParameterId.Stiffness, 650)]
     [InlineData(PartParameterId.Damping, 45)]
     [InlineData(PartParameterId.RiseTime, 0.5)]
+    [InlineData(PartParameterId.Preload, -0.35)]
     public void ASharedValue_RoundTripsThroughItsSlider(PartParameterId id, double value)
     {
         var slider = PartParameters.SliderOver(id, [value, value]);

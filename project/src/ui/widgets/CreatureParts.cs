@@ -207,7 +207,7 @@ public partial class CreatureParts : Node2D
             part.B = ToGodot(nodeB.Position);
             part.RadiusA = (float)NodeRadius(shape, nodeA.Id);
             part.RadiusB = (float)NodeRadius(shape, nodeB.Id);
-            part.Shortest = (float)Piston.ShortestLength(piston, built);
+            part.Travel = (float)(Piston.LongestLength(piston, built) - Piston.ShortestLength(piston, built));
             part.Danger = marks.ShowsTooShort && IsTooShort(shape, nodeA, nodeB);
             part.HaloA = selected.Nodes.Contains(piston.NodeA);
             part.HaloB = selected.Nodes.Contains(piston.NodeB);
@@ -222,10 +222,13 @@ public partial class CreatureParts : Node2D
         foreach (var spring in shape.Springs)
         {
             var (nodeA, nodeB) = (nodes[spring.NodeA], nodes[spring.NodeB]);
+            var built = Math.Sqrt(Math.Pow(nodeB.Position.X - nodeA.Position.X, 2) + Math.Pow(nodeB.Position.Y - nodeA.Position.Y, 2));
             var part = PartFor(_springs, spring.Id);
             part.A = ToGodot(nodeA.Position);
             part.B = ToGodot(nodeB.Position);
-            part.Built = part.A.DistanceTo(part.B);
+            part.Travel = (float)(Spring.LongestLength(spring, built) - Spring.ShortestLength(spring, built));
+            part.Rest = (float)Spring.RestLength(spring, built);
+            part.Stiffness = spring.Stiffness;
             part.RadiusA = (float)NodeRadius(shape, nodeA.Id);
             part.RadiusB = (float)NodeRadius(shape, nodeB.Id);
             part.Danger = marks.ShowsTooShort && IsTooShort(shape, nodeA, nodeB);

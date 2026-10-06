@@ -51,6 +51,24 @@ public readonly struct UiPixelPen : IDisposable
     public void Polyline(Vector2[] points, Color color, float width) =>
         _canvas.DrawPolyline(Mapped(points), color, width * Scale, antialiased: true);
 
+    /// <summary>
+    /// Many round-ended polylines of one colour and width, laid out by <see cref="UiStrokeMesh"/>
+    /// and drawn in one call, so a coil of hundreds of strokes stays cheap (#835).
+    /// </summary>
+    public void Strokes(IEnumerable<Vector2[]> strokes, Color color, float width)
+    {
+        var toPixels = ToPixels;
+        var (points, solid, indices) = UiStrokeMesh.Build(strokes.Select(stroke => Mapped(stroke, toPixels)), width * Scale / 2, _feather);
+        if (indices.Length == 0)
+        {
+            return;
+        }
+
+        var clear = color with { A = 0 };
+        var colors = solid.Select(isSolid => isSolid ? color : clear).ToArray();
+        RenderingServer.CanvasItemAddTriangleArray(_canvas.GetCanvasItem(), indices, points, colors);
+    }
+
     /// <summary>A dashed line laid out by <see cref="DashSpans"/>.</summary>
     public void DashedLine(Vector2 from, Vector2 to, Color color, float width, float dash, float? gap = null)
     {
@@ -131,9 +149,7 @@ public readonly struct UiPixelPen : IDisposable
 
     public void Dispose() => _canvas.DrawSetTransformMatrix(_drawTransform);
 
-    private Vector2[] Mapped(Vector2[] points)
-    {
-        var toPixels = ToPixels;
-        return [.. points.Select(point => toPixels * point)];
-    }
+    private Vector2[] Mapped(Vector2[] points) => Mapped(points, ToPixels);
+
+    private static Vector2[] Mapped(Vector2[] points, Transform2D toPixels) => [.. points.Select(point => toPixels * point)];
 }

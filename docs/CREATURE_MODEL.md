@@ -276,9 +276,10 @@ a composition of triangles; a bare quadrilateral stays free to fold.
 - **Minimum length:** the same as a beam's (`CreatureReadiness.MinimumBeamGap`).
 - **Drawn** as a telescoping rod from node A to node B
   (`project/src/theme/PistonDrawing.cs`), over beams and under joints
-  (see "Draw layers"): the cylinder starts at the first joint, the cap at
-  the second, and the cylinder is as long as its shortest length from the
-  first joint's centre (#870), so the rod that shows is how far it is out.
+  (see "Draw layers"): the cylinder starts at the first joint's edge, the
+  cap sits at the second, and the cylinder is as long as its travel, so a
+  shorter Stroke gives a shorter cylinder (owner decision, #835); it never
+  runs past the second joint's edge.
   A selected Piston shows ticks at its shortest and longest lengths, over
   the joints, while the selection can set its Stroke or Start position
   (#704, `docs/BUILD_MODE.md`).
@@ -288,11 +289,40 @@ a composition of triangles; a bare quadrilateral stays free to fold.
 - **Beginner:** A springy link between two nodes. Stretch or squeeze it
   and it pulls back toward the length it was drawn at; its damping stops it
   bouncing. It has no brain ports: it stores and gives back energy, so a
-  Piston's push can bounce, but it never chooses anything.
+  Piston's push can bounce, but it never chooses anything. Like a car's
+  spring it only moves so far: a new Spring hangs free at its drawn length
+  and squeezes to half of it.
 - **Implementation:** `SpringDef` in `libs/NodeRunner.Domain/SpringDef.cs`
-  stores an id, optional display name, two node ids and two settings chosen
-  in Build: **Stiffness** (N/m, 400 new) and **Damping** (N·s/m, 10 new). Its rest length is the
-  distance between its nodes in the drawing.
+  stores an id, optional display name, two node ids and four settings chosen
+  in Build: **Stiffness** (N/m, 400 new), **Damping** (N·s/m, 10 new),
+  **Stroke** (how much it can grow, as a share of its shortest length; 10–100%,
+  100% new) and **Preload** (where its drawn length sits in that travel;
+  −50…200%, 100% new, #835).
+- **Travel and rest length** (owner decisions, #835): inside 0…100% it is
+  the Piston's maths with Preload in place of Start position,
+  `shortest = drawn / (1 + p · s)` and `longest = shortest · (1 + s)`, and
+  the Spring pushes nothing at its drawn length. Outside 0…100% the travel
+  stays where 0% or 100% puts it, with the drawn length on that stop, and
+  only the rest length, `shortest · (1 + p · s)`, moves on past the stop:
+  the Spring starts pressed against it, harder the further out. Under 0%
+  it pulls, over 100% it pushes (`Spring.ShortestLength`,
+  `Spring.LongestLength`, `Spring.RestLength`). Drawn 1 m with Stroke 100%:
+  Preload −50% gives 1…2 m resting at 0.5 m, 50% 0.67…1.33 m, 100%
+  0.5…1 m and 200% 0.5…1 m resting at 1.5 m. Changing either setting never
+  moves a node.
+- **End stops:** Godot's damped spring has no stops of its own (its length
+  only places its second anchor), so a Spring gets the Piston's end stops
+  (#701): a hidden cylinder on node A and a groove that holds node B
+  between the two lengths. The cylinder weighs half a beam, like the
+  Piston's. Older saves are migrated (`docs/SAVE_FORMAT.md` → "Versions and migration").
+- **Preload stays inside the stop** (#835): a real preloaded spring presses
+  its stop and the stop holds that force inside, so its nodes feel nothing
+  until a load beats the preload. Godot's spring would push the whole
+  preload through the nodes into the stop's joints, which gave way and threw
+  the creature about. So each physics tick `SpringLink` sets the joint's
+  rest length to `Spring.StepRestLength`: past a stop it pushes only what
+  brings its nodes to the stop within the step. A stop that carries the
+  creature's weight still chatters a little and can creep (#935).
 - **Damping is a plain coefficient** (#801): the force braking the speed
   between its nodes, per unit of speed. Like the Piston it is not tuned to
   the mass it moves, so the same Damping bounces more on heavy nodes than on
@@ -306,18 +336,33 @@ a composition of triangles; a bare quadrilateral stays free to fold.
 - **Minimum length:** the same as a beam's (`CreatureReadiness.MinimumBeamGap`).
 - **Drawn** as a coilover (#807, `project/src/theme/SpringDrawing.cs`): a
   thin `line-strong` rod that stops under the joint rings, a seat plate just
-  outside each joint's edge, a `panel` damper body with a `line-strong` outline in
-  the middle, and a seven-turn helix wound round it. The helix's front
-  strokes are `muted` and drawn over the body. Its back strokes are
-  `line-strong` hairlines drawn under it. The turns spread as the Spring
-  stretches and bunch as it squeezes. The body keeps the length the Spring
-  was built with, but shrinks if the coil would no longer show round it.
+  outside each joint's edge, a `panel` damper body with a `line-strong`
+  outline from the first seat, and a helix wound round it. Like a Piston's
+  cylinder the body is as long as the Spring's travel, so a shorter Stroke
+  gives a shorter body; it never runs past the far seat. The
+  helix's front strokes are `muted` and drawn over the body; its back
+  strokes are `line-strong`, drawn under it as the same wire. Every stroke
+  has round ends, so a thick wire turns rather than ending in a hook. Its
+  wire thickens with Stiffness, from a hairline at 50 N/m to as wide as a
+  drawn beam at 2000 N/m, in proportion. Its turns stack solid over a third
+  of the seat-to-seat span at its rest length, at least 3. Past 2 m they
+  grow only with the square root of the span, so a long thin coil does not
+  become a grey band, but with no cap, so it still shows its Preload. A
+  Preload past 100% packs in more turns and one under 0% fewer: the
+  pressure shows as more or less spring. A stiffer Spring gets fewer,
+  thicker turns. They spread as the Spring stretches and bunch as it
+  squeezes, but their number never changes as it moves (#835). Each side
+  of the coil is drawn in one call, its half turns cut into fewer segments
+  the smaller it is on screen, as one call per stroke cost a phone most
+  of its frame with many shadows (#835).
   There is no `accent`, because accent marks parts the brain drives. An
   Orchid coil was tried on a device and judged too busy; the hue is kept as
   a possible highlight token (#832). Too short, all of it turns `danger`. Selected, it gets the Piston's
-  two halo lines outside its seats (`docs/UI_DIRECTION.md` → Selection). A
-  creation card draws the same coilover, scaled down with the creature
-  (#770).
+  two halo lines outside its seats (`docs/UI_DIRECTION.md` → Selection),
+  and the Piston's ticks at its shortest and longest lengths, as wide as
+  its seats so the coil does not hide them, while the selection can set its
+  Stroke or Preload. A creation card draws the same
+  coilover, scaled down with the creature (#770).
 
 ## Draw layers
 
@@ -326,7 +371,7 @@ A creature draws in named layers (`project/src/theme/CreatureLayers.cs`,
 shadow"), rigid hatch, underlays such as Build's placing
 feedback, beams, links (Pistons and Springs), a selected link, sensors, a selected sensor,
 joints, a selected joint, then overlays such as the camera rays and a
-selected Piston's stroke ticks. Each part
+selected Piston's or Spring's stroke ticks. Each part
 visual (`project/src/theme/*Part.cs`) puts itself on its layer, so the
 picture never depends on the order parts are added. A screen draws its own
 marks on an underlay or overlay through `ViewLayer`.

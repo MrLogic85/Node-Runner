@@ -48,12 +48,15 @@ public static class Piston
     public static double ShortestLength(PistonDef piston, double builtLength)
     {
         ArgumentNullException.ThrowIfNull(piston);
-        return builtLength / (1 + (piston.Start * piston.Stroke));
+        return Travel.Shortest(builtLength, piston.Stroke, piston.Start);
     }
 
     /// <summary>Its longest length: its shortest grown by <see cref="PistonDef.Stroke"/>.</summary>
-    public static double LongestLength(PistonDef piston, double builtLength) =>
-        ShortestLength(piston, builtLength) * (1 + piston.Stroke);
+    public static double LongestLength(PistonDef piston, double builtLength)
+    {
+        ArgumentNullException.ThrowIfNull(piston);
+        return Travel.Longest(builtLength, piston.Stroke, piston.Start);
+    }
 
     /// <summary>The length a position output asks for: −1 its shortest … +1 its longest, in a straight line.</summary>
     public static double TargetLength(PistonDef piston, double builtLength, double position)

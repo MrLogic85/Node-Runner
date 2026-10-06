@@ -21,8 +21,8 @@ public partial class Creature : Node2D
     // half on its own body and a quarter on each end node (#794), so a creature weighs the same.
     private const float _beamWeight = 1.2f;
 
-    // A Piston's end-stop cylinder weighs half a beam on top (#731), so Godot's joints can hold it
-    // on its node A.
+    // A Piston's or Spring's end-stop cylinder weighs half a beam on top (#731, #835), so Godot's
+    // joints can hold it on its node A.
     private const float _cylinderMass = _beamWeight / 2;
 
     // The beam body carries half its beam's weight (#794): Godot's solver cannot hold a nearly
@@ -55,7 +55,9 @@ public partial class Creature : Node2D
     private PistonLink[] _pistons = [];
     private PistonVisual[] _pistonVisuals = [];
     private SpringVisual[] _springVisuals = [];
-    private RigidBody2D[] _cylinderBodies = [];
+    private RigidBody2D[] _pistonCylinders = [];
+    private RigidBody2D[] _springCylinders = [];
+    private SpringLink[] _springs = [];
     private CameraRaysVisual? _cameraRaysVisual;
     private readonly List<KnockoutVisual> _knockoutVisuals = [];
     private bool _isShadow;
@@ -111,6 +113,11 @@ public partial class Creature : Node2D
 
     public override void _PhysicsProcess(double delta)
     {
+        foreach (var spring in _springs)
+        {
+            spring.Step(delta);
+        }
+
         if (Brain is null)
         {
             return;
@@ -243,7 +250,7 @@ public partial class Creature : Node2D
         Build(Definition);
 
         var offset = GlobalTransform.BasisXformInv(new Vector2(0, lowestPointY - LowestPointY));
-        foreach (var body in _beamBodies.Concat(_nodeBodies).Concat(_cylinderBodies))
+        foreach (var body in _beamBodies.Concat(_nodeBodies).Concat(_pistonCylinders).Concat(_springCylinders))
         {
             body.Position += offset;
         }

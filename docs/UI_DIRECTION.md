@@ -958,6 +958,14 @@ is not `antialiased: true` inside a method that opens a pen, calls
   `pen.Line` (the brain's negative neuron), since line ends are feathered.
 - `UiBoundsDebugOverlay`: debug only.
 
+**Many strokes of one colour go in one call: `pen.Strokes` (#835).** On
+Compatibility each draw call builds its own buffer, so a part drawn as
+hundreds of `Polyline`s and `Disc`s cost the S25 most of its frame with
+shadows. `pen.Strokes` lays them out with `UiStrokeMesh` as one feathered
+triangle list with round ends, since Godot has no batched polyline with
+round caps. Reach for it when a drawing repeats a stroke many times (the
+Spring's coil); a few strokes stay plain `Line`/`Polyline`.
+
 A part visual bakes the window pixel scale into its strokes, so it must redraw
 when that scale changes (a zoom, UI size or screen change). Every view that
 holds parts calls `PartVisual.RedrawOnNewPixelScale` as it may have zoomed:
@@ -971,6 +979,12 @@ The rule does not cover `DrawStyleBox`: Godot divides a `StyleBoxFlat`'s
 feather by the viewport's oversampling, so it stays about one device pixel at
 any stretch or UI size, even when drawn from `_Draw()`. Keep
 `StyleBoxFlat.AntiAliasing` on, its default (#732).
+
+**A stroke width may show a part's setting (#835).** The Spring's coil wire
+grows with its Stiffness, from `UiSize.Stroke.Hair` to
+`UiSize.Widget.CreatureBeamWidth`, as wide as a drawn beam (owner
+decision). Such a width starts at a hairline and its drawing names its
+maximum.
 
 ### Icon filtering
 

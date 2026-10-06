@@ -99,11 +99,16 @@ Long-form descriptions and the sensor/model contract live in
   and strength output. See: `docs/CREATURE_MODEL.md`.
 - **Spring** — A passive link between two nodes (#453) that pulls back
   toward its drawn length with its Stiffness; its Damping (N·s/m) brakes
-  the speed between its nodes. No brain ports. See:
+  the speed between its nodes, and its Stroke and Preload set where it
+  stops. No brain ports. See: `docs/CREATURE_MODEL.md`.
+- **Stroke** — How much a Piston or Spring can grow, as a share of its
+  shortest length: 100% means it can double, the most a real cylinder can.
+  Its end stops hold it there, whatever the load. See:
   `docs/CREATURE_MODEL.md`.
-- **Stroke** — How much a Piston can grow, as a share of its shortest
-  length: 100% means it can double, the most a real cylinder can. Its end
-  stops hold it there, whatever the load. See: `docs/CREATURE_MODEL.md`.
+- **Preload** — Where a Spring's drawn length sits in its travel, −50…200%:
+  like a Piston's Start position. Past 0% or 100% the travel stays put and
+  the Spring starts pressed against that stop, pulling or pushing, harder
+  the further out. See: `docs/CREATURE_MODEL.md`.
 - **Start position** — Where a part's drawn pose sits in its travel or
   range, 0…100%. A Piston at 0% is drawn at its shortest; a Servo's sits
   that far through its Range. See: `docs/CREATURE_MODEL.md`.

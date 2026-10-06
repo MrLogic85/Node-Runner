@@ -183,7 +183,7 @@ public sealed class BuildPresentationViewModel
 
     public static UiText ServoNote { get; } = UiText.Plain("The brain picks an angle and how much of its max strength to use.");
 
-    public static UiText SpringNote { get; } = UiText.Plain("It pulls back toward its drawn length. Damping stops it bouncing.");
+    public static UiText SpringNote { get; } = UiText.Plain("It springs toward the length its Preload sets, within its stroke. Past 100% or under 0%, it presses against a stop. Damping stops it bouncing.");
 
     /// <summary>A slider for each setting the selection can change in the panel (#704).</summary>
     private List<ParameterSlider> PanelSliders() =>

@@ -344,7 +344,7 @@ public sealed class BuildPresentationViewModelTests
     }
 
     [Fact]
-    public void SelectedSpring_HasASliderForItsStiffnessAndDamping()
+    public void SelectedSpring_HasASliderForEachOfItsSettings()
     {
         var build = new BuildViewModel();
         build.Load(SpringCreature());
@@ -358,6 +358,8 @@ public sealed class BuildPresentationViewModelTests
         [
             UiText.Format("{0} N/m", new FixedNumber(400, 0)),
             UiText.Format("{0} N·s/m", new FixedNumber(10, 0)),
+            UiText.Format("{0}%", new FixedNumber(100, 0)),
+            UiText.Format("{0}%", new FixedNumber(100, 0)),
         ]);
     }
 
