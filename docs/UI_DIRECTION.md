@@ -79,12 +79,11 @@ and parts keep their size. A screen narrower than 16:9 keeps 640 units of
 width and gains height. 640 × 360 is the smallest canvas the layouts fit,
 not a fixed size. The Creations card row keeps its 16:9 height (#520).
 
-The app runs immersive in both landscape orientations (#513); lying flat it
-can flip 180° despite a rotation lock, since Godot offers `userLandscape`
-only through a Gradle build. Only the camera cutout is avoided: the card
-holding the content is inset, and the background still reaches the screen
-edge. Content that needs more room is clipped inside the frame and toolbar
-(#737).
+The app runs immersive in both landscape orientations (#513). Godot asks
+Android for `userLandscape`, which keeps to the rotation lock. Only the
+camera cutout is avoided: the card holding the content is inset, and the
+background still reaches the screen edge. Content that needs more room is
+clipped inside the frame and toolbar (#737).
 
 ## UI size
 
