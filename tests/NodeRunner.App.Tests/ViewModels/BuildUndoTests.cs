@@ -328,7 +328,7 @@ public sealed class BuildUndoTests
         var build = TwoJoints();
         var name = build.PartDisplayName(1);
 
-        build.RenamePart(1, "Hip", "Node 1");
+        build.RenamePart(1, "Hip", "Joint 1");
         build.Undo();
 
         build.PartDisplayName(1).ShouldBe(name);
