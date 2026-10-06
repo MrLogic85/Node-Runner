@@ -36,7 +36,7 @@ Pure C# data types. The vocabulary of the app, no behavior beyond invariants.
 ## What lives here
 
 - `CreatureDef`, `NodeDef`, `BeamDef`, `SensorDef`, `SensorKind`,
-  `PistonDef`, `SpringDef` — anatomy
+  `ServoDef`, `PistonDef`, `SpringDef` — anatomy
 - `SensorPicture` — a sensor picture's tap area (see the exceptions above)
 - `SelectionMarks` — the selection gap, joint halo and touch reach (see the
   exceptions above)
@@ -52,6 +52,7 @@ Pure C# data types. The vocabulary of the app, no behavior beyond invariants.
 - `SimulationConfig`, `GaConfig` — hyperparameters
 - `Vector2D` — our own `readonly record struct` (Godot.Vector2 stays on the
   Godot side)
+- `LinkRef` — a Beam/Piston/Spring id and its two joints for Servo link choices
 - Enums: `Activation`, `SelectionStrategy`, …
 
 ## Style

@@ -81,6 +81,7 @@ public sealed class BuildViewModelTests
             new HashSet<int> { 3 },
             new HashSet<int> { 101, 102 },
             new HashSet<int> { 201 },
+            new HashSet<int>(),
             new HashSet<int> { 301 },
             new HashSet<int>()));
 
@@ -162,6 +163,7 @@ public sealed class BuildViewModelTests
             parts.Where(id => id < 100).ToHashSet(),
             parts.Where(id => id is > 100 and < 200).ToHashSet(),
             parts.Where(id => id is > 200 and < 300).ToHashSet(),
+            new HashSet<int>(),
             parts.Where(id => id is > 300 and < 400).ToHashSet(),
             parts.Where(id => id > 400).ToHashSet()));
 

@@ -17,21 +17,28 @@ public static class PartNames
         _ => throw new ArgumentOutOfRangeException(nameof(kind)),
     };
 
-    public static UiText Display(IReadOnlyList<NodeDef> nodes, IReadOnlyList<BeamDef> beams, IReadOnlyList<SensorDef> sensors, IReadOnlyList<PistonDef> pistons, IReadOnlyList<SpringDef> springs, int partId) =>
-        Own(nodes, beams, sensors, pistons, springs, partId) is { } own
+    public static UiText Display(IReadOnlyList<NodeDef> nodes, IReadOnlyList<BeamDef> beams, IReadOnlyList<SensorDef> sensors, IReadOnlyList<ServoDef> servos, IReadOnlyList<PistonDef> pistons, IReadOnlyList<SpringDef> springs, int partId) =>
+        Own(nodes, beams, sensors, servos, pistons, springs, partId) is { } own
             ? UiText.AsWritten(own)
-            : Default(nodes, beams, sensors, pistons, springs, partId);
+            : Default(nodes, beams, sensors, servos, pistons, springs, partId);
 
-    public static UiText Default(IReadOnlyList<NodeDef> nodes, IReadOnlyList<BeamDef> beams, IReadOnlyList<SensorDef> sensors, IReadOnlyList<PistonDef> pistons, IReadOnlyList<SpringDef> springs, int partId)
+    public static UiText Default(IReadOnlyList<NodeDef> nodes, IReadOnlyList<BeamDef> beams, IReadOnlyList<SensorDef> sensors, IReadOnlyList<ServoDef> servos, IReadOnlyList<PistonDef> pistons, IReadOnlyList<SpringDef> springs, int partId)
     {
         ArgumentNullException.ThrowIfNull(nodes);
         ArgumentNullException.ThrowIfNull(beams);
         ArgumentNullException.ThrowIfNull(sensors);
+        ArgumentNullException.ThrowIfNull(servos);
         ArgumentNullException.ThrowIfNull(pistons);
         ArgumentNullException.ThrowIfNull(springs);
         if (sensors.FirstOrDefault(sensor => sensor.Id == partId) is { } sensor)
         {
             return SensorKind(sensor.Kind);
+        }
+
+        var servoIndex = IndexOf(servos, servo => servo.Id == partId);
+        if (servoIndex >= 0)
+        {
+            return UiText.Format("Servo {0}", servoIndex + 1);
         }
 
         var pistonIndex = IndexOf(pistons, piston => piston.Id == partId);
@@ -58,16 +65,18 @@ public static class PartNames
             : throw new ArgumentOutOfRangeException(nameof(partId), "Part id must point to an existing part.");
     }
 
-    public static string? Own(IReadOnlyList<NodeDef> nodes, IReadOnlyList<BeamDef> beams, IReadOnlyList<SensorDef> sensors, IReadOnlyList<PistonDef> pistons, IReadOnlyList<SpringDef> springs, int partId)
+    public static string? Own(IReadOnlyList<NodeDef> nodes, IReadOnlyList<BeamDef> beams, IReadOnlyList<SensorDef> sensors, IReadOnlyList<ServoDef> servos, IReadOnlyList<PistonDef> pistons, IReadOnlyList<SpringDef> springs, int partId)
     {
         ArgumentNullException.ThrowIfNull(nodes);
         ArgumentNullException.ThrowIfNull(beams);
         ArgumentNullException.ThrowIfNull(sensors);
+        ArgumentNullException.ThrowIfNull(servos);
         ArgumentNullException.ThrowIfNull(pistons);
         ArgumentNullException.ThrowIfNull(springs);
         return nodes.FirstOrDefault(node => node.Id == partId)?.Name
             ?? beams.FirstOrDefault(beam => beam.Id == partId)?.Name
             ?? sensors.FirstOrDefault(sensor => sensor.Id == partId)?.Name
+            ?? servos.FirstOrDefault(servo => servo.Id == partId)?.Name
             ?? pistons.FirstOrDefault(piston => piston.Id == partId)?.Name
             ?? springs.FirstOrDefault(spring => spring.Id == partId)?.Name;
     }

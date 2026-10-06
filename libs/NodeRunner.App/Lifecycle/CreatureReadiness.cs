@@ -18,14 +18,21 @@ public static class CreatureReadiness
 
     private const double _sensorGap = 4;
 
-    /// <summary>True when the beam or link between <paramref name="a"/> and <paramref name="b"/> leaves less than <see cref="MinimumBeamGap"/> between their rings.</summary>
-    public static bool IsTooShort(NodeDef a, NodeDef b)
+    /// <summary>True when the non-zero beam or link between two nodes leaves less than <see cref="MinimumBeamGap"/> between their rings.</summary>
+    public static bool IsTooShort(NodeDef a, NodeDef b, double radiusA, double radiusB)
     {
         ArgumentNullException.ThrowIfNull(a);
         ArgumentNullException.ThrowIfNull(b);
-        var dx = b.Position.X - a.Position.X;
-        var dy = b.Position.Y - a.Position.Y;
-        return Math.Sqrt((dx * dx) + (dy * dy)) - a.Radius - b.Radius < MinimumBeamGap;
+        return a.Position != b.Position && FreeLength(a.Position, b.Position, radiusA, radiusB) < MinimumBeamGap;
+    }
+
+    /// <summary>True when the free length between two nodes' effective rings is too small.</summary>
+    public static bool IsTooShort(CreatureDef creature, int nodeA, int nodeB)
+    {
+        ArgumentNullException.ThrowIfNull(creature);
+        var a = creature.Nodes[creature.NodeIndexOf(nodeA)];
+        var b = creature.Nodes[creature.NodeIndexOf(nodeB)];
+        return IsTooShort(a, b, creature.NodeRadius(nodeA), creature.NodeRadius(nodeB));
     }
 
     /// <summary>Why the creature cannot be simulated yet; empty when it can.</summary>
@@ -52,6 +59,17 @@ public static class CreatureReadiness
             AddLengthProblem(creature, CreatureElementKind.Beam, beam.NodeA, beam.NodeB, problems);
         }
 
+        foreach (var servo in creature.Servos)
+        {
+            if (servo.FixedLinkId is null || servo.TargetLinkId is null)
+            {
+                var name = PartNames.Display(creature.Nodes, creature.Beams, creature.Sensors, creature.Servos, creature.Pistons, creature.Springs, servo.Id);
+                problems.Add(!ServoDef.HasTwoLinks(creature.LinksAt(servo.NodeId))
+                    ? UiText.Format("{0} needs two links at its joint. Connect another link there or delete it.", name)
+                    : UiText.Format("{0} is missing a link. Pick two links at its joint or delete it.", name));
+            }
+        }
+
         foreach (var piston in creature.Pistons)
         {
             AddLengthProblem(creature, CreatureElementKind.Piston, piston.NodeA, piston.NodeB, problems);
@@ -69,9 +87,7 @@ public static class CreatureReadiness
     public static bool IsAttached(CreatureDef creature, int nodeId)
     {
         ArgumentNullException.ThrowIfNull(creature);
-        return creature.Beams.Any(beam => beam.NodeA == nodeId || beam.NodeB == nodeId)
-            || creature.Pistons.Any(piston => piston.NodeA == nodeId || piston.NodeB == nodeId)
-            || creature.Springs.Any(spring => spring.NodeA == nodeId || spring.NodeB == nodeId);
+        return creature.LinksAt(nodeId).Count > 0;
     }
 
     private static void AddLengthProblem(CreatureDef creature, CreatureElementKind kind, int nodeA, int nodeB, List<UiText> problems)
@@ -89,7 +105,7 @@ public static class CreatureReadiness
                 _ => UiText.Format("The beam between node {0} and node {1} has zero length. Move one of the nodes apart.", a, b),
             });
         }
-        else if (IsTooShort(creature.Nodes[indexA], creature.Nodes[indexB]))
+        else if (IsTooShort(creature, nodeA, nodeB))
         {
             problems.Add(kind switch
             {
@@ -105,4 +121,11 @@ public static class CreatureReadiness
     /// brain has nothing to drive and it stands still, and Train setup warns about that.
     /// </summary>
     public static bool CanTrain(CreatureDef creature) => Problems(creature).Count == 0;
+
+    private static double FreeLength(Vector2D a, Vector2D b, double radiusA, double radiusB)
+    {
+        var dx = b.X - a.X;
+        var dy = b.Y - a.Y;
+        return Math.Sqrt((dx * dx) + (dy * dy)) - radiusA - radiusB;
+    }
 }

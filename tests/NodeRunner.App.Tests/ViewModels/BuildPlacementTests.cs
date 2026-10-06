@@ -1,3 +1,4 @@
+using NodeRunner.App.Builders;
 using NodeRunner.App.ViewModels;
 using NodeRunner.Domain;
 
@@ -9,6 +10,7 @@ public sealed class BuildPlacementTests
     private static readonly CreatureElementSelection _firstBeam = new(CreatureElementKind.Beam, 4);
     private static readonly CreatureElementSelection _secondBeam = new(CreatureElementKind.Beam, 5);
     private static readonly CreatureElementSelection _firstJoint = new(CreatureElementKind.Node, 1);
+    private static readonly CreatureElementSelection _middleJoint = new(CreatureElementKind.Node, 2);
 
     [Fact]
     public void PlacePart_OnAFreeBeam_AddsTheSensorThereWithAFreshId()
@@ -194,6 +196,237 @@ public sealed class BuildPlacementTests
         PartTray.IsAvailable(BuildPart.Battery).ShouldBeFalse();
     }
 
+    [Fact]
+    public void PlacePart_Servo_OnAJointWithTwoBeams_AddsAndSelectsIt()
+    {
+        var build = TwoBeams();
+        var freshId = build.Snapshot().NextPartId;
+
+        var id = build.PlacePart(BuildPart.Servo, _middleJoint);
+
+        id.ShouldBe(freshId);
+        build.Servos.Select(servo => (servo.Id, servo.NodeId, servo.FixedLinkId, servo.TargetLinkId))
+            .ShouldBe([(freshId, 2, 4, 5)]);
+        build.SingleSelectedServoId.ShouldBe(freshId);
+        build.NodeRadius(2).ShouldBe(ServoDef.JointRadius);
+    }
+
+    [Theory]
+    [InlineData("beam-piston", 4, 5)]
+    [InlineData("beam-spring", 4, 5)]
+    [InlineData("piston-spring", 4, 5)]
+    [InlineData("piston-before-beam", 3, 4)]
+    [InlineData("spring-before-beam", 3, 4)]
+    public void PlacePart_Servo_OnAJointWithAnyTwoLinks_AddsDefaultLowestIds(string setup, int fixedLink, int targetLink)
+    {
+        var build = setup switch
+        {
+            "beam-piston" => BeamAndPiston(),
+            "beam-spring" => BeamAndSpring(),
+            "piston-spring" => PistonAndSpring(),
+            "piston-before-beam" => PistonWithLowerIdThanBeam(),
+            "spring-before-beam" => SpringWithLowerIdThanBeam(),
+            _ => throw new ArgumentOutOfRangeException(nameof(setup)),
+        };
+        var freshId = build.Snapshot().NextPartId;
+
+        var id = build.PlacePart(BuildPart.Servo, _middleJoint);
+
+        id.ShouldBe(freshId);
+        build.Servos.Select(servo => (servo.Id, servo.NodeId, servo.FixedLinkId, servo.TargetLinkId))
+            .ShouldBe([(freshId, 2, fixedLink, targetLink)]);
+    }
+
+    [Fact]
+    public void SetServoLink_WithMixedLinks_SwapsRolesAndGivesFreshId()
+    {
+        var build = PistonAndSpring();
+        var servoId = build.PlacePart(BuildPart.Servo, _middleJoint)!.Value;
+        var presentation = new BuildPresentationViewModel(build).SinglePart!;
+
+        presentation.Pickers![0].Options.ShouldBe([UiText.Format("Piston {0}", 1), UiText.Format("Spring {0}", 1)]);
+
+        var newId = build.SetServoLink(servoId, fixedRole: true, linkId: 5);
+
+        newId.ShouldBe(7);
+        build.Servos.Select(servo => (servo.Id, servo.FixedLinkId, servo.TargetLinkId))
+            .ShouldBe([(7, 5, 4)]);
+        build.SingleSelectedServoId.ShouldBe(7);
+    }
+
+    [Fact]
+    public void SetServoLink_AsFirstUndoStep_PresentationNeverSeesOldServoId()
+    {
+        var build = PistonAndSpring();
+        var servoId = build.PlacePart(BuildPart.Servo, _middleJoint)!.Value;
+        build.Load(build.Snapshot());
+        build.ReplaceSelection(PartSet.None with { Servos = new HashSet<int> { servoId } });
+        var presentation = new BuildPresentationViewModel(build);
+        var shownIds = new List<int?>();
+        presentation.PresentationChanged += (_, _) => shownIds.Add(presentation.SinglePart?.Id);
+
+        var newId = build.SetServoLink(servoId, fixedRole: true, linkId: 5);
+
+        build.CanUndo.ShouldBeTrue();
+        shownIds.ShouldNotBeEmpty();
+        shownIds.ShouldAllBe(id => id == newId);
+    }
+
+    [Fact]
+    public void SetServoLink_PickerOrder_UsesLowestIdsAcrossLinkKinds()
+    {
+        var build = PistonWithLowerIdThanBeam();
+        build.PlacePart(BuildPart.Servo, _middleJoint).ShouldNotBeNull();
+
+        var picker = new BuildPresentationViewModel(build).SinglePart!.Pickers![0];
+
+        picker.LinkIds.ShouldBe([3, 4]);
+        picker.LinkKinds.ShouldBe([CreatureElementKind.Piston, CreatureElementKind.Beam]);
+        picker.Options.ShouldBe([UiText.Format("Piston {0}", 1), UiText.Format("Beam {0}", 1)]);
+    }
+
+    [Fact]
+    public void DeleteHeldPistonOrSpring_ClearsServoRole()
+    {
+        var build = PistonAndSpring();
+        var servoId = build.PlacePart(BuildPart.Servo, _middleJoint)!.Value;
+
+        build.ReplaceSelection(PartSet.None with { Pistons = new HashSet<int> { 4 } });
+        build.DeleteSelectedParts();
+
+        var servo = build.Servos.Single();
+        servo.Id.ShouldBe(servoId);
+        servo.FixedLinkId.ShouldBeNull();
+        servo.TargetLinkId.ShouldBe(5);
+        var note = build.CanvasNotes().Single(note => note.Target.Id == servoId);
+        note.Text.ShouldBe(CreatureBuilder.ServoNeedsTwoLinksReason);
+        CanvasNoteTargets.JointIds(note.Target, build).ShouldBe([2]);
+
+        build.ReplaceSelection(PartSet.None with { Springs = new HashSet<int> { 5 } });
+        build.DeleteSelectedParts();
+
+        build.Servos.Single().TargetLinkId.ShouldBeNull();
+    }
+
+    [Fact]
+    public void DeleteHeldBeam_ClearsServoRole()
+    {
+        var build = TwoBeams();
+        var servoId = build.PlacePart(BuildPart.Servo, _middleJoint)!.Value;
+
+        build.ReplaceSelection(PartSet.None with { Beams = new HashSet<int> { 4 } });
+        build.DeleteSelectedParts();
+
+        var servo = build.Snapshot().Servos.Single();
+        servo.Id.ShouldBe(servoId);
+        servo.FixedLinkId.ShouldBeNull();
+        servo.TargetLinkId.ShouldBe(5);
+        build.CanvasNotes().Single(note => note.Target.Id == servoId).Text.ShouldBe(CreatureBuilder.ServoNeedsTwoLinksReason);
+        build.ReplaceSelection(PartSet.None with { Servos = new HashSet<int> { servoId } });
+        var pickers = new BuildPresentationViewModel(build).SinglePart!.Pickers!;
+        pickers[0].Note.ShouldBe(CreatureBuilder.ServoNeedsTwoLinksReason);
+        pickers[1].Note.ShouldBeNull();
+    }
+
+    [Fact]
+    public void DeleteHeldLink_WithTwoLinksLeft_AsksForTheMissingRole()
+    {
+        var build = new BuildViewModel();
+        build.Load(new CreatureDef(
+            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(100, 0)), new NodeDef(3, new Vector2D(200, 0)), new NodeDef(4, new Vector2D(100, 100))],
+            [new BeamDef(5, 1, 2), new BeamDef(6, 2, 3), new BeamDef(7, 2, 4)],
+            [],
+            [],
+            [],
+            [],
+            nextPartId: 8));
+        var servoId = build.PlacePart(BuildPart.Servo, _middleJoint)!.Value;
+
+        build.ReplaceSelection(PartSet.None with { Beams = new HashSet<int> { 5 } });
+        build.DeleteSelectedParts();
+
+        build.CanvasNotes().Single(note => note.Target.Id == servoId).Text.ShouldBe(UiText.Plain("Pick a Fixed link"));
+        build.ReplaceSelection(PartSet.None with { Servos = new HashSet<int> { servoId } });
+        var picker = new BuildPresentationViewModel(build).SinglePart!.Pickers![0];
+        picker.SelectedIndex.ShouldBeNull();
+        picker.Placeholder.ShouldBe(UiText.Plain("Pick a Fixed link"));
+        picker.Note.ShouldBeNull();
+        picker.LinkIds.ShouldBe([6, 7]);
+        picker.Options.ShouldBe([UiText.Format("Beam {0}", 1), UiText.Format("Beam {0}", 2)]);
+        picker.LinkKinds.ShouldBe([CreatureElementKind.Beam, CreatureElementKind.Beam]);
+    }
+
+    [Fact]
+    public void DeleteFarEndJoint_ClearsServoRole()
+    {
+        var build = TwoBeams();
+        var servoId = build.PlacePart(BuildPart.Servo, _middleJoint)!.Value;
+
+        build.ReplaceSelection([1]);
+        build.DeleteSelectedParts();
+
+        var servo = build.Snapshot().Servos.Single();
+        servo.Id.ShouldBe(servoId);
+        servo.FixedLinkId.ShouldBeNull();
+        servo.TargetLinkId.ShouldBe(5);
+        var note = build.CanvasNotes().Single(note => note.Target.Id == servoId);
+        note.Text.ShouldBe(CreatureBuilder.ServoNeedsTwoLinksReason);
+        CanvasNoteTargets.JointIds(note.Target, build).ShouldBe([2]);
+    }
+
+    [Fact]
+    public void DeleteSelectedServo_RemovesIt()
+    {
+        var build = TwoBeams();
+        var servoId = build.PlacePart(BuildPart.Servo, _middleJoint)!.Value;
+
+        build.ReplaceSelection(PartSet.None with { Servos = new HashSet<int> { servoId } });
+        build.DeleteSelectedParts();
+
+        build.Snapshot().Servos.ShouldBeEmpty();
+        build.CanvasNotes().ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void PlacePart_Servo_RefusesNonJointAndOccupiedJoint()
+    {
+        var build = TwoBeams();
+
+        build.PlacePart(BuildPart.Servo, _firstBeam).ShouldBeNull();
+        build.PlacementNote.ShouldBe(new CanvasNote(CanvasNoteKind.Danger, _firstBeam, UiText.Plain("Joint parts go on a joint")));
+
+        build.PlacePart(BuildPart.Servo, _middleJoint).ShouldNotBeNull();
+        build.PlacePart(BuildPart.Servo, _middleJoint).ShouldBeNull();
+        build.PlacementNote.ShouldBe(new CanvasNote(CanvasNoteKind.Danger, _middleJoint, UiText.Plain("One part per joint")));
+    }
+
+    [Fact]
+    public void PlacePart_Servo_OnOneLinkJoint_ExplainsThatTwoLinksAreNeeded()
+    {
+        var build = TwoBeams();
+
+        build.PlacePart(BuildPart.Servo, _firstJoint).ShouldBeNull();
+
+        build.PlacementNote.ShouldBe(new CanvasNote(CanvasNoteKind.Danger, _firstJoint, CreatureBuilder.ServoNeedsTwoLinksReason));
+    }
+
+    [Fact]
+    public void PlacePart_Servo_AndItsSettings_AreUndoSteps()
+    {
+        var build = TwoBeams();
+        var id = build.PlacePart(BuildPart.Servo, _middleJoint)!.Value;
+
+        build.SetParameter(PartParameterId.Range, Math.PI / 2);
+        build.CanUndo.ShouldBeTrue();
+        build.Undo();
+        build.Servos.Single().Range.ShouldBe(ServoDef.DefaultRange);
+
+        build.Undo();
+        build.Servos.ShouldBeEmpty();
+        build.Redo();
+        build.Servos.Single().Id.ShouldBe(id);
+    }
+
     /// <summary>Joints 1 (0,0), 2 (100,0) and 3 (200,0); beam 4 joins 1–2 and beam 5 joins 2–3.</summary>
     private static BuildViewModel TwoBeams()
     {
@@ -203,6 +436,67 @@ public sealed class BuildPlacementTests
         build.PlaceNode(new Vector2D(200, 0));
         build.ConnectBeam(1, 2);
         build.ConnectBeam(2, 3);
+        return build;
+    }
+
+    private static BuildViewModel BeamAndPiston()
+    {
+        var build = ThreeNodes();
+        build.ConnectBeam(1, 2);
+        build.ConnectLink(BuildLink.Piston, 2, 3).ShouldBe(5);
+        return build;
+    }
+
+    private static BuildViewModel BeamAndSpring()
+    {
+        var build = ThreeNodes();
+        build.ConnectBeam(1, 2);
+        build.ConnectLink(BuildLink.Spring, 2, 3).ShouldBe(5);
+        return build;
+    }
+
+    private static BuildViewModel PistonAndSpring()
+    {
+        var build = ThreeNodes();
+        build.ConnectLink(BuildLink.Piston, 1, 2).ShouldBe(4);
+        build.ConnectLink(BuildLink.Spring, 2, 3).ShouldBe(5);
+        return build;
+    }
+
+    private static BuildViewModel PistonWithLowerIdThanBeam()
+    {
+        var build = new BuildViewModel();
+        build.Load(new CreatureDef(
+            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(100, 0)), new NodeDef(5, new Vector2D(200, 0))],
+            [new BeamDef(4, 2, 5)],
+            [],
+            [],
+            [new PistonDef(3, 1, 2)],
+            [],
+            nextPartId: 6));
+        return build;
+    }
+
+    private static BuildViewModel SpringWithLowerIdThanBeam()
+    {
+        var build = new BuildViewModel();
+        build.Load(new CreatureDef(
+            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(100, 0)), new NodeDef(5, new Vector2D(200, 0))],
+            [new BeamDef(4, 2, 5)],
+            [],
+            [],
+            [],
+            [new SpringDef(3, 1, 2)],
+            nextPartId: 6));
+        return build;
+    }
+
+    private static BuildViewModel ThreeNodes()
+    {
+        var build = new BuildViewModel();
+        build.PlaceNode(new Vector2D(0, 0));
+        build.PlaceNode(new Vector2D(100, 0));
+        build.PlaceNode(new Vector2D(200, 0));
         return build;
     }
 

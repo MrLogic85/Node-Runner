@@ -5,7 +5,9 @@ namespace NodeRunner.Theme;
 
 /// <summary>
 /// Draws a plain joint in Build and Training (#626): a ring whose outer edge is the collision
-/// radius, a fine inner ring and a tint for its <see cref="JointLook"/>. Drawn in window pixels
+/// radius, a fine inner ring and a tint for its <see cref="JointLook"/>. The tint lies on an opaque
+/// background disc, so beams, links and their selection marks under the joint never show through it.
+/// Drawn in window pixels
 /// (<see cref="UiPixelSpace"/>); <c>drawTransform</c> is the caller's transform, restored afterwards.
 /// </summary>
 public static class JointDrawing
@@ -39,6 +41,7 @@ public static class JointDrawing
                 JointLook.Loose => theme.DangerFill,
                 _ => theme.JointFill,
             };
+            canvas.DrawCircle(at, radius * scale, theme.ArenaBackground, antialiased: true);
             canvas.DrawCircle(at, radius * scale, fill, antialiased: true);
         }
 

@@ -28,6 +28,7 @@ folder.
 
 - `Accelerometer`, `ProofMass` — the proof-mass step, reading and sensor frame
 - `CameraRays` — the camera's ray targets and reading
+- `Servo` — a Servo's angle inputs, torque and endpoint force couple
 - `Piston` — a Piston's inputs and force
 - `RigidTriangles`, `RigidTriangleDef` — the closed beam triangles of a
   creature

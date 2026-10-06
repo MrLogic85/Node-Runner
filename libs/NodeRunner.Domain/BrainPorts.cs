@@ -26,6 +26,18 @@ public static class BrainPorts
     /// <summary>A Piston's strength output key: the share of its Strength to use.</summary>
     public const string PistonStrengthChannel = "strength";
 
+    /// <summary>A Servo's angle input key: where its target link is within its angular range.</summary>
+    public const string ServoAngleChannel = "angle";
+
+    /// <summary>A Servo's angular speed input key.</summary>
+    public const string ServoSpeedChannel = "speed";
+
+    /// <summary>A Servo's angle output key: the angle to reach.</summary>
+    public const string ServoAngleOutputChannel = "angle";
+
+    /// <summary>A Servo's strength output key: the share of its Strength to use.</summary>
+    public const string ServoStrengthChannel = "strength";
+
     public static BrainPortLayout Of(CreatureDef creature)
     {
         ArgumentNullException.ThrowIfNull(creature);
@@ -39,6 +51,11 @@ public static class BrainPorts
         foreach (var piston in creature.Pistons)
         {
             blocks.Add((piston.Id, [.. PistonInputs(piston.Id), .. PistonOutputs(piston.Id)]));
+        }
+
+        foreach (var servo in creature.Servos)
+        {
+            blocks.Add((servo.Id, [.. ServoInputs(servo.Id), .. ServoOutputs(servo.Id)]));
         }
 
         var ports = blocks
@@ -76,5 +93,19 @@ public static class BrainPorts
     [
         BrainPort.Output(pistonId, PistonPositionChannel, PortSignal.Position),
         BrainPort.Output(pistonId, PistonStrengthChannel, PortSignal.Strength),
+    ];
+
+    /// <summary>A Servo's input ports, angle then speed.</summary>
+    public static IEnumerable<BrainPort> ServoInputs(int servoId) =>
+    [
+        BrainPort.Input(servoId, ServoAngleChannel),
+        BrainPort.Input(servoId, ServoSpeedChannel),
+    ];
+
+    /// <summary>A Servo's output ports, angle then strength.</summary>
+    public static IEnumerable<BrainPort> ServoOutputs(int servoId) =>
+    [
+        BrainPort.Output(servoId, ServoAngleOutputChannel, PortSignal.Position),
+        BrainPort.Output(servoId, ServoStrengthChannel, PortSignal.Strength),
     ];
 }

@@ -316,7 +316,7 @@ transition to keep in step with it.
     stays near 0 m. Generation 0 never changes the base brain.
   - Every other shadow perturbs it: Gaussian noise on every weight
     (σ 1.5) and bias (σ 0.5), covering position and strength outputs.
-    Every Piston pushes from the start, so no generation 0 stands still.
+    Every Piston and Servo pushes from the start, so no generation 0 stands still.
   - The start was chosen headless in #785, 30 generations over 6–15 seeds.
     With a three-Piston Frog, a base at about 2% strength that woke one
     strength output per shadow reached a median best distance of about
@@ -467,7 +467,8 @@ component READMEs under `reference design/components/` guide its presentation.
   ("Training · Flat ground") and Brain and Stats buttons; unlock progress
   is not shown here (#488). Beside the arena, a `UiSidePanel` titled
   "Status" shows the Senses → Brain → Outputs → Distance stages from
-  `SignalFlowPresentationViewModel` (#813). Collapsing it widens the
+  `SignalFlowPresentationViewModel` (#813); Outputs counts driven motors
+  (Pistons plus Servos). Collapsing it widens the
   arena, and the camera refits. Under the arena are Pause and the
   generation caption from `TrainingPresentationViewModel`.
   - **Pause** toggles `GetTree().Paused`. This is the standard Godot

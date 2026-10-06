@@ -24,6 +24,7 @@ public static class UiTokens
         Danger,
         Scrim,
         Output,
+        Detail,
     }
 
     public enum Flag
@@ -95,6 +96,7 @@ public static class UiTokens
         Color.Danger => "danger",
         Color.Scrim => "scrim",
         Color.Output => "output",
+        Color.Detail => "detail",
         _ => throw new ArgumentOutOfRangeException(nameof(token), token, null),
     };
 

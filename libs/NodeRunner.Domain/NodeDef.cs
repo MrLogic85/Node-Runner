@@ -1,5 +1,3 @@
-using System.Text.Json.Serialization;
-
 namespace NodeRunner.Domain;
 
 /// <summary>
@@ -14,6 +12,8 @@ public sealed record NodeDef
     /// docs/UI_DIRECTION.md.
     /// </summary>
     public const double PlainJointRadius = 15;
+
+    public static double RadiusWithServo(bool hasServo) => hasServo ? ServoDef.JointRadius : PlainJointRadius;
 
     public NodeDef(int id, Vector2D position, string? name = null)
     {
@@ -30,13 +30,6 @@ public sealed record NodeDef
     public int Id { get; }
 
     public Vector2D Position { get; }
-
-    /// <summary>
-    /// How far the joint reaches from its position. It follows from what is on the joint and is
-    /// not saved; every joint is plain until joint parts arrive (#452, #454).
-    /// </summary>
-    [JsonIgnore]
-    public double Radius => PlainJointRadius;
 
     public string? Name { get; }
 }

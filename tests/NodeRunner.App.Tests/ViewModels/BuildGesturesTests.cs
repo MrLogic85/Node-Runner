@@ -1489,6 +1489,26 @@ public class BuildGesturesTests
     }
 
     [Fact]
+    public void Parts_TapOnAServoJoint_SelectsTheServo()
+    {
+        var build = new BuildViewModel();
+        build.Load(new CreatureDef(
+            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(100, 0)), new NodeDef(3, new Vector2D(200, 0))],
+            [new BeamDef(4, 1, 2), new BeamDef(5, 2, 3)],
+            [],
+            [new ServoDef(6, 2, 4, 5)],
+            [],
+            [],
+            nextPartId: 7));
+        var gestures = new BuildGestures(build);
+
+        Tap(gestures, new Vector2D(100, 0));
+
+        build.SingleSelectedServoId.ShouldBe(6);
+        build.SingleSelectedNodeId.ShouldBeNull();
+    }
+
+    [Fact]
     public void Joint_TapOnASensorPicture_SelectsTheSensorAndAddsNothing()
     {
         var (build, gestures) = BeamWithSensor(100, SensorKind.Accelerometer);

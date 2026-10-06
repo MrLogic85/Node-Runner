@@ -1,3 +1,4 @@
+using System.Text.Json.Nodes;
 using NodeRunner.Domain;
 
 namespace NodeRunner.App.Repositories;
@@ -14,7 +15,7 @@ public sealed class FileCreationRepository : ICreationRepository
     /// <c>creation.json</c>'s versions. Add a migration here when its shape changes
     /// (docs/SAVE_FORMAT.md → "Versions and migration").
     /// </summary>
-    public static VersionedSaveFile<CreationDef> Format { get; } = new([]);
+    public static VersionedSaveFile<CreationDef> Format { get; } = new([AddServosArray]);
 
     private readonly string _directoryPath;
     private readonly VersionedSaveFile<CreationDef> _format;
@@ -37,6 +38,16 @@ public sealed class FileCreationRepository : ICreationRepository
         ArgumentNullException.ThrowIfNull(format);
         _directoryPath = storageLocation.DirectoryPath;
         _format = format;
+    }
+
+    private static void AddServosArray(JsonObject file)
+    {
+        if (file["creature"] is not JsonObject creature)
+        {
+            throw new InvalidDataException("creation.json is missing its creature object.");
+        }
+
+        creature["servos"] ??= new JsonArray();
     }
 
     public IReadOnlyList<CreationDef> List()

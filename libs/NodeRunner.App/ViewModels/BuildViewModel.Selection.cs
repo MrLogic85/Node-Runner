@@ -17,6 +17,7 @@ public sealed partial class BuildViewModel
     private readonly HashSet<int> _selectedNodeIds = [];
     private readonly HashSet<int> _selectedBeamIds = [];
     private readonly HashSet<int> _selectedSensorIds = [];
+    private readonly HashSet<int> _selectedServoIds = [];
     private readonly HashSet<int> _selectedPistonIds = [];
     private readonly HashSet<int> _selectedSpringIds = [];
 
@@ -26,17 +27,21 @@ public sealed partial class BuildViewModel
 
     public int SelectedSensorCount => _selectedSensorIds.Count;
 
+    public int SelectedServoCount => _selectedServoIds.Count;
+
     public int SelectedPistonCount => _selectedPistonIds.Count;
 
     public int SelectedSpringCount => _selectedSpringIds.Count;
 
-    public int SelectedPartCount => SelectedNodeCount + SelectedBeamCount + SelectedSensorCount + SelectedPistonCount + SelectedSpringCount;
+    public int SelectedPartCount => SelectedNodeCount + SelectedBeamCount + SelectedSensorCount + SelectedServoCount + SelectedPistonCount + SelectedSpringCount;
 
     public int? SingleSelectedNodeId => Single(_selectedNodeIds);
 
     public int? SingleSelectedBeamId => Single(_selectedBeamIds);
 
     public int? SingleSelectedSensorId => Single(_selectedSensorIds);
+
+    public int? SingleSelectedServoId => Single(_selectedServoIds);
 
     public int? SingleSelectedPistonId => Single(_selectedPistonIds);
 
@@ -47,6 +52,7 @@ public sealed partial class BuildViewModel
         _selectedNodeIds.ToHashSet(),
         _selectedBeamIds.ToHashSet(),
         _selectedSensorIds.ToHashSet(),
+        _selectedServoIds.ToHashSet(),
         _selectedPistonIds.ToHashSet(),
         _selectedSpringIds.ToHashSet());
 
@@ -71,7 +77,7 @@ public sealed partial class BuildViewModel
     }
 
     private IEnumerable<int> SelectedPartIds() =>
-        _selectedNodeIds.Concat(_selectedBeamIds).Concat(_selectedSensorIds).Concat(_selectedPistonIds).Concat(_selectedSpringIds);
+        _selectedNodeIds.Concat(_selectedBeamIds).Concat(_selectedSensorIds).Concat(_selectedServoIds).Concat(_selectedPistonIds).Concat(_selectedSpringIds);
 
     public void ClearSelection()
     {
@@ -109,6 +115,7 @@ public sealed partial class BuildViewModel
         CreatureElementKind.Node => _selectedNodeIds,
         CreatureElementKind.Beam => _selectedBeamIds,
         CreatureElementKind.Sensor => _selectedSensorIds,
+        CreatureElementKind.Servo => _selectedServoIds,
         CreatureElementKind.Piston => _selectedPistonIds,
         CreatureElementKind.Spring => _selectedSpringIds,
         _ => throw new ArgumentOutOfRangeException(nameof(kind)),
@@ -119,6 +126,7 @@ public sealed partial class BuildViewModel
         _selectedNodeIds.Clear();
         _selectedBeamIds.Clear();
         _selectedSensorIds.Clear();
+        _selectedServoIds.Clear();
         _selectedPistonIds.Clear();
         _selectedSpringIds.Clear();
     }
@@ -156,13 +164,13 @@ public sealed partial class BuildViewModel
         foreach (var (id, position) in start.Positions)
         {
             var moved = new Vector2D(position.X + delta.X, position.Y + delta.Y);
-            var allowed = BuildArea.Clamp(moved, NodeById(id).Radius);
+            var allowed = BuildArea.Clamp(moved, NodeRadius(id));
             delta = new Vector2D(delta.X + allowed.X - moved.X, delta.Y + allowed.Y - moved.Y);
         }
 
         // Clamping each joint too absorbs the rounding in the shortened delta.
         PlaceSelection(start, (id, position) =>
-            BuildArea.Clamp(new Vector2D(position.X + delta.X, position.Y + delta.Y), NodeById(id).Radius));
+            BuildArea.Clamp(new Vector2D(position.X + delta.X, position.Y + delta.Y), NodeRadius(id)));
     }
 
     /// <summary>
@@ -219,7 +227,7 @@ public sealed partial class BuildViewModel
     private bool PlaceSelection(SelectionSnapshot start, Func<int, Vector2D, Vector2D> place, bool keepInBuildArea = true)
     {
         var placed = start.Positions.ToDictionary(entry => entry.Key, entry => place(entry.Key, entry.Value));
-        if (keepInBuildArea && placed.Any(entry => BuildArea.Clamp(entry.Value, NodeById(entry.Key).Radius) != entry.Value))
+        if (keepInBuildArea && placed.Any(entry => BuildArea.Clamp(entry.Value, NodeRadius(entry.Key)) != entry.Value))
         {
             return false;
         }
@@ -244,6 +252,8 @@ public sealed partial class BuildViewModel
         OnPropertyChanged(nameof(SingleSelectedBeamId));
         OnPropertyChanged(nameof(SelectedSensorCount));
         OnPropertyChanged(nameof(SingleSelectedSensorId));
+        OnPropertyChanged(nameof(SelectedServoCount));
+        OnPropertyChanged(nameof(SingleSelectedServoId));
         OnPropertyChanged(nameof(SelectedPistonCount));
         OnPropertyChanged(nameof(SingleSelectedPistonId));
         OnPropertyChanged(nameof(SelectedSpringCount));

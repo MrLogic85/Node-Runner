@@ -114,11 +114,23 @@ public static class PartParameters
     public static PartParameter Strength { get; } = new(
         PartParameterId.Strength, MultiEditable: true, new(UiText.Plain("Max strength"), new(20, 400, 10), 0, "{0} N", "{0}–{1} N", Metres.FromWorldUnits, ToWorld));
 
+    public static PartParameter ServoStrength { get; } = new(
+        PartParameterId.ServoStrength, MultiEditable: true, new(UiText.Plain("Max strength"), new(5, 200, 5), 0, "{0} N·m", "{0}–{1} N·m", value => value / 10000, value => value * 10000));
+
     public static PartParameter Stroke { get; } = new(
         PartParameterId.Stroke, MultiEditable: true, new(UiText.Plain("Stroke"), new(10, 50, 5), 0, "±{0}%", "±{0}–{1}%", value => value * 100, value => value / 100));
 
+    public static PartParameter Range { get; } = new(
+        PartParameterId.Range, MultiEditable: true, new(UiText.Plain("Range"), new(20, 360, 5), 0, "{0}°", "{0}–{1}°", RadiansToDegrees, DegreesToRadians));
+
+    public static PartParameter StartPosition { get; } = new(
+        PartParameterId.StartPosition, MultiEditable: true, new(UiText.Plain("Start position"), new(0, 100, 5), 0, "{0}%", "{0}–{1}%", value => value * 100, value => value / 100));
+
     public static PartParameter MaxSpeed { get; } = new(
         PartParameterId.MaxSpeed, MultiEditable: true, new(UiText.Plain("Max speed"), new(0.5, 4, 0.1), 1, "{0} m/s", "{0}–{1} m/s", Metres.FromWorldUnits, ToWorld));
+
+    public static PartParameter AngularMaxSpeed { get; } = new(
+        PartParameterId.AngularMaxSpeed, MultiEditable: true, new(UiText.Plain("Max speed"), new(30, 720, 15), 0, "{0}°/s", "{0}–{1}°/s", RadiansToDegrees, DegreesToRadians));
 
     public static PartParameter RiseTime { get; } = new(
         PartParameterId.RiseTime, MultiEditable: true, new(UiText.Plain("Rise time"), SettingRange.Of(0.1, 0.2, 0.5, 1), 1, "{0} s", "{0}–{1} s", value => value, value => value));
@@ -136,8 +148,12 @@ public static class PartParameters
     public static PartParameter Of(PartParameterId id) => id switch
     {
         PartParameterId.Strength => Strength,
+        PartParameterId.ServoStrength => ServoStrength,
         PartParameterId.Stroke => Stroke,
+        PartParameterId.Range => Range,
+        PartParameterId.StartPosition => StartPosition,
         PartParameterId.MaxSpeed => MaxSpeed,
+        PartParameterId.AngularMaxSpeed => AngularMaxSpeed,
         PartParameterId.RiseTime => RiseTime,
         PartParameterId.Aim => Aim,
         PartParameterId.Stiffness => Stiffness,
@@ -171,4 +187,8 @@ public static class PartParameters
         Of(id).Slider ?? throw new ArgumentOutOfRangeException(nameof(id), "This setting has no panel slider.");
 
     private static double ToWorld(double metres) => metres * Metres.WorldUnitsPerMetre;
+
+    private static double RadiansToDegrees(double radians) => radians * 180 / Math.PI;
+
+    private static double DegreesToRadians(double degrees) => degrees * Math.PI / 180;
 }

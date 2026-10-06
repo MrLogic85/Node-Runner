@@ -73,10 +73,10 @@ public static class PartTray
     [
         new(UiText.Plain("On a joint"), UiText.Plain("Drag onto a joint. A joint holds one part."),
         [
-            Locked(BuildPart.Brake, UiText.Plain("Brake")),
-            Locked(BuildPart.Servo, UiText.Plain("Servo")),
+            Available(BuildPart.Servo, UiText.Plain("Servo")),
             Locked(BuildPart.Stepper, UiText.Plain("Stepper")),
             Locked(BuildPart.VelocityMotor, UiText.Plain("Velocity motor")),
+            Locked(BuildPart.Brake, UiText.Plain("Brake")),
             Locked(BuildPart.Wheel, UiText.Plain("Wheel")),
         ]),
         new(UiText.Plain("Sensors"), UiText.Plain("Drag onto a beam. A beam holds one sensor."),

@@ -94,6 +94,14 @@ public sealed class GenerationZeroTests
     }
 
     [Fact]
+    public void BaseGenome_TreatsServoStrengthLikeOtherStrengthOutputs()
+    {
+        var ports = new BrainPortLayout(BrainPorts.ServoInputs(4).ToArray(), BrainPorts.ServoOutputs(4).ToArray());
+
+        GenerationZero.BaseGenome(ports).ShouldBe([0, 0, 0, 0, 0, GenerationZero.FullStrengthBias]);
+    }
+
+    [Fact]
     public void Population_RejectsAnEmptyPopulation()
     {
         Should.Throw<ArgumentOutOfRangeException>(() => GenerationZero.Population(_ports, 0, new Random(8)));

@@ -26,10 +26,10 @@ shared part visuals that Build, Training and thumbnails draw with (#766).**
 
 - `VisualTheme.cs` — the arena, creature and selection colours
 - `JointDrawing.cs`, `PistonDrawing.cs`, `SpringDrawing.cs`,
-  `SensorDrawing.cs`, `SelectionDrawing.cs`, `TriangleHatch.cs` — static drawing helpers
+  `SensorDrawing.cs`, `SelectionDrawing.cs`, `TriangleHatch.cs`, `ServoGeometry.cs` — static drawing helpers
 - `PartVisual.cs` — the base of every part visual: theme, selection and
   layer, and the redraw on a new pixel scale every view that holds parts calls
-- `JointPart.cs`, `BeamPart.cs`, `PistonPart.cs`, `SpringPart.cs`,
+- `JointPart.cs`, `BeamPart.cs`, `ServoPart.cs`, `PistonPart.cs`, `SpringPart.cs`,
   `SensorPart.cs`, `HatchPart.cs` — one visual per part kind
 - `KnockoutPart.cs` — the arena background around a beam or joint, under the
   whole creature (#818)

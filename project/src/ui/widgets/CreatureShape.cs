@@ -9,6 +9,7 @@ namespace NodeRunner.Ui.Widgets;
 public sealed record CreatureShape(
     IReadOnlyList<NodeDef> Nodes,
     IReadOnlyList<BeamDef> Beams,
+    IReadOnlyList<ServoDef> Servos,
     IReadOnlyList<PistonDef> Pistons,
     IReadOnlyList<SpringDef> Springs,
     IReadOnlyList<SensorDef> Sensors);

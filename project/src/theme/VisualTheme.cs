@@ -17,6 +17,11 @@ public sealed class VisualTheme
     // The reference's rigid hatch: muted hairlines at half opacity, 7 apart (#612).
     private const float _rigidHatchOpacity = 0.5f;
     private const float _rigidHatchSpacing = 7f;
+    private const float _servoFixedBandOpacity = 0.30f;
+    private const float _servoFixedHatchOpacity = 0.85f;
+    private const float _servoFixedEdgeOpacity = 0.90f;
+    private const float _servoTargetBandOpacity = 0.24f;
+    private const float _servoTargetEdgeOpacity = 0.90f;
 
     public static VisualTheme FromTheme(Godot.Theme theme) => new()
     {
@@ -40,6 +45,13 @@ public sealed class VisualTheme
         JointInnerRingWidth = UiSize.Stroke.Hair,
         SpringCoil = UiThemes.Color(theme, UiTokens.Color.Muted),
         MotorAccent = UiThemes.Color(theme, UiTokens.Color.Accent),
+        ServoPanelFill = UiThemes.Color(theme, UiTokens.Color.Panel),
+        ServoFixed = UiThemes.Color(theme, UiTokens.Color.Detail),
+        ServoFixedBand = UiThemes.Color(theme, UiTokens.Color.Detail) with { A = _servoFixedBandOpacity },
+        ServoFixedHatch = UiThemes.Color(theme, UiTokens.Color.Detail) with { A = _servoFixedHatchOpacity },
+        ServoFixedBandEdge = UiThemes.Color(theme, UiTokens.Color.Detail) with { A = _servoFixedEdgeOpacity },
+        ServoTargetBand = UiThemes.Color(theme, UiTokens.Color.Accent) with { A = _servoTargetBandOpacity },
+        ServoTargetBandEdge = UiThemes.Color(theme, UiTokens.Color.Accent) with { A = _servoTargetEdgeOpacity },
         Danger = UiThemes.Color(theme, UiTokens.Color.Danger),
         SensorFill = UiThemes.Color(theme, UiTokens.Color.Panel),
         SensorLine = UiThemes.Color(theme, UiTokens.Color.Accent),
@@ -115,6 +127,27 @@ public sealed class VisualTheme
     public Color SpringCoil { get; private init; }
 
     public Color MotorAccent { get; private init; }
+
+    /// <summary>The panel fill inside a Servo's housing, range band and horn.</summary>
+    public Color ServoPanelFill { get; private init; }
+
+    /// <summary>The detail colour for the passive Fixed side of a Servo (#832).</summary>
+    public Color ServoFixed { get; private init; }
+
+    /// <summary>The translucent band under a selected Servo's Fixed link.</summary>
+    public Color ServoFixedBand { get; private init; }
+
+    /// <summary>The hatch inside a selected Servo's Fixed-link band.</summary>
+    public Color ServoFixedHatch { get; private init; }
+
+    /// <summary>The hairline edges of a selected Servo's Fixed-link band.</summary>
+    public Color ServoFixedBandEdge { get; private init; }
+
+    /// <summary>The translucent band under a selected Servo's Target link.</summary>
+    public Color ServoTargetBand { get; private init; }
+
+    /// <summary>The hairline edges of a selected Servo's Target-link band.</summary>
+    public Color ServoTargetBandEdge { get; private init; }
 
     public Color Danger { get; private init; }
 

@@ -16,7 +16,7 @@ public sealed class BuildPartSettingsTests
     public void PartSettings_IsRowsThenDelete_WithNoCloseButton()
     {
         Children("/PartSettings").ShouldBe(["PartRows", "PartActions"]);
-        Children("/PartSettings/PartRows").ShouldBe(["PartName", "PartParameters", "PartConnections", "PartNote"]);
+        Children("/PartSettings/PartRows").ShouldBe(["PartName", "PartParameters", "PartPickers", "PartConnections", "PartNote"]);
         Children("/PartSettings/PartActions").ShouldBe(["PartDelete"]);
         _build.ShouldNotContain(node => node.Name == "PartClose");
     }

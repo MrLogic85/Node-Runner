@@ -17,6 +17,7 @@ namespace NodeRunner.Ui.Widgets;
 public partial class CreatureParts : Node2D
 {
     private readonly Dictionary<int, JointPart> _joints = [];
+    private readonly Dictionary<int, ServoPart> _servos = [];
     private readonly Dictionary<int, BeamPart> _beams = [];
     private readonly Dictionary<int, PistonPart> _pistons = [];
     private readonly Dictionary<int, SpringPart> _springs = [];
@@ -37,7 +38,7 @@ public partial class CreatureParts : Node2D
     public void Show(CreatureDef creature)
     {
         ArgumentNullException.ThrowIfNull(creature);
-        Show(new CreatureShape(creature.Nodes, creature.Beams, creature.Pistons, creature.Springs, creature.Sensors), CreatureMarks.None);
+        Show(new CreatureShape(creature.Nodes, creature.Beams, creature.Servos, creature.Pistons, creature.Springs, creature.Sensors), CreatureMarks.None);
     }
 
     /// <summary>
@@ -51,6 +52,7 @@ public partial class CreatureParts : Node2D
 
         var nodes = shape.Nodes.ToDictionary(node => node.Id);
         ShowJoints(shape, marks);
+        ShowServos(shape, nodes, marks);
         ShowBeams(shape, nodes, marks);
         ShowPistons(shape, nodes, marks);
         ShowSprings(shape, nodes, marks);
@@ -66,11 +68,111 @@ public partial class CreatureParts : Node2D
         {
             var part = PartFor(_joints, node.Id);
             part.Position = ToGodot(node.Position);
-            part.Radius = (float)node.Radius;
+            part.Radius = (float)NodeRadius(shape, node.Id);
             part.Loose = marks.ShowsAsLoose(node.Id);
-            part.Selected = marks.Selected.Nodes.Contains(node.Id);
+            part.Selected = marks.Selected.Nodes.Contains(node.Id) && !shape.Servos.Any(servo => servo.NodeId == node.Id);
+            part.Visible = !shape.Servos.Any(servo => servo.NodeId == node.Id) && marks.PreviewServoNode != node.Id;
         }
     }
+
+    private void ShowServos(CreatureShape shape, Dictionary<int, NodeDef> nodes, CreatureMarks marks)
+    {
+        var ids = shape.Servos.Select(servo => servo.Id).Concat(marks.PreviewServoNode is { } nodeId ? [-nodeId] : []);
+        Prune(_servos, ids);
+        foreach (var servo in shape.Servos)
+        {
+            var part = PartFor(_servos, servo.Id);
+            ShowServoPart(part, shape, nodes, servo.NodeId, servo.FixedLinkId, servo.TargetLinkId, servo.Range, servo.Start, marks.Selected.Servos.Contains(servo.Id));
+        }
+
+        if (marks.PreviewServoNode is { } previewNode && nodes.TryGetValue(previewNode, out var node))
+        {
+            var part = PartFor(_servos, -previewNode);
+            var links = LinksAtNode(shape, previewNode).OrderBy(link => link.Id).Take(2).ToArray();
+            ShowServoPart(
+                part,
+                shape,
+                nodes,
+                node.Id,
+                links.ElementAtOrDefault(0).Id is var fixedId && fixedId > 0 ? fixedId : null,
+                links.ElementAtOrDefault(1).Id is var targetId && targetId > 0 ? targetId : null,
+                ServoDef.DefaultRange,
+                ServoDef.DefaultStart,
+                selected: true);
+        }
+    }
+
+    private static void ShowServoPart(
+        ServoPart part,
+        CreatureShape shape,
+        Dictionary<int, NodeDef> nodes,
+        int nodeId,
+        int? fixedLinkId,
+        int? targetLinkId,
+        double range,
+        double start,
+        bool selected)
+    {
+        var joint = nodes[nodeId];
+        var hasFixed = TryLink(shape, nodeId, fixedLinkId, out var fixedLink);
+        var hasTarget = TryLink(shape, nodeId, targetLinkId, out var targetLink);
+        var fixedAngle = hasFixed ? LinkAngle(nodes, nodeId, fixedLink) : 0;
+        var targetAngle = hasTarget ? LinkAngle(nodes, nodeId, targetLink) : 0;
+        var localTarget = hasTarget ? RelativeAngle(fixedAngle, targetAngle) : 0;
+
+        part.Position = ToGodot(joint.Position);
+        part.Rotation = fixedAngle;
+        part.Radius = (float)ServoDef.JointRadius;
+        part.Selected = selected;
+        part.Visible = true;
+        part.Simplified = false;
+        part.HasFixed = hasFixed;
+        part.HasTarget = hasTarget;
+        part.TargetAngle = localTarget;
+        part.BuiltAngle = hasFixed && hasTarget ? localTarget : 0;
+        part.Range = (float)range;
+        part.Start = (float)start;
+        part.HousingReach = hasFixed ? HousingReach(shape, nodes, nodeId, fixedLink) : 0;
+    }
+
+    private static bool TryLink(CreatureShape shape, int nodeId, int? linkId, out LinkRef link)
+    {
+        if (linkId is { } id)
+        {
+            foreach (var entry in Links(shape))
+            {
+                if (entry.Id == id && entry.Touches(nodeId))
+                {
+                    link = entry;
+                    return true;
+                }
+            }
+        }
+
+        link = default;
+        return false;
+    }
+
+    private static IEnumerable<LinkRef> LinksAtNode(CreatureShape shape, int nodeId) =>
+        Links(shape).Where(link => link.Touches(nodeId));
+
+    private static IEnumerable<LinkRef> Links(CreatureShape shape) => LinkRef.All(shape.Beams, shape.Pistons, shape.Springs);
+
+    private static float LinkAngle(Dictionary<int, NodeDef> nodes, int jointNodeId, LinkRef link)
+    {
+        var joint = nodes[jointNodeId].Position;
+        var far = nodes[link.FarNodeFrom(jointNodeId)].Position;
+        return (float)Math.Atan2(far.Y - joint.Y, far.X - joint.X);
+    }
+
+    private static float HousingReach(CreatureShape shape, Dictionary<int, NodeDef> nodes, int servoNodeId, LinkRef link) =>
+        ServoGeometry.HousingReach(nodes.Values.ToArray(), nodeId => NodeRadius(shape, nodeId), link, servoNodeId, SensorLength(shape, link));
+
+    private static float SensorLength(CreatureShape shape, LinkRef link) =>
+        link.Kind == CreatureElementKind.Beam && shape.Sensors.FirstOrDefault(sensor => sensor.BeamId == link.Id) is { } sensor ? (float)SensorPicture.SizeOf(sensor.Kind) : 0;
+
+    private static float RelativeAngle(float fixedAngle, float targetAngle) =>
+        Mathf.Atan2(Mathf.Sin(targetAngle - fixedAngle), Mathf.Cos(targetAngle - fixedAngle));
 
     private void ShowBeams(CreatureShape shape, Dictionary<int, NodeDef> nodes, CreatureMarks marks)
     {
@@ -82,10 +184,10 @@ public partial class CreatureParts : Node2D
             var part = PartFor(_beams, beam.Id);
             part.A = ToGodot(nodeA.Position);
             part.B = ToGodot(nodeB.Position);
-            part.RadiusA = (float)nodeA.Radius;
-            part.RadiusB = (float)nodeB.Radius;
+            part.RadiusA = (float)NodeRadius(shape, nodeA.Id);
+            part.RadiusB = (float)NodeRadius(shape, nodeB.Id);
             // A beam too short for training (#593) is drawn in danger until its joints move apart.
-            part.Danger = marks.ShowsTooShort && CreatureReadiness.IsTooShort(nodeA, nodeB);
+            part.Danger = marks.ShowsTooShort && IsTooShort(shape, nodeA, nodeB);
             part.HaloA = selected.Nodes.Contains(beam.NodeA);
             part.HaloB = selected.Nodes.Contains(beam.NodeB);
             part.Selected = selected.Beams.Contains(beam.Id);
@@ -103,11 +205,11 @@ public partial class CreatureParts : Node2D
             var part = PartFor(_pistons, piston.Id);
             part.A = ToGodot(nodeA.Position);
             part.B = ToGodot(nodeB.Position);
-            part.RadiusA = (float)nodeA.Radius;
-            part.RadiusB = (float)nodeB.Radius;
+            part.RadiusA = (float)NodeRadius(shape, nodeA.Id);
+            part.RadiusB = (float)NodeRadius(shape, nodeB.Id);
             part.Shortest = (float)Piston.ShortestLength(built, piston.Stroke);
             part.Longest = (float)Piston.LongestLength(built, piston.Stroke);
-            part.Danger = marks.ShowsTooShort && CreatureReadiness.IsTooShort(nodeA, nodeB);
+            part.Danger = marks.ShowsTooShort && IsTooShort(shape, nodeA, nodeB);
             part.ShowStroke = marks.ShowsStroke;
             part.HaloA = selected.Nodes.Contains(piston.NodeA);
             part.HaloB = selected.Nodes.Contains(piston.NodeB);
@@ -126,9 +228,9 @@ public partial class CreatureParts : Node2D
             part.A = ToGodot(nodeA.Position);
             part.B = ToGodot(nodeB.Position);
             part.Built = part.A.DistanceTo(part.B);
-            part.RadiusA = (float)nodeA.Radius;
-            part.RadiusB = (float)nodeB.Radius;
-            part.Danger = marks.ShowsTooShort && CreatureReadiness.IsTooShort(nodeA, nodeB);
+            part.RadiusA = (float)NodeRadius(shape, nodeA.Id);
+            part.RadiusB = (float)NodeRadius(shape, nodeB.Id);
+            part.Danger = marks.ShowsTooShort && IsTooShort(shape, nodeA, nodeB);
             part.HaloA = selected.Nodes.Contains(spring.NodeA);
             part.HaloB = selected.Nodes.Contains(spring.NodeB);
             part.Selected = selected.Springs.Contains(spring.Id);
@@ -192,8 +294,7 @@ public partial class CreatureParts : Node2D
             var b = ToGodot(creature.Nodes[triangle.NodeB].Position);
             var c = ToGodot(creature.Nodes[triangle.NodeC].Position);
             corners.AddRange([a, b, c]);
-            // Every joint is plain today, so all three share one radius.
-            foreach (var (start, end) in TriangleHatch.Lines(a, b, c, Theme.RigidHatchSpacing, (float)creature.Nodes[triangle.NodeA].Radius))
+            foreach (var (start, end) in TriangleHatch.Lines(a, b, c, Theme.RigidHatchSpacing, (float)NodeRadius(shape, creature.Nodes[triangle.NodeA].Id)))
             {
                 lines.Add(start);
                 lines.Add(end);
@@ -229,7 +330,7 @@ public partial class CreatureParts : Node2D
             return new CreatureDef(
                 shape.Nodes.Where(node => nodeIds.Contains(node.Id)).ToArray(),
                 beams,
-                shape.Sensors.Where(sensor => beamIds.Contains(sensor.BeamId)).ToArray());
+                []);
         }
         catch (ArgumentException)
         {
@@ -264,4 +365,10 @@ public partial class CreatureParts : Node2D
     }
 
     private static Vector2 ToGodot(Vector2D position) => new((float)position.X, (float)position.Y);
+
+    private static double NodeRadius(CreatureShape shape, int nodeId) =>
+        NodeDef.RadiusWithServo(shape.Servos.Any(servo => servo.NodeId == nodeId));
+
+    private static bool IsTooShort(CreatureShape shape, NodeDef a, NodeDef b) =>
+        CreatureReadiness.IsTooShort(a, b, NodeRadius(shape, a.Id), NodeRadius(shape, b.Id));
 }

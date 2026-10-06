@@ -160,7 +160,7 @@ public partial class TrainingHost : Node, IRoutedScene
 
         _signalRefreshElapsed = 0;
         _followed.ReadInputs(_brainInputs);
-        _signalFlow.Update(_brainInputs.Count, _followed.Brain is null ? 0 : _followed.PistonCount, FollowedDistance);
+        _signalFlow.Update(_brainInputs.Count, _followed.Brain is null ? 0 : _followed.MotorCount, FollowedDistance);
         _brainFocus.Update(_followed.Brain, _brainInputs);
     }
 
@@ -518,7 +518,7 @@ public partial class TrainingHost : Node, IRoutedScene
         {
             _followed?.SetSelectedElement(_selection.SelectedElement);
             _selectedPartName = _selection.SelectedElement is { } selected && _followed?.Definition is { } definition
-                ? UiTextTranslation.Source(PartNames.Display(definition.Nodes, definition.Beams, definition.Sensors, definition.Pistons, definition.Springs, selected.Id))
+                ? UiTextTranslation.Source(PartNames.Display(definition.Nodes, definition.Beams, definition.Sensors, definition.Servos, definition.Pistons, definition.Springs, selected.Id))
                 : null;
             BestMarker.Faded = _selectedPartName is not null;
             StartSign.Faded = BestMarker.Faded;

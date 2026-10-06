@@ -37,7 +37,7 @@ public class CreatureThumbnailFitTests
 
         foreach (var node in creature.Nodes)
         {
-            ShouldBeInside(fit, node.Position, node.Radius);
+            ShouldBeInside(fit, node.Position, creature.NodeRadius(node.Id));
         }
 
         ShouldFillAndCentre(fit, CreatureThumbnailFit.Bounds(creature)!.Value);

@@ -2510,7 +2510,7 @@ TextStyle = 12
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 8
-text = "collapsed, expanded, locked, and disabled"
+text = "collapsed, expanded, locked, disabled, and nothing picked yet"
 autowrap_mode = 3
 script = ExtResource("2_cpfof")
 TextStyle = 9
@@ -2579,6 +2579,26 @@ mouse_filter = 1
 script = ExtResource("18_picker")
 LabelText = "Disabled"
 Disabled = true
+
+[node name="Missing" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Picker/Examples" unique_id=1580663412]
+layout_mode = 2
+size_flags_horizontal = 0
+theme_override_constants/separation = 4
+
+[node name="Caption" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Picker/Examples/Missing" unique_id=1580663413]
+layout_mode = 2
+text = "Nothing picked"
+script = ExtResource("2_cpfof")
+TextStyle = 9
+
+[node name="MissingPicker" type="PanelContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Picker/Examples/Missing" unique_id=1580663414]
+layout_mode = 2
+size_flags_horizontal = 0
+mouse_filter = 1
+script = ExtResource("18_picker")
+LabelText = "Fixed link"
+MissingText = "Pick a Fixed link"
+SelectedIndex = -1
 
 [node name="PartRows" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content" unique_id=1472066312]
 layout_mode = 2

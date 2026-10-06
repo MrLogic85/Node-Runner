@@ -11,10 +11,10 @@ public sealed class SignalFlowPresentationViewModelTests
         var changed = new List<string?>();
         viewModel.PropertyChanged += (_, args) => changed.Add(args.PropertyName);
 
-        viewModel.Update(readings: 4, pistons: 2, distance: 4225);
+        viewModel.Update(readings: 4, motors: 2, distance: 4225);
 
         viewModel.SensesNote.ShouldBe(Readings(4));
-        viewModel.OutputsNote.ShouldBe(Pistons(2));
+        viewModel.OutputsNote.ShouldBe(Motors(2));
         viewModel.DistanceNote.ShouldBe(UiText.Format("{0} m", new FixedNumber(42.3, 1)));
         changed.ShouldBe([null], "The counts changed, so every note is new.");
     }
@@ -27,7 +27,7 @@ public sealed class SignalFlowPresentationViewModelTests
         viewModel.Update(1, 1, 0);
 
         viewModel.SensesNote.ShouldBe(Readings(1));
-        viewModel.OutputsNote.ShouldBe(Pistons(1));
+        viewModel.OutputsNote.ShouldBe(Motors(1));
         viewModel.DistanceNote.ShouldBe(UiText.Format("{0} m", new FixedNumber(0, 1)));
     }
 
@@ -89,11 +89,11 @@ public sealed class SignalFlowPresentationViewModelTests
 
         viewModel.Update(0, 2, 300);
 
-        viewModel.OutputsNote.ShouldBe(Pistons(2));
+        viewModel.OutputsNote.ShouldBe(Motors(2));
         changed.ShouldBe([null], "The Outputs count changed, so the screen must rebuild the count notes.");
     }
 
     private static UiText Readings(int count) => UiText.Counted("{0} reading", "{0} readings", count);
 
-    private static UiText Pistons(int count) => UiText.Counted("{0} piston", "{0} pistons", count);
+    private static UiText Motors(int count) => UiText.Counted("{0} motor", "{0} motors", count);
 }

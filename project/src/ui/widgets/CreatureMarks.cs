@@ -16,8 +16,9 @@ public sealed record CreatureMarks(
     Func<int, bool> ShowsAsLoose,
     Func<int, Vector2D?> WeightOffset,
     (BeamDef Beam, SensorKind Kind)? PreviewSensor,
+    int? PreviewServoNode,
     bool ShowsTooShort,
     bool ShowsStroke)
 {
-    public static CreatureMarks None { get; } = new(PartSet.None, _ => false, _ => null, null, ShowsTooShort: false, ShowsStroke: false);
+    public static CreatureMarks None { get; } = new(PartSet.None, _ => false, _ => null, null, null, ShowsTooShort: false, ShowsStroke: false);
 }

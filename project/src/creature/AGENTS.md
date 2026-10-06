@@ -1,6 +1,6 @@
 # AGENTS.md — `src/creature/`
 
-**The Godot-side representation of a creature: nodes, beams, sensor parts, Pistons,
+**The Godot-side representation of a creature: nodes, beams, sensor parts, Servos, Pistons,
 and the brain wiring. See `docs/CREATURE_MODEL.md` for
 the model this implements.**
 
@@ -23,8 +23,9 @@ the model this implements.**
    include it. Each Spring is a `DampedSpringJoint2D` between its two node
    bodies (#453), with no body of its own. Do not introduce Box2D.NET or a
    custom solver.
-4. **Joints are passive (#450).** A beam turns freely at its nodes; only
-   parts with ports (Pistons today) are driven by the brain.
+4. **Plain joints are passive (#450).** A beam turns freely at its nodes
+   unless a Servo sits on that joint; parts with ports (Servos and Pistons
+   today) are driven by the brain.
 5. **The brain's input and output order is `BrainPorts.Of` (in
    `NodeRunner.Domain`).** The creature reads its parts in its own
    order and copies each value to its port's place; do not hand-order brain
@@ -45,7 +46,10 @@ the model this implements.**
   mass and writes its 2 readings into the sensor buffer
 - `CameraSensor.cs` — one camera: three `RayCast2D` children aimed as
   built by the Mechanics `CameraRays`, writing 3 nearness readings
-- `NodeVisual.cs` / `BeamVisual.cs` / `PistonVisual.cs` / `SpringVisual.cs` /
+- `ServoJoint.cs` — a Servo motor realised with endpoint force couples for
+  every link kind, because Godot angular joints cannot cover Beams, Pistons
+  and Springs uniformly.
+- `NodeVisual.cs` / `BeamVisual.cs` / `ServoVisual.cs` / `PistonVisual.cs` / `SpringVisual.cs` /
   `RigidHatchVisual.cs` — rendering only, no physics: Training's adapters
   over the shared part visuals in `project/src/theme` (`JointPart`,
   `BeamPart`, `PistonPart`, `SpringPart`, `HatchPart`, #767)
