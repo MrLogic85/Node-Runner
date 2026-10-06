@@ -46,7 +46,6 @@ public partial class UiPicker : PanelContainer
         new("Left shin", UiIconId.Beam, Note: "swaps"),
         new("Tail"),
     ];
-    private UiMenu? _openMenu;
 
     [Export]
     public string LabelText
@@ -221,7 +220,6 @@ public partial class UiPicker : PanelContainer
             RemoveChild(child);
             child.QueueFree();
         }
-        _openMenu = null;
 
         AddThemeStyleboxOverride("panel", new StyleBoxEmpty());
         MouseFilter = MouseFilterEnum.Pass;
@@ -247,7 +245,6 @@ public partial class UiPicker : PanelContainer
             var overlay = new UiLevelLayer();
             AddChild(overlay);
             overlay.AddChild(menu);
-            _openMenu = menu;
             menu.Follow(closedRow, new Vector2(0, 1), new Vector2(0, UiSize.Space.S1));
             menu.CallDeferred(CanvasItem.MethodName.Show);
         }

@@ -16,7 +16,6 @@ public partial class UiFrame : PanelContainer
     private bool _ready;
 
     private ColorRect? _background;
-    private UiCard? _card;
     private MarginContainer? _margin;
     private UiSafeArea? _safeArea;
 
@@ -29,7 +28,6 @@ public partial class UiFrame : PanelContainer
     public override void _Ready()
     {
         MouseFilter = MouseFilterEnum.Pass;
-        _card = GetNode<UiCard>("%Card");
         _background = GetNode<ColorRect>("%Background");
         _margin = GetNode<MarginContainer>("MarginContainer");
         _baseLeft = _margin.GetThemeConstant("margin_left");

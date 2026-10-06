@@ -31,7 +31,6 @@ public partial class UiTextField : VBoxContainer, ISerializationListener
     private Func<string>? _placeholderSource;
     private TextInputSize _size = TextInputSize.Standard;
     private TextInputState _state;
-    private bool _placeCaretAtEndOnFocus;
     private bool _holdErrorUntilTextChanges;
     private int _maxLength;
 
@@ -310,19 +309,6 @@ public partial class UiTextField : VBoxContainer, ISerializationListener
 
     private void OnTextSubmitted(string _) => FinishEditing();
 
-    public void BeginEditing()
-    {
-        if (_editor?.HasFocus() == true)
-        {
-            StartEditing();
-            return;
-        }
-
-        _placeCaretAtEndOnFocus = true;
-        _editor?.GrabFocus();
-        PlaceCaretAtEnd();
-    }
-
     public void FinishEditing()
     {
         _textValue = _editor?.Text ?? _textValue;
@@ -454,12 +440,6 @@ public partial class UiTextField : VBoxContainer, ISerializationListener
     private void OnFocusEntered()
     {
         ApplyMaxLength();
-        if (_placeCaretAtEndOnFocus)
-        {
-            PlaceCaretAtEnd();
-            _placeCaretAtEndOnFocus = false;
-        }
-
         StartEditing();
     }
 
@@ -498,14 +478,6 @@ public partial class UiTextField : VBoxContainer, ISerializationListener
         var caret = _editor.CaretColumn;
         _editor.MaxLength = limit;
         _editor.CaretColumn = caret;
-    }
-
-    private void PlaceCaretAtEnd()
-    {
-        if (_editor is not null)
-        {
-            _editor.CaretColumn = _editor.Text.Length;
-        }
     }
 
     private void StartEditing()

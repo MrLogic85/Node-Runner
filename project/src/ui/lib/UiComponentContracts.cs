@@ -136,33 +136,6 @@ public static class UiComponentContracts
     public static int EditorMaxLength(int limit, int currentLength) =>
         limit <= 0 ? 0 : Math.Max(limit, currentLength);
 
-    public static double ClampValue(double value, double minimum, double maximum)
-    {
-        minimum = FiniteOrZero(minimum);
-        maximum = FiniteOrZero(maximum);
-        if (minimum > maximum)
-        {
-            (minimum, maximum) = (maximum, minimum);
-        }
-
-        if (double.IsNaN(value))
-        {
-            return minimum;
-        }
-
-        if (double.IsNegativeInfinity(value))
-        {
-            return minimum;
-        }
-
-        if (double.IsPositiveInfinity(value))
-        {
-            return maximum;
-        }
-
-        return Math.Clamp(value, minimum, maximum);
-    }
-
     public static double ClampSliderPosition(double position)
     {
         if (!double.IsFinite(position))
