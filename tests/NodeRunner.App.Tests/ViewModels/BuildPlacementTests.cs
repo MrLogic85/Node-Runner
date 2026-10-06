@@ -99,7 +99,7 @@ public sealed class BuildPlacementTests
     public void PlacePart_OnALockedCreation_ChangesNothing_WithoutANote()
     {
         var build = new BuildViewModel();
-        build.Load(TwoBeams().Snapshot(), moveOnly: true);
+        build.Load(TwoBeams().Snapshot(), locked: true);
 
         build.PlacePart(BuildPart.Accelerometer, _firstBeam).ShouldBeNull();
 

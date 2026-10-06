@@ -303,7 +303,7 @@ public sealed class BuildUndoTests
         var build = new BuildViewModel();
         build.Load(
             new CreatureDef([new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(100, 0))], [new BeamDef(3, 1, 2)], [new SensorDef(4, 3, SensorKind.Camera)]),
-            moveOnly: true);
+            locked: true);
         var gestures = new BuildGestures(build);
         build.SelectOnly(CreatureElementKind.Sensor, 4);
         var aim = build.Sensors[0].Aim;
@@ -398,7 +398,7 @@ public sealed class BuildUndoTests
         build.MoveNode(1, new Vector2D(0, 40));
         build.Undo();
 
-        build.IsMoveOnly.ShouldBeTrue();
+        build.IsLocked.ShouldBeTrue();
         build.Nodes[0].Position.ShouldBe(new Vector2D(0, 0));
     }
 

@@ -319,7 +319,7 @@ public sealed class BuildGestures
             return;
         }
 
-        if (_pressTool == BuildTool.Beam && _pressedNode is { } start && !_build.IsMoveOnly && !_pressedNodeWasSelected)
+        if (_pressTool == BuildTool.Beam && _pressedNode is { } start && !_pressedNodeWasSelected)
         {
             BeamStartNodeId = start;
             BeamEnd = position;
@@ -516,7 +516,7 @@ public sealed class BuildGestures
         }
         else if (_pressTool == BuildTool.Joint && _build.Selection.Count == 0)
         {
-            if (!_build.IsMoveOnly && BuildViewModel.BuildArea.Contains(_pressPosition))
+            if (BuildViewModel.BuildArea.Contains(_pressPosition))
             {
                 _build.PlaceNode(_pressPosition);
             }

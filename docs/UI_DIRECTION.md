@@ -150,8 +150,9 @@ entry (#315). The entries that are not a component of their own (#306):
 
 - **Kinds:** Primary, Secondary (default), Tertiary (destructive) and Flat.
 - **Unavailable** (#841): dashed and dimmed like disabled, but tappable, so
-  the screen can say why: a later version, or what blocks the action, as
-  danger notes on the parts that block it (#844, #937).
+  the screen can say why: a later version, what blocks the action, as
+  danger notes on the parts that block it (#844, #937), or a locked
+  Creation, as a notification (#896).
   It has no lock glyph, which would read as the creation padlock.
 - **Icon sizes** (#358, #422): 16 beside text, 20 on a textless or stacked
   button and in a `touch` row, 16 in a `control-sm` row or inside a ring,
@@ -211,7 +212,9 @@ The shell is filled `panel` over the frame card's `bg` (#347).
 - **Tray tabs** (#330): glyph tabs sharing the strip's width, 4 px apart, 32
   high, selected with `accent-soft`. **Tray rows** are `control-sm`
   `UiPartRow`s with 20 px glyphs; a locked row shows only its lock and fades
-  whole (#374, #964).
+  whole (#374, #964). A row locked by the creation lock answers a tap with
+  a notification titled after the screen, with the padlock icon; a "Coming
+  later" row stays silent (#896).
 
 ## Screens
 
@@ -295,7 +298,7 @@ repeated. The last column owns the detail (BM = `docs/BUILD_MODE.md`, TL =
 | No two destructive actions side by side | Allowed when each asks first (#687) | BM → Overflow menu |
 | Start training in the top bar | Play on the rail in both states (#370) | Screens → Build |
 | No Undo | Undo and Redo in the bar (#689): the overflow must fit a landscape phone, and a menu does not scroll | BM → Undo and Redo |
-| Locked Build cannot scale | It can, and aim a Camera (#366, #638) | BM → Locked Build |
+| Locked Build cannot scale | It can, aim a Camera, and add and delete joints, beams and Springs (#366, #638, #896) | BM → Locked Build |
 | Rail says Beam and Move; Links tab | Links and Parts tools (#705, #706, #913) | BM → Interactions |
 | Selecting differs per tool; Joint splits beams | One selection model (#746) | BM → Every tool |
 | Locked-canvas chip | None (#706) | — |

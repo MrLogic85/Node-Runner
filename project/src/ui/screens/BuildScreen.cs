@@ -62,6 +62,10 @@ public partial class BuildScreen : Control
     [Signal]
     public delegate void CopySelectionRequestedEventHandler();
 
+    /// <summary>A part or link row the locked Creation refuses was tapped (#896).</summary>
+    [Signal]
+    public delegate void CreationLockedPressedEventHandler();
+
     [Signal]
     public delegate void ToolRequestedEventHandler(BuildTool tool);
 
@@ -363,10 +367,8 @@ public partial class BuildScreen : Control
         GetNode<UiButton>("%PartsTool").Selected = presentation.ActiveTool == BuildTool.Parts;
         var beam = GetNode<UiButton>("%BeamTool");
         beam.Selected = presentation.ActiveTool == BuildTool.Beam;
-        beam.Disabled = presentation.LockTopologyTools;
         var joint = GetNode<UiButton>("%JointTool");
         joint.Selected = presentation.ActiveTool == BuildTool.Joint;
-        joint.Disabled = presentation.LockTopologyTools;
         GetNode<UiButton>("%SelectTool").Selected = presentation.ActiveTool == BuildTool.Select;
     }
 
@@ -450,11 +452,10 @@ public partial class BuildScreen : Control
         copy.Unavailable = !group.CanCopy;
         var delete = GetNode<UiButton>("%SelectionDelete");
         delete.ShowText(group.DeleteText);
-        delete.Visible = group.CanDelete;
+        delete.Unavailable = !group.CanDelete;
         var deleteNote = GetNode<UiLabel>("%SelectionDeleteNote");
         deleteNote.TextSource = UiTextTranslation.Source(group.DeleteNote);
-        deleteNote.Visible = group.CanDelete && deleteNote.TextSource is not null;
-        GetNode<Control>("%SelectionActions").Visible = group.ShowCopy || group.CanDelete;
+        deleteNote.Visible = deleteNote.TextSource is not null;
     }
 
     private void ApplyPickList(BuildPresentationViewModel presentation, LinkListPresentation? linkList)
@@ -464,7 +465,7 @@ public partial class BuildScreen : Control
         GetNode<Control>("%PartGroupHeader").Visible = linkList is null;
         if (linkList is not null)
         {
-            ApplyLinkList(linkList);
+            ApplyLinkList(linkList, presentation.IsLocked);
         }
         else
         {
@@ -472,15 +473,15 @@ public partial class BuildScreen : Control
         }
     }
 
-    private void ApplyLinkList(LinkListPresentation list)
+    private void ApplyLinkList(LinkListPresentation list, bool locked)
     {
         var help = GetNode<UiLabel>("%PartHelp");
         help.ShowText(list.HelpText);
         help.Visible = true;
         var rows = GetNode<Container>("%PartRows");
-        if (_shownPartGroup != "links")
+        if (_shownPartGroup != $"links:{locked}")
         {
-            _shownPartGroup = "links";
+            _shownPartGroup = $"links:{locked}";
             ClearRows(rows);
             foreach (var link in list.Rows)
             {
@@ -488,6 +489,10 @@ public partial class BuildScreen : Control
                 if (link.IsPickable)
                 {
                     row.PartSelected += () => EmitSignal(SignalName.LinkPicked, (int)link.Link);
+                }
+                else if (link.State == LinkListRowState.CreationLocked)
+                {
+                    row.LockedPressed += () => EmitSignal(SignalName.CreationLockedPressed);
                 }
 
                 rows.AddChild(row);
@@ -504,7 +509,7 @@ public partial class BuildScreen : Control
             linkRows[index].State = list.Rows[index].State switch
             {
                 LinkListRowState.Selected => UiPartRow.PartRowState.Selected,
-                LinkListRowState.Locked => UiPartRow.PartRowState.Locked,
+                LinkListRowState.Locked or LinkListRowState.CreationLocked => UiPartRow.PartRowState.Locked,
                 _ => UiPartRow.PartRowState.Rest,
             };
             if (list.Rows[index].State == LinkListRowState.Selected)
@@ -525,9 +530,10 @@ public partial class BuildScreen : Control
         help.Visible = true;
         var rows = GetNode<Container>("%PartRows");
         GetNode<UiLabel>("%PickedInfo").Visible = false;
-        if (_shownPartGroup != $"tray:{tab}")
+        // Unlocking rebuilds the rows, so they can be dragged.
+        if (_shownPartGroup != $"tray:{tab}:{presentation.IsLocked}")
         {
-            _shownPartGroup = $"tray:{tab}";
+            _shownPartGroup = $"tray:{tab}:{presentation.IsLocked}";
             ClearRows(rows);
 
             foreach (var part in group.Rows)
@@ -539,6 +545,10 @@ public partial class BuildScreen : Control
                         Callable.From<Vector2, Variant>(_ => StartPartDrag(row, draggable)),
                         new Callable(),
                         new Callable());
+                }
+                else if (part.State == PartTrayRowState.CreationLocked)
+                {
+                    row.LockedPressed += () => EmitSignal(SignalName.CreationLockedPressed);
                 }
 
                 rows.AddChild(row);
@@ -641,7 +651,7 @@ public partial class BuildScreen : Control
         ApplyPartPickers(part);
 
         GetNode<UiLabel>("%PartNote").ShowText(part.Note);
-        GetNode<UiButton>("%PartDelete").Visible = part.CanDelete;
+        GetNode<UiButton>("%PartDelete").Unavailable = !part.CanDelete;
     }
 
     private void ApplyPartPickers(PartSettingsPresentation part)

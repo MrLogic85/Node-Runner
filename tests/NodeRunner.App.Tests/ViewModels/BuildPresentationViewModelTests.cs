@@ -84,28 +84,34 @@ public sealed class BuildPresentationViewModelTests
     }
 
     [Fact]
-    public void LinkList_HidesWhenLocked()
+    public void LinkList_OnALockedCreation_LocksOnlyThePiston()
     {
         var build = new BuildViewModel();
-        build.Load(PairCreature(), moveOnly: true);
+        build.Load(PairCreature(), locked: true);
         build.ActiveTool = BuildTool.Beam;
 
-        new BuildPresentationViewModel(build).LinkList.ShouldBeNull();
+        var list = new BuildPresentationViewModel(build).LinkList.ShouldNotBeNull();
+
+        list.Rows.Select(row => (row.Link, row.State)).ShouldBe([
+            (BuildLink.Beam, LinkListRowState.Selected),
+            (BuildLink.Piston, LinkListRowState.CreationLocked),
+            (BuildLink.Spring, LinkListRowState.Rest),
+            (BuildLink.Wing, LinkListRowState.Locked)]);
     }
 
     [Fact]
-    public void PartsTray_OnALockedCreation_ShowsEveryRowLocked_AndHowToUnlock()
+    public void PartsTray_OnALockedCreation_ShowsEveryRowLocked_HowToUnlock_AndWhy()
     {
         var build = new BuildViewModel();
-        build.Load(PairCreature(), moveOnly: true);
+        build.Load(PairCreature(), locked: true);
 
         var groups = new BuildPresentationViewModel(build).PartGroups;
 
         groups.SelectMany(group => group.Rows).ShouldAllBe(row => !row.IsAvailable);
-        groups.ShouldAllBe(group => Equals(group.HelpText, UiText.Plain("Unlock to add or remove parts.")));
+        groups.ShouldAllBe(group => Equals(group.HelpText, UiText.Plain("Unlock to add parts.")));
         var servo = groups.SelectMany(group => group.Rows).Single(row => row.Part == BuildPart.Servo);
         servo.State.ShouldBe(PartTrayRowState.CreationLocked);
-        servo.LockedReason.ShouldBe(UiText.Plain("Unlock to add or remove parts."));
+        servo.LockedReason.ShouldBe(UiText.Plain("Locked: the model is trained for these parts."));
         groups.SelectMany(group => group.Rows).Single(row => row.Part == BuildPart.Camera).State.ShouldBe(PartTrayRowState.ComingLater);
     }
 
@@ -137,7 +143,7 @@ public sealed class BuildPresentationViewModelTests
     }
 
     [Fact]
-    public void EditMode_LocksTopologyTools()
+    public void LockedCreation_OpensOnTheJointTool_WithItsPanel()
     {
         var build = new BuildViewModel();
         build.LoadCreation(new CreationDef(
@@ -147,9 +153,8 @@ public sealed class BuildPresentationViewModelTests
             TestTraining.State(3, 1, TestTraining.Run)));
         var presentation = new BuildPresentationViewModel(build);
 
-        presentation.LockTopologyTools.ShouldBeTrue();
-        presentation.ActiveTool.ShouldBe(BuildTool.Parts);
-        presentation.ToolPanel.Mode.ShouldBe(ToolPanelMode.PartsTray);
+        presentation.ActiveTool.ShouldBe(BuildTool.Joint);
+        presentation.ToolPanel.Mode.ShouldBe(ToolPanelMode.JointHelp);
         presentation.IsLocked.ShouldBeTrue();
         presentation.IsTrained.ShouldBeTrue();
     }
@@ -190,7 +195,6 @@ public sealed class BuildPresentationViewModelTests
         build.Unlock();
 
         presentation.IsLocked.ShouldBeFalse();
-        presentation.LockTopologyTools.ShouldBeFalse();
         presentation.IsTrained.ShouldBeTrue();
         build.TrainingGeneration.ShouldBe(3);
         changes.ShouldBeGreaterThan(0);
@@ -273,7 +277,7 @@ public sealed class BuildPresentationViewModelTests
                 [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(3, 4))],
                 [new BeamDef(101, 1, 2)],
                 [new SensorDef(7, 101, SensorKind.Camera)]),
-            moveOnly: true);
+            locked: true);
         build.SelectOnly(CreatureElementKind.Sensor, 7);
 
         new BuildPresentationViewModel(build).SinglePart!.Note.ShouldBe(UiText.Plain("Three rays see how near the ground is. Drag the round handle to aim it."));
@@ -364,7 +368,7 @@ public sealed class BuildPresentationViewModelTests
     }
 
     [Fact]
-    public void LockedCreation_PartSettingsHaveNoDelete()
+    public void LockedCreation_PartSettingsDimDelete_WhenItTakesASensorAlong()
     {
         var build = new BuildViewModel();
         build.LoadCreation(new CreationDef(
@@ -375,6 +379,16 @@ public sealed class BuildPresentationViewModelTests
         build.ToggleSelected(new(CreatureElementKind.Node, build.Nodes[0].Id));
 
         new BuildPresentationViewModel(build).SinglePart!.CanDelete.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void LockedCreation_PartSettingsOfferDelete_ForALinkWithoutPorts()
+    {
+        var build = new BuildViewModel();
+        build.Load(PistonCreature(), locked: true);
+        build.SelectOnly(CreatureElementKind.Beam, 102);
+
+        new BuildPresentationViewModel(build).SinglePart!.CanDelete.ShouldBeTrue();
     }
 
     [Fact]
@@ -571,7 +585,7 @@ public sealed class BuildPresentationViewModelTests
     }
 
     [Fact]
-    public void Selection_OnALockedCreation_HasNoDelete()
+    public void Selection_OnALockedCreation_DimsDelete_WhenItTakesASensorAlong_AndHidesCopy()
     {
         var build = new BuildViewModel();
         build.LoadCreation(new CreationDef(
@@ -585,6 +599,16 @@ public sealed class BuildPresentationViewModelTests
         selection.Title.ShouldBe(UiText.Counted("{0} selected", "{0} selected", 2));
         selection.CanDelete.ShouldBeFalse();
         selection.ShowCopy.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Selection_OnALockedCreation_OffersDelete_WithoutPortedParts()
+    {
+        var build = new BuildViewModel();
+        build.Load(SpringCreature(), locked: true);
+        build.ReplaceSelection(PartSet.None with { Beams = new HashSet<int> { 101 }, Springs = new HashSet<int> { 401 } });
+
+        new BuildPresentationViewModel(build).Selection!.CanDelete.ShouldBeTrue();
     }
 
     [Fact]

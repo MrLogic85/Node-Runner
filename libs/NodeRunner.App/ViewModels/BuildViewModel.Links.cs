@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using NodeRunner.App.Builders;
 using NodeRunner.Domain;
 
 namespace NodeRunner.App.ViewModels;
@@ -18,14 +19,16 @@ public sealed partial class BuildViewModel
 
     /// <summary>
     /// <see cref="CanConnectLink(BuildLink, int, int, out UiText?)"/>, and the beam the link would
-    /// replace (#849): a Piston or Spring takes the place of a beam on its pair.
+    /// replace (#849): a Piston or Spring takes the place of a beam on its pair. A locked Creation
+    /// draws a Beam or a Spring, but neither a Piston, whose ports would change the model, nor a
+    /// link that replaces a beam (#896).
     /// </summary>
     public bool CanConnectLink(BuildLink link, int nodeIdA, int nodeIdB, [NotNullWhen(false)] out UiText? reason, out int? replacedBeamId)
     {
         replacedBeamId = null;
-        if (_moveOnly)
+        if (_locked && BuildLinkList.HasBrainPorts(link))
         {
-            reason = MoveOnlyReason;
+            reason = LockedReason;
             return false;
         }
 
@@ -41,6 +44,14 @@ public sealed partial class BuildViewModel
             replacedBeamId = _builder.BeamBetween(nodeIdA, nodeIdB);
         }
 
+        // Replacing a beam changes the model, so a locked Creation refuses it as before #849.
+        if (can && _locked && replacedBeamId is not null)
+        {
+            replacedBeamId = null;
+            reason = CreatureBuilder.BeamJoinsTheseNodesReason;
+            return false;
+        }
+
         return can;
     }
 
@@ -54,7 +65,7 @@ public sealed partial class BuildViewModel
         PlacementNote = null;
         if (!CanConnectLink(link, nodeIdA, nodeIdB, out var reason))
         {
-            if (!_moveOnly && nodeIdA != nodeIdB && _builder.Nodes.Any(node => node.Id == nodeIdB))
+            if (nodeIdA != nodeIdB && _builder.Nodes.Any(node => node.Id == nodeIdB))
             {
                 PlacementNote = new CanvasNote(CanvasNoteKind.Danger, new CreatureElementSelection(CreatureElementKind.Node, nodeIdB), reason);
             }

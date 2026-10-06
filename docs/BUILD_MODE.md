@@ -23,16 +23,21 @@ boundary. `reference design/components/Build/README.md`,
   Build. A creation opened by + New that has no nodes when Build is left is
   removed again; if Android ends the app in the background, it stays in
   the list.
-- **Locked Build.** A locked creation (`CreationLock`) opens move-only, in
-  Parts, with Links and Joint disabled, and `BuildViewModel` refuses
-  topology edits on its own. Only what changes the model is locked (#638):
-  joints move, cameras aim, the selection handles all work (scaling changes
-  only beam lengths), parameters change and parts can be renamed. No part
-  can be added or deleted: every tray row is locked, each tab's help line
-  says "Unlock to add or remove parts." (`PartTray.LockedGroups`), and
-  Delete is hidden. There is no training summary: the Creations card shows
-  the latest training (#479). The padlock unlocks it for this visit and
-  keeps the training (`docs/TRAINING_LOOP.md` step 6).
+- **Locked Build.** A locked creation (`CreationLock`) opens in Joint like
+  any other, and `BuildViewModel` refuses on its own what changes the model
+  (#638, #896). Joints, beams and Springs have no brain ports, so they can
+  be added and deleted; joints move, cameras aim, the selection handles all
+  work (scaling changes only beam lengths), parameters change and parts can
+  be renamed. A part with ports (a sensor, Piston or Servo) can be neither
+  added nor deleted: every tray row and the Piston row are locked, the
+  tray's help line says "Unlock to add parts.", and tapping a locked row
+  shows "Locked: the model is trained for these parts."
+  (`BuildViewModel.LockedReason`) in a notification. Delete stays,
+  Unavailable, when it would take a part with ports along, also by cascade,
+  or clear a Servo's link (`BuildViewModel.DeleteLockedReason`); a tap shows
+  the same notification. Copy is hidden. There is no training summary: the
+  Creations card shows the latest training (#479). The padlock unlocks it
+  for this visit and keeps the training (`docs/TRAINING_LOOP.md` step 6).
 - **Overflow menu.** It follows training, not the lock. A trained creation
   lists Stats (#198) and Power budget (#460), both unavailable, then Copy
   creation, Reset training and Delete creation; an untrained one lists
@@ -67,7 +72,7 @@ boundary. `reference design/components/Build/README.md`,
 The rail holds the tools Joint, Links, Parts and Select (#365, #705, #706,
 #913); "joint" is the player-facing name for a node. Start training is the
 play button at the bottom of the rail in both states (#370). Build opens in
-Joint, the default tool, or in Parts when locked (#896). `BuildGestures`
+Joint, the default tool, locked or not (#896). `BuildGestures`
 turns pointer presses, drags and releases into edits for the active tool
 and into zoom and pan; `BuildCanvas` only forwards input and draws.
 
@@ -117,7 +122,8 @@ and into zoom and pan; `BuildCanvas` only forwards input and draws.
     joins these joints", "These joints already have a piston", "These
     joints already have a spring", or "A sensor sits on this beam".
   - A Piston or Spring dropped on a pair a beam joins replaces that beam
-    (#849), unless a sensor sits on it; while dragging, the beam is
+    (#849), unless a sensor sits on it or the creation is locked, which
+    shows "A beam already joins these joints"; while dragging, the beam is
     outlined. A Servo that held the beam holds the new link in the same
     role, under a new id. One Undo brings the beam back. A Beam never
     replaces a link.
@@ -214,8 +220,9 @@ panel (#343). The title carries the part's glyph and kind ("Accelerometer",
 what it is; there is no close button, and tapping empty canvas deselects.
 The rows are **Name**, then what the part is joined to (a beam's two
 joints, a sensor's beam; joints and links list nothing, as the canvas shows
-them, #913), then its note, and last a full-width **Delete**, absent on a
-locked creation. Delete acts on a tap, with no dialog; Undo brings the part
+them, #913), then its note, and last a full-width **Delete**, Unavailable on
+a locked creation when deleting would change the model (see Locked Build).
+Delete acts on a tap, with no dialog; Undo brings the part
 back, selected (#866, #878). Structure is read-only here: a beam's length
 is drawn, not a number. A part's note is its `PartInfo` line, the same as
 its row in the Links list; `BuildPresentationViewModel.SinglePart` owns the
@@ -299,9 +306,9 @@ Several selected parts show the selection panel instead (#558, #704), titled
   them."
 - With a frame, three rows explain its handles (Move, Rotate, Scale). With
   neither settings nor a frame: "These parts share no settings."
-- Last full-width **Copy N** and **Delete N**, both hidden when locked.
-  Delete acts on a tap (Undo restores it), and its note says what else a
-  delete removes.
+- Last full-width **Copy N**, hidden when locked, and **Delete N**, which a
+  locked creation makes Unavailable like a part's Delete. Delete acts on a
+  tap (Undo restores it), and its note says what else a delete removes.
 - Copy (#937) duplicates the joints, beams and Springs one grid step aside,
   with their settings but not their names, and selects the copy; Undo
   removes it. A selected joint's Servo is not copied with it. Copy is

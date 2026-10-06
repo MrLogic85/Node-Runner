@@ -106,7 +106,7 @@ public sealed class BuildPartNameTests
             "Worm",
             Loaded().Snapshot(),
             TestTraining.State(3, 1, TestTraining.Run)));
-        build.IsMoveOnly.ShouldBeTrue();
+        build.IsLocked.ShouldBeTrue();
 
         build.RenamePart(7, "Balance", null);
 

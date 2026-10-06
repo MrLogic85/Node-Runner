@@ -148,6 +148,10 @@ msgstr ""
 msgid "Brake"
 msgstr ""
 
+#: project/src/hosts/BuildHost.cs
+msgid "Build"
+msgstr ""
+
 #: libs/NodeRunner.App/ViewModels/PartSettingsPresentation.cs
 #: libs/NodeRunner.App/ViewModels/PartTrayPresentation.cs
 msgid "Camera"
@@ -427,6 +431,10 @@ msgstr ""
 
 #: project/scenes/screens/TrainSetupScreen.tscn
 msgid "Locked"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/BuildViewModel.cs
+msgid "Locked: the model is trained for these parts."
 msgstr ""
 
 #: project/scenes/screens/TrainSetupScreen.tscn
@@ -922,7 +930,7 @@ msgid "Unlock"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartTrayPresentation.cs
-msgid "Unlock to add or remove parts."
+msgid "Unlock to add parts."
 msgstr ""
 
 #: project/src/hosts/CreationActions.cs

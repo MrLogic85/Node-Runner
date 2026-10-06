@@ -642,22 +642,21 @@ public class BuildGesturesTests
     }
 
     [Fact]
-    public void Beam_WhenLocked_DoesNotStart()
+    public void Beam_WhenLocked_DrawsABeam()
     {
         var build = new BuildViewModel();
         build.Load(
             new CreatureDef([new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(100, 0)), new NodeDef(3, new Vector2D(0, 100))], [new BeamDef(101, 1, 2), new BeamDef(102, 1, 3)], []),
-            moveOnly: true);
+            locked: true);
         build.ActiveTool = BuildTool.Beam;
         var gestures = new BuildGestures(build);
 
         gestures.Press(new Vector2D(100, 0));
-        gestures.BeamStartNodeId.ShouldBeNull();
+        gestures.BeamStartNodeId.ShouldBe(2);
         gestures.Drag(new Vector2D(0, 100));
-        gestures.BeamEnd.ShouldBeNull();
         gestures.Release(new Vector2D(0, 100));
 
-        build.Beams.Count.ShouldBe(2);
+        build.Beams.Count.ShouldBe(3);
     }
 
     [Fact]
@@ -700,20 +699,22 @@ public class BuildGesturesTests
     }
 
     [Fact]
-    public void Joint_WhenLocked_AddsNothing()
+    public void Joint_WhenLocked_TapAddsAJoint_AndATapOnABeamSelectsIt()
     {
         var build = new BuildViewModel();
         build.Load(
             new CreatureDef([new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(100, 0))], [new BeamDef(101, 1, 2)], []),
-            moveOnly: true);
+            locked: true);
         build.ActiveTool = BuildTool.Joint;
         var gestures = new BuildGestures(build);
 
         Tap(gestures, _empty);
+        build.Nodes.Count.ShouldBe(3);
         Tap(gestures, new Vector2D(50, 0));
 
-        build.Nodes.Count.ShouldBe(2);
+        build.Nodes.Count.ShouldBe(3);
         build.Beams.Count.ShouldBe(1);
+        build.Selection.Beams.ShouldBe([101]);
     }
 
     [Fact]
@@ -990,7 +991,7 @@ public class BuildGesturesTests
                 [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(100, 0)), new NodeDef(3, new Vector2D(0, 100))],
                 [new BeamDef(101, 1, 2)],
                 []),
-            moveOnly: true);
+            locked: true);
         build.ActiveTool = BuildTool.Select;
         build.ReplaceSelection([1, 3]);
         var gestures = new BuildGestures(build);
@@ -1165,7 +1166,7 @@ public class BuildGesturesTests
         var build = new BuildViewModel();
         build.Load(
             new CreatureDef([new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(100, 0))], [new BeamDef(101, 1, 2)], []),
-            moveOnly: true);
+            locked: true);
         build.ActiveTool = BuildTool.Select;
         build.ReplaceSelection([1, 2]);
         var gestures = new BuildGestures(build);
@@ -1633,7 +1634,7 @@ public class BuildGesturesTests
         var build = new BuildViewModel();
         build.Load(
             new CreatureDef([new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(100, 0))], [new BeamDef(3, 1, 2)], [new SensorDef(4, 3, SensorKind.Camera)]),
-            moveOnly: true);
+            locked: true);
         var gestures = new BuildGestures(build);
 
         build.SelectOnly(CreatureElementKind.Sensor, 4);

@@ -42,10 +42,10 @@ public sealed class BuildPresentationViewModel
 
     public BuildTool ActiveTool => _build.ActiveTool;
 
-    public IReadOnlyList<PartTrayGroup> PartGroups => _build.IsMoveOnly ? PartTray.LockedGroups() : PartTray.Groups();
+    public IReadOnlyList<PartTrayGroup> PartGroups => _build.IsLocked ? PartTray.LockedGroups() : PartTray.Groups();
 
     public LinkListPresentation? LinkList => ToolPanel.Mode == ToolPanelMode.LinkList
-        ? BuildLinkList.Create(_build.PickedLink)
+        ? BuildLinkList.Create(_build.PickedLink, _build.IsLocked)
         : null;
 
     public ToolPanelPresentation ToolPanel => CreateToolPanel();
@@ -69,7 +69,7 @@ public sealed class BuildPresentationViewModel
     {
         get
         {
-            var canDelete = !_build.IsMoveOnly;
+            var canDelete = _build.DeleteLockedReason is null;
             if (_build.SingleSelectedServoId is { } servoId)
             {
                 var servo = ServoById(servoId);
@@ -206,7 +206,7 @@ public sealed class BuildPresentationViewModel
                 showFrameRows,
                 UiText.Counted("Delete {0}", "Delete {0}", count),
                 deleteNote,
-                CanDelete: !_build.IsMoveOnly,
+                CanDelete: _build.DeleteLockedReason is null,
                 UiText.Counted("Copy {0}", "Copy {0}", count),
                 ShowCopy: _build.CanOfferCopy,
                 _build.CanCopySelection);
@@ -216,10 +216,8 @@ public sealed class BuildPresentationViewModel
     /// <summary>Whether the part and selection panels show their Advanced settings (#903).</summary>
     public bool AdvancedSettingsOpen => _build.AdvancedSettingsOpen;
 
-    public bool LockTopologyTools => _build.IsMoveOnly;
-
-    /// <summary>True for a locked Creation: its anatomy is fixed and only moving nodes is allowed.</summary>
-    public bool IsLocked => _build.IsMoveOnly;
+    /// <summary>True for a locked Creation: it refuses every edit that would change its model (#896).</summary>
+    public bool IsLocked => _build.IsLocked;
 
     /// <summary>Whether the overflow's Undo can be tapped (#689).</summary>
     public bool CanUndo => _build.CanUndo;
@@ -240,8 +238,7 @@ public sealed class BuildPresentationViewModel
 
     private ToolPanelPresentation CreateToolPanel()
     {
-        // A locked Creation's Joint and Links tools are off (#896), so they have no panel.
-        if (_build.SelectedPartCount > 0 || (_build.IsMoveOnly && ActiveTool is BuildTool.Beam or BuildTool.Joint))
+        if (_build.SelectedPartCount > 0)
         {
             return ToolPanelPresentation.None;
         }
@@ -324,7 +321,7 @@ public sealed class BuildPresentationViewModel
             .OrderBy(link => link.Id)
             .ToArray();
         var options = links.Select(link => _build.PartDisplayName(link.Id)).ToArray();
-        var trainedNote = !_build.IsMoveOnly && _build.TrainingGeneration is not null ? UiText.Plain("Changing these makes it learn again.") : null;
+        var trainedNote = !_build.IsLocked && _build.TrainingGeneration is not null ? UiText.Plain("Changing these makes it learn again.") : null;
         var twoLinksNote = _build.ServoNeedsTwoLinks(servo.NodeId) ? CreatureBuilder.ServoNeedsTwoLinksReason : null;
         return
         [
@@ -341,8 +338,8 @@ public sealed class BuildPresentationViewModel
                 links.Select(link => link.Id).ToArray(),
                 options,
                 chosen ? selected : null,
-                _build.IsMoveOnly,
-                _build.IsMoveOnly ? null : chosen ? trainedNote : twoLinksNote,
+                _build.IsLocked,
+                _build.IsLocked ? null : chosen ? trainedNote : twoLinksNote,
                 links.Select(link => link.Kind).ToArray(),
                 chosen ? null : placeholder);
         }

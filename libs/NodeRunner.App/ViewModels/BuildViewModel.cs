@@ -53,7 +53,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     private bool _isActive;
     private BuildTool _activeTool = BuildTool.Joint;
     private BuildLink _pickedLink = BuildLink.Beam;
-    private bool _moveOnly;
+    private bool _locked;
     private string _creationName = string.Empty;
     private int? _trainingGeneration;
     private CanvasNote? _placementNote;
@@ -68,7 +68,8 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     /// <summary>Why a sensor dropped on a joint was not placed.</summary>
     public static UiText SensorsGoOnABeamReason { get; } = UiText.Plain("Sensors go on a beam");
 
-    private static UiText MoveOnlyReason => PartTray.CreationLockedReason;
+    /// <summary>Why a locked Creation refuses an edit that would change its model (#896): see <see cref="IsLocked"/>.</summary>
+    public static UiText LockedReason { get; } = UiText.Plain("Locked: the model is trained for these parts.");
 
     public BuildViewModel(CreatureBuilder? builder = null)
     {
@@ -77,7 +78,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
         _history.Changed += (_, _) => NotifyHistoryChanged();
     }
 
-    public void Load(CreatureDef creature, bool moveOnly = false, string? creationName = null, TrainingStateDef? training = null)
+    public void Load(CreatureDef creature, bool locked = false, string? creationName = null, TrainingStateDef? training = null)
     {
         ArgumentNullException.ThrowIfNull(creature);
         _builder = new CreatureBuilder(creature);
@@ -85,14 +86,13 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
         _creationName = creationName ?? string.Empty;
         _trainingGeneration = training?.Generation;
         _openedBrain = training?.Brain;
-        _moveOnly = moveOnly;
+        _locked = locked;
         _history.Clear();
         _shownLooseNodes.Clear();
         _showPieces = false;
         _shownCopyBlockers = [];
         _advancedSettingsOpen = false;
-        // Joint is the default tool; a locked Creation cannot add joints yet (#896), so it opens on Parts.
-        ActiveTool = moveOnly ? BuildTool.Parts : BuildTool.Joint;
+        ActiveTool = BuildTool.Joint;
         SetPickedLink(BuildLink.Beam);
         PlacementNote = null;
         RaiseAnatomyChanged();
@@ -100,7 +100,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
 
     /// <summary>
     /// Opens a saved Creation. It is fully editable until it is locked (<see cref="CreationLock"/>);
-    /// a locked one only moves its nodes until <see cref="Unlock"/>.
+    /// a locked one refuses every edit that would change its model until <see cref="Unlock"/>.
     /// </summary>
     public void LoadCreation(CreationDef creation)
     {
@@ -113,8 +113,12 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     /// <summary>Raised whenever the placed anatomy (nodes, beams, or sensors) changes, so the UI can redraw.</summary>
     public event EventHandler? AnatomyChanged;
 
-    /// <summary>True for a locked Creation: parts are fixed, and only nodes move.</summary>
-    public bool IsMoveOnly => _moveOnly;
+    /// <summary>
+    /// True for a locked Creation (#896): it refuses every edit that would change its model, adding or
+    /// deleting a part with brain ports or clearing a Servo's link. Joints, beams and Springs have no
+    /// ports, so they can still be added and deleted.
+    /// </summary>
+    public bool IsLocked => _locked;
 
     /// <summary>
     /// Unlocks a locked Creation for this Build visit (#371), so its body can change. The training
@@ -123,13 +127,13 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     /// </summary>
     public void Unlock()
     {
-        if (!_moveOnly)
+        if (!_locked)
         {
             return;
         }
 
-        _moveOnly = false;
-        OnPropertyChanged(nameof(IsMoveOnly));
+        _locked = false;
+        OnPropertyChanged(nameof(IsLocked));
     }
 
     public string CreationName => _creationName;
@@ -279,7 +283,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     /// <summary>Picks the link the Links tool draws. Locked and future links do nothing.</summary>
     public void PickLink(BuildLink link)
     {
-        if (_moveOnly || _activeTool != BuildTool.Beam || !BuildLinkList.IsAvailable(link))
+        if (_activeTool != BuildTool.Beam || !BuildLinkList.IsAvailable(link) || (_locked && BuildLinkList.HasBrainPorts(link)))
         {
             return;
         }
@@ -492,9 +496,10 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     public bool CanPlacePart(BuildPart part, CreatureElementSelection target, [NotNullWhen(false)] out UiText? reason)
     {
         ArgumentNullException.ThrowIfNull(target);
-        if (_moveOnly)
+        // Every tray part has brain ports (#896).
+        if (_locked)
         {
-            reason = MoveOnlyReason;
+            reason = LockedReason;
             return false;
         }
 
@@ -547,7 +552,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
 
         if (!CanPlacePart(part, target, out var reason))
         {
-            if (!_moveOnly)
+            if (!_locked)
             {
                 PlacementNote = new CanvasNote(CanvasNoteKind.Danger, target, reason);
             }
@@ -581,14 +586,9 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
         _ => _builder.Sensors.Any(sensor => sensor.Id == element.Id),
     };
 
-    /// <summary>Places a new node, moved inside <see cref="BuildArea"/>, and returns its id.</summary>
+    /// <summary>Places a new node, moved inside <see cref="BuildArea"/>, and returns its id. A joint has no brain ports, so a locked Creation places one too (#896).</summary>
     public int PlaceNode(Vector2D position)
     {
-        if (_moveOnly)
-        {
-            throw new InvalidOperationException("Edit mode can only move existing nodes.");
-        }
-
         var id = _history.Change(() => _builder.AddNode(BuildArea.Clamp(position, NodeDef.PlainJointRadius)));
         RaiseAnatomyChanged();
         return id;
@@ -798,51 +798,83 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
         return link is not null;
     }
 
+    /// <summary>
+    /// Why Delete cannot remove the selection now, or null when it can (#896). A locked Creation
+    /// refuses a delete that would change its model: one that takes a part with brain ports, also by
+    /// cascade (a joint's Piston or Servo, a beam's sensor), or clears a Servo's Fixed or Target link,
+    /// after which it could no longer train (<c>docs/SAVE_FORMAT.md</c> → <c>servos[]</c>).
+    /// </summary>
+    public UiText? DeleteLockedReason => _locked && SelectedPartCount > 0 && DeleteWouldChangeModel()
+        ? LockedReason
+        : null;
+
+    // Tries the delete on a copy of the body, so every cascade counts exactly as the delete does it.
+    private bool DeleteWouldChangeModel()
+    {
+        var before = _builder.Build();
+        var trial = new CreatureBuilder(before);
+        RemoveParts(trial, Selection);
+        var after = trial.Build();
+        var portsBefore = BrainPorts.Of(before);
+        var portsAfter = BrainPorts.Of(after);
+        return !portsBefore.Inputs.SequenceEqual(portsAfter.Inputs)
+            || !portsBefore.Outputs.SequenceEqual(portsAfter.Outputs)
+            || !before.Servos.Select(ServoLinks).SequenceEqual(after.Servos.Select(ServoLinks));
+
+        static (int, int?, int?) ServoLinks(ServoDef servo) => (servo.Id, servo.FixedLinkId, servo.TargetLinkId);
+    }
+
+    /// <summary>Deletes the selection and what goes with it, as one undo step; does nothing while <see cref="DeleteLockedReason"/> says why not.</summary>
     public void DeleteSelectedParts()
     {
-        if (_moveOnly || SelectedPartCount == 0)
+        if (SelectedPartCount == 0 || DeleteLockedReason is not null)
         {
             return;
         }
 
         _history.Change(() =>
         {
-            // Parts first, so none is already gone with a deleted beam or joint.
-            foreach (var sensorId in _selectedSensorIds)
-            {
-                _builder.RemoveSensor(sensorId);
-            }
-
-            foreach (var pistonId in _selectedPistonIds)
-            {
-                _builder.RemovePiston(pistonId);
-            }
-
-            foreach (var servoId in _selectedServoIds)
-            {
-                _builder.RemoveServo(servoId);
-            }
-
-            foreach (var springId in _selectedSpringIds)
-            {
-                _builder.RemoveSpring(springId);
-            }
-
-            foreach (var beamId in _selectedBeamIds)
-            {
-                _builder.RemoveBeam(beamId);
-            }
-
-            foreach (var nodeId in _selectedNodeIds)
-            {
-                _builder.RemoveNode(nodeId);
-            }
+            RemoveParts(_builder, Selection);
 
             // Within the step: its Undo row refresh must find no deleted part still selected.
             ClearSelectionSets();
         }, Selection);
         NotifySelectionChanged();
         RaiseAnatomyChanged();
+    }
+
+    private static void RemoveParts(CreatureBuilder builder, PartSet parts)
+    {
+        // Parts first, so none is already gone with a deleted beam or joint.
+        foreach (var sensorId in parts.Sensors)
+        {
+            builder.RemoveSensor(sensorId);
+        }
+
+        foreach (var pistonId in parts.Pistons)
+        {
+            builder.RemovePiston(pistonId);
+        }
+
+        foreach (var servoId in parts.Servos)
+        {
+            builder.RemoveServo(servoId);
+        }
+
+        foreach (var springId in parts.Springs)
+        {
+            builder.RemoveSpring(springId);
+        }
+
+        foreach (var beamId in parts.Beams)
+        {
+            builder.RemoveBeam(beamId);
+        }
+
+        foreach (var nodeId in parts.Nodes)
+        {
+            builder.RemoveNode(nodeId);
+        }
     }
 
     /// <summary>
@@ -912,7 +944,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
 
     public int? SetServoLink(int servoId, bool fixedRole, int linkId)
     {
-        if (_moveOnly)
+        if (_locked)
         {
             return null;
         }
