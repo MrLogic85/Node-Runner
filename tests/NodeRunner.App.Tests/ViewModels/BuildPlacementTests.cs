@@ -323,6 +323,25 @@ public sealed class BuildPlacementTests
     }
 
     [Fact]
+    public void ServoPanel_KeepsItsPanelId_ThroughLinkChangeUndoAndRedo()
+    {
+        var build = PistonAndSpring();
+        var servoId = build.PlacePart(BuildPart.Servo, _middleJoint)!.Value;
+        var presentation = new BuildPresentationViewModel(build);
+        var panelId = presentation.SinglePart!.PanelId;
+
+        build.SetServoLink(servoId, fixedRole: true, linkId: 5);
+        presentation.SinglePart!.PanelId.ShouldBe(panelId);
+        build.Undo();
+        presentation.SinglePart!.PanelId.ShouldBe(panelId);
+        build.Redo();
+        presentation.SinglePart!.PanelId.ShouldBe(panelId);
+
+        build.ReplaceSelection(PartSet.None with { Pistons = new HashSet<int> { 4 } });
+        presentation.SinglePart!.PanelId.ShouldBe(4);
+    }
+
+    [Fact]
     public void SetServoLink_PickerOrder_UsesLowestIdsAcrossLinkKinds()
     {
         var build = PistonWithLowerIdThanBeam();

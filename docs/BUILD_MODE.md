@@ -317,7 +317,10 @@ the joint has fewer than two links, the note under it and the canvas
 callout say "A Servo needs two links at its joint" instead, and the
 Play-blocked reason asks to connect another link there, because no pick
 could fix it. Changing a picker follows
-`docs/CREATURE_MODEL.md` → "Editing identity rules".
+`docs/CREATURE_MODEL.md` → "Editing identity rules". The panel scrolls back
+to the top when it shows another part, tool or selection count; a Servo
+whose links a picker, Undo or Redo changed is still the same part, so the
+panel keeps its place (`PartSettingsPresentation.PanelId`, #910).
 A Spring's are Name, its sliders, then "It springs toward the ring, which
 Coil length moves. With the ring past an end mark, it starts pressed against
 that end. Damping stops it bouncing." A Piston
