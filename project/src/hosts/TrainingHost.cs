@@ -54,6 +54,10 @@ public partial class TrainingHost : Node, IRoutedScene
     // null with nothing selected.
     private Func<string>? _selectedPartName;
     private double _signalRefreshElapsed;
+    // Training's slow-motion chip (#318); null in Simulate, which races one shadow.
+    private SlowMotionWatch? _slowMotion;
+    private ulong _watchedPhysicsFrames;
+    private ulong _watchedUsec;
     private float _partsPixelScale;
 
     private SaveManager Saves => GetNode<SaveManager>("/root/SaveManager");
@@ -108,6 +112,7 @@ public partial class TrainingHost : Node, IRoutedScene
         else
         {
             AddEvolver();
+            _slowMotion = new SlowMotionWatch(Engine.PhysicsTicksPerSecond);
             BindScreen(creation);
             AddBackHandler();
             if (creation is not null || _route is null)
@@ -136,6 +141,7 @@ public partial class TrainingHost : Node, IRoutedScene
     public override void _Process(double delta)
     {
         PartVisual.RedrawOnNewPixelScale(World, ref _partsPixelScale);
+        WatchSlowMotion();
         if (_followed is null)
         {
             return;
@@ -156,6 +162,31 @@ public partial class TrainingHost : Node, IRoutedScene
         _followed.ReadInputs(_brainInputs);
         _signalFlow.Update(_brainInputs.Count, _followed.Brain is null ? 0 : _followed.MotorCount, FollowedDistance);
         _brainFocus.Update(_followed.Brain, _brainInputs);
+    }
+
+    // Counts the physics ticks run against real time; a pause stops physics on purpose, so it starts
+    // the count over and leaves the chip as it is.
+    private void WatchSlowMotion()
+    {
+        if (_slowMotion is null)
+        {
+            return;
+        }
+
+        var physicsFrames = Engine.GetPhysicsFrames();
+        var usec = Time.GetTicksUsec();
+        var ticks = (long)(physicsFrames - _watchedPhysicsFrames);
+        var seconds = (usec - _watchedUsec) / 1_000_000.0;
+        var first = _watchedUsec == 0;
+        _watchedPhysicsFrames = physicsFrames;
+        _watchedUsec = usec;
+        if (first || GetTree().Paused)
+        {
+            _slowMotion.Restart();
+            return;
+        }
+
+        _screen.ShowSlowMotion(_slowMotion.Advance(seconds, ticks));
     }
 
     private CreationDef? LoadRouteCreation()

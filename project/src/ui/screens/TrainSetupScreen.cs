@@ -1,5 +1,6 @@
 using Godot;
 using NodeRunner.App.Navigation;
+using NodeRunner.App.Services;
 using NodeRunner.App.ViewModels;
 using NodeRunner.Ui.Lib;
 using NodeRunner.Ui.Widgets;
@@ -93,7 +94,26 @@ public partial class TrainSetupScreen : Control
         mode.SelectedIndex = _presentation.Mode == TrainingRunMode.Simulate ? _simulateSegment : _trainSegment;
         GetNode<UiLabel>("%ModeNote").ShowText(_presentation.ModeNote);
         Bind(GetNode<UiSlider>("%Shadows"), _presentation.Shadows, _presentation.ShadowsEnds);
+        BindNote(_presentation.ShadowsNote);
         Bind(GetNode<UiSlider>("%RunLength"), _presentation.RunLength, _presentation.RunLengthEnds);
+    }
+
+    // The row stays in every state, empty in Simulate, so Run length below it does not move (#318).
+    private void BindNote(SettingNote? note)
+    {
+        var load = note?.Load ?? ShadowsLoad.Smooth;
+        var color = load switch
+        {
+            ShadowsLoad.TooMany => UiTokens.Color.Danger,
+            ShadowsLoad.Caution => UiTokens.Color.Halo,
+            _ => UiTokens.Color.Muted,
+        };
+        var icon = GetNode<UiIcon>("%ShadowsNoteIcon");
+        icon.Visible = load != ShadowsLoad.Smooth;
+        icon.Color = color;
+        var text = GetNode<UiLabel>("%ShadowsNoteText");
+        text.TextColor = color;
+        text.TextSource = note is null ? () => string.Empty : UiTextTranslation.Source(note.Text);
     }
 
     private static void Bind(UiSlider slider, SettingSlider value, IReadOnlyList<UiText> ends)

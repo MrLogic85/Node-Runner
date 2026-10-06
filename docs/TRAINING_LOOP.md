@@ -228,6 +228,12 @@ transition to keep in step with it.
     100 keeps the S25 at full rate with room for larger creatures. Since
     #284 only the shadow strip's shadows are drawn (see "Drawn shadows"
     below).
+  - Measured on a Galaxy S23 for #318 (Flat, physics cost grows with
+    shadows × parts): a 29-part creature stayed real time at 100 shadows
+    (12.7 ms of physics per tick); a 47-part one stayed real time up to 64
+    (about 22 fps) and fell to 0.8× at 100. `ShadowsBudget` scales from a
+    30-part reference: smooth up to 32 shadows, a caution up to 64, then
+    "too many"; Train setup shows it under the Shadows slider.
   - Followed shadow (#385): one shadow is drawn in full, wholly above
     the others (so even its rigid hatch, #627, stays above their joints;
     `docs/CREATURE_MODEL.md` → "Draw layers"), and feeds signal flow, the brain and part selection; every
@@ -236,9 +242,10 @@ transition to keep in step with it.
     candidate `i`. The default is shadow 1 (slot 0): the resumed genome or
     the elite `GeneticAlgorithm` puts first, i.e. the previous best, and in
     a fresh generation 0 the first perturbed shadow. The previous best
-    replays its run exactly (see "The same brain runs the same trial" above). `Evolver.Follow` is the only way
-    it changes, so a new leader never takes it, and it stays on that slot
-    across generations. `Evolver` exposes `FollowedShadow`,
+    replays its run exactly (see "The same brain runs the same trial" above). The player
+    changes it with `Evolver.Follow`, and a new leader never takes it. A
+    picked shadow is followed for the rest of its generation only: every new
+    generation opens on shadow 1 again (#894). `Evolver` exposes `FollowedShadow`,
     `HasPreviousBest` and `ShadowDistances`; `TrainingPresentationViewModel`
     turns them into `ShadowStanding` rows (followed, leader = furthest
     running shadow, previous best) and `Follow(number)` for the shadow strip
@@ -479,6 +486,15 @@ component READMEs under `reference design/components/` guide its presentation.
     Godot's `Engine.TimeScale` stretches each step instead of running more
     of them, which changed fitness with speed and made stiff Springs blow
     up. Training goes faster by racing more shadows per generation instead.
+  - **Slow-motion warning** (#318). When a frame needs more than Godot's
+    8 physics steps, physics falls behind real time. `SlowMotionWatch`
+    compares physics ticks with real time in 0.5 s windows (a single
+    hitch, such as a generation change, counts at most 0.25 s). After 3 s
+    below 0.9× the arena shows a Warning chip, "Too many shadows!", in its
+    top-left corner. It stays 60 s after the last such stretch, so a player
+    who only glances at the arena still sees it; each new stretch starts
+    the 60 s over. Pause restarts the measuring and leaves the chip as it
+    is. Owner decision: a chip, not a notification.
   - **Brain** (the button or the Brain stage) opens the BrainFocus sheet;
     Android Back closes it before leaving the scene. BrainFocus shows the
     direct brain (#536): a Senses column named by port ("Accel:

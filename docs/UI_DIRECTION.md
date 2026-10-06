@@ -249,6 +249,8 @@ reference would mislead someone working on that surface.
   is not marked anywhere (#387: it flickers). The reference's camera follows the
   leader; here it follows the previous best by default (shadow 1 in
   generation 0) and never switches to the leader by itself. Owner decision.
+  A shadow the player picks in the strip is followed until the generation
+  ends; the next generation opens on the previous best again (#894).
 - **The shadow strip pages and has a shorter caption (#387).** Past 8
   shadows the reference shows the best 7, sorted, and a sort button.
   Instead the strip holds as many places as fit its width, cells keeping
@@ -348,6 +350,18 @@ reference would mislead someone working on that surface.
   There is nothing to train" (#845, owner decision); Start still trains.
   BrainFocus for such a creature drops its line legend and shows the same
   warning where the tap hint would be.
+  Under the Shadows slider one short `note` line says how the count will
+  run (#318, #531 D3 = a): `muted` "The brain learns faster with more
+  shadows.", then with the warn icon "Phone may stutter above N." in
+  `halo` and "Probably too many shadows." in `danger`. N scales with the
+  creature's part count (`ShadowsBudget`, measured on a Galaxy S23), since
+  physics costs about shadows × parts. In Simulate the line stays empty so
+  the layout does not jump. Owner decision.
+  Training shows slow motion as a Warning chip "Too many shadows!" in the
+  arena's top-left corner, not a notification, since the player only
+  glances at the arena (`docs/TRAINING_LOOP.md` → Slow-motion warning).
+  When the Best flag scrolls past that corner the chip covers it for a
+  moment; the warning outranks the flag. Owner decision.
   Run until power is out (0.18) is disabled with the
   reference's "Needs a battery or generator". Locked maps are disabled cards with a lock,
   not the library's `Locked` card, which means "the only choice". Each map

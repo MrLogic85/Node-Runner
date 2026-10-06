@@ -1,4 +1,5 @@
 using NodeRunner.App.Navigation;
+using NodeRunner.App.Services;
 using NodeRunner.Domain;
 
 namespace NodeRunner.App.ViewModels;
@@ -10,6 +11,12 @@ namespace NodeRunner.App.ViewModels;
 /// value the scale does not hold.
 /// </summary>
 public sealed record SettingSlider(UiText Label, UiText Readout, double? Position, double Step, bool Disabled = false);
+
+/// <summary>
+/// The line under the Shadows slider: a quiet note while <see cref="ShadowsLoad.Smooth"/>, else a
+/// warning whose colour rises with the load.
+/// </summary>
+public sealed record SettingNote(UiText Text, ShadowsLoad Load);
 
 /// <summary>
 /// Train setup (#194), between Build and Training: Train or Simulate, and the Shadows and Run length
@@ -35,6 +42,7 @@ public sealed class TrainSetupPresentationViewModel
             ? UiText.Counted("{0} generation so far", "{0} generations so far", training.Generation)
             : UiText.Plain("Not trained yet");
         Settings = creation.TrainSettings ?? TrainSettingsDef.Default;
+        ShadowsBudget = ShadowsBudget.For(creation.Creature);
         CanSimulate = creation.Training is not null;
         HasPoweredParts = BrainPorts.Of(creation.Creature).Outputs.Count > 0;
     }
@@ -52,6 +60,9 @@ public sealed class TrainSetupPresentationViewModel
     public TrainSettingsDef Settings { get; private set; }
 
     public TrainingRunMode Mode { get; private set; }
+
+    /// <summary>How many shadows this creature can race smoothly, and before slow motion (#318).</summary>
+    public ShadowsBudget ShadowsBudget { get; }
 
     /// <summary>
     /// Whether Simulate can be chosen: only a trained Creation has a brain to play. Without it there
@@ -79,6 +90,19 @@ public sealed class TrainSetupPresentationViewModel
             UiText.Number(Settings.Shadows),
             ShadowsRange.Position(Settings.Shadows),
             ShadowsRange.PositionStep);
+
+    /// <summary>
+    /// The line under the Shadows slider (#318): why more shadows help, or a warning above the smooth
+    /// limit. It never blocks Start or changes the value. Simulate has no line.
+    /// </summary>
+    public SettingNote? ShadowsNote => Mode == TrainingRunMode.Simulate
+        ? null
+        : ShadowsBudget.LoadOf(Settings.Shadows) switch
+        {
+            ShadowsLoad.TooMany => new(UiText.Plain("Probably too many shadows."), ShadowsLoad.TooMany),
+            ShadowsLoad.Caution => new(UiText.Format("Phone may stutter above {0}.", ShadowsBudget.SmoothLimit), ShadowsLoad.Caution),
+            _ => new(UiText.Plain("The brain learns faster with more shadows."), ShadowsLoad.Smooth),
+        };
 
     public SettingSlider RunLength => Mode == TrainingRunMode.Simulate
         ? new(UiText.Plain("Run length"), UiText.Plain("Until you leave"), null, RunLengthRange.PositionStep, Disabled: true)

@@ -1,4 +1,6 @@
 using NodeRunner.App.Navigation;
+using NodeRunner.App.Services;
+using NodeRunner.App.Tests.Services;
 using NodeRunner.App.ViewModels;
 using NodeRunner.Domain;
 
@@ -169,11 +171,60 @@ public sealed class TrainSetupPresentationViewModelTests
         new TrainSetupPresentationViewModel(new CreationDef(Guid.NewGuid(), "Worm", creature)).HasPoweredParts.ShouldBeTrue();
     }
 
-    private static CreationDef Creation(TrainSettingsDef? settings = null, int? generation = null) =>
+    [Theory]
+    [InlineData(32, ShadowsLoad.Smooth, "The brain learns faster with more shadows.")]
+    [InlineData(33, ShadowsLoad.Caution, "Phone may stutter above {0}.")]
+    [InlineData(64, ShadowsLoad.Caution, "Phone may stutter above {0}.")]
+    [InlineData(65, ShadowsLoad.TooMany, "Probably too many shadows.")]
+    public void ShadowsNote_FollowsTheBudget(int shadows, ShadowsLoad load, string message)
+    {
+        var setup = new TrainSetupPresentationViewModel(Creation(
+            new TrainSettingsDef(shadows, 10),
+            creature: ShadowsBudgetTests.Creature(ShadowsBudget.ReferenceParts)));
+
+        var note = setup.ShadowsNote.ShouldNotBeNull();
+        note.Load.ShouldBe(load);
+        note.Text.ShouldBe(message.Contains("{0}", StringComparison.Ordinal)
+            ? UiText.Format(message, ShadowsBudget.ReferenceSmoothLimit)
+            : UiText.Plain(message));
+    }
+
+    [Fact]
+    public void ShadowsNote_FollowsTheSlider_WithoutChangingTheValue()
+    {
+        var setup = new TrainSetupPresentationViewModel(Creation(creature: ShadowsBudgetTests.Creature(ShadowsBudget.ReferenceParts)));
+
+        setup.SetShadows(1);
+
+        setup.Settings.Shadows.ShouldBe(TrainSettingsDef.MaxShadows);
+        setup.ShadowsNote.ShouldNotBeNull().Load.ShouldBe(ShadowsLoad.TooMany);
+        setup.SetShadows(0);
+        setup.ShadowsNote.ShouldNotBeNull().Load.ShouldBe(ShadowsLoad.Smooth);
+    }
+
+    [Fact]
+    public void ShadowsNote_IsGoneInSimulate()
+    {
+        var setup = new TrainSetupPresentationViewModel(Creation(generation: 3));
+
+        setup.SetMode(TrainingRunMode.Simulate);
+
+        setup.ShadowsNote.ShouldBeNull();
+    }
+
+    [Fact]
+    public void ASmallCreature_RunsEveryShadowSmoothly()
+    {
+        var setup = new TrainSetupPresentationViewModel(Creation(new TrainSettingsDef(TrainSettingsDef.MaxShadows, 10)));
+
+        setup.ShadowsNote.ShouldNotBeNull().Load.ShouldBe(ShadowsLoad.Smooth);
+    }
+
+    private static CreationDef Creation(TrainSettingsDef? settings = null, int? generation = null, CreatureDef? creature = null) =>
         new(
             Guid.NewGuid(),
             "Worm",
-            new CreatureDef([new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(2, 0))], [new BeamDef(3, 1, 2)], []),
+            creature ?? new CreatureDef([new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(2, 0))], [new BeamDef(3, 1, 2)], []),
             generation is { } finished ? TestTraining.State(finished, 1, TestTraining.Run) : null,
             settings);
 }

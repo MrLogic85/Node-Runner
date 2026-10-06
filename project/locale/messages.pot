@@ -501,6 +501,10 @@ msgstr ""
 msgid "Pause"
 msgstr ""
 
+#: libs/NodeRunner.App/ViewModels/TrainSetupPresentationViewModel.cs
+msgid "Phone may stutter above {0}."
+msgstr ""
+
 #: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs
 #: libs/NodeRunner.App/ViewModels/BuildViewModel.cs
 msgid "Pick a Fixed link"
@@ -529,6 +533,10 @@ msgstr ""
 
 #: project/scenes/screens/BuildScreen.tscn
 msgid "Power budget"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/TrainSetupPresentationViewModel.cs
+msgid "Probably too many shadows."
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartParameters.cs
@@ -760,6 +768,10 @@ msgstr ""
 msgid "The beam between node {0} and node {1} is too short. Move one of the nodes apart."
 msgstr ""
 
+#: libs/NodeRunner.App/ViewModels/TrainSetupPresentationViewModel.cs
+msgid "The brain learns faster with more shadows."
+msgstr ""
+
 #: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs
 msgid "The brain picks an angle and how much of its max strength to use."
 msgstr ""
@@ -818,6 +830,10 @@ msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs
 msgid "Three rays see how near the ground is. Drag the round handle to aim it."
+msgstr ""
+
+#: project/scenes/screens/TrainingScreen.tscn
+msgid "Too many shadows!"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/BuildViewModel.cs
