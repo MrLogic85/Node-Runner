@@ -100,7 +100,8 @@ public sealed class BuildPresentationViewModel
                     ServoNote,
                     canDelete,
                     PanelSliders(),
-                    ServoPickers(servo));
+                    ServoPickers(servo),
+                    servo.NodeId);
             }
 
             if (_build.SingleSelectedPistonId is { } pistonId)

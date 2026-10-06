@@ -1641,7 +1641,8 @@ settings are at Max UI size. The scroll reaches the panel's sides and bottom
 and the padding sits inside it, so content is clipped at the panel's edges
 rather than short of them, and a slider thumb's glow is not cut. A screen
 part that should fill the rest of the panel (the Parts tray, a spacer) still
-does, since the content fills the scroll while it fits.
+does, since the content fills the scroll while it fits. The screen decides
+when to show the top again (`ScrollContentToTop`).
 Tapping the chevron sets `Collapsed`: the panel shrinks to a 28px tab
 (`UiLayout.SidePanelTabWidth`; the reference hardcodes 28px, it is not a
 token) holding a left chevron (the icon set names it `back`) and the title

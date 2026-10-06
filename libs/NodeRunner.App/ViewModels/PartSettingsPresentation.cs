@@ -20,7 +20,8 @@ public enum PartSettingsKind
 /// and changed on the canvas. <see cref="Settings"/> are the part's panel sliders (#704), like a
 /// Piston's (#451); a joint (#913), Piston or Spring lists no connections, as they are drawn on the canvas, so its
 /// <see cref="ConnectionsLabel"/> and <see cref="ConnectionsValue"/> are null. <see cref="Name"/> is
-/// the player's own name as written, or <see cref="DefaultName"/>.
+/// the player's own name as written, or <see cref="DefaultName"/>. <see cref="PanelId"/> says which
+/// part the panel shows across edits.
 /// </summary>
 public sealed record PartSettingsPresentation(
     int Id,
@@ -32,7 +33,16 @@ public sealed record PartSettingsPresentation(
     UiText Note,
     bool CanDelete,
     IReadOnlyList<ParameterSlider> Settings,
-    IReadOnlyList<PartPickerPresentation>? Pickers = null);
+    IReadOnlyList<PartPickerPresentation>? Pickers = null,
+    int? JointId = null)
+{
+    /// <summary>
+    /// The part the panel shows, kept across edits: <see cref="Id"/>, or a Servo's <see cref="JointId"/>,
+    /// since a link change gives the Servo a new id (<c>docs/CREATURE_MODEL.md</c> → "Editing identity
+    /// rules") but it is the same Servo to the player (#910, #911).
+    /// </summary>
+    public int PanelId => JointId ?? Id;
+}
 
 /// <summary>
 /// A Servo link picker: the links it offers, which one is chosen, and the <see cref="Placeholder"/>
