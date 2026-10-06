@@ -51,7 +51,7 @@ public partial class Creature
         }
 
         var link = definition.Link(fixedLinkId);
-        return ServoGeometry.HousingReach(definition.Nodes, definition.NodeRadius, link, servo.NodeId, SensorLength(definition, link));
+        return ServoGeometry.HousingReach(definition.Nodes, definition.NodeRadius, link, SensorLength(definition, link));
     }
 
     private static float SensorLength(CreatureDef definition, LinkRef link) =>

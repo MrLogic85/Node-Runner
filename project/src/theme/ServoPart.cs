@@ -92,17 +92,9 @@ public partial class ServoPart : PartVisual
         set => Change(ref _simplified, value);
     }
 
-    /// <summary>
-    /// How far the housing may reach past the Servo ring without crowding a middle sensor or a
-    /// Piston cylinder.
-    /// </summary>
-    public static float HousingReachFor(float freeLength, float sensorLength = 0, bool pistonCylinderEnd = false)
+    /// <summary>How far the housing may reach past the Servo ring without crowding a middle sensor.</summary>
+    public static float HousingReachFor(float freeLength, float sensorLength = 0)
     {
-        if (pistonCylinderEnd)
-        {
-            return 0;
-        }
-
         var reach = MathF.Min(_housingMaxReach, ((freeLength - sensorLength) / 2) - 2);
         return reach >= _housingMinReach ? reach : 0;
     }

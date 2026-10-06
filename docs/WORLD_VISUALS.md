@@ -46,8 +46,8 @@ A housing, a range dial and a horn (#452, #577):
 
 - the joint's `accent` ring;
 - a `panel` housing box with an `accent` outline on the Fixed link, at most
-  8 units past the ring, left out when a sensor needs the room or the Fixed
-  link is a Piston held at its cylinder;
+  8 units past the ring, drawn over a Piston's cylinder as over any link
+  (#925), and left out when a sensor needs the room;
 - the range, a `panel` band with an `accent` outline inside the ring from
   end stop to end stop, turning with the Fixed link. At 360° the stops meet
   and an `accent` line across the band marks them (#922);
