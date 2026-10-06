@@ -88,10 +88,10 @@ public partial class Evolver : Node
     /// <summary>How far the followed shadow's front has got in its current trial (#725); NaN when none is running.</summary>
     public double FollowedTrialDistance => ShadowDistance(_followedShadow);
 
-    /// <summary>Physics ticks left in the followed shadow's trial (#715); null when none is running.</summary>
-    public int? FollowedTrialTicksLeft =>
+    /// <summary>How far the followed shadow is into its trial and how long it lasts, in ticks (#715); null when none is running.</summary>
+    public (int TicksRun, int LengthTicks)? FollowedTrialTicks =>
         _followedShadow < _trialControllers.Count && _trialControllers[_followedShadow] is { IsRunning: true } controller
-            ? controller.TicksLeft
+            ? (controller.TicksRun, controller.TrialDurationTicks)
             : null;
 
     /// <summary>Every shadow's front distance so far this trial (#725), NaN for a shadow that is not running.</summary>

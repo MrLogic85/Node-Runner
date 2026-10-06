@@ -259,7 +259,8 @@ reference would mislead someone working on that surface.
   pages; the order is the
   shadows' own until the player sorts, since nobody is best when a
   generation starts (`docs/TRAINING_LOOP.md` → Shadow strip). The caption
-  is only "Generation 37": no time and no "Following shadow 5 · 10.3 m".
+  is "Generation 37" and the run's progress bar (#715): no time and no
+  "Following shadow 5 · 10.3 m".
   Only the followed shadow's cell is marked (`accent`); the leader gets no
   mark, as the lead changes too often and flickers. The arena draws only
   the shadows on the strip's current page, plus the followed one; the rest
@@ -274,14 +275,15 @@ reference would mislead someone working on that surface.
   Training column has no header and cannot collapse. Instead it is a
   `UiSidePanel` titled "Status" that collapses like Build's, so both
   screens share one panel. Owner decision.
-- **Time left is a value row above the stages (#715).** The reference
-  shows no run time. Instead the Status panel opens with a `UiValueRow`
-  "Time left", whole seconds rounded up, such as "20 s", for the
-  followed shadow's run. It sits above Senses, not in the stage chain,
-  because it is about the whole run, and is not in the shadow strip
-  caption (#387). It starts again at the full run length every
-  generation, stops while paused, and is hidden in Simulate, whose run has no
-  time limit. Owner decision.
+- **The run's progress is a bar in the caption (#715).** The reference
+  shows no run time. Instead the "Generation 37" caption row ends in a
+  bare `UiSlider` (no label, readout or thumb) that fills from empty to
+  full as the followed shadow's run goes by. It empties when the next
+  generation starts, stops while paused, and is hidden in Simulate, whose
+  run has no time limit. It is a bar, not a number, so it reads at a
+  glance, and it spans the row to the column's edge (less the slider's
+  thumb inset), since the strip's width changes with its places and
+  screens don't size controls in code (#310). The bar makes the tray a few pixels taller. Owner decisions.
 - **Only the Brain stage looks like a button (#847).** In the reference
   every signal-flow stage card glows and expands on tap. Until #196 makes
   them all tappable, only Brain (which opens BrainFocus) reads as one: it

@@ -131,6 +131,23 @@ public partial class TrainingScreen : Control
         Unsubscribe();
     }
 
+    // The run bar fills every frame, as the strip's bars do.
+    public override void _Process(double delta)
+    {
+        if (_training is not { } training || !GetNode<Control>("%Caption").Visible)
+        {
+            return;
+        }
+
+        var runTime = GetNode<UiSlider>("%RunTime");
+        // Empty between runs rather than hidden, so the tray keeps its height.
+        var value = UiSliderValue.Progress(training.RunProgress ?? 0);
+        if (runTime.Value != value)
+        {
+            runTime.Value = value;
+        }
+    }
+
     private void Subscribe()
     {
         if (_training is not null)
@@ -160,7 +177,7 @@ public partial class TrainingScreen : Control
     private void OnTrainingChanged(object? sender, PropertyChangedEventArgs args) => ApplyGeneration();
 
     private void OnSignalFlowChanged(object? sender, PropertyChangedEventArgs args) =>
-        ApplySignalFlow(counts: args.PropertyName is null);
+        ApplySignalFlow(counts: args.PropertyName != nameof(SignalFlowPresentationViewModel.DistanceNote));
 
     private void Apply()
     {
@@ -180,7 +197,7 @@ public partial class TrainingScreen : Control
         var shows = _header?.ShowsGeneration == true && _training is not null;
         var generation = GetNode<UiLabel>("%Generation");
         var strip = GetNode<ShadowStrip>("%ShadowStrip");
-        generation.Visible = shows;
+        GetNode<Control>("%Caption").Visible = shows;
         strip.Visible = shows;
         strip.Presentation = _training;
         if (_training is not null)
@@ -203,8 +220,5 @@ public partial class TrainingScreen : Control
         }
 
         GetNode<UiStageCard>("%DistanceStage").NoteSource = UiTextTranslation.Source(signalFlow.DistanceNote);
-        var timeLeft = GetNode<UiValueRow>("%TimeLeftRow");
-        timeLeft.ValueSource = UiTextTranslation.Source(signalFlow.TimeLeft);
-        GetNode<Control>("%TimeLeft").Visible = timeLeft.ValueSource is not null;
     }
 }

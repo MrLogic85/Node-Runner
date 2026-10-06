@@ -14,7 +14,7 @@
 [ext_resource type="Script" uid="uid://cciq0runnobr4" path="res://src/ui/lib/UiCalloutLayer.cs" id="12_callout_layer"]
 [ext_resource type="PackedScene" uid="uid://c7sdp4nel2qx" path="res://scenes/ui/UiSidePanel.tscn" id="13_side_panel"]
 [ext_resource type="Script" uid="uid://b32bnhbgasedd" path="res://src/ui/lib/UiChip.cs" id="14_chip"]
-[ext_resource type="Script" uid="uid://dhd4rdri8h4rj" path="res://src/ui/lib/UiValueRow.cs" id="15_value_row"]
+[ext_resource type="Script" uid="uid://bau3bwe6tkv48" path="res://src/ui/lib/UiSlider.cs" id="15_slider"]
 
 [node name="TrainingScreen" type="Control"]
 layout_mode = 3
@@ -184,13 +184,31 @@ size_flags_vertical = 8
 mouse_filter = 2
 theme_override_constants/separation = 4
 
-[node name="Generation" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/Arena/Tray/TrayRow/StripColumn"]
+[node name="Caption" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/Arena/Tray/TrayRow/StripColumn"]
 unique_name_in_owner = true
 layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 0
+
+[node name="Generation" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/Arena/Tray/TrayRow/StripColumn/Caption"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 4
 text = "Generation 1"
-text_overrun_behavior = 3
 script = ExtResource("4_label")
 TextStyle = 7
+
+[node name="RunTime" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Body/Arena/Tray/TrayRow/StripColumn/Caption"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+mouse_filter = 2
+script = ExtResource("15_slider")
+LabelText = ""
+ReadoutText = ""
+HighEnd = 0
+HighPosition = 0.0
 
 [node name="ShadowStrip" parent="UiFrame/MarginContainer/Card/Shell/Body/Arena/Tray/TrayRow/StripColumn" instance=ExtResource("11_shadow_strip")]
 unique_name_in_owner = true
@@ -203,20 +221,6 @@ Title = "Status"
 
 [node name="SidePanelContent" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset" index="0"]
 theme_override_constants/separation = 0
-
-[node name="TimeLeft" type="MarginContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent"]
-unique_name_in_owner = true
-visible = false
-layout_mode = 2
-mouse_filter = 2
-theme_override_constants/margin_bottom = 8
-
-[node name="TimeLeftRow" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent/TimeLeft"]
-unique_name_in_owner = true
-layout_mode = 2
-mouse_filter = 2
-script = ExtResource("15_value_row")
-LabelText = "Time left"
 
 [node name="SensesStage" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent" instance=ExtResource("8_stage_card")]
 unique_name_in_owner = true

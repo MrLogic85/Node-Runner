@@ -29,10 +29,10 @@ public partial class TrialController : Node
     public int ElapsedTicks => _elapsedTicks;
 
     /// <summary>
-    /// Physics ticks left in the trial in progress (#715): the full length until it has begun, 0 once
-    /// it is over. Meaningless with an endless <see cref="TrialDurationTicks"/>.
+    /// The ticks the trial in progress has run (#715): 0 until it has begun, which
+    /// <see cref="ElapsedTicks"/> is not, as it keeps the last trial's count until then.
     /// </summary>
-    public int TicksLeft => !IsRunning ? 0 : _startsNextTick ? TrialDurationTicks : Math.Max(TrialDurationTicks - _elapsedTicks, 0);
+    public int TicksRun => _startsNextTick ? 0 : _elapsedTicks;
 
     /// <summary>What the trial in progress (or the last one) has measured so far.</summary>
     public TrialResult Measured => _measurement.Result;

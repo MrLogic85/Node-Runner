@@ -10,8 +10,6 @@ public partial class UiValueRow : HBoxContainer
     private string _labelText = "";
     private string _valueText = "";
     private UiIconId _iconId = UiIconId.None;
-    private Func<string>? _valueSource;
-    private Label? _value;
 
     [Export]
     public string LabelText
@@ -32,21 +30,6 @@ public partial class UiValueRow : HBoxContainer
         {
             _valueText = value;
             Refresh();
-        }
-    }
-
-    /// <summary>
-    /// Already translated text shown instead of <see cref="ValueText"/>; asked again when the
-    /// language changes, with the value label's own auto-translation off meanwhile. Null shows
-    /// ValueText. A new source only rewrites the value, so a live value does not rebuild the row.
-    /// </summary>
-    public Func<string>? ValueSource
-    {
-        get => _valueSource;
-        set
-        {
-            _valueSource = value;
-            ApplyValue();
         }
     }
 
@@ -79,10 +62,6 @@ public partial class UiValueRow : HBoxContainer
         if (what == NotificationThemeChanged && IsNodeReady())
         {
             Refresh();
-        }
-        else if (what == NotificationTranslationChanged && ValueSource is not null)
-        {
-            ApplyValue();
         }
     }
 
@@ -131,20 +110,5 @@ public partial class UiValueRow : HBoxContainer
         value.TextOverrunBehavior = TextServer.OverrunBehavior.NoTrimming;
         value.SizeFlagsHorizontal = SizeFlags.ShrinkEnd;
         readout.AddChild(value);
-        _value = value;
-        ApplyValue();
-    }
-
-    private void ApplyValue()
-    {
-        if (_value is null || !IsInstanceValid(_value))
-        {
-            Refresh();
-            return;
-        }
-
-        _value.AutoTranslateMode = ValueSource is null ? AutoTranslateModeEnum.Inherit : AutoTranslateModeEnum.Disabled;
-        UiTranslation.ShareContext(this, _value);
-        _value.Text = ValueSource?.Invoke() ?? ValueText;
     }
 }
