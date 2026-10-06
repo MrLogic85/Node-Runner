@@ -106,8 +106,8 @@ drawn over it.
 - **Servo:** a keyhole `halo` outline. Selected alone, a hatched `detail`
   band also marks its Fixed link and an `accent` band its Target link.
 - **Link travel (#704, #835, #931):** stops are `halo` `stroke-signal`
-  ticks, as wide as the link's widest part (a Piston's cylinder, a
-  Spring's seats), joined by a dashed line; a Spring's rest length is a 3-unit `halo` ring.
+  ticks, as wide as a Piston's cylinder or a Spring's seats,
+  joined by a dashed line; a Spring's rest length is a 3-unit `halo` ring.
   Every mark sits at its true length.
 - **Camera aim:** a Camera selected alone shows its rays and an Aim handle
   out along its centre ray.
