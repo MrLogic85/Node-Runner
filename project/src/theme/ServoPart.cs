@@ -92,10 +92,7 @@ public partial class ServoPart : PartVisual
         set => Change(ref _simplified, value);
     }
 
-    /// <summary>
-    /// How far the housing may reach past the Servo ring without crowding a middle sensor. On a
-    /// Piston it draws over the cylinder, as on any other link (#925).
-    /// </summary>
+    /// <summary>How far the housing may reach past the Servo ring without crowding a middle sensor.</summary>
     public static float HousingReachFor(float freeLength, float sensorLength = 0)
     {
         var reach = MathF.Min(_housingMaxReach, ((freeLength - sensorLength) / 2) - 2);
