@@ -37,9 +37,8 @@ build_tools=$(ls -d "$android_home"/build-tools/* 2>/dev/null | sort -V | tail -
   || fail "No apksigner/aapt2 under $android_home/build-tools; set ANDROID_HOME."
 
 version=$(sed -n 's/^config\/version="\(.*\)"$/\1/p' project/project.godot)
-# The release and debug presets (#898) share one build number.
 code=$(sed -n 's/^version\/code=\(.*\)$/\1/p' project/export_presets.cfg | sort -u)
-[[ $code =~ ^[0-9]+$ ]] || fail "The export presets do not share one version/code; run .github/scripts/set-version.sh."
+[[ $code =~ ^[0-9]+$ ]] || fail "The export preset has no single version/code; run .github/scripts/set-version.sh."
 [[ $version =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]] || fail "No X.Y.Z config/version in project.godot."
 major=${BASH_REMATCH[1]} minor=${BASH_REMATCH[2]} patch=${BASH_REMATCH[3]}
 (( code == 10#$major * 1000000 + 10#$minor * 1000 + 10#$patch )) \
@@ -83,11 +82,17 @@ password=${NODE_RUNNER_KEYSTORE_PASSWORD:-$(security find-generic-password -s no
 
 mkdir -p build
 rm -f "$apk"
+# The Gradle template is git-ignored, so a clean tree says nothing about it. Build from a
+# fresh copy; installing it overwrites the tracked build.gradle, which is put back after.
+git clean -fdXq project/android
+trap 'git checkout -- project/android/build/build.gradle' EXIT
 echo "Exporting $tag ($code) to ${apk#"$root"/}"
 (cd project && GODOT_ANDROID_KEYSTORE_RELEASE_PATH=$keystore \
   GODOT_ANDROID_KEYSTORE_RELEASE_USER=$alias \
   GODOT_ANDROID_KEYSTORE_RELEASE_PASSWORD=$password \
-  "$godot" --headless --export-release Android "$apk")
+  "$godot" --headless --install-android-build-template --export-release Android "$apk")
+git checkout -- project/android/build/build.gradle
+trap - EXIT
 [[ -f $apk ]] || fail "Godot did not write $apk."
 
 badging=$("$build_tools/aapt2" dump badging "$apk" 2>/dev/null) || fail "aapt2 could not read $apk."

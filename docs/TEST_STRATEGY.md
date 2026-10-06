@@ -25,7 +25,7 @@ test focus is in its `libs/*/AGENTS.md`.
 | Mechanics | `libs/NodeRunner.Mechanics/` | xUnit + Shouldly | Part physics on hand-checkable numbers |
 | ML | `libs/NodeRunner.ML/` | xUnit + Shouldly | Forward pass, GA operators, activation math, genome round-trips |
 | App | `libs/NodeRunner.App/` | xUnit + Shouldly + NSubstitute | View-models, repositories, services |
-| Architecture | `libs/`, `project/` | xUnit + NetArchTest | Layer graph, source conventions, export presets |
+| Architecture | `libs/`, `project/` | xUnit + NetArchTest | Layer graph, source conventions, Android export |
 | Static UI contracts | `project/src/`, `project/scenes/`, theme files | xUnit + Shouldly + Roslyn | See "UI contracts" |
 | Godot Nodes | `project/src/` | Manual (`docs/MANUAL_TESTING.md`) | Node lifecycle, physics, input |
 | End-to-end | full app on device | Manual, decided per change | Feel, latency, battery |
@@ -50,7 +50,7 @@ versions.
 
 `NodeRunner.Arch.Tests` (`ArchitectureSpec.cs`) guards the layer graph
 (`docs/ARCHITECTURE.md`), the file-size limit
-(`docs/CODE_DESIGN_PRINCIPLES.md` §5) and the export presets
+(`docs/CODE_DESIGN_PRINCIPLES.md` §5) and the Android export
 (`docs/RELEASING.md` → "Android export"). Add a fact when we decide to
 enforce a convention.
 

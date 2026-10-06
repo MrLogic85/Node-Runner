@@ -45,3 +45,12 @@ coverage.*.xml
 # Godot editor backups
 *.csproj.old
 build/
+
+# Android build template (#914): Godot installs it (docs/RELEASING.md). Only our own files are tracked.
+/project/android/*
+!/project/android/build/
+/project/android/build/*
+!/project/android/build/build.gradle
+!/project/android/build/src/
+/project/android/build/src/*
+!/project/android/build/src/monoDebug/
