@@ -69,15 +69,15 @@ public partial class Creature
             var piston = definition.Pistons[i];
             var indexA = definition.NodeIndexOf(piston.NodeA);
             var indexB = definition.NodeIndexOf(piston.NodeB);
-            _pistons[i] = new PistonLink(piston, _nodeBodies[indexA], _nodeBodies[indexB]);
+            _pistons[i] = new PistonLink(piston, _nodeBodies[indexA], _nodeBodies[indexB], definition.NodeRadius(piston.NodeA) + definition.NodeRadius(piston.NodeB));
             var built = (float)_pistons[i].BuiltLength;
             _pistonCylinders[i] = CreateEndStops(
                 $"Piston{i}",
                 _pistons[i].NodeA,
                 _pistons[i].NodeB,
                 built,
-                (float)Mechanics.Piston.ShortestLength(piston, built),
-                (float)Mechanics.Piston.LongestLength(piston, built));
+                (float)_pistons[i].ShortestLength,
+                (float)_pistons[i].LongestLength);
             var visual = new PistonVisual
             {
                 Name = $"Piston{i}Visual",
@@ -85,7 +85,7 @@ public partial class Creature
                 Link = _pistons[i],
                 RadiusA = ToGodotFloat(definition.NodeRadius(piston.NodeA), nameof(ServoDef.JointRadius)),
                 RadiusB = ToGodotFloat(definition.NodeRadius(piston.NodeB), nameof(ServoDef.JointRadius)),
-                Travel = (float)(Mechanics.Piston.LongestLength(piston, built) - Mechanics.Piston.ShortestLength(piston, built)),
+                Travel = (float)(_pistons[i].LongestLength - _pistons[i].ShortestLength),
             };
             AddChild(visual);
             _pistonVisuals[i] = visual;
@@ -144,8 +144,8 @@ public partial class Creature
     // A Spring is Godot's DampedSpringJoint2D between its two node bodies (#453): it pulls them
     // toward its rest length with its Stiffness and damps the speed between them with its
     // Damping coefficient, whatever they weigh (#801). Godot's spring has no stops of its own, so
-    // it gets a Piston's end stops for its Stroke (#835); a Preload outside 0…1 moves its rest
-    // length past a stop, so it starts pressed against it, and its SpringLink keeps that preload
+    // it gets a Piston's end stops for its Stroke (#835); a coil length past a stop moves its rest
+    // length there, so it starts pressed against it, and its SpringLink keeps that preload
     // inside the stop. It has no collider and no brain ports; its picture is a child of the
     // creature, on the Links layer over the beams.
     private void CreateSprings(CreatureDef definition)
@@ -165,6 +165,7 @@ public partial class Creature
             var indexB = definition.NodeIndexOf(spring.NodeB);
             var (nodeA, nodeB) = (_nodeBodies[indexA], _nodeBodies[indexB]);
             var built = Math.Max(nodeA.Position.DistanceTo(nodeB.Position), 1f);
+            var jointRadii = definition.NodeRadius(spring.NodeA) + definition.NodeRadius(spring.NodeB);
 
             // The joint hangs its second anchor Length along its own +Y, so it is turned a quarter back from the axis.
             var joint = new DampedSpringJoint2D
@@ -173,15 +174,15 @@ public partial class Creature
                 Position = nodeA.Position,
                 Rotation = (nodeB.Position - nodeA.Position).Angle() - (Mathf.Pi / 2),
                 Length = built,
-                RestLength = (float)Mechanics.Spring.RestLength(spring, built),
+                RestLength = (float)Mechanics.Spring.RestLength(spring, built, jointRadii),
                 Stiffness = (float)spring.Stiffness,
                 Damping = (float)(spring.Damping / dampingPasses),
             };
             AddChild(joint);
             joint.NodeA = joint.GetPathTo(nodeA);
             joint.NodeB = joint.GetPathTo(nodeB);
-            var shortest = Mechanics.Spring.ShortestLength(spring, built);
-            var longest = Mechanics.Spring.LongestLength(spring, built);
+            var shortest = Mechanics.Spring.ShortestLength(spring, built, jointRadii);
+            var longest = Mechanics.Spring.LongestLength(spring, built, jointRadii);
             _springCylinders[i] = CreateEndStops($"Spring{i}", nodeA, nodeB, built, (float)shortest, (float)longest);
             _springs[i] = new SpringLink(joint, nodeA, nodeB, joint.RestLength, shortest, longest);
 
@@ -194,7 +195,7 @@ public partial class Creature
                 RadiusA = ToGodotFloat(definition.NodeRadius(spring.NodeA), nameof(ServoDef.JointRadius)),
                 RadiusB = ToGodotFloat(definition.NodeRadius(spring.NodeB), nameof(ServoDef.JointRadius)),
                 Travel = (float)(longest - shortest),
-                Rest = (float)Mechanics.Spring.RestLength(spring, built),
+                Rest = joint.RestLength,
                 Stiffness = spring.Stiffness,
             };
             AddChild(visual);

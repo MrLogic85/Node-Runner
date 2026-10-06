@@ -62,15 +62,15 @@ public sealed class PartParametersTests
         PartParameters.ValueAt(PartParameterId.Damping, 0).ShouldBe(0);
         PartParameters.ValueAt(PartParameterId.Damping, 1).ShouldBe(100);
         PartParameters.SliderOver(PartParameterId.Stroke, [spring.Stroke]).Readout.ShouldBe(UiText.Format("{0}%", new FixedNumber(100, 0)));
-        PartParameters.SliderOver(PartParameterId.Preload, [spring.Preload]).Readout.ShouldBe(UiText.Format("{0}%", new FixedNumber(100, 0)));
+        PartParameters.SliderOver(PartParameterId.CoilLength, [spring.CoilLength]).Readout.ShouldBe(UiText.Format("{0}%", new FixedNumber(67, 0)));
     }
 
     [Fact]
-    public void Preload_RunsFromMinusFiftyToTwoHundredPercent_InStepsOfFive()
+    public void CoilLength_RunsFromZeroToAHundredPercent_InStepsOfOne()
     {
-        PartParameters.ValueAt(PartParameterId.Preload, 0).ShouldBe(SpringDef.MinPreload);
-        PartParameters.ValueAt(PartParameterId.Preload, 1).ShouldBe(SpringDef.MaxPreload);
-        PartParameters.ValueAt(PartParameterId.Preload, 0.212).ShouldBe(0.05, tolerance: 1e-9);
+        PartParameters.ValueAt(PartParameterId.CoilLength, 0).ShouldBe(SpringDef.MinCoilLength);
+        PartParameters.ValueAt(PartParameterId.CoilLength, 1).ShouldBe(SpringDef.MaxCoilLength);
+        PartParameters.ValueAt(PartParameterId.CoilLength, 0.334).ShouldBe(0.33, tolerance: 1e-9);
     }
 
     [Fact]
@@ -91,7 +91,7 @@ public sealed class PartParametersTests
     [InlineData(PartParameterId.Stiffness, 650)]
     [InlineData(PartParameterId.Damping, 45)]
     [InlineData(PartParameterId.RiseTime, 0.5)]
-    [InlineData(PartParameterId.Preload, -0.35)]
+    [InlineData(PartParameterId.CoilLength, 0.35)]
     public void ASharedValue_RoundTripsThroughItsSlider(PartParameterId id, double value)
     {
         var slider = PartParameters.SliderOver(id, [value, value]);

@@ -55,7 +55,8 @@ public sealed class FileCreationRepository : ICreationRepository
 
     // Before #870 a Piston's stroke was ±s of its built length. Now it grows by stroke of its
     // shortest length, and start says where the built length sits in that travel: 2s / (1 − s) at
-    // start 0.5 keeps the same shortest and longest lengths. A Piston can now at most double, so
+    // start 0.5 kept the same shortest and longest lengths, until #835 measured its travel on the gap
+    // between its joints' edges, which shortens it a little. A Piston can now at most double, so
     // a stroke above ±⅓ becomes 100%, about ±33% of its built length.
     private static void PistonStrokeFromShortest(JsonObject file)
     {
@@ -145,8 +146,8 @@ public sealed class FileCreationRepository : ICreationRepository
     }
 
     // Before #835 a Spring had no travel: it pushed nothing at its drawn length and nothing stopped
-    // it. The widest travel with the drawn length in the middle, 0.67…1.33 of it, keeps that for
-    // every move but the largest.
+    // it. Stroke 1 and coil length 0.5 rest it at its drawn length, between stops a quarter of the gap
+    // between its joints' edges either side, so it stays free there for every move but the largest.
     private static void SpringTravel(JsonObject file)
     {
         if (file["creature"] is not JsonObject creature)
@@ -168,7 +169,7 @@ public sealed class FileCreationRepository : ICreationRepository
             }
 
             spring["stroke"] = 1.0;
-            spring["preload"] = 0.5;
+            spring["coilLength"] = 0.5;
         }
     }
 

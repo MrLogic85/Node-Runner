@@ -438,7 +438,8 @@ public partial class BuildCanvas : Node2D
 
     /// <summary>
     /// A selected Piston's or Spring's shortest and longest length while its Stroke, Start position
-    /// or Preload can be set (#704, #870, #835), over the joints so the one at joint B is never hidden.
+    /// or Coil length can be set (#704, #870, #835), and a Spring's rest length, over the joints so the
+    /// one at joint B is never hidden.
     /// </summary>
     private void DrawSelectedTravels(CanvasItem canvas)
     {
@@ -448,21 +449,23 @@ public partial class BuildCanvas : Node2D
             var selected = _viewModel.Selection.Pistons;
             foreach (var piston in _viewModel.Pistons.Where(piston => selected.Contains(piston.Id)))
             {
-                var built = BuiltLength(piston.NodeA, piston.NodeB);
-                DrawTravel(canvas, piston.NodeA, piston.NodeB, Piston.ShortestLength(piston, built), Piston.LongestLength(piston, built), PistonDrawing.TickHalf);
+                var (built, radii) = (BuiltLength(piston.NodeA, piston.NodeB), JointRadii(piston.NodeA, piston.NodeB));
+                DrawTravel(canvas, piston.NodeA, piston.NodeB, Piston.ShortestLength(piston, built, radii), Piston.LongestLength(piston, built, radii), PistonDrawing.TickHalf, rest: null);
             }
         }
 
-        if (stroke || _viewModel.CanEdit(PartParameterId.Preload))
+        if (stroke || _viewModel.CanEdit(PartParameterId.CoilLength))
         {
             var selected = _viewModel.Selection.Springs;
             foreach (var spring in _viewModel.Springs.Where(spring => selected.Contains(spring.Id)))
             {
-                var built = BuiltLength(spring.NodeA, spring.NodeB);
-                DrawTravel(canvas, spring.NodeA, spring.NodeB, Spring.ShortestLength(spring, built), Spring.LongestLength(spring, built), SpringDrawing.SeatHalf(Theme));
+                var (built, radii) = (BuiltLength(spring.NodeA, spring.NodeB), JointRadii(spring.NodeA, spring.NodeB));
+                DrawTravel(canvas, spring.NodeA, spring.NodeB, Spring.ShortestLength(spring, built, radii), Spring.LongestLength(spring, built, radii), SpringDrawing.SeatHalf(Theme), Spring.RestLength(spring, built, radii));
             }
         }
     }
+
+    private double JointRadii(int nodeA, int nodeB) => _viewModel!.NodeRadius(nodeA) + _viewModel.NodeRadius(nodeB);
 
     private double BuiltLength(int nodeA, int nodeB)
     {
@@ -471,8 +474,8 @@ public partial class BuildCanvas : Node2D
         return Math.Sqrt(Math.Pow(b.X - a.X, 2) + Math.Pow(b.Y - a.Y, 2));
     }
 
-    private void DrawTravel(CanvasItem canvas, int nodeA, int nodeB, double shortest, double longest, float tickHalf) =>
-        PistonDrawing.DrawStroke(canvas, ViewTransform(), Theme, ToGodot(NodeById(nodeA).Position), ToGodot(NodeById(nodeB).Position), (float)_viewModel!.NodeRadius(nodeB), (float)shortest, (float)longest, tickHalf);
+    private void DrawTravel(CanvasItem canvas, int nodeA, int nodeB, double shortest, double longest, float tickHalf, double? rest) =>
+        PistonDrawing.DrawStroke(canvas, ViewTransform(), Theme, ToGodot(NodeById(nodeA).Position), ToGodot(NodeById(nodeB).Position), (float)shortest, (float)longest, tickHalf, (float?)rest);
 
     /// <summary>
     /// While a tray part is dragged (#376), a beam that would take it shows the <c>halo</c>, and

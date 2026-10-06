@@ -7,8 +7,8 @@ namespace NodeRunner.Theme;
 /// <summary>
 /// Draws a Piston between two joints (#451), shared by Build's canvas and the creature in
 /// Training: a thin <c>accent</c> rod from ring to ring, a cylinder at its first joint and a cap
-/// at its second. The cylinder starts at joint A's edge and is as long as its travel (#870, #835),
-/// so a shorter Stroke gives a shorter cylinder; the rod runs on to joint B. Selected, it gets the beam's two <c>halo</c> lines,
+/// at its second. The cylinder starts at joint A's edge and is as long as its travel, which is on
+/// the gap between the joints' edges (#870, #835), so a shorter Stroke gives a shorter cylinder; the rod runs on to joint B. Selected, it gets the beam's two <c>halo</c> lines,
 /// which stop at the joints' edges or join a selected joint's halo (#710). Its stroke ticks are
 /// drawn apart, by <see cref="DrawStroke"/>, so a view can put them over the joints. Drawn in window
 /// pixels (<see cref="UiPixelSpace"/>) so it stays crisp at any zoom; <c>drawTransform</c> is the
@@ -30,15 +30,15 @@ public static class PistonDrawing
     private const float _minCylinder = 4;
     private const int _cornerSegments = 3;
 
-    // A tick this close to joint B's centre is on it, whichever side rounding puts it.
-    private const float _onCentre = 0.01f;
+    private const float _restRadius = 3;
+    private const int _restSegments = 24;
 
     /// <param name="canvas">The CanvasItem drawing it, inside its draw call.</param>
     /// <param name="drawTransform">The canvas's draw transform, for <see cref="UiPixelSpace"/>.</param>
     /// <param name="theme">The theme its fills come from.</param>
     /// <param name="a">Joint A's centre, where the cylinder sits.</param>
     /// <param name="b">Joint B's centre, where the rod ends in its cap.</param>
-    /// <param name="radiusA">Joint A's radius: the cylinder starts at its edge.</param>
+    /// <param name="radiusA">Joint A's radius: the rod and cylinder start at its edge.</param>
     /// <param name="radiusB">Joint B's radius: the cap sits at its edge.</param>
     /// <param name="travel">The Piston's travel: its longest length less its shortest.</param>
     /// <param name="line">The rod, cylinder and cap colour: <c>accent</c>, or <c>danger</c> while too short.</param>
@@ -76,9 +76,10 @@ public static class PistonDrawing
         var (rodStart, rodEnd) = JointDrawing.BeamSpan(theme.JointRingWidth, a, radiusA, b, radiusB) ?? (a, b);
         canvas.DrawLine(toPixels * rodStart, toPixels * rodEnd, line, theme.BeamWidth * _rodPerBeam * scale, antialiased: true);
 
-        // It never runs past joint B's edge.
+        // The travel is on the gap between the joints' edges (#835), so at its shortest joint B's edge
+        // meets the cylinder's end at most; it never runs past joint B's edge.
         var cylinderStart = a + (along * radiusA);
-        var cylinderLength = Math.Min(radiusA + travel, a.DistanceTo(b) - radiusB);
+        var cylinderLength = Math.Min(radiusA + Math.Max(travel, _minCylinder), a.DistanceTo(b) - radiusB);
         var cylinderEnd = a + (along * Math.Max(cylinderLength, radiusA + _minCylinder));
         var cylinder = Cylinder(cylinderStart, cylinderEnd, along, across, cylinderHalf);
         canvas.DrawColoredPolygon([.. cylinder.Select(point => toPixels * point)], theme.SensorFill);
@@ -99,18 +100,19 @@ public static class PistonDrawing
 
     /// <summary>
     /// A Piston's stroke (#704): <c>halo</c> ticks at its shortest and longest length from joint A's
-    /// centre, and a dashed line from joint B's edge on to the longest when that is past it.
+    /// centre, joined by a dashed line, over the joints like a Camera's rays. A Spring's also rings
+    /// its rest length (#835); the line leaves the ring's hole clear.
     /// </summary>
     /// <param name="canvas">The CanvasItem drawing it, inside its draw call.</param>
     /// <param name="drawTransform">The canvas's draw transform, for <see cref="UiPixelSpace"/>; restored afterwards.</param>
     /// <param name="theme">The theme its colour comes from.</param>
     /// <param name="a">Joint A's centre.</param>
     /// <param name="b">Joint B's centre.</param>
-    /// <param name="radiusB">Joint B's radius: the dashed line starts at its edge, and a tick inside it moves out to it.</param>
     /// <param name="shortest">The Piston's or Spring's shortest length, centre to centre.</param>
     /// <param name="longest">The Piston's or Spring's longest length, centre to centre.</param>
     /// <param name="tickHalf">Half a tick's length across the link; a Spring's spans its seats (#835).</param>
-    public static void DrawStroke(CanvasItem canvas, Transform2D drawTransform, VisualTheme theme, Vector2 a, Vector2 b, float radiusB, float shortest, float longest, float tickHalf)
+    /// <param name="rest">A Spring's rest length, centre to centre, ringed; none for a Piston.</param>
+    public static void DrawStroke(CanvasItem canvas, Transform2D drawTransform, VisualTheme theme, Vector2 a, Vector2 b, float shortest, float longest, float tickHalf, float? rest = null)
     {
         ArgumentNullException.ThrowIfNull(canvas);
         ArgumentNullException.ThrowIfNull(theme);
@@ -124,28 +126,30 @@ public static class PistonDrawing
         var along = (b - a).Normalized();
         var across = along.Orthogonal();
         var glow = theme.SelectionGlow;
-        var longestPoint = a + (along * longest);
-        if (a.DistanceTo(b) + radiusB < longest)
+        // The dashed line leaves the rest ring's hole clear, so the ring still reads as a ring.
+        var clear = _restRadius + (_line / 2);
+        var (gapStart, gapEnd) = rest is { } ringAt ? (ringAt - clear, ringAt + clear) : (longest, longest);
+        foreach (var (from, to) in new[] { (shortest, Math.Min(longest, gapStart)), (Math.Max(shortest, gapEnd), longest) })
         {
-            canvas.DrawDashedLine(toPixels * (b + (along * radiusB)), toPixels * longestPoint, glow, _hairline * scale, _dash * scale, antialiased: true);
+            if (from < to)
+            {
+                canvas.DrawDashedLine(toPixels * (a + (along * from)), toPixels * (a + (along * to)), glow, _hairline * scale, _dash * scale, antialiased: true);
+            }
         }
 
         foreach (var length in new[] { shortest, longest })
         {
-            var tick = b + (along * TickPastB(length - a.DistanceTo(b), radiusB + (_line / 2)));
+            var tick = a + (along * length);
             canvas.DrawLine(toPixels * (tick + (across * tickHalf)), toPixels * (tick - (across * tickHalf)), glow, _line * scale, antialiased: true);
+        }
+
+        if (rest is { } restLength)
+        {
+            canvas.DrawArc(toPixels * (a + (along * restLength)), _restRadius * scale, 0, Mathf.Tau, _restSegments, glow, _line * scale, antialiased: true);
         }
 
         canvas.DrawSetTransformMatrix(drawTransform);
     }
-
-    /// <summary>
-    /// Where a tick <paramref name="past"/> joint B's centre is drawn: there, or, inside a ring of
-    /// <paramref name="clear"/> round the joint, on its edge on that side, so a stop on the joint
-    /// reads as a stop rather than a slash through it (#835). On the centre it goes outside.
-    /// </summary>
-    public static float TickPastB(float past, float clear) =>
-        Math.Abs(past) >= clear ? past : past < -_onCentre ? -clear : clear;
 
     /// <summary>A rounded rectangle from start to end, 2 × half thick, walked round its corners in order.</summary>
     internal static Vector2[] Cylinder(Vector2 start, Vector2 end, Vector2 along, Vector2 across, float half)

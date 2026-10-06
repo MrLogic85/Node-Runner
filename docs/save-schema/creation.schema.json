@@ -267,9 +267,9 @@
                 "type": "number",
                 "default": 1
               },
-              "preload": {
+              "coilLength": {
                 "type": "number",
-                "default": 1
+                "default": 0.6666666666666666
               }
             },
             "required": [

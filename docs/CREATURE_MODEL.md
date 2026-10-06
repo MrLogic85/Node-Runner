@@ -230,18 +230,23 @@ a composition of triangles; a bare quadrilateral stays free to fold.
 - **Implementation:** `PistonDef` in `libs/NodeRunner.Domain/PistonDef.cs`
   stores an id, optional display name, two node ids and five settings
   chosen in Build: **Strength** (its most force; 150 N new), **Stroke** (how
-  much it can grow, as a share of its shortest length; 50% new),
+  much the gap between its joints' edges can grow, as a share of its
+  shortest; 50% new),
   **Start position** (where its drawn length sits in that travel, 0% at the
   shortest and 100% at the longest; 50% new), **Max speed** (2 m/s new) and
   **Rise time** (how long its force takes to build up to full; 0.2 s new,
   #801). Its built length is the distance between its nodes in the drawing.
   The simulation applies its force along the line between those nodes.
-- **Travel** (owner decision, #870: a real cylinder): a cylinder is at most
-  as long as the Piston's shortest length, so a Piston can at most double.
-  With Stroke `s` and Start position `p`, `shortest = drawn / (1 + p · s)`
-  and `longest = shortest · (1 + s)` (`Piston.ShortestLength`,
-  `Piston.LongestLength`). Drawn 1 m with Stroke 100%: Start 0% gives
-  1…2 m, 50% 0.67…1.33 m and 100% 0.5…1 m.
+- **Travel** (owner decisions, #870: a real cylinder; #835: from the
+  joints' edges): it moves the gap between its joints' edges,
+  `gap = drawn − rA − rB`, so a Servo's bigger joint shortens it. A cylinder
+  is at most as long as the shortest gap, so the gap can at most double.
+  With Stroke `s` and Start position `p`,
+  `shortest = drawn − gap + gap / (1 + p · s)` and
+  `longest = shortest + gap · s / (1 + p · s)` (`Piston.ShortestLength`,
+  `Piston.LongestLength`). Two plain joints drawn 1 m apart leave a 0.7 m
+  gap; with Stroke 100%, Start 0% gives 1…1.7 m, 50% 0.77…1.23 m and 100%
+  0.65…1 m.
 - **Not a beam:** inside its stroke it does not hold its length, so it adds no rigidity, and it counts as attached for the node degree rules. A
   Piston cannot join two nodes a beam already joins (the beam would hold
   them rigid), and two nodes hold at most one Piston (`CreatureBuilder.CanAddPiston`).
@@ -276,10 +281,11 @@ a composition of triangles; a bare quadrilateral stays free to fold.
 - **Minimum length:** the same as a beam's (`CreatureReadiness.MinimumBeamGap`).
 - **Drawn** as a telescoping rod from node A to node B
   (`project/src/theme/PistonDrawing.cs`), over beams and under joints
-  (see "Draw layers"): the cylinder starts at the first joint's edge, the
-  cap sits at the second, and the cylinder is as long as its travel, so a
-  shorter Stroke gives a shorter cylinder (owner decision, #835); it never
-  runs past the second joint's edge.
+  (see "Draw layers"): the cylinder starts at the first joint's edge,
+  the cap sits at the second, and the cylinder is as long as its travel,
+  so a shorter Stroke gives a shorter cylinder (owner decision, #835).
+  The travel is on the gap between the joints' edges, so at its shortest
+  the second joint's edge at most meets the cylinder's end.
   A selected Piston shows ticks at its shortest and longest lengths, over
   the joints, while the selection can set its Stroke or Start position
   (#704, `docs/BUILD_MODE.md`).
@@ -295,21 +301,28 @@ a composition of triangles; a bare quadrilateral stays free to fold.
 - **Implementation:** `SpringDef` in `libs/NodeRunner.Domain/SpringDef.cs`
   stores an id, optional display name, two node ids and four settings chosen
   in Build: **Stiffness** (N/m, 400 new), **Damping** (N·s/m, 10 new),
-  **Stroke** (how much it can grow, as a share of its shortest length; 10–100%,
-  100% new) and **Preload** (where its drawn length sits in that travel;
-  −50…200%, 100% new, #835).
-- **Travel and rest length** (owner decisions, #835): inside 0…100% it is
-  the Piston's maths with Preload in place of Start position,
-  `shortest = drawn / (1 + p · s)` and `longest = shortest · (1 + s)`, and
-  the Spring pushes nothing at its drawn length. Outside 0…100% the travel
-  stays where 0% or 100% puts it, with the drawn length on that stop, and
-  only the rest length, `shortest · (1 + p · s)`, moves on past the stop:
-  the Spring starts pressed against it, harder the further out. Under 0%
-  it pulls, over 100% it pushes (`Spring.ShortestLength`,
-  `Spring.LongestLength`, `Spring.RestLength`). Drawn 1 m with Stroke 100%:
-  Preload −50% gives 1…2 m resting at 0.5 m, 50% 0.67…1.33 m, 100%
-  0.5…1 m and 200% 0.5…1 m resting at 1.5 m. Changing either setting never
-  moves a node.
+  **Stroke** (how much its gap can grow, as a Piston's drawn at its longest; 10–100%,
+  100% new) and **Coil length** (where its rest length sits; 0…100%, new
+  at its longest stop, #835).
+- **Travel and rest length** (owner decisions, #835): like a Piston's, they
+  are on the gap between its joints' edges, `gap = drawn − rA − rB`. Its
+  travel is a Piston's drawn at its longest, `gap · s / (1 + s)`, whatever
+  the Coil length. Coil length moves the rest length evenly over the travel plus
+  half the gap past each stop: `offset = p · (gap + travel) − gap / 2`.
+  So a short Stroke can be pressed as hard against a stop as a long one. Between the
+  stops (`0 ≤ offset ≤ travel`) the rest length is the drawn length and the
+  stops sit round it, `shortest = drawn − offset`; the Spring pushes
+  nothing at its drawn length. Past a stop the travel stays with the drawn
+  length on that stop, and only the rest length moves on, up to half the
+  gap short of the shortest stop or past the longest: the Spring starts pressed against
+  that stop, harder the further out. Short of its shortest it pulls, past
+  its longest it pushes (`Spring.ShortestLength`, `Spring.LongestLength`,
+  `Spring.RestLength`). Two plain joints drawn 1 m apart leave a 0.7 m gap;
+  with Stroke 100% its stops are at a third and two thirds of the slider:
+  Coil length 0% gives 1…1.35 m resting at 0.65 m, 50% 0.83…1.18 m, 67%
+  0.65…1 m and 100% 0.65…1 m resting at 1.35 m. A new
+  Stroke keeps the Coil length, so the stops may move past or off the rest
+  length. Changing either setting never moves a node.
 - **End stops:** Godot's damped spring has no stops of its own (its length
   only places its second anchor), so a Spring gets the Piston's end stops
   (#701): a hidden cylinder on node A and a groove that holds node B
@@ -337,9 +350,9 @@ a composition of triangles; a bare quadrilateral stays free to fold.
 - **Drawn** as a coilover (#807, `project/src/theme/SpringDrawing.cs`): a
   thin `line-strong` rod that stops under the joint rings, a seat plate just
   outside each joint's edge, a `panel` damper body with a `line-strong`
-  outline from the first seat, and a helix wound round it. Like a Piston's
-  cylinder the body is as long as the Spring's travel, so a shorter Stroke
-  gives a shorter body; it never runs past the far seat. The
+  outline, and a helix wound round it. Like a Piston's cylinder the body
+  starts at the first joint's edge and is as long as the Spring's
+  travel, so a shorter Stroke gives a shorter body. The
   helix's front strokes are `muted` and drawn over the body; its back
   strokes are `line-strong`, drawn under it as the same wire. Every stroke
   has round ends, so a thick wire turns rather than ending in a hook. Its
@@ -347,9 +360,9 @@ a composition of triangles; a bare quadrilateral stays free to fold.
   drawn beam at 2000 N/m, in proportion. Its turns stack solid over a third
   of the seat-to-seat span at its rest length, at least 3. Past 2 m they
   grow only with the square root of the span, so a long thin coil does not
-  become a grey band, but with no cap, so it still shows its Preload. A
-  Preload past 100% packs in more turns and one under 0% fewer: the
-  pressure shows as more or less spring. A stiffer Spring gets fewer,
+  become a grey band, but with no cap, so it still shows its Coil length. A
+  coil length past its longest stop packs in more turns and one short of its
+  shortest fewer: the pressure shows as more or less spring. A stiffer Spring gets fewer,
   thicker turns. They spread as the Spring stretches and bunch as it
   squeezes, but their number never changes as it moves (#835). Each side
   of the coil is drawn in one call, its half turns cut into fewer segments
@@ -360,8 +373,12 @@ a composition of triangles; a bare quadrilateral stays free to fold.
   a possible highlight token (#832). Too short, all of it turns `danger`. Selected, it gets the Piston's
   two halo lines outside its seats (`docs/UI_DIRECTION.md` → Selection),
   and the Piston's ticks at its shortest and longest lengths, as wide as
-  its seats so the coil does not hide them, while the selection can set its
-  Stroke or Preload. A creation card draws the same
+  its seats so the coil does not hide them, and a small halo ring at its
+  rest length, while the selection can set its Stroke or Coil length. Between
+  the stops the ring sits on joint B, otherwise short of the shortest or
+  past the longest. A dashed line joins the two ticks. Like a Camera's
+  rays, all of it is drawn over the whole creature, joints included.
+  A creation card draws the same
   coilover, scaled down with the creature (#770).
 
 ## Draw layers

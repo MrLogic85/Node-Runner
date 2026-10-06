@@ -105,10 +105,10 @@ public sealed record ParameterSlider(PartParameterId Id, UiText Label, UiText Re
 }
 
 /// <summary>
-/// Every part setting (#704). A Piston's Max strength is in N, its Stroke % of its shortest length,
+/// Every part setting (#704). A Piston's Max strength is in N, its Stroke % of its shortest gap between its joints' edges (#835),
 /// its Start position % of its travel (#870), its Max speed in m/s (#451) and its Rise time in s
 /// (#801); a Spring's Stiffness is in N/m, its Damping in N·s/m (#453, #801), and its Stroke and
-/// Preload in % like a Piston's Stroke and Start position (#835); a Camera's aim is turned on the canvas (#594).
+/// Coil length in % like a Piston's Stroke and Start position (#835); a Camera's aim is turned on the canvas (#594).
 /// </summary>
 public static class PartParameters
 {
@@ -145,9 +145,9 @@ public static class PartParameters
     public static PartParameter Damping { get; } = new(
         PartParameterId.Damping, MultiEditable: true, new(UiText.Plain("Damping"), new(0, 100, 1), 0, "{0} N·s/m", "{0}–{1} N·s/m", value => value, value => value));
 
-    // Preload may press the Spring against a stop, so it reaches past 0–100% (#835).
-    public static PartParameter Preload { get; } = new(
-        PartParameterId.Preload, MultiEditable: true, new(UiText.Plain("Preload"), new(SpringDef.MinPreload * 100, SpringDef.MaxPreload * 100, 5), 0, "{0}%", "{0}–{1}%", value => value * 100, value => value / 100));
+    // In whole percent, as a new Spring's stops sit at a third and two thirds of it (#835).
+    public static PartParameter CoilLength { get; } = new(
+        PartParameterId.CoilLength, MultiEditable: true, new(UiText.Plain("Coil length"), new(SpringDef.MinCoilLength * 100, SpringDef.MaxCoilLength * 100, 1), 0, "{0}%", "{0}–{1}%", value => value * 100, value => value / 100));
 
     public static PartParameter Aim { get; } = new(PartParameterId.Aim, MultiEditable: false, Slider: null);
 
@@ -164,7 +164,7 @@ public static class PartParameters
         PartParameterId.Aim => Aim,
         PartParameterId.Stiffness => Stiffness,
         PartParameterId.Damping => Damping,
-        PartParameterId.Preload => Preload,
+        PartParameterId.CoilLength => CoilLength,
         _ => throw new ArgumentOutOfRangeException(nameof(id)),
     };
 

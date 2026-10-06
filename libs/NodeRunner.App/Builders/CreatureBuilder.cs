@@ -244,7 +244,7 @@ public sealed class CreatureBuilder
                 PartParameterId.Stiffness => spring.Stiffness,
                 PartParameterId.Damping => spring.Damping,
                 PartParameterId.Stroke => spring.Stroke,
-                PartParameterId.Preload => spring.Preload,
+                PartParameterId.CoilLength => spring.CoilLength,
                 _ => throw new ArgumentOutOfRangeException(nameof(parameter)),
             };
         }
@@ -291,10 +291,10 @@ public sealed class CreatureBuilder
             var spring = _springs[springIndex];
             _springs[springIndex] = parameter switch
             {
-                PartParameterId.Stiffness => spring.WithSettings(value, spring.Damping, spring.Stroke, spring.Preload),
-                PartParameterId.Damping => spring.WithSettings(spring.Stiffness, value, spring.Stroke, spring.Preload),
-                PartParameterId.Stroke => spring.WithSettings(spring.Stiffness, spring.Damping, value, spring.Preload),
-                PartParameterId.Preload => spring.WithSettings(spring.Stiffness, spring.Damping, spring.Stroke, value),
+                PartParameterId.Stiffness => spring.WithSettings(value, spring.Damping, spring.Stroke, spring.CoilLength),
+                PartParameterId.Damping => spring.WithSettings(spring.Stiffness, value, spring.Stroke, spring.CoilLength),
+                PartParameterId.Stroke => spring.WithSettings(spring.Stiffness, spring.Damping, value, spring.CoilLength),
+                PartParameterId.CoilLength => spring.WithSettings(spring.Stiffness, spring.Damping, spring.Stroke, value),
                 _ => throw new ArgumentOutOfRangeException(nameof(parameter)),
             };
             return;
@@ -333,7 +333,7 @@ public sealed class CreatureBuilder
 
     private static readonly PartParameterId[] _servoParameters = [PartParameterId.ServoStrength, PartParameterId.Range, PartParameterId.StartPosition, PartParameterId.AngularMaxSpeed, PartParameterId.RiseTime];
 
-    private static readonly PartParameterId[] _springParameters = [PartParameterId.Stiffness, PartParameterId.Damping, PartParameterId.Stroke, PartParameterId.Preload];
+    private static readonly PartParameterId[] _springParameters = [PartParameterId.Stiffness, PartParameterId.Damping, PartParameterId.Stroke, PartParameterId.CoilLength];
 
     private static readonly PartParameterId[] _cameraParameters = [PartParameterId.Aim];
 

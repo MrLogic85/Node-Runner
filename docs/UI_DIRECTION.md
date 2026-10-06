@@ -436,6 +436,16 @@ reference would mislead someone working on that surface.
     hit and a 6-unit `halo` ring there; other shadows draw no rays
     (`docs/CREATURE_MODEL.md` → "Drawing as a shadow"). Rays leave from the
     picture's edge and are drawn over the joints.
+  - *Link travel (#704, #835):* a selected Piston or Spring draws its
+    stops as `halo` `stroke-signal` ticks, and a Spring its rest length as
+    a 3-unit `halo` ring: on joint B's centre while that is between the
+    stops, otherwise short of the shortest or past the longest. Like the rays,
+    they and the dashed line from one tick to the other are drawn over the
+    whole creature, joints included; the line leaves the ring's hole clear. Each sits at
+    its true length, even on joint B, so the span never looks wider than
+    it is. The travel is on the gap between the joints' edges, so the
+    cylinder or body, from joint A's edge, never reaches past joint B's
+    edge at the shortest tick.
   - *Order:* joints, then sensors, then beams, for both tapping and drawing.
     Dragging from a sensor never moves it.
   - *Placing:* the dragged part's glyph rides on a 48 px raised tile with an

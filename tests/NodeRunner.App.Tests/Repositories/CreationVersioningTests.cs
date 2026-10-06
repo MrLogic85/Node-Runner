@@ -87,7 +87,7 @@ public sealed class CreationVersioningTests : IDisposable
 
         var spring = new FileCreationRepository(new TestStorageLocation(_directory)).List().ShouldHaveSingleItem().Creature.Springs.ShouldHaveSingleItem();
 
-        spring.ShouldBe(new SpringDef(50, 3, 4, null, 300, 5, stroke: 1, preload: 0.5));
+        spring.ShouldBe(new SpringDef(50, 3, 4, null, 300, 5, stroke: 1, coilLength: 0.5));
     }
 
     [Fact]

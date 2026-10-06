@@ -2,10 +2,11 @@ namespace NodeRunner.Domain;
 
 /// <summary>
 /// A Spring (#453): a passive link between two nodes that pulls them back toward its rest length,
-/// their distance in the drawing unless <see cref="Preload"/> presses it against a stop, and damps
+/// their distance in the drawing unless <see cref="CoilLength"/> presses it against a stop, and damps
 /// how fast that distance changes. It limits movement without holding it rigid, has no brain ports and draws no power. Like a Piston it travels between a shortest and
-/// a longest length, <see cref="Stroke"/> apart, and <see cref="Preload"/> says where in that travel
-/// the drawn length sits; outside 0…1 it starts pressed against a stop (#835). See
+/// a longest length, <see cref="Stroke"/> apart, and <see cref="CoilLength"/> moves its rest length
+/// evenly across that travel and half its drawn gap, between its joints' edges, past each stop, where it starts pressed
+/// against that stop (#835). See
 /// <c>Spring</c> in NodeRunner.Mechanics and docs/CREATURE_MODEL.md.
 /// </summary>
 public sealed record SpringDef
@@ -22,17 +23,21 @@ public sealed record SpringDef
     /// <summary>A new Spring's <see cref="Damping"/>: 10 N·s/m.</summary>
     public const double DefaultDamping = 10;
 
-    /// <summary>A new Spring's <see cref="Stroke"/>: it can be squeezed to half its longest length.</summary>
+    /// <summary>A new Spring's <see cref="Stroke"/>: the gap between its joints' edges can be squeezed to half its longest.</summary>
     public const double DefaultStroke = 1;
 
-    /// <summary>A new Spring's <see cref="Preload"/>: drawn at its longest, like a car's suspension hanging free.</summary>
-    public const double DefaultPreload = 1;
+    /// <summary>
+    /// A new Spring's <see cref="CoilLength"/>: at its <see cref="DefaultStroke"/>, its travel is half its
+    /// drawn gap between its joints' edges, so its rest length is on its longest stop two thirds of the way along, drawn
+    /// there like a car's suspension hanging free.
+    /// </summary>
+    public const double DefaultCoilLength = 2.0 / 3;
 
-    /// <summary>The lowest <see cref="Preload"/>.</summary>
-    public const double MinPreload = -0.5;
+    /// <summary>The lowest <see cref="CoilLength"/>: its rest length half its drawn gap short of its shortest stop.</summary>
+    public const double MinCoilLength = 0;
 
-    /// <summary>The highest <see cref="Preload"/>.</summary>
-    public const double MaxPreload = 2;
+    /// <summary>The highest <see cref="CoilLength"/>: its rest length half its drawn gap past its longest stop.</summary>
+    public const double MaxCoilLength = 1;
 
     public SpringDef(
         int id,
@@ -42,7 +47,7 @@ public sealed record SpringDef
         double stiffness = DefaultStiffness,
         double damping = DefaultDamping,
         double stroke = DefaultStroke,
-        double preload = DefaultPreload)
+        double coilLength = DefaultCoilLength)
     {
         if (id <= 0)
         {
@@ -76,12 +81,12 @@ public sealed record SpringDef
 
         if (!double.IsFinite(stroke) || stroke <= 0 || stroke > 1)
         {
-            throw new ArgumentOutOfRangeException(nameof(stroke), "Spring stroke must be a share of its shortest length above 0 and at most 1.");
+            throw new ArgumentOutOfRangeException(nameof(stroke), "Spring stroke must be above 0 and at most 1.");
         }
 
-        if (!double.IsFinite(preload) || preload < MinPreload || preload > MaxPreload)
+        if (!double.IsFinite(coilLength) || coilLength < MinCoilLength || coilLength > MaxCoilLength)
         {
-            throw new ArgumentOutOfRangeException(nameof(preload), $"Spring preload must be between {MinPreload} and {MaxPreload}.");
+            throw new ArgumentOutOfRangeException(nameof(coilLength), $"Spring coil length must be between {MinCoilLength} and {MaxCoilLength}.");
         }
 
         Id = id;
@@ -91,7 +96,7 @@ public sealed record SpringDef
         Stiffness = stiffness;
         Damping = damping;
         Stroke = stroke;
-        Preload = preload;
+        CoilLength = coilLength;
     }
 
     public int Id { get; }
@@ -112,19 +117,24 @@ public sealed record SpringDef
     /// </summary>
     public double Damping { get; }
 
-    /// <summary>How much it can grow from its shortest length, as a share of it: at most 1, so it can at most double.</summary>
+    /// <summary>
+    /// Its travel, as a Piston's of this Stroke drawn at its longest: drawn gap × s / (1 + s), the
+    /// gap being between its joints' edges (#835), so above 0 and at most 1, where it is half that gap.
+    /// </summary>
     public double Stroke { get; }
 
     /// <summary>
-    /// Where its rest length sits in its travel: 0 at its shortest, 1 at its longest. Inside 0…1 that
-    /// is the drawn length. Outside it the travel stays where 0 or 1 puts it, the drawn length on
-    /// that stop, and only the rest length moves past it, so the Spring starts pressed against it:
-    /// above 1 it pushes its nodes apart against its longest, below 0 it pulls them in.
+    /// Where its rest length sits, evenly from half its drawn gap, between its joints' edges, short of
+    /// its shortest stop at 0 to half that gap past its longest at 1. Between its stops that is the drawn length,
+    /// and the stops sit round it. Past a stop they stay, the drawn length on that stop, and the
+    /// Spring starts pressed against it: past its longest it pushes its nodes apart, past its
+    /// shortest it pulls them in. A new Stroke keeps the Coil length, so its stops may move past or
+    /// off its rest length.
     /// </summary>
-    public double Preload { get; }
+    public double CoilLength { get; }
 
-    public SpringDef WithName(string? name) => new(Id, NodeA, NodeB, name, Stiffness, Damping, Stroke, Preload);
+    public SpringDef WithName(string? name) => new(Id, NodeA, NodeB, name, Stiffness, Damping, Stroke, CoilLength);
 
-    public SpringDef WithSettings(double stiffness, double damping, double stroke, double preload) =>
-        new(Id, NodeA, NodeB, Name, stiffness, damping, stroke, preload);
+    public SpringDef WithSettings(double stiffness, double damping, double stroke, double coilLength) =>
+        new(Id, NodeA, NodeB, Name, stiffness, damping, stroke, coilLength);
 }

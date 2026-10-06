@@ -6,6 +6,9 @@ public sealed class PistonTests
 {
     private const double _built = 100;
 
+    // Joints with no size, so the gap between their edges is the drawn length.
+    private const double _pointJoints = 0;
+
     private const double _step = 1.0 / 60;
 
     private static readonly PistonDef _piston = new(1, 2, 3);
@@ -19,15 +22,61 @@ public sealed class PistonTests
     {
         var piston = new PistonDef(1, 2, 3, stroke: 1, start: start);
 
-        Piston.ShortestLength(piston, _built).ShouldBe(shortest, tolerance: 1e-9);
-        Piston.LongestLength(piston, _built).ShouldBe(longest, tolerance: 1e-9);
+        Piston.ShortestLength(piston, _built, _pointJoints).ShouldBe(shortest, tolerance: 1e-9);
+        Piston.LongestLength(piston, _built, _pointJoints).ShouldBe(longest, tolerance: 1e-9);
+    }
+
+    // Drawn 1 m between joints of radius 20, so a gap of 60 between their edges that the stroke grows.
+    [Theory]
+    [InlineData(0, 100, 160)]
+    [InlineData(1, 70, 100)]
+    public void ShortestAndLongest_GrowTheGapBetweenItsJointsEdges(double start, double shortest, double longest)
+    {
+        var piston = new PistonDef(1, 2, 3, stroke: 1, start: start);
+
+        Piston.ShortestLength(piston, _built, 40).ShouldBe(shortest, tolerance: 1e-9);
+        Piston.LongestLength(piston, _built, 40).ShouldBe(longest, tolerance: 1e-9);
+    }
+
+    [Fact]
+    public void AServosBiggerJoint_ShortensItsTravel()
+    {
+        var plain = 2 * NodeDef.PlainJointRadius;
+        var withServo = NodeDef.PlainJointRadius + ServoDef.JointRadius;
+
+        var plainTravel = Piston.LongestLength(_piston, _built, plain) - Piston.ShortestLength(_piston, _built, plain);
+        var servoTravel = Piston.LongestLength(_piston, _built, withServo) - Piston.ShortestLength(_piston, _built, withServo);
+
+        servoTravel.ShouldBeLessThan(plainTravel);
+    }
+
+    [Fact]
+    public void WithItsJointsTouching_ItCannotMove()
+    {
+        Piston.ShortestLength(_piston, _built, 120).ShouldBe(_built);
+        Piston.LongestLength(_piston, _built, 120).ShouldBe(_built);
+    }
+
+    // So a cylinder from joint A's edge as long as its travel never reaches past joint B's edge.
+    [Theory]
+    [InlineData(0.1, 0)]
+    [InlineData(1, 0)]
+    [InlineData(1, 1)]
+    [InlineData(0.5, 0.5)]
+    public void AtItsShortest_TheGapBetweenItsJointsEdges_IsAtLeastItsTravel(double stroke, double start)
+    {
+        var piston = new PistonDef(1, 2, 3, stroke: stroke, start: start);
+        var radii = NodeDef.PlainJointRadius + ServoDef.JointRadius;
+
+        var shortest = Piston.ShortestLength(piston, _built, radii);
+        (shortest - radii).ShouldBeGreaterThanOrEqualTo(Piston.LongestLength(piston, _built, radii) - shortest - 1e-9);
     }
 
     [Fact]
     public void ShortestAndLongest_ForANewPiston_SpanEightyToOneHundredAndTwentyPercent()
     {
-        Piston.ShortestLength(_piston, _built).ShouldBe(80, tolerance: 1e-9);
-        Piston.LongestLength(_piston, _built).ShouldBe(120, tolerance: 1e-9);
+        Piston.ShortestLength(_piston, _built, _pointJoints).ShouldBe(80, tolerance: 1e-9);
+        Piston.LongestLength(_piston, _built, _pointJoints).ShouldBe(120, tolerance: 1e-9);
     }
 
     [Theory]
@@ -38,9 +87,12 @@ public sealed class PistonTests
     {
         var piston = new PistonDef(1, 2, 3, stroke: 0.6, start: start);
 
-        Piston.LengthInput(piston, _built, Piston.ShortestLength(piston, _built)).ShouldBe(0, tolerance: 1e-12);
-        Piston.LengthInput(piston, _built, Piston.LongestLength(piston, _built)).ShouldBe(1, tolerance: 1e-12);
-        Piston.LengthInput(piston, _built, _built).ShouldBe(start, tolerance: 1e-12);
+        Piston.LengthInput(piston, _built, _pointJoints, Piston.ShortestLength(piston, _built, _pointJoints)).ShouldBe(0, tolerance: 1e-12);
+        Piston.LengthInput(piston, _built, _pointJoints, Piston.LongestLength(piston, _built, _pointJoints)).ShouldBe(1, tolerance: 1e-12);
+        Piston.LengthInput(piston, _built, _pointJoints, _built).ShouldBe(start, tolerance: 1e-12);
+        Piston.LengthInput(piston, _built, 40, Piston.ShortestLength(piston, _built, 40)).ShouldBe(0, tolerance: 1e-12);
+        Piston.LengthInput(piston, _built, 40, Piston.LongestLength(piston, _built, 40)).ShouldBe(1, tolerance: 1e-12);
+        Piston.LengthInput(piston, _built, 40, _built).ShouldBe(start, tolerance: 1e-12);
     }
 
     [Fact]
@@ -56,10 +108,10 @@ public sealed class PistonTests
     {
         var piston = new PistonDef(1, 2, 3, stroke: 1, start: 0);
 
-        Piston.TargetLength(piston, _built, -1).ShouldBe(100, tolerance: 1e-9);
-        Piston.TargetLength(piston, _built, 0).ShouldBe(150, tolerance: 1e-9);
-        Piston.TargetLength(piston, _built, 1).ShouldBe(200, tolerance: 1e-9);
-        Piston.TargetLength(piston, _built, 3).ShouldBe(200, tolerance: 1e-9);
+        Piston.TargetLength(piston, _built, _pointJoints, -1).ShouldBe(100, tolerance: 1e-9);
+        Piston.TargetLength(piston, _built, _pointJoints, 0).ShouldBe(150, tolerance: 1e-9);
+        Piston.TargetLength(piston, _built, _pointJoints, 1).ShouldBe(200, tolerance: 1e-9);
+        Piston.TargetLength(piston, _built, _pointJoints, 3).ShouldBe(200, tolerance: 1e-9);
     }
 
     [Theory]
@@ -72,7 +124,7 @@ public sealed class PistonTests
         var piston = new PistonDef(1, 2, 3, stroke: 0.4, start: start);
 
         Piston.DrawnPosition(piston).ShouldBe(position, tolerance: 1e-12);
-        Piston.TargetLength(piston, _built, Piston.DrawnPosition(piston)).ShouldBe(_built, tolerance: 1e-9);
+        Piston.TargetLength(piston, _built, _pointJoints, Piston.DrawnPosition(piston)).ShouldBe(_built, tolerance: 1e-9);
     }
 
     [Fact]
@@ -169,7 +221,7 @@ public sealed class PistonTests
 
         StillPushesAtTheEnd(forces, OutputSignals.StrengthFromOutput(strength, piston.Strength)).ShouldBeFalse();
         topSpeed.ShouldBeLessThanOrEqualTo(maxSpeed * 1.35);
-        length.ShouldBe(Piston.LongestLength(piston, _built), tolerance: 0.5);
+        length.ShouldBe(Piston.LongestLength(piston, _built, _pointJoints), tolerance: 0.5);
     }
 
     [Fact]
@@ -180,7 +232,7 @@ public sealed class PistonTests
         // needs to lack some speed, and so some distance, to keep carrying the load.
         var forces = Run(pairMass: 2, strength: 1, load: -_piston.Strength / 4, steps: 600, out var length, out _);
 
-        var target = Piston.LongestLength(_piston, _built);
+        var target = Piston.LongestLength(_piston, _built, _pointJoints);
         length.ShouldBeInRange(target - 6, target - 1);
         forces.TakeLast(60).Average().ShouldBe(_piston.Strength / 4, tolerance: _piston.Strength * 0.01);
     }
@@ -217,8 +269,8 @@ public sealed class PistonTests
         PistonDef? piston = null)
     {
         piston ??= _piston;
-        var shortest = Piston.ShortestLength(piston, _built);
-        var longest = Piston.LongestLength(piston, _built);
+        var shortest = Piston.ShortestLength(piston, _built, _pointJoints);
+        var longest = Piston.LongestLength(piston, _built, _pointJoints);
         length = _built;
         var speed = 0.0;
         var force = 0.0;
@@ -226,7 +278,7 @@ public sealed class PistonTests
         topSpeed = 0.0;
         for (var i = 0; i < steps; i++)
         {
-            force = Piston.NextForce(piston, _built, length, speed, position, strength, force, _step);
+            force = Piston.NextForce(piston, _built, _pointJoints, length, speed, position, strength, force, _step);
             speed += (force + (i < loadSteps ? load : 0)) / pairMass * _step;
             length += speed * _step;
             if (endStops && (length < shortest || length > longest))
@@ -249,7 +301,7 @@ public sealed class PistonTests
         var forces = new List<double>();
         for (var i = 0; i < (int)(2 * riseTime / _step); i++)
         {
-            force = Piston.NextForce(piston, _built, _built, 0, 1, strength, force, _step);
+            force = Piston.NextForce(piston, _built, _pointJoints, _built, 0, 1, strength, force, _step);
             forces.Add(force);
         }
 
@@ -257,5 +309,5 @@ public sealed class PistonTests
     }
 
     private static double Next(double length, double speed, double position, double force, double strength = 1) =>
-        Piston.NextForce(_piston, _built, length, speed, position, strength, force, _step);
+        Piston.NextForce(_piston, _built, _pointJoints, length, speed, position, strength, force, _step);
 }

@@ -145,8 +145,8 @@ public sealed class BuildViewModelTests
     [InlineData(new[] { 201 }, "Aim")]
     [InlineData(new[] { 201, 202 }, "")]
     [InlineData(new[] { 201, 301 }, "")]
-    [InlineData(new[] { 401 }, "Stiffness,Damping,Stroke,Preload")]
-    [InlineData(new[] { 401, 402 }, "Stiffness,Damping,Stroke,Preload")]
+    [InlineData(new[] { 401 }, "Stiffness,Damping,Stroke,CoilLength")]
+    [InlineData(new[] { 401, 402 }, "Stiffness,Damping,Stroke,CoilLength")]
     [InlineData(new[] { 301, 401 }, "Stroke")]
     [InlineData(new int[0], "")]
     public void EditableParameters_AreOnePartsOwn_OrThoseEverySelectedPartHasAndCanShare(int[] parts, string editable)

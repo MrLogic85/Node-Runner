@@ -161,15 +161,15 @@ public sealed class CreatureBuilderTests
         var spring = builder.AddSpring(builder.Nodes[0].Id, far);
 
         builder.ParametersOf(spring).ShouldBe(
-            [PartParameterId.Stiffness, PartParameterId.Damping, PartParameterId.Stroke, PartParameterId.Preload]);
+            [PartParameterId.Stiffness, PartParameterId.Damping, PartParameterId.Stroke, PartParameterId.CoilLength]);
         builder.SetParameter(spring, PartParameterId.Damping, 0.6);
         builder.SetParameter(spring, PartParameterId.Stroke, 0.3);
-        builder.SetParameter(spring, PartParameterId.Preload, -0.5);
+        builder.SetParameter(spring, PartParameterId.CoilLength, 0.2);
 
-        builder.Springs.Single().ShouldBe(new SpringDef(spring, builder.Nodes[0].Id, far, damping: 0.6, stroke: 0.3, preload: -0.5));
+        builder.Springs.Single().ShouldBe(new SpringDef(spring, builder.Nodes[0].Id, far, damping: 0.6, stroke: 0.3, coilLength: 0.2));
         builder.ParameterValue(spring, PartParameterId.Stiffness).ShouldBe(SpringDef.DefaultStiffness);
         builder.ParameterValue(spring, PartParameterId.Stroke).ShouldBe(0.3);
-        builder.ParameterValue(spring, PartParameterId.Preload).ShouldBe(-0.5);
+        builder.ParameterValue(spring, PartParameterId.CoilLength).ShouldBe(0.2);
         builder.Nodes.Single(node => node.Id == far).Position.ShouldBe(new Vector2D(180, 0));
     }
 

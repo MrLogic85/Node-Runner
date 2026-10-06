@@ -3,31 +3,52 @@ using NodeRunner.Domain;
 namespace NodeRunner.Mechanics;
 
 /// <summary>
-/// The travel and rest length of a <see cref="SpringDef"/> (#835). It has a hard stop at each end
-/// of its travel. Inside 0…1 its <see cref="SpringDef.Preload"/> says where the drawn length sits in
-/// that travel, and the Spring pushes nothing there. Outside 0…1 the travel stays where 0 or 1 puts
-/// it, with the drawn length on a stop, and only its rest length moves on past that stop, so the
-/// Spring starts pressed against it, harder the further out.
+/// The travel and rest length of a <see cref="SpringDef"/> (#835). Like a Piston's they are measured
+/// on the gap between its joints' edges, where the movement happens. It has a hard stop at each end
+/// of a travel as long as a Piston's of the same Stroke drawn at its longest. Its
+/// <see cref="SpringDef.CoilLength"/> moves its rest length evenly from half its drawn gap short of its
+/// shortest stop to half its drawn gap past its longest. While the rest length is inside the travel
+/// it is the drawn length, and the stops move round it; past a stop the stops stay with the drawn
+/// length on that stop, and the Spring starts pressed against it, harder the further out.
 /// </summary>
+/// <remarks>
+/// Every length takes the Spring's length as built, centre to centre, and its two joints' radii
+/// together; a joint with a Servo is bigger, so its gap and travel are shorter.
+/// </remarks>
 public static class Spring
 {
-    /// <summary>Its shortest length: the drawn length sits <see cref="SpringDef.Preload"/>, kept within 0…1, of the way to its longest.</summary>
-    public static double ShortestLength(SpringDef spring, double builtLength)
+    /// <summary>Its shortest length: <see cref="Offset"/> short of the drawn length, kept within its travel.</summary>
+    public static double ShortestLength(SpringDef spring, double builtLength, double jointRadii)
     {
         ArgumentNullException.ThrowIfNull(spring);
-        return Travel.Shortest(builtLength, spring.Stroke, Math.Clamp(spring.Preload, 0, 1));
+        return builtLength - Math.Clamp(Offset(spring, builtLength, jointRadii), 0, TravelLength(spring, builtLength, jointRadii));
     }
 
-    /// <summary>Its longest length: its shortest grown by <see cref="SpringDef.Stroke"/>.</summary>
-    public static double LongestLength(SpringDef spring, double builtLength) =>
-        ShortestLength(spring, builtLength) * (1 + spring.Stroke);
+    /// <summary>Its longest length: its shortest plus its <see cref="TravelLength"/>.</summary>
+    public static double LongestLength(SpringDef spring, double builtLength, double jointRadii) =>
+        ShortestLength(spring, builtLength, jointRadii) + TravelLength(spring, builtLength, jointRadii);
+
+    /// <summary>Where it pushes nothing: <see cref="Offset"/> past its shortest stop.</summary>
+    public static double RestLength(SpringDef spring, double builtLength, double jointRadii) =>
+        ShortestLength(spring, builtLength, jointRadii) + Offset(spring, builtLength, jointRadii);
 
     /// <summary>
-    /// Where it pushes nothing: <see cref="SpringDef.Preload"/> of the way along its travel. That is
-    /// the drawn length inside 0…1, and beyond a stop outside it.
+    /// How far its longest length is past its shortest: a Piston's travel at the same Stroke drawn
+    /// at its longest, so it does not depend on its Coil length.
     /// </summary>
-    public static double RestLength(SpringDef spring, double builtLength) =>
-        ShortestLength(spring, builtLength) * (1 + (spring.Preload * spring.Stroke));
+    public static double TravelLength(SpringDef spring, double builtLength, double jointRadii)
+    {
+        ArgumentNullException.ThrowIfNull(spring);
+        return Travel.Longest(builtLength, jointRadii, spring.Stroke, 1) - Travel.Shortest(builtLength, jointRadii, spring.Stroke, 1);
+    }
+
+    // How far its rest length is past its shortest stop: from half the drawn gap short of it at
+    // Coil length 0 to half the drawn gap past its longest at 1, evenly.
+    private static double Offset(SpringDef spring, double builtLength, double jointRadii)
+    {
+        var margin = Travel.Gap(builtLength, jointRadii) / 2;
+        return (spring.CoilLength * ((2 * margin) + TravelLength(spring, builtLength, jointRadii))) - margin;
+    }
 
     /// <summary>
     /// The rest length to give Godot's spring this step (#835): its own rest length, but past a stop
@@ -37,7 +58,7 @@ public static class Spring
     /// A real preloaded spring presses its stop with its whole preload and the stop holds it inside,
     /// so its nodes feel nothing until a load beats the preload. Godot's spring would instead push
     /// its whole preload through the nodes into the end-stop joints, which give way under it and
-    /// throw the creature about (measured headless on a creature at preload 2, stiffness 2000).
+    /// throw the creature about (measured headless on a creature resting at 1.5 times its drawn length, stiffness 2000).
     /// Pushing only what reaches the stop keeps the preload inside it. Under a load it pushes back
     /// up to the full preload; <paramref name="reducedMass"/> counts only its two nodes, so against a
     /// heavier creature it gives a little rather than overshoot.

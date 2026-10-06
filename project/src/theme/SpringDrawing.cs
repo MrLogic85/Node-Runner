@@ -7,11 +7,11 @@ namespace NodeRunner.Theme;
 /// <summary>
 /// Draws a Spring between two joints (#453) as a coilover (#807), shared by Build's canvas, the
 /// creature in Training and the thumbnails: a <c>line-strong</c> rod from ring to ring, a seat
-/// plate just outside each joint's edge, a <c>panel</c> damper body from seat A, and a helix wound round it,
+/// plate just outside each joint's edge, a <c>panel</c> damper body from joint A's edge, and a helix wound round it,
 /// its front strokes in <c>muted</c> over the body and its back strokes as <c>line-strong</c>
-/// strokes under it, all of the same wire with round ends, each side in one call (#835). Like a Piston's cylinder, the body is as long as the Spring's travel (#835).
+/// strokes under it, all of the same wire with round ends, each side in one call (#835). Like a Piston's cylinder, the body is as long as the Spring's travel, which is on the gap between the joints' edges (#835).
 /// The coil's wire is thicker the stiffer the Spring, and its turns are wound for its rest length,
-/// so a Preload that presses it harder against a stop packs in more of them. No
+/// so a coil length that presses it harder against a stop packs in more of them. No
 /// <c>accent</c>, as the Spring has no brain ports; all of it turns <c>danger</c> while too short.
 /// Selected, it gets the Piston's two <c>halo</c> lines outside its seats. Drawn through
 /// <see cref="UiPixelPen"/>, so it stays crisp at any zoom.
@@ -113,10 +113,14 @@ public static class SpringDrawing
             // The back strokes are the same wire, so each turn reads as one coil.
             pen.Strokes(Helix(seatA, seatB, across, turns, radius, segments, front: false), line, wire);
 
-            var length = Math.Min(travel, span);
-            if (length >= _minBodyLength)
+            // The travel is on the gap between the joints' edges (#835) and it starts under seat A at
+            // joint A's edge, so at its shortest joint B's edge meets the body's end at most.
+            // A short one still shows past seat A.
+            var length = Math.Min(Math.Max(travel, _lead + _minBodyLength), a.DistanceTo(b) - radiusA - radiusB);
+            if (length > _lead)
             {
-                var body = PistonDrawing.Cylinder(seatA, seatA + (along * length), along, across, theme.BeamWidth * _bodyHalfPerBeam);
+                var edgeA = a + (along * radiusA);
+                var body = PistonDrawing.Cylinder(edgeA, edgeA + (along * length), along, across, theme.BeamWidth * _bodyHalfPerBeam);
                 pen.Polygon(body, theme.SensorFill);
                 pen.Polyline([.. body, body[0]], line, _line);
             }
@@ -159,7 +163,7 @@ public static class SpringDrawing
     /// a third of <paramref name="restSpan"/>, seat to seat at the Spring's rest length, and at least
     /// <see cref="MinTurns"/>. Past <see cref="LongSpan"/> they grow only with the square root of
     /// the span, so a long coil does not turn into a grey band of hundreds, yet still gains turns
-    /// with its Preload, as there is no most (#835). They never depend on its current length, so
+    /// with its Coil length, as there is no most (#835). They never depend on its current length, so
     /// they hold still as it moves.
     /// </summary>
     public static int CoilTurns(float restSpan, float wire)
