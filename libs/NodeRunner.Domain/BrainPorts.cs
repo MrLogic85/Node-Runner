@@ -14,7 +14,7 @@ public static class BrainPorts
     /// <summary>A Camera's input keys, one per ray from left to right. Never change one.</summary>
     public static IReadOnlyList<string> CameraChannels { get; } = ["left1", "centre", "right1"];
 
-    /// <summary>A Piston's length input key: how far it is from its built length.</summary>
+    /// <summary>A Piston's length input key: where it is in its travel, 0 at its shortest length and 1 at its longest.</summary>
     public const string PistonLengthChannel = "length";
 
     /// <summary>A Piston's speed input key.</summary>

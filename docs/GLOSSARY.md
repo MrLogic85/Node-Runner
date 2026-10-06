@@ -101,9 +101,12 @@ Long-form descriptions and the sensor/model contract live in
   toward its drawn length with its Stiffness; its Damping (N·s/m) brakes
   the speed between its nodes. No brain ports. See:
   `docs/CREATURE_MODEL.md`.
-- **Stroke** — How far a Piston moves each way from its built length, as a
-  share of that length: ±30% means it reaches 70%…130%. Its end stops hold
-  it there, whatever the load. See: `docs/CREATURE_MODEL.md`.
+- **Stroke** — How much a Piston can grow, as a share of its shortest
+  length: 100% means it can double, the most a real cylinder can. Its end
+  stops hold it there, whatever the load. See: `docs/CREATURE_MODEL.md`.
+- **Start position** — Where a part's drawn pose sits in its travel or
+  range, 0…100%. A Piston at 0% is drawn at its shortest; a Servo's sits
+  that far through its Range. See: `docs/CREATURE_MODEL.md`.
 - **Strength output / Strength setting** — A powered part's Strength
   setting, chosen in Build, is its maximum force. Its strength output is the
   brain's sigmoid choice, 0…1, of how much of that maximum to use this tick.

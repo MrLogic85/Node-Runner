@@ -211,7 +211,11 @@
               },
               "stroke": {
                 "type": "number",
-                "default": 0.3
+                "default": 0.5
+              },
+              "start": {
+                "type": "number",
+                "default": 0.5
               },
               "maxSpeed": {
                 "type": "number",

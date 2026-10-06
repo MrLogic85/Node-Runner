@@ -91,7 +91,7 @@ Schema: [`save-schema/creation.schema.json`](save-schema/creation.schema.json).
 | `beams[]` | `{ id, nodeA, nodeB, name }` | Beams between two node ids. |
 | `sensors[]` | `{ id, beamId, kind, name, aim }` | One sensor per beam. `kind` is `accelerometer` or `camera`. `aim` is the Camera's centre ray from its beam, and `null` for other kinds. |
 | `servos[]` | `{ id, nodeId, fixedLinkId, targetLinkId, name, strength, range, start, maxSpeed, riseTime }` | Servo joint motors (#452). `fixedLinkId` and `targetLinkId` may reference a Beam, Piston or Spring touching `nodeId`, and are nullable so deleting a held link keeps the Servo but blocks training until the player picks a replacement. `strength` is world torque units (N·m × 10⁴), `range` and `maxSpeed` are radians/radians per second, `start` is 0–1, and `riseTime` is seconds. Required since format version 2; version 1 saves are migrated with an empty list. |
-| `pistons[]` | `{ id, nodeA, nodeB, name, strength, stroke, maxSpeed, riseTime }` | Pistons between two node ids (#451). `strength` is in world force units (100 per newton), `stroke` a share of its built length (0.3 is ±30%), `maxSpeed` in world units per second (100 per m/s), `riseTime` in seconds (#801; missing in older saves, read as 0.2). |
+| `pistons[]` | `{ id, nodeA, nodeB, name, strength, stroke, start, maxSpeed, riseTime }` | Pistons between two node ids (#451). `strength` is in world force units (100 per newton), `stroke` how much it can grow as a share of its shortest length (0 < stroke ≤ 1; 1 doubles it, #870), `start` where its drawn length sits in that travel (0 shortest … 1 longest, #870), `maxSpeed` in world units per second (100 per m/s), `riseTime` in seconds (#801; missing in older saves, read as 0.2). |
 | `springs[]` | `{ id, nodeA, nodeB, name, stiffness, damping }` | Springs between two node ids (#453). `stiffness` is in N/m (the same number in world units), `damping` a coefficient in N·s/m, the same number in world units (#801; before it was a share of critical damping, so older saves damp almost nothing). |
 | `nextPartId` | int | The next free part id. Higher than every id in use; removed ids are never reused. |
 
@@ -203,6 +203,7 @@ Current `creation.json` migrations:
 | From | To | Change |
 |---|---|---|
 | 1 | 2 | Add required `creature.servos: []` to pre-Servo saves. |
+| 2 | 3 | #870: a Piston's `stroke` was ±s of its built length (missing: 0.3). It becomes `2s / (1 − s)` with `start: 0.5`, which keeps its shortest and longest lengths. A Piston can now at most double, so a stroke above ±⅓ becomes 1 (about ±33%). Its `length` input went from −1…1 around the built length to 0…1 over its travel, so each brain connection from it doubles its `weight` and takes the old weight off the `bias` of the neuron it feeds (an enabled connection only): a trained brain drives its Pistons as before, exactly while their stroke was within ±⅓. |
 
 ### Changing a saved shape
 

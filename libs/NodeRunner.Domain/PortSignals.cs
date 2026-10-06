@@ -5,7 +5,8 @@ namespace NodeRunner.Domain;
 /// newly added output starts. A new output has no incoming weight and an almost passive bias, so a
 /// part added to a trained brain starts close to doing nothing and mutation can still teach it.
 /// <list type="bullet">
-/// <item>Velocity and position use <c>tanh</c>: −1…1, with 0 meaning stand still or the built pose.</item>
+/// <item>Velocity and position use <c>tanh</c>: −1…1, with 0 meaning stand still, a Servo's built
+/// pose, or the middle of a Piston's travel (#870).</item>
 /// <item>Strength uses <c>sigmoid</c>: 0…1 of the part's Strength setting, which stays the maximum.
 /// A new strength output starts at bias −4, about 2% force, with no dead zone below it.</item>
 /// </list>

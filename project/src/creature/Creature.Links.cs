@@ -78,8 +78,7 @@ public partial class Creature
                 Link = _pistons[i],
                 RadiusA = ToGodotFloat(definition.NodeRadius(piston.NodeA), nameof(ServoDef.JointRadius)),
                 RadiusB = ToGodotFloat(definition.NodeRadius(piston.NodeB), nameof(ServoDef.JointRadius)),
-                Shortest = (float)Mechanics.Piston.ShortestLength(_pistons[i].BuiltLength, piston.Stroke),
-                Longest = (float)Mechanics.Piston.LongestLength(_pistons[i].BuiltLength, piston.Stroke),
+                Shortest = (float)Mechanics.Piston.ShortestLength(piston, _pistons[i].BuiltLength),
             };
             AddChild(visual);
             _pistonVisuals[i] = visual;
@@ -99,8 +98,8 @@ public partial class Creature
         var link = _pistons[index];
         var a = link.NodeA.Position;
         var axis = (link.NodeB.Position - a).Normalized();
-        var shortest = (float)Mechanics.Piston.ShortestLength(link.BuiltLength, link.Definition.Stroke);
-        var longest = (float)Mechanics.Piston.LongestLength(link.BuiltLength, link.Definition.Stroke);
+        var shortest = (float)Mechanics.Piston.ShortestLength(link.Definition, link.BuiltLength);
+        var longest = (float)Mechanics.Piston.LongestLength(link.Definition, link.BuiltLength);
         var rotation = axis.Angle();
 
         var cylinder = new RigidBody2D

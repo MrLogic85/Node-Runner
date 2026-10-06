@@ -24,11 +24,14 @@ public static class CreationExamples
 
     public static IReadOnlyList<CreationExample> All { get; } = [Walker];
 
+    private const double _walkerStroke = 0.85;
+
     /// <summary>
     /// A walker seen from the side (#745): a back with a leg hanging from each end, and two Pistons
     /// crossing between them, each from one end of the back to the other leg's foot. Its joints are
     /// passive (#450), so the Pistons hold it up and swing the legs; the brain drives nothing else.
-    /// The legs splay out a little, so it stands wider than its back.
+    /// The legs splay out a little, so it stands wider than its back. Its Pistons keep the reach they
+    /// had before #870, about 70%–130% of their drawn length.
     /// </summary>
     public static CreatureDef CreateWalkerCreature()
     {
@@ -51,8 +54,8 @@ public static class CreationExamples
 
         var pistons = new[]
         {
-            new PistonDef(9, 2, 3),
-            new PistonDef(10, 1, 4),
+            new PistonDef(9, 2, 3, stroke: _walkerStroke),
+            new PistonDef(10, 1, 4, stroke: _walkerStroke),
         };
 
         return new CreatureDef(nodes, beams, sensors, pistons, nextPartId: 11);

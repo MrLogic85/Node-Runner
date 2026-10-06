@@ -306,7 +306,11 @@ transition to keep in step with it.
   halts the in-progress trial without raising any events.
 - **Generation 0 (#537, #810).** A new Creation has no trained brain, so
   its base brain holds the built pose at full strength: all weights 0,
-  positions at the built pose, strength at bias 3 (about 95%). This is
+  positions at the built pose, strength at bias 3 (about 95%). A Servo's
+  angle output holds its built pose at 0; a Piston's position output gets
+  the bias that asks for its drawn length, `atanh(2p − 1)` for Start
+  position `p`, clamped to ±3 (`Piston.DrawnPositions`, #870). A brain
+  kept after its Start position changes keeps its old bias. This is
   how robots start in robotics ML: stiff in a default pose, with the
   network learning offsets from it. New ports on a trained brain start
   almost passive instead (#535, `docs/CREATURE_MODEL.md`).

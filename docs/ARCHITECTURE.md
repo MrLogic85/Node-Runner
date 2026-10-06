@@ -230,7 +230,7 @@ public sealed record NodeDef(int Id, Vector2D Position, string? Name = null); //
 public sealed record BeamDef(int Id, int NodeA, int NodeB, string? Name = null);   // node ids
 public sealed record SensorDef(int Id, int BeamId, SensorKind Kind, string? Name = null, double? Aim = null); // beam id; Aim: Camera only
 // SensorDef.DefaultAim(nodeA, nodeB): a new Camera's level, world-forward aim
-public sealed record PistonDef(int Id, int NodeA, int NodeB, string? Name = null, double Strength = 15000, double Stroke = 0.3, double MaxSpeed = 200, double RiseTime = 0.2); // node ids
+public sealed record PistonDef(int Id, int NodeA, int NodeB, string? Name = null, double Strength = 15000, double Stroke = 0.5, double Start = 0.5, double MaxSpeed = 200, double RiseTime = 0.2); // node ids
 public sealed record ServoDef(int Id, int NodeId, int? FixedLinkId = null, int? TargetLinkId = null, string? Name = null, double Strength = 500000, double Range = π, double Start = 0.5, double MaxSpeed = 2π, double RiseTime = 0.2); // joint node id, link ids (null = role missing); JointRadius = 27
 public sealed record SpringDef(int Id, int NodeA, int NodeB, string? Name = null, double Stiffness = 400, double Damping = 10); // node ids; Damping in N·s/m
 public sealed record CreatureDef(NodeDef[] Nodes, BeamDef[] Beams, SensorDef[] Sensors, ServoDef[] Servos, PistonDef[] Pistons, SpringDef[] Springs, int NextPartId);

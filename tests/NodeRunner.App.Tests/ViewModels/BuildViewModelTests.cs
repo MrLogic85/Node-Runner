@@ -138,8 +138,8 @@ public sealed class BuildViewModelTests
     }
 
     [Theory]
-    [InlineData(new[] { 301 }, "Strength,Stroke,MaxSpeed,RiseTime")]
-    [InlineData(new[] { 301, 302 }, "Strength,Stroke,MaxSpeed,RiseTime")]
+    [InlineData(new[] { 301 }, "Strength,Stroke,StartPosition,MaxSpeed,RiseTime")]
+    [InlineData(new[] { 301, 302 }, "Strength,Stroke,StartPosition,MaxSpeed,RiseTime")]
     [InlineData(new[] { 301, 1 }, "")]
     [InlineData(new[] { 301, 101 }, "")]
     [InlineData(new[] { 201 }, "Aim")]

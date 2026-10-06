@@ -272,7 +272,9 @@ A part's settings are parameters (`PartParameters`), plain data: an id, whether
 several selected parts can share one value (`MultiEditable`), and a slider
 when the panel shows it (`InPanel`). Each kind of part lists its own
 (`CreatureBuilder.ParametersOf`): a Piston has **Max strength** (20–400 N,
-step 10), **Stroke** (±10–50%, step 5), **Max speed** (0.5–4.0 m/s, step
+step 10), **Stroke** (10–100% of its shortest length, step 5), **Start
+position** (0–100%, step 5; where its drawn length sits in its travel, #870),
+**Max speed** (0.5–4.0 m/s, step
 0.1) and **Rise time** (0.1, 0.2, 0.5 or 1 s, evenly spaced along the slider
 so the short ones are as easy to pick, #801); a Spring has **Stiffness**
 (50–2000 N/m, step 50) and **Damping** (0–100 N·s/m, step 1); a Servo has
@@ -285,9 +287,9 @@ The selection can change one part's own parameters, or those every selected
 part has and can share (`BuildViewModel.EditableParameters`). The panel shows a
 slider for each that is `InPanel`, and a slider sets its value on every
 selected part (`SetParameter`). The canvas shows what a parameter changes
-only while it can be changed: a Piston's stroke ticks while Stroke can, a
-Camera's rays and aim handle while Aim can. Parameters change no brain port,
-so a locked creation keeps them.
+only while it can be changed: a Piston's stroke ticks while Stroke or Start
+position can, a Camera's rays and aim handle while Aim can. Parameters change
+no brain port, so a locked creation keeps them.
 
 A Piston's rows are Name, then its sliders instead of what it is joined to,
 then the note "The brain pushes it out and pulls it in, within its stroke."

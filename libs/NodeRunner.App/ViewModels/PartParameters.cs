@@ -104,8 +104,9 @@ public sealed record ParameterSlider(PartParameterId Id, UiText Label, UiText Re
 }
 
 /// <summary>
-/// Every part setting (#704). A Piston's Max strength is in N, its Stroke ±% of its built length
-/// its Max speed in m/s (#451) and its Rise time in s (#801); a Spring's Stiffness is in N/m and its Damping in N·s/m
+/// Every part setting (#704). A Piston's Max strength is in N, its Stroke % of its shortest length,
+/// its Start position % of its travel (#870), its Max speed in m/s (#451) and its Rise time in s
+/// (#801); a Spring's Stiffness is in N/m and its Damping in N·s/m
 /// (#453, #801); a Camera's aim is turned on the canvas (#594).
 /// </summary>
 public static class PartParameters
@@ -118,7 +119,7 @@ public static class PartParameters
         PartParameterId.ServoStrength, MultiEditable: true, new(UiText.Plain("Max strength"), new(5, 200, 5), 0, "{0} N·m", "{0}–{1} N·m", value => value / 10000, value => value * 10000));
 
     public static PartParameter Stroke { get; } = new(
-        PartParameterId.Stroke, MultiEditable: true, new(UiText.Plain("Stroke"), new(10, 50, 5), 0, "±{0}%", "±{0}–{1}%", value => value * 100, value => value / 100));
+        PartParameterId.Stroke, MultiEditable: true, new(UiText.Plain("Stroke"), new(10, 100, 5), 0, "{0}%", "{0}–{1}%", value => value * 100, value => value / 100));
 
     public static PartParameter Range { get; } = new(
         PartParameterId.Range, MultiEditable: true, new(UiText.Plain("Range"), new(20, 360, 5), 0, "{0}°", "{0}–{1}°", RadiansToDegrees, DegreesToRadians));

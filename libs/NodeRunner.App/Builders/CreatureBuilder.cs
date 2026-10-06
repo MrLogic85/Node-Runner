@@ -257,6 +257,7 @@ public sealed class CreatureBuilder
         {
             PartParameterId.Strength => _pistons[PistonIndexOf(partId)].Strength,
             PartParameterId.Stroke => _pistons[PistonIndexOf(partId)].Stroke,
+            PartParameterId.StartPosition => _pistons[PistonIndexOf(partId)].Start,
             PartParameterId.MaxSpeed => _pistons[PistonIndexOf(partId)].MaxSpeed,
             PartParameterId.RiseTime => _pistons[PistonIndexOf(partId)].RiseTime,
             PartParameterId.Aim => Camera(partId).Aim ?? DefaultAim(Camera(partId).BeamId),
@@ -306,15 +307,16 @@ public sealed class CreatureBuilder
         var piston = _pistons[index];
         _pistons[index] = parameter switch
         {
-            PartParameterId.Strength => piston.WithSettings(value, piston.Stroke, piston.MaxSpeed, piston.RiseTime),
-            PartParameterId.Stroke => piston.WithSettings(piston.Strength, value, piston.MaxSpeed, piston.RiseTime),
-            PartParameterId.MaxSpeed => piston.WithSettings(piston.Strength, piston.Stroke, value, piston.RiseTime),
-            PartParameterId.RiseTime => piston.WithSettings(piston.Strength, piston.Stroke, piston.MaxSpeed, value),
+            PartParameterId.Strength => piston.WithSettings(value, piston.Stroke, piston.Start, piston.MaxSpeed, piston.RiseTime),
+            PartParameterId.Stroke => piston.WithSettings(piston.Strength, value, piston.Start, piston.MaxSpeed, piston.RiseTime),
+            PartParameterId.StartPosition => piston.WithSettings(piston.Strength, piston.Stroke, value, piston.MaxSpeed, piston.RiseTime),
+            PartParameterId.MaxSpeed => piston.WithSettings(piston.Strength, piston.Stroke, piston.Start, value, piston.RiseTime),
+            PartParameterId.RiseTime => piston.WithSettings(piston.Strength, piston.Stroke, piston.Start, piston.MaxSpeed, value),
             _ => throw new ArgumentOutOfRangeException(nameof(parameter)),
         };
     }
 
-    private static readonly PartParameterId[] _pistonParameters = [PartParameterId.Strength, PartParameterId.Stroke, PartParameterId.MaxSpeed, PartParameterId.RiseTime];
+    private static readonly PartParameterId[] _pistonParameters = [PartParameterId.Strength, PartParameterId.Stroke, PartParameterId.StartPosition, PartParameterId.MaxSpeed, PartParameterId.RiseTime];
 
     private static readonly PartParameterId[] _servoParameters = [PartParameterId.ServoStrength, PartParameterId.Range, PartParameterId.StartPosition, PartParameterId.AngularMaxSpeed, PartParameterId.RiseTime];
 
