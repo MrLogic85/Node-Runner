@@ -37,6 +37,7 @@ public sealed class BuildLockedTests
     }
 
     [Theory]
+    [InlineData(CreatureElementKind.Beam, 11)]
     [InlineData(CreatureElementKind.Beam, 13)]
     [InlineData(CreatureElementKind.Spring, 50)]
     [InlineData(CreatureElementKind.Spring, 51)]
@@ -60,7 +61,7 @@ public sealed class BuildLockedTests
     [InlineData(CreatureElementKind.Sensor, 20)]
     [InlineData(CreatureElementKind.Piston, 40)]
     [InlineData(CreatureElementKind.Servo, 30)]
-    [InlineData(CreatureElementKind.Beam, 11)] // Its sensor goes with it.
+    [InlineData(CreatureElementKind.Beam, 14)] // Its sensor goes with it.
     [InlineData(CreatureElementKind.Node, 7)] // Its Piston goes with it.
     [InlineData(CreatureElementKind.Node, 2)] // Its Servo goes with it.
     [InlineData(CreatureElementKind.Beam, 10)] // The Servo's Fixed link.
@@ -151,9 +152,9 @@ public sealed class BuildLockedTests
         reason.ShouldBe(_lockedReason);
     }
 
-    // A Servo at joint 2 holds beams 10 and 12; a sensor sits on beam 11; Piston 40 joins 3 and 4,
-    // and Piston 41 joins the otherwise free joints 7 and 8; beam 13 and Springs 50 and 51 have
-    // nothing on them.
+    // A Servo at joint 2 holds beams 10 and 12; Piston 40 joins 3 and 4, and Piston 41 joins 7 and
+    // 8; a sensor sits on beam 14, from 8 to 9. Beams 11 and 13 and Springs 50 and 51 have nothing
+    // on them, so deleting joint 2 takes only the Servo and its own links, and joint 7 only Piston 41.
     private static BuildViewModel Locked()
     {
         var build = new BuildViewModel();
@@ -162,10 +163,10 @@ public sealed class BuildLockedTests
                 [
                     new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(100, 0)), new NodeDef(3, new Vector2D(200, 0)),
                     new NodeDef(4, new Vector2D(100, 100)), new NodeDef(5, new Vector2D(300, 0)), new NodeDef(6, new Vector2D(300, 100)),
-                    new NodeDef(7, new Vector2D(400, 0)), new NodeDef(8, new Vector2D(400, 100)),
+                    new NodeDef(7, new Vector2D(400, 0)), new NodeDef(8, new Vector2D(400, 100)), new NodeDef(9, new Vector2D(500, 100)),
                 ],
-                [new BeamDef(10, 1, 2), new BeamDef(11, 2, 3), new BeamDef(12, 2, 4), new BeamDef(13, 3, 5)],
-                [new SensorDef(20, 11, SensorKind.Accelerometer)],
+                [new BeamDef(10, 1, 2), new BeamDef(11, 2, 3), new BeamDef(12, 2, 4), new BeamDef(13, 3, 5), new BeamDef(14, 8, 9)],
+                [new SensorDef(20, 14, SensorKind.Accelerometer)],
                 [new ServoDef(30, 2, 10, 12)],
                 [new PistonDef(40, 3, 4), new PistonDef(41, 7, 8)],
                 [new SpringDef(50, 5, 6), new SpringDef(51, 1, 4)],
