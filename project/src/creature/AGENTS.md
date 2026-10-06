@@ -21,8 +21,8 @@ the model this implements.**
    pinned to node A and grooved to node B for its end stops (#701; see
    `docs/CREATURE_MODEL.md`): anything that moves or resets every body must
    include it. Each Spring is a `DampedSpringJoint2D` between its two node
-   bodies (#453), with no body of its own. Do not introduce Box2D.NET or a
-   custom solver.
+   bodies (#453) and gets the same end-stop cylinder (#835). Do not
+   introduce Box2D.NET or a custom solver.
 4. **Plain joints are passive (#450).** A beam turns freely at its nodes
    unless a Servo sits on that joint; parts with ports (Servos and Pistons
    today) are driven by the brain.
@@ -37,8 +37,8 @@ the model this implements.**
 
 - `Creature.cs` — root `Node2D` that builds nodes/beams/pins/sensors from a
   `CreatureDef` and owns the brain wiring
-- `Creature.Links.cs` — the same class: builds the links, each Piston with
-  its end-stop cylinder and each Spring's `DampedSpringJoint2D`
+- `Creature.Links.cs` — the same class: builds the links: each Piston and
+  Spring with its end-stop cylinder, and each Spring's `DampedSpringJoint2D`
 - `IBeamSensor.cs` — what `Creature` needs from a sensor part: its value
   names, `Read` into the sensor buffer, and `Reset`
 - `AccelerometerSensor.cs` — one accelerometer: measures its beam's
@@ -46,6 +46,8 @@ the model this implements.**
   mass and writes its 2 readings into the sensor buffer
 - `CameraSensor.cs` — one camera: three `RayCast2D` children aimed as
   built by the Mechanics `CameraRays`, writing 3 nearness readings
+- `SpringLink.cs` — one Spring's joint: each tick sets its rest length to
+  `Spring.StepRestLength`, so a preload past a stop stays inside the stop
 - `ServoJoint.cs` — a Servo motor realised with endpoint force couples for
   every link kind, because Godot angular joints cannot cover Beams, Pistons
   and Springs uniformly.

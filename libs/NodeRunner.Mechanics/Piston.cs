@@ -34,33 +34,43 @@ public static class Piston
     private const double _speedSharpness = 10;
 
     /// <summary>Where <paramref name="length"/> is in its travel: 0 at its shortest, 1 at its longest; not clamped.</summary>
-    public static double LengthInput(PistonDef piston, double builtLength, double length)
+    /// <param name="piston">The Piston and its settings.</param>
+    /// <param name="builtLength">Its length as built, centre to centre.</param>
+    /// <param name="jointRadii">Its two joints' radii together: its travel is on the gap between their edges.</param>
+    /// <param name="length">Its length now, centre to centre.</param>
+    public static double LengthInput(PistonDef piston, double builtLength, double jointRadii, double length)
     {
-        var shortest = ShortestLength(piston, builtLength);
-        return (length - shortest) / (LongestLength(piston, builtLength) - shortest);
+        var shortest = ShortestLength(piston, builtLength, jointRadii);
+        return (length - shortest) / (LongestLength(piston, builtLength, jointRadii) - shortest);
     }
 
     /// <param name="speed">How fast its length grows, in world units per second; negative while it retracts.</param>
     /// <param name="maxSpeed">Its <see cref="PistonDef.MaxSpeed"/>.</param>
     public static double SpeedInput(double speed, double maxSpeed) => Math.Tanh(speed / maxSpeed);
 
-    /// <summary>Its shortest length: the drawn length sits <see cref="PistonDef.Start"/> of the way to its longest.</summary>
-    public static double ShortestLength(PistonDef piston, double builtLength)
+    /// <summary>
+    /// Its shortest length, centre to centre: the gap between its joints' edges (#835) sits
+    /// <see cref="PistonDef.Start"/> of the way to its longest as drawn.
+    /// </summary>
+    public static double ShortestLength(PistonDef piston, double builtLength, double jointRadii)
     {
         ArgumentNullException.ThrowIfNull(piston);
-        return builtLength / (1 + (piston.Start * piston.Stroke));
+        return Travel.Shortest(builtLength, jointRadii, piston.Stroke, piston.Start);
     }
 
-    /// <summary>Its longest length: its shortest grown by <see cref="PistonDef.Stroke"/>.</summary>
-    public static double LongestLength(PistonDef piston, double builtLength) =>
-        ShortestLength(piston, builtLength) * (1 + piston.Stroke);
+    /// <summary>Its longest length, centre to centre: its shortest gap grown by <see cref="PistonDef.Stroke"/>.</summary>
+    public static double LongestLength(PistonDef piston, double builtLength, double jointRadii)
+    {
+        ArgumentNullException.ThrowIfNull(piston);
+        return Travel.Longest(builtLength, jointRadii, piston.Stroke, piston.Start);
+    }
 
     /// <summary>The length a position output asks for: −1 its shortest … +1 its longest, in a straight line.</summary>
-    public static double TargetLength(PistonDef piston, double builtLength, double position)
+    public static double TargetLength(PistonDef piston, double builtLength, double jointRadii, double position)
     {
-        var shortest = ShortestLength(piston, builtLength);
+        var shortest = ShortestLength(piston, builtLength, jointRadii);
         var share = (Math.Clamp(position, -1, 1) + 1) / 2;
-        return shortest + (share * (LongestLength(piston, builtLength) - shortest));
+        return shortest + (share * (LongestLength(piston, builtLength, jointRadii) - shortest));
     }
 
     /// <summary>The position output that asks for its drawn length: −1 at Start 0, +1 at Start 1.</summary>
@@ -90,6 +100,7 @@ public static class Piston
     /// </remarks>
     /// <param name="piston">The Piston and its settings.</param>
     /// <param name="builtLength">Its length as built, centre to centre.</param>
+    /// <param name="jointRadii">Its two joints' radii together: its travel is on the gap between their edges.</param>
     /// <param name="length">Its length now.</param>
     /// <param name="speed">How fast its length grows, in world units per second.</param>
     /// <param name="position">The brain's position output, −1 fully in … +1 fully out (<see cref="TargetLength"/>).</param>
@@ -99,6 +110,7 @@ public static class Piston
     public static double NextForce(
         PistonDef piston,
         double builtLength,
+        double jointRadii,
         double length,
         double speed,
         double position,
@@ -108,7 +120,7 @@ public static class Piston
     {
         ArgumentNullException.ThrowIfNull(piston);
         var targetForce = OutputSignals.StrengthFromOutput(strength, piston.Strength);
-        var distanceLeft = TargetLength(piston, builtLength, position) - length;
+        var distanceLeft = TargetLength(piston, builtLength, jointRadii, position) - length;
         var wantedSpeed = Math.Clamp(distanceLeft * _approachRate, -piston.MaxSpeed, piston.MaxSpeed);
         var speedLacking = wantedSpeed - speed;
         var raised = force + step * targetForce / piston.RiseTime * Math.Tanh(_buildSharpness * speedLacking / piston.MaxSpeed);

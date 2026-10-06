@@ -454,6 +454,16 @@ reference would mislead someone working on that surface.
     hit and a 6-unit `halo` ring there; other shadows draw no rays
     (`docs/CREATURE_MODEL.md` → "Drawing as a shadow"). Rays leave from the
     picture's edge and are drawn over the joints.
+  - *Link travel (#704, #835):* a selected Piston or Spring draws its
+    stops as `halo` `stroke-signal` ticks, and a Spring its rest length as
+    a 3-unit `halo` ring: on joint B's centre while that is between the
+    stops, otherwise short of the shortest or past the longest. Like the rays,
+    they and the dashed line from one tick to the other are drawn over the
+    whole creature, joints included; the line leaves the ring's hole clear. Each sits at
+    its true length, even on joint B, so the span never looks wider than
+    it is. The travel is on the gap between the joints' edges, so the
+    cylinder or body, from joint A's edge, never reaches past joint B's
+    edge at the shortest tick.
   - *Order:* joints, then sensors, then beams, for both tapping and drawing.
     Dragging from a sensor never moves it.
   - *Placing:* the dragged part's glyph rides on a 48 px raised tile with an
@@ -997,6 +1007,14 @@ is not `antialiased: true` inside a method that opens a pen, calls
   `pen.Line` (the brain's negative neuron), since line ends are feathered.
 - `UiBoundsDebugOverlay`: debug only.
 
+**Many strokes of one colour go in one call: `pen.Strokes` (#835).** On
+Compatibility each draw call builds its own buffer, so a part drawn as
+hundreds of `Polyline`s and `Disc`s cost the S25 most of its frame with
+shadows. `pen.Strokes` lays them out with `UiStrokeMesh` as one feathered
+triangle list with round ends, since Godot has no batched polyline with
+round caps. Reach for it when a drawing repeats a stroke many times (the
+Spring's coil); a few strokes stay plain `Line`/`Polyline`.
+
 A part visual bakes the window pixel scale into its strokes, so it must redraw
 when that scale changes (a zoom, UI size or screen change). Every view that
 holds parts calls `PartVisual.RedrawOnNewPixelScale` as it may have zoomed:
@@ -1010,6 +1028,12 @@ The rule does not cover `DrawStyleBox`: Godot divides a `StyleBoxFlat`'s
 feather by the viewport's oversampling, so it stays about one device pixel at
 any stretch or UI size, even when drawn from `_Draw()`. Keep
 `StyleBoxFlat.AntiAliasing` on, its default (#732).
+
+**A stroke width may show a part's setting (#835).** The Spring's coil wire
+grows with its Stiffness, from `UiSize.Stroke.Hair` to
+`UiSize.Widget.CreatureBeamWidth`, as wide as a drawn beam (owner
+decision). Such a width starts at a hairline and its drawing names its
+maximum.
 
 ### Icon filtering
 

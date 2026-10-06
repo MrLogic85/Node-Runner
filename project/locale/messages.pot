@@ -165,6 +165,10 @@ msgstr ""
 msgid "Changing these makes it learn again."
 msgstr ""
 
+#: libs/NodeRunner.App/ViewModels/PartParameters.cs
+msgid "Coil length"
+msgstr ""
+
 #: libs/NodeRunner.App/ViewModels/PartTrayPresentation.cs
 #: project/scenes/screens/BuildScreen.tscn
 msgid "Coming later"
@@ -356,7 +360,7 @@ msgid "Hills"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs
-msgid "It pulls back toward its drawn length. Damping stops it bouncing."
+msgid "It springs toward the ring, which Coil length moves. With the ring past an end mark, it starts pressed against that end. Damping stops it bouncing."
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs

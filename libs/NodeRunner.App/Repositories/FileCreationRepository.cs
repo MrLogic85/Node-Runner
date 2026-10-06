@@ -18,7 +18,7 @@ public sealed class FileCreationRepository : ICreationRepository
     /// <c>creation.json</c>'s versions. Add a migration here when its shape changes
     /// (docs/SAVE_FORMAT.md → "Versions and migration").
     /// </summary>
-    public static VersionedSaveFile<CreationDef> Format { get; } = new([AddServosArray, PistonStrokeFromShortest]);
+    public static VersionedSaveFile<CreationDef> Format { get; } = new([AddServosArray, PistonStrokeFromShortest, SpringTravel]);
 
     private readonly string _directoryPath;
     private readonly VersionedSaveFile<CreationDef> _format;
@@ -55,7 +55,8 @@ public sealed class FileCreationRepository : ICreationRepository
 
     // Before #870 a Piston's stroke was ±s of its built length. Now it grows by stroke of its
     // shortest length, and start says where the built length sits in that travel: 2s / (1 − s) at
-    // start 0.5 keeps the same shortest and longest lengths. A Piston can now at most double, so
+    // start 0.5 kept the same shortest and longest lengths, until #835 measured its travel on the gap
+    // between its joints' edges, which shortens it a little. A Piston can now at most double, so
     // a stroke above ±⅓ becomes 100%, about ±33% of its built length.
     private static void PistonStrokeFromShortest(JsonObject file)
     {
@@ -141,6 +142,34 @@ public sealed class FileCreationRepository : ICreationRepository
                 var target = neuronsById[IntOf(connection["to"], "connection to")];
                 target["bias"] = NumberOf(target["bias"], "neuron bias") - weight;
             }
+        }
+    }
+
+    // Before #835 a Spring had no travel: it pushed nothing at its drawn length and nothing stopped
+    // it. Stroke 1 and coil length 0.5 rest it at its drawn length, between stops a quarter of the gap
+    // between its joints' edges either side, so it stays free there for every move but the largest.
+    private static void SpringTravel(JsonObject file)
+    {
+        if (file["creature"] is not JsonObject creature)
+        {
+            throw new InvalidDataException("creation.json is missing its creature object.");
+        }
+
+        // A file without springs fails the strict load, which names the missing field.
+        if (creature["springs"] is not JsonArray springs)
+        {
+            return;
+        }
+
+        foreach (var node in springs)
+        {
+            if (node is not JsonObject spring)
+            {
+                throw new InvalidDataException("creation.json has a spring that is not an object.");
+            }
+
+            spring["stroke"] = 1.0;
+            spring["coilLength"] = 0.5;
         }
     }
 

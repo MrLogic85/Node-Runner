@@ -236,6 +236,19 @@ public sealed class CreatureBuilder
     /// <summary>Part <paramref name="partId"/>'s <paramref name="parameter"/>, in world units.</summary>
     public double ParameterValue(int partId, PartParameterId parameter)
     {
+        if (_springs.Any(spring => spring.Id == partId))
+        {
+            var spring = _springs[SpringIndexOf(partId)];
+            return parameter switch
+            {
+                PartParameterId.Stiffness => spring.Stiffness,
+                PartParameterId.Damping => spring.Damping,
+                PartParameterId.Stroke => spring.Stroke,
+                PartParameterId.CoilLength => spring.CoilLength,
+                _ => throw new ArgumentOutOfRangeException(nameof(parameter)),
+            };
+        }
+
         if (_servos.Any(servo => servo.Id == partId))
         {
             var servo = _servos[ServoIndexOf(partId)];
@@ -258,8 +271,6 @@ public sealed class CreatureBuilder
             PartParameterId.MaxSpeed => _pistons[PistonIndexOf(partId)].MaxSpeed,
             PartParameterId.RiseTime => _pistons[PistonIndexOf(partId)].RiseTime,
             PartParameterId.Aim => Camera(partId).Aim ?? DefaultAim(Camera(partId).BeamId),
-            PartParameterId.Stiffness => _springs[SpringIndexOf(partId)].Stiffness,
-            PartParameterId.Damping => _springs[SpringIndexOf(partId)].Damping,
             _ => throw new ArgumentOutOfRangeException(nameof(parameter)),
         };
     }
@@ -274,13 +285,18 @@ public sealed class CreatureBuilder
             return;
         }
 
-        if (parameter is PartParameterId.Stiffness or PartParameterId.Damping)
+        if (_springs.Any(spring => spring.Id == partId))
         {
             var springIndex = SpringIndexOf(partId);
             var spring = _springs[springIndex];
-            _springs[springIndex] = parameter == PartParameterId.Stiffness
-                ? spring.WithSettings(value, spring.Damping)
-                : spring.WithSettings(spring.Stiffness, value);
+            _springs[springIndex] = parameter switch
+            {
+                PartParameterId.Stiffness => spring.WithSettings(value, spring.Damping, spring.Stroke, spring.CoilLength),
+                PartParameterId.Damping => spring.WithSettings(spring.Stiffness, value, spring.Stroke, spring.CoilLength),
+                PartParameterId.Stroke => spring.WithSettings(spring.Stiffness, spring.Damping, value, spring.CoilLength),
+                PartParameterId.CoilLength => spring.WithSettings(spring.Stiffness, spring.Damping, spring.Stroke, value),
+                _ => throw new ArgumentOutOfRangeException(nameof(parameter)),
+            };
             return;
         }
 
@@ -317,7 +333,7 @@ public sealed class CreatureBuilder
 
     private static readonly PartParameterId[] _servoParameters = [PartParameterId.ServoStrength, PartParameterId.Range, PartParameterId.StartPosition, PartParameterId.AngularMaxSpeed, PartParameterId.RiseTime];
 
-    private static readonly PartParameterId[] _springParameters = [PartParameterId.Stiffness, PartParameterId.Damping];
+    private static readonly PartParameterId[] _springParameters = [PartParameterId.Stiffness, PartParameterId.Damping, PartParameterId.Stroke, PartParameterId.CoilLength];
 
     private static readonly PartParameterId[] _cameraParameters = [PartParameterId.Aim];
 

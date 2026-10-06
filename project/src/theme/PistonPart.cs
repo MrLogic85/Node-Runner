@@ -9,7 +9,7 @@ public partial class PistonPart : PartVisual
     private Vector2 _b;
     private float _radiusA;
     private float _radiusB;
-    private float _shortest;
+    private float _travel;
     private bool _danger;
     private bool _haloA;
     private bool _haloB;
@@ -45,11 +45,11 @@ public partial class PistonPart : PartVisual
         set => Change(ref _radiusB, value);
     }
 
-    /// <summary>The shortest length, centre to centre.</summary>
-    public float Shortest
+    /// <summary>Its travel, longest length less shortest, which sets its cylinder's length.</summary>
+    public float Travel
     {
-        get => _shortest;
-        set => Change(ref _shortest, value);
+        get => _travel;
+        set => Change(ref _travel, value);
     }
 
     /// <summary>Too short to train (#593): drawn in <c>danger</c> instead of <c>accent</c>.</summary>
@@ -74,5 +74,5 @@ public partial class PistonPart : PartVisual
     }
 
     public override void _Draw() =>
-        PistonDrawing.Draw(this, Transform2D.Identity, Theme, A, B, RadiusA, RadiusB, Shortest, Danger ? Theme.Danger : Theme.MotorAccent, Selected, HaloA, HaloB);
+        PistonDrawing.Draw(this, Transform2D.Identity, Theme, A, B, RadiusA, RadiusB, Travel, Danger ? Theme.Danger : Theme.MotorAccent, Selected, HaloA, HaloB);
 }

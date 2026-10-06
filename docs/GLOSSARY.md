@@ -19,6 +19,12 @@ layer keeps its textbook terms.
   Construction. See: `docs/BUILD_MODE.md`.
 - **Creation** — The thing the player saves, names, lists and copies
   (`CreationDef`): a creature body plus its brain and training.
+- **Coil length** — Where a Spring's rest length sits, 0…100%, evenly from half
+  its drawn gap, between its joints' edges, short of its shortest stop to
+  as far past its longest.
+  Between the stops it rests where drawn; past one it starts pressed
+  against that stop, pulling or pushing, harder the further out. See:
+  `docs/CREATURE_MODEL.md`.
 - **Creature** — The body inside a Creation; see "Creature anatomy". Copy
   never calls the saved item a creature.
 - **Parts tool** — The first Build rail tool. It opens the Parts tray when
@@ -98,12 +104,16 @@ Long-form descriptions and the sensor/model contract live in
   Springs. Gives the brain its angle and speed, and takes a target position
   and strength output. See: `docs/CREATURE_MODEL.md`.
 - **Spring** — A passive link between two nodes (#453) that pulls back
-  toward its drawn length with its Stiffness; its Damping (N·s/m) brakes
-  the speed between its nodes. No brain ports. See:
+  toward its rest length with its Stiffness; its Damping (N·s/m) brakes
+  the speed between its nodes, and its Stroke and Coil length set where it
+  stops. No brain ports. See: `docs/CREATURE_MODEL.md`.
+- **Stroke** — How far a Piston or Spring can move between its end stops,
+  which hold it there whatever the load. It moves the gap between its joints'
+  edges, so a Servo's bigger joint shortens it. A Piston's is a share of
+  its shortest gap: 100% means the gap can double, the most a real cylinder
+  can. A Spring's travel is a Piston's drawn at its longest, wherever its
+  Coil length puts it, so at 100% it is half its drawn gap. See:
   `docs/CREATURE_MODEL.md`.
-- **Stroke** — How much a Piston can grow, as a share of its shortest
-  length: 100% means it can double, the most a real cylinder can. Its end
-  stops hold it there, whatever the load. See: `docs/CREATURE_MODEL.md`.
 - **Start position** — Where a part's drawn pose sits in its travel or
   range, 0…100%. A Piston at 0% is drawn at its shortest; a Servo's sits
   that far through its Range. See: `docs/CREATURE_MODEL.md`.

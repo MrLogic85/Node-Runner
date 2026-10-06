@@ -9,6 +9,8 @@ public sealed class SpringDefTests
 
         spring.Stiffness.ShouldBe(SpringDef.DefaultStiffness);
         spring.Damping.ShouldBe(SpringDef.DefaultDamping);
+        spring.Stroke.ShouldBe(1);
+        spring.CoilLength.ShouldBe(2.0 / 3);
         spring.Name.ShouldBeNull();
     }
 
@@ -35,6 +37,24 @@ public sealed class SpringDefTests
         Should.Throw<ArgumentOutOfRangeException>(() => new SpringDef(5, 1, 2, stiffness: stiffness, damping: damping));
 
     [Theory]
+    [InlineData(0, 1)]
+    [InlineData(-0.1, 1)]
+    [InlineData(1.01, 1)]
+    [InlineData(double.NaN, 1)]
+    [InlineData(1, -0.01)]
+    [InlineData(1, 1.01)]
+    [InlineData(1, double.NaN)]
+    public void Constructor_WithAnOutOfRangeTravel_Throws(double stroke, double coilLength) =>
+        Should.Throw<ArgumentOutOfRangeException>(() => new SpringDef(5, 1, 2, stroke: stroke, coilLength: coilLength));
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(0.5)]
+    [InlineData(1)]
+    public void Constructor_AcceptsACoilLengthAcrossItsWholeRange(double coilLength) =>
+        new SpringDef(5, 1, 2, stroke: 0.1, coilLength: coilLength).CoilLength.ShouldBe(coilLength);
+
+    [Theory]
     [InlineData(0)]
     [InlineData(250)]
     public void Constructor_AcceptsNoDampingAndAnyPositiveCoefficient(double damping) =>
@@ -43,8 +63,8 @@ public sealed class SpringDefTests
     [Fact]
     public void WithNameAndWithSettings_KeepTheRest()
     {
-        var spring = new SpringDef(5, 1, 2, "Tail").WithSettings(800, 0.5).WithName("Knee");
+        var spring = new SpringDef(5, 1, 2, "Tail").WithSettings(800, 0.5, 0.4, 0.9).WithName("Knee");
 
-        spring.ShouldBe(new SpringDef(5, 1, 2, "Knee", 800, 0.5));
+        spring.ShouldBe(new SpringDef(5, 1, 2, "Knee", 800, 0.5, 0.4, 0.9));
     }
 }

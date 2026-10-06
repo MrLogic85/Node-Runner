@@ -63,14 +63,21 @@ public partial class Creature
     {
         _pistons = new PistonLink[definition.Pistons.Count];
         _pistonVisuals = new PistonVisual[definition.Pistons.Count];
-        _cylinderBodies = new RigidBody2D[definition.Pistons.Count];
+        _pistonCylinders = new RigidBody2D[definition.Pistons.Count];
         for (var i = 0; i < _pistons.Length; i++)
         {
             var piston = definition.Pistons[i];
             var indexA = definition.NodeIndexOf(piston.NodeA);
             var indexB = definition.NodeIndexOf(piston.NodeB);
-            _pistons[i] = new PistonLink(piston, _nodeBodies[indexA], _nodeBodies[indexB]);
-            CreateEndStops(i);
+            _pistons[i] = new PistonLink(piston, _nodeBodies[indexA], _nodeBodies[indexB], definition.NodeRadius(piston.NodeA) + definition.NodeRadius(piston.NodeB));
+            var built = (float)_pistons[i].BuiltLength;
+            _pistonCylinders[i] = CreateEndStops(
+                $"Piston{i}",
+                _pistons[i].NodeA,
+                _pistons[i].NodeB,
+                built,
+                (float)_pistons[i].ShortestLength,
+                (float)_pistons[i].LongestLength);
             var visual = new PistonVisual
             {
                 Name = $"Piston{i}Visual",
@@ -78,7 +85,7 @@ public partial class Creature
                 Link = _pistons[i],
                 RadiusA = ToGodotFloat(definition.NodeRadius(piston.NodeA), nameof(ServoDef.JointRadius)),
                 RadiusB = ToGodotFloat(definition.NodeRadius(piston.NodeB), nameof(ServoDef.JointRadius)),
-                Shortest = (float)Mechanics.Piston.ShortestLength(piston, _pistons[i].BuiltLength),
+                Travel = (float)(_pistons[i].LongestLength - _pistons[i].ShortestLength),
             };
             AddChild(visual);
             _pistonVisuals[i] = visual;
@@ -92,19 +99,16 @@ public partial class Creature
     // turning with the Piston. It weighs half a beam (#731): Godot's joints give far past an end
     // when the cylinder or its nodes are much lighter than the rest. Inside the stroke the groove
     // pushes nothing along the piston, so only the piston's own force moves it; at an end it
-    // holds whatever the load.
-    private void CreateEndStops(int index)
+    // holds whatever the load. A Spring has the same stops (#835).
+    private RigidBody2D CreateEndStops(string name, RigidBody2D nodeA, RigidBody2D nodeB, float built, float shortest, float longest)
     {
-        var link = _pistons[index];
-        var a = link.NodeA.Position;
-        var axis = (link.NodeB.Position - a).Normalized();
-        var shortest = (float)Mechanics.Piston.ShortestLength(link.Definition, link.BuiltLength);
-        var longest = (float)Mechanics.Piston.LongestLength(link.Definition, link.BuiltLength);
+        var a = nodeA.Position;
+        var axis = (nodeB.Position - a).Normalized();
         var rotation = axis.Angle();
 
         var cylinder = new RigidBody2D
         {
-            Name = $"Piston{index}Cylinder",
+            Name = $"{name}Cylinder",
             CollisionLayer = 0,
             CollisionMask = 0,
             Position = a,
@@ -116,34 +120,39 @@ public partial class Creature
             CanSleep = false,
         };
         AddChild(cylinder);
-        _cylinderBodies[index] = cylinder;
 
-        var pin = new PinJoint2D { Name = $"Piston{index}CylinderPin", Position = a };
+        var pin = new PinJoint2D { Name = $"{name}CylinderPin", Position = a };
         AddChild(pin);
-        pin.NodeA = pin.GetPathTo(link.NodeA);
+        pin.NodeA = pin.GetPathTo(nodeA);
         pin.NodeB = pin.GetPathTo(cylinder);
 
         // The groove runs along the joint's own +Y, so it is turned a quarter back from the axis.
         var groove = new GrooveJoint2D
         {
-            Name = $"Piston{index}EndStops",
+            Name = $"{name}EndStops",
             Position = a + (axis * shortest),
             Rotation = rotation - (Mathf.Pi / 2),
             Length = longest - shortest,
-            InitialOffset = (float)link.BuiltLength - shortest,
+            InitialOffset = built - shortest,
         };
         AddChild(groove);
         groove.NodeA = groove.GetPathTo(cylinder);
-        groove.NodeB = groove.GetPathTo(link.NodeB);
+        groove.NodeB = groove.GetPathTo(nodeB);
+        return cylinder;
     }
 
     // A Spring is Godot's DampedSpringJoint2D between its two node bodies (#453): it pulls them
-    // toward their built distance with its Stiffness and damps the speed between them with its
-    // Damping coefficient, whatever they weigh (#801). It has no body or collider of its own and no brain ports; its
-    // picture is a child of the creature, on the Links layer over the beams.
+    // toward its rest length with its Stiffness and damps the speed between them with its
+    // Damping coefficient, whatever they weigh (#801). Godot's spring has no stops of its own, so
+    // it gets a Piston's end stops for its Stroke (#835); a coil length past a stop moves its rest
+    // length there, so it starts pressed against it, and its SpringLink keeps that preload
+    // inside the stop. It has no collider and no brain ports; its picture is a child of the
+    // creature, on the Links layer over the beams.
     private void CreateSprings(CreatureDef definition)
     {
         _springVisuals = new SpringVisual[definition.Springs.Count];
+        _springCylinders = new RigidBody2D[_springVisuals.Length];
+        _springs = new SpringLink[_springVisuals.Length];
 
         // Godot's damped spring (godot_joints_2d.cpp, checked in 4.7) damps on every second solver
         // iteration, not once per step, so it would damp several times harder than its coefficient.
@@ -156,6 +165,7 @@ public partial class Creature
             var indexB = definition.NodeIndexOf(spring.NodeB);
             var (nodeA, nodeB) = (_nodeBodies[indexA], _nodeBodies[indexB]);
             var built = Math.Max(nodeA.Position.DistanceTo(nodeB.Position), 1f);
+            var jointRadii = definition.NodeRadius(spring.NodeA) + definition.NodeRadius(spring.NodeB);
 
             // The joint hangs its second anchor Length along its own +Y, so it is turned a quarter back from the axis.
             var joint = new DampedSpringJoint2D
@@ -164,13 +174,17 @@ public partial class Creature
                 Position = nodeA.Position,
                 Rotation = (nodeB.Position - nodeA.Position).Angle() - (Mathf.Pi / 2),
                 Length = built,
-                RestLength = built,
+                RestLength = (float)Mechanics.Spring.RestLength(spring, built, jointRadii),
                 Stiffness = (float)spring.Stiffness,
                 Damping = (float)(spring.Damping / dampingPasses),
             };
             AddChild(joint);
             joint.NodeA = joint.GetPathTo(nodeA);
             joint.NodeB = joint.GetPathTo(nodeB);
+            var shortest = Mechanics.Spring.ShortestLength(spring, built, jointRadii);
+            var longest = Mechanics.Spring.LongestLength(spring, built, jointRadii);
+            _springCylinders[i] = CreateEndStops($"Spring{i}", nodeA, nodeB, built, (float)shortest, (float)longest);
+            _springs[i] = new SpringLink(joint, nodeA, nodeB, joint.RestLength, shortest, longest);
 
             var visual = new SpringVisual
             {
@@ -180,7 +194,9 @@ public partial class Creature
                 NodeB = nodeB,
                 RadiusA = ToGodotFloat(definition.NodeRadius(spring.NodeA), nameof(ServoDef.JointRadius)),
                 RadiusB = ToGodotFloat(definition.NodeRadius(spring.NodeB), nameof(ServoDef.JointRadius)),
-                Built = built,
+                Travel = (float)(longest - shortest),
+                Rest = joint.RestLength,
+                Stiffness = spring.Stiffness,
             };
             AddChild(visual);
             _springVisuals[i] = visual;

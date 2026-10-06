@@ -232,7 +232,7 @@ public sealed record SensorDef(int Id, int BeamId, SensorKind Kind, string? Name
 // SensorDef.DefaultAim(nodeA, nodeB): a new Camera's level, world-forward aim
 public sealed record PistonDef(int Id, int NodeA, int NodeB, string? Name = null, double Strength = 15000, double Stroke = 0.5, double Start = 0.5, double MaxSpeed = 200, double RiseTime = 0.2); // node ids
 public sealed record ServoDef(int Id, int NodeId, int? FixedLinkId = null, int? TargetLinkId = null, string? Name = null, double Strength = 500000, double Range = π, double Start = 0.5, double MaxSpeed = 2π, double RiseTime = 0.2); // joint node id, link ids (null = role missing); JointRadius = 27
-public sealed record SpringDef(int Id, int NodeA, int NodeB, string? Name = null, double Stiffness = 400, double Damping = 10); // node ids; Damping in N·s/m
+public sealed record SpringDef(int Id, int NodeA, int NodeB, string? Name = null, double Stiffness = 400, double Damping = 10, double Stroke = 1, double CoilLength = 2.0 / 3); // node ids; Damping in N·s/m
 public sealed record CreatureDef(NodeDef[] Nodes, BeamDef[] Beams, SensorDef[] Sensors, ServoDef[] Servos, PistonDef[] Pistons, SpringDef[] Springs, int NextPartId);
 
 public static class SensorPicture   // a sensor picture's tap area at its beam's middle, sized per kind
@@ -310,14 +310,16 @@ up to its strength. Both motor parts scale with that estimate, which only
 counts the link's end bodies; a planted leg or the bodies beyond the far joint
 make the real inertia much larger. The holding part gathers slowly enough that
 the motor still settles at about 30 times the estimate (#452 review). We do not use a Godot
-angular joint for this because a Piston slides on a `GrooveJoint2D` and a
-Spring has no body of its own; the endpoint-force approach is the one
+angular joint for this because a Piston or Spring slides on a
+`GrooveJoint2D`; the endpoint-force approach is the one
 representation that works for Beams, Pistons and Springs without leaking
 link-kind branches into the model.
 
 ## The tick
 
-At 60 Hz (`_physics_process`), for the creature currently under evaluation:
+At 60 Hz (`_physics_process`), for the creature currently under evaluation
+(first each `SpringLink.Step` sets its spring's rest length, see
+`docs/CREATURE_MODEL.md` → Spring):
 
 1. **Sense.** Each sensor part reads its values in part order (an
    accelerometer steps its proof mass and reads 2, along and across its

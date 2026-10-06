@@ -26,7 +26,7 @@ declared in each `*.Tests.csproj`. Do not import them per file.
 | Project | Tests what |
 |---|---|
 | `NodeRunner.Domain.Tests` | Records, enums, invariants, JSON round-trip |
-| `NodeRunner.Mechanics.Tests` | Part physics: accelerometer, camera rays, Piston, rigid triangles |
+| `NodeRunner.Mechanics.Tests` | Part physics: the parts in `libs/NodeRunner.Mechanics/AGENTS.md` → Scope |
 | `NodeRunner.ML.Tests` | NN math, GA, backprop — the pure engine |
 | `NodeRunner.App.Tests` | View-models, repositories, service abstractions |
 | `NodeRunner.Arch.Tests` | Layer/dependency rules from `docs/ARCHITECTURE.md` and source conventions such as the file-size limit |

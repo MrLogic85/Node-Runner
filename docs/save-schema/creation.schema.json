@@ -262,6 +262,14 @@
               "damping": {
                 "type": "number",
                 "default": 10
+              },
+              "stroke": {
+                "type": "number",
+                "default": 1
+              },
+              "coilLength": {
+                "type": "number",
+                "default": 0.6666666666666666
               }
             },
             "required": [

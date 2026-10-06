@@ -277,12 +277,15 @@ A part's settings are parameters (`PartParameters`), plain data: an id, whether
 several selected parts can share one value (`MultiEditable`), and a slider
 when the panel shows it (`InPanel`). Each kind of part lists its own
 (`CreatureBuilder.ParametersOf`): a Piston has **Max strength** (20–400 N,
-step 10), **Stroke** (10–100% of its shortest length, step 5), **Start
+step 10), **Stroke** (10–100% of its shortest gap between its joints' edges, step 5), **Start
 position** (0–100%, step 5; where its drawn length sits in its travel, #870),
 **Max speed** (0.5–4.0 m/s, step
 0.1) and **Rise time** (0.1, 0.2, 0.5 or 1 s, evenly spaced along the slider
 so the short ones are as easy to pick, #801); a Spring has **Stiffness**
-(50–2000 N/m, step 50) and **Damping** (0–100 N·s/m, step 1); a Servo has
+(50–2000 N/m, step 50), **Damping** (0–100 N·s/m, step 1), **Stroke** (as
+the Piston's) and **Coil length** (0–100%, step 1; moves its rest length evenly
+from half its drawn gap short of its shortest stop to as far past its
+longest, #835; a new Stroke keeps it); a Servo has
 **Max strength** (5–200 N·m), **Range** (20°–360°), **Start position**
 (0–100%), **Max speed** (30°/s–720°/s) and **Rise time**, followed by
 Fixed/Target link pickers; a Camera has **Aim**, set on the canvas and one
@@ -293,7 +296,7 @@ part has and can share (`BuildViewModel.EditableParameters`). The panel shows a
 slider for each that is `InPanel`, and a slider sets its value on every
 selected part (`SetParameter`). The canvas shows what a parameter changes
 only while it can be changed: a Piston's stroke ticks while Stroke or Start
-position can, a Camera's rays and aim handle while Aim can. Parameters change
+position can, a Spring's, with a ring at its rest length, while Stroke or Coil length can, a Camera's rays and aim handle while Aim can. Parameters change
 no brain port, so a locked creation keeps them.
 
 A Piston's rows are Name, then its sliders instead of what it is joined to,
@@ -307,8 +310,10 @@ callout say "A Servo needs two links at its joint" instead, and the
 Play-blocked reason asks to connect another link there, because no pick
 could fix it. Changing a picker follows
 `docs/CREATURE_MODEL.md` → "Editing identity rules".
-A Spring's are Name, its two sliders, then "It pulls back toward its drawn
-length. Damping stops it bouncing."
+A Spring's are Name, its sliders, then "It springs toward the ring, which
+Coil length moves. With the ring past an end mark, it starts pressed against
+that end. Damping stops it bouncing." A Piston
+and a Spring selected together share Stroke.
 
 ## Selection panel
 

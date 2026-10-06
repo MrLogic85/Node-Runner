@@ -13,12 +13,13 @@ namespace NodeRunner.Creature;
 /// </summary>
 public sealed class PistonLink
 {
-    public PistonLink(PistonDef definition, RigidBody2D nodeA, RigidBody2D nodeB)
+    public PistonLink(PistonDef definition, RigidBody2D nodeA, RigidBody2D nodeB, double jointRadii)
     {
         Definition = definition;
         NodeA = nodeA;
         NodeB = nodeB;
         BuiltLength = Math.Max(nodeA.Position.DistanceTo(nodeB.Position), 1f);
+        JointRadii = jointRadii;
     }
 
     // The force it pushed with last step. Creature.ResetPose builds a fresh link each trial (#798),
@@ -34,6 +35,15 @@ public sealed class PistonLink
     /// <summary>The distance between its nodes as built.</summary>
     public double BuiltLength { get; }
 
+    /// <summary>Its two joints' radii together, a Servo's joint being bigger: its travel is on the gap between their edges (#835).</summary>
+    public double JointRadii { get; }
+
+    /// <summary>Its shortest length, centre to centre.</summary>
+    public double ShortestLength => Mechanics.Piston.ShortestLength(Definition, BuiltLength, JointRadii);
+
+    /// <summary>Its longest length, centre to centre.</summary>
+    public double LongestLength => Mechanics.Piston.LongestLength(Definition, BuiltLength, JointRadii);
+
     public double Length => NodeA.GlobalPosition.DistanceTo(NodeB.GlobalPosition);
 
     /// <summary>How fast its length grows, in world units per second; negative while it retracts.</summary>
@@ -46,7 +56,7 @@ public sealed class PistonLink
         }
     }
 
-    public double LengthInput => Mechanics.Piston.LengthInput(Definition, BuiltLength, Length);
+    public double LengthInput => Mechanics.Piston.LengthInput(Definition, BuiltLength, JointRadii, Length);
 
     public double SpeedInput => Mechanics.Piston.SpeedInput(Speed, Definition.MaxSpeed);
 
@@ -57,7 +67,7 @@ public sealed class PistonLink
     /// <param name="step">The physics step, in seconds.</param>
     public void Drive(double position, double strength, double step)
     {
-        _force = Mechanics.Piston.NextForce(Definition, BuiltLength, Length, Speed, position, strength, _force, step);
+        _force = Mechanics.Piston.NextForce(Definition, BuiltLength, JointRadii, Length, Speed, position, strength, _force, step);
         var push = Axis * (float)_force;
         NodeB.ApplyCentralForce(push);
         NodeA.ApplyCentralForce(-push);
