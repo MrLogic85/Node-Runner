@@ -159,7 +159,7 @@ public sealed partial class ArchitectureSpec
             .ShouldBe("Node Runner Debug");
     }
 
-    /// <summary>One value of <paramref name="key"/>; every export preset must agree on it.</summary>
+    /// <summary>The one value <paramref name="file"/> sets <paramref name="key"/> to.</summary>
     private static string ProjectSetting(string file, string key)
     {
         var prefix = key + "=";

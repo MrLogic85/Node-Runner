@@ -110,7 +110,7 @@ Godot's `VkThread` on the SM-S938B (#104); #961 re-checks it.
 
 ### App icon
 
-The presets' `launcher_icons/*` and `splash_screen/icon`, and
+The preset's `launcher_icons/*` and `splash_screen/icon`, and
 `application/config/icon`, point at the SVGs in `project/assets/icons/app/`.
 Godot imports each at its declared size and the export scales it to every
 density (#820). `docs/UI_DIRECTION.md` → "App icon" owns the design.
