@@ -7,6 +7,26 @@ namespace NodeRunner.App.Tests.ViewModels;
 public sealed class PartParametersTests
 {
     [Fact]
+    public void EverySetting_IsBasicOrAdvanced_AsDesigned()
+    {
+        // #903: tuning values sit under Advanced; the rest are basic.
+        PartParameterId[] advanced =
+        [
+            PartParameterId.StartPosition,
+            PartParameterId.ServoStartPosition,
+            PartParameterId.MaxSpeed,
+            PartParameterId.AngularMaxSpeed,
+            PartParameterId.RiseTime,
+            PartParameterId.Damping,
+        ];
+
+        foreach (var id in Enum.GetValues<PartParameterId>())
+        {
+            PartParameters.Of(id).Advanced.ShouldBe(advanced.Contains(id), id.ToString());
+        }
+    }
+
+    [Fact]
     public void ANewPiston_ShowsTheDefaultsInNewtonsPercentAndMetresPerSecond()
     {
         var piston = new PistonDef(3, 1, 2);

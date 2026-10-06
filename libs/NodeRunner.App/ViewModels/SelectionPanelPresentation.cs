@@ -14,4 +14,11 @@ public sealed record SelectionPanelPresentation(
     bool ShowFrameRows,
     UiText DeleteText,
     UiText? DeleteNote,
-    bool CanDelete);
+    bool CanDelete)
+{
+    /// <summary>The <see cref="Settings"/> shown above the Advanced section (#903).</summary>
+    public IReadOnlyList<ParameterSlider> BasicSettings => [.. Settings.Where(setting => !setting.Advanced)];
+
+    /// <summary>The <see cref="Settings"/> in the Advanced section, which is left out when there are none.</summary>
+    public IReadOnlyList<ParameterSlider> AdvancedSettings => [.. Settings.Where(setting => setting.Advanced)];
+}

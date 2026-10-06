@@ -232,17 +232,23 @@ panel shows it (`InPanel`). Each kind lists its own
 (`CreatureBuilder.ParametersOf`); what each means is in
 `docs/CREATURE_MODEL.md`.
 
+Each parameter is basic or `Advanced` for every part that has it (#903):
+Start position, Max speed, Rise time and Damping are advanced. The panel
+shows Name, the basic sliders and any other controls, like a Servo's link
+pickers, then a closed Advanced section with the rest, left out when there
+is none, then the part's note. The section stays open or closed across selections
+until the next Build visit (`BuildViewModel.AdvancedSettingsOpen`).
+
 - **Piston:** Max strength (20–400 N, step 10), Stroke (10–100%, step 5),
   Start position (0–100%, step 5, #870), Max speed (0.5–4.0 m/s, step 0.1)
   and Rise time (0.1, 0.2, 0.5 or 1 s, evenly spaced along the slider so
-  the short ones are as easy to pick, #801). Its rows are Name, its
-  sliders, then its note.
+  the short ones are as easy to pick, #801).
 - **Spring:** Stiffness (50–2000 N/m, step 50), Damping (0–100 N·s/m,
   step 1), Stroke (as the Piston's) and Coil length (0–100%, step 1, #835;
-  a new Stroke keeps it). Its rows are Name, its sliders, then its note.
+  a new Stroke keeps it).
 - **Servo:** Max strength (5–200 N·m), Range (20°–360°), Start position
-  (0–100%), Max speed (30°/s–720°/s) and Rise time, then "Fixed link" and
-  "Target link" pickers and its note. A missing role's picker reads "Pick a
+  (0–100%), Max speed (30°/s–720°/s) and Rise time, plus "Fixed link" and
+  "Target link" pickers. A missing role's picker reads "Pick a
   Fixed link" or "Pick a Target link" in danger colour and lists only the
   real links. If the joint has fewer than two links, its note and canvas
   callout say "A Servo needs two links at its joint" instead, and the
@@ -288,8 +294,9 @@ no brain port, so a locked creation keeps them.
 
 Several selected parts show the selection panel instead (#558, #704), titled
 "N selected"; there is no close button.
-- First a slider for each parameter they share, with the note "A slider
-  sets one value for all of them."
+- First a slider for each parameter they share, split into basic and
+  Advanced like a part's, then the note "A slider sets one value for all of
+  them."
 - With a frame, three rows explain its handles (Move, Rotate, Scale). With
   neither settings nor a frame: "These parts share no settings."
 - Last a full-width **Delete N**, which acts on a tap (Undo restores it),

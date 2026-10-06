@@ -297,6 +297,7 @@ repeated. The last column owns the detail (BM = `docs/BUILD_MODE.md`, TL =
 | Selecting differs per tool; Joint splits beams | One selection model (#746) | BM → Every tool |
 | Locked-canvas chip | None (#706) | — |
 | Piston lists Between, power, weight | Sliders (#451) | BM → Part settings |
+| Every setting shown | Tuning values under a closed Advanced section (#903) | BM → Parameters |
 | Sliders have no help | A hint while touched; "?" buttons were dropped as clutter (#867) | BM → Parameters |
 | Part counts ("1 left") | Unlimited (#374, #525) | BM → Parts tray |
 | Core part | Sensors on beams (#127) | WV → Sensors |

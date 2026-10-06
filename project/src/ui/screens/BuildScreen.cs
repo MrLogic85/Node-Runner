@@ -77,6 +77,10 @@ public partial class BuildScreen : Control
     [Signal]
     public delegate void ServoLinkChangedEventHandler(int servoId, bool fixedRole, int linkId);
 
+    /// <summary>The Advanced settings section was opened or closed (#903).</summary>
+    [Signal]
+    public delegate void AdvancedSettingsToggledEventHandler(bool open);
+
     /// <summary>False while the overflow menu is open; it takes Android Back itself.</summary>
     public bool CanTakeBack => !Toolbar.Menu.Visible;
 
@@ -138,6 +142,8 @@ public partial class BuildScreen : Control
         GetNode<UiSidePanel>("%SidePanel").CollapsedChanged += _ => HideSettingHint();
         GetNode<UiPicker>("%FixedPicker").SelectionChanged += selected => OnServoPickerChanged(selected, fixedRole: true);
         GetNode<UiPicker>("%TargetPicker").SelectionChanged += selected => OnServoPickerChanged(selected, fixedRole: false);
+        GetNode<UiExpandSection>("%PartAdvanced").Toggled += open => EmitSignal(SignalName.AdvancedSettingsToggled, open);
+        GetNode<UiExpandSection>("%SelectionAdvanced").Toggled += open => EmitSignal(SignalName.AdvancedSettingsToggled, open);
         BindViewModels();
         Apply();
     }
@@ -207,12 +213,38 @@ public partial class BuildScreen : Control
     }
 
     /// <summary>
+    /// The basic sliders in <paramref name="basic"/>, then the advanced ones in
+    /// <paramref name="advancedBody"/> under <paramref name="advanced"/> (#903), which shows only
+    /// when there are any. <paramref name="gap"/> widens the space above the section to space-2
+    /// when basic sliders come before it.
+    /// </summary>
+    private void ApplyParameterSliders(
+        Container basic,
+        Control gap,
+        UiExpandSection advanced,
+        Container advancedBody,
+        IReadOnlyList<ParameterSlider> basicSettings,
+        IReadOnlyList<ParameterSlider> advancedSettings,
+        bool advancedOpen)
+    {
+        basic.Visible = basicSettings.Count > 0;
+        ApplySliders(basic, basicSettings);
+        advanced.Visible = advancedSettings.Count > 0;
+        gap.Visible = basic.Visible && advanced.Visible;
+        if (advanced.Open != advancedOpen)
+        {
+            advanced.Open = advancedOpen;
+        }
+
+        ApplySliders(advancedBody, advancedSettings);
+    }
+
+    /// <summary>
     /// One slider per setting in <paramref name="settings"/>, in order (#704). A setting's slider is
     /// made the first time it shows; differing values have Marker ends and no thumb.
     /// </summary>
-    private void ApplyParameterSliders(Container container, IReadOnlyList<ParameterSlider> settings)
+    private void ApplySliders(Container container, IReadOnlyList<ParameterSlider> settings)
     {
-        container.Visible = settings.Count > 0;
         foreach (var slider in container.GetChildren().OfType<UiSlider>())
         {
             slider.Visible = settings.Any(setting => setting.Id.ToString() == slider.Name);
@@ -394,7 +426,14 @@ public partial class BuildScreen : Control
 
     private void ApplySelection(SelectionPanelPresentation group)
     {
-        ApplyParameterSliders(GetNode<Container>("%SelectionParameters"), group.Settings);
+        ApplyParameterSliders(
+            GetNode<Container>("%SelectionParameters"),
+            GetNode<Control>("%SelectionAdvancedGap"),
+            GetNode<UiExpandSection>("%SelectionAdvanced"),
+            GetNode<Container>("%SelectionAdvancedParameters"),
+            group.BasicSettings,
+            group.AdvancedSettings,
+            _presentation?.AdvancedSettingsOpen == true);
         GetNode<Control>("%SelectionSettings").Visible = group.Settings.Count > 0;
         GetNode<UiLabel>("%SelectionSettingsNote").TextSource = UiTextTranslation.Source(group.SettingsNote);
         var emptyNote = GetNode<UiLabel>("%SelectionEmptyNote");
@@ -581,7 +620,14 @@ public partial class BuildScreen : Control
         connectionsLabel.TextSource = UiTextTranslation.Source(part.ConnectionsLabel);
         GetNode<UiLabel>("%PartConnectionsValue").TextSource = UiTextTranslation.Source(part.ConnectionsValue);
         connectionsLabel.GetParent<Control>().Visible = connectionsLabel.TextSource is not null;
-        ApplyParameterSliders(GetNode<Container>("%PartParameters"), part.Settings);
+        ApplyParameterSliders(
+            GetNode<Container>("%PartParameters"),
+            GetNode<Control>("%PartAdvancedGap"),
+            GetNode<UiExpandSection>("%PartAdvanced"),
+            GetNode<Container>("%PartAdvancedParameters"),
+            part.BasicSettings,
+            part.AdvancedSettings,
+            _presentation?.AdvancedSettingsOpen == true);
         ApplyPartPickers(part);
 
         GetNode<UiLabel>("%PartNote").ShowText(part.Note);
