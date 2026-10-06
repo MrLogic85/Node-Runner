@@ -136,6 +136,13 @@ public sealed record CreatureDef
     /// <summary>The Springs (#453): passive links between two nodes.</summary>
     public IReadOnlyList<SpringDef> Springs => _springs;
 
+    /// <summary>
+    /// Every part: nodes, beams, sensors, Pistons and Springs. A new kind of part counts here too,
+    /// since what scales with the creature's size reads it (#318).
+    /// </summary>
+    [JsonIgnore]
+    public int PartCount => _nodes.Count + _beams.Count + _sensors.Count + _pistons.Count + _springs.Count;
+
     public int NextPartId { get; }
 
     public int NodeIndexOf(int nodeId) => IndexOf(_nodeIndexById, nodeId, "Node id must point to an existing node.");

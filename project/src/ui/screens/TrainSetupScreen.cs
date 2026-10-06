@@ -93,7 +93,17 @@ public partial class TrainSetupScreen : Control
         mode.SelectedIndex = _presentation.Mode == TrainingRunMode.Simulate ? _simulateSegment : _trainSegment;
         GetNode<UiLabel>("%ModeNote").ShowText(_presentation.ModeNote);
         Bind(GetNode<UiSlider>("%Shadows"), _presentation.Shadows, _presentation.ShadowsEnds);
+        BindNote(_presentation.ShadowsNote);
         Bind(GetNode<UiSlider>("%RunLength"), _presentation.RunLength, _presentation.RunLengthEnds);
+    }
+
+    // The row stays in every state, empty in Simulate, so Run length below it does not move (#318).
+    private void BindNote(SettingNote? note)
+    {
+        var text = GetNode<UiLabel>("%ShadowsNoteText");
+        GetNode<Control>("%ShadowsNoteIcon").Visible = note?.IsWarning == true;
+        text.TextColor = note?.IsWarning == true ? UiTokens.Color.Halo : UiTokens.Color.Muted;
+        text.TextSource = note is null ? () => string.Empty : UiTextTranslation.Source(note.Text);
     }
 
     private static void Bind(UiSlider slider, SettingSlider value, IReadOnlyList<UiText> ends)

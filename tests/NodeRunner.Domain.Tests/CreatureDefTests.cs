@@ -23,6 +23,21 @@ public sealed class CreatureDefTests
     }
 
     [Fact]
+    public void PartCount_CountsEveryKindOfPart()
+    {
+        var creature = new CreatureDef(
+            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(2, 0)), new NodeDef(3, new Vector2D(1, 1))],
+            [new BeamDef(4, 1, 2), new BeamDef(5, 2, 3)],
+            [new SensorDef(6, 4, SensorKind.Accelerometer)],
+            [new PistonDef(7, 1, 3)],
+            [new SpringDef(8, 1, 3)],
+            nextPartId: 9);
+
+        creature.PartCount.ShouldBe(8);
+        new CreatureDef([], [], []).PartCount.ShouldBe(0);
+    }
+
+    [Fact]
     public void Constructor_WithNoNodes_AcceptsAnEmptyDrawing()
     {
         var creature = new CreatureDef([], [], []);
