@@ -616,6 +616,22 @@ entries are not components of their own in Godot
   `space-1` gap, holding rows that carry no outer padding of their own, and an
   optional full-width danger Delete at the end with `space-2` above it
   ([#343](https://github.com/MrLogic85/Node-Runner/issues/343)).
+- **`UiExpandSection`** has no `c_*` entry. It opens and closes a group of
+  `c_rows` rows, such as a part's Advanced settings
+  ([#928](https://github.com/MrLogic85/Node-Runner/issues/928)).
+  - **Header:** full width and `control-sm` high, and the whole row is the
+    tap target. It shows "Advanced" (`LabelText`) on the left in
+    `Overline`/`muted` and a 16 px `muted` chevron on the right:
+    `ChevronRight` when closed, `ChevronDown` when open, as in `UiPicker`.
+    It has no border or fill, only the shared press tint.
+  - **Body:** the section's own children, with the `space-1` gap. A tap
+    switches them instantly, with no animation.
+  - **Open state:** it starts closed. A tap flips `Open` and raises
+    `Toggled`; the owner keeps the flag and sets `Open` again when it
+    rebuilds the rows.
+  - **Visibility:** the section sets the visibility of each of its own
+    children, so a row that shows or hides itself must sit inside a plain
+    container within the section. The editor always shows the body.
 - **`UiSlider`** draws a filled span from `Low` to `High`, each a
   `UiSliderEnd` that is Rounded, Thumb (draggable) or Marker (square with a
   tick). One value is Rounded + Thumb, a range Thumb + Thumb. With no thumb a
@@ -908,10 +924,11 @@ Every control that reacts to a tap shows it
 - The tint covers exactly the control's tap area. Parts of it that are
   buttons of their own show their own tint instead.
 - `UiButton` (with every kind, format and button-group design such as
-  `UiCardActions`), `UiMenuActionItem`, the picker's closed row and the
-  switch and checkbox rows (`UiChoiceRow`) tint while held. A choice row's
-  tint reaches `Space.S2` past its sides so its corners clear the text and
-  the indicator.
+  `UiCardActions`), `UiMenuActionItem`, the picker's closed row, the
+  switch and checkbox rows (`UiChoiceRow`) and the `UiExpandSection`
+  header tint while held. The tint of a choice row and of the expand
+  section header reaches `Space.S2` past their sides, so its corners clear
+  the text and the indicator or chevron.
 - The creation card tints above its action bar, over the thumbnail too; a
   drag-scroll of the card row clears it.
 - A notification whose tap does something sets `UiCard.ShowsPress`; a swipe

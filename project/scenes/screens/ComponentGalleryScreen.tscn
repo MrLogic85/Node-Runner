@@ -32,6 +32,7 @@
 [ext_resource type="PackedScene" uid="uid://gydkh1xys4yo" path="res://scenes/ui/UiToolbar.tscn" id="28_toolbar"]
 [ext_resource type="Script" uid="uid://bjt8et7kcs50x" path="res://src/ui/lib/UiCardActions.cs" id="29_card_actions"]
 [ext_resource type="Script" uid="uid://bmd4r656osleb" path="res://src/ui/lib/UiSignpost.cs" id="50_signpost"]
+[ext_resource type="Script" uid="uid://bmmmlxr5268v7" path="res://src/ui/lib/UiExpandSection.cs" id="51_expand_section"]
 
 [sub_resource type="Resource" id="Resource_theme_neon"]
 script = ExtResource("5_theme_segment")
@@ -2763,6 +2764,138 @@ layout_mode = 2
 mouse_filter = 2
 script = ExtResource("21_note_row")
 Text = "Sits on an empty joint. Put a motor on top to drive it."
+
+[node name="ExpandSection" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content" unique_id=928000002]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Heading" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/ExpandSection" unique_id=928000003]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Title" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/ExpandSection/Heading" unique_id=928000004]
+layout_mode = 2
+size_flags_vertical = 8
+text = "Expand section"
+script = ExtResource("2_cpfof")
+TextStyle = 12
+
+[node name="Description" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/ExpandSection/Heading" unique_id=928000005]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 8
+text = "a header that opens and closes the rows below it; tap to toggle"
+autowrap_mode = 3
+script = ExtResource("2_cpfof")
+TextStyle = 9
+TextColor = 8
+
+[node name="Examples" type="HFlowContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/ExpandSection" unique_id=928000006]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/h_separation = 12
+theme_override_constants/v_separation = 12
+
+[node name="Closed" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/ExpandSection/Examples" unique_id=928000007]
+layout_mode = 2
+size_flags_horizontal = 0
+theme_override_constants/separation = 4
+
+[node name="Caption" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/ExpandSection/Examples/Closed" unique_id=928000008]
+layout_mode = 2
+text = "Starts closed"
+script = ExtResource("2_cpfof")
+TextStyle = 9
+
+[node name="Panel" type="PanelContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/ExpandSection/Examples/Closed" unique_id=928000009]
+custom_minimum_size = Vector2(176, 0)
+layout_mode = 2
+size_flags_horizontal = 0
+mouse_filter = 1
+script = ExtResource("13_card")
+
+[node name="Rows" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/ExpandSection/Examples/Closed/Panel" unique_id=928000010]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Stroke" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/ExpandSection/Examples/Closed/Panel/Rows" unique_id=928000011]
+layout_mode = 2
+mouse_filter = 1
+script = ExtResource("11_slider")
+LabelText = "Stroke"
+ReadoutText = "0.4 m"
+HighPosition = 0.5
+
+[node name="ClosedSection" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/ExpandSection/Examples/Closed/Panel/Rows" unique_id=928000012]
+layout_mode = 2
+script = ExtResource("51_expand_section")
+
+[node name="StartPosition" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/ExpandSection/Examples/Closed/Panel/Rows/ClosedSection" unique_id=928000013]
+layout_mode = 2
+mouse_filter = 1
+script = ExtResource("11_slider")
+LabelText = "Start position"
+ReadoutText = "Middle"
+HighPosition = 0.5
+
+[node name="MaxSpeed" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/ExpandSection/Examples/Closed/Panel/Rows/ClosedSection" unique_id=928000014]
+layout_mode = 2
+mouse_filter = 1
+script = ExtResource("11_slider")
+LabelText = "Max speed"
+ReadoutText = "1.2 m/s"
+HighPosition = 0.6
+
+[node name="Opened" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/ExpandSection/Examples" unique_id=928000015]
+layout_mode = 2
+size_flags_horizontal = 0
+theme_override_constants/separation = 4
+
+[node name="Caption" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/ExpandSection/Examples/Opened" unique_id=928000016]
+layout_mode = 2
+text = "Starts open"
+script = ExtResource("2_cpfof")
+TextStyle = 9
+
+[node name="Panel" type="PanelContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/ExpandSection/Examples/Opened" unique_id=928000017]
+custom_minimum_size = Vector2(176, 0)
+layout_mode = 2
+size_flags_horizontal = 0
+mouse_filter = 1
+script = ExtResource("13_card")
+
+[node name="Rows" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/ExpandSection/Examples/Opened/Panel" unique_id=928000018]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Stroke" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/ExpandSection/Examples/Opened/Panel/Rows" unique_id=928000019]
+layout_mode = 2
+mouse_filter = 1
+script = ExtResource("11_slider")
+LabelText = "Stroke"
+ReadoutText = "0.4 m"
+HighPosition = 0.5
+
+[node name="OpenedSection" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/ExpandSection/Examples/Opened/Panel/Rows" unique_id=928000020]
+layout_mode = 2
+script = ExtResource("51_expand_section")
+Open = true
+
+[node name="StartPosition" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/ExpandSection/Examples/Opened/Panel/Rows/OpenedSection" unique_id=928000021]
+layout_mode = 2
+mouse_filter = 1
+script = ExtResource("11_slider")
+LabelText = "Start position"
+ReadoutText = "Middle"
+HighPosition = 0.5
+
+[node name="MaxSpeed" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/ExpandSection/Examples/Opened/Panel/Rows/OpenedSection" unique_id=928000022]
+layout_mode = 2
+mouse_filter = 1
+script = ExtResource("11_slider")
+LabelText = "Max speed"
+ReadoutText = "1.2 m/s"
+HighPosition = 0.6
 
 [node name="StageCard" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content" unique_id=-2010556231]
 layout_mode = 2
