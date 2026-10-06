@@ -267,9 +267,10 @@ transition to keep in step with it.
     page shows if there are fewer pages now. Sorting ranks by distance at that moment and holds
     until the next sort, so cells never jump while the player watches; a
     new generation starts over in shadow order on the first page. The
-    followed shadow can sort off the page. The caption reads only
+    followed shadow can sort off the page. The caption reads
     "Generation N", the racing generation counted from 1 like the best's
-    generation. Owner decisions.
+    generation, then a bar that fills as the followed shadow's run goes by
+    and empties when the next generation starts (#715). Owner decisions.
   - Drawn shadows (#284): Training draws only the shadows on the strip's
     current page, plus the followed shadow, which is drawn even off the
     page. The rest keep racing and counting, undrawn: `Evolver.DrawOnly`

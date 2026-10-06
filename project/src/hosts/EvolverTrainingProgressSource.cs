@@ -41,6 +41,9 @@ public sealed class EvolverTrainingProgressSource : ITrainingProgressSource
 
     public IReadOnlyList<double> ShadowDistances => _evolver.ShadowDistances;
 
+    public RunClock? FollowedRun =>
+        _evolver.FollowedTrialTicks is { } trial ? new RunClock(trial.TicksRun, trial.LengthTicks) : null;
+
     public void Follow(int shadow) => _evolver.Follow(shadow);
 
     public void DrawOnly(IReadOnlyList<int> shadows) => _evolver.DrawOnly(shadows);

@@ -282,6 +282,42 @@ public sealed class TrainingPresentationViewModelTests
         TrainingPresentationViewModel.Leader(distances).ShouldBe(leader);
     }
 
+    [Theory]
+    [InlineData(0, 600, 0.0)]
+    [InlineData(150, 600, 0.25)]
+    [InlineData(600, 600, 1.0)]
+    [InlineData(700, 600, 1.0)]
+    public void RunProgress_IsTheShareOfTheRunGone(int elapsed, int length, double progress)
+    {
+        var source = new FakeTrainingProgressSource { FollowedRun = new RunClock(elapsed, length) };
+        var presentation = new TrainingPresentationViewModel(source);
+
+        presentation.RunProgress.ShouldBe(progress);
+    }
+
+    [Fact]
+    public void RunProgress_StartsAgainWithTheNextRun()
+    {
+        var source = new FakeTrainingProgressSource { FollowedRun = new RunClock(590, 600) };
+        var presentation = new TrainingPresentationViewModel(source);
+
+        source.FollowedRun = new RunClock(0, 600);
+
+        presentation.RunProgress.ShouldBe(0, "The next generation's run starts at the beginning.");
+    }
+
+    [Fact]
+    public void RunProgress_WithoutARunOrALength_IsNull()
+    {
+        var source = new FakeTrainingProgressSource();
+        var presentation = new TrainingPresentationViewModel(source);
+
+        presentation.RunProgress.ShouldBeNull("No run is going.");
+        source.FollowedRun = new RunClock(10, 0);
+        presentation.RunProgress.ShouldBeNull("A run with no length has nothing to show.");
+        new TrainingPresentationViewModel().RunProgress.ShouldBeNull("Simulate has no training source.");
+    }
+
     [Fact]
     public void WithoutASource_ThereAreNoShadowsToFollow()
     {
@@ -336,6 +372,8 @@ public sealed class TrainingPresentationViewModelTests
         public bool HasPreviousBest { get; set; }
 
         public IReadOnlyList<double> ShadowDistances { get; set; } = [];
+
+        public RunClock? FollowedRun { get; set; }
 
         public IReadOnlyList<int> Drawn { get; private set; } = [];
 

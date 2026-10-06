@@ -96,6 +96,16 @@ public sealed class TrainingPresentationViewModel : INotifyPropertyChanged, IDis
         }
     }
 
+    /// <summary>
+    /// How much of the followed shadow's run has gone (#715), from 0 as it starts to 1 as it ends,
+    /// read from the source on each call so a bar can fill smoothly; null when no run with a time
+    /// limit is going, as in Simulate.
+    /// </summary>
+    public double? RunProgress =>
+        _source?.FollowedRun is { LengthTicks: > 0 } run
+            ? Math.Clamp((double)run.ElapsedTicks / run.LengthTicks, 0, 1)
+            : null;
+
     /// <summary>The shadow strip (#387): which shadows it shows and how full their bars are.</summary>
     public ShadowStripView Strip => _strip.View(Shadows, _generation);
 

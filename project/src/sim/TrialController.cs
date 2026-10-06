@@ -28,6 +28,12 @@ public partial class TrialController : Node
 
     public int ElapsedTicks => _elapsedTicks;
 
+    /// <summary>
+    /// The ticks the trial in progress has run (#715): 0 until it has begun, which
+    /// <see cref="ElapsedTicks"/> is not, as it keeps the last trial's count until then.
+    /// </summary>
+    public int TicksRun => _startsNextTick ? 0 : _elapsedTicks;
+
     /// <summary>What the trial in progress (or the last one) has measured so far.</summary>
     public TrialResult Measured => _measurement.Result;
 

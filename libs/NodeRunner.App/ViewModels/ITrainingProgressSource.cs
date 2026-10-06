@@ -32,6 +32,9 @@ public interface ITrainingProgressSource : IDisposable
     /// <summary>Every shadow's front distance so far this trial (#725), NaN for one that is not running.</summary>
     IReadOnlyList<double> ShadowDistances { get; }
 
+    /// <summary>How far the followed shadow is into its run (#715); null when none is running.</summary>
+    RunClock? FollowedRun { get; }
+
     /// <summary>Follows the zero-based <paramref name="shadow"/> until another is picked.</summary>
     void Follow(int shadow);
 
