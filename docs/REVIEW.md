@@ -18,9 +18,9 @@ How a change lands in `main`, for humans and AI agents alike.
 A trivial change (typo, comment) still goes through a PR and CI; skip
 manual verification and say "trivial" in the PR.
 
-The local code-review agents in `CODEREVIEW.md` review every PR; #956
-decides whether Copilot code review joins them. Human review is optional,
-and `nit:` comments don't block.
+The local code-review agents in `CODEREVIEW.md` review every PR; Copilot
+code review is not used (#956). Human review is optional, and `nit:`
+comments don't block.
 
 ## Definition of Done
 

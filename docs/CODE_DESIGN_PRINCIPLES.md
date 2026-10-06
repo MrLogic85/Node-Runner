@@ -60,13 +60,13 @@ physics engine could run it. Godot body and joint choices live only in
 - `System.Random` with a seed gives the same sequence on every .NET 5+
   platform, so a run reproduces on desktop and Android without a custom
   PRNG.
-- The run's seed is written to the log; #959 shows it in the app.
+- The run's seed is written to the log and never shown in the app (#959).
 - Physics and network updates run on the fixed 60 Hz timestep
   (`_PhysicsProcess`), never `_Process`.
 - No wall-clock (`DateTime.Now`) decisions in ML or training code.
 
-Why: reproducibility is worth more than you'd think. Bug reports become "run
-seed 4711". Regressions become detectable.
+Why: a seeded run reproduces in a test, so bugs and regressions are
+detectable.
 
 ## 5. Small, composable units
 
@@ -148,7 +148,9 @@ Documentation follows these rules:
 - Godot first (§2) applies here too: what Godot provides beats a package,
   an addon or our own version.
 - Physics: Godot's `RigidBody2D` and joints, not Box2D.NET.
-- Math: `System` and `System.Numerics`.
+- ML: we write the algorithms ourselves (forward pass, GA, backprop), so
+  they can be learned and shown. A library may speed them up if it stays
+  deterministic for a seed and runs on Android (#790).
 
 ## 13. UI is the last mile
 
