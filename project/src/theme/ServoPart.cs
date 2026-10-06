@@ -85,7 +85,7 @@ public partial class ServoPart : PartVisual
         set => Change(ref _hasTarget, value);
     }
 
-    /// <summary>The four-primitives outline used by Training shadows.</summary>
+    /// <summary>The few-primitives outline used by Training shadows.</summary>
     public bool Simplified
     {
         get => _simplified;
@@ -167,6 +167,11 @@ public partial class ServoPart : PartVisual
         }
 
         DrawArcInLocal(toPixels, scale, Vector2.Zero, (_bandInnerRadius + _bandOuterRadius) / 2, BandFrom(), BandTo(), 32, Theme.MotorAccent, 3);
+        if (IsFullTurn)
+        {
+            DrawStop(toPixels, scale, BandFrom(), 3);
+        }
+
         DrawLine(toPixels * Vector2.Zero, toPixels * (Vector2.FromAngle(TargetAngle) * _hornLong), Theme.MotorAccent, 3 * scale, antialiased: true);
     }
 
@@ -224,7 +229,7 @@ public partial class ServoPart : PartVisual
     {
         var lower = BandFrom();
         var upper = BandTo();
-        if (Range >= Mathf.Tau - 0.0001f)
+        if (IsFullTurn)
         {
             if (filled)
             {
@@ -233,6 +238,7 @@ public partial class ServoPart : PartVisual
 
             DrawArcInLocal(toPixels, scale, Vector2.Zero, _bandInnerRadius, lower, lower + Mathf.Tau, _ringSegments, Theme.MotorAccent, Theme.MotorSignalWidth);
             DrawArcInLocal(toPixels, scale, Vector2.Zero, _bandOuterRadius, lower, lower + Mathf.Tau, _ringSegments, Theme.MotorAccent, Theme.MotorSignalWidth);
+            DrawStop(toPixels, scale, lower, Theme.MotorSignalWidth);
             return;
         }
 
@@ -243,6 +249,17 @@ public partial class ServoPart : PartVisual
         }
 
         DrawPolyline(Map(toPixels, Closed(points)), Theme.MotorAccent, Theme.MotorSignalWidth * scale, antialiased: true);
+    }
+
+    private bool IsFullTurn => Range >= Mathf.Tau - 0.0001f;
+
+    /// <summary>
+    /// A full turn's two stops meet at one angle, so a line across the band marks where it is.
+    /// </summary>
+    private void DrawStop(Transform2D toPixels, float scale, float angle, float width)
+    {
+        var along = Vector2.FromAngle(angle);
+        DrawLine(toPixels * (along * _bandInnerRadius), toPixels * (along * _bandOuterRadius), Theme.MotorAccent, width * scale, antialiased: true);
     }
 
     private Vector2[] RangeBandPoints(float lower, float upper)

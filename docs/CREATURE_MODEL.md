@@ -219,7 +219,9 @@ a composition of triangles; a bare quadrilateral stays free to fold.
   time and drops at once.
 - **Settings:** Max strength is torque (N·m in the panel, saved as world
   torque), Range is 20°–360°, Start position is 0–100% inside that range,
-  Max speed is °/s, and Rise time is seconds.
+  Max speed is °/s, and Rise time is seconds. `docs/UI_DIRECTION.md` owns
+  how a Servo is drawn.
+
 ### Piston
 
 - **Beginner:** A powered link between two nodes that pushes them apart or
@@ -372,7 +374,7 @@ creature, so it stands clear of the shadows behind it.
 - **Node:** a plain joint's ring at its collision size, without a glyph.
   Joint parts such as the Servo own their own shadow drawing.
 - **Servo:** simplified to its motor ring, housing outline, one range arc and
-  one horn line.
+  one horn line, plus a line across the arc at its stop at Range 360°.
 - **Beam:** its line, without angle marks or labels.
 - **Rigid triangle:** a faint fill instead of the hatch (#770), as the hatch
   shows when zoomed far out.

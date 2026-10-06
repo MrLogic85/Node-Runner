@@ -479,7 +479,8 @@ reference would mislead someone working on that surface.
     reaching at most 8 units past the ring. It is left out when a sensor needs
     the room or when the Fixed link is a Piston held at its cylinder;
   - the range as a `panel` band with a `MotorAccent` outline inside the ring,
-    from end stop to end stop, turning with the Fixed link;
+    from end stop to end stop, turning with the Fixed link. At Range 360° the
+    two stops meet, so a `MotorAccent` line across the band marks them (#922);
   - a two-armed horn that points along the Target link. In Build the horn sits
     at the Start position.
 
