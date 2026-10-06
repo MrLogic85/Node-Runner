@@ -70,7 +70,8 @@ public partial class Evolver : Node
     /// <summary>
     /// The shadow (zero-based slot, which is also its candidate index) drawn in full and shown in
     /// signal flow and the brain. Shadow 0 by default: the previous best, or shadow 1 in a fresh
-    /// generation 0. It changes only through <see cref="Follow"/> (#385).
+    /// generation 0. The player changes it through <see cref="Follow"/> (#385), and every new
+    /// generation sets it back to shadow 0 (#894).
     /// </summary>
     public int FollowedShadow => _followedShadow;
 
@@ -102,7 +103,7 @@ public partial class Evolver : Node
     /// <summary>Raised when active candidates, completed candidates, or the generation changes.</summary>
     public event Action? TrainingProgressChanged;
 
-    /// <summary>Follows <paramref name="shadow"/> until the player picks another one.</summary>
+    /// <summary>Follows <paramref name="shadow"/> until the player picks another one or the generation ends.</summary>
     public void Follow(int shadow)
     {
         if (shadow < 0 || shadow >= Math.Max(_creatures.Count, 1))
@@ -404,6 +405,8 @@ public partial class Evolver : Node
             return;
         }
 
+        // A picked shadow is followed for its generation only; each new one opens on the previous best (#894).
+        Follow(0);
         StartAvailableSlots();
     }
 

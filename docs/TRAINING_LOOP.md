@@ -242,9 +242,10 @@ transition to keep in step with it.
     candidate `i`. The default is shadow 1 (slot 0): the resumed genome or
     the elite `GeneticAlgorithm` puts first, i.e. the previous best, and in
     a fresh generation 0 the first perturbed shadow. The previous best
-    replays its run exactly (see "The same brain runs the same trial" above). `Evolver.Follow` is the only way
-    it changes, so a new leader never takes it, and it stays on that slot
-    across generations. `Evolver` exposes `FollowedShadow`,
+    replays its run exactly (see "The same brain runs the same trial" above). The player
+    changes it with `Evolver.Follow`, and a new leader never takes it. A
+    picked shadow is followed for the rest of its generation only: every new
+    generation opens on shadow 1 again (#894). `Evolver` exposes `FollowedShadow`,
     `HasPreviousBest` and `ShadowDistances`; `TrainingPresentationViewModel`
     turns them into `ShadowStanding` rows (followed, leader = furthest
     running shadow, previous best) and `Follow(number)` for the shadow strip
