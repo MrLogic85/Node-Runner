@@ -31,9 +31,9 @@ the reference's "a training session has finished" (#369).
 3. Each finished generation is saved. Once the Creation has trained at
    least one generation it is locked (`CreationLock.IsLocked`), so the
    trained model cannot be lost by accident. Only what changes the model is
-   locked: joints can still move and cameras can still be aimed (#638). The
-   lock follows from the saved training alone and is not stored, so
-   `Evolver` knows nothing of it.
+   locked (#638); `docs/BUILD_MODE.md` → Locked Build says what Build still
+   allows. The lock follows from the saved training alone and is not
+   stored, so `Evolver` knows nothing of it.
 4. Leaving Training before the first generation finishes leaves the
    Creation unlocked.
 5. Later Train or Simulate sessions start from the locked Build state.

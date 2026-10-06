@@ -132,9 +132,28 @@ public partial class BuildHost : Node, IRoutedScene
         _buildScreen.CopyCreationRequested += CopyActiveCreation;
         _buildScreen.DeleteCreationRequested += RequestDeleteActiveCreation;
         _buildScreen.PartNameChanged += Build.RenamePart;
-        _buildScreen.DeleteSelectionRequested += Build.DeleteSelectedParts;
+        _buildScreen.DeleteSelectionRequested += DeleteSelection;
         _buildScreen.CopySelectionRequested += Build.CopySelectedParts;
+        _buildScreen.CreationLockedPressed += () => NotifyLocked(UiTextTranslation.Source(BuildViewModel.LockedReason)!);
     }
+
+    // A locked Creation keeps Delete in view; when deleting would change the model, it says why (#896).
+    private void DeleteSelection()
+    {
+        if (UiTextTranslation.Source(Build.DeleteLockedReason) is { } reason)
+        {
+            NotifyLocked(reason);
+            return;
+        }
+
+        Build.DeleteSelectedParts();
+    }
+
+    private void NotifyLocked(Func<string> reason) =>
+        UiNotificationLayer.Enqueue(this, new UiNotificationSpec(UiPopupType.Default, "Build", string.Empty, Icon: new(UiIconId.Lock))
+        {
+            MessageSource = reason,
+        });
 
     // Train setup and Training open in their own scenes from the saved creation, so the edits save
     // first; a creature that cannot train stays in Build, which points at what blocks it (#844).
@@ -327,7 +346,7 @@ public partial class BuildHost : Node, IRoutedScene
 
     private void RequestUnlock()
     {
-        if (!Build.IsMoveOnly || _dialog.IsOpen)
+        if (!Build.IsLocked || _dialog.IsOpen)
         {
             return;
         }

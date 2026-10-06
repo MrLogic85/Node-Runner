@@ -4,7 +4,8 @@ namespace NodeRunner.Ui.Lib;
 
 /// <summary>
 /// Canonical row for build parts: icon, name, count, and four reference states. A locked row shows
-/// only its lock; its owner explains the lock once (#374). <see cref="Compact"/> rows are
+/// only its lock; its owner explains the lock once (#374), and may answer a tap on it
+/// (<see cref="LockedPressedEventHandler"/>, #896). <see cref="Compact"/> rows are
 /// <c>control-sm</c> high, as in the Build Parts tray.
 /// </summary>
 [Tool]
@@ -13,6 +14,9 @@ public partial class UiPartRow : Control
 {
     [Signal]
     public delegate void PartSelectedEventHandler();
+
+    [Signal]
+    public delegate void LockedPressedEventHandler();
 
     public enum PartRowState
     {
@@ -160,6 +164,11 @@ public partial class UiPartRow : Control
         if (IsAvailable && activated)
         {
             EmitSignal(SignalName.PartSelected);
+            AcceptEvent();
+        }
+        else if (State == PartRowState.Locked && activated)
+        {
+            EmitSignal(SignalName.LockedPressed);
             AcceptEvent();
         }
     }

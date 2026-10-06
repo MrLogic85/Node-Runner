@@ -190,7 +190,7 @@ public sealed class BuildPistonTests
         builder.AddNode(new Vector2D(100, 0));
         var piston = builder.AddPiston(1, 2);
         var build = new BuildViewModel();
-        build.Load(builder.Build(), moveOnly: true);
+        build.Load(builder.Build(), locked: true);
         build.SelectOnly(CreatureElementKind.Piston, piston);
         var changes = 0;
         build.AnatomyChanged += (_, _) => changes++;
@@ -209,7 +209,7 @@ public sealed class BuildPistonTests
     public void PickLink_WhenLocked_KeepsBeamPicked()
     {
         var build = new BuildViewModel();
-        build.Load(new CreatureBuilder().Build(), moveOnly: true);
+        build.Load(new CreatureBuilder().Build(), locked: true);
         build.ActiveTool = BuildTool.Beam;
 
         build.PickLink(BuildLink.Piston);

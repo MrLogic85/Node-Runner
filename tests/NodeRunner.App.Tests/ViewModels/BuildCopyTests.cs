@@ -176,7 +176,7 @@ public sealed class BuildCopyTests
         build.CanOfferCopy.ShouldBeFalse();
 
         var locked = new BuildViewModel();
-        locked.Load(Creature(), moveOnly: true);
+        locked.Load(Creature(), locked: true);
         locked.ReplaceSelection(Ids(1, 2));
         locked.CanOfferCopy.ShouldBeFalse();
         locked.CopySelectedParts();

@@ -16,7 +16,7 @@ public enum PartSettingsKind
 
 /// <summary>
 /// The Part settings panel for one selected part (#343): its Name first, then what it is joined to,
-/// a short note, and Delete unless the Creation is locked. Structure is read-only here; it is drawn
+/// a short note, and Delete, dimmed while <see cref="CanDelete"/> is false (#896). Structure is read-only here; it is drawn
 /// and changed on the canvas. <see cref="Settings"/> are the part's panel sliders (#704), like a
 /// Piston's (#451); a joint (#913), Piston or Spring lists no connections, as they are drawn on the canvas, so its
 /// <see cref="ConnectionsLabel"/> and <see cref="ConnectionsValue"/> are null. <see cref="Name"/> is

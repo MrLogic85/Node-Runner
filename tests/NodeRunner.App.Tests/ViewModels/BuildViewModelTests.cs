@@ -125,7 +125,7 @@ public sealed class BuildViewModelTests
             [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(90, 0)), new NodeDef(3, new Vector2D(0, 90))],
             [],
             [],
-            [new PistonDef(301, 1, 2), new PistonDef(302, 1, 3, stroke: 0.4)]), moveOnly: true);
+            [new PistonDef(301, 1, 2), new PistonDef(302, 1, 3, stroke: 0.4)]), locked: true);
         build.ReplaceSelection(PartSet.None with { Pistons = new HashSet<int> { 301, 302 } });
         var changes = 0;
         build.AnatomyChanged += (_, _) => changes++;
@@ -437,18 +437,18 @@ public sealed class BuildViewModelTests
     [Theory]
     [InlineData(null, false)]
     [InlineData(1, true)]
-    public void LoadCreation_IsMoveOnlyExactlyWhenLocked(int? generation, bool moveOnly)
+    public void LoadCreation_IsLockedExactlyWhenTrained(int? generation, bool locked)
     {
         var training = generation is { } trained ? TestTraining.State(trained, 1, TestTraining.Run) : null;
         var viewModel = new BuildViewModel();
 
         viewModel.LoadCreation(new CreationDef(Guid.NewGuid(), "Worm", TwoNodeCreature(), training));
 
-        viewModel.IsMoveOnly.ShouldBe(moveOnly);
+        viewModel.IsLocked.ShouldBe(locked);
     }
 
     [Fact]
-    public void LoadMoveOnly_AllowsMovingExistingNodesButRejectsTopologyChanges()
+    public void LoadLocked_MovesNodes_AndAddsJoints()
     {
         var creature = new CreatureDef(
             [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(20, 0))],
@@ -456,15 +456,15 @@ public sealed class BuildViewModelTests
             []);
         var viewModel = new BuildViewModel();
 
-        viewModel.Load(creature, moveOnly: true);
+        viewModel.Load(creature, locked: true);
         viewModel.MoveNode(1, new Vector2D(5, 5));
 
         viewModel.Nodes[0].Position.ShouldBe(new Vector2D(5, 5));
-        viewModel.IsMoveOnly.ShouldBeTrue();
-        viewModel.Beams.Count.ShouldBe(1);
-        Action action = () => viewModel.PlaceNode(new Vector2D(30, 0));
+        viewModel.IsLocked.ShouldBeTrue();
+        viewModel.PlaceNode(new Vector2D(30, 0));
 
-        action.ShouldThrow<InvalidOperationException>();
+        viewModel.Nodes.Count.ShouldBe(3);
+        viewModel.Beams.Count.ShouldBe(1);
     }
 
     [Fact]
@@ -475,15 +475,15 @@ public sealed class BuildViewModelTests
             [new BeamDef(101, 1, 2)],
             []);
         var viewModel = new BuildViewModel();
-        viewModel.Load(creature, moveOnly: true);
+        viewModel.Load(creature, locked: true);
         var changed = new List<string?>();
         viewModel.PropertyChanged += (_, args) => changed.Add(args.PropertyName);
 
         viewModel.Unlock();
         viewModel.PlaceNode(new Vector2D(30, 0));
 
-        viewModel.IsMoveOnly.ShouldBeFalse();
-        changed.ShouldContain(nameof(BuildViewModel.IsMoveOnly));
+        viewModel.IsLocked.ShouldBeFalse();
+        changed.ShouldContain(nameof(BuildViewModel.IsLocked));
         viewModel.Nodes.Count.ShouldBe(3);
     }
 
@@ -502,17 +502,17 @@ public sealed class BuildViewModelTests
     }
 
     [Fact]
-    public void LoadMoveOnly_OpensOnParts_WhileJointIsLocked()
+    public void LoadLocked_OpensOnTheJointTool()
     {
         var viewModel = new BuildViewModel { ActiveTool = BuildTool.Select };
 
-        viewModel.Load(new CreatureDef([new NodeDef(1, new Vector2D(0, 0))], [], []), moveOnly: true);
+        viewModel.Load(new CreatureDef([new NodeDef(1, new Vector2D(0, 0))], [], []), locked: true);
 
-        viewModel.ActiveTool.ShouldBe(BuildTool.Parts);
+        viewModel.ActiveTool.ShouldBe(BuildTool.Joint);
     }
 
     [Fact]
-    public void LoadMoveOnly_WithSavedCreationMetadata_ExposesNameAndTrainingGeneration()
+    public void LoadLocked_WithSavedCreationMetadata_ExposesNameAndTrainingGeneration()
     {
         var creature = new CreatureDef(
             [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(20, 0))],
@@ -521,7 +521,7 @@ public sealed class BuildViewModelTests
         var training = TestTraining.State(9, 1, TestTraining.Run);
         var viewModel = new BuildViewModel();
 
-        viewModel.Load(creature, moveOnly: true, creationName: "Worm", training: training);
+        viewModel.Load(creature, locked: true, creationName: "Worm", training: training);
 
         viewModel.CreationName.ShouldBe("Worm");
         viewModel.TrainingGeneration.ShouldBe(9);
@@ -636,17 +636,17 @@ public sealed class BuildViewModelTests
     }
 
     [Fact]
-    public void ConnectLink_Beam_WhenLocked_CreatesNoBeam()
+    public void ConnectLink_Beam_WhenLocked_CreatesTheBeam()
     {
         var viewModel = new BuildViewModel();
         viewModel.Load(
             new CreatureDef([new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(20, 0))], [], []),
-            moveOnly: true);
+            locked: true);
 
-        viewModel.CanConnectLink(BuildLink.Beam, 1, 2, out _).ShouldBeFalse();
-        viewModel.ConnectLink(BuildLink.Beam, 1, 2).ShouldBeNull();
+        viewModel.CanConnectLink(BuildLink.Beam, 1, 2, out _).ShouldBeTrue();
+        viewModel.ConnectLink(BuildLink.Beam, 1, 2).ShouldNotBeNull();
 
-        viewModel.Beams.ShouldBeEmpty();
+        viewModel.Beams.ShouldHaveSingleItem();
     }
 
 
@@ -655,7 +655,7 @@ public sealed class BuildViewModelTests
         var viewModel = new BuildViewModel();
         viewModel.Load(
             new CreatureDef([new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(20, 0))], [new BeamDef(101, 1, 2)], []),
-            moveOnly: true);
+            locked: true);
         return viewModel;
     }
 
@@ -804,20 +804,21 @@ public sealed class BuildViewModelTests
         [new SensorDef(4, 3, SensorKind.Accelerometer), new SensorDef(5, 7, SensorKind.Camera)]);
 
     [Fact]
-    public void DeleteSelectedParts_InMoveOnlyMode_PreservesAnatomy()
+    public void DeleteSelectedParts_OnALockedCreation_KeepsABeamWithASensor()
     {
         var viewModel = new BuildViewModel();
         viewModel.Load(
             new CreatureDef(
                 [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(10, 0))],
                 [new BeamDef(101, 1, 2)],
-                []),
-            moveOnly: true);
+                [new SensorDef(201, 101, SensorKind.Accelerometer)]),
+            locked: true);
         viewModel.SelectOnly(CreatureElementKind.Beam, viewModel.Beams[0].Id);
 
         viewModel.DeleteSelectedParts();
 
         viewModel.Beams.Count.ShouldBe(1);
+        viewModel.Sensors.Count.ShouldBe(1);
     }
 
 
@@ -1066,7 +1067,7 @@ public sealed class BuildViewModelTests
     public void SetAim_TurnsTheCameraAndRedrawsOnlyOnAChange()
     {
         var build = new BuildViewModel();
-        build.Load(CameraPair(), moveOnly: false);
+        build.Load(CameraPair(), locked: false);
         build.SelectOnly(CreatureElementKind.Sensor, 4);
         var changes = 0;
         build.AnatomyChanged += (_, _) => changes++;
@@ -1082,7 +1083,7 @@ public sealed class BuildViewModelTests
     public void SetAim_WhenLocked_TurnsTheCamera()
     {
         var build = new BuildViewModel();
-        build.Load(CameraPair(), moveOnly: true);
+        build.Load(CameraPair(), locked: true);
         build.SelectOnly(CreatureElementKind.Sensor, 4);
 
         build.SetParameter(PartParameterId.Aim, 1);

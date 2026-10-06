@@ -24,7 +24,7 @@ public enum PartTrayRowState
     Available,
     ComingLater,
 
-    /// <summary>Implemented, but the creation is locked, so no part can be added (#896).</summary>
+    /// <summary>Implemented, but the creation is locked and the part has brain ports, so adding it would change the model (#896).</summary>
     CreationLocked,
 }
 
@@ -36,7 +36,7 @@ public sealed record PartTrayRow(BuildPart Part, UiText Name, PartTrayRowState S
     public UiText? LockedReason => State switch
     {
         PartTrayRowState.Available => null,
-        PartTrayRowState.CreationLocked => PartTray.CreationLockedReason,
+        PartTrayRowState.CreationLocked => BuildViewModel.LockedReason,
         _ => PartTray.ComingLater,
     };
 }
@@ -51,19 +51,17 @@ public static class PartTray
 {
     public static UiText ComingLater { get; } = UiText.Plain("Coming later");
 
-    public static UiText CreationLockedReason { get; } = UiText.Plain("Unlock to add or remove parts.");
-
     public static IReadOnlyList<PartTrayGroup> Groups() => Catalog();
 
     /// <summary>
-    /// The tray for a locked creation: every row shows locked and each tab says how to unlock,
-    /// so no row looks like it can be dragged out (#896).
+    /// The tray for a locked creation: every tray part has brain ports, so every row shows locked
+    /// and each tab says why, and no row looks like it can be dragged out (#896).
     /// </summary>
     public static IReadOnlyList<PartTrayGroup> LockedGroups() =>
     [
         .. Catalog().Select(group => group with
         {
-            HelpText = CreationLockedReason,
+            HelpText = BuildViewModel.LockedReason,
             Rows = [.. group.Rows.Select(row => row.IsAvailable ? row with { State = PartTrayRowState.CreationLocked } : row)],
         }),
     ];

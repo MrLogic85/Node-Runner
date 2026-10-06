@@ -1,5 +1,7 @@
 using NodeRunner.App.Repositories;
 using NodeRunner.App.Services;
+using NodeRunner.App.Tests.ViewModels;
+using NodeRunner.App.ViewModels;
 using NodeRunner.Domain;
 using NodeRunner.ML.Brains;
 
@@ -111,6 +113,59 @@ public sealed class CreationUpdateCoordinatorTests
         updated.Training!.Generation.ShouldBe(9);
         updated.Training.Brain.Neurons.ShouldBe(opened.Neurons, ignoreOrder: true);
         updated.Training.Brain.Connections.ShouldBe(opened.Connections, ignoreOrder: true);
+    }
+
+    [Fact]
+    public void ApplyEdit_AfterLinksAndJointsChangeOnALockedCreation_KeepsEveryWeight()
+    {
+        var repository = new InMemoryCreationRepository();
+        var coordinator = new CreationUpdateCoordinator(repository);
+        var creation = Trained(PistonCreature(withSecondPiston: false, nodeX: 0));
+        repository.Save(creation);
+        var brain = creation.Training!.Brain;
+        var build = new BuildViewModel();
+        build.LoadCreation(creation);
+        var updates = new List<CreationDef>();
+        void Edit(Action edit)
+        {
+            edit();
+            updates.Add(coordinator.ApplyEdit(creation.Id, build.Snapshot(), build.OpenedBrain)!);
+        }
+
+        var joint = 0;
+        Edit(() => joint = build.PlaceNode(new Vector2D(2, 3)));
+        var beam = 0;
+        Edit(() => beam = build.ConnectLink(BuildLink.Beam, joint, 3)!.Value);
+        var spring = 0;
+        Edit(() => spring = build.ConnectLink(BuildLink.Spring, joint, 2)!.Value);
+        Edit(() =>
+        {
+            build.SelectOnly(CreatureElementKind.Beam, beam);
+            build.DeleteSelectedParts();
+        });
+        Edit(() =>
+        {
+            build.SelectOnly(CreatureElementKind.Spring, spring);
+            build.DeleteSelectedParts();
+        });
+        Edit(() =>
+        {
+            build.SelectOnly(CreatureElementKind.Node, joint);
+            build.DeleteSelectedParts();
+        });
+
+        updates.Count.ShouldBe(6);
+        updates.ShouldAllBe(update => update.Training!.Generation == creation.Training.Generation);
+        foreach (var update in updates)
+        {
+            update.Training!.Brain.Neurons.ShouldBe(brain.Neurons, ignoreOrder: true);
+            update.Training.Brain.Connections.ShouldBe(brain.Connections, ignoreOrder: true);
+        }
+
+        updates[^1].Creature.Nodes.ShouldBe(creation.Creature.Nodes);
+        updates[^1].Creature.Beams.ShouldBe(creation.Creature.Beams);
+        updates[^1].Creature.Springs.ShouldBeEmpty();
+        build.IsLocked.ShouldBeTrue();
     }
 
     [Fact]

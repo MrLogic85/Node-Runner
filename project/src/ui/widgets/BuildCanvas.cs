@@ -188,7 +188,7 @@ public partial class BuildCanvas : Node2D
     {
         // Godot drags in the window, not in the world this canvas lives in.
         var viewport = GetTree().Root;
-        BuildPart? part = viewport.GuiIsDragging() && TryReadPartDrag(viewport.GuiGetDragData(), out var dragged) && !_viewModel!.IsMoveOnly
+        BuildPart? part = viewport.GuiIsDragging() && TryReadPartDrag(viewport.GuiGetDragData(), out var dragged) && !_viewModel!.IsLocked
             ? dragged
             : null;
         CreatureElementSelection? hover = null;
@@ -212,7 +212,7 @@ public partial class BuildCanvas : Node2D
     }
 
     private bool CanDropPart(Vector2 atPosition, Variant data) =>
-        _viewModel is { IsMoveOnly: false } && _gestures is not null && TryReadPartDrag(data, out _);
+        _viewModel is { IsLocked: false } && _gestures is not null && TryReadPartDrag(data, out _);
 
     /// <summary>Places the dropped part where it landed; a refused drop's note goes after a moment, or at the next touch.</summary>
     private void DropPart(Vector2 atPosition, Variant data)

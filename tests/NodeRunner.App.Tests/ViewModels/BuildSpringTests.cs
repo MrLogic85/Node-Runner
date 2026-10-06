@@ -74,7 +74,7 @@ public sealed class BuildSpringTests
         builder.AddNode(new Vector2D(100, 0));
         var spring = builder.AddSpring(1, 2);
         var build = new BuildViewModel();
-        build.Load(builder.Build(), moveOnly: true);
+        build.Load(builder.Build(), locked: true);
         build.SelectOnly(CreatureElementKind.Spring, spring);
 
         build.SetParameter(PartParameterId.Stiffness, 1200);
@@ -84,15 +84,15 @@ public sealed class BuildSpringTests
     }
 
     [Fact]
-    public void PickLink_WhenLocked_KeepsBeamPicked()
+    public void PickLink_WhenLocked_PicksTheSpring()
     {
         var build = new BuildViewModel();
-        build.Load(new CreatureBuilder().Build(), moveOnly: true);
+        build.Load(new CreatureBuilder().Build(), locked: true);
         build.ActiveTool = BuildTool.Beam;
 
         build.PickLink(BuildLink.Spring);
 
-        build.PickedLink.ShouldBe(BuildLink.Beam);
+        build.PickedLink.ShouldBe(BuildLink.Spring);
     }
 
     [Fact]

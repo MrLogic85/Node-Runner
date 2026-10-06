@@ -12,7 +12,7 @@ public sealed partial class BuildViewModel
     private IReadOnlyList<CanvasNote> _shownCopyBlockers = [];
 
     /// <summary>Whether the selection panel offers Copy: two or more parts, on a Creation that is not locked.</summary>
-    public bool CanOfferCopy => !_moveOnly && SelectedPartCount >= 2;
+    public bool CanOfferCopy => !_locked && SelectedPartCount >= 2;
 
     /// <summary>Whether Copy would duplicate the selection now; when not, the button is dimmed.</summary>
     public bool CanCopySelection => CanOfferCopy && CopyBlockers().Count == 0;
