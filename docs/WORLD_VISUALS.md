@@ -156,7 +156,8 @@ ground, the shadows above it, and the followed creature above every shadow.
 - **Ruler:** labels every 1 m at the closest zoom, minor ticks every 0.5 m,
   at screen size (`docs/TRAINING_LOOP.md` → Ruler).
 - **Best marker (#388):** a dashed marker whose flag reads "Best 4.2 m". It
-  fades to `alpha_shadow` while a part callout shows.
+  flies left of its line where it would run past the view's right edge
+  (#886), and fades to `alpha_shadow` while a part callout shows.
 - **Start sign (#848):** an `ink` arrow signpost reading "Start" at 0 m,
   half a metre tall in the world, so it zooms with the creatures (#882).
 - **Part callout (#388):** the followed shadow's tapped part keeps its
