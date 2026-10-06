@@ -10,8 +10,8 @@ public static class OutputSignals
     /// <summary>
     /// The pose a position <paramref name="target"/> asks for, mapped piecewise so 0 is always the
     /// built pose even when it is off-centre: −1…0 spans <paramref name="min"/>…<paramref name="built"/>
-    /// and 0…1 spans <paramref name="built"/>…<paramref name="max"/>. For a Piston, −1 is fully in and
-    /// +1 fully out.
+    /// and 0…1 spans <paramref name="built"/>…<paramref name="max"/>. Used by the Servo; a Piston maps
+    /// its output in a straight line instead (<see cref="Piston.TargetLength"/>, #870).
     /// </summary>
     public static double PositionFromTarget(double target, double min, double built, double max)
     {

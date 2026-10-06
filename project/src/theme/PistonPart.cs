@@ -10,9 +10,7 @@ public partial class PistonPart : PartVisual
     private float _radiusA;
     private float _radiusB;
     private float _shortest;
-    private float _longest;
     private bool _danger;
-    private bool _showStroke = true;
     private bool _haloA;
     private bool _haloB;
 
@@ -54,25 +52,11 @@ public partial class PistonPart : PartVisual
         set => Change(ref _shortest, value);
     }
 
-    /// <summary>The longest length, centre to centre.</summary>
-    public float Longest
-    {
-        get => _longest;
-        set => Change(ref _longest, value);
-    }
-
     /// <summary>Too short to train (#593): drawn in <c>danger</c> instead of <c>accent</c>.</summary>
     public bool Danger
     {
         get => _danger;
         set => Change(ref _danger, value);
-    }
-
-    /// <summary>Whether, selected, it also shows its stroke ticks: only while its Stroke can be set (#704).</summary>
-    public bool ShowStroke
-    {
-        get => _showStroke;
-        set => Change(ref _showStroke, value);
     }
 
     /// <summary>Whether joint A is selected too, so the selection lines end on its halo ring (#710).</summary>
@@ -90,5 +74,5 @@ public partial class PistonPart : PartVisual
     }
 
     public override void _Draw() =>
-        PistonDrawing.Draw(this, Transform2D.Identity, Theme, A, B, RadiusA, RadiusB, Shortest, Longest, Danger ? Theme.Danger : Theme.MotorAccent, Selected, ShowStroke, HaloA, HaloB);
+        PistonDrawing.Draw(this, Transform2D.Identity, Theme, A, B, RadiusA, RadiusB, Shortest, Danger ? Theme.Danger : Theme.MotorAccent, Selected, HaloA, HaloB);
 }

@@ -133,13 +133,13 @@ public sealed class CreatureBuilderTests
     }
 
     [Fact]
-    public void ParametersOf_APiston_AreItsFour_AndSettingOneKeepsTheOthers()
+    public void ParametersOf_APiston_AreItsFive_AndSettingOneKeepsTheOthers()
     {
         var builder = PairBuilder();
         var far = builder.AddNode(new Vector2D(180, 0));
         var piston = builder.AddPiston(builder.Nodes[0].Id, far);
 
-        builder.ParametersOf(piston).ShouldBe([PartParameterId.Strength, PartParameterId.Stroke, PartParameterId.MaxSpeed, PartParameterId.RiseTime]);
+        builder.ParametersOf(piston).ShouldBe([PartParameterId.Strength, PartParameterId.Stroke, PartParameterId.StartPosition, PartParameterId.MaxSpeed, PartParameterId.RiseTime]);
         builder.ParametersOf(builder.Beams[0].Id).ShouldBeEmpty();
         builder.SetParameter(piston, PartParameterId.Stroke, 0.4);
 
@@ -148,6 +148,9 @@ public sealed class CreatureBuilderTests
         builder.SetParameter(piston, PartParameterId.RiseTime, 0.5);
         builder.Pistons.Single().ShouldBe(new PistonDef(piston, builder.Nodes[0].Id, far, stroke: 0.4, riseTime: 0.5));
         builder.ParameterValue(piston, PartParameterId.RiseTime).ShouldBe(0.5);
+        builder.SetParameter(piston, PartParameterId.StartPosition, 0);
+        builder.Pistons.Single().ShouldBe(new PistonDef(piston, builder.Nodes[0].Id, far, stroke: 0.4, riseTime: 0.5, start: 0));
+        builder.ParameterValue(piston, PartParameterId.StartPosition).ShouldBe(0);
     }
 
     [Fact]

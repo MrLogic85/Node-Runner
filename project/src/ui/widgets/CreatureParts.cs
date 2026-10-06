@@ -207,10 +207,8 @@ public partial class CreatureParts : Node2D
             part.B = ToGodot(nodeB.Position);
             part.RadiusA = (float)NodeRadius(shape, nodeA.Id);
             part.RadiusB = (float)NodeRadius(shape, nodeB.Id);
-            part.Shortest = (float)Piston.ShortestLength(built, piston.Stroke);
-            part.Longest = (float)Piston.LongestLength(built, piston.Stroke);
+            part.Shortest = (float)Piston.ShortestLength(piston, built);
             part.Danger = marks.ShowsTooShort && IsTooShort(shape, nodeA, nodeB);
-            part.ShowStroke = marks.ShowsStroke;
             part.HaloA = selected.Nodes.Contains(piston.NodeA);
             part.HaloB = selected.Nodes.Contains(piston.NodeB);
             part.Selected = selected.Pistons.Contains(piston.Id);

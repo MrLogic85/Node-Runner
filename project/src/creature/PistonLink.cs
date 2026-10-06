@@ -46,7 +46,7 @@ public sealed class PistonLink
         }
     }
 
-    public double LengthInput => Mechanics.Piston.LengthInput(Length, BuiltLength, Definition.Stroke);
+    public double LengthInput => Mechanics.Piston.LengthInput(Definition, BuiltLength, Length);
 
     public double SpeedInput => Mechanics.Piston.SpeedInput(Speed, Definition.MaxSpeed);
 

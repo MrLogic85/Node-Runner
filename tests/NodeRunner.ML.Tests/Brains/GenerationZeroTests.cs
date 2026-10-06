@@ -24,6 +24,25 @@ public sealed class GenerationZeroTests
     }
 
     [Fact]
+    public void BaseGenome_AsksEachPistonInTheDrawnPositionsForItsDrawnLength()
+    {
+        var genome = GenerationZero.BaseGenome(_ports, new Dictionary<int, double> { [9] = -0.5, [10] = 1 });
+
+        Math.Tanh(genome[_biasStart]).ShouldBe(-0.5, tolerance: 1e-12);
+        genome[_biasStart + 2].ShouldBe(GenerationZero.FullStrengthBias, tolerance: 1e-12);
+        genome[_biasStart + 1].ShouldBe(GenerationZero.FullStrengthBias);
+        genome[..8].ShouldAllBe(weight => weight == 0);
+    }
+
+    [Fact]
+    public void Population_RunsTheBaseGenomeWithItsDrawnPositionsUnchangedLast()
+    {
+        var drawn = new Dictionary<int, double> { [9] = 0.4 };
+
+        GenerationZero.Population(_ports, 8, new Random(1), drawn)[^1].ShouldBe(GenerationZero.BaseGenome(_ports, drawn));
+    }
+
+    [Fact]
     public void Population_RunsTheBaseGenomeUnchangedLast()
     {
         var population = GenerationZero.Population(_ports, 32, new Random(1));

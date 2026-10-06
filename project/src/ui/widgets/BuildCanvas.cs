@@ -378,8 +378,7 @@ public partial class BuildCanvas : Node2D
                 _sensorMotion.WeightOffset,
                 previewSensor,
                 previewServoNode,
-                ShowsTooShort: true,
-                ShowsStroke: _viewModel.CanEdit(PartParameterId.Stroke)));
+                ShowsTooShort: true));
     }
 
     /// <summary>What goes under the links: the placing feedback of a tray drag.</summary>
@@ -411,6 +410,7 @@ public partial class BuildCanvas : Node2D
             return;
         }
         DrawSelectedCameraRays(canvas);
+        DrawSelectedPistonStrokes(canvas);
         DrawInvalidNodeMarkers(canvas);
         DrawInvalidBeamMarkers(canvas);
         DrawBeamEndRings(canvas);
@@ -434,6 +434,27 @@ public partial class BuildCanvas : Node2D
         var aim = camera.Aim ?? SensorDef.DefaultAim(nodeA, nodeB);
         SensorDrawing.DrawRays(canvas, ViewTransform(), Theme, middle, Enumerable.Range(0, CameraRays.RayCount)
             .Select(ray => middle + ToGodot(CameraRays.LocalRayTarget(ray, aim)).Rotated(beamRotation)));
+    }
+
+    /// <summary>
+    /// A selected Piston's shortest and longest length while Stroke or Start position can be set
+    /// (#704, #870), over the joints so the one at joint B is never hidden.
+    /// </summary>
+    private void DrawSelectedPistonStrokes(CanvasItem canvas)
+    {
+        if (!_viewModel!.CanEdit(PartParameterId.Stroke) && !_viewModel.CanEdit(PartParameterId.StartPosition))
+        {
+            return;
+        }
+
+        var selected = _viewModel.Selection.Pistons;
+        foreach (var piston in _viewModel.Pistons.Where(piston => selected.Contains(piston.Id)))
+        {
+            var nodeA = NodeById(piston.NodeA).Position;
+            var nodeB = NodeById(piston.NodeB).Position;
+            var built = Math.Sqrt(Math.Pow(nodeB.X - nodeA.X, 2) + Math.Pow(nodeB.Y - nodeA.Y, 2));
+            PistonDrawing.DrawStroke(canvas, ViewTransform(), Theme, ToGodot(nodeA), ToGodot(nodeB), (float)_viewModel.NodeRadius(piston.NodeB), (float)Piston.ShortestLength(piston, built), (float)Piston.LongestLength(piston, built));
+        }
     }
 
     /// <summary>

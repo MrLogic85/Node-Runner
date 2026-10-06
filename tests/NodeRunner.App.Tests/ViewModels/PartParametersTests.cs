@@ -13,7 +13,8 @@ public sealed class PartParametersTests
 
         PartParameters.SliderOver(PartParameterId.Strength, [piston.Strength])
             .ShouldBe(new ParameterSlider(PartParameterId.Strength, UiText.Plain("Max strength"), UiText.Format("{0} N", new FixedNumber(150, 0)), Position(PartParameters.Strength, 150), Position(PartParameters.Strength, 150), 10.0 / 380));
-        PartParameters.SliderOver(PartParameterId.Stroke, [piston.Stroke]).Readout.ShouldBe(UiText.Format("±{0}%", new FixedNumber(30, 0)));
+        PartParameters.SliderOver(PartParameterId.Stroke, [piston.Stroke]).Readout.ShouldBe(UiText.Format("{0}%", new FixedNumber(50, 0)));
+        PartParameters.SliderOver(PartParameterId.StartPosition, [piston.Start]).Readout.ShouldBe(UiText.Format("{0}%", new FixedNumber(50, 0)));
         PartParameters.SliderOver(PartParameterId.MaxSpeed, [piston.MaxSpeed]).Readout.ShouldBe(UiText.Format("{0} m/s", new FixedNumber(2, 1)));
         PartParameters.SliderOver(PartParameterId.RiseTime, [piston.RiseTime]).Readout.ShouldBe(UiText.Format("{0} s", new FixedNumber(0.2, 1)));
     }
@@ -65,7 +66,9 @@ public sealed class PartParametersTests
     {
         PartParameters.ValueAt(PartParameterId.Strength, 0).ShouldBe(2000);
         PartParameters.ValueAt(PartParameterId.Strength, 1).ShouldBe(40000);
-        PartParameters.ValueAt(PartParameterId.Stroke, 0.51).ShouldBe(0.3);
+        PartParameters.ValueAt(PartParameterId.Stroke, 0).ShouldBe(0.1);
+        PartParameters.ValueAt(PartParameterId.Stroke, 0.51).ShouldBe(0.55);
+        PartParameters.ValueAt(PartParameterId.Stroke, 1).ShouldBe(1);
         PartParameters.ValueAt(PartParameterId.MaxSpeed, 0.5).ShouldBe(230, tolerance: 1e-9);
     }
 

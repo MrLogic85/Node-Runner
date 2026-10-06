@@ -8,8 +8,8 @@ namespace NodeRunner.Ui.Widgets;
 /// <paramref name="Selected"/> parts in <c>halo</c>, the joints <paramref name="ShowsAsLoose"/>
 /// picks and too short links (<paramref name="ShowsTooShort"/>) in <c>danger</c>, each
 /// Accelerometer's weight where <paramref name="WeightOffset"/> swings it (null at rest), the sensor
-/// a tray drag would place (<paramref name="PreviewSensor"/>), and a selected Piston's stroke
-/// (<paramref name="ShowsStroke"/>). A shown creature that is not edited has <see cref="None"/>.
+/// a tray drag would place (<paramref name="PreviewSensor"/>) or the joint a dragged Servo would
+/// take (<paramref name="PreviewServoNode"/>). A shown creature that is not edited has <see cref="None"/>.
 /// </summary>
 public sealed record CreatureMarks(
     PartSet Selected,
@@ -17,8 +17,7 @@ public sealed record CreatureMarks(
     Func<int, Vector2D?> WeightOffset,
     (BeamDef Beam, SensorKind Kind)? PreviewSensor,
     int? PreviewServoNode,
-    bool ShowsTooShort,
-    bool ShowsStroke)
+    bool ShowsTooShort)
 {
-    public static CreatureMarks None { get; } = new(PartSet.None, _ => false, _ => null, null, null, ShowsTooShort: false, ShowsStroke: false);
+    public static CreatureMarks None { get; } = new(PartSet.None, _ => false, _ => null, null, null, ShowsTooShort: false);
 }

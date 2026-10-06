@@ -1,6 +1,7 @@
 using System.Text.Json.Nodes;
 using NodeRunner.App.Repositories;
 using NodeRunner.Domain;
+using NodeRunner.ML.Brains;
 
 namespace NodeRunner.App.Tests.Repositories;
 
@@ -41,8 +42,89 @@ public sealed class CreationVersioningTests : IDisposable
         written.Remove(_versionField);
         var expected = JsonNode.Parse(original)!.AsObject();
         expected["creature"]!.AsObject()["servos"] = new JsonArray();
+        foreach (var piston in expected["creature"]!["pistons"]!.AsArray())
+        {
+            piston!["stroke"] = 2 * 0.3 / (1 - 0.3);
+            piston["start"] = 0.5;
+        }
+
+        // The brain's Piston length weights move too; Fixture013_ItsTrainedBrainDrivesItsPistonsAsBefore covers them.
+        written["training"]?.AsObject().Remove("brain");
+        expected["training"]?.AsObject().Remove("brain");
         JsonNode.DeepEquals(written, expected).ShouldBeTrue();
         new FileCreationRepository(new TestStorageLocation(_directory)).Get(loaded.Id).ShouldBe(loaded, _creationComparer);
+    }
+
+    // #870: ±s of the built length becomes 2s / (1 − s) of the shortest, from the middle; a Piston
+    // can now at most double, so ±50% becomes 100%.
+    [Theory]
+    [InlineData(0.1, 2.0 / 9)]
+    [InlineData(0.3, 6.0 / 7)]
+    [InlineData(0.5, 1)]
+    public void Fixture013_ItsPistonsKeepTheirShortestAndLongestLengths_UpToDoubling(double oldStroke, double stroke)
+    {
+        var file = JsonNode.Parse(Fixture013("walker.creation.json"))!.AsObject();
+        file["creature"]!["pistons"]![0]!["stroke"] = oldStroke;
+        file["creature"]!["pistons"]![1]!.AsObject().Remove("stroke");
+        WriteCreation(file.ToJsonString());
+
+        var pistons = new FileCreationRepository(new TestStorageLocation(_directory)).List().ShouldHaveSingleItem().Creature.Pistons;
+
+        pistons[0].Stroke.ShouldBe(stroke, tolerance: 1e-12);
+        pistons[0].Start.ShouldBe(0.5);
+        pistons[1].Stroke.ShouldBe(6.0 / 7, tolerance: 1e-12);
+        pistons[1].Start.ShouldBe(0.5);
+    }
+
+    [Theory]
+    [InlineData("0")]
+    [InlineData("1")]
+    [InlineData("\"wide\"")]
+    public void Fixture013_WithAPistonStrokeItCouldNotHaveSaved_IsSkipped(string oldStroke)
+    {
+        var file = JsonNode.Parse(Fixture013("walker.creation.json"))!.AsObject();
+        file["creature"]!["pistons"]![0]!["stroke"] = JsonNode.Parse(oldStroke);
+        WriteCreation(file.ToJsonString());
+
+        new FileCreationRepository(new TestStorageLocation(_directory)).List().ShouldBeEmpty();
+    }
+
+    // #870: a Piston's length input went from −1…1 around its built length to 0…1 over its travel,
+    // so a migrated brain must give every output the same value for the same pose.
+    [Fact]
+    public void Fixture013_ItsTrainedBrainDrivesItsPistonsAsBefore()
+    {
+        var original = Fixture013("trained-walker.creation.json");
+        var oldBrain = SaveJson.Deserialize<BrainDef>(JsonNode.Parse(original)!["training"]!["brain"]!.ToJsonString(), "brain");
+        WriteCreation(original);
+        var creation = new FileCreationRepository(new TestStorageLocation(_directory)).List().ShouldHaveSingleItem();
+        var ports = BrainPorts.Of(creation.Creature);
+        var before = DirectBrain.Network(oldBrain, ports);
+        var after = DirectBrain.Network(creation.Training!.Brain, ports);
+        var random = new Random(870);
+
+        for (var pose = 0; pose < 20; pose++)
+        {
+            var oldInputs = ports.Inputs.Select(_ => (random.NextDouble() * 2) - 1).ToArray();
+            var newInputs = ports.Inputs
+                .Select((port, i) => port.Channel == BrainPorts.PistonLengthChannel ? (oldInputs[i] + 1) / 2 : oldInputs[i])
+                .ToArray();
+
+            after.Forward(newInputs).ShouldBe(before.Forward(oldInputs), tolerance: 1e-12);
+        }
+    }
+
+    [Theory]
+    [InlineData("neurons", "\"many\"")]
+    [InlineData("connections", "[{ \"from\": \"three\", \"to\": 7, \"weight\": 1, \"enabled\": true }]")]
+    [InlineData("connections", "[{ \"from\": 3, \"to\": 7, \"weight\": \"heavy\", \"enabled\": true }]")]
+    public void Fixture013_WithABrainItCouldNotHaveSaved_IsSkipped(string field, string value)
+    {
+        var file = JsonNode.Parse(Fixture013("trained-walker.creation.json"))!.AsObject();
+        file["training"]!["brain"]![field] = JsonNode.Parse(value);
+        WriteCreation(file.ToJsonString());
+
+        new FileCreationRepository(new TestStorageLocation(_directory)).List().ShouldBeEmpty();
     }
 
     [Fact]

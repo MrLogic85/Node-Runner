@@ -11,11 +11,14 @@ public sealed class FileCreationRepository : ICreationRepository
 {
     public const string CreationFileName = "creation.json";
 
+    // The stroke a version 2 save meant when it left the field out.
+    private const double _strokeBefore870 = 0.3;
+
     /// <summary>
     /// <c>creation.json</c>'s versions. Add a migration here when its shape changes
     /// (docs/SAVE_FORMAT.md → "Versions and migration").
     /// </summary>
-    public static VersionedSaveFile<CreationDef> Format { get; } = new([AddServosArray]);
+    public static VersionedSaveFile<CreationDef> Format { get; } = new([AddServosArray, PistonStrokeFromShortest]);
 
     private readonly string _directoryPath;
     private readonly VersionedSaveFile<CreationDef> _format;
@@ -49,6 +52,110 @@ public sealed class FileCreationRepository : ICreationRepository
 
         creature["servos"] ??= new JsonArray();
     }
+
+    // Before #870 a Piston's stroke was ±s of its built length. Now it grows by stroke of its
+    // shortest length, and start says where the built length sits in that travel: 2s / (1 − s) at
+    // start 0.5 keeps the same shortest and longest lengths. A Piston can now at most double, so
+    // a stroke above ±⅓ becomes 100%, about ±33% of its built length.
+    private static void PistonStrokeFromShortest(JsonObject file)
+    {
+        PistonStrokesFromShortest(file);
+        PistonLengthInputsFromShortest(file);
+    }
+
+    private static void PistonStrokesFromShortest(JsonObject file)
+    {
+        if (file["creature"]?["pistons"] is not JsonArray pistons)
+        {
+            throw new InvalidDataException("creation.json is missing its creature's pistons.");
+        }
+
+        foreach (var node in pistons)
+        {
+            if (node is not JsonObject piston)
+            {
+                throw new InvalidDataException("creation.json has a piston that is not an object.");
+            }
+
+            var oldStroke = piston["stroke"] switch
+            {
+                null => _strokeBefore870,
+                JsonValue value when value.TryGetValue<double>(out var stroke) => stroke,
+                _ => throw new InvalidDataException("creation.json has a piston stroke that is not a number."),
+            };
+            if (!double.IsFinite(oldStroke) || oldStroke <= 0 || oldStroke >= 1)
+            {
+                throw new InvalidDataException($"creation.json has a piston stroke of {oldStroke}, outside 0…1.");
+            }
+
+            piston["stroke"] = Math.Min(2 * oldStroke / (1 - oldStroke), 1);
+            piston["start"] = 0.5;
+        }
+    }
+
+    // A Piston's length input was −1…1 around its built length and is now 0…1 over its travel, so
+    // old = 2·new − 1. Doubling each weight from it and taking the old weight off the bias it feeds
+    // keeps a trained brain doing what it did, exactly while its stroke was within ±⅓.
+    private static void PistonLengthInputsFromShortest(JsonObject file)
+    {
+        if (file["training"]?["brain"] is not JsonObject brain)
+        {
+            return;
+        }
+
+        if (brain["neurons"] is not JsonArray neurons || brain["connections"] is not JsonArray connections)
+        {
+            throw new InvalidDataException("creation.json has a brain without neurons or connections.");
+        }
+
+        var pistonIds = file["creature"]!["pistons"]!.AsArray()
+            .Select(piston => IntOf(piston!["id"], "piston id"))
+            .ToHashSet();
+        var neuronsById = neurons
+            .Select(neuron => neuron as JsonObject ?? throw new InvalidDataException("creation.json has a neuron that is not an object."))
+            .ToDictionary(neuron => IntOf(neuron["id"], "neuron id"));
+        var lengthInputs = neuronsById
+            .Where(entry => TextOf(entry.Value["kind"]) == "input"
+                && TextOf(entry.Value["channel"]) == BrainPorts.PistonLengthChannel
+                && entry.Value["partId"] is { } partId
+                && pistonIds.Contains(IntOf(partId, "neuron partId")))
+            .Select(entry => entry.Key)
+            .ToHashSet();
+
+        foreach (var node in connections)
+        {
+            if (node is not JsonObject connection)
+            {
+                throw new InvalidDataException("creation.json has a connection that is not an object.");
+            }
+
+            if (!lengthInputs.Contains(IntOf(connection["from"], "connection from")))
+            {
+                continue;
+            }
+
+            var weight = NumberOf(connection["weight"], "connection weight");
+            connection["weight"] = 2 * weight;
+            if (connection["enabled"] is not JsonValue enabled || !enabled.TryGetValue<bool>(out var isEnabled) || isEnabled)
+            {
+                var target = neuronsById[IntOf(connection["to"], "connection to")];
+                target["bias"] = NumberOf(target["bias"], "neuron bias") - weight;
+            }
+        }
+    }
+
+    private static string? TextOf(JsonNode? node) =>
+        node is JsonValue value && value.TryGetValue<string>(out var text) ? text : null;
+
+    private static int IntOf(JsonNode? node, string what) =>
+        node is JsonValue value && value.TryGetValue<int>(out var number)
+            ? number
+            : throw new InvalidDataException($"creation.json has a {what} that is not a whole number.");
+
+    private static double NumberOf(JsonNode? node, string what) =>
+        node is JsonValue value && value.TryGetValue<double>(out var number)
+            ? number
+            : throw new InvalidDataException($"creation.json has a {what} that is not a number.");
 
     public IReadOnlyList<CreationDef> List()
     {

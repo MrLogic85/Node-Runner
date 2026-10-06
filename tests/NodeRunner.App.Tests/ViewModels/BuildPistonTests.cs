@@ -161,12 +161,13 @@ public sealed class BuildPistonTests
         build.AnatomyChanged += (_, _) => changes++;
 
         build.SetParameter(PartParameterId.Strength, 20000);
-        build.SetParameter(PartParameterId.Stroke, 0.5);
+        build.SetParameter(PartParameterId.Stroke, 0.7);
+        build.SetParameter(PartParameterId.StartPosition, 0.25);
         build.SetParameter(PartParameterId.MaxSpeed, 100);
         build.SetParameter(PartParameterId.MaxSpeed, 100);
 
-        build.Pistons.Single().ShouldBe(new PistonDef(piston, 1, 2, null, 20000, 0.5, 100));
-        changes.ShouldBe(3);
+        build.Pistons.Single().ShouldBe(new PistonDef(piston, 1, 2, null, 20000, 0.7, 0.25, 100));
+        changes.ShouldBe(4);
     }
 
     [Fact]

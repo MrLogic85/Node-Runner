@@ -231,7 +231,7 @@ public partial class Evolver : Node
         LatestRun = null;
 
         _genomes = resumeGenome is null
-            ? GenerationZero.Population(creature.Ports, populationSize, rng)
+            ? GenerationZero.Population(creature.Ports, populationSize, rng, creature.Definition is { } definition ? Mechanics.Piston.DrawnPositions(definition) : null)
             : ga.FromElites([resumeGenome], populationSize, rng);
         _opensWithPreviousBest = resumeGenome is not null;
 

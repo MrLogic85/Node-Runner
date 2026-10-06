@@ -201,7 +201,7 @@ public sealed class CreatureDefTests
             [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(1, 0))],
             [],
             [],
-            [new PistonDef(3, 1, 2, "Ram", 20000, 0.4, 150)]);
+            [new PistonDef(3, 1, 2, "Ram", 20000, 0.4, maxSpeed: 150)]);
 
         var roundTripped = JsonSerializer.Deserialize<CreatureDef>(JsonSerializer.Serialize(original));
 

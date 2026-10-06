@@ -175,11 +175,11 @@ reference would mislead someone working on that surface.
   padlock and the Training panel already say the body is locked.
 - **Piston settings are sliders (#451).** The reference's Piston panel
   lists what it joins ("Between"), its power draw and its weight. Instead
-  its Part settings show four `UiSlider`s, Max strength, Stroke, Max
-  speed and Rise time (#801), and leave those rows out: a Piston's weight is fixed, not a
+  its Part settings show five `UiSlider`s, Max strength, Stroke, Start
+  position (#870), Max speed and Rise time (#801), and leave those rows out: a Piston's weight is fixed, not a
   setting (#731), power comes in 0.18.0, and the canvas already shows its two joints. Owner decision: every
   setting is editable, and like a Camera's aim a locked creation keeps them.
-  Four sliders and Delete are taller than the panel at Max UI size; the
+  Five sliders and Delete are taller than the panel at Max UI size; the
   side panel's content scrolls (see `UiSidePanel`).
 - **Differing values on a slider (#704).** The reference has none. Several
   selected Pistons share their sliders; where their values differ the readout

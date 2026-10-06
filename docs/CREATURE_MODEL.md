@@ -226,13 +226,20 @@ a composition of triangles; a bare quadrilateral stays free to fold.
   pulls them together, in a straight line. The brain chooses how far out it
   goes and how hard it may push.
 - **Implementation:** `PistonDef` in `libs/NodeRunner.Domain/PistonDef.cs`
-  stores an id, optional display name, two node ids and four settings
+  stores an id, optional display name, two node ids and five settings
   chosen in Build: **Strength** (its most force; 150 N new), **Stroke** (how
-  far it moves each way from its built length, as a share of it; ±30% new),
-  **Max speed** (2 m/s new) and **Rise time** (how long its force takes to
-  build up to full; 0.2 s new, #801). Its built length is the distance between
-  its nodes in the drawing. The simulation applies its force along the line
-  between those nodes.
+  much it can grow, as a share of its shortest length; 50% new),
+  **Start position** (where its drawn length sits in that travel, 0% at the
+  shortest and 100% at the longest; 50% new), **Max speed** (2 m/s new) and
+  **Rise time** (how long its force takes to build up to full; 0.2 s new,
+  #801). Its built length is the distance between its nodes in the drawing.
+  The simulation applies its force along the line between those nodes.
+- **Travel** (owner decision, #870: a real cylinder): a cylinder is at most
+  as long as the Piston's shortest length, so a Piston can at most double.
+  With Stroke `s` and Start position `p`, `shortest = drawn / (1 + p · s)`
+  and `longest = shortest · (1 + s)` (`Piston.ShortestLength`,
+  `Piston.LongestLength`). Drawn 1 m with Stroke 100%: Start 0% gives
+  1…2 m, 50% 0.67…1.33 m and 100% 0.5…1 m.
 - **Not a beam:** inside its stroke it does not hold its length, so it adds no rigidity, and it counts as attached for the node degree rules. A
   Piston cannot join two nodes a beam already joins (the beam would hold
   them rigid), and two nodes hold at most one Piston (`CreatureBuilder.CanAddPiston`).
@@ -259,7 +266,7 @@ a composition of triangles; a bare quadrilateral stays free to fold.
   and a weak Piston with a high Max speed cannot brake in time and overshoots.
   That is for the user's settings, the brain (less strength) and fitness
   (#546).
-- **End stops** (#701): its length stays within its stroke under ordinary
+- **End stops** (#701): its length stays within its travel under ordinary
   loads, but a hard impact can give a little before the simulation pushes it
   back.
   The range ends limit the distance; inside the stroke nothing extra pushes
@@ -268,10 +275,11 @@ a composition of triangles; a bare quadrilateral stays free to fold.
 - **Drawn** as a telescoping rod from node A to node B
   (`project/src/theme/PistonDrawing.cs`), over beams and under joints
   (see "Draw layers"): the cylinder starts at the first joint, the cap at
-  the second, and the cylinder takes the stroke's share of the built length
-  (±50% draws half). A
-  selected Piston shows ticks at its shortest and longest lengths while the
-  selection can set its Stroke (#704).
+  the second, and the cylinder is as long as its shortest length from the
+  first joint's centre (#870), so the rod that shows is how far it is out.
+  A selected Piston shows ticks at its shortest and longest lengths, over
+  the joints, while the selection can set its Stroke or Start position
+  (#704, `docs/BUILD_MODE.md`).
 
 ### Spring
 
@@ -315,7 +323,8 @@ A creature draws in named layers (`project/src/theme/CreatureLayers.cs`,
 #767), bottom to top: Training's knock-out outline (#818, see "Drawing as a
 shadow"), rigid hatch, underlays such as Build's placing
 feedback, beams, links (Pistons and Springs), a selected link, sensors, a selected sensor,
-joints, a selected joint, then overlays such as the camera rays. Each part
+joints, a selected joint, then overlays such as the camera rays and a
+selected Piston's stroke ticks. Each part
 visual (`project/src/theme/*Part.cs`) puts itself on its layer, so the
 picture never depends on the order parts are added. A screen draws its own
 marks on an underlay or overlay through `ViewLayer`.
@@ -389,7 +398,8 @@ creature, so it stands clear of the shadows behind it.
   position output reads **length** like its input (#869).
   - **Accelerometer:** inputs `along`, `across`.
   - **Camera:** inputs `left1`, `centre`, `right1`.
-  - **Piston (#451):** inputs `length` (−1…1 over its stroke, 0 as built)
+  - **Piston (#451):** inputs `length` (0 at its shortest, 1 at its longest,
+    its Start position as drawn, #870)
     and `speed` (`tanh(v / maxSpeed)`, extending positive); position output
     `position` and strength output `strength`.
   - **Servo (#452):** inputs `angle` (−1 lower end, 0 built, +1 upper end)
@@ -399,12 +409,14 @@ creature, so it stands clear of the shadows behind it.
 - **Output conventions (#535, `PortSignals`):** the signal fixes the
   output's activation and how a new output starts.
   - **Velocity** (the Velocity motor's target, #454) and **position** use `tanh`:
-    −1…1, where 0 means stand still or the built pose.
-  - A position target maps piecewise, so 0 stays the built pose even when
-    the built pose is off-centre: −1…0 spans fully in…built and 0…1 spans
-    built…fully out (`OutputSignals.PositionFromTarget`). For the Piston (#451)
-    −1 is fully in and +1 fully out; for the Servo (#452), −1 is the lower
-    range end and +1 the upper range end.
+    −1…1, where 0 means stand still, a Servo's built pose, or the middle of
+    a Piston's travel.
+  - A Piston's position output maps in a straight line (owner decision,
+    #870): −1 is its shortest and +1 its longest length (`Piston.TargetLength`),
+    so it holds its drawn length at `2p − 1`.
+  - A Servo's angle output maps piecewise, so 0 stays the built pose even
+    when the built pose is off-centre: −1…0 spans lower range end…built and
+    0…1 spans built…upper range end (`OutputSignals.PositionFromTarget`, #452).
   - **Strength** uses `sigmoid`: 0…1, the share of the part's **Strength
     setting** used this tick. The setting is the part's maximum force, chosen
     in Build; the strength output is the brain's choice of how much of it to

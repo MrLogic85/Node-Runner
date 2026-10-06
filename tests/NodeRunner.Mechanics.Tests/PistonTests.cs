@@ -10,12 +10,37 @@ public sealed class PistonTests
 
     private static readonly PistonDef _piston = new(1, 2, 3);
 
-    [Fact]
-    public void LengthInput_IsZeroAsBuilt_AndOneAtEitherEndOfTheStroke()
+    // The table in #870: drawn 1 m, Stroke 100%.
+    [Theory]
+    [InlineData(0, 100, 200)]
+    [InlineData(0.5, 200.0 / 3, 400.0 / 3)]
+    [InlineData(1, 50, 100)]
+    public void ShortestAndLongest_GrowFromTheShortestByTheStroke_WithTheDrawnLengthAtItsStart(double start, double shortest, double longest)
     {
-        Piston.LengthInput(_built, _built, 0.3).ShouldBe(0);
-        Piston.LengthInput(130, _built, 0.3).ShouldBe(1, tolerance: 1e-12);
-        Piston.LengthInput(70, _built, 0.3).ShouldBe(-1, tolerance: 1e-12);
+        var piston = new PistonDef(1, 2, 3, stroke: 1, start: start);
+
+        Piston.ShortestLength(piston, _built).ShouldBe(shortest, tolerance: 1e-9);
+        Piston.LongestLength(piston, _built).ShouldBe(longest, tolerance: 1e-9);
+    }
+
+    [Fact]
+    public void ShortestAndLongest_ForANewPiston_SpanEightyToOneHundredAndTwentyPercent()
+    {
+        Piston.ShortestLength(_piston, _built).ShouldBe(80, tolerance: 1e-9);
+        Piston.LongestLength(_piston, _built).ShouldBe(120, tolerance: 1e-9);
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(0.25)]
+    [InlineData(1)]
+    public void LengthInput_IsZeroAtTheShortest_OneAtTheLongest_AndItsStartAsDrawn(double start)
+    {
+        var piston = new PistonDef(1, 2, 3, stroke: 0.6, start: start);
+
+        Piston.LengthInput(piston, _built, Piston.ShortestLength(piston, _built)).ShouldBe(0, tolerance: 1e-12);
+        Piston.LengthInput(piston, _built, Piston.LongestLength(piston, _built)).ShouldBe(1, tolerance: 1e-12);
+        Piston.LengthInput(piston, _built, _built).ShouldBe(start, tolerance: 1e-12);
     }
 
     [Fact]
@@ -27,11 +52,40 @@ public sealed class PistonTests
     }
 
     [Fact]
-    public void TargetLength_MapsThePositionOutputOntoTheStroke()
+    public void TargetLength_MapsThePositionOutputStraightOntoItsTravel()
     {
-        Piston.TargetLength(-1, _built, 0.3).ShouldBe(70, tolerance: 1e-9);
-        Piston.TargetLength(0, _built, 0.3).ShouldBe(_built, tolerance: 1e-9);
-        Piston.TargetLength(1, _built, 0.3).ShouldBe(130, tolerance: 1e-9);
+        var piston = new PistonDef(1, 2, 3, stroke: 1, start: 0);
+
+        Piston.TargetLength(piston, _built, -1).ShouldBe(100, tolerance: 1e-9);
+        Piston.TargetLength(piston, _built, 0).ShouldBe(150, tolerance: 1e-9);
+        Piston.TargetLength(piston, _built, 1).ShouldBe(200, tolerance: 1e-9);
+        Piston.TargetLength(piston, _built, 3).ShouldBe(200, tolerance: 1e-9);
+    }
+
+    [Theory]
+    [InlineData(0, -1)]
+    [InlineData(0.25, -0.5)]
+    [InlineData(0.5, 0)]
+    [InlineData(1, 1)]
+    public void DrawnPosition_AsksForItsDrawnLength(double start, double position)
+    {
+        var piston = new PistonDef(1, 2, 3, stroke: 0.4, start: start);
+
+        Piston.DrawnPosition(piston).ShouldBe(position, tolerance: 1e-12);
+        Piston.TargetLength(piston, _built, Piston.DrawnPosition(piston)).ShouldBe(_built, tolerance: 1e-9);
+    }
+
+    [Fact]
+    public void DrawnPositions_ListsEachPistonsDrawnPosition_ById()
+    {
+        var creature = new CreatureDef(
+            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(100, 0)), new NodeDef(3, new Vector2D(0, 100))],
+            [],
+            [],
+            [new PistonDef(4, 1, 2, start: 0), new PistonDef(5, 1, 3, start: 1)],
+            nextPartId: 6);
+
+        Piston.DrawnPositions(creature).ShouldBe(new Dictionary<int, double> { [4] = -1, [5] = 1 });
     }
 
     [Fact]
@@ -109,13 +163,13 @@ public sealed class PistonTests
     [InlineData(2, 1, 1, 400)]
     public void OnAFreePair_ItBrakesBeforeItsTarget_SettlesThere_AndItsForceDiesAway(double pairMass, double strength, double riseTime, double maxSpeed)
     {
-        var piston = _piston.WithSettings(_piston.Strength, _piston.Stroke, maxSpeed, riseTime);
+        var piston = _piston.WithSettings(_piston.Strength, _piston.Stroke, _piston.Start, maxSpeed, riseTime);
 
         var forces = Run(pairMass, strength, load: 0, steps: 600, out var length, out var topSpeed, piston: piston);
 
         StillPushesAtTheEnd(forces, OutputSignals.StrengthFromOutput(strength, piston.Strength)).ShouldBeFalse();
         topSpeed.ShouldBeLessThanOrEqualTo(maxSpeed * 1.35);
-        length.ShouldBe(Piston.TargetLength(1, _built, piston.Stroke), tolerance: 0.5);
+        length.ShouldBe(Piston.LongestLength(piston, _built), tolerance: 0.5);
     }
 
     [Fact]
@@ -126,7 +180,7 @@ public sealed class PistonTests
         // needs to lack some speed, and so some distance, to keep carrying the load.
         var forces = Run(pairMass: 2, strength: 1, load: -_piston.Strength / 4, steps: 600, out var length, out _);
 
-        var target = Piston.TargetLength(1, _built, _piston.Stroke);
+        var target = Piston.LongestLength(_piston, _built);
         length.ShouldBeInRange(target - 6, target - 1);
         forces.TakeLast(60).Average().ShouldBe(_piston.Strength / 4, tolerance: _piston.Strength * 0.01);
     }
@@ -163,8 +217,8 @@ public sealed class PistonTests
         PistonDef? piston = null)
     {
         piston ??= _piston;
-        var shortest = Piston.ShortestLength(_built, piston.Stroke);
-        var longest = Piston.LongestLength(_built, piston.Stroke);
+        var shortest = Piston.ShortestLength(piston, _built);
+        var longest = Piston.LongestLength(piston, _built);
         length = _built;
         var speed = 0.0;
         var force = 0.0;
@@ -190,7 +244,7 @@ public sealed class PistonTests
     // Its force step by step while something holds it still at its built length, wanting it fully out.
     private static List<double> Hold(double strength, double riseTime)
     {
-        var piston = _piston.WithSettings(_piston.Strength, _piston.Stroke, _piston.MaxSpeed, riseTime);
+        var piston = _piston.WithSettings(_piston.Strength, _piston.Stroke, _piston.Start, _piston.MaxSpeed, riseTime);
         var force = 0.0;
         var forces = new List<double>();
         for (var i = 0; i < (int)(2 * riseTime / _step); i++)
