@@ -154,6 +154,21 @@ public sealed class CreatureBuilderTests
     }
 
     [Fact]
+    public void ParametersOf_AServo_AreItsFive_WithAStartPositionOfItsOwn()
+    {
+        var builder = PairBuilder();
+        var a = builder.Nodes[0].Id;
+        builder.AddBeam(a, builder.AddNode(new Vector2D(0, 90)));
+        var servo = builder.AddServo(a);
+
+        builder.ParametersOf(servo).ShouldBe([PartParameterId.ServoStrength, PartParameterId.Range, PartParameterId.ServoStartPosition, PartParameterId.AngularMaxSpeed, PartParameterId.RiseTime]);
+        builder.SetParameter(servo, PartParameterId.ServoStartPosition, 0.25);
+        builder.Servos.Single().Start.ShouldBe(0.25);
+        builder.ParameterValue(servo, PartParameterId.ServoStartPosition).ShouldBe(0.25);
+        Should.Throw<ArgumentOutOfRangeException>(() => builder.SetParameter(servo, PartParameterId.StartPosition, 0.5));
+    }
+
+    [Fact]
     public void ParametersOf_ASpring_AreItsFourSettings_AndSettingOneKeepsTheOthers()
     {
         var builder = PairBuilder();

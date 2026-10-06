@@ -127,7 +127,10 @@ public static class PartParameters
         PartParameterId.Range, MultiEditable: true, new(UiText.Plain("Range"), UiText.Plain("How far it can turn, in total"), new(20, 360, 5), 0, "{0}°", "{0}–{1}°", RadiansToDegrees, DegreesToRadians));
 
     public static PartParameter StartPosition { get; } = new(
-        PartParameterId.StartPosition, MultiEditable: true, new(UiText.Plain("Start position"), UiText.Plain("Where it starts in its travel, at 50% it can move both ways"), new(0, 100, 5), 0, "{0}%", "{0}–{1}%", value => value * 100, value => value / 100));
+        PartParameterId.StartPosition, MultiEditable: true, new(UiText.Plain("Start position"), UiText.Plain("Where it starts in its stroke"), new(0, 100, 5), 0, "{0}%", "{0}–{1}%", value => value * 100, value => value / 100));
+
+    public static PartParameter ServoStartPosition { get; } = new(
+        PartParameterId.ServoStartPosition, MultiEditable: true, new(UiText.Plain("Start position"), UiText.Plain("Where it starts in its rotation"), new(0, 100, 5), 0, "{0}%", "{0}–{1}%", value => value * 100, value => value / 100));
 
     public static PartParameter MaxSpeed { get; } = new(
         PartParameterId.MaxSpeed, MultiEditable: true, new(UiText.Plain("Max speed"), UiText.Plain("How fast it's allowed to move"), new(0.5, 4, 0.1), 1, "{0} m/s", "{0}–{1} m/s", Metres.FromWorldUnits, ToWorld));
@@ -159,6 +162,7 @@ public static class PartParameters
         PartParameterId.Stroke => Stroke,
         PartParameterId.Range => Range,
         PartParameterId.StartPosition => StartPosition,
+        PartParameterId.ServoStartPosition => ServoStartPosition,
         PartParameterId.MaxSpeed => MaxSpeed,
         PartParameterId.AngularMaxSpeed => AngularMaxSpeed,
         PartParameterId.RiseTime => RiseTime,

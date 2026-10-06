@@ -952,7 +952,11 @@ msgid "Wheel"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartParameters.cs
-msgid "Where it starts in its travel, at 50% it can move both ways"
+msgid "Where it starts in its rotation"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/PartParameters.cs
+msgid "Where it starts in its stroke"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/LinkListPresentation.cs
