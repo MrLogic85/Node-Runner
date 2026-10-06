@@ -249,6 +249,8 @@ reference would mislead someone working on that surface.
   is not marked anywhere (#387: it flickers). The reference's camera follows the
   leader; here it follows the previous best by default (shadow 1 in
   generation 0) and never switches to the leader by itself. Owner decision.
+  A shadow the player picks in the strip is followed until the generation
+  ends; the next generation opens on the previous best again (#894).
 - **The shadow strip pages and has a shorter caption (#387).** Past 8
   shadows the reference shows the best 7, sorted, and a sort button.
   Instead the strip holds as many places as fit its width, cells keeping
