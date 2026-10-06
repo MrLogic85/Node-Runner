@@ -154,8 +154,7 @@ contract; `docs/WORLD_VISUALS.md` owns how parts look.
   slot's trial and assigns new brains.
 - **Fixed timestep** — Physics and brain updates run at a locked 60 Hz
   whatever the frame rate, for determinism.
-- **Seed** — The integer the run's RNG starts from; written to the log
-  (#959 shows it in the app).
+- **Seed** — The integer the run's RNG starts from.
 - **Tick** — One fixed step: sensors, brain, Servos and Pistons, then the
   physics step and the trial measurement. See: `docs/ARCHITECTURE.md` →
   "The tick".
