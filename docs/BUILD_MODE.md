@@ -30,15 +30,14 @@ boundary. `reference design/components/Build/README.md`,
   work (scaling changes only beam lengths), parameters change and parts can
   be renamed. A part with ports (a sensor, Piston or Servo) can be neither
   added nor deleted: every tray row and the Piston row are locked, the
-  tray's help line says "Locked: the model is trained for these parts."
-  (`BuildViewModel.LockedReason`), and tapping a locked row shows that in
-  a notification. Delete stays, Unavailable, when it would take a part with
-  ports along, also by cascade, or clear a Servo's link
-  (`BuildViewModel.DeleteLockedReason`); a tap shows the same notification.
-  No link replaces a beam (#849), and Copy is hidden. There is no training
-  summary: the Creations card shows the latest training (#479). The padlock
-  unlocks it for this visit and keeps the training
-  (`docs/TRAINING_LOOP.md` step 6).
+  tray's help line says "Unlock to add parts.", and tapping a locked row
+  shows "Locked: the model is trained for these parts."
+  (`BuildViewModel.LockedReason`) in a notification. Delete stays,
+  Unavailable, when it would take a part with ports along, also by cascade,
+  or clear a Servo's link (`BuildViewModel.DeleteLockedReason`); a tap shows
+  the same notification. Copy is hidden. There is no training summary: the
+  Creations card shows the latest training (#479). The padlock unlocks it
+  for this visit and keeps the training (`docs/TRAINING_LOOP.md` step 6).
 - **Overflow menu.** It follows training, not the lock. A trained creation
   lists Stats (#198) and Power budget (#460), both unavailable, then Copy
   creation, Reset training and Delete creation; an untrained one lists
@@ -123,10 +122,11 @@ and into zoom and pan; `BuildCanvas` only forwards input and draws.
     joins these joints", "These joints already have a piston", "These
     joints already have a spring", or "A sensor sits on this beam".
   - A Piston or Spring dropped on a pair a beam joins replaces that beam
-    (#849), unless a sensor sits on it or the creation is locked; while
-    dragging, the beam is outlined. A Servo that held the beam holds the
-    new link in the same role, under a new id. One Undo brings the beam
-    back. A Beam never replaces a link.
+    (#849), unless a sensor sits on it or the creation is locked, which
+    shows "A beam already joins these joints"; while dragging, the beam is
+    outlined. A Servo that held the beam holds the new link in the same
+    role, under a new id. One Undo brings the beam back. A Beam never
+    replaces a link.
 - **Parts:** with nothing selected, the panel shows the Parts tray; drag a
   part from it onto the creature (see Parts tray). Parts never adds a
   joint.

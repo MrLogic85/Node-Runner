@@ -100,7 +100,7 @@ public sealed class BuildPresentationViewModelTests
     }
 
     [Fact]
-    public void PartsTray_OnALockedCreation_ShowsEveryRowLocked_AndWhy()
+    public void PartsTray_OnALockedCreation_ShowsEveryRowLocked_HowToUnlock_AndWhy()
     {
         var build = new BuildViewModel();
         build.Load(PairCreature(), locked: true);
@@ -108,7 +108,7 @@ public sealed class BuildPresentationViewModelTests
         var groups = new BuildPresentationViewModel(build).PartGroups;
 
         groups.SelectMany(group => group.Rows).ShouldAllBe(row => !row.IsAvailable);
-        groups.ShouldAllBe(group => Equals(group.HelpText, UiText.Plain("Locked: the model is trained for these parts.")));
+        groups.ShouldAllBe(group => Equals(group.HelpText, UiText.Plain("Unlock to add parts.")));
         var servo = groups.SelectMany(group => group.Rows).Single(row => row.Part == BuildPart.Servo);
         servo.State.ShouldBe(PartTrayRowState.CreationLocked);
         servo.LockedReason.ShouldBe(UiText.Plain("Locked: the model is trained for these parts."));

@@ -51,17 +51,19 @@ public static class PartTray
 {
     public static UiText ComingLater { get; } = UiText.Plain("Coming later");
 
+    public static UiText CreationLockedHelp { get; } = UiText.Plain("Unlock to add parts.");
+
     public static IReadOnlyList<PartTrayGroup> Groups() => Catalog();
 
     /// <summary>
-    /// The tray for a locked creation: every tray part has brain ports, so every row shows locked
-    /// and each tab says why, and no row looks like it can be dragged out (#896).
+    /// The tray for a locked creation: every tray part has brain ports, so every row shows locked,
+    /// each tab says how to unlock, and no row looks like it can be dragged out (#896).
     /// </summary>
     public static IReadOnlyList<PartTrayGroup> LockedGroups() =>
     [
         .. Catalog().Select(group => group with
         {
-            HelpText = BuildViewModel.LockedReason,
+            HelpText = CreationLockedHelp,
             Rows = [.. group.Rows.Select(row => row.IsAvailable ? row with { State = PartTrayRowState.CreationLocked } : row)],
         }),
     ];

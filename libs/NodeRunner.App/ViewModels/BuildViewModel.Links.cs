@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using NodeRunner.App.Builders;
 using NodeRunner.Domain;
 
 namespace NodeRunner.App.ViewModels;
@@ -43,10 +44,11 @@ public sealed partial class BuildViewModel
             replacedBeamId = _builder.BeamBetween(nodeIdA, nodeIdB);
         }
 
+        // Replacing a beam changes the model, so a locked Creation refuses it as before #849.
         if (can && _locked && replacedBeamId is not null)
         {
             replacedBeamId = null;
-            reason = LockedReason;
+            reason = CreatureBuilder.BeamJoinsTheseNodesReason;
             return false;
         }
 

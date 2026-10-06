@@ -929,6 +929,10 @@ msgstr ""
 msgid "Unlock"
 msgstr ""
 
+#: libs/NodeRunner.App/ViewModels/PartTrayPresentation.cs
+msgid "Unlock to add parts."
+msgstr ""
+
 #: project/src/hosts/CreationActions.cs
 msgid "Unlock {0}?"
 msgstr ""

@@ -60,10 +60,12 @@ public sealed class BuildLockedTests
     [InlineData(CreatureElementKind.Sensor, 20)]
     [InlineData(CreatureElementKind.Piston, 40)]
     [InlineData(CreatureElementKind.Servo, 30)]
-    [InlineData(CreatureElementKind.Beam, 10)] // Its sensor goes with it.
-    [InlineData(CreatureElementKind.Node, 1)] // So does the sensor on its beam.
-    [InlineData(CreatureElementKind.Node, 4)] // And its Piston.
+    [InlineData(CreatureElementKind.Beam, 11)] // Its sensor goes with it.
+    [InlineData(CreatureElementKind.Node, 7)] // Its Piston goes with it.
+    [InlineData(CreatureElementKind.Node, 2)] // Its Servo goes with it.
+    [InlineData(CreatureElementKind.Beam, 10)] // The Servo's Fixed link.
     [InlineData(CreatureElementKind.Beam, 12)] // The Servo's Target link.
+    [InlineData(CreatureElementKind.Node, 1)] // Its beam is the Servo's Fixed link.
     public void Delete_ThatChangesTheModel_IsLocked_AndChangesNothing(CreatureElementKind kind, int id)
     {
         var build = Locked();
@@ -107,17 +109,17 @@ public sealed class BuildLockedTests
         reason.ShouldBe(_lockedReason);
         build.ConnectLink(BuildLink.Piston, 1, 3).ShouldBeNull();
 
-        build.Pistons.Count.ShouldBe(1);
+        build.Pistons.Count.ShouldBe(2);
         build.PlacementNote.ShouldBe(new CanvasNote(CanvasNoteKind.Danger, new CreatureElementSelection(CreatureElementKind.Node, 3), _lockedReason));
     }
 
     [Fact]
-    public void ConnectLink_ASpringThatWouldReplaceABeam_IsRefused()
+    public void ConnectLink_ASpringThatWouldReplaceABeam_IsRefused_NamingTheBeam()
     {
         var build = Locked();
 
         build.CanConnectLink(BuildLink.Spring, 3, 5, out var reason, out var replaced).ShouldBeFalse();
-        reason.ShouldBe(_lockedReason);
+        reason.ShouldBe(UiText.Plain("A beam already joins these joints"));
         replaced.ShouldBeNull();
         build.ConnectLink(BuildLink.Spring, 3, 5).ShouldBeNull();
 
@@ -138,7 +140,7 @@ public sealed class BuildLockedTests
     }
 
     [Theory]
-    [InlineData(BuildPart.Accelerometer, CreatureElementKind.Beam, 11)]
+    [InlineData(BuildPart.Accelerometer, CreatureElementKind.Beam, 13)]
     [InlineData(BuildPart.Servo, CreatureElementKind.Node, 5)]
     public void CanPlacePart_APartWithPorts_IsRefused(BuildPart part, CreatureElementKind kind, int id)
     {
@@ -149,8 +151,9 @@ public sealed class BuildLockedTests
         reason.ShouldBe(_lockedReason);
     }
 
-    // A Servo at joint 2 holds beam 10 (with a sensor) and beam 12; a Piston joins 3 and 4; beams 11
-    // and 13 and Springs 50 and 51 have nothing on them.
+    // A Servo at joint 2 holds beams 10 and 12; a sensor sits on beam 11; Piston 40 joins 3 and 4,
+    // and Piston 41 joins the otherwise free joints 7 and 8; beam 13 and Springs 50 and 51 have
+    // nothing on them.
     private static BuildViewModel Locked()
     {
         var build = new BuildViewModel();
@@ -159,11 +162,12 @@ public sealed class BuildLockedTests
                 [
                     new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(100, 0)), new NodeDef(3, new Vector2D(200, 0)),
                     new NodeDef(4, new Vector2D(100, 100)), new NodeDef(5, new Vector2D(300, 0)), new NodeDef(6, new Vector2D(300, 100)),
+                    new NodeDef(7, new Vector2D(400, 0)), new NodeDef(8, new Vector2D(400, 100)),
                 ],
                 [new BeamDef(10, 1, 2), new BeamDef(11, 2, 3), new BeamDef(12, 2, 4), new BeamDef(13, 3, 5)],
-                [new SensorDef(20, 10, SensorKind.Accelerometer)],
+                [new SensorDef(20, 11, SensorKind.Accelerometer)],
                 [new ServoDef(30, 2, 10, 12)],
-                [new PistonDef(40, 3, 4)],
+                [new PistonDef(40, 3, 4), new PistonDef(41, 7, 8)],
                 [new SpringDef(50, 5, 6), new SpringDef(51, 1, 4)],
                 nextPartId: 52),
             locked: true);
