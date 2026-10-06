@@ -10,8 +10,10 @@ public enum BuildPart
     Stepper,
     VelocityMotor,
     Wheel,
+    TouchSensor,
     Accelerometer,
     Camera,
+    Pulse,
     Battery,
     Generator,
     FuelTank,
@@ -78,12 +80,14 @@ public static class PartTray
             Locked(BuildPart.VelocityMotor, UiText.Plain("Velocity motor")),
             Locked(BuildPart.Brake, UiText.Plain("Brake")),
             Locked(BuildPart.Wheel, UiText.Plain("Wheel")),
+            Locked(BuildPart.TouchSensor, UiText.Plain("Touch sensor")),
         ]),
         new(UiText.Plain("Sensors"), UiText.Plain("Drag onto a beam. A beam holds one sensor."),
         [
             Available(BuildPart.Accelerometer, UiText.Plain("Accelerometer")),
             // Implemented, but it adds little on the Flat map, so it waits for maps with terrain (#852).
             Locked(BuildPart.Camera, UiText.Plain("Camera")),
+            Locked(BuildPart.Pulse, UiText.Plain("Pulse")),
         ]),
         new(UiText.Plain("Blocks"), UiText.Plain("Drag it onto the canvas, then draw beams to its two eyes."),
         [
