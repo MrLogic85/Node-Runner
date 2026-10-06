@@ -20,7 +20,7 @@ public partial class ArenaCamera : Camera2D
     public double GroundY { get; set; }
 
     /// <summary>
-    /// Frames the creature <paramref name="creature"/> describes, read every frame in world
+    /// Frames the creature <paramref name="creature"/> describes, read every physics tick in world
     /// coordinates. The camera starts on it at once and glides after it as it moves; see
     /// <see cref="Retarget"/> and <see cref="Cut"/> for when it changes creature or trial.
     /// </summary>
@@ -70,11 +70,16 @@ public partial class ArenaCamera : Camera2D
         if (GetViewportRect().Size != _framedView)
         {
             Cut();
-            return;
         }
+    }
 
+    // The camera moves on physics ticks, as the creatures do (#909): stepped every rendered frame,
+    // it moved alone on the frames between ticks of a screen faster than physics, and the world
+    // juddered against it.
+    public override void _PhysicsProcess(double delta)
+    {
         // The host runs while paused, but a paused scene keeps its framing: nothing moves to follow.
-        if (GetTree().Paused)
+        if (_creature is null || GetTree().Paused)
         {
             return;
         }
