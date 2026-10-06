@@ -387,10 +387,11 @@ public sealed class BuildGestures
         {
             BeamEnd = position;
             var target = FindLinkTarget(start, position);
-            var refused = target is { } end && !_build.CanConnectLink(_build.PickedLink, start, end, out _);
+            int? replaced = null;
+            var refused = target is { } end && !_build.CanConnectLink(_build.PickedLink, start, end, out _, out replaced);
             BeamTargetNodeId = refused ? null : target;
             RefusedTargetNodeId = refused ? target : null;
-            ReplacedBeamId = BeamTargetNodeId is { } attach ? _build.BeamReplacedBy(_build.PickedLink, start, attach) : null;
+            ReplacedBeamId = replaced;
 
             Changed?.Invoke(this, EventArgs.Empty);
         }

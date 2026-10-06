@@ -120,9 +120,11 @@ sizes on screen at any zoom.
   then stays for the visit, across tool switches and selections (#874). It
   is not saved. Drag from an
   unselected joint to a different joint to draw the picked link. Every
-  link, a Beam too (#877), uses the refusals and canvas notes in the Piston
-  bullet below (`BuildViewModel.CanConnectLink`); a pair a Beam already
-  joins refuses another Beam with "A beam already joins these nodes".
+  link, a Beam too (#877), shows a refusal like the Piston bullet below:
+  the drag line's states and the reason at the joint
+  (`BuildViewModel.CanConnectLink`). A Beam refuses a pair a link already
+  joins, with "A beam already joins these nodes" when that link is a Beam;
+  only a Piston or Spring replaces a beam.
   While dragging, the line is dashed over no joint, solid once it will
   attach, and dashed danger with a crossed ring at its midpoint when the
   joint would refuse (#920). Links never adds a node.

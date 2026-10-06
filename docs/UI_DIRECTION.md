@@ -165,7 +165,9 @@ reference would mislead someone working on that surface.
   feedback, with no haptics: a finger often covers the target ring, so the
   line must read on its own. A Piston or Spring that will replace a beam
   (#849) also outlines that beam with two dashed `line-strong` lines at
-  the selection's offset, under the drag line.
+  the selection's offset. Like a selected beam's lines they go under the
+  creature, so a Servo's clamp, which keeps holding the new link, stays
+  on top.
 - **Parts replaces the reference rail's Move label (#706).** The rail starts
   Parts, Links, Joint, Select. Parts opens the Parts tray when nothing is
   selected. Its glyph is the

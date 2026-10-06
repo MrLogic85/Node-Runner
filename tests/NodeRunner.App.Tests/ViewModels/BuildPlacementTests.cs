@@ -484,12 +484,15 @@ public sealed class BuildPlacementTests
     {
         var build = TwoBeams();
         var servoId = build.PlacePart(BuildPart.Servo, _middleJoint)!.Value;
+        build.Load(build.Snapshot());
+        build.ReplaceSelection(PartSet.None with { Servos = new HashSet<int> { servoId } });
         var presentation = new BuildPresentationViewModel(build);
         var shownIds = new List<int?>();
         presentation.PresentationChanged += (_, _) => shownIds.Add(presentation.SinglePart?.Id);
 
         var piston = build.ConnectLink(BuildLink.Piston, 1, 2)!.Value;
 
+        build.CanUndo.ShouldBeTrue();
         build.Beams.Select(beam => beam.Id).ShouldBe([5]);
         var moved = build.Servos.Single();
         (moved.FixedLinkId, moved.TargetLinkId).ShouldBe((piston, 5));
@@ -513,12 +516,18 @@ public sealed class BuildPlacementTests
     public void ALinkReplacingASelectedBeam_LeavesNothingOfItSelected()
     {
         var build = TwoBeams();
-        build.ReplaceSelection(PartSet.None with { Beams = new HashSet<int> { 4, 5 } });
+        build.Load(build.Snapshot());
+        build.ReplaceSelection(PartSet.None with { Beams = new HashSet<int> { 4 } });
+        var presentation = new BuildPresentationViewModel(build);
+        var shownIds = new List<int?>();
+        presentation.PresentationChanged += (_, _) => shownIds.Add(presentation.SinglePart?.Id);
 
         build.ConnectLink(BuildLink.Spring, 2, 1);
 
-        build.Selection.Beams.ShouldBe([5]);
-        build.Selection.Springs.ShouldBeEmpty();
+        build.CanUndo.ShouldBeTrue();
+        build.SelectedPartCount.ShouldBe(0);
+        shownIds.ShouldNotBeEmpty();
+        shownIds.ShouldAllBe(id => id == null);
     }
 
     [Fact]

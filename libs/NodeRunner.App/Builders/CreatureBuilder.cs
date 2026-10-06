@@ -150,7 +150,7 @@ public sealed class CreatureBuilder
             return false;
         }
 
-        reason = LinkBlockedReason(nodeIdA, nodeIdB);
+        reason = BeamBlockedReason(nodeIdA, nodeIdB);
         return reason is null;
     }
 
@@ -188,8 +188,8 @@ public sealed class CreatureBuilder
         return reason is null;
     }
 
-    // Two nodes hold one link at most, and a beam between them would hold any link rigid.
-    private UiText? LinkBlockedReason(int nodeIdA, int nodeIdB) =>
+    // A beam refuses a pair that already has a beam or a link; a Piston or Spring goes through MovingLinkBlockedReason.
+    private UiText? BeamBlockedReason(int nodeIdA, int nodeIdB) =>
         BeamBetween(nodeIdA, nodeIdB) is not null ? BeamJoinsTheseNodesReason : LinkReason(nodeIdA, nodeIdB);
 
     // A Piston or Spring takes a beam's place instead (#849), but never a sensor's beam.

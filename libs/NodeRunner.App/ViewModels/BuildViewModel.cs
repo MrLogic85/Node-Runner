@@ -181,31 +181,17 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
         if (reselect is not null)
         {
             ClearSelectionSets();
-        }
-
-        foreach (var kind in Enum.GetValues<CreatureElementKind>())
-        {
-            var set = SelectedSet(kind);
-            if (reselect is not null)
+            foreach (var kind in Enum.GetValues<CreatureElementKind>())
             {
-                set.UnionWith(reselect.SetOf(kind));
+                SelectedSet(kind).UnionWith(reselect.SetOf(kind));
             }
-
-            set.RemoveWhere(id => !Exists(new CreatureElementSelection(kind, id)));
         }
 
-        SelectServosAt(selectedServoJoints);
+        PruneSelection(selectedServoJoints);
         PlacementNote = null;
         NotifySelectionChanged();
         AnatomyChanged?.Invoke(this, EventArgs.Empty);
     }
-
-    private List<int> SelectedServoJoints() =>
-        _builder.Servos.Where(servo => _selectedServoIds.Contains(servo.Id)).Select(servo => servo.NodeId).ToList();
-
-    // Changing a Servo's link gives it a new id (#911): the Servo on the same joint stays selected.
-    private void SelectServosAt(List<int> joints) =>
-        _selectedServoIds.UnionWith(_builder.Servos.Where(servo => joints.Contains(servo.NodeId)).Select(servo => servo.Id));
 
     private void NotifyHistoryChanged()
     {
@@ -681,108 +667,6 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
         }
 
         return nodeId >= 0;
-    }
-
-    /// <summary>
-    /// Joins two existing nodes with a beam. Rejected attempts (locked
-    /// Creation, self-connect, duplicate beam) change nothing and return false
-    /// instead of throwing.
-    /// </summary>
-    public bool ConnectBeam(int nodeIdA, int nodeIdB)
-    {
-        if (_moveOnly)
-        {
-            return false;
-        }
-
-        try
-        {
-            _history.Change(() => _builder.AddBeam(nodeIdA, nodeIdB));
-        }
-        catch (ArgumentException)
-        {
-            return false;
-        }
-
-        AnatomyChanged?.Invoke(this, EventArgs.Empty);
-        return true;
-    }
-
-    /// <summary>
-    /// Whether <see cref="ConnectLink"/> would place <paramref name="link"/> between this pair;
-    /// if not, <paramref name="reason"/> says why.
-    /// </summary>
-    public bool CanConnectLink(BuildLink link, int nodeIdA, int nodeIdB, [NotNullWhen(false)] out UiText? reason)
-    {
-        if (_moveOnly)
-        {
-            reason = MoveOnlyReason;
-            return false;
-        }
-
-        return link switch
-        {
-            BuildLink.Beam => _builder.CanAddBeam(nodeIdA, nodeIdB, out reason),
-            BuildLink.Piston => _builder.CanAddPiston(nodeIdA, nodeIdB, out reason),
-            BuildLink.Spring => _builder.CanAddSpring(nodeIdA, nodeIdB, out reason),
-            _ => throw new ArgumentOutOfRangeException(nameof(link), "Only a Beam, a Piston or a Spring is drawn between two joints."),
-        };
-    }
-
-    /// <summary>The beam a <paramref name="link"/> dropped between these nodes would replace (#849), or null.</summary>
-    public int? BeamReplacedBy(BuildLink link, int nodeIdA, int nodeIdB) =>
-        link != BuildLink.Beam && CanConnectLink(link, nodeIdA, nodeIdB, out _) ? _builder.BeamBetween(nodeIdA, nodeIdB) : null;
-
-    /// <summary>
-    /// Places <paramref name="link"/>, a Beam, a Piston (#451) or a Spring (#453), between two nodes and
-    /// returns its id; a Piston or Spring replaces a beam there (#849). A refused pair changes nothing and shows why as <see cref="PlacementNote"/>
-    /// at <paramref name="nodeIdB"/>, the joint the drag ended on.
-    /// </summary>
-    public int? ConnectLink(BuildLink link, int nodeIdA, int nodeIdB)
-    {
-        PlacementNote = null;
-        if (!CanConnectLink(link, nodeIdA, nodeIdB, out var reason))
-        {
-            if (!_moveOnly && nodeIdA != nodeIdB && _builder.Nodes.Any(node => node.Id == nodeIdB))
-            {
-                PlacementNote = new CanvasNote(CanvasNoteKind.Danger, new CreatureElementSelection(CreatureElementKind.Node, nodeIdB), reason);
-            }
-
-            return null;
-        }
-
-        var replacesBeam = link != BuildLink.Beam && _builder.BeamBetween(nodeIdA, nodeIdB) is not null;
-        var linkId = _history.Change(() =>
-        {
-            var servoJoints = SelectedServoJoints();
-            var id = link switch
-            {
-                BuildLink.Beam => _builder.AddBeam(nodeIdA, nodeIdB),
-                BuildLink.Piston => _builder.AddPiston(nodeIdA, nodeIdB),
-                _ => _builder.AddSpring(nodeIdA, nodeIdB),
-            };
-
-            // Within the step, like a Servo link change: a replaced beam (#849) leaves the selection,
-            // and a Servo that held it stays selected under its new id.
-            if (replacesBeam)
-            {
-                _selectedBeamIds.RemoveWhere(beamId => !Exists(new CreatureElementSelection(CreatureElementKind.Beam, beamId)));
-                _selectedServoIds.RemoveWhere(servoId => !Exists(new CreatureElementSelection(CreatureElementKind.Servo, servoId)));
-                SelectServosAt(servoJoints);
-            }
-
-            return id;
-        });
-        if (replacesBeam)
-        {
-            SelectionChanged();
-        }
-        else
-        {
-            AnatomyChanged?.Invoke(this, EventArgs.Empty);
-        }
-
-        return linkId;
     }
 
     /// <summary>

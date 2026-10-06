@@ -133,6 +133,21 @@ public sealed partial class BuildViewModel
 
     private int? Single(HashSet<int> set) => SelectedPartCount == 1 && set.Count == 1 ? set.First() : null;
 
+    private List<int> SelectedServoJoints() =>
+        _builder.Servos.Where(servo => _selectedServoIds.Contains(servo.Id)).Select(servo => servo.NodeId).ToList();
+
+    // Drops the ids the body no longer has. Changing a Servo's links gives it a new id (#911, #849),
+    // so the Servo now on each of servoJoints, the joints of the Servos selected before, stays selected.
+    private void PruneSelection(List<int> servoJoints)
+    {
+        foreach (var kind in Enum.GetValues<CreatureElementKind>())
+        {
+            SelectedSet(kind).RemoveWhere(id => !Exists(new CreatureElementSelection(kind, id)));
+        }
+
+        _selectedServoIds.UnionWith(_builder.Servos.Where(servo => servoJoints.Contains(servo.NodeId)).Select(servo => servo.Id));
+    }
+
     private void SelectionChanged()
     {
         NotifySelectionChanged();
