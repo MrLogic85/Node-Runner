@@ -248,8 +248,9 @@ a composition of triangles; a bare quadrilateral stays free to fold.
   gap; with Stroke 100%, Start 0% gives 1…1.7 m, 50% 0.77…1.23 m and 100%
   0.65…1 m.
 - **Not a beam:** inside its stroke it does not hold its length, so it adds no rigidity, and it counts as attached for the node degree rules. A
-  Piston cannot join two nodes a beam already joins (the beam would hold
-  them rigid), and two nodes hold at most one Piston (`CreatureBuilder.CanAddPiston`).
+  Piston placed on two nodes a beam joins replaces that beam (#849), since
+  the beam would hold them rigid; a beam with a sensor on it refuses. Two
+  nodes hold at most one Piston (`CreatureBuilder.CanAddPiston`).
 - **Force** (`Piston.NextForce` in `libs/NodeRunner.Mechanics/Piston.cs`,
   the owner's formula, #801): it chases the target length from its position
   output at up to Max speed, slowing as it arrives, with at most the
@@ -341,8 +342,9 @@ a composition of triangles; a bare quadrilateral stays free to fold.
   the mass it moves, so the same Damping bounces more on heavy nodes than on
   light ones.
 - **Not a beam:** it counts as attached for the node degree rules, but adds
-  no rigidity. Two nodes hold at most one link (Piston or Spring), and no
-  link joins two nodes a beam already joins (`CreatureBuilder.CanAddSpring`).
+  no rigidity. Two nodes hold at most one link (Piston or Spring), and one
+  placed where a beam joins them replaces it, like a Piston
+  (`CreatureBuilder.CanAddSpring`).
 - **Stiffness range** 50–2000 N/m. The upper end is high enough to act firm
   without making the lightest pair of nodes unstable at Training's fixed
   step (#787).

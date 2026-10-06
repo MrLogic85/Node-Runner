@@ -480,6 +480,57 @@ public sealed class BuildPlacementTests
     }
 
     [Fact]
+    public void ALinkReplacingASelectedServosBeam_KeepsTheServoSelected_AndUndoesInOneStep()
+    {
+        var build = TwoBeams();
+        var servoId = build.PlacePart(BuildPart.Servo, _middleJoint)!.Value;
+        build.Load(build.Snapshot());
+        build.ReplaceSelection(PartSet.None with { Servos = new HashSet<int> { servoId } });
+        var presentation = new BuildPresentationViewModel(build);
+        var shownIds = new List<int?>();
+        presentation.PresentationChanged += (_, _) => shownIds.Add(presentation.SinglePart?.Id);
+
+        var piston = build.ConnectLink(BuildLink.Piston, 1, 2)!.Value;
+
+        build.CanUndo.ShouldBeTrue();
+        build.Beams.Select(beam => beam.Id).ShouldBe([5]);
+        var moved = build.Servos.Single();
+        (moved.FixedLinkId, moved.TargetLinkId).ShouldBe((piston, 5));
+        build.SingleSelectedServoId.ShouldBe(moved.Id);
+        shownIds.ShouldNotBeEmpty();
+        shownIds.ShouldAllBe(id => id == moved.Id);
+
+        build.Undo();
+
+        build.Beams.Select(beam => beam.Id).ShouldBe([4, 5]);
+        build.Pistons.ShouldBeEmpty();
+        build.Servos.Single().Id.ShouldBe(servoId);
+        build.SingleSelectedServoId.ShouldBe(servoId);
+
+        build.Redo();
+
+        build.SingleSelectedServoId.ShouldBe(moved.Id);
+    }
+
+    [Fact]
+    public void ALinkReplacingASelectedBeam_LeavesNothingOfItSelected()
+    {
+        var build = TwoBeams();
+        build.Load(build.Snapshot());
+        build.ReplaceSelection(PartSet.None with { Beams = new HashSet<int> { 4 } });
+        var presentation = new BuildPresentationViewModel(build);
+        var shownIds = new List<int?>();
+        presentation.PresentationChanged += (_, _) => shownIds.Add(presentation.SinglePart?.Id);
+
+        build.ConnectLink(BuildLink.Spring, 2, 1);
+
+        build.CanUndo.ShouldBeTrue();
+        build.SelectedPartCount.ShouldBe(0);
+        shownIds.ShouldNotBeEmpty();
+        shownIds.ShouldAllBe(id => id == null);
+    }
+
+    [Fact]
     public void PlacePart_Servo_AndItsSettings_AreUndoSteps()
     {
         var build = TwoBeams();

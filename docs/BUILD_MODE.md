@@ -120,9 +120,11 @@ sizes on screen at any zoom.
   then stays for the visit, across tool switches and selections (#874). It
   is not saved. Drag from an
   unselected joint to a different joint to draw the picked link. Every
-  link, a Beam too (#877), uses the refusals and canvas notes in the Piston
-  bullet below (`BuildViewModel.CanConnectLink`); a pair a Beam already
-  joins refuses another Beam with "A beam already joins these nodes".
+  link, a Beam too (#877), shows a refusal like the Piston bullet below:
+  the drag line's states and the reason at the joint
+  (`BuildViewModel.CanConnectLink`). A Beam refuses a pair a link already
+  joins, with "A beam already joins these nodes" when that link is a Beam;
+  only a Piston or Spring replaces a beam.
   While dragging, the line is dashed over no joint, solid once it will
   attach, and dashed danger with a crossed ring at its midpoint when the
   joint would refuse (#920). Links never adds a node.
@@ -143,12 +145,17 @@ sizes on screen at any zoom.
 - **Piston (#451, #705):** picked from the Links tool's list. Drag joint to
   joint to place one; over a joint that would refuse it, the line and that
   joint's ring turn dashed danger, with a crossed ring on the line (#920),
-  and dropping there shows the reason at the joint: "A beam already joins
-  these nodes" or "These nodes already have a piston". Dropping away from a
+  and dropping there shows the reason at the joint: "These nodes already
+  have a piston", or "A sensor sits on this beam" on a beam's pair whose
+  beam has a sensor. On any other pair a beam joins, the Piston replaces
+  the beam (#849): while dragging, two dashed lines outline that beam, and
+  a Servo that held it holds the Piston in the same role, under a new id,
+  as after a link change. One Undo brings the beam back. Dropping away from a
   joint places nothing and shows nothing. The picked link stays after
   placement. A new Piston is not selected. Taps hit a joint, then a sensor,
   then a Piston, then a beam. Deleting a joint deletes its Pistons.
-- **Spring (#453):** placed like a Piston, with the same refusals; a pair
+- **Spring (#453):** placed like a Piston, with the same refusals, and it
+  replaces a beam the same way (#849); a pair
   that has a Spring refuses another link with "These nodes already have a
   spring". Taps treat Pistons and Springs alike as links: after a sensor
   and before a beam, the nearest link is hit, a Spring on a tie. Deleting a

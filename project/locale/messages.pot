@@ -44,6 +44,10 @@ msgstr ""
 msgid "A sensor on a deleted beam goes with it."
 msgstr ""
 
+#: libs/NodeRunner.App/Builders/CreatureBuilder.cs
+msgid "A sensor sits on this beam"
+msgstr ""
+
 #: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs
 msgid "A slider sets one value for all of them."
 msgstr ""

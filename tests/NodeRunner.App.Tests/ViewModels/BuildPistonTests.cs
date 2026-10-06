@@ -36,19 +36,54 @@ public sealed class BuildPistonTests
     }
 
     [Fact]
-    public void Drag_OntoAJointABeamAlreadyJoins_PlacesNothing_AndSaysWhyThere()
+    public void Drag_OntoAJointABeamAlreadyJoins_ShowsTheBeam_AndReplacesItOnRelease()
     {
         var (build, gestures) = ThreeLooseJoints();
         build.ConnectBeam(1, 2);
+        var beam = build.Beams.Single().Id;
+
+        gestures.Press(new Vector2D(0, 0));
+        gestures.Drag(new Vector2D(98, 2));
+        gestures.BeamTargetNodeId.ShouldBe(2);
+        gestures.RefusedTargetNodeId.ShouldBeNull();
+        gestures.ReplacedBeamId.ShouldBe(beam);
+        gestures.Release(new Vector2D(98, 2));
+
+        gestures.ReplacedBeamId.ShouldBeNull();
+        build.Beams.ShouldBeEmpty();
+        build.Pistons.Single().NodeA.ShouldBe(1);
+        build.Pistons.Single().NodeB.ShouldBe(2);
+        build.PlacementNote.ShouldBeNull();
+    }
+
+    [Fact]
+    public void Drag_OntoAJointWhoseBeamHasASensor_IsRefusedWithWhy()
+    {
+        var (build, gestures) = ThreeLooseJoints();
+        build.ConnectBeam(1, 2);
+        build.PlacePart(BuildPart.Accelerometer, new CreatureElementSelection(CreatureElementKind.Beam, build.Beams.Single().Id));
 
         gestures.Press(new Vector2D(0, 0));
         gestures.Drag(new Vector2D(98, 2));
         gestures.RefusedTargetNodeId.ShouldBe(2);
-        gestures.BeamTargetNodeId.ShouldBeNull();
+        gestures.ReplacedBeamId.ShouldBeNull();
         gestures.Release(new Vector2D(98, 2));
 
         build.Pistons.ShouldBeEmpty();
-        build.PlacementNote.ShouldBe(new CanvasNote(CanvasNoteKind.Danger, new CreatureElementSelection(CreatureElementKind.Node, 2), CreatureBuilder.BeamJoinsTheseNodesReason));
+        build.Beams.Count.ShouldBe(1);
+        build.PlacementNote.ShouldBe(new CanvasNote(CanvasNoteKind.Danger, new CreatureElementSelection(CreatureElementKind.Node, 2), CreatureBuilder.SensorSitsOnThisBeamReason));
+    }
+
+    [Fact]
+    public void Drag_OntoAFreeJoint_ReplacesNoBeam()
+    {
+        var (_, gestures) = ThreeLooseJoints();
+
+        gestures.Press(new Vector2D(0, 0));
+        gestures.Drag(new Vector2D(98, 2));
+
+        gestures.BeamTargetNodeId.ShouldBe(2);
+        gestures.ReplacedBeamId.ShouldBeNull();
     }
 
     [Fact]

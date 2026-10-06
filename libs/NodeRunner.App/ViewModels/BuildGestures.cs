@@ -106,6 +106,9 @@ public sealed class BuildGestures
     /// <summary>The joint under a link drag that would refuse it (#451, #877), such as one a beam already joins to the start.</summary>
     public int? RefusedTargetNodeId { get; private set; }
 
+    /// <summary>The beam a Piston or Spring drag would replace if released now (#849).</summary>
+    public int? ReplacedBeamId { get; private set; }
+
     /// <summary>The corners of the Select tool's box while it is dragged.</summary>
     public (Vector2D Start, Vector2D End)? SelectionBox { get; private set; }
 
@@ -384,9 +387,11 @@ public sealed class BuildGestures
         {
             BeamEnd = position;
             var target = FindLinkTarget(start, position);
-            var refused = target is { } end && !_build.CanConnectLink(_build.PickedLink, start, end, out _);
+            int? replaced = null;
+            var refused = target is { } end && !_build.CanConnectLink(_build.PickedLink, start, end, out _, out replaced);
             BeamTargetNodeId = refused ? null : target;
             RefusedTargetNodeId = refused ? target : null;
+            ReplacedBeamId = replaced;
 
             Changed?.Invoke(this, EventArgs.Empty);
         }
@@ -756,6 +761,7 @@ public sealed class BuildGestures
         BeamEnd = null;
         BeamTargetNodeId = null;
         RefusedTargetNodeId = null;
+        ReplacedBeamId = null;
         SelectionBox = null;
     }
 

@@ -183,8 +183,6 @@ public sealed class CreatureBuilderTests
         builder.AddSpring(a, c);
         builder.AddPiston(b, d);
 
-        builder.CanAddSpring(a, b, out var onBeam).ShouldBeFalse();
-        onBeam.ShouldBe(CreatureBuilder.BeamJoinsTheseNodesReason);
         builder.CanAddSpring(c, a, out var onSpring).ShouldBeFalse();
         onSpring.ShouldBe(CreatureBuilder.SpringJoinsTheseNodesReason);
         builder.CanAddPiston(a, c, out var pistonOnSpring).ShouldBeFalse();
@@ -367,6 +365,67 @@ public sealed class CreatureBuilderTests
         creature.Nodes.Count.ShouldBe(5);
         creature.Beams.Count.ShouldBe(4);
         creature.Sensors.Count.ShouldBe(1);
+    }
+
+    [Fact]
+    public void APistonOrSpring_OnABeamsPair_ReplacesTheBeam()
+    {
+        var pistonBuilder = PairBuilder();
+        var (a, b) = (pistonBuilder.Nodes[0].Id, pistonBuilder.Nodes[1].Id);
+        pistonBuilder.BeamBetween(b, a).ShouldBe(pistonBuilder.Beams[0].Id);
+        pistonBuilder.CanAddPiston(a, b, out var reason).ShouldBeTrue();
+        reason.ShouldBeNull();
+
+        var piston = pistonBuilder.AddPiston(b, a);
+
+        pistonBuilder.Beams.ShouldBeEmpty();
+        pistonBuilder.Pistons.ShouldBe([new PistonDef(piston, b, a)]);
+        pistonBuilder.BeamBetween(a, b).ShouldBeNull();
+
+        var springBuilder = PairBuilder();
+        var spring = springBuilder.AddSpring(a, b);
+
+        springBuilder.Beams.ShouldBeEmpty();
+        springBuilder.Springs.Single().Id.ShouldBe(spring);
+    }
+
+    [Fact]
+    public void APistonOrSpring_OnASensorsBeam_IsRefusedWithWhy()
+    {
+        var builder = PairBuilder();
+        var (a, b) = (builder.Nodes[0].Id, builder.Nodes[1].Id);
+        builder.AddSensor(builder.Beams[0].Id, SensorKind.Accelerometer, out _, out _);
+
+        builder.CanAddPiston(a, b, out var piston).ShouldBeFalse();
+        piston.ShouldBe(CreatureBuilder.SensorSitsOnThisBeamReason);
+        builder.CanAddSpring(b, a, out var spring).ShouldBeFalse();
+        spring.ShouldBe(CreatureBuilder.SensorSitsOnThisBeamReason);
+        builder.CanAddBeam(a, b, out var beam).ShouldBeFalse();
+        beam.ShouldBe(CreatureBuilder.BeamJoinsTheseNodesReason);
+        Should.Throw<ArgumentException>(() => builder.AddPiston(a, b));
+        builder.Beams.Count.ShouldBe(1);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void ALinkReplacingAServosBeam_TakesItsRole_UnderANewServoId(bool replaceFixed)
+    {
+        var builder = PairBuilder();
+        var (a, b) = (builder.Nodes[0].Id, builder.Nodes[1].Id);
+        var c = builder.AddNode(new Vector2D(0, 90));
+        var first = builder.Beams[0].Id;
+        var second = builder.AddBeam(a, c);
+        var servo = builder.AddServo(a);
+        builder.Servos.Single().ShouldBe(new ServoDef(servo, a, first, second));
+
+        var spring = replaceFixed ? builder.AddSpring(a, b) : builder.AddSpring(c, a);
+
+        var moved = builder.Servos.Single();
+        moved.Id.ShouldNotBe(servo);
+        moved.Id.ShouldBeGreaterThan(spring);
+        moved.NodeId.ShouldBe(a);
+        (moved.FixedLinkId, moved.TargetLinkId).ShouldBe(replaceFixed ? (spring, second) : (first, spring));
     }
 
     private static CreatureBuilder PairBuilder()
