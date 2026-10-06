@@ -559,6 +559,15 @@ unique_name_in_owner = true
 layout_mode = 2
 theme_override_constants/separation = 4
 
+[node name="SelectionCopy" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent/Selection/SelectionActions"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 1
+text = "Copy"
+script = ExtResource("5_button")
+IconId = 8
+ContentLayout = 2
+
 [node name="SelectionDelete" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent/Selection/SelectionActions"]
 unique_name_in_owner = true
 layout_mode = 2

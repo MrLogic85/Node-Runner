@@ -299,10 +299,18 @@ Several selected parts show the selection panel instead (#558, #704), titled
   them."
 - With a frame, three rows explain its handles (Move, Rotate, Scale). With
   neither settings nor a frame: "These parts share no settings."
-- Last a full-width **Delete N**, which acts on a tap (Undo restores it),
-  hidden when locked. Its note says what else a delete removes.
+- Last full-width **Copy N** and **Delete N**, both hidden when locked.
+  Delete acts on a tap (Undo restores it), and its note says what else a
+  delete removes.
+- Copy (#937) duplicates the joints, beams and Springs one grid step aside,
+  with their settings but not their names, and selects the copy; Undo
+  removes it. A selected joint's Servo is not copied with it. Copy is
+  dimmed while the selection holds a part with brain ports, since a copy
+  would change the network, or a link without both its joints. A tap then
+  puts a danger note on each such part until the selection changes.
+  `BuildViewModel.CopySelectedParts` and `CopyBlockers` own these rules.
 
-`BuildPresentationViewModel.Selection` owns the copy.
+`BuildPresentationViewModel.Selection` owns the panel's wording.
 
 ## Validation
 

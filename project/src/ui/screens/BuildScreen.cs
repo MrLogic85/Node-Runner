@@ -60,6 +60,9 @@ public partial class BuildScreen : Control
     public delegate void DeleteSelectionRequestedEventHandler();
 
     [Signal]
+    public delegate void CopySelectionRequestedEventHandler();
+
+    [Signal]
     public delegate void ToolRequestedEventHandler(BuildTool tool);
 
     /// <summary>A row in the Links tool's list was tapped (#705): the rail tool stays Links.</summary>
@@ -135,6 +138,7 @@ public partial class BuildScreen : Control
         partTabs.TabSelected += OnPartTabSelected;
         GetNode<UiButton>("%PartDelete").Activated += () => EmitSignal(SignalName.DeleteSelectionRequested);
         GetNode<UiButton>("%SelectionDelete").Activated += () => EmitSignal(SignalName.DeleteSelectionRequested);
+        GetNode<UiButton>("%SelectionCopy").Activated += () => EmitSignal(SignalName.CopySelectionRequested);
         var partName = GetNode<UiTextField>("%PartName");
         partName.MaxLength = NameLimits.Part;
         partName.EditingStarted += OnPartNameEditingStarted;
@@ -440,11 +444,17 @@ public partial class BuildScreen : Control
         emptyNote.TextSource = UiTextTranslation.Source(group.EmptyNote);
         emptyNote.Visible = emptyNote.TextSource is not null;
         GetNode<Control>("%SelectionRows").Visible = group.ShowFrameRows;
-        GetNode<UiButton>("%SelectionDelete").ShowText(group.DeleteText);
+        var copy = GetNode<UiButton>("%SelectionCopy");
+        copy.ShowText(group.CopyText);
+        copy.Visible = group.ShowCopy;
+        copy.Unavailable = !group.CanCopy;
+        var delete = GetNode<UiButton>("%SelectionDelete");
+        delete.ShowText(group.DeleteText);
+        delete.Visible = group.CanDelete;
         var deleteNote = GetNode<UiLabel>("%SelectionDeleteNote");
         deleteNote.TextSource = UiTextTranslation.Source(group.DeleteNote);
-        deleteNote.Visible = deleteNote.TextSource is not null;
-        GetNode<Control>("%SelectionActions").Visible = group.CanDelete;
+        deleteNote.Visible = group.CanDelete && deleteNote.TextSource is not null;
+        GetNode<Control>("%SelectionActions").Visible = group.ShowCopy || group.CanDelete;
     }
 
     private void ApplyPickList(BuildPresentationViewModel presentation, LinkListPresentation? linkList)
