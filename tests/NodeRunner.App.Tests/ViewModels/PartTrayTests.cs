@@ -8,7 +8,7 @@ public sealed class PartTrayTests
     public void Groups_ListReferenceTabsInOrder()
     {
         PartTray.Groups().Select(group => group.Name)
-            .ShouldBe(Plain("On a joint", "Sensors", "Blocks"));
+            .ShouldBe(Plain("Moving parts", "Sensors", "Blocks"));
     }
 
     [Fact]
@@ -16,8 +16,8 @@ public sealed class PartTrayTests
     {
         PartTray.Groups().Select(group => group.Rows.Select(row => row.Name).ToArray()).ShouldBe(
         [
-            Plain("Servo", "Stepper", "Velocity motor", "Brake", "Wheel", "Touch sensor"),
-            Plain("Accelerometer", "Camera", "Pulse"),
+            Plain("Servo", "Stepper", "Velocity motor", "Brake", "Wheel"),
+            Plain("Accelerometer", "Camera", "Touch sensor", "Pulse"),
             Plain("Battery", "Generator", "Fuel tank"),
         ]);
     }
@@ -49,7 +49,7 @@ public sealed class PartTrayTests
     }
 
     [Fact]
-    public void SensorsTab_HasTheAccelerometerAvailable_AndTheCameraAndPulseComingLater()
+    public void SensorsTab_HasTheAccelerometerAvailable_AndTheRestComingLater()
     {
         var sensors = PartTray.Groups()[1].Rows;
 
@@ -57,6 +57,7 @@ public sealed class PartTrayTests
             [
                 (BuildPart.Accelerometer, PartTrayRowState.Available),
                 (BuildPart.Camera, PartTrayRowState.ComingLater),
+                (BuildPart.TouchSensor, PartTrayRowState.ComingLater),
                 (BuildPart.Pulse, PartTrayRowState.ComingLater),
             ]);
         sensors[0].LockedReason.ShouldBeNull();
@@ -72,17 +73,12 @@ public sealed class PartTrayTests
     }
 
     [Fact]
-    public void LockedNote_ShowsOnTabsWithALockedRow()
-    {
-        PartTray.Groups().Select(group => group.LockedNote).ShouldAllBe(note => Equals(note, UiText.Plain("Coming later")));
-    }
-
-    [Fact]
     public void LinkList_ShowsBeamPickedWithWingLocked()
     {
         var list = BuildLinkList.Create(BuildLink.Beam);
 
-        list.HelpText.ShouldBe(UiText.Plain("A rigid rod. Drag joint to joint."));
+        list.PickedInfo.ShouldBe(UiText.Plain("A rigid rod."));
+        list.HelpText.ShouldBe(UiText.Plain("Drag from joint to joint to add the picked link."));
         list.Rows.Select(row => (row.Link, row.Name, row.State)).ShouldBe([
             (BuildLink.Beam, UiText.Plain("Beam"), LinkListRowState.Selected),
             (BuildLink.Piston, UiText.Plain("Piston"), LinkListRowState.Rest),
@@ -91,9 +87,9 @@ public sealed class PartTrayTests
     }
 
     [Fact]
-    public void LinkList_HelpFollowsPickedLink()
+    public void LinkList_InfoFollowsPickedLink()
     {
-        BuildLinkList.Create(BuildLink.Piston).HelpText.ShouldBe(UiText.Plain("The brain pushes and pulls it. Drag joint to joint."));
+        BuildLinkList.Create(BuildLink.Piston).PickedInfo.ShouldBe(UiText.Plain("Extends and retracts."));
     }
 
     private static UiText[] Plain(params string[] messages) => [.. messages.Select(UiText.Plain)];

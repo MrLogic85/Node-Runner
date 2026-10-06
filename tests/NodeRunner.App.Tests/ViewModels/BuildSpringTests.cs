@@ -118,7 +118,7 @@ public sealed class BuildSpringTests
         builder.AddNode(new Vector2D(20, 0));
         builder.AddSpring(1, 2);
 
-        CreatureReadiness.Problems(builder.Build()).ShouldContain(UiText.Format("The spring between node {0} and node {1} is too short. Move one of the nodes apart.", 1, 2));
+        CreatureReadiness.Problems(builder.Build()).ShouldContain(UiText.Format("The spring between joint {0} and joint {1} is too short. Move one of the joints apart.", 1, 2));
     }
 
     private static (BuildViewModel Build, BuildGestures Gestures) ThreeLooseJoints()

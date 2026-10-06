@@ -51,7 +51,7 @@ public static class BuildServoDrawing
             var target = new CreatureElementSelection(CreatureElementKind.Node, node.Id);
             var canPlace = viewModel.CanPlacePart(BuildPart.Servo, target, out _);
             var occupied = viewModel.ServoAtNode(node.Id) is not null;
-            if (!canPlace && !occupied && !viewModel.ServoNeedsTwoLinks(node.Id))
+            if (!canPlace && !occupied)
             {
                 continue;
             }

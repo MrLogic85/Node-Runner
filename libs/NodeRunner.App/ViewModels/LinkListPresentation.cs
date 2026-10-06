@@ -21,9 +21,14 @@ public sealed record LinkListRow(BuildLink Link, UiText Name, LinkListRowState S
     public bool IsPickable => State != LinkListRowState.Locked;
 }
 
+/// <summary>
+/// The Links list: its rows, what the picked link does (<see cref="PickedInfo"/>, shown right
+/// under its row), and one help line for the whole list.
+/// </summary>
 public sealed record LinkListPresentation(
     IReadOnlyList<LinkListRow> Rows,
-    UiText? HelpText);
+    UiText? PickedInfo,
+    UiText HelpText);
 
 /// <summary>The Links tool's list: Beam, Piston and Spring now, later links locked.</summary>
 public static class BuildLinkList
@@ -35,16 +40,19 @@ public static class BuildLinkList
             Row(BuildLink.Spring, UiText.Plain("Spring"), picked),
             Locked(BuildLink.Wing, UiText.Plain("Wing")),
         ],
-        HelpText(picked));
+        Info(picked),
+        HelpText);
 
     public static bool IsAvailable(BuildLink link) => link is BuildLink.Beam or BuildLink.Piston or BuildLink.Spring;
 
-    /// <summary>How to use the picked link, or null for a link that cannot be picked yet.</summary>
-    public static UiText? HelpText(BuildLink link) => link switch
+    public static UiText HelpText { get; } = UiText.Plain("Drag from joint to joint to add the picked link.");
+
+    /// <summary>What the link does, or null for a link that cannot be picked yet.</summary>
+    public static UiText? Info(BuildLink link) => link switch
     {
-        BuildLink.Beam => UiText.Plain("A rigid rod. Drag joint to joint."),
-        BuildLink.Piston => UiText.Plain("The brain pushes and pulls it. Drag joint to joint."),
-        BuildLink.Spring => UiText.Plain("Springs back to its drawn length. Drag joint to joint."),
+        BuildLink.Beam => PartInfo.Beam,
+        BuildLink.Piston => PartInfo.Piston,
+        BuildLink.Spring => PartInfo.Spring,
         _ => null,
     };
 

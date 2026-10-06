@@ -26,7 +26,8 @@ public sealed class BuildPartsTrayTests
         Children("/PartsTray").ShouldBe(["PartTabs", "PartScroll"]);
         _build.Single(node => node.Name == "PartScroll").Type.ShouldBe("ScrollContainer");
         Children("/PartScroll/PartList").ShouldBe(["PartGroupHeader", "PartRows", "PartHelp"]);
-        Children("/PartGroupHeader").ShouldBe(["PartGroupName", "PartLockedIcon", "PartLockedNote"]);
+        Children("/PartList/PartRows").ShouldBe(["PickedInfo"]);
+        Children("/PartGroupHeader").ShouldBe(["PartGroupName"]);
     }
 
     [Fact]
@@ -35,7 +36,7 @@ public sealed class BuildPartsTrayTests
         var content = _build.Where(node => node.Parent?.EndsWith("/SidePanelContent", StringComparison.Ordinal) == true).ToList();
 
         content.Select(node => node.Name).ShouldBe(
-            ["PartsTray", "SavedCreation", "PartSettings", "Selection", "JointHelp", "SelectHelp", "PanelSpacer", "Readiness"]);
+            ["PartsTray", "PartSettings", "Selection", "JointHelp", "SelectHelp", "PanelSpacer", "Readiness"]);
         content.ShouldAllBe(node => node.IsUnique);
     }
 

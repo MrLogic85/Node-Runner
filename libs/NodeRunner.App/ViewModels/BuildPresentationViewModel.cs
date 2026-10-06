@@ -42,7 +42,7 @@ public sealed class BuildPresentationViewModel
 
     public BuildTool ActiveTool => _build.ActiveTool;
 
-    public IReadOnlyList<PartTrayGroup> PartGroups => PartTray.Groups();
+    public IReadOnlyList<PartTrayGroup> PartGroups => _build.IsMoveOnly ? PartTray.LockedGroups() : PartTray.Groups();
 
     public LinkListPresentation? LinkList => ToolPanel.Mode == ToolPanelMode.LinkList
         ? BuildLinkList.Create(_build.PickedLink)
@@ -54,14 +54,6 @@ public sealed class BuildPresentationViewModel
 
     public int SensorCount => _build.Sensors.Count;
 
-    public UiText TrainingSummaryTitle => _build.TrainingGeneration is { } generation
-        ? UiText.Counted("Trained {0} generation", "Trained {0} generations", generation)
-        : UiText.Plain("Not trained yet");
-
-    public UiText TrainingSummaryBody => _build.TrainingGeneration is not null
-        ? UiText.Plain("This can drop after a noisy generation; Training's Best never does. Tap the padlock to change the body. Training is kept.")
-        : UiText.Plain("Start training when you are ready.");
-
     /// <summary>The Reset training dialog body (#687). Copy sits beside Reset in the overflow, so it is offered.</summary>
     public UiText ResetTrainingWarning =>
         UiText.Counted(
@@ -69,11 +61,6 @@ public sealed class BuildPresentationViewModel
             "{1} forgets its {0} generations of training and keeps its body. Copy it first to keep the trained one.",
             _build.TrainingGeneration ?? 0,
             _build.CreationName);
-
-    /// <summary>The latest generation's distance (#479); the best ever belongs to Stats.</summary>
-    public UiText LatestDistanceText => _build.LatestDistance is { } distance
-        ? UiText.Format("Latest distance {0}", Metres.WithUnit(distance))
-        : UiText.Plain("Latest distance —");
 
     public int SelectedNodeCount => _build.SelectedNodeCount;
 
@@ -97,7 +84,7 @@ public sealed class BuildPresentationViewModel
                     _build.DefaultPartName(servoId),
                     null,
                     null,
-                    ServoNote,
+                    PartInfo.Servo,
                     canDelete,
                     PanelSliders(),
                     ServoPickers(servo),
@@ -113,7 +100,7 @@ public sealed class BuildPresentationViewModel
                     _build.DefaultPartName(pistonId),
                     null,
                     null,
-                    PistonNote,
+                    PartInfo.Piston,
                     canDelete,
                     PanelSliders());
             }
@@ -127,7 +114,7 @@ public sealed class BuildPresentationViewModel
                     _build.DefaultPartName(springId),
                     null,
                     null,
-                    SpringNote,
+                    PartInfo.Spring,
                     canDelete,
                     PanelSliders());
             }
@@ -157,7 +144,7 @@ public sealed class BuildPresentationViewModel
                     _build.DefaultPartName(beamId),
                     UiText.Plain("Between"),
                     UiText.Format("{0} ↔ {1}", _build.PartDisplayName(beam.NodeA), _build.PartDisplayName(beam.NodeB)),
-                    UiText.Plain("Drag its ends to change the length."),
+                    PartInfo.Beam,
                     canDelete,
                     PanelSliders());
             }
@@ -180,12 +167,6 @@ public sealed class BuildPresentationViewModel
         }
     }
 
-    public static UiText PistonNote { get; } = UiText.Plain("The brain pushes it out and pulls it in, within its stroke.");
-
-    public static UiText ServoNote { get; } = UiText.Plain("The brain picks an angle and how much of its max strength to use.");
-
-    public static UiText SpringNote { get; } = UiText.Plain("It springs toward the ring, which Coil length moves. With the ring past an end mark, it starts pressed against that end. Damping stops it bouncing.");
-
     /// <summary>A slider for each setting the selection can change in the panel (#704).</summary>
     private List<ParameterSlider> PanelSliders() =>
         [.. _build.EditableParameters
@@ -195,10 +176,10 @@ public sealed class BuildPresentationViewModel
     /// <summary>What a sensor does; an <paramref name="aimable"/> Camera's note also says what its Aim handle does (#594).</summary>
     public static UiText SensorNote(SensorKind kind, bool aimable) => kind switch
     {
-        SensorKind.Accelerometer => UiText.Plain("Feels how its beam speeds up, slows down and tilts."),
+        SensorKind.Accelerometer => PartInfo.Accelerometer,
         SensorKind.Camera => aimable
             ? UiText.Plain("Three rays see how near the ground is. Drag the round handle to aim it.")
-            : UiText.Plain("Three rays see how near the ground is."),
+            : PartInfo.Camera,
         _ => throw new ArgumentOutOfRangeException(nameof(kind)),
     };
 
@@ -217,7 +198,7 @@ public sealed class BuildPresentationViewModel
             var settings = PanelSliders();
             var showFrameRows = _build.SelectedNodeCount >= 2;
             var deleteNote = selection.Nodes.Count > 0
-                ? UiText.Plain("Links on a deleted node go with it.")
+                ? UiText.Plain("Links on a deleted joint go with it.")
                 : _build.Sensors.Any(sensor => selection.Beams.Contains(sensor.BeamId) && !selection.Sensors.Contains(sensor.Id))
                     ? UiText.Plain("A sensor on a deleted beam goes with it.")
                     : null;
@@ -257,7 +238,8 @@ public sealed class BuildPresentationViewModel
 
     private ToolPanelPresentation CreateToolPanel()
     {
-        if (_build.SelectedPartCount > 0 || _build.IsMoveOnly)
+        // A locked Creation's Joint and Links tools are off (#896), so they have no panel.
+        if (_build.SelectedPartCount > 0 || (_build.IsMoveOnly && ActiveTool is BuildTool.Beam or BuildTool.Joint))
         {
             return ToolPanelPresentation.None;
         }
@@ -289,7 +271,7 @@ public sealed class BuildPresentationViewModel
     {
         if (errors.Count == 0)
         {
-            return UiText.Plain("Add nodes + beams");
+            return UiText.Plain("Add joints and links");
         }
 
         var unconnected = Enumerable.Range(0, _build.Nodes.Count)
@@ -302,7 +284,7 @@ public sealed class BuildPresentationViewModel
             });
         if (unconnected > 0)
         {
-            return UiText.Counted("{0} node not connected", "{0} nodes not connected", unconnected);
+            return UiText.Counted("{0} joint not connected", "{0} joints not connected", unconnected);
         }
 
         // Build's canvas names each short beam with a callout (#593), so the line only counts them.

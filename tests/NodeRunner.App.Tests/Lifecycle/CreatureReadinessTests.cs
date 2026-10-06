@@ -10,7 +10,7 @@ public sealed class CreatureReadinessTests
     public void Problems_WithEmptyDrawing_AsksForANode()
     {
         CreatureReadiness.Problems(new CreatureDef([], [], []))
-            .ShouldBe([UiText.Plain("Add at least one node before training this creation.")]);
+            .ShouldBe([UiText.Plain("Add at least one joint before training this creation.")]);
     }
 
     [Fact]
@@ -23,8 +23,8 @@ public sealed class CreatureReadinessTests
 
         CreatureReadiness.Problems(creature).ShouldBe(
         [
-            UiText.Format("Node {0} has nothing attached. Connect it with a beam, a piston or a spring, or remove it.", 3),
-            UiText.Format("The beam between node {0} and node {1} has zero length. Move one of the nodes apart.", 1, 2),
+            UiText.Format("Joint {0} has nothing attached. Connect it with a link or remove it.", 3),
+            UiText.Format("The beam between joint {0} and joint {1} has zero length. Move one of the joints apart.", 1, 2),
         ]);
     }
 
@@ -38,7 +38,7 @@ public sealed class CreatureReadinessTests
             [new PistonDef(301, 1, 2)]);
 
         CreatureReadiness.Problems(creature).ShouldBe(
-            [UiText.Format("The piston between node {0} and node {1} has zero length. Move one of the nodes apart.", 1, 2)]);
+            [UiText.Format("The piston between joint {0} and joint {1} has zero length. Move one of the joints apart.", 1, 2)]);
     }
 
     [Theory]
@@ -51,7 +51,7 @@ public sealed class CreatureReadinessTests
         CreatureReadiness.IsTooShort(creature, 1, 2).ShouldBe(!fits);
         CreatureReadiness.Problems(creature).ShouldBe(fits
             ? []
-            : [UiText.Format("The beam between node {0} and node {1} is too short. Move one of the nodes apart.", 1, 2)]);
+            : [UiText.Format("The beam between joint {0} and joint {1} is too short. Move one of the joints apart.", 1, 2)]);
     }
 
     [Fact]
@@ -102,7 +102,7 @@ public sealed class CreatureReadinessTests
 
         CreatureReadiness.IsTooShort(new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(90, 0)), NodeDef.PlainJointRadius, NodeDef.PlainJointRadius).ShouldBeFalse();
         CreatureReadiness.IsTooShort(creature, 1, 2).ShouldBeTrue();
-        CreatureReadiness.Problems(creature).ShouldContain(UiText.Format("The beam between node {0} and node {1} is too short. Move one of the nodes apart.", 1, 2));
+        CreatureReadiness.Problems(creature).ShouldContain(UiText.Format("The beam between joint {0} and joint {1} is too short. Move one of the joints apart.", 1, 2));
     }
 
     [Fact]

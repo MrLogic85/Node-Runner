@@ -75,7 +75,7 @@ internal static class CreationActions
         new(
             UiPopupType.Default,
             string.Empty,
-            "You can change the body until you leave Build. Training is kept: the brain remembers the parts you keep, and new parts start almost unused.",
+            "The creation is locked so you do not change the size or values of its model by accident. Changes to how the model behaves are still allowed. Unlock to use every tool that changes the model. Adding or removing a part keeps the training, but adds or removes that part of the model. Removing a part and adding the same kind back does not bring its training back; use Undo instead.",
             "Unlock",
             () =>
             {

@@ -118,7 +118,7 @@ transition to keep in step with it.
   - **Latest:** the best trial of the most recently finished generation:
     `Evolver.LatestGenome`/`LatestRun`, saved as `TrainingStateDef.Brain`
     and `Latest` (`TrainingRunDef`). It can go down. The Creations card
-    and Build's training summary show it, and Simulate and the warm start
+    shows it, and Simulate and the warm start
     use its brain, because that is what the creature can do now.
   - **Best ever:** the highest score any generation got, and which generation
     that was: `Evolver.BestFitness`/`BestGeneration`, saved as

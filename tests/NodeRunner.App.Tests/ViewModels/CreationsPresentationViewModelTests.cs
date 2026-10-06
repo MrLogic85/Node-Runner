@@ -38,7 +38,7 @@ public sealed class CreationsPresentationViewModelTests
         walker.SummaryText.ShouldBeNull();
         walker.ThumbnailText.ShouldBe(UiText.Format(
             "{0} · {1} · {2}",
-            UiText.Counted("{0} node", "{0} nodes", 2),
+            UiText.Counted("{0} joint", "{0} joints", 2),
             UiText.Counted("{0} beam", "{0} beams", 1),
             UiText.Counted("{0} sensor", "{0} sensors", 1)));
         walker.Training.ShouldBe(new CreationCardTraining(Metre(19.1), Speed(3.1), Metre(1.2), MapIds.Flat, Generations(12)));

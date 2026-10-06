@@ -42,7 +42,7 @@ public static class CreatureReadiness
         var problems = new List<UiText>();
         if (creature.Nodes.Count == 0)
         {
-            problems.Add(UiText.Plain("Add at least one node before training this creation."));
+            problems.Add(UiText.Plain("Add at least one joint before training this creation."));
         }
 
         for (var i = 0; i < creature.Nodes.Count; i++)
@@ -50,7 +50,7 @@ public static class CreatureReadiness
             var nodeId = creature.Nodes[i].Id;
             if (!IsAttached(creature, nodeId))
             {
-                problems.Add(UiText.Format("Node {0} has nothing attached. Connect it with a beam, a piston or a spring, or remove it.", i + 1));
+                problems.Add(UiText.Format("Joint {0} has nothing attached. Connect it with a link or remove it.", i + 1));
             }
         }
 
@@ -100,18 +100,18 @@ public static class CreatureReadiness
         {
             problems.Add(kind switch
             {
-                CreatureElementKind.Piston => UiText.Format("The piston between node {0} and node {1} has zero length. Move one of the nodes apart.", a, b),
-                CreatureElementKind.Spring => UiText.Format("The spring between node {0} and node {1} has zero length. Move one of the nodes apart.", a, b),
-                _ => UiText.Format("The beam between node {0} and node {1} has zero length. Move one of the nodes apart.", a, b),
+                CreatureElementKind.Piston => UiText.Format("The piston between joint {0} and joint {1} has zero length. Move one of the joints apart.", a, b),
+                CreatureElementKind.Spring => UiText.Format("The spring between joint {0} and joint {1} has zero length. Move one of the joints apart.", a, b),
+                _ => UiText.Format("The beam between joint {0} and joint {1} has zero length. Move one of the joints apart.", a, b),
             });
         }
         else if (IsTooShort(creature, nodeA, nodeB))
         {
             problems.Add(kind switch
             {
-                CreatureElementKind.Piston => UiText.Format("The piston between node {0} and node {1} is too short. Move one of the nodes apart.", a, b),
-                CreatureElementKind.Spring => UiText.Format("The spring between node {0} and node {1} is too short. Move one of the nodes apart.", a, b),
-                _ => UiText.Format("The beam between node {0} and node {1} is too short. Move one of the nodes apart.", a, b),
+                CreatureElementKind.Piston => UiText.Format("The piston between joint {0} and joint {1} is too short. Move one of the joints apart.", a, b),
+                CreatureElementKind.Spring => UiText.Format("The spring between joint {0} and joint {1} is too short. Move one of the joints apart.", a, b),
+                _ => UiText.Format("The beam between joint {0} and joint {1} is too short. Move one of the joints apart.", a, b),
             });
         }
     }

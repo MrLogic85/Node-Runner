@@ -1,4 +1,5 @@
 using NodeRunner.App.Builders;
+using NodeRunner.App.Lifecycle;
 using NodeRunner.App.ViewModels;
 using NodeRunner.Domain;
 
@@ -462,7 +463,7 @@ public sealed class BuildPlacementTests
         var build = TwoBeams();
 
         build.PlacePart(BuildPart.Servo, _firstBeam).ShouldBeNull();
-        build.PlacementNote.ShouldBe(new CanvasNote(CanvasNoteKind.Danger, _firstBeam, UiText.Plain("Joint parts go on a joint")));
+        build.PlacementNote.ShouldBe(new CanvasNote(CanvasNoteKind.Danger, _firstBeam, UiText.Plain("Servos go on a joint")));
 
         build.PlacePart(BuildPart.Servo, _middleJoint).ShouldNotBeNull();
         build.PlacePart(BuildPart.Servo, _middleJoint).ShouldBeNull();
@@ -470,13 +471,18 @@ public sealed class BuildPlacementTests
     }
 
     [Fact]
-    public void PlacePart_Servo_OnOneLinkJoint_ExplainsThatTwoLinksAreNeeded()
+    public void PlacePart_Servo_OnOneLinkJoint_HoldsItAsFixed_AndAsksForASecondLink()
     {
         var build = TwoBeams();
 
-        build.PlacePart(BuildPart.Servo, _firstJoint).ShouldBeNull();
+        var servoId = build.PlacePart(BuildPart.Servo, _firstJoint).ShouldNotBeNull();
 
-        build.PlacementNote.ShouldBe(new CanvasNote(CanvasNoteKind.Danger, _firstJoint, CreatureBuilder.ServoNeedsTwoLinksReason));
+        build.PlacementNote.ShouldBeNull();
+        var servo = build.Servos.Single();
+        servo.FixedLinkId.ShouldBe(4);
+        servo.TargetLinkId.ShouldBeNull();
+        build.CanvasNotes().Single(note => note.Target.Id == servoId).Text.ShouldBe(CreatureBuilder.ServoNeedsTwoLinksReason);
+        CreatureReadiness.CanTrain(build.Snapshot()).ShouldBeFalse();
     }
 
     [Fact]

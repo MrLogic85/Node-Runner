@@ -20,8 +20,9 @@ public enum PartSettingsKind
 /// and changed on the canvas. <see cref="Settings"/> are the part's panel sliders (#704), like a
 /// Piston's (#451); a joint (#913), Piston or Spring lists no connections, as they are drawn on the canvas, so its
 /// <see cref="ConnectionsLabel"/> and <see cref="ConnectionsValue"/> are null. <see cref="Name"/> is
-/// the player's own name as written, or <see cref="DefaultName"/>. <see cref="PanelId"/> says which
-/// part the panel shows across edits.
+/// the player's own name as written, or <see cref="DefaultName"/>. The panel's title is
+/// <see cref="Title"/>, what kind of part it is, so a renamed part still says what it is.
+/// <see cref="PanelId"/> says which part the panel shows across edits.
 /// </summary>
 public sealed record PartSettingsPresentation(
     int Id,
@@ -42,6 +43,18 @@ public sealed record PartSettingsPresentation(
     /// rules") but it is the same Servo to the player (#910, #911).
     /// </summary>
     public int PanelId => JointId ?? Id;
+
+    public UiText Title => Kind switch
+    {
+        PartSettingsKind.Node => UiText.Plain("Joint"),
+        PartSettingsKind.Beam => UiText.Plain("Beam"),
+        PartSettingsKind.Accelerometer => UiText.Plain("Accelerometer"),
+        PartSettingsKind.Camera => UiText.Plain("Camera"),
+        PartSettingsKind.Servo => UiText.Plain("Servo"),
+        PartSettingsKind.Piston => UiText.Plain("Piston"),
+        PartSettingsKind.Spring => UiText.Plain("Spring"),
+        _ => throw new ArgumentOutOfRangeException(nameof(Kind), Kind, "Unknown part kind."),
+    };
 }
 
 /// <summary>
