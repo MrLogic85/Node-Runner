@@ -509,8 +509,11 @@ public class BuildGesturesTests
         gestures.Drag(new Vector2D(60, 0));
         gestures.BeamStartNodeId.ShouldBe(1);
         gestures.BeamEnd.ShouldBe(new Vector2D(60, 0));
+        gestures.BeamTargetNodeId.ShouldBeNull();
+        gestures.RefusedTargetNodeId.ShouldBeNull();
         gestures.Drag(new Vector2D(98, 2));
         gestures.BeamTargetNodeId.ShouldBe(2);
+        gestures.RefusedTargetNodeId.ShouldBeNull();
         gestures.Release(new Vector2D(98, 2));
 
         build.Beams.ShouldBe([new BeamDef(4, 1, 2)]);

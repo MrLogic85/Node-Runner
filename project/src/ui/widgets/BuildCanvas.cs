@@ -29,6 +29,9 @@ public partial class BuildCanvas : Node2D
     private const int _refusedRingDashes = 12;
     private const int _refusedDashSegments = 6;
 
+    // The loose-joint style mark a refused link drag shows at its line's middle (#920).
+    private const float _refusedMarkRadius = 12;
+
     // The reference's Select frame and box: dashes 5 on 4 off, and 10-square corners rounded 2.
     private const float _frameDash = 5;
     private const float _frameGap = 4;
@@ -339,7 +342,6 @@ public partial class BuildCanvas : Node2D
         DrawBuildGrid();
         DrawAreaCorners();
         DrawSelectionBox();
-        DrawBeamPreview();
     }
 
     /// <summary>Hands the creature its parts as they are now, through the view's zoom and pan.</summary>
@@ -413,6 +415,7 @@ public partial class BuildCanvas : Node2D
         DrawSelectedPistonStrokes(canvas);
         DrawInvalidNodeMarkers(canvas);
         DrawInvalidBeamMarkers(canvas);
+        DrawBeamPreview(canvas);
         DrawBeamEndRings(canvas);
         DrawSelectionFrame(canvas);
     }
@@ -644,24 +647,47 @@ public partial class BuildCanvas : Node2D
         }
     }
 
-    private void DrawBeamPreview()
+    private void DrawBeamPreview(CanvasItem canvas)
     {
         if (_viewModel is null || _gestures?.BeamStartNodeId is not { } start || _gestures.BeamEnd is not { } end)
         {
             return;
         }
 
-        // A link drag over a joint that would refuse it turns danger (#451, #877).
+        // The line itself shows the state, since the finger hides the target (#920): dashed while
+        // free, solid when it will attach, and dashed danger with a crossed ring when refused (#451,
+        // #877). It goes over the creature, since a refused link lies on the link already there.
         var refused = _gestures.RefusedTargetNodeId;
         var from = NodeById(start);
         var target = (_gestures.BeamTargetNodeId ?? refused) is { } id ? NodeById(id) : null;
         var to = target?.Position ?? end;
-        var color = refused is null ? Theme.SelectionGlow : Theme.Danger;
         // Like a beam, it starts at the joint's ring, and ends at the target's ring or the finger.
-        if (JointDrawing.BeamSpan(Theme.JointRingWidth, ToGodot(from.Position), (float)_viewModel.NodeRadius(from.Id), ToGodot(to), (float)(target is null ? 0 : _viewModel.NodeRadius(target.Id))) is (var lineStart, var lineEnd))
+        if (JointDrawing.BeamSpan(Theme.JointRingWidth, ToGodot(from.Position), (float)_viewModel.NodeRadius(from.Id), ToGodot(to), (float)(target is null ? 0 : _viewModel.NodeRadius(target.Id))) is not (var lineStart, var lineEnd))
         {
-            using var pen = ViewPen(this);
-            pen.DashedLine(lineStart, lineEnd, color, Stroke(Theme.BeamWidth), 8);
+            return;
+        }
+
+        using var pen = ViewPen(canvas);
+        var width = Stroke(Theme.BeamWidth);
+        if (refused is not null)
+        {
+            pen.DashedLine(lineStart, lineEnd, Theme.Danger, width, 8);
+            // On a clear disc, so the cross keeps its shape at any angle of the line.
+            var middle = (lineStart + lineEnd) / 2;
+            var mark = Stroke(Theme.MotorSignalWidth);
+            var arm = _refusedMarkRadius * 0.45f;
+            pen.Disc(middle, _refusedMarkRadius, Theme.ArenaBackground);
+            pen.Ring(middle, _refusedMarkRadius, Theme.Danger, mark);
+            pen.Line(middle + new Vector2(-arm, -arm), middle + new Vector2(arm, arm), Theme.Danger, mark);
+            pen.Line(middle + new Vector2(arm, -arm), middle + new Vector2(-arm, arm), Theme.Danger, mark);
+        }
+        else if (target is not null)
+        {
+            pen.Line(lineStart, lineEnd, Theme.SelectionGlow, width);
+        }
+        else
+        {
+            pen.DashedLine(lineStart, lineEnd, Theme.SelectionGlow, width, 8);
         }
     }
 

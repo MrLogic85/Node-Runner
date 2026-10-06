@@ -155,6 +155,14 @@ reference would mislead someone working on that surface.
   and the Beams tool's panel lists Beam, Piston, Spring and Wing. The Parts
   tray's first tab is On a joint, but it opens on the first tab with an
   available part (#887).
+- **The link drag line shows whether it will attach (#920).** The reference
+  draws one line style for every drag. Instead the line is dashed `halo`
+  while over no joint, solid `halo` once it will attach, and dashed `danger`
+  when the joint under it would refuse, with a crossed `danger` ring like a
+  loose joint's at its midpoint. It is drawn over the creature, since a
+  refused link lies on the link already there. The line is all of the
+  feedback, with no haptics: a finger often covers the target ring, so the
+  line must read on its own.
 - **Parts replaces the reference rail's Move label (#706).** The rail starts
   Parts, Beams, Joint, Select. Parts opens the Parts tray when nothing is
   selected. Its glyph is the
