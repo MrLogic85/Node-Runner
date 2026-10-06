@@ -17,6 +17,7 @@
 [ext_resource type="Script" path="res://src/ui/lib/UiPicker.cs" id="20_picker"]
 [ext_resource type="Script" path="res://src/ui/lib/UiCalloutLayer.cs" id="40_callout_layer"]
 [ext_resource type="PackedScene" uid="uid://kk3td5f4uebc" path="res://scenes/ui/UiWorldView.tscn" id="41_world_view"]
+[ext_resource type="Script" path="res://src/ui/lib/UiHintCard.cs" id="42_hint_card"]
 
 [node name="BuildScreen" type="Control"]
 layout_mode = 3
@@ -272,6 +273,50 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
+
+[node name="SettingHintInset" type="MarginContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/CanvasSlot"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 12
+
+[node name="SettingHint" type="PanelContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/CanvasSlot/SettingHintInset"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(240, 0)
+layout_mode = 2
+size_flags_horizontal = 8
+size_flags_vertical = 0
+mouse_filter = 2
+script = ExtResource("42_hint_card")
+
+[node name="Column" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/CanvasSlot/SettingHintInset/SettingHint"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 4
+
+[node name="SettingHintTitle" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/CanvasSlot/SettingHintInset/SettingHint/Column"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+script = ExtResource("12_label")
+TextStyle = 12
+TextColor = 9
+
+[node name="SettingHintBody" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/CanvasSlot/SettingHintInset/SettingHint/Column"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+autowrap_mode = 3
+script = ExtResource("12_label")
+TextStyle = 4
 
 [node name="SidePanel" parent="UiFrame/MarginContainer/Card/Shell/Body" instance=ExtResource("10_side_panel")]
 unique_name_in_owner = true
