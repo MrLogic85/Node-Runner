@@ -120,8 +120,7 @@ density (#820). `docs/UI_DIRECTION.md` → "App icon" owns the design.
 - `main.svg` (192 px): the full icon for Android 7 and
   `application/config/icon`.
 - `foreground.svg` and `background.svg` (432 px): the adaptive layers.
-  `foreground.svg` is also the Android 12+ launch splash, drawn on the Neon
-  `background` like the window behind the first frame (#829).
+  `foreground.svg` is also the Android 12+ launch splash.
 - `monochrome.svg` (432 px): Android 13 themed icons; white only.
 
 `foreground.svg` owns the art; `main.svg` copies it, so change them
