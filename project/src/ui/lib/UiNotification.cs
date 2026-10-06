@@ -11,9 +11,6 @@ public sealed partial class UiNotification : Control
     private const double _returnSeconds = 0.18;
     private const double _dismissSeconds = 0.22;
 
-    public bool HasNotification => _card is not null;
-    public int PendingCount => _queue.Count;
-
     /// <summary>Scene-tree group UiDialog calls when a modal opens or closes.</summary>
     public const string Group = "ui_notifications";
 

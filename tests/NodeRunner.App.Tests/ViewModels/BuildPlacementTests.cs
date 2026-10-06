@@ -560,15 +560,15 @@ public sealed class BuildPlacementTests
         build.PlaceNode(new Vector2D(0, 0));
         build.PlaceNode(new Vector2D(100, 0));
         build.PlaceNode(new Vector2D(200, 0));
-        build.ConnectBeam(1, 2);
-        build.ConnectBeam(2, 3);
+        build.ConnectLink(BuildLink.Beam, 1, 2);
+        build.ConnectLink(BuildLink.Beam, 2, 3);
         return build;
     }
 
     private static BuildViewModel BeamAndPiston()
     {
         var build = ThreeNodes();
-        build.ConnectBeam(1, 2);
+        build.ConnectLink(BuildLink.Beam, 1, 2);
         build.ConnectLink(BuildLink.Piston, 2, 3).ShouldBe(5);
         return build;
     }
@@ -576,7 +576,7 @@ public sealed class BuildPlacementTests
     private static BuildViewModel BeamAndSpring()
     {
         var build = ThreeNodes();
-        build.ConnectBeam(1, 2);
+        build.ConnectLink(BuildLink.Beam, 1, 2);
         build.ConnectLink(BuildLink.Spring, 2, 3).ShouldBe(5);
         return build;
     }

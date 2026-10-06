@@ -50,10 +50,6 @@ public sealed class BuildPresentationViewModel
 
     public ToolPanelPresentation ToolPanel => CreateToolPanel();
 
-    public int NodeCount => _build.Nodes.Count;
-
-    public int SensorCount => _build.Sensors.Count;
-
     /// <summary>The Reset training dialog body (#687). Copy sits beside Reset in the overflow, so it is offered.</summary>
     public UiText ResetTrainingWarning =>
         UiText.Counted(

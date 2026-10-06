@@ -595,7 +595,7 @@ public sealed class BuildViewModelTests
 
 
     [Fact]
-    public void ConnectBeam_DifferentNodes_CreatesBeam()
+    public void ConnectLink_Beam_DifferentNodes_CreatesBeam()
     {
         var viewModel = new BuildViewModel();
         var a = viewModel.PlaceNode(new Vector2D(0, 0));
@@ -603,7 +603,7 @@ public sealed class BuildViewModelTests
         var raised = false;
         viewModel.AnatomyChanged += (_, _) => raised = true;
 
-        viewModel.ConnectBeam(a, b);
+        viewModel.ConnectLink(BuildLink.Beam, a, b);
 
         viewModel.Beams.Count.ShouldBe(1);
         viewModel.Beams[0].NodeA.ShouldBe(a);
@@ -612,31 +612,31 @@ public sealed class BuildViewModelTests
     }
 
     [Fact]
-    public void ConnectBeam_SameNode_CreatesNoBeam()
+    public void ConnectLink_Beam_SameNode_CreatesNoBeam()
     {
         var viewModel = new BuildViewModel();
         var a = viewModel.PlaceNode(new Vector2D(0, 0));
 
-        viewModel.ConnectBeam(a, a).ShouldBeFalse();
+        viewModel.ConnectLink(BuildLink.Beam, a, a).ShouldBeNull();
 
         viewModel.Beams.Count.ShouldBe(0);
     }
 
     [Fact]
-    public void ConnectBeam_DuplicateBeam_RefusesInsteadOfThrowing()
+    public void ConnectLink_Beam_DuplicateBeam_RefusesInsteadOfThrowing()
     {
         var viewModel = new BuildViewModel();
         var a = viewModel.PlaceNode(new Vector2D(0, 0));
         var b = viewModel.PlaceNode(new Vector2D(10, 0));
-        viewModel.ConnectBeam(a, b);
+        viewModel.ConnectLink(BuildLink.Beam, a, b);
 
-        viewModel.ConnectBeam(a, b).ShouldBeFalse();
+        viewModel.ConnectLink(BuildLink.Beam, a, b).ShouldBeNull();
 
         viewModel.Beams.Count.ShouldBe(1);
     }
 
     [Fact]
-    public void ConnectBeam_WhenLocked_CreatesNoBeam()
+    public void ConnectLink_Beam_WhenLocked_CreatesNoBeam()
     {
         var viewModel = new BuildViewModel();
         viewModel.Load(
@@ -644,7 +644,7 @@ public sealed class BuildViewModelTests
             moveOnly: true);
 
         viewModel.CanConnectLink(BuildLink.Beam, 1, 2, out _).ShouldBeFalse();
-        viewModel.ConnectBeam(1, 2).ShouldBeFalse();
+        viewModel.ConnectLink(BuildLink.Beam, 1, 2).ShouldBeNull();
 
         viewModel.Beams.ShouldBeEmpty();
     }
@@ -668,7 +668,7 @@ public sealed class BuildViewModelTests
         var viewModel = new BuildViewModel();
         var a = viewModel.PlaceNode(new Vector2D(0, 0));
         var b = viewModel.PlaceNode(new Vector2D(10, 0));
-        viewModel.ConnectBeam(a, b);
+        viewModel.ConnectLink(BuildLink.Beam, a, b);
 
         var found = viewModel.TryFindBeamNear(new Vector2D(5, 0), 2, out var beamId);
 
@@ -682,7 +682,7 @@ public sealed class BuildViewModelTests
         var viewModel = new BuildViewModel();
         var a = viewModel.PlaceNode(new Vector2D(0, 0));
         var b = viewModel.PlaceNode(new Vector2D(10, 0));
-        viewModel.ConnectBeam(a, b);
+        viewModel.ConnectLink(BuildLink.Beam, a, b);
 
         var found = viewModel.TryFindBeamNear(new Vector2D(5, 50), 2, out var beamIndex);
 
@@ -696,7 +696,7 @@ public sealed class BuildViewModelTests
         var viewModel = new BuildViewModel();
         var a = viewModel.PlaceNode(new Vector2D(0, 0));
         var b = viewModel.PlaceNode(new Vector2D(10, 0));
-        viewModel.ConnectBeam(a, b);
+        viewModel.ConnectLink(BuildLink.Beam, a, b);
         viewModel.ToggleSelected(new(CreatureElementKind.Node, a));
         var raisedFor = new List<string?>();
         var anatomyChanged = false;
@@ -721,7 +721,7 @@ public sealed class BuildViewModelTests
         var viewModel = new BuildViewModel();
         var a = viewModel.PlaceNode(new Vector2D(0, 0));
         var b = viewModel.PlaceNode(new Vector2D(10, 0));
-        viewModel.ConnectBeam(a, b);
+        viewModel.ConnectLink(BuildLink.Beam, a, b);
         viewModel.SelectOnly(CreatureElementKind.Beam, viewModel.Beams[0].Id);
         var raisedFor = new List<string?>();
         var anatomyChanged = false;
@@ -744,7 +744,7 @@ public sealed class BuildViewModelTests
         var viewModel = new BuildViewModel();
         var a = viewModel.PlaceNode(new Vector2D(0, 0));
         var b = viewModel.PlaceNode(new Vector2D(10, 0));
-        viewModel.ConnectBeam(a, b);
+        viewModel.ConnectLink(BuildLink.Beam, a, b);
         viewModel.SelectOnly(CreatureElementKind.Beam, viewModel.Beams[0].Id);
 
         viewModel.DeleteSelectedParts();
@@ -903,7 +903,7 @@ public sealed class BuildViewModelTests
         var viewModel = new BuildViewModel();
         var a = viewModel.PlaceNode(new Vector2D(0, 0));
         var b = viewModel.PlaceNode(new Vector2D(90, 0));
-        viewModel.ConnectBeam(a, b);
+        viewModel.ConnectLink(BuildLink.Beam, a, b);
 
         var canLeave = viewModel.TryLeave(out var creature, out var errors);
 
@@ -952,7 +952,7 @@ public sealed class BuildViewModelTests
             new CanvasNote(CanvasNoteKind.Danger, new CreatureElementSelection(CreatureElementKind.Node, second), UiText.Plain("Not connected")),
         ]);
 
-        viewModel.ConnectBeam(first, second).ShouldBeTrue();
+        viewModel.ConnectLink(BuildLink.Beam, first, second).ShouldNotBeNull();
 
         viewModel.CanvasNotes().ShouldBeEmpty();
     }
@@ -968,7 +968,7 @@ public sealed class BuildViewModelTests
 
         viewModel.CanvasNotes().ShouldBe([NotConnected(2), NotConnected(4)]);
 
-        viewModel.ConnectBeam(2, 4).ShouldBeTrue();
+        viewModel.ConnectLink(BuildLink.Beam, 2, 4).ShouldNotBeNull();
 
         viewModel.CanvasNotes().ShouldBeEmpty();
     }
@@ -979,11 +979,11 @@ public sealed class BuildViewModelTests
         var viewModel = new BuildViewModel();
         viewModel.Load(TwoPieces());
         viewModel.ShowTrainingBlockers();
-        viewModel.ConnectBeam(2, 4).ShouldBeTrue();
+        viewModel.ConnectLink(BuildLink.Beam, 2, 4).ShouldNotBeNull();
 
         var a = viewModel.PlaceNode(new Vector2D(600, 0));
         var b = viewModel.PlaceNode(new Vector2D(800, 0));
-        viewModel.ConnectBeam(a, b).ShouldBeTrue();
+        viewModel.ConnectLink(BuildLink.Beam, a, b).ShouldNotBeNull();
 
         viewModel.CanvasNotes().ShouldBeEmpty();
         viewModel.ShowTrainingBlockers();

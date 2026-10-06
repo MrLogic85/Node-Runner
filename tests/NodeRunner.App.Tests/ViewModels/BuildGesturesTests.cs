@@ -768,7 +768,7 @@ public class BuildGesturesTests
     public void Beam_DragOverAnAlreadyJoinedJoint_DoesNotSnapToIt()
     {
         var (build, gestures) = ThreeLooseJoints(BuildTool.Beam);
-        build.ConnectBeam(1, 2);
+        build.ConnectLink(BuildLink.Beam, 1, 2);
 
         gestures.Press(new Vector2D(0, 0));
         gestures.Drag(new Vector2D(100, 0));
@@ -1277,7 +1277,7 @@ public class BuildGesturesTests
     public void Select_TapOnABeamUnderTheMoveHandle_AddsIt()
     {
         var (build, gestures) = ThreeLooseJoints(BuildTool.Select);
-        build.ConnectBeam(1, 2);
+        build.ConnectLink(BuildLink.Beam, 1, 2);
         build.ReplaceSelection([1, 2]);
 
         Tap(gestures, _moveHandle);
@@ -1750,7 +1750,7 @@ public class BuildGesturesTests
         var build = new BuildViewModel();
         build.PlaceNode(new Vector2D(0, 0));
         build.PlaceNode(new Vector2D(100, 0));
-        build.ConnectBeam(1, 2);
+        build.ConnectLink(BuildLink.Beam, 1, 2);
         return (build, new BuildGestures(build));
     }
 

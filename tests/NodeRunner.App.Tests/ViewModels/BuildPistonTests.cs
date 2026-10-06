@@ -39,7 +39,7 @@ public sealed class BuildPistonTests
     public void Drag_OntoAJointABeamAlreadyJoins_ShowsTheBeam_AndReplacesItOnRelease()
     {
         var (build, gestures) = ThreeLooseJoints();
-        build.ConnectBeam(1, 2);
+        build.ConnectLink(BuildLink.Beam, 1, 2);
         var beam = build.Beams.Single().Id;
 
         gestures.Press(new Vector2D(0, 0));
@@ -60,7 +60,7 @@ public sealed class BuildPistonTests
     public void Drag_OntoAJointWhoseBeamHasASensor_IsRefusedWithWhy()
     {
         var (build, gestures) = ThreeLooseJoints();
-        build.ConnectBeam(1, 2);
+        build.ConnectLink(BuildLink.Beam, 1, 2);
         build.PlacePart(BuildPart.Accelerometer, new CreatureElementSelection(CreatureElementKind.Beam, build.Beams.Single().Id));
 
         gestures.Press(new Vector2D(0, 0));
@@ -136,7 +136,7 @@ public sealed class BuildPistonTests
         var (build, _) = ThreeLooseJoints();
         build.ConnectLink(BuildLink.Piston, 1, 2);
 
-        build.ConnectBeam(1, 2);
+        build.ConnectLink(BuildLink.Beam, 1, 2);
 
         build.Beams.ShouldBeEmpty();
     }
@@ -147,7 +147,7 @@ public sealed class BuildPistonTests
         var (build, gestures) = ThreeLooseJoints();
         var below = build.PlaceNode(new Vector2D(50, -60));
         var above = build.PlaceNode(new Vector2D(50, 60));
-        build.ConnectBeam(below, above).ShouldBeTrue();
+        build.ConnectLink(BuildLink.Beam, below, above).ShouldNotBeNull();
         var link = build.ConnectLink(BuildLink.Piston, 1, 2)!.Value;
         build.ActiveTool = BuildTool.Parts;
 
