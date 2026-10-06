@@ -31,7 +31,7 @@ public sealed class CreatureBuilder
 
     public static UiText ServoNeedsTwoLinksReason { get; } = UiText.Plain("A Servo needs two links at its joint");
 
-    /// <summary>Why another beam, a Piston or a Spring cannot join two nodes a beam already holds rigid (#451, #453, #877).</summary>
+    /// <summary>Why another beam cannot join two nodes a beam already holds rigid (#877); a Piston or Spring replaces it instead (#849).</summary>
     public static UiText BeamJoinsTheseNodesReason { get; } = UiText.Plain("A beam already joins these nodes");
 
     /// <summary>Why a beam or another link cannot join two nodes a Piston already links.</summary>
@@ -39,6 +39,9 @@ public sealed class CreatureBuilder
 
     /// <summary>Why a beam or another link cannot join two nodes a Spring already links (#453).</summary>
     public static UiText SpringJoinsTheseNodesReason { get; } = UiText.Plain("These nodes already have a spring");
+
+    /// <summary>Why a Piston or Spring cannot replace the beam between two nodes (#849): the sensor on it is never deleted silently.</summary>
+    public static UiText SensorSitsOnThisBeamReason { get; } = UiText.Plain("A sensor sits on this beam");
 
     private readonly List<NodeDef> _nodes = [];
     private readonly List<BeamDef> _beams = [];
@@ -153,8 +156,8 @@ public sealed class CreatureBuilder
 
     /// <summary>
     /// Whether <see cref="AddPiston"/> would accept this pair (#451): two distinct, existing nodes
-    /// with no beam between them, which would hold them rigid, and no link yet; if not,
-    /// <paramref name="reason"/> says why.
+    /// with no link yet. A beam between them is replaced (#849), unless a sensor sits on it; if
+    /// not, <paramref name="reason"/> says why.
     /// </summary>
     public bool CanAddPiston(int nodeIdA, int nodeIdB, [NotNullWhen(false)] out UiText? reason)
     {
@@ -164,13 +167,13 @@ public sealed class CreatureBuilder
             return false;
         }
 
-        reason = LinkBlockedReason(nodeIdA, nodeIdB);
+        reason = MovingLinkBlockedReason(nodeIdA, nodeIdB);
         return reason is null;
     }
 
     /// <summary>
     /// Whether <see cref="AddSpring"/> would accept this pair (#453): the same rules as a Piston's,
-    /// two distinct, existing nodes with no beam and no link between them; if not,
+    /// two distinct, existing nodes with no link between them, replacing a beam without a sensor; if not,
     /// <paramref name="reason"/> says why.
     /// </summary>
     public bool CanAddSpring(int nodeIdA, int nodeIdB, [NotNullWhen(false)] out UiText? reason)
@@ -181,13 +184,23 @@ public sealed class CreatureBuilder
             return false;
         }
 
-        reason = LinkBlockedReason(nodeIdA, nodeIdB);
+        reason = MovingLinkBlockedReason(nodeIdA, nodeIdB);
         return reason is null;
     }
 
     // Two nodes hold one link at most, and a beam between them would hold any link rigid.
     private UiText? LinkBlockedReason(int nodeIdA, int nodeIdB) =>
-        _beams.Any(beam => IsSamePair(beam, nodeIdA, nodeIdB)) ? BeamJoinsTheseNodesReason : LinkReason(nodeIdA, nodeIdB);
+        BeamBetween(nodeIdA, nodeIdB) is not null ? BeamJoinsTheseNodesReason : LinkReason(nodeIdA, nodeIdB);
+
+    // A Piston or Spring takes a beam's place instead (#849), but never a sensor's beam.
+    private UiText? MovingLinkBlockedReason(int nodeIdA, int nodeIdB) =>
+        BeamBetween(nodeIdA, nodeIdB) is { } beamId
+            ? _sensors.Any(sensor => sensor.BeamId == beamId) ? SensorSitsOnThisBeamReason : null
+            : LinkReason(nodeIdA, nodeIdB);
+
+    /// <summary>The beam joining two nodes, or null; a Piston or Spring placed there replaces it (#849).</summary>
+    public int? BeamBetween(int nodeIdA, int nodeIdB) =>
+        _beams.FirstOrDefault(beam => IsSamePair(beam, nodeIdA, nodeIdB))?.Id;
 
     // Why the link already between these nodes stops another part; null when there is none.
     private UiText? LinkReason(int nodeIdA, int nodeIdB) =>
@@ -195,7 +208,7 @@ public sealed class CreatureBuilder
         : _springs.Any(spring => IsSamePair(spring.NodeA, spring.NodeB, nodeIdA, nodeIdB)) ? SpringJoinsTheseNodesReason
         : null;
 
-    /// <summary>Adds a Piston between two nodes with the default settings and returns its id; see <see cref="CanAddPiston"/>.</summary>
+    /// <summary>Adds a Piston between two nodes with the default settings, in place of a beam there (#849), and returns its id; see <see cref="CanAddPiston"/>.</summary>
     public int AddPiston(int nodeIdA, int nodeIdB)
     {
         ValidateNodeId(nodeIdA);
@@ -207,10 +220,11 @@ public sealed class CreatureBuilder
 
         var id = AllocatePartId();
         _pistons.Add(new PistonDef(id, nodeIdA, nodeIdB));
+        ReplaceBeamWith(nodeIdA, nodeIdB, id);
         return id;
     }
 
-    /// <summary>Adds a Spring between two nodes with the default settings and returns its id; see <see cref="CanAddSpring"/>.</summary>
+    /// <summary>Adds a Spring between two nodes with the default settings, in place of a beam there (#849), and returns its id; see <see cref="CanAddSpring"/>.</summary>
     public int AddSpring(int nodeIdA, int nodeIdB)
     {
         ValidateNodeId(nodeIdA);
@@ -222,7 +236,30 @@ public sealed class CreatureBuilder
 
         var id = AllocatePartId();
         _springs.Add(new SpringDef(id, nodeIdA, nodeIdB));
+        ReplaceBeamWith(nodeIdA, nodeIdB, id);
         return id;
+    }
+
+    // The new link takes the beam's place (#849) and its Servo roles: a link change, so such a Servo gets a new id.
+    private void ReplaceBeamWith(int nodeIdA, int nodeIdB, int linkId)
+    {
+        if (BeamBetween(nodeIdA, nodeIdB) is not { } beamId)
+        {
+            return;
+        }
+
+        _beams.RemoveAt(BeamIndexOf(beamId));
+        for (var i = 0; i < _servos.Count; i++)
+        {
+            var servo = _servos[i];
+            if (servo.FixedLinkId == beamId || servo.TargetLinkId == beamId)
+            {
+                _servos[i] = servo.WithLinks(
+                    servo.FixedLinkId == beamId ? linkId : servo.FixedLinkId,
+                    servo.TargetLinkId == beamId ? linkId : servo.TargetLinkId,
+                    AllocatePartId());
+            }
+        }
     }
 
     /// <summary>The settings part <paramref name="partId"/> has (#704), in panel order; a joint and a beam have none.</summary>

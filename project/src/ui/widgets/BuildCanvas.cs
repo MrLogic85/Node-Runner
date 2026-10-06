@@ -32,6 +32,9 @@ public partial class BuildCanvas : Node2D
     // The loose-joint style mark a refused link drag shows at its line's middle (#920).
     private const float _refusedMarkRadius = 12;
 
+    // The dash of a free link drag line (#920) and of the outline round a beam it will replace (#849).
+    private const float _linkPreviewDash = 8;
+
     // The reference's Select frame and box: dashes 5 on 4 off, and 10-square corners rounded 2.
     private const float _frameDash = 5;
     private const float _frameGap = 4;
@@ -674,6 +677,8 @@ public partial class BuildCanvas : Node2D
             return;
         }
 
+        DrawReplacedBeam(canvas);
+
         // The line itself shows the state, since the finger hides the target (#920): dashed while
         // free, solid when it will attach, and dashed danger with a crossed ring when refused (#451,
         // #877). It goes over the creature, since a refused link lies on the link already there.
@@ -691,7 +696,7 @@ public partial class BuildCanvas : Node2D
         var width = Stroke(Theme.BeamWidth);
         if (refused is not null)
         {
-            pen.DashedLine(lineStart, lineEnd, Theme.Danger, width, 8);
+            pen.DashedLine(lineStart, lineEnd, Theme.Danger, width, _linkPreviewDash);
             // On a clear disc, so the cross keeps its shape at any angle of the line.
             var middle = (lineStart + lineEnd) / 2;
             var mark = Stroke(Theme.MotorSignalWidth);
@@ -707,8 +712,32 @@ public partial class BuildCanvas : Node2D
         }
         else
         {
-            pen.DashedLine(lineStart, lineEnd, Theme.SelectionGlow, width, 8);
+            pen.DashedLine(lineStart, lineEnd, Theme.SelectionGlow, width, _linkPreviewDash);
         }
+    }
+
+    // A Piston or Spring dropped now replaces the beam on its pair (#849): a dashed outline at the
+    // selection's offset says so, under the line that will take its place.
+    private void DrawReplacedBeam(CanvasItem canvas)
+    {
+        if (_viewModel is null || _gestures?.ReplacedBeamId is not { } beamId)
+        {
+            return;
+        }
+
+        var beam = _viewModel.Beams[_viewModel.BeamIndexOf(beamId)];
+        var a = NodeById(beam.NodeA);
+        var b = NodeById(beam.NodeB);
+        if (JointDrawing.BeamSpan(Theme.JointRingWidth, ToGodot(a.Position), (float)_viewModel.NodeRadius(a.Id), ToGodot(b.Position), (float)_viewModel.NodeRadius(b.Id)) is not (var start, var end))
+        {
+            return;
+        }
+
+        using var pen = ViewPen(canvas);
+        var across = (end - start).Normalized().Orthogonal() * Theme.SelectedBeamOffset;
+        var width = Stroke(Theme.SelectedBeamLineWidth);
+        pen.DashedLine(start + across, end + across, Theme.Beam, width, _linkPreviewDash);
+        pen.DashedLine(start - across, end - across, Theme.Beam, width, _linkPreviewDash);
     }
 
     private void DrawBeamEndRings(CanvasItem canvas)

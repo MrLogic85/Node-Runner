@@ -163,7 +163,9 @@ reference would mislead someone working on that surface.
   loose joint's at its midpoint. It is drawn over the creature, since a
   refused link lies on the link already there. The line is all of the
   feedback, with no haptics: a finger often covers the target ring, so the
-  line must read on its own.
+  line must read on its own. A Piston or Spring that will replace a beam
+  (#849) also outlines that beam with two dashed `line-strong` lines at
+  the selection's offset, under the drag line.
 - **Parts replaces the reference rail's Move label (#706).** The rail starts
   Parts, Links, Joint, Select. Parts opens the Parts tray when nothing is
   selected. Its glyph is the
