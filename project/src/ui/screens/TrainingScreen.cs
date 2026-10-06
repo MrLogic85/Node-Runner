@@ -160,7 +160,7 @@ public partial class TrainingScreen : Control
     private void OnTrainingChanged(object? sender, PropertyChangedEventArgs args) => ApplyGeneration();
 
     private void OnSignalFlowChanged(object? sender, PropertyChangedEventArgs args) =>
-        ApplySignalFlow(counts: args.PropertyName != nameof(SignalFlowPresentationViewModel.DistanceNote));
+        ApplySignalFlow(counts: args.PropertyName is null);
 
     private void Apply()
     {
@@ -203,5 +203,8 @@ public partial class TrainingScreen : Control
         }
 
         GetNode<UiStageCard>("%DistanceStage").NoteSource = UiTextTranslation.Source(signalFlow.DistanceNote);
+        var timeLeft = GetNode<UiValueRow>("%TimeLeftRow");
+        timeLeft.ValueSource = UiTextTranslation.Source(signalFlow.TimeLeft);
+        GetNode<Control>("%TimeLeft").Visible = timeLeft.ValueSource is not null;
     }
 }

@@ -274,6 +274,14 @@ reference would mislead someone working on that surface.
   Training column has no header and cannot collapse. Instead it is a
   `UiSidePanel` titled "Status" that collapses like Build's, so both
   screens share one panel. Owner decision.
+- **Time left is a value row above the stages (#715).** The reference
+  shows no run time. Instead the Status panel opens with a `UiValueRow`
+  "Time left", whole seconds rounded up, such as "20 s", for the
+  followed shadow's run. It sits above Senses, not in the stage chain,
+  because it is about the whole run, and is not in the shadow strip
+  caption (#387). It starts again at the full run length every
+  generation, stops while paused, and is hidden in Simulate, whose run has no
+  time limit. Owner decision.
 - **Only the Brain stage looks like a button (#847).** In the reference
   every signal-flow stage card glows and expands on tap. Until #196 makes
   them all tappable, only Brain (which opens BrainFocus) reads as one: it

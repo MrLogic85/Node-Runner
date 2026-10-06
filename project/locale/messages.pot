@@ -777,6 +777,10 @@ msgid "Three rays see how near the ground is. Drag the round handle to aim it."
 msgstr ""
 
 #: project/scenes/screens/TrainingScreen.tscn
+msgid "Time left"
+msgstr ""
+
+#: project/scenes/screens/TrainingScreen.tscn
 msgid "Too many shadows!"
 msgstr ""
 
@@ -1003,6 +1007,7 @@ msgstr[0] ""
 msgstr[1] ""
 
 #: libs/NodeRunner.App/ViewModels/PartParameters.cs
+#: libs/NodeRunner.App/ViewModels/SignalFlowPresentationViewModel.cs
 #: libs/NodeRunner.App/ViewModels/TrainSetupPresentationViewModel.cs
 msgid "{0} s"
 msgstr ""

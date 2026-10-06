@@ -160,7 +160,7 @@ public partial class TrainingHost : Node, IRoutedScene
 
         _signalRefreshElapsed = 0;
         _followed.ReadInputs(_brainInputs);
-        _signalFlow.Update(_brainInputs.Count, _followed.Brain is null ? 0 : _followed.PistonCount, FollowedDistance);
+        _signalFlow.Update(_brainInputs.Count, _followed.Brain is null ? 0 : _followed.PistonCount, FollowedDistance, FollowedSecondsLeft);
         _brainFocus.Update(_followed.Brain, _brainInputs);
     }
 
@@ -423,6 +423,10 @@ public partial class TrainingHost : Node, IRoutedScene
         playback.StartTrial(_creature);
         _playback = playback;
     }
+
+    // Simulate's one run has no time limit, so it has no time left to show.
+    private double FollowedSecondsLeft =>
+        _evolver?.FollowedTrialTicksLeft is { } ticks ? (double)ticks / Engine.PhysicsTicksPerSecond : double.NaN;
 
     private double FollowedDistance =>
         _evolver?.FollowedTrialDistance ?? (_playback is { IsRunning: true } playback ? playback.Measured.FrontDistance : double.NaN);
