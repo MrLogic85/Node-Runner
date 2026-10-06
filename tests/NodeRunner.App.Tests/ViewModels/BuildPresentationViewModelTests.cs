@@ -104,6 +104,24 @@ public sealed class BuildPresentationViewModelTests
     }
 
     [Fact]
+    public void PartPickerPresentation_LinkAt_ReturnsNothingOutsideTheOptions()
+    {
+        var picker = new PartPickerPresentation(
+            UiText.Plain("Fixed link"),
+            [4],
+            [UiText.Format("Beam {0}", 1)],
+            SelectedIndex: null,
+            IsLocked: false,
+            Note: null,
+            [CreatureElementKind.Beam],
+            UiText.Plain("Pick a Fixed link"));
+
+        picker.LinkIdAt(0).ShouldBe(4);
+        picker.LinkIdAt(-1).ShouldBeNull();
+        picker.LinkKindAt(0).ShouldBe(CreatureElementKind.Beam);
+    }
+
+    [Fact]
     public void EditMode_LocksTopologyTools()
     {
         var build = new BuildViewModel();
@@ -469,7 +487,7 @@ public sealed class BuildPresentationViewModelTests
     {
         var build = new BuildViewModel();
         build.Load(PistonCreature());
-        build.ReplaceSelection(new PartSet(new HashSet<int> { 1 }, new HashSet<int>(), new HashSet<int>(), new HashSet<int> { 301 }, new HashSet<int>()));
+        build.ReplaceSelection(new PartSet(new HashSet<int> { 1 }, new HashSet<int>(), new HashSet<int>(), new HashSet<int>(), new HashSet<int> { 301 }, new HashSet<int>()));
 
         var selection = new BuildPresentationViewModel(build).Selection!;
 

@@ -32,7 +32,7 @@ build; the *shape* below should stay stable.
 ┌─────────────────────────────────────────────────────────────────┐
 │                     Mechanics (pure C#)                          │
 │                   libs/NodeRunner.Mechanics/                     │
-│   Accelerometer · CameraRays · Piston · RigidTriangles           │
+│   Accelerometer · CameraRays · Servo · Piston · RigidTriangles   │
 └─────────────────────────────────────────────────────────────────┘
                           ▲                │
                           │                ▼
@@ -102,7 +102,7 @@ Node Runner/
 ├── .editorconfig                   # style rules
 ├── libs/                           # pure C#, no Godot
 │   ├── NodeRunner.Domain/          # data records, enums, invariants
-│   ├── NodeRunner.Mechanics/       # pure part physics: sensors, pistons, springs
+│   ├── NodeRunner.Mechanics/       # pure part physics: sensors, servos, pistons, springs
 │   ├── NodeRunner.ML/              # neural nets, GA, backprop
 │   └── NodeRunner.App/             # viewmodels, services, repositories
 ├── project/                        # Godot project (targets net9.0)
@@ -231,8 +231,9 @@ public sealed record BeamDef(int Id, int NodeA, int NodeB, string? Name = null);
 public sealed record SensorDef(int Id, int BeamId, SensorKind Kind, string? Name = null, double? Aim = null); // beam id; Aim: Camera only
 // SensorDef.DefaultAim(nodeA, nodeB): a new Camera's level, world-forward aim
 public sealed record PistonDef(int Id, int NodeA, int NodeB, string? Name = null, double Strength = 15000, double Stroke = 0.3, double MaxSpeed = 200, double RiseTime = 0.2); // node ids
+public sealed record ServoDef(int Id, int NodeId, int? FixedLinkId = null, int? TargetLinkId = null, string? Name = null, double Strength = 500000, double Range = π, double Start = 0.5, double MaxSpeed = 2π, double RiseTime = 0.2); // joint node id, link ids (null = role missing); JointRadius = 27
 public sealed record SpringDef(int Id, int NodeA, int NodeB, string? Name = null, double Stiffness = 400, double Damping = 10); // node ids; Damping in N·s/m
-public sealed record CreatureDef(NodeDef[] Nodes, BeamDef[] Beams, SensorDef[] Sensors, PistonDef[] Pistons, SpringDef[] Springs, int NextPartId);
+public sealed record CreatureDef(NodeDef[] Nodes, BeamDef[] Beams, SensorDef[] Sensors, ServoDef[] Servos, PistonDef[] Pistons, SpringDef[] Springs, int NextPartId);
 
 public static class SensorPicture   // a sensor picture's tap area at its beam's middle, sized per kind
 {
@@ -274,14 +275,45 @@ public static class Piston          // force toward the brain's target length, p
     public static double NextForce(PistonDef piston, double builtLength, double length, double speed,
         double position, double strength, double force, double step); // force builds up over RiseTime
 }
+
+public static class Servo           // torque toward a target angle, pure math
+{
+    public static ServoMotor NextMotor(ServoDef servo, double builtAngle, double angle, double speed,
+        double position, double strength, ServoMotor previous, double step, double effectiveInertia); // push + holding torque
+    public static double EndStopTorque(ServoDef servo, double builtAngle, double angle, double speed,
+        double effectiveInertia, double step);                                                        // soft stop outside the range
+    public static double LinkInertia(Vector2D joint, Vector2D far, double jointMass, double farMass);
+    public static ServoCouple CoupleForTorque(Vector2D joint, Vector2D far, double torque);
+}
 ```
 
 Note: `Vector2D` in `NodeRunner.Domain` is our own `readonly record struct`,
 **not** `Godot.Vector2`. The creature layer converts at its boundary.
 
-See `docs/CREATURE_MODEL.md` for the full Node/Beam/Sensor/Piston/Spring model
+See `docs/CREATURE_MODEL.md` for the full Node/Beam/Sensor/Servo/Piston/Spring model
 these types encode — including why joints are passive, and why sensors sit
 on beams and are not the neural model.
+
+The model stays engine-agnostic: a Servo names two links at a joint and the
+mechanics library computes counter-clockwise-on-screen angles, torque and the
+endpoint force couple. The Godot creature layer realises that uniformly for
+every link kind by applying equal-and-opposite force couples to the joint body
+and each link's far-node body, plus a soft end-stop torque outside the Servo
+range. The force couple clamps its lever arm to a minimum so a compressed
+Spring cannot create unbounded forces. Because the soft stop and motor are
+integrated explicitly, the creature layer estimates the live effective inertia
+from the actual bodies (`Servo.LinkInertia`: the end masses, the link length
+and the clamped lever arm) and asks Mechanics to keep the end-stop damping and
+stiffness and the motor's one-step push below the explicit-step stability
+limits. The motor's holding part is not capped, so a Servo still holds a load
+up to its strength. Both motor parts scale with that estimate, which only
+counts the link's end bodies; a planted leg or the bodies beyond the far joint
+make the real inertia much larger. The holding part gathers slowly enough that
+the motor still settles at about 30 times the estimate (#452 review). We do not use a Godot
+angular joint for this because a Piston slides on a `GrooveJoint2D` and a
+Spring has no body of its own; the endpoint-force approach is the one
+representation that works for Beams, Pistons and Springs without leaking
+link-kind branches into the model.
 
 ## The tick
 
@@ -289,14 +321,17 @@ At 60 Hz (`_physics_process`), for the creature currently under evaluation:
 
 1. **Sense.** Each sensor part reads its values in part order (an
    accelerometer steps its proof mass and reads 2, along and across its
-   beam; a camera reads its 3 rays' nearness); each Piston reads 2 (length, speed) →
+   beam; a camera reads its 3 rays' nearness); each Servo reads 2 (angle,
+   speed), and each Piston reads 2 (length, speed) →
    `double[]`, in the fixed order documented in `docs/CREATURE_MODEL.md`.
 2. **Think.** `Brain.Forward(input, output, scratchA, scratchB)` writes
-   each output port's value (a Piston's position and strength), without
-   per-tick allocations.
-3. **Act.** `PistonLink.Drive(position, strength, step)` pushes its two
-   nodes toward the target length (`Piston.NextForce`, from the force it
-   pushed with last tick).
+   each output port's value (a Servo's angle and strength, then a Piston's
+   position and strength), without per-tick allocations.
+3. **Act.** `ServoJoint.Drive(position, strength, step)` applies endpoint
+   force couples to its Fixed and Target links, then
+   `PistonLink.Drive(position, strength, step)` pushes its two nodes toward
+   the target length (`Piston.NextForce`, from the force it pushed with last
+   tick).
 4. **Score.** `TrialMeasurement` records this trial's centre distance (the
    fitness), front distance (shown), top speed and elevation; see
    `docs/TRAINING_LOOP.md` → Trial.

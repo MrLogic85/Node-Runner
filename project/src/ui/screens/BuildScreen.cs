@@ -1,6 +1,7 @@
 using Godot;
 using NodeRunner.App.Builders;
 using NodeRunner.App.ViewModels;
+using NodeRunner.Domain;
 using NodeRunner.Ui.Lib;
 using NodeRunner.Ui.Widgets;
 
@@ -21,8 +22,8 @@ public partial class BuildScreen : Control
     private bool _subscribedToPresentation;
     private string? _shownPartGroup;
     private int _shownServoPickerId;
-    private int[] _fixedPickerLinkIds = [];
-    private int[] _targetPickerLinkIds = [];
+    private PartPickerPresentation? _fixedPicker;
+    private PartPickerPresentation? _targetPicker;
 
     [Signal]
     public delegate void BackRequestedEventHandler();
@@ -562,41 +563,51 @@ public partial class BuildScreen : Control
         container.Visible = pickers.Count > 0;
         fixedPicker.Visible = pickers.Count > 0;
         targetPicker.Visible = pickers.Count > 1;
-        _fixedPickerLinkIds = [];
-        _targetPickerLinkIds = [];
+        _fixedPicker = null;
+        _targetPicker = null;
 
         for (var index = 0; index < pickers.Count; index++)
         {
             var presentation = pickers[index];
             var fixedRole = index == 0;
             var picker = fixedRole ? fixedPicker : targetPicker;
-            picker.LabelText = UiTextTranslation.Source(presentation.Label)();
-            picker.Options = presentation.Options.Select(option =>
-                new UiPickerOption(UiTextTranslation.Source(option)(), UiIconId.PartBeam)).ToArray();
-            picker.SelectedIndex = presentation.SelectedIndex;
-            picker.Disabled = presentation.IsLocked;
-            picker.BelowText = UiTextTranslation.Source(presentation.Note)?.Invoke() ?? string.Empty;
+            var iconTint = fixedRole ? UiTokens.Color.Detail : UiTokens.Color.Accent;
+            picker.SetPresentation(
+                UiTextTranslation.Source(presentation.Label)(),
+                presentation.Options.Select((option, optionIndex) => new UiPickerOption(
+                    UiTextTranslation.Source(option)(),
+                    IconForLinkKind(presentation.LinkKindAt(optionIndex)),
+                    IconTint: iconTint)).ToArray(),
+                presentation.SelectedIndex ?? -1,
+                disabled: false,
+                UiTextTranslation.Source(presentation.Note)?.Invoke() ?? string.Empty,
+                UiTextTranslation.Source(presentation.Placeholder)?.Invoke() ?? string.Empty);
+            picker.State = presentation.IsLocked ? UiPicker.PickerState.Locked : UiPicker.PickerState.Collapsed;
             if (fixedRole)
             {
-                _fixedPickerLinkIds = presentation.LinkIds.ToArray();
+                _fixedPicker = presentation;
             }
             else
             {
-                _targetPickerLinkIds = presentation.LinkIds.ToArray();
+                _targetPicker = presentation;
             }
         }
+
+        static UiIconId? IconForLinkKind(CreatureElementKind? kind) => kind switch
+        {
+            CreatureElementKind.Beam => UiIconId.PartBeam,
+            CreatureElementKind.Piston => UiIconId.PartPiston,
+            CreatureElementKind.Spring => UiIconId.PartSpring,
+            _ => null,
+        };
     }
 
     private void OnServoPickerChanged(int selected, bool fixedRole)
     {
-        var links = fixedRole ? _fixedPickerLinkIds : _targetPickerLinkIds;
-        if (selected >= 0 && selected < links.Length)
+        var picker = fixedRole ? _fixedPicker : _targetPicker;
+        if (picker?.LinkIdAt(selected) is { } linkId)
         {
-            var linkId = links[selected];
-            if (linkId > 0)
-            {
-                EmitSignal(SignalName.ServoLinkChanged, _shownServoPickerId, fixedRole, linkId);
-            }
+            EmitSignal(SignalName.ServoLinkChanged, _shownServoPickerId, fixedRole, linkId);
         }
     }
 

@@ -146,8 +146,9 @@ sizes on screen at any zoom.
   and before a beam, the nearest link is hit, a Spring on a tie. Deleting a
   joint deletes its Springs. A locked creation cannot add one.
 - **Servo (#452, #577):** dragged from Parts → On a joint onto a node with
-  two or more links (Beam, Piston or Spring). Dropping on a beam, sensor, link or a one-link node
-  refuses with "Joint parts go on a joint"; a joint that already has one
+  two or more links (Beam, Piston or Spring). Dropping on a beam, sensor or link
+  refuses with "Joint parts go on a joint", on a one-link node with "A Servo
+  needs two links at its joint"; a joint that already has one
   refuses with "One part per joint". A good drop chooses the two lowest-id
   links as Fixed and Target, records one undo step and selects the Servo.
   Tapping that joint selects the Servo, but dragging still moves the joint.
@@ -290,9 +291,15 @@ so a locked creation keeps them.
 
 A Piston's rows are Name, then its sliders instead of what it is joined to,
 then the note "The brain pushes it out and pulls it in, within its stroke."
-A Servo's rows are Name, sliders, Fixed/Target pickers, then "The brain
-picks an angle and how much of its max strength to use." Changing a picker
-allocates a new Servo id so sign-dependent trained weights are not reused.
+A Servo's rows are Name, sliders, "Fixed link" and "Target link" pickers,
+then "The brain picks an angle and how much of its max strength to use."
+When a role is missing, the picker reads "Pick a Fixed link" or "Pick a
+Target link" in danger colour, and its list holds only the real links. If
+the joint has fewer than two links, the note under it and the canvas
+callout say "A Servo needs two links at its joint" instead, and the
+Play-blocked reason asks to connect another link there, because no pick
+could fix it. Changing a picker follows
+`docs/CREATURE_MODEL.md` → "Editing identity rules".
 A Spring's are Name, its two sliders, then "It pulls back toward its drawn
 length. Damping stops it bouncing."
 

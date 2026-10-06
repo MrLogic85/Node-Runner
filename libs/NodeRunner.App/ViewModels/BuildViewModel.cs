@@ -321,7 +321,15 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
 
         foreach (var servo in Servos.Where(servo => servo.FixedLinkId is null || servo.TargetLinkId is null))
         {
-            notes.Add(new CanvasNote(CanvasNoteKind.Danger, new CreatureElementSelection(CreatureElementKind.Servo, servo.Id), UiText.Plain("Pick two links")));
+            var text = ServoNeedsTwoLinks(servo.NodeId)
+                ? CreatureBuilder.ServoNeedsTwoLinksReason
+                : (servo.FixedLinkId is null, servo.TargetLinkId is null) switch
+                {
+                    (true, true) => UiText.Plain("Pick two links"),
+                    (true, false) => UiText.Plain("Pick a Fixed link"),
+                    _ => UiText.Plain("Pick a Target link"),
+                };
+            notes.Add(new CanvasNote(CanvasNoteKind.Danger, new CreatureElementSelection(CreatureElementKind.Servo, servo.Id), text));
         }
 
         foreach (var piston in Pistons)
@@ -340,17 +348,10 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
         {
             var a = Nodes[NodeIndexOf(nodeA)];
             var b = Nodes[NodeIndexOf(nodeB)];
-            if (a.Position != b.Position && Distance(a, b) - NodeRadius(a.Id) - NodeRadius(b.Id) < CreatureReadiness.MinimumBeamGap)
+            if (CreatureReadiness.IsTooShort(a, b, NodeRadius(a.Id), NodeRadius(b.Id)))
             {
                 notes.Add(new CanvasNote(CanvasNoteKind.Danger, new CreatureElementSelection(kind, id), UiText.Plain("Too short")));
             }
-        }
-
-        static double Distance(NodeDef a, NodeDef b)
-        {
-            var dx = b.Position.X - a.Position.X;
-            var dy = b.Position.Y - a.Position.Y;
-            return Math.Sqrt((dx * dx) + (dy * dy));
         }
     }
 
@@ -814,7 +815,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
                 _builder.RemoveSpring(springId);
             }
 
-            foreach (var beamId in _selectedLinkIds)
+            foreach (var beamId in _selectedBeamIds)
             {
                 _builder.RemoveBeam(beamId);
             }
@@ -886,11 +887,15 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
 
     public int SpringIndexOf(int springId) => _builder.SpringIndexOf(springId);
 
-    public double NodeRadius(int nodeId) => _builder.Build().NodeRadius(nodeId);
+    public double NodeRadius(int nodeId) => _builder.NodeRadius(nodeId);
+
+    public bool ServoNeedsTwoLinks(int nodeId) => _builder.ServoNeedsTwoLinks(nodeId);
 
     public int? ServoAtNode(int nodeId) => _builder.Servos.FirstOrDefault(servo => servo.NodeId == nodeId)?.Id;
 
-    public IReadOnlyList<CreatureBuilder.LinkRef> LinksAt(int nodeId) => _builder.LinksAt(nodeId);
+    public IReadOnlyList<LinkRef> LinksAt(int nodeId) => _builder.LinksAt(nodeId);
+
+    public LinkRef Link(int linkId) => _builder.Link(linkId);
 
     public int? SetServoLink(int servoId, bool fixedRole, int linkId)
     {
@@ -899,9 +904,16 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
             return null;
         }
 
-        var newId = _history.Change(() => _builder.SetServoLink(servoId, fixedRole, linkId));
-        ReplaceSelection(PartSet.None with { Servos = new HashSet<int> { newId } });
-        AnatomyChanged?.Invoke(this, EventArgs.Empty);
+        var newId = _history.Change(() =>
+        {
+            var id = _builder.SetServoLink(servoId, fixedRole, linkId);
+
+            // Within the step: its Undo row refresh must not find the Servo's old id still selected.
+            ClearSelectionSets();
+            _selectedServoIds.Add(id);
+            return id;
+        });
+        SelectionChanged();
         return newId;
     }
 

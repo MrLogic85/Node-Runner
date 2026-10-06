@@ -412,13 +412,13 @@ theme_override_constants/separation = 4
 unique_name_in_owner = true
 layout_mode = 2
 script = ExtResource("20_picker")
-LabelText = "Fixed part"
+LabelText = "Fixed link"
 
 [node name="TargetPicker" type="PanelContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent/PartSettings/PartRows/PartPickers"]
 unique_name_in_owner = true
 layout_mode = 2
 script = ExtResource("20_picker")
-LabelText = "Target part"
+LabelText = "Target link"
 
 [node name="PartConnections" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent/PartSettings/PartRows"]
 layout_mode = 2

@@ -15,7 +15,7 @@ public sealed partial class BuildViewModel
     public const double MaxSelectionScale = 4;
 
     private readonly HashSet<int> _selectedNodeIds = [];
-    private readonly HashSet<int> _selectedLinkIds = [];
+    private readonly HashSet<int> _selectedBeamIds = [];
     private readonly HashSet<int> _selectedSensorIds = [];
     private readonly HashSet<int> _selectedServoIds = [];
     private readonly HashSet<int> _selectedPistonIds = [];
@@ -23,7 +23,7 @@ public sealed partial class BuildViewModel
 
     public int SelectedNodeCount => _selectedNodeIds.Count;
 
-    public int SelectedBeamCount => _selectedLinkIds.Count;
+    public int SelectedBeamCount => _selectedBeamIds.Count;
 
     public int SelectedSensorCount => _selectedSensorIds.Count;
 
@@ -37,7 +37,7 @@ public sealed partial class BuildViewModel
 
     public int? SingleSelectedNodeId => Single(_selectedNodeIds);
 
-    public int? SingleSelectedBeamId => Single(_selectedLinkIds);
+    public int? SingleSelectedBeamId => Single(_selectedBeamIds);
 
     public int? SingleSelectedSensorId => Single(_selectedSensorIds);
 
@@ -50,7 +50,7 @@ public sealed partial class BuildViewModel
     /// <summary>A copy of everything selected (#704).</summary>
     public PartSet Selection => new(
         _selectedNodeIds.ToHashSet(),
-        _selectedLinkIds.ToHashSet(),
+        _selectedBeamIds.ToHashSet(),
         _selectedSensorIds.ToHashSet(),
         _selectedServoIds.ToHashSet(),
         _selectedPistonIds.ToHashSet(),
@@ -77,7 +77,7 @@ public sealed partial class BuildViewModel
     }
 
     private IEnumerable<int> SelectedPartIds() =>
-        _selectedNodeIds.Concat(_selectedLinkIds).Concat(_selectedSensorIds).Concat(_selectedServoIds).Concat(_selectedPistonIds).Concat(_selectedSpringIds);
+        _selectedNodeIds.Concat(_selectedBeamIds).Concat(_selectedSensorIds).Concat(_selectedServoIds).Concat(_selectedPistonIds).Concat(_selectedSpringIds);
 
     public void ClearSelection()
     {
@@ -113,7 +113,7 @@ public sealed partial class BuildViewModel
     private HashSet<int> SelectedSet(CreatureElementKind kind) => kind switch
     {
         CreatureElementKind.Node => _selectedNodeIds,
-        CreatureElementKind.Beam => _selectedLinkIds,
+        CreatureElementKind.Beam => _selectedBeamIds,
         CreatureElementKind.Sensor => _selectedSensorIds,
         CreatureElementKind.Servo => _selectedServoIds,
         CreatureElementKind.Piston => _selectedPistonIds,
@@ -124,7 +124,7 @@ public sealed partial class BuildViewModel
     private void ClearSelectionSets()
     {
         _selectedNodeIds.Clear();
-        _selectedLinkIds.Clear();
+        _selectedBeamIds.Clear();
         _selectedSensorIds.Clear();
         _selectedServoIds.Clear();
         _selectedPistonIds.Clear();

@@ -12,7 +12,7 @@ public sealed class ServoJoint
 {
     private readonly ServoLinkSide _fixed;
     private readonly ServoLinkSide _target;
-    private double _motorTorque;
+    private Mechanics.ServoMotor _motor;
     private double _lastRelativeAngle;
     private double _continuousRelativeAngle;
 
@@ -34,29 +34,25 @@ public sealed class ServoJoint
 
     public double BuiltAngle { get; }
 
-    public double Angle => ContinuousRelativeAngle - BuiltAngle;
-
     public double Speed => _target.AngularSpeed - _fixed.AngularSpeed;
 
-    public double AngleInput => Mechanics.Servo.AngleInput(ContinuousRelativeAngle, Definition, BuiltAngle);
+    public double AngleInput => Mechanics.Servo.AngleInput(_continuousRelativeAngle, Definition, BuiltAngle);
 
     public double SpeedInput => Mechanics.Servo.SpeedInput(Speed, Definition.MaxSpeed);
 
-    public double FixedRotation => _fixed.Angle;
+    public double FixedRotation => -_fixed.Angle;
 
-    public double TargetRelativeRotation => RelativeAngle;
+    public double TargetRelativeRotation => -RelativeAngle;
+
+    public double BuiltRelativeRotation => -BuiltAngle;
 
     private double RelativeAngle => _target.Angle - _fixed.Angle;
 
-    private double ContinuousRelativeAngle
+    public void UpdatePhysicsState()
     {
-        get
-        {
-            var current = RelativeAngle;
-            _continuousRelativeAngle += Mathf.AngleDifference((float)_lastRelativeAngle, (float)current);
-            _lastRelativeAngle = current;
-            return _continuousRelativeAngle;
-        }
+        var current = RelativeAngle;
+        _continuousRelativeAngle = Mechanics.Servo.UnwrapAngle(_continuousRelativeAngle, _lastRelativeAngle, current);
+        _lastRelativeAngle = current;
     }
 
     /// <param name="position">The brain's angle output, −1 lower end … +1 upper end.</param>
@@ -64,14 +60,22 @@ public sealed class ServoJoint
     /// <param name="step">The physics step, in seconds.</param>
     public void Drive(double position, double strength, double step)
     {
-        var angle = ContinuousRelativeAngle;
+        var angle = _continuousRelativeAngle;
         var speed = Speed;
-        _motorTorque = Mechanics.Servo.NextTorque(Definition, BuiltAngle, angle, speed, position, strength, _motorTorque, step);
-        // Godot's angular joints limit body-to-body rotation; the Servo model limits the angle
-        // between two link directions, so this implementation applies the range as torque instead.
-        var torque = _motorTorque + Mechanics.Servo.EndStopTorque(Definition, BuiltAngle, angle, speed);
+        var effectiveInertia = EffectiveInertia();
+        _motor = Mechanics.Servo.NextMotor(Definition, BuiltAngle, angle, speed, position, strength, _motor, step, effectiveInertia);
+        // Godot's angular joints cannot uniformly limit Beam, Piston and Spring link directions.
+        // The soft stop is explicit-step stable by capping its gains to the live effective inertia.
+        var torque = _motor.Torque + Mechanics.Servo.EndStopTorque(Definition, BuiltAngle, angle, speed, effectiveInertia, step);
         _target.ApplyTorque(torque);
         _fixed.ApplyTorque(-torque);
+    }
+
+    private double EffectiveInertia()
+    {
+        var target = _target.EffectiveInertia;
+        var fixedSide = _fixed.EffectiveInertia;
+        return (target * fixedSide) / (target + fixedSide);
     }
 }
 
@@ -94,6 +98,12 @@ public sealed class ServoLinkSide
         ToVector(_farBody.GlobalPosition),
         ToVector(JointBody.LinearVelocity),
         ToVector(_farBody.LinearVelocity));
+
+    public double EffectiveInertia => Mechanics.Servo.LinkInertia(
+        ToVector(JointBody.GlobalPosition),
+        ToVector(_farBody.GlobalPosition),
+        JointBody.Mass,
+        _farBody.Mass);
 
     public void ApplyTorque(double torque)
     {

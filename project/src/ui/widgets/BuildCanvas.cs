@@ -34,9 +34,6 @@ public partial class BuildCanvas : Node2D
     private const float _frameGap = 4;
     private const float _frameCornerSquare = 10;
     private const float _frameCornerRadius = 2;
-    private const float _servoBeamBandHalfWidth = 9;
-    private const float _servoPistonBandHalfWidth = 11;
-    private const float _servoSpringBandHalfWidth = 13;
 
     private BuildViewModel? _viewModel;
     private BuildGestures? _gestures;
@@ -393,7 +390,7 @@ public partial class BuildCanvas : Node2D
             return;
         }
 
-        DrawSelectedServoBands(canvas);
+        BuildServoDrawing.DrawSelectedBands(canvas, _viewModel, Theme, ViewTransform());
         foreach (var beam in _viewModel.Beams)
         {
             var nodeA = NodeById(beam.NodeA);
@@ -403,7 +400,7 @@ public partial class BuildCanvas : Node2D
             DrawPlacingFeedback(canvas, beam, start, end);
         }
 
-        DrawServoPlacingFeedback(canvas);
+        BuildServoDrawing.DrawPlacingFeedback(canvas, _viewModel, _partDrag, Theme, ViewTransform());
     }
 
     /// <summary>What goes over the whole creature: the aimed camera's rays, warnings, the beam drag's rings and the selection frame.</summary>
@@ -414,109 +411,11 @@ public partial class BuildCanvas : Node2D
             return;
         }
         DrawSelectedCameraRays(canvas);
-        DrawSelectedCameraRays(canvas);
         DrawInvalidNodeMarkers(canvas);
         DrawInvalidBeamMarkers(canvas);
         DrawBeamEndRings(canvas);
         DrawSelectionFrame(canvas);
     }
-
-    /// <summary>A selected Servo marks its Fixed and Target links with underlay bands (#452, #577).</summary>
-    private void DrawSelectedServoBands(CanvasItem canvas)
-    {
-        if (_viewModel!.SingleSelectedServoId is not { } servoId)
-        {
-            return;
-        }
-
-        var servo = _viewModel.Servos[_viewModel.ServoIndexOf(servoId)];
-        var toPixels = UiPixelSpace.Enter(canvas, ViewTransform());
-        var scale = UiPixelSpace.ScaleOf(toPixels);
-        if (servo.FixedLinkId is { } fixedLink)
-        {
-            DrawServoLinkBand(canvas, toPixels, scale, fixedLink, fixedMark: true);
-        }
-
-        if (servo.TargetLinkId is { } targetLink)
-        {
-            DrawServoLinkBand(canvas, toPixels, scale, targetLink, fixedMark: false);
-        }
-
-        canvas.DrawSetTransformMatrix(ViewTransform());
-    }
-
-    private void DrawServoLinkBand(CanvasItem canvas, Transform2D toPixels, float scale, int linkId, bool fixedMark)
-    {
-        if (!TryLinkNodes(linkId, out var nodeA, out var nodeB, out var kind))
-        {
-            return;
-        }
-
-        var a = NodeById(nodeA);
-        var b = NodeById(nodeB);
-        SelectionDrawing.DrawLinkBand(
-            canvas,
-            toPixels,
-            scale,
-            ToGodot(a.Position),
-            ToGodot(b.Position),
-            (float)_viewModel!.NodeRadius(a.Id),
-            (float)_viewModel.NodeRadius(b.Id),
-            ServoBandHalfWidth(kind),
-            fixedMark ? Theme.ServoFixedBand : Theme.ServoTargetBand,
-            fixedMark ? Theme.ServoFixedBandEdge : Theme.ServoTargetBandEdge,
-            fixedMark ? Theme.ServoFixedHatch : null,
-            Theme.RigidHatchSpacing);
-    }
-
-    private bool TryLinkNodes(int linkId, out int nodeA, out int nodeB, out CreatureElementKind kind)
-    {
-        foreach (var beam in _viewModel!.Beams)
-        {
-            if (beam.Id == linkId)
-            {
-                nodeA = beam.NodeA;
-                nodeB = beam.NodeB;
-                kind = CreatureElementKind.Beam;
-                return true;
-            }
-        }
-
-        foreach (var piston in _viewModel.Pistons)
-        {
-            if (piston.Id == linkId)
-            {
-                nodeA = piston.NodeA;
-                nodeB = piston.NodeB;
-                kind = CreatureElementKind.Piston;
-                return true;
-            }
-        }
-
-        foreach (var spring in _viewModel.Springs)
-        {
-            if (spring.Id == linkId)
-            {
-                nodeA = spring.NodeA;
-                nodeB = spring.NodeB;
-                kind = CreatureElementKind.Spring;
-                return true;
-            }
-        }
-
-        nodeA = 0;
-        nodeB = 0;
-        kind = default;
-        return false;
-    }
-
-    private static float ServoBandHalfWidth(CreatureElementKind kind) => kind switch
-    {
-        CreatureElementKind.Beam => _servoBeamBandHalfWidth,
-        CreatureElementKind.Piston => _servoPistonBandHalfWidth,
-        CreatureElementKind.Spring => _servoSpringBandHalfWidth,
-        _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, "Not a Servo link kind."),
-    };
 
     /// <summary>The Camera's rays while its aim can be set, over the joints so the creature never hides them (#623).</summary>
     private void DrawSelectedCameraRays(CanvasItem canvas)
@@ -543,7 +442,7 @@ public partial class BuildCanvas : Node2D
     /// </summary>
     private void DrawPlacingFeedback(CanvasItem canvas, BeamDef beam, Vector2 start, Vector2 end)
     {
-        if (_partDrag is not { } part || start == end)
+        if (_partDrag is not { } part || part == BuildPart.Servo || start == end)
         {
             return;
         }
@@ -560,40 +459,6 @@ public partial class BuildCanvas : Node2D
         }
     }
 
-    private void DrawServoPlacingFeedback(CanvasItem canvas)
-    {
-        if (_partDrag != BuildPart.Servo)
-        {
-            return;
-        }
-
-        using var pen = ViewPen(canvas);
-        foreach (var node in _viewModel!.Nodes)
-        {
-            var target = new CreatureElementSelection(CreatureElementKind.Node, node.Id);
-            var canPlace = _viewModel.CanPlacePart(BuildPart.Servo, target, out _);
-            var occupied = _viewModel.ServoAtNode(node.Id) is not null;
-            if (!canPlace && !occupied)
-            {
-                continue;
-            }
-
-            var center = ToGodot(node.Position);
-            var radius = (float)SelectionMarks.JointHalo(_viewModel.NodeRadius(node.Id));
-            if (canPlace)
-            {
-                pen.Ring(center, radius, Theme.SelectionGlow, Stroke(Theme.SelectionRingWidth));
-            }
-            else
-            {
-                for (var index = 0; index < 8; index++)
-                {
-                    var start = index * Mathf.Tau / 8;
-                    pen.Arc(center, radius, start, start + (Mathf.Tau / 16), 8, Theme.Danger, Stroke(Theme.SelectionRingWidth));
-                }
-            }
-        }
-    }
 
     /// <summary>Where each Accelerometer's beam is now, in creature units, for <see cref="BuildSensorMotion"/>.</summary>
     private List<SensorPose> AccelerometerPoses()
@@ -690,41 +555,36 @@ public partial class BuildCanvas : Node2D
         var toSlot = SlotTransform();
         Vector2 ToSlot(Vector2D position) => toSlot * ToGodot(view.ToView(position));
         float OnScreen(double length) => (float)(length * view.Zoom) * toSlot.Scale.X;
-        switch (note.Target.Kind)
+        var joints = CanvasNoteTargets.JointIds(note.Target, _viewModel!);
+        if (joints.Count == 2)
         {
-            case CreatureElementKind.Beam or CreatureElementKind.Piston or CreatureElementKind.Spring:
-                var (nodeA, nodeB) = note.Target.Kind switch
-                {
-                    CreatureElementKind.Beam => (_viewModel!.Beams[_viewModel.BeamIndexOf(note.Target.Id)].NodeA, _viewModel.Beams[_viewModel.BeamIndexOf(note.Target.Id)].NodeB),
-                    CreatureElementKind.Piston => (_viewModel!.Pistons[_viewModel.PistonIndexOf(note.Target.Id)].NodeA, _viewModel.Pistons[_viewModel.PistonIndexOf(note.Target.Id)].NodeB),
-                    _ => (_viewModel!.Springs[_viewModel.SpringIndexOf(note.Target.Id)].NodeA, _viewModel.Springs[_viewModel.SpringIndexOf(note.Target.Id)].NodeB),
-                };
-                var a = NodeById(nodeA);
-                var b = NodeById(nodeB);
-                var start = ToSlot(a.Position);
-                var end = ToSlot(b.Position);
-                anchor = (start + end) / 2;
-                direction = (end - start).Normalized().Orthogonal();
-                if (direction.Y > 0 || (Mathf.IsZeroApprox(direction.Y) && direction.X < 0))
-                {
-                    direction = -direction;
-                }
+            var a = NodeById(joints[0]);
+            var b = NodeById(joints[1]);
+            var start = ToSlot(a.Position);
+            var end = ToSlot(b.Position);
+            anchor = (start + end) / 2;
+            direction = (end - start).Normalized().Orthogonal();
+            if (direction.Y > 0 || (Mathf.IsZeroApprox(direction.Y) && direction.X < 0))
+            {
+                direction = -direction;
+            }
 
-                clearance = OnScreen(Math.Max(_viewModel!.NodeRadius(a.Id), _viewModel.NodeRadius(b.Id)));
-                return true;
-            case CreatureElementKind.Node or CreatureElementKind.Servo:
-                var node = NodeById(note.Target.Kind == CreatureElementKind.Servo
-                    ? _viewModel!.Servos[_viewModel.ServoIndexOf(note.Target.Id)].NodeId
-                    : note.Target.Id);
-                anchor = ToSlot(node.Position);
-                direction = Vector2.Up;
-                clearance = OnScreen(_viewModel!.NodeRadius(node.Id));
-                return true;
-            default:
-                anchor = direction = Vector2.Zero;
-                clearance = 0;
-                return false;
+            clearance = OnScreen(Math.Max(_viewModel!.NodeRadius(a.Id), _viewModel.NodeRadius(b.Id)));
+            return true;
         }
+
+        if (joints.Count == 1)
+        {
+            var node = NodeById(joints[0]);
+            anchor = ToSlot(node.Position);
+            direction = Vector2.Up;
+            clearance = OnScreen(_viewModel!.NodeRadius(node.Id));
+            return true;
+        }
+
+        anchor = direction = Vector2.Zero;
+        clearance = 0;
+        return false;
     }
 
     private static UiCallout.CalloutKind CalloutKindOf(CanvasNoteKind kind) => kind switch
@@ -777,7 +637,7 @@ public partial class BuildCanvas : Node2D
         var to = target?.Position ?? end;
         var color = refused is null ? Theme.SelectionGlow : Theme.Danger;
         // Like a beam, it starts at the joint's ring, and ends at the target's ring or the finger.
-        if (JointDrawing.BeamSpan(Theme.JointRingWidth, ToGodot(from.Position), (float)from.Radius, ToGodot(to), (float)(target?.Radius ?? 0)) is (var lineStart, var lineEnd))
+        if (JointDrawing.BeamSpan(Theme.JointRingWidth, ToGodot(from.Position), (float)_viewModel.NodeRadius(from.Id), ToGodot(to), (float)(target is null ? 0 : _viewModel.NodeRadius(target.Id))) is (var lineStart, var lineEnd))
         {
             using var pen = ViewPen(this);
             pen.DashedLine(lineStart, lineEnd, color, Stroke(Theme.BeamWidth), 8);
@@ -797,14 +657,14 @@ public partial class BuildCanvas : Node2D
             if (nodeId is { } id)
             {
                 var node = NodeById(id);
-                pen.Ring(ToGodot(node.Position), (float)SelectionMarks.JointHalo(node.Radius), Theme.SelectionGlow, Stroke(Theme.MotorSignalWidth));
+                pen.Ring(ToGodot(node.Position), (float)SelectionMarks.JointHalo(_viewModel.NodeRadius(node.Id)), Theme.SelectionGlow, Stroke(Theme.MotorSignalWidth));
             }
         }
 
         if (_gestures.RefusedTargetNodeId is { } refused)
         {
             var node = NodeById(refused);
-            var radius = (float)SelectionMarks.JointHalo(node.Radius);
+            var radius = (float)SelectionMarks.JointHalo(_viewModel.NodeRadius(node.Id));
             for (var dash = 0; dash < _refusedRingDashes; dash++)
             {
                 var from = dash * Mathf.Tau / _refusedRingDashes;
@@ -853,7 +713,7 @@ public partial class BuildCanvas : Node2D
             }
 
             var position = ToGodot(node.Position);
-            var radius = (float)node.Radius * 1.55f;
+            var radius = (float)_viewModel.NodeRadius(node.Id) * 1.55f;
             pen.Ring(position, radius, Theme.Danger, Stroke(Theme.MotorSignalWidth));
             pen.Line(position + new Vector2(-radius * 0.45f, -radius * 0.45f), position + new Vector2(radius * 0.45f, radius * 0.45f), Theme.Danger, Stroke(Theme.MotorSignalWidth));
             pen.Line(position + new Vector2(radius * 0.45f, -radius * 0.45f), position + new Vector2(-radius * 0.45f, radius * 0.45f), Theme.Danger, Stroke(Theme.MotorSignalWidth));
@@ -884,7 +744,7 @@ public partial class BuildCanvas : Node2D
             }
 
             var position = ToGodot(start.Position);
-            var radius = (float)Math.Max(start.Radius, end.Radius) * 1.95f;
+            var radius = (float)Math.Max(_viewModel.NodeRadius(start.Id), _viewModel.NodeRadius(end.Id)) * 1.95f;
             pen.Ring(position, radius, Theme.Danger, Stroke(Theme.MotorSignalWidth));
             pen.Line(position + new Vector2(-radius * 0.55f, 0), position + new Vector2(radius * 0.55f, 0), Theme.Danger, Stroke(Theme.MotorSignalWidth));
             pen.Line(position + new Vector2(0, -radius * 0.55f), position + new Vector2(0, radius * 0.55f), Theme.Danger, Stroke(Theme.MotorSignalWidth));

@@ -116,6 +116,11 @@ public partial class Creature : Node2D
             return;
         }
 
+        foreach (var servo in _servos)
+        {
+            servo.UpdatePhysicsState();
+        }
+
         ReadSensors(_sensorValues, delta);
         Brain.Forward(_sensorValues, _outputValues, _scratchA, _scratchB);
 
@@ -137,6 +142,10 @@ public partial class Creature : Node2D
     public void BuildFrom(CreatureDef definition)
     {
         ArgumentNullException.ThrowIfNull(definition);
+        if (definition.Servos.FirstOrDefault(servo => servo.FixedLinkId is null || servo.TargetLinkId is null) is { } incompleteServo)
+        {
+            throw new InvalidOperationException($"Servo {incompleteServo.Id} must have two links before the creature is built for simulation.");
+        }
 
         Definition = definition;
         _selection = null;
@@ -654,7 +663,7 @@ public partial class Creature : Node2D
             var b = ToGodot(definition.Nodes[triangle.NodeB].Position);
             var c = ToGodot(definition.Nodes[triangle.NodeC].Position);
             var toBeam = _beamBodies[beamIndex].Transform.AffineInverse();
-            var jointRadius = ToGodotFloat(definition.Nodes[triangle.NodeA].Radius, nameof(NodeDef.Radius));
+            var jointRadius = ToGodotFloat(definition.NodeRadius(definition.Nodes[triangle.NodeA].Id), nameof(ServoDef.JointRadius));
             var visual = new RigidHatchVisual
             {
                 Name = $"Hatch{hatches.Count}",
@@ -848,7 +857,7 @@ public partial class Creature : Node2D
     }
 
     /// <summary>How many powered outputs the creature has.</summary>
-    public int PistonCount => _pistons.Length + _servos.Length;
+    public int MotorCount => _pistons.Length + _servos.Length;
 
     private float GetHitTolerance()
     {

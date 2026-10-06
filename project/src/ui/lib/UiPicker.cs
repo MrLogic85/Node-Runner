@@ -7,13 +7,20 @@ public readonly record struct UiPickerOption(
     UiIconId? Icon = null,
     UiMenuActionItem.MenuItemKind Kind = UiMenuActionItem.MenuItemKind.Default,
     string? Note = null,
-    Color? IconTint = null);
+    UiTokens.Color? IconTint = null);
 
-/// <summary>Picker row that opens a menu-backed list of valid choices.</summary>
+/// <summary>
+/// Picker row that opens a menu-backed list of valid choices. With a <see cref="MissingText"/>,
+/// a negative selection means a required choice is missing: the row shows that text in danger, and the menu
+/// lists only the real options.
+/// </summary>
 [Tool]
 [GlobalClass]
 public partial class UiPicker : PanelContainer
 {
+    private const float _minimumWidth = 160;
+    private const float _viewportMargin = 16;
+
     public enum PickerState
     {
         Collapsed,
@@ -27,10 +34,11 @@ public partial class UiPicker : PanelContainer
     [Signal]
     public delegate void StateChangedEventHandler(PickerState state);
 
-    private string _labelText = "Fixed part";
+    private string _labelText = "Fixed link";
     private PickerState _state = PickerState.Collapsed;
     private bool _disabled;
     private string _belowText = string.Empty;
+    private string _missingText = string.Empty;
     private int _selectedIndex;
     private UiPickerOption[] _options =
     [
@@ -46,6 +54,11 @@ public partial class UiPicker : PanelContainer
         get => _labelText;
         set
         {
+            if (_labelText == value)
+            {
+                return;
+            }
+
             _labelText = value;
             Rebuild();
         }
@@ -58,7 +71,24 @@ public partial class UiPicker : PanelContainer
         set => SetState(value, emit: false);
     }
 
-    public string ValueText => SelectedOption?.Label ?? string.Empty;
+    public string ValueText => SelectedOption?.Label ?? MissingText;
+
+    [Export]
+    public string MissingText
+    {
+        get => _missingText;
+        set
+        {
+            if (_missingText == value)
+            {
+                return;
+            }
+
+            _missingText = value;
+            _selectedIndex = NormalizeSelectedIndex(_selectedIndex);
+            Rebuild();
+        }
+    }
 
     [Export]
     public bool Disabled
@@ -66,6 +96,11 @@ public partial class UiPicker : PanelContainer
         get => _disabled;
         set
         {
+            if (_disabled == value)
+            {
+                return;
+            }
+
             _disabled = value;
             if (_disabled && IsExpanded)
             {
@@ -82,6 +117,11 @@ public partial class UiPicker : PanelContainer
         get => _belowText;
         set
         {
+            if (_belowText == value)
+            {
+                return;
+            }
+
             _belowText = value;
             Rebuild();
         }
@@ -93,7 +133,13 @@ public partial class UiPicker : PanelContainer
         get => EffectiveSelectedIndex;
         set
         {
-            _selectedIndex = NormalizeSelectedIndex(value);
+            var selected = NormalizeSelectedIndex(value);
+            if (_selectedIndex == selected)
+            {
+                return;
+            }
+
+            _selectedIndex = selected;
             Rebuild();
         }
     }
@@ -103,10 +149,44 @@ public partial class UiPicker : PanelContainer
         get => _options;
         set
         {
-            _options = value ?? [];
+            var options = value ?? [];
+            if (_options.SequenceEqual(options))
+            {
+                return;
+            }
+
+            _options = options;
             _selectedIndex = NormalizeSelectedIndex(_selectedIndex);
             Rebuild();
         }
+    }
+
+    public void SetPresentation(string labelText, IReadOnlyList<UiPickerOption> options, int selectedIndex, bool disabled, string belowText, string missingText = "")
+    {
+        var nextOptions = options.ToArray();
+        var nextSelected = NormalizeSelectedIndex(selectedIndex, nextOptions.Length, missingText.Length > 0);
+        if (_labelText == labelText
+            && _options.SequenceEqual(nextOptions)
+            && _selectedIndex == nextSelected
+            && _disabled == disabled
+            && _belowText == belowText
+            && _missingText == missingText)
+        {
+            return;
+        }
+
+        _labelText = labelText;
+        _options = nextOptions;
+        _selectedIndex = nextSelected;
+        _disabled = disabled;
+        _belowText = belowText;
+        _missingText = missingText;
+        if (_disabled && IsExpanded)
+        {
+            _state = PickerState.Collapsed;
+        }
+
+        Rebuild();
     }
 
     public override void _Ready()
@@ -150,6 +230,7 @@ public partial class UiPicker : PanelContainer
         var stack = new VBoxContainer
         {
             SizeFlagsHorizontal = SizeFlags.ExpandFill,
+            CustomMinimumSize = new Vector2(_minimumWidth, 0),
         };
         stack.AddThemeConstantOverride("separation", (int)UiSize.Space.S1);
         AddChild(stack);
@@ -175,8 +256,10 @@ public partial class UiPicker : PanelContainer
         {
             var below = UiFieldAndRows.Label(BelowText, UiTokens.Typography.Note, UiTokens.Color.Muted);
             UiTranslation.ShareContext(this, below);
-            below.CustomMinimumSize = new Vector2(0, UiThemeLookup.FontSize(this, UiTokens.Typography.Note) + UiSize.Widget.SmallTextLeading);
-            below.ClipText = true;
+            below.AutowrapMode = TextServer.AutowrapMode.WordSmart;
+            // A label that both wraps and trims reports a 1 px minimum height and collapses.
+            below.TextOverrunBehavior = TextServer.OverrunBehavior.NoTrimming;
+            below.SizeFlagsHorizontal = SizeFlags.ExpandFill;
             stack.AddChild(below);
         }
 
@@ -187,7 +270,7 @@ public partial class UiPicker : PanelContainer
         var rowButton = new Button
         {
             Disabled = IsLocked || Disabled || Options.Length == 0,
-            CustomMinimumSize = new Vector2(0, UiSize.Control.Small),
+            CustomMinimumSize = new Vector2(_minimumWidth, UiSize.Control.Small),
             SizeFlagsHorizontal = SizeFlags.ExpandFill,
             TooltipText = LabelText,
         };
@@ -255,14 +338,15 @@ public partial class UiPicker : PanelContainer
     {
         var menu = new UiMenu
         {
-            Width = UiLayout.SidePanelWidth,
+            Width = MenuWidth(),
             WidthMode = UiMenu.MenuWidthMode.Fixed,
             Compact = true,
             SizeFlagsHorizontal = SizeFlags.ShrinkBegin,
             Visible = true,
         };
-        var items = Options.Select((option, index) =>
+        var items = Enumerable.Range(0, Options.Length).Select(index =>
         {
+            var option = Options[index];
             return new UiMenuItemSpec(
                 option.Label,
                 option.Icon,
@@ -284,6 +368,13 @@ public partial class UiPicker : PanelContainer
             }
         };
         return menu;
+    }
+
+    private float MenuWidth()
+    {
+        var viewportWidth = GetViewportRect().Size.X;
+        var available = viewportWidth > 0 ? Math.Max(_minimumWidth, viewportWidth - (2 * _viewportMargin)) : UiLayout.SidePanelWidth;
+        return Math.Min(Math.Max(_minimumWidth, Size.X), available);
     }
 
     private StyleBoxFlat ClosedRowStyle(bool focused = false, bool disabled = false)
@@ -340,17 +431,19 @@ public partial class UiPicker : PanelContainer
 
     private int EffectiveSelectedIndex => NormalizeSelectedIndex(_selectedIndex);
 
-    private int NormalizeSelectedIndex(int index) =>
-        Options.Length == 0 ? -1 : Mathf.Clamp(index, 0, Options.Length - 1);
+    private int NormalizeSelectedIndex(int index) => NormalizeSelectedIndex(index, Options.Length, MissingText.Length > 0);
+
+    private static int NormalizeSelectedIndex(int index, int optionsLength, bool hasMissingText) =>
+        optionsLength == 0 || (index < 0 && hasMissingText) ? -1 : Mathf.Clamp(index, 0, optionsLength - 1);
 
     private bool IsExpanded => State == PickerState.Expanded;
 
     private bool IsLocked => State == PickerState.Locked;
 
     private Color ResolveIconTint(UiPickerOption option, bool selected) =>
-        option.IconTint ?? (selected ? UiThemeLookup.Color(this, UiTokens.Color.Halo) : UiThemeLookup.Color(this, UiTokens.Color.Accent));
+        UiThemeLookup.Color(this, option.IconTint ?? (selected ? UiTokens.Color.Halo : UiTokens.Color.Accent));
 
-    private UiTokens.Color ValueColor => IsLocked ? UiTokens.Color.Muted : UiTokens.Color.Ink;
+    private UiTokens.Color ValueColor => IsLocked ? UiTokens.Color.Muted : SelectedOption is null ? UiTokens.Color.Danger : UiTokens.Color.Ink;
 
     private Color TrailingColor => IsLocked ? UiThemeLookup.Color(this, UiTokens.Color.Muted) : UiThemeLookup.Color(this, UiTokens.Color.Accent);
 

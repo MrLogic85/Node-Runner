@@ -57,6 +57,11 @@ Why: it forces a clean interface, it lets us test on the CLI, and it means the
 ML code could be lifted into any other project (or a future desktop tool)
 without rewriting.
 
+The same holds for the creature model in `libs/NodeRunner.Domain/` and
+`libs/NodeRunner.Mechanics/` (owner decision, #452): a part is described as
+if another physics engine could run it. Godot body and joint choices live
+only in `project/src/creature/`, with a comment saying why.
+
 ## 4. Determinism by default
 
 - All randomness flows through a single seeded `System.Random`, obtained

@@ -88,14 +88,14 @@ public partial class CreatureParts : Node2D
         if (marks.PreviewServoNode is { } previewNode && nodes.TryGetValue(previewNode, out var node))
         {
             var part = PartFor(_servos, -previewNode);
-            var links = LinksAtNode(shape, previewNode).OrderBy(id => id).Take(2).ToArray();
+            var links = LinksAtNode(shape, previewNode).OrderBy(link => link.Id).Take(2).ToArray();
             ShowServoPart(
                 part,
                 shape,
                 nodes,
                 node.Id,
-                links.ElementAtOrDefault(0),
-                links.ElementAtOrDefault(1),
+                links.ElementAtOrDefault(0).Id is var fixedId && fixedId > 0 ? fixedId : null,
+                links.ElementAtOrDefault(1).Id is var targetId && targetId > 0 ? targetId : null,
                 ServoDef.DefaultRange,
                 ServoDef.DefaultStart,
                 selected: true);
@@ -135,35 +135,15 @@ public partial class CreatureParts : Node2D
         part.HousingReach = hasFixed ? HousingReach(shape, nodes, nodeId, fixedLink) : 0;
     }
 
-    private readonly record struct ServoLinkDrawing(int Id, int NodeA, int NodeB, CreatureElementKind Kind, float SensorLength);
-
-    private static bool TryLink(CreatureShape shape, int nodeId, int? linkId, out ServoLinkDrawing link)
+    private static bool TryLink(CreatureShape shape, int nodeId, int? linkId, out LinkRef link)
     {
         if (linkId is { } id)
         {
-            foreach (var beam in shape.Beams)
+            foreach (var entry in Links(shape))
             {
-                if (beam.Id == id && Touches(beam.NodeA, beam.NodeB, nodeId))
+                if (entry.Id == id && entry.Touches(nodeId))
                 {
-                    link = new ServoLinkDrawing(beam.Id, beam.NodeA, beam.NodeB, CreatureElementKind.Beam, SensorLength(shape, beam.Id));
-                    return true;
-                }
-            }
-
-            foreach (var piston in shape.Pistons)
-            {
-                if (piston.Id == id && Touches(piston.NodeA, piston.NodeB, nodeId))
-                {
-                    link = new ServoLinkDrawing(piston.Id, piston.NodeA, piston.NodeB, CreatureElementKind.Piston, 0);
-                    return true;
-                }
-            }
-
-            foreach (var spring in shape.Springs)
-            {
-                if (spring.Id == id && Touches(spring.NodeA, spring.NodeB, nodeId))
-                {
-                    link = new ServoLinkDrawing(spring.Id, spring.NodeA, spring.NodeB, CreatureElementKind.Spring, 0);
+                    link = entry;
                     return true;
                 }
             }
@@ -173,42 +153,23 @@ public partial class CreatureParts : Node2D
         return false;
     }
 
-    private static IEnumerable<int> LinksAtNode(CreatureShape shape, int nodeId)
-    {
-        foreach (var beam in shape.Beams.Where(beam => Touches(beam.NodeA, beam.NodeB, nodeId)))
-        {
-            yield return beam.Id;
-        }
+    private static IEnumerable<LinkRef> LinksAtNode(CreatureShape shape, int nodeId) =>
+        Links(shape).Where(link => link.Touches(nodeId));
 
-        foreach (var piston in shape.Pistons.Where(piston => Touches(piston.NodeA, piston.NodeB, nodeId)))
-        {
-            yield return piston.Id;
-        }
+    private static IEnumerable<LinkRef> Links(CreatureShape shape) => LinkRef.All(shape.Beams, shape.Pistons, shape.Springs);
 
-        foreach (var spring in shape.Springs.Where(spring => Touches(spring.NodeA, spring.NodeB, nodeId)))
-        {
-            yield return spring.Id;
-        }
-    }
-
-    private static bool Touches(int nodeA, int nodeB, int nodeId) => nodeA == nodeId || nodeB == nodeId;
-
-    private static float LinkAngle(Dictionary<int, NodeDef> nodes, int jointNodeId, ServoLinkDrawing link)
+    private static float LinkAngle(Dictionary<int, NodeDef> nodes, int jointNodeId, LinkRef link)
     {
         var joint = nodes[jointNodeId].Position;
-        var far = nodes[link.NodeA == jointNodeId ? link.NodeB : link.NodeA].Position;
+        var far = nodes[link.FarNodeFrom(jointNodeId)].Position;
         return (float)Math.Atan2(far.Y - joint.Y, far.X - joint.X);
     }
 
-    private static float HousingReach(CreatureShape shape, Dictionary<int, NodeDef> nodes, int servoNodeId, ServoLinkDrawing link)
-    {
-        var length = ToGodot(nodes[link.NodeA].Position).DistanceTo(ToGodot(nodes[link.NodeB].Position));
-        var free = length - (float)NodeRadius(shape, link.NodeA) - (float)NodeRadius(shape, link.NodeB);
-        return ServoPart.HousingReachFor(free, link.SensorLength, link.Kind == CreatureElementKind.Piston && link.NodeA == servoNodeId);
-    }
+    private static float HousingReach(CreatureShape shape, Dictionary<int, NodeDef> nodes, int servoNodeId, LinkRef link) =>
+        ServoGeometry.HousingReach(nodes.Values.ToArray(), nodeId => NodeRadius(shape, nodeId), link, servoNodeId, SensorLength(shape, link));
 
-    private static float SensorLength(CreatureShape shape, int beamId) =>
-        shape.Sensors.FirstOrDefault(sensor => sensor.BeamId == beamId) is { } sensor ? (float)SensorPicture.SizeOf(sensor.Kind) : 0;
+    private static float SensorLength(CreatureShape shape, LinkRef link) =>
+        link.Kind == CreatureElementKind.Beam && shape.Sensors.FirstOrDefault(sensor => sensor.BeamId == link.Id) is { } sensor ? (float)SensorPicture.SizeOf(sensor.Kind) : 0;
 
     private static float RelativeAngle(float fixedAngle, float targetAngle) =>
         Mathf.Atan2(Mathf.Sin(targetAngle - fixedAngle), Mathf.Cos(targetAngle - fixedAngle));
@@ -406,12 +367,8 @@ public partial class CreatureParts : Node2D
     private static Vector2 ToGodot(Vector2D position) => new((float)position.X, (float)position.Y);
 
     private static double NodeRadius(CreatureShape shape, int nodeId) =>
-        shape.Servos.Any(servo => servo.NodeId == nodeId) ? ServoDef.JointRadius : NodeDef.PlainJointRadius;
+        NodeDef.RadiusWithServo(shape.Servos.Any(servo => servo.NodeId == nodeId));
 
-    private static bool IsTooShort(CreatureShape shape, NodeDef a, NodeDef b)
-    {
-        var dx = b.Position.X - a.Position.X;
-        var dy = b.Position.Y - a.Position.Y;
-        return Math.Sqrt((dx * dx) + (dy * dy)) - NodeRadius(shape, a.Id) - NodeRadius(shape, b.Id) < CreatureReadiness.MinimumBeamGap;
-    }
+    private static bool IsTooShort(CreatureShape shape, NodeDef a, NodeDef b) =>
+        CreatureReadiness.IsTooShort(a, b, NodeRadius(shape, a.Id), NodeRadius(shape, b.Id));
 }

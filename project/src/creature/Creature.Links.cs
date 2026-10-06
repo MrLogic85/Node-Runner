@@ -9,14 +9,11 @@ public partial class Creature
 {
     private void CreateServos(CreatureDef definition)
     {
-        var complete = definition.Servos
-            .Where(servo => servo.FixedLinkId is not null && servo.TargetLinkId is not null)
-            .ToArray();
-        _servos = new ServoJoint[complete.Length];
-        _servoVisuals = new ServoVisual[complete.Length];
-        for (var i = 0; i < complete.Length; i++)
+        _servos = new ServoJoint[definition.Servos.Count];
+        _servoVisuals = new ServoVisual[definition.Servos.Count];
+        for (var i = 0; i < definition.Servos.Count; i++)
         {
-            var servo = complete[i];
+            var servo = definition.Servos[i];
             var fixedLink = ServoLinkSide(definition, servo.NodeId, servo.FixedLinkId!.Value);
             var targetLink = ServoLinkSide(definition, servo.NodeId, servo.TargetLinkId!.Value);
             _servos[i] = new ServoJoint(servo, fixedLink, targetLink);
@@ -26,8 +23,8 @@ public partial class Creature
                 Theme = Theme,
                 Link = _servos[i],
                 Radius = ToGodotFloat(ServoDef.JointRadius, nameof(ServoDef.JointRadius)),
-                BuiltAngle = (float)_servos[i].BuiltAngle,
-                TargetAngle = (float)_servos[i].BuiltAngle,
+                BuiltAngle = (float)_servos[i].BuiltRelativeRotation,
+                TargetAngle = (float)_servos[i].BuiltRelativeRotation,
                 Range = (float)servo.Range,
                 Start = (float)servo.Start,
                 HousingReach = ServoHousingReach(definition, servo),
@@ -42,20 +39,8 @@ public partial class Creature
     private ServoLinkSide ServoLinkSide(CreatureDef definition, int servoNodeId, int linkId)
     {
         var joint = _nodeBodies[definition.NodeIndexOf(servoNodeId)];
-        if (definition.Beams.FirstOrDefault(beam => beam.Id == linkId) is { } beam)
-        {
-            return new ServoLinkSide(joint, _nodeBodies[definition.NodeIndexOf(FarNode(beam.NodeA, beam.NodeB, servoNodeId))]);
-        }
-
-        if (definition.Pistons.FirstOrDefault(piston => piston.Id == linkId) is { } piston)
-        {
-            return new ServoLinkSide(joint, _nodeBodies[definition.NodeIndexOf(FarNode(piston.NodeA, piston.NodeB, servoNodeId))]);
-        }
-
-        var spring = definition.Springs.First(entry => entry.Id == linkId);
-        return new ServoLinkSide(joint, _nodeBodies[definition.NodeIndexOf(FarNode(spring.NodeA, spring.NodeB, servoNodeId))]);
-
-        static int FarNode(int nodeA, int nodeB, int jointNode) => nodeA == jointNode ? nodeB : nodeA;
+        var link = definition.Link(linkId);
+        return new ServoLinkSide(joint, _nodeBodies[definition.NodeIndexOf(link.FarNodeFrom(servoNodeId))]);
     }
 
     private static float ServoHousingReach(CreatureDef definition, ServoDef servo)
@@ -65,32 +50,12 @@ public partial class Creature
             return 0;
         }
 
-        if (definition.Beams.FirstOrDefault(beam => beam.Id == fixedLinkId) is { } beam)
-        {
-            return HousingReach(beam.NodeA, beam.NodeB, SensorLength(definition, beam.Id), pistonCylinderEnd: false);
-        }
-
-        if (definition.Pistons.FirstOrDefault(piston => piston.Id == fixedLinkId) is { } piston)
-        {
-            return HousingReach(piston.NodeA, piston.NodeB, 0, pistonCylinderEnd: piston.NodeA == servo.NodeId);
-        }
-
-        var spring = definition.Springs.First(entry => entry.Id == fixedLinkId);
-        return HousingReach(spring.NodeA, spring.NodeB, 0, pistonCylinderEnd: false);
-
-        float HousingReach(int nodeA, int nodeB, float sensorLength, bool pistonCylinderEnd)
-        {
-            var a = definition.Nodes[definition.NodeIndexOf(nodeA)].Position;
-            var b = definition.Nodes[definition.NodeIndexOf(nodeB)].Position;
-            var dx = b.X - a.X;
-            var dy = b.Y - a.Y;
-            var free = Math.Sqrt((dx * dx) + (dy * dy)) - definition.NodeRadius(nodeA) - definition.NodeRadius(nodeB);
-            return ServoPart.HousingReachFor((float)free, sensorLength, pistonCylinderEnd);
-        }
+        var link = definition.Link(fixedLinkId);
+        return ServoGeometry.HousingReach(definition.Nodes, definition.NodeRadius, link, servo.NodeId, SensorLength(definition, link));
     }
 
-    private static float SensorLength(CreatureDef definition, int beamId) =>
-        definition.Sensors.FirstOrDefault(sensor => sensor.BeamId == beamId) is { } sensor ? (float)SensorPicture.SizeOf(sensor.Kind) : 0;
+    private static float SensorLength(CreatureDef definition, LinkRef link) =>
+        link.Kind == CreatureElementKind.Beam && definition.Sensors.FirstOrDefault(sensor => sensor.BeamId == link.Id) is { } sensor ? (float)SensorPicture.SizeOf(sensor.Kind) : 0;
 
     // A Piston pushes on its two node bodies; its only body is the hidden end-stop cylinder. Its
     // picture is a child of the creature, on the Links layer over the beams.

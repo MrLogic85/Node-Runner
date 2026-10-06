@@ -22,9 +22,6 @@ public static class PartNames
             ? UiText.AsWritten(own)
             : Default(nodes, beams, sensors, servos, pistons, springs, partId);
 
-    public static UiText Display(IReadOnlyList<NodeDef> nodes, IReadOnlyList<BeamDef> beams, IReadOnlyList<SensorDef> sensors, IReadOnlyList<PistonDef> pistons, IReadOnlyList<SpringDef> springs, int partId) =>
-        Display(nodes, beams, sensors, [], pistons, springs, partId);
-
     public static UiText Default(IReadOnlyList<NodeDef> nodes, IReadOnlyList<BeamDef> beams, IReadOnlyList<SensorDef> sensors, IReadOnlyList<ServoDef> servos, IReadOnlyList<PistonDef> pistons, IReadOnlyList<SpringDef> springs, int partId)
     {
         ArgumentNullException.ThrowIfNull(nodes);
@@ -68,9 +65,6 @@ public static class PartNames
             : throw new ArgumentOutOfRangeException(nameof(partId), "Part id must point to an existing part.");
     }
 
-    public static UiText Default(IReadOnlyList<NodeDef> nodes, IReadOnlyList<BeamDef> beams, IReadOnlyList<SensorDef> sensors, IReadOnlyList<PistonDef> pistons, IReadOnlyList<SpringDef> springs, int partId) =>
-        Default(nodes, beams, sensors, [], pistons, springs, partId);
-
     public static string? Own(IReadOnlyList<NodeDef> nodes, IReadOnlyList<BeamDef> beams, IReadOnlyList<SensorDef> sensors, IReadOnlyList<ServoDef> servos, IReadOnlyList<PistonDef> pistons, IReadOnlyList<SpringDef> springs, int partId)
     {
         ArgumentNullException.ThrowIfNull(nodes);
@@ -86,9 +80,6 @@ public static class PartNames
             ?? pistons.FirstOrDefault(piston => piston.Id == partId)?.Name
             ?? springs.FirstOrDefault(spring => spring.Id == partId)?.Name;
     }
-
-    public static string? Own(IReadOnlyList<NodeDef> nodes, IReadOnlyList<BeamDef> beams, IReadOnlyList<SensorDef> sensors, IReadOnlyList<PistonDef> pistons, IReadOnlyList<SpringDef> springs, int partId) =>
-        Own(nodes, beams, sensors, [], pistons, springs, partId);
 
     private static int IndexOf<T>(IReadOnlyList<T> items, Func<T, bool> match)
     {

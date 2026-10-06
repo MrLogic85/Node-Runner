@@ -308,6 +308,7 @@ public partial class UiMenu : Container, IUiClipping
     /// <summary>
     /// Keeps this menu attached to a normalized point on another control.
     /// The anchor is sampled every frame so scrolling and container relayout are followed.
+    /// A menu that would not fit below the screen edge opens above its anchor when it fits there; otherwise it stays below.
     /// The menu must sit in a <see cref="UiLevelLayer"/>, which floats it over its screen (#768).
     /// </summary>
     public void Follow(Control anchor, Vector2 normalizedPoint, Vector2 offset = default)
@@ -340,10 +341,26 @@ public partial class UiMenu : Container, IUiClipping
             return;
         }
 
+        var anchorTransform = _followAnchor.GetGlobalTransformWithCanvas();
         var localPoint = new Vector2(
             _followAnchor.Size.X * _followPoint.X,
             _followAnchor.Size.Y * _followPoint.Y);
-        GlobalPosition = _followAnchor.GetGlobalTransformWithCanvas() * localPoint + _followOffset;
+        var position = anchorTransform * localPoint + _followOffset;
+
+        // A menu that would run past the bottom of the screen opens upward instead,
+        // as Godot's own OptionButton popup does.
+        var screenBottom = GetViewportRect().End.Y;
+        if (position.Y + Size.Y > screenBottom)
+        {
+            var anchorTop = (anchorTransform * new Vector2(0, 0)).Y;
+            var above = anchorTop - _followOffset.Y - Size.Y;
+            if (above >= 0)
+            {
+                position.Y = above;
+            }
+        }
+
+        GlobalPosition = position;
     }
 
     private Control[] VisibleChildren() =>

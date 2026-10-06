@@ -20,9 +20,6 @@ namespace NodeRunner.App.Builders;
 /// </summary>
 public sealed class CreatureBuilder
 {
-    /// <summary>A beam, Piston or Spring by id and end nodes, for generic Servo link choices.</summary>
-    public readonly record struct LinkRef(int Id, int NodeA, int NodeB);
-
     /// <summary>Why a sensor cannot go on a beam that already has one.</summary>
     public static UiText OneSensorPerBeamReason { get; } = UiText.Plain("One sensor per beam");
 
@@ -31,6 +28,8 @@ public sealed class CreatureBuilder
 
     /// <summary>Why a joint part needs a node where at least two links meet.</summary>
     public static UiText JointPartsGoOnAJointReason { get; } = UiText.Plain("Joint parts go on a joint");
+
+    public static UiText ServoNeedsTwoLinksReason { get; } = UiText.Plain("A Servo needs two links at its joint");
 
     /// <summary>Why a Piston or a Spring cannot join two nodes a beam already holds rigid (#451, #453).</summary>
     public static UiText BeamJoinsTheseNodesReason { get; } = UiText.Plain("A beam already joins these nodes");
@@ -101,14 +100,9 @@ public sealed class CreatureBuilder
     public void RemoveNode(int nodeId)
     {
         var nodeIndex = NodeIndexOf(nodeId);
-        var removedBeamIds = _beams
-            .Where(beam => beam.NodeA == nodeId || beam.NodeB == nodeId)
-            .Select(beam => beam.Id)
-            .ToHashSet();
-        var removedLinkIds = removedBeamIds
-            .Concat(_pistons.Where(piston => piston.NodeA == nodeId || piston.NodeB == nodeId).Select(piston => piston.Id))
-            .Concat(_springs.Where(spring => spring.NodeA == nodeId || spring.NodeB == nodeId).Select(spring => spring.Id))
-            .ToArray();
+        var removedLinks = LinksAt(nodeId);
+        var removedBeamIds = removedLinks.Where(link => link.Kind == CreatureElementKind.Beam).Select(link => link.Id).ToHashSet();
+        var removedLinkIds = removedLinks.Select(link => link.Id).ToArray();
 
         _beams.RemoveAll(beam => removedBeamIds.Contains(beam.Id));
         _sensors.RemoveAll(sensor => removedBeamIds.Contains(sensor.BeamId));
@@ -292,33 +286,19 @@ public sealed class CreatureBuilder
             return;
         }
 
-        if (parameter is PartParameterId.Range or PartParameterId.StartPosition or PartParameterId.AngularMaxSpeed)
+        if (_servos.Any(servo => servo.Id == partId))
         {
             var servoIndex = ServoIndexOf(partId);
             var servo = _servos[servoIndex];
             _servos[servoIndex] = parameter switch
             {
+                PartParameterId.ServoStrength => servo.WithSettings(value, servo.Range, servo.Start, servo.MaxSpeed, servo.RiseTime),
                 PartParameterId.Range => servo.WithSettings(servo.Strength, value, servo.Start, servo.MaxSpeed, servo.RiseTime),
                 PartParameterId.StartPosition => servo.WithSettings(servo.Strength, servo.Range, value, servo.MaxSpeed, servo.RiseTime),
                 PartParameterId.AngularMaxSpeed => servo.WithSettings(servo.Strength, servo.Range, servo.Start, value, servo.RiseTime),
+                PartParameterId.RiseTime => servo.WithSettings(servo.Strength, servo.Range, servo.Start, servo.MaxSpeed, value),
                 _ => throw new ArgumentOutOfRangeException(nameof(parameter)),
             };
-            return;
-        }
-
-        if (parameter == PartParameterId.ServoStrength && _servos.Any(servo => servo.Id == partId))
-        {
-            var servoIndex = ServoIndexOf(partId);
-            var servo = _servos[servoIndex];
-            _servos[servoIndex] = servo.WithSettings(value, servo.Range, servo.Start, servo.MaxSpeed, servo.RiseTime);
-            return;
-        }
-
-        if (parameter == PartParameterId.RiseTime && _servos.Any(servo => servo.Id == partId))
-        {
-            var servoIndex = ServoIndexOf(partId);
-            var servo = _servos[servoIndex];
-            _servos[servoIndex] = servo.WithSettings(servo.Strength, servo.Range, servo.Start, servo.MaxSpeed, value);
             return;
         }
 
@@ -403,9 +383,15 @@ public sealed class CreatureBuilder
     /// <summary>Whether a Servo can sit on this node; if not, <paramref name="reason"/> says why.</summary>
     public bool CanAddServo(int nodeId, [NotNullWhen(false)] out UiText? reason)
     {
-        if (!HasNode(nodeId) || LinksAt(nodeId).Count < 2)
+        if (!HasNode(nodeId))
         {
             reason = JointPartsGoOnAJointReason;
+            return false;
+        }
+
+        if (!ServoDef.HasTwoLinks(LinksAt(nodeId)))
+        {
+            reason = ServoNeedsTwoLinksReason;
             return false;
         }
 
@@ -418,6 +404,8 @@ public sealed class CreatureBuilder
         reason = null;
         return true;
     }
+
+    public bool ServoNeedsTwoLinks(int nodeId) => HasNode(nodeId) && !ServoDef.HasTwoLinks(LinksAt(nodeId));
 
     /// <summary>Adds a Servo with the first two links at the joint as Fixed and Target.</summary>
     public int AddServo(int nodeId)
@@ -433,17 +421,18 @@ public sealed class CreatureBuilder
         return id;
     }
 
-    /// <summary>The beams touching <paramref name="nodeId"/>, in their current list order.</summary>
-    public IReadOnlyList<BeamDef> BeamsAt(int nodeId) =>
-        [.. _beams.Where(beam => beam.NodeA == nodeId || beam.NodeB == nodeId)];
-
     /// <summary>The beams, Pistons and Springs touching <paramref name="nodeId"/>, in their current list order.</summary>
-    public IReadOnlyList<LinkRef> LinksAt(int nodeId) =>
-    [
-        .. _beams.Where(beam => beam.NodeA == nodeId || beam.NodeB == nodeId).Select(beam => new LinkRef(beam.Id, beam.NodeA, beam.NodeB)),
-        .. _pistons.Where(piston => piston.NodeA == nodeId || piston.NodeB == nodeId).Select(piston => new LinkRef(piston.Id, piston.NodeA, piston.NodeB)),
-        .. _springs.Where(spring => spring.NodeA == nodeId || spring.NodeB == nodeId).Select(spring => new LinkRef(spring.Id, spring.NodeA, spring.NodeB)),
-    ];
+    public IReadOnlyList<LinkRef> LinksAt(int nodeId) => [.. Links().Where(link => link.Touches(nodeId))];
+
+    /// <summary>The beam, Piston or Spring with <paramref name="linkId"/>.</summary>
+    public LinkRef Link(int linkId) => LinkRef.Find(Links(), linkId);
+
+    /// <summary>A node's current drawn/collision radius without building a CreatureDef.</summary>
+    public double NodeRadius(int nodeId)
+    {
+        ValidateNodeId(nodeId);
+        return NodeDef.RadiusWithServo(_servos.Any(servo => servo.NodeId == nodeId));
+    }
 
     /// <summary>
     /// Changes the Servo's fixed or target link. Picking the other role swaps them; any real role
@@ -676,11 +665,13 @@ public sealed class CreatureBuilder
 
     private void ValidateLinkTouchesNode(int linkId, int nodeId)
     {
-        if (!LinksAt(nodeId).Any(link => link.Id == linkId))
+        if (!Link(linkId).Touches(nodeId))
         {
             throw new ArgumentException("A servo can only use links at its joint.");
         }
     }
 
     private int AllocatePartId() => _nextPartId++;
+
+    private IEnumerable<LinkRef> Links() => LinkRef.All(_beams, _pistons, _springs);
 }

@@ -12,16 +12,27 @@ public sealed class PartNamesTests
         const int count = 99;
         var nodes = Enumerable.Range(1, count + 1).Select(id => new NodeDef(id, new Vector2D(id, 0))).ToArray();
         var beams = Enumerable.Range(0, count).Select(index => new BeamDef(1000 + index, index + 1, index + 2)).ToArray();
+        var servos = Enumerable.Range(0, count).Select(index => new ServoDef(5000 + index, index + 1, 1000 + index, 1000 + index + 1)).ToArray();
         var pistons = Enumerable.Range(0, count).Select(index => new PistonDef(2000 + index, index + 1, index + 2)).ToArray();
         var springs = Enumerable.Range(0, count).Select(index => new SpringDef(3000 + index, index + 1, index + 2)).ToArray();
         var sensors = Enum.GetValues<SensorKind>().Select((kind, index) => new SensorDef(4000 + index, 1000 + index, kind)).ToArray();
-        int[] partIds = [.. nodes.Select(node => node.Id), .. beams.Select(beam => beam.Id), .. pistons.Select(piston => piston.Id), .. springs.Select(spring => spring.Id), .. sensors.Select(sensor => sensor.Id)];
+        int[] partIds = [.. nodes.Select(node => node.Id), .. beams.Select(beam => beam.Id), .. servos.Select(servo => servo.Id), .. pistons.Select(piston => piston.Id), .. springs.Select(spring => spring.Id), .. sensors.Select(sensor => sensor.Id)];
 
         foreach (var partId in partIds)
         {
-            var name = PartNames.Default(nodes, beams, sensors, pistons, springs, partId);
+            var name = PartNames.Default(nodes, beams, sensors, servos, pistons, springs, partId);
             var shown = string.Format(CultureInfo.InvariantCulture, name.Message, [.. name.Args]);
             shown.Length.ShouldBeLessThanOrEqualTo(NameLimits.Part, shown);
         }
+    }
+
+    [Fact]
+    public void Display_WithANamedServo_ReturnsTheServoName()
+    {
+        var nodes = new[] { new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(80, 0)), new NodeDef(3, new Vector2D(0, 80)) };
+        var beams = new[] { new BeamDef(10, 1, 2), new BeamDef(11, 1, 3) };
+        var servos = new[] { new ServoDef(20, 1, 10, 11, "Hip") };
+
+        PartNames.Display(nodes, beams, [], servos, [], [], 20).ShouldBe(UiText.AsWritten("Hip"));
     }
 }

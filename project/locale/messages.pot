@@ -21,6 +21,10 @@ msgid "3.1 m/s"
 msgstr ""
 
 #: libs/NodeRunner.App/Builders/CreatureBuilder.cs
+msgid "A Servo needs two links at its joint"
+msgstr ""
+
+#: libs/NodeRunner.App/Builders/CreatureBuilder.cs
 msgid "A beam already joins these nodes"
 msgstr ""
 
@@ -315,7 +319,7 @@ msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs
 #: project/scenes/screens/BuildScreen.tscn
-msgid "Fixed part"
+msgid "Fixed link"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/MapNames.cs
@@ -498,15 +502,17 @@ msgid "Pause"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs
-msgid "Pick a link"
+#: libs/NodeRunner.App/ViewModels/BuildViewModel.cs
+msgid "Pick a Fixed link"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs
+#: libs/NodeRunner.App/ViewModels/BuildViewModel.cs
+msgid "Pick a Target link"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/BuildViewModel.cs
 msgid "Pick two links"
-msgstr ""
-
-#: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs
-msgid "Pick two links."
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/LinkListPresentation.cs
@@ -732,7 +738,7 @@ msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs
 #: project/scenes/screens/BuildScreen.tscn
-msgid "Target part"
+msgid "Target link"
 msgstr ""
 
 #: project/src/hosts/BuildHost.cs
@@ -867,10 +873,6 @@ msgstr ""
 #: project/scenes/screens/BuildScreen.tscn
 #: project/src/hosts/CreationActions.cs
 msgid "Unlock"
-msgstr ""
-
-#: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs
-msgid "Unlock to change which link is fixed."
 msgstr ""
 
 #: project/src/hosts/CreationActions.cs
@@ -1017,6 +1019,10 @@ msgid "{0} motor"
 msgid_plural "{0} motors"
 msgstr[0] ""
 msgstr[1] ""
+
+#: libs/NodeRunner.App/Lifecycle/CreatureReadiness.cs
+msgid "{0} needs two links at its joint. Connect another link there or delete it."
+msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/CreationCardPresentation.cs
 msgid "{0} node"

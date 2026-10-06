@@ -19,7 +19,7 @@ public partial class ServoVisual : ServoPart, IShadowVisual
     {
         GlobalPosition = Link.JointPosition;
         GlobalRotation = (float)Link.FixedRotation;
-        BuiltAngle = (float)Link.BuiltAngle;
+        BuiltAngle = (float)Link.BuiltRelativeRotation;
         TargetAngle = (float)Link.TargetRelativeRotation;
         QueueRedraw();
     }

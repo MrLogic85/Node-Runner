@@ -109,14 +109,18 @@ public partial class ComponentGalleryScreen : GalleryScreen
                 new("Left shin", UiIconId.Beam, Note: "swaps"),
                 new("Tail"),
             ],
+            "MissingPicker" =>
+            [
+                new("Front thigh", UiIconId.Beam, IconTint: UiTokens.Color.Detail),
+            ],
             "LockedPicker" or "DisabledPicker" =>
             [
                 new("Wheel 1", UiIconId.Beam),
             ],
             "FixedPartPicker" =>
             [
-                new("Front thigh", UiIconId.Beam),
-                new("Front shin", UiIconId.Beam),
+                new("Front thigh", UiIconId.Beam, IconTint: UiTokens.Color.Detail),
+                new("Front shin", UiIconId.Beam, IconTint: UiTokens.Color.Detail),
             ],
             _ => picker.Options,
         };

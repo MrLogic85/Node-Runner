@@ -1,3 +1,4 @@
+using NodeRunner.App.Builders;
 using NodeRunner.App.Lifecycle;
 using NodeRunner.Domain;
 
@@ -316,15 +317,7 @@ public sealed class BuildPresentationViewModel
         };
 
         bool IsTooShort(int nodeA, int nodeB) =>
-            NodeById(nodeA).Position != NodeById(nodeB).Position
-            && Distance(NodeById(nodeA), NodeById(nodeB)) - _build.NodeRadius(nodeA) - _build.NodeRadius(nodeB) < CreatureReadiness.MinimumBeamGap;
-
-        static double Distance(NodeDef a, NodeDef b)
-        {
-            var dx = b.Position.X - a.Position.X;
-            var dy = b.Position.Y - a.Position.Y;
-            return Math.Sqrt((dx * dx) + (dy * dy));
-        }
+            CreatureReadiness.IsTooShort(NodeById(nodeA), NodeById(nodeB), _build.NodeRadius(nodeA), _build.NodeRadius(nodeB));
     }
 
     private UiText ConnectedBeamText(int nodeId)
@@ -352,20 +345,27 @@ public sealed class BuildPresentationViewModel
             .OrderBy(link => link.Id)
             .ToArray();
         var options = links.Select(link => _build.PartDisplayName(link.Id)).ToArray();
-        var lockedNote = _build.IsMoveOnly ? UiText.Plain("Unlock to change which link is fixed.") : null;
         var trainedNote = !_build.IsMoveOnly && _build.TrainingGeneration is not null ? UiText.Plain("Changing these makes it learn again.") : null;
+        var twoLinksNote = _build.ServoNeedsTwoLinks(servo.NodeId) ? CreatureBuilder.ServoNeedsTwoLinksReason : null;
         return
         [
-            Picker(UiText.Plain("Fixed part"), servo.FixedLinkId),
-            Picker(UiText.Plain("Target part"), servo.TargetLinkId),
+            Picker(UiText.Plain("Fixed link"), servo.FixedLinkId, UiText.Plain("Pick a Fixed link")),
+            Picker(UiText.Plain("Target link"), servo.TargetLinkId, UiText.Plain("Pick a Target link")),
         ];
 
-        PartPickerPresentation Picker(UiText label, int? selectedLinkId)
+        PartPickerPresentation Picker(UiText label, int? selectedLinkId, UiText placeholder)
         {
             var selected = selectedLinkId is { } id ? Array.FindIndex(links, link => link.Id == id) : -1;
-            return selected >= 0
-                ? new PartPickerPresentation(label, links.Select(link => link.Id).ToArray(), options, selected, _build.IsMoveOnly, lockedNote ?? trainedNote)
-                : new PartPickerPresentation(label, [0, .. links.Select(link => link.Id)], [UiText.Plain("Pick a link"), .. options], 0, _build.IsMoveOnly, UiText.Plain("Pick two links."));
+            var chosen = selected >= 0;
+            return new PartPickerPresentation(
+                label,
+                links.Select(link => link.Id).ToArray(),
+                options,
+                chosen ? selected : null,
+                _build.IsMoveOnly,
+                _build.IsMoveOnly ? null : chosen ? trainedNote : twoLinksNote,
+                links.Select(link => link.Kind).ToArray(),
+                chosen ? null : placeholder);
         }
     }
 

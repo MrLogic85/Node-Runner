@@ -48,10 +48,61 @@ public sealed class CreatureReadinessTests
     {
         var creature = new CreatureDef([new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(0, length))], [new BeamDef(101, 1, 2)], []);
 
-        CreatureReadiness.IsTooShort(creature.Nodes[0], creature.Nodes[1]).ShouldBe(!fits);
+        CreatureReadiness.IsTooShort(creature, 1, 2).ShouldBe(!fits);
         CreatureReadiness.Problems(creature).ShouldBe(fits
             ? []
             : [UiText.Format("The beam between node {0} and node {1} is too short. Move one of the nodes apart.", 1, 2)]);
+    }
+
+    [Fact]
+    public void Problems_WithAMissingServoLink_SaysItIsMissingALink()
+    {
+        var creature = new CreatureDef(
+            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(120, 0)), new NodeDef(3, new Vector2D(0, 120))],
+            [new BeamDef(4, 1, 2), new BeamDef(5, 1, 3)],
+            [],
+            [new ServoDef(6, 1, null, 5)],
+            [],
+            [],
+            nextPartId: 7);
+
+        CreatureReadiness.Problems(creature).ShouldBe(
+            [UiText.Format("{0} is missing a link. Pick two links at its joint or delete it.",
+                PartNames.Display(creature.Nodes, creature.Beams, creature.Sensors, creature.Servos, creature.Pistons, creature.Springs, 6))]);
+    }
+
+    [Fact]
+    public void Problems_WithAServoOnAOneLinkJoint_AsksForAnotherLink()
+    {
+        var creature = new CreatureDef(
+            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(120, 0))],
+            [new BeamDef(4, 1, 2)],
+            [],
+            [new ServoDef(6, 1, null, 4)],
+            [],
+            [],
+            nextPartId: 7);
+
+        CreatureReadiness.Problems(creature).ShouldBe(
+            [UiText.Format("{0} needs two links at its joint. Connect another link there or delete it.",
+                PartNames.Display(creature.Nodes, creature.Beams, creature.Sensors, creature.Servos, creature.Pistons, creature.Springs, 6))]);
+    }
+
+    [Fact]
+    public void Problems_WithAServoJoint_UsesServoRadiusForTooShortCheck()
+    {
+        var creature = new CreatureDef(
+            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(90, 0)), new NodeDef(3, new Vector2D(0, 120))],
+            [new BeamDef(4, 1, 2), new BeamDef(5, 1, 3)],
+            [],
+            [new ServoDef(6, 1, 4, 5)],
+            [],
+            [],
+            nextPartId: 7);
+
+        CreatureReadiness.IsTooShort(new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(90, 0)), NodeDef.PlainJointRadius, NodeDef.PlainJointRadius).ShouldBeFalse();
+        CreatureReadiness.IsTooShort(creature, 1, 2).ShouldBeTrue();
+        CreatureReadiness.Problems(creature).ShouldContain(UiText.Format("The beam between node {0} and node {1} is too short. Move one of the nodes apart.", 1, 2));
     }
 
     [Fact]

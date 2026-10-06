@@ -51,14 +51,9 @@ public sealed record CreatureDef
     {
     }
 
+    [JsonConstructor]
     public CreatureDef(IReadOnlyList<NodeDef> nodes, IReadOnlyList<BeamDef> beams, IReadOnlyList<SensorDef> sensors, IReadOnlyList<ServoDef> servos, IReadOnlyList<PistonDef> pistons, IReadOnlyList<SpringDef> springs, int nextPartId)
         : this(nodes, beams, sensors, servos, pistons, springs, (int?)nextPartId)
-    {
-    }
-
-    [JsonConstructor]
-    public CreatureDef(IReadOnlyList<NodeDef> nodes, IReadOnlyList<BeamDef> beams, IReadOnlyList<SensorDef> sensors, IReadOnlyList<PistonDef> pistons, IReadOnlyList<SpringDef> springs, int nextPartId, IReadOnlyList<ServoDef>? servos = null)
-        : this(nodes, beams, sensors, servos ?? [], pistons, springs, (int?)nextPartId)
     {
     }
 
@@ -115,6 +110,7 @@ public sealed record CreatureDef
         }
 
         var beamIds = beams.Select(beam => beam.Id).ToHashSet();
+        var links = LinkRef.All(beams, pistons, springs).ToArray();
         var servosByNode = new HashSet<int>();
         foreach (var servo in servos)
         {
@@ -124,8 +120,8 @@ public sealed record CreatureDef
                 throw new ArgumentException($"Node id {servo.NodeId} already has a joint part; a joint holds at most one.");
             }
 
-            ValidateServoLink(servo.FixedLinkId, servo.NodeId, beams, pistons, springs);
-            ValidateServoLink(servo.TargetLinkId, servo.NodeId, beams, pistons, springs);
+            ValidateServoLink(servo.FixedLinkId, servo.NodeId, links);
+            ValidateServoLink(servo.TargetLinkId, servo.NodeId, links);
         }
 
         var beamsWithSensor = new HashSet<int>();
@@ -186,8 +182,20 @@ public sealed record CreatureDef
     public double NodeRadius(int nodeId)
     {
         NodeIndexOf(nodeId);
-        return _servos.Any(servo => servo.NodeId == nodeId) ? ServoDef.JointRadius : NodeDef.PlainJointRadius;
+        return NodeDef.RadiusWithServo(_servos.Any(servo => servo.NodeId == nodeId));
     }
+
+    /// <summary>The beam, Piston or Spring with <paramref name="linkId"/>.</summary>
+    public LinkRef Link(int linkId) => LinkRef.Find(Links(), linkId);
+
+    /// <summary>The beams, Pistons and Springs touching <paramref name="nodeId"/>, in part-list order.</summary>
+    public IReadOnlyList<LinkRef> LinksAt(int nodeId)
+    {
+        NodeIndexOf(nodeId);
+        return [.. Links().Where(link => link.Touches(nodeId))];
+    }
+
+    private IEnumerable<LinkRef> Links() => LinkRef.All(_beams, _pistons, _springs);
 
     private static SensorDef WithAim(SensorDef sensor, IReadOnlyList<NodeDef> nodes, IReadOnlyList<BeamDef> beams)
     {
@@ -231,23 +239,18 @@ public sealed record CreatureDef
         }
     }
 
-    private static void ValidateServoLink(int? linkId, int nodeId, IReadOnlyList<BeamDef> beams, IReadOnlyList<PistonDef> pistons, IReadOnlyList<SpringDef> springs)
+    private static void ValidateServoLink(int? linkId, int nodeId, IReadOnlyList<LinkRef> links)
     {
         if (linkId is null)
         {
             return;
         }
 
-        if (!LinkTouchesNode(linkId.Value, nodeId, beams, pistons, springs))
+        if (!links.Any(link => link.Id == linkId.Value && link.Touches(nodeId)))
         {
             throw new ArgumentException($"Link id {linkId.Value} must touch node id {nodeId} for that servo.");
         }
     }
-
-    private static bool LinkTouchesNode(int linkId, int nodeId, IReadOnlyList<BeamDef> beams, IReadOnlyList<PistonDef> pistons, IReadOnlyList<SpringDef> springs) =>
-        beams.Any(beam => beam.Id == linkId && (beam.NodeA == nodeId || beam.NodeB == nodeId))
-        || pistons.Any(piston => piston.Id == linkId && (piston.NodeA == nodeId || piston.NodeB == nodeId))
-        || springs.Any(spring => spring.Id == linkId && (spring.NodeA == nodeId || spring.NodeB == nodeId));
 
     private static Dictionary<int, int> BuildIndex<T>(IReadOnlyList<T> items, Func<T, int> idOf)
     {

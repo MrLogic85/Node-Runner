@@ -10,13 +10,19 @@ below was designed by the project owner, not inferred from the old code — if
 you are extending it, keep asking "what would the owner want here" rather
 than defaulting to what is easiest to implement.
 
-## Parts: Node, Beam, Sensor, Piston, Spring
+**The model is not the simulation** (owner decision, #452). This document
+describes what a part *is* and what it does, in words that would hold for
+any physics engine: no engine body or joint types, and no rules that differ
+by how a part happens to be simulated. How Godot realises each part lives in
+`docs/ARCHITECTURE.md` and in code comments under `project/src/creature/`.
+
+## Parts: Node, Beam, Sensor, Servo, Piston, Spring
 
 A creature is built from two structural parts (Node, Beam), sensor parts
-that sit on beams (the Accelerometer and the Camera) and links between two
-nodes (the Piston and the Spring). Joints are passive (#450): a beam turns freely where it
-meets another, and only parts with brain ports move the body. Joint motor
-parts come with the Servo (#452) and the Velocity motor (#454). Keeping
+that sit on beams (the Accelerometer and the Camera), a joint motor (the
+Servo) and links between two nodes (the Piston and the Spring). Plain joints
+are passive (#450): a beam turns freely where it meets another, and only
+parts with brain ports move the body. Keeping
 "what senses" (sensors) and "what thinks" (the neural model) conceptually separate is the most important rule in this
 document — **a sensor is not the brain.**
 
@@ -26,7 +32,7 @@ two beams, so they will sit on a joint; spring, piston and wing join two
 nodes, so they are links. Each sensor is one clear idea, the way real
 sensors are.
 
-Every saved Node, Beam, sensor, Piston and Spring has a stable positive integer id from the
+Every saved Node, Beam, sensor, Servo, Piston and Spring has a stable positive integer id from the
 creature's single part counter (`CreatureDef.NextPartId`). The counter is
 saved with the creature, only increases, and deleted ids are never reused.
 Ids are machine identity only: they are not display order, draw order, brain
@@ -34,7 +40,7 @@ port order, or names. Display names are optional metadata on parts; they may
 be duplicated and are never keys.
 
 ```
-CreatureDef  ──build──▶  physical body  ──sensors──▶  model  ──outputs──▶  pistons  ──force──▶  physical body
+CreatureDef  ──build──▶  physical body  ──sensors──▶  model  ──outputs──▶  servos + pistons  ──force──▶  physical body
    (data)                    (physics)                (control)                                (physics)
 ```
 
@@ -141,28 +147,6 @@ CreatureDef  ──build──▶  physical body  ──sensors──▶  model 
 - **There is no speed or elevation sensor:** the brain learns movement from
   acceleration, Piston length and speed, and its own outputs.
 
-### Servo
-
-- **Beginner:** A motor on a joint. It holds one link as Fixed and turns
-  another link as Target; any other links at that joint stay free.
-- **Implementation:** `ServoDef` stores the joint node, nullable Fixed and
-  Target link ids, optional name, Max strength, Range, Start position, Max
-  speed and Rise time. Link ids may point to Beams, Pistons or Springs.
-  `CreatureDef` allows missing link ids so deleting a held link keeps the
-  Servo and readiness blocks training until the player picks a
-  replacement or deletes the Servo.
-- **Limits and torque:** the Servo's angle is the direction from its joint to
-  the Target link's other joint minus the direction from its joint to the
-  Fixed link's other joint, relative to the built pose. Range and Start set
-  the lower and upper range ends, and the Target cannot turn past them. Each
-  tick `Servo.NextTorque` mirrors `Piston.NextForce`.
-- **Settings:** Max strength is torque (N·m in the panel, saved as world
-  torque), Range is 20°–360°, Start position is 0–100% inside that range,
-  Max speed is °/s, and Rise time is seconds.
-- **Ports:** inputs are `angle` (−1 lower end, 0 built, +1 upper end) and
-  `speed` (`tanh(ω/maxSpeed)`, counter-clockwise positive). Outputs are
-  `angle` (target angle) and `strength` (share of Max strength).
-
 #### Camera
 
 - **Beginner:** Three rays that tell the brain how near the ground is. A
@@ -177,12 +161,11 @@ CreatureDef  ──build──▶  physical body  ──sensors──▶  model 
   world as built, so its rays look forward-up, forward and forward-down
   (#622). Only a
   Camera has an aim.
-- **Implementation:** `project/src/creature/CameraSensor.cs` adds three
-  `RayCast2D` children at the beam's midpoint, aimed by
-  `CameraRays.LocalRayTarget` (`libs/NodeRunner.Mechanics/CameraRays.cs`) in
-  the beam body's frame, so they turn with the beam.
-  They see the ground only (collision layer 1), `CameraRays.RayLength`
-  (220) long. (It is not Godot's `Camera2D`.)
+- **Rays:** three rays from the beam's midpoint, aimed by
+  `CameraRays.LocalRayTarget` (`libs/NodeRunner.Mechanics/CameraRays.cs`)
+  relative to the beam, so they turn with it. They see the ground only and
+  are `CameraRays.RayLength` (220) long. How the engine casts them is
+  described in `project/src/creature/CameraSensor.cs`.
 - **Ray names** are symmetric around the centre ray, seen from the camera
   looking along its rays: **left**, **centre**, **right** (keys `left1`,
   `centre`, `right1`; five rays add **far left** / **far right**, keys
@@ -199,7 +182,7 @@ CreatureDef  ──build──▶  physical body  ──sensors──▶  model 
   camera settings in 0.15 (#578); their power draw comes with power in
   0.18 (#599).
 
-#### Rigid triangles
+### Rigid triangles
 
 Three beams that close a triangle between three nodes are geometrically
 rigid (SSS: three fixed side lengths fully determine all three vertex
@@ -211,6 +194,32 @@ faintly instead (#770). There the hatch rides on one of the triangle's
 beams, which it cannot move against. A larger truss is
 a composition of triangles; a bare quadrilateral stays free to fold.
 
+### Servo
+
+- **Beginner:** A motor on a joint. It holds one link as Fixed and turns
+  another link as Target; any other links at that joint stay free.
+- **Implementation:** `ServoDef` stores the joint node, nullable Fixed and
+  Target link ids, optional name, Max strength, Range, Start position, Max
+  speed and Rise time. Link ids may point to Beams, Pistons or Springs.
+  `CreatureDef` allows missing link ids so deleting a held link keeps the
+  Servo and readiness blocks training until the player picks a
+  replacement or deletes the Servo.
+- **Limits and torque:** the Servo's angle is the direction from its joint to
+  the Target link's other joint minus the direction from its joint to the
+  Fixed link's other joint, relative to the built pose. Range and Start set
+  the lower and upper range ends; past either end it is pushed back, harder
+  the further it goes. Each tick `Servo.NextMotor` chases a wanted speed
+  (ten times the angle still to go, at most Max speed) with two parts: a
+  push that closes most of the speed gap in one step, and a holding part
+  that slowly gathers what a steady load needs, so a Servo can hold weight up
+  to the strength the brain chose. The holding part stops gathering while
+  the motor already gives all it can. Because it gathers slowly, a Servo
+  that suddenly takes weight first sags a little and climbs back over a
+  second or two. The torque builds to that strength over Rise
+  time and drops at once.
+- **Settings:** Max strength is torque (N·m in the panel, saved as world
+  torque), Range is 20°–360°, Start position is 0–100% inside that range,
+  Max speed is °/s, and Rise time is seconds.
 ### Piston
 
 - **Beginner:** A powered link between two nodes that pushes them apart or
@@ -250,14 +259,17 @@ a composition of triangles; a bare quadrilateral stays free to fold.
   and a weak Piston with a high Max speed cannot brake in time and overshoots.
   That is for the user's settings, the brain (less strength) and fitness
   (#546).
-- **End stops** (#701): its length stays within its stroke, whatever the load.
+- **End stops** (#701): its length stays within its stroke under ordinary
+  loads, but a hard impact can give a little before the simulation pushes it
+  back.
   The range ends limit the distance; inside the stroke nothing extra pushes
   along the Piston, so the Piston's own force is what moves it.
 - **Minimum length:** the same as a beam's (`CreatureReadiness.MinimumBeamGap`).
 - **Drawn** as a telescoping rod from node A to node B
   (`project/src/theme/PistonDrawing.cs`), over beams and under joints
-  (see "Draw layers"). The moving section shows the stroke's share of its
-  built length (±50% draws half). A
+  (see "Draw layers"): the cylinder starts at the first joint, the cap at
+  the second, and the cylinder takes the stroke's share of the built length
+  (±50% draws half). A
   selected Piston shows ticks at its shortest and longest lengths while the
   selection can set its Stroke (#704).
 
@@ -348,9 +360,8 @@ creature has a knock-out outline instead (`KnockoutVisual`): the arena's
 background a little wider than each beam and node, under the whole
 creature, so it stands clear of the shadows behind it.
 
-- **Node:** its ring at its collision size, without a glyph. Joint parts
-  that make a node larger (the motors, #452 and #454; later the Wheel, #129,
-  and a touch sensor, #665) only change that size.
+- **Node:** a plain joint's ring at its collision size, without a glyph.
+  Joint parts such as the Servo own their own shadow drawing.
 - **Servo:** simplified to its motor ring, housing outline, one range arc and
   one horn line.
 - **Beam:** its line, without angle marks or labels.
@@ -393,7 +404,7 @@ creature, so it stands clear of the shadows behind it.
     the built pose is off-centre: −1…0 spans fully in…built and 0…1 spans
     built…fully out (`OutputSignals.PositionFromTarget`). For the Piston (#451)
     −1 is fully in and +1 fully out; for the Servo (#452), −1 is the lower
-    lower range end and +1 the upper range end.
+    range end and +1 the upper range end.
   - **Strength** uses `sigmoid`: 0…1, the share of the part's **Strength
     setting** used this tick. The setting is the part's maximum force, chosen
     in Build; the strength output is the brain's choice of how much of it to
@@ -407,8 +418,10 @@ creature, so it stands clear of the shadows behind it.
     match by part id, channel and direction: a kept port keeps its weights
     and bias, a new port starts almost passive as above, and a removed
     part's neurons and connections are dropped. Moving nodes or changing a
-    part's settings keeps every port. Part ids are never reused, so a part
-    removed and added again is a new part that starts passive.
+    part's settings keeps every port. Changing a Servo's Fixed or Target link
+    gives it a new id because the meaning and sign of its ports changed, so
+    its weights reset. Part ids are never reused, so a part removed and added
+    again is a new part that starts passive.
   - **Build refits the brain it opened with (#689):** every save in one
     Build visit refits the brain as it was when Build opened, not the last
     saved one. So a part an Undo brings back in the same visit gets its
@@ -418,8 +431,8 @@ creature, so it stands clear of the shadows behind it.
     reused, though new ports' ids need not be sequential. Generation,
     latest and best always come from the saved training.
 - **Input count** = `(accelerometer count × 2) + (camera count × 3) +
-  (piston count × 2)`.
-- **Output count** = `piston count × 2`.
+  (servo count × 2) + (piston count × 2)`.
+- **Output count** = `(servo count × 2) + (piston count × 2)`.
 - **Order** comes from `BrainPorts.Of` (`libs/NodeRunner.Domain/BrainPorts.cs`):
   ports sorted by part id, then in the order the part declares them. It
   depends only on ids, so moving or resizing parts, or adding one, never
@@ -441,6 +454,8 @@ creature, so it stands clear of the shadows behind it.
   surviving parts keep their ids because no list reindexing is needed.
 - Saving, loading, moving, renaming, reordering lists, rebuilding a body, and
   copying a whole Creation preserve part ids and the counter.
+- Changing a Servo's Fixed or Target link allocates a new Servo id, so any
+  trained weights for its old angle convention are not reused.
 - Part-to-part references are by stable id. Code that needs an array position
   uses `CreatureDef`'s id-to-index lookups at the boundary.
 

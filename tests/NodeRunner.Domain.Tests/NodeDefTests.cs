@@ -13,9 +13,9 @@ public sealed class NodeDefTests
     }
 
     [Fact]
-    public void Radius_OfAPlainJoint_Is15()
+    public void PlainJointRadius_Is15()
     {
-        new NodeDef(1, new Vector2D(0, 0)).Radius.ShouldBe(15);
+        NodeDef.PlainJointRadius.ShouldBe(15);
     }
 
     [Theory]

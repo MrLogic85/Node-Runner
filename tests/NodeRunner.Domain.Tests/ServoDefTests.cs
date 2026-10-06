@@ -11,6 +11,7 @@ public sealed class ServoDefTests
         Should.Throw<ArgumentOutOfRangeException>(() => new ServoDef(1, 1, 2, 3, start: 1.1));
         Should.Throw<ArgumentOutOfRangeException>(() => new ServoDef(1, 1, 2, 3, maxSpeed: 0));
         Should.Throw<ArgumentOutOfRangeException>(() => new ServoDef(1, 1, 2, 3, riseTime: 0));
+        Should.Throw<ArgumentException>(() => new ServoDef(1, 1, 2, 2));
     }
 
     [Fact]

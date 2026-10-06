@@ -125,10 +125,7 @@
           }
         },
         "servos": {
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": "array",
           "items": {
             "type": "object",
             "properties": {
@@ -185,8 +182,7 @@
               "nodeId"
             ],
             "additionalProperties": false
-          },
-          "default": null
+          }
         },
         "pistons": {
           "type": "array",
@@ -280,6 +276,7 @@
         "nodes",
         "beams",
         "sensors",
+        "servos",
         "pistons",
         "springs",
         "nextPartId"

@@ -240,6 +240,26 @@ public sealed class CreatureDefTests
     }
 
     [Fact]
+    public void JsonRoundTrip_PreservesServos()
+    {
+        var original = new CreatureDef(
+            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(1, 0)), new NodeDef(3, new Vector2D(0, 1))],
+            [new BeamDef(4, 1, 2), new BeamDef(5, 1, 3)],
+            [],
+            [new ServoDef(6, 1, null, 5, "Hip", strength: 7, range: Math.PI / 2, start: 0.25, maxSpeed: 3, riseTime: 0.4)],
+            [],
+            [],
+            nextPartId: 7);
+
+        var roundTripped = JsonSerializer.Deserialize<CreatureDef>(JsonSerializer.Serialize(original));
+
+        roundTripped.ShouldNotBeNull();
+        roundTripped.Servos.ToArray().ShouldBe(original.Servos.ToArray());
+        roundTripped.ServoIndexOf(6).ShouldBe(0);
+        roundTripped.NextPartId.ShouldBe(7);
+    }
+
+    [Fact]
     public void Constructor_WithANullPart_Throws()
     {
         NodeDef[] nodes = [new NodeDef(1, new Vector2D(0, 0)), null!];

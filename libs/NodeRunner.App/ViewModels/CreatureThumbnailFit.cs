@@ -39,7 +39,7 @@ public readonly record struct CreatureThumbnailFit(double Scale, Vector2D Offset
             return null;
         }
 
-        var extents = creature.Nodes.Select(node => (node.Position, Reach: node.Radius)).ToList();
+        var extents = creature.Nodes.Select(node => (node.Position, Reach: creature.NodeRadius(node.Id))).ToList();
         foreach (var sensor in creature.Sensors)
         {
             var beam = creature.Beams[creature.BeamIndexOf(sensor.BeamId)];

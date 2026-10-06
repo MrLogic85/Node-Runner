@@ -63,11 +63,11 @@ Long-form descriptions and the sensor/model contract live in
 - **CreatureDef** — Pure-data description of a creature; the "genome" of the
   body, distinct from the brain's genome. See: `docs/CREATURE_MODEL.md`.
 - **Joint** — The player-facing name for a node in Build (the reference
-  design's Joint tool adds one). Joints are passive (#450): beams turn
+  design's Joint tool adds one). A plain joint is passive (#450): beams turn
   freely there, with no settings, limits or brain ports, unless a closed
-  triangle locks them. Not the retired 0.1.0 Joint/Bone/Muscle prototype
-  part, and not a Godot physics joint. See:
-  `docs/BUILD_MODE.md`.
+  triangle locks them. A Servo can sit on a joint and add a motor; see the
+  Servo entry. Not the retired 0.1.0 Joint/Bone/Muscle prototype part, and
+  not a Godot physics joint. See: `docs/BUILD_MODE.md`.
 - **Link** — A joint-to-joint connection a Servo may use as Fixed or Target:
   Beam, Piston or Spring. In the Beams tool, "link" usually means the
   non-beam rows (Piston, Spring; Wing later), while the UI list is headed

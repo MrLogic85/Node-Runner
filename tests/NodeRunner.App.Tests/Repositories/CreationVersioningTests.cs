@@ -61,7 +61,7 @@ public sealed class CreationVersioningTests : IDisposable
     public void Save_WritesTheVersionFirst()
     {
         var repository = new FileCreationRepository(new TestStorageLocation(_directory));
-        var creation = SaveJson.Deserialize<CreationDef>(Fixture013("walker.creation.json"), "walker");
+        var creation = LoadFixture013("walker.creation.json");
 
         repository.Save(creation);
 
@@ -74,7 +74,7 @@ public sealed class CreationVersioningTests : IDisposable
     public void Load_InTheCurrentVersion_LeavesTheFileAlone()
     {
         var repository = new FileCreationRepository(new TestStorageLocation(_directory));
-        var creation = SaveJson.Deserialize<CreationDef>(Fixture013("walker.creation.json"), "walker");
+        var creation = LoadFixture013("walker.creation.json");
         repository.Save(creation);
         var path = CreationPath(creation.Id);
         var written = File.GetLastWriteTimeUtc(path);
@@ -88,7 +88,11 @@ public sealed class CreationVersioningTests : IDisposable
     [Fact]
     public void Repository_WritesAMigratedFileBackInTheNewVersion()
     {
-        var format = new VersionedSaveFile<CreationDef>([RenameField("title", "name")]);
+        var format = new VersionedSaveFile<CreationDef>([file =>
+        {
+            RenameField("title", "name")(file);
+            AddServosArray(file);
+        }]);
         var file = JsonNode.Parse(Fixture013("walker.creation.json"))!.AsObject();
         file["title"] = file["name"]!.DeepClone();
         file.Remove("name");
@@ -145,7 +149,11 @@ public sealed class CreationVersioningTests : IDisposable
         var path = CreationPath(Guid.Parse(JsonNode.Parse(Fixture013("walker.creation.json"))!["id"]!.GetValue<string>()));
         const string saved = "saved in the meantime";
         // The migration runs between the read and the write-back, so it stands in for a Save that lands there.
-        var format = new VersionedSaveFile<CreationDef>([_ => File.WriteAllText(path, saved)]);
+        var format = new VersionedSaveFile<CreationDef>([file =>
+        {
+            File.WriteAllText(path, saved);
+            AddServosArray(file);
+        }]);
         WriteCreation(Fixture013("walker.creation.json"));
 
         new FileCreationRepository(new TestStorageLocation(_directory), format).List().ShouldHaveSingleItem();
@@ -157,7 +165,11 @@ public sealed class CreationVersioningTests : IDisposable
     public void WriteBack_ThatFails_StillLoadsTheCreation()
     {
         var path = CreationPath(Guid.Parse(JsonNode.Parse(Fixture013("walker.creation.json"))!["id"]!.GetValue<string>()));
-        var format = new VersionedSaveFile<CreationDef>([_ => File.Delete(path)]);
+        var format = new VersionedSaveFile<CreationDef>([file =>
+        {
+            File.Delete(path);
+            AddServosArray(file);
+        }]);
         WriteCreation(Fixture013("walker.creation.json"));
 
         new FileCreationRepository(new TestStorageLocation(_directory), format).List().ShouldHaveSingleItem().Name.ShouldBe("Walker");
@@ -169,6 +181,12 @@ public sealed class CreationVersioningTests : IDisposable
         file.Remove(from);
         file[to] = value;
     };
+
+    private static void AddServosArray(JsonObject file) =>
+        file["creature"]!.AsObject()["servos"] = new JsonArray();
+
+    private static CreationDef LoadFixture013(string name) =>
+        FileCreationRepository.Format.Deserialize(Fixture013(name), name).Value;
 
     private static string WithVersion(string json, int version)
     {

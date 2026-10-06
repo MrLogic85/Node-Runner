@@ -166,7 +166,7 @@ public partial class ServoPart : PartVisual
             return;
         }
 
-        DrawArcInLocal(toPixels, scale, Vector2.Zero, (_bandInnerRadius + _bandOuterRadius) / 2, LowerStop(), UpperStop(), 32, Theme.MotorAccent, 3);
+        DrawArcInLocal(toPixels, scale, Vector2.Zero, (_bandInnerRadius + _bandOuterRadius) / 2, BandFrom(), BandTo(), 32, Theme.MotorAccent, 3);
         DrawLine(toPixels * Vector2.Zero, toPixels * (Vector2.FromAngle(TargetAngle) * _hornLong), Theme.MotorAccent, 3 * scale, antialiased: true);
     }
 
@@ -222,8 +222,8 @@ public partial class ServoPart : PartVisual
 
     private void DrawRangeBand(Transform2D toPixels, float scale, bool filled)
     {
-        var lower = LowerStop();
-        var upper = UpperStop();
+        var lower = BandFrom();
+        var upper = BandTo();
         if (Range >= Mathf.Tau - 0.0001f)
         {
             if (filled)
@@ -314,9 +314,17 @@ public partial class ServoPart : PartVisual
         DrawCircle(badge + new Vector2(0, 3.6f * scale), 1.2f * scale, Theme.ArenaBackground, antialiased: true);
     }
 
-    private float LowerStop() => BuiltAngle - (Start * Range);
+    /// <summary>
+    /// The range band as a clockwise sweep in Godot rotation. Model angles are counter-clockwise, so
+    /// the model's upper stop is where the sweep starts and its lower stop, Start × Range past the
+    /// built angle, is where it ends.
+    /// </summary>
+    public static (float From, float To) BandSweep(float builtAngle, float range, float start) =>
+        (builtAngle - ((1 - start) * range), builtAngle + (start * range));
 
-    private float UpperStop() => LowerStop() + Range;
+    private float BandFrom() => BandSweep(BuiltAngle, Range, Start).From;
+
+    private float BandTo() => BandSweep(BuiltAngle, Range, Start).To;
 
     private void DrawArcInLocal(Transform2D toPixels, float scale, Vector2 centre, float radius, float start, float end, int segments, Color color, float width) =>
         DrawArc(toPixels * centre, radius * scale, start + toPixels.Rotation, end + toPixels.Rotation, segments, color, width * scale, antialiased: true);

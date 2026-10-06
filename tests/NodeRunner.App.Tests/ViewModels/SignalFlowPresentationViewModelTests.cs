@@ -11,7 +11,7 @@ public sealed class SignalFlowPresentationViewModelTests
         var changed = new List<string?>();
         viewModel.PropertyChanged += (_, args) => changed.Add(args.PropertyName);
 
-        viewModel.Update(readings: 4, pistons: 2, distance: 4225);
+        viewModel.Update(readings: 4, motors: 2, distance: 4225);
 
         viewModel.SensesNote.ShouldBe(Readings(4));
         viewModel.OutputsNote.ShouldBe(Motors(2));

@@ -442,7 +442,8 @@ reference would mislead someone working on that surface.
   `line-strong` `stroke-signal` ring whose outer edge is
   `NodeDef.PlainJointRadius`, a `stroke-hair` inner ring at 0.55 of it
   (not on a loose joint, which shows a `danger` ring and cross), and an `alpha_soft` tint: `line-strong`, `halo`
-  when selected, `danger` when loose. Lines scale with the zoom. A Training
+  when selected, `danger` when loose. The tint lies on an opaque
+  `background` disc, so nothing under the joint shows through it. Lines scale with the zoom. A Training
   shadow draws the outer ring only. Beams and Piston rods stop flat under
   the ring. Motor joints: see the Servo entry below.
 - **A Servo is a housing, a range dial and a horn (#452, #577, owner decisions
@@ -463,8 +464,8 @@ reference would mislead someone working on that surface.
   an `accent` band, both under the links and only when that Servo is the single
   selection. There are no labels, and selection adds no extra range marks. A
   Servo missing a link draws a `danger` ring, a `DangerFill` tint and an
-  upright "!" badge. A Training shadow draws the ring, the housing outline, one
-  range arc and one horn line.
+  upright "!" badge. `docs/CREATURE_MODEL.md` owns how a Servo simplifies in
+  Training shadows.
 - **UI size is pixels per unit, with no touch floor and no over-size layout
   (#299, #738).** The reference's % is a multiple of the 640 x 360 canvas
   (50–400%, default 100%, marks at 50/100/200/400), keeps 48px controls under
@@ -516,8 +517,8 @@ token import does not recreate the dead mappings.
 
 - **`detail`** is imported as a normal palette colour. It highlights a passive
   detail of a part: first use is the Servo's Fixed link mark, where it appears
-  as a small hatched band rather than colouring the whole link, text or a
-  control.
+  as a small hatched band rather than colouring the whole link or text. It also
+  marks the Fixed-link picker icon, tying that control to the canvas band.
 - **`*-glow` color tokens** (`line-strong-glow`, `ink-glow`, `edge-glow`,
   `accent-glow`, `halo-glow`, `danger-glow`) are **not** imported. They exist in
   the package only because CSS cannot derive an alpha variant from an existing
@@ -1594,7 +1595,8 @@ than the menu, so sectioned and nested menu layouts can manage each selectable
 item independently. Item highlights remain square; the menu clips all children
 to its rounded surface. `Follow` keeps a menu attached to a
 normalized point on an anchor control while scrolling or relayout moves that
-control. A following menu must sit in a `UiLevelLayer`, which floats it
+control; one that would run off the bottom of the screen opens above its
+anchor when it fits there, otherwise it stays below. A following menu must sit in a `UiLevelLayer`, which floats it
 over its screen or dialog (see UI levels above). Outside a Container a menu
 resizes itself to its visible children, so hiding an item shrinks it (#876).
 Menus default to the fixed menu-width token and can opt into content-wrapping
@@ -1618,6 +1620,11 @@ controls remain valid children. `UiMenuItemDivider` is a non-interactive
 separator in the `Line` colour at `UiSize.Stroke.Hair` width. It uses the base item's Standard or Compact padding and does not emit
 the menu's index-click signal.
 See [issue #251](https://github.com/MrLogic85/Node-Runner/issues/251).
+
+`UiPicker` opens its options in a following `UiMenu`. Its empty state is a
+required-choice prompt, not a quiet hint: with `MissingText` set and nothing
+selected, the row shows that text in `danger` and the menu lists only the real
+options. The Component Gallery shows it as "Nothing picked".
 
 ## CSS line-height mapping to Godot
 

@@ -10,6 +10,9 @@ public sealed record ServoDef
     /// <summary>A Servo's visible/collision joint radius, about 11/6 of a plain joint (#452).</summary>
     public const double JointRadius = 27;
 
+    /// <summary>Whether a joint with <paramref name="linksAtJoint"/> can hold a working Servo: it needs one Fixed and one Target link.</summary>
+    public static bool HasTwoLinks(IReadOnlyCollection<LinkRef> linksAtJoint) => linksAtJoint.Count >= 2;
+
     /// <summary>A new Servo's <see cref="Strength"/>: 50 N·m at 100 world units per metre.</summary>
     public const double DefaultStrength = 500000;
 
