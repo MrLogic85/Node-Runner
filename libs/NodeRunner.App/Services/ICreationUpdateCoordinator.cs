@@ -42,7 +42,7 @@ public interface ICreationUpdateCoordinator
 
     /// <summary>
     /// Reads a Creation once every training snapshot queued for it has landed, so a screen that
-    /// trusts its lock or training summary never reads it early (#370). Returns <c>null</c> if no
+    /// trusts its lock or training values never reads them early (#370). Returns <c>null</c> if no
     /// such Creation exists.
     /// </summary>
     CreationDef? Get(Guid id);
