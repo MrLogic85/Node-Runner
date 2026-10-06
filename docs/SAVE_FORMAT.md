@@ -152,7 +152,7 @@ Current `creation.json` migrations:
 |---|---|---|
 | 1 | 2 | Add required `creature.servos: []` to pre-Servo saves. |
 | 2 | 3 | #870: a Piston's `stroke` ±s (missing: 0.3) becomes `2s / (1 − s)`, capped at 1, with `start: 0.5`, which keeps its shortest and longest lengths up to ±⅓. Its `length` input went from −1…1 around the built length to 0…1 over its travel, so each enabled connection from it doubles its `weight` and takes the old weight off the target neuron's `bias`: a trained brain drives its Pistons as before. |
-| 3 | 4 | #835: each Spring gets `stroke: 1` and `coilLength: 0.5`: stops a quarter of its gap either side of its drawn length, resting free in the middle as before. A Piston's travel now runs on the gap between its joints' edges, which shortens it a little, but its saved shape is unchanged, so Piston saves load without migration. |
+| 3 | 4 | #835: each Spring gets `stroke: 1` and `coilLength: 0.55`: stops about a third of its gap either side of its drawn length (0.325 in, 0.35 out, #974), resting free near the middle as before. A Piston's travel now runs on the gap between its joints' edges, which shortens it a little, but its saved shape is unchanged, so Piston saves load without migration. |
 
 ### Changing a saved shape
 

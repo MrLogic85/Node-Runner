@@ -118,15 +118,17 @@ public sealed record SpringDef
     public double Damping { get; }
 
     /// <summary>
-    /// Its travel, as a Piston's of this Stroke drawn at its longest: drawn gap × s / (1 + s), the
-    /// gap being between its joints' edges (#835), so above 0 and at most 1, where it is half that gap.
+    /// Its travel, as a Piston's of this Stroke drawn where its rest length is, kept within its stops
+    /// (#974): drawn gap × s / (1 + at·s), at 0 on its shortest stop and 1 on its longest, the gap being
+    /// between its joints' edges (#835). Above 0 and at most 1.
     /// </summary>
     public double Stroke { get; }
 
     /// <summary>
     /// Where its rest length sits, evenly from half its drawn gap, between its joints' edges, short of
     /// its shortest stop at 0 to half that gap past its longest at 1. Between its stops that is the drawn length,
-    /// and the stops sit round it. Past a stop they stay, the drawn length on that stop, and the
+    /// and the stops sit round it as a Piston's round its Start position, so its travel is longer the
+    /// nearer its shortest stop (#974). Past a stop they stay, the drawn length on that stop, and the
     /// Spring starts pressed against it: past its longest it pushes its nodes apart, past its
     /// shortest it pulls them in. A new Stroke keeps the Coil length, so its stops may move past or
     /// off its rest length.
