@@ -153,12 +153,12 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     /// <summary>Drops <paramref name="owner"/>'s open edit without a step, once it has put the body back.</summary>
     public void CancelEdit(object owner) => _history.Cancel(owner);
 
-    /// <summary>Puts the body back as it was before the last step.</summary>
+    /// <summary>Puts the body back as it was before the last step, and selects again what a delete removed (#878).</summary>
     public void Undo()
     {
-        if (_history.Undo() is { } body)
+        if (_history.Undo() is { } step)
         {
-            Restore(body);
+            Restore(step.Body, step.Reselect);
         }
     }
 
@@ -167,18 +167,29 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     {
         if (_history.Redo() is { } body)
         {
-            Restore(body);
+            Restore(body, null);
         }
     }
 
     // Part ids are never reused (#220): the restored body keeps the highest NextPartId this visit reached.
-    private void Restore(CreatureDef body)
+    private void Restore(CreatureDef body, PartSet? reselect)
     {
         var nextPartId = Math.Max(body.NextPartId, _builder.NextPartId);
         _builder = new CreatureBuilder(new CreatureDef(body.Nodes, body.Beams, body.Sensors, body.Servos, body.Pistons, body.Springs, nextPartId));
+        if (reselect is not null)
+        {
+            ClearSelectionSets();
+        }
+
         foreach (var kind in Enum.GetValues<CreatureElementKind>())
         {
-            SelectedSet(kind).RemoveWhere(id => !Exists(new CreatureElementSelection(kind, id)));
+            var set = SelectedSet(kind);
+            if (reselect is not null)
+            {
+                set.UnionWith(reselect.SetOf(kind));
+            }
+
+            set.RemoveWhere(id => !Exists(new CreatureElementSelection(kind, id)));
         }
 
         PlacementNote = null;
@@ -827,7 +838,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
 
             // Within the step: its Undo row refresh must find no deleted part still selected.
             ClearSelectionSets();
-        });
+        }, Selection);
         NotifySelectionChanged();
         AnatomyChanged?.Invoke(this, EventArgs.Empty);
     }
