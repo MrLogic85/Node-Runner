@@ -110,19 +110,6 @@ msgstr ""
 msgid "Beam {0}"
 msgstr ""
 
-#: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs
-#: project/scenes/screens/BuildScreen.tscn
-msgid "Beams"
-msgstr ""
-
-#: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs
-msgid "Beams meet and turn here. Drag it to move them."
-msgstr ""
-
-#: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs
-msgid "Beams on a deleted node go with it."
-msgstr ""
-
 #: libs/NodeRunner.App/ViewModels/TrainingPresentationViewModel.cs
 msgid "Best {0}"
 msgstr ""
@@ -389,9 +376,17 @@ msgstr ""
 msgid "Left thigh"
 msgstr ""
 
-#: libs/NodeRunner.App/ViewModels/LinkListPresentation.cs
+#: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs
 #: project/scenes/screens/BuildScreen.tscn
 msgid "Links"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs
+msgid "Links meet and turn here. Drag it to move them."
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs
+msgid "Links on a deleted node go with it."
 msgstr ""
 
 #: project/scenes/screens/TrainSetupScreen.tscn
@@ -449,10 +444,6 @@ msgstr ""
 
 #: libs/NodeRunner.App/Lifecycle/CreatureReadiness.cs
 msgid "Node {0} has nothing attached. Connect it with a beam, a piston or a spring, or remove it."
-msgstr ""
-
-#: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs
-msgid "None yet"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/BuildViewModel.cs

@@ -263,12 +263,12 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     }
 
     /// <summary>
-    /// The link the Beams tool draws when a drag starts from an unselected joint (#705). Beam on
+    /// The link the Links tool draws when a drag starts from an unselected joint (#705). Beam on
     /// <see cref="Load"/>; a pick then stays for the visit, across tool switches (#874).
     /// </summary>
     public BuildLink PickedLink => _pickedLink;
 
-    /// <summary>Picks the link the Beams tool draws. Locked and future links do nothing.</summary>
+    /// <summary>Picks the link the Links tool draws. Locked and future links do nothing.</summary>
     public void PickLink(BuildLink link)
     {
         if (_moveOnly || _activeTool != BuildTool.Beam || !BuildLinkList.IsAvailable(link))

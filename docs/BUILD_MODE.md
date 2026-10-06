@@ -70,7 +70,7 @@ owned by `docs/TRAINING_LOOP.md` → Product lifecycle boundary.
 
 ## Interactions
 
-The rail holds the tools Parts, Beams, Joint and Select (#365, #705, #706);
+The rail holds the tools Parts, Links, Joint and Select (#365, #705, #706, #913);
 "joint" is the player-facing name for a node. Start training is the play
 button at the bottom of the rail in both states (#370); it is dimmed until
 the creature can train, and the panel's last line says why.
@@ -94,7 +94,7 @@ sizes on screen at any zoom.
     above and **Scale** at the bottom-right corner.
   - A drag is settled by where it starts, first match wins: a handle moves,
     turns or scales the selection; a selected joint moves the selection;
-    in Beams, an unselected joint draws a link; anywhere inside a group's
+    in Links, an unselected joint draws a link; anywhere inside a group's
     frame moves the group; an unselected joint is selected alone and moved.
     Any other drag draws a box in Select and pans in the other tools.
   - After a Rotate the frame stays turned until the selection changes
@@ -111,8 +111,10 @@ sizes on screen at any zoom.
 - **Parts:** with nothing selected, the panel shows the Parts tray; drag a
   part from it onto the creature (see Parts tray below). Parts never adds a
   node.
-- **Beams:** with nothing selected, the panel lists link types: Beam, Piston,
-  Spring and later Wing. Beam is picked when Build opens; the picked link
+- **Links:** with nothing selected, the panel lists link types: Beam, Piston,
+  Spring and later Wing, with no group header, since the panel's title
+  already says Links (#913); the locked Wing row shows only its lock, with
+  no "Coming later" line. Beam is picked when Build opens; the picked link
   then stays for the visit, across tool switches and selections (#874). It
   is not saved. Drag from an
   unselected joint to a different joint to draw the picked link. Every
@@ -121,7 +123,7 @@ sizes on screen at any zoom.
   joins refuses another Beam with "A beam already joins these nodes".
   While dragging, the line is dashed over no joint, solid once it will
   attach, and dashed danger with a crossed ring at its midpoint when the
-  joint would refuse (#920). Beams never adds a node.
+  joint would refuse (#920). Links never adds a node.
 - **Joint:** with nothing selected, a tap on empty canvas adds a node; with
   a selection, that tap only clears it. A beam tap selects the beam like in
   every tool: beams are never split (#746).
@@ -136,7 +138,7 @@ sizes on screen at any zoom.
   tray holds the Camera back as "Coming later" (#852): on the Flat map it
   only adds complexity, so it returns with maps that have terrain (#855). A saved
   creation that already has one keeps it, and it works as below.
-- **Piston (#451, #705):** picked from the Beams link list. Drag joint to
+- **Piston (#451, #705):** picked from the Links tool's list. Drag joint to
   joint to place one; over a joint that would refuse it, the line and that
   joint's ring turn dashed danger, with a crossed ring on the line (#920),
   and dropping there shows the reason at the joint: "A beam already joins
@@ -170,9 +172,9 @@ sizes on screen at any zoom.
   aim back; a finished aim drag is one Undo step. A locked creation keeps the Aim handle:
   aim changes no brain port (#638).
 - There is no Delete tool: the part settings and selection panels delete the
-  selection, and deleting a node removes every beam on it and those beams'
-  sensors (`CreatureBuilder.RemoveNode`).
-- A locked creation opens in Parts with Beams and Joint disabled, and
+  selection, and deleting a node removes every link on it, its Servo, and
+  those beams' sensors (`CreatureBuilder.RemoveNode`).
+- A locked creation opens in Parts with Links and Joint disabled, and
   `BuildViewModel` refuses topology edits on its own.
 - **Two fingers, any tool (#400):** pinch zooms about the point between the
   fingers and dragging both pans. The second finger cancels the first
@@ -226,7 +228,7 @@ sizes on screen at any zoom.
 ## Parts tray
 
 With nothing selected, an unlocked creation's side panel shows the active
-tool's panel: Parts shows the Parts tray (#374), Beams shows the link list
+tool's panel: Parts shows the Parts tray (#374), Links shows the link list
 (#705), and Joint and Select show scene-authored short help (#706). The tray has three
 `UiIconTabs` (On a joint, Sensors, Blocks) pinned at the top, then a scrolling
 list with the open tab's name, its parts as compact `UiPartRow`s and one help
@@ -255,8 +257,9 @@ part shows its settings and several show the selection panel instead.
 One selected joint, beam, sensor or link shows its Part settings in the side
 panel (#343). The panel's own title row carries the part's glyph and name;
 there is no close button, and tapping empty canvas deselects. The rows are
-`UiTextField` **Name** first, then what the part is joined to (a joint's
-beams, a beam's two joints, a sensor's beam), then a short note, and one
+`UiTextField` **Name** first, then what the part is joined to (a beam's two
+joints, a sensor's beam; a joint, a Piston and a Spring list nothing, as
+the canvas shows them, #913), then a short note, and one
 full-width danger **Delete** in its own column after them, absent on a
 locked creation. Delete acts on a tap, with no dialog; Undo brings the
 part back, selected again (#866, #878). Structure is read-only here: a beam's length is drawn, so its note
@@ -326,7 +329,7 @@ title row carries the Select glyph and "N selected"; there is no close button.
   With neither settings nor a frame: "These parts share no settings."
 - Last a full-width danger **Delete N**, which acts on a tap (Undo restores it)
   (`BuildViewModel.DeleteSelectedParts`), hidden when locked. Its note is
-  "Beams on a deleted node go with it." with a joint selected, else "A sensor
+  "Links on a deleted node go with it." with a joint selected (#913), else "A sensor
   on a deleted beam goes with it." when one would, else none.
 
 `BuildPresentationViewModel.Selection` owns the copy.

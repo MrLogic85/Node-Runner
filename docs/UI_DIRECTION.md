@@ -150,9 +150,10 @@ reference would mislead someone working on that surface.
   stay turned with the group until the selection changes. The reference
   has no box select; ours is dashed like the frame, filled `halo` at
   `alpha_soft`, and shows the parts it would catch as selected.
-- **Links live in the Beams tool (#705).** The reference tray has a Links tab
-  and the rail says Beam. Instead the rail and side-panel title say Beams,
-  and the Beams tool's panel lists Beam, Piston, Spring and Wing. The Parts
+- **Links live in the Links tool (#705, #913).** The reference tray has a
+  Links tab and the rail says Beam. Instead the rail and side-panel title
+  say Links, and the Links tool's panel lists Beam, Piston, Spring and Wing
+  with no group header (wording: `docs/GLOSSARY.md` → Link). The Parts
   tray's first tab is On a joint, but it opens on the first tab with an
   available part (#887).
 - **The link drag line shows whether it will attach (#920).** The reference
@@ -164,7 +165,7 @@ reference would mislead someone working on that surface.
   feedback, with no haptics: a finger often covers the target ring, so the
   line must read on its own.
 - **Parts replaces the reference rail's Move label (#706).** The rail starts
-  Parts, Beams, Joint, Select. Parts opens the Parts tray when nothing is
+  Parts, Links, Joint, Select. Parts opens the Parts tray when nothing is
   selected. Its glyph is the
   project-owned `assets/icons/ui/parts.svg`, like the accelerometer glyph:
   three rounded tiles plus one lifted diamond.
@@ -175,7 +176,7 @@ reference would mislead someone working on that surface.
   joint only on an empty tap with nothing selected. Beams are never split.
 - **Tool panels give help when empty (#706).** The reference keeps the tray
   in the side panel. Instead, with nothing selected, Parts shows the tray,
-  Beams shows Links, and Joint and Select show short help rows. A selected
+  Links shows the link list, and Joint and Select show short help rows. A selected
   part or selection replaces any tool panel.
 - **No locked-canvas chip (#706).** The reference's locked Build shows a
   "Parts locked · drag to move" chip on the canvas. The owner removed it:
