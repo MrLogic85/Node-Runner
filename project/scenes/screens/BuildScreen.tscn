@@ -410,20 +410,6 @@ visible = false
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="PartAdvancedGap" type="MarginContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent/PartSettings/PartRows"]
-layout_mode = 2
-theme_override_constants/margin_top = 4
-
-[node name="PartAdvanced" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent/PartSettings/PartRows/PartAdvancedGap"]
-unique_name_in_owner = true
-layout_mode = 2
-script = ExtResource("43_expand_section")
-
-[node name="PartAdvancedParameters" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent/PartSettings/PartRows/PartAdvancedGap/PartAdvanced"]
-unique_name_in_owner = true
-layout_mode = 2
-theme_override_constants/separation = 4
-
 [node name="PartPickers" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent/PartSettings/PartRows"]
 unique_name_in_owner = true
 visible = false
@@ -460,6 +446,20 @@ autowrap_mode = 3
 script = ExtResource("12_label")
 TextStyle = 4
 TextColor = 7
+
+[node name="PartAdvancedGap" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent/PartSettings/PartRows"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="PartAdvanced" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent/PartSettings/PartRows"]
+unique_name_in_owner = true
+layout_mode = 2
+script = ExtResource("43_expand_section")
+
+[node name="PartAdvancedParameters" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent/PartSettings/PartRows/PartAdvanced"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 4
 
 [node name="PartNote" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent/PartSettings/PartRows"]
 unique_name_in_owner = true
@@ -498,16 +498,16 @@ unique_name_in_owner = true
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="SelectionAdvancedGap" type="MarginContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent/Selection/SelectionSettings"]
+[node name="SelectionAdvancedGap" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent/Selection/SelectionSettings"]
+unique_name_in_owner = true
 layout_mode = 2
-theme_override_constants/margin_top = 4
 
-[node name="SelectionAdvanced" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent/Selection/SelectionSettings/SelectionAdvancedGap"]
+[node name="SelectionAdvanced" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent/Selection/SelectionSettings"]
 unique_name_in_owner = true
 layout_mode = 2
 script = ExtResource("43_expand_section")
 
-[node name="SelectionAdvancedParameters" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent/Selection/SelectionSettings/SelectionAdvancedGap/SelectionAdvanced"]
+[node name="SelectionAdvancedParameters" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent/Selection/SelectionSettings/SelectionAdvanced"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_constants/separation = 4

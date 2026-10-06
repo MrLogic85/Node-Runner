@@ -214,21 +214,29 @@ public partial class BuildScreen : Control
 
     /// <summary>
     /// The basic sliders in <paramref name="basic"/>, then the advanced ones in
-    /// <paramref name="advanced"/>'s section (#903), which shows only when the part has any.
+    /// <paramref name="advancedBody"/> under <paramref name="advanced"/> (#903), which shows only
+    /// when there are any. <paramref name="gap"/> widens the space above the section to space-2
+    /// when basic sliders come before it.
     /// </summary>
-    private void ApplyParameterSliders(Container basic, UiExpandSection advanced, IReadOnlyList<ParameterSlider> settings, bool advancedOpen)
+    private void ApplyParameterSliders(
+        Container basic,
+        Control gap,
+        UiExpandSection advanced,
+        Container advancedBody,
+        IReadOnlyList<ParameterSlider> basicSettings,
+        IReadOnlyList<ParameterSlider> advancedSettings,
+        bool advancedOpen)
     {
-        var basicSettings = settings.Where(setting => !setting.Advanced).ToList();
-        var advancedSettings = settings.Where(setting => setting.Advanced).ToList();
         basic.Visible = basicSettings.Count > 0;
         ApplySliders(basic, basicSettings);
-        advanced.GetParent<Control>().Visible = advancedSettings.Count > 0;
+        advanced.Visible = advancedSettings.Count > 0;
+        gap.Visible = basic.Visible && advanced.Visible;
         if (advanced.Open != advancedOpen)
         {
             advanced.Open = advancedOpen;
         }
 
-        ApplySliders(advanced.GetChild<Container>(0), advancedSettings);
+        ApplySliders(advancedBody, advancedSettings);
     }
 
     /// <summary>
@@ -418,7 +426,14 @@ public partial class BuildScreen : Control
 
     private void ApplySelection(SelectionPanelPresentation group)
     {
-        ApplyParameterSliders(GetNode<Container>("%SelectionParameters"), GetNode<UiExpandSection>("%SelectionAdvanced"), group.Settings, _presentation?.AdvancedSettingsOpen == true);
+        ApplyParameterSliders(
+            GetNode<Container>("%SelectionParameters"),
+            GetNode<Control>("%SelectionAdvancedGap"),
+            GetNode<UiExpandSection>("%SelectionAdvanced"),
+            GetNode<Container>("%SelectionAdvancedParameters"),
+            group.BasicSettings,
+            group.AdvancedSettings,
+            _presentation?.AdvancedSettingsOpen == true);
         GetNode<Control>("%SelectionSettings").Visible = group.Settings.Count > 0;
         GetNode<UiLabel>("%SelectionSettingsNote").TextSource = UiTextTranslation.Source(group.SettingsNote);
         var emptyNote = GetNode<UiLabel>("%SelectionEmptyNote");
@@ -605,7 +620,14 @@ public partial class BuildScreen : Control
         connectionsLabel.TextSource = UiTextTranslation.Source(part.ConnectionsLabel);
         GetNode<UiLabel>("%PartConnectionsValue").TextSource = UiTextTranslation.Source(part.ConnectionsValue);
         connectionsLabel.GetParent<Control>().Visible = connectionsLabel.TextSource is not null;
-        ApplyParameterSliders(GetNode<Container>("%PartParameters"), GetNode<UiExpandSection>("%PartAdvanced"), part.Settings, _presentation?.AdvancedSettingsOpen == true);
+        ApplyParameterSliders(
+            GetNode<Container>("%PartParameters"),
+            GetNode<Control>("%PartAdvancedGap"),
+            GetNode<UiExpandSection>("%PartAdvanced"),
+            GetNode<Container>("%PartAdvancedParameters"),
+            part.BasicSettings,
+            part.AdvancedSettings,
+            _presentation?.AdvancedSettingsOpen == true);
         ApplyPartPickers(part);
 
         GetNode<UiLabel>("%PartNote").ShowText(part.Note);

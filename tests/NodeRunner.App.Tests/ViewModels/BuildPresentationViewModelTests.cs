@@ -457,11 +457,53 @@ public sealed class BuildPresentationViewModelTests
         build.Load(TwoPistonCreature(stroke: 0.3));
         build.ReplaceSelection(PartSet.None with { Pistons = new HashSet<int> { 301, 302 } });
 
-        var settings = new BuildPresentationViewModel(build).Selection!.Settings;
+        var selection = new BuildPresentationViewModel(build).Selection!;
 
-        settings.Where(slider => !slider.Advanced).Select(slider => slider.Id).ShouldBe([PartParameterId.Strength, PartParameterId.Stroke]);
-        settings.Where(slider => slider.Advanced).Select(slider => slider.Id).ShouldBe(
+        selection.BasicSettings.Select(slider => slider.Id).ShouldBe([PartParameterId.Strength, PartParameterId.Stroke]);
+        selection.AdvancedSettings.Select(slider => slider.Id).ShouldBe(
             [PartParameterId.StartPosition, PartParameterId.MaxSpeed, PartParameterId.RiseTime]);
+    }
+
+    [Fact]
+    public void SelectedServo_SplitsItsSettingsIntoBasicAndAdvanced()
+    {
+        var build = new BuildViewModel();
+        build.Load(ServoCreature());
+        build.SelectOnly(CreatureElementKind.Servo, 6);
+
+        var part = new BuildPresentationViewModel(build).SinglePart!;
+
+        part.BasicSettings.Select(slider => slider.Id).ShouldBe([PartParameterId.ServoStrength, PartParameterId.Range]);
+        part.AdvancedSettings.Select(slider => slider.Id).ShouldBe(
+            [PartParameterId.ServoStartPosition, PartParameterId.AngularMaxSpeed, PartParameterId.RiseTime]);
+    }
+
+    [Fact]
+    public void SelectedSpring_HasOnlyDampingUnderAdvanced()
+    {
+        var build = new BuildViewModel();
+        build.Load(SpringCreature());
+        build.SelectOnly(CreatureElementKind.Spring, 401);
+
+        var part = new BuildPresentationViewModel(build).SinglePart!;
+
+        part.BasicSettings.Select(slider => slider.Id).ShouldBe([PartParameterId.Stiffness, PartParameterId.Stroke, PartParameterId.CoilLength]);
+        part.AdvancedSettings.Select(slider => slider.Id).ShouldBe([PartParameterId.Damping]);
+    }
+
+    [Fact]
+    public void SelectedSensor_HasNoAdvancedSettings()
+    {
+        var build = new BuildViewModel();
+        build.Load(new CreatureDef(
+            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(90, 0))],
+            [new BeamDef(101, 1, 2)],
+            [new SensorDef(201, 101, SensorKind.Camera)]));
+        build.SelectOnly(CreatureElementKind.Sensor, 201);
+
+        var part = new BuildPresentationViewModel(build).SinglePart!;
+
+        part.AdvancedSettings.ShouldBeEmpty();
     }
 
     [Fact]
@@ -709,6 +751,15 @@ public sealed class BuildPresentationViewModelTests
         [new PistonDef(301, 1, 3)],
         [new SpringDef(401, 2, 3)],
         nextPartId: 402);
+
+    private static CreatureDef ServoCreature() => new(
+        [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(100, 0)), new NodeDef(3, new Vector2D(200, 0))],
+        [new BeamDef(4, 1, 2), new BeamDef(5, 2, 3)],
+        [],
+        [new ServoDef(6, 2, 4, 5)],
+        [],
+        [],
+        nextPartId: 7);
 
     private static CreatureDef TwoPistonCreature(double stroke, double otherStroke = 0.3) => new(
         [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(90, 0)), new NodeDef(3, new Vector2D(0, 90)), new NodeDef(4, new Vector2D(90, 90))],

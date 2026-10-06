@@ -14,6 +14,7 @@ internal static class BuildSelection
             CreatureElementKind.Node => PartSet.None with { Nodes = one },
             CreatureElementKind.Beam => PartSet.None with { Beams = one },
             CreatureElementKind.Sensor => PartSet.None with { Sensors = one },
+            CreatureElementKind.Servo => PartSet.None with { Servos = one },
             CreatureElementKind.Piston => PartSet.None with { Pistons = one },
             CreatureElementKind.Spring => PartSet.None with { Springs = one },
             _ => throw new ArgumentOutOfRangeException(nameof(kind)),

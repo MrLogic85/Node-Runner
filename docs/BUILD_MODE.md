@@ -234,8 +234,9 @@ panel shows it (`InPanel`). Each kind lists its own
 
 Each parameter is basic or `Advanced` for every part that has it (#903):
 Start position, Max speed, Rise time and Damping are advanced. The panel
-shows the basic sliders, then a closed Advanced section with the rest, left
-out when there is none. The section stays open or closed across selections
+shows the basic sliders and any other controls, like a Servo's link
+pickers, then a closed Advanced section with the rest, left out when there
+is none. The section stays open or closed across selections
 until the next Build visit (`BuildViewModel.AdvancedSettingsOpen`).
 
 - **Piston:** Max strength (20–400 N, step 10), Stroke (10–100%, step 5),
