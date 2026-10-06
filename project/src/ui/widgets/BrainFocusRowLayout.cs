@@ -33,23 +33,30 @@ public readonly record struct BrainFocusRowLayout(float Top, float Spacing, floa
     {
         var minSpacing = fontSize * RowSpacingPerFontSize;
         var top = VerticalInset + HeadingBand;
-        var bottom = Math.Max(top + 1, viewHeight - VerticalInset);
-        var available = bottom - top;
-        if (tallest <= 1 || (tallest - 1) * minSpacing <= available)
+        var available = Math.Max(1, viewHeight - VerticalInset - top);
+        if (tallest <= 1)
         {
             // A single row sits in the middle, sized as if it had the whole height.
-            return tallest > 1
-                ? new BrainFocusRowLayout(top, available / (tallest - 1), RadiusFor(available / (tallest - 1)), viewHeight, viewHeight)
-                : new BrainFocusRowLayout(top + (available / 2), 0, RadiusFor(available), viewHeight, viewHeight);
+            return new BrainFocusRowLayout(top + (available / 2), 0, RadiusFor(available), viewHeight, viewHeight);
         }
 
-        // The first and last rows keep room for the selection halo, so it is never cut at either end.
+        // The last row keeps room for its selection halo, so it never crosses the card's bottom border.
+        // Spacing them by the dots of the whole height leaves room for their own, smaller halos.
+        if (((tallest - 1) * minSpacing) + HaloEdge(RadiusFor(minSpacing)) <= viewHeight - top)
+        {
+            var spacing = Math.Max(minSpacing, (viewHeight - HaloEdge(RadiusFor(available / (tallest - 1))) - top) / (tallest - 1));
+            return new BrainFocusRowLayout(top, spacing, RadiusFor(spacing), viewHeight, viewHeight);
+        }
+
+        // Scrolled rows keep the same room at both ends.
         var radius = RadiusFor(minSpacing);
-        var edge = Math.Max(VerticalInset, radius + HaloGap + HaloWidth);
+        var edge = HaloEdge(radius);
         var scrolledTop = clipTop + edge;
         var content = scrolledTop + ((tallest - 1) * minSpacing) + edge;
         return new BrainFocusRowLayout(scrolledTop, minSpacing, radius, content, viewHeight);
     }
+
+    private static float HaloEdge(float radius) => Math.Max(VerticalInset, radius + HaloGap + HaloWidth);
 
     private static float RadiusFor(float spacing) => Math.Clamp(spacing * RadiusPerRow, MinRadius, MaxRadius);
 }
