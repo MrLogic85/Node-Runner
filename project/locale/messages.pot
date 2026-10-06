@@ -1086,6 +1086,18 @@ msgstr[0] ""
 msgstr[1] ""
 
 #: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs
+msgid "{0} piece not connected"
+msgid_plural "{0} pieces not connected"
+msgstr[0] ""
+msgstr[1] ""
+
+#: libs/NodeRunner.App/Lifecycle/CreatureReadiness.cs
+msgid "{0} piece of the creation is not connected to the rest. Connect it with a link or remove it."
+msgid_plural "{0} pieces of the creation are not connected to each other. Connect them with links or remove all but one."
+msgstr[0] ""
+msgstr[1] ""
+
+#: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs
 msgid "{0} piston too short"
 msgid_plural "{0} pistons too short"
 msgstr[0] ""

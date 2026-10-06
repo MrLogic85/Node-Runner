@@ -290,6 +290,11 @@ public sealed class BuildPresentationViewModel
             return UiText.Counted("{0} joint not connected", "{0} joints not connected", unconnected);
         }
 
+        if (_build.Pieces() is { Count: > 1 } pieces)
+        {
+            return UiText.Counted("{0} piece not connected", "{0} pieces not connected", pieces.Count);
+        }
+
         // Build's canvas names each short beam with a callout (#593), so the line only counts them.
         var tooShort = _build.Beams.Count(beam => IsTooShort(beam.NodeA, beam.NodeB));
         var tooShortPistons = _build.Pistons.Count(piston => IsTooShort(piston.NodeA, piston.NodeB));

@@ -88,7 +88,7 @@ public sealed partial class BuildViewModel
 
         ClearSelectionSets();
         NotifySelectionChanged();
-        AnatomyChanged?.Invoke(this, EventArgs.Empty);
+        RaiseAnatomyChanged();
     }
 
     public void ReplaceSelection(IEnumerable<int> nodeIds)
@@ -151,7 +151,7 @@ public sealed partial class BuildViewModel
     private void SelectionChanged()
     {
         NotifySelectionChanged();
-        AnatomyChanged?.Invoke(this, EventArgs.Empty);
+        RaiseAnatomyChanged();
     }
 
     /// <summary>
@@ -254,7 +254,7 @@ public sealed partial class BuildViewModel
                 _builder.MoveNode(id, position);
             }
         });
-        AnatomyChanged?.Invoke(this, EventArgs.Empty);
+        RaiseAnatomyChanged();
         return true;
     }
 

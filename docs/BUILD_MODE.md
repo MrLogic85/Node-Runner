@@ -324,7 +324,9 @@ last line says why; `BuildViewModel.TryLeave` and `CanTrain` gate it. The
 dimmed button can still be tapped
 (#844): the tap starts nothing, and `BuildViewModel.ShowTrainingBlockers`
 gives each joint loose at that moment a "Not connected" canvas note until
-it is joined or removed. Too-short parts always have their "Too short"
+it is joined or removed. A creation in separate pieces gets the same note
+on every piece's joint nearest another piece, none being the main one, until
+it is one piece (#930); a piece split off later waits for the next tap. Too-short parts always have their "Too short"
 note. The edits are saved first either way. Back never validates: it saves
 the drawing as it stands (#474). Training refuses a saved creature that
 cannot train and returns to Creations.
