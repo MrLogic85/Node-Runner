@@ -147,7 +147,8 @@ ground, the shadows above it, and the followed creature above every shadow.
   its colour, at screen size. Near an edge it slides along the edge, never
   to the part's other side. Overlapping callouts stack in a column, most
   important nearest; leaders are behind all callouts and every note shows.
-  Notes with the same text join into one callout with a leader to each part.
+  In a stack, notes of the same kind and text join into one callout with a
+  leader to each part.
 
 ## Training arena
 
