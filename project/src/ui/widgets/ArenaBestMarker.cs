@@ -7,7 +7,8 @@ namespace NodeRunner.Ui.Widgets;
 /// The best ever on this map, marked in the Training arena at its shown distance (#388, #725): a dashed line up from
 /// the ground, the node's origin, to a flag near the top of the view that reads "Best 4.2 m". It
 /// stands at that distance on the ruler, behind every creature, and keeps its screen size at any
-/// zoom. Hidden until its distance is known; it jumps when a generation's front goes past it.
+/// zoom. Hidden until its distance is known; it jumps when a generation's front goes past it. Near the
+/// view's right edge the flag flies left of its line, so its text is never cut (#886).
 /// </summary>
 public partial class ArenaBestMarker : ArenaMark
 {
@@ -72,7 +73,8 @@ public partial class ArenaBestMarker : ArenaMark
         var textWidth = Theme.MarkerFont.GetStringSize(_text, HorizontalAlignment.Left, -1, Theme.MarkerFontSize).X;
         var flagWidth = (_flagPadding * 2) + textWidth + _notchDepth;
         var x = (float)(StartX + _distance);
-        if (x + (flagWidth * screenScale) < view.Position.X || x > view.End.X)
+        var side = FliesLeft(x, flagWidth * screenScale, view) ? -1 : 1;
+        if (Math.Max(x, x + (side * flagWidth * screenScale)) < view.Position.X || x > view.End.X)
         {
             return;
         }
@@ -84,9 +86,9 @@ public partial class ArenaBestMarker : ArenaMark
         Vector2[] flag =
         [
             new(0, 0),
-            new(flagWidth, 0),
-            new(flagWidth - _notchDepth, _flagHeight / 2),
-            new(flagWidth, _flagHeight),
+            new(side * flagWidth, 0),
+            new(side * (flagWidth - _notchDepth), _flagHeight / 2),
+            new(side * flagWidth, _flagHeight),
             new(0, _flagHeight),
             new(0, 0),
         ];
@@ -105,9 +107,17 @@ public partial class ArenaBestMarker : ArenaMark
         var font = Theme.MarkerFont;
         var size = Theme.MarkerFontSize;
         var baseline = ((_flagHeight - font.GetHeight(size)) / 2) + font.GetAscent(size);
-        DrawString(font, new Vector2(_flagPadding, baseline), _text, HorizontalAlignment.Left, -1, size, Theme.MarkerInk);
+        var textLeft = side > 0 ? _flagPadding : -(_flagPadding + textWidth);
+        DrawString(font, new Vector2(textLeft, baseline), _text, HorizontalAlignment.Left, -1, size, Theme.MarkerInk);
         DrawSetTransformMatrix(Transform2D.Identity);
     }
+
+    /// <summary>
+    /// Whether a flag <paramref name="flagWidth"/> wide on a line at <paramref name="lineX"/> flies left of
+    /// it (#886): when it would run past <paramref name="view"/>'s right edge and fits on the left.
+    /// </summary>
+    public static bool FliesLeft(float lineX, float flagWidth, Rect2 view) =>
+        lineX + flagWidth > view.End.X && lineX - flagWidth >= view.Position.X;
 
     protected override void OnChanged() => QueueRedraw();
 }
