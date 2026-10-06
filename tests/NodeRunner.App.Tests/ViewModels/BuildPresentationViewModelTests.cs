@@ -451,6 +451,37 @@ public sealed class BuildPresentationViewModelTests
     }
 
     [Fact]
+    public void Selection_OfPistons_SplitsTheirSettingsIntoBasicAndAdvanced()
+    {
+        var build = new BuildViewModel();
+        build.Load(TwoPistonCreature(stroke: 0.3));
+        build.ReplaceSelection(PartSet.None with { Pistons = new HashSet<int> { 301, 302 } });
+
+        var settings = new BuildPresentationViewModel(build).Selection!.Settings;
+
+        settings.Where(slider => !slider.Advanced).Select(slider => slider.Id).ShouldBe([PartParameterId.Strength, PartParameterId.Stroke]);
+        settings.Where(slider => slider.Advanced).Select(slider => slider.Id).ShouldBe(
+            [PartParameterId.StartPosition, PartParameterId.MaxSpeed, PartParameterId.RiseTime]);
+    }
+
+    [Fact]
+    public void AdvancedSettings_StayOpenAcrossSelections_AndCloseOnTheNextVisit()
+    {
+        var build = new BuildViewModel();
+        build.Load(TwoPistonCreature(stroke: 0.3));
+        var presentation = new BuildPresentationViewModel(build);
+        presentation.AdvancedSettingsOpen.ShouldBeFalse();
+
+        build.ReplaceSelection(PartSet.None with { Pistons = new HashSet<int> { 301 } });
+        build.AdvancedSettingsOpen = true;
+        build.ReplaceSelection(PartSet.None with { Pistons = new HashSet<int> { 301, 302 } });
+        presentation.AdvancedSettingsOpen.ShouldBeTrue();
+
+        build.Load(TwoPistonCreature(stroke: 0.3));
+        presentation.AdvancedSettingsOpen.ShouldBeFalse();
+    }
+
+    [Fact]
     public void Selection_ValuesThatShowTheSame_DoNotDiffer()
     {
         var build = new BuildViewModel();

@@ -232,6 +232,12 @@ panel shows it (`InPanel`). Each kind lists its own
 (`CreatureBuilder.ParametersOf`); what each means is in
 `docs/CREATURE_MODEL.md`.
 
+Each parameter is basic or `Advanced` for every part that has it (#903):
+Start position, Max speed, Rise time and Damping are advanced. The panel
+shows the basic sliders, then a closed Advanced section with the rest, left
+out when there is none. The section stays open or closed across selections
+until the next Build visit (`BuildViewModel.AdvancedSettingsOpen`).
+
 - **Piston:** Max strength (20–400 N, step 10), Stroke (10–100%, step 5),
   Start position (0–100%, step 5, #870), Max speed (0.5–4.0 m/s, step 0.1)
   and Rise time (0.1, 0.2, 0.5 or 1 s, evenly spaced along the slider so
@@ -288,8 +294,9 @@ no brain port, so a locked creation keeps them.
 
 Several selected parts show the selection panel instead (#558, #704), titled
 "N selected"; there is no close button.
-- First a slider for each parameter they share, with the note "A slider
-  sets one value for all of them."
+- First a slider for each parameter they share, split into basic and
+  Advanced like a part's, then the note "A slider sets one value for all of
+  them."
 - With a frame, three rows explain its handles (Move, Rotate, Scale). With
   neither settings nor a frame: "These parts share no settings."
 - Last a full-width **Delete N**, which acts on a tap (Undo restores it),

@@ -6,9 +6,10 @@ namespace NodeRunner.App.ViewModels;
 /// <summary>
 /// What a part setting is (#704), as data. <see cref="MultiEditable"/> settings can take one value
 /// on several selected parts; the panel shows those with a <see cref="Slider"/>, and the canvas
-/// sets the rest, like a Camera's aim.
+/// sets the rest, like a Camera's aim. <see cref="Advanced"/> settings sit in the panel's
+/// Advanced section (#903); the flag belongs to the setting, so it is the same on every part.
 /// </summary>
-public sealed record PartParameter(PartParameterId Id, bool MultiEditable, ParameterScale? Slider)
+public sealed record PartParameter(PartParameterId Id, bool MultiEditable, ParameterScale? Slider, bool Advanced)
 {
     public bool InPanel => Slider is not null;
 }
@@ -103,6 +104,8 @@ public sealed record SettingRange(double Min, double Max, double Step)
 public sealed record ParameterSlider(PartParameterId Id, UiText Label, UiText Readout, double Low, double High, double Step)
 {
     public bool ValuesDiffer => Low != High;
+
+    public bool Advanced => PartParameters.Of(Id).Advanced;
 }
 
 /// <summary>
@@ -115,45 +118,45 @@ public static class PartParameters
 {
     // A newton is a kilogram metre per second squared, so world force converts like world speed.
     public static PartParameter Strength { get; } = new(
-        PartParameterId.Strength, MultiEditable: true, new(UiText.Plain("Max strength"), UiText.Plain("The most force it can push or pull with"), new(20, 400, 10), 0, "{0} N", "{0}–{1} N", Metres.FromWorldUnits, ToWorld));
+        PartParameterId.Strength, MultiEditable: true, new(UiText.Plain("Max strength"), UiText.Plain("The most force it can push or pull with"), new(20, 400, 10), 0, "{0} N", "{0}–{1} N", Metres.FromWorldUnits, ToWorld), Advanced: false);
 
     public static PartParameter ServoStrength { get; } = new(
-        PartParameterId.ServoStrength, MultiEditable: true, new(UiText.Plain("Max strength"), UiText.Plain("The most force it can turn with"), new(5, 200, 5), 0, "{0} N·m", "{0}–{1} N·m", value => value / 10000, value => value * 10000));
+        PartParameterId.ServoStrength, MultiEditable: true, new(UiText.Plain("Max strength"), UiText.Plain("The most force it can turn with"), new(5, 200, 5), 0, "{0} N·m", "{0}–{1} N·m", value => value / 10000, value => value * 10000), Advanced: false);
 
     public static PartParameter Stroke { get; } = new(
-        PartParameterId.Stroke, MultiEditable: true, new(UiText.Plain("Stroke"), UiText.Plain("How far it moves in and out"), new(10, 100, 5), 0, "{0}%", "{0}–{1}%", value => value * 100, value => value / 100));
+        PartParameterId.Stroke, MultiEditable: true, new(UiText.Plain("Stroke"), UiText.Plain("How far it moves in and out"), new(10, 100, 5), 0, "{0}%", "{0}–{1}%", value => value * 100, value => value / 100), Advanced: false);
 
     public static PartParameter Range { get; } = new(
-        PartParameterId.Range, MultiEditable: true, new(UiText.Plain("Range"), UiText.Plain("How far it can turn"), new(20, 360, 5), 0, "{0}°", "{0}–{1}°", RadiansToDegrees, DegreesToRadians));
+        PartParameterId.Range, MultiEditable: true, new(UiText.Plain("Range"), UiText.Plain("How far it can turn"), new(20, 360, 5), 0, "{0}°", "{0}–{1}°", RadiansToDegrees, DegreesToRadians), Advanced: false);
 
     public static PartParameter StartPosition { get; } = new(
-        PartParameterId.StartPosition, MultiEditable: true, new(UiText.Plain("Start position"), UiText.Plain("Where it starts in its stroke"), new(0, 100, 5), 0, "{0}%", "{0}–{1}%", value => value * 100, value => value / 100));
+        PartParameterId.StartPosition, MultiEditable: true, new(UiText.Plain("Start position"), UiText.Plain("Where it starts in its stroke"), new(0, 100, 5), 0, "{0}%", "{0}–{1}%", value => value * 100, value => value / 100), Advanced: true);
 
     public static PartParameter ServoStartPosition { get; } = new(
-        PartParameterId.ServoStartPosition, MultiEditable: true, new(UiText.Plain("Start position"), UiText.Plain("Where it starts in its rotation"), new(0, 100, 5), 0, "{0}%", "{0}–{1}%", value => value * 100, value => value / 100));
+        PartParameterId.ServoStartPosition, MultiEditable: true, new(UiText.Plain("Start position"), UiText.Plain("Where it starts in its rotation"), new(0, 100, 5), 0, "{0}%", "{0}–{1}%", value => value * 100, value => value / 100), Advanced: true);
 
     public static PartParameter MaxSpeed { get; } = new(
-        PartParameterId.MaxSpeed, MultiEditable: true, new(UiText.Plain("Max speed"), UiText.Plain("How fast it's allowed to move"), new(0.5, 4, 0.1), 1, "{0} m/s", "{0}–{1} m/s", Metres.FromWorldUnits, ToWorld));
+        PartParameterId.MaxSpeed, MultiEditable: true, new(UiText.Plain("Max speed"), UiText.Plain("How fast it's allowed to move"), new(0.5, 4, 0.1), 1, "{0} m/s", "{0}–{1} m/s", Metres.FromWorldUnits, ToWorld), Advanced: true);
 
     public static PartParameter AngularMaxSpeed { get; } = new(
-        PartParameterId.AngularMaxSpeed, MultiEditable: true, new(UiText.Plain("Max speed"), UiText.Plain("How fast it's allowed to move"), new(30, 720, 15), 0, "{0}°/s", "{0}–{1}°/s", RadiansToDegrees, DegreesToRadians));
+        PartParameterId.AngularMaxSpeed, MultiEditable: true, new(UiText.Plain("Max speed"), UiText.Plain("How fast it's allowed to move"), new(30, 720, 15), 0, "{0}°/s", "{0}–{1}°/s", RadiansToDegrees, DegreesToRadians), Advanced: true);
 
     public static PartParameter RiseTime { get; } = new(
-        PartParameterId.RiseTime, MultiEditable: true, new(UiText.Plain("Rise time"), UiText.Plain("How quickly it reaches full force"), SettingRange.Of(0.1, 0.2, 0.5, 1), 1, "{0} s", "{0}–{1} s", value => value, value => value));
+        PartParameterId.RiseTime, MultiEditable: true, new(UiText.Plain("Rise time"), UiText.Plain("How quickly it reaches full force"), SettingRange.Of(0.1, 0.2, 0.5, 1), 1, "{0} s", "{0}–{1} s", value => value, value => value), Advanced: true);
 
     // World force per world unit is N/m: both scale by world units per metre, which cancel.
     public static PartParameter Stiffness { get; } = new(
-        PartParameterId.Stiffness, MultiEditable: true, new(UiText.Plain("Stiffness"), UiText.Plain("How hard it springs back"), new(SpringDef.SoftestStiffness, SpringDef.StiffestStiffness, 50), 0, "{0} N/m", "{0}–{1} N/m", value => value, value => value));
+        PartParameterId.Stiffness, MultiEditable: true, new(UiText.Plain("Stiffness"), UiText.Plain("How hard it springs back"), new(SpringDef.SoftestStiffness, SpringDef.StiffestStiffness, 50), 0, "{0} N/m", "{0}–{1} N/m", value => value, value => value), Advanced: false);
 
     // World force per world speed is N·s/m, for the same reason.
     public static PartParameter Damping { get; } = new(
-        PartParameterId.Damping, MultiEditable: true, new(UiText.Plain("Damping"), UiText.Plain("How quickly it stops bouncing"), new(0, 100, 1), 0, "{0} N·s/m", "{0}–{1} N·s/m", value => value, value => value));
+        PartParameterId.Damping, MultiEditable: true, new(UiText.Plain("Damping"), UiText.Plain("How quickly it stops bouncing"), new(0, 100, 1), 0, "{0} N·s/m", "{0}–{1} N·s/m", value => value, value => value), Advanced: true);
 
     // In whole percent, as a new Spring's stops sit at a third and two thirds of it (#835).
     public static PartParameter CoilLength { get; } = new(
-        PartParameterId.CoilLength, MultiEditable: true, new(UiText.Plain("Coil length"), UiText.Plain("The length the coil wants to be"), new(SpringDef.MinCoilLength * 100, SpringDef.MaxCoilLength * 100, 1), 0, "{0}%", "{0}–{1}%", value => value * 100, value => value / 100));
+        PartParameterId.CoilLength, MultiEditable: true, new(UiText.Plain("Coil length"), UiText.Plain("The length the coil wants to be"), new(SpringDef.MinCoilLength * 100, SpringDef.MaxCoilLength * 100, 1), 0, "{0}%", "{0}–{1}%", value => value * 100, value => value / 100), Advanced: false);
 
-    public static PartParameter Aim { get; } = new(PartParameterId.Aim, MultiEditable: false, Slider: null);
+    public static PartParameter Aim { get; } = new(PartParameterId.Aim, MultiEditable: false, Slider: null, Advanced: false);
 
     public static PartParameter Of(PartParameterId id) => id switch
     {

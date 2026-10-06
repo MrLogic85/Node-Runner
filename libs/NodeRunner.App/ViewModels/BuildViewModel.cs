@@ -58,6 +58,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     private int? _trainingGeneration;
     private CanvasNote? _placementNote;
     private readonly HashSet<int> _shownLooseNodes = [];
+    private bool _advancedSettingsOpen;
     private readonly BuildHistory _history;
     private BrainDef? _openedBrain;
     private bool _shownCanUndo;
@@ -86,6 +87,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
         _moveOnly = moveOnly;
         _history.Clear();
         _shownLooseNodes.Clear();
+        _advancedSettingsOpen = false;
         // Joint is the default tool; a locked Creation cannot add joints yet (#896), so it opens on Parts.
         ActiveTool = moveOnly ? BuildTool.Parts : BuildTool.Joint;
         SetPickedLink(BuildLink.Beam);
@@ -269,6 +271,25 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
         }
 
         SetPickedLink(link);
+    }
+
+    /// <summary>
+    /// Whether the settings panels show their Advanced section (#903): one flag for the whole Build
+    /// visit, kept across selections, closed again by <see cref="Load"/> and never saved.
+    /// </summary>
+    public bool AdvancedSettingsOpen
+    {
+        get => _advancedSettingsOpen;
+        set
+        {
+            if (_advancedSettingsOpen == value)
+            {
+                return;
+            }
+
+            _advancedSettingsOpen = value;
+            OnPropertyChanged();
+        }
     }
 
     private void SetPickedLink(BuildLink link)

@@ -16,7 +16,9 @@ public sealed class BuildPartSettingsTests
     public void PartSettings_IsRowsThenDelete_WithNoCloseButton()
     {
         Children("/PartSettings").ShouldBe(["PartRows", "PartActions"]);
-        Children("/PartSettings/PartRows").ShouldBe(["PartName", "PartParameters", "PartPickers", "PartConnections", "PartNote"]);
+        Children("/PartSettings/PartRows").ShouldBe(["PartName", "PartParameters", "PartAdvancedGap", "PartPickers", "PartConnections", "PartNote"]);
+        Children("/PartSettings/PartRows/PartAdvancedGap").ShouldBe(["PartAdvanced"]);
+        Children("/PartSettings/PartRows/PartAdvancedGap/PartAdvanced").ShouldBe(["PartAdvancedParameters"]);
         Children("/PartSettings/PartActions").ShouldBe(["PartDelete"]);
         _build.ShouldNotContain(node => node.Name == "PartClose");
     }
@@ -68,7 +70,9 @@ public sealed class BuildPartSettingsTests
     public void Selection_HasSharedSettings_TheThreeHandles_ThenDeleteAndItsNote_WithNoCloseButton()
     {
         Children("/Selection").ShouldBe(["SelectionSettings", "SelectionEmptyNote", "SelectionRows", "SelectionActions"]);
-        Children("/Selection/SelectionSettings").ShouldBe(["SelectionParameters", "SelectionSettingsNote"]);
+        Children("/Selection/SelectionSettings").ShouldBe(["SelectionParameters", "SelectionAdvancedGap", "SelectionSettingsNote"]);
+        Children("/Selection/SelectionSettings/SelectionAdvancedGap").ShouldBe(["SelectionAdvanced"]);
+        Children("/Selection/SelectionSettings/SelectionAdvancedGap/SelectionAdvanced").ShouldBe(["SelectionAdvancedParameters"]);
         Children("/Selection/SelectionRows").ShouldBe(["SelectionMove", "SelectionRotate", "SelectionScale"]);
         Children("/Selection/SelectionActions").ShouldBe(["SelectionDelete", "SelectionDeleteNote"]);
         _build.ShouldNotContain(node => node.Name == "SelectionClear");

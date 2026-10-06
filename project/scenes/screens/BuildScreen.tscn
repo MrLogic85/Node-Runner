@@ -18,6 +18,7 @@
 [ext_resource type="Script" path="res://src/ui/lib/UiCalloutLayer.cs" id="40_callout_layer"]
 [ext_resource type="PackedScene" uid="uid://kk3td5f4uebc" path="res://scenes/ui/UiWorldView.tscn" id="41_world_view"]
 [ext_resource type="Script" path="res://src/ui/lib/UiHintCard.cs" id="42_hint_card"]
+[ext_resource type="Script" uid="uid://bmmmlxr5268v7" path="res://src/ui/lib/UiExpandSection.cs" id="43_expand_section"]
 
 [node name="BuildScreen" type="Control"]
 layout_mode = 3
@@ -409,6 +410,20 @@ visible = false
 layout_mode = 2
 theme_override_constants/separation = 4
 
+[node name="PartAdvancedGap" type="MarginContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent/PartSettings/PartRows"]
+layout_mode = 2
+theme_override_constants/margin_top = 4
+
+[node name="PartAdvanced" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent/PartSettings/PartRows/PartAdvancedGap"]
+unique_name_in_owner = true
+layout_mode = 2
+script = ExtResource("43_expand_section")
+
+[node name="PartAdvancedParameters" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent/PartSettings/PartRows/PartAdvancedGap/PartAdvanced"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 4
+
 [node name="PartPickers" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent/PartSettings/PartRows"]
 unique_name_in_owner = true
 visible = false
@@ -479,6 +494,20 @@ layout_mode = 2
 theme_override_constants/separation = 4
 
 [node name="SelectionParameters" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent/Selection/SelectionSettings"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="SelectionAdvancedGap" type="MarginContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent/Selection/SelectionSettings"]
+layout_mode = 2
+theme_override_constants/margin_top = 4
+
+[node name="SelectionAdvanced" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent/Selection/SelectionSettings/SelectionAdvancedGap"]
+unique_name_in_owner = true
+layout_mode = 2
+script = ExtResource("43_expand_section")
+
+[node name="SelectionAdvancedParameters" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent/Selection/SelectionSettings/SelectionAdvancedGap/SelectionAdvanced"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_constants/separation = 4

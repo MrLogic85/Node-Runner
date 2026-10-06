@@ -214,6 +214,9 @@ public sealed class BuildPresentationViewModel
         }
     }
 
+    /// <summary>Whether the part and selection panels show their Advanced settings (#903).</summary>
+    public bool AdvancedSettingsOpen => _build.AdvancedSettingsOpen;
+
     public bool LockTopologyTools => _build.IsMoveOnly;
 
     /// <summary>True for a locked Creation: its anatomy is fixed and only moving nodes is allowed.</summary>

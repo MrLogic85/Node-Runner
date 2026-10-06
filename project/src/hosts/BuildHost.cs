@@ -121,6 +121,7 @@ public partial class BuildHost : Node, IRoutedScene
         };
         _buildScreen.ParameterChangeFinished += () => Build.EndEdit(_buildScreen);
         _buildScreen.ServoLinkChanged += (servoId, fixedRole, linkId) => Build.SetServoLink(servoId, fixedRole, linkId);
+        _buildScreen.AdvancedSettingsToggled += open => Build.AdvancedSettingsOpen = open;
         _buildScreen.UndoRequested += Build.Undo;
         _buildScreen.RedoRequested += Build.Redo;
         _buildScreen.StartTrainingRequested += StartTraining;
