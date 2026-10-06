@@ -1,96 +1,71 @@
 # AGENTS.md — `src/creature/`
 
-**The Godot-side representation of a creature: nodes, beams, sensor parts, Servos, Pistons,
-and the brain wiring. See `docs/CREATURE_MODEL.md` for
-the model this implements.**
+The Godot side of a creature: bodies, joints, sensors, Servos, Pistons,
+Springs and the brain wiring. `docs/CREATURE_MODEL.md` owns the model; this
+file owns how Godot realises it.
 
 ## Rules
 
-1. **Creatures are built FROM `CreatureDef`.** The `CreatureDef` (in
-   `libs/NodeRunner.Domain`) is the source of truth. `Creature.cs` interprets
-   it and spawns physics bodies.
-2. **No game logic here.** No evolution, no fitness, no UI. Just: "given this
-   def and this brain, become a physical thing on screen that reacts to
-   forces and drives its moving parts."
-3. **Physics uses Godot built-ins.** Each node and each beam is its own
-   `RigidBody2D`; a `PinJoint2D` pins every beam to its two nodes. Only
-   nodes collide (a circle each); beams and links (Pistons, Springs) have no
-   collider. A link's weight sits on its nodes; a beam keeps half its own
-   (#794; see `docs/CREATURE_MODEL.md` Beam). Beam rigidity is geometric (fixed pin distance), not
-   spring-based. Each Piston also has a hidden, collider-free cylinder body
-   pinned to node A and grooved to node B for its end stops (#701; see
-   `docs/CREATURE_MODEL.md`): anything that moves or resets every body must
-   include it. Each Spring is a `DampedSpringJoint2D` between its two node
-   bodies (#453) and gets the same end-stop cylinder (#835). Do not
-   introduce Box2D.NET or a custom solver.
-4. **Plain joints are passive (#450).** A beam turns freely at its nodes
-   unless a Servo sits on that joint; parts with ports (Servos and Pistons
-   today) are driven by the brain.
-5. **The brain's input and output order is `BrainPorts.Of` (in
-   `NodeRunner.Domain`).** The creature reads its parts in its own
-   order and copies each value to its port's place; do not hand-order brain
-   slots here.
-6. **No allocations in the tick hot path.** Reuse arrays for sensor readings
-   and brain outputs.
+1. **Built from `CreatureDef`.** The def is the source of truth; `Creature`
+   turns it into bodies. No `[Export]` for anything a def sets.
+2. **No game logic.** No evolution, fitness or UI: given a def and a brain,
+   become a physical thing that reacts to forces and drives its parts.
+3. **Bodies and joints.** Each node and each beam is its own `RigidBody2D`
+   (`CanSleep = false`), and a `PinJoint2D` pins every beam to its two
+   nodes, so beams are rigid by geometry, not springs. Only nodes collide (a
+   circle each); beams and links have no collider. A link's weight sits on
+   its nodes; a beam keeps half its own (`docs/CREATURE_MODEL.md` → Beam).
+4. **End stops.** Each Piston and Spring has a hidden, collider-free
+   cylinder body pinned to node A and a `GrooveJoint2D` to node B that holds
+   its length between the stops (`Creature.CreateEndStops`, #701). Anything
+   that moves or resets every body must include the cylinders.
+5. **Springs.** A Spring is a `DampedSpringJoint2D` between its nodes
+   (#453), which has no stops of its own, so it gets the cylinder above.
+   Each tick `SpringLink` sets its rest length to `Spring.StepRestLength`:
+   Godot's spring would push a preload past a stop into the stop's joints,
+   which gave way (#835). Behaviour: `docs/CREATURE_MODEL.md` → Spring.
+6. **Servos.** `ServoJoint` applies equal-and-opposite force couples
+   (`Servo.CoupleForTorque`) to the joint body and each link's far body,
+   plus a soft end-stop torque outside its range. No Godot angular joint:
+   Pistons and Springs slide on a groove, and force couples work for every
+   link kind without link-kind branches. The lever arm is clamped to
+   `Servo.MinimumLeverArm` so a compressed Spring cannot make unbounded
+   force. Motor and stop are integrated explicitly, so the gains are scaled
+   to the live inertia (`Servo.LinkInertia`, `Servo.StableEndStopGains`) to
+   stay stable; the holding part is not capped, so a Servo holds a load up
+   to its strength.
+7. **Accelerometer.** `AccelerometerSensor` differences its beam's midpoint
+   velocity each tick into specific force and steps the Mechanics
+   `Accelerometer`, which substeps at most `Accelerometer.MaxSubstep`
+   (1/60 s), so Build's longer frame steps stay stable.
+8. **Brain order is `BrainPorts.Of`.** The creature copies each part's value
+   to its port's place; never hand-order brain slots here.
+9. **No allocations in the tick.** Reuse the sensor, output and scratch
+   buffers; keep `_PhysicsProcess` a short sequence of named steps.
+10. **Every visual declares its shadow drawing.** Each visual implements
+    `IShadowVisual` (static `AsShadow`, an `IsShadow` switch);
+    `Creature.IsShadow` sets them all, and `ShadowDrawingTests`
+    (`NodeRunner.Ui.Tests`) checks each one. Shadows are drawn in the
+    `ArenaShadows` viewport chosen by `ArenaVisibility` layers, because a
+    `CanvasGroup` lets the parts' own draw layers escape. The look is in
+    `docs/WORLD_VISUALS.md` → Drawing as a shadow.
 
 ## What lives here
 
-- `Creature.cs` — root `Node2D` that builds nodes/beams/pins/sensors from a
-  `CreatureDef` and owns the brain wiring
-- `Creature.Links.cs` — the same class: builds the links: each Piston and
-  Spring with its end-stop cylinder, and each Spring's `DampedSpringJoint2D`
-- `IBeamSensor.cs` — what `Creature` needs from a sensor part: its value
-  names, `Read` into the sensor buffer, and `Reset`
-- `AccelerometerSensor.cs` — one accelerometer: measures its beam's
-  midpoint acceleration each tick, steps the Mechanics `Accelerometer` proof
-  mass and writes its 2 readings into the sensor buffer
-- `CameraSensor.cs` — one camera: three `RayCast2D` children aimed as
-  built by the Mechanics `CameraRays`, writing 3 nearness readings
-- `SpringLink.cs` — one Spring's joint: each tick sets its rest length to
-  `Spring.StepRestLength`, so a preload past a stop stays inside the stop
-- `ServoJoint.cs` — a Servo motor realised with endpoint force couples for
-  every link kind, because Godot angular joints cannot cover Beams, Pistons
-  and Springs uniformly.
-- `NodeVisual.cs` / `BeamVisual.cs` / `ServoVisual.cs` / `PistonVisual.cs` / `SpringVisual.cs` /
-  `RigidHatchVisual.cs` — rendering only, no physics: Training's adapters
-  over the shared part visuals in `project/src/theme` (`JointPart`,
-  `BeamPart`, `PistonPart`, `SpringPart`, `HatchPart`, #767)
-- `SensorVisual.cs` — a sensor's picture (`SensorPart`), a rendering-only
-  child of its beam body; the Accelerometer weight follows the live proof mass
-- `CameraRaysVisual.cs` — every camera ray that hits the ground, drawn up to
-  the hit on the `CreatureLayers.Overlays` layer, over the whole creature
-- `KnockoutVisual.cs` — the followed creature's outline around one beam or
-  node (`KnockoutPart`, #818), hidden on a shadow
-- `ShadowDrawing.cs` — `IShadowVisual`: every visual above declares how it
-  draws on a shadow that is not followed (#385); a test checks each one
-- `Creature.tscn` (in `scenes/`) — the scene template
+- `Creature.cs`, `Creature.Links.cs` — builds bodies, pins, sensors and
+  links (each with its end-stop cylinder) and wires the brain
+- `IBeamSensor.cs` — what `Creature` needs from a sensor: value names,
+  `Read`, `Reset`
+- `AccelerometerSensor.cs`, `CameraSensor.cs` — the sensors (a camera is
+  three `RayCast2D` children aimed by `CameraRays`)
+- `ServoJoint.cs`, `PistonLink.cs`, `SpringLink.cs` — the driven parts
+- `*Visual.cs` — rendering only: Training's adapters over the shared part
+  visuals in `project/src/theme` (#767); `ShadowDrawing.cs` holds
+  `IShadowVisual`
+- `project/scenes/Creature.tscn` — the scene template
 
-## What does NOT live here
+## Tests
 
-- The brain's math → `libs/NodeRunner.ML/`
-- Fitness measurement → `project/src/sim/`
-- Save/load → `libs/NodeRunner.App/Repositories/`
-- The def data types → `libs/NodeRunner.Domain/`; their pure part physics → `libs/NodeRunner.Mechanics/`
-
-## Style specifics
-
-- Keep `_PhysicsProcess(double delta)` short:
-  ```csharp
-  public override void _PhysicsProcess(double delta)
-  {
-      ReadSensors(_sensorValues, delta);
-      Brain.Forward(_sensorValues, _outputValues, _scratchA, _scratchB);
-      foreach (var piston in _pistons)
-      {
-          piston.Drive(...);
-      }
-  }
-  ```
-- No `[Export]` for things that come from a `CreatureDef` — those are set
-  programmatically at build time.
-
-## Test expectations
-
-- `docs/MANUAL_TESTING.md` decides when physics changes need manual testing;
-  physics feel usually does.
-- Unit tests for pure helpers only (e.g. sensor ordering, Piston control) if any are extracted from the Godot classes.
+`docs/MANUAL_TESTING.md` decides when a physics change needs manual
+testing; physics feel usually does. Pure sums move to
+`libs/NodeRunner.Mechanics` and are unit tested there.

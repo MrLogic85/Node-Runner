@@ -1,70 +1,49 @@
 # AGENTS.md — `libs/NodeRunner.Domain`
 
-Pure C# data types. The vocabulary of the app, no behavior beyond invariants.
+Pure C# data types: the vocabulary of the app, with no behaviour beyond
+invariants.
 
-## Hard rules
+## Rules
 
-- **No `Godot.*` references.** Enforced by `NodeRunner.Arch.Tests`.
-- **No I/O.** No `System.IO`, no `System.Net`, no environment access.
-- **No behavior beyond data validation.** Records + enums + constructor
-  invariants. Business logic lives elsewhere.
-  - **Deliberate exceptions:** a few pure, stateless static classes that
-    take and return only Domain types. This is the one list of them.
-    These stay because a layer that cannot use `NodeRunner.Mechanics`
-    needs them (`docs/ARCHITECTURE.md`):
-    `BrainPorts` — the brain ports every part declares, their order and
-    channel keys (#534), shared by the sim, Build and the brain (ML).
-    `PortSignals` — each output signal's activation and passive start
-    (#535), the brain's half of the port contract (ML).
-    `SensorDef.DefaultAim` — a new Camera's aim, which `CreatureDef` fills
-    in at construction (#622).
-    These are not part physics and stayed when the physics moved out
-    (owner's scope decision on #596); move them only with a new issue:
-    `SensorPicture` — the area a tap on a sensor's picture hits, shared by
-    Build's canvas and gestures and the creature in Training (#576).
-    `SelectionMarks` — the one selection gap, a joint's halo and touch
-    reach (#710), shared by Build's gestures and the drawing in Build and
-    Training.
-    `MapGround` — a map's ground height at x (#443), shared by the arena
-    and, later, map previews.
-  - **Part physics does not live here.** The sums a part runs each step
-    (accelerometer, camera rays, piston, spring, rigid triangles) live in
-    `libs/NodeRunner.Mechanics` (#596). Put new physics there.
-- **Serialisable via `System.Text.Json` without custom converters.** Saved
+- **No I/O.** No `System.IO`, `System.Net` or environment access.
+- **Records, enums and constructor invariants only.** The constructor
+  validates, so bad data never survives construction; logic lives in the
+  layers above.
+- **Part physics goes in `libs/NodeRunner.Mechanics`** (#596).
+- **Serialisable with `System.Text.Json` without custom converters.** Saved
   records are the save shape: changing one follows `docs/SAVE_FORMAT.md`.
+
+### Exceptions: static helpers kept here
+
+Pure, stateless static classes over Domain types, kept because a layer that
+cannot use Mechanics needs them (`docs/ARCHITECTURE.md`). This is the one
+list; move one only with a new issue.
+
+| Type | Why it is here | Issue |
+|---|---|---|
+| `BrainPorts` | Every part's brain ports, their order and channel keys, shared by the sim, Build and ML | #534 |
+| `PortSignals` | Each output's activation and passive start: the brain's half of the port contract (ML) | #535 |
+| `SensorDef.DefaultAim` | A new Camera's aim, filled in by `CreatureDef` at construction | #622 |
+| `SensorPicture` | The area a tap on a sensor's picture hits, shared by Build and Training | #576 |
+| `SelectionMarks` | The selection gap, a joint's halo and touch reach, shared by Build's gestures and the drawing in Build and Training | #710 |
+| `MapGround` | A map's ground height at x, part of `MapDef` and read by the arena | #443 |
 
 ## What lives here
 
 - `CreatureDef`, `NodeDef`, `BeamDef`, `SensorDef`, `SensorKind`,
-  `ServoDef`, `PistonDef`, `SpringDef` — anatomy
-- `SensorPicture` — a sensor picture's tap area (see the exceptions above)
-- `SelectionMarks` — the selection gap, joint halo and touch reach (see the
-  exceptions above)
-- `BrainPort`, `PortDirection`, `PortSignal`, `BrainPortLayout`,
-  `BrainPorts`, `PortSignals` — brain ports, their order, channel keys and
-  the brain's output conventions (see the exceptions above)
+  `ServoDef`, `PistonDef`, `SpringDef`, `LinkRef` — anatomy
+- `CreatureElementKind`, `CreatureElementSelection` — what is selected
+- `BrainPort`, `PortDirection`, `PortSignal`, `BrainPortLayout` — brain ports
 - `BrainDef`, `NeuronDef`, `ConnectionGeneDef`, `NeuronKind`,
   `NeuronActivation` — the saved brain graph (#536)
 - `CreationDef`, `TrainingStateDef`, `TrainingRunDef`, `TrainingBestDef`,
-  `TrainSettingsDef` — a saved Creation
-- `MapDef`, `MapGround`, `FlatGround`, `Maps`, `MapIds` — the maps a
-  creation trains on (#443)
-- `SimulationConfig`, `GaConfig` — hyperparameters
-- `Vector2D` — our own `readonly record struct` (Godot.Vector2 stays on the
-  Godot side)
-- `LinkRef` — a Beam/Piston/Spring id and its two joints for Servo link choices
-- Enums: `Activation`, `SelectionStrategy`, …
-
-## Style
-
-- `sealed record` for value types with named fields
-- `readonly record struct` for tiny high-frequency values
-- Constructor validates invariants — bad data must not survive construction
-- One concept per file
+  `TrainSettingsDef` — a saved Creation; `ProgressionDef` — saved progress
+- `MapDef`, `FlatGround`, `Maps`, `MapIds` — the maps a creation trains on
+- `Vector2D` — our own `readonly record struct`; `Godot.Vector2` stays on
+  the Godot side
 
 ## Tests
 
-`tests/NodeRunner.Domain.Tests/` — xUnit + Shouldly. Cover:
-- Invariant violations throw
-- JSON round-trip: `Deserialize(Serialize(x)).ShouldBe(x)`
-- Record equality holds (compiler gift; one canary test is enough)
+`tests/NodeRunner.Domain.Tests/`: invariant violations throw; JSON
+round-trips (`Deserialize(Serialize(x)).ShouldBe(x)`); one record-equality
+canary, since the compiler writes equality.

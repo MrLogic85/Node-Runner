@@ -88,7 +88,7 @@ public partial class SceneRouter : Node, ISceneNavigator
 
     private void OnSceneChanged() => _changing = false;
 
-    // Development exports can start on a component-library page (docs/UI_DIRECTION.md).
+    // Development exports can start on a component-library page (project/src/ui/lib/AGENTS.md).
     private static SceneRoute? DevelopmentStartRoute()
     {
         if (ProjectSettings.GetSetting("ui/popup_gallery", false).AsBool())

@@ -36,7 +36,8 @@ public static class UiIcons
     /// <summary>
     /// Icons sample Linear (#734). An icon rasterized for the UI size lands on fractional device
     /// pixels, where the project's Nearest doubles or drops rows. Where it is already pixel-aligned,
-    /// Linear draws it exactly the same. Text keeps Nearest: see "Icon filtering" in docs/UI_DIRECTION.md.
+    /// Linear draws it exactly the same. Text keeps Nearest: see "Icon filtering" in
+    /// project/src/ui/lib/AGENTS.md.
     /// </summary>
     public const CanvasItem.TextureFilterEnum IconFilter = CanvasItem.TextureFilterEnum.Linear;
 

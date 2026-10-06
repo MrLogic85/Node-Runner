@@ -1,22 +1,47 @@
 # AGENTS.md — `libs/NodeRunner.ML`
 
-The neural-network and evolutionary-algorithm engine.
+The neural-network and genetic-algorithm engine. Layer rules (no Godot,
+Domain only) are in `docs/ARCHITECTURE.md` and enforced by
+`NodeRunner.Arch.Tests`.
 
-Shared architecture, design, and testing rules live in
-`docs/ARCHITECTURE.md`, `docs/CODE_DESIGN_PRINCIPLES.md`, and
-`docs/TEST_STRATEGY.md`. This file owns only constraints specific to this
-folder.
+## Rules
 
-## Local constraints
-
-- **No I/O, no global state.** No `System.IO`, no `System.Net`, no static
-  mutable fields, no `Console.WriteLine` in training loops.
-- **No allocations in hot paths.** `Forward(...)` overloads should accept
-  reusable output buffers.
+- **Plain values in and out.** The public API takes and returns primitives
+  (`double`, `double[]`, `int`), small structs and Domain records such as
+  `BrainDef` and `BrainPortLayout`, so the engine stays testable with plain
+  xUnit.
+- **`double`, not `float`,** so training maths is consistent and
+  reproducible.
+- **No I/O, no global state.** No `System.IO`, `System.Net`, static mutable
+  fields or `Console.WriteLine`.
+- **No allocations in hot paths.** `NeuralNetwork.Forward(input, output,
+  scratchA, scratchB)` takes caller-owned buffers, which must be distinct
+  arrays (`ValidateDistinctBuffer`); the network keeps no per-call state.
+- **Genome layout.** Per layer: weights in row-major output-neuron order,
+  then biases. `DirectBrain.LayerSizes` is `[inputs, outputs]` in
+  `BrainPorts` order, and `DirectBrain.Compile` matches genes by port, never
+  by list order, so a saved brain loads whatever its order. A disabled gene
+  compiles to 0 and `Evolver.SilenceDisabledGenes` keeps it there
+  (`DirectBrain.DisabledGenes`). The `DirectBrain` XML doc has the detail.
 
 ## Scope
 
-- Feedforward neural networks and activation functions
-- Genetic algorithms and evolutionary operators
-- Backpropagation and optimisers
-- ML-specific math not provided by the BCL
+- `NeuralNetwork`, `Activation` — the feedforward network
+- `Brains/` — `DirectBrain` (brain graph ↔ network), `GenerationZero`
+- `Ga/` — `GeneticAlgorithm`, `CrossoverStrategy`,
+  `ParallelEvaluationSchedule`, `TrialMeasurement`
+- `Gaussian` — maths the BCL lacks
+
+Backpropagation is #955.
+
+## Tests
+
+`tests/NodeRunner.ML.Tests/` pins:
+
+- `Forward` output shape for `LayerSizes`; same seed and input give the same
+  output; activations on hand-worked values
+- GA operators: elitism, crossover only from parents, and the same seed
+  gives the same generation (tournament and mutation-sigma tests: #967)
+- Round-trips: `FromGenome(LayerSizes, FlattenGenome(), activation)` and
+  `DirectBrain.Compile(ToBrainDef(...))` whatever the saved order
+- `Clone` gives an independent network

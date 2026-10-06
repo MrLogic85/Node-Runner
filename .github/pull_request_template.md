@@ -1,12 +1,11 @@
 <!--
-PR template. Delete sections that don't apply. The Definition of Done is
-owned by docs/REVIEW.md; do not copy it into this template.
+Delete sections that don't apply. docs/REVIEW.md owns the Definition of Done
+and the PR title format ("PR title and commit hygiene").
 -->
 
 ## What & why
 
-<!-- 1–3 sentences. What does this PR do, and why? Link the issue. -->
-<!-- PR title: type(#123): Description, or type(#123, #124) for several issues; see docs/REVIEW.md "PR title and commit hygiene". -->
+<!-- 1–3 sentences. What does this PR do, and why? -->
 
 Closes #123
 
@@ -18,12 +17,7 @@ Closes #123
 
 ## How to verify
 
-<!-- The exact commands / steps a reviewer runs to check this. Fill in. -->
-
-```bash
-dotnet build NodeRunner.slnx
-dotnet test  NodeRunner.slnx
-```
+<!-- Commands run and their results; see docs/MANUAL_TESTING.md "What belongs in a PR". -->
 
 Manual testing decision (`docs/MANUAL_TESTING.md`):
 
@@ -33,7 +27,7 @@ Manual testing decision (`docs/MANUAL_TESTING.md`):
 
 ## Screenshots / recordings
 
-<!-- Drop into the PR description; delete this section if not applicable. -->
+<!-- Delete this section if not applicable. -->
 
 ## Definition of Done
 
@@ -42,5 +36,4 @@ satisfied. Explain any item that does not apply in **Notes for the reviewer**.
 
 ## Notes for the reviewer
 
-<!-- Anything worth calling out: shortcuts taken, follow-ups filed, design
-     alternatives considered and rejected. -->
+<!-- Shortcuts taken, follow-ups filed, alternatives rejected. -->

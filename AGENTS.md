@@ -1,81 +1,58 @@
 # AGENTS.md
 
-Guidance for AI coding agents (Copilot CLI, Claude Code, Cursor, etc.) working
-in the **Node Runner** repository. Human contributors should also read this — it
-is the entry point to the documents that own the project's rules.
+Guidance for AI coding agents (Copilot CLI, Claude Code, Cursor, etc.) and
+human contributors working in the **Node Runner** repository.
 
 ## What this project is
 
-Node Runner is a **learning-by-playing Android app** where the user draws a 2D
+Node Runner is a **learning-by-playing Android app**: the user draws a 2D
 creature (nodes, beams, sensors — see `docs/CREATURE_MODEL.md`), a neural
-network is generated from it, and the user watches it learn to move via
-neuroevolution and (later) backprop. The
-primary goal is **pedagogical**: to make ML concepts visible, tangible, and
-interactive.
+network is generated from it, and the user watches it learn to move through
+neuroevolution. The primary goal is **pedagogical**: to make ML concepts
+visible, tangible and interactive.
 
-- **Engine:** Godot 4 (latest stable)
-- **Language:** C# (.NET) for everything
-- **Target:** Android (primary), desktop for development
-- **Not targeted (yet):** iOS, web, consoles
-- **Stage:** see `docs/ROADMAP.md` → "Project stage"; it decides whether
+- **Engine:** Godot 4.7 (.NET)
+- **Language:** C# for everything
+- **Target:** Android, with desktop for development
+- **Stage:** `docs/ROADMAP.md` → "Project stage"; it decides whether
   changes to saved data need a migration.
 
-Make sure to read all the documents in docs/* and have a good understanding
-of the project before starting to work.
+Make sure to read all the documents in `docs/*` and have a good
+understanding of the project before starting to work.
 
 ## Prime directives for agents
 
-1. **Follow the owning documents.** `docs/ARCHITECTURE.md` owns layers and
-   dependencies, `docs/CODE_DESIGN_PRINCIPLES.md` owns implementation rules,
-   `docs/TEST_STRATEGY.md` owns testing, `docs/REVIEW.md` owns how changes
-   land, and `docs/RELEASING.md` owns publishing a version. The nearest
-   local `AGENTS.md` adds only layer-specific instructions.
-2. **Godot first, always.** Use Godot's own features to their full potential.
-   Write our own solution only when Godot cannot do it natively, and say why
-   (`docs/CODE_DESIGN_PRINCIPLES.md` §2).
-3. **Run code review agents before committing or pushing.** Dispatch the
-   reviews in `CODEREVIEW.md` against the staged diff (or the range about
-   to be pushed). Only commit/push once each *new*
-   finding has either been addressed or judged
-   as not useful — by the human, or by the agent.
-   Code-review clean = commit/push authorised.
-4. Always try to continue to work autonomously, only pause when you are stuck
-   due to hardware issues or when you guninely need input from a human. Pick work
-   tasks from recent discussions with a human or from GitHub. If GitHub tasks are big,
-   break them down into milestones, new issues or subtasks.
-5. When new milestones, feature bugs are found or discussed. Add or update them
-   on GitHub. Status, Priority and Size live in the GitHub Project, not in
-   labels. Set them, and blocked-by relationships, when you create an issue,
-   then run `.github/scripts/issue-audit.sh` (`docs/ISSUE_LABELS.md` →
-   "Creating an issue"). Dont leave desicions undocumented. Review broad,
-   risky, or ambiguous issues under docs/ISSUE_REVIEW.md before implementation.
-6. Keep *.md files up to date and as clean as possible.
+1. **Follow the owning documents and keep them current.** Each topic has one
+   owner, listed in `README.md` → "Documentation"; write docs by
+   `docs/CODE_DESIGN_PRINCIPLES.md` §9.
+2. **Godot first, always.** Write our own solution only when Godot cannot
+   do it natively, and say why (`docs/CODE_DESIGN_PRINCIPLES.md` §2).
+3. **Run the review agents in `CODEREVIEW.md` before every commit or
+   push.** `docs/REVIEW.md` → "Definition of Done" owns the gate.
+4. **Work autonomously.** Pause only when blocked by hardware or when a
+   decision genuinely needs a human. Pick work from recent discussions with
+   a human or from GitHub, and break big issues into milestones or
+   sub-issues.
+5. **Record work and decisions on GitHub.** File new work, bugs and
+   decisions as issues per `docs/ISSUES.md` → "Creating an issue", and
+   review broad, risky or ambiguous issues before implementing them
+   (`docs/ISSUES.md` → "Reviewing an issue").
 
-## Architecture map
+## Repository map
 
-`docs/ARCHITECTURE.md` owns the detailed layer map and dependency graph.
-Conceptually:
+- `libs/`: the engine-independent Domain, Mechanics, ML and App layers.
+- `project/`: the Godot host (scenes, simulation, composition, UI).
+- `tests/`: mirrors the pure-C# layers and enforces the architecture.
+- `docs/`: design, process and teaching documents.
+- `issues/`: a read-only archive of the old file-based tracker.
 
-- `libs/` contains the engine-independent Domain, Mechanics, ML, and App layers.
-- `project/` is the Godot host: scenes, simulation, composition, and UI.
-- `tests/` mirrors the pure-C# layers and enforces architecture boundaries.
-- `docs/` owns durable design, process, roadmap, and teaching material.
-- `issues/` is a read-only archive of the old file-based tracker.
-
-Several folders have local `AGENTS.md` files, including those in `libs/`,
-`project/src/`, `tests/`, and `docs/release-notes/`. Read the nearest one
+`docs/ARCHITECTURE.md` owns the layers and solution layout. Code folders
+with layer-specific rules have their own `AGENTS.md`; read the nearest one
 before editing there.
 
 ## Machine-local setup
 
-Host-specific state (GitHub CLI accounts, SSH host aliases, per-machine
-paths) lives in `LOCAL_CONFIG.md` at the repo root. That file is git-ignored;
-each clone maintains its own. Read it before running `gh`, `git push`, or any
-command that touches an external account — the primary `gh` login on a
-machine is not necessarily the account that has write access to this repo.
-Its token needs the `project` scope to set issue Status, Priority and Size.
-
-## Definition of Done
-
-Authoritative Definition of Done lives in `docs/REVIEW.md`. Follow the list
-there; do not maintain a second copy.
+`LOCAL_CONFIG.md` (git-ignored, one per clone) holds host-specific state:
+GitHub CLI accounts, SSH host aliases and paths. Read it before running
+`gh`, `git push` or anything that touches an external account; the primary
+`gh` login is not necessarily the one with write access to this repo.

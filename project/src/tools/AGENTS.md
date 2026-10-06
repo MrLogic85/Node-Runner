@@ -14,5 +14,13 @@
 
 ## What lives here
 
-- `ExpandThemes.cs` — regenerates the palette-derived items of the theme files;
-  see `docs/UI_DIRECTION.md` for when and how to run it.
+- `ExpandThemes.cs` — regenerates the palette-derived items of the theme
+  files. Run it after editing a palette colour:
+  1. Build Debug: `dotnet build project/NodeRunner.csproj`.
+  2. `Godot --headless --path project res://scenes/tools/ExpandThemes.tscn`
+     (on macOS, `/Applications/Godot_mono.app/Contents/MacOS/Godot`).
+  3. A command-line save drops the font `uid`s from `Neon.tres`'s
+     `ext_resource` lines; restore them, or re-save in the editor, before
+     committing.
+
+  `UiThemeExpanderTests` fail when a theme was edited without regenerating.

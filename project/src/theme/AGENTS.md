@@ -13,14 +13,15 @@ shared part visuals that Build, Training and thumbnails draw with (#766).**
    `CreatureLayers` member passed to `PartVisual`'s constructor, and
    Training's world uses `ArenaLayers`. Only `PartVisual` sets a part's
    `ZIndex`, so the selected-layer switch is never bypassed, and nothing
-   here depends on the order parts are added (`docs/CREATURE_MODEL.md` →
-   "Draw layers"). `DrawLayersTests` checks that the layers are passed by
-   name and that every `ZIndex` is a named layer.
+   here depends on the order parts are added. `docs/WORLD_VISUALS.md` →
+   "Draw layers" owns the order; `DrawLayersTests` checks that layers are
+   passed by name and that every `ZIndex` is a named layer.
 3. **Selection is drawn with its part.** A part draws its own marks in its
    `_Draw` and rises whole to its kind's selected layer while selected.
    Never draw a mark on a separate layer.
-4. **Strokes follow `docs/UI_DIRECTION.md`** (the pixel pen and
-   `UiStrokeGuardTests`).
+4. **Strokes follow the pen rule** in `project/src/ui/lib/AGENTS.md` →
+   Drawing (`UiStrokeGuardTests`). `docs/WORLD_VISUALS.md` owns how parts
+   look.
 
 ## What lives here
 

@@ -10,13 +10,12 @@ namespace NodeRunner.App.Builders;
 /// (0.3.0). Add/move/remove nodes, beams, sensors, Pistons and Springs here; <see cref="Build"/>
 /// returns the drawing as an immutable <see cref="CreatureDef"/> for saving, and
 /// <see cref="TryBuild"/> returns it only once it can be simulated. See
-/// docs/CREATURE_MODEL.md for the vocabulary and docs/ROADMAP.md 0.3.0 for
+/// docs/CREATURE_MODEL.md for the vocabulary and docs/BUILD_MODE.md for
 /// the feature this supports.
 ///
 /// Lives in `NodeRunner.App`, not `NodeRunner.Domain`: this is mutable
-/// business logic (add/remove/cascade), which
-/// `libs/NodeRunner.Domain/AGENTS.md` explicitly reserves for
-/// stateless derivations such as <c>RigidTriangles</c> only.
+/// business logic (add/remove/cascade), and Domain keeps only records and
+/// a short list of stateless helpers (`libs/NodeRunner.Domain/AGENTS.md`).
 /// </summary>
 public sealed class CreatureBuilder
 {

@@ -1,219 +1,111 @@
 # Review process
 
-How a change lands in `main`. Applies to humans and AI agents equally.
+How a change lands in `main`, for humans and AI agents alike.
 
 ## TL;DR
 
-1. Branch from `main` (or use a Copilot-agent PR).
-2. Push and open a PR against `main`. The PR template auto-populates.
-3. Enable squash auto-merge. GitHub waits persistently and merges when the
-   required checks are green.
-4. The PR author owns failures and follow-up changes until the PR is merged.
-   AI reviewers post advisory comments once enabled (see § "AI reviewer").
-5. Verify the merge and the resulting `main` checks. The linked GitHub Issue
-   is closed by the PR's closing keyword.
+1. Branch from `main`; never push to `main` directly (the ruleset rejects
+   it).
+2. Run the review agents in `CODEREVIEW.md` before every commit or push.
+3. Push, open a PR against `main` with the template, and enable squash
+   auto-merge.
+4. Own the PR until it merges: fix failing checks, answer every review
+   comment with a fix or a reason, and don't resolve threads you didn't
+   address.
+5. Confirm the PR merged and `main` is green. The PR's closing keyword
+   closes the issue.
 
-Never push straight to `main`; the `main` ruleset rejects direct pushes.
+A trivial change (typo, comment) still goes through a PR and CI; skip
+manual verification and say "trivial" in the PR.
 
-## Roles
-
-### Author (human or AI)
-
-- Owns the change from implementation through merge. Reads the linked issue,
-  `docs/ARCHITECTURE.md`, and the local `AGENTS.md` before starting.
-- Keeps the diff small. If it grows past one clear intent, splits it.
-- Fills the PR template, confirms the DoD, and explains anything that does
-  not apply.
-- Responds to review comments; does not resolve conversations they didn't
-  address.
-- Enables squash auto-merge after opening the PR.
-- Monitors CI to a terminal result. If a check fails, fixes the cause, reruns
-  the relevant local validation and code-review focuses, then pushes the fix.
-- Verifies that GitHub merged the PR and that `main` is healthy. A pushed
-  branch or open PR is not a completed change.
-
-### Human reviewer
-
-- Human review is optional; this is a solo project and no approval is
-  required to merge.
-- Runs the checks in `## How to verify` locally when the change is risky
-  (physics, ML, saving) — CI is necessary but not sufficient for those.
-- Checks the DoD against reality.
-- Reviews the *design*, not just the diff. "Does this belong in this layer?
-  Are we creating debt we won't pay?"
-- Flags: layer violations, missing tests for pure-C# logic, hidden
-  breaking changes, unreviewed AGENTS.md / ARCHITECTURE.md changes.
-- Nits are welcome but must be labelled `nit:` and are non-blocking.
-
-### AI reviewer (Copilot code review, local code-review agents)
-
-- Copilot code review runs automatically on every PR **once enabled on the
-  repository**. Until that is configured, only the local pass below runs.
-- **Local code-review agents** defined in `CODEREVIEW.md` are dispatched by
-  the author (or the assistant working on their behalf) before every
-  commit. Each focus area runs as its own parallel agent so findings stay
-  scoped. New findings block the commit; preexisting findings are
-  informational.
-- Findings are advisory. The human reviewer decides which to action.
-- If an AI reviewer flags a real bug and the author disagrees, they must
-  respond with reasoning, not just resolve the thread.
-- AI review is not a substitute for human review, but it catches boring
-  bugs and style drift before the human sees them.
-
-### AI author (Copilot coding agent)
-
-- Follows the same PR template.
-- Ends every session with a summary of what it did and what it deferred —
-  the human reviewer reads this before the diff.
-- Updates the linked GitHub Issue when scope, status, or follow-up changes.
-  Archived file issues under `issues/archive/` are historical records and
-  must not be edited.
+The local code-review agents in `CODEREVIEW.md` review every PR; #956
+decides whether Copilot code review joins them. Human review is optional,
+and `nit:` comments don't block.
 
 ## Definition of Done
 
-A PR is mergeable when every box is true (or a skipped box is justified in
-the PR):
+A PR is mergeable when every box is true, or the PR says why a box does
+not apply:
 
-- [ ] Linked GitHub Issue exists and the PR uses a closing keyword
-      (release-notes PRs use `Part of`; see `docs/RELEASING.md`)
-- [ ] `dotnet build NodeRunner.slnx` clean, 0 warnings
-- [ ] `dotnet test NodeRunner.slnx` all green (unit + arch)
-- [ ] Any new logic in `libs/NodeRunner.{ML,Domain}/` has unit tests
-- [ ] `dotnet format NodeRunner.slnx --verify-no-changes` passes
-- [ ] Local review agents (`CODEREVIEW.md`) dispatched; new findings
-      addressed or explicitly dismissed. For UI-touching changes (screens,
-      controls, layout, theme), include `CODEREVIEW.md`'s "Visual & UX
-      design" focus area, which uses the `design-lead` custom agent
-      (`.github/agents/design-lead.agent.md`). A Visual & UX result of
-      "insufficient evidence" is blocking until live app access,
-      screenshots/recordings, or an explicit human waiver is recorded.
-- [ ] Docs updated where behavior/architecture changed
+- [ ] A linked GitHub Issue and a closing keyword (release-notes PRs use
+      `Part of`; see `docs/RELEASING.md`)
+- [ ] Required checks green (see "Merge gates"), and
+      `dotnet build NodeRunner.slnx -warnaserror` is clean: CI does not
+      fail on warnings in `project/`
+- [ ] New logic in `libs/NodeRunner.{Domain,Mechanics,ML}/` has unit tests
+- [ ] Review agents (`CODEREVIEW.md`) ran on the final diff, and every new
+      finding is fixed or dismissed with a written reason. UI-touching
+      changes (screens, controls, layout, theme) include "Visual & UX
+      design", run by `design-lead` (`.github/agents/design-lead.agent.md`);
+      its "insufficient evidence" result blocks until live app access,
+      screenshots or recordings, or a human waiver is recorded in the PR.
+- [ ] Docs and the nearest `AGENTS.md` updated where behaviour,
+      architecture or a rule changed
 - [ ] A change to a saved shape updates `docs/SAVE_FORMAT.md` and the
       schemas in `docs/save-schema/`, and adds the migration and test the
       current stage requires (`docs/SAVE_FORMAT.md` → "Versions and
       migration")
-- [ ] Local `AGENTS.md` reflects any new rule that emerged
-- [ ] Nothing under `libs/` uses `using Godot;` — arch tests enforce this
-- [ ] No secrets, credentials, or personal data
-- [ ] PR title follows `type(#123): Description`
-- [ ] Manual testing decision recorded and executed according to
-      `docs/MANUAL_TESTING.md`
+- [ ] No secrets, credentials or personal data
+- [ ] PR title follows "PR title and commit hygiene"
+- [ ] Manual testing decided and done per `docs/MANUAL_TESTING.md`
 - [ ] Squash auto-merge enabled
 
 ## Merge gates
 
-Merging requires a PR and green checks; no approvals are required. The full
-ruleset is listed under § "Branch protection".
-
-Branches need not be up to date with `main`: auto-merge would otherwise stall
-whenever another PR lands first, and the CI run on `main` catches the rare
-semantic conflict.
-
-The local code-review gate and every applicable pre-push DoD item are
-completed before the branch is pushed. PR lifecycle items, including
-auto-merge and final `main` verification, follow after push. These are process
-rules, not required GitHub approvals.
+The `main` ruleset requires a PR, linear history, squash merges and the
+checks `PR title`, `Build`, `Test & coverage` and `Format check`; it needs
+no approval and has no exceptions for administrators. Branches need not be
+up to date with `main`, because auto-merge would otherwise stall whenever
+another PR lands first; the CI run on `main` catches the rare semantic
+conflict.
 
 ## Auto-merge
 
-After creating a PR, its author enables GitHub-managed squash auto-merge:
+After opening the PR, enable GitHub's squash auto-merge:
 
 ```bash
 gh pr merge --auto --squash
 ```
 
-GitHub owns the persistent wait; do not rely on a local background process
-surviving the CLI session. The PR author still owns the outcome:
-
-- Watch the checks while the session remains active.
-- Fix failures instead of leaving a red PR behind.
-- Re-run applicable code-review focuses after a corrective code change.
-- Confirm the PR reached `MERGED` and `main` is green.
-
-If GitHub cannot enable auto-merge, keep the PR open, report the blocker, and
-do not bypass the required checks with a direct merge.
+GitHub owns the wait, so no local process has to outlive the session. The
+author still watches the checks while the session lasts, fixes failures,
+re-runs the affected review focuses after a corrective change, and confirms
+the PR reached `MERGED` with `main` green. If auto-merge cannot be enabled,
+keep the PR open, report the blocker, and never bypass the required checks.
 
 ## What review should flag
 
-- Layer violations that snuck past the arch tests (arch tests only catch
-  what they know to check)
+- Layer violations the arch tests don't know to check
 - Missing tests for load-bearing math or state changes
-- Hidden breaking changes (public API shape shift, save-file format
-  change) without a heads-up in the PR description, or without the
-  migration the current stage requires (`docs/ROADMAP.md` → "Project stage")
-- Changes to `AGENTS.md`, `ARCHITECTURE.md`, or `TEST_STRATEGY.md` without
-  a paragraph in the PR explaining why
+- Hidden breaking changes (public API shape, save format) without a note in
+  the PR, or without the migration the current stage requires
+  (`docs/ROADMAP.md` → "Project stage")
+- Changes to `AGENTS.md`, `ARCHITECTURE.md` or `TEST_STRATEGY.md` without a
+  paragraph in the PR saying why
 
 ## What does NOT block a merge
 
-- Style nits already covered by `.editorconfig` (raise in a `nit:` comment)
-- Personal preference between two equally valid designs (raise once; drop
-  if the author defends it)
-- Missing follow-up issues (file them; do not block the current PR)
-- Not adding a test for compiler-generated record members
+- Style nits already covered by `.editorconfig`
+- A preference between two equally valid designs (raise it once; drop it if
+  the author defends it)
+- Missing follow-up issues (file them instead)
+- No test for compiler-generated record members
 
 ## PR title and commit hygiene
 
-- PR title format is `type(#123): Description`.
-  Example: `feat(#11): Add feedforward neural network`.
-- Allowed types: `feat`, `fix`, `docs`, `chore`, `refactor`, `test`, `build`,
-  `ci`, `perf`, `style`, `revert`.
-- The scope is the GitHub Issue number, including `#`. A PR that closes several
-  issues lists them: `refactor(#497, #498): Description`.
+- Format: `type(#123): Description`, for example
+  `feat(#11): Add feedforward neural network`.
+- Types: `feat`, `fix`, `docs`, `chore`, `refactor`, `test`, `build`, `ci`,
+  `perf`, `style`, `revert`.
+- The scope is the issue number with `#`; a PR closing several issues lists
+  them: `refactor(#497, #498): Description`.
 - The description starts with an uppercase letter.
-- Squash-merge PRs and use the PR title as the squash commit subject. Individual
-  commits inside the PR can be messy; the squash commit tells the story.
-- Include a `Co-authored-by:` trailer for every human or agent that
-  contributed materially.
-
-## Branch protection
-
-The `main` ruleset (GitHub → Settings → Rules → Rulesets) is configured with:
-
-- Require a pull request before merging
-- Require status checks to pass: `PR title`, `Build`, `Test & coverage`,
-  `Format check`
-- Require linear history
-- Allow only squash merges
-- Do not allow force pushes
-- Do not allow branch deletion
-- Include administrators
+- PRs are squash-merged with the PR title as the commit subject, so commits
+  inside a PR may be messy.
+- Add a `Co-authored-by:` trailer for every human or agent that contributed
+  materially.
 
 ## Releases
 
 Publishing a version is not a change to `main`; `docs/RELEASING.md` owns
-the release flow, including its PRs on `release/vX.Y`.
-
-## Local pre-push checklist
-
-For your own sanity before opening the PR:
-
-```bash
-dotnet format NodeRunner.slnx
-dotnet build  NodeRunner.slnx
-dotnet test   NodeRunner.slnx
-```
-
-If any of these fail locally, CI will fail too. Save the round trip.
-
-Additionally, dispatch the code-review agents defined in `CODEREVIEW.md`
-against the staged diff. This is a hard rule for agents (see root
-`AGENTS.md` § "Prime directives"), and a strong habit for humans.
-
-## When the reviewer is *you*
-
-Solo work still gets a PR. The value is:
-
-- A durable diff to read a year from now with rested eyes
-- CI catches the change you were 90% sure was harmless
-- Copilot review flags what tired-you missed
-- Forces a written PR description, which is future-you's context
-
-Enable auto-merge without waiting for external approval, but *never* skip the
-DoD checklist or leave a failed check unowned.
-
-## When the change is trivial
-
-Docs typo, one-line comment, gitignore fix. Still a PR, still CI, but skip
-the manual verification steps and note "trivial" in the PR body. The
-history is worth more than the ceremony.
+it, including its PRs on `release/vX.Y`.

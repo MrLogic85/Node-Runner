@@ -7,7 +7,7 @@ namespace NodeRunner.App.ViewModels;
 /// BrainFocus on the direct brain (#536): a Senses column and an Outputs column, the enabled
 /// connections between them and live activations. Nothing is selected at first; tapping an
 /// output names the senses that drive it most, and tapping a sense names the outputs it drives
-/// most. Best guesses until #549 designs it (docs/UI_DIRECTION.md).
+/// most. Its look is in docs/UI_DIRECTION.md → "BrainFocus"; hidden layers are #549.
 /// </summary>
 public sealed class BrainFocusPresentationViewModel : INotifyPropertyChanged
 {

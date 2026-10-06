@@ -1,7 +1,6 @@
 # Architecture
 
-High-level map of where things live and how they talk. Details change as we
-build; the *shape* below should stay stable.
+Where code lives and which way it may depend.
 
 ## Layer diagram
 
@@ -32,33 +31,35 @@ build; the *shape* below should stay stable.
 ┌─────────────────────────────────────────────────────────────────┐
 │                     Mechanics (pure C#)                          │
 │                   libs/NodeRunner.Mechanics/                     │
-│   Accelerometer · CameraRays · Servo · Piston · RigidTriangles   │
+│   Accelerometer · CameraRays · Servo · Piston · Spring           │
 └─────────────────────────────────────────────────────────────────┘
                           ▲                │
                           │                ▼
 ┌─────────────────────────────────────────────────────────────────┐
 │                    Domain data (pure C#)                         │
 │                    libs/NodeRunner.Domain/                       │
-│           CreatureDef · NodeDef · BeamDef · SensorDef · Vector2D          │
+│      CreatureDef · NodeDef · BeamDef · SensorDef · Vector2D      │
 └─────────────────────────────────────────────────────────────────┘
                                            │
                                            ▼
 ┌─────────────────────────────────────────────────────────────────┐
 │                      ML engine (pure C#)                         │
 │                       libs/NodeRunner.ML/                        │
-│    NeuralNetwork · activations · ga · backprop · math            │
+│          NeuralNetwork · Activation · Brains · Ga                │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-The four libraries in `libs/` are pure .NET 8 class libraries with **no
+The four libraries in `libs/` are .NET 8 class libraries with **no
 `Godot.*` references**. The Godot project (`project/`) targets .NET 9 for
-Godot 4.7 Android export templates, references the libraries, and provides the
-runtime host: scenes, physics, input, rendering. `NodeRunner.App` references
-the System.Text.Json 9 package, the same version the host runs, for strict
-save loading (`docs/SAVE_FORMAT.md`).
+Godot 4.7's Android export templates, references the libraries, and provides
+the runtime host: scenes, physics, input, rendering. `NodeRunner.App`
+references the System.Text.Json 9 package, the same version the host runs,
+for strict save loading (`docs/SAVE_FORMAT.md`).
 
-Enforcement: `tests/NodeRunner.Arch.Tests/ArchitectureSpec.cs` fails the build
-if any lib imports `Godot`, or if the layer graph below is violated.
+`tests/NodeRunner.Arch.Tests/ArchitectureSpec.cs` enforces the dependency
+rules for the libraries only: no lib references Godot, Domain references no
+other lib, Mechanics only Domain, and ML neither App nor Mechanics. Nothing
+tests the `project/` rules below; review must catch a breach.
 
 ## Dependency rules
 
@@ -66,14 +67,21 @@ Arrows only go **downward** across layer boundaries.
 
 - **UI** (`project/src/ui/`) depends on: `NodeRunner.App` (ViewModels),
   `NodeRunner.Domain` (for display types), `NodeRunner.Mechanics` (to draw a
-  part as the sim moves it), `project/src/ui/lib` (Controls).
+  part as the sim moves it), `project/src/theme/`, `project/src/ui/lib`
+  (Controls).
   **Never** on: sim, managers, `NodeRunner.ML`.
 - **App** (`libs/NodeRunner.App/` — ViewModels, Repositories, Services)
   depends on: `NodeRunner.Domain`, `NodeRunner.Mechanics`, `NodeRunner.ML`.
   **Never** on: Godot, sim, creature.
 - **Sim & Creature** (`project/src/{sim,creature}/`) depend on:
-  `NodeRunner.Domain`, `NodeRunner.Mechanics`, `NodeRunner.ML`, and Godot.
-  **Never** on: UI, ViewModels, Managers.
+  `NodeRunner.Domain`, `NodeRunner.Mechanics`, `NodeRunner.ML`,
+  `project/src/theme/`, and Godot.
+  **Never** on: UI, ViewModels, Managers. A host adapts sim events for
+  view-models: `EvolverTrainingProgressSource` turns `Evolver`'s events into
+  the App's `ITrainingProgressSource`.
+- **Theme** (`project/src/theme/`) depends on: `NodeRunner.Domain`,
+  `project/src/ui/lib` and Godot. It draws the arena and creature parts from
+  plain visual state (`project/src/theme/AGENTS.md`).
 - **Managers** (`project/src/managers/`) depend on: `NodeRunner.App` (for
   repository/service interfaces), `NodeRunner.Domain`, Godot.
   Managers are the **composition root** — they wire concrete implementations
@@ -83,14 +91,14 @@ Arrows only go **downward** across layer boundaries.
   every project layer above. They wire a screen's signals to managers and
   the navigator; keep game rules out of them. Nothing depends on them.
 - **Domain** (`libs/NodeRunner.Domain/`) depends on: nothing but the .NET BCL.
+  Its `Vector2D` is our own `readonly record struct`, **not**
+  `Godot.Vector2`; the creature layer converts at its boundary.
+  `docs/CREATURE_MODEL.md` owns the model its records encode.
 - **Mechanics** (`libs/NodeRunner.Mechanics/`) depends on: `NodeRunner.Domain`
   only. It holds the pure physics of creature parts — the sums the sim runs
   each step and Build reuses to draw the same thing (#596). What stays in
   Domain, and why, is listed in `libs/NodeRunner.Domain/AGENTS.md`.
 - **ML** (`libs/NodeRunner.ML/`) depends on: `NodeRunner.Domain` only.
-
-Every source folder has an `AGENTS.md` with its specific rules. Read those
-before editing.
 
 ## Solution layout
 
@@ -103,7 +111,7 @@ Node Runner/
 ├── libs/                           # pure C#, no Godot
 │   ├── NodeRunner.Domain/          # data records, enums, invariants
 │   ├── NodeRunner.Mechanics/       # pure part physics: sensors, servos, pistons, springs
-│   ├── NodeRunner.ML/              # neural nets, GA, backprop
+│   ├── NodeRunner.ML/              # neural nets, brains, GA
 │   └── NodeRunner.App/             # viewmodels, services, repositories
 ├── project/                        # Godot project (targets net9.0)
 │   ├── project.godot
@@ -130,376 +138,77 @@ Node Runner/
     └── NodeRunner.Ui.Tests/        # static Godot UI contracts; no scene tree
 ```
 
-Static UI token/style contracts run in xUnit by referencing the Godot project
-without constructing Nodes. Godot-side behavioral tests (Node lifecycle,
-physics, input, rendered layout) will land later in
-`project/tests/` using GdUnit4 — a separate framework with its own lifecycle,
-kept out of the pure-C# solution.
-
-## Android export
-
-`project/export_presets.cfg` defines two export presets. `Android` builds the
-release. `Android Debug` builds a debug APK with its own package,
-`dev.mrlogic85.noderunner.debug`, and app name, Node Runner Debug, so it
-installs next to the release on a tester's phone, with its own saved data
-(#898). Android will not replace an app with one signed by another key: releases
-are signed with the release keystore (`docs/RELEASING.md` → "Signing key"),
-development builds with each developer's debug key. A debug APK for
-development:
-
-```bash
-/Applications/Godot_mono.app/Contents/MacOS/Godot \
-  --headless --path project \
-  --export-debug "Android Debug" ../build/node-runner-debug.apk
-```
-
-Godot presets cannot inherit, so `Android Debug` repeats every option of
-`Android`; change both. `ArchitectureSpec` fails if they differ in anything but
-the preset name, package and app name.
-
-Release APKs come from `.github/scripts/release.sh` (see
-`docs/RELEASING.md`), which runs `--export-release` with the release keystore passed
-through Godot's `GODOT_ANDROID_KEYSTORE_RELEASE_*` environment variables.
-Release exports are not debug builds, so `OS.IsDebugBuild()` is false and
-debug-only UI such as the Component library link is hidden (#808).
-
-The version has one source, `application/config/version` in
-`project/project.godot`. Both presets leave `version/name` empty so the export
-reads it from there, and set `version/code` to
-1000000·major + 1000·minor + patch (0.13.0 → 13000) (#809). Change both with
-`.github/scripts/set-version.sh X.Y.Z`; `ArchitectureSpec` checks they agree.
-
-The presets' `launcher_icons/*` and `splash_screen/icon` point at the SVGs in
-`project/assets/icons/app/`. Godot imports each at its declared size and the
-export scales it to every density (#820). `docs/UI_DIRECTION.md` → "App icon"
-owns the design.
-
-Local prerequisites are Godot 4.7.2 Mono export templates, JDK 21, Android SDK
-platform/build-tools, platform-tools, and a user-local debug keystore configured
-in Godot editor settings. The committed preset contains values only; keystore
-paths/passwords stay in user-local Godot settings, ignored credential files,
-or the macOS Keychain.
-
-For the non-Gradle debug export, Godot 4.7.2 currently emits min SDK 24 and
-target/compile SDK 36 from its Android template. Do not override min/target SDK
-in `export_presets.cfg` unless Gradle export is enabled in a later issue.
-
-The project uses Godot's Compatibility/OpenGL renderer by default because the
-Mobile/Vulkan renderer previously crashed in Godot's Android `VkThread` on the
-SM-S938B test device. Issue #104 revisited Mobile/Vulkan on 2026-09-20 with
-Godot 4.7.2 on a Samsung SM-S911B (Android 15 / API 35): a debug APK exported,
-installed, and launched without `FATAL EXCEPTION`, `SIGSEGV`, `VkThread`, or
-ANR logcat signals in a short smoke test. Keep Compatibility/OpenGL as the
-default until Mobile/Vulkan has a longer stability/performance pass showing a
-clear benefit on target devices.
-
-## Key data types (informal)
-
-```csharp
-// libs/NodeRunner.ML/
-public sealed class NeuralNetwork
-{
-    public int[] LayerSizes { get; }
-    public double[][] Weights { get; }        // weights[layer] row-major
-    public double[][] Biases  { get; }
-    public Activation Activation { get; }
-
-    public double[] Forward(double[] input);
-    public void Forward(double[] input, double[] output);
-    public void Forward(double[] input, double[] output, double[] scratchA, double[] scratchB);
-    public NeuralNetwork Clone();
-    public double[] FlattenGenome();
-    public static NeuralNetwork FromGenome(int[] layers, double[] genome, Activation act);
-}
-
-// libs/NodeRunner.ML/Ga/
-public sealed class GeneticAlgorithm
-{
-    public GeneticAlgorithm(
-        int tournamentSize,
-        double mutationRate,
-        double mutationStrength,
-        int elitismCount = 1,
-        CrossoverStrategy crossoverStrategy = CrossoverStrategy.Uniform);
-
-    public double[][] NextGeneration(double[][] genomes, double[] fitness, Random rng);
-}
-
-// libs/NodeRunner.Domain/
-public sealed record NodeDef(int Id, Vector2D Position, string? Name = null); // Radius follows from its parts, not saved
-public sealed record BeamDef(int Id, int NodeA, int NodeB, string? Name = null);   // node ids
-public sealed record SensorDef(int Id, int BeamId, SensorKind Kind, string? Name = null, double? Aim = null); // beam id; Aim: Camera only
-// SensorDef.DefaultAim(nodeA, nodeB): a new Camera's level, world-forward aim
-public sealed record PistonDef(int Id, int NodeA, int NodeB, string? Name = null, double Strength = 15000, double Stroke = 0.5, double Start = 0.5, double MaxSpeed = 200, double RiseTime = 0.2); // node ids
-public sealed record ServoDef(int Id, int NodeId, int? FixedLinkId = null, int? TargetLinkId = null, string? Name = null, double Strength = 500000, double Range = π, double Start = 0.5, double MaxSpeed = 2π, double RiseTime = 0.2); // joint node id, link ids (null = role missing); JointRadius = 27
-public sealed record SpringDef(int Id, int NodeA, int NodeB, string? Name = null, double Stiffness = 400, double Damping = 10, double Stroke = 1, double CoilLength = 2.0 / 3); // node ids; Damping in N·s/m
-public sealed record CreatureDef(NodeDef[] Nodes, BeamDef[] Beams, SensorDef[] Sensors, ServoDef[] Servos, PistonDef[] Pistons, SpringDef[] Springs, int NextPartId);
-
-public static class SensorPicture   // a sensor picture's tap area at its beam's middle, sized per kind
-{
-    public static double SizeOf(SensorKind kind);
-    public static bool Contains(SensorKind kind, Vector2D point, Vector2D nodeA, Vector2D nodeB);
-}
-
-public sealed record MapDef(string Id, MapGround Ground); // #443; Id saved with training records; App's MapNames names it
-public abstract record MapGround { public abstract double HeightAt(double x); } // FlatGround: 0 everywhere
-public static class Maps            // every map by id; 0.13 has only Flat ("map-flat")
-{
-    public static MapDef Flat { get; }
-    public static MapDef Default { get; } // Flat until map choice (#540)
-    public static MapDef Get(string id);
-}
-
-// libs/NodeRunner.Mechanics/ — pure part physics on Domain types (#596)
-public static class RigidTriangles  // closed beam triangles, which cannot fold
-{
-    public static IReadOnlyList<RigidTriangleDef> Of(CreatureDef creature);
-}
-
-public static class Accelerometer   // proof mass on a damped spring, pure math
-{
-    public static ProofMass Step(ProofMass state, Vector2D specificForceG, double dt);
-    public static Vector2D Reading(ProofMass state);
-    public static Vector2D SpecificForce(Vector2D acceleration, double gravity);
-}
-
-public static class CameraRays      // the camera's three rays around its aim, pure math
-{
-    public static double AimAlong(double worldAngle, Vector2D nodeA, Vector2D nodeB);
-    public static Vector2D LocalRayTarget(int ray, double aim);
-    public static double Reading(double? hitDistance);
-}
-
-public static class Piston          // force toward the brain's target length, pure math
-{
-    public static double NextForce(PistonDef piston, double builtLength, double length, double speed,
-        double position, double strength, double force, double step); // force builds up over RiseTime
-}
-
-public static class Servo           // torque toward a target angle, pure math
-{
-    public static ServoMotor NextMotor(ServoDef servo, double builtAngle, double angle, double speed,
-        double position, double strength, ServoMotor previous, double step, double effectiveInertia); // push + holding torque
-    public static double EndStopTorque(ServoDef servo, double builtAngle, double angle, double speed,
-        double effectiveInertia, double step);                                                        // soft stop outside the range
-    public static double LinkInertia(Vector2D joint, Vector2D far, double jointMass, double farMass);
-    public static ServoCouple CoupleForTorque(Vector2D joint, Vector2D far, double torque);
-}
-```
-
-Note: `Vector2D` in `NodeRunner.Domain` is our own `readonly record struct`,
-**not** `Godot.Vector2`. The creature layer converts at its boundary.
-
-See `docs/CREATURE_MODEL.md` for the full Node/Beam/Sensor/Servo/Piston/Spring model
-these types encode — including why joints are passive, and why sensors sit
-on beams and are not the neural model.
-
-The model stays engine-agnostic: a Servo names two links at a joint and the
-mechanics library computes counter-clockwise-on-screen angles, torque and the
-endpoint force couple. The Godot creature layer realises that uniformly for
-every link kind by applying equal-and-opposite force couples to the joint body
-and each link's far-node body, plus a soft end-stop torque outside the Servo
-range. The force couple clamps its lever arm to a minimum so a compressed
-Spring cannot create unbounded forces. Because the soft stop and motor are
-integrated explicitly, the creature layer estimates the live effective inertia
-from the actual bodies (`Servo.LinkInertia`: the end masses, the link length
-and the clamped lever arm) and asks Mechanics to keep the end-stop damping and
-stiffness and the motor's one-step push below the explicit-step stability
-limits. The motor's holding part is not capped, so a Servo still holds a load
-up to its strength. Both motor parts scale with that estimate, which only
-counts the link's end bodies; a planted leg or the bodies beyond the far joint
-make the real inertia much larger. The holding part gathers slowly enough that
-the motor still settles at about 30 times the estimate (#452 review). We do not use a Godot
-angular joint for this because a Piston or Spring slides on a
-`GrooveJoint2D`; the endpoint-force approach is the one
-representation that works for Beams, Pistons and Springs without leaking
-link-kind branches into the model.
-
 ## The tick
 
-At 60 Hz (`_physics_process`), for the creature currently under evaluation
-(first each `SpringLink.Step` sets its spring's rest length, see
-`docs/CREATURE_MODEL.md` → Spring):
+At 60 Hz (`_physics_process`) each Spring first sets its rest length, then
+the creature runs four steps:
 
-1. **Sense.** Each sensor part reads its values in part order (an
-   accelerometer steps its proof mass and reads 2, along and across its
-   beam; a camera reads its 3 rays' nearness); each Servo reads 2 (angle,
-   speed), and each Piston reads 2 (length, speed) →
-   `double[]`, in the fixed order documented in `docs/CREATURE_MODEL.md`.
-2. **Think.** `Brain.Forward(input, output, scratchA, scratchB)` writes
-   each output port's value (a Servo's angle and strength, then a Piston's
-   position and strength), without per-tick allocations.
-3. **Act.** `ServoJoint.Drive(position, strength, step)` applies endpoint
-   force couples to its Fixed and Target links, then
-   `PistonLink.Drive(position, strength, step)` pushes its two nodes toward
-   the target length (`Piston.NextForce`, from the force it pushed with last
-   tick).
-4. **Score.** `TrialMeasurement` records this trial's centre distance (the
-   fitness), front distance (shown), top speed and elevation; see
-   `docs/TRAINING_LOOP.md` → Trial.
+1. **Sense:** every part writes its readings into one `double[]` in
+   `BrainPorts` order (`docs/CREATURE_MODEL.md` → "Sensor–model contract").
+2. **Think:** `Brain.Forward` writes each output port's value into
+   caller-owned buffers, with no per-tick allocations.
+3. **Act:** each Servo, then each Piston, drives toward its outputs;
+   Mechanics computes the torque or force and the creature layer applies it
+   to the bodies.
+4. **Score:** `TrialMeasurement` records the trial (`docs/TRAINING_LOOP.md`
+   → Trial).
 
-After N ticks (say 600 = 10 s at 60 Hz) each slot's trial ends. `Evolver`
-records its fitness, assigns the slot the next pending genome, and, once every
-genome in the current generation has completed, produces the next generation
-via `GeneticAlgorithm.NextGeneration(...)`. The first slot reuses the visible
-creature; the rest of the generation runs alongside it as clones, all at
-once (up to 100). Only the shadow strip's current page and the followed one are
-drawn, as transparent shadows behind it (`docs/TRAINING_LOOP.md` → Drawn
-shadows); the rest race undrawn. Each slot owns a `TrialController` and resets
-independently between trials. Creature bodies collide only with the ground. See `docs/TRAINING_LOOP.md` for the full design.
-
-`Evolver` raises `GenerationCompleted`/`TrainingProgressChanged` events; the
-Training scene's root, `TrainingHost`, saves the training after each finished
-generation, and progress, including the best ever and its generation,
-reaches `TrainingPresentationViewModel` through
-`EvolverTrainingProgressSource`. Training unlocks nothing (#557). The
-Training screen's caption follows `TrainingPresentationViewModel`, the
-SignalFlow stages are polled every ~0.15s, and Pause arrives as a screen
-signal. A dedicated `PopulationViewModel`
-in the App layer remains a possible later refactor if this logic outgrows
-`TrainingHost` — not required yet.
-
-Creature bodies stay awake (`CanSleep = false`). Random brains produce
-visible, if uncoordinated, Piston movement without any twitch-hack overlay — the old 0.1.0 CPG/twitch blend was
-tied to the retired Muscle model and does not carry over.
+`docs/TRAINING_LOOP.md` owns trials, generations and what the Training
+scene shows.
 
 ## Navigation
 
-Screens are moving to one scene each, where navigating replaces the current
-scene (#326): a left scene is closed, not paused, and Back rebuilds it from
-its route. #468 is routing them one by one. Creations (the root and the
-main scene), Examples, Build, Train setup, Training and the component-library
-pages are routed scenes. Build (`BuildRoute`, #363) edits one saved creation and saves
-each edit as it settles and before it is left (#368); + New saves an empty
-creation first and opens it with `IsNew` (see `docs/BUILD_MODE.md`
-for when Build removes it again). Its layout
-is authored in `BuildScreen.tscn` (#364): the Build canvas is a
-`Node2D` in the world of a `UiWorldView` (`BuildView`, #769) inside the
-screen's clipped canvas slot, placed and scaled in the scene. Build has no
-camera; `BuildView` passes taps into its world, and its handles and notes
-are controls in the slot above it. Training
-(`TrainingRoute`, #469) trains one saved creation: it
-builds the creature and the `Evolver` from the creation's save, resumes from its
-last finished generation and saves each finished one, so leaving drops only
-the generation in progress. Its layout is authored in `TrainingScreen.tscn`
-(#386); the physics world is authored in `TrainingHost.tscn` inside the screen's
-`UiWorldView`, a `SubViewport` with its own camera, so UI scale never changes
-physics distances. Train setup (`TrainSetupRoute`, #194) sits between
-them: Start saves Shadows and Run length on the creation and opens
-Training without keeping Train setup, so Back from Training lands on Build.
-Its Simulate mode (#702) opens Training to play the saved brain instead
-(`TrainingRoute` with `TrainingRunMode.Simulate`): no `Evolver`, nothing saved.
+Each screen is one scene. Navigating replaces the current scene (#326): the
+scene left is closed, not paused, and Back rebuilds it from its route, so
+anything the player expects to find again is saved before the scene closes.
 
-A screen stays in `ui/screens/` and knows nothing of saves or the router's
-type: it emits signals. The routed scene that holds it is a small host in
-`project/src/hosts/` (`CreationsHost`, `ExamplesHost`, `BuildHost`, `TrainSetupHost`, `TrainingHost`) that wires
-those signals to `SaveManager` and the navigator. The standalone gallery
-pages have nothing to save, so they are routed directly.
-
-- `SceneRoute` is one sealed record per scene. The record type is the scene;
-  its properties are the plain arguments it is built from (a creation id, an
-  achievement id). Every route is declared in `libs/NodeRunner.App/Navigation/`,
-  because the test that keeps routes to plain values scans only that assembly.
+- A screen (`ui/screens/`) knows nothing of saves or the router: it emits
+  signals, and its host (`project/src/hosts/`) wires them to `SaveManager`
+  and the navigator. Gallery pages have nothing to save, so they are routed
+  directly.
+- `SceneRoute` is one sealed record per scene; its properties are the plain
+  values the scene is built from (a creation id). Every route is declared in
+  `libs/NodeRunner.App/Navigation/`, because the test that keeps routes to
+  plain values scans only that assembly.
 - `SceneNavigation` opens a route with two choices: **keep current** (does
-  the scene navigated from stay in the history) and **launch mode**
-  (*unique* drops earlier entries of the same scene, *stacked* pushes on top).
+  the scene left stay in the history) and **launch mode** (*unique* drops
+  earlier entries of the same scene, *stacked* pushes on top).
 - `SceneBackStack` holds the history. Its root (Creations) is never
-  removed; opening the root's scene returns to it. `Back()` returns the
-  previous route, or null on the root, where Android leaves the app.
-  `ReturnToRoot()` clears everything above the root (e.g. after Delete).
-  `ReplaceCurrent()` gives the current entry new arguments without reopening
-  it: Start training on a new creation drops `BuildRoute.IsNew`, so Back from
-  training rebuilds it as an ordinary creation that is kept even if emptied.
-- `ISceneNavigator` is what a scene asks to navigate; `IRoutedScene` is how
-  a scene receives its route and navigator before it joins the tree. Both
-  live in App so UI scenes need not know the manager.
-- The `SceneRouter` autoload (`project/src/managers/`) implements
-  `ISceneNavigator` over the history and is the only code that changes scenes.
-  Godot opens the main scene (Creations) itself at startup, so its host
-  takes the router from the autoload instead of `Enter`.
-- Android Back and Escape: a routed screen adds a `UiBackHandler`
-  (`ui/lib`) in front of its children. While it is in the tree Back does
-  not quit; it asks the screen to go back unless an open menu or dialog in
-  the screen takes Back first. On the root nothing holds Back, so Android
-  leaves the app.
-  Build and Training hold Back the same way: an open dialog, sheet or menu
-  closes first, then the scene goes one step back (#474). Training has a
-  Back button in its top bar and no Build/Simulate mode switch.
-
-Because a scene is rebuilt from its route, anything the player expects to
-find again is saved before the scene closes. What must outlive a scene
-change lives outside the scenes: notifications are queued on the
-`Notifications` autoload (`UiNotificationLayer`, #472). The `BackPress`
-autoload (`UiBackPress`, #506, #838) lets one go-back signal through per
-Back key-down or gesture, across scenes, so one Android Back press acts once. The `SafeArea` autoload (`UiSafeArea`, #513)
-keeps one set of display-cutout insets for every screen's frame. The
-`UiScale` autoload (#299) holds the UI size and applies it to the root
-window. All four live in `ui/lib`, not `managers/`, because managers hold no UI.
+  removed; Back on the root returns null, and Android leaves the app.
+- `ISceneNavigator` and `IRoutedScene` live in App so UI scenes need not
+  know the manager. The `SceneRouter` autoload (`project/src/managers/`)
+  implements the navigator and is the only code that changes scenes. Godot
+  opens the main scene itself, so its host takes the router from the
+  autoload.
+- Android Back and Escape go through a `UiBackHandler` (`ui/lib`) on each
+  routed screen: an open menu, dialog or sheet takes Back first, then the
+  scene goes one step back (#474). `project/src/ui/AGENTS.md` says how to
+  code it.
+- What must outlive a scene change lives in `ui/lib` autoloads, not
+  `managers/`, because managers hold no UI: `Notifications`
+  (`UiNotificationLayer`, #472), `BackPress` (one go-back per Back press,
+  #506, #838), `SafeArea` (display-cutout insets, #513) and `UiScale` (the
+  UI size, #299; how it scales without touching the world:
+  `project/src/ui/lib/AGENTS.md`).
 
 ## UI text and translation
 
-Godot translates UI text (`TranslationServer`, gettext PO), and
-the English source text is the msgid (#682). Text written in a scene is
-translated by its Control. Text a view-model builds is a `UiText`
-(`NodeRunner.App/ViewModels`). It holds the message, its plural and count,
-its arguments, and a context. App never renders it as English, so its tests
-compare `UiText` values. On the Godot side, `UiTextTranslation` (`ui/widgets`)
-is the one place that turns a `UiText` into the player's language.
-`docs/UI_DIRECTION.md` → "Text and translation" owns the rules for showing
-it. All text App builds for the player crosses as `UiText` (#752); none is
-built as English any more. `docs/LOCALIZATION.md` owns the translation
-template and how to add a language (#778).
+Godot translates UI text (`TranslationServer`, gettext PO); the English
+source text is the msgid (#682). Text written in a scene is translated by
+its Control. Text App builds for the player crosses as a `UiText`
+(`NodeRunner.App/ViewModels`, #752): the message, its plural and count, its
+arguments and a context. App never renders it as English, so its tests
+compare `UiText` values. `UiTextTranslation` (`ui/widgets`) is the one place
+that turns a `UiText` into the player's language. A workflow that saves a
+default name takes a `Func<UiText, string>`, and the hosts pass
+`UiTextTranslation.Now`, since managers hold no UI (#759).
 
-A default name that is saved, such as "Untitled Creation", "Copy of {0}" or
-a copied example's name, is put into the player's language once, as it is
-saved (#759). From then on it is the player's own text, like a name they
-typed, and is never translated again. The workflows that save one take a
-`Func<UiText, string>`; the hosts pass `UiTextTranslation.Now`, since
-managers hold no UI. So `CreationsHost`, not `SaveManager`, seeds the Walker
-on the first start.
+`docs/LOCALIZATION.md` → "Text rules" owns what the text says and how it is
+translated; `project/src/ui/AGENTS.md` owns how UI code shows it.
 
 ## Threading
 
-- Single-threaded for v1. Godot's physics runs on one thread, but `Evolver`
-  evaluates the whole generation (up to 100 candidates) concurrently in one
-  scene using the ground-only collision specified in `docs/TRAINING_LOOP.md`. This is
-  parallel evaluation, not multithreaded physics.
-- If profiling later shows the need for more throughput, brains can be
-  forward-passed off the main thread since they are pure functions on
-  `double[]`. Physics remains on Godot's thread.
-- Training saves are the one thread-pool write (#113): each finished
-  generation is queued per creation in `CreationUpdateCoordinator`, and
-  `ICreationUpdateCoordinator.Get` blocks the caller until that creation's
-  queued saves land (#370). Never call `Get` while holding a creation's
-  lock (inside an `UpdateIfPresent` update) or from a queued save. Details
-  in `docs/TRAINING_LOOP.md` → Save.
-
-## Save format
-
-`docs/SAVE_FORMAT.md` owns the files, their layout and every saved field.
-
-## Neural-network genome layout
-
-Neural-network genomes are flattened per layer transition: weights in
-row-major output-neuron order, then biases for that layer. Networks use
-the configured activation for hidden layers and each output port's own
-activation (`PortSignals`). The 0.13 brain is direct
-(`NodeRunner.ML.Brains.DirectBrain`, #536): `LayerSizes` is
-`[inputs, outputs]` in port order, so the genome is one weight per
-(output, input) pair, then one bias per output. It is saved as a graph
-(`BrainDef`, `docs/SAVE_FORMAT.md`) and compiled back to this genome by port,
-never by list order; a disabled gene compiles to 0 and the Evolver keeps it
-at 0. Hot paths use the overload that
-accepts caller-owned output and scratch buffers; those buffers must be
-distinct arrays. The network itself does not keep per-call scratch state.
-
-## Open questions
-
-Open design questions are tracked as GitHub Issues rather than listed here,
-so they get labels, milestones, and a closing decision instead of going
-stale in prose. Of the three questions previously recorded in this section:
-the large-network-visualization question belongs to the 0.16.0 brain views
-(#196, #197, #393); the sensor-configurability question is decided on issue #107 (sensors are
-configured through their own part settings, the camera first in #578);
-and the ViewModel-base question is resolved: `INotifyPropertyChanged` per
-`libs/NodeRunner.App/AGENTS.md`.
+Physics runs on Godot's thread. `Evolver` evaluates a whole generation (up
+to 100 candidates) at once in parallel slots of one scene; this is parallel
+evaluation, not multithreaded physics. Training saves are the one
+thread-pool write (#113, `docs/TRAINING_LOOP.md` → Save).

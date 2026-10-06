@@ -1,35 +1,31 @@
 # Manual testing
 
-Manual testing is decided per issue and per change. There is no shared smoke
-suite yet; do not add ritual checks just because a PR exists.
+Manual testing is decided per change; do not add ritual checks just because
+a PR exists.
 
 ## Decision point
 
-Every issue should state whether manual testing is expected. If the issue is
-silent, the PR author decides before opening the PR and records the decision
-in **How to verify**.
+Every issue states whether manual testing is expected. If it is silent, the
+PR author decides before opening the PR and records the decision in **How
+to verify**.
 
 Manual testing is usually required when the change affects:
 
-- Godot scenes, nodes, physics, input, rendering, or UI
-- Android export, install, permissions, file paths, or device behavior
-- Save/load behavior that a user can observe
-- Simulation feel, timing, determinism, or training visualization
+- Godot scenes, nodes, physics, input, rendering or UI
+- Android export, install, permissions, file paths or device behaviour
+- Save/load behaviour that a user can observe
+- Simulation feel, timing, determinism or training visualization
 - Anything where "it compiles" does not prove the user experience
 
-Manual testing is usually not required for:
-
-- Pure documentation changes
-- Pure-C# logic fully covered by unit and architecture tests
-- Build/CI metadata that is already proven by the relevant GitHub check
-- Issue-tracker bookkeeping
-
-When in doubt, write one small manual check in the issue instead of guessing.
+It is usually not required for documentation, pure-C# logic covered by
+unit and architecture tests, build/CI metadata proven by its GitHub check,
+or issue-tracker bookkeeping. When in doubt, write one small manual check in
+the issue.
 
 ## What belongs in an issue
 
-Manual checks live with the issue they prove. Keep them concrete and
-observable:
+Manual checks live with the issue they prove. Reuse this format, not
+another issue's test cases:
 
 ```markdown
 ## Manual test plan
@@ -53,92 +49,58 @@ Evidence:
 - Notes:
 ```
 
-Do not copy a generic checklist between issues. Reuse the format, not the
-test cases.
-
 ## What belongs in a PR
 
 The PR's **How to verify** section records what actually ran:
 
 - Automated commands and their results
-- Manual checks performed
-- Manual checks intentionally skipped, with a reason
-- Environment details when behavior may depend on device, OS, Godot version,
-  screen size, or input method
-- Evidence links or attachments when visual/physics behavior matters
+- Manual checks performed, and those skipped with a reason
+- Environment details when behaviour may depend on device, OS, Godot
+  version, screen size or input method
+- Screenshots or recordings when visual or physics behaviour matters,
+  including every new screen or state a UI change adds
 
 ## Agent-run manual tests
 
-The coding agent is allowed to perform manual checks when the required
-runtime is available. "Manual" describes the user-visible workflow; it does
-not mean that a human must perform every step. The agent may export and launch
-Godot, install an APK with `adb`, interact with a connected Android device,
-capture screenshots, and inspect `adb logcat`.
-
-An AI agent can run a manual test only when the environment is available and
-the expected result is observable from tools. Prefer agent-run tests for:
-
-- CLI commands (`dotnet`, export scripts, import checks)
-- Godot headless operations when Godot is installed and scriptable
-- Android install/log/screenshot flows when a device is connected, unlocked,
-  and trusted by `adb`
-- Screenshot or recording inspection when files are available to the session
-
-Before claiming a manual test passed, the agent must capture the evidence it
-used: command output, logs, screenshot path, recording path, seed, or
-settings.
-
-Agent-run tests are not enough when the result is subjective or requires real
-touch feel, animation feel, or visual judgement that cannot be captured in
-the session. In those cases, the agent records the blocker and leaves the
-manual check for the human.
+"Manual" describes the user-visible workflow, not who runs it. An agent may
+run manual checks when the runtime is available and the result is
+observable from its tools: launching Godot, exporting, installing with
+`adb`, driving a connected device, capturing screenshots and reading
+`adb logcat`. Before claiming a pass, it records the evidence it used
+(command output, logs, screenshot or recording path, seed, settings). When a
+check needs subjective judgement, such as touch or animation feel, or its
+runtime is missing, the agent records the missing prerequisite and leaves
+the check to the human; it never reports such a check as passed.
 
 ## Desktop checks
 
-Desktop is the first manual target because it is fast and close to the editor:
+Desktop is the first target because it is fast and close to the editor.
 
-- Open `project/project.godot` in Godot.
-- Run the relevant scene.
-- Verify the issue's expected behavior.
-- Capture a screenshot or short recording for UI/visual behavior.
-
-If Godot is unavailable to the agent, the PR should say so and leave the
-desktop check for the human.
-
-When an issue changes how screens fill the display, its test plan should
-consider resizing the desktop window to 16:9, 20:9, 4:3 and 1:1, and on
-Android a wide phone and a phone with a camera cutout in both landscape
-orientations (see "Screen size and safe area" in `docs/UI_DIRECTION.md`).
-An issue that changes layout should also be seen at Min (50%), Auto and Max
-UI size (set on the Colors & Styles page until Settings has it; see "UI
-size" in `docs/UI_DIRECTION.md`). On a phone, Max is the tightest canvas
-(640 x 360 inside the safe area); restarting the app returns to Auto.
+When an issue changes how screens fill the display, its test plan considers
+the desktop window at 16:9, 20:9, 4:3 and 1:1, and on Android a wide phone
+and a phone with a camera cutout in both landscape orientations
+(`docs/UI_DIRECTION.md` → "Screen size and safe area"). A layout change is
+also seen at Min (50%), Auto and Max UI size (`docs/UI_DIRECTION.md` → "UI
+size"). UI size is set for the session on the Colors & Styles page
+(Settings: #201), and restarting the app returns to Auto. On a phone, Max is
+the tightest canvas (640 × 360 inside the safe area).
 
 ## Android checks
 
 Android checks are required when the issue affects export, install, device
-input, permissions, file paths, performance, battery, or any behavior likely
-to differ from desktop.
+input, permissions, file paths, performance, battery, or anything likely to
+differ from desktop.
 
-Agent-run Android checks prefer a connected physical phone because touch feel,
-screen density, performance, and rendering artifacts are easiest to judge
-there. If no phone is available, the agent may start and use a configured
-Android emulator/AVD instead. If neither is available, record the missing
-prerequisite rather than pretending the Android check passed.
+Use a connected physical phone first, because touch feel, screen density,
+performance and rendering artifacts are easiest to judge there. Otherwise
+use a configured Android emulator/AVD. If neither is available, record the
+missing prerequisite.
 
-Agent-run Android checks require:
+An agent-run Android check needs Android export configured
+(`docs/RELEASING.md` → "Android export"), a device or emulator that is
+unlocked, authorized and listed by `adb devices`, and a non-secret debug
+signing setup.
 
-- Android export configured
-- A connected device or emulator visible in `adb devices`
-- Device/emulator unlocked and authorized
-- A non-secret debug signing setup
-
-Useful evidence:
-
-- `adb install` result
-- `adb logcat` excerpt for launch/runtime failures
-- Screenshot or screen recording from the device
-- Device model, Android version, build type, seed, and relevant settings
-
-If no device is available, record the missing prerequisite rather than
-pretending the Android check passed.
+Useful evidence: the `adb install` result, an `adb logcat` excerpt for
+launch or runtime failures, a screenshot or recording from the device, and
+the device model, Android version, build type, seed and relevant settings.

@@ -1,100 +1,54 @@
 # Code review prompts
 
-This file owns the review process and its focus areas. It does **not** own
-architecture, implementation, testing, or product rules. Review agents must
-read the documents named by their focus and evaluate the diff against those
-sources instead of inventing stricter rules.
+How review agents are dispatched, how they report, and the prompt for each
+focus area. Each agent evaluates the diff against the documents its prompt
+names and invents no stricter rules.
 
 ## How to run
 
 1. Select every focus area relevant to the diff.
-2. Dispatch each selected section as a separate parallel review agent.
-   Use `code-review` for code/process focus areas and `design-lead` for the
-   "Visual & UX design" focus area.
-3. Give every agent the repository path and exact diff or commit range.
-4. Include the selected section body verbatim.
-
-If the review scope is not stated, ask before dispatching.
+2. Dispatch each as its own parallel agent: `code-review` for every focus
+   except "Visual & UX design", which uses `design-lead`.
+3. Give each agent the repository path, the exact diff or commit range, and
+   its section body verbatim.
 
 Every agent must:
 
 - Read root `AGENTS.md`, the nearest local `AGENTS.md` files, and the
-  authoritative documents named in its prompt.
-- Stay within the supplied diff. Mention preexisting problems separately;
-  they do not block the current change.
-- Report only actionable correctness, maintainability, or process problems.
-  Do not turn preferences into findings.
-- Classify findings as **Major**, **Medium**, or **Minor**, mark each as
-  **new** or **preexisting**, and include file, lines, evidence, impact, and a
+  documents named in its prompt.
+- Stay within the diff. Mention preexisting problems separately; they do
+  not block.
+- Report only actionable correctness, maintainability or process problems,
+  not preferences.
+- Classify each finding as **Major**, **Medium** or **Minor**, mark it
+  **new** or **preexisting**, and give file, lines, evidence, impact and a
   suggested direction. Do not implement fixes.
 - Return "No findings" when nothing clears that bar.
 
-New findings block commit and push until fixed or explicitly dismissed with a
-written reason. `AGENTS.md` owns that gate.
+`docs/REVIEW.md` → "Definition of Done" says how findings gate a commit.
 
 ---
 
 ## Visual & UX design
 
-Review UI-touching changes for whether they are attractive, intuitive, and
+Review UI-touching changes for whether they are attractive, intuitive and
 consistent with the rest of the app.
 
-Use the `design-lead` custom agent, not the generic `code-review` agent.
-Give it access to the user-facing result, not only the diff. Prefer a
-connected Android phone for UI review. If no phone is available, the reviewer
-may start and use an Android emulator/AVD when the local environment has one
-configured. Otherwise provide fresh screenshots/recordings from the target
-device/form factor with the exact screens and interactions under review.
-Include the issue/PR goal in the prompt, and the `reference design/` path when
-it guides a new surface. If
-neither live app access nor visual evidence is available, the design review
-must report **insufficient evidence** instead of guessing from code.
-**Insufficient evidence is a blocking, non-passing review outcome** for this
-focus area: the gate is not satisfied until the author supplies live app
-access, fresh screenshots/recordings, or records an explicit human waiver in
-the PR.
+Use the `design-lead` agent. Give it the issue or PR goal, the
+`reference design/` path when it guides a new surface, and live app access
+or fresh screenshots/recordings (`docs/MANUAL_TESTING.md` → "Android
+checks"). Without them it reports **insufficient evidence**, which blocks
+(`docs/REVIEW.md` → "Definition of Done").
 
 Authoritative sources:
 
-- `docs/UI_DIRECTION.md` for who owns each UI decision, the visual standard
-  (the app's own UI library and finished screens) and implementation
-  boundaries
-- `reference design/` as a guide, not the source of truth: component READMEs,
-  previews, `tokens.json` and `library.md` for surfaces the app does not have
-  yet
-- `docs/UI_IMPLEMENTATION_PLAN.md` for UI implementation order and review gates
-- `docs/MANUAL_TESTING.md` for device/screenshot evidence expectations
+- `docs/UI_DIRECTION.md` for who owns each UI decision and the visual
+  standard
+- `docs/WORLD_VISUALS.md` for how parts, selection, shadows and arena marks
+  look
+- `reference design/` as a guide, not the source of truth
+- `docs/MANUAL_TESTING.md` for evidence
 - The nearest `project/src/**/AGENTS.md` files for UI layering constraints
-
-Optional supplied evidence:
-
-- Screenshots, recordings, or additional design references attached to the
-  issue/PR. These can clarify intent.
-
-Judge the experience, not just the code. Check whether the screen/control:
-
-- Looks intentional and polished enough for the current milestone
-- Feels intuitive on Android touch: clear affordances, no dead controls,
-  readable labels, and sensible primary/secondary actions
-- Is consistent with the app's UI library and finished screens in layout,
-  typography/text styles, spacing, contrast, rhythm, corner radius, stroke
-  widths, glow, component proportions, and visual hierarchy, reusing library
-  components instead of restyling them
-- Preserves Node Runner's neon learning-lab identity and the issue's teaching
-  goal
-- Uses state indicators that do not rely on color alone
-- Avoids unplanned future UI or generic developer-dashboard chrome
-- Has screenshot/manual-test evidence when the change is visible, including
-  before/after or design-reference comparison when that is what the issue is
-  trying to improve
-
-Do not block on personal taste or on differences from `reference design/`,
-but do block on inconsistency inside the app: one-off typography, token
-values, spacing, radius, line/stroke weight, glow, component proportion, or
-hierarchy is a design bug unless the PR records a concrete technical
-constraint or human-approved change. Report findings in the same format as other review
-sections: **Major**, **Medium**, or **Minor**, **new** or **preexisting**, with
-screen/file, evidence, impact, and a concrete suggested direction.
 
 ---
 
@@ -111,10 +65,10 @@ Authoritative sources:
 - Root and local `AGENTS.md` files for agent instructions (including
   `docs/release-notes/AGENTS.md` for release notes)
 
-Check that statements, links, commands, examples, diagrams, and ownership
-pointers are accurate and durable. Flag duplicated rules whose copies can
-drift; each rule should live in its owning document and be referenced
-elsewhere.
+Check that statements, links, commands, examples, diagrams and ownership
+pointers are accurate and durable. Flag anything that breaks the
+documentation rules in `docs/CODE_DESIGN_PRINCIPLES.md` §9, especially a
+rule written in two places.
 
 ---
 
@@ -145,10 +99,9 @@ Review ML behavior, numerical correctness, and reproducibility.
 
 Authoritative sources:
 
-- `docs/CODE_DESIGN_PRINCIPLES.md` for numeric and determinism rules
+- `docs/CODE_DESIGN_PRINCIPLES.md` for determinism rules
 - `docs/ML_CONCEPTS.md` for intended teaching behavior
-- `docs/TEST_STRATEGY.md` for required ML evidence
-- `libs/NodeRunner.ML/AGENTS.md` for ML-layer constraints
+- `libs/NodeRunner.ML/AGENTS.md` for ML-layer constraints and test focus
 
 Work through the relevant math and state transitions rather than relying only
 on test names. Check edge cases, shapes, cloning/serialization behavior, and
