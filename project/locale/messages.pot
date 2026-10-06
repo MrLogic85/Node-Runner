@@ -538,6 +538,10 @@ msgstr ""
 msgid "Probably too many shadows."
 msgstr ""
 
+#: libs/NodeRunner.App/ViewModels/PartTrayPresentation.cs
+msgid "Pulse"
+msgstr ""
+
 #: libs/NodeRunner.App/ViewModels/PartParameters.cs
 msgid "Range"
 msgstr ""
@@ -837,6 +841,10 @@ msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/BuildViewModel.cs
 msgid "Too short"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/PartTrayPresentation.cs
+msgid "Touch sensor"
 msgstr ""
 
 #: project/scenes/screens/TrainSetupScreen.tscn

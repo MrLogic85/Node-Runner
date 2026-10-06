@@ -16,8 +16,8 @@ public sealed class PartTrayTests
     {
         PartTray.Groups().Select(group => group.Rows.Select(row => row.Name).ToArray()).ShouldBe(
         [
-            Plain("Servo", "Stepper", "Velocity motor", "Brake", "Wheel"),
-            Plain("Accelerometer", "Camera"),
+            Plain("Servo", "Stepper", "Velocity motor", "Brake", "Wheel", "Touch sensor"),
+            Plain("Accelerometer", "Camera", "Pulse"),
             Plain("Battery", "Generator", "Fuel tank"),
         ]);
     }
@@ -49,12 +49,16 @@ public sealed class PartTrayTests
     }
 
     [Fact]
-    public void SensorsTab_HasTheAccelerometerAvailable_AndTheCameraComingLater()
+    public void SensorsTab_HasTheAccelerometerAvailable_AndTheCameraAndPulseComingLater()
     {
         var sensors = PartTray.Groups()[1].Rows;
 
         sensors.Select(row => (row.Part, row.State)).ShouldBe(
-            [(BuildPart.Accelerometer, PartTrayRowState.Available), (BuildPart.Camera, PartTrayRowState.ComingLater)]);
+            [
+                (BuildPart.Accelerometer, PartTrayRowState.Available),
+                (BuildPart.Camera, PartTrayRowState.ComingLater),
+                (BuildPart.Pulse, PartTrayRowState.ComingLater),
+            ]);
         sensors[0].LockedReason.ShouldBeNull();
     }
 

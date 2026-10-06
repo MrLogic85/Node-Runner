@@ -409,13 +409,17 @@ reference would mislead someone working on that surface.
   SignalFlow, Training). Instead Core is removed: an Accelerometer and a
   Camera sit on a beam, one sensor per beam, at its midpoint. The designer is
   not available, so these are best guesses; a design review may change them:
-  - *Parts tray:* the Sensors tab lists Accelerometer, then Camera, with
-    the help line "Drag onto a beam. A beam holds one sensor." There
+  - *Parts tray:* the Sensors tab lists Accelerometer, Camera, then Pulse
+    (#527, locked until it ships), with the help line "Drag onto a beam. A beam holds one sensor." There
     is no Core row.
   - *Glyphs:* Camera uses the reference `los` glyph. Accelerometer uses the
     project-owned `accelerometer` part glyph (an upright frame with a weight
     on a spring), which is not in the reference package. The reference
-    `core` glyphs are unused.
+    `core` glyphs are unused. Pulse and Touch sensor also use project-owned
+    glyphs: `pulse` is a ring broken at 3 o'clock by the dot that travels
+    round it; `touch` is a node ring resting on the ground with two impact
+    ticks. The Touch sensor (#665) sits on a node, so its locked row is in
+    the On a joint tab.
   - *On a beam:* a sensor is drawn as a picture of itself, not as a badge
     with a glyph, at the beam's midpoint, in panel fill with 2 px `accent`
     lines. The Accelerometer is a 16 × 22 rounded frame with a zigzag spring

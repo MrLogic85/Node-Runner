@@ -240,7 +240,10 @@ owns the groups, their order, the help lines and each row's state; the screen
 only maps parts to glyphs. Every implemented part is unlimited until #525, so
 rows show no count. A part not yet implemented is a dashed row with a lock,
 and the tab's name row says "Coming later" once; the Camera is held back the
-same way (#852). The available rows (today Servo and Accelerometer) do nothing on tap; they are dragged out instead
+same way (#852). Each planned joint part, sensor and block has a row, so
+the tray shows what is coming: the Touch sensor (#665) in On a joint and
+the Pulse (#527) in Sensors are locked rows too. The available rows (today
+Servo and Accelerometer) do nothing on tap; they are dragged out instead
 (#376). Godot's drag-and-drop carries the part: the row starts it and
 floats its glyph above the finger (`UiPartRow.CreateDragPreview`), and
 `BuildCanvas` takes the drop in `PartDropZone`, a control over the canvas
