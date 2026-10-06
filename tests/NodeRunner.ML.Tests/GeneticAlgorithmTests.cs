@@ -282,4 +282,45 @@ public sealed class GeneticAlgorithmTests
         Should.Throw<ArgumentException>(() => ga.FromElites([[1, 2], [1]], 4, new Random(5)));
         Should.Throw<ArgumentOutOfRangeException>(() => ga.FromElites([[1, 2]], 0, new Random(5)));
     }
+
+    // Genome i is [i] with fitness i, and without mutation each child gene is one tournament winner's:
+    // k draws with replacement from N pick the fittest with probability 1 - (1 - 1/N)^k, and a winner's
+    // mean is the expected best of k draws. So even a tournament as large as the population can miss it.
+    [Theory]
+    [InlineData(1)]
+    [InlineData(3)]
+    [InlineData(10)]
+    public void NextGeneration_TournamentPicksTheFittestOfKDrawsWithReplacement(int tournamentSize)
+    {
+        const int population = 10;
+        var ga = new GeneticAlgorithm(tournamentSize, mutationRate: 0.0, mutationStrength: 1.0, elitismCount: 0);
+        var genomes = Enumerable.Range(0, population).Select(i => new double[] { i }).ToArray();
+        var fitness = Enumerable.Range(0, population).Select(i => (double)i).ToArray();
+        var random = new Random(967);
+
+        var winners = Enumerable.Range(0, 2000).SelectMany(_ => ga.NextGeneration(genomes, fitness, random)).Select(child => child[0]).ToArray();
+
+        var expectedMean = Enumerable.Range(1, population - 1).Sum(j => 1 - Math.Pow((double)j / population, tournamentSize));
+        winners.Average().ShouldBe(expectedMean, tolerance: 0.1);
+        ((double)winners.Count(gene => gene == population - 1) / winners.Length).ShouldBe(
+            1 - Math.Pow(1 - (1.0 / population), tournamentSize),
+            tolerance: 0.02);
+    }
+
+    [Fact]
+    public void NextGeneration_MutatesEachGeneAtTheRate_ByGaussianNoiseOfTheStrength()
+    {
+        const double rate = 0.25;
+        const double sigma = 0.5;
+        var ga = new GeneticAlgorithm(1, mutationRate: rate, mutationStrength: sigma, elitismCount: 0);
+        double[][] genomes = [new double[1000], new double[1000]];
+
+        var genes = Enumerable.Range(0, 40).SelectMany(seed => ga.NextGeneration(genomes, [0, 0], new Random(seed))).SelectMany(child => child).ToArray();
+
+        var mutated = genes.Where(gene => gene != 0).ToArray();
+        ((double)mutated.Length / genes.Length).ShouldBe(rate, tolerance: 0.01);
+        mutated.Average().ShouldBe(0, tolerance: 0.02);
+        Math.Sqrt(mutated.Average(gene => gene * gene)).ShouldBe(sigma, tolerance: 0.02);
+        ((double)mutated.Count(gene => Math.Abs(gene) <= sigma) / mutated.Length).ShouldBe(0.6827, tolerance: 0.02);
+    }
 }
