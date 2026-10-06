@@ -810,7 +810,7 @@ msgid "The creation is locked so you do not change the size or values of its mod
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartParameters.cs
-msgid "The length it wants to be"
+msgid "The length the coil wants to be"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartParameters.cs
