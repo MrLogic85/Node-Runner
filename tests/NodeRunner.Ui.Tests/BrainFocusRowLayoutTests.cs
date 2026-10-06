@@ -7,7 +7,8 @@ public sealed class BrainFocusRowLayoutTests
     private const float _fontSize = 12;
     private const float _clipTop = 16;
     private const float _lineSpacing = _fontSize * BrainFocusRowLayout.RowSpacingPerFontSize;
-    private const float _fixedHeight = BrainFocusRowLayout.HeadingBand + (2 * BrainFocusRowLayout.VerticalInset);
+    private const float _top = BrainFocusRowLayout.HeadingBand + BrainFocusRowLayout.VerticalInset;
+    private const float _haloRoom = BrainFocusRowLayout.HaloGap + BrainFocusRowLayout.HaloWidth;
 
     [Fact]
     public void Rows_that_fit_spread_over_the_card_without_scrolling()
@@ -15,8 +16,23 @@ public sealed class BrainFocusRowLayoutTests
         var layout = BrainFocusRowLayout.For(viewHeight: 300, tallest: 12, _fontSize, _clipTop);
 
         layout.Scrolls.ShouldBeFalse();
-        layout.RowY(0, 12, 12).ShouldBe(BrainFocusRowLayout.HeadingBand + BrainFocusRowLayout.VerticalInset);
-        layout.RowY(11, 12, 12).ShouldBe(300 - BrainFocusRowLayout.VerticalInset, tolerance: 0.001);
+        layout.RowY(0, 12, 12).ShouldBe(_top);
+        var dotOverWholeHeight = (300 - BrainFocusRowLayout.VerticalInset - _top) / 11 * BrainFocusRowLayout.RadiusPerRow;
+        layout.RowY(11, 12, 12).ShouldBe(300 - dotOverWholeHeight - _haloRoom, tolerance: 0.001);
+    }
+
+    [Theory]
+    [InlineData(60, 2)]
+    [InlineData(120, 3)]
+    [InlineData(200, 6)]
+    [InlineData(300, 12)]
+    [InlineData(600, 22)]
+    public void Rows_that_fit_keep_the_bottom_selection_halo_inside_the_card(float viewHeight, int tallest)
+    {
+        var layout = BrainFocusRowLayout.For(viewHeight, tallest, _fontSize, _clipTop);
+
+        layout.Scrolls.ShouldBeFalse();
+        (layout.RowY(tallest - 1, tallest, tallest) + layout.Radius + _haloRoom).ShouldBeLessThanOrEqualTo(viewHeight + 0.001f);
     }
 
     [Theory]
@@ -25,7 +41,7 @@ public sealed class BrainFocusRowLayoutTests
     public void Rows_scroll_exactly_when_they_would_be_closer_than_a_label_line(float extra, bool scrolls)
     {
         const int tallest = 22;
-        var justFits = _fixedHeight + ((tallest - 1) * _lineSpacing);
+        var justFits = _top + ((tallest - 1) * _lineSpacing) + (_lineSpacing * BrainFocusRowLayout.RadiusPerRow) + _haloRoom;
 
         var layout = BrainFocusRowLayout.For(justFits + extra, tallest, _fontSize, _clipTop);
 
