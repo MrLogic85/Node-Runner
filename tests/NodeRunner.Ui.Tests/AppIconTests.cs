@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
+using Godot;
 using NodeRunner.Ui.Lib;
 
 namespace NodeRunner.Ui.Tests;
@@ -17,7 +18,7 @@ public sealed partial class AppIconTests
     [InlineData("launcher_icons/adaptive_foreground_432x432", "foreground.svg", 432)]
     [InlineData("launcher_icons/adaptive_background_432x432", "background.svg", 432)]
     [InlineData("launcher_icons/adaptive_monochrome_432x432", "monochrome.svg", 432)]
-    [InlineData("splash_screen/icon", "splash.svg", 432)]
+    [InlineData("splash_screen/icon", "foreground.svg", 432)]
     public void Android_export_uses_the_app_icon_at_its_native_size(string option, string file, int size)
     {
         Setting("export_presets.cfg", option).ShouldBe(_iconRoot + file);
@@ -37,7 +38,6 @@ public sealed partial class AppIconTests
     [InlineData("main.svg")]
     [InlineData("foreground.svg")]
     [InlineData("background.svg")]
-    [InlineData("splash.svg")]
     public void Colours_come_from_the_Neon_palette(string file)
     {
         var neon = ThemeFile.For(UiTokenType.Neon);
@@ -55,18 +55,28 @@ public sealed partial class AppIconTests
         Paints("monochrome.svg").Distinct().ShouldBe(["FFFFFF"]);
 
     [Theory]
-    [InlineData("main.svg")]
-    [InlineData("splash.svg")]
-    public void Icon_draws_the_foreground_art_unchanged(string file)
+    [InlineData("splash_screen/background_color")]
+    [InlineData("screen/background_color")]
+    public void Launch_is_drawn_on_the_Neon_background(string option)
+    {
+        var channels = OpaqueColor().Match(Setting("export_presets.cfg", option));
+        channels.Success.ShouldBeTrue($"{option} should be an opaque Color(r, g, b, 1)");
+        var color = new Color(Channel(channels, "r"), Channel(channels, "g"), Channel(channels, "b"));
+
+        color.ToHtml(false).ShouldBe(ThemeFile.For(UiTokenType.Neon).Color(UiTokens.Color.Background).ToHtml(false));
+    }
+
+    [Fact]
+    public void Launcher_icon_draws_the_foreground_art_unchanged()
     {
         var art = Children(XElement.Parse(Source("foreground.svg")));
 
-        // The file draws its own backdrop, then ends one group (or the root) with foreground.svg's art,
+        // main.svg draws its own backdrop, then ends one group (or the root) with foreground.svg's art,
         // element for element in paint order.
-        var copied = XElement.Parse(Source(file)).DescendantsAndSelf()
+        var copied = XElement.Parse(Source("main.svg")).DescendantsAndSelf()
             .Select(Children)
             .Any(children => children.Count >= art.Count && children.TakeLast(art.Count).SequenceEqual(art));
-        copied.ShouldBeTrue($"{file} should end a group with foreground.svg's elements in order");
+        copied.ShouldBeTrue("main.svg should end a group with foreground.svg's elements in order");
     }
 
     private static string Source(string file) =>
@@ -102,6 +112,12 @@ public sealed partial class AppIconTests
         values.Count.ShouldBe(1, $"{file} should set {key} to one value");
         return values[0];
     }
+
+    private static float Channel(Match match, string group) =>
+        float.Parse(match.Groups[group].Value, CultureInfo.InvariantCulture);
+
+    [GeneratedRegex(@"^Color\((?<r>[0-9.]+), (?<g>[0-9.]+), (?<b>[0-9.]+), 1\)$")]
+    private static partial Regex OpaqueColor();
 
     [GeneratedRegex("^#[0-9A-Fa-f]{6}$")]
     private static partial Regex HexColour();
