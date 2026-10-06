@@ -94,10 +94,11 @@ public static class PistonDrawing
     }
 
     /// <summary>
-    /// Half a Piston's stroke tick, across it: out to the selection outline, so the shortest tick shows
-    /// past the cylinder's end (#931). A Spring's spans its seats (<see cref="SpringDrawing.SeatHalf"/>).
+    /// Half a Piston's stroke tick, across it: out to the cylinder's outer edge, so the shortest tick is
+    /// as wide as the cylinder whose end it marks (#931). A Spring's spans its seats
+    /// (<see cref="SpringDrawing.SeatHalf"/>); both stop a gap inside the selection outline.
     /// </summary>
-    public static float TickHalf(VisualTheme theme) => SelectionOffset(theme);
+    public static float TickHalf(VisualTheme theme) => CylinderHalf(theme) + (_line / 2);
 
     private static float CylinderHalf(VisualTheme theme)
     {
@@ -106,7 +107,7 @@ public static class PistonDrawing
     }
 
     // The selection outline's distance from the axis, a gap past the cylinder outline's outer edge.
-    private static float SelectionOffset(VisualTheme theme) => CylinderHalf(theme) + (_line / 2) + (float)SelectionMarks.Gap;
+    private static float SelectionOffset(VisualTheme theme) => TickHalf(theme) + (float)SelectionMarks.Gap;
 
     /// <summary>
     /// A Piston's stroke (#704): <c>halo</c> ticks at its shortest and longest length from joint A's
