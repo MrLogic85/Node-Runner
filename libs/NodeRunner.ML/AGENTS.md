@@ -40,8 +40,10 @@ Backpropagation is #955.
 
 - `Forward` output shape for `LayerSizes`; same seed and input give the same
   output; activations on hand-worked values
-- GA operators: elitism, crossover only from parents, and the same seed
-  gives the same generation (tournament and mutation-sigma tests: #967)
+- GA operators: elitism, crossover only from parents, the same seed gives
+  the same generation, a tournament picks the fittest of its draws with
+  replacement, and mutation hits genes at the rate with noise of the given
+  sigma
 - Round-trips: `FromGenome(LayerSizes, FlattenGenome(), activation)` and
   `DirectBrain.Compile(ToBrainDef(...))` whatever the saved order
 - `Clone` gives an independent network
