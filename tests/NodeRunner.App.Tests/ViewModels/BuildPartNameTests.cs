@@ -40,7 +40,7 @@ public sealed class BuildPartNameTests
         var changes = 0;
         build.AnatomyChanged += (_, _) => changes++;
 
-        build.RenamePart(2, " Led 2 ", "Led 2");
+        build.RenamePart(2, " [Joint 2] ", "[Joint 2]");
 
         build.Snapshot().Nodes[1].Name.ShouldBeNull();
         changes.ShouldBe(0);
@@ -53,7 +53,7 @@ public sealed class BuildPartNameTests
     {
         var build = Loaded();
 
-        build.RenamePart(2, "Joint 2", "Led 2");
+        build.RenamePart(2, "Joint 2", "[Joint 2]");
 
         build.PartDisplayName(2).ShouldBe(UiText.AsWritten("Joint 2"));
     }
