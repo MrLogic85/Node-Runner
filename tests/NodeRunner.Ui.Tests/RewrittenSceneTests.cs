@@ -34,6 +34,8 @@ internal static class RewrittenUi
         "ui/widgets/ArenaShadows.cs",
         "ui/widgets/ArenaStartSign.cs",
         "ui/widgets/BrainFocusNetworkView.cs",
+        "ui/widgets/BrainFocusRowLayout.cs",
+        "ui/widgets/BrainFocusRows.cs",
         "ui/widgets/BrainFocusSheet.cs",
         "ui/widgets/BuildCanvas.cs",
         "ui/widgets/CreationCard.cs",

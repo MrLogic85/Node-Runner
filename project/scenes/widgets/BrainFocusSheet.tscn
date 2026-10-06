@@ -6,6 +6,7 @@
 [ext_resource type="Script" uid="uid://byhbh5da7rpk8" path="res://src/ui/lib/UiCard.cs" id="4_card"]
 [ext_resource type="Script" uid="uid://dbvd666r72oex" path="res://src/ui/widgets/BrainFocusNetworkView.cs" id="5_network"]
 [ext_resource type="Script" uid="uid://r2ped3g3uiaa" path="res://src/ui/lib/UiButton.cs" id="6_button"]
+[ext_resource type="Script" uid="uid://bacmtji5aoqd8" path="res://src/ui/widgets/BrainFocusRows.cs" id="7_rows"]
 
 [node name="BrainFocusSheet" type="Control"]
 layout_mode = 3
@@ -71,6 +72,25 @@ unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 96)
 layout_mode = 2
 script = ExtResource("5_network")
+
+[node name="Scroll" type="ScrollContainer" parent="Inset/Sheet/Margin/Stack/NetworkCard/Network"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 16.0
+grow_horizontal = 2
+grow_vertical = 2
+scroll_deadzone = 8
+horizontal_scroll_mode = 0
+vertical_scroll_mode = 3
+
+[node name="Rows" type="Control" parent="Inset/Sheet/Margin/Stack/NetworkCard/Network/Scroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+mouse_filter = 1
+script = ExtResource("7_rows")
 
 [node name="Footer" type="HBoxContainer" parent="Inset/Sheet/Margin/Stack"]
 layout_mode = 2

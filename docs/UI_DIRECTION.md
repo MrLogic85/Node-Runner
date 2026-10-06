@@ -241,8 +241,18 @@ reference would mislead someone working on that surface.
   - the column headings "SENSES" and "OUTPUTS" (#660) sit over the label
     columns, flush with the labels' inner edge, instead of centred over the
     dots, so a large first dot never runs into them. The sheet's margins
-    shrink to 12 (bottom inset 8) to give the card the heading band, so
-    as many rows keep their labels as before.
+    shrink to 12 (bottom inset 8) to give the card the heading band.
+  - every sense and output keeps its `Caption` label, both columns alike
+    ([#908](https://github.com/MrLogic85/Node-Runner/issues/908)). Rows are
+    at least one Caption line apart. When the taller column does not fit at
+    that spacing, the rows scroll vertically in a `ScrollContainer` with a
+    hidden bar under the pinned headings, both columns together. It starts
+    a `space-1` gap below the headings and clips only while the rows
+    overflow, as the toolbar field does; the first and last rows keep room
+    for the selection halo. A tap on a row selects on release unless the
+    drag scrolled (8 px `scroll_deadzone`), as the creation cards do. The
+    view never scrolls by itself to show a selected row's partners; the
+    sentence names them.
 - **Shadows are drawn simplified (#385).** The reference draws the leader in
   full and the other shadows faded but fully detailed, at opacity 0.32 and 0.2
   (Training; GenerationStrip). Instead the followed shadow, which need not be
@@ -937,6 +947,10 @@ Every control that reacts to a tap shows it
 - Controls whose press already changes something need no tint: tabs and
   segmented switches select on press, the Brain stage card opens BrainFocus
   on press, a part row starts a drag, and a slider moves.
+- BrainFocus rows show no tint, unlike the creation card, which also acts
+  on release: a row is a tap band drawn in code inside the network rather
+  than a Control of its own, and the selection halo on release is its
+  answer. This is a best guess until a design review.
 
 Two rules keep it that way; `UiPressFeedbackTests` guards the first:
 
