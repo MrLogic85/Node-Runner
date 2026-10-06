@@ -15,9 +15,6 @@ public static class UiLayout
     public const int CanvasWidth = 640;
     public const int CanvasHeight = 360;
 
-    /// <summary>The top bar is exactly one touch target tall.</summary>
-    public const int TopBarHeight = UiSize.Control.Touch;
-
     /// <summary>The side panel's width (the reference token <c>w-side</c>).</summary>
     public const int SidePanelWidth = 176;
 

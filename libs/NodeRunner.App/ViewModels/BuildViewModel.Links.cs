@@ -10,31 +10,6 @@ namespace NodeRunner.App.ViewModels;
 public sealed partial class BuildViewModel
 {
     /// <summary>
-    /// Joins two existing nodes with a beam. Rejected attempts (locked
-    /// Creation, self-connect, duplicate beam) change nothing and return false
-    /// instead of throwing.
-    /// </summary>
-    public bool ConnectBeam(int nodeIdA, int nodeIdB)
-    {
-        if (_moveOnly)
-        {
-            return false;
-        }
-
-        try
-        {
-            _history.Change(() => _builder.AddBeam(nodeIdA, nodeIdB));
-        }
-        catch (ArgumentException)
-        {
-            return false;
-        }
-
-        RaiseAnatomyChanged();
-        return true;
-    }
-
-    /// <summary>
     /// Whether <see cref="ConnectLink"/> would place <paramref name="link"/> between this pair;
     /// if not, <paramref name="reason"/> says why.
     /// </summary>

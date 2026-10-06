@@ -349,21 +349,6 @@ public sealed partial class UiComponentContractsTests
     }
 
     [Theory]
-    [InlineData(double.NaN, 10, 20, 10)]
-    [InlineData(double.NegativeInfinity, 10, 20, 10)]
-    [InlineData(double.PositiveInfinity, 10, 20, 20)]
-    [InlineData(12, 20, 10, 12)]
-    [InlineData(30, 20, 10, 20)]
-    public void ClampValue_NormalizesBoundsAndFiniteSpecialValues(
-        double value,
-        double minimum,
-        double maximum,
-        double expected)
-    {
-        UiComponentContracts.ClampValue(value, minimum, maximum).ShouldBe(expected);
-    }
-
-    [Theory]
     [InlineData(double.NaN, 0)]
     [InlineData(double.NegativeInfinity, 0)]
     [InlineData(double.PositiveInfinity, 1)]

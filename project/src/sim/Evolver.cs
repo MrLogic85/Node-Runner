@@ -64,9 +64,6 @@ public partial class Evolver : Node
     /// <summary>Fitness values completed in the current generation.</summary>
     public double[] CompletedFitness => _fitness.ToArray();
 
-    /// <summary>Number of candidates whose trials have completed in the current generation.</summary>
-    public int CompletedCandidateCount => _schedule?.CompletedCount ?? 0;
-
     /// <summary>
     /// The shadow (zero-based slot, which is also its candidate index) drawn in full and shown in
     /// signal flow and the brain. Shadow 0 by default: the previous best, or shadow 1 in a fresh

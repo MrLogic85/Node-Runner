@@ -28,8 +28,6 @@ public sealed class ParallelEvaluationSchedule
 
     public int PopulationSize { get; }
 
-    public int SlotCount => _activeCandidates.Length;
-
     public int CompletedCount { get; private set; }
 
     public bool IsComplete => CompletedCount == PopulationSize;

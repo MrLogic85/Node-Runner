@@ -40,7 +40,7 @@ public sealed class BuildSpringTests
         var (build, gestures) = ThreeLooseJoints();
         var below = build.PlaceNode(new Vector2D(50, -60));
         var above = build.PlaceNode(new Vector2D(50, 60));
-        build.ConnectBeam(below, above).ShouldBeTrue();
+        build.ConnectLink(BuildLink.Beam, below, above).ShouldNotBeNull();
         var link = build.ConnectLink(BuildLink.Spring, 1, 2)!.Value;
         build.ActiveTool = BuildTool.Parts;
 

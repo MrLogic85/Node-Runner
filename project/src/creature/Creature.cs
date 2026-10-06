@@ -63,7 +63,6 @@ public partial class Creature : Node2D
     private bool _isShadow;
     private CreatureElementSelection? _selection;
     private IBeamSensor[] _sensors = [];
-    private AccelerometerSensor[] _accelerometers = [];
     private double[] _rawInputs = [];
     private int[] _inputPortOf = [];
     private int[] _outputPortOf = [];
@@ -80,12 +79,8 @@ public partial class Creature : Node2D
     /// <summary>The brain driving the creature; <c>null</c> until training or Simulate sets one.</summary>
     public NeuralNetwork? Brain { get; private set; }
 
-    public bool IsBuilt => _isBuilt;
-
     /// <summary>The brain's ports in runtime order (#534); empty when the creature has no brain.</summary>
     public BrainPortLayout Ports { get; private set; } = BrainPortLayout.Empty;
-
-    public IReadOnlyList<AccelerometerSensor> Accelerometers => _accelerometers;
 
     /// <summary>
     /// True for every shadow except the followed one (#385): each visual draws as it declares in
@@ -719,7 +714,6 @@ public partial class Creature : Node2D
             };
         }
 
-        _accelerometers = _sensors.OfType<AccelerometerSensor>().ToArray();
         CreateSensorVisuals(definition);
     }
 

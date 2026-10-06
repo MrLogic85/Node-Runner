@@ -59,7 +59,7 @@ public sealed class BuildUndoTests
     public void UndoingADelete_SelectsTheRestoredPartAgain_AndRedoClearsIt()
     {
         var build = TwoJoints();
-        build.ConnectBeam(1, 2);
+        build.ConnectLink(BuildLink.Beam, 1, 2);
         var beam = build.Beams.Single().Id;
         build.SelectOnly(CreatureElementKind.Beam, beam);
         build.DeleteSelectedParts();
@@ -79,7 +79,7 @@ public sealed class BuildUndoTests
     public void UndoingADeleteOfSeveralParts_SelectsOnlyThoseParts()
     {
         var build = TwoJoints();
-        build.ConnectBeam(1, 2);
+        build.ConnectLink(BuildLink.Beam, 1, 2);
         build.ReplaceSelection([1, 2]);
         build.DeleteSelectedParts();
         build.Beams.ShouldBeEmpty();
@@ -107,11 +107,11 @@ public sealed class BuildUndoTests
     public void ARefusedEdit_AddsNoStep_AndKeepsRedo()
     {
         var build = TwoJoints();
-        build.ConnectBeam(1, 2);
+        build.ConnectLink(BuildLink.Beam, 1, 2);
         build.PlaceNode(new Vector2D(0, 100));
         build.Undo();
 
-        build.ConnectBeam(1, 2).ShouldBeFalse();
+        build.ConnectLink(BuildLink.Beam, 1, 2).ShouldBeNull();
         build.MoveNode(1, build.Nodes[0].Position);
 
         build.CanRedo.ShouldBeTrue();
