@@ -277,7 +277,10 @@ The launcher icon is the Brain glyph (the 2-3-2 network) in Neon colours
 focus ring. Neurons sit on `panel_raised` discs over a vignette to
 `background` with a faint `muted` dot grid. Glow is the base colour at low
 alpha. Neurons stay inside the 66 dp safe circle. The monochrome layer is a
-flat white silhouette. `docs/RELEASING.md` → "App icon" lists the files.
+flat white silhouette. The Android 12+ launch splash is the foreground
+alone on `background`, the colour of the window behind the first frame, so
+launch stays one dark field (#829). `docs/RELEASING.md` → "App icon" lists
+the files.
 
 ## Departures from the reference
 
