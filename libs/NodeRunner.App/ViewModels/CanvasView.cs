@@ -11,7 +11,8 @@ namespace NodeRunner.App.ViewModels;
 /// <see cref="Bounds"/>, and zooming out goes just far enough to show all of
 /// it. Zoom limits are on screen, not in view units: view units grow with
 /// the UI size's root factor (<see cref="UiScale"/>, #299), so the limits shrink by it and the
-/// creation keeps its size on screen. See `docs/BUILD_MODE.md`.
+/// creation keeps its size on screen. Godot's <c>Camera2D</c> would replace
+/// only the clamp, so Build keeps this class (#564). See `docs/BUILD_MODE.md`.
 /// </summary>
 public sealed class CanvasView
 {

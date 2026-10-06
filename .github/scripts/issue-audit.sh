@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# List open issues that break the rules in docs/ISSUE_LABELS.md ("Required metadata", "Size"
+# List open issues that break the rules in docs/ISSUES.md ("Required metadata", "Size"
 # and "Status").
 #
 #   issue-audit.sh        print one line per issue with what it is missing; exit 1 if any
@@ -7,7 +7,7 @@
 # A leaf issue (no sub-issues) needs a Size unless it is an Idea, a `type: question` or a
 # `type: epic`; a parent issue must not have one. A Blocked issue needs an open blocked-by
 # issue, and a Ready or In progress one must have none. A parent has no blocked-by issues
-# and its Status follows its sub-issues (docs/ISSUE_REVIEW.md → "Parent issues").
+# and its Status follows its sub-issues (docs/ISSUES.md → "Parent issues").
 # Uses the caller's gh login, whose token needs the `project` scope (gh auth refresh -s project).
 set -euo pipefail
 

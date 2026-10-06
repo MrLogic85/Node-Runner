@@ -873,8 +873,8 @@ public partial class BuildCanvas : Node2D
         new(0, Vector2.One * (float)_gestures!.View.Zoom, 0, ToGodot(_gestures.View.Offset));
 
     /// <summary>
-    /// The width every line is drawn at (`docs/UI_DIRECTION.md` → Departures
-    /// from the reference); to keep lines at their screen width instead, return
+    /// The width every line is drawn at (`docs/WORLD_VISUALS.md` → Lines and
+    /// zoom); to keep lines at their screen width instead, return
     /// <c>width / (float)_gestures.View.Zoom</c> here.
     /// </summary>
     private float Stroke(float width) => width;

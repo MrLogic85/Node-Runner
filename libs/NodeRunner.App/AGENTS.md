@@ -1,69 +1,56 @@
 # AGENTS.md — `libs/NodeRunner.App`
 
-Application-level pure C#: view-models, service interfaces, repositories,
-in-memory fakes. The bridge between the Godot side and the pure ML/Domain
-layers.
+Application-level pure C#: view-models, services, repositories and their
+in-memory fakes. The bridge between the Godot side and the pure layers.
 
-## Hard rules
+## Rules
 
-- **No `Godot.*` references.** Enforced by `NodeRunner.Arch.Tests`.
-- **Every service that Godot code will consume has an interface.** Managers
-  and repositories are consumed via their interface, not the concrete type.
-  This is what enables mocking with NSubstitute in tests.
-- **Constructor injection everywhere.** Static state and singletons are
-  forbidden. Composition happens in Godot autoloads (`project/src/managers/`).
-- **JSON via `System.Text.Json`.** No third-party serialisers.
-- **No `async void`.**
+- **Every service Godot code consumes has an interface,** and callers use
+  it, so tests substitute it with NSubstitute.
+- **Constructor injection, no static state or singletons.** The composition
+  root is `SaveManager` (`project/src/managers/AGENTS.md`).
+- **JSON via `System.Text.Json` only** (`SaveJson`).
+- **No `async void`,** so every fault reaches a caller.
+- **Fakes live next to their interfaces.** `InMemoryCreationRepository` is
+  production code that also serves as a test double.
+- **Never call `ICreationUpdateCoordinator.Get` while holding a creation's
+  lock** (inside an `UpdateIfPresent` update) **or from a queued save:**
+  `Get` waits for that creation's queued saves, so it deadlocks (#370).
+- **A `SaveMigration` edits the JSON one version up** and throws
+  `InvalidDataException` for a file it cannot change, which loads as a bad
+  file. Any other exception is a bug and is not caught (`VersionedSaveFile`;
+  policy in `docs/SAVE_FORMAT.md` → Versions and migration).
+- **File paths come from `IStorageLocation`,** so Godot injects `user://`
+  paths on Android.
 
 ## What lives here
 
 - `ViewModels/` — screen state and presentation: `BuildViewModel` and its
   `BuildGestures`, `CreationsPresentationViewModel`,
-  `TrainingPresentationViewModel` (shadows, not population), the Brain
-  focus and Signal flow presentations
-- `Repositories/` — `ICreatureRepository`, `FileCreatureRepository`,
-  `InMemoryCreatureRepository` (test fake, also usable in production)
-- `Services/` — `IRngProvider`, `ISettings`, cross-cutting service
-  interfaces
-- `Results/` — `Result` / `Result<T>` helpers if we go that route (decide when
-  first I/O lands)
-- `Builders/` — mutable, stateful construction helpers that assemble
-  `NodeRunner.Domain` records over several steps (e.g. `CreatureBuilder` for
-  0.3.0's Build mode). These hold in-progress state and expose
-  `TryBuild(...)` to attempt converting it into an immutable Domain type;
-  they belong here rather than in Domain because Domain permits no
-  behavior beyond validation (see `libs/NodeRunner.Domain/AGENTS.md`).
-- `Navigation/` — the screen history for the `SceneRouter` autoload (#468):
-  `SceneRoute` (one sealed record per scene; its properties are the plain
-  arguments the scene is rebuilt from), `SceneNavigation` (a request with
-  keep-current and launch mode), `SceneBackStack`, and the `ISceneNavigator` /
-  `IRoutedScene` seam between scenes and the router. Declare every scene's
-  route here; the plain-value test only scans this assembly. See
-  `docs/ARCHITECTURE.md` → Navigation.
-- `Lifecycle/` — Creation lifecycle rules read from Domain records, e.g.
-  `CreationLock` (#369). See `docs/TRAINING_LOOP.md` → Product lifecycle
-  boundary.
-
-## What does NOT live here
-
-- Actual Godot autoloads → `project/src/managers/`
-- Godot Nodes → `project/src/{creature,ui,sim}/`
-- NN math → `libs/NodeRunner.ML/`
-- Data records → `libs/NodeRunner.Domain/`
-
-## Style
-
-- `sealed class` for stateful services; `sealed record` for events/DTOs.
-- Interfaces + concrete impl live side by side (`ICreatureRepository.cs` next
-  to `FileCreatureRepository.cs`).
-- File I/O uses `System.IO`; abstract the *path* via an `IStorageLocation`
-  service so the Godot side can inject `user://` paths on Android.
+  `TrainingPresentationViewModel` (shadows), the Brain focus and Signal flow
+  presentations
+- `Repositories/` — `ICreationRepository` (`FileCreationRepository`,
+  `InMemoryCreationRepository`), `IProgressionRepository` (file and
+  in-memory), `VersionedSaveFile`, `SaveJson`, `FilePersistenceExceptions`
+- `Services/` — `IRngProvider`, `ICreationUpdateCoordinator`, the
+  workflows (`INewCreationWorkflow`, `IBuildEditWorkflow`,
+  `ICreationDuplicateWorkflow`, `IExampleCopyWorkflow`), `EvolutionSetup`,
+  `CreationExamples`, `DefaultCreationSeeder`, `ShadowsBudget`,
+  `SlowMotionWatch`
+- `Builders/` — `CreatureBuilder`, the in-progress Build creature, with
+  `TryBuild` into an immutable `CreatureDef`; it holds state, so it cannot
+  live in Domain
+- `Navigation/` — routes and history; declare every route here, because the
+  plain-value test scans only this assembly (`docs/ARCHITECTURE.md` →
+  Navigation)
+- `Lifecycle/` — `CreationLock`, `CreatureReadiness`: lifecycle rules read
+  from Domain records (`docs/TRAINING_LOOP.md` → Product lifecycle boundary)
 
 ## Tests
 
-`tests/NodeRunner.App.Tests/` — xUnit + Shouldly + NSubstitute.
+`tests/NodeRunner.App.Tests/`:
 
-- View-models: fake dependencies via `Substitute.For<...>()`, drive events,
-  assert `INotifyPropertyChanged` firings.
-- Repositories: file impls tested against a temp directory; in-memory impls
-  double as test doubles for other layers.
+- View-models fire `INotifyPropertyChanged` in the expected order; fake
+  their dependencies with `Substitute.For<...>()`.
+- File repositories run against a per-test temp directory
+  (`Path.GetTempPath()`, cleaned up in `Dispose`).

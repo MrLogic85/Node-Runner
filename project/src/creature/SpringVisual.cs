@@ -9,7 +9,10 @@ namespace NodeRunner.Creature;
 /// </summary>
 public partial class SpringVisual : SpringPart, IShadowVisual
 {
-    /// <summary>Links draw on a shadow as on the followed creature (docs/CREATURE_MODEL.md).</summary>
+    /// <summary>
+    /// Links draw on a shadow as on the followed creature (docs/WORLD_VISUALS.md → "Drawing as a
+    /// shadow").
+    /// </summary>
     public static ShadowDrawing AsShadow => ShadowDrawing.Same;
 
     public required RigidBody2D NodeA { get; init; }

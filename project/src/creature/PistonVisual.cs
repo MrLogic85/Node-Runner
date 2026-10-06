@@ -8,7 +8,10 @@ namespace NodeRunner.Creature;
 /// </summary>
 public partial class PistonVisual : PistonPart, IShadowVisual
 {
-    /// <summary>Links draw on a shadow as on the followed creature (docs/CREATURE_MODEL.md).</summary>
+    /// <summary>
+    /// Links draw on a shadow as on the followed creature (docs/WORLD_VISUALS.md → "Drawing as a
+    /// shadow").
+    /// </summary>
     public static ShadowDrawing AsShadow => ShadowDrawing.Same;
 
     public required PistonLink Link { get; init; }

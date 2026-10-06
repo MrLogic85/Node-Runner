@@ -1,11 +1,12 @@
 # Code Design Principles
 
-The rules we hold ourselves to. When in doubt, come back here.
+The implementation rules we hold ourselves to, including how we write
+comments and docs.
 
 ## 1. Clarity beats cleverness
 
-This is a teaching tool. A student — including future-you at 22:47 on a
-Tuesday — must be able to read the code and *learn* from it.
+This is a teaching tool: a student must be able to read the code and
+*learn* from it.
 
 - Prefer a straightforward loop over a chained LINQ one-liner
 - Name variables for meaning (`fitness`, `mutationRate`) not brevity (`f`, `m`)
@@ -20,10 +21,9 @@ an option.
 
 - Before writing anything, find what Godot already provides (nodes,
   resources, servers, project settings, editor features) and use it fully,
-  even if that means learning a new part of the engine. Examples: physics
-  (`RigidBody2D` and joints), themes and theme type variations, containers
-  for layout, stretch and `ContentScaleFactor` for UI size, `DPITexture`,
-  and translation (`TranslationServer`) for text (#682).
+  even if that means learning a new part of the engine, such as physics
+  (`RigidBody2D` and joints), theme type variations, or `TranslationServer`
+  for text (#682).
 - Write our own only when Godot cannot do what we need. Say why in the code
   or the owning doc, naming what was checked. "Ours is simpler" or "we
   didn't know" is not a reason.
@@ -40,43 +40,30 @@ an option.
 
 ## 3. The ML engine is engine-agnostic
 
-Anything under `libs/NodeRunner.ML/` must satisfy:
+Nothing in `libs/` references Godot (`docs/ARCHITECTURE.md`; the arch
+tests enforce it). The ML engine's own rules are in
+`libs/NodeRunner.ML/AGENTS.md`.
 
-- No `using Godot;`
-- No references to `Node`, `Vector2`, `Resource`, etc.
-- Public API takes and returns primitive types or plain C# records: `double`,
-  `double[]`, `int`, small structs
-- Use `double`, not `float`, throughout the ML engine so training math is
-  consistent and reproducible
-- Fully unit-testable outside Godot with plain xUnit
-
-Enforcement: `NodeRunner.Arch.Tests` fails the build if any `Godot.*` type
-leaks into `libs/`.
-
-Why: it forces a clean interface, it lets us test on the CLI, and it means the
-ML code could be lifted into any other project (or a future desktop tool)
-without rewriting.
+Why: it forces a clean interface, lets us test on the CLI, and means the ML
+code could be lifted into another project without rewriting.
 
 The same holds for the creature model in `libs/NodeRunner.Domain/` and
-`libs/NodeRunner.Mechanics/` (owner decision, #452): a part is described as
-if another physics engine could run it. Godot body and joint choices live
-only in `project/src/creature/`, with a comment saying why.
+`libs/NodeRunner.Mechanics/` (#452): a part is described as if another
+physics engine could run it. Godot body and joint choices live only in
+`project/src/creature/`, with a comment saying why.
 
 ## 4. Determinism by default
 
-- All randomness flows through a single seeded `System.Random`, obtained
-  from `RngProvider` (see `project/src/managers/AGENTS.md`), passed to
-  whoever needs it — never `new Random()` scattered ad hoc
-- `System.Random`'s algorithm was replaced in .NET Core 3.0 and has been
-  stable since (identical output for a given seed on any OS/CPU
-  architecture, as long as all builds target .NET Core 3.0+ / .NET 5+ —
-  this project targets net8.0/net10.0), so it's sufficient for reproducing
-  a run across desktop and Android; a custom Xoshiro/PCG generator isn't
-  needed unless that guarantee changes
-- The seed for a simulation run is displayed in the UI and written to the log
-- Fixed timestep for physics *and* NN updates — never `_process(delta)` for
-  anything training-related. Use `_physics_process` with 60 Hz.
-- No `DateTime.Now`-based decisions in ML code
+- All randomness flows through one seeded `System.Random` from
+  `RngProvider` (`project/src/managers/RngProvider.cs`), passed to whoever
+  needs it; never an ad-hoc `new Random()`.
+- `System.Random` with a seed gives the same sequence on every .NET 5+
+  platform, so a run reproduces on desktop and Android without a custom
+  PRNG.
+- The run's seed is written to the log; #959 shows it in the app.
+- Physics and network updates run on the fixed 60 Hz timestep
+  (`_PhysicsProcess`), never `_Process`.
+- No wall-clock (`DateTime.Now`) decisions in ML or training code.
 
 Why: reproducibility is worth more than you'd think. Bug reports become "run
 seed 4711". Regressions become detectable.
@@ -90,8 +77,7 @@ seed 4711". Regressions become detectable.
   flags it.
 - **Hard limit, 2000 lines.** No `.cs` file under `libs/` or `project/src/`
   may exceed it. `NodeRunner.Arch.Tests` fails the build.
-- Test files have no size limit; see `docs/TEST_STRATEGY.md` § "Test file
-  layout".
+- Test files have no size limit; see `tests/AGENTS.md`.
 - Prefer composition over inheritance. A creature *has* nodes, beams, sensors
   and a brain — it doesn't *inherit* from any of them.
 - No abstract base classes "just in case". Introduce them when the second
@@ -99,15 +85,10 @@ seed 4711". Regressions become detectable.
 
 ## 6. Data before behavior
 
-- Represent things as data first, then add behavior:
-  ```csharp
-  public sealed record NodeDef(int Id, Vector2 Position);
-  public sealed record BeamDef(int Id, int NodeA, int NodeB);
-  public sealed record SensorDef(int Id, int BeamId, SensorKind Kind);
-  ```
-- This makes serialization (save/load creatures), diffing (evolution!), and
-  hashing (dedup) trivial.
-- Godot nodes are built *from* these defs, they don't replace them.
+- Represent things as data first, then add behavior: a creature is Domain
+  records such as `NodeDef`, `BeamDef` and `SensorDef`.
+- This makes serialization, diffing and hashing trivial.
+- Godot nodes are built *from* these defs; they don't replace them.
 
 ## 7. Explicit units
 
@@ -124,7 +105,9 @@ seed 4711". Regressions become detectable.
 - Release builds should clamp/log rather than crash the app.
 - Never `catch (Exception) { }`. Ever.
 
-## 9. Comment intent, not mechanics
+## 9. Comments and docs
+
+Comment intent, not mechanics:
 
 ```csharp
 // BAD: increments the counter
@@ -141,27 +124,23 @@ Docs and comments describe what is true now and why. Pending work, such as
 TODOs, "move this when touched" lists and wished-for improvements, goes in a
 GitHub issue; the doc or comment may link to it.
 
-## 10. Testing philosophy
+Documentation follows these rules:
 
-- **Unit tests** for `libs/NodeRunner.ML/`, `libs/NodeRunner.Domain/` and
-  `libs/NodeRunner.Mechanics/` — mandatory. Small, fast, no Godot.
-- **Architecture tests** (`NodeRunner.Arch.Tests`) — enforce layer rules and
-  source conventions that the compiler can't. Add a fact whenever a new convention emerges.
-- **Property tests** where cheap (a network's output shape equals the output
-  layer size for any random input).
-- **Manual tests** are decided per issue/change. See
-  `docs/MANUAL_TESTING.md`.
-- We don't chase 100% coverage. We chase "the tricky parts are pinned down".
+- Each file has one responsibility.
+- Nothing is written twice; other files link to the owner.
+- One clear sentence beats two.
+- Instructions that add nothing are removed: generic advice, restating what
+  code, tests or CI enforce without a why, and history that no longer guides
+  decisions.
+- Layer-specific instructions live in the nearest `AGENTS.md`.
 
-See `docs/TEST_STRATEGY.md` for the full tooling table and per-layer detail.
+## 10. Testing
 
-## 11. Version-control hygiene
+`docs/TEST_STRATEGY.md`.
 
-- One logical change per commit.
-- Do **not** commit generated files: `.godot/`, `.mono/`, `bin/`, `obj/`,
-  `*.import` for imported assets is fine but check on a case-by-case basis.
-- PR title, squash-commit format, DoD, and merge process live in
-  `docs/REVIEW.md`.
+## 11. Version control
+
+`docs/REVIEW.md` → "PR title and commit hygiene".
 
 ## 12. Dependencies are a debt
 
@@ -169,9 +148,9 @@ See `docs/TEST_STRATEGY.md` for the full tooling table and per-layer detail.
 - Godot first (§2) applies here too: what Godot provides beats a package,
   an addon or our own version.
 - No ML libraries. We're building this to learn.
-- Physics: use Godot's built-in `RigidBody2D` + joints. Don't pull Box2D.NET.
-- Math: `System`, `System.Numerics`. If we need more, we implement it in
-  `libs/NodeRunner.ML/Math/`.
+- Physics: Godot's `RigidBody2D` and joints, not Box2D.NET.
+- Math: `System` and `System.Numerics`; anything more we write ourselves in
+  `libs/NodeRunner.ML/`.
 
 ## 13. UI is the last mile
 
@@ -183,14 +162,12 @@ See `docs/TEST_STRATEGY.md` for the full tooling table and per-layer detail.
 
 ## Style specifics (C#)
 
-- Braces on new line (default Godot C# style)
-- `PascalCase` for public/protected, `camelCase` for locals & params,
-  `_camelCase` for private fields
+`.editorconfig` and `dotnet format` own formatting and naming. Beyond them:
+
 - `readonly` everywhere it fits
-- `sealed` by default on classes, unfrozen only when subclassing is planned
-- Prefer `record` for immutable data, `class` for identity/state
-- `var` when the type is obvious from the right-hand side; explicit otherwise
-- No `#region`. If a file needs regions, it's too big.
+- `sealed` by default on classes, unsealed only when subclassing is planned
+- `record` for immutable data, `class` for identity and state
+- No `#region`; a file that needs regions is too big
 
 ## Anti-patterns we explicitly reject
 
@@ -205,31 +182,20 @@ See `docs/TEST_STRATEGY.md` for the full tooling table and per-layer detail.
 
 ## Chosen tooling
 
-Locked in — do not swap without an issue.
+Changing a choice needs an issue. Test tools are in
+`docs/TEST_STRATEGY.md` → "Tools"; target frameworks in
+`docs/ARCHITECTURE.md`.
 
 | Concern | Choice | Why |
 |---|---|---|
-| Test framework | **xUnit 2.9** | Standard, mature, fast |
-| Assertions | **Shouldly** | Apache 2.0. FluentAssertions changed licence at v8; we avoid that entire debate. |
-| Mocking | **NSubstitute 5** | Cleaner API than Moq, no legal drama |
-| Architecture rules | **NetArchTest.Rules** | Reflection over assembly markers, keeps layer rules executable |
-| Coverage | **Coverlet** | Default; already wired to `dotnet test` |
-| Source guards | **Microsoft.CodeAnalysis.CSharp** (Roslyn) | Parses and binds C# in tests so hardcoding rules check real syntax and types, not text |
 | Solution format | **`.slnx`** (XML) | .NET 10 default; readable diffs, no GUIDs |
-| Package versioning | **Central Package Management** (`Directory.Packages.props`) | One source of truth for lib versions. Godot csproj opts out (SDK conflicts). |
-| Namespaces | **File-scoped** | Enforced by `.editorconfig` |
+| Package versioning | **Central Package Management** (`Directory.Packages.props`) | One source of truth for versions. The Godot csproj opts out (SDK conflicts). |
 | Code style | **`.editorconfig` + `dotnet format`** | Editor-agnostic |
-| DI | **Hand-rolled constructor injection**, autoloads as composition root | Can migrate to Chickensoft.AutoInject later without touching classes |
+| DI | **Hand-rolled constructor injection**, autoloads as composition root | |
 
-Notes / quirks:
-
-- `TreatWarningsAsErrors=true` in `Directory.Build.props`, but disabled in
+- `TreatWarningsAsErrors=true` in `Directory.Build.props`, but off in
   `project/NodeRunner.csproj` because Godot's source generators emit code we
   don't own.
-- `<GenerateDocumentationFile>true</GenerateDocumentationFile>` is required
-  for `IDE0005` (unused usings) to actually fail the build. This triggers
-  `CS1591` (missing XML docs); we suppress that with `NoWarn` until the API
-  stabilises.
-- Test projects target `net10.0` because that's the only runtime installed
-  locally; library projects target `net8.0` because that's what Godot's
-  runtime ships. `net10.0` tests load `net8.0` libs cleanly.
+- `GenerateDocumentationFile` is on so `IDE0005` (unused usings) fails the
+  build. We suppress the `CS1591` (missing XML docs) it triggers with
+  `NoWarn`.

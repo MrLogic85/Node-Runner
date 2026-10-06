@@ -2,10 +2,13 @@
 
 **Godot Controls, scenes, screens. The last mile.**
 
+`lib/AGENTS.md` holds the theme, drawing, icon, input and UI-level rules.
+They bind every file under `src/ui/`, not only the library.
+
 ## Rules
 
 1. **UI binds to view-models in `NodeRunner.App`, not to sim/managers
-   directly.** Reach for `MainViewModel`, not `Evolver`.
+   directly.** Reach for `BuildViewModel`, not `Evolver`.
 2. **Reusable Controls live in `lib/`.** Screens in `screens/`. App-specific
    composite widgets in `widgets/`.
 3. **UI code contains presentation logic only.** Formatting, animation,
@@ -14,11 +17,12 @@
    `.cs` file lives here in `src/ui/screens/`. Reusable component scenes
    (e.g. `UiStageCard`, `UiFrame`) live in `project/scenes/ui/` instead, and
    widget scenes (e.g. `CreationCard`) in `project/scenes/widgets/`.
-   The scene owns the layout and the script owns behaviour; see "Who owns
-   what" in `docs/UI_DIRECTION.md`.
-5. **The UI library is the visual contract.** Reuse its components and
-   tokens; `docs/UI_DIRECTION.md` owns the rules. `reference design/` is a
-   guide for surfaces the app does not have yet, not the source of truth.
+   The scene owns the layout and the script owns behaviour
+   (`docs/UI_DIRECTION.md` → "Who owns what").
+5. **Reuse library components and tokens** (`docs/UI_DIRECTION.md`).
+6. **A new screen, widget or gallery script joins `RewrittenUi`**
+   (`tests/NodeRunner.Ui.Tests/RewrittenSceneTests.cs`) in the same PR, so
+   the scene and source guards cover it from the start.
 
 ## Folder layout inside `src/ui/`
 
@@ -34,13 +38,6 @@ unchanged, it belongs in `lib/`. If it embeds project vocabulary
 ("creature", "generation", "brain"), it's a `widget/`.
 
 ## Rules per subfolder
-
-### `lib/`
-
-- No references to `project/src/sim/`, `project/src/creature/`, or the
-  `NodeRunner.Domain` lib. Only primitives and system types.
-- Exports parameters via `[Export]` and signals for events.
-- One file per Control.
 
 ### `screens/`
 
@@ -62,6 +59,8 @@ unchanged, it belongs in `lib/`. If it embeds project vocabulary
   it returns true. Taking uses up the press, so never take it before
   checking your own condition. `UiBackPressGuardTests` enforces the call.
 - `_ExitTree()` unsubscribes. No leaked handlers.
+- A screen script declares no numbers: its numeric exports take their value
+  from its scene.
 
 ### `widgets/`
 
@@ -70,75 +69,63 @@ unchanged, it belongs in `lib/`. If it embeds project vocabulary
   moves it).
 - Must not depend on `project/src/sim/` directly.
 - Reusable across screens.
+- Every number is named. In a drawn widget (`RewrittenUi.DrawnWidgets`),
+  literals inside `_Draw` and its `Draw*` helpers stay inline. A drawn
+  widget may set the `Position` of controls its scene authors (selection
+  handles, #366); their sizes stay in the scene.
 
 ## Style specifics
 
 - Godot signals for Control-to-Control events. C# events for
   ViewModel-to-Control notifications.
 - `[Export]` fields have sensible defaults so the Control renders something
-  useful in the editor without setup. A rewritten screen declares no numbers
-  (`docs/TEST_STRATEGY.md`), so its numeric exports take their value from its
-  scene instead.
+  useful in the editor without setup.
+- `RewrittenSceneTests` reads literal `GetNode<T>("%Name")` calls, so a
+  helper takes the node, not its path.
 - Use containers and anchors for composition. Dimensions set in C# come from
-  named `UiSize`/`UiLayout`/`UiSpacing` values, never one-off literals. The
-  exception is drawing code in a widget that draws in `_Draw`: see
-  `RewrittenUi.DrawnWidgets` in `docs/TEST_STRATEGY.md`. A scene owns the paddings and sizes it authors; do not re-apply them from code
-  (#331).
-- Order drawing with the tree, not `ZIndex` (#463): add an overlay last, or a
-  part that must draw last with `InternalMode.Back`. A menu that floats over
-  its screen goes in a `UiLevelLayer`. `docs/UI_DIRECTION.md` "UI levels"
-  (#768) owns the rule and the level stack. Inside a world (`UiWorldView`)
-  holding creature parts, draw a view's own marks on a `ViewLayer`, not as a
-  last child: the parts sit on `CreatureLayers` (`docs/CREATURE_MODEL.md` →
-  "Draw layers").
-- A `[Tool]` component that writes a property on itself or on a node of its
-  own scene (a theme override, `clip_children`, text, an icon, a computed
-  size) lists it in a `UiUnsavedState` and calls `Handle` first in
-  `_Notification`, so the value never lands in a saved scene (#309). A plain
-  `Control` returns a computed size from `_GetMinimumSize` instead of setting
-  `CustomMinimumSize`. Add own-node properties to `SceneDerivedStateTests`.
-- Colors, fonts, and typography come from the inherited Godot `Theme`, using
-  its native lookup APIs and type variations. `UiTokens` holds the typed identifiers
-  a control or the editor selects a value by (`Color`, `Alpha`, `Flag`, `Typography`,
-  and `Size.Stroke` for dimensions); resolve them through `UiThemeLookup` (see
-  `docs/UI_DIRECTION.md` → Theme boundaries). Theme values are authored only in the theme files
-  under `assets/themes/`: palette-independent items (typography, spacing) once
-  in the project theme `Neon.tres`, palette colours in each palette file.
-  Colour-derived items are regenerated by `UiThemeExpander` (see
-  `docs/UI_DIRECTION.md`). Never hand-edit those or hardcode a theme value in C#. Do not pass or assign palette data to controls or walk a
-  subtree to propagate style.
-- Select theme values by *name*, never by copying them. A control sets
-  `ThemeTypeVariation` and lets the inherited Theme resolve it; do not read a
-  theme color/font and write it back as an `AddTheme*Override`, because the
-  copy goes stale on a theme swap. A control has one variation, so combined
-  axes (typography × text color, size × kind) are separate variations that
-  `UiThemeExpander` generates and chains, e.g. `UiNoteMuted` → `UiNote` →
-  `Label`. Colors a control draws itself are read in `_Draw`, which Godot
-  re-queues on theme change. Overrides are only for explicit per-instance
-  values (e.g. `IconTint`) and theme-independent constants.
-- Screens inherit the Neon project theme; assign another `Theme` only to
-  switch palette, in `_EnterTree` or before `AddChild`, never in `_Ready`. Authored scene children run `_Ready` before their parent, so a
-  late theme lets them measure against the engine default theme. See #301.
-- Text takes its style by name: `UiThemeLookup.ApplyTextStyle(control,
-  typography, color)` on a Label, Button or LineEdit (or UiLabel), never
-  `ApplyTypography` plus a copied `font_color`. A Button or LineEdit takes its
-  other state colours (hover, placeholder, caret) from its base type. Letter
-  case belongs to the typography (`UiTokens.IsUppercase`); for text cased in
-  code see `docs/UI_DIRECTION.md` → "Text and translation".
-- Button icons use `UiIcons.Apply` without a tint; the icon state colours come
-  from `Button` or a generated variation (`UiIconTab`). `UiSourceGuardTests`
-  fails on any colour override in `ui/lib` outside UiIcons' tint helper (#338).
-- A `NotificationThemeChanged` handler is only for caches that cannot be a
-  variation (e.g. custom-draw geometry, styleboxes, icon tints). Godot sends it
-  on every tree entry, before `_Ready`, so a handler that rebuilds must check
-  `IsNodeReady()`; first-time construction belongs in `_Ready`. If it writes
-  overrides on its own node it re-triggers itself; wrap it in
-  `UiThemeRefresh.Guarded`.
-- Subclasses that override `_Notification` must call `base._Notification(what)`,
-  otherwise the base control's theme refresh silently never runs.
-- Dimensions are theme-independent constants, not theme entries: `UiSize` for
-  the component scale, `UiLayout` for shell and surface sizes, and `UiSpacing`
-  for semantic gap roles. Never re-declare a reference dimension locally.
+  named `UiSize`/`UiLayout`/`UiSpacing` values, never one-off literals or a
+  local copy. A scene owns the paddings and sizes it authors; do not
+  re-apply them from code (#331).
+- Order drawing with the tree, not `ZIndex` (`lib/AGENTS.md` → "UI levels").
+  Inside a world (`UiWorldView`) holding creature parts, draw a view's own
+  marks on a `ViewLayer`, not as a last child: the parts sit on
+  `CreatureLayers` (`project/src/theme/AGENTS.md`).
+
+## Text
+
+`docs/LOCALIZATION.md` → "Text rules" owns what the text says; this is how
+code shows it.
+
+- Show a `UiText` with `label.ShowText(text)` or `button.ShowText(text)`
+  (`widgets/UiTextTranslation.cs`). It sets the control's `TextSource` and
+  turns Godot's own translation off. Other components take text through
+  their `…Source` properties and `UiTextTranslation.Source(text)`. Only
+  `UiTextTranslation` reads a `UiText`.
+- Text drawn in code asks `UiTextTranslation.Source` and redraws when the
+  language changes. `UiCalloutLayer` turns auto-translation off for its
+  callouts.
+- A label showing player-written text sets `auto_translate_mode = Disabled`
+  on itself only. A part's own name crosses as `UiText.AsWritten`.
+- Text cased in code goes through `UiThemeLookup.LetterCase`, never .NET
+  casing (#776, `UiTextTranslationTests`).
+- A component that passes its text to an inner control calls
+  `UiTranslation.ShareContext(this, inner)` first, so the context goes with
+  it (#777).
+- A number argument is an `int`/`long` or a `FixedNumber`, wrapped with
+  `UiText.Number`.
+
+## Touch input
+
+- A widget that hit-tests pointer input against what it draws maps the
+  position with `GetGlobalTransformWithCanvas().AffineInverse() * position`.
+  `ToLocal()` misses the world viewport's canvas transform.
+- `UiWorldView` pushes events into its world; `BuildCanvas` reads them in
+  `_UnhandledInput`. A tray drag maps through `SlotTransform`.
+- Keep Godot's `emulate_mouse_from_touch` on. `BuildCanvas` is the exception
+  that reads `ScreenTouch`/`ScreenDrag` by index and skips events whose
+  device is `InputEvent.DeviceIdEmulation`.
+- Keep `input_devices/pointing/android/enable_pan_and_scale_gestures` off:
+  it doubled events on a Galaxy S25 and broke pinch (#564).
 
 ## Test expectations
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Read or set the Node Runner project fields (Status, Priority, Size) on an issue.
-# See docs/ISSUE_LABELS.md → "Setting project fields".
+# See docs/ISSUES.md → "Setting project fields".
 #
 #   issue-fields.sh 286                         print the fields
 #   issue-fields.sh 286 --status Ready          set one or more fields

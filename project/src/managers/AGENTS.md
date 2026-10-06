@@ -1,78 +1,34 @@
 # AGENTS.md — `src/managers/`
 
-**Long-lived, app-wide services. Godot autoloads.**
+Long-lived, app-wide services: Godot autoloads, one instance per app
+lifetime, registered in `project/project.godot` → `[autoload]`.
 
 ## Rules
 
-1. **Managers are Godot autoloads** — registered in `project.godot`'s
-   `[autoload]` section. One instance per app lifetime.
-2. **Managers own state; UI reads it.** They are the source of truth for
-   things like current settings, current save slot, active RNG seed.
-3. **No UI code in managers.** No `Control` references, no scene changes.
-   Scene routing is one specific manager's job (`SceneRouter`), not every
-   manager's business.
-4. **Access via typed helpers, not string paths.** Prefer a small
-   `Services.SaveManager` locator over
-   `GetNode<SaveManager>("/root/SaveManager")` scattered across the codebase.
-5. **Managers depend on `NodeRunner.App` service interfaces, not concrete
-   implementations.** Managers are the **composition root**: they instantiate
-   the concrete `FileCreatureRepository`, `RngProvider`, etc., and hand them
-   to view-models via constructor injection. Higher-level orchestrators;
-   repositories are dumb data pipes.
+1. **Managers own state; UI reads it.**
+2. **No UI code.** No `Control` references; only `SceneRouter` changes
+   scenes. App-wide UI autoloads live in `project/src/ui/lib/`.
+3. **Managers are the composition root.** They build the concrete
+   App-layer classes and hand out their interfaces, so everything else takes
+   constructor-injected interfaces (`libs/NodeRunner.App/AGENTS.md`).
+4. **Code reaches an autoload with `GetNode<T>("/root/<Name>")`.**
+5. **Raise C# events (`event Action<...>`) for state changes,** not only
+   Godot signals: view-models subscribe to plain events in tests.
+6. **Pure logic moves to a plain C# class in `libs/` and is tested there;**
+   a manager that needs heavy test setup does too much.
 
 ## What lives here
 
-- `RngProvider.cs` — the seeded RNG for the current simulation, exposes seed
-  in the UI, logs it, can be reseeded
-- `SettingsManager.cs` — user preferences (mutation rate defaults, time
-  scale, etc.)
-- `SaveManager.cs` — orchestrates saving/loading creatures via
-  `ICreatureRepository`
-- `SceneRouter.cs` — the only place scenes are changed
-  (`GetTree().ChangeSceneToNode(...)`). It keeps the `SceneBackStack` and maps
-  each route to its scene in `ScenePaths`; a scene implementing `IRoutedScene`
-  gets its route and the router before it joins the tree
-- `Services.cs` — static locator that resolves autoloads by type
+- `RngProvider.cs` — the app's one seeded RNG (`IRngProvider`); reseeds
+  from the clock on start and logs the seed
+  (`docs/CODE_DESIGN_PRINCIPLES.md` §4)
+- `SaveManager.cs` — builds `FileCreationRepository`,
+  `CreationUpdateCoordinator`, the workflows, the progression repository and
+  `DefaultCreationSeeder`, and hands out their interfaces
+- `SceneRouter.cs` — the only place scenes change: keeps the
+  `SceneBackStack`, maps each route to its scene in `ScenePaths`, and gives a
+  scene implementing `IRoutedScene` its route and the router before it joins
+  the tree (`docs/ARCHITECTURE.md` → Navigation)
 
-## What does NOT live here
-
-- App-wide UI autoloads (`Notifications`, `BackPress`, `SafeArea`; see
-  `docs/ARCHITECTURE.md`) → `project/src/ui/lib/`: managers hold no UI
-
-- Simulation logic → `project/src/sim/`
-- UI state formatting → `libs/NodeRunner.App/ViewModels/`
-- Actual file I/O implementations → `libs/NodeRunner.App/Repositories/`
-- Pure ML → `libs/NodeRunner.ML/`
-
-## Style specifics
-
-- Inherit from `Godot.Node` (usually) so autoload works.
-- Emit C# events (`event Action<...>`) for state changes, not just Godot
-  signals — viewmodels prefer subscribing to plain events for testability.
-- Keep `_Ready()` short. Heavy init goes in an explicit `InitializeAsync()`
-  called by the router or a boot scene.
-- Configuration is passed in via `SettingsManager`, not read directly from
-  `ProjectSettings`.
-
-## Autoload registration
-
-When you add a manager, register it in `project/project.godot`:
-
-```ini
-[autoload]
-
-RngProvider="*res://src/managers/RngProvider.cs"
-SettingsManager="*res://src/managers/SettingsManager.cs"
-SaveManager="*res://src/managers/SaveManager.cs"
-SceneRouter="*res://src/managers/SceneRouter.cs"
-```
-
-The leading `*` means the node is added to the scene tree.
-
-## Test expectations
-
-- Pure logic in a manager (e.g. seed derivation) is extracted into a plain
-  C# helper class and tested there.
-- `docs/MANUAL_TESTING.md` decides when a manager change needs manual
-  testing. If a manager needs heavy test setup, it's probably doing too much —
-  split it.
+`docs/MANUAL_TESTING.md` decides when a manager change needs manual
+testing.

@@ -7,7 +7,7 @@ namespace NodeRunner.Ui.Tests;
 
 /// <summary>
 /// Icons sample Linear so they stay smooth at fractional UI sizes; text keeps the project's Nearest
-/// (#734; "Icon filtering" in docs/UI_DIRECTION.md). Calls are bound with Roslyn, per type: the filter
+/// (#734; "Icon filtering" in project/src/ui/lib/AGENTS.md). Calls are bound with Roslyn, per type: the filter
 /// is set on the node that draws, which the call that loads the icon does not name.
 /// </summary>
 public sealed partial class UiIconFilterGuardTests

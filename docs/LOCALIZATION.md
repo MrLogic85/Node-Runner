@@ -1,14 +1,31 @@
 # Localization
 
-How Node Runner's text gets into other languages. The game is written in
+How Node Runner's text is written and translated. The game is written in
 English, and the English text is the translation key (gettext msgid).
 `docs/ARCHITECTURE.md` → "UI text and translation" owns how text crosses
-the layers; `docs/UI_DIRECTION.md` → "Text and translation" owns the rules
-for showing it.
+the layers, and `project/src/ui/AGENTS.md` how UI code shows it.
 
-The game ships in English only (`docs/ROADMAP.md` → "Non-goals"). Text
-still goes through Godot's translation system, as the rules above say, so a
-language can be added later without code changes.
+The game ships in English only (`docs/ROADMAP.md` → "Non-goals"), but all
+text goes through Godot's translation system (#682), so adding a language
+needs no code changes.
+
+## Text rules
+
+- Text written in a scene is English and is its own translation key.
+- Text the player wrote, such as a creation's or part's own name, is never
+  translated. A default name such as "Joint 2" is. A creation's default
+  name, such as "Untitled Creation", is saved in the player's language when
+  it is made and is their own text from then on (#757, #759).
+- Godot translates whole messages only, so text is never put together in
+  code (#773).
+- Counted text is one whole sentence per plural form, and Godot picks the
+  form; never add an "s" in code.
+- Numbers are arguments, never part of the English: "{0} m", not "2.5 m".
+  Godot swaps in the language's own digits (#756).
+- Uppercase is display only and applied after translating, by the
+  TextServer in the current language, never by .NET casing (#776).
+- A translation context tells two meanings of the same English apart, such
+  as "Run" the verb and "Run" the noun (#777).
 
 ## The template
 
@@ -41,12 +58,11 @@ The template holds:
   follows it through locals, fields, parameters, returns, records and
   `?:`/`??`/switch branches.
 
-Text without letters, such as "—" or "1", is left out. The test fails when
-a `UiText` message cannot be traced to literal text, such as an
-interpolated string, when a counted text or context is not literal, or when
-one English text is used both alone and counted. Text set directly on a
-control that does not come from a literal, such as a creation's name, is
-not in the template.
+Text without letters, such as "—" or "1", and text that does not come from
+a literal, such as a creation's name, are left out. The test fails on a
+`UiText` it cannot trace to literal text (an interpolated string, or a
+non-literal plural or context) and on an English text used both alone and
+counted.
 
 The galleries (Component Gallery, Popup Gallery, Colors & Styles and
 Toolbars) are developer tools, so they stay in English and are left out.
@@ -57,14 +73,11 @@ harmless.
 ### Why not Godot's generator
 
 Godot's own POT generator (Project Settings → Localization → Template
-Generation) runs only from the editor UI, has no command-line or script
-entry, and reads only scenes and GDScript. It would miss our components'
-text properties, every `UiText` and all text set in C#, and it cannot be
-checked in a test. So we generate the template ourselves.
+Generation) runs only from the editor UI and reads only scenes and
+GDScript. It would miss our components' text properties, every `UiText` and
+all text set in C#, and it cannot be checked in a test.
 
 ## Adding a language
-
-No code changes are needed, only these steps.
 
 1. Create `project/locale/<language>.po` from `messages.pot`, for example
    with Poedit (New from POT) or `msginit --locale=sv -i messages.pot -o
