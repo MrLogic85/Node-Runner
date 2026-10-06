@@ -111,8 +111,9 @@ sizes on screen at any zoom.
   part from it onto the creature (see Parts tray below). Parts never adds a
   node.
 - **Beams:** with nothing selected, the panel lists link types: Beam, Piston,
-  Spring and later Wing. Beam is picked each time the tool is entered;
-  selecting a part and clearing it keeps the picked link. Drag from an
+  Spring and later Wing. Beam is picked when Build opens; the picked link
+  then stays for the visit, across tool switches and selections (#874). It
+  is not saved. Drag from an
   unselected joint to a different joint to draw the picked link. A Beam
   preview only snaps to a node the beam could join
   (`BuildViewModel.CanConnect`); releasing anywhere else adds nothing. A
@@ -137,8 +138,7 @@ sizes on screen at any zoom.
   joint's ring turn dashed danger, and dropping there shows the reason at the
   joint: "A beam already joins these nodes" or "These nodes already have a
   piston". Dropping away from a joint places nothing and shows nothing. The
-  picked link stays after placement until another tool is
-  entered. A new Piston is not selected. Taps hit a joint, then a sensor, then
+  picked link stays after placement. A new Piston is not selected. Taps hit a joint, then a sensor, then
   a Piston, then a beam. Deleting a joint deletes its Pistons.
 - **Spring (#453):** placed like a Piston, with the same refusals; a pair
   that has a Spring refuses another link with "These nodes already have a
@@ -228,7 +228,8 @@ tool's panel: Parts shows the Parts tray (#374), Beams shows the link list
 list with the open tab's name, its parts as compact `UiPartRow`s and one help
 line for the tab. Each Build visit opens the tray on the first tab with an
 available part (`PartTray.OpeningGroup`, today On a joint), so a tab of padlocks
-never reads as every part being locked (#887). `NodeRunner.App.ViewModels.PartTray`
+never reads as every part being locked (#887). The open tab then stays for the
+visit, across tool switches (#874). `NodeRunner.App.ViewModels.PartTray`
 owns the groups, their order, the help lines and each row's state; the screen
 only maps parts to glyphs. Every implemented part is unlimited until #525, so
 rows show no count. A part not yet implemented is a dashed row with a lock,

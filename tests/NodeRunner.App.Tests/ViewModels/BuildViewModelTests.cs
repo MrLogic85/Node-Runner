@@ -180,14 +180,28 @@ public sealed class BuildViewModelTests
         Should.Throw<InvalidOperationException>(() => build.SetParameter(PartParameterId.Strength, 20000));
     }
 
+    [Theory]
+    [InlineData(BuildTool.Parts)]
+    [InlineData(BuildTool.Joint)]
+    [InlineData(BuildTool.Select)]
+    public void PickedLink_StaysAcrossToolSwitches(BuildTool other)
+    {
+        var build = new BuildViewModel { ActiveTool = BuildTool.Beam };
+        build.PickLink(BuildLink.Spring);
+
+        build.ActiveTool = other;
+        build.ActiveTool = BuildTool.Beam;
+
+        build.PickedLink.ShouldBe(BuildLink.Spring);
+    }
+
     [Fact]
-    public void ActiveTool_EnteringBeams_PicksBeamEachTime()
+    public void Load_PicksBeamAgain()
     {
         var build = new BuildViewModel { ActiveTool = BuildTool.Beam };
         build.PickLink(BuildLink.Piston);
 
-        build.ActiveTool = BuildTool.Parts;
-        build.ActiveTool = BuildTool.Beam;
+        build.Load(new CreatureBuilder().Build());
 
         build.PickedLink.ShouldBe(BuildLink.Beam);
     }
