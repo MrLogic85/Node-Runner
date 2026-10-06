@@ -133,6 +133,7 @@ public partial class BuildHost : Node, IRoutedScene
         _buildScreen.DeleteCreationRequested += RequestDeleteActiveCreation;
         _buildScreen.PartNameChanged += Build.RenamePart;
         _buildScreen.DeleteSelectionRequested += Build.DeleteSelectedParts;
+        _buildScreen.CopySelectionRequested += Build.CopySelectedParts;
     }
 
     // Train setup and Training open in their own scenes from the saved creation, so the edits save

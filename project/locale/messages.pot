@@ -186,6 +186,7 @@ msgstr ""
 msgid "Continue"
 msgstr ""
 
+#: project/scenes/screens/BuildScreen.tscn
 #: project/scenes/widgets/CreationCard.tscn
 msgid "Copy"
 msgstr ""
@@ -202,6 +203,12 @@ msgstr ""
 #: libs/NodeRunner.App/Services/ExampleCopyWorkflow.cs
 msgid "Copy of {0}"
 msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs
+msgid "Copy {0}"
+msgid_plural "Copy {0}"
+msgstr[0] ""
+msgstr[1] ""
 
 #: project/src/hosts/ExamplesHost.cs
 msgid "Could not copy {0}. Try again."
@@ -629,6 +636,10 @@ msgstr ""
 msgid "Select"
 msgstr ""
 
+#: libs/NodeRunner.App/ViewModels/BuildViewModel.Copy.cs
+msgid "Select both its joints"
+msgstr ""
+
 #: project/scenes/screens/TrainSetupScreen.tscn
 msgid "Selected"
 msgstr ""
@@ -965,6 +976,10 @@ msgstr ""
 
 #: project/scenes/widgets/ShadowStrip.tscn
 msgid "Worse shadows"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/BuildViewModel.Copy.cs
+msgid "Would change the brain"
 msgstr ""
 
 #: project/scenes/ui/UiDialogContent.tscn

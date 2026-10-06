@@ -424,7 +424,19 @@ public sealed class BuildPresentationViewModelTests
             ShowFrameRows: true,
             UiText.Counted("Delete {0}", "Delete {0}", 3),
             UiText.Plain("Links on a deleted joint go with it."),
-            CanDelete: true));
+            CanDelete: true,
+            UiText.Counted("Copy {0}", "Copy {0}", 3),
+            CanCopy: true));
+    }
+
+    [Fact]
+    public void Selection_WithAPartCopyCannotTake_DimsCopy()
+    {
+        var build = new BuildViewModel();
+        build.Load(PistonCreature());
+        build.ReplaceSelection(PartSet.None with { Nodes = new HashSet<int> { 1 }, Pistons = new HashSet<int> { 301 } });
+
+        new BuildPresentationViewModel(build).Selection!.CanCopy.ShouldBeFalse();
     }
 
     [Fact]

@@ -89,6 +89,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
         _history.Clear();
         _shownLooseNodes.Clear();
         _showPieces = false;
+        _shownCopyBlockers = [];
         _advancedSettingsOpen = false;
         // Joint is the default tool; a locked Creation cannot add joints yet (#896), so it opens on Parts.
         ActiveTool = moveOnly ? BuildTool.Parts : BuildTool.Joint;
@@ -331,8 +332,8 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     /// <summary>
     /// The messages Build shows in the drawing, each beside the part it is about: why the last
     /// dropped part was refused (#376), each loose joint <see cref="ShowTrainingBlockers"/> pointed
-    /// at (#844) and each separate piece's joint nearest another piece (#930), then each beam or
-    /// link too short to train (#593). Listed most important first:
+    /// at (#844), each separate piece's joint nearest another piece (#930) and each part a dimmed
+    /// Copy pointed at (#937), then each beam or link too short to train (#593). Listed most important first:
     /// notes that would overlap stack, the first listed nearest its part.
     /// </summary>
     public IReadOnlyList<CanvasNote> CanvasNotes()
@@ -355,6 +356,8 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
         {
             notes.AddRange(pieces.Select(piece => NotConnected(NearestOtherPiece(piece, pieces))));
         }
+
+        notes.AddRange(_shownCopyBlockers.Where(note => Exists(note.Target)));
 
         foreach (var beam in Beams)
         {

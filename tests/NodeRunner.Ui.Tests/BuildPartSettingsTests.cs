@@ -66,19 +66,22 @@ public sealed class BuildPartSettingsTests
     }
 
     [Fact]
-    public void Selection_HasSharedSettings_TheThreeHandles_ThenDeleteAndItsNote_WithNoCloseButton()
+    public void Selection_HasSharedSettings_TheThreeHandles_ThenCopyDeleteAndItsNote_WithNoCloseButton()
     {
         Children("/Selection").ShouldBe(["SelectionSettings", "SelectionEmptyNote", "SelectionRows", "SelectionActions"]);
         Children("/Selection/SelectionSettings").ShouldBe(["SelectionParameters", "SelectionAdvancedGap", "SelectionAdvanced", "SelectionSettingsNote"]);
         Children("/Selection/SelectionSettings/SelectionAdvanced").ShouldBe(["SelectionAdvancedParameters"]);
         Children("/Selection/SelectionRows").ShouldBe(["SelectionMove", "SelectionRotate", "SelectionScale"]);
-        Children("/Selection/SelectionActions").ShouldBe(["SelectionDelete", "SelectionDeleteNote"]);
+        Children("/Selection/SelectionActions").ShouldBe(["SelectionCopy", "SelectionDelete", "SelectionDeleteNote"]);
         _build.ShouldNotContain(node => node.Name == "SelectionClear");
 
         int[] icons = [(int)UiIconId.Move, (int)UiIconId.Rotate, (int)UiIconId.Scale];
         var rows = _build.Where(node => node.Parent?.EndsWith("/SelectionRows", StringComparison.Ordinal) == true).ToList();
         rows.ShouldAllBe(row => row.Script == "res://src/ui/lib/UiInfoRow.cs");
         rows.Select(row => row.Node.Body).Zip(icons).ShouldAllBe(pair => pair.First.Contains($"IconId = {pair.Second}"));
+        var copy = _build.Single(node => node.Name == "SelectionCopy").Node.Body;
+        copy.ShouldContain($"IconId = {(int)UiIconId.Copy}");
+        copy.ShouldNotContain("Kind =");
         _build.Single(node => node.Name == "SelectionDelete").Node.Body.ShouldContain($"Kind = {(int)UiButtonKind.Tertiary}");
     }
 

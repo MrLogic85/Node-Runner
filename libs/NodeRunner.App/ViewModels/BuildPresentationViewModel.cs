@@ -210,7 +210,9 @@ public sealed class BuildPresentationViewModel
                 showFrameRows,
                 UiText.Counted("Delete {0}", "Delete {0}", count),
                 deleteNote,
-                CanDelete: !_build.IsMoveOnly);
+                CanDelete: !_build.IsMoveOnly,
+                UiText.Counted("Copy {0}", "Copy {0}", count),
+                _build.CanCopySelection);
         }
     }
 

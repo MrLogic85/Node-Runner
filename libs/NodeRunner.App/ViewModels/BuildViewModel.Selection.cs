@@ -260,6 +260,7 @@ public sealed partial class BuildViewModel
 
     private void NotifySelectionChanged()
     {
+        _shownCopyBlockers = [];
         OnPropertyChanged(nameof(SelectedNodeCount));
         OnPropertyChanged(nameof(SelectedBeamCount));
         OnPropertyChanged(nameof(SelectedPartCount));
