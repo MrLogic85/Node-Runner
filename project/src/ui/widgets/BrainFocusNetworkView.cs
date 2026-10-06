@@ -6,24 +6,18 @@ namespace NodeRunner.Ui.Widgets;
 
 /// <summary>
 /// Draws the live direct brain: labelled inputs and outputs under their column headings, weighted connections and the selected neuron.
-/// With a selection, connections that don't touch it fade and its strongest partners light up. Neurons shrink to fit tall columns; when rows
-/// get too tight for text, only highlighted neurons keep their label.
+/// With a selection, connections that don't touch it fade and its strongest partners light up. Neurons shrink to fit tall columns, and
+/// every row keeps its label: when the rows would get closer than a label line, the network scrolls under its pinned headings
+/// (<see cref="BrainFocusRowLayout"/>, #908). The rows sit in the scene's ScrollContainer, which owns the drag, fling and wheel;
+/// a tap on a row selects on release unless the drag scrolled, as the creation cards do.
 /// </summary>
 public partial class BrainFocusNetworkView : Control
 {
     private const float _sideInset = 12f;
-    private const float _verticalInset = 10f;
-
-    // Room above the first row for the column headings; the sheet gives the card this much more height.
-    private const float _headingBand = 12f;
     private const float _labelGap = 10f;
     private const float _maxLabelShare = 0.4f;
-    private const float _maxRadius = 16f;
-    private const float _minRadius = 3f;
-    private const float _radiusPerRow = 0.4f;
-    private const float _rowSpacingPerFontSize = 1.1f;
-    private const float _haloGap = 4f;
-    private const float _haloWidth = 3f;
+    private const float _haloGap = BrainFocusRowLayout.HaloGap;
+    private const float _haloWidth = BrainFocusRowLayout.HaloWidth;
     private const float _selectedEdgeMinAlpha = 0.4f;
     private const float _selectedEdgeMinWidth = 1.5f;
     private const float _tapRadius = 24f;
@@ -31,8 +25,15 @@ public partial class BrainFocusNetworkView : Control
     private const UiTokens.Typography _headingStyle = UiTokens.Typography.Overline;
 
     private readonly Dictionary<(int Layer, int Neuron), Vector2> _positions = new();
-    private float _radius = _maxRadius;
+    private float _radius = BrainFocusRowLayout.MaxRadius;
+    private bool _tapPending;
     private BrainFocusPresentationViewModel? _viewModel;
+
+    // The rows, edges and dots draw in Rows, inside the scene's Scroll. Scroll starts a gap below the
+    // headings and clips only while the rows overflow, so scrolled rows are cut before the headings.
+    private ScrollContainer? _scroll;
+    private BrainFocusRows? _body;
+    private float _clipTop;
 
     public BrainFocusPresentationViewModel? ViewModel
     {
@@ -50,8 +51,21 @@ public partial class BrainFocusNetworkView : Control
                 _viewModel.PropertyChanged += OnViewModelChanged;
             }
 
-            QueueRedraw();
+            UpdateRows();
+            Redraw();
         }
+    }
+
+    public override void _Ready()
+    {
+        _scroll = GetNode<ScrollContainer>("Scroll");
+        _clipTop = _scroll.OffsetTop;
+        _scroll.ScrollStarted += () => _tapPending = false;
+        _body = GetNode<BrainFocusRows>("Scroll/Rows");
+        _body.Draw += DrawBody;
+        _body.GuiInput += OnRowsInput;
+        Resized += UpdateRows;
+        UpdateRows();
     }
 
     public override void _ExitTree()
@@ -66,30 +80,100 @@ public partial class BrainFocusNetworkView : Control
     {
         if (what == NotificationThemeChanged || what == NotificationTranslationChanged)
         {
-            QueueRedraw();
+            UpdateRows();
+            Redraw();
         }
     }
 
+    // A tap on the headings, above the rows, clears the selection.
     public override void _GuiInput(InputEvent @event)
+    {
+        if (_viewModel is { HasNetwork: true } && PointerInput.TryGetPressPosition(@event, out _))
+        {
+            _viewModel.ClearSelection();
+            AcceptEvent();
+        }
+    }
+
+    // Unaccepted, so the ScrollContainer still sees the drag; its ScrollStarted cancels the tap.
+    private void OnRowsInput(InputEvent @event)
     {
         if (_viewModel is null || !_viewModel.HasNetwork)
         {
             return;
         }
 
-        if (@event is InputEventMouseButton { Pressed: true, ButtonIndex: MouseButton.Left } mouse)
+        if (PointerInput.TryGetPressPosition(@event, out _))
         {
-            SelectNearestNeuron(mouse.Position);
+            _tapPending = true;
+        }
+        else if (PointerInput.TryGetReleasePosition(@event, out var release) && _tapPending)
+        {
+            _tapPending = false;
+            SelectNearestNeuron(release + new Vector2(0, _clipTop));
         }
     }
 
+    // Sizes the rows for the ScrollContainer and clips only while they overflow, as UiToolbar's field does.
+    private void UpdateRows()
+    {
+        if (_body is null || _scroll is null)
+        {
+            return;
+        }
+
+        var rows = RowLayout();
+        _body.ContentHeight = rows is { Scrolls: true } scrolled ? scrolled.ContentHeight - _clipTop : 0;
+        _scroll.ClipContents = rows?.Scrolls == true;
+    }
+
+    private BrainFocusRowLayout? RowLayout() =>
+        _viewModel is { HasNetwork: true, Layers.Count: > 0 }
+            ? BrainFocusRowLayout.For(Size.Y, _viewModel.Layers.Max(layer => layer.Neurons.Count), UiThemeLookup.FontSize(this, _labelStyle), _clipTop)
+            : null;
+
+    private void Redraw()
+    {
+        QueueRedraw();
+        _body?.QueueRedraw();
+    }
+
+    // The view draws the headings and the waiting state; its body draws the network.
     public override void _Draw()
+    {
+        if (Layout() is not { } layout)
+        {
+            DrawWaitingState();
+            return;
+        }
+
+        DrawHeadings(layout.Texts, layout.HeadingFont, layout.HeadingSize, layout.LabelWidths);
+    }
+
+    private void DrawBody()
+    {
+        if (_body is null || Layout() is not { } layout)
+        {
+            return;
+        }
+
+        var toBody = Transform2D.Identity.Translated(new Vector2(0, -_clipTop));
+        _body.DrawSetTransformMatrix(toBody);
+        DrawNetwork(_body, toBody);
+        DrawLabels(_body, layout.Texts, layout.Font, layout.FontSize, layout.LabelWidths);
+        _body.DrawSetTransformMatrix(Transform2D.Identity);
+    }
+
+    private sealed record DrawLayout(ColumnText[] Texts, Font Font, int FontSize, Font HeadingFont, int HeadingSize, (float Input, float Output) LabelWidths);
+
+    // Measures the labels and places every row in view coordinates, before scrolling. Both draws call
+    // it, so neither depends on the other drawing first.
+    private DrawLayout? Layout()
     {
         _positions.Clear();
         if (_viewModel is null || !_viewModel.HasNetwork || _viewModel.Layers.Count == 0)
         {
-            DrawWaitingState();
-            return;
+            return null;
         }
 
         var font = GetThemeFont("font", UiTokens.Variation(_labelStyle));
@@ -99,9 +183,7 @@ public partial class BrainFocusNetworkView : Control
         var texts = InLanguage(_viewModel.Layers);
         var labelWidths = LabelColumnWidths(texts, font, fontSize, headingFont, headingSize);
         CacheNeuronPositions(labelWidths);
-        DrawNetwork();
-        DrawLabels(texts, font, fontSize, labelWidths);
-        DrawHeadings(texts, headingFont, headingSize, labelWidths);
+        return new DrawLayout(texts, font, fontSize, headingFont, headingSize, labelWidths);
     }
 
     // Each column's heading and neuron labels in the player's language, translated once per draw
@@ -114,9 +196,9 @@ public partial class BrainFocusNetworkView : Control
     private sealed record ColumnText(string Heading, string[] Labels);
 
     // In window pixels, so the edges, dots and halo are smooth at any UI size (#733).
-    private void DrawNetwork()
+    private void DrawNetwork(CanvasItem canvas, Transform2D drawTransform)
     {
-        using var pen = UiPixelPen.Begin(this);
+        using var pen = UiPixelPen.Begin(canvas, drawTransform);
         foreach (var edge in _viewModel!.Edges)
         {
             var faded = _viewModel.Selected is not null && !edge.IsHighlighted;
@@ -179,12 +261,9 @@ public partial class BrainFocusNetworkView : Control
     private void CacheNeuronPositions((float Input, float Output) labelWidths)
     {
         var layers = _viewModel!.Layers;
-        var top = _verticalInset + _headingBand;
-        var bottom = Math.Max(top + 1, Size.Y - _verticalInset);
         var tallest = layers.Max(layer => layer.Neurons.Count);
-        var spacing = tallest > 1 ? (bottom - top) / (tallest - 1) : bottom - top;
-        _radius = Math.Clamp(spacing * _radiusPerRow, _minRadius, _maxRadius);
-
+        var rows = RowLayout()!.Value;
+        _radius = rows.Radius;
         var left = _sideInset + labelWidths.Input + _labelGap + _radius;
         var right = Math.Max(left + 1, Size.X - _sideInset - labelWidths.Output - _labelGap - _radius);
         for (var layerIndex = 0; layerIndex < layers.Count; layerIndex++)
@@ -195,38 +274,30 @@ public partial class BrainFocusNetworkView : Control
                 : Mathf.Lerp(left, right, (float)layerIndex / (layers.Count - 1));
             for (var neuronIndex = 0; neuronIndex < layer.Neurons.Count; neuronIndex++)
             {
-                var y = layer.Neurons.Count == 1
-                    ? (top + bottom) / 2
-                    : Mathf.Lerp(top, bottom, (float)neuronIndex / (layer.Neurons.Count - 1));
+                var y = rows.RowY(neuronIndex, layer.Neurons.Count, tallest);
                 _positions[(layerIndex, neuronIndex)] = new Vector2(x, y);
             }
         }
     }
 
-    private void DrawLabels(ColumnText[] texts, Font font, int fontSize, (float Input, float Output) labelWidths)
+    // Every row keeps its label in both columns (#908); the layout keeps rows a label line apart.
+    private void DrawLabels(CanvasItem canvas, ColumnText[] texts, Font font, int fontSize, (float Input, float Output) labelWidths)
     {
         var layers = _viewModel!.Layers;
-        var minRowSpacing = fontSize * _rowSpacingPerFontSize;
         var baselineOffset = (font.GetAscent(fontSize) - font.GetDescent(fontSize)) / 2;
         for (var layerIndex = 0; layerIndex < layers.Count; layerIndex++)
         {
             var neurons = layers[layerIndex].Neurons;
             var isInput = layerIndex == 0;
             var width = isInput ? labelWidths.Input : labelWidths.Output;
-            var rowsFit = neurons.Count < 2 || (Size.Y - _headingBand - (2 * _verticalInset)) / (neurons.Count - 1) >= minRowSpacing;
             foreach (var neuron in neurons)
             {
-                if (!rowsFit && !neuron.IsHighlighted)
-                {
-                    continue;
-                }
-
                 var position = _positions[(neuron.LayerIndex, neuron.Index)];
                 var x = isInput
                     ? position.X - _radius - _labelGap - width
                     : position.X + _radius + _labelGap;
                 var color = UiThemeLookup.Color(this, neuron.IsHighlighted ? UiTokens.Color.Ink : UiTokens.Color.Muted);
-                DrawString(
+                canvas.DrawString(
                     font,
                     new Vector2(x, position.Y + baselineOffset),
                     texts[layerIndex].Labels[neuron.Index],
@@ -301,17 +372,13 @@ public partial class BrainFocusNetworkView : Control
         pen.DashedLine(from, to, color, width, dash: 10, gap: 7);
     }
 
-    // Each row is a band across its label and dot, so tapping the name works; a tap outside every row,
-    // or on the headings, clears.
+    // Each row is a band across its label and dot, so tapping the name works; a tap outside every row
+    // clears. The position is in view coordinates before scrolling. A row scrolled under the headings
+    // or out of the card can't be tapped.
     private void SelectNearestNeuron(Vector2 position)
     {
         var layers = _viewModel!.Layers;
-        if (position.Y < _headingBand)
-        {
-            _viewModel.ClearSelection();
-            return;
-        }
-
+        var scroll = _scroll?.ScrollVertical ?? 0;
         var column = -1;
         for (var layerIndex = 0; layerIndex < layers.Count && column < 0; layerIndex++)
         {
@@ -335,8 +402,9 @@ public partial class BrainFocusNetworkView : Control
         {
             foreach (var neuron in layers[column].Neurons)
             {
-                var distance = Math.Abs(_positions[(column, neuron.Index)].Y - position.Y);
-                if (distance < bestDistance)
+                var y = _positions[(column, neuron.Index)].Y;
+                var distance = Math.Abs(y - position.Y);
+                if (y - scroll >= _clipTop && y - scroll <= Size.Y && distance < bestDistance)
                 {
                     bestDistance = distance;
                     best = neuron.Index;
@@ -356,6 +424,7 @@ public partial class BrainFocusNetworkView : Control
 
     private void OnViewModelChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs args)
     {
-        QueueRedraw();
+        UpdateRows();
+        Redraw();
     }
 }
