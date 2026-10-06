@@ -355,9 +355,11 @@ component READMEs under `reference design/components/` guide its presentation.
     run's front distance, and the best marker stays at the saved best on
     this map.
   - **Camera (#668, #675).** `ArenaCamera` frames the followed shadow
-    through `ArenaFraming`, read every frame from its centre
+    through `ArenaFraming`, read every physics tick from its centre
     (`Creature.CenterOfMass`, the point its score is measured from) and
-    its box (`Creature.Bounds`, the node colliders). Only the followed
+    its box (`Creature.Bounds`, the node colliders). It moves on physics
+    ticks, as the creatures do, so on a screen faster than physics (a
+    120 Hz phone) the world never judders against it (#909). Only the followed
     shadow decides the framing; the others may leave the view.
     - *Sideways* `ArenaFollow` keeps the centre 43% from the left, as in
       the reference. Smoothing has two stages, both in pure code (the

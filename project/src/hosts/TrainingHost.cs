@@ -306,7 +306,7 @@ public partial class TrainingHost : Node, IRoutedScene
         StartSign.StartX = Ruler.StartX;
         Camera.GroundY = GroundTopY;
 
-        // Read every frame; OnFollowedShadowChanged retargets it when the followed shadow changes.
+        // Read every physics tick; OnFollowedShadowChanged retargets it when the followed shadow changes.
         Camera.Follow(() => Framed(_followed ?? creature));
     }
 
