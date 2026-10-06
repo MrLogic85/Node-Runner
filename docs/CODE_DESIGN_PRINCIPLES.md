@@ -137,6 +137,10 @@ generation++;
 Assume the reader knows C#. Do not assume they know why *this* algorithm cares
 about *that* invariant.
 
+Docs and comments describe what is true now and why. Pending work, such as
+TODOs, "move this when touched" lists and wished-for improvements, goes in a
+GitHub issue; the doc or comment may link to it.
+
 ## 10. Testing philosophy
 
 - **Unit tests** for `libs/NodeRunner.ML/`, `libs/NodeRunner.Domain/` and
