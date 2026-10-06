@@ -809,10 +809,6 @@ msgstr ""
 msgid "The creation is locked so you do not change the size or values of its model by accident. Changes to how the model behaves are still allowed. Unlock to use every tool that changes the model. Adding or removing a part keeps the training, but adds or removes that part of the model. Removing a part and adding the same kind back does not bring its training back; use Undo instead."
 msgstr ""
 
-#: libs/NodeRunner.App/Lifecycle/CreatureReadiness.cs
-msgid "The creation is {0} pieces that are not connected. Connect them with links or remove all but one."
-msgstr ""
-
 #: libs/NodeRunner.App/ViewModels/PartParameters.cs
 msgid "The length the coil wants to be"
 msgstr ""
@@ -1092,6 +1088,12 @@ msgstr[1] ""
 #: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs
 msgid "{0} piece not connected"
 msgid_plural "{0} pieces not connected"
+msgstr[0] ""
+msgstr[1] ""
+
+#: libs/NodeRunner.App/Lifecycle/CreatureReadiness.cs
+msgid "{0} piece of the creation is not connected to the rest. Connect it with a link or remove it."
+msgid_plural "{0} pieces of the creation are not connected to each other. Connect them with links or remove all but one."
 msgstr[0] ""
 msgstr[1] ""
 

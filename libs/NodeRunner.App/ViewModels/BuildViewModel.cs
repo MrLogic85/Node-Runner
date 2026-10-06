@@ -94,7 +94,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
         ActiveTool = moveOnly ? BuildTool.Parts : BuildTool.Joint;
         SetPickedLink(BuildLink.Beam);
         PlacementNote = null;
-        AnatomyChanged?.Invoke(this, EventArgs.Empty);
+        RaiseAnatomyChanged();
     }
 
     /// <summary>
@@ -193,6 +193,17 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
         PruneSelection(selectedServoJoints);
         PlacementNote = null;
         NotifySelectionChanged();
+        RaiseAnatomyChanged();
+    }
+
+    // A creation joined into one piece forgets the tap's piece notes (#930): a later split waits for the next tap.
+    private void RaiseAnatomyChanged()
+    {
+        if (_showPieces && Pieces().Count <= 1)
+        {
+            _showPieces = false;
+        }
+
         AnatomyChanged?.Invoke(this, EventArgs.Empty);
     }
 
@@ -320,8 +331,8 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     /// <summary>
     /// The messages Build shows in the drawing, each beside the part it is about: why the last
     /// dropped part was refused (#376), each loose joint <see cref="ShowTrainingBlockers"/> pointed
-    /// at (#844) and the first joint of each separate piece (#930), then each beam or link too short
-    /// to train (#593). Listed most important first:
+    /// at (#844) and each separate piece's joint nearest another piece (#930), then each beam or
+    /// link too short to train (#593). Listed most important first:
     /// notes that would overlap stack, the first listed nearest its part.
     /// </summary>
     public IReadOnlyList<CanvasNote> CanvasNotes()
@@ -342,7 +353,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
 
         if (_showPieces && Pieces() is { Count: > 1 } pieces)
         {
-            notes.AddRange(pieces.Select(piece => NotConnected(piece[0])));
+            notes.AddRange(pieces.Select(piece => NotConnected(NearestOtherPiece(piece, pieces))));
         }
 
         foreach (var beam in Beams)
@@ -374,6 +385,39 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
         }
 
         return notes;
+
+        // The piece's joint nearest another piece, where a joining link would go; the first on a tie.
+        int NearestOtherPiece(IReadOnlyList<int> piece, IReadOnlyList<IReadOnlyList<int>> pieces)
+        {
+            var nearest = piece[0];
+            var nearestDistanceSquared = double.PositiveInfinity;
+            foreach (var id in piece)
+            {
+                var position = Nodes[NodeIndexOf(id)].Position;
+                foreach (var other in pieces)
+                {
+                    if (other == piece)
+                    {
+                        continue;
+                    }
+
+                    foreach (var otherId in other)
+                    {
+                        var otherPosition = Nodes[NodeIndexOf(otherId)].Position;
+                        var dx = position.X - otherPosition.X;
+                        var dy = position.Y - otherPosition.Y;
+                        var distanceSquared = (dx * dx) + (dy * dy);
+                        if (distanceSquared < nearestDistanceSquared)
+                        {
+                            nearestDistanceSquared = distanceSquared;
+                            nearest = id;
+                        }
+                    }
+                }
+            }
+
+            return nearest;
+        }
 
         static CanvasNote NotConnected(int nodeId) =>
             new(CanvasNoteKind.Danger, new CreatureElementSelection(CreatureElementKind.Node, nodeId), UiText.Plain("Not connected"));
@@ -420,8 +464,8 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     /// <summary>
     /// Answers a tap on the dimmed play button (#844): every joint loose now gets a "Not connected"
     /// note in <see cref="CanvasNotes"/>, kept until it is joined or removed, and so does every
-    /// piece while there is more than one (#930). Too-short parts already have theirs. A joint
-    /// loosened later waits for the next tap.
+    /// piece until the creation is one piece (#930). Too-short parts already have theirs. A joint
+    /// loosened or a piece split off later waits for the next tap.
     /// </summary>
     public void ShowTrainingBlockers()
     {
@@ -543,7 +587,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
         }
 
         var id = _history.Change(() => _builder.AddNode(BuildArea.Clamp(position, NodeDef.PlainJointRadius)));
-        AnatomyChanged?.Invoke(this, EventArgs.Empty);
+        RaiseAnatomyChanged();
         return id;
     }
 
@@ -551,7 +595,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     public void MoveNode(int nodeId, Vector2D position)
     {
         _history.Change(() => _builder.MoveNode(nodeId, BuildArea.Clamp(position, NodeRadius(nodeId))));
-        AnatomyChanged?.Invoke(this, EventArgs.Empty);
+        RaiseAnatomyChanged();
     }
 
     /// <summary>
@@ -608,7 +652,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
 
         if (changed)
         {
-            AnatomyChanged?.Invoke(this, EventArgs.Empty);
+            RaiseAnatomyChanged();
         }
     }
 
@@ -671,7 +715,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
         }
 
         _history.Change(() => _builder.Rename(partId, newName));
-        AnatomyChanged?.Invoke(this, EventArgs.Empty);
+        RaiseAnatomyChanged();
     }
 
     private string? PartName(int partId) => PartNames.Own(_builder.Nodes, _builder.Beams, _builder.Sensors, _builder.Servos, _builder.Pistons, _builder.Springs, partId);
@@ -795,7 +839,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
             ClearSelectionSets();
         }, Selection);
         NotifySelectionChanged();
-        AnatomyChanged?.Invoke(this, EventArgs.Empty);
+        RaiseAnatomyChanged();
     }
 
     /// <summary>

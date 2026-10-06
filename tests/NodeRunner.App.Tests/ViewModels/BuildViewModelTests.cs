@@ -958,27 +958,58 @@ public sealed class BuildViewModelTests
     }
 
     [Fact]
-    public void ShowTrainingBlockers_NotesEveryPiece_UntilTheyAreJoined()
+    public void ShowTrainingBlockers_NotesEveryPieceAtItsJointNearestAnother_UntilTheyAreJoined()
     {
         var viewModel = new BuildViewModel();
-        viewModel.Load(new CreatureDef(
-            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(200, 0)), new NodeDef(3, new Vector2D(0, 300)), new NodeDef(4, new Vector2D(200, 300))],
-            [new BeamDef(5, 1, 2), new BeamDef(6, 4, 3)],
-            []));
+        viewModel.Load(TwoPieces());
         viewModel.CanvasNotes().ShouldBeEmpty();
 
         viewModel.ShowTrainingBlockers();
 
-        viewModel.CanvasNotes().ShouldBe(
-        [
-            new CanvasNote(CanvasNoteKind.Danger, new CreatureElementSelection(CreatureElementKind.Node, 1), UiText.Plain("Not connected")),
-            new CanvasNote(CanvasNoteKind.Danger, new CreatureElementSelection(CreatureElementKind.Node, 3), UiText.Plain("Not connected")),
-        ]);
+        viewModel.CanvasNotes().ShouldBe([NotConnected(2), NotConnected(4)]);
 
         viewModel.ConnectBeam(2, 4).ShouldBeTrue();
 
         viewModel.CanvasNotes().ShouldBeEmpty();
     }
+
+    [Fact]
+    public void ShowTrainingBlockers_LeavesAPieceSplitOffAfterTheyWereJoinedForTheNextTap()
+    {
+        var viewModel = new BuildViewModel();
+        viewModel.Load(TwoPieces());
+        viewModel.ShowTrainingBlockers();
+        viewModel.ConnectBeam(2, 4).ShouldBeTrue();
+
+        var a = viewModel.PlaceNode(new Vector2D(600, 0));
+        var b = viewModel.PlaceNode(new Vector2D(800, 0));
+        viewModel.ConnectBeam(a, b).ShouldBeTrue();
+
+        viewModel.CanvasNotes().ShouldBeEmpty();
+        viewModel.ShowTrainingBlockers();
+        viewModel.CanvasNotes().ShouldBe([NotConnected(2), NotConnected(a)]);
+    }
+
+    [Fact]
+    public void Load_ForgetsThePiecesTheLastTapPointedAt()
+    {
+        var viewModel = new BuildViewModel();
+        viewModel.Load(TwoPieces());
+        viewModel.ShowTrainingBlockers();
+
+        viewModel.Load(TwoPieces());
+
+        viewModel.CanvasNotes().ShouldBeEmpty();
+    }
+
+    // Joints 1–2 and 3–4: joint 2 and joint 4 are the two pieces' nearest joints.
+    private static CreatureDef TwoPieces() => new(
+        [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(200, 100)), new NodeDef(3, new Vector2D(0, 300)), new NodeDef(4, new Vector2D(200, 300))],
+        [new BeamDef(5, 1, 2), new BeamDef(6, 4, 3)],
+        []);
+
+    private static CanvasNote NotConnected(int nodeId) =>
+        new(CanvasNoteKind.Danger, new CreatureElementSelection(CreatureElementKind.Node, nodeId), UiText.Plain("Not connected"));
 
     [Fact]
     public void ShowTrainingBlockers_LeavesAJointLoosenedLaterForTheNextTap()

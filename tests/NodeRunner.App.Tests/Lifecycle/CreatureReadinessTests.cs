@@ -38,7 +38,10 @@ public sealed class CreatureReadinessTests
             [new PistonDef(6, 3, 4)]);
 
         CreatureReadiness.Problems(creature).ShouldBe(
-            [UiText.Format("The creation is {0} pieces that are not connected. Connect them with links or remove all but one.", 2)]);
+            [UiText.Counted(
+                "{0} piece of the creation is not connected to the rest. Connect it with a link or remove it.",
+                "{0} pieces of the creation are not connected to each other. Connect them with links or remove all but one.",
+                2)]);
         CreatureReadiness.CanTrain(creature).ShouldBeFalse();
     }
 

@@ -57,7 +57,10 @@ public static class CreatureReadiness
         var pieces = Pieces(creature.Nodes, LinkRef.All(creature.Beams, creature.Pistons, creature.Springs)).Count;
         if (pieces > 1)
         {
-            problems.Add(UiText.Format("The creation is {0} pieces that are not connected. Connect them with links or remove all but one.", pieces));
+            problems.Add(UiText.Counted(
+                "{0} piece of the creation is not connected to the rest. Connect it with a link or remove it.",
+                "{0} pieces of the creation are not connected to each other. Connect them with links or remove all but one.",
+                pieces));
         }
 
         foreach (var beam in creature.Beams)
@@ -125,9 +128,12 @@ public static class CreatureReadiness
             var pending = new Stack<int>([node.Id]);
             while (pending.TryPop(out var id))
             {
-                foreach (var next in neighbours[id].Where(next => pieceOf.TryAdd(next, pieceCount)))
+                foreach (var next in neighbours[id])
                 {
-                    pending.Push(next);
+                    if (pieceOf.TryAdd(next, pieceCount))
+                    {
+                        pending.Push(next);
+                    }
                 }
             }
 
