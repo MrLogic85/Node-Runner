@@ -54,7 +54,7 @@ public partial class TrainingHost : Node, IRoutedScene
     // null with nothing selected.
     private Func<string>? _selectedPartName;
     private double _signalRefreshElapsed;
-    // Training's one slow-motion warning per visit (#318); null in Simulate, which races no shadows.
+    // Training's slow-motion chip (#318); null in Simulate, which races one shadow.
     private SlowMotionWatch? _slowMotion;
     private ulong _watchedPhysicsFrames;
     private ulong _watchedUsec;
@@ -165,7 +165,7 @@ public partial class TrainingHost : Node, IRoutedScene
     }
 
     // Counts the physics ticks run against real time; a pause stops physics on purpose, so it starts
-    // the count over. Warns once per visit (#531 D5).
+    // the count over and leaves the chip as it is.
     private void WatchSlowMotion()
     {
         if (_slowMotion is null)
@@ -186,13 +186,7 @@ public partial class TrainingHost : Node, IRoutedScene
             return;
         }
 
-        if (_slowMotion.Advance(seconds, ticks))
-        {
-            UiNotificationLayer.Enqueue(this, new UiNotificationSpec(
-                UiPopupType.Warn,
-                "Slow motion",
-                "Training is running in slow motion. Fewer shadows run smoother on this phone."));
-        }
+        _screen.ShowSlowMotion(_slowMotion.Advance(seconds, ticks));
     }
 
     private CreationDef? LoadRouteCreation()

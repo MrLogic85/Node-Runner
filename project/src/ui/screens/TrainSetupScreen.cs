@@ -1,5 +1,6 @@
 using Godot;
 using NodeRunner.App.Navigation;
+using NodeRunner.App.Services;
 using NodeRunner.App.ViewModels;
 using NodeRunner.Ui.Lib;
 using NodeRunner.Ui.Widgets;
@@ -100,9 +101,18 @@ public partial class TrainSetupScreen : Control
     // The row stays in every state, empty in Simulate, so Run length below it does not move (#318).
     private void BindNote(SettingNote? note)
     {
+        var load = note?.Load ?? ShadowsLoad.Smooth;
+        var color = load switch
+        {
+            ShadowsLoad.TooMany => UiTokens.Color.Danger,
+            ShadowsLoad.Caution => UiTokens.Color.Halo,
+            _ => UiTokens.Color.Muted,
+        };
+        var icon = GetNode<UiIcon>("%ShadowsNoteIcon");
+        icon.Visible = load != ShadowsLoad.Smooth;
+        icon.Color = color;
         var text = GetNode<UiLabel>("%ShadowsNoteText");
-        GetNode<Control>("%ShadowsNoteIcon").Visible = note?.IsWarning == true;
-        text.TextColor = note?.IsWarning == true ? UiTokens.Color.Halo : UiTokens.Color.Muted;
+        text.TextColor = color;
         text.TextSource = note is null ? () => string.Empty : UiTextTranslation.Source(note.Text);
     }
 

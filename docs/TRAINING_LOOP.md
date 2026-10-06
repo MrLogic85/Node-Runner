@@ -484,13 +484,15 @@ component READMEs under `reference design/components/` guide its presentation.
     Godot's `Engine.TimeScale` stretches each step instead of running more
     of them, which changed fitness with speed and made stiff Springs blow
     up. Training goes faster by racing more shadows per generation instead.
-  - **Slow-motion warning** (#318, #531 D5). When a frame needs more than
-    Godot's 8 physics steps, physics falls behind real time. `SlowMotionWatch`
+  - **Slow-motion warning** (#318). When a frame needs more than Godot's
+    8 physics steps, physics falls behind real time. `SlowMotionWatch`
     compares physics ticks with real time in 0.5 s windows (a single
-    hitch, such as a generation change, counts at most 0.25 s) and after
-    3 s below 0.9× Training shows one Warn popup per visit: "Training is
-    running in slow motion. Fewer shadows run smoother on this phone."
-    Pause restarts the count.
+    hitch, such as a generation change, counts at most 0.25 s). After 3 s
+    below 0.9× the arena shows a Warning chip, "Too many shadows!", in its
+    top-left corner. It stays 60 s after the last such stretch, so a player
+    who only glances at the arena still sees it; each new stretch starts
+    the 60 s over. Pause restarts the measuring and leaves the chip as it
+    is. Owner decision: a chip, not a notification.
   - **Brain** (the button or the Brain stage) opens the BrainFocus sheet;
     Android Back closes it before leaving the scene. BrainFocus shows the
     direct brain (#536): a Senses column named by port ("Accel:

@@ -348,14 +348,18 @@ reference would mislead someone working on that surface.
   There is nothing to train" (#845, owner decision); Start still trains.
   BrainFocus for such a creature drops its line legend and shows the same
   warning where the tap hint would be.
-  Under the Shadows slider one `note` line says how the count will run
-  (#318, #531 D3 = a): `muted` "More shadows try more brains at once. Up
-  to N should run smoothly.", then with the warn icon in `halo` "This
-  phone may stutter above N." and "Too many for most phones: training may
-  run in slow motion." N scales with the creature's part count
-  (`ShadowsBudget`, measured on a Galaxy S23), since physics costs about
-  shadows × parts. In Simulate the line stays empty so the layout does not
-  jump. Owner decision.
+  Under the Shadows slider one short `note` line says how the count will
+  run (#318, #531 D3 = a): `muted` "The brain learns faster with more
+  shadows.", then with the warn icon "Phone may stutter above N." in
+  `halo` and "Probably too many shadows." in `danger`. N scales with the
+  creature's part count (`ShadowsBudget`, measured on a Galaxy S23), since
+  physics costs about shadows × parts. In Simulate the line stays empty so
+  the layout does not jump. Owner decision.
+  Training shows slow motion as a Warning chip "Too many shadows!" in the
+  arena's top-left corner, not a notification, since the player only
+  glances at the arena (`docs/TRAINING_LOOP.md` → Slow-motion warning).
+  When the Best flag scrolls past that corner the chip covers it for a
+  moment; the warning outranks the flag. Owner decision.
   Run until power is out (0.18) is disabled with the
   reference's "Needs a battery or generator". Locked maps are disabled cards with a lock,
   not the library's `Locked` card, which means "the only choice". Each map

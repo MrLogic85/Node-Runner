@@ -13,6 +13,7 @@
 [ext_resource type="PackedScene" path="res://scenes/widgets/ShadowStrip.tscn" id="11_shadow_strip"]
 [ext_resource type="Script" uid="uid://cciq0runnobr4" path="res://src/ui/lib/UiCalloutLayer.cs" id="12_callout_layer"]
 [ext_resource type="PackedScene" uid="uid://c7sdp4nel2qx" path="res://scenes/ui/UiSidePanel.tscn" id="13_side_panel"]
+[ext_resource type="Script" uid="uid://b32bnhbgasedd" path="res://src/ui/lib/UiChip.cs" id="14_chip"]
 
 [node name="TrainingScreen" type="Control"]
 layout_mode = 3
@@ -128,6 +129,18 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 script = ExtResource("12_callout_layer")
+
+[node name="SlowMotionChip" type="PanelContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/Arena/ArenaView"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+offset_left = 12.0
+offset_top = 12.0
+mouse_filter = 2
+script = ExtResource("14_chip")
+Text = "Too many shadows!"
+Kind = 1
+IconId = 37
 
 [node name="TrayDivider" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Body/Arena"]
 layout_mode = 2

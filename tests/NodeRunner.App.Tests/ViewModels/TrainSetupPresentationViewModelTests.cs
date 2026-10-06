@@ -172,18 +172,18 @@ public sealed class TrainSetupPresentationViewModelTests
     }
 
     [Theory]
-    [InlineData(32, false, "More shadows try more brains at once. Up to {0} should run smoothly.")]
-    [InlineData(33, true, "This phone may stutter above {0}.")]
-    [InlineData(64, true, "This phone may stutter above {0}.")]
-    [InlineData(65, true, "Too many for most phones: training may run in slow motion.")]
-    public void ShadowsNote_FollowsTheBudget(int shadows, bool warns, string message)
+    [InlineData(32, ShadowsLoad.Smooth, "The brain learns faster with more shadows.")]
+    [InlineData(33, ShadowsLoad.Caution, "Phone may stutter above {0}.")]
+    [InlineData(64, ShadowsLoad.Caution, "Phone may stutter above {0}.")]
+    [InlineData(65, ShadowsLoad.TooMany, "Probably too many shadows.")]
+    public void ShadowsNote_FollowsTheBudget(int shadows, ShadowsLoad load, string message)
     {
         var setup = new TrainSetupPresentationViewModel(Creation(
             new TrainSettingsDef(shadows, 10),
             creature: ShadowsBudgetTests.Creature(ShadowsBudget.ReferenceParts)));
 
         var note = setup.ShadowsNote.ShouldNotBeNull();
-        note.IsWarning.ShouldBe(warns);
+        note.Load.ShouldBe(load);
         note.Text.ShouldBe(message.Contains("{0}", StringComparison.Ordinal)
             ? UiText.Format(message, ShadowsBudget.ReferenceSmoothLimit)
             : UiText.Plain(message));
@@ -197,9 +197,9 @@ public sealed class TrainSetupPresentationViewModelTests
         setup.SetShadows(1);
 
         setup.Settings.Shadows.ShouldBe(TrainSettingsDef.MaxShadows);
-        setup.ShadowsNote.ShouldNotBeNull().IsWarning.ShouldBeTrue();
+        setup.ShadowsNote.ShouldNotBeNull().Load.ShouldBe(ShadowsLoad.TooMany);
         setup.SetShadows(0);
-        setup.ShadowsNote.ShouldNotBeNull().IsWarning.ShouldBeFalse();
+        setup.ShadowsNote.ShouldNotBeNull().Load.ShouldBe(ShadowsLoad.Smooth);
     }
 
     [Fact]
@@ -217,9 +217,7 @@ public sealed class TrainSetupPresentationViewModelTests
     {
         var setup = new TrainSetupPresentationViewModel(Creation(new TrainSettingsDef(TrainSettingsDef.MaxShadows, 10)));
 
-        setup.ShadowsNote.ShouldBe(new SettingNote(
-            UiText.Format("More shadows try more brains at once. Up to {0} should run smoothly.", TrainSettingsDef.MaxShadows),
-            IsWarning: false));
+        setup.ShadowsNote.ShouldNotBeNull().Load.ShouldBe(ShadowsLoad.Smooth);
     }
 
     private static CreationDef Creation(TrainSettingsDef? settings = null, int? generation = null, CreatureDef? creature = null) =>

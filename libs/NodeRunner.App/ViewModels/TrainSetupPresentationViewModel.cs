@@ -12,8 +12,11 @@ namespace NodeRunner.App.ViewModels;
 /// </summary>
 public sealed record SettingSlider(UiText Label, UiText Readout, double? Position, double Step, bool Disabled = false);
 
-/// <summary>One line under a setting: a quiet note, or a warning shown with the warn icon.</summary>
-public sealed record SettingNote(UiText Text, bool IsWarning);
+/// <summary>
+/// The line under the Shadows slider: a quiet note while <see cref="ShadowsLoad.Smooth"/>, else a
+/// warning whose colour rises with the load.
+/// </summary>
+public sealed record SettingNote(UiText Text, ShadowsLoad Load);
 
 /// <summary>
 /// Train setup (#194), between Build and Training: Train or Simulate, and the Shadows and Run length
@@ -89,16 +92,16 @@ public sealed class TrainSetupPresentationViewModel
             ShadowsRange.PositionStep);
 
     /// <summary>
-    /// The line under the Shadows slider (#318): how many should run smoothly, or a warning above
-    /// that. It never blocks Start or changes the value. Simulate has no line.
+    /// The line under the Shadows slider (#318): why more shadows help, or a warning above the smooth
+    /// limit. It never blocks Start or changes the value. Simulate has no line.
     /// </summary>
     public SettingNote? ShadowsNote => Mode == TrainingRunMode.Simulate
         ? null
         : ShadowsBudget.LoadOf(Settings.Shadows) switch
         {
-            ShadowsLoad.TooMany => new(UiText.Plain("Too many for most phones: training may run in slow motion."), IsWarning: true),
-            ShadowsLoad.Caution => new(UiText.Format("This phone may stutter above {0}.", ShadowsBudget.SmoothLimit), IsWarning: true),
-            _ => new(UiText.Format("More shadows try more brains at once. Up to {0} should run smoothly.", ShadowsBudget.SmoothLimit), IsWarning: false),
+            ShadowsLoad.TooMany => new(UiText.Plain("Probably too many shadows."), ShadowsLoad.TooMany),
+            ShadowsLoad.Caution => new(UiText.Format("Phone may stutter above {0}.", ShadowsBudget.SmoothLimit), ShadowsLoad.Caution),
+            _ => new(UiText.Plain("The brain learns faster with more shadows."), ShadowsLoad.Smooth),
         };
 
     public SettingSlider RunLength => Mode == TrainingRunMode.Simulate
