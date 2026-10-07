@@ -456,7 +456,6 @@ public partial class BuildScreen : Control
         GetNode<Control>("%SelectionRows").Visible = group.ShowFrameRows;
         var copy = GetNode<UiButton>("%SelectionCopy");
         copy.ShowText(group.CopyText);
-        copy.Visible = group.ShowCopy;
         copy.Unavailable = !group.CanCopy;
         var delete = GetNode<UiButton>("%SelectionDelete");
         delete.ShowText(group.DeleteText);

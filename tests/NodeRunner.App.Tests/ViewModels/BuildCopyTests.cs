@@ -49,13 +49,34 @@ public sealed class BuildCopyTests
         (piston.NodeA, piston.NodeB, piston.Name, piston.Strength, piston.Stroke, piston.Start, piston.MaxSpeed, piston.RiseTime)
             .ShouldBe((nodes[3], nodes[4], null, 20000, 0.8, 0.25, 300, 0.5));
         var sensor = build.Sensors.Where(sensor => sensor.Id != 21).ShouldHaveSingleItem();
-        (sensor.BeamId, sensor.Kind, sensor.Name).ShouldBe((beams[0], SensorKind.Accelerometer, null));
+        (sensor.BeamId, sensor.Kind, sensor.Name, sensor.Aim).ShouldBe((beams[0], SensorKind.Camera, null, 1.0));
         var servo = build.Servos.Where(servo => servo.Id != 31).ShouldHaveSingleItem();
         (servo.NodeId, servo.FixedLinkId, servo.TargetLinkId, servo.Name, servo.Strength, servo.Range)
             .ShouldBe((nodes[1], beams[1], beams[0], null, 800000, Math.PI / 2));
         build.Selection.Nodes.ShouldBe(nodes, ignoreOrder: true);
         build.Selection.Beams.ShouldBe(beams, ignoreOrder: true);
         (build.Selection.Sensors.Single(), build.Selection.Servos.Single(), build.Selection.Pistons.Single()).ShouldBe((sensor.Id, servo.Id, piston.Id));
+        build.CanvasNotes().ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void Copy_OfAServoBetweenASpringAndAPiston_UsesTheirCopies()
+    {
+        var build = new BuildViewModel();
+        build.Load(new CreatureDef(
+            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(100, 0)), new NodeDef(3, new Vector2D(100, 100))],
+            [],
+            [],
+            [new ServoDef(31, 2, 13, 14)],
+            [new PistonDef(14, 2, 3)],
+            [new SpringDef(13, 1, 2)],
+            nextPartId: 40));
+        build.ReplaceSelection(new PartSet(Ids(1, 2, 3), Ids(), Ids(), Ids(31), Ids(14), Ids(13)));
+
+        build.CopySelectedParts();
+
+        var copy = build.Servos.Where(servo => servo.Id != 31).ShouldHaveSingleItem();
+        (copy.FixedLinkId, copy.TargetLinkId).ShouldBe((build.Springs.Last().Id, build.Pistons.Last().Id));
         build.CanvasNotes().ShouldBeEmpty();
     }
 
@@ -186,6 +207,24 @@ public sealed class BuildCopyTests
     }
 
     [Fact]
+    public void Unlocking_HidesTheLockedCopysNotes()
+    {
+        var build = new BuildViewModel();
+        build.Load(Creature(), locked: true);
+        build.ReplaceSelection(new PartSet(Ids(1, 2), Ids(11), Ids(21), Ids(), Ids(), Ids()));
+        build.CopySelectedParts();
+        build.CanvasNotes().ShouldNotBeEmpty();
+        var changed = new List<string?>();
+        build.PropertyChanged += (_, e) => changed.Add(e.PropertyName);
+
+        build.Unlock();
+
+        build.CanvasNotes().ShouldBeEmpty();
+        changed.ShouldContain(nameof(BuildViewModel.CanvasNotes));
+        build.CanCopySelection.ShouldBeTrue();
+    }
+
+    [Fact]
     public void Copy_OfASelectionAsTallAsTheBuildArea_KeepsItsShape()
     {
         var area = BuildViewModel.BuildArea;
@@ -279,7 +318,7 @@ public sealed class BuildCopyTests
         return build;
     }
 
-    // A square of joints 1–4 with beams 11 (sensor 21) and 12, Servo 31 on joint 2, a tuned Spring 13
+    // A square of joints 1–4 with beams 11 (Camera 21, aimed) and 12, Servo 31 on joint 2, a tuned Spring 13
     // and a tuned Piston 14 out to joint 5.
     private static CreatureDef Creature() => new(
         [
@@ -290,7 +329,7 @@ public sealed class BuildCopyTests
             new NodeDef(5, new Vector2D(-100, 100)),
         ],
         [new BeamDef(11, 1, 2), new BeamDef(12, 2, 3)],
-        [new SensorDef(21, 11, SensorKind.Accelerometer)],
+        [new SensorDef(21, 11, SensorKind.Camera, aim: 1.0)],
         [new ServoDef(31, 2, 12, 11, strength: 800000, range: Math.PI / 2)],
         [new PistonDef(14, 4, 5, "Kick", strength: 20000, stroke: 0.8, start: 0.25, maxSpeed: 300, riseTime: 0.5)],
         [new SpringDef(13, 3, 4, stiffness: 900, damping: 20, stroke: 0.5, coilLength: 0.4)],

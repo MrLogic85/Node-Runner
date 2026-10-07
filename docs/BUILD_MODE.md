@@ -36,10 +36,10 @@ boundary. `reference design/components/Build/README.md`,
   still names its version (see Parts tray). Delete stays,
   Unavailable, when it would take a part with ports along, also by cascade,
   or clear a Servo's link (`BuildViewModel.DeleteLockedReason`); a tap shows
-  the same notification. Copy stays, Unavailable while the selection holds
-  a part with ports (#990). There is no training summary: the
-  Creations card shows the latest training (#479). The padlock unlocks it
-  for this visit and keeps the training (`docs/TRAINING_LOOP.md` step 6).
+  the same notification. Copy stays too (see Selection panel). There is no
+  training summary: the Creations card shows the latest training (#479).
+  The padlock unlocks it for this visit and keeps the training
+  (`docs/TRAINING_LOOP.md` step 6).
 - **Overflow menu.** It follows training, not the lock. A trained creation
   lists Stats (#198) and Power budget (#460), both unavailable, then Copy
   creation, Reset training and Delete creation; an untrained one lists
@@ -320,9 +320,9 @@ Several selected parts show the selection panel instead (#558, #704), titled
   Piston with both its joints, a sensor with its beam and a Servo with its
   joint, so a selected joint's Servo is not copied unless it is selected
   too. A copied Servo uses the copies of its Fixed and Target links and
-  leaves a role empty whose link was not copied, showing its "Pick a …
-  link" note. On a locked creation a sensor, Piston or Servo would change
-  the model, so it blocks Copy too. Copy is dimmed while the selection
+  leaves a role empty whose link was not copied, so it shows its error
+  note. On a locked creation a sensor, Piston or Servo would change the
+  model, so it blocks Copy too. Copy is dimmed while the selection
   holds a part it cannot take; a tap then puts a danger note on each such
   part until the selection changes or the next canvas touch (#991).
   `BuildViewModel.CopySelectedParts` and `CopyBlockers` own these rules.
