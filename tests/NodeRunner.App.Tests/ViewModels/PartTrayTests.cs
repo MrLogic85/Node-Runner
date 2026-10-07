@@ -60,7 +60,6 @@ public sealed class PartTrayTests
                 (BuildPart.TouchSensor, PartTrayRowState.ComingLater),
                 (BuildPart.Pulse, PartTrayRowState.ComingLater),
             ]);
-        sensors[0].LockedReason.ShouldBeNull();
     }
 
     [Fact]
@@ -69,7 +68,7 @@ public sealed class PartTrayTests
         var rows = PartTray.Groups().SelectMany(group => group.Rows).ToList();
 
         rows.Where(row => row.Part is not BuildPart.Accelerometer and not BuildPart.Servo).ShouldAllBe(row =>
-            row.State == PartTrayRowState.ComingLater && !row.IsAvailable && Equals(row.LockedReason, PartTray.ComingIn(row.Version!)));
+            row.State == PartTrayRowState.ComingLater && !row.IsAvailable);
     }
 
     [Fact]
@@ -89,13 +88,22 @@ public sealed class PartTrayTests
             (BuildPart.Generator, "0.18.0"),
             (BuildPart.FuelTank, "0.18.0"),
         ]);
-        PartTray.ComingIn("0.14.0").ShouldBe(UiText.Format("Coming in version {0}", "0.14.0"));
         BuildLinkList.Create(BuildLink.Beam).Rows.Select(row => (row.Link, row.Version)).ShouldBe([
             (BuildLink.Beam, null),
             (BuildLink.Piston, null),
             (BuildLink.Spring, null),
             (BuildLink.Wing, "0.18.0"),
         ]);
+    }
+
+    [Fact]
+    public void ATapOnAComingLaterRow_NamesThePartAndItsVersion()
+    {
+        PartTray.ComingLaterReason(BuildPart.Stepper).ShouldBe(UiText.Format("{0} comes in version {1}", UiText.Plain("Stepper"), "0.14.0"));
+        PartTray.ComingLaterReason(BuildPart.Battery).ShouldBe(UiText.Format("{0} comes in version {1}", UiText.Plain("Battery"), "0.18.0"));
+        BuildLinkList.ComingLaterReason(BuildLink.Wing).ShouldBe(UiText.Format("{0} comes in version {1}", UiText.Plain("Wing"), "0.18.0"));
+        Should.Throw<ArgumentOutOfRangeException>(() => PartTray.ComingLaterReason(BuildPart.Servo));
+        Should.Throw<ArgumentOutOfRangeException>(() => BuildLinkList.ComingLaterReason(BuildLink.Beam));
     }
 
     [Fact]

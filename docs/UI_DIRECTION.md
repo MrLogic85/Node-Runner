@@ -213,9 +213,8 @@ The shell is filled `panel` over the frame card's `bg` (#347).
   high, selected with `accent-soft`. **Tray rows** are `control-sm`
   `UiPartRow`s with 20 px glyphs; a locked row shows only its lock and fades
   whole (#374, #964). A locked row answers a tap with a notification
-  titled after the screen, with the padlock icon: the creation lock's
-  reason (#896), or for a "Coming later" row the version that brings it
-  (#992).
+  titled after the screen, with the padlock icon (#896, #992); its text
+  is Build's (`docs/BUILD_MODE.md` → Parts tray).
 
 ## Screens
 

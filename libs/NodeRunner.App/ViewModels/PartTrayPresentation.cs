@@ -28,18 +28,10 @@ public enum PartTrayRowState
     CreationLocked,
 }
 
-/// <summary>A tray row; <c>Version</c> is the version that brings a Coming later row's part (#992), null for the others.</summary>
-public sealed record PartTrayRow(BuildPart Part, UiText Name, PartTrayRowState State, string? Version = null)
+/// <summary>A tray row; <c>Version</c> is the version that brings a Coming later row's part (#992), null for the other rows.</summary>
+public sealed record PartTrayRow(BuildPart Part, UiText Name, PartTrayRowState State, string? Version)
 {
     public bool IsAvailable => State == PartTrayRowState.Available;
-
-    /// <summary>Why the row cannot be picked, or null when it can.</summary>
-    public UiText? LockedReason => State switch
-    {
-        PartTrayRowState.Available => null,
-        PartTrayRowState.CreationLocked => BuildViewModel.LockedReason,
-        _ => PartTray.ComingIn(Version!),
-    };
 }
 
 public sealed record PartTrayGroup(UiText Name, UiText HelpText, IReadOnlyList<PartTrayRow> Rows);
@@ -52,8 +44,14 @@ public static class PartTray
 {
     public static UiText ComingLater { get; } = UiText.Plain("Coming later");
 
-    /// <summary>What a tap on a Coming later row says (#992); the catalogs give each row its version.</summary>
-    public static UiText ComingIn(string version) => UiText.Format("Coming in version {0}", version);
+    /// <summary>What a tap on a Coming later row says (#992): the part and the version that brings it.</summary>
+    public static UiText ComingLaterReason(BuildPart part) =>
+        Catalog().SelectMany(group => group.Rows).Single(row => row.Part == part) is { State: PartTrayRowState.ComingLater } row
+            ? ComingIn(row.Name, row.Version!)
+            : throw new ArgumentOutOfRangeException(nameof(part), part, "Only a Coming later part has a version.");
+
+    /// <summary>A Coming later part or link with the version that brings it (#992).</summary>
+    public static UiText ComingIn(UiText name, string version) => UiText.Format("{0} comes in version {1}", name, version);
 
     public static UiText CreationLockedHelp { get; } = UiText.Plain("Unlock to add parts.");
 
@@ -120,7 +118,7 @@ public static class PartTray
         ]),
     ];
 
-    private static PartTrayRow Available(BuildPart part, UiText name) => new(part, name, PartTrayRowState.Available);
+    private static PartTrayRow Available(BuildPart part, UiText name) => new(part, name, PartTrayRowState.Available, Version: null);
 
     // The version is the part's GitHub milestone (#992): moving the part to another milestone means updating it here.
     private static PartTrayRow Locked(BuildPart part, UiText name, string version) => new(part, name, PartTrayRowState.ComingLater, version);

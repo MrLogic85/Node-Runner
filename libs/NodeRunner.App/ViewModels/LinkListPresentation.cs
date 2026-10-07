@@ -19,8 +19,8 @@ public enum LinkListRowState
     CreationLocked,
 }
 
-/// <summary>A Links row; <c>Version</c> is the version that brings a <see cref="LinkListRowState.Locked"/> row's link (#992), null for the others.</summary>
-public sealed record LinkListRow(BuildLink Link, UiText Name, LinkListRowState State, string? Version = null)
+/// <summary>A Links row; <c>Version</c> is the version that brings a <see cref="LinkListRowState.Locked"/> row's link (#992), null for the other rows.</summary>
+public sealed record LinkListRow(BuildLink Link, UiText Name, LinkListRowState State, string? Version)
 {
     public bool IsPickable => State is LinkListRowState.Rest or LinkListRowState.Selected;
 }
@@ -52,6 +52,12 @@ public static class BuildLinkList
 
     public static bool IsAvailable(BuildLink link) => link is BuildLink.Beam or BuildLink.Piston or BuildLink.Spring;
 
+    /// <summary>What a tap on a locked link row says (#992), as <see cref="PartTray.ComingLaterReason"/>.</summary>
+    public static UiText ComingLaterReason(BuildLink link) =>
+        Create(BuildLink.Beam).Rows.Single(row => row.Link == link) is { State: LinkListRowState.Locked } row
+            ? PartTray.ComingIn(row.Name, row.Version!)
+            : throw new ArgumentOutOfRangeException(nameof(link), link, "Only a locked link has a version.");
+
     /// <summary>Whether drawing <paramref name="link"/> adds brain ports, so a locked creation refuses it (#896).</summary>
     public static bool HasBrainPorts(BuildLink link) => link == BuildLink.Piston;
 
@@ -69,8 +75,9 @@ public static class BuildLinkList
     private static LinkListRow Row(BuildLink link, UiText name, BuildLink picked, bool creationLocked) =>
         new(link, name, creationLocked && HasBrainPorts(link) ? LinkListRowState.CreationLocked
             : link == picked ? LinkListRowState.Selected
-            : LinkListRowState.Rest);
+            : LinkListRowState.Rest,
+            Version: null);
 
-    // As the tray's Coming later rows, the version is the link's GitHub milestone (#992).
+    // The version is kept as PartTray.Locked's (#992).
     private static LinkListRow Locked(BuildLink link, UiText name, string version) => new(link, name, LinkListRowState.Locked, version);
 }

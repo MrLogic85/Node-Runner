@@ -30,9 +30,10 @@ boundary. `reference design/components/Build/README.md`,
   work (scaling changes only beam lengths), parameters change and parts can
   be renamed. A part with ports (a sensor, Piston or Servo) can be neither
   added nor deleted: every tray row and the Piston row are locked, the
-  tray's help line says "Unlock to add parts.", and tapping a locked row
-  shows "Locked: the model is trained for these parts."
-  (`BuildViewModel.LockedReason`) in a notification. Delete stays,
+  tray's help line says "Unlock to add parts.", and tapping a row so
+  locked shows "Locked: the model is trained for these parts."
+  (`BuildViewModel.LockedReason`) in a notification; a Coming later row
+  still names its version (see Parts tray). Delete stays,
   Unavailable, when it would take a part with ports along, also by cascade,
   or clear a Servo's link (`BuildViewModel.DeleteLockedReason`); a tap shows
   the same notification. Copy is hidden. There is no training summary: the
@@ -204,11 +205,10 @@ several the selection panel instead.
 - Parts are unlimited (#525), so rows show no count. Every planned part has
   a locked row, so the tray shows what is coming: the Touch sensor (#665)
   and the Pulse (#527) are locked rows in Sensors, and the Camera is held
-  back the same way (#852). A tap on a locked row says "Coming in version
-  0.14.0" or whichever version brings it (#992); the tray and Links
-  catalogs (`PartTray`, `BuildLinkList`) give each row its part's
-  milestone, so moving a part to another milestone means updating it
-  there.
+  back the same way (#852). A tap on a locked row names the part and the
+  version that brings it, as "Battery comes in version 0.18.0", in a
+  notification (#992); `PartTray.ComingLaterReason` and
+  `BuildLinkList.ComingLaterReason` own it.
 - An available row does nothing on tap; it is dragged out (#376). The drop
   lands on what the part is over (a joint's ring, a sensor picture's beam,
   a beam within reach, then a joint within reach), and
