@@ -165,6 +165,9 @@ entry (#315). The entries that are not a component of their own (#306):
   button and in a `touch` row, 16 in a `control-sm` row or inside a ring,
   12 on a chip (16 for a part glyph, never 12). Only the canvas Move handle
   is filled `accent-soft`.
+- **Icon drawing** (#1010): every UI icon is drawn 16 on its longer side,
+  centred on a plain 24 viewBox, so icons side by side match in size and
+  air; `UiIconGridTests` enforces it. Part glyphs keep their 20 grid.
 - **Toggles and checkboxes:** transparent rows with solid indicator
   outlines; a disabled row is 50% opacity, not dashed.
 - **Segmented switch:** the selected segment has an `accent-soft` fill and a

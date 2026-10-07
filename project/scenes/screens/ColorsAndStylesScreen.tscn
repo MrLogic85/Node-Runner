@@ -1356,7 +1356,7 @@ TextColor = 8
 
 [node name="UiIconsTitle" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet"]
 layout_mode = 2
-text = "UI icons (47): stroked, 24 grid, one colour"
+text = "UI icons (51): stroked, 24 grid, one colour"
 script = ExtResource("shell_4_label")
 TextStyle = 12
 TextColor = 8
