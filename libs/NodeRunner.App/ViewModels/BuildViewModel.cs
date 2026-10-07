@@ -57,7 +57,9 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     private string _creationName = string.Empty;
     private int? _trainingGeneration;
     private CanvasNote? _placementNote;
-    private readonly HashSet<int> _shownLooseNodes = [];
+    // What a Play tap pointed at, each with its joint: loose joints (Node) and Servos missing a link
+    // (Servo). By joint, as picking a Servo's link gives it a new id (#911).
+    private readonly HashSet<(CreatureElementKind Kind, int JointId)> _shownBlockers = [];
     private bool _showPieces;
     private bool _advancedSettingsOpen;
     private readonly BuildHistory _history;
@@ -88,7 +90,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
         _openedBrain = training?.Brain;
         _locked = locked;
         _history.Clear();
-        _shownLooseNodes.Clear();
+        _shownBlockers.Clear();
         _showPieces = false;
         _shownCopyBlockers = [];
         _advancedSettingsOpen = false;
@@ -341,9 +343,10 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
 
     /// <summary>
     /// The messages Build shows in the drawing, each beside the part it is about: why the last
-    /// dropped part was refused (#376), each loose joint <see cref="ShowTrainingBlockers"/> pointed
-    /// at (#844), each separate piece's joint nearest another piece (#930) and each part a dimmed
-    /// Copy pointed at (#937), then each beam or link too short to train (#593). Listed most important first:
+    /// dropped part was refused (#376), each loose joint and Servo missing a link
+    /// <see cref="ShowTrainingBlockers"/> pointed at (#844, #1006), each separate piece's joint nearest
+    /// another piece (#930) and each part a dimmed Copy pointed at (#937), then each beam or link too
+    /// short to train (#593). Listed most important first:
     /// notes that would overlap stack, the first listed nearest its part.
     /// </summary>
     public IReadOnlyList<CanvasNote> CanvasNotes()
@@ -356,7 +359,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
 
         foreach (var node in Nodes)
         {
-            if (_shownLooseNodes.Contains(node.Id) && IsLoose(node.Id))
+            if (_shownBlockers.Contains((CreatureElementKind.Node, node.Id)) && IsLoose(node.Id))
             {
                 notes.Add(NotConnected(node.Id));
             }
@@ -374,7 +377,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
             AddTooShortNote(CreatureElementKind.Beam, beam.Id, beam.NodeA, beam.NodeB);
         }
 
-        foreach (var servo in Servos.Where(servo => servo.FixedLinkId is null || servo.TargetLinkId is null))
+        foreach (var servo in Servos.Where(servo => _shownBlockers.Contains((CreatureElementKind.Servo, servo.NodeId)) && CreatureReadiness.IsMissingALink(servo)))
         {
             var text = ServoNeedsTwoLinks(servo.NodeId)
                 ? CreatureBuilder.ServoNeedsTwoLinksReason
@@ -467,18 +470,18 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
 
     /// <summary>
     /// Hides the notes a tap brought up, on the next canvas touch (#991): <see cref="PlacementNote"/>,
-    /// <see cref="ShowTrainingBlockers"/>' "Not connected" notes and a dimmed Copy's notes. Too-short
-    /// parts and Servo link notes stay, as they mark the drawing itself.
+    /// <see cref="ShowTrainingBlockers"/>' notes and a dimmed Copy's notes. Too-short parts' notes
+    /// stay, as they mark the drawing itself.
     /// </summary>
     public void DismissTapNotes()
     {
         PlacementNote = null;
-        if (_shownLooseNodes.Count == 0 && !_showPieces && _shownCopyBlockers.Count == 0)
+        if (_shownBlockers.Count == 0 && !_showPieces && _shownCopyBlockers.Count == 0)
         {
             return;
         }
 
-        _shownLooseNodes.Clear();
+        _shownBlockers.Clear();
         _showPieces = false;
         _shownCopyBlockers = [];
         OnPropertyChanged(nameof(CanvasNotes));
@@ -496,21 +499,16 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     /// <summary>
     /// Answers a tap on the dimmed play button (#844): every joint loose now gets a "Not connected"
     /// note in <see cref="CanvasNotes"/>, kept until it is joined or removed, and so does every
-    /// piece until the creation is one piece (#930); the next canvas touch hides them all
-    /// (<see cref="DismissTapNotes"/>). Too-short parts already have theirs. A joint loosened or a
-    /// piece split off later waits for the next tap.
+    /// piece until the creation is one piece (#930) and every Servo missing a link until it has
+    /// both (#1006); the next canvas touch hides them all (<see cref="DismissTapNotes"/>). Too-short
+    /// parts already have theirs. A blocker that appears later waits for the next tap.
     /// </summary>
     public void ShowTrainingBlockers()
     {
         _showPieces = Pieces().Count > 1;
-        _shownLooseNodes.Clear();
-        foreach (var node in Nodes)
-        {
-            if (IsLoose(node.Id))
-            {
-                _shownLooseNodes.Add(node.Id);
-            }
-        }
+        _shownBlockers.Clear();
+        _shownBlockers.UnionWith(Nodes.Where(node => IsLoose(node.Id)).Select(node => (CreatureElementKind.Node, node.Id)));
+        _shownBlockers.UnionWith(Servos.Where(CreatureReadiness.IsMissingALink).Select(servo => (CreatureElementKind.Servo, servo.NodeId)));
 
         OnPropertyChanged(nameof(CanvasNotes));
     }
