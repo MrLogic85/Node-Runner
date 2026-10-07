@@ -534,6 +534,22 @@ public sealed class BuildPlacementTests
         IEnumerable<CanvasNote> ServoNotes() => build.CanvasNotes().Where(note => note.Target.Kind == CreatureElementKind.Servo);
     }
 
+    // A Play tap marks each blocker for its own note: a Servo's joint loosened later waits for the next tap (#1006).
+    [Fact]
+    public void AServosPlayTapMark_DoesNotNoteItsJointLoosenedLater()
+    {
+        var build = TwoBeams();
+        build.PlacePart(BuildPart.Servo, _middleJoint);
+        build.ReplaceSelection(PartSet.None with { Beams = new HashSet<int> { 4 } });
+        build.DeleteSelectedParts();
+        build.ShowTrainingBlockers();
+
+        build.ReplaceSelection(PartSet.None with { Beams = new HashSet<int> { 5 } });
+        build.DeleteSelectedParts();
+
+        build.CanvasNotes().Where(note => note.Target.Kind == CreatureElementKind.Node).Select(note => note.Target.Id).ShouldBe([1]);
+    }
+
     [Fact]
     public void DeleteFarEndJoint_ClearsServoRole()
     {

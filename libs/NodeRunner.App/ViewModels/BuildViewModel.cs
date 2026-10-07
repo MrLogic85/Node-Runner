@@ -57,9 +57,9 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     private string _creationName = string.Empty;
     private int? _trainingGeneration;
     private CanvasNote? _placementNote;
-    private readonly HashSet<int> _shownLooseNodes = [];
-    // By joint: picking a Servo's link gives it a new id (#911), and the mark must stay.
-    private readonly HashSet<int> _shownServoJoints = [];
+    // What a Play tap pointed at, each with its joint: loose joints (Node) and Servos missing a link
+    // (Servo). By joint, as picking a Servo's link gives it a new id (#911).
+    private readonly HashSet<(CreatureElementKind Kind, int JointId)> _shownBlockers = [];
     private bool _showPieces;
     private bool _advancedSettingsOpen;
     private readonly BuildHistory _history;
@@ -90,8 +90,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
         _openedBrain = training?.Brain;
         _locked = locked;
         _history.Clear();
-        _shownLooseNodes.Clear();
-        _shownServoJoints.Clear();
+        _shownBlockers.Clear();
         _showPieces = false;
         _shownCopyBlockers = [];
         _advancedSettingsOpen = false;
@@ -360,7 +359,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
 
         foreach (var node in Nodes)
         {
-            if (_shownLooseNodes.Contains(node.Id) && IsLoose(node.Id))
+            if (_shownBlockers.Contains((CreatureElementKind.Node, node.Id)) && IsLoose(node.Id))
             {
                 notes.Add(NotConnected(node.Id));
             }
@@ -378,7 +377,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
             AddTooShortNote(CreatureElementKind.Beam, beam.Id, beam.NodeA, beam.NodeB);
         }
 
-        foreach (var servo in Servos.Where(servo => _shownServoJoints.Contains(servo.NodeId) && IsMissingALink(servo)))
+        foreach (var servo in Servos.Where(servo => _shownBlockers.Contains((CreatureElementKind.Servo, servo.NodeId)) && CreatureReadiness.IsMissingALink(servo)))
         {
             var text = ServoNeedsTwoLinks(servo.NodeId)
                 ? CreatureBuilder.ServoNeedsTwoLinksReason
@@ -477,19 +476,16 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     public void DismissTapNotes()
     {
         PlacementNote = null;
-        if (_shownLooseNodes.Count == 0 && _shownServoJoints.Count == 0 && !_showPieces && _shownCopyBlockers.Count == 0)
+        if (_shownBlockers.Count == 0 && !_showPieces && _shownCopyBlockers.Count == 0)
         {
             return;
         }
 
-        _shownLooseNodes.Clear();
-        _shownServoJoints.Clear();
+        _shownBlockers.Clear();
         _showPieces = false;
         _shownCopyBlockers = [];
         OnPropertyChanged(nameof(CanvasNotes));
     }
-
-    private static bool IsMissingALink(ServoDef servo) => servo.FixedLinkId is null || servo.TargetLinkId is null;
 
     /// <summary>Joined to nothing by a beam or a link, so the creature cannot train (<see cref="CreatureReadiness.IsAttached"/>).</summary>
     public bool IsLoose(int nodeId) =>
@@ -510,17 +506,9 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     public void ShowTrainingBlockers()
     {
         _showPieces = Pieces().Count > 1;
-        _shownLooseNodes.Clear();
-        foreach (var node in Nodes)
-        {
-            if (IsLoose(node.Id))
-            {
-                _shownLooseNodes.Add(node.Id);
-            }
-        }
-
-        _shownServoJoints.Clear();
-        _shownServoJoints.UnionWith(Servos.Where(IsMissingALink).Select(servo => servo.NodeId));
+        _shownBlockers.Clear();
+        _shownBlockers.UnionWith(Nodes.Where(node => IsLoose(node.Id)).Select(node => (CreatureElementKind.Node, node.Id)));
+        _shownBlockers.UnionWith(Servos.Where(CreatureReadiness.IsMissingALink).Select(servo => (CreatureElementKind.Servo, servo.NodeId)));
 
         OnPropertyChanged(nameof(CanvasNotes));
     }

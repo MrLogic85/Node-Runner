@@ -70,7 +70,7 @@ public static class CreatureReadiness
 
         foreach (var servo in creature.Servos)
         {
-            if (servo.FixedLinkId is null || servo.TargetLinkId is null)
+            if (IsMissingALink(servo))
             {
                 var name = PartNames.Display(creature.Nodes, creature.Beams, creature.Sensors, creature.Servos, creature.Pistons, creature.Springs, servo.Id);
                 problems.Add(!ServoDef.HasTwoLinks(creature.LinksAt(servo.NodeId))
@@ -90,6 +90,13 @@ public static class CreatureReadiness
         }
 
         return problems;
+    }
+
+    /// <summary>A Servo without both its Fixed and Target link cannot train.</summary>
+    public static bool IsMissingALink(ServoDef servo)
+    {
+        ArgumentNullException.ThrowIfNull(servo);
+        return servo.FixedLinkId is null || servo.TargetLinkId is null;
     }
 
     /// <summary>Whether a beam or a link, a Piston (#451) or a Spring (#453), holds the node to the rest of the creature.</summary>
