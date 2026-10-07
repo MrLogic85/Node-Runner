@@ -240,9 +240,9 @@ panel shows it (`InPanel`). Each kind lists its own
 `docs/CREATURE_MODEL.md`.
 
 Each parameter is basic or `Advanced` for every part that has it (#903):
-Start position, Max speed, Rise time and Damping are advanced. The panel
-shows Name, the basic sliders and any other controls, like a Servo's link
-pickers, then a closed Advanced section with the rest, left out when there
+Start position, Max speed, Rise time, Damping and Coil length (#989) are
+advanced. The panel shows Name, the basic sliders and any other controls,
+like a Servo's link pickers, then a closed Advanced section with the rest, left out when there
 is none, then the part's note. The section stays open or closed across selections
 until the next Build visit (`BuildViewModel.AdvancedSettingsOpen`).
 

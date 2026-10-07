@@ -154,7 +154,7 @@ public static class PartParameters
 
     // In whole percent, as a new Spring's stops sit at a third and two thirds of it (#835).
     public static PartParameter CoilLength { get; } = new(
-        PartParameterId.CoilLength, MultiEditable: true, new(UiText.Plain("Coil length"), UiText.Plain("The length the coil wants to be"), new(SpringDef.MinCoilLength * 100, SpringDef.MaxCoilLength * 100, 1), 0, "{0}%", "{0}–{1}%", value => value * 100, value => value / 100), Advanced: false);
+        PartParameterId.CoilLength, MultiEditable: true, new(UiText.Plain("Coil length"), UiText.Plain("The length the coil wants to be"), new(SpringDef.MinCoilLength * 100, SpringDef.MaxCoilLength * 100, 1), 0, "{0}%", "{0}–{1}%", value => value * 100, value => value / 100), Advanced: true);
 
     public static PartParameter Aim { get; } = new(PartParameterId.Aim, MultiEditable: false, Slider: null, Advanced: false);
 
