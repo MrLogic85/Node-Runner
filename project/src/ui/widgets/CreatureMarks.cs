@@ -8,14 +8,14 @@ namespace NodeRunner.Ui.Widgets;
 /// <paramref name="Selected"/> parts in <c>halo</c>, the joints <paramref name="ShowsAsLoose"/>
 /// picks and too short links (<paramref name="ShowsTooShort"/>) in <c>danger</c>, each
 /// Accelerometer's weight where <paramref name="WeightOffset"/> swings it (null at rest), the sensor
-/// a tray drag would place (<paramref name="PreviewSensor"/>) or the joint a dragged Servo would
+/// a tray drag would place or a sensor drag would move (<paramref name="PreviewSensor"/>, with a Camera's aim) or the joint a dragged Servo would
 /// take (<paramref name="PreviewServoNode"/>). A shown creature that is not edited has <see cref="None"/>.
 /// </summary>
 public sealed record CreatureMarks(
     PartSet Selected,
     Func<int, bool> ShowsAsLoose,
     Func<int, Vector2D?> WeightOffset,
-    (BeamDef Beam, SensorKind Kind)? PreviewSensor,
+    (BeamDef Beam, SensorKind Kind, double? Aim)? PreviewSensor,
     int? PreviewServoNode,
     bool ShowsTooShort)
 {

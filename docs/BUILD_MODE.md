@@ -26,9 +26,9 @@ boundary. `reference design/components/Build/README.md`,
 - **Locked Build.** A locked creation (`CreationLock`) opens in Joint like
   any other, and `BuildViewModel` refuses on its own what changes the model
   (#638, #896). Joints, beams and Springs have no brain ports, so they can
-  be added and deleted; joints move, cameras aim, the selection handles all
-  work (scaling changes only beam lengths), parameters change and parts can
-  be renamed. A part with ports (a sensor, Piston or Servo) can be neither
+  be added and deleted; joints move, sensors move to another beam (#806),
+  cameras aim, the selection handles all work (scaling changes only beam
+  lengths), parameters change and parts can be renamed. A part with ports (a sensor, Piston or Servo) can be neither
   added nor deleted: every tray row and the Piston row are locked, the
   tray's help line says "Unlock to add parts.", and tapping a row so
   locked shows "Locked: the model is trained for these parts."
@@ -53,7 +53,8 @@ boundary. `reference design/components/Build/README.md`,
   locked creation too; each is disabled when there is nothing to undo or
   redo. One finished action that changes the body is one step: a placed
   part, a link, a delete, a part rename, or a whole drag (a joint, a
-  selection's move, turn or scale, a camera's aim, a slider). Selection,
+  selection's move, turn or scale, a sensor's move to another beam, a
+  camera's aim, a slider). Selection,
   tool, zoom and pan never count, and a cancelled gesture adds nothing and
   keeps Redo. A new step clears Redo. A visit holds 100 steps; opening
   Build, also after Train setup, Reset training or Copy creation, starts
@@ -100,7 +101,8 @@ and into zoom and pan; `BuildCanvas` only forwards input and draws.
     turns or scales the selection; in Links, an unselected joint or a
     selected Servo's draws a link; a selected joint moves the selection;
     anywhere inside a group's frame moves the group; an unselected joint is
-    selected alone and moved.
+    selected alone and moved; a sensor is moved to another beam (see
+    Sensors).
     Any other drag draws a box in Select and pans in the other tools.
   - After a Rotate the frame stays turned with the group until the
     selection changes. Rotate and Scale turn about the frame's centre;
@@ -136,8 +138,8 @@ and into zoom and pan; `BuildCanvas` only forwards input and draws.
 - **Parts:** with nothing selected, the panel shows the Parts tray; drag a
   part from it onto the creature, or tap it and then tap where it goes
   (see Parts tray). Parts never adds a joint.
-- **Select (#366, #704):** a drag on empty canvas, or from a beam, sensor
-  or link, outside any group's frame draws a box that shows the parts it
+- **Select (#366, #704):** a drag on empty canvas, or from a beam or
+  link, outside any group's frame draws a box that shows the parts it
   would catch as selected. It selects every part whose centre is in it (a
   joint's centre, a beam's or link's midpoint, a sensor's beam midpoint)
   and replaces the selection, so a box can catch only beams. A joint with
@@ -147,6 +149,14 @@ and into zoom and pan; `BuildCanvas` only forwards input and draws.
   a locked row (#852): on the Flat map it only adds complexity, so it
   returns with terrain (#855).
   A saved creation that already has one keeps it working.
+  - **Moving a sensor (#806):** drag its picture to another beam in any
+    tool, locked or not. It keeps its id, name and settings, so its brain
+    ports and trained weights stay (`CreatureBuilder.MoveSensor`); a
+    Camera keeps the direction it looks in the world. How the drag looks
+    is in `docs/WORLD_VISUALS.md` → "Moving a sensor". A drop on a beam
+    with another sensor, a joint or empty canvas leaves it where it was
+    with the reason as a note ("One sensor per beam", "Sensors go on a
+    beam"). A good drop selects it.
 - **Servo (#452, #577):** placed from Parts → Moving parts on any joint, by
   drag or tap (see Parts tray). A beam, sensor or link refuses with "Servos
   go on a joint"; a joint that already has one refuses with "One part per
