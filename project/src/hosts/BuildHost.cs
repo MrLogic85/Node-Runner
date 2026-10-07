@@ -114,6 +114,8 @@ public partial class BuildHost : Node, IRoutedScene
         _buildScreen.Setup(Build);
         _buildScreen.ToolRequested += tool => Build.ActiveTool = tool;
         _buildScreen.LinkPicked += link => Build.PickLink((BuildLink)link);
+        _buildScreen.PartPicked += part => Build.PickPart((BuildPart)part);
+        _buildScreen.PartPickHidden += () => Build.ClearPickedPart();
         _buildScreen.ParameterChanged += (parameter, value) =>
         {
             Build.BeginEdit(_buildScreen);
@@ -241,6 +243,12 @@ public partial class BuildHost : Node, IRoutedScene
     // failure notice outlives the scene.
     private void BackFromBuildScreen()
     {
+        // A picked tray part is the step Back takes first (#805).
+        if (Build.ClearPickedPart())
+        {
+            return;
+        }
+
         LeaveCreation(playerAsked: true);
         _navigator?.Back();
     }

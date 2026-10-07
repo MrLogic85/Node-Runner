@@ -42,7 +42,7 @@ public sealed class BuildPresentationViewModel
 
     public BuildTool ActiveTool => _build.ActiveTool;
 
-    public IReadOnlyList<PartTrayGroup> PartGroups => _build.IsLocked ? PartTray.LockedGroups() : PartTray.Groups();
+    public PartTrayPresentation Tray => PartTray.Create(_build.PickedPart, _build.IsLocked);
 
     public LinkListPresentation? LinkList => ToolPanel.Mode == ToolPanelMode.LinkList
         ? BuildLinkList.Create(_build.PickedLink, _build.IsLocked)

@@ -81,6 +81,17 @@ public partial class BuildScreen : Control
     [Signal]
     public delegate void LinkPickedEventHandler(int link);
 
+    /// <summary>A tray part was tapped (#805); the view-model picks it, or clears it if it was picked.</summary>
+    [Signal]
+    public delegate void PartPickedEventHandler(int part);
+
+    /// <summary>
+    /// The picked part went out of sight (#805): another tray tab was opened or the side panel
+    /// collapsed. The view-model clears the pick, so a tap never places a part the player cannot see.
+    /// </summary>
+    [Signal]
+    public delegate void PartPickHiddenEventHandler();
+
     /// <summary>A setting's slider moved (#704): every selected part takes <paramref name="value"/> for <paramref name="parameter"/> (a <see cref="PartParameterId"/>).</summary>
     [Signal]
     public delegate void ParameterChangedEventHandler(int parameter, double value);
@@ -155,7 +166,14 @@ public partial class BuildScreen : Control
         partName.MaxLength = NameLimits.Part;
         partName.EditingStarted += OnPartNameEditingStarted;
         partName.EditingFinished += OnPartNameEdited;
-        GetNode<UiSidePanel>("%SidePanel").CollapsedChanged += _ => HideSettingHint();
+        GetNode<UiSidePanel>("%SidePanel").CollapsedChanged += collapsed =>
+        {
+            HideSettingHint();
+            if (collapsed)
+            {
+                EmitSignal(SignalName.PartPickHidden);
+            }
+        };
         GetNode<UiPicker>("%FixedPicker").SelectionChanged += selected => OnServoPickerChanged(selected, fixedRole: true);
         GetNode<UiPicker>("%TargetPicker").SelectionChanged += selected => OnServoPickerChanged(selected, fixedRole: false);
         GetNode<UiExpandSection>("%PartAdvanced").Toggled += open => EmitSignal(SignalName.AdvancedSettingsToggled, open);
@@ -485,7 +503,7 @@ public partial class BuildScreen : Control
         var help = GetNode<UiLabel>("%PartHelp");
         help.ShowText(list.HelpText);
         help.Visible = true;
-        var rows = GetNode<Container>("%PartRows");
+        var rows = GetNode<UiPickList>("%PartRows");
         if (_shownPartGroup != $"links:{locked}")
         {
             _shownPartGroup = $"links:{locked}";
@@ -510,11 +528,8 @@ public partial class BuildScreen : Control
             }
         }
 
-        // The picked link's info sits right under its row.
-        var infoLabel = GetNode<UiLabel>("%PickedInfo");
-        infoLabel.TextSource = UiTextTranslation.Source(list.PickedInfo);
-        infoLabel.Visible = infoLabel.TextSource is not null;
         var linkRows = rows.GetChildren().OfType<UiPartRow>().ToList();
+        UiPartRow? picked = null;
         for (var index = 0; index < list.Rows.Count; index++)
         {
             linkRows[index].State = list.Rows[index].State switch
@@ -525,22 +540,30 @@ public partial class BuildScreen : Control
             };
             if (list.Rows[index].State == LinkListRowState.Selected)
             {
-                var below = linkRows[index].GetIndex();
-                rows.MoveChild(infoLabel, infoLabel.GetIndex() < below ? below : below + 1);
+                picked = linkRows[index];
             }
         }
+
+        ShowPickedInfo(rows, picked, UiTextTranslation.Source(list.PickedInfo));
+    }
+
+    // The picked row's info sits right under it, in the Links list and the Parts tray alike.
+    private void ShowPickedInfo(UiPickList rows, UiPartRow? picked, Func<string>? info)
+    {
+        GetNode<UiLabel>("%PickedInfo").TextSource = info;
+        rows.ShowInfoUnder(info is null ? null : picked);
     }
 
     private void ApplyTray(BuildPresentationViewModel presentation)
     {
         var tab = GetNode<UiIconTabs>("%PartTabs").SelectedIndex;
-        var group = presentation.PartGroups[tab];
+        var tray = presentation.Tray;
+        var group = tray.Groups[tab];
         GetNode<UiLabel>("%PartGroupName").ShowText(group.Name);
         var help = GetNode<UiLabel>("%PartHelp");
-        help.ShowText(group.HelpText);
+        help.ShowText(tray.HelpText);
         help.Visible = true;
-        var rows = GetNode<Container>("%PartRows");
-        GetNode<UiLabel>("%PickedInfo").Visible = false;
+        var rows = GetNode<UiPickList>("%PartRows");
         // Unlocking rebuilds the rows, so they can be dragged.
         if (_shownPartGroup != $"tray:{tab}:{presentation.IsLocked}")
         {
@@ -556,6 +579,7 @@ public partial class BuildScreen : Control
                         Callable.From<Vector2, Variant>(_ => StartPartDrag(row, draggable)),
                         new Callable(),
                         new Callable());
+                    row.PartSelected += () => EmitSignal(SignalName.PartPicked, (int)draggable);
                 }
                 else if (part.State == PartTrayRowState.CreationLocked)
                 {
@@ -571,15 +595,23 @@ public partial class BuildScreen : Control
         }
 
         var partRows = rows.GetChildren().OfType<UiPartRow>().ToList();
+        UiPartRow? picked = null;
         for (var index = 0; index < group.Rows.Count; index++)
         {
             var row = group.Rows[index];
             partRows[index].State = row.State switch
             {
                 PartTrayRowState.Available => UiPartRow.PartRowState.Rest,
+                PartTrayRowState.Selected => UiPartRow.PartRowState.Selected,
                 _ => UiPartRow.PartRowState.Locked,
             };
+            if (row.State == PartTrayRowState.Selected)
+            {
+                picked = partRows[index];
+            }
         }
+
+        ShowPickedInfo(rows, picked, UiTextTranslation.Source(tray.PickedInfo));
     }
 
     // Frees the rows built in code; the scene's %PickedInfo label stays.
@@ -595,6 +627,7 @@ public partial class BuildScreen : Control
     private void OnPartTabSelected(int index)
     {
         GetNode<ScrollContainer>("%PartScroll").ScrollVertical = 0;
+        EmitSignal(SignalName.PartPickHidden);
         Apply();
     }
 

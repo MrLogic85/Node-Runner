@@ -19,6 +19,7 @@
 [ext_resource type="PackedScene" uid="uid://kk3td5f4uebc" path="res://scenes/ui/UiWorldView.tscn" id="41_world_view"]
 [ext_resource type="Script" path="res://src/ui/lib/UiHintCard.cs" id="42_hint_card"]
 [ext_resource type="Script" uid="uid://bmmmlxr5268v7" path="res://src/ui/lib/UiExpandSection.cs" id="43_expand_section"]
+[ext_resource type="Script" path="res://src/ui/lib/UiPickList.cs" id="44_pick_list"]
 
 [node name="BuildScreen" type="Control"]
 layout_mode = 3
@@ -365,10 +366,12 @@ script = ExtResource("12_label")
 TextStyle = 12
 TextColor = 8
 
-[node name="PartRows" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent/PartsTray/PartScroll/PartList"]
+[node name="PartRows" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent/PartsTray/PartScroll/PartList" node_paths=PackedStringArray("Info")]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_constants/separation = 4
+script = ExtResource("44_pick_list")
+Info = NodePath("PickedInfo")
 
 [node name="PickedInfo" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent/PartsTray/PartScroll/PartList/PartRows"]
 unique_name_in_owner = true
@@ -382,7 +385,7 @@ TextColor = 8
 [node name="PartHelp" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent/PartsTray/PartScroll/PartList"]
 unique_name_in_owner = true
 layout_mode = 2
-text = "Drag onto a joint. A joint holds one part."
+text = "Tap a part to pick it, or drag it onto the creature."
 autowrap_mode = 3
 script = ExtResource("12_label")
 TextStyle = 9

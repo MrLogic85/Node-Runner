@@ -105,10 +105,12 @@ public sealed class BuildPresentationViewModelTests
         var build = new BuildViewModel();
         build.Load(PairCreature(), locked: true);
 
-        var groups = new BuildPresentationViewModel(build).PartGroups;
+        var tray = new BuildPresentationViewModel(build).Tray;
+        var groups = tray.Groups;
 
         groups.SelectMany(group => group.Rows).ShouldAllBe(row => !row.IsAvailable);
-        groups.ShouldAllBe(group => Equals(group.HelpText, UiText.Plain("Unlock to add parts.")));
+        tray.HelpText.ShouldBe(UiText.Plain("Unlock to add parts."));
+        tray.PickedInfo.ShouldBeNull();
         var servo = groups.SelectMany(group => group.Rows).Single(row => row.Part == BuildPart.Servo);
         servo.State.ShouldBe(PartTrayRowState.CreationLocked);
         groups.SelectMany(group => group.Rows).Single(row => row.Part == BuildPart.Camera).State.ShouldBe(PartTrayRowState.ComingLater);

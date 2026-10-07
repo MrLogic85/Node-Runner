@@ -2631,7 +2631,7 @@ custom_minimum_size = Vector2(176, 0)
 layout_mode = 2
 size_flags_horizontal = 0
 
-[node name="Rest" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/PartRows/Rows" unique_id=2081701680]
+[node name="Rest" type="BaseButton" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/PartRows/Rows" unique_id=2081701680]
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 1
@@ -2640,7 +2640,7 @@ IconId = 49
 Label = "Servo"
 ValueText = "3 left"
 
-[node name="Selected" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/PartRows/Rows" unique_id=82803774]
+[node name="Selected" type="BaseButton" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/PartRows/Rows" unique_id=82803774]
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 1
@@ -2650,7 +2650,7 @@ Label = "Servo"
 ValueText = "3 left"
 State = 1
 
-[node name="Locked" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/PartRows/Rows" unique_id=656227028]
+[node name="Locked" type="BaseButton" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/PartRows/Rows" unique_id=656227028]
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 1
@@ -2659,7 +2659,7 @@ IconId = 51
 Label = "Stepper"
 State = 2
 
-[node name="NoneLeft" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/PartRows/Rows" unique_id=639492777]
+[node name="NoneLeft" type="BaseButton" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/PartRows/Rows" unique_id=639492777]
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 1
@@ -2669,7 +2669,7 @@ Label = "Wheel"
 ValueText = "0 left"
 State = 3
 
-[node name="CompactRest" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/PartRows/Rows"]
+[node name="CompactRest" type="BaseButton" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/PartRows/Rows"]
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 1
@@ -2678,7 +2678,7 @@ IconId = 49
 Label = "Servo"
 Compact = true
 
-[node name="CompactLocked" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/PartRows/Rows"]
+[node name="CompactLocked" type="BaseButton" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/PartRows/Rows"]
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 1

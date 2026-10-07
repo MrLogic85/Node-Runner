@@ -22,6 +22,9 @@ public enum BuildPart
 public enum PartTrayRowState
 {
     Available,
+
+    /// <summary>Available and picked: a canvas tap places it (#805).</summary>
+    Selected,
     ComingLater,
 
     /// <summary>Implemented, but the creation is locked and the part has brain ports, so adding it would change the model (#896).</summary>
@@ -31,10 +34,19 @@ public enum PartTrayRowState
 /// <summary>A tray row; <c>Version</c> is the version that brings a Coming later row's part (#992), null for the other rows.</summary>
 public sealed record PartTrayRow(BuildPart Part, UiText Name, PartTrayRowState State, string? Version)
 {
-    public bool IsAvailable => State == PartTrayRowState.Available;
+    public bool IsAvailable => State is PartTrayRowState.Available or PartTrayRowState.Selected;
 }
 
-public sealed record PartTrayGroup(UiText Name, UiText HelpText, IReadOnlyList<PartTrayRow> Rows);
+public sealed record PartTrayGroup(UiText Name, IReadOnlyList<PartTrayRow> Rows);
+
+/// <summary>
+/// The Parts tray (#805): its tabs, what the picked part does and where it goes (<see cref="PickedInfo"/>,
+/// right under its row as in the Links list, so it is on screen however long the tab), and one help line.
+/// </summary>
+public sealed record PartTrayPresentation(
+    IReadOnlyList<PartTrayGroup> Groups,
+    UiText? PickedInfo,
+    UiText HelpText);
 
 /// <summary>
 /// The Build Parts tray: three tabs of reference parts (#374). Implemented rows are available;
@@ -55,20 +67,49 @@ public static class PartTray
 
     public static UiText CreationLockedHelp { get; } = UiText.Plain("Unlock to add parts.");
 
+    /// <summary>The tray's help line (#805).</summary>
+    public static UiText PickHelp { get; } = UiText.Plain("Tap a part to pick it, or drag it onto the creature.");
+
     public static IReadOnlyList<PartTrayGroup> Groups() => Catalog();
 
     /// <summary>
-    /// The tray for a locked creation: every tray part has brain ports, so every row shows locked,
-    /// each tab says how to unlock, and no row looks like it can be dragged out (#896).
+    /// The tray with <paramref name="picked"/> selected (#805). On a locked creation every tray part
+    /// has brain ports, so every row shows locked, the help says how to unlock, and no row looks like
+    /// it can be picked or dragged out (#896).
     /// </summary>
-    public static IReadOnlyList<PartTrayGroup> LockedGroups() =>
-    [
-        .. Catalog().Select(group => group with
+    public static PartTrayPresentation Create(BuildPart? picked, bool creationLocked = false)
+    {
+        if (creationLocked)
         {
-            HelpText = CreationLockedHelp,
-            Rows = [.. group.Rows.Select(row => row.IsAvailable ? row with { State = PartTrayRowState.CreationLocked } : row)],
-        }),
-    ];
+            return new(
+                [.. Catalog().Select(group => group with { Rows = [.. group.Rows.Select(row => row.IsAvailable ? row with { State = PartTrayRowState.CreationLocked } : row)] })],
+                PickedInfo: null,
+                CreationLockedHelp);
+        }
+
+        var pickedPart = picked is { } part && IsAvailable(part) ? part : (BuildPart?)null;
+        return new(
+            [.. Catalog().Select(group => group with { Rows = [.. group.Rows.Select(row => row.Part == pickedPart ? row with { State = PartTrayRowState.Selected } : row)] })],
+            pickedPart is { } shown ? PickedInfo(shown) : null,
+            PickHelp);
+    }
+
+    private static UiText PickedInfo(BuildPart part) =>
+        Info(part) is { } info ? UiText.Format("{0}\n{1}", info, Placement(part)) : Placement(part);
+
+    /// <summary>What the part does: the same line as its Part settings note (<see cref="PartInfo"/>), or null for a part not built yet.</summary>
+    public static UiText? Info(BuildPart part) => part switch
+    {
+        BuildPart.Servo => PartInfo.Servo,
+        BuildPart.Accelerometer => PartInfo.Accelerometer,
+        BuildPart.Camera => PartInfo.Camera,
+        _ => null,
+    };
+
+    /// <summary>Where a picked part goes, per part rather than per tab, as a tab can mix placements (#805).</summary>
+    public static UiText Placement(BuildPart part) => SensorKindOf(part) is not null
+        ? UiText.Plain("Tap a beam to place it. A beam holds one sensor.")
+        : UiText.Plain("Tap a joint to place it. A joint holds one part.");
 
     /// <summary>
     /// The tab the tray opens on: the first with a part the player can place (#887), so a
@@ -94,7 +135,7 @@ public static class PartTray
 
     private static PartTrayGroup[] Catalog() =>
     [
-        new(UiText.Plain("Moving parts"), UiText.Plain("Drag onto a joint. A joint holds one part."),
+        new(UiText.Plain("Moving parts"),
         [
             Available(BuildPart.Servo, UiText.Plain("Servo")),
             Locked(BuildPart.Stepper, UiText.Plain("Stepper"), "0.14.0"),
@@ -102,7 +143,7 @@ public static class PartTray
             Locked(BuildPart.Brake, UiText.Plain("Brake"), "0.14.0"),
             Locked(BuildPart.Wheel, UiText.Plain("Wheel"), "0.14.0"),
         ]),
-        new(UiText.Plain("Sensors"), UiText.Plain("Drag onto a beam. A beam holds one sensor."),
+        new(UiText.Plain("Sensors"),
         [
             Available(BuildPart.Accelerometer, UiText.Plain("Accelerometer")),
             // Implemented, but it adds little on the Flat map, so it waits for maps with terrain (#852).
@@ -110,7 +151,7 @@ public static class PartTray
             Locked(BuildPart.TouchSensor, UiText.Plain("Touch sensor"), "0.14.0"),
             Locked(BuildPart.Pulse, UiText.Plain("Pulse"), "0.14.0"),
         ]),
-        new(UiText.Plain("Blocks"), UiText.Plain("Drag it onto the canvas, then draw beams to its two eyes."),
+        new(UiText.Plain("Blocks"),
         [
             Locked(BuildPart.Battery, UiText.Plain("Battery"), "0.18.0"),
             Locked(BuildPart.Generator, UiText.Plain("Generator"), "0.18.0"),

@@ -223,7 +223,11 @@ The shell is filled `panel` over the frame card's `bg` (#347).
 - **Tray tabs** (#330): glyph tabs sharing the strip's width, 4 px apart, 32
   high, selected with `accent-soft`. **Tray rows** are `control-sm`
   `UiPartRow`s with 20 px glyphs; a locked row shows only its lock and fades
-  whole (#374, #964). A locked row answers a tap with a notification
+  whole (#374, #964). A row is a native button: a tap that does not turn
+  into a drag picks it (#805). The picked row has an `accent-soft` fill, an
+  `accent` signal border and an `accent` glyph, and a `UiPickList` fades its
+  info line in right under it over 0.12 s, in the Parts tray and the Links
+  list alike. A locked row answers a tap with a notification
   titled after the screen, with the padlock icon (#896, #992); its text
   is Build's (`docs/BUILD_MODE.md` → Locked Build).
 

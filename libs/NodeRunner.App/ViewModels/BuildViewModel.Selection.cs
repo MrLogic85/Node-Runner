@@ -277,6 +277,12 @@ public sealed partial class BuildViewModel
     private void NotifySelectionChanged()
     {
         _shownCopyBlockers = [];
+        if (SelectedPartCount > 0)
+        {
+            // A selection replaces the tray, so a pick it would hide is dropped, not kept out of sight (#805).
+            ClearPickedPart();
+        }
+
         OnPropertyChanged(nameof(SelectedNodeCount));
         OnPropertyChanged(nameof(SelectedBeamCount));
         OnPropertyChanged(nameof(SelectedPartCount));
