@@ -270,6 +270,7 @@ public partial class UiPicker : PanelContainer
             CustomMinimumSize = new Vector2(_minimumWidth, UiSize.Control.Small),
             SizeFlagsHorizontal = SizeFlags.ExpandFill,
             TooltipText = LabelText,
+            MouseFilter = MouseFilterEnum.Pass,
         };
         UiTranslation.ShareContext(this, rowButton);
         rowButton.Pressed += () => SetState(IsExpanded ? PickerState.Collapsed : PickerState.Expanded, emit: true);
