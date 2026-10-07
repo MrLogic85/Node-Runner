@@ -9,7 +9,7 @@ public sealed class PartParametersTests
     [Fact]
     public void EverySetting_IsBasicOrAdvanced_AsDesigned()
     {
-        // #903: tuning values sit under Advanced; the rest are basic.
+        // #903, #989: tuning values sit under Advanced; the rest are basic.
         PartParameterId[] advanced =
         [
             PartParameterId.StartPosition,
@@ -18,6 +18,7 @@ public sealed class PartParametersTests
             PartParameterId.AngularMaxSpeed,
             PartParameterId.RiseTime,
             PartParameterId.Damping,
+            PartParameterId.CoilLength,
         ];
 
         foreach (var id in Enum.GetValues<PartParameterId>())

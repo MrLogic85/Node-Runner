@@ -505,7 +505,7 @@ public sealed class BuildPresentationViewModelTests
     }
 
     [Fact]
-    public void SelectedSpring_HasOnlyDampingUnderAdvanced()
+    public void SelectedSpring_HasDampingAndCoilLengthUnderAdvanced()
     {
         var build = new BuildViewModel();
         build.Load(SpringCreature());
@@ -513,8 +513,8 @@ public sealed class BuildPresentationViewModelTests
 
         var part = new BuildPresentationViewModel(build).SinglePart!;
 
-        part.BasicSettings.Select(slider => slider.Id).ShouldBe([PartParameterId.Stiffness, PartParameterId.Stroke, PartParameterId.CoilLength]);
-        part.AdvancedSettings.Select(slider => slider.Id).ShouldBe([PartParameterId.Damping]);
+        part.BasicSettings.Select(slider => slider.Id).ShouldBe([PartParameterId.Stiffness, PartParameterId.Stroke]);
+        part.AdvancedSettings.Select(slider => slider.Id).ShouldBe([PartParameterId.Damping, PartParameterId.CoilLength]);
     }
 
     [Fact]
