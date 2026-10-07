@@ -25,13 +25,14 @@ of a stage card's header, or leading a chain chip -- every numbered step uses th
 Lives here, not in ui17's control kit, because the old signal-flow pipeline (gen10, gen13) needs it too and
 can't import ui17 without a circular import; ui17 pulls this in the same way it pulls in ic() and ICONS.
 
-## `c_stage(n, title, body='', em='', height=None, sel=False, collapsed=False, style='')`
+## `c_stage(n, title, body='', em='', height=None, sel=False, collapsed=False, style='', opens=None)`
 
 One numbered card of the signal-flow column: c_num leading the header (the stage name, an optional
 right-aligned note), then whatever that stage needs to show. collapsed=True is the 28px strip used when
 only one stage is expanded at a time -- same header, no body. sel=True is the frame `pick`: the chosen
 stage card, the same frame Menu and Dialog use for "this is the open one" (see Rule: frames) -- never a
-literal 'sel' class of its own. Every stage card is the Frame, glowing, in its own border colour.
+literal 'sel' class of its own. Only a stage that opens something looks like a button (opens, the Brain stage by
+default): the raised frame with its glow. The others are plain frames without glow, so they never read as tappable.
 
 ## `c_round_button(icn, col=None, fill=None, r=13)`
 
@@ -181,6 +182,11 @@ The one frame (Frame surface) for panels, cards, tiles, menus and dialogs. kind:
 ## `c_ring(pct, done=False)`
 
 Progress ring: a touch-size box, a 44 ring centred in it, the percent (or a check when done) centred inside.
+
+## `c_bar_cell(fill=0.0, sel=False, icon=None)`
+
+Bar cell: a square control-size cell on panel with a line-strong hairline, either a bar from the bottom (inset
+space-1, its height the value 0..1, line-strong) or a muted icon-lg. Selected: a 2 px accent border and an accent bar.
 
 ## `c_status(text, ok=True)`
 

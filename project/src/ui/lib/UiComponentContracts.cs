@@ -38,6 +38,7 @@ public static class UiComponentContracts
         CardActions,
         ExpandSection,
         HintCard,
+        BarCell,
     }
 
     public static IReadOnlyList<CanonicalComponent> AllCanonicalComponents { get; } =
@@ -75,6 +76,7 @@ public static class UiComponentContracts
             CanonicalComponent.CardActions => nameof(UiCardActions),
             CanonicalComponent.ExpandSection => nameof(UiExpandSection),
             CanonicalComponent.HintCard => nameof(UiHintCard),
+            CanonicalComponent.BarCell => nameof(UiBarCell),
             _ => throw new ArgumentOutOfRangeException(nameof(component), component, null),
         };
 
@@ -111,6 +113,7 @@ public static class UiComponentContracts
             CanonicalComponent.CardActions => "c_card_actions",
             CanonicalComponent.ExpandSection => "c_expand",
             CanonicalComponent.HintCard => "c_hint",
+            CanonicalComponent.BarCell => "c_bar_cell",
             _ => throw new ArgumentOutOfRangeException(nameof(component), component, null),
         };
 

@@ -14,7 +14,7 @@ The feeling is a **neon lab bench**, not a cute toy: a dark arena, glowing parts
 
 ## How the app is organised
 
-The app is hub and spoke around the **Creations** menu (see Navigation). **Build** and **BuildLocked** are one scene (`Build`, with a `locked` flag) in two states. **Unlocked (Build):** draw as many beams as you like, place limited parts from a **Parts tray** (Links, On a joint, Sensors, Blocks), tap any part to edit its settings, and choose the brain's shape in **Brain setup** in the overflow menu. Everything **autosaves** and the primary action is **Start training**. **Locked (BuildLocked):** after a training session has finished the parts and the brain's shape are locked, so the machine-learning model can never be broken. You can still move things, open **Stats**, tap the **brain widget** to see which senses drive which outputs, and press **play** to train more (**Train setup**, then **Training**). The **padlock** unlocks it again, which resets the training after a warning. **Achievements** unlock new parts, maps and examples. **Settings** (UI size, theme, sounds) opens from the Creations overflow menu. A card on Creations can be **copied** (identical, brain intact) or **deleted**.
+The app is hub and spoke around the **Creations** menu (see Navigation). **Build** and **BuildLocked** are one scene (`Build`) in two states. **Build:** add joints and links (Beam, Piston, Spring), drag parts from the **Parts tray** (Moving parts, Sensors, Blocks), and tap any part to edit its settings. Everything **autosaves**, Undo and Redo are in the top bar, and **play** at the foot of the rail opens **Train setup**, then **Training**. **Locked (BuildLocked):** once a creation has trained one generation, adding or deleting parts the brain uses is locked, so the model is not changed by accident; joints, beams and springs, moving, sliders and renaming still work. The **padlock** unlocks it for the visit and keeps the training; **Reset training** in the overflow starts over. The brain is direct, every sense to every output, and grows with the player (see the brain pages). **Achievements**, **Stats**, **Settings** and **Power** are planned and say "comes later" where the app already shows them. A card on Creations can be **copied** (identical, brain intact) or **deleted**.
 
 ## Canvas and layout
 
@@ -35,33 +35,32 @@ A phone in landscape has about 360px of height, so each screen shows only what t
 
 ## Selecting a part
 
-The rail is **Move** (also tap to select one part; it never adds joints), **Beam** (joins two joints), **Joint** (adds one) and **Select** (several at once, with move, rotate and scale handles around the selection). Tapping a part or beam opens its **settings** (see PartSettings). They take the place of the Parts tray when unlocked and sit under the brain widget when locked. A motor has a **Fixed part** and a **Target part**, both lit on the canvas and both chosen from the beams that touch the joint. A beam's own length, and a link's own length or which nodes it spans, are not settings: they're structure, drawn on the canvas, not listed in the panel.
+The rail is **Joint** (the default: a tap on empty space adds a joint), **Links** (draw the picked Beam, Piston or Spring from joint to joint), **Parts** (the tray) and **Select** (draws a box), then **play**. Every tool selects the same way: a tap adds a part to the selection or takes it out, and two or more joints get a frame with Move, Rotate and Scale. One selected part shows its **settings** (see PartSettings) in the side panel, several the selection panel with their shared sliders, Copy and Delete. A Servo has a **Fixed link** and a **Target link**, marked on the canvas while it is selected. A beam's length, and which joints a link spans, are structure: drawn on the canvas, not listed in the panel.
 
 ## The words
 
-Use exactly these words and glyphs (see Parts). **Beam**: a rigid rod between two joints. Joints are added with the **Joint** tool, never by Move or Beam. **Node** and **Joint**: where beams meet; a joint has angle limits and is never a motor by itself. Parts you place, limited in number: on a joint, **Brake**, **Servo**, **Stepper**, **Velocity motor** and **Wheel**; sensors on a joint, the **Core** (velocity, elevation, tilt) and the **LOS sensor** (1 to 5 rays, the eyes); links between two nodes, **Spring / damper**, **Piston** and **Wing**; and the blocks **Battery**, **Generator** and **Fuel tank**, drawn objects of one size each with two **eyes** that beams attach to, moved and rotated as one piece. A joint holds one part. The product word for a saved thing is **creation**; **shadow** is one of the ghost copies that race at once during training.
+Use exactly these words and glyphs (see Parts). **Joint**: where links meet (the player never sees "node"). **Link**: what joins two joints: a **Beam** (a rigid rod), a **Piston** (extends and retracts) or a **Spring** (extends and retracts toward its built length); later a **Wing**. Parts you place, unlimited: on a joint, the **Servo** (later Stepper, Velocity motor, Brake and Wheel); on a beam, the **Accelerometer** (later the Camera, Touch sensor and Pulse); and later the blocks **Battery**, **Generator** and **Fuel tank**. A joint holds one part and a beam one sensor. The product word for a saved thing is **creation**; a **shadow** is one of the copies that race at once during training, each with a slightly different brain.
 
-The causal chain is the sentence to serve: cores and sensors sense the world, the brain works out what to do, motors (and any other outputs) move the body, the body moves, distance is the score. The numbered stages **1 Senses, 2 Brain, 3 Outputs, 4 Distance** carry it on every screen that shows live data.
+The causal chain is the sentence to serve: sensors sense the world, the brain works out what to do, motors and pistons move the body, the body moves, distance is the score. The numbered stages **1 Senses, 2 Brain, 3 Outputs, 4 Distance** carry it on every screen that shows live data.
 
 ## Rules that fix the known problems
 
-- **No dead air.** Trials run one at a time (about 10 s each, 8 per generation). The GenerationStrip makes a generation a shape and its one line says "try 5 of 8".
-- **Numbers are a diagram, not a log.** Sensors and motors live in SignalFlow (bars and dials, named on tap), neurons in BrainFocus. Never a scrolling text list of raw values.
-- **One reset.** Training is only lost by unlocking a creation, with a warning that names it and a hold to confirm. Delete is the same dialog and the same hold, and there is no Undo.
+- **No dead air.** Every shadow races at once (8 by default, up to 100), and a generation is one picture: the shadow strip and the arena.
+- **Numbers are a diagram, not a log.** Sensors and motors live in SignalFlow (bars and dials, named on tap), the brain in BrainFocus. Never a scrolling text list of raw values.
+- **Training is not lost by accident.** Unlocking keeps it; only Reset training forgets it, after a dialog that names the generations. Every confirm is a tap, and Build has Undo.
 - **Nothing is disposable.** Creations autosave silently, are named (editable), listed and resumable; Copy makes an identical creation with its brain.
-- **The camera follows.** The creature stays about 43% from the left, the ruler scrolls, and a dashed best marker sits ahead.
-- **Build gives live feedback.** Part counts ("1 left"), rigidity and one validation line update as you build; Start training is dimmed with the reason instead of failing later.
-- **Trained means locked.** After the first finished session only moving is allowed; Beam is dashed and locked, the tray is gone, and a padlock in the top bar says why and offers the way out.
+- **The camera follows.** The followed shadow stays about 43% from the left, the ruler scrolls, and the best distance is marked.
+- **Build gives live feedback.** Rigidity, too-short links, loose joints and one readiness line update as you build; play is dimmed with the reason instead of failing later.
 
 ## Decisions already made
 
-- **Changing a trained creation's body** means unlocking it, which resets the training; Copy it first to keep the trained one.
+- **Changing a trained creation's body** keeps the training: what the brain does not use can change even while locked, and the padlock opens the rest for the visit. A part added or removed adds or removes its part of the model.
 - **Copy** keeps the brain and training exactly.
 - **Unlocked parts and maps** are player-wide, earned in Achievements, and available to every creation.
 
 ## Power
 
-Powered parts (servo, stepper, velocity motor, LOS sensor, piston) draw from a shared supply made by generators, as much as they can, and stored in batteries; fuel tanks feed generators. When draw is more than output every powered part gets the same fraction of its force, and when everything is spent the run ends. Show it with the bolt chip on the canvas and the Power budget (see Power), never with colour alone.
+Planned for 0.18. Powered parts draw from a shared supply made by generators, as much as they can, and stored in batteries; fuel tanks feed generators. When draw is more than output every powered part gets the same fraction of its force, and when everything is spent the run ends. Show it with the bolt chip and the Power budget (see Power), never with colour alone.
 
 ## Colour, type, and never colour alone
 
@@ -71,14 +70,12 @@ Type: `heading` and `stage` in Chakra Petch, `body`, `label` and `caption` in Ba
 
 ## The Tron feel
 
-The neon theme should read as a lit grid: dark surfaces, thin bright lines, light that comes from the lines rather than fills.
+The neon theme should read as a lit lab: dark surfaces, thin bright lines, light that comes from the lines rather than fills.
 
-- **Lit lines.** Motor arcs, cores, the firing node, the ground trail and corner brackets use `accent` at 2px with the `glow` class (a soft drop shadow in `accent-glow`). Resting beams and node outlines stay `line-strong`, so light means "live".
-- **Grid floor.** The arena and the build canvas sit on a faint 24 to 32px line grid in `line`, faded toward the edges so the creature stays the brightest thing.
-- **Light trail.** The ground line behind the creature is a gradient that fades in from the left and shows the distance it has run; ahead of the creature it is an unlit `line-strong` rule.
-- **Edge lighting.** Frame, top bar, panels and cards are outlined with `edge` (a solid teal in neon, plain grey in paper). Any frame can also glow: a separate on/off, box-shadow in that frame's own border colour, never a fixed colour of its own.
-- **HUD corners and traces.** Two `accent` corner brackets top left and right of the arena and canvas, and one or two circuit traces in `edge`; never more, and never near text.
-- **Removable.** All of the above use `accent-glow`, `glow` or the `.glow` class, so paper and `data-effects="lite"` turn the light off and keep the grid, lines and shapes.
+- **Lit lines.** What the brain drives (Servo, Piston) and the sensors are drawn in `accent`; resting beams, joints and springs stay `line-strong`, so colour means "live".
+- **Blueprint.** The Build canvas has a faint `line` grid over exactly the build area, with `accent` corner marks. The Training arena is plain: motion reads against the ruler and the `accent` edge of the ground.
+- **Edge lighting.** Frame, top bar, panels and cards are outlined with `edge` (a solid teal in neon, plain grey in paper). Any frame can also glow: a separate on/off, in that frame's own border colour, never a fixed colour of its own.
+- **Removable.** Glow comes from the glow tokens and the `.glow` class, so paper and `data-effects="lite"` turn the light off and keep the lines and shapes.
 
 ## Theming and effects
 
@@ -86,11 +83,11 @@ Neon (`dark`) is the reference theme and the default; every screen in this syste
 
 ## Copy
 
-Plain words first: "Senses", "Brain", "Outputs", "How long is each try". Teach a term once, in one sentence, where it appears (node, beam, core, motor relation). Sentence case in copy; upper case only in labels and stage names. No emoji, no exclamation marks. Name what is lost before asking for confirmation ("142 generations of training").
+Plain words first: "Senses", "Brain", "Outputs", "How long is each try". Teach a term once, in one sentence, where it appears (joint, link, sensor, Fixed and Target link). Sentence case in copy; upper case only in labels and stage names. No emoji, and an exclamation mark only on a warning the player must not miss. Name what is lost before asking for confirmation ("142 generations of training").
 
 ## Iconography
 
-A stroked glyph set on a 24px grid, 2px stroke, round caps, `currentColor`: menu, chev-l, chev-r, chev-u, chev-d (Back is chev-l), more, play, pause, speed, restart, plus, copy, trash, lock, unlock, check, x, warn, move, beam, core (eye), build, flag, brain; the training values distance, top-speed and elevation, and one per map: map-flat, map-hills, map-stairs. The part glyphs (node, beam, core, motor arc) are the same drawings used in the arena.
+A stroked glyph set on a 24 grid, 2 px stroke, round caps, `currentColor`, every drawing 16 on its longer side and centred (see ColorsAndStyles): menu, chev-l, chev-r, chev-u, chev-d (Back is chev-l), more, play, pause, undo, redo, restart, plus, copy, trash, lock, unlock, check, x, warn, move, rotate, scale, select, joint, beam, parts, eye, build, flag, model; the training values distance, top-speed and elevation, and one per map. The part glyphs (20 grid) are small pictures of the parts as the canvas draws them.
 
 ## Not yet drawn
 
@@ -100,7 +97,7 @@ Empty state for a first launch, onboarding, accessibility settings beyond UI siz
 
 **Rule: colour.** Every colour is a token from tokens.json, defined once per theme and referenced as `var(--name)`. A component never holds a hex or rgba value, so a theme swap or a change to a token reaches everything. Transparency comes from a token that has it (`accent-soft`, `accent-glow`, `scrim`) or from `opacity`, not from a new literal. The build fails on any literal colour.
 
-**Rule: icons.** An icon or part glyph is one colour and has no colour of its own: it takes its parent's (`ink` by default, `muted` when quiet or locked, `accent` when selected, `danger` for destructive). UI icons are strokes on a 24 grid with a 2 px stroke, part glyphs are strokes on a 20 grid with a 1.67 stroke (the same line at the same size), both drawn in `currentColor`. Every UI icon fills its box the same way, whatever its drawing: its longer side takes 18 of the 24 (as Move does), centred, so a narrow drawing such as the lock or a chevron is scaled up to take the same place as a wide one; the line is scaled with it and stays 2 on 24. In the SVG this is the viewBox, fitted around the drawing. Every stroke in an icon has that one width: no thin details, and a heavier line is never used to say something is important. In Godot import the SVG as white and tint with `modulate` or a Button's icon colours.
+**Rule: icons.** An icon or part glyph is one colour and has no colour of its own: it takes its parent's (`ink` by default, `muted` when quiet or locked, `accent` when selected, `danger` for destructive). UI icons are strokes on a 24 grid with a 2 px stroke, part glyphs are strokes on a 20 grid with a 1.67 stroke (the same line at the same size), both drawn in `currentColor`. Every UI icon is drawn the same way on its 24 grid: the drawing's longer side is 16, centred, so every icon has the same air round it (4 on its longer sides), whether it is a narrow lock or a wide chart. The SVG is that plain 24 grid and is never scaled to fit: the file shown here is the file the app imports. A drawing that is not 16 on its longer side, centred, fails the build. Every stroke in an icon has that one width: no thin details, and a heavier line is never used to say something is important. In Godot import the SVG as white and tint with `modulate` or a Button's icon colours.
 
 **Rule: one implementation.** Every control, frame and figure comes from the component library (`c_*` functions in the kit; in Godot, one scene each) and is marked `data-c` in the preview HTML, or is one of its classes (`btn`, `chip`, `bar`, `field`, `partrow`, `call`, `pnl`, `well`, `switch`, `scrollbar`, `rail`). A screen never draws its own copy: no hand-built frame (border, radius and background on a bare element), no inline border, radius, background or shadow on a component class, no second progress ring. A new look is a variant of the component, added once. The build lists every violation and fails on any.
 
@@ -126,7 +123,7 @@ Empty state for a first launch, onboarding, accessibility settings beyond UI siz
 
 ## Components
 
-- [GenerationStrip](#generationstrip): The shadow strip: who is ahead, and who to follow
+- [GenerationStrip](#generationstrip): The shadow strip: how far each shadow has come, and which one is followed
 - [SignalFlow](#signalflow): Senses, Brain, Outputs, Distance: at rest, other outputs, a core tapped, a large brain
 
 ## Screens
@@ -145,8 +142,8 @@ Empty state for a first launch, onboarding, accessibility settings beyond UI siz
 - [Settings](#settings): Settings: UI size, theme (Neon, Paper, Use phone) and sounds
 - [Splash](#splash): Splash: the cover artwork on a screen while the app loads
 - [Stats](#stats): Stats: the latest run and the progress over generations, per metric
-- [TrainSetup](#trainsetup): Train setup: Train or Simulate, shadows, run length, map
-- [Training](#training): Training: shadows run at once; a tapped core expands Senses
+- [TrainSetup](#trainsetup): Train setup: shadows, run length and map; Train or Simulate once trained
+- [Training](#training): Training: shadows race at once; the previous best is followed; the Status panel beside the arena
 - [Wing](#wing): A beam with a lift side: gliding, flapping, flip and placement
 
 ## Themes
@@ -167,7 +164,7 @@ The **foundations** every component is built from: colours, text styles, radius 
 
 **Colour variants.** 7 more tokens, each a transparent or glow version of one base colour (`accent-soft`, `accent-glow`, `halo-glow`, `danger-glow`, `ink-glow`, `edge-glow`, `line-strong-glow`), shown in their own group so they are never mistaken for a colour of their own. A variant is never used as a solid colour: `accent-soft` washes a selected tool or the current stage; the `*-glow` tokens build the glow around a selected button, in that kind's own colour (`halo-glow` for primary, `accent-glow` for secondary, `danger-glow` for tertiary, `ink-glow` for flat), or around any frame that turns its own glow on (`edge-glow` for the plain panel, `accent-glow` for `sel` and `lock`, `danger-glow` for `warn`, `halo-glow` for `hint`, `line-strong-glow` for `raised`; a frame that is `disabled` never glows), and `accent-glow` also lights a menu, a dialog and firing neurons. Both `glow`, the shadow token, and every `*-glow` colour go to `none` or transparent in the paper theme and under `data-effects="lite"`.
 
-**Icon set.** Every UI icon (50) and part glyph (18) is shown by name on this page, and exported as pure white SVG (see `icons/`). Each part has exactly one glyph, named after the part: the `spring` glyph is the Spring / damper part (there is no separate damper glyph). The `model` icon is a tiny network: two inputs, three hidden neurons and two outputs, drawn as dots joined by lines. Each input reaches two hidden neurons and each output is fed by two. It is used for Brain setup and the network view. Icons are drawn with the same 2 px round stroke; a dot (the `more` icon) is a 4 px dot, not a zero-length stroke.
+**Icon set.** Every UI icon (51) and part glyph (18) is shown by name on this page, and exported as pure white SVG (see `icons/`). Each part has exactly one glyph, named after the part: the `spring` glyph is the Spring / damper part (there is no separate damper glyph). The `model` icon is a tiny network: two inputs, three hidden neurons and two outputs, drawn as dots joined by lines. Each input reaches two hidden neurons and each output is fed by two. It is used for Brain setup and the network view. Icons are drawn with the same 2 px round stroke; a dot (the `more` icon) is a 4 px dot, not a zero-length stroke.
 
 **Icons.** A stroked glyph on a 24 grid, `currentColor`, in four sizes: `icon-sm` 12 (inside a chip or dense row), `icon` 16 (beside text), `icon-lg` 20 (in an icon button or menu row) and `icon-xl` 24. No other size is used. In a button the layout picks the size, never the screen: `icon` beside text, `icon-lg` when the button has no text and in a stacked button. A chip takes `icon-sm`. The leading icon of a list row takes `icon-lg` in a `touch` row (a menu row, a part row) and `icon` in a `control-sm` row (a compact menu, a picker); an icon inside a ring (a handle, and an info row, which shows that handle) takes `icon`, as the round button draws it. Part glyphs are drawn on a 20 grid and used at `icon`, `icon-lg` or `icon-xl`, never at `icon-sm`, where the drawing no longer reads; a chip that shows a glyph takes `icon`, and so does a UI icon in a chip beside it. Any other size fails the build.
 
@@ -177,7 +174,7 @@ The **foundations** every component is built from: colours, text styles, radius 
 
 **Rule: colour.** Every colour is a token from tokens.json, defined once per theme and referenced as `var(--name)`. A component never holds a hex or rgba value, so a theme swap or a change to a token reaches everything. Transparency comes from a token that has it (`accent-soft`, `accent-glow`, `scrim`) or from `opacity`, not from a new literal. The build fails on any literal colour.
 
-**Rule: icons.** An icon or part glyph is one colour and has no colour of its own: it takes its parent's (`ink` by default, `muted` when quiet or locked, `accent` when selected, `danger` for destructive). UI icons are strokes on a 24 grid with a 2 px stroke, part glyphs are strokes on a 20 grid with a 1.67 stroke (the same line at the same size), both drawn in `currentColor`. Every UI icon fills its box the same way, whatever its drawing: its longer side takes 18 of the 24 (as Move does), centred, so a narrow drawing such as the lock or a chevron is scaled up to take the same place as a wide one; the line is scaled with it and stays 2 on 24. In the SVG this is the viewBox, fitted around the drawing. Every stroke in an icon has that one width: no thin details, and a heavier line is never used to say something is important. In Godot import the SVG as white and tint with `modulate` or a Button's icon colours.
+**Rule: icons.** An icon or part glyph is one colour and has no colour of its own: it takes its parent's (`ink` by default, `muted` when quiet or locked, `accent` when selected, `danger` for destructive). UI icons are strokes on a 24 grid with a 2 px stroke, part glyphs are strokes on a 20 grid with a 1.67 stroke (the same line at the same size), both drawn in `currentColor`. Every UI icon is drawn the same way on its 24 grid: the drawing's longer side is 16, centred, so every icon has the same air round it (4 on its longer sides), whether it is a narrow lock or a wide chart. The SVG is that plain 24 grid and is never scaled to fit: the file shown here is the file the app imports. A drawing that is not 16 on its longer side, centred, fails the build. Every stroke in an icon has that one width: no thin details, and a heavier line is never used to say something is important. In Godot import the SVG as white and tint with `modulate` or a Button's icon colours.
 
 **Rule: text is a class.** A view or component puts `class="t-<style>"` on its text (`t-title`, `t-body`, `t-label`, `t-readout`...) and nothing else: no inline `font`, `font-size`, `font-weight`, `font-family`, `line-height`, `letter-spacing` or `text-transform`. The class carries the font, the tracking and the case of its style, so one place decides them. In Godot each style is a `LabelSettings` or a theme type variation.
 
@@ -264,7 +261,7 @@ Preview: [components/ComponentLibraryCont/preview.html](components/ComponentLibr
 
 The three structural pieces every Build and BuildLocked screen is built from -- shown here on their own, apart from any one screen's content, because they are shared chrome, not a feature of Build or BuildLocked specifically.
 
-**Toolbar**, 48px (`touch`), spans the full width at the top. Always the same shape: **Back**, one flexible field that holds everything else -- a title, and up to a couple of trailing actions, left- and/or right-justified within it but never taller than the bar itself -- then the **overflow**, always last. Every screen in the app uses it; only what sits inside the field changes.
+**Toolbar**, 48px (`touch`), spans the full width at the top. Always the same shape: **Back**, one flexible field that holds everything else -- a title, and up to a couple of trailing actions, left- and/or right-justified within it but never taller than the bar itself -- then the **overflow**, always last. Back and the overflow are flat stacked buttons with no label (48 x 48); the actions in the field are secondary icon buttons (40 x 40), and a primary text button where there is one (New, Start). Every screen in the app uses it; only what sits inside the field changes.
 
 **ButtonBar**, 56px (`w-rail`), the vertical tool rail down the left edge of Build: **Joint**, **Links**, **Parts** and **Select** as stacked secondary buttons (the active one selected), a spacer, then **play**, a stacked primary button, at the bottom in both states. Play is *unavailable* (dimmed and dashed, still tappable) while the creature cannot train. A divider in `edge` separates the rail from the canvas.
 
@@ -407,17 +404,19 @@ Preview: [components/Spacing/preview.html](components/Spacing/preview.html)
 
 # GenerationStrip
 
-*Components · The shadow strip: who is ahead, and who to follow*
+*Components · The shadow strip: how far each shadow has come, and which one is followed*
 
 ![GenerationStrip](screenshots/GenerationStrip.png)
 
-One cell per **shadow** (the ghost copies that all run at the same time). Each cell shows **how far that shadow has travelled**, as a bar that grows during the run, so a glance says who is ahead: the leader's bar is `accent`, always, whichever cell is being followed; the rest are `line-strong`. The leader is drawn in full in the arena; the others are faded.
+One **bar cell** per **shadow** (the copies of the creation that race at once, each with a slightly different brain), under the caption "Generation 37" and a bar that fills as the followed run goes by. Generations count from 1.
 
-**It is tappable, and there is only ever one ring.** The `accent` border is "selected" everywhere else in the system, so it sits on exactly one cell: whichever shadow the arena is following. By default that is the leader, so its bar and its ring are both `accent` and nothing else needs marking. Tap a different cell to follow it instead (the caption says "Following shadow 5 · 10.3 m"): the ring moves to it in `halo`, and the leader's border goes back to plain `line-strong` -- its bar stays the brightest, so it is still easy to find, but its border no longer claims to be selected. Tap the leader to bring the ring back to it.
+**A cell** is square, `control` high, on `panel` with a `line-strong` hairline. Its bar grows from the bottom with the shadow's distance so far, measured against this generation's leader, whose bar is full.
 
-There is no time bar under the strip: all shadows run for the same time, so one line of text carries it ("Generation 37 · 6 of 10 s").
+**Only the followed cell is marked**: a 2 px `accent` border and an `accent` bar. The leader is not marked: the lead changes too often to follow with the eye. By default the followed shadow is shadow 1, the previous best, which replays its run; a tap on a cell follows that shadow until the generation ends, then it goes back to shadow 1.
 
-**Past 8 shadows, the row stops shrinking.** Shadows can go up to 32 (see TrainSetup), and a cell that thin would be unreadable and untappable. Instead of cramming every shadow in, the row always holds the same 8 cells' worth of room: the best 7 -- the only ones worth following anyway -- sorted worst to best, left to right, so the leader is always among the brightest, then a sort-icon button last (tap to re-sort). It never shrinks further and never gains a ninth cell, however many shadows are racing.
+**Order.** Shadow order, shadow 1 on the right. A sort ranks by distance at that moment and holds until the next sort, so cells never jump while the player watches.
+
+**Paging.** The strip has as many cells as fit its width, at least 3. With more shadows than that it pages: a **worse** chevron first, then the shadows, and as the last cell **Sort** on the first page or a **better** chevron on later pages. Only the shadows on the page are drawn in the arena, plus the followed one. A new generation starts on the first page, in shadow order.
 
 Preview: [components/GenerationStrip/preview.html](components/GenerationStrip/preview.html)
 
@@ -430,15 +429,17 @@ Preview: [components/GenerationStrip/preview.html](components/GenerationStrip/pr
 
 ![SignalFlow](screenshots/SignalFlow.png)
 
-The causal chain as four stacked cards joined by `accent` arrows, in the order things happen: **1 Senses**, **2 Brain**, **3 Outputs**, **4 Distance**. The words are the parts the player just built: cores sense, the brain is the network, motors move the body, and distance is the score.
+The causal chain as four stacked cards joined by `accent` arrows, in the order things happen: **1 Senses**, **2 Brain**, **3 Outputs**, **4 Distance**. The words are the parts the player just built: sensors sense, the brain is the network, motors move the body, and distance is the score.
 
 **At rest** each card is one picture and no captions: a row of small level bars (one per sense), a tiny network, half-dials (one per motor) and the distance readout.
 
-**Senses can be many.** A creature can have many cores, and each core has several readings. At rest the card shows the eight most active as bars and a `+6` chip for the rest, and the header carries the total. **Tap a core on the body** and Senses expands to that core's readings (named rows: "Touch", "Speed", "Angle"...), most active first, in a card about 170px tall that **scrolls** (thin scroll thumb, fade at the foot). The other three cards collapse to one-line headers so the column never overflows; tap one to swap.
+**Senses can be many.** A creature can have many sensors, and each has several readings. At rest the card shows the eight most active as bars and a `+6` chip for the rest, and the header carries the total. **Tap a sensor on the body** and Senses expands to that sensor's readings (named rows: "Touch", "Speed", "Angle"...), most active first, in a card about 170px tall that **scrolls** (thin scroll thumb, fade at the foot). The other three cards collapse to one-line headers so the column never overflows; tap one to swap.
 
 **Outputs, not only motors.** The card is always called Outputs, because motors are not the only output. As soon as a creation has other output parts (a spring's stiffness, for instance) the card is titled **Outputs**, keeps the dials for motors and adds one bar row per other output with its part glyph. More rows scroll in the same way.
 
-Tapping a body part outlines the matching card in `halo`. Tapping Brain opens the Brain screen. Cards are 156px wide inside a 168px column.
+Tapping a body part outlines the matching card in `halo`. Tapping Brain opens the Brain screen. Cards are 156px wide inside the 176 side panel titled **Status**, which collapses to a 28 tab. Only the Brain card looks like a button, the raised frame with its glow, and opens the brain; the others are plain frames without glow.
+
+**Built so far.** The app shows the four cards as headers with a count ("9 readings", "2 motors", "12.4 m"); the pictures here are the design they grow into (#196).
 
 **A large brain.** The Brain card must stay one glance tall whatever the network size, so it never draws neurons as circles beyond twelve per layer. Past that, each hidden layer becomes a small **grid of squares** (one per neuron, at most 10 x 10, brightness = activity), the senses and motors are a few dots at the ends, and faint bands show the layers are connected. The header carries the shape ("64 · 32" for two hidden layers) instead of a picture of every neuron. The card is still one tap to the Brain screen, where BrainScale takes over.
 
@@ -529,7 +530,7 @@ Preview: [components/BrainSetup/preview.html](components/BrainSetup/preview.html
 
 Build is where a creation is drawn. Build and BuildLocked are **one scene in two states**: a creation is locked once it has trained at least one generation (derived from its training, never stored), and the lock only guards what changes the model. Everything **autosaves**; there is no Save button. The canvas draws the creature exactly as Training does (see **How parts are drawn**).
 
-**Top bar.** Back, the creation's name (the field fills the bar; at most 40 characters), the **padlock** when locked (a selected secondary icon button), **Undo** and **Redo** (secondary icon buttons, dimmed when there is nothing to undo or redo), then the overflow. There is no Start training button here: play is on the rail. Undo and Redo work in both states. Each finished action is one step (a placed part, a link, a delete, a rename of a part, a whole drag, a whole slider drag); selection, tool, zoom and pan are not steps. The history holds 100 steps and lasts one visit.
+**Top bar.** Back, the creation's name (the field fills the bar; at most 40 characters), the **padlock** when locked (a selected secondary icon button), **Undo** and **Redo** (secondary icon buttons, disabled, dimmed and dashed, when there is nothing to undo or redo), then the overflow. There is no Start training button here: play is on the rail. Undo and Redo work in both states. Each finished action is one step (a placed part, a link, a delete, a rename of a part, a whole drag, a whole slider drag); selection, tool, zoom and pan are not steps. The history holds 100 steps and lasts one visit.
 
 **Overflow.** Not trained yet: **Power budget** (coming soon), **Copy creation** (only when something is drawn) and **Delete creation**. Trained: **Stats** (coming soon), Power budget, Copy creation, **Reset training** and Delete creation. Copy opens the copy in place of the original, named "Copy of …", with its trained brain. Delete creation and Reset training each ask first in a dialog confirmed with a tap (see Overlays), so they may sit next to each other.
 
@@ -635,9 +636,9 @@ The home screen and the hub for everything: the list of saved **creations**. Thr
 
 **The list** is sorted by name.
 
-**A card** is a still thumbnail of the creation, the name, cut with an ellipsis when it is too long, and, for a trained creation, a **padlock** and three values from its **latest training** (never from a checkpoint): **distance**, **top speed** and **elevation**. They have no units, to fit; each value's own icon says which it is. Under them, the icon of the **map** it was last trained on and the number of generations. An untrained creation says so instead. Along its bottom edge are two 48px actions: **Copy** (an identical creation with the trained model intact; the new card simply appears in the list, no dialog) and **Delete** (a hold to confirm, no undo, see Overlays). A copied example is a creation like any other, with both.
+**A card** is a thumbnail of the creation, drawn with the same parts as in Build (plain, no edit marks, fitted inside the card and never larger than half its Build size), the name, cut with an ellipsis when it is too long, and, for a trained creation, a **padlock** and three values from its **latest training** (never from a checkpoint): **distance**, **top speed** and **elevation**. One value per row with its unit ("18.4 m", "3.1 m/s", "1.2 m") and its icon at the left: testers new to the app needed the units to read the card. The distance icon is `|->`. Under them, the icon of the **map** it was last trained on and the number of generations. An untrained creation says so instead. Along its bottom edge are two 48px actions: **Copy** (an identical creation with the trained model intact; the new card simply appears in the list, no dialog) and **Delete** (a dialog confirmed with a tap, no undo, see Overlays). A copied example is a creation like any other, with both.
 
-**Top bar.** The title, the **Achievements** trophy with a badge at its top right corner for anything new, **+ New** (the only primary, which opens an empty Build) and the overflow menu: **Settings** (with a cog) and **Examples** (see Examples). Nothing has a Save button: everything autosaves.
+**Top bar.** The title, inset a touch's width to line up with the other bars' titles, the **Achievements** trophy (a secondary icon button, unavailable until Achievements is built: a tap says it comes later; then it gets a badge for anything new), **+ New** (the only primary, which opens an empty Build) and the overflow menu: **Settings** (with a cog) and **Examples** (see Examples). Nothing has a Save button: everything autosaves.
 
 Preview: [components/Creations/preview.html](components/Creations/preview.html)
 
@@ -652,9 +653,9 @@ Preview: [components/Creations/preview.html](components/Creations/preview.html)
 
 **Examples** is the list of ready-made creations, opened from the **overflow menu on Creations** (Examples). Back returns to Creations. Three cards across, scrolling sideways, the same card frame and thumbnail as Creations.
 
-**A card** is a still thumbnail of the creation, the name, and one line on **what is new in it**: the part or idea the example is there to show. Along its bottom edge is one action, **Copy**.
+**A card** is a thumbnail of the creation, drawn with the same parts as in Build, the name, and one line on **what is new in it**: the part or idea the example is there to show. Along its bottom edge is one action, **Copy**.
 
-**Copy** puts an identical creation in the player's own list and returns to Creations, where the new card appears. From then on it is a creation like any other: it can be opened, edited, trained, copied and deleted. The examples themselves are never changed, so they never need restoring.
+**Copy** saves an identical creation in the player's own list, named in the player's language, and opens it in Build in place of Examples, so Back from Build lands on Creations, where the new card is. If the copy cannot be saved, a `danger` notification says so and Examples stays. From then on it is a creation like any other: it can be opened, edited, trained, copied and deleted. The examples themselves are never changed, so they never need restoring.
 
 **Locked examples** are shown too, so there is something to aim for: the card is the **lock** frame, with a padlock next to the name, and instead of Copy a **trophy** button that opens Achievements, where examples are earned (the only way for now).
 
@@ -786,17 +787,21 @@ Preview: [components/Stats/preview.html](components/Stats/preview.html)
 
 # TrainSetup
 
-*Screens · Train setup: Train or Simulate, shadows, run length, map*
+*Screens · Train setup: shadows, run length and map; Train or Simulate once trained*
 
 ![TrainSetup](screenshots/TrainSetup.png)
 
-Reached from the **play** button on a saved creation. One screen, one **Start** in the top bar.
+Reached from the **play** button at the foot of Build's rail, locked or not. One screen, one **Start** in the top bar. The title names the creation ("Train Walker"), with "142 generations so far" or "Not trained yet" under it.
 
-**Train or Simulate** is the first control, and each has one line under it. **Train**: several **shadows** (ghost copies, each trying a slightly different brain) race at once, the best brains are kept and the next generation starts from them, so the creation learns. **Simulate**: replays the current best brain on its own, with one shadow; nothing is learned and nothing is saved, so it is safe for showing a creation to someone. In Simulate the Shadows slider is dimmed at 1.
+**Train or Simulate** is the first control, and only once the creation has trained; an untrained one has no switch and Start trains. Each mode has one line under it. **Train**: "Shadows race and the brain keeps learning." **Simulate**: "Plays the trained brain with one shadow. Nothing is learned or saved." In Simulate both sliders are dimmed, empty dashed tracks off their scale: Shadows reads 1 and Run length "Until you leave".
 
-**Shadows** (1 to 32) and **Run length** (5 to 60 s) are the shared slider with two steps, the ends, named (1 and 32, 5 s and 60 s). **Run until power is out** is a checkbox under Run length: when it is checked the run-length slider is disabled and reads "until power is out", and each try ends when the power does. It needs a battery or a generator; without one the checkbox is dimmed and says "Needs a battery or generator".
+**Shadows** (2 to 100, 8 by default) and **Run length** (5 to 60 s, in 5 s steps) are sliders with their ends named. A note under Shadows says what the number costs: muted "The brain learns faster with more shadows.", a `halo` warn "Phone may stutter above 32.", or a `danger` warn "Probably too many shadows.". Both are saved with the creation when Start is pressed; Back discards them. There are no profiles.
 
-**Map** is a row of cards; only Flat ground is unlocked at first, the others are dashed with a lock and are earned in Achievements.
+**Run until power is out** waits for power (0.18): it is a disabled checkbox that says "Needs a battery or generator".
+
+**No powered parts.** A creature with nothing for its brain to drive can still train, but a `halo` warn row at the top says so: "Warning, no powered parts added! There is nothing to train".
+
+**Map** is a row of cards sharing the column's width, each with a preview of its map, `accent` on the map in use. Flat ground is the only map today and is selected; Hills and Stairs are disabled cards with a lock, and a line under them says "More maps come in a later version."
 
 Preview: [components/TrainSetup/preview.html](components/TrainSetup/preview.html)
 
@@ -805,27 +810,28 @@ Preview: [components/TrainSetup/preview.html](components/TrainSetup/preview.html
 
 # Training
 
-*Screens · Training: shadows run at once; a tapped core expands Senses*
+*Screens · Training: shadows race at once; the previous best is followed; the Status panel beside the arena*
 
 ![Training](screenshots/Training.png)
 
-Named **Training** in the app (it also runs a saved brain in Simulate mode).
+Named **Training** in the app; the same screen runs a saved brain in **Simulate**.
 
-Training or simulating a creation on its map. It shows four things at rest and reveals detail only on tap.
+**Arena.** Plain: the background, the ground (a `panel` fill under an `accent` edge), the ruler and what is on it. Every **shadow** (a copy of the creation with a slightly different brain) races at once. **Shadow 1**, the previous best, is followed by default: it is drawn in full with a knock-out outline in the background colour, and the camera keeps its centre 43% from the left. The other shadows are drawn simplified (a joint's outer ring, a beam's line, links as they are, no sensors) and fade together at `alpha_shadow`; the leader is not marked. Only the shadows on the strip's page are drawn, plus the followed one.
 
-**Arena (left).** The lead shadow in full, the other **shadows** faded behind it (they are the same creation trying different brains at the same time), a ruler labelled every 2 m and the **targets** (below). The camera follows the leader. Tapping a part of the leader rings it in `halo` with its name ("Left foot").
+- **Camera.** It zooms out to fit the followed shadow and a second of its travel, keeps the ground 80% down, rises after a shadow that climbs past the top margin, and cuts back to the start when the shadow begins a new trial.
+- **Ruler.** Counted from where the followed creature's front starts, labels every 1 m at the closest zoom and minor ticks every 0.5 m; labels thin out to 2, 5, 10 m as the view zooms out. Ticks and labels keep their screen size. Every distance shown is the creature's front.
+- **Targets.** The best distance on this map ("Best 9.4 m") and the next distance-based achievement ("Marathon 50 m") are both the callout's flag in its `ok` kind. The nearest one not reached yet is pinned to the arena's top right with a chevron; one that has been passed stands on the ground at its distance, a flag on a dashed line. The ground marks fade to `alpha_shadow` while a part's name shows, since it may cover them.
+- **Start sign.** An `ink` arrow sign at 0 m, half a metre tall in the world, pointing the way to go, so a creature that walks backwards is seen to.
+- **A tapped part** of the followed shadow keeps its selection look, and its Build name shows in a `halo` callout above the whole creature, with a line down to it.
+- **"Too many shadows!"** A Warning chip at the arena's top left when physics falls behind real time for 3 s; it stays 60 s after the last slow stretch.
 
-**Bottom row.** Pause, speed, and the **shadow strip** (see GenerationStrip): one cell per shadow, its bar the distance so far, the leader in `accent`. Tap a cell to follow that shadow. One line of text carries the time: "Generation 37 · 6 of 10 s". There is no time bar.
+**Under the arena.** **Pause** (a stacked button; it becomes Play while paused) and, while training, the caption "Generation 37" with a bar that fills as the followed run goes by, over the **shadow strip** (see GenerationStrip). There is no speed control: physics always runs in real time, and training goes faster by racing more shadows.
 
-**Signal flow (right).** 1 Senses, 2 Brain, 3 Outputs, 4 Distance for the leader (see SignalFlow). Tap a core on the body and Senses expands to that core's readings and scrolls; the other cards collapse. Tapping Brain opens the brain.
+**Status.** Beside the arena a side panel titled **Status** holds the signal flow: 1 Senses, 2 Brain, 3 Outputs, 4 Distance (see SignalFlow). Only the Brain stage looks like a button (raised, with glow) and opens the brain; the others are plain frames. The panel collapses to its tab, and the arena widens.
 
-**Power chip.** When the creation has powered parts, a bolt chip with the battery percentage sits at the top left of the arena (see Power).
+**Top bar.** Back (to Build), the creation's name over its status ("Training · Flat ground", or "Simulating · Flat ground"), and **Brain** and **Stats** as secondary icon buttons; Stats is unavailable until it is built and a tap says it comes later. No overflow.
 
-**Targets.** Two kinds of target are shown, alike: the **best** distance so far ("Best 9.4 m") and, for **distance-based achievements** only, the next one not yet earned ("Marathon 50 m"). Both are the callout's flag in its `ok` kind (see Callout). The nearest target the leader has not reached yet is **pinned to the arena's top right** with a chevron. When the leader passes it, it drops onto the ground at its distance, a flag on a dashed line, and the next target takes the pinned place. Achievements that are not about distance get no target here; their progress is shown in Achievements.
-
-**Top bar.** Back (to the creation), the creation name (not editable here), status "Training · Flat ground", and two icon buttons: Brain and Stats. Pause is on the bottom row; stopping is Back. Just watching a saved brain (no learning) shows the same screen with "Simulating" as status and no generation caption.
-
-Nothing here adds or removes parts; the creation is locked.
+**Simulate** plays the latest brain on its own in one run that never ends, and saves nothing: no generation caption, no strip and no shadows; the best marker stays at the saved best.
 
 Preview: [components/Training/preview.html](components/Training/preview.html)
 

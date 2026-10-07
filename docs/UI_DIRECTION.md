@@ -138,6 +138,7 @@ entry (#315). The entries that are not a component of their own (#306):
   or fill.
 - **`c_hint`** is `UiHintCard`, the slider hint at the canvas's top right
   (#867).
+- **`c_bar_cell`** is `UiBarCell`, a cell of the shadow strip (#791).
 - **`c_status`** is Build's readiness row, a `UiIcon` and a `UiLabel` in the
   side panel's scene.
 - **`c_prog`, `c_meter`** are a `UiSlider` with two Rounded ends.
