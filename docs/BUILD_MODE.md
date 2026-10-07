@@ -317,12 +317,14 @@ Several selected parts show the selection panel instead (#558, #704), titled
 - Copy (#937, #990) duplicates the selected parts one grid step aside,
   with their settings but not their names, and selects the copy; Undo
   removes it. A part copies only with what it sits on: a beam, Spring or
-  Piston with both its joints, a sensor with its beam and a Servo with its
-  joint, so a selected joint's Servo is not copied unless it is selected
-  too. A copied Servo uses the copies of its Fixed and Target links and
-  leaves a role empty whose link was not copied, so it shows its error
-  note. On a locked creation a sensor, Piston or Servo would change the
-  model, so it blocks Copy too. Copy is dimmed while the selection
+  Piston with both its joints and a sensor with its beam. A Servo is its
+  joint to the player, so it brings that joint along (#1000) but the copy
+  selects only the Servo there; a selected joint's Servo is not copied
+  unless it is selected too. A copied Servo uses the copies of its Fixed
+  and Target links and leaves a role empty whose link was not copied, so
+  it shows its error note. On a locked creation a sensor, Piston or Servo
+  would change the model, so it blocks Copy too, with the note "Locked:
+  would change the model". Copy is dimmed while the selection
   holds a part it cannot take; a tap then puts a danger note on each such
   part until the selection changes or the next canvas touch (#991).
   `BuildViewModel.CopySelectedParts` and `CopyBlockers` own these rules.
