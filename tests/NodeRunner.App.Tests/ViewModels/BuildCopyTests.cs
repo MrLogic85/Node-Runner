@@ -173,23 +173,23 @@ public sealed class BuildCopyTests
     }
 
     [Fact]
-    public void ADimmedCopy_MarksEveryOffendingPart_LinksFirst_ThenSensors_InIdOrder()
+    public void ADimmedCopy_MarksEveryOffendingPart_KindByKind_InIdOrder()
     {
         var build = Loaded();
-        build.ReplaceSelection(new PartSet(Ids(5), Ids(12), Ids(21), Ids(), Ids(), Ids(13)));
+        build.ReplaceSelection(new PartSet(Ids(5), Ids(12, 11), Ids(), Ids(), Ids(), Ids(13)));
 
         build.CopySelectedParts();
 
         build.CanvasNotes().ShouldBe(
         [
+            new CanvasNote(CanvasNoteKind.Danger, new(CreatureElementKind.Beam, 11), UiText.Plain("Select both its joints")),
             new CanvasNote(CanvasNoteKind.Danger, new(CreatureElementKind.Beam, 12), UiText.Plain("Select both its joints")),
             new CanvasNote(CanvasNoteKind.Danger, new(CreatureElementKind.Spring, 13), UiText.Plain("Select both its joints")),
-            new CanvasNote(CanvasNoteKind.Danger, new(CreatureElementKind.Sensor, 21), UiText.Plain("Select its beam")),
         ]);
     }
 
     [Fact]
-    public void ASelectedServo_BringsItsJoint_SoItsLinksCopy_ButOnlyTheServoIsSelectedThere()
+    public void ASelectedServo_BringsItsJoint_SoItsLinksCopy()
     {
         var build = Loaded();
         build.ReplaceSelection(new PartSet(Ids(3), Ids(12), Ids(), Ids(31), Ids(), Ids()));
@@ -203,7 +203,7 @@ public sealed class BuildCopyTests
         (beam.NodeA, beam.NodeB).ShouldBe((joint.Id, other.Id));
         var servo = build.Servos.Last();
         (servo.NodeId, servo.FixedLinkId, servo.TargetLinkId).ShouldBe((joint.Id, beam.Id, null));
-        build.Selection.Nodes.ShouldBe([other.Id]);
+        build.Selection.Nodes.ShouldBe([joint.Id, other.Id], ignoreOrder: true);
         build.Selection.Beams.ShouldBe([beam.Id]);
         build.Selection.Servos.ShouldBe([servo.Id]);
     }
