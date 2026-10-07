@@ -19,7 +19,8 @@ public enum LinkListRowState
     CreationLocked,
 }
 
-public sealed record LinkListRow(BuildLink Link, UiText Name, LinkListRowState State)
+/// <summary>A Links row; <c>Version</c> is the version that brings a <see cref="LinkListRowState.Locked"/> row's link (#992), null for the others.</summary>
+public sealed record LinkListRow(BuildLink Link, UiText Name, LinkListRowState State, string? Version = null)
 {
     public bool IsPickable => State is LinkListRowState.Rest or LinkListRowState.Selected;
 }
@@ -44,7 +45,7 @@ public static class BuildLinkList
             Row(BuildLink.Beam, UiText.Plain("Beam"), picked, creationLocked),
             Row(BuildLink.Piston, UiText.Plain("Piston"), picked, creationLocked),
             Row(BuildLink.Spring, UiText.Plain("Spring"), picked, creationLocked),
-            Locked(BuildLink.Wing, UiText.Plain("Wing")),
+            Locked(BuildLink.Wing, UiText.Plain("Wing"), "0.18.0"),
         ],
         Info(picked),
         HelpText);
@@ -70,5 +71,6 @@ public static class BuildLinkList
             : link == picked ? LinkListRowState.Selected
             : LinkListRowState.Rest);
 
-    private static LinkListRow Locked(BuildLink link, UiText name) => new(link, name, LinkListRowState.Locked);
+    // As the tray's Coming later rows, the version is the link's GitHub milestone (#992).
+    private static LinkListRow Locked(BuildLink link, UiText name, string version) => new(link, name, LinkListRowState.Locked, version);
 }

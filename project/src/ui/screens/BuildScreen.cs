@@ -66,6 +66,10 @@ public partial class BuildScreen : Control
     [Signal]
     public delegate void CreationLockedPressedEventHandler();
 
+    /// <summary>A Coming later part or link row was tapped; <paramref name="version"/> brings it (#992).</summary>
+    [Signal]
+    public delegate void ComingLaterPressedEventHandler(string version);
+
     [Signal]
     public delegate void ToolRequestedEventHandler(BuildTool tool);
 
@@ -494,6 +498,10 @@ public partial class BuildScreen : Control
                 {
                     row.LockedPressed += () => EmitSignal(SignalName.CreationLockedPressed);
                 }
+                else if (link.Version is { } version)
+                {
+                    row.LockedPressed += () => EmitSignal(SignalName.ComingLaterPressed, version);
+                }
 
                 rows.AddChild(row);
             }
@@ -549,6 +557,10 @@ public partial class BuildScreen : Control
                 else if (part.State == PartTrayRowState.CreationLocked)
                 {
                     row.LockedPressed += () => EmitSignal(SignalName.CreationLockedPressed);
+                }
+                else if (part.Version is { } version)
+                {
+                    row.LockedPressed += () => EmitSignal(SignalName.ComingLaterPressed, version);
                 }
 
                 rows.AddChild(row);

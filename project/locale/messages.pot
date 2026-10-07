@@ -175,6 +175,10 @@ msgid "Coil length"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartTrayPresentation.cs
+msgid "Coming in version {0}"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/PartTrayPresentation.cs
 msgid "Coming later"
 msgstr ""
 

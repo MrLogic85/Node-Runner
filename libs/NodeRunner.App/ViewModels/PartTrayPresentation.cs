@@ -28,7 +28,8 @@ public enum PartTrayRowState
     CreationLocked,
 }
 
-public sealed record PartTrayRow(BuildPart Part, UiText Name, PartTrayRowState State)
+/// <summary>A tray row; <c>Version</c> is the version that brings a Coming later row's part (#992), null for the others.</summary>
+public sealed record PartTrayRow(BuildPart Part, UiText Name, PartTrayRowState State, string? Version = null)
 {
     public bool IsAvailable => State == PartTrayRowState.Available;
 
@@ -37,7 +38,7 @@ public sealed record PartTrayRow(BuildPart Part, UiText Name, PartTrayRowState S
     {
         PartTrayRowState.Available => null,
         PartTrayRowState.CreationLocked => BuildViewModel.LockedReason,
-        _ => PartTray.ComingLater,
+        _ => PartTray.ComingIn(Version!),
     };
 }
 
@@ -50,6 +51,9 @@ public sealed record PartTrayGroup(UiText Name, UiText HelpText, IReadOnlyList<P
 public static class PartTray
 {
     public static UiText ComingLater { get; } = UiText.Plain("Coming later");
+
+    /// <summary>What a tap on a Coming later row says (#992); the catalogs give each row its version.</summary>
+    public static UiText ComingIn(string version) => UiText.Format("Coming in version {0}", version);
 
     public static UiText CreationLockedHelp { get; } = UiText.Plain("Unlock to add parts.");
 
@@ -95,28 +99,29 @@ public static class PartTray
         new(UiText.Plain("Moving parts"), UiText.Plain("Drag onto a joint. A joint holds one part."),
         [
             Available(BuildPart.Servo, UiText.Plain("Servo")),
-            Locked(BuildPart.Stepper, UiText.Plain("Stepper")),
-            Locked(BuildPart.VelocityMotor, UiText.Plain("Velocity motor")),
-            Locked(BuildPart.Brake, UiText.Plain("Brake")),
-            Locked(BuildPart.Wheel, UiText.Plain("Wheel")),
+            Locked(BuildPart.Stepper, UiText.Plain("Stepper"), "0.14.0"),
+            Locked(BuildPart.VelocityMotor, UiText.Plain("Velocity motor"), "0.14.0"),
+            Locked(BuildPart.Brake, UiText.Plain("Brake"), "0.14.0"),
+            Locked(BuildPart.Wheel, UiText.Plain("Wheel"), "0.14.0"),
         ]),
         new(UiText.Plain("Sensors"), UiText.Plain("Drag onto a beam. A beam holds one sensor."),
         [
             Available(BuildPart.Accelerometer, UiText.Plain("Accelerometer")),
             // Implemented, but it adds little on the Flat map, so it waits for maps with terrain (#852).
-            Locked(BuildPart.Camera, UiText.Plain("Camera")),
-            Locked(BuildPart.TouchSensor, UiText.Plain("Touch sensor")),
-            Locked(BuildPart.Pulse, UiText.Plain("Pulse")),
+            Locked(BuildPart.Camera, UiText.Plain("Camera"), "0.14.0"),
+            Locked(BuildPart.TouchSensor, UiText.Plain("Touch sensor"), "0.14.0"),
+            Locked(BuildPart.Pulse, UiText.Plain("Pulse"), "0.14.0"),
         ]),
         new(UiText.Plain("Blocks"), UiText.Plain("Drag it onto the canvas, then draw beams to its two eyes."),
         [
-            Locked(BuildPart.Battery, UiText.Plain("Battery")),
-            Locked(BuildPart.Generator, UiText.Plain("Generator")),
-            Locked(BuildPart.FuelTank, UiText.Plain("Fuel tank")),
+            Locked(BuildPart.Battery, UiText.Plain("Battery"), "0.18.0"),
+            Locked(BuildPart.Generator, UiText.Plain("Generator"), "0.18.0"),
+            Locked(BuildPart.FuelTank, UiText.Plain("Fuel tank"), "0.18.0"),
         ]),
     ];
 
     private static PartTrayRow Available(BuildPart part, UiText name) => new(part, name, PartTrayRowState.Available);
 
-    private static PartTrayRow Locked(BuildPart part, UiText name) => new(part, name, PartTrayRowState.ComingLater);
+    // The version is the part's GitHub milestone (#992): moving the part to another milestone means updating it here.
+    private static PartTrayRow Locked(BuildPart part, UiText name, string version) => new(part, name, PartTrayRowState.ComingLater, version);
 }

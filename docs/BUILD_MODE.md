@@ -204,7 +204,11 @@ several the selection panel instead.
 - Parts are unlimited (#525), so rows show no count. Every planned part has
   a locked row, so the tray shows what is coming: the Touch sensor (#665)
   and the Pulse (#527) are locked rows in Sensors, and the Camera is held
-  back the same way (#852).
+  back the same way (#852). A tap on a locked row says "Coming in version
+  0.14.0" or whichever version brings it (#992); the tray and Links
+  catalogs (`PartTray`, `BuildLinkList`) give each row its part's
+  milestone, so moving a part to another milestone means updating it
+  there.
 - An available row does nothing on tap; it is dragged out (#376). The drop
   lands on what the part is over (a joint's ring, a sensor picture's beam,
   a beam within reach, then a joint within reach), and
