@@ -4,9 +4,10 @@ namespace NodeRunner.App.ViewModels;
 
 /// <summary>
 /// The selection panel's Copy (#937, #990): several selected parts duplicated beside themselves,
-/// inside the same Creation. A part copies only with what it sits on: a link with both its joints,
-/// a sensor with its beam and a Servo with its joint. A locked Creation copies no part with brain
-/// ports, since a copy would change its model.
+/// inside the same Creation. A part copies only with what it sits on: a link with both its joints
+/// and a sensor with its beam. A Servo is its joint to the player (#973), so it brings that joint
+/// along (#1000). A locked Creation copies no part with brain ports, since a copy would change its
+/// model.
 /// </summary>
 public sealed partial class BuildViewModel
 {
@@ -21,11 +22,12 @@ public sealed partial class BuildViewModel
     /// <summary>
     /// A danger note at each selected part a copy cannot take, in id order within each kind: on a
     /// locked Creation a sensor, Servo or Piston for its brain ports; a beam, Spring or Piston
-    /// without both joints selected; a sensor without its beam; a Servo without its joint.
+    /// without both joints among <see cref="CopiedJointIds"/>; a sensor without its beam.
     /// </summary>
     public IReadOnlyList<CanvasNote> CopyBlockers()
     {
         var notes = new List<CanvasNote>();
+        var joints = CopiedJointIds();
         if (_locked)
         {
             AddBrainPortNotes(CreatureElementKind.Sensor, _selectedSensorIds);
@@ -59,24 +61,19 @@ public sealed partial class BuildViewModel
             notes.Add(Note(CreatureElementKind.Sensor, sensor.Id, UiText.Plain("Select its beam")));
         }
 
-        foreach (var servo in Servos.Where(servo => _selectedServoIds.Contains(servo.Id) && !_selectedNodeIds.Contains(servo.NodeId)))
-        {
-            notes.Add(Note(CreatureElementKind.Servo, servo.Id, UiText.Plain("Select its joint")));
-        }
-
         return notes;
 
         void AddBrainPortNotes(CreatureElementKind kind, HashSet<int> selected)
         {
             foreach (var id in selected.Order())
             {
-                notes.Add(Note(kind, id, UiText.Plain("Would change the model")));
+                notes.Add(Note(kind, id, UiText.Plain("Locked: would change the model")));
             }
         }
 
         void AddOpenLinkNote(CreatureElementKind kind, int id, int nodeA, int nodeB)
         {
-            if (SelectedSet(kind).Contains(id) && !(_selectedNodeIds.Contains(nodeA) && _selectedNodeIds.Contains(nodeB)))
+            if (SelectedSet(kind).Contains(id) && !(joints.Contains(nodeA) && joints.Contains(nodeB)))
             {
                 notes.Add(Note(kind, id, UiText.Plain("Select both its joints")));
             }
@@ -89,8 +86,9 @@ public sealed partial class BuildViewModel
     /// <summary>
     /// Duplicates the selection one grid step aside and selects the copy, as one undo step that
     /// selects the originals again. Each copy keeps its settings but not its name; a copied Servo
-    /// uses the copies of its Fixed and Target links, and leaves a role empty whose link was not
-    /// copied. While Copy is dimmed, it instead shows <see cref="CopyBlockers"/> in
+    /// sits on the copy of its joint, uses the copies of its Fixed and Target links, and leaves a
+    /// role empty whose link was not copied. The copy selects every copied joint, also those Servos
+    /// brought, since only selected joints move with the selection. While Copy is dimmed, it instead shows <see cref="CopyBlockers"/> in
     /// <see cref="CanvasNotes"/> until the selection changes or the canvas is touched.
     /// </summary>
     public void CopySelectedParts()
@@ -108,7 +106,8 @@ public sealed partial class BuildViewModel
             return;
         }
 
-        var nodes = Nodes.Where(node => _selectedNodeIds.Contains(node.Id)).ToList();
+        var joints = CopiedJointIds();
+        var nodes = Nodes.Where(node => joints.Contains(node.Id)).ToList();
         var beams = Beams.Where(beam => _selectedBeamIds.Contains(beam.Id)).ToList();
         var pistons = Pistons.Where(piston => _selectedPistonIds.Contains(piston.Id)).ToList();
         var springs = Springs.Where(spring => _selectedSpringIds.Contains(spring.Id)).ToList();
@@ -163,6 +162,9 @@ public sealed partial class BuildViewModel
         NotifySelectionChanged();
         RaiseAnatomyChanged();
     }
+
+    // The selected joints and the joints under selected Servos.
+    private HashSet<int> CopiedJointIds() => [.. _selectedNodeIds, .. SelectedServoJoints()];
 
     private int CopySettings(int fromPartId, int toPartId)
     {

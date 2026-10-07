@@ -148,10 +148,9 @@ public sealed class BuildCopyTests
         { new PartSet(Ids(3), Ids(), Ids(), Ids(), Ids(), Ids(13)), [new(CreatureElementKind.Spring, 13)], "Select both its joints", false },
         { new PartSet(Ids(4), Ids(), Ids(), Ids(), Ids(14), Ids()), [new(CreatureElementKind.Piston, 14)], "Select both its joints", false },
         { new PartSet(Ids(1, 2), Ids(), Ids(21), Ids(), Ids(), Ids()), [new(CreatureElementKind.Sensor, 21)], "Select its beam", false },
-        { new PartSet(Ids(1, 3), Ids(), Ids(), Ids(31), Ids(), Ids()), [new(CreatureElementKind.Servo, 31)], "Select its joint", false },
-        { new PartSet(Ids(1, 2), Ids(11), Ids(21), Ids(), Ids(), Ids()), [new(CreatureElementKind.Sensor, 21)], "Would change the model", true },
-        { new PartSet(Ids(1, 2), Ids(), Ids(), Ids(31), Ids(), Ids()), [new(CreatureElementKind.Servo, 31)], "Would change the model", true },
-        { new PartSet(Ids(4), Ids(), Ids(), Ids(), Ids(14), Ids()), [new(CreatureElementKind.Piston, 14)], "Would change the model", true },
+        { new PartSet(Ids(1, 2), Ids(11), Ids(21), Ids(), Ids(), Ids()), [new(CreatureElementKind.Sensor, 21)], "Locked: would change the model", true },
+        { new PartSet(Ids(1, 2), Ids(), Ids(), Ids(31), Ids(), Ids()), [new(CreatureElementKind.Servo, 31)], "Locked: would change the model", true },
+        { new PartSet(Ids(4), Ids(), Ids(), Ids(), Ids(14), Ids()), [new(CreatureElementKind.Piston, 14)], "Locked: would change the model", true },
     };
 
     [Theory]
@@ -174,10 +173,10 @@ public sealed class BuildCopyTests
     }
 
     [Fact]
-    public void ADimmedCopy_MarksEveryOffendingPart_LinksFirst_ThenSensorsAndServos_InIdOrder()
+    public void ADimmedCopy_MarksEveryOffendingPart_KindByKind_InIdOrder()
     {
         var build = Loaded();
-        build.ReplaceSelection(new PartSet(Ids(3), Ids(12, 11), Ids(), Ids(31), Ids(), Ids()));
+        build.ReplaceSelection(new PartSet(Ids(5), Ids(12, 11), Ids(), Ids(), Ids(), Ids(13)));
 
         build.CopySelectedParts();
 
@@ -185,8 +184,28 @@ public sealed class BuildCopyTests
         [
             new CanvasNote(CanvasNoteKind.Danger, new(CreatureElementKind.Beam, 11), UiText.Plain("Select both its joints")),
             new CanvasNote(CanvasNoteKind.Danger, new(CreatureElementKind.Beam, 12), UiText.Plain("Select both its joints")),
-            new CanvasNote(CanvasNoteKind.Danger, new(CreatureElementKind.Servo, 31), UiText.Plain("Select its joint")),
+            new CanvasNote(CanvasNoteKind.Danger, new(CreatureElementKind.Spring, 13), UiText.Plain("Select both its joints")),
         ]);
+    }
+
+    [Fact]
+    public void ASelectedServo_BringsItsJoint_SoItsLinksCopy()
+    {
+        var build = Loaded();
+        build.ReplaceSelection(new PartSet(Ids(3), Ids(12), Ids(), Ids(31), Ids(), Ids()));
+        build.CanCopySelection.ShouldBeTrue();
+
+        build.CopySelectedParts();
+
+        var (joint, other) = (build.Nodes[^2], build.Nodes[^1]);
+        (joint.Position, other.Position).ShouldBe((new Vector2D(100 + _step, _step), new Vector2D(100 + _step, 100 + _step)));
+        var beam = build.Beams.Last();
+        (beam.NodeA, beam.NodeB).ShouldBe((joint.Id, other.Id));
+        var servo = build.Servos.Last();
+        (servo.NodeId, servo.FixedLinkId, servo.TargetLinkId).ShouldBe((joint.Id, beam.Id, null));
+        build.Selection.Nodes.ShouldBe([joint.Id, other.Id], ignoreOrder: true);
+        build.Selection.Beams.ShouldBe([beam.Id]);
+        build.Selection.Servos.ShouldBe([servo.Id]);
     }
 
     [Fact]
@@ -198,11 +217,11 @@ public sealed class BuildCopyTests
 
         build.CopySelectedParts();
 
+        // The Servo still brings its joint 2, so beam 12 has both of its joints.
         build.CanvasNotes().ShouldBe(
         [
-            new CanvasNote(CanvasNoteKind.Danger, new(CreatureElementKind.Servo, 31), UiText.Plain("Would change the model")),
+            new CanvasNote(CanvasNoteKind.Danger, new(CreatureElementKind.Servo, 31), UiText.Plain("Locked: would change the model")),
             new CanvasNote(CanvasNoteKind.Danger, new(CreatureElementKind.Beam, 11), UiText.Plain("Select both its joints")),
-            new CanvasNote(CanvasNoteKind.Danger, new(CreatureElementKind.Beam, 12), UiText.Plain("Select both its joints")),
         ]);
     }
 
