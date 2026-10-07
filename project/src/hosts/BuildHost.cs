@@ -135,6 +135,8 @@ public partial class BuildHost : Node, IRoutedScene
         _buildScreen.DeleteSelectionRequested += DeleteSelection;
         _buildScreen.CopySelectionRequested += Build.CopySelectedParts;
         _buildScreen.CreationLockedPressed += () => NotifyLocked(UiTextTranslation.Source(BuildViewModel.LockedReason)!);
+        _buildScreen.ComingLaterPartPressed += part => NotifyLocked(UiTextTranslation.Source(PartTray.ComingLaterReason((BuildPart)part))!);
+        _buildScreen.ComingLaterLinkPressed += link => NotifyLocked(UiTextTranslation.Source(BuildLinkList.ComingLaterReason((BuildLink)link))!);
     }
 
     // A locked Creation keeps Delete in view; when deleting would change the model, it says why (#896).

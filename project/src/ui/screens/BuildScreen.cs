@@ -66,6 +66,14 @@ public partial class BuildScreen : Control
     [Signal]
     public delegate void CreationLockedPressedEventHandler();
 
+    /// <summary>A Coming later tray row was tapped (#992).</summary>
+    [Signal]
+    public delegate void ComingLaterPartPressedEventHandler(int part);
+
+    /// <summary>A Links row not yet implemented was tapped (#992).</summary>
+    [Signal]
+    public delegate void ComingLaterLinkPressedEventHandler(int link);
+
     [Signal]
     public delegate void ToolRequestedEventHandler(BuildTool tool);
 
@@ -494,6 +502,10 @@ public partial class BuildScreen : Control
                 {
                     row.LockedPressed += () => EmitSignal(SignalName.CreationLockedPressed);
                 }
+                else if (link.State == LinkListRowState.Locked)
+                {
+                    row.LockedPressed += () => EmitSignal(SignalName.ComingLaterLinkPressed, (int)link.Link);
+                }
 
                 rows.AddChild(row);
             }
@@ -549,6 +561,10 @@ public partial class BuildScreen : Control
                 else if (part.State == PartTrayRowState.CreationLocked)
                 {
                     row.LockedPressed += () => EmitSignal(SignalName.CreationLockedPressed);
+                }
+                else if (part.State == PartTrayRowState.ComingLater)
+                {
+                    row.LockedPressed += () => EmitSignal(SignalName.ComingLaterPartPressed, (int)part.Part);
                 }
 
                 rows.AddChild(row);

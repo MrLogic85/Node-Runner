@@ -1030,6 +1030,10 @@ msgid_plural "{0} beams too short"
 msgstr[0] ""
 msgstr[1] ""
 
+#: libs/NodeRunner.App/ViewModels/PartTrayPresentation.cs
+msgid "{0} comes in version {1}"
+msgstr ""
+
 #: libs/NodeRunner.App/ViewModels/BrainFocusPresentationViewModel.cs
 msgid "{0} does not drive any output yet."
 msgstr ""
