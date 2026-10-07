@@ -1,9 +1,7 @@
 using Godot;
 using NodeRunner.App.Navigation;
 using NodeRunner.App.ViewModels;
-using NodeRunner.Domain;
 using NodeRunner.Managers;
-using NodeRunner.Ui.Lib;
 using NodeRunner.Ui.Screens;
 using NodeRunner.Ui.Widgets;
 
@@ -36,13 +34,8 @@ public partial class ExamplesHost : Node, IRoutedScene
         }
 
         var saves = GetNode<SaveManager>("/root/SaveManager");
-        CreationDef copy = null!;
-        if (!CreationActions.TryRunFileOperation(() => copy = saves.CopyExample(id, UiTextTranslation.Now), $"Copying example '{name}'"))
+        if (CreationActions.TryCopy(this, name, () => saves.CopyExample(id, UiTextTranslation.Now)) is not { } copy)
         {
-            UiNotificationLayer.Enqueue(this, new UiNotificationSpec(UiPopupType.Default, "Examples", string.Empty)
-            {
-                MessageSource = UiTextTranslation.Source(UiText.Format("Could not copy {0}. Try again.", name)),
-            });
             return;
         }
 

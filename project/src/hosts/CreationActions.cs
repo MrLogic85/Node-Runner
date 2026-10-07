@@ -1,6 +1,7 @@
 using Godot;
 using NodeRunner.App.Repositories;
 using NodeRunner.App.ViewModels;
+using NodeRunner.Domain;
 using NodeRunner.Managers;
 using NodeRunner.Ui.Lib;
 using NodeRunner.Ui.Widgets;
@@ -23,6 +24,23 @@ internal static class CreationActions
             GD.PrintErr($"{description} failed: {ex}");
             return false;
         }
+    }
+
+    /// <summary>Copies a creation; a failure shows the shared "Copy failed" notification (#1013) and returns null.</summary>
+    public static CreationDef? TryCopy(Node from, string name, Func<CreationDef> copy)
+    {
+        CreationDef? copied = null;
+        if (TryRunFileOperation(() => copied = copy(), $"Copying Creation '{name}'") && copied is not null)
+        {
+            return copied;
+        }
+
+        UiNotificationLayer.Enqueue(from, new UiNotificationSpec(UiPopupType.Danger, "Copy failed", string.Empty, Icon: new(UiIconId.Copy))
+        {
+            Id = $"creation.copy.failed.{name}",
+            MessageSource = UiTextTranslation.Source(UiText.Format("Could not copy {0}. Try again.", name)),
+        });
+        return null;
     }
 
     /// <summary>Deletes a saved creation; a missing one counts as a failure.</summary>

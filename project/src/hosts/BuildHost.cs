@@ -194,11 +194,8 @@ public partial class BuildHost : Node, IRoutedScene
             return;
         }
 
-        CreationDef? copy = null;
-        if (!CreationActions.TryRunFileOperation(() => copy = Saves.Duplicate(id, UiTextTranslation.Now), $"Copying Creation {id}") || copy is null)
+        if (CreationActions.TryCopy(this, Build.CreationName, () => Saves.Duplicate(id, UiTextTranslation.Now)) is not { } copy)
         {
-            UiNotificationLayer.Enqueue(this, new UiNotificationSpec(
-                UiPopupType.Danger, "Copy failed", "The creation could not be copied.", Icon: new(UiIconId.Copy)));
             return;
         }
 

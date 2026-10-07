@@ -91,8 +91,10 @@ public partial class CreationsHost : Node, IRoutedScene
     {
         if (CreationActions.TryParseId(key, name, "duplicate Creation", out var id))
         {
-            CreationActions.TryRunFileOperation(() => Saves.Duplicate(id, UiTextTranslation.Now), $"Duplicating Creation '{name}'");
-            Refresh();
+            if (CreationActions.TryCopy(this, name, () => Saves.Duplicate(id, UiTextTranslation.Now)) is not null)
+            {
+                Refresh();
+            }
         }
     }
 
