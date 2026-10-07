@@ -189,7 +189,7 @@ public sealed class BuildCopyTests
     }
 
     [Fact]
-    public void ASelectedServo_BringsItsJoint_SoItsLinksCopy()
+    public void ASelectedServo_BringsItsJoint_SoItsLinksCopy_AndTheCopyServoStandsInForIt()
     {
         var build = Loaded();
         build.ReplaceSelection(new PartSet(Ids(3), Ids(12), Ids(), Ids(31), Ids(), Ids()));
@@ -203,9 +203,10 @@ public sealed class BuildCopyTests
         (beam.NodeA, beam.NodeB).ShouldBe((joint.Id, other.Id));
         var servo = build.Servos.Last();
         (servo.NodeId, servo.FixedLinkId, servo.TargetLinkId).ShouldBe((joint.Id, beam.Id, null));
-        build.Selection.Nodes.ShouldBe([joint.Id, other.Id], ignoreOrder: true);
+        build.Selection.Nodes.ShouldBe([other.Id]);
         build.Selection.Beams.ShouldBe([beam.Id]);
         build.Selection.Servos.ShouldBe([servo.Id]);
+        build.SelectedNodeIds.ShouldBe([joint.Id, other.Id], ignoreOrder: true);
     }
 
     [Fact]

@@ -858,9 +858,20 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
             return;
         }
 
+        // A Servo's joint goes too when the delete takes its links and leaves none (#973): to the
+        // player the Servo is that joint, so clearing an area must not leave a bare joint behind.
+        var servoJoints = SelectedServoJoints().ToDictionary(joint => joint, joint => _builder.LinksAt(joint).Count);
         _history.Change(() =>
         {
             RemoveParts(_builder, Selection);
+
+            foreach (var (joint, linksBefore) in servoJoints)
+            {
+                if (linksBefore > 0 && Exists(new CreatureElementSelection(CreatureElementKind.Node, joint)) && _builder.LinksAt(joint).Count == 0)
+                {
+                    _builder.RemoveNode(joint);
+                }
+            }
 
             // Within the step: its Undo row refresh must find no deleted part still selected.
             ClearSelectionSets();

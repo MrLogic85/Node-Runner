@@ -90,13 +90,17 @@ and into zoom and pan; `BuildCanvas` only forwards input and draws.
     removes it, even under a handle (`BuildViewModel.ToggleSelected`). A
     tap on empty canvas clears the selection; a tap on a handle over empty
     canvas does nothing.
+  - A Servo stands in for its joint (#973): selecting it never also
+    selects the joint under it, but the selection moves that joint, and
+    it counts as a joint for the group.
   - Two or more selected joints are a *group*, with a frame and three
     handles: **Move** in the middle, **Rotate** on a stem above and
     **Scale** at the bottom-right corner.
   - A drag is settled by where it starts, first match wins: a handle moves,
-    turns or scales the selection; a selected joint moves the selection;
-    in Links, an unselected joint draws a link; anywhere inside a group's
-    frame moves the group; an unselected joint is selected alone and moved.
+    turns or scales the selection; in Links, an unselected joint or a
+    selected Servo's draws a link; a selected joint moves the selection;
+    anywhere inside a group's frame moves the group; an unselected joint is
+    selected alone and moved.
     Any other drag draws a box in Select and pans in the other tools.
   - After a Rotate the frame stays turned with the group until the
     selection changes. Rotate and Scale turn about the frame's centre;
@@ -136,7 +140,8 @@ and into zoom and pan; `BuildCanvas` only forwards input and draws.
   or link, outside any group's frame draws a box that shows the parts it
   would catch as selected. It selects every part whose centre is in it (a
   joint's centre, a beam's or link's midpoint, a sensor's beam midpoint)
-  and replaces the selection, so a box can catch only beams.
+  and replaces the selection, so a box can catch only beams. A joint with
+  a Servo comes in as the Servo (#973).
 - **Sensors (#127, #575):** dragged from the tray onto a beam, one per
   beam (#376). The tray holds the Camera back as a locked row (#852): on
   the Flat map it only adds complexity, so it returns with terrain (#855).
@@ -148,7 +153,8 @@ and into zoom and pan; `BuildCanvas` only forwards input and draws.
   selects the Servo. On a joint with fewer than two links the missing roles
   stay empty and the Servo shows "A Servo needs two links at its joint"
   until another link is drawn there and picked: drop first, finish later.
-  Tapping that joint selects the Servo, but dragging still moves the joint.
+  Tapping or dragging that joint selects the Servo; dragging moves the
+  joint with it.
 - **Camera aim (#594, #622):** a Camera selected alone shows its rays and an
   Aim handle out along its centre ray, in any tool; the handle may cover a
   joint, which then cannot be tapped there (#639). Dragging the handle
@@ -158,7 +164,9 @@ and into zoom and pan; `BuildCanvas` only forwards input and draws.
 - **Deleting:** there is no Delete tool; the Part settings and selection
   panels delete the selection. Deleting a joint removes every link on it,
   its Servo and those beams' sensors (`CreatureBuilder.RemoveNode`), and
-  deleting a beam removes its sensor. Deleting a link a Servo holds keeps
+  deleting a beam removes its sensor. Deleting a Servo leaves its joint,
+  unless the same delete takes every link on that joint: then the joint
+  goes too, so a box that clears an area leaves no bare joint (#973). Deleting a link a Servo holds keeps
   the Servo with that role missing, which blocks training until a
   replacement is picked or the Servo is deleted.
 - **Two fingers, any tool (#400):** pinch zooms about the point between the

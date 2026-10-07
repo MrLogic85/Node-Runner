@@ -319,7 +319,8 @@ public sealed class BuildGestures
             return;
         }
 
-        if (_pressTool == BuildTool.Beam && _pressedNode is { } start && !_pressedNodeWasSelected)
+        // A selected Servo's joint still starts a link, so a dropped Servo can get its links (#973).
+        if (_pressTool == BuildTool.Beam && _pressedNode is { } start && !_selectionBefore.Nodes.Contains(start))
         {
             BeamStartNodeId = start;
             BeamEnd = position;
@@ -360,7 +361,10 @@ public sealed class BuildGestures
             {
                 if (_press == SharedPress.Move && !_pressedNodeWasSelected && _pressedNode is { } joint)
                 {
-                    _build.ReplaceSelection([joint]);
+                    // A dragged Servo is selected, not the joint under it (#973).
+                    _build.ReplaceSelection(_build.ServoAtNode(joint) is { } servo
+                        ? PartSet.None with { Servos = new HashSet<int> { servo } }
+                        : PartSet.None with { Nodes = new HashSet<int> { joint } });
                 }
 
                 // The group turns and scales about the frame's centre, where the Move handle is.
@@ -702,7 +706,7 @@ public sealed class BuildGestures
     /// <summary>
     /// The parts whose centres lie in the box from <paramref name="start"/> to <paramref name="end"/>
     /// (#704): a joint's centre, a beam's or link's midpoint, and a sensor's, which is its beam's
-    /// midpoint. Null while the box is too small to count.
+    /// midpoint. A Servo comes in place of its joint (#973). Null while the box is too small to count.
     /// </summary>
     private PartSet? PartsInBox(Vector2D start, Vector2D end)
     {
@@ -717,7 +721,7 @@ public sealed class BuildGestures
         bool MidInside(int nodeA, int nodeB) => Inside(Midpoint(NodeById(nodeA).Position, NodeById(nodeB).Position));
         var beams = _build.Beams.Where(beam => MidInside(beam.NodeA, beam.NodeB)).Select(beam => beam.Id).ToHashSet();
         return new PartSet(
-            _build.Nodes.Where(node => Inside(node.Position)).Select(node => node.Id).ToHashSet(),
+            _build.Nodes.Where(node => Inside(node.Position) && _build.ServoAtNode(node.Id) is null).Select(node => node.Id).ToHashSet(),
             beams,
             _build.Sensors.Where(sensor => beams.Contains(sensor.BeamId)).Select(sensor => sensor.Id).ToHashSet(),
             _build.Servos.Where(servo => Inside(NodeById(servo.NodeId).Position)).Select(servo => servo.Id).ToHashSet(),

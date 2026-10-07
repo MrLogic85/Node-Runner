@@ -21,7 +21,8 @@ public sealed partial class BuildViewModel
     private readonly HashSet<int> _selectedPistonIds = [];
     private readonly HashSet<int> _selectedSpringIds = [];
 
-    public int SelectedNodeCount => _selectedNodeIds.Count;
+    /// <summary>How many joints the selection moves: <see cref="SelectedNodeIds"/>.</summary>
+    public int SelectedNodeCount => SelectedNodeIds.Count;
 
     public int SelectedBeamCount => _selectedBeamIds.Count;
 
@@ -33,7 +34,7 @@ public sealed partial class BuildViewModel
 
     public int SelectedSpringCount => _selectedSpringIds.Count;
 
-    public int SelectedPartCount => SelectedNodeCount + SelectedBeamCount + SelectedSensorCount + SelectedServoCount + SelectedPistonCount + SelectedSpringCount;
+    public int SelectedPartCount => _selectedNodeIds.Count + SelectedBeamCount + SelectedSensorCount + SelectedServoCount + SelectedPistonCount + SelectedSpringCount;
 
     public int? SingleSelectedNodeId => Single(_selectedNodeIds);
 
@@ -56,7 +57,13 @@ public sealed partial class BuildViewModel
         _selectedPistonIds.ToHashSet(),
         _selectedSpringIds.ToHashSet());
 
-    public IReadOnlyCollection<int> SelectedNodeIds => _selectedNodeIds;
+    /// <summary>
+    /// The joints the selection moves: the selected joints and the joints under selected Servos,
+    /// since to the player a Servo is its joint (#973).
+    /// </summary>
+    public IReadOnlyCollection<int> SelectedNodeIds => _selectedServoIds.Count == 0
+        ? _selectedNodeIds
+        : _selectedNodeIds.Union(SelectedServoJoints()).ToHashSet();
 
     /// <summary>Adds the part to the selection, or removes it if it is already selected (#704).</summary>
     public void ToggleSelected(CreatureElementSelection element)
@@ -160,12 +167,13 @@ public sealed partial class BuildViewModel
     /// </summary>
     public SelectionSnapshot SnapshotSelection(Vector2D? pivot = null)
     {
-        if (_selectedNodeIds.Count == 0)
+        var joints = SelectedNodeIds;
+        if (joints.Count == 0)
         {
             throw new InvalidOperationException("Nothing is selected.");
         }
 
-        var positions = _selectedNodeIds.ToDictionary(id => id, id => NodeById(id).Position);
+        var positions = joints.ToDictionary(id => id, id => NodeById(id).Position);
         pivot ??= new Vector2D(
             (positions.Values.Min(p => p.X) + positions.Values.Max(p => p.X)) / 2,
             (positions.Values.Min(p => p.Y) + positions.Values.Max(p => p.Y)) / 2);
