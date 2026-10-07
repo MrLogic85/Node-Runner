@@ -36,6 +36,8 @@ public static class UiComponentContracts
         Number,
         StageCard,
         CardActions,
+        ExpandSection,
+        HintCard,
     }
 
     public static IReadOnlyList<CanonicalComponent> AllCanonicalComponents { get; } =
@@ -71,6 +73,8 @@ public static class UiComponentContracts
             CanonicalComponent.Number => nameof(UiNumber),
             CanonicalComponent.StageCard => nameof(UiStageCard),
             CanonicalComponent.CardActions => nameof(UiCardActions),
+            CanonicalComponent.ExpandSection => nameof(UiExpandSection),
+            CanonicalComponent.HintCard => nameof(UiHintCard),
             _ => throw new ArgumentOutOfRangeException(nameof(component), component, null),
         };
 
@@ -105,6 +109,8 @@ public static class UiComponentContracts
             CanonicalComponent.Number => "c_num",
             CanonicalComponent.StageCard => "c_stage",
             CanonicalComponent.CardActions => "c_card_actions",
+            CanonicalComponent.ExpandSection => "c_expand",
+            CanonicalComponent.HintCard => "c_hint",
             _ => throw new ArgumentOutOfRangeException(nameof(component), component, null),
         };
 
@@ -113,7 +119,7 @@ public static class UiComponentContracts
     /// ("Reference component mapping") says what builds each one instead.
     /// </summary>
     public static IReadOnlyList<string> ReferenceEntriesWithoutComponent { get; } =
-        ["c_panel_head", "c_inspector", "c_rows", "c_hold"];
+        ["c_panel_head", "c_inspector", "c_rows", "c_hold", "c_status"];
 
     public static bool SharesImplementation(CanonicalComponent component, CanonicalComponent other) =>
         ControlTypeFor(component) == ControlTypeFor(other);

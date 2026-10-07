@@ -4,7 +4,7 @@ All icons are pure white (`#ffffff`) on purpose: import them as SVG and tint the
 
 Two sets. **UI icons** are stroked glyphs on a 24 grid (stroke 2, round caps and joins, `currentColor`), used at 12, 16, 20 and 24. Each file's viewBox is fitted around its drawing, so every icon fills its box the same way (the longer side is 18 of 24) and the line stays 2 on 24. **Part glyphs** are 20-grid pictures of parts, drawn with the dark theme colours. One SVG per icon in `icons/ui/` and `icons/parts/`.
 
-## UI icons (47)
+## UI icons (50)
 
 | Icon | Name |
 |---|---|
@@ -36,10 +36,12 @@ Two sets. **UI icons** are stroked glyphs on a 24 grid (stroke 2, round caps and
 | <img src="icons/ui/more.svg" width="24" style="background:#0d1424"> | `more` |
 | <img src="icons/ui/move.svg" width="24" style="background:#0d1424"> | `move` |
 | <img src="icons/ui/mute.svg" width="24" style="background:#0d1424"> | `mute` |
+| <img src="icons/ui/parts.svg" width="24" style="background:#0d1424"> | `parts` |
 | <img src="icons/ui/pause.svg" width="24" style="background:#0d1424"> | `pause` |
 | <img src="icons/ui/phone.svg" width="24" style="background:#0d1424"> | `phone` |
 | <img src="icons/ui/play.svg" width="24" style="background:#0d1424"> | `play` |
 | <img src="icons/ui/plus.svg" width="24" style="background:#0d1424"> | `plus` |
+| <img src="icons/ui/redo.svg" width="24" style="background:#0d1424"> | `redo` |
 | <img src="icons/ui/restart.svg" width="24" style="background:#0d1424"> | `restart` |
 | <img src="icons/ui/rotate.svg" width="24" style="background:#0d1424"> | `rotate` |
 | <img src="icons/ui/scale.svg" width="24" style="background:#0d1424"> | `scale` |
@@ -52,14 +54,16 @@ Two sets. **UI icons** are stroked glyphs on a 24 grid (stroke 2, round caps and
 | <img src="icons/ui/top-speed.svg" width="24" style="background:#0d1424"> | `top-speed` |
 | <img src="icons/ui/trash.svg" width="24" style="background:#0d1424"> | `trash` |
 | <img src="icons/ui/trophy.svg" width="24" style="background:#0d1424"> | `trophy` |
+| <img src="icons/ui/undo.svg" width="24" style="background:#0d1424"> | `undo` |
 | <img src="icons/ui/unlock.svg" width="24" style="background:#0d1424"> | `unlock` |
 | <img src="icons/ui/warn.svg" width="24" style="background:#0d1424"> | `warn` |
 | <img src="icons/ui/x.svg" width="24" style="background:#0d1424"> | `x` |
 
-## Part glyphs (15)
+## Part glyphs (18)
 
 | Glyph | Name |
 |---|---|
+| <img src="icons/parts/accelerometer.svg" width="32"> | `accelerometer` |
 | <img src="icons/parts/battery.svg" width="32"> | `battery` |
 | <img src="icons/parts/beam.svg" width="32"> | `beam` |
 | <img src="icons/parts/brake.svg" width="32"> | `brake` |
@@ -69,9 +73,11 @@ Two sets. **UI icons** are stroked glyphs on a 24 grid (stroke 2, round caps and
 | <img src="icons/parts/los.svg" width="32"> | `los` |
 | <img src="icons/parts/node.svg" width="32"> | `node` |
 | <img src="icons/parts/piston.svg" width="32"> | `piston` |
+| <img src="icons/parts/pulse.svg" width="32"> | `pulse` |
 | <img src="icons/parts/servo.svg" width="32"> | `servo` |
 | <img src="icons/parts/spring.svg" width="32"> | `spring` |
 | <img src="icons/parts/stepper.svg" width="32"> | `stepper` |
+| <img src="icons/parts/touch.svg" width="32"> | `touch` |
 | <img src="icons/parts/velocity.svg" width="32"> | `velocity` |
 | <img src="icons/parts/wheel.svg" width="32"> | `wheel` |
 | <img src="icons/parts/wing.svg" width="32"> | `wing` |
