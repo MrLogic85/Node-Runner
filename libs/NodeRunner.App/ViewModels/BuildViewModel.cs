@@ -456,8 +456,27 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
         }
     }
 
-    /// <summary>Hides <see cref="PlacementNote"/>: the canvas does so on the next touch, or once it has been read.</summary>
+    /// <summary>Hides <see cref="PlacementNote"/> once it has been read.</summary>
     public void DismissPlacementNote() => PlacementNote = null;
+
+    /// <summary>
+    /// Hides the notes a tap brought up, on the next canvas touch (#991): <see cref="PlacementNote"/>,
+    /// <see cref="ShowTrainingBlockers"/>' "Not connected" notes and a dimmed Copy's notes. Too-short
+    /// parts and Servo link notes stay, as they mark the drawing itself.
+    /// </summary>
+    public void DismissTapNotes()
+    {
+        PlacementNote = null;
+        if (_shownLooseNodes.Count == 0 && !_showPieces && _shownCopyBlockers.Count == 0)
+        {
+            return;
+        }
+
+        _shownLooseNodes.Clear();
+        _showPieces = false;
+        _shownCopyBlockers = [];
+        OnPropertyChanged(nameof(CanvasNotes));
+    }
 
     /// <summary>Joined to nothing by a beam or a link, so the creature cannot train (<see cref="CreatureReadiness.IsAttached"/>).</summary>
     public bool IsLoose(int nodeId) =>
@@ -471,8 +490,9 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     /// <summary>
     /// Answers a tap on the dimmed play button (#844): every joint loose now gets a "Not connected"
     /// note in <see cref="CanvasNotes"/>, kept until it is joined or removed, and so does every
-    /// piece until the creation is one piece (#930). Too-short parts already have theirs. A joint
-    /// loosened or a piece split off later waits for the next tap.
+    /// piece until the creation is one piece (#930); the next canvas touch hides them all
+    /// (<see cref="DismissTapNotes"/>). Too-short parts already have theirs. A joint loosened or a
+    /// piece split off later waits for the next tap.
     /// </summary>
     public void ShowTrainingBlockers()
     {

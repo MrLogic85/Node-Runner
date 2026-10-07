@@ -314,7 +314,8 @@ Several selected parts show the selection panel instead (#558, #704), titled
   removes it. A selected joint's Servo is not copied with it. Copy is
   dimmed while the selection holds a part with brain ports, since a copy
   would change the network, or a link without both its joints. A tap then
-  puts a danger note on each such part until the selection changes.
+  puts a danger note on each such part until the selection changes or the
+  next canvas touch (#991).
   `BuildViewModel.CopySelectedParts` and `CopyBlockers` own these rules.
 
 `BuildPresentationViewModel.Selection` owns the panel's wording.
@@ -341,7 +342,8 @@ dimmed button can still be tapped
 gives each joint loose at that moment a "Not connected" canvas note until
 it is joined or removed. A creation in separate pieces gets the same note
 on every piece's joint nearest another piece, none being the main one, until
-it is one piece (#930); a piece split off later waits for the next tap. Too-short parts always have their "Too short"
-note. The edits are saved first either way. Back never validates: it saves
+it is one piece (#930); a piece split off later waits for the next tap. The
+next canvas touch hides these notes, so they do not stay in the way while
+building (#991). Too-short parts always have their "Too short" note. The edits are saved first either way. Back never validates: it saves
 the drawing as it stands (#474). Training refuses a saved creature that
 cannot train and returns to Creations.
