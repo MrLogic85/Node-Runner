@@ -303,35 +303,18 @@ guide back by mistake. Departures stated in this doc's own sections are not
 repeated. The last column owns the detail (BM = `docs/BUILD_MODE.md`, TL =
 `docs/TRAINING_LOOP.md`, WV = `docs/WORLD_VISUALS.md`).
 
-The 2026-10-07 import adopted many of these in the reference's Build,
-BuildLocked and PartSettings sections, but its overview still says the old
-thing, so those rows stay.
+The reference's Build, BuildLocked, Training and Creations sections now
+describe the app, but its Navigation, Parts and component-library sections
+still say the old thing, so those rows stay.
 
 | Reference | Ours | Owner |
 | --- | --- | --- |
 | The padlock resets training | Unlocking keeps it; Reset training is an overflow item (#371, #687) | TL step 6; BM → Overflow menu |
-| No two destructive actions side by side | Allowed when each asks first (#687) | BM → Overflow menu |
 | Start training in the top bar | Play on the rail in both states (#370) | Screens → Build |
-| No Undo | Undo and Redo in the bar (#689): the overflow must fit a landscape phone, and a menu does not scroll | BM → Undo and Redo |
-| Locked Build cannot scale | It can, aim a Camera, and add and delete joints, beams and Springs (#366, #638, #896) | BM → Locked Build |
 | Rail says Beam and Move; Links tab | Links and Parts tools (#705, #706, #913) | BM → Interactions |
-| Selecting differs per tool; Joint splits beams | One selection model (#746) | BM → Every tool |
-| Locked-canvas chip | None (#706) | — |
 | Part counts ("1 left") | Unlimited (#374, #525) | BM → Parts tray |
 | Core part | Sensors on beams (#127) | WV → Sensors |
-| Joint circle; Servo gauge and labels | Bearing; housing, dial and horn (#626, #452) | WV → Parts |
-| Lines stay 2 px; grid fills the canvas | Zoom scales lines; the grid is the build area (#400, #884) | WV → Lines and zoom, Build canvas |
-| Upright selection frame with a hint | Keeps its turn, no hint (#366) | WV → Selection marks |
-| One drag line style | Attach and refuse looks (#920) | WV → Build canvas |
 | Brain setup screen; hidden neurons | Removed; the direct brain (#536) | Screens → BrainFocus |
-| Card shows best distance | Latest result (#479) | TL → Latest and best ever |
-| Shadows 1–32, profiles | 2–100, no profiles (#194, #787) | Screens → Train setup; TL step 2 |
-| Detailed shadows; camera follows the leader | Simplified; the previous best is followed (#385, #894) | WV → Drawing as a shadow; TL → Generations |
-| Strip shows the best 7 | Pages (#387, #791) | TL → Generations |
 | Speed control | None (#787) | TL → No speed-up |
-| Fixed camera | Zooms out and rises (#675) | TL → Camera |
-| Grid behind the arena; ringed part name | Plain; a callout; a start sign (#668, #848) | WV → Training arena |
 | Targets pinned top right with a chevron; achievement targets | Best stays on the ground, nothing off screen, until #488 | WV → Training arena |
-| Distances from the centre | From the front (#725) | TL → Trial |
-| Every stage card glows | Only Brain (#847) | Screens → Training |
 | UI size multiplies the canvas | Pixels per unit (#299, #738) | UI size |
