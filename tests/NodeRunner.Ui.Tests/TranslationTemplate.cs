@@ -268,7 +268,8 @@ internal static partial class TranslationTemplate
         /// <summary>A property whose text the player sees, translated by Godot.</summary>
         public static bool IsSinkProperty(IPropertySymbol property)
         {
-            if (!IsText(property.Type) || property.Name == "TextValue")
+            // An Id names a value for code, like a notification's (#1004); the player never sees it.
+            if (!IsText(property.Type) || property.Name is "TextValue" or "Id")
             {
                 return false;
             }

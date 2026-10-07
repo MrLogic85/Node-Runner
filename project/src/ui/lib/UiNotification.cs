@@ -17,8 +17,7 @@ public sealed partial class UiNotification : Control
     /// <summary>True while any UiDialog is open; expiry, gestures and queue advance wait.</summary>
     public bool Paused { get; private set; }
 
-    private readonly Queue<UiNotificationSpec> _queue = [];
-    private UiNotificationSpec? _current;
+    private readonly UiNotificationQueue _queue = new();
     private UiCard? _card;
     private float _preferredWidth;
     private double _remaining;
@@ -52,9 +51,18 @@ public sealed partial class UiNotification : Control
 
     public void Enqueue(UiNotificationSpec spec)
     {
-        ArgumentNullException.ThrowIfNull(spec);
-        _queue.Enqueue(spec);
-        ShowNext();
+        switch (_queue.Offer(spec))
+        {
+            case UiNotificationOffer.ReplacesCurrent:
+                Dismiss();
+                break;
+            case UiNotificationOffer.RepeatsCurrent:
+                _remaining = LifetimeSeconds;
+                break;
+            default:
+                ShowNext();
+                break;
+        }
     }
 
     public void Clear()
@@ -74,13 +82,13 @@ public sealed partial class UiNotification : Control
         _card?.Hide();
         _card?.QueueFree();
         _card = null;
-        _current = null;
+        _queue.CloseCurrent();
         ShowNext();
     }
 
     public void Activate()
     {
-        if (Paused || _pointerDown || _dismissing || _motion is not null || _activating || _current is not { } spec)
+        if (Paused || _pointerDown || _dismissing || _motion is not null || _activating || _queue.Current is not { } spec)
         {
             return;
         }
@@ -93,15 +101,9 @@ public sealed partial class UiNotification : Control
         catch (Exception exception)
         {
             GD.PushError($"Notification action failed: {exception}");
-            if (GodotObject.IsInstanceValid(this) && IsInsideTree() && ReferenceEquals(spec, _current))
+            if (GodotObject.IsInstanceValid(this) && IsInsideTree() && ReferenceEquals(spec, _queue.Current))
             {
-                var pending = _queue.ToArray();
-                _queue.Clear();
-                _queue.Enqueue(new(UiPopupType.Danger, "Action failed", "The action could not be completed. Please try again."));
-                foreach (var notification in pending)
-                {
-                    _queue.Enqueue(notification);
-                }
+                _queue.PushFront(new(UiPopupType.Danger, "Action failed", "The action could not be completed. Please try again."));
                 Dismiss();
             }
             return;
@@ -110,7 +112,7 @@ public sealed partial class UiNotification : Control
         {
             _activating = false;
         }
-        if (dismiss && GodotObject.IsInstanceValid(this) && IsInsideTree() && ReferenceEquals(spec, _current))
+        if (dismiss && GodotObject.IsInstanceValid(this) && IsInsideTree() && ReferenceEquals(spec, _queue.Current))
         {
             Dismiss();
         }
@@ -135,11 +137,10 @@ public sealed partial class UiNotification : Control
 
     private void ShowNext()
     {
-        if (!IsNodeReady() || !IsInsideTree() || _card is not null || Paused || !_queue.TryDequeue(out var spec))
+        if (!IsNodeReady() || !IsInsideTree() || _card is not null || Paused || !_queue.TryAdvance(out var spec))
         {
             return;
         }
-        _current = spec;
         _remaining = LifetimeSeconds;
         var content = GD.Load<PackedScene>("res://scenes/ui/UiNotificationContent.tscn").Instantiate<UiNotificationContent>();
         _card = content;
@@ -238,7 +239,7 @@ public sealed partial class UiNotification : Control
     {
         if (_card is not null)
         {
-            _card.ShowsPress = _pointerDown && !_horizontalDrag && !_verticalDrag && _current?.OnClick is not null;
+            _card.ShowsPress = _pointerDown && !_horizontalDrag && !_verticalDrag && _queue.Current?.OnClick is not null;
         }
     }
 
@@ -352,7 +353,6 @@ public sealed partial class UiNotification : Control
         Resized -= QueueLayout;
         StopMotion();
         _queue.Clear();
-        _current = null;
         _pointerDown = false;
     }
 

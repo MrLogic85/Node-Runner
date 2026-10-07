@@ -341,7 +341,11 @@ public partial class TrainingHost : Node, IRoutedScene
             UiPopupType.Default,
             "Stats",
             "Stats come in a later version.",
-            Icon: new(UiIconId.Chart)));
+            Icon: new(UiIconId.Chart))
+        {
+            Id = "training.stats",
+            Replaceable = true,
+        });
         _screen.ArenaPressed += SelectPartAt;
     }
 
