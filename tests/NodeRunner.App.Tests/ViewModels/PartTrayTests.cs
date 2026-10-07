@@ -30,12 +30,47 @@ public sealed class PartTrayTests
     }
 
     [Fact]
-    public void Groups_GiveEachTabOneHelpLine()
+    public void Create_WithNothingPicked_SaysHowToPick()
     {
-        PartTray.Groups().Select(group => group.HelpText).ShouldBe(Plain(
-            "Drag onto a joint. A joint holds one part.",
-            "Drag onto a beam. A beam holds one sensor.",
-            "Drag it onto the canvas, then draw beams to its two eyes."));
+        var tray = PartTray.Create(picked: null);
+
+        tray.HelpText.ShouldBe(UiText.Plain("Tap a part to pick it, or drag it onto the creature."));
+        tray.PickedInfo.ShouldBeNull();
+        tray.Groups.SelectMany(group => group.Rows).ShouldNotContain(row => row.State == PartTrayRowState.Selected);
+    }
+
+    [Theory]
+    [InlineData(BuildPart.Servo, "A motor that tries to hold a target angle.", "Tap a joint to place it. A joint holds one part.")]
+    [InlineData(BuildPart.Accelerometer, "Measures its beam's acceleration.", "Tap a beam to place it. A beam holds one sensor.")]
+    public void Create_WithAPickedPart_SelectsItsRow_AndSaysUnderItWhatItDoesAndWhereItGoes(BuildPart part, string info, string placement)
+    {
+        var tray = PartTray.Create(part);
+
+        tray.Groups.SelectMany(group => group.Rows).Where(row => row.State == PartTrayRowState.Selected)
+            .Select(row => row.Part).ShouldBe([part]);
+        tray.Groups.SelectMany(group => group.Rows).Single(row => row.Part == part).IsAvailable.ShouldBeTrue();
+        tray.PickedInfo.ShouldBe(UiText.Format("{0}\n{1}", UiText.Plain(info), UiText.Plain(placement)));
+        tray.HelpText.ShouldBe(PartTray.PickHelp);
+    }
+
+    [Fact]
+    public void Create_WithAComingLaterPart_PicksNothing()
+    {
+        var tray = PartTray.Create(BuildPart.Wheel);
+
+        tray.Groups.SelectMany(group => group.Rows).ShouldNotContain(row => row.State == PartTrayRowState.Selected);
+        tray.PickedInfo.ShouldBeNull();
+        tray.HelpText.ShouldBe(PartTray.PickHelp);
+    }
+
+    [Fact]
+    public void Create_OnALockedCreation_ShowsNoPick()
+    {
+        var tray = PartTray.Create(BuildPart.Servo, creationLocked: true);
+
+        tray.Groups.SelectMany(group => group.Rows).Single(row => row.Part == BuildPart.Servo).State.ShouldBe(PartTrayRowState.CreationLocked);
+        tray.PickedInfo.ShouldBeNull();
+        tray.HelpText.ShouldBe(PartTray.CreationLockedHelp);
     }
 
     [Fact]
@@ -109,9 +144,9 @@ public sealed class PartTrayTests
     [Fact]
     public void ALockedCreationsTray_KeepsTheComingLaterRowsAndTheirVersions()
     {
-        PartTray.LockedGroups().SelectMany(group => group.Rows).Where(row => row.State == PartTrayRowState.ComingLater)
-            .Select(row => row.Version).ShouldAllBe(version => version != null);
-        PartTray.LockedGroups().SelectMany(group => group.Rows).Count(row => row.State == PartTrayRowState.ComingLater).ShouldBe(10);
+        var rows = PartTray.Create(picked: null, creationLocked: true).Groups.SelectMany(group => group.Rows).ToList();
+        rows.Where(row => row.State == PartTrayRowState.ComingLater).Select(row => row.Version).ShouldAllBe(version => version != null);
+        rows.Count(row => row.State == PartTrayRowState.ComingLater).ShouldBe(10);
     }
 
     [Fact]

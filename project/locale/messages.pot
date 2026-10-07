@@ -297,19 +297,6 @@ msgstr ""
 msgid "Drag inside the box"
 msgstr ""
 
-#: libs/NodeRunner.App/ViewModels/PartTrayPresentation.cs
-msgid "Drag it onto the canvas, then draw beams to its two eyes."
-msgstr ""
-
-#: libs/NodeRunner.App/ViewModels/PartTrayPresentation.cs
-msgid "Drag onto a beam. A beam holds one sensor."
-msgstr ""
-
-#: libs/NodeRunner.App/ViewModels/PartTrayPresentation.cs
-#: project/scenes/screens/BuildScreen.tscn
-msgid "Drag onto a joint. A joint holds one part."
-msgstr ""
-
 #: project/scenes/screens/BuildScreen.tscn
 msgid "Drag the corner: closer together or further apart"
 msgstr ""
@@ -783,8 +770,21 @@ msgstr ""
 msgid "Tail"
 msgstr ""
 
+#: libs/NodeRunner.App/ViewModels/PartTrayPresentation.cs
+msgid "Tap a beam to place it. A beam holds one sensor."
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/PartTrayPresentation.cs
+msgid "Tap a joint to place it. A joint holds one part."
+msgstr ""
+
 #: project/scenes/screens/BuildScreen.tscn
 msgid "Tap a part"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/PartTrayPresentation.cs
+#: project/scenes/screens/BuildScreen.tscn
+msgid "Tap a part to pick it, or drag it onto the creature."
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/BrainFocusPresentationViewModel.cs

@@ -134,23 +134,24 @@ and into zoom and pan; `BuildCanvas` only forwards input and draws.
     role, under a new id. One Undo brings the beam back. A Beam never
     replaces a link.
 - **Parts:** with nothing selected, the panel shows the Parts tray; drag a
-  part from it onto the creature (see Parts tray). Parts never adds a
-  joint.
+  part from it onto the creature, or tap it and then tap where it goes
+  (see Parts tray). Parts never adds a joint.
 - **Select (#366, #704):** a drag on empty canvas, or from a beam, sensor
   or link, outside any group's frame draws a box that shows the parts it
   would catch as selected. It selects every part whose centre is in it (a
   joint's centre, a beam's or link's midpoint, a sensor's beam midpoint)
   and replaces the selection, so a box can catch only beams. A joint with
   a Servo comes in as the Servo (#973).
-- **Sensors (#127, #575):** dragged from the tray onto a beam, one per
-  beam (#376). The tray holds the Camera back as a locked row (#852): on
-  the Flat map it only adds complexity, so it returns with terrain (#855).
+- **Sensors (#127, #575):** placed from the tray on a beam, by drag or tap
+  (see Parts tray), one per beam (#376). The tray holds the Camera back as
+  a locked row (#852): on the Flat map it only adds complexity, so it
+  returns with terrain (#855).
   A saved creation that already has one keeps it working.
-- **Servo (#452, #577):** dragged from Parts → Moving parts onto any joint.
-  Dropping on a beam, sensor or link refuses with "Servos go on a joint"; a
-  joint that already has one refuses with "One part per joint". A good drop
-  takes the two lowest-id links as Fixed and Target, is one Undo step and
-  selects the Servo. On a joint with fewer than two links the missing roles
+- **Servo (#452, #577):** placed from Parts → Moving parts on any joint, by
+  drag or tap (see Parts tray). A beam, sensor or link refuses with "Servos
+  go on a joint"; a joint that already has one refuses with "One part per
+  joint". A good placement takes the two lowest-id links as Fixed and
+  Target and is one Undo step; a drop also selects the Servo. On a joint with fewer than two links the missing roles
   stay empty and the Servo's panel note says "A Servo needs two links at
   its joint" until another link is drawn there and picked: drop first,
   finish later. Its canvas note waits for a Play tap, like "Not connected"
@@ -209,7 +210,7 @@ several the selection panel instead.
   do, not where they go: Moving parts holds the motors, Brake and Wheel,
   and Sensors every sensor, on a beam or, like the Touch sensor (#665), on
   a joint. Each part decides its own placement. `PartTray` owns the groups,
-  their order, the help lines and each row's state.
+  their order, the help line and each row's state.
 - Each visit opens on the first tab with an available part
   (`PartTray.OpeningGroup`), so a tab of padlocks never reads as every part
   being locked (#887). The open tab then stays for the visit (#874).
@@ -220,12 +221,25 @@ several the selection panel instead.
   version that brings it, as "Battery comes in version 0.18.0", in a
   notification (#992); `PartTray.ComingLaterReason` and
   `BuildLinkList.ComingLaterReason` own it.
-- An available row does nothing on tap; it is dragged out (#376). The drop
-  lands on what the part is over (a joint's ring, a sensor picture's beam,
-  a beam within reach, then a joint within reach), and
-  `BuildViewModel.PlacePart` places it with a fresh id or refuses it with a
-  canvas note at that part (`PlacementNote`) until the next touch or for
-  3 s. A drop on empty canvas or back on the panel changes nothing.
+- An available row is dragged out (#376). The drop lands on what the part
+  is over (a joint's ring, a sensor picture's beam, a beam within reach,
+  then a joint within reach), and `BuildViewModel.PlacePart` places it with
+  a fresh id and selects it, or refuses it with a canvas note at that part
+  (`PlacementNote`) until the next touch or for 3 s. A drop on empty canvas
+  or back on the panel changes nothing.
+- A tap on an available row picks it (#805; `BuildViewModel.PickedPart`):
+  the row shows selected, and a line fades in right under it, as under the
+  picked link in the Links list: its `PartInfo` (the same as its Part
+  settings note) and where it goes ("Tap a joint to place it. A joint holds
+  one part."), per part, not per tab, as a tab can mix placements. Under
+  the rows the help line says "Tap a part to pick it, or drag it onto the
+  creature." A canvas tap then places the part where a drop there would
+  land, with the same refusals, notes and Undo. The placed part is not
+  selected, so the tray stays and the part stays picked for the next one.
+  Tapping the row again, another tab or tool, a selection (which replaces
+  the tray), collapsing the side panel, or Back clears the pick; Back
+  leaves Build only once nothing is picked. Marking the targets on the
+  canvas is #1016.
 
 ## Part settings
 

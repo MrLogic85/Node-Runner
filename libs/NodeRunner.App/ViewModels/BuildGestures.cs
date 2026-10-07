@@ -507,10 +507,15 @@ public sealed class BuildGestures
     /// <summary>
     /// A tap in any tool (#803) adds or removes the part under it. A tap on empty canvas clears the
     /// selection, or with nothing selected adds a joint in Joint; one on a handle does nothing.
+    /// With a tray part to place, a tap places it where a drop there would (#805).
     /// </summary>
     private void Tap()
     {
-        if (PressedElement() is { } element)
+        if (_build.PickedPart is { } part)
+        {
+            _build.PlacePart(part, DropTargetAt(_pressViewPosition), select: false);
+        }
+        else if (PressedElement() is { } element)
         {
             _build.ToggleSelected(element);
         }

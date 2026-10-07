@@ -53,6 +53,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     private bool _isActive;
     private BuildTool _activeTool = BuildTool.Joint;
     private BuildLink _pickedLink = BuildLink.Beam;
+    private BuildPart? _pickedPart;
     private bool _locked;
     private string _creationName = string.Empty;
     private int? _trainingGeneration;
@@ -96,6 +97,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
         _advancedSettingsOpen = false;
         ActiveTool = BuildTool.Joint;
         SetPickedLink(BuildLink.Beam);
+        ClearPickedPart();
         PlacementNote = null;
         RaiseAnatomyChanged();
     }
@@ -279,6 +281,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
 
             _activeTool = value;
             OnPropertyChanged();
+            ClearPickedPart();
         }
     }
 
@@ -316,6 +319,42 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
             _advancedSettingsOpen = value;
             OnPropertyChanged();
         }
+    }
+
+    /// <summary>
+    /// The tray part a canvas tap places (#805), or null. Picked in the Parts tool and kept after each
+    /// placement, so several can be placed. A switch of tool or tray tab, a collapsed side panel, a
+    /// selection, Back, or <see cref="Load"/> clears it, so it is never picked out of sight.
+    /// </summary>
+    public BuildPart? PickedPart => _pickedPart;
+
+    /// <summary>Picks a tray part, or clears it if it is the picked one (#805). Parts that cannot be placed now do nothing.</summary>
+    public void PickPart(BuildPart part)
+    {
+        if (_activeTool != BuildTool.Parts || !PartTray.IsAvailable(part) || _locked)
+        {
+            return;
+        }
+
+        SetPickedPart(_pickedPart == part ? null : part);
+    }
+
+    /// <summary>Clears <see cref="PickedPart"/>; true if one was picked, so Back takes that step first.</summary>
+    public bool ClearPickedPart()
+    {
+        if (_pickedPart is null)
+        {
+            return false;
+        }
+
+        SetPickedPart(null);
+        return true;
+    }
+
+    private void SetPickedPart(BuildPart? part)
+    {
+        _pickedPart = part;
+        OnPropertyChanged(nameof(PickedPart));
     }
 
     private void SetPickedLink(BuildLink link)
@@ -562,11 +601,12 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     }
 
     /// <summary>
-    /// Places a tray part dropped on <paramref name="target"/> and returns its new id (#376). A drop
-    /// on empty canvas (<paramref name="target"/> null) changes nothing and says nothing; a refused
-    /// drop changes nothing and shows why as <see cref="PlacementNote"/> at that part.
+    /// Places a tray part dropped or tapped on <paramref name="target"/> and returns its new id
+    /// (#376, #805). A drop on empty canvas (<paramref name="target"/> null) changes nothing and says
+    /// nothing; a refused drop changes nothing and shows why as <see cref="PlacementNote"/> at that
+    /// part. A dropped part is selected; a tapped one is not, so the tray stays for the next.
     /// </summary>
-    public int? PlacePart(BuildPart part, CreatureElementSelection? target)
+    public int? PlacePart(BuildPart part, CreatureElementSelection? target, bool select = true)
     {
         PlacementNote = null;
         if (target is null)
@@ -587,7 +627,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
         if (part == BuildPart.Servo)
         {
             var servoId = _history.Change(() => _builder.AddServo(target.Id));
-            ReplaceSelection(PartSet.None with { Servos = new HashSet<int> { servoId } });
+            SelectPlaced(PartSet.None with { Servos = new HashSet<int> { servoId } }, select);
             return servoId;
         }
 
@@ -596,8 +636,20 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
             _builder.AddSensor(target.Id, PartTray.SensorKindOf(part)!.Value, out var id, out _);
             return id;
         });
-        ReplaceSelection(PartSet.None with { Sensors = new HashSet<int> { sensorId } });
+        SelectPlaced(PartSet.None with { Sensors = new HashSet<int> { sensorId } }, select);
         return sensorId;
+    }
+
+    private void SelectPlaced(PartSet placed, bool select)
+    {
+        if (select)
+        {
+            ReplaceSelection(placed);
+        }
+        else
+        {
+            RaiseAnatomyChanged();
+        }
     }
 
     private bool Exists(CreatureElementSelection element) => element.Kind switch

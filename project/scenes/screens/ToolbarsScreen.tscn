@@ -197,7 +197,7 @@ SelectedIndex = 1
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="Servo" type="Control" parent="UiFrame/MarginContainer/Card/Shell/HShell/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent/PartRows" unique_id=663357980]
+[node name="Servo" type="BaseButton" parent="UiFrame/MarginContainer/Card/Shell/HShell/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent/PartRows" unique_id=663357980]
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 1
@@ -206,7 +206,7 @@ IconId = 49
 Label = "Servo"
 ValueText = "3 left"
 
-[node name="Spring" type="Control" parent="UiFrame/MarginContainer/Card/Shell/HShell/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent/PartRows" unique_id=2007275687]
+[node name="Spring" type="BaseButton" parent="UiFrame/MarginContainer/Card/Shell/HShell/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent/PartRows" unique_id=2007275687]
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 1
@@ -215,7 +215,7 @@ IconId = 50
 Label = "Spring"
 ValueText = "2 left"
 
-[node name="Wheel" type="Control" parent="UiFrame/MarginContainer/Card/Shell/HShell/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent/PartRows" unique_id=949681915]
+[node name="Wheel" type="BaseButton" parent="UiFrame/MarginContainer/Card/Shell/HShell/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent/PartRows" unique_id=949681915]
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 1
