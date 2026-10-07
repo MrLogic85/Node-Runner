@@ -22,12 +22,12 @@ public sealed partial class BuildViewModel
     /// <summary>
     /// A danger note at each selected part a copy cannot take, in id order within each kind: on a
     /// locked Creation a sensor, Servo or Piston for its brain ports; a beam, Spring or Piston
-    /// without both joints among <see cref="CopiedJointIds"/>; a sensor without its beam.
+    /// without both joints among <see cref="SelectedNodeIds"/>; a sensor without its beam.
     /// </summary>
     public IReadOnlyList<CanvasNote> CopyBlockers()
     {
         var notes = new List<CanvasNote>();
-        var joints = CopiedJointIds();
+        var joints = SelectedNodeIds;
         if (_locked)
         {
             AddBrainPortNotes(CreatureElementKind.Sensor, _selectedSensorIds);
@@ -87,8 +87,8 @@ public sealed partial class BuildViewModel
     /// Duplicates the selection one grid step aside and selects the copy, as one undo step that
     /// selects the originals again. Each copy keeps its settings but not its name; a copied Servo
     /// sits on the copy of its joint, uses the copies of its Fixed and Target links, and leaves a
-    /// role empty whose link was not copied. The copy selects every copied joint, also those Servos
-    /// brought, since only selected joints move with the selection. While Copy is dimmed, it instead shows <see cref="CopyBlockers"/> in
+    /// role empty whose link was not copied. The copy is selected as the original was: a Servo
+    /// stands in for its copied joint (#973). While Copy is dimmed, it instead shows <see cref="CopyBlockers"/> in
     /// <see cref="CanvasNotes"/> until the selection changes or the canvas is touched.
     /// </summary>
     public void CopySelectedParts()
@@ -106,7 +106,8 @@ public sealed partial class BuildViewModel
             return;
         }
 
-        var joints = CopiedJointIds();
+        var joints = SelectedNodeIds;
+        var selectedJoints = _selectedNodeIds.ToHashSet();
         var nodes = Nodes.Where(node => joints.Contains(node.Id)).ToList();
         var beams = Beams.Where(beam => _selectedBeamIds.Contains(beam.Id)).ToList();
         var pistons = Pistons.Where(piston => _selectedPistonIds.Contains(piston.Id)).ToList();
@@ -124,7 +125,10 @@ public sealed partial class BuildViewModel
                 var position = new Vector2D(node.Position.X + offset.X, node.Position.Y + offset.Y);
                 // Clamping too absorbs the rounding in a shortened offset, as in TranslateSelection.
                 nodeCopies[node.Id] = _builder.AddNode(BuildArea.Clamp(position, NodeDef.PlainJointRadius));
-                _selectedNodeIds.Add(nodeCopies[node.Id]);
+                if (selectedJoints.Contains(node.Id))
+                {
+                    _selectedNodeIds.Add(nodeCopies[node.Id]);
+                }
             }
 
             foreach (var beam in beams)
@@ -162,9 +166,6 @@ public sealed partial class BuildViewModel
         NotifySelectionChanged();
         RaiseAnatomyChanged();
     }
-
-    // The selected joints and the joints under selected Servos.
-    private HashSet<int> CopiedJointIds() => [.. _selectedNodeIds, .. SelectedServoJoints()];
 
     private int CopySettings(int fromPartId, int toPartId)
     {

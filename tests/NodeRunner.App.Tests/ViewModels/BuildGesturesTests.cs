@@ -578,6 +578,25 @@ public class BuildGesturesTests
         build.SelectedNodeIds.ShouldBe([3]);
     }
 
+    [Fact]
+    public void Beam_DragFromASelectedServo_LinksFromItsJoint_AndKeepsTheServoSelected()
+    {
+        var build = new BuildViewModel();
+        build.PlaceNode(new Vector2D(0, 0));
+        build.PlaceNode(new Vector2D(100, 0));
+        var servo = build.PlacePart(BuildPart.Servo, new CreatureElementSelection(CreatureElementKind.Node, 2))!.Value;
+        build.ActiveTool = BuildTool.Beam;
+        var gestures = new BuildGestures(build);
+
+        gestures.Press(new Vector2D(100, 0));
+        gestures.Drag(new Vector2D(0, 0));
+        gestures.Release(new Vector2D(0, 0));
+
+        build.Beams.Select(beam => (beam.NodeA, beam.NodeB)).ShouldBe([(2, 1)]);
+        build.Nodes.Select(node => node.Position).ShouldBe([new Vector2D(0, 0), new Vector2D(100, 0)]);
+        build.SingleSelectedServoId.ShouldBe(servo);
+    }
+
     [Theory]
     [InlineData(300, 300)]
     [InlineData(50, 0)]
@@ -1018,6 +1037,54 @@ public class BuildGesturesTests
         gestures.Release(new Vector2D(30, 130));
 
         build.SelectedNodeIds.ShouldBe([3]);
+    }
+
+    [Fact]
+    public void Select_BoxOverAServo_SelectsTheServoInPlaceOfItsJoint()
+    {
+        var (build, gestures, servo) = ServoOnABeamsEnd();
+
+        gestures.Press(new Vector2D(-30, -30));
+        gestures.Drag(new Vector2D(130, 30));
+        gestures.Release(new Vector2D(130, 30));
+
+        ShouldSelect(build, nodes: [1], beams: [3]);
+        build.Selection.Servos.ShouldBe([servo]);
+        build.SelectedPartCount.ShouldBe(3);
+    }
+
+    [Theory]
+    [InlineData(BuildTool.Parts)]
+    [InlineData(BuildTool.Joint)]
+    [InlineData(BuildTool.Select)]
+    public void AnyToolButBeams_DragAnUnselectedServo_MovesItsJointAndSelectsTheServo(BuildTool tool)
+    {
+        var (build, gestures, servo) = ServoOnABeamsEnd();
+        build.ActiveTool = tool;
+
+        gestures.Press(new Vector2D(100, 0));
+        gestures.Drag(new Vector2D(100, 40));
+        gestures.Release(new Vector2D(100, 40));
+
+        build.Nodes.Select(node => node.Position).ShouldBe([new Vector2D(0, 0), new Vector2D(100, 40)]);
+        ShouldSelect(build);
+        build.Selection.Servos.ShouldBe([servo]);
+    }
+
+    [Fact]
+    public void Select_DragASelectedServo_MovesTheSelectionWithItsJoint()
+    {
+        var (build, gestures, servo) = ServoOnABeamsEnd();
+        build.ReplaceSelection(PartSet.None with { Nodes = new HashSet<int> { 1 }, Servos = new HashSet<int> { servo } });
+        build.SelectedNodeCount.ShouldBe(2);
+
+        gestures.Press(new Vector2D(100, 0));
+        gestures.Drag(new Vector2D(100, 30));
+        gestures.Release(new Vector2D(100, 30));
+
+        build.Nodes.Select(node => node.Position).ShouldBe([new Vector2D(0, 30), new Vector2D(100, 30)]);
+        ShouldSelect(build, nodes: [1]);
+        build.Selection.Servos.ShouldBe([servo]);
     }
 
     [Fact]
@@ -1753,6 +1820,16 @@ public class BuildGesturesTests
         build.PlaceNode(new Vector2D(100, 0));
         build.ConnectLink(BuildLink.Beam, 1, 2);
         return (build, new BuildGestures(build));
+    }
+
+    /// <summary>Joints 1 (0,0) and 2 (100,0), beam 3 between them, and a Servo on joint 2; Select is active.</summary>
+    private static (BuildViewModel Build, BuildGestures Gestures, int Servo) ServoOnABeamsEnd()
+    {
+        var (build, gestures) = TwoJointsAndABeam();
+        var servo = build.PlacePart(BuildPart.Servo, new CreatureElementSelection(CreatureElementKind.Node, 2))!.Value;
+        build.ActiveTool = BuildTool.Select;
+        build.ClearSelection();
+        return (build, gestures, servo);
     }
 
     private static (BuildViewModel Build, BuildGestures Gestures) ThreeLooseJoints(BuildTool tool)

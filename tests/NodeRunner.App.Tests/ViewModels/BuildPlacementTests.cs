@@ -379,6 +379,79 @@ public sealed class BuildPlacementTests
     }
 
     [Fact]
+    public void DeleteServo_Alone_LeavesItsJoint()
+    {
+        var build = TwoBeams();
+        var servoId = build.PlacePart(BuildPart.Servo, _middleJoint)!.Value;
+
+        build.ReplaceSelection(PartSet.None with { Servos = new HashSet<int> { servoId } });
+        build.DeleteSelectedParts();
+
+        build.Servos.ShouldBeEmpty();
+        build.Nodes.Select(node => node.Id).ShouldBe([1, 2, 3]);
+        build.Beams.Select(beam => beam.Id).ShouldBe([4, 5]);
+    }
+
+    [Fact]
+    public void DeleteServo_OnAJointWithNoLinks_LeavesTheJoint()
+    {
+        var build = ThreeNodes();
+        var servoId = build.PlacePart(BuildPart.Servo, _middleJoint)!.Value;
+
+        build.ReplaceSelection(PartSet.None with { Servos = new HashSet<int> { servoId } });
+        build.DeleteSelectedParts();
+
+        build.Nodes.Select(node => node.Id).ShouldBe([1, 2, 3]);
+    }
+
+    [Fact]
+    public void DeleteServo_WithSomeOfItsLinks_LeavesItsJointOnTheOthers()
+    {
+        var build = TwoBeams();
+        var servoId = build.PlacePart(BuildPart.Servo, _middleJoint)!.Value;
+
+        build.ReplaceSelection(PartSet.None with { Beams = new HashSet<int> { 4 }, Servos = new HashSet<int> { servoId } });
+        build.DeleteSelectedParts();
+
+        build.Nodes.Select(node => node.Id).ShouldBe([1, 2, 3]);
+        build.Beams.Select(beam => beam.Id).ShouldBe([5]);
+    }
+
+    [Fact]
+    public void DeleteServo_WithEveryLinkOnItsJoint_TakesTheJointToo()
+    {
+        var build = TwoBeams();
+        var servoId = build.PlacePart(BuildPart.Servo, _middleJoint)!.Value;
+
+        build.ReplaceSelection(PartSet.None with { Beams = new HashSet<int> { 4, 5 }, Servos = new HashSet<int> { servoId } });
+        build.DeleteSelectedParts();
+
+        build.Nodes.Select(node => node.Id).ShouldBe([1, 3]);
+        build.Beams.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void DeleteServo_WithTheJointsAroundIt_ClearsTheArea_AndOneUndoBringsItAllBack()
+    {
+        var build = TwoBeams();
+        var servoId = build.PlacePart(BuildPart.Servo, _middleJoint)!.Value;
+        var selection = PartSet.None with { Nodes = new HashSet<int> { 1, 3 }, Beams = new HashSet<int> { 4, 5 }, Servos = new HashSet<int> { servoId } };
+
+        build.ReplaceSelection(selection);
+        build.DeleteSelectedParts();
+
+        build.Nodes.ShouldBeEmpty();
+        build.Servos.ShouldBeEmpty();
+
+        build.Undo();
+
+        build.Nodes.Select(node => node.Id).ShouldBe([1, 2, 3]);
+        build.Servos.Select(servo => servo.Id).ShouldBe([servoId]);
+        build.Selection.Nodes.ShouldBe([1, 3], ignoreOrder: true);
+        build.Selection.Servos.ShouldBe([servoId]);
+    }
+
+    [Fact]
     public void DeleteHeldBeam_ClearsServoRole()
     {
         var build = TwoBeams();
