@@ -90,6 +90,7 @@ public sealed class BuildCopyTests
 
         var copy = build.Servos.Where(servo => servo.Id != 31).ShouldHaveSingleItem();
         (copy.FixedLinkId, copy.TargetLinkId).ShouldBe((null, build.Beams.Last().Id));
+        build.ShowTrainingBlockers();
         build.CanvasNotes().ShouldContain(note => note.Target == new CreatureElementSelection(CreatureElementKind.Servo, copy.Id));
     }
 

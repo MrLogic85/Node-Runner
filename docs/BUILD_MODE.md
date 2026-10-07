@@ -151,8 +151,10 @@ and into zoom and pan; `BuildCanvas` only forwards input and draws.
   joint that already has one refuses with "One part per joint". A good drop
   takes the two lowest-id links as Fixed and Target, is one Undo step and
   selects the Servo. On a joint with fewer than two links the missing roles
-  stay empty and the Servo shows "A Servo needs two links at its joint"
-  until another link is drawn there and picked: drop first, finish later.
+  stay empty and the Servo's panel note says "A Servo needs two links at
+  its joint" until another link is drawn there and picked: drop first,
+  finish later. Its canvas note waits for a Play tap, like "Not connected"
+  (#1006).
   Tapping or dragging that joint selects the Servo; dragging moves the
   joint with it.
 - **Camera aim (#594, #622):** a Camera selected alone shows its rays and an
@@ -270,10 +272,11 @@ until the next Build visit (`BuildViewModel.AdvancedSettingsOpen`).
   (0–100%), Max speed (30°/s–720°/s) and Rise time, plus "Fixed link" and
   "Target link" pickers. A missing role's picker reads "Pick a
   Fixed link" or "Pick a Target link" in danger colour and lists only the
-  real links. If the joint has fewer than two links, its note and canvas
-  callout say "A Servo needs two links at its joint" instead, and the
-  play-blocked reason asks to connect another link there, because no pick
-  could fix it. Changing a picker follows `docs/CREATURE_MODEL.md` →
+  real links; its Play-tap canvas note says the same, or "Pick two links"
+  when both are empty. If the joint has fewer than two links, its note and its
+  Play-tap canvas note say "A Servo needs two links at its joint" instead,
+  and the play-blocked reason asks to connect another link there, because
+  no pick could fix it. Changing a picker follows `docs/CREATURE_MODEL.md` →
   "Editing identity rules".
 - **Camera:** Aim, set on the canvas, one Camera at a time.
 
@@ -360,8 +363,9 @@ dimmed button can still be tapped
 gives each joint loose at that moment a "Not connected" canvas note until
 it is joined or removed. A creation in separate pieces gets the same note
 on every piece's joint nearest another piece, none being the main one, until
-it is one piece (#930); a piece split off later waits for the next tap. The
-next canvas touch hides these notes, so they do not stay in the way while
-building (#991). Too-short parts always have their "Too short" note. The edits are saved first either way. Back never validates: it saves
+it is one piece (#930), and every Servo missing a link gets its
+missing-link note (see Servo settings) until it has both (#1006); a blocker
+that appears later waits for the next tap. The next canvas touch hides
+these notes, so they do not stay in the way while building (#991). Too-short parts always have their "Too short" note. The edits are saved first either way. Back never validates: it saves
 the drawing as it stands (#474). Training refuses a saved creature that
 cannot train and returns to Creations.

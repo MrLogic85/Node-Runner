@@ -368,6 +368,7 @@ public sealed class BuildPlacementTests
         servo.Id.ShouldBe(servoId);
         servo.FixedLinkId.ShouldBeNull();
         servo.TargetLinkId.ShouldBe(5);
+        build.ShowTrainingBlockers();
         var note = build.CanvasNotes().Single(note => note.Target.Id == servoId);
         note.Text.ShouldBe(CreatureBuilder.ServoNeedsTwoLinksReason);
         CanvasNoteTargets.JointIds(note.Target, build).ShouldBe([2]);
@@ -464,6 +465,7 @@ public sealed class BuildPlacementTests
         servo.Id.ShouldBe(servoId);
         servo.FixedLinkId.ShouldBeNull();
         servo.TargetLinkId.ShouldBe(5);
+        build.ShowTrainingBlockers();
         build.CanvasNotes().Single(note => note.Target.Id == servoId).Text.ShouldBe(CreatureBuilder.ServoNeedsTwoLinksReason);
         build.ReplaceSelection(PartSet.None with { Servos = new HashSet<int> { servoId } });
         var pickers = new BuildPresentationViewModel(build).SinglePart!.Pickers!;
@@ -487,6 +489,7 @@ public sealed class BuildPlacementTests
 
         build.ReplaceSelection(PartSet.None with { Beams = new HashSet<int> { 5 } });
         build.DeleteSelectedParts();
+        build.ShowTrainingBlockers();
 
         build.CanvasNotes().Single(note => note.Target.Id == servoId).Text.ShouldBe(UiText.Plain("Pick a Fixed link"));
         build.ReplaceSelection(PartSet.None with { Servos = new HashSet<int> { servoId } });
@@ -497,6 +500,38 @@ public sealed class BuildPlacementTests
         picker.LinkIds.ShouldBe([6, 7]);
         picker.Options.ShouldBe([UiText.Format("Beam {0}", 1), UiText.Format("Beam {0}", 2)]);
         picker.LinkKinds.ShouldBe([CreatureElementKind.Beam, CreatureElementKind.Beam]);
+    }
+
+    // Picking a link gives the Servo a new id (#911); its Play-tap note stays until both roles are set (#1006).
+    [Fact]
+    public void AServosPlayTapNote_StaysThroughALinkPick_UntilBothRolesAreSet()
+    {
+        var build = new BuildViewModel();
+        build.Load(new CreatureDef(
+            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(100, 0)), new NodeDef(3, new Vector2D(200, 0)), new NodeDef(4, new Vector2D(100, 100))],
+            [new BeamDef(5, 1, 2), new BeamDef(6, 2, 3), new BeamDef(7, 2, 4)],
+            [],
+            [],
+            [],
+            [],
+            nextPartId: 8));
+        var servoId = build.PlacePart(BuildPart.Servo, _middleJoint)!.Value;
+        build.ReplaceSelection(PartSet.None with { Beams = new HashSet<int> { 5 } });
+        build.DeleteSelectedParts();
+        build.ShowTrainingBlockers();
+
+        var picked = build.SetServoLink(servoId, fixedRole: false, linkId: 7)!.Value;
+
+        picked.ShouldNotBe(servoId);
+        ServoNotes().ShouldHaveSingleItem().ShouldBe(
+            new CanvasNote(CanvasNoteKind.Danger, new CreatureElementSelection(CreatureElementKind.Servo, picked), UiText.Plain("Pick a Fixed link")));
+
+        build.SetServoLink(picked, fixedRole: true, linkId: 6);
+
+        ServoNotes().ShouldBeEmpty();
+
+        // Joint 1 lost its beam, so it has its own "Not connected" note.
+        IEnumerable<CanvasNote> ServoNotes() => build.CanvasNotes().Where(note => note.Target.Kind == CreatureElementKind.Servo);
     }
 
     [Fact]
@@ -512,6 +547,7 @@ public sealed class BuildPlacementTests
         servo.Id.ShouldBe(servoId);
         servo.FixedLinkId.ShouldBeNull();
         servo.TargetLinkId.ShouldBe(5);
+        build.ShowTrainingBlockers();
         var note = build.CanvasNotes().Single(note => note.Target.Id == servoId);
         note.Text.ShouldBe(CreatureBuilder.ServoNeedsTwoLinksReason);
         CanvasNoteTargets.JointIds(note.Target, build).ShouldBe([2]);
@@ -554,8 +590,33 @@ public sealed class BuildPlacementTests
         var servo = build.Servos.Single();
         servo.FixedLinkId.ShouldBe(4);
         servo.TargetLinkId.ShouldBeNull();
-        build.CanvasNotes().Single(note => note.Target.Id == servoId).Text.ShouldBe(CreatureBuilder.ServoNeedsTwoLinksReason);
         CreatureReadiness.CanTrain(build.Snapshot()).ShouldBeFalse();
+        build.CanvasNotes().ShouldBeEmpty();
+
+        build.ShowTrainingBlockers();
+
+        build.CanvasNotes().Single(note => note.Target.Id == servoId).Text.ShouldBe(CreatureBuilder.ServoNeedsTwoLinksReason);
+    }
+
+    // Like "Not connected" (#844, #1006): a Servo missing a link is marked on a Play tap, stays
+    // marked while it misses one, and the next canvas touch hides it.
+    [Fact]
+    public void AServoMissingALink_IsNotedOnAPlayTap_UntilFixedOrTheCanvasIsTouched()
+    {
+        var build = TwoBeams();
+        var servoId = build.PlacePart(BuildPart.Servo, _firstJoint)!.Value;
+
+        build.ShowTrainingBlockers();
+        build.CanvasNotes().ShouldHaveSingleItem().Target.ShouldBe(new CreatureElementSelection(CreatureElementKind.Servo, servoId));
+        build.DismissTapNotes();
+        build.CanvasNotes().ShouldBeEmpty();
+
+        build.ShowTrainingBlockers();
+        build.ReplaceSelection(PartSet.None with { Servos = new HashSet<int> { servoId } });
+        build.DeleteSelectedParts();
+        build.CanvasNotes().ShouldBeEmpty();
+        build.Undo();
+        build.CanvasNotes().ShouldHaveSingleItem().Target.Id.ShouldBe(servoId);
     }
 
     [Fact]
