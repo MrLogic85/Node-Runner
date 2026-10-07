@@ -169,6 +169,19 @@ public sealed class BuildCopyTests
     }
 
     [Fact]
+    public void ADimmedCopysNotes_GoOnTheNextCanvasTouch()
+    {
+        var build = Loaded();
+        build.ReplaceSelection(new PartSet(Ids(1), Ids(11), Ids(), Ids(), Ids(), Ids()));
+        build.CopySelectedParts();
+        build.CanvasNotes().ShouldNotBeEmpty();
+
+        new BuildGestures(build).Press(new Vector2D(2000, 2000));
+
+        build.CanvasNotes().ShouldBeEmpty();
+    }
+
+    [Fact]
     public void Copy_IsNotOffered_ForOnePart_OrOnALockedCreation()
     {
         var build = Loaded();

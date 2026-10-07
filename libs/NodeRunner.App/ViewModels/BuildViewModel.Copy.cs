@@ -63,7 +63,7 @@ public sealed partial class BuildViewModel
     /// Duplicates the selection one grid step aside and selects the copy, as one undo step that
     /// selects the originals again. Each copy keeps its settings but not its name. While Copy is
     /// dimmed, it instead shows <see cref="CopyBlockers"/> in <see cref="CanvasNotes"/> until the
-    /// selection changes.
+    /// selection changes or the canvas is touched.
     /// </summary>
     public void CopySelectedParts()
     {

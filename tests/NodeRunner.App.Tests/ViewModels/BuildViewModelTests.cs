@@ -1016,6 +1016,40 @@ public sealed class BuildViewModelTests
     }
 
     [Fact]
+    public void ACanvasTouch_HidesTheNotConnectedNotes_ButNotTooShort()
+    {
+        var viewModel = new BuildViewModel();
+        viewModel.Load(new CreatureDef(
+            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(50, 0)), new NodeDef(3, new Vector2D(400, 0))],
+            [new BeamDef(5, 1, 2)],
+            []));
+        var tooShort = new CanvasNote(CanvasNoteKind.Danger, new CreatureElementSelection(CreatureElementKind.Beam, 5), UiText.Plain("Too short"));
+        viewModel.ShowTrainingBlockers();
+        viewModel.CanvasNotes().ShouldBe([NotConnected(3), tooShort]);
+        var changed = new List<string?>();
+        viewModel.PropertyChanged += (_, e) => changed.Add(e.PropertyName);
+
+        new BuildGestures(viewModel).Press(new Vector2D(2000, 2000));
+
+        changed.ShouldContain(nameof(BuildViewModel.CanvasNotes));
+        viewModel.CanvasNotes().ShouldBe([tooShort]);
+    }
+
+    [Fact]
+    public void ACanvasTouch_HidesThePieceNotes_UntilTheNextTap()
+    {
+        var viewModel = new BuildViewModel();
+        viewModel.Load(TwoPieces());
+        viewModel.ShowTrainingBlockers();
+
+        new BuildGestures(viewModel).Press(new Vector2D(2000, 2000));
+
+        viewModel.CanvasNotes().ShouldBeEmpty();
+        viewModel.ShowTrainingBlockers();
+        viewModel.CanvasNotes().ShouldBe([NotConnected(2), NotConnected(4)]);
+    }
+
+    [Fact]
     public void Load_ForgetsThePiecesTheLastTapPointedAt()
     {
         var viewModel = new BuildViewModel();

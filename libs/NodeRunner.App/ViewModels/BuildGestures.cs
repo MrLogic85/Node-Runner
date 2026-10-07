@@ -187,7 +187,7 @@ public sealed class BuildGestures
     /// <summary>A pointer touches down at <paramref name="viewPosition"/>.</summary>
     public void Press(Vector2D viewPosition, int pointer = 0)
     {
-        _build.DismissPlacementNote();
+        _build.DismissTapNotes();
         _pointers[pointer] = viewPosition;
         if (_navigating)
         {
