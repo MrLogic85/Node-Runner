@@ -458,14 +458,25 @@ public sealed class CreatureBuilder
     /// </summary>
     public int AddServo(int nodeId)
     {
+        var links = HasNode(nodeId) ? LinksAt(nodeId).OrderBy(link => link.Id).ToArray() : [];
+        return AddServo(nodeId, links.Length > 0 ? links[0].Id : null, links.Length > 1 ? links[1].Id : null);
+    }
+
+    /// <summary>Adds a Servo with the given Fixed and Target links, each at the joint or empty, as a copied Servo has (#990).</summary>
+    public int AddServo(int nodeId, int? fixedLinkId, int? targetLinkId)
+    {
         if (!CanAddServo(nodeId, out var reason))
         {
             throw new ArgumentException(reason.Message);
         }
 
-        var links = LinksAt(nodeId).OrderBy(link => link.Id).ToArray();
+        foreach (var linkId in new[] { fixedLinkId, targetLinkId }.OfType<int>())
+        {
+            ValidateLinkTouchesNode(linkId, nodeId);
+        }
+
         var id = AllocatePartId();
-        _servos.Add(new ServoDef(id, nodeId, links.Length > 0 ? links[0].Id : null, links.Length > 1 ? links[1].Id : null));
+        _servos.Add(new ServoDef(id, nodeId, fixedLinkId, targetLinkId));
         return id;
     }
 
