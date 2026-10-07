@@ -6,6 +6,6 @@ Reached from **Checkpoints** in the overflow menu on a locked creation (see Buil
 
 **Each card** carries the creation's thumbnail, its name and a "Gen N · timestamp" line, then a footer row of three labelled icon buttons -- **Restore**, **Rename** and **Delete** -- visible at once rather than behind an overflow menu, the same idea as Copy/Delete on a creation card.
 
-- **Restore.** Overwrites active with a copy of the checkpoint, as if the app had been reloaded into it -- structure and training both revert, so any progress or edits made since are lost. The dialog names the checkpoint and suggests making a new checkpoint of the current state first (see Overlays). Needs a press-and-hold; there is no undo.
+- **Restore.** Overwrites active with a copy of the checkpoint, as if the app had been reloaded into it -- structure and training both revert, so any progress or edits made since are lost. The dialog names the checkpoint and suggests making a new checkpoint of the current state first (see Overlays). Confirmed with a tap; there is no undo.
 - **Rename.** The name becomes an editable field in place, the same field and states as any other name in the app (see Component Library). The timestamp does not change.
-- **Delete.** Removes that one checkpoint for good. The dialog names it and needs a press-and-hold; there is no undo. Deleting a checkpoint never touches active or any other checkpoint.
+- **Delete.** Removes that one checkpoint for good. The dialog names it and is confirmed with a tap; there is no undo. Deleting a checkpoint never touches active or any other checkpoint.

@@ -93,6 +93,8 @@ public sealed partial class UiComponentContractsTests
                 "Number",
                 "StageCard",
                 "CardActions",
+                "ExpandSection",
+                "HintCard",
             ]);
     }
 

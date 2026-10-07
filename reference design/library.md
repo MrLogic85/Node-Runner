@@ -2,15 +2,17 @@
 
 One implementation per control. Every screen calls these; a new screen adds a variant here, never a private copy. The signatures are the props to give the matching Godot scene.
 
-## `c_btn(text, kind='secondary', icon=None, w=None, off=False, on=False, compact=False, badge=None)`
+## `c_btn(text, kind='secondary', icon=None, w=None, off=False, on=False, compact=False, badge=None, unavailable=False)`
 
 kind: primary, secondary, tertiary or flat. off/on are the disabled/selected states; compact is the small size.
 kind can also carry a layout word (icon, stack) for buttons with no text, e.g. c_btn('', 'icon secondary', 'gear');
 the play button is c_btn('', 'primary stack', 'play') — a stack button (like a tool rail cell) with no label.
 badge: a small halo counter in the corner, for any kind or layout, row, icon or stack alike.
 The layout picks the icon size, never the caller: icon (16) beside text in a row, icon-lg (20) with no text and in a stack.
+unavailable: looks like off (dashed, dimmed) but still takes a tap, so the screen can answer it -- the reason play is
+blocked, or that a feature comes in a later version. Never a substitute for off on a control that does nothing.
 
-## `c_ib(icon, kind='secondary', on=False, off=False, compact=False, badge=None)`
+## `c_ib(icon, kind='secondary', on=False, off=False, compact=False, badge=None, unavailable=False)`
 
 An icon-only button: the same btn system as c_btn, just the icon layout. kind: primary, secondary, tertiary or flat.
 badge: a small halo counter in the corner. The icon is always icon-lg (20): a button with no text gets the larger
@@ -57,7 +59,7 @@ Label with a value and a bar: c_slider with thumbs=None -- the slider's own trac
 thumb to drag. pad=False for a row inside c_rows: the list owns the gap between rows, this one carries none
 of its own.
 
-## `c_slider(label, value, thumbs, steps=(), marker=None, enabled=True, compact=False, _steppers=False, pad=True, pct=None)`
+## `c_slider(label, value, thumbs, steps=(), marker=None, enabled=True, compact=False, _steppers=False, pad=True, pct=None, spread=None)`
 
 The one slider, configured by data -- and, with thumbs=None, the one progress bar too (c_prog and c_meter
 above are thin wrappers over exactly this): the same track and the same fill, just no thumb to drag, and
@@ -94,13 +96,13 @@ can't be opened right now, and a line nearby should say why. The two never combi
 selected shows a check, note is a short word ("swaps") for a choice that needs explaining instead of being refused. pad=False for a row
 inside c_rows: the list owns the gap between rows, this one carries none of its own.
 
-## `c_menu(items, w=210, compact=False)`
+## `c_menu(items, w=200, compact=False, marks=False)`
 
-The menu: rows in the menu frame. items: (icon, text, kind[, accessory[, tail]]) -- icon is a UI icon name or None,
-kind '' / 'hi' (the current or chosen row, an accent-soft wash) / 'danger', accessory any small HTML the caller draws
-first (a swatch), tail anything at the row's end (a check, a short note). Two sizes: standard, touch-high rows with
-body-strong text, an icon-lg icon and a hairline between rows (the overflow menu); compact, control-sm rows with
-small-strong text and an icon at icon, no hairlines (the list a picker opens). w: a width, or None to fill the parent.
+The menu: rows in the menu frame (kind menu, with its glow). items: mi() rows, mi_toggle() rows and MI_DIVIDER.
+Two sizes: standard rows are at least touch (48) high, body-strong, icon-lg (the overflow menu); compact rows at least
+control-sm (32), small-strong, icon (the list a picker opens). A row is laid out as: the icon or lead, the label with its
+optional note under it, and, when marks=True, an icon-sm check in accent on the chosen row; all centred vertically.
+w: a fixed width in px (200 by default), or 'fit' to fit the content (never narrower than what it hangs from).
 
 ## `c_chip(text, icn=None, kind='neutral')`
 
@@ -115,7 +117,7 @@ kind shares chip's names: warn (halo, the default), danger (explains a refusal),
 
 ## `c_textfield(text, state='rest', size='bar', w=None)`
 
-The only text entry. size 'bar' (control high, heading text) sits in a top bar; 'panel' (control-sm high, body-strong) fills a settings panel. States rest, edit, bad are classes of .field.
+The only text entry. size 'bar' (control high, heading text) sits in a top bar and fills the bar's field, whatever its text; 'panel' (control-sm high, body-strong) fills a settings panel. States rest, edit, bad are classes of .field.
 
 ## `c_name(v, state='rest', pad=True)`
 
@@ -148,7 +150,7 @@ Icon tabs; one open at a time.
 
 Title row of a side panel: an optional glyph, the title, and icon actions (compact flat icon buttons, by icon name).
 
-## `c_rows(rows, delete=None)`
+## `c_rows(rows, delete=None, locked=False)`
 
 The body of a part's settings panel: its rows in one column with the panel's own gap between them (var(--space-1)) — the panel
 owns that spacing, not the rows, so build each row with pad=False and let this join them. delete, if given, is the label of a
@@ -158,9 +160,10 @@ full-width danger button at the end (its own bigger gap above, space-2, since an
 
 A part's settings panel: c_panel_head (glyph, title, close) then c_rows (its rows sharing one gap, and an optional Delete).
 
-## `c_info_row(icn, title, sub)`
+## `c_info_row(icn, title, sub, handle=True, glyph=False)`
 
 A handle explained: the handle itself (c_round_button, exactly as it sits on the canvas), a title and a note.
+handle=False: a plain muted 16 icon in its place (a part glyph with glyph=True), for a tool's help rows.
 
 ## `c_card_actions(buttons)`
 
@@ -178,3 +181,21 @@ The one frame (Frame surface) for panels, cards, tiles, menus and dialogs. kind:
 ## `c_ring(pct, done=False)`
 
 Progress ring: a touch-size box, a 44 ring centred in it, the percent (or a check when done) centred inside.
+
+## `c_status(text, ok=True)`
+
+The readiness line, the last line of Build's side panel: an accent check and "Ready to train", or a danger warn and
+the short reason training cannot start. Small text in the icon's colour, the icon icon-sm. It sits at the panel's foot,
+after everything else.
+
+## `c_hint(title, text)`
+
+What a setting does: a box at the canvas's top right while a finger is on its slider, and 2 s after it lifts. The
+setting's name in overline accent, one short line under it. Touching another slider swaps it.
+
+## `c_expand(title, open_=False, body='')`
+
+Expand section: a full-width control-sm header, its title in overline muted and a 16 muted chevron at the end
+(right when closed, down when open), no frame, only the press tint. Open, its rows follow with the panel's own gap.
+It starts closed every time Build opens and keeps its state while the selection changes. Build's part settings put
+the less used sliders in one called Advanced.

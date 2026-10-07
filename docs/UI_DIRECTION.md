@@ -132,9 +132,14 @@ entry (#315). The entries that are not a component of their own (#306):
 - **`c_round_button`** is `UiSelectionHandle`, which `UiInfoRow` also
   draws; tool help rows show only a muted glyph (#706).
 - **`c_rows`** is a plain container with a `space-1` gap and an optional
-  danger Delete (#343). `UiExpandSection` folds rows such as Advanced
+  danger Delete (#343).
+- **`c_expand`** is `UiExpandSection`, which folds rows such as Advanced
   (#928): a `control-sm` `Overline` `muted` header with a chevron, no border
   or fill.
+- **`c_hint`** is `UiHintCard`, the slider hint at the canvas's top right
+  (#867).
+- **`c_status`** is Build's readiness row, a `UiIcon` and a `UiLabel` in the
+  side panel's scene.
 - **`c_prog`, `c_meter`** are a `UiSlider` with two Rounded ends.
 - **`c_power`** and read-only facts are `UiValueRow`.
 - **`c_card_actions`** is `UiCardActions`, a bar of text cells.
@@ -297,6 +302,10 @@ guide back by mistake. Departures stated in this doc's own sections are not
 repeated. The last column owns the detail (BM = `docs/BUILD_MODE.md`, TL =
 `docs/TRAINING_LOOP.md`, WV = `docs/WORLD_VISUALS.md`).
 
+The 2026-10-07 import adopted many of these in the reference's Build,
+BuildLocked and PartSettings sections, but its overview still says the old
+thing, so those rows stay.
+
 | Reference | Ours | Owner |
 | --- | --- | --- |
 | The padlock resets training | Unlocking keeps it; Reset training is an overflow item (#371, #687) | TL step 6; BM → Overflow menu |
@@ -307,9 +316,6 @@ repeated. The last column owns the detail (BM = `docs/BUILD_MODE.md`, TL =
 | Rail says Beam and Move; Links tab | Links and Parts tools (#705, #706, #913) | BM → Interactions |
 | Selecting differs per tool; Joint splits beams | One selection model (#746) | BM → Every tool |
 | Locked-canvas chip | None (#706) | — |
-| Piston lists Between, power, weight | Sliders (#451) | BM → Part settings |
-| Every setting shown | Tuning values under a closed Advanced section (#903) | BM → Parameters |
-| Sliders have no help | A hint while touched; "?" buttons were dropped as clutter (#867) | BM → Parameters |
 | Part counts ("1 left") | Unlimited (#374, #525) | BM → Parts tray |
 | Core part | Sensors on beams (#127) | WV → Sensors |
 | Joint circle; Servo gauge and labels | Bearing; housing, dial and horn (#626, #452) | WV → Parts |
@@ -323,8 +329,8 @@ repeated. The last column owns the detail (BM = `docs/BUILD_MODE.md`, TL =
 | Strip shows the best 7 | Pages (#387, #791) | TL → Generations |
 | Speed control | None (#787) | TL → No speed-up |
 | Fixed camera | Zooms out and rises (#675) | TL → Camera |
-| Grid behind the arena; flag reads "best"; ringed part name | Plain; "Best 4.2 m"; a callout; a start sign (#668, #388, #848) | WV → Training arena |
+| Grid behind the arena; ringed part name | Plain; a callout; a start sign (#668, #848) | WV → Training arena |
+| Targets pinned top right with a chevron; achievement targets | Best stays on the ground, nothing off screen, until #488 | WV → Training arena |
 | Distances from the centre | From the front (#725) | TL → Trial |
 | Every stage card glows | Only Brain (#847) | Screens → Training |
-| Trophy and Stats look ready | Unavailable (#841) | Buttons and icons |
 | UI size multiplies the canvas | Pixels per unit (#299, #738) | UI size |
