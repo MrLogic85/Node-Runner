@@ -95,6 +95,7 @@ public sealed partial class UiComponentContractsTests
                 "CardActions",
                 "ExpandSection",
                 "HintCard",
+                "BarCell",
             ]);
     }
 

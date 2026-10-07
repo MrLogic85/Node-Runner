@@ -6,6 +6,7 @@
 .slot-arena{position:absolute;left:var(--w-rail);right:var(--w-side);top:0;bottom:0}
 .slot-side{position:absolute;right:0;top:0;bottom:0;width:var(--w-side)}
 .slot-tray{position:absolute;left:0;right:var(--w-side);bottom:0}
+.slot-world{position:absolute;left:0;right:var(--w-side);top:0;bottom:0}.slot-world.wide,.slot-tray.wide{right:28px}   /* Training: the arena, with the Status panel open or collapsed to its 28 tab */
 .slot-fill{position:absolute;left:0;right:0;top:0;bottom:0}
 .slot-foot{position:absolute;left:var(--space-4);right:var(--space-4);bottom:var(--space-1)}
 .slot-brain{position:absolute;left:50%;margin-left:calc(var(--w-brain) / -2);top:0;bottom:0;width:var(--w-brain)}

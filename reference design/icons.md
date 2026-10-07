@@ -2,9 +2,9 @@
 
 All icons are pure white (`#ffffff`) on purpose: import them as SVG and tint them in Godot with `modulate` / `self_modulate`, or with the Button icon colour properties. Never bake a colour into the file.
 
-Two sets. **UI icons** are stroked glyphs on a 24 grid (stroke 2, round caps and joins, `currentColor`), used at 12, 16, 20 and 24. Each file's viewBox is fitted around its drawing, so every icon fills its box the same way (the longer side is 18 of 24) and the line stays 2 on 24. **Part glyphs** are 20-grid pictures of parts, drawn with the dark theme colours. One SVG per icon in `icons/ui/` and `icons/parts/`.
+Two sets. **UI icons** are stroked glyphs on a 24 grid (stroke 2, round caps and joins, `currentColor`), used at 12, 16, 20 and 24. Every file is the plain 24 grid with the drawing 16 on its longer side, centred, so every icon has the same air round it; nothing is scaled to fit. **Part glyphs** are 20-grid pictures of parts, drawn with the dark theme colours. One SVG per icon in `icons/ui/` and `icons/parts/`.
 
-## UI icons (50)
+## UI icons (51)
 
 | Icon | Name |
 |---|---|
@@ -22,6 +22,7 @@ Two sets. **UI icons** are stroked glyphs on a 24 grid (stroke 2, round caps and
 | <img src="icons/ui/distance.svg" width="24" style="background:#0d1424"> | `distance` |
 | <img src="icons/ui/edit.svg" width="24" style="background:#0d1424"> | `edit` |
 | <img src="icons/ui/elevation.svg" width="24" style="background:#0d1424"> | `elevation` |
+| <img src="icons/ui/eye.svg" width="24" style="background:#0d1424"> | `eye` |
 | <img src="icons/ui/flag.svg" width="24" style="background:#0d1424"> | `flag` |
 | <img src="icons/ui/gear.svg" width="24" style="background:#0d1424"> | `gear` |
 | <img src="icons/ui/height.svg" width="24" style="background:#0d1424"> | `height` |

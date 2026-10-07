@@ -1,17 +1,18 @@
-Named **Training** in the app (it also runs a saved brain in Simulate mode).
+Named **Training** in the app; the same screen runs a saved brain in **Simulate**.
 
-Training or simulating a creation on its map. It shows four things at rest and reveals detail only on tap.
+**Arena.** Plain: the background, the ground (a `panel` fill under an `accent` edge), the ruler and what is on it. Every **shadow** (a copy of the creation with a slightly different brain) races at once. **Shadow 1**, the previous best, is followed by default: it is drawn in full with a knock-out outline in the background colour, and the camera keeps its centre 43% from the left. The other shadows are drawn simplified (a joint's outer ring, a beam's line, links as they are, no sensors) and fade together at `alpha_shadow`; the leader is not marked. Only the shadows on the strip's page are drawn, plus the followed one.
 
-**Arena (left).** The lead shadow in full, the other **shadows** faded behind it (they are the same creation trying different brains at the same time), a ruler labelled every 2 m and the **targets** (below). The camera follows the leader. Tapping a part of the leader rings it in `halo` with its name ("Left foot").
+- **Camera.** It zooms out to fit the followed shadow and a second of its travel, keeps the ground 80% down, rises after a shadow that climbs past the top margin, and cuts back to the start when the shadow begins a new trial.
+- **Ruler.** Counted from where the followed creature's front starts, labels every 1 m at the closest zoom and minor ticks every 0.5 m; labels thin out to 2, 5, 10 m as the view zooms out. Ticks and labels keep their screen size. Every distance shown is the creature's front.
+- **Targets.** The best distance on this map ("Best 9.4 m") and the next distance-based achievement ("Marathon 50 m") are both the callout's flag in its `ok` kind. The nearest one not reached yet is pinned to the arena's top right with a chevron; one that has been passed stands on the ground at its distance, a flag on a dashed line. The ground marks fade to `alpha_shadow` while a part's name shows, since it may cover them.
+- **Start sign.** An `ink` arrow sign at 0 m, half a metre tall in the world, pointing the way to go, so a creature that walks backwards is seen to.
+- **A tapped part** of the followed shadow keeps its selection look, and its Build name shows in a `halo` callout above the whole creature, with a line down to it.
+- **"Too many shadows!"** A Warning chip at the arena's top left when physics falls behind real time for 3 s; it stays 60 s after the last slow stretch.
 
-**Bottom row.** Pause, speed, and the **shadow strip** (see GenerationStrip): one cell per shadow, its bar the distance so far, the leader in `accent`. Tap a cell to follow that shadow. One line of text carries the time: "Generation 37 · 6 of 10 s". There is no time bar.
+**Under the arena.** **Pause** (a stacked button; it becomes Play while paused) and, while training, the caption "Generation 37" with a bar that fills as the followed run goes by, over the **shadow strip** (see GenerationStrip). There is no speed control: physics always runs in real time, and training goes faster by racing more shadows.
 
-**Signal flow (right).** 1 Senses, 2 Brain, 3 Outputs, 4 Distance for the leader (see SignalFlow). Tap a core on the body and Senses expands to that core's readings and scrolls; the other cards collapse. Tapping Brain opens the brain.
+**Status.** Beside the arena a side panel titled **Status** holds the signal flow: 1 Senses, 2 Brain, 3 Outputs, 4 Distance (see SignalFlow). Only the Brain stage looks like a button (raised, with glow) and opens the brain; the others are plain frames. The panel collapses to its tab, and the arena widens.
 
-**Power chip.** When the creation has powered parts, a bolt chip with the battery percentage sits at the top left of the arena (see Power).
+**Top bar.** Back (to Build), the creation's name over its status ("Training · Flat ground", or "Simulating · Flat ground"), and **Brain** and **Stats** as secondary icon buttons; Stats is unavailable until it is built and a tap says it comes later. No overflow.
 
-**Targets.** Two kinds of target are shown, alike: the **best** distance so far ("Best 9.4 m") and, for **distance-based achievements** only, the next one not yet earned ("Marathon 50 m"). Both are the callout's flag in its `ok` kind (see Callout). The nearest target the leader has not reached yet is **pinned to the arena's top right** with a chevron. When the leader passes it, it drops onto the ground at its distance, a flag on a dashed line, and the next target takes the pinned place. Achievements that are not about distance get no target here; their progress is shown in Achievements.
-
-**Top bar.** Back (to the creation), the creation name (not editable here), status "Training · Flat ground", and two icon buttons: Brain and Stats. Pause is on the bottom row; stopping is Back. Just watching a saved brain (no learning) shows the same screen with "Simulating" as status and no generation caption.
-
-Nothing here adds or removes parts; the creation is locked.
+**Simulate** plays the latest brain on its own in one run that never ends, and saves nothing: no generation caption, no strip and no shadows; the best marker stays at the saved best.
