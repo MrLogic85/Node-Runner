@@ -109,6 +109,16 @@ public sealed class BuildGestures
     /// <summary>The beam a Piston or Spring drag would replace if released now (#849).</summary>
     public int? ReplacedBeamId { get; private set; }
 
+    /// <summary>The sensor a drag is moving to another beam (#806).</summary>
+    public int? MovingSensorId { get; private set; }
+
+    /// <summary>What <see cref="MovingSensorId"/> would land on if released now (<see cref="DropTargetAt"/>); null over empty canvas.</summary>
+    public CreatureElementSelection? SensorDropTarget { get; private set; }
+
+    /// <summary>The moving sensor as it would be if released now (#806): on another beam that takes it, else null.</summary>
+    public SensorDef? MovedSensorPreview =>
+        MovingSensorId is { } sensor ? _build.SensorMovePreview(sensor, SensorDropTarget) : null;
+
     /// <summary>The corners of the Select tool's box while it is dragged.</summary>
     public (Vector2D Start, Vector2D End)? SelectionBox { get; private set; }
 
@@ -376,6 +386,10 @@ public sealed class BuildGestures
                 _build.ClearSelection();
                 SelectionBox = (_pressPosition, _pressPosition);
             }
+            else if (_press == SharedPress.Sensor)
+            {
+                MovingSensorId = _pressedSensor;
+            }
         }
 
         var lastViewPosition = _lastViewPosition;
@@ -407,6 +421,15 @@ public sealed class BuildGestures
         {
             SelectionBox = (box.Start, position);
             Changed?.Invoke(this, EventArgs.Empty);
+        }
+        else if (MovingSensorId is not null)
+        {
+            var target = DropTargetAt(viewPosition);
+            if (target != SensorDropTarget)
+            {
+                SensorDropTarget = target;
+                Changed?.Invoke(this, EventArgs.Empty);
+            }
         }
         else if (_press == SharedPress.Pan)
         {
@@ -440,6 +463,10 @@ public sealed class BuildGestures
         else if (SelectionBox is { } box)
         {
             CompleteSelectionBox(box.Start, position);
+        }
+        else if (MovingSensorId is { } sensor)
+        {
+            _build.MoveSensor(sensor, DropTargetAt(viewPosition));
         }
         else if (_pressedHandle == SelectionHandle.Rotate && _dragLayout is { } turned)
         {
@@ -481,8 +508,8 @@ public sealed class BuildGestures
     /// <summary>
     /// What a press does once it drags, the same in every tool (#803) apart from a Beams link drag:
     /// a selected joint drags the selection, a press inside a group's frame drags the group, an
-    /// unselected joint is moved alone, and any other press draws a box in Select and pans elsewhere.
-    /// Taps are settled on release (<see cref="Tap"/>).
+    /// unselected joint is moved alone, a sensor is moved to another beam (#806), and any other
+    /// press draws a box in Select and pans elsewhere. Taps are settled on release (<see cref="Tap"/>).
     /// </summary>
     private void PressShared(Vector2D viewPosition)
     {
@@ -497,6 +524,10 @@ public sealed class BuildGestures
         else if (_pressedNode is not null)
         {
             _press = SharedPress.Move;
+        }
+        else if (_pressedSensor is not null)
+        {
+            _press = SharedPress.Sensor;
         }
         else
         {
@@ -771,6 +802,8 @@ public sealed class BuildGestures
         BeamTargetNodeId = null;
         RefusedTargetNodeId = null;
         ReplacedBeamId = null;
+        MovingSensorId = null;
+        SensorDropTarget = null;
         SelectionBox = null;
     }
 
@@ -804,5 +837,8 @@ public sealed class BuildGestures
         Group,
         Pan,
         Box,
+
+        /// <summary>On a sensor's picture: a drag moves the sensor to another beam (#806).</summary>
+        Sensor,
     }
 }

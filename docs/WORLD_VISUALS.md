@@ -144,6 +144,10 @@ ground, the shadows above it, and the followed creature above every shadow.
 - **Placing a part:** the glyph rides on a 48 px raised tile with an
   `accent` line above the finger. A dragged sensor shows free beams `halo`,
   taken beams dashed `danger`, and its picture where it would land.
+- **Moving a sensor (#806):** no tile follows the finger. The sensor stays
+  on its beam drawn as selected, beams are outlined as for a tray drag
+  (its own beam `halo`), and its picture shows on another beam that takes
+  it, a Camera looking the same way in the world.
 - **Callouts (#593, #633):** a note out past its part, joined by a leader in
   its colour, at screen size. Near an edge it slides along the edge, never
   to the part's other side. Overlapping callouts stack in a column, most

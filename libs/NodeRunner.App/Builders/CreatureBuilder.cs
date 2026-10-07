@@ -2,6 +2,7 @@ using System.Diagnostics.CodeAnalysis;
 using NodeRunner.App.Lifecycle;
 using NodeRunner.App.ViewModels;
 using NodeRunner.Domain;
+using NodeRunner.Mechanics;
 
 namespace NodeRunner.App.Builders;
 
@@ -540,10 +541,9 @@ public sealed class CreatureBuilder
             throw new ArgumentOutOfRangeException(nameof(kind), "Sensor kind must be defined.");
         }
 
-        if (_sensors.Any(sensor => sensor.BeamId == beamId))
+        if (!CanMountSensor(beamId, movingSensorId: null, out reason))
         {
             sensorId = 0;
-            reason = OneSensorPerBeamReason;
             return false;
         }
 
@@ -555,6 +555,65 @@ public sealed class CreatureBuilder
         _sensors.Add(new SensorDef(sensorId, beamId, kind, aim: aim));
         reason = null;
         return true;
+    }
+
+    /// <summary>
+    /// Moves a sensor to another beam unless that beam already has a sensor (#806), as
+    /// <see cref="SensorMovedTo"/> shows it.
+    /// </summary>
+    public bool MoveSensor(int sensorId, int beamId, [NotNullWhen(false)] out UiText? reason)
+    {
+        var moved = SensorMovedTo(sensorId, beamId);
+        if (!CanMountSensor(beamId, sensorId, out reason))
+        {
+            return false;
+        }
+
+        _sensors[SensorIndexOf(sensorId)] = moved;
+        return true;
+    }
+
+    /// <summary>
+    /// Whether a sensor can sit on <paramref name="beamId"/>: one sensor per beam, not counting
+    /// <paramref name="movingSensorId"/>, the one being moved (#806).
+    /// </summary>
+    public bool CanMountSensor(int beamId, int? movingSensorId, [NotNullWhen(false)] out UiText? reason)
+    {
+        ValidateBeamId(beamId);
+        if (_sensors.Any(sensor => sensor.BeamId == beamId && sensor.Id != movingSensorId))
+        {
+            reason = OneSensorPerBeamReason;
+            return false;
+        }
+
+        reason = null;
+        return true;
+    }
+
+    /// <summary>
+    /// The sensor as it would be on <paramref name="beamId"/> (#806): the same id, so the same brain
+    /// ports, kind and name. A Camera keeps the world direction it looks in as built, so its aim
+    /// along the new beam changes.
+    /// </summary>
+    public SensorDef SensorMovedTo(int sensorId, int beamId)
+    {
+        var sensor = _sensors[SensorIndexOf(sensorId)];
+        ValidateBeamId(beamId);
+        double? aim = null;
+        if (sensor.Aim is { } beamAim)
+        {
+            var (fromA, fromB) = BeamEnds(sensor.BeamId);
+            var (toA, toB) = BeamEnds(beamId);
+            aim = CameraRays.AimAlong(CameraRays.BeamAngle(fromA, fromB) + beamAim, toA, toB);
+        }
+
+        return new SensorDef(sensor.Id, beamId, sensor.Kind, sensor.Name, aim);
+    }
+
+    private (Vector2D NodeA, Vector2D NodeB) BeamEnds(int beamId)
+    {
+        var beam = _beams[BeamIndexOf(beamId)];
+        return (_nodes[NodeIndexOf(beam.NodeA)].Position, _nodes[NodeIndexOf(beam.NodeB)].Position);
     }
 
     /// <summary>Removes a sensor by id.</summary>

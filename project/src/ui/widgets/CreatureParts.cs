@@ -257,12 +257,12 @@ public partial class CreatureParts : Node2D
             part.Selected = marks.Selected.Sensors.Contains(sensor.Id);
         }
 
-        // The sensor a tray drag would place on the free beam under the finger (#376).
+        // The sensor a tray drag would place, or a sensor drag would move, on the beam under the finger (#376, #806).
         _previewSensor.Visible = marks.PreviewSensor is not null;
         _previewSensor.Theme = Theme;
-        if (marks.PreviewSensor is ({ } previewBeam, var kind))
+        if (marks.PreviewSensor is ({ } previewBeam, var kind, var aim))
         {
-            PlaceSensor(_previewSensor, nodes[previewBeam.NodeA].Position, nodes[previewBeam.NodeB].Position, kind, null, null);
+            PlaceSensor(_previewSensor, nodes[previewBeam.NodeA].Position, nodes[previewBeam.NodeB].Position, kind, aim, null);
         }
     }
 

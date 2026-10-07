@@ -348,13 +348,23 @@ public partial class BuildCanvas : Node2D
 
         var caught = _gestures.SelectionBoxCatches;
         var selected = caught.Count > 0 ? caught : _viewModel.Selection;
-        (BeamDef, SensorKind)? previewSensor = null;
+        // A sensor being moved looks selected, so its preview never reads as a copy (#806).
+        if (_gestures.MovingSensorId is { } moving && !selected.Sensors.Contains(moving))
+        {
+            selected = selected with { Sensors = new HashSet<int>(selected.Sensors) { moving } };
+        }
+
+        (BeamDef, SensorKind, double?)? previewSensor = null;
         int? previewServoNode = null;
-        if (_partDrag is { } part && PartTray.SensorKindOf(part) is { } kind
+        if (_gestures.MovedSensorPreview is { } moved)
+        {
+            previewSensor = (_viewModel.Beams[_viewModel.BeamIndexOf(moved.BeamId)], moved.Kind, moved.Aim);
+        }
+        else if (_partDrag is { } part && PartTray.SensorKindOf(part) is { } kind
             && _dropHover is { Kind: CreatureElementKind.Beam } hover
             && _viewModel.CanPlacePart(part, hover, out _))
         {
-            previewSensor = (_viewModel.Beams[_viewModel.BeamIndexOf(hover.Id)], kind);
+            previewSensor = (_viewModel.Beams[_viewModel.BeamIndexOf(hover.Id)], kind, null);
         }
         else if (_partDrag == BuildPart.Servo
             && _dropHover is { Kind: CreatureElementKind.Node } servoHover
@@ -475,19 +485,19 @@ public partial class BuildCanvas : Node2D
         PistonDrawing.DrawStroke(canvas, ViewTransform(), Theme, ToGodot(NodeById(nodeA).Position), ToGodot(NodeById(nodeB).Position), (float)shortest, (float)longest, tickHalf, (float?)rest);
 
     /// <summary>
-    /// While a tray part is dragged (#376), a beam that would take it shows the <c>halo</c>, and
-    /// one that would refuse it a dashed <c>danger</c> stroke, both under the beam.
+    /// While a tray part is dragged (#376) or a sensor is moved (#806), a beam that would take it
+    /// shows the <c>halo</c>, and one that would refuse it a dashed <c>danger</c> stroke, both under the beam.
     /// </summary>
     private void DrawPlacingFeedback(CanvasItem canvas, BeamDef beam, Vector2 start, Vector2 end)
     {
-        if (_partDrag is not { } part || part == BuildPart.Servo || start == end)
+        if (BeamTakesDrag(beam.Id) is not { } takes || start == end)
         {
             return;
         }
 
         var width = Stroke(Theme.BeamWidth * 2.2f);
         using var pen = ViewPen(canvas);
-        if (_viewModel!.CanPlacePart(part, new CreatureElementSelection(CreatureElementKind.Beam, beam.Id), out _))
+        if (takes)
         {
             pen.Line(start, end, Theme.SelectionGlow, width);
         }
@@ -495,6 +505,18 @@ public partial class BuildCanvas : Node2D
         {
             pen.DashedLine(start, end, Theme.Danger, width, dash: Theme.BeamWidth * 2);
         }
+    }
+
+    /// <summary>Whether the beam would take the sensor a drag moves or the tray part a drag carries; null while neither is dragged.</summary>
+    private bool? BeamTakesDrag(int beamId)
+    {
+        var beam = new CreatureElementSelection(CreatureElementKind.Beam, beamId);
+        if (_gestures!.MovingSensorId is { } sensor)
+        {
+            return _viewModel!.CanMoveSensor(sensor, beam, out _);
+        }
+
+        return _partDrag is { } part && part != BuildPart.Servo ? _viewModel!.CanPlacePart(part, beam, out _) : null;
     }
 
 

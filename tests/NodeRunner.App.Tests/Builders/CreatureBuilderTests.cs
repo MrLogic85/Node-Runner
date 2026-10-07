@@ -457,6 +457,74 @@ public sealed class CreatureBuilderTests
         (moved.FixedLinkId, moved.TargetLinkId).ShouldBe(replaceFixed ? (spring, second) : (first, spring));
     }
 
+    [Fact]
+    public void MoveSensor_ToAFreeBeam_KeepsItsIdKindAndName()
+    {
+        var builder = TwoBeams(out var from, out var to);
+        builder.AddSensor(from, SensorKind.Accelerometer, out var sensor, out _);
+        builder.Rename(sensor, "Tilt");
+
+        var moved = builder.MoveSensor(sensor, to, out var reason);
+
+        moved.ShouldBeTrue();
+        reason.ShouldBeNull();
+        builder.Sensors.ShouldBe([new SensorDef(sensor, to, SensorKind.Accelerometer, "Tilt")]);
+    }
+
+    [Fact]
+    public void MoveSensor_ToABeamThatHasOne_ReturnsReasonAndDoesNotMutate()
+    {
+        var builder = TwoBeams(out var from, out var to);
+        builder.AddSensor(from, SensorKind.Accelerometer, out var sensor, out _);
+        builder.AddSensor(to, SensorKind.Camera, out _, out _);
+        var before = builder.Sensors.ToList();
+
+        var moved = builder.MoveSensor(sensor, to, out var reason);
+
+        moved.ShouldBeFalse();
+        reason.ShouldBe(UiText.Plain("One sensor per beam"));
+        builder.Sensors.ShouldBe(before);
+    }
+
+    [Theory]
+    [InlineData(false, 0.3 - (Math.PI / 2))]
+    [InlineData(true, 0.3 + (Math.PI / 2))]
+    public void MoveSensor_Camera_KeepsTheWorldDirectionItLooksIn(bool fromTheDownBeam, double expected)
+    {
+        // Level → down turns the beam by +π/2 and down → level by −π/2, so both beams' angles count.
+        var builder = TwoBeams(out var level, out var down);
+        var (from, to) = fromTheDownBeam ? (down, level) : (level, down);
+        builder.AddSensor(from, SensorKind.Camera, out var camera, out _);
+        builder.SetParameter(camera, PartParameterId.Aim, 0.3);
+
+        builder.MoveSensor(camera, to, out _).ShouldBeTrue();
+
+        builder.Sensors.Single().Aim!.Value.ShouldBe(expected, 1e-9);
+    }
+
+    [Fact]
+    public void MoveSensor_ToItsOwnBeam_ChangesNothing()
+    {
+        var builder = TwoBeams(out var from, out _);
+        builder.AddSensor(from, SensorKind.Camera, out var camera, out _);
+        builder.SetParameter(camera, PartParameterId.Aim, 0.3);
+        var before = builder.Sensors.ToList();
+
+        builder.MoveSensor(camera, from, out _).ShouldBeTrue();
+
+        builder.Sensors.ShouldBe(before);
+    }
+
+    // A level beam from (0,0) to (90,0), and one from (90,0) straight down to (90,90).
+    private static CreatureBuilder TwoBeams(out int level, out int down)
+    {
+        var builder = PairBuilder();
+        level = builder.Beams[0].Id;
+        var end = builder.AddNode(new Vector2D(90, 90));
+        down = builder.AddBeam(builder.Beams[0].NodeB, end);
+        return builder;
+    }
+
     private static CreatureBuilder PairBuilder()
     {
         var builder = new CreatureBuilder();
