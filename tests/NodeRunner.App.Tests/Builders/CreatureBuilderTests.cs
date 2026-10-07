@@ -169,6 +169,20 @@ public sealed class CreatureBuilderTests
     }
 
     [Fact]
+    public void AddServo_WithGivenLinks_KeepsThem_AndRefusesALinkElsewhere()
+    {
+        var builder = PairBuilder();
+        var a = builder.Nodes[0].Id;
+        var second = builder.AddBeam(a, builder.AddNode(new Vector2D(0, 90)));
+        var elsewhere = builder.AddBeam(builder.AddNode(new Vector2D(300, 0)), builder.AddNode(new Vector2D(400, 0)));
+
+        Should.Throw<ArgumentException>(() => builder.AddServo(a, elsewhere, null));
+        var servo = builder.AddServo(a, null, second);
+
+        builder.Servos.Single().ShouldBe(new ServoDef(servo, a, null, second));
+    }
+
+    [Fact]
     public void ParametersOf_ASpring_AreItsFourSettings_AndSettingOneKeepsTheOthers()
     {
         var builder = PairBuilder();

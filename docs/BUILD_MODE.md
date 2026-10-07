@@ -36,9 +36,10 @@ boundary. `reference design/components/Build/README.md`,
   still names its version (see Parts tray). Delete stays,
   Unavailable, when it would take a part with ports along, also by cascade,
   or clear a Servo's link (`BuildViewModel.DeleteLockedReason`); a tap shows
-  the same notification. Copy is hidden. There is no training summary: the
-  Creations card shows the latest training (#479). The padlock unlocks it
-  for this visit and keeps the training (`docs/TRAINING_LOOP.md` step 6).
+  the same notification. Copy stays too (see Selection panel). There is no
+  training summary: the Creations card shows the latest training (#479).
+  The padlock unlocks it for this visit and keeps the training
+  (`docs/TRAINING_LOOP.md` step 6).
 - **Overflow menu.** It follows training, not the lock. A trained creation
   lists Stats (#198) and Power budget (#460), both unavailable, then Copy
   creation, Reset training and Delete creation; an untrained one lists
@@ -310,16 +311,20 @@ Several selected parts show the selection panel instead (#558, #704), titled
   them."
 - With a frame, three rows explain its handles (Move, Rotate, Scale). With
   neither settings nor a frame: "These parts share no settings."
-- Last full-width **Copy N**, hidden when locked, and **Delete N**, which a
-  locked creation makes Unavailable like a part's Delete. Delete acts on a
-  tap (Undo restores it), and its note says what else a delete removes.
-- Copy (#937) duplicates the joints, beams and Springs one grid step aside,
+- Last full-width **Copy N** and **Delete N**. A locked creation makes
+  Delete Unavailable like a part's Delete. Delete acts on a tap (Undo
+  restores it), and its note says what else a delete removes.
+- Copy (#937, #990) duplicates the selected parts one grid step aside,
   with their settings but not their names, and selects the copy; Undo
-  removes it. A selected joint's Servo is not copied with it. Copy is
-  dimmed while the selection holds a part with brain ports, since a copy
-  would change the network, or a link without both its joints. A tap then
-  puts a danger note on each such part until the selection changes or the
-  next canvas touch (#991).
+  removes it. A part copies only with what it sits on: a beam, Spring or
+  Piston with both its joints, a sensor with its beam and a Servo with its
+  joint, so a selected joint's Servo is not copied unless it is selected
+  too. A copied Servo uses the copies of its Fixed and Target links and
+  leaves a role empty whose link was not copied, so it shows its error
+  note. On a locked creation a sensor, Piston or Servo would change the
+  model, so it blocks Copy too. Copy is dimmed while the selection
+  holds a part it cannot take; a tap then puts a danger note on each such
+  part until the selection changes or the next canvas touch (#991).
   `BuildViewModel.CopySelectedParts` and `CopyBlockers` own these rules.
 
 `BuildPresentationViewModel.Selection` owns the panel's wording.

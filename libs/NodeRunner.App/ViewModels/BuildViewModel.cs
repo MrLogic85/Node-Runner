@@ -134,6 +134,12 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
 
         _locked = false;
         OnPropertyChanged(nameof(IsLocked));
+        if (_shownCopyBlockers.Count > 0)
+        {
+            // Copy notes shown while locked may blame the lock, which no longer holds (#990).
+            _shownCopyBlockers = [];
+            OnPropertyChanged(nameof(CanvasNotes));
+        }
     }
 
     public string CreationName => _creationName;

@@ -648,6 +648,14 @@ msgstr ""
 msgid "Select both its joints"
 msgstr ""
 
+#: libs/NodeRunner.App/ViewModels/BuildViewModel.Copy.cs
+msgid "Select its beam"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/BuildViewModel.Copy.cs
+msgid "Select its joint"
+msgstr ""
+
 #: project/scenes/screens/TrainSetupScreen.tscn
 msgid "Selected"
 msgstr ""
@@ -987,7 +995,7 @@ msgid "Worse shadows"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/BuildViewModel.Copy.cs
-msgid "Would change the brain"
+msgid "Would change the model"
 msgstr ""
 
 #: project/scenes/ui/UiDialogContent.tscn

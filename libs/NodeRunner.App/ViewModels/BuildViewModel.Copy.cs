@@ -3,30 +3,36 @@ using NodeRunner.Domain;
 namespace NodeRunner.App.ViewModels;
 
 /// <summary>
-/// The selection panel's Copy (#937): several selected joints, beams and Springs duplicated beside
-/// themselves, inside the same Creation. Parts with brain ports are never copied, since a copy would
-/// change the network, and nor is a link without both of its joints.
+/// The selection panel's Copy (#937, #990): several selected parts duplicated beside themselves,
+/// inside the same Creation. A part copies only with what it sits on: a link with both its joints,
+/// a sensor with its beam and a Servo with its joint. A locked Creation copies no part with brain
+/// ports, since a copy would change its model.
 /// </summary>
 public sealed partial class BuildViewModel
 {
     private IReadOnlyList<CanvasNote> _shownCopyBlockers = [];
 
-    /// <summary>Whether the selection panel offers Copy: two or more parts, on a Creation that is not locked.</summary>
-    public bool CanOfferCopy => !_locked && SelectedPartCount >= 2;
+    /// <summary>Whether enough parts are selected to copy: two or more, locked or not (#990).</summary>
+    public bool CanOfferCopy => SelectedPartCount >= 2;
 
     /// <summary>Whether Copy would duplicate the selection now; when not, the button is dimmed.</summary>
     public bool CanCopySelection => CanOfferCopy && CopyBlockers().Count == 0;
 
     /// <summary>
-    /// A danger note at each selected part a copy cannot take, in id order within each kind: a sensor,
-    /// Servo or Piston for its brain ports, and a beam or Spring without both joints selected.
+    /// A danger note at each selected part a copy cannot take, in id order within each kind: on a
+    /// locked Creation a sensor, Servo or Piston for its brain ports; a beam, Spring or Piston
+    /// without both joints selected; a sensor without its beam; a Servo without its joint.
     /// </summary>
     public IReadOnlyList<CanvasNote> CopyBlockers()
     {
         var notes = new List<CanvasNote>();
-        AddBrainPortNotes(CreatureElementKind.Sensor, _selectedSensorIds);
-        AddBrainPortNotes(CreatureElementKind.Servo, _selectedServoIds);
-        AddBrainPortNotes(CreatureElementKind.Piston, _selectedPistonIds);
+        if (_locked)
+        {
+            AddBrainPortNotes(CreatureElementKind.Sensor, _selectedSensorIds);
+            AddBrainPortNotes(CreatureElementKind.Servo, _selectedServoIds);
+            AddBrainPortNotes(CreatureElementKind.Piston, _selectedPistonIds);
+        }
+
         foreach (var beam in Beams)
         {
             AddOpenLinkNote(CreatureElementKind.Beam, beam.Id, beam.NodeA, beam.NodeB);
@@ -37,13 +43,34 @@ public sealed partial class BuildViewModel
             AddOpenLinkNote(CreatureElementKind.Spring, spring.Id, spring.NodeA, spring.NodeB);
         }
 
+        // A part with brain ports already has its note on a locked Creation.
+        if (_locked)
+        {
+            return notes;
+        }
+
+        foreach (var piston in Pistons)
+        {
+            AddOpenLinkNote(CreatureElementKind.Piston, piston.Id, piston.NodeA, piston.NodeB);
+        }
+
+        foreach (var sensor in Sensors.Where(sensor => _selectedSensorIds.Contains(sensor.Id) && !_selectedBeamIds.Contains(sensor.BeamId)))
+        {
+            notes.Add(Note(CreatureElementKind.Sensor, sensor.Id, UiText.Plain("Select its beam")));
+        }
+
+        foreach (var servo in Servos.Where(servo => _selectedServoIds.Contains(servo.Id) && !_selectedNodeIds.Contains(servo.NodeId)))
+        {
+            notes.Add(Note(CreatureElementKind.Servo, servo.Id, UiText.Plain("Select its joint")));
+        }
+
         return notes;
 
         void AddBrainPortNotes(CreatureElementKind kind, HashSet<int> selected)
         {
             foreach (var id in selected.Order())
             {
-                notes.Add(Note(kind, id, UiText.Plain("Would change the brain")));
+                notes.Add(Note(kind, id, UiText.Plain("Would change the model")));
             }
         }
 
@@ -61,9 +88,10 @@ public sealed partial class BuildViewModel
 
     /// <summary>
     /// Duplicates the selection one grid step aside and selects the copy, as one undo step that
-    /// selects the originals again. Each copy keeps its settings but not its name. While Copy is
-    /// dimmed, it instead shows <see cref="CopyBlockers"/> in <see cref="CanvasNotes"/> until the
-    /// selection changes or the canvas is touched.
+    /// selects the originals again. Each copy keeps its settings but not its name; a copied Servo
+    /// uses the copies of its Fixed and Target links, and leaves a role empty whose link was not
+    /// copied. While Copy is dimmed, it instead shows <see cref="CopyBlockers"/> in
+    /// <see cref="CanvasNotes"/> until the selection changes or the canvas is touched.
     /// </summary>
     public void CopySelectedParts()
     {
@@ -82,38 +110,68 @@ public sealed partial class BuildViewModel
 
         var nodes = Nodes.Where(node => _selectedNodeIds.Contains(node.Id)).ToList();
         var beams = Beams.Where(beam => _selectedBeamIds.Contains(beam.Id)).ToList();
+        var pistons = Pistons.Where(piston => _selectedPistonIds.Contains(piston.Id)).ToList();
         var springs = Springs.Where(spring => _selectedSpringIds.Contains(spring.Id)).ToList();
+        var sensors = Sensors.Where(sensor => _selectedSensorIds.Contains(sensor.Id)).ToList();
+        var servos = Servos.Where(servo => _selectedServoIds.Contains(servo.Id)).ToList();
         var offset = CopyOffset(nodes);
         _history.Change(() =>
         {
             ClearSelectionSets();
-            var copies = new Dictionary<int, int>();
+            var nodeCopies = new Dictionary<int, int>();
+            var linkCopies = new Dictionary<int, int>();
             foreach (var node in nodes)
             {
                 var position = new Vector2D(node.Position.X + offset.X, node.Position.Y + offset.Y);
                 // Clamping too absorbs the rounding in a shortened offset, as in TranslateSelection.
-                copies[node.Id] = _builder.AddNode(BuildArea.Clamp(position, NodeDef.PlainJointRadius));
-                _selectedNodeIds.Add(copies[node.Id]);
+                nodeCopies[node.Id] = _builder.AddNode(BuildArea.Clamp(position, NodeDef.PlainJointRadius));
+                _selectedNodeIds.Add(nodeCopies[node.Id]);
             }
 
             foreach (var beam in beams)
             {
-                _selectedBeamIds.Add(_builder.AddBeam(copies[beam.NodeA], copies[beam.NodeB]));
+                linkCopies[beam.Id] = _builder.AddBeam(nodeCopies[beam.NodeA], nodeCopies[beam.NodeB]);
+                _selectedBeamIds.Add(linkCopies[beam.Id]);
+            }
+
+            foreach (var piston in pistons)
+            {
+                linkCopies[piston.Id] = CopySettings(piston.Id, _builder.AddPiston(nodeCopies[piston.NodeA], nodeCopies[piston.NodeB]));
+                _selectedPistonIds.Add(linkCopies[piston.Id]);
             }
 
             foreach (var spring in springs)
             {
-                var copy = _builder.AddSpring(copies[spring.NodeA], copies[spring.NodeB]);
-                foreach (var parameter in _builder.ParametersOf(spring.Id))
-                {
-                    _builder.SetParameter(copy, parameter, _builder.ParameterValue(spring.Id, parameter));
-                }
-
-                _selectedSpringIds.Add(copy);
+                linkCopies[spring.Id] = CopySettings(spring.Id, _builder.AddSpring(nodeCopies[spring.NodeA], nodeCopies[spring.NodeB]));
+                _selectedSpringIds.Add(linkCopies[spring.Id]);
             }
+
+            foreach (var sensor in sensors)
+            {
+                _builder.AddSensor(linkCopies[sensor.BeamId], sensor.Kind, out var copy, out _);
+                _selectedSensorIds.Add(CopySettings(sensor.Id, copy));
+            }
+
+            foreach (var servo in servos)
+            {
+                var copy = _builder.AddServo(nodeCopies[servo.NodeId], CopyOf(servo.FixedLinkId), CopyOf(servo.TargetLinkId));
+                _selectedServoIds.Add(CopySettings(servo.Id, copy));
+            }
+
+            int? CopyOf(int? linkId) => linkId is { } id && linkCopies.TryGetValue(id, out var copy) ? copy : null;
         }, Selection);
         NotifySelectionChanged();
         RaiseAnatomyChanged();
+    }
+
+    private int CopySettings(int fromPartId, int toPartId)
+    {
+        foreach (var parameter in _builder.ParametersOf(fromPartId))
+        {
+            _builder.SetParameter(toPartId, parameter, _builder.ParameterValue(fromPartId, parameter));
+        }
+
+        return toPartId;
     }
 
     // One grid step down and right, or the first other diagonal that keeps every copied joint inside

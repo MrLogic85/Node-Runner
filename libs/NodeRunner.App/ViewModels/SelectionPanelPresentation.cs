@@ -2,8 +2,9 @@ namespace NodeRunner.App.ViewModels;
 
 /// <summary>
 /// The selection panel for several selected parts (#558, #704): the counted title, the settings
-/// they all share, the Move, Rotate and Scale help while a frame shows, then Copy (#937), which a
-/// locked Creation hides, and Delete, dimmed while <see cref="CanDelete"/> is false (#896).
+/// they all share, the Move, Rotate and Scale help while a frame shows, then Copy (#937), dimmed
+/// while <see cref="CanCopy"/> is false (#990), and Delete, dimmed while <see cref="CanDelete"/> is
+/// false (#896).
 /// <see cref="EmptyNote"/> shows when there are neither settings nor a frame; a note with nothing to
 /// say is null.
 /// </summary>
@@ -17,7 +18,6 @@ public sealed record SelectionPanelPresentation(
     UiText? DeleteNote,
     bool CanDelete,
     UiText CopyText,
-    bool ShowCopy,
     bool CanCopy)
 {
     /// <summary>The <see cref="Settings"/> shown above the Advanced section (#903).</summary>

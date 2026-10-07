@@ -208,7 +208,6 @@ public sealed class BuildPresentationViewModel
                 deleteNote,
                 CanDelete: _build.DeleteLockedReason is null,
                 UiText.Counted("Copy {0}", "Copy {0}", count),
-                ShowCopy: _build.CanOfferCopy,
                 _build.CanCopySelection);
         }
     }
