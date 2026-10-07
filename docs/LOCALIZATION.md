@@ -53,9 +53,10 @@ The template holds:
 - **`UiText`:** the message of every `UiText.Plain`, `Format` and `Counted`,
   with its plural and its `InContext` context.
 - **Text set in code:** constant text that reaches a Godot text property,
-  one of our components' text properties or a popup's text. The test
-  follows it through locals, fields, parameters, returns, records and
-  `?:`/`??`/switch branches.
+  one of our components' text properties or a popup's text, but not an
+  `Id` such as a notification's (#1004). The test follows it through
+  locals, fields, parameters, returns, records and `?:`/`??`/switch
+  branches.
 
 Text without letters, such as "—" or "1", and text that does not come from
 a literal, such as a creation's name, are left out. The test fails on a

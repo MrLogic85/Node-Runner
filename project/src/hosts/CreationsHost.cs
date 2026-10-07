@@ -119,5 +119,9 @@ public partial class CreationsHost : Node, IRoutedScene
             UiPopupType.Default,
             "Achievements",
             "Achievements come in a later version.",
-            Icon: new(UiIconId.Trophy)));
+            Icon: new(UiIconId.Trophy))
+        {
+            Id = "creations.achievements",
+            Replaceable = true,
+        });
 }

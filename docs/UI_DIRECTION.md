@@ -172,7 +172,11 @@ Dialogs (centred) and notifications (bottom centre, one at a time) share
 reference (#692). Actions are text cells in a `UiCardActions` bar flush with
 the frame (#353): Default uses Primary, Danger uses Tertiary, Cancel is
 Secondary, and Warning actions use Flat (#964). A dialog covers
-notifications; a notification waits until it closes.
+notifications; a notification waits until it closes. A notification with an
+`Id` is not queued again while that Id shows or waits; a repeat restarts the
+showing one's time. A `Replaceable` notification gives way to any newer one,
+closing at once or leaving the queue: tap answers such as Build's lock and
+"comes in version" notes use both (#1004).
 
 ### Menus and pickers
 

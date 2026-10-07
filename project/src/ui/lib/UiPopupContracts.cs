@@ -86,4 +86,10 @@ public sealed record UiNotificationSpec(
     /// changes, with the message's own auto-translation off meanwhile.
     /// </summary>
     public Func<string>? MessageSource { get; init; }
+
+    /// <summary>Names the notification: one with the same Id showing or waiting is not queued again.</summary>
+    public string? Id { get; init; }
+
+    /// <summary>True when any newer notification closes or drops this one instead of waiting behind it.</summary>
+    public bool Replaceable { get; init; }
 }
