@@ -151,6 +151,9 @@ sets no colour override outside `UiIcons`' tint helper (#338).
   mouse, so a control reads mouse events (`PointerInput`), never touch too,
   which would handle a tap twice. `UiMenu` swallows both copies of a
   dismissing tap.
+- **Drags scroll through buttons.** A Godot button made in code sets
+  `MouseFilter = Pass`, so a drag that starts on it still scrolls its
+  ScrollContainer (`UiNativeScroll`, `UiButtonScrollGuardTests`, #1001).
 
 ## UI levels
 
