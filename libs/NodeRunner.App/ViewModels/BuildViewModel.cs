@@ -62,6 +62,9 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     // (Servo). By joint, as picking a Servo's link gives it a new id (#911).
     private readonly HashSet<(CreatureElementKind Kind, int JointId)> _shownBlockers = [];
     private bool _showPieces;
+    // The notes a refused Copy or Delete tap put on the parts that block it (#937, #987), until the
+    // selection changes, the Creation is unlocked or the canvas is touched.
+    private IReadOnlyList<CanvasNote> _shownRefusalNotes = [];
     private bool _advancedSettingsOpen;
     private readonly BuildHistory _history;
     private BrainDef? _openedBrain;
@@ -73,6 +76,9 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
 
     /// <summary>Why a locked Creation refuses an edit that would change its model (#896): see <see cref="IsLocked"/>.</summary>
     public static UiText LockedReason { get; } = UiText.Plain("Locked: the model is trained for these parts.");
+
+    // On each part that makes a locked Creation refuse Copy (#990) or Delete (#987).
+    private static readonly UiText _wouldChangeModelNote = UiText.Plain("Locked: would change the model");
 
     public BuildViewModel(CreatureBuilder? builder = null)
     {
@@ -93,7 +99,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
         _history.Clear();
         _shownBlockers.Clear();
         _showPieces = false;
-        _shownCopyBlockers = [];
+        _shownRefusalNotes = [];
         _advancedSettingsOpen = false;
         ActiveTool = BuildTool.Joint;
         SetPickedLink(BuildLink.Beam);
@@ -138,10 +144,10 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
 
         _locked = false;
         OnPropertyChanged(nameof(IsLocked));
-        if (_shownCopyBlockers.Count > 0)
+        if (_shownRefusalNotes.Count > 0)
         {
-            // Copy notes shown while locked may blame the lock, which no longer holds (#990).
-            _shownCopyBlockers = [];
+            // Copy and Delete notes shown while locked may blame the lock, which no longer holds (#990, #987).
+            _shownRefusalNotes = [];
             OnPropertyChanged(nameof(CanvasNotes));
         }
     }
@@ -384,7 +390,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     /// The messages Build shows in the drawing, each beside the part it is about: why the last
     /// dropped part was refused (#376), each loose joint and Servo missing a link
     /// <see cref="ShowTrainingBlockers"/> pointed at (#844, #1006), each separate piece's joint nearest
-    /// another piece (#930) and each part a dimmed Copy pointed at (#937), then each beam or link too
+    /// another piece (#930) and each part a dimmed Copy or a locked Delete pointed at (#937, #987), then each beam or link too
     /// short to train (#593). Listed most important first:
     /// notes that would overlap stack, the first listed nearest its part.
     /// </summary>
@@ -409,7 +415,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
             notes.AddRange(pieces.Select(piece => NotConnected(NearestOtherPiece(piece, pieces))));
         }
 
-        notes.AddRange(_shownCopyBlockers.Where(note => Exists(note.Target)));
+        notes.AddRange(_shownRefusalNotes.Where(note => Exists(note.Target)));
 
         foreach (var beam in Beams)
         {
@@ -509,20 +515,26 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
 
     /// <summary>
     /// Hides the notes a tap brought up, on the next canvas touch (#991): <see cref="PlacementNote"/>,
-    /// <see cref="ShowTrainingBlockers"/>' notes and a dimmed Copy's notes. Too-short parts' notes
+    /// <see cref="ShowTrainingBlockers"/>' notes and a dimmed Copy's or a locked Delete's notes. Too-short parts' notes
     /// stay, as they mark the drawing itself.
     /// </summary>
     public void DismissTapNotes()
     {
         PlacementNote = null;
-        if (_shownBlockers.Count == 0 && !_showPieces && _shownCopyBlockers.Count == 0)
+        if (_shownBlockers.Count == 0 && !_showPieces && _shownRefusalNotes.Count == 0)
         {
             return;
         }
 
         _shownBlockers.Clear();
         _showPieces = false;
-        _shownCopyBlockers = [];
+        _shownRefusalNotes = [];
+        OnPropertyChanged(nameof(CanvasNotes));
+    }
+
+    private void ShowRefusalNotes(IReadOnlyList<CanvasNote> notes)
+    {
+        _shownRefusalNotes = notes;
         OnPropertyChanged(nameof(CanvasNotes));
     }
 
@@ -772,96 +784,6 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
 
         link = best;
         return link is not null;
-    }
-
-    /// <summary>
-    /// Why Delete cannot remove the selection now, or null when it can (#896). A locked Creation
-    /// refuses a delete that would change its model: one that takes a part with brain ports, also by
-    /// cascade (a joint's Piston or Servo, a beam's sensor), or clears a Servo's Fixed or Target link,
-    /// after which it could no longer train (<c>docs/SAVE_FORMAT.md</c> → <c>servos[]</c>).
-    /// </summary>
-    public UiText? DeleteLockedReason => _locked && SelectedPartCount > 0 && DeleteWouldChangeModel()
-        ? LockedReason
-        : null;
-
-    // Tries the delete on a copy of the body, so every cascade counts exactly as the delete does it.
-    private bool DeleteWouldChangeModel()
-    {
-        var before = _builder.Build();
-        var trial = new CreatureBuilder(before);
-        RemoveParts(trial, Selection);
-        var after = trial.Build();
-        var portsBefore = BrainPorts.Of(before);
-        var portsAfter = BrainPorts.Of(after);
-        return !portsBefore.Inputs.SequenceEqual(portsAfter.Inputs)
-            || !portsBefore.Outputs.SequenceEqual(portsAfter.Outputs)
-            || !before.Servos.Select(ServoLinks).SequenceEqual(after.Servos.Select(ServoLinks));
-
-        static (int, int?, int?) ServoLinks(ServoDef servo) => (servo.Id, servo.FixedLinkId, servo.TargetLinkId);
-    }
-
-    /// <summary>Deletes the selection and what goes with it, as one undo step; does nothing while <see cref="DeleteLockedReason"/> says why not.</summary>
-    public void DeleteSelectedParts()
-    {
-        if (SelectedPartCount == 0 || DeleteLockedReason is not null)
-        {
-            return;
-        }
-
-        // A Servo's joint goes too when the delete takes its links and leaves none (#973): to the
-        // player the Servo is that joint, so clearing an area must not leave a bare joint behind.
-        var servoJoints = SelectedServoJoints().ToDictionary(joint => joint, joint => _builder.LinksAt(joint).Count);
-        _history.Change(() =>
-        {
-            RemoveParts(_builder, Selection);
-
-            foreach (var (joint, linksBefore) in servoJoints)
-            {
-                if (linksBefore > 0 && Exists(new CreatureElementSelection(CreatureElementKind.Node, joint)) && _builder.LinksAt(joint).Count == 0)
-                {
-                    _builder.RemoveNode(joint);
-                }
-            }
-
-            // Within the step: its Undo row refresh must find no deleted part still selected.
-            ClearSelectionSets();
-        }, Selection);
-        NotifySelectionChanged();
-        RaiseAnatomyChanged();
-    }
-
-    private static void RemoveParts(CreatureBuilder builder, PartSet parts)
-    {
-        // Parts first, so none is already gone with a deleted beam or joint.
-        foreach (var sensorId in parts.Sensors)
-        {
-            builder.RemoveSensor(sensorId);
-        }
-
-        foreach (var pistonId in parts.Pistons)
-        {
-            builder.RemovePiston(pistonId);
-        }
-
-        foreach (var servoId in parts.Servos)
-        {
-            builder.RemoveServo(servoId);
-        }
-
-        foreach (var springId in parts.Springs)
-        {
-            builder.RemoveSpring(springId);
-        }
-
-        foreach (var beamId in parts.Beams)
-        {
-            builder.RemoveBeam(beamId);
-        }
-
-        foreach (var nodeId in parts.Nodes)
-        {
-            builder.RemoveNode(nodeId);
-        }
     }
 
     /// <summary>

@@ -473,7 +473,7 @@ msgstr ""
 msgid "Locked: the model is trained for these parts."
 msgstr ""
 
-#: libs/NodeRunner.App/ViewModels/BuildViewModel.Copy.cs
+#: libs/NodeRunner.App/ViewModels/BuildViewModel.cs
 msgid "Locked: would change the model"
 msgstr ""
 

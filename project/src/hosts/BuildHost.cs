@@ -143,13 +143,13 @@ public partial class BuildHost : Node, IRoutedScene
         _buildScreen.ComingLaterLinkPressed += link => NotifyLocked($"build.link.{(BuildLink)link}", UiTextTranslation.Source(BuildLinkList.ComingLaterReason((BuildLink)link))!);
     }
 
-    // A locked Creation keeps Delete in view; when deleting would change the model, it says why (#896).
+    // A locked Creation keeps Delete in view; when deleting would change the model, it says why (#896)
+    // beside the notes the refused delete puts on the parts that block it (#987).
     private void DeleteSelection()
     {
         if (UiTextTranslation.Source(Build.DeleteLockedReason) is { } reason)
         {
             NotifyLocked("build.delete", reason);
-            return;
         }
 
         Build.DeleteSelectedParts();

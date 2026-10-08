@@ -36,7 +36,10 @@ boundary. `reference design/components/Build/README.md`,
   still names its version (see Parts tray). Delete stays,
   Unavailable, when it would take a part with ports along, also by cascade,
   or clear a Servo's link (`BuildViewModel.DeleteLockedReason`); a tap shows
-  the same notification. Copy stays too (see Selection panel). There is no
+  the same notification and the danger note "Locked: would change the model"
+  on each part that blocks it: each part with ports it would take and each
+  kept Servo whose link it would clear (#987), which clear like Copy's.
+  Copy stays too (see Selection panel). There is no
   training summary: the Creations card shows the latest training (#479).
   The padlock unlocks it for this visit and keeps the training
   (`docs/TRAINING_LOOP.md` step 6).
@@ -366,7 +369,8 @@ Several selected parts show the selection panel instead (#558, #704), titled
   would change the model, so it blocks Copy too, with the note "Locked:
   would change the model". Copy is dimmed while the selection
   holds a part it cannot take; a tap then puts a danger note on each such
-  part until the selection changes or the next canvas touch (#991).
+  part until the selection changes, the creation is unlocked or the next
+  canvas touch (#991).
   `BuildViewModel.CopySelectedParts` and `CopyBlockers` own these rules.
 
 `BuildPresentationViewModel.Selection` owns the panel's wording.
