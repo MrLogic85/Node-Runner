@@ -249,6 +249,10 @@ msgstr ""
 msgid "Could not copy {0}. Try again."
 msgstr ""
 
+#: project/src/hosts/CreationsHost.cs
+msgid "Could not create a new creation. Try again."
+msgstr ""
+
 #: project/src/hosts/CreationActions.cs
 msgid "Could not delete {0}. Try again."
 msgstr ""
@@ -261,12 +265,12 @@ msgstr ""
 msgid "Could not reset training. Try again."
 msgstr ""
 
-#: project/src/hosts/CreationsHost.cs
-msgid "Could not start a new creation. Try again."
-msgstr ""
-
 #: project/src/hosts/TrainSetupHost.cs
 msgid "Could not start training. Try again."
+msgstr ""
+
+#: project/src/hosts/CreationsHost.cs
+msgid "Create failed"
 msgstr ""
 
 #: project/src/hosts/BuildHost.cs
@@ -279,7 +283,6 @@ msgstr ""
 
 #: project/scenes/screens/CreationsScreen.tscn
 #: project/src/hosts/BuildHost.cs
-#: project/src/hosts/CreationsHost.cs
 #: project/src/hosts/TrainingHost.cs
 msgid "Creations"
 msgstr ""
@@ -814,6 +817,10 @@ msgstr ""
 
 #: project/scenes/screens/TrainSetupScreen.tscn
 msgid "Start"
+msgstr ""
+
+#: project/src/hosts/TrainSetupHost.cs
+msgid "Start failed"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartParameters.cs

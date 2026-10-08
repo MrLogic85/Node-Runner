@@ -81,7 +81,7 @@ public partial class CreationsHost : Node, IRoutedScene
         if (!CreationActions.TryRunFileOperation(() => creation = Saves.CreateNew(UiTextTranslation.Now), "Creating a new Creation"))
         {
             UiNotificationLayer.Enqueue(this, new UiNotificationSpec(
-                UiPopupType.Default, "Creations", "Could not start a new creation. Try again."));
+                UiPopupType.Danger, "Create failed", "Could not create a new creation. Try again.", Icon: new(UiIconId.Plus)));
             return;
         }
 

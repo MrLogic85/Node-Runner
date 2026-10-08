@@ -198,7 +198,16 @@ closing at once or leaving the queue: tap answers such as Build's lock and
 "comes in version" notes use both (#1004). A failed copy shows the same
 Danger notification whether it started in Creations, Examples or Build,
 built once in `CreationActions.TryCopy` (#1013); a failed import shows its
-own, built beside it in `CreationActions.TryImport` (#899). A copy to the
+own, built beside it in `CreationActions.TryImport` (#899). A failed user
+action uses a Danger notification titled "<Action> failed", with the
+action's icon where one exists: "Create failed" with Plus, "Start failed"
+with Play (#1015). For a specific action, prefer "Could not <verb>
+<object>. Try again." Generic UI-boundary failures may say "The action
+could not be completed. Please try again.", and save failures may say what
+stayed unsaved. Route and state-validation notices, such as a missing
+creation or a training prerequisite, are not action failures and stay
+Default; dialog-inline errors and log-only failures are not notifications.
+A copy to the
 clipboard confirms through `UiClipboard.Copy`, which waits for Android's
 own toast.
 

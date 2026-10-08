@@ -67,7 +67,8 @@ public partial class TrainSetupHost : Node, IRoutedScene
                 () => saved = saves.UpdateIfPresent(_setup.CreationId, creation => creation.WithTrainSettings(settings)),
                 "Saving the Train setup"))
         {
-            Notify("Could not start training. Try again.");
+            UiNotificationLayer.Enqueue(this, new UiNotificationSpec(
+                UiPopupType.Danger, "Start failed", "Could not start training. Try again.", Icon: new(UiIconId.Play)));
             return;
         }
 
