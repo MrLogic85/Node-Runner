@@ -154,9 +154,10 @@ and into zoom and pan; `BuildCanvas` only forwards input and draws.
     ports and trained weights stay (`CreatureBuilder.MoveSensor`); a
     Camera keeps the direction it looks in the world. How the drag looks
     is in `docs/WORLD_VISUALS.md` → "Moving a sensor". A drop on a beam
-    with another sensor, a joint or empty canvas leaves it where it was
-    with the reason as a note ("One sensor per beam", "Sensors go on a
-    beam"). A good drop selects it.
+    with another sensor or on a joint leaves it where it was with the
+    reason as a note ("One sensor per beam", "Sensors go on a beam"); a
+    drop on empty canvas leaves it where it was and says nothing (#1026).
+    A good drop selects it.
 - **Servo (#452, #577):** placed from Parts → Moving parts on any joint, by
   drag or tap (see Parts tray). A beam, sensor or link refuses with "Servos
   go on a joint"; a joint that already has one refuses with "One part per

@@ -117,21 +117,22 @@ public sealed partial class BuildViewModel
 
     /// <summary>
     /// Moves the sensor dragged onto <paramref name="target"/> there (#806), keeping its id, ports
-    /// and settings (<see cref="CreatureBuilder.SensorMovedTo"/>), and selects it. A refused drop
-    /// leaves it where it was and shows why as <see cref="PlacementNote"/>: at the part it was
-    /// dropped on, or at the sensor itself over empty canvas. A sensor gone mid-drag moves nowhere.
+    /// and settings (<see cref="CreatureBuilder.SensorMovedTo"/>), and selects it. A drop on empty
+    /// canvas (<paramref name="target"/> null) leaves it and says nothing (#1026), as <see cref="PlacePart"/>
+    /// does; a refused drop leaves it and shows why as <see cref="PlacementNote"/> at the part it was
+    /// dropped on. A sensor gone mid-drag moves nowhere.
     /// </summary>
     public bool MoveSensor(int sensorId, CreatureElementSelection? target)
     {
         PlacementNote = null;
-        if (!SensorExists(sensorId))
+        if (!SensorExists(sensorId) || target is null)
         {
             return false;
         }
 
         if (!CanMoveSensor(sensorId, target, out var reason))
         {
-            PlacementNote = new CanvasNote(CanvasNoteKind.Danger, target ?? new CreatureElementSelection(CreatureElementKind.Sensor, sensorId), reason);
+            PlacementNote = new CanvasNote(CanvasNoteKind.Danger, target, reason);
             return false;
         }
 

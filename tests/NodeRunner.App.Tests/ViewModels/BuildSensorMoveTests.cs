@@ -67,7 +67,7 @@ public sealed class BuildSensorMoveTests
     }
 
     [Fact]
-    public void ADropOnEmptyCanvas_LeavesItAndSaysWhyAtTheSensor()
+    public void ADropOnEmptyCanvas_LeavesItAndSaysNothing()
     {
         var build = Unlocked();
         var before = build.Snapshot();
@@ -75,7 +75,8 @@ public sealed class BuildSensorMoveTests
         build.MoveSensor(20, null).ShouldBeFalse();
 
         build.Snapshot().Sensors.ShouldBe(before.Sensors);
-        build.PlacementNote.ShouldBe(new CanvasNote(CanvasNoteKind.Danger, new CreatureElementSelection(CreatureElementKind.Sensor, 20), UiText.Plain("Sensors go on a beam")));
+        build.PlacementNote.ShouldBeNull();
+        build.CanUndo.ShouldBeFalse();
     }
 
     [Fact]

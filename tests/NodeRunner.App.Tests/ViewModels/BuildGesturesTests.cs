@@ -1878,14 +1878,14 @@ public class BuildGesturesTests
     }
 
     [Fact]
-    public void ASensorDroppedOnEmptyCanvas_StaysWithTheNoteOnIt()
+    public void ASensorDroppedOnEmptyCanvas_StaysWithNoNote()
     {
         var (build, gestures) = SensorsOnThreeBeams();
 
         Drag(gestures, new Vector2D(100, 0), new Vector2D(100, 300));
 
         build.Sensors.Single(sensor => sensor.Id == 6).BeamId.ShouldBe(5);
-        build.PlacementNote!.Target.ShouldBe(new CreatureElementSelection(CreatureElementKind.Sensor, 6));
+        build.PlacementNote.ShouldBeNull();
     }
 
     [Fact]
