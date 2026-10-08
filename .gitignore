@@ -54,3 +54,14 @@ build/
 !/project/android/build/src/
 /project/android/build/src/*
 !/project/android/build/src/monoDebug/
+!/project/android/build/src/main/
+/project/android/build/src/main/*
+!/project/android/build/src/main/java/
+/project/android/build/src/main/java/*
+!/project/android/build/src/main/java/com/
+/project/android/build/src/main/java/com/*
+!/project/android/build/src/main/java/com/godot/
+/project/android/build/src/main/java/com/godot/*
+!/project/android/build/src/main/java/com/godot/game/
+/project/android/build/src/main/java/com/godot/game/*
+!/project/android/build/src/main/java/com/godot/game/GodotApp.java

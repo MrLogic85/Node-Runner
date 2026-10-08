@@ -83,15 +83,24 @@ password=${NODE_RUNNER_KEYSTORE_PASSWORD:-$(security find-generic-password -s no
 mkdir -p build
 rm -f "$apk"
 # The Gradle template is git-ignored, so a clean tree says nothing about it. Build from a
-# fresh copy; installing it overwrites the tracked build.gradle, which is put back after.
+# fresh copy. Godot installs it only as part of an export, and the install overwrites our
+# tracked template files, so install with a throwaway debug export, put ours back, and only
+# then export the release.
+[[ -z $(git status --porcelain -- project/android/build) ]] \
+  || fail "Commit or stash the changes under project/android/build; the export restores it from git."
 git clean -fdXq project/android
-trap 'git checkout -- project/android/build/build.gradle' EXIT
+trap 'git checkout -- project/android/build/' EXIT
+template_apk=$(mktemp -d)/template.apk
+echo "Installing the Android build template"
+(cd project && "$godot" --headless --install-android-build-template --export-debug Android "$template_apk")
+rm -rf "$(dirname "$template_apk")"
+git checkout -- project/android/build/
 echo "Exporting $tag ($code) to ${apk#"$root"/}"
 (cd project && GODOT_ANDROID_KEYSTORE_RELEASE_PATH=$keystore \
   GODOT_ANDROID_KEYSTORE_RELEASE_USER=$alias \
   GODOT_ANDROID_KEYSTORE_RELEASE_PASSWORD=$password \
-  "$godot" --headless --install-android-build-template --export-release Android "$apk")
-git checkout -- project/android/build/build.gradle
+  "$godot" --headless --export-release Android "$apk")
+git checkout -- project/android/build/
 trap - EXIT
 [[ -f $apk ]] || fail "Godot did not write $apk."
 

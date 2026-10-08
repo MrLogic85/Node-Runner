@@ -160,6 +160,18 @@ public sealed partial class ArchitectureSpec
         label.Value.ShouldBe("Node Runner Debug");
     }
 
+    [Fact]
+    public void AndroidActivity_OpensTheDefaultKeyboardWithCapitalizedSentences()
+    {
+        // Godot's own activity, tracked so the release keeps our keyboard hook (#906). A Godot
+        // upgrade replaces it; see docs/RELEASING.md → "Android export".
+        var activity = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "project", "android", "build",
+            "src", "main", "java", "com", "godot", "game", "GodotApp.java"));
+        activity.ShouldContain("public class GodotApp extends GodotActivity");
+        activity.ShouldContain("InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_CAP_SENTENCES");
+        activity.ShouldContain("restartInput(");
+    }
+
     /// <summary>The one value <paramref name="file"/> sets <paramref name="key"/> to.</summary>
     private static string ProjectSetting(string file, string key)
     {

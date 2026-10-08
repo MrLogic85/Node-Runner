@@ -66,21 +66,28 @@ on top of Godot's build template: `applicationIdSuffix ".debug"` in the
 `project/android/build/src/monoDebug/AndroidManifest.xml` (Godot rewrites
 `src/debug` on every export). `ArchitectureSpec` checks both and the preset.
 
+A third tracked file changes the app itself:
+`project/android/build/src/main/java/com/godot/game/GodotApp.java`, Godot's
+activity, turns on sentence capitalization for the keyboard Godot opens
+with its default type, so a name starts with a capital (#906).
+`ArchitectureSpec` checks that the hook is there.
+
 The rest of `project/android/` is Godot's template, about 270 MB of
 libraries before a build, so it is git-ignored. Install it once per clone,
 and again after a Godot upgrade. Godot installs it only as part of an
-export, which then has to be redone, since the install also overwrites
-`build.gradle`:
+export, which then has to be redone, since the install also overwrites the
+tracked files:
 
 ```bash
 cd project
 /Applications/Godot_mono.app/Contents/MacOS/Godot --headless \
   --install-android-build-template --export-debug Android /tmp/template.apk
-git checkout -- android/build/build.gradle
+git checkout -- android/build/
 ```
 
-After an upgrade, keep Godot's new `build.gradle` instead and add the
-`applicationIdSuffix` line back.
+After an upgrade, keep Godot's new `build.gradle` and `GodotApp.java`
+instead, add the `applicationIdSuffix` line back, and carry the #906
+keyboard hook over to the new activity.
 
 A debug APK for development, signed with the developer's debug key:
 
@@ -90,8 +97,11 @@ A debug APK for development, signed with the developer's debug key:
   --export-debug Android ../build/node-runner-debug.apk
 ```
 
-`release.sh` deletes the ignored template and runs `--export-release` with a
-fresh install, so local template edits never reach a release. It passes the
+`release.sh` deletes the ignored template, installs a fresh one with a
+throwaway debug export, restores the tracked files, and only then runs
+`--export-release`, so local template edits never reach a release and ours
+always do. It stops if those tracked files have uncommitted changes, even
+for `--dry-run`, as restoring them would discard the changes. It passes the
 release keystore through Godot's `GODOT_ANDROID_KEYSTORE_RELEASE_*`
 environment variables. A release
 export is not a debug build, so `OS.IsDebugBuild()` is false and debug-only
