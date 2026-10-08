@@ -1877,6 +1877,30 @@ public class BuildGesturesTests
         gestures.MovingSensorId.ShouldBeNull();
     }
 
+    [Theory]
+    [InlineData(BuildLink.Piston)]
+    [InlineData(BuildLink.Spring)]
+    public void ASensorDroppedOnALinkOverAFreeBeam_StaysWithTheNoteOnTheLink(BuildLink kind)
+    {
+        // The link crosses free beam 7 at (100, 150), well outside its joints' reach (#1033).
+        var (build, gestures) = SensorsOnThreeBeams();
+        var top = build.PlaceNode(new Vector2D(100, 100));
+        var bottom = build.PlaceNode(new Vector2D(100, 200));
+        var link = new CreatureElementSelection(kind == BuildLink.Piston ? CreatureElementKind.Piston : CreatureElementKind.Spring, build.ConnectLink(kind, top, bottom)!.Value);
+        var changes = 0;
+        build.AnatomyChanged += (_, _) => changes++;
+        gestures.Press(new Vector2D(100, 0));
+        gestures.Drag(new Vector2D(100, 150));
+
+        gestures.SensorDropTarget.ShouldBe(link);
+        gestures.MovedSensorPreview.ShouldBeNull();
+        gestures.Release(new Vector2D(100, 150));
+
+        build.Sensors.Single(sensor => sensor.Id == 6).BeamId.ShouldBe(5);
+        build.PlacementNote.ShouldBe(new CanvasNote(CanvasNoteKind.Danger, link, BuildViewModel.SensorsGoOnABeamReason));
+        changes.ShouldBe(0);
+    }
+
     [Fact]
     public void ASensorDroppedOnEmptyCanvas_StaysWithNoNote()
     {

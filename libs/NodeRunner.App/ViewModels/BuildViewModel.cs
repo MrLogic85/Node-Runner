@@ -68,7 +68,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     private bool _shownCanUndo;
     private bool _shownCanRedo;
 
-    /// <summary>Why a sensor dropped on a joint was not placed.</summary>
+    /// <summary>Why a sensor dropped on anything but a beam is refused.</summary>
     public static UiText SensorsGoOnABeamReason { get; } = UiText.Plain("Sensors go on a beam");
 
     /// <summary>Why a locked Creation refuses an edit that would change its model (#896): see <see cref="IsLocked"/>.</summary>

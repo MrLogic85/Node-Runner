@@ -148,13 +148,14 @@ and into zoom and pan; `BuildCanvas` only forwards input and draws.
   and replaces the selection, so a box can catch only beams. A joint with
   a Servo comes in as the Servo (#973).
 - **Sensors (#127, #575):** placed from the tray on a beam, by drag or tap
-  (see Parts tray), one per beam (#376).
+  (see Parts tray), one per beam (#376). A joint, Piston or Spring refuses
+  with "Sensors go on a beam".
   - **Moving a sensor (#806):** drag its picture to another beam in any
     tool, locked or not. It keeps its id, name and settings, so its brain
     ports and trained weights stay (`CreatureBuilder.MoveSensor`); a
     Camera keeps the direction it looks in the world. How the drag looks
     is in `docs/WORLD_VISUALS.md` → "Moving a sensor". A drop on a beam
-    with another sensor or on a joint leaves it where it was with the
+    with another sensor, a joint, or a Piston or Spring leaves it where it was with the
     reason as a note ("One sensor per beam", "Sensors go on a beam"); a
     drop on empty canvas leaves it where it was and says nothing (#1026).
     A good drop selects it.
@@ -232,11 +233,13 @@ several the selection panel instead.
   notification (#992); `PartTray.ComingLaterReason` and
   `BuildLinkList.ComingLaterReason` own it.
 - An available row is dragged out (#376). The drop lands on what the part
-  is over (a joint's ring, a sensor picture's beam, a beam within reach,
-  then a joint within reach), and `BuildViewModel.PlacePart` places it with
+  is over (a joint's ring, a sensor picture's beam, a Piston or Spring
+  outside any joint's reach, a beam within reach, then a joint within
+  reach; `BuildGestures.DropTargetAt`), and `BuildViewModel.PlacePart` places it with
   a fresh id and selects it, or refuses it with a canvas note at that part
-  (`PlacementNote`) until the next touch or for 3 s. A drop on empty canvas
-  or back on the panel changes nothing.
+  (`PlacementNote`) until the next touch or for 3 s. A Piston or Spring
+  takes no tray part, so a drop on it refuses (#1033). A drop on empty
+  canvas or back on the panel changes nothing.
 - A tap on an available row picks it (#805; `BuildViewModel.PickedPart`):
   the row shows selected, and a line fades in right under it, as under the
   picked link in the Links list: its `PartInfo` (the same as its Part
