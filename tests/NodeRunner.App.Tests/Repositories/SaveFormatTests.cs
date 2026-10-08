@@ -1,8 +1,10 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Schema;
+using NodeRunner.App.Lifecycle;
 using NodeRunner.App.Repositories;
 using NodeRunner.Domain;
+using NodeRunner.ML.Brains;
 
 namespace NodeRunner.App.Tests.Repositories;
 
@@ -60,6 +62,30 @@ public sealed class SaveFormatTests : IDisposable
 
         loaded.ShouldNotBeNull();
         SaveJson.Serialize(loaded).ShouldBe(SaveJson.Serialize(ExampleCreation()));
+    }
+
+    // The example's Camera (7) was saved before its hit input (#1032), so its brain has no hit neuron.
+    // It loads unchanged and locked, and plays exactly as before whatever hit reads: the input
+    // compiles silent. A refit, as an edit makes, adds the neuron, still silent.
+    [Fact]
+    public void Example_ACameraBrainFromBeforeHit_PlaysAsBefore_AndARefitAddsHit()
+    {
+        var loaded = Load(Example(), "creation.json");
+        var brain = loaded.Training!.Brain;
+        var ports = BrainPorts.Of(loaded.Creature);
+        var hit = BrainPort.Input(7, "hit");
+        var hitIndex = ports.Inputs.ToList().IndexOf(hit);
+        brain.Neurons.ShouldNotContain(neuron => neuron.PartId == 7 && neuron.Channel == "hit");
+        CreationLock.IsLocked(loaded).ShouldBeTrue();
+
+        double[] seenBefore = [0.3, -0.2, 0.1, 0.6, 0, 0.4, -0.5];
+        double[] seenNow = [.. seenBefore[..hitIndex], 1, .. seenBefore[hitIndex..]];
+        var before = DirectBrain.Network(brain, ports with { Inputs = ports.Inputs.Where(port => port != hit).ToArray() }).Forward(seenBefore);
+        DirectBrain.Network(brain, ports).Forward(seenNow).ShouldBe(before);
+
+        var refit = DirectBrain.Refit(brain, ports);
+        refit.Neurons.ShouldContain(neuron => neuron.Kind == NeuronKind.Input && neuron.PartId == 7 && neuron.Channel == "hit");
+        DirectBrain.Network(refit, ports).Forward(seenNow).ShouldBe(before);
     }
 
     [Theory]

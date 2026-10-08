@@ -26,6 +26,7 @@ public sealed class BrainPortLabelsTests
             UiText.Format("{0}:\u00A0left", eye),
             UiText.Format("{0}:\u00A0centre", eye),
             UiText.Format("{0}:\u00A0right", eye),
+            UiText.Format("{0}:\u00A0hit", eye),
             UiText.Format("{0}:\u00A0length", ram),
             UiText.Format("{0}:\u00A0speed", ram),
         ]);

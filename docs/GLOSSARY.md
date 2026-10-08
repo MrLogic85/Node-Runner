@@ -67,7 +67,7 @@ contract; `docs/WORLD_VISUALS.md` owns how parts look.
   beam.
 - **Beam** — A rigid, fixed-length connection between two joints.
 - **Camera** — A sensor: three rays around its aim that read how near the
-  ground is. Three inputs. Not Godot's `Camera2D`.
+  ground is, and whether any sees it. Four inputs. Not Godot's `Camera2D`.
 - **Coil length** — Where a Spring's rest length sits relative to its end
   stops, 0…100%.
 - **Creature element selection** — A selected joint, beam, sensor or link: a

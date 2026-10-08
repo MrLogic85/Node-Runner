@@ -7,13 +7,14 @@ namespace NodeRunner.Creature;
 /// <summary>
 /// One camera on its beam (#575, #604, #594): three <see cref="RayCast2D"/> children at the beam's
 /// midpoint, fanned around its aim by the Mechanics <see cref="CameraRays"/> so they turn with the beam.
-/// They see the ground only and each writes its nearness: 0 with nothing in range, 1 at contact.
+/// They see the ground only; <see cref="CameraRays.Read"/> turns their hits into the brain inputs.
 /// </summary>
 public sealed class CameraSensor : IBeamSensor
 {
     private const uint _groundMask = 1;
 
     private readonly RayCast2D[] _rays = new RayCast2D[CameraRays.RayCount];
+    private readonly double?[] _hitDistances = new double?[CameraRays.RayCount];
 
     /// <param name="beamBody">The camera's beam; its +x runs along the beam, from node A to node B.</param>
     /// <param name="aim">The camera's aim relative to its beam (<see cref="SensorDef.Aim"/>).</param>
@@ -48,11 +49,12 @@ public sealed class CameraSensor : IBeamSensor
         for (var i = 0; i < _rays.Length; i++)
         {
             var ray = _rays[i];
-            double? hitDistance = ray.IsColliding()
+            _hitDistances[i] = ray.IsColliding()
                 ? ray.GlobalPosition.DistanceTo(ray.GetCollisionPoint())
                 : null;
-            values[startIndex + i] = CameraRays.Reading(hitDistance);
         }
+
+        CameraRays.Read(_hitDistances, values.AsSpan(startIndex, ValueCount));
     }
 
     // A ray only casts on a physics step, so after ResetPose places the creature, cast now and

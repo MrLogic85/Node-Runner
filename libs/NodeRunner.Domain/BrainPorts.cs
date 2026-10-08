@@ -11,8 +11,11 @@ public static class BrainPorts
     /// <summary>An Accelerometer's input keys, in order: along and across its beam. Never change one.</summary>
     public static IReadOnlyList<string> AccelerometerChannels { get; } = ["along", "across"];
 
-    /// <summary>A Camera's input keys, one per ray from left to right. Never change one.</summary>
-    public static IReadOnlyList<string> CameraChannels { get; } = ["left1", "centre", "right1"];
+    /// <summary>
+    /// A Camera's input keys: one per ray from left to right, then hit, whether any ray sees the
+    /// ground (#1032). Never change one.
+    /// </summary>
+    public static IReadOnlyList<string> CameraChannels { get; } = ["left1", "centre", "right1", "hit"];
 
     /// <summary>A Piston's length input key: where it is in its travel, 0 at its shortest length and 1 at its longest.</summary>
     public const string PistonLengthChannel = "length";

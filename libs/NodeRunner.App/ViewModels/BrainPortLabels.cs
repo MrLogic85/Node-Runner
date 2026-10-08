@@ -43,6 +43,7 @@ public sealed record BrainPortLabels(IReadOnlyList<UiText> Inputs, IReadOnlyList
         (SensorKind.Camera, "left1") => UiText.Format("{0}:\u00A0left", name),
         (SensorKind.Camera, "centre") => UiText.Format("{0}:\u00A0centre", name),
         (SensorKind.Camera, "right1") => UiText.Format("{0}:\u00A0right", name),
+        (SensorKind.Camera, "hit") => UiText.Format("{0}:\u00A0hit", name),
         _ => throw new InvalidOperationException($"No label for {kind} reading {channel}."),
     };
 

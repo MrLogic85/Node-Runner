@@ -108,7 +108,10 @@ output.
 
 A port with no neuron yet starts silent: its connections compile to 0. The
 saved brain always matches the saved creature (`docs/CREATURE_MODEL.md` →
-"A rebuild keeps the brain").
+"A rebuild keeps the brain"), except for a port a later version adds to a
+part, such as the Camera's `hit` (#1032): a brain saved before it has no
+neuron for it, so it plays as before, and the next refit adds one. Such a
+port needs no migration.
 
 ## `progression.json`
 
