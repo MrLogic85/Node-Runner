@@ -165,13 +165,19 @@ entry (#315). The entries that are not a component of their own (#306):
   button and in a `touch` row, 16 in a `control-sm` row or inside a ring,
   12 on a chip (16 for a part glyph, never 12). Only the canvas Move handle
   is filled `accent-soft`.
+- **Icon files** (#1029): one folder, `project/assets/icons/`, each file
+  named `<kind>_<name>.svg` in snake_case, where the kind is `icon` for a
+  UI icon, `part` for a part glyph and `mark` for a mark. Kinds are named,
+  not nested, so a file says what it is. `icons/app/` holds the launcher
+  art, not icons.
 - **Icon drawing** (#1010): every UI icon is drawn 16 on its longer side,
   centred on a plain 24 viewBox, so icons side by side match in size and
-  air; `UiIconGridTests` enforces it. Part glyphs keep their 20 grid.
-  A mark, named `mark-…`, echoes the launcher glyph and is the one icon
-  drawn 20 on the 24 grid, larger than its neighbours: at the shared
-  stroke a network drawn 16 fills into lumps (#1018). `model` keeps the
-  16 rule by stopping its lines short of the middle column.
+  air. Part glyphs keep their 20 grid. A mark echoes the launcher glyph
+  and is the one icon drawn 20 on the 24 grid, larger than its
+  neighbours: at the shared stroke a network drawn 16 fills into lumps
+  (#1018). `icon_model` keeps the 16 rule by stopping its lines short of
+  the middle column. `UiIconGridTests` reads each file's kind from its
+  prefix and enforces its grid.
 - **Toggles and checkboxes:** transparent rows with solid indicator
   outlines; a disabled row is 50% opacity, not dashed.
 - **Segmented switch:** the selected segment has an `accent-soft` fill and a
@@ -256,7 +262,7 @@ The trophy is Unavailable (#199).
 
 - **Rail:** Joint, Links, Parts, Select, and the Primary play button at
   the bottom in every state (#370, #706). Parts uses the project's own
-  `parts.svg`: three tiles and a lifted diamond.
+  `icon_parts.svg`: three tiles and a lifted diamond.
 - **Top bar:** the name field, padlock, Undo and Redo as Secondary icon
   buttons (#689), and the overflow, where Stats (#198) and Power budget say
   "Coming soon".

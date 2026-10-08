@@ -27,8 +27,11 @@ public enum UiIconSize
 /// <summary>Central icon registry, resource loader, and control tinting helpers.</summary>
 public static class UiIcons
 {
-    public const string UiRoot = "res://assets/icons/ui/";
-    public const string PartRoot = "res://assets/icons/parts/";
+    /// <summary>One folder holds every icon; the file name's prefix says its kind (docs/UI_DIRECTION.md).</summary>
+    public const string Root = "res://assets/icons/";
+    public const string IconPrefix = "icon_";
+    public const string PartPrefix = "part_";
+    public const string MarkPrefix = "mark_";
     /// <summary>Side of the viewBox every UI icon SVG is authored on.</summary>
     public const float UiSourceSize = 24;
     private const float _partSourceSize = 20;
@@ -60,14 +63,10 @@ public static class UiIcons
         _ => throw new ArgumentOutOfRangeException(nameof(size), size, "Only canonical icon sizes are supported."),
     };
 
-    public static string PathFor(UiIconId icon)
-    {
-        var source = SourceFor(icon);
-        return source.Root + source.FileName;
-    }
+    public static string PathFor(UiIconId icon) => Root + SourceFor(icon).FileName;
 
     /// <summary>A part glyph, drawn on a 20 grid, rather than a UI icon.</summary>
-    public static bool IsPartGlyph(UiIconId icon) => icon != UiIconId.None && SourceFor(icon).Root == PartRoot;
+    public static bool IsPartGlyph(UiIconId icon) => icon != UiIconId.None && SourceFor(icon).FileName.StartsWith(PartPrefix, StringComparison.Ordinal);
 
     /// <summary>Part glyphs no longer read at <see cref="UiIconSize.Small"/>; every other pairing is allowed.</summary>
     public static bool IsAllowed(UiIconId icon, UiIconSize size) => !(IsPartGlyph(icon) && size == UiIconSize.Small);
@@ -80,7 +79,7 @@ public static class UiIcons
         }
 
         var source = SourceFor(icon);
-        return Load(source.Root + source.FileName, Pixels(size), source.SourceSize);
+        return Load(Root + source.FileName, Pixels(size), source.SourceSize);
     }
 
     /// <summary>
@@ -155,83 +154,84 @@ public static class UiIcons
 
     private static IconSource SourceFor(UiIconId icon) => icon switch
     {
-        UiIconId.Back => Ui("back.svg"),
-        UiIconId.Beam => Ui("beam.svg"),
-        UiIconId.Bolt => Ui("bolt.svg"),
-        UiIconId.Build => Ui("build.svg"),
-        UiIconId.Chart => Ui("chart.svg"),
-        UiIconId.Check => Ui("check.svg"),
-        UiIconId.ChevronDown => Ui("chev-d.svg"),
-        UiIconId.ChevronRight => Ui("chev-r.svg"),
-        UiIconId.Copy => Ui("copy.svg"),
-        UiIconId.Core => Ui("core.svg"),
-        UiIconId.Edit => Ui("edit.svg"),
-        UiIconId.Flag => Ui("flag.svg"),
-        UiIconId.Gear => Ui("gear.svg"),
-        UiIconId.Height => Ui("height.svg"),
-        UiIconId.Joint => Ui("joint.svg"),
-        UiIconId.Lock => Ui("lock.svg"),
-        UiIconId.Map => Ui("map.svg"),
-        UiIconId.Menu => Ui("menu.svg"),
-        UiIconId.Model => Ui("model.svg"),
-        UiIconId.More => Ui("more.svg"),
-        UiIconId.Move => Ui("move.svg"),
-        UiIconId.Mute => Ui("mute.svg"),
-        UiIconId.Pause => Ui("pause.svg"),
-        UiIconId.Phone => Ui("phone.svg"),
-        UiIconId.Play => Ui("play.svg"),
-        UiIconId.Plus => Ui("plus.svg"),
-        UiIconId.Restart => Ui("restart.svg"),
-        UiIconId.Rotate => Ui("rotate.svg"),
-        UiIconId.Scale => Ui("scale.svg"),
-        UiIconId.Select => Ui("select.svg"),
-        UiIconId.Shadow => Ui("shadow.svg"),
-        UiIconId.Sound => Ui("sound.svg"),
-        UiIconId.Speed => Ui("speed.svg"),
-        UiIconId.Stop => Ui("stop.svg"),
-        UiIconId.Trash => Ui("trash.svg"),
-        UiIconId.Trophy => Ui("trophy.svg"),
-        UiIconId.Unlock => Ui("unlock.svg"),
-        UiIconId.Warn => Ui("warn.svg"),
-        UiIconId.Close => Ui("x.svg"),
-        UiIconId.Eye => Ui("eye.svg"),
-        UiIconId.PartBattery => Part("battery.svg"),
-        UiIconId.PartBeam => Part("beam.svg"),
-        UiIconId.PartBrake => Part("brake.svg"),
-        UiIconId.PartCore => Part("core.svg"),
-        UiIconId.PartFuel => Part("fuel.svg"),
-        UiIconId.PartGenerator => Part("generator.svg"),
-        UiIconId.PartCamera => Part("los.svg"),
-        UiIconId.PartNode => Part("node.svg"),
-        UiIconId.PartPiston => Part("piston.svg"),
-        UiIconId.PartServo => Part("servo.svg"),
-        UiIconId.PartSpring => Part("spring.svg"),
-        UiIconId.PartStepper => Part("stepper.svg"),
-        UiIconId.PartVelocity => Part("velocity.svg"),
-        UiIconId.PartWheel => Part("wheel.svg"),
-        UiIconId.PartWing => Part("wing.svg"),
-        UiIconId.Distance => Ui("distance.svg"),
-        UiIconId.TopSpeed => Ui("top-speed.svg"),
-        UiIconId.Elevation => Ui("elevation.svg"),
-        UiIconId.MapFlat => Ui("map-flat.svg"),
-        UiIconId.MapHills => Ui("map-hills.svg"),
-        UiIconId.MapStairs => Ui("map-stairs.svg"),
-        UiIconId.PartAccelerometer => Part("accelerometer.svg"),
-        UiIconId.ChevronLeft => Ui("chev-l.svg"),
-        UiIconId.Sort => Ui("sort.svg"),
-        UiIconId.Parts => Ui("parts.svg"),
-        UiIconId.Undo => Ui("undo.svg"),
-        UiIconId.Redo => Ui("redo.svg"),
-        UiIconId.PartPulse => Part("pulse.svg"),
-        UiIconId.PartTouch => Part("touch.svg"),
-        UiIconId.BrainMark => Ui("mark-brain.svg"),
+        UiIconId.Back => Icon("back"),
+        UiIconId.Beam => Icon("beam"),
+        UiIconId.Bolt => Icon("bolt"),
+        UiIconId.Build => Icon("build"),
+        UiIconId.Chart => Icon("chart"),
+        UiIconId.Check => Icon("check"),
+        UiIconId.ChevronDown => Icon("chev_d"),
+        UiIconId.ChevronRight => Icon("chev_r"),
+        UiIconId.Copy => Icon("copy"),
+        UiIconId.Core => Icon("core"),
+        UiIconId.Edit => Icon("edit"),
+        UiIconId.Flag => Icon("flag"),
+        UiIconId.Gear => Icon("gear"),
+        UiIconId.Height => Icon("height"),
+        UiIconId.Joint => Icon("joint"),
+        UiIconId.Lock => Icon("lock"),
+        UiIconId.Map => Icon("map"),
+        UiIconId.Menu => Icon("menu"),
+        UiIconId.Model => Icon("model"),
+        UiIconId.More => Icon("more"),
+        UiIconId.Move => Icon("move"),
+        UiIconId.Mute => Icon("mute"),
+        UiIconId.Pause => Icon("pause"),
+        UiIconId.Phone => Icon("phone"),
+        UiIconId.Play => Icon("play"),
+        UiIconId.Plus => Icon("plus"),
+        UiIconId.Restart => Icon("restart"),
+        UiIconId.Rotate => Icon("rotate"),
+        UiIconId.Scale => Icon("scale"),
+        UiIconId.Select => Icon("select"),
+        UiIconId.Shadow => Icon("shadow"),
+        UiIconId.Sound => Icon("sound"),
+        UiIconId.Speed => Icon("speed"),
+        UiIconId.Stop => Icon("stop"),
+        UiIconId.Trash => Icon("trash"),
+        UiIconId.Trophy => Icon("trophy"),
+        UiIconId.Unlock => Icon("unlock"),
+        UiIconId.Warn => Icon("warn"),
+        UiIconId.Close => Icon("x"),
+        UiIconId.Eye => Icon("eye"),
+        UiIconId.PartBattery => Part("battery"),
+        UiIconId.PartBeam => Part("beam"),
+        UiIconId.PartBrake => Part("brake"),
+        UiIconId.PartCore => Part("core"),
+        UiIconId.PartFuel => Part("fuel"),
+        UiIconId.PartGenerator => Part("generator"),
+        UiIconId.PartCamera => Part("los"),
+        UiIconId.PartNode => Part("node"),
+        UiIconId.PartPiston => Part("piston"),
+        UiIconId.PartServo => Part("servo"),
+        UiIconId.PartSpring => Part("spring"),
+        UiIconId.PartStepper => Part("stepper"),
+        UiIconId.PartVelocity => Part("velocity"),
+        UiIconId.PartWheel => Part("wheel"),
+        UiIconId.PartWing => Part("wing"),
+        UiIconId.Distance => Icon("distance"),
+        UiIconId.TopSpeed => Icon("top_speed"),
+        UiIconId.Elevation => Icon("elevation"),
+        UiIconId.MapFlat => Icon("map_flat"),
+        UiIconId.MapHills => Icon("map_hills"),
+        UiIconId.MapStairs => Icon("map_stairs"),
+        UiIconId.PartAccelerometer => Part("accelerometer"),
+        UiIconId.ChevronLeft => Icon("chev_l"),
+        UiIconId.Sort => Icon("sort"),
+        UiIconId.Parts => Icon("parts"),
+        UiIconId.Undo => Icon("undo"),
+        UiIconId.Redo => Icon("redo"),
+        UiIconId.PartPulse => Part("pulse"),
+        UiIconId.PartTouch => Part("touch"),
+        UiIconId.BrainMark => Mark("brain"),
         _ => throw new ArgumentOutOfRangeException(nameof(icon), icon, "Unknown UI icon."),
     };
 
-    private static IconSource Ui(string fileName) => new(UiRoot, fileName, UiSourceSize);
-    private static IconSource Part(string fileName) => new(PartRoot, fileName, _partSourceSize);
+    private static IconSource Icon(string name) => new(IconPrefix + name + ".svg", UiSourceSize);
+    private static IconSource Mark(string name) => new(MarkPrefix + name + ".svg", UiSourceSize);
+    private static IconSource Part(string name) => new(PartPrefix + name + ".svg", _partSourceSize);
 
-    private readonly record struct IconSource(string Root, string FileName, float SourceSize);
+    private readonly record struct IconSource(string FileName, float SourceSize);
 
     // A DpiTexture is sized in canvas units and re-rasterizes itself for the viewport's
     // oversampling, which includes the stretch and the UI size.
