@@ -174,6 +174,57 @@ public sealed class BuildPlacementTests
         gestures.DropTargetAt(gestures.View.ToView(new Vector2D(-17, 0))).ShouldBe(_firstJoint);
     }
 
+    // A Piston or Spring takes no tray part, but is a target so a drop on it says why (#1033).
+    [Theory]
+    [InlineData(BuildLink.Piston)]
+    [InlineData(BuildLink.Spring)]
+    public void DropTargetAt_FindsAPistonOrSpring_OverABeamItCrosses_ButNotInAJointsReach(BuildLink kind)
+    {
+        var (build, link) = BeamCrossedBy(kind);
+        var gestures = new BuildGestures(build);
+
+        gestures.DropTargetAt(new Vector2D(50, 0)).ShouldBe(link);
+        gestures.DropTargetAt(new Vector2D(50, 30)).ShouldBe(link);
+        gestures.DropTargetAt(new Vector2D(20, 0)).ShouldBe(new CreatureElementSelection(CreatureElementKind.Beam, 5));
+        gestures.DropTargetAt(new Vector2D(50, -33)).ShouldBe(new CreatureElementSelection(CreatureElementKind.Node, 3));
+    }
+
+    [Theory]
+    [InlineData(BuildPart.Accelerometer, BuildLink.Piston, "Sensors go on a beam")]
+    [InlineData(BuildPart.Accelerometer, BuildLink.Spring, "Sensors go on a beam")]
+    [InlineData(BuildPart.Camera, BuildLink.Piston, "Sensors go on a beam")]
+    [InlineData(BuildPart.Camera, BuildLink.Spring, "Sensors go on a beam")]
+    [InlineData(BuildPart.Servo, BuildLink.Piston, "Servos go on a joint")]
+    [InlineData(BuildPart.Servo, BuildLink.Spring, "Servos go on a joint")]
+    public void APartTappedOrDroppedOnAPistonOrSpring_ChangesNothing_AndNotesWhyThere(BuildPart part, BuildLink kind, string reason)
+    {
+        var (build, link) = BeamCrossedBy(kind);
+        build.ActiveTool = BuildTool.Parts;
+        var gestures = new BuildGestures(build);
+        var refused = new CanvasNote(CanvasNoteKind.Danger, link, UiText.Plain(reason));
+        var onLink = new Vector2D(50, 0);
+        build.PickPart(part);
+        var tapChanges = CountChanges(build);
+
+        gestures.Press(onLink);
+        gestures.Release(onLink);
+
+        tapChanges().ShouldBe(0);
+        build.PlacementNote.ShouldBe(refused);
+        build.PickedPart.ShouldBe(part);
+        build.SelectedPartCount.ShouldBe(0);
+
+        build.ReplaceSelection([1]);
+        var dropChanges = CountChanges(build);
+        gestures.DropPart(part, onLink).ShouldBeNull();
+
+        dropChanges().ShouldBe(0);
+        build.PlacementNote.ShouldBe(refused);
+        build.SelectedNodeIds.ShouldBe([1]);
+        build.Sensors.ShouldBeEmpty();
+        build.Servos.ShouldBeEmpty();
+    }
+
     [Fact]
     public void DropPart_PlacesOnTheBeamUnderThePointer()
     {
@@ -776,6 +827,20 @@ public sealed class BuildPlacementTests
             [new SpringDef(3, 1, 2)],
             nextPartId: 6));
         return build;
+    }
+
+    /// <summary>Beam 5 joins joints 1 (0,0) and 2 (100,0); a Piston or Spring 6 crosses it at (50,0), from joint 3 (50,-50) to 4 (50,50).</summary>
+    private static (BuildViewModel Build, CreatureElementSelection Link) BeamCrossedBy(BuildLink kind)
+    {
+        var build = new BuildViewModel();
+        build.PlaceNode(new Vector2D(0, 0));
+        build.PlaceNode(new Vector2D(100, 0));
+        build.PlaceNode(new Vector2D(50, -50));
+        build.PlaceNode(new Vector2D(50, 50));
+        build.ConnectLink(BuildLink.Beam, 1, 2).ShouldBe(5);
+        build.ConnectLink(kind, 3, 4).ShouldBe(6);
+        build.ClearSelection();
+        return (build, new CreatureElementSelection(kind == BuildLink.Piston ? CreatureElementKind.Piston : CreatureElementKind.Spring, 6));
     }
 
     private static BuildViewModel ThreeNodes()

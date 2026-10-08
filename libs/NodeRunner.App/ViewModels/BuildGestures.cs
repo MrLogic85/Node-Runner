@@ -166,9 +166,9 @@ public sealed class BuildGestures
 
     /// <summary>
     /// The part a tray part dragged to <paramref name="viewPosition"/> would land on (#376): a
-    /// joint's ring, then a sensor picture (its beam), then a beam within reach, then a joint
-    /// within reach, so a drop near a joint on a short beam still reaches the beam. Null over
-    /// empty canvas.
+    /// joint's ring, then a sensor picture (its beam), then a Piston or Spring off any joint's reach
+    /// (#1033), then a beam within reach, then a joint within reach, so a drop near a joint on a
+    /// short beam still reaches the beam. Null over empty canvas.
     /// </summary>
     public CreatureElementSelection? DropTargetAt(Vector2D viewPosition)
     {
@@ -182,6 +182,14 @@ public sealed class BuildGestures
         {
             var sensor = _build.Sensors.Single(entry => entry.Id == sensorId);
             return new CreatureElementSelection(CreatureElementKind.Beam, sensor.BeamId);
+        }
+
+        // A Piston or Spring takes no tray part, but a drop on it still says why. It draws over the
+        // beams it crosses, so it wins there; near a joint, the beam and the joint keep their reach.
+        if (!_build.TryFindNodeNear(position, SelectionMarks.Gap, out _)
+            && _build.TryFindLinkNear(position, HitDistance(BeamHitDistance), out var link))
+        {
+            return link;
         }
 
         if (_build.TryFindBeamNear(position, HitDistance(BeamHitDistance), out var beamId))
