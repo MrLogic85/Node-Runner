@@ -38,9 +38,10 @@ public static class BuildServoDrawing
         canvas.DrawSetTransformMatrix(viewTransform);
     }
 
-    public static void DrawPlacingFeedback(CanvasItem canvas, BuildViewModel viewModel, BuildPart? partDrag, VisualTheme theme, Transform2D viewTransform)
+    /// <summary>While a Servo is dragged or picked (#1016), a joint that takes it shows the <c>halo</c> ring and one that holds a part a dashed <c>danger</c> ring.</summary>
+    public static void DrawPlacingFeedback(CanvasItem canvas, BuildViewModel viewModel, BuildPart? placing, VisualTheme theme, Transform2D viewTransform)
     {
-        if (partDrag != BuildPart.Servo)
+        if (placing != BuildPart.Servo)
         {
             return;
         }

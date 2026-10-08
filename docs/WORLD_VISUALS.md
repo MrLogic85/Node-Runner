@@ -143,7 +143,10 @@ ground, the shadows above it, and the followed creature above every shadow.
   creature.
 - **Placing a part:** the glyph rides on a 48 px raised tile with an
   `accent` line above the finger. A dragged sensor shows free beams `halo`,
-  taken beams dashed `danger`, and its picture where it would land.
+  taken beams dashed `danger`, and its picture where it would land. A
+  dragged Servo rings free joints `halo` and joints holding a part dashed
+  `danger`. A picked part (#1016) marks the same free and taken targets
+  from the moment it is picked, so a tap can find them.
 - **Moving a sensor (#806):** no tile follows the finger. The sensor stays
   on its beam drawn as selected, beams are outlined as for a tray drag
   (its own beam `halo`), and its picture shows on another beam that takes

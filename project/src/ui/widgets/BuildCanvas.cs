@@ -386,7 +386,7 @@ public partial class BuildCanvas : Node2D
                 ShowsTooShort: true));
     }
 
-    /// <summary>What goes under the links: the placing feedback of a tray drag, and the beam a link drag replaces.</summary>
+    /// <summary>What goes under the links: the placing feedback of a tray part dragged or picked or a sensor moved, and the beam a link drag replaces.</summary>
     private void DrawUnderlay(CanvasItem canvas)
     {
         if (_viewModel is null || _gestures is null)
@@ -405,7 +405,7 @@ public partial class BuildCanvas : Node2D
             DrawPlacingFeedback(canvas, beam, start, end);
         }
 
-        BuildServoDrawing.DrawPlacingFeedback(canvas, _viewModel, _partDrag, Theme, ViewTransform());
+        BuildServoDrawing.DrawPlacingFeedback(canvas, _viewModel, PlacingPart, Theme, ViewTransform());
     }
 
     /// <summary>What goes over the whole creature: the aimed camera's rays, warnings, the beam drag's rings and the selection frame.</summary>
@@ -485,12 +485,12 @@ public partial class BuildCanvas : Node2D
         PistonDrawing.DrawStroke(canvas, ViewTransform(), Theme, ToGodot(NodeById(nodeA).Position), ToGodot(NodeById(nodeB).Position), (float)shortest, (float)longest, tickHalf, (float?)rest);
 
     /// <summary>
-    /// While a tray part is dragged (#376) or a sensor is moved (#806), a beam that would take it
+    /// While a tray part is dragged (#376) or picked (#1016), or a sensor is moved (#806), a beam that would take it
     /// shows the <c>halo</c>, and one that would refuse it a dashed <c>danger</c> stroke, both under the beam.
     /// </summary>
     private void DrawPlacingFeedback(CanvasItem canvas, BeamDef beam, Vector2 start, Vector2 end)
     {
-        if (BeamTakesDrag(beam.Id) is not { } takes || start == end)
+        if (BeamTakesPlacing(beam.Id) is not { } takes || start == end)
         {
             return;
         }
@@ -507,8 +507,8 @@ public partial class BuildCanvas : Node2D
         }
     }
 
-    /// <summary>Whether the beam would take the sensor a drag moves or the tray part a drag carries; null while neither is dragged.</summary>
-    private bool? BeamTakesDrag(int beamId)
+    /// <summary>Whether the beam would take the sensor a drag moves or the <see cref="PlacingPart"/>; null while neither is placed.</summary>
+    private bool? BeamTakesPlacing(int beamId)
     {
         var beam = new CreatureElementSelection(CreatureElementKind.Beam, beamId);
         if (_gestures!.MovingSensorId is { } sensor)
@@ -516,8 +516,15 @@ public partial class BuildCanvas : Node2D
             return _viewModel!.CanMoveSensor(sensor, beam, out _);
         }
 
-        return _partDrag is { } part && part != BuildPart.Servo ? _viewModel!.CanPlacePart(part, beam, out _) : null;
+        return PlacingPart is { } part && part != BuildPart.Servo ? _viewModel!.CanPlacePart(part, beam, out _) : null;
     }
+
+    /// <summary>
+    /// The tray part being placed: one dragged from the tray, or one picked to tap into place, which
+    /// shows where it goes the same way from the moment it is picked (#1016). Null while a sensor is
+    /// moved, so only the move's targets show.
+    /// </summary>
+    private BuildPart? PlacingPart => _gestures?.MovingSensorId is null ? _partDrag ?? _viewModel?.PickedPart : null;
 
 
     /// <summary>Where each Accelerometer's beam is now, in creature units, for <see cref="BuildSensorMotion"/>.</summary>
@@ -780,7 +787,7 @@ public partial class BuildCanvas : Node2D
 
     private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs eventArgs)
     {
-        if (eventArgs.PropertyName is nameof(BuildViewModel.SelectedNodeCount) or nameof(BuildViewModel.PlacementNote) or nameof(BuildViewModel.CanvasNotes))
+        if (eventArgs.PropertyName is nameof(BuildViewModel.SelectedNodeCount) or nameof(BuildViewModel.PlacementNote) or nameof(BuildViewModel.CanvasNotes) or nameof(BuildViewModel.PickedPart))
         {
             QueueRedraw();
         }
