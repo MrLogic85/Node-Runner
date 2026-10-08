@@ -18,6 +18,7 @@ public sealed class BrainPortsTests
             BrainPort.Input(8, "left1"),
             BrainPort.Input(8, "centre"),
             BrainPort.Input(8, "right1"),
+            BrainPort.Input(8, "hit"),
         ]);
         layout.Outputs.ShouldBe([BrainPort.Output(6, "position", PortSignal.Position), BrainPort.Output(6, "strength", PortSignal.Strength)]);
     }
@@ -134,7 +135,7 @@ public sealed class BrainPortsTests
     public void SensorPorts_UseTheSavedChannelKeys()
     {
         BrainPorts.AccelerometerChannels.ShouldBe(["along", "across"]);
-        BrainPorts.CameraChannels.ShouldBe(["left1", "centre", "right1"]);
+        BrainPorts.CameraChannels.ShouldBe(["left1", "centre", "right1", "hit"]);
         BrainPorts.SensorPorts(new SensorDef(3, 1, SensorKind.Accelerometer)).Select(port => port.Channel)
             .ShouldBe(BrainPorts.AccelerometerChannels);
         BrainPorts.SensorPorts(new SensorDef(3, 1, SensorKind.Camera)).Select(port => port.Channel)

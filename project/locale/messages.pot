@@ -1300,6 +1300,10 @@ msgid "{0}: centre"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/BrainPortLabels.cs
+msgid "{0}: hit"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/BrainPortLabels.cs
 msgid "{0}: left"
 msgstr ""
 

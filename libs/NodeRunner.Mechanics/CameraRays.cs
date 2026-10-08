@@ -9,7 +9,8 @@ namespace NodeRunner.Mechanics;
 /// camera looks level, at the world's forward as built (<see cref="SensorDef.DefaultAim"/>, #622), which
 /// makes its rays look forward-up, forward and forward-down. Rays are named symmetrically around the centre ray,
 /// seen from the camera looking along them, and run left to right. Each ray reads how near the
-/// ground is: 0 when nothing is in range, rising linearly to 1 at contact. Stateless and shared
+/// ground is: 0 when nothing is in range, rising linearly to 1 at contact, and one more input says
+/// whether any ray sees the ground at all (#1032). Stateless and shared
 /// by the sim, Build and the sensor picture, like <see cref="Accelerometer"/>. See
 /// docs/CREATURE_MODEL.md.
 /// </summary>
@@ -66,6 +67,29 @@ public static class CameraRays
     /// </summary>
     public static double Reading(double? hitDistance) =>
         hitDistance is { } distance ? Math.Clamp(1 - (distance / RayLength), 0, 1) : 0;
+
+    /// <summary>
+    /// Writes the camera's brain inputs from each ray's <paramref name="hitDistances"/> (null where it
+    /// sees nothing), in <see cref="BrainPorts.CameraChannels"/> order: each ray's <see cref="Reading"/>,
+    /// then hit, 1 when any ray sees the ground and else 0. Hit tells far ground from none: a hit at
+    /// the very end of a ray reads nearness 0 but hit 1 (#1032).
+    /// </summary>
+    public static void Read(ReadOnlySpan<double?> hitDistances, Span<double> values)
+    {
+        if (hitDistances.Length != RayCount)
+        {
+            throw new ArgumentException($"A camera has {RayCount} rays.", nameof(hitDistances));
+        }
+
+        var hit = false;
+        for (var ray = 0; ray < RayCount; ray++)
+        {
+            values[ray] = Reading(hitDistances[ray]);
+            hit |= hitDistances[ray] is not null;
+        }
+
+        values[RayCount] = hit ? 1 : 0;
+    }
 
     /// <summary><paramref name="angle"/> in −π..π.</summary>
     public static double Wrap(double angle) => Math.IEEERemainder(angle, 2 * Math.PI);

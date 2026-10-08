@@ -114,10 +114,33 @@ public sealed class CameraRaysTests
         CameraRays.Reading(hitDistance).ShouldBe(expected, 1e-12);
     }
 
-    [Fact]
-    public void RayCount_MatchesTheCameraChannels()
+    [Theory]
+    [InlineData(null, null, null, new[] { 0.0, 0, 0, 0 })]
+    [InlineData(null, 0.0, null, new[] { 0.0, 1, 0, 1 })]
+    [InlineData(220.0, null, null, new[] { 0.0, 0, 0, 1 })]
+    [InlineData(55.0, 110.0, null, new[] { 0.75, 0.5, 0, 1 })]
+    public void Read_WritesEachRaysNearness_ThenWhetherAnyRayHits(double? left, double? centre, double? right, double[] expected)
     {
-        BrainPorts.CameraChannels.Count.ShouldBe(CameraRays.RayCount);
+        var values = new double[CameraRays.RayCount + 2];
+        values[^1] = -7;
+
+        CameraRays.Read([left, centre, right], values.AsSpan(0, CameraRays.RayCount + 1));
+
+        values[..^1].ShouldBe(expected);
+        values[^1].ShouldBe(-7);
+    }
+
+    [Fact]
+    public void Read_WithTheWrongRayCount_Throws()
+    {
+        Should.Throw<ArgumentException>(() => CameraRays.Read([null, null], new double[CameraRays.RayCount + 1]));
+    }
+
+    [Fact]
+    public void RayCount_MatchesTheCameraChannels_WithHitLast()
+    {
+        BrainPorts.CameraChannels.Count.ShouldBe(CameraRays.RayCount + 1);
+        BrainPorts.CameraChannels[^1].ShouldBe("hit");
     }
 
     private static Vector2D ToWorld(Vector2D local, double beamAngle)

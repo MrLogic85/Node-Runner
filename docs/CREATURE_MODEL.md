@@ -125,10 +125,13 @@ CreatureDef  ──build──▶  physical body  ──sensors──▶  model 
   `centre`, `right1`; five rays add **far left** / **far right**, `left2` /
   `right2`). Every ray count the camera will offer (1, 3 or 5, #578) has a
   centre ray, so the inner rays' keys survive a rebuild with another count.
-- **Reading:** three inputs, left to right: each ray's **nearness**, 0 when
-  nothing is in range and rising linearly to 1 at contact
-  (`CameraRays.Reading`); a hit at half range reads 0.5. Nothing seen adds
-  nothing to the brain's weighted sum (`docs/ML_CONCEPTS.md`).
+- **Reading:** four inputs (`CameraRays.Read`). First each ray's
+  **nearness**, left to right: 0 when nothing is in range and rising
+  linearly to 1 at contact (`CameraRays.Reading`); a hit at half range
+  reads 0.5. Nothing seen adds nothing to the brain's weighted sum
+  (`docs/ML_CONCEPTS.md`). Last, **hit**: 1 when any ray sees the ground,
+  else 0, so far ground, whose nearness is almost 0, differs from none
+  (#1032). It comes after every ray, whatever the ray count.
 
 ### Rigid triangles
 
@@ -244,7 +247,7 @@ fold.
   (`BrainPortLabels`); an output's label is the quantity it sets, so the
   Piston's position output reads **length** like its input (#869).
   - **Accelerometer:** inputs `along`, `across`.
-  - **Camera:** inputs `left1`, `centre`, `right1`.
+  - **Camera:** inputs `left1`, `centre`, `right1`, `hit` (#1032).
   - **Piston (#451):** inputs `length` (0 at its shortest, 1 at its longest,
     its Start position as drawn, #870) and `speed` (`tanh(v / maxSpeed)`,
     extending positive); outputs `position` and `strength`.
