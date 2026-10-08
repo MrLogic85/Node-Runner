@@ -90,7 +90,7 @@ size_flags_vertical = 4
 tooltip_text = "Brain"
 mouse_filter = 1
 script = ExtResource("5_button")
-IconId = 18
+IconId = 69
 Kind = 1
 
 [node name="Stats" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/HBoxContainer/Field/MarginContainer/ToolbarContent/Actions"]

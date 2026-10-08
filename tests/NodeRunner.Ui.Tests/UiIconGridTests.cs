@@ -5,17 +5,19 @@ using System.Xml.Linq;
 namespace NodeRunner.Ui.Tests;
 
 /// <summary>
-/// Enforces <c>docs/UI_DIRECTION.md</c> → "Icon drawing" (#1010). Bounds are the geometry alone,
+/// Enforces <c>docs/UI_DIRECTION.md</c> → "Icon drawing" (#1010, #1018). Bounds are the geometry alone,
 /// which holds because every icon shares one stroke, untransformed.
 /// </summary>
 public sealed partial class UiIconGridTests
 {
     private const double _size = 16;
+    private const double _markSize = 20;
+    private const string _markPrefix = "mark-";
     private const double _centre = 12;
     private const double _tolerance = 0.1;
 
     [Fact]
-    public void EveryUiIcon_Is16OnItsLongerSideAndCentredOnA24Grid()
+    public void EveryUiIcon_Is16OnItsLongerSide_AndAMark20_CentredOnA24Grid()
     {
         var folder = Path.Combine(SceneNodes.FindRepositoryRoot(), "project", "assets", "icons", "ui");
         var files = Directory.GetFiles(folder, "*.svg");
@@ -83,7 +85,8 @@ public sealed partial class UiIconGridTests
         var longer = Math.Max(bounds.Right - bounds.Left, bounds.Bottom - bounds.Top);
         var centreX = (bounds.Left + bounds.Right) / 2;
         var centreY = (bounds.Top + bounds.Bottom) / 2;
-        return Math.Abs(longer - _size) > _tolerance || Math.Abs(centreX - _centre) > _tolerance || Math.Abs(centreY - _centre) > _tolerance
+        var size = name.StartsWith(_markPrefix, StringComparison.Ordinal) ? _markSize : _size;
+        return Math.Abs(longer - size) > _tolerance || Math.Abs(centreX - _centre) > _tolerance || Math.Abs(centreY - _centre) > _tolerance
             ? $"{name}: drawing is {longer:0.##} on its longer side, centred at ({centreX:0.##}, {centreY:0.##})"
             : null;
     }

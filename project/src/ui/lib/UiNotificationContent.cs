@@ -115,7 +115,7 @@ public sealed partial class UiNotificationContent : UiPopupCard
         var color = UiPopupStyle.SemanticColor(Type, this);
         _icon.Texture = _iconOverride is { } icon
             ? icon.Load(UiIconSize.Large)
-            : UiIcons.Load(Type == UiPopupType.Default ? UiIconId.Model : UiIconId.Warn, UiIconSize.Large);
+            : UiIcons.Load(Type == UiPopupType.Default ? UiIconId.BrainMark : UiIconId.Warn, UiIconSize.Large);
         _icon.SelfModulate = color;
         _semanticType.Text = UiPopupStyle.Overline(Type);
         _semanticType.Visible = _semanticType.Text.Length > 0;

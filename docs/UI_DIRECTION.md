@@ -168,6 +168,10 @@ entry (#315). The entries that are not a component of their own (#306):
 - **Icon drawing** (#1010): every UI icon is drawn 16 on its longer side,
   centred on a plain 24 viewBox, so icons side by side match in size and
   air; `UiIconGridTests` enforces it. Part glyphs keep their 20 grid.
+  A mark, named `mark-…`, echoes the launcher glyph and is the one icon
+  drawn 20 on the 24 grid, larger than its neighbours: at the shared
+  stroke a network drawn 16 fills into lumps (#1018). `model` keeps the
+  16 rule by stopping its lines short of the middle column.
 - **Toggles and checkboxes:** transparent rows with solid indicator
   outlines; a disabled row is 50% opacity, not dashed.
 - **Segmented switch:** the selected segment has an `accent-soft` fill and a
