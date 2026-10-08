@@ -113,7 +113,7 @@ public sealed class BuildPresentationViewModelTests
         tray.PickedInfo.ShouldBeNull();
         var servo = groups.SelectMany(group => group.Rows).Single(row => row.Part == BuildPart.Servo);
         servo.State.ShouldBe(PartTrayRowState.CreationLocked);
-        groups.SelectMany(group => group.Rows).Single(row => row.Part == BuildPart.Camera).State.ShouldBe(PartTrayRowState.ComingLater);
+        groups.SelectMany(group => group.Rows).Single(row => row.Part == BuildPart.TouchSensor).State.ShouldBe(PartTrayRowState.ComingLater);
     }
 
     [Theory]

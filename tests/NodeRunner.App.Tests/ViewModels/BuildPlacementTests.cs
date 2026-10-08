@@ -81,9 +81,20 @@ public sealed class BuildPlacementTests
         build.PlacementNote.ShouldBe(new CanvasNote(CanvasNoteKind.Danger, _firstBeam, UiText.Plain("One sensor per beam")));
     }
 
+    [Fact]
+    public void PlacePart_Camera_OnAFreeBeam_LooksLevelAndForward()
+    {
+        var build = TwoBeams();
+
+        var id = build.PlacePart(BuildPart.Camera, _firstBeam);
+
+        id.ShouldNotBeNull();
+        build.Sensors.Select(sensor => (sensor.Id, sensor.BeamId, sensor.Kind, sensor.Aim)).ShouldBe([(id.Value, 4, SensorKind.Camera, (double?)0)]);
+    }
+
     [Theory]
     [InlineData(BuildPart.Battery)]
-    [InlineData(BuildPart.Camera)]
+    [InlineData(BuildPart.TouchSensor)]
     public void PlacePart_ComingLater_IsRefused(BuildPart part)
     {
         var build = TwoBeams();
