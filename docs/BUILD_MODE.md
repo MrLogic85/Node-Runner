@@ -248,8 +248,9 @@ several the selection panel instead.
   selected, so the tray stays and the part stays picked for the next one.
   Tapping the row again, another tab or tool, a selection (which replaces
   the tray), collapsing the side panel, or Back clears the pick; Back
-  leaves Build only once nothing is picked. Marking the targets on the
-  canvas is #1016.
+  leaves Build only once nothing is picked. While a part is picked, the
+  canvas marks where it can go as a drag would (#1016; see
+  `docs/WORLD_VISUALS.md` → "Placing a part").
 
 ## Part settings
 
