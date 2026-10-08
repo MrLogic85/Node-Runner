@@ -197,7 +197,10 @@ showing one's time. A `Replaceable` notification gives way to any newer one,
 closing at once or leaving the queue: tap answers such as Build's lock and
 "comes in version" notes use both (#1004). A failed copy shows the same
 Danger notification whether it started in Creations, Examples or Build,
-built once in `CreationActions.TryCopy` (#1013).
+built once in `CreationActions.TryCopy` (#1013); a failed import shows its
+own, built beside it in `CreationActions.TryImport` (#899). A copy to the
+clipboard confirms through `UiClipboard.Copy`, which waits for Android's
+own toast.
 
 ### Menus and pickers
 
@@ -257,6 +260,23 @@ A card shows its creature, "12 generations", and the latest result as one
 stat per row with its unit, not the reference's bare numbers in one row
 (#479, #846). The `distance` icon is `|->` and `elevation` lies on its side.
 The trophy is Unavailable (#199).
+
+### Import
+
+Import creation in Creations' overflow menu (`icon_paste`) opens it (#899).
+Its toolbar holds Back, the title, Secondary Paste and Primary Add to
+Creations, enabled only while a build shows and its name is not blank.
+There is no field for the code: Paste reads the clipboard only when
+tapped. The left card says what to do, shows the build, or shows why the
+code was refused under a danger `icon_warn`. The build draws on Build's
+grid, as large as Build at 1:1, never larger: what it previews is what
+Build opens with (cards stop at half and show no grid). Beside it, a
+column at least 176 px wide holds a Name field with the build's name and
+one authored row per kind of part it has (icon, name in `Body`, count in
+`ReadoutSmall`, no border: they are facts, not buttons). Add saves it
+under that name and opens it in Build in place of Import, like an
+example's Copy. Build's Share build uses `icon_share`, three linked nodes,
+and confirms with a "Code copied" notification.
 
 ### Build
 

@@ -331,7 +331,6 @@ public partial class BuildCanvas : Node2D
         LayoutSelectionHandles();
         LayoutCanvasNotes();
         ShowCreature();
-        DrawThroughView();
         DrawBuildGrid();
         DrawAreaCorners();
         DrawSelectionBox();
@@ -824,41 +823,14 @@ public partial class BuildCanvas : Node2D
         }
     }
 
-    /// <summary>
-    /// A faint blueprint grid over the Build area, the only place joints can
-    /// go: fixed <see cref="BuildViewModel.BuildGridStep"/> cells that
-    /// zoom with the picture, drawn as hairlines that stay one pixel wide.
-    /// </summary>
+    /// <summary>The <see cref="BuildGrid"/> where the view shows it, zooming with the picture.</summary>
     private void DrawBuildGrid()
     {
         var view = _gestures!.View;
-        var area = BuildViewModel.BuildArea;
-        var step = BuildViewModel.BuildGridStep;
-
         var shown = view.VisibleArea is { } visible
             ? new CanvasRect(view.ToCanvas(visible.Min), view.ToCanvas(visible.Max))
-            : area;
-        var top = (float)area.Min.Y;
-        var bottom = (float)area.Max.Y;
-        var left = (float)area.Min.X;
-        var right = (float)area.Max.X;
-        for (var x = area.Min.X; x <= area.Max.X; x += step)
-        {
-            if (x >= shown.Min.X && x <= shown.Max.X)
-            {
-                DrawLine(new Vector2((float)x, top), new Vector2((float)x, bottom), Theme.ArenaGrid, -1);
-            }
-        }
-
-        for (var y = area.Min.Y; y <= area.Max.Y; y += step)
-        {
-            if (y >= shown.Min.Y && y <= shown.Max.Y)
-            {
-                DrawLine(new Vector2(left, (float)y), new Vector2(right, (float)y), Theme.ArenaGrid, -1);
-            }
-        }
-
-        DrawRect(new Rect2(left, top, right - left, bottom - top), Theme.ArenaGrid, filled: false, width: -1);
+            : BuildViewModel.BuildArea;
+        BuildGrid.Draw(this, ViewTransform(), shown, Theme.ArenaGrid);
     }
 
     /// <summary>Marks the corners of the Build area, zooming with the rest of the picture.</summary>
@@ -884,9 +856,6 @@ public partial class BuildCanvas : Node2D
                 Stroke(Theme.AreaCornerWidth));
         }
     }
-
-    /// <summary>Draws everything after this in canvas units, zoomed and panned by the view.</summary>
-    private void DrawThroughView() => DrawSetTransformMatrix(ViewTransform());
 
     /// <summary>Draws strokes given in creature units on <paramref name="canvas"/> in window pixels, so they stay smooth at any zoom (#733).</summary>
     private UiPixelPen ViewPen(CanvasItem canvas) => UiPixelPen.Begin(canvas, ViewTransform());

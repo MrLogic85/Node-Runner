@@ -69,6 +69,10 @@ msgstr ""
 msgid "Accelerometer"
 msgstr ""
 
+#: project/scenes/screens/ImportScreen.tscn
+msgid "Accelerometers"
+msgstr ""
+
 #: project/scenes/screens/CreationsScreen.tscn
 #: project/src/hosts/CreationsHost.cs
 msgid "Achievements"
@@ -89,6 +93,10 @@ msgstr ""
 #: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs
 #: project/scenes/screens/BuildScreen.tscn
 msgid "Add joints and links"
+msgstr ""
+
+#: project/scenes/screens/ImportScreen.tscn
+msgid "Add to Creations"
 msgstr ""
 
 #: project/scenes/screens/BuildScreen.tscn
@@ -118,6 +126,10 @@ msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartNames.cs
 msgid "Beam {0}"
+msgstr ""
+
+#: project/scenes/screens/ImportScreen.tscn
+msgid "Beams"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/TrainingPresentationViewModel.cs
@@ -161,6 +173,10 @@ msgstr ""
 msgid "Camera {0}"
 msgstr ""
 
+#: project/scenes/screens/ImportScreen.tscn
+msgid "Cameras"
+msgstr ""
+
 #: project/scenes/ui/UiDialogContent.tscn
 #: project/src/ui/lib/UiPopupContracts.cs
 msgid "Cancel"
@@ -168,6 +184,10 @@ msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs
 msgid "Changing these makes it learn again."
+msgstr ""
+
+#: project/src/hosts/BuildHost.cs
+msgid "Code copied"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartParameters.cs
@@ -195,6 +215,14 @@ msgstr ""
 msgid "Copy"
 msgstr ""
 
+#: libs/NodeRunner.App/ViewModels/ImportPresentation.cs
+msgid "Copy a creation's share code first, then tap Paste."
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/ImportPresentation.cs
+msgid "Copy a creation's share code, then tap Paste."
+msgstr ""
+
 #: project/scenes/screens/BuildScreen.tscn
 msgid "Copy creation"
 msgstr ""
@@ -203,8 +231,7 @@ msgstr ""
 msgid "Copy failed"
 msgstr ""
 
-#: libs/NodeRunner.App/Services/CreationDuplicateWorkflow.cs
-#: libs/NodeRunner.App/Services/ExampleCopyWorkflow.cs
+#: libs/NodeRunner.App/ViewModels/CreationNames.cs
 msgid "Copy of {0}"
 msgstr ""
 
@@ -213,6 +240,10 @@ msgid "Copy {0}"
 msgid_plural "Copy {0}"
 msgstr[0] ""
 msgstr[1] ""
+
+#: project/src/hosts/CreationActions.cs
+msgid "Could not add {0}. Try again."
+msgstr ""
 
 #: project/src/hosts/CreationActions.cs
 msgid "Could not copy {0}. Try again."
@@ -380,6 +411,18 @@ msgstr ""
 msgid "How quickly it stops bouncing"
 msgstr ""
 
+#: project/scenes/screens/ImportScreen.tscn
+msgid "Import"
+msgstr ""
+
+#: project/scenes/screens/CreationsScreen.tscn
+msgid "Import creation"
+msgstr ""
+
+#: project/src/hosts/CreationActions.cs
+msgid "Import failed"
+msgstr ""
+
 #: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs
 #: libs/NodeRunner.App/ViewModels/PartSettingsPresentation.cs
 #: project/scenes/screens/BuildScreen.tscn
@@ -392,6 +435,10 @@ msgstr ""
 
 #: libs/NodeRunner.App/Lifecycle/CreatureReadiness.cs
 msgid "Joint {0} has nothing attached. Connect it with a link or remove it."
+msgstr ""
+
+#: project/scenes/screens/ImportScreen.tscn
+msgid "Joints"
 msgstr ""
 
 #: project/src/ui/lib/UiPicker.cs
@@ -427,6 +474,10 @@ msgstr ""
 msgid "Locked: would change the model"
 msgstr ""
 
+#: libs/NodeRunner.App/ViewModels/ImportPresentation.cs
+msgid "Made in a newer version"
+msgstr ""
+
 #: project/scenes/screens/TrainSetupScreen.tscn
 msgid "Map"
 msgstr ""
@@ -460,6 +511,7 @@ msgid "Moving parts"
 msgstr ""
 
 #: project/scenes/screens/BuildScreen.tscn
+#: project/scenes/screens/ImportScreen.tscn
 #: project/src/ui/lib/UiNameField.cs
 msgid "Name"
 msgstr ""
@@ -480,6 +532,10 @@ msgstr ""
 msgid "No saved Creations yet."
 msgstr ""
 
+#: libs/NodeRunner.App/ViewModels/ImportPresentation.cs
+msgid "Not a share code"
+msgstr ""
+
 #: libs/NodeRunner.App/ViewModels/BuildViewModel.cs
 msgid "Not connected"
 msgstr ""
@@ -495,6 +551,14 @@ msgstr ""
 
 #: project/scenes/ui/UiStageCard.tscn
 msgid "Note about stage"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/ImportPresentation.cs
+msgid "Nothing to build"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/ImportPresentation.cs
+msgid "Nothing to paste"
 msgstr ""
 
 #: project/src/hosts/BuildHost.cs
@@ -518,9 +582,21 @@ msgstr ""
 msgid "Outputs"
 msgstr ""
 
+#: libs/NodeRunner.App/ViewModels/ImportPresentation.cs
+msgid "Part of it is missing or changed. Ask for the code again."
+msgstr ""
+
 #: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs
 #: project/scenes/screens/BuildScreen.tscn
 msgid "Parts"
+msgstr ""
+
+#: project/scenes/screens/ImportScreen.tscn
+msgid "Paste"
+msgstr ""
+
+#: project/src/hosts/BuildHost.cs
+msgid "Paste it in a chat to share {0}. It holds the build, not the training."
 msgstr ""
 
 #: project/scenes/screens/TrainingScreen.tscn
@@ -553,6 +629,10 @@ msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartNames.cs
 msgid "Piston {0}"
+msgstr ""
+
+#: project/scenes/screens/ImportScreen.tscn
+msgid "Pistons"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/TrainSetupPresentationViewModel.cs
@@ -672,6 +752,10 @@ msgstr ""
 msgid "Servo {0}"
 msgstr ""
 
+#: project/scenes/screens/ImportScreen.tscn
+msgid "Servos"
+msgstr ""
+
 #: libs/NodeRunner.App/Builders/CreatureBuilder.cs
 msgid "Servos go on a joint"
 msgstr ""
@@ -684,6 +768,10 @@ msgstr ""
 #: libs/NodeRunner.App/ViewModels/TrainSetupPresentationViewModel.cs
 #: project/scenes/screens/TrainSetupScreen.tscn
 msgid "Shadows race and the brain keeps learning."
+msgstr ""
+
+#: project/scenes/screens/BuildScreen.tscn
+msgid "Share build"
 msgstr ""
 
 #: project/scenes/screens/TrainSetupScreen.tscn
@@ -710,6 +798,10 @@ msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartNames.cs
 msgid "Spring {0}"
+msgstr ""
+
+#: project/scenes/screens/ImportScreen.tscn
+msgid "Springs"
 msgstr ""
 
 #: project/scenes/ui/UiStageCard.tscn
@@ -871,6 +963,18 @@ msgstr ""
 msgid "These parts share no settings."
 msgstr ""
 
+#: libs/NodeRunner.App/ViewModels/ImportPresentation.cs
+msgid "This code is damaged"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/ImportPresentation.cs
+msgid "This creation has no parts yet."
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/ImportPresentation.cs
+msgid "This text is not a Node Runner creation."
+msgstr ""
+
 #: libs/NodeRunner.App/ViewModels/PartInfo.cs
 msgid "Three rays see how near the ground is."
 msgstr ""
@@ -946,6 +1050,10 @@ msgstr ""
 
 #: libs/NodeRunner.App/Services/NewCreationWorkflow.cs
 msgid "Untitled Creation"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/ImportPresentation.cs
+msgid "Update Node Runner to open this creation."
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartTrayPresentation.cs

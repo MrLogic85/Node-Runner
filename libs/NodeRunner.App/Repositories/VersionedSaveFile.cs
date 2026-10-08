@@ -63,6 +63,14 @@ public sealed class VersionedSaveFile<T>
         return new VersionedLoad<T>(value, !hasVersion || version < CurrentVersion);
     }
 
+    /// <summary>Whether <paramref name="json"/> is a file in a version newer than this app reads, so a newer app made it.</summary>
+    /// <exception cref="JsonException">The file is not JSON.</exception>
+    public bool IsNewer(string json) =>
+        JsonNode.Parse(json) is JsonObject file
+        && file[VersionField] is JsonValue value
+        && value.TryGetValue<int>(out var version)
+        && version > CurrentVersion;
+
     // A file without a version is the baseline. It is outdated even while the baseline is current,
     // so writing it back adds the field.
     private int ReadVersion(JsonObject file, string path, out bool hasVersion)

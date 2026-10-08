@@ -1,0 +1,360 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://src/ui/screens/ImportScreen.cs" id="1_screen"]
+[ext_resource type="PackedScene" path="res://scenes/ui/UiFrame.tscn" id="2_frame"]
+[ext_resource type="PackedScene" path="res://scenes/ui/UiToolbar.tscn" id="3_toolbar"]
+[ext_resource type="Script" path="res://src/ui/lib/UiLabel.cs" id="4_label"]
+[ext_resource type="Script" path="res://src/ui/lib/UiButton.cs" id="5_button"]
+[ext_resource type="Script" path="res://src/ui/lib/UiCard.cs" id="6_card"]
+[ext_resource type="Script" path="res://src/ui/lib/UiIcon.cs" id="7_icon"]
+[ext_resource type="Script" path="res://src/ui/widgets/CreatureThumbnail.cs" id="8_thumb"]
+[ext_resource type="PackedScene" path="res://scenes/ui/UiWorldView.tscn" id="9_world_view"]
+[ext_resource type="Script" path="res://src/ui/widgets/CreatureParts.cs" id="10_parts"]
+[ext_resource type="Script" path="res://src/ui/lib/UiTextField.cs" id="11_text_field"]
+
+[node name="ImportScreen" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_screen")
+
+[node name="UiFrame" parent="." instance=ExtResource("2_frame")]
+layout_mode = 1
+
+[node name="Shell" type="VBoxContainer" parent="UiFrame/MarginContainer/Card" index="0"]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="Toolbar" parent="UiFrame/MarginContainer/Card/Shell" instance=ExtResource("3_toolbar")]
+unique_name_in_owner = true
+layout_mode = 2
+ShowOverflow = false
+
+[node name="ToolbarContent" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/HBoxContainer/Field/MarginContainer" index="0"]
+theme_override_constants/separation = 8
+
+[node name="Title" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/HBoxContainer/Field/MarginContainer/ToolbarContent" index="0"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Import"
+text_overrun_behavior = 3
+script = ExtResource("4_label")
+TextStyle = 1
+
+[node name="Paste" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/HBoxContainer/Field/MarginContainer/ToolbarContent" index="1"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 1
+text = "Paste"
+script = ExtResource("5_button")
+IconId = 71
+Kind = 1
+
+[node name="Add" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/HBoxContainer/Field/MarginContainer/ToolbarContent" index="2"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 1
+text = "Add to Creations"
+script = ExtResource("5_button")
+IconId = 25
+Kind = 0
+
+[node name="Body" type="MarginContainer" parent="UiFrame/MarginContainer/Card/Shell"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 12
+
+[node name="Columns" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="PreviewCard" type="PanelContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+script = ExtResource("6_card")
+SizeVariant = 4
+ClipContent = true
+
+[node name="Thumbnail" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/PreviewCard"]
+unique_name_in_owner = true
+visible = false
+clip_contents = true
+layout_mode = 2
+mouse_filter = 2
+script = ExtResource("8_thumb")
+LargestScale = 1.0
+ShowsBuildGrid = true
+
+[node name="View" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/PreviewCard/Thumbnail" instance=ExtResource("9_world_view")]
+layout_mode = 1
+mouse_filter = 2
+ScalesWithUi = true
+
+[node name="WorldViewport" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/PreviewCard/Thumbnail/View" index="0"]
+render_target_update_mode = 0
+
+[node name="Parts" type="Node2D" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/PreviewCard/Thumbnail/View/WorldViewport"]
+script = ExtResource("10_parts")
+
+[node name="NoteMargin" type="MarginContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/PreviewCard"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 24
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 24
+
+[node name="Note" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/PreviewCard/NoteMargin"]
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+theme_override_constants/separation = 8
+
+[node name="NoteIcon" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/PreviewCard/NoteMargin/Note"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+size_flags_horizontal = 4
+mouse_filter = 2
+script = ExtResource("7_icon")
+IconId = 37
+IconSize = 2
+Color = 12
+
+[node name="NoteTitle" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/PreviewCard/NoteMargin/Note"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+horizontal_alignment = 1
+autowrap_mode = 3
+script = ExtResource("4_label")
+TextStyle = 2
+
+[node name="NoteText" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/PreviewCard/NoteMargin/Note"]
+unique_name_in_owner = true
+layout_mode = 2
+horizontal_alignment = 1
+autowrap_mode = 3
+script = ExtResource("4_label")
+TextStyle = 9
+TextColor = 8
+
+[node name="InfoScroll" type="ScrollContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(176, 0)
+layout_mode = 2
+horizontal_scroll_mode = 0
+
+[node name="InfoColumn" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/InfoScroll"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 12
+
+[node name="Name" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/InfoScroll/InfoColumn"]
+unique_name_in_owner = true
+layout_mode = 2
+script = ExtResource("11_text_field")
+LabelText = "Name"
+
+[node name="PartRows" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/InfoScroll/InfoColumn"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="Node" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/InfoScroll/InfoColumn/PartRows"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Icon" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/InfoScroll/InfoColumn/PartRows/Node"]
+layout_mode = 2
+size_flags_vertical = 4
+script = ExtResource("7_icon")
+IconId = 14
+
+[node name="Label" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/InfoScroll/InfoColumn/PartRows/Node"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Joints"
+text_overrun_behavior = 3
+script = ExtResource("4_label")
+TextStyle = 4
+
+[node name="Count" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/InfoScroll/InfoColumn/PartRows/Node"]
+layout_mode = 2
+horizontal_alignment = 2
+vertical_alignment = 1
+script = ExtResource("4_label")
+TextStyle = 16
+
+[node name="Beam" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/InfoScroll/InfoColumn/PartRows"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Icon" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/InfoScroll/InfoColumn/PartRows/Beam"]
+layout_mode = 2
+size_flags_vertical = 4
+script = ExtResource("7_icon")
+IconId = 1
+
+[node name="Label" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/InfoScroll/InfoColumn/PartRows/Beam"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Beams"
+text_overrun_behavior = 3
+script = ExtResource("4_label")
+TextStyle = 4
+
+[node name="Count" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/InfoScroll/InfoColumn/PartRows/Beam"]
+layout_mode = 2
+horizontal_alignment = 2
+vertical_alignment = 1
+script = ExtResource("4_label")
+TextStyle = 16
+
+[node name="Accelerometer" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/InfoScroll/InfoColumn/PartRows"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Icon" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/InfoScroll/InfoColumn/PartRows/Accelerometer"]
+layout_mode = 2
+size_flags_vertical = 4
+script = ExtResource("7_icon")
+IconId = 61
+
+[node name="Label" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/InfoScroll/InfoColumn/PartRows/Accelerometer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Accelerometers"
+text_overrun_behavior = 3
+script = ExtResource("4_label")
+TextStyle = 4
+
+[node name="Count" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/InfoScroll/InfoColumn/PartRows/Accelerometer"]
+layout_mode = 2
+horizontal_alignment = 2
+vertical_alignment = 1
+script = ExtResource("4_label")
+TextStyle = 16
+
+[node name="Camera" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/InfoScroll/InfoColumn/PartRows"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Icon" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/InfoScroll/InfoColumn/PartRows/Camera"]
+layout_mode = 2
+size_flags_vertical = 4
+script = ExtResource("7_icon")
+IconId = 46
+
+[node name="Label" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/InfoScroll/InfoColumn/PartRows/Camera"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Cameras"
+text_overrun_behavior = 3
+script = ExtResource("4_label")
+TextStyle = 4
+
+[node name="Count" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/InfoScroll/InfoColumn/PartRows/Camera"]
+layout_mode = 2
+horizontal_alignment = 2
+vertical_alignment = 1
+script = ExtResource("4_label")
+TextStyle = 16
+
+[node name="Servo" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/InfoScroll/InfoColumn/PartRows"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Icon" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/InfoScroll/InfoColumn/PartRows/Servo"]
+layout_mode = 2
+size_flags_vertical = 4
+script = ExtResource("7_icon")
+IconId = 49
+
+[node name="Label" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/InfoScroll/InfoColumn/PartRows/Servo"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Servos"
+text_overrun_behavior = 3
+script = ExtResource("4_label")
+TextStyle = 4
+
+[node name="Count" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/InfoScroll/InfoColumn/PartRows/Servo"]
+layout_mode = 2
+horizontal_alignment = 2
+vertical_alignment = 1
+script = ExtResource("4_label")
+TextStyle = 16
+
+[node name="Piston" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/InfoScroll/InfoColumn/PartRows"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Icon" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/InfoScroll/InfoColumn/PartRows/Piston"]
+layout_mode = 2
+size_flags_vertical = 4
+script = ExtResource("7_icon")
+IconId = 48
+
+[node name="Label" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/InfoScroll/InfoColumn/PartRows/Piston"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Pistons"
+text_overrun_behavior = 3
+script = ExtResource("4_label")
+TextStyle = 4
+
+[node name="Count" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/InfoScroll/InfoColumn/PartRows/Piston"]
+layout_mode = 2
+horizontal_alignment = 2
+vertical_alignment = 1
+script = ExtResource("4_label")
+TextStyle = 16
+
+[node name="Spring" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/InfoScroll/InfoColumn/PartRows"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Icon" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/InfoScroll/InfoColumn/PartRows/Spring"]
+layout_mode = 2
+size_flags_vertical = 4
+script = ExtResource("7_icon")
+IconId = 50
+
+[node name="Label" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/InfoScroll/InfoColumn/PartRows/Spring"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Springs"
+text_overrun_behavior = 3
+script = ExtResource("4_label")
+TextStyle = 4
+
+[node name="Count" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/InfoScroll/InfoColumn/PartRows/Spring"]
+layout_mode = 2
+horizontal_alignment = 2
+vertical_alignment = 1
+script = ExtResource("4_label")
+TextStyle = 16
+
+[editable path="UiFrame"]
+[editable path="UiFrame/MarginContainer/Card/Shell/Toolbar"]
+[editable path="UiFrame/MarginContainer/Card/Shell/Body/Columns/PreviewCard/Thumbnail/View"]

@@ -80,6 +80,11 @@ public sealed record SettingRange(double Min, double Max, double Step)
         return (upper - 1 + ((clamped - lower) / (Stops[upper] - lower))) / (Stops.Count - 1);
     }
 
+    /// <summary>Whether shown value <paramref name="value"/> lies on the slider, allowing for rounding in unit conversions.</summary>
+    public bool Allows(double value) => value >= Min - _rounding && value <= Max + _rounding;
+
+    private const double _rounding = 1e-6;
+
     /// <summary>One step as a share of the slider, 0…1.</summary>
     public double PositionStep => Stops is null ? Step / (Max - Min) : 1.0 / (Stops.Count - 1);
 

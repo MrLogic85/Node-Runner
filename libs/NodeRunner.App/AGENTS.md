@@ -30,11 +30,12 @@ in-memory fakes. The bridge between the Godot side and the pure layers.
   `TrainingPresentationViewModel` (shadows), the Brain focus and Signal flow
   presentations
 - `Repositories/` — `ICreationRepository` (`FileCreationRepository`,
-  `InMemoryCreationRepository`), `IProgressionRepository` (file and
-  in-memory), `VersionedSaveFile`, `SaveJson`, `FilePersistenceExceptions`
+  `InMemoryCreationRepository`), `CreationShareCode`,
+  `IProgressionRepository` (file and in-memory), `VersionedSaveFile`, `SaveJson`, `FilePersistenceExceptions`
 - `Services/` — `IRngProvider`, `ICreationUpdateCoordinator`, the
   workflows (`INewCreationWorkflow`, `IBuildEditWorkflow`,
-  `ICreationDuplicateWorkflow`, `IExampleCopyWorkflow`), `EvolutionSetup`,
+  `ICreationDuplicateWorkflow`, `IExampleCopyWorkflow`,
+  `ICreationImportWorkflow`), `EvolutionSetup`,
   `CreationExamples`, `DefaultCreationSeeder`, `ShadowsBudget`,
   `SlowMotionWatch`
 - `Builders/` — `CreatureBuilder`, the in-progress Build creature, with

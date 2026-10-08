@@ -6,17 +6,18 @@ namespace NodeRunner.App.ViewModels;
 public readonly record struct CreatureThumbnailFit(double Scale, Vector2D Offset)
 {
     /// <summary>
-    /// The largest scale a thumbnail draws at, so a lone joint or a small creature is not blown up
-    /// past half its size in Build at 1:1.
+    /// The largest scale a card's thumbnail draws at, so a lone joint or a small creature is not
+    /// blown up past half its size in Build at 1:1.
     /// </summary>
     public const double LargestScale = 0.5;
 
     /// <summary>
     /// Fits <paramref name="creature"/>'s whole picture, every joint ring and every sensor picture at
     /// its beam's middle (#770), centred in a <paramref name="width"/> × <paramref name="height"/>
-    /// thumbnail <paramref name="inset"/> inside each edge. Null when there is nothing to show or no room.
+    /// thumbnail <paramref name="inset"/> inside each edge, never larger than <paramref name="largestScale"/>.
+    /// Null when there is nothing to show or no room.
     /// </summary>
-    public static CreatureThumbnailFit? Of(CreatureDef creature, double width, double height, double inset)
+    public static CreatureThumbnailFit? Of(CreatureDef creature, double width, double height, double inset, double largestScale = LargestScale)
     {
         ArgumentNullException.ThrowIfNull(creature);
         var room = new Vector2D(width - (2 * inset), height - (2 * inset));
@@ -25,7 +26,7 @@ public readonly record struct CreatureThumbnailFit(double Scale, Vector2D Offset
             return null;
         }
 
-        var scale = Math.Min(LargestScale, Math.Min(room.X / bounds.Width, room.Y / bounds.Height));
+        var scale = Math.Min(largestScale, Math.Min(room.X / bounds.Width, room.Y / bounds.Height));
         var center = bounds.Center;
         return new CreatureThumbnailFit(scale, new Vector2D((width / 2) - (center.X * scale), (height / 2) - (center.Y * scale)));
     }

@@ -28,6 +28,9 @@ public partial class CreationsScreen : Control
     public delegate void ExamplesRequestedEventHandler();
 
     [Signal]
+    public delegate void ImportRequestedEventHandler();
+
+    [Signal]
     public delegate void ComponentLibraryRequestedEventHandler();
 
     [Signal]
@@ -89,6 +92,7 @@ public partial class CreationsScreen : Control
         GetNode<UiButton>("%New").Activated += () => EmitSignal(SignalName.NewRequested);
         GetNode<UiButton>("%EmptyNew").Activated += () => EmitSignal(SignalName.NewRequested);
         BindMenuItem(toolbar, GetNode<UiMenuActionItem>("%MenuExamples"), SignalName.ExamplesRequested);
+        BindMenuItem(toolbar, GetNode<UiMenuActionItem>("%MenuImport"), SignalName.ImportRequested);
         BindMenuItem(toolbar, GetNode<UiMenuActionItem>("%MenuComponentLibrary"), SignalName.ComponentLibraryRequested);
         ApplyDebugLinks();
         Apply();

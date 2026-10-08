@@ -15,7 +15,8 @@ textbook terms (population, candidate, genome).
   `docs/TRAINING_LOOP.md` → "Latest and best ever".
 - **Build** — The editor where a Creation's body is drawn and changed. Code
   says Build (`BuildViewModel`, `BuildTool`, `BuildCanvas`), never
-  Construction. See: `docs/BUILD_MODE.md`.
+  Construction. As a noun, a creation's build is its body without its
+  training, what Share build shares. See: `docs/BUILD_MODE.md`.
 - **Creation** — The thing the player saves, names, lists and copies
   (`CreationDef`): a creature body plus its brain and training.
 - **Creature** — The body inside a Creation (`CreatureDef`): joints, beams,
@@ -44,6 +45,9 @@ textbook terms (population, candidate, genome).
 - **Shadow strip** — Training's row of cells, one per shadow, that ranks
   them and picks the followed one (#387). See: `docs/TRAINING_LOOP.md` →
   Generations.
+- **Share code** — One line of text holding a creation's build, which Share
+  build copies and Import creation reads (#899, `CreationShareCode`). See:
+  `docs/SAVE_FORMAT.md` → "Share code".
 - **Shown distance** — The distance the player reads: how far ahead of its
   start the creature's front-most point ended up (#725). Not the fitness,
   which follows the centre. See: `docs/TRAINING_LOOP.md` → Trial.

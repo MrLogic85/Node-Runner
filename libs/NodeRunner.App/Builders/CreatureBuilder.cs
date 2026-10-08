@@ -270,6 +270,17 @@ public sealed class CreatureBuilder
         : _sensors.Any(sensor => sensor.Id == partId && sensor.Kind == SensorKind.Camera) ? _cameraParameters
         : [];
 
+    /// <summary>
+    /// Whether the drawing is one Build lets a player make (#899): every joint inside
+    /// <see cref="BuildViewModel.BuildArea"/> and every panel setting inside its slider's range. A
+    /// creature from outside the app, like a share code, is checked with this.
+    /// </summary>
+    public bool IsWithinBuildLimits() =>
+        _nodes.All(node => BuildViewModel.BuildArea.Contains(node.Position))
+        && _pistons.Select(piston => piston.Id).Concat(_servos.Select(servo => servo.Id)).Concat(_springs.Select(spring => spring.Id))
+            .All(partId => ParametersOf(partId).All(parameter =>
+                PartParameters.Of(parameter).Slider is not { } slider || slider.Range.Allows(slider.Shown(ParameterValue(partId, parameter)))));
+
     /// <summary>Part <paramref name="partId"/>'s <paramref name="parameter"/>, in world units.</summary>
     public double ParameterValue(int partId, PartParameterId parameter)
     {

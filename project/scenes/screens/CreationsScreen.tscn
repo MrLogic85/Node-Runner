@@ -78,14 +78,21 @@ script = ExtResource("6_menu_item")
 LabelText = "Examples"
 IconId = 8
 
-[node name="MenuDebugDivider" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/MenuLayer/ToolbarMenu" parent_id_path=PackedInt32Array(1400314004, 1208477361) index="1" unique_id=1400314013]
+[node name="MenuImport" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/MenuLayer/ToolbarMenu" parent_id_path=PackedInt32Array(1400314004, 1208477361) index="1" unique_id=1400314030]
+unique_name_in_owner = true
+layout_mode = 2
+script = ExtResource("6_menu_item")
+LabelText = "Import creation"
+IconId = 71
+
+[node name="MenuDebugDivider" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/MenuLayer/ToolbarMenu" parent_id_path=PackedInt32Array(1400314004, 1208477361) index="2" unique_id=1400314013]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
 mouse_filter = 2
 script = ExtResource("7_menu_divider")
 
-[node name="MenuComponentLibrary" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/MenuLayer/ToolbarMenu" parent_id_path=PackedInt32Array(1400314004, 1208477361) index="2" unique_id=1400314015]
+[node name="MenuComponentLibrary" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/MenuLayer/ToolbarMenu" parent_id_path=PackedInt32Array(1400314004, 1208477361) index="3" unique_id=1400314015]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2

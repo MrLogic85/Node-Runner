@@ -228,8 +228,8 @@ public sealed class BuildPresentationViewModel
     public bool IsTrained => _build.TrainingGeneration is not null;
 
     /// <summary>
-    /// Whether the overflow offers Copy creation: anything drawn, trained or not (#840). An empty
-    /// creation has nothing to copy.
+    /// Whether the overflow offers Copy creation (#840) and Share build (#899): anything drawn,
+    /// trained or not. An empty creation has nothing to copy or share.
     /// </summary>
     public bool CanCopy => _build.Nodes.Count > 0;
 

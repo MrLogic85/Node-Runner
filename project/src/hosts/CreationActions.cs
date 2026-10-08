@@ -27,18 +27,28 @@ internal static class CreationActions
     }
 
     /// <summary>Copies a creation; a failure shows the shared "Copy failed" notification (#1013) and returns null.</summary>
-    public static CreationDef? TryCopy(Node from, string name, Func<CreationDef> copy)
+    public static CreationDef? TryCopy(Node from, string name, Func<CreationDef> copy) =>
+        TryAdd(from, name, copy, $"Copying Creation '{name}'", "Copy failed", UiIconId.Copy, $"creation.copy.failed.{name}",
+            UiTextTranslation.Source(UiText.Format("Could not copy {0}. Try again.", name)));
+
+    /// <summary>Adds a shared build (#899); a failure shows "Import failed" and returns null.</summary>
+    public static CreationDef? TryImport(Node from, string name, Func<CreationDef> import) =>
+        TryAdd(from, name, import, $"Importing Creation '{name}'", "Import failed", UiIconId.Paste, $"creation.import.failed.{name}",
+            UiTextTranslation.Source(UiText.Format("Could not add {0}. Try again.", name)));
+
+    private static CreationDef? TryAdd(
+        Node from, string name, Func<CreationDef> add, string description, string failedTitle, UiIconId icon, string id, Func<string>? failedText)
     {
-        CreationDef? copied = null;
-        if (TryRunFileOperation(() => copied = copy(), $"Copying Creation '{name}'") && copied is not null)
+        CreationDef? added = null;
+        if (TryRunFileOperation(() => added = add(), description) && added is not null)
         {
-            return copied;
+            return added;
         }
 
-        UiNotificationLayer.Enqueue(from, new UiNotificationSpec(UiPopupType.Danger, "Copy failed", string.Empty, Icon: new(UiIconId.Copy))
+        UiNotificationLayer.Enqueue(from, new UiNotificationSpec(UiPopupType.Danger, failedTitle, string.Empty, Icon: new(icon))
         {
-            Id = $"creation.copy.failed.{name}",
-            MessageSource = UiTextTranslation.Source(UiText.Format("Could not copy {0}. Try again.", name)),
+            Id = id,
+            MessageSource = failedText,
         });
         return null;
     }

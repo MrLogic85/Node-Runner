@@ -116,7 +116,15 @@ script = ExtResource("6_menu_item")
 LabelText = "Copy creation"
 IconId = 8
 
-[node name="MenuResetTraining" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/MenuLayer/ToolbarMenu" index="3"]
+[node name="MenuShareBuild" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/MenuLayer/ToolbarMenu" index="3"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+script = ExtResource("6_menu_item")
+LabelText = "Share build"
+IconId = 70
+
+[node name="MenuResetTraining" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/MenuLayer/ToolbarMenu" index="4"]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
@@ -125,7 +133,7 @@ LabelText = "Reset training"
 IconId = 26
 Kind = 1
 
-[node name="MenuDeleteCreation" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/MenuLayer/ToolbarMenu" index="4"]
+[node name="MenuDeleteCreation" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/MenuLayer/ToolbarMenu" index="5"]
 unique_name_in_owner = true
 layout_mode = 2
 script = ExtResource("6_menu_item")

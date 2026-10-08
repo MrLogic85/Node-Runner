@@ -164,12 +164,53 @@ Current `creation.json` migrations:
    by one.
 3. Add a test that loads a file in the previous version, and keep the
    0.13.0 fixtures loading.
+4. For `creation.json`, add the new version's share dictionary: run the App
+   tests with `NODE_RUNNER_UPDATE_SHARE_DICTIONARY=1`, then again to build
+   it in (see "Share code").
 
 The real files 0.13.0 wrote are checked in as fixtures in
 `tests/NodeRunner.App.Tests/Repositories/SaveExamples/0.13.0/` (the Walker
 example, untrained and trained, and `progression.json`), and
 `CreationVersioningTests` and `ProgressionVersioningTests` load them.
 They are never rewritten in place.
+
+## Share code
+
+Share build in Build's overflow menu copies the creation as one line of
+text to paste in a chat; Import creation in Creations' overflow menu reads
+it back (#899). `CreationShareCode` (`libs/NodeRunner.App/Repositories/`)
+owns it.
+
+- The code is `NR`, the format version and a dot, then `creation.json`
+  on one line with `training` and `trainSettings` `null` and the id
+  `00000000-0000-0000-0000-000000000001`, zlib-compressed against that
+  version's share dictionary, in URL-safe base64 without padding. The
+  Walker's is about 70 characters, starting `NR4.`. It holds the build
+  only, so the copy trains from scratch.
+- A share dictionary is a `creation.json` in its version with every kind
+  of part (`libs/NodeRunner.App/Repositories/ShareDictionaries/`), so a
+  code only holds where its build differs from it. The code leaves out the
+  dictionary's compressed bytes: the dictionary is compressed first and
+  sync-flushed so its bytes end on a whole byte, and reading compresses it
+  again in front of the code. zlib's checksum covers both and catches a
+  changed character. It is only checked when the code is whole: a code cut
+  by a few characters at its end still loads if its build is complete,
+  which then is unchanged.
+- A dictionary never changes once released, or its codes stop reading;
+  `ShareDictionaryTests` reads a pinned version-4 code.
+- An older code is unpacked with its own version's dictionary and goes
+  through the same migrations as a saved file. A code from a newer version
+  is refused as newer.
+- The code is someone else's text, so reading it is strict and capped:
+  white space is ignored, but any other text around it is not; a code over
+  32,768 characters, or one that unpacks to over 1 MB, is refused as
+  damaged, as is anything the migrations or the strict load fail on. A
+  build with no joints is refused.
+- Its name is cut to the creation name limit. A build Build could not
+  make is refused as damaged: a name blank once cut, a joint outside the
+  Build area or a setting off its slider (`CreatureBuilder.IsWithinBuildLimits`).
+- The saved copy gets a new id and the name the player gives it on Import
+  (`docs/BUILD_MODE.md` → "Names").
 
 ## Writing and reading
 

@@ -54,6 +54,9 @@ public partial class BuildScreen : Control
     public delegate void CopyCreationRequestedEventHandler();
 
     [Signal]
+    public delegate void ShareBuildRequestedEventHandler();
+
+    [Signal]
     public delegate void DeleteCreationRequestedEventHandler();
 
     [Signal]
@@ -151,6 +154,7 @@ public partial class BuildScreen : Control
         GetNode<UiButton>("%Redo").Activated += () => EmitSignal(SignalName.RedoRequested);
         BindMenuItem(toolbar, GetNode<UiMenuActionItem>("%MenuResetTraining"), () => EmitSignal(SignalName.ResetTrainingRequested));
         BindMenuItem(toolbar, GetNode<UiMenuActionItem>("%MenuCopyCreation"), () => EmitSignal(SignalName.CopyCreationRequested));
+        BindMenuItem(toolbar, GetNode<UiMenuActionItem>("%MenuShareBuild"), () => EmitSignal(SignalName.ShareBuildRequested));
         BindMenuItem(toolbar, GetNode<UiMenuActionItem>("%MenuDeleteCreation"), () => EmitSignal(SignalName.DeleteCreationRequested));
         BindTool(GetNode<UiButton>("%PartsTool"), BuildTool.Parts);
         BindTool(GetNode<UiButton>("%BeamTool"), BuildTool.Beam);
@@ -386,6 +390,7 @@ public partial class BuildScreen : Control
         GetNode<UiMenuActionItem>("%MenuStats").Visible = presentation.IsTrained;
         GetNode<UiMenuActionItem>("%MenuResetTraining").Visible = presentation.IsTrained;
         GetNode<UiMenuActionItem>("%MenuCopyCreation").Visible = presentation.CanCopy;
+        GetNode<UiMenuActionItem>("%MenuShareBuild").Visible = presentation.CanCopy;
     }
 
     private void ApplyTools(BuildPresentationViewModel presentation)

@@ -18,6 +18,7 @@ internal static class RewrittenUi
         "ui/screens/CreationsScreen.cs",
         "ui/screens/ExamplesScreen.cs",
         "ui/screens/GalleryScreen.cs",
+        "ui/screens/ImportScreen.cs",
         "ui/screens/PopupGalleryScreen.cs",
         "ui/screens/ToolbarsScreen.cs",
         "ui/screens/TrainSetupScreen.cs",

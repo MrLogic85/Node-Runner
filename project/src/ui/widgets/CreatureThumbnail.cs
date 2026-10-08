@@ -19,6 +19,19 @@ public partial class CreatureThumbnail : Control
     private const float _inset = UiSize.Space.S3;
 
     private CreatureDef? _creature;
+
+    /// <summary>The largest scale the creature draws at: half Build's 1:1 on a card, 1 on Import's preview (#899).</summary>
+    [Export]
+    public float LargestScale { get; set; } = (float)CreatureThumbnailFit.LargestScale;
+
+    /// <summary>
+    /// Draws Build's <see cref="BuildGrid"/> behind the creature, at its scale, as Import's preview
+    /// does (#899). The grid runs past the thumbnail, so set <c>clip_contents</c> with it.
+    /// </summary>
+    [Export]
+    public bool ShowsBuildGrid { get; set; }
+
+    private CreatureThumbnailFit? _fit;
     private bool _refreshQueued;
 
     // Looked up, not exported: this is a tool script, and in the editor neither is its own type.
@@ -48,8 +61,17 @@ public partial class CreatureThumbnail : Control
         QueueRefresh();
     }
 
-    public override void _Draw() =>
+    public override void _Draw()
+    {
         UiCorners.Top(UiSize.Radius.Large).Fill(this, new Rect2(Vector2.Zero, Size), UiThemeLookup.Color(this, UiTokens.Color.Background));
+        if (ShowsBuildGrid && _fit is { } fit)
+        {
+            var offset = new Vector2((float)fit.Offset.X, (float)fit.Offset.Y);
+            var toThumbnail = new Transform2D(0, Vector2.One * (float)fit.Scale, 0, offset);
+            var shown = new CanvasRect(new((0 - offset.X) / fit.Scale, (0 - offset.Y) / fit.Scale), new((Size.X - offset.X) / fit.Scale, (Size.Y - offset.Y) / fit.Scale));
+            BuildGrid.Draw(this, toThumbnail, shown, UiThemeLookup.Color(this, UiTokens.Color.Line));
+        }
+    }
 
     // Once a frame at most, after layout, so the world has its new size before it renders. The
     // editor only draws the background: the parts are not a tool script.
@@ -67,7 +89,9 @@ public partial class CreatureThumbnail : Control
     private void Refresh()
     {
         _refreshQueued = false;
-        var fit = _creature is null ? null : CreatureThumbnailFit.Of(_creature, Size.X, Size.Y, _inset);
+        var fit = _creature is null ? null : CreatureThumbnailFit.Of(_creature, Size.X, Size.Y, _inset, LargestScale);
+        _fit = fit;
+        QueueRedraw();
         var parts = Parts;
         parts.Visible = fit is not null;
         if (fit is { } placed)
