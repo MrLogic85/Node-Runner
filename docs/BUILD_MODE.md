@@ -145,10 +145,7 @@ and into zoom and pan; `BuildCanvas` only forwards input and draws.
   and replaces the selection, so a box can catch only beams. A joint with
   a Servo comes in as the Servo (#973).
 - **Sensors (#127, #575):** placed from the tray on a beam, by drag or tap
-  (see Parts tray), one per beam (#376). The tray holds the Camera back as
-  a locked row (#852): on the Flat map it only adds complexity, so it
-  returns with terrain (#855).
-  A saved creation that already has one keeps it working.
+  (see Parts tray), one per beam (#376).
   - **Moving a sensor (#806):** drag its picture to another beam in any
     tool, locked or not. It keeps its id, name and settings, so its brain
     ports and trained weights stay (`CreatureBuilder.MoveSensor`); a
@@ -227,9 +224,8 @@ several the selection panel instead.
   being locked (#887). The open tab then stays for the visit (#874).
 - Parts are unlimited (#525), so rows show no count. Every planned part has
   a locked row, so the tray shows what is coming: the Touch sensor (#665)
-  and the Pulse (#527) are locked rows in Sensors, and the Camera is held
-  back the same way (#852). A tap on a locked row names the part and the
-  version that brings it, as "Battery comes in version 0.18.0", in a
+  and the Pulse (#527) are locked rows in Sensors. A tap on a locked row
+  names the part and the version that brings it, as "Battery comes in version 0.18.0", in a
   notification (#992); `PartTray.ComingLaterReason` and
   `BuildLinkList.ComingLaterReason` own it.
 - An available row is dragged out (#376). The drop lands on what the part

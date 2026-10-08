@@ -50,7 +50,7 @@ public sealed record PartTrayPresentation(
 
 /// <summary>
 /// The Build Parts tray: three tabs of reference parts (#374). Implemented rows are available;
-/// a part not yet implemented, or held back like the Camera (#852), is a locked row; <see cref="ComingLater"/> is the reason a drag of one is refused.
+/// a part not yet implemented is a locked row; <see cref="ComingLater"/> is the reason a drag of one is refused.
 /// </summary>
 public static class PartTray
 {
@@ -146,8 +146,7 @@ public static class PartTray
         new(UiText.Plain("Sensors"),
         [
             Available(BuildPart.Accelerometer, UiText.Plain("Accelerometer")),
-            // Implemented, but it adds little on the Flat map, so it waits for maps with terrain (#852).
-            Locked(BuildPart.Camera, UiText.Plain("Camera"), "0.14.0"),
+            Available(BuildPart.Camera, UiText.Plain("Camera")),
             Locked(BuildPart.TouchSensor, UiText.Plain("Touch sensor"), "0.14.0"),
             Locked(BuildPart.Pulse, UiText.Plain("Pulse"), "0.14.0"),
         ]),

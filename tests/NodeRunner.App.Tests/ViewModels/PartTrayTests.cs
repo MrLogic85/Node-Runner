@@ -84,14 +84,14 @@ public sealed class PartTrayTests
     }
 
     [Fact]
-    public void SensorsTab_HasTheAccelerometerAvailable_AndTheRestComingLater()
+    public void SensorsTab_HasTheAccelerometerAndCameraAvailable_AndTheRestComingLater()
     {
         var sensors = PartTray.Groups()[1].Rows;
 
         sensors.Select(row => (row.Part, row.State)).ShouldBe(
             [
                 (BuildPart.Accelerometer, PartTrayRowState.Available),
-                (BuildPart.Camera, PartTrayRowState.ComingLater),
+                (BuildPart.Camera, PartTrayRowState.Available),
                 (BuildPart.TouchSensor, PartTrayRowState.ComingLater),
                 (BuildPart.Pulse, PartTrayRowState.ComingLater),
             ]);
@@ -102,7 +102,7 @@ public sealed class PartTrayTests
     {
         var rows = PartTray.Groups().SelectMany(group => group.Rows).ToList();
 
-        rows.Where(row => row.Part is not BuildPart.Accelerometer and not BuildPart.Servo).ShouldAllBe(row =>
+        rows.Where(row => row.Part is not BuildPart.Accelerometer and not BuildPart.Camera and not BuildPart.Servo).ShouldAllBe(row =>
             row.State == PartTrayRowState.ComingLater && !row.IsAvailable);
     }
 
@@ -116,7 +116,7 @@ public sealed class PartTrayTests
             (BuildPart.Brake, "0.14.0"),
             (BuildPart.Wheel, "0.14.0"),
             (BuildPart.Accelerometer, null),
-            (BuildPart.Camera, "0.14.0"),
+            (BuildPart.Camera, null),
             (BuildPart.TouchSensor, "0.14.0"),
             (BuildPart.Pulse, "0.14.0"),
             (BuildPart.Battery, "0.18.0"),
@@ -146,7 +146,7 @@ public sealed class PartTrayTests
     {
         var rows = PartTray.Create(picked: null, creationLocked: true).Groups.SelectMany(group => group.Rows).ToList();
         rows.Where(row => row.State == PartTrayRowState.ComingLater).Select(row => row.Version).ShouldAllBe(version => version != null);
-        rows.Count(row => row.State == PartTrayRowState.ComingLater).ShouldBe(10);
+        rows.Count(row => row.State == PartTrayRowState.ComingLater).ShouldBe(9);
     }
 
     [Fact]
