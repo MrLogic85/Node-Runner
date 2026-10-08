@@ -1,29 +1,39 @@
 using System.Globalization;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
+using NodeRunner.Ui.Lib;
 
 namespace NodeRunner.Ui.Tests;
 
 /// <summary>
-/// Enforces <c>docs/UI_DIRECTION.md</c> → "Icon drawing" (#1010, #1018). Bounds are the geometry alone,
-/// which holds because every icon shares one stroke, untransformed.
+/// Enforces <c>docs/UI_DIRECTION.md</c> → "Icon files" (#1029) and "Icon drawing" (#1010, #1018): a file's
+/// prefix names its kind, and the kind sets its grid and drawn size. Bounds are the geometry alone, which holds because every
+/// UI icon and mark shares one stroke, untransformed.
 /// </summary>
 public sealed partial class UiIconGridTests
 {
-    private const double _size = 16;
-    private const double _markSize = 20;
-    private const string _markPrefix = "mark-";
     private const double _centre = 12;
     private const double _tolerance = 0.1;
 
+    // A null drawn size leaves the drawing free: part glyphs only keep their 20 grid.
+    private static readonly (string Prefix, string ViewBox, double? Drawn)[] _kinds =
+    [
+        (UiIcons.IconPrefix, "0 0 24 24", 16),
+        (UiIcons.MarkPrefix, "0 0 24 24", 20),
+        (UiIcons.PartPrefix, "0 0 20 20", null),
+    ];
+
     [Fact]
-    public void EveryUiIcon_Is16OnItsLongerSide_AndAMark20_CentredOnA24Grid()
+    public void EveryIcon_IsNamedByItsKind_AndDrawnOnThatKindsGrid()
     {
-        var folder = Path.Combine(SceneNodes.FindRepositoryRoot(), "project", "assets", "icons", "ui");
-        var files = Directory.GetFiles(folder, "*.svg");
+        var folder = Path.Combine(SceneNodes.FindRepositoryRoot(), "project", "assets", "icons");
+        var launcherArt = Path.Combine(folder, "app") + Path.DirectorySeparatorChar;
+        var files = Directory.GetFiles(folder, "*.svg", SearchOption.AllDirectories)
+            .Where(file => !file.StartsWith(launcherArt, StringComparison.Ordinal))
+            .ToList();
         files.ShouldNotBeEmpty();
 
-        var failures = files.Select(Check).OfType<string>().ToList();
+        var failures = files.Select(file => Check(folder, file)).OfType<string>().ToList();
 
         failures.ShouldBeEmpty();
     }
@@ -67,13 +77,34 @@ public sealed partial class UiIconGridTests
     private static XElement Svg(string shape) =>
         XElement.Parse($"<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\">{shape}</svg>");
 
-    private static string? Check(string file)
+    private static string? Check(string folder, string file)
     {
         var name = Path.GetFileName(file);
-        var svg = XElement.Load(file);
-        if ((string?)svg.Attribute("viewBox") != "0 0 24 24")
+        if (Path.GetDirectoryName(file) != folder)
         {
-            return $"{name}: viewBox is not 0 0 24 24";
+            return $"{Path.GetRelativePath(folder, file)}: is in a subfolder; icons share one folder";
+        }
+
+        var kind = _kinds.FirstOrDefault(entry => name.StartsWith(entry.Prefix, StringComparison.Ordinal));
+        if (kind.Prefix is null)
+        {
+            return $"{name}: has no kind prefix ({string.Join(", ", _kinds.Select(entry => entry.Prefix))})";
+        }
+
+        if (!SnakeCase().IsMatch(name))
+        {
+            return $"{name}: is not snake_case";
+        }
+
+        var svg = XElement.Load(file);
+        if ((string?)svg.Attribute("viewBox") != kind.ViewBox)
+        {
+            return $"{name}: viewBox is not {kind.ViewBox}";
+        }
+
+        if (kind.Drawn is not { } size)
+        {
+            return null;
         }
 
         if (StrokeMismatch(svg) is { } stroke)
@@ -85,7 +116,6 @@ public sealed partial class UiIconGridTests
         var longer = Math.Max(bounds.Right - bounds.Left, bounds.Bottom - bounds.Top);
         var centreX = (bounds.Left + bounds.Right) / 2;
         var centreY = (bounds.Top + bounds.Bottom) / 2;
-        var size = name.StartsWith(_markPrefix, StringComparison.Ordinal) ? _markSize : _size;
         return Math.Abs(longer - size) > _tolerance || Math.Abs(centreX - _centre) > _tolerance || Math.Abs(centreY - _centre) > _tolerance
             ? $"{name}: drawing is {longer:0.##} on its longer side, centred at ({centreX:0.##}, {centreY:0.##})"
             : null;
@@ -301,6 +331,9 @@ public sealed partial class UiIconGridTests
             points.Add((cos * ax - sin * ay + cx, sin * ax + cos * ay + cy));
         }
     }
+
+    [GeneratedRegex(@"^[a-z0-9]+(_[a-z0-9]+)*\.svg$")]
+    private static partial Regex SnakeCase();
 
     [GeneratedRegex(@"[A-Za-z]|[-+]?(?:\d+\.?\d*|\.\d+)(?:[eE][-+]?\d+)?")]
     private static partial Regex PathToken();

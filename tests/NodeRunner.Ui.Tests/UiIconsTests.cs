@@ -33,7 +33,7 @@ public sealed class UiIconsTests
     {
         foreach (var icon in UiIcons.AllIds)
         {
-            var isGlyph = UiIcons.PathFor(icon).StartsWith(UiIcons.PartRoot, StringComparison.Ordinal);
+            var isGlyph = Path.GetFileName(UiIcons.PathFor(icon)).StartsWith(UiIcons.PartPrefix, StringComparison.Ordinal);
             UiIcons.IsPartGlyph(icon).ShouldBe(isGlyph, icon.ToString());
             UiIcons.IsAllowed(icon, UiIconSize.Small).ShouldBe(!isGlyph, icon.ToString());
             UiIcons.IsAllowed(icon, UiIconSize.Standard).ShouldBeTrue(icon.ToString());

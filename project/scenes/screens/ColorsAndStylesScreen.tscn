@@ -1368,7 +1368,7 @@ theme_override_constants/v_separation = 8
 
 [node name="Back" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
 layout_mode = 2
-custom_minimum_size = Vector2(88, 0)
+custom_minimum_size = Vector2(112, 0)
 theme_override_constants/separation = 4
 
 [node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Back" groups=["inventory_icon"]]
@@ -1381,14 +1381,14 @@ IconSize = 3
 [node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Back"]
 layout_mode = 2
 horizontal_alignment = 1
-text = "back"
+text = "icon_back"
 script = ExtResource("shell_4_label")
 TextStyle = 16
 TextColor = 8
 
 [node name="Beam" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
 layout_mode = 2
-custom_minimum_size = Vector2(88, 0)
+custom_minimum_size = Vector2(112, 0)
 theme_override_constants/separation = 4
 
 [node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Beam" groups=["inventory_icon"]]
@@ -1401,14 +1401,14 @@ IconSize = 3
 [node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Beam"]
 layout_mode = 2
 horizontal_alignment = 1
-text = "beam"
+text = "icon_beam"
 script = ExtResource("shell_4_label")
 TextStyle = 16
 TextColor = 8
 
 [node name="Bolt" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
 layout_mode = 2
-custom_minimum_size = Vector2(88, 0)
+custom_minimum_size = Vector2(112, 0)
 theme_override_constants/separation = 4
 
 [node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Bolt" groups=["inventory_icon"]]
@@ -1421,14 +1421,14 @@ IconSize = 3
 [node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Bolt"]
 layout_mode = 2
 horizontal_alignment = 1
-text = "bolt"
+text = "icon_bolt"
 script = ExtResource("shell_4_label")
 TextStyle = 16
 TextColor = 8
 
 [node name="Build" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
 layout_mode = 2
-custom_minimum_size = Vector2(88, 0)
+custom_minimum_size = Vector2(112, 0)
 theme_override_constants/separation = 4
 
 [node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Build" groups=["inventory_icon"]]
@@ -1441,14 +1441,14 @@ IconSize = 3
 [node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Build"]
 layout_mode = 2
 horizontal_alignment = 1
-text = "build"
+text = "icon_build"
 script = ExtResource("shell_4_label")
 TextStyle = 16
 TextColor = 8
 
 [node name="Chart" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
 layout_mode = 2
-custom_minimum_size = Vector2(88, 0)
+custom_minimum_size = Vector2(112, 0)
 theme_override_constants/separation = 4
 
 [node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Chart" groups=["inventory_icon"]]
@@ -1461,14 +1461,14 @@ IconSize = 3
 [node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Chart"]
 layout_mode = 2
 horizontal_alignment = 1
-text = "chart"
+text = "icon_chart"
 script = ExtResource("shell_4_label")
 TextStyle = 16
 TextColor = 8
 
 [node name="Check" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
 layout_mode = 2
-custom_minimum_size = Vector2(88, 0)
+custom_minimum_size = Vector2(112, 0)
 theme_override_constants/separation = 4
 
 [node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Check" groups=["inventory_icon"]]
@@ -1481,14 +1481,14 @@ IconSize = 3
 [node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Check"]
 layout_mode = 2
 horizontal_alignment = 1
-text = "check"
+text = "icon_check"
 script = ExtResource("shell_4_label")
 TextStyle = 16
 TextColor = 8
 
 [node name="ChevD" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
 layout_mode = 2
-custom_minimum_size = Vector2(88, 0)
+custom_minimum_size = Vector2(112, 0)
 theme_override_constants/separation = 4
 
 [node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/ChevD" groups=["inventory_icon"]]
@@ -1501,14 +1501,14 @@ IconSize = 3
 [node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/ChevD"]
 layout_mode = 2
 horizontal_alignment = 1
-text = "chev-d"
+text = "icon_chev_d"
 script = ExtResource("shell_4_label")
 TextStyle = 16
 TextColor = 8
 
 [node name="ChevL" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
 layout_mode = 2
-custom_minimum_size = Vector2(88, 0)
+custom_minimum_size = Vector2(112, 0)
 theme_override_constants/separation = 4
 
 [node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/ChevL" groups=["inventory_icon"]]
@@ -1521,14 +1521,14 @@ IconSize = 3
 [node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/ChevL"]
 layout_mode = 2
 horizontal_alignment = 1
-text = "chev-l"
+text = "icon_chev_l"
 script = ExtResource("shell_4_label")
 TextStyle = 16
 TextColor = 8
 
 [node name="ChevR" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
 layout_mode = 2
-custom_minimum_size = Vector2(88, 0)
+custom_minimum_size = Vector2(112, 0)
 theme_override_constants/separation = 4
 
 [node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/ChevR" groups=["inventory_icon"]]
@@ -1541,14 +1541,14 @@ IconSize = 3
 [node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/ChevR"]
 layout_mode = 2
 horizontal_alignment = 1
-text = "chev-r"
+text = "icon_chev_r"
 script = ExtResource("shell_4_label")
 TextStyle = 16
 TextColor = 8
 
 [node name="Copy" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
 layout_mode = 2
-custom_minimum_size = Vector2(88, 0)
+custom_minimum_size = Vector2(112, 0)
 theme_override_constants/separation = 4
 
 [node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Copy" groups=["inventory_icon"]]
@@ -1561,14 +1561,14 @@ IconSize = 3
 [node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Copy"]
 layout_mode = 2
 horizontal_alignment = 1
-text = "copy"
+text = "icon_copy"
 script = ExtResource("shell_4_label")
 TextStyle = 16
 TextColor = 8
 
 [node name="ReservedCore" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
 layout_mode = 2
-custom_minimum_size = Vector2(88, 0)
+custom_minimum_size = Vector2(112, 0)
 theme_override_constants/separation = 4
 
 [node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/ReservedCore" groups=["inventory_icon"]]
@@ -1588,7 +1588,7 @@ TextColor = 8
 
 [node name="Distance" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
 layout_mode = 2
-custom_minimum_size = Vector2(88, 0)
+custom_minimum_size = Vector2(112, 0)
 theme_override_constants/separation = 4
 
 [node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Distance" groups=["inventory_icon"]]
@@ -1601,14 +1601,14 @@ IconSize = 3
 [node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Distance"]
 layout_mode = 2
 horizontal_alignment = 1
-text = "distance"
+text = "icon_distance"
 script = ExtResource("shell_4_label")
 TextStyle = 16
 TextColor = 8
 
 [node name="Edit" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
 layout_mode = 2
-custom_minimum_size = Vector2(88, 0)
+custom_minimum_size = Vector2(112, 0)
 theme_override_constants/separation = 4
 
 [node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Edit" groups=["inventory_icon"]]
@@ -1621,14 +1621,14 @@ IconSize = 3
 [node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Edit"]
 layout_mode = 2
 horizontal_alignment = 1
-text = "edit"
+text = "icon_edit"
 script = ExtResource("shell_4_label")
 TextStyle = 16
 TextColor = 8
 
 [node name="Elevation" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
 layout_mode = 2
-custom_minimum_size = Vector2(88, 0)
+custom_minimum_size = Vector2(112, 0)
 theme_override_constants/separation = 4
 
 [node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Elevation" groups=["inventory_icon"]]
@@ -1641,14 +1641,14 @@ IconSize = 3
 [node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Elevation"]
 layout_mode = 2
 horizontal_alignment = 1
-text = "elevation"
+text = "icon_elevation"
 script = ExtResource("shell_4_label")
 TextStyle = 16
 TextColor = 8
 
 [node name="Eye" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
 layout_mode = 2
-custom_minimum_size = Vector2(88, 0)
+custom_minimum_size = Vector2(112, 0)
 theme_override_constants/separation = 4
 
 [node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Eye" groups=["inventory_icon"]]
@@ -1661,14 +1661,14 @@ IconSize = 3
 [node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Eye"]
 layout_mode = 2
 horizontal_alignment = 1
-text = "eye"
+text = "icon_eye"
 script = ExtResource("shell_4_label")
 TextStyle = 16
 TextColor = 8
 
 [node name="Flag" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
 layout_mode = 2
-custom_minimum_size = Vector2(88, 0)
+custom_minimum_size = Vector2(112, 0)
 theme_override_constants/separation = 4
 
 [node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Flag" groups=["inventory_icon"]]
@@ -1681,14 +1681,14 @@ IconSize = 3
 [node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Flag"]
 layout_mode = 2
 horizontal_alignment = 1
-text = "flag"
+text = "icon_flag"
 script = ExtResource("shell_4_label")
 TextStyle = 16
 TextColor = 8
 
 [node name="Gear" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
 layout_mode = 2
-custom_minimum_size = Vector2(88, 0)
+custom_minimum_size = Vector2(112, 0)
 theme_override_constants/separation = 4
 
 [node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Gear" groups=["inventory_icon"]]
@@ -1701,14 +1701,14 @@ IconSize = 3
 [node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Gear"]
 layout_mode = 2
 horizontal_alignment = 1
-text = "gear"
+text = "icon_gear"
 script = ExtResource("shell_4_label")
 TextStyle = 16
 TextColor = 8
 
 [node name="Height" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
 layout_mode = 2
-custom_minimum_size = Vector2(88, 0)
+custom_minimum_size = Vector2(112, 0)
 theme_override_constants/separation = 4
 
 [node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Height" groups=["inventory_icon"]]
@@ -1721,14 +1721,14 @@ IconSize = 3
 [node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Height"]
 layout_mode = 2
 horizontal_alignment = 1
-text = "height"
+text = "icon_height"
 script = ExtResource("shell_4_label")
 TextStyle = 16
 TextColor = 8
 
 [node name="Joint" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
 layout_mode = 2
-custom_minimum_size = Vector2(88, 0)
+custom_minimum_size = Vector2(112, 0)
 theme_override_constants/separation = 4
 
 [node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Joint" groups=["inventory_icon"]]
@@ -1741,14 +1741,14 @@ IconSize = 3
 [node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Joint"]
 layout_mode = 2
 horizontal_alignment = 1
-text = "joint"
+text = "icon_joint"
 script = ExtResource("shell_4_label")
 TextStyle = 16
 TextColor = 8
 
 [node name="Lock" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
 layout_mode = 2
-custom_minimum_size = Vector2(88, 0)
+custom_minimum_size = Vector2(112, 0)
 theme_override_constants/separation = 4
 
 [node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Lock" groups=["inventory_icon"]]
@@ -1761,14 +1761,14 @@ IconSize = 3
 [node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Lock"]
 layout_mode = 2
 horizontal_alignment = 1
-text = "lock"
+text = "icon_lock"
 script = ExtResource("shell_4_label")
 TextStyle = 16
 TextColor = 8
 
 [node name="Map" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
 layout_mode = 2
-custom_minimum_size = Vector2(88, 0)
+custom_minimum_size = Vector2(112, 0)
 theme_override_constants/separation = 4
 
 [node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Map" groups=["inventory_icon"]]
@@ -1781,14 +1781,14 @@ IconSize = 3
 [node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Map"]
 layout_mode = 2
 horizontal_alignment = 1
-text = "map"
+text = "icon_map"
 script = ExtResource("shell_4_label")
 TextStyle = 16
 TextColor = 8
 
 [node name="MapFlat" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
 layout_mode = 2
-custom_minimum_size = Vector2(88, 0)
+custom_minimum_size = Vector2(112, 0)
 theme_override_constants/separation = 4
 
 [node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/MapFlat" groups=["inventory_icon"]]
@@ -1801,14 +1801,14 @@ IconSize = 3
 [node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/MapFlat"]
 layout_mode = 2
 horizontal_alignment = 1
-text = "map-flat"
+text = "icon_map_flat"
 script = ExtResource("shell_4_label")
 TextStyle = 16
 TextColor = 8
 
 [node name="MapHills" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
 layout_mode = 2
-custom_minimum_size = Vector2(88, 0)
+custom_minimum_size = Vector2(112, 0)
 theme_override_constants/separation = 4
 
 [node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/MapHills" groups=["inventory_icon"]]
@@ -1821,14 +1821,14 @@ IconSize = 3
 [node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/MapHills"]
 layout_mode = 2
 horizontal_alignment = 1
-text = "map-hills"
+text = "icon_map_hills"
 script = ExtResource("shell_4_label")
 TextStyle = 16
 TextColor = 8
 
 [node name="MapStairs" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
 layout_mode = 2
-custom_minimum_size = Vector2(88, 0)
+custom_minimum_size = Vector2(112, 0)
 theme_override_constants/separation = 4
 
 [node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/MapStairs" groups=["inventory_icon"]]
@@ -1841,14 +1841,14 @@ IconSize = 3
 [node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/MapStairs"]
 layout_mode = 2
 horizontal_alignment = 1
-text = "map-stairs"
+text = "icon_map_stairs"
 script = ExtResource("shell_4_label")
 TextStyle = 16
 TextColor = 8
 
 [node name="BrainMark" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
 layout_mode = 2
-custom_minimum_size = Vector2(88, 0)
+custom_minimum_size = Vector2(112, 0)
 theme_override_constants/separation = 4
 
 [node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/BrainMark" groups=["inventory_icon"]]
@@ -1861,14 +1861,14 @@ IconSize = 3
 [node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/BrainMark"]
 layout_mode = 2
 horizontal_alignment = 1
-text = "mark-brain"
+text = "mark_brain"
 script = ExtResource("shell_4_label")
 TextStyle = 16
 TextColor = 8
 
 [node name="Menu" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
 layout_mode = 2
-custom_minimum_size = Vector2(88, 0)
+custom_minimum_size = Vector2(112, 0)
 theme_override_constants/separation = 4
 
 [node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Menu" groups=["inventory_icon"]]
@@ -1881,14 +1881,14 @@ IconSize = 3
 [node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Menu"]
 layout_mode = 2
 horizontal_alignment = 1
-text = "menu"
+text = "icon_menu"
 script = ExtResource("shell_4_label")
 TextStyle = 16
 TextColor = 8
 
 [node name="Model" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
 layout_mode = 2
-custom_minimum_size = Vector2(88, 0)
+custom_minimum_size = Vector2(112, 0)
 theme_override_constants/separation = 4
 
 [node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Model" groups=["inventory_icon"]]
@@ -1901,14 +1901,14 @@ IconSize = 3
 [node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Model"]
 layout_mode = 2
 horizontal_alignment = 1
-text = "model"
+text = "icon_model"
 script = ExtResource("shell_4_label")
 TextStyle = 16
 TextColor = 8
 
 [node name="More" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
 layout_mode = 2
-custom_minimum_size = Vector2(88, 0)
+custom_minimum_size = Vector2(112, 0)
 theme_override_constants/separation = 4
 
 [node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/More" groups=["inventory_icon"]]
@@ -1921,14 +1921,14 @@ IconSize = 3
 [node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/More"]
 layout_mode = 2
 horizontal_alignment = 1
-text = "more"
+text = "icon_more"
 script = ExtResource("shell_4_label")
 TextStyle = 16
 TextColor = 8
 
 [node name="Move" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
 layout_mode = 2
-custom_minimum_size = Vector2(88, 0)
+custom_minimum_size = Vector2(112, 0)
 theme_override_constants/separation = 4
 
 [node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Move" groups=["inventory_icon"]]
@@ -1941,14 +1941,14 @@ IconSize = 3
 [node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Move"]
 layout_mode = 2
 horizontal_alignment = 1
-text = "move"
+text = "icon_move"
 script = ExtResource("shell_4_label")
 TextStyle = 16
 TextColor = 8
 
 [node name="Parts" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
 layout_mode = 2
-custom_minimum_size = Vector2(88, 0)
+custom_minimum_size = Vector2(112, 0)
 theme_override_constants/separation = 4
 
 [node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Parts" groups=["inventory_icon"]]
@@ -1961,14 +1961,14 @@ IconSize = 3
 [node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Parts"]
 layout_mode = 2
 horizontal_alignment = 1
-text = "parts"
+text = "icon_parts"
 script = ExtResource("shell_4_label")
 TextStyle = 16
 TextColor = 8
 
 [node name="Mute" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
 layout_mode = 2
-custom_minimum_size = Vector2(88, 0)
+custom_minimum_size = Vector2(112, 0)
 theme_override_constants/separation = 4
 
 [node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Mute" groups=["inventory_icon"]]
@@ -1981,14 +1981,14 @@ IconSize = 3
 [node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Mute"]
 layout_mode = 2
 horizontal_alignment = 1
-text = "mute"
+text = "icon_mute"
 script = ExtResource("shell_4_label")
 TextStyle = 16
 TextColor = 8
 
 [node name="Pause" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
 layout_mode = 2
-custom_minimum_size = Vector2(88, 0)
+custom_minimum_size = Vector2(112, 0)
 theme_override_constants/separation = 4
 
 [node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Pause" groups=["inventory_icon"]]
@@ -2001,14 +2001,14 @@ IconSize = 3
 [node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Pause"]
 layout_mode = 2
 horizontal_alignment = 1
-text = "pause"
+text = "icon_pause"
 script = ExtResource("shell_4_label")
 TextStyle = 16
 TextColor = 8
 
 [node name="Phone" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
 layout_mode = 2
-custom_minimum_size = Vector2(88, 0)
+custom_minimum_size = Vector2(112, 0)
 theme_override_constants/separation = 4
 
 [node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Phone" groups=["inventory_icon"]]
@@ -2021,14 +2021,14 @@ IconSize = 3
 [node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Phone"]
 layout_mode = 2
 horizontal_alignment = 1
-text = "phone"
+text = "icon_phone"
 script = ExtResource("shell_4_label")
 TextStyle = 16
 TextColor = 8
 
 [node name="Play" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
 layout_mode = 2
-custom_minimum_size = Vector2(88, 0)
+custom_minimum_size = Vector2(112, 0)
 theme_override_constants/separation = 4
 
 [node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Play" groups=["inventory_icon"]]
@@ -2041,14 +2041,14 @@ IconSize = 3
 [node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Play"]
 layout_mode = 2
 horizontal_alignment = 1
-text = "play"
+text = "icon_play"
 script = ExtResource("shell_4_label")
 TextStyle = 16
 TextColor = 8
 
 [node name="Plus" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
 layout_mode = 2
-custom_minimum_size = Vector2(88, 0)
+custom_minimum_size = Vector2(112, 0)
 theme_override_constants/separation = 4
 
 [node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Plus" groups=["inventory_icon"]]
@@ -2061,14 +2061,14 @@ IconSize = 3
 [node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Plus"]
 layout_mode = 2
 horizontal_alignment = 1
-text = "plus"
+text = "icon_plus"
 script = ExtResource("shell_4_label")
 TextStyle = 16
 TextColor = 8
 
 [node name="Redo" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
 layout_mode = 2
-custom_minimum_size = Vector2(88, 0)
+custom_minimum_size = Vector2(112, 0)
 theme_override_constants/separation = 4
 
 [node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Redo" groups=["inventory_icon"]]
@@ -2081,14 +2081,14 @@ IconSize = 3
 [node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Redo"]
 layout_mode = 2
 horizontal_alignment = 1
-text = "redo"
+text = "icon_redo"
 script = ExtResource("shell_4_label")
 TextStyle = 16
 TextColor = 8
 
 [node name="Restart" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
 layout_mode = 2
-custom_minimum_size = Vector2(88, 0)
+custom_minimum_size = Vector2(112, 0)
 theme_override_constants/separation = 4
 
 [node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Restart" groups=["inventory_icon"]]
@@ -2101,14 +2101,14 @@ IconSize = 3
 [node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Restart"]
 layout_mode = 2
 horizontal_alignment = 1
-text = "restart"
+text = "icon_restart"
 script = ExtResource("shell_4_label")
 TextStyle = 16
 TextColor = 8
 
 [node name="Rotate" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
 layout_mode = 2
-custom_minimum_size = Vector2(88, 0)
+custom_minimum_size = Vector2(112, 0)
 theme_override_constants/separation = 4
 
 [node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Rotate" groups=["inventory_icon"]]
@@ -2121,14 +2121,14 @@ IconSize = 3
 [node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Rotate"]
 layout_mode = 2
 horizontal_alignment = 1
-text = "rotate"
+text = "icon_rotate"
 script = ExtResource("shell_4_label")
 TextStyle = 16
 TextColor = 8
 
 [node name="Scale" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
 layout_mode = 2
-custom_minimum_size = Vector2(88, 0)
+custom_minimum_size = Vector2(112, 0)
 theme_override_constants/separation = 4
 
 [node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Scale" groups=["inventory_icon"]]
@@ -2141,14 +2141,14 @@ IconSize = 3
 [node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Scale"]
 layout_mode = 2
 horizontal_alignment = 1
-text = "scale"
+text = "icon_scale"
 script = ExtResource("shell_4_label")
 TextStyle = 16
 TextColor = 8
 
 [node name="Select" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
 layout_mode = 2
-custom_minimum_size = Vector2(88, 0)
+custom_minimum_size = Vector2(112, 0)
 theme_override_constants/separation = 4
 
 [node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Select" groups=["inventory_icon"]]
@@ -2161,14 +2161,14 @@ IconSize = 3
 [node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Select"]
 layout_mode = 2
 horizontal_alignment = 1
-text = "select"
+text = "icon_select"
 script = ExtResource("shell_4_label")
 TextStyle = 16
 TextColor = 8
 
 [node name="Shadow" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
 layout_mode = 2
-custom_minimum_size = Vector2(88, 0)
+custom_minimum_size = Vector2(112, 0)
 theme_override_constants/separation = 4
 
 [node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Shadow" groups=["inventory_icon"]]
@@ -2181,14 +2181,14 @@ IconSize = 3
 [node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Shadow"]
 layout_mode = 2
 horizontal_alignment = 1
-text = "shadow"
+text = "icon_shadow"
 script = ExtResource("shell_4_label")
 TextStyle = 16
 TextColor = 8
 
 [node name="Sort" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
 layout_mode = 2
-custom_minimum_size = Vector2(88, 0)
+custom_minimum_size = Vector2(112, 0)
 theme_override_constants/separation = 4
 
 [node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Sort" groups=["inventory_icon"]]
@@ -2201,14 +2201,14 @@ IconSize = 3
 [node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Sort"]
 layout_mode = 2
 horizontal_alignment = 1
-text = "sort"
+text = "icon_sort"
 script = ExtResource("shell_4_label")
 TextStyle = 16
 TextColor = 8
 
 [node name="Sound" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
 layout_mode = 2
-custom_minimum_size = Vector2(88, 0)
+custom_minimum_size = Vector2(112, 0)
 theme_override_constants/separation = 4
 
 [node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Sound" groups=["inventory_icon"]]
@@ -2221,14 +2221,14 @@ IconSize = 3
 [node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Sound"]
 layout_mode = 2
 horizontal_alignment = 1
-text = "sound"
+text = "icon_sound"
 script = ExtResource("shell_4_label")
 TextStyle = 16
 TextColor = 8
 
 [node name="Speed" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
 layout_mode = 2
-custom_minimum_size = Vector2(88, 0)
+custom_minimum_size = Vector2(112, 0)
 theme_override_constants/separation = 4
 
 [node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Speed" groups=["inventory_icon"]]
@@ -2241,14 +2241,14 @@ IconSize = 3
 [node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Speed"]
 layout_mode = 2
 horizontal_alignment = 1
-text = "speed"
+text = "icon_speed"
 script = ExtResource("shell_4_label")
 TextStyle = 16
 TextColor = 8
 
 [node name="Stop" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
 layout_mode = 2
-custom_minimum_size = Vector2(88, 0)
+custom_minimum_size = Vector2(112, 0)
 theme_override_constants/separation = 4
 
 [node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Stop" groups=["inventory_icon"]]
@@ -2261,14 +2261,14 @@ IconSize = 3
 [node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Stop"]
 layout_mode = 2
 horizontal_alignment = 1
-text = "stop"
+text = "icon_stop"
 script = ExtResource("shell_4_label")
 TextStyle = 16
 TextColor = 8
 
 [node name="TopSpeed" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
 layout_mode = 2
-custom_minimum_size = Vector2(88, 0)
+custom_minimum_size = Vector2(112, 0)
 theme_override_constants/separation = 4
 
 [node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/TopSpeed" groups=["inventory_icon"]]
@@ -2281,14 +2281,14 @@ IconSize = 3
 [node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/TopSpeed"]
 layout_mode = 2
 horizontal_alignment = 1
-text = "top-speed"
+text = "icon_top_speed"
 script = ExtResource("shell_4_label")
 TextStyle = 16
 TextColor = 8
 
 [node name="Trash" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
 layout_mode = 2
-custom_minimum_size = Vector2(88, 0)
+custom_minimum_size = Vector2(112, 0)
 theme_override_constants/separation = 4
 
 [node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Trash" groups=["inventory_icon"]]
@@ -2301,14 +2301,14 @@ IconSize = 3
 [node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Trash"]
 layout_mode = 2
 horizontal_alignment = 1
-text = "trash"
+text = "icon_trash"
 script = ExtResource("shell_4_label")
 TextStyle = 16
 TextColor = 8
 
 [node name="Trophy" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
 layout_mode = 2
-custom_minimum_size = Vector2(88, 0)
+custom_minimum_size = Vector2(112, 0)
 theme_override_constants/separation = 4
 
 [node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Trophy" groups=["inventory_icon"]]
@@ -2321,14 +2321,14 @@ IconSize = 3
 [node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Trophy"]
 layout_mode = 2
 horizontal_alignment = 1
-text = "trophy"
+text = "icon_trophy"
 script = ExtResource("shell_4_label")
 TextStyle = 16
 TextColor = 8
 
 [node name="Undo" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
 layout_mode = 2
-custom_minimum_size = Vector2(88, 0)
+custom_minimum_size = Vector2(112, 0)
 theme_override_constants/separation = 4
 
 [node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Undo" groups=["inventory_icon"]]
@@ -2341,14 +2341,14 @@ IconSize = 3
 [node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Undo"]
 layout_mode = 2
 horizontal_alignment = 1
-text = "undo"
+text = "icon_undo"
 script = ExtResource("shell_4_label")
 TextStyle = 16
 TextColor = 8
 
 [node name="Unlock" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
 layout_mode = 2
-custom_minimum_size = Vector2(88, 0)
+custom_minimum_size = Vector2(112, 0)
 theme_override_constants/separation = 4
 
 [node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Unlock" groups=["inventory_icon"]]
@@ -2361,14 +2361,14 @@ IconSize = 3
 [node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Unlock"]
 layout_mode = 2
 horizontal_alignment = 1
-text = "unlock"
+text = "icon_unlock"
 script = ExtResource("shell_4_label")
 TextStyle = 16
 TextColor = 8
 
 [node name="Warn" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
 layout_mode = 2
-custom_minimum_size = Vector2(88, 0)
+custom_minimum_size = Vector2(112, 0)
 theme_override_constants/separation = 4
 
 [node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Warn" groups=["inventory_icon"]]
@@ -2381,14 +2381,14 @@ IconSize = 3
 [node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Warn"]
 layout_mode = 2
 horizontal_alignment = 1
-text = "warn"
+text = "icon_warn"
 script = ExtResource("shell_4_label")
 TextStyle = 16
 TextColor = 8
 
 [node name="X" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
 layout_mode = 2
-custom_minimum_size = Vector2(88, 0)
+custom_minimum_size = Vector2(112, 0)
 theme_override_constants/separation = 4
 
 [node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/X" groups=["inventory_icon"]]
@@ -2401,7 +2401,7 @@ IconSize = 3
 [node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/X"]
 layout_mode = 2
 horizontal_alignment = 1
-text = "x"
+text = "icon_x"
 script = ExtResource("shell_4_label")
 TextStyle = 16
 TextColor = 8
@@ -2420,7 +2420,7 @@ theme_override_constants/v_separation = 8
 
 [node name="Accelerometer" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs"]
 layout_mode = 2
-custom_minimum_size = Vector2(88, 0)
+custom_minimum_size = Vector2(112, 0)
 theme_override_constants/separation = 4
 
 [node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs/Accelerometer" groups=["inventory_icon"]]
@@ -2433,14 +2433,14 @@ IconSize = 3
 [node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs/Accelerometer"]
 layout_mode = 2
 horizontal_alignment = 1
-text = "accelerometer"
+text = "part_accelerometer"
 script = ExtResource("shell_4_label")
 TextStyle = 16
 TextColor = 8
 
 [node name="Battery" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs"]
 layout_mode = 2
-custom_minimum_size = Vector2(88, 0)
+custom_minimum_size = Vector2(112, 0)
 theme_override_constants/separation = 4
 
 [node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs/Battery" groups=["inventory_icon"]]
@@ -2453,14 +2453,14 @@ IconSize = 3
 [node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs/Battery"]
 layout_mode = 2
 horizontal_alignment = 1
-text = "battery"
+text = "part_battery"
 script = ExtResource("shell_4_label")
 TextStyle = 16
 TextColor = 8
 
 [node name="Beam" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs"]
 layout_mode = 2
-custom_minimum_size = Vector2(88, 0)
+custom_minimum_size = Vector2(112, 0)
 theme_override_constants/separation = 4
 
 [node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs/Beam" groups=["inventory_icon"]]
@@ -2473,14 +2473,14 @@ IconSize = 3
 [node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs/Beam"]
 layout_mode = 2
 horizontal_alignment = 1
-text = "beam"
+text = "part_beam"
 script = ExtResource("shell_4_label")
 TextStyle = 16
 TextColor = 8
 
 [node name="Brake" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs"]
 layout_mode = 2
-custom_minimum_size = Vector2(88, 0)
+custom_minimum_size = Vector2(112, 0)
 theme_override_constants/separation = 4
 
 [node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs/Brake" groups=["inventory_icon"]]
@@ -2493,14 +2493,14 @@ IconSize = 3
 [node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs/Brake"]
 layout_mode = 2
 horizontal_alignment = 1
-text = "brake"
+text = "part_brake"
 script = ExtResource("shell_4_label")
 TextStyle = 16
 TextColor = 8
 
 [node name="ReservedCore" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs"]
 layout_mode = 2
-custom_minimum_size = Vector2(88, 0)
+custom_minimum_size = Vector2(112, 0)
 theme_override_constants/separation = 4
 
 [node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs/ReservedCore" groups=["inventory_icon"]]
@@ -2520,7 +2520,7 @@ TextColor = 8
 
 [node name="Fuel" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs"]
 layout_mode = 2
-custom_minimum_size = Vector2(88, 0)
+custom_minimum_size = Vector2(112, 0)
 theme_override_constants/separation = 4
 
 [node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs/Fuel" groups=["inventory_icon"]]
@@ -2533,14 +2533,14 @@ IconSize = 3
 [node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs/Fuel"]
 layout_mode = 2
 horizontal_alignment = 1
-text = "fuel"
+text = "part_fuel"
 script = ExtResource("shell_4_label")
 TextStyle = 16
 TextColor = 8
 
 [node name="Generator" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs"]
 layout_mode = 2
-custom_minimum_size = Vector2(88, 0)
+custom_minimum_size = Vector2(112, 0)
 theme_override_constants/separation = 4
 
 [node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs/Generator" groups=["inventory_icon"]]
@@ -2553,14 +2553,14 @@ IconSize = 3
 [node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs/Generator"]
 layout_mode = 2
 horizontal_alignment = 1
-text = "generator"
+text = "part_generator"
 script = ExtResource("shell_4_label")
 TextStyle = 16
 TextColor = 8
 
 [node name="Los" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs"]
 layout_mode = 2
-custom_minimum_size = Vector2(88, 0)
+custom_minimum_size = Vector2(112, 0)
 theme_override_constants/separation = 4
 
 [node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs/Los" groups=["inventory_icon"]]
@@ -2573,14 +2573,14 @@ IconSize = 3
 [node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs/Los"]
 layout_mode = 2
 horizontal_alignment = 1
-text = "los"
+text = "part_los"
 script = ExtResource("shell_4_label")
 TextStyle = 16
 TextColor = 8
 
 [node name="Node" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs"]
 layout_mode = 2
-custom_minimum_size = Vector2(88, 0)
+custom_minimum_size = Vector2(112, 0)
 theme_override_constants/separation = 4
 
 [node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs/Node" groups=["inventory_icon"]]
@@ -2593,14 +2593,14 @@ IconSize = 3
 [node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs/Node"]
 layout_mode = 2
 horizontal_alignment = 1
-text = "node"
+text = "part_node"
 script = ExtResource("shell_4_label")
 TextStyle = 16
 TextColor = 8
 
 [node name="Piston" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs"]
 layout_mode = 2
-custom_minimum_size = Vector2(88, 0)
+custom_minimum_size = Vector2(112, 0)
 theme_override_constants/separation = 4
 
 [node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs/Piston" groups=["inventory_icon"]]
@@ -2613,14 +2613,14 @@ IconSize = 3
 [node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs/Piston"]
 layout_mode = 2
 horizontal_alignment = 1
-text = "piston"
+text = "part_piston"
 script = ExtResource("shell_4_label")
 TextStyle = 16
 TextColor = 8
 
 [node name="Pulse" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs"]
 layout_mode = 2
-custom_minimum_size = Vector2(88, 0)
+custom_minimum_size = Vector2(112, 0)
 theme_override_constants/separation = 4
 
 [node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs/Pulse" groups=["inventory_icon"]]
@@ -2633,14 +2633,14 @@ IconSize = 3
 [node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs/Pulse"]
 layout_mode = 2
 horizontal_alignment = 1
-text = "pulse"
+text = "part_pulse"
 script = ExtResource("shell_4_label")
 TextStyle = 16
 TextColor = 8
 
 [node name="Servo" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs"]
 layout_mode = 2
-custom_minimum_size = Vector2(88, 0)
+custom_minimum_size = Vector2(112, 0)
 theme_override_constants/separation = 4
 
 [node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs/Servo" groups=["inventory_icon"]]
@@ -2653,14 +2653,14 @@ IconSize = 3
 [node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs/Servo"]
 layout_mode = 2
 horizontal_alignment = 1
-text = "servo"
+text = "part_servo"
 script = ExtResource("shell_4_label")
 TextStyle = 16
 TextColor = 8
 
 [node name="Spring" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs"]
 layout_mode = 2
-custom_minimum_size = Vector2(88, 0)
+custom_minimum_size = Vector2(112, 0)
 theme_override_constants/separation = 4
 
 [node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs/Spring" groups=["inventory_icon"]]
@@ -2673,14 +2673,14 @@ IconSize = 3
 [node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs/Spring"]
 layout_mode = 2
 horizontal_alignment = 1
-text = "spring"
+text = "part_spring"
 script = ExtResource("shell_4_label")
 TextStyle = 16
 TextColor = 8
 
 [node name="Stepper" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs"]
 layout_mode = 2
-custom_minimum_size = Vector2(88, 0)
+custom_minimum_size = Vector2(112, 0)
 theme_override_constants/separation = 4
 
 [node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs/Stepper" groups=["inventory_icon"]]
@@ -2693,14 +2693,14 @@ IconSize = 3
 [node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs/Stepper"]
 layout_mode = 2
 horizontal_alignment = 1
-text = "stepper"
+text = "part_stepper"
 script = ExtResource("shell_4_label")
 TextStyle = 16
 TextColor = 8
 
 [node name="Touch" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs"]
 layout_mode = 2
-custom_minimum_size = Vector2(88, 0)
+custom_minimum_size = Vector2(112, 0)
 theme_override_constants/separation = 4
 
 [node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs/Touch" groups=["inventory_icon"]]
@@ -2713,14 +2713,14 @@ IconSize = 3
 [node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs/Touch"]
 layout_mode = 2
 horizontal_alignment = 1
-text = "touch"
+text = "part_touch"
 script = ExtResource("shell_4_label")
 TextStyle = 16
 TextColor = 8
 
 [node name="Velocity" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs"]
 layout_mode = 2
-custom_minimum_size = Vector2(88, 0)
+custom_minimum_size = Vector2(112, 0)
 theme_override_constants/separation = 4
 
 [node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs/Velocity" groups=["inventory_icon"]]
@@ -2733,14 +2733,14 @@ IconSize = 3
 [node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs/Velocity"]
 layout_mode = 2
 horizontal_alignment = 1
-text = "velocity"
+text = "part_velocity"
 script = ExtResource("shell_4_label")
 TextStyle = 16
 TextColor = 8
 
 [node name="Wheel" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs"]
 layout_mode = 2
-custom_minimum_size = Vector2(88, 0)
+custom_minimum_size = Vector2(112, 0)
 theme_override_constants/separation = 4
 
 [node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs/Wheel" groups=["inventory_icon"]]
@@ -2753,14 +2753,14 @@ IconSize = 3
 [node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs/Wheel"]
 layout_mode = 2
 horizontal_alignment = 1
-text = "wheel"
+text = "part_wheel"
 script = ExtResource("shell_4_label")
 TextStyle = 16
 TextColor = 8
 
 [node name="Wing" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs"]
 layout_mode = 2
-custom_minimum_size = Vector2(88, 0)
+custom_minimum_size = Vector2(112, 0)
 theme_override_constants/separation = 4
 
 [node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs/Wing" groups=["inventory_icon"]]
@@ -2773,7 +2773,7 @@ IconSize = 3
 [node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs/Wing"]
 layout_mode = 2
 horizontal_alignment = 1
-text = "wing"
+text = "part_wing"
 script = ExtResource("shell_4_label")
 TextStyle = 16
 TextColor = 8

@@ -7,10 +7,10 @@ public sealed class UiNotificationIconTests
     [Fact]
     public void Icon_PreservesLibraryWhenNamesOverlap()
     {
-        new UiNotificationIcon(UiIconId.Beam).ResourcePath.ShouldBe(UiIcons.UiRoot + "beam.svg");
-        new UiNotificationIcon(UiIconId.PartBeam).ResourcePath.ShouldBe(UiIcons.PartRoot + "beam.svg");
-        new UiNotificationIcon(UiIconId.Trophy).ResourcePath.ShouldBe(UiIcons.UiRoot + "trophy.svg");
-        new UiNotificationIcon(UiIconId.PartSpring).ResourcePath.ShouldBe(UiIcons.PartRoot + "spring.svg");
+        new UiNotificationIcon(UiIconId.Beam).ResourcePath.ShouldBe(UiIcons.Root + "icon_beam.svg");
+        new UiNotificationIcon(UiIconId.PartBeam).ResourcePath.ShouldBe(UiIcons.Root + "part_beam.svg");
+        new UiNotificationIcon(UiIconId.Trophy).ResourcePath.ShouldBe(UiIcons.Root + "icon_trophy.svg");
+        new UiNotificationIcon(UiIconId.PartSpring).ResourcePath.ShouldBe(UiIcons.Root + "part_spring.svg");
     }
 
     [Theory]
