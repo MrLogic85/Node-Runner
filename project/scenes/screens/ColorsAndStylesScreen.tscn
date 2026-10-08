@@ -1846,6 +1846,26 @@ script = ExtResource("shell_4_label")
 TextStyle = 16
 TextColor = 8
 
+[node name="BrainMark" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
+layout_mode = 2
+custom_minimum_size = Vector2(88, 0)
+theme_override_constants/separation = 4
+
+[node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/BrainMark" groups=["inventory_icon"]]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 40)
+script = ExtResource("cs_icon")
+IconId = 69
+IconSize = 3
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/BrainMark"]
+layout_mode = 2
+horizontal_alignment = 1
+text = "mark-brain"
+script = ExtResource("shell_4_label")
+TextStyle = 16
+TextColor = 8
+
 [node name="Menu" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
 layout_mode = 2
 custom_minimum_size = Vector2(88, 0)

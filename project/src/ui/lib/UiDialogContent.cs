@@ -147,7 +147,7 @@ public sealed partial class UiDialogContent : Control
         var icon = GetNode<TextureRect>("%SemanticIcon");
         icon.Texture = _iconOverride is { } glyph
             ? glyph.Load(UiIconSize.Large)
-            : UiIcons.Load(Type == UiPopupType.Default ? UiIconId.Model : UiIconId.Warn, UiIconSize.Large);
+            : UiIcons.Load(Type == UiPopupType.Default ? UiIconId.BrainMark : UiIconId.Warn, UiIconSize.Large);
         icon.SelfModulate = color;
         var typeLabel = GetNode<Label>("%SemanticType");
         typeLabel.Text = UiPopupStyle.Overline(Type);
