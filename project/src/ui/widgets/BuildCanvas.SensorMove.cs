@@ -25,7 +25,7 @@ public partial class BuildCanvas
         // Like a link drag's line, it starts at the sensor's picture, and ends at its preview or the finger.
         var pictureRadius = (float)SensorPicture.SizeOf(moving.Kind) / 2;
         var endRadius = preview is null ? 0 : pictureRadius;
-        if (from.DistanceTo(to) <= pictureRadius + endRadius + (refused ? _refusedMarkRadius * 2 : 0))
+        if (from.DistanceTo(to) <= pictureRadius + endRadius + (refused ? _lineMarkRadius * 2 : 0))
         {
             return;
         }
