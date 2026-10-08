@@ -38,6 +38,7 @@ public partial class CreationsHost : Node, IRoutedScene
         screen.DeleteRequested += RequestDelete;
         screen.AchievementsRequested += ShowAchievementsCue;
         screen.ExamplesRequested += () => Navigate(new ExamplesRoute());
+        screen.ImportRequested += () => Navigate(new ImportRoute());
         screen.ComponentLibraryRequested += () => Navigate(new ComponentGalleryRoute());
 
         _deleteDialog = new UiDialog();

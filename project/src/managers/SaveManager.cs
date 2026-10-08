@@ -15,6 +15,7 @@ public partial class SaveManager : Node
     private IBuildEditWorkflow? _buildEditWorkflow;
     private ICreationDuplicateWorkflow? _creationDuplicateWorkflow;
     private IExampleCopyWorkflow? _exampleCopyWorkflow;
+    private ICreationImportWorkflow? _creationImportWorkflow;
     private DefaultCreationSeeder? _defaultCreationSeeder;
     private CreationsPresentationViewModel? _creationsPresentation;
 
@@ -29,6 +30,7 @@ public partial class SaveManager : Node
         var progression = new FileProgressionRepository(new GodotStorageLocation(ProjectSettings.GlobalizePath("user://")));
         _creationDuplicateWorkflow = new CreationDuplicateWorkflow(_repository);
         _exampleCopyWorkflow = new ExampleCopyWorkflow(_repository);
+        _creationImportWorkflow = new CreationImportWorkflow(_repository);
         _defaultCreationSeeder = new DefaultCreationSeeder(_exampleCopyWorkflow, progression);
         _creationsPresentation = new CreationsPresentationViewModel(_repository);
     }
@@ -77,6 +79,9 @@ public partial class SaveManager : Node
     public CreationDef CopyExample(Guid exampleId, Func<UiText, string> inPlayerLanguage) =>
         ExampleCopyWorkflow.Copy(exampleId, inPlayerLanguage);
 
+    public CreationDef Import(CreationDef build, string name) =>
+        CreationImportWorkflow.Import(build, name);
+
     public CreationDef CreateNew(Func<UiText, string> inPlayerLanguage) => NewCreationWorkflow.Create(inPlayerLanguage);
 
     /// <summary>Copies the Walker on the app's first start; see <see cref="DefaultCreationSeeder"/>.</summary>
@@ -94,6 +99,9 @@ public partial class SaveManager : Node
 
     private IExampleCopyWorkflow ExampleCopyWorkflow =>
         _exampleCopyWorkflow ?? throw new InvalidOperationException("SaveManager is not ready.");
+
+    private ICreationImportWorkflow CreationImportWorkflow =>
+        _creationImportWorkflow ?? throw new InvalidOperationException("SaveManager is not ready.");
 
     private INewCreationWorkflow NewCreationWorkflow =>
         _newCreationWorkflow ?? throw new InvalidOperationException("SaveManager is not ready.");

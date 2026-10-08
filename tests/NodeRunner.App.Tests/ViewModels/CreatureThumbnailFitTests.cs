@@ -26,6 +26,14 @@ public class CreatureThumbnailFitTests
         Place(fit, new Vector2D(40, -30)).ShouldBe(new Vector2D(_width / 2, _height / 2));
     }
 
+    [Fact]
+    public void LargestScale_CapsTheFit()
+    {
+        var joint = new CreatureDef([new NodeDef(1, new Vector2D(40, -30))], [], []);
+
+        CreatureThumbnailFit.Of(joint, _width, _height, _inset, largestScale: 1)!.Value.Scale.ShouldBe(1);
+    }
+
     [Theory]
     [InlineData(3000, 0)]
     [InlineData(0, 3000)]

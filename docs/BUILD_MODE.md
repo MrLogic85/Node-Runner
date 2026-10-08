@@ -42,9 +42,12 @@ boundary. `reference design/components/Build/README.md`,
   (`docs/TRAINING_LOOP.md` step 6).
 - **Overflow menu.** It follows training, not the lock. A trained creation
   lists Stats (#198) and Power budget (#460), both unavailable, then Copy
-  creation, Reset training and Delete creation; an untrained one lists
-  Power budget, Copy creation and Delete creation. Copy creation is offered
-  for anything drawn, trained or not (#840): it saves edits first, keeps
+  creation, Share build, Reset training and Delete creation; an untrained
+  one lists Power budget, Copy creation, Share build and Delete creation.
+  Share build copies the build, not its training, as a code to paste in a
+  chat, which Import creation in Creations adds back (#899,
+  `docs/SAVE_FORMAT.md` → "Share code"). Copy creation and Share build are
+  offered for anything drawn, trained or not (#840). Copy creation saves edits first, keeps
   any trained brain, names the copy "Copy of …", opens it in place of the
   original and confirms with a notification. Reset training (#370, #687)
   and Delete creation each ask first in a dialog confirmed with a tap
@@ -333,7 +336,9 @@ no brain port, so a locked creation keeps them.
   saved name is never cut by the field: it shows whole, cannot grow, and
   only gets shorter as the player deletes.
 - Names are labels only (#220), so a locked creation can be renamed too; a
-  rename autosaves like any edit.
+  rename autosaves like any edit. Two creations may share a name: an
+  imported build keeps the name its Name field shows on Import, its own
+  unless the player changes it (#899).
 
 ## Selection panel
 

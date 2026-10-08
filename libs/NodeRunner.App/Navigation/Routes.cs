@@ -23,6 +23,9 @@ public sealed record PopupGalleryRoute(int ThemeIndex = 0, bool ShowDebugBounds 
 /// <summary>Ready-made creations the player copies into Creations.</summary>
 public sealed record ExamplesRoute : SceneRoute;
 
+/// <summary>Adds a creation someone shared as a code (#899) to Creations.</summary>
+public sealed record ImportRoute : SceneRoute;
+
 /// <summary>
 /// Build for one saved creation. <see cref="IsNew"/> is true when + New just made it; see
 /// docs/BUILD_MODE.md for when Build removes such a creation again (#368).

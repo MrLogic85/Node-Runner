@@ -12,7 +12,8 @@ public enum UiIconId
     Scale, Select, Shadow, Sound, Speed, Stop, Trash, Trophy, Unlock, Warn, Close, Eye, PartBattery,
     PartBeam, PartBrake, PartCore, PartFuel, PartGenerator, PartCamera, PartNode, PartPiston,
     PartServo, PartSpring, PartStepper, PartVelocity, PartWheel, PartWing, Distance, TopSpeed, Elevation,
-    MapFlat, MapHills, MapStairs, PartAccelerometer, ChevronLeft, Sort, Parts, Undo, Redo, PartPulse, PartTouch, BrainMark
+    MapFlat, MapHills, MapStairs, PartAccelerometer, ChevronLeft, Sort, Parts, Undo, Redo, PartPulse, PartTouch, BrainMark,
+    Share, Paste
 }
 
 /// <summary>The only permitted display sizes for canonical icons.</summary>
@@ -224,6 +225,8 @@ public static class UiIcons
         UiIconId.PartPulse => Part("pulse"),
         UiIconId.PartTouch => Part("touch"),
         UiIconId.BrainMark => Mark("brain"),
+        UiIconId.Share => Icon("share"),
+        UiIconId.Paste => Icon("paste"),
         _ => throw new ArgumentOutOfRangeException(nameof(icon), icon, "Unknown UI icon."),
     };
 

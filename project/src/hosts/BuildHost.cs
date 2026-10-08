@@ -1,6 +1,7 @@
 using Godot;
 using NodeRunner.App.Builders;
 using NodeRunner.App.Navigation;
+using NodeRunner.App.Repositories;
 using NodeRunner.App.ViewModels;
 using NodeRunner.Domain;
 using NodeRunner.Managers;
@@ -132,6 +133,7 @@ public partial class BuildHost : Node, IRoutedScene
         _buildScreen.UnlockRequested += RequestUnlock;
         _buildScreen.ResetTrainingRequested += RequestResetTraining;
         _buildScreen.CopyCreationRequested += CopyActiveCreation;
+        _buildScreen.ShareBuildRequested += ShareActiveBuild;
         _buildScreen.DeleteCreationRequested += RequestDeleteActiveCreation;
         _buildScreen.PartNameChanged += Build.RenamePart;
         _buildScreen.DeleteSelectionRequested += DeleteSelection;
@@ -207,6 +209,23 @@ public partial class BuildHost : Node, IRoutedScene
             MessageSource = UiTextTranslation.Source(UiText.Format("Now editing {0}. The original is in Creations.", copy.Name)),
         });
         _navigator?.Navigate(new SceneNavigation(new BuildRoute(copy.Id), KeepCurrent: false));
+    }
+
+    // The code is made from the build on screen, so it needs no save first (#899).
+    private void ShareActiveBuild()
+    {
+        if (_autosave?.CreationId is not { } id)
+        {
+            return;
+        }
+
+        UiClipboard.Copy(this, CreationShareCode.Create(new CreationDef(id, Build.CreationName, Build.Snapshot())), new UiNotificationSpec(
+            UiPopupType.Default, "Code copied", string.Empty, Icon: new(UiIconId.Share))
+        {
+            Id = $"creation.share.{id}",
+            MessageSource = UiTextTranslation.Source(
+                UiText.Format("Paste it in a chat to share {0}. It holds the build, not the training.", Build.CreationName)),
+        });
     }
 
     private void ShowCreations() => _navigator?.ReturnToRoot();

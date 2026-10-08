@@ -60,9 +60,9 @@ public sealed class BuildRailTests
     }
 
     [Fact]
-    public void Overflow_PutsResetTrainingUnderCopy_AboveDelete()
+    public void Overflow_PutsShareUnderCopy_AndResetTrainingAboveDelete()
     {
-        Children("/ToolbarMenu").ShouldBe(["MenuStats", "MenuPowerBudget", "MenuCopyCreation", "MenuResetTraining", "MenuDeleteCreation"]);
+        Children("/ToolbarMenu").ShouldBe(["MenuStats", "MenuPowerBudget", "MenuCopyCreation", "MenuShareBuild", "MenuResetTraining", "MenuDeleteCreation"]);
     }
 
     private static string[] Children(string parent) =>

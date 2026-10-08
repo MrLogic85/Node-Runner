@@ -1986,6 +1986,26 @@ script = ExtResource("shell_4_label")
 TextStyle = 16
 TextColor = 8
 
+[node name="Paste" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
+layout_mode = 2
+custom_minimum_size = Vector2(112, 0)
+theme_override_constants/separation = 4
+
+[node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Paste" groups=["inventory_icon"]]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 40)
+script = ExtResource("cs_icon")
+IconId = 71
+IconSize = 3
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Paste"]
+layout_mode = 2
+horizontal_alignment = 1
+text = "icon_paste"
+script = ExtResource("shell_4_label")
+TextStyle = 16
+TextColor = 8
+
 [node name="Pause" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
 layout_mode = 2
 custom_minimum_size = Vector2(112, 0)
@@ -2182,6 +2202,26 @@ IconSize = 3
 layout_mode = 2
 horizontal_alignment = 1
 text = "icon_shadow"
+script = ExtResource("shell_4_label")
+TextStyle = 16
+TextColor = 8
+
+[node name="Share" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
+layout_mode = 2
+custom_minimum_size = Vector2(112, 0)
+theme_override_constants/separation = 4
+
+[node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Share" groups=["inventory_icon"]]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 40)
+script = ExtResource("cs_icon")
+IconId = 70
+IconSize = 3
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Share"]
+layout_mode = 2
+horizontal_alignment = 1
+text = "icon_share"
 script = ExtResource("shell_4_label")
 TextStyle = 16
 TextColor = 8
