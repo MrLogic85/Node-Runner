@@ -152,8 +152,9 @@ ground, the shadows above it, and the followed creature above every shadow.
   (its own beam `halo`), and its picture shows on another beam that takes
   it, a Camera looking the same way in the world. A link drag line (#1021)
   ties the sensor's picture to the finger, or to its picture on a beam
-  that takes it. Unless refused, a filled `halo` dart at its middle points
-  along the move; a line too short to show it beside its ends has none.
+  that takes it. Unless refused, a `halo` ring like the crossed one,
+  holding an arrow (#1024), points along the move at its middle; a line
+  too short to show it beside its ends has none.
 - **Callouts (#593, #633):** a note out past its part, joined by a leader in
   its colour, at screen size. Near an edge it slides along the edge, never
   to the part's other side. Overlapping callouts stack in a column, most
