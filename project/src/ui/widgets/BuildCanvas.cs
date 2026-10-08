@@ -421,6 +421,7 @@ public partial class BuildCanvas : Node2D
         DrawInvalidBeamMarkers(canvas);
         DrawBeamPreview(canvas);
         DrawBeamEndRings(canvas);
+        DrawSensorMoveLine(canvas);
         DrawSelectionFrame(canvas);
     }
 

@@ -11,12 +11,6 @@ public partial class BuildCanvas
     private const int _refusedRingDashes = 12;
     private const int _refusedDashSegments = 6;
 
-    // The loose-joint style mark a refused link drag shows at its line's middle (#920).
-    private const float _refusedMarkRadius = 12;
-
-    // The dash of a free link drag line (#920) and of the outline round a beam it will replace (#849).
-    private const float _linkPreviewDash = 8;
-
     private void DrawBeamPreview(CanvasItem canvas)
     {
         if (_viewModel is null || _gestures?.BeamStartNodeId is not { } start || _gestures.BeamEnd is not { } end)
@@ -24,9 +18,8 @@ public partial class BuildCanvas
             return;
         }
 
-        // The line itself shows the state, since the finger hides the target (#920): dashed while
-        // free, solid when it will attach, and dashed danger with a crossed ring when refused (#451,
-        // #877). It goes over the creature, since a refused link lies on the link already there.
+        // The line itself shows the state, since the finger hides the target (#920, #451, #877). It
+        // goes over the creature, since a refused link lies on the link already there.
         var refused = _gestures.RefusedTargetNodeId;
         var from = NodeById(start);
         var target = (_gestures.BeamTargetNodeId ?? refused) is { } id ? NodeById(id) : null;
@@ -38,27 +31,7 @@ public partial class BuildCanvas
         }
 
         using var pen = ViewPen(canvas);
-        var width = Stroke(Theme.BeamWidth);
-        if (refused is not null)
-        {
-            pen.DashedLine(lineStart, lineEnd, Theme.Danger, width, _linkPreviewDash);
-            // On a clear disc, so the cross keeps its shape at any angle of the line.
-            var middle = (lineStart + lineEnd) / 2;
-            var mark = Stroke(Theme.MotorSignalWidth);
-            var arm = _refusedMarkRadius * 0.45f;
-            pen.Disc(middle, _refusedMarkRadius, Theme.ArenaBackground);
-            pen.Ring(middle, _refusedMarkRadius, Theme.Danger, mark);
-            pen.Line(middle + new Vector2(-arm, -arm), middle + new Vector2(arm, arm), Theme.Danger, mark);
-            pen.Line(middle + new Vector2(arm, -arm), middle + new Vector2(-arm, arm), Theme.Danger, mark);
-        }
-        else if (target is not null)
-        {
-            pen.Line(lineStart, lineEnd, Theme.SelectionGlow, width);
-        }
-        else
-        {
-            pen.DashedLine(lineStart, lineEnd, Theme.SelectionGlow, width, _linkPreviewDash);
-        }
+        DrawDragLine(pen, lineStart, lineEnd, refused is not null ? DragLine.Refused : target is not null ? DragLine.Attaches : DragLine.Free, arrow: false);
     }
 
     // A Piston or Spring dropped now replaces the beam on its pair (#849): a dashed outline at the
@@ -82,8 +55,8 @@ public partial class BuildCanvas
         using var pen = ViewPen(canvas);
         var across = (end - start).Normalized().Orthogonal() * Theme.SelectedBeamOffset;
         var width = Stroke(Theme.SelectedBeamLineWidth);
-        pen.DashedLine(start + across, end + across, Theme.Beam, width, _linkPreviewDash);
-        pen.DashedLine(start - across, end - across, Theme.Beam, width, _linkPreviewDash);
+        pen.DashedLine(start + across, end + across, Theme.Beam, width, _dragLineDash);
+        pen.DashedLine(start - across, end - across, Theme.Beam, width, _dragLineDash);
     }
 
     private void DrawBeamEndRings(CanvasItem canvas)

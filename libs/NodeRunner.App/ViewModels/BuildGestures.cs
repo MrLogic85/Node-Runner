@@ -115,6 +115,9 @@ public sealed class BuildGestures
     /// <summary>What <see cref="MovingSensorId"/> would land on if released now (<see cref="DropTargetAt"/>); null over empty canvas.</summary>
     public CreatureElementSelection? SensorDropTarget { get; private set; }
 
+    /// <summary>Where the pointer is while <see cref="MovingSensorId"/> is dragged (#1021), in canvas units: the end of the line from the sensor.</summary>
+    public Vector2D? SensorDragEnd { get; private set; }
+
     /// <summary>The moving sensor as it would be if released now (#806): on another beam that takes it, else null.</summary>
     public SensorDef? MovedSensorPreview =>
         MovingSensorId is { } sensor ? _build.SensorMovePreview(sensor, SensorDropTarget) : null;
@@ -424,12 +427,9 @@ public sealed class BuildGestures
         }
         else if (MovingSensorId is not null)
         {
-            var target = DropTargetAt(viewPosition);
-            if (target != SensorDropTarget)
-            {
-                SensorDropTarget = target;
-                Changed?.Invoke(this, EventArgs.Empty);
-            }
+            SensorDragEnd = position;
+            SensorDropTarget = DropTargetAt(viewPosition);
+            Changed?.Invoke(this, EventArgs.Empty);
         }
         else if (_press == SharedPress.Pan)
         {
@@ -804,6 +804,7 @@ public sealed class BuildGestures
         ReplacedBeamId = null;
         MovingSensorId = null;
         SensorDropTarget = null;
+        SensorDragEnd = null;
         SelectionBox = null;
     }
 

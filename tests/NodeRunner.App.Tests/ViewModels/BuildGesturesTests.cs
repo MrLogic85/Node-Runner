@@ -1845,6 +1845,26 @@ public class BuildGesturesTests
     }
 
     [Fact]
+    public void ZoomedIn_DraggingASensor_RedrawsTheLineToThePointerOnEveryMove()
+    {
+        var (_, gestures) = SensorsOnThreeBeams();
+        gestures.View.ZoomAbout(new Vector2D(0, 0), 2);
+        gestures.View.PanBy(new Vector2D(50, 50));
+        gestures.Press(new Vector2D(250, 50));
+        gestures.Drag(new Vector2D(250, 450));
+        var redraws = 0;
+        gestures.Changed += (_, _) => redraws++;
+
+        // Both over empty canvas: the drop target stays, but the line still follows the finger.
+        gestures.Drag(new Vector2D(450, 450));
+        gestures.SensorDragEnd.ShouldBe(new Vector2D(200, 200));
+        redraws.ShouldBe(1);
+
+        gestures.Release(new Vector2D(450, 450));
+        gestures.SensorDragEnd.ShouldBeNull();
+    }
+
+    [Fact]
     public void ASensorDroppedOnATakenBeam_StaysWithTheNoteThere()
     {
         var (build, gestures) = SensorsOnThreeBeams();

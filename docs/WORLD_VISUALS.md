@@ -120,9 +120,9 @@ drawn over it.
 From the bottom up (#767): Training's knock-out outline, the rigid hatch,
 underlays (Build's placing feedback), beams, links, a selected beam or link,
 sensors, a selected sensor, joints, a selected joint, then overlays (camera
-rays, link travel marks, the link drag line, the selection frame). Joint
-rings cover link ends and sensors; rays and travel marks stay readable over
-joints.
+rays, link travel marks, the link drag and sensor move lines, the selection
+frame). Joint rings cover link ends and sensors; rays and travel marks stay
+readable over joints.
 
 A part draws its marks with itself, and a selected part rises whole to the
 selected layer of its kind, so a mark never weaves through nearby parts and
@@ -147,7 +147,10 @@ ground, the shadows above it, and the followed creature above every shadow.
 - **Moving a sensor (#806):** no tile follows the finger. The sensor stays
   on its beam drawn as selected, beams are outlined as for a tray drag
   (its own beam `halo`), and its picture shows on another beam that takes
-  it, a Camera looking the same way in the world.
+  it, a Camera looking the same way in the world. A link drag line (#1021)
+  ties the sensor's picture to the finger, or to its picture on a beam
+  that takes it. Unless refused, a filled `halo` dart at its middle points
+  along the move; a line too short to show it beside its ends has none.
 - **Callouts (#593, #633):** a note out past its part, joined by a leader in
   its colour, at screen size. Near an edge it slides along the edge, never
   to the part's other side. Overlapping callouts stack in a column, most
