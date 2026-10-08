@@ -276,7 +276,7 @@ public sealed partial class BuildViewModel
 
     private void NotifySelectionChanged()
     {
-        _shownCopyBlockers = [];
+        _shownRefusalNotes = [];
         if (SelectedPartCount > 0)
         {
             // A selection replaces the tray, so a pick it would hide is dropped, not kept out of sight (#805).

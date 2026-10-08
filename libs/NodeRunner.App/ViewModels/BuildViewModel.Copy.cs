@@ -11,8 +11,6 @@ namespace NodeRunner.App.ViewModels;
 /// </summary>
 public sealed partial class BuildViewModel
 {
-    private IReadOnlyList<CanvasNote> _shownCopyBlockers = [];
-
     /// <summary>Whether enough parts are selected to copy: two or more, locked or not (#990).</summary>
     public bool CanOfferCopy => SelectedPartCount >= 2;
 
@@ -67,7 +65,7 @@ public sealed partial class BuildViewModel
         {
             foreach (var id in selected.Order())
             {
-                notes.Add(Note(kind, id, UiText.Plain("Locked: would change the model")));
+                notes.Add(Note(kind, id, _wouldChangeModelNote));
             }
         }
 
@@ -89,7 +87,7 @@ public sealed partial class BuildViewModel
     /// sits on the copy of its joint, uses the copies of its Fixed and Target links, and leaves a
     /// role empty whose link was not copied. The copy is selected as the original was: a Servo
     /// stands in for its copied joint (#973). While Copy is dimmed, it instead shows <see cref="CopyBlockers"/> in
-    /// <see cref="CanvasNotes"/> until the selection changes or the canvas is touched.
+    /// <see cref="CanvasNotes"/>.
     /// </summary>
     public void CopySelectedParts()
     {
@@ -101,8 +99,7 @@ public sealed partial class BuildViewModel
         var blockers = CopyBlockers();
         if (blockers.Count > 0)
         {
-            _shownCopyBlockers = blockers;
-            OnPropertyChanged(nameof(CanvasNotes));
+            ShowRefusalNotes(blockers);
             return;
         }
 

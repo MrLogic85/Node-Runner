@@ -159,7 +159,7 @@ entry (#315). The entries that are not a component of their own (#306):
   the screen can say why: a later version, what blocks the action, as
   danger notes on the parts that block it (#844, #937), also when it is
   the lock that makes them block it (#990), or a locked Creation, as a
-  notification, when no part shows why (#896).
+  notification (#896); a locked Delete shows both (#987).
   It has no lock glyph, which would read as the creation padlock.
 - **Icon sizes** (#358, #422): 16 beside text, 20 on a textless or stacked
   button and in a `touch` row, 16 in a `control-sm` row or inside a ring,

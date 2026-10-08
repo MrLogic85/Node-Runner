@@ -53,6 +53,7 @@ public sealed class BuildLockedTests
         build.DeleteSelectedParts();
 
         Parts(build.Snapshot()).ShouldNotBe(Parts(before));
+        build.CanvasNotes().ShouldBeEmpty();
         build.Undo();
         Parts(build.Snapshot()).ShouldBe(Parts(before));
     }
@@ -77,6 +78,94 @@ public sealed class BuildLockedTests
         build.DeleteSelectedParts();
 
         Parts(build.Snapshot()).ShouldBe(Parts(before));
+    }
+
+    [Theory]
+    [InlineData(CreatureElementKind.Sensor, 20, CreatureElementKind.Sensor, 20)]
+    [InlineData(CreatureElementKind.Piston, 40, CreatureElementKind.Piston, 40)]
+    [InlineData(CreatureElementKind.Servo, 30, CreatureElementKind.Servo, 30)]
+    [InlineData(CreatureElementKind.Beam, 14, CreatureElementKind.Sensor, 20)] // Its sensor goes with it.
+    [InlineData(CreatureElementKind.Node, 7, CreatureElementKind.Piston, 41)] // Its Piston goes with it.
+    [InlineData(CreatureElementKind.Node, 2, CreatureElementKind.Servo, 30)] // Its Servo goes with it.
+    [InlineData(CreatureElementKind.Beam, 12, CreatureElementKind.Servo, 30)] // The kept Servo's Target link.
+    [InlineData(CreatureElementKind.Node, 1, CreatureElementKind.Servo, 30)] // Its beam is the kept Servo's Fixed link.
+    public void LockedDelete_PutsANoteOnThePartThatBlocksIt_AndChangesNothing(CreatureElementKind kind, int id, CreatureElementKind blockerKind, int blockerId)
+    {
+        var build = Locked();
+        var before = build.Snapshot();
+        build.SelectOnly(kind, id);
+
+        build.DeleteSelectedParts();
+
+        build.CanvasNotes().ShouldBe([WouldChangeModel(blockerKind, blockerId)]);
+        Parts(build.Snapshot()).ShouldBe(Parts(before));
+        build.CanUndo.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void LockedDelete_NotesEveryBlockerOnce()
+    {
+        var build = Locked();
+        // Joint 8 takes beam 14 with its sensor and Piston 41; joint 3 takes Piston 40. The Servo
+        // goes itself and loses its Fixed link too, and the sensor goes itself and with its beam.
+        build.ReplaceSelection(PartSet.None with
+        {
+            Nodes = new HashSet<int> { 3, 8 },
+            Beams = new HashSet<int> { 10, 14 },
+            Sensors = new HashSet<int> { 20 },
+            Servos = new HashSet<int> { 30 },
+        });
+
+        build.DeleteSelectedParts();
+
+        build.CanvasNotes().ShouldBe(
+        [
+            WouldChangeModel(CreatureElementKind.Sensor, 20),
+            WouldChangeModel(CreatureElementKind.Servo, 30),
+            WouldChangeModel(CreatureElementKind.Piston, 40),
+            WouldChangeModel(CreatureElementKind.Piston, 41),
+        ]);
+    }
+
+    [Fact]
+    public void LockedDeleteNotes_ClearOnSelectionChange_AndComeBackOnTheNextTap()
+    {
+        var build = Locked();
+        build.SelectOnly(CreatureElementKind.Sensor, 20);
+        build.DeleteSelectedParts();
+
+        build.SelectOnly(CreatureElementKind.Piston, 40);
+        build.CanvasNotes().ShouldBeEmpty();
+        build.DeleteSelectedParts();
+
+        build.CanvasNotes().ShouldBe([WouldChangeModel(CreatureElementKind.Piston, 40)]);
+    }
+
+    [Fact]
+    public void LockedDeleteNotes_ClearOnTheNextCanvasTouch()
+    {
+        var build = Locked();
+        build.SelectOnly(CreatureElementKind.Sensor, 20);
+        build.DeleteSelectedParts();
+
+        build.DismissTapNotes();
+
+        build.CanvasNotes().ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void LockedDeleteNotes_ClearOnUnlock_AndDeleteThenDeletes()
+    {
+        var build = Locked();
+        build.SelectOnly(CreatureElementKind.Sensor, 20);
+        build.DeleteSelectedParts();
+
+        build.Unlock();
+        build.CanvasNotes().ShouldBeEmpty();
+        build.DeleteSelectedParts();
+
+        build.Sensors.ShouldBeEmpty();
+        build.CanvasNotes().ShouldBeEmpty();
     }
 
     [Fact]
@@ -174,6 +263,9 @@ public sealed class BuildLockedTests
             locked: true);
         return build;
     }
+
+    private static CanvasNote WouldChangeModel(CreatureElementKind kind, int id) =>
+        new(CanvasNoteKind.Danger, new CreatureElementSelection(kind, id), UiText.Plain("Locked: would change the model"));
 
     private static (int Nodes, int Beams, int Springs, int Pistons, int Sensors, int Servos) Parts(CreatureDef creature) =>
         (creature.Nodes.Count, creature.Beams.Count, creature.Springs.Count, creature.Pistons.Count, creature.Sensors.Count, creature.Servos.Count);
